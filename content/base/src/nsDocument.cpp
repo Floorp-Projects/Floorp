@@ -749,15 +749,15 @@ nsDocument::~nsDocument()
       // links one by one
       DestroyLinkMap();
 
-      PRInt32 count = mChildren.Count();
-      for (indx = 0; indx < count; ++indx) {
-        mChildren[indx]->UnbindFromTree();
+      PRUint32 count = mChildren.ChildCount();
+      for (indx = PRInt32(count) - 1; indx >= 0; --indx) {
+        mChildren.ChildAt(indx)->UnbindFromTree();
+        mChildren.RemoveChildAt(indx);
       }
     }
   }
 
   mRootContent = nsnull;
-  mChildren.Clear();
 
   // Let the stylesheets know we're going away
   indx = mStyleSheets.Count();
@@ -975,15 +975,14 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
   DestroyLinkMap();
 
   mRootContent = nsnull;
-  PRInt32 count, i;
-  count = mChildren.Count();
-  for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIContent> content = mChildren[i];
+  PRUint32 count = mChildren.ChildCount();
+  for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
+    nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
 
     ContentRemoved(nsnull, content, i);
     content->UnbindFromTree();
+    mChildren.RemoveChildAt(i);
   }
-  mChildren.Clear();
 
   // Reset our stylesheets
   ResetStylesheetsToURI(aURI);
@@ -1673,8 +1672,8 @@ nsDocument::SetRootContent(nsIContent* aRoot)
                  "Already have a root content!  Clear out first!");
     nsresult rv = aRoot->BindToTree(this, nsnull, nsnull, PR_TRUE);
 
-    if (NS_SUCCEEDED(rv) && !mChildren.AppendObject(aRoot)) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
+    if (NS_SUCCEEDED(rv)) {
+      rv = mChildren.AppendChild(aRoot);
     }
 
     if (NS_FAILED(rv)) {
@@ -1689,7 +1688,10 @@ nsDocument::SetRootContent(nsIContent* aRoot)
   if (mRootContent) {
     DestroyLinkMap();
     mRootContent->UnbindFromTree();
-    mChildren.RemoveObject(mRootContent);
+    PRInt32 pos = mChildren.IndexOfChild(mRootContent);
+    if (pos >= 0) {
+      mChildren.RemoveChildAt(pos);
+    }
     mRootContent = nsnull;
   }
 
@@ -1699,23 +1701,19 @@ nsDocument::SetRootContent(nsIContent* aRoot)
 nsIContent *
 nsDocument::GetChildAt(PRUint32 aIndex) const
 {
-  if (aIndex >= (PRUint32)mChildren.Count()) {
-    return nsnull;
-  }
-
-  return mChildren[aIndex];
+  return mChildren.GetSafeChildAt(aIndex);
 }
 
 PRInt32
 nsDocument::IndexOf(nsIContent* aPossibleChild) const
 {
-  return mChildren.IndexOf(aPossibleChild);
+  return mChildren.IndexOfChild(aPossibleChild);
 }
 
 PRUint32
 nsDocument::GetChildCount() const
 {
-  return mChildren.Count();
+  return mChildren.ChildCount();
 }
 
 PRInt32
@@ -2459,12 +2457,12 @@ nsDocument::GetDoctype(nsIDOMDocumentType** aDoctype)
 
   *aDoctype = nsnull;
   PRInt32 i, count;
-  count = mChildren.Count();
+  count = mChildren.ChildCount();
   nsCOMPtr<nsIDOMNode> rootContentNode(do_QueryInterface(mRootContent) );
   nsCOMPtr<nsIDOMNode> node;
 
   for (i = 0; i < count; i++) {
-    node = do_QueryInterface(mChildren[i]);
+    node = do_QueryInterface(mChildren.ChildAt(i));
 
     NS_ASSERTION(node, "null element of mChildren");
 
@@ -3427,7 +3425,7 @@ nsDocument::HasChildNodes(PRBool* aHasChildNodes)
 {
   NS_ENSURE_ARG(aHasChildNodes);
 
-  *aHasChildNodes = (mChildren.Count() != 0);
+  *aHasChildNodes = (mChildren.ChildCount() != 0);
 
   return NS_OK;
 }
@@ -3445,8 +3443,8 @@ nsDocument::HasAttributes(PRBool* aHasAttributes)
 NS_IMETHODIMP
 nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-  if (mChildren.Count()) {
-    return CallQueryInterface(mChildren[0], aFirstChild);
+  if (mChildren.ChildCount()) {
+    return CallQueryInterface(mChildren.ChildAt(0), aFirstChild);
   }
 
   *aFirstChild = nsnull;
@@ -3457,9 +3455,9 @@ nsDocument::GetFirstChild(nsIDOMNode** aFirstChild)
 NS_IMETHODIMP
 nsDocument::GetLastChild(nsIDOMNode** aLastChild)
 {
-  PRInt32 count = mChildren.Count();
+  PRInt32 count = mChildren.ChildCount();
   if (count) {
-    return CallQueryInterface(mChildren[count-1], aLastChild);
+    return CallQueryInterface(mChildren.ChildAt(count-1), aLastChild);
   }
 
   *aLastChild = nsnull;
@@ -3557,161 +3555,16 @@ NS_IMETHODIMP
 nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                          nsIDOMNode** aReturn)
 {
-  *aReturn = nsnull;
-
-  NS_ENSURE_ARG(aNewChild);
-
-  nsresult rv = nsContentUtils::CheckSameOrigin(this, aNewChild);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRUint16 nodeType;
-  aNewChild->GetNodeType(&nodeType);
-
-  rv = IsAllowedAsChild(nodeType, nsnull);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNewChild);
-  if (!content) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  PRInt32 indx;
-  if (!aRefChild) {
-    if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE && mRootContent) {
-      // docType needs to be before documentElement
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
-
-    indx = mChildren.Count();
-    if (!mChildren.AppendObject(content)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  else {
-    nsCOMPtr<nsIContent> refContent(do_QueryInterface(aRefChild));
-    if (!refContent) {
-      return NS_ERROR_DOM_NOT_FOUND_ERR;
-    }
-
-    indx = mChildren.IndexOf(refContent);
-    if (indx == -1) {
-      // couldn't find refChild
-      return NS_ERROR_DOM_NOT_FOUND_ERR;
-    }
-
-    if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE && mRootContent &&
-        indx > mChildren.IndexOf(mRootContent)) {
-      // docType needs to be before documentElement
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
-
-    if (!mChildren.InsertObjectAt(content, indx)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  // If we get here, we've succesfully inserted content into the
-  // index-th spot in mChildren.
-  if (nodeType == nsIDOMNode::ELEMENT_NODE) {
-    mRootContent = content;
-  }
-
-  rv = content->BindToTree(this, nsnull, nsnull, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    mChildren.RemoveObjectAt(indx);
-    if (mRootContent == content) {
-      mRootContent = nsnull;
-    }
-    content->UnbindFromTree();
-    return rv;
-  }
-  
-  ContentInserted(nsnull, content, indx);
-
-  NS_ADDREF(*aReturn = aNewChild);
-
-  return NS_OK;
+  return nsGenericElement::doInsertBefore(aNewChild, aRefChild, nsnull, this,
+                                          mChildren, aReturn);
 }
 
 NS_IMETHODIMP
 nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                          nsIDOMNode** aReturn)
 {
-  *aReturn = nsnull;
-
-  NS_ENSURE_ARG(aNewChild && aOldChild);
-
-  nsCOMPtr<nsIContent> refContent(do_QueryInterface(aOldChild));
-  if (!refContent) {
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
-  }
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aNewChild);
-  if (!content) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  nsresult rv = nsContentUtils::CheckSameOrigin(this, aNewChild);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRUint16 nodeType;
-  aNewChild->GetNodeType(&nodeType);
-
-  rv = IsAllowedAsChild(nodeType, refContent);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRInt32 indx = mChildren.IndexOf(refContent);
-  if (indx == -1) {
-    // The reference child is not a child of the document.
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
-  }
-
-  if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE && mRootContent &&
-      indx > mChildren.IndexOf(mRootContent)) {
-    // docType needs to be before documentElement
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  mChildren.RemoveObjectAt(indx);
-
-  if (nodeType == nsIDOMNode::ELEMENT_NODE) {
-    // This must be replacing the root node. Tear down the link map
-    // because we're going to unbind all content.
-    DestroyLinkMap();
-  }
-  ContentRemoved(nsnull, refContent, indx);
-  refContent->UnbindFromTree();
-
-  // This is OK because we checked above.
-  if (nodeType == nsIDOMNode::ELEMENT_NODE) {
-    mRootContent = content;
-  }
-
-  mChildren.InsertObjectAt(content, indx);
-  
-  rv = content->BindToTree(this, nsnull, nsnull, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    mChildren.RemoveObjectAt(indx);
-    if (mRootContent == content) {
-      mRootContent = nsnull;
-    }
-    content->UnbindFromTree();
-    return rv;
-  }
-  
-  ContentInserted(nsnull, content, indx);
-
-  NS_ADDREF(*aReturn = aNewChild);
-
-  return rv;
+  return nsGenericElement::doReplaceChild(aNewChild, aOldChild, nsnull, this,
+                                          mChildren, aReturn);
 }
 
 NS_IMETHODIMP
@@ -3726,14 +3579,14 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  PRInt32 indx = mChildren.IndexOf(content);
+  PRInt32 indx = mChildren.IndexOfChild(content);
   if (indx == -1) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
   ContentRemoved(nsnull, content, indx);
 
-  mChildren.RemoveObjectAt(indx);
+  mChildren.RemoveChildAt(indx);
   if (content == mRootContent) {
     DestroyLinkMap();
     mRootContent = nsnull;
@@ -3765,9 +3618,9 @@ nsDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDocument::Normalize()
 {
-  PRInt32 count = mChildren.Count();
+  PRInt32 count = mChildren.ChildCount();
   for (PRInt32 i = 0; i < count; ++i) {
-    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mChildren[i]));
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mChildren.ChildAt(i)));
 
     if (node) {
       node->Normalize();
@@ -5088,12 +4941,12 @@ nsDocument::Destroy()
   if (mIsGoingAway)
     return;
 
-  PRInt32 count = mChildren.Count();
+  PRInt32 count = mChildren.ChildCount();
 
   mIsGoingAway = PR_TRUE;
   DestroyLinkMap();
   for (PRInt32 indx = 0; indx < count; ++indx) {
-    mChildren[indx]->UnbindFromTree();
+    mChildren.ChildAt(indx)->UnbindFromTree();
   }
 
   // Propagate the out-of-band notification to each PresShell's anonymous

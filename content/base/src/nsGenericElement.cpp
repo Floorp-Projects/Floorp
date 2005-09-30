@@ -106,6 +106,46 @@
 #include "nsNodeInfoManager.h"
 #include "nsICategoryManager.h"
 #include "nsIDOMNSFeatureFactory.h"
+#include "nsIDOMDocumentType.h"
+
+
+/**
+ * Most of the implementation of the nsIContent InsertChildAt method.  Shared
+ * by nsDocument for insertions via DOM methods.  When called from
+ * nsDocument, aParent will be null.
+ *
+ * @param aKid The child to insert.
+ * @param aIndex The index to insert at.
+ * @param aNotify Whether to notify.
+ * @param aParent The parent to use for the new child.
+ * @param aDocument The document to use for the new child.
+ *                  Must be non-null if aParent is null and must match
+ *                  aParent->GetCurrentDoc() if aParent is not null.
+ * @param aChildArray The child array to work with
+ */
+static nsresult
+doInsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
+                nsIContent* aParent, nsIDocument* aDocument,
+                nsAttrAndChildArray& aChildArray);
+
+/**
+ * Most of the implementation of the nsIContent RemoveChildAt method.  Shared
+ * by nsDocument for removals via DOM methods, sometimes.  When called from
+ * nsDocument, aParent will be null.
+ *
+ * @param aIndex The index to remove at.
+ * @param aNotify Whether to notify.
+ * @param aKid The kid at aIndex.  Must not be null.
+ * @param aParent The parent we're removing from.
+ * @param aDocument The document we're removing from.
+ *                  Must be non-null if aParent is null and must match
+ *                  aParent->GetCurrentDoc() if aParent is not null.
+ * @param aChildArray The child array to work with
+ */
+static nsresult
+doRemoveChildAt(PRUint32 aIndex, PRBool aNotify, nsIContent* aKid,
+                nsIContent* aParent, nsIDocument* aDocument,
+                nsAttrAndChildArray& aChildArray);
 
 #ifdef MOZ_SVG
 PRBool NS_SVG_TestFeature(const nsAString &fstr);
@@ -2659,42 +2699,72 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
   nsresult rv = WillAddOrRemoveChild(aKid, aIndex, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocument *document = GetCurrentDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
-  
-  rv = mAttrsAndChildren.InsertChildAt(aKid, aIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
+  return doInsertChildAt(aKid, aIndex, aNotify, this, GetCurrentDoc(),
+                         mAttrsAndChildren);
+}
 
-  rv = aKid->BindToTree(document, this, nsnull, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    mAttrsAndChildren.RemoveChildAt(aIndex);
-    aKid->UnbindFromTree();
-    return rv;
+
+static nsresult
+doInsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
+                nsIContent* aParent, nsIDocument* aDocument,
+                nsAttrAndChildArray& aChildArray)
+{
+  NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
+  NS_PRECONDITION(!aParent || aParent->GetCurrentDoc() == aDocument,
+                  "Incorrect aDocument");
+
+  mozAutoDocUpdate updateBatch(aDocument, UPDATE_CONTENT_MODEL, aNotify);
+  
+  // Note that SetRootContent already deals with binding, so if we plan to call
+  // it we shouldn't bind ourselves.
+  // XXXbz this doesn't put aKid in the right spot, really... We really need a
+  // better api for handling kids on documents.
+  if (!aParent && aKid->IsContentOfType(nsIContent::eELEMENT)) {
+    nsresult rv = aDocument->SetRootContent(aKid);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    nsresult rv = aChildArray.InsertChildAt(aKid, aIndex);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aKid->BindToTree(aDocument, aParent, nsnull, PR_TRUE);
+    if (NS_FAILED(rv)) {
+      aChildArray.RemoveChildAt(aIndex);
+      aKid->UnbindFromTree();
+      return rv;
+    }
   }
 
     // XXX this screws up ranges in XUL, no?  Need to figure out...
-  if (!IsContentOfType(eXUL)) {
-    nsRange::OwnerChildInserted(this, aIndex);
+  if (aParent && !aParent->IsContentOfType(nsIContent::eXUL)) {
+    nsRange::OwnerChildInserted(aParent, aIndex);
   }
-  // The kid may have removed us from the document, so recheck that we're still
-  // in the document before proceeding.  Also, the kid may have just removed
-  // itself, in which case we don't really want to fire ContentAppended or a
-  // mutation event.
+  
+  // The kid may have removed its parent from the document, so recheck that
+  // that's still in the document before proceeding.  Also, the kid may have
+  // just removed itself, in which case we don't really want to fire
+  // ContentAppended or a mutation event.
   // XXXbz What if the kid just moved us in the document?  Scripts suck.  We
   // really need to stop running them while we're in the middle of modifying
   // the DOM....
-  if (document && document == GetCurrentDoc() && aKid->GetParent() == this) {
+  if (aDocument && aKid->GetCurrentDoc() == aDocument &&
+      (!aParent || aKid->GetParent() == aParent)) {
     if (aNotify) {
-      if (aIndex == GetChildCount() - 1) {
-        document->ContentAppended(this, aIndex);
+      // Note that we always want to call ContentInserted when things are added
+      // as kids to documents
+      if (aParent && aIndex == aParent->GetChildCount() - 1) {
+        aDocument->ContentAppended(aParent, aIndex);
       } else {
-        document->ContentInserted(this, aKid, aIndex);
+        aDocument->ContentInserted(aParent, aKid, aIndex);
       }
     }
 
-    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
+    // XXXbz how come we're not firing mutation listeners for adding to
+    // documents?
+    if (aParent &&
+        nsGenericElement::HasMutationListeners(aParent,
+                                               NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED, aKid);
-      mutation.mRelatedNode = do_QueryInterface(this);
+      mutation.mRelatedNode = do_QueryInterface(aParent);
 
       nsEventStatus status = nsEventStatus_eIgnore;
       aKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
@@ -2758,33 +2828,133 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     nsresult rv = WillAddOrRemoveChild(oldKid, aIndex, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsIDocument *document = GetCurrentDoc();
-    mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
+    return doRemoveChildAt(aIndex, aNotify, oldKid, this, GetCurrentDoc(),
+                           mAttrsAndChildren);
+  }
 
-    PRBool hasListeners = 
-      HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED);
+  return NS_OK;
+}
 
-    if (hasListeners) {
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED, oldKid);
-      mutation.mRelatedNode = do_QueryInterface(this);
+// Note: A lot of methods like IndexOf(), GetChildCount(), etc, need to do more
+// than just look at the child array for some subclasses, so make sure to call
+// them instead of just messing with aChildArray
+struct nsContentOrDocument {
+  nsContentOrDocument(nsIContent* aContent, nsIDocument* aDocument) :
+    mContent(aContent), mDocument(aDocument)
+  {}
 
-      nsEventStatus status = nsEventStatus_eIgnore;
-      oldKid->HandleDOMEvent(nsnull, &mutation, nsnull,
-                             NS_EVENT_FLAG_INIT, &status);
+  PRInt32 IndexOf(nsIContent* aPossibleChild)
+  {
+    return mContent ? mContent->IndexOf(aPossibleChild) :
+      mDocument->IndexOf(aPossibleChild);
+  }
+
+  PRUint32 GetChildCount()
+  {
+    return mContent ? mContent->GetChildCount() :
+      mDocument->GetChildCount();
+  }
+
+  nsIContent* GetChildAt(PRUint32 aIndex)
+  {
+    return mContent ? mContent->GetChildAt(aIndex) :
+      mDocument->GetChildAt(aIndex);
+  }
+
+  nsIDocument* GetOwnerDoc()
+  {
+    return mContent ? mContent->GetOwnerDoc() : mDocument;
+  }
+
+  nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
+                         nsAttrAndChildArray& aChildArray)
+  {
+    // XXXbz can't quite use doInsertChildAt because InsertChildAt has this
+    // random subclass notification it now does... and because subclasses
+    // might be intercepting InsertChildAt and doing stuff.
+    return mContent ? mContent->InsertChildAt(aKid, aIndex, aNotify) :
+      doInsertChildAt(aKid, aIndex, aNotify, mContent, mDocument, aChildArray);
+  }
+
+  nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify,
+                         nsAttrAndChildArray& aChildArray)
+  {
+    // XXXbz can't quite use doRemoveChildAt because RemoveChildAt has this
+    // random subclass notification it now does... and because subclasses
+    // might be intercepting RemoveChildAt and doing stuff.
+    if (mContent) {
+      return mContent->RemoveChildAt(aIndex, aNotify);
     }
 
-    // Someone may have removed the kid while that event was processing...
-    if (!hasListeners ||
-        (oldKid->GetParent() == this && oldKid == GetChildAt(aIndex))) {
-      nsRange::OwnerChildRemoved(this, aIndex, oldKid);
+    nsIContent* kid = GetChildAt(aIndex);
+    if (kid) {
+      return doRemoveChildAt(aIndex, aNotify, kid, mContent, mDocument,
+                             aChildArray);
+    }
 
-      mAttrsAndChildren.RemoveChildAt(aIndex);
+    return NS_OK;
+  }
+  
+  nsIContent* mContent;
+  nsIDocument* mDocument;
+};
 
-      if (aNotify && document) {
-        document->ContentRemoved(this, oldKid, aIndex);
+
+static nsresult
+doRemoveChildAt(PRUint32 aIndex, PRBool aNotify, nsIContent* aKid,
+                nsIContent* aParent, nsIDocument* aDocument,
+                nsAttrAndChildArray& aChildArray)
+{
+  NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
+  NS_PRECONDITION(!aParent || aParent->GetCurrentDoc() == aDocument,
+                  "Incorrect aDocument");
+
+  nsContentOrDocument container(aParent, aDocument);
+  
+  NS_PRECONDITION(aKid && aKid->GetParent() == aParent &&
+                  aKid == container.GetChildAt(aIndex), "Bogus aKid");
+
+  mozAutoDocUpdate updateBatch(aDocument, UPDATE_CONTENT_MODEL, aNotify);
+
+  PRBool hasListeners = 
+    aParent &&
+    nsGenericElement::HasMutationListeners(aParent,
+                                           NS_EVENT_BITS_MUTATION_NODEREMOVED);
+
+  if (hasListeners) {
+    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED, aKid);
+    mutation.mRelatedNode = do_QueryInterface(aParent);
+
+      nsEventStatus status = nsEventStatus_eIgnore;
+      aKid->HandleDOMEvent(nsnull, &mutation, nsnull,
+                           NS_EVENT_FLAG_INIT, &status);
+  }
+
+  // Someone may have removed the kid while that event was processing...
+  if (!hasListeners ||
+      (aKid->GetParent() == aParent &&
+       aKid == container.GetChildAt(aIndex))) {
+    if (aParent) {
+      nsRange::OwnerChildRemoved(aParent, aIndex, aKid);
+    }
+
+    // Note that SetRootContent already deals with unbinding, so if we plan to
+    // call it we shouldn't unbind ourselves.  It also deals with removing the
+    // node from the child array, but not with notifying, unfortunately.  So we
+    // have to call ContentRemoved ourselves after setting the root content.
+    if (!aParent && aKid->IsContentOfType(nsIContent::eELEMENT)) {
+      aDocument->SetRootContent(nsnull);
+      if (aNotify) {
+        aDocument->ContentRemoved(aParent, aKid, aIndex);
+      }
+    } else {
+      aChildArray.RemoveChildAt(aIndex);
+
+      if (aNotify && aDocument) {
+        aDocument->ContentRemoved(aParent, aKid, aIndex);
       }
     
-      oldKid->UnbindFromTree();
+      aKid->UnbindFromTree();
     }
   }
 
@@ -2837,9 +3007,185 @@ NS_IMETHODIMP
 nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
                                nsIDOMNode **aReturn)
 {
-  if (!aReturn) {
-    return NS_ERROR_NULL_POINTER;
+  return doInsertBefore(aNewChild, aRefChild, this, GetCurrentDoc(),
+                        mAttrsAndChildren, aReturn);
+}
+
+NS_IMETHODIMP
+nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                               nsIDOMNode** aReturn)
+{
+  return doReplaceChild(aNewChild, aOldChild, this, GetOwnerDoc(),
+                        mAttrsAndChildren, aReturn);
+}
+
+// When replacing, aRefContent is the content being replaced; when
+// inserting it's the content before which we're inserting.  In the
+// latter case it may be null.
+static
+PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
+                        nsIContent* aParent, nsIDocument* aDocument,
+                        PRBool aIsReplace, nsIContent* aRefContent)
+{
+  NS_PRECONDITION(aNewChild, "Must have new child");
+  NS_PRECONDITION(!aIsReplace || aRefContent,
+                  "Must have ref content for replace");
+#ifdef DEBUG
+  PRUint16 debugNodeType = 0;
+  nsCOMPtr<nsIDOMNode> debugNode(do_QueryInterface(aNewChild));
+  nsresult debugRv = debugNode->GetNodeType(&debugNodeType);
+
+  NS_PRECONDITION(NS_SUCCEEDED(debugRv) && debugNodeType == aNewNodeType,
+                  "Bogus node type passed");
+#endif
+
+  // The allowed child nodes differ for documents and elements
+  switch (aNewNodeType) {
+  case nsIDOMNode::COMMENT_NODE :
+  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE :
+    // OK in both cases
+    return PR_TRUE;
+  case nsIDOMNode::TEXT_NODE :
+  case nsIDOMNode::CDATA_SECTION_NODE :
+  case nsIDOMNode::ENTITY_REFERENCE_NODE :
+    // Only allowed under elements
+    return aParent != nsnull;
+  case nsIDOMNode::ELEMENT_NODE :
+    {
+      if (aParent) {
+        // Always ok to have elements under other elements
+        return PR_TRUE;
+      }
+
+      nsIContent* rootContent = aDocument->GetRootContent();
+      if (rootContent) {
+        // Already have a documentElement, so this is only OK if we're
+        // replacing it.
+        return aIsReplace && rootContent == aRefContent;
+      }
+
+      // We don't have a documentElement yet.  Our one remaining constraint is
+      // that the documentElement must come after the doctype.
+      if (!aRefContent) {
+        // Appending is just fine.
+        return PR_TRUE;
+      }
+
+      // Now grovel for a doctype
+      nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDocument);
+      NS_ASSERTION(doc, "Shouldn't happen");
+      nsCOMPtr<nsIDOMDocumentType> docType;
+      doc->GetDoctype(getter_AddRefs(docType));
+      nsCOMPtr<nsIContent> docTypeContent = do_QueryInterface(docType);
+      
+      if (!docTypeContent) {
+        // It's all good.
+        return PR_TRUE;
+      }
+
+      PRInt32 doctypeIndex = aDocument->IndexOf(docTypeContent);
+      PRInt32 insertIndex = aDocument->IndexOf(aRefContent);
+
+      // Now we're OK in the following two cases only:
+      // 1) We're replacing something that's not before the doctype
+      // 2) We're inserting before something that comes after the doctype 
+      return aIsReplace ? (insertIndex >= doctypeIndex) :
+        insertIndex > doctypeIndex;
+    }
+  case nsIDOMNode::DOCUMENT_TYPE_NODE :
+    {
+      if (aParent) {
+        // no doctypes allowed under elements
+        return PR_FALSE;
+      }
+
+      nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDocument);
+      NS_ASSERTION(doc, "Shouldn't happen");
+      nsCOMPtr<nsIDOMDocumentType> docType;
+      doc->GetDoctype(getter_AddRefs(docType));
+      nsCOMPtr<nsIContent> docTypeContent = do_QueryInterface(docType);
+      if (docTypeContent) {
+        // Already have a doctype, so this is only OK if we're replacing it
+        return aIsReplace && docTypeContent == aRefContent;
+      }
+
+      // We don't have a doctype yet.  Our one remaining constraint is
+      // that the doctype must come before the documentElement.
+      nsIContent* rootContent = aDocument->GetRootContent();
+      if (!rootContent) {
+        // It's all good
+        return PR_TRUE;
+      }
+
+      if (!aRefContent) {
+        // Trying to append a doctype, but have a documentElement
+        return PR_FALSE;
+      }
+
+      PRInt32 rootIndex = aDocument->IndexOf(rootContent);
+      PRInt32 insertIndex = aDocument->IndexOf(aRefContent);
+
+      // Now we're OK if and only if insertIndex <= rootIndex.  Indeed, either
+      // we end up replacing aRefContent or we end up before it.  Either one is
+      // ok as long as aRefContent is not after rootContent.
+      return insertIndex <= rootIndex;
+    }
+  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE :
+    {
+      // Note that for now we only allow nodes inside document fragments if
+      // they're allowed inside elements.  If we ever change this to allow
+      // doctype nodes in document fragments, we'll need to update this code
+      if (aParent) {
+        // All good here
+        return PR_TRUE;
+      }
+
+      PRBool sawElement = PR_FALSE;
+      PRUint32 count = aNewChild->GetChildCount();
+      for (PRUint32 index = 0; index < count; ++index) {
+        nsIContent* childContent = aNewChild->GetChildAt(index);
+        NS_ASSERTION(childContent, "Something went wrong");
+        if (childContent->IsContentOfType(nsIContent::eELEMENT)) {
+          if (sawElement) {
+            // Can't put two elements into a document
+            return PR_FALSE;
+          }
+          sawElement = PR_TRUE;
+        }
+        // If we can put this content at the the right place, we might be ok;
+        // if not, we bail out.
+        nsCOMPtr<nsIDOMNode> childNode(do_QueryInterface(childContent));
+        PRUint16 type;
+        childNode->GetNodeType(&type);
+        if (!IsAllowedAsChild(childContent, type, aParent, aDocument,
+                              aIsReplace, aRefContent)) {
+          return PR_FALSE;
+        }
+      }
+
+      // Everything in the fragment checked out ok, so we can stick it in here
+      return PR_TRUE;
+    }
+  default:
+    /*
+     * aNewChild is of invalid type.
+     */
+    break;
   }
+
+  return PR_FALSE;
+}
+
+/* static */
+nsresult
+nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                                 nsIContent* aParent, nsIDocument* aDocument,
+                                 nsAttrAndChildArray& aChildArray,
+                                 nsIDOMNode** aReturn)
+{
+  NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
+  NS_PRECONDITION(!aParent || aParent->GetCurrentDoc() == aDocument,
+                  "Incorrect aDocument");
 
   *aReturn = nsnull;
 
@@ -2850,6 +3196,8 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
   nsCOMPtr<nsIContent> refContent;
   nsresult res = NS_OK;
   PRInt32 refPos = 0;
+
+  nsContentOrDocument container(aParent, aDocument);
 
   if (aRefChild) {
     refContent = do_QueryInterface(aRefChild, &res);
@@ -2862,13 +3210,19 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
 
-    refPos = IndexOf(refContent);
+    refPos = container.IndexOf(refContent);
 
     if (refPos < 0) {
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
   } else {
-    refPos = GetChildCount();
+    refPos = container.GetChildCount();
+  }
+
+  nsCOMPtr<nsIContent> newContent(do_QueryInterface(aNewChild, &res));
+
+  if (NS_FAILED(res)) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
   PRUint16 nodeType = 0;
@@ -2879,40 +3233,38 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
     return res;
   }
 
-  switch (nodeType) {
-  case nsIDOMNode::ELEMENT_NODE :
-  case nsIDOMNode::TEXT_NODE :
-  case nsIDOMNode::CDATA_SECTION_NODE :
-  case nsIDOMNode::ENTITY_REFERENCE_NODE :
-  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE :
-  case nsIDOMNode::COMMENT_NODE :
-  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE :
-    break;
-  default:
-    /*
-     * aNewChild is of invalid type.
-     */
+  if (!IsAllowedAsChild(newContent, nodeType, aParent, aDocument, PR_FALSE,
+                        refContent)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsCOMPtr<nsIContent> newContent(do_QueryInterface(aNewChild, &res));
+  nsIDocument* old_doc = newContent->GetOwnerDoc();
 
-  if (NS_FAILED(res)) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  // XXXbz The document code and content code have two totally different
+  // security checks here.  Why?  Because I'm afraid to change such things this
+  // close to 1.8.  But which should we do here, really?  Or both?  For example
+  // what should a caller with UniversalBrowserRead/Write/whatever be able to
+  // do, exactly?  Do we need to be more careful with documents because random
+  // callers _can_ get access to them?  That might be....
+  if (old_doc && old_doc != container.GetOwnerDoc()) {
+    if (aParent) {
+      if (!nsContentUtils::CanCallerAccess(aNewChild)) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
+    } else {
+      nsCOMPtr<nsIDOMNode> doc(do_QueryInterface(aDocument));
+      if (NS_FAILED(nsContentUtils::CheckSameOrigin(doc, aNewChild))) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
+    }
   }
-
-  nsCOMPtr<nsIDocument> old_doc = newContent->GetDocument();
-  if (old_doc && old_doc != GetDocument() &&
-      !nsContentUtils::CanCallerAccess(aNewChild)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
+  
   /*
-   * Make sure the new child is not "this" node or one of this nodes
+   * Make sure the new child is not aParent or one of aParent's
    * ancestors. Doing this check here should be safe even if newContent
    * is a document fragment.
    */
-  if (isSelfOrAncestor(this, newContent)) {
+  if (aParent && isSelfOrAncestor(aParent, newContent)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
@@ -2929,19 +3281,19 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
 
     PRUint32 count = newContent->GetChildCount();
 
-    PRUint32 old_count = GetChildCount();
+    PRUint32 old_count = container.GetChildCount();
 
-    PRBool do_notify = !!aRefChild;
+    PRBool do_notify = !!aRefChild || !aParent;
 
     // If do_notify is true, then we don't have to handle the notifications
     // ourselves...  Also, if count is 0 there will be no updates.  So we only
     // want an update batch to happen if count is nonzero and do_notify is not
     // true.
-    mozAutoDocUpdate updateBatch(GetDocument(), UPDATE_CONTENT_MODEL,
+    mozAutoDocUpdate updateBatch(aDocument, UPDATE_CONTENT_MODEL,
                                  count && !do_notify);
     
     /*
-     * Iterate through the fragments children, removing each from
+     * Iterate through the fragment's children, removing each from
      * the fragment and inserting it into the child list of its
      * new parent.
      */
@@ -2956,8 +3308,10 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
       // faster.
       childContent = newContent->GetChildAt(i);
 
+      // XXXbz how come no reparenting here?  That seems odd...
       // Insert the child and increment the insertion position
-      res = InsertChildAt(childContent, refPos++, do_notify);
+      res = container.InsertChildAt(childContent, refPos++, do_notify,
+                                    aChildArray);
 
       if (NS_FAILED(res)) {
         break;
@@ -2967,17 +3321,16 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
     if (NS_FAILED(res)) {
       // This should put the children that were moved out of the
       // document fragment back into the document fragment and remove
-      // them from the element they were intserted into.
+      // them from the element or document they were inserted into.
 
       doc_fragment->ReconnectChildren();
 
       return res;
     }
 
-    nsIDocument *doc = GetDocument();
-
-    if (count && !do_notify && doc) {
-      doc->ContentAppended(this, old_count);
+    if (count && !do_notify && aDocument) {
+      NS_ASSERTION(aParent, "Must have parent here!");
+      aDocument->ContentAppended(aParent, old_count);
     }
 
     doc_fragment->DropChildReferences();
@@ -2998,14 +3351,14 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
     if (oldParent) {
       nsCOMPtr<nsIDOMNode> tmpNode;
 
-      PRUint32 origChildCount = GetChildCount();
+      PRUint32 origChildCount = container.GetChildCount();
 
       /*
        * We don't care here if the return fails or not.
        */
       oldParent->RemoveChild(aNewChild, getter_AddRefs(tmpNode));
 
-      PRUint32 newChildCount = GetChildCount();
+      PRUint32 newChildCount = container.GetChildCount();
 
       /*
        * Check if our child count changed during the RemoveChild call, if
@@ -3020,7 +3373,7 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
            * previous siblings.
            */
 
-          if (refContent == GetChildAt(refPos - 1)) {
+          if (refContent == container.GetChildAt(refPos - 1)) {
             refPos--;
           }
         } else {
@@ -3033,11 +3386,12 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
     }
 
     if (!newContent->IsContentOfType(eXUL)) {
-      nsContentUtils::ReparentContentWrapper(newContent, this, GetDocument(),
+      nsContentUtils::ReparentContentWrapper(newContent, aParent,
+                                             container.GetOwnerDoc(),
                                              old_doc);
     }
 
-    res = InsertChildAt(newContent, refPos, PR_TRUE);
+    res = container.InsertChildAt(newContent, refPos, PR_TRUE, aChildArray);
 
     if (NS_FAILED(res)) {
       return res;
@@ -3050,13 +3404,16 @@ nsGenericElement::InsertBefore(nsIDOMNode *aNewChild, nsIDOMNode *aRefChild,
   return res;
 }
 
-NS_IMETHODIMP
-nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
-                               nsIDOMNode** aReturn)
+/* static */
+nsresult
+nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                                 nsIContent* aParent, nsIDocument* aDocument,
+                                 nsAttrAndChildArray& aChildArray,
+                                 nsIDOMNode** aReturn)
 {
-  if (!aReturn) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
+  NS_PRECONDITION(!aParent || aParent->GetCurrentDoc() == aDocument,
+                  "Incorrect aDocument");
 
   *aReturn = nsnull;
 
@@ -3069,14 +3426,16 @@ nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
 
   nsCOMPtr<nsIContent> oldContent = do_QueryInterface(aOldChild);
 
+  nsContentOrDocument container(aParent, aDocument);
+
   // if oldContent is null IndexOf will return < 0, which is what we want
   // since aOldChild couldn't be a child.
-  oldPos = IndexOf(oldContent);
+  oldPos = container.IndexOf(oldContent);
   if (oldPos < 0) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
 
-  nsCOMPtr<nsIContent> replacedChild = GetChildAt(oldPos);
+  nsCOMPtr<nsIContent> replacedChild = container.GetChildAt(oldPos);
 
   PRUint16 nodeType = 0;
 
@@ -3086,48 +3445,49 @@ nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
     return res;
   }
 
-  switch (nodeType) {
-  case nsIDOMNode::ELEMENT_NODE :
-  case nsIDOMNode::TEXT_NODE :
-  case nsIDOMNode::CDATA_SECTION_NODE :
-  case nsIDOMNode::ENTITY_REFERENCE_NODE :
-  case nsIDOMNode::PROCESSING_INSTRUCTION_NODE :
-  case nsIDOMNode::COMMENT_NODE :
-  case nsIDOMNode::DOCUMENT_FRAGMENT_NODE :
-    break;
-  default:
-    /*
-     * aNewChild is of invalid type.
-     */
-
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
   nsCOMPtr<nsIContent> newContent(do_QueryInterface(aNewChild, &res));
 
   if (NS_FAILED(res)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsIDocument* elemDoc = GetDocument();
+  if (!IsAllowedAsChild(newContent, nodeType, aParent, aDocument, PR_TRUE,
+                        oldContent)) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
 
-  nsCOMPtr<nsIDocument> old_doc = newContent->GetDocument();
-  if (old_doc && old_doc != elemDoc &&
-      !nsContentUtils::CanCallerAccess(aNewChild)) {
-    return NS_ERROR_DOM_SECURITY_ERR;
+  nsIDocument* old_doc = newContent->GetOwnerDoc();
+
+  // XXXbz The document code and content code have two totally different
+  // security checks here.  Why?  Because I'm afraid to change such things this
+  // close to 1.8.  But which should we do here, really?  Or both?  For example
+  // what should a caller with UniversalBrowserRead/Write/whatever be able to
+  // do, exactly?  Do we need to be more careful with documents because random
+  // callers _can_ get access to them?  That might be....
+  if (old_doc && old_doc != container.GetOwnerDoc()) {
+    if (aParent) {
+      if (!nsContentUtils::CanCallerAccess(aNewChild)) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
+    } else {
+      nsCOMPtr<nsIDOMNode> doc(do_QueryInterface(aDocument));
+      if (NS_FAILED(nsContentUtils::CheckSameOrigin(doc, aNewChild))) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
+    }
   }
 
   /*
-   * Make sure the new child is not "this" node or one of this nodes
+   * Make sure the new child is not aParent or one of aParent's
    * ancestors. Doing this check here should be safe even if newContent
    * is a document fragment.
    */
-  if (isSelfOrAncestor(this, newContent)) {
+  if (aParent && isSelfOrAncestor(aParent, newContent)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
   // We're ready to start inserting children, so let's start a batch
-  mozAutoDocUpdate updateBatch(elemDoc, UPDATE_CONTENT_MODEL, PR_TRUE);
+  mozAutoDocUpdate updateBatch(aDocument, UPDATE_CONTENT_MODEL, PR_TRUE);
 
   /*
    * Check if this is a document fragment. If it is, we need
@@ -3137,7 +3497,7 @@ nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
   if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
     nsCOMPtr<nsIContent> childContent;
     PRUint32 i, count = newContent->GetChildCount();
-    res = RemoveChildAt(oldPos, PR_TRUE);
+    res = container.RemoveChildAt(oldPos, PR_TRUE, aChildArray);
     NS_ENSURE_SUCCESS(res, res);
 
     /*
@@ -3152,8 +3512,12 @@ nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
       res = newContent->RemoveChildAt(0, PR_FALSE);
       NS_ENSURE_SUCCESS(res, res);
 
+      // XXXbz need a way to insert into document here....  Maybe it's time for
+      // nsIContentContainer?  ;)
+      // XXXbz how come no reparenting here?
       // Insert the child and increment the insertion position
-      res = InsertChildAt(childContent, oldPos++, PR_TRUE);
+      res = container.InsertChildAt(childContent, oldPos++, PR_TRUE,
+                                    aChildArray);
       NS_ENSURE_SUCCESS(res, res);
     }
   }
@@ -3169,7 +3533,7 @@ nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
      * new child is alleady a child of this node-- jst@citec.fi
      */
     if (oldParent) {
-      PRUint32 origChildCount = GetChildCount();
+      PRUint32 origChildCount = container.GetChildCount();
 
       /*
        * We don't care here if the return fails or not.
@@ -3177,7 +3541,7 @@ nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
       nsCOMPtr<nsIDOMNode> tmpNode;
       oldParent->RemoveChild(aNewChild, getter_AddRefs(tmpNode));
 
-      PRUint32 newChildCount = GetChildCount();
+      PRUint32 newChildCount = container.GetChildCount();
 
       /*
        * Check if our child count changed during the RemoveChild call, if
@@ -3189,7 +3553,7 @@ nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
          * Check if aOldChild is now at oldPos - 1, this will happend if
          * the new child was one of aOldChilds' previous siblings.
          */
-        nsIContent *tmpContent = GetChildAt(oldPos - 1);
+        nsIContent *tmpContent = container.GetChildAt(oldPos - 1);
 
         if (oldContent == tmpContent) {
           oldPos--;
@@ -3198,18 +3562,19 @@ nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
     }
 
     if (!newContent->IsContentOfType(eXUL)) {
-      nsContentUtils::ReparentContentWrapper(newContent, this, GetDocument(),
+      nsContentUtils::ReparentContentWrapper(newContent, aParent,
+                                             container.GetOwnerDoc(),
                                              old_doc);
     }
 
     // If we're replacing a child with itself the child
     // has already been removed from this element once we get here.
     if (aNewChild != aOldChild) {
-      res = RemoveChildAt(oldPos, PR_TRUE);
+      res = container.RemoveChildAt(oldPos, PR_TRUE, aChildArray);
       NS_ENSURE_SUCCESS(res, res);
     }
 
-    res = InsertChildAt(newContent, oldPos, PR_TRUE);
+    res = container.InsertChildAt(newContent, oldPos, PR_TRUE, aChildArray);
     NS_ENSURE_SUCCESS(res, res);
   }
 

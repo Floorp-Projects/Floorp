@@ -643,6 +643,41 @@ public:
   static PRBool isSelfOrAncestor(nsIContent *aNode,
                                  nsIContent *aPossibleAncestor);
 
+  /**
+   * Actual implementation of the DOM InsertBefore method.  Shared by
+   * nsDocument.  When called from nsDocument, aParent will be null.
+   *
+   * @param aNewChild The child to insert
+   * @param aRefChild The child to insert before
+   * @param aParent The parent to use for the new child
+   * @param aDocument The document to use for the new child.
+   *                  Must be non-null, if aParent is null and must match
+   *                  aParent->GetCurrentDoc() if aParent is not null.
+   * @param aChildArray The child array to work with
+   * @param aReturn [out] the child we insert
+   */
+  static nsresult doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
+                                 nsIContent* aParent, nsIDocument* aDocument,
+                                 nsAttrAndChildArray& aChildArray,
+                                 nsIDOMNode** aReturn);
+
+  /**
+   * Actual implementation of the DOM ReplaceChild method.  Shared by
+   * nsDocument.  When called from nsDocument, aParent will be null.
+   *
+   * @param aNewChild The child to replace with
+   * @param aOldChild The child to replace
+   * @param aParent The parent to use for the new child
+   * @param aDocument The document to use for the new child.
+   *                  Must be non-null if aParent is null and must match
+   *                  aParent->GetCurrentDoc() if aParent is not null.
+   * @param aChildArray The child array to work with
+   * @param aReturn [out] the child we insert
+   */
+  static nsresult doReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
+                                 nsIContent* aParent, nsIDocument* aDocument,
+                                 nsAttrAndChildArray& aChildArray,
+                                 nsIDOMNode** aReturn);
 
   static nsresult InitHashes();
 
