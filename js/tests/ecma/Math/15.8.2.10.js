@@ -53,9 +53,10 @@
 
 var SECTION = "15.8.2.10";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Math.log(x)";
 var BUGNUMBER = "77391";
+
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

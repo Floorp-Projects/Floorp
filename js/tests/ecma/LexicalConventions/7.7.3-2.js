@@ -60,9 +60,10 @@
 */
 var SECTION = "7.7.3-2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Numeric Literals";
 var BUGNUMBER="122884";
+
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

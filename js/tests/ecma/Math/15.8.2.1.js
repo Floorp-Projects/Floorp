@@ -50,9 +50,9 @@
 */
 var SECTION = "15.8.2.1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Math.abs()";
 var BUGNUMBER = "77391";
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

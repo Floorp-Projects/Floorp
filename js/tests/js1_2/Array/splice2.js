@@ -46,10 +46,10 @@
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
 var VERSION = 'no version';
-startTest();
 var TITLE = 'String:splice 2';
 var BUGNUMBER="123795";
 
+startTest();
 writeHeaderToLog('Executing script: splice2.js');
 writeHeaderToLog( SECTION + " "+ TITLE);
 

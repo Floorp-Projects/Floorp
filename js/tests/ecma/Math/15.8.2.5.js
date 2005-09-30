@@ -47,9 +47,10 @@
 */
 var SECTION = "15.8.2.5";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Math.atan2(x,y)";
 var BUGNUMBER="76111";
+
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

@@ -47,10 +47,10 @@ Date:               16 september 1997
 */
 var SECTION = "15.1.2.1-1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "eval(x)";
-
 var BUGNUMBER = "111199";
+
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

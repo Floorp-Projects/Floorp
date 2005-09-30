@@ -47,9 +47,9 @@
 
 var SECTION = "10.1.3-2";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "Variable Instantiation:  Function Declarations";
 var BUGNUMBER="299639";
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

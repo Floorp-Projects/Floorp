@@ -46,10 +46,10 @@
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
 var VERSION = 'no version';
-startTest();
 var TITLE = 'RegExp: .';
 var BUGNUMBER="123802";
 
+startTest();
 writeHeaderToLog('Executing script: control_characters.js');
 writeHeaderToLog( SECTION + " "+ TITLE);
 

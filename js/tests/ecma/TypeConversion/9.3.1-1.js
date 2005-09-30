@@ -57,9 +57,10 @@
 */
 var SECTION = "9.3.1-1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "ToNumber applied to the String type";
 var BUGNUMBER="77391";
+
+startTest();
 
 writeHeaderToLog( SECTION + " "+ TITLE);
 

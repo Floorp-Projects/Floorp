@@ -76,10 +76,10 @@
 
 var SECTION = "15.1.2.3-1";
 var VERSION = "ECMA_1";
-startTest();
 var TITLE   = "parseFloat(string)";
 var BUGNUMBER= "77391";
 
+startTest();
 writeHeaderToLog( SECTION + " "+ TITLE);
 
 new TestCase( SECTION, "parseFloat.length",     1,              parseFloat.length );

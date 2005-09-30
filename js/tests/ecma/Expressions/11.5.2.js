@@ -70,8 +70,8 @@
 */
     var SECTION = "11.5.2";
     var VERSION = "ECMA_1";
-    startTest();
     var BUGNUMBER="111202";
+    startTest();
 
     writeHeaderToLog( SECTION + " Applying the / operator");
 

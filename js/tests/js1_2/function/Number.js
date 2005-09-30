@@ -46,10 +46,10 @@
 
 var SECTION = 'As described in Netscape doc "Whats new in JavaScript 1.2"';
 var VERSION = 'no version';
-startTest();
 var TITLE = 'functions: Number';
 var BUGNUMBER="123435";
 
+startTest();
 writeHeaderToLog('Executing script: Number.js');
 writeHeaderToLog( SECTION + " "+ TITLE);
 
