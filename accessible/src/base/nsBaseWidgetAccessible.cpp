@@ -314,3 +314,14 @@ NS_IMETHODIMP nsLinkableAccessible::Shutdown()
   return nsAccessibleWrap::Shutdown();
 }
 
+//---------------------
+// nsEnumRoleAccessible
+//---------------------
+
+nsEnumRoleAccessible::nsEnumRoleAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell, PRUint32 aRole) :
+  nsAccessibleWrap(aNode, aShell),
+  mRole(aRole)
+{
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsEnumRoleAccessible, nsAccessible)

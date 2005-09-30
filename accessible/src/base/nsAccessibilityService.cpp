@@ -467,7 +467,6 @@ nsAccessibilityService::CreateHTMLButtonAccessibleXBL(nsIDOMNode *aNode, nsIAcce
 }
 
 PRBool nsAccessibilityService::GetRole(nsIContent *aContent,
-                                       nsIWeakReference *aWeakShell,
                                        nsAString& aRole)
 {
   return NS_CONTENT_ATTR_HAS_VALUE ==
@@ -1751,7 +1750,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // Please leave this in for now, it's a convenient debugging method
   nsAutoString name;
   aNode->GetLocalName(name);
-  if (name.LowerCaseEqualsLiteral("ol")) 
+  if (name.LowerCaseEqualsLiteral("wizardpage")) 
     printf("## aaronl debugging tag name\n");
 
   nsAutoString attrib;
@@ -1875,13 +1874,26 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // This allows them to say what kind of accessible to create
     // Non-HTML elements must have an nsIAccessibleProvider, tabindex
     // or XHTML2 role or they're not in the accessible tree.
+    nsAutoString role;
+    if (GetRole(content, role) &&
+        StringEndsWith(role, NS_LITERAL_STRING(":presentation"))) {
+      return NS_ERROR_FAILURE;
+    }
     nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
     if (accProv) {
       accProv->GetAccessible(getter_AddRefs(newAcc));
     }
-    else if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex) ||
-             content->HasAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role)) {
+    else if (!role.IsEmpty() ||
+             content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex)) {
       newAcc = new nsAccessibleWrap(aNode, aWeakShell); // Create generic accessible
+    }
+    else if (content->GetNameSpaceID() == kNameSpaceID_SVG &&
+             content->Tag() == nsAccessibilityAtoms::svg) {
+      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_DIAGRAM);
+    }
+    else if (content->GetNameSpaceID() == kNameSpaceID_MathML &&
+             content->Tag() == nsAccessibilityAtoms::math) {
+      newAcc = new nsEnumRoleAccessible(aNode, aWeakShell, nsIAccessible::ROLE_EQUATION);
     }
     else {
       return NS_ERROR_FAILURE;
@@ -1890,7 +1902,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   else {
     // --- Try creating accessible for HTML ---
     nsAutoString role;
-    GetRole(content, aWeakShell, role);
+    GetRole(content, role);
     if (!content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::tabindex)) {
       // If no tabindex, check for a Presentation role, which 
       // tells us not to expose this to the accessibility hierarchy.
@@ -1912,7 +1924,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           nsAutoString tableRole;
           while ((tableContent = tableContent->GetParent()) != nsnull) {
             if (tableContent->Tag() == nsAccessibilityAtoms::table) {
-              if (GetRole(tableContent, aWeakShell, tableRole) &&
+              if (GetRole(tableContent, tableRole) &&
                   StringEndsWith(tableRole, NS_LITERAL_STRING(":presentation"),
                   nsCaseInsensitiveStringComparator())) {
                 // Table that we're a descendant of is presentational
