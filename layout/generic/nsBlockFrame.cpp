@@ -75,6 +75,7 @@
 #include "nsLayoutErrors.h"
 #include "nsAutoPtr.h"
 #include "nsIServiceManager.h"
+#include "nsIScrollableFrame.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -610,13 +611,23 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
       // heck did it end up wrapping this block frame?
       NS_ASSERTION(aLastRS->frame->GetStyleDisplay()->IsBlockLevel(),
                    "Wrapping frame should be block-level");
+      // Scrollbars need to be specifically excluded, if present, because they are outside the
+      // padding-edge. We need better APIs for getting the various boxes from a frame.
+      nsIScrollableFrame* scrollFrame;
+      CallQueryInterface(aLastRS->frame, &scrollFrame);
+      nsMargin scrollbars(0,0,0,0);
+      if (scrollFrame) {
+        scrollbars = scrollFrame->GetActualScrollbarSizes();
+      }
       // We found a reflow state for the outermost wrapping frame, so use
       // its computed metrics if available
       if (aLastRS->mComputedWidth != NS_UNCONSTRAINEDSIZE) {
-        cbSize.width = aLastRS->mComputedWidth + aLastRS->mComputedPadding.LeftRight();
+        cbSize.width = PR_MAX(0,
+          aLastRS->mComputedWidth + aLastRS->mComputedPadding.LeftRight() - scrollbars.LeftRight());
       }
       if (aLastRS->mComputedHeight != NS_UNCONSTRAINEDSIZE) {
-        cbSize.height = aLastRS->mComputedHeight + aLastRS->mComputedPadding.TopBottom();
+        cbSize.height = PR_MAX(0,
+          aLastRS->mComputedHeight + aLastRS->mComputedPadding.TopBottom() - scrollbars.TopBottom());
       }
     }
   }
