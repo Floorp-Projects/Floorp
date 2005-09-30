@@ -105,8 +105,12 @@ nsFileControlFrame::~nsFileControlFrame()
 {
   // remove ourself as a listener of the button (bug 40533)
   if (mBrowse) {
-    nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mBrowse));
-    reciever->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mBrowse));
+    receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
+  }
+  if (mTextContent) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mTextContent));
+    receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
   }
 
   if (mCachedState) {
@@ -186,22 +190,27 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
   if (mTextContent) {
     mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
-    nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
-    if (fileContent && textControl) {
-      // Initialize value when we create the content in case the value was set
-      // before we got here
-      nsAutoString value;
-      nsAutoString accessKey;
-      fileContent->GetValue(value);
-      textControl->SetValue(value);
 
-      PRInt32 tabIndex;
-      fileContent->GetTabIndex(&tabIndex);
-      textControl->SetTabIndex(tabIndex);
-      fileContent->GetAccessKey(accessKey);
-      textControl->SetAccessKey(accessKey);
+    nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
+    if (textControl) {
+      if (fileContent) {
+        // Initialize value when we create the content in case the value was set
+        // before we got here
+        nsAutoString value;
+        fileContent->GetValue(value);
+        textControl->SetValue(value);
+      }
+      
+      textControl->SetTabIndex(-1);
+      textControl->SetDisabled(PR_TRUE);
+      textControl->SetReadOnly(PR_TRUE);
     }
+
     aChildList.AppendElement(mTextContent);
+
+    // register as an event listener of the textbox to open file dialog on mouse click
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mTextContent));
+    receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
   }
 
   // Create the browse button
@@ -214,6 +223,10 @@ nsFileControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     nsCOMPtr<nsIDOMHTMLInputElement> browseControl = do_QueryInterface(mBrowse);
     if (fileContent && browseControl) {
       PRInt32 tabIndex;
+      nsAutoString accessKey;
+      
+      fileContent->GetAccessKey(accessKey);
+      browseControl->SetAccessKey(accessKey);
       fileContent->GetTabIndex(&tabIndex);
       browseControl->SetTabIndex(tabIndex);
     }
