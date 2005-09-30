@@ -297,7 +297,7 @@ function eventHandlerMenu(e) {
 	  var tempElement=ruleElement.getAttribute("accessfocus");
         if(tempElement=="#tabContainer") { 
 		if(ruleElement.tabContainer) {
-			ruleElement.mTabContainer.childNodes[0].focus();
+			ruleElement.selectedTab.focus();
 		}
 	  } else { 
 		  document.getElementById(tempElement).focus();
