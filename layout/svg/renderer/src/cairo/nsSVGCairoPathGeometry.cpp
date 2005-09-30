@@ -296,6 +296,18 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
     return NS_OK;
   }
 
+  PRUint16 shapeMode;
+  mSource->GetShapeRendering(&shapeMode);
+  switch (shapeMode) {
+  case nsISVGPathGeometrySource::SHAPE_RENDERING_OPTIMIZESPEED:
+  case nsISVGPathGeometrySource::SHAPE_RENDERING_CRISPEDGES:
+    cairo_set_antialias(ctx, CAIRO_ANTIALIAS_NONE);
+    break;
+  default:
+    cairo_set_antialias(ctx, CAIRO_ANTIALIAS_DEFAULT);
+    break;
+  }
+
   PRUint16 strokeType, fillType;
   PRUint16 strokeServerType = 0;
 
