@@ -1033,6 +1033,12 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
         if ((dpolicy == mDefaultPolicy) && aCachedClassPolicy)
             *aCachedClassPolicy = cpolicy;
     }
+
+    // We look for a PropertyPolicy in the following places:
+    // 1)  The ClassPolicy for our class we got from our DomainPolicy
+    // 2)  The mWildcardPolicy of our DomainPolicy
+    // 3)  The ClassPolicy for our class we got from mDefaultPolicy
+    // 4)  The mWildcardPolicy of our mDefaultPolicy
     PropertyPolicy* ppolicy = nsnull;
     if (cpolicy != NO_POLICY_FOR_CLASS)
     {
@@ -1041,38 +1047,47 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
                                                       (void*)aProperty,
                                                       PL_DHASH_LOOKUP));
     }
-    else
-    {
-        // If there's no per-domain policy and no default policy, we're done
-        if (dpolicy == mDefaultPolicy)
-            return NS_OK;
 
-        // This class is not present in the domain policy, check its wildcard policy
-        if (dpolicy->mWildcardPolicy)
+    // If there is no class policy for this property, and we have a wildcard
+    // policy, try that.
+    if (dpolicy->mWildcardPolicy &&
+        (!ppolicy || PL_DHASH_ENTRY_IS_FREE(ppolicy)))
+    {
+        ppolicy =
+            NS_STATIC_CAST(PropertyPolicy*,
+                           PL_DHashTableOperate(dpolicy->mWildcardPolicy->mPolicy,
+                                                (void*)aProperty,
+                                                PL_DHASH_LOOKUP));
+    }
+
+    // If dpolicy is not the defauly policy and there's no class or wildcard
+    // policy for this property, check the default policy for this class and
+    // the default wildcard policy
+    if (dpolicy != mDefaultPolicy &&
+        (!ppolicy || PL_DHASH_ENTRY_IS_FREE(ppolicy)))
+    {
+        cpolicy = NS_STATIC_CAST(ClassPolicy*,
+                                 PL_DHashTableOperate(mDefaultPolicy,
+                                                      aClassName,
+                                                      PL_DHASH_LOOKUP));
+
+        if (PL_DHASH_ENTRY_IS_BUSY(cpolicy))
+        {
+            ppolicy =
+                NS_STATIC_CAST(PropertyPolicy*,
+                               PL_DHashTableOperate(cpolicy->mPolicy,
+                                                    (void*)aProperty,
+                                                    PL_DHASH_LOOKUP));
+        }
+
+        if ((!ppolicy || PL_DHASH_ENTRY_IS_FREE(ppolicy)) &&
+            mDefaultPolicy->mWildcardPolicy)
         {
             ppolicy =
               NS_STATIC_CAST(PropertyPolicy*,
-                             PL_DHashTableOperate(dpolicy->mWildcardPolicy->mPolicy,
+                             PL_DHashTableOperate(mDefaultPolicy->mWildcardPolicy->mPolicy,
                                                   (void*)aProperty,
                                                   PL_DHASH_LOOKUP));
-        }
-
-        // If there's no wildcard policy, check the default policy for this class
-        if (!ppolicy || PL_DHASH_ENTRY_IS_FREE(ppolicy))
-        {
-            cpolicy = NS_STATIC_CAST(ClassPolicy*,
-                                     PL_DHashTableOperate(mDefaultPolicy,
-                                                          aClassName,
-                                                          PL_DHASH_LOOKUP));
-
-            if (PL_DHASH_ENTRY_IS_BUSY(cpolicy))
-            {
-                ppolicy =
-                  NS_STATIC_CAST(PropertyPolicy*,
-                                 PL_DHashTableOperate(cpolicy->mPolicy,
-                                                      (void*)aProperty,
-                                                      PL_DHASH_LOOKUP));
-            }
         }
     }
 
