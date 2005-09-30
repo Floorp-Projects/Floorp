@@ -47,8 +47,8 @@
 #define TIMER_INTERVAL 0.2
 
 static float sProgressVal;  // between 0 and 100
-static BOOL  sQuit = FALSE;
-
+static BOOL sQuit = FALSE;
+static StringTable sLabels;
 static const char *sProgramPath;
 
 @interface UpdaterUI : NSObject
@@ -65,14 +65,8 @@ static const char *sProgramPath;
   NSWindow *w = [progressBar window];
   [w center];
   
-  // localize strings, don't worry if it fails because nib has default text
-  char path[PATH_MAX];
-  snprintf(path, sizeof(path), "%s.ini", sProgramPath);
-  StringTable strings;
-  if (ReadStrings(path, &strings) == OK) {
-    [w setTitle:[NSString stringWithUTF8String:strings.title]];
-    [progressTextField setStringValue:[NSString stringWithUTF8String:strings.info]];
-  }
+  [w setTitle:[NSString stringWithUTF8String:sLabels.title]];
+  [progressTextField setStringValue:[NSString stringWithUTF8String:sLabels.info]];
   
   [progressBar setIndeterminate:NO];
   [progressBar setDoubleValue:0.0];
@@ -133,6 +127,11 @@ ShowProgressUI()
   
   if (sQuit || sProgressVal > 50.0f)
     return 0;
+
+  char path[PATH_MAX];
+  snprintf(path, sizeof(path), "%s.ini", sProgramPath);
+  if (ReadStrings(path, &sLabels) != OK)
+    return -1;
   
   [NSApplication sharedApplication];
   [NSBundle loadNibNamed:@"MainMenu" owner:NSApp];
