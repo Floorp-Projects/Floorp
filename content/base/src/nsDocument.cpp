@@ -1198,7 +1198,7 @@ nsDocument::GetLastModified(nsAString& aLastModified)
   } else {
     // If we for whatever reason failed to find the last modified time
     // (or even the current time), fall back to what NS4.x returned.
-    CopyASCIItoUCS2(NS_LITERAL_CSTRING("January 1, 1970 GMT"), aLastModified);
+    aLastModified.Assign(NS_LITERAL_STRING("01/01/1970 00:00:00"));
   }
 
   return NS_OK;
@@ -4726,10 +4726,12 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
     rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"),
                                         tmp);
 
-    if (NS_FAILED(rv)) {
-      mLastModified.Truncate();
-    } else {
-      CopyASCIItoUTF16(tmp, mLastModified);
+    if (NS_SUCCEEDED(rv)) {
+      PRTime time;
+      PRStatus st = PR_ParseTimeString(tmp.get(), PR_TRUE, &time);
+      if (st == PR_SUCCESS) {
+        modDate = time;
+      }
     }
 
     // The misspelled key 'referer' is as per the HTTP spec
@@ -4790,29 +4792,24 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
     }
   }
 
-  if (mLastModified.IsEmpty() && LL_IS_ZERO(modDate)) {
+  if (LL_IS_ZERO(modDate)) {
     // We got nothing from our attempt to ask nsIFileChannel and
     // nsIHttpChannel for the last modified time. Return the current
     // time.
     modDate = PR_Now();
   }
 
+  mLastModified.Truncate();
   if (LL_NE(modDate, LL_ZERO)) {
     PRExplodedTime prtime;
     PR_ExplodeTime(modDate, PR_LocalTimeParameters, &prtime);
-
-    nsCOMPtr<nsIDateTimeFormat> dateFormatter =
-                                  do_CreateInstance(kDateTimeFormatCID);
-    if (!dateFormatter)
-      return;
-
-    rv = dateFormatter->FormatPRExplodedTime(nsnull /* nsILocale* locale */,
-                                             kDateFormatLong,
-                                             kTimeFormatSeconds,
-                                             &prtime,
-                                             mLastModified);
-    if (NS_FAILED(rv))
-      mLastModified.Truncate();
+    // "MM/DD/YYYY hh:mm:ss"
+    char formatedTime[20];
+    if (sprintf(formatedTime, "%02d/%02d/%04d %02d:%02d:%02d",
+                prtime.tm_month + 1, prtime.tm_mday, prtime.tm_year,
+                prtime.tm_hour     ,  prtime.tm_min,  prtime.tm_sec)) {
+      CopyASCIItoUTF16(nsDependentCString(formatedTime), mLastModified);
+    }
   }
 }
 
