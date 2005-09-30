@@ -57,6 +57,9 @@
 #include "nsIAuthPrompt.h"
 #include "nsIWindowMediator.h"
 #include "nsIXULBrowserWindow.h"
+#include "nsIPrincipal.h"
+#include "nsIURIFixup.h"
+#include "nsCDefaultURIFixup.h"
 
 // Needed for nsIDocument::FlushPendingNotifications(...)
 #include "nsIDOMDocument.h"
@@ -600,6 +603,58 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
   }
   else
     title.Assign(mWindowTitleModifier); // Title will just be plain "Mozilla"
+
+  //
+  // if there is no location bar we modify the title to display at least
+  // the scheme and host (if any) as an anti-spoofing measure.
+  //
+  nsCOMPtr<nsIDOMElement> docShellElement;
+  mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
+
+  if (docShellElement) {
+    nsAutoString chromeString;
+    docShellElement->GetAttribute(NS_LITERAL_STRING("chromehidden"), chromeString);
+    if (chromeString.Find(NS_LITERAL_STRING("location")) != kNotFound) {
+      //
+      // location bar is turned off, find the browser location
+      //
+      // use the document's nsPrincipal to find the true owner
+      // in case of javascript: or data: documents
+      //
+      nsCOMPtr<nsIDocShellTreeItem> dsitem;
+      GetPrimaryContentShell(getter_AddRefs(dsitem));
+      nsCOMPtr<nsIDOMDocument> domdoc(do_GetInterface(dsitem));
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
+      if (doc) {
+        nsCOMPtr<nsIURI> uri;
+        nsIPrincipal* principal = doc->GetPrincipal();
+        if (principal) {
+          principal->GetURI(getter_AddRefs(uri));
+          if (uri) {
+            //
+            // remove any user:pass information
+            //
+            nsCOMPtr<nsIURIFixup> fixup(do_GetService(NS_URIFIXUP_CONTRACTID));
+            if (fixup) {
+              nsCOMPtr<nsIURI> tmpuri;
+              nsresult rv = fixup->CreateExposableURI(uri,getter_AddRefs(tmpuri));
+              if (NS_SUCCEEDED(rv) && tmpuri) {
+                nsCAutoString prepath;
+                tmpuri->GetPrePath(prepath);
+                if (!prepath.IsEmpty()) {
+                  //
+                  // We have a scheme/host, update the title
+                  //
+                  title.Insert(NS_ConvertUTF8toUTF16(prepath) +
+                               mTitleSeparator, 0);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   return mXULWindow->SetTitle(title.get());
 }

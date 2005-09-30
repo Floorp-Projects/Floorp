@@ -495,15 +495,31 @@
           <![CDATA[
             var newTitle = "";
             var docTitle;
+            var docElement = this.ownerDocument.documentElement;
+            var sep = docElement.getAttribute("titlemenuseparator");
+
             if (this.docShell.contentViewer)
               docTitle = this.contentTitle;
 
             if (docTitle) {
-              newTitle += this.ownerDocument.documentElement.getAttribute("titlepreface");
+              newTitle += docElement.getAttribute("titlepreface");
               newTitle += docTitle;
-              newTitle += this.ownerDocument.documentElement.getAttribute("titlemenuseparator");
+              newTitle += sep;
             }
-            newTitle += this.ownerDocument.documentElement.getAttribute("titlemodifier");
+            newTitle += docElement.getAttribute("titlemodifier");
+
+            // If location bar is hidden and the URL type supports a host,
+            // add the scheme and host to the title to prevent spoofing.
+            // XXX https://bugzilla.mozilla.org/show_bug.cgi?id=22183#c239
+            try {
+              if (docElement.getAttribute("chromehidden").indexOf("location") != -1) {
+                var host = this.mURIFixup.createExposableURI(
+                             this.mCurrentBrowser.currentURI).prePath;
+                if (host)
+                  newTitle = host + sep + newTitle;
+              }
+            } catch (e) {}
+
             this.ownerDocument.title = newTitle;
           ]]>
         </body>
