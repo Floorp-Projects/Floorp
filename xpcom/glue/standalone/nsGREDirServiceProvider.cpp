@@ -288,7 +288,6 @@ GRE_GetXPCOMPath()
         
     if (statResult != -1) {
       //found our xpcom lib in the current process directory
-      buffer[pathlen] = '\0';
       strcpy(sXPCOMPath, buffer);
       return sXPCOMPath;
     }
