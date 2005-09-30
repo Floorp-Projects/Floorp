@@ -67,7 +67,7 @@ nsAbAutoCompleteSession::~nsAbAutoCompleteSession()
 {
 }
 
-PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCompleteResults* results)
+PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, PRInt32 aPopularityIndex, nsIAutoCompleteResults* results)
 {
     nsresult rv;
 
@@ -92,11 +92,27 @@ PRBool nsAbAutoCompleteSession::ItsADuplicate(PRUnichar* fullAddrStr, nsIAutoCom
                     if (NS_SUCCEEDED(rv))
                     {
                         rv = resultItem->GetValue(valueStr);
-                        if (NS_SUCCEEDED(rv) && !valueStr.IsEmpty())
+                        if (NS_SUCCEEDED(rv) && !valueStr.IsEmpty() 
+                            && nsDependentString(fullAddrStr).Equals(valueStr, nsCaseInsensitiveStringComparator()))
                         {
-                          if (nsDependentString(fullAddrStr).Equals(valueStr,
-                                                                    nsCaseInsensitiveStringComparator()))
-                            return PR_TRUE;
+                          // ok, we have a duplicate, but before we ignore the dupe, check the popularity index
+                          // and use the card that is the most popular so it gets sorted correctly
+                          nsCOMPtr<nsISupports> currentItemParams;
+                          rv = resultItem->GetParam(getter_AddRefs(currentItemParams));
+                          if (NS_SUCCEEDED(rv))
+                          {
+                            nsAbAutoCompleteParam *param = (nsAbAutoCompleteParam *)(void *)currentItemParams;
+                            if (aPopularityIndex > param->mPopularityIndex)
+                            {
+                              // remove the current autocomplete result, and return false so our dupe
+                              // gets added in its place.
+                              array->RemoveElement(item);
+                              break; 
+                            }
+                          }
+
+                          // it's a dupe, ignore it.
+                          return PR_TRUE;
                         }
                     }
                 }
@@ -183,7 +199,7 @@ nsAbAutoCompleteSession::AddToResult(const PRUnichar* pNickNameStr,
     }
   }
     
-  if (fullAddrStr && ! ItsADuplicate(fullAddrStr, results))
+  if (fullAddrStr && ! ItsADuplicate(fullAddrStr, aPopularityIndex, results))
   {    
     nsCOMPtr<nsIAutoCompleteItem> newItem = do_CreateInstance(NS_AUTOCOMPLETEITEM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
