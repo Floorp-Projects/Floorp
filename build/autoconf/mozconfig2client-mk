@@ -58,6 +58,10 @@ ac_add_options() {
   echo "# $* is used by configure (not client.mk)" >> $tmp_file
 }
 
+ac_add_app_options() {
+  echo "# $* is used by configure (not client.mk)" >> $tmp_file
+}
+
 mk_add_options() {
   for _opt
   do
