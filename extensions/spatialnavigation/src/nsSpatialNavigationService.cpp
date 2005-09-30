@@ -35,7 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSpatialNavigationPrivate.h"
-#include <windows.h>
 
 nsSpatialNavigationService::nsSpatialNavigationService()  
 {
