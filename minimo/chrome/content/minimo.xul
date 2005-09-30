@@ -134,7 +134,7 @@
     
     <toolbar id="toolbar-rss" 
                                accessfocus="rss-close"
-                               accessnextrule="nav-bar" 
+                               accessnextrule="content" 
                                accessprevrule="toolbar-view" 
                                flex="1"
                                collapsed="true" >
@@ -168,6 +168,7 @@
                     src="about:blank"
                     flex="1" 
                     autocompletepopup="PopupAutoComplete"
+                    accessfocus="#tabContainer" 
                     onnewtab="BrowserOpenTab()"/>
       </hbox>
     </hbox>
