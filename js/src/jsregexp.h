@@ -78,8 +78,8 @@ typedef struct RECharSet {
     union {
         uint8       *bits;
         struct {
-            uint16  startIndex;
-            uint16  length;
+            size_t  startIndex;
+            size_t  length;
         } src;
     } u;
 } RECharSet;
@@ -102,8 +102,8 @@ struct JSRegExp {
     uint16       flags;         /* flags, see jsapi.h's JSREG_* defines */
     uint16       cloneIndex;    /* index in fp->vars or funobj->slots of
                                    cloned regexp object */
-    uint16       parenCount;    /* number of parenthesized submatches */
-    uint16       classCount;    /* count [...] bitmaps */
+    size_t       parenCount;    /* number of parenthesized submatches */
+    size_t       classCount;    /* count [...] bitmaps */
     RECharSet    *classList;    /* list of [...] bitmaps */
     JSString     *source;       /* locked source string, sans // */
     jsbytecode   program[1];    /* regular expression bytecode */
