@@ -42,7 +42,8 @@
         minwidth="40em"
         title="&xforms.bindingdialog.title;"
         buttons="accept"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="document.getElementById('XFormsBindingDialog').getButton('accept').focus();">
 
   <hbox flex="1">
     <hbox align="start">
@@ -53,9 +54,9 @@
       <description class="header descr1">
         &xforms.bindingdialog.description1;
       </description>
-      <description class="descr2">
+      <label class="descr2 text-link" onclick="open('chrome://global/content/console.xul', 'global:console', 'menubar=no,resizable=yes')">
         &xforms.bindingdialog.description2;
-      </description>
+      </label>
     </vbox>
   </hbox>
 </dialog>
