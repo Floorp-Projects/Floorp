@@ -144,7 +144,7 @@ protected:
   float                             mPreviousTranslate_x;
   float                             mPreviousTranslate_y;
   float                             mPreviousScale;
-  PRBool                            mZooming;
+  PRBool                            mDispatchEvent;
 
   PRInt32 mRedrawSuspendCount;
 };
@@ -317,7 +317,7 @@ nsSVGSVGElement::Init()
 
   // initialise "Previous" values
   RecordCurrentScaleTranslate();
-  mZooming = PR_FALSE;
+  mDispatchEvent = PR_TRUE;
 
   return rv;
 }
@@ -495,10 +495,20 @@ nsSVGSVGElement::GetCurrentScale(float *aCurrentScale)
   return mCurrentScale->GetValue(aCurrentScale);
 }
 
+#define CURRENT_SCALE_MAX 16.0f
+#define CURRENT_SCALE_MIN 0.0625f
+
 NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentScale(float aCurrentScale)
 {
+  // Prevent bizarre behaviour and maxing out of CPU and memory by clamping
+  if (aCurrentScale < CURRENT_SCALE_MIN)
+    aCurrentScale = CURRENT_SCALE_MIN;
+  else if (aCurrentScale > CURRENT_SCALE_MAX)
+    aCurrentScale = CURRENT_SCALE_MAX;
+
   return mCurrentScale->SetValue(aCurrentScale);
+
   // We have to dispatch the required SVGZoom event from DidModifySVGObservable
   // since dispatching it here is too late (i.e. after repaint)
 }
@@ -1276,11 +1286,11 @@ NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentScaleTranslate(float s, float x, float y)
 {
   RecordCurrentScaleTranslate();
-  mZooming = PR_TRUE;  // prevent event dispatch by the following setters
-  mCurrentScale->SetValue(s);
+  mDispatchEvent = PR_FALSE;
+  SetCurrentScale(s);  // clamps! don't call mCurrentScale->SetValue() directly
   mCurrentTranslate->SetX(x);
   mCurrentTranslate->SetY(y);
-  mZooming = PR_FALSE;
+  mDispatchEvent = PR_TRUE;
 
   // now dispatch an SVGZoom event if we are the root element
   nsIDocument* doc = GetCurrentDoc();
@@ -1302,10 +1312,10 @@ NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentTranslate(float x, float y)
 {
   RecordCurrentScaleTranslate();
-  mZooming = PR_TRUE;  // prevent event dispatch by the following setters
+  mDispatchEvent = PR_FALSE;
   mCurrentTranslate->SetX(x);
   mCurrentTranslate->SetY(y);
-  mZooming = PR_FALSE;
+  mDispatchEvent = PR_TRUE;
 
   // now dispatch an SVGScroll event if we are the root element
   nsIDocument* doc = GetCurrentDoc();
@@ -1386,7 +1396,7 @@ nsSVGSVGElement::WillModifySVGObservable(nsISVGValue* observable,
   printf("viewport/viewbox/preserveAspectRatio will be changed\n");
 #endif
 
-  if (!mZooming) {
+  if (mDispatchEvent) {
     // Modification isn't due to calling SetCurrent[Scale]Translate, so if
     // currentScale or currentTranslate is about to change we must record their
     // current values.
@@ -1419,7 +1429,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
   // dispatch an SVGZoom or SVGScroll DOM event before repainting
   nsCOMPtr<nsIDOMSVGNumber> n = do_QueryInterface(observable);
   if (n && n==mCurrentScale) {
-    if (!mZooming &&
+    if (mDispatchEvent &&
         doc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
       nsEventStatus status = nsEventStatus_eIgnore;
       nsGUIEvent event(PR_TRUE, NS_SVG_ZOOM, 0);
@@ -1433,7 +1443,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
   else {
     nsCOMPtr<nsIDOMSVGPoint> p = do_QueryInterface(observable);
     if (p && p==mCurrentTranslate) {
-      if (!mZooming &&
+      if (mDispatchEvent &&
           doc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
         nsEventStatus status = nsEventStatus_eIgnore;
         nsEvent event(PR_TRUE, NS_SVG_SCROLL);
