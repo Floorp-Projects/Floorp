@@ -839,7 +839,7 @@ UpdateService.prototype = {
     var tm = 
         Components.classes["@mozilla.org/updates/timer-manager;1"]
                   .getService(Components.interfaces.nsIUpdateTimerManager);
-    var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL, 86400000);
+    var interval = getPref("getIntPref", PREF_APP_UPDATE_INTERVAL, 86400);
     tm.registerTimer("background-update-timer", this, interval);
 
     // Resume fetching...
@@ -2281,8 +2281,10 @@ TimerManager.prototype = {
       // Fudge the lastUpdateTime by some random increment of the update 
       // check interval (e.g. some random slice of 10 minutes) so that when
       // the time comes to check, we offset each client request by a random
-      // amount so they don't all hit at once.
-      lastUpdateTime += Math.round(Math.random() * timerData.interval);
+      // amount so they don't all hit at once. app.update.timer is in milliseconds,
+      // whereas app.update.lastUpdateTime is in seconds
+      var timerInterval = getPref("getIntPref", PREF_APP_UPDATE_TIMER, 600000);
+      lastUpdateTime += Math.round(Math.random() * timerInterval / 1000);
 
       if ((now - lastUpdateTime) > timerData.interval &&
           timerData.callback instanceof Components.interfaces.nsITimerCallback) {
