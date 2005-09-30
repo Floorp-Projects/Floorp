@@ -142,7 +142,7 @@ void nsImapServerResponseParser::end_of_line()
 {
   // if current commands failed, don't reset the lex analyzer
   // we need the info for the user
-  if (!at_end_of_line())
+  if (!fAtEndOfLine)
     SetSyntaxError(PR_TRUE);
   else if (fProcessingTaggedResponse && !fCurrentCommandFailed)
     ResetLexAnalyzer();	// no more tokens until we send a command
@@ -613,7 +613,7 @@ void nsImapServerResponseParser::response_data(PRBool advanceToNextLine)
           PL_strfree( mailboxName); 
         }
         while (	ContinueParse() &&
-          !at_end_of_line() )
+          !fAtEndOfLine )
         {
           AdvanceToNextToken();
           if (!fNextToken)
@@ -670,7 +670,7 @@ void nsImapServerResponseParser::response_data(PRBool advanceToNextLine)
           }
           else if (*fNextToken == ')')
             break;
-          else if (!at_end_of_line())
+          else if (!fAtEndOfLine)
             SetSyntaxError(PR_TRUE);
         } 
       } else SetSyntaxError(PR_TRUE);
@@ -735,7 +735,7 @@ void nsImapServerResponseParser::response_data(PRBool advanceToNextLine)
         if (customCommand.Equals(fNextToken))
         {
           nsCAutoString customCommandResponse;
-          while (Connected() && !at_end_of_line())
+          while (Connected() && !fAtEndOfLine)
           {
             AdvanceToNextToken();
             customCommandResponse.Append(fNextToken);
@@ -1807,7 +1807,7 @@ void nsImapServerResponseParser::parse_folder_flags()
       fSupportsUserDefinedFlags |= kImapMsgSupportMDNSentFlag;
       fSupportsUserDefinedFlags |= kImapMsgLabelFlags;
     }
-  } while (!at_end_of_line() && ContinueParse());
+  } while (!fAtEndOfLine && ContinueParse());
 
   if (labelFlags == 31)
     fSupportsUserDefinedFlags |= kImapMsgLabelFlags;
@@ -1962,7 +1962,7 @@ void nsImapServerResponseParser::resp_text_code()
       do 
       {
         AdvanceToNextToken();
-      } while (!PL_strcasestr(fNextToken, "]") && !at_end_of_line() 
+      } while (!PL_strcasestr(fNextToken, "]") && !fAtEndOfLine 
                 && ContinueParse());
     }
   }
@@ -2187,7 +2187,7 @@ void nsImapServerResponseParser::capability_data()
         fCapabilityFlag |= kHasIdleCapability;
     }
   } while (fNextToken && 
-			 !at_end_of_line() &&
+			 !fAtEndOfLine &&
                          ContinueParse());
   
   if (fHostSessionList)
@@ -2226,7 +2226,7 @@ void nsImapServerResponseParser::xmailboxinfo_data()
           // ignore this for now...
         }
       }
-    } while (fNextToken && !at_end_of_line() && ContinueParse());
+    } while (fNextToken && !fAtEndOfLine && ContinueParse());
   }
 }
 
@@ -2252,7 +2252,7 @@ void nsImapServerResponseParser::xserverinfo_data()
       AdvanceToNextToken();
       fManageFiltersUrl = CreateNilString();
     }
-  } while (fNextToken && !at_end_of_line() && ContinueParse());
+  } while (fNextToken && !fAtEndOfLine && ContinueParse());
 }
 
 void nsImapServerResponseParser::language_data()
@@ -2265,7 +2265,7 @@ void nsImapServerResponseParser::language_data()
   {
     // eat each language returned to us
     AdvanceToNextToken();
-  } while (fNextToken && !at_end_of_line() && ContinueParse());
+  } while (fNextToken && !fAtEndOfLine && ContinueParse());
 }
 
 // cram/auth response data ::= "+" SPACE challenge CRLF
@@ -2289,7 +2289,7 @@ void nsImapServerResponseParser::namespace_data()
 	while ((namespaceType != kUnknownNamespace) && ContinueParse())
 	{
 		AdvanceToNextToken();
-		while (at_end_of_line() && ContinueParse())
+		while (fAtEndOfLine && ContinueParse())
 			AdvanceToNextToken();
 		if (!PL_strcasecmp(fNextToken,"NIL"))
 		{
@@ -2395,7 +2395,7 @@ void nsImapServerResponseParser::namespace_data()
 void nsImapServerResponseParser::myrights_data()
 {
   AdvanceToNextToken();
-  if (ContinueParse() && !at_end_of_line())
+  if (ContinueParse() && !fAtEndOfLine)
   {
     char *mailboxName = CreateAstring(); // PL_strdup(fNextToken);
     if (mailboxName)
@@ -2435,13 +2435,13 @@ void nsImapServerResponseParser::myrights_data()
 void nsImapServerResponseParser::acl_data()
 {
   AdvanceToNextToken();
-  if (ContinueParse() && !at_end_of_line())
+  if (ContinueParse() && !fAtEndOfLine)
   {
     char *mailboxName = CreateAstring();	// PL_strdup(fNextToken);
     if (mailboxName && ContinueParse())
     {
       AdvanceToNextToken();
-      while (ContinueParse() && !at_end_of_line())
+      while (ContinueParse() && !fAtEndOfLine)
       {
         char *userName = CreateAstring(); // PL_strdup(fNextToken);
         if (userName && ContinueParse())
@@ -2598,7 +2598,7 @@ void nsImapServerResponseParser::quota_data()
       AdvanceToNextToken();
       quotaroot.Adopt(CreateAstring());
     }
-    while (ContinueParse() && !at_end_of_line());
+    while (ContinueParse() && !fAtEndOfLine);
   }
   else if(!PL_strcasecmp(fNextToken, "QUOTA"))
   {
@@ -2612,7 +2612,7 @@ void nsImapServerResponseParser::quota_data()
     {
       quotaroot.Adopt(CreateAstring());
 
-      if(ContinueParse() && !at_end_of_line())
+      if(ContinueParse() && !fAtEndOfLine)
       {
         AdvanceToNextToken();
         if(fNextToken)

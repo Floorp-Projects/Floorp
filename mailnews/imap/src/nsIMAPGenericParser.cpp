@@ -124,15 +124,9 @@ PRBool nsIMAPGenericParser::ContinueParse()
   return !fSyntaxError && !fDisconnected;
 }
 
-
-PRBool nsIMAPGenericParser::at_end_of_line()
-{
-  return (fAtEndOfLine || (nsCRT::strcmp(fNextToken, CRLF) == 0));
-}
-
 void nsIMAPGenericParser::skip_to_CRLF()
 {
-  while (Connected() && !at_end_of_line())
+  while (Connected() && !fAtEndOfLine)
     AdvanceToNextToken();
 }
 
@@ -207,6 +201,7 @@ void nsIMAPGenericParser::AdvanceToNextLine()
     fStartOfLineOfTokens = nsnull;
     fLineOfTokens = nsnull;
     fCurrentTokenPlaceHolder = nsnull;
+    fAtEndOfLine = PR_TRUE;
     fNextToken = CRLF;
   }
   else if (fCurrentLine)	// might be NULL if we are would_block ?
@@ -480,7 +475,7 @@ char *nsIMAPGenericParser::CreateLiteral()
           // next line to ensure that the next call to AdvanceToNextToken()
           // would lead to fNextToken=="A3" in our example.
           // Note that setting fAtEndOfLine=PR_TRUE is wrong here, since the "\r\n"
-          // were just some characters from the literal; at_end_of_line() would
+          // were just some characters from the literal; fAtEndOfLine would
           // give a misleading result.
           AdvanceToNextLine();
           AdvanceTokenizerStartingPoint(0);

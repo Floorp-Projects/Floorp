@@ -89,7 +89,6 @@ protected:
   virtual char    *CreateQuoted(PRBool skipToEnd = PR_TRUE);
 	virtual char	*CreateParenGroup();
   virtual void        SetSyntaxError(PRBool error);
-  virtual PRBool     at_end_of_line();
 
   void AdvanceToNextToken();
   void AdvanceToNextLine();
