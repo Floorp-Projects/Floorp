@@ -34,8 +34,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef Window_h__
-#define Window_h__
+
+#ifndef nsChildView_h__
+#define nsChildView_h__
 
 #import "mozView.h"
 
@@ -71,6 +72,7 @@ class nsChildView;
 
 @interface ChildView : NSQuickDrawView<mozView, NSTextInput>
 {
+@private
   NSWindow*       mWindow;    // shortcut to the top window, [WEAK]
   
     // the nsChildView that created the view. It retains this NSView, so
@@ -131,6 +133,14 @@ public:
   
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIEVENTSINK 
+
+  // nsIKBStateControl interface
+  NS_IMETHOD              ResetInputState();
+  NS_IMETHOD              SetIMEOpenState(PRBool aState);
+  NS_IMETHOD              GetIMEOpenState(PRBool* aState);
+  NS_IMETHOD              SetIMEEnabled(PRBool aState);
+  NS_IMETHOD              GetIMEEnabled(PRBool* aState);
+  NS_IMETHOD              CancelIMEComposition();
  
   // nsIWidget interface
   NS_IMETHOD              Create(nsIWidget *aParent,
@@ -202,10 +212,10 @@ public:
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
   virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
-  virtual void          StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
-  virtual void          EndDraw();
-  NS_IMETHOD        Update();
-  virtual void      UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
+  virtual void            StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
+  virtual void            EndDraw();
+  NS_IMETHOD              Update();
+  virtual void            UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
   
   virtual void      ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
   void              LocalToWindowCoordinate(nsPoint& aPoint)            { ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
@@ -219,6 +229,7 @@ public:
   NS_IMETHOD        SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
   
   NS_IMETHOD        SetCursor(nsCursor aCursor);
+  NS_IMETHOD        SetCursor(imgIContainer* aCursor, PRUint32 aHotspotX, PRUint32 aHotspotY);
   
   NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
   NS_IMETHOD        SetTitle(const nsAString& title);
@@ -247,48 +258,34 @@ public:
   void              LiveResizeStarted();
   void              LiveResizeEnded();
   
-public:
-  // nsIKBStateControl interface
-  NS_IMETHOD ResetInputState();
-  NS_IMETHOD SetIMEOpenState(PRBool aState);
-  NS_IMETHOD GetIMEOpenState(PRBool* aState);
-  NS_IMETHOD SetIMEEnabled(PRBool aState);
-  NS_IMETHOD GetIMEEnabled(PRBool* aState);
-  NS_IMETHOD CancelIMEComposition();
-
 protected:
 
-  PRBool          ReportDestroyEvent();
-  PRBool          ReportMoveEvent();
-  PRBool          ReportSizeEvent();
+  PRBool            ReportDestroyEvent();
+  PRBool            ReportMoveEvent();
+  PRBool            ReportSizeEvent();
 
   NS_IMETHOD        CalcOffset(PRInt32 &aX,PRInt32 &aY);
 
-  virtual PRBool      OnPaint(nsPaintEvent & aEvent);
-
-    // our own impl of ::ScrollRect() that uses CopyBits so that it looks good. On 
-    // Carbon, this just calls ::ScrollWindowRect()
-  void          ScrollBits ( Rect & foo, PRInt32 inLeftDelta, PRInt32 inTopDelta ) ;
+  virtual PRBool    OnPaint(nsPaintEvent & aEvent);
 
     // override to create different kinds of child views. Autoreleases, so
     // caller must retain.
-  virtual NSView* CreateCocoaView(NSRect inFrame);
-  void            TearDownView();
+  virtual NSView*   CreateCocoaView(NSRect inFrame);
+  void              TearDownView();
 
     // Find a quickdraw port in which to draw (needed by GFX until it
     // is converted to Cocoa). This MUST be overridden if CreateCocoaView()
     // does not create something that inherits from NSQuickDrawView!
-  virtual GrafPtr GetQuickDrawPort() ;
+  virtual GrafPtr   GetQuickDrawPort();   // gets plugin port or view's port
 
-/* protected: */
-public:
-#if DEBUG
-  const char*       gInstanceClassName;
-#endif
+  // return qdPort for a focussed ChildView, and null otherwise
+  GrafPtr           GetChildViewQuickDrawPort();
 
-  id                    mView;      // my parallel cocoa view, [STRONG]
+protected:
 
-  NSView*               mParentView;
+  NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
+
+  NSView<mozView>*      mParentView;
   nsIWidget*            mParentWidget;
   
   nsIFontMetrics*       mFontMetrics;
@@ -312,12 +309,4 @@ public:
 };
 
 
-#if DEBUG
-#define WIDGET_SET_CLASSNAME(n)   gInstanceClassName = (n)
-#else
-#define WIDGET_SET_CLASSNAME(n)   
-#endif
-
-
-
-#endif // Window_h__
+#endif // nsChildView_h__

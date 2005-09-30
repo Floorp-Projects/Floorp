@@ -290,7 +290,6 @@ nsCocoaWindow::nsCocoaWindow()
 {
 #if 0
   mMacEventHandler.reset(new nsMacEventHandler(this));
-  WIDGET_SET_CLASSNAME("nsCocoaWindow");  
 
   // create handlers for drag&drop
   mDragTrackingHandlerUPP = NewDragTrackingHandlerUPP(DragTrackingHandler);

@@ -35,9 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#include <ControlDefinitions.h>
-
 #include "nsNativeScrollbar.h"
 #include "nsIDeviceContext.h"
 
@@ -69,19 +66,11 @@ nsNativeScrollbar::nsNativeScrollbar()
   , mLineIncrement(0)
   , mIsEnabled(PR_TRUE)
 {
-  WIDGET_SET_CLASSNAME("nsNativeScrollbar");
 }
 
 
 nsNativeScrollbar::~nsNativeScrollbar()
 {
-}
-
-NS_IMETHODIMP
-nsNativeScrollbar::Destroy()
-{
-  [mView scrollbarDestroyed];
-  return NS_OK;
 }
 
 //
@@ -198,7 +187,7 @@ nsNativeScrollbar::DoScroll(NSScrollerPart inPart)
     //
     case NSScrollerKnob:
     case NSScrollerKnobSlot:
-      newPos = (int) ([mView floatValue] * mMaxValue);
+      newPos = (int) ([ScrollbarView() floatValue] * mMaxValue);
       UpdateContentPosition(newPos);
       if ( mMediator ) {
         PRInt32 op = oldPos, np = mValue;
@@ -293,6 +282,8 @@ nsNativeScrollbar::GetMaxRange(PRUint32* aMaxRange)
 NS_IMETHODIMP
 nsNativeScrollbar::SetPosition(PRUint32 aPos)
 {
+  NativeScrollbarView* scrollbarView = ScrollbarView();
+
   if ((PRInt32)aPos < 0)
     aPos = 0;
 
@@ -305,9 +296,9 @@ nsNativeScrollbar::SetPosition(PRUint32 aPos)
   //   mValue = ((PRInt32)aPos) > mMaxValue ? mMaxValue : ((int)aPos);
   mValue = aPos;
   if ( mMaxValue )
-    [mView setFloatValue:(mValue / (float)mMaxValue)];
+    [scrollbarView setFloatValue:(mValue / (float)mMaxValue)];
   else
-    [mView setFloatValue:0.0];
+    [scrollbarView setFloatValue:0.0];
 
   return NS_OK;
 }
@@ -448,13 +439,16 @@ nsNativeScrollbar::RecreateHorizontalScrollbar()
   orientation.size.width = 100;
   orientation.size.height = 16;
   
+  NativeScrollbarView* scrollbarView = ScrollbarView();
+
   // save off the old values and get rid of the previous view. Hiding
   // it removes it from the parent hierarchy.
-  NSRect oldBounds = [mView bounds];
-  float oldValue = [mView floatValue];
-  float oldProportion = [mView knobProportion];
+  NSRect oldBounds = [scrollbarView bounds];
+  float oldValue = [scrollbarView floatValue];
+  float oldProportion = [scrollbarView knobProportion];
   mVisible = PR_TRUE;           // ensure that hide does the work
   Show(PR_FALSE);
+  scrollbarView = nil;
   [mView release];
   
   // create the new horizontal scroller, init it, hook it up to the
@@ -462,7 +456,9 @@ nsNativeScrollbar::RecreateHorizontalScrollbar()
   mView = [[NativeScrollbarView alloc] initWithFrame:orientation geckoChild:this];
   [mView setNativeWindow: [mParentView getNativeWindow]];
   [mView setFrame:oldBounds];
-  [mView setFloatValue:oldValue knobProportion:oldProportion];
+  
+  scrollbarView = ScrollbarView();
+  [scrollbarView setFloatValue:oldValue knobProportion:oldProportion];
   Show(PR_TRUE);
   Enable(PR_TRUE);
 }
@@ -519,18 +515,20 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
 void
 nsNativeScrollbar::UpdateScroller()
 {
+  NativeScrollbarView* scrollbarView = ScrollbarView();
+
   // Update the current value based on the new range. We need to recompute the
   // float value in case we had to set the value to 0 because gecko cheated
   // and set the position before it set the max value.
   float knobProp = 1.0f;
   if ((mVisibleImageSize + mMaxValue) > 0)
     knobProp = (float)mVisibleImageSize / (float)(mVisibleImageSize + mMaxValue);
-  [mView setFloatValue:(mValue / (float)mMaxValue) knobProportion:knobProp];
+  [scrollbarView setFloatValue:(mValue / (float)mMaxValue) knobProportion:knobProp];
   
   BOOL enableScrollbar = (mIsEnabled && (mMaxValue > 0));
-  [mView setEnabled:enableScrollbar];
+  [scrollbarView setEnabled:enableScrollbar];
   
-  [mView setNeedsDisplay:YES];
+  [scrollbarView setNeedsDisplay:YES];
 }
 
 
@@ -639,11 +637,11 @@ nsNativeScrollbar::UpdateScroller()
 }
 
 //
-// -scrollbarDestroyed
+// -widgetDestroyed
 //
 // the gecko nsNativeScrollbar is being destroyed.
 //
-- (void)scrollbarDestroyed
+- (void)widgetDestroyed
 {
   mGeckoChild = nsnull;
 
@@ -666,6 +664,11 @@ nsNativeScrollbar::UpdateScroller()
   }
 }
 
+// getContextMenu, from mozView protocol
+- (NSMenu*)getContextMenu
+{
+  return nil;
+}
 
 //
 // -scroll
