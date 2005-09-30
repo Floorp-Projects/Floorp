@@ -40,6 +40,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <process.h>
+#include <io.h>
 #include "resource.h"
 
 #define TIMER_ID 1
@@ -169,6 +170,13 @@ ShowProgressUI()
 
   if (sQuit || sProgress > 50.0f)
     return 0;
+
+  // If we do not have updater.ini, then we should not bother showing UI.
+  char filename[MAX_PATH];
+  if (!GetStringsFile(filename))
+    return -1;
+  if (_access(filename, 04))
+    return -1;
 
   INITCOMMONCONTROLSEX icc = {
     sizeof(INITCOMMONCONTROLSEX),

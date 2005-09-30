@@ -47,6 +47,7 @@
 
 static float    sProgressVal;  // between 0 and 100
 static gboolean sQuit = FALSE;
+static gboolean sEnableUI;
 static guint    sTimerID;
 
 static GtkWidget *sWin;
@@ -83,13 +84,16 @@ InitProgressUI(int *pargc, char ***pargv)
 {
   sProgramPath = (*pargv)[0];
 
-  gtk_init(pargc, pargv);
+  sEnableUI = gtk_init_check(pargc, pargv);
   return 0;
 }
 
 int
 ShowProgressUI()
 {
+  if (!sEnableUI)
+    return -1;
+
   // Only show the Progress UI if the process is taking significant time.
   // Here we measure significant time as taking more than one second.
 
