@@ -2857,7 +2857,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     JSPrinter *jp;
     JSString *name;
 
-    fp = cx->fp;
+    for (fp = cx->fp; fp && !fp->script; fp = fp->down)
+        continue;
     if (!fp)
         goto do_fallback;
 
