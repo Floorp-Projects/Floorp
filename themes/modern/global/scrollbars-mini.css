@@ -60,12 +60,14 @@ scrollcorner {
 /* ::::: slider ::::: */
 
 slider {
+  width: 0px;
   height: 11px;
   background: url("chrome://global/skin/scrollbar/mini-slider-hrz.gif") repeat-x;
 }
 
 slider[orient="vertical"] {
   width: 11px;
+  height: 0px;
   background: url("chrome://global/skin/scrollbar/mini-slider-vrt.gif") repeat-y;
 }
 
@@ -104,11 +106,16 @@ thumb[orient="horizontal"] {
 scrollbarbutton {
   width: 11px;
   height: 14px;
+  max-width: 11px;
+  max-height: 14px;
+  -moz-box-flex: 1;
 }
 
 scrollbar[orient="horizontal"] > scrollbarbutton {
   width: 14px;
   height: 11px;
+  max-width: 14px;
+  max-height: 11px;
 }
 
 scrollbarbutton[disabled="true"],

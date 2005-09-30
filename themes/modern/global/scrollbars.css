@@ -52,12 +52,14 @@ scrollbar {
 /* ::::: slider ::::: */
 
 slider {
+  width: 0px;
   height: 15px;
   background: url("chrome://global/skin/scrollbar/slider-hrz.gif") repeat-x;
 }
 
 slider[orient="vertical"] {
   width: 15px;
+  height: 0px;
   background: url("chrome://global/skin/scrollbar/slider-vrt.gif") repeat-y;
 }
 
@@ -98,6 +100,9 @@ thumb[orient="horizontal"] {
 scrollbarbutton {
   width: 15px;
   height: 15px;
+  max-width: 15px;
+  max-height: 15px;
+  -moz-box-flex: 1;
 }
 
 scrollbarbutton[disabled="true"],
