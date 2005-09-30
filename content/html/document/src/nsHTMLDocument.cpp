@@ -1980,6 +1980,10 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     SetDesignMode(NS_LITERAL_STRING("on"));
   }
 
+  // Zap the old title -- otherwise it would hang around until document.close()
+  // (which might never come) if the new document doesn't explicitly set one.
+  SetTitle(EmptyString());
+
   // Store the security info of the caller now that we're done
   // resetting the document.
   mSecurityInfo = securityInfo;
