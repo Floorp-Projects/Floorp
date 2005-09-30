@@ -114,6 +114,7 @@ public:
     NS_IMETHOD              SetSizeMode(PRInt32 aMode);
 
     NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
+    virtual nsresult        Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint, PRBool aFromUI);
     NS_IMETHOD            	GetScreenBounds(nsRect &aRect);
     virtual PRBool          OnPaint(nsPaintEvent &event);
 
@@ -148,6 +149,7 @@ protected:
                                                EventRef inEvent, void* userData ) ;
   pascal static OSStatus ScrollEventHandler ( EventHandlerCallRef inHandlerChain, 
                                                EventRef inEvent, void* userData ) ;
+  nsresult GetDesktopRect(Rect* desktopRect);
 
 	PRPackedBool                    mWindowMadeHere; // true if we created the window
 	PRPackedBool                    mIsSheet;        // true if the window is a sheet (Mac OS X)

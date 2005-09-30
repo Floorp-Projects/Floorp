@@ -1405,38 +1405,89 @@ void nsMacWindow::MoveToGlobalPoint(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+  return Resize(aWidth, aHeight, aRepaint, PR_FALSE); // resize not from UI
+}
+
+nsresult nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint, PRBool aFromUI)
+{
   if (mWindowMadeHere) {
-      // Sanity check against screen size
-      Rect screenRect;
-    ::GetRegionBounds(::GetGrayRgn(), &screenRect);
+    Rect windowRect;
+    if (::GetWindowBounds(mWindowPtr, kWindowContentRgn, &windowRect)
+        != noErr) {
+      NS_ERROR("::GetWindowBounds() didn't get window bounds");
+      return NS_ERROR_FAILURE;
+    }
 
-      // Need to use non-negative coordinates
-      PRInt32 screenWidth;
-      if(screenRect.left < 0)
-        screenWidth = screenRect.right - screenRect.left;
-      else
-        screenWidth = screenRect.right;
-        
-      PRInt32 screenHeight;
-      if(screenRect.top < 0)
-        screenHeight = screenRect.bottom - screenRect.top;
-      else
-        screenHeight = screenRect.bottom;
-          
-      if(aHeight > screenHeight)
-        aHeight = screenHeight;
-        
-      if(aWidth > screenWidth)
-        aWidth = screenWidth;      
-    
-    Rect macRect;
-    ::GetWindowPortBounds ( mWindowPtr, &macRect );
+    if (!aFromUI) {
+      // If the resize came from the UI, trust the system's constraints.
+      // If it came from the application, make sure it's rational.
+      // @@@mm the ultimate goal is to separate UI, chrome, and content,
+      // and enforce different restrictions in each case.
+      Rect desktopRect;
+      if (NS_FAILED(GetDesktopRect(&desktopRect))) {
+        return NS_ERROR_FAILURE;
+      }
 
-    short w = macRect.right - macRect.left;
-    short h = macRect.bottom - macRect.top;
+#if 1
+      // Use the desktop's dimensions as the maximum size without taking
+      // the window's position into account.  This is the code that will
+      // eventually be used as a sanity check on chrome callers, which are
+      // trusted to be able to resize windows to arbitrary sizes regardless
+      // of their position on screen.  Since chrome and content can't be
+      // separated here yet, use this less restrictive approach for both,
+      // otherwise chrome would break.
+      //
+      // The maximum window dimensions are the desktop area, but if the
+      // window is already larger than the desktop, don't force it to
+      // shrink.  This doesn't take the window's origin into account,
+      // but the window won't be able to expand so that it can't be
+      // displayed entirely onscreen without being obscured by the dock
+      // (unless the user already made it larger with UI resizing.)
+      // Use mBoundsOffset to account for the difference between window
+      // structure and content (like the title bar).
+      short maxWidth  = PR_MAX(desktopRect.right  - desktopRect.left -
+                                 mBoundsOffset.h,
+                               windowRect.right   - windowRect.left);
+      short maxHeight = PR_MAX(desktopRect.bottom - desktopRect.top  -
+                                 mBoundsOffset.v,
+                               windowRect.bottom  - windowRect.top);
+#else
+      // This will eventually become the branch that is used for resizes
+      // that come from content.  It's fairly restrictive and takes the
+      // window's current position into account.
+      //
+      // Consider the window's position when computing the maximum size.
+      // The goal is to use this on resizes that come from content, but
+      // it's currently not possible to distinguish between resizes that
+      // come from chrome and content.
+      //
+      // Use PR_MAX to pick the greatest (top,left) point.  If the window's
+      // left edge is to the right of the desktop's left edge, the maximum
+      // width needs to be smaller than the width of the desktop to avoid
+      // resizing the window past the desktop during this operation.  If
+      // the window's left edge is left of the desktop's left edge (offscreen),
+      // use the desktop's left edge to ensure that the window, if moved,
+      // will fit on the desktop.  The max of the desktop and window right
+      // edges are used so that windows already offscreen aren't forced to
+      // shrink during a resize.
+      short maxWidth = PR_MAX(desktopRect.right, windowRect.right) -
+                       PR_MAX(desktopRect.left, windowRect.left);
 
-    if ((w != aWidth) || (h != aHeight))
-    {
+      // There shouldn't be any way for the window top to be above the desktop
+      // top, but paranoia dictates that the same check should be done for
+      // height as width.
+      short maxHeight = PR_MAX(desktopRect.bottom, windowRect.bottom) -
+                        PR_MAX(desktopRect.top, windowRect.top);
+#endif
+
+      aWidth = PR_MIN(aWidth, maxWidth);
+      aHeight = PR_MIN(aHeight, maxHeight);
+    } // !aFromUI
+
+    short currentWidth = windowRect.right - windowRect.left;
+    short currentHeight = windowRect.bottom - windowRect.top;
+
+    if (currentWidth != aWidth || currentHeight != aHeight) {
       if (aWidth != 0 && aHeight != 0) {
         // make sure that we don't infinitely recurse if live-resize is on
         mResizeIsFromUs = PR_TRUE;
@@ -1488,7 +1539,7 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
         }
       }
     }
-  }
+  } // mWindowMadeHere
   Inherited::Resize(aWidth, aHeight, aRepaint);
 
   // Make window visible.  Show() will not make a window visible if mBounds are
@@ -1789,3 +1840,199 @@ void nsMacWindow::IsActive(PRBool* aActive)
   *aActive = mIsActive;
 }
 
+//
+// GetDesktopRect
+//
+// Determines a suitable desktop size for this window.  The desktop
+// size can be used to restrict resizes and moves.
+//
+// If a window already lies on a single screen (possibly with portions
+// beyond the visible desktop shown on any screen), then the containing
+// screen's bounds are the limiting factor.  If a window lies on multiple
+// multiple screens (or the resize comes from the UI as opposed to a
+// script), the rect encompassing all screens is the maximum limit.
+// That rect (screen size or desktop size) will be put into
+// desktopRect.  If the menu bar is at the top edge of desktopRect, or
+// the dock is at any other edge of desktopRect, they will be clipped out
+// of desktopRect, because scripted resizes should not be able to make
+// windows that don't fit in the visible area.
+typedef enum {
+  kDockOrientationNone       = 0,
+  kDockOrientationHorizontal = 1,
+  kDockOrientationVertical   = 2
+} nsMacDockOrientation;
+
+nsresult nsMacWindow::GetDesktopRect(Rect* desktopRect)
+{
+  // This is how to figure out where the dock and menu bar are, in global
+  // coordinates, when there seems to be no way to get that information
+  // directly from the system.  Compare the real dimensions of each screen
+  // with the dimensions of the screen less the space used for the dock (as
+  // given by GetAvailableWindowPositioningBounds) and apply deductive
+  // reasoning.  While doing that, it's a convenient time to add each
+  // screen's full rect to the union in desktopRect.
+
+  ::SetRect(desktopRect, 0, 0, 0, 0);
+  Rect menuBarRect = {0, 0, 0, 0};
+  Rect dockRect = {0, 0, 0, 0};
+
+  Rect windowRect;
+  if (::GetWindowBounds(mWindowPtr, kWindowStructureRgn, &windowRect)
+      != noErr) {
+    NS_ERROR("::GetWindowBounds() didn't get window bounds");
+    return NS_ERROR_FAILURE;
+  }
+
+  Rect tempRect; // for various short-lived purposes, such as holding
+                 // unimportant overlap areas in ::SectRect calls
+
+  PRUint32 windowOnScreens = 0; // number of screens containing window
+  Rect windowOnScreenRect = {0, 0, 0, 0}; // only valid if windowOnScreens==1
+  GDHandle screen = ::DMGetFirstScreenDevice(TRUE);
+  nsMacDockOrientation dockOrientation = kDockOrientationNone;
+  while (screen != NULL) {
+    Rect screenRect = (*screen)->gdRect;
+    if (::EmptyRect(&screenRect)) {
+      NS_WARNING("Couldn't determine screen dimensions");
+      continue;
+    }
+
+    ::UnionRect(desktopRect, &screenRect, desktopRect);
+
+    if (::SectRect(&screenRect, &windowRect, &tempRect)) {
+      // The window is at least partially on this screen.  Set
+      // windowOnScreenRect to the bounds of this screen.
+      // If, after checking any other screens, the window is only on one
+      // screen, then windowOnScreenRect will be used as the bounds,
+      // limiting the window to the screen that contains it.
+      windowOnScreens++;
+      windowOnScreenRect = screenRect;
+    }
+
+    // GetAvailableWindowPositioningBounds clips out the menu bar
+    // and the dock.  Since the menu bar is clipped from the top,
+    // and the dock can't be at the top, this suffices.
+    Rect availableRect;
+    if (::GetAvailableWindowPositioningBounds(screen, &availableRect)
+        != noErr) {
+      NS_ERROR("::GetAvailableWindowPositioningBounds couldn't determine" \
+               "available screen dimensions");
+      return NS_ERROR_FAILURE;
+    }
+
+    // The menu bar is at the top of the primary display.  Its bounds
+    // could be retrieved by looking at the main display outside of the
+    // screen iterator loop.
+    if (availableRect.top > screenRect.top) {
+      ::SetRect(&menuBarRect, screenRect.left, screenRect.top,
+                              screenRect.right, availableRect.top);
+    }
+
+    // The dock, if it's not hidden, will be at the bottom, right,
+    // or left edge of a screen.  Look for it on this screen.  If
+    // it's found, set up dockRect to extend from the extremity of
+    // availableRect to the extremity of screenRect.
+    //
+    // It seems that even if the dock is hidden, the system reserves
+    // 4px at the screen edge for it.
+    if (availableRect.bottom < screenRect.bottom) {
+      // Dock on bottom
+      ::SetRect(&dockRect, availableRect.left, availableRect.bottom,
+                           availableRect.right, screenRect.bottom);
+      dockOrientation = kDockOrientationHorizontal;
+    }
+    else if (availableRect.right < screenRect.right) {
+      // Dock on right
+      ::SetRect(&dockRect, availableRect.right, availableRect.top,
+                           screenRect.right, availableRect.bottom);
+      dockOrientation = kDockOrientationVertical;
+    }
+    else if (availableRect.left > screenRect.left) {
+      // Dock on left
+      ::SetRect(&dockRect, screenRect.left, availableRect.top,
+                           availableRect.left, availableRect.bottom);
+      dockOrientation = kDockOrientationVertical;
+    }
+
+    screen = ::DMGetNextScreenDevice(screen, TRUE);
+  }
+
+  if (windowOnScreens == 1) {
+    // The window is contained entirely on a single screen.  It may actually
+    // be partly offscreen, the key is that no part of the window is on a
+    // screen other than the one with screen bounds in windowOnScreenRect.
+    // Use that screen's bounds.
+    //
+    // It's tempting to save the screen's available positioning bounds and
+    // return early here, but we still need to check to see if the window is
+    // under the dock already, and permit it to remain there if so.
+    //
+    // Keep in mind that if the resize came from the UI as opposed to a
+    // script, the window's dimensions will already appear to exceed the
+    // screen it had formerly been contained within if the user has resized
+    // it to cover multiple screens.  In other words, this won't constrain
+    // UI resizes to a single screen.  That's perfect, because we only
+    // want to police script resizing.
+    *desktopRect = windowOnScreenRect;
+  }
+
+  if (::EmptyRect(desktopRect)) {
+    NS_ERROR("Couldn't determine desktop dimensions\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  // *desktopRect is now the smallest rectangle enclosing all of
+  // the screens, or if the window is on a single screen, the rectangle
+  // corresponding to the screen itself, without any areas clipped out for
+  // the menu bar or dock.
+
+  // Clip where appropriate.
+
+  if (::SectRect(desktopRect, &menuBarRect, &tempRect) &&
+      menuBarRect.top == desktopRect->top) {
+    // The menu bar is in the desktop rect at the very top.  Adjust the
+    // top of the desktop to clip out the menu bar.
+    // menuBarRect.bottom is the height of the menu bar because
+    // menuBarRect.top is 0, so there's no need to subtract top
+    // from bottom.  When using multiple monitors, the menu bar
+    // might not be at the desktop top - in that case, don't clip it.
+    desktopRect->top += menuBarRect.bottom;
+  }
+
+  if (dockOrientation != kDockOrientationNone &&
+      ::SectRect(desktopRect, &dockRect, &tempRect)) {
+    // There's a dock and it's somewhere in the desktop rect.
+
+    // Determine the orientation of the dock before checking to see if
+    // it's on an edge, so that the proper edge can be clipped.  If
+    // the dock is on an edge corresponding to its orientation, clip
+    // the dock out of the available desktop.
+    switch (dockOrientation) {
+      case kDockOrientationVertical:
+        // The dock is oriented vertically, so check the left and right
+        // edges.
+        if (dockRect.left == desktopRect->left) {
+          desktopRect->left += dockRect.right - dockRect.left;
+        }
+        else if (dockRect.right == desktopRect->right) {
+          desktopRect->right -= dockRect.right - dockRect.left;
+        }
+        break;
+
+      case kDockOrientationHorizontal:
+        // The dock is oriented horizontally, so check the bottom edge.
+        // The dock can't be at the top edge.
+        if (dockRect.bottom == desktopRect->bottom) {
+          desktopRect->bottom -= dockRect.bottom - dockRect.top;
+        }
+        break;
+
+      default:
+        break;
+    } // switch
+  } // dockRect overlaps *desktopRect
+
+  // *desktopRect is now clear of the menu bar and dock, if they needed
+  // to be cleared.
+  return NS_OK;
+}
