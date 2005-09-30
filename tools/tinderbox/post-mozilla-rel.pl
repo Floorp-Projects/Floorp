@@ -32,6 +32,7 @@
 
 use strict;
 use Sys::Hostname;
+use POSIX qw(mktime);
 
 package PostMozilla;
 
@@ -831,25 +832,6 @@ sub pushit {
   return 1;
 }
 
-
-# Cache builds in a dated directory if:
-#  * The hour of the day is $Settings::build_hour or higher 
-#    (set in tinder-config.pl)
-#    -and-
-#  * the "last-built" file indicates a day before today's date
-#
-sub cacheit {
-  my ($c_hour, $c_yday, $target_hour, $last_build_day) = @_;
-  TinderUtils::print_log "c_hour = $c_hour\n";
-  TinderUtils::print_log "c_yday = $c_yday\n";
-  TinderUtils::print_log "last_build_day = $last_build_day\n";
-  if (($c_hour > $target_hour) && ($last_build_day != $c_yday)) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
 sub reportRelease {
   my ($url, $datestamp)       = @_;
 
@@ -882,24 +864,52 @@ sub returnStatus{
 }
 
 sub PreBuild {
-    my $last_build_day;
-    my ($c_hour,$c_yday) = (localtime(time))[2,7];
 
-    if ( -e "last-built") {
-        ($last_build_day) = (localtime((stat "last-built")[9]))[7];
-    } else {
-        $last_build_day = -1;
+  # We want to be able to remove the last-built file at any time of
+  # day to trigger a respin, even if it's before the designated build
+  # hour.  This means that we want to do a cached build if any of the
+  # following are true:
+  # 1. there is no last-built file
+  # 2. the last-built file is more than 24 hours old
+  # 3. the last-built file is before the most recent occurrence of the
+  #    build hour (which may not be today!)
+  # (3) subsumes (2), so there's no need to check for (2) explicitly.
+
+  if ( -e "last-built") {
+    my $last = (stat "last-built")[9];
+    TinderUtils::print_log "Most recent nightly build: " .
+      localtime($last) . "\n";
+
+    # Figure out the most recent past time that's at
+    # $Settings::build_hour.
+    my $now = time;
+    my $most_recent_build_hour =
+      POSIX::mktime(0, 0, $Settings::build_hour,
+                    (localtime($now))[3 .. 8]);
+    if ($most_recent_build_hour > $now) {
+      $most_recent_build_hour -= 86400; # subtract a day
     }
+    TinderUtils::print_log "Most recent build hour:    " .
+      localtime($most_recent_build_hour) . "\n";
 
-    if (cacheit($c_hour,$c_yday,$Settings::build_hour,$last_build_day)) {
-        TinderUtils::print_log "starting nightly release build\n";
-        # clobber the tree
-        TinderUtils::run_shell_command "rm -rf mozilla";
-        $cachebuild = 1;
-      } else {
-        TinderUtils::print_log "starting non-release build\n";
-        $cachebuild = 0;
-      }
+    # If that time is older than last-built, then it's time for a new
+    # nightly.
+    $cachebuild = ($most_recent_build_hour > $last);
+  } else {
+    # No last-built file.  Either it's the first build or somebody
+    # removed it to trigger a respin.
+    TinderUtils::print_log
+      "No record of generating a nightly build.\n";
+    $cachebuild = 1;
+  }
+
+  if ($cachebuild) {
+    TinderUtils::print_log "starting nightly release build\n";
+    # clobber the tree
+    TinderUtils::run_shell_command "rm -rf mozilla";
+  } else {
+    TinderUtils::print_log "starting non-release build\n";
+  }
 }
 
 
@@ -995,7 +1005,7 @@ sub main {
 
   if ($cachebuild) { 
     # remove saved builds older than a week and save current build
-    TinderUtils::run_shell_command "find $mozilla_build_dir -type d -name \"200*-*\" -prune -mtime +7 -print | xargs rm -rf";
+    TinderUtils::run_shell_command "find $mozilla_build_dir -type d -name \"200*-*\" -maxdepth 1 -prune -mtime +7 -print | xargs rm -rf";
     TinderUtils::run_shell_command "cp -rpf $upload_directory $mozilla_build_dir/$datestamp";
 
     unlink "last-built";
