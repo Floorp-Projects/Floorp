@@ -38,7 +38,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.19 2005/04/09 05:06:34 julien.pierre.bugs%sun.com Exp $
+ * $Id: secasn1e.c,v 1.20 2005/09/30 19:22:48 relyea%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -62,6 +62,14 @@ typedef enum {
     keepGoing,
     needBytes
 } sec_asn1e_parse_status;
+
+typedef enum {
+    hdr_normal      = 0,  /* encode header normally */
+    hdr_any         = 1,  /* header already encoded in content */
+    hdr_decoder     = 2,  /* template only used by decoder. skip it. */
+    hdr_optional    = 3,  /* optional component, to be omitted */
+    hdr_placeholder = 4   /* place holder for from_buf content */
+} sec_asn1e_hdr_encoding;
 
 typedef struct sec_asn1e_state_struct {
     SEC_ASN1EncoderContext *top;
@@ -308,7 +316,7 @@ sec_asn1e_init_state_based_on_template (sec_asn1e_state *state)
 	 * (tag, optional status, etc.).
 	 *
 	 * NB: ALL the following flags in the subtemplate are disallowed
-	 *     and/or ignored: ECPLICIT, OPTIONAL, INNER< INLINE< POINTER.
+	 *     and/or ignored: EXPLICIT, OPTIONAL, INNER, INLINE, POINTER.
 	 */
 
 	under_kind = state->theTemplate->kind;
@@ -501,7 +509,8 @@ sec_asn1e_which_choice
 
 static unsigned long
 sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
-			   PRBool disallowStreaming, PRBool *noheaderp)
+			   PRBool disallowStreaming, PRBool insideIndefinite,
+			   sec_asn1e_hdr_encoding *pHdrException)
 {
     unsigned long encode_kind, underlying_kind;
     PRBool isExplicit, optional, universal, may_stream;
@@ -540,21 +549,27 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
     /* Just clear this to get it out of the way; we do not need it here */
     encode_kind &= ~SEC_ASN1_DYNAMIC;
+
+    if (encode_kind & SEC_ASN1_NO_STREAM) {
+	disallowStreaming = PR_TRUE;
+    }
     encode_kind &= ~SEC_ASN1_NO_STREAM;
 
-    if( encode_kind & SEC_ASN1_CHOICE ) {
-      void *src2;
-      int indx = sec_asn1e_which_choice(src, theTemplate);
-      if( 0 == indx ) {
-        /* XXX set an error? "choice not found" */
-        /* state->top->status = encodeError; */
-        return 0;
-      }
+    if (encode_kind & SEC_ASN1_CHOICE) {
+	void *src2;
+	int indx = sec_asn1e_which_choice(src, theTemplate);
+	if (0 == indx) {
+	    /* XXX set an error? "choice not found" */
+	    /* state->top->status = encodeError; */
+	    return 0;
+	}
 
-      src2 = (void *)((char *)src - theTemplate->offset + theTemplate[indx].offset);
+        src2 = (void *)
+	        ((char *)src - theTemplate->offset + theTemplate[indx].offset);
 
-      return sec_asn1e_contents_length(&theTemplate[indx], src2, 
-                                       PR_FALSE, noheaderp);
+        return sec_asn1e_contents_length(&theTemplate[indx], src2, 
+					 disallowStreaming, insideIndefinite,
+					 pHdrException);
     }
 
     if ((encode_kind & (SEC_ASN1_POINTER | SEC_ASN1_INLINE)) || !universal) {
@@ -563,10 +578,7 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	if (encode_kind & SEC_ASN1_POINTER) {
 	    src = *(void **)src;
 	    if (src == NULL) {
-		if (optional)
-		    *noheaderp = PR_TRUE;
-		else 
-		    *noheaderp = PR_FALSE;
+		*pHdrException = optional ? hdr_optional : hdr_normal;
 		return 0;
 	    }
 	} else if (encode_kind & SEC_ASN1_INLINE) {
@@ -578,7 +590,7 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 		    SECItem* target = (SECItem*)src;
 		    if (!target || !target->data || !target->len) {
 			/* no valid data to encode subtemplate */
-			*noheaderp = PR_TRUE;
+			*pHdrException = hdr_optional;
 			return 0;
 		    }
 		} else {
@@ -591,14 +603,17 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	src = (char *)src + theTemplate->offset;
 
 	/* recurse to find the length of the subtemplate */
-	len = sec_asn1e_contents_length (theTemplate, src, PR_FALSE, noheaderp);
+	len = sec_asn1e_contents_length (theTemplate, src, disallowStreaming, 
+	                                 insideIndefinite, pHdrException);
 	if (len == 0 && optional) {
-	    *noheaderp = PR_TRUE;
+	    *pHdrException = hdr_optional;
 	} else if (isExplicit) {
-	    if (*noheaderp) {
-		/* Okay, *we* do not want to add in a header, but our caller still does. */
-		*noheaderp = PR_FALSE;
-	    } else {
+	    if (*pHdrException == hdr_any) {
+		/* *we* do not want to add in a header, 
+		** but our caller still does. 
+		*/
+		*pHdrException = hdr_normal;
+	    } else if (*pHdrException == hdr_normal) {
 		/* if the inner content exists, our length is
 		 * len(identifier) + len(length) + len(innercontent)
 		 * XXX we currently assume len(identifier) == 1;
@@ -615,7 +630,7 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
     if (underlying_kind & SEC_ASN1_SAVE) {
 	/* check that there are no extraneous bits */
 	PORT_Assert (underlying_kind == SEC_ASN1_SAVE);
-	*noheaderp = PR_TRUE;
+	*pHdrException = hdr_decoder;
 	return 0;
     }
 
@@ -628,18 +643,20 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
     underlying_kind &= ~UNEXPECTED_FLAGS;
 #undef UNEXPECTED_FLAGS
 
-    if( underlying_kind & SEC_ASN1_CHOICE ) {
-      void *src2;
-      int indx = sec_asn1e_which_choice(src, theTemplate);
-      if( 0 == indx ) {
-        /* XXX set an error? "choice not found" */
-        /* state->top->status = encodeError; */
-        return 0;
-      }
+    if (underlying_kind & SEC_ASN1_CHOICE) {
+	void *src2;
+	int indx = sec_asn1e_which_choice(src, theTemplate);
+	if (0 == indx) {
+	    /* XXX set an error? "choice not found" */
+	    /* state->top->status = encodeError; */
+	    return 0;
+	}
 
-      src2 = (void *)((char *)src - theTemplate->offset + theTemplate[indx].offset);
-      len = sec_asn1e_contents_length(&theTemplate[indx], src2, PR_FALSE,
-                                      noheaderp);
+        src2 = (void *)
+		((char *)src - theTemplate->offset + theTemplate[indx].offset);
+        len = sec_asn1e_contents_length(&theTemplate[indx], src2, 
+	                                disallowStreaming, insideIndefinite, 
+					pHdrException);
     } else {
       switch (underlying_kind) {
       case SEC_ASN1_SEQUENCE_OF:
@@ -660,14 +677,16 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
 	    for (; *group != NULL; group++) {
 		sub_src = (char *)(*group) + tmpt->offset;
-		sub_len = sec_asn1e_contents_length (tmpt, sub_src, PR_FALSE,
-                                                     noheaderp);
+		sub_len = sec_asn1e_contents_length (tmpt, sub_src, 
+		                                     disallowStreaming,
+						     insideIndefinite,
+                                                     pHdrException);
 		len += sub_len;
 		/*
 		 * XXX The 1 below is the presumed length of the identifier;
 		 * to support a high-tag-number this would need to be smarter.
 		 */
-		if (!*noheaderp)
+		if (*pHdrException == hdr_normal)
 		    len += 1 + SEC_ASN1LengthLength (sub_len);
 	    }
 	}
@@ -683,14 +702,16 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 	    len = 0;
 	    for (tmpt = theTemplate + 1; tmpt->kind; tmpt++) {
 		sub_src = (char *)src + tmpt->offset;
-		sub_len = sec_asn1e_contents_length (tmpt, sub_src, PR_FALSE,
-                                                     noheaderp);
+		sub_len = sec_asn1e_contents_length (tmpt, sub_src, 
+		                                     disallowStreaming,
+						     insideIndefinite,
+                                                     pHdrException);
 		len += sub_len;
 		/*
 		 * XXX The 1 below is the presumed length of the identifier;
 		 * to support a high-tag-number this would need to be smarter.
 		 */
-		if (!*noheaderp)
+		if (*pHdrException == hdr_normal)
 		    len += 1 + SEC_ASN1LengthLength (sub_len);
 	    }
 	}
@@ -735,16 +756,23 @@ sec_asn1e_contents_length (const SEC_ASN1Template *theTemplate, void *src,
 
       default:
 	len = ((SECItem *)src)->len;
-	if (may_stream && len == 0 && !disallowStreaming)
-	    len = 1;	/* if we're streaming, we may have a secitem w/len 0 as placeholder */
 	break;
-      }
-    }
+      }  /* end switch */
 
-    if ((len == 0 && optional) || underlying_kind == SEC_ASN1_ANY)
-	*noheaderp = PR_TRUE;
+#ifndef WHAT_PROBLEM_DOES_THIS_SOLVE
+      /* if we're streaming, we may have a secitem w/len 0 as placeholder */
+      if (!len && insideIndefinite && may_stream && !disallowStreaming) {
+	  len = 1;
+      }
+#endif
+    }    /* end else */
+
+    if (len == 0 && optional)
+	*pHdrException = hdr_optional;
+    else if (underlying_kind == SEC_ASN1_ANY)
+	*pHdrException = hdr_any;
     else 
-	*noheaderp = PR_FALSE;
+	*pHdrException = hdr_normal;
 
     return len;
 }
@@ -755,7 +783,8 @@ sec_asn1e_write_header (sec_asn1e_state *state)
 {
     unsigned long contents_length;
     unsigned char tag_number, tag_modifiers;
-    PRBool noheader;
+    sec_asn1e_hdr_encoding hdrException = hdr_normal;
+    PRBool indefinite = PR_FALSE;
 
     PORT_Assert (state->place == beforeHeader);
 
@@ -767,66 +796,79 @@ sec_asn1e_write_header (sec_asn1e_state *state)
 	return;
     }
 
-    if( state->underlying_kind & SEC_ASN1_CHOICE ) {
-      int indx = sec_asn1e_which_choice(state->src, state->theTemplate);
-      if( 0 == indx ) {
-        /* XXX set an error? "choice not found" */
-        state->top->status = encodeError;
-        return;
-      }
-
-      state->place = afterChoice;
-      state = sec_asn1e_push_state(state->top, &state->theTemplate[indx],
-                                   (char *)state->src - state->theTemplate->offset, 
-				   PR_TRUE);
-
-      if( (sec_asn1e_state *)NULL != state ) {
-        /*
-         * Do the "before" field notification.
-         */
-        sec_asn1e_notify_before (state->top, state->src, state->depth);
-        state = sec_asn1e_init_state_based_on_template (state);
-      }
-      
-      return;
+    if (state->underlying_kind & SEC_ASN1_CHOICE) {
+	int indx = sec_asn1e_which_choice(state->src, state->theTemplate);
+	if( 0 == indx ) {
+	    /* XXX set an error? "choice not found" */
+	    state->top->status = encodeError;
+	    return;
+	}
+	state->place = afterChoice;
+	state = sec_asn1e_push_state(state->top, &state->theTemplate[indx],
+			       (char *)state->src - state->theTemplate->offset, 
+			       PR_TRUE);
+	if (state) {
+	    /*
+	     * Do the "before" field notification.
+	     */
+	    sec_asn1e_notify_before (state->top, state->src, state->depth);
+	    state = sec_asn1e_init_state_based_on_template (state);
+	}
+	return;
     }
 
+    /* The !isString test below is apparently intended to ensure that all 
+    ** constructed types receive indefinite length encoding.
+    */
+   indefinite = (PRBool) 
+	(state->top->streaming && state->may_stream && 
+	 (state->top->from_buf || !state->is_string));
+
     /*
-     * We are doing a definite-length encoding.  First we have to
+     * If we are doing a definite-length encoding, first we have to
      * walk the data structure to calculate the entire contents length.
+     * If we are doing an indefinite-length encoding, we still need to 
+     * know if the contents is:
+     *    optional and to be omitted, or 
+     *    an ANY (header is pre-encoded), or 
+     *    a SAVE or some other kind of template used only by the decoder.
+     * So, we call this function either way.
      */
     contents_length = sec_asn1e_contents_length (state->theTemplate,
 						 state->src, 
                                                  state->disallowStreaming,
-                                                 &noheader);
+						 indefinite,
+                                                 &hdrException);
     /*
      * We might be told explicitly not to put out a header.
      * But it can also be the case, via a pushed subtemplate, that
      * sec_asn1e_contents_length could not know that this field is
      * really optional.  So check for that explicitly, too.
      */
-    if (noheader || (contents_length == 0 && state->optional)) {
+    if (hdrException != hdr_normal || 
+	(contents_length == 0 && state->optional)) {
 	state->place = afterContents;
-	if (state->top->streaming && state->may_stream && state->top->from_buf)
-	    /* we did not find an optional indefinite string, so we don't encode it.
-	     * However, if TakeFromBuf is on, we stop here anyway to give our caller
-	     * a chance to intercept at the same point where we would stop if the
-	     * field were present. */
+	if (state->top->streaming && 
+	    state->may_stream && 
+	    state->top->from_buf) {
+	    /* we did not find an optional indefinite string, so we 
+	     * don't encode it.  However, if TakeFromBuf is on, we stop 
+	     * here anyway to give our caller a chance to intercept at the 
+	     * same point where we would stop if the field were present. 
+	     */
 	    state->top->status = needBytes;
+	}
 	return;
     }
 
-    if (state->top->streaming && state->may_stream
-			      && (state->top->from_buf || !state->is_string)) {
+    if (indefinite) {
 	/*
 	 * We need to put out an indefinite-length encoding.
-	 */
-	state->indefinite = PR_TRUE;
-	/*
 	 * The only universal types that can be constructed are SETs,
 	 * SEQUENCEs, and strings; so check that it is one of those,
 	 * or that it is not universal (e.g. context-specific).
 	 */
+	state->indefinite = PR_TRUE;
 	PORT_Assert ((tag_number == SEC_ASN1_SET)
 		     || (tag_number == SEC_ASN1_SEQUENCE)
 		     || ((tag_modifiers & SEC_ASN1_CLASS_MASK) != 0)
