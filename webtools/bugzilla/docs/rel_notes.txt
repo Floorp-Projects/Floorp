@@ -25,6 +25,7 @@ Table of Contents
     * Choice of E-Mail Sending Methods
     * "User Preferences"
     * "Large Attachment" Storage
+    * "User Visibility" Controls
     * Miscellaneous Improvements
     * All Changes
 - Deprecated Features
@@ -87,8 +88,8 @@ For MySQL Users
 For PostgreSQL Users       (new in 2.20)
 --------------------
 
-  PostgreSQL 7.3.x         (8.x has not been tested, but may work)
-  perl module: DBD::Pg 1.31
+  PostgreSQL 7.3.x          (8.x has received less testing)
+  perl module: DBD::Pg 1.31 (1.41 required for PostgreSQL 8+)
 
 Required Perl Modules
 ---------------------
@@ -167,7 +168,14 @@ You can now tell Bugzilla to accept a certain value passed in from
 Apache as authentication for Bugzilla users. This means that Bugzilla
 now "supports" any type of authentication that Apache supports.
 
-To use this, FIXME ----- EXPLAIN THIS BEFORE 2.20 RELEASE ----- FIXME
+To use this, set the "user_info_class" parameter to "ENV" and, at a 
+minimum, set the "auth_env_email" parameter to the name of the 
+Environment variable that passes the authenticated user (usually 
+"REMOTE_USER").  If your webserver knows users' real names as well, also
+set the "auth_env_realname" parameter.  If you are using a true 
+single-signon system that assigns an identifier uniquely to an
+individual, even across changes of email address, then set 
+"auth_env_id" to the name of that variable.
 
 
 User-List Drop-Down Menus
@@ -270,6 +278,19 @@ it's stored on the disk instead of in the database.
 To enable this feature, set the "maxlocalattachmentsize" parameter to
 a non-zero value, in editparams.cgi.
 
+
+"User Visibility" Controls
+--------------------------
+
+It is now possible to prevent users from encountering all other users when
+using user-matching or drop-down userlists.  To enable this restriction, 
+enable the "usevisibilitygroups" parameter.  Once this is enabled, each 
+group's permissions will include a new column for "visible."  The members 
+of any group for which the group being edited is visible will be
+able to user-match this groups's users or see them in dropdown lists.
+
+This does not control who a user can CC on a bug, only who they can 
+see in the user-matching lists or drop-downs.
 
 Miscellaneous Improvements
 --------------------------
@@ -403,6 +424,11 @@ Outstanding Issues
   "mid-air collision" protection.
 
 - Bug 285614: importxml.pl may be broken in many different ways.
+
+- (No Bug Number) Note that the email interface (bug_mail.pl) in the 
+  contrib/ directory has not been maintained (as it has no maintainer),
+  and so may not be working properly. Contributions are welcome, if
+  anybody would like to work on it.
 
 
 Upgrading From An Older Bugzilla
@@ -555,6 +581,12 @@ Other Changes
   Bugzilla->dbh is the $dbh handle to use. We expect SendSQL to completely
   disappear by 2.22. For more information on how to use the $dbh methods, 
   see:  http://search.cpan.org/dist/DBI/DBI.pm
+
+- The $::userid variable will be going away. Use Bugzilla->user->id instead.
+
+- All global variables (any that start with $::, @::, or %::) will 
+  be going away, eventually, hopefully they will be entirely gone 
+  by Bugzilla 2.24.
 
 
 Release Notes for Previous Versions
