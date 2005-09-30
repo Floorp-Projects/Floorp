@@ -2320,7 +2320,7 @@ nsPostScriptObj::translate(nscoord x, nscoord y)
    *    @param iRect    Rectangle describing the portion of the image's
    *                    coordinate space covered by the image pixel data.
    */
-
+   
 void
 nsPostScriptObj::draw_image(nsIImage *anImage,
     const nsRect& sRect, const nsRect& iRect, const nsRect& dRect)
@@ -2330,6 +2330,17 @@ nsPostScriptObj::draw_image(nsIImage *anImage,
     return;
   }
 
+  PRBool hasAlpha = anImage->GetHasAlphaMask();
+  PRInt32 bytesPerRow = anImage->GetLineStride();
+  
+  PRUint8 *rowCopy = nsnull;
+  if (hasAlpha) {
+    rowCopy = new PRUint8[bytesPerRow];
+    if (!rowCopy) {
+      return;
+    }
+  }
+
   anImage->LockImagePixels(PR_FALSE);
   PRUint8 *theBits = anImage->GetBits();
 
@@ -2337,14 +2348,34 @@ nsPostScriptObj::draw_image(nsIImage *anImage,
   // There's nothing to print, so just return.
   if (!theBits || (0 == iRect.width) || (0 == iRect.height)) {
     anImage->UnlockImagePixels(PR_FALSE);
+    delete[] rowCopy;
     return;
   }
-
+  
   // Save the current graphic state and define a PS variable that
-  // can hold one line of pixel data.
-  fprintf(mScriptFP, "gsave\n/rowdata %d string def\n",
-     mPrintSetup->color ? iRect.width * 3 : iRect.width);
- 
+  // can hold pixel data.
+  // If !hasAlpha, we read the image one line at a time
+  PRInt32 pixCountBytes = mPrintSetup->color ? iRect.width * 3 : iRect.width;
+  PRInt32 alphaCountBytes = hasAlpha ? (iRect.width + 7)/8 : 0;
+  fprintf(mScriptFP, "gsave\n"
+                     "/rowdata %d string def\n", pixCountBytes + alphaCountBytes);
+  if (hasAlpha) {
+    // Determine whether we can support explicit mask
+    fputs("/useExplicitMask false def\n"
+          "/languagelevel where\n"
+          "{pop languagelevel\n"
+          " 3 eq\n"
+          " {/useExplicitMask true def} if\n"
+          "} if\n"
+          "/makedict {"
+          " counttomark 2 idiv\n"
+          " dup dict\n"
+          " begin\n"
+          "  {def} repeat\n"
+          "  pop\n"
+          "  currentdict\n"
+          " end } def\n", mScriptFP);
+  }
   // Translate the coordinate origin to the corner of the rectangle where
   // the image should appear, set up a clipping region, and scale the
   // coordinate system to the image's final size.
@@ -2352,10 +2383,6 @@ nsPostScriptObj::draw_image(nsIImage *anImage,
   box(0, 0, dRect.width, dRect.height);
   clip();
   fprintf(mScriptFP, "%d %d scale\n", dRect.width, dRect.height);
-
-  // Describe how the pixel data is to be interpreted: pixels per row,
-  // rows, and bits per pixel (per component in color).
-  fprintf(mScriptFP, "%d %d 8 ", iRect.width, iRect.height);
 
   // Output the transformation matrix for the image. This is a bit tricky
   // to understand. PS image-drawing operations involve two transformation
@@ -2397,25 +2424,121 @@ nsPostScriptObj::draw_image(nsIImage *anImage,
     tmTY += tmSY;
     tmSY = -tmSY;
   }
-  fprintf(mScriptFP, "[ %d 0 0 %d %d %d ]\n", tmSX, tmSY, tmTX, tmTY);
-
-  // Output the data-reading procedure and the appropriate image command.
-  fputs(" { currentfile rowdata readhexstring pop }", mScriptFP);
-  if (mPrintSetup->color)
+  
+  if (hasAlpha) {
+    const char* decodeMatrix;
+    fprintf(mScriptFP, " useExplicitMask {\n");
+    if (mPrintSetup->color) {
+      fprintf(mScriptFP, " /DeviceRGB setcolorspace\n");
+      decodeMatrix = "0 1 0 1 0 1";
+    } else {
+      fprintf(mScriptFP, " /DeviceGray setcolorspace\n");
+      decodeMatrix = "0 1";
+    }
+    fprintf(mScriptFP, "mark /ImageType 3\n"
+                       "  /DataDict mark\n"
+                       "   /ImageType 1 /Width %d /Height %d\n"
+                       "   /ImageMatrix [ %d 0 0 %d %d %d ]\n"
+                       "   /DataSource { currentfile rowdata readhexstring pop }\n"
+                       "   /BitsPerComponent 8\n"
+                       "   /Decode [%s]\n"
+                       "  makedict\n"
+                       "  /MaskDict mark\n"
+                       "   /ImageType 1 /Width %d /Height %d\n"
+                       "   /ImageMatrix [ %d 0 0 %d %d %d ]\n"
+                       "   /BitsPerComponent 1\n"
+                       "   /Decode [1 0]\n"
+                       "  makedict\n"
+                       "  /InterleaveType 2\n" // interleave by row
+                       " makedict image}\n"
+                       "{", iRect.width, iRect.height, tmSX, tmSY, tmTX, tmTY,
+                       decodeMatrix,
+                       iRect.width, iRect.height, tmSX, tmSY, tmTX, tmTY);
+  }
+  // output the runtime fallback "no mask" code
+  fprintf(mScriptFP, " %d %d 8 [ %d 0 0 %d %d %d ]\n",
+                     iRect.width, iRect.height, tmSX, tmSY, tmTX, tmTY);
+  if (hasAlpha) {
+    fprintf(mScriptFP, " { currentfile rowdata readhexstring pop %d %d getinterval }\n",
+                       /*index*/ alphaCountBytes, /*index*/ pixCountBytes);
+  } else {
+    fprintf(mScriptFP, " { currentfile rowdata readhexstring pop }\n");
+  }
+  if (mPrintSetup->color) {
     fputs(" false 3 colorimage\n", mScriptFP);
-  else
+  } else {
     fputs(" image\n", mScriptFP);
-
+  }
+  if (hasAlpha) {
+    fputs("} ifelse\n", mScriptFP);
+  }
+  
+  PRUint8* alphaBits;
+  PRInt32 alphaBytesPerRow;
+  PRInt32 alphaDepth;
+  if (hasAlpha) {
+    anImage->LockImagePixels(PR_TRUE);
+    alphaBits = anImage->GetAlphaBits();
+    alphaBytesPerRow = anImage->GetAlphaLineStride();
+    alphaDepth = anImage->GetAlphaDepth();
+  }
+  
   // Output the image data. The entire image is written, even
   // if it's partially clipped in the document.
   int outputCount = 0;
-  PRInt32 bytesPerRow = anImage->GetLineStride();
 
-  for (nscoord y = 0; y < iRect.height; y++) {
-    // calculate the starting point for this row of pixels
-    PRUint8 *row = theBits                // Pixel buffer start
-      + y * bytesPerRow;                  // Rows already output
+  nscoord y;
+  for (y = 0; y < iRect.height; y++) {
+    PRUint8 *row = theBits + y * bytesPerRow;
 
+    // output alpha first, if any
+    if (hasAlpha) {
+      // Copy the row so that we can set any transparent pixels to white
+      memcpy(rowCopy, row, bytesPerRow);
+      row = rowCopy;
+        
+      PRUint8 *alphaRow = alphaBits + y * alphaBytesPerRow;
+      PRUint8 v = 0;
+      for (nscoord x = 0; x < iRect.width; x++) {
+        PRUint8 alpha;
+        if (alphaDepth == 8) {
+          alpha = alphaRow[x];
+        } else {
+          PRUint8 mask = 0x80 >> (x & 7);
+          // Test the x'th bit of the alphaRow
+          alpha = (alphaRow[x >> 3] & mask) ? 255 : 0;
+        }
+        
+        if (alpha >= 128) {
+          PRUint8 mask = 0x80 >> (x & 7);
+          // set the correct bit for the Postscript mask
+          v |= mask;
+        } else {
+          // Many tools set fully transparent pixels to black (perhaps
+          // because that compresses better). So for PS printers that
+          // don't support transparency, we'll get the image on an ugly
+          // black background which is especially bad on printers.
+          // So if the pixel is fully transparent and fully black, then
+          // we set it to white --- still wrong, but less bad.
+          PRUint8 *pixel = row + (x * 3);
+          if (alpha == 0 && pixel[0] == 0 && pixel[1] == 0 &&
+              pixel[2] == 0) {
+            pixel[0] = pixel[1] = pixel[2] = 0xFF;
+          }
+        }
+        if ((x & 7) == 7 || x == iRect.width - 1) {
+          outputCount += fprintf(mScriptFP, "%02x", v);
+          if (outputCount >= 72) {
+            fputc('\n', mScriptFP);
+            outputCount = 0;
+          }
+          v = 0;
+        }
+      }
+      fputc('\n', mScriptFP);
+      outputCount = 0;
+    }
+    
     for (nscoord x = 0; x < iRect.width; x++) {
       PRUint8 *pixel = row + (x * 3);
       if (mPrintSetup->color)
@@ -2430,12 +2553,18 @@ nsPostScriptObj::draw_image(nsIImage *anImage,
         outputCount = 0;
       }
     }
+    fputc('\n', mScriptFP);
+    outputCount = 0;
+  }
+  if (hasAlpha) {
+    anImage->UnlockImagePixels(PR_TRUE);
   }
   anImage->UnlockImagePixels(PR_FALSE);
-
+  
   // Free the PS data buffer and restore the previous graphics state.
-  fputs("\n/undef where { pop /rowdata where { /rowdata undef } if } if\n", mScriptFP);
-  fputs("grestore\n", mScriptFP);
+  fputs("/undef where { pop /rowdata where { /rowdata undef } if } if\n"
+        "grestore\n", mScriptFP);
+  delete[] rowCopy;
 }
 
 
