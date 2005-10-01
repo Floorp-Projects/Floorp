@@ -546,14 +546,11 @@ static int MatchesLangGroup(font_family family,  const char* aLangGroup)
 
 static nsresult EnumFonts(const char * aLangGroup, const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult) 
 { 
-  nsString font_name; 
-    
   int32 numFamilies = count_font_families(); 
  
-  PRUnichar** array = 
-    (PRUnichar**) nsMemory::Alloc(numFamilies * sizeof(PRUnichar*)); 
-  if (!array) 
-    return NS_ERROR_OUT_OF_MEMORY; 
+  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(numFamilies * sizeof(PRUnichar*)); 
+  NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
+
   int j = 0;
   for(int32 i = 0; i < numFamilies; i++) 
   {
@@ -565,22 +562,30 @@ static nsresult EnumFonts(const char * aLangGroup, const char* aGeneric, PRUint3
       {
         if(FontMatchesGenericType(family, flags, aGeneric, aLangGroup))
         {
-          font_name.AssignWithConversion(family); 
-          if (!(array[j] = ToNewUnicode(font_name)))
+          if (!(array[j] = ToNewUnicode(NS_ConvertUTF8toUTF16((const char*)family))))
             break; 
           ++j;
         }
       }
     }
   } 
- 
-  NS_QuickSort(array, j, sizeof(PRUnichar*), CompareFontNames, nsnull); 
- 
   *aCount = j; 
+
   if (*aCount)
+  {
     *aResult = array; 
+    // Resizing array for real number of matching families after check for language and generic type
+    if (*aCount < numFamilies)
+    {
+      array = (PRUnichar**) nsMemory::Realloc(array, *aCount * sizeof(PRUnichar*));
+      NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
+    }
+    NS_QuickSort(array, j, sizeof(PRUnichar*), CompareFontNames, nsnull);
+  }
   else 
+  {
     nsMemory::Free(array); 
+  }
 
   return NS_OK; 
 } 
@@ -622,8 +627,24 @@ nsFontEnumeratorBeOS::HaveFontFor(const char* aLangGroup, PRBool* aResult)
 {
   NS_ENSURE_ARG_POINTER(aLangGroup); 
   NS_ENSURE_ARG_POINTER(aResult); 
-  *aResult = PR_TRUE; 
-  // XXX stub
+  *aResult = PR_FALSE;
+
+  int32 numFamilies = count_font_families(); 
+
+  for(int32 i = 0; i < numFamilies; i++) 
+  {
+    font_family family; 
+    uint32 flags; 
+    if (get_font_family(i, &family, &flags) == B_OK) 
+    {
+      if (family && (!aLangGroup || MatchesLangGroup(family,  aLangGroup)))
+      {
+         *aResult = PR_TRUE;
+         return NS_OK;
+         
+      }
+    }
+  }
   return NS_OK;
 }
 
