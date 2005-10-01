@@ -16,8 +16,8 @@
 
 <!ENTITY  allowedSitesPopup.label           "Allowed Sites">
 <!ENTITY  allowedSitesPopup.accesskey       "l">
-<!ENTITY  allowedSitesSoftware.label        "Allowed Sites">
-<!ENTITY  allowedSitesSoftware.accesskey    "o">
+<!ENTITY  exceptionsSoftware.label          "Exceptions">
+<!ENTITY  exceptionsSoftware.accesskey      "x">
 <!ENTITY  exceptions.label                  "Exceptions">
 <!ENTITY  exceptions.accesskey              "E">
 
