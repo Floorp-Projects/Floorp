@@ -112,7 +112,7 @@ nsSHistoryObserver::Observe(nsISupports *aSubject, const char *aTopic,
     prefs->GetIntPref(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
                       &nsSHistory::sHistoryMaxTotalViewers);
     if (nsSHistory::sHistoryMaxTotalViewers < 0) {
-      nsSHistory::sHistoryMaxTotalViewers = nsSHistory::GetMaxTotalViewers();
+      nsSHistory::sHistoryMaxTotalViewers = nsSHistory::CalcMaxTotalViewers();
     }
 
     nsSHistory::EvictGlobalContentViewer();
@@ -158,16 +158,9 @@ NS_INTERFACE_MAP_END
 //    nsSHistory: nsISHistory
 //*****************************************************************************
 
-NS_IMETHODIMP
-nsSHistory::GetHistoryMaxTotalViewers(PRInt32 *max)
-{
-    *max = sHistoryMaxTotalViewers;
-    return NS_OK;
-}
-
 // static
 PRUint32
-nsSHistory::GetMaxTotalViewers()
+nsSHistory::CalcMaxTotalViewers()
 {
   // Calculate an estimate of how many ContentViewers we should cache based
   // on RAM.  This assumes that the average ContentViewer is 4MB (conservative)
@@ -262,7 +255,7 @@ nsSHistory::Startup()
   // If the pref is negative, that means we calculate how many viewers
   // we think we should cache, based on total memory
   if (sHistoryMaxTotalViewers < 0) {
-    sHistoryMaxTotalViewers = GetMaxTotalViewers();
+    sHistoryMaxTotalViewers = CalcMaxTotalViewers();
   }
 
   // Initialize the global list of all SHistory objects

@@ -101,6 +101,7 @@
 #include "nsDocShellLoadInfo.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsDocShellEnumerator.h"
+#include "nsSHistory.h"
 
 // Helper Classes
 #include "nsDOMError.h"
@@ -4964,15 +4965,8 @@ nsDocShell::CanSavePresentation(PRUint32 aLoadType,
 
     // Avoid doing the work of saving the presentation state in the case where
     // the content viewer cache is disabled.
-    nsCOMPtr<nsISHistory> rootSH;
-    GetRootSessionHistory(getter_AddRefs(rootSH));
-    if (rootSH) {
-      nsCOMPtr<nsISHistoryInternal> shistInt(do_QueryInterface(rootSH));
-      PRInt32 maxViewers;
-      shistInt->GetHistoryMaxTotalViewers(&maxViewers);
-      if (maxViewers == 0)
+    if (nsSHistory::GetMaxTotalViewers() == 0)
         return PR_FALSE;
-    }
 
     // Don't cache the content viewer if we're in a subframe and the subframe
     // pref is disabled.
