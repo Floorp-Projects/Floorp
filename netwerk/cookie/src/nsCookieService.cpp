@@ -1925,6 +1925,13 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
 
   // no domain specified, use hostFromURI
   } else {
+    // block any URIs without a host that aren't file:/// URIs
+    if (hostFromURI.IsEmpty()) {
+      PRBool isFileURI = PR_FALSE;
+      aHostURI->SchemeIs("file", &isFileURI);
+      if (!isFileURI)
+        return PR_FALSE;
+    }
     aCookieAttributes.host = hostFromURI;
   }
 
