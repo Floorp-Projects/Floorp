@@ -221,7 +221,7 @@ moz_debug_program()
 	fi
     if [ -x "$debugger" ] 
     then
-        tmpfile=`mktemp -t` || { echo "Cannot create temporary file" >&2; exit 1; }
+        tmpfile=`mktemp /tmp/mozargs.XXXXXX` || { echo "Cannot create temporary file" >&2; exit 1; }
         trap " [ -f \"$tmpfile\" ] && /bin/rm -f -- \"$tmpfile\"" 0 1 2 3 13 15
         echo "set args ${1+"$@"}" > $tmpfile
 # If you are not using ddd, gdb and know of a way to convey the arguments 
