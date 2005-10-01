@@ -51,6 +51,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 #include "nsIIDNService.h"
+#include "nsIPlatformCharset.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
 #include "nsAutoPtr.h"
@@ -2454,7 +2455,14 @@ nsStandardURL::SetFile(nsIFile *file)
     rv = net_GetURLSpecFromFile(file, url);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpec(url);
+    // We should always set the charset until bug 278161 is fixed.
+    nsCOMPtr <nsIPlatformCharset> platformCharset =
+        do_GetService(NS_PLATFORMCHARSET_CONTRACTID);
+    nsCAutoString charset;
+    if (platformCharset)
+        platformCharset->GetCharset(kPlatformCharsetSel_FileName, charset);
+
+    rv = Init(mURLType, mDefaultPort, url, charset.get(), nsnull);
 
     // must clone |file| since its value is not guaranteed to remain constant
     if (NS_SUCCEEDED(rv)) {
