@@ -98,7 +98,6 @@ nsImageLoadingContent::nsImageLoadingContent()
     mImageBlockingStatus(nsIContentPolicy::ACCEPT),
     mLoadingEnabled(PR_TRUE),
     mStartingLoad(PR_FALSE),
-    mLoading(PR_FALSE),
     // mBroken starts out true, since an image without a URI is broken....
     mBroken(PR_TRUE),
     mUserDisabled(PR_FALSE),
@@ -163,10 +162,6 @@ nsImageLoadingContent::OnStartContainer(imgIRequest* aRequest,
                                         imgIContainer* aContainer)
 {
   LOOP_OVER_OBSERVERS(OnStartContainer(aRequest, aContainer));
-
-  // Have to check for state changes here, since we might have been in
-  // the LOADING state before.
-  UpdateImageState(PR_TRUE);
   return NS_OK;    
 }
 
@@ -545,8 +540,7 @@ nsImageLoadingContent::ImageState() const
   return
     (mBroken * NS_EVENT_STATE_BROKEN) |
     (mUserDisabled * NS_EVENT_STATE_USERDISABLED) |
-    (mSuppressed * NS_EVENT_STATE_SUPPRESSED) |
-    (mLoading * NS_EVENT_STATE_LOADING);
+    (mSuppressed * NS_EVENT_STATE_SUPPRESSED);
 }
 
 void
@@ -568,7 +562,7 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
 
   PRInt32 oldState = ImageState();
 
-  mLoading = mBroken = mUserDisabled = mSuppressed = PR_FALSE;
+  mBroken = mUserDisabled = mSuppressed = PR_FALSE;
   
   // If we were blocked by server-based content policy, we claim to be
   // suppressed.  If we were blocked by type-based content policy, we claim to
@@ -585,8 +579,6 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
     nsresult rv = mCurrentRequest->GetImageStatus(&currentLoadStatus);
     if (NS_FAILED(rv) || (currentLoadStatus & imgIRequest::STATUS_ERROR)) {
       mBroken = PR_TRUE;
-    } else if (!(currentLoadStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
-      mLoading = PR_TRUE;
     }
   }
 

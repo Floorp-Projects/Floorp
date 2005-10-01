@@ -438,15 +438,14 @@ nsImageFrame::SourceRectToDest(const nsRect& aRect)
 }
 
 static PRBool
-ImageOK(PRInt32 aContentState)
+ImageOK(nsIContent* aContent)
 {
   // Note that we treat NS_EVENT_STATE_SUPPRESSED images as "OK".  This means
   // that we'll construct image frames for them as needed if their display is
   // toggled from "none" (though we won't paint them, unless their visibility
   // is changed too).
-  return !(aContentState &
-           (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
-            NS_EVENT_STATE_LOADING));
+  return !(aContent->IntrinsicState() &
+           (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED));
 }
 
 /* static */
@@ -454,14 +453,8 @@ PRBool
 nsImageFrame::ShouldCreateImageFrameFor(nsIContent* aContent,
                                         nsStyleContext* aStyleContext)
 {
-  PRInt32 state = aContent->IntrinsicState();
-  if (ImageOK(state)) {
+  if (ImageOK(aContent)) {
     // Image is fine; do the image frame thing
-    return PR_TRUE;
-  }
-
-  if ((state & NS_EVENT_STATE_LOADING) &&
-      HaveFixedSize(aStyleContext->GetStylePosition())) {
     return PR_TRUE;
   }
   
@@ -1280,7 +1273,7 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
                                 getter_AddRefs(currentRequest));
       }
       
-      PRBool imageOK = ImageOK(mContent->IntrinsicState());
+      PRBool imageOK = ImageOK(mContent);
 
       nsCOMPtr<imgIContainer> imgCon;
       if (currentRequest) {

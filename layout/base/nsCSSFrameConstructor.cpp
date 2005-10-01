@@ -10436,7 +10436,7 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
     nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(aContent);
     if (primaryFrame) {
       if (aStateMask & (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
-                        NS_EVENT_STATE_SUPPRESSED | NS_EVENT_STATE_LOADING)) {
+                        NS_EVENT_STATE_SUPPRESSED)) {
         hint = nsChangeHint_ReconstructFrame;
       } else {          
         PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
