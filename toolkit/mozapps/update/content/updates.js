@@ -450,7 +450,7 @@ var gUpdates = {
     }
     tm.registerTimer(timerID, (new Callback(gUpdates.update, methodName)), 
                      timerInterval);
-  },
+  }
 }
 
 /**
@@ -1341,7 +1341,7 @@ var gErrorsPage = {
     gUpdates.wiz.getButton("back").disabled = true;
     gUpdates.wiz.getButton("cancel").disabled = true;
     gUpdates.wiz.getButton("next").focus();
-  },
+  }
 };
 
 /**
@@ -1450,7 +1450,7 @@ var gFinishedPage = {
                            18000000);
     gUpdates.registerNagTimer("restart-nag-timer", interval, 
                               "showUpdateComplete");
-  },
+  }
 };
 
 /**
@@ -1478,7 +1478,7 @@ var gInstalledPage = {
     this.setButtons(null, true, null, true, null, false, null, true, false, 
                     null, false);
     gUpdates.wiz.getButton("finish").focus();
-  },
+  }
 };
 
 /**
@@ -1502,4 +1502,3 @@ function tryToClose() {
 function setCurrentPage(pageid) {
   gUpdates.wiz.currentPage = document.getElementById(pageid);
 }
-
