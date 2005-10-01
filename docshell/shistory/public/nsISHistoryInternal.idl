@@ -51,7 +51,7 @@ interface nsIDocShell;
 #define NS_SHISTORY_INTERNAL_CONTRACTID "@mozilla.org/browser/shistory-internal;1"
 %}
 
-[scriptable, uuid(494fac3c-64f4-41b8-b209-b4ada899613b)]
+[scriptable, uuid(df8788d6-c0ed-4517-b47e-c719afc94284)]
 interface nsISHistoryInternal: nsISupports
 {
   /**
@@ -98,12 +98,4 @@ interface nsISHistoryInternal: nsISupports
    * the previous viewer.
    */
    void evictContentViewers(in long previousIndex, in long index);
-
-   /**
-    * Max number of total cached content viewers.  If the pref
-    * browser.sessionhistory.max_total_viewers is negative, then
-    * this value is calculated based on the total amount of memory.
-    * Otherwise, it comes straight from the pref.
-    */
-   readonly attribute long historyMaxTotalViewers;
 };

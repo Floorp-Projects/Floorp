@@ -76,9 +76,11 @@ public:
   // One time initialization method called upon docshell module construction
   static nsresult Startup();
 
-  // Calculates a max number of total
-  // content viewers to cache, based on amount of total memory
-  static PRUint32 GetMaxTotalViewers();
+  // Max number of total cached content viewers.  If the pref
+  // browser.sessionhistory.max_total_viewers is negative, then
+  // this value is calculated based on the total amount of memory.
+  // Otherwise, it comes straight from the pref.
+  static PRUint32 GetMaxTotalViewers() { return sHistoryMaxTotalViewers; }
 
 protected:
   virtual ~nsSHistory();
@@ -100,6 +102,10 @@ protected:
   void EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex);
   static void EvictGlobalContentViewer();
   static void EvictAllContentViewers();
+
+  // Calculates a max number of total
+  // content viewers to cache, based on amount of total memory
+  static PRUint32 CalcMaxTotalViewers();
 
 protected:
   nsCOMPtr<nsISHTransaction> mListRoot;
