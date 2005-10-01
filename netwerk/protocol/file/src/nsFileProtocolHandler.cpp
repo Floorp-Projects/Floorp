@@ -46,7 +46,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
-#include "nsIPlatformCharset.h"
 
 #include "nsNetUtil.h"
 
@@ -270,15 +269,8 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
         specPtr = &buf;
 #endif
 
-    nsCAutoString urlCharset;
-    // We should set file system charset until bug 278161 is fixed.
-    nsCOMPtr <nsIPlatformCharset> platformCharset =
-        do_GetService(NS_PLATFORMCHARSET_CONTRACTID);
-    if (platformCharset) {
-        platformCharset->GetCharset(kPlatformCharsetSel_FileName, urlCharset);
-        if (!urlCharset.IsEmpty())
-            charset = urlCharset.get();
-    }
+    // XXX perhaps we should convert |charset| to whatever the system charset
+    // is so that nsStandardURL will normalize our URL string properly?
 
     nsresult rv = url->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
                             *specPtr, charset, baseURI);
@@ -341,8 +333,8 @@ nsFileProtocolHandler::NewFileURI(nsIFile *file, nsIURI **result)
     if (!url)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // NOTE: the origin charset is assigned the value of the platform
-    // charset by the SetFile method.
+    // XXX shouldn't we set nsIURI::originCharset ??
+
     rv = url->SetFile(file);
     if (NS_FAILED(rv)) return rv;
 
