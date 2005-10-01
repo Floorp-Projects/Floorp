@@ -3660,8 +3660,10 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
                          nsSpread aSpread)
 {
   DEBUG_VERIFY_NOT_DIRTY(mState);
+#if 0 //XXXrbs disable due to bug 310318
   if (mState & NS_FRAME_IS_DIRTY)
     return NS_ERROR_UNEXPECTED;
+#endif
 
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
@@ -3927,8 +3929,10 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
                                            nsIFrame **outChildFrame)
 {
   DEBUG_VERIFY_NOT_DIRTY(mState);
+#if 0 //XXXrbs disable due to bug 310227
   if (mState & NS_FRAME_IS_DIRTY)
     return NS_ERROR_UNEXPECTED;
+#endif
 
   if (nsnull == outChildFrame)
     return NS_ERROR_NULL_POINTER;
