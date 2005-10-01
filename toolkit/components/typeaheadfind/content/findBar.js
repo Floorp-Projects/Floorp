@@ -66,6 +66,7 @@ var gFlashFindBarTimeout = null;
 var gLastHighlightString = "";
 var gTypeAheadLinksOnly = false;
 var gIsIMEComposing = false;
+var gTextToSubURIService = null;
 
 // DOMRange used during highlighting
 var searchRange;
@@ -112,6 +113,10 @@ function initFindBar()
   
   var findField = document.getElementById("find-field");
   findField.addEventListener("dragdrop", findBarOnDrop, true);
+
+  gTextToSubURIService =
+    Components.classes["@mozilla.org/intl/texttosuburi;1"]
+                .getService(Components.interfaces.nsITextToSubURI);
 }
 
 var findbarObserver = {
@@ -366,6 +371,29 @@ function fireKeypressEvent(target, evt)
   target.dispatchEvent(event);
 }
 
+function updateStatusBar()
+{
+  var xulBrowserWindow = window.XULBrowserWindow;
+  if (!xulBrowserWindow)
+    return false;
+
+  if (!gFoundLink || !gFoundLink.href || gFoundLink.href == "") {
+    xulBrowserWindow.setOverLink("");
+    return true;
+  }
+
+  var docCharset = "";
+  var ownerDoc = gFoundLink.ownerDocument;
+  if (ownerDoc)
+    docCharset = ownerDoc.characterSet;
+
+  var url =
+    gTextToSubURIService.unEscapeURIForUI(docCharset, gFoundLink.href);
+  xulBrowserWindow.setOverLink(url);
+
+  return true;
+}
+
 function setFoundLink(foundLink)
 {
   if (gFoundLink == foundLink)
@@ -389,6 +417,13 @@ function setFoundLink(foundLink)
   }
 
   gFoundLink = foundLink;
+
+  // We should update status bar. But we need delay. If the mouse cursor is
+  // on the document, the status bar text is changed by mouse event that is
+  // fired by scroll event. So, we need to change the status bar text after
+  // mouse event.
+  if (gFindMode != FIND_NORMAL)
+    setTimeout(updateStatusBar, 0);
 }
 
 function finishFAYT(aKeypressEvent)
