@@ -385,7 +385,7 @@ sub packit {
   }
 
   if ($cachebuild and $Settings::update_package) {
-    update_create_package( builddir => $builddir,
+    update_create_package( objdir => $builddir,
                            stagedir => $stagedir,
                            url => $url,
                          );
@@ -399,7 +399,8 @@ sub packit {
 sub update_create_package {
     my %args = @_;
 
-    my $objdir = $args{'builddir'};
+    my $locale = $args{'locale'};
+    my $objdir = $args{'objdir'};
     my $stagedir = $args{'stagedir'};
     my $distdir = $args{'distdir'};
     my $url = $args{'url'};
@@ -407,6 +408,7 @@ sub update_create_package {
     # $distdir refers to the directory containing the app we plan to package.
     # Note: Other uses of $objdir/dist should not be changed to use $distdir.
     $distdir = "$objdir/dist" if !defined($distdir);
+    $locale = "en-US" if !defined($locale);
 
     my($update_product, $update_version, $update_platform);
     my($update_appv, $update_extv);
@@ -487,7 +489,7 @@ sub update_create_package {
           $path = "$path/$update_product/$update_platform";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
-          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
+          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/$locale.txt";
       } else {
           TinderUtils::print_log "\nNot pushing first-gen update info...\n";
       }
@@ -499,14 +501,14 @@ sub update_create_package {
           $path = "$path/$update_product/$update_version/$update_platform";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
-          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/en-US.txt";
+          TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.0 cltbld\@aus-staging.mozilla.org:$path/$locale.txt";
       }
 
       # Push the build schema 2 data.
       {
           TinderUtils::print_log "\nPushing third-gen update info...\n";
           my $path = "/opt/aus2/build/0";
-          $path = "$path/$update_product/$update_version/$update_platform/$buildid/en-US";
+          $path = "$path/$update_product/$update_version/$update_platform/$buildid/$locale";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
           TinderUtils::run_shell_command "scp -i $ENV{HOME}/.ssh/aus $objdir/dist/update/update.snippet.1 cltbld\@aus-staging.mozilla.org:$path/complete.txt";
@@ -592,7 +594,7 @@ sub update_create_stats {
 }
 
 sub packit_l10n {
-  my ($srcdir, $objdir, $packaging_dir, $package_location, $url, $stagedir) = @_;
+  my ($srcdir, $objdir, $packaging_dir, $package_location, $url, $stagedir, $cachebuild) = @_;
   my $status;
 
   TinderUtils::print_log "Starting l10n builds\n";
@@ -708,9 +710,9 @@ sub packit_l10n {
         # If .../*.dmg.gz exists, copy it to the staging directory.  Otherwise, copy
         # .../*.dmg if it exists.
         my @dmg;
-        @dmg = grep { -f $_ } <${package_location}/../*$locale*.dmg.gz>;
+        @dmg = grep { -f $_ } glob "${package_location}/../*$locale*.dmg.gz";
         if ( scalar(@dmg) eq 0 ) {
-          @dmg = grep { -f $_ } <${package_location}/../*$locale*.dmg>;
+          @dmg = grep { -f $_ } glob "${package_location}/../*$locale*.dmg";
         }
 
         if ( scalar(@dmg) gt 0 ) {
@@ -731,6 +733,15 @@ sub packit_l10n {
           $archive_loc = "$archive_loc/dist";
         }
         run_locale_shell_command "cp $archive_loc/*$locale*.tar.* $stagedir/";
+      }
+
+      if ($cachebuild and $Settings::update_package) {
+        update_create_package( objdir => $objdir,
+                               stagedir => $stagedir,
+                               url => $url,
+                               locale => $locale,
+                               distdir => "$objdir/dist/l10n-stage",
+                             );
       }
     }
 
@@ -907,6 +918,9 @@ sub PreBuild {
     TinderUtils::print_log "starting nightly release build\n";
     # clobber the tree
     TinderUtils::run_shell_command "rm -rf mozilla";
+    if ( -d "l10n" ) {
+      TinderUtils::run_shell_command "rm -rf l10n";
+    }
   } else {
     TinderUtils::print_log "starting non-release build\n";
   }
@@ -995,7 +1009,17 @@ sub main {
   }
 
   if ($Settings::BuildLocales) {
-    packit_l10n($srcdir,$objdir,$package_creation_path,$package_location,$url_path,$upload_directory);
+    # Check for existing mar tool.
+    my $mar_tool = "$srcdir/modules/libmar/tool/mar";
+    if (! -f $mar_tool) {
+      TinderUtils::run_shell_command "make -C $srcdir/nsprpub && make -C $srcdir/config && make -C $srcdir/modules/libmar";
+      # mar tool should exist now.
+      if (! -f $mar_tool) {
+	TinderUtils::print_log "Failed to build $mar_tool\n";
+      }
+    }
+
+    packit_l10n($srcdir,$objdir,$package_creation_path,$package_location,$url_path,$upload_directory,$cachebuild);
   }
 
   unless (pushit($Settings::ssh_server,
