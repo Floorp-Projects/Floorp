@@ -250,7 +250,6 @@ private:
    * The state we had the last time we checked whether we needed to notify the
    * document of a state change.  These are maintained by UpdateImageState.
    */
-  PRPackedBool mLoading : 1;
   PRPackedBool mBroken : 1;
   PRPackedBool mUserDisabled : 1;
   PRPackedBool mSuppressed : 1;
