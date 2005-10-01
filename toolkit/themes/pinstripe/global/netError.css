@@ -64,6 +64,7 @@ body[dir="rtl"] #errorPageContainer {
 }
 
 #errorShortDesc > p {
+  overflow: auto;
   border-bottom: 1px solid ThreeDLightShadow;
   padding-bottom: 1em;
   font-size: 130%;
