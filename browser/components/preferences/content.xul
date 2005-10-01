@@ -89,9 +89,9 @@
                         onsyncfrompreference="return gContentPane.updateButtons('enableSoftwareInstallButton', 
                                                                             'xpinstall.whitelist.required');"/>
             </vbox>
-            <button id="enableSoftwareInstallButton" label="&allowedSitesSoftware.label;"
+            <button id="enableSoftwareInstallButton" label="&exceptionsSoftware.label;"
                     oncommand="gContentPane.showExceptions('install');"
-                    accesskey="&allowedSitesSoftware.accesskey;"/>
+                    accesskey="&exceptionsSoftware.accesskey;"/>
           </row>
           <row id="enableImagesRow">
             <vbox align="start">
