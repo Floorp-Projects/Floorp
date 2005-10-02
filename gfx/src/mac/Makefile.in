@@ -115,6 +115,12 @@ LOCAL_INCLUDES	= \
 
 include $(topsrcdir)/config/rules.mk
 
+libs:: fontEncoding.properties 
+	$(INSTALL) $^ $(DIST)/bin/res/fonts
+ 
+install:: fontEncoding.properties
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res/fonts
+
 CXXFLAGS    += $(TK_CFLAGS)
 CFLAGS      += $(TK_CFLAGS)
 INCLUDES    += $(TK_CFLAGS) -I$(srcdir)/..
@@ -122,4 +128,3 @@ INCLUDES    += $(TK_CFLAGS) -I$(srcdir)/..
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 EXTRA_DSO_LDOPTS += -framework Cocoa
 endif
-
