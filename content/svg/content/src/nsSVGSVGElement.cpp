@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Jonathan Watt <jonathan.watt@strath.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -125,7 +126,7 @@ protected:
   PRBool IsEventName(nsIAtom* aName);
 
   // implementation helpers:
-  void GetClientPosition(PRInt32 &x, PRInt32 &y);
+  void GetOffsetToAncestor(nsIContent* ancestor, float &x, float &y);
 
   nsCOMPtr<nsIDOMSVGAnimatedLength> mWidth;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mHeight;
@@ -805,6 +806,8 @@ nsSVGSVGElement::GetElementById(const nsAString & elementId, nsIDOMElement **_re
 NS_IMETHODIMP
 nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 {
+  nsresult rv;
+
   if (!mViewBoxToViewportTransform) {
     float viewportWidth;
     {
@@ -920,13 +923,13 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
     printf("                            [b d f] = [   0,  %f, %f]\n", d, f);
 #endif
     
-    NS_NewSVGMatrix(getter_AddRefs(mViewBoxToViewportTransform),
-                    a, 0.0f, 0.0f, d, e, f);
+    rv = NS_NewSVGMatrix(getter_AddRefs(mViewBoxToViewportTransform),
+                         a, 0.0f, 0.0f, d, e, f);
   }
 
   *_retval = mViewBoxToViewportTransform;
   NS_IF_ADDREF(*_retval);
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -1008,181 +1011,225 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::GetCTM(nsIDOMSVGMatrix **_retval)
 {
-  nsCOMPtr<nsIDOMSVGMatrix> CTM;
+  nsresult rv;
+  *_retval = nsnull;
+
+  // first try to get the "screen" CTM of our nearest SVG ancestor
 
   nsIBindingManager *bindingManager = nsnull;
   // XXXbz I _think_ this is right.  We want to be using the binding manager
-  // that would have attached the binding that gives us our anonymous parent.
-  // That's the binding manager for the document we actually belong to, which
-  // is our owner doc.
+  // that would have attached the bindings that gives us our anonymous
+  // ancestors. That's the binding manager for the document we actually belong
+  // to, which is our owner doc.
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
     bindingManager = ownerDoc->BindingManager();
   }
 
-  nsCOMPtr<nsIContent> parent;
-  
-  if (bindingManager) {
-    // we have a binding manager -- do we have an anonymous parent?
-    bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
-  }
+  nsCOMPtr<nsIContent> element = this;
+  nsCOMPtr<nsIContent> ancestor;
+  unsigned short ancestorCount = 0;
+  nsCOMPtr<nsIDOMSVGMatrix> ancestorCTM;
 
-  if (!parent) {
-    // if we didn't find an anonymous parent, use the explicit one,
-    // whether it's null or not...
-    parent = GetParent();
-  }
-  
-  while (parent) {
-    nsCOMPtr<nsIDOMSVGSVGElement> viewportElement = do_QueryInterface(parent);
-    if (viewportElement) {
-      // Our nearest SVG parent is a viewport element.
-      viewportElement->GetViewboxToViewportTransform(getter_AddRefs(CTM));
-      break; 
+  while (1) {
+    if (bindingManager) {
+      // check for an anonymous ancestor first
+      bindingManager->GetInsertionParent(element, getter_AddRefs(ancestor));
     }
-    
-    nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(parent);
-    if (locatableElement) {
-      // Our nearest SVG parent is a locatable object that is not a
-      // viewport. Its GetCTM function will give us a ctm from the
-      // viewport to itself:
-      locatableElement->GetCTM(getter_AddRefs(CTM));
+    if (!ancestor) {
+      // if we didn't find an anonymous ancestor, use the explicit one
+      ancestor = element->GetParent();
+    }
+    if (!ancestor) {
+      // reached the top of our parent chain without finding an SVG ancestor
       break;
     }
 
-    // Our parent was not svg content. We allow interdispersed non-SVG
-    // content to coexist with XBL. Loop until we find the first SVG
-    // parent.
-    
-    nsCOMPtr<nsIContent> next;
-
-    if (bindingManager) {
-      bindingManager->GetInsertionParent(parent, getter_AddRefs(next));
+    nsCOMPtr<nsIDOMSVGSVGElement> viewportElement = do_QueryInterface(ancestor);
+    if (viewportElement) {
+      rv = viewportElement->GetViewboxToViewportTransform(getter_AddRefs(ancestorCTM));
+      if (NS_FAILED(rv)) return rv;
+      break;
     }
 
-    if (!next) {
-      // no anonymous parent, so use explicit one
-      next = parent->GetParent();
+    nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(ancestor);
+    if (locatableElement) {
+      rv = locatableElement->GetCTM(getter_AddRefs(ancestorCTM));
+      if (NS_FAILED(rv)) return rv;
+      break;
     }
 
-    parent = next;
+    // ancestor was not SVG content. loop until we find an SVG ancestor
+    element = ancestor;
+    ancestorCount++;
   }
 
-  if (!CTM) {
-    // We either didn't find an SVG parent, or our parent failed in
-    // giving us a CTM. In either case:
-    NS_NewSVGMatrix(getter_AddRefs(CTM));
+  // now account for our offset
+
+  if (!ancestorCTM) {
+    // we didn't find an SVG ancestor
+    float s=1, x=0, y=0;
+    if (ownerDoc &&
+        ownerDoc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
+      // we're the root element. get our currentScale and currentTranslate vals
+      mCurrentScale->GetValue(&s);
+      mCurrentTranslate->GetX(&x);
+      mCurrentTranslate->GetY(&y);
+    }
+    else {
+      // we're inline in some non-SVG content. get our offset from the root
+      GetOffsetToAncestor(nsnull, x, y);
+    }
+    rv = NS_NewSVGMatrix(getter_AddRefs(ancestorCTM), s, 0, 0, s, x, y);
+    if (NS_FAILED(rv)) return rv;
   }
-  
-  // XXX do we have to append our viewboxToViewport  transformation?
-  // if we do we have to change nsSVGGraphicElement::GetCTM()
-  
-  *_retval = CTM;
-  NS_IF_ADDREF(*_retval);
-  return NS_OK;
+  else {
+    // we found an SVG ancestor
+    float x=0, y=0;
+    nsCOMPtr<nsIDOMSVGMatrix> tmp;
+    if (ancestorCount == 0) {
+      // our immediate parent is an SVG element. get our 'x' and 'y' attribs
+      nsCOMPtr<nsIDOMSVGLength> length;
+      mX->GetAnimVal(getter_AddRefs(length));
+      length->GetValue(&x);
+      mY->GetAnimVal(getter_AddRefs(length));
+      length->GetValue(&y);
+    }
+    else {
+      // We have an SVG ancestor, but with non-SVG content between us
+#if 0
+      nsCOMPtr<nsIDOMSVGForeignObjectElement> foreignObject
+                                              = do_QueryInterface(ancestor);
+      if (!foreignObject) {
+        NS_ERROR("the none-SVG content in the parent chain between us and our "
+                 "SVG ancestor isn't rooted in a foreignObject element");
+        return NS_ERROR_FAILURE;
+      }
+#endif
+      // XXXjwatt: this isn't quite right since foreignObject can transform its
+      // content, but it's close enough until we turn foreignObject back on
+      GetOffsetToAncestor(ancestor, x, y);
+    }
+    rv = ancestorCTM->Translate(x, y, getter_AddRefs(tmp));
+    if (NS_FAILED(rv)) return rv;
+    ancestorCTM.swap(tmp);
+  }
+
+  // finally append our viewbox transform
+
+  nsCOMPtr<nsIDOMSVGMatrix> tmp;
+  rv = GetViewboxToViewportTransform(getter_AddRefs(tmp));
+  if (NS_FAILED(rv)) return rv;
+  return ancestorCTM->Multiply(tmp, _retval);  // addrefs, so we don't
 }
 
 /* nsIDOMSVGMatrix getScreenCTM (); */
 NS_IMETHODIMP
 nsSVGSVGElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
 {
-  nsCOMPtr<nsIDOMSVGMatrix> screenCTM;
+  nsresult rv;
+  *_retval = nsnull;
+
+  // first try to get the "screen" CTM of our nearest SVG ancestor
 
   nsIBindingManager *bindingManager = nsnull;
   // XXXbz I _think_ this is right.  We want to be using the binding manager
-  // that would have attached the binding that gives us our anonymous parent.
-  // That's the binding manager for the document we actually belong to, which
-  // is our owner doc.
+  // that would have attached the bindings that gives us our anonymous
+  // ancestors. That's the binding manager for the document we actually belong
+  // to, which is our owner doc.
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
     bindingManager = ownerDoc->BindingManager();
   }
 
-  nsCOMPtr<nsIContent> parent;
-  
-  if (bindingManager) {
-    // we have a binding manager -- do we have an anonymous parent?
-    bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
-  }
+  nsCOMPtr<nsIContent> element = this;
+  nsCOMPtr<nsIContent> ancestor;
+  unsigned short ancestorCount = 0;
+  nsCOMPtr<nsIDOMSVGMatrix> ancestorScreenCTM;
 
-  if (!parent) {
-    // if we didn't find an anonymous parent, use the explicit one,
-    // whether it's null or not...
-    parent = GetParent();
-  }
-  
-  while (parent) {
-    
-    nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(parent);
-    if (locatableElement) {
-      locatableElement->GetScreenCTM(getter_AddRefs(screenCTM));
-      if (!screenCTM) break;
-
-      nsCOMPtr<nsIDOMSVGSVGElement> viewportElement = do_QueryInterface(parent);
-      if (viewportElement) {
-        // it is a viewport element
-        nsCOMPtr<nsIDOMSVGMatrix> tmp;
-        nsCOMPtr<nsIDOMSVGMatrix> res;
-
-        nsCOMPtr<nsIContent> vpElement = do_QueryInterface(viewportElement);
-        if (ownerDoc && ownerDoc->GetRootContent() == vpElement) {
-          // it is also the document element
-          // first append its currentScale and currentTranslate values
-          float cs, ctx, cty;
-          nsCOMPtr<nsIDOMSVGPoint> currentTranslate;
-          viewportElement->GetCurrentScale(&cs);
-          viewportElement->GetCurrentTranslate(getter_AddRefs(currentTranslate));
-          currentTranslate->GetX(&ctx);
-          currentTranslate->GetY(&cty);
-          NS_NewSVGMatrix(getter_AddRefs(tmp), cs, 0, 0, cs, ctx, cty);
-          screenCTM->Multiply(tmp, getter_AddRefs(res));
-          screenCTM.swap(res);
-          if (!screenCTM) break; // out of memory
-        }
-
-        // append its viewbox transform
-        viewportElement->GetViewboxToViewportTransform(getter_AddRefs(tmp));
-        screenCTM->Multiply(tmp, getter_AddRefs(res));
-        screenCTM.swap(res);
-      }
-
+  while (1) {
+    if (bindingManager) {
+      // check for an anonymous ancestor first
+      bindingManager->GetInsertionParent(element, getter_AddRefs(ancestor));
+    }
+    if (!ancestor) {
+      // if we didn't find an anonymous ancestor, use the explicit one
+      ancestor = element->GetParent();
+    }
+    if (!ancestor) {
+      // reached the top of our parent chain without finding an SVG ancestor
       break;
     }
 
-    // Our parent was not svg content. We allow interdispersed non-SVG
-    // content to coexist with XBL. Loop until we find the first SVG
-    // parent.
-    
-    nsCOMPtr<nsIContent> next;
-
-    if (bindingManager) {
-      bindingManager->GetInsertionParent(parent, getter_AddRefs(next));
+    nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(ancestor);
+    if (locatableElement) {
+      rv = locatableElement->GetScreenCTM(getter_AddRefs(ancestorScreenCTM));
+      if (NS_FAILED(rv)) return rv;
+      break;
     }
 
-    if (!next) {
-      // no anonymous parent, so use explicit one
-      next = parent->GetParent();
+    // ancestor was not SVG content. loop until we find an SVG ancestor
+    element = ancestor;
+    ancestorCount++;
+  }
+
+  // now account for our offset
+
+  if (!ancestorScreenCTM) {
+    // we didn't find an SVG ancestor
+    float s=1, x=0, y=0;
+    if (ownerDoc &&
+        ownerDoc->GetRootContent() == NS_STATIC_CAST(nsIContent*, this)) {
+      // we're the root element. get our currentScale and currentTranslate vals
+      mCurrentScale->GetValue(&s);
+      mCurrentTranslate->GetX(&x);
+      mCurrentTranslate->GetY(&y);
     }
-
-    parent = next;
+    else {
+      // we're inline in some non-SVG content. get our offset from the root
+      GetOffsetToAncestor(nsnull, x, y);
+    }
+    rv = NS_NewSVGMatrix(getter_AddRefs(ancestorScreenCTM), s, 0, 0, s, x, y);
+    if (NS_FAILED(rv)) return rv;
+  }
+  else {
+    // we found an SVG ancestor
+    float x=0, y=0;
+    nsCOMPtr<nsIDOMSVGMatrix> tmp;
+    if (ancestorCount == 0) {
+      // our immediate parent is an SVG element. get our 'x' and 'y' attribs
+      nsCOMPtr<nsIDOMSVGLength> length;
+      mX->GetAnimVal(getter_AddRefs(length));
+      length->GetValue(&x);
+      mY->GetAnimVal(getter_AddRefs(length));
+      length->GetValue(&y);
+    }
+    else {
+      // We have an SVG ancestor, but with non-SVG content between us
+#if 0
+      nsCOMPtr<nsIDOMSVGForeignObjectElement> foreignObject
+                                              = do_QueryInterface(ancestor);
+      if (!foreignObject) {
+        NS_ERROR("the none-SVG content in the parent chain between us and our "
+                 "SVG ancestor isn't rooted in a foreignObject element");
+        return NS_ERROR_FAILURE;
+      }
+#endif
+      // XXXjwatt: this isn't quite right since foreignObject can transform its
+      // content, but it's close enough until we turn foreignObject back on
+      GetOffsetToAncestor(ancestor, x, y);
+    }
+    rv = ancestorScreenCTM->Translate(x, y, getter_AddRefs(tmp));
+    if (NS_FAILED(rv)) return rv;
+    ancestorScreenCTM.swap(tmp);
   }
 
-  if (!screenCTM) {
-    // We either didn't find an SVG parent, or our parent failed in
-    // giving us a CTM.
-    // In either case, we'll just assume that we are the outermost SVG element:
-    // we get our client offset in case we're inline in some other content
-    PRInt32 x, y;
-    GetClientPosition(x, y);
-    NS_NewSVGMatrix(getter_AddRefs(screenCTM), 1, 0, 0, 1, (float)x, (float)y);
-  }
+  // finally append our viewbox transform
 
-  // XXX do we have to append our viewboxToViewport  transformation?
-  // if we do we have to change nsSVGGraphicElement::GetScreenCTM()
-  
-  *_retval = screenCTM;
-  NS_IF_ADDREF(*_retval);
-  return NS_OK;
+  nsCOMPtr<nsIDOMSVGMatrix> tmp;
+  rv = GetViewboxToViewportTransform(getter_AddRefs(tmp));
+  if (NS_FAILED(rv)) return rv;
+  return ancestorScreenCTM->Multiply(tmp, _retval);  // addrefs, so we don't
 }
 
 /* nsIDOMSVGMatrix getTransformToElement (in nsIDOMSVGElement element); */
@@ -1190,12 +1237,25 @@ NS_IMETHODIMP
 nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element,
                                        nsIDOMSVGMatrix **_retval)
 {
-  // null check when implementing - this method can be used by scripts!
-  // if (!element)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  if (!element)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("nsSVGSVGElement::GetTransformToElement");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+  *_retval = nsnull;
+  nsCOMPtr<nsIDOMSVGMatrix> ourScreenCTM;
+  nsCOMPtr<nsIDOMSVGMatrix> targetScreenCTM;
+  nsCOMPtr<nsIDOMSVGMatrix> tmp;
+  nsCOMPtr<nsIDOMSVGLocatable> target = do_QueryInterface(element, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // the easiest way to do this (if likely to increase rounding error):
+  rv = GetScreenCTM(getter_AddRefs(ourScreenCTM));
+  if (NS_FAILED(rv)) return rv;
+  rv = target->GetScreenCTM(getter_AddRefs(targetScreenCTM));
+  if (NS_FAILED(rv)) return rv;
+  rv = targetScreenCTM->Inverse(getter_AddRefs(tmp));
+  if (NS_FAILED(rv)) return rv;
+  return ourScreenCTM->Multiply(tmp, _retval);  // addrefs, so we don't
 }
 
 //----------------------------------------------------------------------
@@ -1506,10 +1566,12 @@ nsSVGSVGElement::IsEventName(nsIAtom* aName)
 //----------------------------------------------------------------------
 // implementation helpers
 
-void nsSVGSVGElement::GetClientPosition(PRInt32 &x, PRInt32 &y)
+// if an ancestor isn't specified, obtains offset from root frame
+void nsSVGSVGElement::GetOffsetToAncestor(nsIContent* ancestor,
+                                          float &x, float &y)
 {
-  x = 0;
-  y = 0;
+  x = 0.0f;
+  y = 0.0f;
 
   nsIDocument *document = GetCurrentDoc();
   if (!document) return;
@@ -1524,13 +1586,19 @@ void nsSVGSVGElement::GetClientPosition(PRInt32 &x, PRInt32 &y)
     return;
   }
 
-  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  nsPresContext *context = presShell->GetPresContext();
+  if (!context) {
+    return;
+  }
 
-  if (frame) {
-    nsPoint point;
-    nsIView *view;
-    frame->GetOriginToViewOffset(point, &view);
-    x = point.x;
-    y = point.y;
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
+  nsIFrame* ancestorFrame = ancestor ?
+                            presShell->GetPrimaryFrameFor(ancestor) :
+                            presShell->GetRootFrame();
+
+  if (frame && ancestorFrame) {
+    nsPoint point = frame->GetOffsetTo(ancestorFrame);
+    x = point.x * context->TwipsToPixels();
+    y = point.y * context->TwipsToPixels();
   }
 }
