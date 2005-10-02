@@ -376,10 +376,10 @@ var messageHeaderSink = {
         // already. 
         if (lowerCaseHeaderName == "x-mailer" || lowerCaseHeaderName == "x-mimeole")
           lowerCaseHeaderName = "user-agent";   
-        
-        if (lowerCaseHeaderName == "sender")
+        else if (lowerCaseHeaderName == "sender" && msgHeaderParser &&
+            header.headerValue && fromMailbox)
         {
-          if (fromMailbox == header.headerValue)
+          if (msgHeaderParser.extractHeaderAddressMailboxes(null, header.headerValue) == fromMailbox)
             continue;
         }
         if (this.mDummyMsgHeader)
@@ -416,10 +416,10 @@ var messageHeaderSink = {
          currentHeaderData[lowerCaseHeaderName] = header;
         if (lowerCaseHeaderName == "from")
         {
-          if (msgHeaderParser && header.value)
-            fromMailbox = msgHeaderParser.extractHeaderAddressMailboxes(null, header.value);
+          if (msgHeaderParser && header.headerValue)
+            fromMailbox = msgHeaderParser.extractHeaderAddressMailboxes(null, header.headerValue);
 
-          if (header.value) {
+          if (header.headerValue) {
             if ((gCollectIncoming && !dontCollectAddress) || 
                 (gCollectNewsgroup && dontCollectAddress))
             {
