@@ -475,7 +475,9 @@ nsOperaProfileMigrator::CopyProxySettings(nsINIParser &aParser,
 
     sprintf(serverPrefBuf, "network.proxy.%s", protocols_l[i]);
     sprintf(serverPortPrefBuf, "network.proxy.%s_port", protocols_l[i]);
-    SetProxyPref(proxyServer, serverPrefBuf, serverPortPrefBuf, aBranch);
+    // strings in Opera pref. file are in UTF-8
+    SetProxyPref(NS_ConvertUTF8toUTF16(proxyServer),
+                 serverPrefBuf, serverPortPrefBuf, aBranch);
   }
 
   GetInteger(aParser, "Proxy", "Use Automatic Proxy Configuration", &enabled);
@@ -493,7 +495,8 @@ nsOperaProfileMigrator::CopyProxySettings(nsINIParser &aParser,
     nsCAutoString servers;
     rv = aParser.GetString("Proxy", "No Proxy Servers", servers);
     if (NS_SUCCEEDED(rv))
-      ParseOverrideServers(servers.get(), aBranch);
+      // strings in Opera pref. file are in UTF-8
+      ParseOverrideServers(NS_ConvertUTF8toUTF16(servers), aBranch);
   }
 
   aBranch->SetIntPref("network.proxy.type", networkProxyType);

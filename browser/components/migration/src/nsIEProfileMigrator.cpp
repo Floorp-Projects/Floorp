@@ -88,12 +88,11 @@
 #include "nsNetUtil.h"
 #include "nsToolkitCompsCID.h"
 #include "nsUnicharUtils.h"
+#include "nsIWindowsRegKey.h"
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 #define TRIDENTPROFILE_BUNDLE       "chrome://browser/locale/migration/migration.properties"
-
-#define LARGE_BUFFER 1024
 
 const int sInitialCookieBufferSize = 1024; // but it can grow
 const int sUsernameLengthLimit     = 80;
@@ -604,34 +603,30 @@ nsIEProfileMigrator::CopyHistory(PRBool aReplace)
   ::CoUninitialize();
 
   // Now, find out what URLs were typed in by the user
-  HKEY key;
-  if (::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                     "Software\\Microsoft\\Internet Explorer\\TypedURLs",
-                     0, KEY_READ, &key) == ERROR_SUCCESS) {
+  nsCOMPtr<nsIWindowsRegKey> regKey = 
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  NS_NAMED_LITERAL_STRING(typedURLKey,
+                          "Software\\Microsoft\\Internet Explorer\\TypedURLs");
+  if (regKey && 
+      NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                                typedURLKey, nsIWindowsRegKey::ACCESS_READ))) {
     int offset = 0;
-#define KEY_NAME_LENGTH 20
+
     while (1) {
-      char valueName[KEY_NAME_LENGTH];
-      DWORD valueSize = KEY_NAME_LENGTH;
-      unsigned char data[MAX_PATH];
-      DWORD dataSize = MAX_PATH;
-      DWORD type;
-      LONG rv = ::RegEnumValue(key, offset, valueName, &valueSize, 
-                               NULL, &type, data, &dataSize);
-      if (rv == ERROR_NO_MORE_ITEMS)
+      nsAutoString valueName;
+      if (NS_FAILED(regKey->GetValueName(offset, valueName)))
         break;
 
-      nsCAutoString valueNameStr(valueName);
-      const nsACString& prefix = Substring(valueNameStr, 0, 3);
-      if (prefix.Equals("url")) {
+      nsAutoString url; 
+      if (Substring(valueName, 0, 3).EqualsLiteral("url") &&
+          NS_SUCCEEDED(regKey->ReadStringValue(valueName, url))) {
         nsCOMPtr<nsIURI> uri;
-        ios->NewURI(nsDependentCString((const char *) data), nsnull, nsnull,
-                                       getter_AddRefs(uri));
+        ios->NewURI(NS_ConvertUTF16toUTF8(url), nsnull, nsnull,
+                    getter_AddRefs(uri));
         if (uri)
           hist->MarkPageAsTyped(uri);
       }
       ++offset;
-
     }
   }
 
@@ -843,11 +838,10 @@ nsIEProfileMigrator::KeyIsURI(const nsAString& aKey, char** aRealm)
 {
   *aRealm = nsnull;
 
-  nsCOMPtr<nsIURI> uri(do_CreateInstance("@mozilla.org/network/standard-url;1"));
-  if (!uri)
+  nsCOMPtr<nsIURI> uri;
+
+  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aKey))) 
     return PR_FALSE;
-  nsCAutoString keyCStr; keyCStr.AssignWithConversion(aKey);
-  uri->SetSpec(keyCStr);
 
   PRBool validScheme = PR_FALSE;
   const char* schemes[] = { "http", "https" };
@@ -1099,14 +1093,18 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
   else {
     // Locate the Links toolbar folder, we want to replace the Personal Toolbar content with 
     // Favorites in this folder. 
-    HKEY key;
-    if (::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                      "Software\\Microsoft\\Internet Explorer\\Toolbar",
-                      0, KEY_READ, &key) == ERROR_SUCCESS) {
-      DWORD type, length;
-      unsigned char linksFolderName[MAX_PATH];
-      if (::RegQueryValueEx(key, "LinksFolderName", 0, &type, linksFolderName, &length) == ERROR_SUCCESS)
-        personalToolbarFolderName.AssignWithConversion((char*)linksFolderName);
+    nsCOMPtr<nsIWindowsRegKey> regKey = 
+      do_CreateInstance("@mozilla.org/windows-registry-key;1");
+    NS_NAMED_LITERAL_STRING(toolbarKey,
+                            "Software\\Microsoft\\Internet Explorer\\Toolbar");
+    if (regKey && 
+        NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                                  toolbarKey, nsIWindowsRegKey::ACCESS_READ))) {
+      nsAutoString linksFolderName;
+      if (NS_SUCCEEDED(regKey->ReadStringValue(
+                       NS_LITERAL_STRING("LinksFolderName"),
+                       linksFolderName)))
+        personalToolbarFolderName = linksFolderName; 
     }
     folder = root;
   }
@@ -1133,13 +1131,15 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
 nsresult
 nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
 { 
-  HKEY key;
-  if (::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                    "Software\\Microsoft\\Internet Explorer\\SearchUrl",
-                    0, KEY_READ, &key) == ERROR_SUCCESS) {
+  nsCOMPtr<nsIWindowsRegKey> regKey = 
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  NS_NAMED_LITERAL_STRING(searchUrlKey,
+                          "Software\\Microsoft\\Internet Explorer\\SearchUrl");
+  if (regKey && 
+      NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                                searchUrlKey, nsIWindowsRegKey::ACCESS_READ))) {
     nsCOMPtr<nsIBookmarksService> bms(do_GetService("@mozilla.org/browser/bookmarks-service;1"));
     nsCOMPtr<nsIRDFResource> keywordsFolder, bookmark;
-    nsCOMPtr<nsIURI> uri(do_CreateInstance("@mozilla.org/network/standard-url;1"));
 
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID);
     
@@ -1149,10 +1149,8 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
 
     int offset = 0;
     while (1) {
-      char keyName[MAX_PATH];
-      DWORD keySize = MAX_PATH;
-      LONG rv = ::RegEnumKey(key, offset, keyName, keySize);
-      if (rv == ERROR_NO_MORE_ITEMS)
+      nsAutoString keyName;
+      if (NS_FAILED(regKey->GetChildName(offset, keyName)))
         break;
 
       if (!keywordsFolder) {
@@ -1168,41 +1166,37 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
                                      getter_AddRefs(keywordsFolder));
       }
 
-      nsCAutoString keyNameStr(keyName);
-      nsCAutoString smartKeywordKey(NS_LITERAL_CSTRING("Software\\Microsoft\\Internet Explorer\\SearchUrl\\"));
-      smartKeywordKey += keyNameStr;
-      HKEY skey;
-      if (::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                        smartKeywordKey.get(),
-                        0, KEY_READ, &skey) == ERROR_SUCCESS) {
-        LONG length = LARGE_BUFFER;
-        char url[LARGE_BUFFER];
-        if (::RegQueryValue(skey, NULL, (char*)url, &length) == ERROR_SUCCESS) {
-          uri->SetSpec(nsDependentCString((char*)url));
+      nsCOMPtr<nsIWindowsRegKey> childKey; 
+      if (NS_SUCCEEDED(regKey->OpenChild(keyName,
+                       nsIWindowsRegKey::ACCESS_READ,
+                       getter_AddRefs(childKey)))) {
+        nsAutoString url; 
+        if (NS_SUCCEEDED(childKey->ReadStringValue(EmptyString(), url))) {
+          nsCOMPtr<nsIURI> uri;
+          if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), url))) {
+            NS_WARNING("Invalid url while importing smart keywords of MS IE");
+            ++offset;
+            childKey->Close();
+            continue;
+          }
           nsCAutoString hostCStr;
           uri->GetHost(hostCStr);
-          nsAutoString host; host.AssignWithConversion(hostCStr.get());
+          NS_ConvertUTF8toUTF16 host(hostCStr); 
 
           const PRUnichar* nameStrings[] = { host.get() };
           nsXPIDLString keywordName;
-          rv = bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchURLsTitle").get(),
-                                            nameStrings, 1, getter_Copies(keywordName));
+          nsresult rv = bundle->FormatStringFromName(
+                        NS_LITERAL_STRING("importedSearchURLsTitle").get(),
+                        nameStrings, 1, getter_Copies(keywordName));
 
-          nsAutoString keyword; keyword.AssignWithConversion(keyName);
-
-          const PRUnichar* descStrings[] = { keyword.get(), host.get() };
+          const PRUnichar* descStrings[] = { keyName.get(), host.get() };
           nsXPIDLString keywordDesc;
-          rv = bundle->FormatStringFromName(NS_LITERAL_STRING("importedSearchUrlDesc").get(),
-                                            descStrings, 2, getter_Copies(keywordDesc));
-          // XXX: Assume Windows stores URLs in ASCII (with everything escaped).
-          // It may change in the future, but we can't assume that it's UTF-8
-          // here. Unlike other places, it's likely to be in a legacy encoding.
-          // Assuming ASCII at least works for Latin-1 if URLs are stored
-          // without being escaped and Win32 supports IDN (it doesn't at the 
-          // moment.) Eventually, we have to use 'W' APIs when available.
+          rv = bundle->FormatStringFromName(
+                       NS_LITERAL_STRING("importedSearchUrlDesc").get(),
+                       descStrings, 2, getter_Copies(keywordDesc));
           bms->CreateBookmarkInContainer(keywordName.get(), 
-                                         NS_ConvertASCIItoUTF16(url).get(), 
-                                         keyword.get(), 
+                                         url.get(),
+                                         keyName.get(), 
                                          keywordDesc.get(), 
                                          nsnull,
                                          nsnull, 
@@ -1210,6 +1204,7 @@ nsIEProfileMigrator::CopySmartKeywords(nsIRDFResource* aParentFolder)
                                          -1, 
                                          getter_AddRefs(bookmark));
         }
+        childKey->Close();
       }
 
       ++offset;
@@ -1727,29 +1722,29 @@ nsresult
 nsIEProfileMigrator::CopyStyleSheet(PRBool aReplace) 
 {
   nsresult rv = NS_OK; // return failure only if filecopy fails
-  HKEY     regKey;
-  DWORD    regType,
-           regLength,
-           regDWordValue;
-  char     tridentFilename[MAX_PATH];
 
   // is there a trident user stylesheet?
-  if (::RegOpenKeyEx(HKEY_CURRENT_USER,
-                 "Software\\Microsoft\\Internet Explorer\\Styles", 0,
-                 KEY_READ, &regKey) != ERROR_SUCCESS)
-    return NS_OK;
-  
-  regLength = sizeof(DWORD);
-  if (::RegQueryValueEx(regKey, "Use My Stylesheet", 0, &regType,
-                        NS_REINTERPRET_CAST(unsigned char *, &regDWordValue),
-                        &regLength) == ERROR_SUCCESS &&
-      regType == REG_DWORD && regDWordValue == 1) {
+  nsCOMPtr<nsIWindowsRegKey> regKey = 
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  if (!regKey)
+    return NS_ERROR_UNEXPECTED;
 
-    regLength = MAX_PATH;
-    if (::RegQueryValueEx(regKey, "User Stylesheet", 0, &regType,
-                          NS_REINTERPRET_CAST(unsigned char *, tridentFilename),
-                          &regLength)
-        == ERROR_SUCCESS) {
+  NS_NAMED_LITERAL_STRING(styleKey,
+                          "Software\\Microsoft\\Internet Explorer\\Styles");
+  if (NS_FAILED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                             styleKey, nsIWindowsRegKey::ACCESS_READ)))
+    return NS_OK;
+
+  NS_NAMED_LITERAL_STRING(myStyleValName, "Use My StyleSheet");
+  PRUint32 type, useMyStyle; 
+  if (NS_SUCCEEDED(regKey->GetValueType(myStyleValName, &type)) &&
+      type == nsIWindowsRegKey::TYPE_INT &&
+      NS_SUCCEEDED(regKey->ReadIntValue(myStyleValName, &useMyStyle)) &&
+      useMyStyle == 1) {
+
+    nsAutoString tridentFilename;
+    if (NS_SUCCEEDED(regKey->ReadStringValue(
+                     NS_LITERAL_STRING("User Stylesheet"), tridentFilename))) {
 
       // tridentFilename is a native path to the specified stylesheet file
       // point an nsIFile at it
@@ -1757,7 +1752,7 @@ nsIEProfileMigrator::CopyStyleSheet(PRBool aReplace)
       if (tridentFile) {
         PRBool exists;
 
-        tridentFile->InitWithNativePath(nsDependentCString(tridentFilename));
+        tridentFile->InitWithPath(tridentFilename);
         tridentFile->Exists(&exists);
         if (exists) {
           // now establish our file (userContent.css in the profile/chrome dir)
@@ -1765,13 +1760,12 @@ nsIEProfileMigrator::CopyStyleSheet(PRBool aReplace)
           NS_GetSpecialDirectory(NS_APP_USER_CHROME_DIR,
                                  getter_AddRefs(chromeDir));
           if (chromeDir)
-            rv = tridentFile->CopyToNative(chromeDir,
-                              nsDependentCString("userContent.css"));
+            rv = tridentFile->CopyTo(chromeDir,
+                              NS_LITERAL_STRING("userContent.css"));
         }
       }
     }
   }
-  ::RegCloseKey(regKey);
   return rv;
 }
 
@@ -1802,13 +1796,17 @@ nsIEProfileMigrator::GetUserStyleSheetFile(nsIFile **aUserFile)
 nsresult
 nsIEProfileMigrator::CopySecurityPrefs(nsIPrefBranch* aPrefs)
 {
-  HKEY key;
-  if (::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                     "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
-                     0, KEY_READ, &key) == ERROR_SUCCESS) {
-    DWORD value, type; 
-    DWORD length = sizeof DWORD;
-    if (::RegQueryValueEx(key, "SecureProtocols", 0, &type, (LPBYTE)&value, &length) == ERROR_SUCCESS) {
+  nsCOMPtr<nsIWindowsRegKey> regKey = 
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  NS_NAMED_LITERAL_STRING(key,
+      "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings");
+  if (regKey && 
+      NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                                key, nsIWindowsRegKey::ACCESS_READ))) {
+    
+    PRUint32 value;
+    if (NS_SUCCEEDED(regKey->ReadIntValue(NS_LITERAL_STRING("SecureProtocols"),
+                                          &value))) { 
       aPrefs->SetBoolPref("security.enable_ssl2", value & 0x08);
       aPrefs->SetBoolPref("security.enable_ssl3", value & 0x20);
       aPrefs->SetBoolPref("security.enable_tls",  value & 0x80);
@@ -1829,49 +1827,54 @@ struct ProxyData {
 nsresult
 nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
 {
-  HKEY key;
-  if (::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                     "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings",
-                     0, KEY_READ, &key) == ERROR_SUCCESS) {
-    DWORD type, length = LARGE_BUFFER;
-    char buf[LARGE_BUFFER];
-    // If there's an autoconfig URL specified in the registry at all, it is being used. 
-    if (::RegQueryValueEx(key, "AutoConfigURL", 0, &type, (LPBYTE)&buf, &length) == ERROR_SUCCESS) {      
-      aPrefs->SetCharPref("network.proxy.autoconfig_url", buf);
+  nsCOMPtr<nsIWindowsRegKey> regKey; 
+    do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  NS_NAMED_LITERAL_STRING(key,
+    "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings");
+  if (regKey && 
+      NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                                key, nsIWindowsRegKey::ACCESS_READ))) {
+    nsAutoString buf; 
+    // If there's an autoconfig URL specified in the registry at all, 
+    // it is being used. 
+    if (NS_SUCCEEDED(regKey->
+                     ReadStringValue(NS_LITERAL_STRING("AutoConfigURL"), buf))) {
+      // make this future-proof (MS IE will support IDN eventually and
+      // 'URL' will contain more than ASCII characters)
+      SetUnicharPref("network.proxy.autoconfig_url", buf, aPrefs);
       aPrefs->SetIntPref("network.proxy.type", 2);
     }
+
     // ProxyEnable
-    DWORD enabled;
-    length = LARGE_BUFFER;
-    if (::RegQueryValueEx(key, "ProxyEnable", 0, &type, (LPBYTE)&enabled, &length) == ERROR_SUCCESS) {
-      if (enabled & 0x1) 
-        aPrefs->SetIntPref("network.proxy.type", 1);
-      else
-        aPrefs->SetIntPref("network.proxy.type", 0);
-    }
+    PRUint32 enabled;
+    if (NS_SUCCEEDED(regKey->
+                     ReadIntValue(NS_LITERAL_STRING("ProxyEnable"), &enabled)))
+      aPrefs->SetIntPref("network.proxy.type", (enabled & 0x1) ? 1 : 0); 
     
-    length = LARGE_BUFFER;
-    LONG r = ::RegQueryValueEx(key, "ProxyOverride", 0, &type, (LPBYTE)&buf, &length);
-    if (r == ERROR_SUCCESS)
+    if (NS_SUCCEEDED(regKey->
+                     ReadStringValue(NS_LITERAL_STRING("ProxyOverride"), buf)))
       ParseOverrideServers(buf, aPrefs);
 
-    length = LARGE_BUFFER;
-    r = ::RegQueryValueEx(key, "ProxyServer", 0, &type, (LPBYTE)&buf, &length);
-    if (r == ERROR_SUCCESS) {
-      nsCAutoString bufStr; bufStr = (char*)buf;
+    if (NS_SUCCEEDED(regKey->
+                     ReadStringValue(NS_LITERAL_STRING("ProxyServer"), buf))) {
 
       ProxyData data[] = {
-        { "ftp=",     4, PR_FALSE, "network.proxy.ftp",     "network.proxy.ftp_port"    },
-        { "gopher=",  7, PR_FALSE, "network.proxy.gopher",  "network.proxy.gopher_port" },
-        { "http=",    5, PR_FALSE, "network.proxy.http",    "network.proxy.http_port"   },
-        { "https=",   6, PR_FALSE, "network.proxy.ssl",     "network.proxy.ssl_port"    },
-        { "socks=",   6, PR_FALSE, "network.proxy.socks",   "network.proxy.socks_port"  },
+        { "ftp=",     4, PR_FALSE, "network.proxy.ftp",
+          "network.proxy.ftp_port"    },
+        { "gopher=",  7, PR_FALSE, "network.proxy.gopher",
+          "network.proxy.gopher_port" },
+        { "http=",    5, PR_FALSE, "network.proxy.http",
+          "network.proxy.http_port"   },
+        { "https=",   6, PR_FALSE, "network.proxy.ssl",
+          "network.proxy.ssl_port"    },
+        { "socks=",   6, PR_FALSE, "network.proxy.socks",
+          "network.proxy.socks_port"  },
       };
 
       PRInt32 startIndex = 0, count = 0;
       PRBool foundSpecificProxy = PR_FALSE;
       for (PRUint32 i = 0; i < 5; ++i) {
-        PRInt32 offset = bufStr.Find(data[i].prefix);
+        PRInt32 offset = buf.Find(NS_ConvertASCIItoUTF16(data[i].prefix));
         if (offset >= 0) {
           foundSpecificProxy = PR_TRUE;
 
@@ -1879,19 +1882,22 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
 
           startIndex = offset + data[i].prefixLength;
 
-          PRInt32 terminal = bufStr.FindChar(';', offset);
-          count = terminal > startIndex ? terminal - startIndex : bufStr.Length() - startIndex;
+          PRInt32 terminal = buf.FindChar(';', offset);
+          count = terminal > startIndex ? terminal - startIndex : 
+                                          buf.Length() - startIndex;
 
           // hostPort now contains host:port
-          SetProxyPref(Substring(bufStr, startIndex, count), data[i].hostPref, data[i].portPref, aPrefs);
+          SetProxyPref(Substring(buf, startIndex, count), data[i].hostPref,
+                       data[i].portPref, aPrefs);
         }
       }
 
       if (!foundSpecificProxy) {
-        // No proxy config for any specific type was found, assume the ProxyServer value
-        // is of the form host:port and that it applies to all protocols.
+        // No proxy config for any specific type was found, assume 
+        // the ProxyServer value is of the form host:port and that 
+        // it applies to all protocols.
         for (PRUint32 i = 0; i < 5; ++i)
-          SetProxyPref(bufStr, data[i].hostPref, data[i].portPref, aPrefs);
+          SetProxyPref(buf, data[i].hostPref, data[i].portPref, aPrefs);
         aPrefs->SetBoolPref("network.proxy.share_proxy_settings", PR_TRUE);
       }
     }

@@ -63,9 +63,13 @@
 #include "nsString.h"
 class nsIProfileStartup;
 
+
+void SetUnicharPref(const char* aPref, const nsAString& aValue,
+                    nsIPrefBranch* aPrefs);
+
 // Proxy utilities shared by the Opera and IE migrators
-void ParseOverrideServers(const char* aServers, nsIPrefBranch* aBranch);
-void SetProxyPref(const nsACString& aHostPort, const char* aPref, 
+void ParseOverrideServers(const nsAString& aServers, nsIPrefBranch* aBranch);
+void SetProxyPref(const nsAString& aHostPort, const char* aPref, 
                   const char* aPortPref, nsIPrefBranch* aPrefs);
 
 struct MigrationData { 
