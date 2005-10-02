@@ -303,10 +303,6 @@
 <!ENTITY mailButton.readMail.accesskey    "M">
 <!ENTITY mailButton.newMessage.label      "New Message...">
 <!ENTITY mailButton.newMessage.accesskey  "w">
-<!ENTITY mailButton.sendLink.label        "Send Link...">
-<!ENTITY mailButton.sendLink.accesskey    "L">
-<!ENTITY mailButton.readNews.label        "Read News">
-<!ENTITY mailButton.readNews.accesskey    "N">
 <!ENTITY sendMessage.commandkey           "m">
 
 <!ENTITY newTabButton.tooltip           "Open a new tab">
