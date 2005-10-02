@@ -134,7 +134,7 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
 {
   NS_ASSERTION(aGrad, "Called CairoGradient without a gradient!");
   if (!aGrad)
-    return NULL;
+    return nsnull;
 
   // Get the transform list (if there is one)
   nsCOMPtr<nsIDOMSVGMatrix> svgMatrix;
@@ -142,6 +142,9 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
   NS_ASSERTION(svgMatrix, "CairoGradient: GetGradientTransform returns null");
 
   cairo_matrix_t patternMatrix = SVGToMatrix(svgMatrix);
+  if (cairo_matrix_invert(&patternMatrix)) {
+    return nsnull;
+  }
 
   cairo_pattern_t *gradient;
 
@@ -153,7 +156,7 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
   else if (type == nsISVGGradient::SVG_RADIAL_GRADIENT)
     gradient = CairoRadialGradient(ctx, aGrad);
   else 
-    return NULL; // Shouldn't happen
+    return nsnull; // Shouldn't happen
 
   PRUint16 aSpread;
   aGrad->GetSpreadMethod(&aSpread);
@@ -164,7 +167,6 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad,
   else if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT)
     cairo_pattern_set_extend(gradient, CAIRO_EXTEND_REPEAT);
   
-  cairo_matrix_invert(&patternMatrix);
   cairo_pattern_set_matrix(gradient, &patternMatrix);
 
   CairoSetStops(gradient, aGrad);

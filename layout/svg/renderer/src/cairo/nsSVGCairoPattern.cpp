@@ -113,11 +113,15 @@ CairoPattern(nsISVGRendererCanvas *canvas, nsISVGPattern *aPat,
 
   // Translate the pattern frame
   cairo_matrix_t pmatrix = SVGToMatrix(pMatrix);
-  cairo_matrix_invert(&pmatrix);
+  if (cairo_matrix_invert(&pmatrix))
+    return nsnull;
 
-  cairo_pattern_t *surface_pattern = cairo_pattern_create_for_surface(pattern_surface);
-  cairo_pattern_set_matrix (surface_pattern, &pmatrix);
-  cairo_pattern_set_extend (surface_pattern, CAIRO_EXTEND_REPEAT);
+  cairo_pattern_t *surface_pattern =
+    cairo_pattern_create_for_surface(pattern_surface);
+  if (surface_pattern) {
+    cairo_pattern_set_matrix (surface_pattern, &pmatrix);
+    cairo_pattern_set_extend (surface_pattern, CAIRO_EXTEND_REPEAT);
+  }
   return surface_pattern;
 }
 

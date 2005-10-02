@@ -83,7 +83,7 @@ protected:
   ~nsSVGCairoGlyphGeometry();
   nsresult Init(nsISVGGlyphGeometrySource* src);
 
-  void GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
+  nsresult GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas* aCanvas);
 
 public:
   // nsISupports interface:
@@ -219,7 +219,12 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
     cairo_get_matrix(ctx, &matrix);
   }
 
-  GetGlobalTransform(ctx, cairoCanvas);
+  if (NS_FAILED(GetGlobalTransform(ctx, cairoCanvas))) {
+    if (renderMode == nsISVGRendererCanvas::SVG_RENDER_MODE_NORMAL)
+      cairo_restore(ctx);
+    delete [] cp;
+    return NS_ERROR_FAILURE;
+  }
 
   metrics->SelectFont(ctx);
 
@@ -297,9 +302,11 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
           mSource->GetFillGradient(getter_AddRefs(aGrad));
 
           cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
-          cairo_set_source(ctx, gradient);
-          LOOP_CHARS(cairo_show_text)
-          cairo_pattern_destroy(gradient);
+          if (gradient) {
+            cairo_set_source(ctx, gradient);
+            LOOP_CHARS(cairo_show_text)
+            cairo_pattern_destroy(gradient);
+          }
         } else if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
           nsCOMPtr<nsISVGPattern> aPat;
           mSource->GetFillPattern(getter_AddRefs(aPat));
@@ -390,9 +397,11 @@ nsSVGCairoGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
         mSource->GetStrokeGradient(getter_AddRefs(aGrad));
 
         cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
-        cairo_set_source(ctx, gradient);
-        cairo_stroke(ctx);
-        cairo_pattern_destroy(gradient);
+        if (gradient) {
+          cairo_set_source(ctx, gradient);
+          cairo_stroke(ctx);
+          cairo_pattern_destroy(gradient);
+        }
       } else if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
         nsCOMPtr<nsISVGPattern> aPat;
         mSource->GetStrokePattern(getter_AddRefs(aPat));
@@ -486,7 +495,10 @@ nsSVGCairoGlyphGeometry::GetCoveredRegion(nsISVGRendererRegion **_retval)
       return NS_ERROR_FAILURE;
   }
 
-  GetGlobalTransform(ctx, nsnull);
+  if (NS_FAILED(GetGlobalTransform(ctx, nsnull))) {
+    cairo_destroy(ctx);
+    return NS_ERROR_FAILURE;
+  }
 
   metrics->SelectFont(ctx);
 
@@ -626,7 +638,10 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
   }
 
   cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
-  GetGlobalTransform(ctx, nsnull);
+  if (NS_FAILED(GetGlobalTransform(ctx, nsnull))) {
+    cairo_destroy(ctx);
+    return NS_ERROR_FAILURE;
+  }
 
   metrics->SelectFont(ctx);
 
@@ -684,7 +699,7 @@ nsSVGCairoGlyphGeometry::ContainsPoint(float x, float y, PRBool *_retval)
 }
 
 
-void
+nsresult
 nsSVGCairoGlyphGeometry::GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas* aCanvas)
 {
   nsCOMPtr<nsIDOMSVGMatrix> ctm;
@@ -715,7 +730,15 @@ nsSVGCairoGlyphGeometry::GetGlobalTransform(cairo_t *ctx, nsISVGCairoCanvas* aCa
   if (aCanvas) {
     aCanvas->AdjustMatrixForInitialTransform(&matrix);
   }
+
+  cairo_matrix_t inverse = matrix;
+  if (cairo_matrix_invert(&inverse)) {
+    cairo_identity_matrix(ctx);
+    return NS_ERROR_FAILURE;
+  }
+
   cairo_set_matrix(ctx, &matrix);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -741,7 +764,11 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
 
   cairo_t *ctx = cairo_create(gSVGCairoDummySurface);
 
-  GetGlobalTransform(ctx, nsnull);
+  if (NS_FAILED(GetGlobalTransform(ctx, nsnull))) {
+    cairo_destroy(ctx);
+    delete [] cp;
+    return NS_ERROR_FAILURE;
+  }
 
   /* get the metrics */
   nsCOMPtr<nsISVGCairoGlyphMetrics> metrics;
@@ -750,8 +777,10 @@ nsSVGCairoGlyphGeometry::GetBoundingBox(nsIDOMSVGRect * *aBoundingBox)
     mSource->GetMetrics(getter_AddRefs(xpmetrics));
     metrics = do_QueryInterface(xpmetrics);
     NS_ASSERTION(metrics, "wrong metrics object!");
-    if (!metrics)
+    if (!metrics) {
+      delete [] cp;
       return NS_ERROR_FAILURE;
+    }
   }
 
   metrics->SelectFont(ctx);
