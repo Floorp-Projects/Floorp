@@ -188,25 +188,25 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
 }
 
 static JSBool
-IndexToValue(JSContext *cx, jsuint length, jsval *vp)
+IndexToValue(JSContext *cx, jsuint index, jsval *vp)
 {
-    if (length <= JSVAL_INT_MAX) {
-        *vp = INT_TO_JSVAL(length);
+    if (index <= JSVAL_INT_MAX) {
+        *vp = INT_TO_JSVAL(index);
         return JS_TRUE;
     }
-    return js_NewDoubleValue(cx, (jsdouble)length, vp);
+    return js_NewDoubleValue(cx, (jsdouble)index, vp);
 }
 
 static JSBool
-IndexToId(JSContext *cx, jsuint length, jsid *idp)
+IndexToId(JSContext *cx, jsuint index, jsid *idp)
 {
     JSString *str;
     JSAtom *atom;
 
-    if (length <= JSVAL_INT_MAX) {
-        *idp = INT_TO_JSID(length);
+    if (index <= JSVAL_INT_MAX) {
+        *idp = INT_TO_JSID(index);
     } else {
-        str = js_NumberToString(cx, (jsdouble)length);
+        str = js_NumberToString(cx, (jsdouble)index);
         if (!str)
             return JS_FALSE;
         atom = js_AtomizeString(cx, str, 0);
@@ -232,6 +232,22 @@ PropertyExists(JSContext *cx, JSObject *obj, jsid id, JSBool *foundp)
         OBJ_DROP_PROPERTY(cx, obj2, prop);
     }
 
+    return JS_TRUE;
+}
+
+#define JSID_HOLE       JSVAL_NULL
+
+static JSBool
+IndexToExistingId(JSContext *cx, JSObject *obj, jsuint index, jsid *idp)
+{
+    JSBool exists;
+
+    if (!IndexToId(cx, index, idp))
+        return JS_FALSE;
+    if (!PropertyExists(cx, obj, *idp, &exists))
+        return JS_FALSE;
+    if (!exists)
+        *idp = JSID_HOLE;
     return JS_TRUE;
 }
 
@@ -637,7 +653,7 @@ array_reverse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             return JS_FALSE;
         }
 
-        /* 
+        /*
          * Get both of the values now. Note that we don't use v, or v2 based on
          * idexists and id2exists.
          */
@@ -654,7 +670,7 @@ array_reverse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 return JS_FALSE;
         }
         if (id2exists) {
-            if (!OBJ_SET_PROPERTY(cx, obj, id, &v2)) 
+            if (!OBJ_SET_PROPERTY(cx, obj, id, &v2))
                 return JS_FALSE;
         } else {
             if (!OBJ_DELETE_PROPERTY(cx, obj, id, &v2))
@@ -791,7 +807,7 @@ sort_compare(const void *a, const void *b, void *arg)
 
     fval = ca->fval;
 
-    /* 
+    /*
      * By ECMA 262, 15.4.4.11, existence of the property with value undefined
      * takes precedence over an undefined property (which we call a "hole").
      */
@@ -876,7 +892,6 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStackFrame *fp;
     jsid id;
     size_t nbytes;
-    JSBool idexists;
 
     /*
      * Optimize the default compare function case if all of obj's elements
@@ -926,14 +941,11 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     fp->nvars = len;
 
     for (i = 0; i < len; i++) {
-        ca.status = IndexToId(cx, i, &id);
+        ca.status = IndexToExistingId(cx, obj, i, &id);
         if (!ca.status)
             goto out;
 
-        ca.status = PropertyExists(cx, obj, id, &idexists);
-        if (!ca.status)
-            goto out;
-        if (!idexists) {
+        if (id == JSID_HOLE) {
             vec[i] = JSVAL_HOLE;
             all_strings = JS_FALSE;
             continue;
@@ -1088,7 +1100,6 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     uintN i;
     jsid id, id2;
     jsval v;
-    JSBool propExists;
 
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
@@ -1097,17 +1108,15 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         if (length > 0) {
             last = length;
             while (last--) {
-                if (!IndexToId(cx, last, &id))
+                if (!IndexToExistingId(cx, obj, last, &id))
                     return JS_FALSE;
-                if (!IndexToId(cx, last + argc, &id2))
-                    return JS_FALSE;
-                if (!PropertyExists(cx, obj, id, &propExists))
-                    return JS_FALSE;
-                if (!propExists) {
+                if (id == JSID_HOLE) {
                     OBJ_DELETE_PROPERTY(cx, obj, id2, &v); /* v is junk. */
                     continue;
                 }
                 if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+                    return JS_FALSE;
+                if (!IndexToId(cx, last + argc, &id2))
                     return JS_FALSE;
                 if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
                     return JS_FALSE;
@@ -1139,7 +1148,6 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsid id, id2;
     jsval v;
     JSObject *obj2;
-    JSBool propExists;
 
     /* Nothing to do if no args.  Otherwise lock and load length. */
     if (argc == 0)
@@ -1213,15 +1221,13 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             /* If there are elements to remove, put them into the return value. */
             if (count > 0) {
                 for (last = begin; last < end; last++) {
-                    if (!IndexToId(cx, last, &id))
+                    if (!IndexToExistingId(cx, obj, last, &id))
+                        return JS_FALSE;
+                    if (id == JSID_HOLE)
+                        continue;       /* don't fill holes in the new array */
+                    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
                         return JS_FALSE;
                     if (!IndexToId(cx, last - begin, &id2))
-                        return JS_FALSE;
-                    if (!PropertyExists(cx, obj, id, &propExists))
-                        return JS_FALSE;
-                    if (!propExists)
-                        continue; /* Don't fill holes in the new array */
-                    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
                         return JS_FALSE;
                     if (!OBJ_SET_PROPERTY(cx, obj2, id2, &v))
                         return JS_FALSE;
@@ -1239,13 +1245,11 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         last = length;
         /* (uint) end could be 0, so can't use vanilla >= test */
         while (last-- > end) {
-            if (!IndexToId(cx, last, &id))
+            if (!IndexToExistingId(cx, obj, last, &id))
                 return JS_FALSE;
             if (!IndexToId(cx, last + delta, &id2))
                 return JS_FALSE;
-            if (!PropertyExists(cx, obj, id, &propExists))
-                return JS_FALSE;
-            if (propExists) {
+            if (id != JSID_HOLE) {
                 if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
                     return JS_FALSE;
                 if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
@@ -1259,13 +1263,11 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else if (argc < count) {
         delta = count - (jsuint)argc;
         for (last = end; last < length; last++) {
-            if (!IndexToId(cx, last, &id))
+            if (!IndexToExistingId(cx, obj, last, &id))
                 return JS_FALSE;
             if (!IndexToId(cx, last - delta, &id2))
                 return JS_FALSE;
-            if (!PropertyExists(cx, obj, id, &propExists))
-                return JS_FALSE;
-            if (propExists) {
+            if (id != JSID_HOLE) {
                 if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
                     return JS_FALSE;
                 if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
@@ -1330,22 +1332,18 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (!ValueIsLength(cx, v, &alength))
                     return JS_FALSE;
                 for (slot = 0; slot < alength; slot++) {
-                    JSBool propExists;
-
-                    if (!IndexToId(cx, slot, &id))
+                    if (!IndexToExistingId(cx, aobj, slot, &id))
                         return JS_FALSE;
-                    if (!IndexToId(cx, length + slot, &id2))
-                        return JS_FALSE;
-                    if (!PropertyExists(cx, aobj, id, &propExists))
-                        return JS_FALSE;
-                    if (!propExists) {
-                        /* 
+                    if (id == JSID_HOLE) {
+                        /*
                          * Per ECMA 262, 15.4.4.4, step 9, ignore non-existent
                          * properties.
                          */
                         continue;
                     }
                     if (!OBJ_GET_PROPERTY(cx, aobj, id, &v))
+                        return JS_FALSE;
+                    if (!IndexToId(cx, length + slot, &id2))
                         return JS_FALSE;
                     if (!OBJ_SET_PROPERTY(cx, nobj, id2, &v))
                         return JS_FALSE;
@@ -1373,7 +1371,6 @@ array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsdouble d;
     jsid id, id2;
     jsval v;
-    JSBool propExists;
 
     nobj = js_NewArrayObject(cx, 0, NULL);
     if (!nobj)
@@ -1416,15 +1413,13 @@ array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         begin = end;
 
     for (slot = begin; slot < end; slot++) {
-        if (!IndexToId(cx, slot, &id))
+        if (!IndexToExistingId(cx, obj, slot, &id))
             return JS_FALSE;
-        if (!IndexToId(cx, slot - begin, &id2))
-            return JS_FALSE;
-        if (!PropertyExists(cx, obj, id, &propExists))
-            return JS_FALSE;
-        if (!propExists)
+        if (id == JSID_HOLE)
             continue;
         if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+            return JS_FALSE;
+        if (!IndexToId(cx, slot - begin, &id2))
             return JS_FALSE;
         if (!OBJ_SET_PROPERTY(cx, nobj, id2, &v))
             return JS_FALSE;
@@ -1435,94 +1430,80 @@ array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif /* JS_HAS_SEQUENCE_OPS */
 
 #if JS_HAS_ARRAY_EXTRAS
+
 static JSBool
-array_indexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval)
+array_indexOfHelper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                    jsval *rval, JSBool isLast)
 {
-    jsuint length, i;
-    jsint index;
-    jsdouble start;
+    jsuint length, i, stop;
+    jsint direction;
 
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
-    
-    start = 0;
-    if (argc > 1) {
+    if (length == 0)
+        goto not_found;
+
+    if (argc <= 1) {
+        i = isLast ? length - 1 : 0;
+    } else {
+        jsdouble start;
+
         if (!js_ValueToNumber(cx, argv[1], &start))
             return JS_FALSE;
         start = js_DoubleToInteger(start);
         if (start < 0) {
             start += length;
-            if (start < 0)
-                start = 0;
-        } else if (start > length) {
-            start = length;
+            i = (start < 0) ? 0 : (jsuint)start;
+        } else if (start >= length) {
+            i = length - 1;
+        } else {
+            i = (jsuint)start;
         }
     }
-    
-    index = -1;
-    for (i = (jsuint)start; i < length; i++) {
+
+    if (isLast) {
+        stop = 0;
+        direction = -1;
+    } else {
+        stop = length - 1;
+        direction = 1;
+    }
+
+    for (; ; i += direction) {
         jsid id;
         jsval v;
 
-        if (!IndexToId(cx, i, &id) ||
-            !OBJ_GET_PROPERTY(cx, obj, id, &v)) {
+        if (!IndexToExistingId(cx, obj, (jsuint)i, &id))
             return JS_FALSE;
-        }
+        if (id == JSID_HOLE)
+            continue;
 
-        if (js_StrictlyEqual(v, argv[0])) {
-            index = i;
-            break;
-        }
+        if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+            return JS_FALSE;
+        if (js_StrictlyEqual(v, argv[0]))
+            return js_NewNumberValue(cx, i, rval);
+
+        if (i == stop)
+            goto not_found;
     }
 
-    *rval = INT_TO_JSVAL(index);
+  not_found:
+    *rval = INT_TO_JSVAL(-1);
     return JS_TRUE;
+}
+
+static JSBool
+array_indexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+              jsval *rval)
+{
+    return array_indexOfHelper(cx, obj, argc, argv, rval, JS_FALSE);
 }
 
 static JSBool
 array_lastIndexOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                   jsval *rval)
 {
-    jsuint length;
-    jsint i, index;
-    jsdouble start;
-
-    if (!js_GetLengthProperty(cx, obj, &length))
-        return JS_FALSE;
-    
-    start = length - 1;
-    if (argc > 1) {
-        if (!js_ValueToNumber(cx, argv[1], &start))
-            return JS_FALSE;
-        start = js_DoubleToInteger(start);
-        if (start < 0) {
-            start += length ;
-            if (start < 0)
-                start = 0;
-        } else if (start >= length) {
-            start = length - 1;
-        }
-    }
-    
-    index = -1;
-    for (i = (jsint)start; i >= 0; i--) {
-        jsid id;
-        jsval v;
-
-        if (!IndexToId(cx, (jsuint)i, &id) ||
-            !OBJ_GET_PROPERTY(cx, obj, id, &v)) {
-            return JS_FALSE;
-        }
-
-        if (js_StrictlyEqual(v, argv[0])) {
-            index = i;
-            break;
-        }
-    }
-
-    *rval = INT_TO_JSVAL(index);
-    return JS_TRUE;
+    return array_indexOfHelper(cx, obj, argc, argv, rval, JS_TRUE);
 }
 
 /* Order is important; extras that use a caller's predicate must follow MAP. */
@@ -1544,7 +1525,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
     void *mark;
     JSStackFrame *fp;
     JSBool ok, b;
-    
+
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
@@ -1587,7 +1568,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
 
     if (length == 0)
         return JS_TRUE;
-    
+
     if (argc > 1) {
         if (!js_ValueToObject(cx, argv[1], &thisp))
             return JS_FALSE;
@@ -1612,9 +1593,11 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         jsid id;
         jsval v, rval2;
 
-        ok = IndexToId(cx, i, &id);
+        ok = IndexToExistingId(cx, obj, i, &id);
         if (!ok)
             break;
+        if (id == JSID_HOLE)
+            continue;
         ok = OBJ_GET_PROPERTY(cx, obj, id, &v);
         if (!ok)
             break;
