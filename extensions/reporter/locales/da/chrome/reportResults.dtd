@@ -1,0 +1,14 @@
+<!ENTITY reportSite                  "Websted">
+<!ENTITY reportProblemType           "Problemtype">
+<!ENTITY reportDecsription           "Beskrivelse">
+<!ENTITY reportPlatform              "Platform">
+<!ENTITY reportProduct               "Produkt">
+<!ENTITY reportoscpu                 "OS">
+<!ENTITY reportGecko                 "Gecko">
+<!ENTITY reportBuildConfig           "Build Konfiguration">
+<!ENTITY reportUseragent             "Useragent">
+<!ENTITY reportLanguage              "Sprog">
+<!ENTITY reportEmail                 "Email">
+<!ENTITY error                       "Fejldetaljer">
+<!ENTITY faultCode                   "Kode">
+<!ENTITY faultMessage                "Besked">

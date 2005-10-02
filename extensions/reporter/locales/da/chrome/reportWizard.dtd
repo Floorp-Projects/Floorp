@@ -1,0 +1,55 @@
+<!-- Entities for the Sample Extension Options Dialog go here -->
+<!ENTITY reportWizard.title                         "Rapporter inkompatibel websted">
+
+<!ENTITY privacyNotice.label                        "Privacy Policy">
+<!ENTITY reportWizardPrivacy.description            "Denne guide giver dig mulighed for at fortælle Evangelist-holdet omkring websteder, som ikke virker ordenligt i &brandShortName; eller som udelukker &brandShortName; fra at bruge webstedet. På den måde kan du hjælpe os til at sikre den bedst mulige brugsoplevelse for &brandShortName; brugere. Brug venligst et øjeblik til at læse det følgende for at lære, hvordan vi bruger de informationer vi indsamler, hvis du vælger at deltage.">
+<!ENTITY reportWizardMustAgree.description          "For at fortsætte skal du acceptere den ovenstående police.">
+
+<!ENTITY dontShowPrivacyStatement.label             "Jeg har læst og accepteret den ovenstående police.">
+<!ENTITY dontShowPrivacyStatement.accesskey         "J">
+
+<!ENTITY reportForm.label                           "Udfyld rapport">
+
+<!ENTITY reportForm.description                     "Fortæl os lidt om hvad der gik galt:">
+<!ENTITY reportForm.url.title                       "Webstedets adresse:">
+
+<!ENTITY reportForm.behind_login.title              "Er webstedet kodeordsbeskyttet"><!-- No ":" at the end -->
+<!ENTITY reportForm.behind_login.accesskey          "k">
+
+<!ENTITY reportForm.problem_type.title              "Problemtype:">
+<!ENTITY reportForm.problem_type.accesskey          "P">
+
+<!ENTITY reportForm.problem_type.chooseOne.title    "Vælg en...">
+
+<!-- DO *NOT* Add/change/modify (except localization) without consulting with r.m.o server admin first! -->
+<!ENTITY reportForm.problem_type.item1.title        "Browser er ikke understøttet">
+<!ENTITY reportForm.problem_type.item2.title        "Kan ikke logge ind">
+<!ENTITY reportForm.problem_type.item3.title        "Plugin kan ikke vises">
+<!ENTITY reportForm.problem_type.item4.title        "Indhold mangler">
+<!ENTITY reportForm.problem_type.item5.title        "Fokert opførsel">
+<!ENTITY reportForm.problem_type.item6.title        "Fokert udseende">
+<!ENTITY reportForm.problem_type.item7.title        "Andet problem">
+
+<!ENTITY reportForm.describe.title                  "Beskriv problemet:">
+<!ENTITY reportForm.describe.accesskey              "B">
+
+<!ENTITY reportForm.platform.title                  "Platform:">
+<!ENTITY reportForm.product.title                   "Produkt:">
+<!ENTITY reportForm.gecko.title                     "Gecko:">
+<!ENTITY reportForm.useragent.title                 "Useragent:">
+<!ENTITY reportForm.language.title                  "Sprog:">
+
+<!--  Make sure this has "(Optional)" at the end.  This is important for the user to know -->
+<!ENTITY reportForm.email.title                     "Email (Valgfrit):">
+<!ENTITY reportForm.email.accesskey                 "E">
+
+<!ENTITY reportForm.privacyPolicy.title             "Informationspolice">
+<!ENTITY reportForm.privacyPolicy.tooltip           "Se informationspolice">
+
+<!ENTITY reportResults.showDetail.title             "Vis detaljer">
+<!ENTITY reportResults.showDetail.accesskey         "V">
+
+<!ENTITY sendReport.label                           "Sender rapport">
+<!ENTITY sendReport.description                     "Sender rapport til server...">
+
+<!ENTITY finish.label                               "Rapport sendt">
