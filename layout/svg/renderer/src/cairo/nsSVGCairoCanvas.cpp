@@ -630,6 +630,9 @@ nsSVGCairoCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
   cairo_matrix_t oldMatrix;
   cairo_get_matrix(mCR, &oldMatrix);
   cairo_matrix_t matrix = {m[0], m[1], m[2], m[3], m[4], m[5]};
+  cairo_matrix_t inverse = matrix;
+  if (cairo_matrix_invert(&inverse))
+    return NS_ERROR_FAILURE;
   cairo_transform(mCR, &matrix);
 
   cairo_new_path(mCR);

@@ -182,6 +182,13 @@ nsSVGCairoPathGeometry::GeneratePath(cairo_t *ctx, nsISVGCairoCanvas* aCanvas)
   if (aCanvas) {
     aCanvas->AdjustMatrixForInitialTransform(&matrix);
   }
+
+  cairo_matrix_t inverse = matrix;
+  if (cairo_matrix_invert(&inverse)) {
+    cairo_identity_matrix(ctx);
+    cairo_new_path(ctx);
+    return;
+  }
   cairo_set_matrix(ctx, &matrix);
 
   nsCOMPtr<nsISVGRendererPathBuilder> builder;
@@ -350,9 +357,11 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
         mSource->GetFillGradient(getter_AddRefs(aGrad));
 
         cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
-        cairo_set_source(ctx, gradient);
-        cairo_fill_preserve(ctx);
-        cairo_pattern_destroy(gradient);
+        if (gradient) {
+          cairo_set_source(ctx, gradient);
+          cairo_fill_preserve(ctx);
+          cairo_pattern_destroy(gradient);
+        }
       } else if (fillServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
         nsCOMPtr<nsISVGPattern> aPat;
         mSource->GetFillPattern(getter_AddRefs(aPat));
@@ -392,9 +401,11 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
         mSource->GetStrokeGradient(getter_AddRefs(aGrad));
 
         cairo_pattern_t *gradient = CairoGradient(ctx, aGrad, mSource);
-        cairo_set_source(ctx, gradient);
-        cairo_stroke(ctx);
-        cairo_pattern_destroy(gradient);
+        if (gradient) {
+          cairo_set_source(ctx, gradient);
+          cairo_stroke(ctx);
+          cairo_pattern_destroy(gradient);
+        }
       } else if (strokeServerType == nsISVGGeometrySource::PAINT_TYPE_PATTERN) {
         nsCOMPtr<nsISVGPattern> aPat;
         mSource->GetStrokePattern(getter_AddRefs(aPat));
