@@ -3015,7 +3015,7 @@ NS_IMETHODIMP
 nsGenericElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                                nsIDOMNode** aReturn)
 {
-  return doReplaceChild(aNewChild, aOldChild, this, GetOwnerDoc(),
+  return doReplaceChild(aNewChild, aOldChild, this, GetCurrentDoc(),
                         mAttrsAndChildren, aReturn);
 }
 
