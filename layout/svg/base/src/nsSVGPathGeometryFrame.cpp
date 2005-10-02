@@ -647,17 +647,33 @@ nsSVGPathGeometryFrame::GetStrokeDashArray(float **arr, PRUint32 *count)
 {
   const nsStyleCoord *dasharray = GetStyleSVG()->mStrokeDasharray;
   nsPresContext *presContext = nsSVGPathGeometryFrameBase::GetPresContext();
+  float totalLength = 0.0f;
 
   *count = GetStyleSVG()->mStrokeDasharrayLength;
+  *arr = nsnull;
 
   if (*count) {
     *arr = (float *) nsMemory::Alloc(*count * sizeof(float));
     if (*arr) {
-      for (PRUint32 i = 0; i < *count; i++)
+      for (PRUint32 i = 0; i < *count; i++) {
         (*arr)[i] = nsSVGUtils::CoordToFloat(presContext, mContent, dasharray[i]);
+        if ((*arr)[i] < 0.0f) {
+          nsMemory::Free(*arr);
+          *count = 0;
+          *arr = nsnull;
+          return NS_OK;
+        }
+        totalLength += (*arr)[i];
+      }
     } else {
       *count = 0;
       return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    if (totalLength == 0.0f) {
+      nsMemory::Free(*arr);
+      *count = 0;
+      *arr = nsnull;
     }
   }
 
