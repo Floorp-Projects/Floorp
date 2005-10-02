@@ -108,9 +108,8 @@
   <rdf:Description about="#customize-firebird">
       <nc:subheadings>
         <rdf:Seq>
-          <rdf:li> <rdf:Description ID="customize-toolbar" nc:name="Toolbar Customization" nc:link="customization.xhtml"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="customize-toolbar-can-i-customize" nc:name="Can I customize my toolbars?" nc:link="customization.xhtml#can_i_customize_my_toolbars"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize" nc:name="How do I customize the toolbars?" nc:link="customization.xhtml#how_do_i_customize_the_toolbars"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="customize-toolbar-can-i-customize" nc:name="Can I Customize My Toolbars?" nc:link="customization.xhtml#can_i_customize_my_toolbars"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize" nc:name="How Do I Customize the Toolbars?" nc:link="customization.xhtml#how_do_i_customize_the_toolbars"/> </rdf:li>
           <rdf:li> <rdf:Description ID="themes" nc:name="Themes" nc:link="customization.xhtml#themes"/> </rdf:li>
           <rdf:li> <rdf:Description ID="extensions" nc:name="Extensions" nc:link="customization.xhtml#extensions"/> </rdf:li>
         </rdf:Seq>
@@ -121,8 +120,8 @@
       <nc:subheadings>
         <rdf:Seq>
           <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize-adding" nc:name="Adding/Removing Toolbars" nc:link="customization.xhtml#adding_removing_toolbars"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize-rearrange" nc:name="Rearrange toolbar items" nc:link="customization.xhtml#rearranging_toolbar_items"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize-special" nc:name="Special toolbar items" nc:link="customization.xhtml#special_toolbar_items"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize-rearrange" nc:name="Rearranging Toolbar Items" nc:link="customization.xhtml#rearranging_toolbar_items"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize-special" nc:name="Special Toolbar Items" nc:link="customization.xhtml#special_toolbar_items"/> </rdf:li>
         </rdf:Seq>
       </nc:subheadings>
   </rdf:Description>
