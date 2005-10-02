@@ -1715,13 +1715,12 @@ function BrowserViewSourceOfURL(url, charset, pageCookie)
 }
 
 // doc=null for regular page info, doc=owner document for frame info.
-function BrowserPageInfo(doc, tab)
+function BrowserPageInfo(doc, initialTab)
 {
   window.openDialog("chrome://navigator/content/pageInfo.xul",
                     "_blank",
                     "chrome,dialog=no",
-                    doc,
-                    tab);
+                    {doc: doc, initialTab: initialTab});
 }
 
 function hiddenWindowStartup()

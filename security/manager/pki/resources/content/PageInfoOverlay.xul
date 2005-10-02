@@ -62,16 +62,10 @@
 
         // Get the window for this information
         var w;
-#ifdef MOZ_PHOENIX
-       if (window.arguments[0] && window.arguments[0].doc)
-       {
-         w = window.arguments[0].doc;
-#else
-        if ("arguments" in window && window.arguments.length > 0 && window.arguments[0])
+        if ("arguments" in window && window.arguments.length > 0 &&
+            window.arguments[0] && window.arguments[0].doc)
         {
-          w = window.arguments[0];
-#endif
-
+          // w = window.arguments[0].doc;
           // We don't have separate info for a frame, return null until further notice
           // (see bug 138479)
           return null;

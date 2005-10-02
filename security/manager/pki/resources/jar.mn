@@ -20,7 +20,7 @@ pippki.jar:
     content/pippki/ssl2ciphers.xul           (content/ssl2ciphers.xul)
     content/pippki/ssl3tlsciphers.xul        (content/ssl3tlsciphers.xul)
     content/pippki/ssl3tlsciphers2.xul       (content/ssl3tlsciphers2.xul)
-*   content/pippki/PageInfoOverlay.xul       (content/PageInfoOverlay.xul)
+    content/pippki/PageInfoOverlay.xul       (content/PageInfoOverlay.xul)
     content/pippki/newserver.js              (content/newserver.js)
 *   content/pippki/newserver.xul             (content/newserver.xul)
     content/pippki/downloadcert.js           (content/downloadcert.js)
