@@ -167,6 +167,7 @@ nsSVGCairoCanvas::AdjustMatrixForInitialTransform(cairo_matrix_t* aMatrix)
   return NS_OK;
 }
 
+
 nsresult
 nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
                        nsPresContext *presContext,
@@ -236,11 +237,16 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
                                         mWidth, mHeight);
 #elif defined(XP_WIN)
   nsDrawingSurfaceWin *surface;
-  HDC hdc;
   ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
-  surface->GetDimensions(&mWidth, &mHeight);
-  surface->GetDC(&hdc);
-  cairoSurf = cairo_win32_surface_create(hdc);
+
+  PRInt32 canRaster;
+  surface->GetTECHNOLOGY(&canRaster);
+  if (canRaster != DT_RASPRINTER) {
+    HDC hdc;
+    surface->GetDimensions(&mWidth, &mHeight);
+    surface->GetDC(&hdc);
+    cairoSurf = cairo_win32_surface_create(hdc);
+  }
 #elif defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_GTK)
   nsDrawingSurfaceGTK *surface;
   ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
@@ -283,7 +289,7 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
     
     mBuffer = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
 #ifdef XP_WIN
-    mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::BGR_A8, 24);
+    mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::BGR, 24);
 #else
     mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB_A8, 24);
 #endif
@@ -423,19 +429,27 @@ static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 a
     return rv;
   }
 
+#ifndef XP_WIN
   rv = aImage->LockAlphaData();
   if (NS_FAILED(rv)) {
     aImage->UnlockImageData();
     return rv;
   }
+#endif
 
-  rv = aImage->GetAlphaBytesPerRow(&alphaStride);
-  rv |= aImage->GetAlphaData(&alphaBits, &alphaLen);
-  rv |= aImage->GetImageBytesPerRow(&rgbStride);
+  rv = aImage->GetImageBytesPerRow(&rgbStride);
   rv |= aImage->GetImageData(&rgbBits, &rgbLen);
+
+#ifndef XP_WIN
+  rv |= aImage->GetAlphaBytesPerRow(&alphaStride);
+  rv |= aImage->GetAlphaData(&alphaBits, &alphaLen);
+#endif
+
   if (NS_FAILED(rv)) {
     aImage->UnlockImageData();
+#ifndef XP_WIN
     aImage->UnlockAlphaData();
+#endif
     return rv;
   }
 
@@ -452,7 +466,9 @@ static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 a
       rowIndex = aHeight - j - 1;
 
     PRUint8 *outrowrgb = rgbBits + (rgbStride * rowIndex);
+#ifndef XP_WIN
     PRUint8 *outrowalpha = alphaBits + (alphaStride * rowIndex);
+#endif
 
     for (PRUint32 i = 0; i < (PRUint32) aWidth; i++) {
 #ifdef IS_LITTLE_ENDIAN
@@ -479,7 +495,9 @@ static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 a
         r = (r * 255 + a / 2) / a;
       }
 
+#ifndef XP_WIN
       *outrowalpha++ = a;
+#endif
 
 #ifdef XP_MACOSX
       // On the mac, RGB_A8 is really RGBX_A8
@@ -489,9 +507,10 @@ static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 a
 #ifdef XP_WIN
       // On windows, RGB_A8 is really BGR_A8.
       // in fact, BGR_A8 is also BGR_A8.
-      *outrowrgb++ = b;
-      *outrowrgb++ = g;
-      *outrowrgb++ = r;
+      // Preblend with white since win32 printing can't deal with RGBA
+      MOZ_BLEND(*outrowrgb++, 255, b, (unsigned)a);
+      MOZ_BLEND(*outrowrgb++, 255, g, (unsigned)a);
+      MOZ_BLEND(*outrowrgb++, 255, r, (unsigned)a);
 #else
       *outrowrgb++ = r;
       *outrowrgb++ = g;
@@ -500,7 +519,12 @@ static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 a
     }
   }
 
+#ifndef XP_WIN
   rv = aImage->UnlockAlphaData();
+#else
+  rv = NS_OK;
+#endif
+
   rv |= aImage->UnlockImageData();
   if (NS_FAILED(rv))
     return rv;
