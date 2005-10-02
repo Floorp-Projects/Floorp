@@ -148,7 +148,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
 
     nsCOMPtr<nsIDOMDocumentFragment> resultFragment;
     nsCOMPtr<nsIDOMDocument> sourceDocument = do_QueryInterface(aDocument);
-    rv = transformer->TransformToFragment(sourceDocument, xslDocument,
+    rv = transformer->TransformToFragment(sourceDocument, sourceDocument,
                                           getter_AddRefs(resultFragment));
     NS_ENSURE_SUCCESS(rv, rv);
 
