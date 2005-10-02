@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Jonathan Watt <jonathan.watt@strath.ac.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -49,6 +50,7 @@
 #include "nsIFrame.h"
 #include "nsISVGChildFrame.h"
 #include "nsIDOMSVGPoint.h"
+#include "nsDOMError.h"
 
 //----------------------------------------------------------------------
 // nsISupports methods
@@ -145,7 +147,8 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
 /* nsIDOMSVGMatrix getCTM (); */
 NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
 {
-  nsCOMPtr<nsIDOMSVGMatrix> CTM;
+  nsresult rv;
+  *_retval = nsnull;
 
   nsIBindingManager *bindingManager = nsnull;
   // XXXbz I _think_ this is right.  We want to be using the binding manager
@@ -158,74 +161,42 @@ NS_IMETHODIMP nsSVGGraphicElement::GetCTM(nsIDOMSVGMatrix **_retval)
   }
 
   nsCOMPtr<nsIContent> parent;
-  
+  nsCOMPtr<nsIDOMSVGMatrix> parentCTM;
+
   if (bindingManager) {
-    // we have a binding manager -- do we have an anonymous parent?
+    // check for an anonymous parent first
     bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
   }
-
   if (!parent) {
-    // if we didn't find an anonymous parent, use the explicit one,
-    // whether it's null or not...
+    // if we didn't find an anonymous parent, use the explicit one
     parent = GetParent();
   }
-  
-  while (parent) {
-    nsCOMPtr<nsIDOMSVGSVGElement> viewportElement = do_QueryInterface(parent);
-    if (viewportElement) {
-      // Our nearest SVG parent is a viewport element.
-      viewportElement->GetViewboxToViewportTransform(getter_AddRefs(CTM));
-      break; 
-    }
-    
-    nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(parent);
-    if (locatableElement) {
-      // Our nearest SVG parent is a locatable object that is not a
-      // viewport. Its GetCTM function will give us a ctm from the
-      // viewport to itself:
-      locatableElement->GetCTM(getter_AddRefs(CTM));
-      break;
-    }
 
-    // Our parent was not svg content. We allow interdispersed non-SVG
-    // content to coexist with XBL. Loop until we find the first SVG
-    // parent.
-    
-    nsCOMPtr<nsIContent> next;
-
-    if (bindingManager) {
-      bindingManager->GetInsertionParent(parent, getter_AddRefs(next));
-    }
-
-    if (!next) {
-      // no anonymous parent, so use explicit one
-      next = parent->GetParent();
-    }
-
-    parent = next;
+  nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(parent);
+  if (!locatableElement) {
+    // we don't have an SVGLocatable parent so we aren't even rendered
+    NS_WARNING("SVGGraphicElement without an SVGLocatable parent");
+    return NS_ERROR_FAILURE;
   }
 
-  if (!CTM) {
-    // We either didn't find an SVG parent, or our parent failed in
-    // giving us a CTM. In either case:
-    NS_WARNING("Couldn't get CTM");
-    NS_NewSVGMatrix(getter_AddRefs(CTM));
-  }
+  // get our parent's CTM
+  rv = locatableElement->GetCTM(getter_AddRefs(parentCTM));
+  if (NS_FAILED(rv)) return rv;
 
-  // append our local transformations:
+  // append our local transformations
   nsCOMPtr<nsIDOMSVGTransformList> transforms;
   mTransforms->GetAnimVal(getter_AddRefs(transforms));
   NS_ENSURE_TRUE(transforms, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMSVGMatrix> matrix;
   transforms->GetConsolidationMatrix(getter_AddRefs(matrix));
-
-  return CTM->Multiply(matrix, _retval);
+  return parentCTM->Multiply(matrix, _retval);  // addrefs, so we don't
 }
 
 /* nsIDOMSVGMatrix getScreenCTM (); */
 NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
 {
-  nsCOMPtr<nsIDOMSVGMatrix> screenCTM;
+  nsresult rv;
+  *_retval = nsnull;
 
   nsIBindingManager *bindingManager = nsnull;
   // XXXbz I _think_ this is right.  We want to be using the binding manager
@@ -238,100 +209,59 @@ NS_IMETHODIMP nsSVGGraphicElement::GetScreenCTM(nsIDOMSVGMatrix **_retval)
   }
 
   nsCOMPtr<nsIContent> parent;
-  
+  nsCOMPtr<nsIDOMSVGMatrix> parentScreenCTM;
+
   if (bindingManager) {
-    // we have a binding manager -- do we have an anonymous parent?
+    // check for an anonymous parent first
     bindingManager->GetInsertionParent(this, getter_AddRefs(parent));
   }
-
   if (!parent) {
-    // if we didn't find an anonymous parent, use the explicit one,
-    // whether it's null or not...
+    // if we didn't find an anonymous parent, use the explicit one
     parent = GetParent();
   }
-  
-  while (parent) {
-    
-    nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(parent);
-    if (locatableElement) {
-      locatableElement->GetScreenCTM(getter_AddRefs(screenCTM));
-      if (!screenCTM) break;
 
-      nsCOMPtr<nsIDOMSVGSVGElement> viewportElement = do_QueryInterface(parent);
-      if (viewportElement) {
-        // it is a viewport element
-        nsCOMPtr<nsIDOMSVGMatrix> tmp;
-        nsCOMPtr<nsIDOMSVGMatrix> res;
-
-        nsCOMPtr<nsIContent> vpElement = do_QueryInterface(viewportElement);
-        if (ownerDoc && ownerDoc->GetRootContent() == vpElement) {
-          // it is also the document element
-          // first append its currentScale and currentTranslate values
-          float cs, ctx, cty;
-          nsCOMPtr<nsIDOMSVGPoint> currentTranslate;
-          viewportElement->GetCurrentScale(&cs);
-          viewportElement->GetCurrentTranslate(getter_AddRefs(currentTranslate));
-          currentTranslate->GetX(&ctx);
-          currentTranslate->GetY(&cty);
-          NS_NewSVGMatrix(getter_AddRefs(tmp), cs, 0, 0, cs, ctx, cty);
-          screenCTM->Multiply(tmp, getter_AddRefs(res));
-          screenCTM.swap(res);
-          if (!screenCTM) break; // out of memory
-        }
-
-        // append its viewbox transform
-        viewportElement->GetViewboxToViewportTransform(getter_AddRefs(tmp));
-        screenCTM->Multiply(tmp, getter_AddRefs(res));
-        screenCTM.swap(res);
-      }
-
-      break;
-    }
-
-    // Our parent was not svg content. We allow interdispersed non-SVG
-    // content to coexist with XBL. Loop until we find the first SVG
-    // parent.
-    
-    nsCOMPtr<nsIContent> next;
-
-    if (bindingManager) {
-      bindingManager->GetInsertionParent(parent, getter_AddRefs(next));
-    }
-
-    if (!next) {
-      // no anonymous parent, so use explicit one
-      next = parent->GetParent();
-    }
-
-    parent = next;
+  nsCOMPtr<nsIDOMSVGLocatable> locatableElement = do_QueryInterface(parent);
+  if (!locatableElement) {
+    // we don't have an SVGLocatable parent so we aren't even rendered
+    NS_WARNING("SVGGraphicElement without an SVGLocatable parent");
+    return NS_ERROR_FAILURE;
   }
 
-  if (!screenCTM) {
-    // We either didn't find an SVG parent, or our parent failed in
-    // giving us a CTM. In either case:
-    NS_ERROR("couldn't get ctm");
-    NS_NewSVGMatrix(getter_AddRefs(screenCTM));
-  }
+  // get our parent's "screen" CTM
+  rv = locatableElement->GetScreenCTM(getter_AddRefs(parentScreenCTM));
+  if (NS_FAILED(rv)) return rv;
 
-  // append our local transformations:
+  // append our local transformations
   nsCOMPtr<nsIDOMSVGTransformList> transforms;
   mTransforms->GetAnimVal(getter_AddRefs(transforms));
   NS_ENSURE_TRUE(transforms, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMSVGMatrix> matrix;
   transforms->GetConsolidationMatrix(getter_AddRefs(matrix));
-
-  return screenCTM->Multiply(matrix, _retval);
+  return parentScreenCTM->Multiply(matrix, _retval);  // addrefs, so we don't
 }
 
 /* nsIDOMSVGMatrix getTransformToElement (in nsIDOMSVGElement element); */
 NS_IMETHODIMP nsSVGGraphicElement::GetTransformToElement(nsIDOMSVGElement *element, nsIDOMSVGMatrix **_retval)
 {
-  // null check when implementing - this method can be used by scripts!
-  // if (!element)
-  //   return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
+  if (!element)
+    return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
-  NS_NOTYETIMPLEMENTED("nsSVGGraphicElement::GetTransformToElement");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+  *_retval = nsnull;
+  nsCOMPtr<nsIDOMSVGMatrix> ourScreenCTM;
+  nsCOMPtr<nsIDOMSVGMatrix> targetScreenCTM;
+  nsCOMPtr<nsIDOMSVGMatrix> tmp;
+  nsCOMPtr<nsIDOMSVGLocatable> target = do_QueryInterface(element, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // the easiest way to do this (if likely to increase rounding error):
+  rv = GetScreenCTM(getter_AddRefs(ourScreenCTM));
+  if (NS_FAILED(rv)) return rv;
+  rv = target->GetScreenCTM(getter_AddRefs(targetScreenCTM));
+  if (NS_FAILED(rv)) return rv;
+  rv = targetScreenCTM->Inverse(getter_AddRefs(tmp));
+  if (NS_FAILED(rv)) return rv;
+  return ourScreenCTM->Multiply(tmp, _retval);  // addrefs, so we don't
 }
 
 //----------------------------------------------------------------------
