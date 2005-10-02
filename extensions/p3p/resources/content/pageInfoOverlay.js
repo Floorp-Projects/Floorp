@@ -43,10 +43,10 @@ var gIOService = null;
 function initTopDocAndWin()
 {
   if ("arguments" in window && window.arguments.length > 0 && 
-      window.arguments[0])
+      window.arguments[0] && window.arguments[0].doc)
   {
     gTopWin = null;
-    gTopDoc = window.arguments[0];
+    gTopDoc = window.arguments[0].doc;
   }
   else 
   {

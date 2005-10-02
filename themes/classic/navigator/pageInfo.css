@@ -49,6 +49,7 @@ textbox > .textarea-internal-box {
   -moz-appearance: none;
 }
 
+label.header,
 textbox.header {
   margin-left: 0;
 }

@@ -48,6 +48,7 @@ textbox > .textarea-internal-box {
   padding: 0px;
 }
 
+label.header,
 textbox.header {
   margin-left: 0;
 }
