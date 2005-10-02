@@ -185,6 +185,8 @@ $ShellOverride = '';
 
 # Release build options
 $ReleaseBuild  = 1;
+$clean_objdir = 1; # remove objdir when starting release cycle?
+$clean_srcdir = 1; # remove srcdir when starting release cycle?
 $LocaleProduct = "browser";
 $shiptalkback  = 1;
 $ReleaseToLatest = 1; # Push the release to latest-<milestone>?

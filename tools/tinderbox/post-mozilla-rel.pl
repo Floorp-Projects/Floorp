@@ -26,6 +26,9 @@
 #  stub_installer: (0/1) whether to upload a stub installer
 #  sea_installer: (0/1) whether to upload a sea (blob) installer
 #  archive: (0/1) whether to upload an archive (tar or zip) build
+#  clean_objdir: (0/1) whether to wipe out the objdir (same as the srcdir if no
+#                objdir set) when starting a release build cycle
+#  clean_srcdir: (0/1) whether to wipe out the srcdir for a release cycle
 #
 #  windows-specific variables:
 #   as_perl_path: cygwin-ized path to Activestate Perl's bin directory
@@ -916,8 +919,20 @@ sub PreBuild {
 
   if ($cachebuild) {
     TinderUtils::print_log "starting nightly release build\n";
-    # clobber the tree
-    TinderUtils::run_shell_command "rm -rf mozilla";
+    # clobber the tree if set to do so
+    $Settings::clean_objdir = 1 if !defined($Settings::objdir);
+    $Settings::clean_srcdir = 1 if !defined($Settings::srcdir);
+    if ($Settings::ObjDir eq '') {
+      $Settings::clean_srcdir = ($Settings::clean_srcdir || $Settings::clean_objdir);
+      $Settings::clean_objdir = 0;
+    }
+    if ($Settings::clean_srcdir) {
+      TinderUtils::run_shell_command "rm -rf mozilla";
+    }
+    if ($Settings::clean_objdir) {
+      my $objdir = 'mozilla/'.$Settings::ObjDir;
+      TinderUtils::run_shell_command "rm -rf $objdir";
+    }
     if ( -d "l10n" ) {
       TinderUtils::run_shell_command "rm -rf l10n";
     }
