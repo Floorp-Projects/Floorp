@@ -1017,12 +1017,8 @@ inline uint32 utf8_str_len(const char* ustring)
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(char aC, nscoord &aWidth)
 {
-	// Check for the very common case of trying to get the width of a single space
-	if ((aC == ' ') && (nsnull != mFontMetrics))
-		return mFontMetrics->GetSpaceWidth(aWidth);
-	else
-		return GetWidth(&aC, 1, aWidth);
-	}
+	return GetWidth(&aC, 1, aWidth);
+}
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(PRUnichar aC, nscoord &aWidth, PRInt32 *aFontID)
 {
@@ -1041,7 +1037,6 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const char *aString, nscoord &aWi
 
 NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const char *aString, PRUint32 aLength, nscoord &aWidth)
 {
-	
 	if (0 == aLength)
 	{
 		aWidth = 0;
@@ -1050,8 +1045,8 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetWidth(const char *aString, PRUint32 aLe
 	{
 		if (aString == nsnull)
 			return NS_ERROR_FAILURE;
-		PRUint32 rawWidth = (PRUint32)mCurrentFont->StringWidth(aString, aLength);
-		aWidth = NSToCoordRound(rawWidth * mP2T);
+		// Using cached width if possible
+		aWidth  = (nscoord)((nsFontMetricsBeOS *)mFontMetrics)->GetStringWidth((char *)aString, aLength) * mP2T;
 	}
 	return NS_OK;
 }

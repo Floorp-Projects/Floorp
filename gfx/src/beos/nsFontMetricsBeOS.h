@@ -51,6 +51,7 @@
 #include "nsCOMPtr.h"
 #include "nsRenderingContextBeOS.h" 
 #include "nsICharRepresentable.h" 
+#include "nsDataHashtable.h"
 
 #include <Font.h>
 
@@ -94,6 +95,8 @@ public:
   static int FontMatchesGenericType(font_family family, uint32 flags, const char* aGeneric,  const char* aLangGroup);
   nsCOMPtr<nsIAtom>   mLangGroup; 
   static int MatchesLangGroup(font_family family,  const char* aLangGroup);
+  float GetStringWidth(char *string, uint32 len);
+
 protected:
   void RealizeFont(nsIDeviceContext* aContext);
 
@@ -120,7 +123,8 @@ protected:
  
   PRUint16            mPixelSize; 
   PRUint8             mStretchIndex; 
-  PRUint8             mStyleIndex;  
+  PRUint8             mStyleIndex;
+  nsDataHashtable<nsUint32HashKey, float>         mFontWidthCache; 
 }; 
  
 class nsFontEnumeratorBeOS : public nsIFontEnumerator 
