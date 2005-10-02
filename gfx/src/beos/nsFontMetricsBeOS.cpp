@@ -50,7 +50,6 @@
 #include "nsIPrefBranch.h"
 #include "nsCOMPtr.h" 
 #include "nspr.h" 
-#include "nsHashtable.h" 
 #include "nsReadableUtils.h"
  
 #include <UnicodeBlockObjects.h>
@@ -168,9 +167,9 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       } 
       // not successful. use system font.
       if (isfixed)
-        mFontHandle = be_fixed_font;
+        mFontHandle = BFont(be_fixed_font);
       else
-        mFontHandle = be_plain_font;
+        mFontHandle = BFont(be_plain_font);
       fontfound = PR_TRUE;
       break;
     }
@@ -180,9 +179,9 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   if (!fontfound)
   {
     if (isfixed)
-      mFontHandle = be_fixed_font;
+      mFontHandle = BFont(be_fixed_font);
     else
-      mFontHandle = be_plain_font;
+      mFontHandle = BFont(be_plain_font);
   } 
  
   if (aFont.style == NS_FONT_STYLE_ITALIC)
@@ -206,12 +205,16 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mFontHandle.SetShear(105.0);
 
   mFontHandle.SetSize(mFont.size/app2twip);
+  mFontHandle.SetSpacing(B_FIXED_SPACING);
 #ifdef NOISY_FONTS
 #ifdef DEBUG
   fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / app2twip);
 #endif
 #endif
-
+  //UTF8 charspace in BeOS is 0xFFFF, 256 is by "pighole rule" sqrt(0xFFFF), 
+  // actually rare font contains more glyphs
+  mFontWidthCache.Init(256);
+  
   RealizeFont(aContext);
 
   return NS_OK;
@@ -274,7 +277,6 @@ void nsFontMetricsBeOS::RealizeFont(nsIDeviceContext* aContext)
   /* need better way to calculate this */ 
   mStrikeoutOffset = NSToCoordRound(mXHeight / 2.0); 
   mStrikeoutSize = mUnderlineSize; 
- 
 }
 
 NS_IMETHODIMP  nsFontMetricsBeOS::GetXHeight(nscoord& aResult)
@@ -409,6 +411,45 @@ nsFontMetricsBeOS::FamilyExists(const nsString& aName)
   printf("exists? %s", (font_family)family.get()); 
   return  (count_font_styles((font_family)family.get()) > 0) ? NS_OK : NS_ERROR_FAILURE;
 } 
+
+// useful UTF-8 utility
+inline uint32 utf8_char_len(uchar byte) 
+{
+	return (((0xE5000000 >> ((byte >> 3) & 0x1E)) & 3) + 1);
+}
+
+// nsHashKeys has trouble with char* substring conversion
+// it likes 0-terminated, plus conversion to nsACString overhead.
+// So KISS
+inline PRUint32 utf8_to_index(char *utf8char)
+{
+	PRUint32 ch = 0;
+	switch (utf8_char_len(*utf8char) - 1) 
+	{
+		case 3: ch += *utf8char++; ch <<= 6;
+		case 2: ch += *utf8char++; ch <<= 6;
+		case 1: ch += *utf8char++; ch <<= 6;
+		case 0: ch += *utf8char++;
+	}
+	return ch;
+}
+// Using cached widths
+float  nsFontMetricsBeOS::GetStringWidth(char *utf8str, uint32 len)
+{
+	//At moment only for most annoying case - permanent calls for single char widths
+	// calculating StringWidth as sum of chars width produces sometimes weird results
+	if (utf8_char_len(*utf8str) != len)
+		return mFontHandle.StringWidth(utf8str, len);
+	// converting multibyte sequence to index
+	PRUint32 index = utf8_to_index(utf8str);
+	float width;
+	if (!mFontWidthCache.Get(index, &width))
+	{
+		width = mFontHandle.StringWidth(utf8str, len);
+		mFontWidthCache.Put(index, width);
+	}
+	return width;
+}
  
 // The Font Enumerator 
  
@@ -562,7 +603,7 @@ static nsresult EnumFonts(const char * aLangGroup, const char* aGeneric, PRUint3
       {
         if(FontMatchesGenericType(family, flags, aGeneric, aLangGroup))
         {
-          if (!(array[j] = ToNewUnicode(NS_ConvertUTF8toUTF16((const char*)family))))
+          if (!(array[j] = UTF8ToNewUnicode(nsDependentCString(family))))
             break; 
           ++j;
         }
