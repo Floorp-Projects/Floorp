@@ -258,7 +258,7 @@ calRecurrenceInfo.prototype = {
         if (!this.mBaseItem)
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
 
-        var startDate = this.mBaseItem.getRecurrenceStartDate();
+        var startDate = this.mBaseItem.recurrenceStartDate;
         var dates = [];
 
         for each (ritem in this.mRecurrenceItems) {
@@ -269,7 +269,7 @@ calRecurrenceInfo.prototype = {
             if (ritem.isNegative)
                 dates = dates.filter(function (d) { return (d.compare(date) != 0); });
             else
-                dates = dates.push(date);
+                dates.push(date);
         }
 
         // if no dates, there's no next
