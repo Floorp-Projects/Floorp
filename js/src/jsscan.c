@@ -1888,9 +1888,11 @@ skipline:
         if (ts->flags & TSF_OPERAND) {
             JSObject *obj;
             uintN flags;
+            JSBool inCharClass = JS_FALSE;
 
             INIT_TOKENBUF();
-            while ((c = GetChar(ts)) != '/') {
+            for (;;) {
+                c = GetChar(ts);
                 if (c == '\n' || c == EOF) {
                     UngetChar(ts, c);
                     js_ReportCompileErrorNumber(cx, ts,
@@ -1901,6 +1903,13 @@ skipline:
                 if (c == '\\') {
                     ADD_TO_TOKENBUF(c);
                     c = GetChar(ts);
+                } else if (c == '[') {
+                    inCharClass = JS_TRUE;
+                } else if (c == ']') {
+                    inCharClass = JS_FALSE;
+                } else if (c == '/' && !inCharClass) {
+                    /* For compat with IE, allow unescaped / in char classes. */
+                    break;
                 }
                 ADD_TO_TOKENBUF(c);
             }
