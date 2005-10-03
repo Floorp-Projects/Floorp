@@ -64,7 +64,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       patchfile="$workdir/$f.patch.bz2"
       patchsize=$(get_file_size "$patchfile")
       fullsize=$(get_file_size "$workdir/$f")
-      if [ $patchsize -lt $fullsize ]; then
+      if [ $patchsize -lt $fullsize -a "$f" != "removed-files" ]; then
         make_patch_instruction "$f" >> $manifest
         mv -f "$patchfile" "$workdir/$f.patch"
         rm -f "$workdir/$f"
