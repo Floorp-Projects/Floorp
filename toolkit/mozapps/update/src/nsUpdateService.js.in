@@ -45,6 +45,7 @@ const PREF_APP_UPDATE_TIMER               = "app.update.timer";
 const PREF_APP_UPDATE_LOG_BRANCH          = "app.update.log.";
 const PREF_APP_UPDATE_URL                 = "app.update.url";
 const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
+const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
 const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
 const PREF_APP_UPDATE_SHOW_INSTALLED_UI   = "app.update.showInstalledUI";
 const PREF_APP_UPDATE_LASTUPDATETIME_FMT  = "app.update.lastUpdateTime.%ID%";
@@ -615,6 +616,8 @@ function Update(update) {
       this.isCompleteUpdate = attr.value == "true";
     else if (attr.name == "isSecurityUpdate")
       this.isSecurityUpdate = attr.value == "true";
+    else if (attr.name == "detailsURL")
+      this._detailsURL = attr.value;
     else
       this[attr.name] = attr.value;
   }
@@ -680,6 +683,23 @@ Update.prototype = {
         return this._patches[i];
     }
     return null;
+  },
+  
+  /**
+   * See nsIUpdateService.idl
+   */
+  get detailsURL() {
+    if (!this._detailsURL) {
+      try {
+        // Try using a default details URL supplied by the distribution
+        // if the update XML does not supply one.
+        return gPref.getComplexValue(PREF_APP_UPDATE_URL_DETAILS,
+                                     nsIPrefLocalizedString).data;
+      }
+      catch (e) {
+      }
+    }
+    return this._detailsURL || "";
   },
   
   /**
