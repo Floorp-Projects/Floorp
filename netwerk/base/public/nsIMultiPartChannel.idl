@@ -45,7 +45,7 @@ interface nsIChannel;
  * associated with a MultiPartChannel.
  */
 
-[scriptable, uuid(c1284456-652d-4130-a1a4-48a652af2330)]
+[scriptable, uuid(ba78db7b-b88c-4b76-baf9-3c2296a585ae)]
 interface nsIMultiPartChannel : nsISupports
 {
     /**
@@ -65,4 +65,11 @@ interface nsIMultiPartChannel : nsISupports
      * the same multipart document.
      */
     readonly attribute PRUint32 partID;
+
+    /**
+     * Set to true when onStopRequest is received from the base channel.
+     * The listener can check this from its onStopRequest to determine
+     * whether more data can be expected.
+     */
+    readonly attribute boolean isLastPart;
 };

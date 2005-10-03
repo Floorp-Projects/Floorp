@@ -45,7 +45,6 @@
 #include "nsMimeTypes.h"
 #include "nsIStringStream.h"
 #include "nsReadableUtils.h"
-#include "nsIMultiPartChannel.h"
 #include "nsCRT.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsURLHelper.h"
@@ -68,59 +67,14 @@ LengthToToken(const char *cursor, const char *token)
     return len;
 }
 
-//
-// nsPartChannel is a "dummy" channel which represents an individual part of
-// a multipart/mixed stream...
-//
-// Instances on this channel are passed out to the consumer through the
-// nsIStreamListener interface.
-//
-class nsPartChannel : public nsIChannel,
-                      public nsIByteRangeRequest,
-                      public nsIMultiPartChannel
-{
-public:
-  nsPartChannel(nsIChannel *aMultipartChannel, PRUint32 aPartID);
-
-  void InitializeByteRange(PRInt64 aStart, PRInt64 aEnd);
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREQUEST
-  NS_DECL_NSICHANNEL
-  NS_DECL_NSIBYTERANGEREQUEST
-  NS_DECL_NSIMULTIPARTCHANNEL
-
-protected:
-  ~nsPartChannel();
-
-protected:
-  nsCOMPtr<nsIChannel>    mMultipartChannel;
-  
-  nsresult                mStatus;
-  nsLoadFlags             mLoadFlags;
-
-  nsCOMPtr<nsILoadGroup>  mLoadGroup;
-
-  nsCString               mContentType;
-  nsCString               mContentCharset;
-  nsCString               mContentDisposition;
-  nsUint64                mContentLength;
-
-  PRBool                  mIsByteRangeRequest;
-  nsInt64                 mByteRangeStart;
-  nsInt64                 mByteRangeEnd;
-
-  PRUint32                mPartID; // unique ID that can be used to identify
-                                   // this part of the multipart document
-};
-
 nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel, PRUint32 aPartID) :
   mStatus(NS_OK),
   mContentLength(LL_MAXUINT),
   mIsByteRangeRequest(PR_FALSE),
   mByteRangeStart(0),
   mByteRangeEnd(0),
-  mPartID(aPartID)
+  mPartID(aPartID),
+  mIsLastPart(PR_FALSE)
 {
     mMultipartChannel = aMultipartChannel;
 
@@ -377,6 +331,13 @@ NS_IMETHODIMP
 nsPartChannel::GetPartID(PRUint32 *aPartID)
 {
     *aPartID = mPartID;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPartChannel::GetIsLastPart(PRBool *aIsLastPart)
+{
+    *aIsLastPart = mIsLastPart;
     return NS_OK;
 }
 
@@ -701,6 +662,8 @@ nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
         return NS_ERROR_FAILURE;
 
     if (mPartChannel) {
+        mPartChannel->SetIsLastPart();
+
         // we've already called SendStart() (which sets up the mPartChannel,
         // and fires an OnStart()) send any data left over, and then fire the stop.
         if (mBufLen > 0 && mBuffer) {
@@ -798,11 +761,8 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     rv = mPartChannel->SetContentLength(mContentLength); // XXX Truncates 64-bit!
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIMultiPartChannel> partChannel(do_QueryInterface(mPartChannel));
-    if (partChannel) {
-        rv = partChannel->SetContentDisposition(mContentDisposition);
-        if (NS_FAILED(rv)) return rv;
-    }
+    rv = mPartChannel->SetContentDisposition(mContentDisposition);
+    if (NS_FAILED(rv)) return rv;
 
     nsLoadFlags loadFlags = 0;
     mPartChannel->GetLoadFlags(&loadFlags);

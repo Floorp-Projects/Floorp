@@ -77,7 +77,7 @@ public:
                                                // owner has already sent notifications out!
 
   void AddToLoadGroup();
-  void RemoveFromLoadGroup();
+  void RemoveFromLoadGroup(PRBool releaseLoadGroup);
 
 protected:
   friend class imgRequest;
