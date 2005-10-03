@@ -45,6 +45,8 @@
 #include "nsCOMPtr.h"
 #include "nsInt64.h"
 #include "nsIByteRangeRequest.h"
+#include "nsIMultiPartChannel.h"
+#include "nsAutoPtr.h"
 
 #define NS_MULTIMIXEDCONVERTER_CID                         \
 { /* 7584CE90-5B25-11d3-A175-0050041CAF44 */         \
@@ -53,6 +55,54 @@
     0x11d3,                                          \
     {0xa1, 0x75, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44}       \
 }
+
+//
+// nsPartChannel is a "dummy" channel which represents an individual part of
+// a multipart/mixed stream...
+//
+// Instances on this channel are passed out to the consumer through the
+// nsIStreamListener interface.
+//
+class nsPartChannel : public nsIChannel,
+                      public nsIByteRangeRequest,
+                      public nsIMultiPartChannel
+{
+public:
+  nsPartChannel(nsIChannel *aMultipartChannel, PRUint32 aPartID);
+
+  void InitializeByteRange(PRInt64 aStart, PRInt64 aEnd);
+  void SetIsLastPart() { mIsLastPart = PR_TRUE; }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIREQUEST
+  NS_DECL_NSICHANNEL
+  NS_DECL_NSIBYTERANGEREQUEST
+  NS_DECL_NSIMULTIPARTCHANNEL
+
+protected:
+  ~nsPartChannel();
+
+protected:
+  nsCOMPtr<nsIChannel>    mMultipartChannel;
+  
+  nsresult                mStatus;
+  nsLoadFlags             mLoadFlags;
+
+  nsCOMPtr<nsILoadGroup>  mLoadGroup;
+
+  nsCString               mContentType;
+  nsCString               mContentCharset;
+  nsCString               mContentDisposition;
+  nsUint64                mContentLength;
+
+  PRBool                  mIsByteRangeRequest;
+  nsInt64                 mByteRangeStart;
+  nsInt64                 mByteRangeEnd;
+
+  PRUint32                mPartID; // unique ID that can be used to identify
+                                   // this part of the multipart document
+  PRBool                  mIsLastPart;
+};
 
 // The nsMultiMixedConv stream converter converts a stream of type "multipart/x-mixed-replace"
 // to it's subparts. There was some debate as to whether or not the functionality desired
@@ -119,7 +169,7 @@ protected:
     nsCString           mToken;
     PRUint32            mTokenLen;
 
-    nsCOMPtr<nsIChannel>mPartChannel;   // the channel for the given part we're processing.
+    nsRefPtr<nsPartChannel> mPartChannel;   // the channel for the given part we're processing.
                                         // one channel per part.
     nsCOMPtr<nsISupports> mContext;
     nsCString           mContentType;

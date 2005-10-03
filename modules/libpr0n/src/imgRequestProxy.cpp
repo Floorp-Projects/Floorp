@@ -42,6 +42,7 @@
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsIMultiPartChannel.h"
 
 #include "nsAutoLock.h"
 #include "nsString.h"
@@ -159,7 +160,7 @@ void imgRequestProxy::AddToLoadGroup()
   }
 }
 
-void imgRequestProxy::RemoveFromLoadGroup()
+void imgRequestProxy::RemoveFromLoadGroup(PRBool releaseLoadGroup)
 {
   if (!mIsInLoadGroup)
     return;
@@ -174,8 +175,10 @@ void imgRequestProxy::RemoveFromLoadGroup()
   mLoadGroup->RemoveRequest(this, NS_OK, nsnull);
   mIsInLoadGroup = PR_FALSE;
 
-  // We're done with the loadgroup, release it.
-  mLoadGroup = nsnull;
+  if (releaseLoadGroup) {
+    // We're done with the loadgroup, release it.
+    mLoadGroup = nsnull;
+  }
 }
 
 
@@ -488,6 +491,26 @@ void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
   LOG_FUNC_WITH_PARAM(gImgLog, "imgRequestProxy::OnStopRequest", "name", name.get());
 #endif
 
-  RemoveFromLoadGroup();
+  // If we're expecting more data from a multipart channel, re-add ourself
+  // to the loadgroup so that the document doesn't lose track of the load.
+  PRBool lastPart = PR_TRUE;
+  if (mOwner->mIsMultiPartChannel) {
+    nsCOMPtr<nsIMultiPartChannel> mpc = do_QueryInterface(request);
+    if (mpc) {
+      mpc->GetIsLastPart(&lastPart);
+    }
+  }
+
+  // If the request is already a background request and there's more data
+  // coming, we can just leave the request in the loadgroup as-is.
+  if (lastPart || (mLoadFlags & nsIRequest::LOAD_BACKGROUND) == 0) {
+    RemoveFromLoadGroup(lastPart);
+    // More data is coming, so change the request to be a background request
+    // and put it back in the loadgroup.
+    if (!lastPart) {
+      mLoadFlags |= nsIRequest::LOAD_BACKGROUND;
+      AddToLoadGroup();
+    }
+  }
 }
 
