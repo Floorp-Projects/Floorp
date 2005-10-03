@@ -40,7 +40,7 @@
  * encoding/creation side *and* the decoding/decryption side.  Anything
  * else should be static routines in the appropriate file.
  *
- * $Id: p7local.c,v 1.7 2004/04/25 15:03:13 gerv%gerv.net Exp $
+ * $Id: p7local.c,v 1.8 2005/10/03 22:01:56 relyea%netscape.com Exp $
  */
 
 #include "p7local.h"
@@ -118,11 +118,12 @@ sec_PKCS7CreateDecryptObject (PK11SymKey *key, SECAlgorithmID *algid)
     if (SEC_PKCS5IsAlgorithmPBEAlg(algid)) {
 	CK_MECHANISM pbeMech, cryptoMech;
 	SECItem *pbeParams, *pwitem;
-	SEC_PKCS5KeyAndPassword *keyPwd;
 
-	keyPwd = (SEC_PKCS5KeyAndPassword *)key;
-	key = keyPwd->key;
-	pwitem = keyPwd->pwitem;
+	pwitem = (SECItem *)PK11_GetSymKeyUserData(key);
+	if (!pwitem) {
+	    PORT_Free(result);
+	    return NULL;
+	}
 
 	pbeMech.mechanism = PK11_AlgtagToMechanism(algtag);
 	pbeParams = PK11_ParamFromAlgid(algid);
@@ -211,11 +212,16 @@ sec_PKCS7CreateEncryptObject (PRArenaPool *poolp, PK11SymKey *key,
     ciphercx = NULL;
     if (SEC_PKCS5IsAlgorithmPBEAlg(algid)) {
 	CK_MECHANISM pbeMech, cryptoMech;
-	SECItem *pbeParams;
-	SEC_PKCS5KeyAndPassword *keyPwd;
+	SECItem *pbeParams, *pwitem;
 
 	PORT_Memset(&pbeMech, 0, sizeof(CK_MECHANISM));
 	PORT_Memset(&cryptoMech, 0, sizeof(CK_MECHANISM));
+
+	pwitem = (SECItem *)PK11_GetSymKeyUserData(key);
+	if (!pwitem) {
+	    PORT_Free(result);
+	    return NULL;
+	}
 
 	pbeMech.mechanism = PK11_AlgtagToMechanism(algtag);
 	pbeParams = PK11_ParamFromAlgid(algid);
@@ -223,13 +229,11 @@ sec_PKCS7CreateEncryptObject (PRArenaPool *poolp, PK11SymKey *key,
 	    PORT_Free(result);
 	    return NULL;
 	}
-	keyPwd = (SEC_PKCS5KeyAndPassword *)key;
-	key = keyPwd->key;
 
 	pbeMech.pParameter = pbeParams->data;
 	pbeMech.ulParameterLen = pbeParams->len;
-	if(PK11_MapPBEMechanismToCryptoMechanism(&pbeMech, &cryptoMech, 
-					 keyPwd->pwitem, PR_FALSE) != CKR_OK) {
+	if(PK11_MapPBEMechanismToCryptoMechanism(&pbeMech, &cryptoMech, pwitem,
+							 PR_FALSE) != CKR_OK) {
 	    PORT_Free(result);
 	    SECITEM_ZfreeItem(pbeParams, PR_TRUE);
 	    return NULL;

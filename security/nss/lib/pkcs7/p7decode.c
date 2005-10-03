@@ -38,7 +38,7 @@
 /*
  * PKCS7 decoding, verification.
  *
- * $Id: p7decode.c,v 1.19 2005/09/02 01:24:56 wtchang%redhat.com Exp $
+ * $Id: p7decode.c,v 1.20 2005/10/03 22:01:56 relyea%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -690,16 +690,6 @@ sec_pkcs7_decoder_start_decrypt (SEC_PKCS7DecoderContext *p7dcx, int depth,
      */
     decryptobj = sec_PKCS7CreateDecryptObject (bulkkey,
 					       &(enccinfo->contentEncAlg));
-
-    /* 
-     * For PKCS5 Encryption Algorithms, the bulkkey is actually a different
-     * structure.  Therefore, we need to set the bulkkey to the actual key 
-     * prior to freeing it.
-     */
-    if ( SEC_PKCS5IsAlgorithmPBEAlg(&(enccinfo->contentEncAlg)) && bulkkey ) {
-	SEC_PKCS5KeyAndPassword *keyPwd = (SEC_PKCS5KeyAndPassword *)bulkkey;
-	bulkkey = keyPwd->key;
-    }
 
     /*
      * We are done with (this) bulkkey now.

@@ -1901,10 +1901,9 @@ sec_pkcs12_encoder_asafe_process(sec_PKCS12EncoderContext *p12ecx)
 {
     SEC_PKCS7EncoderContext *innerP7ecx;
     SEC_PKCS7ContentInfo    *cinfo;
-    void                    *arg          = NULL;
+    PK11SymKey              *bulkKey      = NULL;
     SEC_ASN1EncoderContext  *innerA1ecx   = NULL;
     SECStatus                rv           = SECSuccess;
-    SEC_PKCS5KeyAndPassword  keyPwd;
 
     if(p12ecx->currentSafe < p12ecx->p12exp->authSafe.safeCount) {
 	SEC_PKCS12SafeInfo *safeInfo;
@@ -1923,15 +1922,11 @@ sec_pkcs12_encoder_asafe_process(sec_PKCS12EncoderContext *p12ecx)
 	/* determine the safe type and set the appropriate argument */
 	switch(cinfoType) {
 	    case SEC_OID_PKCS7_DATA:
-		arg = NULL;
+	    case SEC_OID_PKCS7_ENVELOPED_DATA:
 		break;
 	    case SEC_OID_PKCS7_ENCRYPTED_DATA:
-		keyPwd.pwitem = &safeInfo->pwitem;
-		keyPwd.key = safeInfo->encryptionKey;
-		arg = &keyPwd;
-		break;
-	    case SEC_OID_PKCS7_ENVELOPED_DATA:
-		arg = NULL;
+		bulkKey = safeInfo->encryptionKey;
+		PK11_SetSymKeyUserData(bulkKey, &safeInfo->pwitem, NULL);
 		break;
 	    default:
 		return SECFailure;
@@ -1941,7 +1936,7 @@ sec_pkcs12_encoder_asafe_process(sec_PKCS12EncoderContext *p12ecx)
 	/* start the PKCS7 encoder */
 	innerP7ecx = SEC_PKCS7EncoderStart(cinfo, 
 				  sec_P12P7OutputCB_CallA1Update,
-				  p12ecx->middleA1ecx, (PK11SymKey *)arg);
+				  p12ecx->middleA1ecx, bulkKey);
 	if(!innerP7ecx) {
 	    goto loser;
 	}

@@ -37,7 +37,7 @@
 /*
  * CMS envelopedData methods.
  *
- * $Id: cmsenvdata.c,v 1.10 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: cmsenvdata.c,v 1.11 2005/10/03 22:01:57 relyea%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -384,16 +384,6 @@ NSS_CMSEnvelopedData_Decode_BeforeData(NSSCMSEnvelopedData *envd)
     if (cinfo->ciphcx == NULL)
 	goto loser;		/* error has been set by NSS_CMSCipherContext_StartDecrypt */
 
-    /* 
-     * HACK ALERT!!
-     * For PKCS5 Encryption Algorithms, the bulkkey is actually a different
-     * structure.  Therefore, we need to set the bulkkey to the actual key 
-     * prior to freeing it.
-     */
-    if (SEC_PKCS5IsAlgorithmPBEAlg(bulkalg)) {
-	SEC_PKCS5KeyAndPassword *keyPwd = (SEC_PKCS5KeyAndPassword *)bulkkey;
-	bulkkey = keyPwd->key;
-    }
 
     rv = SECSuccess;
 
