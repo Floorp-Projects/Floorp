@@ -230,6 +230,12 @@ function delayedOnLoadAddressBook()
 
   var toolbarset = document.getElementById('customToolbars');
   toolbox.toolbarset = toolbarset;
+
+  // Ensure we don't load xul error pages into the main window
+  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+        .getInterface(Components.interfaces.nsIWebNavigation)
+        .QueryInterface(Components.interfaces.nsIDocShell)
+        .useErrorPages = false;
 }
 
 function OnLoadDirTree() {
@@ -876,9 +882,11 @@ function IsCardViewAndAbResultsPaneSplitterCollapsed()
 
 function LaunchUrl(url)
 {
-  var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance(Components.interfaces.nsIMessenger);
-  messenger.SetWindow(window,null);
-  messenger.OpenURL(url);
+  // Doesn't matter if this bit fails, window.location contains its own prompts
+  try {
+    window.location = url;
+  }
+  catch (ex) {}
 }
 
 function AbIMSelected()
