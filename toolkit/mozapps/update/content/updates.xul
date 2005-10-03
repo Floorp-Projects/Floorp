@@ -114,7 +114,9 @@
             </hbox>
           </vbox>
         </hbox>
-        <label class="text-link" id="updateMoreInfoURL" value="&clickHere.label;"/>
+        <hbox>
+          <label class="text-link" id="updateMoreInfoURL" value="&clickHere.label;"/>
+        </hbox>
       </vbox>
     </deck>
   </wizardpage>

@@ -77,6 +77,9 @@ pref("app.update.url", "https://aus2.mozilla.org/update/1/%PRODUCT%/%VERSION%/%B
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.  TODO: Change this URL
 pref("app.update.url.manual", "http://www.mozilla.org/products/thunderbird/");
+// A default value for the "More information about this update" link
+// supplied in the "An update is available" page of the update wizard. 
+pref("app.update.url.details", "chrome://messenger-region/locale/region.properties");
 // User-settable override to app.update.url for testing purposes.
 //pref("app.update.url.override", "");
 
