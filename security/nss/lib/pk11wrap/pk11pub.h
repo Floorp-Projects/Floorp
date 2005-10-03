@@ -299,6 +299,39 @@ PK11SymKey * PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname,
 PK11SymKey *PK11_GetNextSymKey(PK11SymKey *symKey);
 CK_KEY_TYPE PK11_GetSymKeyType(PK11SymKey *key);
 
+/*
+ * PK11_SetSymKeyUserData
+ *   sets generic user data on keys (usually a pointer to a data structure)
+ * that can later be retrieved by PK11_GetSymKeyUserData().
+ *    symKey - key where data will be set.
+ *    data - data to be set.
+ *    freefunc - function used to free the data.
+ * Setting user data on symKeys with existing user data already set will cause 
+ * the existing user data to be freed before the new user data is set.
+ * Freeing user data is done by calling the user specified freefunc. 
+ * If freefunc is NULL, the user data is assumed to be global or static an 
+ * not freed. Passing NULL for user data to PK11_SetSymKeyUserData has the 
+ * effect of freeing any existing user data, and clearing the user data 
+ * pointer. If user data exists when the symKey is finally freed, that 
+ * data will be freed with freefunc.
+ *
+ * Applications should only use this function on keys which the application
+ * has created directly, as there is only one user data value per key.
+ */
+void PK11_SetSymKeyUserData(PK11SymKey *symKey, void *data, 
+                                 PK11FreeDataFunc freefunc);
+/* PK11_GetSymKeyUserData 
+ *   retrieves generic user data which was set on a key by 
+ * PK11_SetSymKeyUserData.
+ *    symKey - key with data to be fetched
+ *
+ * If no data exists, or the data has been cleared, PK11_GetSymKeyUserData
+ * will return NULL. Returned data is still owned and managed by the SymKey,
+ * the caller should not free the data.
+ *
+ */
+void *PK11_GetSymKeyUserData(PK11SymKey *symKey);
+
 SECStatus PK11_PubWrapSymKey(CK_MECHANISM_TYPE type, SECKEYPublicKey *pubKey,
 				PK11SymKey *symKey, SECItem *wrappedKey);
 SECStatus PK11_WrapSymKey(CK_MECHANISM_TYPE type, SECItem *params,

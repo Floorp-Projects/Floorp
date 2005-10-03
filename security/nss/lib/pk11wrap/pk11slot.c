@@ -364,6 +364,7 @@ PK11_NewSlotInfo(SECMODModule *mod)
 	PORT_Free(slot);
 	return slot;
     }
+    slot->freeSymKeysWithSessionHead = NULL;
     slot->freeSymKeysHead = NULL;
     slot->keyCount = 0;
     slot->maxKeyCount = 0;

@@ -97,6 +97,7 @@ struct PK11SlotInfoStr {
      * still in use */
     PRInt32 refCount;    /* to be in/decremented by atomic calls ONLY! */
     PZLock *freeListLock;
+    PK11SymKey *freeSymKeysWithSessionHead;
     PK11SymKey *freeSymKeysHead;
     int keyCount;
     int maxKeyCount;
@@ -153,19 +154,22 @@ struct PK11SymKeyStr {
     CK_OBJECT_HANDLE  objectID; /* object id of this key in the slot */
     PK11SlotInfo      *slot;    /* Slot this key is loaded into */
     void	      *cx;	/* window context in case we need to loggin */
-    PK11SymKey		*next;
-    PRBool	owner;
-    SECItem	data;		/* raw key data if available */
+    PK11SymKey	      *next;
+    PRBool	      owner;
+    SECItem	      data;	/* raw key data if available */
     CK_SESSION_HANDLE session;
-    PRBool	sessionOwner;
-    PRInt32	refCount;	/* number of references to this key */
-    int		size;		/* key size in bytes */
-    PK11Origin	origin;		/* where this key came from 
-						(see def in secmodt.h) */
-    PK11SymKey *parent;
-    uint16 series;		/* break up the slot info into various groups of 
-			 * inserted tokens so that keys and certs can be
-			 * invalidated */
+    PRBool	      sessionOwner;
+    PRInt32	      refCount;	/* number of references to this key */
+    int		      size;	/* key size in bytes */
+    PK11Origin	      origin;	/* where this key came from 
+                                 * (see def in secmodt.h) */
+    PK11SymKey        *parent;  /* potential owner key of the session */
+    uint16 series;		/* break up the slot info into various groups 
+				 * of inserted tokens so that keys and certs 
+				 * can be invalidated */
+    void *userData;		/* random data the application can attach to
+                                 * this key */
+    PK11FreeDataFunc freeFunc;	/* function to free the user data */
 };
 
 
