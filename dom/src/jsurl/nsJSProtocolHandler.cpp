@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=2 sw=4 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -247,9 +248,36 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         }
     }
     else {
-        // No owner from channel, use the current URI to generate a principal
-        rv = securityManager->GetCodebasePrincipal(mURI, 
-                                                   getter_AddRefs(principal));
+        // No owner from channel, use the object principals.
+        rv = securityManager->GetObjectPrincipal(
+                                (JSContext*)scriptContext->GetNativeContext(),
+                                globalJSObject,
+                                getter_AddRefs(principal));
+
+        // Paranoia check: If we don't have an owner, make sure that we're
+        // not giving this javascript URL the principals of some other
+        // random page, so if the principals aren't for about:blank, don't use
+        // them.
+        // XXX We can't just create new about:blank principals since caps
+        // refuses to treat two about:blank principals as equal.
+        if (principal) {
+            nsCOMPtr<nsIURI> uri;
+            rv = principal->GetURI(getter_AddRefs(uri));
+            if (NS_SUCCEEDED(rv)) {
+                nsCAutoString spec;
+                uri->GetSpec(spec);
+                if (!spec.EqualsLiteral("about:blank")) {
+                    rv = NS_ERROR_FAILURE;
+                }
+            }
+        }
+
+        if (NS_FAILED(rv) || !principal) {
+            // If all else fails, use the current URI to generate a principal.
+            rv = securityManager->GetCodebasePrincipal(mURI,
+                                                       getter_AddRefs(principal));
+        }
+
         if (NS_FAILED(rv) || !principal) {
             return NS_ERROR_FAILURE;
         }
