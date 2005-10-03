@@ -50,7 +50,11 @@ MOZ_PKG_FORMAT  = DMG
 else
 ifeq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
 MOZ_PKG_FORMAT  = ZIP
+ifeq ($(OS_ARCH),OS2)
+INSTALLER_DIR   = os2
+else
 INSTALLER_DIR   = windows
+endif
 else
 ifeq (,$(filter-out SunOS, $(OS_ARCH)))
 MOZ_PKG_FORMAT  = BZ2
