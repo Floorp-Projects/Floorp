@@ -682,12 +682,16 @@ function refreshEventTreeInternal(eventArray)
        for (var j in eventArray) {
            var event = eventArray[j];
            if (event.title && 
-               event.title.toLowerCase().indexOf(searchText) != -1 )
+               event.title.toLowerCase().indexOf(searchText) != -1 ) {
                gEventArray.push(event);
-           for (var k in fieldsToSearch) {
-               var val = event.getProperty(fieldsToSearch[k]);
-               if (val && val.toLowerCase().indexOf(searchText) != -1 )
-                   gEventArray.push(event);
+           } else { 
+               for (var k in fieldsToSearch) {
+                   var val = event.getProperty(fieldsToSearch[k]);
+                   if (val && val.toLowerCase().indexOf(searchText) != -1 ) {
+                       gEventArray.push(event);
+                       break;
+                   }
+               }
            }
        }
    } else {
