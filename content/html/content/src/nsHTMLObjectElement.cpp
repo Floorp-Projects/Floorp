@@ -84,6 +84,7 @@ public:
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
 
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_OBJECT; }
@@ -180,6 +181,8 @@ nsHTMLObjectElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
+// nsIContent
+
 nsresult
 nsHTMLObjectElement::BindToTree(nsIDocument* aDocument,
                                 nsIContent* aParent,
@@ -234,6 +237,21 @@ nsHTMLObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   return nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                            aValue, aNotify);
+}
+
+PRBool nsHTMLObjectElement::IsFocusable(PRInt32 *aTabIndex)
+{
+  if (aTabIndex) {
+    GetTabIndex(aTabIndex);
+  }
+  
+  if (Type() == eType_Plugin) {
+    // Has plugin content: let the plugin decide what to do in terms of
+    // internal focus from mouse clicks
+    return PR_TRUE;
+  }
+  
+  return HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex);
 }
 
  

@@ -73,6 +73,11 @@ public:
 
   // nsIDOMHTMLObjectElement
   NS_DECL_NSIDOMHTMLOBJECTELEMENT
+  
+  // nsIContent
+  // Let plugin decide whether it wants focus from mouse clicks
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull)
+    { if (aTabIndex) GetTabIndex(aTabIndex); return PR_TRUE; }
 
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRInt32) GetType()
