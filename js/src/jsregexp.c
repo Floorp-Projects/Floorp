@@ -203,13 +203,12 @@ typedef struct EmitStateStackEntry {
  * the offset.
  */
 #define ARG_LEN             2
-#define ARG_MAX             (JS_BIT(ARG_LEN * 8) - 1)
 #define GET_ARG(pc)         ((uint16)(((pc)[0] << 8) | (pc)[1]))
 #define SET_ARG(pc, arg)    ((pc)[0] = (jsbytecode) ((arg) >> 8),       \
                              (pc)[1] = (jsbytecode) (arg))
 
 #define OFFSET_LEN          ARG_LEN
-#define OFFSET_MAX          ARG_MAX
+#define OFFSET_MAX          (JS_BIT(ARG_LEN * 8) - 1)
 #define GET_OFFSET(pc)      GET_ARG(pc)
 
 /*
