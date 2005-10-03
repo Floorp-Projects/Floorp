@@ -120,7 +120,10 @@ nsAsyncInstantiateEvent::HandleEvent(PLEvent* event)
                                                PL_GetEventOwner(event));
   // Make sure that we still have the right frame
   if (con->GetFrame() == ev->mFrame) {
-    ev->mFrame->Instantiate(ev->mContentType.get(), ev->mURI);
+    nsresult rv = ev->mFrame->Instantiate(ev->mContentType.get(), ev->mURI);
+    if (NS_FAILED(rv)) {
+      con->Fallback(PR_TRUE);
+    }
   }
   return nsnull;
 }
@@ -801,7 +804,6 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
 
   mInstantiating = PR_FALSE;
 
-  // XXX should this use current doc, or owner doc?
   nsCOMPtr<nsILoadGroup> group = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> chan;
   rv = NS_NewChannel(getter_AddRefs(chan), aURI, nsnull, group, this);
