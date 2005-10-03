@@ -110,7 +110,6 @@ struct SEC_PKCS12DecoderContextStr {
 
     /* state variables for decoding authenticated safes. */
     SEC_PKCS7DecoderContext *currentASafeP7Dcx;
-    SEC_PKCS5KeyAndPassword *currentASafeKeyPwd;
     SEC_ASN1DecoderContext *aSafeDcx;
     SEC_PKCS7DecoderContext *aSafeP7Dcx;
     sec_PKCS12AuthenticatedSafe authSafe;
@@ -173,25 +172,43 @@ sec_pkcs12_proper_version(sec_PKCS12PFXItem *pfx)
 static PK11SymKey *
 sec_pkcs12_decoder_get_decrypt_key(void *arg, SECAlgorithmID *algid)
 {
-    SEC_PKCS5KeyAndPassword *keyPwd = 
-        (SEC_PKCS5KeyAndPassword *)arg;
+    SEC_PKCS12DecoderContext *p12dcx =
+	(SEC_PKCS12DecoderContext *) arg;
+    PK11SlotInfo *slot;
+    PK11SymKey *bulkKey;
 
-    if(!keyPwd) {
+    if(!p12dcx) {
 	return NULL;
     }
 
     /* if no slot specified, use the internal key slot */
-    if(!keyPwd->slot) {
-	keyPwd->slot = PK11_GetInternalKeySlot();
+    if(p12dcx->slot) {
+	slot = PK11_ReferenceSlot(p12dcx->slot);
+    } else {
+	slot = PK11_GetInternalKeySlot();
     }
 
-    /* retrieve the key */
-    if(!keyPwd->key) {
-	keyPwd->key = PK11_PBEKeyGen(keyPwd->slot, algid, 
-				     keyPwd->pwitem, PR_FALSE, keyPwd->wincx);
+    bulkKey = PK11_PBEKeyGen(slot, algid, p12dcx->pwitem, 
+						PR_FALSE, p12dcx->wincx);
+    /* some tokens can't generate PBE keys on their own, generate the
+     * key in the internal slot, and let the Import code deal with it,
+     * (if the slot can't generate PBEs, then we need to use the internal
+     * slot anyway to unwrap). */
+    if (!bulkKey && !PK11_IsInternal(slot)) {
+	PK11_FreeSlot(slot);
+	slot = PK11_GetInternalKeySlot();
+	bulkKey = PK11_PBEKeyGen(slot, algid, p12dcx->pwitem, 
+						PR_FALSE, p12dcx->wincx);
+    }
+    PK11_FreeSlot(slot);
+
+    /* set the password data on the key */
+    if (bulkKey) {
+        PK11_SetSymKeyUserData(bulkKey,p12dcx->pwitem, NULL);
     }
 
-    return (PK11SymKey *)keyPwd;
+
+    return bulkKey;
 }
 
 /* XXX this needs to be modified to handle enveloped data.  most
@@ -778,25 +795,12 @@ sec_pkcs12_decoder_asafes_notify(void *arg, PRBool before, void *dest,
 	    goto loser;
 	}
 
-	/* set up password and encryption key information */
-	p12dcx->currentASafeKeyPwd = 
-	    (SEC_PKCS5KeyAndPassword*)PORT_ArenaZAlloc(p12dcx->arena, 
-					      sizeof(SEC_PKCS5KeyAndPassword));
-	if(!p12dcx->currentASafeKeyPwd) {
-	    p12dcx->errorValue = SEC_ERROR_NO_MEMORY;
-	    goto loser;
-	}
-	p12dcx->currentASafeKeyPwd->pwitem = p12dcx->pwitem;
-	p12dcx->currentASafeKeyPwd->slot = p12dcx->slot;
-	p12dcx->currentASafeKeyPwd->wincx = p12dcx->wincx;
-
 	/* initiate the PKCS7ContentInfo decode */
 	p12dcx->currentASafeP7Dcx = SEC_PKCS7DecoderStart(
 				sec_pkcs12_decoder_safe_contents_callback,
 				safeContentsCtx, 
 				p12dcx->pwfn, p12dcx->pwfnarg,
-				sec_pkcs12_decoder_get_decrypt_key, 
-				p12dcx->currentASafeKeyPwd, 
+				sec_pkcs12_decoder_get_decrypt_key, p12dcx,
 				sec_pkcs12_decoder_decryption_allowed);
 	if(!p12dcx->currentASafeP7Dcx) {
 	    p12dcx->errorValue = PORT_GetError();
@@ -818,9 +822,6 @@ sec_pkcs12_decoder_asafes_notify(void *arg, PRBool before, void *dest,
 	    p12dcx->currentASafeP7Dcx = NULL;
 	}
 	p12dcx->currentASafeP7Dcx = NULL;
-	if(p12dcx->currentASafeKeyPwd->key != NULL) {
-	    p12dcx->currentASafeKeyPwd->key = NULL;
-	}
     }
 
 
