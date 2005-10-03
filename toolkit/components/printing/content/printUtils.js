@@ -138,6 +138,17 @@ var PrintUtils = {
     }
   },
 
+  savePrintPreviewSettings: function (aPrintSettings)
+  {
+    // XXX this ignore gPrintSettingsAreGlobal and gSavePrintSettings
+    var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                  .getService(Components.interfaces.nsIPrintSettingsService);
+    var flags = aPrintSettings.kInitSaveShrinkToFit |
+                aPrintSettings.kInitSaveScaling |
+                aPrintSettings.kInitSaveOrientation;
+    PSSVC.savePrintSettingsToPrefs(aPrintSettings, true, flags);
+  },
+
   ////////////////////////////////////////
   // "private" methods. Don't use them. //
   ////////////////////////////////////////
