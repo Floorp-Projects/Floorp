@@ -130,6 +130,9 @@ public:
   // Have to override tabindex for <embed> to act right
   NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
+  // Let plugin decide whether it wants focus from mouse clicks
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull)
+    { if (aTabIndex) GetTabIndex(aTabIndex); return PR_TRUE; }
   
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
