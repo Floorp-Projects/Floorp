@@ -518,7 +518,7 @@ nsFocusController::SetSuppressFocus(PRBool aSuppressFocus, const char* aReason)
   // focus on the currently focused window
   if (!mSuppressFocus) {
     // Always update commands if we have a current element
-    mNeedUpdateCommands = mNeedUpdateCommands || mCurrentElement;
+    // and mNeedUpdateCommands is true (checked in nsFC::UpdateCommands)
     UpdateCommands();
   }
   
