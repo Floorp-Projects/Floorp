@@ -135,16 +135,6 @@
         // remove undisplayed errors to avoid bug 39098
         var errContainer = document.getElementById("errorContainer");
         errContainer.parentNode.removeChild(errContainer);
-
-        // Focus the Try Again button.  We can't just do this inline because of
-        // bug 232004.  We can't use onload (see comment below).  Since the
-        // <script> that calls initPage is the last DOM node in the document,
-        // a setTimeout of 0 should work.
-        setTimeout(function(){
-          var tryAgainButton = document.getElementById("errorTryAgain");
-          if (tryAgainButton)
-            tryAgainButton.focus();
-        }, 0);
       }
     ]]></script>
   </head>
