@@ -766,7 +766,8 @@ nsNativeThemeMac::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = PR_FALSE;
     if (aAttribute == mDisabledAtom || aAttribute == mCheckedAtom ||
-        aAttribute == mSelectedAtom || aAttribute == mMenuActiveAtom)
+        aAttribute == mSelectedAtom || aAttribute == mMenuActiveAtom ||
+        aAttribute == mSortDirectionAtom)
       *aShouldRepaint = PR_TRUE;
   }
 

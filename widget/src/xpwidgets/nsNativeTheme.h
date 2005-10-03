@@ -163,6 +163,7 @@ protected:
   nsCOMPtr<nsIAtom> mReadOnlyAtom;
   nsCOMPtr<nsIAtom> mFirstTabAtom;
   nsCOMPtr<nsIAtom> mFocusedAtom;
+  nsCOMPtr<nsIAtom> mSortDirectionAtom;
 
   // these should be set to appropriate platform values by the subclass, to
   // match the values in forms.css.  These defaults match forms.css
@@ -192,5 +193,4 @@ private:
   nsCOMPtr<nsIAtom> mValueAtom;
   nsCOMPtr<nsIAtom> mModeAtom;
   nsCOMPtr<nsIAtom> mClassAtom;
-  nsCOMPtr<nsIAtom> mSortDirectionAtom;
 };
