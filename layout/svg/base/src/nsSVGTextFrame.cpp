@@ -1053,7 +1053,6 @@ static void
 GetSingleValue(nsISVGGlyphFragmentLeaf *fragment,
                nsIDOMSVGLengthList *list, float *val)
 {
-  *val = 0.0f;
   if (!list)
     return;
 
@@ -1147,9 +1146,19 @@ nsSVGTextFrame::UpdateGlyphPositioning()
 
   firstFragment = node->GetFirstGlyphFragment();
 
+  float x, y;
+
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> list = GetX();
+    GetSingleValue(firstFragment, list, &x);
+  }
+  {
+    nsCOMPtr<nsIDOMSVGLengthList> list = GetY();
+    GetSingleValue(firstFragment, list, &y);
+  }
+
   // loop over chunks
   while (firstFragment) {
-    float x, y;
     {
       nsCOMPtr<nsIDOMSVGLengthList> list = firstFragment->GetX();
       GetSingleValue(firstFragment, list, &x);
@@ -1173,7 +1182,7 @@ nsSVGTextFrame::UpdateGlyphPositioning()
         fragment->GetGlyphMetrics(getter_AddRefs(metrics));
         if (!metrics) continue;
 
-        float advance, dx;
+        float advance, dx = 0.0f;
         nsCOMPtr<nsIDOMSVGLengthList> list = fragment->GetDx();
         GetSingleValue(fragment, list, &dx);
         metrics->GetAdvance(&advance);
@@ -1197,7 +1206,7 @@ nsSVGTextFrame::UpdateGlyphPositioning()
       fragment->GetGlyphMetrics(getter_AddRefs(metrics));
       if (!metrics) continue;
 
-      float baseline_offset, dx, dy;
+      float baseline_offset, dx = 0.0f, dy = 0.0f;
       metrics->GetBaselineOffset(baseline, &baseline_offset);
       {
         nsCOMPtr<nsIDOMSVGLengthList> list = fragment->GetDx();
