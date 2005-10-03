@@ -93,6 +93,11 @@ const char kScriptSecurityManagerContractID[] = NS_SCRIPTSECURITYMANAGER_CONTRAC
 const char kStandardURLContractID[] = "@mozilla.org/network/standard-url;1";
 #endif
 
+/* Some platforms don't have an implementation of PR_MemMap(). */
+#if !defined(XP_BEOS) && !defined(XP_OS2)
+#define HAVE_PR_MEMMAP
+#endif
+
 JS_STATIC_DLL_CALLBACK(void)
 Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
 {
@@ -879,23 +884,15 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
             goto out;
         }
 
-        // Quick hack to unbust XPCONNECT_STANDALONE.
-        // This leaves the jsdebugger with a non-URL pathname in the 
-        // XPCONNECT_STANDALONE case - but at least it builds and runs otherwise.
-        // See: http://bugzilla.mozilla.org/show_bug.cgi?id=121438
         {
             nsCAutoString nativePath;
-            FILE* fileHandle;
-#ifdef XPCONNECT_STANDALONE
-            localFile->GetNativePath(nativePath);
+#ifdef HAVE_PR_MEMMAP
+            PRFileDesc *fileHandle;
+            char *buf;
+            PRFileMap *map;
 #else
-            NS_GetURLSpecFromFile(localFile, nativePath);
+            FILE *fileHandle;
 #endif
-            rv = localFile->OpenANSIFileDesc("r", &fileHandle);
-            if (NS_FAILED(rv)) {
-                global = nsnull;
-                goto out;
-            }
 
             nsCOMPtr<nsIXPConnectJSObjectHolder> locationHolder;
             rv = xpc->WrapNative(cx, global, localFile,
@@ -920,11 +917,78 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
                 goto out;
             }
 
-            script = 
-                JS_CompileFileHandleForPrincipals(cx, global, nativePath.get(),
-                                                  fileHandle, jsPrincipals);
-    
+            // Quick hack to unbust XPCONNECT_STANDALONE.
+            // This leaves the jsdebugger with a non-URL pathname in the 
+            // XPCONNECT_STANDALONE case - but at least it builds and runs otherwise.
+            // See: http://bugzilla.mozilla.org/show_bug.cgi?id=121438
+#ifdef XPCONNECT_STANDALONE
+            localFile->GetNativePath(nativePath);
+#else
+            NS_GetURLSpecFromFile(localFile, nativePath);
+#endif
+
+#ifdef HAVE_PR_MEMMAP
+            PRInt64 fileSize;
+            localFile->GetFileSize(&fileSize);
+            PRInt64 maxSize;
+            LL_UI2L(maxSize, PR_UINT32_MAX);
+            if (LL_CMP(fileSize, >, maxSize)) {
+                NS_ERROR("file too large");
+                global = nsnull;
+                goto out;
+            }
+
+            rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fileHandle);
+            if (NS_FAILED(rv)) {
+                global = nsnull;
+                goto out;
+            }
+
+            map = PR_CreateFileMap(fileHandle, fileSize, PR_PROT_READONLY);
+            if (!map) {
+                NS_ERROR("Failed to create file map");
+                global = nsnull;
+                goto close_file;
+            }
+
+            PRUint32 fileSize32;
+            LL_L2UI(fileSize32, fileSize);
+
+            buf = NS_STATIC_CAST(char*, PR_MemMap(map, 0, fileSize32));
+            if (!buf) {
+                NS_ERROR("Failed to map file");
+                global = nsnull;
+                goto close_file_map;
+            }
+
+            script = JS_CompileScriptForPrincipals(cx, global,
+                                                   jsPrincipals,
+                                                   buf, fileSize32,
+                                                   nativePath.get(), 0);
+
+            
+            PR_MemUnmap(buf, fileSize32);
+
+#else  /* HAVE_PR_MEMMAP */
+
+            /**
+             * No memmap implementation, so fall back to using
+             * JS_CompileFileHandleForPrincipals().
+             */
+
+            rv = localFile->OpenANSIFileDesc("r", &fileHandle);
+            if (NS_FAILED(rv)) {
+                global = nsnull;
+                goto out;
+            }
+
+            script = JS_CompileFileHandleForPrincipals(cx, global,
+                                                       nativePath.get(),
+                                                       fileHandle,
+                                                       jsPrincipals);
+
             /* JS will close the filehandle after compilation is complete. */
+#endif /* HAVE_PR_MEMMAP */
 
             if (!script) {
 #ifdef DEBUG_shaver_off
@@ -932,7 +996,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
                         nativePath.get());
 #endif
                 global = nsnull;
-                goto out;
+                goto close_file_map;
             }
 
 #ifdef DEBUG_shaver_off
@@ -947,12 +1011,20 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
                         nativePath.get());
 #endif
                 global = nsnull;
-                goto out;
             }
+
+#ifdef HAVE_PR_MEMMAP
+        close_file_map:
+            PR_CloseFileMap(map);
+        close_file:
+            PR_Close(fileHandle);
+#else /* HAVE_PR_MEMMAP */
+        close_file_map: ;
+#endif /* HAVE_PR_MEMMAP */
         }
     }
 
-    {
+    if (global) {
         /* freed when we remove from the table */
         char *location = nsCRT::strdup(aLocation);
         he = PL_HashTableRawAdd(mGlobals, hep, hash, location, global);
