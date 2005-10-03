@@ -764,7 +764,13 @@ nsSVGGlyphFrame::GetClipRule(PRUint16 *aClipRule)
 NS_IMETHODIMP
 nsSVGGlyphFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
 {
-  *aStrokePaintType = GetStyleSVG()->mStroke.mType;
+  float strokeWidth;
+  GetStrokeWidth(&strokeWidth);
+
+  // cairo will stop rendering if stroke-width is less than or equal to zero
+  *aStrokePaintType = strokeWidth <= 0 ?
+                      nsISVGGeometrySource::PAINT_TYPE_NONE :
+                      GetStyleSVG()->mStroke.mType;
   return NS_OK;
 }
 
