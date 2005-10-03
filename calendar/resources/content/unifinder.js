@@ -677,7 +677,7 @@ function refreshEventTreeInternal(eventArray)
    // XXX match for strings with only whitespace. Skip those too
    if (searchText.length) {
        gEventArray = new Array();
-       var fieldsToSearch = new Array("description", "location", "categories" );
+       var fieldsToSearch = ["DESCRIPTION", "LOCATION", "CATEGORIES", "URL"];
 
        for (var j in eventArray) {
            var event = eventArray[j];
