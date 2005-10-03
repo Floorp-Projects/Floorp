@@ -66,6 +66,7 @@ typedef struct PK11RSAGenParamsStr PK11RSAGenParams;
 typedef unsigned long SECMODModuleID;
 typedef struct PK11DefaultArrayEntryStr PK11DefaultArrayEntry;
 typedef struct PK11GenericObjectStr PK11GenericObject;
+typedef void (*PK11FreeDataFunc)(void *);
 
 struct SECMODModuleStr {
     PRArenaPool	*arena;

@@ -2392,3 +2392,41 @@ PK11_ListCertsInSlot(PK11SlotInfo *slot)
     return certs;
 }
 
+PK11SlotList *
+PK11_GetAllSlotsForCert(NSSCertificate *c, void *arg)
+{
+    /* add multiple instances to the cert list */
+    nssCryptokiObject **ip;
+    nssCryptokiObject **instances = nssPKIObject_GetInstances(&c->object);
+    PK11SlotList *slotList;
+    PRBool found = PR_FALSE;
+
+
+    if (!instances) {
+	PORT_SetError(SEC_ERROR_NO_TOKEN);
+	return NULL;
+    }
+
+    slotList = PK11_NewSlotList();
+    if (!slotList) {
+	nssCryptokiObjectArray_Destroy(instances);
+	return NULL;
+    }
+
+    for (ip = instances; *ip; ip++) {
+	nssCryptokiObject *instance = *ip;
+	PK11SlotInfo *slot = instance->token->pk11slot;
+	if (slot) {
+	    PK11_AddSlotToList(slotList, slot);
+	    found = PR_TRUE;
+	}
+    }
+    if (!found) {
+	PK11_FreeSlotList(slotList);
+	PORT_SetError(SEC_ERROR_NO_TOKEN);
+	slotList = NULL;
+    }
+
+    nssCryptokiObjectArray_Destroy(instances);
+    return slotList;
+}

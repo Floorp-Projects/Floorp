@@ -153,46 +153,52 @@ pk11sdr_Shutdown(void)
 SECStatus
 PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx)
 {
-  SECStatus rv = SECSuccess;
-  PK11SlotInfo *slot = 0;
-  PK11SymKey *key = 0;
-  SECItem *params = 0;
-  PK11Context *ctx = 0;
-  CK_MECHANISM_TYPE type;
-  SDRResult sdrResult;
-  SECItem paddedData;
-  SECItem *pKeyID;
-  PLArenaPool *arena = 0;
+    SECStatus rv = SECSuccess;
+    PK11SlotInfo *slot = 0;
+    PK11SymKey *key = 0;
+    SECItem *params = 0;
+    PK11Context *ctx = 0;
+    CK_MECHANISM_TYPE type;
+    SDRResult sdrResult;
+    SECItem paddedData;
+    SECItem *pKeyID;
+    PLArenaPool *arena = 0;
 
-  /* Initialize */
-  paddedData.len = 0;
-  paddedData.data = 0;
+    /* Initialize */
+    paddedData.len = 0;
+    paddedData.data = 0;
+  
+    arena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
+    if (!arena) { 
+	rv = SECFailure; goto loser; }
 
-  arena = PORT_NewArena(SEC_ASN1_DEFAULT_ARENA_SIZE);
-  if (!arena) { rv = SECFailure; goto loser; }
+    /* 1. Locate the requested keyid, or the default key (which has a keyid)
+     * 2. Create an encryption context
+     * 3. Encrypt
+     * 4. Encode the results (using ASN.1)
+     */
 
-  /* 1. Locate the requested keyid, or the default key (which has a keyid)
-   * 2. Create an encryption context
-   * 3. Encrypt
-   * 4. Encode the results (using ASN.1)
-   */
+    slot = PK11_GetInternalKeySlot();
+    if (!slot) { 
+	rv = SECFailure; 
+	goto loser;
+    }
 
-  slot = PK11_GetInternalKeySlot();
-  if (!slot) { rv = SECFailure; goto loser; }
+    /* Use triple-DES */
+    type = CKM_DES3_CBC;
 
-  /* Use triple-DES */
-  type = CKM_DES3_CBC;
+    /*
+     * Login to the internal token before we look for the key, otherwise we
+     * won't find it.
+     */
+    rv = PK11_Authenticate(slot, PR_TRUE, cx);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
 
-  /*
-   * Login to the internal token before we look for the key, otherwise we
-   * won't find it.
-   */
-  rv = PK11_Authenticate(slot, PR_TRUE, cx);
-  if (rv != SECSuccess) goto loser;
-
-  /* Find the key to use */
-  pKeyID = keyid;
-  if (pKeyID->len == 0) {
+    /* Find the key to use */
+    pKeyID = keyid;
+    if (pKeyID->len == 0) {
 	  pKeyID = &keyIDItem;  /* Use default value */
 
 	  /* put in a course lock to prevent a race between not finding the 
@@ -200,51 +206,68 @@ PK11SDR_Encrypt(SECItem *keyid, SECItem *data, SECItem *result, void *cx)
 	   */
 
 	  if (pk11sdrLock) PR_Lock(pk11sdrLock);
-
 	  /* Try to find the key */
 	  key = PK11_FindFixedKey(slot, type, pKeyID, cx);
 	  
 	  /* If the default key doesn't exist yet, try to create it */
-	  if (!key) key = PK11_GenDES3TokenKey(slot, pKeyID, cx);
-	  if (pk11sdrLock) PR_Unlock(pk11sdrLock);
-  } else {
+	  if (!key) {
+		key = PK11_GenDES3TokenKey(slot, pKeyID, cx);
+	  }
+	  if (pk11sdrLock) {
+		PR_Unlock(pk11sdrLock);
+	  }
+    } else {
 	  key = PK11_FindFixedKey(slot, type, pKeyID, cx);
-  }
+    }
 
-  if (!key) { rv = SECFailure; goto loser; }
+    if (!key) { 
+	rv = SECFailure; 
+	goto loser; 
+    }
 
-  params = PK11_GenerateNewParam(type, key);
-  if (!params) { rv = SECFailure; goto loser; }
+    params = PK11_GenerateNewParam(type, key);
+    if (!params) { rv = SECFailure; goto loser; }
 
-  ctx = PK11_CreateContextBySymKey(type, CKA_ENCRYPT, key, params);
-  if (!ctx) { rv = SECFailure; goto loser; }
+    ctx = PK11_CreateContextBySymKey(type, CKA_ENCRYPT, key, params);
+    if (!ctx) { rv = SECFailure; goto loser; }
 
-  rv = padBlock(data, PK11_GetBlockSize(type, 0), &paddedData);
-  if (rv != SECSuccess) goto loser;
+    rv = padBlock(data, PK11_GetBlockSize(type, 0), &paddedData);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
 
-  sdrResult.data.len = paddedData.len;
-  sdrResult.data.data = (unsigned char *)PORT_ArenaAlloc(arena, sdrResult.data.len);
+    sdrResult.data.len = paddedData.len;
+    sdrResult.data.data = (unsigned char *)
+			PORT_ArenaAlloc(arena, sdrResult.data.len);
 
-  rv = PK11_CipherOp(ctx, sdrResult.data.data, (int*)&sdrResult.data.len, sdrResult.data.len,
-                     paddedData.data, paddedData.len);
-  if (rv != SECSuccess) goto loser;
+    rv = PK11_CipherOp(ctx, sdrResult.data.data, 
+		       (int*)&sdrResult.data.len, sdrResult.data.len,
+                       paddedData.data, paddedData.len);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
 
-  PK11_Finalize(ctx);
+    PK11_Finalize(ctx);
 
-  sdrResult.keyid = *pKeyID;
+    sdrResult.keyid = *pKeyID;
 
-  rv = PK11_ParamToAlgid(SEC_OID_DES_EDE3_CBC, params, arena, &sdrResult.alg);
-  if (rv != SECSuccess) goto loser;
+    rv = PK11_ParamToAlgid(SEC_OID_DES_EDE3_CBC, params, arena, &sdrResult.alg);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
 
-  if (!SEC_ASN1EncodeItem(0, result, &sdrResult, template)) { rv = SECFailure; goto loser; }
+    if (!SEC_ASN1EncodeItem(0, result, &sdrResult, template)) {
+	rv = SECFailure;
+	goto loser;
+    }
 
 loser:
-  SECITEM_ZfreeItem(&paddedData, PR_FALSE);
-  if (arena) PORT_FreeArena(arena, PR_TRUE);
-  if (ctx) PK11_DestroyContext(ctx, PR_TRUE);
-  if (params) SECITEM_ZfreeItem(params, PR_TRUE);
-  if (key) PK11_FreeSymKey(key);
-  if (slot) PK11_FreeSlot(slot);
+    SECITEM_ZfreeItem(&paddedData, PR_FALSE);
+    if (arena) PORT_FreeArena(arena, PR_TRUE);
+    if (ctx) PK11_DestroyContext(ctx, PR_TRUE);
+    if (params) SECITEM_ZfreeItem(params, PR_TRUE);
+    if (key) PK11_FreeSymKey(key);
+    if (slot) PK11_FreeSlot(slot);
 
   return rv;
 }
