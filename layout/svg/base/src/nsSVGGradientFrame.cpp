@@ -36,9 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsContainerFrame.h"
+#include "nsSVGGenericContainerFrame.h"
 #include "nsSVGGradient.h"
-#include "nsWeakReference.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMSVGStopElement.h"
@@ -56,7 +55,6 @@
 #include "nsISVGValue.h"
 #include "nsISVGValueUtils.h"
 #include "nsStyleContext.h"
-#include "nsISVGValueObserver.h"
 #include "nsSVGValue.h"
 #include "nsNetUtil.h"
 #include "nsINameSpaceManager.h"
@@ -69,10 +67,11 @@
 #include "nsIContent.h"
 #include "nsSVGNumber.h"
 #include "nsIDOMSVGStopElement.h"
-#include "nsLayoutAtoms.h"
 #include "nsSVGUtils.h"
+#include "nsWeakReference.h"
+#include "nsISVGValueObserver.h"
   
-typedef nsContainerFrame  nsSVGGradientFrameBase;
+typedef nsSVGGenericContainerFrame  nsSVGGradientFrameBase;
 
 class nsSVGGradientFrame : public nsSVGGradientFrameBase,
                            public nsSVGValue,
@@ -121,6 +120,8 @@ public:
 
   // nsIFrame interface:
   NS_IMETHOD DidSetStyleContext(nsPresContext* aPresContext);
+  NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
 
   /**
    * Get the "type" of the frame
@@ -129,6 +130,12 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
+  // nsISVGChildFrame interface:
+  // Override PaintSVG (our frames don't directly render)
+  NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,
+                      const nsRect& dirtyRectTwips,
+                      PRBool ignoreFilter) {return NS_OK;}
+  
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
@@ -328,6 +335,16 @@ nsSVGGradientFrame::DidSetStyleContext(nsPresContext* aPresContext)
   WillModify(mod_other);
   DidModify(mod_other);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSVGGradientFrame::RemoveFrame(nsIAtom*        aListName,
+                                nsIFrame*       aOldFrame)
+{
+  WillModify(mod_other);
+  PRBool result = mFrames.DestroyFrame(GetPresContext(), aOldFrame);
+  DidModify(mod_other);
+  return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsIAtom*
