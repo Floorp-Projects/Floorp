@@ -1578,14 +1578,22 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       }
     }
 
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
     if (mOrigMsgHdr)
+      msgHdr = mOrigMsgHdr;
+    else
+    {
+      rv = GetMsgDBHdrFromURI(uri, getter_AddRefs(msgHdr));
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+    if (msgHdr)
     {
       nsXPIDLString subject;
       nsXPIDLCString decodedCString;
 
       if (!charsetOverride && charset.IsEmpty())
       {
-        rv = mOrigMsgHdr->GetCharset(getter_Copies(charset));
+        rv = msgHdr->GetCharset(getter_Copies(charset));
         if (NS_FAILED(rv)) return rv;
       }
 
@@ -1621,7 +1629,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
         m_compFields->SetCharacterSet(charset);
 
       nsXPIDLCString subjectCStr;
-      (void) mOrigMsgHdr->GetSubject(getter_Copies(subjectCStr));
+      (void) msgHdr->GetSubject(getter_Copies(subjectCStr));
       rv = mimeConverter->DecodeMimeHeader(subjectCStr,
                 getter_Copies(decodedCString),
                 originCharset.get(), charsetOverride);
@@ -1641,19 +1649,19 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
         // First, assume that it should be stripped; the variable will be set to
         // false later if stripping should not happen.
         PRUint16 numRef;
-        mOrigMsgHdr->GetNumReferences(&numRef);
+        msgHdr->GetNumReferences(&numRef);
         if (numRef) {
           // If there are references, look for the first message in the thread
           // firstly, get the database via the folder
           nsCOMPtr<nsIMsgFolder> folder;
-          mOrigMsgHdr->GetFolder(getter_AddRefs(folder));
+          msgHdr->GetFolder(getter_AddRefs(folder));
 	  if (folder) {
             nsCOMPtr<nsIMsgDatabase> db;
             folder->GetMsgDatabase(nsnull, getter_AddRefs(db));
   
 	    if (db) {
               nsCAutoString reference;
-              mOrigMsgHdr->GetStringReference(0, reference);
+              msgHdr->GetStringReference(0, reference);
   
               nsCOMPtr<nsIMsgDBHdr> refHdr;
               db->GetMsgHdrForMessageID(reference.get(), getter_AddRefs(refHdr));
@@ -1704,7 +1712,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
             m_compFields->SetSubject(subject);
 
             nsXPIDLCString author;
-            rv = mOrigMsgHdr->GetAuthor(getter_Copies(author));
+            rv = msgHdr->GetAuthor(getter_Copies(author));
             if (NS_FAILED(rv))
               return rv;
 
@@ -1726,7 +1734,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
           {
             PRUint32 flags;
 
-            mOrigMsgHdr->GetFlags(&flags);
+            msgHdr->GetFlags(&flags);
             if (flags & MSG_FLAG_HAS_RE)
               subject.Insert(NS_LITERAL_STRING("Re: "), 0);
 
@@ -2578,9 +2586,16 @@ nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // 
   PRBool bAutoQuote = PR_TRUE;
   m_identity->GetAutoQuote(&bAutoQuote);
 
+  nsCOMPtr <nsIMsgDBHdr> originalMsgHdr = mOrigMsgHdr;
+  if (!originalMsgHdr)
+  {
+    rv = GetMsgDBHdrFromURI(originalMsgURI, getter_AddRefs(originalMsgHdr));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Create the consumer output stream.. this will receive all the HTML from libmime
   mQuoteStreamListener =
-    new QuotingOutputStreamListener(originalMsgURI, mOrigMsgHdr, what != 1, !bAutoQuote, m_identity,
+    new QuotingOutputStreamListener(originalMsgURI, originalMsgHdr, what != 1, !bAutoQuote, m_identity,
                                     mQuoteCharset.get(), mCharsetOverride, PR_TRUE);
   
   if (!mQuoteStreamListener)

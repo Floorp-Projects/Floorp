@@ -475,17 +475,20 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
         else
         {
           pMsgComposeParams->SetOriginalMsgURI(originalMsgURI);
-          nsCOMPtr <nsIMsgDBHdr> msgHdr;
-          if (strncmp(originalMsgURI, "file:", 5))
-            rv = GetMsgDBHdrFromURI(originalMsgURI, getter_AddRefs(msgHdr));
-          else if (aMsgWindow)
+          if (PL_strstr(originalMsgURI, "?type=application/x-message-display"))
           {
-            nsCOMPtr <nsIMsgHeaderSink> headerSink;
-            rv = aMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
-            if (headerSink)
-              rv = headerSink->GetDummyMsgHeader(getter_AddRefs(msgHdr));
+            nsCOMPtr <nsIMsgDBHdr> msgHdr;
+            if (strncmp(originalMsgURI, "file:", 5))
+              rv = GetMsgDBHdrFromURI(originalMsgURI, getter_AddRefs(msgHdr));
+            else if (aMsgWindow)
+            {
+              nsCOMPtr <nsIMsgHeaderSink> headerSink;
+              rv = aMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+              if (headerSink)
+                rv = headerSink->GetDummyMsgHeader(getter_AddRefs(msgHdr));
+            }
+            pMsgComposeParams->SetOrigMsgHdr(msgHdr);
           }
-          pMsgComposeParams->SetOrigMsgHdr(msgHdr);
         }
       }
 
