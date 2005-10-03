@@ -1,6 +1,5 @@
 #filter emptyLines
 
-#define MOZ_LANGPACK_EID {fc121405-5aef-4291-86c6-8b43b04194b7}
 #define MOZ_LANGPACK_CREATOR mozilla.org
 
 # If non-English locales wish to credit multiple contributors, uncomment this
