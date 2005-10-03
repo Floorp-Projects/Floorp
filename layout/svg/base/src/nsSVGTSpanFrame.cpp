@@ -674,14 +674,9 @@ nsSVGTSpanFrame::GetX()
   if (!tpElement)
     return nsnull;
 
-  if (!mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::x)) {
-    nsISVGTextContainerFrame *parent;
-    mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame), (void **)&parent);
-    if (parent)
-      return parent->GetX();
-    else
+  if (!mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::x))
       return nsnull;
-  }
+
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
   tpElement->GetX(getter_AddRefs(animLengthList));
   nsIDOMSVGLengthList *retval;
@@ -696,14 +691,9 @@ nsSVGTSpanFrame::GetY()
   if (!tpElement)
     return nsnull;
 
-  if (!mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::y)) {
-    nsISVGTextContainerFrame *parent;
-    mParent->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame), (void **)&parent);
-    if (parent)
-      return parent->GetY();
-    else
+  if (!mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::y))
       return nsnull;
-  }
+
   nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
   tpElement->GetY(getter_AddRefs(animLengthList));
   nsIDOMSVGLengthList *retval;
