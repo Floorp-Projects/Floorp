@@ -981,7 +981,15 @@ WriteStatusFile(int status)
   if (fd < 0)
     return;
 
-  const char *text = (status == OK) ? "succeeded\n" : "failed\n";
+  const char *text;
+
+  char buf[32];
+  if (status == OK) {
+    text = "succeeded\n";
+  } else {
+    snprintf(buf, sizeof(buf), "failed: %d\n", status);
+    text = buf;
+  }
   write(fd, text, strlen(text));
 }
 

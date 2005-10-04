@@ -86,6 +86,9 @@ const STATE_SUCCEEDED       = "succeeded";
 const STATE_DOWNLOAD_FAILED = "download-failed";
 const STATE_FAILED          = "failed";
 
+// From updater/errors.h:
+const IO_ERROR = 2;
+
 const DOWNLOAD_CHUNK_SIZE           = 65536;
 const DOWNLOAD_BACKGROUND_INTERVAL  = 60;  // seconds
 const DOWNLOAD_FOREGROUND_INTERVAL  = 0;
@@ -248,7 +251,7 @@ function closeSafeOutputStream(fos) {
 }
 
 /**
- * Returns human readable status text from the updates.propreties bundle
+ * Returns human readable status text from the updates.properties bundle
  * based on an error code
  * @param   code
  *          The error code to look up human readable status text for
@@ -304,6 +307,22 @@ function readStatusFile(dir) {
   statusFile.append(FILE_UPDATE_STATUS);
   LOG("General", "Reading Status File: " + statusFile.path);
   return readStringFromFile(statusFile) || STATE_NONE;
+}
+
+/**
+ * Writes the current update operation/state to a file in the patch 
+ * directory, indicating to the patching system that operations need
+ * to be performed.
+ * @param   dir
+ *          The patch directory where the update.status file should be 
+ *          written.
+ * @param   state
+ *          The state value to write.
+ */
+function writeStatusFile(dir, state) {
+  var statusFile = dir.clone();
+  statusFile.append(FILE_UPDATE_STATUS);
+  writeStringToFile(statusFile, state);
 }
 
 /**
@@ -673,6 +692,11 @@ Update.prototype = {
       return this.selectedPatch.state;
     return this._state;
   },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  errorCode: 0,
     
   /**
    * See nsIUpdateService.idl
@@ -922,6 +946,21 @@ UpdateService.prototype = {
         cleanupActiveUpdate();
       }
       else {
+        // If we hit an error, then the error code will be included in the
+        // status string following a colon.  If we had an I/O error, then we
+        // assume that the patch is not invalid, and we restage the patch so
+        // that it can be attempted again the next time we restart.
+        var ary = status.split(": ");
+        update.state = ary[0];
+        if (update.state == STATE_FAILED && ary[1]) {
+          update.errorCode = ary[1];
+          if (update.errorCode == IO_ERROR) {
+            prompter.showUpdateError(update);
+            writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+            return;
+          }
+        }
+
         // Something went wrong with the patch application process.
         cleanupActiveUpdate();
 
@@ -1766,22 +1805,6 @@ Downloader.prototype = {
   },
 
   /**
-   * Writes the current update operation/state to a file in the patch 
-   * directory, indicating to the patching system that operations need
-   * to be performed.
-   * @param   dir
-   *          The patch directory where the update.status file should be 
-   *          written.
-   * @param   state
-   *          The state value to write.
-   */
-  _writeStatusFile: function(dir, state) {
-    var statusFile = dir.clone();
-    statusFile.append(FILE_UPDATE_STATUS);
-    writeStringToFile(statusFile, state);
-  },
-
-  /**
    * Whether or not a patch has been downloaded and staged for installation.
    */
   get patchIsStaged() {
@@ -1876,10 +1899,7 @@ Downloader.prototype = {
       case STATE_PENDING:
         LOG("Downloader", "already downloaded and staged");
         return null;
-      case STATE_FAILED:
-      case STATE_DOWNLOAD_FAILED:
-      case STATE_APPLYING:
-      case STATE_NONE:
+      default:
         // Something went wrong when we tried to apply the previous patch.
         // Try the complete patch next time.
         if (update && selectedPatch.type == "partial") {
@@ -1887,7 +1907,7 @@ Downloader.prototype = {
         } else {
           // This is a pretty fatal error.  Just bail.
           LOG("Downloader", "failed to apply complete patch!");
-          this._writeStatusFile(updateDir, STATE_NONE);
+          writeStatusFile(updateDir, STATE_NONE);
           return null;
         }
       }
@@ -1969,7 +1989,7 @@ Downloader.prototype = {
     this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, interval);
     this._request.start(this, null);
 
-    this._writeStatusFile(updateDir, STATE_DOWNLOADING);
+    writeStatusFile(updateDir, STATE_DOWNLOADING);
     this._patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
     this._patch.state = STATE_DOWNLOADING;
     var um = Components.classes["@mozilla.org/updates/update-manager;1"]
@@ -2102,7 +2122,7 @@ Downloader.prototype = {
           shouldShowPrompt = true;
         
         // Tell the updater.exe we're ready to apply.
-        this._writeStatusFile(getUpdatesDir(), state);
+        writeStatusFile(getUpdatesDir(), state);
         this._update.installDate = (new Date()).getTime();
         this._update.statusText = "Install Pending";
       } else {
@@ -2397,8 +2417,23 @@ UpdatePrompt.prototype = {
    */
   showUpdateError: function(update) {
     if (this._enabled) {
-      this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", 
-                   "errors", update);
+      // In some cases, we want to just show a simple alert dialog:
+      if (update.state == STATE_FAILED && update.errorCode == IO_ERROR) {
+        var sbs = 
+            Components.classes["@mozilla.org/intl/stringbundle;1"].
+            getService(Components.interfaces.nsIStringBundleService);
+        var updateBundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
+        var title = updateBundle.GetStringFromName("updaterIOErrorTitle");
+        var text = updateBundle.formatStringFromName("updaterIOErrorText",
+                                                     [gApp.name], 1);
+        var ww =
+            Components.classes["@mozilla.org/embedcomp/window-watcher;1"].
+            getService(Components.interfaces.nsIWindowWatcher);
+        ww.getNewPrompter(null).alert(title, text);
+      } else {
+        this._showUI(null, URI_UPDATE_PROMPT_DIALOG, null, "Update:Wizard", 
+                     "errors", update);
+      }
     }
   },
   
