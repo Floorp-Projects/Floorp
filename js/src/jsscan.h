@@ -252,13 +252,6 @@ struct JSTokenStream {
 #define TSF_UNEXPECTED_EOF 0x1000
 
 /*
- * Start of statement flag, set when getting the first token in a statment.
- * This is used to disambiguate an XML comment from the ancient Netscape-2-era
- * HTML comment hiding hack.
- */
-#define TSF_START_STATEMENT 0x2000
-
-/*
  * To handle the hard case of contiguous HTML comments, we want to clear the
  * TSF_DIRTYINPUT flag at the end of each such comment.  But we'd rather not
  * scan for --> within every //-style comment unless we have to.  So we set
@@ -277,7 +270,7 @@ struct JSTokenStream {
  * It does not cope with malformed comment hiding hacks where --> is hidden
  * by C-style comments, or on a dirty line.  Such cases are already broken.
  */
-#define TSF_IN_HTML_COMMENT 0x4000
+#define TSF_IN_HTML_COMMENT 0x2000
 
 /* Unicode separators that are treated as line terminators, in addition to \n, \r */
 #define LINE_SEPARATOR  0x2028
