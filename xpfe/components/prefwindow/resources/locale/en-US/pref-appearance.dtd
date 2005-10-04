@@ -6,38 +6,38 @@
     Place &brandShortName; in the phrase where the name of the application should
 	 appear
 -->
-<!ENTITY onStartLegend.label "When &brandShortName; starts up, open">
+<!ENTITY onStartLegend.label                    "When &brandShortName; starts up, open">
 <!--LOCALIZATION NOTE (navCheck.label): DONT_TRANSLATE -->
-<!ENTITY navCheck.label "Navigator">
-<!ENTITY navCheck.accesskey "n">
+<!ENTITY navCheck.label                         "Navigator">
+<!ENTITY navCheck.accesskey                     "N">
 <!--LOCALIZATION NOTE (compCheck.label): DONT_TRANSLATE -->
-<!ENTITY compCheck.label "Composer">
-<!ENTITY compCheck.accesskey "c">
-<!ENTITY calCheck.label "Calendar">
-<!ENTITY calCheck.accesskey "a">
-<!ENTITY showToolsLegend.label "Show toolbars as">
-<!ENTITY picsNtextRadio.label "Pictures and text">
-<!ENTITY picsNtextRadio.accesskey "p">
-<!ENTITY picsOnlyRadio.label "Pictures only">
-<!ENTITY picsOnlyRadio.accesskey "o">
-<!ENTITY textonlyRadio.label "Text only">
-<!ENTITY textonlyRadio.accesskey "x">
-<!ENTITY showHideTooltips.label "Show Tooltips">
-<!ENTITY showHideTooltips.accesskey "t">
-<!ENTITY useSiteIcons.label "Show Web Site Icons">
-<!ENTITY useSiteIcons.accesskey "i">
-<!ENTITY enableAutomaticImageResizing.label "Resize large images to fit in the browser window">
+<!ENTITY compCheck.label                        "Composer">
+<!ENTITY compCheck.accesskey                    "C">
+<!ENTITY calCheck.label                         "Calendar">
+<!ENTITY calCheck.accesskey                     "a">
+<!ENTITY showToolsLegend.label                  "Show toolbars as">
+<!ENTITY picsNtextRadio.label                   "Pictures and text">
+<!ENTITY picsNtextRadio.accesskey               "P">
+<!ENTITY picsOnlyRadio.label                    "Pictures only">
+<!ENTITY picsOnlyRadio.accesskey                "o">
+<!ENTITY textonlyRadio.label                    "Text only">
+<!ENTITY textonlyRadio.accesskey                "x">
+<!ENTITY showHideTooltips.label                 "Show Tooltips">
+<!ENTITY showHideTooltips.accesskey             "T">
+<!ENTITY useSiteIcons.label                     "Show Web Site Icons">
+<!ENTITY useSiteIcons.accesskey                 "S">
+<!ENTITY enableAutomaticImageResizing.label     "Resize large images to fit in the browser window">
 <!ENTITY enableAutomaticImageResizing.accesskey "R">
-<!ENTITY useSmoothScroll.label "Use smooth scrolling">
-<!ENTITY useSmoothScroll.accesskey "s">
+<!ENTITY useSmoothScroll.label                  "Use smooth scrolling">
+<!ENTITY useSmoothScroll.accesskey              "U">
 
 <!--LOCALIZATION NOTE (languageList.txt.label): Don't translate "&brandShortName;".
     Place &brandShortName; in the phrase where the name of the application should appear
 -->
-<!ENTITY languageList.txt.label "Choose a language for &brandShortName;. The setting affects the language for text that appears in dialog boxes, menus, toolbars, and button labels. You must restart &brandShortName; for a new language setting to take effect.">
+<!ENTITY languageList.txt.label                 "Choose a language for &brandShortName;. The setting affects the language for text that appears in dialog boxes, menus, toolbars, and button labels. You must restart &brandShortName; for a new language setting to take effect.">
 
 <!--LOCALIZATION NOTE (languageList.label): Don't translate "&brandShortName;".
     Place &brandShortName; in the phrase where the name of the application should appear
 -->
-<!ENTITY languageList.label "Choose your preferred language for &brandShortName;:">
+<!ENTITY languageList.label                     "Choose your preferred language for &brandShortName;:">
 

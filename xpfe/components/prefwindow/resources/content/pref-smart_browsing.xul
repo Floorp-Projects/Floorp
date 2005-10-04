@@ -108,6 +108,7 @@
 
     <checkbox id="domainGuessingEnabled"
               label="&domainGuessingEnabled.label;"
+              accesskey="&domainGuessingEnabled.accesskey;"
               prefstring="browser.fixup.alternate.enabled"/>
   </groupbox>
 </page>

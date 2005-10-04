@@ -3,8 +3,7 @@
 <!ENTITY pref.winHooks.title  "System">
 
 <!-- These entities are used on the "File Types" section of the dialog. -->
-<!ENTITY files.label          "File Types">
-<!ENTITY files.text           "Windows should use &brandShortName; to open these file types:">
+<!ENTITY files.label          "Windows should use &brandShortName; to open these file types:">
 <!ENTITY html.label           "HTML documents">
 <!ENTITY jpeg.label           "JPEG images">
 <!ENTITY gif.label            "GIF images">
@@ -16,9 +15,8 @@
 <!ENTITY xhtml.label          "XHTML documents">
 <!ENTITY xul.label            "XUL documents">
 
-<!-- These entities are used on the "Internet Shortcuts" section of the dialog. -->
-<!ENTITY shortcuts.label      "Internet Shortcuts">
-<!ENTITY shortcuts.text       "Windows should use &brandShortName; to handle these protocols:">
+<!-- These entities are used on the "Protocols" section of the dialog. -->
+<!ENTITY protocols.label      "Windows should use &brandShortName; to handle these protocols:">
 <!ENTITY http.label           "http: (Hypertext Transfer Protocol)">
 <!ENTITY https.label          "https: (Secure HTTP)">
 <!ENTITY ftp.label            "ftp: (File Transfer Protocol)">

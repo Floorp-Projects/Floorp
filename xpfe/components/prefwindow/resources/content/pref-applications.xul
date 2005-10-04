@@ -130,7 +130,7 @@
                 <label id="extension" crop="right"/>
               </row>
               <row align="center">
-                <label value="&handle;" control="handler"/>
+                <label value="&handle;" accesskey="&handle.accesskey;" control="handler"/>
                 <textbox id="handler" readonly="true" flex="1"/>
               </row>
             </rows>
@@ -143,6 +143,7 @@
     <caption label="&plugins.label;"/>
     <vbox>
       <checkbox id="useNSPluginFinder" label="&pluginFinder.label;"
+                accesskey="&pluginFinder.accesskey;"
                 prefstring="application.use_ns_plugin_finder"/>
       <description>&pluginFinderDesc.label;</description>
     </vbox>
