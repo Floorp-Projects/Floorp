@@ -92,6 +92,15 @@ BrowserGlue.prototype = {
   _onProfileStartup: function() 
   {
     this.Sanitizer.onStartup();
+    // check if we're in safe mode
+    var app = Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULAppInfo)
+                        .QueryInterface(Components.interfaces.nsIXULRuntime);
+    if (app.inSafeMode) {
+      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                         .getService(Components.interfaces.nsIWindowWatcher);
+      ww.openWindow(null, "chrome://browser/content/safeMode.xul", 
+                    "_blank", "chrome,centerscreen,modal,resizable=no", null);
+    }
   },
 
   // profile shutdown handler (contains profile cleanup routines)
