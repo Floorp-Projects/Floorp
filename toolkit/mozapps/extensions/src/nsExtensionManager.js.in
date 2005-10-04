@@ -103,6 +103,7 @@ const KEY_PROFILEDIR                  = "ProfD";
 const KEY_PROFILEDS                   = "ProfDS";
 const KEY_APPDIR                      = "XCurProcD";
 const KEY_TEMPDIR                     = "TmpD";
+const KEY_USERDATADIR                 = "UAppData"
 
 const EM_ACTION_REQUESTED_TOPIC       = "em-action-requested";
 const EM_ITEM_INSTALLED               = "item-installed";
@@ -2216,6 +2217,12 @@ function ExtensionManager() {
                                                      appProfileExtensions, false,
                                                      priority);
   InstallLocations.put(profileLocation);
+
+  // Register per-user Install Location
+  var folder = getDirNoCreate(KEY_USERDATADIR, [DIR_EXTENSIONS]);
+  InstallLocations.put(
+      new DirectoryInstallLocation("sys-user", folder, false,
+                                   nsIInstallLocation.PRIORITY_APP_SYSTEM_USER));
 
 #ifdef XP_WIN
   // Register HKEY_LOCAL_MACHINE Install Location
