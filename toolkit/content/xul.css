@@ -867,6 +867,14 @@ scrollbar, scrollbarbutton, scrollcorner, slider, thumb {
   -moz-user-select: none;
 }
 
+scrollcorner {
+  display: -moz-box !important;
+}
+
+scrollcorner[hidden="true"] {
+  display: none !important;
+}
+
 scrollbar[value="hidden"] {
   visibility: hidden;
 }
