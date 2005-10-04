@@ -149,7 +149,7 @@ var gComposePane = {
           aPopup.appendChild(item);   
           if (preference.value == abURI)
           {
-.            aPopup.parentNode.value = abURI;
+            aPopup.parentNode.value = abURI;
             aPopup.selectedItem = item;
           }
         }
