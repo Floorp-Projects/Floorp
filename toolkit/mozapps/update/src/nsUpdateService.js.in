@@ -2353,8 +2353,14 @@ TimerManager.prototype = {
    */
   registerTimer: function(id, callback, interval) {
     var preference = PREF_APP_UPDATE_LASTUPDATETIME_FMT.replace(/%ID%/, id);
-    var lastUpdateTime = getPref("getIntPref", preference, 
-                                 Math.round(Date.now() / 1000));
+    var now = Math.round(Date.now() / 1000);
+    var lastUpdateTime = null;
+    if (gPref.prefHasUserValue(preference)) {
+      lastUpdateTime = gPref.getIntPref(preference);
+    } else {
+      gPref.setIntPref(preference, now);
+      lastUpdateTime = now;
+    }
     this._timers[id] = { callback       : callback, 
                          interval       : interval,
                          lastUpdateTime : lastUpdateTime }; 
