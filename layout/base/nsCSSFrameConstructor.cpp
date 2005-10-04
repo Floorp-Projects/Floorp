@@ -2391,6 +2391,8 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
                                         nsIFrame        **aFrame,
                                         nsStyleContext  *aStyleContext)
 {
+  // Make sure to keep IsSpecialHTMLContent in synch with this code
+  
   // Note: do not do anything in this method that assumes pseudo-frames have
   // been processed.  If you feel the urge to do something like that, fix
   // callers accordingly.
@@ -2449,6 +2451,7 @@ nsCSSFrameConstructor::CreateHTMLImageFrame(nsIContent* aContent,
                                             ImageFrameCreatorFunc aFunc,
                                             nsIFrame** aFrame)
 {
+  // Make sure to keep IsSpecialHTMLContent in synch with this code
   if (nsImageFrame::ShouldCreateImageFrameFor(aContent, aStyleContext)) {
     return (*aFunc)(mPresShell, aFrame);
   }
@@ -3316,35 +3319,52 @@ nsCSSFrameConstructor::GetParentFrame(nsTableCreator&          aTableCreator,
 }
 
 static PRBool
-IsSpecialHTMLContent(nsIContent* aContent)
+IsSpecialHTMLContent(nsIContent* aContent, nsStyleContext* aStyleContext)
 {
   // Gross hack. Return true if this is a content node that we'd create an HTML
   // frame for based on something other than display -- in other words if this
   // is an HTML node that could never have a nsTableCellFrame, for example.
-  // XXXbz of course this fails if this is an image that'll get replaced by alt
-  // text or something like that.... oh, well.
   if (!aContent->IsContentOfType(nsIContent::eHTML)) {
     return PR_FALSE;
   }
 
   nsIAtom* tag = aContent->Tag();
+
+  // XXXbz this is duplicating some logic from ConstructHTMLFrame....
+  // Would be nice to avoid that.  :(
   
   if (tag == nsHTMLAtoms::input) {
     nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
-    if (control && NS_FORM_INPUT_HIDDEN == control->GetType())
-      return PR_FALSE; // input hidden does not create a special frame
+    if (control) {
+      PRInt32 type = control->GetType();
+      if (NS_FORM_INPUT_HIDDEN == type) {
+        return PR_FALSE; // input hidden does not create a special frame
+      }
+      else if (NS_FORM_INPUT_IMAGE == type) {
+        return nsImageFrame::ShouldCreateImageFrameFor(aContent, aStyleContext);
+      }
+    }
+
+    return PR_TRUE;
+  }
+
+  if (tag == nsHTMLAtoms::img) {
+    return nsImageFrame::ShouldCreateImageFrameFor(aContent, aStyleContext);
+  }
+
+  if (tag == nsHTMLAtoms::object ||
+      tag == nsHTMLAtoms::applet ||
+      tag == nsHTMLAtoms::embed) {
+    return !(aContent->IntrinsicState() &
+             (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
+              NS_EVENT_STATE_SUPPRESSED));
   }
 
   return
-    tag == nsHTMLAtoms::img ||
     tag == nsHTMLAtoms::br ||
     tag == nsHTMLAtoms::wbr ||
-    tag == nsHTMLAtoms::input ||
     tag == nsHTMLAtoms::textarea ||
     tag == nsHTMLAtoms::select ||
-    tag == nsHTMLAtoms::object ||
-    tag == nsHTMLAtoms::applet ||
-    tag == nsHTMLAtoms::embed ||
     tag == nsHTMLAtoms::fieldset ||
     tag == nsHTMLAtoms::legend ||
     tag == nsHTMLAtoms::frameset ||
@@ -3356,14 +3376,14 @@ IsSpecialHTMLContent(nsIContent* aContent)
 
 nsresult
 nsCSSFrameConstructor::AdjustParentFrame(nsIContent* aChildContent,
-                                         const nsStyleDisplay* aChildDisplay,
+                                         nsStyleContext* aChildStyle,
                                          nsIFrame* & aParentFrame,
                                          nsFrameItems* & aFrameItems,
                                          nsFrameConstructorState& aState,
                                          nsFrameConstructorSaveState& aSaveState,
                                          PRBool& aCreatedPseudo)
 {
-  NS_PRECONDITION(aChildDisplay, "Must have child's display struct");
+  NS_PRECONDITION(aChildStyle, "Must have child's style context");
   NS_PRECONDITION(aFrameItems, "Must have frame items to work with");
 
   aCreatedPseudo = PR_FALSE;
@@ -3376,10 +3396,10 @@ nsCSSFrameConstructor::AdjustParentFrame(nsIContent* aChildContent,
   // we're not table-related in any way, we have to create table
   // pseudo-frames so that we have a table cell to live in.
   if (IsTableRelated(aParentFrame->GetType(), PR_FALSE) &&
-      (!IsTableRelated(aChildDisplay->mDisplay, PR_TRUE) ||
+      (!IsTableRelated(aChildStyle->GetStyleDisplay()->mDisplay, PR_TRUE) ||
        // Also need to create a pseudo-parent if the child is going to end up
        // with a frame based on something other than display.
-       IsSpecialHTMLContent(aChildContent)) &&
+       IsSpecialHTMLContent(aChildContent, aChildStyle)) &&
       // XXXbz evil hack for HTML forms.... see similar in
       // nsCSSFrameConstructor::TableProcessChild.  It should just go away.
       (!aChildContent->IsContentOfType(nsIContent::eHTML) ||
@@ -5371,6 +5391,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
 
   // Create a frame based on the tag
   if (nsHTMLAtoms::img == aTag) {
+    // Make sure to keep IsSpecialHTMLContent in synch with this code
     rv = CreateHTMLImageFrame(aContent, aStyleContext, NS_NewImageFrame,
                               &newFrame);
     if (NS_SUCCEEDED(rv) && newFrame) {
@@ -5398,6 +5419,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     rv = NS_NewWBRFrame(mPresShell, &newFrame);
   }
   else if (nsHTMLAtoms::input == aTag) {
+    // Make sure to keep IsSpecialHTMLContent in synch with this code
     rv = CreateInputFrame(aContent, &newFrame, aStyleContext);
     if (NS_SUCCEEDED(rv) && newFrame) {
       if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -5432,6 +5454,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
   else if (nsHTMLAtoms::object == aTag ||
            nsHTMLAtoms::applet == aTag ||
            nsHTMLAtoms::embed == aTag) {
+    // Make sure to keep IsSpecialHTMLContent in synch with this code
     if (!(aContent->IntrinsicState() &
           (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
            NS_EVENT_STATE_SUPPRESSED))) {
@@ -5460,8 +5483,11 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
         rv = NS_NewImageFrame(mPresShell, &newFrame);
       else if (type == nsIObjectLoadingContent::TYPE_DOCUMENT)
         rv = NS_NewSubDocumentFrame(mPresShell, &newFrame);
-      // Otherwise, it's null - doing nothing here will fallback appropriately
-      // (i.e., render the children)
+#ifdef DEBUG
+      else
+        NS_ERROR("Shouldn't get here if we're not broken and not "
+                 "suppressed and not blocked");
+#endif
     }
   }
   else if (nsHTMLAtoms::fieldset == aTag) {
@@ -7702,7 +7728,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
   nsFrameItems* frameItems = &aFrameItems;
   PRBool pseudoParent = PR_FALSE;
   nsFrameConstructorSaveState pseudoSaveState;
-  nsresult rv = AdjustParentFrame(aContent, display, adjParentFrame,
+  nsresult rv = AdjustParentFrame(aContent, styleContext, adjParentFrame,
                                   frameItems, aState, pseudoSaveState,
                                   pseudoParent);
   if (NS_FAILED(rv)) {

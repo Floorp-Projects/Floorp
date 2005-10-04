@@ -417,7 +417,7 @@ private:
    * Function to adjust aParentFrame and aFrameItems to deal with table
    * pseudo-frames that may have to be inserted.
    * @param aChildContent the content node we want to construct a frame for
-   * @param aChildDisplay the display struct for aChildContent
+   * @param aChildStyle the style context for aChildContent
    * @param aParentFrame the frame we think should be the parent.  This will be
    *        adjusted to point to a pseudo-frame if needed.
    * @param aFrameItems the framelist we think we need to put the child frame
@@ -434,7 +434,7 @@ private:
   // GetGeometricParent, and stuff like the frameitems and parent frame should
   // be kept track of in the state...
   nsresult AdjustParentFrame(nsIContent* aChildContent,
-                             const nsStyleDisplay* aChildDisplay,
+                             nsStyleContext* aChildStyle,
                              nsIFrame* & aParentFrame,
                              nsFrameItems* & aFrameItems,
                              nsFrameConstructorState& aState,
