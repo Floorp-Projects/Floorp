@@ -45,12 +45,12 @@
 
 #include "nsIHistoryItems.h"
 
-// CB1059D7-5BC5-11D9-8254-000393D7254A
-#define NS_IHISTORYOBSERVER_IID_STR "cb1059d7-5bc5-11d9-8254-000393d7254a"
+// BDF54C7D-83C6-406F-84D3-D5ABB9D978B2
+#define NS_IHISTORYOBSERVER_IID_STR "bdf54c7d-83c6-406f-84d3-d5abb9d978b2"
 
 #define NS_IHISTORYOBSERVER_IID \
-  {0xcb1059d7, 0x5bc5, 0x11d9, \
-    { 0x82, 0x54, 0x00, 0x03, 0x39, 0xd7, 0x25, 0x4a }}
+  {0xbdf54c7d, 0x83c6, 0x406f, \
+    { 0x84, 0xd3, 0xd5, 0xab, 0xb9, 0xd9, 0x78, 0xb2 }}
 
 class nsIHistoryObserver : public nsISupports
 {
@@ -59,6 +59,7 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHISTORYOBSERVER_IID)
 
   NS_IMETHOD HistoryLoaded() = 0;
+  NS_IMETHOD HistoryClosing() = 0;
 
   NS_IMETHOD ItemLoaded(nsIHistoryItem* inHistoryItem, PRBool inFirstVisit) = 0;
 

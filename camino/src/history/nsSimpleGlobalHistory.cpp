@@ -841,6 +841,24 @@ nsSimpleGlobalHistory::NotifyObserversHistoryLoaded()
 }
 
 nsresult
+nsSimpleGlobalHistory::NotifyObserversHistoryClosing()
+{
+  PRUint32 numObservers;
+  mHistoryObservers.Count(&numObservers);
+  
+  for (PRUint32 i = 0; i < numObservers; i ++)
+  {
+    nsCOMPtr<nsISupports> element;
+    mHistoryObservers.GetElementAt(i, getter_AddRefs(element));
+  
+    nsCOMPtr<nsIHistoryObserver> historyObserver = do_QueryInterface(element);
+    if (historyObserver)
+      historyObserver->HistoryClosing(); 
+  }
+  return NS_OK;
+}
+
+nsresult
 nsSimpleGlobalHistory::NotifyObserversItemLoaded(nsIMdbRow* inRow, PRBool inFirstVisit)
 {
   if (mBatchesInProgress > 0)
@@ -1763,6 +1781,7 @@ nsSimpleGlobalHistory::OpenDB()
   // See if we need to byte-swap.
   InitByteOrder(PR_FALSE);
 
+  NotifyObserversHistoryLoaded();
   return NS_OK;
 }
 
@@ -2198,10 +2217,10 @@ nsSimpleGlobalHistory::CloseDB()
   if (!mStore)
     return NS_OK;
 
-  mdb_err err;
+  NotifyObserversHistoryClosing();
 
   ExpireEntries(PR_FALSE /* don't notify */);
-  err = Commit(kSessionCommit);
+  mdb_err err = Commit(kSessionCommit);
 
   // order is important here - logically smallest objects first
   mMetaRow = nsnull;

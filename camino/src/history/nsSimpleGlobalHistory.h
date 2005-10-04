@@ -209,6 +209,7 @@ protected:
   // 
   
   nsresult NotifyObserversHistoryLoaded();
+  nsresult NotifyObserversHistoryClosing();
   nsresult NotifyObserversItemLoaded(nsIMdbRow* inRow, PRBool inFirstVisit);
   nsresult NotifyObserversItemRemoved(nsIMdbRow* inRow);
   nsresult NotifyObserversItemTitleChanged(nsIMdbRow* inRow);

@@ -544,7 +544,13 @@ public:
 
   NS_IMETHOD HistoryLoaded()
   {
-  
+    // we build the Obj-C data source lazily, so do nothing here
+    return NS_OK;
+  }
+
+  NS_IMETHOD HistoryClosing()
+  {
+    [mDataSource cleanupHistory];
     return NS_OK;
   }
 
