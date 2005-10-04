@@ -52,6 +52,11 @@ var gComposePane = {
       this.mLDAPPrefsService = Components.classes[kLDAPPrefContractID].getService(Components.interfaces.nsILDAPPrefsService);
 
     this.createDirectoriesList();
+    
+    // build the local address book menu list. We do this by hand instead of using the xul template
+    // builder because of Bug #285076, 
+    this.createLocalDirectoriesList();
+    
     this.enableAutocomplete();
 
     this.initLanguageMenu();
@@ -111,6 +116,45 @@ var gComposePane = {
     // if we do not have any directories disable the dropdown list box
     if (!this.mDirectories || (this.mDirectories < 1))
       directoriesList.setAttribute("disabled", true);  
+  },
+
+  createLocalDirectoriesList: function () 
+  {
+    var abPopup = document.getElementById("abPopup-menupopup");
+
+    if (abPopup) 
+      this.loadLocalDirectories(abPopup);
+  },
+
+  loadLocalDirectories: function (aPopup)
+  {
+    var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                     .getService(Components.interfaces.nsIRDFService);
+
+    var parentDir = rdfService.GetResource("moz-abdirectory://").QueryInterface(Components.interfaces.nsIAbDirectory);
+    var enumerator = parentDir.childNodes;
+    var preference = document.getElementById("mail.collect_addressbook");
+
+    if (enumerator)
+    {
+      while (enumerator.hasMoreElements())
+      {
+        var addrbook = enumerator.getNext();
+        if (addrbook instanceof Components.interfaces.nsIAbDirectory && !addrbook.isRemote && !addrbook.isMailList)
+        {
+          var abURI = addrbook.directoryProperties.URI;
+          item = document.createElement("menuitem");
+          item.setAttribute("label", addrbook.dirName);
+          item.setAttribute("value", abURI);
+          aPopup.appendChild(item);   
+          if (preference.value == abURI)
+          {
+.            aPopup.parentNode.value = abURI;
+            aPopup.selectedItem = item;
+          }
+        }
+      }
+    }
   },
 
   createDirectoriesList: function()

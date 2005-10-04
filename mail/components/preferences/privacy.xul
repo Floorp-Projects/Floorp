@@ -112,22 +112,8 @@
             <checkbox id="useWhiteList"
                       preference="mailnews.message_display.disable_remote_images.useWhitelist"                       
                       label="&allowRemoteImagesForFriends.label;" accesskey="&allowRemoteImagesForFriends.accesskey;"/> 
-
-            <menulist id="whiteListAbURI" flex="1"
-                      preference="mailnews.message_display.disable_remote_images.whiteListAbURI">
-              <menupopup id="abPopup-menupopup" ref="moz-abdirectory://" 
-                           datasources="rdf:addressdirectory"
-                           sortActive="true"
-                           sortDirection="ascending"
-                           sortResource="http://home.netscape.com/NC-rdf#DirTreeNameSort">
-                <template>
-                  <rule nc:IsWriteable="false"/>
-                  <rule nc:IsMailList="false">
-                    <menuitem uri="..."
-                              label="rdf:http://home.netscape.com/NC-rdf#DirName"
-                              value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
-                  </rule>
-                </template>
+            <menulist id="whiteListAbURI" flex="1" preference="mailnews.message_display.disable_remote_images.whiteListAbURI">
+              <menupopup id="abPopup-menupopup">
               </menupopup>
             </menulist>  
           </hbox>  
