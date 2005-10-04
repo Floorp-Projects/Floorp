@@ -182,6 +182,10 @@ nsXFormsInsertDeleteElement::HandleAction(nsIDOMEvent            *aEvent,
   nodeset->SnapshotItem(atInt - 1, getter_AddRefs(location));
   NS_ENSURE_STATE(location);
 
+  nsCOMPtr<nsIDOMNode> parent;
+  location->GetParentNode(getter_AddRefs(parent));
+  NS_ENSURE_STATE(parent);
+
   if (mIsInsert && insertAfter) {
     nsCOMPtr<nsIDOMNode> temp;
     // If we're at the end of the nodeset, this returns nsnull, which is fine,
@@ -189,11 +193,6 @@ nsXFormsInsertDeleteElement::HandleAction(nsIDOMEvent            *aEvent,
     location->GetNextSibling(getter_AddRefs(temp));
     location.swap(temp);
   }
-  
-
-  nsCOMPtr<nsIDOMNode> parent;
-  location->GetParentNode(getter_AddRefs(parent));
-  NS_ENSURE_STATE(parent);
 
   nsCOMPtr<nsIDOMNode> resNode;
   if (mIsInsert) {
