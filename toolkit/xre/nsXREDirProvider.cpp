@@ -229,6 +229,12 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     // We must create the profile directory here if it does not exist.
     rv |= EnsureDirectoryExists(file);
   }
+  else if (!strcmp(aProperty, XRE_EXECUTABLE_FILE)) {
+    nsCOMPtr<nsILocalFile> lf;
+    rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+    if (NS_SUCCEEDED(rv))
+      file = lf;
+  }
   else if (mXULAppDir && !strcmp(aProperty, "resource:app")) {
     rv = mXULAppDir->Clone(getter_AddRefs(file));
   }

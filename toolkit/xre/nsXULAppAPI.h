@@ -168,6 +168,13 @@ struct nsXREAppData
 #define XRE_EXTENSIONS_DIR_LIST "XREExtDL"
 
 /**
+ * A directory service key which provides the executable file used to
+ * launch the current process.  This is the same value returned by the
+ * XRE_GetBinaryPath function defined below.
+ */
+#define XRE_EXECUTABLE_FILE "XREExeF"
+
+/**
  * Begin an XUL application. Does not return until the user exits the
  * application.
  *
