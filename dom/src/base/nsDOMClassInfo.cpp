@@ -448,7 +448,7 @@ static const char kDOMStringBundleURL[] =
    nsIXPCScriptable::WANT_POSTCREATE)
 
 #define ARRAY_SCRIPTABLE_FLAGS                                                \
-  (DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
+  (DOM_DEFAULT_SCRIPTABLE_FLAGS       |                                       \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
    nsIXPCScriptable::WANT_ENUMERATE)
 
@@ -6677,6 +6677,31 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 }
 
 // Generic array scriptable helper.
+
+NS_IMETHODIMP
+nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                             JSObject *obj, jsval id, PRUint32 flags,
+                             JSObject **objp, PRBool *_retval)
+{
+  PRBool is_number = PR_FALSE;
+  PRInt32 n = GetArrayIndexFromId(cx, id, &is_number);
+
+  if (is_number && n >= 0) {
+    nsCOMPtr<nsIDOMNodeList> map(do_QueryInterface(wrapper->Native()));
+    NS_ENSURE_TRUE(map, NS_ERROR_UNEXPECTED);
+
+    PRUint32 length = 0;
+    map->GetLength(&length);
+
+    if ((PRUint32)n < length) {
+      *_retval = ::JS_DefineElement(cx, obj, n, JSVAL_VOID, nsnull, nsnull,
+                                    JSPROP_ENUMERATE);
+      *objp = obj;
+    }
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
