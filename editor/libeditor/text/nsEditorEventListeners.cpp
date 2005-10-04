@@ -1043,10 +1043,9 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
         editor->GetSelectionController(getter_AddRefs(selCon));
         if (selCon)
         {
-          if (! (flags & nsIPlaintextEditor::eEditorReadonlyMask)) {
-            selCon->SetCaretEnabled(PR_TRUE);
-          }
-
+          const PRBool kIsReadonly = (flags & nsIPlaintextEditor::eEditorReadonlyMask) != 0;
+          selCon->SetCaretReadOnly(kIsReadonly);
+          selCon->SetCaretEnabled(PR_TRUE);
           selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
 #ifdef USE_HACK_REPAINT
   // begin hack repaint

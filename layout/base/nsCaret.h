@@ -95,6 +95,7 @@ class nsCaret : public nsICaret,
     PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint);
     PRBool        MustDrawCaret();
     void          DrawCaret();
+    void          DrawCaretAfterBriefDelay();
     void          GetCaretRectAndInvert(nsIFrame* aFrame, PRInt32 aFrameOffset);
     void          ToggleDrawnStatus() {   mDrawn = !mDrawn; }
 
