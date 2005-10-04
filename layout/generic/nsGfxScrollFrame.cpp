@@ -2369,6 +2369,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
   scrollable->SetLineHeight(fontHeight);
 
   if (mVScrollbarBox) {
+    NS_PRECONDITION(mVScrollbarBox->IsBoxFrame(), "Must be a box frame!");
     if (!mHasVerticalScrollbar) {
       SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
     }
@@ -2387,6 +2388,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
   }
     
   if (mHScrollbarBox) {
+    NS_PRECONDITION(mHScrollbarBox->IsBoxFrame(), "Must be a box frame!");
     if (!mHasHorizontalScrollbar) {
       SetAttribute(mHScrollbarBox, nsXULAtoms::curpos, 0);
     }
@@ -2406,6 +2408,7 @@ nsGfxScrollFrameInner::LayoutScrollbars(nsBoxLayoutState& aState,
 
   // place the scrollcorner
   if (mScrollCornerBox) {
+    NS_PRECONDITION(mScrollCornerBox->IsBoxFrame(), "Must be a box frame!");
     nsRect r(0, 0, 0, 0);
     if (aContentArea.x != aScrollArea.x) {
       // scrollbar (if any) on left
