@@ -242,6 +242,26 @@ PRInt32 gTimeoutCnt                                    = 0;
   }                                                                           \
   PR_END_MACRO
 
+// Same as FORWARD_TO_INNER, but this will create a fresh inner if an
+// inner doesn't already exists.
+#define FORWARD_TO_INNER_CREATE(method, args)                                 \
+  PR_BEGIN_MACRO                                                              \
+  if (IsOuterWindow()) {                                                      \
+    if (!mInnerWindow) {                                                      \
+      if (mIsClosed) {                                                        \
+        return NS_ERROR_NOT_AVAILABLE;                                        \
+      }                                                                       \
+      nsCOMPtr<nsIDOMDocument> doc;                                           \
+      nsresult fwdic_nr = GetDocument(getter_AddRefs(doc));                   \
+      NS_ENSURE_SUCCESS(fwdic_nr, fwdic_nr);                                  \
+      if (!mInnerWindow) {                                                    \
+        return NS_ERROR_NOT_AVAILABLE;                                        \
+      }                                                                       \
+    }                                                                         \
+    return GetCurrentInnerWindowInternal()->method args;                      \
+  }                                                                           \
+  PR_END_MACRO
+
 // CIDs
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #ifdef OJI
@@ -1414,7 +1434,7 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
 {
   FORWARD_TO_INNER(HandleDOMEvent,
                    (aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus),
-                   NS_ERROR_NOT_INITIALIZED);
+                   NS_OK);
 
   nsGlobalWindow *outer = GetOuterWindowInternal();
 
@@ -4983,8 +5003,7 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
                                  nsIDOMEventListener* aListener,
                                  PRBool aUseCapture)
 {
-  FORWARD_TO_INNER(AddEventListener, (aType, aListener, aUseCapture),
-                   NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER_CREATE(AddEventListener, (aType, aListener, aUseCapture));
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
 
@@ -5003,7 +5022,7 @@ nsGlobalWindow::RemoveEventListener(const nsAString& aType,
 NS_IMETHODIMP
 nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
 {
-  FORWARD_TO_INNER(DispatchEvent, (aEvent, _retval), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER(DispatchEvent, (aEvent, _retval), NS_OK);
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
   if (!doc) {
@@ -5032,9 +5051,8 @@ nsGlobalWindow::AddGroupedEventListener(const nsAString & aType,
                                         PRBool aUseCapture,
                                         nsIDOMEventGroup *aEvtGrp)
 {
-  FORWARD_TO_INNER(AddGroupedEventListener,
-                   (aType, aListener, aUseCapture, aEvtGrp),
-                   NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER_CREATE(AddGroupedEventListener,
+                          (aType, aListener, aUseCapture, aEvtGrp));
 
   nsCOMPtr<nsIEventListenerManager> manager;
 
@@ -5133,7 +5151,7 @@ nsGlobalWindow::RemoveEventListenerByIID(nsIDOMEventListener* aListener,
 NS_IMETHODIMP
 nsGlobalWindow::GetListenerManager(nsIEventListenerManager **aResult)
 {
-  FORWARD_TO_INNER(GetListenerManager, (aResult), NS_ERROR_NOT_INITIALIZED);
+  FORWARD_TO_INNER_CREATE(GetListenerManager, (aResult));
 
   if (!mListenerManager) {
     static NS_DEFINE_CID(kEventListenerManagerCID,
