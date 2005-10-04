@@ -5979,6 +5979,10 @@ nsWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         return NS_OK;
       }
 
+#ifdef DEBUG_mrbkap
+      printf(">>> Enumerating a window!\n");
+#endif
+
       // The security check passed, let's see if we need to get the inner
       // window's JS object or if we can just start enumerating.
       nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
@@ -6012,6 +6016,13 @@ nsWindowSH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       }
 
       if (*idp != JSVAL_VOID) {
+#ifdef DEBUG_mrbkap
+        {
+          jsval v;
+          NS_ASSERTION(JS_IdToValue(cx, *idp, &v), "Give me my value");
+          printf("=== %s\n", JS_GetStringBytes(JS_ValueToString(cx, v)));
+        }
+#endif
         break;
       }
 
@@ -6687,13 +6698,21 @@ nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   PRInt32 n = GetArrayIndexFromId(cx, id, &is_number);
 
   if (is_number && n >= 0) {
-    nsCOMPtr<nsIDOMNodeList> map(do_QueryInterface(wrapper->Native()));
-    NS_ENSURE_TRUE(map, NS_ERROR_UNEXPECTED);
+    PRInt32 length = 0;
+    jsval lenval;
 
-    PRUint32 length = 0;
-    map->GetLength(&length);
+    if (!JS_GetProperty(cx, obj, "length", &lenval)) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-    if ((PRUint32)n < length) {
+    if (!JSVAL_IS_INT(lenval)) {
+      // This can apparently happen with some sparse array impls falling back
+      // onto this code.
+      return NS_OK;
+    }
+
+    length = JSVAL_TO_INT(lenval);
+    if (n < length) {
       *_retval = ::JS_DefineElement(cx, obj, n, JSVAL_VOID, nsnull, nsnull,
                                     JSPROP_ENUMERATE);
       *objp = obj;
