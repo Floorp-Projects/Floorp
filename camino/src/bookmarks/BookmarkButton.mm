@@ -22,6 +22,7 @@
  * Contributor(s):
  *   David Hyatt <hyatt@mozilla.org> (Original Author)
  *   David Haas <haasd@cae.wisc.edu>
+ *   Bruce Davidson <Bruce.Davidson@ipl.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -103,6 +104,7 @@
   if ([aItem isKindOfClass:[Bookmark class]]) {
     if ([(Bookmark *)aItem isSeparator]) {
       [self setTitle:nil];
+      [self setImage:[NSImage imageNamed:@"bm_separator"]];
       return;
     }
     [self setAction:@selector(openBookmark:)];
@@ -214,6 +216,12 @@
 //
 -(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
+  if ([[self bookmarkItem] isKindOfClass:[Bookmark class]] && [(Bookmark *)[self bookmarkItem] isSeparator]) {
+    SEL action = [aMenuItem action];
+    if (action != @selector(deleteBookmarks:))
+      return NO;
+  }
+
   return YES;
 }
 

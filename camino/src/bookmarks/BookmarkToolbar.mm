@@ -243,12 +243,9 @@ static const int kBMBarScanningStep = 5;
 
   for (int i = 0; i < count; i++) {
     BookmarkButton* button = [mButtons objectAtIndex:i];
-    BookmarkItem *item = [button bookmarkItem];
     NSRect buttonRect;
-    if ([item isKindOfClass:[Bookmark class]] && [(Bookmark *)item isSeparator]){
-      continue;
-    }
-    else if (i < aIndex) {
+
+    if (i < aIndex) {
       buttonRect = [button frame];
       curRowYOrigin = NSMinY(buttonRect) - kBookmarkButtonVerticalPadding;
       curX = NSMaxX(buttonRect) + kBookmarkButtonHorizPadding;
