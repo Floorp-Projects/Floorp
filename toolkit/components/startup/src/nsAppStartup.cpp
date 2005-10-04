@@ -144,7 +144,18 @@ nsAppStartup::CreateHiddenWindow()
 NS_IMETHODIMP
 nsAppStartup::Run(void)
 {
-  if (!mShuttingDown) {
+  NS_ASSERTION(!mRunning, "Reentrant appstartup->Run()");
+
+  // If we have no windows open and no explicit calls to
+  // enterLastWindowClosingSurvivalArea, or somebody has explicitly called
+  // quit, don't bother running the event loop which would probably leave us
+  // with a zombie process.
+
+  if (!mShuttingDown && mConsiderQuitStopper != 0) {
+#ifdef XP_MACOSX
+    EnterLastWindowClosingSurvivalArea();
+#endif
+
     mRunning = PR_TRUE;
 
     nsresult rv = mAppShell->Run();
@@ -187,18 +198,7 @@ nsAppStartup::Quit(PRUint32 aMode)
 
   if (ferocity == eConsiderQuit && mConsiderQuitStopper == 0) {
     // attempt quit if the last window has been unregistered/closed
-
-    PRBool windowsRemain = PR_TRUE;
-
-    if (mediator) {
-      nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-      mediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
-      if (windowEnumerator)
-        windowEnumerator->HasMoreElements(&windowsRemain);
-    }
-    if (!windowsRemain) {
-      ferocity = eAttemptQuit;
-    }
+    ferocity = eAttemptQuit;
   }
 
   /* Currently ferocity can never have the value of eForceQuit here.
@@ -296,32 +296,27 @@ nsAppStartup::Quit(PRUint32 aMode)
       // no matter what, make sure we send the exit event.  If
       // worst comes to worst, we'll do a leaky shutdown but we WILL
       // shut down. Well, assuming that all *this* stuff works ;-).
-      nsCOMPtr<nsIEventQueueService> svc = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+      nsCOMPtr<nsIEventQueue> queue;
+      rv = NS_GetMainEventQ(getter_AddRefs(queue));
       if (NS_SUCCEEDED(rv)) {
+        PLEvent* event = new PLEvent;
+        if (event) {
+          NS_ADDREF_THIS();
+          PL_InitEvent(event,
+                       this,
+                       HandleExitEvent,
+                       DestroyExitEvent);
 
-        nsCOMPtr<nsIEventQueue> queue;
-        rv = NS_GetMainEventQ(getter_AddRefs(queue));
-        if (NS_SUCCEEDED(rv)) {
-
-          PLEvent* event = new PLEvent;
-          if (event) {
-            NS_ADDREF_THIS();
-            PL_InitEvent(event,
-                         this,
-                         HandleExitEvent,
-                         DestroyExitEvent);
-
-            rv = queue->PostEvent(event);
-            if (NS_SUCCEEDED(rv)) {
-              postedExitEvent = PR_TRUE;
-            }
-            else {
-              PL_DestroyEvent(event);
-            }
+          rv = queue->PostEvent(event);
+          if (NS_SUCCEEDED(rv)) {
+            postedExitEvent = PR_TRUE;
           }
           else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
+            PL_DestroyEvent(event);
           }
+        }
+        else {
+          rv = NS_ERROR_OUT_OF_MEMORY;
         }
       }
     }
@@ -341,21 +336,19 @@ nsAppStartup::Quit(PRUint32 aMode)
 void
 nsAppStartup::AttemptingQuit(PRBool aAttempt)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   if (aAttempt) {
     // now even the Mac wants to quit when the last window is closed
     if (!mAttemptingQuit)
       ExitLastWindowClosingSurvivalArea();
-    mAttemptingQuit = PR_TRUE;
   } else {
     // changed our mind. back to normal.
     if (mAttemptingQuit)
       EnterLastWindowClosingSurvivalArea();
-    mAttemptingQuit = PR_FALSE;
   }
-#else
-  mAttemptingQuit = aAttempt;
 #endif
+
+  mAttemptingQuit = aAttempt;
 }
 
 NS_IMETHODIMP
@@ -371,6 +364,10 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
 {
   NS_ASSERTION(mConsiderQuitStopper > 0, "consider quit stopper out of bounds");
   --mConsiderQuitStopper;
+
+  if (mRunning && mConsiderQuitStopper == 0)
+    Quit(eAttemptQuit);
+
   return NS_OK;
 }
 
@@ -517,9 +514,10 @@ nsAppStartup::Observe(nsISupports *aSubject,
     }
     ExitLastWindowClosingSurvivalArea();
   } else if (!strcmp(aTopic, "xul-window-registered")) {
+    EnterLastWindowClosingSurvivalArea();
     AttemptingQuit(PR_FALSE);
   } else if (!strcmp(aTopic, "xul-window-destroyed")) {
-    Quit(eConsiderQuit);
+    ExitLastWindowClosingSurvivalArea();
   } else {
     NS_ERROR("Unexpected observer topic.");
   }
