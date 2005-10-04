@@ -160,6 +160,10 @@ public:
    * returns 0 if we don't have any cell with 'vertical-align: baseline'
    */
   nscoord GetMaxCellAscent() const;
+
+  /* return the row ascent
+   */
+  nscoord GetAscent();
  
   /** returns the ordinal position of this row in its table */
   virtual PRInt32 GetRowIndex() const;

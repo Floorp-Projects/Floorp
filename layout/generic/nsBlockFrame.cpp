@@ -704,7 +704,13 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     // Just return our current size as our desired size.
     aMetrics.width = mRect.width;
     aMetrics.height = mRect.height;
-    aMetrics.ascent = mAscent;
+    
+    // XXXbernd this should be revised when inline-blocks are implemented
+    if (GetFirstChild(nsnull))
+      aMetrics.ascent = mAscent;
+    else 
+      aMetrics.ascent = aMetrics.height;
+
     aMetrics.descent = aMetrics.height - aMetrics.ascent;
     
     // Whether or not we're complete hasn't changed
@@ -1415,7 +1421,11 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     aMetrics.height = autoHeight;
   }
 
-  aMetrics.ascent = mAscent;
+  // XXXbernd this should be revised when inline-blocks are implemented
+  if (GetFirstChild(nsnull))
+    aMetrics.ascent = mAscent;
+  else 
+    aMetrics.ascent = aMetrics.height;
   aMetrics.descent = aMetrics.height - aMetrics.ascent;
 
   if (aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH)) {
