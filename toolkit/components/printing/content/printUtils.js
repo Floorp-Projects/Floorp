@@ -53,8 +53,6 @@ var PrintUtils = {
       var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                      .getService(Components.interfaces.nsIPrintingPromptService);
       PRINTPROMPTSVC.showPageSetup(window, printSettings, null);
-      this.savePrintSettings(printSettings);
-
     } catch (e) {
       dump("showPageSetup "+e+"\n");
       return false;
@@ -86,11 +84,20 @@ var PrintUtils = {
 
   printPreview: function (aEnterPPCallback, aExitPPCallback)
   {
-    // if we're in PP mode, don't copy the callbacks.
-    if (!document.getElementById("print-preview-toolbar")) {
+    // if we're already in PP mode, don't set the callbacks; chances
+    // are they're null because someone is calling printPreview() to
+    // get us to refresh the display.
+    var pptoolbar = document.getElementById("print-preview-toolbar");
+    if (!pptoolbar) {
       this._onEnterPP = aEnterPPCallback;
       this._onExitPP  = aExitPPCallback;
+    } else {
+      // hide the toolbar here -- it will be shown in
+      // onEnterPrintPreview; this forces a reflow which fixes display
+      // issues in bug 267422.
+      pptoolbar.hidden = true;
     }
+
     this._webProgressPP = {};
     var ppParams        = {};
     var notifyOnOpen    = {};
@@ -127,26 +134,6 @@ var PrintUtils = {
   {
     return _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                    .getInterface(Components.interfaces.nsIWebBrowserPrint);
-  },
-
-  savePrintSettings: function (aPrintSettings)
-  {
-    if (gPrintSettingsAreGlobal && gSavePrintSettings) {
-      var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                            .getService(Components.interfaces.nsIPrintSettingsService);
-      PSSVC.savePrintSettingsToPrefs(aPrintSettings, false, aPrintSettings.kInitSaveNativeData);
-    }
-  },
-
-  savePrintPreviewSettings: function (aPrintSettings)
-  {
-    // XXX this ignore gPrintSettingsAreGlobal and gSavePrintSettings
-    var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                  .getService(Components.interfaces.nsIPrintSettingsService);
-    var flags = aPrintSettings.kInitSaveShrinkToFit |
-                aPrintSettings.kInitSaveScaling |
-                aPrintSettings.kInitSaveOrientation;
-    PSSVC.savePrintSettingsToPrefs(aPrintSettings, true, flags);
   },
 
   ////////////////////////////////////////
@@ -229,6 +216,7 @@ var PrintUtils = {
     var printPreviewTB = document.getElementById("print-preview-toolbar");
     if (printPreviewTB) {
       printPreviewTB.updateToolbar();
+      printPreviewTB.hidden = false;
       return;
     }
 
@@ -259,7 +247,7 @@ var PrintUtils = {
     window.addEventListener("keypress", this.onKeyPressPP, true);
  
     _content.focus();
-    
+
     // on Enter PP Call back
     if (this._onEnterPP) {
       this._onEnterPP();
