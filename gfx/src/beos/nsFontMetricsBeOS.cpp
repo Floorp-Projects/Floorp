@@ -434,21 +434,27 @@ inline PRUint32 utf8_to_index(char *utf8char)
 	return ch;
 }
 // Using cached widths
-float  nsFontMetricsBeOS::GetStringWidth(char *utf8str, uint32 len)
+float  nsFontMetricsBeOS::GetStringWidth(char *utf8str, uint32 bytelen)
 {
-	//At moment only for most annoying case - permanent calls for single char widths
-	// calculating StringWidth as sum of chars width produces sometimes weird results
-	if (utf8_char_len(*utf8str) != len)
-		return mFontHandle.StringWidth(utf8str, len);
-	// converting multibyte sequence to index
-	PRUint32 index = utf8_to_index(utf8str);
-	float width;
-	if (!mFontWidthCache.Get(index, &width))
+	float retwidth = 0;
+	uint32 charlen = 1;
+	// Traversing utf8string - get, cache and sum widths for all utf8 chars
+	for (uint32 i =0; i < bytelen && *utf8str  != '\0'; i += charlen)
 	{
-		width = mFontHandle.StringWidth(utf8str, len);
-		mFontWidthCache.Put(index, width);
+		float width = 0;
+		// Calculating utf8 char bytelength
+		charlen = ((0xE5000000 >> ((*utf8str >> 3) & 0x1E)) & 3) + 1;
+		// Converting multibyte sequence to index
+		PRUint32 index = utf8_to_index(utf8str);
+		if (!mFontWidthCache.Get(index, &width))
+		{
+			width = mFontHandle.StringWidth(utf8str, charlen);
+			mFontWidthCache.Put(index, width);
+		}
+		retwidth +=  width;
+		utf8str += charlen;
 	}
-	return width;
+	return retwidth;
 }
  
 // The Font Enumerator 
