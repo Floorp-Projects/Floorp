@@ -60,6 +60,7 @@
 
 #include "nsSupportsArray.h"
 #include "nsArray.h"
+#include "nsINIParserImpl.h"
 #include "nsSupportsPrimitives.h"
 #include "nsConsoleService.h"
 #include "nsExceptionService.h"
@@ -139,6 +140,7 @@ extern void _FreeAutoLockStatics();
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProcess)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsEventQueueServiceImpl, Init)
@@ -593,6 +595,13 @@ nsresult NS_COM NS_InitXPCOM3(nsIServiceManager* *result,
     if (registrar) {
         for (int i = 0; i < components_length; i++)
             RegisterGenericFactory(registrar, &components[i]);
+
+        nsCOMPtr<nsIFactory> iniParserFactory(new nsINIParserFactory());
+        if (iniParserFactory)
+            registrar->RegisterFactory(kINIParserFactoryCID, 
+                                       "nsINIParserFactory",
+                                       NS_INIPARSERFACTORY_CONTRACTID, 
+                                       iniParserFactory);
     }
     rv = nsComponentManagerImpl::gComponentManager->ReadPersistentRegistry();
 #ifdef DEBUG    

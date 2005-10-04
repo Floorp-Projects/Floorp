@@ -64,6 +64,7 @@ CPPSRCS		= \
 		nsFixedSizeAllocator.cpp \
 		nsHashSets.cpp \
 		nsHashtable.cpp \
+		nsINIParserImpl.cpp \
 		nsObserverList.cpp \
 		nsObserverService.cpp \
 		nsProperties.cpp \
@@ -127,6 +128,7 @@ XPIDLSRCS	= \
 		nsIAtomService.idl \
 		nsICollection.idl \
 		nsIEnumerator.idl \
+		nsIINIParser.idl \
 		nsIPersistentProperties2.idl \
 		nsIProperty.idl \
 		nsIPropertyBag.idl \
