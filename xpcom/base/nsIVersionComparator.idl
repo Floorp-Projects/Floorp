@@ -45,6 +45,9 @@
  *
  * <number-a><string-b><number-c><string-d (everything else)>
  *
+ * A version-part may also consist of a single asterisk "*" which indicates
+ * "infinity".
+ *
  * Numbers are base-10, and are zero if left out.
  * Strings are compared bytewise.
  *

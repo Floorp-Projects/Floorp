@@ -74,7 +74,13 @@ ParseVP(char *part, VersionPart &result)
   if (dot)
     *dot = '\0';
 
-  result.numA = strtol(part, NS_CONST_CAST(char**, &result.strB), 10);
+  if (part[0] == '*' && part[1] == '\0') {
+    result.numA = PR_INT32_MAX;
+    result.strB = "";
+  }
+  else {
+    result.numA = strtol(part, NS_CONST_CAST(char**, &result.strB), 10);
+  }
 
   if (!*result.strB) {
     result.strB = nsnull;
