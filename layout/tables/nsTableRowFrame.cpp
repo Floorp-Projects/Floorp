@@ -406,6 +406,43 @@ nscoord nsTableRowFrame::GetMaxCellAscent() const
   return mMaxCellAscent;
 }
 
+nscoord nsTableRowFrame::GetAscent()
+{
+  if(mMaxCellAscent)
+    return mMaxCellAscent;
+
+  // If we don't have a baseline on any of the cells we go for the lowest 
+  // content edge of the inner block frames. 
+  // Every table cell has a cell frame with its border and padding. Inside
+  // the cell is a block frame. The cell is as high as the tallest cell in
+  // the parent row. As a consequence the block frame might not touch both
+  // the top and the bottom padding of it parent cell frame at the same time.
+  // 
+  // bbbbbbbbbbbbbbbbbb             cell border:  b
+  // bppppppppppppppppb             cell padding: p
+  // bpxxxxxxxxxxxxxxpb             inner block:  x
+  // bpx            xpb
+  // bpx            xpb
+  // bpx            xpb
+  // bpxxxxxxxxxxxxxxpb  base line
+  // bp              pb
+  // bp              pb
+  // bppppppppppppppppb
+  // bbbbbbbbbbbbbbbbbb
+
+  nsTableIterator iter(*this, eTableDIR);
+  nsIFrame* childFrame = iter.First();
+  nscoord ascent = 0;
+   while (childFrame) {
+    if (IS_TABLE_CELL(childFrame->GetType())) {
+      nsIFrame* firstKid = childFrame->GetFirstChild(nsnull);
+      ascent = PR_MAX(ascent, firstKid->GetRect().YMost());
+    }
+    // Get the next child
+    childFrame = iter.Next();
+  }
+  return ascent;
+}
 nscoord
 nsTableRowFrame::GetHeight(nscoord aPctBasis) const
 {
@@ -506,7 +543,11 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
         CalculateCellActualSize(kidFrame, desSize.width, desSize.height, availWidth);
       }
       // height may have changed, adjust descent to absorb any excess difference
-      nscoord ascent = ((nsTableCellFrame *)kidFrame)->GetDesiredAscent();
+      nscoord ascent;
+       if (!kidFrame->GetFirstChild(nsnull)->GetFirstChild(nsnull))
+         ascent = desSize.height;
+       else
+         ascent = ((nsTableCellFrame *)kidFrame)->GetDesiredAscent();
       nscoord descent = desSize.height - ascent;
       UpdateHeight(desSize.height, ascent, descent, tableFrame, (nsTableCellFrame*)kidFrame);
     }
@@ -1003,7 +1044,11 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
                                     desiredSize.height, availCellWidth);
           }
           // height may have changed, adjust descent to absorb any excess difference
-          nscoord ascent = cellFrame->GetDesiredAscent();
+          nscoord ascent;
+          if (!kidFrame->GetFirstChild(nsnull)->GetFirstChild(nsnull))
+            ascent = desiredSize.height;
+          else
+            ascent = ((nsTableCellFrame *)kidFrame)->GetDesiredAscent();
           nscoord descent = desiredSize.height - ascent;
           UpdateHeight(desiredSize.height, ascent, descent, &aTableFrame, cellFrame);
         }
@@ -1227,6 +1272,8 @@ nsTableRowFrame::IR_TargetIsChild(nsPresContext*          aPresContext,
     CalculateCellActualSize(aNextFrame, cellMet.width, cellMet.height, cellAvailWidth);
 
     // height may have changed, adjust descent to absorb any excess difference
+    if (!aNextFrame->GetFirstChild(nsnull)->GetFirstChild(nsnull))
+      cellMet.ascent = cellMet.height;
     cellMet.descent = cellMet.height - cellMet.ascent;
 
     // if the cell got shorter and it may have been the tallest, recalc the tallest cell
@@ -1513,6 +1560,7 @@ nsTableRowFrame::GetNextRow() const
   nsIFrame* childFrame = GetNextSibling();
   while (childFrame) {
     if (nsLayoutAtoms::tableRowFrame == childFrame->GetType()) {
+	  NS_ASSERTION(NS_STYLE_DISPLAY_TABLE_ROW == childFrame->GetStyleDisplay()->mDisplay, "wrong display type on rowframe");
       return (nsTableRowFrame*)childFrame;
     }
     childFrame = childFrame->GetNextSibling();

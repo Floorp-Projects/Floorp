@@ -2015,8 +2015,14 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*          aPresContext,
   }
   
   // Return our desired rect
-  aDesiredSize.ascent  = aDesiredSize.height;
-  aDesiredSize.descent = 0;
+  if (mInnerTableFrame) {
+    aDesiredSize.ascent  = mInnerTableFrame->GetAscent();
+    aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
+  }
+  else {
+    aDesiredSize.ascent  = aDesiredSize.height;
+    aDesiredSize.descent = 0;
+  }
 
   // compute max element size and maximum width if it hasn't already been 
   if (needUpdateMetrics) {

@@ -4036,6 +4036,26 @@ nscoord nsTableFrame::GetCellSpacingY()
   return GetStyleTableBorder()->mBorderSpacingY.GetCoordValue();
 }
 
+
+nscoord nsTableFrame::GetAscent()
+{
+  nscoord ascent = 0;
+  nsAutoVoidArray orderedRowGroups;
+  PRUint32 numRowGroups;
+  OrderRowGroups(orderedRowGroups, numRowGroups);
+  nsTableRowFrame* firstRow = nsnull;
+  for (PRUint32 rgIndex = 0; rgIndex < numRowGroups; rgIndex++) {
+    nsTableRowGroupFrame* rgFrame = GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgIndex));
+    if (rgFrame->GetRowCount()) {
+      firstRow = rgFrame->GetFirstRow(); 
+      ascent = rgFrame->GetRect().y + firstRow->GetRect().y + firstRow->GetAscent();
+      break;
+    }
+  }
+  if (!firstRow)
+    ascent = GetRect().height;
+  return ascent;
+}
 /* ----- global methods ----- */
 
 nsresult 
