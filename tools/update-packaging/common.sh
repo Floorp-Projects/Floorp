@@ -66,7 +66,8 @@ append_remove_instructions() {
     files=($(cat "$listfile" | tr " " "|"))  
     num_files=${#files[*]}
     for ((i=0; $i<$num_files; i=$i+1)); do
-      f=$(echo ${files[$i]} | tr "|" " " | sed 's/^ *\(.*\) *$/\1/')
+      # Trim whitespace (including trailing carriage returns)
+      f=$(echo ${files[$i]} | tr "|" " " | sed 's/^ *\(.*\) *$/\1/' | tr -d '\r')
       # Exclude any blank lines or any lines ending with a slash, which indicate
       # directories.  The updater doesn't know how to remove entire directories.
       if [ -n "$f" ]; then
