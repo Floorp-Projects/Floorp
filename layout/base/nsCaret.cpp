@@ -378,10 +378,32 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   return NS_OK;
 }
 
+void nsCaret::DrawCaretAfterBriefDelay()
+{
+  // Make sure readonly caret gets drawn again if it needs to be
+  if (!mBlinkTimer) {
+    nsresult  err;
+    mBlinkTimer = do_CreateInstance("@mozilla.org/timer;1", &err);    
+    if (NS_FAILED(err))
+      return;
+  }    
+
+  mBlinkTimer->InitWithFuncCallback(CaretBlinkCallback, this, 0,
+                                    nsITimer::TYPE_ONE_SHOT);
+}
+
 NS_IMETHODIMP nsCaret::EraseCaret()
 {
-  if (mDrawn)
+  if (mDrawn) {
     DrawCaret();
+    if (mReadOnly) {
+      // If readonly we don't have a blink timer set, so caret won't
+      // be redrawn automatically. We need to force the caret to get
+      // redrawn right after the paint
+      DrawCaretAfterBriefDelay();
+    }
+  }
+
   return NS_OK;
 }
 
@@ -474,6 +496,12 @@ nsresult nsCaret::PrimeTimer()
 //-----------------------------------------------------------------------------
 nsresult nsCaret::StartBlinking()
 {
+  if (mReadOnly) {
+    // Make sure the one draw command we use for a readonly caret isn't
+    // done until the selection is set
+    DrawCaretAfterBriefDelay();
+    return NS_OK;
+  }
   PrimeTimer();
 
   //NS_ASSERTION(!mDrawn, "Caret should not be drawn here");
