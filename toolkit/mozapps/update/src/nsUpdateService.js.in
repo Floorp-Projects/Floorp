@@ -64,7 +64,7 @@ const KEY_APPDIR          = "XCurProcD";
 const DIR_UPDATES         = "updates";
 const FILE_UPDATE_STATUS  = "update.status";
 const FILE_UPDATE_ARCHIVE = "update.mar";
-const FILE_UPDATE_INFO    = "update.info";
+const FILE_UPDATE_LOG     = "update.log"
 const FILE_UPDATES_DB     = "updates.xml";
 const FILE_UPDATE_ACTIVE  = "active-update.xml";
 const FILE_PERMS_TEST     = "update.test";
@@ -334,6 +334,18 @@ function cleanUpUpdatesDir() {
   var e = updateDir.directoryEntries;
   while (e.hasMoreElements()) {
     var f = e.getNext().QueryInterface(Components.interfaces.nsIFile);
+    // Preserve the last update log file for debugging purposes
+    if (f.leafName == FILE_UPDATE_LOG) {
+      try {
+        f.copyTo(f.parent.parent, "last-update.log");
+      }
+      catch (e) {
+        LOG("General", "Failed to copy file: " + f.path);
+      }
+    }
+    // Now, recursively remove this file.  The recusive removal is really
+    // only needed on Mac OSX because this directory will contain a copy of
+    // updater.app, which is itself a directory.
     try {
       f.remove(true);
     }
