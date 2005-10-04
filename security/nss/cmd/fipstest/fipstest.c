@@ -37,9 +37,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "secitem.h"
 #include "blapi.h"
 #include "nss.h"
+#if 0
 #include "../../lib/freebl/mpi/mpi.h"
+#endif
 
 static const unsigned char
 table3[32][8] = {
@@ -367,7 +370,7 @@ char2_from_hex(unsigned char byteval, unsigned char *c2, char a)
 }
 
 void
-to_hex_str(char *str, unsigned char *buf, unsigned int len)
+to_hex_str(char *str, const unsigned char *buf, unsigned int len)
 {
     int i;
     for (i=0; i<len; i++) {
@@ -1060,6 +1063,7 @@ dss_test(char *reqdir, char *rspdir)
     PQGVerify verify;
     int i, j, rv;
     goto do_pqggen;
+#if 0
     /* primality test */
 do_prime:
     sprintf(filename, "%s/prime.req", reqdir);
@@ -1090,6 +1094,7 @@ do_prime:
     }
     fclose(req);
     fclose(rsp);
+#endif
 do_pqggen:
     /* PQG Gen */
     sprintf(filename, "%s/pqg.req", reqdir);
@@ -1225,7 +1230,7 @@ do_keygen:
 	PQGParams *pqg;
 	PQGVerify *vfy;
 	fprintf(rsp, "[mod=%d]\n", 512 + j*64);
-	PQG_ParamGenSeedLen(j, &pqg, &vfy);
+	PQG_ParamGen(j, &pqg, &vfy);
 	to_hex_str(str, pqg->prime.data, pqg->prime.len);
 	fprintf(rsp, "P= %s\n", str);
 	to_hex_str(str, pqg->subPrime.data, pqg->subPrime.len);
