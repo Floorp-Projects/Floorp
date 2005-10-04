@@ -476,8 +476,10 @@ public: // NOT in nsIViewManager, so private to the view module
    * method:
    *
    * @par
-   *   fatal error C1001: INTERNAL COMPILER ERROR
-   *               (compiler file 'E:\8966\vc98\p2\src\P2\main.c', line 494)
+@verbatim
+       fatal error C1001: INTERNAL COMPILER ERROR
+                   (compiler file 'E:\8966\vc98\p2\src\P2\main.c', line 494)
+@endverbatim
    *
    * @par
    * Making the method return nsresult worked around the internal
