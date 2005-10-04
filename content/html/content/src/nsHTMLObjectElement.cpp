@@ -241,17 +241,17 @@ nsHTMLObjectElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 
 PRBool nsHTMLObjectElement::IsFocusable(PRInt32 *aTabIndex)
 {
-  if (aTabIndex) {
-    GetTabIndex(aTabIndex);
-  }
-  
   if (Type() == eType_Plugin) {
     // Has plugin content: let the plugin decide what to do in terms of
     // internal focus from mouse clicks
+    if (aTabIndex) {
+      GetTabIndex(aTabIndex);
+    }
+  
     return PR_TRUE;
   }
-  
-  return HasAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex);
+
+  return nsGenericHTMLFormElement::IsFocusable(aTabIndex);
 }
 
  

@@ -130,9 +130,7 @@ public:
   // Have to override tabindex for <embed> to act right
   NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
-  // Let plugin decide whether it wants focus from mouse clicks
-  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull)
-    { if (aTabIndex) GetTabIndex(aTabIndex); return PR_TRUE; }
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
   
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
@@ -593,4 +591,18 @@ nsHTMLSharedElement::IntrinsicState() const
     state |= ObjectState();
   }
   return state;
+}
+
+PRBool
+nsHTMLSharedElement::IsFocusable(PRInt32 *aTabIndex)
+{
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    // Let plugin decide whether it wants focus from mouse clicks
+    if (aTabIndex) {
+      GetTabIndex(aTabIndex);
+    }
+    return PR_TRUE;
+  }
+
+  return nsGenericHTMLElement::IsFocusable(aTabIndex);
 }
