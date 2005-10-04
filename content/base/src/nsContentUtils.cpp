@@ -1760,9 +1760,14 @@ nsContentUtils::SplitExpatName(const PRUnichar *aExpatName, nsIAtom **aPrefix,
 
   const PRUnichar *nameStart;
   if (uriEnd) {
-    sNameSpaceManager->RegisterNameSpace(nsDependentSubstring(aExpatName,
-                                                              uriEnd),
-                                         *aNameSpaceID);
+    if (sNameSpaceManager) {
+      sNameSpaceManager->RegisterNameSpace(nsDependentSubstring(aExpatName,
+                                                                uriEnd),
+                                           *aNameSpaceID);
+    }
+    else {
+      *aNameSpaceID = kNameSpaceID_Unknown;
+    }
 
     nameStart = (uriEnd + 1);
     if (nameEnd)  {
