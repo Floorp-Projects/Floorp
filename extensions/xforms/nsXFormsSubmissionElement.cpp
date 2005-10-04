@@ -472,8 +472,7 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
 
   // replace instance document
 
-  nsCString contentType, contentCharset;
-  channel->GetContentType(contentType);
+  nsCString contentCharset;
   channel->GetContentCharset(contentCharset);
 
   // use DOM parser to construct nsIDOMDocument
@@ -485,7 +484,7 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
 
   nsCOMPtr<nsIDOMDocument> newDoc;
   parser->ParseFromStream(mPipeIn, contentCharset.get(), contentLength,
-                          contentType.get(), getter_AddRefs(newDoc));
+                          "application/xml", getter_AddRefs(newDoc));
   // XXX Add URI, etc?
   if (!newDoc) {
     nsXFormsUtils::ReportError(NS_LITERAL_STRING("instanceParseError"),
