@@ -311,9 +311,9 @@ function CreateCCK()
   destdir.append("xpi");
   destdir.append("plugins");
   try {
+    destdir.remove(true);
     destdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
   } catch(ex) {}
-
 
   haveplugins = CCKCopyFile(document.getElementById("BrowserPluginPath1").value, destdir);
   haveplugins |= CCKCopyFile(document.getElementById("BrowserPluginPath2").value, destdir);
@@ -325,9 +325,10 @@ function CreateCCK()
   destdir.append("xpi");
   destdir.append("searchplugins");
   try {
+    destdir.remove(true);
     destdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
   } catch(ex) {}
-
+  
   havesearchplugins = CCKCopyFile(document.getElementById("SearchPlugin1").value, destdir);
   CCKCopyFile(document.getElementById("SearchPluginIcon1").value, destdir);
   havesearchplugins |= CCKCopyFile(document.getElementById("SearchPlugin2").value, destdir);
