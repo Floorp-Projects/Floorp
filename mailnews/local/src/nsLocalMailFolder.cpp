@@ -3016,7 +3016,8 @@ nsMsgLocalMailFolder::MarkMsgsOnPop3Server(nsISupportsArray *aMessages, PRInt32 
         }
       }
       // ignore this header if not partial and leaveOnServer not set...
-      if (! (flags & MSG_FLAG_PARTIAL) && !leaveOnServer)
+      // or if we can't find the pop3 server.
+      if (!msgPop3Server || (! (flags & MSG_FLAG_PARTIAL) && !leaveOnServer))
         continue;
       // if marking deleted, ignore header if we're not deleting from
       // server when deleting locally.
