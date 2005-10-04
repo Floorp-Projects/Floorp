@@ -1649,9 +1649,14 @@ retry:
          * https://bugzilla.mozilla.org/show_bug.cgi?id=309242
          * https://bugzilla.mozilla.org/show_bug.cgi?id=309712
          * https://bugzilla.mozilla.org/show_bug.cgi?id=310993
+         *
+         * So without JSOPTION_XML, we never scan an XML comment or CDATA
+         * literal.  We always scan <! as the start of an HTML comment hack
+         * to end of line, used since Netscape 2 to hide script tag content
+         * from script-unaware browsers.
          */
         if ((ts->flags & TSF_OPERAND) &&
-            (JS_HAS_XML_OPTION(cx) || !(ts->flags & TSF_START_STATEMENT))) {
+            (JS_HAS_XML_OPTION(cx) || PeekChar(ts) != '!')) {
             /* Check for XML comment or CDATA section. */
             if (MatchChar(ts, '!')) {
                 INIT_TOKENBUF();

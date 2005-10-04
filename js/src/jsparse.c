@@ -1047,9 +1047,9 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         return NULL;
     PN_INIT_LIST(pn);
 
-    ts->flags |= TSF_OPERAND | TSF_START_STATEMENT;
+    ts->flags |= TSF_OPERAND;
     while ((tt = js_PeekToken(cx, ts)) > TOK_EOF && tt != TOK_RC) {
-        ts->flags &= ~(TSF_OPERAND | TSF_START_STATEMENT);
+        ts->flags &= ~TSF_OPERAND;
         pn2 = Statement(cx, ts, tc);
         if (!pn2) {
             if (ts->flags & TSF_EOF)
@@ -1091,7 +1091,7 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             PN_APPEND(pn, pn2);
         }
     }
-    ts->flags &= ~(TSF_OPERAND | TSF_START_STATEMENT);
+    ts->flags &= ~TSF_OPERAND;
     if (tt == TOK_ERROR)
         return NULL;
 
@@ -1265,9 +1265,9 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 
     CHECK_RECURSION();
 
-    ts->flags |= TSF_OPERAND | TSF_START_STATEMENT;
+    ts->flags |= TSF_OPERAND;
     tt = js_GetToken(cx, ts);
-    ts->flags &= ~(TSF_OPERAND | TSF_START_STATEMENT);
+    ts->flags &= ~TSF_OPERAND;
 
 #if JS_HAS_GETTER_SETTER
     if (tt == TOK_NAME) {
