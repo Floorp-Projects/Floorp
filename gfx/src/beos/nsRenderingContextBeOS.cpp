@@ -1231,8 +1231,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const char* aString, PRI
 		} 
 		else if (numChars > 0) 
 		{
-			float  size = mCurrentFont->StringWidth(&aString[utf8pos[start]], numBytes);
-			twWidth = NSToCoordRound(size * mP2T);
+			GetWidth(&aString[utf8pos[start]], numBytes, twWidth);
 		} 
 
 		// See if the text fits
@@ -1289,8 +1288,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetTextDimensions(const char* aString, PRI
 				}
 				else if (numChars > 0) 
 				{
-					float size = mCurrentFont->StringWidth(&aString[utf8pos[start]], numBytes);
-					twWidth = NSToCoordRound(size * mP2T);
+					GetWidth(&aString[utf8pos[start]], numBytes, twWidth);
 				}
 				width -= twWidth;
 				aNumCharsFit = start;
@@ -1509,7 +1507,7 @@ nsRenderingContextBeOS::GetBoundingMetrics(const char* aString, PRUint32 aLength
 	mCurrentFont->GetBoundingBoxesForStrings(&aString, 1, B_PRINTING_METRIC, &delta, &rect);
 
 
-	aBoundingMetrics.width = NSToCoordRound(mCurrentFont->StringWidth(aString) * mP2T);
+	GetWidth(aString, aLength, aBoundingMetrics.width );
 	
 	aBoundingMetrics.leftBearing = NSToCoordRound(rect.left * mP2T);
 	aBoundingMetrics.rightBearing = NSToCoordRound(rect.right * mP2T);
