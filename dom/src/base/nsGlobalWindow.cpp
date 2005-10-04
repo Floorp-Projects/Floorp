@@ -3443,7 +3443,31 @@ nsGlobalWindow::Focus()
 
   nsCOMPtr<nsIPresShell> presShell;
   if (mDocShell) {
-    mDocShell->GetEldestPresShell(getter_AddRefs(presShell));
+    // Don't look for a presshell if we're a root chrome window that's got
+    // about:blank loaded.  We don't want to focus our widget in that case.
+    PRBool lookForPresShell = PR_TRUE;
+    PRInt32 itemType = nsIDocShellTreeItem::typeContent;
+    nsCOMPtr<nsIDocShellTreeItem> treeItem(do_QueryInterface(mDocShell));
+    NS_ASSERTION(treeItem, "What happened?");
+    treeItem->GetItemType(&itemType);
+    if (itemType == nsIDocShellTreeItem::typeChrome &&
+        GetPrivateRoot() == NS_STATIC_CAST(nsIDOMWindowInternal*, this) &&
+        mDocument) {
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+      NS_ASSERTION(doc, "Bogus doc?");
+      nsIURI* ourURI = doc->GetDocumentURI();
+      PRBool isAbout;
+      if (ourURI && NS_SUCCEEDED(ourURI->SchemeIs("about", &isAbout)) &&
+          isAbout) {
+        nsCAutoString spec;
+        ourURI->GetSpec(spec);
+        lookForPresShell = !spec.EqualsLiteral("about:blank");
+      }
+    }
+      
+    if (lookForPresShell) {
+      mDocShell->GetEldestPresShell(getter_AddRefs(presShell));
+    }
   }
 
   nsresult result = NS_OK;
