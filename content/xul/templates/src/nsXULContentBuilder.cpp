@@ -1109,8 +1109,6 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
                                                         nsIContent** aContainer,
                                                         PRInt32* aNewIndexInContainer)
 {
-    NS_PRECONDITION(!aContainer == !aNewIndexInContainer,
-                    "Must ask for either both or neither");
     // Generate both 1) the template content for the current element,
     // and 2) recursive subcontent (if the current element refers to a
     // container resource in the RDF graph).
@@ -1136,9 +1134,7 @@ nsXULContentBuilder::CreateTemplateAndContainerContents(nsIContent* aElement,
         // The element has a resource; that means that it corresponds
         // to something in the graph, so we need to go to the graph to
         // create its contents.
-        PRInt32 contentContainerIndex = -1;
-        CreateContainerContents(aElement, resource, PR_FALSE, *aContainer ? nsnull : aContainer, 
-                                *aContainer ? &contentContainerIndex : aNewIndexInContainer);
+        CreateContainerContents(aElement, resource, PR_FALSE, aContainer, aNewIndexInContainer);
     }
 
     return NS_OK;
@@ -1542,22 +1538,7 @@ nsXULContentBuilder::CreateContents(nsIContent* aElement)
 
     NS_ASSERTION(IsElementInBuilder(aElement, this), "element not managed by this template builder");
 
-    // Now, regenerate both the template- and container-generated
-    // contents for the current element...
-    nsCOMPtr<nsIContent> container;
-    PRInt32 newIndex;
-    nsresult rv = CreateTemplateAndContainerContents(aElement, getter_AddRefs(container), &newIndex);
-
-    if (container) {
-        nsIDocument * doc = mRoot->GetCurrentDoc();
-        NS_ASSERTION(doc, "element has no document");
-        if (! doc)
-            return NS_ERROR_UNEXPECTED;
-
-        doc->ContentAppended(container, newIndex);
-    }
-
-    return rv;
+    return CreateTemplateAndContainerContents(aElement, nsnull /* don't care */, nsnull /* don't care */);
 }
 
 //----------------------------------------------------------------------
