@@ -309,6 +309,12 @@ RewrapIfDeepWrapper(JSContext *cx, JSObject *obj, jsval v, jsval *rval)
 #ifdef DEBUG_XPCNativeWrapper
       printf("Rewrapping for deep explicit wrapper\n");
 #endif
+      if (wrappedNative == XPCNativeWrapper::GetWrappedNative(cx, obj)) {
+        // Already wrapped, return the wrapper.
+        *rval = OBJECT_TO_JSVAL(obj);
+        return JS_TRUE;
+      }
+
       // |obj| is an explicit deep wrapper.  We want to construct another
       // explicit deep wrapper for |v|.  Just call XPCNativeWrapperCtor by hand
       // (passing null as the pre-created object it doesn't use anyway) so we
