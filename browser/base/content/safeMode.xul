@@ -66,8 +66,8 @@
 
   <label value="&safeModeDescription2.label;"/>
   <vbox>
-    <checkbox id="disableThemes"  label="&disableThemes.label;"  accesskey="&disableThemes.accesskey;" disabled="true"/>
-    <checkbox id="resetToolbars"  label="&resetToolbars.label;"  accesskey="&resetToolbars.accesskey;" disabled="true"/>
+    <checkbox id="disableThemes"  label="&disableThemes.label;"  accesskey="&disableThemes.accesskey;" hidden="true"/>
+    <checkbox id="resetToolbars"  label="&resetToolbars.label;"  accesskey="&resetToolbars.accesskey;"/>
     <checkbox id="resetBookmarks" label="&resetBookmarks.label;" accesskey="&resetBookmarks.accesskey;"/>
     <checkbox id="resetUserPrefs" label="&resetUserPrefs.label;" accesskey="&resetUserPrefs.accesskey;"/>
   </vbox>

@@ -40,7 +40,7 @@
 function restartApp() {
   var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
                              .getService(Components.interfaces.nsIAppStartup);
-  appStartup.quit(appStartup.eAttemptQuit | appStartup.eRestart);
+  appStartup.quit(appStartup.eForceQuit | appStartup.eRestart);
 }
 
 function clearAllPrefs() {
@@ -55,12 +55,27 @@ function restoreDefaultBookmarks() {
   prefBranch.setBoolPref("browser.bookmarks.restore_default_bookmarks", true);
 }
 
-function onOK() {
-  if (document.getElementById("resetUserPrefs").checked)
-    clearAllPrefs();
+function deleteLocalstore() {
+  const nsIDirectoryServiceContractID = "@mozilla.org/file/directory_service;1";
+  const nsIProperties = Components.interfaces.nsIProperties;
+  var directoryService =  Components.classes[nsIDirectoryServiceContractID]
+                                    .getService(nsIProperties);
+  var localstoreFile = directoryService.get("LStoreS", Components.interfaces.nsIFile);
+  if (localstoreFile.exists())
+    localstoreFile.remove(false);
+}
 
-  if (document.getElementById("resetBookmarks").checked)
-    restoreDefaultBookmarks();
+function onOK() {
+  try {
+    if (document.getElementById("resetUserPrefs").checked)
+      clearAllPrefs();
+    if (document.getElementById("resetBookmarks").checked)
+      restoreDefaultBookmarks();
+    if (document.getElementById("resetToolbars").checked)
+      deleteLocalstore();
+  } catch(e) {
+  }
 
   restartApp();
 }
+ 
