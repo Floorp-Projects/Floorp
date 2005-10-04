@@ -1636,12 +1636,22 @@ retry:
       case '<':
 #if JS_HAS_XML_SUPPORT
         /*
-         * XXX Use TSF_DIRTYLINE for now rather than TSF_DIRTYINPUT, because
-         * believe it or not, some .js files included via <script src="...">
-         * actually contain HTML comment-hiding hacks.
+         * After much testing, it's clear that Postel's advice to protocol
+         * designers ("be liberal in what you accept, and conservative in what
+         * you send") invites a natural-law repercussion for JS as "protocol":
+         *
+         * "If you are liberal in what you accept, others will utterly fail to
+         *  be conservative in what they send."
+         *
+         * Which means you will get <!-- comments to end of line in the middle
+         * of .js files, and after if conditions whose then statements are on
+         * the next line, and other wonders.  See at least the following bugs:
+         * https://bugzilla.mozilla.org/show_bug.cgi?id=309242
+         * https://bugzilla.mozilla.org/show_bug.cgi?id=309712
+         * https://bugzilla.mozilla.org/show_bug.cgi?id=310993
          */
         if ((ts->flags & TSF_OPERAND) &&
-            (JS_HAS_XML_OPTION(cx) || (ts->flags & TSF_DIRTYLINE))) {
+            (JS_HAS_XML_OPTION(cx) || !(ts->flags & TSF_START_STATEMENT))) {
             /* Check for XML comment or CDATA section. */
             if (MatchChar(ts, '!')) {
                 INIT_TOKENBUF();
@@ -1754,7 +1764,7 @@ retry:
         if (MatchChar(ts, '!')) {
             if (MatchChar(ts, '-')) {
                 if (MatchChar(ts, '-')) {
-                    ts->flags |= TSF_INHTMLCOMMENT;
+                    ts->flags |= TSF_IN_HTML_COMMENT;
                     goto skipline;
                 }
                 UngetChar(ts, '-');
@@ -1855,10 +1865,10 @@ retry:
 
 skipline:
             /* Optimize line skipping if we are not in an HTML comment. */
-            if (ts->flags & TSF_INHTMLCOMMENT) {
+            if (ts->flags & TSF_IN_HTML_COMMENT) {
                 while ((c = GetChar(ts)) != EOF && c != '\n') {
                     if (c == '-' && MatchChar(ts, '-') && MatchChar(ts, '>'))
-                        ts->flags &= ~(TSF_DIRTYINPUT | TSF_INHTMLCOMMENT);
+                        ts->flags &= ~TSF_IN_HTML_COMMENT;
                 }
             } else {
                 while ((c = GetChar(ts)) != EOF && c != '\n')
@@ -1992,13 +2002,7 @@ skipline:
             tt = TOK_ASSIGN;
         } else if (MatchChar(ts, c)) {
             if (PeekChar(ts) == '>' && !(ts->flags & TSF_DIRTYLINE)) {
-                /*
-                 * Clear TSF_DIRTYINPUT as well as TSF_INHTMLCOMMENT, just
-                 * in case another HTML comment hiding hack follows this one.
-                 * It's unusual to have more than one per <script> content,
-                 * but possible.
-                 */
-                ts->flags &= ~(TSF_DIRTYINPUT | TSF_INHTMLCOMMENT);
+                ts->flags &= ~TSF_IN_HTML_COMMENT;
                 goto skipline;
             }
             tt = TOK_DEC;
@@ -2067,7 +2071,7 @@ skipline:
 
 out:
     JS_ASSERT(tt != TOK_EOL);
-    ts->flags |= TSF_DIRTYLINE | TSF_DIRTYINPUT;
+    ts->flags |= TSF_DIRTYLINE;
 
 eol_out:
     if (!STRING_BUFFER_OK(&ts->tokenbuf))
