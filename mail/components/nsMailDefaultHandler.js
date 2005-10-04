@@ -1,3 +1,4 @@
+/* -*- indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -42,6 +43,7 @@ const nsICommandLineHandler    = Components.interfaces.nsICommandLineHandler;
 const nsIDOMWindowInternal     = Components.interfaces.nsIDOMWindowInternal;
 const nsIFactory               = Components.interfaces.nsIFactory;
 const nsISupportsString        = Components.interfaces.nsISupportsString;
+const nsIURILoader             = Components.interfaces.nsIURILoader;
 const nsIWindowMediator        = Components.interfaces.nsIWindowMediator;
 const nsIWindowWatcher         = Components.interfaces.nsIWindowWatcher;
 
@@ -57,7 +59,7 @@ function mayOpenURI(uri)
 
 function openURI(uri)
 {
-  if (!mayOpenURI())
+  if (!mayOpenURI(uri))
     throw Components.results.NS_ERROR_FAILURE;
 
   var io = Components.classes["@mozilla.org/network/io-service;1"]
@@ -65,6 +67,37 @@ function openURI(uri)
   var channel = io.newChannelFromURI(uri);
   var loader = Components.classes["@mozilla.org/uriloader;1"]
                          .getService(Components.interfaces.nsIURILoader);
+
+  // We cannot load a URI on startup asynchronously without protecting
+  // the startup
+
+  var loadgroup = Components.classes["@mozilla.org/network/load-group;1"]
+                            .createInstance(Components.interfaces.nsILoadGroup);
+
+  var appstartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                             .getService(Components.interfaces.nsIAppStartup);
+
+  var loadlistener = {
+    onStartRequest: function ll_start(aRequest, aContext) {
+      appstartup.enterLastWindowClosingSurvivalArea();
+    },
+
+    onStopRequest: function ll_stop(aRequest, aContext, aStatusCode) {
+      appstartup.exitLastWindowClosingSurvivalArea();
+    },
+
+    QueryInterface: function ll_QI(iid) {
+      if (iid.equals(nsISupports) ||
+          iid.equals(Components.interfaces.nsIRequestObserver) ||
+          iid.equals(Components.interfaces.nsISupportsWeakReference))
+        return this;
+
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    }
+  };
+
+  loadgroup.groupObserver = loadlistener;
+
   var listener = {
     onStartURIOpen: function(uri) { return false; },
     doContent: function(ctype, preferred, request, handler) { return false; },
@@ -75,6 +108,9 @@ function openURI(uri)
     getInterface: function(iid) {
       if (iid.equals(Components.interfaces.nsIURIContentListener))
         return this;
+
+      if (iid.equals(Components.interfaces.nsILoadGroup))
+        return loadgroup;
 
       throw Components.results.NS_ERROR_NO_INTERFACE;
     }
@@ -182,14 +218,14 @@ var nsMailDefaultHandler = {
       var i = 0;
       while (i < count) {
         var curarg = cmdLine.getArgument(i);
-        if (curarg.match(/^-/)) {
-          dump ("Warning: unrecognized command line flag " + curarg + "\n");
-          // To emulate the pre-nsICommandLine behavior, we ignore the
-          // argument after an unrecognized flag.
-          ++i;
-          // xxxbsmedberg: make me use the console service!
-        }
-        ++i;
+        if (!curarg.match(/^-/))
+          break;
+
+        dump ("Warning: unrecognized command line flag " + curarg + "\n");
+        // To emulate the pre-nsICommandLine behavior, we ignore the
+        // argument after an unrecognized flag.
+        i += 2;
+        // xxxbsmedberg: make me use the console service!
       }
 
       if (i < count) {
@@ -197,27 +233,20 @@ var nsMailDefaultHandler = {
 
         // mailto: URIs are frequently passed with spaces in them. They should be
         // escaped into %20, but we hack around bad clients, see bug 231032
-        if (uri.match.(/^mailto:/)) {
-          do {
-            ++i;
-            var testarg = cmdLine.getArgument(++i);
+        if (uri.match(/^mailto:/)) {
+          while (++i < count) {
+            var testarg = cmdLine.getArgument(i);
             if (testarg.match(/^-/))
               break;
 
             uri += " " + testarg;
-          } while (1);
+          }
         }
       }
     }
 
     if (!uri && cmdLine.preventDefault)
       return;
-
-    // xxxbsmedberg: This should be using nsIURILoader.openURI, which is what
-    // the 1.0 branch does (see nsAppShellService.cpp, revision 1.212.6.6).
-    // However, nsIURILoader.openURI is async, which means that the event loop
-    // sometimes is not run when it is supposed to, and other badness. Fix
-    // this for 1.1!
 
     if (!uri && cmdLine.state != nsICommandLine.STATE_INITIAL_LAUNCH) {
       try {
@@ -236,16 +265,19 @@ var nsMailDefaultHandler = {
       }
     }
 
-    var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                           .getService(nsIWindowWatcher);
+    if (uri) {
+      openURI(cmdLine.resolveURI(uri));
+      // XXX: add error-handling here! (error dialog, if nothing else)
+    } else {
+      var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(nsIWindowWatcher);
 
-    var argstring = Components.classes["@mozilla.org/supports-string;1"]
-                              .createInstance(nsISupportsString);
-    if (uri)
-      argstring.data = uri;
+      var argstring = Components.classes["@mozilla.org/supports-string;1"]
+                                .createInstance(nsISupportsString);
 
-    wwatch.openWindow(null, "chrome://messenger/content/", "_blank",
-                      "chrome,dialog=no,all", argstring);
+      wwatch.openWindow(null, "chrome://messenger/content/", "_blank",
+                        "chrome,dialog=no,all", argstring);
+    }
   },
 
   helpInfo : "",
