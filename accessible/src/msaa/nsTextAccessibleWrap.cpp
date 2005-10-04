@@ -50,7 +50,6 @@
 #include "nsIRenderingContext.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
-#include "nsIViewManager.h"
 #include "nsIWidget.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
@@ -220,26 +219,19 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
                                                    PRInt32* aX, PRInt32* aY, 
                                                    PRInt32* aWidth, PRInt32* aHeight) 
 {
-  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-  nsPresContext *presContext = presShell->GetPresContext();
+  nsPresContext *presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
   float t2p = presContext->TwipsToPixels();
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+  nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  nsIViewManager* viewManager = presShell->GetViewManager();
-  NS_ASSERTION(viewManager, "No view manager for pres shell");
-
-  nsCOMPtr<nsIWidget> widget;
-  viewManager->GetWidget(getter_AddRefs(widget));
+  nsIWidget *widget = frame->GetWindow();
+  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
   nsIRenderingContext *rendContext;
   rendContext = widget->GetRenderingContext();
-
+  
   nsPoint startPoint, endPoint;
   nsIFrame *startFrame = GetPointFromOffset(frame, presContext, rendContext, 
                                             aStartOffset, PR_TRUE, startPoint);

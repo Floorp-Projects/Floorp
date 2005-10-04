@@ -43,6 +43,7 @@
 #include "nsAccessibleWrap.h"
 #include "nsGUIEvent.h"
 #include "nsILink.h"
+#include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -60,8 +61,12 @@ nsBlockAccessible::nsBlockAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell
 NS_IMPL_ISUPPORTS_INHERITED0(nsBlockAccessible, nsAccessible)
 
 /* nsIAccessible accGetAt (in long x, in long y); */
-NS_IMETHODIMP nsBlockAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAccessible **_retval)
+NS_IMETHODIMP nsBlockAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty,
+                                                 nsIAccessible **aChildAtPoint)
 {
+  *aChildAtPoint = nsnull;
+  nsCOMPtr<nsIAccessible> childAtPoint;
+
   // We're going to find the child that contains coordinates (tx,ty)
   PRInt32 x,y,w,h;
   GetBounds(&x,&y,&w,&h);  // Get bounds for this accessible
@@ -69,8 +74,6 @@ NS_IMETHODIMP nsBlockAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAcce
   {
     // It's within this nsIAccessible, let's drill down
     nsCOMPtr<nsIAccessible> child;
-    nsCOMPtr<nsIAccessible> smallestChild;
-    PRInt32 smallestArea = -1;
     nsCOMPtr<nsIAccessible> next;
     GetFirstChild(getter_AddRefs(child));
     PRInt32 cx,cy,cw,ch;  // Child bounds
@@ -78,39 +81,42 @@ NS_IMETHODIMP nsBlockAccessible::GetChildAtPoint(PRInt32 tx, PRInt32 ty, nsIAcce
     while(child) {
       child->GetBounds(&cx,&cy,&cw,&ch);
       
-      // ok if there are multiple frames the contain the point 
-      // and they overlap then pick the smallest. We need to do this
-      // for text frames.
+      // if there are multiple accessibles the contain the point 
+      // and they overlap then pick the one with a frame that contans the point
       
       // For example, A point that's in block #2 is also in block #1, but we want to return #2:
-      //
       // [[block #1 is long wrapped text that continues to
       // another line]]  [[here is a shorter block #2]]
 
       if (tx >= cx && tx < cx + cw && ty >= cy && ty < cy + ch) 
       {
-        if (smallestArea == -1 || cw*ch < smallestArea) {
-          smallestArea = cw*ch;
-          smallestChild = child;
+        // See whether one of the frames for this accessible
+        // contains this screen point
+        if (!childAtPoint) {
+          // Default in case accessible doesn't have a frame such as
+          // tree items or combo box dropdown markers
+          childAtPoint = child;
+        }
+        nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(child));
+        if (accessNode) {
+          nsIFrame *frame = accessNode->GetFrame();
+          while (frame) {
+            if (frame->GetScreenRectExternal().Contains(tx, ty)) {
+              childAtPoint = child;
+              break; // Definitely in this accessible, since one of its frame matches the point
+            }
+            frame = frame->GetNextInFlow();
+          }
         }
       }
       child->GetNextSibling(getter_AddRefs(next));
       child = next;
     }
 
-    if (smallestChild != nsnull)
-    {
-      *_retval = smallestChild;
-      NS_ADDREF(*_retval);
-      return NS_OK;
-    }
-
-    *_retval = this;
-    NS_ADDREF(this);
-    return NS_OK;
+    *aChildAtPoint = childAtPoint ? childAtPoint : this;
+    NS_ADDREF(*aChildAtPoint);
   }
 
-  *_retval = nsnull;
   return NS_OK;
 }
 
