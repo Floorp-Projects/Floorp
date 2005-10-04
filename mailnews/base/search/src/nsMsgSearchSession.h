@@ -65,50 +65,44 @@ protected:
 
   nsCOMPtr <nsIMsgWindow> m_window;
 
-	nsresult Initialize();
+  nsresult Initialize();
   nsresult StartTimer();
-	nsresult TimeSlice (PRBool *aDone);
-	nsMsgSearchScopeTerm *GetRunningScope();
-	void			StopRunning();
-	nsresult BeginSearching();
-	nsresult BuildUrlQueue ();
-	nsresult AddUrl(const char *url);
-	nsresult SearchWOUrls ();
-	nsresult GetNextUrl();
+  nsresult TimeSlice (PRBool *aDone);
+  nsMsgSearchScopeTerm *GetRunningScope();
+  void			StopRunning();
+  nsresult BeginSearching();
+  nsresult DoNextSearch();
+  nsresult BuildUrlQueue ();
+  nsresult AddUrl(const char *url);
+  nsresult SearchWOUrls ();
+  nsresult GetNextUrl();
   nsresult NotifyListenersDone(nsresult status);
   void EnableFolderNotifications(PRBool aEnable);
   void ReleaseFolderDBRef();
 
-	nsMsgSearchScopeTermArray m_scopeList;
-	nsCOMPtr <nsISupportsArray> m_termList;
-    nsCOMPtr <nsISupportsArray> m_listenerList;
+  nsMsgSearchScopeTermArray m_scopeList;
+  nsCOMPtr <nsISupportsArray> m_termList;
+  nsCOMPtr <nsISupportsArray> m_listenerList;
 
-	nsMsgResultArray m_resultList;
+  nsMsgResultArray m_resultList;
 
-	void DestroyTermList ();
-	void DestroyScopeList ();
-	void DestroyResultList ();
-
+  void DestroyTermList ();
+  void DestroyScopeList ();
+  void DestroyResultList ();
 
   static void TimerCallback(nsITimer *aTimer, void *aClosure);
-	// support for searching multiple scopes in serial
-	nsresult TimeSliceSerial (PRBool *aDone);
-	nsresult TimeSliceParallel ();
+  // support for searching multiple scopes in serial
+  nsresult TimeSliceSerial (PRBool *aDone);
+  nsresult TimeSliceParallel ();
 
-	nsMsgSearchAttribValue m_sortAttribute;
-	PRBool m_descending;
-	// support for searching multiple scopes in parallel
-	PRBool m_parallel;
-	PRInt32 m_idxRunningScope;
-	nsMsgSearchScopeTermArray m_parallelScopes;
-	nsMsgSearchType m_searchType;
-	void *m_pSearchParam;
-	PRBool m_handlingError;
+  nsMsgSearchAttribValue m_sortAttribute;
+  PRInt32 m_idxRunningScope;
+  nsMsgSearchType m_searchType;
+  PRBool m_handlingError;
+  PRInt32 m_urlQueueIndex;
   nsCStringArray m_urlQueue;
   nsCOMPtr <nsITimer> m_backgroundTimer;
   PRBool m_searchPaused;
-
-
 };
 
 #endif

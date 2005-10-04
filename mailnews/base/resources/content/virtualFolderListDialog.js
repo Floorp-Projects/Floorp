@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 var gFolderPickerTree = null;
-var gServerURI;
 
 function onLoad()
 {
@@ -57,19 +56,6 @@ function onLoad()
         realFolder.setInVFEditSearchScope(true, false);
     }
   }
-
-  var serverMenu = document.getElementById("serverMenu"); 
-  var menuitems = serverMenu.getElementsByTagName("menuitem");
-
-  if (window.arguments[0].serverURI)
-  {
-    
-    reRootFolderPicker(window.arguments[0].serverURI);
-    var menuitems = serverMenu.getElementsByAttribute("id", gServerURI);
-    serverMenu.selectedItem = menuitems[0];
-  }
-  else 
-    reRootFolderPicker(menuitems[1]);     
 }
 
 function onUnLoad()
@@ -86,19 +72,6 @@ function onOK()
 function onCancel()
 {
   // onunload will clear out the folder attributes we changed
-}
-
-function onServerClick(event)
-{  
-  // re-root the folder list based on the newly chosen account...
-  var item = event.target;
-  reRootFolderPicker(item.id); 
-}
-
-function reRootFolderPicker(aServerURI)
-{
-  gServerURI = aServerURI; 
-  gFolderPickerTree.setAttribute('ref', gServerURI);
 }
 
 function addFolderToSearchListString(aFolder, aCurrentSearchURIString)
@@ -124,18 +97,22 @@ function generateFoldersToSearchList()
 {
   var uriSearchString = "";
   
-  var rootFolder  = GetMsgFolderFromUri(gServerURI, false); 
-
-  if (rootFolder)
+  var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+  var allServers = accountManager.allServers;
+  var numServers = allServers.Count();
+  for (var index = 0; index < numServers; index++)
   {
-    uriSearchString = processSearchSettingForFolder(rootFolder, uriSearchString);
-
-    var allFolders = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    rootFolder.ListDescendents(allFolders);
-    var numFolders = allFolders.Count();
-    for (var folderIndex = 0; folderIndex < numFolders; folderIndex++)
-      uriSearchString = processSearchSettingForFolder(allFolders.GetElementAt(folderIndex).QueryInterface(Components.interfaces.nsIMsgFolder), uriSearchString);
-  }
+    var rootFolder  = allServers.GetElementAt(index).QueryInterface(Components.interfaces.nsIMsgIncomingServer).rootFolder;
+    if (rootFolder)
+    {
+      uriSearchString = processSearchSettingForFolder(rootFolder, uriSearchString);
+      var allFolders = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+      rootFolder.ListDescendents(allFolders);
+      var numFolders = allFolders.Count();
+      for (var folderIndex = 0; folderIndex < numFolders; folderIndex++)
+        uriSearchString = processSearchSettingForFolder(allFolders.GetElementAt(folderIndex).QueryInterface(Components.interfaces.nsIMsgFolder), uriSearchString);
+    }
+  } // for each account
 
   return uriSearchString;
 }
