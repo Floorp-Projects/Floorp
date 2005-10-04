@@ -3054,7 +3054,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     NS_ENSURE_FALSE(messageStr.IsEmpty(), NS_ERROR_FAILURE);
     // Note: For now, display an alert instead of an error page if we have no
     // URI object. Missing URI objects are handled badly by session history.
-    if (mUseErrorPages && aURI) {
+    if (mUseErrorPages && aURI && aFailedChannel) {
         // Display an error page
         LoadErrorPage(aURI, aURL, error.get(), messageStr.get(),
                       aFailedChannel);
