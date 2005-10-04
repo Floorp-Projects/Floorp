@@ -1683,21 +1683,6 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
 #define MAX_INLINE_CALL_COUNT 1000
 
 JSBool
-ObjectInProtoChain(JSContext *cx, JSObject *maybeproto, JSObject *obj)
-{
-    JS_ASSERT(maybeproto && obj != maybeproto);
-
-    /* Note: This loop purposely skips checking obj != maybeproto. */
-    do {
-        obj = OBJ_GET_PROTO(cx, obj);
-        if (maybeproto == obj)
-            return JS_TRUE;
-    } while (obj);
-
-    return JS_FALSE;
-}
-
-JSBool
 js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 {
     JSRuntime *rt;
@@ -2364,9 +2349,28 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             if (prop)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
 
-            /* If the id was deleted, or found in a prototype, skip it. */
-            if (!prop || (obj != obj2 && ObjectInProtoChain(cx, obj2, obj)))
+            /*
+             * If the id was deleted, or found in a prototype or an unrelated
+             * object (specifically, not in an inner object for obj), skip it.
+             * This means that OBJ_LOOKUP_PROPERTY implementations must return
+             * an object either further on the prototype chain, or related by
+             * the JSExtendedClass.outerObject optional hook.
+             */
+            if (!prop)
                 goto enum_next_property;
+            if (obj != obj2) {
+                cond = JS_FALSE;
+                clasp = OBJ_GET_CLASS(cx, obj2);
+                if (clasp->flags & JSCLASS_IS_EXTENDED) {
+                    JSExtendedClass *xclasp;
+
+                    xclasp = (JSExtendedClass *) clasp;
+                    cond = xclasp->outerObject &&
+                           xclasp->outerObject(cx, obj2) == obj;
+                }
+                if (!cond)
+                    goto enum_next_property;
+            }
 
 #if JS_HAS_XML_SUPPORT
             if (foreach) {
