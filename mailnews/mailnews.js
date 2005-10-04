@@ -430,6 +430,10 @@ pref("mail.server.default.max_articles", 500);
 pref("mail.server.default.notify.on", true);
 pref("mail.server.default.mark_old_read", false);
 pref("mail.server.default.empty_trash_on_exit", false);
+// 0 = Keep Dupes, leave them alone
+// 1 = delete dupes
+// 2 = Move Dupes to trash
+// 3 = Mark Dupes as Read
 pref("mail.server.default.dup_action", 0);
 
 pref("mail.server.default.using_subscription", true);
