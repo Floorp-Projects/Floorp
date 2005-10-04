@@ -1332,8 +1332,6 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
         (do_GetService(NS_APPSTARTUP_CONTRACTID));
       NS_ENSURE_TRUE(appStartup, NS_ERROR_FAILURE);
 
-      appStartup->EnterLastWindowClosingSurvivalArea();
-
       nsCOMPtr<nsIDOMWindow> newWindow;
       rv = windowWatcher->OpenWindow(nsnull,
                                      kProfileManagerURL,
@@ -1341,8 +1339,6 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
                                      "centerscreen,chrome,modal,titlebar",
                                      ioParamBlock,
                                      getter_AddRefs(newWindow));
-
-      appStartup->ExitLastWindowClosingSurvivalArea();
 
       NS_ENSURE_SUCCESS_LOG(rv, rv);
 
@@ -2165,9 +2161,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         (do_GetService(NS_APPSTARTUP_CONTRACTID));
       NS_ENSURE_TRUE(appStartup, 1);
 
-      // So we can open and close windows during startup
-      appStartup->EnterLastWindowClosingSurvivalArea();
-
       // Profile Migration
       if (gAppData->flags & NS_XRE_ENABLE_PROFILE_MIGRATOR && gDoMigration) {
         gDoMigration = PR_FALSE;
@@ -2271,61 +2264,38 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         rv = cmdLine->Run();
         NS_ENSURE_SUCCESS_LOG(rv, 1);
 
-        nsCOMPtr<nsIWindowMediator> windowMediator
-          (do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
-        NS_ENSURE_SUCCESS(rv, 1);
+#ifdef MOZ_ENABLE_XREMOTE
+        // if we have X remote support, start listening for requests on the
+        // proxy window.
+        nsCOMPtr<nsIRemoteService> remoteService;
+        remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
+        if (remoteService)
+          remoteService->Startup(gAppData->name, nsnull);
+#endif /* MOZ_ENABLE_XREMOTE */
 
-        // Make sure there exists at least 1 window.
-        nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-        rv = windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator));
-        NS_ENSURE_SUCCESS(rv, 1);
+        // enable win32 DDE responses and Mac appleevents responses
+        nativeApp->Enable();
 
-        PRBool more;
-        windowEnumerator->HasMoreElements(&more);
-        if (!more) {
-          // We didn't open any windows. This is normally not a good thing,
-          // so we force console logging to file.
+        NS_TIMELINE_ENTER("appStartup->Run");
+        rv = appStartup->Run();
+        NS_TIMELINE_LEAVE("appStartup->Run");
+        if (NS_FAILED(rv)) {
+          NS_ERROR("failed to run appstartup");
           gLogConsoleErrors = PR_TRUE;
         }
-        else {
-#ifndef XP_MACOSX
-          appStartup->ExitLastWindowClosingSurvivalArea();
-#endif
 
-#ifdef MOZ_ENABLE_XREMOTE
-          // if we have X remote support and we have our one window up and
-          // running start listening for requests on the proxy window.
-          nsCOMPtr<nsIRemoteService> remoteService;
-          remoteService = do_GetService("@mozilla.org/toolkit/remote-service;1");
-          if (remoteService)
-            remoteService->Startup(gAppData->name, nsnull);
-#endif /* MOZ_ENABLE_XREMOTE */
-
-          // enable win32 DDE responses and Mac appleevents responses
-          nativeApp->Enable();
-
-          // Start main event loop
-          NS_TIMELINE_ENTER("appStartup->Run");
-          rv = appStartup->Run();
-          NS_TIMELINE_LEAVE("appStartup->Run");
-          if (NS_FAILED(rv)) {
-            NS_ERROR("failed to run appstartup");
-            gLogConsoleErrors = PR_TRUE;
-          }
-
-          // Check for an application initiated restart.  This is one that
-          // corresponds to nsIAppStartup.quit(eRestart)
-          if (rv == NS_SUCCESS_RESTART_APP) {
-            needsRestart = PR_TRUE;
-            appInitiatedRestart = PR_TRUE;
-          }
-
-#ifdef MOZ_ENABLE_XREMOTE
-          // shut down the x remote proxy window
-          if (remoteService)
-            remoteService->Shutdown();
-#endif /* MOZ_ENABLE_XREMOTE */
+        // Check for an application initiated restart.  This is one that
+        // corresponds to nsIAppStartup.quit(eRestart)
+        if (rv == NS_SUCCESS_RESTART_APP) {
+          needsRestart = PR_TRUE;
+          appInitiatedRestart = PR_TRUE;
         }
+
+#ifdef MOZ_ENABLE_XREMOTE
+        // shut down the x remote proxy window
+        if (remoteService)
+          remoteService->Shutdown();
+#endif /* MOZ_ENABLE_XREMOTE */
 
 #ifdef MOZ_TIMELINE
         // Make sure we print this out even if timeline is runtime disabled

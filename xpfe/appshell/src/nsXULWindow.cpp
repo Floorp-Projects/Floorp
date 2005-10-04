@@ -538,17 +538,19 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       mWindow = nsnull;
    }
 
-   /* Inform appstartup we've destroyed this window and it could
-      quit now if it wanted. This must happen at least after mDocShell
-      is destroyed, because onunload handlers fire then, and those being
-      script, anything could happen. A new window could open, even.
-      See bug 130719. */
-   nsCOMPtr<nsIObserverService> obssvc =
-     do_GetService("@mozilla.org/observer-service;1");
-   NS_ASSERTION(obssvc, "Couldn't get observer service?");
+   if (!mIsHiddenWindow) {
+     /* Inform appstartup we've destroyed this window and it could
+        quit now if it wanted. This must happen at least after mDocShell
+        is destroyed, because onunload handlers fire then, and those being
+        script, anything could happen. A new window could open, even.
+        See bug 130719. */
+     nsCOMPtr<nsIObserverService> obssvc =
+       do_GetService("@mozilla.org/observer-service;1");
+     NS_ASSERTION(obssvc, "Couldn't get observer service?");
 
-   if (obssvc)
-     obssvc->NotifyObservers(nsnull, "xul-window-destroyed", nsnull);
+     if (obssvc)
+       obssvc->NotifyObservers(nsnull, "xul-window-destroyed", nsnull);
+   }
 
    return NS_OK;
 }

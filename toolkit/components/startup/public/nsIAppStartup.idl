@@ -51,7 +51,9 @@ interface nsIAppStartup : nsISupports
 
     /**
      * Runs an application event loop: normally the main event pump which
-     * defines the lifetime of the application.
+     * defines the lifetime of the application. If there are no windows open
+     * and no outstanding calls to enterLastWindowClosingSurvivalArea this
+     * method will exit immediately.
      *
      * @returnCode NS_SUCCESS_RESTART_APP
      *             This return code indicates that the application should be
@@ -60,12 +62,10 @@ interface nsIAppStartup : nsISupports
     void run();
 
     /**
-     * During application startup (and at other times!) we may temporarily
-     * encounter a situation where all application windows will be closed
-     * but we don't want to take this as a signal to quit the app. Bracket
-     * the code where the last window could close with these.
-     * (And at application startup, on platforms that don't normally quit
-     * when the last window has closed, call Enter once, but not Exit)
+     * There are situations where all application windows will be
+     * closed but we don't want to take this as a signal to quit the
+     * app. Bracket the code where the last window could close with
+     * these.
      */
     void enterLastWindowClosingSurvivalArea();
     void exitLastWindowClosingSurvivalArea();
