@@ -223,12 +223,12 @@ public:
   inline void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull)
 		{
 		if( aPoint == nsnull ) {
-		  event.point.x = 0;
-		  event.point.y = 0;
+		  event.refPoint.x = 0;
+		  event.refPoint.y = 0;
 		  }
 		else {
-		  event.point.x = aPoint->x;
-		  event.point.y = aPoint->y;
+		  event.refPoint.x = aPoint->x;
+		  event.refPoint.y = aPoint->y;
 		  }
 		event.widget = this;
 		event.time = PR_IntervalNow();
