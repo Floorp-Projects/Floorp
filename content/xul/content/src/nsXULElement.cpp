@@ -679,8 +679,11 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
 
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheSets);
 
+    // XXX sXBL/XBL2 issue! Owner or current document?
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(GetOwnerDoc());
+
     nsIScriptContext *context;
-    if (mPrototype) {
+    if (mPrototype && xuldoc) {
         // It'll be shared among the instances of the prototype.
         // Use null for the scope object when precompiling shared
         // prototype scripts.
@@ -693,10 +696,6 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
         // keeps the global object alive, so if we use this document's
         // global object, we'll be putting something in the prototype
         // that protects this document's global object from GC.
-        // XXX sXBL/XBL2 issue! Owner or current document?
-        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(GetOwnerDoc());
-        NS_ENSURE_TRUE(xuldoc, NS_ERROR_UNEXPECTED);
-
         nsCOMPtr<nsIXULPrototypeDocument> protodoc;
         rv = xuldoc->GetMasterPrototype(getter_AddRefs(protodoc));
         NS_ENSURE_SUCCESS(rv, rv);
