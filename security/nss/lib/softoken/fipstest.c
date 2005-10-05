@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: fipstest.c,v 1.9 2005/10/05 16:31:01 glen.beasley%sun.com Exp $ */
+/* $Id: fipstest.c,v 1.10 2005/10/05 17:58:01 wtchang%redhat.com Exp $ */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
                         /*              DES-CBC, DES3-ECB, DES3-CBC, RSA */
@@ -571,7 +571,7 @@ sftk_fips_AES_PowerUpSelfTest( int aes_key_size )
     static const PRUint8 aes_known_key[] = 
         { "AES-128 RIJNDAELLEADNJIR 821-SEA" };
 
-    /* AES-CBC Known Initialization Vector 128-bits. */
+    /* AES-CBC Known Initialization Vector (128-bits). */
     static const PRUint8 aes_cbc_known_initialization_vector[] = 
         { "SecurityytiruceS" };
 
