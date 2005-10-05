@@ -187,7 +187,7 @@ NS_IMETHODIMP nsWindow::CaptureRollupEvents( nsIRollupListener * aListener, PRBo
 		/* Menus+submenus have the same parent. If the parent has mLastMenu set and realized, then use its region as "infront" */
 		/* If not, then this widget ( mWidget ) becomes the mLastMenu and gets recorded into the parent */
 		/* Different windows have different mLastMenu's */
-		if( mWindowType == eWindowType_popup && !( PtWidgetFlags( gMenuRegion ) & Pt_REALIZED ) ) {
+		if( mWindowType == eWindowType_popup && !( PtWidgetFlags( gMenuRegion ) & Pt_REALIZED ) && mParent ) {
 
 			PtWidget_t *pw = ((nsWindow*)mParent)->mLastMenu;
 
