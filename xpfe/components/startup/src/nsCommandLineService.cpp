@@ -215,8 +215,13 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 NS_IMETHODIMP
 nsCmdLineService::GetURLToLoad(char ** aResult)
 {
-
-   return GetCmdLineValue("-url", aResult);
+  nsresult rv = GetCmdLineValue("-url", aResult);
+  if (NS_SUCCEEDED(rv) && *aResult && !strncmp(*aResult, "chrome:", 7)) {
+    nsMemory::Free(*aResult);
+    *aResult = nsnull;
+    return NS_ERROR_INVALID_ARG;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
