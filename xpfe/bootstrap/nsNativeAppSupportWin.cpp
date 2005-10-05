@@ -1814,7 +1814,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow, nsIDOMWi
     // first see if there is a url
     nsXPIDLCString arg;
     rv = args->GetURLToLoad(getter_Copies(arg));
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) return rn;
 
     if (!arg.IsEmpty() ) {
       // Launch browser.
