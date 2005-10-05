@@ -3660,6 +3660,25 @@ XMLElementOrList(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
     return pn;
 }
 
+static JSParseNode *
+XMLElementOrListRoot(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
+                     JSBool allowList)
+{
+    uint32 oldopts;
+    JSParseNode *pn;
+
+    /*
+     * Force XML support to be enabled so that comments and CDATA literals
+     * are recognized, instead of <! followed by -- starting an HTML comment
+     * to end of line (used in script tags to hide content from old browsers
+     * that don't recognize <script>).
+     */
+    oldopts = JS_SetOptions(cx, cx->options | JSOPTION_XML);
+    pn = XMLElementOrList(cx, ts, tc, allowList);
+    JS_SetOptions(cx, oldopts);
+    return pn;
+}
+
 JS_FRIEND_API(JSParseNode *)
 js_ParseXMLTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
                        JSBool allowList)
@@ -3701,7 +3720,7 @@ js_ParseXMLTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
                                     JSMSG_BAD_XML_MARKUP);
         pn = NULL;
     } else {
-        pn = XMLElementOrList(cx, ts, &tc, allowList);
+        pn = XMLElementOrListRoot(cx, ts, &tc, allowList);
     }
 
     ts->flags &= ~TSF_XMLONLYMODE;
@@ -3990,7 +4009,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 
       case TOK_XMLSTAGO:
-        pn = XMLElementOrList(cx, ts, tc, JS_TRUE);
+        pn = XMLElementOrListRoot(cx, ts, tc, JS_TRUE);
         if (!pn)
             return NULL;
         notsharp = JS_TRUE;     /* XXXbe could be sharp? */
