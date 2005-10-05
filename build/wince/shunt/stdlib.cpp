@@ -41,6 +41,10 @@
 #include <stdio.h>
 #include "mozce_internal.h"
 
+#define _MAX_FNAME          256
+#define _MAX_DIR            _MAX_FNAME
+#define _MAX_EXT            _MAX_FNAME
+
 
 extern "C" {
 #if 0
@@ -61,9 +65,10 @@ MOZCE_SHUNT_API char *mozce_fullpath(char *absPath, const char *relPath, size_t 
 
     if (relPath[0] != '\\') 
     {
-        unsigned short dir[MAX_PATH];
+        int i;
+                unsigned short dir[MAX_PATH];
         GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
-        for (int i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
+        for (i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
         
         dir[i + 1] = TCHAR('\0');
         
@@ -102,11 +107,11 @@ MOZCE_SHUNT_API void mozce_splitpath(const char* inPath, char* outDrive, char* o
 
     if(NULL != inPath && '\0' != *inPath)
     {
-		char* dup = (char*) malloc(strlen(inPath));
-		if(NULL != dup)
+                char* dup = (char*) malloc(strlen(inPath));
+                if(NULL != dup)
         {
             strcpy(dup, inPath);
-			/*
+                        /*
             **  Change all forward slashes to back.
             */
             char* convert = dup;

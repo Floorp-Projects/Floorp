@@ -48,7 +48,7 @@ extern "C" {
 #endif
 
 
-MOZCE_SHUNT_API int mozce_stat(const char* inPath, struct stat* outStats)
+MOZCE_SHUNT_API int mozce_stat(const char* inPath, struct mozce_stat* outStats)
 {
     MOZCE_PRECHECK
         

@@ -44,6 +44,8 @@
 
 #include "mozce_internal.h"
 
+#define USE_NC_LOGGING
+
 #ifdef USE_NC_LOGGING
 
 
@@ -77,17 +79,33 @@ static bool wsa_init()
   WSADATA wd;
   BOOL bc=true;
   
-  if (0 != WSAStartup(0x101, &wd)) goto error;
+  if (0 != WSAStartup(0x101, &wd)) 
+  {
+	  MessageBox(0, L"WSAStartup failed", L"ERROR", 0);
+  	  goto error;
+  }
   wsa_socket=socket(PF_INET, SOCK_DGRAM, 0);
-  if (wsa_socket == INVALID_SOCKET) goto error;
+  if (wsa_socket == INVALID_SOCKET)
+  {
+	  MessageBox(0, L"socket failed", L"ERROR", 0);
+	  goto error;
+  }
   r=setsockopt(wsa_socket, SOL_SOCKET, SO_BROADCAST, (char*)&bc,
                sizeof(bc));
-  if (r!=0) goto error;
+  if (r!=0)
+  {
+	MessageBox(0, L"setsockopt failed", L"ERROR", 0);
+	goto error;
+  }
+
   if (wsa_bind(9998)) return true; // bind to default port.
- error:
+
+  MessageBox(0, L"Can Not Bind To Port", L"ERROR", 0);
+
+error:
   if (wsa_socket != INVALID_SOCKET) closesocket(wsa_socket);
   return false;
-  
+
 }
 
 // can be called externally to select a different port for operations
@@ -104,7 +122,7 @@ static void wsa_send(const char *x)
 }
 
 // format input, convert to 8-bit and send.
-void nclog (const char *fmt, ...)
+int nclog (const char *fmt, ...)
 {
   va_list vl;
   va_start(vl,fmt);
@@ -112,7 +130,7 @@ void nclog (const char *fmt, ...)
   sprintf(buf,fmt,vl);
   wsa_init();
   wsa_send(buf);
-  
+  return 0;
 }
 
 void nclograw(const char* data, long length)

@@ -40,7 +40,7 @@
 
 #include "mozce_internal.h"
 
-int w2a_buffer(LPCWSTR inWideString, int inWideChars, LPSTR outACPString, int inACPChars)
+int w2a_buffer(const unsigned short* inWideString, int inWideChars, char* outACPString, int inACPChars)
 {
     int retval = 0;
 
@@ -76,7 +76,7 @@ int w2a_buffer(LPCWSTR inWideString, int inWideChars, LPSTR outACPString, int in
 }
 
 
-LPSTR w2a_malloc(LPCWSTR inWideString, int inWideChars, int* outACPChars)
+char* w2a_malloc(const unsigned short* inWideString, int inWideChars, int* outACPChars)
 {
     LPSTR retval = NULL;
 
