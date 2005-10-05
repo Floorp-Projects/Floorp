@@ -34,8 +34,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef MOZCE_DEFS
-#define MOZCE_DEFS
+#ifndef _MOZCE_DEFS
+#define _MOZCE_DEFS
+
+#ifdef MOZCE_SHUNT_EXPORTS
+#define MOZCE_SHUNT_API __declspec(dllexport)
+#else
+#define MOZCE_SHUNT_API __declspec(dllimport)
+#endif
 
 //#define USE_NC_LOGGING 1
 
@@ -59,50 +65,239 @@
 #undef max
 #endif
 
-#ifdef MOZCE_SHUNT_EXPORTS
-#define MOZCE_SHUNT_API __declspec(dllexport)
-#else
-#define MOZCE_SHUNT_API __declspec(dllimport)
-#endif
-
-
 //////////////////////////////////////////////////////////
 // Various Definations
 //////////////////////////////////////////////////////////
 
 // for errors.h
-#define EINVAL              __LINE__
-#define EAGAIN              __LINE__
-#define EINTR               __LINE__
-#define ENOMEM              __LINE__
-#define EBADF               __LINE__
-#define EFAULT              __LINE__
-#define EACCES              __LINE__
-#define EIO                 __LINE__
-#define ENOTDIR             __LINE__
-#define EDEADLOCK           __LINE__
-#define EFBIG               __LINE__
-#define ENOSPC              __LINE__
-#define EPIPE               __LINE__
-#define ESPIPE              __LINE__
-#define EISDIR              __LINE__
-#define ENOENT              __LINE__
-#define EROFS               __LINE__
-#define EBUSY               __LINE__
-#define EXDEV               __LINE__
-#define EEXIST              __LINE__
-#define ENFILE              __LINE__
-#define EDEADLK             __LINE__
-#define ERANGE              __LINE__
-#define EPERM               __LINE__
-#define ENOSYS              __LINE__
+
+#ifdef EPERM
+#undef EPERM
+#endif
+#define	EPERM		1	/* Operation not permitted */
+
+#ifdef ENOENT
+#undef ENOENT
+#endif
+#define	ENOENT		2	/* No such file or directory */
+
+#ifdef ESRCH
+#undef ESRCH
+#endif
+#define	ESRCH		3	/* No such process */
+
+#ifdef EINTR
+#undef EINTR
+#endif
+#define	EINTR		4	/* Interrupted system call */
+
+#ifdef EIO
+#undef EIO
+#endif
+#define	EIO		5	/* Input/output error */
+
+#ifdef ENXIO
+#undef ENXIO
+#endif
+#define	ENXIO		6	/* Device not configured */
+
+#ifdef E2BIG
+#undef E2BIG
+#endif
+#define	E2BIG		7	/* Argument list too long */
+
+#ifdef ENOEXEC
+#undef ENOEXEC
+#endif
+#define	ENOEXEC		8	/* Exec format error */
+
+#ifdef EBADF
+#undef EBADF
+#endif
+#define	EBADF		9	/* Bad file descriptor */
+
+#ifdef ECHILD
+#undef ECHILD
+#endif
+#define	ECHILD		10	/* No child processes */
+
+#ifdef EDEADLK
+#undef EDEADLK
+#endif
+#define	EDEADLK		11	/* Resource deadlock avoided */
+
+#ifdef was
+#undef was
+#endif
+				/* 11 was EAGAIN */
+
+#ifdef ENOMEM
+#undef ENOMEM
+#endif
+#define	ENOMEM		12	/* Cannot allocate memory */
+
+#ifdef EACCES
+#undef EACCES
+#endif
+#define	EACCES		13	/* Permission denied */
+
+#ifdef EFAULT
+#undef EFAULT
+#endif
+#define	EFAULT		14	/* Bad address */
+
+#ifdef ENOTBLK
+#undef ENOTBLK
+#endif
+#define	ENOTBLK		15	/* Block device required */
+
+#ifdef EBUSY
+#undef EBUSY
+#endif
+#define	EBUSY		16	/* Device busy */
+
+#ifdef EEXIST
+#undef EEXIST
+#endif
+#define	EEXIST		17	/* File exists */
+
+#ifdef EXDEV
+#undef EXDEV
+#endif
+#define	EXDEV		18	/* Cross-device link */
+
+#ifdef ENODEV
+#undef ENODEV
+#endif
+#define	ENODEV		19	/* Operation not supported by device */
+
+#ifdef ENOTDIR
+#undef ENOTDIR
+#endif
+#define	ENOTDIR		20	/* Not a directory */
+
+#ifdef EISDIR
+#undef EISDIR
+#endif
+#define	EISDIR		21	/* Is a directory */
+
+#ifdef EINVAL
+#undef EINVAL
+#endif
+#define	EINVAL		22	/* Invalid argument */
+
+#ifdef ENFILE
+#undef ENFILE
+#endif
+#define	ENFILE		23	/* Too many open files in system */
+
+#ifdef EMFILE
+#undef EMFILE
+#endif
+#define	EMFILE		24	/* Too many open files */
+
+#ifdef ENOTTY
+#undef ENOTTY
+#endif
+#define	ENOTTY		25	/* Inappropriate ioctl for device */
+
+#ifdef ETXTBSY
+#undef ETXTBSY
+#endif
+#define	ETXTBSY		26	/* Text file busy */
+
+#ifdef EFBIG
+#undef EFBIG
+#endif
+#define	EFBIG		27	/* File too large */
+
+#ifdef ENOSPC
+#undef ENOSPC
+#endif
+#define	ENOSPC		28	/* No space left on device */
+
+#ifdef ESPIPE
+#undef ESPIPE
+#endif
+#define	ESPIPE		29	/* Illegal seek */
+
+#ifdef EROFS
+#undef EROFS
+#endif
+#define	EROFS		30	/* Read-only file system */
+
+#ifdef EMLINK
+#undef EMLINK
+#endif
+#define	EMLINK		31	/* Too many links */
+
+#ifdef EPIPE
+#undef EPIPE
+#endif
+#define	EPIPE		32	/* Broken pipe */
+
+#ifdef EDOM
+#undef EDOM
+#endif
+#define	EDOM		33	/* Numerical argument out of domain */
+
+#ifdef ERANGE
+#undef ERANGE
+#endif
+#define	ERANGE		34	/* Result too large */
+
+#ifdef EAGAIN
+#undef EAGAIN
+#endif
+#define	EAGAIN		35	/* Resource temporarily unavailable */
+
+// in winsock.h
+
+#ifdef EBADRPC
+#undef EBADRPC
+#endif
+#define	EBADRPC		72	/* RPC struct is bad */
+
+#ifdef ERPCMISMATCH
+#undef ERPCMISMATCH
+#endif
+#define	ERPCMISMATCH	73	/* RPC version wrong */
+
+#ifdef EPROGUNAVAIL
+#undef EPROGUNAVAIL
+#endif
+#define	EPROGUNAVAIL	74	/* RPC prog. not avail */
+
+#ifdef EPROGMISMATCH
+#undef EPROGMISMATCH
+#endif
+#define	EPROGMISMATCH	75	/* Program version wrong */
+
+#ifdef EPROCUNAVAIL
+#undef EPROCUNAVAIL
+#endif
+#define	EPROCUNAVAIL	76	/* Bad procedure for program */
+
+#ifdef ENOLCK
+#undef ENOLCK
+#endif
+#define	ENOLCK		77	/* No locks available */
+
+#ifdef ENOSYS
+#undef ENOSYS
+#endif
+#define	ENOSYS		78	/* Function not implemented */
+
+#ifdef EOVERFLOW
+#undef EOVERFLOW
+#endif
+#define	EOVERFLOW	79	/* Value too large to be stored in data type */
+
 
 // From signal.h
 #define SIGABRT         0
 #define SIGSEGV         1
 #define _SIGCOUNT       2 /* LAST ONE, SIZES BUFFER */
-
-typedef void (*_sigsig)(int inSignal);
 
 // From stdio.h
 
@@ -126,10 +321,6 @@ typedef void (*_sigsig)(int inSignal);
 #define _O_WRONLY       O_WRONLY
 
 // From stdlib.h
-#define _MAX_DRIVE      MAX_PATH
-#define _MAX_DIR        MAX_PATH
-#define _MAX_EXT        MAX_PATH
-#define _MAX_FNAME      MAX_PATH
 #define _MAX_PATH       MAX_PATH
 
 // From sys/types.h
@@ -162,11 +353,8 @@ struct mozce_stat
 
 // From time.h
 
-#ifdef MOZCE_SHUNT_EXPORTS
+#define _TM_DEFINED
 struct tm {
-#else
-struct mozce_tm {
-#endif
     int tm_sec;
     int tm_min;
     int tm_hour;
@@ -179,13 +367,6 @@ struct mozce_tm {
 };
 
 
-struct mozce_lconv {
-  const char* thousandsSeparator;
-  const char* decimalSeparator;
-  const char* numGrouping;
-};
-
-
 typedef struct mozce_GLYPHMETRICS 
 { 
   UINT  gmBlackBoxX; 
@@ -193,21 +374,7 @@ typedef struct mozce_GLYPHMETRICS
   POINT gmptGlyphOrigin; 
   short gmCellIncX; 
   short gmCellIncY; 
-} mozce_GLYPHMETRICS; 
-
-
-typedef struct mozce_FIXED { 
-  WORD  fract; 
-  short value; 
-} mozce_FIXED; 
-
-typedef struct mozce_MAT2 { 
-  mozce_FIXED eM11; 
-  mozce_FIXED eM12; 
-  mozce_FIXED eM21; 
-  mozce_FIXED eM22; 
-} mozce_MAT2; 
-
+} mozce_GLYPHMETRICS;
 
 typedef struct mozce_PANOSE { 
   BYTE bFamilyType; 
@@ -258,16 +425,6 @@ typedef struct mozce_OUTLINETEXTMETRIC
   PSTR   otmpFullName; 
 } mozce_OUTLINETEXTMETRIC;
 
-
-typedef struct _WINDOWPLACEMENT {
-    UINT  length;
-    UINT  flags;
-    UINT  showCmd;
-    POINT ptMinPosition;
-    POINT ptMaxPosition;
-    RECT  rcNormalPosition;
-} WINDOWPLACEMENT;
-typedef WINDOWPLACEMENT *PWINDOWPLACEMENT, *LPWINDOWPLACEMENT;
 
 #define SW_SHOWMINIMIZED 2 
 #define GGO_METRICS 0
@@ -335,4 +492,29 @@ typedef struct _BLENDFUNCTION
 #define WM_MOUSEACTIVATE WM_ACTIVATE
 #endif
 
+typedef struct WINDOWPLACEMENT
+{
+  UINT  length;
+  UINT  flags;
+  UINT  showCmd;
+  POINT ptMinPosition;
+  POINT ptMaxPosition;
+  RECT  rcNormalPosition;
+} WINDOWPLACEMENT, *PWINDOWPLACEMENT, *LPWINDOWPLACEMENT;
+
+typedef void (*_sigsig)(int inSignal);
+
+
+typedef struct mozce_FIXED { 
+  WORD  fract; 
+  short value; 
+} mozce_FIXED; 
+
+typedef struct mozce_MAT2 { 
+  mozce_FIXED eM11; 
+  mozce_FIXED eM12; 
+  mozce_FIXED eM21; 
+  mozce_FIXED eM22; 
+} mozce_MAT2; 
+  
 #endif

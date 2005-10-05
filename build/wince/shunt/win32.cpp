@@ -413,7 +413,7 @@ static int CALLBACK collectProc(CONST LOGFONT* inLF, CONST TEXTMETRIC* inTM, DWO
     return retval;
 }
 
-MOZCE_SHUNT_API int mozce_EnumFontFamiliesEx(HDC inDC, LPLOGFONT inLogfont, FONTENUMPROC inFunc, LPARAM inParam, DWORD inFlags)
+MOZCE_SHUNT_API int mozce_EnumFontFamiliesEx(HDC inDC, const LOGFONTA* inLogfont, FONTENUMPROC inFunc, LPARAM inParam, DWORD inFlags)
 {
     MOZCE_PRECHECK
 
@@ -887,97 +887,14 @@ MOZCE_SHUNT_API void mozce_GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFile
     SystemTimeToFileTime(&st,lpSystemTimeAsFileTime);
 }
 
-struct lconv s_locale_conv =
-{
-    ".",   /* decimal_point */
-    ",",   /* thousands_sep */
-    "333", /* grouping */
-    "$",   /* int_curr_symbol */
-    "$",   /* currency_symbol */
-    "",    /* mon_decimal_point */
-    "",    /* mon_thousands_sep */
-    "",    /* mon_grouping */
-    "+",   /* positive_sign */
-    "-",   /* negative_sign */
-    '2',   /* int_frac_digits */
-    '2',   /* frac_digits */
-    1,     /* p_cs_precedes */
-    1,     /* p_sep_by_space */
-    1,     /* n_cs_precedes */
-    1,     /* n_sep_by_space */
-    1,     /* p_sign_posn */
-    1,     /* n_sign_posn */
-};
-
-MOZCE_SHUNT_API struct lconv * mozce_localeconv(void)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("mozce_localeconv called\n");
-#endif
-    return &s_locale_conv;
-}
-
-MOZCE_SHUNT_API DWORD mozce_GetCurrentThreadId(void)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("mozce_GetCurrentThreadId called\n");
-#endif
-    return GetCurrentThreadId();
-}
-
-
-MOZCE_SHUNT_API DWORD mozce_GetCurrentProcessId(void)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("mozce_GetCurrentProcessId called\n");
-#endif
-    return GetCurrentProcessId();
-}
-
-MOZCE_SHUNT_API DWORD mozce_TlsAlloc(void)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("mozce_TlsAlloc called\n");
-#endif
-    return TlsAlloc();
-}
-
-MOZCE_SHUNT_API BOOL mozce_TlsFree(DWORD dwTlsIndex)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("mozce_TlsFree called\n");
-#endif
-    return TlsFree(dwTlsIndex);
-}
-
-MOZCE_SHUNT_API HANDLE mozce_GetCurrentProcess(void)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("mozce_GetCurrentProcess called\n");
-#endif
-    return GetCurrentProcess();
-}
-
 #ifndef MIN
 #define MIN(a,b) (((a)<(b)) ? (a) : (b))
 #endif
 
-MOZCE_SHUNT_API DWORD mozce_GetFullPathName(LPCSTR lpFileName, 
+MOZCE_SHUNT_API DWORD mozce_GetFullPathName(const char* lpFileName, 
                                             DWORD nBufferLength, 
-                                            LPCSTR lpBuffer, 
-                                            LPCSTR* lpFilePart)
+                                            const char* lpBuffer, 
+                                            const char** lpFilePart)
 {
 #ifdef DEBUG
     mozce_printf("mozce_GetFullPathName called\n");
@@ -1005,17 +922,6 @@ MOZCE_SHUNT_API DWORD mozce_GetFullPathName(LPCSTR lpFileName,
     mozce_printf("mozce_GetFullPathName called %s (%s)\n", lpBuffer, *lpFilePart);
 #endif
     return len;	
-}
-
-MOZCE_SHUNT_API DWORD mozce_MsgWaitForMultipleObjects(DWORD nCount, const HANDLE* pHandles, BOOL bWaitAll, DWORD dwMilliseconds, DWORD dwWakeMask)
-{
-    MOZCE_PRECHECK
-
-#ifdef DEBUG
-    mozce_printf("mozce_MsgWaitForMultipleObjects called\n");
-#endif
-
-    return MsgWaitForMultipleObjects(nCount, (HANDLE*) pHandles, bWaitAll, dwMilliseconds, dwWakeMask);
 }
 
 static LONG gGetMessageTime = 0;
@@ -1091,7 +997,7 @@ MOZCE_SHUNT_API DWORD mozce_ExpandEnvironmentStrings(LPCTSTR lpSrc, LPTSTR lpDst
     return 0;
 }
 
-MOZCE_SHUNT_API DWORD mozce_ExpandEnvironmentStringsW(LPCTSTR lpSrc, LPTSTR lpDst, DWORD nSize)
+MOZCE_SHUNT_API DWORD mozce_ExpandEnvironmentStringsW(const unsigned short* lpSrc, const unsigned short* lpDst, DWORD nSize)
 {
     MOZCE_PRECHECK
 
@@ -1161,6 +1067,38 @@ MOZCE_SHUNT_API HINSTANCE mozce_ShellExecute(HWND hwnd,
         free(dir);
     
     return (HINSTANCE) info.hProcess;
+}
+
+struct lconv s_locale_conv =
+{
+    ".",   /* decimal_point */
+    ",",   /* thousands_sep */
+    "333", /* grouping */
+    "$",   /* int_curr_symbol */
+    "$",   /* currency_symbol */
+    "",    /* mon_decimal_point */
+    "",    /* mon_thousands_sep */
+    "",    /* mon_grouping */
+    "+",   /* positive_sign */
+    "-",   /* negative_sign */
+    '2',   /* int_frac_digits */
+    '2',   /* frac_digits */
+    1,     /* p_cs_precedes */
+    1,     /* p_sep_by_space */
+    1,     /* n_cs_precedes */
+    1,     /* n_sep_by_space */
+    1,     /* p_sign_posn */
+    1,     /* n_sign_posn */
+};
+
+MOZCE_SHUNT_API struct lconv * mozce_localeconv(void)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_localeconv called\n");
+#endif
+    return &s_locale_conv;
 }
 
 #if 0

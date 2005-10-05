@@ -128,7 +128,7 @@ MOZCE_SHUNT_API FILE* mozce_fdopen(int fd, const char* inMode)
     
     
     if(fd < 0 || fd >= MAXFDS || _fdtab[fd].fd == -1)
-	return 0;
+        return 0;
     
     return _fdtab[fd].file;
 }
@@ -180,10 +180,10 @@ MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size)
 #ifdef DEBUG
         mozce_printf("mozce_getcwd called.\n");
 #endif
-    
+    int i;
     unsigned short dir[MAX_PATH];
     GetModuleFileName(GetModuleHandle (NULL), dir, MAX_PATH);
-    for (int i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
+    for (i = _tcslen(dir); i && dir[i] != TEXT('\\'); i--) {}
     dir[i + 1] = TCHAR('\0');
     
     w2a_buffer(dir, -1, buff, size);
@@ -193,6 +193,7 @@ MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size)
 
 MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
 {
+        nclograw(format, strlen(format));
     return 0;
 }
 
@@ -274,7 +275,7 @@ MOZCE_SHUNT_API int mozce_close(int fd)
     
     
     if(fd < 0 || fd >= MAXFDS || _fdtab[fd].fd == -1)
-	return -1;
+        return -1;
     
     
     fclose(_fdtab[fd].file);
@@ -292,7 +293,7 @@ MOZCE_SHUNT_API size_t mozce_read(int fd, void* buffer, size_t count)
 #endif
     
     if(fd < 0 || fd >= MAXFDS || _fdtab[fd].fd == -1)
-	return -1;
+        return -1;
     
     size_t num = fread(buffer, 1, count, _fdtab[fd].file);
     
@@ -312,7 +313,7 @@ MOZCE_SHUNT_API size_t mozce_write(int fd, const void* buffer, size_t count)
 #endif
     
     if(fd < 0 || fd >= MAXFDS || _fdtab[fd].fd == -1)
-	return -1;
+        return -1;
     
     size_t num = fwrite(buffer, 1, count, _fdtab[fd].file);
     if (ferror(_fdtab[fd].file))
@@ -343,7 +344,7 @@ MOZCE_SHUNT_API int mozce_lseek(int fd, int offset, int whence)
     
     
     if(fd < 0 || fd >= MAXFDS || _fdtab[fd].fd == -1)
-	return -1;
+        return -1;
     
     int newpos = -1;
     int error = fseek(_fdtab[fd].file, offset, whence);
@@ -369,9 +370,9 @@ MOZCE_SHUNT_API int mozce_fileno(FILE* f)
     for(fd = 0; fd < MAXFDS; fd++)
     {
         if(_fdtab[fd].file == f)
-	{
+        {
             return _fdtab[fd].fd;
-	}
+        }
     }
     return (int) fileno(f);
     

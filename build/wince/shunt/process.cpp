@@ -1,6 +1,6 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
- * ***** BEGIN LICENSE BLOCK *****
+ * ***** BEG LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -58,7 +58,7 @@ MOZCE_SHUNT_API void mozce_abort(void)
 #if defined(DEBUG)
     DebugBreak();
 #endif
-    TerminateProcess(GetCurrentProcess(), 3);
+    TerminateProcess((HANDLE) GetCurrentProcessId(), 3);
 }
 
 
