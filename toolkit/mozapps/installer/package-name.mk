@@ -56,6 +56,9 @@ endif
 ifeq ($(TARGET_OS),linux-gnu)
 MOZ_PKG_PLATFORM := linux-$(TARGET_CPU)
 endif
+ifeq ($(OS_ARCH),OS2)
+MOZ_PKG_PLATFORM := os2
+endif
 
 # GTK2 is the default, so we mark gtk1 builds
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
