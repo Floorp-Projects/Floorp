@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: fipstest.c,v 1.10 2005/10/05 17:58:01 wtchang%redhat.com Exp $ */
+/* $Id: fipstest.c,v 1.11 2005/10/05 22:03:14 wtchang%redhat.com Exp $ */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
                         /*              DES-CBC, DES3-ECB, DES3-CBC, RSA */
@@ -605,12 +605,6 @@ sftk_fips_AES_PowerUpSelfTest( int aes_key_size )
         0x37,0xea,0x07,0x06,0x31,0x1c,0x59,0x27,
         0xc5,0xc5,0x68,0x71,0x6e,0x34,0x40,0x16 };
 
-    /*check if aes_key_size is 128, 192, or 256 bits */
-    if ((aes_key_size != FIPS_AES_128_KEY_SIZE) && 
-        (aes_key_size != FIPS_AES_192_KEY_SIZE) && 
-        (aes_key_size != FIPS_AES_256_KEY_SIZE)) 
-            return( CKR_DEVICE_ERROR );
-
     const PRUint8 *aes_ecb_known_ciphertext =
         ( aes_key_size == FIPS_AES_128_KEY_SIZE) ? aes_ecb128_known_ciphertext :
         ( aes_key_size == FIPS_AES_192_KEY_SIZE) ? aes_ecb192_known_ciphertext :
@@ -628,6 +622,12 @@ sftk_fips_AES_PowerUpSelfTest( int aes_key_size )
     unsigned int   aes_bytes_encrypted;
     unsigned int   aes_bytes_decrypted;
     SECStatus      aes_status;
+
+    /*check if aes_key_size is 128, 192, or 256 bits */
+    if ((aes_key_size != FIPS_AES_128_KEY_SIZE) && 
+        (aes_key_size != FIPS_AES_192_KEY_SIZE) && 
+        (aes_key_size != FIPS_AES_256_KEY_SIZE)) 
+            return( CKR_DEVICE_ERROR );
 
     /******************************************************/
     /* AES-ECB Single-Round Known Answer Encryption Test: */
