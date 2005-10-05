@@ -607,8 +607,8 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 		
 		sevent.windowSize = new nsRect (0, 0, aWidth, aHeight); 	
 		
-		sevent.point.x = 0;
-		sevent.point.y = 0;
+		sevent.refPoint.x = 0;
+		sevent.refPoint.y = 0;
 		sevent.mWinWidth = aWidth;
 		sevent.mWinHeight = aHeight;
 		// XXX fix this
@@ -639,8 +639,8 @@ int nsWindow::WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
 			  event.widget  = win;
 			  
 			  event.time = 0;
-			  event.point.x = 0;
-			  event.point.y = 0;
+			  event.refPoint.x = 0;
+			  event.refPoint.y = 0;
 			  
 			  win->DispatchEvent(&event, status);
 			  
@@ -718,8 +718,8 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 
 			/* Re-Setup Paint Event */
 			pWin->InitEvent(pev, NS_PAINT);
-			pev.point.x = nsDmg.x;
-			pev.point.y = nsDmg.y;
+			pev.refPoint.x = nsDmg.x;
+			pev.refPoint.y = nsDmg.y;
 			pev.rect = &nsDmg;
 			pev.region = nsnull;
 

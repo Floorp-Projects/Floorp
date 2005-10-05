@@ -1084,7 +1084,7 @@ inline PRBool nsWidget::HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbIn
 		case Ph_EV_PTR_MOTION_BUTTON:
       	{
         PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
-	    	nsMouseEvent theMouseEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal;
+	    	nsMouseEvent theMouseEvent(PR_TRUE, 0, nsnull, nsMouseEvent::eReal);
 
         if( ptrev ) {
 
