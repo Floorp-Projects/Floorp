@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: fipstest.c,v 1.8 2005/03/29 18:21:18 nelsonb%netscape.com Exp $ */
+/* $Id: fipstest.c,v 1.9 2005/10/05 16:31:01 glen.beasley%sun.com Exp $ */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
                         /*              DES-CBC, DES3-ECB, DES3-CBC, RSA */
@@ -68,16 +68,17 @@
 #define FIPS_DES3_DECRYPT_LENGTH                 8  /*  64-bits */
 
 
-/* FIPS preprocessor directives for MD2.                        */
-#define FIPS_MD2_HASH_MESSAGE_LENGTH            64  /* 512-bits */
+/* FIPS preprocessor directives for AES-ECB and AES-CBC.        */
+#define FIPS_AES_BLOCK_SIZE                     16  /* 128-bits */
+#define FIPS_AES_ENCRYPT_LENGTH                 16  /* 128-bits */
+#define FIPS_AES_DECRYPT_LENGTH                 16  /* 128-bits */
+#define FIPS_AES_128_KEY_SIZE                   16  /* 128-bits */
+#define FIPS_AES_192_KEY_SIZE                   24  /* 192-bits */
+#define FIPS_AES_256_KEY_SIZE                   32  /* 256-bits */
 
 
-/* FIPS preprocessor directives for MD5.                        */
-#define FIPS_MD5_HASH_MESSAGE_LENGTH            64  /* 512-bits */
-
-
-/* FIPS preprocessor directives for SHA-1.                      */
-#define FIPS_SHA1_HASH_MESSAGE_LENGTH           64  /* 512-bits */
+/* FIPS preprocessor directives for message digests             */
+#define FIPS_KNOWN_HASH_MESSAGE_LENGTH          64  /* 512-bits */
 
 
 /* FIPS preprocessor directives for RSA.                        */
@@ -562,17 +563,186 @@ sftk_fips_DES3_PowerUpSelfTest( void )
 }
 
 
+/* AES self-test for 128-bit, 192-bit, or 256-bit key sizes*/
+static CK_RV
+sftk_fips_AES_PowerUpSelfTest( int aes_key_size )
+{
+    /* AES Known Key (up to 256-bits). */
+    static const PRUint8 aes_known_key[] = 
+        { "AES-128 RIJNDAELLEADNJIR 821-SEA" };
+
+    /* AES-CBC Known Initialization Vector 128-bits. */
+    static const PRUint8 aes_cbc_known_initialization_vector[] = 
+        { "SecurityytiruceS" };
+
+    /* AES Known Plaintext (128-bits). (blocksize is 128-bits) */
+    static const PRUint8 aes_known_plaintext[] = { "NetscapeepacsteN" };
+
+    /* AES Known Ciphertext (128-bit key). */
+    static const PRUint8 aes_ecb128_known_ciphertext[] = {
+        0x3c,0xa5,0x96,0xf3,0x34,0x6a,0x96,0xc1,
+        0x03,0x88,0x16,0x7b,0x20,0xbf,0x35,0x47 };
+
+    static const PRUint8 aes_cbc128_known_ciphertext[]  = {
+        0xcf,0x15,0x1d,0x4f,0x96,0xe4,0x4f,0x63,
+        0x15,0x54,0x14,0x1d,0x4e,0xd8,0xd5,0xea };
+
+    /* AES Known Ciphertext (192-bit key). */
+    static const PRUint8 aes_ecb192_known_ciphertext[] = { 
+        0xa0,0x18,0x62,0xed,0x88,0x19,0xcb,0x62,
+        0x88,0x1d,0x4d,0xfe,0x84,0x02,0x89,0x0e };
+
+    static const PRUint8 aes_cbc192_known_ciphertext[]  = { 
+        0x83,0xf7,0xa4,0x76,0xd1,0x6f,0x07,0xbe,
+        0x07,0xbc,0x43,0x2f,0x6d,0xad,0x29,0xe1 };
+
+    /* AES Known Ciphertext (256-bit key). */
+    static const PRUint8 aes_ecb256_known_ciphertext[] = { 
+        0xdb,0xa6,0x52,0x01,0x8a,0x70,0xae,0x66,
+        0x3a,0x99,0xd8,0x95,0x7f,0xfb,0x01,0x67 };
+    
+    static const PRUint8 aes_cbc256_known_ciphertext[]  = { 
+        0x37,0xea,0x07,0x06,0x31,0x1c,0x59,0x27,
+        0xc5,0xc5,0x68,0x71,0x6e,0x34,0x40,0x16 };
+
+    /*check if aes_key_size is 128, 192, or 256 bits */
+    if ((aes_key_size != FIPS_AES_128_KEY_SIZE) && 
+        (aes_key_size != FIPS_AES_192_KEY_SIZE) && 
+        (aes_key_size != FIPS_AES_256_KEY_SIZE)) 
+            return( CKR_DEVICE_ERROR );
+
+    const PRUint8 *aes_ecb_known_ciphertext =
+        ( aes_key_size == FIPS_AES_128_KEY_SIZE) ? aes_ecb128_known_ciphertext :
+        ( aes_key_size == FIPS_AES_192_KEY_SIZE) ? aes_ecb192_known_ciphertext :
+                                aes_ecb256_known_ciphertext;
+
+    const PRUint8 *aes_cbc_known_ciphertext =
+        ( aes_key_size == FIPS_AES_128_KEY_SIZE) ? aes_cbc128_known_ciphertext :
+        ( aes_key_size == FIPS_AES_192_KEY_SIZE) ? aes_cbc192_known_ciphertext :
+                                aes_cbc256_known_ciphertext;
+
+    /* AES variables. */
+    PRUint8        aes_computed_ciphertext[FIPS_AES_ENCRYPT_LENGTH];
+    PRUint8        aes_computed_plaintext[FIPS_AES_DECRYPT_LENGTH];
+    AESContext *   aes_context;
+    unsigned int   aes_bytes_encrypted;
+    unsigned int   aes_bytes_decrypted;
+    SECStatus      aes_status;
+
+    /******************************************************/
+    /* AES-ECB Single-Round Known Answer Encryption Test: */
+    /******************************************************/
+
+    aes_context = AES_CreateContext( aes_known_key, NULL, NSS_AES, PR_TRUE,
+                                     aes_key_size, FIPS_AES_BLOCK_SIZE );
+
+    if( aes_context == NULL )
+        return( CKR_HOST_MEMORY );
+
+    aes_status = AES_Encrypt( aes_context, aes_computed_ciphertext,
+                              &aes_bytes_encrypted, FIPS_AES_ENCRYPT_LENGTH,
+                              aes_known_plaintext,
+                              FIPS_AES_DECRYPT_LENGTH );
+    
+    AES_DestroyContext( aes_context, PR_TRUE );
+
+    if( ( aes_status != SECSuccess ) ||
+        ( aes_bytes_encrypted != FIPS_AES_ENCRYPT_LENGTH ) ||
+        ( PORT_Memcmp( aes_computed_ciphertext, aes_ecb_known_ciphertext,
+                       FIPS_AES_ENCRYPT_LENGTH ) != 0 ) )
+        return( CKR_DEVICE_ERROR );
+
+
+    /******************************************************/
+    /* AES-ECB Single-Round Known Answer Decryption Test: */
+    /******************************************************/
+
+    aes_context = AES_CreateContext( aes_known_key, NULL, NSS_AES, PR_FALSE,
+                                     aes_key_size, FIPS_AES_BLOCK_SIZE );
+
+    if( aes_context == NULL )
+        return( CKR_HOST_MEMORY );
+
+    aes_status = AES_Decrypt( aes_context, aes_computed_plaintext,
+                              &aes_bytes_decrypted, FIPS_AES_DECRYPT_LENGTH,
+                              aes_ecb_known_ciphertext,
+                              FIPS_AES_ENCRYPT_LENGTH );
+
+    AES_DestroyContext( aes_context, PR_TRUE );
+
+    if( ( aes_status != SECSuccess ) ||         
+        ( aes_bytes_decrypted != FIPS_AES_DECRYPT_LENGTH ) ||
+        ( PORT_Memcmp( aes_computed_plaintext, aes_known_plaintext,
+                       FIPS_AES_DECRYPT_LENGTH ) != 0 ) )
+        return( CKR_DEVICE_ERROR );
+
+
+    /******************************************************/
+    /* AES-CBC Single-Round Known Answer Encryption Test. */
+    /******************************************************/
+
+    aes_context = AES_CreateContext( aes_known_key,
+                                     aes_cbc_known_initialization_vector,
+                                     NSS_AES_CBC, PR_TRUE, aes_key_size, 
+                                     FIPS_AES_BLOCK_SIZE );
+
+    if( aes_context == NULL )
+        return( CKR_HOST_MEMORY );
+
+    aes_status = AES_Encrypt( aes_context, aes_computed_ciphertext,
+                              &aes_bytes_encrypted, FIPS_AES_ENCRYPT_LENGTH,
+                              aes_known_plaintext,
+                              FIPS_AES_DECRYPT_LENGTH );
+
+    AES_DestroyContext( aes_context, PR_TRUE );
+
+    if( ( aes_status != SECSuccess ) ||
+        ( aes_bytes_encrypted != FIPS_AES_ENCRYPT_LENGTH ) ||
+        ( PORT_Memcmp( aes_computed_ciphertext, aes_cbc_known_ciphertext,
+                       FIPS_AES_ENCRYPT_LENGTH ) != 0 ) )
+        return( CKR_DEVICE_ERROR );
+
+
+    /******************************************************/
+    /* AES-CBC Single-Round Known Answer Decryption Test. */
+    /******************************************************/
+
+    aes_context = AES_CreateContext( aes_known_key,
+                                     aes_cbc_known_initialization_vector,
+                                     NSS_AES_CBC, PR_FALSE, aes_key_size, 
+                                     FIPS_AES_BLOCK_SIZE );
+
+    if( aes_context == NULL )
+        return( CKR_HOST_MEMORY );
+
+    aes_status = AES_Decrypt( aes_context, aes_computed_plaintext,
+                              &aes_bytes_decrypted, FIPS_AES_DECRYPT_LENGTH,
+                              aes_cbc_known_ciphertext,
+                              FIPS_AES_ENCRYPT_LENGTH );
+
+    AES_DestroyContext( aes_context, PR_TRUE );
+
+    if( ( aes_status != SECSuccess ) ||
+        ( aes_bytes_decrypted != FIPS_AES_DECRYPT_LENGTH ) ||
+        ( PORT_Memcmp( aes_computed_plaintext, aes_known_plaintext,
+                       FIPS_AES_DECRYPT_LENGTH ) != 0 ) )
+        return( CKR_DEVICE_ERROR );
+
+    return( CKR_OK );
+}
+
+/* Known Hash Message (512-bits).  Used for all hashes (incl. SHA-N [N>1]). */
+static const PRUint8 known_hash_message[] = {
+  "The test message for the MD2, MD5, and SHA-1 hashing algorithms." };
+
+
 static CK_RV
 sftk_fips_MD2_PowerUpSelfTest( void )
 {
-    /* MD2 Known Hash Message (512-bits). */
-    static const PRUint8 md2_known_hash_message[] = {
-	"The test message for the MD2, MD5, and SHA-1 hashing algorithms." };
-
     /* MD2 Known Digest Message (128-bits). */
     static const PRUint8 md2_known_digest[]  = {
-				   0x41,0x5a,0x12,0xb2,0x3f,0x28,0x97,0x17,
-				   0x0c,0x71,0x4e,0xcc,0x40,0xc8,0x1d,0x1b};
+                                   0x41,0x5a,0x12,0xb2,0x3f,0x28,0x97,0x17,
+                                   0x0c,0x71,0x4e,0xcc,0x40,0xc8,0x1d,0x1b};
 
     /* MD2 variables. */
     MD2Context * md2_context;
@@ -591,13 +761,13 @@ sftk_fips_MD2_PowerUpSelfTest( void )
 
     MD2_Begin( md2_context );
 
-    MD2_Update( md2_context, md2_known_hash_message,
-                FIPS_MD2_HASH_MESSAGE_LENGTH );
+    MD2_Update( md2_context, known_hash_message,
+                FIPS_KNOWN_HASH_MESSAGE_LENGTH );
 
     MD2_End( md2_context, md2_computed_digest, &md2_bytes_hashed, MD2_LENGTH );
 
     MD2_DestroyContext( md2_context , PR_TRUE );
-
+    
     if( ( md2_bytes_hashed != MD2_LENGTH ) ||
         ( PORT_Memcmp( md2_computed_digest, md2_known_digest,
                        MD2_LENGTH ) != 0 ) )
@@ -610,10 +780,6 @@ sftk_fips_MD2_PowerUpSelfTest( void )
 static CK_RV
 sftk_fips_MD5_PowerUpSelfTest( void )
 {
-    /* MD5 Known Hash Message (512-bits). */
-    static const PRUint8 md5_known_hash_message[] = {
-	"The test message for the MD2, MD5, and SHA-1 hashing algorithms." };
-
     /* MD5 Known Digest Message (128-bits). */
     static const PRUint8 md5_known_digest[]  = {
 				   0x25,0xc8,0xc0,0x10,0xc5,0x6e,0x68,0x28,
@@ -628,8 +794,8 @@ sftk_fips_MD5_PowerUpSelfTest( void )
     /* MD5 Single-Round Known Answer Hashing Test. */
     /***********************************************/
 
-    md5_status = MD5_HashBuf( md5_computed_digest, md5_known_hash_message,
-                              FIPS_MD5_HASH_MESSAGE_LENGTH );
+    md5_status = MD5_HashBuf( md5_computed_digest, known_hash_message,
+                              FIPS_KNOWN_HASH_MESSAGE_LENGTH );
 
     if( ( md5_status != SECSuccess ) ||
         ( PORT_Memcmp( md5_computed_digest, md5_known_digest,
@@ -641,33 +807,91 @@ sftk_fips_MD5_PowerUpSelfTest( void )
 
 
 static CK_RV
-sftk_fips_SHA1_PowerUpSelfTest( void )
+sftk_fips_SHA_PowerUpSelfTest( void )
 {
-    /* SHA-1 Known Hash Message (512-bits). */
-    static const PRUint8 sha1_known_hash_message[] = {
-	 "The test message for the MD2, MD5, and SHA-1 hashing algorithms." };
-
     /* SHA-1 Known Digest Message (160-bits). */
     static const PRUint8 sha1_known_digest[] = {
 			       0x0a,0x6d,0x07,0xba,0x1e,0xbd,0x8a,0x1b,
 			       0x72,0xf6,0xc7,0x22,0xf1,0x27,0x9f,0xf0,
 			       0xe0,0x68,0x47,0x7a};
 
-    /* SHA-1 variables. */
-    PRUint8        sha1_computed_digest[SHA1_LENGTH];
-    SECStatus      sha1_status;
+    /* SHA-256 Known Digest Message (256-bits). */
+    static const PRUint8 sha256_known_digest[] = {
+        0x38,0xa9,0xc1,0xf0,0x35,0xf6,0x5d,0x61,
+        0x11,0xd4,0x0b,0xdc,0xce,0x35,0x14,0x8d,
+        0xf2,0xdd,0xaf,0xaf,0xcf,0xb7,0x87,0xe9,
+        0x96,0xa5,0xd2,0x83,0x62,0x46,0x56,0x79};
+ 
+    /* SHA-384 Known Digest Message (384-bits). */
+    static const PRUint8 sha384_known_digest[] = {
+        0x11,0xfe,0x1c,0x00,0x89,0x48,0xde,0xb3,
+        0x99,0xee,0x1c,0x18,0xb4,0x10,0xfb,0xfe,
+        0xe3,0xa8,0x2c,0xf3,0x04,0xb0,0x2f,0xc8,
+        0xa3,0xc4,0x5e,0xea,0x7e,0x60,0x48,0x7b,
+        0xce,0x2c,0x62,0xf7,0xbc,0xa7,0xe8,0xa3,
+        0xcf,0x24,0xce,0x9c,0xe2,0x8b,0x09,0x72};
 
+    /* SHA-512 Known Digest Message (512-bits). */
+    static const PRUint8 sha512_known_digest[] = {
+        0xc8,0xb3,0x27,0xf9,0x0b,0x24,0xc8,0xbf,
+        0x4c,0xba,0x33,0x54,0xf2,0x31,0xbf,0xdb,
+        0xab,0xfd,0xb3,0x15,0xd7,0xfa,0x48,0x99,
+        0x07,0x60,0x0f,0x57,0x41,0x1a,0xdd,0x28,
+        0x12,0x55,0x25,0xac,0xba,0x3a,0x99,0x12,
+        0x2c,0x7a,0x8f,0x75,0x3a,0xe1,0x06,0x6f,
+        0x30,0x31,0xc9,0x33,0xc6,0x1b,0x90,0x1a,
+        0x6c,0x98,0x9a,0x87,0xd0,0xb2,0xf8,0x07};
+
+    /* SHA-X variables. */
+    PRUint8        sha_computed_digest[HASH_LENGTH_MAX];
+    SECStatus      sha_status;
 
     /*************************************************/
     /* SHA-1 Single-Round Known Answer Hashing Test. */
     /*************************************************/
 
-    sha1_status = SHA1_HashBuf( sha1_computed_digest, sha1_known_hash_message,
-                                FIPS_SHA1_HASH_MESSAGE_LENGTH );
-
-    if( ( sha1_status != SECSuccess ) ||
-        ( PORT_Memcmp( sha1_computed_digest, sha1_known_digest,
+    sha_status = SHA1_HashBuf( sha_computed_digest, known_hash_message,
+                                FIPS_KNOWN_HASH_MESSAGE_LENGTH );
+ 
+    if( ( sha_status != SECSuccess ) ||
+        ( PORT_Memcmp( sha_computed_digest, sha1_known_digest,
                        SHA1_LENGTH ) != 0 ) )
+        return( CKR_DEVICE_ERROR );
+
+    /***************************************************/
+    /* SHA-256 Single-Round Known Answer Hashing Test. */
+    /***************************************************/
+
+    sha_status = SHA256_HashBuf( sha_computed_digest, known_hash_message,
+                                FIPS_KNOWN_HASH_MESSAGE_LENGTH );
+
+    if( ( sha_status != SECSuccess ) ||
+        ( PORT_Memcmp( sha_computed_digest, sha256_known_digest,
+                       SHA256_LENGTH ) != 0 ) )
+        return( CKR_DEVICE_ERROR );
+
+    /***************************************************/
+    /* SHA-384 Single-Round Known Answer Hashing Test. */
+    /***************************************************/
+
+    sha_status = SHA384_HashBuf( sha_computed_digest, known_hash_message,
+                                FIPS_KNOWN_HASH_MESSAGE_LENGTH );
+
+    if( ( sha_status != SECSuccess ) ||
+        ( PORT_Memcmp( sha_computed_digest, sha384_known_digest,
+                       SHA384_LENGTH ) != 0 ) )
+        return( CKR_DEVICE_ERROR );
+
+    /***************************************************/
+    /* SHA-512 Single-Round Known Answer Hashing Test. */
+    /***************************************************/
+
+    sha_status = SHA512_HashBuf( sha_computed_digest, known_hash_message,
+                                FIPS_KNOWN_HASH_MESSAGE_LENGTH );
+
+    if( ( sha_status != SECSuccess ) ||
+        ( PORT_Memcmp( sha_computed_digest, sha512_known_digest,
+                       SHA512_LENGTH ) != 0 ) )
         return( CKR_DEVICE_ERROR );
 
     return( CKR_OK );
@@ -872,7 +1096,8 @@ sftk_fips_RSA_PowerUpSelfTest( void )
     /* Perform RSA signature with the RSA private key. */
     rsa_status = RSA_Sign( rsa_private_key, rsa_computed_signature,
                            &rsa_bytes_signed,
-                           FIPS_RSA_SIGNATURE_LENGTH, (unsigned char *)rsa_known_message,
+                           FIPS_RSA_SIGNATURE_LENGTH, 
+                           (unsigned char *)rsa_known_message,
                            FIPS_RSA_MESSAGE_LENGTH );
 
     if( ( rsa_status != SECSuccess ) ||
@@ -1059,6 +1284,24 @@ sftk_fipsPowerUpSelfTest( void )
 
     if( rv != CKR_OK )
         return rv;
+ 
+    /* AES Power-Up SelfTest(s) for 128-bit key. */
+    rv = sftk_fips_AES_PowerUpSelfTest(FIPS_AES_128_KEY_SIZE);
+
+    if( rv != CKR_OK )
+        return rv;
+
+    /* AES Power-Up SelfTest(s) for 192-bit key. */
+    rv = sftk_fips_AES_PowerUpSelfTest(FIPS_AES_192_KEY_SIZE);
+
+    if( rv != CKR_OK )
+        return rv;
+
+    /* AES Power-Up SelfTest(s) for 256-bit key. */
+    rv = sftk_fips_AES_PowerUpSelfTest(FIPS_AES_256_KEY_SIZE);
+
+    if( rv != CKR_OK )
+        return rv;
 
     /* MD2 Power-Up SelfTest(s). */
     rv = sftk_fips_MD2_PowerUpSelfTest();
@@ -1072,8 +1315,8 @@ sftk_fipsPowerUpSelfTest( void )
     if( rv != CKR_OK )
         return rv;
 
-    /* SHA-1 Power-Up SelfTest(s). */
-    rv = sftk_fips_SHA1_PowerUpSelfTest();
+    /* SHA-X Power-Up SelfTest(s). */
+    rv = sftk_fips_SHA_PowerUpSelfTest();
 
     if( rv != CKR_OK )
         return rv;
