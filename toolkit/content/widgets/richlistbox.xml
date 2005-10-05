@@ -535,7 +535,7 @@
       </property>
 
       <property name="selected"
-                onget="return this.getAttribute('selected');"
+                onget="return this.getAttribute('selected') == 'true';"
                 onset="return this.setAttribute('selected',val);"/>
 
       <property name="control">
