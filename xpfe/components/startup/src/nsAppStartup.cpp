@@ -806,8 +806,6 @@ nsAppStartup::OpenBrowserWindow(PRInt32 height, PRInt32 width)
 
   nsXPIDLCString urlToLoad;
   rv = cmdLine->GetURLToLoad(getter_Copies(urlToLoad));
-  if (NS_FAILED(rv)) return rv;
-
   if (!urlToLoad.IsEmpty()) {
 
 #ifdef DEBUG_CMD_LINE

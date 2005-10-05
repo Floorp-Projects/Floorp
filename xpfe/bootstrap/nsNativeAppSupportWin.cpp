@@ -1814,7 +1814,9 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow, nsIDOMWi
     // first see if there is a url
     nsXPIDLCString arg;
     rv = args->GetURLToLoad(getter_Copies(arg));
-    if (NS_SUCCEEDED(rv) && !arg.IsEmpty() ) {
+    if (NS_FAILED(rv)) return;
+
+    if (!arg.IsEmpty() ) {
       // Launch browser.
 #if MOZ_DEBUG_DDE
       printf( "Launching browser on url [%s]...\n", arg.get() );
