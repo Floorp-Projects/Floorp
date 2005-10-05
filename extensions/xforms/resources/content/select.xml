@@ -331,7 +331,7 @@
             // we only care about element nodes
             if (child.nodeType == child.ELEMENT_NODE) {
               if (child.localName == "label") {
-                label = child.textContent;
+                optGroup.appendChild(child.cloneNode(true));
               } else if (child.localName == "item") {
                 var itemElm = child.QueryInterface(Components.interfaces.nsIXFormsItemElement);
                 var itemValue = itemElm.value;
@@ -352,9 +352,6 @@
               }
             }
           }
-
-          // set the label
-          optGroup.setAttribute("label", label);
 
           return optGroup;
         ]]>
@@ -642,7 +639,7 @@
             // we only care about element nodes
             if (child.nodeType == child.ELEMENT_NODE) {
               if (child.localName == "label") {
-                label.textContent = child.textContent;
+                label.appendChild(child.cloneNode(true));
               } else if (child.localName == "item") {
                 var itemElm =
                   child.QueryInterface(Components.interfaces.nsIXFormsItemElement)
