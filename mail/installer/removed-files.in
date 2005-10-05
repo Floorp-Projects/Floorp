@@ -154,9 +154,9 @@ components/xpconnect.xpt
 components/xpinstall.xpt 
 components/xuldoc.xpt 
 components/xultmpl.xpt
-
 components/nsBackgroundUpdateService.js
-
+components/xptitemp.dat
+component.reg
 chrome/installed-chrome.txt
 chrome/chrome.rdf
 chrome/app-chrome.manifest
@@ -164,15 +164,9 @@ chrome/mail.jar
 chrome/qute.jar
 chrome/en-US-mail.jar
 chrome/overlayinfo/
-
 defaults/pref/all.js
 defaults/pref/security-prefs.js
 defaults/pref/winpref.js
 defaults/pref/xpinstall.js
 defaults/pref/thunderbird.js
-
 @DLL_PREFIX@zlib@DLL_SUFFIX@
-component.reg
-components/compreg.dat
-components/xpti.dat
-components/xptitemp.dat
