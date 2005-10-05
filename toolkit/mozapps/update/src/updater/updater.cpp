@@ -74,6 +74,8 @@
 # define snprintf _snprintf
 # define putenv _putenv
 # define fchmod(a,b)
+//# undef BUFSIZ
+//# define BUFSIZ (4096 * 4) 
 #else
 # include <sys/wait.h>
 # include <unistd.h>
@@ -266,6 +268,46 @@ static const char kWhitespace[] = " \t";
 static const char kNL[] = "\r\n";
 static const char kQuote[] = "\"";
 
+//-----------------------------------------------------------------------------
+// LOGGING
+
+static FILE *gLogFP = NULL;
+
+static void LogInit()
+{
+  if (gLogFP)
+    return;
+
+  char logFile[MAXPATHLEN];
+  snprintf(logFile, MAXPATHLEN, "%s/update.log", gSourcePath);
+
+  gLogFP = fopen(logFile, "w");
+}
+
+static void LogFinish()
+{
+  if (!gLogFP)
+    return;
+
+  fclose(gLogFP);
+  gLogFP = NULL;
+}
+
+static void LogPrintf(const char *fmt, ... )
+{
+  if (!gLogFP)
+    return;
+
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(gLogFP, fmt, ap);
+  va_end(ap);
+}
+
+#define LOG(args) LogPrintf args
+
+//-----------------------------------------------------------------------------
+
 static inline PRUint32
 mmin(PRUint32 a, PRUint32 b)
 {
@@ -338,12 +380,16 @@ static int copy_file(const char *spath, const char *dpath)
   struct stat ss;
 
   AutoFD sfd = open(spath, O_RDONLY | _O_BINARY);
-  if (sfd < 0 || fstat(sfd, &ss))
+  if (sfd < 0 || fstat(sfd, &ss)) {
+    LOG(("copy_file: failed to open or stat: %d, %s\n", (int) sfd, spath));
     return IO_ERROR;
+  }
 
   AutoFD dfd = open(dpath, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, ss.st_mode);
-  if (dfd < 0)
+  if (dfd < 0) {
+    LOG(("copy_file: failed to open: %s\n", dpath));
     return IO_ERROR;
+  }
 
   char buf[BUFSIZ];
   int sc;
@@ -355,52 +401,18 @@ static int copy_file(const char *spath, const char *dpath)
         break;
       bp += dc;
     }
-    if (dc < 0)
+    if (dc < 0) {
+      LOG(("copy_file: failed to write\n"));
       return IO_ERROR;
+    }
   }
-  if (sc < 0)
+  if (sc < 0) {
+    LOG(("copy_file: failed to read\n"));
     return IO_ERROR;
+  }
 
   return OK;
 }
-
-//-----------------------------------------------------------------------------
-// LOGGING
-
-static FILE *gLogFP = NULL;
-
-static void LogInit()
-{
-  if (gLogFP)
-    return;
-
-  char logFile[MAXPATHLEN];
-  snprintf(logFile, MAXPATHLEN, "%s/update.log", gSourcePath);
-
-  gLogFP = fopen(logFile, "w");
-}
-
-static void LogFinish()
-{
-  if (!gLogFP)
-    return;
-
-  fclose(gLogFP);
-  gLogFP = NULL;
-}
-
-static void LogPrintf(const char *fmt, ... )
-{
-  if (!gLogFP)
-    return;
-
-  va_list ap;
-  va_start(ap, fmt);
-  vfprintf(gLogFP, fmt, ap);
-  va_end(ap);
-}
-
-#define LOG(args) LogPrintf args
 
 //-----------------------------------------------------------------------------
 
@@ -542,8 +554,10 @@ RemoveFile::Prepare()
     rv = access(".", W_OK);
   }
 
-  if (rv)
+  if (rv) {
+    LOG(("access failed: %d\n", rv));
     return IO_ERROR;
+  }
 
   return OK;
 }
@@ -556,16 +570,30 @@ RemoveFile::Execute()
   if (mSkip)
     return OK;
 
+  // We expect the file to exist if we are to remove it.  We check here as well
+  // as in PREPARE since we might have been asked to remove the same file more
+  // than once: bug 311099.
+  int rv = access(mFile, F_OK);
+  if (rv) {
+    LOG(("file cannot be removed because it does not exist; skipping"));
+    mSkip = 1;
+    return OK;
+  }
+
   // save a complete copy of the old file, and then remove the
   // old file.  we'll clean up the copy in Finish.
 
-  int rv = backup_create(mFile);
-  if (rv)
+  rv = backup_create(mFile);
+  if (rv) {
+    LOG(("backup_create failed: %d\n", rv));
     return rv;
+  }
 
   rv = remove(mFile);
-  if (rv)
+  if (rv) {
+    LOG(("remove failed: %d\n", rv));
     return IO_ERROR;
+  }
 
   return OK;
 }
