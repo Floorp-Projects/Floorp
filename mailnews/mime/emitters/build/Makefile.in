@@ -54,7 +54,6 @@ MOZILLA_INTERNAL_API = 1
 PACKAGE_FILE = mimeemitter.pkg
 
 REQUIRES	= xpcom \
-		  xpcom_obsolete \
 		  string \
 		  mime \
 		  necko \
@@ -79,7 +78,6 @@ EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIRS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_XPCOM_OBSOLETE_LIBS) \
 		$(EXTRA_DSO_LIBS) \
 		$(NULL)
 

@@ -44,7 +44,7 @@
 #include "nsIIOService.h"
 #include "nsIURI.h"
 #include "prprf.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsCRT.h"
 
 extern "C" PRBool
 EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header)

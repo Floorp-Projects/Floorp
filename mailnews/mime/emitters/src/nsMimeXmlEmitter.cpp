@@ -47,6 +47,7 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsCRT.h"
 
 /*
  * nsMimeXmlEmitter definitions....

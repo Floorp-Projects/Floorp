@@ -60,7 +60,6 @@ PACKAGE_FILE = vcard.pkg
 META_COMPONENT = mail
 
 REQUIRES	= xpcom \
-                  xpcom_obsolete \
 		  string \
 		  mime \
 		  msgbase \
@@ -102,7 +101,6 @@ EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_XPCOM_OBSOLETE_LIBS) \
 		$(NULL)
 else
 
