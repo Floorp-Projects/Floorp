@@ -103,6 +103,7 @@ img[src*=".ultramercial.com"],
 img[src*=".casalemedia.com"],
 img[src*=".zedo.com"],
 img[src*=".mspaceads.com"],
+img[src*=".adbrite.com"],
 img[src*="ximages.offeroptimizer.com"],
 
 iframe[src*="/ad."],
@@ -157,8 +158,9 @@ div#gB1,
 div#gB2,
 div#gB3,
 div.yschspns,
-div.yschsec,
+div#yschsec,
 div#rh>div#rc,
+div#sponsorsAd,
 div[id^="ads_"]
 
 { display: none ! important }

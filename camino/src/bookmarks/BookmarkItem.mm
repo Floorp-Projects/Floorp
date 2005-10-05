@@ -353,7 +353,7 @@ static BOOL gSuppressAllUpdates = NO;
   return NO;
 }
 
--(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef
+-(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef settingToolbar:(BOOL)setupToolbar
 {
   return NO;
 }

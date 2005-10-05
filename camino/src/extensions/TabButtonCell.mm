@@ -129,12 +129,10 @@ static NSImage* gTabButtonDividerImage = nil;
   // make sure the close button and the favicon line up properly
   [labelCell setImagePadding:0.0];
   [labelCell setMaxImageHeight:buttonSize.height];
-  
 
   if (mNeedsDivider) {
-	  rect.size.width -= [gTabButtonDividerImage size].width;
-	  [gTabButtonDividerImage compositeToPoint:NSMakePoint(NSMaxX(rect), rect.origin.y)
-                           operation:NSCompositeSourceOver];
+    rect.size.width -= [gTabButtonDividerImage size].width;
+    [gTabButtonDividerImage compositeToPoint:NSMakePoint(NSMaxX(rect), rect.origin.y) operation:NSCompositeSourceOver];
   }
   
   NSPoint patternOrigin = [controlView convertPoint:NSMakePoint(0.0f, 0.0f) toView:nil];
@@ -181,7 +179,7 @@ static NSImage* gTabButtonDividerImage = nil;
 -(void)hideCloseButton
 {
   if ([mCloseButton superview] != nil)
-	  [mCloseButton removeFromSuperview];
+    [mCloseButton removeFromSuperview];
 }
 
 -(void)setDrawDivider:(BOOL)willDraw

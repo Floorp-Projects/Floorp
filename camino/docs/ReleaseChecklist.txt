@@ -1,9 +1,12 @@
 Checklist of things to do before releasing a new Chimera version:
 
-- Update version number in project file
-- Update version number in chimera.js
+- Update version number in project file (both Camino and CaminoStatic targets)
+- Update version number in all-camino.js
+- Update version number in ChimeraVersion.r
 - Update version number in Credits.rtf
 - Update version number in InfoPlist.strings
+- Update version number in WebsiteDefaults.strings
+- Update version number in Info-Camino.plist, Info-CaminoStatic.plist
 - Flip switch on Talkback server to enable wizard UI
 - Check in new release notes
 - Update mozilla/camino/installer/Makefile.in to pick up new release notes

@@ -84,6 +84,9 @@
 #define kGetInfoContextMenuItemTag 9
 
 static NSString* const kExpandedBookmarksStatesDefaultsKey = @"bookmarks_expand_state";
+static NSString* const kBookmarksSelectedContainerDefaultsKey = @"bookmarks_selected_container";
+  static NSString* const kBookmarksSelectedContainerIdentifierKey = @"identifier";
+  static NSString* const kBookmarksSelectedContainerUUIDKey       = @"uuid";
 
 // minimum sizes for the search panel
 const long kMinContainerSplitWidth = 150;
@@ -114,10 +117,10 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (void)searchFor:(NSString*)searchString inFieldWithTag:(int)tag;
 - (void)clearSearchResults;
 
-- (void)selectContainer:(int)inRowIndex;
+- (void)selectContainerFolder:(BookmarkFolder*)inFolder;
+- (BookmarkFolder*)selectedContainerFolder;
 
 - (void)selectItems:(NSArray*)items expandingContainers:(BOOL)expandContainers scrollIntoView:(BOOL)scroll;
-- (void)selectItem:(BookmarkItem*)item expandingContainers:(BOOL)expandContainers scrollIntoView:(BOOL)scroll byExtendingSelection:(BOOL)extendSelection;
 
 - (id)itemTreeRootContainer;   // something that responds to NSArray-like selectors
 
@@ -370,20 +373,17 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 - (IBAction) setAsDockMenuFolder:(id)aSender
 {
-  int rowIndex = [mContainersTableView selectedRow];
-  if (rowIndex >= 0) {
-    BookmarkFolder *aFolder = [mRootBookmarks objectAtIndex:[mContainersTableView selectedRow]];
-    [aFolder setIsDockMenu:YES];
-  }
+  BookmarkFolder* aFolder = [self selectedContainerFolder];
+  [aFolder setIsDockMenu:YES];
 }
 
 -(IBAction)addCollection:(id)aSender
 {
   BookmarkFolder *aFolder = [mRootBookmarks addBookmarkFolder];
   [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder",@"New Folder")];
-  unsigned int index = [mRootBookmarks indexOfObjectIdenticalTo:aFolder];
-  [self selectContainer:index];
-  [mContainersTableView editColumn:0 row:index withEvent:nil select:YES];
+  [self selectContainerFolder:aFolder];
+  int newFolderIndex = [[BookmarkManager sharedBookmarkManager] indexOfContainerItem:aFolder];
+  [mContainersTableView editColumn:0 row:newFolderIndex withEvent:nil select:YES];
 }
 
 -(IBAction)addBookmarkSeparator:(id)aSender
@@ -395,7 +395,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   BookmarkFolder *parentFolder = [self selectedItemFolderAndIndex:&index];
 
   [parentFolder insertChild:aBookmark atIndex:index isMove:NO];  
-  [self selectItem:aBookmark expandingContainers:YES scrollIntoView:YES byExtendingSelection:NO];
+
+  [self revealItem:aBookmark scrollIntoView:YES selecting:YES byExtendingSelection:NO];
   [aBookmark release];
 }
 
@@ -413,12 +414,15 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
 -(IBAction)deleteCollection:(id)aSender
 {
-  BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
+  BookmarkManager* manager = [BookmarkManager sharedBookmarkManager];
   int index = [mContainersTableView selectedRow];
-  if (index < (int)[manager firstUserCollection])
+  
+  BookmarkItem* selectedContainer = [self selectedContainerFolder];
+  if (![manager isUserCollection:selectedContainer])
     return;
-  [self selectContainer:(index - 1)];
-  [[manager rootBookmarks] deleteChild:[[manager rootBookmarks] objectAtIndex:index]];
+
+  [self selectContainerFolder:[manager containerItemAtIndex:index - 1]];
+  [[manager rootBookmarks] deleteChild:selectedContainer];
 }
 
 -(IBAction)deleteBookmarks: (id)aSender
@@ -607,17 +611,13 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [bic showWindow:bic];
 }
 
+// XXX unused
 -(IBAction) locateBookmark:(id)aSender
 {
-  // XXX use to go from quicksort to tree view?
 #if 0
-  int index = [mSearchPane selectedRow];
-  if (index == -1)
-    return;
-#endif 
-  BookmarkItem *item = nil; //  = [mSearchResultArray objectAtIndex:index];
-  [self displayBookmarkInOutlineView:item];
-  [mBookmarksOutlineView selectRow:[mBookmarksOutlineView rowForItem:item] byExtendingSelection:NO];
+  BookmarkItem* item = [aSender representedObject]; // XXX ???
+  [self revealItem:item scrollIntoView:YES selecting:YES byExtendingSelection:NO];
+#endif
 }
 
 -(IBAction) cut:(id)aSender
@@ -704,6 +704,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   mBrowserWindowController = bwController;
 }
 
+// XXX unused
 -(void) displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem
 {
   if (!aBookmarkItem) return;   // avoid recursion
@@ -711,9 +712,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   if (parent != mRootBookmarks)
     [self displayBookmarkInOutlineView:parent];
   else {
-    int index = [mRootBookmarks indexOfObject:aBookmarkItem];
-    [mContainersTableView selectRow:index byExtendingSelection:NO];
-    [self selectContainer:index];
+    [self selectContainerFolder:aBookmarkItem];
     return;
   }
   [mBookmarksOutlineView expandItem:aBookmarkItem];
@@ -813,15 +812,21 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 {
   BookmarkManager* bmManager = [BookmarkManager sharedBookmarkManager];
   
-  if ([item hasAncestor:[bmManager bookmarkMenuFolder]])
-    [self selectContainer:kBookmarkMenuContainerIndex];
-  else if ([item hasAncestor:[bmManager toolbarFolder]])
-    [self selectContainer:kToolbarContainerIndex];
-  else if ([item parent] == [bmManager rootBookmarks])
+  BookmarkFolder* menuContainer    = [bmManager bookmarkMenuFolder];
+  BookmarkFolder* toolbarContainer = [bmManager toolbarFolder];
+  if ([item hasAncestor:menuContainer])
+    [self selectContainerFolder:menuContainer];
+  else if ([item hasAncestor:toolbarContainer])
+    [self selectContainerFolder:toolbarContainer];
+  else
   {
-    int itemRow = [[bmManager rootBookmarks] indexOfObject:item];
-    [mContainersTableView selectRow:itemRow byExtendingSelection:NO];
-    return;
+    // walk up to the child of the root, which should be a container
+    id curParent = item;
+    while (curParent && [curParent respondsToSelector:@selector(parent)] && [curParent parent] != [bmManager rootBookmarks])
+      curParent = [curParent parent];
+    
+    if (curParent)
+      [self selectContainerFolder:(BookmarkFolder*)curParent];
   }
 
   [self expandAllParentsOfItem:item];
@@ -831,7 +836,9 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
   if (inSelectItem)
     [mBookmarksOutlineView selectRow:itemRow byExtendingSelection:NO];
-  [mBookmarksOutlineView scrollRowToVisible:itemRow];
+    
+  if (inScroll)
+    [mBookmarksOutlineView scrollRowToVisible:itemRow];
 }
 
 - (void)expandAllParentsOfItem:(BookmarkItem*)inItem
@@ -904,6 +911,15 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 {
   if (mExpandedStates)
     [[NSUserDefaults standardUserDefaults] setObject:mExpandedStates forKey:kExpandedBookmarksStatesDefaultsKey];
+
+  NSDictionary* collectionStateDict = nil;
+  BookmarkFolder* collectionFolder = [self activeCollection];
+  if ([[collectionFolder identifier] length] > 0)   // if it has an identifier, use that
+    collectionStateDict = [NSDictionary dictionaryWithObject:[collectionFolder identifier] forKey:kBookmarksSelectedContainerIdentifierKey];
+  else    // otherwise use UUID
+    collectionStateDict = [NSDictionary dictionaryWithObject:[collectionFolder UUID] forKey:kBookmarksSelectedContainerUUIDKey];
+  
+  [[NSUserDefaults standardUserDefaults] setObject:collectionStateDict forKey:kBookmarksSelectedContainerDefaultsKey];
 }
 
 -(void)pasteBookmarks:(NSPasteboard*)aPasteboard intoFolder:(BookmarkFolder *)dropFolder index:(int)index copying:(BOOL)isCopy
@@ -983,6 +999,19 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   mBookmarkUpdatesDisabled = NO;
   [self reloadDataForItem:nil reloadChildren:YES];
   [self selectItems:newBookmarks expandingContainers:NO scrollIntoView:YES];
+}
+
+- (unsigned int)outlineView:(NSOutlineView *)outlineView draggingSourceOperationMaskForLocal:(BOOL)localFlag
+{
+  if (outlineView == mBookmarksOutlineView)
+  {
+    if (localFlag)
+      return (NSDragOperationCopy | NSDragOperationGeneric | NSDragOperationMove);
+
+    return (NSDragOperationDelete | NSDragOperationGeneric);
+  }
+  
+  return NSDragOperationGeneric;
 }
 
 //
@@ -1066,14 +1095,20 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   return [mRootBookmarks count];
 }
 
-- (void)selectContainer:(int)inRowIndex
+- (void)selectContainerFolder:(BookmarkFolder*)inFolder
 {
-  [mContainersTableView selectRow:inRowIndex byExtendingSelection:NO];
+  BookmarkManager* bmManager = [BookmarkManager sharedBookmarkManager];
+
+  unsigned folderIndex = [bmManager indexOfContainerItem:inFolder];
+  if (folderIndex == NSNotFound)
+    return;
+
+  [mContainersTableView selectRow:folderIndex byExtendingSelection:NO];
 
   // reset the search
   [self resetSearchField];
 
-  if (inRowIndex == kHistoryContainerIndex)
+  if (inFolder == [bmManager historyFolder])
   {
     [self setActiveOutlineView:mHistoryOutlineView];
 
@@ -1093,17 +1128,16 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
     [mHistoryOutlineViewDelegate historyViewMadeVisible:NO];
 
-    BookmarkFolder *activeCollection = [mRootBookmarks objectAtIndex:inRowIndex];
-    [self setActiveCollection:activeCollection];
+    [self setActiveCollection:inFolder];
     [self clearSearchResults];
 
-    if ([activeCollection isSmartFolder])
+    if ([inFolder isSmartFolder])
       [self setCanEditSelectedContainerContents:NO];
     else
       [self setCanEditSelectedContainerContents:YES];
 
     // if its a smart folder, but not the history folder
-    if ([[self activeCollection] isSmartFolder])
+    if ([inFolder isSmartFolder])
       [mBookmarksOutlineView setDeleteAction:nil];
     else
       [mBookmarksOutlineView setDeleteAction:@selector(deleteBookmarks:)];
@@ -1122,11 +1156,20 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   }
 }
 
+- (BookmarkFolder*)selectedContainerFolder
+{
+  int selectedRow = [mContainersTableView selectedRow];
+  id selectedItem = [mRootBookmarks objectAtIndex:selectedRow];
+  if ([selectedItem isKindOfClass:[BookmarkFolder class]])
+    return (BookmarkFolder*)selectedItem;
+
+  return nil;
+}
+
 - (void)selectLastContainer
 {
-  int curRow = [mContainersTableView selectedRow];
-  curRow = (curRow != -1) ? curRow : 0;
-  [self selectContainer:curRow];
+  BookmarkItem* lastContainer = [[[[BookmarkManager sharedBookmarkManager] rootBookmarks] childArray] lastObject];
+  [self selectContainerFolder:lastContainer];
 }
 
 - (int)numberOfRowsInTableView:(NSTableView *)tableView
@@ -1164,9 +1207,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (BOOL)tableView:(NSTableView *)aTableView shouldEditTableColumn:(NSTableColumn *)aTableColumn row:(int)rowIndex
 {
   if (aTableView == mContainersTableView) {
-    if (rowIndex >= (int)[[BookmarkManager sharedBookmarkManager] firstUserCollection])
-      return YES;
-    return NO;
+    BookmarkFolder* aFolder = [mRootBookmarks objectAtIndex:rowIndex];
+    return [[BookmarkManager sharedBookmarkManager] isUserCollection:aFolder];
   }
   return NO;
 }
@@ -1184,25 +1226,26 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   int count = [rows count];
   if (count == 0)
     return NO;
-  NSMutableArray *itemArray = [[NSMutableArray alloc] initWithCapacity:count];
-  BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
-  NSEnumerator *enumerator = [rows objectEnumerator];
-  unsigned firstUserCollection = [manager firstUserCollection];
-  int rowVal;
-  id aRow;
-  while ((aRow = [enumerator nextObject])) {
-    rowVal = [aRow intValue];
-    if (rowVal >= (int)firstUserCollection)
-      [itemArray addObject:[mRootBookmarks objectAtIndex:rowVal]];
+
+  NSMutableArray* itemArray = [[NSMutableArray alloc] initWithCapacity:count];
+  BookmarkManager* manager = [BookmarkManager sharedBookmarkManager];
+
+  NSEnumerator* enumerator = [rows objectEnumerator];
+  id curRow;
+  while ((curRow = [enumerator nextObject]))
+  {
+    int rowVal = [curRow intValue];
+    BookmarkFolder* collectionFolder = [mRootBookmarks objectAtIndex:rowVal];
+    if ([manager isUserCollection:collectionFolder])
+      [itemArray addObject:collectionFolder];
   }
-  if ([itemArray count] == 0) {
-    [itemArray release];
-    return NO;
-  }
-  
-  [self copyBookmarks:itemArray toPasteboard:pboard];
+
+  BOOL haveCopyableItems = ([itemArray count] > 0);
+  if (haveCopyableItems)
+    [self copyBookmarks:itemArray toPasteboard:pboard];
+
   [itemArray release];
-  return YES;
+  return haveCopyableItems;
 }
 
 //
@@ -1217,21 +1260,31 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     NSDragOperation dragOp = [self preferredDragOperationForSourceMask:[info draggingSourceOperationMask]];
     // figure out where we want to drop. |dropFolder| will either be a container or
     // the top-level bookmarks root if we're to create a new container.
-    BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
-    BookmarkFolder *dropFolder = nil;
-    if ((row < 2) && (op == NSTableViewDropOn))
-      dropFolder = [mRootBookmarks objectAtIndex:row];
-    else if (row >= (int)[manager firstUserCollection]) {
-      if (op == NSTableViewDropAbove)
-        dropFolder = mRootBookmarks;
-      else
-        dropFolder = [mRootBookmarks objectAtIndex:row];
+    BookmarkManager* manager = [BookmarkManager sharedBookmarkManager];
+    BookmarkFolder* dropFolder = nil;
+    
+    if (op == NSTableViewDropOn)
+    {
+      BookmarkFolder* destFolder = [mRootBookmarks objectAtIndex:row];
+      // only use this if it's a modifiable folder
+      if (![destFolder isSmartFolder])
+        dropFolder = destFolder;
     }
-    if (dropFolder) {
+    else if (op == NSTableViewDropAbove)
+    {
+      // disallow drops above the first user collection (this assumes that the last smart
+      // folder is the address book folder)
+      int firstUserCollectionRow = [manager indexOfContainerItem:[manager addressBookFolder]] + 1;
+      if (row >= firstUserCollectionRow)
+        dropFolder = mRootBookmarks;
+    }
+    
+    if (dropFolder)
+    {
       // special check if we're moving pointers around
       if ([types containsObject:kCaminoBookmarkListPBoardType])
       {
-        NSArray *draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: kCaminoBookmarkListPBoardType]];
+        NSArray* draggedItems = [BookmarkManager bookmarkItemsFromSerializableArray:[[info draggingPasteboard] propertyListForType: kCaminoBookmarkListPBoardType]];
         BOOL isOK = [manager isDropValid:draggedItems toFolder:dropFolder];
         return (isOK) ? dragOp : NSDragOperationNone;
       }
@@ -1259,7 +1312,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     dropLocation = [dropFolder count];
   }
   BOOL result = [self doDrop:info intoFolder:dropFolder index:dropLocation];
-  [self selectContainer:[mContainersTableView selectedRow]];
+  [self selectContainerFolder:[self selectedContainerFolder]];
   return result;
 }
 
@@ -1267,7 +1320,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 {
   NSTableView *aView = [note object];
   if (aView == mContainersTableView) {
-    [self selectContainer:[aView selectedRow]];
+    
+    [self selectContainerFolder:[self selectedContainerFolder]];
   }
 }
 
@@ -1275,19 +1329,22 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 {
   if (aTableView == mContainersTableView)
   {
-    NSMenu *contextMenu = [[[aTableView menu] copy] autorelease];
+    NSMenu* contextMenu = [[[aTableView menu] copy] autorelease];
     if ([aTableView numberOfSelectedRows] > 0)
     {
+      BookmarkFolder* aFolder = [mRootBookmarks objectAtIndex:rowIndex];
+      
       [contextMenu addItem:[NSMenuItem separatorItem]];
-      NSMenuItem *useAsDockItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Use as Dock Menu", @"Use as Dock Menu")
+      NSMenuItem* useAsDockItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Use as Dock Menu", @"")
                                                              action:@selector(setAsDockMenuFolder:)
                                                       keyEquivalent:@""];
       [useAsDockItem setTarget:self];
       [contextMenu addItem:useAsDockItem];
       [useAsDockItem release];
-      if (rowIndex >= (int)[[BookmarkManager sharedBookmarkManager] firstUserCollection])
+      
+      if ([[BookmarkManager sharedBookmarkManager] isUserCollection:aFolder])
       {
-        NSMenuItem *deleteItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete", @"Delete")
+        NSMenuItem* deleteItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete", @"")
                                                             action:@selector(deleteCollection:)
                                                      keyEquivalent:@""];
         [deleteItem setTarget:self];
@@ -1378,7 +1435,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 - (BOOL)outlineView:(NSOutlineView *)outlineView writeItems:(NSArray*)items toPasteboard:(NSPasteboard*)pboard
 {
   int count = [items count];
-  if ((count == 0) || [mActiveRootCollection isSmartFolder])
+  if ((count == 0) || [mActiveRootCollection isSmartFolder]) // XXX why deny drags from smart folders?
     return NO;
 
   // Pack pointers to bookmark items into this array.
@@ -1640,29 +1697,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   BookmarkItem* item;
   while ((item = [itemsEnum nextObject]))
   {
-    [self selectItem:item expandingContainers:expandContainers scrollIntoView:scroll byExtendingSelection:YES];
+    [self revealItem:item scrollIntoView:scroll selecting:YES byExtendingSelection:YES];
   }
-}
-
-// share code with revealItem:selecting:
-- (void)selectItem:(BookmarkItem*)item expandingContainers:(BOOL)expandContainers scrollIntoView:(BOOL)scroll byExtendingSelection:(BOOL)extendSelection
-{
-  [self revealItem:item scrollIntoView:scroll selecting:YES byExtendingSelection:extendSelection];
-#if 0
-  int itemRow = [mBookmarksOutlineView rowForItem:item];
-  if (itemRow == -1)
-  {
-    if (!expandContainers)
-      return;
-    
-    // expanding isn't implemented yet
-    return;
-  }
-
-  [mBookmarksOutlineView selectRow:itemRow byExtendingSelection:extendSelection];
-  if (scroll)
-    [mBookmarksOutlineView scrollRowToVisible:itemRow];
-#endif
 }
 
 - (id)itemTreeRootContainer
@@ -1775,8 +1811,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   if ((addedItem == [[BookmarkManager sharedBookmarkManager] rootBookmarks]))
   {
     [mContainersTableView reloadData];
-    BookmarkFolder *updatedFolder = [[note userInfo] objectForKey:BookmarkFolderChildKey];
-    [self selectContainer:[(BookmarkFolder*)addedItem indexOfObjectIdenticalTo:updatedFolder]];
+    BookmarkFolder* updatedFolder = [[note userInfo] objectForKey:BookmarkFolderChildKey];
+    [self selectContainerFolder:updatedFolder];
     return;
   }
   
@@ -1863,10 +1899,34 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   [self ensureNibLoaded];
 
   if ([[inURL lowercaseString] isEqualToString:@"about:history"])
-    [self selectContainer:kHistoryContainerIndex];
+    [self selectContainerFolder:[[BookmarkManager sharedBookmarkManager] historyFolder]];
   else
-    [self selectContainer:kBookmarkMenuContainerIndex];
-
+  {
+    BookmarkManager* bookmarkManager = [BookmarkManager sharedBookmarkManager];
+    BookmarkFolder* folderToSelect = [bookmarkManager bookmarkMenuFolder];
+    
+    // fetch the last-viewed container
+    NSDictionary* selectedContainerInfo = [[NSUserDefaults standardUserDefaults] dictionaryForKey:kBookmarksSelectedContainerDefaultsKey];
+    if (selectedContainerInfo)
+    {
+      NSString* containerId = nil;
+      BookmarkFolder* theFolder = nil;
+      if ((containerId = [selectedContainerInfo objectForKey:kBookmarksSelectedContainerIdentifierKey]))
+        theFolder = [bookmarkManager rootBookmarkFolderWithIdentifier:containerId];
+      else if ((containerId = [selectedContainerInfo objectForKey:kBookmarksSelectedContainerUUIDKey]))
+      {
+        theFolder = [bookmarkManager itemWithUUID:containerId];
+        // make sure it's (still) a container
+        if ([theFolder parent] != [bookmarkManager rootBookmarks])
+          theFolder = nil;
+      }
+      if (theFolder)
+        folderToSelect = theFolder;
+    }
+        
+    [self selectContainerFolder:folderToSelect];
+  }
+  
   if (mItemToReveal)
   {
     [self revealItem:mItemToReveal scrollIntoView:YES selecting:YES byExtendingSelection:NO];

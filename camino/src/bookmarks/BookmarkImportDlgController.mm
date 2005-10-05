@@ -175,13 +175,14 @@
 
 -(IBAction) import:(id)aSender
 {
+  // XXX show a spinner, disable the button, postpone to next event loop (to give UI time to update)
   NSMenuItem *selectedItem = [mBrowserListButton selectedItem];
   BookmarkFolder *importFolder = [[[BookmarkManager sharedBookmarkManager] rootBookmarks] addBookmarkFolder];
   NSString *titleString;
   if ([[selectedItem title] isEqualToString:@"Internet Explorer"])
-    titleString = [[NSString alloc] initWithString:NSLocalizedString(@"Imported IE Favorites",@"Imported IE Favorites")];
+    titleString = [[NSString alloc] initWithString:NSLocalizedString(@"Imported IE Favorites", @"")];
   else
-    titleString = [[NSString alloc] initWithFormat:NSLocalizedString(@"Imported %@ Bookmarks",@"Imported %@ Bookmarks"),[selectedItem title]];
+    titleString = [[NSString alloc] initWithFormat:NSLocalizedString(@"Imported %@ Bookmarks", @""), [selectedItem title]];
   [importFolder setTitle:titleString];
   [titleString release];
   // Stupid OmniWeb 5 gets its own import function

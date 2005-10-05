@@ -61,6 +61,22 @@
 
 NSString* const kBookmarkManagerStartedNotification = @"BookmarkManagerStartedNotification";
 
+// root bookmark folder identifiers (must be unique!)
+NSString* const kBookmarksToolbarFolderIdentifier      = @"BookmarksToolbarFolder";
+NSString* const kBookmarksMenuFolderIdentifier         = @"BookmarksMenuFolder";
+
+static NSString* const kTop10BookmarksFolderIdentifier = @"Top10BookmarksFolder";
+static NSString* const kRendezvousFolderIdentifier     = @"RendezvousFolder";   // aka Bonjour
+static NSString* const kAddressBookFolderIdentifier    = @"AddressBookFolder";
+static NSString* const kHistoryFolderIdentifier        = @"HistoryFolder";
+
+// these are suggested indices; we only use them to order the root folders, not to access them.
+enum {
+  kBookmarkMenuContainerIndex = 0,
+  kToolbarContainerIndex = 1,
+  kHistoryContainerIndex = 2,
+};
+
 
 @interface BookmarkManager (Private)
 
@@ -76,6 +92,22 @@ NSString* const kBookmarkManagerStartedNotification = @"BookmarkManagerStartedNo
 - (void)writeBookmarks:(NSNotification *)note;
 - (BookmarkFolder *)findDockMenuFolderInFolder:(BookmarkFolder *)aFolder;
 - (void)writeBookmarksMetadataForSpotlight;
+
+// Reading bookmark files
+- (BOOL)readBookmarks;
+
+// these versions assume that we're readinog all the bookmarks from the file (i.e. not an import into a subfolder)
+- (BOOL)readPListBookmarks:(NSString *)pathToFile;    // camino or safari
+- (BOOL)readCaminoPListBookmarks:(NSDictionary *)plist;
+- (BOOL)readSafariPListBookmarks:(NSDictionary *)plist;
+- (BOOL)readCaminoXMLBookmarks:(NSString *)pathToFile;
+
+// these are "import" methods that import into a subfolder.
+- (BOOL)importHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
+- (BOOL)importCaminoXMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder settingToolbarFolder:(BOOL)setToolbarFolder;
+- (BOOL)importPropertyListFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
+
+- (BOOL)readOperaFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 
 + (void)addItem:(id)inBookmark toURLMap:(NSMutableDictionary*)urlMap usingURL:(NSString*)inURL;
 + (void)removeItem:(id)inBookmark fromURLMap:(NSMutableDictionary*)urlMap usingURL:(NSString*)inURL;  // url may be nil, in which case exhaustive search is used
@@ -94,7 +126,6 @@ NSString* const kBookmarkManagerStartedNotification = @"BookmarkManagerStartedNo
 @implementation BookmarkManager
 
 static NSString* const    kWriteBookmarkNotification = @"write_bms";
-static unsigned           gFirstUserCollection = 0;
 
 + (BookmarkManager*)sharedBookmarkManager
 {
@@ -190,8 +221,7 @@ static unsigned           gFirstUserCollection = 0;
   [mMetadataPath release];
   [mSmartFolderManager release];
 
-  if (mImportDlgController)
-    [mImportDlgController release];
+  [mImportDlgController release];
 
   [mBookmarkURLMap release];
   [mBookmarkFaviconURLMap release];
@@ -221,7 +251,11 @@ static unsigned           gFirstUserCollection = 0;
 - (void)loadBookmarks
 {
   BookmarkFolder* root = [[BookmarkFolder alloc] init];
-  [root setParent:self];    // XXX why?
+  
+  // We used to do this:
+  // [root setParent:self];
+  // but it was unclear why, and it broke logic in a bunch of places (like -setIsRoot).
+
   [root setIsRoot:YES];
   [root setTitle:NSLocalizedString(@"BookmarksRootName", @"")];
   [self setRootBookmarks:root];
@@ -231,45 +265,48 @@ static unsigned           gFirstUserCollection = 0;
   // All interested parties haven't been init'd yet, and/or will recieve the
   // managerStartedNotification when setup is actually complete.
   [BookmarkItem setSuppressAllUpdateNotifications:YES];
-  if (![self readBookmarks]) {
-    // one of two things happened. we are importing off an old xml file
-    // for startup, OR we totally muffed reading the bookmarks.  we'll hope
-    // it was the former.
-    if ([root count] > 0) {
-      // find the xml toolbar menu.  it'll be in top level of bookmark menu folder
-      NSMutableArray *childArray = [[self bookmarkMenuFolder] childArray];
-      unsigned i, j=[childArray count];
-      id anObject;
-      for (i=0;i < j; i++) {
-        anObject = [childArray objectAtIndex:i];
-        if ([anObject isKindOfClass:[BookmarkFolder class]]) {
-          if ([(BookmarkFolder *)anObject isToolbar]) { //triumph!
-            [[self bookmarkMenuFolder] moveChild:anObject toBookmarkFolder:root atIndex:kToolbarContainerIndex];
-            break;
-          }
-        }
-      }
-    } else {  //we are so totally screwed
-      BookmarkFolder *aFolder = [root addBookmarkFolder];
-      if ([root count] == 1) {
-        [aFolder setTitle:NSLocalizedString(@"Bookmark Menu",@"Bookmark Menu")];
-        aFolder = [root addBookmarkFolder];
-      }
-      [aFolder setTitle:NSLocalizedString(@"Bookmark Toolbar",@"Bookmark Toolbar")];
+  BOOL bookmarksReadOK = [self readBookmarks];
+  if (!bookmarksReadOK)
+  {
+    // We'll come here either when reading the bookmarks totally failed, or
+    // when we did a partial read of the xml file. The xml reading code already
+    // fixed up the toolbar folder.
+    if ([root count] == 0)
+    {
+      // failed to read any folders. make some by hand.
+      BookmarkFolder* menuFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksMenuFolderIdentifier] autorelease];
+      [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", @"")];
+      [root appendChild:menuFolder];
+
+      BookmarkFolder* toolbarFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksToolbarFolderIdentifier] autorelease];
+      [toolbarFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", @"")];
+      [toolbarFolder setIsToolbar:YES];
+      [root appendChild:toolbarFolder];
     }
   }
+  
   [BookmarkItem setSuppressAllUpdateNotifications:NO];
+
+  // make sure that the root folder has the special flag
+  [[self rootBookmarks] setIsRoot:YES];
+
   // setup special folders
   [self setupSmartCollections];
+
   mSmartFolderManager = [[KindaSmartFolderManager alloc] initWithBookmarkManager:self];
+
+#if 0
   // at some point, f'd up setting the bookmark toolbar folder special flag.
   // this'll handle that little boo-boo for the time being
   [[self toolbarFolder] setIsToolbar:YES];
-  [[self toolbarFolder] setTitle:NSLocalizedString(@"Bookmark Bar",@"Bookmark Bar")];
-  [[self bookmarkMenuFolder] setTitle:NSLocalizedString(@"Bookmark Menu","Bookmark Menu")]; 
+  [[self toolbarFolder] setTitle:NSLocalizedString(@"Bookmark Bar", @"")];
+  [[self bookmarkMenuFolder] setTitle:NSLocalizedString(@"Bookmark Menu", @"")]; 
+#endif
+
   // don't do this until after we've read in the bookmarks
   mUndoManager = [[NSUndoManager alloc] init];
 
+  // do the other startup stuff over on the main thread
   [self performSelectorOnMainThread:@selector(delayedStartupItems) withObject:nil waitUntilDone:NO];
 
   // pitch everything in the metadata cache and start over. Changes made from here will be incremental. It's
@@ -351,31 +388,27 @@ static unsigned           gFirstUserCollection = 0;
   // reading the file that the Nth folder of the root really is the Toolbar (for example).
   
   // add history
-  BookmarkFolder *temp = [[BookmarkFolder alloc] init];
-  [temp setTitle:NSLocalizedString(@"History",@"History")];
-  [temp setIsSmartFolder:YES];
-  [mRootBookmarks insertChild:temp atIndex:(collectionIndex++) isMove:NO];
-  [temp release];
+  BookmarkFolder* historyBMFolder = [[BookmarkFolder alloc] initWithIdentifier:kHistoryFolderIdentifier];
+  [historyBMFolder setTitle:NSLocalizedString(@"History", nil)];
+  [historyBMFolder setIsSmartFolder:YES];
+  [mRootBookmarks insertChild:historyBMFolder atIndex:(collectionIndex++) isMove:NO];
+  [historyBMFolder release];
   
-  // note: don't release the smart folders until dealloc, so they persist even if turned off and on
-  
-  // add top 10 list
-  mTop10Container = [[BookmarkFolder alloc] init];
-  [mTop10Container setTitle:NSLocalizedString(@"Top Ten List",@"Top Ten List")];
+  // note: we retain smart folders, so they persist even if turned off and on
+  mTop10Container = [[BookmarkFolder alloc] initWithIdentifier:kTop10BookmarksFolderIdentifier];
+  [mTop10Container setTitle:NSLocalizedString(@"Top Ten List", @"")];
   [mTop10Container setIsSmartFolder:YES];
   [mRootBookmarks insertChild:mTop10Container atIndex:(collectionIndex++) isMove:NO];
   
-  mRendezvousContainer = [[BookmarkFolder alloc] init];
-  [mRendezvousContainer setTitle:NSLocalizedString(@"Rendezvous",@"Rendezvous")];
+  mRendezvousContainer = [[BookmarkFolder alloc] initWithIdentifier:kRendezvousFolderIdentifier];
+  [mRendezvousContainer setTitle:NSLocalizedString(@"Rendezvous", @"")];
   [mRendezvousContainer setIsSmartFolder:YES];
   [mRootBookmarks insertChild:mRendezvousContainer atIndex:(collectionIndex++) isMove:NO];
     
-  mAddressBookContainer = [[BookmarkFolder alloc] init];
-  [mAddressBookContainer setTitle:NSLocalizedString(@"Address Book",@"Address Book")];
+  mAddressBookContainer = [[BookmarkFolder alloc] initWithIdentifier:kAddressBookFolderIdentifier];
+  [mAddressBookContainer setTitle:NSLocalizedString(@"Address Book", @"")];
   [mAddressBookContainer setIsSmartFolder:YES];
   [mRootBookmarks insertChild:mAddressBookContainer atIndex:(collectionIndex++) isMove:NO];
-      
-  gFirstUserCollection = collectionIndex;
   
   // set pretty icons
   [[self historyFolder]       setIcon:[NSImage imageNamed:@"historyicon"]];
@@ -420,6 +453,19 @@ static unsigned           gFirstUserCollection = 0;
   return foundFolder;
 }
 
+- (BookmarkFolder*)rootBookmarkFolderWithIdentifier:(NSString*)inIdentifier
+{
+  NSArray* rootFolders = [[self rootBookmarks] childArray];
+  unsigned int numFolders = [rootFolders count];
+  for (unsigned int i = 0; i < numFolders; i ++)
+  {
+    id curItem = [rootFolders objectAtIndex:i];
+    if ([curItem isKindOfClass:[BookmarkFolder class]] && [[curItem identifier] isEqualToString:inIdentifier])
+      return (BookmarkFolder*)curItem;
+  }
+  return nil;
+}
+
 -(BookmarkFolder *)top10Folder
 {
   return mTop10Container;
@@ -427,17 +473,33 @@ static unsigned           gFirstUserCollection = 0;
 
 -(BookmarkFolder *) toolbarFolder
 {
-  return [[self rootBookmarks] objectAtIndex:kToolbarContainerIndex];
+  return [self rootBookmarkFolderWithIdentifier:kBookmarksToolbarFolderIdentifier];
 }
 
 -(BookmarkFolder *) bookmarkMenuFolder
 {
-  return [[self rootBookmarks] objectAtIndex:kBookmarkMenuContainerIndex];
+  return [self rootBookmarkFolderWithIdentifier:kBookmarksMenuFolderIdentifier];
 }
 
 -(BookmarkFolder *) historyFolder
 {
-  return [[self rootBookmarks] objectAtIndex:kHistoryContainerIndex];
+  return [self rootBookmarkFolderWithIdentifier:kHistoryFolderIdentifier];
+}
+
+- (BOOL)isUserCollection:(BookmarkFolder *)inFolder
+{
+  return ([inFolder parent] == mRootBookmarks) &&
+         ([[inFolder identifier] length] == 0);   // all our special folders have identifiers
+}
+
+- (unsigned)indexOfContainerItem:(BookmarkItem*)inItem
+{
+  return [mRootBookmarks indexOfObject:inItem];
+}
+
+- (BookmarkItem*)containerItemAtIndex:(unsigned)inIndex
+{
+  return [mRootBookmarks objectAtIndex:inIndex];
 }
 
 -(BookmarkFolder *) rendezvousFolder
@@ -469,11 +531,6 @@ static unsigned           gFirstUserCollection = 0;
 -(NSUndoManager *) undoManager
 {
   return mUndoManager;
-}
-
--(unsigned) firstUserCollection
-{
-  return gFirstUserCollection;
 }
 
 - (void)setPathToBookmarkFile:(NSString *)aString
@@ -955,10 +1012,11 @@ static unsigned           gFirstUserCollection = 0;
 }
 
 #pragma mark -
+
 //
 // Reading/Importing bookmark files
 //
--(BOOL) readBookmarks
+- (BOOL)readBookmarks
 {
   NSString *profileDir = [[PreferenceManager sharedInstance] newProfilePath];  
 
@@ -973,45 +1031,197 @@ static unsigned           gFirstUserCollection = 0;
   [self setPathToBookmarkFile:bookmarkPath];
   if ([fM isReadableFileAtPath:bookmarkPath])
   {
-    if ([self readPropertyListFile:bookmarkPath intoFolder:[self rootBookmarks]])
-      return YES; // triumph!
+    if ([self readPListBookmarks:bookmarkPath])
+      return YES;
   }
   else if ([fM isReadableFileAtPath:[profileDir stringByAppendingPathComponent:@"bookmarks.xml"]])
   {
-    BookmarkFolder *aFolder = [[self rootBookmarks] addBookmarkFolder];
-    [aFolder setTitle:NSLocalizedString(@"Bookmark Menu",@"Bookmark Menu")];
-    if ([self readCaminoXMLFile:[profileDir stringByAppendingPathComponent:@"bookmarks.xml"] intoFolder:[self bookmarkMenuFolder]])
-      return NO; // triumph! - will do post processing in init
+    if ([self readCaminoXMLBookmarks:[profileDir stringByAppendingPathComponent:@"bookmarks.xml"]])
+      return YES;
   }
   else
   {
     NSString *defaultBookmarks = [[NSBundle mainBundle] pathForResource:@"bookmarks" ofType:@"plist"];
     if ([fM copyPath:defaultBookmarks toPath:bookmarkPath handler:nil]) {
-        if ([self readPropertyListFile:bookmarkPath intoFolder:[self rootBookmarks]])
-          return YES; //triumph!
+        if ([self readPListBookmarks:bookmarkPath])
+          return YES;
     }
   }
 
+  // maybe just look for safari bookmarks here??
+  
   // if we're here, we've had a problem
-  NSString *alert     = NSLocalizedString(@"CorruptedBookmarksAlert",@"");
-  NSString *message   = NSLocalizedString(@"CorruptedBookmarksMsg",@"");
-  NSString *okButton  = NSLocalizedString(@"OKButtonText",@"");
-  NSRunAlertPanel(alert, message, okButton, nil, nil);
+  NSRunAlertPanel(NSLocalizedString(@"CorruptedBookmarksAlert", @""),
+                  NSLocalizedString(@"CorruptedBookmarksMsg", @""),
+                  NSLocalizedString(@"OKButtonText", @""),
+                  nil,
+                  nil);
   return NO;
 }
 
--(void) startImportBookmarks
+- (BOOL)readPListBookmarks:(NSString *)pathToFile
+{
+  NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:pathToFile];
+  if (!dict) return NO;
+
+  // see if it's safari
+  if ([dict objectForKey:@"WebBookmarkType"])
+    return [self readSafariPListBookmarks:dict];
+
+  return [self readCaminoPListBookmarks:dict];
+}
+
+- (BOOL)readCaminoPListBookmarks:(NSDictionary *)plist
+{
+  if (![[self rootBookmarks] readNativeDictionary:plist])
+    return NO;    // read failed
+  
+  // find the menu and toolbar folders
+  BookmarkFolder* menuFolder = nil;
+  BookmarkFolder* toolbarFolder = nil;
+
+  NSEnumerator* rootFoldersEnum = [[[self rootBookmarks] childArray] objectEnumerator];
+  id curChild;
+  while ((curChild = [rootFoldersEnum nextObject]))
+  {
+    if ([curChild isKindOfClass:[BookmarkFolder class]])
+    {
+      BookmarkFolder* bmFolder = (BookmarkFolder*)curChild;
+      if ([bmFolder isToolbar])
+      {
+        toolbarFolder = bmFolder; // remember that we've seen it
+        [bmFolder setIdentifier:kBookmarksToolbarFolderIdentifier];
+      }
+      else if (!menuFolder)
+      {
+        menuFolder = bmFolder;
+        [bmFolder setIdentifier:kBookmarksMenuFolderIdentifier];
+      }
+      
+      if (toolbarFolder && menuFolder)
+        break;
+    }
+  }
+
+  if (!menuFolder)
+  {
+    menuFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksMenuFolderIdentifier] autorelease];
+    [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", @"")];
+    [[self rootBookmarks] insertChild:menuFolder atIndex:kBookmarkMenuContainerIndex isMove:NO];
+  }
+
+  if (!toolbarFolder)
+  {
+    toolbarFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksToolbarFolderIdentifier] autorelease];
+    [toolbarFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", @"")];
+    [toolbarFolder setIsToolbar:YES];
+    [[self rootBookmarks] insertChild:toolbarFolder atIndex:kToolbarContainerIndex isMove:NO];
+  }
+
+  return YES;
+}
+
+- (BOOL)readSafariPListBookmarks:(NSDictionary *)plist
+{
+  BOOL readOK = [[self rootBookmarks] readSafariDictionary:plist];
+  if (!readOK) return NO;
+
+  // find the menu and toolbar folders
+  BookmarkFolder* menuFolder = nil;
+  BookmarkFolder* toolbarFolder = nil;
+
+  NSEnumerator* rootFoldersEnum = [[[self rootBookmarks] childArray] objectEnumerator];
+  id curChild;
+  while ((curChild = [rootFoldersEnum nextObject]))
+  {
+    if ([curChild isKindOfClass:[BookmarkFolder class]])
+    {
+      BookmarkFolder* bmFolder = (BookmarkFolder*)curChild;
+      if ([[bmFolder title] isEqualToString:@"BookmarksBar"])
+      {
+        toolbarFolder = bmFolder; // remember that we've seen it
+        [bmFolder setIsToolbar:YES];
+        [bmFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", @"")];
+        [bmFolder setIdentifier:kBookmarksToolbarFolderIdentifier];
+      }
+      else if ([[bmFolder title] isEqualToString:@"BookmarksMenu"])
+      {
+        menuFolder = bmFolder;
+        [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", @"")];
+        [bmFolder setIdentifier:kBookmarksMenuFolderIdentifier];
+      }
+      
+      if (toolbarFolder && menuFolder)
+        break;
+    }
+  }
+
+  if (!menuFolder)
+  {
+    menuFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksMenuFolderIdentifier] autorelease];
+    [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", @"")];
+    [[self rootBookmarks] insertChild:menuFolder atIndex:kBookmarkMenuContainerIndex isMove:NO];
+  }
+
+  if (!toolbarFolder)
+  {
+    toolbarFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksToolbarFolderIdentifier] autorelease];
+    [toolbarFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", @"")];
+    [toolbarFolder setIsToolbar:YES];
+    [[self rootBookmarks] insertChild:toolbarFolder atIndex:kToolbarContainerIndex isMove:NO];
+  }
+
+  return YES;
+}
+
+- (BOOL)readCaminoXMLBookmarks:(NSString *)pathToFile
+{
+  BookmarkFolder* menuFolder = [[[BookmarkFolder alloc] initWithIdentifier:kBookmarksMenuFolderIdentifier] autorelease];
+  [menuFolder setTitle:NSLocalizedString(@"Bookmark Menu", @"")];
+  [[self rootBookmarks] appendChild:menuFolder];
+
+  BOOL readOK = [self importCaminoXMLFile:pathToFile intoFolder:menuFolder settingToolbarFolder:YES];
+
+  // even if we didn't do a full read, try to fix up the toolbar folder
+  BookmarkFolder* toolbarFolder = nil;
+  NSEnumerator* bookmarksEnum = [[self rootBookmarks] objectEnumerator];
+  BookmarkItem* curItem;
+  while ((curItem = [bookmarksEnum nextObject]))
+  {
+    if ([curItem isKindOfClass:[BookmarkFolder class]])
+    {
+      BookmarkFolder* curFolder = (BookmarkFolder*)curItem;
+      if ([curFolder isToolbar])
+      {
+        toolbarFolder = curFolder;
+        break;
+      }
+    }
+  }
+
+  if (toolbarFolder)
+  {
+    [[toolbarFolder parent] moveChild:toolbarFolder toBookmarkFolder:[self rootBookmarks] atIndex:kToolbarContainerIndex];
+    [toolbarFolder setTitle:NSLocalizedString(@"Bookmark Toolbar", @"")];
+    [toolbarFolder setIdentifier:kBookmarksToolbarFolderIdentifier];
+  }
+  
+  return readOK;
+}
+
+- (void)startImportBookmarks
 {
   if (!mImportDlgController)
     mImportDlgController = [[BookmarkImportDlgController alloc] initWithWindowNibName:@"BookmarkImportDlg"];
+
   [mImportDlgController buildAvailableFileList];
   [mImportDlgController showWindow:nil];
 }
 
--(BOOL) importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
+- (BOOL)importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
 {
-  //I feel dirty doing it this way.  But we'll check file extension
-  //to figure out how to handle this.  Damn you, Steve Jobs!!
+  // I feel dirty doing it this way.  But we'll check file extension
+  // to figure out how to handle this.
   NSUndoManager *undoManager = [self undoManager];
   [undoManager beginUndoGrouping];
   BOOL success = NO;
@@ -1019,30 +1229,30 @@ static unsigned           gFirstUserCollection = 0;
   if ([extension isEqualToString:@""]) // we'll go out on a limb here
     success = [self readOperaFile:pathToFile intoFolder:aFolder];
   else if ([extension isEqualToString:@"html"] || [extension isEqualToString:@"htm"])
-    success = [self readHTMLFile:pathToFile intoFolder:aFolder];
+    success = [self importHTMLFile:pathToFile intoFolder:aFolder];
   else if ([extension isEqualToString:@"xml"])
-    success = [self readCaminoXMLFile:pathToFile intoFolder:aFolder];
+    success = [self importCaminoXMLFile:pathToFile intoFolder:aFolder settingToolbarFolder:NO];
   else if ([extension isEqualToString:@"plist"] || !success)
-    success = [self readPropertyListFile:pathToFile intoFolder:aFolder];
+    success = [self importPropertyListFile:pathToFile intoFolder:aFolder];
   // we don't know the extension, or we failed to load.  we'll take another
   // crack at it trying everything we know.
   if (!success) {
     success = [self readOperaFile:pathToFile intoFolder:aFolder];
     if (!success) {
-      success = [self readHTMLFile:pathToFile intoFolder:aFolder];
+      success = [self importHTMLFile:pathToFile intoFolder:aFolder];
       if (!success) {
-        success = [self readCaminoXMLFile:pathToFile intoFolder:aFolder];
+        success = [self importCaminoXMLFile:pathToFile intoFolder:aFolder settingToolbarFolder:NO];
       }
     }
   }
   [[undoManager prepareWithInvocationTarget:[self rootBookmarks]] deleteChild:aFolder];
   [undoManager endUndoGrouping];
-  [undoManager setActionName:NSLocalizedString(@"Import Bookmarks",@"Import Bookmarks")];
+  [undoManager setActionName:NSLocalizedString(@"Import Bookmarks", @"")];
   return success;
 }
 
 // spits out text file as NSString with "proper" encoding based on pretty shitty detection
--(NSString *)decodedTextFile:(NSString *)pathToFile
+- (NSString *)decodedTextFile:(NSString *)pathToFile
 {
   NSData* fileAsData = [[NSData alloc] initWithContentsOfFile:pathToFile];
   if (!fileAsData) {
@@ -1103,7 +1313,7 @@ static unsigned           gFirstUserCollection = 0;
 }
 
 
--(BOOL)readHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
+-(BOOL)importHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
 {
   // get file as NSString
   NSString* fileAsString = [self decodedTextFile:pathToFile];
@@ -1275,7 +1485,7 @@ static unsigned           gFirstUserCollection = 0;
       // Firefox menu separator
       else if ([tokenTag isEqualToString:@"<HR"]) {
           currentItem = [currentArray addBookmark];
-          [(Bookmark *)currentItem setIsSeparator:TRUE];
+          [(Bookmark *)currentItem setIsSeparator:YES];
           [fileScanner setScanLocation:(scanIndex+1)];          
       }
       else { //beats me.  just close the tag out and continue.
@@ -1288,7 +1498,8 @@ static unsigned           gFirstUserCollection = 0;
   return YES;
 }
 
--(BOOL)readCaminoXMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
+
+- (BOOL)importCaminoXMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder settingToolbarFolder:(BOOL)setToolbarFolder
 {
   NSURL* fileURL = [NSURL fileURLWithPath:pathToFile];
   if (!fileURL) {
@@ -1297,63 +1508,66 @@ static unsigned           gFirstUserCollection = 0;
   }
   // Thanks, Apple, for example XML parsing code.
   // Create CFXMLTree from file.  This needs to be released later
-  CFXMLTreeRef XMLFileTree = CFXMLTreeCreateWithDataFromURL (kCFAllocatorDefault,
+  CFXMLTreeRef xmlFileTree = CFXMLTreeCreateWithDataFromURL (kCFAllocatorDefault,
                                                              (CFURLRef)fileURL,
                                                              kCFXMLParserSkipWhitespace,
                                                              kCFXMLNodeCurrentVersion);
-  if (!XMLFileTree) {
+  if (!xmlFileTree) {
     NSLog(@"XMLTree creation failed");
     return NO;
   }
+
   // process top level nodes.  I think we'll find DTD
   // before data - so only need to make 1 pass.
-  int count, index;
-  CFXMLTreeRef subFileTree;
-  CFXMLNodeRef bookmarkNode;
-  CFXMLDocumentTypeInfo *docTypeInfo;
-  CFURLRef dtdURL;
-  BOOL aBool;
-  count = CFTreeGetChildCount(XMLFileTree);
-  for (index=0;index < count;index++) {
-    subFileTree = CFTreeGetChildAtIndex(XMLFileTree,index);
-    if (subFileTree) {
-      bookmarkNode = CFXMLTreeGetNode(subFileTree);
-      if (bookmarkNode) {
-        switch (CFXMLNodeGetTypeCode(bookmarkNode)) {
+  int count = CFTreeGetChildCount(xmlFileTree);
+  for (int index = 0;index < count; index++)
+  {
+    CFXMLTreeRef subFileTree = CFTreeGetChildAtIndex(xmlFileTree,index);
+    if (subFileTree)
+    {
+      CFXMLNodeRef bookmarkNode = CFXMLTreeGetNode(subFileTree);
+      if (bookmarkNode)
+      {
+        switch (CFXMLNodeGetTypeCode(bookmarkNode))
+        {
           // make sure it's Camino/Chimera DTD
-          case (kCFXMLNodeTypeDocumentType):
-            docTypeInfo = (CFXMLDocumentTypeInfo *)CFXMLNodeGetInfoPtr(bookmarkNode);
-            dtdURL = docTypeInfo->externalID.systemID;
-            if (![[(NSURL *)dtdURL absoluteString] isEqualToString:@"http://www.mozilla.org/DTDs/ChimeraBookmarks.dtd"]) {
-              NSLog(@"not a ChimeraBookmarks xml file. Bail");
-              CFRelease(XMLFileTree);
-              return NO;
-            }
+          case kCFXMLNodeTypeDocumentType:
+            {
+              CFXMLDocumentTypeInfo* docTypeInfo = (CFXMLDocumentTypeInfo *)CFXMLNodeGetInfoPtr(bookmarkNode);
+              CFURLRef dtdURL = docTypeInfo->externalID.systemID;
+              if (![[(NSURL *)dtdURL absoluteString] isEqualToString:@"http://www.mozilla.org/DTDs/ChimeraBookmarks.dtd"]) {
+                NSLog(@"not a ChimeraBookmarks xml file. Bail");
+                CFRelease(xmlFileTree);
+                return NO;
+              }
               break;
-          case (kCFXMLNodeTypeElement):
-            aBool = [aFolder readCaminoXML:subFileTree];
-            CFRelease (XMLFileTree);
-            return aBool;
-            break;
+            }
+
+          case kCFXMLNodeTypeElement:
+            {
+              BOOL readOK = [aFolder readCaminoXML:subFileTree settingToolbar:setToolbarFolder];
+              CFRelease (xmlFileTree);
+              return readOK;
+            }
           default:
             break;
         }
       }
     }
   }
-  CFRelease(XMLFileTree);
+  CFRelease(xmlFileTree);
   NSLog(@"run through the tree and didn't find anything interesting.  Bailed out");
   return NO;
 }
 
--(BOOL)readPropertyListFile:(NSString *)pathToFile intoFolder:aFolder
+-(BOOL)importPropertyListFile:(NSString *)pathToFile intoFolder:aFolder
 {
   NSDictionary* dict = [NSDictionary dictionaryWithContentsOfFile:pathToFile];
   // see if it's safari
-  if (![dict objectForKey:@"WebBookmarkType"])
-    return [aFolder readNativeDictionary:dict];
-  else
+  if ([dict objectForKey:@"WebBookmarkType"])
     return [aFolder readSafariDictionary:dict];
+
+  return [aFolder readNativeDictionary:dict];
 }
 
 -(BOOL)readOperaFile:(NSString *)pathToFile intoFolder:aFolder
@@ -1393,9 +1607,11 @@ static unsigned           gFirstUserCollection = 0;
     }
     // Perhaps a separator? This isn't how I'd spell it, but
     // then again, I'm not Norwagian, so what do I know.
+    //                         ^
+    //                     That's funny
     else if ([aLine hasPrefix:@"#SEPERATOR"]) {
       currentItem = [currentArray addBookmark];
-      [(Bookmark *)currentItem setIsSeparator:TRUE];
+      [(Bookmark *)currentItem setIsSeparator:YES];
       currentItem = nil;
     }
     // Or maybe this folder is being closed out.
@@ -1428,7 +1644,7 @@ static unsigned           gFirstUserCollection = 0;
       }
     }
   }
-  // That wasn't so bad
+
   return YES;
 }
 
@@ -1440,14 +1656,14 @@ static unsigned           gFirstUserCollection = 0;
 {
   NSData *htmlData = [[[self rootBookmarks] writeHTML:0] dataUsingEncoding:NSUTF8StringEncoding];
   if (![htmlData writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
-    NSLog(@"writeHTML: Failed to write file %@",pathToFile);
+    NSLog(@"writeHTML: Failed to write file %@", pathToFile);
 }
 
 -(void) writeSafariFile:(NSString *)pathToFile
 {
   NSDictionary* dict = [[self rootBookmarks] writeSafariDictionary];
   if (![dict writeToFile:[pathToFile stringByStandardizingPath] atomically:YES])
-    NSLog(@"writeSafariFile: Failed to write file %@",pathToFile);
+    NSLog(@"writeSafariFile: Failed to write file %@", pathToFile);
 }
 
 //
@@ -1458,7 +1674,11 @@ static unsigned           gFirstUserCollection = 0;
 //
 -(void)writePropertyListFile:(NSString *)pathToFile
 {
-  NSDictionary* dict = [[self rootBookmarks] writeNativeDictionary];
+  BookmarkFolder* rootBookmarks = [self rootBookmarks];
+  if (!rootBookmarks)
+    return;   // we never read anything
+
+  NSDictionary* dict = [rootBookmarks writeNativeDictionary];
   NSString* stdPath = [pathToFile stringByStandardizingPath];
   NSString* backupFile = [NSString stringWithFormat:@"%@.new", stdPath];
   BOOL success = [dict writeToFile:backupFile atomically:YES];
@@ -1468,7 +1688,7 @@ static unsigned           gFirstUserCollection = 0;
     [fm movePath:backupFile toPath:stdPath handler:nil];     //  ... in with the new
   }
   else
-    NSLog(@"writePropertyList: Failed to write file %@",pathToFile);
+    NSLog(@"writePropertyList: Failed to write file %@", pathToFile);
 }
 
 @end

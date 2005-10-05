@@ -36,10 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "NSString+Utils.h"
+#import "NSArray+Utils.h"
+
 #import "BookmarkManager.h"
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
-#import "NSString+Utils.h"
 
 // Notification definitions
 NSString* const BookmarkFolderAdditionNotification      = @"bf_add";
@@ -48,28 +50,142 @@ NSString* const BookmarkFolderChildKey                  = @"bf_ck";
 NSString* const BookmarkFolderChildIndexKey             = @"bf_ik";
 NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
+
+@interface BookmarksEnumerator : NSEnumerator
+{
+  BookmarkFolder*   mRootFolder;
+  
+  BookmarkFolder*   mCurFolder;
+  int               mCurChildIndex;   // -1 means "self"
+}
+
+- (id)initWithRootFolder:(BookmarkFolder*)rootFolder;
+
+- (id)nextObject;
+- (NSArray *)allObjects;
+
+@end;
+
+#pragma mark -
+
+
 @interface BookmarkFolder (Private)
+
 // status stuff
 -(unsigned) specialFlag;
 -(void) setSpecialFlag:(unsigned)aNumber;
+
 // ways to add a new bookmark
 -(BOOL) addBookmarkFromNativeDict:(NSDictionary *)aDict;
 -(BOOL) addBookmarkFromSafariDict:(NSDictionary *)aDict;
 -(BOOL) addBookmarkFromXML:(CFXMLTreeRef)aTreeRef;
-//ways to add a new bookmark folder
+
+// ways to add a new bookmark folder
 -(BOOL) addBookmarkFolderFromNativeDict:(NSDictionary *)aDict; //read in - adds sequentially
 -(BOOL) addBookmarkFolderFromSafariDict:(NSDictionary *)aDict;
--(BOOL) addBookmarkFolderFromXML:(CFXMLTreeRef)aTreeRef;
-// Deletes the bookmark or bookmark array
+-(BOOL) addBookmarkFolderFromXML:(CFXMLTreeRef)aTreeRef settingToolbar:(BOOL)setupToolbar;
+
+// deletes the bookmark or bookmark array
 -(BOOL) deleteBookmark:(Bookmark *)childBookmark;
 -(BOOL) deleteBookmarkFolder:(BookmarkFolder *)childArray;
-  //Notification methods
+
+// notification methods
 -(void) itemAddedNote:(BookmarkItem *)theItem atIndex:(unsigned)anIndex;
 -(void) itemRemovedNote:(BookmarkItem *)theItem;
 -(void) dockMenuChanged:(NSNotification *)note;
+
 // aids in searching
-- (NSString*) expandKeyword:(NSString*)keyword inString:(NSString*)location;
-- (NSArray *) folderItemWithClass:(Class)theClass;
+- (NSString*)expandKeyword:(NSString*)keyword inString:(NSString*)location;
+- (NSArray *)folderItemsWithClass:(Class)theClass;
+
+@end
+
+#pragma mark -
+
+@implementation BookmarksEnumerator
+
+- (id)initWithRootFolder:(BookmarkFolder*)rootFolder
+{
+  if ((self = [super init]))
+  {
+    mRootFolder = [rootFolder retain];
+    mCurFolder = mRootFolder;
+    mCurChildIndex = -1;
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  [mRootFolder release];
+  [super dealloc];
+}
+
+- (void)setupNextForItem:(BookmarkItem*)inItem
+{
+  if ([inItem isKindOfClass:[BookmarkFolder class]])
+  {
+    mCurFolder = inItem;
+    mCurChildIndex = 0;   // start on its children next time
+  }
+  else
+    ++mCurChildIndex;
+}
+
+- (id)nextObject
+{
+  if (!mCurFolder) return nil;    // if we're done, keep it that way
+  
+  if (mCurChildIndex == -1)
+  {
+    [self setupNextForItem:mCurFolder];
+    return mCurFolder;
+  }
+  
+  NSArray* curFolderChildren = [mCurFolder childArray];
+  BookmarkItem* curChild = [curFolderChildren safeObjectAtIndex:mCurChildIndex];
+  if (curChild)
+  {
+    [self setupNextForItem:curChild];
+    return curChild;
+  }
+  
+  // we're at the end of this folder.
+  while (1)
+  {
+    // back up to parent folder, next index
+    BookmarkFolder* newCurFolder = [mCurFolder parent];
+    mCurChildIndex = [newCurFolder indexOfObject:mCurFolder] + 1;
+    mCurFolder = newCurFolder;
+    
+    if (mCurChildIndex < (int)[newCurFolder count])
+    {
+      BookmarkItem* nextItem = [mCurFolder objectAtIndex:mCurChildIndex];
+      [self setupNextForItem:nextItem];
+      return nextItem;
+    }
+    
+    if (mCurFolder == mRootFolder)  // we finished
+    {
+      mCurFolder = nil;
+      break;
+    }
+  }
+  
+  return nil;
+}
+
+- (NSArray*)allObjects
+{
+  NSMutableArray* allObjectsArray = [NSMutableArray array];
+
+  BookmarksEnumerator* bmEnum = [[[BookmarksEnumerator alloc] initWithRootFolder:mRootFolder] autorelease];
+  id curItem;
+  while ((curItem = [bmEnum nextObject]))
+    [allObjectsArray addObject:curItem];
+  
+  return allObjectsArray;
+}
 
 @end
 
@@ -114,7 +230,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   [undoManager disableUndoRegistration];
   while ((anItem = [enumerator nextObject])) {
     aCopiedItem = [anItem copyWithZone:[anItem zone]];
-    [folderCopy insertChild:aCopiedItem];
+    [folderCopy appendChild:aCopiedItem];
     [aCopiedItem release];
   }
   [undoManager enableUndoRegistration];
@@ -179,14 +295,30 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 -(NSArray *) allChildBookmarks
 {
   NSMutableArray *anArray = [NSMutableArray array];
-  [anArray addObjectsFromArray:[self folderItemWithClass:[Bookmark class]]];
-  NSEnumerator *enumerator = [[self folderItemWithClass:[BookmarkFolder class]] objectEnumerator];
+  [anArray addObjectsFromArray:[self folderItemsWithClass:[Bookmark class]]];
+  NSEnumerator *enumerator = [[self folderItemsWithClass:[BookmarkFolder class]] objectEnumerator];
   BookmarkFolder *kid;
   while ((kid = [enumerator nextObject])) {
     NSArray *kidsBookmarks = [kid allChildBookmarks];
     [anArray addObjectsFromArray:kidsBookmarks];
   }
   return anArray;
+}
+
+-(NSEnumerator*)objectEnumerator
+{
+  return [[[BookmarksEnumerator alloc] initWithRootFolder:self] autorelease];
+}
+
+-(void)setIdentifier:(NSString*)inIdentifier
+{
+  [mIdentifier autorelease];
+  mIdentifier = [inIdentifier retain];
+}
+
+-(NSString*)identifier
+{
+  return mIdentifier;
 }
 
 -(BOOL) isSpecial
@@ -321,7 +453,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 //
 // Adding children.
 //
--(void) insertChild:(BookmarkItem *) aChild
+-(void) appendChild:(BookmarkItem *) aChild
 {
   [self insertChild:aChild atIndex:[self count] isMove:NO];
 }
@@ -338,12 +470,12 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     [[undoManager prepareWithInvocationTarget:self] deleteChild:aChild];
     if (![undoManager isUndoing]) {
       if ([aChild isKindOfClass:[BookmarkFolder class]])
-        [undoManager setActionName:NSLocalizedString(@"Add Folder",@"Add Folder")];
+        [undoManager setActionName:NSLocalizedString(@"Add Folder", @"")];
       else if ([aChild isKindOfClass:[Bookmark class]]) {
         if (![(Bookmark  *)aChild isSeparator])
-          [undoManager setActionName:NSLocalizedString(@"Add Bookmark",@"Add Bookmark")];
+          [undoManager setActionName:NSLocalizedString(@"Add Bookmark", @"")];
         else
-          [undoManager setActionName:NSLocalizedString(@"Add Separator",@"Add Separator")];
+          [undoManager setActionName:NSLocalizedString(@"Add Separator", @"")];
       }
     } else {
       [aChild itemUpdatedNote:kBookmarkItemEverythingChangedMask];   // ??
@@ -380,7 +512,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 {
   if (![self isRoot]) {
     Bookmark* theBookmark = [[Bookmark alloc] init];
-    [self insertChild:theBookmark];
+    [self appendChild:theBookmark];
     [theBookmark release]; //retained on insert
     return theBookmark;
   }
@@ -401,7 +533,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 // add from camino xml
 -(BOOL) addBookmarkFromXML:(CFXMLTreeRef)aTreeRef
 {
-  return [[self addBookmark] readCaminoXML:aTreeRef];
+  return [[self addBookmark] readCaminoXML:aTreeRef settingToolbar:NO];
 }
 
 -(Bookmark *) addBookmark:(NSString *)aTitle url:(NSString *)aURL inPosition:(unsigned)aIndex isSeparator:(BOOL)aBool
@@ -437,7 +569,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 -(BookmarkFolder *)addBookmarkFolder // adds to end
 {
   BookmarkFolder *theFolder = [[BookmarkFolder alloc] init];
-  [self insertChild:theFolder];
+  [self appendChild:theFolder];
   [theFolder release]; // retained on insert
   return theFolder;
 }
@@ -453,9 +585,9 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   return [[self addBookmarkFolder] readSafariDictionary:aDict];
 }
 
--(BOOL) addBookmarkFolderFromXML:(CFXMLTreeRef)aTreeRef
+-(BOOL) addBookmarkFolderFromXML:(CFXMLTreeRef)aTreeRef settingToolbar:(BOOL)setupToolbar
 {
-  return [[self addBookmarkFolder] readCaminoXML:aTreeRef];
+  return [[self addBookmarkFolder] readCaminoXML:aTreeRef settingToolbar:setupToolbar];
 }
 
 // normal add while programming running
@@ -528,7 +660,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
   // What we do depends on if we're moving into a new folder, or just
   // rearranging ourself a bit.
-  if (self != aNewParent)
+  if (aNewParent != self)
   {
     [aNewParent insertChild:aChild atIndex:aIndex isMove:YES];
     // DO NOT call deleteChild here.  Just quietly remove it from the array.
@@ -542,6 +674,9 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     [self itemRemovedNote:aChild];
     if (curIndex < aIndex)
       --aIndex;
+    else
+      ++curIndex; // so that redo works
+
     [self insertChild:aChild atIndex:aIndex isMove:YES];
     [aChild release];
   }
@@ -550,11 +685,11 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   [undoManager endUndoGrouping];
 
   if ([aChild isKindOfClass:[BookmarkFolder class]])
-    [undoManager setActionName:NSLocalizedString(@"Move Folder",@"Move Folder")];
+    [undoManager setActionName:NSLocalizedString(@"Move Folder", @"")];
   else if (isSeparator)
-    [undoManager setActionName:NSLocalizedString(@"Move Separator",@"Move Separator")];
+    [undoManager setActionName:NSLocalizedString(@"Move Separator", @"")];
   else
-    [undoManager setActionName:NSLocalizedString(@"Move Bookmark",@"Move Bookmark")];
+    [undoManager setActionName:NSLocalizedString(@"Move Bookmark", @"")];
 }
 
 -(BookmarkItem*) copyChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex
@@ -571,9 +706,9 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
   NSUndoManager* undoManager = [[BookmarkManager sharedBookmarkManager] undoManager];
   if ([aChild isKindOfClass:[BookmarkFolder class]])
-    [undoManager setActionName:NSLocalizedString(@"Copy Folder",@"Copy Bookmark Folder")];
+    [undoManager setActionName:NSLocalizedString(@"Copy Folder", @"")];
   else
-    [undoManager setActionName:NSLocalizedString(@"Copy Bookmark",@"Copy Bookmark")];
+    [undoManager setActionName:NSLocalizedString(@"Copy Bookmark", @"")];
 
   return copiedChild;
 }
@@ -612,9 +747,9 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
   if (![undoManager isUndoing] && ![self isSmartFolder]) {
     if ([aChild isSeparator])
-      [undoManager setActionName:NSLocalizedString(@"Delete Separator", @"Delete Separator")];
+      [undoManager setActionName:NSLocalizedString(@"Delete Separator", @"")];
     else
-      [undoManager setActionName:NSLocalizedString(@"Delete Bookmark", @"Delete Bookmark")];
+      [undoManager setActionName:NSLocalizedString(@"Delete Bookmark", @"")];
   }
 
   [self itemRemovedNote:aChild];
@@ -644,7 +779,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   [[self childArray] removeObject:aChild];
 
   if (![undoManager isUndoing])
-    [undoManager setActionName:NSLocalizedString(@"Delete Folder", @"Delete Bookmark Folder")];
+    [undoManager setActionName:NSLocalizedString(@"Delete Folder", @"")];
 
   [self itemRemovedNote:aChild];
   return YES;
@@ -849,9 +984,6 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(BOOL) readNativeDictionary:(NSDictionary *)aDict
 {
-  id aKid;
-  NSEnumerator *enumerator;
-  BOOL success = YES;
   [self setTitle:[aDict objectForKey:BMTitleKey]];
   [self setItemDescription:[aDict objectForKey:BMFolderDescKey]];
   [self setKeyword:[aDict objectForKey:BMFolderKeywordKey]];
@@ -870,7 +1002,10 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
       flag &= ~kBookmarkSmartFolder;
   }
   [self setSpecialFlag:flag];
-  enumerator = [[aDict objectForKey:BMChildrenKey] objectEnumerator];
+
+  NSEnumerator* enumerator = [[aDict objectForKey:BMChildrenKey] objectEnumerator];
+  BOOL success = YES;
+  id aKid;
   while ((aKid = [enumerator nextObject]) && success) {
     if ([aKid objectForKey:BMChildrenKey])
       success = [self addBookmarkFolderFromNativeDict:(NSDictionary *)aKid];
@@ -882,10 +1017,9 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(BOOL) readSafariDictionary:(NSDictionary *)aDict
 {
-  BOOL success = YES;
-
   [self setTitle:[aDict objectForKey:BMTitleKey]];
 
+  BOOL success = YES;
   NSEnumerator* enumerator = [[aDict objectForKey:BMChildrenKey] objectEnumerator];
   id aKid;
   while ((aKid = [enumerator nextObject]) && success)
@@ -903,7 +1037,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   return success;
 }
 
--(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef
+-(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef settingToolbar:(BOOL)setupToolbar
 {
   BOOL success = YES;
   CFXMLNodeRef myNode = CFXMLTreeGetNode(aTreeRef);
@@ -912,7 +1046,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     // Process our info - we load info into tempMuteString,
     // then send a cleaned up version to temp string, which gets
     // dropped into appropriate variable
-    if (CFXMLNodeGetTypeCode(myNode)==kCFXMLNodeTypeElement)
+    if (CFXMLNodeGetTypeCode(myNode) == kCFXMLNodeTypeElement)
     {
       CFXMLElementInfo* elementInfoPtr = (CFXMLElementInfo*)CFXMLNodeGetInfoPtr(myNode);
       if (elementInfoPtr)
@@ -921,9 +1055,12 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
         [self setTitle:[[attribDict objectForKey:CaminoNameKey] stringByRemovingAmpEscapes]];
         [self setItemDescription:[[attribDict objectForKey:CaminoDescKey] stringByRemovingAmpEscapes]];
 
-        if ([[attribDict objectForKey:CaminoTypeKey] isEqualToString:CaminoToolbarKey])
+        if ([[attribDict objectForKey:CaminoTypeKey] isEqualToString:CaminoToolbarKey] && setupToolbar)
+        {
+          // we move the toolbar folder to its correct location later
           [self setIsToolbar:YES];
-
+        }
+        
         if ([[attribDict objectForKey:CaminoGroupKey] isEqualToString:CaminoTrueKey])
           [self setIsGroup:YES];
 
@@ -938,7 +1075,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
             if ([tempString isEqualToString:CaminoBookmarkKey])
               success = [self addBookmarkFromXML:childTreeRef];
             else if ([tempString isEqualToString:CaminoFolderKey])
-              success = [self addBookmarkFolderFromXML:childTreeRef];
+              success = [self addBookmarkFolderFromXML:childTreeRef settingToolbar:setupToolbar];
           } 
         }
       } else  {
@@ -953,6 +1090,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     NSLog(@"BookmarkFolder: readCaminoXML - myNode null - bookmark not imported");
     success = NO;
   }
+
   return success;
 }
 
@@ -1086,9 +1224,11 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 {
   id item = nil;
   NSString* htmlString = nil;
+
   NSMutableString *padString = [NSMutableString string];
-  for (unsigned i = 0;i<aPad;i++) 
+  for (unsigned i = 0; i < aPad;i++) 
     [padString insertString:@"    " atIndex:0];
+
   // Normal folders
   if ((![self isToolbar] && ![self isRoot] && ![self isSmartFolder])) {
     NSString *formatString;
@@ -1096,7 +1236,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
       formatString = @"%@<DT><H3 FOLDER_GROUP=\"true\">%@</H3>\n%@<DL><p>\n";
     else
       formatString = @"%@<DT><H3>%@</H3>\n%@<DL><p>\n";
-    htmlString = [NSString stringWithFormat:formatString, padString,[mTitle stringByAddingAmpEscapes],padString];
+    htmlString = [NSString stringWithFormat:formatString, padString, [mTitle stringByAddingAmpEscapes], padString];
   }
   // Toolbar Folder
   else if ([self isToolbar])
@@ -1114,16 +1254,18 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
    // Folder-Not-Appearing-In-This-File Folder (ie, smart folders)
    else if ([self isSmartFolder])
      return @"";
+
   NSEnumerator* enumerator = [mChildArray objectEnumerator];
   //get chillins first
   while ((item = [enumerator nextObject]))
     htmlString = [htmlString stringByAppendingString:[item writeHTML:aPad+1]];
-  return [htmlString stringByAppendingString:[NSString stringWithFormat:@"%@</DL><p>\n",padString]];
+  return [htmlString stringByAppendingString:[NSString stringWithFormat:@"%@</DL><p>\n", padString]];
 }
 
 #pragma mark -
+
 //
-// Scripting methods - thanks for the sketch example, Apple
+// Scripting methods
 //
 - (NSScriptObjectSpecifier *)objectSpecifier
 {
@@ -1142,12 +1284,13 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
   return nil;
 }
 
-- (NSArray *)folderItemWithClass:(Class)theClass {
+- (NSArray *)folderItemsWithClass:(Class)theClass
+{
   NSArray *kiddies = [self childArray];
   NSMutableArray *result = [NSMutableArray array];
   unsigned i, c = [kiddies count];
   id curItem;
-  for (i=0; i<c; i++) {
+  for (i = 0; i < c; i++) {
     curItem = [kiddies objectAtIndex:i];
     if ([curItem isKindOfClass:theClass]) {
       [result addObject:curItem];
@@ -1159,12 +1302,12 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 // both childBookmarks and childFolders are read-only functions.
 -(NSArray *)childBookmarks
 {
-  return [self folderItemWithClass:[Bookmark class]];
+  return [self folderItemsWithClass:[Bookmark class]];
 }
 
 -(NSArray *)childFolders
 {
-  return [self folderItemWithClass:[BookmarkFolder class]];
+  return [self folderItemsWithClass:[BookmarkFolder class]];
 }
 
 // all the insert, add, remove, replace methods for the 3 sets of items in a bookmark array
@@ -1175,7 +1318,7 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 
 -(void) addInChildArray:(BookmarkItem *)aItem
 {
-  [self insertChild:aItem];
+  [self appendChild:aItem];
 }
 
 -(void) removeFromChildArrayAtIndex:(unsigned)aIndex

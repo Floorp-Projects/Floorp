@@ -123,7 +123,7 @@ enum
   // for reading/writing to disk - unimplemented in BookmarkItem.
 -(BOOL) readNativeDictionary:(NSDictionary *)aDict;
 -(BOOL) readSafariDictionary:(NSDictionary *)aDict;
--(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef;
+-(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef settingToolbar:(BOOL)setupToolbar;
 
 -(void)writeBookmarksMetadataToPath:(NSString*)inPath;
 -(void)removeBookmarksMetadataFromPath:(NSString*)inPath;

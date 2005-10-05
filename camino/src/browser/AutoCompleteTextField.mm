@@ -658,7 +658,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
   [self clearResults];
   NSTextView *fieldEditor = [self fieldEditor];
-  [[fieldEditor undoManager] removeAllActionsWithTarget:self];
+  [[fieldEditor undoManager] removeAllActionsWithTarget:fieldEditor];
   [fieldEditor setString:url];
   [fieldEditor selectAll:self];
 }
@@ -736,19 +736,30 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
     [[self fieldEditor] setSelectedRange:NSMakeRange(len, len)];
   }
   else
+  {
     [self setStringValue:aURI];
+  }
 }
 
-- (void) setStringUndoably:(NSString *)aString fromLocation:(unsigned int)aLocation
+- (void)setStringUndoably:(NSString *)aString fromLocation:(unsigned int)aLocation
 {
-  NSTextView *fieldEditor = [self fieldEditor];
-	if ( aLocation > [[fieldEditor string] length] )			// sanity check or AppKit crashes
+  NSTextView* fieldEditor = [self fieldEditor];
+  NSString* curValue = [fieldEditor string];
+
+  unsigned curLength = [curValue length];
+  if (aLocation > curLength)    // sanity check or AppKit crashes
     return;
-  NSRange range = NSMakeRange(aLocation,[[fieldEditor string] length] - aLocation);
-  if ([fieldEditor shouldChangeTextInRange:range replacementString:aString]) {
+
+  if ((aLocation + [aString length] == curLength) && [curValue compare:aString options:0 range:NSMakeRange(aLocation, curLength)] == NSOrderedSame)
+    return;  // nothing to do
+
+  NSRange range = NSMakeRange(aLocation, [curValue length] - aLocation);
+  if ([fieldEditor shouldChangeTextInRange:range replacementString:aString])
+  {
     [[fieldEditor textStorage] replaceCharactersInRange:range withString:aString];
     if (NSMaxRange(range) == 0) // will only be true if the field is empty
       [fieldEditor setFont:[self font]]; // wrong font will be used otherwise
+
     // Whenever we send [self didChangeText], we trigger the
     // textDidChange method, which will begin a new search with
     // a new search string (which we just inserted) if the selection
@@ -761,9 +772,9 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   // sanity check and don't update the highlight if we're starting from the
   // beginning of the string. There's no need for that since no autocomplete
   // result would ever replace the string from location 0.
-  if ( aLocation > [[fieldEditor string] length] || !aLocation )
+  if (aLocation > [[fieldEditor string] length] || !aLocation)
     return;
-  range = NSMakeRange(aLocation,[[fieldEditor string] length] - aLocation);
+  range = NSMakeRange(aLocation, [[fieldEditor string] length] - aLocation);
   [fieldEditor setSelectedRange:range];
 }
 

@@ -61,7 +61,7 @@
     // set up default menu
     NSMenu *menu = [[[NSMenu alloc] init] autorelease];
     NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder...", @"")
-                                                       action:@selector(addFolder:)
+                                                       action:@selector(addBookmarkFolder:)
                                                 keyEquivalent:@""] autorelease];
     [menuItem setTarget:[self delegate]];
     [menu addItem:menuItem];
@@ -101,14 +101,6 @@
     }
   }
   [super _editItem:dummy];
-}
-
-- (unsigned int)outlineView:(NSOutlineView *)outlineView draggingSourceOperationMaskForLocal:(BOOL)localFlag
-{
-  if (localFlag)
-    return (NSDragOperationCopy | NSDragOperationGeneric | NSDragOperationMove);
-
-  return (NSDragOperationDelete | NSDragOperationGeneric);
 }
 
 //

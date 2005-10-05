@@ -57,7 +57,7 @@ enum {
 {
   NSMutableArray* mChildArray;
   unsigned int    mSpecialFlag;
-  NSString*       mIdentifier;    // only non-nil for "special" collection folders
+  NSString*       mIdentifier;    // only non-nil for "special" collection folders. not saved (yet)
 }
 
 -(id) init;   // designated initializer
@@ -65,6 +65,14 @@ enum {
 -(NSMutableArray *) childArray;
 -(NSArray *) childURLs;
 -(NSArray *) allChildBookmarks;
+
+// enumerator for this folder and all its children (in depth-first order). not safe under
+// tree changes during enumeration
+-(NSEnumerator*)objectEnumerator;
+
+-(void)setIdentifier:(NSString*)inIdentifier;
+-(NSString*)identifier;
+
 -(BOOL) isSpecial;
 -(BOOL) isToolbar;
 -(BOOL) isRoot;
@@ -102,7 +110,7 @@ enum {
 -(BookmarkItem *)itemWithUUID:(NSString*)uuid;
 
 // Moving & Copying & inserting bookmarks/bookmark arrays
--(void) insertChild:(BookmarkItem *)aChild;
+-(void) appendChild:(BookmarkItem *)aChild;
 -(void) insertChild:(BookmarkItem *)aChild atIndex:(unsigned)aIndex isMove:(BOOL)aBool;
 -(void) moveChild:(BookmarkItem *)aChild toBookmarkFolder:(BookmarkFolder *)aNewParent atIndex:(unsigned)aIndex;
 // returns the new child
@@ -123,9 +131,9 @@ enum {
 -(NSSet *) bookmarksWithString:(NSString *)searchString inFieldWithTag:(int)tag;
 - (BOOL)containsChildItem:(BookmarkItem*)inItem;
 
-//Scripting - should be a protocol we could use for these
-//two, but i'm not sure which one, so we'll declare them here
-//and avoid the compiler warning
+// Scripting - should be a protocol we could use for these
+// two, but i'm not sure which one, so we'll declare them here
+// and avoid the compiler warning
 -(NSArray *) indicesOfObjectsByEvaluatingRelativeSpecifier:(NSRelativeSpecifier *)relSpec;
 -(NSArray *) indicesOfObjectsByEvaluatingRangeSpecifier:(NSRangeSpecifier *)rangeSpec;
 

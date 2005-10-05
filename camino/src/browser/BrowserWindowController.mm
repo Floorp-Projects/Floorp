@@ -421,6 +421,7 @@ enum BWCOpenDest {
 - (BrowserTabViewItem*)openNewTab:(BOOL)aLoadInBG;
 
 - (void)setupToolbar;
+- (void)delayedSetActive:(NSNumber*)inActive; // NSNumber with bool
 - (NSString*)getContextMenuNodeDocumentURL;
 - (void)loadSourceOfURL:(NSString*)urlStr;
 - (void)transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch;
@@ -491,13 +492,10 @@ enum BWCOpenDest {
   [[NSApp delegate] adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
 
-#if 0
   // the widget code (via -viewsWindowDidBecomeKey) takes care
   // of sending focus and activate events to gecko
   // on window activation, so no need to do this here:
-  if ([self isResponderGeckoView:[[self window] firstResponder]])
-    [mBrowserView setBrowserActive:YES];
-#endif
+  [self performSelector:@selector(delayedSetActive:) withObject:[NSNumber numberWithBool:YES] afterDelay:0];
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
@@ -507,13 +505,16 @@ enum BWCOpenDest {
   [[NSApp delegate] adjustCloseTabMenuItemKeyEquivalent:NO];
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:NO];
 
-#if 0
   // the widget code (via -viewsWindowDidResignKey) takes care
   // of sending lost-focus and deactivate events to gecko
   // on window activation, so no need to do this here:
+  [self performSelector:@selector(delayedSetActive:) withObject:[NSNumber numberWithBool:NO] afterDelay:0];
+}
+
+- (void)delayedSetActive:(NSNumber*)inActive
+{
   if ([self isResponderGeckoView:[[self window] firstResponder]])
-    [mBrowserView setBrowserActive:NO];
-#endif
+    [mBrowserView setBrowserActive:[inActive boolValue]];
 }
 
 - (void)windowDidBecomeMain:(NSNotification *)notification
@@ -530,14 +531,14 @@ enum BWCOpenDest {
 
 -(void)mouseMoved:(NSEvent*)aEvent
 {
-    if (mMoveReentrant)
-        return;
-        
-    mMoveReentrant = YES;
-    NSView* view = [[[self window] contentView] hitTest: [aEvent locationInWindow]];
-    [view mouseMoved: aEvent];
-    [super mouseMoved: aEvent];
-    mMoveReentrant = NO;
+  if (mMoveReentrant)
+      return;
+      
+  mMoveReentrant = YES;
+  NSView* view = [[[self window] contentView] hitTest: [aEvent locationInWindow]];
+  [view mouseMoved: aEvent];
+  [super mouseMoved: aEvent];
+  mMoveReentrant = NO;
 }
 
 -(void)autosaveWindowFrame
@@ -1322,6 +1323,9 @@ enum BWCOpenDest {
       action == @selector(closeSendersTab:)    ||
       action == @selector(closeOtherTabs:))
     return ([mTabBrowser numberOfTabViewItems] > 1);
+  
+  if (action == @selector(fillForm:))
+    return ![self bookmarkManagerIsVisible];
   
   return YES;
 }
@@ -3471,6 +3475,9 @@ enum BWCOpenDest {
 
 - (NSUndoManager *)windowWillReturnUndoManager:(NSWindow *)sender
 {
+  if ([[self window] firstResponder] == mURLFieldEditor)
+    return [mURLFieldEditor undoManagerForTextView:mURLFieldEditor];
+  
   return [[BookmarkManager sharedBookmarkManager] undoManager];
 }
 

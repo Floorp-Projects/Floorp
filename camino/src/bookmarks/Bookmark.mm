@@ -308,7 +308,7 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
   return YES;
 }
 
--(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef
+-(BOOL) readCaminoXML:(CFXMLTreeRef)aTreeRef settingToolbar:(BOOL)setupToolbar
 {
   CFXMLNodeRef myNode;
   CFXMLElementInfo* elementInfoPtr;
@@ -426,20 +426,26 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
 
 -(NSString *)writeHTML:(unsigned int)aPad
 {
-  NSString* formatString;
   NSMutableString *padString = [NSMutableString string];
-  for (unsigned i = 0;i<aPad;i++)
-    [padString insertString:@"    " atIndex:0];  
-  if ([mDescription length] > 0)
-    formatString = @"%@<DT><A HREF=\"%@\">%@</A>\n%@<DD>%@\n";
-  else
-    formatString = @"%@<DT><A HREF=\"%@\">%@</A>\n";
-  return [NSString stringWithFormat:formatString,
-    padString,
-    [self url],
-    [mTitle stringByAddingAmpEscapes],
-    padString,
-    [mDescription stringByAddingAmpEscapes]];
+  for (unsigned i = 0; i < aPad; i++)
+    [padString insertString:@"    " atIndex:0];
+
+  if ([self isSeparator])
+    return [NSString stringWithFormat:@"%@<HR>\n", padString];
+
+  NSString* exportHTMLString = [NSString stringWithFormat:@"%@<DT><A HREF=\"%@\"", padString, [self url]];
+  if ([self lastVisit])  // if there is a lastVisit, export it
+    exportHTMLString = [exportHTMLString stringByAppendingFormat:@" LAST_VISIT=\"%d\"", [[self lastVisit] timeIntervalSince1970]];
+
+  if ([[self keyword] length] > 0)  // if there is a keyword, export it (bug 307743)
+    exportHTMLString = [exportHTMLString stringByAppendingFormat:@" SHORTCUTURL=\"%@\"", [self keyword]];
+
+  // close up the attributes, export the title, close the A tag
+  exportHTMLString = [exportHTMLString stringByAppendingFormat:@">%@</A>\n", [mTitle stringByAddingAmpEscapes]];
+  if ([mDescription length] > 0)  // if there is a description, export that too
+    exportHTMLString = [exportHTMLString stringByAppendingFormat:@"%@<DD>%@\n", padString, [mDescription stringByAddingAmpEscapes]];
+
+  return exportHTMLString;
 }
 
 //

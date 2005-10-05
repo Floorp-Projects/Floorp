@@ -46,13 +46,11 @@
 @class BookmarkOutlineView;
 @class KindaSmartFolderManager;
 
-enum {
-  kBookmarkMenuContainerIndex = 0,
-  kToolbarContainerIndex = 1,
-  kHistoryContainerIndex = 2,
-};
-
 extern NSString* const kBookmarkManagerStartedNotification;
+
+extern NSString* const kBookmarksToolbarFolderIdentifier;
+extern NSString* const kBookmarksMenuFolderIdentifier;
+
 
 @interface BookmarkManager : NSObject <BookmarksClient>
 {
@@ -98,6 +96,13 @@ extern NSString* const kBookmarkManagerStartedNotification;
 -(BookmarkFolder *) addressBookFolder;
 -(BookmarkFolder *) historyFolder;
 
+- (BOOL)isUserCollection:(BookmarkFolder *)inFolder;
+
+// returns NSNotFound if the folder is not a child of the root
+- (unsigned)indexOfContainerItem:(BookmarkItem*)inItem;
+- (BookmarkItem*)containerItemAtIndex:(unsigned)inIndex;
+- (BookmarkFolder*)rootBookmarkFolderWithIdentifier:(NSString*)inIdentifier;
+
 // get/set folder last used by "Add Bookmarks"
 - (BookmarkFolder*)lastUsedBookmarkFolder;
 - (void)setLastUsedBookmarkFolder:(BookmarkFolder*)inFolder;
@@ -109,22 +114,16 @@ extern NSString* const kBookmarkManagerStartedNotification;
 // Informational things
 -(NSArray *)resolveBookmarksKeyword:(NSString *)keyword;
 -(NSArray *)searchBookmarksContainer:(BookmarkFolder*)container forString:(NSString *)searchString inFieldWithTag:(int)tag;
--(unsigned) firstUserCollection;
 -(BOOL) isDropValid:(NSArray *)items toFolder:(BookmarkFolder *)parent;
 -(NSMenu *)contextMenuForItems:(NSArray*)items fromView:(BookmarkOutlineView *)outlineView target:(id)target;
 
-// Reading bookmark files
--(BOOL) readBookmarks;
--(void) startImportBookmarks;
--(BOOL) importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
--(BOOL)readHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
--(BOOL)readCaminoXMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
--(BOOL)readPropertyListFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
--(BOOL)readOperaFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
+// Importing bookmarks
+- (void)startImportBookmarks;
+- (BOOL)importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 
 // Writing bookmark files
--(void)writeHTMLFile:(NSString *)pathToFile;
--(void)writePropertyListFile:(NSString *)pathToFile;
--(void)writeSafariFile:(NSString *)pathToFile;
+- (void)writeHTMLFile:(NSString *)pathToFile;
+- (void)writePropertyListFile:(NSString *)pathToFile;
+- (void)writeSafariFile:(NSString *)pathToFile;
 
 @end

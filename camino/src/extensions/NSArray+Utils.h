@@ -37,4 +37,13 @@
 
 #import <Foundation/Foundation.h>
 
-// nothing to see here (functionality moved elsewhere)
+// NSArray utilities
+@interface NSArray(CaminoNSArrayUtils)
+
+- (id)firstObject;
+- (id)lastObject;
+
+// just returns nil if out of range, rather than throwing.
+- (id)safeObjectAtIndex:(unsigned)inIndex;
+
+@end
