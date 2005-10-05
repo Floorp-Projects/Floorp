@@ -74,6 +74,7 @@ public:
   PRUint32            *GetData();
   void               SetAt(PRUint32 nIndex, PRUint32 newElement);
   PRUint32           IndexOf(PRUint32 element);
+  PRUint32           IndexOfSorted(PRUint32 element);
   
   // Insertion/deletion member functions
   PRUint32  Add(PRUint32 newElement);

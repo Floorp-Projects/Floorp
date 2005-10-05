@@ -39,11 +39,11 @@
 #ifndef _nsMsgQuickSearchDBViewsH_
 #define _nsMsgQuickSearchDBView_H_
 
-#include "nsMsgDBView.h"
+#include "nsMsgThreadedDBView.h"
 #include "nsIMsgSearchNotify.h"
 #include "nsIMsgSearchSession.h"
 
-class nsMsgQuickSearchDBView : public nsMsgDBView, public nsIMsgSearchNotify
+class nsMsgQuickSearchDBView : public nsMsgThreadedDBView, public nsIMsgSearchNotify
 {
 public:
   nsMsgQuickSearchDBView();
@@ -53,17 +53,24 @@ public:
   NS_DECL_NSIMSGSEARCHNOTIFY
 
   virtual const char * GetViewName(void) {return "QuickSearchView"; }
+  NS_IMETHOD Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, 
+                  nsMsgViewSortOrderValue sortOrder, 
+                  nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount);
   NS_IMETHOD DoCommand(nsMsgViewCommandTypeValue aCommand);
   NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType);
   NS_IMETHOD SetSearchSession(nsIMsgSearchSession *aSearchSession);
   NS_IMETHOD GetSearchSession(nsIMsgSearchSession* *aSearchSession);
-  NS_IMETHOD Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
   NS_IMETHOD OnHdrChange(nsIMsgDBHdr *aHdrChanged, PRUint32 aOldFlags, 
                          PRUint32 aNewFlags, nsIDBChangeListener *aInstigator);
 
 protected:
   nsWeakPtr m_searchSession;
+  nsMsgKeyArray m_origKeys;
   virtual nsresult OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool ensureListed);
+  virtual nsresult SortThreads(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
+  virtual nsresult GetFirstMessageHdrToDisplayInThread(nsIMsgThread *threadHdr, nsIMsgDBHdr **result);
+  virtual nsresult ExpansionDelta(nsMsgViewIndex index, PRInt32 *expansionDelta);
+  virtual nsresult ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed);
   void      SavePreSearchInfo();
   void      ClearPreSearchInfo();
 

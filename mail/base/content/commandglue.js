@@ -852,6 +852,7 @@ function FolderPaneSelectionChange()
                   var dbFolderInfo = msgDatabase.dBFolderInfo;
                   sortType = dbFolderInfo.sortType;
                   sortOrder = dbFolderInfo.sortOrder;
+                  viewFlags = dbFolderInfo.viewFlags;
                   if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
                   {
                     viewType = nsMsgViewType.eShowQuickSearchResults;

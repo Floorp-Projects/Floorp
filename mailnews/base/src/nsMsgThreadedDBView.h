@@ -67,7 +67,7 @@ protected:
   nsresult ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnly, nsMsgKey *pOutput, PRInt32 *pFlags, char *pLevels, 
                         PRInt32 numToList, PRInt32 *pNumListed, PRInt32 *pTotalHeaders);
   nsresult InitSort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
-  nsresult SortThreads(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
+  virtual nsresult SortThreads(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
   virtual void  OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extraFlag);
   virtual void OnHeaderAddedOrDeleted();
   void    ClearPrevIdArray();

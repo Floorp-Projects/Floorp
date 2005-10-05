@@ -286,7 +286,7 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
   // sort threads by sort order
   PRBool sortThreads = m_viewFlags & (nsMsgViewFlagsType::kThreadedDisplay | nsMsgViewFlagsType::kGroupBySort);
   
-  // if sort type is by thread, but we're not threaded, change sort type to byId
+  // if sort type is by thread, and we're already threaded, change sort type to byId
   if (sortType == nsMsgViewSortType::byThread && (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) != 0)
     sortType = nsMsgViewSortType::byId;
 
@@ -489,6 +489,10 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
   else
   {
     *startMsg = nsMsgKey_None;
+    nsCOMPtr <nsIDBChangeListener> dbListener = do_QueryInterface(m_threadEnumerator);
+    // this is needed to make the thread enumerator release its reference to the db.
+    if (dbListener)
+      dbListener->OnAnnouncerGoingAway(nsnull);
     m_threadEnumerator = nsnull;
   }
   *pNumListed = numListed;

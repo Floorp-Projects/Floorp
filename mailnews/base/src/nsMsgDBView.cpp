@@ -3706,22 +3706,22 @@ void nsMsgDBView::FreeAll(nsVoidArray *ptrs)
 
 nsMsgViewIndex nsMsgDBView::GetIndexOfFirstDisplayedKeyInThread(nsIMsgThread *threadHdr)
 {
-	nsMsgViewIndex	retIndex = nsMsgViewIndex_None;
-	PRUint32	childIndex = 0;
-	// We could speed up the unreadOnly view by starting our search with the first
-	// unread message in the thread. Sometimes, that will be wrong, however, so
-	// let's skip it until we're sure it's necessary.
-//	(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) 
-//		? threadHdr->GetFirstUnreadKey(m_db) : threadHdr->GetChildAt(0);
+  nsMsgViewIndex  retIndex = nsMsgViewIndex_None;
+  PRUint32        childIndex = 0;
+  // We could speed up the unreadOnly view by starting our search with the first
+  // unread message in the thread. Sometimes, that will be wrong, however, so
+  // let's skip it until we're sure it's necessary.
+  //	(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) 
+  //		? threadHdr->GetFirstUnreadKey(m_db) : threadHdr->GetChildAt(0);
   PRUint32 numThreadChildren;
   threadHdr->GetNumChildren(&numThreadChildren);
-	while (retIndex == nsMsgViewIndex_None && childIndex < numThreadChildren)
-	{
-		nsMsgKey childKey;
+  while (retIndex == nsMsgViewIndex_None && childIndex < numThreadChildren)
+  {
+    nsMsgKey childKey;
     threadHdr->GetChildKeyAt(childIndex++, &childKey);
-		retIndex = FindViewIndex(childKey);
-	}
-	return retIndex;
+    retIndex = FindViewIndex(childKey);
+  }
+  return retIndex;
 }
 
 nsresult nsMsgDBView::GetFirstMessageHdrToDisplayInThread(nsIMsgThread *threadHdr, nsIMsgDBHdr **result)
@@ -4245,12 +4245,10 @@ nsMsgViewIndex nsMsgDBView::GetInsertIndexHelper(nsIMsgDBHdr *msgHdr, nsMsgKeyAr
       comparisonContext = m_db.get();
       break;
     case kU32:
-      if (sortType == nsMsgViewSortType::byId) {
+      if (sortType == nsMsgViewSortType::byId)
         EntryInfo1.dword = EntryInfo1.id;
-      }
-      else {
+      else
         GetLongField(msgHdr, sortType, &EntryInfo1.dword);
-      }
       comparisonFun = FnSortIdDWord;
       break;
     default:
@@ -4323,7 +4321,8 @@ nsresult	nsMsgDBView::AddHdr(nsIMsgDBHdr *msgHdr)
   NS_ASSERTION((int) m_keys.GetSize() == m_flags.GetSize() && (int) m_keys.GetSize() == m_levels.GetSize(), "view arrays out of sync!");
 #endif
 
-  if (!GetShowingIgnored()) {
+  if (!GetShowingIgnored()) 
+  {
     nsCOMPtr <nsIMsgThread> thread;
     m_db->GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(thread));
     if (thread)
@@ -4471,7 +4470,7 @@ nsresult nsMsgDBView::ListIdsInThreadOrder(nsIMsgThread *threadHdr, nsMsgKey par
   return rv; // we don't want to return the rv from the enumerator when it reaches the end, do we?
 }
 
-nsresult	nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed)
+nsresult nsMsgDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed)
 {
   NS_ENSURE_ARG(threadHdr);
   // these children ids should be in thread order.
@@ -4807,10 +4806,11 @@ NS_IMETHODIMP nsMsgDBView::SetViewFlags(nsMsgViewFlagsTypeValue aViewFlags)
   }
   m_viewFlags = aViewFlags;
   
-  if (m_folder)
+  if (m_viewFolder)
   {
+    nsCOMPtr <nsIMsgDatabase> db;
     nsCOMPtr <nsIDBFolderInfo> folderInfo;
-    nsresult rv = m_folder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(m_db));
+    nsresult rv = m_viewFolder->GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
     NS_ENSURE_SUCCESS(rv,rv);
     return folderInfo->SetViewFlags(aViewFlags);
   }
@@ -5419,8 +5419,8 @@ nsresult nsMsgDBView::ToggleIgnored(nsMsgViewIndex * indices, PRInt32 numIndices
 nsMsgViewIndex	nsMsgDBView::GetThreadFromMsgIndex(nsMsgViewIndex index, 
                                                    nsIMsgThread **threadHdr)
 {
-  nsMsgKey			msgKey = GetAt(index);
-  nsMsgViewIndex		threadIndex;
+  nsMsgKey        msgKey = GetAt(index);
+  nsMsgViewIndex  threadIndex;
   
   NS_ENSURE_ARG(threadHdr);
   nsresult rv = GetThreadContainingIndex(index, threadHdr);

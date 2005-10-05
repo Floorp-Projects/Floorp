@@ -331,3 +331,24 @@ void nsUInt32Array::QuickSort (int (* PR_CALLBACK compare) (const void *elem1, c
   if (m_nSize > 1)
     NS_QuickSort(m_pData, m_nSize, sizeof(PRUint32), compare ? compare : CompareDWord, nsnull);
 }
+
+// Does a binary search - assumes array is sorted in ascending order.
+PRUint32 nsUInt32Array::IndexOfSorted(PRUint32 element)
+{
+  PRInt32 msgIndex = 0;
+  PRInt32 hi = m_nSize - 1;
+  PRInt32 lo = 0;
+  
+  while (lo <= hi)
+  {
+    msgIndex = (lo + hi) / 2;
+    if (m_pData[msgIndex] == element)
+      return msgIndex;
+    if (m_pData[msgIndex] > element)
+      hi = msgIndex -1;
+    else if (m_pData[msgIndex] <  element)
+      lo = msgIndex + 1;
+  }
+  return kNotFound;
+}
+

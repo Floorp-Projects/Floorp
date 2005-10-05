@@ -43,6 +43,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsIMsgImapMailFolder.h"
 #include "nsImapCore.h"
+#include "nsIMsgHdr.h"
 
 nsMsgQuickSearchDBView::nsMsgQuickSearchDBView()
 {
@@ -54,6 +55,19 @@ nsMsgQuickSearchDBView::~nsMsgQuickSearchDBView()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsMsgQuickSearchDBView, nsMsgDBView, nsIMsgDBView, nsIMsgSearchNotify)
+
+NS_IMETHODIMP nsMsgQuickSearchDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount)
+{
+  nsresult rv = nsMsgDBView::Open(folder, sortType, sortOrder, viewFlags, pCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!m_db)
+    return NS_ERROR_NULL_POINTER;
+  if (pCount)
+    *pCount = 0;
+  m_viewFolder = nsnull;
+  return InitThreadedView(pCount);
+}
 
 NS_IMETHODIMP nsMsgQuickSearchDBView::DoCommand(nsMsgViewCommandTypeValue aCommand)
 {
@@ -100,7 +114,7 @@ nsresult nsMsgQuickSearchDBView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aPare
     if (searchSession)
       searchSession->MatchHdr(newHdr, m_db, &match);
     if (match)
-      AddHdr(newHdr); // do not add a new message if there isn't a match.
+      nsMsgThreadedDBView::OnNewHeader(newHdr, aParentKey, ensureListed); // do not add a new message if there isn't a match.
   }
   return NS_OK;
 }
@@ -163,20 +177,9 @@ NS_IMETHODIMP
 nsMsgQuickSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 {
   NS_ENSURE_ARG(aMsgHdr);
-  NS_ENSURE_ARG(folder);
-  nsMsgKey msgKey;
-  PRUint32 msgFlags;
-  aMsgHdr->GetMessageKey(&msgKey);
-  aMsgHdr->GetFlags(&msgFlags);
-  m_keys.Add(msgKey);
-  m_levels.Add(0);
-  m_flags.Add(msgFlags);
-
-  // this needs to happen after we add the key, as RowCountChanged() will call our GetRowCount()
-  if (mTree)
-    mTree->RowCountChanged(GetSize() - 1, 1);
-
-  return NS_OK;
+  if (!m_db)
+    return NS_ERROR_NULL_POINTER;
+  return AddHdr(aMsgHdr); 
 }
 
 NS_IMETHODIMP
@@ -207,20 +210,196 @@ nsMsgQuickSearchDBView::OnNewSearch()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMsgQuickSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
+nsresult nsMsgQuickSearchDBView::GetFirstMessageHdrToDisplayInThread(nsIMsgThread *threadHdr, nsIMsgDBHdr **result)
 {
-  nsMsgKey preservedKey;
-  nsMsgKeyArray preservedSelection;
-  SaveAndClearSelection(&preservedKey, &preservedSelection);
-  nsMsgDBView::Sort(sortType, sortOrder);
-  RestoreSelection(preservedKey, &preservedSelection);
-  if (mTree) 
-    mTree->Invalidate();
+  PRUint32 numChildren;
+  nsresult rv = NS_OK;
+  PRUint8 minLevel = 0xff;
+  nsMsgKey threadRootKey;
 
-  PRUint32 folderFlags;
-  if (m_viewFolder && NS_SUCCEEDED(m_viewFolder->GetFlags(&folderFlags)) && folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
-    SaveSortInfo(sortType, sortOrder);
+  threadHdr->GetNumChildren(&numChildren);
+  threadHdr->GetThreadKey(&threadRootKey);
+  if ((PRInt32) numChildren < 0)
+    numChildren = 0;
 
+  nsCOMPtr <nsIMsgDBHdr> retHdr;
+
+  // iterate over thread, finding mgsHdr in view with the lowest level.
+  for (PRUint32 childIndex = 0; childIndex < numChildren; childIndex++)
+  {
+    nsCOMPtr <nsIMsgDBHdr> child;
+    rv = threadHdr->GetChildHdrAt(childIndex, getter_AddRefs(child));
+    if (NS_SUCCEEDED(rv) && child)
+    {
+      nsMsgKey msgKey;
+      child->GetMessageKey(&msgKey);
+
+      // this works because we've already sorted m_keys by id.
+      nsMsgViewIndex keyIndex = m_origKeys.IndexOfSorted(msgKey);
+      if (keyIndex != kNotFound)
+      {
+        // this is the root, so it's the best we're going to do.
+        if (msgKey == threadRootKey)
+        {
+          retHdr = child;
+          break;
+        }
+        PRUint8 level = 0;
+        nsMsgKey parentId;
+        child->GetThreadParent(&parentId);
+        nsCOMPtr <nsIMsgDBHdr> parent;
+        // count number of ancestors - that's our level
+        while (parentId != nsMsgKey_None)
+        {
+          rv = m_db->GetMsgHdrForKey(parentId, getter_AddRefs(parent));
+          if (parent)
+          {
+            parent->GetThreadParent(&parentId);
+            level++;
+          }
+        }
+        if (level < minLevel)
+        {
+          minLevel = level;
+          retHdr = child;
+        }
+      }
+    }
+  }
+  NS_IF_ADDREF(*result = retHdr);
+  return NS_OK; 
+}
+
+nsresult nsMsgQuickSearchDBView::SortThreads(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
+{
+  // iterate over the messages in the view, getting the thread id's
+  if (sortType == nsMsgViewSortType::byId)
+  {
+    // sort m_keys so we can quickly find if a key is in the view. 
+    m_keys.QuickSort();
+    // array of the threads' root hdr keys.
+    nsMsgKeyArray threadRootIds;
+    nsCOMPtr <nsIMsgDBHdr> rootHdr;
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    nsCOMPtr <nsIMsgThread> threadHdr;
+    for (PRUint32 i = 0; i < m_keys.GetSize(); i++)
+    {
+      GetMsgHdrForViewIndex(i, getter_AddRefs(msgHdr));
+      m_db->GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(threadHdr));
+      if (threadHdr)
+      {
+        nsMsgKey rootKey;
+        threadHdr->GetChildKeyAt(0, &rootKey);
+        nsMsgViewIndex threadRootIndex = threadRootIds.IndexOfSorted(rootKey);
+        // if we already have that id in top level threads, ignore this msg.
+        if (threadRootIndex != kNotFound)
+          continue;
+        // it would be nice if GetInsertIndexHelper always found the hdr, but it doesn't.
+        threadHdr->GetChildHdrAt(0, getter_AddRefs(rootHdr));
+        threadRootIndex = GetInsertIndexHelper(rootHdr, &threadRootIds, nsMsgViewSortOrder::ascending, sortType);
+        threadRootIds.InsertAt(threadRootIndex, rootKey);
+      }
+    }
+    // now we've build up the list of thread ids - need to build the view
+    // from that. So for each thread id, we need to list the messages in the thread.
+    m_origKeys.CopyArray(m_keys);
+    m_keys.RemoveAll();
+    m_levels.RemoveAll();
+    m_flags.RemoveAll();
+    PRUint32 numThreads = threadRootIds.GetSize();
+    for (PRUint32 threadIndex = 0; threadIndex < numThreads; threadIndex++)
+    {
+      m_db->GetMsgHdrForKey(threadRootIds[threadIndex], getter_AddRefs(rootHdr));
+      if (rootHdr)
+      {
+        nsCOMPtr <nsIMsgDBHdr> displayRootHdr;
+        m_db->GetThreadContainingMsgHdr(rootHdr, getter_AddRefs(threadHdr));
+        if (threadHdr)
+        {
+          nsMsgKey rootKey;
+          PRUint32 rootFlags;
+          GetFirstMessageHdrToDisplayInThread(threadHdr, getter_AddRefs(displayRootHdr));
+          displayRootHdr->GetMessageKey(&rootKey);
+          displayRootHdr->GetFlags(&rootFlags);
+          rootFlags |= MSG_VIEW_FLAG_ISTHREAD;
+          m_keys.Add(rootKey);
+          m_flags.Add(rootFlags);
+          m_levels.Add(0);
+
+          nsMsgViewIndex startOfThreadViewIndex = m_keys.GetSize() - 1;
+          PRUint32 numListed;
+          ListIdsInThread(threadHdr, startOfThreadViewIndex, &numListed);
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult  nsMsgQuickSearchDBView::ListIdsInThread(nsIMsgThread *threadHdr, nsMsgViewIndex startOfThreadViewIndex, PRUint32 *pNumListed)
+{
+  PRUint32 numChildren;
+  threadHdr->GetNumChildren(&numChildren);
+  PRUint32 i;
+  PRUint32 viewIndex = startOfThreadViewIndex + 1;
+  nsCOMPtr <nsIMsgDBHdr> rootHdr;
+  nsMsgKey rootKey;
+  PRUint32 rootFlags = m_flags[startOfThreadViewIndex];
+  *pNumListed = 0;
+  GetMsgHdrForViewIndex(startOfThreadViewIndex, getter_AddRefs(rootHdr));
+  rootHdr->GetMessageKey(&rootKey);
+  for (i = 0; i < numChildren; i++)
+  {
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    threadHdr->GetChildHdrAt(i, getter_AddRefs(msgHdr));
+    if (msgHdr != nsnull)
+    {
+      nsMsgKey msgKey;
+      msgHdr->GetMessageKey(&msgKey);
+      if (msgKey != rootKey)
+      {
+        nsMsgViewIndex threadRootIndex = m_origKeys.IndexOfSorted(msgKey);
+        // if this hdr is in the original view, add it to new view.
+        if (threadRootIndex != kNotFound)
+        {
+          PRUint32 childFlags;
+          msgHdr->GetFlags(&childFlags);
+          PRUint8 levelToAdd;
+          m_keys.InsertAt(viewIndex, msgKey);
+          m_flags.InsertAt(viewIndex, childFlags);
+          if (! (rootFlags & MSG_VIEW_FLAG_HASCHILDREN))
+          {
+            rootFlags |= MSG_VIEW_FLAG_HASCHILDREN;
+            m_flags.SetAt(startOfThreadViewIndex, rootFlags);
+          }
+          levelToAdd = FindLevelInThread(msgHdr, startOfThreadViewIndex, viewIndex);
+          m_levels.InsertAt(viewIndex, levelToAdd);
+          viewIndex++;
+          (*pNumListed)++;
+        }
+      }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult nsMsgQuickSearchDBView::ExpansionDelta(nsMsgViewIndex index, PRInt32 *expansionDelta)
+{
+  *expansionDelta = 0;
+  if ( index > ((nsMsgViewIndex) m_keys.GetSize()))
+    return NS_MSG_MESSAGE_NOT_FOUND;
+
+  char	flags = m_flags[index];
+
+  if (!(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
+    return NS_OK;
+
+  // The client can pass in the key of any message
+  // in a thread and get the expansion delta for the thread.
+
+  PRInt32 numChildren = CountExpandedThread(index);
+
+  *expansionDelta = (flags & MSG_FLAG_ELIDED) ? 
+                    numChildren - 1 : - (PRInt32) (numChildren - 1);
   return NS_OK;
 }
