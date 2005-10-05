@@ -1,4 +1,3 @@
-# vim:set ts=8 sw=8 sts=8 et:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,15 +11,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla Browser code.
+# The Original Code is Mozilla XULRunner.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2002
-# the Initial Developer. All Rights Reserved.
+# Benjamin Smedberg <benjamin@smedbergs.us>.
+#
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,24 +35,19 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH     = ../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-	setup \
-	stub \
-	app \
-	examples \
+MODULE = xulapp_setup
+
+XPIDLSRCS = \
+	nsIXULAppInstall.idl \
 	$(NULL)
 
-ifeq ($(OS_ARCH),WINNT)
-ifdef MOZ_INSTALLER
-DIRS += installer/windows
-endif
-endif
+EXTRA_PP_COMPONENTS = nsXULAppInstall.js
 
 include $(topsrcdir)/config/rules.mk
