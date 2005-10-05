@@ -1892,7 +1892,6 @@ ParseXMLSource(JSContext *cx, JSString *src)
     uintN lineno;
     JSStackFrame *fp;
     JSOp op;
-    uint32 oldopts;
     JSParseNode *pn;
     JSXML *xml;
     JSXMLArray nsarray;
@@ -1946,8 +1945,6 @@ ParseXMLSource(JSContext *cx, JSString *src)
         }
     }
 
-    /* Toggle on XML support since the script has explicitly requested it. */
-    oldopts = JS_SetOptions(cx, cx->options | JSOPTION_XML);
     JS_KEEP_ATOMS(cx->runtime);
     pn = js_ParseXMLTokenStream(cx, cx->fp->scopeChain, ts, JS_FALSE);
     xml = NULL;
@@ -1958,7 +1955,6 @@ ParseXMLSource(JSContext *cx, JSString *src)
         XMLArrayFinish(cx, &nsarray);
     }
     JS_UNKEEP_ATOMS(cx->runtime);
-    JS_SetOptions(cx, oldopts);
 
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     JS_free(cx, chars);
