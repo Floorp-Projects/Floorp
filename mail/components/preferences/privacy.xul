@@ -113,7 +113,7 @@
                       preference="mailnews.message_display.disable_remote_images.useWhitelist"                       
                       label="&allowRemoteImagesForFriends.label;" accesskey="&allowRemoteImagesForFriends.accesskey;"/> 
             <menulist id="whiteListAbURI" flex="1" preference="mailnews.message_display.disable_remote_images.whiteListAbURI">
-              <menupopup id="abPopup-menupopup">
+              <menupopup id="whitelist-menupopup">
               </menupopup>
             </menulist>  
           </hbox>  
