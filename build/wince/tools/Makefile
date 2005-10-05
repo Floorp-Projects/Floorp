@@ -28,6 +28,16 @@ all:
 	cl sp2003arm/arm-wince-link.c
 	mv arm-wince-link.exe sp2003arm
 	rm -f *.obj
+	cl vs8ppc2003arm/arm-wince-as.c
+	mv arm-wince-as.exe vs8ppc2003arm
+	cl vs8ppc2003arm/arm-wince-gcc.c
+	mv arm-wince-gcc.exe vs8ppc2003arm
+	cl vs8ppc2003arm/arm-wince-lib.c
+	mv arm-wince-lib.exe vs8ppc2003arm
+	cl vs8ppc2003arm/arm-wince-link.c
+	mv arm-wince-link.exe vs8ppc2003arm
+	rm -f *.obj
+
 
 clobber:
 	rm -f ppc2003em/*.exe
@@ -36,4 +46,6 @@ clobber:
 	rm -f ppc2003arm/*.obj
 	rm -f sp2003arm/*.exe
 	rm -f sp2003arm/*.obj
+	rm -f vs8ppc2003arm/*.exe
+	rm -f vs8ppc2003arm/*.obj
 	rm -f *.obj
