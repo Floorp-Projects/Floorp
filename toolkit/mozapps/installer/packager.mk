@@ -200,6 +200,7 @@ NO_PKG_FILES += \
 	res/throbber \
 	shlibsign* \
 	winEmbed.exe \
+	os2Embed.exe \
 	chrome/chrome.rdf \
 	chrome/app-chrome.manifest \
 	chrome/overlayinfo \
