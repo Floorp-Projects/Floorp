@@ -39,26 +39,73 @@ import java.io.*;
 import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.util.Password;
 import org.mozilla.jss.util.Debug;
-import org.mozilla.jss.crypto.*;
+import org.mozilla.jss.crypto.CryptoToken;
 import java.security.MessageDigest;
 
 public class DigestTest {
+    public static boolean messageDigest(String alg, byte[] toBeDigested)
+    throws Exception {
+        byte[] nsdigestOut;
+        byte[] sundigestOut;
+        
+        java.security.MessageDigest nsdigest =
+                java.security.MessageDigest.getInstance(alg, "Mozilla-JSS");
+        java.security.MessageDigest sundigest =
+                java.security.MessageDigest.getInstance(alg, "SUN");
+
+        nsdigestOut = nsdigest.digest(toBeDigested);
+        sundigestOut = sundigest.digest(toBeDigested);
+
+        if( MessageDigest.isEqual(nsdigestOut, sundigestOut) ) {
+            System.out.println("Sun and Mozilla give same " + alg + " hash");
+        } else {
+            throw new Exception("ERROR: Sun and Mozilla give different "+
+                alg + " hashes");
+        }        
+        return true;
+    }
+    
+    public static boolean testJSSDigest(String alg, byte[] toBeDigested)
+    throws Exception {
+        byte[] nsdigestOut;
+        byte[] sundigestOut;
+        
+        java.security.MessageDigest nsdigest =
+                java.security.MessageDigest.getInstance(alg, "Mozilla-JSS");
+
+        nsdigestOut = nsdigest.digest(toBeDigested);
+
+        System.out.println("Provider " + nsdigest.getProvider());
+        System.out.println("algorithm " + nsdigest.getAlgorithm());
+        System.out.println("length of digest " + nsdigest.getDigestLength());
+        
+        if( nsdigestOut.length == nsdigest.getDigestLength() ) {
+            System.out.println("digest output size is " + nsdigestOut.length);
+        } else {
+            throw new Exception("ERROR: digest output size is "+
+            nsdigestOut.length + ", should be "+nsdigest.getDigestLength() );
+        }
+        
+        return true;
+    }
+    
+    
 
     public static void main(String []argv) {
 
       try {
 
         if( argv.length != 2 ) {
-            System.out.println("Usage: DigestTest <dbdir> <infile>");
-            System.exit(0);
+	    System.out.println(
+		"Usage: java org.mozilla.jss.tests.DigestTest " + 
+		"<dbdir> <File>");
+            System.exit(1);
         }
         String dbdir = argv[0];
         FileInputStream fis = new FileInputStream(argv[1]);
         byte[] toBeDigested = new byte[ fis.available() ];
         int read = fis.read( toBeDigested );
         System.out.println(read + " bytes to be digested");
-        byte[] nsdigestOut;
-        byte[] sundigestOut;
 
         CryptoManager.initialize(dbdir);
 
@@ -69,73 +116,29 @@ public class DigestTest {
         java.security.Security.addProvider(new sun.security.provider.Sun() );
 
         /////////////////////////////////////////////////////////////
-        // Test SHA-1
+        // Test all available algorithms
         /////////////////////////////////////////////////////////////
-        java.security.MessageDigest nsdigest =
-                java.security.MessageDigest.getInstance("SHA-1", "Mozilla-JSS");
-        java.security.MessageDigest sundigest =
-                java.security.MessageDigest.getInstance("SHA-1", "SUN");
-
-        nsdigestOut = nsdigest.digest(toBeDigested);
-        sundigestOut = sundigest.digest(toBeDigested);
-
-        if( MessageDigest.isEqual(nsdigestOut, sundigestOut) ) {
-            System.out.println("Sun and Mozilla give same SHA-1 hash");
-        } else {
-            throw new Exception("ERROR: Sun and Mozilla give different"+
-                " SHA-1 hashes");
+        String javaVersion = System.getProperty("java.version");
+        System.out.println("the java version is: " + javaVersion);
+        messageDigest("SHA1", toBeDigested);
+        if  ( javaVersion.indexOf("1.4") == -1) {
+            // JDK 1.5 or greater 
+            messageDigest("MD2", toBeDigested);
+        }  else {
+            System.out.println("JDK 1.4  does not implement MD2");
+            testJSSDigest("MD2", toBeDigested);
         }
-
-        /////////////////////////////////////////////////////////////
-        // Test MD5
-        /////////////////////////////////////////////////////////////
-        nsdigest = java.security.MessageDigest.getInstance("MD5", "Mozilla-JSS");
-        sundigest = java.security.MessageDigest.getInstance("MD5", "SUN");
-
-        nsdigestOut = nsdigest.digest(toBeDigested);
-        sundigestOut = sundigest.digest(toBeDigested);
-
-        if( MessageDigest.isEqual(nsdigestOut, sundigestOut) ) {
-            System.out.println("Sun and Mozilla give same MD5 hash");
-        } else {
-            throw new Exception("ERROR: Sun and Mozilla give different"+
-                " MD5 hashes");
-        }
-
-        /////////////////////////////////////////////////////////////
-        // Test SHA-1 HMAC
-        /////////////////////////////////////////////////////////////
-        CryptoManager cm = CryptoManager.getInstance();
-        CryptoToken token = cm.getInternalCryptoToken();
-        Password pass = new Password("password".toCharArray());
-        byte[] salt = { 0, 1, 2, 3,4 ,5 ,6 ,7 };
-        PBEKeyGenParams pbe = new PBEKeyGenParams(
-                    pass,
-                    salt,
-                    1 );
-        pass.clear();
-        KeyGenerator kg = token.getKeyGenerator(
-                                PBEAlgorithm.PBE_SHA1_DES3_CBC );
-        kg.initialize(pbe);
-        SymmetricKey symkey = kg.generate();
-        pbe.clear();
-        org.mozilla.jss.crypto.JSSMessageDigest digest =
-                token.getDigestContext( HMACAlgorithm.SHA1 );
-        digest.initHMAC(symkey);
-        digest.update(toBeDigested);
-        byte[] digestOut = digest.digest();
-        if( digestOut.length == digest.getOutputSize() ) {
-            System.out.println("digest output size is " + digestOut.length);
-        } else {
-            throw new Exception("ERROR: digest output size is "+
-                digestOut.length + ", should be "+digest.getOutputSize() );
-        }
-        System.exit(0);
-
-
+        messageDigest("MD5", toBeDigested);
+        messageDigest("SHA-256", toBeDigested);
+        messageDigest("SHA-384", toBeDigested);
+        messageDigest("SHA-512", toBeDigested);
+            
+         //HMAC examples in org.mozilla.jss.tests.HMACTest
+      
       } catch( Exception e ) {
             e.printStackTrace();
             System.exit(1);
       }
+      System.exit(0);
     }
 }

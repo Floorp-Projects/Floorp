@@ -45,7 +45,8 @@ public class SetupDBs {
     public static void main(String args[]) {
       try {
         if( args.length != 2 ) {
-            System.err.println("Invalid number of arguments");
+            System.err.println("Usage: java org.mozilla.jss.tests.SetupDBs " +
+			       "<dbdir> <passwordFile>");
             System.exit(1);
         }
         String dbdir = args[0];

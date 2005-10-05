@@ -38,7 +38,7 @@ package org.mozilla.jss.tests;
 import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.ssl.*;
 import org.mozilla.jss.crypto.*;
-import org.mozilla.jss.crypto.KeyPairGenerator;
+import java.security.*;
 import org.mozilla.jss.asn1.*;
 import org.mozilla.jss.pkix.primitive.*;
 import org.mozilla.jss.pkix.cert.*;
@@ -51,6 +51,10 @@ import java.security.PrivateKey;
 import java.net.InetAddress;
 import java.io.InputStream;
 import java.io.EOFException;
+import java.io.PrintWriter;
+import java.io.BufferedWriter;
+import java.io.OutputStreamWriter;
+import java.io.*;
 
 public class SSLClientAuth implements Runnable {
 
@@ -103,7 +107,14 @@ public class SSLClientAuth implements Runnable {
     private X509Certificate nssServerCert, nssClientCert;
     private String serverCertNick, clientCertNick;
 
+
     public void doIt(String[] args) throws Exception {
+
+        if ( args.length != 2 ) {
+	    System.out.println("Usage: java org.mozilla.jss.tests." +
+			       "SSLClientAuth <dbdir> <passwordFile>");
+            System.exit(1);
+        }
 
         CryptoManager.initialize(args[0]);
         CryptoManager cm = CryptoManager.getInstance();
@@ -117,8 +128,11 @@ public class SSLClientAuth implements Runnable {
             "Mozilla-JSS");
         int rand = nextRandInt(rng);
 
+
         // generate CA cert
-        KeyPairGenerator kpg = tok.getKeyPairGenerator(KeyPairAlgorithm.RSA);
+        // 512-bit RSA Key with default exponent
+        java.security.KeyPairGenerator kpg =
+        java.security.KeyPairGenerator.getInstance("RSA", "Mozilla-JSS");
         kpg.initialize(512);
         KeyPair caPair = kpg.genKeyPair();
 

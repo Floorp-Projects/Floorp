@@ -39,7 +39,6 @@ package org.mozilla.jss.tests;
 import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.ssl.*;
 import org.mozilla.jss.crypto.*;
-import org.mozilla.jss.crypto.KeyPairGenerator;
 import org.mozilla.jss.asn1.*;
 import org.mozilla.jss.pkix.primitive.*;
 import org.mozilla.jss.pkix.cert.*;
@@ -73,54 +72,66 @@ public class GenerateTestCert {
      */
     private void doIt(String[] args) throws Exception {
         
-        CryptoManager.initialize(args[0]);
-        CryptoManager cm = CryptoManager.getInstance();
+        if ( args.length != 2 ) {
+	    System.out.println("Usage: java org.mozilla.jss.tests." +
+			       "GenerateTestCert <dbdir> <passwordFile>");
+            System.exit(1);
+        }
         
-        CryptoToken tok = cm.getInternalKeyStorageToken();
+        try {
+            CryptoManager.initialize(args[0]);
+            CryptoManager cm = CryptoManager.getInstance();
         
-        PasswordCallback cb = new FilePasswordCallback(args[1]);
-        tok.login(cb);
+            CryptoToken tok = cm.getInternalKeyStorageToken();
         
-        SecureRandom rng= SecureRandom.getInstance("pkcs11prng",
+            PasswordCallback cb = new FilePasswordCallback(args[1]);
+            tok.login(cb);
+        
+            SecureRandom rng= SecureRandom.getInstance("pkcs11prng",
                 "Mozilla-JSS");
-        int rand = 24022402;
+            int rand = 24022402;
         
-        // generate CA cert
-        KeyPairGenerator kpg = tok.getKeyPairGenerator(KeyPairAlgorithm.RSA);
-        kpg.initialize(512);
-        KeyPair caPair = kpg.genKeyPair();
+            // generate CA cert
+            java.security.KeyPairGenerator kpg =
+            java.security.KeyPairGenerator.getInstance("RSA", "Mozilla-JSS");
+            kpg.initialize(512);
+            KeyPair caPair = kpg.genKeyPair();
         
-        SEQUENCE extensions = new SEQUENCE();
-        extensions.addElement(makeBasicConstraintsExtension());
-        Certificate caCert = makeCert("CACert", "CACert", 1,
+            SEQUENCE extensions = new SEQUENCE();
+            extensions.addElement(makeBasicConstraintsExtension());
+            Certificate caCert = makeCert("CACert", "CACert", 1,
                 caPair.getPrivate(), caPair.getPublic(), rand, extensions);
-        X509Certificate nssCaCert = cm.importUserCACertPackage(
+            X509Certificate nssCaCert = cm.importUserCACertPackage(
                 ASN1Util.encode(caCert), "JSSCATestCert");
-        InternalCertificate intern = (InternalCertificate)nssCaCert;
-        intern.setSSLTrust(
+            InternalCertificate intern = (InternalCertificate)nssCaCert;
+            intern.setSSLTrust(
                 InternalCertificate.TRUSTED_CA |
                 InternalCertificate.TRUSTED_CLIENT_CA |
                 InternalCertificate.VALID_CA);
         
-        // generate server cert
-        kpg.initialize(512);
-        KeyPair serverPair = kpg.genKeyPair();
-        Certificate serverCert = makeCert("CACert", "localhost", 2,
+            // generate server cert
+            kpg.initialize(512);
+            KeyPair serverPair = kpg.genKeyPair();
+            Certificate serverCert = makeCert("CACert", "localhost", 2,
                 caPair.getPrivate(), serverPair.getPublic(), rand, null);
-        serverCertNick = "JSSCATestServerCert";
-        nssServerCert = cm.importCertPackage(
+            serverCertNick = "JSSCATestServerCert";
+            nssServerCert = cm.importCertPackage(
                 ASN1Util.encode(serverCert), serverCertNick);
         
-        // generate client auth cert
-        kpg.initialize(512);
-        KeyPair clientPair = kpg.genKeyPair();
-        Certificate clientCert = makeCert("CACert", "ClientCert", 3,
+            // generate client auth cert
+            kpg.initialize(512);
+            KeyPair clientPair = kpg.genKeyPair();
+            Certificate clientCert = makeCert("CACert", "ClientCert", 3,
                 caPair.getPrivate(), clientPair.getPublic(), rand, null);
-        clientCertNick = "JSSCATestClientCert";
-        nssClientCert = cm.importCertPackage(
+            clientCertNick = "JSSCATestClientCert";
+            nssClientCert = cm.importCertPackage(
                 ASN1Util.encode(clientCert), clientCertNick);
         
-        System.out.println("Exiting main()");
+            System.out.println("Exiting main()");
+        } catch(Exception e) {
+              e.printStackTrace();
+              System.exit(1);
+        }
         System.exit(0);
     }
     

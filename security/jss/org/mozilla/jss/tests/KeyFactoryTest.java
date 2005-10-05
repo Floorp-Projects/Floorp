@@ -40,8 +40,8 @@ import java.security.*;
 import java.security.spec.*;
 import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.crypto.CryptoToken;
-import org.mozilla.jss.util.ConsolePasswordCallback;
 import java.util.Iterator;
+import org.mozilla.jss.util.PasswordCallback;
 
 abstract class TestValues {
     protected TestValues(String keyGenAlg, String sigAlg,
@@ -78,16 +78,21 @@ class DSATestValues extends TestValues {
 
 public class KeyFactoryTest {
 
+
     public static void main(String argv[]) {
       try {
 
-        if( argv.length < 1 ) {
-            System.out.println("Usage: java KeyFactoryTest <dbdir>\n");
+        if( argv.length < 2 ) {
+	    System.out.println(
+		"Usage: java org.mozilla.jss.tests.KeyFactoryTest " +
+		 "<dbdir> <passwordFile>");
             System.exit(1);
         }
         CryptoManager.initialize(argv[0]);
         CryptoToken tok = CryptoManager.getInstance().getInternalKeyStorageToken();
-        tok.login( new ConsolePasswordCallback() );
+	PasswordCallback cb = new FilePasswordCallback(argv[1]);
+        tok.login(cb);
+
         Provider []provs = Security.getProviders();
         for( int i=0; i < provs.length; ++i) {
             System.out.println("======");
@@ -97,36 +102,31 @@ public class KeyFactoryTest {
         }
 
         (new KeyFactoryTest()).doTest();          
-    
-        System.exit(0);
+        
       } catch(Throwable e) {
             e.printStackTrace();
             System.exit(1);
       }
+      System.exit(0);
     }
 
     public void doTest() throws Throwable {
         RSATestValues rsa = new RSATestValues();
         DSATestValues dsa = new DSATestValues();
 
-        //
-        // Generate private key from spec
-        //
+        // Generate RSA private key from spec
         genPrivKeyFromSpec(rsa);
 
-        // importing DSA private keys doesn't work
-        // http://bugzilla.mozilla.org/show_bug.cgi?id=150720
-        // genPrivKeyFromSpec(dsa);
+        // Generate DSA private key from spec
+        genPrivKeyFromSpec(dsa);
 
-        //
-        // Generate public key from spec
-        //
+        // translate RSA key
         genPubKeyFromSpec(rsa);
-        genPubKeyFromSpec(dsa);
 
-        //
         // translate key
-        //
+	genPubKeyFromSpec(dsa);
+
+	System.exit(0);
     }
 
     public void genPrivKeyFromSpec(TestValues vals) throws Throwable {

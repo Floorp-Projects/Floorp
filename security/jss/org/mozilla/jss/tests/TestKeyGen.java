@@ -71,10 +71,9 @@ public class TestKeyGen {
         Base64OutputStream base64;
 
         if(args.length != 2) {
-            System.err.println(
-                "Usage: java org.mozilla.jss.pkcs11.TestKeyGen <dbdir> <pwfile>");
+            System.err.println("Usage: java org.mozilla.jss.pkcs11." +
+                               "TestKeyGen  <dbdir> <pwfile>");
             System.exit(1);
-            return;
         }
 
         CryptoManager.initialize(args[0]);

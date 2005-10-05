@@ -256,6 +256,16 @@ $result >>=8;
 $result and print "TestKeyGen returned $result\n";
 print_case_result ($result,"Key generation");
 
+
+# test KeyFactory 
+#
+print "============= test KeyFactory\n";
+$result = system("$java org.mozilla.jss.tests.KeyFactoryTest $testdir $pwfile");
+$result >>=8;
+$result and print "KeyFactoryTest returned $result\n";
+print_case_result ($result,"KeyFactoryTest");
+
+
 # test digesting
 #
 print "============= test digesting\n";
@@ -263,6 +273,16 @@ $result = system("$java org.mozilla.jss.tests.DigestTest $testdir $pwfile");
 $result >>=8;
 $result and print "DigestTest returned $result\n";
 print_case_result ($result,"Digesting");
+
+
+# test HMAC 
+#
+print "============= test HMAC\n";
+$result = system("$java org.mozilla.jss.tests.HMACTest $testdir $pwfile");
+$result >>=8;
+$result and print "HMACTest returned $result\n";
+print_case_result ($result,"HMACTest");
+
 
 # test signing
 #
@@ -274,11 +294,11 @@ print_case_result ($result,"Signing");
 
 # test JCA Sig Test
 #
-print "============= test Mozilla-JSS SigatureSPI JCASitTest\n";
+print "============= test Mozilla-JSS SigatureSPI JCASigTest\n";
 $result = system("$java org.mozilla.jss.tests.JCASigTest $testdir $pwfile");
 $result >>=8;
 $result and print "TestJCASigTest returned $result\n";
-print_case_result ($result,"Mozilla-JSS SigatureSPI JCASitTest");
+print_case_result ($result,"Mozilla-JSS SigatureSPI JCASigTest");
 
 # test Secret Decoder Ring
 #

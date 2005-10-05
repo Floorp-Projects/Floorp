@@ -54,7 +54,11 @@ public class JSSPackageTest {
         try {
             try {
                 certDbPath = (String)args[0];
-            } catch (Exception e) { }
+            } catch (Exception e) { 
+                System.out.println("Exception caught : " + e.getMessage());
+                e.printStackTrace();
+                System.exit(1);
+            }
             CryptoManager.initialize(certDbPath);
 
             Package pkg = Package.getPackage("org.mozilla.jss");

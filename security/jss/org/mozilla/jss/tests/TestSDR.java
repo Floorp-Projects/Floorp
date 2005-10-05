@@ -125,5 +125,6 @@ public class TestSDR {
             "Good: failed to decrypt plaintext with deleted key");
 
         System.out.println("TestSDR: Success");
+        System.exit(0);
     }
 }

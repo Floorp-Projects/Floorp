@@ -36,6 +36,9 @@
 
 
 /* This program demonstrates how to sign data with keys from JSS
+ *
+ * Most of this code is deprecated look at JCASigTest.java
+ *
  * The token name can be either the name of a hardware token, or
  * one of the internal tokens:
  *  Internal Crypto Services Token

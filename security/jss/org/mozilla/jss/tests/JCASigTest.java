@@ -62,6 +62,11 @@ public class JCASigTest {
             Provider provider = signer.getProvider();
             System.out.println("The provider used for the signer " 
                  + provider.getName() + " and the algorithm was " + alg);
+            if (provider.getName().equalsIgnoreCase("Mozilla-JSS") == false) {
+                System.out.println("Mozilla-JSS is supposed to be the " +
+                    "default provider for JCASigTest");
+                System.exit(1);
+            }
 
             signer.initSign(
                    (org.mozilla.jss.crypto.PrivateKey)keyPair.getPrivate());
@@ -83,6 +88,7 @@ public class JCASigTest {
             }
         } catch ( Exception e ) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -93,7 +99,7 @@ public class JCASigTest {
 
         if ( args.length != 2 ) {
             usage();
-            return;
+            System.exit(1);
         }
         String dbdir = args[0];
         String file = args[1];
@@ -106,7 +112,6 @@ public class JCASigTest {
             manager.setPasswordCallback( new FilePasswordCallback(file) );
 
             Debug.setLevel(Debug.OBNOXIOUS);
-
             Provider[] providers = Security.getProviders();
             for ( int i=0; i < providers.length; i++ ) {
                 System.out.println("Provider "+i+": "+providers[i].getName());
@@ -121,6 +126,12 @@ public class JCASigTest {
             System.out.println("The provider used to Generate the Keys was " 
                                 + provider.getName() );
             System.out.println("provider info " + provider.getInfo() );
+            
+            if (provider.getName().equalsIgnoreCase("Mozilla-JSS") == false) {
+                System.out.println("Mozilla-JSS is supposed to be the " +
+                    "default provider for JCASigTest");
+                System.exit(1);
+            }
 
             sigTest("MD5/RSA", keyPair);
             sigTest("MD2/RSA", keyPair);
@@ -129,9 +140,10 @@ public class JCASigTest {
             sigTest("SHA-384/RSA", keyPair);
             sigTest("SHA-512/RSA", keyPair);
 
-
         } catch ( Exception e ) {
             e.printStackTrace();
+	    System.exit(1);
         }
+	System.exit(0);
     }
 }
