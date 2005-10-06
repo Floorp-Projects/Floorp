@@ -1418,10 +1418,11 @@ sub init {
         next if ($field =~ /(AVG|SUM|COUNT|MAX|MIN|VARIANCE)\s*\(/i ||
                  $field =~ /^\d+$/ || $field eq "bugs.bug_id" ||
                  $field =~ /^relevance/);
-        if ($field =~ /.*AS\s+(\w+)$/i) {
+        # The structure of fields is of the form:
+        # [foo AS] {bar | bar.baz} [ASC | DESC]
+        # Only the mandatory part bar OR bar.baz is of interest
+        if ($field =~ /(?:.*\s+AS\s+)?(\w+(\.\w+)?)(?:\s+(ASC|DESC))?$/i) {
             push(@groupby, $1) if !grep($_ eq $1, @groupby);
-        } else {
-            push(@groupby, $field) if !grep($_ eq $field, @groupby);
         }
     }
     $query .= ") " . $dbh->sql_group_by("bugs.bug_id", join(', ', @groupby));
