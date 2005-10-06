@@ -651,6 +651,7 @@
                       chunkBox.calendarView = this.calendarView;
                       chunkBox.occurrence = chunk.event.event;
                       chunkBox.parentColumn = this;
+                      chunkBox.setAttribute("item-calendar", chunk.event.event.calendar.uri.spec);
 
                       chunk.event.eventbox = chunkBox;
                   } else {
