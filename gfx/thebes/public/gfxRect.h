@@ -41,7 +41,7 @@
 #include "gfxTypes.h"
 #include "gfxPoint.h"
 
-struct gfxRect {
+struct NS_EXPORT gfxRect {
     // pt? point?
     gfxPoint pos;
     gfxSize size;

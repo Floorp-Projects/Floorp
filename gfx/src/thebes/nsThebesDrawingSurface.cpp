@@ -44,6 +44,7 @@
 #include "gfxImageSurface.h"
 
 #ifdef MOZ_ENABLE_GTK2
+#include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include "gfxXlibSurface.h"
 # ifdef MOZ_ENABLE_GLITZ
@@ -68,9 +69,20 @@ nsThebesDrawingSurface::~nsThebesDrawingSurface()
 {
 #ifdef WIN_XP
     if (mWidget)
-        nsNativeWidget nativeWidget = mWidget->FreeNativeData(mNativeWidget, NS_NATIVE_GRAPHIC);
+        mWidget->FreeNativeData(mNativeWidget, NS_NATIVE_GRAPHIC);
 #endif
 }
+
+#ifdef MOZ_ENABLE_GTK2
+static cairo_user_data_key_t cairo_gtk_pixmap_unref_key;
+static void do_gtk_pixmap_unref (void *data)
+{
+    GdkPixmap *pmap = (GdkPixmap*)data;
+    guint rc = ((GObject*)pmap)->ref_count;
+    //fprintf (stderr, "do_gtk_pixmap_unref: %p refcnt %d\n", pmap, rc);
+    gdk_pixmap_unref (pmap);
+}
+#endif
 
 nsresult
 nsThebesDrawingSurface::Init(nsThebesDeviceContext *aDC, PRUint32 aWidth, PRUint32 aHeight, PRBool aFastAccess)
@@ -91,7 +103,24 @@ nsThebesDrawingSurface::Init(nsThebesDeviceContext *aDC, PRUint32 aWidth, PRUint
         mSurface = new gfxImageSurface(gfxImageSurface::ImageFormatARGB32, aWidth, aHeight);
     } else {
         if (!UseGlitz()) {
-            mSurface = new gfxXlibSurface(GDK_DISPLAY(), GDK_VISUAL_XVISUAL(gdk_rgb_get_visual()), aWidth, aHeight);
+            mNativeWidget = ::gdk_pixmap_new(nsnull, mWidth, mHeight, 24);
+            {
+                guint rc = ((GObject*)mNativeWidget)->ref_count;
+                //fprintf (stderr, "do_gtk_pixmap_new: %p refcnt %d\n", mNativeWidget, rc);
+            }
+            gdk_drawable_set_colormap(GDK_DRAWABLE(mNativeWidget), gdk_rgb_get_colormap());
+
+            mSurface = new gfxXlibSurface(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(mNativeWidget)),
+                                          GDK_WINDOW_XWINDOW(GDK_DRAWABLE(mNativeWidget)),
+                                          GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(GDK_DRAWABLE(mNativeWidget))));
+
+            // we need some thebes wrappers for surface destructor hooks
+            cairo_surface_set_user_data (mSurface->CairoSurface(),
+                                         &cairo_gtk_pixmap_unref_key,
+                                         mNativeWidget,
+                                         do_gtk_pixmap_unref);
+            
+            //mSurface = new gfxXlibSurface(GDK_DISPLAY(), GDK_VISUAL_XVISUAL(gdk_rgb_get_visual()), aWidth, aHeight);
         } else {
 # if defined(MOZ_ENABLE_GLITZ)
             glitz_drawable_format_t *gdformat = (glitz_drawable_format_t*) aDC->GetGlitzDrawableFormat();
@@ -110,7 +139,7 @@ nsThebesDrawingSurface::Init(nsThebesDeviceContext *aDC, PRUint32 aWidth, PRUint
                                       aHeight,
                                       0,
                                       NULL);
-            glitz_surface_attach (gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR, 0, 0);
+            glitz_surface_attach (gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
 
             //fprintf (stderr, "## nsThebesDrawingSurface::Init Glitz PBUFFER %d %d\n", aWidth, aHeight);
             mSurface = new gfxGlitzSurface (gdraw, gsurf, PR_TRUE);
@@ -120,8 +149,19 @@ nsThebesDrawingSurface::Init(nsThebesDeviceContext *aDC, PRUint32 aWidth, PRUint
 #elif XP_WIN
     if (aFastAccess) {
         mSurface = new gfxImageSurface(gfxImageSurface::ImageFormatARGB32, aWidth, aHeight);
-    } else {
-        mSurface = new gfxWindowsSurface(aWidth, aHeight);
+      } else {
+        // this may or may not be null.  this is currently only called from a spot
+        // where this will be a hwnd
+        nsNativeWidget widget = aDC->GetWidget();
+        HDC dc = nsnull;
+        if (widget)
+            dc = GetDC((HWND)widget);
+
+        mSurface = new gfxWindowsSurface(dc, aWidth, aHeight);
+
+        if (widget)
+            ReleaseDC((HWND)widget, dc);
+
     }
 #else
 #error Write me!
@@ -136,15 +176,15 @@ nsThebesDrawingSurface::Init (nsThebesDeviceContext *aDC, nsIWidget *aWidget)
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsThebesDrawingSurface::Init aDC %p aWidget %p\n", this, aDC, aWidget));
 
 #ifdef MOZ_ENABLE_GTK2
-    nsNativeWidget nativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
+    mNativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
 #elif XP_WIN
     mWidget = aWidget; // hold a pointer to this.. not a reference.. because we have to free the dc...
-    nsNativeWidget nativeWidget = aWidget->GetNativeData(NS_NATIVE_GRAPHIC);
+    mNativeWidget = aWidget->GetNativeData(NS_NATIVE_GRAPHIC);
 #else
 #error Write me!
 #endif
 
-    Init(aDC, nativeWidget);
+    Init(aDC, mNativeWidget);
 
     return NS_OK;
 }
@@ -200,7 +240,7 @@ nsThebesDrawingSurface::Init (nsThebesDeviceContext *aDC, nsNativeWidget aWidget
                                   height,
                                   0,
                                   NULL);
-        glitz_surface_attach (gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR, 0, 0);
+        glitz_surface_attach (gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
 
 
         //fprintf (stderr, "## nsThebesDrawingSurface::Init Glitz DRAWABLE %p (DC: %p)\n", aWidget, aDC);

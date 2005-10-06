@@ -41,7 +41,7 @@
  * *********************************************************
  */
 
-class gfxRegion {
+class NS_EXPORT gfxRegion {
 public:
     gfxRegion(const gfxRegion& r);
     gfxRegion(const gfxRect& r);

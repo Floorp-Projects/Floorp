@@ -43,6 +43,8 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+VISIBILITY_FLAGS =
+
 MODULE          = cairo
 LIBRARY_NAME    = mozcairo
 LIBXUL_LIBRARY = 1
@@ -79,6 +81,7 @@ CSRCS   = \
         cairo-pen.c \
         cairo-polygon.c \
 	cairo-region.c \
+	cairo-scaled-font.c \
         cairo-slope.c \
         cairo-spline.c \
         cairo-surface.c \
@@ -87,7 +90,7 @@ CSRCS   = \
         cairo-wideint.c \
         $(NULL)
 
-EXPORTS = cairo.h cairo-features.h
+EXPORTS = cairo.h cairo-features.h cairo-platform.h
 
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)

@@ -95,25 +95,25 @@ typedef XID GLXPbuffer;
 #endif
 
 typedef glitz_function_pointer_t (* glitz_glx_get_proc_address_t)
-     (const glitz_gl_ubyte_t *);
+    (const glitz_gl_ubyte_t *);
 typedef GLXFBConfig *(* glitz_glx_get_fbconfigs_t)
-     (Display *display, int screen, int *n_elements);
+    (Display *display, int screen, int *n_elements);
 typedef int (* glitz_glx_get_fbconfig_attrib_t)
-     (Display *display, GLXFBConfig config, int attribute, int *value);
+    (Display *display, GLXFBConfig config, int attribute, int *value);
 typedef XVisualInfo *(* glitz_glx_get_visual_from_fbconfig_t)
-     (Display *display, GLXFBConfig config);
+    (Display *display, GLXFBConfig config);
 typedef GLXPbuffer (* glitz_glx_create_pbuffer_t)
-     (Display *display, GLXFBConfig config, const int *attrib_list);
+    (Display *display, GLXFBConfig config, const int *attrib_list);
 typedef void (* glitz_glx_destroy_pbuffer_t)
-     (Display *display, GLXPbuffer pbuffer);
+    (Display *display, GLXPbuffer pbuffer);
 typedef void (* glitz_glx_query_drawable_t)
-     (Display *display, GLXDrawable drawable,
-      int attribute, unsigned int *value);
+    (Display *display, GLXDrawable drawable,
+     int attribute, unsigned int *value);
 typedef Bool (* glitz_glx_make_context_current_t)
-     (Display *display, GLXDrawable draw, GLXDrawable read, GLXContext ctx);
+    (Display *display, GLXDrawable draw, GLXDrawable read, GLXContext ctx);
 typedef GLXContext (* glitz_glx_create_new_context_t)
-     (Display *display, GLXFBConfig config, int render_type,
-      GLXContext share_list, Bool direct);
+    (Display *display, GLXFBConfig config, int render_type,
+     GLXContext share_list, Bool direct);
 
 #ifndef GLX_ARB_multisample
 #define GLX_SAMPLE_BUFFERS_ARB              0x186a0
@@ -121,8 +121,8 @@ typedef GLXContext (* glitz_glx_create_new_context_t)
 #endif
 
 typedef Bool *(* glitz_glx_bind_tex_image_t)
-     (Display *display, GLXPbuffer pbuffer, int buffer);
+    (Display *display, GLXPbuffer pbuffer, int buffer);
 typedef Bool (* glitz_glx_release_tex_image_t)
-     (Display *display, GLXPbuffer pbuffer, int buffer);
+    (Display *display, GLXPbuffer pbuffer, int buffer);
 
 #endif /* GLITZ_GLXEXT_H_INCLUDED */

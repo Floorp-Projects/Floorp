@@ -124,8 +124,8 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
     }
 
     bitmap_info->bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-    bitmap_info->bmiHeader.biWidth = width;
-    bitmap_info->bmiHeader.biHeight = - height; /* top-down */
+    bitmap_info->bmiHeader.biWidth = width == 0 ? 1 : width;
+    bitmap_info->bmiHeader.biHeight = height == 0 ? -1 : - height; /* top-down */
     bitmap_info->bmiHeader.biSizeImage = 0;
     bitmap_info->bmiHeader.biXPelsPerMeter = 72. / 0.0254; /* unused here */
     bitmap_info->bmiHeader.biYPelsPerMeter = 72. / 0.0254; /* unused here */
@@ -524,9 +524,6 @@ _cairo_win32_surface_release_dest_image (void                   *abstract_surfac
     cairo_surface_destroy ((cairo_surface_t *)local);
 }
 
-// AlphaBlend is not available or useable on older versions of Win32
-
-/* for compatibility with VC++ 5 */
 #if !defined(AC_SRC_OVER)
 #define AC_SRC_OVER                 0x00
 #pragma pack(1)
@@ -544,21 +541,77 @@ typedef struct {
 #define AC_SRC_ALPHA                0x01
 #endif
 
-typedef BOOL (WINAPI *ALPHABLENDPROC)(
-  HDC hdcDest,
-  int nXOriginDest,
-  int nYOriginDest,
-  int nWidthDest,
-  int hHeightDest,
-  HDC hdcSrc,
-  int nXOriginSrc,
-  int nYOriginSrc,
-  int nWidthSrc,
-  int nHeightSrc,
-  BLENDFUNCTION blendFunction);
+typedef BOOL (WINAPI *cairo_alpha_blend_func_t) (HDC hdcDest,
+						 int nXOriginDest,
+						 int nYOriginDest,
+						 int nWidthDest,
+						 int hHeightDest,
+						 HDC hdcSrc,
+						 int nXOriginSrc,
+						 int nYOriginSrc,
+						 int nWidthSrc,
+						 int nHeightSrc,
+						 BLENDFUNCTION blendFunction);
 
-static unsigned gAlphaBlendChecked = FALSE;
-static ALPHABLENDPROC gAlphaBlend;
+static cairo_int_status_t
+_composite_alpha_blend (cairo_win32_surface_t *dst,
+			cairo_win32_surface_t *src,
+			int                    alpha,
+			int                    src_x,
+			int                    src_y,
+			int                    dst_x,
+			int                    dst_y,
+			int                    width,
+			int                    height)
+{
+    static unsigned alpha_blend_checked = FALSE;
+    static cairo_alpha_blend_func_t alpha_blend = NULL;
+
+    BLENDFUNCTION blend_function;
+
+    /* Check for AlphaBlend dynamically to allow compiling on
+     * MSVC 6 and use on older windows versions
+     */
+    if (!alpha_blend_checked) {
+	OSVERSIONINFO os;
+    
+	os.dwOSVersionInfoSize = sizeof (os);
+	GetVersionEx (&os);
+	
+	/* If running on Win98, disable using AlphaBlend()
+	 * to avoid Win98 AlphaBlend() bug */
+	if (VER_PLATFORM_WIN32_WINDOWS != os.dwPlatformId ||
+	    os.dwMajorVersion != 4 || os.dwMinorVersion != 10)
+	{
+	    HMODULE msimg32_dll = LoadLibrary ("msimg32");
+	    
+	    if (msimg32_dll != NULL)
+		alpha_blend = (cairo_alpha_blend_func_t)GetProcAddress (msimg32_dll,
+									"AlphaBlend");
+	}
+	    
+	alpha_blend_checked = TRUE;
+    }
+
+    if (alpha_blend == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    
+    blend_function.BlendOp = AC_SRC_OVER;
+    blend_function.BlendFlags = 0;
+    blend_function.SourceConstantAlpha = alpha;
+    blend_function.AlphaFormat = src->format == CAIRO_FORMAT_ARGB32 ? AC_SRC_ALPHA : 0;
+
+    if (!alpha_blend (dst->dc,
+		      dst_x, dst_y,
+		      width, height,
+		      src->dc,
+		      src_x, src_y,
+		      width, height,
+		      blend_function))
+	return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite");
+    
+    return CAIRO_STATUS_SUCCESS;
+}
 
 static cairo_int_status_t
 _cairo_win32_surface_composite (cairo_operator_t	operator,
@@ -580,21 +633,6 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
     int alpha;
     int integer_transform;
     int itx, ity;
-
-    if (!gAlphaBlendChecked) {
-	OSVERSIONINFO os;
-    
-	os.dwOSVersionInfoSize = sizeof(os);
-	GetVersionEx(&os);
-	// If running on Win98, disable using AlphaBlend()
-	// to avoid Win98 AlphaBlend() bug
-	if (VER_PLATFORM_WIN32_WINDOWS != os.dwPlatformId ||
-	    os.dwMajorVersion != 4 || os.dwMinorVersion != 10) {
-	    gAlphaBlend = (ALPHABLENDPROC)GetProcAddress(LoadLibrary("msimg32"),
-							 "AlphaBlend");
-	}
-	gAlphaBlendChecked = TRUE;
-    }
 
     if (pattern->type != CAIRO_PATTERN_SURFACE ||
 	pattern->extend != CAIRO_EXTEND_NONE)
@@ -642,26 +680,9 @@ _cairo_win32_surface_composite (cairo_operator_t	operator,
 	       dst->format == CAIRO_FORMAT_RGB24 &&
 	       operator == CAIRO_OPERATOR_OVER) {
 
-	BLENDFUNCTION blend_function;
-
-	blend_function.BlendOp = AC_SRC_OVER;
-	blend_function.BlendFlags = 0;
-	blend_function.SourceConstantAlpha = alpha;
-	blend_function.AlphaFormat = src->format == CAIRO_FORMAT_ARGB32 ? AC_SRC_ALPHA : 0;
-
-	if (!gAlphaBlend)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
-	if (!gAlphaBlend(dst->dc,
-			 dst_x, dst_y,
-			 width, height,
-			 src->dc,
-			 src_x + itx, src_y + ity,
-			 width, height,
-			 blend_function))
-	    return _cairo_win32_print_gdi_error ("_cairo_win32_surface_composite");
-
-	return CAIRO_STATUS_SUCCESS;
+	return _composite_alpha_blend (dst, src, alpha,
+				       src_x + itx, src_y + ity,
+				       dst_x, dst_y, width, height);
     }
     
     return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1030,3 +1051,37 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_flush,
     NULL  /* mark_dirty_rectangle */
 };
+
+/*
+ * Without pthread, on win32 we need to initialize all the 'mutex'es
+ * before use. It is guaranteed that DllMain will get called single
+ * threaded before any other function.
+ * Initializing more than finally needed should not matter much.
+ */
+#ifndef HAVE_PTHREAD_H
+CRITICAL_SECTION cairo_toy_font_face_hash_table_mutex;
+CRITICAL_SECTION cairo_scaled_font_map_mutex;
+CRITICAL_SECTION cairo_ft_unscaled_font_map_mutex;
+
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+	 DWORD     fdwReason,
+	 LPVOID    lpvReserved)
+{
+  switch (fdwReason)
+  {
+  case DLL_PROCESS_ATTACH:
+    /* every 'mutex' from CAIRO_MUTEX_DECALRE needs to be initialized here */
+    InitializeCriticalSection (&cairo_toy_font_face_hash_table_mutex);
+    InitializeCriticalSection (&cairo_scaled_font_map_mutex);
+    InitializeCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    break;
+  case DLL_PROCESS_DETACH:
+    DeleteCriticalSection (&cairo_toy_font_face_hash_table_mutex);
+    DeleteCriticalSection (&cairo_scaled_font_map_mutex);
+    DeleteCriticalSection (&cairo_ft_unscaled_font_map_mutex);
+    break;
+  }
+  return TRUE;
+}
+#endif

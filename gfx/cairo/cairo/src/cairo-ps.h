@@ -47,18 +47,18 @@ CAIRO_BEGIN_DECLS
 
 /* PS-surface functions */
 
-cairo_surface_t *
+cairo_public cairo_surface_t *
 cairo_ps_surface_create (const char *filename,
 			 double	     width_in_points,
 			 double	     height_in_points);
 
-cairo_surface_t *
+cairo_public cairo_surface_t *
 cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
 				    void	       *closure,
 				    double		width_in_points,
 				    double		height_in_points);
 
-void
+cairo_public void
 cairo_ps_surface_set_dpi (cairo_surface_t      *surface,
 			  double		x_dpi,
 			  double		y_dpi);

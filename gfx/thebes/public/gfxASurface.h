@@ -41,12 +41,13 @@
 #include <cairo.h>
 
 #include "gfxTypes.h"
+#include "gfxRect.h"
 
 /**
  * A surface is something you can draw on. Instantiate a subclass of this
  * abstract class, and use gfxContext to draw on this surface.
  */
-class gfxASurface {
+class NS_EXPORT gfxASurface {
     THEBES_DECL_REFCOUNTING_ABSTRACT
 
 public:
@@ -63,6 +64,14 @@ public:
 
     /*** this DOES NOT addref the surface */
     cairo_surface_t* CairoSurface() { return mSurface; }
+
+    void Flush() { cairo_surface_flush(mSurface); }
+    void MarkDirty() { cairo_surface_mark_dirty(mSurface); }
+    void MarkDirty(const gfxRect& r) {
+        cairo_surface_mark_dirty_rectangle(mSurface,
+                                           (int) r.pos.x, (int) r.pos.y,
+                                           (int) r.size.width, (int) r.size.height);
+    }
 
 protected:
     void Init(cairo_surface_t* surface) {

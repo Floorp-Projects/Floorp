@@ -230,7 +230,7 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
                                       0,
                                       NULL);
 
-            glitz_surface_attach (gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR, 0, 0);
+            glitz_surface_attach (gsurf, gdraw, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
             mOptSurface = new gfxGlitzSurface (gdraw, gsurf, PR_TRUE);
 # endif
         }
@@ -517,19 +517,27 @@ nsThebesImage::DrawTile(nsIRenderingContext &aContext,
 #endif
 
     gfxMatrix savedMatrix = ctx->CurrentMatrix();
-    PRBool reallyRepeating = PR_TRUE;
-
-    /* Let's figure out if this really is repeating, or if we're just drawing a subrect */
-    if (aTileRect.x + aTileRect.width > mWidth ||
-        aTileRect.y + aTileRect.height > mHeight)
-    {
-        reallyRepeating = PR_TRUE;
-    }
-
-    ctx->IdentityMatrix();
+    PRBool reallyRepeating = PR_FALSE;
 
     PRInt32 x0 = aTileRect.x - aSXOffset;
     PRInt32 y0 = aTileRect.y - aSYOffset;
+
+    // Let's figure out if this really is repeating, or if we're just drawing a subrect
+    if (aTileRect.width > mWidth ||
+        aTileRect.height > mHeight)
+    {
+        reallyRepeating = PR_TRUE;
+    } else {
+        // nope, just drawing a subrect, so let's not set CAIRO_EXTEND_REPEAT
+        // so that we don't get screwed by image surface fallbacks due to
+        // buggy RENDER implementations
+        if (aSXOffset > mWidth)
+            aSXOffset = aSXOffset % mWidth;
+        if (aSYOffset > mHeight)
+            aSYOffset = aSYOffset % mHeight;
+    }
+
+    ctx->IdentityMatrix();
 
     ctx->Translate(gfxPoint(x0, y0));
 
@@ -538,9 +546,15 @@ nsThebesImage::DrawTile(nsIRenderingContext &aContext,
         pat->SetExtend(CAIRO_EXTEND_REPEAT);
 
     ctx->NewPath();
+    ctx->Rectangle(gfxRect(aSXOffset, aSYOffset,
+                           aTileRect.width, aTileRect.height),
+                   PR_TRUE);
+    ctx->SetPattern(pat);
+#if 0
     ctx->PixelSnappedRectangleAndSetPattern(gfxRect(aSXOffset, aSYOffset,
                                                     aTileRect.width, aTileRect.height),
                                             pat);
+#endif
     ctx->Fill();
 
     ctx->SetMatrix(savedMatrix);

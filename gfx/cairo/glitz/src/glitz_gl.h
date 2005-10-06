@@ -112,8 +112,9 @@ typedef ptrdiff_t glitz_gl_sizeiptr_t;
 #define GLITZ_GL_MAX_TEXTURE_SIZE  0x0D33
 #define GLITZ_GL_MAX_VIEWPORT_DIMS 0x0D3A
 
-#define GLITZ_GL_TEXTURE_WIDTH  0x1000
-#define GLITZ_GL_TEXTURE_HEIGHT 0x1001
+#define GLITZ_GL_TEXTURE_WIDTH        0x1000
+#define GLITZ_GL_TEXTURE_HEIGHT       0x1001
+#define GLITZ_GL_TEXTURE_BORDER_COLOR 0x1004
 
 #define GLITZ_GL_TEXTURE_ENV            0x2300
 #define GLITZ_GL_TEXTURE_ENV_MODE       0x2200
@@ -135,6 +136,7 @@ typedef ptrdiff_t glitz_gl_sizeiptr_t;
 #define GLITZ_GL_MODULATE               0x2100
 #define GLITZ_GL_NEAREST                0x2600
 #define GLITZ_GL_LINEAR                 0x2601
+#define GLITZ_GL_CLAMP                  0x2900
 #define GLITZ_GL_REPEAT                 0x2901
 #define GLITZ_GL_CLAMP_TO_EDGE          0x812F
 #define GLITZ_GL_CLAMP_TO_BORDER        0x812D
@@ -187,6 +189,9 @@ typedef ptrdiff_t glitz_gl_sizeiptr_t;
 #define GLITZ_GL_VIEWPORT_BIT       0x00000800
 #define GLITZ_GL_TRANSFORM_BIT      0x00001000
 #define GLITZ_GL_COLOR_BUFFER_BIT   0x00004000
+
+#define GLITZ_GL_STENCIL_INDEX   0x1901
+#define GLITZ_GL_DEPTH_COMPONENT 0x1902
 
 #define GLITZ_GL_ALPHA     0x1906
 #define GLITZ_GL_RGB       0x1907
@@ -309,8 +314,14 @@ typedef ptrdiff_t glitz_gl_sizeiptr_t;
 #define GLITZ_GL_WRITE_ONLY 0x88B9
 #define GLITZ_GL_READ_WRITE 0x88BA
 
-#define GLITZ_GL_FRAMEBUFFER       0x8D40
-#define GLITZ_GL_COLOR_ATTACHMENT0 0x8CE0
+#define GLITZ_GL_FRAMEBUFFER  0x8D40
+#define GLITZ_GL_RENDERBUFFER 0x8D41
+
+#define GLITZ_GL_COLOR_ATTACHMENT0  0x8CE0
+#define GLITZ_GL_COLOR_ATTACHMENT1  0x8CE1
+#define GLITZ_GL_DEPTH_ATTACHMENT   0x8D00
+#define GLITZ_GL_STENCIL_ATTACHMENT 0x8D20
+
 #define GLITZ_GL_FRAMEBUFFER_COMPLETE                        0x8CD5
 #define GLITZ_GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT           0x8CD6
 #define GLITZ_GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT   0x8CD7
@@ -321,6 +332,13 @@ typedef ptrdiff_t glitz_gl_sizeiptr_t;
 #define GLITZ_GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER          0x8CDC
 #define GLITZ_GL_FRAMEBUFFER_UNSUPPORTED                     0x8CDD
 #define GLITZ_GL_FRAMEBUFFER_STATUS_ERROR                    0x8CDE
+
+#define GLITZ_GL_RENDERBUFFER_RED_SIZE     0x8D50
+#define GLITZ_GL_RENDERBUFFER_GREEN_SIZE   0x8D51
+#define GLITZ_GL_RENDERBUFFER_BLUE_SIZE    0x8D52
+#define GLITZ_GL_RENDERBUFFER_ALPHA_SIZE   0x8D53
+#define GLITZ_GL_RENDERBUFFER_DEPTH_SIZE   0x8D54
+#define GLITZ_GL_RENDERBUFFER_STENCIL_SIZE 0x8D55
 
 typedef glitz_gl_void_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_enable_t)
      (glitz_gl_enum_t cap);
@@ -470,6 +488,9 @@ typedef glitz_gl_void_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_tex_image_2d_t)
       const glitz_gl_void_t *pixels);
 typedef glitz_gl_void_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_tex_parameter_i_t)
      (glitz_gl_enum_t target, glitz_gl_enum_t pname, glitz_gl_int_t param);
+typedef glitz_gl_void_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_tex_parameter_fv_t)
+     (glitz_gl_enum_t target, glitz_gl_enum_t pname,
+      const glitz_gl_float_t *parama);
 typedef glitz_gl_void_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_get_tex_level_parameter_iv_t)
      (glitz_gl_enum_t target, glitz_gl_int_t level,
       glitz_gl_enum_t pname, glitz_gl_int_t *param);
@@ -524,10 +545,23 @@ typedef void (GLITZ_GL_API_ATTRIBUTE * glitz_gl_delete_framebuffers_t)
      (glitz_gl_sizei_t, const glitz_gl_uint_t *);
 typedef glitz_gl_void_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_bind_framebuffer_t)
      (glitz_gl_enum_t, glitz_gl_uint_t);
-typedef glitz_gl_enum_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_check_framebuffer_status_t)
-     (glitz_gl_enum_t);
+typedef void (GLITZ_GL_API_ATTRIBUTE * glitz_gl_framebuffer_renderbuffer_t)
+    (glitz_gl_enum_t, glitz_gl_enum_t, glitz_gl_enum_t,
+     glitz_gl_uint_t);
 typedef void (GLITZ_GL_API_ATTRIBUTE * glitz_gl_framebuffer_texture_2d_t)
     (glitz_gl_enum_t, glitz_gl_enum_t, glitz_gl_enum_t,
      glitz_gl_uint_t, glitz_gl_int_t);
+typedef glitz_gl_enum_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_check_framebuffer_status_t)
+     (glitz_gl_enum_t);
+typedef void (GLITZ_GL_API_ATTRIBUTE * glitz_gl_gen_renderbuffers_t)
+     (glitz_gl_sizei_t, glitz_gl_uint_t *);
+typedef void (GLITZ_GL_API_ATTRIBUTE * glitz_gl_delete_renderbuffers_t)
+     (glitz_gl_sizei_t, const glitz_gl_uint_t *);
+typedef glitz_gl_void_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_bind_renderbuffer_t)
+     (glitz_gl_enum_t, glitz_gl_uint_t);
+typedef glitz_gl_void_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_renderbuffer_storage_t)
+     (glitz_gl_enum_t, glitz_gl_enum_t, glitz_gl_sizei_t, glitz_gl_sizei_t);
+typedef glitz_gl_void_t (GLITZ_GL_API_ATTRIBUTE * glitz_gl_get_renderbuffer_parameter_iv_t)
+     (glitz_gl_enum_t, glitz_gl_enum_t, glitz_gl_int_t *);
 
 #endif /* GLITZ_GL_H_INCLUDED */

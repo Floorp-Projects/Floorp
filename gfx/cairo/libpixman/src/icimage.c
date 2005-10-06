@@ -120,13 +120,13 @@ pixman_image_init (pixman_image_t *image)
     image->componentAlpha = 0;
     image->compositeClipSource = 0;
 
-    image->alphaMap = 0;
+    image->alphaMap = NULL;
     image->alphaOrigin.x = 0;
     image->alphaOrigin.y = 0;
 
     image->clipOrigin.x = 0;
     image->clipOrigin.y = 0;
-    image->clientClip = 0;
+    image->clientClip = NULL;
 
     image->dither = 0L;
 
@@ -148,7 +148,7 @@ pixman_image_init (pixman_image_t *image)
     image->transform = NULL;
 
     image->filter = PIXMAN_FILTER_NEAREST;
-    image->filter_params = 0;
+    image->filter_params = NULL;
     image->filter_nparams = 0;
 
 
@@ -175,7 +175,7 @@ pixman_image_set_transform (pixman_image_t		*image,
     } };
 
     if (transform && memcmp (transform, &identity, sizeof (pixman_transform_t)) == 0)
-	transform = 0;
+	transform = NULL;
     
     if (transform)
     {
@@ -192,7 +192,7 @@ pixman_image_set_transform (pixman_image_t		*image,
 	if (image->transform)
 	{
 	    free (image->transform);
-	    image->transform = 0;
+	    image->transform = NULL;
 	}
     }
     return 0;

@@ -8,10 +8,13 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= thebes
 
+REQUIRES	= cairo
+
 EXPORTS		= 	gfxASurface.h \
 			gfxColor.h \
 			gfxContext.h \
 			gfxFilter.h \
+			gfxFont.h \
 			gfxImageSurface.h \
 			gfxMatrix.h \
 			gfxPattern.h \
@@ -22,16 +25,26 @@ EXPORTS		= 	gfxASurface.h \
 			gfxTypes.h \
 			$(NULL)
 
+ifdef MOZ_ENABLE_GLITZ
+REQUIRES += glitz
+EXPORTS +=	gfxGlitzSurface.h
+endif
+
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
-EXPORTS	+=	gfxWindowsSurface.h
+EXPORTS	+=	gfxWindowsFonts.h \
+		gfxWindowsSurface.h
+
+ifdef MOZ_ENABLE_GLITZ
+REQUIRES += glitzwgl
+endif
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
 EXPORTS	+=	gfxXlibSurface.h
-endif
 
 ifdef MOZ_ENABLE_GLITZ
-EXPORTS +=	gfxGlitzSurface.h
+REQUIRES += glitzglx
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

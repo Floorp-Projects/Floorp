@@ -42,7 +42,7 @@
 
 #include "gfxTypes.h"
 
-struct gfxSize {
+struct NS_EXPORT gfxSize {
     gfxFloat width, height;
 
     gfxSize() {}
@@ -65,7 +65,7 @@ struct gfxSize {
     }
 };
 
-struct gfxPoint {
+struct NS_EXPORT gfxPoint {
     gfxFloat x, y;
 
     gfxPoint() { }

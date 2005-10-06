@@ -36,12 +36,6 @@
 #ifndef CAIRO_WIN32_PRIVATE_H
 #define CAIRO_WIN32_PRIVATE_H
 
-/* We depend on various features introduced with Win2k and Win98,
- * like AlphaBlend. If it turns out to be a problem, we could
- * use GetProcAddress() to look them up.
- */
-#define WINVER 0x0500
-
 #include <cairo-win32.h>
 #include <cairoint.h>
 

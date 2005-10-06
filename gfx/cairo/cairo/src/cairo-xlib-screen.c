@@ -247,6 +247,9 @@ CAIRO_MUTEX_DECLARE(_xlib_screen_mutex);
 
 static cairo_xlib_screen_info_t *_cairo_xlib_screen_list = NULL;
 
+/* XXX: From this function we should also run through and cleanup
+ * anything else that still has a pointer to this Display*. For
+ * example, we should clean up any Xlib-specific glyph caches. */
 static int
 _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 {

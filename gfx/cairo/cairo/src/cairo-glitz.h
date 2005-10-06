@@ -45,7 +45,7 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_surface_t *
+cairo_public cairo_surface_t *
 cairo_glitz_surface_create (glitz_surface_t *surface);
 
 CAIRO_END_DECLS

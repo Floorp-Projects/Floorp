@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright ¬© 2002 University of Southern California
+ * Copyright Å¬Å© 2005 Mozilla Foundation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -31,30 +31,54 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ *	Stuart Parmenter <stuart@mozilla.com>
  */
 
-#ifndef CAIRO_QUARTZ_H
-#define CAIRO_QUARTZ_H
+#ifndef CAIRO_PLATFORM_H
+#define CAIRO_PLATFORM_H
 
-#include <cairo.h>
+#if defined(_MSC_VER)
 
-#if CAIRO_HAS_QUARTZ_SURFACE
+#define cairo_public extern __declspec(dllexport)
+#define CCALLBACK
+#define CCALLBACK_DECL
+#define CSTATIC_CALLBACK(__x) static __x
 
-#include <Carbon/Carbon.h>
+#elif defined(XP_BEOS)
 
-CAIRO_BEGIN_DECLS
+#define cairo_public extern __declspec(dllexport)
+#define CCALLBACK
+#define CCALLBACK_DECL
+#define CSTATIC_CALLBACK(__x) static __x
 
-cairo_public cairo_surface_t *
-cairo_quartz_surface_create (CGContextRef    context,
-			     int	     width,
-			     int	     height);
+#elif defined(XP_MAC)
 
-CAIRO_END_DECLS
+#define cairo_public extern __declspec(export)
+#define CCALLBACK
+#define CCALLBACK_DECL
+#define CSTATIC_CALLBACK(__x) static __x
 
-#else  /* CAIRO_HAS_QUARTZ_SURFACE */
-# error Cairo was not compiled with support for the quartz backend
-#endif /* CAIRO_HAS_QUARTZ_SURFACE */
+#elif defined(XP_OS2_VACPP) 
 
-#endif /* CAIRO_QUARTZ_H */
+#define cairo_public extern
+#define CCALLBACK _Optlink
+#define CCALLBACK_DECL
+#define CSTATIC_CALLBACK(__x) static __x CCALLBACK
 
+#else /* Unix */
+
+#ifdef HAVE_VISIBILITY_PRAGMA
+#define CVISIBILITY_DEFAULT __attribute__((visibility("default")))
+#else
+#define CVISIBILITY_DEFAULT
+#endif
+
+#define cairo_public extern CVISIBILITY_DEFAULT
+#define CCALLBACK
+#define CCALLBACK_DECL
+#define CSTATIC_CALLBACK(__x) static __x
+
+#endif
+
+
+#endif /* CAIRO_PLATFORM_H */

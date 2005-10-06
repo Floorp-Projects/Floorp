@@ -48,7 +48,7 @@
  * purpose is for storing read-only images and using it as a source surface,
  * but it can also be drawn to.
  */
-class gfxImageSurface : public gfxASurface {
+class NS_EXPORT gfxImageSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:

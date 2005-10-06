@@ -56,6 +56,10 @@
 #include "nsIMenuFrame.h"
 #include <malloc.h>
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxContext.h"
+#include "gfxMatrix.h"
+#endif
 /* 
  * The following constants are used to determine how a widget is drawn using
  * Windows' Theme API. For more information on theme parts and states see
@@ -684,7 +688,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 	nsRect tr(aRect);
   nsRect cr(aClipRect);
 	transformMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-#ifdef MOZ_THEBES
+#ifdef MOZ_CAIRO_GFX
   tr.x = NSToCoordRound(tr.x * T2P);
   tr.y = NSToCoordRound(tr.y * T2P);
   tr.width  = NSToCoordRound(tr.width * T2P);
@@ -692,7 +696,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 #endif
   GetNativeRect(tr, widgetRect);
   transformMatrix->TransformCoord(&cr.x,&cr.y,&cr.width,&cr.height);
-#ifdef MOZ_THEBES
+#ifdef MOZ_CAIRO_GFX
   cr.x = NSToCoordRound(cr.x * T2P);
   cr.y = NSToCoordRound(cr.y * T2P);
   cr.width  = NSToCoordRound(cr.width * T2P);
@@ -702,7 +706,27 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   HDC hdc = (HDC)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
   if (!hdc)
     return NS_ERROR_FAILURE;
-  
+
+  SaveDC(hdc);
+  SetGraphicsMode(hdc, GM_ADVANCED);
+
+#ifdef MOZ_CAIRO_GFX
+#if 0
+  gfxContext *c = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  gfxMatrix m = c->CurrentMatrix();
+  XFORM xform;
+  double dm[6];
+  m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
+  xform.eM11 = dm[0];
+  xform.eM21 = dm[1];
+  xform.eM12 = dm[2];
+  xform.eM22 = dm[3];
+  xform.eDx  = dm[4];
+  xform.eDy  = dm[5];
+  SetWorldTransform (hdc, &xform);
+#endif
+#endif
+
   // For left edge and right edge tabs, we need to adjust the widget
   // rects and clip rects so that the edges don't get drawn.
   if (aWidgetType == NS_THEME_TAB_LEFT_EDGE || aWidgetType == NS_THEME_TAB_RIGHT_EDGE) {
@@ -741,6 +765,9 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
         ::SetTextColor(hdc, oldColor);
       }
   }
+
+  RestoreDC(hdc, -1);
+
   return NS_OK;
 }
 
@@ -1519,7 +1546,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   RECT widgetRect;
 	nsRect tr(aRect);
 	transformMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
-#ifdef MOZ_THEBES
+#ifdef MOZ_CAIRO_GFX
   tr.x = NSToCoordRound(tr.x * T2P);
   tr.y = NSToCoordRound(tr.y * T2P);
   tr.width  = NSToCoordRound(tr.width * T2P);
@@ -1528,6 +1555,27 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   GetNativeRect(tr, widgetRect); 
 
   HDC hdc = (HDC)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+
+  SaveDC(hdc);
+
+#ifdef MOZ_CAIRO_GFX
+#if 0
+  SetGraphicsMode(hdc, GM_ADVANCED);
+
+  gfxContext *c = (gfxContext*)aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  gfxMatrix m = c->CurrentMatrix();
+  XFORM xform;
+  double dm[6];
+  m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
+  xform.eM11 = dm[0];
+  xform.eM21 = dm[1];
+  xform.eM12 = dm[2];
+  xform.eM22 = dm[3];
+  xform.eDx  = dm[4];
+  xform.eDy  = dm[5];
+  SetWorldTransform (hdc, &xform);
+#endif
+#endif
 
   switch (aWidgetType) { 
     // Draw button
@@ -1570,7 +1618,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
         ::DrawFocusRect(hdc, &widgetRect);
         ::SetTextColor(hdc, oldColor);
       }
-
+      RestoreDC(hdc, -1);
       return NS_OK;
     }
     // Draw controls with 2px 3D inset border
@@ -1588,6 +1636,8 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
         ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
       else
         ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_WINDOW+1));
+
+      RestoreDC(hdc, -1);
       return NS_OK;
     }
     case NS_THEME_TREEVIEW: {
@@ -1596,7 +1646,8 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
 
       // Fill in window color background
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_WINDOW+1));
-      
+
+      RestoreDC(hdc, -1);
       return NS_OK;
     }
     // Draw ToolTip background
@@ -1607,6 +1658,8 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
         ::FrameRect(hdc, &widgetRect, brush);
       InflateRect(&widgetRect, -1, -1);
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_INFOBK+1));
+
+      RestoreDC(hdc, -1);
       return NS_OK;
     // Draw 3D face background controls
     case NS_THEME_PROGRESSBAR:
@@ -1619,6 +1672,8 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
     case NS_THEME_STATUSBAR:
     case NS_THEME_STATUSBAR_RESIZER_PANEL: {
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
+
+      RestoreDC(hdc, -1);
       return NS_OK;
     }
     // Draw 3D inset statusbar panel
@@ -1627,12 +1682,16 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
         widgetRect.right -= 2; // space between sibling status panels
 
       ::DrawEdge(hdc, &widgetRect, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
+
+      RestoreDC(hdc, -1);
       return NS_OK;  
     }
     // Draw scrollbar thumb
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
       ::DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_RECT | BF_MIDDLE);
+
+      RestoreDC(hdc, -1);
       return NS_OK;
     // Draw scrollbar track background
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
@@ -1687,11 +1746,15 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
       }
       // XXX should invert the part of the track being clicked here
       // but the track is never :active
+
+      RestoreDC(hdc, -1);
       return NS_OK;
     }
     case NS_THEME_PROGRESSBAR_CHUNK:
     case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
       ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_HIGHLIGHT+1));
+
+      RestoreDC(hdc, -1);
       return NS_OK;
     // Draw Tab
     case NS_THEME_TAB:
@@ -1703,14 +1766,18 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
         aWidgetType != NS_THEME_TAB_RIGHT_EDGE,
         aWidgetType != NS_THEME_TAB_LEFT_EDGE);      
 
+      RestoreDC(hdc, -1);
       return NS_OK;
     }
     case NS_THEME_TAB_PANELS:
       ::DrawEdge(hdc, &widgetRect, EDGE_RAISED, BF_SOFT | BF_MIDDLE |
           BF_LEFT | BF_RIGHT | BF_BOTTOM);
+
+      RestoreDC(hdc, -1);
       return NS_OK;
 
   }
+  RestoreDC(hdc, -1);
   return NS_ERROR_FAILURE;
 }
 

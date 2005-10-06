@@ -41,6 +41,7 @@ typedef struct cairo_hull
     cairo_point_t point;
     cairo_slope_t slope;
     int discard;
+    int id;
 } cairo_hull_t;
 
 static cairo_hull_t *
@@ -69,11 +70,15 @@ _cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
 	hull[i].point = vertices[i].point;
 	_cairo_slope_init (&hull[i].slope, &hull[0].point, &hull[i].point);
 
+        /* give each point a unique id for later comparison */
+        hull[i].id = i;
+
+        /* Don't discard by default */
+        hull[i].discard = 0;
+
 	/* Discard all points coincident with the extremal point */
 	if (i != 0 && hull[i].slope.dx == 0 && hull[i].slope.dy == 0)
 	    hull[i].discard = 1;
-	else
-	    hull[i].discard = 0;
     }
 
     return hull;
@@ -97,7 +102,12 @@ _cairo_hull_vertex_compare (const void *av, const void *bv)
 		  (cairo_fixed_48_16_t) a->slope.dy * a->slope.dy);
 	b_dist = ((cairo_fixed_48_16_t) b->slope.dx * b->slope.dx +
 		  (cairo_fixed_48_16_t) b->slope.dy * b->slope.dy);
-	if (a_dist < b_dist) {
+	/*
+	 * Use the point's ids to ensure a total ordering.
+	 * a well-defined ordering, and avoid setting discard on
+	 * both points.          
+	 */
+	if (a_dist < b_dist || (a_dist == b_dist && a->id < b->id)) {
 	    a->discard = 1;
 	    ret = -1;
 	} else {

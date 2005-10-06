@@ -64,7 +64,7 @@
  *           \ tx ty 1 /   \         1          /
  *
  */
-class gfxMatrix {
+class NS_EXPORT gfxMatrix {
 protected:
     cairo_matrix_t mat;
 
@@ -217,11 +217,6 @@ public:
         return ret;
     }
 
-    // XXX this is wrong and should go away
-    gfxSize GetScaling() const {
-        return gfxSize(mat.xx, mat.yy);
-    }
-
     /**
      * Returns the translation component of this matrix.
      */
@@ -229,9 +224,13 @@ public:
         return gfxPoint(mat.x0, mat.y0);
     }
 
-    // XXX this is wrong and should go away
-    bool HasShear() const {
-        return ((mat.xy != 0.0) || (mat.yx != 0.0));
+    /**
+     * Returns true if the matrix has any transform other
+     * than a straight translation
+     */
+    bool HasNonTranslation() const {
+        return ((mat.xx != 1.0) || (mat.yy != 1.0) ||
+                (mat.xy != 0.0) || (mat.yx != 0.0));
     }
 };
 

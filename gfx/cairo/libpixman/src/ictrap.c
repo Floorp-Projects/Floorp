@@ -1,5 +1,5 @@
 /*
- * $Id: ictrap.c,v 1.4 2005/08/20 05:34:02 vladimir%pobox.com Exp $
+ * $Id: ictrap.c,v 1.8 2006/02/03 04:49:30 vladimir%pobox.com Exp $
  *
  * Copyright © 2002 Keith Packard
  *
@@ -34,7 +34,7 @@ FbCreateAlphaPicture (pixman_image_t	*dst,
     int own_format = 0;
 
     if (width > 32767 || height > 32767)
-	return 0;
+	return NULL;
 
     if (!format)
     {
@@ -44,7 +44,7 @@ FbCreateAlphaPicture (pixman_image_t	*dst,
 	else
 	    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
 	if (!format)
-	    return 0;
+	    return NULL;
     }
 
     image = pixman_image_create (format, width, height); 

@@ -45,7 +45,7 @@
  *
  * @see gfxContext::PushFilter, gfxContext::PopFilter
  */
-class gfxFilter {
+class NS_EXPORT gfxFilter {
     static gfxFilter* CreateOpacityFilter(gfxFloat alpha);
     // CreateGaussianFilter, etc
 };

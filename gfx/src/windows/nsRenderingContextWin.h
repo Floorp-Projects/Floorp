@@ -195,7 +195,6 @@ public:
 
   NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
-
   // nsIRenderingContextWin
   NS_IMETHOD CreateDrawingSurface(HDC aDC, nsIDrawingSurface* &aSurface);
 

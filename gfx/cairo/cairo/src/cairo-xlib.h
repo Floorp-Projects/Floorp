@@ -45,26 +45,26 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_surface_t *
+cairo_public cairo_surface_t *
 cairo_xlib_surface_create (Display     *dpy,
 			   Drawable	drawable,
 			   Visual      *visual,
 			   int		width,
 			   int		height);
 
-cairo_surface_t *
+cairo_public cairo_surface_t *
 cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 				      Pixmap	bitmap,
 				      Screen	*screen,
 				      int	width,
 				      int	height);
 
-void
+cairo_public void
 cairo_xlib_surface_set_size (cairo_surface_t *surface,
 			     int              width,
 			     int              height);
 
-void
+cairo_public void
 cairo_xlib_surface_set_drawable (cairo_surface_t *surface,
 				 Drawable	  drawable,
 				 int              width,

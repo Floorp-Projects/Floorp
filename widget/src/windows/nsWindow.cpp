@@ -92,7 +92,7 @@
 #include "resource.h"
 #include <commctrl.h>
 #include "prtime.h"
-#ifdef CAIRO_GFX
+#ifdef MOZ_CAIRO_GFX
 #include "nsIThebesRenderingContext.h"
 #else
 #include "nsIRenderingContextWin.h"
@@ -5530,7 +5530,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
       if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
       {
-#ifdef CAIRO_GFX
+#ifdef MOZ_CAIRO_GFX
         nsIThebesRenderingContext *winrc;
 #else
         nsIRenderingContextWin *winrc;

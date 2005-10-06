@@ -42,6 +42,8 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+VISIBILITY_FLAGS =
+
 MODULE          = glitz
 LIBRARY_NAME    = mozglitz
 LIBXUL_LIBRARY = 1

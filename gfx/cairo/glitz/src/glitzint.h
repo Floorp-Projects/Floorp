@@ -1,6 +1,6 @@
 /*
  * Copyright © 2004 David Reveman
- * 
+ *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
  * fee, provided that the above copyright notice appear in all copies
@@ -12,11 +12,11 @@
  * software for any purpose. It is provided "as is" without express or
  * implied warranty.
  *
- * DAVID REVEMAN DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, 
+ * DAVID REVEMAN DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
  * NO EVENT SHALL DAVID REVEMAN BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
+ * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
  * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
  * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
@@ -88,7 +88,7 @@
 #define GLITZ_CONTEXT_STACK_SIZE 16
 
 typedef struct _glitz_gl_proc_address_list_t {
-  
+
   /* core */
   glitz_gl_enable_t                     enable;
   glitz_gl_disable_t                    disable;
@@ -145,6 +145,7 @@ typedef struct _glitz_gl_proc_address_list_t {
   glitz_gl_bind_texture_t               bind_texture;
   glitz_gl_tex_image_2d_t               tex_image_2d;
   glitz_gl_tex_parameter_i_t            tex_parameter_i;
+  glitz_gl_tex_parameter_fv_t           tex_parameter_fv;
   glitz_gl_get_tex_level_parameter_iv_t get_tex_level_parameter_iv;
   glitz_gl_copy_tex_sub_image_2d_t      copy_tex_sub_image_2d;
   glitz_gl_get_integer_v_t              get_integer_v;
@@ -171,8 +172,14 @@ typedef struct _glitz_gl_proc_address_list_t {
   glitz_gl_gen_framebuffers_t           gen_framebuffers;
   glitz_gl_delete_framebuffers_t        delete_framebuffers;
   glitz_gl_bind_framebuffer_t           bind_framebuffer;
-  glitz_gl_check_framebuffer_status_t   check_framebuffer_status;
+  glitz_gl_framebuffer_renderbuffer_t   framebuffer_renderbuffer;
   glitz_gl_framebuffer_texture_2d_t     framebuffer_texture_2d;
+  glitz_gl_check_framebuffer_status_t   check_framebuffer_status;
+  glitz_gl_gen_renderbuffers_t          gen_renderbuffers;
+  glitz_gl_delete_renderbuffers_t       delete_renderbuffers;
+  glitz_gl_bind_renderbuffer_t          bind_renderbuffer;
+  glitz_gl_renderbuffer_storage_t       renderbuffer_storage;
+  glitz_gl_get_renderbuffer_parameter_iv_t get_renderbuffer_parameter_iv;
 } glitz_gl_proc_address_list_t;
 
 typedef int glitz_surface_type_t;
@@ -307,52 +314,81 @@ typedef struct _glitz_region_t {
 
 extern glitz_status_t __internal_linkage
 glitz_region_union (glitz_region_t *region,
-                    glitz_box_t    *box);
+		    glitz_box_t    *box);
+
+#define GLITZ_DRAWABLE_TYPE_WINDOW_MASK  (1L << 0)
+#define GLITZ_DRAWABLE_TYPE_PBUFFER_MASK (1L << 1)
+#define GLITZ_DRAWABLE_TYPE_FBO_MASK     (1L << 2)
+
+#define GLITZ_INT_FORMAT_WINDOW_MASK  (1L << 17)
+#define GLITZ_INT_FORMAT_PBUFFER_MASK (1L << 18)
+#define GLITZ_INT_FORMAT_FBO_MASK     (1L << 19)
+
+typedef struct _glitz_int_drawable_format_t {
+    glitz_drawable_format_t d;
+    unsigned int            types;
+    int                     caveat;
+    union {
+	void	  *ptr;
+	long	  val;
+	unsigned long uval;
+	void	  *(*fptr) (void);
+    } u;
+} glitz_int_drawable_format_t;
 
 typedef struct glitz_backend {
   glitz_drawable_t *
   (*create_pbuffer)            (void                    *drawable,
-                                glitz_drawable_format_t *format,
-                                unsigned int            width,
-                                unsigned int            height);
-  
+				glitz_drawable_format_t *format,
+				unsigned int            width,
+				unsigned int            height);
+
   void
   (*destroy)                   (void *drawable);
 
-  void
+  glitz_bool_t
   (*push_current)              (void               *drawable,
-                                glitz_surface_t    *surface,
-                                glitz_constraint_t constraint);
+				glitz_surface_t    *surface,
+				glitz_constraint_t constraint);
 
   glitz_surface_t *
   (*pop_current)               (void *drawable);
 
   void
+  (*attach_notify)             (void            *drawable,
+				glitz_surface_t *surface);
+
+  void
+  (*detach_notify)             (void            *drawable,
+				glitz_surface_t *surface);
+
+  glitz_bool_t
   (*swap_buffers)              (void *drawable);
+
 
   glitz_context_t *
   (*create_context)            (void                    *drawable,
-                                glitz_drawable_format_t *format);
+				glitz_drawable_format_t *format);
 
   void
   (*destroy_context)           (void *context);
 
   void
   (*copy_context)              (void          *src,
-                                void          *dst,
-                                unsigned long mask);
+				void          *dst,
+				unsigned long mask);
 
   void
-  (*make_current)              (void *context,
-                                void *drawable);
+  (*make_current)              (void *drawable,
+				void *context);
 
   glitz_function_pointer_t
   (*get_proc_address)          (void       *context,
-                                const char *name);
+				const char *name);
 
-  glitz_gl_proc_address_list_t gl;
-  
-  glitz_drawable_format_t      *drawable_formats;
+  glitz_gl_proc_address_list_t *gl;
+
+  glitz_int_drawable_format_t  *drawable_formats;
   int                          n_drawable_formats;
 
   glitz_gl_int_t               *texture_formats;
@@ -360,25 +396,30 @@ typedef struct glitz_backend {
   int                          n_formats;
 
   glitz_gl_float_t             gl_version;
+  glitz_gl_int_t               max_viewport_dims[2];
   glitz_gl_int_t               max_texture_2d_size;
   glitz_gl_int_t               max_texture_rect_size;
   unsigned long                feature_mask;
-  
+
   glitz_program_map_t          *program_map;
 } glitz_backend_t;
 
 struct _glitz_drawable {
-  glitz_backend_t         *backend;
-
-  int                     ref_count;
-  glitz_drawable_format_t *format;
-  int                     width, height;
-  glitz_rectangle_t       viewport;
-  glitz_bool_t            update_all;
+  glitz_backend_t             *backend;
+  int                         ref_count;
+  glitz_int_drawable_format_t *format;
+  int                         width, height;
+  glitz_rectangle_t           viewport;
+  glitz_bool_t                update_all;
+  glitz_surface_t             *front;
+  glitz_surface_t             *back;
 };
 
 #define GLITZ_GL_DRAWABLE(drawable) \
-  glitz_gl_proc_address_list_t *gl = &(drawable)->backend->gl;
+  glitz_gl_proc_address_list_t *gl = (drawable)->backend->gl;
+
+#define DRAWABLE_IS_FBO(drawable) \
+  ((drawable)->format->types == GLITZ_DRAWABLE_TYPE_FBO_MASK)
 
 typedef struct _glitz_vec2_t {
   glitz_float_t v[2];
@@ -405,23 +446,34 @@ typedef struct _glitz_vec4_t {
 #define TEXTURE_INVALID_SIZE(texture) \
   ((texture)->flags & GLITZ_TEXTURE_FLAG_INVALID_SIZE_MASK)
 
+typedef struct _glitz_texture_parameters {
+    glitz_gl_enum_t filter[2];
+    glitz_gl_enum_t wrap[2];
+    glitz_color_t   border_color;
+} glitz_texture_parameters_t;
+
 typedef struct _glitz_texture {
   glitz_gl_uint_t name;
   glitz_gl_enum_t target;
   glitz_gl_int_t  format;
   unsigned long   flags;
-  
-  glitz_gl_enum_t filter;
-  glitz_gl_enum_t wrap;
-  
-  int             width;
-  int             height;
 
-  glitz_box_t     box;
-  
-  glitz_float_t   texcoord_width_unit;
-  glitz_float_t   texcoord_height_unit;
+  glitz_texture_parameters_t param;
+
+  int width;
+  int height;
+
+  glitz_box_t box;
+
+  glitz_float_t texcoord_width_unit;
+  glitz_float_t texcoord_height_unit;
 } glitz_texture_t;
+
+struct _glitz_texture_object {
+  glitz_surface_t            *surface;
+  int                        ref_count;
+  glitz_texture_parameters_t param;
+};
 
 struct _glitz_buffer {
   glitz_gl_uint_t  name;
@@ -429,6 +481,8 @@ struct _glitz_buffer {
   void             *data;
   int              owns_data;
   int              ref_count;
+  glitz_surface_t  *front_surface;
+  glitz_surface_t  *back_surface;
   glitz_drawable_t *drawable;
 };
 
@@ -538,20 +592,12 @@ typedef struct _glitz_geometry {
 #define SURFACE_PROJECTIVE_TRANSFORM(surface) \
   ((surface)->flags & GLITZ_SURFACE_FLAG_PROJECTIVE_TRANSFORM_MASK)
 
-#define SURFACE_DRAWABLE_HEIGHT(surface) \
-  (((surface)->attached) ? \
-   (surface)->attached->height: surface->texture.height)
-
 typedef struct _glitz_filter_params_t glitz_filter_params_t;
 
 typedef struct _glitz_matrix {
   glitz_float_t t[16];
   glitz_float_t m[16];
 } glitz_matrix_t;
-
-typedef struct _glitz_framebuffer {
-    glitz_gl_uint_t name;
-} glitz_framebuffer_t;
 
 #define GLITZ_DAMAGE_TEXTURE_MASK  (1 << 0)
 #define GLITZ_DAMAGE_DRAWABLE_MASK (1 << 1)
@@ -587,11 +633,12 @@ struct _glitz_surface {
   int                   *primcount;
   glitz_region_t        texture_damage;
   glitz_region_t        drawable_damage;
-  glitz_framebuffer_t   framebuffer;
+  unsigned int          flip_count;
+  glitz_gl_int_t        fb;
 };
 
 #define GLITZ_GL_SURFACE(surface) \
-  glitz_gl_proc_address_list_t *gl = &(surface)->drawable->backend->gl;
+  glitz_gl_proc_address_list_t *gl = (surface)->drawable->backend->gl;
 
 struct _glitz_context {
   int                           ref_count;
@@ -634,160 +681,169 @@ typedef struct _glitz_extension_map {
 
 extern void __internal_linkage
 glitz_set_operator (glitz_gl_proc_address_list_t *gl,
-                    glitz_operator_t             op);
+		    glitz_operator_t             op);
 
 unsigned long
 glitz_extensions_query (glitz_gl_float_t    version,
-                        const char          *extensions_string,
-                        glitz_extension_map *extensions_map);
+			const char          *extensions_string,
+			glitz_extension_map *extensions_map);
 
 typedef glitz_function_pointer_t (* glitz_get_proc_address_proc_t)
      (const char *name, void *closure);
 
 void
 glitz_backend_init (glitz_backend_t               *backend,
-                    glitz_get_proc_address_proc_t get_proc_address,
-                    void                          *closure);
+		    glitz_get_proc_address_proc_t get_proc_address,
+		    void                          *closure);
 
 extern unsigned int __internal_linkage
 glitz_uint_to_power_of_two (unsigned int x);
 
 extern void __internal_linkage
 glitz_set_raster_pos (glitz_gl_proc_address_list_t *gl,
-                      glitz_float_t                x,
-                      glitz_float_t                y);
+		      glitz_float_t                x,
+		      glitz_float_t                y);
 
 extern void __internal_linkage
 glitz_clamp_value (glitz_float_t *value,
-                   glitz_float_t min,
-                   glitz_float_t max);
+		   glitz_float_t min,
+		   glitz_float_t max);
 
 void
 glitz_initiate_state (glitz_gl_proc_address_list_t *gl);
 
 void
 glitz_create_surface_formats (glitz_gl_proc_address_list_t *gl,
-                              glitz_format_t               **formats,
-                              glitz_gl_int_t               **texture_formats,
-                              int                          *n_formats);
+			      glitz_format_t               **formats,
+			      glitz_gl_int_t               **texture_formats,
+			      int                          *n_formats);
+
+extern void __internal_linkage
+_glitz_add_drawable_formats (glitz_gl_proc_address_list_t *gl,
+			     unsigned long		  feature_mask,
+			     glitz_int_drawable_format_t  **formats,
+			     int                          *n_formats);
+
+void
+glitz_drawable_format_copy (const glitz_drawable_format_t *src,
+			    glitz_drawable_format_t	  *dst,
+			    unsigned long		  mask);
 
 glitz_drawable_format_t *
-glitz_drawable_format_find (glitz_drawable_format_t       *formats,
-                            int                           n_formats,
-                            unsigned long                 mask,
-                            const glitz_drawable_format_t *templ,
-                            int                           count);
+glitz_drawable_format_find (glitz_int_drawable_format_t       *formats,
+			    int                               n_formats,
+			    unsigned long                     mask,
+			    const glitz_int_drawable_format_t *templ,
+			    int                               count);
 
 void
 glitz_texture_init (glitz_texture_t *texture,
-                    int             width,
-                    int             height,
-                    glitz_gl_int_t  texture_format,
-                    unsigned long   feature_mask,
-                    glitz_bool_t    unnormalized);
+		    int             width,
+		    int             height,
+		    glitz_gl_int_t  texture_format,
+		    unsigned long   feature_mask,
+		    glitz_bool_t    unnormalized);
 
 void
 glitz_texture_fini (glitz_gl_proc_address_list_t *gl,
-                    glitz_texture_t              *texture);
+		    glitz_texture_t              *texture);
 
 void
 glitz_texture_size_check (glitz_gl_proc_address_list_t *gl,
-                          glitz_texture_t              *texture,
-                          glitz_gl_int_t               max_2d,
-                          glitz_gl_int_t               max_rect);
+			  glitz_texture_t              *texture,
+			  glitz_gl_int_t               max_2d,
+			  glitz_gl_int_t               max_rect);
 
 void
 glitz_texture_allocate (glitz_gl_proc_address_list_t *gl,
-                        glitz_texture_t              *texture);
+			glitz_texture_t              *texture);
 
 extern void __internal_linkage
-glitz_texture_ensure_filter (glitz_gl_proc_address_list_t *gl,
-                             glitz_texture_t              *texture,
-                             glitz_gl_enum_t              filter);
-
-extern void __internal_linkage
-glitz_texture_ensure_wrap (glitz_gl_proc_address_list_t *gl,
-                           glitz_texture_t              *texture,
-                           glitz_gl_enum_t              wrap);
+glitz_texture_ensure_parameters (glitz_gl_proc_address_list_t *gl,
+				 glitz_texture_t	      *texture,
+				 glitz_texture_parameters_t   *param);
 
 void
 glitz_texture_bind (glitz_gl_proc_address_list_t *gl,
-                    glitz_texture_t              *texture);
+		    glitz_texture_t              *texture);
 
 void
 glitz_texture_unbind (glitz_gl_proc_address_list_t *gl,
-                      glitz_texture_t              *texture);
+		      glitz_texture_t              *texture);
 
 void
 glitz_texture_copy_drawable (glitz_gl_proc_address_list_t *gl,
-                             glitz_texture_t              *texture,
-                             glitz_drawable_t             *drawable,
-                             int                          x_drawable,
-                             int                          y_drawable,
-                             int                          width,
-                             int                          height,
-                             int                          x_texture,
-                             int                          y_texture);
+			     glitz_texture_t              *texture,
+			     glitz_drawable_t             *drawable,
+			     int                          x_drawable,
+			     int                          y_drawable,
+			     int                          width,
+			     int                          height,
+			     int                          x_texture,
+			     int                          y_texture);
 
 void
 glitz_texture_set_tex_gen (glitz_gl_proc_address_list_t *gl,
-                           glitz_texture_t              *texture,
-                           glitz_geometry_t             *geometry,
-                           int                          x_src,
-                           int                          y_src,
-                           unsigned long                flags,
-                           glitz_int_coordinate_t       *coord);
+			   glitz_texture_t              *texture,
+			   glitz_geometry_t             *geometry,
+			   int                          x_src,
+			   int                          y_src,
+			   unsigned long                flags,
+			   glitz_int_coordinate_t       *coord);
+
+extern void __internal_linkage
+_glitz_surface_sync_texture (glitz_surface_t *surface);
 
 extern glitz_texture_t __internal_linkage *
 glitz_surface_get_texture (glitz_surface_t *surface,
-                           glitz_bool_t    allocate);
+			   glitz_bool_t    allocate);
 
 extern void __internal_linkage
 glitz_surface_sync_solid (glitz_surface_t *surface);
 
 extern glitz_bool_t __internal_linkage
 glitz_surface_push_current (glitz_surface_t    *surface,
-                            glitz_constraint_t constraint);
+			    glitz_constraint_t constraint);
 
 extern void __internal_linkage
 glitz_surface_pop_current (glitz_surface_t *surface);
 
 extern void __internal_linkage
 glitz_surface_damage (glitz_surface_t *surface,
-                      glitz_box_t     *box,
-                      int             what);
+		      glitz_box_t     *box,
+		      int             what);
 
 extern void __internal_linkage
 glitz_surface_sync_drawable (glitz_surface_t *surface);
 
 extern void __internal_linkage
 glitz_surface_status_add (glitz_surface_t *surface,
-                          int             flags);
+			  int             flags);
 
 extern unsigned long __internal_linkage
 glitz_status_to_status_mask (glitz_status_t status);
-     
+
 extern glitz_status_t __internal_linkage
 glitz_status_pop_from_mask (unsigned long *mask);
 
 void
 glitz_program_map_init (glitz_program_map_t *map);
-     
+
 void
 glitz_program_map_fini (glitz_gl_proc_address_list_t *gl,
-                        glitz_program_map_t          *map);
+			glitz_program_map_t          *map);
 
 extern glitz_gl_uint_t __internal_linkage
 glitz_get_fragment_program (glitz_composite_op_t *op,
-                            int                  fp_type,
-                            int                  id);
+			    int                  fp_type,
+			    int                  id);
 
 extern void __internal_linkage
 glitz_composite_op_init (glitz_composite_op_t *op,
-                         glitz_operator_t     render_op,
-                         glitz_surface_t      *src,
-                         glitz_surface_t      *mask,
-                         glitz_surface_t      *dst);
+			 glitz_operator_t     render_op,
+			 glitz_surface_t      *src,
+			 glitz_surface_t      *mask,
+			 glitz_surface_t      *dst);
 
 extern void __internal_linkage
 glitz_composite_enable (glitz_composite_op_t *op);
@@ -797,71 +853,69 @@ glitz_composite_disable (glitz_composite_op_t *op);
 
 extern void __internal_linkage *
 glitz_buffer_bind (glitz_buffer_t  *buffer,
-                   glitz_gl_enum_t target);
+		   glitz_gl_enum_t target);
 
 extern void __internal_linkage
 glitz_buffer_unbind (glitz_buffer_t *buffer);
 
 extern glitz_status_t __internal_linkage
 glitz_filter_set_params (glitz_surface_t    *surface,
-                         glitz_filter_t     filter,
-                         glitz_fixed16_16_t *params,
-                         int                n_params);
+			 glitz_filter_t     filter,
+			 glitz_fixed16_16_t *params,
+			 int                n_params);
 
 extern void __internal_linkage
 glitz_filter_set_type (glitz_surface_t *surface,
-                       glitz_filter_t  filter);
+		       glitz_filter_t  filter);
 
 extern glitz_gl_uint_t __internal_linkage
 glitz_filter_get_vertex_program (glitz_surface_t      *surface,
-                                 glitz_composite_op_t *op);
+				 glitz_composite_op_t *op);
 
 extern glitz_gl_uint_t __internal_linkage
 glitz_filter_get_fragment_program (glitz_surface_t      *surface,
-                                   glitz_composite_op_t *op);
+				   glitz_composite_op_t *op);
 
 extern void __internal_linkage
 glitz_filter_enable (glitz_surface_t      *surface,
-                     glitz_composite_op_t *op);
+		     glitz_composite_op_t *op);
 
 extern void __internal_linkage
 glitz_geometry_enable_none (glitz_gl_proc_address_list_t *gl,
-                            glitz_surface_t              *dst,
-                            glitz_box_t                  *box);
+			    glitz_surface_t              *dst,
+			    glitz_box_t                  *box);
 
 extern void __internal_linkage
 glitz_geometry_enable (glitz_gl_proc_address_list_t *gl,
-                       glitz_surface_t              *dst,
-                       glitz_box_t                  *box);
+		       glitz_surface_t              *dst,
+		       glitz_box_t                  *box);
 
 extern void __internal_linkage
 glitz_geometry_disable (glitz_surface_t *dst);
 
 extern void __internal_linkage
 glitz_geometry_draw_arrays (glitz_gl_proc_address_list_t *gl,
-                            glitz_surface_t              *dst,
-                            glitz_geometry_type_t        type,
-                            glitz_box_t                  *bounds,
-                            int                          damage);
+			    glitz_surface_t              *dst,
+			    glitz_geometry_type_t        type,
+			    glitz_box_t                  *bounds,
+			    int                          damage);
 
-extern void __internal_linkage
-glitz_framebuffer_init (glitz_framebuffer_t *framebuffer);
+void
+_glitz_drawable_init (glitz_drawable_t	          *drawable,
+		      glitz_int_drawable_format_t *format,
+		      glitz_backend_t	          *backend,
+		      int		          width,
+		      int		          height);
 
-extern void __internal_linkage
-glitz_framebuffer_fini (glitz_gl_proc_address_list_t *gl,
-                        glitz_framebuffer_t          *framebuffer);
-
-extern void __internal_linkage
-glitz_framebuffer_unbind (glitz_gl_proc_address_list_t *gl);
-
-extern glitz_bool_t __internal_linkage
-glitz_framebuffer_complete (glitz_gl_proc_address_list_t *gl,
-                            glitz_framebuffer_t          *framebuffer,
-                            glitz_texture_t              *texture);
+extern glitz_drawable_t __internal_linkage *
+_glitz_fbo_drawable_create (glitz_drawable_t	        *other,
+			    glitz_int_drawable_format_t *format,
+			    int	                        width,
+			    int	                        height);
 
 void
 _glitz_context_init (glitz_context_t  *context,
-                     glitz_drawable_t *drawable);
+		     glitz_drawable_t *drawable);
 
 void
 _glitz_context_fini (glitz_context_t *context);
@@ -912,8 +966,8 @@ typedef uint32_t glitz_fixed_1_16;
 typedef int32_t glitz_fixed_16_16;
 
 /*
- * An unadorned "glitz_fixed" is the same as glitz_fixed_16_16, 
- * (since it's quite common in the code) 
+ * An unadorned "glitz_fixed" is the same as glitz_fixed_16_16,
+ * (since it's quite common in the code)
  */
 typedef glitz_fixed_16_16 glitz_fixed;
 
@@ -953,13 +1007,14 @@ typedef glitz_fixed_16_16 glitz_fixed;
 #define sqrtf(_X) ((float)sqrt((double)(_X)))
 #endif
 
-/* Avoid unnecessary PLT entries.  */
+/* Avoid unnecessary PLT entries. */
 
-slim_hidden_proto(glitz_find_similar_drawable_format)
+slim_hidden_proto(glitz_find_drawable_format)
+slim_hidden_proto(glitz_find_pbuffer_format)
+slim_hidden_proto(glitz_create_drawable)
 slim_hidden_proto(glitz_create_pbuffer_drawable)
 slim_hidden_proto(glitz_drawable_get_width)
 slim_hidden_proto(glitz_drawable_get_height)
-slim_hidden_proto(glitz_drawable_swap_buffers)
 slim_hidden_proto(glitz_drawable_swap_buffers)
 slim_hidden_proto(glitz_drawable_flush)
 slim_hidden_proto(glitz_drawable_finish)

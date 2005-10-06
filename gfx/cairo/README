@@ -1,4 +1,4 @@
-Snapshots of cairo, libpixman, and glitz for mozilla usage.  Where possible,
+Snapshots of cairo and glitz for mozilla usage.  Where possible,
 these should be official releases from the cairo project as-is.  If
 changes are necessary, they should be documented below and the patch
 file included in this directory.
@@ -10,29 +10,10 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo 0.9.1
-  libpixman 0.1.5
-  glitz 0.4.0
+  cairo 1.1.1 (cvs)
+  glitz 0.5.0
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
 
-VC6 cannot build pixman correctly for various reasons.  There is a static
-win32 pixman library provided in libpixman/src/pixman-vc71.lib that will
-be used instead of building on all Win32/Visual C++ builds.  Building with
-VC7.1, gcc/mingw, or anything else other than VC6 is fine.
-
-PATCHES:
-
-  stdint.h - select between inttypes.h, stdint.h, and mozstdint.h.
-
-  dash-dos.diff - prevent DOS attack with dasharray.
-
-  alphablend.diff - check for AlphaBlend usability at runtime (win32)
-
-  feature-tests.diff - change #if to #ifdef, and change
-      cairo-features.h.in to #define things based on mozilla configure
-      tests
-
-  allow-null-surface.diff - allow creating a cairo_t with a NULL
-      target surface
-  atsui-empty.diff - prevent OS-X crash with empty string
+VC6 cannot build pixman from cairo.  Therefore, VC6 builds are not supported
+if cairo is enabled.  Please upgrade to VC7.1/8.

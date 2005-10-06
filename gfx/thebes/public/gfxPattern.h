@@ -45,7 +45,7 @@
 #include "gfxMatrix.h"
 #include "gfxTypes.h"
 
-class gfxPattern {
+class NS_EXPORT gfxPattern {
     THEBES_DECL_REFCOUNTING
 
 public:

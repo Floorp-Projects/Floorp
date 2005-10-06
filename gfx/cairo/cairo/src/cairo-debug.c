@@ -60,7 +60,6 @@ void
 cairo_debug_reset_static_data (void)
 {
 #if CAIRO_HAS_XLIB_SURFACE
-    _cairo_xlib_surface_reset_static_data ();
     _cairo_xlib_screen_reset_static_data ();
 #endif
 

@@ -173,130 +173,13 @@ device space.
 We construct the pen by computing points along the circumference
 using equally spaced angles.
 
-We show below that this approximation to the ellipse has
-maximum error at the major axis of the ellipse.  
-So, we need to compute the length of the major axis and then 
-use that to compute the number of sides needed in our pen.
-
-Thanks to Walter Brisken <wbrisken@aoc.nrao.edu> for this
-derivation:
-
-1.  First some notation:
-
-All capital letters represent vectors in two dimensions.  A prime ' 
-represents a transformed coordinate.  Matrices are written in underlined
-form, ie _R_.  Lowercase letters represent scalar real values.
-
-The letter t is used to represent the greek letter theta.
-
-2.  The question has been posed:  What is the maximum expansion factor 
-achieved by the linear transformation
-
-X' = _R_ X
-
-where _R_ is a real-valued 2x2 matrix with entries:
-
-_R_ = [a b]
-      [c d]  .
-
-In other words, what is the maximum radius, MAX[ |X'| ], reached for any 
-X on the unit circle ( |X| = 1 ) ?
-
-
-3.  Some useful formulae
-
-(A) through (C) below are standard double-angle formulae.  (D) is a lesser
-known result and is derived below:
-
-(A)  sin^2(t) = (1 - cos(2*t))/2
-(B)  cos^2(t) = (1 + cos(2*t))/2
-(C)  sin(t)*cos(t) = sin(2*t)/2
-(D)  MAX[a*cos(t) + b*sin(t)] = sqrt(a^2 + b^2)
-
-Proof of (D):
-
-find the maximum of the function by setting the derivative to zero:
-
-     -a*sin(t)+b*cos(t) = 0
-
-From this it follows that 
-
-     tan(t) = b/a 
-
-and hence 
-
-     sin(t) = b/sqrt(a^2 + b^2)
-
-and 
-
-     cos(t) = a/sqrt(a^2 + b^2)
-
-Thus the maximum value is
-
-     MAX[a*cos(t) + b*sin(t)] = (a^2 + b^2)/sqrt(a^2 + b^2)
-                                 = sqrt(a^2 + b^2)
-
-
-4.  Derivation of maximum expansion
-
-To find MAX[ |X'| ] we search brute force method using calculus.  The unit
-circle on which X is constrained is to be parameterized by t:
-
-     X(t) = (cos(t), sin(t))
-
-Thus 
-
-     X'(t) = (a*cos(t) + b*sin(t), c*cos(t) + d*sin(t)) .
-
-Define 
-
-     r(t) = |X'(t)|
-
-Thus
-
-     r^2(t) = (a*cos(t) + b*sin(t))^2 + (c*cos(t) + d*sin(t))^2
-            = (a^2 + c^2)*cos^2(t) + (b^2 + d^2)*sin^2(t) 
-               + 2*(a*b + c*d)*cos(t)*sin(t) 
-
-Now apply the double angle formulae (A) to (C) from above:
-
-     r^2(t) = (a^2 + b^2 + c^2 + d^2)/2 
-	  + (a^2 - b^2 + c^2 - d^2)*cos(2*t)/2
-	  + (a*b + c*d)*sin(2*t)
-            = f + g*cos(u) + h*sin(u)
-
-Where
-
-     f = (a^2 + b^2 + c^2 + d^2)/2
-     g = (a^2 - b^2 + c^2 - d^2)/2
-     h = (a*b + c*d)
-     u = 2*t
-
-It is clear that MAX[ |X'| ] = sqrt(MAX[ r^2 ]).  Here we determine MAX[ r^2 ]
-using (D) from above:
-
-     MAX[ r^2 ] = f + sqrt(g^2 + h^2)
-
-And finally
-
-     MAX[ |X'| ] = sqrt( f + sqrt(g^2 + h^2) )
-
-Which is the solution to this problem.
-
-
-Walter Brisken
-2004/10/08
-
-(Note that the minor axis length is at the minimum of the above solution,
-which is just sqrt (f - sqrt (g^2 + h^2)) given the symmetry of (D)).
-
-Now to compute how many sides to use for the pen formed by
-a regular polygon.
+We show that this approximation to the ellipse has maximum error at the
+major axis of the ellipse.  
 
 Set
 
-	    M = major axis length (computed by above formula)
-	    m = minor axis length (computed by above formula)
+	    M = major axis length
+	    m = minor axis length
 
 Align 'M' along the X axis and 'm' along the Y axis and draw
 an ellipse parameterized by angle 't':
@@ -361,12 +244,11 @@ We must make maximum error ≤ tolerance, so compute the ∆ needed:
 Remembering that ∆ is half of our angle between vertices,
 the number of vertices is then
 
-vertices = ceil(2π/2∆).
-		 = ceil(π/∆).
+             vertices = ceil(2π/2∆).
+                      = ceil(π/∆).
 
 Note that this also equation works for M == m (a circle) as it
 doesn't matter where on the circle the error is computed.
-
 */
 
 static int
@@ -374,28 +256,14 @@ _cairo_pen_vertices_needed (double	    tolerance,
 			    double	    radius,
 			    cairo_matrix_t  *matrix)
 {
-    double  a = matrix->xx, b = matrix->yx;
-    double  c = matrix->xy, d = matrix->yy;
-
-    double  i = a*a + c*c;
-    double  j = b*b + d*d;
-
-    double  f = 0.5 * (i + j);
-    double  g = 0.5 * (i - j);
-    double  h = a*b + c*d;
-    
     /* 
-     * compute major and minor axes lengths for 
-     * a pen with the specified radius 
+     * the pen is a circle that gets transformed to an ellipse by matrix.
+     * compute major axis length for a pen with the specified radius.
+     * we don't need the minor axis length.
      */
     
-    double  major_axis = radius * sqrt (f + sqrt (g*g+h*h));
+    double  major_axis = _cairo_matrix_transformed_circle_major_axis(matrix, radius);
 
-    /*
-     * we don't need the minor axis length, which is
-     * double min = radius * sqrt (f - sqrt (g*g+h*h));
-     */
-    
     /*
      * compute number of vertices needed
      */

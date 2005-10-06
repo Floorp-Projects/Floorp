@@ -108,7 +108,11 @@ static void
 _cairo_surface_set_error (cairo_surface_t *surface,
 			  cairo_status_t status)
 {
-    surface->status = status;
+    /* Don't overwrite an existing error. This preserves the first
+     * error, which is the most significant. It also avoids attempting
+     * to write to read-only data (eg. from a nil surface). */
+    if (surface->status == CAIRO_STATUS_SUCCESS)
+	surface->status = status;
 
     _cairo_error (status);
 }
@@ -143,8 +147,10 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     _cairo_user_data_array_init (&surface->user_data);
 
-    surface->device_x_offset = 0;
-    surface->device_y_offset = 0;
+    surface->device_x_offset = 0.0;
+    surface->device_y_offset = 0.0;
+    surface->device_x_scale = 1.0;
+    surface->device_y_scale = 1.0;
 
     surface->next_clip_serial = 0;
     surface->current_clip_serial = 0;
@@ -264,6 +270,8 @@ cairo_surface_reference (cairo_surface_t *surface)
     if (surface->ref_count == (unsigned int)-1)
 	return surface;
 
+    assert (surface->ref_count > 0);
+
     surface->ref_count++;
 
     return surface;
@@ -285,6 +293,8 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     if (surface->ref_count == (unsigned int)-1)
 	return;
+
+    assert (surface->ref_count > 0);
 
     surface->ref_count--;
     if (surface->ref_count)
@@ -434,10 +444,8 @@ cairo_surface_get_font_options (cairo_surface_t       *surface,
 void
 cairo_surface_flush (cairo_surface_t *surface)
 {
-    if (surface->status) {
-	_cairo_surface_set_error (surface, surface->status);
+    if (surface->status)
 	return;
-    }
 
     if (surface->finished) {
 	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
@@ -487,10 +495,8 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 				    int              width,
 				    int              height)
 {
-    if (surface->status) {
-	_cairo_surface_set_error (surface, surface->status);
+    if (surface->status)
 	return;
-    }
 
     if (surface->finished) {
 	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
@@ -530,27 +536,25 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 				 double           x_offset,
 				 double           y_offset)
 {
-    if (surface->status) {
-	_cairo_surface_set_error (surface, surface->status);
+    if (surface->status)
 	return;
-    }
 
     if (surface->finished) {
 	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
 
-    surface->device_x_offset = x_offset;
-    surface->device_y_offset = y_offset;
+    surface->device_x_offset = x_offset * surface->device_x_scale;
+    surface->device_y_offset = y_offset * surface->device_y_scale;
 }
 
 /**
  * _cairo_surface_acquire_source_image:
  * @surface: a #cairo_surface_t
- * @image_out: location to store a pointer to an image surface that includes at least
- *    the intersection of @interest_rect with the visible area of @surface.
- *    This surface could be @surface itself, a surface held internal to @surface,
- *    or it could be a new surface with a copy of the relevant portion of @surface.
+ * @image_out: location to store a pointer to an image surface that
+ *    has identical contents to @surface. This surface could be @surface
+ *    itself, a surface held internal to @surface, or it could be a new
+ *    surface with a copy of the relevant portion of @surface.
  * @image_extra: location to store image specific backend data
  * 
  * Gets an image surface to use when drawing as a fallback when drawing with
@@ -574,7 +578,7 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 /**
  * _cairo_surface_release_source_image:
  * @surface: a #cairo_surface_t
- * @image_extra: same as return from the matching _cairo_surface_acquire_dest_image()
+ * @image_extra: same as return from the matching _cairo_surface_acquire_source_image()
  * 
  * Releases any resources obtained with _cairo_surface_acquire_source_image()
  **/
@@ -598,6 +602,8 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
  *    the intersection of @interest_rect with the visible area of @surface.
  *    This surface could be @surface itself, a surface held internal to @surface,
  *    or it could be a new surface with a copy of the relevant portion of @surface.
+ *    If a new surface is created, it should have the same channels and depth
+ *    as @surface so that copying to and from it is exact.
  * @image_rect: location to store area of the original surface occupied 
  *    by the surface stored in @image.
  * @image_extra: location to store image specific backend data
@@ -605,16 +611,16 @@ _cairo_surface_release_source_image (cairo_surface_t        *surface,
  * Retrieves a local image for a surface for implementing a fallback drawing
  * operation. After calling this function, the implementation of the fallback
  * drawing operation draws the primitive to the surface stored in @image_out
- * then calls _cairo_surface_release_dest_fallback(),
+ * then calls _cairo_surface_release_dest_image(),
  * which, if a temporary surface was created, copies the bits back to the
  * main surface and frees the temporary surface.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY.
  *  %CAIRO_INT_STATUS_UNSUPPORTED can be returned but this will mean that
  *  the backend can't draw with fallbacks. It's possible for the routine
  *  to store NULL in @local_out and return %CAIRO_STATUS_SUCCESS;
  *  that indicates that no part of @interest_rect is visible, so no drawing
- *  is necessary. _cairo_surface_release_dest_fallback() should not be called in that
+ *  is necessary. _cairo_surface_release_dest_image() should not be called in that
  *  case.
  **/
 cairo_status_t
@@ -631,7 +637,7 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
 }
 
 /**
- * _cairo_surface_end_fallback:
+ * _cairo_surface_release_dest_image:
  * @surface: a #cairo_surface_t
  * @interest_rect: same as passed to the matching _cairo_surface_acquire_dest_image()
  * @image: same as returned from the matching _cairo_surface_acquire_dest_image()
@@ -684,11 +690,12 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    if (surface->backend->clone_similar) {
-	status = surface->backend->clone_similar (surface, src, clone_out);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
- 	    return status;
-    }
+    if (surface->backend->clone_similar == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+      
+    status = surface->backend->clone_similar (surface, src, clone_out);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
     if (status != CAIRO_STATUS_SUCCESS)
@@ -816,6 +823,13 @@ _cairo_surface_composite (cairo_operator_t	operator,
 			  unsigned int		height)
 {
     cairo_int_status_t status;
+
+    if (mask) {
+	/* These operators aren't interpreted the same way by the backends;
+	 * they are implemented in terms of other operators in cairo-gstate.c
+	 */
+	assert (operator != CAIRO_OPERATOR_SOURCE && operator != CAIRO_OPERATOR_CLEAR);
+    }
 
     if (dst->status)
 	return dst->status;
@@ -1013,7 +1027,7 @@ _fallback_fill_rectangles (cairo_surface_t	*surface,
  * 
  * Applies an operator to a set of rectangles using a solid color
  * as the source. Note that even if the operator is an unbounded operator
- * such as %CAIRO_OPERATOR_CLEAR, only the given set of rectangles
+ * such as %CAIRO_OPERATOR_IN, only the given set of rectangles
  * is affected. This differs from _cairo_surface_composite_trapezoids()
  * where the entire destination rectangle is cleared.
  * 
@@ -1151,6 +1165,11 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		operator,
 				     int			num_traps)
 {
     cairo_int_status_t status;
+
+    /* These operators aren't interpreted the same way by the backends;
+     * they are implemented in terms of other operators in cairo-gstate.c
+     */
+    assert (operator != CAIRO_OPERATOR_SOURCE && operator != CAIRO_OPERATOR_CLEAR);
 
     if (dst->status)
 	return dst->status;

@@ -89,16 +89,9 @@ CPPSRCS		= \
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)gfxshared_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)mozcairo.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)mozlibpixman.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)thebes.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifdef MOZ_ENABLE_GLITZ
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitz.$(LIB_SUFFIX)
-endif
-
-EXTRA_DSO_LIBS	= gkgfx
+EXTRA_DSO_LIBS	= gkgfx thebes
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS		+= nsSystemFontsGTK2.cpp
@@ -110,7 +103,6 @@ CPPSRCS         += nsFontMetricsPango.cpp \
 endif
 
 ifdef MOZ_ENABLE_GLITZ
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzglx.$(LIB_SUFFIX)
 REQUIRES            += glitzglx
 endif
 

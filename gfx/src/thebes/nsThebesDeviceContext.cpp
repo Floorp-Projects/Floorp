@@ -123,12 +123,12 @@ nsThebesDeviceContext::Init(nsNativeWidget aWidget)
 {
 #ifdef XP_WIN
     // XXX we should really look at the widget for printing and such, but this widget is currently always null...
-    HDC dc = GetDC(nsnull);
+    HDC dc = GetDC((HWND)aWidget);
     mPixelsToTwips = (float)NSIntPointsToTwips(72) / (float)GetDeviceCaps(dc, LOGPIXELSY);
     if (GetDeviceCaps(dc, TECHNOLOGY) == DT_RASDISPLAY)
         mPixelsToTwips = (float)NSToIntRound(mPixelsToTwips);
     mTwipsToPixels = 1.0f / mPixelsToTwips;
-    ReleaseDC(nsnull, dc);
+    ReleaseDC((HWND)aWidget, dc);
 #else
     mTwipsToPixels = 96 / (float) NSIntPointsToTwips(72);
     mPixelsToTwips = 1.0f / mTwipsToPixels;
@@ -411,12 +411,11 @@ nsThebesDeviceContext::GetGlitzDrawableFormat()
     glitz_drawable_format_t templ;
     memset(&templ, 0, sizeof(templ));
     templ.samples = 1; // change this to change FSAA?
-    templ.types.window = 1;
 
     int defaultScreen = gdk_x11_get_default_screen();
-    unsigned long mask = GLITZ_FORMAT_SAMPLES_MASK | GLITZ_FORMAT_WINDOW_MASK;
+    unsigned long mask = GLITZ_FORMAT_SAMPLES_MASK;
     
-    format = glitz_glx_find_drawable_format (GDK_DISPLAY(), defaultScreen, mask, &templ, 0);
+    format = glitz_glx_find_window_format (GDK_DISPLAY(), defaultScreen, mask, &templ, 0);
 #endif
     return format;
 }
