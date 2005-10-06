@@ -30,6 +30,7 @@
  */
 
 #include "bspatch.h"
+#include "errors.h"
 
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -59,7 +60,7 @@ MBS_ReadHeader(int fd, MBSPatchHeader *header)
 {
   int s = read(fd, header, sizeof(MBSPatchHeader));
   if (s != sizeof(MBSPatchHeader))
-    return BSP_ERROR_IO;
+    return READ_ERROR;
 
   header->slen      = ntohl(header->slen);
   header->scrc32    = ntohl(header->scrc32);
@@ -71,18 +72,18 @@ MBS_ReadHeader(int fd, MBSPatchHeader *header)
   struct stat hs;
   s = fstat(fd, &hs);
   if (s)
-    return BSP_ERROR_IO;
+    return READ_ERROR;
 
   if (memcmp(header->tag, "MBDIFF10", 8) != 0)
-    return BSP_ERROR_CORRUPT;
+    return UNEXPECTED_ERROR;
 
   if (sizeof(MBSPatchHeader) +
       header->cblen +
       header->difflen +
       header->extralen != PRUint32(hs.st_size))
-    return BSP_ERROR_CORRUPT;
+    return UNEXPECTED_ERROR;
 
-  return BSP_OK;
+  return OK;
 }
          
 int
@@ -95,23 +96,23 @@ MBS_ApplyPatch(const MBSPatchHeader *header, int patchfd,
                                                header->difflen +
                                                header->extralen);
   if (!buf)
-    return BSP_ERROR_NOMEM;
+    return MEM_ERROR;
 
-  int rv = BSP_OK;
+  int rv = OK;
 
   int r = header->cblen + header->difflen + header->extralen;
   unsigned char *wb = buf;
   while (r) {
     int c = read(patchfd, wb, (r > SSIZE_MAX) ? SSIZE_MAX : r);
     if (c < 0) {
-      rv = BSP_ERROR_IO;
+      rv = READ_ERROR;
       goto end;
     }
 
     r -= c;
 
     if (c == 0 && r) {
-      rv = BSP_ERROR_CORRUPT;
+      rv = UNEXPECTED_ERROR;
       goto end;
     }
   }
@@ -144,14 +145,14 @@ MBS_ApplyPatch(const MBSPatchHeader *header, int patchfd,
 
       if (fbuffer + ctrlsrc->x > fbufend ||
           diffsrc + ctrlsrc->x > diffend) {
-        rv = BSP_ERROR_CORRUPT;
+        rv = UNEXPECTED_ERROR;
         goto end;
       }
       for (PRUint32 i = 0; i < ctrlsrc->x; ++i) {
         diffsrc[i] += fbuffer[i];
       }
       if ((PRUint32) write(filefd, diffsrc, ctrlsrc->x) != ctrlsrc->x) {
-        rv = BSP_ERROR_IO;
+        rv = WRITE_ERROR;
         goto end;
       }
       fbuffer += ctrlsrc->x;
@@ -160,11 +161,11 @@ MBS_ApplyPatch(const MBSPatchHeader *header, int patchfd,
       /* Copy y bytes from the extra block */
 
       if (extrasrc + ctrlsrc->y > extraend) {
-        rv = BSP_ERROR_CORRUPT;
+        rv = UNEXPECTED_ERROR;
         goto end;
       }
       if ((PRUint32) write(filefd, extrasrc, ctrlsrc->y) != ctrlsrc->y) {
-        rv = BSP_ERROR_IO;
+        rv = WRITE_ERROR;
         goto end;
       }
       extrasrc += ctrlsrc->y;
@@ -172,7 +173,7 @@ MBS_ApplyPatch(const MBSPatchHeader *header, int patchfd,
       /* "seek" forwards in oldfile by z bytes */
 
       if (fbuffer + ctrlsrc->z > fbufend) {
-        rv = BSP_ERROR_CORRUPT;
+        rv = UNEXPECTED_ERROR;
         goto end;
       }
       fbuffer += ctrlsrc->z;

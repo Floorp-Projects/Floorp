@@ -58,19 +58,19 @@ ReadStrings(const char *path, StringTable *results)
 {
   AutoFILE fp = fopen(path, "r");
   if (!fp)
-    return IO_ERROR;
+    return READ_ERROR;
 
   // Trim leading junk -- this is a hack!
   if (!fgets(results->title, MAX_TEXT_LEN, fp))
-    return IO_ERROR;
+    return READ_ERROR;
   if (!fgets(results->title, MAX_TEXT_LEN, fp))
-    return IO_ERROR;
+    return READ_ERROR;
 
   // Now, read the values we care about.
   if (!fgets(results->title, MAX_TEXT_LEN, fp))
-    return IO_ERROR;
+    return READ_ERROR;
   if (!fgets(results->info, MAX_TEXT_LEN, fp))
-    return IO_ERROR;
+    return READ_ERROR;
 
   // Trim trailing newline character and leading 'key='
   char *strings[] = {

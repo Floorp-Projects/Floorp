@@ -56,7 +56,7 @@ ArchiveReader::Open(const char *path)
 
   mArchive = mar_open(path);
   if (!mArchive)
-    return IO_ERROR;
+    return READ_ERROR;
 
   return OK;
 }
@@ -75,7 +75,7 @@ ArchiveReader::ExtractFile(const char *name, const char *dest)
 {
   const MarItem *item = mar_find_item(mArchive, name);
   if (!item)
-    return IO_ERROR;
+    return READ_ERROR;
 
 #ifdef XP_WIN
   int fd = _open(dest, _O_BINARY|_O_CREAT|_O_TRUNC|_O_WRONLY, item->flags);
@@ -83,11 +83,11 @@ ArchiveReader::ExtractFile(const char *name, const char *dest)
   int fd = creat(dest, item->flags);
 #endif
   if (fd == -1)
-    return IO_ERROR;
+    return WRITE_ERROR;
 
   FILE *fp = fdopen(fd, "wb");
   if (!fp)
-    return IO_ERROR;
+    return WRITE_ERROR;
 
   int rv = ExtractItemToStream(item, fp);
 
@@ -113,7 +113,7 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
     if (offset < (int) item->length && strm.avail_in == 0) {
       inlen = mar_read(mArchive, item, offset, inbuf, BUFSIZ);
       if (inlen <= 0)
-        return -1;
+        return READ_ERROR;
       offset += inlen;
       strm.next_in = inbuf;
       strm.avail_in = inlen;
@@ -124,13 +124,13 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
 
     ret = BZ2_bzDecompress(&strm);
     if (ret != BZ_OK && ret != BZ_STREAM_END) {
-      ret = IO_ERROR;
+      ret = UNEXPECTED_ERROR;
       break;
     }
 
     if (strm.avail_out < BUFSIZ) {
       if (fwrite(outbuf, BUFSIZ - strm.avail_out, 1, fp) != 1) {
-        ret = IO_ERROR;
+        ret = WRITE_ERROR;
         break;
       }
     }

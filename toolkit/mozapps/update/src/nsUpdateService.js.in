@@ -87,7 +87,7 @@ const STATE_DOWNLOAD_FAILED = "download-failed";
 const STATE_FAILED          = "failed";
 
 // From updater/errors.h:
-const IO_ERROR = 2;
+const WRITE_ERROR = 7;
 
 const DOWNLOAD_CHUNK_SIZE           = 65536;
 const DOWNLOAD_BACKGROUND_INTERVAL  = 60;  // seconds
@@ -966,7 +966,7 @@ UpdateService.prototype = {
         update.state = ary[0];
         if (update.state == STATE_FAILED && ary[1]) {
           update.errorCode = ary[1];
-          if (update.errorCode == IO_ERROR) {
+          if (update.errorCode == WRITE_ERROR) {
             prompter.showUpdateError(update);
             writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
             return;
@@ -2436,7 +2436,7 @@ UpdatePrompt.prototype = {
   showUpdateError: function(update) {
     if (this._enabled) {
       // In some cases, we want to just show a simple alert dialog:
-      if (update.state == STATE_FAILED && update.errorCode == IO_ERROR) {
+      if (update.state == STATE_FAILED && update.errorCode == WRITE_ERROR) {
         var sbs = 
             Components.classes["@mozilla.org/intl/stringbundle;1"].
             getService(Components.interfaces.nsIStringBundleService);
