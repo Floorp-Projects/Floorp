@@ -1063,6 +1063,7 @@ CRITICAL_SECTION cairo_toy_font_face_hash_table_mutex;
 CRITICAL_SECTION cairo_scaled_font_map_mutex;
 CRITICAL_SECTION cairo_ft_unscaled_font_map_mutex;
 
+#if 0
 BOOL WINAPI
 DllMain (HINSTANCE hinstDLL,
 	 DWORD     fdwReason,
@@ -1084,4 +1085,6 @@ DllMain (HINSTANCE hinstDLL,
   }
   return TRUE;
 }
+#endif
+
 #endif
