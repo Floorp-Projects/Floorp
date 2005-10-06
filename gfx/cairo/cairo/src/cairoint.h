@@ -179,6 +179,10 @@ do {					\
     assert (NOT_REACHED);		\
 } while (0)
 
+#ifndef M_PI
+#define M_PI           3.14159265358979323846
+#endif
+
 #include "cairo-wideint.h"
 
 typedef int32_t		cairo_fixed_16_16_t;
