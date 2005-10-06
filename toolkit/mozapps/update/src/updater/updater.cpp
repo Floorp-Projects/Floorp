@@ -577,7 +577,7 @@ RemoveFile::Execute()
   // than once: bug 311099.
   int rv = access(mFile, F_OK);
   if (rv) {
-    LOG(("file cannot be removed because it does not exist; skipping"));
+    LOG(("file cannot be removed because it does not exist; skipping\n"));
     mSkip = 1;
     return OK;
   }
