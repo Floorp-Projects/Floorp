@@ -453,15 +453,20 @@ sub update_create_package {
 
     # We're making an update.
     TinderUtils::print_log "\nGenerating complete update...\n";
-    TinderUtils::run_shell_command "make -C $objdir/tools/update-packaging full-update STAGE_DIR=$stagedir DIST=$distdir";
+    my $temp_stagedir = "$stagedir/build.$$";
+    system("mkdir -p $temp_stagedir");
+    TinderUtils::run_shell_command "make -C $objdir/tools/update-packaging full-update STAGE_DIR=$temp_stagedir DIST=$distdir AB_CD=$locale";
 
     my $update_file = "update.mar";
     my @updatemar;
-    @updatemar = grep { -f $_ } <${stagedir}/*.mar>;
+    @updatemar = grep { -f $_ } <${temp_stagedir}/*.mar>;
     if ( scalar(@updatemar) ge 1 ) {
       $update_file = $updatemar[0];
-      $update_file =~ s:^$stagedir/(.*)$:$1:g;
+      $update_file =~ s:^$temp_stagedir/(.*)$:$1:g;
     }
+
+    system("rsync -av $temp_stagedir/$update_file $stagedir/");
+    system("rm -rf $temp_stagedir");
 
     my $update_path = "$stagedir/$update_file";
     my $update_fullurl = "$url/$update_file";
@@ -469,9 +474,28 @@ sub update_create_package {
     if ( -f $update_path ) {
       # Make update dist directory.
       TinderUtils::run_shell_command "mkdir -p $objdir/dist/update/";
-      my $buildid = `cd $objdir/config/ && cat build_number`;
-      chomp($buildid);
       TinderUtils::print_log "\nGathering complete update info...\n";
+
+      my $buildid;
+
+      # First try to get the build ID from the files in dist/.
+      my $find_master = `find $distdir -iname master.ini -print`;
+      my @find_output = split(/\n/, $find_master);
+
+      if (scalar(@find_output) gt 0) {
+          my $master = read_file($find_output[0]);
+          # BuildID = "2005100517"
+          if ( $master =~ /^BuildID\s+=\s+\"(\d+)\"\s+$/m ) {
+              $buildid = $1;
+          }
+      }
+
+      # If the first method of getting the build ID failed, grab it from config.
+      if (!defined($buildid)) {
+          $buildid = `cd $objdir/config/ && cat build_number`;
+          chomp($buildid);
+      }
+
       TinderUtils::print_log "Got build ID $buildid.\n";
       # Gather stats for update file.
       update_create_stats( update => $update_path,
@@ -486,7 +510,7 @@ sub update_create_package {
       # Push update information to update-staging/auslite.
 
       # Only push the build schema 0 data if this is a trunk build.
-      if ( $update_version eq "trunk" ) {
+      if ( 0 and $update_version eq "trunk" ) {
           TinderUtils::print_log "\nPushing first-gen update info...\n";
           my $path = "/opt/aus2/incoming/0";
           $path = "$path/$update_product/$update_platform";
@@ -498,7 +522,7 @@ sub update_create_package {
       }
 
       # Push the build schema 1 data.
-      {
+      if ( 0 ) {
           TinderUtils::print_log "\nPushing second-gen update info...\n";
           my $path = "/opt/aus2/incoming/1";
           $path = "$path/$update_product/$update_version/$update_platform";
@@ -510,7 +534,8 @@ sub update_create_package {
       # Push the build schema 2 data.
       {
           TinderUtils::print_log "\nPushing third-gen update info...\n";
-          my $path = "/opt/aus2/build/0";
+          #my $path = "/opt/aus2/build/0";
+          my $path = "/tmp/l10n-test3/opt/aus2/build/0";
           $path = "$path/$update_product/$update_version/$update_platform/$buildid/$locale";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
@@ -524,6 +549,22 @@ sub update_create_package {
     }
 
     NOUPDATE:
+}
+
+sub read_file {
+  my ($filename) = @_;
+
+  if ( ! -e $filename ) {
+    die("read_file: file $filename doesn't exist!");
+  }
+
+  local($/) = undef;
+
+  open(FILE, "$filename") or die("read_file: unable to open $filename for reading!");
+  my $text = <FILE>;
+  close(FILE);
+
+  return $text;
 }
 
 sub update_create_stats {
@@ -739,6 +780,15 @@ sub packit_l10n {
       }
 
       if ($cachebuild and $Settings::update_package) {
+        if ( ! -d "$objdir/dist/l10n-stage" ) {
+            die "packit_l10n: $objdir/dist/l10n-stage is not a directory!\n";
+        }
+
+        if ( ! -d "$objdir/dist/host" ) {
+            die "packit_l10n: $objdir/dist/host is not a directory!\n");
+        }
+
+        system("cd $objdir/dist/l10n-stage; ln -s ../host .");
         update_create_package( objdir => $objdir,
                                stagedir => $stagedir,
                                url => $url,
