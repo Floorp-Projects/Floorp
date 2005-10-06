@@ -50,9 +50,8 @@ var gShowingMenuPopup=null;
 
 var gPref = null;                    // so far snav toggles on / off via direct access to pref.
                                      // See bugzilla.mozilla.org/show_bug.cgi?id=311287#c1
+var gStateSNAV = false;              // Default SNAV is false. , see above bug. 
                                      
-var gSnavAlreadyDisabled = false;
-
 function nsBrowserStatusHandler()
 {
 }
@@ -279,18 +278,12 @@ function MiniNavStartup()
 
 /* 
  *  Toggles SNAV ON/OFF based on focused element. If in #document, then SNAV on. Otherwise off. 
- *  So far the whole idea of pref is gone since this use the pref itself to toggle. 
- *  https://bugzilla.mozilla.org/show_bug.cgi?id=311287#c1 - we should have the snav interface here. 
  */
 function eventHandlerFocus(e) {
  if(e.target.nodeName=="#document") {
-	gPref.setBoolPref("snav.enabled", true);
-	gSnavAlreadyDisabled=false;
+	BrowserSNAVToggle(true);
  } else {
-	if(!gSnavAlreadyDisabled) {
-		gSnavAlreadyDisabled=true;
-		gPref.setBoolPref("snav.enabled", false);
-      } 
+    BrowserSNAVToggle(false);
  } 
 }
 
@@ -637,3 +630,13 @@ function MenuPopupHidden() {
       gShowingMenuPopup=false;
 }
 
+/*
+ *  So far the whole idea of pref is gone since this use the pref itself to toggle. 
+ *  https://bugzilla.mozilla.org/show_bug.cgi?id=311287#c1 - we should have the snav interface here. 
+ */
+function BrowserSNAVToggle(state) {
+  if(gStateSNAV != state) { // goes through actually doing, only first time. 
+    gPref.setBoolPref("snav.enabled", state);
+    gStateSNAV=state;
+  } 
+} 
