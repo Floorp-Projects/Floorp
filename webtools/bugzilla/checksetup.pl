@@ -2445,7 +2445,7 @@ if (!($sth->fetchrow_arrayref()->[0])) {
     $sth = $dbh->prepare(
         "SELECT longdescs.bug_id, thetext " .
           "FROM longdescs " .
-     "LEFT JOIN bugs using(bug_id) " .
+     "LEFT JOIN bugs ON longdescs.bug_id = bugs.bug_id " .
          "WHERE (" . $dbh->sql_regexp("thetext",
                  "'[.*.]{3} This bug has been marked as a duplicate of [[:digit:]]+ [.*.]{3}'") . ") " .
            "AND (resolution = 'DUPLICATE') " .

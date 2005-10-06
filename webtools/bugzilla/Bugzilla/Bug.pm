@@ -177,7 +177,7 @@ sub initBug  {
       $dbh->sql_date_format('deadline', '%Y-%m-%d') . "
     FROM bugs
        LEFT JOIN votes
-           USING (bug_id)
+              ON bugs.bug_id = votes.bug_id
       INNER JOIN components
               ON components.id = bugs.component_id
       INNER JOIN products
@@ -1011,7 +1011,7 @@ sub RemoveVotes {
                             "products.votesperuser, products.maxvotesperbug " .
                             "FROM profiles " . 
                             "LEFT JOIN votes ON profiles.userid = votes.who " .
-                            "LEFT JOIN bugs USING(bug_id) " .
+                            "LEFT JOIN bugs ON votes.bug_id = bugs.bug_id " .
                             "LEFT JOIN products ON products.id = bugs.product_id " .
                             "WHERE votes.bug_id = ? " . $whopart);
     $sth->execute($id);
