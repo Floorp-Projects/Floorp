@@ -1348,7 +1348,8 @@ nsTreeBodyFrame::GetCellAt(nscoord aX, nscoord aY, PRInt32* aRow,
   // Determine the column hit.
   for (nsTreeColumn* currCol = mColumns->GetFirstColumn(); currCol; 
        currCol = currCol->GetNext()) {
-    nsRect cellRect(currCol->GetX(), mInnerBox.y+mRowHeight*(*aRow-mTopRowIndex), currCol->GetWidth(), mRowHeight);
+    nsRect cellRect;
+    CalcColumnRect(cellRect, currCol, mInnerBox.y+mRowHeight*(*aRow-mTopRowIndex), mRowHeight);
     if (!OffsetForHorzScroll(cellRect, PR_TRUE))
         continue;
 
@@ -1969,22 +1970,25 @@ void nsTreeBodyFrame::CalcInnerBox()
 nscoord
 nsTreeBodyFrame::CalcHorzWidth()
 {
-  // If no horz scrolling periphery is present, then just
-  // return the width of the main box
-
-  if (!EnsureScrollable(PR_TRUE)) {
-    CalcInnerBox();
-    return mInnerBox.width;
-  }
+  nscoord width = 0;
+  nscoord height;
 
   // We calculate this from the scrollable view, so that it 
   // properly covers all contingencies of what could be 
   // scrollable (columns, body, etc...)
 
-  nscoord height;
-  nscoord width;
-  if (NS_FAILED (mColScrollView->GetContainerSize(&width, &height)))
-    width = 0;
+  if (EnsureScrollable(PR_TRUE)) {
+    if (NS_FAILED (mColScrollView->GetContainerSize(&width, &height)))
+      width = 0;
+  }
+
+  // If no horz scrolling periphery is present, then just
+  // return the width of the main box
+  if (width == 0) {
+    CalcInnerBox();
+    width = mInnerBox.width;
+  }
+
   return width;
 }
 
@@ -2249,7 +2253,8 @@ nsTreeBodyFrame::Paint(nsPresContext*      aPresContext,
          currCol = currCol->GetNext()) {
       // Don't paint hidden columns.
       if (currCol->GetWidth()) {
-        nsRect colRect(currCol->GetX(), mInnerBox.y, currCol->GetWidth(), mInnerBox.height);
+        nsRect colRect;
+        CalcColumnRect(colRect, currCol, mInnerBox.y, mInnerBox.height);
         if (OffsetForHorzScroll(colRect, PR_FALSE)) {
           nsRect dirtyRect;
           if (dirtyRect.IntersectRect(aDirtyRect, colRect)) {
@@ -2386,7 +2391,8 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
     nsTreeColumn* primaryCol = mColumns->GetPrimaryColumn();
     if (primaryCol) {
       // Paint the primary cell.
-      nsRect cellRect(primaryCol->GetX(), rowRect.y, primaryCol->GetWidth(), rowRect.height);
+      nsRect cellRect;
+      CalcColumnRect(cellRect, primaryCol, rowRect.y, rowRect.height);
       if (OffsetForHorzScroll(cellRect, PR_FALSE)) {
         nsRect dirtyRect;
         if (dirtyRect.IntersectRect(aDirtyRect, cellRect))
@@ -2427,7 +2433,8 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
          currCol = currCol->GetNext()) {
       // Don't paint cells in hidden columns.
       if (currCol->GetWidth()) {
-        nsRect cellRect(currCol->GetX(), rowRect.y, currCol->GetWidth(), rowRect.height);
+        nsRect cellRect;
+        CalcColumnRect(cellRect, currCol, rowRect.y, rowRect.height);
         if (OffsetForHorzScroll(cellRect, PR_FALSE)) {
           nsRect dirtyRect;
           nscoord dummy;
@@ -3653,6 +3660,36 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
   mImageCache = nsnull;
   mScrollbar = nsnull;
   return NS_OK;
+}
+
+void
+nsTreeBodyFrame::CalcColumnRect(nsRect& rect, nsTreeColumn* aCol, nscoord y, nscoord height)
+{
+  rect.x = aCol->GetX();
+  rect.y = y;
+  rect.width = aCol->GetWidth();
+  rect.height = height;
+
+  if (aCol->GetNext())
+    return;
+
+  // The treecolpicker and scrollbar:
+  // - Might not be the same width (usually)
+  // - Either one or the other may be visible. 
+  //
+  // The uptake of this is the width of the last column doesn't necessarily 
+  // match the width of the last treecol element. We adjust for that here. 
+
+  if (!EnsureScrollable(PR_TRUE))
+    return;
+
+  nsRect bounds = mColScrollView->View()->GetBounds();
+  if (bounds.width == 0)
+    return;
+
+  nscoord diff = bounds.width - mInnerBox.width;
+  if (diff > 0)
+    rect.width = PR_MAX(0, rect.width - diff);
 }
 
 PRBool 

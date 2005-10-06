@@ -290,6 +290,10 @@ protected:
   // after projecting both onto the horizontal coordinate axis.
   PRBool OffsetForHorzScroll(nsRect& rect, PRBool clip);
 
+  // Fills in rect with column args and x/width coords. Does some extra 
+  // calculations for the last column
+  void CalcColumnRect(nsRect& rect, nsTreeColumn* aCol, nscoord y, nscoord height);
+
   PRBool CanAutoScroll(PRInt32 aRowIndex);
 
   // Calc the row and above/below/on status given where the mouse currently is hovering.
