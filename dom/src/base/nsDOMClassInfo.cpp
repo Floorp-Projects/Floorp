@@ -6698,21 +6698,43 @@ nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   PRInt32 n = GetArrayIndexFromId(cx, id, &is_number);
 
   if (is_number && n >= 0) {
-    PRInt32 length = 0;
-    jsval lenval;
+    // XXX The following is a cheap optimization to avoid hitting xpconnect to
+    // get the length. We may want to consider asking our concrete
+    // implementation for the length, and falling back onto the GetProperty if
+    // it doesn't provide one.
 
-    if (!JS_GetProperty(cx, obj, "length", &lenval)) {
-      return NS_ERROR_UNEXPECTED;
+    PRUint32 length;
+
+    nsCOMPtr<nsIDOMNodeList> map = do_QueryWrappedNative(wrapper);
+    if (map) {
+      // Fast path: Get the length from our map.
+
+      map->GetLength(&length);
+    } else {
+      // Slow path: We don't know how to get the length in a fast way, ask our
+      // implementation.
+
+      jsval lenval;
+      if (!JS_GetProperty(cx, obj, "length", &lenval)) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      if (!JSVAL_IS_INT(lenval)) {
+        // This can apparently happen with some sparse array impls falling back
+        // onto this code.
+
+        return NS_OK;
+      }
+
+      PRInt32 slen = JSVAL_TO_INT(lenval);
+      if (slen < 0) {
+        return NS_OK;
+      }
+
+      length = (PRUint32)slen;
     }
 
-    if (!JSVAL_IS_INT(lenval)) {
-      // This can apparently happen with some sparse array impls falling back
-      // onto this code.
-      return NS_OK;
-    }
-
-    length = JSVAL_TO_INT(lenval);
-    if (n < length) {
+    if ((PRUint32)n < length) {
       *_retval = ::JS_DefineElement(cx, obj, n, JSVAL_VOID, nsnull, nsnull,
                                     JSPROP_ENUMERATE);
       *objp = obj;
