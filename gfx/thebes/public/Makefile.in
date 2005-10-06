@@ -14,7 +14,6 @@ EXPORTS		= 	gfxASurface.h \
 			gfxColor.h \
 			gfxContext.h \
 			gfxFilter.h \
-			gfxFont.h \
 			gfxImageSurface.h \
 			gfxMatrix.h \
 			gfxPattern.h \
