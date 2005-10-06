@@ -4002,8 +4002,10 @@ void nsViewManager::OptimizeDisplayList(const nsVoidArray* aDisplayList, const n
       } else {
         element->mBounds = tmpRgn.GetBounds();
 
+        PRBool tooComplex = aOpaqueRegion.GetNumRects() > MAX_OPAQUE_REGION_COMPLEXITY &&
+          !element->mBounds.Contains(aOpaqueRegion.GetBounds());
         // See whether we should add this view's bounds to aOpaqueRegion
-        if (aOpaqueRegion.GetNumRects() <= MAX_OPAQUE_REGION_COMPLEXITY &&
+        if (!tooComplex &&
             // a view is opaque if it is neither transparent nor transluscent
             (!(element->mFlags & (VIEW_TRANSPARENT | VIEW_TRANSLUCENT))
             // also, treat it as opaque if it's drawn onto a uniform background
