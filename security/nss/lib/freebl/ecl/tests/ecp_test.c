@@ -311,13 +311,13 @@ ectest_curve_GFp(ECGroup *group, int ectestPrint, int ectestTime,
 	}
 
 	/* test validate_point function */
-	if (ECPoint_validate(group, &gx, &gy) != 0) {
+	if (ECPoint_validate(group, &gx, &gy) != MP_YES) {
 		printf("  Error: validate point on base point failed.\n");
 		res = MP_NO;
 		goto CLEANUP;
 	}
 	MP_CHECKOK(mp_add_d(&gy, 1, &ry));
-	if (ECPoint_validate(group, &gx, &ry) == 0) {
+	if (ECPoint_validate(group, &gx, &ry) != MP_NO) {
 		printf("  Error: validate point on invalid point passed.\n");
 		res = MP_NO;
 		goto CLEANUP;

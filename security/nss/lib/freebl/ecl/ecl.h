@@ -81,7 +81,10 @@ mp_err ECPoints_mul(const ECGroup *group, const mp_int *k1,
 					const mp_int *k2, const mp_int *px, const mp_int *py,
 					mp_int *qx, mp_int *qy);
 
-/* Validates an EC public key as described in Section 5.2.2 of X9.62. */
+/* Validates an EC public key as described in Section 5.2.2 of X9.62.
+ * Returns MP_YES if the public key is valid, MP_NO if the public key
+ * is invalid, or an error code if the validation could not be
+ * performed. */
 mp_err ECPoint_validate(const ECGroup *group, const mp_int *px, const 
 					mp_int *py);
 

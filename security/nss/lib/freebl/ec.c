@@ -408,9 +408,9 @@ EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
 	PORT_SetError(SEC_ERROR_UNSUPPORTED_EC_POINT_FORM);
 	return SECFailure;
     } else if (publicValue->len != (2 * len + 1)) {
-	PORT_SetError(SEC_ERROR_INPUT_LEN);
+	PORT_SetError(SEC_ERROR_BAD_KEY);
 	return SECFailure;
-    };
+    }
 
     MP_DIGITS(&Px) = 0;
     MP_DIGITS(&Py) = 0;
@@ -423,11 +423,34 @@ EC_ValidatePublicKey(ECParams *ecParams, SECItem *publicValue)
 
     /* construct from named params */
     group = ECGroup_fromName(ecParams->name);
-    if (group == NULL)
+    if (group == NULL) {
+	/*
+	 * ECGroup_fromName fails if ecParams->name is not a valid
+	 * ECCurveName value, or if we run out of memory, or perhaps
+	 * for other reasons.  Unfortunately if ecParams->name is a
+	 * valid ECCurveName value, we don't know what the right error
+	 * code should be because ECGroup_fromName doesn't return an
+	 * error code to the caller.  Set err to MP_UNDEF because
+	 * that's what ECGroup_fromName uses internally.
+	 */
+	if ((ecParams->name <= ECCurve_noName) ||
+	    (ecParams->name >= ECCurve_pastLastCurve)) {
+	    err = MP_BADARG;
+	} else {
+	    err = MP_UNDEF;
+	}
 	goto cleanup;
+    }
 
     /* validate public point */
-    CHECK_MPI_OK( ECPoint_validate(group, &Px, &Py) );
+    if ((err = ECPoint_validate(group, &Px, &Py)) < MP_YES) {
+	if (err == MP_NO) {
+	    PORT_SetError(SEC_ERROR_BAD_KEY);
+	    rv = SECFailure;
+	    err = MP_OKAY;  /* don't change the error code */
+	}
+	goto cleanup;
+    }
 
     rv = SECSuccess;
 
