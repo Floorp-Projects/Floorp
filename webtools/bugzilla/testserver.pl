@@ -83,14 +83,14 @@ to validate webservergroup.\n";
 }
 
 
-# Try to fetch a static file (ant.jpg)
+# Try to fetch a static file (front.png)
 $ARGV[0] =~ s/\/$//;
-my $url = $ARGV[0] . "/ant.jpg";
+my $url = $ARGV[0] . "/skins/standard/index/front.png";
 if (fetch($url)) {
-    print "TEST-OK Got ant picture.\n";
+    print "TEST-OK Got front picture.\n";
 } else {
     print 
-"TEST-FAILED Fetch of ant.jpg failed
+"TEST-FAILED Fetch of skins/standard/index/front.png failed
 Your webserver could not fetch $url.
 Check your webserver configuration and try again.\n";
     exit(1);
