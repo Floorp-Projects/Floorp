@@ -1039,8 +1039,7 @@
   [% ELSIF error == "reassign_to_empty" %]
     [% title = "Illegal Reassignment" %]
     To reassign [% terms.abug %], you must provide an address for
-    the new assignee. If you did not intentionally clear out the 
-    "Reassign [% terms.bug %] to" field, [% Param("browserbugmessage") %]
+    the new assignee.
 
   [% ELSIF error == "report_access_denied" %]
     [% title = "Access Denied" %]

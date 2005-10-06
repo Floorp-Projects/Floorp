@@ -285,7 +285,7 @@
      I was unable to retrieve your old password from the database.
 
   [% ELSIF error == "undefined_field" %]
-    Form field [% field FILTER html %] was not defined; [% Param('browserbugmessage') %]
+    Form field [% field FILTER html %] was not defined.
     [%# Useful message if browser did not select show_bug radio button %]
     [% IF field == "knob" %]
       Check that the "Leave as..." radio button was selected.

@@ -1118,15 +1118,6 @@ Reason: %reason%
   },
 
   {
-   name => 'browserbugmessage',
-   desc => 'If bugzilla gets unexpected data from the browser, in addition to ' .
-           'displaying the cause of the problem, it will output this HTML as ' .
-           'well.',
-   type => 'l',
-   default => 'this may indicate a bug in your browser.'
-  },
-
-  {
    name => 'commentoncreate',
    desc => 'If this option is on, the user needs to enter a description ' .
            'when entering a new bug',
