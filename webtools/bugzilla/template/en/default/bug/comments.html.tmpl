@@ -23,6 +23,21 @@
 
 [% PROCESS bug/time.html.tmpl %]
 
+  <script type="text/javascript">
+  <!--
+  function updateCommentPrivacy(checkbox, id) {
+    var text_elem = document.getElementById('comment_text_'+id);
+    if (checkbox.checked) {
+        text_elem.parentNode.className='bz_private';
+    } else {
+        text_elem.parentNode.className='';
+    }
+    document.refresh();
+  }
+  //-->
+  </script>
+
+
 [% DEFAULT start_at = 0 mode = "show" %]
 [% isinsider = Param("insidergroup") && UserInGroup(Param("insidergroup")) %]
 [% sort_order = user.settings.comment_sort_order.value %]
@@ -112,6 +127,7 @@
                  value="[% comment.isprivate %]">
           <input type="hidden" name="when-[% count %]" value="[% comment.when %]">
           <input type="checkbox" name="isprivate-[% count %]" value="1"
+                 onClick="updateCommentPrivacy(this, [% count %])"
                  id="isprivate-[% count %]"
           [% " checked=\"checked\"" IF comment.isprivate %]> Private
         </i>
