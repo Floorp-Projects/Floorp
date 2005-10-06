@@ -1,4 +1,11 @@
+2005-10-06  Mike Taylor <bear@code-bear.com>
 
+  * Contact
+    added my contact info as co-maintainer
+
+  * src/bin/tinder.cgi
+    fixed minor spelling mistake s/Regnerate/Regenerate/
+    bug 231057 reported by David Costanzo
 
 New Time columns for use in environments with multiple time zones.
 

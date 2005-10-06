@@ -2,9 +2,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.38 $ 
-# $Date: 2004/08/07 13:12:10 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.39 $ 
+# $Date: 2005/10/06 07:06:39 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
 
@@ -32,7 +32,7 @@
 # complete rewrite by Ken Estes for contact info see the
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
-
+#     
 
 
 # Standard perl libraries
@@ -347,7 +347,7 @@ sub HTML_status_page {
                    ).
   "<br><p>\n\n".
   HTMLPopUp::Link(
-                  "linktxt"=>"Regnerate HTML Pages",
+                  "linktxt"=>"Regenerate HTML Pages",
                   "href"=>("$FileStructure::URLS{'regenerate'}".
                            "\?".
                            "tree=$tree"),
