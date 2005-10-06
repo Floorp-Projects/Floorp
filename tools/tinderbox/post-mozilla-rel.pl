@@ -785,7 +785,7 @@ sub packit_l10n {
         }
 
         if ( ! -d "$objdir/dist/host" ) {
-            die "packit_l10n: $objdir/dist/host is not a directory!\n");
+            die "packit_l10n: $objdir/dist/host is not a directory!\n";
         }
 
         system("cd $objdir/dist/l10n-stage; ln -s ../host .");
