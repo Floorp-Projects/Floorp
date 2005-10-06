@@ -93,12 +93,6 @@ my $sth_schedules_by_event = $dbh->prepare(
 # After that, it looks over each user to see if they have schedules that need
 # running, then runs those and generates the email messages.
 
-# exit quietly if the system is shut down
-if (Param('shutdownhtml')) {
-    exit;
-}
-
-
 # Send whines from the address in the 'maintainer' Parameter so that all
 # Bugzilla-originated mail appears to come from a single address.
 my $fromaddress = Param('maintainer');

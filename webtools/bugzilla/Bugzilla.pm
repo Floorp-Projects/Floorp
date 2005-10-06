@@ -49,6 +49,11 @@ use constant SHUTDOWNHTML_EXEMPT => [
     'checksetup.pl',
 ];
 
+# Non-cgi scripts that should silently exit.
+use constant SHUTDOWNHTML_EXIT_SILENTLY => [
+    'whine.pl'
+];
+
 #####################################################################
 # Global Code
 #####################################################################
@@ -62,6 +67,15 @@ use constant SHUTDOWNHTML_EXEMPT => [
 if (Param("shutdownhtml") 
     && lsearch(SHUTDOWNHTML_EXEMPT, basename($0)) == -1) 
 {
+    # Allow non-cgi scripts to exit silently (without displaying any
+    # message), if desired. At this point, no DBI call has been made
+    # yet, and no error will be returned if the DB is inaccessible.
+    if (lsearch(SHUTDOWNHTML_EXIT_SILENTLY, basename($0)) > -1
+        && !i_am_cgi())
+    {
+        exit;
+    }
+
     # For security reasons, log out users when Bugzilla is down.
     # Bugzilla->login() is required to catch the logincookie, if any.
     my $user = Bugzilla->login(LOGIN_OPTIONAL);
