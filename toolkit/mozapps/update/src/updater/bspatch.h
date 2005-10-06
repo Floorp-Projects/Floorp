@@ -35,12 +35,6 @@
 // We use the NSPR types, but we don't link with NSPR
 #include "prtypes.h"
 
-/* return values for bspatch */
-#define BSP_OK             0
-#define BSP_ERROR_IO      -1
-#define BSP_ERROR_CORRUPT -2
-#define BSP_ERROR_NOMEM   -3
-
 typedef struct MBSPatchHeader_ {
   /* "MBDIFF10" */
   char tag[8];

@@ -62,6 +62,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <errno.h>
 
 #if defined(XP_WIN)
 # include <windows.h>
@@ -74,8 +75,7 @@
 # define snprintf _snprintf
 # define putenv _putenv
 # define fchmod(a,b)
-//# undef BUFSIZ
-//# define BUFSIZ (4096 * 4) 
+# define mkdir(path, perm) _mkdir(path)
 #else
 # include <sys/wait.h>
 # include <unistd.h>
@@ -356,19 +356,25 @@ mstrtok(const char *delims, char **str)
 // Ensure that the directory containing this file exists.
 static int ensure_parent_dir(const char *path)
 {
+  int rv = OK;
+
   char *slash = (char *) strrchr(path, '/');
   if (slash)
   {
     *slash = '\0';
-    ensure_parent_dir(path);
-#ifdef XP_WIN
-    _mkdir(path);
-#else
-    mkdir(path, 0755);
-#endif
+    rv = ensure_parent_dir(path);
+    if (rv == OK) {
+      rv = mkdir(path, 0755);
+      // If the directory already exists, then ignore the error.
+      if (rv < 0 && errno != EEXIST) {
+        rv = WRITE_ERROR;
+      } else {
+        rv = OK;
+      }
+    }
     *slash = '/';
   }
-  return OK;
+  return rv;
 }
 
 static int copy_file(const char *spath, const char *dpath)
@@ -381,14 +387,14 @@ static int copy_file(const char *spath, const char *dpath)
 
   AutoFD sfd = open(spath, O_RDONLY | _O_BINARY);
   if (sfd < 0 || fstat(sfd, &ss)) {
-    LOG(("copy_file: failed to open or stat: %d, %s\n", (int) sfd, spath));
-    return IO_ERROR;
+    LOG(("copy_file: failed to open or stat: %d,%s,%d\n", (int) sfd, spath, errno));
+    return READ_ERROR;
   }
 
   AutoFD dfd = open(dpath, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, ss.st_mode);
   if (dfd < 0) {
-    LOG(("copy_file: failed to open: %s\n", dpath));
-    return IO_ERROR;
+    LOG(("copy_file: failed to open: %s,%d\n", dpath, errno));
+    return WRITE_ERROR;
   }
 
   char buf[BUFSIZ];
@@ -402,13 +408,13 @@ static int copy_file(const char *spath, const char *dpath)
       bp += dc;
     }
     if (dc < 0) {
-      LOG(("copy_file: failed to write\n"));
-      return IO_ERROR;
+      LOG(("copy_file: failed to write: %d\n", errno));
+      return WRITE_ERROR;
     }
   }
   if (sc < 0) {
-    LOG(("copy_file: failed to read\n"));
-    return IO_ERROR;
+    LOG(("copy_file: failed to read: %d\n", errno));
+    return READ_ERROR;
   }
 
   return OK;
@@ -424,11 +430,7 @@ static int backup_create(const char *path)
   char backup[MAXPATHLEN];
   snprintf(backup, sizeof(backup), "%s" BACKUP_EXT, path);
 
-  int rv = copy_file(path, backup);
-  if (rv)
-    return IO_ERROR;
-
-  return OK;
+  return copy_file(path, backup);
 }
 
 // Copy the backup copy of the specified file back overtop
@@ -441,11 +443,11 @@ static int backup_restore(const char *path)
 
   int rv = copy_file(backup, path);
   if (rv)
-    return IO_ERROR;
+    return rv;
 
   rv = remove(backup);
   if (rv)
-    return IO_ERROR;
+    return WRITE_ERROR;
 
   return OK;
 }
@@ -458,7 +460,7 @@ static int backup_discard(const char *path)
 
   int rv = remove(backup);
   if (rv)
-    return IO_ERROR;
+    return WRITE_ERROR;
 
   return OK;
 }
@@ -540,7 +542,7 @@ RemoveFile::Prepare()
   // We expect the file to exist if we are to remove it.
   int rv = access(mFile, F_OK);
   if (rv) {
-    LOG(("file cannot be removed because it does not exist; skipping"));
+    LOG(("file cannot be removed because it does not exist; skipping\n"));
     mSkip = 1;
     return OK;
   }
@@ -555,8 +557,8 @@ RemoveFile::Prepare()
   }
 
   if (rv) {
-    LOG(("access failed: %d\n", rv));
-    return IO_ERROR;
+    LOG(("access failed: %d\n", errno));
+    return WRITE_ERROR;
   }
 
   return OK;
@@ -592,7 +594,7 @@ RemoveFile::Execute()
   rv = remove(mFile);
   if (rv) {
     LOG(("remove failed: %d\n", rv));
-    return IO_ERROR;
+    return WRITE_ERROR;
   }
 
   return OK;
@@ -659,7 +661,7 @@ AddFile::Execute()
 
     rv = remove(mFile);
     if (rv)
-      return IO_ERROR;
+      return WRITE_ERROR;
   }
   else
   {
@@ -724,27 +726,27 @@ PatchFile::LoadSourceFile(int ofd)
   struct stat os;
   int rv = fstat(ofd, &os);
   if (rv)
-    return IO_ERROR;
+    return READ_ERROR;
 
   if (PRUint32(os.st_size) != header.slen)
-    return BSP_ERROR_CORRUPT;
+    return UNEXPECTED_ERROR;
 
   buf = (unsigned char*) malloc(header.slen);
   if (!buf)
-    return BSP_ERROR_NOMEM;
+    return MEM_ERROR;
 
   int r = header.slen;
   unsigned char *rb = buf;
   while (r) {
     int c = read(ofd, rb, mmin(BUFSIZ,r));
     if (c < 0)
-      return IO_ERROR;
+      return READ_ERROR;
 
     r -= c;
     rb += c;
 
     if (c == 0 && r)
-      return BSP_ERROR_CORRUPT;
+      return UNEXPECTED_ERROR;
   }
 
   // Verify that the contents of the source file correspond to what we expect.
@@ -753,7 +755,7 @@ PatchFile::LoadSourceFile(int ofd)
 
   if (crc != header.scrc32) {
     LOG(("CRC check failed\n"));
-    return BSP_ERROR_CORRUPT;
+    return CRC_ERROR;
   }
   
   return OK;
@@ -803,7 +805,7 @@ PatchFile::Prepare()
 
   pfd = open(spath, O_RDONLY | _O_BINARY);
   if (pfd < 0)
-    return IO_ERROR;
+    return READ_ERROR;
 
   rv = MBS_ReadHeader(pfd, &header);
   if (rv)
@@ -811,7 +813,7 @@ PatchFile::Prepare()
 
   AutoFD ofd = open(mFile, O_RDONLY | _O_BINARY);
   if (ofd < 0)
-    return IO_ERROR;
+    return READ_ERROR;
 
   rv = LoadSourceFile(ofd);
   if (rv)
@@ -828,7 +830,7 @@ PatchFile::Execute()
 
   struct stat ss;
   if (stat(mFile, &ss))
-    return IO_ERROR;
+    return READ_ERROR;
 
   int rv = backup_create(mFile);
   if (rv)
@@ -836,11 +838,11 @@ PatchFile::Execute()
 
   rv = remove(mFile);
   if (rv)
-    return IO_ERROR;
+    return WRITE_ERROR;
 
   AutoFD ofd = open(mFile, O_WRONLY | O_TRUNC | O_CREAT | _O_BINARY, ss.st_mode);
   if (ofd < 0)
-    return IO_ERROR;
+    return WRITE_ERROR;
 
   return MBS_ApplyPatch(&header, pfd, buf, ofd);
 }
@@ -1208,29 +1210,29 @@ int DoUpdate()
 
   AutoFD mfd = open(manifest, O_RDONLY | _O_BINARY);
   if (mfd < 0)
-    return -1;
+    return READ_ERROR;
 
   struct stat ms;
   rv = fstat(mfd, &ms);
   if (rv)
-    return IO_ERROR;
+    return READ_ERROR;
 
   char *mbuf = (char*) malloc(ms.st_size + 1);
   if (!mbuf)
-    return BSP_ERROR_NOMEM;
+    return MEM_ERROR;
 
   int r = ms.st_size;
   char *rb = mbuf;
   while (r) {
     int c = read(mfd, rb, mmin(SSIZE_MAX,r));
     if (c < 0)
-      return IO_ERROR;
+      return READ_ERROR;
 
     r -= c;
     rb += c;
 
     if (c == 0 && r)
-      return BSP_ERROR_CORRUPT;
+      return UNEXPECTED_ERROR;
   }
   mbuf[ms.st_size] = '\0';
 
@@ -1268,7 +1270,7 @@ int DoUpdate()
     }
 
     if (!action)
-      return BSP_ERROR_NOMEM;
+      return MEM_ERROR;
 
     rv = action->Parse(line);
     if (rv)
