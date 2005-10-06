@@ -8,9 +8,9 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.16 $ 
-# $Date: 2003/12/27 21:15:34 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.17 $ 
+# $Date: 2005/10/06 07:23:05 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
 
@@ -479,7 +479,7 @@ sub jspanel {
   $temp =~ s/\"/\'/g;
   $body .= $temp."\n";
 
-  $body .= "\t<TABLE BPRDER=0 CELLPADDING=1 CELLSPACING=1>\n";
+  $body .= "\t<TABLE BORDER=0 CELLPADDING=1 CELLSPACING=1>\n";
   for ($i=0; $i <= $#BUILD_NAMES; $i++) {
     my ($buildname) = $BUILD_NAMES[$i];
     my ($color) = $HTML_COLORS[$i];

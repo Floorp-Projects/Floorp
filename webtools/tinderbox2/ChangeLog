@@ -7,6 +7,10 @@
     fixed minor spelling mistake s/Regnerate/Regenerate/
     bug 231057 reported by David Costanzo
 
+  * src/lib/Summaries.pm
+    fixed spelling error in generated html content s/BPRDER/BORDER/
+    bug 230348 patch supplied by Todd Endicott
+
 New Time columns for use in environments with multiple time zones.
 
 Spelling fixes 
