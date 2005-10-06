@@ -414,6 +414,17 @@ function BrowserOpenTab()
 
 }
 
+/**
+  * FOR - keyboard acessibility - context menu for tabbed area *** 
+  * Launches the popup for the tabbed area / tabbrowser. Make sure to call this function 
+  * when the tabbed panel is available. WARNING somehow need to inform which tab was lack clicked 
+  * or mouse over.  
+  *
+  **/
+function BrowserLaunchTabbedPopup() {
+	var tabMenu = document.getAnonymousElementByAttribute(document.getElementById("content"),"anonid","tabContextMenu");
+	tabMenu.showPopup(getBrowser().selectedTab,-1,-1,"popup","bottomleft", "topleft");
+}
 
 /**
   * Has to go through some other approach like a XML-based rule system. 
