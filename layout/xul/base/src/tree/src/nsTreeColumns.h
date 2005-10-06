@@ -134,9 +134,6 @@ private:
   nsITreeBoxObject* mTree;
 
   nsTreeColumn* mFirstColumn;
-
-  // An indicator that columns have changed and need to be rebuilt.
-  PRBool mDirty;
 };
 
 #endif // nsTreeColumns_h__
