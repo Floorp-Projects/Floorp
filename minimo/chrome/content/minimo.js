@@ -40,7 +40,6 @@ const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 
 var gURLBar = null;
-var gtabCounter=0;
 var gBrowserStatusHandler;
 var gSelectedTab=null;
 var gFullScreen=false;
@@ -48,6 +47,11 @@ var gRSSTag="minimo";
 var gGlobalHistory = null;
 var gURIFixup = null;
 var gShowingMenuPopup=null;
+
+var gPref = null;                    // so far snav toggles on / off via direct access to pref.
+                                     // See bugzilla.mozilla.org/show_bug.cgi?id=311287#c1
+                                     
+var gSnavAlreadyDisabled = false;
 
 function nsBrowserStatusHandler()
 {
@@ -243,10 +247,10 @@ function MiniNavStartup()
 
 
     try {
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+      gPref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
 
-      var page = pref.getCharPref("browser.startup.homepage");
+      var page = gPref.getCharPref("browser.startup.homepage");
 
       if (page != null)
       {
@@ -265,7 +269,29 @@ function MiniNavStartup()
    * We add event handler to catch the right and left keys on the main_MenuPopup 
    */
   document.addEventListener("keypress",eventHandlerMenu,true);
+
+  /* 
+   * Focus event detection to toggle SNAV mode on/OFF
+   */
+  document.addEventListener("focus",eventHandlerFocus,false); 
   
+}
+
+/* 
+ *  Toggles SNAV ON/OFF based on focused element. If in #document, then SNAV on. Otherwise off. 
+ *  So far the whole idea of pref is gone since this use the pref itself to toggle. 
+ *  https://bugzilla.mozilla.org/show_bug.cgi?id=311287#c1 - we should have the snav interface here. 
+ */
+function eventHandlerFocus(e) {
+ if(e.target.nodeName=="#document") {
+	gPref.setBoolPref("snav.enabled", true);
+	gSnavAlreadyDisabled=false;
+ } else {
+	if(!gSnavAlreadyDisabled) {
+		gSnavAlreadyDisabled=true;
+		gPref.setBoolPref("snav.enabled", false);
+      } 
+ } 
 }
 
 /*
@@ -302,15 +328,8 @@ function eventHandlerMenu(e) {
 		}
 	  } else { 
 		  document.getElementById(tempElement).focus();
-
 	  }
   }
-
-	  
-  /* 
-   * We may use onblur with content navigation tabbrowser to snav enable disable. 
-   */ 
-
 }
 
 function findRuleById(outnavTarget,ruleattribute) {
