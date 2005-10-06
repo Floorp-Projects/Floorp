@@ -98,32 +98,6 @@ sub sortkey    { return $_[0]->{'sortkey'};    }
 #####     Subroutines      #####
 ################################
 
-sub get_milestones_by_product {
-    my ($product_id) = @_;
-    my $dbh = Bugzilla->dbh;
-
-    my $stored_product_id = $product_id;
-    unless (detaint_natural($product_id)) {
-        ThrowCodeError(
-            'invalid_numeric_argument',
-            {argument => 'product_id',
-             value    => $stored_product_id,
-             function =>
-                'Bugzilla::Milestone::get_milestones_by_product'}
-        );
-    }
-
-    my $values = $dbh->selectcol_arrayref(q{
-        SELECT value FROM milestones
-        WHERE product_id = ?}, undef, $product_id);
-
-    my @milestones;
-    foreach my $value (@$values) {
-        push @milestones, new Bugzilla::Milestone($product_id, $value);
-    }
-    return @milestones;
-}
-
 sub check_milestone {
     my ($product, $milestone_name) = @_;
 
@@ -172,7 +146,6 @@ Bugzilla::Milestone - Bugzilla product milestone class.
     my $product_id = $milestone->product_id;
     my $value = $milestone->value;
 
-    my $hash_ref = Bugzilla::Milestone::get_milestones_by_product(1);
     my $milestone = $hash_ref->{'milestone_value'};
 
 =head1 DESCRIPTION
@@ -206,15 +179,6 @@ Milestone.pm represents a Product Milestone object.
 =head1 SUBROUTINES
 
 =over
-
-=item C<get_milestones_by_product($product_id)>
-
- Description: Returns all product milestones that belong
-              to the supplied product.
-
- Params:      $product_id - Integer with a product id.
-
- Returns:     Bugzilla::Milestone object list.
 
 =item C<check_milestone($product, $milestone_name)>
 

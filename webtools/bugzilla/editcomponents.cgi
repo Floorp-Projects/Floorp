@@ -92,12 +92,9 @@ my $product = Bugzilla::Product::check_product($product_name);
 
 unless ($action) {
 
-    my @components =
-        Bugzilla::Component::get_components_by_product($product->id);
-
     $vars->{'showbugcounts'} = $showbugcounts;
     $vars->{'product'} = $product->name;
-    $vars->{'components'} = \@components;
+    $vars->{'components'} = $product->components;
     $template->process("admin/components/list.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
 

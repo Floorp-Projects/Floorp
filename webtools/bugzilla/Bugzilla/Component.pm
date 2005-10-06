@@ -145,32 +145,6 @@ sub product_id  { return $_[0]->{'product_id'};  }
 ####      Subroutines      ####
 ###############################
 
-sub get_components_by_product {
-    my ($product_id) = @_;
-    my $dbh = Bugzilla->dbh;
-
-    my $stored_product_id = $product_id;
-    unless (detaint_natural($product_id)) {
-        ThrowCodeError(
-            'invalid_numeric_argument',
-            {argument => 'product_id',
-             value    => $stored_product_id,
-             function =>
-                'Bugzilla::Component::get_components_by_product'}
-        );
-    }
-
-    my $ids = $dbh->selectcol_arrayref(q{
-        SELECT id FROM components
-        WHERE product_id = ?}, undef, $product_id);
-
-    my @components;
-    foreach my $id (@$ids) {
-        push @components, new Bugzilla::Component($id);
-    }
-    return @components;
-}
-
 sub check_component {
     my ($product, $comp_name) = @_;
 
@@ -217,7 +191,6 @@ Bugzilla::Component - Bugzilla product component class.
     my $default_assignee   = $component->default_assignee;
     my $default_qa_contact = $component->default_qa_contact;
 
-    my @components = Bugzilla::Component::get_components_by_product($id);
     my $component  = Bugzilla::Component::check_component($product, 'AcmeComp');
 
 =head1 DESCRIPTION
@@ -281,15 +254,6 @@ Component.pm represents a Product Component object.
 =head1 SUBROUTINES
 
 =over
-
-=item C<get_components_by_product($product_id)>
-
- Description: Returns all components that belong to the supplied product.
-
- Params:      $product_id - Integer with a Bugzilla product id.
-
- Returns:     An array of Bugzilla::Component objects.
- 
 
 =item C<check_component($product, $comp_name)>
 

@@ -96,32 +96,6 @@ sub product_id { return $_[0]->{'product_id'}; }
 #####     Subroutines       ###
 ###############################
 
-sub get_versions_by_product {
-    my ($product_id) = @_;
-    my $dbh = Bugzilla->dbh;
-
-    my $stored_product_id = $product_id;
-    unless (detaint_natural($product_id)) {
-        ThrowCodeError(
-            'invalid_numeric_argument',
-            {argument => 'product_id',
-             value    => $stored_product_id,
-             function =>
-                'Bugzilla::Version::get_versions_by_product'}
-        );
-    }
-
-    my $values = $dbh->selectcol_arrayref(q{
-        SELECT value FROM versions
-        WHERE product_id = ?}, undef, $product_id);
-
-    my @versions;
-    foreach my $value (@$values) {
-        push @versions, new Bugzilla::Version($product_id, $value);
-    }
-    return @versions;
-}
-
 sub check_version {
     my ($product, $version_name) = @_;
 
@@ -152,7 +126,6 @@ Bugzilla::Version - Bugzilla product version class.
     my $product_id = $version->product_id;
     my $value = $version->value;
 
-    my $hash_ref = Bugzilla::Version::get_versions_by_product(1);
     my $version = $hash_ref->{'version_value'};
 
     my $version = Bugzilla::Version::check_version($product_obj,
@@ -189,15 +162,6 @@ Version.pm represents a Product Version object.
 =head1 SUBROUTINES
 
 =over
-
-=item C<get_versions_by_product($product_id)>
-
- Description: Returns all product versions that belong
-              to the supplied product.
-
- Params:      $product_id - Integer with a product id.
-
- Returns:     Bugzilla::Version object list.
 
 =item C<check_version($product, $version_name)>
 

@@ -80,12 +80,9 @@ my $product = Bugzilla::Product::check_product($product_name);
 
 unless ($action) {
 
-    my @milestones =
-        Bugzilla::Milestone::get_milestones_by_product($product->id);
-
     $vars->{'showbugcounts'} = $showbugcounts;
     $vars->{'product'} = $product->name;
-    $vars->{'milestones'} = \@milestones;
+    $vars->{'milestones'} = $product->milestones;
     $vars->{'default_milestone'} = $product->default_milestone;
     $template->process("admin/milestones/list.html.tmpl",
                        $vars)

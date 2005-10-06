@@ -96,15 +96,22 @@ sub _init {
 
 sub components {
     my $self = shift;
+    my $dbh = Bugzilla->dbh;
 
     if (!defined $self->{components}) {
-        my @components =
-            Bugzilla::Component::get_components_by_product($self->id);
+        my $ids = $dbh->selectcol_arrayref(q{
+            SELECT id FROM components
+            WHERE product_id = ?}, undef, $self->id);
+
+        my @components;
+        foreach my $id (@$ids) {
+            push @components, new Bugzilla::Component($id);
+        }
         $self->{components} = \@components;
     }
     return $self->{components};
 }
-
+ 
 sub classification {
     my $self = shift;
 
@@ -117,20 +124,46 @@ sub classification {
 
 sub group_controls {
     my $self = shift;
+    my $dbh = Bugzilla->dbh;
 
     if (!defined $self->{group_controls}) {
-        $self->{group_controls} =
-            Bugzilla::Group::get_group_controls_by_product($self->id);
+        my $query = qq{SELECT
+                       groups.id,
+                       groups.name,
+                       groups.description,
+                       groups.isbuggroup,
+                       groups.last_changed,
+                       groups.userregexp,
+                       groups.isactive,
+                       group_control_map.entry,
+                       group_control_map.membercontrol,
+                       group_control_map.othercontrol,
+                       group_control_map.canedit
+                  FROM groups
+                  LEFT JOIN group_control_map
+                        ON groups.id = group_control_map.group_id
+                  WHERE group_control_map.product_id = ?
+                  AND   groups.isbuggroup != 0
+                  ORDER BY groups.name};
+        my $self->{group_controls} = 
+            $dbh->selectall_hashref($query, 'id', undef, $self->id);
     }
     return $self->{group_controls};
 }
 
 sub versions {
     my $self = shift;
+    my $dbh = Bugzilla->dbh;
 
     if (!defined $self->{versions}) {
-        my @versions =
-            Bugzilla::Version::get_versions_by_product($self->id);
+        my $values = $dbh->selectcol_arrayref(q{
+            SELECT value FROM versions
+            WHERE product_id = ?}, undef, $self->id);
+
+        my @versions;
+        foreach my $value (@$values) {
+            push @versions, new Bugzilla::Version($self->id, $value);
+        }
         $self->{versions} = \@versions;
     }
     return $self->{versions};
@@ -138,10 +171,17 @@ sub versions {
 
 sub milestones {
     my $self = shift;
+    my $dbh = Bugzilla->dbh;
 
     if (!defined $self->{milestones}) {
-        my @milestones =
-            Bugzilla::Milestone::get_milestones_by_product($self->id);
+        my $values = $dbh->selectcol_arrayref(q{
+            SELECT value FROM milestones
+            WHERE product_id = ?}, undef, $self->id);
+ 
+        my @milestones;
+        foreach my $value (@$values) {
+            push @milestones, new Bugzilla::Milestone($self->id, $value);
+        }
         $self->{milestones} = \@milestones;
     }
     return $self->{milestones};

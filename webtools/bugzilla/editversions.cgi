@@ -88,12 +88,9 @@ my $product = Bugzilla::Product::check_product($product_name);
 #
 
 unless ($action) {
-    my @versions =
-        Bugzilla::Version::get_versions_by_product($product->id);
-
     $vars->{'showbugcounts'} = $showbugcounts;
     $vars->{'product'} = $product->name;
-    $vars->{'versions'} = \@versions;
+    $vars->{'versions'} = $product->versions;
     $template->process("admin/versions/list.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());

@@ -124,27 +124,6 @@ sub ValidateGroupName {
     return $ret;
 }
 
-sub get_group_controls_by_product {
-    my ($product_id) = @_;
-    my $dbh = Bugzilla->dbh;
-
-    my $query = qq{SELECT
-                       $columns,
-                       group_control_map.entry,
-                       group_control_map.membercontrol,
-                       group_control_map.othercontrol,
-                       group_control_map.canedit
-                  FROM groups
-                  LEFT JOIN group_control_map
-                        ON groups.id = group_control_map.group_id
-                  WHERE group_control_map.product_id = ?
-                  AND   groups.isbuggroup != 0
-                  ORDER BY groups.name};
-    my $groups = $dbh->selectall_hashref($query, 'id', undef,
-                                         ($product_id));
-    return $groups;
-}
-
 sub get_all_groups {
     my $dbh = Bugzilla->dbh;
 
@@ -181,7 +160,6 @@ Bugzilla::Group - Bugzilla group class.
     my $is_active    = $group->is_active;
 
     my $group_id = Bugzilla::Group::ValidateGroupName('admin', @users);
-    my $groups = Bugzilla::Group::get_group_controls_by_product(1);
     my @groups = Bugzilla::get_all_groups();
 
 =head1 DESCRIPTION
@@ -222,17 +200,6 @@ Group.pm represents a Bugzilla Group object.
 
  Returns:     It returns the group id if successful
               and undef otherwise.
-
-=item C<get_group_controls_by_product($product_id)>
-
- Description: Returns all group controls of a specific product.
-              It is encouraged to use Bugzilla::Product object
-              instead of directly calling this routine.
-
- Params:      $product_id - Integer with a Bugzilla product id.
-
- Returns:     A hash with group id as key and hash containing the
-              group data as value.
 
 =item C<get_all_groups()>
 
