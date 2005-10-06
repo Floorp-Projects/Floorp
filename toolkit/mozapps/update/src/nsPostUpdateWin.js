@@ -187,14 +187,24 @@ InstallLogWriter.prototype = {
   },
 
   /**
-   * Return the update.log file.
+   * Return the update.log file.  Use last-update.log file in case the
+   * updates/0 directory has already been cleaned out (see bug 311302).
    */
   _getUpdateLogFile: function() {
     var file = getFile(KEY_APPDIR); 
     file.append("updates");
     file.append("0");
     file.append("update.log");
-    return file.exists() ? file : null;
+    if (file.exists())
+      return file;
+
+    file = getFile(KEY_APPDIR); 
+    file.append("updates");
+    file.append("last-update.log");
+    if (file.exists())
+      return file;
+
+    return null;
   },
 
   /**
@@ -266,6 +276,8 @@ InstallLogWriter.prototype = {
    * This function records the creation of a registry key.
    */
   registryKeyCreated: function(keyPath) {
+    if (!this._outputStream)
+      return;
     this._writeLine(PREFIX_CREATE_REGISTRY_KEY + keyPath + " []");
   },
 
@@ -273,15 +285,17 @@ InstallLogWriter.prototype = {
    * This function records the creation of a registry key value.
    */
   registryKeyValueSet: function(keyPath, valueName) {
+    if (!this._outputStream)
+      return;
     this._writeLine(
         PREFIX_STORE_REGISTRY_VALUE_STRING + keyPath + " [" + valueName + "]");
   },
 
   end: function() {
-    if (this._outputStream) {
-      this._outputStream.close();
-      this._outputStream = null;
-    }
+    if (!this._outputStream)
+      return;
+    this._outputStream.close();
+    this._outputStream = null;
   }
 };
 
