@@ -1,5 +1,5 @@
 /*
- * $Id: fbpict.h,v 1.1 2005/08/20 05:34:02 vladimir%pobox.com Exp $
+ * $Id: fbpict.h,v 1.5 2006/02/03 04:49:30 vladimir%pobox.com Exp $
  *
  * Copyright © 2000 Keith Packard
  *             2005 Lars Knoll & Zack Rusin, Trolltech
@@ -67,7 +67,9 @@
 #define Green(x) (((x) >> 8) & 0xff)
 #define Blue(x) ((x) & 0xff)
 
-#define fbComposeGetSolid(pict, bits) { \
+#define IsRGB(pict) ((pict)->image_format.red > (pict)->image_format.blue)
+
+#define fbComposeGetSolid(pict, dest, bits) { \
     FbBits	*__bits__; \
     FbStride	__stride__; \
     int		__bpp__; \
@@ -99,6 +101,12 @@
     /* manage missing src alpha */ \
     if ((pict)->image_format.alphaMask == 0) \
 	(bits) |= 0xff000000; \
+    /* Handle RGB/BGR mismatch */ \
+    if (dest && IsRGB(dest) != IsRGB(pict)) \
+        bits = (((bits & 0xff000000)) | \
+		((bits & 0x00ff0000) >> 16) | \
+		((bits & 0x0000ff00)) | \
+		((bits & 0x000000ff) << 16)); \
 }
 
 #define fbComposeGetStart(pict,x,y,type,stride,line,mul) {\

@@ -132,6 +132,17 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
     return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_path_fixed_t *
+_cairo_path_fixed_create (void)
+{
+    cairo_path_fixed_t	*path = malloc (sizeof (cairo_path_fixed_t));
+
+    if (!path)
+	return NULL;
+    _cairo_path_fixed_init (path);
+    return path;
+}
+
 void
 _cairo_path_fixed_fini (cairo_path_fixed_t *path)
 {
@@ -153,6 +164,13 @@ _cairo_path_fixed_fini (cairo_path_fixed_t *path)
     path->arg_buf_tail = NULL;
 
     path->has_current_point = 0;
+}
+
+void
+_cairo_path_fixed_destroy (cairo_path_fixed_t *path)
+{
+    _cairo_path_fixed_fini (path);
+    free (path);
 }
 
 cairo_status_t

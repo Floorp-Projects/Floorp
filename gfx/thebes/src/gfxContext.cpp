@@ -66,6 +66,12 @@ gfxASurface *gfxContext::CurrentSurface()
     return mSurface;
 }
 
+void gfxContext::SetTarget(gfxASurface *target)
+{
+    cairo_set_target (mCairo, target->CairoSurface());
+    mSurface = target;
+}
+
 void gfxContext::Save()
 {
     cairo_save(mCairo);

@@ -541,6 +541,23 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 		 command->show_glyphs.height,
 		 command->show_glyphs.glyphs,
 		 command->show_glyphs.num_glyphs);
+	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+		break;
+	    
+	    status = (*command->show_glyphs.scaled_font->backend->
+		      show_glyphs) (command->show_glyphs.scaled_font,
+				    command->show_glyphs.operator,
+				    &command->show_glyphs.pattern.base,
+				    target,
+				    command->show_glyphs.source_x,
+				    command->show_glyphs.source_y,
+				    command->show_glyphs.dest_x,
+				    command->show_glyphs.dest_y,
+				    command->show_glyphs.width,
+				    command->show_glyphs.height,
+				    command->show_glyphs.glyphs,
+				    command->show_glyphs.num_glyphs);
+
 	    break;
 
 	case CAIRO_COMMAND_FILL_PATH:

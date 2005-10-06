@@ -42,7 +42,7 @@
 
 #include <cairo-win32.h>
 
-class gfxWindowsSurface : public gfxASurface {
+class NS_EXPORT gfxWindowsSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:

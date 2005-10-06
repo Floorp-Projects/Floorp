@@ -46,27 +46,21 @@ class nsIAtom;
 
 class gfxTextRun {
     // these do not copy the text
-    gfxTextRun(const char* ASCII, int length, nsIFontMetrics* font, nsIAtom* language);
-    gfxTextRun(const PRUnichar* unicode, int length, nsIFontMetrics* font, nsIAtom* language);
+    gfxTextRun(const PRUnichar *unicode, int length, nsFont *font);
  
-    enum { ClusterStart = 0x1 } CharFlags;
-    // ClusterStart: character is the first character of a cluster/glyph
-    void GetCharacterFlags(int pos, int len, CharFlags* flags);
-
-    struct Dimensions {
+    struct Metrics {
         gfxFloat ascent, descent, width, leftBearing, rightBearing;
     };
-    Dimensions MeasureText(int pos, int len);
+    Metrics GetMetrics();
 
-    // Compute how many characters from this string starting at
-    // character 'pos' and up to length 'len' fit
-    // into the given width. 'breakflags' indicates our
-    // preferences about where we allow breaks.
-    // We will usually want to call MeasureText right afterwards,
-    // the implementor could optimize for that.
-    int GetCharsFit(int pos, int len, gfxFloat width, int breakflags);
 
-    int GetPositionInString(gfxPoint& pt);
+    // return the length of the string
+    double Measure();
+
+
+    int nitems;
+    PRInt32 *fontIndex;
+    cairo_glyph_t **glyphs;
 };
 
 #endif

@@ -130,7 +130,7 @@ fbLaneTable(int bpp)
     case 32:
 	return fb32Lane;
     }
-    return 0;
+    return NULL;
 }
 #endif
 
@@ -233,11 +233,11 @@ fbBltOne (FbStip    *src,
     /*
      * Get pointer to stipple mask array for this depth
      */
-    fbBits = 0;	/* unused */
+    fbBits = NULL;	/* unused */
     if (pixelsPerDst <= 8)
 	fbBits = fbStippleTable(pixelsPerDst);
 #ifndef FBNOPIXADDR
-    fbLane = 0;
+    fbLane = NULL;
     if (transparent && fgand == 0 && dstBpp >= 8)
 	fbLane = fbLaneTable(dstBpp);
 #endif

@@ -100,27 +100,19 @@ _arc_max_angle_for_tolerance_normalized (double tolerance)
     return angle;
 }
 
-/* XXX: The computation here if bogus. Correct math (with proof!) is
- * available in _cairo_pen_vertices_needed. */
 static int
 _arc_segments_needed (double	      angle,
 		      double	      radius,
 		      cairo_matrix_t *ctm,
 		      double	      tolerance)
 {
-    double l1, l2, lmax;
-    double max_angle;
+    double major_axis, max_angle;
 
-    _cairo_matrix_compute_eigen_values (ctm, &l1, &l2);
-
-    l1 = fabs (l1);
-    l2 = fabs (l2);
-    if (l1 > l2)
-	lmax = l1;
-    else
-	lmax = l2;
-
-    max_angle = _arc_max_angle_for_tolerance_normalized (tolerance / (radius * lmax));
+    /* the error is amplified by at most the length of the
+     * major axis of the circle; see cairo-pen.c for a more detailed analysis
+     * of this. */
+    major_axis = _cairo_matrix_transformed_circle_major_axis (ctm, radius);
+    max_angle = _arc_max_angle_for_tolerance_normalized (tolerance / major_axis);
 
     return (int) ceil (angle / max_angle);
 }

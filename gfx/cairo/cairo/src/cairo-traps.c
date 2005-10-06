@@ -827,16 +827,10 @@ _cairo_traps_extract_region (cairo_traps_t      *traps,
     for (i = 0; i < traps->num_traps; i++)
 	if (!(traps->traps[i].left.p1.x == traps->traps[i].left.p2.x
 	      && traps->traps[i].right.p1.x == traps->traps[i].right.p2.x
-	      && traps->traps[i].left.p1.y == traps->traps[i].right.p1.y
-	      && traps->traps[i].left.p2.y == traps->traps[i].right.p2.y
+	      && _cairo_fixed_is_integer(traps->traps[i].top)
+	      && _cairo_fixed_is_integer(traps->traps[i].bottom)
 	      && _cairo_fixed_is_integer(traps->traps[i].left.p1.x)
-	      && _cairo_fixed_is_integer(traps->traps[i].left.p1.y)
-	      && _cairo_fixed_is_integer(traps->traps[i].left.p2.x)
-	      && _cairo_fixed_is_integer(traps->traps[i].left.p2.y)
-	      && _cairo_fixed_is_integer(traps->traps[i].right.p1.x)
-	      && _cairo_fixed_is_integer(traps->traps[i].right.p1.y)
-	      && _cairo_fixed_is_integer(traps->traps[i].right.p2.x)
-	      && _cairo_fixed_is_integer(traps->traps[i].right.p2.y))) {
+	      && _cairo_fixed_is_integer(traps->traps[i].right.p1.x))) {
 	    *region = NULL;
 	    return CAIRO_STATUS_SUCCESS;
 	}
@@ -845,9 +839,9 @@ _cairo_traps_extract_region (cairo_traps_t      *traps,
 
     for (i = 0; i < traps->num_traps; i++) {
 	int x = _cairo_fixed_integer_part(traps->traps[i].left.p1.x);
-	int y = _cairo_fixed_integer_part(traps->traps[i].left.p1.y);
+	int y = _cairo_fixed_integer_part(traps->traps[i].top);
 	int width = _cairo_fixed_integer_part(traps->traps[i].right.p1.x) - x;
-	int height = _cairo_fixed_integer_part(traps->traps[i].left.p2.y) - y;
+	int height = _cairo_fixed_integer_part(traps->traps[i].bottom) - y;
 
 	/* XXX: Sometimes we get degenerate trapezoids from the tesellator,
 	 * if we call pixman_region_union_rect(), it bizarrly fails on such

@@ -149,8 +149,13 @@ _create_pixman_format (cairo_format_t format)
  * must explicitely clear the buffer, using, for example,
  * cairo_rectangle() and cairo_fill() if you want it cleared.
  *
- * Return value: the newly created surface, or %NULL if it couldn't
- *   be created because of lack of memory
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
  **/
 cairo_surface_t *
 cairo_image_surface_create (cairo_format_t	format,
@@ -203,8 +208,13 @@ cairo_image_surface_create (cairo_format_t	format,
  * must explicitely clear the buffer, using, for example,
  * cairo_rectangle() and cairo_fill() if you want it cleared.
  *
- * Return value: the newly created surface, or %NULL if it couldn't
- *   be created because of lack of memory
+ * Return value: a pointer to the newly created surface. The caller
+ * owns the surface and should call cairo_surface_destroy when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if an error such as out of memory
+ * occurs. You can use cairo_surface_status() to check for this.
  **/
 cairo_surface_t *
 cairo_image_surface_create_for_data (unsigned char     *data,
@@ -616,7 +626,9 @@ _cairo_image_surface_composite (cairo_operator_t	operator,
 			  width, height);
     }
     
-    if (!_cairo_operator_bounded (operator))
+    if (!_cairo_operator_bounded (operator) ||
+	operator == CAIRO_OPERATOR_SOURCE ||
+	operator == CAIRO_OPERATOR_CLEAR)
 	status = _cairo_surface_composite_fixup_unbounded (&dst->base,
 							   &src_attr, src->width, src->height,
 							   mask ? &mask_attr : NULL,

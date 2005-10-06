@@ -44,7 +44,9 @@
 #endif
 
 #include <mmintrin.h>
+#ifdef USE_SSE
 #include <xmmintrin.h> /* for _mm_shuffle_pi16 and _MM_SHUFFLE */
+#endif
 
 #ifdef RENDER
 
@@ -374,11 +376,17 @@ mmxCombineMaskU (CARD32 *src, const CARD32 *mask, int width)
 {
     const CARD32 *end = mask + width;
     while (mask < end) {
-        __m64 a = load8888(*mask);
-        __m64 s = load8888(*src);
-        a = expand_alpha(a);
-        s = pix_multiply(s, a);
-        *src = store8888(s);
+	CARD32 mmask = *mask;
+	CARD32 maska = mmask >> 24;
+	if (maska == 0) {
+	    *src = 0;
+	} else if (maska != 0xff) {
+	    __m64 a = load8888(mmask);
+	    __m64 s = load8888(*src);
+	    a = expand_alpha(a);
+	    s = pix_multiply(s, a);
+	    *src = store8888(s);
+	}
         ++src;
         ++mask;
     }
@@ -392,10 +400,16 @@ mmxCombineOverU (CARD32 *dest, const CARD32 *src, int width)
     const CARD32 *end = dest + width;
 
     while (dest < end) {
-        __m64 s, sa;
-	s = load8888(*src);
-	sa = expand_alpha(s);
-	*dest = store8888(over(s, sa, load8888(*dest)));
+	CARD32 ssrc = *src;
+	CARD32 a = ssrc >> 24;
+	if (a == 0xff) {
+	    *dest = ssrc;
+	} else if (a) {
+	    __m64 s, sa;
+	    s = load8888(ssrc);
+	    sa = expand_alpha(s);
+	    *dest = store8888(over(s, sa, load8888(*dest)));
+	}
         ++dest;
         ++src;
     }
@@ -874,7 +888,7 @@ fbCompositeSolid_nx8888mmx (pixman_operator_t	op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     if (src >> 24 == 0)
 	return;
@@ -952,7 +966,7 @@ fbCompositeSolid_nx0565mmx (pixman_operator_t	op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     if (src >> 24 == 0)
 	return;
@@ -1037,7 +1051,7 @@ fbCompositeSolidMask_nx8888x8888Cmmx (pixman_operator_t	op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     srca = src >> 24;
     if (srca == 0)
@@ -1339,6 +1353,56 @@ fbCompositeSrc_x888x8x8888mmx (pixman_operator_t	op,
 }
 
 void
+fbCompositeSrc_8888x8888mmx (pixman_operator_t      op,
+			     PicturePtr pSrc,
+			     PicturePtr pMask,
+			     PicturePtr pDst,
+			     INT16      xSrc,
+			     INT16      ySrc,
+			     INT16      xMask,
+			     INT16      yMask,
+			     INT16      xDst,
+			     INT16      yDst,
+			     CARD16     width,
+			     CARD16     height)
+{
+    CARD32	*dstLine, *dst;
+    CARD32	*srcLine, *src, s;
+    FbStride	dstStride, srcStride;
+    CARD8	a;
+    CARD16	w;
+
+    fbComposeGetStart (pDst, xDst, yDst, CARD32, dstStride, dstLine, 1);
+    fbComposeGetStart (pSrc, xSrc, ySrc, CARD32, srcStride, srcLine, 1);
+
+    while (height--)
+    {
+	dst = dstLine;
+	dstLine += dstStride;
+	src = srcLine;
+	srcLine += srcStride;
+	w = width;
+
+	while (w--)
+	{
+	    s = *src++;
+	    a = s >> 24;
+	    if (a == 0xff)
+		*dst = s;
+	    else if (a) {
+		__m64 ms, sa;
+		ms = load8888(s);
+		sa = expand_alpha(ms);
+		*dst = store8888(over(ms, sa, load8888(*dst)));
+	    }
+	    dst++;
+	}
+    }
+    _mm_empty();
+}
+
+
+void
 fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
 				  PicturePtr pSrc,
 				  PicturePtr pMask,
@@ -1362,7 +1426,7 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     srca = src >> 24;
     if (srca == 0)
@@ -1477,7 +1541,7 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     srca = src >> 24;
     if (srca == 0)
@@ -1513,6 +1577,10 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 		  __m64 vdest = in(vsrc, expand_alpha_rev ((__m64)m));
 		  *dst = store8888(vdest);
 	    }
+	    else
+	    {
+		  *dst = 0;
+	    }
 	    
 	    w--;
 	    mask++;
@@ -1543,6 +1611,10 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 		
 		*(__m64 *)dst = pack8888(dest0, dest1);
 	    }
+	    else
+	    {
+		*dst = 0;
+	    }
 	    
 	    mask += 2;
 	    dst += 2;
@@ -1560,6 +1632,10 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 		__m64 vdest = load8888(*dst);
 		vdest = in(vsrc, expand_alpha_rev ((__m64)m));
 		*dst = store8888(vdest);
+	    }
+	    else
+	    {
+		*dst = 0;
 	    }
 	    
 	    w--;
@@ -1596,7 +1672,7 @@ fbCompositeSolidMask_nx8x0565mmx (pixman_operator_t      op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     srca = src >> 24;
     if (srca == 0)
@@ -1937,7 +2013,7 @@ fbCompositeSolidMask_nx8888x0565Cmmx (pixman_operator_t      op,
     
     CHECKPOINT();
     
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
     
     srca = src >> 24;
     if (srca == 0)
@@ -2396,108 +2472,5 @@ fbCompositeCopyAreammx (pixman_operator_t		op,
 		   xDst, yDst,
 		   width, height);
 }
-
-#if !defined(__amd64__) && !defined(__x86_64__)
-
-enum CPUFeatures {
-    NoFeatures = 0,
-    MMX = 0x1,
-    MMX_Extensions = 0x2, 
-    SSE = 0x6,
-    SSE2 = 0x8,
-    CMOV = 0x10
-};
-
-static unsigned int detectCPUFeatures(void) {
-    unsigned int result;
-    char vendor[13];
-    vendor[0] = 0;
-    vendor[12] = 0;
-    /* see p. 118 of amd64 instruction set manual Vol3 */
-    __asm__ ("push %%ebx\n"
-             "pushf\n"
-             "pop %%eax\n"
-             "mov %%eax, %%ebx\n"
-             "xor $0x00200000, %%eax\n"
-             "push %%eax\n"
-             "popf\n"
-             "pushf\n"
-             "pop %%eax\n"
-             "mov $0x0, %%edx\n"
-             "xor %%ebx, %%eax\n"
-             "jz skip\n"
-
-             "mov $0x00000000, %%eax\n"
-             "cpuid\n"
-             "mov %%ebx, %1\n"
-             "mov %%edx, %2\n"
-             "mov %%ecx, %3\n"
-             "mov $0x00000001, %%eax\n"
-             "cpuid\n"
-             "skip:\n"
-             "pop %%ebx\n"
-             "mov %%edx, %0\n"
-             : "=r" (result), 
-               "=m" (vendor[0]), 
-               "=m" (vendor[4]), 
-               "=m" (vendor[8])
-             :
-             : "%eax", "%ecx", "%edx"
-        );
-
-    unsigned int features = 0;
-    if (result) {
-        /* result now contains the standard feature bits */
-        if (result & (1 << 15))
-            features |= CMOV;
-        if (result & (1 << 23))
-            features |= MMX;
-        if (result & (1 << 25))
-            features |= SSE;
-        if (result & (1 << 26))
-            features |= SSE2;
-        if ((result & MMX) && !(result & SSE) && (strcmp(vendor, "AuthenticAMD") == 0)) {
-            /* check for AMD MMX extensions */
-
-            unsigned int result;            
-            __asm__("push %%ebx\n"
-                    "mov $0x80000000, %%eax\n"
-                    "cpuid\n"
-                    "xor %%edx, %%edx\n"
-                    "cmp $0x1, %%eax\n"
-                    "jge skip2\n"
-                    "mov $0x80000001, %%eax\n"
-                    "cpuid\n"
-                    "skip2:\n"
-                    "mov %%edx, %0\n"
-                    "pop %%ebx\n"
-                    : "=r" (result)
-                    :
-                    : "%eax", "%ecx", "%edx"
-                );
-            if (result & (1<<22))
-                features |= MMX_Extensions;
-        }
-    }
-    return features;
-}
-
-Bool
-fbHaveMMX (void)
-{
-    static Bool initialized = FALSE;
-    static Bool mmx_present;
-
-    if (!initialized)
-    {
-        unsigned int features = detectCPUFeatures();
-	mmx_present = (features & (MMX|MMX_Extensions)) == (MMX|MMX_Extensions);
-        initialized = TRUE;
-    }
-    
-    return mmx_present;
-}
-#endif /* __amd64__ */
-
 
 #endif /* RENDER */

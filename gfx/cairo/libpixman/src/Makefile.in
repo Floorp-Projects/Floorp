@@ -43,6 +43,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+VISIBILITY_FLAGS =
+
 MODULE		= libpixman
 LIBRARY_NAME	= mozlibpixman
 LIBXUL_LIBRARY = 1
@@ -50,8 +52,8 @@ LIBXUL_LIBRARY = 1
 CSRCS	= \
 	fbcompose.c \
 	fbedge.c \
+	fbpict.c \
 	fbtrap.c \
-	ic.c \
 	icblt.c \
 	icbltone.c \
 	iccolor.c \
@@ -73,7 +75,7 @@ ifdef MOZ_X11
 #DEFINES += -DUSE_MMX
 endif
 
-EXPORTS		= pixman.h pixman-remap.h mozstdint.h
+EXPORTS		= pixman.h pixman-remap.h
 
 LOCAL_INCLUDES	= -I$(srcdir)
 

@@ -45,20 +45,20 @@
 
 CAIRO_BEGIN_DECLS
 
-cairo_surface_t *
+cairo_public cairo_surface_t *
 cairo_xcb_surface_create (XCBConnection *c,
 			  XCBDRAWABLE	 drawable,
 			  XCBVISUALTYPE *visual,
 			  int		 width,
 			  int		 height);
 
-cairo_surface_t *
+cairo_public cairo_surface_t *
 cairo_xcb_surface_create_for_bitmap (XCBConnection *c,
 				     XCBPIXMAP	    bitmap,
 				     int	    width,
 				     int	    height);
 
-void
+cairo_public void
 cairo_xcb_surface_set_size (cairo_surface_t *surface,
 			    int		     width,
 			    int		     height);

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2004 David Reveman
- * 
+ *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
  * fee, provided that the above copyright notice appear in all copies
@@ -12,11 +12,11 @@
  * software for any purpose. It is provided "as is" without express or
  * implied warranty.
  *
- * DAVID REVEMAN DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, 
+ * DAVID REVEMAN DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
  * NO EVENT SHALL DAVID REVEMAN BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
+ * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
  * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
  * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
@@ -43,47 +43,46 @@
 typedef struct _glitz_agl_drawable glitz_agl_drawable_t;
 
 typedef struct _glitz_agl_context_info_t {
-  glitz_agl_drawable_t *drawable;
-  glitz_surface_t      *surface;
-  glitz_constraint_t   constraint;
+    glitz_agl_drawable_t *drawable;
+    glitz_surface_t      *surface;
+    glitz_constraint_t   constraint;
 } glitz_agl_context_info_t;
 
 typedef struct _glitz_agl_context_t {
-  glitz_context_t   base;
-  AGLContext        context;
-  glitz_format_id_t id;
-  AGLPixelFormat    pixel_format;
-  glitz_bool_t      pbuffer;
-  glitz_backend_t   backend;
-  glitz_gl_int_t    max_viewport_dims[2];
-  glitz_gl_int_t    max_texture_2d_size;
-  glitz_gl_int_t    max_texture_rect_size;
-  glitz_bool_t      initialized;
+    glitz_context_t   base;
+    AGLContext        context;
+    glitz_format_id_t id;
+    AGLPixelFormat    pixel_format;
+    glitz_bool_t      pbuffer;
+    glitz_backend_t   backend;
+    glitz_bool_t      initialized;
 } glitz_agl_context_t;
 
 typedef struct _glitz_agl_thread_info_t {
-  int                      drawables;
-  glitz_drawable_format_t  *formats;
-  AGLPixelFormat           *pixel_formats;
-  int                      n_formats;
-  glitz_agl_context_t      **contexts;
-  int                      n_contexts;
-  glitz_agl_context_info_t context_stack[GLITZ_CONTEXT_STACK_SIZE];
-  int                      context_stack_size;
-  AGLContext               root_context;
-  unsigned long            agl_feature_mask;
-  glitz_context_t          *cctx;
-  glitz_program_map_t      program_map;
+    int                         drawables;
+    glitz_int_drawable_format_t *formats;
+    AGLPixelFormat              *pixel_formats;
+    int                         n_formats;
+    glitz_agl_context_t         **contexts;
+    int                         n_contexts;
+    glitz_agl_context_info_t    context_stack[GLITZ_CONTEXT_STACK_SIZE];
+    int                         context_stack_size;
+    AGLContext                  root_context;
+    unsigned long               agl_feature_mask;
+    glitz_context_t             *cctx;
+    glitz_program_map_t         program_map;
 } glitz_agl_thread_info_t;
 
 struct _glitz_agl_drawable {
-  glitz_drawable_t        base;
-  
-  glitz_agl_thread_info_t *thread_info;
-  glitz_agl_context_t     *context;
-  AGLDrawable             drawable;
-  AGLPbuffer              pbuffer;
-  WindowRef               window;
+    glitz_drawable_t        base;
+
+    glitz_agl_thread_info_t *thread_info;
+    glitz_agl_context_t     *context;
+    AGLDrawable             drawable;
+    AGLPbuffer              pbuffer;
+    WindowRef               window;
+    int                     width;
+    int                     height;
 };
 
 extern glitz_status_t __internal_linkage
@@ -94,33 +93,33 @@ glitz_agl_thread_info_get (void);
 
 extern glitz_agl_context_t __internal_linkage *
 glitz_agl_context_get (glitz_agl_thread_info_t *thread_info,
-                       glitz_drawable_format_t *format);
+		       glitz_drawable_format_t *format);
 
 extern void __internal_linkage
 glitz_agl_context_destroy (glitz_agl_thread_info_t *thread_info,
-                           glitz_agl_context_t     *context);
+			   glitz_agl_context_t     *context);
 
 extern void __internal_linkage
 glitz_agl_query_formats (glitz_agl_thread_info_t *thread_info);
 
 extern AGLPbuffer __internal_linkage
 glitz_agl_pbuffer_create (glitz_agl_thread_info_t *thread_info,
-                          int                     width,
-                          int                     height);
+			  int                     width,
+			  int                     height);
 
 extern void __internal_linkage
 glitz_agl_pbuffer_destroy (AGLPbuffer pbuffer);
 
 extern glitz_drawable_t __internal_linkage *
 glitz_agl_create_pbuffer (void                    *abstract_templ,
-                          glitz_drawable_format_t *format,
-                          unsigned int            width,
-                          unsigned int            height);
+			  glitz_drawable_format_t *format,
+			  unsigned int            width,
+			  unsigned int            height);
 
-extern void __internal_linkage
+extern glitz_bool_t __internal_linkage
 glitz_agl_push_current (void               *abstract_drawable,
-                        glitz_surface_t    *surface,
-                        glitz_constraint_t constraint);
+			glitz_surface_t    *surface,
+			glitz_constraint_t constraint);
 
 extern glitz_surface_t __internal_linkage *
 glitz_agl_pop_current (void *abstract_drawable);
@@ -128,7 +127,7 @@ glitz_agl_pop_current (void *abstract_drawable);
 extern void __internal_linkage
 glitz_agl_destroy (void *abstract_drawable);
 
-extern void __internal_linkage
+extern glitz_bool_t __internal_linkage
 glitz_agl_swap_buffers (void *abstract_drawable);
 
 /* Avoid unnecessary PLT entries.  */

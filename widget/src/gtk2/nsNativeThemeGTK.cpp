@@ -61,6 +61,10 @@
 
 #include <gdk/gdkx.h>
 
+#ifdef MOZ_CAIRO_GFX
+#include "gfxContext.h"
+#endif
+
 NS_IMPL_ISUPPORTS2(nsNativeThemeGTK, nsITheme, nsIObserver)
 
 static int gLastXError;
@@ -426,6 +430,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                             &flags))
     return NS_OK;
 
+#ifndef MOZ_CAIRO_GFX
   GdkWindow* window = NS_STATIC_CAST(GdkWindow*,
     aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE));
 
@@ -473,6 +478,153 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
       SetWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
     }
   }
+#else
+  // Thebes gfx rendering; if we can get a GdkWindow and if we don't have any transform
+  // other than a translation, then just render directly.  Otherwise, we can't do
+  // native themes yet, until we figure out how to intercept gtk rendering
+
+  nsRefPtr<gfxContext> ctx = (gfxContext*) aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+
+  nsIDeviceContext *dctx = nsnull;
+  aContext->GetDeviceContext(dctx);
+  double t2p = dctx->AppUnitsToDevUnits();
+
+  GdkRectangle gdk_rect = { aRect.x * t2p,
+                            aRect.y * t2p,
+                            aRect.width * t2p,
+                            aRect.height * t2p };
+  GdkRectangle gdk_clip = { aClipRect.x * t2p,
+                            aClipRect.y * t2p,
+                            aClipRect.width * t2p,
+                            aClipRect.height * t2p };
+
+  GdkWindow *gdkwin = (GdkWindow*) aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE);
+  GdkDrawable *target_drawable = nsnull;
+  PRBool needs_thebes_composite = PR_FALSE;
+
+  if (gdkwin && !ctx->CurrentMatrix().HasNonTranslation()) {
+    // we can draw straight to the gdkwin drawable; need to offset gdk_rect/gdk_clip
+    // by the current translation
+    target_drawable = gdkwin;
+
+    gfxPoint t = ctx->CurrentMatrix().GetTranslation();
+    gdk_rect.x += t.x;
+    gdk_rect.y += t.y;
+    gdk_clip.x += t.x;
+    gdk_clip.y += t.y;
+
+    ctx->CurrentSurface()->Flush();
+  } else {
+    // we can't draw directly to the gdkwin drawable because we're being transformed;
+    // so draw to our temporary pixmap and composite
+
+    // .. except that we can't draw to the temporary pixmap just yet, so bail
+    SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
+    RefreshWidgetWindow(aFrame);
+    return NS_OK;
+
+#if 0
+    PRUint32 maxsz = ((PRUint32)(aRect.width < aRect.height ? (aRect.height * t2p) : (aRect.width * t2p))) + 1;
+  
+    if (mGdkPixmapSize < maxsz) {
+      if (mGdkPixmap) {
+        mThebesSurface = nsnull;
+        g_object_unref(mGdkPixmap);
+        mGdkPixmap = nsnull;
+      }
+
+      fprintf (stderr, "maxsz: %d\n", maxsz);
+      mGdkPixmap = gdk_pixmap_new (gdk_get_default_root_window(),
+                                   maxsz,
+                                   maxsz,
+                                   32);
+
+      mThebesSurface = new gfxXlibSurface (gdk_x11_get_default_xdisplay(),
+                                           GDK_PIXMAP_XID(mGdkPixmap),
+                                           gfxXlibSurface::FindRenderFormat(gdk_x11_get_default_xdisplay(),
+                                                                            gfxASurface::ImageFormatARGB32),
+                                           maxsz, maxsz);
+      
+      mGdkPixmapSize = maxsz;
+    }
+
+    nsRefPtr<gfxContext> gdkCtx = new gfxContext(mThebesSurface);
+    gdkCtx->SetOperator(gfxContext::OPERATOR_CLEAR);
+    gdkCtx->Paint();
+
+    target_drawable = mGdkPixmap;
+    needs_thebes_composite = PR_TRUE;
+#endif
+  }
+
+  if (gdk_clip.x < 0) {
+    gdk_clip.width += gdk_clip.x;
+    gdk_clip.x = 0;
+  }
+
+  if (gdk_clip.y < 0) {
+    gdk_clip.height += gdk_clip.y;
+    gdk_clip.y = 0;
+  }
+
+  if (gdk_clip.width < 0 || gdk_clip.height < 0)
+    return NS_OK;
+
+  NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
+               "Trying to render an unsafe widget!");
+
+  PRBool safeState = IsWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
+  XErrorHandler oldHandler = nsnull;
+  if (!safeState) {
+    gLastXError = 0;
+    oldHandler = XSetErrorHandler(NativeThemeErrorHandler);
+  }
+
+
+  moz_gtk_widget_paint(gtkWidgetType, target_drawable, &gdk_rect, &gdk_clip, &state,
+                       flags);
+
+
+  if (!safeState) {
+    gdk_flush();
+    XSetErrorHandler(oldHandler);
+
+    if (gLastXError) {
+#ifdef DEBUG
+      printf("GTK theme failed for widget type %d, error was %d, state was "
+             "[active=%d,focused=%d,inHover=%d,disabled=%Id]\n",
+             aWidgetType, gLastXError, state.active, state.focused,
+             state.inHover, state.disabled);
+#endif
+      NS_WARNING("GTK theme failed; disabling unsafe widget");
+      SetWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType);
+      // force refresh of the window, because the widget was not
+      // successfully drawn it must be redrawn using the default look
+      RefreshWidgetWindow(aFrame);
+    } else {
+      SetWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
+    }
+  }
+
+  if (needs_thebes_composite) {
+#if 0
+    ctx->Save();
+    ctx->NewPath();
+    ctx->Translate(gfxPoint(aRect.x * t2p,
+                            aRect.y * t2p));
+    nsRefPtr<gfxPattern> pat = new gfxPattern(mThebesSurface);
+    
+    ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0,
+                                                    aRect.width * t2p,
+                                                    aRect.height * t2p),
+                                            pat);
+    ctx->Fill();
+    ctx->Restore();
+#endif
+  } else {
+    ctx->CurrentSurface()->MarkDirty();
+  }
+#endif /* MOZ_CAIRO_GFX */
 
   return NS_OK;
 }

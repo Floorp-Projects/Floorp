@@ -46,8 +46,6 @@ SOFTWARE.
 
 ******************************************************************/
 
-#undef DEBUG
-
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
@@ -62,7 +60,7 @@ SOFTWARE.
 #endif
 
 #undef assert
-#ifdef DEBUG
+#ifdef DEBUG_PIXREGION
 #define assert(expr) {if (!(expr)) \
 		FatalError("Assertion failed file %s, line %d: expr\n", \
 			__FILE__, __LINE__); }
@@ -210,7 +208,7 @@ if (((numRects) < ((reg)->data->size >> 1)) && ((reg)->data->size > 50)) \
 }
 
 
-#ifdef DEBUG
+#ifdef DEBUG_PIXREGION
 int
 pixman_region16_print(rgn)
     pixman_region16_t * rgn;
@@ -304,7 +302,7 @@ pixman_region16_valid(reg)
     }
 }
 
-#endif /* DEBUG */
+#endif /* DEBUG_PIXREGION */
 
 
 /*	Create a new empty region	*/
@@ -1158,7 +1156,7 @@ pixman_region_union_rect(pixman_region16_t *dest, pixman_region16_t *source,
     pixman_region16_t region;
 
     if (!width || !height)
-	return PIXMAN_REGION_STATUS_SUCCESS;
+	return pixman_region_copy (dest, source);
     region.data = NULL;
     region.extents.x1 = x;
     region.extents.y1 = y;

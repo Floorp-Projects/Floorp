@@ -64,7 +64,7 @@ class gfxTextRun;
  * When a path is drawn (stroked or filled), it is filled/stroked with a
  * pattern set by SetPattern, SetColor or SetSource.
  */
-class gfxContext {
+class NS_EXPORT gfxContext {
     THEBES_DECL_REFCOUNTING
 
 public:
@@ -74,8 +74,22 @@ public:
     gfxContext(gfxASurface *surface);
     ~gfxContext();
 
-    // this does not addref
+    /**
+     * Return the current target surface
+     */
     gfxASurface* CurrentSurface();
+
+    /**
+     * Set a new surface to render to; the previous
+     * surface is lost, but the current graphics state
+     * is maintained.
+     */
+    void SetTarget(gfxASurface *surface);
+
+    /**
+     * Return the raw cairo_t object.
+     * XXX this should go away at some point.
+     */
     cairo_t* GetCairo() { return mCairo; }
 
     /**

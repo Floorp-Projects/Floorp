@@ -288,6 +288,13 @@ cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
     return write_png (surface, stream_write_func, &png_closure);
 }				     
 
+static INLINE int
+multiply_alpha (int alpha, int color)
+{
+    int temp = (alpha * color) + 0x80;
+    return ((temp + (temp >> 8)) >> 8);
+}
+
 /* Premultiplies data and converts RGBA bytes => native endian */
 static void
 premultiply_data (png_structp   png,
@@ -298,16 +305,23 @@ premultiply_data (png_structp   png,
 
     for (i = 0; i < row_info->rowbytes; i += 4) {
 	uint8_t *base = &data[i];
-	uint8_t  red = base[0];
-	uint8_t  green = base[1];
-	uint8_t  blue = base[2];
 	uint8_t  alpha = base[3];
 	uint32_t p;
 
-	red = ((unsigned) red * (unsigned) alpha + 127) / 255;
-	green = ((unsigned) green * (unsigned) alpha + 127) / 255;
-	blue = ((unsigned) blue * (unsigned) alpha + 127) / 255;
-	p = (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
+	if (alpha == 0) {
+	    p = 0;
+	} else {
+	    uint8_t  red = base[0];
+	    uint8_t  green = base[1];
+	    uint8_t  blue = base[2];
+
+	    if (alpha != 0xff) {
+		red = multiply_alpha (alpha, red);
+		green = multiply_alpha (alpha, green);
+		blue = multiply_alpha (alpha, blue);
+	    }
+	    p = (alpha << 24) | (red << 16) | (green << 8) | (blue << 0);
+	}
 	memcpy (base, &p, sizeof (uint32_t));
     }
 }

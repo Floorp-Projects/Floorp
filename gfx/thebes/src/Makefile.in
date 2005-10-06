@@ -24,8 +24,19 @@ CPPSRCS	= \
 	$(NULL)
 
 
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)mozcairo.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)mozlibpixman.$(LIB_SUFFIX) \
+	$(NULL)
+
+EXTRA_DSO_LDOPTS += \
+	$(NSPR_LIBS) \
+	$(XPCOM_LIBS)
+
+
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
-CPPSRCS	+= 	gfxWindowsSurface.cpp
+CPPSRCS	+= 	gfxWindowsFonts.cpp \
+		gfxWindowsSurface.cpp
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
@@ -36,14 +47,25 @@ ifdef MOZ_ENABLE_GLITZ
 REQUIRES += 	glitz
 CPPSRCS +=	gfxGlitzSurface.cpp
 
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitz.$(LIB_SUFFIX)
+
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
 REQUIRES +=	glitzglx
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)mozglitzglx.$(LIB_SUFFIX)
 endif
 endif
 
-FORCE_STATIC_LIB = 1
-# This library is used by other shared libs in a static build
-FORCE_USE_PIC = 1
+#FORCE_STATIC_LIB = 1
+## This library is used by other shared libs in a static build
+#FORCE_USE_PIC = 1
+
+# Force use of PIC
+FORCE_USE_PIC	= 1 
+
+ifndef MOZ_ENABLE_LIBXUL
+FORCE_SHARED_LIB = 1
+endif
+
 
 include $(topsrcdir)/config/rules.mk
 

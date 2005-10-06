@@ -1,6 +1,6 @@
 /*
  * Copyright © 2004 David Reveman
- * 
+ *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
  * fee, provided that the above copyright notice appear in all copies
@@ -12,11 +12,11 @@
  * software for any purpose. It is provided "as is" without express or
  * implied warranty.
  *
- * DAVID REVEMAN DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, 
+ * DAVID REVEMAN DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
  * INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
  * NO EVENT SHALL DAVID REVEMAN BE LIABLE FOR ANY SPECIAL, INDIRECT OR
  * CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
- * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, 
+ * OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
  * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
  * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
@@ -42,28 +42,28 @@ glitz_agl_init (void);
 
 void
 glitz_agl_fini (void);
-  
-  
+
+
 /* glitz_agl_format.c */
 
 glitz_drawable_format_t *
 glitz_agl_find_drawable_format (unsigned long                 mask,
-                                const glitz_drawable_format_t *templ,
-                                int                           count);
-  
+				const glitz_drawable_format_t *templ,
+				int                           count);
+
 
 /* glitz_agl_drawable.c */
 
 glitz_drawable_t *
 glitz_agl_create_drawable_for_window (glitz_drawable_format_t *format,
-                                      WindowRef               window,
-                                      unsigned int            width,
-                                      unsigned int            height);
+				      WindowRef               window,
+				      unsigned int            width,
+				      unsigned int            height);
 
 glitz_drawable_t *
 glitz_agl_create_pbuffer_drawable (glitz_drawable_format_t *format,
-                                   unsigned int            width,
-                                   unsigned int            height);
+				   unsigned int            width,
+				   unsigned int            height);
 
 
 #if defined(__cplusplus) || defined(c_plusplus)

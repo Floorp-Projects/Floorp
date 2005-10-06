@@ -1,5 +1,5 @@
 /*
- * $Id: fbpict.c,v 1.1 2005/08/20 05:34:02 vladimir%pobox.com Exp $
+ * $Id: fbpict.c,v 1.4 2006/01/18 22:15:25 vladimir%pobox.com Exp $
  *
  * Copyright © 2000 SuSE, Inc.
  *
@@ -119,30 +119,29 @@ fbIn24 (CARD32 x, CARD8 y)
 	}
 
 #if IMAGE_BYTE_ORDER == LSBFirst
-	#define setupPackedReader(count,temp,where,workingWhere,workingVal) count=(long)where; \
+#	define setupPackedReader(count,temp,where,workingWhere,workingVal) count=(long)where; \
 					temp=count&3; \
 					where-=temp; \
 					workingWhere=(CARD32 *)where; \
 					workingVal=*workingWhere++; \
 					count=4-temp; \
 					workingVal>>=(8*temp)
-	#define readPacked(where,x,y,z) {if(!(x)) { (x)=4; y=*z++; } where=(y)&0xff; (y)>>=8; (x)--;}
-	#define readPackedSource(where) readPacked(where,ws,workingSource,wsrc)
-	#define readPackedDest(where) readPacked(where,wd,workingiDest,widst)
-	#define writePacked(what) workingoDest>>=8; workingoDest|=(what<<24); ww--; if(!ww) { ww=4; *wodst++=workingoDest; }
+#	define readPacked(where,x,y,z) {if(!(x)) { (x)=4; y=*z++; } where=(y)&0xff; (y)>>=8; (x)--;}
+#	define readPackedSource(where) readPacked(where,ws,workingSource,wsrc)
+#	define readPackedDest(where) readPacked(where,wd,workingiDest,widst)
+#	define writePacked(what) workingoDest>>=8; workingoDest|=(what<<24); ww--; if(!ww) { ww=4; *wodst++=workingoDest; }
 #else
-	#warning "I havn't tested fbCompositeTrans_0888xnx0888() on big endian yet!"
-	#define setupPackedReader(count,temp,where,workingWhere,workingVal) count=(long)where; \
+#	define setupPackedReader(count,temp,where,workingWhere,workingVal) count=(long)where; \
 					temp=count&3; \
 					where-=temp; \
 					workingWhere=(CARD32 *)where; \
 					workingVal=*workingWhere++; \
 					count=4-temp; \
 					workingVal<<=(8*temp)
-	#define readPacked(where,x,y,z) {if(!(x)) { (x)=4; y=*z++; } where=(y)>>24; (y)<<=8; (x)--;}
-	#define readPackedSource(where) readPacked(where,ws,workingSource,wsrc)
-	#define readPackedDest(where) readPacked(where,wd,workingiDest,widst)
-	#define writePacked(what) workingoDest<<=8; workingoDest|=what; ww--; if(!ww) { ww=4; *wodst++=workingoDest; }
+#	define readPacked(where,x,y,z) {if(!(x)) { (x)=4; y=*z++; } where=(y)>>24; (y)<<=8; (x)--;}
+#	define readPackedSource(where) readPacked(where,ws,workingSource,wsrc)
+#	define readPackedDest(where) readPacked(where,wd,workingiDest,widst)
+#	define writePacked(what) workingoDest<<=8; workingoDest|=what; ww--; if(!ww) { ww=4; *wodst++=workingoDest; }
 #endif
 /*
  * Naming convention:
@@ -170,7 +169,7 @@ fbCompositeSolidMask_nx8x8888 (pixman_operator_t   op,
     FbStride	dstStride, maskStride;
     CARD16	w;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     dstMask = FbFullMask (pDst->pDrawable->depth);
     srca = src >> 24;
@@ -229,7 +228,7 @@ fbCompositeSolidMask_nx8888x8888C (pixman_operator_t   op,
     CARD16	w;
     CARD32	m, n, o, p;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     dstMask = FbFullMask (pDst->pDrawable->depth);
     srca = src >> 24;
@@ -303,7 +302,7 @@ fbCompositeSolidMask_nx8x0888 (pixman_operator_t   op,
     CARD16	w;
 	CARD32 rs,gs,bs,rd,gd,bd;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     srca = src >> 24;
     srcia = 255-srca;
@@ -399,7 +398,7 @@ fbCompositeSolidMask_nx8x0565 (pixman_operator_t      op,
     FbStride	dstStride, maskStride;
     CARD16	w,src16;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     if (src == 0)
 	return;
@@ -477,7 +476,7 @@ fbCompositeSolidMask_nx8888x0565 (pixman_operator_t      op,
     FbStride	dstStride, maskStride;
     CARD16	w, src16;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     if (src == 0)
 	return;
@@ -556,7 +555,7 @@ fbCompositeSolidMask_nx8888x0565C (pixman_operator_t      op,
     CARD16	w;
     CARD32	m, n, o;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     srca = src >> 24;
     if (src == 0)
@@ -927,7 +926,7 @@ fbCompositeSolidMask_nx1xn (pixman_operator_t   op,
     int		maskXoff, maskYoff;
     FbBits	src;
 
-    fbComposeGetSolid(pSrc, src);
+    fbComposeGetSolid(pSrc, pDst, src);
 
     if ((src & 0xff000000) != 0xff000000)
     {
@@ -1009,7 +1008,7 @@ fbCompositeTrans_0565xnx0565(pixman_operator_t      op,
     CARD16	s_16, d_16;
     CARD32	s_32, d_32;
 
-    fbComposeGetSolid (pMask, mask);
+    fbComposeGetSolid (pMask, pDst, mask);
     maskAlpha = mask >> 27;
 
     if (!maskAlpha)
@@ -1111,7 +1110,7 @@ fbCompositeTrans_0888xnx0888(pixman_operator_t      op,
     FbBits	mask;
     CARD16	maskAlpha,maskiAlpha;
 
-    fbComposeGetSolid (pMask, mask);
+    fbComposeGetSolid (pMask, pDst, mask);
     maskAlpha = mask >> 24;
 	maskiAlpha= 255-maskAlpha;
 
@@ -1361,7 +1360,7 @@ pixman_composite (pixman_operator_t	op,
     pixman_region16_t	    *region;
     int		    n;
     pixman_box16_t    *pbox;
-    CompositeFunc   func = 0;
+    CompositeFunc   func = NULL;
     Bool	    srcRepeat = pSrc->pDrawable && pSrc->repeat == RepeatNormal;
     Bool	    maskRepeat = FALSE;
     Bool	    srcTransform = pSrc->transform != 0;
@@ -1416,10 +1415,9 @@ pixman_composite (pixman_operator_t	op,
         && !maskAlphaMap && !srcAlphaMap && !dstAlphaMap
 #ifdef PIXMAN_CONVOLUTION
         && (pSrc->filter != PictFilterConvolution)
-        && (!pMask || pMask->filter != PictFilterConvolution))
-#else
-        && !pMask)
+        && (!pMask || pMask->filter != PictFilterConvolution)
 #endif
+        )
     switch (op) {
     case PIXMAN_OPERATOR_OVER:
 	if (pMask)
@@ -1694,7 +1692,12 @@ pixman_composite (pixman_operator_t	op,
 		    switch (pDst->format_code) {
 		    case PICT_a8r8g8b8:
 		    case PICT_x8r8g8b8:
-			func = fbCompositeSrc_8888x8888;
+#ifdef USE_MMX
+			if (fbHaveMMX())
+			    func = fbCompositeSrc_8888x8888mmx;
+			else
+#endif
+			    func = fbCompositeSrc_8888x8888;
 			break;
 		    case PICT_r8g8b8:
 			func = fbCompositeSrc_8888x0888;
@@ -1708,7 +1711,12 @@ pixman_composite (pixman_operator_t	op,
 		    switch (pDst->format_code) {
 		    case PICT_a8b8g8r8:
 		    case PICT_x8b8g8r8:
-			func = fbCompositeSrc_8888x8888;
+#ifdef USE_MMX
+			if (fbHaveMMX())
+			    func = fbCompositeSrc_8888x8888mmx;
+			else
+#endif
+			    func = fbCompositeSrc_8888x8888;
 			break;
 		    case PICT_b8g8r8:
 			func = fbCompositeSrc_8888x0888;
@@ -1901,4 +1909,121 @@ pixman_composite (pixman_operator_t	op,
     pixman_region_destroy (region);
 }
 slim_hidden_def(pixman_composite);
+
+/* The CPU detection code needs to be in a file not compiled with
+ * "-mmmx -msse", as gcc would generate CMOV instructions otherwise
+ * that would lead to SIGILL instructions on old CPUs that don't have
+ * it.
+ */
+#if defined(USE_MMX) && !defined(__amd64__) && !defined(__x86_64__)
+
+enum CPUFeatures {
+    NoFeatures = 0,
+    MMX = 0x1,
+    MMX_Extensions = 0x2, 
+    SSE = 0x6,
+    SSE2 = 0x8,
+    CMOV = 0x10
+};
+
+static unsigned int detectCPUFeatures(void) {
+    unsigned int result;
+    char vendor[13];
+    vendor[0] = 0;
+    vendor[12] = 0;
+    /* see p. 118 of amd64 instruction set manual Vol3 */
+    /* We need to be careful about the handling of %ebx and
+     * %esp here. We can't declare either one as clobbered
+     * since they are special registers (%ebx is the "PIC
+     * register" holding an offset to global data, %esp the
+     * stack pointer), so we need to make sure they have their
+     * original values when we access the output operands.
+     */
+    __asm__ ("pushf\n"
+             "pop %%eax\n"
+             "mov %%eax, %%ecx\n"
+             "xor $0x00200000, %%eax\n"
+             "push %%eax\n"
+             "popf\n"
+             "pushf\n"
+             "pop %%eax\n"
+             "mov $0x0, %%edx\n"
+             "xor %%ecx, %%eax\n"
+             "jz 1f\n"
+
+             "mov $0x00000000, %%eax\n"
+	     "push %%ebx\n"
+             "cpuid\n"
+             "mov %%ebx, %%eax\n"
+	     "pop %%ebx\n"
+             "mov %%eax, %1\n"
+             "mov %%edx, %2\n"
+             "mov %%ecx, %3\n"
+             "mov $0x00000001, %%eax\n"
+	     "push %%ebx\n"
+             "cpuid\n"
+	     "pop %%ebx\n"
+             "1:\n"
+             "mov %%edx, %0\n"
+             : "=r" (result), 
+               "=m" (vendor[0]), 
+               "=m" (vendor[4]), 
+               "=m" (vendor[8])
+             :
+             : "%eax", "%ecx", "%edx"
+        );
+
+    unsigned int features = 0;
+    if (result) {
+        /* result now contains the standard feature bits */
+        if (result & (1 << 15))
+            features |= CMOV;
+        if (result & (1 << 23))
+            features |= MMX;
+        if (result & (1 << 25))
+            features |= SSE;
+        if (result & (1 << 26))
+            features |= SSE2;
+        if ((result & MMX) && !(result & SSE) && (strcmp(vendor, "AuthenticAMD") == 0)) {
+            /* check for AMD MMX extensions */
+
+            unsigned int result;            
+            __asm__("push %%ebx\n"
+                    "mov $0x80000000, %%eax\n"
+                    "cpuid\n"
+                    "xor %%edx, %%edx\n"
+                    "cmp $0x1, %%eax\n"
+                    "jge 1f\n"
+                    "mov $0x80000001, %%eax\n"
+                    "cpuid\n"
+                    "1:\n"
+                    "pop %%ebx\n"
+                    "mov %%edx, %0\n"
+                    : "=r" (result)
+                    :
+                    : "%eax", "%ecx", "%edx"
+                );
+            if (result & (1<<22))
+                features |= MMX_Extensions;
+        }
+    }
+    return features;
+}
+
+Bool
+fbHaveMMX (void)
+{
+    static Bool initialized = FALSE;
+    static Bool mmx_present;
+
+    if (!initialized)
+    {
+        unsigned int features = detectCPUFeatures();
+	mmx_present = (features & (MMX|MMX_Extensions)) == (MMX|MMX_Extensions);
+        initialized = TRUE;
+    }
+    
+    return mmx_present;
+}
+#endif /* USE_MMX && !amd64 */
 #endif /* RENDER */

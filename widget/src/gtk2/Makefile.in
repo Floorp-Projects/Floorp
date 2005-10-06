@@ -73,7 +73,6 @@ REQUIRES	= xpcom \
 
 ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
 REQUIRES += thebes cairo
-EXTRA_DSO_LDOPTS += -lthebes $(MOZ_CAIRO_LIBS)
 endif
 
 CSRCS		= \
@@ -113,6 +112,10 @@ EXTRA_DSO_LDOPTS += \
 		$(XLIBS) \
 		$(MOZ_GTK2_LIBS)
 
+ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
+EXTRA_DSO_LDOPTS += -lthebes
+endif
+
 EXPORTS		= \
                 nsIGdkPixbufImage.h \
 		mozdrawingarea.h \
@@ -132,7 +135,7 @@ CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
 
 DEFINES         += -DUSE_XIM
 
-ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
+ifdef MOZ_ENABLE_CAIRO_GFX
 DEFINES		+= -DCAIRO_GFX
 endif
 

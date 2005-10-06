@@ -101,10 +101,11 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
     mDeviceContext = aContext;
     mWidget = aWidget;
 
-    mDrawingSurface = new nsThebesDrawingSurface();
-    mDrawingSurface->Init(thebesDC, aWidget);
+    mLocalDrawingSurface = new nsThebesDrawingSurface();
+    mLocalDrawingSurface->Init(thebesDC, aWidget);
+    mDrawingSurface = mLocalDrawingSurface;
 
-    mThebes = new gfxContext(mDrawingSurface->GetThebesSurface());
+    mThebes = new gfxContext(mLocalDrawingSurface->GetThebesSurface());
 
     //mThebes->SetColor(gfxRGBA(0.9, 0.0, 0.0, 0.3));
     //mThebes->Paint();
@@ -125,9 +126,10 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIDrawingSurface *aS
     mDeviceContext = aContext;
     mWidget = nsnull;
 
-    mDrawingSurface = (nsThebesDrawingSurface *) cds;
+    mLocalDrawingSurface = (nsThebesDrawingSurface *) cds;
+    mDrawingSurface = mLocalDrawingSurface;
 
-    mThebes = new gfxContext(mDrawingSurface->GetThebesSurface());
+    mThebes = new gfxContext(mLocalDrawingSurface->GetThebesSurface());
 
     //mThebes->SetColor(gfxRGBA(1.0, 1.0, 1.0, 1.0));
     //mThebes->Paint();
@@ -153,9 +155,7 @@ nsThebesRenderingContext::Reset(void)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Reset\n", this));
 
-    nsRefPtr<gfxASurface> surf = mThebes->CurrentSurface();
-
-    mThebes = new gfxContext(surf);
+    mThebes = new gfxContext(mDrawingSurface->GetThebesSurface());
 
     return (CommonInit());
 }
@@ -171,8 +171,14 @@ nsThebesRenderingContext::GetDeviceContext(nsIDeviceContext *& aDeviceContext)
 NS_IMETHODIMP
 nsThebesRenderingContext::SelectOffScreenDrawingSurface(nsIDrawingSurface *aSurface)
 {
-    NS_WARNING("Unimplemented function called");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (aSurface)
+        mDrawingSurface = NS_STATIC_CAST(nsThebesDrawingSurface*, aSurface);
+    else
+        mDrawingSurface = mLocalDrawingSurface;
+
+    mThebes->SetTarget(mDrawingSurface->GetThebesSurface());
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -241,10 +247,11 @@ nsThebesRenderingContext::SetClipRect(const nsRect& aRect,
     //return NS_OK;
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetClipRect [%d,%d,%d,%d] %d\n", this, aRect.x, aRect.y, aRect.width, aRect.height, aCombine));
 
-    if (aCombine == nsClipCombine_kReplace)
+    if (aCombine == nsClipCombine_kReplace) {
         mThebes->ResetClip();
-    else if (aCombine != nsClipCombine_kIntersect)
+    } else if (aCombine != nsClipCombine_kIntersect) {
         NS_WARNING("Unexpected usage of SetClipRect");
+    }
 
     mThebes->NewPath();
     mThebes->Rectangle(GFX_RECT_FROM_TWIPS_RECT(aRect), PR_TRUE);
@@ -300,7 +307,6 @@ nsThebesRenderingContext::SetClipRegion(const nsIRegion& pxRegion,
                                        rects->mRects[i].height),
                                PR_TRUE);
         }
-
         mThebes->Clip();
 
         evilPxRegion->FreeRects (rects);
@@ -508,7 +514,7 @@ nsThebesRenderingContext::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoor
     // we can't draw thick lines with gfx, so we always assume we want pixel-aligned
     // lines if the rendering context is at 1.0 scale
     gfxMatrix savedMatrix = mThebes->CurrentMatrix();
-    if (savedMatrix.GetScaling() == gfxSize(1.0, 1.0)) {
+    if (!savedMatrix.HasNonTranslation()) {
         p0 = mThebes->UserToDevice(p0);
         p1 = mThebes->UserToDevice(p1);
 
@@ -719,8 +725,14 @@ nsThebesRenderingContext::FillPolygon(const nsPoint twPoints[], PRInt32 aNumPoin
 void*
 nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
 {
-    //if (mWidget && aType == NATIVE_GDK_DRAWABLE)
-    //    return mWidget->GetNativeData(NS_NATIVE_WIDGET);
+    if (aType == NATIVE_GDK_DRAWABLE &&
+        !nsThebesDrawingSurface::UseGlitz())
+    {
+        if (mWidget && mDrawingSurface == mLocalDrawingSurface)
+            return mWidget->GetNativeData(NS_NATIVE_WIDGET);
+        else if (mDrawingSurface != mLocalDrawingSurface)
+            return mDrawingSurface->GetNativeWidget();
+    }
     if (aType == NATIVE_THEBES_CONTEXT)
         return mThebes;
     if (aType == NATIVE_CAIRO_CONTEXT)
@@ -784,61 +796,9 @@ nsThebesRenderingContext::DrawNativeWidgetPixmap(void* aSrcSurfaceBlack,
 NS_IMETHODIMP
 nsThebesRenderingContext::UseBackbuffer(PRBool* aUseBackbuffer)
 {
-    *aUseBackbuffer = PR_FALSE;
     *aUseBackbuffer = PR_TRUE;
     return NS_OK;
 }
-
-nsresult nsThebesRenderingContext::AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer, PRBool aCacheBackbuffer, PRUint32 aSurfFlags)
-{
-#if 0
-  nsRect newBounds;
-  nsresult rv = NS_OK;
-
-   if (! aCacheBackbuffer) {
-    newBounds = aRequestedSize;
-  } else {
-    GetDrawingSurfaceSize(aMaxSize, aRequestedSize, newBounds);
-  }
-
-  if ((nsnull == gBackbuffer)
-      || (gBackbufferBounds.width != newBounds.width)
-      || (gBackbufferBounds.height != newBounds.height))
-    {
-      if (gBackbuffer) {
-        //destroy existing DS
-        DestroyDrawingSurface(gBackbuffer);
-        gBackbuffer = nsnull;
-      }
-
-      rv = CreateDrawingSurface(newBounds, aSurfFlags, gBackbuffer);
-      //   printf("Allocating a new drawing surface %d %d\n", newBounds.width, newBounds.height);
-      if (NS_SUCCEEDED(rv)) {
-        gBackbufferBounds = newBounds;
-        SelectOffScreenDrawingSurface(gBackbuffer);
-      } else {
-        gBackbufferBounds.SetRect(0,0,0,0);
-        gBackbuffer = nsnull;
-      }
-    } else {
-      SelectOffScreenDrawingSurface(gBackbuffer);
-
-      float p2t;
-      nsCOMPtr<nsIDeviceContext>  dx;
-      GetDeviceContext(*getter_AddRefs(dx));
-      p2t = dx->DevUnitsToAppUnits();
-      nsRect bounds = aRequestedSize;
-      bounds *= p2t;
-
-      SetClipRect(bounds, nsClipCombine_kReplace);
-    }
-
-  aBackbuffer = gBackbuffer;
-  return rv;
-#endif
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 NS_IMETHODIMP
 nsThebesRenderingContext::GetBackbuffer(const nsRect &aRequestedSize,
@@ -846,16 +806,14 @@ nsThebesRenderingContext::GetBackbuffer(const nsRect &aRequestedSize,
                                         PRBool aForBlending,
                                         nsIDrawingSurface* &aBackbuffer)
 {
-    return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE, aForBlending ? NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS : 0);
-    //NS_WARNING("Unimplemented function called");
-    //return NS_ERROR_NOT_IMPLEMENTED;
+    return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_FALSE,
+                              aForBlending ? NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS : 0);
 }
 
 NS_IMETHODIMP
 nsThebesRenderingContext::ReleaseBackbuffer(void)
 {
-    NS_WARNING("Unimplemented function called");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return DestroyCachedBackbuffer();
 }
 
 NS_IMETHODIMP
@@ -931,29 +889,57 @@ nsThebesRenderingContext::DrawImage(imgIContainer *aImage,
     nsIntRect pxSr;
     pxSr.x = NSToIntRound(FROM_TWIPS(twSrcRect.x));
     pxSr.y = NSToIntRound(FROM_TWIPS(twSrcRect.y));
-    pxSr.width = NSToIntRound(FROM_TWIPS(twSrcRect.XMost())) - pxSr.x;
-    pxSr.height = NSToIntRound(FROM_TWIPS(twSrcRect.YMost())) - pxSr.y;
+    pxSr.width = NSToIntRound(FROM_TWIPS(twSrcRect.width));
+    pxSr.height = NSToIntRound(FROM_TWIPS(twSrcRect.height));
 
     // the dest rect is affected by the current transform; that'll be
     // handled by Image::Draw(), when we actually set up the rectangle.
     nsIntRect pxDr;
     pxDr.x = NSToIntRound(FROM_TWIPS(twDestRect.x));
     pxDr.y = NSToIntRound(FROM_TWIPS(twDestRect.y));
-    pxDr.width = NSToIntRound(FROM_TWIPS(twDestRect.XMost())) - pxDr.x;
-    pxDr.height = NSToIntRound(FROM_TWIPS(twDestRect.YMost())) - pxDr.y;
+    pxDr.width = NSToIntRound(FROM_TWIPS(twDestRect.width));
+    pxDr.height = NSToIntRound(FROM_TWIPS(twDestRect.height));
 
-    if (pxImgFrameRect != pxSr) {
-        double xscale = double(pxDr.width)/pxSr.width;
-        double yscale = double(pxDr.height)/pxSr.height;
+    if (pxImgFrameRect.x > 0) {
+        pxSr.x -= pxImgFrameRect.x;
 
-        nsIntRect pxScaledUpIRect;
-        pxScaledUpIRect.x = NSToCoordRound(pxImgFrameRect.x*xscale);
-        pxScaledUpIRect.y = NSToCoordRound(pxImgFrameRect.y*yscale);
-        pxScaledUpIRect.width = NSToCoordRound(pxImgFrameRect.XMost()*xscale) - pxScaledUpIRect.x;
-        pxScaledUpIRect.height = NSToCoordRound(pxImgFrameRect.YMost()*yscale) - pxScaledUpIRect.y;
+        nscoord scaled_x = pxSr.x;
+        if (pxDr.width != pxSr.width) {
+            PRFloat64 scale_ratio = PRFloat64(pxDr.width) / PRFloat64(pxSr.width);
+            scaled_x = NSToCoordRound(scaled_x * scale_ratio);
+        }
 
-        pxSr.IntersectRect(pxSr, pxImgFrameRect);
-        pxDr.IntersectRect(pxDr, pxScaledUpIRect);
+        if (pxSr.x < 0) {
+            pxDr.x -= scaled_x;
+            pxSr.width += pxSr.x;
+            pxDr.width += scaled_x;
+            if (pxSr.width <= 0 || pxDr.width <= 0)
+                return NS_OK;
+            pxSr.x = 0;
+        } else if (pxSr.x > pxImgFrameRect.width) {
+            return NS_OK;
+        }
+    }
+
+    if (pxImgFrameRect.y > 0) {
+        pxSr.y -= pxImgFrameRect.y;
+
+        nscoord scaled_y = pxSr.y;
+        if (pxDr.height != pxSr.height) {
+            PRFloat64 scale_ratio = PRFloat64(pxDr.height) / PRFloat64(pxSr.height);
+            scaled_y = NSToCoordRound(scaled_y * scale_ratio);
+        }
+
+        if (pxSr.y < 0) {
+            pxDr.y -= scaled_y;
+            pxSr.height += pxSr.y;
+            pxDr.height += scaled_y;
+            if (pxSr.height <= 0 || pxDr.height <= 0)
+                return NS_OK;
+            pxSr.y = 0;
+        } else if (pxSr.y > pxImgFrameRect.height) {
+            return NS_OK;
+        }
     }
 
     return img->Draw(*this, mDrawingSurface,
@@ -1399,6 +1385,40 @@ nsThebesRenderingContext::CopyOffScreenBits(nsIDrawingSurface *aSrcSurf,
                                            const nsRect &aDestBounds,
                                            PRUint32 aCopyFlags)
 {
-    NS_WARNING ("not used");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // there's only one caller of this code, so this implementation is
+    // tailored to that one caller.
+    if (aCopyFlags != NS_COPYBITS_USE_SOURCE_CLIP_REGION)
+        NS_ERROR("CopyOffScreenBits called with unsupported copy flags");
+
+    nsRefPtr<gfxASurface> cursurf = mThebes->CurrentSurface();
+
+    mThebes->Save();
+    mThebes->SetTarget(mLocalDrawingSurface->GetThebesSurface());
+    mThebes->IdentityMatrix();
+
+    mThebes->Translate(gfxPoint(aDestBounds.x, aDestBounds.y));
+
+    // update debugging
+#if 0
+    mThebes->SetColor(gfxRGBA(1, 0, 0, 1));
+    mThebes->NewPath();
+    mThebes->Rectangle(gfxRect(0, 0, aDestBounds.width, aDestBounds.height), PR_TRUE);
+    mThebes->Fill();
+
+    //usleep(400000);
+    //Sleep(4);
+#endif
+
+    mThebes->SetSource(NS_STATIC_CAST(nsThebesDrawingSurface*,aSrcSurf)->GetThebesSurface(),
+                   gfxPoint(FROM_TWIPS(aSrcX), FROM_TWIPS(aSrcY)));
+
+    mThebes->NewPath();
+    mThebes->Rectangle(gfxRect(0, 0, aDestBounds.width, aDestBounds.height), PR_TRUE);
+    mThebes->Fill();
+
+    mThebes->SetTarget(cursurf);
+    mThebes->Restore();
+
+    return NS_OK;
 }
+

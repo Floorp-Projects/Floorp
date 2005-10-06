@@ -41,6 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIRenderingContext.h"
+#include "nsRenderingContextImpl.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIWidget.h"
@@ -59,7 +60,8 @@ class nsIImage;
 
 class nsThebesDrawingSurface;
 
-class nsThebesRenderingContext : public nsIRenderingContext, public nsIThebesRenderingContext
+class nsThebesRenderingContext : public nsIThebesRenderingContext,
+                                 public nsRenderingContextImpl
 {
 public:
     nsThebesRenderingContext();
@@ -242,9 +244,6 @@ public:
 
     void TransformCoord (nscoord *aX, nscoord *aY);
 
-    nsresult AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer, PRBool aCacheBackbuffer, PRUint32 aSurfFlags);
-
-
 protected:
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
     // cached pixels2twips, twips2pixels values
@@ -259,8 +258,15 @@ protected:
     nsLineStyle mLineStyle;
     nscolor mColor;
 
-    nsRefPtr<gfxContext> mThebes;
+    // this is always the local surface
+    nsCOMPtr<nsThebesDrawingSurface> mLocalDrawingSurface;
+
+    // this is the current drawing surface; might be same
+    // as local, or might be offscreen
     nsCOMPtr<nsThebesDrawingSurface> mDrawingSurface;
+
+    // the rendering context
+    nsRefPtr<gfxContext> mThebes;
 
     // for handing out to people
     void UpdateTempTransformMatrix();

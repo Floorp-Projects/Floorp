@@ -83,6 +83,10 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
 		$(NULL)
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)thebes.$(LIB_SUFFIX)
+endif
+
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \

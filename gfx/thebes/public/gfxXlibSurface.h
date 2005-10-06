@@ -44,7 +44,7 @@
 #include <cairo-xlib.h>
 #include <cairo-xlib-xrender.h>
 
-class gfxXlibSurface : public gfxASurface {
+class NS_EXPORT gfxXlibSurface : public gfxASurface {
     THEBES_DECL_ISUPPORTS_INHERITED
 
 public:
@@ -77,9 +77,14 @@ public:
 
     static XRenderPictFormat *FindRenderFormat(Display *dpy, gfxImageFormat format);
 
-protected:
-    PRBool mOwnsPixmap;
+    // take ownership of a passed-in Pixmap, calling XFreePixmap on it
+    // when the gfxXlibSurface is destroyed.
+    void TakePixmap();
 
+protected:
+    // if TakePixmap() was already called on this
+    PRBool mPixmapTaken;
+    
     Display *mDisplay;
     Drawable mDrawable;
 

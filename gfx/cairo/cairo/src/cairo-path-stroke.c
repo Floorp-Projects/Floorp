@@ -42,17 +42,17 @@ typedef struct cairo_stroker {
     cairo_gstate_t *gstate;
     cairo_traps_t *traps;
 
-    int has_current_point;
+    cairo_bool_t has_current_point;
     cairo_point_t current_point;
     cairo_point_t first_point;
 
-    int has_current_face;
+    cairo_bool_t has_current_face;
     cairo_stroke_face_t current_face;
 
-    int has_first_face;
+    cairo_bool_t has_first_face;
     cairo_stroke_face_t first_face;
 
-    int dashed;
+    cairo_bool_t dashed;
     int dash_index;
     int dash_on;
     double dash_remain;
@@ -81,6 +81,12 @@ _cairo_stroker_curve_to (void *closure,
 			 cairo_point_t *d);
 
 static cairo_status_t
+_cairo_stroker_curve_to_dashed (void *closure,
+				cairo_point_t *b,
+				cairo_point_t *c,
+				cairo_point_t *d);
+
+static cairo_status_t
 _cairo_stroker_close_path (void *closure);
 
 static void
@@ -107,7 +113,7 @@ _cairo_stroker_start_dash (cairo_stroker_t *stroker)
 	if (++i == gstate->num_dashes)
 	    i = 0;
     }
-    stroker->dashed = 1;
+    stroker->dashed = TRUE;
     stroker->dash_index = i;
     stroker->dash_on = on;
     stroker->dash_remain = gstate->dash[i] - offset;
@@ -133,14 +139,14 @@ _cairo_stroker_init (cairo_stroker_t *stroker, cairo_gstate_t *gstate, cairo_tra
     stroker->gstate = gstate;
     stroker->traps = traps;
 
-    stroker->has_current_point = 0;
-    stroker->has_current_face = 0;
-    stroker->has_first_face = 0;
+    stroker->has_current_point = FALSE;
+    stroker->has_current_face = FALSE;
+    stroker->has_first_face = FALSE;
 
     if (gstate->dash)
 	_cairo_stroker_start_dash (stroker);
     else
-	stroker->dashed = 0;
+	stroker->dashed = FALSE;
 }
 
 static void
@@ -335,7 +341,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 }
 
 static cairo_status_t
-_cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
+_cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 {
     cairo_status_t	    status;
     cairo_gstate_t	    *gstate = stroker->gstate;
@@ -403,6 +409,54 @@ _cairo_stroker_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
     default:
 	return CAIRO_STATUS_SUCCESS;
     }
+}
+
+static cairo_status_t
+_cairo_stroker_add_leading_cap (cairo_stroker_t     *stroker,
+				cairo_stroke_face_t *face)
+{
+    cairo_stroke_face_t reversed;
+    cairo_point_t t;
+
+    reversed = *face;
+
+    /* The initial cap needs an outward facing vector. Reverse everything */
+    reversed.usr_vector.x = -reversed.usr_vector.x;
+    reversed.usr_vector.y = -reversed.usr_vector.y;
+    reversed.dev_vector.dx = -reversed.dev_vector.dx;
+    reversed.dev_vector.dy = -reversed.dev_vector.dy;
+    t = reversed.cw;
+    reversed.cw = reversed.ccw;
+    reversed.ccw = t;
+
+    return _cairo_stroker_add_cap (stroker, &reversed);
+}
+
+static cairo_status_t
+_cairo_stroker_add_trailing_cap (cairo_stroker_t     *stroker,
+				 cairo_stroke_face_t *face)
+{
+    return _cairo_stroker_add_cap (stroker, face);
+}
+
+static cairo_status_t
+_cairo_stroker_add_caps (cairo_stroker_t *stroker)
+{
+    cairo_status_t status;
+
+    if (stroker->has_first_face) {
+	status = _cairo_stroker_add_leading_cap (stroker, &stroker->first_face);
+	if (status)
+	    return status;
+    }
+
+    if (stroker->has_current_face) {
+	status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
+	if (status)
+	    return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -527,7 +581,12 @@ _cairo_stroker_add_sub_edge (cairo_stroker_t *stroker, cairo_point_t *p1, cairo_
 static cairo_status_t
 _cairo_stroker_move_to (void *closure, cairo_point_t *point)
 {
+    cairo_status_t status;
     cairo_stroker_t *stroker = closure;
+
+    status = _cairo_stroker_add_caps (stroker);
+    if (status)
+	return status;
 
     stroker->first_point = *point;
     stroker->current_point = *point;
@@ -633,7 +692,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		/*
 		 * Not first dash in this segment, cap start
 		 */
-		status = _cairo_stroker_cap (stroker, &sub_start);
+		status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
 		if (status)
 		    return status;
 	    } else {
@@ -651,7 +710,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 			stroker->first_face = sub_start;
 			stroker->has_first_face = 1;
 		    } else {
-			status = _cairo_stroker_cap (stroker, &sub_start);
+			status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
 			if (status)
 			    return status;
 		    }
@@ -661,7 +720,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		/*
 		 * Cap if not at end of segment
 		 */
-		status = _cairo_stroker_cap (stroker, &sub_end);
+		status = _cairo_stroker_add_trailing_cap (stroker, &sub_end);
 		if (status)
 		    return status;
 	    } else {
@@ -679,7 +738,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	     */
 	    if (first) {
 		if (stroker->has_current_face) {
-		    status = _cairo_stroker_cap (stroker, &stroker->current_face);
+		    status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
 		    if (status)
 			return status;
 		}
@@ -767,6 +826,74 @@ _cairo_stroker_curve_to (void *closure,
     return status;
 }
 
+/* We're using two different algorithms here for dashed and un-dashed
+ * splines. The dashed alogorithm uses the existing line dashing
+ * code. It's linear in path length, but gets subtly wrong results for
+ * self-intersecting paths (an outstanding but for self-intersecting
+ * non-curved paths as well). The non-dashed algorithm tessellates a
+ * single polygon for the whole curve. It handles the
+ * self-intersecting problem, but it's (unsurprisingly) not O(n) and
+ * more significantly, it doesn't yet handle dashes.
+ *
+ * The only reason we're doing split algortihms here is to
+ * minimize the impact of fixing the splines-aren't-dashed bug for
+ * 1.0.2. Long-term the right answer is to rewrite the whole pile
+ * of stroking code so that the entire result is computed as a
+ * single polygon that is tessellated, (that is, stroking can be
+ * built on top of filling). That will solve the self-intersecting
+ * problem. It will also increase the importance of implementing
+ * an efficient and more robust tessellator.
+ */
+static cairo_status_t
+_cairo_stroker_curve_to_dashed (void *closure,
+				cairo_point_t *b,
+				cairo_point_t *c,
+				cairo_point_t *d)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_stroker_t *stroker = closure;
+    cairo_gstate_t *gstate = stroker->gstate;
+    cairo_spline_t spline;
+    cairo_point_t *a = &stroker->current_point;
+    cairo_line_join_t line_join_save;
+    int i;
+
+    status = _cairo_spline_init (&spline, a, b, c, d);
+    if (status == CAIRO_INT_STATUS_DEGENERATE)
+	return CAIRO_STATUS_SUCCESS;
+
+    /* If the line width is so small that the pen is reduced to a
+       single point, then we have nothing to do. */
+    if (gstate->pen_regular.num_vertices <= 1)
+	goto CLEANUP_SPLINE;
+
+    /* Temporarily modify the gstate to use round joins to guarantee
+     * smooth stroked curves. */
+    line_join_save = gstate->line_join;
+    gstate->line_join = CAIRO_LINE_JOIN_ROUND;
+
+    status = _cairo_spline_decompose (&spline, gstate->tolerance);
+    if (status)
+	goto CLEANUP_GSTATE;
+
+    for (i = 1; i < spline.num_points; i++) {
+	if (stroker->dashed)
+	    status = _cairo_stroker_line_to_dashed (stroker, &spline.points[i]);
+	else
+	    status = _cairo_stroker_line_to (stroker, &spline.points[i]);
+	if (status)
+	    break;
+    }
+
+  CLEANUP_GSTATE:
+    gstate->line_join = line_join_save;
+
+  CLEANUP_SPLINE:
+    _cairo_spline_fini (&spline);
+
+    return status;
+}
+
 static cairo_status_t
 _cairo_stroker_close_path (void *closure)
 {
@@ -810,7 +937,7 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t *path,
 					      CAIRO_DIRECTION_FORWARD,
 					      _cairo_stroker_move_to,
 					      _cairo_stroker_line_to_dashed,
-					      _cairo_stroker_curve_to,
+					      _cairo_stroker_curve_to_dashed,
 					      _cairo_stroker_close_path,
 					      &stroker);
     else
@@ -824,26 +951,7 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t *path,
     if (status)
 	goto BAIL;
 
-    if (stroker.has_first_face) {
-	cairo_point_t t;
-	/* The initial cap needs an outward facing vector. Reverse everything */
-	stroker.first_face.usr_vector.x = -stroker.first_face.usr_vector.x;
-	stroker.first_face.usr_vector.y = -stroker.first_face.usr_vector.y;
-	stroker.first_face.dev_vector.dx = -stroker.first_face.dev_vector.dx;
-	stroker.first_face.dev_vector.dy = -stroker.first_face.dev_vector.dy;
-	t = stroker.first_face.cw;
-	stroker.first_face.cw = stroker.first_face.ccw;
-	stroker.first_face.ccw = t;
-	status = _cairo_stroker_cap (&stroker, &stroker.first_face);
-	if (status)
-	    goto BAIL;
-    }
-
-    if (stroker.has_current_face) {
-	status = _cairo_stroker_cap (&stroker, &stroker.current_face);
-	if (status)
-	    goto BAIL;
-    }
+    status = _cairo_stroker_add_caps (&stroker);
 
 BAIL:
     _cairo_stroker_fini (&stroker);

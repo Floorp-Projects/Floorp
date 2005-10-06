@@ -109,12 +109,13 @@ pixman_fill_rect_8bpp (pixman_image_t *dst,
 		       uint16_t	       height,
 		       pixman_bits_t  *pixel)
 {
+    int value = (int) (*pixel);
     char *line;
 
     line = (char *)dst->pixels->data +
 	xDst + yDst * dst->pixels->stride;
     while (height-- > 0) {
-	memset (line, *(char *)pixel, width);
+	memset (line, value, width);
 	line += dst->pixels->stride;
     }
 }
@@ -349,7 +350,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 
 	while (nRects--)
 	{
-	    pixman_composite (op, src, 0, dst, 0, 0, 0, 0, 
+	    pixman_composite (op, src, NULL, dst, 0, 0, 0, 0, 
 			 rects->x,
 			 rects->y,
 			 rects->width,

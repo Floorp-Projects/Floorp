@@ -69,6 +69,10 @@ REQUIRES	= xpcom \
 			imglib2 \
 			$(NULL)
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+REQUIRES += thebes cairo
+endif
+
 CPPSRCS		= \
 	L_Ienumfe.cpp  \
 	nsWindow.cpp         \
@@ -116,11 +120,6 @@ ENABLE_CXX_EXCEPTIONS = 1
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-
-ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
-DEFINES		+= -DCAIRO_GFX
-endif
 
 # Silly case-insensitive fs
 export:: IENUMFE.CPP

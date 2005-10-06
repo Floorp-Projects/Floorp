@@ -42,6 +42,8 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+VISIBILITY_FLAGS =
+
 MODULE          = glitzglx
 LIBRARY_NAME    = mozglitzglx
 LIBXUL_LIBRARY = 1

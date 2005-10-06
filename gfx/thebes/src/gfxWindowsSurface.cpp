@@ -50,21 +50,13 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, unsigned long width, unsigned long 
 {
     mDC = CreateCompatibleDC(dc);
 
-    HBITMAP tbits = nsnull;
-
-    if (width > 0 && height > 0)
-        tbits = CreateCompatibleBitmap(dc, width, height);
-    else
-        tbits = CreateCompatibleBitmap(dc, 2, 2);
+    // Creating with width or height of 0 will create a
+    // 1x1 monotone bitmap, which isn't what we want
+    HBITMAP tbits = CreateCompatibleBitmap(dc, PR_MAX(2, width), PR_MAX(2, height));
 
     mOrigBitmap = (HBITMAP)SelectObject(mDC, tbits);
 
     Init(cairo_win32_surface_create(mDC));
-}
-
-gfxWindowsSurface::gfxWindowsSurface(unsigned long width, unsigned long height)
-{
-    //    Init(cairo_win32_surface_create(dc));
 }
 
 gfxWindowsSurface::~gfxWindowsSurface()

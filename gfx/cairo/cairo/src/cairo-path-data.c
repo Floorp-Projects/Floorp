@@ -367,8 +367,8 @@ _cairo_path_data_create_real (cairo_path_fixed_t *path_fixed,
 
 /**
  * cairo_path_destroy:
- * @path: a path to destroy which was previously returned by either
- * cairo_copy_path or cairo_copy_path_flat.
+ * @path: a path previously returned by either cairo_copy_path() or
+ * cairo_copy_path_flat().
  * 
  * Immediately releases all memory associated with @path. After a call
  * to cairo_path_destroy() the @path pointer is no longer valid and
