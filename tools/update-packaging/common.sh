@@ -85,5 +85,8 @@ append_remove_instructions() {
 # Skip the channel-prefs.js file as it should not be included in any
 # generated MAR files (see bug 306077).
 list_files() {
-  find . -type f ! -name "channel-prefs.js" | sed 's/\.\/\(.*\)/"\1"/'
+  find . -type f \
+    ! -name "channel-prefs.js" \
+    ! -name "update.manifest" \
+    | sed 's/\.\/\(.*\)/"\1"/'
 }
