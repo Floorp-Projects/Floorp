@@ -382,14 +382,12 @@ nsCanvasRenderingContext2D::StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhi
 
         return PR_TRUE;
     } else if (paramType == nsIDataType::VTYPE_WSTRING_SIZE_IS) {
-        PRUint32 sz;
-        PRUnichar* str = nsnull;
+        nsAutoString str;
 
-        rv = aStyle->GetAsWStringWithSize(&sz, &str);
+        rv = aStyle->GetAsAString(str);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = mCSSParser->ParseColorString(nsString(str, sz), nsnull, 0, PR_TRUE, &color);
-        nsMemory::Free(str);
+        rv = mCSSParser->ParseColorString(str, nsnull, 0, PR_TRUE, &color);
         if (NS_FAILED(rv))
             return PR_FALSE;
 
