@@ -383,6 +383,7 @@ public:
   virtual PRBool DeleteShell(nsIPresShell* aShell);
   virtual PRUint32 GetNumberOfShells() const;
   virtual nsIPresShell *GetShellAt(PRUint32 aIndex) const;
+  virtual void SetShellsHidden(PRBool aHide);
 
   virtual nsresult SetSubDocumentFor(nsIContent *aContent,
                                      nsIDocument* aSubDoc);
@@ -698,8 +699,6 @@ protected:
 
   PLDHashTable *mSubDocuments;
 
-  nsSmallVoidArray mPresShells;
-
   // Array of owning references to all children
   nsAttrAndChildArray mChildren;
 
@@ -734,6 +733,8 @@ protected:
   // True if the document "page" is not hidden
   PRPackedBool mVisible:1;
 
+  PRPackedBool mShellsAreHidden:1;
+
   PRUint8 mXMLDeclarationBits;
 
   PRUint8 mDefaultElementType;
@@ -761,6 +762,8 @@ private:
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
+
+  nsSmallVoidArray mPresShells;
 
   nsXPathDocumentTearoff* mXPathDocument;
 
