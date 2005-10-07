@@ -51,6 +51,7 @@
 #include "plbase64.h"
 #include "nsIAddrBookSession.h"
 #include "nsIStringBundle.h"
+#include "nsIAddressBook.h"
 #include "plstr.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFService.h"
@@ -65,61 +66,59 @@
 
 const char sAddrbookProperties[] = "chrome://messenger/locale/addressbook/addressBook.properties";
 
-struct AppendItem;
-
-typedef nsresult (AppendCallback) (nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLConv *aConv, nsString &aResult);
+enum EAppendType {
+  eAppendLine,
+  eAppendLabel,
+  eAppendCityStateZip
+};
 
 struct AppendItem {
   const char *mColumn;
   const char *mLabel;
-  AppendCallback *mCallback;
+  EAppendType mAppendType;
 };
 
-nsresult AppendLine(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLConv *aConv, nsString &aResult);
-nsresult AppendLabel(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLConv *aConv, nsString &aResult);
-nsresult AppendCityStateZip(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLConv *aConv, nsString &aResult);
-
-static AppendItem NAME_ATTRS_ARRAY[] = { 
-	{kDisplayNameColumn, "propertyDisplayName", AppendLabel},   
-	{kNicknameColumn, "propertyNickname", AppendLabel},
-	{kPriEmailColumn, "", AppendLine},       
-	{k2ndEmailColumn, "", AppendLine},
-  {kAimScreenNameColumn, "propertyScreenName", AppendLabel},
+static const AppendItem NAME_ATTRS_ARRAY[] = { 
+	{kDisplayNameColumn, "propertyDisplayName", eAppendLabel},   
+	{kNicknameColumn, "propertyNickname", eAppendLabel},
+	{kPriEmailColumn, "", eAppendLine},       
+	{k2ndEmailColumn, "", eAppendLine},
+  {kAimScreenNameColumn, "propertyScreenName", eAppendLabel},
 };
 
-static AppendItem PHONE_ATTRS_ARRAY[] = { 
-	{kWorkPhoneColumn, "propertyWork", AppendLabel},   
-	{kHomePhoneColumn, "propertyHome", AppendLabel},
-	{kFaxColumn, "propertyFax", AppendLabel},       
-	{kPagerColumn, "propertyPager", AppendLabel},
-	{kCellularColumn, "propertyCellular", AppendLabel}
+static const AppendItem PHONE_ATTRS_ARRAY[] = { 
+	{kWorkPhoneColumn, "propertyWork", eAppendLabel},   
+	{kHomePhoneColumn, "propertyHome", eAppendLabel},
+	{kFaxColumn, "propertyFax", eAppendLabel},       
+	{kPagerColumn, "propertyPager", eAppendLabel},
+	{kCellularColumn, "propertyCellular", eAppendLabel}
 };
 
-static AppendItem HOME_ATTRS_ARRAY[] = { 
-	{kHomeAddressColumn, "", AppendLine},   
-	{kHomeAddress2Column, "", AppendLine},
-	{kHomeCityColumn, "", AppendCityStateZip},       
-	{kHomeCountryColumn, "", AppendLine},
-	{kWebPage2Column, "", AppendLine}
+static const AppendItem HOME_ATTRS_ARRAY[] = { 
+	{kHomeAddressColumn, "", eAppendLine},   
+	{kHomeAddress2Column, "", eAppendLine},
+	{kHomeCityColumn, "", eAppendCityStateZip},       
+	{kHomeCountryColumn, "", eAppendLine},
+	{kWebPage2Column, "", eAppendLine}
 };
 
-static AppendItem WORK_ATTRS_ARRAY[] = { 
-	{kJobTitleColumn, "", AppendLine},   
-	{kDepartmentColumn, "", AppendLine},
-	{kCompanyColumn, "", AppendLine},
-	{kWorkAddressColumn, "", AppendLine},   
-	{kWorkAddress2Column, "", AppendLine},
-	{kWorkCityColumn, "", AppendCityStateZip},       
-	{kWorkCountryColumn, "", AppendLine},
-	{kWebPage1Column, "", AppendLine}
+static const AppendItem WORK_ATTRS_ARRAY[] = { 
+	{kJobTitleColumn, "", eAppendLine},   
+	{kDepartmentColumn, "", eAppendLine},
+	{kCompanyColumn, "", eAppendLine},
+	{kWorkAddressColumn, "", eAppendLine},   
+	{kWorkAddress2Column, "", eAppendLine},
+	{kWorkCityColumn, "", eAppendCityStateZip},       
+	{kWorkCountryColumn, "", eAppendLine},
+	{kWebPage1Column, "", eAppendLine}
 };
 
-static AppendItem CUSTOM_ATTRS_ARRAY[] = { 
-	{kCustom1Column, "propertyCustom1", AppendLabel},   
-	{kCustom2Column, "propertyCustom2", AppendLabel},
-	{kCustom3Column, "propertyCustom3", AppendLabel},       
-	{kCustom4Column, "propertyCustom4", AppendLabel},
-	{kNotesColumn, "", AppendLine}
+static const AppendItem CUSTOM_ATTRS_ARRAY[] = { 
+	{kCustom1Column, "propertyCustom1", eAppendLabel},   
+	{kCustom2Column, "propertyCustom2", eAppendLabel},
+	{kCustom3Column, "propertyCustom3", eAppendLabel},       
+	{kCustom4Column, "propertyCustom4", eAppendLabel},
+	{kNotesColumn, "", eAppendLine}
 };
 
 nsAbCardProperty::nsAbCardProperty(void)
@@ -1652,18 +1651,18 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToXMLPrintData(PRUnichar **aXMLSubstr)
   xmlStr.AppendLiteral("</GeneratedName>\n"
                        "<table><tr><td>");
 
-  rv = AppendSection(NAME_ATTRS_ARRAY, sizeof(NAME_ATTRS_ARRAY)/sizeof(AppendItem), EmptyString(), conv, xmlStr);
+  rv = AppendSection(NAME_ATTRS_ARRAY, sizeof(NAME_ATTRS_ARRAY)/sizeof(AppendItem), EmptyString(), bundle, conv, xmlStr);
 
   xmlStr.AppendLiteral("</td></tr><tr><td>");
 
-  rv = AppendSection(PHONE_ATTRS_ARRAY, sizeof(PHONE_ATTRS_ARRAY)/sizeof(AppendItem), NS_LITERAL_STRING("headingPhone"), conv, xmlStr);
+  rv = AppendSection(PHONE_ATTRS_ARRAY, sizeof(PHONE_ATTRS_ARRAY)/sizeof(AppendItem), NS_LITERAL_STRING("headingPhone"), bundle, conv, xmlStr);
 
   if (!m_IsMailList) {
-    rv = AppendSection(CUSTOM_ATTRS_ARRAY, sizeof(CUSTOM_ATTRS_ARRAY)/sizeof(AppendItem), NS_LITERAL_STRING("headingOther"), conv, xmlStr);
+    rv = AppendSection(CUSTOM_ATTRS_ARRAY, sizeof(CUSTOM_ATTRS_ARRAY)/sizeof(AppendItem), NS_LITERAL_STRING("headingOther"), bundle, conv, xmlStr);
   }
   else {
     rv = AppendSection(CUSTOM_ATTRS_ARRAY, sizeof(CUSTOM_ATTRS_ARRAY)/sizeof(AppendItem), NS_LITERAL_STRING("headingDescription"),
-         conv, xmlStr);
+         bundle, conv, xmlStr);
     
     xmlStr.AppendLiteral("<section><sectiontitle>");
 
@@ -1726,8 +1725,8 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToXMLPrintData(PRUnichar **aXMLSubstr)
 
   xmlStr.AppendLiteral("</td><td>");
 
-  rv = AppendSection(HOME_ATTRS_ARRAY, sizeof(HOME_ATTRS_ARRAY)/sizeof(AppendItem), NS_LITERAL_STRING("headingHome"), conv, xmlStr);
-  rv = AppendSection(WORK_ATTRS_ARRAY, sizeof(WORK_ATTRS_ARRAY)/sizeof(AppendItem), NS_LITERAL_STRING("headingWork"), conv, xmlStr);
+  rv = AppendSection(HOME_ATTRS_ARRAY, sizeof(HOME_ATTRS_ARRAY)/sizeof(AppendItem), NS_LITERAL_STRING("headingHome"), bundle, conv, xmlStr);
+  rv = AppendSection(WORK_ATTRS_ARRAY, sizeof(WORK_ATTRS_ARRAY)/sizeof(AppendItem), NS_LITERAL_STRING("headingWork"), bundle, conv, xmlStr);
   
   xmlStr.AppendLiteral("</td></tr></table>");
 
@@ -1765,10 +1764,12 @@ nsresult nsAbCardProperty::AppendData(const char *aAttrName, mozITXTToHTMLConv *
   return NS_OK;
 }
 
-nsresult nsAbCardProperty::AppendSection(AppendItem *aArray, PRInt16 aCount, const nsAFlatString& aHeading,
-                                         mozITXTToHTMLConv *aConv, nsString &aResult)
+nsresult nsAbCardProperty::AppendSection(const AppendItem *aArray, PRInt16 aCount, const nsAFlatString& aHeading,
+                                         nsIStringBundle *aBundle,
+                                         mozITXTToHTMLConv *aConv,
+                                         nsString &aResult)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   aResult.AppendLiteral("<section>");
 
@@ -1783,16 +1784,8 @@ nsresult nsAbCardProperty::AppendSection(AppendItem *aArray, PRInt16 aCount, con
   }
 
   if (!sectionIsEmpty && !aHeading.IsEmpty()) {
-    nsCOMPtr<nsIStringBundle> bundle;
-
-    nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = stringBundleService->CreateBundle(sAddrbookProperties, getter_AddRefs(bundle));
-    NS_ENSURE_SUCCESS(rv,rv); 
-  
     nsXPIDLString heading;
-    rv = bundle->GetStringFromName(aHeading.get(), getter_Copies(heading));
+    rv = aBundle->GetStringFromName(aHeading.get(), getter_Copies(heading));
     NS_ENSURE_SUCCESS(rv, rv);
 
     aResult.AppendLiteral("<sectiontitle>");
@@ -1801,26 +1794,46 @@ nsresult nsAbCardProperty::AppendSection(AppendItem *aArray, PRInt16 aCount, con
   }
 
   for (i=0;i<aCount;i++) {
-	  rv = aArray[i].mCallback(this, &aArray[i], aConv, aResult);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "append callback failed");
-  }
+    switch (aArray[i].mAppendType) {
+      case eAppendLine:
+        rv = AppendLine(aArray[i], aConv, aResult);
+        break;
+      case eAppendLabel:
+        rv = AppendLabel(aArray[i], aBundle, aConv, aResult);
+        break;
+      case eAppendCityStateZip:
+        rv = AppendCityStateZip(aArray[i], aBundle, aConv, aResult);
+        break;
+      default:
+        rv = NS_ERROR_FAILURE;
+        break;
+    }
 
+    if (NS_FAILED(rv)) {
+      NS_WARNING("append item failed");
+      break;
+    }
+  }
   aResult.AppendLiteral("</section>");
 
-  return NS_OK;
+  return rv;
 }
 
-nsresult AppendLine(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLConv *aConv, nsString &aResult)
+nsresult nsAbCardProperty::AppendLine(const AppendItem &aItem,
+                                      mozITXTToHTMLConv *aConv,
+                                      nsString &aResult)
 {
+  NS_ENSURE_ARG_POINTER(aConv);
+
   nsXPIDLString attrValue;
-  nsresult rv = aCard->GetCardValue(aItem->mColumn, getter_Copies(attrValue));
+  nsresult rv = GetCardValue(aItem.mColumn, getter_Copies(attrValue));
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (attrValue.IsEmpty())
     return NS_OK; 
 
   nsAutoString attrNameStr;
-  attrNameStr.AssignWithConversion(aItem->mColumn);
+  attrNameStr.AssignWithConversion(aItem.mColumn);
   
   aResult.Append(PRUnichar('<'));
   aResult.Append(attrNameStr);
@@ -1839,29 +1852,26 @@ nsresult AppendLine(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLCon
   return NS_OK;
 }
 
-nsresult AppendLabel(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLConv *aConv, nsString &aResult)
+nsresult nsAbCardProperty::AppendLabel(const AppendItem &aItem,
+                                       nsIStringBundle *aBundle,
+                                       mozITXTToHTMLConv *aConv,
+                                       nsString &aResult)
 {
+  NS_ENSURE_ARG_POINTER(aBundle);
+
   nsresult rv;
-  
-  nsCOMPtr<nsIStringBundle> bundle;
-
-  nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = stringBundleService->CreateBundle(sAddrbookProperties, getter_AddRefs(bundle));
-  NS_ENSURE_SUCCESS(rv,rv); 
   
   nsXPIDLString label;
   
   nsXPIDLString attrValue;
 
-  rv = aCard->GetCardValue(aItem->mColumn, getter_Copies(attrValue));
+  rv = GetCardValue(aItem.mColumn, getter_Copies(attrValue));
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (attrValue.IsEmpty())
     return NS_OK;
 
-  rv = bundle->GetStringFromName(NS_ConvertASCIItoUCS2(aItem->mLabel).get(), getter_Copies(label));
+  rv = aBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aItem.mLabel).get(), getter_Copies(label));
   NS_ENSURE_SUCCESS(rv, rv);
 
   aResult.AppendLiteral("<labelrow><label>");
@@ -1869,7 +1879,7 @@ nsresult AppendLabel(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLCo
   aResult.Append(label);
   aResult.AppendLiteral(": </label>");
 
-  rv = AppendLine(aCard, aItem, aConv, aResult);
+  rv = AppendLine(aItem, aConv, aResult);
   NS_ENSURE_SUCCESS(rv,rv);
 
   aResult.AppendLiteral("</labelrow>");
@@ -1877,13 +1887,18 @@ nsresult AppendLabel(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLCo
   return NS_OK;
 }
 
-nsresult AppendCityStateZip(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLConv *aConv, nsString &aResult) 
+nsresult nsAbCardProperty::AppendCityStateZip(const AppendItem &aItem,
+                                              nsIStringBundle *aBundle,
+                                              mozITXTToHTMLConv *aConv,
+                                              nsString &aResult) 
 {
+  NS_ENSURE_ARG_POINTER(aBundle);
+
   nsresult rv;
   AppendItem item;
   const char *stateCol, *zipCol;
 
-  if (strcmp(aItem->mColumn, kHomeCityColumn) == 0) {
+  if (strcmp(aItem.mColumn, kHomeCityColumn) == 0) {
     stateCol = kHomeStateColumn;
     zipCol = kHomeZipCodeColumn;
   }
@@ -1894,44 +1909,36 @@ nsresult AppendCityStateZip(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTT
 
   nsAutoString cityResult, stateResult, zipResult;
 
-  rv = AppendLine(aCard, aItem, aConv, cityResult);
+  rv = AppendLine(aItem, aConv, cityResult);
   NS_ENSURE_SUCCESS(rv,rv);
   
   item.mColumn = stateCol;
   item.mLabel = "";
 
-  rv = AppendLine(aCard, &item, aConv, stateResult);
+  rv = AppendLine(item, aConv, stateResult);
   NS_ENSURE_SUCCESS(rv,rv);
 
   item.mColumn = zipCol;
 
-  rv = AppendLine(aCard, &item, aConv, zipResult);
+  rv = AppendLine(item, aConv, zipResult);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsXPIDLString formattedString;
 
-  nsCOMPtr<nsIStringBundle> bundle;
-
-  nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  rv = stringBundleService->CreateBundle(sAddrbookProperties, getter_AddRefs(bundle));
-  NS_ENSURE_SUCCESS(rv,rv); 
-
   if (!cityResult.IsEmpty() && !stateResult.IsEmpty() && !zipResult.IsEmpty()) {
-    const PRUnichar *formatStrings[3] = { cityResult.get(), stateResult.get(), zipResult.get() };
-    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("cityAndStateAndZip").get(), formatStrings, 3, getter_Copies(formattedString));
+    const PRUnichar *formatStrings[] = { cityResult.get(), stateResult.get(), zipResult.get() };
+    rv = aBundle->FormatStringFromName(NS_LITERAL_STRING("cityAndStateAndZip").get(), formatStrings, NS_ARRAY_LENGTH(formatStrings), getter_Copies(formattedString));
     NS_ENSURE_SUCCESS(rv,rv);
   }
   else if (!cityResult.IsEmpty() && !stateResult.IsEmpty() && zipResult.IsEmpty()) {
-    const PRUnichar *formatStrings[2] = { cityResult.get(), stateResult.get() };
-    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("cityAndStateNoZip").get(), formatStrings, 2, getter_Copies(formattedString));
+    const PRUnichar *formatStrings[] = { cityResult.get(), stateResult.get() };
+    rv = aBundle->FormatStringFromName(NS_LITERAL_STRING("cityAndStateNoZip").get(), formatStrings, NS_ARRAY_LENGTH(formatStrings), getter_Copies(formattedString));
     NS_ENSURE_SUCCESS(rv,rv);
   }
   else if ((!cityResult.IsEmpty() && stateResult.IsEmpty() && !zipResult.IsEmpty()) ||
           (cityResult.IsEmpty() && !stateResult.IsEmpty() && !zipResult.IsEmpty())) {
-    const PRUnichar *formatStrings[2] = { cityResult.IsEmpty() ? stateResult.get() : cityResult.get(), zipResult.get() };
-    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("cityOrStateAndZip").get(), formatStrings, 2, getter_Copies(formattedString));
+    const PRUnichar *formatStrings[] = { cityResult.IsEmpty() ? stateResult.get() : cityResult.get(), zipResult.get() };
+    rv = aBundle->FormatStringFromName(NS_LITERAL_STRING("cityOrStateAndZip").get(), formatStrings, NS_ARRAY_LENGTH(formatStrings), getter_Copies(formattedString));
     NS_ENSURE_SUCCESS(rv,rv);
   }
   else {
