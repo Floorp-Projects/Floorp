@@ -1057,7 +1057,7 @@ CheckEvalAccess(JSContext *cx, JSObject *scopeobj, JSPrincipals *principals)
     rt = cx->runtime;
     if (rt->findObjectPrincipals) {
         scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
-        if (scopePrincipals &&
+        if (!scopePrincipals || !principals ||
             !principals->subsume(principals, scopePrincipals)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_INDIRECT_CALL, js_eval_str);
@@ -1203,11 +1203,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * Belt-and-braces: check that the lesser of eval's principals and the
      * caller's principals has access to scopeobj.
      */
-    if (principals) {
-        ok = CheckEvalAccess(cx, scopeobj, principals);
-        if (!ok)
-            goto out;
-    }
+    ok = CheckEvalAccess(cx, scopeobj, principals);
+    if (!ok)
+        goto out;
 
     ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
     JS_DestroyScript(cx, script);
