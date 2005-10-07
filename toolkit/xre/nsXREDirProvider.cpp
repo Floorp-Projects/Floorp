@@ -674,11 +674,7 @@ GetProfileFolderName(char* aProfileFolderName, const char* aSource)
 static nsresult
 GetShellFolderPath(int folder, char result[MAXPATHLEN])
 {
-  LPMALLOC pMalloc;
   LPITEMIDLIST pItemIDList = NULL;
-
-  if (!SUCCEEDED(SHGetMalloc(&pMalloc)))
-    return NS_ERROR_OUT_OF_MEMORY;
 
   nsresult rv;
   if (SUCCEEDED(SHGetSpecialFolderLocation(NULL, folder, &pItemIDList)) &&
@@ -688,9 +684,8 @@ GetShellFolderPath(int folder, char result[MAXPATHLEN])
     rv = NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (pItemIDList)
-    pMalloc->Free(pItemIDList);
-  pMalloc->Release();
+  CoTaskMemFree(pItemIDList);
+
   return rv;
 }
 #endif
