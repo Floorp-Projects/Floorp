@@ -2144,11 +2144,6 @@ nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
                     aEventStatus);
 
     aEvent->flags &= ~aFlags;
-
-    // We don't want scroll events to bubble further after it has been
-    // handled at the local stage.
-    if (aEvent->message == NS_SCROLL_EVENT && aFlags & NS_EVENT_FLAG_BUBBLE)
-      aEvent->flags |= NS_EVENT_FLAG_CANT_BUBBLE;
   }
 
   if (retarget) {
@@ -2165,8 +2160,9 @@ nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
   if (NS_EVENT_FLAG_BUBBLE & aFlags && IsInDoc() &&
       aEvent->message != NS_PAGE_LOAD && aEvent->message != NS_SCRIPT_LOAD &&
       aEvent->message != NS_IMAGE_ERROR && aEvent->message != NS_IMAGE_LOAD &&
-      !(aEvent->message == NS_SCROLL_EVENT &&
-        aEvent->flags & NS_EVENT_FLAG_CANT_BUBBLE)) {
+      // scroll events fired at elements don't bubble (although scroll events
+      // fired at documents do, to the window)
+      aEvent->message != NS_SCROLL_EVENT) {
     if (parent) {
       // If there's a parent we pass the event to the parent...
 

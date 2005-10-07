@@ -1824,13 +1824,23 @@ void
 nsGfxScrollFrameInner::FireScrollEvent()
 {
   mScrollEventQueue = nsnull;
-  nsIPresShell *presShell = mOuter->GetPresContext()->GetPresShell();
-  if (!presShell)
-    return;
+
   nsScrollbarEvent event(PR_TRUE, NS_SCROLL_EVENT, nsnull);
   nsEventStatus status = nsEventStatus_eIgnore;
-  presShell->HandleEventWithTarget(&event, mOuter, mOuter->GetContent(),
-                                   NS_EVENT_FLAG_INIT, &status);
+  nsIContent* content = mOuter->GetContent();
+  nsPresContext* prescontext = mOuter->GetPresContext();
+  // Fire viewport scroll events at the document (where they
+  // will bubble to the window)
+  if (mIsRoot) {
+    nsIDocument* doc = content->GetCurrentDoc();
+    if (doc) {
+      doc->HandleDOMEvent(prescontext, &event, nsnull,
+                          NS_EVENT_FLAG_INIT, &status);
+    }
+  } else {
+    content->HandleDOMEvent(prescontext, &event, nsnull,
+                            NS_EVENT_FLAG_INIT, &status);
+  }
 }
 
 void
