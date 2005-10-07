@@ -86,7 +86,7 @@
     <command id="cmd_DoBrowserRSS"           oncommand="DoBrowserRSS()" />
     <command id="cmd_BrowserMenu"            oncommand="BrowserMenuPopup()" />
           
-    <toolbar id="nav-bar" accessfocus="menu-button" accessnextrule="toolbar-view"  >
+    <toolbar id="nav-bar" accessfocus="menu-button" accessnextrule="toolbar-view"  accessprevrule="accesstabcontent"  >
     
         <toolbarbutton tabindex="1" accessrule="nav-bar"  id="menu-button" accesskey="m" command="cmd_BrowserMenu" />  
         <toolbarbutton tabindex="2" accessrule="nav-bar"  id="back-button" command="cmd_BrowserBack" />  
