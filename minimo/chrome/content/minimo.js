@@ -274,6 +274,14 @@ function MiniNavStartup()
    */
   document.addEventListener("focus",eventHandlerFocus,false); 
   
+  /* 
+   * Override the title attribute <title /> in this doc with a setter.
+   * This is our workaround solution so that when the tabbrowser::updateTitle
+   * tries to update this document's title, nothing happens. Bug 311564
+   */ 
+   
+  document.__defineSetter__("title",function(x){}); // Stays with the titled defined by the XUL element. 
+  
 }
 
 /* 
@@ -651,3 +659,21 @@ function BrowserSNAVToggle(state) {
     gStateSNAV=state;
   } 
 } 
+
+
+/*
+ * Util function for the phone call calculation. 
+ */
+ 
+function util_stripCharsFromString (s, bag) {
+    var i;
+    var returnString = "";
+    for (i = 0; i < s.length; i++)
+    {   
+        var c = s.charAt(i);
+        if (bag.indexOf(c) == -1) returnString += c;
+    }
+    return returnString;
+}
+	
+
