@@ -163,13 +163,20 @@
       <hbox id="browser" context="context" flex="1">
         <tabbrowser contentcontextmenu="contentAreaContextMenu"
                     context="context" disablehistory="false"
-                     accessnextrule="nav-bar" accessrule="content" accessprevrule="toolbar-rss" accessfocus="#tabContainer"                   
+                    accessnextrule="accesstabcontent" accessrule="content" accessprevrule="toolbar-rss" accessfocus="#tabContainer"                   
                     type="content-primary"
                     id="content" 
                     src="about:blank"
                     flex="1" 
                     autocompletepopup="PopupAutoComplete"
                     onnewtab="BrowserOpenTab()"/>
+                    
+        <!-- This element is here to store information for the keyboard access functions --> 
+        <!-- see that id=content's accessnextrule attribute points to this element.      --> 
+        <!-- Then the accessfocus="#tabContent" is a special, check the eventHandlerMenu --> 
+        
+        <hiddenelement id="accesstabcontent" accessfocus="#tabContent" />
+                    
       </hbox>
     </hbox>
   </hbox>
