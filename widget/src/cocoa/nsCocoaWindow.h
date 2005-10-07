@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,37 +38,23 @@
 #define MacWindow_h__
 
 #undef DARWIN
+
 #import <Cocoa/Cocoa.h>
-
-
-//#include <memory>	// for auto_ptr
 #include <Controls.h>
 
-//using std::auto_ptr;
-
 #include "nsBaseWidget.h"
-
-//#include "nsMacEventHandler.h"
 
 class nsCocoaWindow;
 
 
 @interface WindowDelegate : NSObject
 {
-  nsCocoaWindow* mGeckoWindow;
+  nsCocoaWindow* mGeckoWindow; // [WEAK] (it owns us)
 }
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
 - (void)windowDidResize:(NSNotification *)aNotification;
 @end
 
-
-
-//-------------------------------------------------------------------------
-//
-// nsCocoaWindow
-//
-//-------------------------------------------------------------------------
-//	Cocoa native window
 
 class nsCocoaWindow : public nsBaseWidget
 {
@@ -77,7 +63,7 @@ private:
 
 public:
 
-    enum { kTitleBarHeight = 20 };
+    enum { kTitleBarHeight = 22 };
 
     nsCocoaWindow();
     virtual ~nsCocoaWindow();
@@ -119,8 +105,9 @@ public:
     NS_IMETHOD              SetModal(PRBool aState) { return NS_OK; }
     NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE) { return NS_OK; }
-    NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar) { return NS_OK; }
-    NS_IMETHOD ShowMenuBar(PRBool aShow) { return NS_OK; }
+    NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar);
+    virtual nsIMenuBar*     GetMenuBar();
+    NS_IMETHOD              ShowMenuBar(PRBool aShow);
     NS_IMETHOD WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect) { return NS_OK; }
     NS_IMETHOD ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect) { return NS_OK; }
     
@@ -157,55 +144,35 @@ public:
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent) { return NS_OK; }
     
 		// be notified that a some form of drag event needs to go into Gecko
-	virtual PRBool 			DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;
+    virtual PRBool DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers ) ;
 
-      // Helpers to prevent recursive resizing during live-resize
-    PRBool IsResizing ( ) const { return mIsResizing; }
-    void StartResizing ( ) { mIsResizing = PR_TRUE; }
-    void StopResizing ( ) { mIsResizing = PR_FALSE; }
+    // Helpers to prevent recursive resizing during live-resize
+    PRBool IsResizing () const { return mIsResizing; }
+    void StartResizing () { mIsResizing = PR_TRUE; }
+    void StopResizing () { mIsResizing = PR_FALSE; }
     
-    void                    ComeToFront();
+    void ComeToFront();
 
   	// nsIKBStateControl interface
   	NS_IMETHOD ResetInputState();
 
-    void              		MoveToGlobalPoint(PRInt32 aX, PRInt32 aY);
+    void MoveToGlobalPoint(PRInt32 aX, PRInt32 aY);
 
     void IsActive(PRBool* aActive);
     void SetIsActive(PRBool aActive);
+
 protected:
+  
+	nsIWidget*           mOffsetParent;   // if we're a popup, this is our parent [WEAK]
+	PRBool				       mIsDialog;       // true if the window is a dialog
+	PRBool               mIsResizing;     // we originated the resize, prevent infinite recursion
+	PRBool               mWindowMadeHere; // true if we created the window, false for embedding
+  NSWindow*            mWindow;         // our cocoa window [STRONG]
+  WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
+  nsCOMPtr<nsIMenuBar> mMenuBar;
 
-#if 0
-	pascal static OSErr DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr theWindow, 
-										void *handlerRefCon, DragReference theDrag );
-	pascal static OSErr DragReceiveHandler (WindowPtr theWindow,
-												void *handlerRefCon, DragReference theDragRef) ;
-	DragTrackingHandlerUPP mDragTrackingHandlerUPP;
-	DragReceiveHandlerUPP mDragReceiveHandlerUPP;
-#endif
-
-#if 0
-  pascal static OSStatus WindowEventHandler ( EventHandlerCallRef inHandlerChain, 
-                                               EventRef inEvent, void* userData ) ;
-  pascal static OSStatus ScrollEventHandler ( EventHandlerCallRef inHandlerChain, 
-                                               EventRef inEvent, void* userData ) ;
-#endif
-
-#if 0
-	auto_ptr<nsMacEventHandler>		mMacEventHandler;
-	PRBool                          mAcceptsActivation;
-	PRBool                          mIsActive;
-	PRBool                          mZoomOnShow;	
-#endif // COCOA
-
-	nsIWidget*        mOffsetParent;   // if we're a popup, this is our parent [WEAK]
-	PRBool				    mIsDialog;       // true if the window is a dialog
-	PRBool            mIsResizing;     // we originated the resize, prevent infinite recursion
-	PRBool            mWindowMadeHere; // true if we created the window, false for embedding
-  NSWindow*         mWindow;         // our cocoa window [STRONG]
-  WindowDelegate*   mDelegate;       // our delegate for processing window msgs [STRONG]
-
-  PRBool            mVisible;        // Whether or not we're visible.
+  PRBool               mVisible;        // Whether or not we're visible.
 };
+
 
 #endif // MacWindow_h__
