@@ -68,6 +68,7 @@ const FILE_UPDATE_LOG     = "update.log"
 const FILE_UPDATES_DB     = "updates.xml";
 const FILE_UPDATE_ACTIVE  = "active-update.xml";
 const FILE_PERMS_TEST     = "update.test";
+const FILE_LAST_LOG       = "last-update.log";
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -337,7 +338,11 @@ function cleanUpUpdatesDir() {
     // Preserve the last update log file for debugging purposes
     if (f.leafName == FILE_UPDATE_LOG) {
       try {
-        f.copyTo(f.parent.parent, "last-update.log");
+        var dir = f.parent.parent;
+        var logFile = dir.clone();
+        logFile.append(FILE_LAST_LOG);
+        logFile.remove(false);
+        f.copyTo(dir, FILE_LAST_LOG);
       }
       catch (e) {
         LOG("General", "Failed to copy file: " + f.path);
