@@ -47,8 +47,10 @@
 #include "nsAppRunner.h"
 #include "nsINIParser.h"
 #include "nsILocalFile.h"
+#include "nsIXULAppInstall.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsBuildID.h"
 #include "plstr.h"
 #include "prprf.h"
@@ -270,6 +272,8 @@ static void Usage()
            "                             --register-user\n"
            "  --find-gre <version>       Find a GRE with version <version> and print\n"
            "                             the path on stdout\n"
+           "  --install-app <application> [<destination> [<directoryname>]]\n"
+           "                             Install a XUL application.\n"
            "\n"
            "APP-FILE\n"
            "  Application initialization file.\n"
@@ -296,6 +300,53 @@ GetXULRunnerDir(const char *argv0, nsIFile* *aResult)
     Output(PR_TRUE, "Could not find XULRunner installation dir.\n");
   }
   return rv;
+}
+
+static int
+InstallXULApp(nsIFile* aXULRunnerDir,
+              const char *aAppLocation,
+              const char *aInstallTo,
+              const char *aLeafName)
+{
+  nsCOMPtr<nsILocalFile> appLocation;
+  nsCOMPtr<nsILocalFile> installTo;
+  nsAutoString leafName;
+
+  nsresult rv = XRE_GetFileFromPath(aAppLocation, getter_AddRefs(appLocation));
+  if (NS_FAILED(rv))
+    return 2;
+
+  if (aInstallTo) {
+    rv = XRE_GetFileFromPath(aInstallTo, getter_AddRefs(installTo));
+    if (NS_FAILED(rv))
+      return 2;
+  }
+
+  if (aLeafName)
+    NS_CopyNativeToUnicode(nsDependentCString(aLeafName), leafName);
+
+  rv = NS_InitXPCOM2(nsnull, aXULRunnerDir, nsnull);
+  if (NS_FAILED(rv))
+    return 3;
+
+  {
+    // Scope our COMPtr to avoid holding XPCOM refs beyond xpcom shutdown
+    nsCOMPtr<nsIXULAppInstall> install
+      (do_GetService("@mozilla.org/xulrunner/app-install-service;1"));
+    if (!install) {
+      rv = NS_ERROR_FAILURE;
+    }
+    else {
+      rv = install->InstallApplication(appLocation, installTo, leafName);
+    }
+  }
+
+  NS_ShutdownXPCOM(nsnull);
+
+  if (NS_FAILED(rv))
+    return 3;
+
+  return 0;
 }
 
 int main(int argc, char* argv[])
@@ -375,6 +426,36 @@ int main(int argc, char* argv[])
 
       printf("%s\n", GRE_BUILD_ID);
       return 0;
+    }
+
+    if (IsArg(argv[1], "install-app")) {
+      if (argc < 3 || argc > 5) {
+        Usage();
+        return 1;
+      }
+
+      char *appLocation = argv[2];
+
+      char *installTo = nsnull;
+      if (argc > 3) {
+        installTo = argv[3];
+        if (!*installTo) // left blank?
+          installTo = nsnull;
+      }
+
+      char *leafName = nsnull;
+      if (argc > 4) {
+        leafName = argv[4];
+        if (!*leafName)
+          leafName = nsnull;
+      }
+
+      nsCOMPtr<nsIFile> regDir;
+      nsresult rv = GetXULRunnerDir(argv[0], getter_AddRefs(regDir));
+      if (NS_FAILED(rv))
+        return 2;
+
+      return InstallXULApp(regDir, appLocation, installTo, leafName);
     }
   }
 

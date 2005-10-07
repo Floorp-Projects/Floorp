@@ -42,7 +42,8 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = xulapp_setup
+MODULE = xulrunner
+XPIDL_MODULE = xulapp_setup
 
 XPIDLSRCS = \
 	nsIXULAppInstall.idl \

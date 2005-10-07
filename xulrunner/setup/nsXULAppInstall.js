@@ -46,9 +46,14 @@ const nsIZipEntry         = Components.interfaces.nsIZipEntry;
 const nsIZipReader        = Components.interfaces.nsIZipReader;
 
 function getDirectoryKey(aKey) {
-  return Components.classes["@mozilla.org/file/directory_service;1"].
-    getService(Components.interfaces.nsIProperties).
-    get(aKey, nsIFile);
+  try {
+    return Components.classes["@mozilla.org/file/directory_service;1"].
+      getService(Components.interfaces.nsIProperties).
+      get(aKey, nsIFile);
+  }
+  catch (e) {
+    throw "Couln't get directory service key: " + aKey;
+  }
 }
 
 function createINIParser(aFile) {
@@ -87,7 +92,7 @@ const PR_TRUNCATE = 0x20;
 function openFileOutputStream(aFile) {
   var s = Components.classes["@mozilla.org/network/file-output-stream;1"].
     createInstance(Components.interfaces.nsIFileOutputStream);
-  s.init(aFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE);
+  s.init(aFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0644, 0);
   return s;
 }
 
@@ -227,7 +232,7 @@ const AppInstall = {
 
     if (aDirectory == null) {
 #ifdef XP_WIN
-      aDirectory = getDirectoryKey("Progs");
+      aDirectory = getDirectoryKey("ProgF");
       if (vendor)
         aDirectory.append(vendor);
 #else
@@ -277,6 +282,12 @@ const AppInstall = {
     var version = iniParser.getString("App", "Version");
     var buildID = iniParser.getString("App", "BuildID");
 
+    var infoString = "";
+    if (vendor) {
+      infoString = vendor + " ";
+    }
+    infoString += appName + " " + version;
+
     var plistFile = aDirectory.clone();
     plistFile.append("Info.plist");
     var ostream = openFileOutputStream(plistFile);
@@ -289,13 +300,13 @@ const AppInstall = {
     "<key>CFBundleInfoDictionaryVersion</key>\n" +
     "<string>6.0</string>\n" +
     "<key>CFBundlePackageType</key>\n" +
-    "<string>APPL</string>" +
+    "<string>APPL</string>\n" +
     "<key>CFBundleExecutable</key>\n" +
     "<string>xulrunner</string>\n" +
     "<key>NSAppleScriptEnabled</key>\n" +
     "<true/>\n" +
     "<key>CFBundleGetInfoString</key>\n" +
-    "<string>" + vendor ? (vendor + " ") : "" + appName + " " + version + "</string>\n" +
+    "<string>" + infoString + "</string>\n" +
     "<key>CFBundleName</key>\n" +
     "<string>" + appName + "</string>\n" +
     "<key>CFBundleShortVersionString</key>\n" +
