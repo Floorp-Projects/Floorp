@@ -1074,7 +1074,7 @@ nsHTMLDocument::SetCompatibilityMode(nsCompatibility aMode)
 
   mCompatMode = aMode;
   CSSLoader()->SetCompatibilityMode(mCompatMode);
-  nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
+  nsCOMPtr<nsIPresShell> shell = GetShellAt(0);
   if (shell) {
     nsPresContext *pc = shell->GetPresContext();
     if (pc) {

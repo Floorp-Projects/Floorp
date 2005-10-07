@@ -1344,7 +1344,7 @@ DocumentViewerImpl::Destroy()
     mSHEntry->SetSticky(mIsSticky);
     mIsSticky = PR_TRUE;
 
-    mSHEntry->SetContentViewer(this);
+    PRBool savePresentation = PR_TRUE;
 
     // Remove our root view from the view hierarchy.
     if (mPresShell) {
@@ -1371,13 +1371,20 @@ DocumentViewerImpl::Destroy()
     if (mDocument) {
       nsresult rv = mDocument->Sanitize();
       if (NS_FAILED(rv)) {
-        // If we failed to sanitize, remove the document immediately.
-        mSHEntry->SetContentViewer(nsnull);
-        mSHEntry->SyncPresentationState();
+        // If we failed to sanitize, don't save presentation.
+        savePresentation = PR_FALSE;
       }
     }
 
 
+    // Reverse ownership. Do this *after* calling sanitize so that sanitize
+    // doesn't cause mutations that make the SHEntry drop the presentation
+    if (savePresentation) {
+      mSHEntry->SetContentViewer(this);
+    }
+    else {
+      mSHEntry->SyncPresentationState();
+    }
     mSHEntry = nsnull;
 
     // Break the link from the document/presentation to the docshell, so that

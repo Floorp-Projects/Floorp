@@ -93,8 +93,8 @@ class nsILayoutHistoryState;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x6a524f45, 0x4e21, 0x4049, \
- { 0xb3, 0x57, 0x2d, 0x29, 0x75, 0x76, 0x7a, 0x43 } }
+{ 0x977a6eea, 0xd06f, 0x43fd, \
+ { 0xa5, 0x7e, 0xe8, 0xad, 0x4d, 0x64, 0x02, 0x43 } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -290,6 +290,7 @@ public:
   virtual PRBool DeleteShell(nsIPresShell* aShell) = 0;
   virtual PRUint32 GetNumberOfShells() const = 0;
   virtual nsIPresShell *GetShellAt(PRUint32 aIndex) const = 0;
+  virtual void SetShellsHidden(PRBool aHide) = 0;
 
   /**
    * Return the parent document of this document. Will return null

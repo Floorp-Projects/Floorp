@@ -1055,10 +1055,9 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
         // |onbroadcast| event handler
         nsEvent event(PR_TRUE, NS_XUL_BROADCAST);
 
-        PRInt32 j = mPresShells.Count();
+        PRInt32 j = GetNumberOfShells();
         while (--j >= 0) {
-            nsCOMPtr<nsIPresShell> shell =
-                NS_STATIC_CAST(nsIPresShell*, mPresShells[j]);
+            nsCOMPtr<nsIPresShell> shell = GetShellAt(j);
 
             nsCOMPtr<nsPresContext> aPresContext = shell->GetPresContext();
 

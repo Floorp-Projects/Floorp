@@ -114,9 +114,12 @@ nsSHEntry::~nsSHEntry()
   // out the mParent pointers on all our kids.
   mChildren.EnumerateForwards(ClearParentPtr, nsnull);
   mChildren.Clear();
-  RemoveDocumentObserver();
-  if (mContentViewer)
-    mContentViewer->Destroy();
+
+  nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
+  DropPresentationState();
+  if (viewer) {
+    viewer->Destroy();
+  }
 }
 
 //*****************************************************************************
@@ -173,10 +176,14 @@ NS_IMETHODIMP nsSHEntry::SetReferrerURI(nsIURI *aReferrerURI)
 NS_IMETHODIMP
 nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
 {
-  RemoveDocumentObserver();
+  NS_PRECONDITION(!aViewer || !mContentViewer, "SHEntry already contains viewer");
+
+  if (!aViewer) {
+    DropPresentationState();
+  }
+
   mContentViewer = aViewer;
 
-  mDocument = nsnull;
   if (mContentViewer) {
     nsCOMPtr<nsIDOMDocument> domDoc;
     mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
@@ -184,6 +191,7 @@ nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
     // the contentviewer
     mDocument = do_QueryInterface(domDoc);
     if (mDocument) {
+      mDocument->SetShellsHidden(PR_TRUE);
       mDocument->AddObserver(this);
     }
   }
@@ -606,26 +614,22 @@ nsSHEntry::SyncPresentationState()
 void
 nsSHEntry::DropPresentationState()
 {
-  RemoveDocumentObserver();
+  nsRefPtr<nsSHEntry> kungFuDeathGrip = this;
+
+  if (mDocument) {
+    mDocument->SetShellsHidden(PR_FALSE);
+    mDocument->RemoveObserver(this);
+    mDocument = nsnull;
+  }
   if (mContentViewer)
     mContentViewer->ClearHistoryEntry();
 
   mContentViewer = nsnull;
-  mDocument = nsnull;
   mSticky = PR_TRUE;
   mWindowState = nsnull;
   mViewerBounds.SetRect(0, 0, 0, 0);
   mChildShells.Clear();
   mRefreshURIList = nsnull;
-}
-
-void
-nsSHEntry::RemoveDocumentObserver()
-{
-  if (mDocument) {
-    mDocument->RemoveObserver(this);
-    mDocument = nsnull;
-  }
 }
 
 //*****************************************************************************
@@ -682,39 +686,39 @@ nsSHEntry::ContentRemoved(nsIDocument* aDocument,
   DocumentMutated();
 }
 
-class DropPresentationEvent : public PLEvent
+class DestroyViewerEvent : public PLEvent
 {
 public:
-  DropPresentationEvent(nsSHEntry* aSHEntry);
+  DestroyViewerEvent(nsIContentViewer* aViewer, nsIDocument* aDocument);
 
-  nsRefPtr<nsSHEntry> mSHEntry;
+  nsCOMPtr<nsIContentViewer> mViewer;
+  nsCOMPtr<nsIDocument> mDocument;
 };
 
 PR_STATIC_CALLBACK(void*)
-HandleDropPresentationEvent(PLEvent *aEvent)
+HandleDestroyViewerEvent(PLEvent *aEvent)
 {
-  nsSHEntry* entry = NS_STATIC_CAST(DropPresentationEvent*, aEvent)->mSHEntry;
-  nsCOMPtr<nsIContentViewer> viewer;
-  entry->GetContentViewer(getter_AddRefs(viewer));
+  nsIContentViewer* viewer = NS_STATIC_CAST(DestroyViewerEvent*, aEvent)->mViewer;
   if (viewer) {
     viewer->Destroy();
   }
-  entry->DropPresentationState();
 
   return nsnull;
 }
 
 PR_STATIC_CALLBACK(void)
-DestroyDropPresentationEvent(PLEvent *aEvent)
+DestroyDestroyViewerEvent(PLEvent *aEvent)
 {
-    delete NS_STATIC_CAST(DropPresentationEvent*, aEvent);
+    delete NS_STATIC_CAST(DestroyViewerEvent*, aEvent);
 }
 
-DropPresentationEvent::DropPresentationEvent(nsSHEntry* aSHEntry)
-    : mSHEntry(aSHEntry)
+DestroyViewerEvent::DestroyViewerEvent(nsIContentViewer* aViewer,
+                                       nsIDocument* aDocument)
+    : mViewer(aViewer),
+      mDocument(aDocument)
 {
-    PL_InitEvent(this, mSHEntry, ::HandleDropPresentationEvent,
-                 ::DestroyDropPresentationEvent);
+    PL_InitEvent(this, mViewer, ::HandleDestroyViewerEvent,
+                 ::DestroyDestroyViewerEvent);
 }
 
 void
@@ -731,7 +735,7 @@ nsSHEntry::DocumentMutated()
     return;
   }
 
-  PLEvent *evt = new DropPresentationEvent(this);
+  PLEvent *evt = new DestroyViewerEvent(mContentViewer, mDocument);
   if (!evt) {
     return;
   }
@@ -740,7 +744,12 @@ nsSHEntry::DocumentMutated()
   if (NS_FAILED(rv)) {
     PL_DestroyEvent(evt);
   }
-
-  // Ensure that we don't post more then one PLEvent
-  RemoveDocumentObserver();
+  else {
+    // Drop presentation. Also ensures that we don't post more then one
+    // PLEvent. Only do this if we succeeded in posting the event since
+    // otherwise the document could be torn down mid mutation causing crashes.
+    DropPresentationState();
+  }
+  // Warning! The call to DropPresentationState could have dropped the last
+  // reference to this nsSHEntry, so no accessing members beyond here.
 }

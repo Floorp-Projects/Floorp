@@ -1042,8 +1042,8 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     PRBool applicable;
     sheet->GetApplicable(applicable);
     if (applicable) {
-      for (PRInt32 i = 0, i_end = mPresShells.Count(); i < i_end; ++i) {
-        NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(i))->StyleSet()->
+      for (PRInt32 i = 0, i_end = GetNumberOfShells(); i < i_end; ++i) {
+        GetShellAt(i)->StyleSet()->
           RemoveStyleSheet(nsStyleSet::eAgentSheet, sheet);
       }
     }
@@ -1063,9 +1063,9 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   nsStyleSet::sheetType attrSheetType = GetAttrSheetType();
   if (mAttrStyleSheet) {
     // Remove this sheet from all style sets
-    PRInt32 count = mPresShells.Count();
+    PRInt32 count = GetNumberOfShells();
     for (indx = 0; indx < count; ++indx) {
-      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
+      GetShellAt(indx)->StyleSet()->
         RemoveStyleSheet(attrSheetType, mAttrStyleSheet);
     }
     rv = mAttrStyleSheet->Reset(aURI);
@@ -1080,9 +1080,9 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   
   if (mStyleAttrStyleSheet) {
     // Remove this sheet from all style sets
-    PRInt32 count = mPresShells.Count();
+    PRInt32 count = GetNumberOfShells();
     for (indx = 0; indx < count; ++indx) {
-      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
+      GetShellAt(indx)->StyleSet()->
         RemoveStyleSheet(nsStyleSet::eStyleAttrSheet, mStyleAttrStyleSheet);
     }
     rv = mStyleAttrStyleSheet->Reset(aURI);
@@ -1097,10 +1097,9 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   mStyleAttrStyleSheet->SetOwningDocument(this);
 
   // Now set up our style sets
-  PRInt32 count = mPresShells.Count();
+  PRInt32 count = GetNumberOfShells();
   for (indx = 0; indx < count; ++indx) {
-    FillStyleSet(NS_STATIC_CAST(nsIPresShell*,
-                                mPresShells.ElementAt(indx))->StyleSet());
+    FillStyleSet(GetShellAt(indx)->StyleSet());
   }
 
   return rv;
@@ -1485,7 +1484,9 @@ nsDocument::doCreateShell(nsPresContext* aContext,
                           nsIPresShell** aInstancePtrResult)
 {
   *aInstancePtrResult = nsnull;
-  
+
+  NS_ENSURE_FALSE(mShellsAreHidden, NS_ERROR_FAILURE);
+
   FillStyleSet(aStyleSet);
   
   nsCOMPtr<nsIPresShell> shell;
@@ -1513,13 +1514,20 @@ nsDocument::DeleteShell(nsIPresShell* aShell)
 PRUint32
 nsDocument::GetNumberOfShells() const
 {
-  return mPresShells.Count();
+  return mShellsAreHidden ? 0 : mPresShells.Count();
 }
 
 nsIPresShell *
 nsDocument::GetShellAt(PRUint32 aIndex) const
 {
-  return (nsIPresShell*)mPresShells.SafeElementAt(aIndex);
+  return mShellsAreHidden ? nsnull :
+         NS_STATIC_CAST(nsIPresShell*, mPresShells.SafeElementAt(aIndex));
+}
+
+void
+nsDocument::SetShellsHidden(PRBool aHide)
+{
+  mShellsAreHidden = aHide;
 }
 
 PR_STATIC_CALLBACK(void)
@@ -1738,11 +1746,10 @@ nsDocument::GetIndexOfStyleSheet(nsIStyleSheet* aSheet) const
 void
 nsDocument::AddStyleSheetToStyleSets(nsIStyleSheet* aSheet)
 {
-  PRInt32 count = mPresShells.Count();
+  PRInt32 count = GetNumberOfShells();
   PRInt32 indx;
   for (indx = 0; indx < count; ++indx) {
-    NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
-      AddDocStyleSheet(aSheet, this);
+    GetShellAt(indx)->StyleSet()->AddDocStyleSheet(aSheet, this);
   }
 }
 
@@ -1773,8 +1780,8 @@ nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
 void
 nsDocument::RemoveStyleSheetFromStyleSets(nsIStyleSheet* aSheet)
 {
-  for (PRInt32 i = 0, i_end = mPresShells.Count(); i < i_end; ++i)
-    NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(i))->StyleSet()->
+  for (PRInt32 i = 0, i_end = GetNumberOfShells(); i < i_end; ++i)
+    GetShellAt(i)->StyleSet()->
       RemoveStyleSheet(nsStyleSet::eDocSheet, aSheet);
 }
 
@@ -1949,8 +1956,8 @@ nsDocument::AddCatalogStyleSheet(nsIStyleSheet* aSheet)
                                                                                 
   if (applicable) {
     // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
-    for (PRInt32 i = 0, i_end = mPresShells.Count(); i < i_end; ++i)
-      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(i))->StyleSet()->
+    for (PRInt32 i = 0, i_end = GetNumberOfShells(); i < i_end; ++i)
+      GetShellAt(i)->StyleSet()->
         AppendStyleSheet(nsStyleSet::eAgentSheet, aSheet);
   }
                                                                                 
@@ -3157,9 +3164,8 @@ nsDocument::GetTitle(nsAString& aTitle)
 NS_IMETHODIMP
 nsDocument::SetTitle(const nsAString& aTitle)
 {
-  for (PRInt32 i = mPresShells.Count() - 1; i >= 0; --i) {
-    nsCOMPtr<nsIPresShell> shell =
-      NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+  for (PRInt32 i = GetNumberOfShells() - 1; i >= 0; --i) {
+    nsCOMPtr<nsIPresShell> shell = GetShellAt(i);
 
     nsCOMPtr<nsISupports> container = shell->GetPresContext()->GetContainer();
     if (!container)
@@ -3312,7 +3318,7 @@ static const DirTable dirAttributes[] = {
 NS_IMETHODIMP
 nsDocument::GetDir(nsAString& aDirection)
 {
-  nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
+  nsCOMPtr<nsIPresShell> shell = GetShellAt(0);
   if (shell) {
     nsPresContext *context = shell->GetPresContext();
     if (context) {
@@ -3337,8 +3343,7 @@ nsDocument::GetDir(nsAString& aDirection)
 NS_IMETHODIMP
 nsDocument::SetDir(const nsAString& aDirection)
 {
-  nsIPresShell *shell =
-    NS_STATIC_CAST(nsIPresShell *, mPresShells.SafeElementAt(0));
+  nsIPresShell *shell = GetShellAt(0);
 
   if (!shell) {
     return NS_OK;
@@ -4283,11 +4288,10 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
     }
   }
 
-  PRInt32 i, count = mPresShells.Count();
+  PRInt32 i, count = GetNumberOfShells();
 
   for (i = 0; i < count; i++) {
-    nsCOMPtr<nsIPresShell> shell =
-      NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+    nsCOMPtr<nsIPresShell> shell = GetShellAt(i);
 
     if (shell) {
       shell->FlushPendingNotifications(aType);
@@ -4720,10 +4724,9 @@ PRBool
 nsDocument::IsSafeToFlush() const
 {
   PRBool isSafeToFlush = PR_TRUE;
-  PRInt32 i = 0, n = mPresShells.Count();
+  PRInt32 i = 0, n = GetNumberOfShells();
   while (i < n && isSafeToFlush) {
-    nsCOMPtr<nsIPresShell> shell =
-      NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
+    nsCOMPtr<nsIPresShell> shell = GetShellAt(i);
 
     if (shell) {
       shell->IsSafeToFlush(isSafeToFlush);
@@ -4953,9 +4956,8 @@ nsDocument::Destroy()
   // content as well. This ensures that there aren't any accidental references
   // left in anonymous content keeping the document alive. (While not strictly
   // necessary -- the PresShell owns us -- it's tidy.)
-  for (count = mPresShells.Count() - 1; count >= 0; --count) {
-    nsCOMPtr<nsIPresShell> shell =
-      NS_STATIC_CAST(nsIPresShell*, mPresShells[count]);
+  for (count = GetNumberOfShells() - 1; count >= 0; --count) {
+    nsCOMPtr<nsIPresShell> shell = GetShellAt(count);
     if (!shell)
       continue;
 
@@ -5116,7 +5118,7 @@ nsDocument::OnPageShow(PRBool aPersisted)
     }
   }
 
-  nsIPresShell *shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[0]);
+  nsIPresShell *shell = GetShellAt(0);
   if (shell && mScriptGlobalObject) {
     nsPresContext *pc = shell->GetPresContext();
     if (pc) {
@@ -5152,7 +5154,7 @@ nsDocument::OnPageHide(PRBool aPersisted)
   }
 
   // Now send out a PageHide event.
-  nsIPresShell *shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[0]);
+  nsIPresShell *shell = GetShellAt(0);
   if (shell && mScriptGlobalObject) {
     nsPresContext *pc = shell->GetPresContext();
     if (pc) {
