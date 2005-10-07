@@ -1,11 +1,16 @@
-* {
+
+/* Note we added 'html' to all the rules. This is now here because with the previous rule
+ the following definition applied to everything including dialog windows. So far, only HTML content. 
+ If you load other namespace SVG HTML many other things, small screen wont work */ 
+
+html * {
   /* on a small screen, we need to use a readable font */
   font-size: small ! important;
 }
 
 /* for all elements but the root element and the body, let's */
 /* cancel all annoying document's settings */
-* {
+html * {
   /* first cancel all size settings */
   width: auto ! important;
   height: auto ! important;
@@ -34,58 +39,58 @@
   white-space: normal ! important;
 }
 
-table,tbody,thead,tfoot,tr,td,th,col,colgroup {
+html table,html tbody,html thead,html tfoot,html tr,html td,html th,html col,html colgroup {
   /* we need to "flatten" all tables */
   display: block ! important;
 }
 
-img[width="1"], img[height="1"],img[width="468"], img[height="600"] {
+html img[width="1"], html img[height="1"],html img[width="468"],html  img[height="600"] {
   /* let's get rid of 1 pixel wide/high images */
   /* and of std formats of ads ; current ads formats are */
   /* too big for small screens */
   display: none ! important;
 }
 
-li {
+html li {
   /* better placement of the bullet on a small screen */
   list-style-position: inside ! important;
 }
 
-:-moz-any-link {
+html :-moz-any-link {
   /* we need to make anchors more visible */
   text-decoration: underline !important;
 }
 
 
-ul,ol {
+html ul,html ol {
   display: block ! important;
 }
-li {
+html li {
   display: list-item ! important;
 }
-a {
+html a {
   background-image: none ! important;
 }
-img[src*="spacer"] {
+html img[src*="spacer"] {
   display: none ! important;
 } 
 
 
 
 
-*:focus
+html *:focus
 {
   -moz-outline: 3px solid #FFFF00  !important;
   -moz-outline-offset: 1px         !important;
   -moz-outline-radius: 3px         !important;
 }
 
-textarea:focus, button:focus, select:focus, input:focus
+html textarea:focus,html  button:focus,html  select:focus,html  input:focus
 {
   -moz-outline-offset: -1px        !important;
 }
 
-input[type="radio"]:focus
+html input[type="radio"]:focus
 {
   -moz-outline-radius: 8px        !important;
   -moz-outline-offset: 0px         !important;
