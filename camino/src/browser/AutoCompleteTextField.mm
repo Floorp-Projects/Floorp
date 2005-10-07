@@ -750,7 +750,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   if (aLocation > curLength)    // sanity check or AppKit crashes
     return;
 
-  if ((aLocation + [aString length] == curLength) && [curValue compare:aString options:0 range:NSMakeRange(aLocation, curLength)] == NSOrderedSame)
+  if ((aLocation + [aString length] == curLength) && [curValue compare:aString options:0 range:NSMakeRange(aLocation, [aString length])] == NSOrderedSame)
     return;  // nothing to do
 
   NSRange range = NSMakeRange(aLocation, [curValue length] - aLocation);
