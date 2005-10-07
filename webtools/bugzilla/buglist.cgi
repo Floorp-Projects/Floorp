@@ -1066,7 +1066,11 @@ if ($format->{'extension'} eq "csv") {
 if ($serverpush) {
     # close the "please wait" page, then open the buglist page
     print $cgi->multipart_end();
-    print $cgi->multipart_start(-type => $contenttype, -content_disposition => $disposition);
+    my @extra;
+    push @extra, (-charset => "utf8") if Param("utf8");
+    print $cgi->multipart_start(-type => $contenttype, 
+                                -content_disposition => $disposition, 
+                                @extra);
 } else {
     # Suggest a name for the bug list if the user wants to save it as a file.
     # If we are doing server push, then we did this already in the HTTP headers
