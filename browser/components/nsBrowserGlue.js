@@ -60,7 +60,7 @@ BrowserGlue.prototype = {
       case "profile-change-teardown": 
         this._onProfileShutdown();
         break;
-      case "profile-after-change":
+      case "final-ui-startup":
         this._onProfileStartup();
         break;
     }
@@ -74,7 +74,7 @@ BrowserGlue.prototype = {
                            .getService(Components.interfaces.nsIObserverService);
     osvr.addObserver(this, "profile-change-teardown", false);
     osvr.addObserver(this, "xpcom-shutdown", false);
-    osvr.addObserver(this, "profile-after-change", false);
+    osvr.addObserver(this, "final-ui-startup", false);
   },
 
   // cleanup (called on application shutdown)
@@ -85,7 +85,7 @@ BrowserGlue.prototype = {
                            .getService(Components.interfaces.nsIObserverService);
     osvr.removeObserver(this, "profile-change-teardown");
     osvr.removeObserver(this, "xpcom-shutdown");
-    osvr.removeObserver(this, "profile-after-change");
+    osvr.removeObserver(this, "final-ui-startup");
   },
 
   // profile startup handler (contains profile initialization routines)
