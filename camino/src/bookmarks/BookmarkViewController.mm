@@ -457,7 +457,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   int count = [itemsToDelete count];
   for (int i = 0; i < count; i++) {
     doomedItem = [itemsToDelete objectAtIndex:i];
-    [[doomedItem parent] deleteChild:doomedItem];
+    [(BookmarkFolder*)[doomedItem parent] deleteChild:doomedItem];
   }
 
   // restore selection to location near last item deleted or last item
@@ -822,7 +822,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
   {
     // walk up to the child of the root, which should be a container
     id curParent = item;
-    while (curParent && [curParent respondsToSelector:@selector(parent)] && [curParent parent] != [bmManager rootBookmarks])
+    while (curParent && [curParent respondsToSelector:@selector(parent)] && (BookmarkFolder*)[curParent parent] != [bmManager rootBookmarks])
       curParent = [curParent parent];
     
     if (curParent)
@@ -942,7 +942,7 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     {
       if (isCopy)
       {
-        BookmarkItem* newItem = [[aKid parent] copyChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+        BookmarkItem* newItem = [(BookmarkFolder*)[aKid parent] copyChild:aKid toBookmarkFolder:dropFolder atIndex:index];
         [newBookmarks addObject:newItem];
         ++index;
       }
@@ -953,13 +953,13 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
         if ([aKid parent] == (id)dropFolder)
         {
           int kidIndex = [dropFolder indexOfObject:aKid];
-          [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+          [(BookmarkFolder*)[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
           if (kidIndex > index)
             ++index;
         }
         else
         {
-          [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+          [(BookmarkFolder*)[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
           ++index;
         }
       }
