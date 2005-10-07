@@ -46,6 +46,7 @@
 #include "nsRDFCID.h"
 #include "nsUnicharUtils.h"
 #include "nsIAbMDBCard.h"
+#include "nsIAddressBook.h"
 #include "nsAbCardProperty.h"
 #include "prdtoa.h"
 #include "nsMsgUtils.h"
