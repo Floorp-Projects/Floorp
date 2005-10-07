@@ -323,10 +323,19 @@ function eventHandlerMenu(e) {
         ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
       }
 	  var tempElement=ruleElement.getAttribute("accessfocus");
+
+      if(tempElement.indexOf("#")>-1) {
+      
         if(tempElement=="#tabContainer") { 
-		if(ruleElement.tabContainer) {
-			ruleElement.selectedTab.focus();
-		}
+          if(ruleElement.tabContainer) {
+            ruleElement.selectedTab.focus();
+          }
+        } 
+		if(tempElement=="#tabContent") { 
+          document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("content"));
+          document.commandDispatcher.advanceFocus();
+        } 
+        
 	  } else { 
 		  document.getElementById(tempElement).focus();
 	  }
