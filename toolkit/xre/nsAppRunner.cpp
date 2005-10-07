@@ -2260,6 +2260,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
         UpdatePrebinding();
 #endif
+        nsCOMPtr<nsIObserverService> obsService
+          (do_GetService("@mozilla.org/observer-service;1"));
+        if (obsService)
+          obsService->NotifyObservers(nsnull, "final-ui-startup", nsnull);        
 
         rv = cmdLine->Run();
         NS_ENSURE_SUCCESS_LOG(rv, 1);
