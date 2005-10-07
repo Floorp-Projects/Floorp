@@ -1249,37 +1249,6 @@ function CalendarToolboxCustomizeDone(aToolboxChanged)
   window.focus();
 }
 
-/**
- * Pick whichever of "black" or "white" will look better when used as a text
- * color against a background of bgColor. 
- *
- * @param bgColor   the background color as a "#RRGGBB" string
- */
-function getContrastingTextColor(bgColor)
-{
-    var calcColor = bgColor.replace(/#/g, "");
-    var red = parseInt(calcColor.substring(0, 2), 16);
-    var green = parseInt(calcColor.substring(2, 4), 16);
-    var blue = parseInt(calcColor.substring(4, 6), 16);
-
-    // Calculate the L(ightness) value of the HSL color system.
-    // L = (max(R, G, B) + min(R, G, B)) / 2
-    var max = Math.max(Math.max(red, green), blue);
-    var min = Math.min(Math.min(red, green), blue);
-    var lightness = (max + min) / 2;
-
-    // Consider all colors with less than 50% Lightness as dark colors
-    // and use white as the foreground color; otherwise use black.
-    // Actually we use a threshold a bit below 50%, so colors like
-    // #FF0000, #00FF00 and #0000FF still get black text which looked
-    // better when we tested this.
-    if (lightness < 120) {
-        return "white";
-    }
-    
-    return "black";
-}
-
 var gTransactionMgr = Components.classes["@mozilla.org/transactionmanager;1"]
                                 .createInstance(Components.interfaces.nsITransactionManager);
 function doTransaction(aAction, aItem, aCalendar, aOldItem, aListener) {
