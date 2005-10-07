@@ -542,6 +542,9 @@ nsTSubstring_CharT::SetCapacity( size_type capacity )
 void
 nsTSubstring_CharT::SetLength( size_type length )
   {
+    if (mLength == length)
+      return;
+
     SetCapacity(length);
 
     // XXX(darin): SetCapacity may fail, but it doesn't give us a way to find
