@@ -332,8 +332,11 @@ function eventHandlerMenu(e) {
           }
         } 
 		if(tempElement=="#tabContent") { 
-          document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("content"));
-          document.commandDispatcher.advanceFocus();
+          // THis is hack to go backwards and get into browser area. 
+          // The previous approach worked in toolkitFF desktop and failed in device. 
+          
+          document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("nav-bar"));
+          document.commandDispatcher.rewindFocus();
         } 
         
 	  } else { 
