@@ -261,7 +261,7 @@
       
       <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1"
                    class="chromeclass-directories">
-        <stack id="bookmarks-stack" flex="1" style="min-width:0px; width:0px;"
+        <stack id="bookmarks-stack" flex="1" style="min-width:0px; width:0px; overflow: hidden;"
                onpopupshowing="BookmarksToolbar.setOpenedMenu(event);"
                onpopuphidden="BookmarksToolbar.unsetOpenedMenu(event);">
           <hbox id="bookmarks-ptf" class="bookmarks-toolbar-items" contextmenu="bookmarks-context-menu"

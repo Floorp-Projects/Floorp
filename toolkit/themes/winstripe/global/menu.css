@@ -46,12 +46,20 @@
 
 menu,
 menuitem {
+  -moz-appearance: menuitem;
   -moz-box-align: center;
-  border: 1px solid transparent;
   color: MenuText;
   font: menu;
   list-style-image: none;
   -moz-image-region: auto;
+}
+
+menuitem[type="checkbox"] {
+  -moz-appearance: checkmenuitem;
+}
+
+menuitem[type="radio"] {
+  -moz-appearance: radiomenuitem;
 }
 
 menuitem[default="true"] {
@@ -70,10 +78,10 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 .menu-iconic-accel,
 .menu-text,
 .menu-iconic-text {
-  margin-top: 2px !important;
+  margin-top: 1px !important;
   margin-bottom: 2px !important;
-  -moz-margin-start: 1px !important;
-  -moz-margin-end: 2px !important;
+  -moz-margin-start: 0px !important;
+  -moz-margin-end: 0px !important;
   color: inherit;
 }
 
@@ -84,99 +92,64 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 
 .menu-accel,
 .menu-iconic-accel {
-  -moz-padding-end: 17px;
-  -moz-margin-start: 5px;
+  -moz-margin-end: 19px !important;
+  -moz-margin-start: 8px !important;
   color: inherit;
 }
 
+.menu-iconic-text {
+  -moz-margin-start: 2px !important;
+}
+
 .menu-iconic-left {
-  min-width: 12px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  -moz-margin-start: 2px;
-  -moz-margin-end: 2px;
+  padding: 1px;
+  min-width: 15px;
+  min-height: 15px;
 }
 
 /* ..... menu arrow box ..... */
 
 .menu-right {
-  margin-top: 0px;
-  margin-bottom: 1px;
-  -moz-margin-start: 0px;
-  -moz-margin-end: 6px;
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow.png");
+  margin-top: 2px;
+  margin-bottom: 3px;
+  -moz-padding-end: 6px;
+  list-style-image: none;
   -moz-image-region: auto;
-}
-
-.menu-right[_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-hover.png");
-  -moz-image-region: auto;
-}
-
-.menu-right[disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-disabled.png") !important;
-  -moz-image-region: auto;
-}
-
-.menu-right[chromedir="rtl"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-rtl.png");
-}
-
-.menu-right[chromedir="rtl"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-hover-rtl.png");
-}
-
-.menu-right[chromedir="rtl"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/Menu-arrow-disabled-rtl.png") !important;
 }
 
 /* ::::: menu/menuitems in menubar ::::: */
 
 menubar > menu {
-  border: 1px solid transparent !important;
-  padding-top: 1px;
-  -moz-padding-end: 3px;
-  padding-bottom: 1px;
-  -moz-padding-start: 2px;
-	margin-top: 0px !important;
-  margin-bottom: 1px !important;
+  border: 1px solid transparent;
+}
+menubar > menu[_moz-menuactive="true"],
+menubar > menu[_moz-menuactive="true"][open="true"] {
+  color: -moz-MenuBarHoverText;
 }
 menubar > menu[_moz-menuactive="true"] {
-  padding: 1px 3px 1px 2px !important;
-  background-color : Highlight !important;
-  color: HighlightText !important;
-  border-top: 1px solid ThreeDHighlight;
-  border-right: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
-  border-left: 1px solid ThreeDHighlight;
+  border-top-color: ThreeDHighlight;
+  border-left-color: ThreeDHighlight;
+  border-right-color: ThreeDShadow;
+  border-bottom-color: ThreeDShadow;
 }
 menubar > menu[_moz-menuactive="true"][open="true"] {
-  border-top: 1px solid ThreeDShadow;
-  border-right: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDHighlight;
-  border-left: 1px solid ThreeDShadow;
-  padding-top: 1px;
-  -moz-padding-end: 2px;
-  padding-bottom: 0px;
-  -moz-padding-start: 3px;
+  border-top-color: ThreeDShadow;
+  border-left-color: ThreeDShadow;
+  border-right-color: ThreeDHighlight;
+  border-bottom-color: ThreeDHighlight;
 }
 
 /* ..... internal content .... */
 
 .menubar-left {
-  margin-top: 0px;
-  margin-bottom: 0px;
-  -moz-margin-start: 0px;
-  -moz-margin-end: 2px;
   color: inherit;
 }
 
 .menubar-text {
-  margin-top: 1px;
-  -moz-margin-end: 4px !important;
-  margin-bottom: 1px;
   -moz-margin-start: 5px !important;
+  -moz-margin-end: 4px !important;
   padding-top: 1px;
+  padding-bottom: 3px;
   color: inherit;
 }
 
@@ -193,7 +166,7 @@ menupopup > menu[_moz-menuactive="true"],
 menupopup > menuitem[_moz-menuactive="true"],
 popup > menu[_moz-menuactive="true"],
 popup > menuitem[_moz-menuactive="true"] {
-  background-color: Highlight;
+  background: Highlight;
   color: HighlightText;
 }
 
@@ -226,40 +199,6 @@ menulist > menupopup > menuitem[_moz-menuactive="true"] {
 
 menulist > menupopup > menuitem > .menu-iconic-text {
   margin: 0 !important;
-}
-
-/* ::::: checkbox menuitem ::::: */
-
-menuitem[checked="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-disabled.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-check-hover.gif");
-  -moz-image-region: auto;
-}
-
-/* ::::: radio menuitem ::::: */
-
-menuitem[checked="true"][type="radio"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][type="radio"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-disabled.gif");
-  -moz-image-region: auto;
-}
-
-menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-radio-hover.gif");
-  -moz-image-region: auto;
 }
 
 /* ::::: menuseparator ::::: */

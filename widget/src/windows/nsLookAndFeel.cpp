@@ -40,7 +40,15 @@
 #include "nsXPLookAndFeel.h"
 #include <windows.h>
 #include "nsWindow.h"
- 
+
+// Constants only found in new (98+, 2K+, XP+, etc.) Windows.
+#ifndef COLOR_MENUHILIGHT
+#define COLOR_MENUHILIGHT    29
+#endif
+#ifndef SPI_GETFLATMENU
+#define SPI_GETFLATMENU      0x1022
+#endif
+
 nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
 {
 }
@@ -221,6 +229,19 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_buttondefault:
       idx = COLOR_3DDKSHADOW;
       break;
+    case eColor__moz_menubarhovertext: {
+      BOOL isFlatMenus;
+      HRESULT rv;
+
+      // This will simply fail on Windows versions prior to XP, so we get
+      // non-flat as desired.
+      rv = ::SystemParametersInfo(SPI_GETFLATMENU, 0, &isFlatMenus, 0);
+      if (rv && isFlatMenus)
+        idx = COLOR_HIGHLIGHTTEXT; /* flat menus (XP themes and later only) */
+      else
+        idx = COLOR_MENUTEXT; /* 3d menus (pre-XP, some themes) */
+      break;
+    }
     default:
       idx = COLOR_WINDOW;
       break;

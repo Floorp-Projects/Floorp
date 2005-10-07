@@ -437,6 +437,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_mac_accentdarkestshadow, nsILookAndFeel::eColor__moz_mac_accentdarkestshadow,
   eCSSKeyword__moz_menuhover, nsILookAndFeel::eColor__moz_menuhover,
   eCSSKeyword__moz_menuhovertext, nsILookAndFeel::eColor__moz_menuhovertext,
+  eCSSKeyword__moz_menubarhovertext, nsILookAndFeel::eColor__moz_menubarhovertext,
   eCSSKeyword__moz_visitedhyperlinktext, NS_COLOR_MOZ_VISITEDHYPERLINKTEXT,
   eCSSKeyword_currentcolor, NS_COLOR_CURRENTCOLOR,
   eCSSKeyword_UNKNOWN,-1
