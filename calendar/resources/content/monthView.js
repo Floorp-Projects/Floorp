@@ -221,7 +221,6 @@ MonthView.prototype.refreshEvents = function()
     var startDate = new Date(this.firstDateOfView);
     var endDate = new Date(this.lastDateOfView);
     endDate.setDate(endDate.getDate() + 1);
-    endDate.setSeconds(endDate.getSeconds() - 1);
 
     this.eventList = new Array();
 

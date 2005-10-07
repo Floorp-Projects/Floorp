@@ -119,7 +119,6 @@ DayView.prototype.refreshEvents = function()
                                      selectedDateTime.getDate());
     this.displayEndDate = new Date(this.displayStartDate);
     this.displayEndDate.setDate(this.displayEndDate.getDate() + 1)
-    this.displayEndDate.setMilliseconds(this.displayEndDate.getMilliseconds() - 1);
 
     // Save this off so we can get it again in onGetResult below
     var eventController = this;
@@ -361,7 +360,9 @@ DayView.prototype.addToDisplayList = function(itemOccurrence, startDate, endDate
 
     // Check if the event is within the bounds of events to be displayed.
     if ((adjustedEndDate < this.displayStartDate) ||
-        (adjustedStartDate > this.displayEndDate))
+        (adjustedStartDate >= this.displayEndDate) ||
+        (adjustedEndDate == this.displayStartDate &&
+         adjustedStartDate < this.displayStartDate))
         return;
 
     this.eventList.push({event:itemOccurrence, start:startDate.clone(), end:endDate.clone()});

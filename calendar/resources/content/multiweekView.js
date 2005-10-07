@@ -64,8 +64,8 @@
 *   firstDateOfView        - A date equal to the date of the first box of the View (the date of 
 *                            dayBoxItemArray[0])
 *
-*   lastDateOfView        - A date equal to the date of the last box of the View (the date of 
-*                            dayBoxItemArray[41])
+*   endExDateOfView        - A date equal to the date AFTER the last box of the View (AFTER date of 
+*                            dayBoxItemArray[41]) (exclusive end date)
 *
 *
 *    kungFooDeathGripOnEventBoxes - This is to keep the event box javascript objects around so 
@@ -167,7 +167,7 @@ function MultiweekView( calendarWindow )
    this.weekNumberItemArray = new Array();
    this.kungFooDeathGripOnEventBoxes = new Array();
    this.firstDateOfView = new Date();
-   this.lastDateOfView = new Date();
+   this.endExDateOfView = new Date();
 
    // Get the default number of WeeksInView
    this.localeDefaultsStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
@@ -219,7 +219,7 @@ function MultiweekView( calendarWindow )
 MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
 {
     var startDate = new Date( this.firstDateOfView );
-    var endDate = new Date( this.lastDateOfView );
+    var endExDate = new Date( this.endExDateOfView );
     //First just make it work with events
 
     //Clear out all current events
@@ -257,7 +257,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
     var ccalendar = getDisplayComposite();
 
     var start = jsDateToDateTime(startDate).getInTimezone(calendarDefaultTimezone());
-    var end = jsDateToDateTime(endDate).getInTimezone(calendarDefaultTimezone());
+    var end = jsDateToDateTime(endExDate).getInTimezone(calendarDefaultTimezone());
 
     ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT | ccalendar.ITEM_FILTER_CLASS_OCCURRENCES,
                        0, start, end, getListener);
@@ -562,7 +562,7 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
 MultiweekView.prototype.refreshDisplayFromDate = function multiweekView_refreshDisplayFromDate(startDate) { 
   // figure out first and last days of the month, first and last date of view
   this.firstDateOfView = startDate;
-  this.lastDateOfView = new Date( startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + this.WeeksInView*7 - 1, 23, 59, 59 );
+  this.endExDateOfView = new Date( startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + this.WeeksInView*7);
   // set the year in the header (top-left)
   document.getElementById( "multiweek-title" ).setAttribute( "value" , startDate.getFullYear() );
 

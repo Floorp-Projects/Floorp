@@ -124,7 +124,6 @@ WeekView.prototype.refreshEvents = function()
     this.displayStartDate = new Date(gHeaderDateItemArray[1].getAttribute("date"));
     this.displayEndDate = new Date(this.displayStartDate);
     this.displayEndDate.setDate(this.displayEndDate.getDate() + 7);
-    this.displayEndDate.setSeconds(this.displayEndDate.getSeconds() - 1);
 
     // Save this off so we can get it again in onGetResult below
     var eventController = this;
@@ -383,7 +382,9 @@ WeekView.prototype.createEventBoxInternal = function (event)
 
     // Check if the event is within the bounds of events to be displayed.
     if ((adjustedEndDate < this.displayStartDate) ||
-        (adjustedStartDate > this.displayEndDate))
+        (adjustedStartDate > this.displayEndDate) ||
+        (adjustedEndDate == this.displayStartDate &&
+         adjustedStartDate < this.displayStartDate))
         return;
 
     /*
