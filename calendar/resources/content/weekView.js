@@ -411,10 +411,7 @@ WeekView.prototype.createEventBoxInternal = function (event)
     eventBox.event = calEvent;
 
     // figure out what column we need to put this on
-    debug("d: "+gHeaderDateItemArray[1].getAttribute("date")+"\n");
-    var dayIndex = new Date(gHeaderDateItemArray[1].getAttribute("date"));
-    var index = startDate.weekday - dayIndex.getDay();
-    debug("index is:" + index + "(" + startDate.weekday + " - " + dayIndex.getDay() + ")\n");
+    var index = (startDate.weekday - this.displayStartDate.getDay() + 7) % 7;
 
     var ElementOfRef = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + startHour) ;
     // All-day events won't find a good ElementOfRef normally,
