@@ -90,9 +90,20 @@
         if (document.documentElement.type == "child" && 
             !this.instantApply && window.opener) {
           var pdoc = window.opener.document;
-          var lastStatePref = pdoc.getElementById(window.location.href + "#" + this.id);
-          this._setValue(lastStatePref ? lastStatePref.value 
-                                       : this.valueFromPreferences, false);
+
+          // Try to find a preference element for the same preference.
+          var preference = null;
+          var parentPreferences = pdoc.getElementsByTagName("preferences");
+          for (var k = 0; (k < parentPreferences.length && !preference); ++k) {
+            var parentPrefs = parentPreferences[k]
+                                    .getElementsByAttribute("name", this.name);
+            for (var l = 0; (l < parentPrefs.length && !preference); ++l) {
+              if (parentPrefs[l].localName == "preference")
+                preference = parentPrefs[l];
+            }
+          }
+          this._setValue(preference ? preference.value 
+                                    : this.valueFromPreferences, false);
         }
         else
           this._setValue(this.valueFromPreferences, false);
@@ -170,6 +181,9 @@
           else
             this.removeAttribute("disabled");
 
+          if (!this.id)
+            return val;
+
           var elements = document.getElementsByAttribute("preference", this.id);
           for (var i = 0; i < elements.length; ++i) {
             elements[i].disabled = val;
@@ -194,6 +208,9 @@
             this.setAttribute("tabindex", val);
           else
             this.removeAttribute("tabindex");
+
+          if (!this.id)
+            return val;
 
           var elements = document.getElementsByAttribute("preference", this.id);
           for (var i = 0; i < elements.length; ++i) {
@@ -450,6 +467,9 @@
       <method name="updateElements">
         <body>
         <![CDATA[
+          if (!this.id)
+            return;
+
           // This "change" event handler tracks changes made to preferences by 
           // sources other than the user in this window. 
           var elements = document.getElementsByAttribute("preference", this.id);
@@ -978,19 +998,28 @@
               for (var i = 0; i < panes.length; ++i) {
                 var preferences = panes[i].preferences;
                 for (var j = 0; j < preferences.length; ++j) {
-                  var prefID = window.location.href + "#" + preferences[j].id;
-                  var preference = pdoc.getElementById(prefID);
+                  // Try to find a preference element for the same preference.
+                  var preference = null;
+                  var parentPreferences = pdoc.getElementsByTagName("preferences");
+                  for (var k = 0; (k < parentPreferences.length && !preference); ++k) {
+                    var parentPrefs = parentPreferences[k]
+                                         .getElementsByAttribute("name", preferences[j].name);
+                    for (var l = 0; (l < parentPrefs.length && !preference); ++l) {
+                      if (parentPrefs[l].localName == "preference")
+                        preference = parentPrefs[l];
+                    }
+                  }
                   if (!preference) {
-                    var preference = pdoc.createElement("preference");
+                    // No matching preference in the parent window.
+                    preference = pdoc.createElement("preference");
                     childPrefs.appendChild(preference);
-                    preference.id       = prefID;
                     preference.name     = preferences[j].name;
                     preference.type     = preferences[j].type;
                     preference.inverted = preferences[j].inverted;
                     preference.readonly = preferences[j].readonly;
                     preference.disabled = preferences[j].disabled;
                   }
-                  preference.value    = preferences[j].value;
+                  preference.value = preferences[j].value;
                 }
               }
             }
