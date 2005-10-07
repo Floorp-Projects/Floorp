@@ -342,7 +342,7 @@ static const int kBMBarScanningStep = 5;
 -(NSMenu*)menuForEvent:(NSEvent*)aEvent
 {
   NSMenu* myMenu = [[NSMenu alloc] initWithTitle:@"snookums"];
-  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder...",@"Create New Folder...")
+  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder", @"")
                                                     action:@selector(addFolder:)
                                              keyEquivalent:@""];
   [menuItem setTarget:self];
@@ -363,7 +363,7 @@ static const int kBMBarScanningStep = 5;
 {
   BookmarkFolder* toolbar = [[BookmarkManager sharedBookmarkManager] toolbarFolder];
   BookmarkFolder* aFolder = [toolbar addBookmarkFolder];
-  [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder",@"New Folder")];
+  [aFolder setTitle:NSLocalizedString(@"NewBookmarkFolder", @"")];
 }
 
 -(void)showBookmarksToolbar: (BOOL)aShow
