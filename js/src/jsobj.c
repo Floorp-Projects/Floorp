@@ -1043,6 +1043,30 @@ obj_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+/*
+ * Check whether principals subsumes scopeobj's principals, and return true
+ * if so (or if scopeobj has no principals, for backward compatibility with
+ * the JS API, which does not require principals), and false otherwise.
+ */
+static JSBool
+CheckEvalAccess(JSContext *cx, JSObject *scopeobj, JSPrincipals *principals)
+{
+    JSRuntime *rt;
+    JSPrincipals *scopePrincipals;
+
+    rt = cx->runtime;
+    if (rt->findObjectPrincipals) {
+        scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
+        if (scopePrincipals &&
+            !principals->subsume(principals, scopePrincipals)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_BAD_INDIRECT_CALL, js_eval_str);
+            return JS_FALSE;
+        }
+    }
+    return JS_TRUE;
+}
+
 static JSBool
 obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1052,7 +1076,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
     const char *file;
     uintN line;
-    JSPrincipals *principals, *scopePrincipals;
+    JSPrincipals *principals;
     JSScript *script;
     JSBool ok;
     JSRuntime *rt;
@@ -1099,6 +1123,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (indirectCall) {
             callerScopeChain = caller->scopeChain;
             if (obj != callerScopeChain) {
+                if (!CheckEvalAccess(cx, obj, caller->script->principals))
+                    return JS_FALSE;
+
                 scopeobj = js_NewObject(cx, &js_WithClass, obj,
                                         callerScopeChain);
                 if (!scopeobj)
@@ -1177,16 +1204,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * caller's principals has access to scopeobj.
      */
     if (principals) {
-        rt = cx->runtime;
-        if (rt->findObjectPrincipals) {
-            scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
-            if (scopePrincipals &&
-                !principals->subsume(principals, scopePrincipals)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_INDIRECT_CALL, js_eval_str);
-                return JS_FALSE;
-            }
-        }
+        ok = CheckEvalAccess(cx, scopeobj, principals);
+        if (!ok)
+            goto out;
     }
 
     ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
