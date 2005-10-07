@@ -164,6 +164,7 @@
 
 #if defined (XP_MACOSX)
 #include <Processes.h>
+#include <Events.h>
 #endif
 
 extern "C" void ShowOSAlert(const char* aMessage);
@@ -1907,7 +1908,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   ScopedFPHandler handler;
 #endif /* XP_OS2 */
 
+#ifdef XP_MACOSX
+  if (CheckArg("safe-mode") || GetCurrentKeyModifiers() & optionKey)
+#else
   if (CheckArg("safe-mode"))
+#endif
     gSafeMode = PR_TRUE;
 
   // Handle -help and -version command line arguments.

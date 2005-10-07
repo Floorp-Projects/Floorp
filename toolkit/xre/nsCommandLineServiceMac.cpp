@@ -167,9 +167,6 @@ nsresult nsMacCommandLine::Initialize(int& argc, char**& argv)
       err = ::AEProcessAppleEvent(&anEvent);
     }
   }
-  
-  if (GetCurrentKeyModifiers() & optionKey)
-    AddToCommandLine("-p");
 
   // we've started up now
   mStartedUp = PR_TRUE;
