@@ -3414,6 +3414,11 @@ NS_IMETHODIMP nsViewManager::EnableRefresh(PRUint32 aUpdateFlags)
 
   mRefreshEnabled = PR_TRUE;
 
+  if (!mHasPendingUpdates) {
+    // Nothing to do
+    return NS_OK;
+  }
+
   // nested batching can combine IMMEDIATE with DEFERRED. Favour
   // IMMEDIATE over DEFERRED and DEFERRED over NO_SYNC.
   if (aUpdateFlags & NS_VMREFRESH_IMMEDIATE) {
