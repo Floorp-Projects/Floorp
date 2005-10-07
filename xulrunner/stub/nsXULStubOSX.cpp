@@ -70,7 +70,7 @@ main(int argc, char **argv)
                                           absResourcesURL,
                                           CFSTR("application.ini"),
                                           false);
-  CFRelease(resourcesURL);
+  CFRelease(absResourcesURL);
 
   if (!iniFileURL)
     return 1;
@@ -129,6 +129,11 @@ main(int argc, char **argv)
             "Could not find compatible GRE between version %s and %s.\n", 
             range.lower, range.upper);
     return 1;
+  }
+
+  char *lastSlash = strrchr(greDir, '/');
+  if (lastSlash) {
+    *lastSlash = '\0';
   }
 
   char **argv2 = (char**) alloca(sizeof(char*) * (argc + 2));

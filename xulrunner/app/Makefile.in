@@ -68,6 +68,7 @@ REQUIRES = \
         string \
         appshell \
         xulapp \
+        xulrunner \
 	$(NULL)
 
 CPPSRCS = nsXULRunnerApp.cpp
