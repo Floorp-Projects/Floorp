@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "NSString+Utils.h"
+#import "NSArray+Utils.h"
 #import "CHBrowserView.h"
 
 #include "nsCOMPtr.h"
@@ -50,14 +51,14 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIFrame.h"
 
 
 @interface CHOptionSelector : NSObject
@@ -104,7 +105,6 @@
 }
 
 @end
-
 
 NS_IMPL_ISUPPORTS2(CHClickListener, nsIDOMMouseListener, nsIDOMEventListener)
 
@@ -212,60 +212,54 @@ CHClickListener::MouseDown(nsIDOMEvent* aEvent)
     if (!selected)
       [menuItem setAction:@selector(selectOption:)];
   }
-
-  nsCOMPtr<nsIDOMNSHTMLElement> nsSel(do_QueryInterface(sel));
-  PRInt32 left, top, height;
-  PRInt32 clientX, clientY;
-  nsSel->GetOffsetLeft(&left);
-  nsSel->GetOffsetTop(&top);
-  nsSel->GetOffsetHeight(&height);
-
-  nsCOMPtr<nsIDOMElement> currOffsetParent;
-  nsSel->GetOffsetParent(getter_AddRefs(currOffsetParent));
-  while (currOffsetParent) {
-    nsCOMPtr<nsIDOMNSHTMLElement> currNS(do_QueryInterface(currOffsetParent));
-    PRInt32 currLeft, currTop;
-    currNS->GetOffsetLeft(&currLeft);
-    currNS->GetOffsetTop(&currTop);
-    left += currLeft;
-    top += currTop;
-    currNS->GetOffsetParent(getter_AddRefs(currOffsetParent));
-  }
   
-  mouseEvent->GetClientX(&clientX);
-  mouseEvent->GetClientY(&clientY);
-
-  PRInt32 xDelta = clientX - left;
-  PRInt32 yDelta = top + height - clientY;
-
   nsCOMPtr<nsIContent> selContent = do_QueryInterface(sel);
   nsCOMPtr<nsIDocument> doc = selContent->GetDocument();
 
-  // I'm going to assume that if we got a mousedown for a content node,
-  // it's actually in a document.
-
-  nsIScriptGlobalObject* sgo = doc->GetScriptGlobalObject();
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(sgo);
-  if (!window)
-    return NS_OK;
-
-  PRInt32 scrollX, scrollY;
-  window->GetScrollX(&scrollX);
-  window->GetScrollY(&scrollY);
-  xDelta += scrollX; // Normal direction.
-  yDelta -= scrollY; // Remember, y is flipped.
+  NSEvent*  event = [NSApp currentEvent];
+  NSWindow* hostWindow = [event window];
   
+  // get the frame location
+  nsIPresShell* presShell = doc->GetShellAt(0);
+  if (!presShell)
+    return NS_ERROR_FAILURE;
+
+  nsIFrame* selectFrame = presShell->GetPrimaryFrameFor(selContent);
+  if (!selectFrame)
+    return NS_ERROR_FAILURE;
+  
+  nsIntRect selectRect = selectFrame->GetScreenRectExternal();
+  NSRect selectScreenRect = NSMakeRect(selectRect.x, selectRect.y, selectRect.width, selectRect.height);
+  
+  NSScreen* mainScreen = [[NSScreen screens] firstObject];  // NSArray category method
+  if (!mainScreen)
+    return NS_ERROR_FAILURE;
+
+  // y-flip to convert to cocoa coords
+  NSRect mainScreenFrame = [mainScreen frame];
+  selectScreenRect.origin.y = NSMaxY(mainScreenFrame) - selectScreenRect.origin.y;
+
+  // convert to window coords
+  NSRect selectFrameRect = selectScreenRect;
+  selectFrameRect.origin = [hostWindow convertScreenToBase:selectFrameRect.origin];
+
+  // we're gonna make a little view to display things with, so that the popup isn't
+  // shown at the top of the window when it's near the bottom of the screen.
+  NSView* hostView = [[NSView alloc] initWithFrame:selectFrameRect];
+  [[hostWindow contentView] addSubview:hostView];   // takes ownership
+  [hostView release];
+
   const float kMenuWidth = 20.0;               // specify something small so it sizes to fit
   const float kMenuPopupHeight = 20.0;         // height of a popup in aqua
-  NSEvent* event = [NSApp currentEvent];
-  NSPoint point = [event locationInWindow];
-  NSRect bounds = { {point.x - xDelta, point.y - yDelta}, {kMenuWidth, kMenuPopupHeight} };
 
-  NSPopUpButtonCell *cell = [[NSPopUpButtonCell alloc] initTextCell: @"" pullsDown: NO];
-  [cell setMenu: menu];
-  [cell setFont:[NSFont systemFontOfSize:[NSFont systemFontSize]]];
-  [cell trackMouse: event inRect: bounds ofView: [[event window] contentView] untilMouseUp: YES];
-  [cell release];
+  NSRect bounds = NSMakeRect(0, 0, kMenuWidth, kMenuPopupHeight);
+  
+  NSPopUpButtonCell* popupCell = [[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:NO];
+  [popupCell setMenu: menu];
+  [popupCell setFont:[NSFont systemFontOfSize:[NSFont systemFontSize]]];
+  [popupCell trackMouse:event inRect:bounds ofView:hostView untilMouseUp:YES];
+  [popupCell release];
 
+  [hostView removeFromSuperview];   // this releases it
   return NS_OK;
 }

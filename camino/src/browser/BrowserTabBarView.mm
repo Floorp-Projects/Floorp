@@ -426,7 +426,7 @@ static const int kOverflowButtonMargin = 1;
 
 - (IBAction)overflowMenu:(id)sender
 {
-  NSPopUpButtonCell *popupCell = [[[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES] autorelease];
+  NSPopUpButtonCell* popupCell = [[[NSPopUpButtonCell alloc] initTextCell:@"" pullsDown:YES] autorelease];
   [popupCell setMenu:mOverflowMenu];
   [popupCell trackMouse:[NSApp currentEvent] inRect:[sender bounds] ofView:sender untilMouseUp:YES];
 }
