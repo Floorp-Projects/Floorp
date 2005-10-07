@@ -49,7 +49,7 @@
 #include <math.h>
 #include "prprf.h"
 
-static int ComponentValue(const char* aColorSpec, int aLen, int color, int dpc)
+static int ComponentValue(const PRUnichar* aColorSpec, int aLen, int color, int dpc)
 {
   int component = 0;
   int index = (color * dpc);
@@ -57,7 +57,7 @@ static int ComponentValue(const char* aColorSpec, int aLen, int color, int dpc)
     dpc = 2;
   }
   while (--dpc >= 0) {
-    char ch = ((index < aLen) ? aColorSpec[index++] : '0');
+    PRUnichar ch = ((index < aLen) ? aColorSpec[index++] : '0');
     if (('0' <= ch) && (ch <= '9')) {
       component = (component * 16) + (ch - '0');
     } else if ((('a' <= ch) && (ch <= 'f')) || 
@@ -72,24 +72,22 @@ static int ComponentValue(const char* aColorSpec, int aLen, int color, int dpc)
   return component;
 }
 
-extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
-                                       nscolor* aResult)
-{
-  // XXXldb nsStackString<10>
-  NS_LossyConvertUCS2toASCII bufferStr(aColorSpec);
-  return NS_ASCIIHexToRGB(bufferStr, aResult);
-}
-
 extern "C" NS_GFX_(PRBool) NS_ASCIIHexToRGB(const nsCString& aColorSpec,
                                             nscolor* aResult)
 {
-  const char* buffer = aColorSpec.get();
+  return NS_HexToRGB(NS_ConvertASCIItoUTF16(aColorSpec), aResult);
+}
+
+extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
+                                       nscolor* aResult)
+{
+  const PRUnichar* buffer = aColorSpec.get();
 
   int nameLen = aColorSpec.Length();
   if ((nameLen == 3) || (nameLen == 6)) {
     // Make sure the digits are legal
     for (int i = 0; i < nameLen; i++) {
-      char ch = buffer[i];
+      PRUnichar ch = buffer[i];
       if (((ch >= '0') && (ch <= '9')) ||
           ((ch >= 'a') && (ch <= 'f')) ||
           ((ch >= 'A') && (ch <= 'F'))) {
@@ -129,11 +127,8 @@ extern "C" NS_GFX_(PRBool) NS_ASCIIHexToRGB(const nsCString& aColorSpec,
 // compatible with legacy Nav behavior
 extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aColorSpec, nscolor* aResult)
 {
-  // XXXldb nsStackString<30>
-  NS_LossyConvertUCS2toASCII buffer(aColorSpec);
-
-  int nameLen = buffer.Length();
-  const char* colorSpec = buffer.get();
+  int nameLen = aColorSpec.Length();
+  const PRUnichar* colorSpec = aColorSpec.get();
   if ('#' == colorSpec[0]) {
     ++colorSpec;
     --nameLen;
