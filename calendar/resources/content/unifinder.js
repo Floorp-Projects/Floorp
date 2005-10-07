@@ -715,7 +715,7 @@ function refreshEventTreeInternal(eventArray)
 
    document.getElementById( UnifinderTreeName ).view = treeView;
 
-   document.getElementById( UnifinderTreeName ).eventView = new calendarEventView( eventArray );
+   document.getElementById( UnifinderTreeName ).eventView = new calendarEventView( gEventArray );
 
    //select selected events in the tree.
    selectSelectedEventsInTree( false );
