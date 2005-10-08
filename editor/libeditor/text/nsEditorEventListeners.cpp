@@ -275,18 +275,29 @@ nsTextEditorMouseListener::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-
-
 nsresult
 nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
-  nsCOMPtr<nsIDOMNSEvent> nsEvent ( do_QueryInterface(aMouseEvent) );
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
+  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aMouseEvent);
   PRBool isTrusted = PR_FALSE;
-  if (!mouseEvent || !nsEvent ||
-      NS_FAILED(nsEvent->GetIsTrusted(&isTrusted)) || !isTrusted) {
-    //non-ui, or non-trusted evet passed in.  bad things.
+  if (!mouseEvent || !nsevent ||
+      NS_FAILED(nsevent->GetIsTrusted(&isTrusted)) || !isTrusted) {
+    // Non-ui or non-trusted event passed in. Bad things.
     return NS_OK;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent = do_QueryInterface(aMouseEvent);
+  if (!nsuiEvent)
+    return NS_ERROR_NULL_POINTER;
+
+  PRBool preventDefault;
+  rv = nsuiEvent->GetPreventDefault(&preventDefault);
+  if (NS_FAILED(rv) || preventDefault)
+  {
+    // We're done if 'preventdefault' is true (see for example bug 70698).
+    return rv;
   }
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
@@ -303,7 +314,6 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   // middle-mouse click (paste);
   if (button == 1)
   {
-    nsresult rv;
     nsCOMPtr<nsIPrefBranch> prefBranch =
       do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv) && prefBranch)
@@ -313,9 +323,6 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
       if (NS_SUCCEEDED(rv) && doMiddleMousePaste)
       {
         // Set the selection to the point under the mouse cursor:
-        nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aMouseEvent));
-        if (!nsuiEvent)
-          return NS_ERROR_NULL_POINTER;
         nsCOMPtr<nsIDOMNode> parent;
         if (NS_FAILED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
           return NS_ERROR_NULL_POINTER;
@@ -351,12 +358,7 @@ nsTextEditorMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 
         // Prevent the event from bubbling up to be possibly handled
         // again by the containing window:
-        nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(mouseEvent));
-
-        if (nsevent) {
-          nsevent->PreventBubble();
-        }
-
+        nsevent->PreventBubble();
         mouseEvent->PreventDefault();
 
         // We processed the event, whether drop/paste succeeded or not
