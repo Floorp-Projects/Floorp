@@ -1848,8 +1848,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   }
 
   // Check frame to see if it is hidden
-  if (!frame || !frame->GetStyleVisibility()->IsVisible() ||
-      !frame->AreAncestorViewsVisible()) {
+  if (!frame || !frame->GetStyleVisibility()->IsVisible()) {
     *aIsHidden = PR_TRUE;
   }
 
