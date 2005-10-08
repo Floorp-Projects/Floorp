@@ -160,6 +160,7 @@ protected:
                           const PRUnichar* aPreventDefault=nsnull,
                           const PRUnichar* aAllowUntrusted=nsnull);
 
+  void ReportKeyConflict(const PRUnichar* aKey, const PRUnichar* aModifiers, nsIContent* aElement, const char *aMessageName);
   void GetEventType(nsAString& type);
   PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
 

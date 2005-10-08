@@ -68,6 +68,8 @@
 #include "nsPIWindowRoot.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIServiceManager.h"
+#include "nsContentUtils.h"
+#include "nsIScriptError.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsXULAtoms.h"
@@ -889,6 +891,17 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
     // We have a charcode.
     mMisc = 1;
     mDetail = key[0];
+    const PRUint8 GTK2Modifiers = cShift | cControl | cShiftMask | cControlMask;
+    if ((mKeyMask & GTK2Modifiers) == GTK2Modifiers &&
+        modifiers.First() != PRUnichar(',') &&
+        (('0' <= mDetail && mDetail <= '9') ||
+         ('a' <= mDetail && mDetail <= 'f')))
+      ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "GTK2Conflict");
+    const PRUint8 WinModifiers = cControl | cAlt | cControlMask | cAltMask;
+    if ((mKeyMask & WinModifiers) == WinModifiers &&
+        modifiers.First() != PRUnichar(',') &&
+        'a' <= mDetail && mDetail <= 'f')
+      ReportKeyConflict(key.get(), modifiers.get(), aKeyElement, "WinConflict");
   }
   else {
     key.Assign(aKeyCode);
@@ -916,6 +929,20 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
       mType &= ~NS_HANDLER_ALLOW_UNTRUSTED;
     }
   }
+}
+
+void
+nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar* aModifiers, nsIContent* aKeyElement, const char *aMessageName)
+{
+  nsIURI* uri = mPrototypeBinding ? uri = mPrototypeBinding->DocURI() :
+           aKeyElement ? aKeyElement->GetOwnerDoc()->GetDocumentURI() : nsnull;
+  const PRUnichar* params[] = { aKey, aModifiers };
+  nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+                                  aMessageName,
+                                  params, NS_ARRAY_LENGTH(params),
+                                  uri, EmptyString(), mLineNumber, 0,
+                                  nsIScriptError::warningFlag,
+                                  "XBL Prototype Handler");
 }
 
 PRBool
