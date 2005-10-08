@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
+#   Asaf Romano <mozilla.mano@sent.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,9 +42,16 @@ var gGeneralPane = {
 
   setHomePageToCurrentPage: function ()
   {
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                      .getService(Components.interfaces.nsIWindowMediator);
-    var win = wm.getMostRecentWindow("navigator:browser");
+    var win;
+    if (document.documentElement.instantApply) {
+      // If we're in instant-apply mode, use the most recent browser window
+      var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                         .getService(Components.interfaces.nsIWindowMediator);
+      win = wm.getMostRecentWindow("navigator:browser");
+    }
+    else
+      win = window.opener;
+
     if (win) {
       var homePageField = document.getElementById("browserStartupHomepage");
       var newVal = "";
@@ -117,23 +125,38 @@ var gGeneralPane = {
   init: function ()
   {
     this._pane = document.getElementById("paneGeneral");
-    
+
+    this._updateUseCurrentButton();
+    if (document.documentElement.instantApply)
+      window.addEventListener("focus", this._updateUseCurrentButton, false);
+  },
+
+  _updateUseCurrentButton: function () {
     var useButton = document.getElementById("browserUseCurrent");
-    
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-    var win = wm.getMostRecentWindow("navigator:browser");
-    if (win) {
+
+    var win;
+    if (document.documentElement.instantApply) {
+      // If we're in instant-apply mode, use the most recent browser window
+      var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                         .getService(Components.interfaces.nsIWindowMediator);
+      win = wm.getMostRecentWindow("navigator:browser");
+    }
+    else
+      win = window.opener;
+
+    if (win && win.document.documentElement
+                  .getAttribute("windowtype") == "navigator:browser") {
+      useButton.disabled = false;
+
       var tabbrowser = win.document.getElementById("content");  
       if (tabbrowser.browsers.length > 1)
         useButton.label = useButton.getAttribute("label2");
     }
     else {
-      // prefwindow wasn't opened from a browser window, so no current page
       useButton.disabled = true;
     }
   },
-  
+
   showConnections: function ()
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/connection.xul",
@@ -171,4 +194,3 @@ var gGeneralPane = {
   }
 #endif
 };
-
