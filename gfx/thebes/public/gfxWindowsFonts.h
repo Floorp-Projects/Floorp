@@ -12,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Oracle Corporation code.
+ * The Original Code is Mozilla Foundation code.
  *
- * The Initial Developer of the Original Code is Oracle Corporation.
+ * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <pavlov@pavlov.net>
+ *   Stuart Parmenter <stuart@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,30 +35,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_WINDOWSSURFACE_H
-#define GFX_WINDOWSSURFACE_H
+#ifndef GFX_WINDOWSFONTS_H
+#define GFX_WINDOWSFONTS_H
 
-#include "gfxASurface.h"
+#include "prtypes.h"
+#include "gfxTypes.h"
+#include "gfxFont.h"
 
 #include <cairo-win32.h>
 
-class NS_EXPORT gfxWindowsSurface : public gfxASurface {
-    THEBES_DECL_ISUPPORTS_INHERITED
+class gfxWindowsFont : public gfxFont {
 
 public:
-    gfxWindowsSurface(HDC dc);
-    gfxWindowsSurface(HDC dc, unsigned long width, unsigned long height);
-    virtual ~gfxWindowsSurface();
+    gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HWND aHWnd);
+    virtual ~gfxWindowsFont();
 
+    virtual const gfxFont::Metrics& GetMetrics() const { return mMetrics; }
 
-    HDC GetDC() { return mDC; }
+    cairo_font_face_t *CairoFontFace() { return mFontFace; }
+    cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
+
+protected:
+    cairo_font_face_t *MakeCairoFontFace();
+    cairo_scaled_font_t *MakeCairoScaledFont(cairo_t *cr);
+    void FillLogFont();
+
 private:
-    PRBool mOwnsDC;
-    HDC mDC;
-    HBITMAP mOrigBitmap;
+    void ComputeMetrics();
 
-    PRInt32 mWidth;
-    PRInt32 mHeight;
+    LOGFONTW mLogFont;
+    cairo_font_face_t *mFontFace;
+    cairo_scaled_font_t *mScaledFont;
+    HWND mHWnd;
+
+    gfxFont::Metrics mMetrics;
 };
 
-#endif /* GFX_WINDOWSSURFACE_H */
+
+
+class NS_EXPORT gfxWindowsFontGroup : public gfxFontGroup {
+
+public:
+    gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle, HWND hwnd);
+    virtual ~gfxWindowsFontGroup();
+    void DrawString(gfxContext *aContext, const nsAString& aString, gfxPoint pt);
+    gfxFloat MeasureText(gfxContext *aContext, const nsAString& aString);
+
+protected:
+    virtual gfxFont *MakeFont(const nsAString& aName);
+
+private:
+    PRInt32 MeasureOrDrawUniscribe(gfxContext *aContext,
+                                   const PRUnichar *aString, PRUint32 aLength,
+                                   PRBool aDraw, PRInt32 aX, PRInt32 aY, const PRInt32 *aSpacing);
+
+    HWND mWnd;
+};
+
+#endif /* GFX_WINDOWSFONTS_H */
+

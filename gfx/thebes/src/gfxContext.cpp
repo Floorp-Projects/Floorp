@@ -487,9 +487,14 @@ void gfxContext::Mask(gfxASurface *surface, gfxPoint offset)
 }
 
 // fonts?
-void gfxContext::DrawString(gfxTextRun& text, int pos, int len)
+void gfxContext::DrawText(gfxTextRun& text, int pos, int len)
 {
 
+}
+
+void gfxContext::DrawText(const nsAString& aString, gfxPoint pt, gfxFontGroup &aFontGroup)
+{
+    //    aFontGroup.DrawText(aString, pt);
 }
 
 void gfxContext::Paint(gfxFloat alpha)

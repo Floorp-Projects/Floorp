@@ -16,12 +16,11 @@
  *
  * The Initial Developer of the Original Code is
  * mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Stuart Parmenter <pavlov@pavlov.net>
- *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,15 +39,15 @@
 #ifndef NSTHEBESFONTMETRICS__H__
 #define NSTHEBESFONTMETRICS__H__
 
-#include "nsIFontMetrics.h"
+#include "nsIThebesFontMetrics.h"
+#include "nsThebesRenderingContext.h"
 #include "nsCOMPtr.h"
-#include "nsIDeviceContext.h"
+#include "nsThebesDeviceContext.h"
 #include "nsIAtom.h"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include "gfxFont.h"
 
-class nsThebesFontMetrics : public nsIFontMetrics
+class nsThebesFontMetrics : public nsIThebesFontMetrics
 {
 public:
     nsThebesFontMetrics();
@@ -81,22 +80,83 @@ public:
     NS_IMETHOD  GetLeading(nscoord& aLeading);
     NS_IMETHOD  GetNormalLineHeight(nscoord& aLineHeight);
 
-/* local methods */
-    nscoord MeasureString(const char *aString, PRUint32 aLength);
-    nscoord MeasureString(const PRUnichar *aString, PRUint32 aLength);
+
+
+
+    virtual nsresult GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
+                              nsThebesRenderingContext *aContext);
+    // aCachedOffset will be updated with a new offset.
+    virtual nsresult GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                              nscoord& aWidth, PRInt32 *aFontID,
+                              nsThebesRenderingContext *aContext);
+
+    // Get the text dimensions for this string
+    virtual nsresult GetTextDimensions(const PRUnichar* aString,
+                                       PRUint32 aLength,
+                                       nsTextDimensions& aDimensions, 
+                                       PRInt32* aFontID);
+    virtual nsresult GetTextDimensions(const char*         aString,
+                                       PRInt32             aLength,
+                                       PRInt32             aAvailWidth,
+                                       PRInt32*            aBreaks,
+                                       PRInt32             aNumBreaks,
+                                       nsTextDimensions&   aDimensions,
+                                       PRInt32&            aNumCharsFit,
+                                       nsTextDimensions&   aLastWordDimensions,
+                                       PRInt32*            aFontID);
+    virtual nsresult GetTextDimensions(const PRUnichar*    aString,
+                                       PRInt32             aLength,
+                                       PRInt32             aAvailWidth,
+                                       PRInt32*            aBreaks,
+                                       PRInt32             aNumBreaks,
+                                       nsTextDimensions&   aDimensions,
+                                       PRInt32&            aNumCharsFit,
+                                       nsTextDimensions&   aLastWordDimensions,
+                                       PRInt32*            aFontID);
+
+    // Draw a string using this font handle on the surface passed in.  
+    virtual nsresult DrawString(const char *aString, PRUint32 aLength,
+                                nscoord aX, nscoord aY,
+                                const nscoord* aSpacing,
+                                nsThebesRenderingContext *aContext);
+    // aCachedOffset will be updated with a new offset.
+    virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
+                                nscoord aX, nscoord aY,
+                                PRInt32 aFontID,
+                                const nscoord* aSpacing,
+                                nsThebesRenderingContext *aContext);
+
+#ifdef MOZ_MATHML
+    // These two functions get the bounding metrics for this handle,
+    // updating the aBoundingMetrics in Points.  This means that the
+    // caller will have to update them to twips before passing it
+    // back.
+    virtual nsresult GetBoundingMetrics(const char *aString, PRUint32 aLength,
+                                        nsBoundingMetrics &aBoundingMetrics);
+    // aCachedOffset will be updated with a new offset.
+    virtual nsresult GetBoundingMetrics(const PRUnichar *aString,
+                                        PRUint32 aLength,
+                                        nsBoundingMetrics &aBoundingMetrics,
+                                        PRInt32 *aFontID);
+#endif /* MOZ_MATHML */
+
+    // Set the direction of the text rendering
+    virtual nsresult SetRightToLeftText(PRBool aIsRTL);
+
+
+
+
+protected:
+
+    gfxFont::Metrics GetMetrics();
+
+    gfxFontGroup *mFontGroup;
+    gfxFontStyle *mFontStyle;
 
 private:
-    FT_Face mFace;
-    nsCOMPtr<nsIDeviceContext> mDeviceContext;
+    nsThebesDeviceContext *mDeviceContext;
     nsCOMPtr<nsIAtom> mLangGroup;
     float mDev2App;
-
-    long mMaxAscent;
-    long mMaxDescent;
-    short mMaxAdvance;
-
-    long mUnderlineOffset;
-    long mUnderlineHeight;
 };
 
 #endif /* NSTHEBESFONTMETRICS__H__ */

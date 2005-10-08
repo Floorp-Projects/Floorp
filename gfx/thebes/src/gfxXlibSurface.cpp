@@ -123,7 +123,6 @@ gfxXlibSurface::gfxXlibSurface(Display* dpy, XRenderPictFormat *format,
 
 gfxXlibSurface::~gfxXlibSurface()
 {
-    //fprintf (stderr, "Destroying xlib surface %p (drawable %d)\n", this, mDrawable);
     Destroy();
 }
 

@@ -57,8 +57,13 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsPango)
 #endif
 #ifdef XP_WIN
+#if 0
 #include "nsFontMetricsWin2.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsWin)
+#else
+#include "nsThebesFontMetrics.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontMetrics)
+#endif
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesBlender)
@@ -118,7 +123,8 @@ static const nsModuleComponentInfo components[] =
 #ifdef MOZ_ENABLE_PANGO
     nsFontMetricsPangoConstructor
 #elif XP_WIN
-    nsFontMetricsWinConstructor
+    //nsFontMetricsWinConstructor
+    nsThebesFontMetricsConstructor
 #else
 #error write me!
 #endif

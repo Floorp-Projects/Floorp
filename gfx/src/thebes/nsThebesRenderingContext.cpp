@@ -185,8 +185,7 @@ NS_IMETHODIMP
 nsThebesRenderingContext::GetDrawingSurface(nsIDrawingSurface **aSurface)
 {
     *aSurface = mDrawingSurface;
-    NS_IF_ADDREF (*aSurface);
-    
+    // don't addref! this isn't an xpcom call even though it sure looks like one
     return NS_OK;
 }
 
