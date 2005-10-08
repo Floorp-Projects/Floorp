@@ -293,20 +293,20 @@ public:
 #if defined(IS_LITTLE_ENDIAN)
     void        Swap()
     {
-        mHashNumber   = ::PR_htonl(mHashNumber);
-        mEvictionRank = ::PR_htonl(mEvictionRank);
-        mDataLocation = ::PR_htonl(mDataLocation);
-        mMetaLocation = ::PR_htonl(mMetaLocation);
+        mHashNumber   = htonl(mHashNumber);
+        mEvictionRank = htonl(mEvictionRank);
+        mDataLocation = htonl(mDataLocation);
+        mMetaLocation = htonl(mMetaLocation);
     }
 #endif
     
 #if defined(IS_LITTLE_ENDIAN)
     void        Unswap()
     {
-        mHashNumber   = ::PR_ntohl(mHashNumber);
-        mEvictionRank = ::PR_ntohl(mEvictionRank);
-        mDataLocation = ::PR_ntohl(mDataLocation);
-        mMetaLocation = ::PR_ntohl(mMetaLocation);
+        mHashNumber   = ntohl(mHashNumber);
+        mEvictionRank = ntohl(mEvictionRank);
+        mDataLocation = ntohl(mDataLocation);
+        mMetaLocation = ntohl(mMetaLocation);
     }
 #endif
 
@@ -353,22 +353,22 @@ struct nsDiskCacheHeader {
     void        Swap()
     {
 #if defined(IS_LITTLE_ENDIAN)
-        mVersion     = ::PR_htonl(mVersion);
-        mDataSize    = ::PR_htonl(mDataSize);
-        mEntryCount  = ::PR_htonl(mEntryCount);
-        mIsDirty     = ::PR_htonl(mIsDirty);
-        mRecordCount = ::PR_htonl(mRecordCount);
+        mVersion     = htonl(mVersion);
+        mDataSize    = htonl(mDataSize);
+        mEntryCount  = htonl(mEntryCount);
+        mIsDirty     = htonl(mIsDirty);
+        mRecordCount = htonl(mRecordCount);
 #endif
     }
     
     void        Unswap()
     {
 #if defined(IS_LITTLE_ENDIAN)
-        mVersion     = ::PR_ntohl(mVersion);
-        mDataSize    = ::PR_ntohl(mDataSize);
-        mEntryCount  = ::PR_ntohl(mEntryCount);
-        mIsDirty     = ::PR_ntohl(mIsDirty);
-        mRecordCount = ::PR_ntohl(mRecordCount);
+        mVersion     = ntohl(mVersion);
+        mDataSize    = ntohl(mDataSize);
+        mEntryCount  = ntohl(mEntryCount);
+        mIsDirty     = ntohl(mIsDirty);
+        mRecordCount = ntohl(mRecordCount);
 #endif
     }
 };
