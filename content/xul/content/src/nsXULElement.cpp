@@ -2282,22 +2282,6 @@ nsXULElement::GetClasses() const
     return FindLocalOrProtoAttr(kNameSpaceID_None, nsXULAtoms::clazz);
 }
 
-NS_IMETHODIMP_(PRBool)
-nsXULElement::HasClass(nsIAtom* aClass, PRBool /*aCaseSensitive*/) const
-{
-    const nsAttrValue* val = FindLocalOrProtoAttr(kNameSpaceID_None, nsXULAtoms::clazz);
-    if (val) {
-        if (val->Type() == nsAttrValue::eAtom) {
-            return aClass == val->GetAtomValue();
-        }
-        if (val->Type() == nsAttrValue::eAtomArray) {
-            return val->GetAtomArrayValue()->IndexOf(aClass) >= 0;
-        }
-    }
-
-    return PR_FALSE;
-}
-
 NS_IMETHODIMP
 nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {

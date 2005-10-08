@@ -159,7 +159,6 @@ public:
   // for nsIStyledContent
   virtual nsIAtom *GetClassAttributeName() const;
   virtual const nsAttrValue* GetClasses() const;
-  NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const;
   
   nsresult SetClassAttributeName(nsIAtom* aName);
 protected:

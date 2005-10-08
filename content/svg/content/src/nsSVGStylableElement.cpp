@@ -92,22 +92,6 @@ nsSVGStylableElement::GetClasses() const
   return mClassName->GetAttrValue();
 }
 
-NS_IMETHODIMP_(PRBool)
-nsSVGStylableElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
-{
-  NS_ASSERTION(aCaseSensitive, "svg should always be casesensitive");
-
-  const nsAttrValue* val = mClassName->GetAttrValue();
-  if (val->Type() == nsAttrValue::eAtom) {
-    return aClass == val->GetAtomValue();
-  }
-  if (val->Type() == nsAttrValue::eAtomArray) {
-    return val->GetAtomArrayValue()->IndexOf(aClass) >= 0;
-  }
-
-  return PR_FALSE;
-}
-
 //----------------------------------------------------------------------
 // nsIDOMSVGStylable methods
 

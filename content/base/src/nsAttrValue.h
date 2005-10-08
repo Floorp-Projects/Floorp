@@ -159,6 +159,12 @@ public:
   PRBool Equals(const nsAString& aValue, nsCaseTreatment aCaseSensitive) const;
   PRBool Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const;
 
+  /**
+   * Returns true if this AttrValue is equal to the given atom, or is an
+   * array which contains the given atom.
+   */
+  PRBool Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const;
+
   void ParseAtom(const nsAString& aValue);
   void ParseAtomArray(const nsAString& aValue);
   void ParseStringOrAtom(const nsAString& aValue);

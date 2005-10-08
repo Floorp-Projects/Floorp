@@ -2663,6 +2663,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
   mPreviousSiblingData = nsnull;
   mParentData = nsnull;
   mLanguage = nsnull;
+  mClasses = nsnull;
 
   // get the compat. mode (unless it is provided)
   if(!aCompat) {
@@ -2687,6 +2688,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
       mStyledContent = NS_STATIC_CAST(nsIStyledContent*, aContent);
       mContentID = mStyledContent->GetID();
+      mClasses = mStyledContent->GetClasses();
     }
 
     NS_ASSERTION(nsCOMPtr<nsIStyledContent>(do_QueryInterface(aContent)) == mStyledContent,
@@ -3291,9 +3293,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           do {
             const char* id2Str;
             IDList->mAtom->GetUTF8String(&id2Str);
-            nsDependentCString id2(id2Str);
             if (localTrue !=
-                id1.Equals(id2, nsCaseInsensitiveCStringComparator())) {
+                id1.Equals(id2Str, nsCaseInsensitiveCStringComparator())) {
               result = PR_FALSE;
               break;
             }
@@ -3305,8 +3306,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       if (result &&
           (!aAttribute || aAttribute != data.mStyledContent->GetClassAttributeName())) {
         nsAtomList* classList = aSelector->mClassList;
+        const nsAttrValue *elementClasses = data.mClasses;
         while (nsnull != classList) {
-          if (localTrue == (!data.mStyledContent->HasClass(classList->mAtom, isCaseSensitive))) {
+          if (localTrue == (!(elementClasses && elementClasses->Contains(classList->mAtom, isCaseSensitive ? eCaseMatters : eIgnoreCase)))) {
             result = PR_FALSE;
             break;
           }
@@ -3448,15 +3450,10 @@ nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade) {
-    nsIStyledContent* styledContent = aData->mStyledContent;
-    const nsAttrValue* classes = nsnull;
-    if (styledContent)
-      classes = styledContent->GetClasses();
-    
     cascade->mRuleHash.EnumerateAllRules(aData->mNameSpaceID,
                                          aData->mContentTag,
                                          aData->mContentID,
-                                         classes,
+                                         aData->mClasses,
                                          ContentEnumFunc,
                                          aData);
   }

@@ -673,6 +673,48 @@ nsAttrValue::Equals(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
   return aValue->Equals(val);
 }
 
+PRBool
+nsAttrValue::Contains(nsIAtom* aValue, nsCaseTreatment aCaseSensitive) const
+{
+  switch (BaseType()) {
+    case eAtomBase:
+    {
+      nsIAtom* atom = GetAtomValue();
+
+      if (aCaseSensitive == eCaseMatters) {
+        return aValue == atom;
+      }
+
+      const char *val1, *val2;
+      aValue->GetUTF8String(&val1);
+      atom->GetUTF8String(&val2);
+
+      return nsCRT::strcasecmp(val1, val2) == 0;
+    }
+    default:
+    {
+      if (Type() == eAtomArray) {
+        nsCOMArray<nsIAtom>* array = GetAtomArrayValue();
+        if (aCaseSensitive == eCaseMatters) {
+          return array->IndexOf(aValue) >= 0;
+        }
+
+        const char *val1, *val2;
+        aValue->GetUTF8String(&val1);
+
+        for (PRInt32 i = 0, count = array->Count(); i < count; ++i) {
+          array->ObjectAt(i)->GetUTF8String(&val2);
+          if (nsCRT::strcasecmp(val1, val2) == 0) {
+            return PR_TRUE;
+          }
+        }
+      }
+    }
+  }
+
+  return PR_FALSE;
+}
+
 void
 nsAttrValue::ParseAtom(const nsAString& aValue)
 {

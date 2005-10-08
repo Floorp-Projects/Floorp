@@ -53,6 +53,7 @@ class nsISupportsArray;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsRuleWalker;
+class nsAttrValue;
 
 // The implementation of the constructor and destructor are currently in
 // nsCSSStyleSheet.cpp.
@@ -93,6 +94,7 @@ struct RuleProcessorData {
   nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
   PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
+  const nsAttrValue* mClasses;      // if styled content, styledcontent->GetClasses()
   RuleProcessorData* mPreviousSiblingData;
   RuleProcessorData* mParentData;
 

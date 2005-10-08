@@ -47,10 +47,10 @@ class nsRuleWalker;
 class nsAttrValue;
 
 // IID for the nsIStyledContent class
-// c59f05f5-6e39-4e98-a1ea-6c555cb7813c
+// b3edce42-2a58-4b05-a679-eae3ddbd1edd
 #define NS_ISTYLEDCONTENT_IID   \
-{ 0xc59f05f5, 0x6e39, 0x4e98, \
-  { 0xa1, 0xea, 0x6c, 0x55, 0x5c, 0xb7, 0x81, 0x3c } }
+{ 0xb3edc342, 0x2a58, 0x4b05, \
+  { 0xa6, 0x79, 0xea, 0xe3, 0xdd, 0xbd, 0x1e, 0xdd } }
 
 // Abstract interface for all styled content (that supports ID, CLASS, STYLE, and
 // the ability to specify style hints on an attribute change).
@@ -69,7 +69,6 @@ public:
   // incorrect, then new methods need to be added here.
   virtual nsIAtom* GetID() const = 0;
   virtual const nsAttrValue* GetClasses() const = 0;
-  NS_IMETHOD_(PRBool) HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const = 0;
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) = 0;
 

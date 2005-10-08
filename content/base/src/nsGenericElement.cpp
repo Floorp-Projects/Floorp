@@ -2295,12 +2295,6 @@ nsGenericElement::GetClasses() const
   return nsnull;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsGenericElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
-{
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
 nsGenericElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {

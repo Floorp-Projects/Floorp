@@ -810,22 +810,6 @@ nsXTFStyledElementWrapper::GetClasses() const
   return val;
 }
 
-PRBool
-nsXTFStyledElementWrapper::HasClass(nsIAtom* aClass, PRBool /*aCaseSensitive*/) const
-{
-  const nsAttrValue* val = GetClasses();
-  if (val) {
-    if (val->Type() == nsAttrValue::eAtom) {
-      return aClass == val->GetAtomValue();
-    }
-
-    if (val->Type() == nsAttrValue::eAtomArray) {
-      return val->GetAtomArrayValue()->IndexOf(aClass) >= 0;
-    }
-  }
-  return PR_FALSE;
-}
-
 nsresult
 nsXTFStyledElementWrapper::SetClassAttributeName(nsIAtom* aName)
 {
