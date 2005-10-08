@@ -102,13 +102,16 @@
   mItem = aItem;
 
   if ([aItem isKindOfClass:[Bookmark class]]) {
-    if ([(Bookmark *)aItem isSeparator]) {
+    Bookmark* bookmarkItem = (Bookmark*)aItem;
+    if ([bookmarkItem isSeparator]) {
       [self setTitle:nil];
       [self setImage:[NSImage imageNamed:@"bm_separator"]];
       return;
     }
     [self setAction:@selector(openBookmark:)];
-    [self setToolTip:[(Bookmark *)aItem url]];
+    [self setToolTip:[NSString stringWithFormat:NSLocalizedString(@"BookmarkButtonTooltipFormat", @""),
+                                                [bookmarkItem title],
+                                                [bookmarkItem url]]];
   }
   else {
     [[self cell] setClickHoldTimeout:0.5];
