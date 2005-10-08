@@ -476,7 +476,14 @@ mozStorageStatementWrapper::OuterObject(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
+/* JSObjectPtr innerObject(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
+NS_IMETHODIMP
+mozStorageStatementWrapper::InnerObject(nsIXPConnectWrappedNative *wrapper,
+                                        JSContext *cx, JSObject *obj,
+                                        JSObject **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 /*************************************************************************
  ****
@@ -737,8 +744,14 @@ mozStorageStatementRow::OuterObject(nsIXPConnectWrappedNative *wrapper,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-
+/* JSObjectPtr innerObject(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
+NS_IMETHODIMP
+mozStorageStatementRow::InnerObject(nsIXPConnectWrappedNative *wrapper,
+                                    JSContext *cx, JSObject *obj,
+                                    JSObject **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 /*************************************************************************
  ****
@@ -1008,6 +1021,15 @@ mozStorageStatementParams::Equality(nsIXPConnectWrappedNative *wrapper,
 /* JSObjectPtr outerObject(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
 NS_IMETHODIMP
 mozStorageStatementParams::OuterObject(nsIXPConnectWrappedNative *wrapper,
+                                       JSContext *cx, JSObject *obj,
+                                       JSObject **_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* JSObjectPtr innerObject(in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj); */
+NS_IMETHODIMP
+mozStorageStatementParams::InnerObject(nsIXPConnectWrappedNative *wrapper,
                                        JSContext *cx, JSObject *obj,
                                        JSObject **_retval)
 {

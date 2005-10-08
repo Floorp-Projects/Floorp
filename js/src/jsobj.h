@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -99,6 +100,16 @@ struct JSObjectMap {
     ((obj)->map->ops->setRequiredSlot                                         \
      ? (obj)->map->ops->setRequiredSlot(cx, obj, slot, v)                     \
      : JS_TRUE)
+
+#define OBJ_TO_INNER_OBJECT(cx,obj)                                           \
+    JS_BEGIN_MACRO                                                            \
+        JSClass *clasp_ = OBJ_GET_CLASS(cx, obj);                             \
+        if (clasp_->flags & JSCLASS_IS_EXTENDED) {                            \
+            JSExtendedClass *xclasp_ = (JSExtendedClass*)clasp_;              \
+            if (xclasp_->innerObject)                                         \
+                obj = xclasp_->innerObject(cx, obj);                          \
+        }                                                                     \
+    JS_END_MACRO
 
 /*
  * In the original JS engine design, obj->slots pointed to a vector of length
