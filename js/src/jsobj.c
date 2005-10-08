@@ -1156,6 +1156,11 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
     }
 
+    /* Ensure we compile this eval with the right object in the scope chain. */
+    OBJ_TO_INNER_OBJECT(cx, scopeobj);
+    if (!scopeobj)
+        return JS_FALSE;
+
     str = JSVAL_TO_STRING(argv[0]);
     if (caller) {
         file = caller->script->filename;

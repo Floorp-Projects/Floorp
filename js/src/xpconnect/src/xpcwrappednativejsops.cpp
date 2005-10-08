@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -819,6 +820,44 @@ XPC_WN_OuterObject(JSContext *cx, JSObject *obj)
     return obj;
 }
 
+JS_STATIC_DLL_CALLBACK(JSObject *)
+XPC_WN_InnerObject(JSContext *cx, JSObject *obj)
+{
+    XPCWrappedNative *wrapper =
+        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+    if(!wrapper)
+    {
+        Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
+
+        return nsnull;
+    }
+
+    if(!wrapper->IsValid())
+    {
+        Throw(NS_ERROR_XPC_HAS_BEEN_SHUTDOWN, cx);
+
+        return nsnull;
+    }
+
+    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
+    if(si && si->GetFlags().WantInnerObject())
+    {
+        JSObject *newThis;
+        nsresult rv =
+            si->GetCallback()->InnerObject(wrapper, cx, obj, &newThis);
+
+        if(NS_FAILED(rv))
+        {
+            Throw(rv, cx);
+
+            return nsnull;
+        }
+
+        obj = newThis;
+    }
+
+    return obj;
+}
 
 JSExtendedClass XPC_WN_NoHelper_JSClass = {
     {
@@ -849,7 +888,9 @@ JSExtendedClass XPC_WN_NoHelper_JSClass = {
         nsnull                          // spare;
     },
     XPC_WN_Equality,
-    XPC_WN_OuterObject
+    XPC_WN_OuterObject,
+    XPC_WN_InnerObject,
+    JSCLASS_NO_RESERVED_MEMBERS
 };
 
 
@@ -1378,6 +1419,7 @@ XPCNativeScriptableShared::PopulateJSClass()
 
     mJSClass.equality = XPC_WN_Equality;
     mJSClass.outerObject = XPC_WN_OuterObject;
+    mJSClass.innerObject = XPC_WN_InnerObject;
 }
 
 /***************************************************************************/

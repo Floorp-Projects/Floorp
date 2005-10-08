@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -200,6 +201,11 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         line = 0;
         principals = NULL;
     }
+
+    /* Ensure we compile this script with the right (inner) principals. */
+    OBJ_TO_INNER_OBJECT(cx, scopeobj);
+    if (!scopeobj)
+        return JS_FALSE;
 
     /*
      * Compile the new script using the caller's scope chain, a la eval().

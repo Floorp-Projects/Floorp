@@ -444,6 +444,8 @@ public:
                       JSObject * obj, jsval val, PRBool *bp);
   NS_IMETHOD OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, JSObject * *_retval);
+  NS_IMETHOD InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                         JSObject * obj, JSObject * *_retval);
 
   static JSBool JS_DLL_CALLBACK GlobalScopePolluterNewResolve(JSContext *cx,
                                                               JSObject *obj,

@@ -411,6 +411,7 @@ static const char kDOMStringBundleURL[] =
   nsIXPCScriptable::WANT_NEWENUMERATE |                                       \
   nsIXPCScriptable::WANT_EQUALITY |                                           \
   nsIXPCScriptable::WANT_OUTER_OBJECT |                                       \
+  nsIXPCScriptable::WANT_INNER_OBJECT |                                       \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
@@ -3407,6 +3408,15 @@ nsDOMClassInfo::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
   return NS_ERROR_UNEXPECTED;
 }
 
+NS_IMETHODIMP
+nsDOMClassInfo::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                            JSObject * obj, JSObject * *_retval)
+{
+  NS_ERROR("nsDOMClassInfo::InnerObject Don't call me!");
+
+  return NS_ERROR_UNEXPECTED;
+}
+
 
 // static
 nsIClassInfo *
@@ -6097,11 +6107,7 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
   nsGlobalWindow *win =
     nsGlobalWindow::FromWrapper(wrapper)->GetOuterWindowInternal();
 
-  if (win) {
-    // Return the outer window.
-
-    *_retval = win->GetGlobalJSObject();
-  } else {
+  if (!win) {
     // If we no longer have an outer window. No code should ever be
     // running on a window w/o an outer, which means this hook should
     // never be called when we have no outer. But just in case, return
@@ -6109,11 +6115,45 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
     // window.
 
     *_retval = nsnull;
+
+    return NS_ERROR_UNEXPECTED;
   }
+
+  // Return the outer window.
+
+  *_retval = win->GetGlobalJSObject();
 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWindowSH::InnerObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
+                        JSObject * obj, JSObject * *_retval)
+{
+  nsGlobalWindow *win = nsGlobalWindow::FromWrapper(wrapper);
+
+  if (win->IsInnerWindow()) {
+    // Return the inner window.
+
+    *_retval = obj;
+  } else {
+    // Try to find the current inner window.
+
+    nsGlobalWindow *inner = win->GetCurrentInnerWindowInternal();
+    if (!inner) {
+      // Yikes! No inner window! Instead of leaking the outer window into the
+      // scope chain, let's return an error.
+
+      *_retval = nsnull;
+
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    *_retval = inner->GetGlobalJSObject();
+  }
+
+  return NS_OK;
+}
 
 // DOM Location helper
 
