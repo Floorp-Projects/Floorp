@@ -2748,6 +2748,8 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSTokenType tt;
     JSParseNode *pn, *pn2;
 
+    CHECK_RECURSION();
+
     ts->flags |= TSF_OPERAND;
     tt = js_GetToken(cx, ts);
     ts->flags &= ~TSF_OPERAND;
