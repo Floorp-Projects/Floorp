@@ -62,11 +62,15 @@
 
 [% BLOCK emails %]
   <b>[% description FILTER html %]:</b>
-  [% IF names.size > 0 %]
-    [%+ FOREACH name = names %]
-      [% name FILTER html %][% ", " UNLESS loop.last() %]
+  [% IF user.can_see_bug(mailing_bugid) %]
+    [% IF names.size > 0 %]
+      [%+ FOREACH name = names %]
+        [% name FILTER html %][% ", " UNLESS loop.last() %]
+      [% END %]
+    [% ELSE %]
+      no one
     [% END %]
   [% ELSE %]
-    no one
+    (list of e-mails not avaliable)
   [% END %]
 [% END %]

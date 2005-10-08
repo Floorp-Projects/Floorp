@@ -1914,9 +1914,9 @@ foreach my $id (@idlist) {
             $vars->{'id'} = $k;
             $vars->{'type'} = "dep";
 
-            # Let the user know we checked to see if we should email notice
-            # of this change to users with a relationship to the dependent
-            # bug and who did and didn't receive email about it.
+            # Let the user (if he is able to see the bug) know we checked to see 
+            # if we should email notice of this change to users with a relationship
+            # to the dependent bug and who did and didn't receive email about it.
             $template->process("bug/process/results.html.tmpl", $vars)
               || ThrowTemplateError($template->error());
             $vars->{'header_done'} = 1;
