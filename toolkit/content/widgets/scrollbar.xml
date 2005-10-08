@@ -14,7 +14,7 @@
   <binding id="scrollbar-base">
     <handlers>
       <handler event="contextmenu" preventdefault="true"/>
-      <handler event="click" action="event.preventBubble();"/>
+      <handler event="click" preventdefault="true" action="event.preventBubble();"/>
       <handler event="dblclick" action="event.preventBubble();"/>
       <handler event="command" action="event.preventBubble();"/>
       <handler event="contextmenu" action="event.preventBubble();"/>
