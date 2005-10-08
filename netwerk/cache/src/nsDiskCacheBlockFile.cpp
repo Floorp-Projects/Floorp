@@ -38,7 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCRT.h"
 #include "nsDiskCache.h"
 #include "nsDiskCacheBlockFile.h"
 
@@ -62,7 +61,7 @@ nsDiskCacheBlockFile::Open( nsILocalFile *  blockFile, PRUint32  blockSize)
     if (NS_FAILED(rv))  return rv;  // unable to open or create file
     
     // allocate bit map buffer
-    mBitMap = new PRUint8[kBitMapBytes];
+    mBitMap = new PRUint32[kBitMapWords];
     if (!mBitMap) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto error_exit;
@@ -75,43 +74,36 @@ nsDiskCacheBlockFile::Open( nsILocalFile *  blockFile, PRUint32  blockSize)
         rv = NS_ERROR_UNEXPECTED;
         goto error_exit;
     }
-    mEndOfFile = fileSize;
-    if (mEndOfFile == 0) {
+    if (fileSize == 0) {
         // initialize bit map and write it
         memset(mBitMap, 0, kBitMapBytes);
         PRInt32 bytesWritten = PR_Write(mFD, mBitMap, kBitMapBytes);
-        if (bytesWritten < kBitMapBytes) goto error_exit;
-        mEndOfFile = kBitMapBytes;
+        if (bytesWritten < kBitMapBytes) 
+            goto error_exit;
         
-    } else if (mEndOfFile < kBitMapBytes) {
+    } else if (fileSize < kBitMapBytes) {
         rv = NS_ERROR_UNEXPECTED;  // XXX NS_ERROR_CACHE_INVALID;
         goto error_exit;
         
     } else {
         // read the bit map
-        PRInt32 bytesRead = PR_Read(mFD, mBitMap, kBitMapBytes);
+        const PRInt32 bytesRead = PR_Read(mFD, mBitMap, kBitMapBytes);
         if (bytesRead < kBitMapBytes) {
             rv = NS_ERROR_UNEXPECTED;
             goto error_exit;
         }
         
-        // validate block file
-        rv = ValidateFile();
-        if (NS_FAILED(rv)) goto error_exit;
+        // validate block file size
+        const PRInt32  estimatedSize = CalcBlockFileSize();
+        if (estimatedSize > fileSize) {
+            rv = NS_ERROR_UNEXPECTED;
+            goto error_exit;
+        }
     }
-    
     return NS_OK;
 
 error_exit:
-    if (mFD) {
-        (void) PR_Close(mFD);
-        mFD = nsnull;
-    }
-    
-    if (mBitMap) {
-        delete [] mBitMap;
-        mBitMap = nsnull;
-    }
+    Close(PR_FALSE);
     return rv;
 }
 
@@ -122,42 +114,22 @@ error_exit:
 nsresult
 nsDiskCacheBlockFile::Close(PRBool flush)
 {
-    if (!mFD)  return NS_OK;
     nsresult rv = NS_OK;
 
-    if (flush)
-        rv  = FlushBitMap();
+    if (mFD) {
+        if (flush)
+            rv  = FlushBitMap();
+        PRStatus err = PR_Close(mFD);
+        if (NS_SUCCEEDED(rv) && (err != PR_SUCCESS))
+            rv = NS_ERROR_UNEXPECTED;
+        mFD = nsnull;
+    }
 
-    PRStatus err = PR_Close(mFD);
-    mFD = nsnull;
-    
     if (mBitMap) {
         delete [] mBitMap;
         mBitMap = nsnull;
     }
-    
-    if (NS_SUCCEEDED(rv) && (err != PR_SUCCESS))
-        rv = NS_ERROR_UNEXPECTED;
         
-    return rv;
-}
-
-
-/******************************************************************************
- *  Trim
- *
- *  Truncate the block file to the end of the last allocated block.
- *
- *****************************************************************************/
-nsresult
-nsDiskCacheBlockFile::Trim()
-{
-    PRInt32  estimatedSize = kBitMapBytes;
-    PRInt32  lastBlock = LastBlock();
-    if (lastBlock >= 0)
-        estimatedSize += (lastBlock + 1) * mBlockSize;
-            
-    nsresult rv = nsDiskCache::Truncate(mFD, estimatedSize);
     return rv;
 }
 
@@ -175,75 +147,31 @@ PRInt32
 nsDiskCacheBlockFile::AllocateBlocks(PRInt32 numBlocks)
 {
     if (!mFD)  return -1;  // NS_ERROR_NOT_AVAILABLE;
-    // return -1 if unable to allocate blocks
-    // PRUint8  mask = (0x01 << numBlocks) - 1;    
-    int     i = 0;
-    PRUint8 mapByte;
-    PRUint8 mask;
     
-    // presume allocation will succeed
-    PRBool oldValue = mBitMapDirty;
-    mBitMapDirty = PR_TRUE;
-    
-    while ((mBitMap[i] == 0xFF) && (i < kBitMapBytes)) ++i;     // find first block with a free bit
-    
-    if (numBlocks == 1) {
-        if (i < kBitMapBytes) {
-            // don't need a while loop, because we know there's at least 1 free bit in this byte
-            mapByte = ~mBitMap[i]; // flip bits so free bits are 1
-/*
- *          // Linear search for first free bit in byte
- *          mask = 0x01;
- *          for (int j=0; j<8; ++j, mask <<= 1)
- *              if (mask & mapByte) {mBitMap[i] |= mask; return (i * 8 + j); }
- */
-            // Binary search for first free bit in byte
-            PRUint8 bit = 0;
-            if ((mapByte & 0x0F) == 0) { bit |= 4; mapByte >>= 4; }
-            if ((mapByte & 0x03) == 0) { bit |= 2; mapByte >>= 2; }
-            if ((mapByte & 0x01) == 0) { bit |= 1; mapByte >>= 1; }
-            mBitMap[i] |= (PRUint8)1 << bit;
-            return i * 8 + bit;
-        }
-    } else if (numBlocks == 2) {
-        while (i < kBitMapBytes) {
-            mapByte = ~mBitMap[i]; // flip bits so free bits are 1
-            mask = 0x03;
-            // check for fit in lower quad bits
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8); }       mask <<= 1;
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8 + 1); }   mask <<= 1;
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8 + 2); }   mask <<= 2;
-            // check for fit in upper quad bits
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8 + 4); }   mask <<= 1;
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8 + 5); }   mask <<= 1;
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8 + 6); }
-            ++i;
-        }
-    } else if (numBlocks == 3) {
-        while (i < kBitMapBytes) {
-            mapByte = ~mBitMap[i]; // flip bits so free bits are 1
-            mask = 0x07;
-            // check for fit in lower quad bits
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8); }       mask <<= 1;
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8 + 1); }   mask <<= 3;
-            // check for fit in upper quad bits
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8 + 4); }   mask <<= 1;
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8 + 5); }
-            ++i;
-        }
-    } else if (numBlocks == 4) {
-        while (i < kBitMapBytes) {
-            mapByte = ~mBitMap[i]; // flip bits so free bits are 1
-            mask = 0x0F;
-            // check for fit in lower quad bits
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8); }      mask <<= 4;
-            // check for fit in upper quad bits
-            if ((mask & mapByte) == mask) { mBitMap[i] |= mask; return (i * 8 + 4); }
-            ++i;
+    const int maxPos = 32 - numBlocks;
+    const PRUint32 mask = (0x01 << numBlocks) - 1;
+    for (int i = 0; i < kBitMapWords; ++i) {
+        PRUint32 mapWord = ~mBitMap[i]; // flip bits so free bits are 1
+        if (mapWord) {                  // At least one free bit
+            // Binary search for first free bit in word
+            int bit = 0;
+            if ((mapWord & 0x0FFFF) == 0) { bit |= 16; mapWord >>= 16; }
+            if ((mapWord & 0x000FF) == 0) { bit |= 8;  mapWord >>= 8;  }
+            if ((mapWord & 0x0000F) == 0) { bit |= 4;  mapWord >>= 4;  }
+            if ((mapWord & 0x00003) == 0) { bit |= 2;  mapWord >>= 2;  }
+            if ((mapWord & 0x00001) == 0) { bit |= 1;  mapWord >>= 1;  }
+            // Find first fit for mask
+            for (; bit <= maxPos; ++bit) {
+                // all bits selected by mask are 1, so free
+                if ((mask & mapWord) == mask) {
+                    mBitMap[i] |= mask << bit; 
+                    mBitMapDirty = PR_TRUE;
+                    return i * 32 + bit;
+                }
+            }
         }
     }
     
-    mBitMapDirty = oldValue;
     return -1;
 }
 
@@ -255,23 +183,22 @@ nsresult
 nsDiskCacheBlockFile::DeallocateBlocks( PRInt32  startBlock, PRInt32  numBlocks)
 {
     if (!mFD)  return NS_ERROR_NOT_AVAILABLE;
+
     if ((startBlock < 0) || (startBlock > kBitMapBytes * 8 - 1) ||
         (numBlocks < 1)  || (numBlocks > 4))
        return NS_ERROR_ILLEGAL_VALUE;
            
-    PRInt32 startByte = startBlock / 8;
-    PRUint8 startBit  = startBlock % 8;
-    
-    // make sure requested deallocation doesn't span a byte boundary
-    if ((startBlock + numBlocks - 1) / 8 != startByte)  return NS_ERROR_UNEXPECTED;
-    PRUint8 mask = ((0x01 << numBlocks) - 1) << startBit;
-    
-    PRUint8 mapByte = ~mBitMap[startByte]; // flip so allocated bits are zero
+    const PRInt32 startWord = startBlock >> 5;      // Divide by 32
+    const PRUint32 startBit = startBlock & 31;      // Modulo by 32 
+      
+    // make sure requested deallocation doesn't span a word boundary
+    if (startBit + numBlocks > 32)  return NS_ERROR_UNEXPECTED;
+    PRUint32 mask = ((0x01 << numBlocks) - 1) << startBit;
     
     // make sure requested deallocation is currently allocated
-    if (mapByte & mask)  return NS_ERROR_ABORT;
-    
-    mBitMap[startByte] ^= mask;    // flips the bits off;
+    if ((mBitMap[startWord] & mask) != mask)    return NS_ERROR_ABORT;
+
+    mBitMap[startWord] ^= mask;    // flips the bits off;
     mBitMapDirty = PR_TRUE;
     // XXX rv = FlushBitMap();  // coherency vs. performance
     return NS_OK;
@@ -295,9 +222,6 @@ nsDiskCacheBlockFile::WriteBlocks( void *   buffer,
     PRInt32 blockPos = kBitMapBytes + startBlock * mBlockSize;
     PRInt32 filePos = PR_Seek(mFD, blockPos, PR_SEEK_SET);
     if (filePos != blockPos)  return NS_ERROR_UNEXPECTED;
-    
-    if (mEndOfFile < (blockPos + numBlocks * mBlockSize))
-        mEndOfFile = (blockPos + numBlocks * mBlockSize);
     
     // write the blocks
     PRInt32 bytesToWrite = numBlocks * mBlockSize;
@@ -350,8 +274,18 @@ nsDiskCacheBlockFile::FlushBitMap()
     PRInt32 filePos = PR_Seek(mFD, 0, PR_SEEK_SET);
     if (filePos != 0)  return NS_ERROR_UNEXPECTED;
     
+#if defined(IS_LITTLE_ENDIAN)
+    PRUint32 bitmap[kBitMapWords];
+    // Copy and swap to network format
+    PRUint32 *p = bitmap;
+    for (int i = 0; i < kBitMapWords; ++i, ++p)
+      *p = htonl(mBitMap[i]);
+#else
+    PRUint32 *bitmap = mBitMap;
+#endif
+
     // write bitmap
-    PRInt32 bytesWritten = PR_Write(mFD, mBitMap, kBitMapBytes);
+    PRInt32 bytesWritten = PR_Write(mFD, bitmap, kBitMapBytes);
     if (bytesWritten < kBitMapBytes)  return NS_ERROR_UNEXPECTED;
 
     PRStatus err = PR_Sync(mFD);
@@ -363,34 +297,7 @@ nsDiskCacheBlockFile::FlushBitMap()
 
 
 /******************************************************************************
- *  ValidateFile
- *
- *  Check size of file against last bit allocated for mBlockSize.
- *
- *****************************************************************************/
-nsresult
-nsDiskCacheBlockFile::ValidateFile()
-{
-    PRInt32  estimatedSize = kBitMapBytes;
-    PRInt32  lastBlock = LastBlock();
-    if (lastBlock >= 0)
-        estimatedSize += (lastBlock + 1) * mBlockSize;
-        
-    // seek to beginning
-    PRInt32 filePos = PR_Seek(mFD, 0, PR_SEEK_SET);
-    if (filePos != 0)  return NS_ERROR_UNEXPECTED;
-    
-    PRInt32 fileSize = PR_Available(mFD);
-
-    if (estimatedSize > fileSize)
-        return NS_ERROR_UNEXPECTED;
-
-    return NS_OK;
-}
-
-
-/******************************************************************************
- *  VerfiyAllocation
+ *  VerifyAllocation
  *
  *  Return values:
  *      NS_OK if all bits are marked allocated
@@ -405,45 +312,47 @@ nsDiskCacheBlockFile::VerifyAllocation( PRInt32  startBlock, PRInt32  numBlocks)
         (numBlocks < 1)  || (numBlocks > 4))
        return NS_ERROR_ILLEGAL_VALUE;
     
-    PRInt32 startByte = startBlock / 8;
-    PRUint8 startBit  = startBlock % 8;
-    
-    // make sure requested deallocation doesn't span a byte boundary
-    if ((startBlock + numBlocks - 1) / 8 != startByte)  return NS_ERROR_ILLEGAL_VALUE;
-    PRUint8 mask = ((0x01 << numBlocks) - 1) << startBit;
+    const PRInt32 startWord = startBlock >> 5;      // Divide by 32
+    const PRUint32 startBit = startBlock & 31;      // Modulo by 32 
+      
+    // make sure requested deallocation doesn't span a word boundary
+    if (startBit + numBlocks > 32)  return NS_ERROR_ILLEGAL_VALUE;
+    PRUint32 mask = ((0x01 << numBlocks) - 1) << startBit;
     
     // check if all specified blocks are currently allocated
-    if ((mBitMap[startByte] & mask) != mask)    return NS_ERROR_FAILURE;
+    if ((mBitMap[startWord] & mask) != mask)    return NS_ERROR_FAILURE;
     
     return NS_OK;
 }
 
 
 /******************************************************************************
- *  LastBlock
+ *  CalcBlockFileSize
  *
- *  Return last block allocated or -1 if no blocks are allocated.
+ *  Return size of the block file according to the bits set in mBitmap
  *
  *****************************************************************************/
 PRInt32
-nsDiskCacheBlockFile::LastBlock()
+nsDiskCacheBlockFile::CalcBlockFileSize()
 {
     // search for last byte in mBitMap with allocated bits
-    PRInt32 i = kBitMapBytes;
+    PRInt32  estimatedSize = kBitMapBytes;      
+    PRInt32  i = kBitMapWords;
     while (--i >= 0) {
         if (mBitMap[i]) break;
     }
 
     if (i >= 0) {
         // binary search to find last allocated bit in byte
-        PRUint8 mapByte = mBitMap[i];
-        PRUint8 lastBit = 7;
-        if ((mapByte & 0xF0) == 0) { lastBit ^= 4; mapByte <<= 4; }
-        if ((mapByte & 0xC0) == 0) { lastBit ^= 2; mapByte <<= 2; }
-        if ((mapByte & 0x80) == 0) { lastBit ^= 1; mapByte <<= 1; }
-        return i * 8 + lastBit;
+        PRUint32 mapWord = mBitMap[i];
+        PRUint32 lastBit = 31;
+        if ((mapWord & 0xFFFF0000) == 0) { lastBit ^= 16; mapWord <<= 16; }
+        if ((mapWord & 0xFF000000) == 0) { lastBit ^= 8; mapWord <<= 8; }
+        if ((mapWord & 0xF0000000) == 0) { lastBit ^= 4; mapWord <<= 4; }
+        if ((mapWord & 0xC0000000) == 0) { lastBit ^= 2; mapWord <<= 2; }
+        if ((mapWord & 0x80000000) == 0) { lastBit ^= 1; mapWord <<= 1; }
+        estimatedSize +=  (i * 32 + lastBit + 1) * mBlockSize;
     }
-    
-    return -1;
 
+    return estimatedSize;
 }

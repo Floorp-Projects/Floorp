@@ -45,11 +45,15 @@
 
 #include "nsCacheEntry.h"
 
+#ifdef XP_WIN
+#include <winsock.h>  // for htonl/ntohl
+#endif
+
 
 class nsDiskCache {
 public:
     enum {
-            kCurrentVersion = 0x00010006      // format = 16 bits major version/16 bits minor version
+            kCurrentVersion = 0x00010007      // format = 16 bits major version/16 bits minor version
     };
 
     enum { kData, kMetaData };

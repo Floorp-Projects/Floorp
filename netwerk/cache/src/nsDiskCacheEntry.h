@@ -81,30 +81,30 @@ struct nsDiskCacheEntry {
     void Swap()         // host to network (memory to disk)
     {
 #if defined(IS_LITTLE_ENDIAN)   
-        mHeaderVersion      = ::PR_htonl(mHeaderVersion);
-        mMetaLocation       = ::PR_htonl(mMetaLocation);
-        mFetchCount         = ::PR_htonl(mFetchCount);
-        mLastFetched        = ::PR_htonl(mLastFetched);
-        mLastModified       = ::PR_htonl(mLastModified);
-        mExpirationTime     = ::PR_htonl(mExpirationTime);
-        mDataSize           = ::PR_htonl(mDataSize);
-        mKeySize            = ::PR_htonl(mKeySize);
-        mMetaDataSize       = ::PR_htonl(mMetaDataSize);
+        mHeaderVersion      = htonl(mHeaderVersion);
+        mMetaLocation       = htonl(mMetaLocation);
+        mFetchCount         = htonl(mFetchCount);
+        mLastFetched        = htonl(mLastFetched);
+        mLastModified       = htonl(mLastModified);
+        mExpirationTime     = htonl(mExpirationTime);
+        mDataSize           = htonl(mDataSize);
+        mKeySize            = htonl(mKeySize);
+        mMetaDataSize       = htonl(mMetaDataSize);
 #endif
     }
     
     void Unswap()       // network to host (disk to memory)
     {
 #if defined(IS_LITTLE_ENDIAN)
-        mHeaderVersion      = ::PR_ntohl(mHeaderVersion);
-        mMetaLocation       = ::PR_ntohl(mMetaLocation);
-        mFetchCount         = ::PR_ntohl(mFetchCount);
-        mLastFetched        = ::PR_ntohl(mLastFetched);
-        mLastModified       = ::PR_ntohl(mLastModified);
-        mExpirationTime     = ::PR_ntohl(mExpirationTime);
-        mDataSize           = ::PR_ntohl(mDataSize);
-        mKeySize            = ::PR_ntohl(mKeySize);
-        mMetaDataSize       = ::PR_ntohl(mMetaDataSize);
+        mHeaderVersion      = ntohl(mHeaderVersion);
+        mMetaLocation       = ntohl(mMetaLocation);
+        mFetchCount         = ntohl(mFetchCount);
+        mLastFetched        = ntohl(mLastFetched);
+        mLastModified       = ntohl(mLastModified);
+        mExpirationTime     = ntohl(mExpirationTime);
+        mDataSize           = ntohl(mDataSize);
+        mKeySize            = ntohl(mKeySize);
+        mMetaDataSize       = ntohl(mMetaDataSize);
 #endif
     }
 };

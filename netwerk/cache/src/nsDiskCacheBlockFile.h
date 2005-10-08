@@ -45,6 +45,7 @@
 #include "nspr.h"
 
 const unsigned short kBitMapBytes = 4096;
+const unsigned short kBitMapWords = (kBitMapBytes/4);
 
 /******************************************************************************
  *  nsDiskCacheBlockFile
@@ -59,7 +60,6 @@ public:
     nsDiskCacheBlockFile()
            : mFD(nsnull)
            , mBlockSize(0)
-           , mEndOfFile(0)
            , mBitMap(nsnull)
            , mBitMapDirty(PR_FALSE)
             {}
@@ -67,7 +67,12 @@ public:
     
     nsresult  Open( nsILocalFile *  blockFile, PRUint32  blockSize);
     nsresult  Close(PRBool flush);
-    nsresult  Trim();
+    
+    /*
+     * Trim
+     * Truncates the block file to the end of the last allocated block.
+     */
+    nsresult  Trim() { return nsDiskCache::Truncate(mFD, CalcBlockFileSize()); }
     PRInt32   AllocateBlocks( PRInt32  numBlocks);
     nsresult  DeallocateBlocks( PRInt32  startBlock, PRInt32  numBlocks);
     nsresult  WriteBlocks( void * buffer, PRInt32  startBlock, PRInt32  numBlocks);
@@ -75,17 +80,15 @@ public:
     
 private:
     nsresult  FlushBitMap();
-    nsresult  ValidateFile();   // called by Open()
     nsresult  VerifyAllocation( PRInt32 startBlock, PRInt32 numBLocks);
-    PRInt32   LastBlock();
+    PRInt32   CalcBlockFileSize();
 
 /**
  *  Data members
  */
     PRFileDesc *                mFD;
     PRUint32                    mBlockSize;
-    PRUint32                    mEndOfFile;
-    PRUint8 *                   mBitMap;      // XXX future: array of bit map blocks
+    PRUint32 *                  mBitMap;      // XXX future: array of bit map blocks
     PRBool                      mBitMapDirty;
 };
 
