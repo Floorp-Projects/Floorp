@@ -3190,15 +3190,16 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   reconversionEvent.time = PR_IntervalNow();
 
   nsresult rv = mGeckoChild->DispatchWindowEvent(reconversionEvent);
-  if (NS_SUCCEEDED(rv))
+  PRUnichar* reconvstr;
+  if (NS_SUCCEEDED(rv) && (reconvstr = reconversionEvent.theReply.mReconversionString))
   {
-    PRUnichar *reconvstr = reconversionEvent.theReply.mReconversionString;
-    NSAttributedString *result = [[[NSAttributedString alloc] stringWithCharacters:reconvstr length: reconvstr ? nsCRT::strlen(reconvstr) : 0] autorelease];
+    NSAttributedString* result = [[[NSAttributedString alloc] initWithString:[NSString stringWithCharacters:reconvstr length:nsCRT::strlen(reconvstr)]
+                                                                  attributes:nil] autorelease];
     nsMemory::Free(reconvstr);
     return result;
   }
 
-  return NULL;
+  return nil;
 }
 
 - (NSRange) markedRange
@@ -3237,24 +3238,16 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
 
-#if BRADE_GETS_THIS_WORKING
-  // send NS_COMPOSITION_QUERY event
-  nsRect r = [self sendCompositionEvent: NS_COMPOSITION_QUERY];
+  nsRect compositionRect = [self sendCompositionEvent:NS_COMPOSITION_QUERY];
 
-  // similar to mGeckoChild->WidgetToScreen(gecko_r, screen_r);
-  NSRect temp;
-  ConvertGeckoToCocoaRect(r, temp);
-  temp = [mGeckoChild->mView convertRect:temp toView:nil];   // convert to window coords
-  temp.origin = [[mGeckoChild->mView getNativeWindow] convertBaseToScreen:temp.origin];   // convert to screen coords
-#else
-  NSRect temp;
-  temp.origin.x = temp.origin.y = temp.size.width = temp.size.height = 0;
-#endif
+  NSRect rangeRect;
+  ConvertGeckoToCocoaRect(compositionRect, rangeRect);
 
-#if DEBUG_IME
-  NSLog(@"********** cocoa rect (x, y, w, h): %f %f, %f, %f", temp.origin.x, temp.origin.y, temp.size.width, temp.size.height);
-#endif
-  return temp;
+  // convert to window coords
+  rangeRect = [self convertRect:rangeRect toView:nil];
+  // convert to cocoa screen coords
+  rangeRect.origin = [[self getNativeWindow] convertBaseToScreen:rangeRect.origin];
+  return rangeRect;
 }
 
 
@@ -3265,8 +3258,7 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   NSLog(@" markRange = %d, %d;  selectRange = %d, %d", mMarkedRange.location, mMarkedRange.length, mSelectedRange.location, mSelectedRange.length);
 #endif
 
-//  short regionClass;
-//  return mGeckoChild->HandlePositionToOffset(thePoint, &regionClass);
+  // To implement this, we'd have to grovel in text frames looking at text offsets.
   return 0;
 }
 
