@@ -124,7 +124,7 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
 - (void)expandAllItems
 {
   unsigned int row = 0;
-  while (row < [self numberOfRows])
+  while (row < (unsigned int)[self numberOfRows])
   {
     id curItem = [self itemAtRow:row];
     if ([self isExpandable:curItem])
@@ -383,22 +383,23 @@ static NSString* const kAutosaveSortDirectionKey        = @"sort_descending";
     // gap of 3 pixels between image and label.
     NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
     int clickedRow = [self rowAtPoint:point];
+
     mColumnToBeEdited = [self columnAtPoint:point];
+    
     id dataSource = [self dataSource];
-    BOOL offsetForIcon = NO;
+    float iconWidth = 0.0f;
     if ([dataSource respondsToSelector:@selector(outlineView:columnHasIcon:)]) {
       NSTableColumn* tableCol = [[self tableColumns] objectAtIndex:mColumnToBeEdited];
-      offsetForIcon = [dataSource outlineView:self columnHasIcon:tableCol];
+      if ([dataSource outlineView:self columnHasIcon:tableCol])
+        iconWidth = 20.0 + 3.0f;    // should get from the cell
     }
     if (clickedRow >= 0 && mColumnToBeEdited >= 0)
     {
-      NSRect rect = [self frameOfCellAtColumn:mColumnToBeEdited row:clickedRow];
-      if (offsetForIcon) {
-        rect.size.width = 20.0 + 3.0;
-        wasClickInTextPartOfCell = ! NSPointInRect(point, rect);
-      }
-      else
-        wasClickInTextPartOfCell = NSPointInRect(point, rect);
+      // the cell frame seems to take the twisty into account for outliner columns
+      NSRect cellFrame = [self frameOfCellAtColumn:mColumnToBeEdited row:clickedRow];
+      NSRect textFrame, imageFrame;
+      NSDivideRect(cellFrame, &imageFrame, &textFrame, iconWidth, NSMinXEdge);
+      wasClickInTextPartOfCell = NSPointInRect(point, textFrame);
     }
     
     // Do not start editing for clicks on the icon part (to match Finder's behaviour).
