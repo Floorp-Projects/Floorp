@@ -109,8 +109,8 @@ endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS		+= nsFontMetricsWin2.cpp \
-		   nsSystemFontsWin.cpp \
+CPPSRCS		+= nsSystemFontsWin.cpp \
+		   nsThebesFontMetrics.cpp \
 		   $(NULL)
 REQUIRES        += glitzwgl
 

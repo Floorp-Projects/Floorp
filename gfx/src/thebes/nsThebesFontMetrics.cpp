@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  * mozilla.org.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -39,83 +39,49 @@
 #include "nsThebesFontMetrics.h"    
 #include "nsFont.h"
 
-#include "nsDirectoryServiceDefs.h"
-#include "nsIFile.h"
 #include "nsString.h"
-
-#define FONT_FILE "Vera.ttf"
-#define FONT_SIZE 10
-/*
-#define FONT_FILE "verdana.ttf"
-#define FONT_SIZE 12
-*/
-
-#define FT_FLOOR(X)	((X & -64) >> 6)
-#define FT_CEIL(X)	(((X + 63) & -64) >> 6)
-
-static FT_Library ftlib = nsnull;
+#include "nsAutoBuffer.h"
+#include <stdio.h>
+#include <malloc.h>
 
 NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 
-nsThebesFontMetrics::nsThebesFontMetrics() :
-    mMaxAscent(0),
-    mMaxDescent(0),
-    mMaxAdvance(0),
-    mUnderlineOffset(0),
-    mUnderlineHeight(0)
+#include <stdlib.h>
+
+#ifdef XP_WIN
+#include "gfxWindowsFonts.h"
+#endif
+
+nsThebesFontMetrics::nsThebesFontMetrics()
 {
-    NS_INIT_ISUPPORTS();
-    if (!ftlib) {
-        FT_Init_FreeType(&ftlib);
-    }
+    mFontStyle = nsnull;
+    mFontGroup = nsnull;
 }
 
 nsThebesFontMetrics::~nsThebesFontMetrics()
 {
-    FT_Done_Face(mFace);
-}
-
-static char *
-GetFontPath()
-{
-    return strdup("/tmp/fonts/" FONT_FILE);
-
-    nsCOMPtr<nsIFile> aFile;
-    NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR, getter_AddRefs(aFile));
-    aFile->Append(NS_LITERAL_STRING(FONT_FILE));
-    nsAutoString pathBuf;
-    aFile->GetPath(pathBuf);
-    NS_LossyConvertUCS2toASCII pathCBuf(pathBuf);
-
-    return strdup(pathCBuf.get());
+    delete mFontStyle;
+    delete mFontGroup;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
-                         nsIDeviceContext *aContext)
+                          nsIDeviceContext *aContext)
 {
     mFont = aFont;
     mLangGroup = aLangGroup;
+    mDeviceContext = (nsThebesDeviceContext*)aContext;
+    mDev2App = aContext->DevUnitsToAppUnits();
 
-    mDeviceContext = aContext;
-    mDev2App = 1.0;
+    mFontStyle = new gfxFontStyle(aFont.style, aFont.variant,
+                                  aFont.weight, aFont.decorations,
+                                  (aFont.size * mDeviceContext->AppUnitsToDevUnits()), aFont.sizeAdjust);
 
-    char *fontPath = GetFontPath();
-    FT_Error ferr = FT_New_Face(ftlib, fontPath, 0, &mFace);
-    if (ferr != 0) {
-        fprintf (stderr, "FT Error: %d\n", ferr);
-        return NS_ERROR_FAILURE;
-    }
-    free(fontPath);
-
-    FT_Set_Char_Size(mFace, 0, FONT_SIZE << 6, 72, 72);
-
-    mMaxAscent  = mFace->bbox.yMax;
-    mMaxDescent = mFace->bbox.yMin;
-    mMaxAdvance = mFace->max_advance_width;
-
-    mUnderlineOffset = mFace->underline_position;
-    mUnderlineHeight = mFace->underline_thickness;
+#ifdef XP_WIN
+    mFontGroup = new gfxWindowsFontGroup(aFont.name, mFontStyle, (HWND)mDeviceContext->GetWidget());
+#else
+#error implement me
+#endif
 
     return NS_OK;
 }
@@ -126,47 +92,47 @@ nsThebesFontMetrics::Destroy()
     return NS_OK;
 }
 
+#define ROUND_TO_TWIPS(x) NSToCoordRound((x) * mDev2App)
+
+gfxFont::Metrics nsThebesFontMetrics::GetMetrics()
+{
+    return mFontGroup->GetFontList()[0]->GetMetrics();
+}
+
 NS_IMETHODIMP
 nsThebesFontMetrics::GetXHeight(nscoord& aResult)
 {
-    aResult = NSToCoordRound(14 * mDev2App);
+    aResult = ROUND_TO_TWIPS(GetMetrics().xHeight);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetSuperscriptOffset(nscoord& aResult)
 {
-    aResult = 0;
+    aResult = ROUND_TO_TWIPS(GetMetrics().superscriptOffset);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetSubscriptOffset(nscoord& aResult)
 {
-    aResult = 0;
+    aResult = ROUND_TO_TWIPS(GetMetrics().subscriptOffset);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
-    aOffset = 0;
-    aSize = NSToCoordRound(1 * mDev2App);
+    aOffset = ROUND_TO_TWIPS(GetMetrics().strikeoutOffset);
+    aSize = ROUND_TO_TWIPS(GetMetrics().strikeoutSize);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
-    const FT_Fixed scale = mFace->size->metrics.y_scale;
-
-    aOffset = FT_FLOOR(FT_MulFix(mUnderlineOffset, scale));
-    aOffset = NSToCoordRound(aOffset * mDev2App);
-
-    aSize = FT_CEIL(FT_MulFix(mUnderlineHeight, scale));
-    if (aSize > 1)
-        aSize = 1;
-    aSize = NSToCoordRound(aSize * mDev2App);
+    aOffset = ROUND_TO_TWIPS(GetMetrics().underlineOffset);
+    aSize = ROUND_TO_TWIPS(GetMetrics().underlineSize);
 
     return NS_OK;
 }
@@ -174,104 +140,70 @@ nsThebesFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
 NS_IMETHODIMP
 nsThebesFontMetrics::GetHeight(nscoord &aHeight)
 {
-    aHeight = NSToCoordRound((mFace->size->metrics.height >> 6) * mDev2App);
+    aHeight = ROUND_TO_TWIPS(GetMetrics().maxHeight);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetInternalLeading(nscoord &aLeading)
 {
-    // aLeading = 0 * mDev2App;
-    aLeading = 0;
+    aLeading = ROUND_TO_TWIPS(GetMetrics().internalLeading);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetExternalLeading(nscoord &aLeading)
 {
-    // aLeading = 0 * mDev2App;
-    aLeading = 0;
+    aLeading = ROUND_TO_TWIPS(GetMetrics().externalLeading);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetEmHeight(nscoord &aHeight)
 {
-    /* ascent + descent */
-#if FONT_SIZE == 10
-    const nscoord emHeight = 10;
-#else
-    /* XXX this is for 12px verdana ... */
-    const nscoord emHeight = 14;
-#endif
-
-    aHeight = NSToCoordRound(emHeight * mDev2App);
+    aHeight = ROUND_TO_TWIPS(GetMetrics().emHeight);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetEmAscent(nscoord &aAscent)
 {
-    /* units above the base line */
-#if FONT_SIZE == 10
-    const nscoord emAscent = 10;
-#else
-    /* XXX this is for 12px verdana ... */
-    const nscoord emAscent = 12;
-#endif
-    aAscent = NSToCoordRound(emAscent * mDev2App);
+    aAscent = ROUND_TO_TWIPS(GetMetrics().emAscent);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetEmDescent(nscoord &aDescent)
 {
-    /* units below the base line */
-#if FONT_SIZE == 10
-    const nscoord emDescent = 0;
-#else
-    /* XXX this is for 12px verdana ... */
-    const nscoord emDescent = 2;
-#endif
-    aDescent = NSToCoordRound(emDescent * mDev2App);
+    aDescent = ROUND_TO_TWIPS(GetMetrics().emDescent);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxHeight(nscoord &aHeight)
 {
-    /* ascent + descent */
-    aHeight = FT_CEIL(FT_MulFix(mMaxAscent, mFace->size->metrics.y_scale))
-              - FT_CEIL(FT_MulFix(mMaxDescent, mFace->size->metrics.y_scale))
-              + 1;
-
-    aHeight = NSToCoordRound(aHeight * mDev2App);
+    aHeight = ROUND_TO_TWIPS(GetMetrics().maxHeight);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxAscent(nscoord &aAscent)
 {
-    /* units above the base line */
-    aAscent = FT_CEIL(FT_MulFix(mMaxAscent, mFace->size->metrics.y_scale));
-    aAscent = NSToCoordRound(aAscent * mDev2App);
+    aAscent = ROUND_TO_TWIPS(GetMetrics().maxAscent);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxDescent(nscoord &aDescent)
 {
-    /* units below the base line */
-    aDescent = -FT_CEIL(FT_MulFix(mMaxDescent, mFace->size->metrics.y_scale));
-    aDescent = NSToCoordRound(aDescent * mDev2App);
+    aDescent = ROUND_TO_TWIPS(GetMetrics().maxDescent);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetMaxAdvance(nscoord &aAdvance)
 {
-    aAdvance = FT_CEIL(FT_MulFix(mMaxAdvance, mFace->size->metrics.x_scale));
-    aAdvance = NSToCoordRound(aAdvance * mDev2App);
+    aAdvance = ROUND_TO_TWIPS(GetMetrics().maxAdvance);
     return NS_OK;
 }
 
@@ -292,92 +224,153 @@ nsThebesFontMetrics::GetFontHandle(nsFontHandle &aHandle)
 NS_IMETHODIMP
 nsThebesFontMetrics::GetAveCharWidth(nscoord& aAveCharWidth)
 {
-    aAveCharWidth = NSToCoordRound(7 * mDev2App);
+    aAveCharWidth = ROUND_TO_TWIPS(GetMetrics().aveCharWidth);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetSpaceWidth(nscoord& aSpaceCharWidth)
 {
-    FT_Load_Char(mFace, ' ', FT_LOAD_DEFAULT | FT_LOAD_NO_AUTOHINT);
-
-    aSpaceCharWidth = NSToCoordRound((mFace->glyph->advance.x >> 6) * mDev2App);
+    aSpaceCharWidth = ROUND_TO_TWIPS(GetMetrics().spaceWidth);
 
     return NS_OK;
-}
-
-nscoord
-nsThebesFontMetrics::MeasureString(const char *aString, PRUint32 aLength)
-{
-    nscoord width = 0;
-    PRUint32 i;
-    int error;
-
-    FT_UInt glyph_index;
-    FT_UInt previous = 0;
-
-    for (i=0; i < aLength; ++i) {
-        glyph_index = FT_Get_Char_Index(mFace, aString[i]);
-/*
-        if (previous && glyph_index) {
-            FT_Vector delta;
-            FT_Get_Kerning(mFace, previous, glyph_index,
-                           FT_KERNING_DEFAULT, &delta);
-            width += delta.x >> 6;
-        }
-*/
-        error = FT_Load_Glyph(mFace, glyph_index, FT_LOAD_DEFAULT | FT_LOAD_NO_AUTOHINT);
-        if (error)
-            continue;
-
-        width += mFace->glyph->advance.x;
-        previous = glyph_index;
-    }
-
-    return NSToCoordRound((width >> 6) * mDev2App);
-}
-
-nscoord
-nsThebesFontMetrics::MeasureString(const PRUnichar *aString, PRUint32 aLength)
-{
-    nscoord width = 0;
-    PRUint32 i;
-    int error;
-
-    FT_UInt glyph_index;
-    FT_UInt previous = 0;
-
-    for (i=0; i < aLength; ++i) {
-        glyph_index = FT_Get_Char_Index(mFace, aString[i]);
-/*
-        if (previous && glyph_index) {
-            FT_Vector delta;
-            FT_Get_Kerning(mFace, previous, glyph_index,
-                           FT_KERNING_DEFAULT, &delta);
-            width += delta.x >> 6;
-        }
-*/
-        error = FT_Load_Glyph(mFace, glyph_index, FT_LOAD_DEFAULT | FT_LOAD_NO_AUTOHINT);
-        if (error)
-            continue;
-
-        width += mFace->glyph->advance.x;
-        previous = glyph_index;
-    }
-
-    return NSToCoordRound((width >> 6) * mDev2App);
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetLeading(nscoord& aLeading)
 {
-    aLeading = 0;
+    aLeading = ROUND_TO_TWIPS(GetMetrics().internalLeading);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesFontMetrics::GetNormalLineHeight(nscoord& aLineHeight)
 {
-    aLineHeight = 10;
+    const gfxFont::Metrics &m = GetMetrics();
+    aLineHeight = ROUND_TO_TWIPS(m.emHeight + m.internalLeading);
     return NS_OK;
 }
+
+nsresult 
+nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
+                           nsThebesRenderingContext *aContext)
+{
+    PRInt32 aFontID = 0;
+    return GetWidth(PromiseFlatString(NS_ConvertUTF8toUTF16(aString, aLength)).get(),
+                    aLength, aWidth, &aFontID, aContext);
+}
+
+nsresult
+nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                           nscoord& aWidth, PRInt32 *aFontID,
+                           nsThebesRenderingContext *aContext)
+{
+    aWidth = ROUND_TO_TWIPS(mFontGroup->MeasureText(aContext->Thebes(), nsDependentSubstring(aString, aString+aLength)));
+
+    return NS_OK;
+
+}
+
+// Get the text dimensions for this string
+nsresult
+nsThebesFontMetrics::GetTextDimensions(const PRUnichar* aString,
+                                    PRUint32 aLength,
+                                    nsTextDimensions& aDimensions, 
+                                    PRInt32* aFontID)
+{
+    return NS_OK;
+}
+
+nsresult
+nsThebesFontMetrics::GetTextDimensions(const char*         aString,
+                                   PRInt32             aLength,
+                                   PRInt32             aAvailWidth,
+                                   PRInt32*            aBreaks,
+                                   PRInt32             aNumBreaks,
+                                   nsTextDimensions&   aDimensions,
+                                   PRInt32&            aNumCharsFit,
+                                   nsTextDimensions&   aLastWordDimensions,
+                                   PRInt32*            aFontID)
+{
+    return NS_OK;
+}
+nsresult
+nsThebesFontMetrics::GetTextDimensions(const PRUnichar*    aString,
+                                   PRInt32             aLength,
+                                   PRInt32             aAvailWidth,
+                                   PRInt32*            aBreaks,
+                                   PRInt32             aNumBreaks,
+                                   nsTextDimensions&   aDimensions,
+                                   PRInt32&            aNumCharsFit,
+                                   nsTextDimensions&   aLastWordDimensions,
+                                   PRInt32*            aFontID)
+{
+    return NS_OK;
+}
+
+// Draw a string using this font handle on the surface passed in.  
+nsresult
+nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
+                            nscoord aX, nscoord aY,
+                            const nscoord* aSpacing,
+                            nsThebesRenderingContext *aContext)
+{
+    return DrawString(PromiseFlatString(NS_ConvertUTF8toUTF16(aString, aLength)).get(),
+                      aLength, aX, aY, 0, aSpacing, aContext);
+}
+
+// aCachedOffset will be updated with a new offset.
+nsresult
+nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
+                            nscoord aX, nscoord aY,
+                            PRInt32 aFontID,
+                            const nscoord* aSpacing,
+                            nsThebesRenderingContext *aContext)
+{
+    float app2dev = mDeviceContext->AppUnitsToDevUnits();
+
+    mFontGroup->DrawString(aContext->Thebes(), nsDependentSubstring(aString, aString+aLength), gfxPoint(NSToIntRound(aX * app2dev), NSToIntRound(aY * app2dev)));
+
+    return NS_OK;
+}
+
+
+#ifdef MOZ_MATHML
+// These two functions get the bounding metrics for this handle,
+// updating the aBoundingMetrics in Points.  This means that the
+// caller will have to update them to twips before passing it
+// back.
+nsresult
+nsThebesFontMetrics::GetBoundingMetrics(const char *aString, PRUint32 aLength,
+                                    nsBoundingMetrics &aBoundingMetrics)
+{
+    return NS_OK;
+}
+
+// aCachedOffset will be updated with a new offset.
+nsresult
+nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString,
+                                    PRUint32 aLength,
+                                    nsBoundingMetrics &aBoundingMetrics,
+                                    PRInt32 *aFontID)
+{
+    return NS_OK;
+}
+
+#endif /* MOZ_MATHML */
+
+// Set the direction of the text rendering
+nsresult
+nsThebesFontMetrics::SetRightToLeftText(PRBool aIsRTL)
+{
+    return NS_OK;
+}
+
+
+
+
+
+
+
+
+

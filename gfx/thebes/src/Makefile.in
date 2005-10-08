@@ -21,6 +21,7 @@ CPPSRCS	= \
 	gfxContext.cpp \
 	gfxImageSurface.cpp \
 	gfxPattern.cpp \
+	gfxFont.cpp \
 	$(NULL)
 
 
@@ -35,8 +36,13 @@ EXTRA_DSO_LDOPTS += \
 
 
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
-CPPSRCS	+= 	gfxWindowsFonts.cpp \
-		gfxWindowsSurface.cpp
+CPPSRCS	+= 	gfxWindowsSurface.cpp \
+		gfxWindowsFonts.cpp \
+		$(NULL)
+
+_OS_LIBS	= usp10
+OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
+
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)

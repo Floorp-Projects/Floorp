@@ -48,6 +48,7 @@
 #include "gfxTypes.h"
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
+#include "gfxFont.h"
 
 class gfxRegion;
 class gfxFilter;
@@ -194,7 +195,12 @@ public:
     /**
      * Draw a substring of the text run at the current point.
      */
-    void DrawString(gfxTextRun& text, int pos, int len);
+    void DrawText(gfxTextRun& text, int pos, int len);
+
+    /**
+     * Draw the string at some point (XXX need docs)
+     */
+    void DrawText(const nsAString& aString, gfxPoint pt, gfxFontGroup &aFontGroup);
 
     /**
      ** Transformation Matrix manipulation
