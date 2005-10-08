@@ -401,16 +401,14 @@ applet:empty:-moz-user-disabled::before {
   content: -moz-alt-content !important;
 }
 
-object:-moz-broken, embed:-moz-broken, applet:-moz-broken
-object:-moz-user-disabled, embed:-moz-user-disabled,
-applet:-moz-user-disabled {
+object:-moz-broken > *|*, applet:-moz-broken > *|*
+object:-moz-user-disabled > *|*, applet:-moz-user-disabled > *|* {
   /*
-    Ideally, we wouldn't map in the align attribute in cases like this, but
-    that's hard....  So have to use !important to override the preshint.  This
-    can go away once object loading is in content, since then not mapping in
-    the preshint should be easy.
-   */
-  vertical-align: baseline !important;
+    Inherit in the object's alignment so that if we aren't aligned explicitly
+    we'll end up in the right place vertically.  See bug 36997.  Note that this
+    is not !important because we _might_ be aligned explicitly.
+  */
+  vertical-align: inherit;
 }
 
 img:-moz-suppressed, input:-moz-suppressed, object:-moz-suppressed,
