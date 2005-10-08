@@ -293,13 +293,17 @@ GetExtensions(void)
 {
     unsigned char keyUsage[4] = { 0x03, 0x02, 0x07, KU_DIGITAL_SIGNATURE };
 				/* What are these magic numbers? */
-    SECItem data = { 0, keyUsage, sizeof keyUsage };
-
-    CRMFCertExtension *extension = 
-	    CRMF_CreateCertExtension(SEC_OID_X509_KEY_USAGE, PR_FALSE, &data);
+    SECItem data = { 0, NULL, 0 };
+    CRMFCertExtension *extension; 
     CRMFCertExtCreationInfo *extInfo =
 	    PORT_ZNew(CRMFCertExtCreationInfo);
 
+    data.data = keyUsage;
+    data.len = sizeof keyUsage;
+
+
+    extension = 
+	    CRMF_CreateCertExtension(SEC_OID_X509_KEY_USAGE, PR_FALSE, &data);
     if (extension && extInfo) {
 	extInfo->numExtensions = 1;
 	extInfo->extensions    = PORT_ZNewArray(CRMFCertExtension*, 1);
