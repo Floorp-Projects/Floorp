@@ -1915,44 +1915,6 @@ nsGenericHTMLElement::GetClassAttributeName() const
   return nsHTMLAtoms::kClass;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsGenericHTMLElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
-{
-  const nsAttrValue* val = mAttrsAndChildren.GetAttr(nsHTMLAtoms::kClass);
-  if (val) {
-    if (val->Type() == nsAttrValue::eAtom) {
-      if (aCaseSensitive) {
-        return aClass == val->GetAtomValue();
-      }
-
-      const char *class1, *class2;
-      aClass->GetUTF8String(&class1);
-      val->GetAtomValue()->GetUTF8String(&class2);
-
-      return nsCRT::strcasecmp(class1, class2) == 0;
-    }
-    if (val->Type() == nsAttrValue::eAtomArray) {
-      nsCOMArray<nsIAtom>* array = val->GetAtomArrayValue();
-      if (aCaseSensitive) {
-        return array->IndexOf(aClass) >= 0;
-      }
-
-      const char *class1, *class2;
-      aClass->GetUTF8String(&class1);
-
-      PRInt32 i, count = array->Count();
-      for (i = 0; i < count; ++i) {
-        array->ObjectAt(i)->GetUTF8String(&class2);
-        if (nsCRT::strcasecmp(class1, class2) == 0) {
-          return PR_TRUE;
-        }
-      }
-    }
-  }
-
-  return PR_FALSE;
-}
-
 nsresult
 nsGenericHTMLElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 {
