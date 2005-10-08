@@ -64,7 +64,7 @@ EOF
 # set default variables
 
 $help = 0;
-$prefix = '/home/tinderbox';
+$prefix = '/home/tinderbox2';
 $cgibin_prefix = '/var/www/cgi-bin/tinderbox';
 $html_prefix = '/home/httpd/html/tinderbox';
 # null string means use 'which' to find default

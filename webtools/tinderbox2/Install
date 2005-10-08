@@ -231,10 +231,15 @@ the other files depending on how you wish to have Tinderbox configured.
     your ~/.cvspass into the Tinderbox2 server user id's home directory.
     This must be the REAL home of the Tinderbox2 daemon, as listed in
     /etc/passwd/ and set in the $HOME environmental variable for tinder.cgi.
-    The file must not be world readable or writable or executable. It is
-    recommended that VC_CVS.pm is only used as an interim step in setting up
-    VC_Bonsai. VC_Bonsai is not hard to setup and provided many useful
-    features which are absent in VC_CVS.pm.
+    The file must not be world readable or writable or executable.
+
+    It is recommended that VC_CVS.pm is only used as an interim step in
+    setting up VC_Bonsai. VC_Bonsai is not hard to setup and provided many
+    useful features which are absent in VC_CVS.pm.
+
+    For SVN systems - make sure that the when Tinderbox2 runs it has access
+    to the "svn log" command and that command can access the repository as
+    defined in TreeData.pm
 
 10. Configure the build machines to mail their build logs (with Tinderbox2
     variables on the top) to the web server machine.  New builds must not

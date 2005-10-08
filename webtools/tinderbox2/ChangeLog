@@ -13,6 +13,18 @@
     edited to read in the third person.  Fixed typos, spelling
     and reformatted for readability
 
+  * src/lib/Readme, src/bin/ReadMe
+    edited to read in the third person.  Fixed typos, spelling
+    and reformatted for readability. Updated to reflect current files
+
+  * configure
+    changed --prefix default to match what is in the Install notes
+
+  * src/lib/TinderDB/VC_SVN.pm
+    New TinderDB code to gather SVN information for a given
+    date/time for display in the "blame" column
+
+
 2005-10-06  Mike Taylor <bear@code-bear.com>
 
   * Contact
