@@ -6,9 +6,10 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface ImageAndTextCell : NSTextFieldCell {
+@interface ImageAndTextCell : NSTextFieldCell
+{
 @private
-    NSImage	*image;
+    NSImage* mImage;
 }
 
 - (void)setImage:(NSImage *)anImage;

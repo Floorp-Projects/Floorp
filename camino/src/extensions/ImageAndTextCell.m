@@ -46,33 +46,37 @@
 
 @implementation ImageAndTextCell
 
-- (void)dealloc {
-    [image release];
-    image = nil;
+- (void)dealloc
+{
+    [mImage release];
     [super dealloc];
 }
 
-- copyWithZone:(NSZone *)zone {
+- copyWithZone:(NSZone *)zone
+{
     ImageAndTextCell *cell = (ImageAndTextCell *)[super copyWithZone:zone];
-    cell->image = [image retain];
+    cell->mImage = [mImage retain];
     return cell;
 }
 
-- (void)setImage:(NSImage *)anImage {
-    if (anImage != image) {
-        [image release];
-        image = [anImage retain];
+- (void)setImage:(NSImage *)anImage
+{
+    if (anImage != mImage) {
+        [mImage release];
+        mImage = [anImage retain];
     }
 }
 
-- (NSImage *)image {
-    return image;
+- (NSImage *)image
+{
+    return mImage;
 }
 
-- (NSRect)imageFrameForCellFrame:(NSRect)cellFrame {
-    if (image != nil) {
+- (NSRect)imageFrameForCellFrame:(NSRect)cellFrame 
+{
+    if (mImage != nil) {
         NSRect imageFrame;
-        imageFrame.size = [image size];
+        imageFrame.size = [mImage size];
         imageFrame.origin = cellFrame.origin;
         imageFrame.origin.x += 3;
         imageFrame.origin.y += ceil((cellFrame.size.height - imageFrame.size.height) / 2);
@@ -82,15 +86,17 @@
         return NSZeroRect;
 }
 
-- (void)editWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject event:(NSEvent *)theEvent {
+- (void)editWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject event:(NSEvent *)theEvent
+{
     NSRect textFrame, imageFrame;
-    NSDivideRect (aRect, &imageFrame, &textFrame, 3 + [image size].width, NSMinXEdge);
+    NSDivideRect (aRect, &imageFrame, &textFrame, 3 + [mImage size].width, NSMinXEdge);
     [super editWithFrame: textFrame inView: controlView editor:textObj delegate:anObject event: theEvent];
 }
 
-- (void)selectWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject start:(int)selStart length:(int)selLength {
+- (void)selectWithFrame:(NSRect)aRect inView:(NSView *)controlView editor:(NSText *)textObj delegate:(id)anObject start:(int)selStart length:(int)selLength
+{
     NSRect textFrame, imageFrame;
-    NSDivideRect (aRect, &imageFrame, &textFrame, 3 + [image size].width, NSMinXEdge);
+    NSDivideRect (aRect, &imageFrame, &textFrame, 3 + [mImage size].width, NSMinXEdge);
 
     // adjust so things line up better. not perfect but |textObj| won't tell me
     // enough about the font used to get the lineheight.
@@ -100,12 +106,13 @@
     [super selectWithFrame: textFrame inView: controlView editor:textObj delegate:anObject start:selStart length:selLength];
 }
 
-- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView {
-    if (image != nil) {
+- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
+{
+    if (mImage != nil) {
         NSSize	imageSize;
         NSRect	imageFrame;
 
-        imageSize = [image size];
+        imageSize = [mImage size];
         NSDivideRect(cellFrame, &imageFrame, &cellFrame, 3 + imageSize.width, NSMinXEdge);
         if ([self drawsBackground]) {
             [[self backgroundColor] set];
@@ -119,7 +126,7 @@
         else
             imageFrame.origin.y += ceil((cellFrame.size.height - imageFrame.size.height) / 2);
 
-        [image compositeToPoint:imageFrame.origin operation:NSCompositeSourceOver];
+        [mImage compositeToPoint:imageFrame.origin operation:NSCompositeSourceOver];
     }
     // shift down cellFrame by 1px to better align w/in rect. For some reason the default
     // doesn't center correctly.
@@ -129,9 +136,10 @@
     [super drawWithFrame:cellFrame inView:controlView];
 }
 
-- (NSSize)cellSize {
+- (NSSize)cellSize
+{
     NSSize cellSize = [super cellSize];
-    cellSize.width += (image ? [image size].width : 0) + 3;
+    cellSize.width += (mImage ? [mImage size].width : 0) + 3;
     return cellSize;
 }
 
