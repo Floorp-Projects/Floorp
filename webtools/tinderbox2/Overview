@@ -1,157 +1,172 @@
 
-
 Overview of the Tinderbox System
 --------------------------------
 
-Tinderbox is an information display system. It runs on a machine with
-a webserver and will periodically write static HTML files to the disk
-so that the webserver can serve these documents. Tinderbox is run out
-of cron every five minutes.  It gathers up information from various
-databases including: CVS Logs, Bonsai, and Perforce.  It will also
-process mail which is sent to it. Mail is sent from Bug Ticketing
-software and Build/Test Machines.  All this information is combined to
-produce the HTML pages.
+Tinderbox2 is an information display system. It runs on a machine with
+a web server and will periodically write static HTML files to the disk
+so that the web server can serve these documents.
 
+Tinderbox2 is run out of cron as often as your needs require and gathers
+up information from various databases including: Repository Logs, Bonsai
+and Perforce.  It will also process mail which is sent to it from Bug
+Ticketing software and Build/Test Machines.  All this information is
+combined to produce the HTML pages.
 
 Since no two companies will structure their development processes the
-same way, the tinderbox code has to be highly configurable to account
+same way, the Tinderbox2 code has to be highly configurable to account
 for most possible uses.  There is a main configuration file which
 allows most of the major user configurable variables to be set.
 Novice users can expect to edit only this file and get a working
-tinderbox system.  Additionally each library has been broken into two
-parts.  One part is the library specific configurations.  This file is
-expected to need modifications in some installations.  I have put all
-the library configurations into one directory to make it easy to find
-the parts of tinderbox which are easy to modify.  Each configuration
-library can be thought of as a table which might need to be edited or
-extended for use at your company.  I have provided a working system
-but the defaults may not suit your needs.  These tables can be easily
-changed in small ways by simply looking at the file and making obvious
-changes.  I have also allowed for the possibility of making complex
-changes that only a competent perl programmer could define.  Changes
-are not made to the files which I have provided.  Rather the changes
-are made to copies of the files which are stored in a local
+Tinderbox2 system.
+
+Additionally each library has been broken into two parts.  One part is
+the library specific configurations.  This file is expected to need
+modifications in some installations.  All of the library configurations
+are located in one directory to make it easy to find the parts of Tinderbox2
+which are easy to modify.  Each configuration library can be thought of
+as a table which might need to be edited or extended for use at your company.
+The defaults provide a working system but may not suit your needs.  These
+tables can be easily changed in small ways by simply looking at the file
+and making obvious changes.
+
+Changes are not made to the files which have been provided but rather
+the changes are made to copies of the files which are stored in a local
 configuration directory.  This ensures that you can easily version the
-Tinderbox code as it is provided to you from the official distribution
+Tinderbox2 code as it is provided to you from the official distribution
 and you can separately version the local configurations which you
 make.  It is also easy to see the local configurations since you have
 both the original and the modified code on the same server and can
-difference the two.  As an example you might need to change the
-BuildStatus - I assume that you have the following possible build
-outcomes (Build in progress, Build failed, Build succeded but tests
-failed, Build and all tests were successful) You may have additional
-outcomes to specify which kind of tests failed (unit test failed, not
-enough unit test coverage, performance tests failed).  Similarly you
-may have unusual requirements for how the filesystem should be laid
-out.  I provide a outcomes to specify which kind of tests failed (unit
-test failed, not enough unit test coverage, performance tests failed).
-Similarly you may have unusual requirements for how the filesystem
-should be laid out.  I suggest that you read through the files to see
-how they are laid out and what types of changes are possible.
+difference the two.
 
+As an example you might need to change the BuildStatus - assuming that
+you have the following possible build outcomes (Build in progress,
+Build failed, Build succeded but tests failed, Build and all tests were
+successful.) You may have additional outcomes to specify which kind of
+tests failed (unit test failed, not enough unit test coverage, performance
+tests failed).   Similarly you may have unusual requirements for how the
+filesystem should be laid out.
 
-The build machines are not considered part of the tinderbox server.
-They are clients just like Bug Ticketing systems and Version control
+The build machines are not considered part of the Tinderbox2 server.
+They are clients just like Bug Ticketing systems and Version Control
 systems are clients.  Build machines mail their build logs to the
 server in a special format.  This format specifies that name/value
 pairs must appear at the top of the mail message followed by the
-complete build log.  Scripts for setting up a tinderbox build client
-can be found in the clientbin directory but you may have other build
-needs and may use any build methods you choose.
+complete build log.
 
-The central concept of the Tinderbox system is the notion of a 'Tree'.
+Scripts for setting up a Tinderbox2 build client can be found in the
+clientbin directory but you may have other build needs and may use any
+build methods you choose.
+
+The central concept of the Tinderbox2 system is the notion of a 'Tree'.
+
 When several different groups are working out of the same version
 control system often the files are partitioned into separate modules
 with each group working on one or more disjoint modules.  Over time
 the developers need to branch their code because several different
 versions of the files are under development at the same time.  A tree
-is a module/branch pair.  This corresponds to a set of files which can
-be checked out and built.  Tinderbox makes one page for each tree and
-displays what work is being done on that tree.  CVS has a notion of
-branches and of modules but not of trees.  It is not possible to give
-a branch/module pair a name.  The tinderbox TreeData provides the
-mappings between treenames and branch/module pairs.  Tinderbox
-displays the updates to bug tickets on the appropriate tree page.
-This requires an easy mapping between bug tickets and trees. One
-example of a complex function to determine tree name would be if each
-of the product product types listed in the bug tracking data base
-refers to one development project, except for a particular
-feature/platform of one particular project which is being developed by
-a separate group of developers.  So the version control notion of
-trees (a set of modules on a branch) may not have a direct map into
-the bug tracking database at all times.  In large projects it is
-sometimes convenient to have a tree called 'ALL' which is used to
-display all checkins performed on any trees and all bug tickets worked
-on by any programmers.  It is not possible to build or test the 'ALL'
-tree and neither the version control nor bug ticketing system knows of
-its existence.
+is a module/branch pair and corresponds to a set of files which can
+be checked out and built.  Tinderbox2 creates one page for each tree and
+displays what work is being done on that tree.
 
+While most version control systems know about modules and branches, they
+do not know about trees and it is not possible to give a branch/module pair
+a name.  The Tinderbox2 TreeData provides the mappings between treenames
+and branch/module pairs.
+
+Tinderbox2 displays the updates to bug tickets on the appropriate tree
+page. This requires an easy mapping between bug tickets and a tree. One
+example of a complex function to determine tree name would be if each
+of the product types listed in the bug tracking database refers to one
+development project, except for a particular feature/platform of one
+particular project which is being developed by a separate group of
+developers.  So the version control notion of trees (a set of modules
+on a branch) may not have a direct map into the bug tracking database
+at all times.
+
+In large projects it is sometimes convenient to have a tree called 'ALL'
+which is used to display all checkins performed on any trees and all bug
+tickets worked on by any programmers.  It is not possible to build or
+test the 'ALL' tree and neither the version control nor bug ticketing
+system knows of its existence.
 
 The Bug Tracking code was intended to be as general as possible.
 Most bug ticketing systems send mail when tickets change state.  The
 mail is often of the same form.  It is a name/value pair which the
-separator being the string ": ".  Tinderbox will parse mail of this
+separator being the string ": ".  Tinderbox2 will parse mail of this
 form and display the interesting fields on the appropriate tree page.
 The configuration of this module involves specifying which bug ticket
-names are interesting and should be displayed.  Also you will need to
-specify how to map a bug ticket into a a tree.  This could be very
-simple if each bug ticket has a field which represents the tree it is
-applicable to (in this case tree could equal project) or can be very
-complex if the tree must be computed by the values of a set of fields.
-Also tinderbox keeps track of which bugs are "reopened" and displays
+names are interesting and should be displayed.  
+
+You will need to specify how to map a bug ticket into a tree, this
+could be very simple if each bug ticket has a field which represents
+the tree it is applicable to, in this case the tree would equal the
+project.  Or it can be very complex if the tree must be computed by the
+values of a set of fields.
+
+Also Tinderbox2 keeps track of which bugs are "reopened" and displays
 them in a different column.  The idea is that some bugs are moving
 backwards and creating duplicate work.  These tickets are particularly
-troublesome and should be watched specially.  So possible all ticket
+troublesome and should be watched specially.  So possibly all ticket
 status are partitioned into "progress" or "slippage" categories.  You
 will need to specify what status values are possible for your ticket
 system and you will also need to specify the set of columns which you
 would like to see on the status page.
 
-The heart of the tinderbox system is the 'status table'.  This is an
+The heart of the Tinderbox2 system is the 'status table'.  This is an
 HTML table which graphically shows how the changes made to the
 development databases.  It will show what is going on in the version
 control system, the bug tracking system, the build system, automatic
 regression tests and provide a notice board for developers to inform
-each other of current news.  By placing all this information in the
-same table it is possible to correlate and cross check how different
-types of changes effected each other and what was going on with the
-whole project at different times in the day. The rows of the table
-represent time with the most current events at the top of the page.
-There are different sets of columns for each database which needs to
-be displayed.  The sets of columns are managed by independent modules.
+each other of current news.
+
+By placing all this information in the same table it is possible to
+correlate and cross check how different types of changes effected each
+other and what was going on with the whole project at different times
+in the day.
+
+The rows of the table represent time with the most current events at the
+top of the page. There are different sets of columns for each database
+which needs to be displayed.  The sets of columns are managed by
+independent modules.
+
 There is one module for each version control system and each bug
-tracking system which tinderbox knows how to interface with.  It is
+tracking system which Tinderbox2 knows how to interface with.  It is
 easy to port the system to new databases by just adding a new module
 using the same style as the existing modules.  Modules never share or
-peek at each others data all combining of data is done by the humans
-who stare at the table and interpret what is going on.  The main
-tinderbox system does not know how many columns the final table will
-have. It only knows about a list of table modules.  Each module in the
-list is called in turn to generate the complete row then the entire
-row is displayed. The user must configure tinderbox with the list of
-modules which are of important to their own environment.  There is no
-restriction on the number of modules which may be configured, though
-due to implementation details each module can only appear once in the
-table.  There are many pop up windows embedded in the status table
-these will provide extra level of detail when a mouse is placed over
-the link.  By moving your mouse around the page you may effectively
-drill down into an item of interest and learn more about it without
-leaving the page.  Most of the links will click through to the
-appropriate database.  Thus if you need more data about an item you
-can click on the link and query the database directly.
+peek at each others data and all combining of data is done by the humans
+who stare at the table and interpret what is going on.
+
+The main Tinderbox2 system does not know how many columns the final
+table will have - it only knows about a list of table modules.
+Each module in the list is called in turn to generate the complete row
+then the entire row is displayed. The user must configure Tinderbox2 with
+the list of modules which are of important to their own environment.
+There is no restriction on the number of modules which may be configured,
+though due to implementation details each module can only appear once
+in the table.
+
+There are many pop up windows embedded in the status table these will
+provide extra level of detail when a mouse is placed over the link.
+By moving your mouse around the page you may effectively drill down
+into an item of interest and learn more about it without leaving the page.
+Most of the links will click through to the appropriate database.
+Thus if you need more data about an item you can click on the link and
+query the database directly.
 
 Besides the status table there is one other feature of the status
-page.  The page displays some information which is not correlated
+page.  The status page displays some information which is not correlated
 through time and with other data.  This information is called status
-table headers.  The main headers are the message of the day (MOTD),
-and the Tree State though there are a few others headers of mainly
-historical interest.  The important issue with the headers is that
-they are not optional.  Tinderbox can render a table with as little or
-as many columns in the status table as you wish but each of the
-headers has a particular place on the status page and needs to be
-rendered in a particular way (font size, font type, etc) thus the
-tinderbox server must know where each header must go and how to
-specify the appropriate html context for this header.  Users may set
-null defaults for headers that they do not need but it is much harder
-for a user to add new headers to the code in a modular fashion.
+table headers.
+
+The main headers are the message of the day (MOTD), and the Tree State
+though there are a few others headers of mainly historical interest.
+The important issue with the headers is that they are not optional.
+Tinderbox2 can render a table with as little or as many columns in the
+status table as you wish but each of the headers has a particular place
+on the status page and needs to be rendered in a particular way
+(font size, font type, etc) thus the Tinderbox2 server must know where
+each header must go and how to specify the appropriate HTML context for
+the header.  Users may set null defaults for headers that they do not
+need but it is much harder for a user to add new headers to the code
+in a modular fashion.
 

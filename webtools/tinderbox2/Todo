@@ -1,3 +1,12 @@
+Bear's Todo List:
+
+  * Integrate SVN for blame column - bug 303333
+  * Allow Tinderbox2 to use a Bonsai on another computer - bug 237289
+  * Bring perl code up to some of the newer Mozilla styles
+  * Create more export streams - rdf, atom feed, pub/sub???
+
+
+Original Todo list:
 
 It would be really nice if CVS/Bonsai could mail tinderbox the updates
 which apply to the branches of interest, then tinderbox would not have

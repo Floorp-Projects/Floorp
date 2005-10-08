@@ -1,0 +1,163 @@
+Release ???
+
+    New Time columns for use in environments with multiple time zones.
+
+    Spelling fixes 
+
+    Add support for popup windows which work "on click"
+
+    Add support for users who want to see tinderbox's notion of what was
+    checked in not just Bonsai's query.
+
+    Add support for historical Tinderbox images
+        (flames, stars)
+
+    Mozilla layout preferences are now standard 
+      (non uniform row spacing, 
+      truly empty cells, 
+      legend on bottom of page).
+
+    Allow users to backdate notices
+
+    automate regeneration of HTML when user uses CGI interface
+
+    Put the C in all build cells.
+
+    VC code did the wrong thing when generating old pages and there was
+    no TreeState data.
+
+    Fix Spelling mistakes throughout code.	
+
+    Add support for build machines to tell the server to add text/links 
+    into build cells (TinderboxPrint).
+
+    When builds are started too frequently (more then once every five minutes) 
+    newest build is now kept and oldest build is thrown away.
+
+    New Configure script contributed by Stephen Lamm (slamm@yahoo-inc.com)
+    This includes a fix to allow Perl to be in different locations on the 
+    machine where make is run and on the machine where the web server runs.
+
+    Now it is possible to include the time column on the left and right 
+    side of the status table.
+
+    There is now a working Perforce module for those who use this product
+    instead of CVS.
+
+    There is a module to interface with the req ticketing system.
+
+    New Summary format and number of errors displayed on build page by
+    Adam Di Carlo <adam@onshore-devel.com>,
+
+    Spelling and consistency fixes from:
+        Adam Di Carlo <adam@onshore-devel.com>, 
+        Orion Poplawski <OPoplawski@cqg.com>,
+        John L. Villanlovos <john.l.villalovos@intel.com>,
+
+    Change HTML generation so that the text browser 'links' 
+    (http://artax.karlin.mff.cuni.cz/~mikulas/links/) can
+    work with tinderbox.
+
+    Allow the build script to use a single process and alternate builds 
+    of different types.
+
+    Add a sample /etc/rc.d/init.d file for the RedHat Build machines.
+
+    Mail processing programs were not writing error files correctly.  
+    This has been broken since I separated out the mail processing module.
+
+    Add script to cull old builds from a directory of completed builds.
+
+    Let the VC and BT headers be configurable.  Too many companies find
+    this an important feature.
+
+    Allow Tinderbox to run via suid wrappers.  This is needed for some
+    times of mail delivery systems
+
+    No longer exclude 'privileged id's from running Tinderbox. 
+    Now we require tinderbox to run as the id which the user specifies 
+    is the tinderbox id.
+
+    Better errors for failures in Storable.pm
+
+    BasicTxtHeader.pm had a bug which prevented it from working when using Storable
+
+    Rework the BT modules to allow use when URL is not easily mapped from the bugid
+
+    Begin work to allow tinderbox admin pages to open and close bonsai trees
+
+    Fix code which allowed tinderbox to determine the state of bonsai trees
+
+    Major bug in the untainting code, fixed. This was a security
+    problem. I suspect people may have trouble with the fix but this was
+    how the code was intended to work.  I do not understand how this got
+    through my unit tests.
+
+    Give a useful example of how use the new build script.
+
+    Improve the spec files, split out build machine packages.
+
+
+Release 0.9
+
+    Add full Bonsai integration functionality.
+
+    Allow users to define a display order for the buildnames on a per tree basis.
+    This adds a new function into TreeData.pm check your local files.
+
+    Fix computation of 'deadtime' for eazel.com's build setup,
+    this will improve their estimate of when the next build will be
+    complete.
+
+    Develop portable client build scripts.
+
+    Add RPM spec files.
+
+    Relax check of root id for all redhat users.  
+    uid nobody is 99 and by default redhat apache runs all cgi as nobody.
+
+    VC_CVS.pm was not removing excess treestates from the Database correctly, 
+      now fixed.
+
+Release 0.8
+
+    This release moved some files into new directories update with
+      cvs update -d -P
+
+    Remove the strict time checking on mail, it caused too many problems.
+
+    Fix the Unmonitored Builds in admintree.cgi and in status.html page.
+
+    Storable.pm has been tested as a Persistence implementation.
+
+    Improve the prediction of when builds will end by introducing the
+    notion of 'deadtime'.
+
+    Separate out the BuildStatus table for easier configuration of the
+    status without changing the build display library.
+
+    Better comments in the ReadMe files
+
+    Better security:
+
+      - All scripts run in taint perl mode
+
+      - Separation of HTML and DATA directories in 
+        addition to the CGI directory
+
+      - Additional checks of ownership for the data directories
+
+      - Check the network address of all administrative commands
+
+    Improved Makefile/Configure support
+
+    New permissions help prevent accidental edit of files in the
+    build or install directory
+
+    Inter-positioning of libraries, for local configuration,
+      fully supported
+
+    Test arguments added to Makefile
+
+    Test compiles of the perl are no longer required
+

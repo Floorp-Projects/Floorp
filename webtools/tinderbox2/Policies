@@ -1,277 +1,296 @@
-Preparations you will need to make and 
-policies you will need to set:
------------------------------------
 
-
-To install tinderbox you will need some information about your
+To install Tinderbox2 you will need some information about your
 existing computer systems and some idea about what your goals are.
-Here is a list of questions to help get you started, some of these
+
+Here is a list of topics to help get you started, some of these
 ideas may not be appropriate for your environment.
 
+Web server configuration
+------------------------
 
-The webserver will serve the tinderbox pages.  
-Webserver configuration is a bit of an art and you will need to
-understand the policies which are used to administer your webserver.
+The web server is what delivers the Tinderbox2 information to the world.
+Web server configuration is a bit of an art and you will need to
+understand the policies which are used to administer your web server.
 
-*) You will need to decide the directory where tinderbox should write
-the static HTML pages.  This will depend on how your webserver is
-configured. The default location is based on the RedHat 7.1
-(apache-1.3.19-5) installation and is: /var/www/html/tinderbox2.  You
-will also need to know what the URL browsers will need to use to find
-this directory. Since tinderbox generates static web pages, it is
-possible to run tinderbox and not run a web server.  One way this
-could be done is if you have a network file system and all users have
-browsers which can read from the HTML directories.  In this case all
-URL's should begin with "file:/" instead of the usual "http://".
+  * You will need to decide the directory where Tinderbox2 should write
+    the static HTML pages.  This will depend on how your web server is
+    configured. The default location is based on the RedHat 7.1
+    (apache-1.3.19-5) installation and is: /var/www/html/tinderbox2.
 
-*) Project level administration is done via cgi scripts.  These
-scripts allow administrators to set the message of the day, and the
-state of the tree (open, closed, restricted).  Also all users can post
-notices to the web pages via a cgi script.  CGI programs are often
-restricted to a portion of the file system which is disjoint from the
-HTML files. You will need to figure out where the CGI programs will
-go.  Tinderbox takes its defaults from RedHat 7.1 and uses:
-/var/www/cgi-bin/tinderbox2. You will also need to know what the URL
-browsers will need to use to find this directory.
+    You will also need to know what the URL browsers will need to use
+    to find this directory. Since Tinderbox2 generates static web
+    pages, it is possible to run Tinderbox2 and not run a web server.
+    One way this could be done is if you have a network file system
+    and all users have browsers which can read from the HTML directories.
+    In this case all URL's should begin with "file:/" instead of the
+    usual "http://".
 
-*) CGI scripts will run as an unauthenticated user on your system.
-You will need to decide which user will run the tinderbox CGI scripts.
-The same user id must be used for running the scripts as for tinderbox
-mail delivery.  The Tinderbox Configuration files will define this
-user id and as a security precaution check that it is running as the
-required id.  It is suggested that this id not be a privileged id
-(higher ids are better, please make this number be greater than 10 and
-bigger than 100 is recommended).  Smaller ids are often assumed to
-have more privileges on a Unix box then larger ids.  It is not a good
-idea for an unauthenticated user to have any privileges so a large id
-is recommended. It is also recommended that you not use the id 'nobody'
-as this id is over used and it would be better to partition the
-unauthenticated user into separate ids in case of security problems.
-RedHat runs all its CGI scripts as the user 'apache', this is an
-acceptable user.  I would prefer to have a separate user to run the
-tinderbox CGI scripts but this would require recompiling apache to
-enable suEXEC, and it is more effort then most groups can afford.
+  * Project level administration is done via cgi scripts.  These scripts
+    allow administrators to set the message of the day, and the state
+    of the tree (open, closed, restricted).  Also all users can post
+    notices to the web pages via a cgi script.
+      
+    CGI programs are often restricted to a portion of the file system
+    which is disjoint from the HTML files. You will need to figure out
+    where the CGI programs will go.  Tinderbox2 takes its defaults from
+    RedHat 7.1 and uses /var/www/cgi-bin/tinderbox2. You will also need
+    to know what the URL browsers will need to use to find this directory.
 
-*) Tinderbox Files. There are other tinderbox files which need to be
-placed on the webserver.  These include libraries and non-cgi
-programs. You will need to decide where to place these files.  Most
-users put them in /home/tinderbox2.
+  * CGI scripts will run as an un-authenticated user on your system.
+    You will need to decide which user will run the Tinderbox2 CGI
+    scripts. The same user id must be used for running the scripts as
+    for Tinderbox2 mail delivery.
 
-*) Tinderbox Data. Tinderbox stores its data in the file system.  For
-security it is often a good idea to keep this data out of the HTML and
-CGI directories so that malicious users can not directly access this
-data.  The compressed build logs can grow quite large, so it is
-recommended to put the data on a file system with room.  The default
-is to put them in the directory /home/tinderbox2/data.
+    The Tinderbox2 configuration files will define this user id and,
+    as a security precaution, check that it is running as the required
+    id.  It is suggested that this id not be a privileged id (higher
+    ids are better, please make this number be greater than 10 and
+    bigger than 100 is recommended). Smaller ids are often assumed to
+    have more privileges on a Unix box then larger ids. It is not a
+    good idea for an un-authenticated user to have any privileges so a
+    large id is recommended.
 
+    It is also recommended that you not use the id 'nobody' as this id
+    is over used and it would be better to partition the un-authenticated
+    user into separate ids in case of security problems.
+
+    RedHat runs all its CGI scripts as the user 'apache', this is an
+    acceptable user.  I would prefer to have a separate user to run the
+    Tinderbox2 CGI scripts but this would require recompiling apache to
+    enable suEXEC, and it is more effort then most groups can afford.
+
+  * Tinderbox2 Files. There are other Tinderbox2 files which need to
+    be placed on the web server.  These include libraries and non-cgi
+    programs. You will need to decide where to place these files.
+    Most users put them in /home/tinderbox2.
+
+  * Tinderbox2 Data. Tinderbox2 stores its data in the file system.
+    For security it is often a good idea to keep this data out of the
+    HTML and CGI directories so that malicious users can not directly
+    access this data.  The compressed build logs can grow quite large,
+    so it is recommended to put the data on a file system with room.
+    The default is to put them in the directory /home/tinderbox2/data.
 
 Mail
 ----
 
-*) Many of the tinderbox modules (Bug Ticket, Build, CVS) receive
-their data via mail.  The mail system on you web server machine must
-be configured to deliver the mail into the tinderbox mail processing
-programs.  You should spend some time understanding how your mail
-delivery system can be configured to allow user mail to be delivered
-into a program and how to set the user id under which this delivery
-occurs.  If you do not wish to configure your mail delivery program
-then you can use fetchmail to pull the mail out of a mail box and push
-it into the programs on a periodic basis.  See the install page for
-details on what I have learned about mailing systems.
+Many of the Tinderbox2 modules (Bug Ticket, Build, CVS) receive their
+data via mail.
 
+  * The mail system on your web server machine must be configured to
+    deliver the mail into the Tinderbox2 mail processing programs.
+    You should spend some time understanding how your mail delivery
+    system can be configured to allow user mail to be delivered into a
+    program and how to set the user id under which this delivery occurs.
+
+    If you do not wish to configure your mail delivery program then you
+    can use fetchmail to pull the mail out of a mail box and push it into
+    the programs on a periodic basis.  See the install page for details
+    on different aspects about mailing systems.
 
 Production Version Control
 -------------------------
 
-One of the biggest responsibilities which a "buildmaster" has is the
+One of the biggest responsibilities which a "build master" has is the
 requirement that all code should be reproducible.  That is that at
 any point in the future, even more than one year later, the current
 binaries should be able to be rebuilt byte for byte from sources.
+
 This requirement can be broken down as follows:
 
-1) The build machine must be reproducible.  
+  * The build machine must be reproducible.  
 
-We must be able to get back the same build machine we had at any point
-in the past.  This means that all OS libraries, all header files, all
-compilers, all build tools (make, grep, sed) must have some mechanism
-to roll back.  It is common to use a backup of the build machine to
-reconstruct it.  Most OS will give you a list of the software packages
-which are installed on the machine and their version numbers.  I like
-to keep the list of software packages which are installed on the
-machine checked into version control.  This allows me to compare the
-state of the build machine at any two points in time.  I have tools to
-recreate the build-machine from just a list of packages with version
-numbers. It is considered a best practice to limit the amount of
-software which is available on the build machine.  A build machine
-with too much installed will only make it difficult to reproduce older
-builds should the need arise.  I recommend not installing any
-web servers or graphical window managers on your build machine.  It
-should be clear that the build machine should not be the same machine
-where the tinderbox server runs.
+    You must be able to get back the same build machine configuration
+    you had at any point in the past.  This means that all OS libraries,
+    all header files, all compilers, all build tools (make, grep, sed)
+    must have some mechanism to roll back.  It is common to use a backup
+    of the build machine to reconstruct it.  Most OS will give you a
+    list of the software packages which are installed on the machine and
+    their version numbers.  Maintaining a the list of software packages
+    which are installed on the machine and check it into version control.
+    This allows you to compare the state of the build machine at any two
+    points in time.
+    
+    It is considered a best practice to limit the amount of software which
+    is available on the build machine.  A build machine with too much
+    installed will only make it difficult to reproduce older builds should
+    the need arise. A build machine should not have installed any web
+    servers or graphical window managers on your build machine.  It should
+    be clear that the build machine should not be the same machine where
+    the Tinderbox2 server runs.
 
-2) The build process must be reproducible.  That is all the steps
-which are used to create the application must be reproducible.
+  * The build process must be reproducible. That is all the steps which
+    are used to create the application must be reproducible.
 
-*) Build Interface: We must be able to run exactly the same build
-process in the future including: all commands with command line
-arguments, all environmental variables.  I recommend that the entire
-build process be viewed as something outside of the build master
-control.  Developers are responsible for ensuring that there is a
-simple build master interface to construct all the software products
-which go into a build.  Typically there is a makefile in a standard
-place where the buildmaster can run something like "make all; make
-install;" and be guaranteed that this will build the product.  The
-build interface should be viewed as something which never changes and
- are part of the build machine, like the OS and are changed only
-rarely.  It is hard enough to track all the parts of the build process
-which we expect to change, we should not need to track complex build
-procedures.  The build procedures should have a standard interface.
-By keeping the build instructions in one makefile which is checked
-into the same version control system as the sources it is easy to
-recreate any previous build even if the commands used to build the
-software fluctuate rapidly between releases.  There must be a simple
-interface to construct the software which will hide all the complexity
-of the actual construction.  
+  * Build Interface - You must be able to run exactly the same build
+    process in the future including all commands with command line
+    arguments, all environmental variables.  I recommend that the entire
+    build process be viewed as something outside of the build master
+    control.  Developers are responsible for ensuring that there is a
+    simple build master interface to construct all the software products
+    which go into a build.  Typically there is a Makefile in a standard
+    place where the build master can run something like "make all; make
+    install;" and be guaranteed that this will build the product.
 
-*) Build Environment: The makefile will code all the build commands
-and all the environmental variables (PATH, UMASK, LD_LIBRARY_PATH,
-CLASSPATH) needed to build the software though it may rely on some
-well defined command line arguments (PREFIX, CCFLAGS, JAVA_LIBS) to
-make these prematurely.  These command line arguments should not
-change between versions of the software but should be a fixed set of
-build parameters.  The parameters may be needed to specify where some
-files are found on the build machine (Ideally the build machine is set
-up the same as developers machines so these directories can be
-hard-coded into the makefiles but often there is a need for some
-directories to be specified at build time) or where files are to be
-created/installed on the build machine (typically a subdirectory of
-/var/tmp but there may be several builds running at once and each will
-need a different directory) or what kind of build is being created.
-Each part of the build which needs a particular environmental variable
-set or a special header file in some path should have tests which
-ensure that the build environment is valid.  I keep my build scripts
-installed on the build machine and they are always started by running
-/etc/rc.d/init.d/build start this ensures that I am not relying on any
-build environmental variables which are set by logging into the build
-account and are thus not tracked and versioned.
+    The build interface should be viewed as something which never changes
+    and are part of the build machine, like the OS and are changed only
+    rarely.  It is hard enough to track all the parts of the build process
+    which are epected to change, let alone trying to track complex build
+    procedures.
 
-*) Environmental safety issues: 
+    The build procedures should have a standard interface. By keeping the
+    build instructions in one Makefile which is checked into the same
+    version control system as the sources; it is easy to recreate any
+    previous build even if the commands used to build the software
+    fluctuate rapidly between releases.  There must be a simple interface
+    to construct the software which will hide all the complexity of the
+    actual construction.  
 
-If the build environment can not be used to build the software then a
-human readable error message should be generated.  My makefiles often
-run various checks on the environmental variables before they
-construct the code.  They check that all required environmental
-variables are set, that the required libraries are found, that
-directories which must be disjoint (build and install directories) do
-not overlap. This test suite becomes a build regression test and as I
-discover additional possible build problems I add new tests to the
-makefile.  I make it a habit to explicit set all environmental
-variables so that there is no doubt as to their expected values.  It
-is important for the QA group to only use Builds which were created by
-an automated process so that we are sure that there are no
-undocumented steps in either the test builds or the released build.
+  * Build Environment - The Makefile will code all the build commands
+    and all the environmental variables (PATH, UMASK, LD_LIBRARY_PATH,
+    CLASSPATH) needed to build the software though it may rely on some
+    well defined command line arguments (PREFIX, CCFLAGS, JAVA_LIBS) to
+    make these prematurely.  These command line arguments should not
+    change between versions of the software but should be a fixed set of
+    build parameters.
 
-3) Track the Build numbers.  Given a clean install of your product you
-should have all the information necessary to reproduce the executable
-from sources.  If a customer shows you the application binaries you
-must be able to get the source code which build the application,
-reconstruct the build machine which created the application and
-possibly rerun the build exactly the same way as the application was
-created before, this may include making some minor source code changes
-before the build is run. I like to keep a file which contains:
+    The parameters may be needed to specify where some files are found
+    on the build machine (Ideally the build machine is set up the same
+    as developers machines so these directories can be hard-coded into
+    the Makefile but often there is a need for some directories to be
+    specified at build time) or where files are to be created/installed
+    on the build machine (typically a subdirectory of /var/tmp but there
+    may be several builds running at once and each will need a different
+    directory) or what kind of build is being created.
 
-	The product release name
+    Each part of the build which needs a particular environmental variable
+    set or a special header file in some path should have tests which
+    ensure that the build environment is valid.  The build scripts could be
+    installed on the build machine and started by running:
+    "/etc/rc.d/init.d/build start". This would ensure that the build script
+    does not rely on any build environmental variables which are set by
+    logging into the build account and are thus not tracked and versioned.
 
-	The sources 'as of date'. (I always checkout my sources using
-		cvs -D 'date time' so that exactly the same sources
-		can be recovered knowing only the 'data time' which
-		was used to check them out. I am sure a similar trick
-		could be used with a perforce 'change set number'.)
+  * Environmental safety issues.  If the build environment can not be used
+    to build the software then a human readable error message should be
+    generated.  The Makefile can often run various checks on the environmen
+    variables before they construct the code.  They check that all required
+    environment variables are set, that the required libraries are found,
+    that directories which must be disjoint (build and install directories)
+    do not overlap.
 
-	The branch name.
+    This test suite becomes a build regression test and as additional possible
+    build problems are discovered, new tests can be added to the Makefile.
+    It is a good habit to explicit set all environment variables so that there
+    is no doubt as to their expected values.  It is important for the QA group
+    to only use Builds which were created by an automated process so that you
+    are sure that there are no undocumented steps in either the test builds or
+    the released build.
 
-	The module name.
+  * Track the Build numbers.  Given a clean install of your product you
+    should have all the information necessary to reproduce the executable
+    from sources.  If a customer shows you the application binaries you
+    must be able to get the source code which build the application,
+    reconstruct the build machine which created the application and
+    possibly rerun the build exactly the same way as the application was
+    created before, this may include making some minor source code changes
+    before the build is run.
+    
+    One method is to keep a file which contains:
+      - The product release name
+      - The sources 'as of date'. (Always checkout sources using
+        a known datetime or revision # (cvs -D or svn -R) so that
+        exactly the same sources can be recovered knowing only the
+        'date/time' which was used to check them out.
+      - The branch name
+      - The module name.
 
-This can be stored as a file in the product (encrypted if necessary)
-or may be stored in some secure build master database where the data
-can be looked up by release name.  My preference is to keep all data
-necessary to reproduce a build in the build output and delivered as
-part of the product.  This means that I can generate as many builds as
-I want automatically and not need to keep track of any of them.  When
-the QA team deems that a certain build is 'important', by making a
-particular build the official released copy then I can take a look at
-its contents and tag/branch the code at the sources which I used to
-build it.
+    This can be stored as a file in the product (encrypted if necessary)
+    or may be stored in some secure build master database where the data
+    can be looked up by release name.  A good practice is to keep all data
+    necessary to reproduce a build in the build output and delivered as
+    part of the product.  This means that you can generate as many builds as
+    needed automatically and not need to keep track of any of them.  When
+    the QA team deems that a certain build is 'important', by making a
+    particular build the official released copy then you can take a look at
+    its contents and tag/branch the code at the sources which were used to
+    build it.
 
-4) Build Prefix: It is a good idea to familiarize yourself with the
-makefile conventions regarding the make variable PREFIX.  It is
-easiest to understand if you think about what RedHat does when they
-build their distribution of RPM's but this will apply in many
-different systems including the Andrew File System (AFS) and most
-packaging systems. This variable is used during the build process
-"make all PREFIX=/home/apache" to tell the package where it will be
-installed (examples include /usr, /usr/local, /home/apache).  I
-suggest reading a few RedHat Spec files to see how this works in
-practice.  The application may need to hard-code this value into its
-object code.  When the application is installed it must not be
-installed into its proper place on the build machine.  The package we
-are constructing could cause the build machine to stop working
-correctly if it is a buggy version of a system library or major OS
-application.  Instead the makefile will install "make install
-PREFIX=/var/tmp/build-root/home/apache" the package into some other
-directory with a similar tree structure to its final destination.  The
-packaging system will then move the files into the correct place
-during an installation step on the target machine.  The installation
-step only moves files and sets permissions.  The makefile is not
-supposed to use the installation directories to hard code values into
-the application since the application will never be run from this
-installation directory.  The hard part of the build including any
-PREFIX magic is in the build section.  Notice the clear separation
-between build machine / target machine and installation on the build
-machine and installation on the target machine and construction of the
-application binaries and installation of the application binaries.
-This is one of the reasons why building an application on a build
-machine is different from the way in which developers build their code
-on their personal development machines.  This PREFIX issue will arise
-when you try and build the Tinderbox system and also when you
-construct the makefiles for your own application.  Since the build
-machine is not the target machine it can not be assumed that files
-will always be in the same places on both (for example perl).
+  * Build Prefix: It is a good idea to familiarize yourself with the
+    Makefile conventions regarding the make variable PREFIX.  It is
+    easiest to understand if you think about what RedHat does when they
+    build their distribution of RPM's but this will apply in many
+    different systems including the Andrew File System (AFS) and most
+    packaging systems.
 
-5) Application Architecture: 
+    This variable is used during the build process
+    "make all PREFIX=/home/apache" to tell the package where it will be
+    installed (examples include /usr, /usr/local, /home/apache).  Reading
+    a few RedHat Spec files to see how this works in practice.  The
+    application may need to hard-code this value into its object code.
+    When the application is installed it must not be installed into its
+    proper place on the build machine.  The package that is being
+    constructed could cause the build machine to stop working
+    correctly if it is a buggy version of a system library or major OS
+    application.  Instead the Makefile will install "make install
+    PREFIX=/var/tmp/build-root/home/apache" the package into some other
+    directory with a similar tree structure to its final destination.
 
-*) The build process should mimic the architecture of the code.  It should
-be a final test that the code was coded to the same specifications
-that it was designed.  It is a common problem for code to turn into
-spaghetti with each piece of code using functions and creating
-dependencies on every other piece of code.  For example it is probably
-a mistake for code in the database abstraction layer to be implemented
-in terms of code in the HTML generation layer.  These two libraries
-should probably be independent of each other, though they both might
-depend on a common string library.  The code architecture should limit
-the dependency graph between code modules.  The BuildMaster must
-enforce the restrictions on information flow between components. Thus
-no libraries should be in the path unless the architecture allows this
-module to depend on those libraries.
+    The packaging system will then move the files into the correct place
+    during an installation step on the target machine.  The installation
+    step only moves files and sets permissions.  The Makefile is not
+    supposed to use the installation directories to hard code values into
+    the application since the application will never be run from this
+    installation directory.
 
-*) The architecture must not have circular dependencies.  Circular
-dependencies not only make upgrading individual libraries difficult
-but also make testing components nearly impossible.  That is it should
-be possible to build some set of libraries L0 which depend on no
-libraries and then build some other set of libraries L1 which depend
-only on L0 libraries then build L2 which depend only on the L0 and L1
-libraries.  This "build chain" will prevent circular dependencies and
-help keep your code testable and the dependencies understandable.
-More information about why this is a good practice is available in
-"Large-Scale C++ Software Design" (Addison-Wesley Professional
-Computing Series) by John Lakos
+    The hard part of the build, including any PREFIX magic, is in the
+    build section.  Notice the clear separation between build/target
+    machine, installation on the build machine, installation on the target
+    machine, construction of the application binaries and installation of
+    the application binaries.
 
-*) I enforce the convention that developers are not allowed to overload
-standard system libraries.  I always put standard libraries in the
-path before any library our company develops.  I build the application
-in stages to ensure that parts of the application which are not
-intended to depend on other code will not have other header files on
-the build machine at the time that they are constructed.  Build
-dependencies between modules which are expected are explicitly
-controlled with build scripts and version numbers.
+    This is one of the reasons why building an application on a build
+    machine is different from the way in which developers build their code
+    on their personal development machines.  This PREFIX issue will arise
+    when you try and build the Tinderbox2 system and also when you
+    construct the Makefiles for your own application.  Since the build
+    machine is not the target machine it can not be assumed that files
+    will always be in the same places on both (for example Perl.)
+
+  * Application Architecture.  The build process should mimic the
+    architecture of the code.  It should be a final test that the code
+    was coded to the same specifications that it was designed.  It is a
+    common problem for code to turn into spaghetti with each piece of
+    code using functions and creating dependencies on every other piece
+    of code.
+
+    For example it is probably a mistake for code in the database
+    abstraction layer to be implemented in terms of code in the HTML
+    generation layer.  These two libraries should probably be independent
+    of each other, though they both might depend on a common string library.
+    The code architecture should limit the dependency graph between code
+    modules.  The Build Master must enforce the restrictions on information
+    flow between components. Thus no libraries should be in the path unless
+    the architecture allows this module to depend on those libraries.
+
+    The architecture must not have circular dependencies.  Circular
+    dependencies not only make upgrading individual libraries difficult
+    but also make testing components nearly impossible.  That is it should
+    be possible to build some set of libraries L0 which depend on no
+    libraries and then build some other set of libraries L1 which depend
+    only on L0 libraries then build L2 which depend only on the L0 and L1
+    libraries.  This "build chain" will prevent circular dependencies and
+    help keep your code testable and the dependencies understandable.
+    More information about why this is a good practice is available in
+    "Large-Scale C++ Software Design" (Addison-Wesley Professional
+    Computing Series) by John Lakos
+
+    You should enforce the convention that developers are not allowed to
+    overload standard system libraries.  Always put standard libraries
+    in the path before any library our company develops.  Build the
+    application in stages to ensure that parts of the application which
+    are not intended to depend on other code will not have other header
+    files on the build machine at the time that they are constructed.
+    Build dependencies between modules which are expected are explicitly
+    controlled with build scripts and version numbers.
 

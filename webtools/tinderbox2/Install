@@ -2,50 +2,50 @@
 Tinderbox Documentation:
 ------------------------
 
-*) Every directory has a ReadMe file which tells about all the files
-in that directory.
+  * Every directory has a ReadMe file which tells about all the files
+    in that directory.
 
-*) Every executable can be run with --help so that you can see what
-the program does and what its arguments are.  If you have trouble
-running the file just look at the file in a text editor and find
-the string "usage".
+  * Every executable can be run with --help so that you can see what
+    the program does and what its arguments are.  If you have trouble
+    running the file just look at the file in a text editor and find
+    the string "usage".
 
-*) The top of every file (both code and configuration) has a short
-explanation of what this file does.
+  * The top of every file (both code and configuration) has a short
+    explanation of what this file does.
 
-*) The code has lots of documentation so you can read the code if you
-need more details about how something works.
+  * The code has lots of documentation so you can read the code if you
+    need more details about how something works.
 
 
 To install:
 -----------
 
+NOTE: You will need to ensure that Perl is installed on your web server.
+      It would be a good idea to have these modules installed:
 
-*) You will need to ensure that Perl is installed on your webserver.
-It would be a good idea to have these modules installed:
-	 Storable, Date::Format,
+          Storable, Date::Format,
 
-You can easily check if these are installed by executing these two
-commands.
+      You can easily check if these are installed by executing these
+      following commands.  If the module is installed, you'll get no
+      output:
 
-If the module is installed, you'll get no output:
-	 perl -e 'use Storable'
-	 perl -e 'use Date::Format'
- 
+          perl -e 'use Storable'
+          perl -e 'use Date::Format'
 
 
-*) Read the Policies and Overview documents found in this directory to
+Read the Policies and Overview documents found in this directory to
 help you get a feel for the scope of this installation.
 
-*) The process id which receives and process the mail must be the
-same id which runs the tinderbox cron job to prepare the web pages.  I
-prefer to manage my webserver so that all CGI scripts do not run as
-the same user.  Using one user id can cause security problems which
-are hard to detect.  If you must run all web applications as a single
-user it would be safer to ensure that this user is a specific web user
-(apache, cgiuser, webuser) so that this is not mixed up with other
-unix system users (daemon, nobody, bin) since this could cause
-security interactions with other programs which use these ids.
+The process id which receives and process the mail must be the
+same id which runs the Tinderbox cron job to prepare the web pages.
+
+A good practice is to configure the web server so that all CGI scripts
+do not run as the same user.  Using one user id can cause security
+problems which are hard to detect.  If you must run all web applications
+as a single user it would be safer to ensure that this user is a specific
+web user (apache, cgiuser, webuser) so that this is not mixed up with other
+unix system users (daemon, nobody, bin) since this could cause security
+interactions with other programs which use these ids.
 
 It may take some thought as to how the user id will be configured to
 run when receiving mail and when receiving web requests and not be a
@@ -55,224 +55,230 @@ These products will help partition your web application to run as
 different users. (See http://www.w3.org/Security/Faq/wwwsf4.html for
 more info)
 
-CGIWrap 
-	http://cgiwrap.unixtools.org/
-	http://sourceforge.net/projects/cgiwrap/
+    CGIWrap 
+        http://cgiwrap.unixtools.org/
+        http://sourceforge.net/projects/cgiwrap/
 
-sbox: Put CGI Scripts in a Box 
-	http://stein.cshl.org/software/sbox/
-
-
+    sbox: Put CGI Scripts in a Box 
+        http://stein.cshl.org/software/sbox/
 
 The Apache Web server comes with its own wrapper script called suEXEC.
 
-*) The src/default_conf directory contains perl libraries which are
+The src/default_conf directory contains Perl libraries which are
 specific to an individual users site configuration.  No two users of
-Tinderbox will have the identical sets of files.
+Tinderbox2 will have the identical sets of files.
 
 The files found in default_conf are sample files which are used at
 Mozilla.org.  Other users are expected to customize these libraries and
 install the modified libraries in local_conf.  Files found in
 local_conf will be used before any file found in default_conf.
-The distribution of Tinderbox will never place any files in the
+The distribution of Tinderbox2 will never place any files in the
 local_conf directory as this is assumed to be under local control.
 
 A quick overview of the files:
 
-	TinderConfig.pm: general configuration settings 
-		(HTML directories, Log files, implementations of libraries 
-		 to use, etc).
-	TreeData.pm: version control (CVS, Bonsai) configuration.
-	Error_Parse.pm: the regular expressions for identifying
-		 errors in build logs.
-	BTData.pm: bug tracking configuration
-	FileStructure.pm: filesystem (storage) and global/per-project 
-		settings. Most users will not have to change this.
+  TinderConfig.pm
+      general configuration settings: HTML directories, Log files,
+      implementations of libraries to use, etc
 
+  TreeData.pm
+      version control (CVS, Bonsai) configuration
+
+  Error_Parse.pm
+      the regular expressions for identifying errors in build logs.
+
+  BTData.pm
+      bug tracking configuration
+
+  FileStructure.pm
+      filesystem (storage) and global/per-project settings.
+      Most users will not have to change this.
 
 In particular you will need a TinderConfig.pm and a TreeData.pm which
 describes your local setup.  You may need to make local versions of
 the other files depending on how you wish to have Tinderbox configured.
 
-I install Tinderbox via RPM.  I have three RPMS. One tracks changes in
-the Tinderbox server source code just as I get it from CVS. One RPM
-contains my local_conf files.  The clientbin files get put in their
-own RPM which is installed on the buildmachine along with the
-local_conf files.  I do not currently have all the other configuration
-details worked out (crontab files, /etc/rc.d/init.d, .cvspass,) but
-most of the state of my machines is under RPM control.
+1.  Run ./configure. When configure is done you will have a Makefile
+    and a config.out.  Although Tinderbox2 consists entirely of Perl
+    scripts we must substitute some values into the source code to make it
+    executable.  You may wish to change the default directories in
+    configure for some of the Makefile variables.  Please read config.out
+    and make any changes which need to be made for your system. Configure
+    also accepts command line options to change some default variables.
+    Please look at the configure source code for variable details, but the
+    most common changes are:
 
-*) Run ./configure. When configure is done you will have a Makefile
-and a config.out.  Although Tinderbox consists entirely of perl
-scripts we must substitute some values into the source code to make it
-executable.  You may wish to change the default directories in
-configure for some of the makefile variables.  Please read config.out
-and make any changes which need to be made for your system. Configure
-also accepts command line options to change some default variables.
-Please look at the configure source code for variable details, but the
-most common changes are:
+        --prefix
+            the directory for most of the tinderbox files.
+            Defaults to /home/tinderbox2
 
-	--prefix: the directory for most of the tinderbox files,
-		defaults to /home/tinderbox2
+         --cgibin-prefix
+            The directory where cgi scripts will be run.
+            This depends on how your web server is configured.  
+            For security you may wish to ensure that this directory is
+            disjoint from the prefix directory.  
+            Defaults to /var/www/cgi-bin/tinderbox.
 
-	--cgibin-prefix: The directory where cgi scripts will be
-		run. This depends on how your webserver is configured.  
-		For security you may wish to ensure that this
-		directory is disjoint from the prefix directory.  This
-		defaults to /var/www/cgi-bin/tinderbox.
+          --html-prefix
+            The directory where html files should be written.
+            This depends on how your web server is configured. 
+            This is where the web server will pick up Tinderbox2 output.
+            Defaults to /home/httpd/html/tinderbox.
 
-	--html-prefix: The directory where html files should be
-		written. This depends on how your webserver is configured. 
-		This is where the webserver will pick up tinderbox2
-		output.  This defaults to /home/httpd/html/tinderbox.
+2.  Run 'make' to create executable versions of the source code in the
+    ./build directory.
+
+3.  Run 'make compile_bin_code' to ensure that the code will compile
+    when it is installed.  This will not work if your target machine is
+    very different from the machine you are running make on.
+
+4.  If you wish run the test programs as described in /build/test/ReadMe
+    to ensure that you have configured the program correctly. This will
+    require a TinderConfig.pm file in your local_conf directory.
+
+    See the ReadMe file in the test directory for detailed information
+    on how the tests work.
+
+5.  Run 'make install' to install Tinderbox2 on your system.  You may
+    wish to run this with a different 'prefix'
+
+        make install --prefix=/opt/tinderbox
+
+    It is currently assumed that the bin directory of your installation
+    will be where the web server will run the Tinderbox2 cgi's from.
+    You can copy the *.cgi files to another directory if this is not
+    the case.
+
+5.  There are some gifs located in the gif directory which have
+    historically been used by Tinderbox2.  The installation via
+    'make install' does not install these images.  Put them
+    somewhere in your web server's html directory if you wish to
+    use them.  Samples of their use are in the configuration files.
+
+6.  Set up a cron job to run the following every five minutes:
+
+        $cgi-bin/bin/tinder.cgi --daemon-mode
+
+    This generates the static tinderbox pages which users see.
+
+    Set up a cron job to run the following at least once a day:
+
+        $prefix/bin/rmlogs
+
+    Six am is a good time to run this as the machine load is usually
+    light and will avoids any Daylight Savings problems.  This keeps
+    the archive of compressed build logs from growing without limit.
+
+7.  You may recieve data into the $prefix/bin/processmail* programs via
+    http post. Typically this means that these programs must be installed
+    in the $cgi-bin directory and have a name which ends in *.cgi. Instead
+    of mailling the logs to these programs, use the HTTPPost program to
+    post the data to the correct URL.
+
+8.  If using the mail system, set up the $prefix/bin/processmail*
+    programs to receive the incoming tinderbox mail.  The process id which
+    receives and process the mail must be the the same id which runs the
+    Tinderbox2 cron job to prepare the web pages.  Usually this set up is
+    accomplished by having the MTA (Sendmail) pass mail for particular
+    accounts into a script.  This can be configured via a global
+    configuration file (Sendmail alias file) or via a .forward file (each
+    account gets the same user id but a different home directory, each
+    home directory gets a .forward to cause incoming mail to be delivered
+    through the correct tinderbox mail processing program).
+
+    The following configuration has been tested for the mail server
+    Postfix. The postfix aliases file /etc/postfix/aliases contains the
+    following lines.  This file must be processed with a /usr/sbin/postalias
+    command which must be run by the same id which will run the Tinderbox2
+    cgi scripts.
+
+        tinderbox_builds: |/home/tinderbox2/bin/processmail_builds
+        tinderbox_bugzilla: |/home/tinderbox2/bin/processmail_bugs
+
+    If it is not possible to have mail delivery on your web machine and to
+    have your web machine deliver specific mail through a program then you
+    could you use fetchmail to simulate this delivery format.
+
+    Download fetchmail (from http://tuxedo.org/~esr/fetchmail) and install
+    it on your web server.  Have the mail sent to any pop/imap mail server
+    which is accessible from the web server.  Configure fetchmail to gather
+    the mail from the mail server and pass it through to the correct mail
+    processing program.  You should keep the polling interval short
+    (30-200 seconds) as long polling intervals will cause delays in the
+    Tinderbox2 system and limit how quickly users see the new data.  If
+    the polling interval is too short then you will overload your pop
+    server with needless queries.  Fetchmail should run under the same
+    id as the Tinderbox2 server.  The fetchmail configuration file will
+    look something like:
+
+        poll mail.provider.net with proto pop3:
+            user "tinderbox_builds" there has password "u can't krak this"
+            is tinder here and wants mda "$prefix/bin/processmail_builds"
+
+    A common mail address is 'tinderbox_builds' for build information
+    destined for the web server. Similarly the bug tracking system should
+    send mail to 'tinderbox_bugs'.
+
+9.  For CVS systems - make sure that when Tinderbox2 runs it has all the
+    permissions that it needs to access the Version Control database.
+    This usually means having an environment variable set when Tinderbox2
+    is run from cron. If you are using VC_CVS.pm then you will need to put
+    a ~/.cvspass for the Tinderbox2 server to use.
+    
+    To create this file you will need to Log into the CVS repository
+    yourself, once for each tree you have defined.  The login command must
+    use the hostname/modules exactly as you wrote it in VCData.  Then copy
+    your ~/.cvspass into the Tinderbox2 server user id's home directory.
+    This must be the REAL home of the Tinderbox2 daemon, as listed in
+    /etc/passwd/ and set in the $HOME environmental variable for tinder.cgi.
+    The file must not be world readable or writable or executable. It is
+    recommended that VC_CVS.pm is only used as an interim step in setting up
+    VC_Bonsai. VC_Bonsai is not hard to setup and provided many useful
+    features which are absent in VC_CVS.pm.
+
+10. Configure the build machines to mail their build logs (with Tinderbox2
+    variables on the top) to the web server machine.  New builds must not
+    start earlier then 6 minutes after the last build started.  Each build
+    machine mails the build log of each build and puts some build data at
+    the top of the log.  Build information includes whether the build was
+    a success, which error parsers to use on the log file and what build
+    this is.
+
+    Run 'processmail_builds --help' to learn about how the mail
+    processing system works and what the mail messages are expected to
+    look like.  There is an example mail in the test directory called
+    samplelog.  The clientbin directory contains code which can be used on
+    the buildmachine.
+
+    See the README to help setup your build machine.
+
+    http://www.ntsendmail.com/ has a Perl program which can be used to
+    send mail on systems where there is no sendmail installed.
+
+    There is nothing special about sending mail.  Any data transport layer
+    would work including HTTP Post and SSH the only requirement is that
+    the data is sent to the STDIN of the mail processing programs upon
+    delivery and that the process which runs this is the same uid as the
+    Tinderbox2 server.
+
+    Alternate delivery mechanisms have not been explored thoroughly but
+    they should not be too hard to setup.  There is a set of instructions
+    for this in lwpcook.pod which suggest you will need to install
+    HTTP::Request::Common and LWP::UserAgent;
+
+11. Set up the bug tracking system to send mail to 'tinderbox_bugs' on
+    the web server machine whenever a Bug ticket changes state. It is not
+    interesting to see which tickets are being worked on, so restrict
+    mailing to changes in ticket state not updates (edit) of a ticket.
+
+12. Check that the time on your web server, your version control
+    machine, your bug tracking machine and your build machines are all in
+    sync.  Check that if build mail bounces on any of the above
+    machines that it will be received by someone who can act on it.
 
 
-*) run 'make' to create executable versions of the source code in the
-./build directory.
+Contact information for questions or updates or gripes is kept in the
+Contact file.
 
-*) run 'make compile_bin_code' to ensure that the code will compile
-when it is installed.  This will not work if your target machine is
-very different from the machine you are running make on.
-
-*) If you wish run the test programs as described in
-/build/test/ReadMe to ensure that you have configured the program
-correctly. This will require a TinderConfig.pm file in your local_conf
-directory.  See the ReadMe file in the test directory for detailed
-information on how the tests work.
-
-*) run make install, to install Tinderbox on your system.  You may
-wish to run this with a different 'prefix'
-
-	make install --prefix=/opt/tinderbox
-
-It is currently assumed that the bin directory of your installation
-will be where the webserver will run the tinderbox cgi's from.  You
-can copy the *.cgi files to another directory if this is not the case.
-
-*) There are some gifs located in the gif directory which have
-historically been used by tinderbox.  The installation via 'make
-install' does not install these images.  Put them somewhere in your
-webserver's html directory if you wish to use them.  Samples of their
-use are in the configuration files.
-
-*) set up a cron job to run $cgi-bin/bin/tinder.cgi --daemon-mode 
-	every five minutes.  This generates the static tinderbox pages
-	which users see.
-   set up a cron job to run $prefix/bin/rmlogs at least once a day.
-     six am is a good time to run this as the machine load is usually light
-      and will avoids any day light savings problems.  This keeps the
-	archive of compressed build logs from growing without limit.
-
-*) you may recieve data into the $prefix/bin/processmail* programs via
-http post. Typically this means that these programs must be installed
-in the $cgi-bin directory and have a name which ends in *.cgi. Instead
-of mailling the logs to these programs, use the HTTPPost program to
-post the data to the correct URL.
-
-*) If using the mail system, set up the $prefix/bin/processmail*
-programs to receive the incoming tinderbox mail.  The process id which
-receives and process the mail must be the the same id which runs the
-tinderbox cron job to prepare the web pages.  Usually this set up is
-accomplished by having the MTA (Sendmail) pass mail for particular
-accounts into a script.  This can be configured via a global
-configuration file (Sendmail alias file) or via a .forward file (each
-account gets the same user id but a different home directory, each
-home directory gets a .forward to cause incoming mail to be delivered
-through the correct tinderbox mail processing program).
-
-I have used the following configurations for the mail server Postfix.
-The postfix aliases file /etc/postfix/aliases contains the following
-lines.  This file must be processed with a /usr/sbin/postalias command
-which must be run by the same id which will run the tinderbox cgi scripts.
-
-	tinderbox_builds: |/home/tinderbox2/bin/processmail_builds
-	tinderbox_bugzilla: |/home/tinderbox2/bin/processmail_bugs
-
-
-
-If it is not possible to have mail delivery on your web machine and to
-have your web machine deliver specific mail through a program then I
-suggest you use fetchmail to simulate this delivery format.  Download
-fetchmail (from http://tuxedo.org/~esr/fetchmail) and install it on
-your webserver.  Have the mail sent to any pop/imap mail server which
-is accessible from the webserver.  Configure fetchmail to gather the
-mail from the mail server and pass it through to the correct mail
-processing program.  You should keep the polling interval short (30-200
-seconds) as long polling intervals will cause delays in the tinderbox
-system and limit how quickly users see the new data.  If the polling
-interval is too short then you will overload your pop server with
-needless queries.  Fetchmail should run under the same id as the
-tinderbox server.  The fetchmail configuration file will look
-something like:
-
-	poll mail.provider.net with proto pop3:
-               user "tinderbox_builds" there has password "u can't krak this"
-               is tinder here and wants mda "$prefix/bin/processmail_builds"
-
-
-
-
-We use the mail address 'tinderbox_builds' for build information
-destined for the webserver. Similarly the bug tracking system should
-send mail to 'tinderbox_bugs'.
-
-
-*) Make sure that when tinderbox runs it has all the permissions that
-it needs to access the Version Control database.  This usually means
-having an environmental variable set when tinderbox is run from
-cron. If you are using VC_CVS.pm then you will need to put a
-~/.cvspass for the tinderbox server to use.  To create this file you
-will need to Log into the CVS repository yourself, once for each tree
-you have defined.  The login command must use the hostname/modules
-exactly as you wrote it in VCData.  Then copy your ~/.cvspass into the
-tinderbox server user id's home directory.  This must be the REAL home
-of the Tinderbox daemon, as listed in /etc/passwd/ and set in the
-$HOME environmental variable for tinder.cgi.  The file must not be
-world readable or writable or executable. It is recommended that
-VC_CVS.pm is only used as an interim step in setting up
-VC_Bonsai. VC_Bonsai is not hard to setup and provided many useful
-features which are absent in VC_CVS.pm.
-
-
-*) Setup the build machines to mail their build logs (with tinderbox
-variables on the top) to the web server machine.  New builds must not
-start earlier then 6 minutes after the last build started.  Each build
-machine mails the build log of each build and puts some build data at
-the top of the log.  Build information includes whether the build was
-a success, which error parsers to use on the log file and what build
-this is.  Run 'processmail_builds --help' to learn about how the mail
-processing system works and what the mail messages are expected to
-look like.  There is an example mail in the test directory called
-samplelog.  The clientbin directory contains code which can be used on
-the buildmachine.  See the README to help setup your buildmachine.
-
-http://www.ntsendmail.com/ has a perl program which can be used to
-send mail on systems where there is no sendmail installed.
-
-There is nothing special about sending mail.  Any data transport layer
-would work including HTTP Post and SSH the only requirement is that
-the data is sent to the STDIN of the mail processing programs upon
-delivery and that the process which runs this is the same uid as the
-tinderbox server. I have not thought too much about how to set up
-these alternate delivery mechanisms so I have no practical advice but
-It should not be too hard to setup. There is a set of instructions for
-this in lwpcook.pod which suggest you will need to install
-HTTP::Request::Common and LWP::UserAgent;
-
-*) Set up the bug tracking system to send mail to 'tinderbox_bugs' on
-the webserver machine whenever a Bug ticket changes state. It is not
-interesting to see which tickets are being worked on, so restrict
-mailing to changes in ticket state not updates (edit) of a ticket.
-
-*) Check that the time on your webserver, your version control
-machine, your bug tracking machine and your build machines are all in
-sync.  Check that mail if build mail bounces on any of the above
-machines that it will be received by someone who can act on it.
-
-
-
-
-I keep my email up to date in the Contact file.  If you have trouble
-with these instructions please drop me a line.
-
-Ken Estes.
+Originally written by Ken Estes.
+Updated by Mike Taylor.

@@ -4,107 +4,109 @@ USERS
 It is helpful to consider the types of users for this system and their
 special needs.
 
-1) Project Managers: not very technical will be administering the
-project and need a GUI to help change various types of project
-information (treestate, message of the day, etc).  They will also need
-summary pages which will show them the current status of all the
-projects which they are working on.  They may occasionally "drill
-down" into the detailed status page but this will not be their primary
-view of the tinderbox system.
+  * Project Managers: not very technical will be administering the
+    project and need a GUI to help change various types of project
+    information (tree state, message of the day, etc).  They will also
+    need summary pages which will show them the current status of all
+    the projects which they are working on.  They may occasionally
+    "drill down" into the detailed status page but this will not be
+    their primary view of the Tinderbox2 system.
 
-2) Build Administrator: A system administrator who will be in charge
-of setting up the build machines, configuring tinderbox and other
-build systems (bugzilla, cvs, bonsai, etc).  A GUI would not be
-helpful as local customizations may require small changes to the code.
-Configurations need to be kept (mostly) in files which are separate
-from the Tinderbox source code so that they can be version controled
-and will not get stepped on when tinderbox is upgraded.
+  * Build Administrator: A system administrator who will be in charge
+    of setting up the build machines, configuring Tinderbox2 and other
+    build systems (bugzilla, cvs, bonsai, etc).  A GUI would not be
+    helpful as local customizations may require small changes to the code.
 
-3) Developers: need to view the "state of development" and add notices
-to the notice board.
+    Configurations need to be kept (mostly) in files which are separate
+    from the Tinderbox2 source code so that they can be version controlled
+    and will not get stepped on when Tinderbox2 is upgraded.
+
+  * Developers: need to view the "state of development" and add notices
+    to the notice board.
 
 Improvements needed from Tinderbox1
 -----------------------------------
 
-highly configurable design with multiple Version Control systems
-possible (bonsai, raw cvs, perforce, continuous, clearcase) and
-multiple modes of running possible (with no version control system
-with no builds display).
+  * Highly configurable design with multiple Version Control systems
+    possible (bonsai, raw cvs, perforce, continuous, clearcase) and
+    multiple modes of running possible (with no version control system
+    with no builds display).
 
-clear programatic interfaces and better separation of functionality
-into separate modules.
+  * Clear programatic interfaces and better separation of functionality
+    into separate modules.
 
-Modules should not have circular dependences.  Care should be taken on
-adding 'use' statement.  I worry very much about which modules depend
-on which other modules.  It is important to consider which modules
-need to work in isolation and which modules need to share data.
+  * Modules should not have circular dependences.  Care should be taken
+    on adding 'use' statement as you should worry very much about which
+    modules depend on which other modules.  It is important to consider
+    which modules need to work in isolation and which modules need to
+    share data.
 
-It should be possible to add hooks so that users get beeped when the
-next good build goes through or that trouble tickets are automatically
-opened when the builds fail.
+  * It should be possible to add hooks so that users get beeped when the
+    next good build goes through or that trouble tickets are automatically
+    opened when the builds fail.
 
-Greater flexibility in setting status of builds.  We may need more
-gradations of failure then just 'busted' or 'test-failed' to
-distinguish the types of tests which have failed.
+  * Greater flexibility in setting status of builds.  We may need more
+    graduations of failure then just 'busted' or 'test-failed' to
+    distinguish the types of tests which have failed.
 
-generated html must be readable and help isolate programming errors.
+  * Generated HTML must be readable and help isolate programming errors.
 
-all programmable configuration parameters should be stored easy change
-and configure for novice users.
+  * All programmable configuration parameters should be stored easy change
+    and configure for novice users.
 
-make better use of the perl data structures to mirror the way we wish
-to use the data.  This will allow easier maintainability and allow for
-more expansion of features.
+  * Make better use of the Perl data structures to mirror the way we wish
+    to use the data.  This will allow easier maintainability and allow for
+    more expansion of features.
 
-display should work on many different browsers.
+  * Display should work on many different browsers.
 
-popup windows should not be netscape specific.
+  * Popup windows should not be Netscape specific.
 
-Permanent data should be stored via datadumper so that the data and
-data structures are easy to read and debug. Currently this is a
-performance bottle neck with a large percentage of our cpu time during
-testing being spent in Data::Dumper::Dump.  The perl module Storable
-is much faster.  I wish to not add additional module requirements at
-this time, this will be configurable.
+  * Permanent data should be stored via datadumper so that the data and
+    data structures are easy to read and debug. Currently this is a
+    performance bottle neck with a large percentage of cpu time during
+    testing being spent in Data::Dumper::Dump.  The Perl module Storable
+    is much faster and there is no need to add additional module
+    requirements at this time, this will be configurable.
 
-# dprofpp says that:
-#	%64.8 of elapsed real time which is 66.25 seconds 
-#	(out of 102.15 Seconds)
-#	was spent in 3 calls to TinderDB::VC::apply_db_updates()
+    # dprofpp says that:
+    #	%64.8 of elapsed real time which is 66.25 seconds 
+    #	(out of 102.15 Seconds)
+    #	was spent in 3 calls to TinderDB::VC::apply_db_updates()
 
-#	%58.0 of user time which is 11.05 seconds 
-#	(out of 19.03 User/102.15 Elapsed Seconds)
-#	was spend in 32878 calls to Data::Dumper::_dump()
+    #	%58.0 of user time which is 11.05 seconds 
+    #	(out of 19.03 User/102.15 Elapsed Seconds)
+    #	was spend in 32878 calls to Data::Dumper::_dump()
 
-#	System Time was negligible at 2.49 Seconds
+    #	System Time was negligible at 2.49 Seconds
 
-All errors should be trapped and sent to log files.  Strange program
-states should be explicitly checked for.
+  * All errors should be trapped and sent to log files.  Strange program
+    states should be explicitly checked for.
 
-Databases should update atomically, no information should be lost due
-to race conditions.
+  * Databases should update atomically, no information should be lost due
+    to race conditions.
 
-All column modules (processmail, build, VC, Notices) should be able to
-be run individually.  Modules should accept well defined text files as
-input and produce text files as output.  This will greatly enhance the
-ability to test each module in isolation and to quickly port modules
-to new architectures.
+  * All column modules (processmail, build, VC, Notices) should be able to
+    be run individually.  Modules should accept well defined text files as
+    input and produce text files as output.  This will greatly enhance the
+    ability to test each module in isolation and to quickly port modules
+    to new architectures.
 
-The source code should be able to run using the standard Perl
-libraries, as it can be difficult for some users to add libraries
-which are not included in the perl distribution onto production
-machines.
+  * The source code should be able to run using the standard Perl
+    libraries, as it can be difficult for some users to add libraries
+    which are not included in the perl distribution onto production
+    machines.
 
-Put CVS keywords into all the source files so that when the software
-is deployed, there is no doubt what version was checked out and where
-the files are stored in the local version control system.
+  * Put CVS keywords into all the source files so that when the software
+    is deployed, there is no doubt what version was checked out and where
+    the files are stored in the local version control system.
 
-Pay closer attention to security.  Use taint perl to ensure that
-harmful input does not get used in unexpected ways.  Keep the flow of
-control clear and simple.
+  * Pay closer attention to security.  Use taint Perl to ensure that
+    harmful input does not get used in unexpected ways.  Keep the flow of
+    control clear and simple.
 
+  * Allow for use of any text browser which can display tables.
+    Currently this is true for the browser
+    links (http://artax.karlin.mff.cuni.cz/~mikulas/links/) but not the
+    browser lynx.
 
-Allow for use of any text browser which can display tables
-currently this is true for the browser links:
-	http://artax.karlin.mff.cuni.cz/~mikulas/links/.
-but not the browser lynx.
