@@ -84,7 +84,7 @@ var gCookiesWindow = {
   
   observe: function (aCookie, aTopic, aData) 
   {
-    if (aTopic != "cookie-changed" || !aCookie)
+    if (aTopic != "cookie-changed")
       return;
     
     if (aCookie instanceof Components.interfaces.nsICookie) {
@@ -93,6 +93,15 @@ var gCookiesWindow = {
         this._handleCookieChanged(aCookie, strippedHost);
       else if (aData == "added")
         this._handleCookieAdded(aCookie, strippedHost);
+    }
+    else if (aData == "cleared") {
+      this._hosts = {};
+      this._hostOrder = [];
+    
+      var oldRowCount = this._view._rowCount;
+      this._view._rowCount = 0;
+      this._tree.treeBoxObject.rowCountChanged(0, -oldRowCount);
+      this._view.selection.clearSelection();
     }
     
     // We don't yet handle aData == "deleted" - it's a less common case
@@ -703,14 +712,6 @@ var gCookiesWindow = {
   deleteAllCookies: function ()
   {
     this._cm.removeAll();
-    this._hosts = {};
-    this._hostOrder = [];
-    
-    var oldRowCount = this._view._rowCount;
-    this._view._rowCount = 0;
-    this._tree.treeBoxObject.rowCountChanged(0, -oldRowCount);
-    this._view.selection.clearSelection();
-    
     this._tree.focus();
   },
   
