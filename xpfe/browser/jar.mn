@@ -35,14 +35,20 @@ comm.jar:
         content/navigator/platformNavigationBindings.xul (resources/content/mac/platformNavigationBindings.xul)
         content/navigator/platformMailOverlay.xul      (resources/content/mac/platformMailOverlay.xul)
 #else
-#ifdef XP_UNIX
-*       content/navigator-platform/contents.rdf        (resources/content/unix/contents-platform.rdf)
-        content/navigator/platformNavigationBindings.xul (resources/content/unix/platformNavigationBindings.xul)
-        content/navigator/platformMailOverlay.xul      (resources/content/unix/platformMailOverlay.xul)
-#else
+#ifdef XP_WIN32
 *       content/navigator-platform/contents.rdf        (resources/content/win/contents-platform.rdf)
         content/navigator/platformNavigationBindings.xul (resources/content/win/platformNavigationBindings.xul)
         content/navigator/platformMailOverlay.xul      (resources/content/win/platformMailOverlay.xul)
+#else
+#ifdef XP_OS2
+*       content/navigator-platform/contents.rdf        (resources/content/win/contents-platform.rdf)
+        content/navigator/platformNavigationBindings.xul (resources/content/win/platformNavigationBindings.xul)
+        content/navigator/platformMailOverlay.xul      (resources/content/win/platformMailOverlay.xul)
+#else
+*       content/navigator-platform/contents.rdf        (resources/content/unix/contents-platform.rdf)
+        content/navigator/platformNavigationBindings.xul (resources/content/unix/platformNavigationBindings.xul)
+        content/navigator/platformMailOverlay.xul      (resources/content/unix/platformMailOverlay.xul)
+#endif
 #endif
 #endif
 
