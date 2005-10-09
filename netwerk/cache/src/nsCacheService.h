@@ -144,8 +144,7 @@ public:
     static void      SetDiskCacheEnabled(PRBool  enabled);
     static void      SetDiskCacheCapacity(PRInt32  capacity);
 
-    static void      SetMemoryCacheEnabled(PRBool  enabled);
-    static void      SetMemoryCacheCapacity(PRInt32  capacity);
+    static void      SetMemoryCache();
 
     nsresult         Init();
     void             Shutdown();
@@ -193,8 +192,6 @@ private:
     void             ClearDoomList(void);
     void             ClearActiveEntries(void);
     void             DoomActiveEntries(void);
-
-    PRInt32         CacheMemoryAvailable();
 
     static
     PLDHashOperator PR_CALLBACK  DeactivateAndClearEntry(PLDHashTable *    table,
