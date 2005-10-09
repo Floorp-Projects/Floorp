@@ -762,16 +762,13 @@ HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
 #undef MEMCPY
 }
 
-JSBool
-js_HeapSort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg)
+void
+js_HeapSort(void *vec, size_t nel, void *pivot, size_t elsize,
+            JSComparator cmp, void *arg)
 {
-    void *pivot;
     HSortArgs hsa;
     size_t i;
 
-    pivot = malloc(elsize);
-    if (!pivot)
-        return JS_FALSE;
     hsa.vec = vec;
     hsa.elsize = elsize;
     hsa.pivot = pivot;
@@ -783,9 +780,6 @@ js_HeapSort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg)
         HeapSortHelper(JS_TRUE, &hsa, i, nel);
     while (nel > 2)
         HeapSortHelper(JS_FALSE, &hsa, 1, --nel);
-
-    free(pivot);
-    return JS_TRUE;
 }
 
 typedef struct CompareArgs {
@@ -920,11 +914,16 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /*
+     * Memory for temporary array incliding one extra jsval as working space
+     * for js_HeapSort.
+     */
+    nbytes = (len + 1) * sizeof(jsval);
+
+    /*
      * Test for size_t overflow, which could lead to indexing beyond the end
      * of the malloc'd vector.
      */
-    nbytes = len * sizeof(jsval);
-    if (nbytes != (double) len * sizeof(jsval)) {
+    if (nbytes != (double) (len + 1) * sizeof(jsval)) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
@@ -935,10 +934,10 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     newlen = 0;
 
     /* Root vec, clearing it first in case a GC nests while we're filling it. */
-    memset(vec, 0, len * sizeof(jsval));
+    memset(vec, 0, nbytes);
     fp = cx->fp;
     fp->vars = vec;
-    fp->nvars = len;
+    fp->nvars = len + 1;
 
     for (i = 0; i < len; i++) {
         ca.status = IndexToExistingId(cx, obj, i, &id);
@@ -964,12 +963,9 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ca.fval = fval;
     ca.localroot = argv + argc;         /* 1 local GC root */
     ca.status = JS_TRUE;
-    if (!js_HeapSort(vec, (size_t) len, sizeof(jsval),
-                     all_strings ? sort_compare_strings : sort_compare,
-                     &ca)) {
-        JS_ReportOutOfMemory(cx);
-        ca.status = JS_FALSE;
-    }
+    js_HeapSort(vec, (size_t) len, vec + len, sizeof(jsval),
+                all_strings ? sort_compare_strings : sort_compare,
+                &ca);
 
     if (ca.status) {
         ca.status = InitArrayElements(cx, obj, newlen, vec);
@@ -1469,22 +1465,22 @@ array_indexOfHelper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         direction = 1;
     }
 
-    for (; ; i += direction) {
+    for (;;) {
         jsid id;
         jsval v;
 
         if (!IndexToExistingId(cx, obj, (jsuint)i, &id))
             return JS_FALSE;
-        if (id == JSID_HOLE)
-            continue;
-
-        if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
-            return JS_FALSE;
-        if (js_StrictlyEqual(v, argv[0]))
-            return js_NewNumberValue(cx, i, rval);
+        if (id != JSID_HOLE) {
+            if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+                return JS_FALSE;
+            if (js_StrictlyEqual(v, argv[0]))
+                return js_NewNumberValue(cx, i, rval);
+        }
 
         if (i == stop)
             goto not_found;
+        i += direction;
     }
 
   not_found:
