@@ -306,6 +306,10 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
 
+    OBJ_TO_INNER_OBJECT(cx, scopeobj);
+    if (!scopeobj)
+        return JS_FALSE;
+
     /* Belt-and-braces: check that this script object has access to scopeobj. */
     principals = script->principals;
     if (principals) {
