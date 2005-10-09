@@ -13218,10 +13218,16 @@ nsCSSFrameConstructor::ProcessOneRestyle(nsIContent* aContent,
 void
 nsCSSFrameConstructor::ProcessPendingRestyles()
 {
+  PRUint32 count = mPendingRestyles.Count();
+  if (!count) {
+    // Nothing to do
+    return;
+  }
+  
   NS_PRECONDITION(mDocument, "No document?  Pshaw!\n");
 
   nsCSSFrameConstructor::RestyleEnumerateData* restylesToProcess =
-    new nsCSSFrameConstructor::RestyleEnumerateData[mPendingRestyles.Count()];
+    new nsCSSFrameConstructor::RestyleEnumerateData[count];
   if (!restylesToProcess) {
     return;
   }
@@ -13230,7 +13236,7 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   mPendingRestyles.Enumerate(CollectRestyles, &lastRestyle);
 
   NS_ASSERTION(lastRestyle - restylesToProcess ==
-               PRInt32(mPendingRestyles.Count()),
+               PRInt32(count),
                "Enumeration screwed up somehow");
 
   // Clear the hashtable so we don't end up trying to process a restyle we're
