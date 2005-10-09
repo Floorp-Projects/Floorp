@@ -214,7 +214,7 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 // you have to love apple..
 #ifdef XP_MACOSX  
 #define XPCOM_SEARCH_KEY  "DYLD_LIBRARY_PATH"
-#define GRE_FRAMEWORK_NAME "XUL"
+#define GRE_FRAMEWORK_NAME "XUL.framework"
 #else
 #define XPCOM_SEARCH_KEY  "LD_LIBRARY_PATH"
 #endif
