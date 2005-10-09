@@ -419,9 +419,8 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent,
                 //   o We need the common dialog service to show the dialog.
                 //   o We need the string bundle service to fetch the appropriate
                 //     dialog text.
-                nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
                 nsCOMPtr<nsIPromptService> promptService( do_GetService(NS_PROMPTSERVICE_CONTRACTID));
-                nsCOMPtr<nsIStringBundleService> bundleService( do_GetService( bundleCID, &rv ) );
+                nsCOMPtr<nsIStringBundleService> bundleService( do_GetService( NS_STRINGBUNDLE_CONTRACTID, &rv ) );
 
                 if ( promptService && bundleService ) {
                     // Next, get bundle that provides text for dialog.
@@ -939,23 +938,36 @@ nsWindowsHooks::SetImageAsWallpaper(nsIDOMElement* aElement, PRBool aUseBackgrou
   NS_ENSURE_SUCCESS(rv, rv);
   
   // get the product brand name from localized strings
-  nsXPIDLString brandName;
-  nsCID bundleCID = NS_STRINGBUNDLESERVICE_CID;
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(bundleCID));
-  if (bundleService) {
-    nsCOMPtr<nsIStringBundle> brandBundle;
-    rv = bundleService->CreateBundle("chrome://branding/locale/brand.properties",
-                                     getter_AddRefs(brandBundle));
-    if (NS_SUCCEEDED(rv) && brandBundle) {
-      if (NS_FAILED(rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                            getter_Copies(brandName))))
-        return rv;                              
-    }
-  }
+  nsXPIDLString brandName, fileLeafName;
+  nsCOMPtr<nsIStringBundleService> bundleService =
+           do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_TRUE(bundleService, rv);
+
+  // get the product brand name from localized strings
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle("chrome://branding/locale/brand.properties",
+                                   getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                 getter_Copies(brandName));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // get the file leaf name from localized strings (e.g. "%S Wallpaper.bmp")
+  rv = bundleService->CreateBundle("chrome://global-platform/locale/nsWindowsHooks.properties",
+                                   getter_AddRefs(bundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  const PRUnichar* stringArray[] = { brandName.get() };
+
+  rv = bundle->FormatStringFromName(NS_LITERAL_STRING("wallpaperFile").get(),
+                                    stringArray, NS_ARRAY_LENGTH(stringArray),
+                                    getter_Copies(fileLeafName));
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // eventually, the path is %APPDATA%\Mozilla\Mozilla Wallpaper.bmp
-  brandName.AppendLiteral(" Wallpaper.bmp");
-  rv = file->Append(brandName);
+  fileLeafName.AppendLiteral(".bmp");
+  rv = file->Append(fileLeafName);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // write the bitmap to the target file
