@@ -145,3 +145,12 @@ function version(v)
   return gVersion; 
 }
 
+function gc()
+{
+  // Thanks to igor.bukanov@gmail.com
+  for (var i = 0; i != 1 << 15; ++i) 
+  {
+    new Object();
+  }
+}
+

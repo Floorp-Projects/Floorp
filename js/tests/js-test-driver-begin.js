@@ -1,6 +1,7 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 var gVersion = 150;
 var gTestName = '';
+var gTestPath = '';
 
 function init()
 {
@@ -17,6 +18,11 @@ function init()
   var testpath  = matches[1];
   var attribute = matches[2];
   var value     = matches[3];
+
+  if (testpath)
+  {
+    gTestPath = testpath;
+  }
 
   var ise4x = /e4x\//.test(testpath);
 

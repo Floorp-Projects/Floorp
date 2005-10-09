@@ -65,6 +65,7 @@ var msg = '';
 
 function TestCase(n, d, e, a)
 {
+  this.path = (typeof gTestPath == 'undefined') ? '' : gTestPath;
   this.name = n;
   this.description = d;
   this.expect = e;
@@ -131,3 +132,12 @@ function quit()
 }
 
 window.onerror = reportFailure;
+
+function gc()
+{
+  // Thanks to igor.bukanov@gmail.com
+  for (var i = 0; i != 1 << 15; ++i) 
+  {
+    new Object();
+  }
+}
