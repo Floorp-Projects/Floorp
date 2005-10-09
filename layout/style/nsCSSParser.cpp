@@ -3184,12 +3184,7 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
   // See if the declaration is followed by a "!important" declaration
   PRBool isImportant = PR_FALSE;
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    if (aCheckForBraces) {
-      // Premature eof is not ok when proper termination is mandated
-      REPORT_UNEXPECTED_EOF(PEEndOfDeclEOF);
-      ClearTempData(propID);
-      return PR_FALSE;
-    }
+    // EOF is a perfectly good way to end a declaration and declaration block
     TransferTempData(aDeclaration, propID, isImportant,
                      aMustCallValueAppended, aChanged);
     return PR_TRUE;
