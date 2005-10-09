@@ -160,3 +160,12 @@ function setBoolPref(prefName, newValue)
   }
   return prevValue;
 }
+
+function gc()
+{
+  // Thanks to igor.bukanov@gmail.com
+  for (var i = 0; i != 1 << 15; ++i) 
+  {
+    new Object();
+  }
+}

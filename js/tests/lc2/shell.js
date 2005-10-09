@@ -88,6 +88,7 @@ function AddTestCase( description, expect, actual ) {
  *
  */
 function TestCase( n, d, e, a ) {
+  this.path = (typeof gTestPath == 'undefined') ? '' : gTestPath;
   this.name        = n;
   this.description = d;
   this.expect      = e;

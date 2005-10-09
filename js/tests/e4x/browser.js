@@ -69,6 +69,7 @@ var SECTION = '';
 
 function TestCase(n, d, e, a)
 {
+  this.path = (typeof gTestPath == 'undefined') ? '' : gTestPath;
   this.name = n;
   this.description = d;
   this.expect = e;
@@ -179,6 +180,11 @@ TEST_XML = function (section, expected, actual)
 
 function gc()
 {
+  // Thanks to igor.bukanov@gmail.com
+  for (var i = 0; i != 1 << 15; ++i) 
+  {
+    new Object();
+  }
 }
 
 function quit()
