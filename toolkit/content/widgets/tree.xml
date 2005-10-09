@@ -27,14 +27,14 @@
   </binding>
 
   <binding id="tree" extends="chrome://global/content/bindings/tree.xml#tree-base">
-    <content>
+    <content hidevscroll="true" hidehscroll="true">
       <children includes="treecols"/>
-      <xul:treerows class="tree-rows" flex="1">
+      <xul:treerows class="tree-rows" flex="1" xbl:inherits="hidevscroll">
         <children/>
       </xul:treerows>
-      <xul:hbox>
-        <xul:scrollbar orient="horizontal" class="tree-scrollbar-horizontal" flex="1"/>
-        <xul:spacer class="tree-scrollbar-spacer"/>
+      <xul:hbox xbl:inherits="collapsed=hidehscroll">
+        <xul:scrollbar orient="horizontal" flex="1" increment="16"/>
+        <xul:scrollcorner xbl:inherits="collapsed=hidevscroll"/>
       </xul:hbox>
     </content>
     
@@ -582,47 +582,30 @@
       <xul:hbox flex="1" class="tree-bodybox">
         <children/>
       </xul:hbox>
-      <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" class="tree-scrollbar"/>
+      <xul:scrollbar height="0" minwidth="0" minheight="0" orient="vertical" xbl:inherits="collapsed=hidevscroll"/>
     </content>
     <handlers>
       <handler event="underflow">
         <![CDATA[
-
           // Scrollport event orientation
           // 0: vertical
           // 1: horizontal
-          // 2: both
-
-          var parent = this.parentNode;
-
-          while(parent && parent.localName != "tree")
-            parent = parent.parentNode;
-
-          if (parent) {
-            if (event.detail == 1 || event.detail == 2)
-              parent.removeAttribute("show-hscroll");
-            if (event.detail == 0 || event.detail == 2)
-              parent.removeAttribute("show-vscroll");
-          }
-           
+          // 2: both (not used)
+          var tree = document.getBindingParent(this);
+          if (event.detail == 1)
+            tree.setAttribute("hidehscroll", "true");
+          else if (event.detail == 0)
+            tree.setAttribute("hidevscroll", "true");
           event.preventBubble();
         ]]>
       </handler>
       <handler event="overflow">
         <![CDATA[
-
-          var parent = this.parentNode;
-
-          while(parent && parent.localName != "tree")
-            parent = parent.parentNode;
-
-          if (parent) {
-            if (event.detail == 1 || event.detail == 2)
-              parent.setAttribute("show-hscroll", "true");
-            if (event.detail == 0 || event.detail == 2)
-              parent.setAttribute("show-vscroll", "true");
-          }
-
+          var tree = document.getBindingParent(this);
+          if (event.detail == 1)
+            tree.removeAttribute("hidehscroll");
+          else if (event.detail == 0)
+            tree.removeAttribute("hidevscroll");
           event.preventBubble();
         ]]>
       </handler>
