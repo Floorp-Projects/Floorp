@@ -24,14 +24,20 @@ comm.jar:
     content/communicator/platformEditorBindings.xul      (resources/content/mac/platformEditorBindings.xul)
     content/communicator/platformCommunicatorOverlay.xul (resources/content/mac/platformCommunicatorOverlay.xul)
 #else
-#ifdef XP_UNIX
-    content/communicator/platformBrowserBindings.xul     (resources/content/unix/platformBrowserBindings.xul)
-    content/communicator/platformEditorBindings.xul      (resources/content/unix/platformEditorBindings.xul)
-    content/communicator/platformCommunicatorOverlay.xul (resources/content/unix/platformCommunicatorOverlay.xul)
-#else
+#ifdef XP_WIN32
     content/communicator/platformBrowserBindings.xul     (resources/content/win/platformBrowserBindings.xul)
     content/communicator/platformEditorBindings.xul      (resources/content/win/platformEditorBindings.xul)
     content/communicator/platformCommunicatorOverlay.xul (resources/content/win/platformCommunicatorOverlay.xul)
+#else
+#ifdef XP_OS2
+    content/communicator/platformBrowserBindings.xul     (resources/content/win/platformBrowserBindings.xul)
+    content/communicator/platformEditorBindings.xul      (resources/content/win/platformEditorBindings.xul)
+    content/communicator/platformCommunicatorOverlay.xul (resources/content/win/platformCommunicatorOverlay.xul)
+#else
+    content/communicator/platformBrowserBindings.xul     (resources/content/unix/platformBrowserBindings.xul)
+    content/communicator/platformEditorBindings.xul      (resources/content/unix/platformEditorBindings.xul)
+    content/communicator/platformCommunicatorOverlay.xul (resources/content/unix/platformCommunicatorOverlay.xul)
+#endif
 #endif
 #endif
     content/communicator/builtinURLs.js                  (resources/content/builtinURLs.js)
