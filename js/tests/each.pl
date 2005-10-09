@@ -62,7 +62,7 @@ my $testrunner = "http://" .
 
 my $spider = "chrome://spider/content/open.xul?" .
     "depth=0&timeout=120&waittime=5&hooksignal=on&autostart=on&autoquit=on&javascripterrors=on&" .
-    "javascriptwarnings=on&chromeerrors=on&xblerrors=on&csserrors=on&" .
+    "javascriptwarnings=off&chromeerrors=on&xblerrors=on&csserrors=off&" .
     "scripturl=" . 
     uri_escape("http://" . 
                $ENV{TEST_HTTP} . 

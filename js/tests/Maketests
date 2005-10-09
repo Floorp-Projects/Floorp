@@ -101,7 +101,7 @@ e4xshell:
 # browser based tests
 #
 
-SPIDER=//spider/content/open.xul?depth%3D0%26timeout%3D120%26waittime%3D0%26hooksignal%3Don%26autostart%3Don%26autoquit%3Don%26javascripterrors%3Don%26javascriptwarnings%3Don%26chromeerrors%3Don%26xblerrors%3Don%26csserrors%3Don
+SPIDER=//spider/content/open.xul?depth%3D0%26timeout%3D120%26waittime%3D0%26hooksignal%3Don%26autostart%3Don%26autoquit%3Don%26javascripterrors%3Don%26javascriptwarnings%3Doff%26chromeerrors%3Don%26xblerrors%3Don%26csserrors%3Doff
 
 URL=http%3A%2F%2F$(TEST_HTTP)%2Ftests%2Fmozilla.org%2Fjs%2Fmenu.html
 
