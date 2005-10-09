@@ -407,6 +407,11 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                          aFile);
         }
 
+        case Win_ProgramFiles:
+        {
+            return GetWindowsFolder(CSIDL_PROGRAM_FILES, aFile);
+        }
+
         case Win_HomeDirectory:
         {    
             if (GetEnvironmentVariable(TEXT("HOME"), path, _MAX_PATH) > 0)

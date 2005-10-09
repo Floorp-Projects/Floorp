@@ -153,9 +153,10 @@
     #define NS_OSX_INTERNET_SITES_DIR           "IntrntSts"
 #elif defined (XP_WIN)
     #define NS_WIN_WINDOWS_DIR                  "WinD"
+    #define NS_WIN_PROGRAM_FILES_DIR            "ProgF"
     #define NS_WIN_HOME_DIR                     NS_OS_HOME_DIR
     #define NS_WIN_DESKTOP_DIR                  "DeskV" // virtual folder at the root of the namespace
-    #define NS_WIN_PROGRAMS_DIR                 "Progs"
+    #define NS_WIN_PROGRAMS_DIR                 "Progs" // User start menu programs directory!
     #define NS_WIN_CONTROLS_DIR                 "Cntls"
     #define NS_WIN_PRINTERS_DIR                 "Prnts"
     #define NS_WIN_PERSONAL_DIR                 "Pers"

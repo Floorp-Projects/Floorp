@@ -367,6 +367,7 @@ nsIAtom*  nsDirectoryService::sInternetSitesDirectory = nsnull;
 #elif defined (XP_WIN) 
 nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sWindowsDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sWindowsProgramFiles = nsnull;
 nsIAtom*  nsDirectoryService::sDesktop = nsnull;
 nsIAtom*  nsDirectoryService::sPrograms = nsnull;
 nsIAtom*  nsDirectoryService::sControls = nsnull;
@@ -472,6 +473,7 @@ static const nsStaticAtom directory_atoms[] = {
 #elif defined (XP_WIN) 
     { NS_OS_SYSTEM_DIR,            &nsDirectoryService::sSystemDirectory },
     { NS_WIN_WINDOWS_DIR,          &nsDirectoryService::sWindowsDirectory },
+    { NS_WIN_PROGRAM_FILES_DIR,    &nsDirectoryService::sWindowsProgramFiles },
     { NS_WIN_DESKTOP_DIR,          &nsDirectoryService::sDesktop },
     { NS_WIN_PROGRAMS_DIR,         &nsDirectoryService::sPrograms },
     { NS_WIN_CONTROLS_DIR,         &nsDirectoryService::sControls },
@@ -1049,6 +1051,10 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sWindowsDirectory)
     {
         rv = GetSpecialSystemDirectory(Win_WindowsDirectory, getter_AddRefs(localFile)); 
+    }
+    else if (inAtom == nsDirectoryService::sWindowsProgramFiles)
+    {
+        rv = GetSpecialSystemDirectory(Win_ProgramFiles, getter_AddRefs(localFile));
     }
     else if (inAtom == nsDirectoryService::sOS_HomeDirectory)
     {
