@@ -558,16 +558,13 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
                 JS_ReportOutOfMemory(cx);
                 goto bad;
             }
-            *sp = NULL;
             sharpid = 0;
             goto out;
         }
     }
 
     sharpid = JS_PTR_TO_UINT32(he->value);
-    if (sharpid == 0) {
-        *sp = NULL;
-    } else {
+    if (sharpid != 0) {
         len = JS_snprintf(buf, sizeof buf, "#%u%c",
                           sharpid >> SHARP_ID_SHIFT,
                           (sharpid & SHARP_BIT) ? '#' : '=');
@@ -1057,7 +1054,7 @@ CheckEvalAccess(JSContext *cx, JSObject *scopeobj, JSPrincipals *principals)
     rt = cx->runtime;
     if (rt->findObjectPrincipals) {
         scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
-        if (!scopePrincipals || !principals ||
+        if (!principals || !scopePrincipals ||
             !principals->subsume(principals, scopePrincipals)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_INDIRECT_CALL, js_eval_str);
@@ -1079,7 +1076,6 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSPrincipals *principals;
     JSScript *script;
     JSBool ok;
-    JSRuntime *rt;
 #if JS_HAS_EVAL_THIS_SCOPE
     JSObject *callerScopeChain = NULL, *callerVarObj = NULL;
     JSBool setCallerScopeChain = JS_FALSE, setCallerVarObj = JS_FALSE;
