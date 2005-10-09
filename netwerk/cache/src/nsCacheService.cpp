@@ -85,9 +85,6 @@
 #define MEMORY_CACHE_ENABLE_PREF    "browser.cache.memory.enable"
 #define MEMORY_CACHE_CAPACITY_PREF  "browser.cache.memory.capacity"
 #define MEMORY_CACHE_MAX_ENTRY_SIZE_PREF "browser.cache.memory.max_entry_size"
-#define MEMORY_CACHE_CAPACITY       4096
-
-#define BROWSER_CACHE_MEMORY_CAPACITY  4096
 
 
 class nsCacheProfilePrefObserver : public nsIObserver
@@ -116,7 +113,7 @@ public:
     nsILocalFile *  DiskCacheParentDirectory()  { return mDiskCacheParentDirectory; }
     
     PRBool          MemoryCacheEnabled();
-    PRInt32         MemoryCacheCapacity()       { return mMemoryCacheCapacity; }
+    PRInt32         MemoryCacheCapacity();
 
 private:
     PRBool                  mHaveProfile;
@@ -302,13 +299,13 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
             rv = branch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF,
                                      &mMemoryCacheEnabled);
             if (NS_FAILED(rv))  return rv;
-            nsCacheService::SetMemoryCacheEnabled(MemoryCacheEnabled());
+            nsCacheService::SetMemoryCache();
             
         } else if (!strcmp(MEMORY_CACHE_CAPACITY_PREF, data.get())) {
 
             (void) branch->GetIntPref(MEMORY_CACHE_CAPACITY_PREF,
                                       &mMemoryCacheCapacity);
-            nsCacheService::SetMemoryCacheCapacity(mMemoryCacheCapacity);
+            nsCacheService::SetMemoryCache();
         }
     }
     
@@ -401,6 +398,67 @@ nsCacheProfilePrefObserver::MemoryCacheEnabled()
 }
 
 
+/**
+ * MemoryCacheCapacity
+ *
+ * If the browser.cache.memory.capacity preference is positive, we use that
+ * value for the amount of memory available for the cache.
+ *
+ * If browser.cache.memory.capacity is zero, the memory cache is disabled.
+ * 
+ * If browser.cache.memory.capacity is negative or not present, we use a
+ * formula that grows less than linearly with the amount of system memory.
+ *
+ *   RAM   Cache
+ *   ---   -----
+ *   32 Mb   2 Mb
+ *   64 Mb   4 Mb
+ *  128 Mb   8 Mb
+ *  256 Mb  14 Mb
+ *  512 Mb  22 Mb
+ * 1024 Mb  32 Mb
+ * 2048 Mb  44 Mb
+ * 4096 Mb  58 Mb
+ *
+ * The equation for this is (for cache size C and memory size K (kbytes)):
+ *  x = log2(K) - 14
+ *  C = x^2 - x + 2
+ */
+
+PRInt32
+nsCacheProfilePrefObserver::MemoryCacheCapacity()
+{
+    PRInt32 capacity = mMemoryCacheCapacity;
+    if (capacity >= 0)
+        return capacity;
+
+    PRUint64 bytes = PR_GetPhysicalMemorySize();
+
+    if (LL_CMP(bytes, ==, LL_ZERO))
+        return 0;
+
+    // Conversion from unsigned int64 to double doesn't work on all platforms.
+    // We need to truncate the value at LL_MAXINT to make sure we don't
+    // overflow.
+    if (LL_CMP(bytes, >, LL_MAXINT))
+        bytes = LL_MAXINT;
+
+    PRUint64 kbytes;
+    LL_SHR(kbytes, bytes, 10);
+
+    double kBytesD;
+    LL_L2D(kBytesD, (PRInt64) kbytes);
+
+    double x = log(kBytesD)/log(2.0) - 14;
+    if (x > 0) {
+        capacity    = (PRInt32)(x * x - x + 2.001); // add .001 for rounding
+        capacity   *= 1024;
+    } else {
+        capacity    = 0;
+    }
+
+    return capacity;
+}
 
 /******************************************************************************
  * nsCacheService
@@ -481,10 +539,6 @@ nsCacheService::Init()
     mObserver->Install();
     mEnableDiskDevice =   mObserver->DiskCacheEnabled();
     mEnableMemoryDevice = mObserver->MemoryCacheEnabled();
-
-    rv = CreateMemoryDevice();
-    if (NS_FAILED(rv) && (rv != NS_ERROR_NOT_AVAILABLE))
-        return rv;
     
     mInitialized = PR_TRUE;
     return NS_OK;
@@ -751,7 +805,7 @@ nsCacheService::CreateMemoryDevice()
     if (!mMemoryDevice)       return NS_ERROR_OUT_OF_MEMORY;
     
     // set preference
-    mMemoryDevice->SetCapacity(CacheMemoryAvailable());
+    mMemoryDevice->SetCapacity(mObserver->MemoryCacheCapacity());
 
     nsresult rv = mMemoryDevice->Init();
     if (NS_FAILED(rv)) {
@@ -1189,12 +1243,7 @@ nsCacheService::OnProfileChanged()
     nsAutoLock lock(gService->mCacheServiceLock);
     
     gService->mEnableDiskDevice   = gService->mObserver->DiskCacheEnabled();
-    gService->mEnableMemoryDevice = gService->mObserver->MemoryCacheEnabled();
     
-    if (gService->mEnableMemoryDevice && !gService->mMemoryDevice) {
-        (void) gService->CreateMemoryDevice();
-    }
-
 #ifdef NECKO_DISK_CACHE
     if (gService->mDiskDevice) {
         gService->mDiskDevice->SetCacheParentDirectory(gService->mObserver->DiskCacheParentDirectory());
@@ -1210,8 +1259,11 @@ nsCacheService::OnProfileChanged()
     }
 #endif // !NECKO_DISK_CACHE
     
+    gService->SetMemoryCache();
+
     if (gService->mMemoryDevice) {
-        gService->mMemoryDevice->SetCapacity(gService->CacheMemoryAvailable());
+        // Clean contents from memory cache
+        // Is using Init the right thing? Why not just 'EvictEntries(nsnull)'?
         rv = gService->mMemoryDevice->Init();
         if (NS_FAILED(rv) && (rv != NS_ERROR_ALREADY_INITIALIZED)) {
             NS_ERROR("nsCacheService::OnProfileChanged: Re-initializing memory device failed");
@@ -1248,102 +1300,25 @@ nsCacheService::SetDiskCacheCapacity(PRInt32  capacity)
 
 
 void
-nsCacheService::SetMemoryCacheEnabled(PRBool  enabled)
+nsCacheService::SetMemoryCache()
 {
     if (!gService)  return;
     nsAutoLock lock(gService->mCacheServiceLock);
-    gService->mEnableMemoryDevice = enabled;
 
-    if (enabled) {
-        if (!gService->mMemoryDevice) {
-            // allocate memory device, if necessary
-            (void) gService->CreateMemoryDevice();
+    gService->mEnableMemoryDevice = gService->mObserver->MemoryCacheEnabled();
+
+    if (gService->mEnableMemoryDevice) {
+        if (gService->mMemoryDevice) {
+            // make sure that capacity is reset to the right value
+            gService->mMemoryDevice->SetCapacity(gService->mObserver->MemoryCacheCapacity());
         }
     } else {
         if (gService->mMemoryDevice) {
             // tell memory device to evict everything
             gService->mMemoryDevice->SetCapacity(0);
+            // Don't delete memory device, because some entries may be active still...
         }
     }
-}
-
-
-void
-nsCacheService::SetMemoryCacheCapacity(PRInt32  capacity)
-{
-    if (!gService)  return;
-    nsAutoLock lock(gService->mCacheServiceLock);
-    
-    gService->mEnableMemoryDevice = gService->mObserver->MemoryCacheEnabled();
-    if (gService->mEnableMemoryDevice && !gService->mMemoryDevice) {
-        (void) gService->CreateMemoryDevice();
-    }
-
-    if (gService->mMemoryDevice) {
-        gService->mMemoryDevice->SetCapacity(gService->CacheMemoryAvailable());
-    }
-}
-
-/**
- * CacheMemoryAvailable
- *
- * If the browser.cache.memory.capacity preference is positive, we use that
- * value for the amount of memory available for the cache.
- *
- * If browser.cache.memory.capacity is zero, the memory cache is disabled.
- * 
- * If browser.cache.memory.capacity is negative or not present, we use a
- * formula that grows less than linearly with the amount of system memory.
- *
- *   RAM   Cache
- *   ---   -----
- *   32 Mb   2 Mb
- *   64 Mb   4 Mb
- *  128 Mb   8 Mb
- *  256 Mb  14 Mb
- *  512 Mb  22 Mb
- * 1024 Mb  32 Mb
- * 2048 Mb  44 Mb
- * 4096 Mb  58 Mb
- *
- * The equation for this is (for cache size C and memory size K (kbytes)):
- *  x = log2(K) - 14
- *  C = x^2 - x + 2
- */
-
-PRInt32
-nsCacheService::CacheMemoryAvailable()
-{
-    PRInt32 capacity = mObserver->MemoryCacheCapacity();
-    if (capacity >= 0)
-        return capacity;
-
-    PRUint64 bytes = PR_GetPhysicalMemorySize();
-
-    if (LL_CMP(bytes, ==, LL_ZERO))
-        return 0;
-
-    // Conversion from unsigned int64 to double doesn't work on all platforms.
-    // We need to truncate the value at LL_MAXINT to make sure we don't
-    // overflow.
-    if (LL_CMP(bytes, >, LL_MAXINT))
-        bytes = LL_MAXINT;
-
-    PRUint64 kbytes;
-    LL_SHR(kbytes, bytes, 10);
-
-    double kBytesD;
-    LL_L2D(kBytesD, (PRInt64) kbytes);
-
-    double x = log(kBytesD)/log(2.0) - 14;
-    if (x > 0) {
-        capacity    = (PRInt32)(x * x - x + 2.001); // add .001 for rounding
-        capacity   *= 1024;
-    } else {
-        capacity    = 0;
-    }
-
-    return capacity;
 }
 
 
