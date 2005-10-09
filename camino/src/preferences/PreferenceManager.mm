@@ -765,10 +765,11 @@ typedef enum EProxyConfig {
     float blueFloat   = ((float)blueInt / 255.0);
     
     returnColor = [NSColor colorWithCalibratedRed:redFloat green:greenFloat blue:blueFloat alpha:1.0f];
+    if (outSuccess) *outSuccess = YES;
   }
   else
   {
-    *outSuccess = NO;
+    if (outSuccess) *outSuccess = NO;
   }
 
   return returnColor;
@@ -792,9 +793,11 @@ typedef enum EProxyConfig {
   PRInt32 intPref = 0;
   nsresult rv = NS_ERROR_FAILURE;
   if (mPrefs)
-    mPrefs->GetIntPref(prefName, &intPref);
+    rv = mPrefs->GetIntPref(prefName, &intPref);
+
   if (outSuccess)
     *outSuccess = NS_SUCCEEDED(rv);
+
   return intPref;
 }
 
