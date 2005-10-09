@@ -21,3 +21,8 @@ js1_5/Exceptions/regress-50447.js
 # Invalid bug
 #
 e4x/Regress/regress-278112.js
+#
+# behavior changed to match MSIE/Opera/etc
+# see bug 309840
+#
+js1_5/Regress/regress-173067.js
