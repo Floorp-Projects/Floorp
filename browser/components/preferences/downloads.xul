@@ -55,7 +55,10 @@
       <preference id="browser.download.useDownloadDir"    name="browser.download.useDownloadDir"    type="bool"/>
       <preference id="browser.download.folderList"        name="browser.download.folderList"        type="int"/>
       <preference id="browser.download.downloadDir"       name="browser.download.downloadDir"       type="file"/>
-      <preference id="browser.download.dir"               name="browser.download.dir"               type="file"/>
+      <preference id="browser.download.dir"
+                  name="browser.download.dir"
+                  type="file"
+                  onchange="gDownloadsPane.readDownloadDirPref();"/>
       <preference id="browser.download.manager.showWhenStarting"
                   name="browser.download.manager.showWhenStarting" 
                   type="bool"
