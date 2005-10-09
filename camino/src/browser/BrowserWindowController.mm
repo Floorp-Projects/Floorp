@@ -1450,7 +1450,7 @@ enum BWCOpenDest {
 - (void)contentViewChangedTo:(NSView*)inView forURL:(NSString*)inURL
 {
   // update bookmarks menu
-  [[NSApp delegate] adjustBookmarksMenuItemsEnabling];
+  [[NSApp delegate] delayedAdjustBookmarksMenuItemsEnabling];
 }
 
 - (void)updateFromFrontmostTab
@@ -1656,7 +1656,7 @@ enum BWCOpenDest {
   else
     [self loadURL:@"about:bookmarks" referrer:nil activate:YES allowPopups:NO];
 
-  [[NSApp delegate] adjustBookmarksMenuItemsEnabling];
+  [[NSApp delegate] delayedAdjustBookmarksMenuItemsEnabling];
 }
 
 //
@@ -2567,7 +2567,7 @@ enum BWCOpenDest {
   else
     [mTabBrowser selectNextTabViewItem:sender];
 
-  [[NSApp delegate] adjustBookmarksMenuItemsEnabling];
+  [[NSApp delegate] delayedAdjustBookmarksMenuItemsEnabling];
 }
 
 - (IBAction)closeSendersTab:(id)sender
@@ -2662,7 +2662,7 @@ enum BWCOpenDest {
   if (![self userChangedLocationField] && [[self window] isKeyWindow])
     [mBrowserView setBrowserActive:YES];
 
-  [[NSApp delegate] adjustBookmarksMenuItemsEnabling];
+  [[NSApp delegate] delayedAdjustBookmarksMenuItemsEnabling];
 }
 
 - (void)tabView:(NSTabView *)aTabView willSelectTabViewItem:(NSTabViewItem *)aTabViewItem
@@ -2679,7 +2679,7 @@ enum BWCOpenDest {
 
 - (void)tabViewDidChangeNumberOfTabViewItems:(NSTabView *)aTabView
 {
-  [[NSApp delegate] fixCloseMenuItemKeyEquivalents];
+  [[NSApp delegate] delayedFixCloseMenuItemKeyEquivalents];
   [mTabBrowser refreshTabBar:YES];
   // paranoia, to avoid stale mBrowserView pointer (since we don't own it)
   if ([aTabView numberOfTabViewItems] == 0)

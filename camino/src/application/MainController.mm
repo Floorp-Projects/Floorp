@@ -376,7 +376,8 @@ const int kReuseWindowOnAE = 2;
 
 - (void)windowLayeringDidChange:(NSNotification*)inNotification
 {
-  [self performSelectorOnMainThread:@selector(doBookmarksMenuEnabling) withObject:nil waitUntilDone:NO];
+  [self delayedAdjustBookmarksMenuItemsEnabling];
+  [self delayedFixCloseMenuItemKeyEquivalents];
 }
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
@@ -914,11 +915,15 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   }
 }
 
-- (void)adjustBookmarksMenuItemsEnabling
+- (void)delayedAdjustBookmarksMenuItemsEnabling
  {
    // we do this after a delay to ensure that window layer state has been set by the time
    // we do the enabling.
-  [self performSelectorOnMainThread:@selector(doBookmarksMenuEnabling) withObject:nil waitUntilDone:NO];
+  if (!mBookmarksMenuUpdatePending)
+  {
+    [self performSelector:@selector(doBookmarksMenuEnabling) withObject:nil afterDelay:0];
+    mBookmarksMenuUpdatePending = YES;
+  }
 }
 
 //
@@ -943,6 +948,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
                                                                                    andAction:[mShowAllBookmarksMenuItem action]]];
 
   // We enable bookmark items themselves from the carbon event handler that fires before the menu is shown.
+  mBookmarksMenuUpdatePending = NO;
 }
 
 - (NSMenu*)bookmarksMenu
@@ -1257,16 +1263,26 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   }
 }
 
+- (void)delayedFixCloseMenuItemKeyEquivalents
+{
+   // we do this after a delay to ensure that window layer state has been set by the time
+   // we do the enabling.
+  if (!mFileMenuUpdatePending)
+  {
+    [self performSelector:@selector(fixCloseMenuItemKeyEquivalents) withObject:nil afterDelay:0];
+    mFileMenuUpdatePending = YES;
+  }
+}
+
 // see if we have a window with tabs open, and adjust the key equivalents for
 // Close Tab/Close Window accordingly
 - (void)fixCloseMenuItemKeyEquivalents
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (browserController) {
-    BOOL windowWithMultipleTabs = ([[browserController getTabBrowser] numberOfTabViewItems] > 1);    
-    [self adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
-    [self adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
-  }
+  BOOL windowWithMultipleTabs = (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);    
+  [self adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
+  [self adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
+  mFileMenuUpdatePending = NO;
 }
 
 - (void)adjustTextEncodingMenu
