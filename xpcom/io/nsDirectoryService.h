@@ -130,6 +130,7 @@ public:
 #elif defined (XP_WIN) 
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sWindowsDirectory;
+    static nsIAtom *sWindowsProgramFiles;
     static nsIAtom *sDesktop;
     static nsIAtom *sPrograms;
     static nsIAtom *sControls;

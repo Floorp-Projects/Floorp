@@ -108,6 +108,7 @@ enum SystemDirectories {
   Win_Printhood             =   226,   
   Win_Cookies               =   227, 
   Win_LocalAppdata          =   228,
+  Win_ProgramFiles          =   229,
   
   Unix_LocalDirectory       =   301,   
   Unix_LibDirectory         =   302,   
