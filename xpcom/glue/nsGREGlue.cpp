@@ -183,7 +183,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
 #ifdef XP_MACOSX
   aBuffer[0] = '\0';
 
-  // Check the bundle first, for <bundle>/Contents/Frameworks/XUL/libxpcom.dylib
+  // Check the bundle first, for <bundle>/Contents/Frameworks/XUL.framework/libxpcom.dylib
   CFBundleRef appBundle = CFBundleGetMainBundle();
   if (appBundle) {
     CFURLRef fwurl = CFBundleCopyPrivateFrameworksURL(appBundle);
@@ -196,7 +196,8 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
     if (absfwurl) {
       CFURLRef xulurl =
         CFURLCreateCopyAppendingPathComponent(NULL, absfwurl,
-                                              CFSTR("XUL.framework"), PR_TRUE);
+                                              CFSTR(GRE_FRAMEWORK_NAME),
+                                              PR_TRUE);
 
       if (xulurl) {
         CFURLRef xpcomurl =
@@ -230,7 +231,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   if (aBuffer[0])
     return NS_OK;
 
-  // Check ~/Library/Frameworks/XUL/Versions/<version>/libxpcom.dylib
+  // Check ~/Library/Frameworks/XUL.framework/Versions/<version>/libxpcom.dylib
   const char *home = getenv("HOME");
   if (home && *home && GRE_FindGREFramework(home,
                                             versions, versionsLength,
@@ -239,7 +240,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
     return NS_OK;
   }
 
-  // Check /Library/Frameworks/XUL/Versions/<version>/libxpcom.dylib
+  // Check /Library/Frameworks/XUL.framework/Versions/<version>/libxpcom.dylib
   if (GRE_FindGREFramework("",
                            versions, versionsLength,
                            properties, propertiesLength,
