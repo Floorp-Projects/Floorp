@@ -4044,72 +4044,67 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       mdbYarn yarn;
       err = aRow->AliasCellYarn(mEnv, property_column, &yarn);
       if (err != 0 || !yarn.mYarn_Buf) return PR_FALSE;
+      
+      nsAutoString rowVal;
 
-      const char* startPtr;
       PRInt32 yarnLength = yarn.mYarn_Fill;;
-      nsCAutoString titleStr;
       if (property_column == kToken_NameColumn) {
-        titleStr =  NS_ConvertUCS2toUTF8((const PRUnichar*)yarn.mYarn_Buf, yarnLength / 2);
-        startPtr = titleStr.get();
-        yarnLength = titleStr.Length();
+        // The name column (page title) is stored as UTF-16.
+        rowVal.Assign((const PRUnichar*)yarn.mYarn_Buf, yarnLength / 2);
       }
       else {
-        // account for null strings
+        // Other columns are stored as UTF-8 and can be null.
         if (yarn.mYarn_Buf)
-          startPtr = (const char *)yarn.mYarn_Buf;
-        else 
-          startPtr = "";
+          rowVal = NS_ConvertUTF8toUTF16((const char*)yarn.mYarn_Buf, yarnLength);
       }
       
-      const nsASingleFragmentCString& rowVal =
-          Substring(startPtr, startPtr + yarnLength);
-
       // set up some iterators
-      nsASingleFragmentCString::const_iterator start, end;
+      nsString::const_iterator start, end;
       rowVal.BeginReading(start);
       rowVal.EndReading(end);
-  
-      NS_ConvertUCS2toUTF8 utf8Value(term->text);
+
+      const nsXPIDLString& searchText = term->text;
+      
       if (term->method.Equals("is")) {
         if (caseSensitive) {
-          if (!utf8Value.Equals(rowVal, nsDefaultCStringComparator()))
+          if (!searchText.Equals(rowVal, nsDefaultStringComparator()))
             return PR_FALSE;
         }
         else {
-          if (!utf8Value.Equals(rowVal, nsCaseInsensitiveCStringComparator()))
+          if (!searchText.Equals(rowVal, nsCaseInsensitiveStringComparator()))
             return PR_FALSE;
         }
       }
 
       else if (term->method.Equals("isnot")) {        
         if (caseSensitive) {
-          if (utf8Value.Equals(rowVal, nsDefaultCStringComparator()))
+          if (searchText.Equals(rowVal, nsDefaultStringComparator()))
             return PR_FALSE;
         }
         else {
-          if (utf8Value.Equals(rowVal, nsCaseInsensitiveCStringComparator()))
+          if (searchText.Equals(rowVal, nsCaseInsensitiveStringComparator()))
             return PR_FALSE;
         }
       }
 
       else if (term->method.Equals("contains")) {
         if (caseSensitive) {
-          if (!FindInReadable(utf8Value, start, end, nsDefaultCStringComparator()))
+          if (!FindInReadable(searchText, start, end, nsDefaultStringComparator()))
             return PR_FALSE;
         }
         else {
-          if (!FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()))
+          if (!FindInReadable(searchText, start, end, nsCaseInsensitiveStringComparator()))
             return PR_FALSE;
         }
       }
 
       else if (term->method.Equals("doesntcontain")) {
         if (caseSensitive) {
-          if (FindInReadable(utf8Value, start, end, nsDefaultCStringComparator()))
+          if (FindInReadable(searchText, start, end, nsDefaultStringComparator()))
             return PR_FALSE;
         }
         else {
-          if (FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()))
+          if (FindInReadable(searchText, start, end, nsCaseInsensitiveStringComparator()))
             return PR_FALSE;
         }
       }
@@ -4117,13 +4112,13 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       else if (term->method.Equals("startswith")) {
         // need to make sure that the found string is 
         // at the beginning of the string
-        nsACString::const_iterator real_start = start;
+        nsAString::const_iterator real_start = start;
         if (caseSensitive) {
-          if (!(FindInReadable(utf8Value, start, end, nsDefaultCStringComparator()) && real_start == start))
+          if (!(FindInReadable(searchText, start, end, nsDefaultStringComparator()) && real_start == start))
             return PR_FALSE;
         }
         else {
-          if (!(FindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()) &&
+          if (!(FindInReadable(searchText, start, end, nsCaseInsensitiveStringComparator()) &&
                 real_start == start))
             return PR_FALSE;
         }
@@ -4132,13 +4127,13 @@ nsGlobalHistory::RowMatches(nsIMdbRow *aRow,
       else if (term->method.Equals("endswith")) {
         // need to make sure that the found string ends
         // at the end of the string
-        nsACString::const_iterator real_end = end;
+        nsAString::const_iterator real_end = end;
         if (caseSensitive) {
-          if (!(RFindInReadable(utf8Value, start, end, nsDefaultCStringComparator()) && real_end == end))
+          if (!(RFindInReadable(searchText, start, end, nsDefaultStringComparator()) && real_end == end))
             return PR_FALSE;
         }
         else {
-          if (!(RFindInReadable(utf8Value, start, end, nsCaseInsensitiveCStringComparator()) &&
+          if (!(RFindInReadable(searchText, start, end, nsCaseInsensitiveStringComparator()) &&
                 real_end == end))
           return PR_FALSE;
         }
