@@ -2166,18 +2166,9 @@ nsDocument::DispatchContentLoadedEvents()
   // Fire a DOM event notifying listeners that this document has been
   // loaded (excluding images and other loads initiated by this
   // document).
-  nsCOMPtr<nsIDOMEvent> event;
-  CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-
-  nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-
-  if (privateEvent) {
-    event->InitEvent(NS_LITERAL_STRING("DOMContentLoaded"), PR_TRUE, PR_TRUE);
-    privateEvent->SetTrusted(PR_TRUE);
-
-    PRBool defaultActionEnabled;
-    DispatchEvent(event, &defaultActionEnabled);
-  }
+  nsContentUtils::DispatchTrustedEvent(this, NS_STATIC_CAST(nsIDocument*, this),
+                                       NS_LITERAL_STRING("DOMContentLoaded"),
+                                       PR_TRUE, PR_TRUE);
 
   // If this document is a [i]frame, fire a DOMFrameContentLoaded
   // event on all parent documents notifying that the HTML (excluding
@@ -2223,6 +2214,8 @@ nsDocument::DispatchContentLoadedEvents()
       nsCOMPtr<nsIDOMDocumentEvent> document_event =
         do_QueryInterface(ancestor_doc);
 
+      nsCOMPtr<nsIDOMEvent> event;
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent;
       if (document_event) {
         document_event->CreateEvent(NS_LITERAL_STRING("Events"),
                                     getter_AddRefs(event));
@@ -3182,17 +3175,9 @@ nsDocument::SetTitle(const nsAString& aTitle)
   mDocumentTitle.Assign(aTitle);
 
   // Fire a DOM event for the title change.
-  nsCOMPtr<nsIDOMEvent> event;
-  CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  if (event) {
-    event->InitEvent(NS_LITERAL_STRING("DOMTitleChanged"), PR_TRUE, PR_TRUE);
-    // There might be script running, so the event might have ended up
-    // untrusted.  Make it trusted.
-    nsCOMPtr<nsIPrivateDOMEvent> privEvt(do_QueryInterface(event));
-    privEvt->SetTrusted(PR_TRUE);
-    PRBool defaultActionEnabled;
-    DispatchEvent(event, &defaultActionEnabled);
-  }
+  nsContentUtils::DispatchTrustedEvent(this, NS_STATIC_CAST(nsIDocument*, this),
+                                       NS_LITERAL_STRING("DOMTitleChanged"),
+                                       PR_TRUE, PR_TRUE);
 
   return NS_OK;
 }

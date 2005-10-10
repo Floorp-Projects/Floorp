@@ -2877,23 +2877,13 @@ nsGlobalWindow::GetLength(PRUint32* aLength)
 PRBool
 nsGlobalWindow::DispatchCustomEvent(const char *aEventName)
 {
-  nsCOMPtr<nsIDOMDocumentEvent> doc(do_QueryInterface(mDocument));
-  nsCOMPtr<nsIDOMEvent> event;
-
   PRBool defaultActionEnabled = PR_TRUE;
-
-  if (doc) {
-    doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-    if (privateEvent) {
-      event->InitEvent(NS_ConvertASCIItoUTF16(aEventName), PR_TRUE, PR_TRUE);
-
-      privateEvent->SetTrusted(PR_TRUE);
-
-      DispatchEvent(event, &defaultActionEnabled);
-    }
-  }
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+  nsContentUtils::DispatchTrustedEvent(doc,
+                                       NS_STATIC_CAST(
+                                         nsIScriptGlobalObject*, this),
+                                       NS_ConvertASCIItoUTF16(aEventName),
+                                       PR_TRUE, PR_TRUE, &defaultActionEnabled);
 
   return defaultActionEnabled;
 }
@@ -4016,22 +4006,11 @@ void FirePopupBlockedEvent(nsIDOMDocument* aDoc,
 
 void FirePopupWindowEvent(nsIDOMDocument* aDoc)
 {
-  if (aDoc) {
-    // Fire a "PopupWindow" event
-    nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
-    nsCOMPtr<nsIDOMEvent> event;
-    docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-    if (event) {
-      event->InitEvent(NS_LITERAL_STRING("PopupWindow"), PR_TRUE, PR_TRUE);
-
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-      privateEvent->SetTrusted(PR_TRUE);
-
-      PRBool defaultActionEnabled;
-      nsCOMPtr<nsIDOMEventTarget> targ(do_QueryInterface(aDoc));
-      targ->DispatchEvent(event, &defaultActionEnabled);
-    }
-  }
+  // Fire a "PopupWindow" event
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
+  nsContentUtils::DispatchTrustedEvent(doc, aDoc,
+                                       NS_LITERAL_STRING("PopupWindow"),
+                                       PR_TRUE, PR_TRUE);
 }
 
 // static

@@ -56,6 +56,7 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsParserUtils.h"
+#include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 
@@ -271,22 +272,9 @@ nsHTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
       (rel.IsEmpty() || rel.LowerCaseEqualsLiteral("stylesheet")))
     return;
 
-  nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(aDoc));
-  nsCOMPtr<nsIDOMEvent> event;
-  docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-  if (event) {
-    event->InitEvent(aEventName, PR_TRUE, PR_TRUE);
-    nsCOMPtr<nsIDOMEventTarget> target =
-      do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this));
-    if (target) {
-      nsCOMPtr<nsIPrivateDOMEvent> privEvent(do_QueryInterface(event));
-      if (privEvent) {
-        privEvent->SetTrusted(PR_TRUE);
-      }
-      PRBool defaultActionEnabled;
-      target->DispatchEvent(event, &defaultActionEnabled);
-    }
-  }
+  nsContentUtils::DispatchTrustedEvent(aDoc,
+                                       NS_STATIC_CAST(nsIContent*, this),
+                                       aEventName, PR_TRUE, PR_TRUE);
 }
 
 nsresult
