@@ -3237,6 +3237,12 @@ ExtensionManager.prototype = {
     if (profileDefaultTheme && profileDefaultTheme.exists())
       profileDefaultTheme.remove(true);
 
+    // Version 0.9 profiles may have DOMi 1.0 with just an install.rdf
+    var profileDOMi = getDirNoCreate(KEY_PROFILEDS, [DIR_EXTENSIONS,
+                                     "{641d8d09-7dda-4850-8228-ac0ab65e2ac9}"]);
+    if (profileDOMi && profileDOMi.exists())
+      profileDOMi.remove(true);
+
     // Prepare themes for installation
     // Only enumerate directories in the app-profile and app-global locations.
     var locations = [KEY_APP_PROFILE, KEY_APP_GLOBAL];
