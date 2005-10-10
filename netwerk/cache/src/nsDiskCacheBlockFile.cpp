@@ -92,7 +92,11 @@ nsDiskCacheBlockFile::Open( nsILocalFile *  blockFile, PRUint32  blockSize)
             rv = NS_ERROR_UNEXPECTED;
             goto error_exit;
         }
-        
+#if defined(IS_LITTLE_ENDIAN)
+        // Swap from network format
+        for (int i = 0; i < kBitMapWords; ++i)
+            mBitMap[i] = ntohl(mBitMap[i]);
+#endif
         // validate block file size
         const PRInt32  estimatedSize = CalcBlockFileSize();
         if (estimatedSize > fileSize) {
