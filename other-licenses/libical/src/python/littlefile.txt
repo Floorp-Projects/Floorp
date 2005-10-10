@@ -1,3 +1,0 @@
-This is just a small file to test mime encoding.
-
-There isn't much here at all.
