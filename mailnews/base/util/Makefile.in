@@ -97,7 +97,6 @@ CPPSRCS		= \
 		nsMsgKeySet.cpp \
 		nsMsgKeyArray.cpp \
 		nsLocalFolderSummarySpec.cpp \
-		nsNewsSummarySpec.cpp \
 		nsMsgIdentity.cpp \
 		nsMsgIncomingServer.cpp \
 		nsMsgUtils.cpp \
@@ -118,7 +117,6 @@ EXPORTS		= \
 		nsMsgKeyArray.h \
 		nsMsgDBFolder.h \
 		nsLocalFolderSummarySpec.h \
-		nsNewsSummarySpec.h \
 		nsMsgIdentity.h \
 		nsMsgIncomingServer.h \
 		nsMsgUtils.h \

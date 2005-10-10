@@ -725,11 +725,6 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineStoreOutputStream(nsIOutputStream **outpu
   return rv;
 }
 
-// XXX todo
-// move these to a common location and remove all the hard coded ".msf"
-#define SUMMARY_SUFFIX ".msf"
-#define SUMMARY_SUFFIX_LEN 4
-
 // path coming in is the root path without the leaf name,
 // on the way out, it's the whole path.
 nsresult nsMsgDBFolder::CreateFileSpecForDB(const char *userLeafName, nsFileSpec &path, nsIFileSpec **dbFileSpec)
@@ -763,7 +758,7 @@ nsresult nsMsgDBFolder::CreateFileSpecForDB(const char *userLeafName, nsFileSpec
     proposedDBName = path.GetLeafName();
   }
   // now, take the ".msf" off
-  proposedDBName.Truncate(proposedDBName.Length() - SUMMARY_SUFFIX_LEN);
+  proposedDBName.Truncate(proposedDBName.Length() - NS_LITERAL_CSTRING(SUMMARY_SUFFIX).Length());
   path.SetLeafName(proposedDBName.get());
 
   NS_NewFileSpecWithSpec(path, dbFileSpec);
@@ -3357,7 +3352,7 @@ NS_IMETHODIMP nsMsgDBFolder::Rename(const PRUnichar *aNewName, nsIMsgWindow *msg
     rv = oldPathSpec->Rename(newDiskName.get());
   if (NS_SUCCEEDED(rv))
   {
-    newDiskName += ".msf";
+    newDiskName += SUMMARY_SUFFIX;
     oldSummarySpec.Rename(newDiskName.get());
   }
   else

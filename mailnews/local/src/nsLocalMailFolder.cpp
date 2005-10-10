@@ -220,7 +220,7 @@ nsShouldIgnoreFile(nsString& name)
       name.LowerCaseEqualsLiteral("feeditems.rdf"))
     return PR_TRUE;
 
-  return (nsStringEndsWith(name,".sbd") || nsStringEndsWith(name,".msf"));
+  return (nsStringEndsWith(name,".sbd") || nsStringEndsWith(name,SUMMARY_SUFFIX));
 }
 
 NS_IMETHODIMP
@@ -1184,7 +1184,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
   rv = oldPathSpec->Rename(newDiskName.get());
   if (NS_SUCCEEDED(rv))
   {
-    newDiskName += ".msf";
+    newDiskName += SUMMARY_SUFFIX;
     oldSummarySpec.Rename(newDiskName.get());
   }
   else

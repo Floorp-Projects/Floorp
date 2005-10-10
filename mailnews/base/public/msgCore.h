@@ -54,6 +54,11 @@ class nsIMsgFolder;
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 
+/*
+ * The suffix we use for the mail summary file.
+ */
+#define SUMMARY_SUFFIX ".msf"
+
 /* NS_ERROR_MODULE_MAILNEWS is defined in mozilla/xpcom/public/nsError.h */
 
 /*

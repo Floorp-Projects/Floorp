@@ -84,7 +84,6 @@
 #include "nsIURL.h"
 #include "nsNetCID.h"
 #include "nsINntpUrl.h"
-#include "nsNewsSummarySpec.h"
 
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -601,18 +600,28 @@ NS_IMETHODIMP nsMsgNewsFolder::Delete()
   nsCOMPtr<nsIFileSpec> pathSpec;
   rv = GetPath(getter_AddRefs(pathSpec));
   if (NS_FAILED(rv)) return rv;
-  
+
   nsFileSpec path;
   rv = pathSpec->GetFileSpec(&path);
   if (NS_FAILED(rv)) return rv;
-  
+
   // delete local store, if it exists
   if (path.Exists())
     path.Delete(PR_FALSE);
+
   // Remove summary file.	
-  nsNewsSummarySpec summarySpec(path);
-  summarySpec.Delete(PR_FALSE);
-  
+  nsXPIDLCString summaryFile;
+  rv = pathSpec->GetLeafName(getter_Copies(summaryFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  summaryFile.Append(SUMMARY_SUFFIX);
+
+  rv = pathSpec->SetLeafName(summaryFile.get());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = pathSpec->Delete(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr <nsINntpIncomingServer> nntpServer;
   rv = GetNntpServer(getter_AddRefs(nntpServer));
   if (NS_FAILED(rv)) return rv;

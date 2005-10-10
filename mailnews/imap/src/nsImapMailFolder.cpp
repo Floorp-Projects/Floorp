@@ -314,7 +314,7 @@ static PRBool
 nsShouldIgnoreFile(nsString& name)
 {
     PRInt32 len = name.Length();
-    if (len > 4 && name.RFind(".msf", PR_TRUE) == len -4)
+    if (len > 4 && name.RFind(SUMMARY_SUFFIX, PR_TRUE) == len -4)
     {
         name.SetLength(len-4); // truncate the string
         return PR_FALSE;
