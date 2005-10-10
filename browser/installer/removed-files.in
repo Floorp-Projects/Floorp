@@ -22,3 +22,18 @@ components/xptitemp.dat
 components/nsBackgroundUpdateService.js
 components/autocomplete.xpt
 @DLL_PREFIX@zlib@DLL_SUFFIX@
+#Remove Talkback files from old location (in case user updates from 1.0.x)
+components/BrandRes.dll
+components/fullsoft.dll
+components/master.ini
+components/qfaservices.dll
+components/qfaservices.xpt
+components/talkback-l10n.ini
+components/talkback.cnt
+components/talkback.exe
+components/talkback.hlp
+components/libqfaservices.so
+components/talkback/master.ini
+components/talkback/talkback
+components/talkback/talkback.so
+components/talkback/XTalkback.ad
