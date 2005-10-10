@@ -106,7 +106,19 @@ BrowserGlue.prototype = {
   // profile shutdown handler (contains profile cleanup routines)
   _onProfileShutdown: function() 
   {
-    this.Sanitizer.onShutdown();
+    // here we enter last survival area, in order to avoid multiple
+    // "quit-application" notifications caused by late window closings
+    const appStartup = Components.classes['@mozilla.org/toolkit/app-startup;1']
+                                 .getService(Components.interfaces.nsIAppStartup);
+    try {
+      appStartup.enterLastWindowClosingSurvivalArea();
+
+      this.Sanitizer.onShutdown();
+
+    } catch(ex) {
+    } finally {
+      appStartup.exitLastWindowClosingSurvivalArea();
+    }
   },
 
   // returns the (cached) Sanitizer constructor
