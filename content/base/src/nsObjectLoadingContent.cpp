@@ -845,7 +845,7 @@ nsObjectLoadingContent::GetCapabilities() const
 void
 nsObjectLoadingContent::Fallback(PRBool aNotify)
 {
-  AutoNotifier(this, aNotify);
+  AutoNotifier notifier(this, aNotify);
 
   UnloadContent();
 }
