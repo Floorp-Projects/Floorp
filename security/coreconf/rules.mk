@@ -137,22 +137,6 @@ realclean clobber_all::
 	rm -rf $(wildcard *.OBJ) dist $(ALL_TRASH)
 	+$(LOOP_OVER_DIRS)
 
-#ifdef ALL_PLATFORMS
-#all_platforms:: $(NFSPWD)
-#	@d=`$(NFSPWD)`;							\
-#	if test ! -d LOGS; then rm -rf LOGS; mkdir LOGS; fi;		\
-#	for h in $(PLATFORM_HOSTS); do					\
-#		echo "On $$h: $(MAKE) $(ALL_PLATFORMS) >& LOGS/$$h.log";\
-#		rsh $$h -n "(chdir $$d;					\
-#			     $(MAKE) $(ALL_PLATFORMS) >& LOGS/$$h.log;	\
-#			     echo DONE) &" 2>&1 > LOGS/$$h.pid &	\
-#		sleep 1;						\
-#	done
-#
-#$(NFSPWD):
-#	cd $(@D); $(MAKE) $(@F)
-#endif
-
 #######################################################################
 # Double-Colon rules for populating the binary release model.         #
 #######################################################################

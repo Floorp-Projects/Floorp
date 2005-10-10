@@ -219,8 +219,7 @@ MKDEPENDENCIES  = $(OBJDIR_NAME)/depend.mk
 # defined, the default is "install using relative symbolic
 # links".  The two possible values are "copy", which copies files
 # but preserves source mtime, and "absolute_symlink", which
-# installs using absolute symbolic links.  The "absolute_symlink"
-# option requires NFSPWD.
+# installs using absolute symbolic links.
 #   - THIS IS NOT PART OF THE NEW BINARY RELEASE PLAN for 9/30/97
 #   - WE'RE KEEPING IT ONLY FOR BACKWARDS COMPATIBILITY
 ####################################################################
@@ -233,7 +232,7 @@ else
 	ifeq ($(NSDISTMODE),absolute_symlink)
 		# install using absolute symbolic links
 		INSTALL  = $(NSINSTALL)
-		INSTALL += -L `$(NFSPWD)`
+		INSTALL += -L `pwd`
 	else
 		# install using relative symbolic links
 		INSTALL  = $(NSINSTALL)
