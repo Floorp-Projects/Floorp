@@ -84,6 +84,16 @@ extern "C" {
 #include <gdk/gdkx.h>
 #endif
 
+/*
+ * The quartz and win32 backends in cairo currently (1.0.x) don't
+ * implement acceleration to be useful, and in fact slow down
+ * rendering due to the repeated locking/unlocking of the target
+ * surface.  Change these to defines if you want to test the native
+ * surfaces.
+ */
+#undef MOZ_ENABLE_QUARTZ_SURFACE
+#undef MOZ_ENABLE_WIN32_SURFACE
+
 /**
  * \addtogroup cairo_renderer Cairo Rendering Engine
  * @{
@@ -132,6 +142,7 @@ private:
 
   PRUint16 mRenderMode;
   PRPackedBool mOwnsCR;
+  PRPackedBool mPreBlendImage;
 };
 
 
@@ -178,6 +189,7 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   NS_ASSERTION(mMozContext, "empty rendering context");
 
   mRenderMode = SVG_RENDER_MODE_NORMAL;
+  mPreBlendImage = PR_FALSE;
 
 #if defined(MOZ_ENABLE_CAIRO_GFX)
   mOwnsCR = PR_FALSE;
@@ -188,7 +200,7 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
 
 #else // !MOZ_ENABLE_CAIRO_GFX
   cairo_surface_t* cairoSurf = nsnull;
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(MOZ_ENABLE_QUARTZ_SURFACE)
   nsIDrawingSurface *surface;
   ctx->GetDrawingSurface(&surface);
   mSurface = do_QueryInterface(surface);
@@ -241,12 +253,16 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
 
   PRInt32 canRaster;
   surface->GetTECHNOLOGY(&canRaster);
+  if (canRaster == DT_RASPRINTER)
+    mPreBlendImage = PR_TRUE;
+#if defined(MOZ_ENABLE_WIN32_SURFACE)
   if (canRaster != DT_RASPRINTER) {
     HDC hdc;
     surface->GetDimensions(&mWidth, &mHeight);
     surface->GetDC(&hdc);
     cairoSurf = cairo_win32_surface_create(hdc);
   }
+#endif
 #elif defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_GTK)
   nsDrawingSurfaceGTK *surface;
   ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
@@ -288,11 +304,19 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
     mContainer->Init(mWidth, mHeight, nsnull);
     
     mBuffer = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
+    if (mPreBlendImage) {
 #ifdef XP_WIN
-    mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::BGR, 24);
+      mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::BGR, 24);
 #else
-    mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB_A8, 24);
+      mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB, 24);
 #endif
+    } else {
+#ifdef XP_WIN
+      mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::BGR_A8, 24);
+#else
+      mBuffer->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB_A8, 24);
+#endif
+    }
     mContainer->AppendFrame(mBuffer);
 
     mData = (PRUint8 *)calloc(4 * mWidth * mHeight, 1);
@@ -418,38 +442,37 @@ nsSVGCairoCanvas::Clear(nscolor color)
 // but all this is going to go away in 1.9 so making it shareable is
 // a bit of unnecessary pain
 static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 aHeight,
-    gfxIImageFrame* aImage)
+                                       gfxIImageFrame* aImage, PRBool aPreBlend)
 {
-  PRUint8 *alphaBits, *rgbBits;
-  PRUint32 alphaLen, rgbLen;
-  PRUint32 alphaStride, rgbStride;
+  PRUint8 *alphaBits = nsnull, *rgbBits;
+  PRUint32 alphaLen = 0, rgbLen;
+  PRUint32 alphaStride = 0, rgbStride;
 
   nsresult rv = aImage->LockImageData();
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-#ifndef XP_WIN
-  rv = aImage->LockAlphaData();
-  if (NS_FAILED(rv)) {
-    aImage->UnlockImageData();
-    return rv;
+  if (!aPreBlend) {
+    rv = aImage->LockAlphaData();
+    if (NS_FAILED(rv)) {
+      aImage->UnlockImageData();
+      return rv;
+    }
   }
-#endif
 
   rv = aImage->GetImageBytesPerRow(&rgbStride);
   rv |= aImage->GetImageData(&rgbBits, &rgbLen);
 
-#ifndef XP_WIN
-  rv |= aImage->GetAlphaBytesPerRow(&alphaStride);
-  rv |= aImage->GetAlphaData(&alphaBits, &alphaLen);
-#endif
+  if (!aPreBlend) {
+    rv |= aImage->GetAlphaBytesPerRow(&alphaStride);
+    rv |= aImage->GetAlphaData(&alphaBits, &alphaLen);
+  }
 
   if (NS_FAILED(rv)) {
     aImage->UnlockImageData();
-#ifndef XP_WIN
-    aImage->UnlockAlphaData();
-#endif
+    if (!aPreBlend)
+      aImage->UnlockAlphaData();
     return rv;
   }
 
@@ -466,9 +489,7 @@ static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 a
       rowIndex = aHeight - j - 1;
 
     PRUint8 *outrowrgb = rgbBits + (rgbStride * rowIndex);
-#ifndef XP_WIN
     PRUint8 *outrowalpha = alphaBits + (alphaStride * rowIndex);
-#endif
 
     for (PRUint32 i = 0; i < (PRUint32) aWidth; i++) {
 #ifdef IS_LITTLE_ENDIAN
@@ -495,9 +516,8 @@ static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 a
         r = (r * 255 + a / 2) / a;
       }
 
-#ifndef XP_WIN
-      *outrowalpha++ = a;
-#endif
+      if (!aPreBlend)
+        *outrowalpha++ = a;
 
 #ifdef XP_MACOSX
       // On the mac, RGB_A8 is really RGBX_A8
@@ -507,24 +527,33 @@ static nsresult CopyCairoImageToIImage(PRUint8* aData, PRInt32 aWidth, PRInt32 a
 #ifdef XP_WIN
       // On windows, RGB_A8 is really BGR_A8.
       // in fact, BGR_A8 is also BGR_A8.
-      // Preblend with white since win32 printing can't deal with RGBA
-      MOZ_BLEND(*outrowrgb++, 255, b, (unsigned)a);
-      MOZ_BLEND(*outrowrgb++, 255, g, (unsigned)a);
-      MOZ_BLEND(*outrowrgb++, 255, r, (unsigned)a);
+      if (!aPreBlend) {
+        *outrowrgb++ = b;
+        *outrowrgb++ = g;
+        *outrowrgb++ = r;
+      } else {
+        MOZ_BLEND(*outrowrgb++, 255, b, (unsigned)a);
+        MOZ_BLEND(*outrowrgb++, 255, g, (unsigned)a);
+        MOZ_BLEND(*outrowrgb++, 255, r, (unsigned)a);
+      }
 #else
-      *outrowrgb++ = r;
-      *outrowrgb++ = g;
-      *outrowrgb++ = b;
+      if (!aPreBlend) {
+        *outrowrgb++ = r;
+        *outrowrgb++ = g;
+        *outrowrgb++ = b;
+      } else {
+        MOZ_BLEND(*outrowrgb++, 255, r, (unsigned)a);
+        MOZ_BLEND(*outrowrgb++, 255, g, (unsigned)a);
+        MOZ_BLEND(*outrowrgb++, 255, b, (unsigned)a);
+      }
 #endif
     }
   }
 
-#ifndef XP_WIN
-  rv = aImage->UnlockAlphaData();
-#else
-  rv = NS_OK;
-#endif
-
+  if (!aPreBlend)
+    rv = aImage->UnlockAlphaData();
+  else
+    rv = NS_OK;
   rv |= aImage->UnlockImageData();
   if (NS_FAILED(rv))
     return rv;
@@ -555,7 +584,7 @@ nsSVGCairoCanvas::Flush()
     nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(mBuffer));
     if (ireq) {
       nsCOMPtr<gfxIImageFrame> img(do_GetInterface(ireq));
-      CopyCairoImageToIImage(mData, mWidth, mHeight, img);
+      CopyCairoImageToIImage(mData, mWidth, mHeight, img, mPreBlendImage);
     }
     mContainer->DecodingComplete();
 
