@@ -295,8 +295,15 @@ void
 nsHTMLAppletElement::StartAppletLoad(PRBool aNotify)
 {
   nsAutoString uri;
-  GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, uri);
-  ObjectURIChanged(uri, aNotify, NS_LITERAL_CSTRING("application/x-java-vm"), PR_TRUE);
+  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, uri);
+  if (rv != NS_CONTENT_ATTR_NOT_THERE) {
+    ObjectURIChanged(uri, aNotify,
+                     NS_LITERAL_CSTRING("application/x-java-vm"), PR_TRUE);
+  } else {
+    // The constructor set the type to eType_Plugin; but if we have no code
+    // attribute, then we aren't really a plugin
+    Fallback(aNotify);
+  }
 }
 
 PRInt32
