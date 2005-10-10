@@ -347,7 +347,7 @@ function CreateCCK()
   CCKWriteInstallRDF(destdir);
   CCKWriteInstallJS(destdir);  
   CCKZip("cck.xpi", destdir,
-         "chrome", "components", "defaults", "plugins", "searchplugins", "chrome.manifest", "install.rdf");
+         "chrome", "components", "defaults", "plugins", "searchplugins", "chrome.manifest", "install.rdf", "install.js");
 }
 
 /* This function takes a file in the chromedir and creates a real file */
