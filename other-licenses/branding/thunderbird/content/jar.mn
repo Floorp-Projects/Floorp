@@ -4,6 +4,7 @@ messenger.jar:
   content/branding/about-thunderbird.png         (about-thunderbird.png)
   content/branding/thunderbird-wizard-badge.png  (thunderbird-wizard-badge.png)
   content/branding/thunderbird-watermark.png     (thunderbird-watermark.png)
+  content/branding/icon64.png                    (icon64.png)
 #ifdef XP_WIN
   content/branding/uninstall.properties          (uninstall.properties)
 #endif
