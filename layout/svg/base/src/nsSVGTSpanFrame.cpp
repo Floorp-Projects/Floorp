@@ -80,17 +80,29 @@ nsSVGTSpanFrame::nsSVGTSpanFrame()
 
 nsSVGTSpanFrame::~nsSVGTSpanFrame()
 {
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> element = do_QueryInterface(mContent);
+
   // clean up our listener refs:
   {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetX();
-    if (lengthList)
-      NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
+    nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
+    element->GetX(getter_AddRefs(animLengthList));
+    if (animLengthList) {
+      nsCOMPtr<nsIDOMSVGLengthList> lengthList;
+      animLengthList->GetAnimVal(getter_AddRefs(lengthList));
+      if (lengthList)
+        NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
+    }
   }
 
   {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetY();
-    if (lengthList)
-      NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
+    nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
+    element->GetY(getter_AddRefs(animLengthList));
+    if (animLengthList) {
+      nsCOMPtr<nsIDOMSVGLengthList> lengthList;
+      animLengthList->GetAnimVal(getter_AddRefs(lengthList));
+      if (lengthList)
+        NS_REMOVE_SVGVALUE_OBSERVER(lengthList);
+    }
   }
 
   {
@@ -108,17 +120,29 @@ nsSVGTSpanFrame::~nsSVGTSpanFrame()
 
 nsresult nsSVGTSpanFrame::InitSVG()
 {
+  nsCOMPtr<nsIDOMSVGTextPositioningElement> element = do_QueryInterface(mContent);
+
   // set us up as a listener for various <tspan>-properties: 
   {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetX();
-    if (lengthList)
-      NS_ADD_SVGVALUE_OBSERVER(lengthList);
+    nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
+    element->GetX(getter_AddRefs(animLengthList));
+    if (animLengthList) {
+      nsCOMPtr<nsIDOMSVGLengthList> lengthList;
+      animLengthList->GetAnimVal(getter_AddRefs(lengthList));
+      if (lengthList)
+        NS_ADD_SVGVALUE_OBSERVER(lengthList);
+    }
   }
 
   {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList = GetY();
-    if (lengthList)
-      NS_ADD_SVGVALUE_OBSERVER(lengthList);
+    nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
+    element->GetY(getter_AddRefs(animLengthList));
+    if (animLengthList) {
+      nsCOMPtr<nsIDOMSVGLengthList> lengthList;
+      animLengthList->GetAnimVal(getter_AddRefs(lengthList));
+      if (lengthList)
+        NS_ADD_SVGVALUE_OBSERVER(lengthList);
+    }
   }
 
   {
@@ -272,15 +296,10 @@ NS_IMETHODIMP
 nsSVGTSpanFrame::DidModifySVGObservable (nsISVGValue* observable,
                                          nsISVGValue::modificationType aModType)
 {
+  nsISVGTextFrame* text_frame = GetTextFrame();
+  if (text_frame)
+    text_frame->NotifyGlyphMetricsChange(this);
   
-  nsIFrame* kid = mFrames.FirstChild();
-  while (kid) {
-    nsISVGChildFrame* SVGFrame=0;
-    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
-    if (SVGFrame)
-      SVGFrame->NotifyCanvasTMChanged(PR_FALSE); // XXX
-    kid = kid->GetNextSibling();
-  }  
   return NS_OK;
 }
 
