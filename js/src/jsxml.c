@@ -2629,6 +2629,10 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
       default:;
     }
 
+    /* After this point, control must flow through label out: to exit. */
+    if (!JS_EnterLocalRootScope(cx))
+        return NULL;
+
     /* ECMA-357 10.2.1 step 8 onward: handle ToXMLString on an XML element. */
     if (!ancestorNSes) {
         XMLArrayInit(cx, &empty, 0);
@@ -2835,7 +2839,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
         if (pretty && indentKids) {
             if (!GetUint32XMLSetting(cx, js_prettyIndent_str, &i))
-                return NULL;
+                goto out;
             nextIndentLevel = indentLevel + i;
         } else {
             nextIndentLevel = 0;
@@ -2877,6 +2881,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
 
     str = js_NewString(cx, sb.base, STRING_BUFFER_OFFSET(&sb), 0);
 out:
+    JS_LeaveLocalRootScope(cx);
     if (!str)
         js_FinishStringBuffer(&sb);
     XMLArrayFinish(cx, &decls);
