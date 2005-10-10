@@ -4726,7 +4726,7 @@ nsDocument::IsSafeToFlush() const
   PRBool isSafeToFlush = PR_TRUE;
   PRInt32 i = 0, n = GetNumberOfShells();
   while (i < n && isSafeToFlush) {
-    nsCOMPtr<nsIPresShell> shell = GetShellAt(i);
+    nsIPresShell* shell = GetShellAt(i);
 
     if (shell) {
       shell->IsSafeToFlush(isSafeToFlush);
