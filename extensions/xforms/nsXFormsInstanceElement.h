@@ -92,7 +92,8 @@ private:
   nsCOMPtr<nsIDOMDocument>    mOriginalDocument;
   nsIDOMElement              *mElement;
   nsCOMPtr<nsIStreamListener> mListener;
-  PRBool                      mIgnoreAttributeChanges;
+  PRBool                      mAddingChildren;
+  PRBool                      mLazy;
   nsCOMPtr<nsIChannel>        mChannel;
 };
 

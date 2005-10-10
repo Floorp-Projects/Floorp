@@ -1176,50 +1176,31 @@ nsXFormsUtils::MakeUniqueAndSort(nsCOMArray<nsIDOMNode> *aArray)
 
 /* static */ nsresult
 nsXFormsUtils::GetInstanceNodeForData(nsIDOMNode             *aInstanceDataNode,
-                                      nsIModelElementPrivate *aModel,
                                       nsIDOMNode             **aInstanceNode)
 {
   NS_ENSURE_ARG(aInstanceDataNode);
-  NS_ENSURE_ARG(aModel);
   NS_ENSURE_ARG_POINTER(aInstanceNode);
   *aInstanceNode = nsnull;
 
-  /* We want to get at the <xf:instance> that aInstanceDataNode belongs to.
-     We get all xf:instance nodes in the aModel, QI it to nsIInstanceElementPrivate
-     and compare its document to the document aInstanceDataNode lives in.
-   */
-
-  nsCOMPtr<nsIDOMDocument> instanceDoc;
-  aInstanceDataNode->GetOwnerDocument(getter_AddRefs(instanceDoc));
+  nsCOMPtr<nsIDOMDocument> instanceDOMDoc;
+  aInstanceDataNode->GetOwnerDocument(getter_AddRefs(instanceDOMDoc));
   // owner doc is null when the data node is the document (e.g., ref="/")
-  if (!instanceDoc)
-    instanceDoc = do_QueryInterface(aInstanceDataNode);
+  if (!instanceDOMDoc) {
+    instanceDOMDoc = do_QueryInterface(aInstanceDataNode);
+  }
+
+  nsCOMPtr<nsIDocument> instanceDoc(do_QueryInterface(instanceDOMDoc));
   NS_ENSURE_TRUE(instanceDoc, NS_ERROR_UNEXPECTED);
 
-  nsCOMArray<nsIInstanceElementPrivate> *instList = nsnull;
-  aModel->GetInstanceList(&instList);
-  NS_ENSURE_TRUE(instList, NS_ERROR_FAILURE);
+  nsISupports* owner =
+    NS_STATIC_CAST(
+      nsISupports*,
+      instanceDoc->GetProperty(nsXFormsAtoms::instanceDocumentOwner));
 
-  PRUint32 i;
-  PRUint32 childCount = instList->Count();
-  for (i = 0; i < childCount; ++i) {
-    nsCOMPtr<nsIInstanceElementPrivate> instPriv = instList->ObjectAt(i); 
-
-    nsCOMPtr<nsIDOMDocument> tmpDoc;
-    instPriv->GetDocument(getter_AddRefs(tmpDoc));
-
-    if (tmpDoc == instanceDoc) {
-      // ok, so we found the instance element that contains the provided
-      // aInstanceDataNode.  Now set the return value.
-      nsCOMPtr<nsIDOMElement> instanceElement;
-      instPriv->GetElement(getter_AddRefs(instanceElement));
-      if (instanceElement) {
-        nsCOMPtr<nsIDOMNode> node = do_QueryInterface(instanceElement);
-        node.swap(*aInstanceNode);
-        return NS_OK;
-      }
-
-    }
+  nsCOMPtr<nsIDOMNode> instanceNode(do_QueryInterface(owner));
+  if (instanceNode) {
+    NS_ADDREF(*aInstanceNode = instanceNode);
+    return NS_OK;
   }
 
   // Two possibilities.  No instance nodes in model (which should never happen)
@@ -1430,7 +1411,7 @@ FindRepeatContext(nsIDOMElement *aElement, PRBool aFindContainer)
   // save running up the tree?
   nsCOMPtr<nsIDOMNode> context, temp;
   aElement->GetParentNode(getter_AddRefs(context));
-  nsresult rv;
+  nsresult rv = NS_OK;
   while (context) {
     if (nsXFormsUtils::IsXFormsElement(context,
                                        aFindContainer ?

@@ -42,7 +42,12 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xbl="http://www.mozilla.org/xbl"
-   xmlns:xforms="http://www.w3.org/2002/xforms">
+   xmlns:xforms="http://www.w3.org/2002/xforms"
+   xmlns:lazy="http://www.mozilla.org/projects/xforms/2005/lazy">
+
+  <binding id="xforms-lazy-instance">
+    <content><xforms:instance lazy:lazy="true"/><children/></content>
+  </binding>
 
   <!-- BASE -->
   <binding id="xformswidget-base">

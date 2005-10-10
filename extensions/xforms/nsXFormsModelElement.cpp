@@ -75,7 +75,10 @@
 #include "nsISchema.h"
 #include "nsAutoPtr.h"
 #include "nsArray.h"
-#include "nsXFormsLazyInstanceElement.h"
+#include "nsIDOMDocumentXBL.h"
+
+#define XFORMS_LAZY_INSTANCE_BINDING \
+  "chrome://xforms/content/xforms.xml#xforms-lazy-instance"
 
 #ifdef DEBUG
 //#define DEBUG_MODEL
@@ -411,16 +414,43 @@ nsXFormsModelElement::DoneAddingChildren()
   // If all of the children are added and there aren't any instance elements,
   // yet, then we need to make sure that one is ready in case the form author
   // is using lazy authoring.
+  // Lazy <xforms:intance> element is created in anonymous content using XBL.
   PRUint32 instCount = mInstanceList.Count();
   if (!instCount) {
     nsCOMPtr<nsIDOMDocument> domDoc;
     mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-    if (domDoc) {
-      nsXFormsLazyInstanceElement *lazyInstance = 
-                                             new nsXFormsLazyInstanceElement();
-      lazyInstance->CreateLazyInstanceDocument(domDoc);
-      AddInstanceElement(lazyInstance);
-      mLazyModel = PR_TRUE;
+    nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(domDoc));
+    if (xblDoc) {
+      nsresult rv =
+        xblDoc->AddBinding(mElement,
+                           NS_LITERAL_STRING(XFORMS_LAZY_INSTANCE_BINDING));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      NS_WARN_IF_FALSE(mInstanceList.Count() == 1, 
+                       "Installing lazy instance didn't succeed!");
+
+      nsCOMPtr<nsIDOMNodeList> list;
+      xblDoc->GetAnonymousNodes(mElement, getter_AddRefs(list));
+      if (list) {
+        PRUint32 childCount = 0;
+        if (list) {
+          list->GetLength(&childCount);
+        }
+
+        for (PRUint32 i = 0; i < childCount; ++i) {
+          nsCOMPtr<nsIDOMNode> item;
+          list->Item(i, getter_AddRefs(item));
+          nsCOMPtr<nsIInstanceElementPrivate> instance =
+            do_QueryInterface(item);
+          if (instance) {
+            rv = instance->InitializeLazyInstance();
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            mLazyModel = PR_TRUE;
+            break;
+          }
+        }
+      }
     }
   }
 

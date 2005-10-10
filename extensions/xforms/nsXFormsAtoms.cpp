@@ -64,6 +64,7 @@ nsIAtom *nsXFormsAtoms::readyForBindProperty;
 nsIAtom *nsXFormsAtoms::accesskey;
 nsIAtom *nsXFormsAtoms::fatalError;
 nsIAtom *nsXFormsAtoms::isInstanceDocument;
+nsIAtom *nsXFormsAtoms::instanceDocumentOwner;
 
 const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "src",                      &nsXFormsAtoms::src },
@@ -90,7 +91,8 @@ const nsStaticAtom nsXFormsAtoms::Atoms_info[] = {
   { "ReadyForBindProperty",     &nsXFormsAtoms::readyForBindProperty },
   { "accesskey",                &nsXFormsAtoms::accesskey },
   { "fatalError",               &nsXFormsAtoms::fatalError },
-  { "isInstanceDocument",       &nsXFormsAtoms::isInstanceDocument }
+  { "isInstanceDocument",       &nsXFormsAtoms::isInstanceDocument },
+  { "instanceDocumentOwner",    &nsXFormsAtoms::instanceDocumentOwner }
 };
 
 void

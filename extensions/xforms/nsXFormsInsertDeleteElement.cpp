@@ -221,7 +221,7 @@ nsXFormsInsertDeleteElement::HandleAction(nsIDOMEvent            *aEvent,
   NS_ENSURE_STATE(modelElem);
 
   nsCOMPtr<nsIDOMNode> instNode;
-  rv = nsXFormsUtils::GetInstanceNodeForData(resNode, model, getter_AddRefs(instNode));
+  rv = nsXFormsUtils::GetInstanceNodeForData(resNode, getter_AddRefs(instNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = nsXFormsUtils::DispatchEvent(instNode,

@@ -526,7 +526,7 @@ nsXFormsSubmissionElement::LoadReplaceInstance(nsIChannel *channel)
     rv = GetBoundInstanceData(getter_AddRefs(data));
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIDOMNode> instanceNode;
-      rv = nsXFormsUtils::GetInstanceNodeForData(data, model,
+      rv = nsXFormsUtils::GetInstanceNodeForData(data,
                                                  getter_AddRefs(instanceNode));
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -839,8 +839,7 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
   newDoc->GetDocumentElement(getter_AddRefs(newDocElm));
 
   nsCOMPtr<nsIDOMNode> instanceNode;
-  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  rv = nsXFormsUtils::GetInstanceNodeForData(data, model, getter_AddRefs(instanceNode));
+  rv = nsXFormsUtils::GetInstanceNodeForData(data, getter_AddRefs(instanceNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // add namespaces from the main document to the submission document, but only
@@ -873,6 +872,7 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // handle namespaces on the model
+    nsCOMPtr<nsIModelElementPrivate> model = GetModel();
     node = do_QueryInterface(model);
     NS_ENSURE_STATE(node);
     rv = AddNameSpaces(newDocElm, node, prefixHash);
