@@ -611,6 +611,23 @@
           aXferData.data = BookmarksUtils.getXferDataFromSelection(selection);
           if (aEvent.ctrlKey)
             aDragAction.action = kDSIID.DRAGDROP_ACTION_COPY;
+        },
+        onDragOver: function (aEvent, aFlavour, aDragSession)
+        {
+          // allow dropping of bookmarks below the tree
+          if (aDragSession.sourceNode == this.mOuter)
+            aDragSession.canDrop = true;
+        },
+        // the actual dropping happens in the nsIXULTreeBuilderObserver below
+        onDrop: function (aEvent, aXferData, aDragSession) { },
+        getSupportedFlavours: function ()
+        {
+          var flavourSet = new FlavourSet();
+          flavourSet.appendFlavour("moz/rdfitem");
+          flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+          flavourSet.appendFlavour("text/x-moz-url");
+          flavourSet.appendFlavour("text/unicode");
+          return flavourSet;
         }
       })
       ]]></field>      
