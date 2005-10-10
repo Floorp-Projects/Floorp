@@ -2019,24 +2019,9 @@ nsHTMLSelectElement::GetHasOptGroups(PRBool* aHasGroups)
 void
 nsHTMLSelectElement::DispatchDOMEvent(const nsAString& aName)
 {
-  nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(GetOwnerDoc());
-  if (domDoc) {
-    nsCOMPtr<nsIDOMEvent> selectEvent;
-    domDoc->CreateEvent(NS_LITERAL_STRING("Events"),
-                        getter_AddRefs(selectEvent));
-
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(selectEvent));
-
-    if (privateEvent) {
-      selectEvent->InitEvent(aName, PR_TRUE, PR_TRUE);
-      privateEvent->SetTrusted(PR_TRUE);
-
-      nsCOMPtr<nsIDOMEventTarget> target =
-        do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this));
-      PRBool defaultActionEnabled;
-      target->DispatchEvent(selectEvent, &defaultActionEnabled);
-    }
-  }
+  nsContentUtils::DispatchTrustedEvent(GetOwnerDoc(),
+                                       NS_STATIC_CAST(nsIContent*, this),
+                                       aName, PR_TRUE, PR_TRUE);
 }
 
 //----------------------------------------------------------------------

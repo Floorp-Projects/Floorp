@@ -1149,21 +1149,11 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     }
 
     if (fireSelectionHandler && doc) {
-      nsCOMPtr<nsIDOMDocumentEvent> docEvent(do_QueryInterface(doc));
-      nsCOMPtr<nsIDOMEvent> event;
-      docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-
-      if (privateEvent) {
-        event->InitEvent(NS_LITERAL_STRING("select"), PR_FALSE, PR_TRUE);
-        privateEvent->SetTrusted(PR_TRUE);
-
-        nsCOMPtr<nsIDOMEventTarget> target =
-            do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
-        NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
-        PRBool defaultActionEnabled;
-        target->DispatchEvent(event, &defaultActionEnabled);
-      }
+      nsContentUtils::DispatchTrustedEvent(doc,
+                                           NS_STATIC_CAST(nsIContent*, this),
+                                           NS_LITERAL_STRING("select"),
+                                           PR_FALSE,
+                                           PR_TRUE);
     }
 
     // This will cause the script object to be unrooted for each

@@ -592,26 +592,9 @@ nsObjectFrame::SetInitialChildList(nsPresContext*  aPresContext,
 static void
 FirePluginNotFoundEvent(nsIContent *aTarget)
 {
-  nsCOMPtr<nsIDOMDocumentEvent> eventDoc =
-    do_QueryInterface(aTarget->GetDocument());
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(aTarget));
-
-  if (eventDoc) {
-    nsCOMPtr<nsIDOMEvent> event;
-    nsresult rv = eventDoc->CreateEvent(NS_LITERAL_STRING("Events"),
-                                        getter_AddRefs(event));
-    if (NS_SUCCEEDED(rv)) {
-      rv = event->InitEvent(NS_LITERAL_STRING("PluginNotFound"), PR_TRUE,
-                            PR_TRUE);
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-        privateEvent->SetTrusted(PR_TRUE);
-
-        PRBool defaultActionEnabled;
-        target->DispatchEvent(event, &defaultActionEnabled);
-      }
-    }
-  }
+  nsContentUtils::DispatchTrustedEvent(aTarget->GetDocument(), aTarget,
+                                       NS_LITERAL_STRING("PluginNotFound"),
+                                       PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP 
