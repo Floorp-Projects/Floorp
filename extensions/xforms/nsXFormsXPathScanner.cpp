@@ -363,29 +363,29 @@ nsXFormsXPathScanner::ScanQName()
     second = ScanNCName();
   }
 
-  nsDependentSubstring image = Substring(mExpression, Offset());
+  nsDependentSubstring image = Substring(mExpression, Offset() + 1);
 
   if (SolveDiambiguate()) {
-    if (StringBeginsWith(image, NS_LITERAL_STRING(" and")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("and")))
       return AND;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" or")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("or")))
       return OR;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" mod")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("mod")))
       return MOD;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" div")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("div")))
       return DIV;
     return ERRORXPATHTOKEN;
   }
 
   PRUnichar c = NextNonWhite();
   if (c == '(') {
-    if (StringBeginsWith(image, NS_LITERAL_STRING(" comment")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("comment")))
       return COMMENT;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" text")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("text")))
       return TEXT;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" processing-instruction")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("processing-instruction")))
       return PI;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" node")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("node")))
       return NODE;
 
     return FUNCTIONNAME;
@@ -393,32 +393,33 @@ nsXFormsXPathScanner::ScanQName()
 
   PRInt32 of = GetOffsetForNonWhite();
   if (PeekChar(of) == ':' && PeekChar(of + 1) == ':') {
-    if (StringBeginsWith(image, NS_LITERAL_STRING(" ancestor")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("ancestor")))
       return ANCESTOR;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" ancestor-or-self")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("ancestor-or-self")))
       return ANCESTOR_OR_SELF;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" attribute")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("attribute")))
       return ATTRIBUTE;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" child")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("child")))
       return CHILD;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" descendant")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("descendant")))
       return DESCENDANT;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" descendant-or-self")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("descendant-or-self")))
       return DESCENDANT_OR_SELF;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" following")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("following")))
       return FOLLOWING;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" following-sibling")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("following-sibling")))
       return FOLLOWING_SIBLING;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" namespace")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("namespace")))
       return NAMESPACE;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" parent")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("parent")))
       return PARENT;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" preceding")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("preceding")))
       return PRECEDING;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" preceding-sibling")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("preceding-sibling")))
       return PRECEDING_SIBLING;
-    else if (StringBeginsWith(image, NS_LITERAL_STRING(" self")))
+    if (StringBeginsWith(image, NS_LITERAL_STRING("self")))
       return SELF;
+
     return ERRORXPATHTOKEN;
   }
   return second != NONE ? QNAME : NCNAME;

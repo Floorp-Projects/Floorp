@@ -583,6 +583,8 @@ nsXFormsXPathParser::PopToken()
   if (mPeek == nsXFormsXPathScanner::WHITESPACE) { // Skip whitespaces
     mPeek = mScanner.NextToken();
   }
+  NS_WARN_IF_FALSE(mPeek != nsXFormsXPathScanner::ERRORXPATHTOKEN,
+                   "Scanner returned ERROR token!");
   return temp;
 }
 
