@@ -68,6 +68,8 @@ var MigrationWizard = {
       nothing.hidden = false;      
     }
 	
+    this.onImportSourcePageShow();
+	
     // Behavior alert! If we were given a migrator already, then we are going to perform migration
     // with that migrator, skip the wizard screen where we show all of the migration sources and 
     // jump right into migration.
