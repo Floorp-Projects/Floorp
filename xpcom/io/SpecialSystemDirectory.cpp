@@ -52,9 +52,12 @@
 #include <string.h>
 #include <direct.h>
 
-// This is not defined by VC6. 
+// These are not defined by VC6. 
 #ifndef CSIDL_LOCAL_APPDATA
 #define CSIDL_LOCAL_APPDATA             0x001C
+#endif
+#ifndef CSIDL_PROGRAM_FILES
+#define CSIDL_PROGRAM_FILES             0x0026
 #endif
 
 #elif defined(XP_OS2)
