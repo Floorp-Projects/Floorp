@@ -43,18 +43,6 @@ pref("accessibility.tabfocus", 3);
 // What to load in a new tab: 0 = blank, 1 = homepage, 2 = last page
 pref("browser.tabs.startPage", 0);
 
-/*
-// Pick some reasonable OS X default fonts
-// Note: these have lived here forever, but were never actually used (they
-//  were overridden by all.js after being set here). Keeping them just for
-//  posterity, but they're unused.
-pref("font.name.serif.x-western", "Times");
-pref("font.name.sans-serif.x-western", "Lucida Grande");
-pref("font.size.variable.x-western", 15);
-pref("font.size.fixed.x-western", 12);
-pref("font.size.minimum-size.x-western", 10);
-*/
-
 pref("browser.quartz.enable.all_font_sizes", true);
 
 pref("chimera.store_passwords_with_keychain", true);
@@ -96,19 +84,13 @@ pref("browser.enable_automatic_image_resizing", true);
 // this is just the emergency fall-back)
 pref("intl.accept_languages", "en-us, en" );
 
-// enable horizontal scroll by shift+wheel
-pref("mousewheel.horizscroll.withshiftkey.action", 0);
-pref("mousewheel.horizscroll.withshiftkey.numlines", 1);
-pref("mousewheel.horizscroll.withshiftkey.sysnumlines", true);
-
-// enable horizontal scrolling with horizontal scroll wheels
-pref("mousewheel.horizscroll.withnokey.action",0);
-pref("mousewheel.horizscroll.withnokey.numlines",1);
-pref("mousewheel.horizscroll.withnokey.sysnumlines",true);
-
-// make history scrolling with option go the standard way
-pref("mousewheel.horizscroll.withaltkey.action", 2);
-pref("mousewheel.horizscroll.withaltkey.numlines", 1);
+// Scrolling overrides.  For vertical: Command for size, control for history,
+// and alt for a line at a time.  Shift and modifierless scrolls the document.
+// If it's a shift-scroll that comes from a mouse that only scrolls vertically,
+// we get from the system as a horizontal scroll.
+pref("mousewheel.withmetakey.action", 3);
+pref("mousewheel.withcontrolkey.action", 2);
+pref("mousewheel.withaltkey.action",0);
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
