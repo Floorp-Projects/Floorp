@@ -617,10 +617,12 @@ export:: $(SUBMAKEFILES) $(MAKE_DIRS)
 
 tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
+ifdef TOOL_DIRS
 	@for d in $(TOOL_DIRS); do \
 	    $(UPDATE_TITLE) \
 	    $(MAKE) -C $$d libs; \
 	done
+endif
 
 #
 # Rule to create list of libraries for final link
