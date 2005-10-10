@@ -39,6 +39,8 @@
 #include "nsIIncrementalDownload.h"
 #include "nsIRequestObserver.h"
 #include "nsIProgressEventSink.h"
+#include "nsIChannelEventSink.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
 #include "nsIServiceManager.h"
@@ -108,6 +110,8 @@ MakeRangeSpec(const nsInt64 &size, const nsInt64 &maxSize, PRInt32 chunkSize,
 class nsIncrementalDownload : public nsIIncrementalDownload
                             , public nsIStreamListener
                             , public nsIObserver
+                            , public nsIInterfaceRequestor
+                            , public nsIChannelEventSink
                             , public nsSupportsWeakReference
 {
 public:
@@ -117,6 +121,8 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSICHANNELEVENTSINK
 
   nsIncrementalDownload();
 
@@ -236,11 +242,9 @@ nsIncrementalDownload::ProcessTimeout()
 
   // Fetch next chunk
   
-  nsCOMPtr<nsIInterfaceRequestor> callbacks = do_QueryInterface(mObserver);
-
   nsCOMPtr<nsIChannel> channel;
   nsresult rv = NS_NewChannel(getter_AddRefs(channel), mFinalURI, nsnull,
-                              nsnull, callbacks, mLoadFlags);
+                              nsnull, this, mLoadFlags);
   if (NS_FAILED(rv))
     return rv;
 
@@ -290,12 +294,14 @@ nsIncrementalDownload::ReadCurrentSize()
 
 // nsISupports
 
-NS_IMPL_ISUPPORTS6(nsIncrementalDownload,
+NS_IMPL_ISUPPORTS8(nsIncrementalDownload,
                    nsIIncrementalDownload,
                    nsIRequest,
                    nsIStreamListener,
                    nsIRequestObserver,
                    nsIObserver,
+                   nsIInterfaceRequestor,
+                   nsIChannelEventSink,
                    nsISupportsWeakReference)
 
 // nsIRequest
@@ -635,6 +641,56 @@ nsIncrementalDownload::Observe(nsISupports *subject, const char *topic,
       Cancel(rv);
   }
   return NS_OK;
+}
+
+// nsIInterfaceRequestor
+
+NS_IMETHODIMP
+nsIncrementalDownload::GetInterface(const nsIID &iid, void **result)
+{
+  if (iid.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    NS_ADDREF_THIS();
+    *result = NS_STATIC_CAST(nsIChannelEventSink *, this);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(mObserver);
+  if (ir)
+    return ir->GetInterface(iid, result);
+
+  return NS_ERROR_NO_INTERFACE;
+}
+
+// nsIChannelEventSink
+
+NS_IMETHODIMP
+nsIncrementalDownload::OnChannelRedirect(nsIChannel *oldChannel,
+                                         nsIChannel *newChannel,
+                                         PRUint32 flags)
+{
+  // In response to a redirect, we need to propogate the Range header.  See bug
+  // 311595.  Any failure code returned from this function aborts the redirect.
+ 
+  nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(oldChannel);
+  NS_ENSURE_STATE(http);
+
+  NS_NAMED_LITERAL_CSTRING(rangeHdr, "Range");
+
+  nsCAutoString rangeVal;
+  http->GetRequestHeader(rangeHdr, rangeVal);
+  NS_ENSURE_STATE(!rangeVal.IsEmpty());
+
+  http = do_QueryInterface(newChannel);
+  NS_ENSURE_STATE(http);
+
+  nsresult rv = http->SetRequestHeader(rangeHdr, rangeVal, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Give the observer a chance to see this redirect notification.
+  nsCOMPtr<nsIChannelEventSink> sink = do_GetInterface(mObserver);
+  if (sink)
+    rv = sink->OnChannelRedirect(oldChannel, newChannel, flags);
+  return rv;
 }
 
 extern NS_METHOD
