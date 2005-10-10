@@ -74,32 +74,46 @@ if (!defined $product || $product eq "") {
     GetVersionTable();
     Bugzilla->login();
 
-   if ( ! Param('useclassification') ) {
-      # just pick the default one
-      $cgi->param(-name => 'classification', -value => (keys %::classdesc)[0]);
-   }
+    if ( ! Param('useclassification') ) {
+        # just pick the default one
+        $cgi->param(-name => 'classification', 
+                    -value => (keys %::classdesc)[0]);
+    }
 
-   if (!$cgi->param('classification')) {
-       my $classifications = Bugzilla->user->get_selectable_classifications();
+    if (!$cgi->param('classification')) {
+        my $classifications = Bugzilla->user->get_selectable_classifications();
+        foreach my $classification (@$classifications) {
+            my $found = 0;
+            foreach my $p (@enterable_products) {
+               if (CanEnterProduct($p)
+                   && IsInClassification($classification->{name},$p)) {
+                       $found = 1; 
+               }
+            }
+            if ($found == 0) {
+                @$classifications = grep($_->{name} ne $classification->{name},
+                                         @$classifications);
+            }
+        }
 
-       if (scalar(@$classifications) == 0) {
-           ThrowUserError("no_products");
-       } 
-       elsif (scalar(@$classifications) > 1) {
-           $vars->{'classifications'} = $classifications;
+        if (scalar(@$classifications) == 0) {
+            ThrowUserError("no_products");
+        } 
+        elsif (scalar(@$classifications) > 1) {
+            $vars->{'classifications'} = $classifications;
 
-           $vars->{'target'} = "enter_bug.cgi";
-           $vars->{'format'} = $cgi->param('format');
+            $vars->{'target'} = "enter_bug.cgi";
+            $vars->{'format'} = $cgi->param('format');
            
-           $vars->{'cloned_bug_id'} = $cgi->param('cloned_bug_id');
+            $vars->{'cloned_bug_id'} = $cgi->param('cloned_bug_id');
 
-           print $cgi->header();
-           $template->process("global/choose-classification.html.tmpl", $vars)
-             || ThrowTemplateError($template->error());
-           exit;        
-       }
-       $cgi->param(-name => 'classification', -value => @$classifications[0]->name);
-   }
+            print $cgi->header();
+            $template->process("global/choose-classification.html.tmpl", $vars)
+               || ThrowTemplateError($template->error());
+            exit;        
+        }
+        $cgi->param(-name => 'classification', -value => @$classifications[0]->name);
+    }
 
     my %products;
     foreach my $p (@enterable_products) {
