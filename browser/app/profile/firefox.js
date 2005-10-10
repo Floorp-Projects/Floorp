@@ -318,18 +318,21 @@ pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/in
 
 // 0=lines, 1=pages, 2=history , 3=text size
 #ifdef XP_MACOSX
-pref("mousewheel.withmetakey.action", 3);
 // On OS X, if the wheel has one axis only, shift+wheel comes through as a
 // horizontal scroll event. Thus, we can't assign anything other than normal
 // scrolling to shift+wheel.
-pref("mousewheel.withshiftkey.action", 0);
-pref("mousewheel.withshiftkey.sysnumlines", false);
-pref("mousewheel.withcontrolkey.action", 2);
+pref("mousewheel.withmetakey.action",3);
+pref("mousewheel.withmetakey.sysnumlines",false);
+pref("mousewheel.withcontrolkey.action",2);
+pref("mousewheel.withcontrolkey.sysnumlines",false);
 #else
 pref("mousewheel.withcontrolkey.action",3);
+pref("mousewheel.withcontrolkey.sysnumlines",false);
 pref("mousewheel.withshiftkey.action",2);
+pref("mousewheel.withshiftkey.sysnumlines",false);
 #endif
 pref("mousewheel.withaltkey.action",0);
+pref("mousewheel.withaltkey.sysnumlines",false);
 
 pref("profile.allow_automigration", false);   // setting to false bypasses automigration in the profile code
 
