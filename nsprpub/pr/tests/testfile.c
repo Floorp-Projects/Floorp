@@ -435,7 +435,7 @@ static PRInt32 PR_CALLBACK FileTest(void)
 PRDir *fd_dir;
 int i, offset, len, rv = 0;
 PRThread *t;
-PRThreadScope scope;
+PRThreadScope scope = PR_GLOBAL_THREAD;
 File_Rdwr_Param *fparamp;
 
 	/*
