@@ -305,7 +305,12 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
     aBuffer += toCopy;
   }
 
+  nsresult rv;
+
   if (mPos == mImageOffset + BITMAPINFOSIZE) {
+    rv = mObserver->OnStartDecode(nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     ProcessInfoHeader();
     if (mBIH.bpp <= 8) {
       switch (mBIH.bpp) {
@@ -327,7 +332,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsresult rv = mImage->Init(mDirEntry.mWidth, mDirEntry.mHeight, mObserver);
+    rv = mImage->Init(mDirEntry.mWidth, mDirEntry.mHeight, mObserver);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (mIsCursor) {
