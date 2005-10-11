@@ -239,23 +239,24 @@ function loadHelpRDF() {
       var iterator = RDFContainer.GetElements();
       while (iterator.hasMoreElements()) {
         var panelDef = iterator.getNext();
-        var panelID = getAttribute(helpFileDS, panelDef, NC_PANELID, null);
 
-        var datasources = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "");
-        // if datasources is "", there's nothing to load
+        var panelID        = getAttribute(helpFileDS, panelDef, NC_PANELID, null);
+        var datasources    = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "");
+        var panelPlatforms = getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform);
+
+        if (panelPlatforms.split(/\s+/).indexOf(platform) == -1)
+          continue; // ignore datasources for other platforms
+
+        // empty datasources are valid on search panel definitions
+        // convert them to "rdf:null" which can be filtered and ignored
         if (!datasources)
-          continue;
+          datasources = "rdf:null";
 
         datasources = normalizeLinks(helpBaseURI, datasources);
 
-        var panelPlatforms = getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform);
-        panelPlatforms = panelPlatforms.split(/\s+/);
-
-        if (panelPlatforms.indexOf(platform) == -1)
-          continue; // ignore datasources for other platforms
-
         var datasourceArray = datasources.split(/\s+/)
-                                          .map(RDF.GetDataSourceBlocking);
+                                         .filter(function(x) { return x != "rdf:null"; })
+                                         .map(RDF.GetDataSourceBlocking);
 
         // Cache Additional Datasources to Augment Search Datasources.
         if (panelID == "search") {
@@ -333,7 +334,7 @@ function filterSeqByPlatform(aDatasource, aNode, aCurrentLevel) {
                                      NC_PLATFORM,
                                      platform);
 
-    if (nodePlatforms.indexOf(platform) == -1) { // node is for another platform
+    if (nodePlatforms.split(/\s+/).indexOf(platform) == -1) { // node is for another platform
       var currentNode = currentTarget.QueryInterface(Components.interfaces.nsIRDFNode);
       // "false" because we don't want to renumber elements in the container
       RDFC.RemoveElement(currentNode, false);
@@ -378,7 +379,8 @@ function getLink(ID) {
 
     // URIs include both the ID part and the base file name,
     // so we need to check for a matching ID in each datasource
-    var tocDSArray = gTocDSList.split(/\s+/);
+    var tocDSArray = gTocDSList.split(/\s+/)
+                               .filter(function(x) { return x != "rdf:null"; });
 
     for (var i = 0; i < tocDSArray.length; i++) {
       var resource = RDF.GetResource(tocDSArray[i] + "#" + ID);
