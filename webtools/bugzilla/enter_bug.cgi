@@ -56,7 +56,6 @@ use vars qw(
   %versions
   %target_milestone
   $proddesc
-  $classdesc
 );
 
 # If we're using bug groups to restrict bug entry, we need to know who the 
@@ -75,9 +74,9 @@ if (!defined $product || $product eq "") {
     Bugzilla->login();
 
     if ( ! Param('useclassification') ) {
-        # just pick the default one
+        # Just use a fake value for the Classification.
         $cgi->param(-name => 'classification', 
-                    -value => (keys %::classdesc)[0]);
+                    -value => '__all');
     }
 
     if (!$cgi->param('classification')) {
@@ -142,7 +141,6 @@ if (!defined $product || $product eq "") {
         }
         $vars->{'proddesc'} = \%products;
         $vars->{'classifications'} = \%classifications;
-        $vars->{'classdesc'} = \%::classdesc;
 
         $vars->{'target'} = "enter_bug.cgi";
         $vars->{'format'} = $cgi->param('format');
