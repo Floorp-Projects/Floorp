@@ -984,74 +984,10 @@ function closeCalendar()
    self.close();
 }
 
-
-/** PUBLIC
-*
-*   Print events using a stylesheet.
-*   Mostly Hack to get going, Should probably be rewritten later when stylesheets are available
-*/
-
-function printEventArray( calendarEventArray, stylesheetName )
-{
-   var xslProcessor = new XSLTProcessor();
-   var domParser = new DOMParser;
-   var xcsDocument = getXcsDocument( calendarEventArray );
-
-   printWindow = window.open( "", "CalendarPrintWindow");
-   if( printWindow )
-   {
-      // if only passsed a filename, assume it is a file in the default directory
-      if( stylesheetName.indexOf( ":" ) == -1 )
-         stylesheetName = convertersDirectory + stylesheetName;
-
-      var stylesheetUrl = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-      stylesheetUrl.spec = convertersDirectory;
-
-      domParser.baseURI = stylesheetUrl;
-      var xslContent = loadFile( stylesheetName );
-      var xslDocument = domParser.parseFromString(xslContent, 'application/xml');
-
-      // hack, might be cleaner to assing xml document directly to printWindow.document
-      // var elementNode = xcsDocument.documentElement;
-      // result.appendChild(elementNode); // doesn't work
-
-      xslProcessor.transformDocument(xcsDocument, xslDocument, printWindow.document, null);
-
-      printWindow.locationbar.visible = false;
-      printWindow.personalbar.visible = false;
-      printWindow.statusbar.visible = false;
-      printWindow.toolbar.visible = false;
-
-      printWindow.print();
-      printWindow.close();
-   }
-}
-
 function print()
 {
-   var args = new Object();
-
-   args.selectedEvents = gCalendarWindow.EventSelection.selectedEvents ;
-   args.selectedDate=gNewDateVariable = gCalendarWindow.getSelectedDate();
-
-   var Offset = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, 
-                           "week.start", 
-                           gCalendarBundle.getString("defaultWeekStart" ) );
-   var WeeksInView = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, 
-                                "weeks.inview", 
-                                gCalendarBundle.getString("defaultWeeksInView" ) );
-   WeeksInView = ( WeeksInView >= 6 ) ? 6 : WeeksInView ;
-
-   var PreviousWeeksInView = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, 
-                                        "previousweeks.inview", 
-                                        gCalendarBundle.getString("defaultPreviousWeeksInView" ) );
-   PreviousWeeksInView = ( PreviousWeeksInView >= WeeksInView - 1 ) ? WeeksInView - 1 : PreviousWeeksInView ;
-
-   args.startOfWeek=Offset;
-   args.weeksInView=WeeksInView;
-   args.prevWeeksInView=PreviousWeeksInView;
-
-   window.openDialog("chrome://calendar/content/printDialog.xul","printdialog","chrome",args);
+    window.openDialog("chrome://calendar/content/printDialog.xul",
+                      "printdialog","chrome");
 }
 
 function getCharPref (prefObj, prefName, defaultValue)

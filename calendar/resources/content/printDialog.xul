@@ -48,7 +48,7 @@
 <?xml-stylesheet href="chrome://calendar/skin/eventDialog.css" ?>
 <?xml-stylesheet href="chrome://calendar/skin/dialogOverlay.css" type="text/css"?>
 
-<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datepicker.css" ?>
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" type="text/css" ?>
 
 <!-- DTD File with all strings specific to the calendar -->
 <!DOCTYPE dialog 
@@ -74,30 +74,9 @@
   var calendarxxxxxx = "&calendar.print.window.title;";
 </script>                                              
    
-<!-- Javascript includes -->
-<script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
-
-<script type="application/x-javascript" >
-var ArrayOfDayNames = new Array();
-
-ArrayOfDayNames[0] = "&day.1.name;";
-ArrayOfDayNames[1] = "&day.2.name;";
-ArrayOfDayNames[2] = "&day.3.name;";
-ArrayOfDayNames[3] = "&day.4.name;";
-ArrayOfDayNames[4] = "&day.5.name;";
-ArrayOfDayNames[5] = "&day.6.name;";
-ArrayOfDayNames[6] = "&day.7.name;";
-
-var windowTitle = "&window.title;";
-var locationTag = "&newevent.location.label;";
-var uriTag = "&newevent.uri.label;";
-var descriptionTag="&newevent.description.label;"
-
-</script>
-
-
-
 <script type="application/x-javascript" src="chrome://calendar/content/printDialog.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/applicationUtil.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
 
 <!-- required for datepicker (probably until bug 58757 fixed) -->
 <script type="application/x-javascript"
@@ -144,31 +123,28 @@ var descriptionTag="&newevent.description.label;"
                         <spacer />
                         <radiogroup id="view-field" >
                            <caption label="&calendar.print.selectviews.label;" />
-                           <radio label="&calendar.monthview.button.label;"
-                                  value="month"
+                           <radio label="&calendar.print.currentview.label;"
+                                  value="currentview"
                                   selected="true" />
-                           <radio label="&calendar.weekview.button.label;"
-                                  value="week"/>
-                           <radio label="&calendar.multiweekview.button.label;"
-                                  value="multiweek"/>
-                           <radio label="&calendar.dayview.button.label;"
-                                  value="day"/>
-                           <radio label="&calendar.print.listselected.label;"
+                           <radio id="list" label="&calendar.print.listselected.label;"
                                   value="list"/>
+                           <radio id="custom-range" label="&calendar.print.custom.label;" value="custom"/>
                         </radiogroup>
                      </row>
 
                      <!-- Start Date -->
                      <row align="center">
+                        <spacer />
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.startdate.label;"/>
+                            <datepicker id="start-date-picker" onchange="onDatePick();"/>
+                            <label value="&newevent.enddate.label;"/>
+                            <datepicker id="end-date-picker" onchange="onDatePick();"/>
                         </hbox>
-                        <datepicker id="start-date-picker" value=""
-                         onchange="onDatePick( this );"/>
                      </row>
                      
                      <!-- Private -->
-                     <row align="center">
+                     <row align="center" collapsed="true">
                         <spacer />
                         <checkbox id="private-checkbox"
                                   checked="true"

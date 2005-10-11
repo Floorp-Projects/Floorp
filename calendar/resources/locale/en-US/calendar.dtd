@@ -511,7 +511,9 @@
 <!ENTITY calendar.print.window.title "Print A Calendar">
 <!ENTITY calendar.print.selectoptions.label "Select your options below, and use OK to print">
 <!ENTITY calendar.print.selectviews.label "Select View to Print">
+<!ENTITY calendar.print.currentview.label "List all events in current view">
 <!ENTITY calendar.print.listselected.label "List Selected Events">
+<!ENTITY calendar.print.custom.label "List events between:">
 <!ENTITY calendar.print.onlyitemsstatus.label "Print only items with this status:">
 <!ENTITY calendar.print.onlyitemscategory.label "Print only items with this category:">
 
