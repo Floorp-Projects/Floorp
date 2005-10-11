@@ -87,7 +87,7 @@ public:
   nscoord max;
   nscoord current;
   nscoord changed;
-  nsIBox* child;
+  nsCOMPtr<nsIContent> childElem;
   PRInt32 flex;
   PRInt32 index;
 };
@@ -503,6 +503,11 @@ nsSplitterFrameInner::MouseUp(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 
     //printf("MouseUp\n");
   }
+
+  delete[] mChildInfosBefore;
+  delete[] mChildInfosAfter;
+  mChildInfosBefore = nsnull;
+  mChildInfosAfter = nsnull;
 }
 
 void
@@ -726,7 +731,6 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
 
   delete[] mChildInfosBefore;
   delete[] mChildInfosAfter;
-
   mChildInfosBefore = new nsSplitterInfo[childCount];
   mChildInfosAfter  = new nsSplitterInfo[childCount];
 
@@ -784,7 +788,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         NS_NAMED_LITERAL_STRING(attrTrue, "true");
         if (!attrTrue.Equals(fixed) && !attrTrue.Equals(hidden)) {
             if (count < childIndex) {
-                mChildInfosBefore[mChildInfosBeforeCount].child   = childBox;
+                mChildInfosBefore[mChildInfosBeforeCount].childElem = content;
                 mChildInfosBefore[mChildInfosBeforeCount].min     = isHorizontal ? minSize.width : minSize.height;
                 mChildInfosBefore[mChildInfosBeforeCount].max     = isHorizontal ? maxSize.width : maxSize.height;
                 mChildInfosBefore[mChildInfosBeforeCount].current = isHorizontal ? r.width : r.height;
@@ -793,7 +797,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
                 mChildInfosBefore[mChildInfosBeforeCount].changed = mChildInfosBefore[mChildInfosBeforeCount].current;
                 mChildInfosBeforeCount++;
             } else if (count > childIndex) {
-                mChildInfosAfter[mChildInfosAfterCount].child   = childBox;
+                mChildInfosAfter[mChildInfosAfterCount].childElem = content;
                 mChildInfosAfter[mChildInfosAfterCount].min     = isHorizontal ? minSize.width : minSize.height;
                 mChildInfosAfter[mChildInfosAfterCount].max     = isHorizontal ? maxSize.width : maxSize.height;
                 mChildInfosAfter[mChildInfosAfterCount].current = isHorizontal ? r.width : r.height;
@@ -999,6 +1003,20 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext)
   }
 }
 
+static nsIBox* GetChildBoxForContent(nsIBox* aParentBox, nsIContent* aContent)
+{
+  nsIBox* childBox = nsnull;
+  aParentBox->GetChildBox(&childBox); 
+
+  while (nsnull != childBox) {
+    if (childBox->GetContent() == aContent) {
+      return childBox;
+    }
+    childBox->GetNextBox(&childBox);
+  }
+  return nsnull;
+}
+
 void
 nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo* aChildInfos, PRInt32 aCount, PRBool aIsHorizontal)
 {
@@ -1021,9 +1039,11 @@ nsSplitterFrameInner::AdjustChildren(nsPresContext* aPresContext, nsSplitterInfo
   for (int i=0; i < aCount; i++) 
   {
     nscoord   pref       = aChildInfos[i].changed;
-    nsIBox* childBox     = aChildInfos[i].child;
+    nsIBox* childBox     = GetChildBoxForContent(mParentBox, aChildInfos[i].childElem);
 
-    SetPreferredSize(state, childBox, onePixel, aIsHorizontal, &pref);
+    if (childBox) {
+      SetPreferredSize(state, childBox, onePixel, aIsHorizontal, &pref);
+    }
   }
 }
 
