@@ -2677,13 +2677,13 @@ var goButtonObserver = {
       var xferData = aXferData.data.split("\n");
       var url = xferData[0] ? xferData[0] : xferData[1];
       try {
+        getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
         var uri = makeURI(url);
-        getBrowser().dragDropSecurityCheck(aEvent, aDragSession, uri);
         const secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                                  .getService(Components.interfaces.nsIScriptSecurityManager);
         const nsIScriptSecMan = Components.interfaces.nsIScriptSecurityManager;
         secMan.checkLoadURI(gBrowser.currentURI, uri, nsIScriptSecMan.DISALLOW_SCRIPT_OR_DATA);
-        loadURI(uri, null, null);
+        loadURI(uri.spec, null, null);
       } catch (ex) {}
     },
   getSupportedFlavours: function ()
