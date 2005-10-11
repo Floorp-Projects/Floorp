@@ -1,5 +1,4 @@
 classic.jar:
-     skin/classic/global/preview.png                  
      skin/classic/global/tree/treetwisty.png                        (icons/treetwisty.png) 
      skin/classic/global/tree/treetwisty-open.png                   (icons/treetwisty-open.png) 
 % skin messenger classic/1.0 %skin/classic/messenger/
@@ -223,3 +222,5 @@ classic.jar:
      skin/classic/communicator/icons/smileys/smiley-innocent.png    (icons/smiley-innocent.png)
      skin/classic/communicator/icons/smileys/smiley-cry.png         (icons/smiley-cry.png)
      skin/classic/communicator/icons/smileys/smiley-sealed.png      (icons/smiley-sealed.png)
+     preview.png
+     icon.png
