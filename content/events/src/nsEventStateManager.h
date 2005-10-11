@@ -325,6 +325,7 @@ protected:
   nsCOMPtr<nsIContent> mLastFocus;
   nsIFrame* mCurrentFocusFrame;
   PRInt32 mCurrentTabIndex;
+  EFocusedWithType mLastFocusedWith;
 
   // DocShell Traversal Data Memebers
   nsCOMPtr<nsIContent> mLastContentFocus;
