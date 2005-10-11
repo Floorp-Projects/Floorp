@@ -44,9 +44,8 @@ var expect = 'No Crash';
 
 printBugNumber (bug);
 printStatus (summary);
+expectExitCode(3);
 
-// test here
-  
 // Not a performance problem.
 var xmlOl = new XML('<ol><li>Item 1<\/li><li>Item 2<\/li><\/ol>');
 
