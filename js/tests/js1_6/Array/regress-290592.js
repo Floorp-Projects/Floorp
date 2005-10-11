@@ -48,13 +48,13 @@ printStatus (summary);
 
 function identity(v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'identity: check callback argument consistency');
   return v;
 }  
 
 function mutate(v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'mutate: check callback argument consistency');
   if (index == 0)
   {
     array[1] = 'mutated';
@@ -66,7 +66,7 @@ function mutate(v, index, array)
 
 function mutateForEach(v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'mutateForEach: check callback argument consistency');
   if (index == 0)
   {
     array[1] = 'mutated';
@@ -78,7 +78,7 @@ function mutateForEach(v, index, array)
 
 function makeUpperCase(v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'makeUpperCase: check callback argument consistency');
   try
   {
     return v.toUpperCase();
@@ -92,14 +92,14 @@ function makeUpperCase(v, index, array)
 
 function concat(v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'concat: check callback argument consistency');
   actual += v + ',';
 }
 
 
 function isUpperCase(v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'isUpperCase: check callback argument consistency');
   try
   {
     return v == v.toUpperCase();
@@ -112,7 +112,7 @@ function isUpperCase(v, index, array)
 
 function isString(v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'isString: check callback argument consistency');
   return typeof v == 'string';
 }
 
@@ -125,7 +125,7 @@ function ArrayCallback(state)
 
 ArrayCallback.prototype.makeUpperCase = function (v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'ArrayCallback.prototype.makeUpperCase: check callback argument consistency');
   try
   {
     return this.state ? v.toUpperCase() : v.toLowerCase();
@@ -138,13 +138,13 @@ ArrayCallback.prototype.makeUpperCase = function (v, index, array)
 
 ArrayCallback.prototype.concat = function(v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'ArrayCallback.prototype.concat: check callback argument consistency');
   actual += v + ',';
 };
 
 ArrayCallback.prototype.isUpperCase = function(v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'ArrayCallback.prototype.isUpperCase: check callback argument consistency');
   try
   {
     return this.state ? true : (v == v.toUpperCase());
@@ -157,7 +157,7 @@ ArrayCallback.prototype.isUpperCase = function(v, index, array)
 
 ArrayCallback.prototype.isString = function(v, index, array)
 {
-  reportCompare(v, array[index], 'check callback argument consistency');
+  reportCompare(v, array[index], 'ArrayCallback.prototype.isString: check callback argument consistency');
   return this.state ? true : (typeof v == 'string');
 };
 
@@ -315,7 +315,7 @@ if ('forEach' in Array.prototype)
 
   try
   {
-    expect = 'hello,mutated,undefined,';
+    expect = 'hello,mutated,';
     actual = '';
     strings.forEach(mutateForEach);
   }
@@ -359,7 +359,8 @@ if ('forEach' in Array.prototype)
   try
   {
     // test forEach on sparse arrays
-    expect = 'undefined,undefined,sparse,';
+    // see https://bugzilla.mozilla.org/show_bug.cgi?id=311082
+    expect = 'sparse,';
     actual = '';
     sparsestrings.forEach(concat);
   }
@@ -467,7 +468,7 @@ if ('every' in Array.prototype)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'every element is a string');
+  reportCompare(expect, actual, 'strings: every element is a string');
 
   try
   {
@@ -478,18 +479,19 @@ if ('every' in Array.prototype)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'every element is a string');
+  reportCompare(expect, actual, 'mixed: every element is a string');
 
   try
   {
-    expect = false;
+    // see https://bugzilla.mozilla.org/show_bug.cgi?id=311082
+    expect = true;
     actual = sparsestrings.every(isString);
   }
   catch(e)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'every element is a string');
+  reportCompare(expect, actual, 'sparsestrings: every element is a string');
 
   // pass object method as map callback
 
@@ -504,7 +506,7 @@ if ('every' in Array.prototype)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'every element is a string, via object callback');
+  reportCompare(expect, actual, 'strings: every element is a string, via object callback');
 
   try
   {
@@ -515,18 +517,19 @@ if ('every' in Array.prototype)
   {
     actual = dumpError(e) ;
   }
-  reportCompare(expect, actual, 'every element is a string, via object callback');
+  reportCompare(expect, actual, 'mixed: every element is a string, via object callback');
 
   try
   {
-    expect = false;
+    // see https://bugzilla.mozilla.org/show_bug.cgi?id=311082
+    expect = true;
     actual = sparsestrings.every(obj.isString, obj);
   }
   catch(e)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'every element is a string, via object callback');
+  reportCompare(expect, actual, 'sparsestrings: every element is a string, via object callback');
 
 }
 
@@ -566,7 +569,7 @@ if ('some' in Array.prototype)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'some element is a string');
+  reportCompare(expect, actual, 'strings: some element is a string');
 
   try
   {
@@ -577,7 +580,7 @@ if ('some' in Array.prototype)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'some element is a string');
+  reportCompare(expect, actual, 'mixed: some element is a string');
 
   try
   {
@@ -588,7 +591,7 @@ if ('some' in Array.prototype)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'some element is a string');
+  reportCompare(expect, actual, 'sparsestrings: some element is a string');
 
   // pass object method as map callback
 
@@ -603,7 +606,7 @@ if ('some' in Array.prototype)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'some element is a string, via object callback');
+  reportCompare(expect, actual, 'strings: some element is a string, via object callback');
 
   try
   {
@@ -614,7 +617,7 @@ if ('some' in Array.prototype)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'some element is a string, via object callback');
+  reportCompare(expect, actual, 'mixed: some element is a string, via object callback');
 
   try
   {
@@ -625,7 +628,7 @@ if ('some' in Array.prototype)
   {
     actual = dumpError(e);
   }
-  reportCompare(expect, actual, 'some element is a string, via object callback');
+  reportCompare(expect, actual, 'sparsestrings: some element is a string, via object callback');
 
 }
 
