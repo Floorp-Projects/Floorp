@@ -462,7 +462,7 @@ GRE_GetPathFromConfigDir(const char* dirname,
 
 struct INIClosure
 {
-  nsINIParser           &parser;
+  nsINIParser           *parser;
   const GREVersionRange *versions;
   PRUint32               versionsLength;
   const GREProperty     *properties;
@@ -486,7 +486,7 @@ CheckINIHeader(const char *aHeader, void *aClosure)
   const GREProperty *endProperties = properties + c->propertiesLength;
   for (; properties < endProperties; ++properties) {
     char buffer[MAXPATHLEN];
-    rv = c->parser.GetString(aHeader, properties->property,
+    rv = c->parser->GetString(aHeader, properties->property,
                              buffer, sizeof(buffer));
     if (NS_FAILED(rv))
       return PR_TRUE;
@@ -495,7 +495,7 @@ CheckINIHeader(const char *aHeader, void *aClosure)
       return PR_TRUE;
   }
 
-  rv = c->parser.GetString(aHeader, "GRE_PATH", c->pathBuffer, c->buflen);
+  rv = c->parser->GetString(aHeader, "GRE_PATH", c->pathBuffer, c->buflen);
   if (NS_FAILED(rv))
     return PR_TRUE;
 
@@ -522,7 +522,7 @@ GRE_GetPathFromConfigFile(const char* filename,
     return PR_FALSE;
 
   INIClosure c = {
-    parser,
+    &parser,
     versions, versionsLength,
     properties, propertiesLength,
     pathBuffer, buflen,
