@@ -1355,6 +1355,12 @@ function productList(catID,famID) {
     //                addBoxItem(document.Support_Form.Product_ID, 'Zen Portable Media Center', 'DUMMYPREFIX_ZenPMC_Temp|9882');
 }
 
-productList(0,0);
+try
+{
+  productList(0,0);
+}
+catch(e)
+{
+}
 
 reportCompare(expect, actual, summary);
