@@ -89,8 +89,11 @@ pref("intl.accept_languages", "en-us, en" );
 // If it's a shift-scroll that comes from a mouse that only scrolls vertically,
 // we get from the system as a horizontal scroll.
 pref("mousewheel.withmetakey.action", 3);
+pref("mousewheel.withmetakey.sysnumlines", false);
 pref("mousewheel.withcontrolkey.action", 2);
-pref("mousewheel.withaltkey.action",0);
+pref("mousewheel.withcontrolkey.sysnumlines", false);
+pref("mousewheel.withaltkey.action", 0);
+pref("mousewheel.withaltkey.sysnumlines", false);
 
 // We want to make sure mail URLs are handled externally...
 pref("network.protocol-handler.external.mailto", true); // for mail
