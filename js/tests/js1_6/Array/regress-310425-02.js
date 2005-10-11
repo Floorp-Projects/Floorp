@@ -43,6 +43,6 @@ var expect = '';
 printBugNumber (bug);
 printStatus (summary);
   
-expect = 0;
+expect = -1;
 actual = Array(1).indexOf(1);
 reportCompare(expect, actual, summary);
