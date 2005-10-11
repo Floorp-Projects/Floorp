@@ -242,7 +242,8 @@ function ComposeMessage(type, format, folder, messageArray)
       {
         var messageUri = messageArray[i];
 
-        var hdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+        var hdr = messenger.msgHdrFromURI(messageUri);
+        // if we treat reply from sent specially, do we check for that folder flag here?
         var hintForIdentity = (type == msgComposeType.Template) ? hdr.author : hdr.recipients + hdr.ccList;
         var accountKey = hdr.accountKey;
         if (accountKey.length > 0)
@@ -255,7 +256,7 @@ function ComposeMessage(type, format, folder, messageArray)
         if (server)
           identity = getIdentityForServer(server, hintForIdentity);
 
-        if (!identity || hintForIdentity.search(identity.email) < 0)
+        if (folder && (!identity || hintForIdentity.search(identity.email) < 0))
         {
           server = folder.server;
           if (server)
@@ -435,8 +436,7 @@ function SaveAsFile(uri)
   if (uri) {
     var filename = null;
     try {
-      var subject = messenger.messageServiceFromURI(uri)
-                             .messageURIToMsgHdr(uri).mime2DecodedSubject;
+      var subject = messenger.msgHdrFromURI(uri).mime2DecodedSubject;
       filename = GenerateValidFilename(subject, ".eml");
     }
     catch (ex) {}
@@ -536,7 +536,7 @@ function determineActionsForJunkMsgs(aView, aIndices, aActionParams)
   // we use some arbitrary message to determine the
   // message server
   var msgURI = aView.getURIForViewIndex(aIndices[0]);
-  var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+  var msgHdr = messenger.msgHdrFromURI(msgURI);
   var server = msgHdr.folder.server;
 
   var spamSettings = server.spamSettings;
@@ -668,7 +668,7 @@ function filterFolderForJunk()
   var junkMsgsArray = new Array;
 
   var tmpMsgURI = view.getURIForViewIndex(0);
-  var tmpMsgHdr = messenger.messageServiceFromURI(tmpMsgURI).messageURIToMsgHdr(tmpMsgURI);
+  var tmpMsgHdr = messenger.msgHdrFromURI(tmpMsgURI);
   var spamSettings = tmpMsgHdr.folder.server.spamSettings;
   var whiteListDirectory;
   if (spamSettings.useWhiteList && spamSettings.whiteListAbURI)
@@ -679,7 +679,7 @@ function filterFolderForJunk()
   for (var i = 0; i < count; i++) {
     var msgIndex = i;
     var msgURI = view.getURIForViewIndex(i);
-    var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+    var msgHdr = messenger.msgHdrFromURI(msgURI);
     analyzeMessageForJunk(msgHdr,msgIndex,junkMsgsArray,(i == count-1),whiteListDirectory);
   }
 }
@@ -721,7 +721,7 @@ function deleteJunkInFolder()
   for (var i = 0; i < count; i++) 
   {
     var messageUri = view.getURIForViewIndex(i);
-    var msgHdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+    var msgHdr = messenger.msgHdrFromURI(messageUri);
     var junkScore = msgHdr.getStringProperty("junkscore"); 
     var isJunk = ((junkScore != "") && (junkScore != "0"));
     // if the message is junk, select it.

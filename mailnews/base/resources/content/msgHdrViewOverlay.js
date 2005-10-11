@@ -341,6 +341,22 @@ var messageHeaderSink = {
             lowerCaseHeaderName == "x-mimeole")
           lowerCaseHeaderName = "user-agent";          
         
+        if (this.mDummyMsgHeader)
+        {
+          if (lowerCaseHeaderName == "from")
+            this.mDummyMsgHeader.author = header.headerValue;
+          else if (lowerCaseHeaderName == "to")
+            this.mDummyMsgHeader.recipients = header.headerValue;
+          else if (lowerCaseHeaderName == "cc")
+            this.mDummyMsgHeader.ccList = header.headerValue;
+          else if (lowerCaseHeaderName == "subject")
+            this.mDummyMsgHeader.subject = header.headerValue;
+          else if (lowerCaseHeaderName == "reply-to")
+            this.mDummyMsgHeader.replyTo = header.headerValue;
+          else if (lowerCaseHeaderName == "message-id")
+            this.mDummyMsgHeader.messageId = header.headerValue;
+
+        }
         // according to RFC 2822, certain headers
         // can occur "unlimited" times
         if (lowerCaseHeaderName in currentHeaderData)
@@ -394,15 +410,18 @@ var messageHeaderSink = {
       // presentation level change....don't show vcards as external attachments in the UI.
       // libmime already renders them inline.
 
+      try
+      {
+        if (!this.mSaveHdr)
+          this.mSaveHdr = messenger.msgHdrFromURI(uri);
+      }
+      catch (ex) {}
       if (contentType == "text/x-vcard")
       {
         var inlineAttachments = pref.getBoolPref("mail.inline_attachments");
         var displayHtmlAs = pref.getIntPref("mailnews.display.html_as");
         if (inlineAttachments && !displayHtmlAs)
-        {
-          this.mSaveHdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
           return;
-        }
       }
 
       currentAttachments.push (new createNewAttachmentInfo(contentType, url, displayName, uri, isExternalAttachment));
@@ -419,8 +438,7 @@ var messageHeaderSink = {
 
         try {
           // convert the uri into a hdr
-          var hdr = messenger.messageServiceFromURI(uri).messageURIToMsgHdr(uri);
-          hdr.markHasAttachments(true);
+          this.mSaveHdr.markHasAttachments(true);
         }
         catch (ex) {
           dump("ex = " + ex + "\n");
@@ -430,11 +448,6 @@ var messageHeaderSink = {
     
     onEndAllAttachments: function()
     {
-      // if we only got a v-card, turn off the attachments flag
-      if (!currentAttachments.length && this.mSaveHdr)
-        this.mSaveHdr.markHasAttachments(false);
-      this.mSaveHdr = null;
-      displayAttachmentsForExpandedView();
       // AddSaveAllAttachmentsMenu();
       if (gCollapsedHeaderViewMode)
         displayAttachmentsForCollapsedView();
@@ -444,6 +457,19 @@ var messageHeaderSink = {
 
     onEndMsgDownload: function(url)
     {
+      // if we don't have any attachments, turn off the attachments flag
+      if (!this.mSaveHdr)
+      {
+        var messageUrl = url.QueryInterface(Components.interfaces.nsIMsgMessageUrl);
+        try
+        {
+          this.mSaveHdr = messenger.msgHdrFromURI(messageUrl.uri);
+        }
+        catch (ex) {}
+
+      }
+      if (!currentAttachments.length && this.mSaveHdr)
+        this.mSaveHdr.markHasAttachments(false);
       OnMsgParsed(url);
     },
 
@@ -468,11 +494,13 @@ var messageHeaderSink = {
       this.mSecurityInfo = aSecurityInfo;
     },
 
-    mDummyHeader: null,
-    getDummyMsgHeader: function() {
-      if (!this.mDummyHeader)
-        this.mDummyHeader = { messageSize: 0, folder: null };
-      return this.mDummyHeader;
+    mDummyMsgHeader: null,
+
+    getDummyMsgHeader: function()
+    {
+      if (!this.mDummyMsgHeader)
+        this.mDummyMsgHeader = new nsDummyMsgHeader();
+      return this.mDummyMsgHeader;
     }
 };
 
@@ -1371,5 +1399,21 @@ nsFlavorDataProvider.prototype =
 
 }
 
+function nsDummyMsgHeader()
+{
+}
 
-
+nsDummyMsgHeader.prototype =
+{
+  mProperties : new Array,
+  getStringProperty : function(property) {return this.mProperties[property];},
+  setStringProperty : function(property, val) {this.mProperties[property] = val;},
+  messageSize : 0,
+  recipients : null,
+  from : null,
+  subject : null,
+  ccList : null,
+  messageId : null,
+  accountKey : "",
+  folder : null
+};

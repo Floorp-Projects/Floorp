@@ -118,7 +118,7 @@ function CanDropOnFolderTree(index, orientation)
                 debugDump("***canFileMessages == false\n");
                 return false;
             }
-            var hdr = messenger.messageServiceFromURI(sourceUri).messageURIToMsgHdr(sourceUri);
+            var hdr = messenger.msgHdrFromURI(sourceUri);
             if (hdr.folder == targetFolder)
                 return false;
             break;
@@ -290,7 +290,7 @@ function DropOnFolderTree(row, orientation)
         if (dropMessage) {
             // from the message uri, get the appropriate messenger service
             // and then from that service, get the msgDbHdr
-            list.AppendElement(messenger.messageServiceFromURI(sourceUri).messageURIToMsgHdr(sourceUri));
+            list.AppendElement(messenger.msgHdrFromURI(sourceUri));
         }
         else {
             // Prevent dropping of a node before, after, or on itself

@@ -898,12 +898,17 @@ function MsgNewMessage(event)
 function MsgReplyMessage(event)
 {
   var loadedFolder = GetLoadedMsgFolder();
-  var server = loadedFolder.server;
+  if (loadedFolder)
+  {
+    var server = loadedFolder.server;
 
-  if(server && server.type == "nntp")
-    MsgReplyGroup(event);
-  else
-    MsgReplySender(event);
+    if (server && server.type == "nntp")
+    {
+      MsgReplyGroup(event);
+      return;
+    }
+  }
+  MsgReplySender(event);
 }
 
 function MsgReplySender(event)
@@ -911,10 +916,9 @@ function MsgReplySender(event)
   var loadedFolder = GetLoadedMsgFolder();
   var messageArray = GetSelectedMessages();
 
-  if (event && event.shiftKey)
-    ComposeMessage(msgComposeType.ReplyToSender, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
-  else
-    ComposeMessage(msgComposeType.ReplyToSender, msgComposeFormat.Default, loadedFolder, messageArray);
+  ComposeMessage(msgComposeType.ReplyToSender,
+    (event && event.shiftKey) ? msgComposeFormat.OppositeOfDefault : msgComposeFormat.Default,
+    loadedFolder, messageArray);
 }
 
 function MsgReplyGroup(event)
@@ -2077,7 +2081,7 @@ function HandleJunkStatusChanged(folder)
     // we don't want to show the junk bar (since the message pane is blank)
     var msgHdr = null;
     if (GetNumSelectedMessages() == 1)
-      msgHdr = messenger.messageServiceFromURI(loadedMessage).messageURIToMsgHdr(loadedMessage);
+      msgHdr = messenger.msgHdrFromURI(loadedMessage);
     gMessageNotificationBar.setJunkMsg(msgHdr);
   }
 }
@@ -2178,7 +2182,7 @@ function setMsgHdrPropertyAndReload(aProperty, aValue)
 
   if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
   {
-    var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+    var msgHdr = messenger.msgHdrFromURI(msgURI);
     if (msgHdr)
     {
       msgHdr.setUint32Property(aProperty, aValue);
@@ -2196,7 +2200,7 @@ function checkMsgHdrPropertyIsNot(aProperty, aValue)
     
   if (msgURI && !(/type=application\/x-message-display/.test(msgURI)))
   {
-    var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+    var msgHdr = messenger.msgHdrFromURI(msgURI);
     return (msgHdr && msgHdr.getUint32Property(aProperty) != aValue);
   }
   return false;
@@ -2240,7 +2244,7 @@ function OnMsgLoaded(aUrl)
     gNextMessageViewIndexAfterDelete = -2;
 
     if (!(/type=application\/x-message-display/.test(msgURI)))
-      msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+      msgHdr = messenger.msgHdrFromURI(msgURI);
 
     gMessageNotificationBar.setJunkMsg(msgHdr);
 
@@ -2323,7 +2327,7 @@ function HandleMDNResponse(aUrl)
   if (SelectedMessagesAreJunk())
     return;
 
-  var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+  var msgHdr = messenger.msgHdrFromURI(msgURI);
   var mimeHdr;
 
   try {

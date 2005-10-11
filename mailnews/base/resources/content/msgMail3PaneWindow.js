@@ -1526,7 +1526,7 @@ function SelectFolder(folderUri)
 
 function SelectMessage(messageUri)
 {
-  var msgHdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+  var msgHdr = messenger.msgHdrFromURI(messageUri);
   if (msgHdr)
     gDBView.selectMsgByKey(msgHdr.messageKey);
 }
