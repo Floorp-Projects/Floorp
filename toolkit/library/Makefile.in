@@ -324,7 +324,7 @@ EXTRA_DSO_LDOPTS += $(MOZ_XPRINT_LDFLAGS)
 endif
 
 ifeq ($(OS_ARCH),BeOS)
-EXTRA_DSO_LDOPTS += -lbe
+EXTRA_DSO_LDOPTS += -lbe -ltracker
 endif
 
 ifeq ($(OS_ARCH),WINNT)
