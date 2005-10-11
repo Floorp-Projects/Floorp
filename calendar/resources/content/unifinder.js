@@ -548,6 +548,8 @@ function msNextOrPreviousRecurrenceStart( calendarEvent ) {
 }
 
 function msNextOrPreviousRecurrenceEnd(event) {
+  return event.endDate.nativeTime;
+  //XXX reimplement the following
   var msNextStart = msNextOrPreviousRecurrenceStart(event);
   var msDuration=dateToMilliseconds(event.endDate)-dateToMilliseconds(event.startDate);
   return msNextStart + msDuration;
