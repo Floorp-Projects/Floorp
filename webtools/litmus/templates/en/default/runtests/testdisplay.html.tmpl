@@ -27,46 +27,221 @@
   # @results   - the list of all possible test results
 #%]
 
-[% PROCESS global/selects.none.tmpl %]
-[% script = ['edittestsscript'] %]
+[% onload="showTEST(1);" %]
 
-[% INCLUDE global/header.html.tmpl title = 'Run Tests' script=script includeselects=1%] 
+[% INCLUDE global/html_header.tmpl js_files=['js/RunTests.js'] %]
+[% INCLUDE global/litmus_header.tmpl %]
 
-<p class="pagetitle">Run Tests</p>
-<p class="pageinstruction">Testing Summary:</p>
-<table border="0">
-<tr><td><div align="right"><strong>Product:</strong></div></td><td>[% sysconfig.product.name FILTER html %]</td></tr>
-<tr><td><div align="right"><strong>Platform:</strong></div></td><td>[% sysconfig.platform.name FILTER html %]</td></tr>
-<tr><td><div align="right"><strong>Opsys:</strong></div></td><td>[% sysconfig.opsys.name FILTER html %]</td></tr>
-<tr><td><div align="right"><strong>Branch:</strong></div></td><td>[% sysconfig.branch.name FILTER html %]</td></tr>
-<tr><td><div align="right"><strong>Build ID:</strong></div></td><td>[% sysconfig.buildid FILTER html %]</td></tr>
-<tr><td><div align="right"><strong>Group:</strong></div></td><td>[% group.name FILTER html %]</td></tr>
-<tr><td><div align="right"><strong>Subgroup:</strong></div></td><td>[% subgroup.name FILTER html %]</td></tr>
+<div id="page">
+
+[% INCLUDE sidebar/runtests_sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+
+<div class="section-full">
+<div class="sec_head">
+<table width="100%">
+<tr>
+<td class="l">Testing Summary</td>
+<td class="r"><a href="#" onclick="divSWAP('sum'); return false;">Hide / Show Summary</a></td>
+</tr>
 </table>
-<p class="smallcaps"><a href="run_tests.cgi">change configuration</a>
+</div>
+
+  <div id="sum" class="summary">
+  <table class="test-config">
+  <tr>
+
+   <td> 
+    <div class="dh">Product:</div><div class="dv">[% sysconfig.product.name FILTER html %]</div>
+    <div class="t_link"><a href="run_tests.cgi">Change Configuration</a></div>
+   </td>
+   <td>
+    <div class="dh">Platform:</div><div class="dv">[% sysconfig.platform.name FILTER html %]</div>
+
+    <div class="dh">Opsys:</div><div class="dv">[% sysconfig.opsys.name FILTER html %]</div>
+   </td>
+   <td>
+    <div class="dh">Branch:</div><div class="dv">[% sysconfig.branch.name FILTER html %]</div>
+    <div class="dh">Build ID:</div><div class="dv">[% sysconfig.buildid FILTER html %]</div>
+   </td>
+
+   <td>
+    <div class="dh">Group:</div><div class="dv">[% group.name FILTER html %]</div>
+    <div class="dh">Subgroup:</div><div class="dv">[% subgroup.name FILTER html %]</div>
+   </td>
+  </tr>
+  </table>
+
+  </div>
+</div>
+
 <hr />
+
 <form action="process_test.cgi" method="post" name="form" id="form">
-<input name="isTestResult" type="hidden" value="true">
-<input name="editingTestcases" id="editingTestcases" type="hidden" value="">
-<input name="testgroup" type="hidden" value="[% tests.list.0.testgroup.testgroupid FILTER html %]">
+<input name="isTestResult" type="hidden" value="true" />
+<input name="editingTestcases" id="editingTestcases" type="hidden" value="" />
+<input name="testgroup" type="hidden" value="[% tests.list.0.testgroup.testgroupid FILTER html %]" />
 
-[% evenodd = 'odd' %]
-[% FOREACH curtest = tests %]
-    <div class="testlist_[%evenodd%]">
-    <a href="show_test.cgi?id=[% curtest.testid FILTER html %]" class="smallcaps">show</a>
-    [% INCLUDE test/test.html.tmpl test=curtest style="testlist_$evenodd" showedit=istrusted %]
-
-    [% IF evenodd == 'odd' %]
-        [% evenodd = 'even' %]
-    [% ELSE %]
-        [% evenodd = 'odd' %]
-    [% END %]
-    </div>
-    <hr />
+<div class="section-full">
+<div class="sec_head">
+  <table cellspacing="0" cellpadding="0">
+  <tr>
+  <td class="l">Testcases</td>
+  <td class="r">
+[% IF tests.size <= 1 %]
+<div class="nav" id="ma1">Previous | Next | Show All</div>
+[% ELSE %]
+[% current_order=1 %]
+[% FOREACH curtest=tests %]
+   [% next_num=current_order+1 %]
+   <div class="nav" id="ma[% current_order %]">
+   [% IF current_order==1 %]
+     Previous
+   [% ELSE %]
+     <a href="#" onclick="showTEST([% current_order - 1 %]); return false;">Previous</a>
+   [% END %] 
+   | 
+   [% IF current_order>=tests.size %]
+     Next
+   [% ELSE %]
+     <a href="#" onclick="showTEST([% next_num %]); return false;">Next</a>
+   [% END %]
+   | <a href="#" onclick="showTEST('all'); return false;">Show All</a></div>
+   [% current_order=current_order+1 %]
 [% END %]
+   <div class="nav" id="mf"><a href="#" onclick="showTEST(tmp_pagepos); return false;">Show One</a></div>
+[% END %]
+  </td>
+  </tr>
+  </table>
+</div> <!--END sec_head-->
 
-<input type="submit" id="Submit" name="Submit" value="Submit Results" onclick="findEdited()">
+</div> <!--END section-full-->
+
+[% first_test_id=0 %]
+[% num_testcases=0 %]
+[% separators=[] %]
+[% test_ids=[] %]
+[% i=1 %]
+[% FOREACH curtest=tests %]
+  [% IF first_test_id==0 %]
+    [% first_test_id=curtest.testid %]
+  [% END %]
+
+  [% IF num_testcases!=0 %]
+    [% sep_id="p$num_testcases" %]
+    <div class="head_s" id="[% sep_id %]" style="display:none;"></div>
+    [% separators.push(sep_id) %]
+  [% END %]
+
+  [% num_testcases=num_testcases+1 %]
+  [% test_ids.push(curtest.testid) %]
+
+  <!-- Test [% i %] Start -->
+
+  <div class="section-full" id="t[% i %]" style="display:[% IF num_testcases==1 %]block[% ELSE %]none[% END %];">
+  <div class="testcase-head">
+    <table cellpadding="0" cellspacing="0">
+    <tr>
+    <td class="l"><a name="test_4"></a>[% loop.count %]: [% curtest.summary %] (ID: [% curtest.testid %])</td>
+    <td class="r"><a href="http://testrunner.mozilla.org/litmus_staging/coop/show_test.cgi?id=[% curtest.testid %]">View / Edit</a></td>
+    </tr>
+    </table>
+  </div> <!--END testcase-head-->
+
+  <div class="section-content">
+
+  <table cellspacing="0" cellpadding="0" class="tcm">
+  <tr>
+   <td width="50%" class="content"><div class="dh">Steps to Perform:</div><div class="dv">[% curtest.steps %]</div></td>
+   <td width="50%" class="content"><div class="dh">Expected Results:</div><div class="dv">[% curtest.expected_results %]</div></td>
+  </tr>
+
+  <tr>
+   <td class="content" colspan="2">
+
+    <table cellspacing="0" cellpadding="0" class="tcmf">
+    <tr>
+     <td width="210px">
+      <div class="dh">Result:</div>
+      [% INCLUDE form_widgets/radio_testresults.tmpl test_id=curtest.testid %]
+      <br/>
+      <div><input type="submit" id="Submit[% curtest.testid %]" name="Submit[% curtest.testid %]" value="Submit This Result" /></div>
+     </td>
+
+     <td>
+      <div class="dh">Notes/Comments (optional):</div>
+      <div class="dv"><textarea name="comment_[% curtest.testid %]" cols="45" rows="4" id="note_[% curtest.testid %]"></textarea></div>
+      <div class="dh">Associated Bug #:</div>
+      <div class="dv"><input type="text" name="bug1_[% curtest.testid %]" class="result_bug" /> <input type="text" name="bug2_[% curtest.testid %]" class="result_bug" /></div>
+     </td>
+    </tr>
+
+    </table>
+
+   </td>
+  </tr>
+  </table>
+
+ </div>
+
+</div>
+
+<!-- Test [% i %] End -->
+
+[% i=i+1 %]
+[% END %]
+<script language="JavaScript" type="text/JavaScript">
+var tmp_pagepos=1;
+var tmp_pagetotal=[% num_testcases %];
+var tmp_tests=new Array([% i=1 %][% FOREACH test_id=test_ids %][% IF i>1 %],[% END %]"t[% i %]"[% i=i+1 %][% END %]);
+var tmp_separ=new Array([% i=1 %][% FOREACH separator=separators %][% IF i>1 %],[% END %]"[% separator %]"[% i=i+1 %][% END %]);
+var tmp_menua=new Array([% i=1 %][% FOREACH test_id=test_ids %]"ma[% i %]",[% i=i+1 %][% END %]"mf");
+var tmp_menub=new Array([% i=1 %][% FOREACH test_id=test_ids %]"mb[% i %]",[% i=i+1 %][% END %]"ml");
+</script>
+
+<div class="sec_head">
+  <table cellspacing="0" cellpadding="0">
+  <tr>
+  <td class="submitall"><div class="v3"><input type="submit" id="Submit" name="Submit" value="Submit All Results" onclick="findEdited()" /></div></td>
+  <td class="r">
+[% IF tests.size <= 1 %]
+<div class="nav" id="mb1">Previous | Next | Show All</div>
+[% ELSE %]
+[% current_order=1 %]
+[% FOREACH curtest=tests %]
+   [% next_num=current_order+1 %]
+   <div class="nav" id="mb[% current_order %]">
+   [% IF current_order==1 %]
+     Previous
+   [% ELSE %]
+     <a href="#" onclick="showTEST([% current_order - 1 %]); return false;">Previous</a>
+   [% END %] 
+   | 
+   [% IF current_order>=tests.size %]
+     Next
+   [% ELSE %]
+     <a href="#" onclick="showTEST([% next_num %]); return false;">Next</a>
+   [% END %]
+   | <a href="#" onclick="showTEST('all'); return false;">Show All</a></div>
+   [% current_order=current_order+1 %]
+[% END %]
+   <div class="nav" id="ml"><a href="#" onclick="showTEST(tmp_pagepos); return false;">Show One</a></div>
+[% END %]
+  </td>
+  </tr>
+  </table>
+</div>
 
 </form>
 
-[% INCLUDE global/footer.html.tmpl %]
+</div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]
+

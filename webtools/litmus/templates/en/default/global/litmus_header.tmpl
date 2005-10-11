@@ -1,0 +1,12 @@
+[% IF includeselects %]
+[% onload = "$onload selects_onload();" %]
+[% END %]
+
+  <body onLoad="init();[% IF onload %][% onload %][% END %]">
+  <script type="text/javascript">function init(){}</script>
+  <script type="text/javascript" src="js/FormPersist.js"></script>
+
+    <div id="container">
+
+      <p class="skipLink"><a href="#content" accesskey="2">Skip to main content</a></p>
+      <div id="mozilla-org"><a href="http://www.mozilla.org/">Visit Mozilla.org</a></div>

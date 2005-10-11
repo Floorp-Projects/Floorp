@@ -30,11 +30,24 @@
   #                         from the current group
 #%]
 
+[% INCLUDE global/html_header.tmpl %] 
+[% INCLUDE global/litmus_header.tmpl %] 
 
-[% INCLUDE global/header.html.tmpl title = 'Run Tests' %] 
+<div id="page">
 
-<p class="pagetitle">Run Tests</p>
-<p class="pageinstruction">Thank you for your testing.</p> 
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+
+<div class="section-full">
+  <div class="section-header">
+Results submitted
+  </div>
+  <div class="section-content">
+
+<p>Thank you for your testing.</p> 
 
 [% IF testcount %]
     [% IF testcount > 1 %] [% plural = 's' %] [% END %]
@@ -70,7 +83,7 @@
     </table>
 [% END %]
 
-<p class="pageinstruction">Go <a href="index.cgi">Home</a> or 
+<p>Go <a href="index.cgi">Home</a> or 
     [% IF return %]
         <a href="[% return | uri | html %]">go back.</a>
     [% ELSE %]
@@ -79,4 +92,15 @@ run some more tests</a>.
     [% END %]
 </p>
 
-[% INCLUDE global/footer.html.tmpl %]
+</div> <!--END section-content-->
+
+</div> <!--END section-full-->
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]
+
+

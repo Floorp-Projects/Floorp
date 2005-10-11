@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="KEYWORDS" content="Main Page" />
+    <meta name="robots" content="index,follow" />
+
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" media="all" href="css/litmus.css" />
+
+    <title>Litmus - [% title %]</title>
+
+[% IF script %]
+<script language="JavaScript" type="text/JavaScript">
+// don't ask why this is here
+function MM_findObj(n) {
+  var x = document.getElementById(n);
+  return x;
+}
+
+[% FOREACH curscript=script %]
+[% # see if the current script looks like a path to a INCLUDE or an
+   # actual snippit of JS:
+%]
+[% IF curscript == "" %] [% NEXT %] [% END %]
+[% IF curscript.match('\(|{') %] [% # looks like js %]
+    [% curscript %]
+[% ELSE %] [% # looks like something to INCLUDE %]
+    [% INCLUDE $curscript %]
+[% END %]
+[% END %]
+</script>
+[% END %]
+
+<script language="JavaScript" type="text/Javascript" src="data/litmusconfig.js"></script>
+[% IF js_files %]
+[% FOREACH js_file=js_files %]
+<script language="JavaScript" type="text/Javascript" src="[% js_file %]"></script>
+[% END %]
+[% END %]
+
+  </head>
+
+
+
+
+
+
+
+
+
+
+
+

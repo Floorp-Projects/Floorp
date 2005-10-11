@@ -1,0 +1,8 @@
+<select name="test_group">
+    <option value="">-Test Group-</option>
+[% IF test_groups %]
+[% FOREACH test_group=test_groups %]
+    <option[% IF defaults.test_group==test_group.name %] selected[% END %] value="[% test_group.name %]">[% test_group.name %]</option>
+[% END %]
+[% END %]
+</select>

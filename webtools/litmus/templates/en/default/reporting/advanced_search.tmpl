@@ -1,0 +1,20 @@
+[% INCLUDE global/html_header.tmpl %]
+[% INCLUDE global/litmus_header.tmpl %]
+
+<div id="page">
+
+[% INCLUDE sidebar/search_sidebar.tmpl criteria=criteria %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+    [% INCLUDE reporting/advanced_search_form.tmpl %]
+    <h1 class="firstHeading">Search Results</h1>
+    [% INCLUDE reporting/test_results.tmpl %]
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]

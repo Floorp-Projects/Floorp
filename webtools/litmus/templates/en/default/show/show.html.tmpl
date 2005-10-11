@@ -28,14 +28,29 @@
 
 
 [% PROCESS global/selects.none.tmpl %]
-[% script = ['edittestsscript'] %]
 
-[% INCLUDE global/header.html.tmpl title = "Testcase $test.testid - $test.summary"
-    script=script includeselects=1 %] 
+[% title="Testcase ID #$test.testid - $test.summary" %]
+[% includeselects=1 %]
 
-<p class="pageinstruction">Test [% test.testid %] - [% test.summary %]</p>
+[% INCLUDE global/html_header.tmpl js_files=['js/EditTests.js', 'js/SelectBoxes.js'] %] 
+[% INCLUDE global/litmus_header.tmpl %]
 
-<strong>Current Status:</strong> [% INCLUDE platformtable test=test %]
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+
+<div class="section-full">
+  <div class="section-header">
+Current Status
+  </div>
+  <div class="section-content">
+
+
+<p>[% INCLUDE platformtable test=test %]</p>
 
 <form action="process_test.cgi" method="post" name="form" id="form">
 <input name="isTestResult" type="hidden" value="true">
@@ -49,60 +64,22 @@
 <td><br /><input type="submit" id="Submit" name="Submit" value="Submit Results" onclick="findEdited()"></td>
 </tr>
 <tr><td colspan="3"><hr /></td></tr>
-
-<tr>
-<td colspan="2">
-
-<table border="0">
-[% 
-  # by default, we show only recent results and the last 
-  # three non-recent results. the showallresults switch
-  # causes us to show all results:
-%]
-[% nonrecentcount = 0 %]
-[% FOREACH curresult = test.testresults %]
-[% UNLESS showallresults %]
-  [% IF curresult.isrecent == 0 && nonrecentcount >= 3 %]
-      [% NEXT %]
-  [% ELSIF curresult.isrecent == 0 %]
-    [% nonrecentcount = nonrecentcount+1 %]
-  [% END %]
-[% END %] 
-<tr>
-<td colspan="2" style="[% curresult.result.style %]">
-------- Test Result From 
-    <a href="mailto:[% curresult.user.email FILTER html | email %]">
-        [% curresult.user.email FILTER html | email %]</a> 
-    [% curresult.timestamp FILTER html %] -------
-</td>
-</tr>
-<tr><td colspan="2">
-    <div align="center"><strong>Result: [% curresult.result.name FILTER html %]</strong></div><br />
-</td></tr>
-
-<tr width="40%">
-
-<td valign="top">
-<table border="0">
-<tr><td><div align="right"><strong>Product:</strong></div></td><td>[% INCLUDE product_to_img product=curresult.testid.product %]</td></tr>
-<tr><td><div align="right"><strong>Platform:</strong></div></td><td>[% INCLUDE platform_to_img platform=curresult.platform %]</td></tr>
-<tr><td><div align="right"><strong>Opsys:</strong></div></td><td>[% IF curresult.opsys %][% curresult.opsys.name FILTER html %][% ELSE %]Unknown[% END %]</td></tr>
-<tr><td><div align="right"><strong>Branch:</strong></div></td><td>[% curresult.branch.name FILTER html %]</td></tr>
-<tr><td><div align="right"><strong>Build ID:</strong></div></td><td>[% curresult.buildid FILTER html %]</td></tr>
-<tr><td><br /></td></tr>
 </table>
-</td>
+  </div>
+</div>
 
-<td valign="top">[% IF curresult.note %]
-<strong>Note: </strong> [% curresult.note FILTER html %]
-[% END %]
-</td>
-</tr>
-[% END %]
 
-</table>
-<a href="show_test.cgi?showallresults=1&id=[%test.testid FILTER html | uri%]">Show all results</a>
-</td></tr>
-</table>
+ <h1 class="firstHeading">Recent Test Results for [% title %]</h1>
 
-[% INCLUDE global/footer.html.tmpl %]
+[% INCLUDE reporting/test_results.tmpl results=test_results %]
+
+  </div>
+
+</div>
+
+ </div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]

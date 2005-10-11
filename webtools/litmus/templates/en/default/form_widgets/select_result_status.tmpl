@@ -1,0 +1,8 @@
+<select name="result_status">
+    <option value="">-Status-</option>
+[% IF result_statuses %]
+[% FOREACH result_status=result_statuses %]
+    <option[% IF defaults.result_status==result_status.class_name %] selected[% END %] value="[% result_status.class_name %]">[% result_status.class_name %]</option>
+[% END %]
+[% END %]
+</select>

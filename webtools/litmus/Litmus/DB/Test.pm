@@ -1,23 +1,34 @@
-# -*- Mode: perl; indent-tabs-mode: nil -*-
-#
-# The contents of this file are subject to the Mozilla Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
-#
-# The Original Code is Litmus.
-#
-# The Initial Developer of the Original Code is Netscape Communications
-# Corporation. Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
-# Rights Reserved.
-#
-# Contributor(s): Zach Lipton <zach@zachlipton.com>
+# -*- mode: cperl; c-basic-offset: 8; indent-tabs-mode: nil; -*-
+
+=head1 COPYRIGHT
+
+ # ***** BEGIN LICENSE BLOCK *****
+ # Version: MPL 1.1
+ #
+ # The contents of this file are subject to the Mozilla Public License
+ # Version 1.1 (the "License"); you may not use this file except in
+ # compliance with the License. You may obtain a copy of the License
+ # at http://www.mozilla.org/MPL/
+ #
+ # Software distributed under the License is distributed on an "AS IS"
+ # basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ # the License for the specific language governing rights and
+ # limitations under the License.
+ #
+ # The Original Code is Litmus.
+ #
+ # The Initial Developer of the Original Code is
+ # the Mozilla Corporation.
+ # Portions created by the Initial Developer are Copyright (C) 2005
+ # the Initial Developer. All Rights Reserved.
+ #
+ # Contributor(s):
+ #   Chris Cooper <ccooper@deadsquid.com>
+ #   Zach Lipton <zach@zachlipton.com>
+ #
+ # ***** END LICENSE BLOCK *****
+
+=cut
 
 package Litmus::DB::Test;
 
@@ -32,7 +43,7 @@ Litmus::DB::Test->table('tests');
 
 Litmus::DB::Test->columns(Primary => qw/test_id/);
 Litmus::DB::Test->columns(Essential => qw/subgroup_id summary details status_id community_enabled format_id regression_bug_id/); 
-Litmus::DB::Test->columns(All => qw/t1 t2 t3/);
+Litmus::DB::Test->columns(All => qw/steps expected_results/);
 
 Litmus::DB::Test->column_alias("test_id", "testid");
 Litmus::DB::Test->column_alias("subgroup_id", "subgroup");
@@ -49,62 +60,61 @@ Litmus::DB::Test->has_many(testresults => "Litmus::DB::Testresult", {order_by =>
 # we override Class::DBI's find_column() so that when we refer to 
 # formatted names like steps and expected results, we use the actual
 # database columns t1 and t2. 
-memoize('find_column'); # we use this _a lot_
-sub find_column {
-    my $self = shift;
-    my $want = shift; 
-
-    my $col = undef;
-    if (ref $self) {
-        $want =~ s/^.*::(\w+)$/$1/;
-        $col = $self->format_id()->getColumnMapping($want);
-    }
-    
-    if ($col) {
-        return $self->SUPER::find_column($col);
-    } else {
-        # didn't find it, so we fall back on the normal 
-        # find_column from Litmus::DBI:
-        $self->SUPER::find_column($want);
-    }
-}
+#memoize('find_column'); # we use this _a lot_
+#sub find_column {
+#    my $self = shift;
+#    my $want = shift;
+#
+#    my $col = undef;
+#    if (ref $self) {
+#        $want =~ s/^.*::(\w+)$/$1/;
+#        $col = $self->format_id()->getColumnMapping($want);
+#    }
+#    
+#    if ($col) {
+#        return $self->SUPER::find_column($col);
+#    } else {
+#        # didn't find it, so we fall back on the normal 
+#        # find_column from Litmus::DBI:
+#        $self->SUPER::find_column($want);
+#    }
+#}
 
 # we need to have accessors that correspond to 
 # the "virtual columns" created by our format. sounds like a job for 
 # autoload...
-sub AUTOLOAD {
-    my $self = shift;
-    my @args = @_;
-    my $name = our $AUTOLOAD;
-    
-    my $col = $self->find_column($name);
-    
-    if (!$col) {
-        internalError("tried to call Litmus::DB::Test method $name which does not exist");
-    }
-    
-    return $self->$col(@args);
-}
+#sub AUTOLOAD {
+#    my $self = shift;
+#    my @args = @_;
+#    my $name = our $AUTOLOAD;
+#    
+#    my $col = $self->find_column($name);
+#    
+#    if (!$col) {
+#        internalError("tried to call Litmus::DB::Test method $name which does not exist");
+#    }
+#    
+#    return $self->$col(@args);
+#}
 
 # does the test have at least one recent result?
 # optionally, just check for a particular platform.
 memoize('isrecent');
 sub isrecent {
-    my $self = shift;
-    my $platform = shift;
-    
-    my %restrictor;
-    if ($platform) { $restrictor{platform} = $platform }
-    
-    my @results = $self->testresults(%restrictor);
-    foreach my $curresult (@results) {
-        if ($curresult->isrecent()) {
-            return 1;
-        }
+  my $self = shift;
+  my $platform = shift;
+  
+  my %restrictor;
+  if ($platform) { $restrictor{platform} = $platform }
+  
+  my @results = $self->testresults(%restrictor);
+  foreach my $curresult (@results) {
+    if ($curresult->isrecent()) {
+      return 1;
     }
-    return 0;
+  }
+  return 0;
 }
-
 
 # Right now, a test is considered completed as long as it has at least 
 # one recent result for that platform. In the future, we would want to 

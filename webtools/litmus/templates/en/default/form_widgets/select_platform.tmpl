@@ -1,0 +1,8 @@
+<select name="platform">
+    <option value="">-Platform-</option>
+[% IF platforms %]
+[% FOREACH platform=platforms %]
+    <option[% IF defaults.platform==platform.name %] selected[% END %] value="[% platform.name %]">[% platform.name %]</option>
+[% END %]
+[% END %]
+</select>

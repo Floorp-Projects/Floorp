@@ -1,0 +1,43 @@
+<table class="test-results">
+  <tr>
+    <td colspan="2" class="header">Date</td>
+    <td class="header">Product</td>
+    <td class="header">Platform</td>
+    <td class="header">Testgroup</td>
+    <td class="header">Testcase ID#</td>
+    <td class="header">Summary</td>
+    <td class="header">Status</td>
+    <td class="header">Branch</td>
+  </tr>
+<tr>
+
+[% IF results AND results.size > 0 %]
+  [% FOREACH result=results %]
+<tr class="[% result.result_status_class %]">
+  <td colspan="2" align="center">[% result.created %]</td>
+  <td align="center">[% result.product_name %]</td>
+  <td align="center">[% result.platform_name %]</td>
+  <td align="center">[% result.test_group_name %]</td>
+  <td align="center"><a href="show_test.cgi?id=[% result.test_id %]">[% result.test_id %]</a></td>
+  <td>[% result.summary %]</td>
+  <td align="center"><a href="single_result.cgi?id=[% result.testresult_id %]">[% result.result_status_class %]</a></td>
+  <td align="center">[% result.branch_name %]</td>
+</tr>
+  [% END %]
+[% ELSE %]
+  <tr>
+    <td class="no-results" colspan="9">No test results match the search criteria.</td>
+  </tr>
+[% END %]
+
+[% IF include_limit_criteria==1 %]
+  [% INCLUDE reporting/test_results_limit.tmpl %]
+[% END %]
+
+</table>
+</form>
+
+
+
+
+

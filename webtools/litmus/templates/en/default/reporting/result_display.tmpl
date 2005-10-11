@@ -1,0 +1,176 @@
+<div class="section-full">
+  <div class="section-header">
+Summary Information
+  </div>
+  <div class="section-content">
+
+<table class="single-result">
+<tr class="[% result.result.class_name %]">
+<td width="20%">Status:</td><td>[% result.result.name %]</td>
+</tr>
+<tr class="even">
+<td>Test Summary:</td><td>[% result.testid.summary %]</td>
+</tr>
+<tr class="odd">
+<td>Testcase ID#:</td><td><a href="show_test.cgi?id=[% result.test_id %]">[% result.test_id %]</a></td>
+</tr>
+<tr class="even">
+<td>Submitted on:</td><td>[% result.submission_time %]</td>
+</tr>
+<tr class="odd">
+<td>Submitted by:</td><td>[% IF result.user.email != "" %]
+<a href="mailto:[% result.user.email %]?subject='Litmus test result submission #[% result.testresult_id %]'">[% result.user.email %]</a>
+[% ELSE %]
+Not provided
+[% END %]</td>
+</tr>
+</table>
+
+  </div> <!--END section-content-->
+
+</div> <!--END section-full-->
+
+<div class="section-full">
+  <div class="section-header">
+Product and Platform
+  </div>
+  <div class="section-content">
+
+<table class="single-result">
+<tr class="odd">
+<td width="20%">Product:</td><td>[% result.testid.subgroup.testgroup.product.name %]</td>
+</tr>
+<tr class="even">
+<td>Platform:</td><td>[% result.platform.name %]</td>
+</tr>
+<tr class="odd">
+<td>Operating System:</td><td>[% result.opsys.name %]</td>
+</tr>
+<tr class="even">
+<td>Build ID:</td><td>[% result.buildid %]</td>
+</tr>
+<tr class="odd">
+<td>User Agent:</td><td>[% result.user_agent %]</td>
+</tr>
+</table>
+
+  </div> <!--END section-content-->
+
+</div> <!--END section-full-->
+
+<form id="update_result" name="update_result" method="post" action="single_result.cgi">
+<input type="hidden" name="id" value="[% result.testresult_id %]">
+
+<div class="section-full">
+  <div class="section-header">
+Referenced Bugs
+  </div>
+  <div class="section-content">
+
+<table class="single-result">
+<tr class="odd">
+<td>
+[% IF result.bugs %]
+Bug IDs: 
+  [% FOREACH bug=result.bugs %]
+    <a target="bugzilla" href="https://bugzilla.mozilla.org/show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>[% UNLESS loop.last %], [% END %] 
+  [% END %]
+[% ELSE %]
+No bugs on file.
+[% END %]
+</td>
+</tr>
+<tr class="even">
+<td>
+Add bug references: <input name="new_bugs" type="text" value=""> (bug #,bug #,...) <input type="submit" value="Add Bug References">
+</td>
+</tr>
+</table>
+
+  </div> <!--END section-content-->
+
+</div> <!--END section-full-->
+
+<div class="section-full">
+  <div class="section-header">
+Comments
+  </div>
+  <div class="section-content">
+
+<table class="comments">
+<tr class="odd">
+[% IF defaultemail %]
+<td width="20%"><a name="add_comment"></a>Add a Comment:</td>
+<td><textarea wrap="hard" name="new_comment" id="new_comment" rows="10" cols="80" accesskey="c"></textarea></td>
+</tr>
+<tr class="odd">
+<td><td><input type="submit" value="Add Comment"></td>
+[% ELSE %]
+<td colspan="2" class="no-results">
+You must log in before you can leave comments.
+</td>
+[% END %]
+</tr>
+
+
+[% IF result.comments %]
+  [% comment_num=1 %]
+  [% FOREACH comment=result.comments %]
+<tr [% IF not (loop.count % 2) %]class="odd"[% ELSE %]class="even"[% END %]>
+<td colspan="2">
+<p><em>------- Comment <a name="c[% comment_num %]" href="#c[% comment_num %]">#[% comment_num %]</a> From 
+    [% IF comment.user.email %]
+<a href="mailto:[% comment.user.email %]">[% comment.user.email %]</a>
+    [% ELSE %]
+Anonymous
+    [% END %]
+ [% comment.user.submission_time %] -------</em></p>
+
+<p>[% comment.comment FILTER html %]</p>
+
+[% comment_num=comment_num+1 %]
+  [% END %]
+</td>
+</tr>
+[% ELSE %]
+<tr class="even">
+<td class="no-results" colspan="2">
+No comments.
+</td>
+</tr>
+[% END %]
+
+</table>
+
+  </div> <!--END section-content-->
+
+</div> <!--END section-full-->
+
+</form>
+
+<div class="section-full">
+  <div class="section-header">
+Logs
+  </div>
+  <div class="section-content">
+
+<table class="single-result">
+<tr class="odd">
+<td>
+[% IF result.logs %]
+  [% FOREACH log=result.logs %]
+    [% log.log_type.name %]: <br/>
+  [% END %]
+[% ELSE %]
+No logs available.
+[% END %]
+</td>
+</tr>
+</table>
+
+  </div> <!--END section-content-->
+
+</div> <!--END section-full-->
+
+
+

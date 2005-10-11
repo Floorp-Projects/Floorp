@@ -36,12 +36,25 @@
 
 [% PROCESS global/selects.none.tmpl %]
 
-[% INCLUDE global/header.html.tmpl title = 'Run Tests' 
-     includeselects=1%] 
+[% includeselects=1 %]
+[% INCLUDE global/html_header.tmpl js_files=['js/SelectBoxes.js'] %]
+[% INCLUDE global/litmus_header.tmpl %]
 
-<p class="pagetitle">Run Tests</p>
-<p class="pageinstruction">Welcome to Litmus. To run tests, please enter some 
-information about your system configuration.</p>
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+
+<div class="section-full">
+  <div class="section-header">
+System Information
+  </div>
+  <div class="section-content">
+
+<p>To run tests, please enter some information about your system configuration.</p>
 <form action="[% goto %]" method="post" name="form" id="form">
 <input name="isSysConfig" type="hidden" value="1">
 <input name="testgroup" type="hidden" value="[% testgroup %]">
@@ -59,7 +72,6 @@ information about your system configuration.</p>
     [% END %]
 [% END %]
 
-<p><strong>System Information:</strong><br>
 <table border="0" cellpadding="5">
 
 <tr><td><div align="right">Product:</div></td><td>
@@ -94,18 +106,28 @@ information about your system configuration.</p>
 <td>[% INCLUDE branchbox branches=branches defaultbranch=ua.branch(product) %]</td>
 </tr>
 <tr>
-<td><div align="right">Build Id:</div></td>
-<td><input type="text" id="buildid" name="buildid" size="20" 
-    value="[% ua.buildid FILTER html %]"></td>
+<td><div align="right">Build ID:</div></td>
+<td><input type="text" id="buildid" name="buildid" size="25" value="[% ua.buildid FILTER html %]"></td>
 </tr>
 <tr>
 <td><div align="right">Email Address:</div></td>
-<td><input type="text" id="email" name="email" size="20" 
-    value="[% defaultemail.email FILTER html %]"></td>
+<td><input type="text" id="email" name="email" size="25" value="[% defaultemail.email FILTER html %]"></td>
+</tr>
+<tr>
+<td colspan="2">
+<input type="submit" name="Submit" value="Submit">
+</td>
 </tr>
 </table>
-</p>
-<input type="submit" name="Submit" value="Submit">
 </form>
 
-[% INCLUDE global/footer.html.tmpl %]
+  </div>
+
+</div>
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]

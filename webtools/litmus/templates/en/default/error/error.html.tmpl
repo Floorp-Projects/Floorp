@@ -22,8 +22,21 @@
   # $message - the error message
 #%]
 
-[% INCLUDE global/header.html.tmpl title = 'Error' %] 
+[% INCLUDE global/html_header.tmpl title = 'Error' %] 
+[% INCLUDE global/litmus_header.tmpl title = 'Error' %] 
 
-<p><strong>Error:</strong> [% message FILTER html %]</p>
+<div id="page">
 
-[% INCLUDE global/footer.html.tmpl %]
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="errorHeading">Error</h1>
+
+    <div class="error">[% message FILTER html %]</div>
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/html_footer.tmpl %]

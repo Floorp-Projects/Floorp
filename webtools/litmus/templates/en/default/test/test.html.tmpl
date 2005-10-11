@@ -45,7 +45,7 @@
                 [% test.summary FILTER html %]
             </strong>
         </td>
-    
+        
     <td><table border="0">
     
         <tr><td><div align="right"><strong>Product:</strong></div></td>
@@ -83,7 +83,36 @@
     <td colspan="3">
     <table border="0" cellpadding="5">
       <tr id="testdatarow_[% test.testid FILTER html %]">
-       [% test.format.display(test, showedit, "runtests/testdisplay.html.tmpl") %]
+<script language="JavaScript" type="text/JavaScript">
+fields = fields.concat(["steps", "results"]);
+</script>
+
+<td valign="top" width="50%">
+<strong>Steps to Perform:</strong><br>
+[% IF showedit %]
+    <textarea name="steps_edit_[%test.testid FILTER html%]"
+        id="steps_edit_[%test.testid FILTER html%]"
+        style="display: none;"
+        rows="15" cols="45">[% test.steps %]</textarea>
+[% END %]
+<p id="steps_text_[%test.testid FILTER html%]">
+    [% test.steps %]</p>
+</td>
+
+<td valign="top" width="50%">
+ <strong>Expected Results:</strong><br>
+ [% IF showedit %]
+     <textarea name="results_edit_[%test.testid FILTER html%]"
+         id="results_edit_[%test.testid FILTER html%]"
+        style="display: none;"
+        rows="15" cols="45">[% test.expected_results %]</textarea>
+ [% END %]
+ <p id="results_text_[%test.testid FILTER html%]">
+    [% test.expected_results %]</p>
+</td>
+[% IF showedit %]
+</tr>
+[% END %]
       </tr>
       <tr style="display: none;" id="communityenabled_row_edit_[%test.testid FILTER html%]"><td>
     <strong>Community Enabled Test: </strong> 

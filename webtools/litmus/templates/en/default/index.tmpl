@@ -1,0 +1,18 @@
+[% INCLUDE global/html_header.tmpl %]
+[% INCLUDE global/litmus_header.tmpl %]
+
+<div id="page">
+
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">Recent Test Results</h1>
+    [% INCLUDE reporting/test_results.tmpl include_limit_criteria=1 %]
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]

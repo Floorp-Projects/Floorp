@@ -30,29 +30,40 @@
   #                         from the current group
 #%]
 
+[% INCLUDE global/html_header.tmpl %] 
+[% INCLUDE global/litmus_header.tmpl %] 
 
-[% INCLUDE global/header.html.tmpl title = 'Run Tests' %] 
+<div id="page">
 
-<p class="pagetitle">Run Tests</p>
-<p class="pageinstruction">Thank you for your testing.</p> 
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+
+<div class="section-full">
+  <div class="section-header">
+Results submitted
+  </div>
+  <div class="section-content">
+
+<p>Thank you for your testing efforts.</p>
 
 [% IF testcount %]
     [% IF testcount > 1 %] [% plural = 's' %] [% END %]
-    <p class="pageinstruction"> You have submitted [% testcount FILTER html %] test
-        result[% plural %]. 
-    </p>
+    <p>You have submitted <strong>[% testcount FILTER html %]</strong> test result[% plural %].</p>
 [% END %]
 
 [% IF resultcounts.keys.0 %]
     <p><strong>Result Summary:</strong></p>
-    <table border="0">
+    <table class="testresults-submitted">
     [% FOREACH curresult = resultcounts.keys %]
         [% IF resultcounts.$curresult %]
             [% count = resultcounts.$curresult %]
         [% ELSE %]
             [% count = 0 %]
         [% END %]
-        <tr>
+        <tr class="[% curresult FILTER lower %]">
         <td><strong>[% curresult FILTER html %]:</strong></td>
         <td>[% count FILTER html %]</td>
         </tr>
@@ -70,13 +81,24 @@
     </table>
 [% END %]
 
-<p class="pageinstruction">Go <a href="index.cgi">Home</a> or 
-    [% IF return %]
-        <a href="[% return | uri | html %]">go back.</a>
-    [% ELSE %]
+<p>
+  [% IF return %]
+    <a href="[% return | uri | html %]">Go Back</a> or 
+  [% END %]
     <a href="run_tests.cgi?product=[% product.productid | uri | html %]&continuetesting=1&defaulttestgroup=[% testgroup.testgroupid | uri | html %]">
-run some more tests</a>.
-    [% END %]
+Run Some More Tests</a>
 </p>
 
-[% INCLUDE global/footer.html.tmpl %]
+      </div> <!--END section-content-->
+
+    </div> <!--END section-full-->
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]
+
+
+

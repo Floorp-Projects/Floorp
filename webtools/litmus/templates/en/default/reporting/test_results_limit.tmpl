@@ -1,0 +1,85 @@
+[% PROCESS global/selects.none.tmpl %]
+
+<form name="search_results" method="get" action="search_results.cgi" onSubmit="if(this.test_id.value=='-Testcase ID#-'){this.test_id.value = '';}if(this.summary.value=='-Summary-'){this.summary.value = '';}">
+
+<script>
+function init()
+{
+    FormInit(document.forms['search_results'], document.location.search);
+}
+</script>
+
+
+<!--# Add a row to order the results by each field. -->
+<tr class="search">
+  <td class="search-heading">Sort by</td>
+  <td class="search"><select name="order_by_created">
+        <option value="">-Sort-</option>
+        <option[% IF order_bys.created == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.created == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+      </select></td>
+  <td class="search"><select name="order_by_product">
+        <option value="">-Sort-</option>
+        <option[% IF order_bys.product == 'ASC' %] selected[% END %]
+ value="ASC">A->Z</option>
+        <option[% IF order_bys.product == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+      </select></td>
+  <td class="search"><select name="order_by_platform">
+        <option value="">-Sort-</option>
+        <option[% IF order_bys.platform == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.platform == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+      </select></td>
+  <td class="search"><select name="order_by_test_group">
+        <option value="">-Sort-</option>
+        <option[% IF order_bys.test_group == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.test_group == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+      </select></td>
+  <td class="search"><select name="order_by_test_id">
+        <option value="">-Sort-</option>
+        <option[% IF order_bys.test_id == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.test_id == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+      </select></td>
+  <td class="search"><select name="order_by_summary">
+        <option value="">-Sort-</option>
+        <option[% IF order_bys.summary == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.summary == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+      </select></td>
+  <td class="search"><select name="order_by_result_status">
+        <option value="">-Sort-</option>
+        <option[% IF order_bys.result_status == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.result_status == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+      </select></td>
+  <td class="search"><select name="order_by_branch">
+        <option value="">-Sort-</option>
+        <option[% IF order_bys.branch == 'ASC' %] selected[% END %] value="ASC">A->Z</option>
+        <option[% IF order_bys.branch == 'DESC' %] selected[% END %] value="DESC">Z->A</option>
+      </select></td>
+</tr>
+
+<!--# Add a row to order the results by each field. -->
+<tr class="search">
+  <td class="search-heading" align="center">Limit by</td>
+  <td class="search">[% INCLUDE form_widgets/select_timespan.tmpl %]</td>
+  <td class="search">[% INCLUDE form_widgets/select_product.tmpl %]</td>
+  <td class="search">[% INCLUDE form_widgets/select_platform.tmpl %]</td>
+  <td class="search">[% INCLUDE form_widgets/select_test_group.tmpl %]</td>
+  <td class="search">[% INCLUDE form_widgets/input_test_id.tmpl %]</td>
+  <td class="search">[% INCLUDE form_widgets/input_summary.tmpl %]</td>
+  <td class="search">[% INCLUDE form_widgets/select_result_status.tmpl%]</td>
+  <td class="search">[% INCLUDE form_widgets/select_branch.tmpl %]</td>
+</tr>
+
+<tr class="search">
+  <td class="search-heading" align="center">
+Limit to</td>
+  <td class="search"><input type="text" name="limit" value="[% limit %]" size="5"> results</td>
+  <td class="search-submit" colspan="7"><input type="reset" onclick="FormInit(this.parent, '');">&nbsp;<input type="submit" value="Show Results">
+</td>
+</tr>
+
+</form>
+
+
+
+
+

@@ -27,35 +27,71 @@
 #%]
 
 
-[% INCLUDE global/header.html.tmpl title = 'Statistics' %] 
+[% INCLUDE global/html_header.tmpl %]
+[% INCLUDE global/litmus_header.tmpl %]
 
-<p class="pagetitle">Litmus - Statistics</p>
+<div id="page">
 
-<p class="pageinstruction">General Statistics</p>
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+
+<div class="section-full">
+<div class="section-header">
+General Statistics
+</div>
+
+<div class="section-content">
 <ul>
 <li>Testcases - [% numtests FILTER html %] testcases</li>
 <li>Users - [% numusers FILTER html %] users</li>
 <li>Results - [% numresults FILTER html %] results</li>
 </ul>
-
-<p class="pageinstruction">Tester Statistics</p>
-<div>
-<p><strong>Top Testers:</strong></p>
-<table border="1">
-<tr><td></td><td><strong>Tester</strong></td><td><strong># Tests Run</strong></td></tr>
-[% count = 1 %]
-[% FOREACH curtester = toptesters %]
-<tr>
-    <td>[% count FILTER html %]</td>
-    <td>[% curtester.email FILTER html | email %]</td>
-    <td>[% curtester.numtests FILTER html %]</td>
+</td>
 </tr>
-[% count = count+1 %]
+</div>
+
+  </div> <!--END section-full-->
+
+<br/>
+
+<div class="section-full">
+<div class="section-header">
+Top Testers
+</div>
+
+<div class="section-content">
+<table class="stats"
+<tr>
+<td class="header">Rank</td>
+<td class="header">Tester</td>
+<td class="header"># Tests Run</td>
+</tr>
+[% FOREACH curtester = toptesters %]
+<tr [% IF not (loop.count % 2) %]class="even"[% ELSE %]class="odd"[% END %]>
+    <td align="center">[% loop.count %]</td>
+    <td align="center">[% IF curtester.email %]<a href="mailto:[% curtester.email FILTER html %]">[% curtester.email FILTER html %]</a>[% ELSE %]Anonymous[% END %]</td>
+    <td align="center">[% curtester.numtests FILTER html %]</td>
+</tr>
 [% END %]
 </table>
 </div>
 
-<div>
-</div>
+  </div> <!--END section-full-->
 
-[% INCLUDE global/footer.html.tmpl %]
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]
+
+
+
+
+
+
+

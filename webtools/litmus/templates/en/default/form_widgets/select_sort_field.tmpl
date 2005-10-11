@@ -1,0 +1,8 @@
+<select name="[% name %]">
+    <option value="">-Sort Field-</option>
+[% IF sort_fields %]
+[% FOREACH sort_field=sort_fields %]
+    <option value="[% sort_field.name %]">[% sort_field.display_string %]</option>
+[% END %]
+[% END %]
+</select>

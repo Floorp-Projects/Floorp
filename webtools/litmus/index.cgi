@@ -1,50 +1,89 @@
 #!/usr/bin/perl -w
-# -*- Mode: perl; indent-tabs-mode: nil -*-
+# -*- mode: cperl; c-basic-offset: 8; indent-tabs-mode: nil; -*-
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1
 #
-# The contents of this file are subject to the Mozilla Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/MPL/
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
 #
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
 #
 # The Original Code is Litmus.
 #
-# The Initial Developer of the Original Code is Netscape Communications
-# Corporation. Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
-# Rights Reserved.
+# The Initial Developer of the Original Code is
+# the Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
 #
-# Contributor(s): Zach Lipton <zach@zachlipton.com>
+# Contributor(s):
+#   Chris Cooper <ccooper@deadsquid.com>
+#   Zach Lipton <zach@zachlipton.com>
+#
+# ***** END LICENSE BLOCK *****
 
 use strict;
+$|++;
 
-# Litmus homepage
+use Time::HiRes qw( gettimeofday tv_interval );
+my $t0 = [gettimeofday];
 
 use Litmus;
+use Litmus::Auth;
 use Litmus::Error;
-use Litmus::DB::Product;
-use Litmus::Testlist;
+use Litmus::DB::Testresult;
+use Litmus::FormWidget;
+
 use CGI;
+use Time::Piece::MySQL;
 
-my $c = new CGI; 
+use diagnostics;
 
+my ($criteria,$results) = Litmus::DB::Testresult->getDefaultTestResults;
+
+my $products = Litmus::FormWidget->getProducts();
+my $platforms = Litmus::FormWidget->getPlatforms();
+my $test_groups = Litmus::FormWidget->getTestGroups();
+my $result_statuses = Litmus::FormWidget->getResultStatuses;
+my $branches = Litmus::FormWidget->getBranches();
+
+my $c = new CGI;
 print $c->header();
 
-my @products = Litmus::DB::Product->retrieve_all();
-
-my @failingtests = Litmus::DB::Test->retrieve_all();
-#my @hotlist = makeHotlist(15, Litmus::DB::Result->search(name => "Fail"), @failingtests);
-my @hotlist = undef;
-
-
 my $vars = {
-    products => \@products,
-    hotlist  => \@hotlist,
-};
+            title => 'Main Page',
+            products => $products,
+            platforms => $platforms,
+            test_groups => $test_groups,
+            result_statuses => $result_statuses,
+            branches => $branches,
+            limit => $Litmus::DB::Testresult::_num_results_default,
+           };
 
-Litmus->template()->process("index.html.tmpl", $vars) || 
+# Only include results if we have them.
+if ($results and scalar @$results > 0) {
+    $vars->{results} = $results;
+}
+
+my $cookie =  Litmus::Auth::getCookie();
+$vars->{"defaultemail"} = $cookie;
+$vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
+
+Litmus->template()->process("index.tmpl", $vars) ||
     internalError(Litmus->template()->error());
+
+my $elapsed = tv_interval ( $t0 );
+printf  "<div id='pageload'>Page took %f seconds to load.</div>", $elapsed;
+
+exit 0;
+
+
+
+
+
+

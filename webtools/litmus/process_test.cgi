@@ -1,24 +1,31 @@
 #!/usr/bin/perl -w
-# -*- Mode: perl; indent-tabs-mode: nil -*-
+# -*- mode: cperl; c-basic-offset: 8; indent-tabs-mode: nil; -*-
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1
 #
-# The contents of this file are subject to the Mozilla Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/MPL/
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
 #
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
 #
 # The Original Code is Litmus.
 #
-# The Initial Developer of the Original Code is Netscape Communications
-# Corporation. Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
-# Rights Reserved.
+# The Initial Developer of the Original Code is
+# the Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
 #
-# Contributor(s): Zach Lipton <zach@zachlipton.com>
+# Contributor(s):
+#   Chris Cooper <ccooper@deadsquid.com>
+#   Zach Lipton <zach@zachlipton.com>
+#
+# ***** END LICENSE BLOCK *****
 
 use strict;
 
@@ -33,8 +40,10 @@ use Litmus::Utils;
 use CGI;
 use Time::Piece::MySQL;
 
-my $c = new CGI; 
+use diagnostics;
+use Data::Dumper;
 
+my $c = new CGI; 
 
 my $user;
 my $sysconfig;
@@ -48,6 +57,8 @@ if ($c->param("isSysConfig")) {
 }
 
 my @names = $c->param();
+
+#print Dumper \@names;
 
 # find all the test numbers contained in this result submission
 my @tests;
@@ -73,7 +84,7 @@ foreach my $curtestid (@tests) {
         # it and move on...
         next; 
     }
-    
+
     my $curtest = Litmus::DB::Test->retrieve($curtestid);
     unless ($curtest) {
         # oddly enough, the test doesn't exist
@@ -97,18 +108,21 @@ foreach my $curtestid (@tests) {
                             );
     }
     
-    # get system configuration. If there is no 
-    # configuration and we're not doing the 
-    # simpletest interface, then we make you enter it
-    $sysconfig = $sysconfig || Litmus::SysConfig->getCookie(
-        Litmus::DB::Product->retrieve($c->param("product_initial_$curtestid")));
-    if (! $sysconfig && ! $c->param("isSimpleTest")) {
-        # users who don't have a sysconfig for this product
-        # should go configure themselves first:
-        Litmus::SysConfig->displayForm(
-            Litmus::DB::Product->retrieve($c->param("product_$curtestid")), 
-                "process_test.cgi", $c);
-        exit;
+    # get system configuration. If there is no configuration and we're 
+    # not doing the simpletest interface, then we make you enter it
+    # Get system configuration. If there is no configuration,
+    # then we make the user enter it.
+    if (!$sysconfig) {
+      $sysconfig = Litmus::SysConfig->getCookie($product);
+    }
+    
+    # Users who still don't have a sysconfig for this product
+    # should go configure themselves first.
+    if (!$sysconfig) {
+      Litmus::SysConfig->displayForm($product,
+                                     "process_test_results.cgi",
+                                     $c);
+      exit;
     }
     
     my $result = Litmus::DB::Result->retrieve($c->param("testresult_".$curtestid));
@@ -122,97 +136,103 @@ foreach my $curtestid (@tests) {
     # users, we just use the web-user@mozilla.org user:
     
     if ($c->param("isSimpleTest")) {
-        $user = $user || Litmus::DB::User->search(email => 'web-tester@mozilla.org')->next();
+      $user = $user || Litmus::DB::User->search(email => 'web-tester@mozilla.org')->next();
     } else {
-        $user = $user || Litmus::Auth::getCookie()->userid();
+      $user = $user || Litmus::Auth::getCookie()->userid();
     } 
     
     my $tr = Litmus::DB::Testresult->create({
-        user      => $user,
-        testid    => $curtest,
-        timestamp => $time,
-        useragent => $ua,
-        result    => $result,
-        platform  => $sysconfig->platform(),
-        opsys     => $sysconfig->opsys(),
-        branch    => $sysconfig->branch(),
-        buildid   => $sysconfig->buildid(),
-    });
+                                             user      => $user,
+                                             testid    => $curtest,
+                                             timestamp => $time,
+                                             last_updated => $time,
+                                             useragent => $ua,
+                                             result    => $result,
+                                             platform  => $sysconfig->platform(),
+                                             opsys     => $sysconfig->opsys(),
+                                             branch    => $sysconfig->branch(),
+                                             buildid   => $sysconfig->buildid(),
+                                            });
     
     # if there's a note, create an entry in the comments table for it
-    Litmus::DB::Comment->create({
-        testresult      => $tr,
-        submission_time => $time,
-        user            => $user,
-        comment            => $note
-    });
-}
+    if ($note and
+        $note ne '') {
+      Litmus::DB::Comment->create({
+                                   testresult      => $tr,
+                                   submission_time => $time,
+                                   last_updated    => $time,
+                                   user            => $user,
+                                   comment         => $note
+                                  });
+    }
+  
+  }
 
 # process changes to testcases:
 my @changed;
-if ($c->param("editingTestcases") && Litmus::Auth::canEdit(Litmus::Auth::getCookie())) {
-    # only users with canedit can edit testcases, duh!
+if ($c->param("editingTestcases") && 
+    Litmus::Auth::canEdit(Litmus::Auth::getCookie())) {
+  # only users with canedit can edit testcases, duh!
+  
+  # the editingTestcases param contains a comma-separated list of 
+  # testids that the user has made changes to (well, has clicked 
+  # the edit button for). 
+  @changed = split(',' => $c->param("editingTestcases"));
+  foreach my $editid (@changed) {
+    my $edittest = Litmus::DB::Test->retrieve($editid);
+    if (! $edittest) {invalidInputError("Test $editid does not exist")}
     
-    # the editingTestcases param contains a comma-separated list of 
-    # testids that the user has made changes to (well, has clicked 
-    # the edit button for). 
-    @changed = split(',' => $c->param("editingTestcases"));
-    foreach my $editid (@changed) {
-        my $edittest = Litmus::DB::Test->retrieve($editid);
-        if (! $edittest) {invalidInputError("Test $editid does not exist")}
-        
-        $edittest->summary($c->param("summary_edit_$editid"));
-        if ($c->param("communityenabled_$editid")) {
-            $edittest->communityenabled(1);
-        } else {
-            $edittest->communityenabled(0);
-        }
-        my $product = Litmus::DB::Product->retrieve($c->param("product_$editid"));
-        my $group = Litmus::DB::Testgroup->retrieve($c->param("testgroup_$editid"));
-        my $subgroup = Litmus::DB::Subgroup->retrieve($c->param("subgroup_$editid"));
-        requireField("product", $product);
-        requireField("group", $group);
-        requireField("subgroup", $subgroup);
-        $edittest->product($product);
-        $edittest->testgroup($group);
-        $edittest->subgroup($subgroup);
-        
-        # now set the format fields: 
-        my $format = $edittest->format();
-        foreach my $curfield ($format->fields()) {
-            warn($curfield."_edit_editid");
-            $edittest->set($format->getColumnMapping($curfield), 
-                           $c->param($curfield."_edit_$editid"));
-        }
-
-        
-        $edittest->update();
+    $edittest->summary($c->param("summary_edit_$editid"));
+    if ($c->param("communityenabled_$editid")) {
+      $edittest->communityenabled(1);
+    } else {
+      $edittest->communityenabled(0);
     }
+    my $product = Litmus::DB::Product->retrieve($c->param("product_$editid"));
+    my $group = Litmus::DB::Testgroup->retrieve($c->param("testgroup_$editid"));
+    my $subgroup = Litmus::DB::Subgroup->retrieve($c->param("subgroup_$editid"));
+    requireField("product", $product);
+    requireField("group", $group);
+    requireField("subgroup", $subgroup);
+    $edittest->product($product);
+    $edittest->testgroup($group);
+    $edittest->subgroup($subgroup);
+    
+    $edittest->steps($c->param("steps_edit_$editid"));
+    $edittest->expected_results($c->param("results_edit_$editid"));
+    
+    $edittest->update();
+  }
 } elsif ($c->param("editingTestcases") && 
-    ! Litmus::Auth::canEdit(Litmus::Auth::getCookie())) {
-        invalidInputError("You do not have permissions to edit testcases. ");
+         ! Litmus::Auth::canEdit(Litmus::Auth::getCookie())) {
+  invalidInputError("You do not have permissions to edit testcases. ");
 }
 
 my $testgroup;
 if ($c->param("testgroup")) {
-    $testgroup = Litmus::DB::Testgroup->retrieve($c->param("testgroup")),
+  $testgroup = Litmus::DB::Testgroup->retrieve($c->param("testgroup")),
 } 
+
+my $vars;
+$vars->{'title'} = 'Run Tests';
+
+my $cookie =  Litmus::Auth::getCookie();
+$vars->{"defaultemail"} = $cookie;
+$vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
 
 # show the normal thank you page unless we're in simpletest mode where 
 # we should show a special page:
 if ($c->param("isSimpleTest")) {
-    Litmus->template()->process("simpletest/resultssubmitted.html.tmpl") ||
-        internalError(Litmus->template()->error());    
+  Litmus->template()->process("simpletest/resultssubmitted.html.tmpl", $vars) || internalError(Litmus->template()->error());    
 } else {
-    my $vars = {
-        testcount => $testcount,
-        product   => $product || undef,
-        resultcounts => \%resultcounts || undef,
-        changedlist => \@changed || undef,
-        testgroup => $testgroup || undef,
-        "return" => $c->param("return") || undef,
-    };
-    Litmus->template()->process("process/process.html.tmpl", $vars) ||
-        internalError(Litmus->template()->error());    
+  $vars->{'testcount'} = $testcount;
+  $vars->{'product'} = $product || undef;
+  $vars->{'resultcounts'} = \%resultcounts || undef;
+  $vars->{'changedlist'} = \@changed || undef;
+  $vars->{'testgroup'} = $testgroup || undef;
+  $vars->{'return'} = $c->param("return") || undef;
+
+  Litmus->template()->process("process/process.html.tmpl", $vars) ||
+    internalError(Litmus->template()->error());    
 }
 

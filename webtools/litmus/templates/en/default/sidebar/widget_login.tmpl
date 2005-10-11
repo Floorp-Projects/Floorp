@@ -1,0 +1,14 @@
+  <div class="pagetools">
+    <div>
+    [% IF defaultemail %]
+	<h3>Welcome!</h3>
+	<p>[% defaultemail.email %]</p>
+	<p align="right"><a href="#" onclick="alert('Not Linked'); return false;">Log out</a></p>
+    [% ELSE %]
+	<h3>Log in</h3>
+	<p>Username:<br/><input type="text" name="username" value=""></p>
+        <p>Password:<br/><input type="password" name="password" value=""></p>
+	<p class="submit"><input type="submit" value="Log in"></p>
+    [% END %]
+    </div>
+  </div>

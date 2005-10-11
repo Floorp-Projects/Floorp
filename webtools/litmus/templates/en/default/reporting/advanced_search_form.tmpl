@@ -1,0 +1,189 @@
+<form id="advanced_search" name="advanced_search" method="get" action="advanced_search.cgi">
+
+<script>
+function init()
+{
+    FormInit(document.forms['advanced_search'], document.location.search);
+}
+</script>
+
+<table class="section">
+<tr>
+<td class="subsection">
+  <div class="section-header">
+  Limit By Field
+  </div>
+  <div class="section-content">
+<table class="advanced-search">
+<tr>
+<td colspan="2" class="instructions">
+Limit your search to specific values of visible fields.
+</td>
+</tr>
+<tr>
+<td class="heading">Product:</td>
+<td>[% INCLUDE form_widgets/select_product.tmpl %]</td>
+</tr>
+<tr>
+<td class="heading">Platform:</td>
+<td>[% INCLUDE form_widgets/select_platform.tmpl %]</td>
+</tr>
+<tr>
+<td class="heading">Testgroup:</td>
+<td>[% INCLUDE form_widgets/select_test_group.tmpl %]</td>
+</tr>
+<tr>
+<td class="heading">Testcase ID#:</td>
+<td>[% INCLUDE form_widgets/select_test_id.tmpl %]</td>
+</tr>
+<tr>
+<td class="heading">Status:</td>
+<td>[% INCLUDE form_widgets/select_result_status.tmpl%]</td>
+</tr>
+<tr>
+<td class="heading">Branch:</td>
+<td>[% INCLUDE form_widgets/select_branch.tmpl %]</td>
+</tr>
+</table>
+  </div>
+</td>
+
+<td class="subsection">
+  <div class="section-header">
+  Limit By Date
+  </div>
+  <div class="section-content">
+<table class="advanced-search">
+<tr>
+<td colspan="2" class="instructions">Display only results between these two dates.</p><p>NOTE: the preferred format for dates is YYYYMMDDhhmmss, although the search engine will do its best (within reason) to parse dates from whatever is submitted.</td>
+</tr>
+<tr>
+<td class="heading">Start Date:</td>
+<td><input type="text" name="start_date" value=""></td>
+</tr>
+<tr>
+<td class="heading">End Date:</td>
+<td><input type="text" name="end_date" value="Now"></td>
+</tr>
+</table>
+  </div>
+</td>
+</tr>
+
+<tr>
+<td class="subsection">
+  <div class="section-header">
+  Search By Field
+  </div>
+  <div class="section-content">
+<table class="advanced-search">
+<tr>
+<td colspan="3" class="instructions">
+Perform more elaborate pattern matching against all fields.
+</td>
+</tr>
+<tr>
+<td>[% INCLUDE form_widgets/select_search_field.tmpl name="search_field1" %]</td>
+<td>[% INCLUDE form_widgets/select_match_criteria.tmpl name="match_criteria1" %]</td>
+<td><input type="text" name="search_value1" value=""></td>
+</tr>
+<tr>
+<td>[% INCLUDE form_widgets/select_search_field.tmpl name="search_field2" %]</td>
+<td>[% INCLUDE form_widgets/select_match_criteria.tmpl name="match_criteria2" %]</td>
+<td><input type="text" name="search_value2" value=""></td>
+</tr>
+<tr>
+<td>[% INCLUDE form_widgets/select_search_field.tmpl name="search_field3" %]</td>
+<td>[% INCLUDE form_widgets/select_match_criteria.tmpl name="match_criteria3" %]</td>
+<td><input type="text" name="search_value3" value=""></td>
+</tr>
+<tr>
+<td>[% INCLUDE form_widgets/select_search_field.tmpl name="search_field4" %]</td>
+<td>[% INCLUDE form_widgets/select_match_criteria.tmpl name="match_criteria4" %]</td>
+<td><input type="text" name="search_value4" value=""></td>
+</tr>
+</table>
+  </div>
+</td>
+
+<td class="subsection">
+  <div class="section-header">
+  Sort Order
+  </div>
+  <div class="section-content">
+<table class="advanced-search">
+<tr>
+<td colspan="3" class="instructions">
+Define the sort order for your results.
+</td>
+</tr>
+<tr>
+<td class="heading">Sort first by:</td>
+<td>[% INCLUDE form_widgets/select_sort_field.tmpl name="sort_field1" %]</td>
+<td>[% INCLUDE form_widgets/select_sort_order.tmpl name="sort_order1" %]</td>
+</tr>
+<tr>
+<td class="heading">Then by:</td>
+<td>[% INCLUDE form_widgets/select_sort_field.tmpl name="sort_field2" %]</td>
+<td>[% INCLUDE form_widgets/select_sort_order.tmpl name="sort_order2" %]</td>
+</tr>
+<tr>
+<td class="heading">Then by:</td>
+<td>[% INCLUDE form_widgets/select_sort_field.tmpl name="sort_field3" %]</td>
+<td>[% INCLUDE form_widgets/select_sort_order.tmpl name="sort_order3" %]</td>
+</tr>
+<tr>
+<td class="heading">Then by:</td>
+<td>[% INCLUDE form_widgets/select_sort_field.tmpl name="sort_field4" %]</td>
+<td>[% INCLUDE form_widgets/select_sort_order.tmpl name="sort_order4" %]</td>
+</tr>
+</table>
+  </div>
+</td>
+</tr>
+
+<tr>
+<td class="subsection">
+  <div class="section-header">
+  General Options
+  </div>
+  <div class="section-content">
+<table class="advanced-search">
+<tr>
+<td colspan="2" class="instructions">
+Use this to limit the number of results displayed.
+</td>
+</tr>
+<td colspan="2">Limit to <input type="text" name="limit" value="15" size="5"> results</td>
+</tr>
+</table>
+  </div>
+</td>
+
+<td class="subsection">
+  <div class="section-header">
+  Admin Options
+  </div>
+  <div class="section-content">
+<table class="advanced-search">
+<tr>
+<td colspan="2" class="instructions">
+Admin-specific limiting criteria go here. These criteria are not available to regular users.
+</td>
+</tr>
+<td colspan="2"><input type="checkbox" name="trusted_only">&nbsp;Display only test results from trusted sources</td>
+</tr>
+</table>
+  </div>
+</td>
+</tr>
+
+<tr>
+<td colspan="2" class="submit">
+<input type="reset" onclick="FormInit(this.parent, '');">&nbsp;<input type="submit">
+</td>
+</tr>
+</table>
+
+</form>
+

@@ -27,59 +27,80 @@
   # $defaultgroup (optional) - the default group to display
 #%]
 
+[% onload = 'showsubgroup()' %]
 
-[% INCLUDE global/header.html.tmpl title = 'Run Tests' script = '
-function MM_findObj(n, d) { //v4.01
-  var p,i,x;  if(!d) d=document; if((p=n.indexOf("?"))>0&&parent.frames.length) {
-    d=parent.frames[n.substring(p+1)].document; n=n.substring(0,p);}
-  if(!(x=d[n])&&d.all) x=d.all[n]; for (i=0;!x&&i<d.forms.length;i++) x=d.forms[i][n];
-  for(i=0;!x&&d.layers&&i<d.layers.length;i++) x=MM_findObj(n,d.layers[i].document);
-  if(!x && d.getElementById) x=d.getElementById(n); return x;
-}
+[% INCLUDE global/html_header.tmpl js_files=['js/SubGroup.js','js/SelectBoxes.js','js/RunTests.js'] %] 
+[% INCLUDE global/litmus_header.tmpl %]
 
-function showsubgroup() { 
-  var groupselect = MM_findObj("group");
-  
-  var selnum;
-  
-  for (var i=0; i<groupselect.length; i++) {
-      if (groupselect[i].checked)
-          selnum = groupselect[i].value;
-  }
-  
-  // no selection yet so just keep everything as-is:
-  if (! selnum) 
-      return;
-  
-  
-  // object to show
-  var obj = MM_findObj("divsubgroup_"+selnum);
-  
-  // disable all of them
-  for (var i=0; i<groupselect.length; i++) {
-      var gnum = groupselect[i].value;
-    var disableobj = MM_findObj("divsubgroup_"+gnum);
-    disableobj.style.display = "none";
-  }
-  MM_findObj("divsubgroup_null").style.display = "none";
-  
-  obj.style.display = "";
+<div id="page">
 
-}' onload = 'showsubgroup()' %] 
+[% INCLUDE sidebar/sidebar.tmpl %]
 
-<p class="pagetitle">Run Tests</p>
-<p class="pageinstruction">Select a testing group and subgroup.</p>
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+
+<div class="section-full">
+<div class="sec_head">
+<table width="100%">
+<tr>
+<td class="l">Testing Summary</td>
+<td class="r"><a href="#" onclick="divSWAP('sum'); return false;">Hide / Show Summary</a></td>
+</tr>
+</table>
+</div>
+
+  <div id="sum" class="summary">
+  <table class="test-config">
+  <tr>
+
+   <td>
+    <div class="dh">Product:</div><div class="dv">[% sysconfig.product.name FILTER html %]</div>
+    <div class="t_link"><a href="run_tests.cgi">Change Configuration</a></div>
+   </td>
+   <td>
+    <div class="dh">Platform:</div><div class="dv">[% sysconfig.platform.name FILTER html %]</div>
+    <div class="dh">Opsys:</div><div class="dv">[% sysconfig.opsys.name FILTER html %]</div>
+   </td>
+   <td>
+    <div class="dh">Branch:</div><div class="dv">[% sysconfig.branch.name FILTER html %]</div>
+    <div class="dh">Build ID:</div><div class="dv">[% sysconfig.buildid FILTER html %]</div>
+   </td>
+  </tr>
+  </table>
+
+  </div> <!--END section-content-->
+
+</div> <!--END section-full-->
+
+<hr />
+
+<div class="section-full">
+  <div class="section-header">
+Select Testing Group
+  </div>
+  <div class="section-content">
+
 <form action="run_tests.cgi" method="post" name="form" id="form">
-<p>
-<strong>Testing Group:</strong><br>
 <ul>
+
+[% IF defaultgroup.testgroupid=="" %]
+  [% select_first_avail_group=1 %]
+[% ELSE %]
+  [% select_first_avail_group=0 %]
+[% END %]
 [% FOREACH curgroup = groups %]
-    [% IF defaultgroup.testgroupid == curgroup.testgroupid %]
+    [% group_completed = curgroup.percentcompleted(sysconfig.platform, 0) %]
+    [% IF group_completed != 100 AND group_completed!= 'N/A' AND (defaultgroup.testgroupid==curgroup.testgroupid OR select_first_avail_group==1) %]
       [% selected = "checked" %]
-    [% ELSE %] [% selected = "" %] [% END %]
-    <li><input type="radio" name="group" value="[% curgroup.testgroupid FILTER html %]"
+      [% select_first_avail_group=0 %]
+    [% ELSE %] 
+      [% selected = "" %]
+    [% END %]
+
+    <li><input [% IF group_completed == 100 OR group_completed == 'N/A' %]disabled [% END %] type="radio" name="group" value="[% curgroup.testgroupid FILTER html %]"
         onchange="showsubgroup()" [% selected %]>
-         [% curgroup.name FILTER html %] - [% curgroup.percentcompleted(sysconfig.platform, 0) %]%</li>
+         [% curgroup.name FILTER html %] - [% group_completed %][% IF group_completed != 'N/A' %]%[% END %]</li>
 [% END %]
 [% # for some boneheaded reason, our js breaks if there is only one group, 
    # so we create a fake dummy group if this is the case: %]
@@ -88,42 +109,58 @@ function showsubgroup() {
 [% END %]
 </ul>
 </p>
-<hr>
+
+  </div> <!--END section-content-->
+
+</div> <!--END section-full-->
+
+<div class="section-full">
+  <div class="section-header">
+Select Subgroup
+  </div>
+  <div class="section-content">
 <p>
-<strong>Select Subgroup:</strong><br>
-[% headerrow = '<tr><td><strong>Name</strong></td><td><strong>Number of Tests</td>
-    <td><strong>% Completed</strong></td></tr>' %]
+[% headerrow = '<tr><th>Name</th><th>Number of Tests</th><th>% Completed</th></tr>' %]
     
-<div id="divsubgroup_null" style="visibility: visible; position: absolute;">
-<table border="1">
+<div id="divsubgroup_null" style="visibility: visible;">
+<table class="run-tests">
 [% headerrow %]
+<tr>
+<td colspan="3" class="no-results">
+Please select a testing group with testcases, or that has not yet been tested in its entirety.
+</td>
+</tr>
 </table>
 </div>
 
 [% FOREACH curgroup = subgroups.keys %]
     [% cursubgrouplist = subgroups.$curgroup %]
     <div id="divsubgroup_[% curgroup FILTER html %]" style="display: none;">
-        <table border="1">
+        <table class="run-tests">
             [% headerrow %]
             [% FOREACH cursubgroup = cursubgrouplist %]
             
             [% completed = cursubgroup.percentcompleted(sysconfig.platform, 0) %]
-            [% IF completed == 0 %]
-                [% groupstyle = '' %]
-            [% ELSIF completed == 100 OR completed == 'N/A' %]
+            [% IF completed == 100 OR completed == 'N/A' %]
                 [% groupstyle = 'completegroup' %]
+            [% ELSE %]
+		[% IF not (loop.count % 2) %]
+                    [% groupstyle = 'even' %]
+		[% ELSE %]
+                    [% groupstyle = 'odd' %]
+		[% END %]
             [% END %]
             
             <tr class="[% groupstyle %]">
-                <td><input type="radio" name="subgroup_[% curgroup FILTER html %]" 
+                <td align="left"><input [% IF completed == 100 OR completed == 'N/A' %]disabled [% END %]type="radio" name="subgroup_[% curgroup FILTER html %]" 
                     value="[% cursubgroup.id FILTER html %]">
                     [% cursubgroup.name FILTER html %]</input></td>
-                <td>[% counttests = cursubgroup.tests %]
+                <td align="center">[% counttests = cursubgroup.tests %]
                     [% IF ! counttests %] 0 
                     [% ELSIF ! counttests.testid %][% counttests.list.size %]
                     [% ELSE %]
                     1[% END %]</td>
-                <td>[% completed FILTER html %]%</td>
+                <td align="center">[% completed FILTER html %][% IF completed != 'N/A' %]%[% END %]</td>
             </tr>
             [% END %]
         </table>
@@ -137,5 +174,16 @@ function showsubgroup() {
 </div>
 
 </form>
+</p>
 
-[% INCLUDE global/footer.html.tmpl %]
+  </div> <!--END section-content-->
+
+</div> <!--END section-full-->
+
+  </div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]
+

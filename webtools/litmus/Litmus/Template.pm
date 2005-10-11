@@ -1,32 +1,41 @@
-# -*- Mode: perl; indent-tabs-mode: nil -*-
-#
-# The contents of this file are subject to the Mozilla Public
-# License Version 1.1 (the "License"); you may not use this file
-# except in compliance with the License. You may obtain a copy of
-# the License at http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS
-# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-# implied. See the License for the specific language governing
-# rights and limitations under the License.
-#
-# The Original Code is the Bugzilla Bug Tracking System.
-#
-# The Initial Developer of the Original Code is Netscape Communications
-# Corporation. Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
-# Rights Reserved.
-#
-# Contributor(s): Terry Weissman <terry@mozilla.org>
-#                 Dan Mosedale <dmose@mozilla.org>
-#                 Jacob Steenhagen <jake@bugzilla.org>
-#                 Bradley Baetz <bbaetz@student.usyd.edu.au>
-#                 Christopher Aillon <christopher@aillon.com>
-#                 Tobias Burnus <burnus@net-b.de>
-#                 Myk Melez <myk@mozilla.org>
-#                 Max Kanat-Alexander <mkanat@bugzilla.org>
-#                 Zach Lipton <zach@zachlipton.com>
+# -*- mode: cperl; c-basic-offset: 8; indent-tabs-mode: nil; -*-
 
+=head1 COPYRIGHT
+
+ # ***** BEGIN LICENSE BLOCK *****
+ # Version: MPL 1.1
+ #
+ # The contents of this file are subject to the Mozilla Public License
+ # Version 1.1 (the "License"); you may not use this file except in
+ # compliance with the License. You may obtain a copy of the License
+ # at http://www.mozilla.org/MPL/
+ #
+ # Software distributed under the License is distributed on an "AS IS"
+ # basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+ # the License for the specific language governing rights and
+ # limitations under the License.
+ #
+ # The Original Code is the Bugzilla Bug Tracking System.
+ #
+ # The Initial Developer of the Original Code is Netscape Communications
+ # Corporation. Portions created by Netscape are
+ # Copyright (C) 1998 Netscape Communications Corporation. All
+ # Rights Reserved.
+ #
+ # Contributor(s): Terry Weissman <terry@mozilla.org>
+ #                 Dan Mosedale <dmose@mozilla.org>
+ #                 Jacob Steenhagen <jake@bugzilla.org>
+ #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
+ #                 Christopher Aillon <christopher@aillon.com>
+ #                 Tobias Burnus <burnus@net-b.de>
+ #                 Myk Melez <myk@mozilla.org>
+ #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+ #                 Zach Lipton <zach@zachlipton.com>
+ #                 Chris Cooper <ccooper@deadsquid.com>
+ #
+ # ***** END LICENSE BLOCK *****
+
+=cut
 
 # This is mostly a placeholder. At some point in the future, we might 
 # want to be more like Bugzilla and support multiple languages and 

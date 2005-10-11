@@ -38,8 +38,13 @@ print $c->header();
 
 my $testid = $c->param("id");
 
+my $vars;
+my $cookie =  Litmus::Auth::getCookie();
+$vars->{"defaultemail"} = $cookie;
+$vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
+
 if (! $testid) {
-    Litmus->template()->process("show/enter_id.html.tmpl") || 
+    Litmus->template()->process("show/enter_id.html.tmpl", $vars) || 
         internalError(Litmus->template()->error());
     exit;
 } 
@@ -54,11 +59,19 @@ my @results = Litmus::DB::Result->retrieve_all();
 
 my $showallresults = $c->param("showallresults") || "";
 
-my $vars = {
+my @where;
+push @where, { field => 'test_id', value => $testid };
+my @order_by;
+push @order_by, { field => 'created', direction => 'DESC' };
+my $test_results = Litmus::DB::Testresult->getTestResults(\@where,\@order_by);
+
+$vars = {
     test => $test,
     results => \@results,
     showallresults => $showallresults,
-    
+    test_results => $test_results,    
+    defaultemail => $cookie,
+    show_admin => Litmus::Auth::istrusted($cookie),
 };
 
 Litmus->template()->process("show/show.html.tmpl", $vars) || 

@@ -304,9 +304,8 @@ CREATE TABLE `tests` (
   `community_enabled` tinyint(1) default NULL,
   `format_id` tinyint(4) NOT NULL default '1',
   `regression_bug_id` int(11) default NULL,
-  `t1` longtext collate latin1_bin,
-  `t2` longtext collate latin1_bin,
-  `t3` longtext collate latin1_bin,
+  `steps` longtext collate latin1_bin,
+  `expected_results` longtext collate latin1_bin,
   PRIMARY KEY  (`test_id`),
   KEY `subgroup_id` (`subgroup_id`),
   KEY `summary` (`summary`),
@@ -314,9 +313,8 @@ CREATE TABLE `tests` (
   KEY `community_enabled` (`community_enabled`),
   KEY `format_id` (`format_id`),
   KEY `regression_bug_id` (`regression_bug_id`),
-  KEY `t1` (`t1`(255)),
-  KEY `t2` (`t2`(255)),
-  KEY `t3` (`t3`(255))
+  KEY `steps` (`steps`(255)),
+  KEY `expected_results` (`expected_results`(255))
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
 --

@@ -1,0 +1,8 @@
+<select name="timespan">
+    <option value="">-Timespan-</option>
+    <option[% IF defaults.timespan=="all" %] selected[% END %] value="all">All Results</option>      
+    <option[% IF defaults.timespan=="-1" %] selected[% END %] value="-1">In the last day</option>
+    <option[% IF defaults.timespan=="-2" %] selected[% END %] value="-2">In the last 2 days</option>
+    <option[% IF defaults.timespan=="-7" %] selected[% END %] value="-7">In the last week</option>
+    <option[% IF defaults.timespan=="-14" %] selected[% END %] value="-14">In the last 2 weeks</option>
+</select>

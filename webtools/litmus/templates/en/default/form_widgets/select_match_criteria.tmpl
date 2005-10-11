@@ -1,0 +1,7 @@
+<select name="[% name %]">
+[% IF match_criteria %]
+[% FOREACH match_criterion=match_criteria %]
+    <option value="[% match_criterion.name %]">[% match_criterion.display_string %]</option>
+[% END %]
+[% END %]
+</select>

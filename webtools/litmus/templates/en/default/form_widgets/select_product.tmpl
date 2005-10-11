@@ -1,0 +1,8 @@
+<select name="product">
+    <option value="">-Product-</option>
+[% IF products %]
+[% FOREACH product=products %]
+    <option[% IF defaults.product==product.name %] selected[% END %] value="[% product.name %]">[% product.name %]</option>
+[% END %]
+[% END %]
+</select>

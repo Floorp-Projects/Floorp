@@ -1,0 +1,8 @@
+<select name="[% name %]">
+    <option value="">-Field-</option>
+[% IF fields %]
+[% FOREACH field=fields %]
+    <option value="[% field.name %]">[% field.display_string %]</option>
+[% END %]
+[% END %]
+</select>

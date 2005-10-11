@@ -1,0 +1,8 @@
+<select name="branch">
+    <option value="">-Branch-</option>
+[% IF branches %]
+[% FOREACH branch=branches %]
+    <option[% IF defaults.branch==branch.name %] selected[% END %] value="[% branch.name %]">[% branch.name %]</option>
+[% END %]
+[% END %]
+</select>

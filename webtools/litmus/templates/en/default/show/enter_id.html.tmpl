@@ -22,16 +22,35 @@
   # no interface for this template
 #%]
 
+[% title="View Test" %]
 
-[% INCLUDE global/header.html.tmpl title = 'Show Testcase' %] 
+[% INCLUDE global/html_header.tmpl %]
+[% INCLUDE global/litmus_header.tmpl %]
 
-<p class="pagetitle">Show Testcase</p>
-<p class="pageinstruction">Please enter a testcase ID.</p>
+<div id="page">
 
+[% INCLUDE sidebar/sidebar.tmpl %]
+
+  <div id="content">
+
+    <h1 class="firstHeading">[% title %]</h1>
+
+<div class="section-full">
+  <div class="section-header">
+Please enter a Testcase ID # 
+  </div>
+  <div class="section-content">
 
 <form action="show_test.cgi" method="get" name="form" id="form">
-<input type="text" id="id" name="id" size="7" />
-<br /><br />
-<input type="submit" name="Submit" value="Submit">
+<p><input type="text" id="id" name="id" size="7" />&nbsp;<input type="submit" value="Submit"></p>
 </form>
-[% INCLUDE global/footer.html.tmpl %]
+
+  </div>
+</div>
+
+</div> <!--END content-->
+
+</div> <!--END page-->
+
+[% INCLUDE global/litmus_footer.tmpl %]
+[% INCLUDE global/html_footer.tmpl %]

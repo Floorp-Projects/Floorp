@@ -15,7 +15,7 @@ install: templates
 %.tmpl: 
 	$(PERL) -e " \
 		eval('use CGI qw(-no_debug)'); \
-		use Litmus::Template \
+		use Litmus::Template;use diagnostics; \
 		\$$template = Litmus::Template->create(); \
 		\$$template->context()->template('$@'); \
 	"

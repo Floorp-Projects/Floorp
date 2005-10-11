@@ -1,0 +1,8 @@
+<select name="test_id">
+    <option value="">-Testcase ID#-</option>
+[% IF test_ids %]
+[% FOREACH test_id=test_ids %]
+    <option[% IF defaults.test_id==test_id.test_id %] selected[% END %] value="[% test_id.test_id %]">[% test_id.test_id %]</option>
+[% END %]
+[% END %]
+</select>
