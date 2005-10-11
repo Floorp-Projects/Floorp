@@ -688,6 +688,9 @@ protected:
     return kNameSpaceID_None;
   };
 
+  // Dispatch an event to the ScriptGlobalObject for this document
+  void DispatchEventToWindow(nsEvent *aEvent);
+
   nsDocument();
   virtual ~nsDocument();
 
