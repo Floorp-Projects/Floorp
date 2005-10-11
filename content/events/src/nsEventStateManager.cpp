@@ -214,6 +214,7 @@ nsEventStateManager::nsEventStateManager()
     mGestureDownPoint(0,0),
     mCurrentFocusFrame(nsnull),
     mCurrentTabIndex(0),
+    mLastFocusedWith(eEventFocusedByUnknown),
     mPresContext(nsnull),
     mLClickCount(0),
     mMClickCount(0),
@@ -3051,6 +3052,7 @@ NS_IMETHODIMP
 nsEventStateManager::ChangeFocusWith(nsIContent* aFocusContent,
                                      EFocusedWithType aFocusedWith)
 {
+  mLastFocusedWith = aFocusedWith;
   if (!aFocusContent) {
     SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
     return NS_OK;
@@ -3091,24 +3093,6 @@ nsEventStateManager::ChangeFocusWith(nsIContent* aFocusContent,
         if (inputElement) {
           inputElement->Select();
         }
-      }
-    }
-  }
-  else {
-    nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(mPresContext->PresShell()));
-    nsCOMPtr<nsISelection> selection;
-    if (selCon) {
-      selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                           getter_AddRefs(selection));
-      nsCOMPtr<nsIDOMNode> focusNode(do_QueryInterface(aFocusContent));
-      NS_ASSERTION(focusNode, "No focus node for non-docroot content");
-      // Move caret to focus only if focus not already contained in selection
-      PRBool isFocusInSelection = PR_FALSE;
-      if (selection) {
-        selection->ContainsNode(focusNode, PR_TRUE, &isFocusInSelection);
-      }
-      if (!isFocusInSelection) {
-        MoveCaretToFocus();
       }
     }
   }
@@ -3234,8 +3218,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
   // point was given.
   if (!aStart && itemType != nsIDocShellTreeItem::typeChrome) {
     // We're going to tab from the selection position
-    nsCOMPtr<nsIDOMHTMLAreaElement> areaElement(do_QueryInterface(mCurrentFocus));
-    if (!areaElement) {
+    if (!mCurrentFocus || (mLastFocusedWith != eEventFocusedByMouse && mCurrentFocus->Tag() != nsHTMLAtoms::area)) {
       nsCOMPtr<nsIContent> selectionContent, endSelectionContent;  // We won't be using this, need arg for method call
       PRUint32 selectionOffset; // We won't be using this either, need arg for method call
       GetDocSelectionLocation(getter_AddRefs(selectionContent), getter_AddRefs(endSelectionContent), &selectionFrame, &selectionOffset);
