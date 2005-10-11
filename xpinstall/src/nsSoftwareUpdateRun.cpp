@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=4 sw=4 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -525,17 +526,8 @@ extern "C" void RunInstallOnThread(void *data)
                                                        &scriptLength);
             if ( finalStatus == NS_OK && scriptBuffer )
             {
-                PRBool ownRuntime = PR_FALSE;
-
-                nsCOMPtr<nsIJSRuntimeService> rtsvc =
-                        do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
-                if(NS_FAILED(rv) || NS_FAILED(rtsvc->GetRuntime(&rt)))
-                {
-                    // service not available (wizard context?)
-                    // create our own runtime
-                    ownRuntime = PR_TRUE;
-                    rt = JS_Init(4L * 1024L * 1024L);
-                }
+                // create our runtime
+                rt = JS_NewRuntime(4L * 1024L * 1024L);
 
                 rv = SetupInstallContext( hZip, jarpath,
                                           installInfo->GetURL(),
@@ -601,9 +593,8 @@ extern "C" void RunInstallOnThread(void *data)
                     finalStatus = nsInstall::UNEXPECTED_ERROR;
                 }
 
-                // clean up Runtime if we created it ourselves
-                if ( ownRuntime )
-                    JS_DestroyRuntime(rt);
+                // Clean up after ourselves.
+                JS_DestroyRuntime(rt);
             }
         }
         // force zip archive closed before other cleanup
