@@ -999,10 +999,10 @@ nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::FillRect(float x, float y, float w, float h)
 {
-    ApplyStyle(STYLE_FILL);
-
     cairo_new_path (mCairo);
     cairo_rectangle (mCairo, x, y, w, h);
+
+    ApplyStyle(STYLE_FILL);
     cairo_fill (mCairo);
 
     return Redraw();
@@ -1011,10 +1011,10 @@ nsCanvasRenderingContext2D::FillRect(float x, float y, float w, float h)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::StrokeRect(float x, float y, float w, float h)
 {
-    ApplyStyle(STYLE_STROKE);
-
     cairo_new_path (mCairo);
     cairo_rectangle (mCairo, x, y, w, h);
+
+    ApplyStyle(STYLE_STROKE);
     cairo_stroke (mCairo);
 
     return Redraw();
@@ -1327,9 +1327,9 @@ nsCanvasRenderingContext2D::DrawImage()
     cairo_pattern_set_matrix(pat, &surfMat);
 
     cairo_save(mCairo);
-    cairo_set_source(mCairo, pat);
     cairo_translate(mCairo, dx, dy);
     cairo_rectangle(mCairo, 0, 0, dw, dh);
+    cairo_set_source(mCairo, pat);
     cairo_clip(mCairo);
     cairo_paint_with_alpha(mCairo, mGlobalAlpha);
     cairo_restore(mCairo);
