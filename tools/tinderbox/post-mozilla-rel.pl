@@ -779,7 +779,9 @@ sub packit_l10n {
         run_locale_shell_command "cp $archive_loc/*$locale*.tar.* $stagedir/";
       }
 
-      if ($cachebuild and $Settings::update_package) {
+      if ($tinderstatus eq 'success' and
+          $cachebuild and
+          $Settings::update_package) {
         if ( ! -d "$objdir/dist/l10n-stage" ) {
             die "packit_l10n: $objdir/dist/l10n-stage is not a directory!\n";
         }
