@@ -1334,12 +1334,10 @@ function BrowserBack(aEvent, aIgnoreAlt)
   }
 }
 
-#ifndef XP_MACOSX
 function BrowserHandleBackspace()
 {
   BrowserBack();
 }
-#endif
 
 function BrowserBackMenu(event)
 {

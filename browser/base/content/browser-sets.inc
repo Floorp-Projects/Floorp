@@ -83,9 +83,7 @@
     <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
     <command id="cmd_bm_sortbyname"                oncommand="goDoCommand('cmd_bm_sortbyname');"/>
 
-#ifndef XP_MACOSX
     <command id="cmd_handleBackspace"  oncommand="BrowserHandleBackspace();" />
-#endif
 
     <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
@@ -267,9 +265,9 @@
     <key id="key_delete" keycode="VK_DELETE" command="cmd_delete"/>
     <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
 
-#ifndef XP_MACOSX
     <key keycode="VK_BACK" command="cmd_handleBackspace"/>
     <key keycode="VK_BACK" command="Browser:Forward" modifiers="shift"/>
+#ifndef XP_MACOSX
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
 #else
