@@ -228,32 +228,32 @@ function calendarDefaultTimezone() {
 function guessSystemTimezone()
 {
     var probableTZ = null;
-    var summerTZname = null;
-    var winterTZname = null;
-    var summerDate = (new Date(2005,6,20)).toString();
-    var winterDate = (new Date(2005,12,20)).toString();
-    var summerData = summerDate.match(/[^(]* ([^ ]*) \(([^)]+)\)/);
-    var winterData = winterDate.match(/[^(]* ([^ ]*) \(([^)]+)\)/);
-    if (summerData && summerData[2]) 
-        summerTZname = summerData[2];
-    if (winterData && winterData[2])
-        winterTZname = winterData[2];
+    var TZname1 = null;
+    var TZname2 = null;
+    var Date1 = (new Date(2005,6,20)).toString();
+    var Date2 = (new Date(2005,12,20)).toString();
+    var nameData1 = Date1.match(/[^(]* ([^ ]*) \(([^)]+)\)/);
+    var nameData2 = Date2.match(/[^(]* ([^ ]*) \(([^)]+)\)/);
+    if (nameData1 && nameData1[2]) 
+        TZname1 = nameData1[2];
+    if (nameData2 && nameData2[2])
+        TZname2 = nameData2[2];
 
-    var index = summerDate.indexOf('+');
+    var index = Date1.indexOf('+');
     if (index < 0)
-        index = summerDate.indexOf('-');
+        index = Date2.indexOf('-');
     // the offset is always 5 characters long
-    var summerOffset = summerDate.substr(index, 5);
-    index = winterDate.indexOf('+');
+    var TZoffset1 = Date1.substr(index, 5);
+    index = Date2.indexOf('+');
     if (index < 0)
-        index = winterDate.indexOf('-');
+        index = Date2.indexOf('-');
     // the offset is always 5 characters long
-    var winterOffset = winterDate.substr(index, 5);
+    var TZoffset2 = Date2.substr(index, 5);
 
     dump("Guessing system timezone:\n");
-    dump("summerOffset: " + summerOffset + "\nwinterOffset: " + winterOffset + "\n");
-    if (summerTZname && winterTZname)
-        dump("summerTZname: " + summerTZname + "\nwinterTZname: " + winterTZname + "\n");
+    dump("TZoffset1: " + TZoffset1 + "\nTZoffset2: " + TZoffset2 + "\n");
+    if (TZname1 && TZname2)
+        dump("TZname1: " + TZname1 + "\nTZname2: " + TZname2 + "\n");
 
     var icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
                        .getService(Components.interfaces.calIICSService);
@@ -273,16 +273,29 @@ function guessSystemTimezone()
             daylightTZOffset = daylight.getFirstProperty("TZOFFSETTO").stringValue;
             daylightName = daylight.getFirstProperty("TZNAME").stringValue;
         }
-        if (winterOffset == standardTZOffset && winterOffset == summerOffset &&
+        if (TZoffset2 == standardTZOffset && TZoffset2 == TZoffset1 &&
            !daylight) {
-            if(!standardName || standardName == summerTZname)
+            if(!standardName || standardName == TZname1)
                 return 2;
             return 1;
         }
-        if (winterOffset == standardTZOffset && summerOffset == daylightTZOffset) {
-            // This seems backwards to me too, but it's how the data is written
-            if ((!standardName || standardName == summerTZname) &&
-                (!daylightName || daylightName == winterTZname))
+        if (TZoffset2 == standardTZOffset && TZoffset1 == daylightTZOffset) {
+            if ((!standardName || standardName == TZname1) &&
+                (!daylightName || daylightName == TZname2))
+                return 2;
+            return 1;
+        }
+
+        // Now flip them and check again, to cover the southern hemisphere case
+        if (TZoffset1 == standardTZOffset && TZoffset2 == TZoffset1 &&
+           !daylight) {
+            if(!standardName || standardName == TZname2)
+                return 2;
+            return 1;
+        }
+        if (TZoffset1 == standardTZOffset && TZoffset2 == daylightTZOffset) {
+            if ((!standardName || standardName == TZname2) &&
+                (!daylightName || daylightName == TZname1))
                 return 2;
             return 1;
         }
@@ -304,7 +317,7 @@ function guessSystemTimezone()
         
     var tzIDs = icssrv.timezoneIds;
     while (tzIDs.hasMore()) {
-        theTZ = tzIDs.getNext();
+        var theTZ = tzIDs.getNext();
         switch (checkTZ(theTZ)) {
             case 0: break;
             case 1: 
