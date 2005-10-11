@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -114,6 +115,8 @@
 //-----------------------------------------------------------------------------
 var bug = 157652;
 var summary = "Testing that Array.sort() doesn't crash on very large arrays";
+var expect = 'No Crash';
+var actual = 'No Crash';
 
 printBugNumber(bug);
 printStatus(summary);
@@ -135,3 +138,5 @@ a2=null;
 var a3=Array(0x10000000/4);
 a3.sort();
 a3=null;
+
+reportCompare(expect, actual, summary);
