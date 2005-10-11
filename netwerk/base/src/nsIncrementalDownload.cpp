@@ -668,7 +668,7 @@ nsIncrementalDownload::OnChannelRedirect(nsIChannel *oldChannel,
                                          nsIChannel *newChannel,
                                          PRUint32 flags)
 {
-  // In response to a redirect, we need to propogate the Range header.  See bug
+  // In response to a redirect, we need to propagate the Range header.  See bug
   // 311595.  Any failure code returned from this function aborts the redirect.
  
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(oldChannel);
