@@ -666,12 +666,17 @@ GetThreadStackLimit()
     int stackDummy;
     jsuword currentStackAddr = (jsuword)&stackDummy;
 
-    // We assume here that the stack grows down, and that a stack
-    // limit of 512k below the current stack addr is ok. If this is
-    // not the case on some platforms, #ifdef's are needed for those
-    // platforms.
-    sThreadStackLimit = currentStackAddr +
-      (0x80000 * JS_STACK_GROWTH_DIRECTION);
+    const jsuword kStackSize = 0x80000;   // 512k
+
+#if JS_STACK_GROWTH_DIRECTION < 0
+    sThreadStackLimit = (currentStackAddr > kStackSize)
+                        ? currentStackAddr - kStackSize
+                        : 0;
+#else
+    sThreadStackLimit = (currentStackAddr + kStackSize > currentStackAddr)
+                        ? currentStackAddr + kStackSize
+                        : (jsuword) -1;
+#endif
   }
 
   return sThreadStackLimit;
