@@ -289,14 +289,13 @@ function OnLoadEditCard()
       {
         var disableElements = document.getElementsByAttribute("disableforreadonly", "true");
         for (var i = disableElements.length; i-- > 0; )
-          disableElements[i].disabled = 'true';
+          disableElements[i].disabled = true;
 
         document.documentElement.buttons = "accept";
         document.documentElement.removeAttribute("ondialogaccept");
       }
     }
   }
-  
 }
 
 // this is used by people who extend the ab card dialog
