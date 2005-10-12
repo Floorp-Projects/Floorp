@@ -522,17 +522,18 @@ nsHTMLSharedElement::BindToTree(nsIDocument* aDocument,
                                                  aCompileEventHandlers);
   // Must start loading stuff after being in a document
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+    nsAutoString type;
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
+
     nsAutoString uri;
     nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
     if (rv != NS_CONTENT_ATTR_NOT_THERE) {
-      nsAutoString type;
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
       // Don't notify: We aren't in a document yet, so we have no frames
       ObjectURIChanged(uri, PR_FALSE, NS_ConvertUTF16toUTF8(type), PR_TRUE);
     } else {
-      // The constructor set the type to eType_Plugin; but if we have no src
-      // attribute, then we aren't really a plugin
-      Fallback(PR_FALSE);
+      // Sometimes, code uses <embed> with no src attributes, for example using
+      // code="...". Handle that case.
+      ObjectURIChanged(nsnull, PR_FALSE, NS_ConvertUTF16toUTF8(type), PR_TRUE);
     }
   }
   return rv;
