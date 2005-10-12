@@ -386,7 +386,6 @@ private:
   nsCString                   mDocumentBase;
   char                       *mTagText;
   nsCOMPtr<nsIWidget>         mWidget;
-  nsPresContext              *mContext;
   nsCOMPtr<nsITimer>          mPluginTimer;
   nsCOMPtr<nsIPluginHost>     mPluginHost;
   PRPackedBool                mContentFocused;
@@ -2050,7 +2049,6 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
     mPluginWindow = nsnull;
 
   mOwner = nsnull;
-  mContext = nsnull;
   mTagText = nsnull;
   mContentFocused = PR_FALSE;
   mWidgetVisible = PR_TRUE;
@@ -2097,8 +2095,6 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
     nsCRT::free(mTagText);
     mTagText = nsnull;
   }
-
-  mContext = nsnull;
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
   // the mem for this struct is allocated
@@ -2235,10 +2231,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
                                             PRUint32 aHeadersDataLen, PRBool isFile)
 {
   NS_ENSURE_TRUE(mOwner,NS_ERROR_NULL_POINTER);
-  NS_ENSURE_TRUE(mContext,NS_ERROR_NULL_POINTER);
 
   // the container of the pres context will give us the link handler
-  nsCOMPtr<nsISupports> container = mContext->GetContainer();
+  nsCOMPtr<nsISupports> container = mOwner->GetPresContext()->GetContainer();
   NS_ENSURE_TRUE(container,NS_ERROR_FAILURE);
   nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
   NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
@@ -2313,10 +2308,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::ShowStatus(const PRUnichar *aStatusMsg)
 {
   nsresult  rv = NS_ERROR_FAILURE;
 
-  if (!mContext) {
+  if (!mOwner) {
     return rv;
   }
-  nsCOMPtr<nsISupports> cont = mContext->GetContainer();
+  nsCOMPtr<nsISupports> cont = mOwner->GetPresContext()->GetContainer();
   if (!cont) {
     return NS_OK;
   }
@@ -2348,8 +2343,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocument(nsIDocument* *aDocument)
     return NS_ERROR_NULL_POINTER;
 
   *aDocument = nsnull;
-  if (nsnull != mContext) {
-    nsIPresShell *shell = mContext->GetPresShell();
+  if (mOwner) {
+    nsIPresShell *shell = mOwner->GetPresContext()->GetPresShell();
     if (shell)
       NS_IF_ADDREF(*aDocument = shell->GetDocument());
   }
@@ -2360,13 +2355,13 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(nsPluginRect *invalidRect)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (invalidRect) {
+  if (mOwner && invalidRect) {
     //no reference count on view
     nsIView* view = mOwner->GetView();
 
     if (view) {
       float ptot;
-      ptot = mContext->PixelsToTwips();
+      ptot = mOwner->GetPresContext()->PixelsToTwips();
 
       nsRect rect((int)(ptot * invalidRect->left),
             (int)(ptot * invalidRect->top),
@@ -2406,8 +2401,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
       // get the document's widget from the view manager
       // get the view manager from the pres shell, not from the view!
       // we may not have a view if we are hidden
-      if (mContext) {
-        nsIViewManager* vm = mContext->GetViewManager();
+      if (mOwner) {
+        nsIViewManager* vm = mOwner->GetPresContext()->GetViewManager();
           if (vm) {
             nsCOMPtr<nsIWidget> widget;
             rv = vm->GetWidget(getter_AddRefs(widget));            
@@ -2416,9 +2411,9 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetValue(nsPluginInstancePeerVariable varia
               void** pvalue = (void**)value;
               *pvalue = (void*)widget->GetNativeData(NS_NATIVE_WINDOW);
 
-            } else NS_ASSERTION(widget, "couldn't get doc's widget in getting doc's window handle");
-          } else NS_ASSERTION(vm, "couldn't get view manager in getting doc's window handle");
-      } else NS_ASSERTION(mContext, "plugin owner has no pres context in getting doc's window handle");
+            } else NS_ERROR("couldn't get doc's widget in getting doc's window handle");
+          } else NS_ERROR("couldn't get view manager in getting doc's window handle");
+      } else NS_ERROR("plugin owner has no owner in getting doc's window handle");
 
       break;
     }
@@ -2546,12 +2541,19 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
   NS_ENSURE_ARG_POINTER(result);
   nsresult rv = NS_OK;
   if (mDocumentBase.IsEmpty()) {
-    if (nsnull == mContext) {
+    if (!mOwner) {
       *result = nsnull;
       return NS_ERROR_FAILURE;
     }
-    
-    rv = mContext->PresShell()->GetDocument()->GetBaseURI()->GetSpec(mDocumentBase);
+
+    nsIPresShell* shell = mOwner->GetPresContext()->PresShell();
+    rv = NS_ERROR_FAILURE;
+    if (shell) {
+      nsIDocument* doc = shell->GetDocument();
+      if (doc) {
+        rv = doc->GetBaseURI()->GetSpec(mDocumentBase);
+      }
+    }
   }
   if (NS_SUCCEEDED(rv))
     *result = ToNewCString(mDocumentBase);
@@ -2735,7 +2737,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(PRUint32 *result)
 NS_IMETHODIMP nsPluginInstanceOwner::GetUniqueID(PRUint32 *result)
 {
   NS_ENSURE_ARG_POINTER(result);
-  *result = NS_PTR_TO_INT32(mContext);
+  *result = NS_PTR_TO_INT32(mOwner);
   return NS_OK;
 }
 
@@ -3451,10 +3453,11 @@ nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
 
   // if the plugin is windowless, we need to set focus ourselves
   // otherwise, we might not get key events
-  if (mPluginWindow && mPluginWindow->type == nsPluginWindowType_Drawable) {
+  if (mOwner && mPluginWindow &&
+      mPluginWindow->type == nsPluginWindowType_Drawable) {
     nsIContent* content = mOwner->GetContent();
     if (content)
-      content->SetFocus(mContext);
+      content->SetFocus(mOwner->GetPresContext());
   }
 
   nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(aMouseEvent));
@@ -3694,7 +3697,7 @@ nsPluginInstanceOwner::Destroy()
 
 void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
 {
-  if (!mInstance)
+  if (!mInstance || !mOwner)
     return;
  
 #if defined(XP_MACOSX)
@@ -3710,7 +3713,8 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
 
   // Convert to absolute pixel values for the dirty rect
   nsRect absDirtyRectInPixels;
-  ConvertTwipsToPixels(*mContext, absDirtyRect, absDirtyRectInPixels);
+  ConvertTwipsToPixels(*mOwner->GetPresContext(), absDirtyRect,
+                       absDirtyRectInPixels);
 #endif
 
   nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
@@ -3737,7 +3741,8 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
   GetWindow(window);
   nsRect relDirtyRect = nsRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   nsRect relDirtyRectInPixels;
-  ConvertTwipsToPixels(*mContext, relDirtyRect, relDirtyRectInPixels);
+  ConvertTwipsToPixels(*mOwner->GetPresContext(), relDirtyRect,
+                       relDirtyRectInPixels);
 
   // we got dirty rectangle in relative window coordinates, but we
   // need it in absolute units and in the (left, top, right, bottom) form
@@ -3816,7 +3821,6 @@ void nsPluginInstanceOwner::CancelTimer()
 NS_IMETHODIMP nsPluginInstanceOwner::Init(nsPresContext* aPresContext, nsObjectFrame *aFrame)
 {
   //do not addref to avoid circular refs. MMP
-  mContext = aPresContext;
   mOwner = aFrame;
   
   nsIContent* content = mOwner->GetContent();
@@ -3923,7 +3927,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
                           (void *)&windowless);
 
       // always create widgets in Twips, not pixels
-      float p2t = mContext->ScaledPixelsToTwips();
+      float p2t = mOwner->GetPresContext()->ScaledPixelsToTwips();
       rv = mOwner->CreateWidget(NSIntPixelsToTwips(mPluginWindow->width, p2t),
                                 NSIntPixelsToTwips(mPluginWindow->height, p2t),
                                 windowless);
