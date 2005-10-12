@@ -78,7 +78,7 @@ ValidateComment($comment);
 # Check that the product exists and that the user
 # is allowed to enter bugs into this product.
 my $product = $cgi->param('product');
-CanEnterProductOrWarn($product);
+$user->can_enter_product($product, 1);
 
 my $product_id = get_product_id($product);
 

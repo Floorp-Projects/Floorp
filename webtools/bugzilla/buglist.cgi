@@ -988,8 +988,7 @@ if ($dotweak) {
     $vars->{'dotweak'} = 1;
     $vars->{'use_keywords'} = 1 if @::legal_keywords;
 
-    my @enterable_products = GetEnterableProducts();
-    $vars->{'products'} = \@enterable_products;
+    $vars->{'products'} = Bugzilla->user->get_enterable_products;
     $vars->{'platforms'} = \@::legal_platform;
     $vars->{'op_sys'} = \@::legal_opsys;
     $vars->{'priorities'} = \@::legal_priority;

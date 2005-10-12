@@ -55,13 +55,15 @@
     <th><label for="product">Product:</label></th>
     <td>
       [% PROCESS selectmenu menuname = "product"
-                            menuitems = products %]
+                            menuitems = products
+                            property = "name" %]
     </td>
 
     <th><label for="version">Version:</label></th>
     <td>
       [% PROCESS selectmenu menuname = "version"
-                            menuitems = versions %]
+                            menuitems = versions
+                            property = "" %]
     </td>
 
   </tr>
@@ -358,6 +360,7 @@
       [% dontchange FILTER html %]
     </option>
     [% FOREACH menuitem = menuitems %]
+      [% IF property %][% menuitem = menuitem.$property %][% END %]
       <option value="[% menuitem FILTER html %]">[% menuitem FILTER html %]</option>
     [% END %]
   </select>

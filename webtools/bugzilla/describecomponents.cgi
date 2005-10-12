@@ -30,7 +30,7 @@ require "globals.pl";
 
 use vars qw($vars @legal_product);
 
-Bugzilla->login();
+my $user = Bugzilla->login();
 
 GetVersionTable();
 
@@ -39,7 +39,7 @@ my $template = Bugzilla->template;
 my $product = trim($cgi->param('product') || '');
 my $product_id = get_product_id($product);
 
-if (!$product_id || !CanEnterProduct($product)) {
+if (!$product_id || !$user->can_enter_product($product)) {
     # Reference to a subset of %::proddesc, which the user is allowed to see
     my %products;
 
@@ -47,7 +47,7 @@ if (!$product_id || !CanEnterProduct($product)) {
         # OK, now only add products the user can see
         Bugzilla->login(LOGIN_REQUIRED);
         foreach my $p (@::legal_product) {
-            if (CanEnterProduct($p)) {
+            if ($user->can_enter_product($p)) {
                 $products{$p} = $::proddesc{$p};
             }
         }

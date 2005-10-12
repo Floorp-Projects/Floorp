@@ -279,7 +279,7 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
                                $dbh->sql_limit(1),
                                undef, $prod);
 
-    if ($check_can_enter) { CanEnterProductOrWarn($prod) }
+    if ($check_can_enter) { $user->can_enter_product($prod, 1) }
 
     # note that when this script is called from buglist.cgi (rather
     # than show_bug.cgi), it's possible that the product will be changed

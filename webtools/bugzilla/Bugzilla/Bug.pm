@@ -650,7 +650,7 @@ sub choices {
             next;
         }
 
-        if (!&::CanEnterProduct($product)) {
+        if (!Bugzilla->user->can_enter_product($product)) {
             # If we're using bug groups to restrict entry on products, and
             # this product has an entry group, and the user is not in that
             # group, we don't want to include that product in this list.

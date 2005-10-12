@@ -84,7 +84,7 @@ if (!defined $product || $product eq "") {
         foreach my $classification (@$classifications) {
             my $found = 0;
             foreach my $p (@enterable_products) {
-               if (CanEnterProduct($p)
+               if (Bugzilla->user->can_enter_product($p)
                    && IsInClassification($classification->{name},$p)) {
                        $found = 1; 
                }
@@ -116,7 +116,7 @@ if (!defined $product || $product eq "") {
 
     my %products;
     foreach my $p (@enterable_products) {
-        if (CanEnterProduct($p)) {
+        if (Bugzilla->user->can_enter_product($p)) {
             if (IsInClassification(scalar $cgi->param('classification'),$p) ||
                 $cgi->param('classification') eq "__all") {
                 $products{$p} = $::proddesc{$p};
@@ -328,7 +328,7 @@ if ($cloned_bug_id) {
 
 # We need to check and make sure
 # that the user has permission to enter a bug against this product.
-CanEnterProductOrWarn($product);
+Bugzilla->user->can_enter_product($product, 1);
 
 GetVersionTable();
 

@@ -428,7 +428,7 @@ sub can_see_product {
 }
 
 sub get_selectable_products {
-    my ($self, $by_id) = @_;
+    my $self = shift;
 
     if (defined $self->{selectable_products}) {
         return $self->{selectable_products};
@@ -474,6 +474,81 @@ sub get_selectable_classifications {
     my @sorted_class = sort {lc($a->name) cmp lc($b->name)} (values %$class);
     $self->{selectable_classifications} = \@sorted_class;
     return $self->{selectable_classifications};
+}
+
+sub can_enter_product {
+    my ($self, $product_name, $warn) = @_;
+    my $dbh = Bugzilla->dbh;
+
+    if (!defined($product_name)) {
+        return unless $warn;
+        ThrowUserError('no_products');
+    }
+    trick_taint($product_name);
+
+    # Checks whether the user has access to the product.
+    my $has_access = $dbh->selectrow_array('SELECT group_id IS NULL
+                                              FROM products
+                                         LEFT JOIN group_control_map
+                                                ON group_control_map.product_id = products.id
+                                               AND group_control_map.entry != 0
+                                               AND group_id NOT IN (' . $self->groups_as_string . ')
+                                             WHERE products.name = ? ' .
+                                             $dbh->sql_limit(1),
+                                            undef, $product_name);
+
+    if (!$has_access) {
+        return unless $warn;
+        ThrowUserError('entry_access_denied', { product => $product_name });
+    }
+
+    # Checks whether the product is open for new bugs and
+    # has at least one component and one version.
+    my ($is_open, $has_version) = 
+        $dbh->selectrow_array('SELECT CASE WHEN disallownew = 0 THEN 1 ELSE 0 END,
+                                      versions.value IS NOT NULL
+                                 FROM products
+                           INNER JOIN components
+                                   ON components.product_id = products.id
+                            LEFT JOIN versions
+                                   ON versions.product_id = products.id
+                                WHERE products.name = ? ' .
+                               $dbh->sql_limit(1), undef, $product_name);
+
+    # Returns undef if the product has no components
+    # Returns 0 if the product has no versions, or is closed for bug entry
+    # Returns 1 if the user can enter bugs into the product
+    return ($is_open && $has_version) unless $warn;
+
+    # (undef, undef): the product has no components,
+    # (0,     ?)    : the product is closed for new bug entry,
+    # (?,     0)    : the product has no versions,
+    # (1,     1)    : the user can enter bugs into the product,
+    if (!defined $is_open) {
+        ThrowUserError('missing_component', { product => $product_name });
+    } elsif (!$is_open) {
+        ThrowUserError('product_disabled', { product => $product_name });
+    } elsif (!$has_version) {
+        ThrowUserError('missing_version', { product => $product_name });
+    }
+    return 1;
+}
+
+sub get_enterable_products {
+    my $self = shift;
+
+    if (defined $self->{enterable_products}) {
+        return $self->{enterable_products};
+    }
+
+    my @products;
+    foreach my $product (Bugzilla::Product::get_all_products()) {
+        if ($self->can_enter_product($product->name)) {
+            push(@products, $product);
+        }
+    }
+    $self->{enterable_products} = \@products;
+    return $self->{enterable_products};
 }
 
 # visible_groups_inherited returns a reference to a list of all the groups
@@ -1492,6 +1567,32 @@ method should be called in such a case to force reresolution of these groups.
 
  Returns:     An array of Bugzilla::Classification objects, sorted by
               the classification name.
+
+=item C<can_enter_product($product_name, $warn)>
+
+ Description: Returns 1 if the user can enter bugs into the specified product.
+              If the user cannot enter bugs into the product, the behavior of
+              this method depends on the value of $warn:
+              - if $warn is false (or not given), a 'false' value is returned;
+              - if $warn is true, an error is thrown.
+
+ Params:      $product_name - a product name.
+              $warn         - optional parameter, indicating whether an error
+                              must be thrown if the user cannot enter bugs
+                              into the specified product.
+
+ Returns:     1 if the user can enter bugs into the product,
+              0 if the user cannot enter bugs into the product and if $warn
+              is false (an error is thrown if $warn is true).
+
+=item C<get_enterable_products>
+
+ Description: Returns an array of product objects into which the user is
+              allowed to enter bugs.
+
+ Params:      none
+
+ Returns:     an array of product objects.
 
 =item C<get_userlist>
 
