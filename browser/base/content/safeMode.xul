@@ -43,6 +43,8 @@
 %brandDTD;
 <!ENTITY % safeModeDTD SYSTEM "chrome://browser/locale/safeMode.dtd" >
 %safeModeDTD;
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+%browserDTD;
 ]>
 
 <?xml-stylesheet href="chrome://global/skin/"?>
@@ -50,11 +52,18 @@
 <dialog id="safeModeDialog"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&safeModeDialog.title;"
-            buttons="accept,cancel"
+            buttons="accept,cancel,extra1"
             buttonlabelaccept="&changeAndRestartButton.label;"
-            buttonlabelcancel="&continueButton.label;"
+#ifdef XP_WIN
+            buttonlabelcancel="&quitApplicationCmdWin.label;"
+#else
+            buttonlabelcancel="&quitApplicationCmd.label;"
+#endif
+            buttonlabelextra1="&continueButton.label;"
             width="&window.width;"
-            ondialogaccept="onOK()">
+            ondialogaccept="onOK()"
+            ondialogcancel="onCancel()"
+            ondialogextra1="window.close()">
 
   <script type="application/x-javascript" src="chrome://browser/content/safeMode.js"/>
 
