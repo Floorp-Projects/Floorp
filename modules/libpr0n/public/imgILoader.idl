@@ -96,6 +96,10 @@ interface imgILoader : nsISupports
    * @param uri the URI to load
    * @param aObserver the observer
    * @param cx some random data
+   * @param aListener [out]
+   *        A listener that should receive the data. Can be null, in which
+   *        case imagelib has found a cached image and is not interested in
+   *        the data. The caller needs not cancel the channel in this case.
    *
    * libpr0n does NOT keep a strong ref to the observer; this prevents
    * reference cycles.  This means that callers of loadImageWithChannel should
