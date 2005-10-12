@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: dsa.c,v 1.17 2005/09/29 23:22:53 wtchang%redhat.com Exp $ */
+/* $Id: dsa.c,v 1.18 2005/10/12 00:48:25 wtchang%redhat.com Exp $ */
 
 #include "secerr.h"
 
@@ -140,10 +140,33 @@ DSA_NewKey(const PQGParams *params, DSAPrivateKey **privKey)
 {
     SECStatus rv;
     unsigned char seed[DSA_SUBPRIME_LEN];
-    /* Generate seed bytes for x according to FIPS 186-1 appendix 3 */
-    if (DSA_GenerateGlobalRandomBytes(seed, DSA_SUBPRIME_LEN, 
-                                      params->subPrime.data))
+    int retries = 10;
+    int i;
+    PRBool good;
+
+    do {
+	/* Generate seed bytes for x according to FIPS 186-1 appendix 3 */
+	if (DSA_GenerateGlobalRandomBytes(seed, DSA_SUBPRIME_LEN,
+					  params->subPrime.data))
+	    return SECFailure;
+	/* Disallow values of 0 and 1 for x. */
+	good = PR_FALSE;
+	for (i = 0; i < DSA_SUBPRIME_LEN-1; i++) {
+	    if (seed[i] != 0) {
+		good = PR_TRUE;
+		break;
+	    }
+	}
+	if (!good && seed[i] > 1) {
+	    good = PR_TRUE;
+	}
+    } while (!good && --retries > 0);
+
+    if (!good) {
+	PORT_SetError(SEC_ERROR_NEED_RANDOM);
 	return SECFailure;
+    }
+
     /* Generate a new DSA key using random seed. */
     rv = dsa_NewKey(params, privKey, seed);
     return rv;
@@ -267,6 +290,8 @@ DSA_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest)
     SECStatus rv;
     int       retries = 10;
     unsigned char kSeed[DSA_SUBPRIME_LEN];
+    int       i;
+    PRBool    good;
 
     PORT_SetError(0);
     do {
@@ -274,6 +299,19 @@ DSA_SignDigest(DSAPrivateKey *key, SECItem *signature, const SECItem *digest)
 					   key->params.subPrime.data);
 	if (rv != SECSuccess) 
 	    break;
+	/* Disallow a value of 0 for k. */
+	good = PR_FALSE;
+	for (i = 0; i < DSA_SUBPRIME_LEN; i++) {
+	    if (kSeed[i] != 0) {
+		good = PR_TRUE;
+		break;
+	    }
+	}
+	if (!good) {
+	    PORT_SetError(SEC_ERROR_NEED_RANDOM);
+	    rv = SECFailure;
+	    continue;
+	}
 	rv = dsa_SignDigest(key, signature, digest, kSeed);
     } while (rv != SECSuccess && PORT_GetError() == SEC_ERROR_NEED_RANDOM &&
 	     --retries > 0);
