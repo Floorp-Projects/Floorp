@@ -316,6 +316,18 @@ CategoryNode::AddLeaf(const char* aEntryName,
     if (!arenaValue) {
       rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
+      if (_retval) {
+        char *toDup = leaf->nonpValue ? leaf->nonpValue : leaf->pValue;
+        if (toDup) {
+          *_retval = ToNewCString(nsDependentCString(toDup));
+          if (!*_retval)
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        else {
+          *_retval = nsnull;
+        }
+      }
+
       leaf->nonpValue = arenaValue;
       if (aPersist)
         leaf->pValue = arenaValue;
