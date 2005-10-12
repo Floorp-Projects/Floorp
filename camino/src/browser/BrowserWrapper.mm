@@ -500,43 +500,46 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 {
   BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
   
-  NSString* faviconURI = [SiteIconProvider defaultFaviconLocationStringFromURI:urlSpec];
-  if (requestOK && useSiteIcons && [faviconURI length] > 0)
+  if (newPage)
   {
-    SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
-
-    // if the favicon uri has changed, fire off favicon load. When it completes, our
-    // imageLoadedNotification selector gets called.
-    if (![faviconURI isEqualToString:mSiteIconURI])
+    NSString* faviconURI = [SiteIconProvider defaultFaviconLocationStringFromURI:urlSpec];
+    if (requestOK && useSiteIcons && [faviconURI length] > 0)
     {
-      // first get a cached image for this site, if we have one. we'll go ahead
-      // and request the load anyway, in case the site updated their icon.
-      NSImage*  cachedImage = [faviconProvider favoriteIconForPage:urlSpec];
-      NSString* cachedImageURI = nil;
+      SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
 
-      if (cachedImage)
-        cachedImageURI = faviconURI;
-      
-      // immediately update the site icon (to the cached one, or the default)
-      [self updateSiteIconImage:cachedImage withURI:cachedImageURI loadError:NO];
+      // if the favicon uri has changed, fire off favicon load. When it completes, our
+      // imageLoadedNotification selector gets called.
+      if (![faviconURI isEqualToString:mSiteIconURI])
+      {
+        // first get a cached image for this site, if we have one. we'll go ahead
+        // and request the load anyway, in case the site updated their icon.
+        NSImage*  cachedImage = [faviconProvider favoriteIconForPage:urlSpec];
+        NSString* cachedImageURI = nil;
 
-      // note that this is the only time we hit the network for site icons.
-      // note also that we may get a site icon from a link element later,
-      // which will replace any we get from the default location.
-      [faviconProvider fetchFavoriteIconForPage:urlSpec
-                               withIconLocation:nil
-                                   allowNetwork:YES
-                                notifyingClient:self];
+        if (cachedImage)
+          cachedImageURI = faviconURI;
+        
+        // immediately update the site icon (to the cached one, or the default)
+        [self updateSiteIconImage:cachedImage withURI:cachedImageURI loadError:NO];
+
+        // note that this is the only time we hit the network for site icons.
+        // note also that we may get a site icon from a link element later,
+        // which will replace any we get from the default location.
+        [faviconProvider fetchFavoriteIconForPage:urlSpec
+                                 withIconLocation:nil
+                                     allowNetwork:YES
+                                  notifyingClient:self];
+      }
     }
-  }
-  else
-  {
-    if ([urlSpec hasPrefix:@"about:"])
-      faviconURI = urlSpec;
     else
-    	faviconURI = @"";
+    {
+      if ([urlSpec hasPrefix:@"about:"])
+        faviconURI = urlSpec;
+      else
+      	faviconURI = @"";
 
-    [self updateSiteIconImage:nil withURI:faviconURI loadError:!requestOK];
+      [self updateSiteIconImage:nil withURI:faviconURI loadError:!requestOK];
+    }
   }
   
   [mDelegate updateLocationFields:urlSpec ignoreTyping:NO];
@@ -882,7 +885,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   BOOL     tabIconDraggable = YES;
   NSImage* siteIcon         = inSiteIcon;
   
-  if (![mSiteIconURI isEqualToString:inSiteIconURI])
+  if (![mSiteIconURI isEqualToString:inSiteIconURI] || inLoadError)
   {
     if (!siteIcon)
     {
