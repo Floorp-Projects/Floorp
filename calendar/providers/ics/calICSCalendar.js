@@ -406,12 +406,6 @@ calICSCalendar.prototype = {
     },
 
     writeICS: function () {
-        // Don't save right after loading. There are no changes anyway.
-        if (this.loading) {
-            this.loading = false;
-            return;
-        }
-
         this.locked = true;
 
         if (!this.mUri)
@@ -566,6 +560,7 @@ calICSCalendar.prototype = {
         if (this.locked)
             return;
         var a;
+        var hasItems = this.queue.length;
         while ((a = this.queue.shift())) {
             switch (a.action) {
                 case 'add':
@@ -580,6 +575,8 @@ calICSCalendar.prototype = {
                     break;
             }
         }
+        if (hasItems)
+            this.writeICS();
     },
 
     // nsIInterfaceRequestor impl
@@ -629,7 +626,6 @@ calICSObserver.prototype = {
             this.mObservers[i].onEndBatch();
 
         this.mInBatch = false;
-        this.mCalendar.writeICS();
     },
     onLoad: function() {
         for (var i = 0; i < this.mObservers.length; i++)
@@ -638,23 +634,14 @@ calICSObserver.prototype = {
     onAddItem: function(aItem) {
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].onAddItem(aItem);
-
-        if (!this.mInBatch)
-            this.mCalendar.writeICS();
     },
     onModifyItem: function(aNewItem, aOldItem) {
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].onModifyItem(aNewItem, aOldItem);
-
-        if (!this.mInBatch)
-            this.mCalendar.writeICS();
     },
     onDeleteItem: function(aDeletedItem) {
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].onDeleteItem(aDeletedItem);
-
-        if (!this.mInBatch)
-            this.mCalendar.writeICS();
     },
     onAlarm: function(aAlarmItem) {
         for (var i = 0; i < this.mObservers.length; i++)
