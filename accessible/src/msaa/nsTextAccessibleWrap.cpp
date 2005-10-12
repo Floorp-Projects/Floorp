@@ -229,8 +229,7 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   nsIWidget *widget = frame->GetWindow();
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
-  nsIRenderingContext *rendContext;
-  rendContext = widget->GetRenderingContext();
+  nsCOMPtr<nsIRenderingContext> rendContext(getter_AddRefs(widget->GetRenderingContext()));
   
   nsPoint startPoint, endPoint;
   nsIFrame *startFrame = GetPointFromOffset(frame, presContext, rendContext, 
