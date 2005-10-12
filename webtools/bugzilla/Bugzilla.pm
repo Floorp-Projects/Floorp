@@ -44,7 +44,6 @@ use File::Basename;
 
 # Scripts that are not stopped by shutdownhtml being in effect.
 use constant SHUTDOWNHTML_EXEMPT => [
-    'doeditparams.cgi',
     'editparams.cgi',
     'checksetup.pl',
 ];
