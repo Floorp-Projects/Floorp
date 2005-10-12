@@ -246,14 +246,18 @@ langpack-%:
 # This is a generic target that will make a langpack, repack ZIP (+tarball)
 # builds, and repack an installer if applicable. It is called from the
 # tinderbox scripts. Alter it with caution.
+#
+# Note: the last target called here should be repackage-zip-$* as the l10n build
+# systems rely on dist/l10n-stage/<product> to be in place in order to package
+# the complete MAR files.
 
 installers-%:
 	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) langpack-$*
-	@$(MAKE) repackage-zip-$*
 ifeq (WINNT,$(OS_ARCH))
 	@$(MAKE) repackage-win32-installer-$*
 endif
+	@$(MAKE) repackage-zip-$*
 
 ifdef MOZ_UPDATER
 libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
