@@ -2224,13 +2224,13 @@ MakeXMLSpecialString(JSContext *cx, JSStringBuffer *sb,
 static JSString *
 MakeXMLCDATAString(JSContext *cx, JSStringBuffer *sb, JSString *str)
 {
-    static const jschar cdata_prefix_ucNstr[] = {'<', '!',
+    static const jschar cdata_prefix_ucNstr[] = {'<', '!', '[',
                                                  'C', 'D', 'A', 'T', 'A',
                                                  '['};
     static const jschar cdata_suffix_ucNstr[] = {']', ']', '>'};
 
     return MakeXMLSpecialString(cx, sb, str, NULL,
-                                cdata_prefix_ucNstr, 8,
+                                cdata_prefix_ucNstr, 9,
                                 cdata_suffix_ucNstr, 3);
 }
 
