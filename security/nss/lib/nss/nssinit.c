@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nssinit.c,v 1.68 2005/07/08 04:41:29 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: nssinit.c,v 1.69 2005/10/12 19:04:13 wtchang%redhat.com Exp $ */
 
 #include <ctype.h>
 #include "seccomon.h"
@@ -285,7 +285,7 @@ done:
 static const char *dllname =
 #if defined(XP_WIN32) || defined(XP_OS2)
 	"nssckbi.dll";
-#elif defined(HPUX)
+#elif defined(HPUX) && !defined(__ia64)  /* HP-UX PA-RISC */
 	"libnssckbi.sl";
 #elif defined(DARWIN)
 	"libnssckbi.dylib";
