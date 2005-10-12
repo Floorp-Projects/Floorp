@@ -39,8 +39,10 @@
  %]
 
 [% IF NOT multiple_bugs AND NOT doall %]
+  [% filtered_desc = short_desc FILTER html %]
   [% title = "$title for $terms.bug $bug_id"
      h1 = "$h1 for $terms.bug <a href=\"show_bug.cgi?id=$bug_id\">$bug_id</a>"
+     h2 = filtered_desc
    %]
 [% END %]
 

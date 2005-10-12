@@ -23,9 +23,11 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
+[% filtered_desc = blocked_tree.$bugid.summary FILTER html %]
 [% PROCESS global/header.html.tmpl
    title = "Dependency tree for $terms.Bug $bugid"
    h1    = "Dependency tree for <a href=\"show_bug.cgi?id=$bugid\">$terms.Bug $bugid</a>"
+   h2    = filtered_desc
 %]
 
 [% PROCESS depthControlToolbar %]

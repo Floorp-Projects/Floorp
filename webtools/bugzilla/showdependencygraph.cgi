@@ -176,6 +176,7 @@ foreach my $k (keys(%seen)) {
         $resolution = $summary = '';
     }
 
+    $vars->{'short_desc'} = $summary if ($k eq $cgi->param('id'));
 
     my @params;
 
