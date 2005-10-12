@@ -6776,7 +6776,7 @@ nsGenericArraySH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     if ((PRUint32)n < length) {
       *_retval = ::JS_DefineElement(cx, obj, n, JSVAL_VOID, nsnull, nsnull,
-                                    JSPROP_ENUMERATE);
+                                    JSPROP_ENUMERATE | JSPROP_SHARED);
       *objp = obj;
     }
   }
@@ -6812,7 +6812,7 @@ nsGenericArraySH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       PR_snprintf(buf, sizeof(buf), "%d", i);
 
       ok = ::JS_DefineProperty(cx, obj, buf, JSVAL_VOID, nsnull, nsnull,
-                               JSPROP_ENUMERATE);
+                               JSPROP_ENUMERATE | JSPROP_SHARED);
     }
   }
 
@@ -6865,9 +6865,6 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       rv = NS_SUCCESS_I_DID_SOMETHING;
     }
-    else {
-      *vp = JSVAL_VOID;
-    }
   }
 
   return rv;
@@ -6907,9 +6904,6 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = NS_SUCCESS_I_DID_SOMETHING;
-    }
-    else {
-      *vp = JSVAL_VOID;
     }
 
     // Don't fall through to nsArraySH::GetProperty() here
