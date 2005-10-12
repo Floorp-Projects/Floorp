@@ -391,13 +391,15 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
       PRBool page = aKey == nsIAutoCompleteController::KEY_PAGE_UP ||
                     aKey == nsIAutoCompleteController::KEY_PAGE_DOWN ? PR_TRUE : PR_FALSE;
       
+      // Fill in the value of the textbox with whatever is selected in the popup
+      // if the completeSelectedIndex attribute is set.  We check this before
+      // calling SelectBy since that can null out mInput in some cases.
+      PRBool completeSelection;
+      mInput->GetCompleteSelectedIndex(&completeSelection);
+
       // Instruct the result view to scroll by the given amount and direction
       popup->SelectBy(reverse, page);
 
-      // Fill in the value of the textbox with whatever is selected in the popup
-      // if the completeSelectedIndex attribute is set
-      PRBool completeSelection;
-      mInput->GetCompleteSelectedIndex(&completeSelection);
       if (completeSelection)
       {
         PRInt32 selectedIndex;
