@@ -169,6 +169,22 @@
     [% title = "$terms.Bugzilla Login Changed" %]
     Your [% terms.Bugzilla %] login has been changed.
 
+  [% ELSIF message_tag == "parameters_updated" %]
+    [% title = "Parameters Updated" %]
+    [% IF param_changed.size > 0 %]
+      [% FOREACH param = param_changed %]
+        Changed <em>[% param FILTER html %]</em><br>
+      [% END %]
+    [% ELSE %]
+      No changes made.
+    [% END %]
+
+    [% IF shutdown_is_active == 1 %]
+      <hr>
+      [% terms.Bugzilla %] has now been shut down. To re-enable the system,
+      clear the <em>shutdownhtml</em> field.
+    [% END%]
+
   [% ELSIF message_tag == "password_change_cancelled" %]
     [% title = "Cancel Request to Change Password" %]
     Your request has been cancelled.

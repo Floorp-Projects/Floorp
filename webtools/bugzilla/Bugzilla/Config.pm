@@ -26,6 +26,7 @@
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
 #                 Erik Stambaugh <erik@dasbistro.com>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 package Bugzilla::Config;
 
@@ -69,6 +70,8 @@ if ($ENV{'PROJECT'} && $ENV{'PROJECT'} =~ /^(\w+)$/) {
 our $attachdir = "$datadir/attachments";
 our $webdotdir = "$datadir/webdot";
 
+our @parampanels = ();
+
 # Module stuff
 @Bugzilla::Config::EXPORT = qw(Param);
 
@@ -81,12 +84,13 @@ our $webdotdir = "$datadir/webdot";
 
 %Bugzilla::Config::EXPORT_TAGS =
   (
-   admin => [qw(GetParamList UpdateParams SetParam WriteParams)],
+   admin => [qw(UpdateParams SetParam WriteParams)],
    db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock)],
    locations => [qw($libpath $localconfig $attachdir $datadir $templatedir
                     $webdotdir $project)],
+   params => [qw(@parampanels)],
   );
-Exporter::export_ok_tags('admin', 'db', 'locations');
+Exporter::export_ok_tags('admin', 'db', 'locations', 'params');
 
 # Bugzilla version
 $Bugzilla::Config::VERSION = "2.21.1+";
@@ -139,17 +143,21 @@ sub _load_datafiles {
 # Load in the datafiles
 _load_datafiles();
 
-# Load in the param defintions
-unless (my $ret = do 'defparams.pl') {
-    die "Couldn't parse defparams.pl: $@" if $@;
-    die "Couldn't do defparams.pl: $!" unless defined $ret;
-    die "Couldn't run defparams.pl" unless $ret;
-}
-
 # Stick the params into a hash
 my %params;
-foreach my $item (@param_list) {
-    $params{$item->{'name'}} = $item;
+
+# Load in the param definitions
+foreach my $item ((glob "$libpath/Bugzilla/Config/*.pm")) {
+    $item =~ m#/([^/]+)\.pm$#;
+    my $module = $1;
+    next if ($module eq 'Common');
+    require "Bugzilla/Config/$module.pm";
+    my @new_param_list = "Bugzilla::Config::$module"->get_param_list();
+    foreach my $item (@new_param_list) {
+        $params{$item->{'name'}} = $item;
+    }
+    push(@parampanels, $module);
+    push(@param_list, @new_param_list);
 }
 
 # END INIT CODE
@@ -172,10 +180,6 @@ sub Param {
 
     # Else error out
     die "No value for param $param (try running checksetup.pl again)";
-}
-
-sub GetParamList {
-    return @param_list;
 }
 
 sub SetParam {
@@ -327,45 +331,6 @@ sub ChmodDataFile {
     chmod $perm,$file;
 }
 
-sub check_multi {
-    my ($value, $param) = (@_);
-
-    if ($param->{'type'} eq "s") {
-        unless (scalar(grep {$_ eq $value} (@{$param->{'choices'}}))) {
-            return "Invalid choice '$value' for single-select list param '$param->{'name'}'";
-        }
-
-        return "";
-    }
-    elsif ($param->{'type'} eq "m") {
-        foreach my $chkParam (@$value) {
-            unless (scalar(grep {$_ eq $chkParam} (@{$param->{'choices'}}))) {
-                return "Invalid choice '$chkParam' for multi-select list param '$param->{'name'}'";
-            }
-        }
-
-        return "";
-    }
-    else {
-        return "Invalid param type '$param->{'type'}' for check_multi(); " .
-          "contact your Bugzilla administrator";
-    }
-}
-
-sub check_numeric {
-    my ($value) = (@_);
-    if ($value !~ /^[0-9]+$/) {
-        return "must be a numeric value";
-    }
-    return "";
-}
-
-sub check_regexp {
-    my ($value) = (@_);
-    eval { qr/$value/ };
-    return $@;
-}
-
 1;
 
 __END__
@@ -384,7 +349,6 @@ Bugzilla::Config - Configuration parameters for Bugzilla
   # Administration functions
   use Bugzilla::Config qw(:admin);
 
-  my @valid_params = GetParamList();
   my @removed_params = UpgradeParams();
   SetParam($param, $value);
   WriteParams();
@@ -410,13 +374,6 @@ Parameters can be set, retrieved, and updated.
 Returns the Param with the specified name. Either a string, or, in the case
 of multiple-choice parameters, an array reference.
 
-=item C<GetParamList()>
-
-Returns the list of known parameter types, from defparams.pl. Users should not
-rely on this method; it is intended for editparams/doeditparams only
-
-The format for the list is specified in defparams.pl
-
 =item C<SetParam($name, $value)>
 
 Sets the param named $name to $value. Values are checked using the checker
@@ -436,11 +393,7 @@ Writes the parameters to disk.
 
 =back
 
-=head2 Parameter checking functions
-
-All parameter checking functions are called with two parameters:
-
-=over 4
+=over
 
 =item *
 
@@ -450,24 +403,6 @@ The new value for the parameter
 
 A reference to the entry in the param list for this parameter
 
-=back
-
 Functions should return error text, or the empty string if there was no error.
 
-=over 4
-
-=item C<check_multi>
-
-Checks that a multi-valued parameter (ie type C<s> or type C<m>) satisfies
-its contraints.
-
-=item C<check_numeric>
-
-Checks that the value is a valid number
-
-=item C<check_regexp>
-
-Checks that the value is a valid regexp
-
 =back
-

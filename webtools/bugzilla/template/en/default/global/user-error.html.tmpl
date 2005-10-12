@@ -647,6 +647,10 @@
     The maximum number of rows, '[% maxrows FILTER html %]', must be
     a positive integer.
 
+  [% ELSIF error == "invalid_parameter" %]
+    [% title = "Invalid Parameter" %]
+    The new value for [% name FILTER html %] is invalid: [% err FILTER html %].
+
   [% ELSIF error == "invalid_product_name" %]
     [% title = "Invalid Product Name" %]
     The product name '[% product FILTER html %]' is invalid or does not exist.
