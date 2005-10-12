@@ -232,6 +232,13 @@ NS_IMETHODIMP nsCaret::SetCaretDOMSelection(nsISelection *aDOMSel)
 {
   NS_ENSURE_ARG_POINTER(aDOMSel);
   mDomSelectionWeak = do_GetWeakReference(aDOMSel);   // weak reference to pres shell
+  if (mVisible)
+  {
+    // Stop the caret from blinking in its previous location.
+    StopBlinking();
+    // Start the caret blinking in the new location.
+    StartBlinking();
+  }
   return NS_OK;
 }
 
