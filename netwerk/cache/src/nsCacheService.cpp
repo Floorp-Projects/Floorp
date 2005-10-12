@@ -303,6 +303,7 @@ nsCacheProfilePrefObserver::Observe(nsISupports *     subject,
             
         } else if (!strcmp(MEMORY_CACHE_CAPACITY_PREF, data.get())) {
 
+            mMemoryCacheCapacity = -1;
             (void) branch->GetIntPref(MEMORY_CACHE_CAPACITY_PREF,
                                       &mMemoryCacheCapacity);
             nsCacheService::SetMemoryCache();
@@ -375,6 +376,7 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
     // read memory cache device prefs
     (void) branch->GetBoolPref(MEMORY_CACHE_ENABLE_PREF, &mMemoryCacheEnabled);
 
+    mMemoryCacheCapacity = -1;
     (void) branch->GetIntPref(MEMORY_CACHE_CAPACITY_PREF,
                               &mMemoryCacheCapacity);
         
@@ -1239,10 +1241,10 @@ nsCacheService::OnProfileChanged()
 {
     if (!gService)  return;
  
-    nsresult   rv = NS_OK;
     nsAutoLock lock(gService->mCacheServiceLock);
     
     gService->mEnableDiskDevice   = gService->mObserver->DiskCacheEnabled();
+    gService->mEnableMemoryDevice = gService->mObserver->MemoryCacheEnabled();
     
 #ifdef NECKO_DISK_CACHE
     if (gService->mDiskDevice) {
@@ -1250,7 +1252,7 @@ nsCacheService::OnProfileChanged()
         gService->mDiskDevice->SetCapacity(gService->mObserver->DiskCacheCapacity());
 
         // XXX initialization of mDiskDevice could be made lazily, if mEnableDiskDevice is false
-        rv = gService->mDiskDevice->Init();
+        nsresult rv = gService->mDiskDevice->Init();
         if (NS_FAILED(rv)) {
             NS_ERROR("nsCacheService::OnProfileChanged: Re-initializing disk device failed");
             gService->mEnableDiskDevice = PR_FALSE;
@@ -1259,16 +1261,15 @@ nsCacheService::OnProfileChanged()
     }
 #endif // !NECKO_DISK_CACHE
     
-    gService->SetMemoryCache();
-
+    // If memoryDevice exists, reset its size to the new profile
     if (gService->mMemoryDevice) {
-        // Clean contents from memory cache
-        // Is using Init the right thing? Why not just 'EvictEntries(nsnull)'?
-        rv = gService->mMemoryDevice->Init();
-        if (NS_FAILED(rv) && (rv != NS_ERROR_ALREADY_INITIALIZED)) {
-            NS_ERROR("nsCacheService::OnProfileChanged: Re-initializing memory device failed");
-            gService->mEnableMemoryDevice = PR_FALSE;
-            // XXX delete mMemoryDevice?
+        if (gService->mEnableMemoryDevice) {
+            // make sure that capacity is reset to the right value
+            gService->mMemoryDevice->SetCapacity(gService->mObserver->MemoryCacheCapacity());
+        } else {
+            // tell memory device to evict everything
+            gService->mMemoryDevice->SetCapacity(0);
+            // Don't delete memory device, because some entries may be active still...
         }
     }
 }
