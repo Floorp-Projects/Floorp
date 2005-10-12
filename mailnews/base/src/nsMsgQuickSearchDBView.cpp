@@ -273,63 +273,60 @@ nsresult nsMsgQuickSearchDBView::GetFirstMessageHdrToDisplayInThread(nsIMsgThrea
 nsresult nsMsgQuickSearchDBView::SortThreads(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
   // iterate over the messages in the view, getting the thread id's
-  if (sortType == nsMsgViewSortType::byId)
+  // sort m_keys so we can quickly find if a key is in the view. 
+  m_keys.QuickSort();
+  // array of the threads' root hdr keys.
+  nsMsgKeyArray threadRootIds;
+  nsCOMPtr <nsIMsgDBHdr> rootHdr;
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  nsCOMPtr <nsIMsgThread> threadHdr;
+  for (PRUint32 i = 0; i < m_keys.GetSize(); i++)
   {
-    // sort m_keys so we can quickly find if a key is in the view. 
-    m_keys.QuickSort();
-    // array of the threads' root hdr keys.
-    nsMsgKeyArray threadRootIds;
-    nsCOMPtr <nsIMsgDBHdr> rootHdr;
-    nsCOMPtr <nsIMsgDBHdr> msgHdr;
-    nsCOMPtr <nsIMsgThread> threadHdr;
-    for (PRUint32 i = 0; i < m_keys.GetSize(); i++)
+    GetMsgHdrForViewIndex(i, getter_AddRefs(msgHdr));
+    m_db->GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(threadHdr));
+    if (threadHdr)
     {
-      GetMsgHdrForViewIndex(i, getter_AddRefs(msgHdr));
-      m_db->GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(threadHdr));
+      nsMsgKey rootKey;
+      threadHdr->GetChildKeyAt(0, &rootKey);
+      nsMsgViewIndex threadRootIndex = threadRootIds.IndexOfSorted(rootKey);
+      // if we already have that id in top level threads, ignore this msg.
+      if (threadRootIndex != kNotFound)
+        continue;
+      // it would be nice if GetInsertIndexHelper always found the hdr, but it doesn't.
+      threadHdr->GetChildHdrAt(0, getter_AddRefs(rootHdr));
+      threadRootIndex = GetInsertIndexHelper(rootHdr, &threadRootIds, nsMsgViewSortOrder::ascending, sortType);
+      threadRootIds.InsertAt(threadRootIndex, rootKey);
+    }
+  }
+  // now we've build up the list of thread ids - need to build the view
+  // from that. So for each thread id, we need to list the messages in the thread.
+  m_origKeys.CopyArray(m_keys);
+  m_keys.RemoveAll();
+  m_levels.RemoveAll();
+  m_flags.RemoveAll();
+  PRUint32 numThreads = threadRootIds.GetSize();
+  for (PRUint32 threadIndex = 0; threadIndex < numThreads; threadIndex++)
+  {
+    m_db->GetMsgHdrForKey(threadRootIds[threadIndex], getter_AddRefs(rootHdr));
+    if (rootHdr)
+    {
+      nsCOMPtr <nsIMsgDBHdr> displayRootHdr;
+      m_db->GetThreadContainingMsgHdr(rootHdr, getter_AddRefs(threadHdr));
       if (threadHdr)
       {
         nsMsgKey rootKey;
-        threadHdr->GetChildKeyAt(0, &rootKey);
-        nsMsgViewIndex threadRootIndex = threadRootIds.IndexOfSorted(rootKey);
-        // if we already have that id in top level threads, ignore this msg.
-        if (threadRootIndex != kNotFound)
-          continue;
-        // it would be nice if GetInsertIndexHelper always found the hdr, but it doesn't.
-        threadHdr->GetChildHdrAt(0, getter_AddRefs(rootHdr));
-        threadRootIndex = GetInsertIndexHelper(rootHdr, &threadRootIds, nsMsgViewSortOrder::ascending, sortType);
-        threadRootIds.InsertAt(threadRootIndex, rootKey);
-      }
-    }
-    // now we've build up the list of thread ids - need to build the view
-    // from that. So for each thread id, we need to list the messages in the thread.
-    m_origKeys.CopyArray(m_keys);
-    m_keys.RemoveAll();
-    m_levels.RemoveAll();
-    m_flags.RemoveAll();
-    PRUint32 numThreads = threadRootIds.GetSize();
-    for (PRUint32 threadIndex = 0; threadIndex < numThreads; threadIndex++)
-    {
-      m_db->GetMsgHdrForKey(threadRootIds[threadIndex], getter_AddRefs(rootHdr));
-      if (rootHdr)
-      {
-        nsCOMPtr <nsIMsgDBHdr> displayRootHdr;
-        m_db->GetThreadContainingMsgHdr(rootHdr, getter_AddRefs(threadHdr));
-        if (threadHdr)
-        {
-          nsMsgKey rootKey;
-          PRUint32 rootFlags;
-          GetFirstMessageHdrToDisplayInThread(threadHdr, getter_AddRefs(displayRootHdr));
-          displayRootHdr->GetMessageKey(&rootKey);
-          displayRootHdr->GetFlags(&rootFlags);
-          rootFlags |= MSG_VIEW_FLAG_ISTHREAD;
-          m_keys.Add(rootKey);
-          m_flags.Add(rootFlags);
-          m_levels.Add(0);
+        PRUint32 rootFlags;
+        GetFirstMessageHdrToDisplayInThread(threadHdr, getter_AddRefs(displayRootHdr));
+        displayRootHdr->GetMessageKey(&rootKey);
+        displayRootHdr->GetFlags(&rootFlags);
+        rootFlags |= MSG_VIEW_FLAG_ISTHREAD;
+        m_keys.Add(rootKey);
+        m_flags.Add(rootFlags);
+        m_levels.Add(0);
 
-          nsMsgViewIndex startOfThreadViewIndex = m_keys.GetSize() - 1;
-          PRUint32 numListed;
-          ListIdsInThread(threadHdr, startOfThreadViewIndex, &numListed);
-        }
+        nsMsgViewIndex startOfThreadViewIndex = m_keys.GetSize() - 1;
+        PRUint32 numListed;
+        ListIdsInThread(threadHdr, startOfThreadViewIndex, &numListed);
       }
     }
   }
