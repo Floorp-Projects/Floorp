@@ -2391,7 +2391,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
                                         nsIFrame        **aFrame,
                                         nsStyleContext  *aStyleContext)
 {
-  // Make sure to keep IsSpecialHTMLContent in synch with this code
+  // Make sure to keep IsSpecialContent in synch with this code
   
   // Note: do not do anything in this method that assumes pseudo-frames have
   // been processed.  If you feel the urge to do something like that, fix
@@ -2404,7 +2404,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
     case NS_FORM_INPUT_RESET:
     case NS_FORM_INPUT_BUTTON:
       if (gUseXBLForms)
-        return NS_OK; // upddate IsSpecialHTMLContent if this becomes functional
+        return NS_OK; // upddate IsSpecialContent if this becomes functional
       return NS_NewGfxButtonControlFrame(mPresShell, aFrame);
 
     case NS_FORM_INPUT_CHECKBOX:
@@ -2429,7 +2429,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
 
     case NS_FORM_INPUT_HIDDEN:
       return NS_OK; // this does not create a frame so it needs special handling
-                    // in IsSpecialHTMLContent
+                    // in IsSpecialContent
 
     case NS_FORM_INPUT_IMAGE:
       return CreateHTMLImageFrame(aContent, aStyleContext,
@@ -2451,7 +2451,7 @@ nsCSSFrameConstructor::CreateHTMLImageFrame(nsIContent* aContent,
                                             ImageFrameCreatorFunc aFunc,
                                             nsIFrame** aFrame)
 {
-  // Make sure to keep IsSpecialHTMLContent in synch with this code
+  // Make sure to keep IsSpecialContent in synch with this code
   if (nsImageFrame::ShouldCreateImageFrameFor(aContent, aStyleContext)) {
     return (*aFunc)(mPresShell, aFrame);
   }
@@ -3319,69 +3319,174 @@ nsCSSFrameConstructor::GetParentFrame(nsTableCreator&          aTableCreator,
 }
 
 static PRBool
-IsSpecialHTMLContent(nsIContent* aContent, nsStyleContext* aStyleContext)
+IsSpecialContent(nsIContent*     aContent,
+                 nsIAtom*        aTag,
+                 PRInt32         aNameSpaceID,
+                 nsStyleContext* aStyleContext)
 {
-  // Gross hack. Return true if this is a content node that we'd create an HTML
+  // Gross hack. Return true if this is a content node that we'd create a
   // frame for based on something other than display -- in other words if this
-  // is an HTML node that could never have a nsTableCellFrame, for example.
-  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
-    return PR_FALSE;
-  }
+  // is a node that could never have a nsTableCellFrame, for example.
+  if (aContent->IsContentOfType(nsIContent::eHTML) ||
+      aNameSpaceID == kNameSpaceID_XHTML) {
+    // XXXbz this is duplicating some logic from ConstructHTMLFrame....
+    // Would be nice to avoid that.  :(
 
-  nsIAtom* tag = aContent->Tag();
+    if (aTag == nsHTMLAtoms::input) {
+      nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
+      if (control) {
+        PRInt32 type = control->GetType();
+        if (NS_FORM_INPUT_HIDDEN == type) {
+          return PR_FALSE; // input hidden does not create a special frame
+        }
+        else if (NS_FORM_INPUT_IMAGE == type) {
+          return nsImageFrame::ShouldCreateImageFrameFor(aContent, aStyleContext);
+        }
+      }
 
-  // XXXbz this is duplicating some logic from ConstructHTMLFrame....
-  // Would be nice to avoid that.  :(
-  
-  if (tag == nsHTMLAtoms::input) {
-    nsCOMPtr<nsIFormControl> control = do_QueryInterface(aContent);
-    if (control) {
-      PRInt32 type = control->GetType();
-      if (NS_FORM_INPUT_HIDDEN == type) {
-        return PR_FALSE; // input hidden does not create a special frame
-      }
-      else if (NS_FORM_INPUT_IMAGE == type) {
-        return nsImageFrame::ShouldCreateImageFrameFor(aContent, aStyleContext);
-      }
+      return PR_TRUE;
     }
 
-    return PR_TRUE;
-  }
+    if (aTag == nsHTMLAtoms::img) {
+      return nsImageFrame::ShouldCreateImageFrameFor(aContent, aStyleContext);
+    }
 
-  if (tag == nsHTMLAtoms::img) {
-    return nsImageFrame::ShouldCreateImageFrameFor(aContent, aStyleContext);
-  }
-
-  if (tag == nsHTMLAtoms::object ||
-      tag == nsHTMLAtoms::applet ||
-      tag == nsHTMLAtoms::embed) {
-    return !(aContent->IntrinsicState() &
+    if (aTag == nsHTMLAtoms::object ||
+        aTag == nsHTMLAtoms::applet ||
+        aTag == nsHTMLAtoms::embed) {
+      return !(aContent->IntrinsicState() &
              (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
               NS_EVENT_STATE_SUPPRESSED));
+    }
+
+    return
+      aTag == nsHTMLAtoms::br ||
+      aTag == nsHTMLAtoms::wbr ||
+      aTag == nsHTMLAtoms::textarea ||
+      aTag == nsHTMLAtoms::select ||
+      aTag == nsHTMLAtoms::fieldset ||
+      aTag == nsHTMLAtoms::legend ||
+      aTag == nsHTMLAtoms::frameset ||
+      aTag == nsHTMLAtoms::iframe ||
+      aTag == nsHTMLAtoms::spacer ||
+      aTag == nsHTMLAtoms::button ||
+      aTag == nsHTMLAtoms::isindex;
   }
 
-  return
-    tag == nsHTMLAtoms::br ||
-    tag == nsHTMLAtoms::wbr ||
-    tag == nsHTMLAtoms::textarea ||
-    tag == nsHTMLAtoms::select ||
-    tag == nsHTMLAtoms::fieldset ||
-    tag == nsHTMLAtoms::legend ||
-    tag == nsHTMLAtoms::frameset ||
-    tag == nsHTMLAtoms::iframe ||
-    tag == nsHTMLAtoms::spacer ||
-    tag == nsHTMLAtoms::button ||
-    tag == nsHTMLAtoms::isindex;    
-}
 
+  if (aNameSpaceID == kNameSpaceID_XUL)
+    return
+#ifdef MOZ_XUL
+      aTag == nsXULAtoms::button ||
+      aTag == nsXULAtoms::checkbox ||
+      aTag == nsXULAtoms::radio ||
+      aTag == nsXULAtoms::autorepeatbutton ||
+      aTag == nsXULAtoms::titlebar ||
+      aTag == nsXULAtoms::resizer ||
+      aTag == nsXULAtoms::image ||
+      aTag == nsXULAtoms::spring ||
+      aTag == nsHTMLAtoms::spacer ||
+      aTag == nsXULAtoms::treechildren ||
+      aTag == nsXULAtoms::treecol ||
+      aTag == nsXULAtoms::text ||
+      aTag == nsXULAtoms::description ||
+      aTag == nsHTMLAtoms::label ||
+      aTag == nsXULAtoms::menu ||
+      aTag == nsXULAtoms::menuitem ||
+      aTag == nsXULAtoms::menubutton ||
+  #ifndef XP_MACOSX
+      // keep this in sync  with ConstructXULFrame especially for the MAC
+      aTag == nsXULAtoms::menubar ||
+  #endif
+      aTag == nsXULAtoms::popupgroup ||
+      aTag == nsXULAtoms::iframe ||
+      aTag == nsXULAtoms::editor ||
+      aTag == nsXULAtoms::browser ||
+      aTag == nsXULAtoms::progressmeter ||
+#endif
+      aTag == nsXULAtoms::slider ||
+      aTag == nsXULAtoms::scrollbar ||
+      aTag == nsXULAtoms::nativescrollbar ||
+      aTag == nsXULAtoms::scrollbarbutton ||
+#ifdef MOZ_XUL
+      aTag == nsXULAtoms::splitter ||
+      aTag == nsXULAtoms::grippy ||
+#endif
+      PR_FALSE;
+
+#ifdef MOZ_SVG
+  if (aNameSpaceID == kNameSpaceID_SVG &&
+      nsSVGUtils::SVGEnabled())
+    return
+      aTag == nsSVGAtoms::svg ||
+      aTag == nsSVGAtoms::g ||
+      aTag == nsSVGAtoms::polygon ||
+      aTag == nsSVGAtoms::polyline ||
+      aTag == nsSVGAtoms::circle ||
+      aTag == nsSVGAtoms::defs ||
+      aTag == nsSVGAtoms::ellipse ||
+      aTag == nsSVGAtoms::line ||
+      aTag == nsSVGAtoms::rect ||
+#ifdef MOZ_SVG_FOREIGNOBJECT
+      aTag == nsSVGAtoms::foreignObject ||
+#endif
+      aTag == nsSVGAtoms::path ||
+      aTag == nsSVGAtoms::text ||
+      aTag == nsSVGAtoms::tspan ||
+      aTag == nsSVGAtoms::linearGradient ||
+      aTag == nsSVGAtoms::radialGradient ||
+      aTag == nsSVGAtoms::stop ||
+      aTag == nsSVGAtoms::use ||
+      aTag == nsSVGAtoms::marker ||
+      aTag == nsSVGAtoms::image  ||
+      aTag == nsSVGAtoms::clipPath  ||
+      aTag == nsSVGAtoms::textPath  ||
+      aTag == nsSVGAtoms::filter  ||
+      aTag == nsSVGAtoms::pattern;
+#endif
+
+#ifdef MOZ_MATHML
+  if (aNameSpaceID == kNameSpaceID_MathML)
+    return
+      aTag == nsMathMLAtoms::mi_ ||
+      aTag == nsMathMLAtoms::mn_ ||
+      aTag == nsMathMLAtoms::ms_ ||
+      aTag == nsMathMLAtoms::mtext_ ||
+      aTag == nsMathMLAtoms::mo_ ||
+      aTag == nsMathMLAtoms::mfrac_ ||
+      aTag == nsMathMLAtoms::msup_ ||
+      aTag == nsMathMLAtoms::msub_ ||
+      aTag == nsMathMLAtoms::msubsup_ ||
+      aTag == nsMathMLAtoms::munder_ ||
+      aTag == nsMathMLAtoms::mover_ ||
+      aTag == nsMathMLAtoms::munderover_ ||
+      aTag == nsMathMLAtoms::mphantom_ ||
+      aTag == nsMathMLAtoms::mpadded_ ||
+      aTag == nsMathMLAtoms::mspace_ ||
+      aTag == nsMathMLAtoms::mfenced_ ||
+      aTag == nsMathMLAtoms::mmultiscripts_ ||
+      aTag == nsMathMLAtoms::mstyle_ ||
+      aTag == nsMathMLAtoms::msqrt_ ||
+      aTag == nsMathMLAtoms::mroot_ ||
+      aTag == nsMathMLAtoms::maction_ ||
+      aTag == nsMathMLAtoms::mrow_   ||
+      aTag == nsMathMLAtoms::merror_ ||
+      aTag == nsMathMLAtoms::none_   ||
+      aTag == nsMathMLAtoms::mprescripts_;
+#endif
+  return PR_FALSE;
+}
+                                      
 nsresult
-nsCSSFrameConstructor::AdjustParentFrame(nsIContent* aChildContent,
-                                         nsStyleContext* aChildStyle,
-                                         nsIFrame* & aParentFrame,
-                                         nsFrameItems* & aFrameItems,
-                                         nsFrameConstructorState& aState,
+nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
+                                         nsIContent*                  aChildContent,
+                                         nsIFrame* &                  aParentFrame,
+                                         nsIAtom*                     aTag,
+                                         PRInt32                      aNameSpaceID,
+                                         nsStyleContext*              aChildStyle,
+                                         nsFrameItems* &              aFrameItems,
                                          nsFrameConstructorSaveState& aSaveState,
-                                         PRBool& aCreatedPseudo)
+                                         PRBool&                      aCreatedPseudo)
 {
   NS_PRECONDITION(aChildStyle, "Must have child's style context");
   NS_PRECONDITION(aFrameItems, "Must have frame items to work with");
@@ -3399,7 +3504,7 @@ nsCSSFrameConstructor::AdjustParentFrame(nsIContent* aChildContent,
       (!IsTableRelated(aChildStyle->GetStyleDisplay()->mDisplay, PR_TRUE) ||
        // Also need to create a pseudo-parent if the child is going to end up
        // with a frame based on something other than display.
-       IsSpecialHTMLContent(aChildContent, aChildStyle)) &&
+       IsSpecialContent(aChildContent, aTag, aNameSpaceID, aChildStyle)) &&
       // XXXbz evil hack for HTML forms.... see similar in
       // nsCSSFrameConstructor::TableProcessChild.  It should just go away.
       (!aChildContent->IsContentOfType(nsIContent::eHTML) ||
@@ -5391,7 +5496,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
 
   // Create a frame based on the tag
   if (nsHTMLAtoms::img == aTag) {
-    // Make sure to keep IsSpecialHTMLContent in synch with this code
+    // Make sure to keep IsSpecialContent in synch with this code
     rv = CreateHTMLImageFrame(aContent, aStyleContext, NS_NewImageFrame,
                               &newFrame);
     if (NS_SUCCEEDED(rv) && newFrame) {
@@ -5419,7 +5524,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     rv = NS_NewWBRFrame(mPresShell, &newFrame);
   }
   else if (nsHTMLAtoms::input == aTag) {
-    // Make sure to keep IsSpecialHTMLContent in synch with this code
+    // Make sure to keep IsSpecialContent in synch with this code
     rv = CreateInputFrame(aContent, &newFrame, aStyleContext);
     if (NS_SUCCEEDED(rv) && newFrame) {
       if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -5454,7 +5559,7 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
   else if (nsHTMLAtoms::object == aTag ||
            nsHTMLAtoms::applet == aTag ||
            nsHTMLAtoms::embed == aTag) {
-    // Make sure to keep IsSpecialHTMLContent in synch with this code
+    // Make sure to keep IsSpecialContent in synch with this code
     if (!(aContent->IntrinsicState() &
           (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
            NS_EVENT_STATE_SUPPRESSED))) {
@@ -5905,6 +6010,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
 
     if (isXULNS) {
       // First try creating a frame based on the tag
+      // Make sure to keep IsSpecialContent in synch with this code
 #ifdef MOZ_XUL
       // BUTTON CONSTRUCTION
       if (aTag == nsXULAtoms::button || aTag == nsXULAtoms::checkbox || aTag == nsXULAtoms::radio) {
@@ -5988,6 +6094,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
   #ifdef XP_MACOSX
         // On Mac OS X, we use the system menubar for any root chrome shell
         // XUL menubars.
+        // keep this in sync  with IsSpecialContent
         PRBool isRootChromeShell = PR_FALSE;
         nsCOMPtr<nsISupports> container = aState.mPresContext->GetContainer();
         if (container) {
@@ -6934,6 +7041,7 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
   // Initialize the new frame
   nsIFrame* newFrame = nsnull;
 
+  // Make sure to keep IsSpecialContent in synch with this code
   const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
 
   if (aTag == nsMathMLAtoms::mi_ ||
@@ -7417,6 +7525,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     return NS_OK;
   }
 
+  // Make sure to keep IsSpecialContent in synch with this code
   if (aTag == nsSVGAtoms::svg) {
     if (!parentIsSVG) {
       // This is the outermost <svg> element.
@@ -7728,8 +7837,9 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsFrameConstructorState& aState,
   nsFrameItems* frameItems = &aFrameItems;
   PRBool pseudoParent = PR_FALSE;
   nsFrameConstructorSaveState pseudoSaveState;
-  nsresult rv = AdjustParentFrame(aContent, styleContext, adjParentFrame,
-                                  frameItems, aState, pseudoSaveState,
+  nsresult rv = AdjustParentFrame(aState, aContent, adjParentFrame,
+                                  aTag, aNameSpaceID, styleContext,
+                                  frameItems, pseudoSaveState,
                                   pseudoParent);
   if (NS_FAILED(rv)) {
     return rv;
