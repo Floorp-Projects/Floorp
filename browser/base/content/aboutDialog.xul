@@ -63,8 +63,7 @@
         buttons="accept,extra2"
 #endif
         creditslabel="&copyright;"
-        aboutlabel="&aboutLink;" 
-        style="width: 299px">
+        aboutlabel="&aboutLink;">
     
   <script type="application/x-javascript" src="chrome://browser/content/aboutDialog.js"/>
 
@@ -82,7 +81,7 @@
       </vbox>
     </vbox>
     <vbox flex="1" id="creditsBox">
-      <html:iframe style="border: 0px;" id="creditsIframe" src="chrome://browser/content/credits.xhtml" flex="1"/>
+      <iframe id="creditsIframe" src="chrome://browser/content/credits.xhtml" flex="1"/>
     </vbox>    
   </deck>
   <separator class="groove" id="groove"/>
