@@ -46,7 +46,7 @@
 <!ENTITY importDescription.label  "This wizard will import mail messages, address book entries, and/or preferences from other mail programs and common address book formats into &brandShortName; Mail.">
 <!ENTITY importDescription2.label "Once they have been imported, you will be able to access them from within &brandShortName; Mail and/or Address Book.">
 
-<!ENTITY selectDescription.label  "Please select the program from which you would like to import:">
+<!ENTITY selectDescription.label  "Please select the type of file that you would like to import:">
 
 <!ENTITY back.label               "&lt; Back">
 <!ENTITY forward.label            "Next &gt;">
