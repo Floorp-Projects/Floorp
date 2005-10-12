@@ -141,6 +141,10 @@ if(verifyDiskSpace(fProgram, srDest))
     logComment("Installing: "    + fProgram + "components\\Netscape\\MozillaTrunk\\Talkback.ini");
     logComment("Create Folder: " + fProgram + "chrome");
     logComment("Create Folder: " + fProgram + "uninstall");
+    logComment("Installing: "    + fProgram + "active-update.xml");
+    logComment("Installing: "    + fProgram + "updates.xml");
+    logComment("Installing: "    + fProgram + "last-update.log");
+    logComment("Create Folder: " + fProgram + "updates");
 
     err = getLastError();
     if (err == SUCCESS)
