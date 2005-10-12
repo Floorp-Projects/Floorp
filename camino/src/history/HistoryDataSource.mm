@@ -408,8 +408,23 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
   else
     [mDateCategories removeAllObjects];  
 
-  NSCalendarDate* nowDate = [NSCalendarDate calendarDate];
+  static const int kOlderThanAWeek = 7;
+  static const int kDefaultExpireDays = 9;
 
+  // Read the history cutoff so that we don't create too many folders
+  BOOL gotPref = NO;
+  int expireDays = [[PreferenceManager sharedInstance] getIntPref:"browser.history_expire_days" withSuccess:&gotPref];
+  if (!gotPref)
+    expireDays = kDefaultExpireDays;
+  else if (expireDays == 0) {
+    // Return with an empty array, there is no history
+    return;
+  }
+
+  NSDictionary* curCalendarLocale = [[NSUserDefaults standardUserDefaults] dictionaryRepresentation];
+  NSString* dateFormat = NSLocalizedString(@"HistoryMenuDateFormat", @"");
+  
+  NSCalendarDate* nowDate      = [NSCalendarDate calendarDate];
   NSCalendarDate* lastMidnight = [NSCalendarDate dateWithYear:[nowDate yearOfCommonEra]
                                                     month:[nowDate monthOfYear]
                                                       day:[nowDate dayOfMonth]
@@ -417,48 +432,46 @@ static int HistoryItemSort(id firstItem, id secondItem, void* context)
                                                    minute:0
                                                    second:0
                                                  timeZone:[nowDate timeZone]];
-  HistoryCategoryItem* todayItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource startDate:lastMidnight ageInDays:0 title:NSLocalizedString(@"Today", @"") childCapacity:10];
-  [mDateCategories addObject:todayItem];
-  [todayItem release];
-  
-  NSCalendarDate* startYesterday = [lastMidnight dateByAddingYears:0
-                                                   months:0
-                                                     days:-1
-                                                    hours:0
-                                                  minutes:0
-                                                  seconds:0];
-  HistoryCategoryItem* yesterdayItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource startDate:startYesterday ageInDays:1 title:NSLocalizedString(@"Yesterday", @"") childCapacity:10];
-  [mDateCategories addObject:yesterdayItem];
-  [yesterdayItem release];
 
-  NSCalendarDate* curDayStart = startYesterday;
-  NSDictionary* curCalendarLocale = [[NSUserDefaults standardUserDefaults] dictionaryRepresentation];
-  NSString* dateFormat = NSLocalizedString(@"HistoryMenuDateFormat", @"");
-  
-  // do previous 6 days
-  for (int i = 0; i < 6; i ++)
+  int dayLimit = (expireDays < kOlderThanAWeek ? expireDays : kOlderThanAWeek);
+  for (int ageDays = 0; ageDays <= dayLimit; ++ageDays)
   {
-    curDayStart = [curDayStart dateByAddingYears:0
-                                          months:0
-                                            days:-1
-                                           hours:0
-                                         minutes:0
-                                         seconds:0];
+    NSDate* dayStartDate;
+    if (ageDays < kOlderThanAWeek) {
+      dayStartDate = [lastMidnight dateByAddingYears:0
+                                              months:0
+                                                days:(-1)*ageDays
+                                               hours:0
+                                             minutes:0
+                                             seconds:0];
+    } else
+      dayStartDate = [NSDate distantPast];
+    
+    NSString* itemTitle;
+    int childCapacity = 10;
+    int ageInDays = ageDays;
+    if (ageDays == 0)
+      itemTitle = NSLocalizedString(@"Today", @"");
+    else if (ageDays == 1 )
+      itemTitle = NSLocalizedString(@"Yesterday", @"");
+    else if (ageDays == kOlderThanAWeek) {
+      itemTitle = NSLocalizedString(@"HistoryMoreThanAWeek", @"");
+      ageInDays = -1;
+      childCapacity = 100;
+    } else {
+      itemTitle = [dayStartDate descriptionWithCalendarFormat:dateFormat
+                                                     timeZone:nil
+                                                       locale:curCalendarLocale];
+    }
 
-    HistoryCategoryItem* dayItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource
-                                                                             startDate:curDayStart
-                                                                             ageInDays:(i + 2)
-                                                                                 title:[curDayStart descriptionWithCalendarFormat:dateFormat locale:curCalendarLocale]
-                                                                         childCapacity:10];
-    [mDateCategories addObject:dayItem];
-    [dayItem release];
+    HistoryCategoryItem* newItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource
+                                                                             startDate:dayStartDate
+                                                                             ageInDays:ageInDays
+                                                                                 title:itemTitle
+                                                                         childCapacity:childCapacity];
+    [mDateCategories addObject:newItem];
+    [newItem release];
   }
-  
-  // do "older"
-  NSDate* oldDate = [NSDate distantPast];
-  HistoryCategoryItem* olderItem = [[HistoryDateCategoryItem alloc] initWithDataSource:mDataSource startDate:oldDate ageInDays:-1 title:NSLocalizedString(@"HistoryMoreThanAWeek", @"") childCapacity:100];
-  [mDateCategories addObject:olderItem];
-  [olderItem release];
 }
 
 - (HistoryCategoryItem*)categoryItemForDate:(NSDate*)date
