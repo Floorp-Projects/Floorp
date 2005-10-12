@@ -972,18 +972,22 @@ sub PreBuild {
   if ($cachebuild) {
     TinderUtils::print_log "starting nightly release build\n";
     # clobber the tree if set to do so
-    $Settings::clean_objdir = 1 if !defined($Settings::objdir);
-    $Settings::clean_srcdir = 1 if !defined($Settings::srcdir);
+    $Settings::clean_objdir = 1 if !defined($Settings::clean_objdir);
+    $Settings::clean_srcdir = 1 if !defined($Settings::clean_srcdir);
     if ($Settings::ObjDir eq '') {
       $Settings::clean_srcdir = ($Settings::clean_srcdir || $Settings::clean_objdir);
       $Settings::clean_objdir = 0;
     }
-    if ($Settings::clean_srcdir) {
-      TinderUtils::run_shell_command "rm -rf mozilla";
-    }
     if ($Settings::clean_objdir) {
       my $objdir = 'mozilla/'.$Settings::ObjDir;
-      TinderUtils::run_shell_command "rm -rf $objdir";
+      if ( -d $objdir) {
+        TinderUtils::run_shell_command "rm -rf $objdir";
+      }
+    }
+    if ($Settings::clean_srcdir) {
+      if ( -d "mozilla") {
+        TinderUtils::run_shell_command "rm -rf mozilla";
+      }
     }
     if ( -d "l10n" ) {
       TinderUtils::run_shell_command "rm -rf l10n";
