@@ -47,7 +47,7 @@
 }
 
 *|*.themesLink {
-  margin-left: 5px;
+  -moz-margin-start: 5px;
   text-decoration: underline;
   color: blue;
   cursor: pointer;

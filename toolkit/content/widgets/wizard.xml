@@ -1,5 +1,10 @@
 <?xml version="1.0"?>
 
+<!DOCTYPE bindings [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
+
 <bindings id="wizardBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -13,7 +18,7 @@
   
   <binding id="wizard" extends="chrome://global/content/bindings/wizard.xml#wizard-base">
     <content>
-      <xul:hbox class="wizard-header" anonid="Header"/>
+      <xul:hbox class="wizard-header" chromedir="&locale.dir;" anonid="Header"/>
       
       <xul:deck class="wizard-page-box" flex="1" anonid="Deck">
         <children includes="wizardpage"/>

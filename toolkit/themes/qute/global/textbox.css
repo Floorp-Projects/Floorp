@@ -55,7 +55,10 @@ textbox
   -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  padding: 2px 2px 3px 4px;
+  padding-top: 2px;
+  padding-bottom: 3px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 2px;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }

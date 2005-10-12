@@ -46,7 +46,10 @@
   -moz-user-focus: ignore;
   -moz-box-align: center;
   -moz-box-pack: center;
-  margin: 1px 2px 1px 10px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  -moz-margin-start: 10px;
+  -moz-margin-end: 2px;
   border: 2px solid;
   -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight;
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;

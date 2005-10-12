@@ -47,17 +47,23 @@ radio {
   -moz-appearance: radio-container;
   -moz-box-align: center;
   margin: 2px 4px;
-  padding: 1px 2px 1px 4px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 2px;
 }
 
 .radio-label-box {
-  margin-left: 2px;
+  -moz-margin-start: 2px;
   border: 1px solid transparent;
-  padding: 0px 0px 1px 1px;
+  padding-top: 0px;
+  padding-bottom: 1px;
+  -moz-padding-start: 1px;
+  -moz-padding-end: 0px;
 }
 
 .radio-icon {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
 }
 
 .radio-label {

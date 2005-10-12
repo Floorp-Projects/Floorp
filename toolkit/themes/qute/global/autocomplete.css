@@ -52,7 +52,10 @@ textbox {
 
 /* Used by autocomplete widgets that don't have an icon. Gross. -dwh */
 textbox.padded {
-  padding: 1px 0px 1px 2px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 0px;
 }
 
 .textbox-input-box {
@@ -83,7 +86,10 @@ textbox.padded {
   -moz-border-right-colors: ThreeDShadow ThreeDFace;
   -moz-border-bottom-colors: ThreeDShadow ThreeDFace;
   -moz-border-left-colors: ThreeDShadow ThreeDFace;
-  padding: 2px 0 0 2px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 0px;
 }
 
 /* ::::: autocomplete popups ::::: */
@@ -119,7 +125,7 @@ popup[type="autocomplete"],
 }
 
 .autocomplete-treebody::-moz-tree-cell-text {
-  padding-left: 8px;
+  -moz-padding-start: 8px;
 }
 
 treechildren.autocomplete-treebody::-moz-tree-row(selected) {

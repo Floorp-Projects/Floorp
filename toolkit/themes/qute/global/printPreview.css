@@ -1,18 +1,18 @@
 /* ..... page navigation ..... */
 
-.home-arrow {
+.home-arrow, .end-arrow[chromedir="rtl"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-lft-sharp-end.gif");
 }
 
-.end-arrow {
+.end-arrow, .home-arrow[chromedir="rtl"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp-end.gif");
 }
 
-.left-arrow {
+.left-arrow, .right-arrow[chromedir="rtl"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-lft-sharp.gif");
 }
 
-.right-arrow {
+.right-arrow, .left-arrow[chromedir="rtl"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-rit-sharp.gif");
 }
 
@@ -39,5 +39,5 @@
 }
 
 .toolbarbutton-text { 
-  margin-left: 4px !important;
+  -moz-margin-start: 4px !important;
 }

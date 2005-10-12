@@ -59,7 +59,10 @@ button {
 
 .button-box {
   border: 1px solid transparent;
-  padding: 1px 4px 2px 3px;
+  padding-top: 1px;
+  padding-bottom: 2px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 4px;
 }
 
 .button-text {
@@ -104,7 +107,10 @@ button[checked="true"] {
 button:hover:active > .button-box,
 button[open="true"] > .button-box,
 button[checked="true"] > .button-box {
-  padding: 2px 3px 1px 4px;
+  padding-top: 2px;
+  padding-bottom: 1px;
+  -moz-padding-start: 4px;
+  -moz-padding-end: 3px;
 }
 
 /* .......... disabled state .......... */
@@ -118,7 +124,10 @@ button[disabled="true"] {
 }
 
 button[disabled="true"] > .button-box {
-  padding: 1px 4px 2px 3px !important;
+  padding-top: 1px !important;
+  padding-bottom: 2px !important;
+  -moz-padding-start: 3px !important;
+  -moz-padding-end: 4px !important;
 }
 
 /* ::::: menu/menu-button buttons ::::: */
@@ -144,7 +153,10 @@ button[type="menu-button"] {
 }
 
 .button-menubutton-dropmarker[open="true"] {
-  margin: 2px 0px 0px 2px;
+  margin-top: 2px;
+  margin-bottom: 0px;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 0px;
 }
 
 /* ::::: plain buttons ::::: */

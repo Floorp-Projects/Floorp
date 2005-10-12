@@ -64,7 +64,10 @@
 }
 
 #uninstallButton .button-icon, #updateButton .button-icon {
-  margin: 0px 5px 0px 0px !important;
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+  -moz-margin-start: 0px !important;
+  -moz-margin-end: 5px !important;
 }
 
 #installButton .button-icon,
@@ -72,11 +75,14 @@
 #updateButton .button-icon,
 #optionsButton .button-icon,
 #useThemeButton .button-icon {
-  margin: 0px 5px 0px 0px !important;
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+  -moz-margin-start: 0px !important;
+  -moz-margin-end: 5px !important;
 }
 
 .commandBarSeparator {
-  margin-left: 5px;
+  -moz-margin-start: 5px;
 }
 
 #getMore {
@@ -93,7 +99,10 @@ extension[selected="true"] {
 }
 
 extension {
-  padding: 13px 10px 13px 13px;
+  padding-top: 13px;
+  padding-bottom: 13px;
+  -moz-padding-start: 13px;
+  -moz-padding-end: 10px;
   min-height: 25px;
   border-bottom: 1px dotted #C0C0C0;
   background-image: url("chrome://mozapps/skin/shared/itemFader.png");
@@ -117,7 +126,7 @@ extension[disabled="true"] .extension-icon {
 }
 
 .extension-icon {
-  margin-right: 10px;
+  -moz-margin-end: 10px; 
 }
 
 .previewText {
@@ -128,15 +137,21 @@ extension[disabled="true"] .extension-icon {
 }
 
 extension[itemType="theme"] {
-  padding: 7px 5px 7px 6px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  -moz-padding-start: 6px;
+  -moz-padding-end: 5px;
 }
 
 extension[itemType="theme"] .extension-icon {
-  margin-right: 3px;
+  -moz-margin-end: 3px;
 }
 
 .themePreviewArea {
   -moz-appearance: listbox;
-  margin: 10px 10px 5px 5px;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 10px;
 }
 
