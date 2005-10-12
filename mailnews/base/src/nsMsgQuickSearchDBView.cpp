@@ -272,6 +272,10 @@ nsresult nsMsgQuickSearchDBView::GetFirstMessageHdrToDisplayInThread(nsIMsgThrea
 
 nsresult nsMsgQuickSearchDBView::SortThreads(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
 {
+  // we don't handle grouping in quick search views yet.
+  if (m_viewFlags & nsMsgViewFlagsType::kGroupBySort)
+    return NS_OK;
+
   // iterate over the messages in the view, getting the thread id's
   // sort m_keys so we can quickly find if a key is in the view. 
   m_keys.QuickSort();
