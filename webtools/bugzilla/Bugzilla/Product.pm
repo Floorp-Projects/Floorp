@@ -129,12 +129,6 @@ sub group_controls {
     if (!defined $self->{group_controls}) {
         my $query = qq{SELECT
                        groups.id,
-                       groups.name,
-                       groups.description,
-                       groups.isbuggroup,
-                       groups.last_changed,
-                       groups.userregexp,
-                       groups.isactive,
                        group_control_map.entry,
                        group_control_map.membercontrol,
                        group_control_map.othercontrol,
@@ -145,8 +139,12 @@ sub group_controls {
                   WHERE group_control_map.product_id = ?
                   AND   groups.isbuggroup != 0
                   ORDER BY groups.name};
-        my $self->{group_controls} = 
+        $self->{group_controls} = 
             $dbh->selectall_hashref($query, 'id', undef, $self->id);
+        foreach my $group (keys(%{$self->{group_controls}})) {
+            $self->{group_controls}->{$group}->{'group'} = 
+                new Bugzilla::Group($group);
+        }
     }
     return $self->{group_controls};
 }
@@ -354,8 +352,9 @@ Product.pm represents a product object.
 
  Params:      none.
 
- Returns:     A hash with group id as key and hash containing the
-              group data as value.
+ Returns:     A hash with group id as key and hash containing 
+              a Bugzilla::Group object and the properties of group
+              relative to the product.
 
 =item C<versions()>
 
