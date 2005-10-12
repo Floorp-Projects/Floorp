@@ -1,5 +1,6 @@
  #aboutDialog {
    padding: 0px 0px 10px 0px;
+   width: 299px;
  }
 
  #clientBox {
@@ -15,24 +16,17 @@
  } 
 
  #detailsBox {
-   padding: 8px 10px 10px 8px;
+   padding: 8px 10px 0px 8px;
  }
 
  #userAgent {
-   margin: 3px 10px 3px 5px;
+   margin: 3px 10px 0px 5px;
    background-color: #FFFFFF;
    color: #000000;
-   padding: 1px 0px 1px 3px;
+   padding: 1px 0px 0px 3px;
    -moz-appearance: none;
    overflow: hidden;
-
-%ifdef XP_MACOSX
-   height: 3.8em;
-%else
-   height: 2.4em;
-%endif
-
-   border: none;
+   border: 0px;
  }
 
  #groove {
@@ -42,6 +36,7 @@
  #creditsIframe {
    cursor: default;
    -moz-user-select: none;
+   border: 0px;
  }
 
  #version {
