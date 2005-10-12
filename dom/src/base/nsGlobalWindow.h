@@ -169,7 +169,7 @@ public:
   virtual JSObject *GetGlobalJSObject();
   virtual void OnFinalize(JSObject *aJSObject);
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
-  virtual nsresult SetNewArguments(PRUint32 aArgc, jsval* aArgv);
+  virtual nsresult SetNewArguments(PRUint32 aArgc, void* aArgv);
 
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal();

@@ -1659,7 +1659,7 @@ nsGlobalWindow::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 }
 
 nsresult
-nsGlobalWindow::SetNewArguments(PRUint32 aArgc, jsval* aArgv)
+nsGlobalWindow::SetNewArguments(PRUint32 aArgc, void* aArgv)
 {
   FORWARD_TO_OUTER(SetNewArguments, (aArgc, aArgv), NS_ERROR_NOT_INITIALIZED);
 
@@ -1677,14 +1677,16 @@ nsGlobalWindow::SetNewArguments(PRUint32 aArgc, jsval* aArgv)
     return NS_OK;
   }
 
-  NS_ASSERTION(aArgv, "Must have argv!");
+  jsval* argv = NS_STATIC_CAST(jsval*, aArgv);
+
+  NS_ASSERTION(argv, "Must have argv!");
 
   // Freeze the outer here so that we don't create a bogus new inner
   // just because we're trying to resolve the Array class on cx.
   // Resolving it for window.arguments on the outer window should be
   // fine, I think.
   Freeze();
-  JSObject *argArray = ::JS_NewArrayObject(cx, aArgc, aArgv);
+  JSObject *argArray = ::JS_NewArrayObject(cx, aArgc, argv);
   Thaw();
 
   NS_ENSURE_TRUE(argArray, NS_ERROR_OUT_OF_MEMORY);
