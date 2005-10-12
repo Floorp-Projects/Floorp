@@ -126,6 +126,23 @@ CERT_CreateCertificate(unsigned long serialNumber,
 }
 
 /************************************************************************/
+/* It's clear from the comments that the original author of this 
+ * function expected the template for certificate requests to treat
+ * the attributes as a SET OF ANY.  This function expected to be 
+ * passed an array of SECItems each of which contained an already encoded
+ * Attribute.  But the cert request template does not treat the 
+ * Attributes as a SET OF ANY, and AFAIK never has.  Instead the template
+ * encodes attributes as a SET OF xxxxxxx.  That is, it expects to encode
+ * each of the Attributes, not have them pre-encoded.  Consequently an 
+ * array of SECItems containing encoded Attributes is of no value to this 
+ * function.  But we cannot change the signature of this public function.
+ * It must continue to take SECItems.
+ *
+ * I have recoded this function so that each SECItem contains an 
+ * encoded cert extension.  The encoded cert extensions form the list for the
+ * single attribute of the cert request. In this implementation there is at most
+ * one attribute and it is always of type SEC_OID_PKCS9_EXTENSION_REQUEST.
+ */
 
 CERTCertificateRequest *
 CERT_CreateCertificateRequest(CERTName *subject,
@@ -134,87 +151,93 @@ CERT_CreateCertificateRequest(CERTName *subject,
 {
     CERTCertificateRequest *certreq;
     PRArenaPool *arena;
+    CERTAttribute * attribute;
+    SECOidData * oidData;
     SECStatus rv;
+    int i = 0;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if ( arena == NULL ) {
 	return NULL;
     }
     
-    certreq = (CERTCertificateRequest *)
-			PORT_ArenaZAlloc(arena, sizeof(CERTCertificateRequest));
-
-    if (certreq != NULL) {
-	certreq->arena = arena;
-	
-	rv = DER_SetUInteger(arena, &certreq->version,
-			     SEC_CERTIFICATE_REQUEST_VERSION);
-	if (rv != SECSuccess)
-	    goto loser;
-
-	rv = CERT_CopyName(arena, &certreq->subject, subject);
-	if (rv != SECSuccess)
-	    goto loser;
-
-	rv = SECKEY_CopySubjectPublicKeyInfo(arena,
-					  &certreq->subjectPublicKeyInfo,
-					  spki);
-	if (rv != SECSuccess)
-	    goto loser;
-
-	/* Copy over attribute information */
-	if (attributes) {
-	    int i = 0;
-
-	    /* allocate space for attributes */
-	    while(attributes[i] != NULL) i++;
-	    certreq->attributes = PORT_ArenaZNewArray(arena,CERTAttribute*,i+1);
-	    if(!certreq->attributes) {
-		goto loser;
-	    }
-
-	    /* copy attributes */
-	    i = 0;
-	    while(attributes[i]) {
-		/*
-		** Attributes are a SetOf Attribute which implies
-		** lexigraphical ordering.  It is assumes that the
-		** attributes are passed in sorted.  If we need to
-		** add functionality to sort them, there is an
-		** example in the PKCS 7 code.
-		*/
-		certreq->attributes[i] = (SECItem*)PORT_ArenaZAlloc(arena, 
-							  	    sizeof(SECItem));
-		if(!certreq->attributes[i]) {
-		    goto loser;
-		};
-		rv = SECITEM_CopyItem(arena, certreq->attributes[i], 
-				      attributes[i]);
-		if (rv != SECSuccess) {
-		    goto loser;
-		}
-		i++;
-	    }
-	    certreq->attributes[i] = NULL;
-	} else {
-	    /*
-	     ** Invent empty attribute information. According to the
-	     ** pkcs#10 spec, attributes has this ASN.1 type:
-	     **
-	     ** attributes [0] IMPLICIT Attributes
-	     ** 
-	     ** Which means, we should create a NULL terminated list
-	     ** with the first entry being NULL;
-	     */
-	    certreq->attributes = (SECItem**)PORT_ArenaZAlloc(arena, sizeof(SECItem *));
-	    if(!certreq->attributes) {
-		goto loser;
-	    }
-	    certreq->attributes[0] = NULL;
-	} 
-    } else {
+    certreq = PORT_ArenaZNew(arena, CERTCertificateRequest);
+    if (!certreq) {
 	PORT_FreeArena(arena, PR_FALSE);
+	return NULL;
     }
+    /* below here it is safe to goto loser */
+
+    certreq->arena = arena;
+    
+    rv = DER_SetUInteger(arena, &certreq->version,
+			 SEC_CERTIFICATE_REQUEST_VERSION);
+    if (rv != SECSuccess)
+	goto loser;
+
+    rv = CERT_CopyName(arena, &certreq->subject, subject);
+    if (rv != SECSuccess)
+	goto loser;
+
+    rv = SECKEY_CopySubjectPublicKeyInfo(arena,
+				      &certreq->subjectPublicKeyInfo,
+				      spki);
+    if (rv != SECSuccess)
+	goto loser;
+
+    certreq->attributes = PORT_ArenaZNewArray(arena, CERTAttribute*, 2);
+    if(!certreq->attributes) 
+	goto loser;
+
+    /* Copy over attribute information */
+    if (!attributes || !attributes[0]) {
+	/*
+	 ** Invent empty attribute information. According to the
+	 ** pkcs#10 spec, attributes has this ASN.1 type:
+	 **
+	 ** attributes [0] IMPLICIT Attributes
+	 ** 
+	 ** Which means, we should create a NULL terminated list
+	 ** with the first entry being NULL;
+	 */
+	certreq->attributes[0] = NULL;
+	return certreq;
+    }	
+
+    /* allocate space for attributes */
+    attribute = PORT_ArenaZNew(arena, CERTAttribute);
+    if (!attribute) 
+	goto loser;
+
+    oidData = SECOID_FindOIDByTag( SEC_OID_PKCS9_EXTENSION_REQUEST );
+    PORT_Assert(oidData);
+    if (!oidData)
+	goto loser;
+    rv = SECITEM_CopyItem(arena, &attribute->attrType, &oidData->oid);
+    if (rv != SECSuccess)
+	goto loser;
+
+    for (i = 0; attributes[i] != NULL ; i++) 
+	;
+    attribute->attrValue = PORT_ArenaZNewArray(arena, SECItem *, i+1);
+    if (!attribute->attrValue) 
+	goto loser;
+
+    /* copy attributes */
+    for (i = 0; attributes[i]; i++) {
+	/*
+	** Attributes are a SetOf Attribute which implies
+	** lexigraphical ordering.  It is assumes that the
+	** attributes are passed in sorted.  If we need to
+	** add functionality to sort them, there is an
+	** example in the PKCS 7 code.
+	*/
+	attribute->attrValue[i] = SECITEM_ArenaDupItem(arena, attributes[i]);
+	if(!attribute->attrValue[i]) 
+	    goto loser;
+    }
+
+    certreq->attributes[0] = attribute;
 
     return certreq;
 
