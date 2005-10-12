@@ -1,7 +1,7 @@
 <h2><strong>{$user->UserName}</strong> &raquo; Author Profile</h2>
 <dl>
 <dt>Homepage</dt>
-<dd><a href="{$user->UserWebsite}">{$user->UserWebsite}</a></dd>
+<dd><a href="{$user->UserWebsite|regex_replace:'/^([^(http:\/\/|https:\/\/)].+)$/':'http://\1'}">{$user->UserWebsite}</a></dd>
 
 <dt>Email</dt>
 <dd>
