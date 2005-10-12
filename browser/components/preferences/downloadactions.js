@@ -811,7 +811,7 @@ var gDownloadActionsWindow = {
    
     function filterActions()
     {
-      var filter = document.getElementById("filter").value;
+      var filter = document.getElementById("filter").value.toLowerCase();
       if (filter == "") {
         gDownloadActionsWindow.clearFilter();
         return;
