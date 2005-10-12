@@ -886,7 +886,7 @@ sort_compare_strings(const void *a, const void *b, void *arg)
 static JSBool
 array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    jsval fval, *vec;
+    jsval fval, *vec, *pivotroot;
     CompareArgs ca;
     jsuint len, newlen, i;
     JSStackFrame *fp;
@@ -920,31 +920,27 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /*
-     * Memory for temporary array incliding one extra jsval as working space
-     * for js_HeapSort.
+     * We need a temporary array of len jsvals to hold elements of the array.
+     * Check that its size does not overflow size_t, which would allow for
+     * indexing beyond the end of the malloc'd vector.
      */
-    nbytes = (len + 1) * sizeof(jsval);
-
-    /*
-     * Test for size_t overflow, which could lead to indexing beyond the end
-     * of the malloc'd vector.
-     */
-    if (nbytes != (double) (len + 1) * sizeof(jsval)) {
+    if (len > ((size_t) -1) / sizeof(jsval)) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
     }
+    nbytes = ((size_t) len) * sizeof(jsval);
+
     vec = (jsval *) JS_malloc(cx, nbytes);
     if (!vec)
         return JS_FALSE;
-
-    newlen = 0;
 
     /* Root vec, clearing it first in case a GC nests while we're filling it. */
     memset(vec, 0, nbytes);
     fp = cx->fp;
     fp->vars = vec;
-    fp->nvars = len + 1;
+    fp->nvars = len;
 
+    newlen = 0;
     for (i = 0; i < len; i++) {
         ca.status = IndexToExistingId(cx, obj, i, &id);
         if (!ca.status)
@@ -967,9 +963,10 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     ca.context = cx;
     ca.fval = fval;
-    ca.localroot = argv + argc;         /* 1 local GC root */
+    ca.localroot = argv + argc;       /* local GC root for temporary string */
+    pivotroot    = argv + argc + 1;   /* local GC root for pivot val */
     ca.status = JS_TRUE;
-    js_HeapSort(vec, (size_t) len, vec + len, sizeof(jsval),
+    js_HeapSort(vec, (size_t) len, pivotroot, sizeof(jsval),
                 all_strings ? sort_compare_strings : sort_compare,
                 &ca);
 
@@ -1721,7 +1718,7 @@ static JSFunctionSpec array_methods[] = {
 #if JS_HAS_SOME_PERL_FUN
     {"join",                array_join,             1,JSFUN_GENERIC_NATIVE,0},
     {"reverse",             array_reverse,          0,JSFUN_GENERIC_NATIVE,2},
-    {"sort",                array_sort,             1,JSFUN_GENERIC_NATIVE,1},
+    {"sort",                array_sort,             1,JSFUN_GENERIC_NATIVE,2},
 #endif
 #if JS_HAS_MORE_PERL_FUN
     {"push",                array_push,             1,JSFUN_GENERIC_NATIVE,0},
