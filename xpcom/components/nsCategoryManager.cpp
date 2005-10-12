@@ -317,7 +317,7 @@ CategoryNode::AddLeaf(const char* aEntryName,
       rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
       if (_retval) {
-        char *toDup = leaf->nonpValue ? leaf->nonpValue : leaf->pValue;
+        const char *toDup = leaf->nonpValue ? leaf->nonpValue : leaf->pValue;
         if (toDup) {
           *_retval = ToNewCString(nsDependentCString(toDup));
           if (!*_retval)
