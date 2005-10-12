@@ -1047,6 +1047,48 @@
 			settings = {
 			};
 		};
+		0F0F5E3908FC65FB00B4EBCD = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = CHISupportsOwner.mm;
+			path = src/extensions/CHISupportsOwner.mm;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F0F5E3A08FC65FB00B4EBCD = {
+			fileRef = 0F0F5E3908FC65FB00B4EBCD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F0F5E3B08FC65FB00B4EBCD = {
+			fileRef = 0F0F5E3908FC65FB00B4EBCD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F0F5E3C08FC660300B4EBCD = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = CHISupportsOwner.h;
+			path = src/extensions/CHISupportsOwner.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F0F5E3D08FC660300B4EBCD = {
+			fileRef = 0F0F5E3C08FC660300B4EBCD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F0F5E3E08FC660300B4EBCD = {
+			fileRef = 0F0F5E3C08FC660300B4EBCD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0F13A30D07D7F3930034B176 = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
@@ -3500,6 +3542,7 @@
 				0FC4B33E08941B4F009C5F41,
 				0F222C6108C6102B00B34F14,
 				0F08FB1508D37DA90022DD45,
+				0F0F5E3D08FC660300B4EBCD,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4648,6 +4691,7 @@
 				0FE7712B08C7C42F00AFB850,
 				0FDEEA3B08CBD04200754D9B,
 				0F08FB1808D37DB30022DD45,
+				0F0F5E3A08FC65FB00B4EBCD,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7385,6 +7429,7 @@
 				0FC4B33F08941B4F009C5F41,
 				0F222C6208C6102B00B34F14,
 				0F08FB1608D37DA90022DD45,
+				0F0F5E3E08FC660300B4EBCD,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8540,6 +8585,7 @@
 				0FE7712C08C7C42F00AFB850,
 				0FDEEA3C08CBD04200754D9B,
 				0F08FB1908D37DB30022DD45,
+				0F0F5E3B08FC65FB00B4EBCD,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -16240,6 +16286,7 @@
 			children = (
 				3489ADC90753B717005ADF6C,
 				F541495E02711B0001A80166,
+				0F0F5E3C08FC660300B4EBCD,
 				F583E3C203B8228F01A80166,
 				F541495A02711A8301A80166,
 				F5FDF166031AF47301DE816D,
@@ -16274,6 +16321,7 @@
 			children = (
 				3489ADCA0753B717005ADF6C,
 				F541495F02711B0001A80166,
+				0F0F5E3908FC65FB00B4EBCD,
 				F583E3BF03B8228701A80166,
 				F541495B02711A8301A80166,
 				F5FDF167031AF47301DE816D,
