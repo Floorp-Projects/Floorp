@@ -328,7 +328,7 @@ var nsBrowserContentHandler = {
         openPreferences();
       } else {
         var features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
-        openWindow(null, chromeParam, "_blank", features, null);
+        openWindow(null, chromeParam, "_blank", features, "");
       }
 
       cmdLine.preventDefault = true;
