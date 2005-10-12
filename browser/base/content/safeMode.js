@@ -78,4 +78,9 @@ function onOK() {
 
   restartApp();
 }
- 
+
+function onCancel() {
+  var appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
+                             .getService(Components.interfaces.nsIAppStartup);
+  appStartup.quit(appStartup.eForceQuit);
+}
