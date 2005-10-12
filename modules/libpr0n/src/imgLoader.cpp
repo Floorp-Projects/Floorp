@@ -622,9 +622,6 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   if (request) {
     // we have this in our cache already.. cancel the current (document) load
 
-    /* XXX If |*listener| is null when we return here, the caller should 
-       probably cancel the channel instead of us doing it here.
-    */
     channel->Cancel(NS_IMAGELIB_ERROR_LOAD_ABORTED); // this should fire an OnStopRequest
 
     *listener = nsnull; // give them back a null nsIStreamListener
