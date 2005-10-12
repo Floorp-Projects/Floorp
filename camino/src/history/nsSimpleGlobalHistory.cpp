@@ -56,7 +56,7 @@
 #include "nsIMdbFactoryFactory.h"
 
 #include "nsIPrefService.h"
-#include "nsIPrefBranchInternal.h"
+#include "nsIPrefBranch2.h"
 
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -522,6 +522,9 @@ nsSimpleGlobalHistory::~nsSimpleGlobalHistory()
   NS_IF_RELEASE(mEnv);
   if (mSyncTimer)
     mSyncTimer->Cancel();
+
+  if (mExpireTimer)
+    mExpireTimer->Cancel();
 }
 
 //----------------------------------------------------------------------
@@ -1691,7 +1694,7 @@ nsSimpleGlobalHistory::Init()
 
   gPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);  
   gPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);
-  nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(gPrefBranch);
+  nsCOMPtr<nsIPrefBranch2> pbi = do_QueryInterface(gPrefBranch);
   if (pbi) {
     pbi->AddObserver(PREF_AUTOCOMPLETE_ONLY_TYPED, this, PR_FALSE);
     pbi->AddObserver(PREF_BROWSER_HISTORY_EXPIRE_DAYS, this, PR_FALSE);
@@ -2149,6 +2152,12 @@ nsSimpleGlobalHistory::Commit(eCommitType commitType)
 nsresult
 nsSimpleGlobalHistory::ExpireEntries(PRBool inNotify)
 {
+  if (mExpireTimer)
+  {
+    mExpireTimer->Cancel();
+    mExpireTimer = nsnull;
+  }
+  
   PRTime expirationDate;
   PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInExpireDays;
   
@@ -2162,6 +2171,19 @@ nsSimpleGlobalHistory::ExpireEntries(PRBool inNotify)
   expiration.expirationDate = expirationDate;
   
   return RemoveMatchingRows(matchExpirationCallback, (void *)&expiration, inNotify);
+}
+
+nsresult
+nsSimpleGlobalHistory::SetPendingExpireEntries()
+{
+  if (mExpireTimer)
+    return NS_OK;   // we've already queued it
+
+  nsresult rv;
+  mExpireTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  return mExpireTimer->InitWithFuncCallback(FireExpireTimer, this, 0, nsITimer::TYPE_ONE_SHOT);
 }
 
 void
@@ -2204,6 +2226,12 @@ nsSimpleGlobalHistory::FireSyncTimer(nsITimer *aTimer, void *aClosure)
   ((nsSimpleGlobalHistory *)aClosure)->Sync();
 }
 
+/* static */
+void
+nsSimpleGlobalHistory::FireExpireTimer(nsITimer *aTimer, void *aClosure)
+{
+  ((nsSimpleGlobalHistory *)aClosure)->ExpireEntries(PR_FALSE);
+}
 
 PRTime
 nsSimpleGlobalHistory::GetNow()
@@ -2436,8 +2464,15 @@ nsSimpleGlobalHistory::Observe(nsISupports *aSubject,
     NS_ENSURE_STATE(gPrefBranch);
 
     // expiration date
-    if (!nsCRT::strcmp(aSomeData, NS_LITERAL_STRING(PREF_BROWSER_HISTORY_EXPIRE_DAYS).get())) {
-      gPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &mExpireDays);
+    if (!nsCRT::strcmp(aSomeData, NS_LITERAL_STRING(PREF_BROWSER_HISTORY_EXPIRE_DAYS).get()))
+    {
+      PRInt32 newExpireDays;
+      gPrefBranch->GetIntPref(PREF_BROWSER_HISTORY_EXPIRE_DAYS, &newExpireDays);
+      if (mExpireDays != newExpireDays)
+      {
+        mExpireDays = newExpireDays;
+        SetPendingExpireEntries();
+      }
     }
     else if (!nsCRT::strcmp(aSomeData, NS_LITERAL_STRING(PREF_AUTOCOMPLETE_ONLY_TYPED).get())) {
       gPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED, &mAutocompleteOnlyTyped);

@@ -155,6 +155,7 @@ protected:
   // expiration/removal stuff
   //
   nsresult ExpireEntries(PRBool notify);
+  nsresult SetPendingExpireEntries();
   nsresult RemoveMatchingRows(rowMatchCallback aMatchFunc, void *aClosure, PRBool notify);
 
   // 
@@ -179,6 +180,7 @@ protected:
   nsresult      SetDirty();
   
   static void   FireSyncTimer(nsITimer *aTimer, void *aClosure);
+  static void   FireExpireTimer(nsITimer *aTimer, void *aClosure);
 
   //
   // AddPage-oriented stuff
@@ -273,6 +275,7 @@ protected:
   PRBool              mDirty;             // if we've changed history
   PRBool              mPagesRemoved;      // true if we've removed pages but not committed.
   nsCOMPtr<nsITimer>  mSyncTimer;
+  nsCOMPtr<nsITimer>  mExpireTimer;
 
   // observers
   nsSupportsArray     mHistoryObservers;
