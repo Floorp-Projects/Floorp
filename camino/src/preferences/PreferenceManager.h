@@ -41,28 +41,34 @@
 class nsProfileDirServiceProvider;
 class nsIPref;
 
+extern NSString* const kPrefChangedNotificationName;
+// userInfo entries:
+  extern NSString* const kPrefChangedPrefNameUserInfoKey;   // NSString
+
 @interface PreferenceManager : NSObject
 {
 @private
-    NSUserDefaults* mDefaults;
+    NSUserDefaults*       mDefaults;
     nsProfileDirServiceProvider* mProfileProvider;
-    nsIPref*        mPrefs;
-    long            mLastRunPrefsVersion;
+    nsIPref*              mPrefs;
+
+    NSMutableDictionary*  mPrefChangeObservers; // dict of NSMutableArray of PrefChangeObserverOwner, keyed by pref name.
+
+    long                  mLastRunPrefsVersion;
+
     // proxies notification stuff
-    CFRunLoopSourceRef  mRunLoopSource;
+    CFRunLoopSourceRef    mRunLoopSource;
 }
 
 + (PreferenceManager *)sharedInstance;
 + (PreferenceManager *)sharedInstanceDontCreate;
 
-- (id) init;
-- (void) dealloc;
-- (BOOL) initMozillaPrefs;
-- (void) syncMozillaPrefs;
-- (void) savePrefsFile;
+- (BOOL)initMozillaPrefs;
+- (void)syncMozillaPrefs;
+- (void)savePrefsFile;
 
-- (NSString *) homePage:(BOOL) checkStartupPagePref;
-- (NSString *) searchPage;
+- (NSString *)homePageUsingStartPage:(BOOL)checkStartupPagePref;
+- (NSString *)searchPage;
 
 - (NSString*)getStringPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
 - (NSColor*)getColorPref: (const char*)prefName withSuccess:(BOOL*)outSuccess;
@@ -75,5 +81,11 @@ class nsIPref;
 
 // the path to the user profile's root folder, used by camino 0.8+
 - (NSString*) newProfilePath;
+
+// turn notifications on and off when the given pref changes. 
+// if not nil, inObject is used at the 'object' of the resulting notification.
+- (void)addObserver:(id)inObject forPref:(const char*)inPrefName;
+- (void)removeObserver:(id)inObject;    // remove from all prefs that it observes
+- (void)removeObserver:(id)inObject forPref:(const char*)inPrefName;
 
 @end

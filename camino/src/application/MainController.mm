@@ -609,7 +609,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [[mainWindow windowController] autosaveWindowFrame];
 
   // Now open the new window.
-  NSString* homePage = mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePage:YES];
+  NSString* homePage = mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePageUsingStartPage:YES];
   BrowserWindowController* controller = [self openBrowserWindowWithURL:homePage andReferrer:nil behind:nil allowPopups:NO];
 
   if ([MainController isBlankURL:homePage])
@@ -637,7 +637,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 
     NSString* urlToLoad = @"about:blank";
     if (loadHomepage)
-      urlToLoad = [[PreferenceManager sharedInstance] homePage:NO];
+      urlToLoad = [[PreferenceManager sharedInstance] homePageUsingStartPage:NO];
 
     [self openBrowserWindowWithURL:urlToLoad andReferrer:nil behind:nil allowPopups:NO];
   }
@@ -879,7 +879,10 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   }
   else {
     // explicity open the home page to work around "load home page in new window" pref
-    [self openBrowserWindowWithURL:(mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePage:NO]) andReferrer:nil behind:nil allowPopups:NO];
+    [self openBrowserWindowWithURL:(mStartURL ? mStartURL : [[PreferenceManager sharedInstance] homePageUsingStartPage:NO])
+                       andReferrer:nil
+                            behind:nil
+                       allowPopups:NO];
   }
 }
 

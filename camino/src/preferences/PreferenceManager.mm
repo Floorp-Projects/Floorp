@@ -36,21 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Cocoa/Cocoa.h>
-
 #import <SystemConfiguration/SystemConfiguration.h>
+
+#import "NSString+Utils.h"
 
 #import "PreferenceManager.h"
 #import "UserDefaults.h"
 #import "CHBrowserService.h"
+#import "CHISupportsOwner.h"
 
 #include "nsBuildID.h"
+#include "nsString.h"
+#include "nsCRT.h"
+#include "nsWeakReference.h"
 #include "nsIServiceManager.h"
+#include "nsIObserver.h"
 #include "nsProfileDirServiceProvider.h"
 #include "nsIPref.h"
 #include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsString.h"
+#include "nsIPrefBranch2.h"
 #include "nsEmbedAPI.h"
 #include "AppDirServiceProvider.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -63,6 +67,11 @@
 nsStaticModuleInfo const *const kPStaticModules = nsnull;
 PRUint32 const kStaticModuleCount = 0;
 #endif
+
+NSString* const kPrefChangedNotificationName = @"PrefChangedNotification";
+// userInfo entries:
+  NSString* const kPrefChangedPrefNameUserInfoKey = @"pref_name";
+
 
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 
@@ -103,6 +112,117 @@ static const PRInt32 kCurrentPrefsVersion = 1;
 
 - (BOOL)cleanupUserContentCSS;
 - (void)refreshAdBlockingStyleSheet:(BOOL)inLoad;
+
+@end
+
+#pragma mark -
+
+// 
+// PrefChangeObserver.
+// 
+// We create one of these each time someone adds a pref observer
+// 
+class PrefChangeObserver: public nsIObserver
+{
+public:
+                        PrefChangeObserver(id inObject)  // inObject can be nil
+                        : mObject(inObject)
+                        {}
+                        
+  virtual               ~PrefChangeObserver()
+                        {}
+  
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  id                    GetObject() const { return mObject; }
+  nsresult              RegisterForPref(const char* inPrefName);
+  nsresult              UnregisterForPref(const char* inPrefName);
+
+protected:
+
+  id                    mObject;    // not retained
+};
+
+NS_IMPL_ISUPPORTS1(PrefChangeObserver, nsIObserver);
+
+nsresult
+PrefChangeObserver::RegisterForPref(const char* inPrefName)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch2> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  return pbi->AddObserver(inPrefName, this, PR_FALSE);
+}
+
+nsresult
+PrefChangeObserver::UnregisterForPref(const char* inPrefName)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch2> pbi = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  return pbi->RemoveObserver(inPrefName, this);
+}
+
+NS_IMETHODIMP
+PrefChangeObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aSomeData)
+{
+  if (nsCRT::strcmp(aTopic, "nsPref:changed") != 0)
+    return NS_OK;   // not a pref changed notification
+
+  NSDictionary* userInfoDict = [NSDictionary dictionaryWithObject:[NSString stringWithPRUnichars:aSomeData]
+                                                           forKey:kPrefChangedPrefNameUserInfoKey];
+  
+  [[NSNotificationCenter defaultCenter] postNotificationName:kPrefChangedNotificationName
+                                                      object:mObject
+                                                    userInfo:userInfoDict];
+  return NS_OK;
+}
+
+// little wrapper for the C++ observer class, which takes care of registering
+// and unregistering the observer.
+@interface PrefChangeObserverOwner : CHISupportsOwner
+{
+@private
+  NSString*           mPrefName;
+}
+
+- (id)initWithPrefName:(NSString*)inPrefName object:(id)inObject;
+- (BOOL)hasObject:(id)inObject;
+
+@end
+
+@implementation PrefChangeObserverOwner
+
+- (id)initWithPrefName:(NSString*)inPrefName object:(id)inObject
+{
+  PrefChangeObserver* changeObserver = new PrefChangeObserver(inObject);
+  if ((self = [super initWithValue:(nsISupports*)changeObserver]))    // retains it
+  {
+    mPrefName = [inPrefName retain];
+    NSLog(@"registering observer %@ on %@", self, mPrefName);
+    changeObserver->RegisterForPref([mPrefName UTF8String]);
+  }
+  return self;
+}
+
+- (void)dealloc
+{
+  NSLog(@"unregistering observer %@ on %@", self, mPrefName);
+
+  PrefChangeObserver* changeObserver = NS_REINTERPRET_CAST(PrefChangeObserver*, [super value]);
+  if (changeObserver)
+    changeObserver->UnregisterForPref([mPrefName UTF8String]);
+
+  [mPrefName release];
+  [super dealloc];
+}
+
+- (BOOL)hasObject:(id)inObject
+{
+  PrefChangeObserver* changeObserver = NS_REINTERPRET_CAST(PrefChangeObserver*, [super value]);
+  return (changeObserver && (changeObserver->GetObject() == inObject));
+}
 
 @end
 
@@ -158,6 +278,7 @@ static BOOL gMadePrefManager;
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   if (self == gSharedInstance)
     gSharedInstance = nil;
+
   [super dealloc];
 }
 
@@ -175,6 +296,9 @@ static BOOL gMadePrefManager;
 
 - (void)xpcomTerminate: (NSNotification*)aNotification
 {
+  [mPrefChangeObservers release];
+  mPrefChangeObservers = nil;
+
   // this will notify observers that the profile is about to go away.
   if (mProfileProvider)
   {
@@ -185,7 +309,7 @@ static BOOL gMadePrefManager;
 
   // save prefs now, in case any termination listeners set prefs.
   [self savePrefsFile];
-    
+
   [gSharedInstance release];
 }
 
@@ -819,7 +943,7 @@ typedef enum EProxyConfig {
     (void)mPrefs->SetBoolPref(prefName, (PRBool)value);
 }
 
-- (NSString *) homePage:(BOOL)checkStartupPagePref
+- (NSString *) homePageUsingStartPage:(BOOL)checkStartupPagePref
 {
   if (!mPrefs)
     return @"about:blank";
@@ -1057,6 +1181,87 @@ typedef enum EProxyConfig {
       }
     }
   }
+}
+
+
+- (void)addObserver:(id)inObject forPref:(const char*)inPrefName
+{
+  if (!mPrefChangeObservers)
+    mPrefChangeObservers = [[NSMutableDictionary alloc] initWithCapacity:4];
+
+  NSString* prefName = [NSString stringWithUTF8String:inPrefName];
+
+  // get the array of pref observers for this pref
+  NSMutableArray* existingObservers = [mPrefChangeObservers objectForKey:prefName];
+  if (!existingObservers)
+  {
+    existingObservers = [NSMutableArray arrayWithCapacity:1];
+    [mPrefChangeObservers setObject:existingObservers forKey:prefName];
+  }
+
+  // look for an existing observer with this target object
+  NSEnumerator* observersEnum = [existingObservers objectEnumerator];
+  PrefChangeObserverOwner* curValue;
+  while ((curValue = [observersEnum nextObject]))
+  {
+    if ([curValue hasObject:inObject])
+      return;   // found it; nothing to do
+  }
+
+  // if it doesn't exist, make one
+  PrefChangeObserverOwner* observerOwner = [[PrefChangeObserverOwner alloc] initWithPrefName:prefName object:inObject];
+  [existingObservers addObject:observerOwner];    // takes ownership
+  [observerOwner release];
+}
+
+- (void)removeObserver:(id)inObject
+{
+  NSEnumerator* observerArraysEnum = [mPrefChangeObservers objectEnumerator];
+  NSMutableArray* curArray;
+  while ((curArray = [observerArraysEnum nextObject]))
+  {
+    // look for an existing observer with this target object
+    NSEnumerator* observersEnum = [curArray objectEnumerator];
+    PrefChangeObserverOwner* prefObserverOwner = nil;
+    
+    PrefChangeObserverOwner* curValue;
+    while ((curValue = [observersEnum nextObject]))
+    {
+      if ([curValue hasObject:inObject])
+      {
+        prefObserverOwner = curValue;
+        break;
+      }
+    }
+    
+    if (prefObserverOwner)
+      [curArray removeObjectIdenticalTo:prefObserverOwner];   // this should release it and unregister the observer
+  }
+}
+
+- (void)removeObserver:(id)inObject forPref:(const char*)inPrefName
+{
+  NSString* prefName = [NSString stringWithUTF8String:inPrefName];
+
+  NSMutableArray* existingObservers = [mPrefChangeObservers objectForKey:prefName];
+  if (!existingObservers) return;
+
+  // look for an existing observer with this target object
+  NSEnumerator* observersEnum = [existingObservers objectEnumerator];
+  PrefChangeObserverOwner* prefObserverOwner = nil;
+  
+  PrefChangeObserverOwner* curValue;
+  while ((curValue = [observersEnum nextObject]))
+  {
+    if ([curValue hasObject:inObject])
+    {
+      prefObserverOwner = curValue;
+      break;
+    }
+  }
+  
+  if (prefObserverOwner)
+    [existingObservers removeObjectIdenticalTo:prefObserverOwner];   // this should release it and unregister the observer
 }
 
 @end

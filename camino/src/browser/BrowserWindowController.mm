@@ -493,8 +493,8 @@ enum BWCOpenDest {
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
 
   // the widget code (via -viewsWindowDidBecomeKey) takes care
-  // of sending focus and activate events to gecko
-  // on window activation, so no need to do this here:
+  // of sending focus and activate events to gecko,
+  // but we still need to call the embedding activate API
   [self performSelector:@selector(delayedSetActive:) withObject:[NSNumber numberWithBool:YES] afterDelay:0];
 }
 
@@ -506,8 +506,8 @@ enum BWCOpenDest {
   [[NSApp delegate] adjustCloseWindowMenuItemKeyEquivalent:NO];
 
   // the widget code (via -viewsWindowDidResignKey) takes care
-  // of sending lost-focus and deactivate events to gecko
-  // on window activation, so no need to do this here:
+  // of sending focus and activate events to gecko,
+  // but we still need to call the embedding activate API
   [self performSelector:@selector(delayedSetActive:) withObject:[NSNumber numberWithBool:NO] afterDelay:0];
 }
 
@@ -2291,7 +2291,11 @@ enum BWCOpenDest {
 
 - (IBAction)home:(id)aSender
 {
-  [mBrowserView loadURI:[[PreferenceManager sharedInstance] homePage:NO] referrer: nil flags:NSLoadFlagsNone activate:NO allowPopups:NO];
+  [mBrowserView loadURI:[[PreferenceManager sharedInstance] homePageUsingStartPage:NO]
+               referrer:nil
+                  flags:NSLoadFlagsNone
+               activate:NO
+            allowPopups:NO];
 }
 
 - (NSString*)getContextMenuNodeDocumentURL
@@ -2525,7 +2529,7 @@ enum BWCOpenDest {
                                 
       NSString* urlToLoad = @"about:blank";
       if (loadHomepage)
-        urlToLoad = [[PreferenceManager sharedInstance] homePage: NO];
+        urlToLoad = [[PreferenceManager sharedInstance] homePageUsingStartPage:NO];
 
       focusURLBar = locationBarVisible && [MainController isBlankURL:urlToLoad];      
 
