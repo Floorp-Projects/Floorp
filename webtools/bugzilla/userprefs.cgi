@@ -45,18 +45,19 @@ use vars qw($template $vars $userid);
 ###############################################################################
 sub DoAccount {
     my $dbh = Bugzilla->dbh;
-    SendSQL("SELECT realname FROM profiles WHERE userid = $userid");
-    $vars->{'realname'} = FetchSQLData();
+    ($vars->{'realname'}) = $dbh->selectrow_array(
+             "SELECT realname FROM profiles WHERE userid = ?", undef, $userid);
 
     if(Param('allowemailchange')) {
-        SendSQL("SELECT tokentype, issuedate + " . $dbh->sql_interval('3 DAY') .
-                ", eventdata
-                    FROM tokens
-                    WHERE userid = $userid
-                    AND tokentype LIKE 'email%' 
-                    ORDER BY tokentype ASC " . $dbh->sql_limit(1));
-        if(MoreSQLData()) {
-            my ($tokentype, $change_date, $eventdata) = &::FetchSQLData();
+        my @token = $dbh->selectrow_array(
+            "SELECT tokentype, issuedate + " .
+                    $dbh->sql_interval('3 DAY') . ", eventdata
+               FROM tokens
+              WHERE userid = ?
+                AND tokentype LIKE 'email%'
+           ORDER BY tokentype ASC " . $dbh->sql_limit(1), undef, $userid);
+        if (scalar(@token) > 0) {
+            my ($tokentype, $change_date, $eventdata) = @token;
             $vars->{'login_change_date'} = $change_date;
 
             if($tokentype eq 'emailnew') {
@@ -69,6 +70,7 @@ sub DoAccount {
 
 sub SaveAccount {
     my $cgi = Bugzilla->cgi;
+    my $dbh = Bugzilla->dbh;
 
     my $pwd1 = $cgi->param('new_password1');
     my $pwd2 = $cgi->param('new_password2');
@@ -76,8 +78,9 @@ sub SaveAccount {
     if ($cgi->param('Bugzilla_password') ne "" || 
         $pwd1 ne "" || $pwd2 ne "") 
     {
-        SendSQL("SELECT cryptpassword FROM profiles WHERE userid = $userid");
-        my $oldcryptedpwd = FetchOneColumn();
+        my ($oldcryptedpwd) = $dbh->selectrow_array(
+                        q{SELECT cryptpassword FROM profiles WHERE userid = ?},
+                        undef, $userid);
         $oldcryptedpwd || ThrowCodeError("unable_to_retrieve_password");
 
         if (crypt(scalar($cgi->param('Bugzilla_password')), $oldcryptedpwd) ne 
@@ -92,10 +95,12 @@ sub SaveAccount {
               || ThrowUserError("new_password_missing");
             ValidatePassword($pwd1, $pwd2);
         
-            my $cryptedpassword = SqlQuote(bz_crypt($pwd1));
-            SendSQL("UPDATE profiles 
-                     SET    cryptpassword = $cryptedpassword 
-                     WHERE  userid = $userid");
+            my $cryptedpassword = bz_crypt($pwd1);
+            trick_taint($cryptedpassword); # Only used in a placeholder
+            $dbh->do(q{UPDATE profiles
+                          SET cryptpassword = ?
+                        WHERE userid = ?},
+                     undef, ($cryptedpassword, $userid));
 
             # Invalidate all logins except for the current one
             Bugzilla->logout(LOGOUT_KEEP_CURRENT);
@@ -130,9 +135,10 @@ sub SaveAccount {
         }
     }
 
-    SendSQL("UPDATE profiles SET " .
-            "realname = " . SqlQuote(trim($cgi->param('realname'))) .
-            " WHERE userid = $userid");
+    my $realname = trim($cgi->param('realname'));
+    trick_taint($realname); # Only used in a placeholder
+    $dbh->do("UPDATE profiles SET realname = ? WHERE userid = ?",
+             undef, ($realname, $userid));
 }
 
 
@@ -308,21 +314,20 @@ sub SaveEmail {
 
 
 sub DoPermissions {
+    my $dbh = Bugzilla->dbh;
     my (@has_bits, @set_bits);
     
-    SendSQL("SELECT DISTINCT name, description FROM groups " .
-            "WHERE id IN (" . 
-            Bugzilla->user->groups_as_string .
-            ") ORDER BY name");
-    while (MoreSQLData()) {
-        my ($nam, $desc) = FetchSQLData();
+    my $groups = $dbh->selectall_arrayref(
+               "SELECT DISTINCT name, description FROM groups WHERE id IN (" . 
+               Bugzilla->user->groups_as_string . ") ORDER BY name");
+    foreach my $group (@$groups) {
+        my ($nam, $desc) = @$group;
         push(@has_bits, {"desc" => $desc, "name" => $nam});
     }
-    my @set_ids = ();
-    SendSQL("SELECT DISTINCT name, description FROM groups " .
-            "ORDER BY name");
-    while (MoreSQLData()) {
-        my ($nam, $desc) = FetchSQLData();
+    $groups = $dbh->selectall_arrayref(
+                "SELECT DISTINCT name, description FROM groups ORDER BY name");
+    foreach my $group (@$groups) {
+        my ($nam, $desc) = @$group;
         if (Bugzilla->user->can_bless($nam)) {
             push(@set_bits, {"desc" => $desc, "name" => $nam});
         }
