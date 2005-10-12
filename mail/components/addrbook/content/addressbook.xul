@@ -489,8 +489,6 @@
               <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
               <menuitem command="zoomWindow"/>
               <menuseparator/>
-              <menuitem label="&bringAllToFront.label;" disabled="true"/>
-              <menuseparator/>
               <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
               <menuseparator id="sep-window-list"/>  
             </menupopup>
