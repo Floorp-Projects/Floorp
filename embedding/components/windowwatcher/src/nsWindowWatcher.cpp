@@ -1748,7 +1748,7 @@ nsWindowWatcher::AttachArguments(nsIDOMWindow *aWindow,
   NS_ENSURE_TRUE(scriptGlobal, NS_ERROR_UNEXPECTED);
 
   // Just ask the global to attach the args for us
-  return scriptGlobal->SetNewArguments(argc, argv);
+  return scriptGlobal->SetNewArguments(argc, NS_STATIC_CAST(void*, argv));
 }
 
 nsresult

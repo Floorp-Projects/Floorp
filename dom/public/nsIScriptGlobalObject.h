@@ -50,11 +50,10 @@ class nsIDocShell;
 class nsIDOMWindowInternal;
 class nsIScriptGlobalObjectOwner;
 struct JSObject;
-typedef long jsval;
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0xd0db67fc, 0x50f7, 0x4573, \
- { 0x87, 0x3e, 0x5b, 0x33, 0x0b, 0x13, 0x21, 0x81 } }
+{ 0xd326a211, 0xdc31, 0x45c6, \
+ { 0x98, 0x97, 0x22, 0x11, 0xea, 0xbc, 0xd0, 0x1c } }
 
 /**
  * The JavaScript specific global object. This often used to store
@@ -116,8 +115,13 @@ public:
    * the window right away (if there's an existing document) and it
    * will also be installed on the window when the next document is
    * loaded.  If argc is nonzero, argv must be non-null.
+   *
+   * @param aArgc the number of args
+   * @param aArgv the pointer to the args.  This may be cast to jsval* and the
+   *        args are found at
+   *        ((jsval*)aArgv)[0], ..., ((jsval*)aArgv)[aArgc - 1]
    */
-  virtual nsresult SetNewArguments(PRUint32 aArgc, jsval* aArgv) = 0;
+  virtual nsresult SetNewArguments(PRUint32 aArgc, void* aArgv) = 0;
 };
 
 #endif
