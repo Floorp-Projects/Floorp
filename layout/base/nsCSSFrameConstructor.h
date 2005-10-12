@@ -416,14 +416,16 @@ private:
   /**
    * Function to adjust aParentFrame and aFrameItems to deal with table
    * pseudo-frames that may have to be inserted.
+   * @param aState the nsFrameConstructorState we're using.
    * @param aChildContent the content node we want to construct a frame for
-   * @param aChildStyle the style context for aChildContent
    * @param aParentFrame the frame we think should be the parent.  This will be
    *        adjusted to point to a pseudo-frame if needed.
+   * @param aTag tag that would be used for frame construction
+   * @param aNameSpaceID namespace that will be used for frame construction
+   * @param aChildStyle the style context for aChildContent
    * @param aFrameItems the framelist we think we need to put the child frame
    *        into.  If we have to construct pseudo-frames, we'll modify the
    *        pointer to point to the list the child frame should go into.
-   * @param aState the nsFrameConstructorState we're using.
    * @param aSaveState the nsFrameConstructorSaveState we can use for pushing a
    *        float containing block if we have to do it.
    * @param aCreatedPseudo whether we had to create a pseudo-parent
@@ -433,13 +435,15 @@ private:
   // handling to be better. This should simply be part of the job of
   // GetGeometricParent, and stuff like the frameitems and parent frame should
   // be kept track of in the state...
-  nsresult AdjustParentFrame(nsIContent* aChildContent,
-                             nsStyleContext* aChildStyle,
-                             nsIFrame* & aParentFrame,
-                             nsFrameItems* & aFrameItems,
-                             nsFrameConstructorState& aState,
+  nsresult AdjustParentFrame(nsFrameConstructorState&     aState,
+                             nsIContent*                  aChildContent,
+                             nsIFrame* &                  aParentFrame,
+                             nsIAtom*                     aTag,
+                             PRInt32                      aNameSpaceID,
+                             nsStyleContext*              aChildStyle,
+                             nsFrameItems* &              aFrameItems,
                              nsFrameConstructorSaveState& aSaveState,
-                             PRBool& aCreatedPseudo);
+                             PRBool&                      aCreatedPseudo);
   
   nsresult TableProcessChildren(nsFrameConstructorState& aState,
                                 nsIContent*              aContent,
