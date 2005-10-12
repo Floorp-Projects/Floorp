@@ -655,7 +655,7 @@ sub bz_table_info {
 
 sub bz_table_columns {
     my ($self, $table) = @_;
-    return $self->_bz_schema->get_table_columns($table);
+    return $self->_bz_real_schema->get_table_columns($table);
 }
 
 #####################################################################
