@@ -73,8 +73,6 @@ function onUnload(aEvent)
   persistCurrentSets();
   
   notifyParentComplete();
-  
-  window.close();
 }
 
 function onAccept(aEvent)
