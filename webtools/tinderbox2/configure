@@ -21,6 +21,7 @@
 # complete rewrite by Ken Estes for contact info see the
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): Stephen Lamm (slamm@yahoo-inc.com)
+#                 Mike Taylor (bear@code-bear.com)
 
 use Cwd;
 use Getopt::Long;
@@ -164,7 +165,7 @@ for my $cmd (@cmds) {
 
 my $arg;
 foreach $arg (@XARGS_SINGLE_ARGS) {
-    my $output = `$CMD{'echo'} /bin/true |   $CMD{'xargs'} $arg $CMD{'echo'}`;
+    my $output = `$CMD{'echo'} /bin/true |   $CMD{'xargs'} 2>/dev/null $arg $CMD{'echo'}`;
     if ($output eq "/bin/true\n") {
 	$xargs_single=$arg;
 	last;
