@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import "mozView.h"
 #import "BrowserWindow.h"
 #import "BrowserWindowController.h"
 #import "AutoCompleteTextField.h"

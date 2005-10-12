@@ -421,7 +421,7 @@ enum BWCOpenDest {
 - (BrowserTabViewItem*)openNewTab:(BOOL)aLoadInBG;
 
 - (void)setupToolbar;
-- (void)delayedSetActive:(NSNumber*)inActive; // NSNumber with bool
+- (void)setGeckoActive:(BOOL)inActive;
 - (NSString*)getContextMenuNodeDocumentURL;
 - (void)loadSourceOfURL:(NSString*)urlStr;
 - (void)transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch;
@@ -495,7 +495,7 @@ enum BWCOpenDest {
   // the widget code (via -viewsWindowDidBecomeKey) takes care
   // of sending focus and activate events to gecko,
   // but we still need to call the embedding activate API
-  [self performSelector:@selector(delayedSetActive:) withObject:[NSNumber numberWithBool:YES] afterDelay:0];
+  [self setGeckoActive:YES];
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
@@ -508,13 +508,18 @@ enum BWCOpenDest {
   // the widget code (via -viewsWindowDidResignKey) takes care
   // of sending focus and activate events to gecko,
   // but we still need to call the embedding activate API
-  [self performSelector:@selector(delayedSetActive:) withObject:[NSNumber numberWithBool:NO] afterDelay:0];
+  [self setGeckoActive:NO];
 }
 
-- (void)delayedSetActive:(NSNumber*)inActive
+- (void)setGeckoActive:(BOOL)inActive
 {
   if ([self isResponderGeckoView:[[self window] firstResponder]])
-    [mBrowserView setBrowserActive:[inActive boolValue]];
+  {
+    BrowserWindow* browserWin = (BrowserWindow*)[self window];
+    [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
+    [mBrowserView setBrowserActive:inActive];
+    [browserWin setSuppressMakeKeyFront:NO];
+  }
 }
 
 - (void)windowDidBecomeMain:(NSNotification *)notification

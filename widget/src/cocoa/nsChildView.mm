@@ -111,9 +111,6 @@
 - (void)flushRect:(NSRect)inRect;
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
 
-- (void)sendActivateEvent;
-- (void)sendDeactivateEvent;
-
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
  // a context menu (click-hold)
@@ -3452,37 +3449,28 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 
 - (void)viewsWindowDidBecomeKey
 {
-  // When unhiding the app, -windowBecameKey: gets called when two bits of window
-  // state are incorrect (on Tiger):
-  // 
-  // 1. [window isVisible] returns YES even though it's not on the screen
-  // 2. [NSApp keyWindow] is not the right window yet
-  // 
-  // Because this state is not correct at this time, we postpone sending
-  // the events into gecko (which in turn propagate into the host app)
-  // until the next time through the event loop, when we're off this stack
-  // and Cocoa has got its story straight.
-  [self performSelector:@selector(sendActivateEvent) withObject:nil afterDelay:0];
-}
-
-- (void)viewsWindowDidResignKey
-{
-  [self performSelector:@selector(sendDeactivateEvent) withObject:nil afterDelay:0];
-}
-
-- (void)sendActivateEvent
-{
   if (!mGeckoChild)
-    return;   // we've been destroyed
+    return;   // we've been destroyed (paranoia)
   
+  // check to see if the window implements the mozWindow protocol. This
+  // allows embedders to avoid re-entrant calls to -makeKeyAndOrderFront,
+  // which can happen because these activate/focus calls propagate out
+  // to the embedder via nsIEmbeddingSiteWindow::SetFocus().
+  BOOL isMozWindow = [[self window] respondsToSelector:@selector(setSuppressMakeKeyFront:)];
+  if (isMozWindow)
+    [[self window] setSuppressMakeKeyFront:YES];
+
   nsFocusEvent focusEvent(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(focusEvent);
 
   nsFocusEvent activateEvent(PR_TRUE, NS_ACTIVATE, mGeckoChild);
   mGeckoChild->DispatchWindowEvent(activateEvent);
+
+  if (isMozWindow)
+    [[self window] setSuppressMakeKeyFront:NO];
 }
 
-- (void)sendDeactivateEvent
+- (void)viewsWindowDidResignKey
 {
   if (!mGeckoChild)
     return;   // we've been destroyed

@@ -39,6 +39,8 @@
 
 #import "NSString+Utils.h"
 
+#import "mozView.h"
+
 // Embedding includes
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"

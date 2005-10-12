@@ -38,6 +38,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+// this implements the mozWindow protocol (see mozView.h)
+
 @interface BrowserWindow : NSWindow
 {
   IBOutlet id mAutoCompleteTextField;
@@ -50,9 +52,11 @@
 
 - (BOOL)makeFirstResponder:(NSResponder*) responder;
 
+// mozWindow protocol
 - (BOOL)suppressMakeKeyFront;
 - (void)setSuppressMakeKeyFront:(BOOL)inSuppress;
 
+// scripting
 - (NSString*)getURL;
 
 @end

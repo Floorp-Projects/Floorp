@@ -75,3 +75,18 @@ class nsIWidget;
 
 @end
 
+
+// 
+// An informal protocol implemented by the NSWindow of the host application.
+// 
+// It's used to prevent re-entrant calls to -makeKeyAndOrderFront: when gecko
+// focus/activate events propagate out to the embedder's
+// nsIEmbeddingSiteWindow::SetFocus implementation.
+// 
+
+@interface NSObject(mozWindow)
+
+- (BOOL)suppressMakeKeyFront;
+- (void)setSuppressMakeKeyFront:(BOOL)inSuppress;
+
+@end
