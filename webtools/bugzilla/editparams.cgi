@@ -27,6 +27,7 @@ use lib ".";
 
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT :admin :params $datadir);
+use Bugzilla::Config::Common;
 
 require "globals.pl";
 use vars qw($vars @parampanels);
@@ -51,6 +52,7 @@ my $current_module;
 my @panels = ();
 foreach my $panel (@parampanels) {
     next if ($panel eq 'Common');
+    require "Bugzilla/Config/$panel.pm";
     my @module_param_list = "Bugzilla::Config::${panel}"->get_param_list();
     my $item = { name => lc($panel),
                  current => ($current_panel eq lc($panel)) ? 1 : 0,

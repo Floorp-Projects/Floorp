@@ -60,7 +60,8 @@ use Bugzilla::Constants;
 
 use base qw(Exporter);
 @Bugzilla::Config::Common::EXPORT =
-    qw(check_sslbase check_priority check_severity check_platform
+    qw(check_multi check_numeric check_regexp
+       check_sslbase check_priority check_severity check_platform
        check_opsys check_shadowdb check_urlbase check_webdotbase
        check_netmask check_user_verify_class check_image_converter
        check_languages check_mail_delivery_method
