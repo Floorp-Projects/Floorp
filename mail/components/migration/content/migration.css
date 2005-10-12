@@ -41,3 +41,7 @@
 .wizard-header {
   background: url("chrome://branding/content/thunderbird-wizard-badge.png") no-repeat right center Window;
 }
+
+.wizard-header[chromedir="rtl"] {
+  background: url("chrome://branding/content/thunderbird-wizard-badge-rtl.png") no-repeat left center Window;
+}

@@ -45,11 +45,17 @@ toolbar#toolbox {
 }
 
 toolbar#toolbox button.tool:active {
-  margin: 2px 0px 0px 2px;
+  margin-top: 2px;
+  margin-bottom: 0px;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 0px;
 }
 
 toolbar#toolbox button.tool[toggled="1"] {
-  margin: 2px 0px 0px 2px;
+  margin-top: 2px;
+  margin-bottom: 0px;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 0px;
   border: 1px white inset;
 }
 

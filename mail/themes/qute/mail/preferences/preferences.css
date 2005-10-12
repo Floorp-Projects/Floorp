@@ -131,7 +131,10 @@ filefield[disabled="true"] .fileFieldIcon {
 .fileFieldIcon {
   width: 16px;
   height: 16px;
-  margin: 2px 4px 2px 2px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 4px;
 }
 
 .fileFieldLabel {
@@ -162,7 +165,10 @@ filefield[disabled="true"] .fileFieldIcon {
 }
 
 #extensionChildren::-moz-tree-image(fileExtension) {
-  margin: 0px 5px 0px 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  -moz-margin-start: 0px;
+  -moz-margin-end: 5px;
 }
 
 #typeField {
@@ -173,12 +179,15 @@ filefield[disabled="true"] .fileFieldIcon {
 #typeIcon {
   width: 32px;
   height: 32px;
-  margin-right: 3px;
+  -moz-margin-end: 3px;
 }
 
 #typeField {
   background-color: transparent;
-  margin: 1px 5px 2px 6px !important;
+  margin-top: 1px !important;
+  margin-bottom: 2px !important;
+  -moz-margin-start: 6px !important;
+  -moz-margin-end: 5px !important;
 }
 
 #extensionField {
@@ -191,7 +200,10 @@ filefield[disabled="true"] .fileFieldIcon {
 }
 
 #ChangeActionDialog .dialog-button-box {
-  padding: 8px 10px 10px 8px;
+  padding-top: 8px;
+  padding-bottom: 10px;
+  -moz-padding-start: 8px;
+  -moz-padding-end: 10px;
 }
 
 #changeActionHeader {
@@ -203,16 +215,19 @@ filefield[disabled="true"] .fileFieldIcon {
 }
 
 #changeActionContent {
-  padding: 8px 10px 10px 9px;
+  padding-top: 8px;
+  padding-bottom: 10px;
+  -moz-padding-start: 9px;
+  -moz-padding-end: 10px;
 }
 
 #defaultAppIcon {
   width: 16px;
   height: 16px;
-  margin-left: 2px;
+  -moz-margin-start: 2px;
 }
 
 #defaultAppName {
-  margin-left: 6px !important; 
+  -moz-margin-start: 6px !important; 
   font-weight: bold;
 }

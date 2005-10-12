@@ -56,8 +56,8 @@
 }
 
 .alignBoxWithFieldset {
-  margin-left: 6px;
-  margin-right: 5px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: 5px;
 }
 
 .stateZipSpacer {

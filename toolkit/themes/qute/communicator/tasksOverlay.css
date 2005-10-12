@@ -49,7 +49,10 @@
 }
 
 .taskbutton:hover:active {
-  padding: 2px 0 0 2px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 0px;
 }
 
 #mini-nav {

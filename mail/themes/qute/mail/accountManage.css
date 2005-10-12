@@ -46,7 +46,7 @@
 /* ::::: account manager :::::: */
 
 .specialFolderPickerGrid {
-  margin-left: 20px;
+  -moz-margin-start: 20px;
 }
 
 .selectForOfflineUseButton {
@@ -65,7 +65,7 @@ treechildren::-moz-tree-cell-text(isDefaultServer-true) {
 /* ::::: SMTP Server Panel :::::: */
 
 .smtpServerListItem {
-  padding-left: 3px;
+  -moz-padding-start: 3px;
 }
 
 #backgroundBox {

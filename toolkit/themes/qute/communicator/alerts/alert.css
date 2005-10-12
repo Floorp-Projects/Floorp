@@ -52,8 +52,8 @@
 
 .alertImageBox 
 {
-  margin-left: 4px;
-  margin-right: 6px;
+  -moz-margin-start: 4px;
+  -moz-margin-end: 6px;
   min-height: 46px;
   background-color: transparent;
 }
@@ -66,7 +66,7 @@
 
 .alertText 
 {
-  margin-right: 6px;
+  -moz-margin-end: 6px;
   background-color: transparent;
 }
 
@@ -83,6 +83,6 @@
 
 .alertTextBox
 {
-  padding-right: 10px;
+  -moz-padding-end: 10px;
   padding-top: 5px;
 }

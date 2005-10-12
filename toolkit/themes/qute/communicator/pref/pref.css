@@ -54,7 +54,10 @@
 /*** Styles for the pref category buttons **/
 
 .buttonBox {
-  margin: 0px 5px 0px 0px !important;
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+  -moz-margin-start: 0px !important;
+  -moz-margin-end: 5px !important;
 }
 
 .buttonBoxButton {

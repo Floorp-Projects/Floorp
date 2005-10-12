@@ -69,7 +69,7 @@
 treechildren::-moz-tree-row(dummy)  {
   background-color:  #F0F0F0;
   margin-bottom: 1px;
-  padding-left: 2px;
+  -moz-padding-start: 2px;
 }
 
 treechildren::-moz-tree-row(dummy, selected) {
@@ -110,7 +110,7 @@ treechildren::-moz-tree-cell-text(container, closed, hasUnread, read) {
 treecol.threadColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/thread-col.png");
 
-  padding-right: 3px; 
+  -moz-padding-end: 3px; 
 }
 
 treecol.threadColumnHeader[sortDirection="ascending"]  {
@@ -141,7 +141,7 @@ treechildren::-moz-tree-image(threadCol, container, hasUnread, open) {
 
 treecol.readColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/readcol.png");
-  padding-right: 5px;
+  -moz-padding-end: 5px;
   padding-bottom: 5px;
 }
 
@@ -161,7 +161,7 @@ treechildren::-moz-tree-image(unreadButtonColHeader, unread) {
 
 treecol.attachmentColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/attachment-col.png");
-  padding-right: 5px; 
+  -moz-padding-end: 5px; 
 }
 
 treechildren::-moz-tree-image(attachmentCol, attach) {
@@ -172,7 +172,7 @@ treechildren::-moz-tree-image(attachmentCol, attach) {
 
 treecol.flagColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/flag-col.png");
-  padding-right: 5px; 
+  -moz-padding-end: 5px; 
 }
 
 treechildren::-moz-tree-image(flaggedCol) {
@@ -191,13 +191,13 @@ treechildren::-moz-tree-image(flaggedCol, flagged) {
 
 treecol.junkStatusHeader {
   list-style-image: url("chrome://messenger/skin/icons/junk-col.png");
-  padding-right: 5px; 
+  -moz-padding-end: 5px; 
 }
 
 /* "unknown" now looks like "not junk".  see bug #182386 */
 treechildren::-moz-tree-image(junkStatusCol) {
   list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
-  padding-left: 0px;
+  -moz-padding-start: 0px;
 }
 
 treechildren::-moz-tree-image(junkStatusCol, junk) {
@@ -210,12 +210,12 @@ treechildren::-moz-tree-image(junkStatusCol, dummy) {
 
 treechildren::-moz-tree-image(junkStatusCol, notjunk) {
   list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
-  padding-left: 0px;
+  -moz-padding-start: 0px;
 }
 /* ..... subject column ..... */
 
 treechildren::-moz-tree-image(subjectCol) {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
   list-style-image: url("chrome://messenger/skin/icons/message-mail.png ");
 }
 
@@ -866,7 +866,7 @@ treechildren::-moz-tree-cell-text(lc-black, selected, focus) {
 }
 
 #folderpane-title {
-  padding-left: 4px;
+  -moz-padding-start: 4px;
 }
 
 /* ::::: border adjustments for focus ring and joined splitters ::::: */

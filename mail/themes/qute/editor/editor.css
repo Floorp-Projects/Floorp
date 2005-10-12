@@ -51,11 +51,17 @@
 
 .source-editor,
 .source-editor:focus {
-  margin: 0px 5px 5px 0px;
+  margin-top: 0px;
+  margin-bottom: 5px;
+  -moz-margin-start: 0px;
+  -moz-margin-end: 5px;
   border: 0px;
   /* Scroll bars are in content, 
      so we can't use right and bottom padding! */
-  padding: 5px 0px 0px 5px;
+  padding-top: 5px;
+  padding-bottom: 0px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 0px;
 }
 
 /* Multiline textarea for HTML source editing */

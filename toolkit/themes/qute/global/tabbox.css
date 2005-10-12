@@ -86,6 +86,11 @@ tab
   color: -moz-DialogText;
 }
 
+tab[chromedir="rtl"] {
+  -moz-border-radius-bottomleft: 1px;
+  -moz-border-radius-bottomright: 0px;
+}
+
 .tab-text {
   margin: 0 !important;
 }
@@ -101,13 +106,15 @@ tab:focus > .tab-middle {
   outline: 1px dotted invert;
 }
 
-tab[beforeselected="true"] {
+tab[beforeselected="true"],
+tab[afterselected="true"][chromedir="rtl"] {
   -moz-appearance: tab-left-edge;
   border-right: none;
   -moz-border-radius-topright: 0;
 }
 
-tab[afterselected="true"] {
+tab[afterselected="true"],
+tab[beforeselected="true"][chromedir="rtl"] {
   -moz-appearance: tab-right-edge;
   border-left: none;
   -moz-border-radius-topleft: 0;
@@ -143,11 +150,13 @@ tab[first-tab="true"][selected="true"] {
   padding: 4px 6px 1px 6px;
 }
 
-.tab-bottom[beforeselected="true"] {
+.tab-bottom[beforeselected="true"],
+.tab-bottom[afterselected="true"][chromedir="rtl"] {
   -moz-border-radius-bottomright: 0;
 }
 
-.tab-bottom[afterselected="true"] {
+.tab-bottom[afterselected="true"],
+.tab-bottom[beforeselected="true"][chromedir="rtl"] {
   -moz-border-radius-bottomleft: 0;
 }
 

@@ -56,13 +56,19 @@
 .toolbarbutton-1,
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
 .toolbarbutton-1[disabled="true"]:hover:active {
-  padding: 2px 7px 2px 6px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  -moz-padding-start: 6px;
+  -moz-padding-end: 7px;
 }
 
 .toolbarbutton-1:hover:active,
 .toolbarbutton-1[open="true"],
 .toolbarbutton-1[buttondown="true"] > .toolbarbutton-menubutton-button {
-  padding: 3px 6px 1px 7px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+  -moz-padding-start: 7px;
+  -moz-padding-end: 6px;
 }
 
 .toolbarbutton-1[type="menu-button"],
@@ -101,12 +107,15 @@
 }
 
 .button-toolbar:hover:active > .button-box  {
-  padding: 2px 1px 0px 3px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 1px;
 }
 
 .button-toolbar > .button-box > .button-icon,
 .button-toolbar > .button-box > .button-text {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
 }  
 
 .button-toolbar, 

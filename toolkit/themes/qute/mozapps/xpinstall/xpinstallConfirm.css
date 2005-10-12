@@ -14,7 +14,10 @@
 }
 
 installitem {
-  padding: 5px 0px 5px 5px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  -moz-padding-start: 5px;
+  -moz-padding-end: 0px;
   border-bottom: 1px dotted #C0C0C0;
   margin-bottom: 5px;
 }
@@ -28,7 +31,7 @@ installitem {
   height: 32px;
   max-width: 32px !important;
   max-height: 32px !important;
-  margin-right: 5px;
+  -moz-margin-end: 5px;
 }
 
 .xpinstallItemName {

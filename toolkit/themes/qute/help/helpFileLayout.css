@@ -78,7 +78,7 @@ li {
 }
 
 .makeLeftMargin {
-	margin-left: 25px;
+  -moz-margin-start: 25px;
 }
 
 .menuPath {

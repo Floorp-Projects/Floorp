@@ -298,6 +298,8 @@
         if (this.disabled || event.getPreventDefault())
           return;
         var href = this.getAttribute('href');
+
+        dump('calling text link with: ' + href + '\n');
         if (href)
         {
           try {

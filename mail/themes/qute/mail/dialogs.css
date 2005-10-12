@@ -56,7 +56,10 @@ menu.push {
 menu.push:hover:active,
 menu.push[open="true"] {
   border-style: inset;
-  padding: 3px 1px 1px 3px;
+  padding-top: 3px;
+  padding-bottom: 1px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 1px;
 }
 
 menu.push[disabled="true"],

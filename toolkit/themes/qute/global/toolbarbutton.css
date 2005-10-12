@@ -81,7 +81,10 @@ toolbarbutton[buttonover="true"] {
 toolbarbutton:hover:active,
 toolbarbutton[open="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow;
-  padding: 7px 5px 5px 7px;
+  padding-top: 7px;
+  padding-bottom: 5px;
+  -moz-padding-start: 7px;
+  -moz-padding-end: 5px;
 }
 
 toolbarbutton[disabled="true"],
@@ -97,7 +100,10 @@ toolbarbutton[disabled="true"][open="true"] {
 
 toolbarbutton[checked="true"] {
   border-color: ThreeDShadow ThreeDHighlight ThreeDHighlight ThreeDShadow !important;
-  padding: 7px 5px 5px 7px !important;
+  padding-top: 7px !important;
+  padding-bottom: 5px !important;
+  -moz-padding-start: 7px !important;
+  -moz-padding-end: 5px !important;
   background-image: url("chrome://global/skin/toolbar/Lighten.png");
   color: ButtonText !important;
 }
@@ -111,7 +117,7 @@ toolbarbutton[checked="true"]:hover {
 .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
   -moz-image-region: auto; /* cut off inheritance */
-  margin-left: 6px;
+  -moz-margin-start: 6px;
 }
 
 .toolbarbutton-menu-dropmarker[disabled="true"] {
@@ -140,24 +146,27 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   -moz-box-align: center;
   -moz-box-pack: center;
   -moz-box-orient: vertical;
-  padding-right: 3px;
+  -moz-padding-end: 3px;
 }
 
 .toolbarbutton-menubutton-button:hover:active {
-  padding-right: 2px;
+  -moz-padding-end: 2px;
 }
 .toolbarbutton-menubutton-button[disabled="true"],
 .toolbarbutton-menubutton-button[disabled="true"]:hover,
 .toolbarbutton-menubutton-button[disabled="true"]:hover:active,
 .toolbarbutton-menubutton-button[disabled="true"][open="true"] {
-  padding-right: 3px
+  -moz-padding-end: 3px
 }
 
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {
   -moz-box-align: center;
-  padding: 0 4px 0 2px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  -moz-padding-start: 2px;
+  -moz-padding-end: 4px;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
   -moz-image-region: auto; /* cut off inheritance */
 }

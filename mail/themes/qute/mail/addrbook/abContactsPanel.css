@@ -66,19 +66,19 @@
 }
 
 treechildren::-moz-tree-image(GeneratedName) {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.png");
 }
 
 treechildren::-moz-tree-image(GeneratedName, MailList) {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/ablist.png");
 }
 
 /* ::::: directory pane icons ::::: */
 
 treechildren::-moz-tree-image(DirCol) {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/addrbook.png");
 }
 

@@ -148,7 +148,10 @@
 
   label
     {
-      margin              : 1px 5px 2px 6px;
+      margin-top: 1px;
+      margin-bottom: 2px;
+      -moz-margin-start: 6px;
+      -moz-margin-end: 5px;
     }
 
   .header 
@@ -173,7 +176,7 @@
     
   .indent
     {
-      margin-left         : 23px;
+      -moz-margin-start   : 23px;
     }
 
   .box-padded
@@ -226,7 +229,10 @@
 
   .caption-text
     {
-      margin: 0px 2px 0px 1px !important;
+      margin-top: 0px !important;
+      margin-bottom: 0px !important;
+      -moz-margin-start: 1px !important;
+      -moz-margin-end: 2px !important;
     }
 
 

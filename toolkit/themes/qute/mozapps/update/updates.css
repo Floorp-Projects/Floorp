@@ -59,7 +59,10 @@ license {
  */
 
 #moreDetails {
-  margin: 1px 5px 4px 3px;
+  margin-top: 1px;
+  margin-bottom: 4px;
+  -moz-margin-start: 3px;
+  -moz-margin-end: 5px;
 }
 
 wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] {
@@ -72,7 +75,7 @@ wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-bo
 }
 
 #updateForMoreInfo {
-  margin-left: 5px;
+  -moz-margin-start: 5px;
 }
 
 #updateName, #updateFinishedName {
@@ -82,7 +85,7 @@ wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-bo
 
 #alertImage {
   list-style-image: url("chrome://global/skin/icons/Warning.png");
-  margin-right: 5px;
+  -moz-margin-end: 5px;
 }
 
 #incompatibleWarning {
@@ -106,7 +109,10 @@ wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-bo
 }
 
 #downloadThrobber {
-  margin: 5px 3px 0px 5px;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 3px;
   list-style-image: url("chrome://global/skin/throbber/Throbber-small.png");
 }
 
@@ -120,7 +126,10 @@ wizard[currentpageid="updatesfound"] .wizard-button[dlgtype="next"] > .button-bo
 
 #verificationFailedIcon {
   list-style-image: url("chrome://global/skin/icons/notfound.png");
-  margin: 5px 3px 0px 5px;
+  margin-top: 5px;
+  margin-bottom: 0px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 3px;
 }
 
 /**
@@ -170,7 +179,7 @@ update {
 
 .updatePrefsInfo {
   font-size: smaller;
-  margin-left: 27px;
+  -moz-margin-start: 27px;
   margin-bottom: 10px;
 }
 

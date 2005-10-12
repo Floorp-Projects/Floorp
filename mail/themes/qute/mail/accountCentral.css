@@ -58,21 +58,24 @@ separator.thin {
 /* ::::: rows ::::: */
 
 #acctCentralHeaderRow {
-  padding: 10px 0px 10px 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  -moz-padding-start: 10px;
+  -moz-padding-end: 0px;
   font-size: 180%;
   font-weight: bold;
   color: #000000;
 }
 
 .acctCentralRow {
-  margin-left: 10px;
+  -moz-margin-start: 10px;
   font-size: 125%;
   color: #000000;
 }
 
 .row-iconic-icon {
   list-style-image: inherit;
-  margin-right: 10px;
+  -moz-margin-end: 10px;
 }
 
 .acctCentralRowTitleBox {
@@ -100,70 +103,110 @@ separator.thin {
 
 #ReadMessages label {
   background: url("chrome://messenger/skin/accountcentral/read-messages.png")  no-repeat !important;
-  padding-left: 45px;
+  -moz-padding-start: 45px;
   padding-top: .55em;
   padding-bottom: .55em;
+}
+
+#ReadMessages label[chromedir="rtl"] {
+  background: url("chrome://messenger/skin/accountcentral/read-messages.png") right no-repeat !important;
 }
 
 #ComposeMessage label {
   background: url("chrome://messenger/skin/accountcentral/write-message.png")  no-repeat !important;
-  padding-left: 45px;
+  -moz-padding-start: 45px;
   padding-top: .55em;
   padding-bottom: .55em;
+}
+
+#ComposeMessage label[chromedir="rtl"] {
+  background: url("chrome://messenger/skin/accountcentral/write-message.png") right no-repeat !important;
 }
 
 #AccountSettings label {
   background: url("chrome://messenger/skin/accountcentral/account-settings.png")  no-repeat !important;
-  padding-left: 45px;
+  -moz-padding-start: 45px;
   padding-top: .55em;
   padding-bottom: .55em;
+}
+
+#AccountSettings label[chromedir="rtl"] {
+  background: url("chrome://messenger/skin/accountcentral/account-settings.png") right no-repeat !important;
 }
 
 #CreateAccount label {
   background: url("chrome://messenger/skin/accountcentral/create-account.png")  no-repeat !important;
-  padding-left: 45px;
+  -moz-padding-start: 45px;
   padding-top: .55em;
   padding-bottom: .55em;
+}
+
+#CreateAccount label[chromedir="rtl"] {
+  background: url("chrome://messenger/skin/accountcentral/create-account.png") right no-repeat !important;
 }
 
 #SearchMessages label {
   background: url("chrome://messenger/skin/accountcentral/search-messages.png")  no-repeat !important;
-  padding-left: 45px;
+  -moz-padding-start: 45px;
   padding-top: .55em;
   padding-bottom: .55em;
+}
+
+#SearchMessages label[chromedir="rtl"] {
+  background: url("chrome://messenger/skin/accountcentral/search-messages.png") right no-repeat !important;
 }
 
 #CreateFilters label {
   background: url("chrome://messenger/skin/accountcentral/manage-filters.png")  no-repeat !important;
-  padding-left: 45px;
+  -moz-padding-start: 45px;
   padding-top: .55em;
   padding-bottom: .55em;
+}
+
+#CreateFilters label[chromedir="rtl"] {
+  background: url("chrome://messenger/skin/accountcentral/manage-filters.png") right no-repeat !important;
 }
 
 #OfflineSettings label {
   background: url("chrome://messenger/skin/accountcentral/offline-settings.png")  no-repeat !important;
-  padding-left: 45px;
+  -moz-padding-start: 45px;
   padding-top: .55em;
   padding-bottom: .55em;
+}
+
+#OfflineSettings label[chromedir="rtl"] {
+  background: url("chrome://messenger/skin/accountcentral/offline-settings.png") right no-repeat !important;
 }
 
 #SubscribeImapFolders label {
   background: url("chrome://messenger/skin/accountcentral/manage-imap.png")  no-repeat !important;
-  padding-left: 45px;
+  -moz-padding-start: 45px;
   padding-top: .55em;
   padding-bottom: .55em;
+}
+
+#SubscribeImapFolders label[chromedir="rtl"] {
+  background: url("chrome://messenger/skin/accountcentral/manage-imap.png") right no-repeat !important;
 }
 
 #SubscribeNewsgroups label {
   background: url("chrome://messenger/skin/accountcentral/manage-newsgroups.png")  no-repeat !important;
-  padding-left: 45px;
+  -moz-padding-start: 45px;
   padding-top: .55em;
   padding-bottom: .55em;
 }
 
+#SubscribeNewsgroups label[chromedir="rtl"] {
+  background: url("chrome://messenger/skin/accountcentral/manage-newsgroups.png") right no-repeat !important;
+}
+
 #SubscribeRSS label {
   background: url("chrome://messenger/skin/accountcentral/manage-rss.png")  no-repeat !important;
-  padding-left: 45px;
+  -moz-padding-start: 45px;
   padding-top: .55em;
   padding-bottom: .55em;
+}
+
+#SubscribeRSS label[chromedir="rtl"] {
+  background: url("chrome://messenger/skin/accountcentral/manage-rss.png") right no-repeat !important;
 }

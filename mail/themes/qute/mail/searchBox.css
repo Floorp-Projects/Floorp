@@ -49,7 +49,11 @@
 }
 
 #quick-search-button  {
-  margin: 0 2px 0 0;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  -moz-margin-start: 0px;
+  -moz-margin-end: 2px;
+
 }
 
 .quick-search-button-image {
@@ -62,7 +66,7 @@
 }
 
 .quick-search-button-dropmarker {
-  margin-left: 12px;
+  -moz-margin-start: 12px;
   margin-top: 8px;
   list-style-image: url("chrome://messenger/skin/icons/search-arrow.gif");
 }

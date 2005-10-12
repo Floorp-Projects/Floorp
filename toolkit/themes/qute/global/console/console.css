@@ -67,7 +67,10 @@
 /* ..... error rows ..... */
 
 .console-row-code {
-  padding: 3px 0px 3px 3px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 0px;
   color: #0000BB;
   font-size: larger;
 }
@@ -132,7 +135,7 @@ toolbarseparator {
 /* Toolbar icons */
 
 .toolbarbutton-text {
-  margin-left: 4px !important;
+  -moz-margin-start: 4px !important;
 } 
 
 toolbar#ToolbarMode toolbarbutton {

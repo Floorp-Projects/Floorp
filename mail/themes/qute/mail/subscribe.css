@@ -10,7 +10,7 @@
 
 treechildren::-moz-tree-image(subscribedColumn),
 treechildren::-moz-tree-image(subscribedColumn2) {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
   list-style-image: url("chrome://messenger/skin/icons/notchecked.gif");
 }
 
@@ -31,13 +31,13 @@ treechildren::-moz-tree-cell-text(nameColumn, Subscribable-false) {
 /* ::::: Folders :::::: */
 
 treechildren::-moz-tree-image(nameColumn) {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-closed.png");
 }
 
 treechildren::-moz-tree-image(nameColumn, ServerType-nntp),
 treechildren::-moz-tree-image(nameColumn2, nntp) {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.png");
 }
 

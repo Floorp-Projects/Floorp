@@ -7,7 +7,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 treechildren::-moz-tree-image(selectedColumn) {
-  margin-right: 2px;
+  -moz-margin-end: 2px;
   list-style-image: url("chrome://messenger/skin/icons/notchecked.gif");
 }
 

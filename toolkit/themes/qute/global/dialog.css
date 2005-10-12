@@ -44,7 +44,10 @@
 /* ::::: dialog ::::: */
 
 dialog { 
-  padding: 8px 10px 10px 8px;
+  padding-top: 8px;
+  padding-bottom: 10px;
+  -moz-padding-start: 8px;
+  -moz-padding-end: 10px;
 }
 
 /* ::::: dialog buttons ::::: */
@@ -83,7 +86,10 @@ dialogheader {
   border-right: none;
   border-top: none;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
-  padding: 12px 5px 12px 25px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  -moz-padding-start: 25px;
+  -moz-padding-end: 5px;
   background-color: -moz-Field;
   color: -moz-FieldText;
 }
@@ -94,5 +100,5 @@ dialogheader {
 }
 
 .header-large > .dialogheader-description {
-  margin-left: 12px !important;
+  -moz-margin-start: 12px !important;
 }
