@@ -476,22 +476,22 @@ enum
   {
     nsCString identifier;
     if (NS_SUCCEEDED(inItem->GetID(identifier)))
-      mItemIdentifier = [[NSString stringWith_nsACString:identifier] retain];
+      mItemIdentifier = [[NSString alloc] initWith_nsACString:identifier];
 
     nsCString url;
     if (NS_SUCCEEDED(inItem->GetURL(url)))
-      mURL = [[NSString stringWith_nsACString:url] retain];
+      mURL = [[NSString alloc] initWith_nsACString:url];
     
     nsString title;
     if (NS_SUCCEEDED(inItem->GetTitle(title)))
-      mTitle = [[NSString stringWith_nsAString:title] retain];
+      mTitle = [[NSString alloc] initWith_nsAString:title];
 
     nsCString hostname;
     if (NS_SUCCEEDED(inItem->GetHostname(hostname)))
-      mHostname = [[NSString stringWith_nsACString:hostname] retain];
+      mHostname = [[NSString alloc] initWith_nsACString:hostname];
 
     if ([mHostname length] == 0 && [mURL hasPrefix:@"file://"])
-      mHostname = [[NSString stringWithString:@"local_file"] retain];
+      mHostname = [[NSString alloc] initWithString:@"local_file"];
     
     PRTime firstVisit;
     if (NS_SUCCEEDED(inItem->GetFirstVisitDate(&firstVisit)))

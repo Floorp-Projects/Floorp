@@ -104,6 +104,23 @@
   return [self stringWithUTF8String:flatString.get()];
 }
 
+- (id)initWith_nsAString:(const nsAString&)inString
+{
+  nsPromiseFlatString flatString = PromiseFlatString(inString);
+  return [self initWithCharacters:flatString.get() length:flatString.Length()];
+}
+
+- (id)initWith_nsACString:(const nsACString&)inString
+{
+  nsPromiseFlatCString flatString = PromiseFlatCString(inString);
+  return [self initWithUTF8String:flatString.get()];
+}
+
+- (id)initWithPRUnichars:(const PRUnichar*)inString
+{
+  return [self initWithCharacters:inString length:nsCRT::strlen(inString)];
+}
+
 #define ASSIGN_STACK_BUFFER_CHARACTERS  256
 
 - (void)assignTo_nsAString:(nsAString&)ioString
