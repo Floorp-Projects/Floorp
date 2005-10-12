@@ -44,6 +44,8 @@
 #include "nsIWindowWatcher.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMWindow.h"
+#include "nsISupportsArray.h"
+#include "nsISupportsPrimitives.h"
 
 #ifdef MOZ_XUL_APP
 #include "nsICommandLine.h"
@@ -67,20 +69,46 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)
     nsresult rv;
     PRBool found;
 
-    rv = aCmdLine->HandleFlag(NS_LITERAL_STRING("layoutdebug"),
-                              PR_FALSE, &found);
+    PRInt32 idx;
+    rv = aCmdLine->FindFlag(NS_LITERAL_STRING("layoutdebug"), PR_FALSE, &idx);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (!found)
+    if (idx < 0)
       return NS_OK;
 
-    nsCOMPtr<nsIWindowWatcher> wwatch (do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+    PRInt32 length;
+    aCmdLine->GetLength(&length);
+
+    nsAutoString url;
+    if (idx + 1 < length) {
+        rv = aCmdLine->GetArgument(idx + 1, url);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (!url.IsEmpty() && url.CharAt(0) == '-')
+            url.Truncate();
+    }
+
+    aCmdLine->RemoveArguments(idx, idx + !url.IsEmpty());
+
+    nsCOMPtr<nsISupportsArray> argsArray =
+        do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!url.IsEmpty())
+    {
+        nsCOMPtr<nsISupportsString> scriptableURL =
+            do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+        NS_ENSURE_TRUE(scriptableURL, NS_ERROR_FAILURE);
+  
+        scriptableURL->SetData(url);
+        argsArray->AppendElement(scriptableURL);
+    }
+
+    nsCOMPtr<nsIWindowWatcher> wwatch =
+        do_GetService(NS_WINDOWWATCHER_CONTRACTID);
     NS_ENSURE_TRUE(wwatch, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDOMWindow> opened;
-    // XXX passing |aCmdLine| here to work around inconsistent
-    // window watcher behavior (see bug 277798)
     wwatch->OpenWindow(nsnull, "chrome://layoutdebug/content/",
-                       "_blank", "chrome,dialog=no,all", aCmdLine,
+                       "_blank", "chrome,dialog=no,all", argsArray,
                        getter_AddRefs(opened));
     aCmdLine->SetPreventDefault(PR_TRUE);
     return NS_OK;
@@ -89,7 +117,7 @@ nsLayoutDebugCLH::Handle(nsICommandLine* aCmdLine)
 NS_IMETHODIMP
 nsLayoutDebugCLH::GetHelpInfo(nsACString& aResult)
 {
-    aResult.Assign(NS_LITERAL_CSTRING("  -layoutdebug         Start with Layout Debugger\n"));
+    aResult.Assign(NS_LITERAL_CSTRING("  -layoutdebug [<url>] Start with Layout Debugger\n"));
     return NS_OK;
 }
 
