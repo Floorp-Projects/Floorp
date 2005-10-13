@@ -61,6 +61,7 @@ class nsIDOMEvent;
 #define NS_NAMESPACE_XML_SCHEMA          "http://www.w3.org/2001/XMLSchema"
 #define NS_NAMESPACE_XML_SCHEMA_INSTANCE "http://www.w3.org/2001/XMLSchema-instance"
 #define NS_NAMESPACE_MOZ_XFORMS_TYPE     "http://www.mozilla.org/projects/xforms/2005/type"
+#define NS_NAMESPACE_SOAP_ENVELOPE       "http://schemas.xmlsoap.org/soap/envelope/"
 #define NS_NAMESPACE_MOZ_XFORMS_LAZY     "http://www.mozilla.org/projects/xforms/2005/lazy"
 
 /**

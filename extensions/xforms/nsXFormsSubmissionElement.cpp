@@ -93,6 +93,7 @@
 #include "nsIPermissionManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsIMIMEHeaderParam.h"
 
 // namespace literals
 #define NAMESPACE_XML_SCHEMA \
@@ -603,6 +604,7 @@ nsXFormsSubmissionElement::Submit()
   LOG(("+++ nsXFormsSubmissionElement::Submit\n"));
 
   nsresult rv;
+  mIsSOAPRequest = PR_FALSE;
 
   // 1. ensure that we are not currently processing a xforms-submit (see E37)
   NS_ENSURE_STATE(!mSubmissionActive);
@@ -773,13 +775,57 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
                                             nsCString &contentType,
                                             SubmissionAttachmentArray *attachments)
 {
+  nsresult rv;
   nsAutoString mediaType;
   mElement->GetAttribute(NS_LITERAL_STRING("mediatype"), mediaType);
-  if (mediaType.IsEmpty())
-    contentType.AssignLiteral("application/xml");
-  else
-    CopyUTF16toUTF8(mediaType, contentType);
 
+  // Check for preference, disabling SOAP requests
+  PRBool enableExperimental = PR_FALSE;
+  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && pref) {
+    PRBool val;
+    if (NS_SUCCEEDED(pref->GetBoolPref("xforms.enableExperimentalFeatures",
+                                       &val)))
+      enableExperimental = val;
+  }
+
+  // Check for SOAP Envelope and handle SOAP
+  if (enableExperimental) {
+    nsAutoString nodeName, nodeNS;
+    data->GetLocalName(nodeName);
+    data->GetNamespaceURI(nodeNS);
+    if (nodeName.Equals(NS_LITERAL_STRING("Envelope")) &&
+        nodeNS.Equals(NS_LITERAL_STRING(NS_NAMESPACE_SOAP_ENVELOPE))) {
+      mIsSOAPRequest = PR_TRUE;
+      nsXFormsUtils::ReportError(NS_LITERAL_STRING("warnSOAP"), mElement,
+                                 nsIScriptError::warningFlag);
+      contentType.AssignLiteral("text/xml");
+
+      if (!mediaType.IsEmpty()) {
+        // copy charset from mediatype
+        nsAutoString charset;
+        nsCOMPtr<nsIMIMEHeaderParam> mimeHdrParser =
+          do_GetService("@mozilla.org/network/mime-hdrparam;1");
+        NS_ENSURE_STATE(mimeHdrParser);
+        rv = mimeHdrParser->GetParameter(NS_ConvertUTF16toUTF8(mediaType),
+                                         "charset", EmptyCString(), PR_FALSE,
+                                         nsnull, charset);
+        if (NS_SUCCEEDED(rv) && !charset.IsEmpty()) {
+          contentType.AppendLiteral("; charset=");
+          contentType.Append(NS_ConvertUTF16toUTF8(charset));
+        }
+      }
+    }
+  }
+
+  // Handle non-SOAP requests
+  if (!mIsSOAPRequest) {
+    if (mediaType.IsEmpty())
+      contentType.AssignLiteral("application/xml");
+    else
+      CopyUTF16toUTF8(mediaType, contentType);
+  }
+  
   nsAutoString encoding;
   mElement->GetAttribute(NS_LITERAL_STRING("encoding"), encoding);
   if (encoding.IsEmpty())
@@ -800,7 +846,6 @@ nsXFormsSubmissionElement::SerializeDataXML(nsIDOMNode *data,
   nsCOMPtr<nsIDOMDocument> doc, newDoc;
   data->GetOwnerDocument(getter_AddRefs(doc));
 
-  nsresult rv;
   // XXX: We can't simply pass in data if !doc, since it crashes
   if (!doc) {
     // owner doc is null when the data node is the document (e.g., ref="/")
@@ -1840,6 +1885,29 @@ nsXFormsSubmissionElement::SendData(const nsCString &uriSpec,
 
     rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mIsSOAPRequest) {
+      nsCOMPtr<nsIMIMEHeaderParam> mimeHdrParser =
+        do_GetService("@mozilla.org/network/mime-hdrparam;1");
+      NS_ENSURE_STATE(mimeHdrParser);
+
+      nsAutoString mediatype, action;
+      mElement->GetAttribute(NS_LITERAL_STRING("mediatype"),
+                             mediatype);
+      if (!mediatype.IsEmpty()) {
+        
+        rv = mimeHdrParser->GetParameter(NS_ConvertUTF16toUTF8(mediatype),
+                                         "action", EmptyCString(), PR_FALSE,
+                                         nsnull, action);
+      }
+      if (action.IsEmpty()) {
+        action.AssignLiteral(" ");
+      }
+      rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("SOAPAction"),
+                                         NS_ConvertUTF16toUTF8(action),
+                                         PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // set loadGroup and notificationCallbacks

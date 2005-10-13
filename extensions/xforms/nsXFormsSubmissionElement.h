@@ -83,6 +83,7 @@ public:
     : mElement(nsnull)
     , mSubmissionActive(PR_FALSE)
     , mIsReplaceInstance(PR_FALSE)
+    , mIsSOAPRequest(PR_FALSE)
     , mFormat(0)
   {}
 
@@ -118,6 +119,7 @@ private:
   nsIDOMElement *mElement;
   PRPackedBool   mSubmissionActive;
   PRPackedBool   mIsReplaceInstance; // Valid when mSubmissionActive == PR_TRUE
+  PRPackedBool   mIsSOAPRequest;
   PRUint32       mFormat; // Valid when mSubmissionActive == PR_TRUE
   nsCOMPtr<nsIXFormsSubmitElement> mActivator;
 
