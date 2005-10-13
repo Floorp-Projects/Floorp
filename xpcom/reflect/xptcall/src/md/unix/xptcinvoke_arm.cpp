@@ -136,7 +136,7 @@ extern "C" {
         PRUint32 fn_count;     
         PRUint32 fn_copy;      
     };
-};
+}
 
 XPTC_PUBLIC_API(nsresult)
 XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
