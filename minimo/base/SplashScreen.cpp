@@ -39,6 +39,41 @@
 #ifdef WINCE
 #include "resource.h"
 
+
+// **************************************************************************
+// Function Name: IsSmartphone
+// 
+// Purpose: Determine if platform is smartphone
+//
+// Arguments:
+//	 none
+//
+// Return Values:
+//  BOOL
+//   TRUE if the current platform is a Smartphone platform
+//   FALSE if the current platform is not a Smartphone platform
+// 
+// Description:  
+//  This function retreives the current platforms type and then
+//  does a case insensitive string comparison.
+
+static BOOL IsSmartphone() 
+{
+    unsigned short platform[64];
+
+    if (TRUE == SystemParametersInfo(SPI_GETPLATFORMTYPE,
+                                     sizeof(platform),
+                                     platform,
+                                     0))
+    {
+      if (0 == _wcsicmp(L"Smartphone", platform)) 
+      {
+        return TRUE;
+      }
+    }
+    return FALSE;   
+}
+
 static HWND gSplashScreenDialog = NULL;
 
 BOOL CALLBACK
@@ -129,6 +164,10 @@ void GetScreenSize(unsigned long* x, unsigned long* y)
 
   *x = workarea.right - workarea.left;
   *y = workarea.bottom - workarea.top;
+
+  if (IsSmartphone())
+    *y += 26;
+
 }
 
 #else
