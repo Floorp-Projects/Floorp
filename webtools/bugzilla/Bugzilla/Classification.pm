@@ -21,6 +21,7 @@ package Bugzilla::Classification;
 
 use Bugzilla::Util;
 use Bugzilla::Error;
+use Bugzilla::Product;
 
 ###############################
 ####    Initialization     ####
@@ -92,6 +93,24 @@ sub product_count {
     return $self->{'product_count'};
 }
 
+sub products {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+
+    if (!$self->{'products'}) {
+        my $product_ids = $dbh->selectcol_arrayref(q{
+            SELECT id FROM products
+            WHERE classification_id = ?}, undef, $self->id);
+ 
+        my @products;
+        foreach my $product_id (@$product_ids) {
+            push (@products, new Bugzilla::Product($product_id));
+        }
+        $self->{'products'} = \@products;
+    }
+    return $self->{'products'};
+}
+
 ###############################
 ####      Accessors        ####
 ###############################
@@ -154,6 +173,7 @@ Bugzilla::Classification - Bugzilla classification class.
     my $name = $classification->name;
     my $description = $classification->description;
     my $product_count = $classification->product_count;
+    my $products = $classification->products;
 
     my $hash_ref = Bugzilla::Classification::get_all_classifications();
     my $classification = $hash_ref->{1};
@@ -193,6 +213,14 @@ A Classification is a higher-level grouping of Products.
  Params:      none.
 
  Returns:     Integer - The total of products inside the classification.
+
+=item C<products>
+
+ Description: Returns all products of the classification.
+
+ Params:      none.
+
+ Returns:     A reference to an array of Bugzilla::Product objects.
 
 =back
 

@@ -74,9 +74,9 @@ for "crash secure SSL flash".
           [% FOREACH c = classification %]
             <optgroup label="[% c.name FILTER html %]">
             [% FOREACH p = c.products %]
-              <option value="[% p FILTER html %]"
-                [% " selected" IF lsearch(default.product, p) != -1 %]>
-                [% p FILTER html %]
+              <option value="[% p.name FILTER html %]"
+                [% " selected" IF lsearch(default.product, p.name) != -1 %]>
+                [% p.name FILTER html %]
               </option>
             [% END %]
             </optgroup>

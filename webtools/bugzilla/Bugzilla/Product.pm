@@ -19,7 +19,6 @@ use strict;
 package Bugzilla::Product;
 
 use Bugzilla::Component;
-use Bugzilla::Classification;
 use Bugzilla::Version;
 use Bugzilla::Milestone;
 
@@ -110,16 +109,6 @@ sub components {
         $self->{components} = \@components;
     }
     return $self->{components};
-}
- 
-sub classification {
-    my $self = shift;
-
-    if (!defined $self->{'classification'}) {
-        $self->{'classification'} =
-            new Bugzilla::Classification($self->classification_id);
-    }
-    return $self->{'classification'};
 }
 
 sub group_controls {
@@ -217,33 +206,6 @@ sub classification_id { return $_[0]->{'classification_id'}; }
 ####      Subroutines    ######
 ###############################
 
-sub get_products_by_classification {
-    my ($class_id) = @_;
-    my $dbh = Bugzilla->dbh;
-    $class_id ||= DEFAULT_CLASSIFICATION_ID;
-
-    my $stored_class_id = $class_id;
-    unless (detaint_natural($class_id)) {
-        ThrowCodeError(
-            'invalid_numeric_argument',
-            {argument => 'product_id',
-             value    => $stored_class_id,
-             function =>
-                'Bugzilla::Product::get_classification_products'}
-        );
-    }
-
-    my $ids = $dbh->selectcol_arrayref(q{
-        SELECT id FROM products
-        WHERE classification_id = ? ORDER by name}, undef, $class_id);
-
-    my @products;
-    foreach my $id (@$ids) {
-        push @products, new Bugzilla::Product($id);
-    }
-    return @products;
-}
-
 sub get_all_products {
     my $dbh = Bugzilla->dbh;
 
@@ -287,7 +249,6 @@ Bugzilla::Product - Bugzilla product class.
     my $product = new Bugzilla::Product('AcmeProduct');
 
     my @components      = $product->components();
-    my $classification  = $product->classification();
     my $groups_controls = $product->group_controls();
     my @milestones      = $product->milestones();
     my @versions        = $product->versions();
@@ -303,8 +264,6 @@ Bugzilla::Product - Bugzilla product class.
     my votestoconfirm    = $product->votes_to_confirm;
     my $defaultmilestone = $product->default_milestone;
     my $classificationid = $product->classification_id;
-
-    my @products = Bugzilla::Product::get_products_by_classification(1);
 
 =head1 DESCRIPTION
 
@@ -335,15 +294,6 @@ Product.pm represents a product object.
  Params:      none.
 
  Returns:     An array of Bugzilla::Component object.
-
-=item C<classification()>
-
- Description: Returns a Bugzilla::Classification object for
-              the product classification.
-
- Params:      none.
-
- Returns:     A Bugzilla::Classification object.
 
 =item C<group_controls()>
 
@@ -385,14 +335,6 @@ Product.pm represents a product object.
 =head1 SUBROUTINES
 
 =over
-
-=item C<get_products_by_classification($class_id)>
-
- Description: Returns all products for a specific classification id.
-
- Params:      $class_id - Integer with classification id.
-
- Returns:     Bugzilla::Product object list.
 
 =item C<get_all_products()>
 

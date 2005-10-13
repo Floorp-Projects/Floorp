@@ -497,18 +497,6 @@
   'link_uri'
 ],
 
-'admin/classifications/del.html.tmpl' => [
-  'description', 
-],
-
-'admin/classifications/edit.html.tmpl' => [
-  'description', 
-],
-
-'admin/classifications/reclassify.html.tmpl' => [
-  'description', 
-],
-
 'admin/classifications/select.html.tmpl' => [
   'cl.description', 
 ],

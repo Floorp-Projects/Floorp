@@ -43,7 +43,7 @@ var tms = new Array();
 [% nclass = 0 %]
 [% FOREACH c = classification %]
   prods[[% nclass FILTER js %]] = [
-    [%- FOREACH item = c.products %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
+    [%- FOREACH item = c.products %]'[% item.name FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
   [% nclass = nclass+1 %]
 [% END %]
 

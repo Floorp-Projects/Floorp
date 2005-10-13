@@ -29,7 +29,6 @@ use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Config qw($datadir);
 use Bugzilla::Classification;
-use Bugzilla::Product;
 
 require "globals.pl";
 
@@ -119,6 +118,8 @@ if ($action eq 'new') {
     # Make versioncache flush
     unlink "$datadir/versioncache";
 
+    $vars->{'classification'} = $class_name;
+
     LoadTemplate($action);
 }
 
@@ -141,8 +142,7 @@ if ($action eq 'del') {
         ThrowUserError("classification_has_products");
     }
 
-    $vars->{'description'} = $classification->description;
-    $vars->{'classification'} = $classification->name;
+    $vars->{'classification'} = $classification;
 
     LoadTemplate($action);
 }
@@ -175,7 +175,7 @@ if ($action eq 'delete') {
 
     unlink "$datadir/versioncache";
 
-    $vars->{'classification'} = $classification->name;
+    $vars->{'classification'} = $classification;
 
     LoadTemplate($action);
 }
@@ -191,13 +191,7 @@ if ($action eq 'edit') {
     my $classification =
         Bugzilla::Classification::check_classification($class_name);
 
-    my @products =
-        Bugzilla::Product::get_products_by_classification(
-            $classification->id);
-
-    $vars->{'description'} = $classification->description;
-    $vars->{'classification'} = $classification->name;
-    $vars->{'products'} = \@products;
+    $vars->{'classification'} = $classification;
 
     LoadTemplate($action);
 }
@@ -259,8 +253,6 @@ if ($action eq 'reclassify') {
     my $classification =
         Bugzilla::Classification::check_classification($class_name);
    
-    $vars->{'description'} = $classification->description;
-
     my $sth = $dbh->prepare("UPDATE products SET classification_id = ?
                              WHERE name = ?");
 
@@ -280,22 +272,10 @@ if ($action eq 'reclassify') {
         }
     }
 
-    my @selected_products = ();
-    my @unselected_products = ();
-
-    my @products = Bugzilla::Product::get_all_products();
-
-    foreach my $product (@products) {
-        if ($product->classification_id == $classification->id) {
-            push @selected_products, $product;
-        } else {
-            push @unselected_products, $product;
-        }
-    }
-    
-    $vars->{'selected_products'}   = \@selected_products;
-    $vars->{'unselected_products'} = \@unselected_products;
-    $vars->{'classification'} = $classification->name;
+    my @classifications = 
+        Bugzilla::Classification::get_all_classifications;
+    $vars->{'classifications'} = \@classifications;
+    $vars->{'classification'} = $classification;
 
     LoadTemplate($action);
 }

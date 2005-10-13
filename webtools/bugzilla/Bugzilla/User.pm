@@ -42,6 +42,7 @@ use Bugzilla::Util;
 use Bugzilla::Constants;
 use Bugzilla::User::Setting;
 use Bugzilla::Product;
+use Bugzilla::Classification;
 
 use base qw(Exporter);
 @Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
@@ -469,7 +470,8 @@ sub get_selectable_classifications {
 
     my $class;
     foreach my $product (@$products) {
-        $class->{$product->classification_id} ||= $product->classification;
+        $class->{$product->classification_id} ||= 
+            new Bugzilla::Classification($product->classification_id);
     }
     my @sorted_class = sort {lc($a->name) cmp lc($b->name)} (values %$class);
     $self->{selectable_classifications} = \@sorted_class;

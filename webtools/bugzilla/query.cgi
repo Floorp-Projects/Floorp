@@ -298,23 +298,7 @@ $vars->{'product'} = \@products;
 
 # Create data structures representing each classification
 if (Param('useclassification')) {
-    my @classifications = ();
-
-    my $class = $user->get_selectable_classifications;
-    foreach my $c (@$class) {
-        # Extract the name of products being in this classification.
-        my @prod_in_class
-            = grep { $_->classification_id == $c->id } @selectable_product_objects;
-        @prod_in_class = map { $_->name } @prod_in_class;
-        # Create hash to hold attributes for each classification.
-        my %classification = (
-            'name'       => $c->name,
-            'products'   => \@prod_in_class
-        );
-        # Assign hash back to classification array.
-        push @classifications, \%classification;
-    }
-    $vars->{'classification'} = \@classifications;
+    $vars->{'classification'} = $user->get_selectable_classifications;
 }
 
 # We use 'component_' because 'component' is a Template Toolkit reserved word.

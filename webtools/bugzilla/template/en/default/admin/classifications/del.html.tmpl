@@ -30,13 +30,13 @@
 
 </tr><tr>
   <td valign="top">Classification:</td>
-  <td valign="top">[% classification FILTER html %]</td>
+  <td valign="top">[% classification.name FILTER html %]</td>
 
 </tr><tr>
   <td valign="top">Description:</td>
   <td valign="top">
-    [% IF description %]
-      [% description %]
+    [% IF classification.description %]
+      [% classification.description FILTER none %]
     [% ELSE %]
       <font color="red">description missing</font>
     [% END %]
@@ -51,7 +51,7 @@
 <form method=post action="editclassifications.cgi">
   <input type=submit value="Yes, delete">
   <input type=hidden name="action" value="delete">
-  <input type=hidden name="classification" value="[% classification FILTER html %]">
+  <input type=hidden name="classification" value="[% classification.name FILTER html %]">
 </form>
 
 <p>Back to the <a href="./">main [% terms.bugs %] page</a>
