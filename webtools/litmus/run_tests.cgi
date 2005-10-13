@@ -108,7 +108,7 @@ sub page_pickGroupSubgroup {
     # all possible subgroups per group:
     my %subgroups; 
     foreach my $curgroup (@groups) {
-        my @subgroups = Litmus::DB::Subgroup->search(testgroup => $curgroup);
+        my @subgroups = Litmus::DB::Subgroup->search(testgroup => $curgroup, { order_by => 'sort_order ASC' });
         $subgroups{$curgroup->testgroupid()} = \@subgroups;
     }
     
@@ -145,8 +145,11 @@ sub page_test {
     print $c->header();
     
     # get the tests to display:
-    my @tests = Litmus::DB::Test->search(subgroup => $subgroupid,
-                                         status => Litmus::DB::Status->search(name => "Enabled"));
+    my @tests = Litmus::DB::Test->search(
+                                         subgroup => $subgroupid,
+                                         status => Litmus::DB::Status->search(name => "Enabled"),
+                                         { order_by => 'sort_order ASC' }
+                                        );
     
     # get all possible test results:
     my @results = Litmus::DB::Result->retrieve_all();

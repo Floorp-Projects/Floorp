@@ -597,6 +597,7 @@ div.sec_head td.l, div.testcase-head td.l {
 	padding-right: 10px;
 	font-weight: bold;
 	font-size: 1.4em;
+	line-height: 1.4em;
 	text-transform: lowercase;
 	color: #666666;
 }
@@ -676,9 +677,13 @@ table.tcm td.header {
 	background-color: #d0d0d0; 
 }
 
+td.content {
+}
+
 td.content ul, td.content ol {
-	margin: 0;
-	padding: 5px;
+	margin-left: 1em
+	margin-right: 1em
+	padding: 0px;
 }
 
 table.tcm td.content {
