@@ -44,8 +44,7 @@
 #include "nsIAddrBookSession.h"
 #include "nsAbBaseCID.h"
 #include "nsAbUtils.h"
-#include "nsAbMDBCard.h"
-#include "nsAbLDAPCard.h"
+#include "nsIAbMDBCard.h"
 #include "nsAbLDAPReplicationQuery.h"
 #include "nsProxiedService.h"
 #include "nsCPasswordManager.h"
@@ -334,9 +333,24 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchEntry(nsILDAPMessage *aMess
     if(!mReplicationDB || !mDBOpen) 
         return NS_ERROR_FAILURE;
 
-    nsAbLDAPCard card;
+  nsresult rv = NS_OK;
 
-    nsresult rv = mAttrMap->SetCardPropertiesFromLDAPMessage(aMessage, &card);
+  // Although we would may naturally create an nsIAbLDAPCard here, we don't
+  // need to as we are writing this straight to the database, so just create
+  // the database version instead.
+  nsCOMPtr<nsIAbMDBCard> dbCard(do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv));
+  if(NS_FAILED(rv)) {
+    Abort();
+    return rv;
+  }
+
+  nsCOMPtr<nsIAbCard> newCard(do_QueryInterface(dbCard, &rv));
+  if(NS_FAILED(rv)) {
+    Abort();
+    return rv;
+  }
+
+    rv = mAttrMap->SetCardPropertiesFromLDAPMessage(aMessage, newCard);
     if (NS_FAILED(rv))
     {
         NS_WARNING("nsAbLDAPProcessReplicationData::OnLDAPSearchEntry"
@@ -358,26 +372,6 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchEntry(nsILDAPMessage *aMess
         name.AppendWithConversion(lastName);
         printf("\n LDAPReplication :: got card #: %d, name: %s \n", mCount, name.get());
 #endif
-
-    nsCOMPtr<nsIAbMDBCard> dbCard;
-    dbCard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
-    if(NS_FAILED(rv)) {
-        Abort();
-        return rv;
-    }
-
-    nsCOMPtr<nsIAbCard> newCard;
-    newCard = do_QueryInterface(dbCard, &rv);
-    if(NS_FAILED(rv)) {
-        Abort();
-        return rv;
-    }
-
-    rv = newCard->Copy(&card);
-    if(NS_FAILED(rv)) {
-        Abort();
-        return rv;
-    }
 
     rv = mReplicationDB->CreateNewCardAndAddToDB(newCard, PR_FALSE);
     if(NS_FAILED(rv)) {

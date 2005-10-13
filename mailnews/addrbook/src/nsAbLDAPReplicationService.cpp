@@ -139,13 +139,17 @@ NS_IMETHODIMP nsAbLDAPReplicationService::Done(PRBool aSuccess)
 }
 
 
-// This method should query the RootDSE for the changeLog attribute, 
+// XXX: This method should query the RootDSE for the changeLog attribute, 
 // if it exists ChangeLog protocol is supported.
 PRInt32 nsAbLDAPReplicationService::DecideProtocol()
 {
-    // do the changeLog, it will decide if there is a need to replicate all
-    // entries or only update existing DB and will do the approprite thing.
-    return nsIAbLDAPProcessReplicationData::kChangeLogProtocol;
+  // do the changeLog, it will decide if there is a need to replicate all
+  // entries or only update existing DB and will do the approprite thing.
+  //
+  // XXX: Bug 231965 changed this from kChangeLogProtocol to
+  // kDefaultDownloadAll because of a problem with ldap replication not
+  // working correctly. We need to change this back at some stage (bug 311632).
+  return nsIAbLDAPProcessReplicationData::kDefaultDownloadAll;
 }
 
 
