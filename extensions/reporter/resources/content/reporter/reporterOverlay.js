@@ -48,14 +48,16 @@ var reporterListener = {
 
   onLocationChange: function(aProgress, aRequest, aURI) {
     var broadcaster = document.getElementById("reporterItemsBroadcaster");
-    // XXX The schemeIs check is only necessary until bug 169826 is fixed,
-    // since we can end up with a dummy URI here
-    var isEnabled = (aURI && "schemeIs" in aURI &&
-                     (aURI.schemeIs("http") ||
-                      aURI.schemeIs("https") ||
-                      aURI.schemeIs("ftp") ||
-                      aURI.schemeIs("gopher")));
+    var isEnabled = false;
 
+    switch (aURI.scheme) {
+      case "http":
+      case "https":
+      case "ftp":
+      case "gopher":
+        isEnabled = true;
+    }
+    
     broadcaster.setAttribute("disabled", !isEnabled);
   },
 
