@@ -77,6 +77,252 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 
+#include "nsITimer.h"
+
+
+#ifdef WINCE
+
+#include "keybd.h"
+
+// **************************************************************************
+// Function Name: IsSmartphone
+// 
+// Purpose: Determine if platform is smartphone
+//
+// Arguments:
+//	 none
+//
+// Return Values:
+//  BOOL
+//   TRUE if the current platform is a Smartphone platform
+//   FALSE if the current platform is not a Smartphone platform
+// 
+// Description:  
+//  This function retreives the current platforms type and then
+//  does a case insensitive string comparison.
+
+static BOOL IsSmartphone() 
+{
+    unsigned short platform[64];
+
+    if (TRUE == SystemParametersInfo(SPI_GETPLATFORMTYPE,
+                                     sizeof(platform),
+                                     platform,
+                                     0))
+    {
+      if (0 == _wcsicmp(L"Smartphone", platform)) 
+      {
+        return TRUE;
+      }
+    }
+    return FALSE;   
+}
+
+// The multitap API not accessible.  We need a way to map 
+BYTE GetKeyPress(PRUint32 actualKey, PRUint32 pressCount)
+{
+  BYTE ch = '*';
+
+  switch (actualKey)
+  {
+    case '1':
+    {
+      pressCount %= 8;
+      
+      switch (pressCount)
+      {
+        case 1:
+          ch = '.';
+          break;
+        case 2:
+          ch = ',';
+          break;
+        case 3:
+          ch = '-';
+          break;
+        case 4:
+          ch = '?';
+          break;
+        case 5:
+          ch = '!';
+          break;
+        case 6:
+          ch = '\'';
+          break;
+        case 7:
+          ch = '@';
+          break;
+        case 0:
+          ch = ':';
+          break;
+      }
+    }
+    break;
+
+    case '2':
+    {
+      pressCount %= 3;
+      
+      switch (pressCount)
+      {
+        case 1:
+          ch = 'a';
+          break;
+        case 2:
+          ch = 'b';
+          break;
+        case 0:
+          ch = 'c';
+          break;
+      }
+    }
+    break;
+
+    case '3':
+    {
+      pressCount %= 3;
+      
+      switch (pressCount)
+      {
+        case 1:
+          ch = 'd';
+          break;
+        case 2:
+          ch = 'e';
+          break;
+        case 0:
+          ch = 'f';
+          break;
+      }
+    }
+    break;
+
+    case '4':
+    {
+      pressCount %= 3;
+      
+      switch (pressCount)
+      {
+        case 1:
+          ch = 'g';
+          break;
+        case 2:
+          ch = 'h';
+          break;
+        case 0:
+          ch = 'i';
+          break;
+      }
+    }    
+    break;
+
+    case '5':
+    {
+      pressCount %= 3;
+      
+      switch (pressCount)
+      {
+        case 1:
+          ch = 'j';
+          break;
+        case 2:
+          ch = 'k';
+          break;
+        case 0:
+          ch = 'l';
+          break;
+      }
+    }
+    break;
+
+
+    case '6':
+    {
+      pressCount %= 3;
+      
+      switch (pressCount)
+      {
+        case 1:
+          ch = 'm';
+          break;
+        case 2:
+          ch = 'n';
+          break;
+        case 0:
+          ch = 'o';
+          break;
+      }
+    } 
+    break;
+
+    case '7':
+    {
+      pressCount %= 4;
+      
+      switch (pressCount)
+      {
+        case 1:
+          ch = 'p';
+          break;
+        case 2:
+          ch = 'q';
+          break;
+        case 3:
+          ch = 'r';
+          break;
+        case 0:
+          ch = 's';
+          break;
+      }
+    } 
+    break;
+
+    case '8':
+    {
+      pressCount %= 3;
+      
+      switch (pressCount)
+      {
+        case 1:
+          ch = 't';
+          break;
+        case 2:
+          ch = 'u';
+          break;
+        case 0:
+          ch = 'v';
+          break;
+      }
+    }
+    break;
+
+    case '9':
+    {
+      pressCount %= 4;
+      
+      switch (pressCount)
+      {
+        case 1:
+          ch = 'w';
+          break;
+        case 2:
+          ch = 'x';
+          break;
+        case 3:
+          ch = 'y';
+          break;
+        case 0:
+          ch = 'z';
+          break;
+      }
+    }
+    break;
+  }
+  return ch;
+}
+
+#endif
+
 class nsSoftKeyBoard : public nsIDOMEventListener
 {
 public:
@@ -99,6 +345,19 @@ private:
 
   nsCOMPtr<nsIDOMWindow> mTopWindow;
   class nsSoftKeyBoardService* mService;
+
+  enum
+  {
+    eNumbers = 0,
+    eLowerCase = 1,
+    eUpperCase = 2,
+  };
+
+  PRUint32 mUsage; 
+
+  PRUint32 mCurrentDigit;
+  PRInt32 mCurrentDigitCount;
+  nsCOMPtr<nsITimer> mTimer;
 };
 
 
@@ -129,11 +388,30 @@ nsSoftKeyBoard::nsSoftKeyBoard(nsSoftKeyBoardService* aService)
   NS_ASSERTION(aService, "Should not create this object without a valid service");
 
   mService = aService; // back pointer -- no reference
+
+  mCurrentDigit = 0;
+  mCurrentDigitCount = 0;
+  mUsage = eLowerCase;
 }
 
 nsSoftKeyBoard::~nsSoftKeyBoard()
 {
 }
+#ifdef WINCE
+
+void SoftKeyboardTimerCB(nsITimer *aTimer, void *aClosure)
+{
+  UINT ch = (UINT) aClosure;
+  UINT flag = KeyStateDownFlag; 
+  
+  PostKeybdMessage( (HWND)-1, 
+                    0,
+                    flag,
+                    1,
+                    &flag, /* ignore */
+                    &ch);
+}
+#endif
 
 NS_IMETHODIMP
 nsSoftKeyBoard::HandleEvent(nsIDOMEvent* aEvent)
@@ -146,6 +424,7 @@ nsSoftKeyBoard::HandleEvent(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMEventTarget> target;
   nsevent->GetOriginalTarget(getter_AddRefs(target));
   nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
+
 
   if (!targetContent || !targetContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL))
     return NS_OK;
@@ -181,6 +460,102 @@ nsSoftKeyBoard::HandleEvent(nsIDOMEvent* aEvent)
     {
       CloseSIP();
     }
+
+#ifdef WINCE
+
+    if (IsSmartphone())
+    {
+
+      PRUint32 charCode;
+      keyEvent->GetCharCode(&charCode);
+
+#if 0
+      char buffer[2];
+      sprintf(buffer, "%d = %d", keyCode, charCode);
+      MessageBox(0, buffer, buffer, 0);
+#endif
+     
+      /* value determined by inspection */
+      if (keyCode == 120)
+      {
+        // We're using this key, no one else should
+        aEvent->StopPropagation();
+        aEvent->PreventDefault();
+
+        if (mTimer)
+          mTimer->Cancel(); 
+
+        keybd_event(VK_SPACE, 0, 0, 0);
+        keybd_event(VK_SPACE, 0, KEYEVENTF_KEYUP, 0);
+
+        return NS_OK;
+      }
+
+      /* value determined by inspection */
+      if (keyCode == 119)
+      {
+        // We're using this key, no one else should
+        aEvent->StopPropagation();
+        aEvent->PreventDefault();
+
+        if (mTimer)
+          mTimer->Cancel(); 
+        
+        mUsage++;
+        if (mUsage>eUpperCase) 
+          mUsage=eNumbers;
+
+        return NS_OK;
+      }
+
+      if (mUsage == eNumbers)
+        return NS_OK;
+
+      if ( charCode > nsIDOMKeyEvent::DOM_VK_0 && charCode <= nsIDOMKeyEvent::DOM_VK_9) // [0-9)
+      {
+        // We're using this key, no one else should
+        aEvent->StopPropagation();
+        aEvent->PreventDefault();
+
+        if (mTimer)
+          mTimer->Cancel();
+        
+        if (mCurrentDigit != charCode)
+        {
+          mCurrentDigit = charCode;
+          mCurrentDigitCount = 1;
+        }
+        else
+        {
+          mCurrentDigitCount++;
+        }
+
+        mTimer = do_CreateInstance("@mozilla.org/timer;1");
+        if (!mTimer)
+          return NS_OK;
+
+        BYTE key = GetKeyPress(mCurrentDigit, mCurrentDigitCount);
+
+        if (mUsage == eUpperCase)
+          key = _toupper(key);
+
+        PRUint32 closure = key;
+        
+        mTimer->InitWithFuncCallback(SoftKeyboardTimerCB,
+                                     (void*)closure,
+                                     700, 
+                                     nsITimer::TYPE_ONE_SHOT);
+        return NS_OK;
+      }
+      else
+      {
+        mCurrentDigit = 0;
+        mCurrentDigitCount = 0;
+      }
+      
+    }
+#endif
+
     return NS_OK;
   }
 
@@ -203,6 +578,9 @@ nsSoftKeyBoard::OpenSIP()
     return;
 
 #ifdef WINCE
+  if (IsSmartphone())
+    return;
+
   HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
   if (hWndSIP)
     ::ShowWindow( hWndSIP, SW_SHOW);
@@ -219,6 +597,9 @@ void
 nsSoftKeyBoard::CloseSIP()
 {
 #ifdef WINCE
+  if (IsSmartphone())
+    return;
+
   HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
   if (hWndSIP)
     ::ShowWindow( hWndSIP, SW_HIDE );
@@ -325,7 +706,7 @@ NS_IMETHODIMP
 nsSoftKeyBoardService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
   nsresult rv;
-  
+
   if (!strcmp(aTopic,"domwindowopened")) 
   {
     nsCOMPtr<nsIDOMWindow> chromeWindow = do_QueryInterface(aSubject);
