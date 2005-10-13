@@ -661,6 +661,11 @@
 #endif
 #define IsClipboardFormatAvailable mozce_IsClipboardFormatAvailable
 
+#ifdef CoInitialize
+#undef CoInitialize
+#endif
+#define CoInitialize             mozce_CoInitialize
+
 #ifdef OleInitialize
 #undef OleInitialize
 #endif
@@ -1338,6 +1343,7 @@ extern "C" {
   MOZCE_SHUNT_API int mozce_GetScrollPos(HWND inWnd, int inBar);
   MOZCE_SHUNT_API BOOL mozce_GetScrollRange(HWND inWnd, int inBar, LPINT outMinPos, LPINT outMaxPos);
   MOZCE_SHUNT_API HRESULT mozce_CoLockObjectExternal(IUnknown* inUnk, BOOL inLock, BOOL inLastUnlockReleases);
+  MOZCE_SHUNT_API HRESULT mozce_CoInitialize(LPVOID pvReserved);
   MOZCE_SHUNT_API LRESULT mozce_OleInitialize(LPVOID pvReserved);
   MOZCE_SHUNT_API void    mozce_OleUninitialize();;
   MOZCE_SHUNT_API HRESULT mozce_OleSetClipboard(IDataObject* inDataObj);
