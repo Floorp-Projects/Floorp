@@ -38,77 +38,16 @@
 #include "nsQDFlushManager.h"
 
 #include "nsComponentManagerUtils.h"
-#include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
 
-class nsQDFlushPort : public nsITimerCallback
-{
-  // nsQDFlushManager is responsible for maintaining the list of port objects.
-  friend class nsQDFlushManager;
-
-protected:
-                        nsQDFlushPort(CGrafPtr aPort);
-                        ~nsQDFlushPort();
-
-  void                  Init(CGrafPtr aPort);
-  void                  Destroy();
-  void                  FlushPortBuffer(RgnHandle aRegion);
-  PRInt64               TimeUntilFlush(AbsoluteTime aNow);
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
-
-  // To use the display's refresh rate as the update Hz, see
-  // http://developer.apple.com/documentation/Performance/Conceptual/Drawing/Articles/FlushingContent.html .
-  // Here, use a hard-coded 30 Hz instead.
-  static const PRUint32 kRefreshRateHz = 30;    // Maximum number of updates
-                                                // per second
-
-  nsQDFlushPort*        mNext;                  // Next object in list
-  CGrafPtr              mPort;                  // Associated port
-  AbsoluteTime          mLastFlushTime;         // Last QDFlushPortBuffer call
-  nsCOMPtr<nsITimer>    mFlushTimer;            // Timer for scheduled flush
-  PRPackedBool          mFlushTimerRunning;     // Is it?
-};
-
-class nsQDFlushObserver : public nsIObserver
-{
-  // nsQDFlushManager is responsible for creating the observer.
-  friend class nsQDFlushManager;
-
-protected:
-                        nsQDFlushObserver(nsQDFlushManager* aParent);
-                        ~nsQDFlushObserver();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  nsQDFlushManager*     mParent;                // Parent object
-};
-
 // nsQDFlushManager
 
-// protected static
-nsQDFlushManager* nsQDFlushManager::sQDFlushManager = nsnull;
-nsQDFlushObserver* nsQDFlushManager::sQDFlushObserver = nsnull;
-
-// nsQDFlushManager() constructor
-//
-// If you create your own object, you are responsible for freeing it.  Once
-// freed, it will free the attached port objects.
-//
-// If you work through the static object by calling through the static
-// sQDFlushPortBuffer method, the static object will be created dynamically
-// at first call and will be freed automatically at shutdown.
 nsQDFlushManager::nsQDFlushManager()
 : mPortList(nsnull)
 {
 }
 
-// ~nsQDFlushManager() destructor
-//
-// See the note about object creation and destruction in the comment
-// preceding the constructor.
 nsQDFlushManager::~nsQDFlushManager()
 {
   nsQDFlushPort* port = mPortList;
@@ -119,34 +58,6 @@ nsQDFlushManager::~nsQDFlushManager()
     NS_RELEASE(port);
     port = next;
   }
-}
-
-// FlushPortBuffer(aPort, aRegion)
-//
-// The public entry point for object-based calls.  Calls
-// QDFlushPortBuffer(aPort, aRegion) if aPort hasn't been flushed too
-// recently.  If it has been, calls QDAddRegionToDirtyRegion(aPort, aRegion)
-// and if no flush has been scheduled, schedules a flush for the appropriate
-// time.
-//
-// public
-void
-nsQDFlushManager::FlushPortBuffer(CGrafPtr aPort, RgnHandle aRegion)
-{
-  CreateOrGetPort(aPort)->FlushPortBuffer(aRegion);
-}
-
-// sFlushPortBuffer(aPort, aRegion)
-//
-// The public entry point for calls into the static flush manager.  Gets
-// the static object, creating it if necessary, and then calls into
-// FlushPortBuffer above.
-//
-// public static
-void
-nsQDFlushManager::sFlushPortBuffer(CGrafPtr aPort, RgnHandle aRegion)
-{
-  GetStaticQDFlushManager()->FlushPortBuffer(aPort, aRegion);
 }
 
 // CreateOrGetPort(aPort)
@@ -203,15 +114,33 @@ nsQDFlushManager::CreateOrGetPort(CGrafPtr aPort)
   return port;
 }
 
+NS_IMPL_ISUPPORTS1(nsQDFlushManager, nsIQDFlushManager)
+
+// nsIQDFlushManager implementation
+
+// FlushPortBuffer(aPort, aRegion)
+//
+// The public entry point for object-based calls.  Calls
+// QDFlushPortBuffer(aPort, aRegion) if aPort hasn't been flushed too
+// recently.  If it has been, calls QDAddRegionToDirtyRegion(aPort, aRegion)
+// and if no flush has been scheduled, schedules a flush for the appropriate
+// time.
+//
+// public
+NS_IMETHODIMP
+nsQDFlushManager::FlushPortBuffer(CGrafPtr aPort, RgnHandle aRegion)
+{
+  CreateOrGetPort(aPort)->FlushPortBuffer(aRegion);
+  return NS_OK;
+}
+
 // RemovePort(aPort)
 //
 // Walks through the list of port objects and removes the one corresponding to
 // aPort, if it exists.
 //
-// Presently unused.
-//
-// protected
-void
+// public
+NS_IMETHODIMP
 nsQDFlushManager::RemovePort(CGrafPtr aPort)
 {
   // Traversal is as in CreateOrGetPort.
@@ -228,56 +157,11 @@ nsQDFlushManager::RemovePort(CGrafPtr aPort)
       // mPortList.  That makes it easy to snip the old object out by
       // setting it to the follower.
       *portPtr = next;
-      return;
+      return NS_OK;
     }
     portPtr = &port->mNext;
   }
-}
-
-// GetStaticQDFlushManager()
-//
-// Most calls through nsQDFlushManager are expected to be made through
-// a global object, through the static sQDFlushPort method.  Because
-// constructors and destructors on static objects are distrusted, each
-// call into sQDFlushPort obtains the static object by calling here.
-// If the object does not yet exist, it is created.  To handle destruction,
-// a shutdown observer is added.  The observer handles teardown of the
-// static manager object and all attached port objects.
-//
-// protected static
-nsQDFlushManager*
-nsQDFlushManager::GetStaticQDFlushManager()
-{
-  if (!sQDFlushManager)
-  {
-    // The static flush manager has not yet been initialized.  Create it.
-    sQDFlushManager = new nsQDFlushManager();
-    NS_ASSERTION(sQDFlushManager, "failed to create flush manager");
-    if (!sQDFlushManager)
-    {
-      // Early return, avoid creating a useless observer.
-      return nsnull;
-    }
-
-    // Create a shutdown observer to handle destruction.
-    sQDFlushObserver = new nsQDFlushObserver(sQDFlushManager);
-    NS_ASSERTION(sQDFlushObserver, "failed to create observer");
-    if (sQDFlushObserver)
-    {
-      // register for shutdown
-      nsresult rv;
-      nsCOMPtr<nsIObserverService> observerService(
-        do_GetService("@mozilla.org/observer-service;1", &rv));
-      if (NS_SUCCEEDED(rv))
-      {
-        // There's not much we can or should do if this fails.
-        observerService->AddObserver(sQDFlushObserver,
-          NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
-      }
-    }
-  }
-
-  return sQDFlushManager;
+  return NS_OK;
 }
 
 // nsQDFlushPort
@@ -409,33 +293,5 @@ nsQDFlushPort::Notify(nsITimer* aTimer)
   // This shouldn't be necessary, nsITimer.idl
   // aTimer->Cancel();
 
-  return NS_OK;
-}
-
-// nsQDFlushObserver
-
-nsQDFlushObserver::nsQDFlushObserver(nsQDFlushManager* aParent)
-: mParent(aParent)
-{
-}
-
-nsQDFlushObserver::~nsQDFlushObserver()
-{
-}
-
-// nsIObserver implementation
-
-NS_IMPL_ISUPPORTS1(nsQDFlushObserver, nsIObserver)
-
-// Observe(aSubject, aTopic, aData)
-//
-// Shutdown callback.  Delete static object and any attached port objects.
-NS_IMETHODIMP
-nsQDFlushObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                           const PRUnichar* aData)
-{
-  NS_ASSERTION(!nsCRT::strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID,aTopic),
-               "Shutdown observer called with wrong topic\n");
-  delete mParent;
   return NS_OK;
 }

@@ -57,6 +57,9 @@
 #include "nsCOMPtr.h"
 #include "nsUnicodeMappingUtil.h"
 #include "gfxImageFrame.h"
+#ifdef MOZ_WIDGET_COCOA
+#include "nsQDFlushManager.h"
+#endif
 
 #include "nsIGenericFactory.h"
 
@@ -76,6 +79,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
+#ifdef MOZ_WIDGET_COCOA
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsQDFlushManager)
+#endif
 
 static NS_IMETHODIMP
 nsScriptableRegionConstructor(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -155,7 +161,13 @@ static const nsModuleComponentInfo components[] =
   { "windows image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",
-    gfxImageFrameConstructor, }
+    gfxImageFrameConstructor, },
+#ifdef MOZ_WIDGET_COCOA
+  { NS_QDFLUSHMANAGER_CLASSNAME,
+    NS_QDFLUSHMANAGER_CID,
+    NS_QDFLUSHMANAGER_CONTRACTID,
+    nsQDFlushManagerConstructor },
+#endif
 };
 
 PR_STATIC_CALLBACK(void)
