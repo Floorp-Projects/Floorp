@@ -53,10 +53,12 @@
 #include "nsIEventSink.h"
 #include "nsIScrollableView.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIServiceManager.h"
 
 #include "nsCarbonHelpers.h"
 #include "nsGfxUtils.h"
 #include "nsMacResources.h"
+#include "nsIQDFlushManager.h"
 
 #import "nsCursorManager.h"
 #import "nsWindowMap.h"
@@ -464,6 +466,15 @@ void nsChildView::TearDownView()
     if (responder && [responder isKindOfClass:[NSView class]] &&
         [(NSView*)responder isDescendantOf:mView])
       [win makeFirstResponder: [mView superview]];
+
+    GrafPtr curPort = GetChildViewQuickDrawPort();
+    if (curPort)
+    {
+      nsCOMPtr<nsIQDFlushManager> qdFlushManager =
+       do_GetService("@mozilla.org/gfx/qdflushmanager;1");
+      if (qdFlushManager)
+        qdFlushManager->RemovePort(curPort);
+    }
 
     [mView removeFromSuperviewWithoutNeedingDisplay];
     [mView release];

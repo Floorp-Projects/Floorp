@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIInterfaceRequestorUtils.h" 
+#include "nsIServiceManager.h"
 #include "nsRenderingContextMac.h"
 #include "nsDeviceContextMac.h"
 #include "nsFontMetricsMac.h"
@@ -50,8 +51,11 @@
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
 #include "nsGfxUtils.h"
-#include "nsQDFlushManager.h"
 #include "nsCOMPtr.h"
+
+#ifdef MOZ_WIDGET_COCOA
+#include "nsIQDFlushManager.h"
+#endif
 
 #include "plhash.h"
 
@@ -1426,7 +1430,10 @@ nsRenderingContextMac::FlushRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 
     ::SetRectRgn(rgn, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
 
-    nsQDFlushManager::sFlushPortBuffer(mPort, rgn);
+    nsCOMPtr<nsIQDFlushManager> qdFlushManager =
+     do_GetService("@mozilla.org/gfx/qdflushmanager;1");
+    if (qdFlushManager)
+      qdFlushManager->FlushPortBuffer(mPort, rgn);
   }
 #endif
   return NS_OK;

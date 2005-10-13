@@ -74,6 +74,10 @@ XPIDLSRCS += nsIPrintSettingsX.idl \
 		$(NULL)
 endif
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+XPIDLSRCS += nsIQDFlushManager.idl
+endif
+
 ifeq ($(MOZ_GFX_TOOLKIT),windows)
 XPIDLSRCS += nsIPrintSettingsWin.idl
 endif

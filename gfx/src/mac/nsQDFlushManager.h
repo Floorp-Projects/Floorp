@@ -41,44 +41,69 @@
 #include "nscore.h"
 
 #include "nsCOMPtr.h"
+#include "nsIQDFlushManager.h"
 #include "nsITimer.h"
-#include "nsIObserver.h"
 
 #include <Carbon/Carbon.h>
 
 // The expected use is to replace these calls:
 //   ::QDFlushPortBuffer(port, region)
 // with these:
-//   nsQDFlushManager::sFlushPortBuffer(port,region)
+//   nsCOMPtr<nsIQDFlushManager> qdFlushManager =
+//    do_GetService("@mozilla.org/gfx/qdflushmanager;1");
+//   qdFlushManager->FlushPortBuffer(port, region);
+// and at port destruction time:
+//   qdFlushManager->RemovePort(port)
 
-// These subservient classes are defined in nsQDFlushManager.cpp.
-class nsQDFlushPort;
-class nsQDFlushObserver;
-
-class NS_EXPORT nsQDFlushManager
+class nsQDFlushPort : public nsITimerCallback
 {
-  // nsQDFlushObserver is responsible for destruction of the static object.
-  friend class nsQDFlushObserver;
+  // nsQDFlushManager is responsible for maintaining the list of port objects.
+  friend class nsQDFlushManager;
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITIMERCALLBACK
+
+protected:
+                        nsQDFlushPort(CGrafPtr aPort);
+                        ~nsQDFlushPort();
+
+  void                  Init(CGrafPtr aPort);
+  void                  Destroy();
+  void                  FlushPortBuffer(RgnHandle aRegion);
+  PRInt64               TimeUntilFlush(AbsoluteTime aNow);
+
+  // To use the display's refresh rate as the update Hz, see
+  // http://developer.apple.com/documentation/Performance/Conceptual/Drawing/Articles/FlushingContent.html .
+  // Here, use a hard-coded 30 Hz instead.
+  static const PRUint32 kRefreshRateHz = 30;    // Maximum number of updates
+                                                // per second
+
+  nsQDFlushPort*        mNext;                  // Next object in list
+  CGrafPtr              mPort;                  // Associated port
+  AbsoluteTime          mLastFlushTime;         // Last QDFlushPortBuffer call
+  nsCOMPtr<nsITimer>    mFlushTimer;            // Timer for scheduled flush
+  PRPackedBool          mFlushTimerRunning;     // Is it?
+};
+
+class NS_EXPORT nsQDFlushManager : public nsIQDFlushManager
+{
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIQDFLUSHMANAGER
 
 public:
                               nsQDFlushManager();
                               ~nsQDFlushManager();
 
-  void                        FlushPortBuffer(CGrafPtr aPort,
-                                              RgnHandle aRegion);
-  static void                 sFlushPortBuffer(CGrafPtr aPort,
-                                               RgnHandle aRegion);
-
 protected:
   nsQDFlushPort*              CreateOrGetPort(CGrafPtr aPort);
-  void                        RemovePort(CGrafPtr aPort);
-
-  static nsQDFlushManager*    GetStaticQDFlushManager();
 
   nsQDFlushPort*              mPortList;        // Head of list
-
-  static nsQDFlushManager*    sQDFlushManager;  // Static object
-  static nsQDFlushObserver*   sQDFlushObserver; // Cleanup for static object
 };
+
+// 6F91262A-CF9E-4DDD-AA01-7A1FCCF14281
+#define NS_QDFLUSHMANAGER_CLASSNAME "QuickDraw Buffer Flusher"
+#define NS_QDFLUSHMANAGER_CID \
+ {0x6F91262A, 0xCF9E, 0x4DDD, {0xAA, 0x01, 0x7A, 0x1F, 0xCC, 0xF1, 0x42, 0x81}}
+#define NS_QDFLUSHMANAGER_CONTRACTID "@mozilla.org/gfx/qdflushmanager;1"
 
 #endif /* nsQDFlushManager_h___ */
