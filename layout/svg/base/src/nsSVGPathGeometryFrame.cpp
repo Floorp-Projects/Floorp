@@ -443,17 +443,9 @@ nsSVGPathGeometryFrame::NotifyRedrawSuspended()
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::NotifyRedrawUnsuspended()
 {
-  if (mUpdateFlags != 0) {
-    nsCOMPtr<nsISVGRendererRegion> dirty_region;
-    if (GetGeometry())
-      GetGeometry()->Update(mUpdateFlags, getter_AddRefs(dirty_region));
-    if (dirty_region) {
-      nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
-      if (outerSVGFrame)
-        outerSVGFrame->InvalidateRegion(dirty_region, PR_TRUE);
-    }
-    mUpdateFlags = 0;
-  }
+  if (mUpdateFlags != 0)
+    UpdateGraphic(0);
+
   return NS_OK;
 }
 
