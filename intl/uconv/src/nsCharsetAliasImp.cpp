@@ -45,7 +45,7 @@
 #include "nsUConvDll.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsURLProperties.h"
+#include "nsGREResProperties.h"
 #include "nsITimelineService.h"
 #include "nsCharsetAlias.h"
 
@@ -99,9 +99,9 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
    if(!mDelegate) {
      //load charsetalias.properties string bundle with all remaining aliases
      // we may need to protect the following section with a lock so we won't call the 
-     // 'new nsURLProperties' from two different threads
-     mDelegate = new nsURLProperties( NS_LITERAL_CSTRING("resource://gre/res/charsetalias.properties") );
-     NS_ASSERTION(mDelegate, "cannot create nsURLProperties");
+     // 'new nsGREResProperties' from two different threads
+     mDelegate = new nsGREResProperties( NS_LITERAL_CSTRING("charsetalias.properties") );
+     NS_ASSERTION(mDelegate, "cannot create nsGREResProperties");
      if(nsnull == mDelegate)
        return NS_ERROR_OUT_OF_MEMORY;
    }
@@ -109,7 +109,7 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsACString& aAlias,
    NS_TIMELINE_STOP_TIMER("nsCharsetAlias2:GetPreferred");
    NS_TIMELINE_MARK_TIMER("nsCharsetAlias2:GetPreferred");
 
-   // hack for now, have to fix nsURLProperties, but we can't until
+   // hack for now, have to fix nsGREResProperties, but we can't until
    // string bundles use UTF8 keys
    nsAutoString result;
    nsresult rv = mDelegate->Get(NS_ConvertASCIItoUCS2(aKey), result);

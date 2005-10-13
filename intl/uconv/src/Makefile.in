@@ -77,7 +77,7 @@ CPPSRCS		= \
 		nsConverterInputStream.cpp \
 		nsConverterOutputStream.cpp \
 		nsTextToSubURI.cpp \
-		nsURLProperties.cpp \
+  		nsGREResProperties.cpp \
 		nsCharsetConverterManager.cpp \
 		nsUTF8ConverterService.cpp \
 		nsUTF8ToUnicode.cpp \

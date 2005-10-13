@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sts=2 sw=2 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is gre/res property file loading code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Christian Biesinger <cbiesinger@web.de>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,30 +34,48 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsCharsetAlias_h__
-#define nsCharsetAlias_h__
 
-#include "nsICharsetAlias.h"
 #include "nsGREResProperties.h"
+#include "nsDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsILocalFile.h"
+#include "nsNetUtil.h"
 
-//==============================================================
-class nsCharsetAlias2 : public nsICharsetAlias
+nsGREResProperties::nsGREResProperties(const nsACString& aFile)
 {
-  NS_DECL_ISUPPORTS
+  nsCOMPtr<nsIFile> file;
+  nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(file));
+  if (NS_FAILED(rv))
+    return;
 
-public:
+  file->AppendNative(NS_LITERAL_CSTRING("res"));
+  file->AppendNative(aFile);
 
-  nsCharsetAlias2();
-  virtual ~nsCharsetAlias2();
+  nsCOMPtr<nsILocalFile> lf(do_QueryInterface(file));
+  NS_ENSURE_TRUE(lf, /**/);
 
-  NS_IMETHOD GetPreferred(const nsACString& aAlias, nsACString& aResult);
+  nsCOMPtr<nsIInputStream> inStr;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), lf);
+  if (NS_FAILED(rv))
+    return;
 
-  NS_IMETHOD Equals(const nsACString& aCharset1, const nsACString& aCharset2, PRBool* oResult) ;
-  
-private:
-  nsGREResProperties* mDelegate;
-};
+  mProps = do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
+  if (mProps) {
+    rv = mProps->Load(inStr);
+    if (NS_FAILED(rv))
+      mProps = nsnull;
+  }
+}
 
-#endif // nsCharsetAlias_h__
+PRBool nsGREResProperties::DidLoad() const
+{
+  return mProps != nsnull;
+}
 
+nsresult nsGREResProperties::Get(const nsAString& aKey, nsAString& aValue)
+{
+  if (!mProps)
+    return NS_ERROR_NOT_INITIALIZED;
 
+  return mProps->GetStringProperty(NS_ConvertUTF16toUTF8(aKey), aValue);
+}

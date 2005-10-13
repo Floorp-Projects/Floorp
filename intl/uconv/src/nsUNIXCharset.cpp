@@ -38,7 +38,7 @@
 #include <locale.h>
 #include "nsIPlatformCharset.h"
 #include "pratom.h"
-#include "nsURLProperties.h"
+#include "nsGREResProperties.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsLocaleCID.h"
@@ -65,8 +65,8 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
-static nsURLProperties *gNLInfo = nsnull;
-static nsURLProperties *gInfo_deprecated = nsnull;
+static nsGREResProperties *gNLInfo = nsnull;
+static nsGREResProperties *gInfo_deprecated = nsnull;
 static PRInt32 gCnt=0;
 
 //this lock is for protecting above static variable operation
@@ -96,8 +96,9 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAString& locale
   {
     nsAutoLock guard(gLock);
     if (!gInfo_deprecated) {
-      nsURLProperties *info = new nsURLProperties(NS_LITERAL_CSTRING("resource://gre/res/unixcharset.properties"));
-      NS_ASSERTION( info, "cannot create nsURLProperties");
+      nsGREResProperties *info =
+          new nsGREResProperties(NS_LITERAL_CSTRING("unixcharset.properties"));
+      NS_ASSERTION(info, "cannot create nsGREResProperties");
       gInfo_deprecated = info;
     }
   }
@@ -237,17 +238,15 @@ nsPlatformCharset::InitGetCharset(nsACString &oString)
     nsAutoLock guard(gLock);
 
     if (!gNLInfo) {
-      nsCAutoString propertyURL;
-      // note: NS_LITERAL_STRING("resource:/res/unixcharset." OSARCH ".properties") does not compile on AIX
-      propertyURL.AssignLiteral("resource://gre/res/unixcharset.");
-      propertyURL.Append(OSARCH);
-      propertyURL.AppendLiteral(".properties");
-      nsURLProperties *info;
-      info = new nsURLProperties( propertyURL );
-      NS_ASSERTION( info, "cannot create nsURLProperties");
+      nsCAutoString propertyFile;
+      // note: NS_LITERAL_CSTRING("unixcharset." OSARCH ".properties") does not compile on AIX
+      propertyFile.AssignLiteral("unixcharset.");
+      propertyFile.Append(OSARCH);
+      propertyFile.AppendLiteral(".properties");
+      nsGREResProperties *info = new nsGREResProperties(propertyFile);
+      NS_ASSERTION(info, "cannot create nsGREResProperties");
       if (info) {
-        PRBool didLoad;
-        info->DidLoad(didLoad);
+        PRBool didLoad = info->DidLoad();
         if (!didLoad) {
           delete info;
           info = nsnull;

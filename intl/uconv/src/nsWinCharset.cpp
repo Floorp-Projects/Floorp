@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIPlatformCharset.h"
-#include "nsURLProperties.h"
+#include "nsGREResProperties.h"
 #include "pratom.h"
 #include <windows.h>
 #include "nsUConvDll.h"
@@ -48,7 +48,7 @@
 #include "nsITimelineService.h"
 #include "nsPlatformCharset.h"
 
-static nsURLProperties *gInfo = nsnull;
+static nsGREResProperties *gInfo = nsnull;
 static PRInt32 gCnt= 0;
 
 NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
@@ -80,7 +80,7 @@ nsPlatformCharset::InitInfo()
   PR_AtomicIncrement(&gCnt); // count for gInfo
 
   if (gInfo == nsnull) {
-    nsURLProperties *info = new nsURLProperties(NS_LITERAL_CSTRING("resource://gre/res/wincharset.properties"));
+    nsGREResProperties *info = new nsGREResProperties(NS_LITERAL_CSTRING("wincharset.properties"));
 
     NS_ASSERTION(info , "cannot open properties file");
     NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);
