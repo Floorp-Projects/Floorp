@@ -769,7 +769,9 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
     return NS_ERROR_FAILURE;
 
   SaveDC(hdc);
+#ifndef WINCE
   SetGraphicsMode(hdc, GM_ADVANCED);
+#endif
 
 #ifdef MOZ_CAIRO_GFX
 #if 0
@@ -1713,6 +1715,7 @@ static void DrawTab(HDC hdc, const RECT& R, PRInt32 aPosition, PRBool aSelected,
     ::DrawEdge(hdc, &shadeRect, EDGE_RAISED, BF_SOFT | shadeFlag);
 }
 
+#ifndef WINCE
 static void DrawMenuImage(HDC hdc, const RECT& rc, PRInt32 aComponent, PRUint32 aColor)
 {
   // This procedure creates a memory bitmap to contain the check mark, draws
@@ -1755,6 +1758,7 @@ static void DrawMenuImage(HDC hdc, const RECT& rc, PRInt32 aComponent, PRUint32 
     ::DeleteDC(hMemoryDC);
   }
 }
+#endif
 
 nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aContext,
                                   nsIFrame* aFrame,
@@ -2065,6 +2069,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
           menuRectEnd.right   = menuRectEnd.left    + 15;  // left box
         }
 
+#ifndef WINCE
         if ((state & DFCS_CHECKED) != 0) {
           if (aWidgetType == NS_THEME_CHECKMENUITEM) {
             DrawMenuImage(hdc, menuRectStart, DFCS_MENUCHECK, color);
@@ -2078,6 +2083,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
           else
             DrawMenuImage(hdc, menuRectEnd, DFCS_MENUARROWRIGHT, color);
         }
+#endif
       }
       return NS_OK;
     }
