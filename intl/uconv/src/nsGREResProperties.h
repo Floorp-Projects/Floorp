@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sts=2 sw=2 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is gre/res property file loading code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Christian Biesinger <cbiesinger@web.de>.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,28 +35,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsURLProperties_h__
-#define nsURLProperties_h__
+#ifndef nsGREResProperties_h__
+#define nsGREResProperties_h__
 
-#include "nsIStringBundle.h"
+#include "nsString.h"
+#include "nsIPersistentProperties2.h"
 #include "nsCOMPtr.h"
-#include "nsAString.h"
 
-class nsURLProperties {
+/**
+ * This class loads a .properties file from the gre/res directory; the file
+ * to load is specified as a constructor argument.
+ */
+class nsGREResProperties {
 public:
-  nsURLProperties(const nsACString& aUrl);
-  virtual ~nsURLProperties();
+  /**
+   * @param aFile The file to load. Must be an ASCII string.
+   */
+  nsGREResProperties(const nsACString& aFile);
 
-  NS_IMETHOD DidLoad(PRBool&);
-  NS_IMETHOD Get( const nsAString& aKey, nsAString& value);
+  /**
+   * Returns whether loading the file succeeded.
+   */
+  PRBool DidLoad() const;
+  nsresult Get(const nsAString& aKey, nsAString& value);
 
 private:
-  static nsIStringBundleService*  gStringBundleService; // to speed up getting bundles
-  static nsrefcnt       gRefCnt;
-
-  nsCOMPtr<nsIStringBundle> mBundle;
-
+  nsCOMPtr<nsIPersistentProperties> mProps;
 };
 
-#endif /* nsURLProperties_h__ */
-
+#endif // nsGREResProperties_h__

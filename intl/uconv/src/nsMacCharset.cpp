@@ -39,7 +39,7 @@
 #include <TextCommon.h>
 #include "nsIPlatformCharset.h"
 #include "pratom.h"
-#include "nsURLProperties.h"
+#include "nsGREResProperties.h"
 #include "nsUConvDll.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
@@ -49,7 +49,7 @@
 #include "nsPlatformCharset.h"
 #include "nsEncoderDecoderUtils.h"
 
-static nsURLProperties *gInfo = nsnull;
+static nsGREResProperties *gInfo = nsnull;
 static PRInt32 gCnt = 0;
 
 NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
@@ -71,7 +71,8 @@ nsresult nsPlatformCharset::InitInfo()
 {  
   // load the .property file if necessary
   if (gInfo == nsnull) {
-    nsURLProperties *info = new nsURLProperties( NS_LITERAL_CSTRING("resource://gre/res/maccharset.properties") );
+    nsGREResProperties *info =
+        new nsGREResProperties(NS_LITERAL_CSTRING("maccharset.properties"));
     NS_ASSERTION(info , "cannot open properties file");
     NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);
     gInfo = info;
