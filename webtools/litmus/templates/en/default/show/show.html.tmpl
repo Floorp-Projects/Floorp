@@ -58,7 +58,7 @@ Current Status
 <input name="return" type="hidden" value="show_test.cgi?id=[% test.testid FILTER html %]">
 
 <table border="0">
-[% INCLUDE test/test.html.tmpl test=test results=results showedit=1 %]
+[% INCLUDE test/test.html.tmpl test=test results=results showedit=show_admin %]
 
 <tr>
 <td><br /><input type="submit" id="Submit" name="Submit" value="Submit Results" onclick="findEdited()"></td>

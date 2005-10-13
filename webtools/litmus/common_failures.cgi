@@ -30,9 +30,6 @@
 use strict;
 $|++;
 
-use Time::HiRes qw( gettimeofday tv_interval );
-my $t0 = [gettimeofday];
-
 use Litmus;
 use Litmus::Auth;
 use Litmus::Error;
@@ -61,9 +58,6 @@ $vars->{"defaultemail"} = Litmus::Auth::getCookie();
 
 Litmus->template()->process("reporting/common_failures.tmpl", $vars) ||
   internalError(Litmus->template()->error());
-
-my $elapsed = tv_interval ( $t0 );
-printf  "<p>Page took %f seconds to load.</p>", $elapsed;
 
 exit 0;
 
