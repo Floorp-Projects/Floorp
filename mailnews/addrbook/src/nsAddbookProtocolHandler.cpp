@@ -46,7 +46,6 @@
 
 #include "nsAddbookUrl.h"
 #include "nsAddbookProtocolHandler.h"
-#include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 #include "nsAbBaseCID.h"
 #include "nsNetUtil.h"

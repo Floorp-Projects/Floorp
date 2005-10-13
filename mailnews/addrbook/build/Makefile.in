@@ -54,7 +54,6 @@ MOZILLA_INTERNAL_API = 1
 PACKAGE_FILE = addrbook.pkg
 
 REQUIRES	= xpcom \
-		  xpcom_obsolete \
 		  string \
 		  necko \
 		  mime \

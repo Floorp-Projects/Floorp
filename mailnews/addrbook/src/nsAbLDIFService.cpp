@@ -38,12 +38,16 @@
 #include "nsIAddrDatabase.h"
 #include "nsString.h"
 #include "nsAbLDIFService.h"
-#include "nsIFileSpec.h"
+#include "nsIFile.h"
+#include "nsILineInputStream.h"
+#include "nsNetUtil.h"
+#include "nsISeekableStream.h"
 #include "nsVoidArray.h"
 #include "mdb.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "prprf.h"
+#include "nsCRT.h"
 
 NS_IMPL_ISUPPORTS1(nsAbLDIFService, nsIAbLDIFService)
 
@@ -87,7 +91,7 @@ static unsigned char b642nib[0x80] = {
     0x31, 0x32, 0x33, 0xff, 0xff, 0xff, 0xff, 0xff
 };
 
-NS_IMETHODIMP nsAbLDIFService::ImportLDIFFile(nsIAddrDatabase *aDb, nsIFileSpec *aSrc, PRBool aStoreLocAsHome, PRUint32 *aProgress)
+NS_IMETHODIMP nsAbLDIFService::ImportLDIFFile(nsIAddrDatabase *aDb, nsIFile *aSrc, PRBool aStoreLocAsHome, PRUint32 *aProgress)
 {
   NS_ENSURE_ARG_POINTER(aSrc);
   NS_ENSURE_ARG_POINTER(aDb);
@@ -98,22 +102,23 @@ NS_IMETHODIMP nsAbLDIFService::ImportLDIFFile(nsIAddrDatabase *aDb, nsIFileSpec 
   char buf[1024];
   char* pBuf = &buf[0];
   PRInt32 startPos = 0;
-  PRInt32 len = 0;
-  PRBool bEof = PR_FALSE;
+  PRUint32 len = 0;
   nsVoidArray listPosArray;   // where each list/group starts in ldif file
   nsVoidArray listSizeArray;  // size of the list/group info
   PRInt32 savedStartPos = 0;
   PRInt32 filePos = 0;
+  PRUint32 bytesLeft = 0;
 
-  nsresult rv = aSrc->OpenStreamForReading();
+  nsCOMPtr<nsIInputStream> inputStream;
+  nsresult rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), aSrc);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Initialize the parser for a run...
   mLdifLine.Truncate();
 
-  while (NS_SUCCEEDED(aSrc->Eof(&bEof)) && !bEof)
+  while (NS_SUCCEEDED(inputStream->Available(&bytesLeft)) && bytesLeft > 0)
   {
-    if (NS_SUCCEEDED(aSrc->Read(&pBuf, (PRInt32)sizeof(buf), &len)) && len > 0)
+    if (NS_SUCCEEDED(inputStream->Read(pBuf, sizeof(buf), &len)) && len > 0)
     {
       startPos = 0;
 
@@ -140,21 +145,26 @@ NS_IMETHODIMP nsAbLDIFService::ImportLDIFFile(nsIAddrDatabase *aDb, nsIFileSpec 
     AddLdifRowToDatabase(PR_FALSE); 
 
   // mail Lists
-  PRInt32 i, pos, size;
+  PRInt32 i, pos;
+  PRUint32 size;
   PRInt32 listTotal = listPosArray.Count();
   char *listBuf;
   ClearLdifRecordBuffer();  // make sure the buffer is clean
+
+  nsCOMPtr<nsISeekableStream> seekableStream = do_QueryInterface(inputStream, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   for (i = 0; i < listTotal; i++)
   {
     pos  = NS_PTR_TO_INT32(listPosArray.ElementAt(i));
     size = NS_PTR_TO_INT32(listSizeArray.ElementAt(i));
-    if (NS_SUCCEEDED(aSrc->Seek(pos)))
+    if (NS_SUCCEEDED(seekableStream->Seek(nsISeekableStream::NS_SEEK_SET, pos)))
     {
       // Allocate enough space for the lists/groups as the size varies.
       listBuf = (char *) PR_Malloc(size);
       if (!listBuf)
         continue;
-      if (NS_SUCCEEDED(aSrc->Read(&listBuf, size, &len)) && len > 0)
+      if (NS_SUCCEEDED(inputStream->Read(listBuf, size, &len)) && len > 0)
       {
         startPos = 0;
 
@@ -163,7 +173,7 @@ NS_IMETHODIMP nsAbLDIFService::ImportLDIFFile(nsIAddrDatabase *aDb, nsIFileSpec 
           if (mLdifLine.Find("groupOfNames") != kNotFound)
           {
             AddLdifRowToDatabase(PR_TRUE);
-            if (NS_SUCCEEDED(aSrc->Seek(0)))
+            if (NS_SUCCEEDED(seekableStream->Seek(nsISeekableStream::NS_SEEK_SET, 0)))
               break;
           }
         }
@@ -172,7 +182,7 @@ NS_IMETHODIMP nsAbLDIFService::ImportLDIFFile(nsIAddrDatabase *aDb, nsIFileSpec 
     }
   }
 
-  rv = aSrc->CloseStream();
+  rv = inputStream->Close();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Finally commit everything to the database and return.
@@ -767,93 +777,98 @@ static const char *const sLDIFFields[] = {
 
 // Count total number of legal ldif fields and records in the first 100 lines of the 
 // file and if the average legal ldif field is 3 or higher than it's a valid ldif file.
-NS_IMETHODIMP nsAbLDIFService::IsLDIFFile( nsIFileSpec *pSrc, PRBool *_retval)
+NS_IMETHODIMP nsAbLDIFService::IsLDIFFile(nsIFile *pSrc, PRBool *_retval)
 {
-    *_retval = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(pSrc);
+  NS_ENSURE_ARG_POINTER(_retval);
 
-    nsresult rv = pSrc->OpenStreamForReading();
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    char *pLine = new char[kTextAddressBufferSz];
-    PRBool    eof = PR_FALSE;
-    rv = pSrc->Eof( &eof);
-    if (NS_FAILED( rv)) {
-        pSrc->CloseStream();
-        return( rv);
-    }
-    
-    PRBool    wasTruncated = PR_FALSE;
-    PRInt32    lineLen = 0;
-    PRInt32    lineCount = 0;
-    PRInt32    ldifFields = 0;  // total number of legal ldif fields.
-    char    field[kMaxLDIFLen];
-    PRInt32    fLen = 0;
-    char *    pChar;
-    PRInt32    recCount = 0;  // total number of records.
-    PRInt32    i;
-    PRBool    gotLDIF = PR_FALSE;
+  *_retval = PR_FALSE;
 
-    while (!eof && NS_SUCCEEDED( rv) && (lineCount < 100)) {
-        wasTruncated = PR_FALSE;
-        rv = pSrc->ReadLine( &pLine, kTextAddressBufferSz, &wasTruncated);
-        if (wasTruncated)
-            pLine[kTextAddressBufferSz - 1] = 0;
-        if (NS_SUCCEEDED( rv)) {
-            lineLen = strlen( pLine);            
-            pChar = pLine;
-            if (!lineLen && gotLDIF) {
-                recCount++;
-                gotLDIF = PR_FALSE;
-            }
-                    
-            if (lineLen && (*pChar != ' ') && (*pChar != 9)) {
-                fLen = 0;
-                while (lineLen && (fLen < (kMaxLDIFLen - 1)) && (*pChar != ':')) {
-                    field[fLen] = *pChar;
-                    pChar++;
-                    fLen++;
-                    lineLen--;
-                }
-                
-                field[fLen] = 0;
-                if (lineLen && (*pChar == ':') && (fLen < (kMaxLDIFLen - 1))) {
-                    // see if this is an ldif field (case insensitive)?
-                    i = 0;
-                    while (sLDIFFields[i]) {
-                        if (!nsCRT::strcasecmp( sLDIFFields[i], field)) {
-                            ldifFields++;
-                            gotLDIF = PR_TRUE;
-                            break;
-                        }
-                        i++;
-                    }
-                    
-                }
-            }
+  nsresult rv = NS_OK;
 
-            rv = pSrc->Eof( &eof);
-        }
-        lineCount++;
-    }
+  nsCOMPtr<nsIInputStream> fileStream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileStream), pSrc);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // If we just saw ldif address, increment recCount.
-    if (gotLDIF)
-      recCount++;
-    
-    rv = pSrc->CloseStream();
-        
-    delete [] pLine;
-    
-    if (recCount > 1)
-      ldifFields /= recCount;
+  nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(fileStream, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // If the average field number >= 3 then it's a good ldif file.
-    if (ldifFields >= 3)
+  PRInt32 lineLen = 0;
+  PRInt32 lineCount = 0;
+  PRInt32 ldifFields = 0;  // total number of legal ldif fields.
+  char field[kMaxLDIFLen];
+  PRInt32 fLen = 0;
+  const char *pChar;
+  PRInt32 recCount = 0;  // total number of records.
+  PRInt32 i;
+  PRBool gotLDIF = PR_FALSE;
+  PRBool more = PR_TRUE;
+  nsXPIDLCString line;
+
+  while (more && NS_SUCCEEDED(rv) && (lineCount < 100))
+  {
+    rv = lineInputStream->ReadLine(line, &more);
+
+    if (NS_SUCCEEDED(rv) && more)
     {
-      *_retval = PR_TRUE;
-    }
+      pChar = line.get();
+      lineLen = line.Length();
+      if (!lineLen && gotLDIF)
+      {
+        recCount++;
+        gotLDIF = PR_FALSE;
+      }
+                   
+      if (lineLen && (*pChar != ' ') && (*pChar != 9))
+      {
+        fLen = 0;
 
-    return rv;
+        while (lineLen && (fLen < (kMaxLDIFLen - 1)) && (*pChar != ':'))
+        {
+          field[fLen] = *pChar;
+          pChar++;
+          fLen++;
+          lineLen--;
+        }
+                
+        field[fLen] = 0;
+
+        if (lineLen && (*pChar == ':') && (fLen < (kMaxLDIFLen - 1)))
+        {
+          // see if this is an ldif field (case insensitive)?
+          i = 0;
+          while (sLDIFFields[i])
+          {
+            if (!nsCRT::strcasecmp( sLDIFFields[i], field))
+            {
+              ldifFields++;
+              gotLDIF = PR_TRUE;
+              break;
+            }
+            i++;
+          }
+        }
+      }
+    }
+    lineCount++;
+  }
+
+  // If we just saw ldif address, increment recCount.
+  if (gotLDIF)
+    recCount++;
+
+  rv = fileStream->Close();
+
+  if (recCount > 1)
+    ldifFields /= recCount;
+
+  // If the average field number >= 3 then it's a good ldif file.
+  if (ldifFields >= 3)
+  {
+    *_retval = PR_TRUE;
+  }
+
+  return rv;
 }
 
 void nsAbLDIFService::SplitCRLFAddressField(nsCString &inputAddress, nsCString &outputLine1, nsCString &outputLine2) const

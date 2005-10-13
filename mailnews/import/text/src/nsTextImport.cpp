@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mark Banner <mark@standard8.demon.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -506,18 +507,25 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 	}
 
     
-	nsIFileSpec	*	inFile;
-    if (NS_FAILED( pSource->GetFileSpec( &inFile))) {
+  nsIFileSpec * inFileSpec;
+  if (NS_FAILED( pSource->GetFileSpec( &inFileSpec))) {
 		ReportError( TEXTIMPORT_ADDRESS_BADSOURCEFILE, name, &error);
 		SetLogs( success, error, pErrorLog, pSuccessLog);		
     	return( NS_ERROR_FAILURE);
     }
 
   nsXPIDLCString pPath; 
-  inFile->GetNativePath(getter_Copies(pPath));
+  inFileSpec->GetNativePath(getter_Copies(pPath));
 	IMPORT_LOG1( "Importing address book: %s\n", pPath.get());
-	
-    nsresult rv = NS_OK;
+
+  inFileSpec->Release();
+
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsILocalFile> inFile;
+  rv = NS_NewNativeLocalFile(pPath, PR_TRUE, getter_AddRefs(inFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
 	PRBool	isLDIF = PR_FALSE;
 
     nsCOMPtr<nsIAbLDIFService> ldifService = do_GetService(NS_ABLDIFSERVICE_CONTRACTID, &rv);
@@ -530,7 +538,6 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
     }
 
 	if (NS_FAILED( rv)) {
-		inFile->Release();
 		ReportError( TEXTIMPORT_ADDRESS_CONVERTERROR, name, &error);
 		SetLogs( success, error, pErrorLog, pSuccessLog);
 		return( rv);
@@ -543,13 +550,10 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
           return NS_ERROR_FAILURE;
 	}
 	else {	
-		rv = m_text.ImportAddresses( &addrAbort, name.get(), inFile, pDestination, fieldMap, error, &m_bytesImported);
+    rv = m_text.ImportAddresses( &addrAbort, name.get(), inFileSpec, pDestination, fieldMap, error, &m_bytesImported);
 		SaveFieldMap( fieldMap);
 	}
 
-    inFile->Release();
-	    
-    
 	if (NS_SUCCEEDED( rv) && error.IsEmpty()) {
 		ReportSuccess( name, &success);
 	}
@@ -588,11 +592,18 @@ NS_IMETHODIMP ImportAddressImpl::GetNeedsFieldMap(nsIFileSpec *location, PRBool 
 	if (!exists || !isFile)
 		return( NS_ERROR_FAILURE);
 
+  nsXPIDLCString pPath; 
+  location->GetNativePath(getter_Copies(pPath));
+
+  nsCOMPtr<nsILocalFile> inFile;
+  rv = NS_NewNativeLocalFile(pPath, PR_TRUE, getter_AddRefs(inFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
 	PRBool	isLDIF = PR_FALSE;
     nsCOMPtr<nsIAbLDIFService> ldifService = do_GetService(NS_ABLDIFSERVICE_CONTRACTID, &rv);
 
     if (NS_SUCCEEDED(rv))
-      rv = ldifService->IsLDIFFile(location, &isLDIF);
+      rv = ldifService->IsLDIFFile(inFile, &isLDIF);
 
 	if (NS_FAILED( rv)) {
 		IMPORT_LOG0( "*** Error determining if file is of type LDIF\n");

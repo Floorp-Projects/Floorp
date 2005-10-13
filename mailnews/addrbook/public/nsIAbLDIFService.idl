@@ -37,10 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsISupports.idl"
 
-interface nsIFileSpec;
+interface nsIFile;
 interface nsIAddrDatabase;
 
-[scriptable, uuid(b594baf1-34d4-48ce-891c-66fc2e8bc59d)]    
+[scriptable, uuid(7afaa95f-0b1c-4d8a-a65f-bb5073ed6d39)]    
 interface nsIAbLDIFService : nsISupports {
 
   /**
@@ -52,7 +52,7 @@ interface nsIAbLDIFService : nsISupports {
    * @return      PR_TRUE if the file appears to be of LDIF type,
    *              PR_FALSE otherwise
    */
-  boolean isLDIFFile(in nsIFileSpec aSrc);
+  boolean isLDIFFile(in nsIFile aSrc);
 
   /**
    * Imports a file into the specified address book.
@@ -69,5 +69,5 @@ interface nsIAbLDIFService : nsISupports {
    *                              current position of reading from the file.
    *
    */
-  void importLDIFFile(in nsIAddrDatabase aDb, in nsIFileSpec aSrc, in boolean aStoreLocAsHome, inout unsigned long aProgress);
+  void importLDIFFile(in nsIAddrDatabase aDb, in nsIFile aSrc, in boolean aStoreLocAsHome, inout unsigned long aProgress);
 };

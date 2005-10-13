@@ -67,7 +67,6 @@
 #include "nsIPromptService.h"
 #include "nsIStringBundle.h"
 #include "nsIFile.h"
-#include "nsIFileSpec.h"
 
 #include "nsAddressBook.h" // for the map
 
