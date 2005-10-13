@@ -319,7 +319,7 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 {
     cairo_pattern_union_t pattern;
     cairo_box_t extents;
-    cairo_rectangle_t surface_rect;
+    cairo_rectangle_t surface_rect, target_rect;
     cairo_surface_t *surface;
     cairo_status_t status;
 
@@ -332,6 +332,13 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 
     if (clip->surface != NULL)
 	_cairo_rectangle_intersect (&surface_rect, &clip->surface_rect);
+
+    /* Intersect with the target surface rectangle so we don't use
+     * more memory and time than we need to. */
+
+    status = _cairo_surface_get_extents (target, &target_rect);
+    if (!status)
+	_cairo_rectangle_intersect (&surface_rect, &target_rect);
 
     surface = _cairo_surface_create_similar_solid (target,
 						   CAIRO_CONTENT_ALPHA,
