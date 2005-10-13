@@ -24,6 +24,8 @@
    -
    - Contributor(s):
    -      Jay Patel <jay@mozilla.org>
+   -      Gavin Sharp <gavin@gavinsharp.com>
+   -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
    - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -46,11 +48,15 @@
   <script type="application/x-javascript" src="chrome://reporter/content/reporterOverlay.js"/>
 
   <!-- Firefox -->
+  <broadcasterset id="mainBroadcasterSet">
+    <broadcaster id="reporterItemsBroadcaster" disabled="true"/>
+  </broadcasterset>
   <menupopup id="menu_HelpPopup">
     <menuitem id="menu_HelpPopup_reportertoolmenu" 
               label="&reporterMenu.title;..." 
               accesskey="&reporterMenu.accesskey;" 
               insertbefore="aboutSeparator"
+              observes="reporterItemsBroadcaster"
               oncommand="loadReporterWizard()"/>
   </menupopup>
   <toolbarpalette id="BrowserToolbarPalette">
@@ -58,13 +64,21 @@
                    oncommand="loadReporterWizard();" 
                    class="toolbarbutton-1" 
                    label="&reporterMenu.title;" 
+                   observes="reporterItemsBroadcaster"
                    tooltiptext="&reporterMenu.tooltip;"/>
   </toolbarpalette>
 
   <!-- SeaMonkey -->
+  <broadcasterset id="navBroadcasters">
+    <broadcaster id="reporterItemsBroadcaster" disabled="true"/>
+  </broadcasterset>
   <menupopup id="helpPopup">
     <menuseparator insertbefore="menu_HelpAboutSeparator"/>
-    <menuitem id="helpPopup_reportertoolmenu" label="&reporterMenu.title;..." accesskey="&reporterMenu.accesskey;" insertbefore="menu_HelpAboutSeparator"
-              oncommand="loadReporterWizard()"/>
+    <menuitem id="helpPopup_reportertoolmenu"
+              label="&reporterMenu.title;..."
+              accesskey="&reporterMenu.accesskey;"
+              insertbefore="menu_HelpAboutSeparator"
+              oncommand="loadReporterWizard()"
+              observes="reporterItemsBroadcaster"/>
   </menupopup>
 </overlay>
