@@ -4058,7 +4058,7 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          * TypeError.)  See 10.15.3.1.
          */
         if ((argc < 2 || JSVAL_IS_VOID(argv[1])) &&
-            JSVAL_IS_OBJECT(argv[0]) &&
+            !JSVAL_IS_PRIMITIVE(argv[0]) &&
             OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(argv[0])) == &js_RegExpClass) {
             *rval = argv[0];
             return JS_TRUE;
