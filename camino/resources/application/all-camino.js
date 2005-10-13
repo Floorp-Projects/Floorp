@@ -61,7 +61,6 @@ pref("chimera.log_js_to_console", false);
 pref("general.useragent.vendor", "Camino");
 pref("general.useragent.vendorSub", "1.0+");
 
-pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
 pref("browser.urlbar.autocomplete.enabled", true);
 

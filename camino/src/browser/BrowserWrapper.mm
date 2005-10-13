@@ -498,17 +498,14 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)onLocationChange:(NSString*)urlSpec isNewPage:(BOOL)newPage requestSucceeded:(BOOL)requestOK
 {
-  BOOL useSiteIcons = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
-  
   if (newPage)
   {
     NSString* faviconURI = [SiteIconProvider defaultFaviconLocationStringFromURI:urlSpec];
-    if (requestOK && useSiteIcons && [faviconURI length] > 0)
+    if (requestOK && [faviconURI length] > 0)
     {
       SiteIconProvider* faviconProvider = [SiteIconProvider sharedFavoriteIconProvider];
 
-      // if the favicon uri has changed, fire off favicon load. When it completes, our
-      // imageLoadedNotification selector gets called.
+      // if the favicon uri has changed, do the favicon load
       if (![faviconURI isEqualToString:mSiteIconURI])
       {
         // first get a cached image for this site, if we have one. we'll go ahead
@@ -522,13 +519,17 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
         // immediately update the site icon (to the cached one, or the default)
         [self updateSiteIconImage:cachedImage withURI:cachedImageURI loadError:NO];
 
-        // note that this is the only time we hit the network for site icons.
-        // note also that we may get a site icon from a link element later,
-        // which will replace any we get from the default location.
-        [faviconProvider fetchFavoriteIconForPage:urlSpec
-                                 withIconLocation:nil
-                                     allowNetwork:YES
-                                  notifyingClient:self];
+        if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL])
+        {
+          // note that this is the only time we hit the network for site icons.
+          // note also that we may get a site icon from a link element later,
+          // which will replace any we get from the default location.
+          // when this completes, our imageLoadedNotification: will get called.
+          [faviconProvider fetchFavoriteIconForPage:urlSpec
+                                   withIconLocation:nil
+                                       allowNetwork:YES
+                                    notifyingClient:self];
+        }
       }
     }
     else
@@ -925,7 +926,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 }
 
-// called when [[SiteIconProvider sharedFavoriteIconProvider] loadFavoriteIcon] completes
+// called when [[SiteIconProvider sharedFavoriteIconProvider] fetchFavoriteIconForPage:...] completes
 - (void)imageLoadedNotification:(NSNotification*)notification
 {
   NSDictionary* userInfo = [notification userInfo];

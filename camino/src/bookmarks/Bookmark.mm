@@ -209,11 +209,13 @@ NSString* const URLLoadSuccessKey     = @"url_bool";
     NSImage* siteIcon = [[SiteIconProvider sharedFavoriteIconProvider] favoriteIconForPage:[self url]];
     if (siteIcon)
       [self setIcon:siteIcon];
-    else
+    else if ([[BookmarkManager sharedBookmarkManager] showSiteIcons])
+    {
       [[SiteIconProvider sharedFavoriteIconProvider] fetchFavoriteIconForPage:[self url]
                                                              withIconLocation:nil
                                                                  allowNetwork:NO
                                                               notifyingClient:self];
+    }
   }
 }
 

@@ -72,6 +72,7 @@ extern NSString* const kBookmarksMenuFolderIdentifier;
   BookmarkFolder*                 mLastUsedFolder;
   
   BOOL                            mBookmarksLoaded;
+  BOOL                            mShowSiteIcons;
 }
 
 // Class Methods & shutdown stuff
@@ -82,6 +83,8 @@ extern NSString* const kBookmarksMenuFolderIdentifier;
 - (void)shutdown;
 
 - (BOOL)bookmarksLoaded;
+
+- (BOOL)showSiteIcons;
 
 + (NSArray*)serializableArrayWithBookmarkItems:(NSArray*)bmArray;
 + (NSArray*)bookmarkItemsFromSerializableArray:(NSArray*)bmArray;

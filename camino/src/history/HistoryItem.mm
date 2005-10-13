@@ -594,19 +594,16 @@ enum
   if (mSiteIcon)
     return mSiteIcon;
 
-  if ([mDataSource showSiteIcons])
+  NSImage* siteIcon = [[SiteIconProvider sharedFavoriteIconProvider] favoriteIconForPage:[self url]];
+  if (siteIcon)
   {
-    NSImage* siteIcon = [[SiteIconProvider sharedFavoriteIconProvider] favoriteIconForPage:[self url]];
-    if (siteIcon)
-    {
-      [self setSiteIcon:siteIcon];
-      return mSiteIcon;
-    }
+    [self setSiteIcon:siteIcon];
+    return mSiteIcon;
   }
 
   // firing off site icon loads here interferes with history submenu display
   // (maybe a slew of Carbon or other events causes events to get lost?)
-  if (inAllowLoad)
+  if (inAllowLoad && [mDataSource showSiteIcons])
   {
     if (!mAttemptedIconLoad)
     {

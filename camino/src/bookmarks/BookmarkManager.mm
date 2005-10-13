@@ -197,10 +197,11 @@ static NSString* const    kWriteBookmarkNotification = @"write_bms";
 {
   if ((self = [super init]))
   {
-    mBookmarkURLMap        = [[NSMutableDictionary alloc] initWithCapacity:50];
-    mBookmarkFaviconURLMap = [[NSMutableDictionary alloc] initWithCapacity:50];
+    mBookmarkURLMap         = [[NSMutableDictionary alloc] initWithCapacity:50];
+    mBookmarkFaviconURLMap  = [[NSMutableDictionary alloc] initWithCapacity:50];
 
-    mBookmarksLoaded = NO;
+    mBookmarksLoaded        = NO;
+    mShowSiteIcons          = [[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.favicons" withSuccess:NULL];
   }
   
   return self;
@@ -375,6 +376,10 @@ static NSString* const    kWriteBookmarkNotification = @"write_bms";
   return mBookmarksLoaded;
 }
 
+- (BOOL)showSiteIcons
+{
+  return mShowSiteIcons;
+}
 
 //
 // smart collections, as of now, are Rendezvous, Address Book, Top 10 List.
