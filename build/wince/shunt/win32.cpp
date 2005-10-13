@@ -766,6 +766,19 @@ MOZCE_SHUNT_API HRESULT mozce_CoLockObjectExternal(IUnknown* inUnk, BOOL inLock,
     return retval;
 }
 
+MOZCE_SHUNT_API HRESULT mozce_CoInitialize(LPVOID pvReserved)
+{
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("-- mozce_Conitialize called\n");
+#endif
+
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    return S_OK;
+
+}
+
 MOZCE_SHUNT_API LRESULT mozce_OleInitialize(LPVOID pvReserved)
 {
     MOZCE_PRECHECK
