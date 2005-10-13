@@ -2125,8 +2125,7 @@ nsChildView::Idle()
     mGeckoChild = inChild;
     mEventSink = inSink;
     mIsPluginView = NO;
-    mLastKeyEventWasSentToCocoa = NO;
-    mCurEvent = NULL;
+    mCurKeyEvent = nil;
 
     // See if hack code for enabling and disabling mouse move
     // events is necessary. Fixed by at least 10.2.8
@@ -2323,9 +2322,10 @@ nsChildView::Idle()
   if (mMouseEnterExitTag)
     [self removeTrackingRect:mMouseEnterExitTag];
 
-  mMouseEnterExitTag = [self addTrackingRect:[self bounds] owner:self
-                                    userData:nil assumeInside: [[self window]
-                                    acceptsMouseMovedEvents]];
+  if ([self window])
+    mMouseEnterExitTag = [self addTrackingRect:[self bounds] owner:self
+                                      userData:nil assumeInside: [[self window]
+                                      acceptsMouseMovedEvents]];
 }
 
 
@@ -2393,6 +2393,7 @@ nsChildView::Idle()
 {
   if (mGeckoChild && !newWindow)
     mGeckoChild->RemovedFromWindow();
+
   if (mMouseEnterExitTag)
     [self removeTrackingRect:mMouseEnterExitTag];
 
@@ -2404,9 +2405,10 @@ nsChildView::Idle()
   if (mGeckoChild && [self window])
     mGeckoChild->AddedToWindow();
 
-  mMouseEnterExitTag = [self addTrackingRect:[self bounds] owner:self
-                                    userData:nil assumeInside: [[self window]
-                                    acceptsMouseMovedEvents]];
+  if ([self window])
+    mMouseEnterExitTag = [self addTrackingRect:[self bounds] owner:self
+                                      userData:nil assumeInside: [[self window]
+                                      acceptsMouseMovedEvents]];
 
   [super viewDidMoveToWindow];
 }
@@ -3056,16 +3058,16 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     geckoEvent.time      = PR_IntervalNow();
     geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
     geckoEvent.isChar    = PR_TRUE;
-    geckoEvent.isShift   = ([mCurEvent modifierFlags] & NSShiftKeyMask) != 0;
+    geckoEvent.isShift   = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
     // don't set other modifiers from the current event, because here in
     // -insertText: they've already been taken into account in creating
     // the input string.
         
     // plugins need a native autokey event here, but only if this is a repeat event
     EventRecord macEvent;
-    if (mCurEvent && [mCurEvent isARepeat])
+    if (mCurKeyEvent && [mCurKeyEvent isARepeat])
     {
-      ConvertCocoaKeyEventToMacEvent(mCurEvent, macEvent);
+      ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
     }
 
@@ -3104,9 +3106,10 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 - (void) doCommandBySelector:(SEL)aSelector
 { 
 #if DEBUG_IME 
-  NSLog(@"**** in doCommandBySelector %s", aSelector);
+  NSLog(@"**** in doCommandBySelector %s (ignore %d)", aSelector, mIgnoreDoCommand);
 #endif
-  [super doCommandBySelector:aSelector];
+  if (!mIgnoreDoCommand)
+    [super doCommandBySelector:aSelector];
 }
 
 - (void) setMarkedText:(id)aString selectedRange:(NSRange)selRange
@@ -3297,9 +3300,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 {
   PRBool isKeyDownEventHandled = PR_TRUE;
   PRBool isKeyEventHandled = PR_FALSE;
-  BOOL isARepeat = [theEvent isARepeat];
+  BOOL  isARepeat = [theEvent isARepeat];
 
-  mCurEvent = theEvent;
+  mCurKeyEvent = theEvent;
   
   // if we have a dead-key event, we won't get a character
   // since we have no character, there isn't any point to generating
@@ -3307,14 +3310,14 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
   BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
   if (!isARepeat && nonDeadKeyPress)
   {
-    // Fire a key down.
+    // Fire a key down. We'll fire key presses via -insertText:
     nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
     geckoEvent.refPoint.x = geckoEvent.refPoint.y = 0;
     [self convertKeyEvent:theEvent
                   message:NS_KEY_DOWN
              toGeckoEvent:&geckoEvent];
 
-    //XXX Maybe we should only do this when there is a plugin present.
+    // XXX Maybe we should only do this when there is a plugin present.
     EventRecord macEvent;
     ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
     geckoEvent.nativeMsg = &macEvent;
@@ -3329,30 +3332,24 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 #if DEBUG
     printf("We are no longer the responder. Bailing.\n");
 #endif
-    mCurEvent = NULL;
+    mCurKeyEvent = nil;
     return;
   }
-  
+    
   if (nonDeadKeyPress)
   {
-    // Fire a key press.
     nsKeyEvent geckoEvent(PR_TRUE, 0, nsnull);
     geckoEvent.refPoint.x = geckoEvent.refPoint.y = 0;
 
     [self convertKeyEvent:theEvent
                   message:NS_KEY_PRESS
              toGeckoEvent:&geckoEvent];
-
-    // if it's text input, pass it on to interpretKeyEvents: so that it propagates to our
-    // insertText:.
-    // however, if the control key is down, dispatch the keydown here, so that we trap
-    // control-letter combinations before Cocoa tries to use them for emacs-style keybindings.
-    if (geckoEvent.isChar && !geckoEvent.isControl)
-    {
-      // we'll send the NS_KEY_PRESS event to gecko in [insertText:]
-      mLastKeyEventWasSentToCocoa = YES;  // force all events to go through inserttext
-    }
-    else
+    
+    // if this is a non-letter keypress, or the control key is down,
+    // dispatch the keydown to gecko, so that we trap delete,
+    // control-letter combinations etc before Cocoa tries to use
+    // them for keybindings.
+    if (!geckoEvent.isChar || geckoEvent.isControl)
     {
       // if this is a repeat non-char event (e.g. arrows), then set up
       // a mac event
@@ -3366,26 +3363,17 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
       
       // do we need to end composition if we got here by arrow key press or other?
       if (!mInComposition)
+      {
         isKeyEventHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
-      
-      // only force this through cocoa if this special-key was not handled by gecko
-      mLastKeyEventWasSentToCocoa = !isKeyEventHandled;
+        mIgnoreDoCommand = isKeyEventHandled;
+      }
     }
   }
 
-  if (!nonDeadKeyPress || mLastKeyEventWasSentToCocoa || (!isKeyDownEventHandled && !isKeyEventHandled))
-  {
-    // XXX hack: we need to have a flag so we call interpretKeyEvents even tho 
-    // we've inserted the character(s); if we don't, the system/Cocoa key event 
-    // handling code doesn't know that the letters were "composed" or entered
-    // for example, option-e, e would only send option-e event and we'd get
-    // the accent character with all subsequent key events since it didn't see
-    // the resulting keypress
-    mLastKeyEventWasSentToCocoa = !mLastKeyEventWasSentToCocoa;
-    [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
-  }
+  [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
 
-  mCurEvent = NULL;
+  mIgnoreDoCommand = NO;
+  mCurKeyEvent = nil;
 }
 
 - (void)keyUp:(NSEvent*)theEvent

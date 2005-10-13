@@ -87,14 +87,14 @@ class nsChildView;
 
   // Whether we're a plugin view.
   BOOL mIsPluginView;
-  BOOL mLastKeyEventWasSentToCocoa;
 
-  NSEvent* mCurEvent;   // only valid during a keyDown
+  NSEvent* mCurKeyEvent;   // only valid during a keyDown
   
   // needed for NSTextInput implementation
   NSRange mMarkedRange;
   NSRange mSelectedRange;
   BOOL mInComposition;
+  BOOL mIgnoreDoCommand;
 
   BOOL mToggleMouseMoveEventWatching;
 
