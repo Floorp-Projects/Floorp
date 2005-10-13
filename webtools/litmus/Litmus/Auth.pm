@@ -47,18 +47,28 @@ our @EXPORT = qw();
 my $logincookiename = $Litmus::Config::user_cookiename;
 
 sub setCookie {
-    my $user = shift;
+  my $user = shift;
+  my $expires = shift;
+
+  my $user_id = 0;
+  if ($user) {
+    $user_id = $user->userid();
+  }
+  
+  if (!$expires or $expires eq '') {
+    $expires = '+3d';
+  }
     
-    my $c = new CGI;
-    
-    my $cookie = $c->cookie( 
-        -name   => $logincookiename,
-        -value  => $user->userid(),
-        -domain => $main::ENV{"HTTP_HOST"},
-        -expires=>'+3d',
-    );
-    
-    return $cookie;
+  my $c = new CGI;
+  
+  my $cookie = $c->cookie( 
+                          -name    => $logincookiename,
+                          -value   => $user_id,
+                          -domain  => $main::ENV{"HTTP_HOST"},
+                          -expires => $expires,
+                         );
+  
+  return $cookie;
 }
 
 sub getCookie() {
@@ -95,4 +105,19 @@ sub canEdit($) {
     return $userobj->istrusted();
 }
 
+#########################################################################
+# logout()
+#
+# Unset the user's cookie, and return them to the main index.
+#########################################################################
+sub logout() {
+  my $c = new CGI;
+  
+  my $cookie = Litmus::Auth::setCookie(undef,'-1d');
+  return $cookie;
+}
+
+
 1;
+
+

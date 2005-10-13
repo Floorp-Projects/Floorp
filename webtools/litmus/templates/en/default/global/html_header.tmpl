@@ -5,6 +5,10 @@
     <meta name="KEYWORDS" content="Main Page" />
     <meta name="robots" content="index,follow" />
 
+    [% IF redirect_home %]
+    <meta http-equiv="refresh" content="5;URL=/litmus_staging/coop">
+    [% END %]
+
     <link rel="shortcut icon" href="favicon.ico" />
     <link rel="stylesheet" type="text/css" media="all" href="css/litmus.css" />
 

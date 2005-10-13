@@ -69,6 +69,17 @@ Referenced Bugs
 
 <table class="single-result">
 <tr class="odd">
+[% IF defaultemail %]
+<td>
+Add bug references: <input name="new_bugs" type="text" value=""> (bug #,bug #,...) <input type="submit" value="Add Bug References">
+</td>
+[% ELSE %]
+<td colspan="2" class="no-results">
+You must log in before you can add bug references.
+</td>
+[% END %]
+</tr>
+<tr class="even">
 <td>
 [% IF result.bugs %]
 Bug IDs: 
@@ -80,18 +91,6 @@ No bugs on file.
 [% END %]
 </td>
 </tr>
-[% IF defaultemail %]
-<tr class="even">
-<td>
-Add bug references: <input name="new_bugs" type="text" value=""> (bug #,bug #,...) <input type="submit" value="Add Bug References">
-</td>
-</tr>
-[% ELSE %]
-<td colspan="2" class="no-results">
-You must log in before you can add bug references.
-</td>
-</tr>
-[% END %]
 </table>
 
   </div> <!--END section-content-->
@@ -141,7 +140,7 @@ Anonymous
 </tr>
 [% ELSE %]
 <tr class="even">
-<td class="no-results" colspan="2">
+<td colspan="2">
 No comments.
 </td>
 </tr>
