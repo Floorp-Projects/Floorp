@@ -27,7 +27,7 @@
 
 [% PROCESS global/variables.none.tmpl %]
 
-[% curpanel = 0 %]
+[% curpanel = -1 %]
 [% panels = panels.sort('sortkey') %]
 
 [% FOREACH panel = panels %]
@@ -41,9 +41,20 @@
 
 [% current_panel = panels.$curpanel %]
 
-[%# We cannot call header.html.tmpl earlier as we have to know which panel is active first %]
+[%# We cannot call header.html.tmpl earlier as we have to know
+    which panel is active first, in order to get its title %]
+
+[% title = BLOCK %]
+  [% IF curpanel == -1 %]
+    [% terms.Bugzilla FILTER html %] Parameters: Index
+  [% ELSE %]
+    [% terms.Bugzilla FILTER html %] Configuration:
+    [%+ current_panel.title FILTER html %]
+  [% END %]
+[% END %]
+
 [% PROCESS global/header.html.tmpl
-   title = "$terms.Bugzilla Configuration: $current_panel.title"
+   title = title
    message = message
    style_urls = ['skins/standard/params.css']
 %]
@@ -53,6 +64,11 @@
     <td>
       [%# NAVIGATION BAR %]
       <table id="menu">
+        <tr>
+          <td class="index">
+            <a href="editparams.cgi?section=index" title="Show all parameters">Index</a>
+          </td>
+        </tr>
         [% FOREACH panel = panels %]
           <tr>
             [% IF panel.current %]
@@ -70,19 +86,23 @@
       </table>
     </td>
     <td>
-      <p>
-        This lets you edit the basic operating parameters of [% terms.Bugzilla %].
-        Be careful!<br>
-        Any item you check "Reset" on will get reset to its default value.
-      </p>
-      [%# CONTENT PANEL %]
-      <form method="post" action="editparams.cgi">
-        [% PROCESS admin/params/common.html.tmpl panel = current_panel %]
-        <input type="hidden" name="section" value="[% current_panel.name FILTER html %]">
-        <input type="hidden" name="action" value="save">
-        <input type="reset" value="Reset form">
-        <input type="submit" name="action" value="Save Changes">
-      </form>
+      [% IF curpanel == -1 %]
+        [% PROCESS admin/params/index.html.tmpl panels = panels %]
+      [% ELSE %]
+        <p>
+          This lets you edit the basic operating parameters of [% terms.Bugzilla %].
+          Be careful!<br>
+          Any item you check "Reset" on will get reset to its default value.
+        </p>
+        [%# CONTENT PANEL %]
+        <form method="post" action="editparams.cgi">
+          [% PROCESS admin/params/common.html.tmpl panel = current_panel %]
+          <input type="hidden" name="section" value="[% current_panel.name FILTER html %]">
+          <input type="hidden" name="action" value="save">
+          <input type="reset" value="Reset form">
+          <input type="submit" name="action" value="Save Changes">
+        </form>
+      [% END %]
     </td>
   </tr>
 </table>

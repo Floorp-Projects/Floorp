@@ -65,7 +65,7 @@ foreach my $panel (@parampanels) {
 
 $vars->{panels} = \@panels;
 
-if ($action eq "save") {
+if ($action eq 'save' && $current_module) {
     my @changes = ();
     my @module_param_list = "Bugzilla::Config::${current_module}"->get_param_list();
 

@@ -35,6 +35,11 @@ td.selected_section {
   background-color: white;
 }
 
+td.index {
+  color: black;
+  background-color: #edf;
+}
+
 dt {
   font-weight: bold;
 }
