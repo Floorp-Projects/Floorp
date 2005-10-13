@@ -70,6 +70,32 @@ function ltnOnLoad(event)
     // nuke the onload, or we get called every time there's
     // any load that occurs
     document.removeEventListener("load", ltnOnLoad, true);
+
+    // Start observing preferences
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
+    var rootPrefBranch = prefService.getBranch("");
+    ltnPrefObserver.rootPrefBranch = rootPrefBranch;
+    var pb2 = rootPrefBranch.QueryInterface(
+        Components.interfaces.nsIPrefBranch2);
+    pb2.addObserver("calendar.", ltnPrefObserver, false);
+    ltnPrefObserver.observe(null, null, "");
+
+    // Add an unload function to the window so we don't leak the pref observer
+    document.getElementById("messengerWindow")
+            .addEventListener("unload", ltnFinish, false);
+
+    // Set up the multiday-view to start/end at the correct hours, since this
+    // doesn't persist between startups.  (Fails if pref undefined)
+    try {
+        var sHour = rootPrefBranch.getIntPref("calendar.event.defaultstarthour");
+        var eHour = rootPrefBranch.getIntPref("calendar.event.defaultendhour");
+        document.getElementById("calendar-multiday-view")
+                .setStartEndMinutes(sHour*60, eHour*60);
+    }
+    catch(ex) {}
+
+    return;
 }
 
 function currentView()
@@ -173,6 +199,36 @@ function ltnPublishCalendar()
     currentCalendar = ltnSelectedCalendar();
 
     openDialog("chrome://calendar/content/calendar-publish-dialog.xul", "caPublishEvents", "chrome,titlebar,modal", currentCalendar);
+}
+
+function ltnFinish() {
+    var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefService);
+    // Remove the pref observer
+    var pb2 = prefService.getBranch("");
+    pb2 = pb2.QueryInterface(Components.interfaces.nsIPrefBranch2);
+    pb2.removeObserver("calendar.", ltnPrefObserver);
+    return;
+}
+
+// Preference observer, watches for changes to any 'calendar.' pref
+var ltnPrefObserver =
+{
+   rootPrefBranch: null,
+   observe: function(aSubject, aTopic, aPrefName)
+   {
+       switch (aPrefName) {
+           case "calendar.event.defaultstarthour":
+           case "calendar.event.defaultendhour":
+               var sHour = this.rootPrefBranch.getIntPref
+                               ("calendar.event.defaultstarthour");
+               var eHour = this.rootPrefBranch.getIntPref
+                                ("calendar.event.defaultendhour");
+               document.getElementById("calendar-multiday-view")
+                       .setStartEndMinutes(sHour*60, eHour*60);
+               break;
+       }
+   }
 }
 
 document.getElementById("displayDeck").
