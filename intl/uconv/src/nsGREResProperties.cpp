@@ -36,9 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGREResProperties.h"
+#include "nsILocalFile.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
-#include "nsILocalFile.h"
 #include "nsNetUtil.h"
 
 nsGREResProperties::nsGREResProperties(const nsACString& aFile)
