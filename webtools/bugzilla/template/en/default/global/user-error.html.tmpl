@@ -128,6 +128,8 @@
       access
     [% ELSIF action == "add" %]
       add new
+    [% ELSIF action == "begin" %]
+      begin
     [% ELSIF action == "modify" %]
       modify
     [% ELSIF action == "delete" %]
@@ -156,6 +158,8 @@
       components
     [% ELSIF object == "flagtypes" %]
       flag types
+    [% ELSIF object == "group_access" %]
+      group access
     [% ELSIF object == "groups" %]
       groups
     [% ELSIF object == "keywords" %]
@@ -174,6 +178,8 @@
       whine reports
     [% ELSIF object == "sanity_check" %]
       a sanity check
+    [% ELSIF object == "sudo_session" %]
+      an sudo session
     [% ELSIF object == "timetracking_summaries" %]
       time-tracking summary reports
     [% ELSIF object == "user" %]
@@ -1110,6 +1116,15 @@
         (<a href="showdependencytree.cgi?id=[% bug.bug_id FILTER none %]">Dependency Tree</a>)<br>
       [% END %]
     [% END %]
+
+  [% ELSIF error == "sudo_in_progress" %]
+    [% title = "Session In Progress" %]
+    An sudo session (impersonating [% target FILTER html %]) is in progress.  
+    End that session (using the link in the footer) before starting a new one.
+
+  [% ELSIF error == "sudo_protected" %]
+    [% title = "User Protected" %]
+    The user [% login FILTER html %] may not be impersonated by sudoers.
 
   [% ELSIF error == "too_many_votes_for_bug" %]
     [% title = "Illegal Vote" %]

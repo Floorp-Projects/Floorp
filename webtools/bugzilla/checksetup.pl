@@ -33,6 +33,7 @@
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Joel Peshkin <bugreport@peshkin.net>
 #                 Lance Larsh <lance.larsh@oracle.com>
+#                 A. Karl Kornel <karl@kornel.name>
 #
 #
 #
@@ -4129,6 +4130,27 @@ while (my ($uid, $login, $gid, $rexp, $present) = $sth->fetchrow_array()) {
     } else {
         $sth_del->execute($uid, $gid) if $present;
     }
+}
+
+# 2005-10-10 karl@kornel.name -- Bug 204498
+if (!GroupDoesExist('bz_sudoers')) {
+    my $sudoers_group = AddGroup('bz_sudoers',
+                                 'Can perform actions as other users');
+    my $sudo_protect_group = AddGroup('bz_sudo_protect',
+                                      'Can not be impersonated by other users');
+    my ($admin_group) = $dbh->selectrow_array('SELECT id FROM groups
+                                               WHERE name = ?', undef, 'admin');
+    
+    # Admins should be given sudo access
+    # Everyone in sudo should be in sudo_protect
+    # Admins can grant membership in both groups
+    my $sth = $dbh->prepare('INSERT INTO group_group_map 
+                             (member_id, grantor_id, grant_type) 
+                             VALUES (?, ?, ?)');
+    $sth->execute($admin_group, $sudoers_group, GROUP_MEMBERSHIP);
+    $sth->execute($sudoers_group, $sudo_protect_group, GROUP_MEMBERSHIP);
+    $sth->execute($admin_group, $sudoers_group, GROUP_BLESS);
+    $sth->execute($admin_group, $sudo_protect_group, GROUP_BLESS);
 }
 
 ###########################################################################

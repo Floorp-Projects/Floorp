@@ -62,7 +62,13 @@
             [% ELSE %]
               | Logged&nbsp;in&nbsp;as&nbsp;
             [% END %]
-            [% user.login FILTER html %]
+            [% IF sudoer %]
+              [% sudoer.login FILTER html %] (<b>impersonating 
+              [% user.login FILTER html %]</b> 
+              <a href="relogin.cgi?action=end-sudo">end session</a>)
+            [% ELSE %]
+              [% user.login FILTER html %]
+            [% END %]
         [% ELSE %]
             [% IF Param('createemailregexp') %]
               | <a href="createaccount.cgi">New&nbsp;Account</a>

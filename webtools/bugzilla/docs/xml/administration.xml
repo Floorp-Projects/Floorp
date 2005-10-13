@@ -520,6 +520,43 @@
           </listitem>
         </itemizedlist>
       </section>
+      
+      <section id="impersonatingusers">
+        <title>Impersonating Users</title>
+        
+        <para>
+        There may be times when an administrator would like to do something as
+        another user.  The <command>sudo</command> feature may be used to do 
+        this.
+        </para>
+        
+        <note>
+          <para>
+          To use the sudo feature, you must be in the
+          <emphasis>bz_sudoers</emphasis> group.  By default, all
+          administrators are in this group.</para>
+        </note>
+        
+        <para>
+        If you have access to use this feature, you should notice a link
+        next to your login name (in the footer) titled "sudo".  Click on the 
+        link.  This will take you to a page where you will see a description of 
+        the feature and instructions on how to use it.  After reading the text, 
+        simply enter the login of the user you would like to impersonate and 
+        press the button.</para>
+        
+        <para>
+        As long as you are using this feature, everything you do will be done 
+        as if you were logged in as the user you are impersonating.</para>
+        
+        <warning>
+          <para>
+          The user you are impersonating will not be told about what you are 
+          doing.  If you do anything that results in mail being sent, that 
+          mail will appear to be from the user you are impersonating.  You 
+          should be extremely careful while using this feature.</para>
+        </warning>
+      </section>
     </section>
   </section>
 

@@ -497,7 +497,12 @@ sub create {
             'lsearch' => \&Bugzilla::Util::lsearch,
 
             # Currently logged in user, if any
+            # If an sudo session is in progress, this is the user we're faking
             'user' => sub { return Bugzilla->user; },
+
+            # If an sudo session is in progress, this is the user who
+            # started the session.
+            'sudoer' => sub { return Bugzilla->sudoer; },
 
             # UserInGroup. Deprecated - use the user.* functions instead
             'UserInGroup' => \&Bugzilla::User::UserInGroup,

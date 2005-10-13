@@ -51,6 +51,7 @@ sub _throw_error {
         $mesg .= "$name $error ";
         $mesg .= "$ENV{REMOTE_ADDR} " if $ENV{REMOTE_ADDR};
         $mesg .= Bugzilla->user->login;
+        $mesg .= (' actually ' . Bugzilla->sudoer->login) if Bugzilla->sudoer;
         $mesg .= "\n";
         my %params = Bugzilla->cgi->Vars;
         $Data::Dumper::Useqq = 1;

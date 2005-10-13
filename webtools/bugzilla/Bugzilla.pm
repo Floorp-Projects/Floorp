@@ -19,7 +19,7 @@
 #
 # Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Erik Stambaugh <erik@dasbistro.com>
-#
+#                 A. Karl Kornel <karl@kornel.name>
 
 package Bugzilla;
 
@@ -132,9 +132,60 @@ sub user {
     return $_user;
 }
 
+my $_sudoer;
+sub sudoer {
+    my $class = shift;    
+    return $_sudoer;
+}
+
+sub sudo_request {
+    my $class = shift;
+    my $new_user = shift;
+    my $new_sudoer = shift;
+
+    $_user = $new_user;
+    $_sudoer = $new_sudoer;
+    $::userid = $new_user->id;
+
+    # NOTE: If you want to log the start of an sudo session, do it here.
+
+    return;
+}
+
 sub login {
     my ($class, $type) = @_;
-    $_user = Bugzilla::Auth::Login::WWW->login($type);
+    my $authenticated_user = Bugzilla::Auth::Login::WWW->login($type);
+    
+    # At this point, we now know if a real person is logged in.
+    # We must now check to see if an sudo session is in progress.
+    # For a session to be in progress, the following must be true:
+    # 1: There must be a logged in user
+    # 2: That user must be in the 'bz_sudoer' group
+    # 3: There must be a valid value in the 'sudo' cookie
+    # 4: A Bugzilla::User object must exist for the given cookie value
+    # 5: That user must NOT be in the 'bz_sudo_protect' group
+    my $sudo_cookie = $class->cgi->cookie('sudo');
+    detaint_natural($sudo_cookie) if defined($sudo_cookie);
+    my $sudo_target;
+    $sudo_target = new Bugzilla::User($sudo_cookie) if defined($sudo_cookie);
+    if (defined($authenticated_user)                 &&
+        $authenticated_user->in_group('bz_sudoers')  &&
+        defined($sudo_cookie)                        &&
+        defined($sudo_target)                        &&
+        !($sudo_target->in_group('bz_sudo_protect'))
+       )
+    {
+        $_user = $sudo_target;
+        $_sudoer = $authenticated_user;
+        $::userid = $sudo_target->id;
+
+        # NOTE: If you want to do any special logging, do it here.
+    }
+    else {
+        $_user = $authenticated_user;
+    }
+    
+    return $_user;
 }
 
 sub logout {
@@ -164,6 +215,7 @@ sub logout_user_by_id {
 # hack that invalidates credentials for a single request
 sub logout_request {
     undef $_user;
+    undef $_sudoer;
     # XXX clean this up eventually
     $::userid = 0;
     # We can't delete from $cgi->cookie, so logincookie data will remain
@@ -332,8 +384,24 @@ method for those scripts/templates which are only use via CGI, though.
 
 =item C<user>
 
-The current C<Bugzilla::User>. C<undef> if there is no currently logged in user
-or if the login code has not yet been run.
+C<undef> if there is no currently logged in user or if the login code has not
+yet been run.  If an sudo session is in progress, the C<Bugzilla::User>
+corresponding to the person who is being impersonated.  If no session is in
+progress, the current C<Bugzilla::User>.
+
+=item C<sudoer>
+
+C<undef> if there is no currently logged in user, the currently logged in user
+is not in the I<sudoer> group, or there is no session in progress.  If an sudo
+session is in progress, returns the C<Bugzilla::User> object corresponding to
+the person who logged in and initiated the session.  If no session is in
+progress, returns the C<Bugzilla::User> object corresponding to the currently
+logged in user.
+
+=item C<sudo_request>
+This begins an sudo session for the current request.  It is meant to be 
+used when a session has just started.  For normal use, sudo access should 
+normally be set at login time.
 
 =item C<login>
 

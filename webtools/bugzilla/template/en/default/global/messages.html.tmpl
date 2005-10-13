@@ -237,6 +237,17 @@
     set to zero automatically as part of marking this [% terms.bug %]
     as either RESOLVED or CLOSED.
 
+  [% ELSIF message_tag == "sudo_started" %]
+    [% title = "Sudo session started" %]
+      The sudo session has been started.  For the next 6 hours, or until you 
+      end the session, everything you do you do as the user you are 
+      impersonating ([% target FILTER html %]).
+  
+  [% ELSIF message_tag == "sudo_ended" %]
+    [% title = "Sudo session complete" %]
+      The sudo session has been ended.  From this point forward, everything you 
+      do you do as yourself.
+
   [% ELSIF message_tag == "series_created" %]
     [% title = "Series Created" %]
       The series <em>[% series.category FILTER html %] /
