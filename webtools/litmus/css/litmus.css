@@ -322,6 +322,7 @@ div.pagetools {
         background: #dddddd;
         border: solid #bbbbbb 1px;
 	margin: 0 0 16px;
+	overflow: auto;
 }
 div.pagetools div {
 	padding: 8px;
@@ -332,6 +333,10 @@ div.pagetools h3 {
 div.pagetools ul {
         list-style: none;
 }
+div.pagetools input span.email {
+	font-size: 0.8em;
+}
+
 
 /* 9) Breadcrumbs**************************************************************** */
 

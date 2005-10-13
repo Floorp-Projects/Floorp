@@ -69,11 +69,17 @@ Top Testers
 <td class="header">Tester</td>
 <td class="header"># Tests Run</td>
 </tr>
+[% IF toptesters %]
 [% FOREACH curtester = toptesters %]
 <tr [% IF not (loop.count % 2) %]class="even"[% ELSE %]class="odd"[% END %]>
     <td align="center">[% loop.count %]</td>
     <td align="center">[% IF curtester.email %]<a href="mailto:[% curtester.email FILTER html %]">[% curtester.email FILTER html %]</a>[% ELSE %]Anonymous[% END %]</td>
     <td align="center">[% curtester.numtests FILTER html %]</td>
+</tr>
+[% END %]
+[% ELSE %]
+<tr class="odd">
+<td class="no-results" colspan="3">No test results have been submitted.</td>
 </tr>
 [% END %]
 </table>

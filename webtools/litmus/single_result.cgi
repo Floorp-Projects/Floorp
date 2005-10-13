@@ -44,36 +44,40 @@ print $c->header();
 if ($c->param && $c->param('id')) {
   
   my $time = localtime;
-  my $user = Litmus::Auth::getCookie()->userid();
+  my $cookie =  Litmus::Auth::getCookie();
+  my $user;
+  if ($cookie) {
+    $user = $cookie->userid();
 
-  if ($user and 
-      $c->param('new_bugs') and
-      $c->param('new_bugs') ne '') {
-    my @new_bugs = split(/,/,$c->param('new_bugs'));
-    foreach my $new_bug (@new_bugs) {
-      if (!Litmus::DB::Resultbug->search(test_result_id =>$c->param('id'),
-                                         bug_id => $new_bug)) {
-        my $bug = Litmus::DB::Resultbug->create({
+    if ($user and 
+        $c->param('new_bugs') and
+        $c->param('new_bugs') ne '') {
+      my @new_bugs = split(/,/,$c->param('new_bugs'));
+      foreach my $new_bug (@new_bugs) {
+        if (!Litmus::DB::Resultbug->search(test_result_id =>$c->param('id'),
+                                           bug_id => $new_bug)) {
+          my $bug = Litmus::DB::Resultbug->create({
+                                                   test_result_id => $c->param('id'),
+                                                   last_updated => $time,
+                                                   submission_time => $time,
+                                                   user => $user,
+                                                   bug_id => $new_bug,
+                                                  });
+        }
+      }
+    } 
+
+    if ($user and
+        $c->param('new_comment') and
+        $c->param('new_comment') ne '') {
+      my $comment = Litmus::DB::Comment->create({
                                                  test_result_id => $c->param('id'),
                                                  last_updated => $time,
                                                  submission_time => $time,
                                                  user => $user,
-                                                 bug_id => $new_bug,
-                                                });
-      }
+                                                 comment => $c->param('new_comment'),
+                                                });    
     }
-  } 
-
-  if ($user and
-      $c->param('new_comment') and
-      $c->param('new_comment') ne '') {
-    my $comment = Litmus::DB::Comment->create({
-                                               test_result_id => $c->param('id'),
-                                               last_updated => $time,
-                                               submission_time => $time,
-                                               user => $user,
-                                               comment => $c->param('new_comment'),
-                                              });    
   }
 
   my $result = Litmus::DB::Testresult->retrieve($c->param('id'));

@@ -2,12 +2,12 @@
     <div>
     [% IF defaultemail %]
 	<h3>Welcome!</h3>
-	<p>[% defaultemail.email %]</p>
+	<span class="email"><abbr title="[% defaultemail.email %]">[% defaultemail.email.replace('\@.*','') %]</abbr></span>
 	<p align="right"><a href="#" onclick="alert('Not Linked'); return false;">Log out</a></p>
     [% ELSE %]
 	<h3>Log in</h3>
-	<p>Username:<br/><input type="text" name="username" value=""></p>
-        <p>Password:<br/><input type="password" name="password" value=""></p>
+	<p>Username:<br/><input type="text" name="username" value="" size="10"></p>
+        <p>Password:<br/><input type="password" name="password" value="" size="10"></p>
 	<p class="submit"><input type="submit" value="Log in"></p>
     [% END %]
     </div>

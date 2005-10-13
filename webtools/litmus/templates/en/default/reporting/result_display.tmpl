@@ -80,11 +80,18 @@ No bugs on file.
 [% END %]
 </td>
 </tr>
+[% IF defaultemail %]
 <tr class="even">
 <td>
 Add bug references: <input name="new_bugs" type="text" value=""> (bug #,bug #,...) <input type="submit" value="Add Bug References">
 </td>
 </tr>
+[% ELSE %]
+<td colspan="2" class="no-results">
+You must log in before you can add bug references.
+</td>
+</tr>
+[% END %]
 </table>
 
   </div> <!--END section-content-->
