@@ -308,7 +308,7 @@ function eventHandlerMenu(e) {
     document.getElementById("menu-button").focus(); // forcing state back to the menu. 
   }
 
-  if(e.charCode==513) {
+  if(e.keyCode==134 || e.keyCode==70) /*SoftKey1 or HWKey1*/ {
   	document.getElementById("menu-button").focus();
     e.preventBubble();
   } 
