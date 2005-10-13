@@ -2186,7 +2186,9 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
     if (::IsIconic(toplevelWnd))
       ::OpenIcon(toplevelWnd);
     ::SetFocus(mWnd);
+#ifdef WINCE
     MapHardwareButtons(mWnd);
+#endif
   }
   return NS_OK;
 }
