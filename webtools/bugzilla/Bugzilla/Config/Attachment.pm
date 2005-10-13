@@ -29,39 +29,51 @@
 #                 Frédéric Buclin <LpSolit@gmail.com>
 #
 
-package Bugzilla::Config::Admin;
+package Bugzilla::Config::Attachment;
 
 use strict;
 
 use Bugzilla::Config::Common;
 
-$Bugzilla::Config::Admin::sortkey = "01";
+$Bugzilla::Config::Attachment::sortkey = "025";
 
 sub get_param_list {
   my $class = shift;
   my @param_list = (
   {
-   name => 'allowbugdeletion',
-   type => 'b',
-   default => 0
+   name => 'maxpatchsize',
+   type => 't',
+   default => '1000',
+   checker => \&check_numeric
   },
 
   {
-   name => 'allowemailchange',
-   type => 'b',
-   default => 0
+   name => 'maxattachmentsize',
+   type => 't',
+   default => '1000',
+   checker => \&check_numeric
   },
 
-  {
-   name => 'allowuserdeletion',
-   type => 'b',
-   default => 0
-  },
+  # The maximum size (in bytes) for patches and non-patch attachments.
+  # The default limit is 1000KB, which is 24KB less than mysql's default
+  # maximum packet size (which determines how much data can be sent in a
+  # single mysql packet and thus how much data can be inserted into the
+  # database) to provide breathing space for the data in other fields of
+  # the attachment record as well as any mysql packet overhead (I don't
+  # know of any, but I suspect there may be some.)
 
   {
-   name => 'supportwatchers',
+   name => 'maxlocalattachment',
+   type => 't',
+   default => '0',
+   checker => \&check_numeric
+  },
+  
+  {
+   name => 'convert_uncompressed_images',
    type => 'b',
-   default => 0
+   default => 0,
+   checker => \&check_image_converter
   } );
   return @param_list;
 }

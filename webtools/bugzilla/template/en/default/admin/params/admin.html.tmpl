@@ -21,7 +21,7 @@
   #%]
 [%
    title = "Administrative Policies"
-   desc = "Set up account and attachment policies"
+   desc = "Set up account policies"
 %]
 
 [% param_descs = {
@@ -42,25 +42,5 @@
 
   supportwatchers => "Support one user watching (ie getting copies of all related " _
                      "email about) another's ${terms.bugs}. Useful for people going on " _
-                     "vacation, and QA folks watching particular developers' ${terms.bugs}.",
-
-  maxpatchsize => "The maximum size (in kilobytes) of patches. $terms.Bugzilla will not " _
-                  "accept patches greater than this number of kilobytes in size. " _
-                  "To accept patches of any size (subject to the limitations of " _
-                  "your server software), set this value to zero.",
-
-  maxattachmentsize => "The maximum size (in kilobytes) of non-patch attachments. " _
-                       "$terms.Bugzilla will not accept attachments greater than this number " _
-                       "of kilobytes in size. To accept attachments of any size " _
-                       "(subject to the limitations of your server software), set this " _
-                       "value to zero.",
-
-  maxlocalattachment => "The maximum size (in megabytes) of attachments identified by " _
-                        "the user as 'Big Files' to be stored locally on the webserver. " _
-                        "If set to zero, attachments will never be kept on the local " _
-                        "filesystem.",
-
-  convert_uncompressed_images => "If this option is on, attachments with content type image/bmp " _
-                                 "will be converted to image/png and compressed before uploading to " _
-                                 "the database to conserve disk space." }
+                     "vacation, and QA folks watching particular developers' ${terms.bugs}." }
 %]
