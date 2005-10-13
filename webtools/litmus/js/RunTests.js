@@ -48,7 +48,7 @@ function divCHANGE(divNAME,divVIS) {
     try {
       document.getElementById(divNAME[i]).style.display=divVIS;
     } catch(e) {
-        alert(divNAME[i]+ ": no properties");
+      // alert(divNAME[i]+ ": no properties");	
     }
   }
 }
