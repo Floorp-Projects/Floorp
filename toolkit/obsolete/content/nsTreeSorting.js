@@ -45,7 +45,7 @@
 function RefreshSort()
 {
   var current_column = find_sort_column();
-  SortColumn(current_column);
+  SortColumnElement(current_column);
 }
 
 // set the sort direction on the currently sorted column
@@ -59,10 +59,16 @@ function SortInNewDirection(direction)
   else if (direction == "natural")
     direction = "descending";
   current_column.setAttribute("sortDirection", direction);
-  SortColumn(current_column);
+  SortColumnElement(current_column);
 }
 
-function SortColumn(column)
+function SortColumn(columnId)
+{
+  var column = document.getElementById(columnId);
+  SortColumnElement(column);
+}
+
+function SortColumnElement(column)
 {
   var tree = column.parentNode.parentNode;
   var col = tree.columns.getColumnFor(column);
