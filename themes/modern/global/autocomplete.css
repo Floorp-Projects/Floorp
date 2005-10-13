@@ -77,7 +77,7 @@ textbox[type="autocomplete"] {
 }
 
 .autocomplete-history-popup {
-  max-height: 180px;
+  max-height: 25em;
 }
 
 /* ::::: tree ::::: */
