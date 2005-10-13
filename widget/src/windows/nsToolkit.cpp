@@ -512,10 +512,8 @@ void RunPump(void* arg)
     ::PR_EnterMonitor(info->monitor);
 
     // Start Active Input Method Manager on this thread
-#ifndef WINCE
     if(nsToolkit::gAIMMApp)
         nsToolkit::gAIMMApp->Activate(TRUE);
-#endif
 
     // do registration and creation in this thread
     info->toolkit->CreateInternalWindow(PR_GetCurrentThread());
@@ -545,7 +543,6 @@ nsToolkit::nsToolkit()
     mGuiThread  = NULL;
     mDispatchWnd = 0;
 
-#ifndef WINCE
     //
     // Initialize COM since create Active Input Method Manager object
     //
@@ -556,7 +553,6 @@ nsToolkit::nsToolkit()
       ::CoCreateInstance(CLSID_CActiveIMM, NULL, CLSCTX_INPROC_SERVER, IID_IActiveIMMApp, (void**) &nsToolkit::gAIMMApp);
 
     nsToolkit::gAIMMCount++;
-#endif //#ifndef WINCE
 
 #if defined(MOZ_STATIC_COMPONENT_LIBS) || defined (WINCE)
     nsToolkit::Startup(GetModuleHandle(NULL));
@@ -573,7 +569,6 @@ nsToolkit::~nsToolkit()
 {
     NS_PRECONDITION(::IsWindow(mDispatchWnd), "Invalid window handle");
 
-#ifndef WINCE
     nsToolkit::gAIMMCount--;
 
     if (!nsToolkit::gAIMMCount) {
@@ -584,7 +579,6 @@ nsToolkit::~nsToolkit()
         }
         ::CoUninitialize();
     }
-#endif
 
     // Destroy the Dispatch Window
     ::DestroyWindow(mDispatchWnd);
@@ -636,7 +630,7 @@ nsToolkit::Startup(HMODULE hModule)
     }
 
     nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT);
-    if (nsToolkit::mIsNT)  
+    if (nsToolkit::mIsNT)
 #endif // #ifndef WINCE
 
     {
@@ -697,6 +691,11 @@ nsToolkit::Startup(HMODULE hModule)
     wc.lpszMenuName     = NULL;
     wc.lpszClassName    = L"nsToolkitClass";
     VERIFY(nsToolkit::mRegisterClass(&wc));
+
+#ifdef WINCE
+    nsToolkit::mUseImeApiW  = PR_TRUE;
+#endif
+
 }
 
 
@@ -802,10 +801,8 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
     // If no thread is provided create one
     if (NULL != aThread) {
         // Start Active Input Method Manager on this thread
-#ifndef WINCE
         if(nsToolkit::gAIMMApp)
             nsToolkit::gAIMMApp->Activate(TRUE);
-#endif
         CreateInternalWindow(aThread);
     } else {
         // create a thread where the message pump will run
@@ -860,13 +857,11 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
 
     }
 
-#ifndef WINCE
     if(nsToolkit::gAIMMApp) {
         LRESULT lResult;
         if (nsToolkit::gAIMMApp->OnDefWindowProc(hWnd, msg, wParam, lParam, &lResult) == S_OK)
             return lResult;
     }
-#endif
     return nsToolkit::mDefWindowProc(hWnd, msg, wParam, lParam);
 }
 
@@ -1145,25 +1140,10 @@ nsIMM::nsIMM(const char* aModuleName /* = "IMM32.DLL" */)
     mSetOpenStatus=NULL;
   }
 
-#elif WINCE_EMULATOR
-  mInstance=NULL;
-
-  mGetCompositionStringA=NULL;
-  mGetCompositionStringW=NULL;
-  mGetContext=NULL;
-  mReleaseContext=NULL;
-  mNotifyIME=NULL;
-  mSetCandiateWindow=NULL;
-  mGetCompositionWindow=NULL;
-  mSetCompositionWindow=NULL;
-  mGetProperty=NULL;
-  mGetDefaultIMEWnd=NULL;
-  mGetOpenStatus=NULL;
-  mSetOpenStatus=NULL;
 #else // WinCE
   mInstance=NULL;
 
-  mGetCompositionStringA=NULL;
+  mGetCompositionStringA=(GetCompStrPtr)ImmGetCompositionStringW;
   mGetCompositionStringW=(GetCompStrPtr)ImmGetCompositionStringW;
   mGetContext=(GetContextPtr)ImmGetContext;
   mReleaseContext=(RelContextPtr)ImmReleaseContext;
@@ -1364,11 +1344,6 @@ nsWinNLS::nsWinNLS(const char* aModuleName /* = "USER32.DLL" */)
     mWINNLSEnableIME = NULL;
     mWINNLSGetEnableStatus = NULL;
   }
-#elif WINCE_EMULATOR
-  mInstance = NULL;
-
-  mWINNLSEnableIME = NULL;
-  mWINNLSGetEnableStatus = NULL;
 #else // WinCE
   mInstance = NULL;
 
@@ -1377,7 +1352,7 @@ nsWinNLS::nsWinNLS(const char* aModuleName /* = "USER32.DLL" */)
 
   // XXX If WINNLSEnableIME and WINNLSGetEnableStatus can be used on WinCE,
   // Should use these.
-  // mWINNLSEnableIME = (WINNLSEnableIMEPtr)WINNLSEnableIME;
+  // 
   // mWINNLSGetEnableStatus = (WINNLSGetEnableStatusPtr)WINNLSGetEnableStatus;
 #endif
 }

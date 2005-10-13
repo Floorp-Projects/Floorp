@@ -82,13 +82,13 @@ CPPSRCS		= \
 	nsDataObj.cpp  \
 	nsDataObjCollection.cpp  \
 	nsClipboard.cpp      \
+	nsNativeThemeWin.cpp \
 	$(NULL)
 
 ifneq ($(OS_ARCH), WINCE)
 CPPSRCS += \
 	nsNativeDragTarget.cpp  \
 	nsNativeDragSource.cpp  \
-	nsNativeThemeWin.cpp \
 	nsDragService.cpp  \
 	nsImageClipboard.cpp \
 	nsBidiKeyboard.cpp   \
