@@ -280,7 +280,7 @@ NS_IMETHODIMP nsWebBrowserPersist::GetInterface(const nsIID & aIID, void **aIFac
     *aIFace = nsnull;
 
     nsresult rv = QueryInterface(aIID, aIFace);
-    if (NS_SUCCEEDED(rv) && *aIFace)
+    if (NS_SUCCEEDED(rv))
     {
         return rv;
     }
@@ -288,23 +288,15 @@ NS_IMETHODIMP nsWebBrowserPersist::GetInterface(const nsIID & aIID, void **aIFac
     if (mProgressListener && (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) 
                              || aIID.Equals(NS_GET_IID(nsIPrompt))))
     {
-        nsCOMPtr<nsISupports> sup = do_QueryInterface(mProgressListener);
-        if (sup)
-        {
-            sup->QueryInterface(aIID, aIFace);
-            if (*aIFace)
-                return NS_OK;
-        }
+        mProgressListener->QueryInterface(aIID, aIFace);
+        if (*aIFace)
+            return NS_OK;
+    }
 
-        nsCOMPtr<nsIInterfaceRequestor> req = do_QueryInterface(mProgressListener);
-        if (req)
-        {
-            req->GetInterface(aIID, aIFace);
-            if (*aIFace)
-            {
-                return NS_OK;
-            }
-        }
+    nsCOMPtr<nsIInterfaceRequestor> req = do_QueryInterface(mProgressListener);
+    if (req)
+    {
+        return req->GetInterface(aIID, aIFace);
     }
 
     return NS_ERROR_NO_INTERFACE;
