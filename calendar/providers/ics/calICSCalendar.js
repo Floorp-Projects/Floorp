@@ -132,7 +132,15 @@ calICSCalendar.prototype = {
 
         var streamLoader = Components.classes["@mozilla.org/network/stream-loader;1"]
                                      .createInstance(Components.interfaces.nsIStreamLoader);
-        streamLoader.init(channel, this, this);
+        try {
+            streamLoader.init(channel, this, this);
+        } catch(e) {
+            // File not found: a new calendar. No problem.
+            this.mObserver.onEndBatch();
+            this.mObserver.onLoad();
+            this.locked = false;
+            this.processQueue();
+        }
     },
 
     calendarPromotedProps: {
