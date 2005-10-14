@@ -83,6 +83,13 @@ sub get_param_list {
   },
 
   {
+   name => 'defaultpriority',
+   type => 't',
+   default => 'P2',
+   checker => \&check_priority
+  },
+
+  {
    name => 'defaultseverity',
    type => 't',
    default => 'normal',

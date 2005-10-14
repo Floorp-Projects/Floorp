@@ -53,13 +53,6 @@ sub get_param_list {
   },
 
   {
-   name => 'defaultpriority',
-   type => 't',
-   default => 'P2',
-   checker => \&check_priority
-  },
-
-  {
    name => 'musthavemilestoneonaccept',
    type => 'b',
    default => 0
