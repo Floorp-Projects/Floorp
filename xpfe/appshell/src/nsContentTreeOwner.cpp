@@ -639,9 +639,12 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const PRUnichar* aTitle)
               nsCOMPtr<nsIURI> tmpuri;
               nsresult rv = fixup->CreateExposableURI(uri,getter_AddRefs(tmpuri));
               if (NS_SUCCEEDED(rv) && tmpuri) {
+                // (don't bother if there's no host)
+                nsCAutoString host;
                 nsCAutoString prepath;
+                tmpuri->GetHost(host);
                 tmpuri->GetPrePath(prepath);
-                if (!prepath.IsEmpty()) {
+                if (!host.IsEmpty()) {
                   //
                   // We have a scheme/host, update the title
                   //
