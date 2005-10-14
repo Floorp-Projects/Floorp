@@ -4205,6 +4205,11 @@ if (@admins) {
             (user_id, group_id, isbless, grant_type) 
             VALUES ($userid, $adminid, 1, " . GRANT_DIRECT . ")");
     }
+
+    $dbh->bz_lock_tables('groups READ',
+                         'group_group_map WRITE');
+    $dbh->do('DELETE FROM group_group_map WHERE member_id = ?',
+             undef, $adminid);
     $sth = $dbh->prepare("SELECT id FROM groups");
     $sth->execute();
     while ( my ($id) = $sth->fetchrow_array() ) {
@@ -4222,6 +4227,7 @@ if (@admins) {
             (member_id, grantor_id, grant_type) 
             VALUES ($adminid, $id," . GROUP_MEMBERSHIP . ")");
     }
+    $dbh->bz_unlock_tables();
 }
 
 
