@@ -1324,12 +1324,13 @@ nsSchemaValidatorUtils::RemoveLeadingZeros(nsAString & aString)
   aString.EndReading(end);
 
   PRBool done = PR_FALSE;
-  PRUint32 count = 0, indexstart=0;
+  PRUint32 count = 0, indexstart = 0;
 
-  if(*start == '+' || *start == '-'){
+  if (*start == '+' || *start == '-') {
     start++;
     indexstart = 1;
   }
+
   while ((start != end) && !done)
   {
     if (*start++ == '0') {
@@ -1339,8 +1340,15 @@ nsSchemaValidatorUtils::RemoveLeadingZeros(nsAString & aString)
     }
   }
 
-  // finally, remove the leading zeros
-  aString.Cut(indexstart, count);
+  PRUint32 length = aString.Length();
+
+  // if the entire string is composed of zeros, set it to one zero
+  if (length == count) {
+    aString.AssignLiteral("0");
+  } else {
+    // finally, remove the leading zeros
+    aString.Cut(indexstart, count);
+  }
 }
 
 void
@@ -1366,7 +1374,7 @@ nsSchemaValidatorUtils::RemoveTrailingZeros(nsAString & aString)
     }
   }
 
-  // finally, remove the leading zeros
+  // finally, remove the trailing zeros
   aString.Cut(length - count, count);
 }
 
