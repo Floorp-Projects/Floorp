@@ -41,6 +41,7 @@ components/xmlextras.dll
 components/xpc3250.dll
 components/xpcom_compat_c.dll
 components/xppref32.dll
+#ifdef XP_WIN
 components/accessibility-msaa.xpt
 components/accessibility.xpt
 components/addrbook.xpt
@@ -154,6 +155,7 @@ components/xpconnect.xpt
 components/xpinstall.xpt 
 components/xuldoc.xpt 
 components/xultmpl.xpt
+#endif
 components/nsBackgroundUpdateService.js
 components/xptitemp.dat
 component.reg
