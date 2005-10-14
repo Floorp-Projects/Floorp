@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -277,6 +278,32 @@ nsPrincipal::Equals(nsIPrincipal *aOther, PRBool *aResult)
 NS_IMETHODIMP
 nsPrincipal::Subsumes(nsIPrincipal *aOther, PRBool *aResult)
 {
+  // First, check if aOther is an about:blank principal. If it is, then we can
+  // subsume it.
+
+  nsCOMPtr<nsIURI> otherOrigin;
+  aOther->GetURI(getter_AddRefs(otherOrigin));
+
+  if (otherOrigin) {
+    PRBool isAbout = PR_FALSE;
+    if (NS_SUCCEEDED(otherOrigin->SchemeIs("about", &isAbout)) && isAbout) {
+      nsCAutoString str;
+      otherOrigin->GetSpec(str);
+
+      // Note: about:blank principals do not necessarily subsume about:blank
+      // principals (unless aOther == this, which is checked in the Equals call
+      // below).
+
+      if (str.Equals("about:blank")) {
+        PRBool isEqual = PR_FALSE;
+        if (NS_SUCCEEDED(otherOrigin->Equals(mCodebase, &isEqual)) && !isEqual) {
+          *aResult = PR_TRUE;
+          return NS_OK;
+        }
+      }
+    }
+  }
+
   return Equals(aOther, aResult);
 }
 
