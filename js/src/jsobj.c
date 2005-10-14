@@ -1064,6 +1064,31 @@ CheckEvalAccess(JSContext *cx, JSObject *scopeobj, JSPrincipals *principals)
     return JS_TRUE;
 }
 
+JSBool
+js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller)
+{
+    JSClass *clasp;
+    JSExtendedClass *xclasp;
+
+    /* XXX This is an awful gross hack. */
+    while (scopeobj) {
+        clasp = OBJ_GET_CLASS(cx, scopeobj);
+        if (clasp->flags & JSCLASS_IS_EXTENDED) {
+            xclasp = (JSExtendedClass*)clasp;
+            if (xclasp->innerObject &&
+                xclasp->innerObject(cx, scopeobj) != scopeobj) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_BAD_INDIRECT_CALL, caller);
+                return JS_FALSE;
+            }
+        }
+
+        scopeobj = OBJ_GET_PARENT(cx, scopeobj);
+    }
+
+    return JS_TRUE;
+}
+
 static JSBool
 obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1155,6 +1180,9 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     /* Ensure we compile this eval with the right object in the scope chain. */
     OBJ_TO_INNER_OBJECT(cx, scopeobj);
     if (!scopeobj)
+        return JS_FALSE;
+
+    if (!js_CheckScopeChainValidity(cx, scopeobj, js_eval_str))
         return JS_FALSE;
 
     str = JSVAL_TO_STRING(argv[0]);
