@@ -46,6 +46,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsStringEnumerator.h"
 #include "nsCRT.h"
+#include "nsIStringStream.h"
 
 #include "calIEvent.h"
 #include "calBaseCID.h"
@@ -335,6 +336,7 @@ protected:
 
     void ClearAllProperties(icalproperty_kind kind);
 
+    nsresult Serialize(char **icalstr);
     icalcomponent *mComponent;
     nsCOMPtr<calIIcalComponent> mParent;
     nsInterfaceHashtable<nsCStringHashKey, calIIcalComponent> mTimezones;
@@ -781,6 +783,37 @@ AddTimezoneComponentToIcal(const nsACString& aTzid,
 NS_IMETHODIMP
 calIcalComponent::SerializeToICS(nsACString &serialized)
 {
+    char *icalstr;
+
+    nsresult rv = Serialize(&icalstr);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    serialized.Assign(icalstr);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calIcalComponent::SerializeToICSStream(nsIInputStream **aStreamResult)
+{
+    char *icalstr;
+
+    nsresult rv = Serialize(&icalstr);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    // NS_NewCStringInputStream copies the dependent string into the
+    // input stream that's handed back.  This copy is necessary because 
+    // we don't really own icalstr; it's one of libical's ring buffers
+    return NS_NewCStringInputStream(aStreamResult, 
+                                    nsDependentCString(icalstr));
+}
+
+nsresult
+calIcalComponent::Serialize(char **icalstr)
+{
     // add the timezone bits
     if (icalcomponent_isa(mComponent) == ICAL_VCALENDAR_COMPONENT &&
         mTimezones.Count() > 0)
@@ -788,16 +821,17 @@ calIcalComponent::SerializeToICS(nsACString &serialized)
         mTimezones.EnumerateRead(AddTimezoneComponentToIcal, mComponent);
     }
 
-    char *icalstr = icalcomponent_as_ical_string(mComponent);
-    if (!icalstr) {
+    *icalstr = icalcomponent_as_ical_string(mComponent);
+    if (!*icalstr) {
 #ifdef DEBUG
         fprintf(stderr, "Error serializing: %d (%s)\n",
                 icalerrno, icalerror_strerror(icalerrno));
 #endif
-        return NS_ERROR_FAILURE;
+        // The return values in calIError match with libical errnos,
+        // so no need for a conversion table or anything.
+        return calIErrors::ICS_ERROR_BASE + icalerrno;
     }
 
-    serialized.Assign(icalstr);
     return NS_OK;
 }
 

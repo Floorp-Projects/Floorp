@@ -1,4 +1,4 @@
-/* -*- Mode: javascript; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: java; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
+ *   Dan Mosedale <dan.mosedale@oracle.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -429,46 +430,33 @@ calICSCalendar.prototype = {
         {
             onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
             {
-                // All events are returned. Now set up a channel and a
-                // streamloader to upload.
-                // Will call onStopRequest when finised.
-                var icsStr = calComp.serializeToICS();
+                try  {
+                    // All events are returned. Now set up a channel and a
+                    // streamloader to upload.  onStopRequest will be called
+                    // once the write has finished
+                    var ioService = Components.classes
+                        ["@mozilla.org/network/io-service;1"]
+                        .getService(Components.interfaces.nsIIOService);
+                    var channel = ioService.newChannelFromURI(
+                        fixupUri(savedthis.mUri));
+                    channel.notificationCallbacks = savedthis;
+                    var uploadChannel = channel.QueryInterface(
+                        Components.interfaces.nsIUploadChannel);
 
-                var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                                          .getService(Components.interfaces.nsIIOService);
-                var channel = ioService.newChannelFromURI(fixupUri(savedthis.mUri));
-                channel.notificationCallbacks = savedthis;
-                var uploadChannel = channel.QueryInterface(Components.interfaces.nsIUploadChannel);
+                    // do the actual serialization
+                    var icsStream = calComp.serializeToICSStream();
 
-                // Create a pipe stream to convert the outputstream of the
-                // unicode converter to the inputstream the uploadchannel
-                // wants.
-                var pipe = Components.classes["@mozilla.org/pipe;1"]
-                                              .createInstance(Components.interfaces.nsIPipe);
-                const PR_UINT32_MAX = 4294967295; // signals "infinite-length"
-                pipe.init(true, true, 0, PR_UINT32_MAX, null)
+                    uploadChannel.setUploadStream(icsStream, "text/calendar",
+                                                  -1);
 
-                // This converter is needed to convert the javascript unicode 
-                // string to an array of bytes. (The interface of nsIOutputStream
-                // uses |string|, but the comments talk about bytes, not
-                // chars.)
-                var convStream = Components.classes["@mozilla.org/intl/converter-output-stream;1"]
-                                           .createInstance(Components.interfaces.nsIConverterOutputStream);
-                convStream.init(pipe.outputStream, 'UTF-8', 0, 0x0000);
-                try {
-                    if (!convStream.writeString(icsStr)) {
-                        this.mObserver.onError(NS_ERROR_FAILURE, 
-                                               "Error uploading ICS file");
-                    }
-                } catch(e) {
-                    this.mObserver.onError(e.result, e.toString());
+                    channel.asyncOpen(savedthis, savedthis);
+                } catch (ex) {
+                    savedthis.mObserver.onError(
+                        ex.result, "The calendar could not be saved; there " +
+                        "was a failure: 0x" + ex.result.toString(16));
                 }
-                convStream.close();
 
-                uploadChannel.setUploadStream(pipe.inputStream,
-                                              "text/calendar", -1);
-
-                channel.asyncOpen(savedthis, savedthis);
+                return;
             },
             onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
             {

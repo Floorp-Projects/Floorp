@@ -46,6 +46,7 @@ interface calIDateTime;
 
 interface calIIcalProperty;
 interface nsIUTF8StringEnumerator;
+interface nsIInputStream;
 
 [ptr] native icalpropertyptr(struct icalproperty_impl);
 [ptr] native icalcomponentptr(struct icalcomponent_impl);
@@ -117,6 +118,18 @@ interface calIIcalComponent : nsISupports
     attribute calIDateTime lastModified;
 
     AUTF8String serializeToICS();
+
+    /**
+     * Serializes this component (and subcomponents) directly to an
+     * input stream.  Typically used for performance to avoid
+     * unnecessary conversions and XPConnect traversals.
+     * 
+     * @result     an input stream which can be read to get the serialized
+     *             version of this component, encoded in UTF-8.  Implements
+     *             nsISeekableStream so that it can be used with
+     *             nsIUploadChannel.
+     */
+    nsIInputStream serializeToICSStream();
 
     void addSubcomponent(in calIIcalComponent comp);
     void removeSubcomponent(in calIIcalComponent comp);
