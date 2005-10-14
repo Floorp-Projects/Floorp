@@ -220,15 +220,9 @@
           this.prefService.setComplexValue("browser.search.selectedEngine",
                                            this.nsIPrefLocalizedString, pls);
 
-          // XXX Why did mStringBundle say that formatStringFromName is not a method?
-          var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                                              .getService(Components.interfaces.nsIStringBundleService);
-          var localeService = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
-                                        .getService(Components.interfaces.nsILocaleService);
-          var bundle = stringBundleService.createBundle("chrome://browser/locale/searchbar.properties",
-                                                        localeService.getApplicationLocale());
-          var toolTipText = bundle.formatStringFromName("searchtip", [pls], 1);
-          this.setAttribute("tooltiptext", toolTipText);
+          var toolTipText = this.mStringBundle
+                                .getFormattedString("searchtip", [pls]);
+          this.parentNode.setAttribute("tooltiptext", toolTipText);
         ]]></setter>
       </property>
 
