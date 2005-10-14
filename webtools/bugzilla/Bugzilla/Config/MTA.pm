@@ -89,6 +89,8 @@ Subject: [Bug %bugid%] %neworchanged%%summary%
 X-Bugzilla-Reason: %reasonsheader%
 X-Bugzilla-Product: %product%
 X-Bugzilla-Component: %component%
+X-Bugzilla-Keywords: %keywords%
+X-Bugzilla-Severity: %severity%
 
 %urlbase%show_bug.cgi?id=%bugid%
 

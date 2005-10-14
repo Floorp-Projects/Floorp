@@ -584,6 +584,8 @@ sub sendMail {
     }
     $substs{"product"} = $values{'product'};
     $substs{"component"} = $values{'component'};
+    $substs{"keywords"} = $values{'keywords'};
+    $substs{"severity"} = $values{'bug_severity'};
     $substs{"summary"} = $values{'short_desc'};
     $substs{"reasonsheader"} = join(" ", map { $rel_names{$_} } @$relRef);
     $substs{"reasonsbody"} = $reasonsbody;
