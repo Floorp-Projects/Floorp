@@ -1340,7 +1340,7 @@ nsSchemaValidatorUtils::RemoveLeadingZeros(nsAString & aString)
     }
   }
 
-  PRUint32 length = aString.Length();
+  PRUint32 length = aString.Length() - indexstart;
 
   // if the entire string is composed of zeros, set it to one zero
   if (length == count) {
