@@ -103,7 +103,7 @@ sub page_pickGroupSubgroup {
     }
     
     # get all groups for the product:
-    my @groups = Litmus::DB::Testgroup->search(product => $sysconfig->product());
+    my @groups = Litmus::DB::Testgroup->search(product => $sysconfig->product(), obsolete => 'No');
     
     # all possible subgroups per group:
     my %subgroups; 

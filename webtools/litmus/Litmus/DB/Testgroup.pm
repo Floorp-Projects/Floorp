@@ -37,7 +37,7 @@ use base 'Litmus::DBI';
 
 Litmus::DB::Testgroup->table('test_groups');
 
-Litmus::DB::Testgroup->columns(All => qw/testgroup_id product_id name expiration_days/);
+Litmus::DB::Testgroup->columns(All => qw/testgroup_id product_id name expiration_days obsolete/);
 
 Litmus::DB::Testgroup->column_alias("testgroup_id", "testgroupid");
 Litmus::DB::Testgroup->column_alias("product_id", "product");
