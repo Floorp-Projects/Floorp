@@ -855,7 +855,8 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
     JSNative native;
     JSFunction *fun;
     JSScript *script;
-    uintN nslots, nvars, nalloc, surplus;
+    uintN minargs, nvars;
+    intN nslots, nalloc, surplus;
     JSInterpreterHook hook;
     void *hookData;
 
@@ -1019,7 +1020,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
         }
         fun = NULL;
         script = NULL;
-        nslots = nvars = 0;
+        minargs = nvars = 0;
 
         /* Try a call or construct native object op. */
         native = (flags & JSINVOKE_CONSTRUCT) ? ops->construct : ops->call;
@@ -1036,8 +1037,7 @@ have_fun:
             native = fun->u.native;
             script = NULL;
         }
-        nslots = (fun->nargs > argc) ? fun->nargs - argc : 0;
-        nslots += fun->extra;
+        minargs = fun->nargs + fun->extra;
         nvars = fun->nvars;
 
         /* Handle bound method special case. */
@@ -1076,7 +1076,8 @@ have_fun:
     hook = cx->runtime->callHook;
     hookData = NULL;
 
-    /* Check for argument slots required by the function. */
+    /* Check for missing arguments expected by the function. */
+    nslots = (intN)((argc < minargs) ? minargs - argc : 0);
     if (nslots) {
         /* All arguments must be contiguous, so we may have to copy actuals. */
         nalloc = nslots;
@@ -1086,15 +1087,15 @@ have_fun:
             nalloc += 2 + argc;
         } else {
             /* Take advantage of surplus slots in the caller's frame depth. */
-            JS_ASSERT((jsval *)mark >= sp);
             surplus = (jsval *)mark - sp;
+            JS_ASSERT(surplus >= 0);
             nalloc -= surplus;
         }
 
         /* Check whether we have enough space in the caller's frame. */
         if (nalloc > 0) {
             /* Need space for actuals plus missing formals minus surplus. */
-            newsp = js_AllocRawStack(cx, nalloc, NULL);
+            newsp = js_AllocRawStack(cx, (uintN)nalloc, NULL);
             if (!newsp) {
                 ok = JS_FALSE;
                 goto out;
@@ -1103,7 +1104,7 @@ have_fun:
             /* If we couldn't allocate contiguous args, copy actuals now. */
             if (newsp != mark) {
                 JS_ASSERT(sp + nslots > limit);
-                JS_ASSERT(2 + argc + nslots == nalloc);
+                JS_ASSERT(2 + argc + nslots == (uintN)nalloc);
                 *newsp++ = vp[0];
                 *newsp++ = vp[1];
                 if (argc)
@@ -1117,18 +1118,16 @@ have_fun:
         frame.vars += nslots;
 
         /* Push void to initialize missing args. */
-        do {
+        while (--nslots >= 0)
             PUSH(JSVAL_VOID);
-        } while (--nslots != 0);
     }
-    JS_ASSERT(nslots == 0);
 
     /* Now allocate stack space for local variables. */
-    if (nvars) {
-        JS_ASSERT((jsval *)cx->stackPool.current->avail >= frame.vars);
-        surplus = (jsval *)cx->stackPool.current->avail - frame.vars;
-        if (surplus < nvars) {
-            newsp = js_AllocRawStack(cx, nvars, NULL);
+    nslots = (intN)frame.nvars;
+    if (nslots) {
+        surplus = (intN)((jsval *)cx->stackPool.current->avail - frame.vars);
+        if (surplus < nslots) {
+            newsp = js_AllocRawStack(cx, (uintN)nslots, NULL);
             if (!newsp) {
                 ok = JS_FALSE;
                 goto out;
@@ -1140,9 +1139,8 @@ have_fun:
         }
 
         /* Push void to initialize local variables. */
-        do {
+        while (--nslots >= 0)
             PUSH(JSVAL_VOID);
-        } while (--nvars != 0);
     }
 
     /* Store the current sp in frame before calling fun. */
@@ -2296,7 +2294,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                  ? ((JSXMLObjectOps *) obj->map->ops)->enumerateValues
                                 (cx, obj, JSENUMERATE_NEXT, &iter_state,
                                  &fid, &rval)
-                 :
+                 : 
 #endif
                    OBJ_ENUMERATE(cx, obj, JSENUMERATE_NEXT, &iter_state, &fid);
             propobj->slots[JSSLOT_ITER_STATE] = iter_state;
@@ -3597,7 +3595,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             PUSH_OPND(rval);
             obj = NULL;
             break;
-
+ 
           case JSOP_UINT24:
             i = (jsint) GET_LITERAL_INDEX(pc);
             rval = INT_TO_JSVAL(i);
