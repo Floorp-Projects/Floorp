@@ -169,16 +169,15 @@ public:
 
 
 	// nsSwitchToUIThread interface
-	virtual bool             CallMethod(MethodInfo *info);
+	virtual bool            CallMethod(MethodInfo *info);
 	virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, 
 	                                           nsPoint aPoint, 
 	                                           PRUint32 clicks, 
 	                                           PRUint32 mod);
 
 
-	virtual PRBool          AutoErase();
+	virtual PRBool         AutoErase();
 	void                   InitEvent(nsGUIEvent& event, nsPoint* aPoint = nsnull);
-	bool                   mHidden;
 
 protected:
 
@@ -188,7 +187,7 @@ protected:
 	// Allow Derived classes to modify the height that is passed
 	// when the window is created or resized.
 	virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
-	virtual void             OnDestroy();
+	virtual void            OnDestroy();
 	virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
 	virtual PRBool          OnPaint(nsRect &r, const nsIRegion *nsreg = nsnull);
 	virtual PRBool          OnResize(nsRect &aWindowRect);
@@ -209,10 +208,11 @@ protected:
 	virtual PRBool          DispatchFocus(PRUint32 aEventType);
 	virtual PRBool          OnScroll();
 	static PRBool           ConvertStatus(nsEventStatus aStatus);
-	PRBool                DispatchStandardEvent(PRUint32 aMsg);
+	PRBool                  DispatchStandardEvent(PRUint32 aMsg);
 
 	virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
 	virtual BView          *CreateBeOSView();
+	void                    HideKids(PRBool state);
 
 
 	BView           *mView;
@@ -233,7 +233,7 @@ protected:
 	PRBool           mEnabled;
 	PRBool           mJustGotActivate;
 	PRBool           mJustGotDeactivate;	
-
+	PRBool           mIsScrolling;
 public:	// public on BeOS to allow BViews to access it
 	// Enumeration of the methods which are accessable on the "main GUI thread"
 	// via the CallMethod(...) mechanism...
@@ -297,7 +297,8 @@ public:
 	virtual void            WindowActivated(bool active);
 	virtual void            FrameMoved(BPoint origin);
 	virtual void            WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace);
-
+	virtual void            FrameResized(float width, float height);
+	
 private:
 	BPoint          lastWindowPoint;
 };
@@ -329,13 +330,9 @@ public:
 	void                  KeyUp(const char *bytes, int32 numBytes);
 	virtual void            MakeFocus(bool focused);
 	virtual void            MessageReceived(BMessage *msg);
-	virtual void            FrameResized(float width, float height);
-	virtual void            FrameMoved(BPoint origin);
 
 private:
 	void                 DoDraw(BRect updateRect);
-	float                lastViewWidth;
-	float                lastViewHeight;
 	BPoint               lastViewPoint;
 	uint32               mouseMask;
 	bool                 restoreMouseMask;	

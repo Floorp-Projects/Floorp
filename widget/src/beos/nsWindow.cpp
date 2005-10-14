@@ -125,7 +125,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mEnabled            = PR_TRUE;
 	mJustGotActivate    = PR_FALSE;
 	mJustGotDeactivate  = PR_FALSE;
-	mHidden             = false;
+	mIsScrolling        = PR_FALSE;
 	mUpdateArea = do_CreateInstance(kRegionCID);
 	if (mUpdateArea)
 	{
@@ -170,12 +170,14 @@ PRInt32 nsWindow::GetHeight(PRInt32 aProposedHeight)
 
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
+	// HideKids(PR_TRUE) may be used here
 	NS_NOTYETIMPLEMENTED("BeginResizingChildren not yet implemented"); // to be implemented
 	return NS_OK;
 }
 
 NS_METHOD nsWindow::EndResizingChildren(void)
 {
+	// HideKids(PR_FALSE) may be used here
 	NS_NOTYETIMPLEMENTED("EndResizingChildren not yet implemented"); // to be implemented
 	return NS_OK;
 }
@@ -426,7 +428,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 			window_feel feel = B_NORMAL_WINDOW_FEEL;
 			// Set all windows to use outline resize, since currently, the redraw of the window during resize
 			// is very "choppy"
-			uint32 flags = B_ASYNCHRONOUS_CONTROLS | B_FRAME_EVENTS;
+			uint32 flags = B_ASYNCHRONOUS_CONTROLS;
 			
 #ifdef MOZ_DEBUG_WINDOW_CREATE
 			printf("%s\n", (mWindowType == eWindowType_popup) ? "popup" :
@@ -963,6 +965,20 @@ NS_METHOD nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *a
 	return NS_OK;
 }
 
+void nsWindow::HideKids(PRBool state)	
+{
+	for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
+	{
+		nsWindow *childWidget = NS_STATIC_CAST(nsWindow*, kid);
+		nsRect kidrect = ((nsWindow *)kid)->mBounds;
+		//Don't bother about invisible
+		if(mBounds.Intersects(kidrect))
+		{	
+			childWidget->Show(!state);
+		}
+	}
+}
+
 //-------------------------------------------------------------------------
 //
 // Move this component
@@ -978,35 +994,27 @@ nsresult nsWindow::Move(PRInt32 aX, PRInt32 aY)
 		// Nothing to do, since it is already positioned correctly.
 		return NS_OK;    
 	}
-	
-	bool mustunlock = false;
-	bool havewindow = false;
+
 
 	// Set cached value for lightweight and printing
 	mBounds.x = aX;
 	mBounds.y = aY;
 
-	if(mView)
+	if(eWindowType_child == mWindowType)
+		HideKids(PR_TRUE);
+
+	// until we lack separate window and widget, we "cannot" move BWindow without BView
+	if(mView && mView->LockLooper())
 	{
-		if(mView->LockLooper())
-			mustunlock = true;
-
-		if(mustunlock && mView->Parent() == 0)
-			havewindow = true;
-
-		if(mView->Parent() || ! havewindow)
-		{
+		if(mView->Parent() || !mView->Window())
 			mView->MoveTo(aX, aY);
-		}
 		else
-		{
-				mView->Window()->MoveTo(aX, aY);
-		}
-		if(mustunlock)
-			mView->UnlockLooper();
+			((nsWindowBeOS *)mView->Window())->MoveTo(aX, aY);
+			
+		mView->UnlockLooper();
 	}
-	else
-		OnMove(aX,aY);
+
+	OnMove(aX,aY);
 
 	return NS_OK;
 }
@@ -1020,46 +1028,30 @@ nsresult nsWindow::Move(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-	bool mustunlock = false;
-	bool havewindow = false;
 
 	if(aWidth < 0 || aHeight < 0)
 		return NS_OK;
 
-	// Set cached value for lightweight and printing
 	mBounds.width  = aWidth;
 	mBounds.height = aHeight;
-
-	if(mView)
+	
+	if(eWindowType_child == mWindowType && aRepaint)
+		HideKids(PR_TRUE);
+	// until we lack separate window and widget, we "cannot" resize BWindow without BView
+	if(mView && mView->LockLooper())
 	{
-		if(mView->LockLooper())
-			mustunlock = true;
-
-		if(mustunlock && mView->Parent() == 0)
-			havewindow = true;
-
-		if(mView->Parent() || ! havewindow)
+		if(mView->Parent() || !mView->Window())
 			mView->ResizeTo(aWidth-1, GetHeight(aHeight)-1);
 		else
 			((nsWindowBeOS *)mView->Window())->ResizeTo(aWidth-1, GetHeight(aHeight)-1);
 
-		//This caused senseless blinking on page reload. Do we need it?
-		//if (aRepaint && mustunlock)
-		//	mView->Invalidate();
-			
-		if(mustunlock)
-			mView->UnlockLooper();
-		//No feedback from BView/BWindow in this case.
-		//Informing xp layer directly
-		if(!mIsVisible || !mView->Window()->IsActive())
-			OnResize(mBounds);
-	}
-	else
-	{
-		//inform the xp layer of the change in size
-		OnResize(mBounds);
+		mView->UnlockLooper();
 	}
 
+
+	OnResize(mBounds);
+	if (aRepaint)
+		Update();
 	return NS_OK;
 }
 
@@ -1568,17 +1560,11 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 NS_IMETHODIMP nsWindow::Update()
 {
 
-	//Restoring children visibility
-	for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
-	{
-		nsWindow *childWidget = NS_STATIC_CAST(nsWindow*, kid);
-		if(childWidget->mHidden)
-		{	
-			childWidget->Show(PR_TRUE);
-			childWidget->mHidden = false;
-		}
-	}
-	
+	//Restoring children visibility if scrolling trigger is off
+	if(!mIsScrolling)
+		HideKids(PR_FALSE);
+	//Switching scrolling trigger off
+	mIsScrolling = PR_FALSE;
 	//Flushing native pending updates
 	if (mView && mView->Window())
 		mView->Window()->UpdateIfNeeded();
@@ -1627,29 +1613,19 @@ NS_METHOD nsWindow::SetColorMap(nsColorMap *aColorMap)
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+	// Switching trigger on
+	mIsScrolling = PR_TRUE;
+	//Preventing main view invalidation loop-chain  when children are moving
+	//by by hiding children nsWidgets.
+	//Maybe this method must be used wider, in move and resize chains
+	// and implemented in BeginResizingChildren or in Reset*Visibility() methods
+	//Children will be unhidden in ::Update() when called by other than gkview::Scroll() method.
+	HideKids(PR_TRUE);
 	if(mView && mView->LockLooper())
 	{
 
 		BRect src;
 		BRect b = mView->Bounds();
-		//Preventing main view invalidation loop-chain  when children are moving
-		//by by hiding children nsWidgets.
-		//Maybe this method must be used wider, in move and resize chains
-		// and implemented in BeginResizingChildren or in Reset*Visibility() methods
-
-		for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
-		{
-			nsRect bounds;
-			kid->GetBounds(bounds);
-			bounds.x += aDx;
-			bounds.y += aDy;
-			nsWindow *childWidget = NS_STATIC_CAST(nsWindow*, kid);
-			childWidget->Show(PR_FALSE);
-			//Now moving children
-			childWidget->Move(bounds.x, bounds.y);
-			childWidget->mHidden = true;	
-		}
-		//Children will be unhidden in ::Update() method with current implementation
 
 		if (aClipRect)
 		{
@@ -1710,7 +1686,18 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 		invalid.Exclude(dest);		
 
 		mView->ConstrainClippingRegion(&invalid);
-		
+		// Time to silently move now invisible children
+		for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
+		{
+			nsWindow *childWidget = NS_STATIC_CAST(nsWindow*, kid);
+			// No need to Lock/UnlockLooper with GetBounds() and Move() methods
+			// using cached values and native MoveBy() instead
+			nsRect bounds = childWidget->mBounds;
+			bounds.x += aDx;
+			bounds.y += aDy; 
+			childWidget->SetBounds(bounds);
+			((BView *)kid->GetNativeData(NS_NATIVE_WIDGET))->MoveBy(aDx, aDy);
+		}			
 		//OnPaint don't need Lock()
 		mView->UnlockLooper();
 		// Drawing uncovered regions by direct OnPaint call,
@@ -1924,13 +1911,11 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 	case nsWindow::ONRESIZE :
 		{
-			NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
+			NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
 			if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
 				DealWithPopups(ONRESIZE,nsPoint(0,0));
 			nsRect r;
-			r.width=(nscoord)info->args[0];
-			r.height=(nscoord)info->args[1];
-
+			GetBounds(r);
 			OnResize(r);
 		}
 		break;
@@ -1983,23 +1968,29 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 
 	case nsWindow::ONMOVE:
-		NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
-		if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
-			DealWithPopups(ONMOVE,nsPoint(0,0));
-		PRInt32 aX,  aY;
-		aX=(nscoord)info->args[0];
-		aY=(nscoord)info->args[1];
-		OnMove(aX,aY);
+		{
+			NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+			nsRect r;
+			// We use this only for tracking whole window moves
+			GetScreenBounds(r);		
+			if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+				DealWithPopups(ONMOVE,nsPoint(0,0));
+			OnMove(r.x, r.y);
+		}
+		break;
+		
+	case nsWindow::ONWORKSPACE:
+		{
+			NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
+			if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
+				DealWithPopups(ONWORKSPACE,nsPoint(0,0));
+		}
 		break;
 
-	case nsWindow::ONWORKSPACE:
-		NS_ASSERTION(info->nArgs == 2, "Wrong number of arguments to CallMethod");
-		if(eWindowType_popup != mWindowType && eWindowType_child != mWindowType)
-			DealWithPopups(ONWORKSPACE,nsPoint(0,0));
-			
-		break;	default:
-		bRet = FALSE;
-		break;
+		default:
+			bRet = FALSE;
+			break;
+		
 	}
 
 	return bRet;
@@ -2469,21 +2460,13 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
 		nsSizeEvent event(PR_TRUE, NS_SIZE, this);
 		InitEvent(event);
 		event.windowSize = &aWindowRect;
-		if(mView && mView->LockLooper())
-		{
-			BRect r = mView->Bounds();
-			event.mWinWidth  = r.IntegerWidth()+1;
-			event.mWinHeight = r.IntegerHeight()+1;
-			mView->UnlockLooper();
-		} else {
-			event.mWinWidth  = 0;
-			event.mWinHeight = 0;
-		}
+		// We have same size for windows rect and "client area" rect
+		event.mWinWidth  = aWindowRect.width;
+		event.mWinHeight = aWindowRect.height;
 		PRBool result = DispatchWindowEvent(&event);
 		NS_RELEASE(event.widget);
 		return result;
 	}
-
 	return PR_FALSE;
 }
 
@@ -2697,11 +2680,8 @@ void nsWindowBeOS::FrameMoved(BPoint origin)
 	nsToolkit *t;
 	if(w && (t = w->GetToolkit()) != 0) 
 	{
-		uint32 args[2];
-		args[0] = (uint32)origin.x;
-		args[1] = (uint32)origin.y;
 		MethodInfo *info = nsnull;
-		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONMOVE, 2, args)))
+		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONMOVE)))
 			t->CallMethodAsync(info);
 		NS_RELEASE(t);
 	}
@@ -2742,13 +2722,26 @@ void  nsWindowBeOS::WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace)
 	}	
 }
 
+void  nsWindowBeOS::FrameResized(float width, float height)
+{
+	nsWindow        *w = (nsWindow *)GetMozillaWidget();
+	nsToolkit	*t;
+	if(w && (t = w->GetToolkit()) != 0)
+	{
+		MethodInfo *info = nsnull;
+		if(nsnull != (info = new MethodInfo(w, w, nsWindow::ONRESIZE)))
+			t->CallMethodAsync(info);
+		NS_RELEASE(t);
+	}	
+}
+
 //----------------------------------------------------
 // BeOS Sub-Class View
 //----------------------------------------------------
 
 nsViewBeOS::nsViewBeOS(nsIWidget *aWidgetWindow, BRect aFrame, const char *aName, uint32 aResizingMode, uint32 aFlags)
 		: BView(aFrame, aName, aResizingMode, aFlags), nsIWidgetStore(aWidgetWindow),
-		buttons(0), lastViewWidth(aFrame.Width()), lastViewHeight(aFrame.Height()), restoreMouseMask(false)
+		buttons(0), restoreMouseMask(false)
 {
 	paintregion.MakeEmpty();
 }
@@ -3029,53 +3022,3 @@ void nsViewBeOS::MakeFocus(bool focused)
 	}
 }
 
-void nsViewBeOS::FrameResized(float width, float height)
-{
-	//determine if the window size actually changed
-	if (width==lastViewWidth && height==lastViewHeight)
-	{
-		//it didn't - don't bother
-		return;
-	}
-	//remember new size
-	lastViewWidth=width;
-	lastViewHeight=height;
-	nsWindow	*w = (nsWindow *)GetMozillaWidget();
-	nsToolkit	*t;
-	if(w && (t = w->GetToolkit()) != 0) 
-	{
-		//the window's new size needs to be passed to OnResize() -
-		//note that the values passed to FrameResized() are the
-		//dimensions as reported by Bounds().Width() and
-		//Bounds().Height(), which are one pixel smaller than the
-		//window's true size
-		uint32 args[2];
-		args[0]=(uint32)width+1;
-		args[1]=(uint32)height+1;
-
-		MethodInfo *info = 0;
-		if (nsnull != (info = new MethodInfo(w, w, nsWindow::ONRESIZE, 2, args)))
-			t->CallMethodAsync(info);
-		NS_RELEASE(t);
-	}
-}
-void nsViewBeOS::FrameMoved(BPoint origin)
-{
-	//determine if the window position actually changed
-	if (origin.x == lastViewPoint.x && origin.x == lastViewPoint.x)
-		return;
-	lastViewPoint.x = origin.x;
-	lastViewPoint.y = origin.y;
-	nsWindow	*w = (nsWindow *)GetMozillaWidget();
-	nsToolkit	*t;
-	if(w && (t = w->GetToolkit()) != 0) 
-	{
-		uint32 args[2];
-		args[0] = (uint32)origin.x;
-		args[1] = (uint32)origin.y;
-		MethodInfo *info = 0;
-		if (nsnull != (info = new MethodInfo(w, w, nsWindow::ONMOVE, 2, args)))
-			t->CallMethodAsync(info);
-		NS_RELEASE(t);
-	}
-}
