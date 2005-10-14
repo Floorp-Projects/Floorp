@@ -2853,6 +2853,26 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenFrameset()\n"));
   MOZ_TIMER_STOP(mWatch);
 
+  if (mFrameset && mCurrentContext->mStackPos > 1) {
+    // Have to notify for the frameset now, since we never actually
+    // close out <html>, so won't notify for it then.
+    PRInt32 parentIndex    = mCurrentContext->mStackPos - 2;
+    nsGenericHTMLElement *parent = mCurrentContext->mStack[parentIndex].mContent;
+    PRInt32 numFlushed     = mCurrentContext->mStack[parentIndex].mNumFlushed;
+    PRInt32 insertionPoint =
+      mCurrentContext->mStack[parentIndex].mInsertionPoint;
+
+    // XXX: I have yet to see a case where numFlushed is non-zero and
+    // insertionPoint is not -1, but this code will try to handle
+    // those cases too.
+
+    if (insertionPoint != -1) {
+      NotifyInsert(parent, mFrameset, insertionPoint - 1);
+    } else {
+      NotifyAppend(parent, numFlushed);
+    }
+  }
+  
   return rv;
 }
 
