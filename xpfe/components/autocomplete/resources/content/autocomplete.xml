@@ -527,7 +527,7 @@
       <!--  -->
       <method name="startLookup">
         <body><![CDATA[
-          var str = this.value;
+          var str = this.currentSearchString;
 
           this.isSearching = true;
           this.mSessionReturns = this.sessionCount;
@@ -703,25 +703,31 @@
             } else if (this.mTransientValue || !this.forceComplete ||
                        !(this.mNeedToComplete || aForceComplete)) {
               this.mNeedToFinish = false;
+            } else if (this.isWaiting) {
+              // if the user typed, the search results are out of date, so let
+              // the search finish, and tell it to come back here when it's done
+              this.mFinishAfterSearch = true;
+              this.mFireAfterSearch = aFireTextCommand;
+              return;
             } else {
               // we want to use the default item index for the first session which gave us a valid
               // default item index...
               for (var name in this.mLastResults) {
                 var results = this.mLastResults[name];
-               if (results && results.items.Count() > 0 && results.defaultItemIndex != -1)
-               {
+                if (results && results.items.Count() > 0 && results.defaultItemIndex != -1)
+                {
                   val = this.getSessionValueAt(name, results.defaultItemIndex);
                   this.setTextValue(val);
                   this.mDefaultMatchFilled = true;
                   this.mNeedToFinish = false;
                   break;
-               }
+                }
               }
 
               if (this.mNeedToFinish) {
                 // if a search is happening at this juncture, bail out of this function
                 // and let the search finish, and tell it to come back here when it's done
-                if (this.isSearching || this.isWaiting) {
+                if (this.isSearching) {
                   this.mFinishAfterSearch = true;
                   this.mFireAfterSearch = aFireTextCommand;
                   return;
