@@ -220,13 +220,17 @@ nsGrid::RebuildIfNeeded()
   // So in this case we need to make 1 extra column.
   //
 
+  // Make sure to update mExtraColumnCount no matter what, since it might
+  // happen that we now have as many columns as are defined, and we wouldn't
+  // want to have a positive mExtraColumnCount hanging about in that case!
+  mExtraColumnCount = computedColumnCount - columnCount;
   if (computedColumnCount > columnCount) {
-     mExtraColumnCount = computedColumnCount - columnCount;
      columnCount = computedColumnCount;
   }
 
+  // Same for rows.
+  mExtraRowCount = computedRowCount - rowCount;
   if (computedRowCount > rowCount) {
-     mExtraRowCount    = computedRowCount - rowCount;
      rowCount = computedRowCount;
   }
 
@@ -536,10 +540,10 @@ nsGrid::GetRowAt(PRInt32 aIndex, PRBool aIsHorizontal)
   RebuildIfNeeded();
 
   if (aIsHorizontal) {
-    NS_ASSERTION(aIndex < mRowCount || aIndex >= 0, "Index out of range");
+    NS_ASSERTION(aIndex < mRowCount && aIndex >= 0, "Index out of range");
     return &mRows[aIndex];
   } else {
-    NS_ASSERTION(aIndex < mColumnCount || aIndex >= 0, "Index out of range");
+    NS_ASSERTION(aIndex < mColumnCount && aIndex >= 0, "Index out of range");
     return &mColumns[aIndex];
   }
 }
