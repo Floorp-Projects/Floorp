@@ -2,8 +2,6 @@
    See the file COPYING for copying permission.
 */
 
-#include <stddef.h>
-
 #ifdef COMPILED_FROM_DSP
 #include "winconfig.h"
 #elif defined(MACOS_CLASSIC)
@@ -14,7 +12,6 @@
 #endif
 #endif /* ndef COMPILED_FROM_DSP */
 
-#include "expat_external.h"
 #include "internal.h"
 #include "xmlrole.h"
 #include "ascii.h"
@@ -373,8 +370,6 @@ internalSubset(PROLOG_STATE *state,
   case XML_TOK_CLOSE_BRACKET:
     state->handler = doctype5;
     return XML_ROLE_DOCTYPE_NONE;
-  case XML_TOK_NONE:
-    return XML_ROLE_NONE;
   }
   return common(state, tok);
 }
