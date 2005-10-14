@@ -574,7 +574,7 @@ nsContentAreaDragDrop::DragDrop(nsIDOMEvent* inMouseEvent)
           nsCAutoString sourceUriStr;
           sourceUri->GetSpec(sourceUriStr);
 
-          rv = nsContentUtils::SecurityManager()->
+          rv = nsContentUtils::GetSecurityManager()->
             CheckLoadURIStr(sourceUriStr, NS_ConvertUTF16toUTF8(url),
                             nsIScriptSecurityManager::STANDARD);
 

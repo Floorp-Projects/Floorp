@@ -643,7 +643,7 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
   // Null URIs happen when the URL to load is specified via other means than the
   // data/src attribute, for example via custom <param> elements.
   if (aURI) {
-    nsIScriptSecurityManager* secMan = nsContentUtils::SecurityManager();
+    nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
     NS_ASSERTION(secMan, "No security manager!?");
     nsresult rv = secMan->CheckLoadURIWithPrincipal(doc->GetPrincipal(), aURI, 0);
     if (NS_FAILED(rv)) {

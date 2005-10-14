@@ -1991,8 +1991,8 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
   NS_ENSURE_TRUE(cx, PR_TRUE);
 
   PRBool enabled = PR_TRUE;
-  nsContentUtils::SecurityManager()->CanExecuteScripts(cx, principal,
-                                                       &enabled);
+  nsContentUtils::GetSecurityManager()->CanExecuteScripts(cx, principal,
+                                                          &enabled);
   return enabled;
 }
 
@@ -3607,7 +3607,7 @@ HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
     // NAV compatibility quirk
 
     nsIScriptSecurityManager *securityManager =
-      nsContentUtils::SecurityManager();
+      nsContentUtils::GetSecurityManager();
 
     rv = securityManager->
       CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), baseHrefURI,

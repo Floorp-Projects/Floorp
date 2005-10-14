@@ -552,7 +552,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL, PRBool aAugmentFl
 
   // Not everything with a chrome URI has a system principal.  See bug 160042.
   if (NS_FAILED(rv) || !isChrome) {
-    nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
     rv = secMan->
       CheckLoadURIWithPrincipal(document->GetPrincipal(), aURL,

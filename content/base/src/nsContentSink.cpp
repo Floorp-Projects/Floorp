@@ -335,7 +335,7 @@ nsContentSink::ProcessHeaderData(nsIAtom* aHeader, const nsAString& aValue,
     }
 
     nsCOMPtr<nsIPrincipal> systemPrincipal;
-    nsContentUtils::SecurityManager()->
+    nsContentUtils::GetSecurityManager()->
       GetSystemPrincipal(getter_AddRefs(systemPrincipal));
     NS_ASSERTION(systemPrincipal, "No system principal");
     

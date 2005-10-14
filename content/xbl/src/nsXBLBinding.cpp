@@ -1203,6 +1203,11 @@ nsXBLBinding::AllowScripts()
   // Nasty hack.  Use the JSContext of the bound node, since the
   // security manager API expects to get the docshell type from
   // that.  But use the nsIPrincipal of our document.
+  nsIScriptSecurityManager* mgr = nsContentUtils::GetSecurityManager();
+  if (!mgr) {
+    return PR_FALSE;
+  }
+
   nsIDocument* doc = mBoundElement->GetOwnerDoc();
   if (!doc) {
     return PR_FALSE;
@@ -1226,8 +1231,6 @@ nsXBLBinding::AllowScripts()
   if (!principal) {
     return PR_FALSE;
   }
-
-  nsIScriptSecurityManager* mgr = nsContentUtils::SecurityManager();
 
   PRBool canExecute;
   nsresult rv = mgr->CanExecuteScripts(cx, principal, &canExecute);

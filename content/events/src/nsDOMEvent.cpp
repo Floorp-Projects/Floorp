@@ -507,7 +507,7 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, PRBool aCanBubbleArg, PRBo
     // Ensure the caller is permitted to dispatch trusted DOM events.
 
     PRBool enabled = PR_FALSE;
-    nsContentUtils::SecurityManager()->
+    nsContentUtils::GetSecurityManager()->
       IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
 
     if (!enabled) {

@@ -666,7 +666,7 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
   // OK and gives pages a way to clear a file input if necessary.
   if (mType == NS_FORM_INPUT_FILE && !aValue.IsEmpty()) {
     nsIScriptSecurityManager *securityManager =
-      nsContentUtils::SecurityManager();
+      nsContentUtils::GetSecurityManager();
 
     PRBool enabled;
     nsresult rv =

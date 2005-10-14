@@ -1462,7 +1462,7 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
         STRING_TO_JSVAL(::JS_InternString(cx, "addEventListener"));
     }
 
-    rv = nsContentUtils::SecurityManager()->
+    rv = nsContentUtils::GetSecurityManager()->
       CheckPropertyAccess(cx, jsobj,
                           "EventTarget",
                           sAddListenerID,

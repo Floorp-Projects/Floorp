@@ -542,7 +542,7 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
   NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIPrincipal> principal;
-  rv = nsContentUtils::SecurityManager()->
+  rv = nsContentUtils::GetSecurityManager()->
     GetCodebasePrincipal(mBaseURI, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
     
@@ -1207,7 +1207,11 @@ nsDocument::GetPrincipal()
 {
   if (!mPrincipal) {
     nsIScriptSecurityManager *securityManager =
-      nsContentUtils::SecurityManager();
+      nsContentUtils::GetSecurityManager();
+
+    if (!securityManager) {
+      return nsnull;
+    }
 
     NS_WARN_IF_FALSE(mDocumentURI, "no URI!");
     nsresult rv =
@@ -1263,7 +1267,7 @@ nsDocument::SetBaseURI(nsIURI* aURI)
     NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
     
     nsIScriptSecurityManager* securityManager =
-      nsContentUtils::SecurityManager();
+      nsContentUtils::GetSecurityManager();
     rv = securityManager->
       CheckLoadURIWithPrincipal(principal, aURI,
                                 nsIScriptSecurityManager::STANDARD);
