@@ -511,12 +511,13 @@
             // If location bar is hidden and the URL type supports a host,
             // add the scheme and host to the title to prevent spoofing.
             // XXX https://bugzilla.mozilla.org/show_bug.cgi?id=22183#c239
+            // (only for schemes that support a host)
             try {
               if (docElement.getAttribute("chromehidden").indexOf("location") != -1) {
-                var host = this.mURIFixup.createExposableURI(
-                             this.mCurrentBrowser.currentURI).prePath;
-                if (host)
-                  newTitle = host + sep + newTitle;
+                var uri  = this.mURIFixup.createExposableURI(
+                             this.mCurrentBrowser.currentURI);
+                if (uri.host)
+                  newTitle = uri.prePath + sep + newTitle;
               }
             } catch (e) {}
 
