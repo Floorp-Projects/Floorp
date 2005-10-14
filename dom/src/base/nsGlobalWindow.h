@@ -420,15 +420,19 @@ protected:
   // change. On outer windows it means that the window is in a state
   // where we don't want to force creation of a new inner window since
   // we're in the middle of doing just that.
-  PRPackedBool                  mIsFrozen;
+  PRPackedBool                  mIsFrozen : 1;
 
   // These members are only used on outer window objects. Make sure
   // you never set any of these on an inner object!
-  PRPackedBool                  mFullScreen;
-  PRPackedBool                  mIsClosed;
-  PRPackedBool                  mInClose;
-  PRPackedBool                  mOpenerWasCleared;
-  PRPackedBool                  mIsPopupSpam;
+  PRPackedBool                  mFullScreen : 1;
+  PRPackedBool                  mIsClosed : 1;
+  PRPackedBool                  mInClose : 1;
+  // mHavePendingClose means we've got a termination function set to
+  // close us when the JS stops executing or that we have a close
+  // event posted.  If this is set, just ignore window.close() calls.
+  PRPackedBool                  mHavePendingClose : 1;
+  PRPackedBool                  mOpenerWasCleared : 1;
+  PRPackedBool                  mIsPopupSpam : 1;
 
   nsCOMPtr<nsIScriptContext>    mContext;
   nsCOMPtr<nsIDOMWindowInternal> mOpener;

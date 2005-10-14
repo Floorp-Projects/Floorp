@@ -293,6 +293,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mFullScreen(PR_FALSE),
     mIsClosed(PR_FALSE), 
     mInClose(PR_FALSE), 
+    mHavePendingClose(PR_FALSE),
     mOpenerWasCleared(PR_FALSE),
     mIsPopupSpam(PR_FALSE),
     mArguments(nsnull),
@@ -4412,6 +4413,12 @@ nsGlobalWindow::Close()
     return NS_OK;
   }
 
+  if (mHavePendingClose) {
+    // We're going to be closed anyway; do nothing since we don't want
+    // to double-close
+    return NS_OK;
+  }
+
   // Don't allow scripts from content to close windows
   // that were not opened by script
   nsresult rv = NS_OK;
@@ -4512,9 +4519,12 @@ nsGlobalWindow::Close()
       // fails, it's better to fail to close the window than it is to crash
       // (which is what would tend to happen if we did this synchronously
       // here).
-      currentCX->SetTerminationFunction(CloseWindow,
-                                        NS_STATIC_CAST(nsIDOMWindow *,
-                                                       this));
+      rv = currentCX->SetTerminationFunction(CloseWindow,
+                                             NS_STATIC_CAST(nsIDOMWindow *,
+                                                            this));
+      if (NS_SUCCEEDED(rv)) {
+        mHavePendingClose = PR_TRUE;
+      }
       return NS_OK;
     }
   }
@@ -4540,6 +4550,8 @@ nsGlobalWindow::Close()
   if (NS_FAILED(rv)) {
     ReallyCloseWindow();
     rv = NS_OK;
+  } else {
+    mHavePendingClose = PR_TRUE;
   }
   
   return rv;
@@ -4550,6 +4562,9 @@ void
 nsGlobalWindow::ReallyCloseWindow()
 {
   FORWARD_TO_OUTER_VOID(ReallyCloseWindow, ());
+
+  // Make sure we never reenter this method.
+  mHavePendingClose = PR_TRUE;
 
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
@@ -4582,6 +4597,7 @@ nsGlobalWindow::ReallyCloseWindow()
            that has just been closed (and is therefore already missing
            from the list of browsers) (and has an unload handler
            that closes the window). */
+        // XXXbz now that we have mHavePendingClose, is this needed?
         PRBool isTab = PR_FALSE;
         if (rootWin == this ||
             !bwin || (bwin->IsTabContentWindow(GetOuterWindowInternal(),
