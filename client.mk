@@ -83,6 +83,8 @@
 #                          of MOZ_OBJDIR
 #   MOZ_OBJDIR           - Destination object directory
 #   MOZ_CO_DATE          - Date tag to use for checkout (default: none)
+#   MOZ_CO_LOCALES_DATE  - Date tag to use for locale checkout
+#                          (default: MOZ_CO_DATE)
 #   MOZ_CO_MODULE        - Module to checkout
 #   MOZ_CVS_FLAGS        - Flags to pass cvs (default: -q -z3)
 #   MOZ_CO_FLAGS         - Flags to pass after 'cvs co' (default: -P)
@@ -299,7 +301,10 @@ endif
 endif
 
 CVS_CO_DATE_FLAGS = $(if $(MOZ_CO_DATE),-D "$(MOZ_CO_DATE)")
+CVS_CO_LOCALES_DATE_FLAGS = $(if $(MOZ_CO_LOCALES_DATE),-D "$(MOZ_CO_LOCALES_DATE)")
 CVSCO = $(CVS) $(CVS_FLAGS) co $(MOZ_CO_FLAGS) $(if $(MOZ_CO_TAG),-r $(MOZ_CO_TAG)) $(CVS_CO_DATE_FLAGS)
+
+CVS_CO_LOCALES_DATE ?= $(CVS_CO_DATE)
 
 CVSCO_LOGFILE := $(ROOTDIR)/cvsco.log
 CVSCO_LOGFILE := $(shell echo $(CVSCO_LOGFILE) | sed s%//%/%)
@@ -541,7 +546,7 @@ else # MOZ_CO_LOCALES != all
 LOCALE_CO_DIRS = $(sort $(foreach locale,$(MOZ_CO_LOCALES),$(foreach dir,$(LOCALE_DIRS),l10n/$(locale)/$(dir))))
 endif
 
-CVSCO_LOCALES := $(CVS) $(CVS_FLAGS) -d $(LOCALES_CVSROOT) co $(LOCALES_CO_FLAGS) $(LOCALE_CO_DIRS)
+CVSCO_LOCALES := $(CVS) $(CVS_FLAGS) -d $(LOCALES_CVSROOT) co $(LOCALES_CO_FLAGS) $(CVS_CO_LOCALES_DATE_FLAGS) $(LOCALE_CO_DIRS)
 
 FASTUPDATE_LOCALES := fast_update $(CVSCO_LOCALES)
 CHECKOUT_LOCALES := cvs_co $(CVSCO_LOCALES)
