@@ -1747,8 +1747,11 @@ restart:
                 GC_MARK(cx, fp->thisp, "this", NULL);
                 if (fp->argv) {
                     nslots = fp->argc;
-                    if (fp->fun && fp->fun->nargs > nslots)
-                        nslots = fp->fun->nargs;
+                    if (fp->fun) {
+                        if (fp->fun->nargs > nslots)
+                            nslots = fp->fun->nargs;
+                        nslots += fp->fun->extra;
+                    }
                     GC_MARK_JSVALS(cx, nslots, fp->argv, "arg");
                 }
                 if (JSVAL_IS_GCTHING(fp->rval))
