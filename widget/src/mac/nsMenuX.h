@@ -45,17 +45,12 @@
 #include "nsIChangeManager.h"
 #include "nsWeakReference.h"
 
-#include <Menus.h>
-#include <UnicodeConverter.h>
-#include <CarbonEvents.h>
-
+#include <Carbon/Carbon.h>
 
 class nsIMenuBar;
 class nsIMenuListener;
 
-
-//static PRInt16      mMacMenuIDCount;    // use GetUniqueMenuID()
-extern PRInt16 mMacMenuIDCount;// = kMacMenuID;
+extern PRInt16 mMacMenuIDCount;
 
 #if DEBUG
 // utility instance counter class
@@ -70,7 +65,7 @@ public:
         
         ~nsInstanceCounter()
         {
-          printf("%s %ld\n", mDescription, mInstanceCount);
+          printf("%s %d\n", mDescription, mInstanceCount);
         }
 
         nsInstanceCounter& operator ++()          // prefix
@@ -140,7 +135,6 @@ public:
     NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
     NS_IMETHOD IsHelpMenu(PRBool* aIsEnabled);
 
-    // 
     NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
     NS_IMETHOD AddMenu(nsIMenu * aMenu);
 
