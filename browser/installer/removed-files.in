@@ -27,7 +27,9 @@ components/compreg.dat
 components/xpti.dat
 components/xptitemp.dat
 components/nsBackgroundUpdateService.js
+#ifndef XP_MACOSX
 components/autocomplete.xpt
+#endif
 @DLL_PREFIX@zlib@DLL_SUFFIX@
 #Remove Talkback files from old location (in case user updates from 1.0.x)
 components/BrandRes.dll
