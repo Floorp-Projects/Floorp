@@ -806,7 +806,7 @@ nsSVGSVGElement::GetElementById(const nsAString & elementId, nsIDOMElement **_re
 NS_IMETHODIMP
 nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (!mViewBoxToViewportTransform) {
     float viewportWidth;

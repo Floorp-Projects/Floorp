@@ -416,6 +416,8 @@ nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
 NS_IMETHODIMP
 nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
 {
+  nsresult rv = NS_OK;
+
   if (!mViewBoxToViewportTransform) {
     float viewportWidth;
     {
@@ -512,15 +514,15 @@ nsSVGMarkerElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
     printf("                            [b d f] = [   0,  %f, %f]\n", d, f);
 #endif
     
-    NS_NewSVGMatrix(getter_AddRefs(mViewBoxToViewportTransform),
-                    a,     0.0f,
-                    0.0f,  d,
-                    e,     f);
+    rv = NS_NewSVGMatrix(getter_AddRefs(mViewBoxToViewportTransform),
+                         a,     0.0f,
+                         0.0f,  d,
+                         e,     f);
   }
 
   *_retval = mViewBoxToViewportTransform;
   NS_IF_ADDREF(*_retval);
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------
