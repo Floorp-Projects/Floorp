@@ -36,6 +36,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "secitem.h"
 #include "blapi.h"
@@ -372,7 +373,7 @@ char2_from_hex(unsigned char byteval, unsigned char *c2, char a)
 void
 to_hex_str(char *str, const unsigned char *buf, unsigned int len)
 {
-    int i;
+    unsigned int i;
     for (i=0; i<len; i++) {
 	char2_from_hex(buf[i], &str[2*i], 'a');
     }
@@ -382,7 +383,7 @@ to_hex_str(char *str, const unsigned char *buf, unsigned int len)
 void
 to_hex_str_cap(char *str, unsigned char *buf, unsigned int len)
 {
-    int i;
+    unsigned int i;
     for (i=0; i<len; i++) {
 	char2_from_hex(buf[i], &str[2*i], 'A');
     }
@@ -837,9 +838,931 @@ des_modes(int mode, PRBool encrypt, unsigned int len,
     }
 }
 
+SECStatus
+aes_encrypt_buf(
+    int mode,
+    const unsigned char *key, unsigned int keysize,
+    const unsigned char *iv,
+    unsigned char *output, unsigned int *outputlen, unsigned int maxoutputlen,
+    const unsigned char *input, unsigned int inputlen)
+{
+    SECStatus rv = SECFailure;
+    AESContext *cx;
+    unsigned char doublecheck[10*16];  /* 1 to 10 blocks */
+    unsigned int doublechecklen = 0;
+
+    cx = AES_CreateContext(key, iv, mode, PR_TRUE, keysize, 16);
+    if (cx == NULL) {
+	goto loser;
+    }
+    rv = AES_Encrypt(cx, output, outputlen, maxoutputlen, input, inputlen);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
+    if (*outputlen != inputlen) {
+	goto loser;
+    }
+    AES_DestroyContext(cx, PR_TRUE);
+    cx = NULL;
+
+    /*
+     * Doublecheck our result by decrypting the ciphertext and
+     * compare the output with the input plaintext.
+     */
+    cx = AES_CreateContext(key, iv, mode, PR_FALSE, keysize, 16);
+    if (cx == NULL) {
+	goto loser;
+    }
+    rv = AES_Decrypt(cx, doublecheck, &doublechecklen, sizeof doublecheck,
+	output, *outputlen);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
+    if (doublechecklen != *outputlen) {
+	goto loser;
+    }
+    AES_DestroyContext(cx, PR_TRUE);
+    cx = NULL;
+    if (memcmp(doublecheck, input, inputlen) != 0) {
+	goto loser;
+    }
+    rv = SECSuccess;
+
+loser:
+    if (cx != NULL) {
+	AES_DestroyContext(cx, PR_TRUE);
+    }
+    return rv;
+}
+
+SECStatus
+aes_decrypt_buf(
+    int mode,
+    const unsigned char *key, unsigned int keysize,
+    const unsigned char *iv,
+    unsigned char *output, unsigned int *outputlen, unsigned int maxoutputlen,
+    const unsigned char *input, unsigned int inputlen)
+{
+    SECStatus rv = SECFailure;
+    AESContext *cx;
+    unsigned char doublecheck[10*16];  /* 1 to 10 blocks */
+    unsigned int doublechecklen = 0;
+
+    cx = AES_CreateContext(key, iv, mode, PR_FALSE, keysize, 16);
+    if (cx == NULL) {
+	goto loser;
+    }
+    rv = AES_Decrypt(cx, output, outputlen, maxoutputlen,
+	input, inputlen);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
+    if (*outputlen != inputlen) {
+	goto loser;
+    }
+    AES_DestroyContext(cx, PR_TRUE);
+    cx = NULL;
+
+    /*
+     * Doublecheck our result by encrypting the plaintext and
+     * compare the output with the input ciphertext.
+     */
+    cx = AES_CreateContext(key, iv, mode, PR_TRUE, keysize, 16);
+    if (cx == NULL) {
+	goto loser;
+    }
+    rv = AES_Encrypt(cx, doublecheck, &doublechecklen, sizeof doublecheck,
+	output, *outputlen);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
+    if (doublechecklen != *outputlen) {
+	goto loser;
+    }
+    AES_DestroyContext(cx, PR_TRUE);
+    cx = NULL;
+    if (memcmp(doublecheck, input, inputlen) != 0) {
+	goto loser;
+    }
+    rv = SECSuccess;
+
+loser:
+    if (cx != NULL) {
+	AES_DestroyContext(cx, PR_TRUE);
+    }
+    return rv;
+}
+
+/*
+ * Perform the AES Known Answer Test (KAT) or Multi-block Message
+ * Test (MMT) in ECB or CBC mode.  The KAT (there are four types)
+ * and MMT have the same structure: given the key and IV (CBC mode
+ * only), encrypt the given plaintext or decrypt the given ciphertext.
+ * So we can handle them the same way.
+ *
+ * reqfn is the pathname of the REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+aes_kat_mmt(char *reqfn)
+{
+    char buf[512];      /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "CIPHERTEXT = <320 hex digits>\n".
+                         */
+    FILE *aesreq;       /* input stream from the REQUEST file */
+    FILE *aesresp;      /* output stream to the RESPONSE file */
+    int i, j;
+    int mode;           /* NSS_AES (ECB) or NSS_AES_CBC */
+    int encrypt = 0;    /* 1 means encrypt, 0 means decrypt */
+    unsigned char key[32];              /* 128, 192, or 256 bits */
+    unsigned int keysize;
+    unsigned char iv[16];		/* for all modes except ECB */
+    unsigned char plaintext[10*16];     /* 1 to 10 blocks */
+    unsigned int plaintextlen;
+    unsigned char ciphertext[10*16];    /* 1 to 10 blocks */
+    unsigned int ciphertextlen;
+    SECStatus rv;
+
+    aesreq = fopen(reqfn, "r");
+    aesresp = stdout;
+    while (fgets(buf, sizeof buf, aesreq) != NULL) {
+	/* a comment or blank line */
+	if (buf[0] == '#' || buf[0] == '\n') {
+	    fputs(buf, aesresp);
+	    continue;
+	}
+	/* [ENCRYPT] or [DECRYPT] */
+	if (buf[0] == '[') {
+	    if (strncmp(&buf[1], "ENCRYPT", 7) == 0) {
+		encrypt = 1;
+	    } else {
+		encrypt = 0;
+	    }
+	    fputs(buf, aesresp);
+	    continue;
+	}
+	/* "COUNT = x" begins a new data set */
+	if (strncmp(buf, "COUNT", 5) == 0) {
+	    mode = NSS_AES;
+	    /* zeroize the variables for the test with this data set */
+	    memset(key, 0, sizeof key);
+	    keysize = 0;
+	    memset(iv, 0, sizeof iv);
+	    memset(plaintext, 0, sizeof plaintext);
+	    plaintextlen = 0;
+	    memset(ciphertext, 0, sizeof ciphertext);
+	    ciphertextlen = 0;
+	    fputs(buf, aesresp);
+	    continue;
+	}
+	/* KEY = ... */
+	if (strncmp(buf, "KEY", 3) == 0) {
+	    i = 3;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
+		hex_from_2char(&buf[i], &key[j]);
+	    }
+	    keysize = j;
+	    fputs(buf, aesresp);
+	    continue;
+	}
+	/* IV = ... */
+	if (strncmp(buf, "IV", 2) == 0) {
+	    mode = NSS_AES_CBC;
+	    i = 2;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; j<sizeof iv; i+=2,j++) {
+		hex_from_2char(&buf[i], &iv[j]);
+	    }
+	    fputs(buf, aesresp);
+	    continue;
+	}
+	/* PLAINTEXT = ... */
+	if (strncmp(buf, "PLAINTEXT", 9) == 0) {
+	    /* sanity check */
+	    if (!encrypt) {
+		goto loser;
+	    }
+
+	    i = 9;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
+		hex_from_2char(&buf[i], &plaintext[j]);
+	    }
+	    plaintextlen = j;
+
+	    rv = aes_encrypt_buf(mode, key, keysize,
+		(mode == NSS_AES) ? NULL : iv,
+		ciphertext, &ciphertextlen, sizeof ciphertext,
+		plaintext, plaintextlen);
+	    if (rv != SECSuccess) {
+		goto loser;
+	    }
+
+	    fputs(buf, aesresp);
+	    fputs("CIPHERTEXT = ", aesresp);
+	    to_hex_str(buf, ciphertext, ciphertextlen);
+	    fputs(buf, aesresp);
+	    fputc('\n', aesresp);
+	    continue;
+	}
+	/* CIPHERTEXT = ... */
+	if (strncmp(buf, "CIPHERTEXT", 10) == 0) {
+	    /* sanity check */
+	    if (encrypt) {
+		goto loser;
+	    }
+
+	    i = 10;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
+		hex_from_2char(&buf[i], &ciphertext[j]);
+	    }
+	    ciphertextlen = j;
+
+	    rv = aes_decrypt_buf(mode, key, keysize,
+		(mode == NSS_AES) ? NULL : iv,
+		plaintext, &plaintextlen, sizeof plaintext,
+		ciphertext, ciphertextlen);
+	    if (rv != SECSuccess) {
+		goto loser;
+	    }
+
+	    fputs(buf, aesresp);
+	    fputs("PLAINTEXT = ", aesresp);
+	    to_hex_str(buf, plaintext, plaintextlen);
+	    fputs(buf, aesresp);
+	    fputc('\n', aesresp);
+	    continue;
+	}
+    }
+loser:
+    fclose(aesreq);
+}
+
+/*
+ * Generate Key[i+1] from Key[i], CT[j-1], and CT[j] for AES Monte Carlo
+ * Test (MCT) in ECB and CBC modes.
+ */
+void
+aes_mct_next_key(unsigned char *key, unsigned int keysize,
+    const unsigned char *ciphertext_1, const unsigned char *ciphertext)
+{
+    int k;
+
+    switch (keysize) {
+    case 16:  /* 128-bit key */
+	/* Key[i+1] = Key[i] xor CT[j] */
+	for (k=0; k<16; k++) {
+	    key[k] ^= ciphertext[k];
+	}
+	break;
+    case 24:  /* 192-bit key */
+	/*
+	 * Key[i+1] = Key[i] xor (last 64-bits of
+	 *            CT[j-1] || CT[j])
+	 */
+	for (k=0; k<8; k++) {
+	    key[k] ^= ciphertext_1[k+8];
+	}
+	for (k=8; k<24; k++) {
+	    key[k] ^= ciphertext[k-8];
+	}
+	break;
+    case 32:  /* 256-bit key */
+	/* Key[i+1] = Key[i] xor (CT[j-1] || CT[j]) */
+	for (k=0; k<16; k++) {
+	    key[k] ^= ciphertext_1[k];
+	}
+	for (k=16; k<32; k++) {
+	    key[k] ^= ciphertext[k-16];
+	}
+	break;
+    }
+}
+
+/*
+ * Perform the AES Monte Carlo Test (MCT) in ECB mode.  MCT exercises
+ * our AES code in streaming mode because the plaintext or ciphertext
+ * is generated block by block as we go, so we can't collect all the
+ * plaintext or ciphertext in one buffer and encrypt or decrypt it in
+ * one shot.
+ *
+ * reqfn is the pathname of the input REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+aes_ecb_mct(char *reqfn)
+{
+    char buf[80];       /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "KEY = <64 hex digits>\n".
+                         */
+    FILE *aesreq;       /* input stream from the REQUEST file */
+    FILE *aesresp;      /* output stream to the RESPONSE file */
+    int i, j;
+    int encrypt = 0;    /* 1 means encrypt, 0 means decrypt */
+    unsigned char key[32];              /* 128, 192, or 256 bits */
+    unsigned int keysize;
+    unsigned char plaintext[16];        /* PT[j] */
+    unsigned char plaintext_1[16];      /* PT[j-1] */
+    unsigned char ciphertext[16];       /* CT[j] */
+    unsigned char ciphertext_1[16];     /* CT[j-1] */
+    unsigned char doublecheck[16];
+    unsigned int outputlen;
+    AESContext *cx = NULL;	/* the operation being tested */
+    AESContext *cx2 = NULL;     /* the inverse operation done in parallel
+                                 * to doublecheck our result.
+                                 */
+    SECStatus rv;
+
+    aesreq = fopen(reqfn, "r");
+    aesresp = stdout;
+    while (fgets(buf, sizeof buf, aesreq) != NULL) {
+	/* a comment or blank line */
+	if (buf[0] == '#' || buf[0] == '\n') {
+	    fputs(buf, aesresp);
+	    continue;
+	}
+	/* [ENCRYPT] or [DECRYPT] */
+	if (buf[0] == '[') {
+	    if (strncmp(&buf[1], "ENCRYPT", 7) == 0) {
+		encrypt = 1;
+	    } else {
+		encrypt = 0;
+	    }
+	    fputs(buf, aesresp);
+	    continue;
+	}
+	/* "COUNT = x" begins a new data set */
+	if (strncmp(buf, "COUNT", 5) == 0) {
+	    /* zeroize the variables for the test with this data set */
+	    memset(key, 0, sizeof key);
+	    keysize = 0;
+	    memset(plaintext, 0, sizeof plaintext);
+	    memset(ciphertext, 0, sizeof ciphertext);
+	    continue;
+	}
+	/* KEY = ... */
+	if (strncmp(buf, "KEY", 3) == 0) {
+	    /* Key[0] = Key */
+	    i = 3;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
+		hex_from_2char(&buf[i], &key[j]);
+	    }
+	    keysize = j;
+	    continue;
+	}
+	/* PLAINTEXT = ... */
+	if (strncmp(buf, "PLAINTEXT", 9) == 0) {
+	    /* sanity check */
+	    if (!encrypt) {
+		goto loser;
+	    }
+	    /* PT[0] = PT */
+	    i = 9;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; j<sizeof plaintext; i+=2,j++) {
+		hex_from_2char(&buf[i], &plaintext[j]);
+	    }
+
+	    for (i=0; i<100; i++) {
+		sprintf(buf, "COUNT = %d\n", i);
+	        fputs(buf, aesresp);
+		/* Output Key[i] */
+		fputs("KEY = ", aesresp);
+		to_hex_str(buf, key, keysize);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+		/* Output PT[0] */
+		fputs("PLAINTEXT = ", aesresp);
+		to_hex_str(buf, plaintext, sizeof plaintext);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+
+		cx = AES_CreateContext(key, NULL, NSS_AES,
+		    PR_TRUE, keysize, 16);
+		if (cx == NULL) {
+		    goto loser;
+		}
+		/*
+		 * doublecheck our result by decrypting the result
+		 * and comparing the output with the plaintext.
+		 */
+		cx2 = AES_CreateContext(key, NULL, NSS_AES,
+		    PR_FALSE, keysize, 16);
+		if (cx2 == NULL) {
+		    goto loser;
+		}
+		for (j=0; j<1000; j++) {
+		    /* Save CT[j-1] */
+		    memcpy(ciphertext_1, ciphertext, sizeof ciphertext);
+
+		    /* CT[j] = AES(Key[i], PT[j]) */
+		    outputlen = 0;
+		    rv = AES_Encrypt(cx,
+			ciphertext, &outputlen, sizeof ciphertext,
+			plaintext, sizeof plaintext);
+		    if (rv != SECSuccess) {
+			goto loser;
+		    }
+		    if (outputlen != sizeof plaintext) {
+			goto loser;
+		    }
+
+		    /* doublecheck our result */
+		    outputlen = 0;
+		    rv = AES_Decrypt(cx2,
+			doublecheck, &outputlen, sizeof doublecheck,
+			ciphertext, sizeof ciphertext);
+		    if (rv != SECSuccess) {
+			goto loser;
+		    }
+		    if (outputlen != sizeof ciphertext) {
+			goto loser;
+		    }
+		    if (memcmp(doublecheck, plaintext, sizeof plaintext)) {
+			goto loser;
+		    }
+
+		    /* PT[j+1] = CT[j] */
+		    memcpy(plaintext, ciphertext, sizeof plaintext);
+		}
+		AES_DestroyContext(cx, PR_TRUE);
+		cx = NULL;
+		AES_DestroyContext(cx2, PR_TRUE);
+		cx2 = NULL;
+
+		/* Output CT[j] */
+		fputs("CIPHERTEXT = ", aesresp);
+		to_hex_str(buf, ciphertext, sizeof ciphertext);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+
+		/* Key[i+1] = Key[i] xor ... */
+		aes_mct_next_key(key, keysize, ciphertext_1, ciphertext);
+		/* PT[0] = CT[j] */
+		/* done at the end of the for(j) loop */
+
+		fputc('\n', aesresp);
+	    }
+
+	    continue;
+	}
+	/* CIPHERTEXT = ... */
+	if (strncmp(buf, "CIPHERTEXT", 10) == 0) {
+	    /* sanity check */
+	    if (encrypt) {
+		goto loser;
+	    }
+	    /* CT[0] = CT */
+	    i = 10;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
+		hex_from_2char(&buf[i], &ciphertext[j]);
+	    }
+
+	    for (i=0; i<100; i++) {
+		sprintf(buf, "COUNT = %d\n", i);
+	        fputs(buf, aesresp);
+		/* Output Key[i] */
+		fputs("KEY = ", aesresp);
+		to_hex_str(buf, key, keysize);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+		/* Output CT[0] */
+		fputs("CIPHERTEXT = ", aesresp);
+		to_hex_str(buf, ciphertext, sizeof ciphertext);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+
+		cx = AES_CreateContext(key, NULL, NSS_AES,
+		    PR_FALSE, keysize, 16);
+		if (cx == NULL) {
+		    goto loser;
+		}
+		/*
+		 * doublecheck our result by encrypting the result
+		 * and comparing the output with the ciphertext.
+		 */
+		cx2 = AES_CreateContext(key, NULL, NSS_AES,
+		    PR_TRUE, keysize, 16);
+		if (cx2 == NULL) {
+		    goto loser;
+		}
+		for (j=0; j<1000; j++) {
+		    /* Save PT[j-1] */
+		    memcpy(plaintext_1, plaintext, sizeof plaintext);
+
+		    /* PT[j] = AES(Key[i], CT[j]) */
+		    outputlen = 0;
+		    rv = AES_Decrypt(cx,
+			plaintext, &outputlen, sizeof plaintext,
+			ciphertext, sizeof ciphertext);
+		    if (rv != SECSuccess) {
+			goto loser;
+		    }
+		    if (outputlen != sizeof ciphertext) {
+			goto loser;
+		    }
+
+		    /* doublecheck our result */
+		    outputlen = 0;
+		    rv = AES_Encrypt(cx2,
+			doublecheck, &outputlen, sizeof doublecheck,
+			plaintext, sizeof plaintext);
+		    if (rv != SECSuccess) {
+			goto loser;
+		    }
+		    if (outputlen != sizeof plaintext) {
+			goto loser;
+		    }
+		    if (memcmp(doublecheck, ciphertext, sizeof ciphertext)) {
+			goto loser;
+		    }
+
+		    /* CT[j+1] = PT[j] */
+		    memcpy(ciphertext, plaintext, sizeof ciphertext);
+		}
+		AES_DestroyContext(cx, PR_TRUE);
+		cx = NULL;
+		AES_DestroyContext(cx2, PR_TRUE);
+		cx2 = NULL;
+
+		/* Output PT[j] */
+		fputs("PLAINTEXT = ", aesresp);
+		to_hex_str(buf, plaintext, sizeof plaintext);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+
+		/* Key[i+1] = Key[i] xor ... */
+		aes_mct_next_key(key, keysize, plaintext_1, plaintext);
+		/* CT[0] = PT[j] */
+		/* done at the end of the for(j) loop */
+
+		fputc('\n', aesresp);
+	    }
+
+	    continue;
+	}
+    }
+loser:
+    if (cx != NULL) {
+	AES_DestroyContext(cx, PR_TRUE);
+    }
+    if (cx2 != NULL) {
+	AES_DestroyContext(cx2, PR_TRUE);
+    }
+    fclose(aesreq);
+}
+
+/*
+ * Perform the AES Monte Carlo Test (MCT) in CBC mode.  MCT exercises
+ * our AES code in streaming mode because the plaintext or ciphertext
+ * is generated block by block as we go, so we can't collect all the
+ * plaintext or ciphertext in one buffer and encrypt or decrypt it in
+ * one shot.
+ *
+ * reqfn is the pathname of the input REQUEST file.
+ *
+ * The output RESPONSE file is written to stdout.
+ */
+void
+aes_cbc_mct(char *reqfn)
+{
+    char buf[80];       /* holds one line from the input REQUEST file.
+                         * needs to be large enough to hold the longest
+                         * line "KEY = <64 hex digits>\n".
+                         */
+    FILE *aesreq;       /* input stream from the REQUEST file */
+    FILE *aesresp;      /* output stream to the RESPONSE file */
+    int i, j;
+    int encrypt = 0;    /* 1 means encrypt, 0 means decrypt */
+    unsigned char key[32];              /* 128, 192, or 256 bits */
+    unsigned int keysize;
+    unsigned char iv[16];
+    unsigned char plaintext[16];        /* PT[j] */
+    unsigned char plaintext_1[16];      /* PT[j-1] */
+    unsigned char ciphertext[16];       /* CT[j] */
+    unsigned char ciphertext_1[16];     /* CT[j-1] */
+    unsigned char doublecheck[16];
+    unsigned int outputlen;
+    AESContext *cx = NULL;	/* the operation being tested */
+    AESContext *cx2 = NULL;     /* the inverse operation done in parallel
+                                 * to doublecheck our result.
+                                 */
+    SECStatus rv;
+
+    aesreq = fopen(reqfn, "r");
+    aesresp = stdout;
+    while (fgets(buf, sizeof buf, aesreq) != NULL) {
+	/* a comment or blank line */
+	if (buf[0] == '#' || buf[0] == '\n') {
+	    fputs(buf, aesresp);
+	    continue;
+	}
+	/* [ENCRYPT] or [DECRYPT] */
+	if (buf[0] == '[') {
+	    if (strncmp(&buf[1], "ENCRYPT", 7) == 0) {
+		encrypt = 1;
+	    } else {
+		encrypt = 0;
+	    }
+	    fputs(buf, aesresp);
+	    continue;
+	}
+	/* "COUNT = x" begins a new data set */
+	if (strncmp(buf, "COUNT", 5) == 0) {
+	    /* zeroize the variables for the test with this data set */
+	    memset(key, 0, sizeof key);
+	    keysize = 0;
+	    memset(iv, 0, sizeof iv);
+	    memset(plaintext, 0, sizeof plaintext);
+	    memset(ciphertext, 0, sizeof ciphertext);
+	    continue;
+	}
+	/* KEY = ... */
+	if (strncmp(buf, "KEY", 3) == 0) {
+	    /* Key[0] = Key */
+	    i = 3;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
+		hex_from_2char(&buf[i], &key[j]);
+	    }
+	    keysize = j;
+	    continue;
+	}
+	/* IV = ... */
+	if (strncmp(buf, "IV", 2) == 0) {
+	    /* IV[0] = IV */
+	    i = 2;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; j<sizeof iv; i+=2,j++) {
+		hex_from_2char(&buf[i], &iv[j]);
+	    }
+	    continue;
+	}
+	/* PLAINTEXT = ... */
+	if (strncmp(buf, "PLAINTEXT", 9) == 0) {
+	    /* sanity check */
+	    if (!encrypt) {
+		goto loser;
+	    }
+	    /* PT[0] = PT */
+	    i = 9;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; j<sizeof plaintext; i+=2,j++) {
+		hex_from_2char(&buf[i], &plaintext[j]);
+	    }
+
+	    for (i=0; i<100; i++) {
+		sprintf(buf, "COUNT = %d\n", i);
+	        fputs(buf, aesresp);
+		/* Output Key[i] */
+		fputs("KEY = ", aesresp);
+		to_hex_str(buf, key, keysize);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+		/* Output IV[i] */
+		fputs("IV = ", aesresp);
+		to_hex_str(buf, iv, sizeof iv);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+		/* Output PT[0] */
+		fputs("PLAINTEXT = ", aesresp);
+		to_hex_str(buf, plaintext, sizeof plaintext);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+
+		cx = AES_CreateContext(key, iv, NSS_AES_CBC,
+		    PR_TRUE, keysize, 16);
+		if (cx == NULL) {
+		    goto loser;
+		}
+		/*
+		 * doublecheck our result by decrypting the result
+		 * and comparing the output with the plaintext.
+		 */
+		cx2 = AES_CreateContext(key, iv, NSS_AES_CBC,
+		    PR_FALSE, keysize, 16);
+		if (cx2 == NULL) {
+		    goto loser;
+		}
+		/* CT[-1] = IV[i] */
+		memcpy(ciphertext, iv, sizeof ciphertext);
+		for (j=0; j<1000; j++) {
+		    /* Save CT[j-1] */
+		    memcpy(ciphertext_1, ciphertext, sizeof ciphertext);
+		    /*
+		     * If ( j=0 )
+		     *      CT[j] = AES(Key[i], IV[i], PT[j])
+		     *      PT[j+1] = IV[i] (= CT[j-1])
+		     * Else
+		     *      CT[j] = AES(Key[i], PT[j])
+		     *      PT[j+1] = CT[j-1]
+		     */
+		    outputlen = 0;
+		    rv = AES_Encrypt(cx,
+			ciphertext, &outputlen, sizeof ciphertext,
+			plaintext, sizeof plaintext);
+		    if (rv != SECSuccess) {
+			goto loser;
+		    }
+		    if (outputlen != sizeof plaintext) {
+			goto loser;
+		    }
+
+		    /* doublecheck our result */
+		    outputlen = 0;
+		    rv = AES_Decrypt(cx2,
+			doublecheck, &outputlen, sizeof doublecheck,
+			ciphertext, sizeof ciphertext);
+		    if (rv != SECSuccess) {
+			goto loser;
+		    }
+		    if (outputlen != sizeof ciphertext) {
+			goto loser;
+		    }
+		    if (memcmp(doublecheck, plaintext, sizeof plaintext)) {
+			goto loser;
+		    }
+
+		    memcpy(plaintext, ciphertext_1, sizeof plaintext);
+		}
+		AES_DestroyContext(cx, PR_TRUE);
+		cx = NULL;
+		AES_DestroyContext(cx2, PR_TRUE);
+		cx2 = NULL;
+
+		/* Output CT[j] */
+		fputs("CIPHERTEXT = ", aesresp);
+		to_hex_str(buf, ciphertext, sizeof ciphertext);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+
+		/* Key[i+1] = Key[i] xor ... */
+		aes_mct_next_key(key, keysize, ciphertext_1, ciphertext);
+		/* IV[i+1] = CT[j] */
+		memcpy(iv, ciphertext, sizeof iv);
+		/* PT[0] = CT[j-1] */
+		/* done at the end of the for(j) loop */
+
+		fputc('\n', aesresp);
+	    }
+
+	    continue;
+	}
+	/* CIPHERTEXT = ... */
+	if (strncmp(buf, "CIPHERTEXT", 10) == 0) {
+	    /* sanity check */
+	    if (encrypt) {
+		goto loser;
+	    }
+	    /* CT[0] = CT */
+	    i = 10;
+	    while (isspace(buf[i]) || buf[i] == '=') {
+		i++;
+	    }
+	    for (j=0; isxdigit(buf[i]); i+=2,j++) {
+		hex_from_2char(&buf[i], &ciphertext[j]);
+	    }
+
+	    for (i=0; i<100; i++) {
+		sprintf(buf, "COUNT = %d\n", i);
+	        fputs(buf, aesresp);
+		/* Output Key[i] */
+		fputs("KEY = ", aesresp);
+		to_hex_str(buf, key, keysize);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+		/* Output IV[i] */
+		fputs("IV = ", aesresp);
+		to_hex_str(buf, iv, sizeof iv);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+		/* Output CT[0] */
+		fputs("CIPHERTEXT = ", aesresp);
+		to_hex_str(buf, ciphertext, sizeof ciphertext);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+
+		cx = AES_CreateContext(key, iv, NSS_AES_CBC,
+		    PR_FALSE, keysize, 16);
+		if (cx == NULL) {
+		    goto loser;
+		}
+		/*
+		 * doublecheck our result by encrypting the result
+		 * and comparing the output with the ciphertext.
+		 */
+		cx2 = AES_CreateContext(key, iv, NSS_AES_CBC,
+		    PR_TRUE, keysize, 16);
+		if (cx2 == NULL) {
+		    goto loser;
+		}
+		/* PT[-1] = IV[i] */
+		memcpy(plaintext, iv, sizeof plaintext);
+		for (j=0; j<1000; j++) {
+		    /* Save PT[j-1] */
+		    memcpy(plaintext_1, plaintext, sizeof plaintext);
+		    /*
+		     * If ( j=0 )
+		     *      PT[j] = AES(Key[i], IV[i], CT[j])
+		     *      CT[j+1] = IV[i] (= PT[j-1])
+		     * Else
+		     *      PT[j] = AES(Key[i], CT[j])
+		     *      CT[j+1] = PT[j-1]
+		     */
+		    outputlen = 0;
+		    rv = AES_Decrypt(cx,
+			plaintext, &outputlen, sizeof plaintext,
+			ciphertext, sizeof ciphertext);
+		    if (rv != SECSuccess) {
+			goto loser;
+		    }
+		    if (outputlen != sizeof ciphertext) {
+			goto loser;
+		    }
+
+		    /* doublecheck our result */
+		    outputlen = 0;
+		    rv = AES_Encrypt(cx2,
+			doublecheck, &outputlen, sizeof doublecheck,
+			plaintext, sizeof plaintext);
+		    if (rv != SECSuccess) {
+			goto loser;
+		    }
+		    if (outputlen != sizeof plaintext) {
+			goto loser;
+		    }
+		    if (memcmp(doublecheck, ciphertext, sizeof ciphertext)) {
+			goto loser;
+		    }
+
+		    memcpy(ciphertext, plaintext_1, sizeof ciphertext);
+		}
+		AES_DestroyContext(cx, PR_TRUE);
+		cx = NULL;
+		AES_DestroyContext(cx2, PR_TRUE);
+		cx2 = NULL;
+
+		/* Output PT[j] */
+		fputs("PLAINTEXT = ", aesresp);
+		to_hex_str(buf, plaintext, sizeof plaintext);
+		fputs(buf, aesresp);
+		fputc('\n', aesresp);
+
+		/* Key[i+1] = Key[i] xor ... */
+		aes_mct_next_key(key, keysize, plaintext_1, plaintext);
+		/* IV[i+1] = PT[j] */
+		memcpy(iv, plaintext, sizeof iv);
+		/* CT[0] = PT[j-1] */
+		/* done at the end of the for(j) loop */
+
+		fputc('\n', aesresp);
+	    }
+
+	    continue;
+	}
+    }
+loser:
+    if (cx != NULL) {
+	AES_DestroyContext(cx, PR_TRUE);
+    }
+    if (cx2 != NULL) {
+	AES_DestroyContext(cx2, PR_TRUE);
+    }
+    fclose(aesreq);
+}
+
 void write_compact_string(FILE *out, unsigned char *hash, unsigned int len)
 {
-    int i, j, count = 0, last = -1, z = 0;
+    unsigned int i;
+    int j, count = 0, last = -1, z = 0;
     long start = ftell(out);
     for (i=0; i<len; i++) {
 	for (j=7; j>=0; j--) {
@@ -1061,7 +1984,8 @@ dss_test(char *reqdir, char *rspdir)
     DSAPrivateKey privkey = { 0 };
     PQGParams params;
     PQGVerify verify;
-    int i, j, rv;
+    unsigned int i;
+    int j, rv;
     goto do_pqggen;
 #if 0
     /* primality test */
@@ -1108,7 +2032,7 @@ do_pqggen:
 		fprintf(rsp, "[mod=%d]\n", mod);
 	    } else if (strcmp(key, "N") == 0) {
 		char str[264];
-		int jj;
+		unsigned int jj;
 		int N = atoi(val);
 		for (i=0; i<N; i++) {
 		    PQGParams *pqg;
@@ -1686,6 +2610,27 @@ int main(int argc, char **argv)
 	printf("DATA FILE UTILIZED: datcbcmonted3\n\n");
 	des_modes(NSS_DES_EDE3_CBC, PR_FALSE, 24, tdea3_cbc_dec_key, 
                   tdea3_cbc_dec_iv, tdea3_cbc_dec_inp, 3);
+    /*************/
+    /*   AES     */
+    /*************/
+    } else if (strcmp(argv[1], "aes") == 0) {
+	/* argv[2]=kat|mmt|mct argv[3]=ecb|cbc argv[4]=<test name>.req */
+	if (       strcmp(argv[2], "kat") == 0) {
+	    /* Known Answer Test (KAT) */
+	    aes_kat_mmt(argv[4]);
+	} else if (strcmp(argv[2], "mmt") == 0) {
+	    /* Multi-block Message Test (MMT) */
+	    aes_kat_mmt(argv[4]);
+	} else if (strcmp(argv[2], "mct") == 0) {
+	    /* Monte Carlo Test (MCT) */
+	    if (       strcmp(argv[3], "ecb") == 0) {
+		/* ECB mode */
+		aes_ecb_mct(argv[4]);
+	    } else if (strcmp(argv[3], "cbc") == 0) {
+		/* CBC mode */
+		aes_cbc_mct(argv[4]);
+	    }
+	}
     /*************/
     /*   SHS     */
     /*************/
