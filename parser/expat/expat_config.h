@@ -133,6 +133,9 @@ typedef char XML_LChar;
 #define XML_Parse MOZ_XML_Parse
 #define XML_GetBuffer MOZ_XML_GetBuffer
 #define XML_ParseBuffer MOZ_XML_ParseBuffer
+#define XML_StopParser MOZ_XML_StopParser
+#define XML_ResumeParser MOZ_XML_ResumeParser
+#define XML_GetParsingStatus MOZ_XML_GetParsingStatus
 #define XML_ExternalEntityParserCreate MOZ_XML_ExternalEntityParserCreate
 #define XML_SetParamEntityParsing MOZ_XML_SetParamEntityParsing
 #define XML_GetErrorCode MOZ_XML_GetErrorCode
