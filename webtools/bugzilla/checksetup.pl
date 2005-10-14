@@ -4416,12 +4416,22 @@ if ($sth->rows == 0) {
 
     # Admins get inherited membership and bless capability for all groups
     foreach my $group ( @groups ) {
-        $dbh->do("INSERT INTO group_group_map
-            (member_id, grantor_id, grant_type)
-            VALUES ($admingroupid, $group, " . GROUP_MEMBERSHIP . ")");
-        $dbh->do("INSERT INTO group_group_map
-            (member_id, grantor_id, grant_type)
-            VALUES ($admingroupid, $group, " . GROUP_BLESS . ")");
+        my $sth_check = $dbh->prepare("SELECT member_id FROM group_group_map
+                                 WHERE member_id = ?
+                                 AND  grantor_id = ?
+                                 AND grant_type = ?");
+        $sth_check->execute($admingroupid, $group, GROUP_MEMBERSHIP);
+        unless ($sth_check->rows) {
+            $dbh->do("INSERT INTO group_group_map
+                      (member_id, grantor_id, grant_type)
+                      VALUES ($admingroupid, $group, " . GROUP_MEMBERSHIP . ")");
+        }
+        $sth_check->execute($admingroupid, $group, GROUP_BLESS);
+        unless ($sth_check->rows) {
+            $dbh->do("INSERT INTO group_group_map
+                      (member_id, grantor_id, grant_type)
+                      VALUES ($admingroupid, $group, " . GROUP_BLESS . ")");
+        }
     }
 
     print "\n$login is now set up as an administrator account.\n";
