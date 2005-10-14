@@ -3063,9 +3063,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     // -insertText: they've already been taken into account in creating
     // the input string.
         
-    // plugins need a native autokey event here, but only if this is a repeat event
+    // plugins need a native keyDown or autoKey event here
     EventRecord macEvent;
-    if (mCurKeyEvent && [mCurKeyEvent isARepeat])
+    if (mCurKeyEvent)
     {
       ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
@@ -3349,24 +3349,15 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
     // dispatch the keydown to gecko, so that we trap delete,
     // control-letter combinations etc before Cocoa tries to use
     // them for keybindings.
-    if (!geckoEvent.isChar || geckoEvent.isControl)
+    if ((!geckoEvent.isChar || geckoEvent.isControl) && !mInComposition)
     {
-      // if this is a repeat non-char event (e.g. arrows), then set up
-      // a mac event
-      if (isARepeat)
-      {
-        // plugins need a native event (this should be an autoKey event)
-        EventRecord macEvent;
-        ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
-        geckoEvent.nativeMsg = &macEvent;
-      }
+      // plugins need a native event, it will either be keyDown or autoKey
+      EventRecord macEvent;
+      ConvertCocoaKeyEventToMacEvent(theEvent, macEvent);
+      geckoEvent.nativeMsg = &macEvent;
       
-      // do we need to end composition if we got here by arrow key press or other?
-      if (!mInComposition)
-      {
-        isKeyEventHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
-        mIgnoreDoCommand = isKeyEventHandled;
-      }
+      isKeyEventHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      mIgnoreDoCommand = isKeyEventHandled;
     }
   }
 
