@@ -120,10 +120,9 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 		$(LIBS_DIR)     \
-		$(NSPR_LIBS)	\
-		-lxpcom		\
 		-lgkgfx		\
 		$(GFX_XIE_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
