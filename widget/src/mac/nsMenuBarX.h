@@ -49,12 +49,7 @@
 #include "nsWeakReference.h"
 #include "nsIContent.h"
 
-#include <MacTypes.h>
-#include <UnicodeConverter.h>
-#include <Menus.h>
-#include <CarbonEvents.h>
-
-extern nsWeakPtr gMacMenubarX;
+#include <Carbon/Carbon.h>
 
 class nsIWidget;
 class nsIDocument;

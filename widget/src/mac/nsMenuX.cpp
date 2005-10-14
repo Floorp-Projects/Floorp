@@ -64,10 +64,6 @@
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"
 
-#include <Appearance.h>
-#include <ToolUtils.h>
-#include <UnicodeConverter.h>
-
 #include "nsGUIEvent.h"
 
 #include "nsCRT.h"
@@ -75,13 +71,7 @@
 
 static OSStatus InstallMyMenuEventHandler(MenuRef menuRef, void* userData, EventHandlerRef* outHandler) ;
 
-// keep track of the menuID of the menu the mouse is currently over. Yes, this is ugly,
-// but necessary to work around bugs in Carbon with ::MenuSelect() sometimes returning
-// the wrong menuID.
-static MenuID gCurrentlyTrackedMenuID = 0;
-
-const PRInt16 kMacMenuIDX = nsMenuBarX::kAppleMenuID + 1;
-static PRInt16 gMacMenuIDCountX = kMacMenuIDX;
+static PRInt16 gMacMenuIDCountX = nsMenuBarX::kAppleMenuID + 1;
 static PRBool gConstructingMenu = PR_FALSE;
   
 #if DEBUG
@@ -754,19 +744,11 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
       nsMenuEvent menuEvent(PR_TRUE, NS_MENU_SELECTED, nsnull);
       menuEvent.time = PR_IntervalNow();
       menuEvent.mCommand = (PRUint32) menuRef;
-      if (kind == kEventMenuOpening) {
-        gCurrentlyTrackedMenuID = ::GetMenuID(menuRef);    // remember which menu ID we're over for later
+      if (kind == kEventMenuOpening)
         listener->MenuSelected(menuEvent);
-      }
       else
         listener->MenuDeselected(menuEvent);
     }
-  }
-  else if ( kind == kEventMenuTargetItem ) {
-    // remember which menu ID we're over for later
-    MenuRef menuRef;
-    ::GetEventParameter(event, kEventParamDirectObject, typeMenuRef, NULL, sizeof(menuRef), NULL, &menuRef);
-    gCurrentlyTrackedMenuID = ::GetMenuID(menuRef);
   }
   
   return result;
@@ -1269,19 +1251,19 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
     
   nsCOMPtr<nsIMenuBar> menubarParent = do_QueryInterface(mParent);
 
-  if(aAttribute == nsWidgetAtoms::disabled) {
+  if (aAttribute == nsWidgetAtoms::disabled) {
     SetRebuild(PR_TRUE);
    
     nsAutoString valueString;
     mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, valueString);
-    if(valueString.EqualsLiteral("true"))
+    if (valueString.EqualsLiteral("true"))
       SetEnabled(PR_FALSE);
     else
       SetEnabled(PR_TRUE);
       
     ::DrawMenuBar();
   } 
-  else if(aAttribute == nsWidgetAtoms::label) {
+  else if (aAttribute == nsWidgetAtoms::label) {
     SetRebuild(PR_TRUE);
     
     mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, mLabel);
@@ -1305,7 +1287,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
       ::DrawMenuBar();
     }
   }
-  else if(aAttribute == nsWidgetAtoms::hidden || aAttribute == nsWidgetAtoms::collapsed) {
+  else if (aAttribute == nsWidgetAtoms::hidden || aAttribute == nsWidgetAtoms::collapsed) {
     SetRebuild(PR_TRUE);
       
       nsAutoString hiddenValue, collapsedValue;
