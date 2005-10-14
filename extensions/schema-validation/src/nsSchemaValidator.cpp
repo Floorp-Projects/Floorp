@@ -117,8 +117,8 @@ nsSchemaValidator::ValidateString(const nsAString & aValue,
 {
   LOG((" --------- nsSchemaValidator::ValidateString called --------- "));
 
-  // empty namespace is valid
-  if (aValue.IsEmpty() || aType.IsEmpty())
+  // empty type is invalid
+  if (aType.IsEmpty())
     return NS_ERROR_NOT_AVAILABLE;
 
   // no schemas loaded and type is not builtin, abort
