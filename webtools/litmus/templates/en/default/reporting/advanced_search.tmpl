@@ -7,10 +7,10 @@
 
   <div id="content">
 
-    <h1 class="firstHeading">[% title %]</h1>
-    [% INCLUDE reporting/advanced_search_form.tmpl %]
-    <h1 class="firstHeading">Search Results</h1>
+    <h1 class="firstHeading">Advanced Search Results <a href="#search_form">(Jump to the Advanced Search Form)</a></h1>
     [% INCLUDE reporting/test_results.tmpl %]
+    <h1 class="firstHeading"><a name="search_form"></a>[% title %]</h1>
+    [% INCLUDE reporting/advanced_search_form.tmpl %]
 
   </div> <!--END content-->
 

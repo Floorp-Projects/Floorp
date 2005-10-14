@@ -32,7 +32,12 @@ h1.firstHeading, h1.errorHeading {
 	border-bottom: none;
 	margin-top: 0;
 	font-size: 1.8em;
+	line-height: 1.8em;
 	text-transform: lowercase; 
+}
+
+h1.firstHeading a {
+	font-size: 0.5em;
 }
 
 h1.errorHeading {
@@ -677,12 +682,9 @@ table.tcm td.header {
 	background-color: #d0d0d0; 
 }
 
-td.content {
-}
-
 td.content ul, td.content ol {
-	margin-left: 1em
-	margin-right: 1em
+	margin-left: 1em;
+	margin-right: 1em;
 	padding: 0px;
 }
 
@@ -812,6 +814,7 @@ div.section-full {
 div.section-header {
 	padding: 10px;
 	font-size: 1.4em;
+	line-height: 1.4em;
 	font-weight: bold;
 	color: #666666;
 	text-transform: lowercase;
