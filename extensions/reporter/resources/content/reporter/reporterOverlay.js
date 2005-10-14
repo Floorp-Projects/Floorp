@@ -50,14 +50,16 @@ var reporterListener = {
     var broadcaster = document.getElementById("reporterItemsBroadcaster");
     var isEnabled = false;
 
-    switch (aURI.scheme) {
-      case "http":
-      case "https":
-      case "ftp":
-      case "gopher":
-        isEnabled = true;
+    if (aURI instanceof Components.interfaces.nsIURI) {
+      switch (aURI.scheme) {
+        case "http":
+        case "https":
+        case "ftp":
+        case "gopher":
+          isEnabled = true;
+      }
     }
-    
+
     broadcaster.setAttribute("disabled", !isEnabled);
   },
 
