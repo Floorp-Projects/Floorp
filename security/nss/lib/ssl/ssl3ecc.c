@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* ECC code moved here from ssl3con.c */
-/* $Id: ssl3ecc.c,v 1.2 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
+/* $Id: ssl3ecc.c,v 1.3 2005/10/14 16:48:58 wtchang%redhat.com Exp $ */
 
 #ifdef NSS_ENABLE_ECC
 
@@ -374,8 +374,6 @@ ssl3_HandleECDHClientKeyExchange(sslSocket *ss, SSL3Opaque *b,
     pms = PK11_PubDeriveWithKDF(srvrPrivKey, &clntPubKey, PR_FALSE, NULL, NULL,
 			    CKM_ECDH1_DERIVE, target, CKA_DERIVE, 0,
 			    kdf, NULL, NULL);
-
-    PORT_Free(clntPubKey.u.ec.publicValue.data);
 
     if (pms == NULL) {
 	/* last gasp.  */
