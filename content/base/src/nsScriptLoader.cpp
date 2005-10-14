@@ -85,7 +85,7 @@ IntersectPrincipalCerts(nsIPrincipal *aOld, nsIPrincipal *aNew)
       aOld->GetURI(getter_AddRefs(uri));
       aOld->GetDomain(getter_AddRefs(domain));
 
-      nsContentUtils::SecurityManager()->GetCodebasePrincipal(uri, &principal);
+      nsContentUtils::GetSecurityManager()->GetCodebasePrincipal(uri, &principal);
       if (principal && domain) {
         principal->SetDomain(domain);
       }
@@ -507,7 +507,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
     if (!docPrincipal) {
       return FireErrorNotification(NS_ERROR_UNEXPECTED, aElement, aObserver);
     }
-    rv = nsContentUtils::SecurityManager()->
+    rv = nsContentUtils::GetSecurityManager()->
       CheckLoadURIWithPrincipal(docPrincipal, scriptURI,
                                 nsIScriptSecurityManager::ALLOW_CHROME);
 

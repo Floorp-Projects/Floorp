@@ -280,7 +280,11 @@ public:
   static nsIXTFService* GetXTFService();
 #endif
 
-  static nsIScriptSecurityManager* SecurityManager()
+  /**
+   * Get the cache security manager service. Can return null if the layout
+   * module has been shut down.
+   */
+  static nsIScriptSecurityManager* GetSecurityManager()
   {
     return sSecurityManager;
   }

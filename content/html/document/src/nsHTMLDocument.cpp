@@ -1849,7 +1849,7 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
   }
 
   nsCOMPtr<nsIPrincipal> callerPrincipal;
-  nsContentUtils::SecurityManager()->
+  nsContentUtils::GetSecurityManager()->
     GetSubjectPrincipal(getter_AddRefs(callerPrincipal));
 
   // The URI for the document after this call. Get it from the calling
@@ -2246,7 +2246,7 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
     // document for security purposes. Thus a document.write of a script tag
     // ends up producing a script with the same principals as the script
     // that performed the write.
-    nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
     nsCOMPtr<nsIPrincipal> subject;
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
@@ -3550,7 +3550,7 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
   if (!url.Equals("about:blank")) {
     // If we're 'about:blank' then we don't care who can edit us.
     // If we're not about:blank, then we need to check sameOrigin.
-    rv = nsContentUtils::SecurityManager()->CheckSameOrigin(nsnull,
+    rv = nsContentUtils::GetSecurityManager()->CheckSameOrigin(nsnull,
                                                             mDocumentURI);
     if (NS_FAILED(rv))
       return rv;
@@ -3824,7 +3824,7 @@ nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
 
     NS_NAMED_LITERAL_CSTRING(classNameStr, "Clipboard");
 
-    nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
     if (aPaste) {
       if (nsHTMLDocument::sPasteInternal_id == JSVAL_VOID) {

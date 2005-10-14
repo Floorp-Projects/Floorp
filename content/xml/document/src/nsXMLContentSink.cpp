@@ -639,7 +639,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Do security check
-    nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
     rv = secMan->
       CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), url,
                                 nsIScriptSecurityManager::ALLOW_CHROME);

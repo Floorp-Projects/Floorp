@@ -243,8 +243,11 @@ XULPopupListenerImpl::PreLaunchPopup(nsIDOMEvent* aMouseEvent)
                                               getter_AddRefs(doc),
                                               getter_AddRefs(prin));
       if (prin) {
+        nsIScriptSecurityManager *securityManager =
+            nsContentUtils::GetSecurityManager();
+
         nsCOMPtr<nsIPrincipal> system;
-        nsContentUtils::SecurityManager()->GetSystemPrincipal(getter_AddRefs(system));
+        securityManager->GetSystemPrincipal(getter_AddRefs(system));
         if (prin != system) {
           // This isn't chrome.  Cancel the preventDefault() and
           // let the event go forth.

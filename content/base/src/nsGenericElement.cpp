@@ -2417,7 +2417,7 @@ nsGenericElement::GetBaseURI() const
                  doc->GetDocumentCharacterSet().get(), parentBase);
   if (NS_SUCCEEDED(rv)) {
     // do a security check, almost the same as nsDocument::SetBaseURL()
-    rv = nsContentUtils::SecurityManager()->
+    rv = nsContentUtils::GetSecurityManager()->
       CheckLoadURIWithPrincipal(doc->GetPrincipal(), ourBase,
                                 nsIScriptSecurityManager::STANDARD);
   }

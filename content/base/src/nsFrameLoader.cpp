@@ -136,7 +136,7 @@ nsFrameLoader::LoadURI(nsIURI* aURI)
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
   // Check for security
-  nsIScriptSecurityManager *secMan = nsContentUtils::SecurityManager();
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
   // Get referring URL
   nsCOMPtr<nsIURI> referrer;
