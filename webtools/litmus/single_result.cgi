@@ -47,6 +47,11 @@ if ($c->param && $c->param('id')) {
   
   my $result = Litmus::DB::Testresult->retrieve($c->param('id'));
 
+  if (!$result) {
+    internalError("There is no test result corresponding to id#: " . $c->param('id') . ".");
+    exit 1;
+  }
+
   my $time = &Date::Manip::UnixDate("now","%q");
   my $cookie =  Litmus::Auth::getCookie();
   my $user;
@@ -93,15 +98,23 @@ if ($c->param && $c->param('id')) {
   $vars->{"defaultemail"} = Litmus::Auth::getCookie();
   
   Litmus->template()->process("reporting/single_result.tmpl", $vars) || 
-    internalError(Litmus->template()->error());
+    internalError("Error loading template.");
   
 } else {
-  internalError(Litmus->template()->error());
-  print "Error\n";
+  internalError("You must provide a test result id#.");
   exit 1;
 }
 
 exit 0;
+
+
+
+
+
+
+
+
+
 
 
 
