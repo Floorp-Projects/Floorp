@@ -1543,6 +1543,55 @@ UpdateManager.prototype = {
 };
 
 /**
+ * This class implements nsIBadCertListener.  It's job is to prevent "bad cert"
+ * security dialogs from being shown to the user.  It is better to simply fail
+ * if the certificate is bad.  See bug 304286.
+ */
+function BadCertHandler() {
+}
+BadCertHandler.prototype = {
+  /**
+   * See nsIBadCertListener
+   */
+  confirmUnknownIssuer: function(socketInfo, cert, certAddType) {
+    return false;
+  },
+
+  confirmMismatchDomain: function(socketInfo, targetURL, cert) {
+    return false;
+  },
+
+  confirmCertExpired: function(socketInfo, cert) {
+    return false;
+  },
+
+  notifyCrlNextupdate: function(socketInfo, targetURL, cert) {
+  },
+
+  /**
+   * See nsIInterfaceRequestor
+   */
+  getInterface: function(iid) {
+    if (iid.equals(Components.interfaces.nsIBadCertListener))
+      return this;
+
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
+  },
+
+  /**
+   * See nsISupports
+   */
+  QueryInterface: function(iid) {
+    if (!iid.equals(Components.interfaces.nsIBadCertListener) &&
+        !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
+        !iid.equals(Components.interfaces.nsISupports))
+      throw Components.results.NS_ERROR_NO_INTERFACE;
+    return this;
+  }
+};
+
+/**
  * Checker
  * Checks for new Updates
  * @constructor
@@ -1622,6 +1671,7 @@ Checker.prototype = {
       Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"].
       createInstance(Components.interfaces.nsIXMLHttpRequest);
     this._request.open("GET", this.updateURL, true);
+    this._request.channel.notificationCallbacks = new BadCertHandler();
     this._request.overrideMimeType("text/xml");
     this._request.setRequestHeader("Cache-Control", "no-cache");
     

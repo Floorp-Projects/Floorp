@@ -1258,17 +1258,33 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
                            nsNSSCertificate *nssCert)
 {
   PRBool retVal = PR_FALSE;
-  nsIBadCertListener *badCertHandler;
+  nsIBadCertListener *badCertHandler = nsnull;
   PRInt16 addType = nsIBadCertListener::UNINIT_ADD_FLAG;
   nsresult rv;
 
   if (!nssCert)
     return PR_FALSE;
-  rv = getNSSDialogs((void**)&badCertHandler, 
-                     NS_GET_IID(nsIBadCertListener),
-                     NS_BADCERTLISTENER_CONTRACTID);
-  if (NS_FAILED(rv)) 
-    return PR_FALSE;
+
+  // Try to get a nsIBadCertListener implementation from the socket consumer
+  // first.  If that fails, fallback to the default UI.
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  infoObject->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  if (callbacks) {
+    nsCOMPtr<nsIBadCertListener> handler = do_GetInterface(callbacks);
+    if (handler)
+      NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                           NS_GET_IID(nsIBadCertListener),
+                           handler,
+                           PROXY_SYNC,
+                           (void**)&badCertHandler);
+  }
+  if (!badCertHandler) {
+    rv = getNSSDialogs((void**)&badCertHandler, 
+                       NS_GET_IID(nsIBadCertListener),
+                       NS_BADCERTLISTENER_CONTRACTID);
+    if (NS_FAILED(rv)) 
+      return PR_FALSE;
+  }
   nsIInterfaceRequestor *csi = NS_STATIC_CAST(nsIInterfaceRequestor*,
                                                  infoObject);
   nsIX509Cert *callBackCert = NS_STATIC_CAST(nsIX509Cert*, nssCert);
