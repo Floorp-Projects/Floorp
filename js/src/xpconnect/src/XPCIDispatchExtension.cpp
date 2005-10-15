@@ -237,15 +237,13 @@ JSBool XPCIDispatchExtension::DefineProperty(XPCCallContext & ccx,
     // Look up the native interface for IDispatch and then find a tearoff
     XPCNativeInterface* iface = XPCNativeInterface::GetNewOrUsed(ccx,
                                                                  "IDispatch");
+    // The native interface isn't defined so just exit with an error
     if(iface == nsnull)
         return JS_FALSE;
     XPCWrappedNativeTearOff* to = 
         wrapperToReflectInterfaceNames->LocateTearOff(ccx, iface);
+    // This object has no IDispatch interface so bail.
     if(to == nsnull)
-        return JS_FALSE;
-    // get the JS Object for the tea
-    JSObject* jso = to->GetJSObject();
-    if(jso == nsnull)
         return JS_FALSE;
     // Look up the member in the interface
     const XPCDispInterface::Member * member = to->GetIDispatchInfo()->FindMember(idval);
