@@ -364,6 +364,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SetProgressListener(
 {
     mProgressListener = aProgressListener;
     mProgressListener2 = do_QueryInterface(aProgressListener);
+    mEventSink = do_GetInterface(aProgressListener);
     return NS_OK;
 }
 
@@ -776,6 +777,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
     {
         mProgressListener = nsnull;
         mProgressListener2 = nsnull;
+        mEventSink = nsnull;
     }
 
     return NS_OK;
@@ -973,8 +975,14 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
               nsUint64(aProgressMax), mTotalCurrentProgress, mTotalMaxProgress);
     }
 
-    return NS_OK;
+    // If our progress listener implements nsIProgressEventSink,
+    // forward the notification
+    if (mEventSink)
+    {
+        mEventSink->OnProgress(request, ctxt, aProgress, aProgressMax);
+    }
 
+    return NS_OK;
 }
 
 /* void onStatus (in nsIRequest request, in nsISupports ctxt,
@@ -1008,6 +1016,14 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStatus(
         }
 
     }
+
+    // If our progress listener implements nsIProgressEventSink,
+    // forward the notification
+    if (mEventSink)
+    {
+        mEventSink->OnStatus(request, ctxt, status, statusArg);
+    }
+
     return NS_OK;
 }
 

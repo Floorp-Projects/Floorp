@@ -204,6 +204,7 @@ private:
      * progress notification.
      */
     nsCOMPtr<nsIWebProgressListener2> mProgressListener2;
+    nsCOMPtr<nsIProgressEventSink> mEventSink;
     nsHashtable               mOutputMap;
     nsHashtable               mUploadList;
     nsHashtable               mURIMap;
