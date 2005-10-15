@@ -505,6 +505,10 @@ typedef JSObject *
                                   jsval *vp);
 
 typedef JSBool
+(* JS_DLL_CALLBACK JSSetMethodOp)(JSContext *cx, JSObject *obj, jsid id,
+                                  jsval *vp);
+
+typedef JSBool
 (* JS_DLL_CALLBACK JSEnumerateValuesOp)(JSContext *cx, JSObject *obj,
                                         JSIterateOp enum_op,
                                         jsval *statep, jsid *idp, jsval *vp);

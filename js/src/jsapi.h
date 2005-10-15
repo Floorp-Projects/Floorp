@@ -970,6 +970,7 @@ struct JSObjectOps {
 struct JSXMLObjectOps {
     JSObjectOps         base;
     JSGetMethodOp       getMethod;
+    JSSetMethodOp       setMethod;
     JSEnumerateValuesOp enumerateValues;
     JSEqualityOp        equality;
     JSConcatenateOp     concatenate;

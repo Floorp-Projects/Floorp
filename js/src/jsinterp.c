@@ -890,6 +890,7 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
      */
     if (JSVAL_IS_PRIMITIVE(v)) {
 #if JS_HAS_NO_SUCH_METHOD
+        jsid id;
         jsbytecode *pc;
         jsatomid atomIndex;
         JSAtom *atom;
@@ -918,10 +919,20 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags)
             goto out2;
         thisp = frame.thisp;
 
-        ok = OBJ_GET_PROPERTY(cx, thisp,
-                              ATOM_TO_JSID(cx->runtime->atomState
-                                           .noSuchMethodAtom),
-                              &v);
+        id = ATOM_TO_JSID(cx->runtime->atomState.noSuchMethodAtom);
+        if (OBJECT_IS_XML(cx, thisp)) {
+            JSXMLObjectOps *ops;
+
+            ops = (JSXMLObjectOps *) thisp->map->ops;
+            thisp = ops->getMethod(cx, thisp, id, &v);
+            if (!thisp) {
+                ok = JS_FALSE;
+                goto out2;
+            }
+            vp[1] = OBJECT_TO_JSVAL(thisp);
+        } else {
+            ok = OBJ_GET_PROPERTY(cx, thisp, id, &v);
+        }
         if (!ok)
             goto out2;
         if (JSVAL_IS_PRIMITIVE(v))
@@ -3641,6 +3652,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #endif
 #if JS_HAS_XML_SUPPORT
               case JSOP_GETMETHOD:    goto do_JSOP_GETMETHOD;
+              case JSOP_SETMETHOD:    goto do_JSOP_SETMETHOD;
 #endif
               case JSOP_INITCATCHVAR: goto do_JSOP_INITCATCHVAR;
               case JSOP_NAMEDFUNOBJ:  goto do_JSOP_NAMEDFUNOBJ;
@@ -5216,6 +5228,28 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             if (!ok)
                 goto out;
+            STORE_OPND(-1, rval);
+          END_LITOPX_CASE
+
+          BEGIN_LITOPX_CASE(JSOP_SETMETHOD, 0)
+            /* Get an immediate atom naming the property. */
+            id   = ATOM_TO_JSID(atom);
+            rval = FETCH_OPND(-1);
+            FETCH_OBJECT(cx, -2, lval, obj);
+            SAVE_SP(fp);
+
+            /* Special-case XML object method lookup, per ECMA-357. */
+            if (OBJECT_IS_XML(cx, obj)) {
+                JSXMLObjectOps *ops;
+
+                ops = (JSXMLObjectOps *) obj->map->ops;
+                ok = ops->setMethod(cx, obj, id, &rval);
+            } else {
+                CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
+            }
+            if (!ok)
+                goto out;
+            --sp;
             STORE_OPND(-1, rval);
           END_LITOPX_CASE
 

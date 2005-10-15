@@ -4451,10 +4451,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * First, emit code for the left operand to evaluate the callable or
          * constructable object expression.
          *
-         * For E4X, if calling rather than constructing (TOK_LP), and if this
-         * expression is a member reference, select JSOP_GETMETHOD instead of
-         * JSOP_GETPROP.  ECMA-357 separates XML method lookup from the normal
-         * property lookup done for native objects.
+         * For E4X, if this expression is a dotted member reference, select
+         * JSOP_GETMETHOD instead of JSOP_GETPROP.  ECMA-357 separates XML
+         * method lookup from the normal property id lookup done for native
+         * objects.
          */
         pn2 = pn->pn_head;
 #if JS_HAS_XML_SUPPORT

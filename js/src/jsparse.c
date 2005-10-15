@@ -2428,7 +2428,9 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             tc->flags |= TCF_FUN_HEAVYWEIGHT;
         break;
       case TOK_DOT:
-        pn2->pn_op = JSOP_SETPROP;
+        pn2->pn_op = (pn2->pn_op == JSOP_GETMETHOD)
+                     ? JSOP_SETMETHOD
+                     : JSOP_SETPROP;
         break;
       case TOK_LB:
         pn2->pn_op = JSOP_SETELEM;

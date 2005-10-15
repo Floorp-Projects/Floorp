@@ -391,3 +391,4 @@ OPDEF(JSOP_LITOPX,        191,"litopx",     NULL,     5,  0,  0, 12,  JOF_LITOPX
  */
 OPDEF(JSOP_STARTXML,      192,"startxml",    NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_STARTXMLEXPR,  193,"startxmlexpr",NULL,    1,  0,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_SETMETHOD,     194,"setmethod",   NULL,    3,  2,  1,  1,  JOF_CONST|JOF_PROP)
