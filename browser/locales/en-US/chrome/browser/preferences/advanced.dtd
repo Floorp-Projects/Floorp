@@ -23,7 +23,7 @@
 <!ENTITY enableSearchUpdate.accesskey   "h">
 <!ENTITY checkNow.label                 "Check Now...">
 <!ENTITY appCheckNow.accesskey          "N">
-<!ENTITY whenUpdatesFound.label         "When updates to &brandShortName; are found,">
+<!ENTITY whenUpdatesFound.label         "When updates to &brandShortName; are found:">
 <!ENTITY modeAskMe.label                "Ask me what I want to do">
 <!ENTITY modeAskMe.accesskey            "A">
 <!ENTITY modeAutomatic.label            "Automatically download and install the update">
