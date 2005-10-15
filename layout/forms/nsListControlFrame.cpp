@@ -352,7 +352,7 @@ nsListControlFrame::Destroy(nsPresContext *aPresContext)
 }
 
 NS_IMETHODIMP
-nsListControlFrame::Paint(nsPresContext*      aPresContext,
+nsListControlFrame::Paint(nsPresContext*       aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer,
@@ -668,7 +668,7 @@ GetOptGroupLabelsHeight(nsPresContext* aPresContext,
 // Main Reflow for ListBox/Dropdown
 //-----------------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::Reflow(nsPresContext*          aPresContext, 
+nsListControlFrame::Reflow(nsPresContext*           aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
@@ -1463,8 +1463,8 @@ nsListControlFrame::CaptureMouseEvents(nsPresContext* aPresContext, PRBool aGrab
 //---------------------------------------------------------
 NS_IMETHODIMP 
 nsListControlFrame::HandleEvent(nsPresContext* aPresContext, 
-                                       nsGUIEvent*     aEvent,
-                                       nsEventStatus*  aEventStatus)
+                                nsGUIEvent*    aEvent,
+                                nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   // temp fix until Bug 124990 gets fixed
@@ -1515,8 +1515,8 @@ nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
 //---------------------------------------------------------
 NS_IMETHODIMP
 nsListControlFrame::SetInitialChildList(nsPresContext* aPresContext,
-                                        nsIAtom*        aListName,
-                                        nsIFrame*       aChildList)
+                                        nsIAtom*       aListName,
+                                        nsIFrame*      aChildList)
 {
   // First check to see if all the content has been added
   mIsAllContentHere = mContent->IsDoneAddingChildren();
@@ -1557,10 +1557,10 @@ nsListControlFrame::GetSizeAttribute(PRInt32 *aSize) {
 //---------------------------------------------------------
 NS_IMETHODIMP  
 nsListControlFrame::Init(nsPresContext*  aPresContext,
-                         nsIContent*      aContent,
-                         nsIFrame*        aParent,
-                         nsStyleContext*  aContext,
-                         nsIFrame*        aPrevInFlow)
+                         nsIContent*     aContent,
+                         nsIFrame*       aParent,
+                         nsStyleContext* aContext,
+                         nsIFrame*       aPrevInFlow)
 {
   nsresult result = nsHTMLScrollFrame::Init(aPresContext, aContent, aParent, aContext,
                                             aPrevInFlow);
@@ -2355,8 +2355,8 @@ nsListControlFrame::AboutToRollup()
 //---------------------------------------------------------
 NS_IMETHODIMP
 nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
-                              const nsHTMLReflowState*  aReflowState,
-                              nsDidReflowStatus         aStatus)
+                              const nsHTMLReflowState* aReflowState,
+                              nsDidReflowStatus        aStatus)
 {
   nsresult rv;
   
