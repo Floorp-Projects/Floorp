@@ -3853,8 +3853,11 @@ GetFunction(JSContext *cx, JSObject *obj, JSXML *xml, jsid id, jsval *vp)
         if (JSVAL_IS_FUNCTION(cx, fval)) {
             if (xml && OBJECT_IS_XML(cx, obj)) {
                 fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(fval));
-                if ((fun->spare & CLASS_TO_MASK(xml->xml_class)) == 0)
+                if (fun->spare &&
+                    (fun->spare & CLASS_TO_MASK(xml->xml_class)) == 0) {
+                    /* XML method called on XMLList or vice versa. */
                     fval = JSVAL_VOID;
+                }
             }
             break;
         }
@@ -4422,6 +4425,15 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             goto bad;
         }
 
+        nameqn = ToXMLName(cx, id, &funid);
+        if (!nameqn)
+            goto bad;
+        if (funid) {
+            ok = js_SetProperty(cx, obj, funid, vp);
+            goto out;
+        }
+        nameobj = nameqn->object;
+
         if (JSXML_HAS_VALUE(xml))
             goto out;
 
@@ -4438,15 +4450,6 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             vxml = rxml;
             *vp = OBJECT_TO_JSVAL(vxml->object);
         }
-
-        nameqn = ToXMLName(cx, id, &funid);
-        if (!nameqn)
-            goto bad;
-        if (funid) {
-            ok = js_SetProperty(cx, obj, funid, vp);
-            goto out;
-        }
-        nameobj = nameqn->object;
 
         /*
          * 6.
@@ -5143,17 +5146,26 @@ retry:
             }
         } else if (HasSimpleContent(xml)) {
             JSString *str;
+            JSObject *tmp;
 
             str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
-            if (!str || !js_ValueToObject(cx, STRING_TO_JSVAL(str), &obj))
+            if (!str || !js_ValueToObject(cx, STRING_TO_JSVAL(str), &tmp))
                 return NULL;
-            if (!js_GetProperty(cx, obj, id, &fval))
+            if (!js_GetProperty(cx, tmp, id, &fval))
                 return NULL;
+            if (!JSVAL_IS_VOID(fval))
+                obj = tmp;
         }
     }
 
     *vp = fval;
     return obj;
+}
+
+static JSBool
+xml_setMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
+{
+    return js_SetProperty(cx, obj, id, vp);
 }
 
 static JSBool
@@ -5344,8 +5356,9 @@ JS_FRIEND_DATA(JSXMLObjectOps) js_XMLObjectOps = {
     js_SetProtoOrParent,        js_SetProtoOrParent,
     xml_mark,                   xml_clear,
     NULL,                       NULL },
-    xml_getMethod,              xml_enumerateValues,
-    xml_equality,               xml_concatenate
+    xml_getMethod,              xml_setMethod,
+    xml_enumerateValues,        xml_equality,
+    xml_concatenate
 };
 
 static JSObjectOps *

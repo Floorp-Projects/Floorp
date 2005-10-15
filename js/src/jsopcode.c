@@ -1894,7 +1894,23 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
 #if JS_HAS_XML_SUPPORT
               BEGIN_LITOPX_CASE(JSOP_GETMETHOD)
-                goto do_getprop;
+                GET_QUOTE_AND_FMT("%s.function::[%s]", "%s.function::%s", rval);
+                lval = POP_STR();
+                todo = Sprint(&ss->sprinter, fmt, lval, rval);
+              END_LITOPX_CASE
+
+              BEGIN_LITOPX_CASE(JSOP_SETMETHOD)
+                GET_ATOM_QUOTE_AND_FMT("%s.function::[%s] %s= %s",
+                                       "%s.function::%s %s= %s",
+                                       xval);
+                rval = POP_STR();
+                lval = POP_STR();
+                sn = js_GetSrcNote(jp->script, pc - 1);
+                todo = Sprint(&ss->sprinter, fmt, lval, xval,
+                              (sn && SN_TYPE(sn) == SRC_ASSIGNOP)
+                              ? js_CodeSpec[lastop].token
+                              : "",
+                              rval);
               END_LITOPX_CASE
 #endif
 
@@ -2018,6 +2034,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #endif
 #if JS_HAS_XML_SUPPORT
                   case JSOP_GETMETHOD:    goto do_JSOP_GETMETHOD;
+                  case JSOP_SETMETHOD:    goto do_JSOP_SETMETHOD;
 #endif
                   case JSOP_NAMEDFUNOBJ:  goto do_JSOP_NAMEDFUNOBJ;
                   case JSOP_NUMBER:       goto do_JSOP_NUMBER;
