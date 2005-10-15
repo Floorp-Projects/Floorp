@@ -11,7 +11,7 @@
 <!ENTITY profileCreationIntro.text      "If you create several profiles you can tell them apart by the profile names. You may use the name provided here or use one of your own.">
 <!ENTITY profilePrompt.label            "Enter new profile name:">
 <!ENTITY profilePrompt.accesskey        "E">
-<!ENTITY profileDirExplanation.text     "Your user settings, preferences, bookmarks and mail will be stored in:">
+<!ENTITY profileDirectoryExplanation.text   "Your user settings, preferences and other user-related data will be stored in:">
 <!ENTITY profileDefaultName             "Default User">
 <!ENTITY button.choosefolder.label      "Choose Folder...">
 <!ENTITY button.choosefolder.accesskey  "C">
