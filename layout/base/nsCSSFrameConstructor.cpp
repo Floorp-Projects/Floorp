@@ -3670,9 +3670,9 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsFrameConstructorState& aStat
   aState.PushFloatContainingBlock(aNewFrame, floatSaveState,
                                   haveFirstLetterStyle, haveFirstLineStyle);
   nsFrameItems childItems;
-  // pass in aTableCreator so ProcessChildren will call TableProcessChildren
+  // pass in null tableCreator so ProcessChildren will not call TableProcessChildren
   rv = ProcessChildren(aState, aContent, aNewFrame,
-                       PR_TRUE, childItems, PR_TRUE, &aTableCreator);
+                       PR_TRUE, childItems, PR_TRUE, nsnull);
   if (NS_FAILED(rv)) return rv;
   aNewFrame->SetInitialChildList(aState.mPresContext, nsnull,
                                  childItems.childList);
