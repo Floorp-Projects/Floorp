@@ -1144,6 +1144,7 @@ have_fun:
             PUSH(JSVAL_VOID);
         } while (--nvars != 0);
     }
+    JS_ASSERT(nvars == 0);
 
     /* Store the current sp in frame before calling fun. */
     SAVE_SP(&frame);
