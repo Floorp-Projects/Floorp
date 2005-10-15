@@ -797,8 +797,12 @@ nsHttpConnection::OnTransportStatus(nsITransport *trans,
 NS_IMETHODIMP
 nsHttpConnection::GetInterface(const nsIID &iid, void **result)
 {
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
-
+    // NOTE: This function is only called on the UI thread via sync proxy from
+    //       the socket transport thread.  If that weren't the case, then we'd
+    //       have to worry about the possibility of mTransaction going away
+    //       part-way through this function call.  See CloseTransaction.
+    NS_ASSERTION(PR_GetCurrentThread() != gSocketThread, "wrong thread");
+ 
     if (mTransaction) {
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
         mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
