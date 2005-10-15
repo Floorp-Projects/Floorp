@@ -38,7 +38,7 @@ use Litmus::Auth;
 use Litmus::Utils;
 
 use CGI;
-use Time::Piece::MySQL;
+use Date::Manip;
 
 use diagnostics;
 use Data::Dumper;
@@ -130,7 +130,7 @@ foreach my $curtestid (@tests) {
     
     my $note = $c->param("testnote_".$curtestid);
     
-    my $time = localtime;
+    my $time = &Date::Manip::UnixDate("now","%q");
     
     # normally, the user comes with a cookie, but for simpletest
     # users, we just use the web-user@mozilla.org user:

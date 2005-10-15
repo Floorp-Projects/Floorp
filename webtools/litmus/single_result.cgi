@@ -36,14 +36,18 @@ use Litmus::Auth;
 use Litmus::Error;
 use Litmus::DB::Testresult;
 use Litmus::DB::Resultbug;
+
 use CGI;
+use Date::Manip;
 
 my $c = new CGI; 
 print $c->header();
 
 if ($c->param && $c->param('id')) {
   
-  my $time = localtime;
+  my $result = Litmus::DB::Testresult->retrieve($c->param('id'));
+
+  my $time = &Date::Manip::UnixDate("now","%q");
   my $cookie =  Litmus::Auth::getCookie();
   my $user;
   if ($cookie) {
@@ -57,7 +61,7 @@ if ($c->param && $c->param('id')) {
         if (!Litmus::DB::Resultbug->search(test_result_id =>$c->param('id'),
                                            bug_id => $new_bug)) {
           my $bug = Litmus::DB::Resultbug->create({
-                                                   test_result_id => $c->param('id'),
+                                                   testresult => $result,
                                                    last_updated => $time,
                                                    submission_time => $time,
                                                    user => $user,
@@ -71,7 +75,7 @@ if ($c->param && $c->param('id')) {
         $c->param('new_comment') and
         $c->param('new_comment') ne '') {
       my $comment = Litmus::DB::Comment->create({
-                                                 test_result_id => $c->param('id'),
+                                                 testresult => $result,
                                                  last_updated => $time,
                                                  submission_time => $time,
                                                  user => $user,
@@ -79,8 +83,6 @@ if ($c->param && $c->param('id')) {
                                                 });    
     }
   }
-
-  my $result = Litmus::DB::Testresult->retrieve($c->param('id'));
   
   my $title = 'Test Result #' . $c->param('id') . ' - Details';
   my $vars = {
