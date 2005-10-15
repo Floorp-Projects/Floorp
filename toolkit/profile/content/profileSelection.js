@@ -252,7 +252,7 @@ function ConfirmDelete()
   if (selectedProfile.rootDir.exists()) {
     var dialogTitle = gProfileManagerBundle.getString("deleteTitle");
     var dialogText =
-      gProfileManagerBundle.getFormattedString("deleteProfile",
+      gProfileManagerBundle.getFormattedString("deleteProfileConfirm",
                                                [selectedProfile.rootDir.path]);
 
     var buttonPressed = gPromptService.confirmEx(window, dialogTitle, dialogText,
