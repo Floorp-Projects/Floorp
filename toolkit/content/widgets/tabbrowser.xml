@@ -1483,7 +1483,8 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.canDrop && aDragSession.sourceNode.parentNode == this.mTabContainer) {
+            if (aDragSession.canDrop && aDragSession.sourceNode &&
+                aDragSession.sourceNode.parentNode == this.mTabContainer) {
               var newIndex = this.getNewIndex(aEvent);
 
               var ib = this.mTabDropIndicatorBar;
