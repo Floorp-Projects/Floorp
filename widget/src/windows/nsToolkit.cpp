@@ -931,6 +931,8 @@ MouseTrailer::MouseTrailer() : mHoldMouseWindow(nsnull), mCaptureWindow(nsnull),
 MouseTrailer::~MouseTrailer()
 {
   DestroyTimer();
+  NS_IF_RELEASE(mHoldMouseWindow);
+  NS_IF_RELEASE(mCaptureWindow);
 }
 //-------------------------------------------------------------------------
 //
@@ -943,6 +945,7 @@ void MouseTrailer::SetMouseTrailerWindow(nsWindow * aNSWin)
     // Make sure TimerProc is fired at least once for the old window
     TimerProc(nsnull, nsnull);
   }
+  NS_IF_RELEASE(mHoldMouseWindow);
   mHoldMouseWindow = topWin;
   CreateTimer();
 }
@@ -982,6 +985,7 @@ void MouseTrailer::DestroyTimer()
 //-------------------------------------------------------------------------
 void MouseTrailer::SetCaptureWindow(nsWindow * aNSWin) 
 { 
+  NS_IF_RELEASE(mCaptureWindow);
   mCaptureWindow = aNSWin ? aNSWin->GetTopLevelWindow() : nsnull;
   if (nsnull != mCaptureWindow) {
     mIsInCaptureMode = PR_TRUE;
@@ -1007,7 +1011,7 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
       // The mHoldMouse could be bad from rolling over the frame, so clear 
       // it if we were capturing and now this is the first timer call back 
       // since we canceled the capture
-      mSingleton.mHoldMouseWindow = nsnull;
+      NS_IF_RELEASE(mSingleton.mHoldMouseWindow);
       mSingleton.mIsInCaptureMode = PR_FALSE;
       return;
     }
@@ -1035,12 +1039,12 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
 
         // we are out of this window and of any window, destroy timer
         mSingleton.DestroyTimer();
-        mSingleton.mHoldMouseWindow = nsnull;
+        NS_IF_RELEASE(mSingleton.mHoldMouseWindow);
       }
     }
   } else {
     mSingleton.DestroyTimer();
-    mSingleton.mHoldMouseWindow = nsnull;
+    NS_IF_RELEASE(mSingleton.mHoldMouseWindow);
   }
 }
 
