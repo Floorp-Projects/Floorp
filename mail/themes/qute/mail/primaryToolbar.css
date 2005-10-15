@@ -443,6 +443,6 @@ toolbar[iconsize="small"] #button-mark[disabled] {
 }
 
 #phishingBarImage {
-/* for now, temporarily copy the remote image icon until we can get a new one */
-  list-style-image: url("chrome://messenger/skin/icons/remote-blocked.png"); 
+/* for now, temporarily use the alert icon until we can get a new one */
+  list-style-image: url("chrome://global/skin/icons/Warning.png"); 
 }
