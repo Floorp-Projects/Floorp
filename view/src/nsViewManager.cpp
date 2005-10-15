@@ -4294,6 +4294,13 @@ NS_IMETHODIMP nsViewManager::GetRectVisibility(nsIView *aView,
     return NS_OK; 
   }
 
+  // nsViewManager::InsertChild ensures that descendants of floating views
+  // are also marked floating.
+  if (view->GetFloating()) {
+    *aRectVisibility = nsRectVisibility_kVisible;
+    return NS_OK;
+  }
+
   // Calculate the absolute coordinates for the visible rectangle   
   nsRect visibleRect;
   if (GetVisibleRect(visibleRect) == NS_ERROR_FAILURE) {
