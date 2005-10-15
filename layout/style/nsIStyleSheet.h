@@ -44,7 +44,6 @@ class nsIAtom;
 class nsString;
 class nsIURI;
 class nsIStyleRule;
-class nsISupportsArray;
 class nsPresContext;
 class nsIContent;
 class nsIDocument;

@@ -40,7 +40,6 @@
 #include "nsCRT.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
-#include "nsISupportsArray.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIStyledContent.h"
 #include "nsIStyleRule.h"

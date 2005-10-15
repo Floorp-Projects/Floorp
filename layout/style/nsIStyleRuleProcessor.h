@@ -49,7 +49,6 @@ class nsIStyleSheet;
 class nsPresContext;
 class nsIContent;
 class nsIStyledContent;
-class nsISupportsArray;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsRuleWalker;

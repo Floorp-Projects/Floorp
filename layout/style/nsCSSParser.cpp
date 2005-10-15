@@ -61,7 +61,6 @@
 #include "nsUnicharUtils.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
-#include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsColor.h"
 #include "nsStyleConsts.h"
@@ -122,10 +121,10 @@ public:
                                        PRBool*           aChanged,
                                        PRBool            aClearOldDecl);
 
-  NS_IMETHOD ParseRule(const nsAString&   aRule,
-                       nsIURI*            aSheetURL,
-                       nsIURI*            aBaseURL,
-                       nsISupportsArray** aResult);
+  NS_IMETHOD ParseRule(const nsAString&        aRule,
+                       nsIURI*                 aSheetURL,
+                       nsIURI*                 aBaseURL,
+                       nsCOMArray<nsICSSRule>& aResult);
 
   NS_IMETHOD ParseProperty(const nsCSSProperty aPropID,
                            const nsAString& aPropValue,
@@ -461,8 +460,7 @@ protected:
 
 PR_STATIC_CALLBACK(void) AppendRuleToArray(nsICSSRule* aRule, void* aArray)
 {
-  nsISupportsArray* arr = (nsISupportsArray*) aArray;
-  arr->AppendElement(aRule);
+  NS_STATIC_CAST(nsCOMArray<nsICSSRule>*, aArray)->AppendObject(aRule);
 }
 
 PR_STATIC_CALLBACK(void) AppendRuleToSheet(nsICSSRule* aRule, void* aParser)
@@ -840,25 +838,18 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsAString&  aBuffer,
 }
 
 NS_IMETHODIMP
-CSSParserImpl::ParseRule(const nsAString& aRule,
-                         nsIURI*            aSheetURL,
-                         nsIURI*            aBaseURL,
-                         nsISupportsArray** aResult)
+CSSParserImpl::ParseRule(const nsAString&        aRule,
+                         nsIURI*                 aSheetURL,
+                         nsIURI*                 aBaseURL,
+                         nsCOMArray<nsICSSRule>& aResult)
 {
   NS_ASSERTION(nsnull != aBaseURL, "need base URL");
-  NS_ENSURE_ARG_POINTER(aResult);
 
   nsresult rv = InitScanner(aRule, aSheetURL, 0, aBaseURL);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = NS_NewISupportsArray(aResult);
-  if (NS_FAILED(rv)) {
-    ReleaseScanner();
-    return rv;
-  }
-  
   mSection = eCSSSection_Charset; // callers are responsible for rejecting invalid rules.
   nsresult errorCode = NS_OK;
 
@@ -868,11 +859,11 @@ CSSParserImpl::ParseRule(const nsAString& aRule,
     REPORT_UNEXPECTED(PEParseRuleWSOnly);
     OUTPUT_ERROR();
   } else if (eCSSToken_AtKeyword == tk->mType) {
-    ParseAtRule(errorCode, AppendRuleToArray, *aResult);    
+    ParseAtRule(errorCode, AppendRuleToArray, &aResult);
   }
   else {
     UngetToken();
-    ParseRuleSet(errorCode, AppendRuleToArray, *aResult);
+    ParseRuleSet(errorCode, AppendRuleToArray, &aResult);
   }
   OUTPUT_ERROR();
   ReleaseScanner();
