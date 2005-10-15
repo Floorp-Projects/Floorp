@@ -49,9 +49,9 @@
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsVoidArray.h"
+#include "nsCOMArray.h"
 
 class nsIURI;
-class nsISupportsArray;
 class nsMediaList;
 
 // -------------------------------
@@ -73,7 +73,7 @@ public:
   nsAutoVoidArray        mSheets;
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
   nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
-  nsISupportsArray*      mOrderedRules;
+  nsCOMArray<nsICSSRule> mOrderedRules;
   nsAutoPtr<nsXMLNameSpaceMap> mNameSpaceMap;
   PRPackedBool           mComplete;
 };

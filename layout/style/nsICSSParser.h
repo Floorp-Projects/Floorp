@@ -41,6 +41,7 @@
 #include "nsAString.h"
 #include "nsCSSProperty.h"
 #include "nsColor.h"
+#include "nsCOMArray.h"
 
 class nsICSSStyleRule;
 class nsICSSStyleSheet;
@@ -49,12 +50,11 @@ class nsIURI;
 class nsCSSDeclaration;
 class nsICSSLoader;
 class nsICSSRule;
-class nsISupportsArray;
 class nsMediaList;
 
 #define NS_ICSS_PARSER_IID    \
-{ 0x94d1d921, 0xd6f6, 0x435f, \
-  {0xa5, 0xe8, 0x85, 0x3f, 0x6e, 0x34, 0x57, 0xf6} }
+{ 0x8f2705b6, 0x11ed, 0x47a0, \
+  {0xaf, 0x25, 0x04, 0x2e, 0x3d, 0x4a, 0x6f, 0xb7} }
 
 // Rule processing function
 typedef void (*PR_CALLBACK RuleAppendFunc) (nsICSSRule* aRule, void* aData);
@@ -104,10 +104,10 @@ public:
                                        PRBool*                  aChanged,
                                        PRBool                   aClearOldDecl) = 0;
 
-  NS_IMETHOD ParseRule(const nsAString&   aRule,
-                       nsIURI*            aSheetURL,
-                       nsIURI*            aBaseURL,
-                       nsISupportsArray** aResult) = 0;
+  NS_IMETHOD ParseRule(const nsAString&        aRule,
+                       nsIURI*                 aSheetURL,
+                       nsIURI*                 aBaseURL,
+                       nsCOMArray<nsICSSRule>& aResult) = 0;
 
   NS_IMETHOD ParseProperty(const nsCSSProperty aPropID,
                            const nsAString& aPropValue,

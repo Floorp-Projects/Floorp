@@ -2,7 +2,6 @@
 #define _nsIStyleRuleSupplier_h
 
 #include "nsISupports.h"
-#include "nsISupportsArray.h"
 #include "nsIStyleRuleProcessor.h"
 
 // {2D77A45B-4F3A-4203-A7D2-F4B84D0C1EE4}

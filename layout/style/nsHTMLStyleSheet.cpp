@@ -48,7 +48,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsIAtom.h"
 #include "nsIURL.h"
-#include "nsISupportsArray.h"
 #include "nsMappedAttributes.h"
 #include "nsILink.h"
 #include "nsIFrame.h"
