@@ -89,17 +89,19 @@ li {
 }
 
 table {
-	background-color: #eeeeee;    /* really light grey */
+  border-collapse: collapse;
 }
 
-td {
-	border: 1px solid #999999;    /* grey */
-	vertical-align: top;
+td, th {
+  border: 1px solid #ddd;  /* grey */
+  padding: 6px;
+  vertical-align: top;
 }
 
 th {
-	background-color: #99ccff;    /* light aqua */
-	font-weight: bold;
+  background-color: #eee;   /* light grey */
+  font-weight: bold;
+  text-align: left;
 }
 
 .noTableBorder,
