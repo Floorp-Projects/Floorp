@@ -48,7 +48,7 @@ messenger.jar:
     content/messenger/startpage-gecko-rtl.png       (content/startpage-gecko-rtl.png)
     content/messenger/messenger.css                 (content/messenger.css)
 *   content/messenger/search.xml                    (content/search.xml)
-#ifndef MOZ_USE_GENERIC_BRANDING
+#ifdef MOZ_USE_GENERIC_BRANDING
 % content branding %content/branding/ xpcnativewrappers=yes
     content/branding/about-credits.png              (content/about-credits.png)
     content/branding/about-thunderbird.png          (content/about-thunderbird.png)
