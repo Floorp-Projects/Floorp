@@ -395,6 +395,14 @@ private:
                          PRUint32 aKeycode,
                          HINT aHint);
   void BidiLevelFromClick(nsIContent *aNewFocus, PRUint32 aContentOffset);
+  NS_IMETHOD GetPrevNextBidiLevels(nsPresContext *aPresContext,
+                                   nsIContent *aNode,
+                                   PRUint32 aContentOffset,
+                                   HINT aHint,
+                                   nsIFrame **aPrevFrame,
+                                   nsIFrame **aNextFrame,
+                                   PRUint8 *aPrevLevel,
+                                   PRUint8 *aNextLevel);  
 #ifdef VISUALSELECTION
   NS_IMETHOD VisualSelectFrames(nsPresContext* aContext,
                                 nsIFrame* aCurrentFrame,
@@ -1982,6 +1990,20 @@ nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
                                    PRUint8 *aPrevLevel,
                                    PRUint8 *aNextLevel)
 {
+  return GetPrevNextBidiLevels(aPresContext, aNode, aContentOffset, mHint,
+                               aPrevFrame, aNextFrame, aPrevLevel, aNextLevel);
+}
+
+NS_IMETHODIMP
+nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
+                                   nsIContent *aNode,
+                                   PRUint32 aContentOffset,
+                                   HINT aHint,
+                                   nsIFrame **aPrevFrame,
+                                   nsIFrame **aNextFrame,
+                                   PRUint8 *aPrevLevel,
+                                   PRUint8 *aNextLevel)
+{
   if (!aPrevFrame || !aNextFrame)
     return NS_ERROR_NULL_POINTER;
   // Get the level of the frames on each side
@@ -1993,7 +2015,7 @@ nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
 
   *aPrevLevel = *aNextLevel = 0;
 
-  result = GetFrameForNodeOffset(aNode, aContentOffset, mHint, &currentFrame, &currentOffset);
+  result = GetFrameForNodeOffset(aNode, aContentOffset, aHint, &currentFrame, &currentOffset);
   if (NS_FAILED(result))
     return result;
   currentFrame->GetOffsets(frameStart, frameEnd);
@@ -2258,7 +2280,7 @@ void nsSelection::BidiLevelFromMove(nsPresContext* aContext,
     // Right and Left: the new cursor Bidi level is the level of the character moved over
     case nsIDOMKeyEvent::DOM_VK_RIGHT:
     case nsIDOMKeyEvent::DOM_VK_LEFT:
-      GetPrevNextBidiLevels(aContext, aNode, aContentOffset, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
+      GetPrevNextBidiLevels(aContext, aNode, aContentOffset, aHint, &firstFrame, &secondFrame, &firstLevel, &secondLevel);
       if (HINTLEFT == aHint)
         aPresShell->SetCaretBidiLevel(firstLevel);
       else
