@@ -219,6 +219,7 @@ protected:
 	BView           *mView;
 	PRBool           mIsTopWidgetWindow;
 	BView           *mBorderlessParent;
+	nsCOMPtr<nsIWidget> mParent;
 	nsCOMPtr<nsIRegion> mUpdateArea;
 	// I would imagine this would be in nsBaseWidget, but alas, it is not
 	PRBool           mIsMetaDown;
