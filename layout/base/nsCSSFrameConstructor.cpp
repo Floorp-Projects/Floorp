@@ -13146,6 +13146,18 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   tmp.SetFrames(aState.mFloatedItems.childList);
   tmp.DestroyFrames(presContext);
   aState.mFloatedItems.childList = nsnull;
+
+  // If we don't have a containing block, try to find our closest non-inline
+  // ancestor.  We're guaranteed to have one, since
+  // nsStyleContext::ApplyStyleFixups enforces that the root is display:none,
+  // display:table, or display:block.
+  if (!aContainingBlock) {
+    aContainingBlock = aFrame;
+    do {
+      aContainingBlock = aContainingBlock->GetParent();
+      NS_ASSERTION(aContainingBlock, "Must have non-inline frame as root!");
+    } while (IsInlineFrame(aContainingBlock));
+  }
   
   // Tell parent of the containing block to reformulate the
   // entire block. This is painful and definitely not optimal
@@ -13169,8 +13181,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   if (parentContainer) {
     ReinsertContent(parentContainer, blockContent);
   }
-  else {
-    NS_ERROR("uh oh. the block we need to reframe has no parent!");
+  else if (blockContent->GetCurrentDoc() == mDocument) {
+    ReconstructDocElementHierarchy();
   }
   return PR_TRUE;
 }
