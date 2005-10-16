@@ -153,7 +153,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         }
         else
         {
-            nsresult rv = inPartialPath.Mid(subString, offset, nodeLength);
+            inPartialPath.Mid(subString, offset, nodeLength);
             mFinalFile->Append(subString);
             offset += nodeLength + 1;
             if (!finished)
