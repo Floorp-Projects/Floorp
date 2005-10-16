@@ -147,8 +147,8 @@ OPDEF(JSOP_OR,        68, "or",         NULL,         3,  1,  0,  0,  JOF_JUMP|J
 OPDEF(JSOP_AND,       69, "and",        NULL,         3,  1,  0,  0,  JOF_JUMP|JOF_DETECTING)
 
 /* The switch bytecodes have variable length. */
-OPDEF(JSOP_TABLESWITCH,  70, "tableswitch",  NULL,   -1,  1,  0,  0,  JOF_TABLESWITCH)
-OPDEF(JSOP_LOOKUPSWITCH, 71, "lookupswitch", NULL,   -1,  1,  0,  0,  JOF_LOOKUPSWITCH)
+OPDEF(JSOP_TABLESWITCH,  70, "tableswitch",  NULL,   -1,  1,  0,  0,  JOF_TABLESWITCH|JOF_DETECTING)
+OPDEF(JSOP_LOOKUPSWITCH, 71, "lookupswitch", NULL,   -1,  1,  0,  0,  JOF_LOOKUPSWITCH|JOF_DETECTING)
 
 /* New, infallible/transitive identity ops. */
 OPDEF(JSOP_NEW_EQ,    72, "eq",         NULL,         1,  2,  1,  5,  JOF_BYTE|JOF_DETECTING)
@@ -323,8 +323,8 @@ OPDEF(JSOP_ANDX,          143,"andx",     NULL,       5,  1,  0,  0,  JOF_JUMPX|
 OPDEF(JSOP_GOSUBX,        144,"gosubx",   NULL,       5,  0,  1,  0,  JOF_JUMPX)
 OPDEF(JSOP_CASEX,         145,"casex",    NULL,       5,  1,  0,  0,  JOF_JUMPX)
 OPDEF(JSOP_DEFAULTX,      146,"defaultx", NULL,       5,  1,  0,  0,  JOF_JUMPX)
-OPDEF(JSOP_TABLESWITCHX,  147,"tableswitchx",NULL,   -1,  1,  0,  0,  JOF_TABLESWITCHX)
-OPDEF(JSOP_LOOKUPSWITCHX, 148,"lookupswitchx",NULL,  -1,  1,  0,  0,  JOF_LOOKUPSWITCHX)
+OPDEF(JSOP_TABLESWITCHX,  147,"tableswitchx",NULL,   -1,  1,  0,  0,  JOF_TABLESWITCHX|JOF_DETECTING)
+OPDEF(JSOP_LOOKUPSWITCHX, 148,"lookupswitchx",NULL,  -1,  1,  0,  0,  JOF_LOOKUPSWITCHX|JOF_DETECTING)
 
 /* Placeholders for a real jump opcode set during backpatch chain fixup. */
 OPDEF(JSOP_BACKPATCH,     149,"backpatch",NULL,       3,  0,  0,  0,  JOF_JUMP|JOF_BACKPATCH)
