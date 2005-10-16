@@ -69,7 +69,7 @@
 *   firstDateOfView        - A date equal to the date of the first box of the View (the date of 
 *                            dayBoxItemArray[0])
 *
-*   lastDateOfView        - A date equal to the date of the last box of the View (the date of 
+*   endExDateOfView        - A date equal to the date of the last box of the View (the date of 
 *                            dayBoxItemArray[41])
 *
 *
@@ -169,7 +169,7 @@ function MonthView( calendarWindow )
    this.weekNumberItemArray = new Array();
 //   this.kungFooDeathGripOnEventBoxes = new Array();
    this.firstDateOfView = new Date();
-   this.lastDateOfView = new Date();
+   this.endExDateOfView = new Date();
 
    var dayItemIndex = 0;
    
@@ -219,7 +219,7 @@ MonthView.prototype.refreshEvents = function()
   
     // Figure out the start and end days for the week we're currently viewing
     var startDate = new Date(this.firstDateOfView);
-    var endDate = new Date(this.lastDateOfView);
+    var endDate = new Date(this.endExDateOfView);
     endDate.setDate(endDate.getDate() + 1);
 
     this.eventList = new Array();
@@ -391,7 +391,7 @@ MonthView.prototype.createEventBoxInternal = function(itemOccurrence, startDate,
          this.setNumberOfEventsToShow();
 
    // get this month's events and display them
-   var monthEventList = gEventSource.getEventsDisplayForRange( this.firstDateOfView,this.lastDateOfView );
+   var monthEventList = gEventSource.getEventsDisplayForRange( this.firstDateOfView,this.endExDateOfView );
    
    // remove old event boxes
   this.removeElementsByAttribute("eventbox", "monthview");
@@ -650,7 +650,7 @@ MonthView.prototype.refreshDisplay = function()
    var lastDateCol = (firstDateCol + lastDayOfMonth - 1) % 7;
 
    this.firstDateOfView = new Date( newYear, newMonth, 1 - firstDateCol, 0, 0, 0 );
-   this.lastDateOfView = new Date( newYear, newMonth,  42 - firstDateCol, 0, 0, 0 );
+   this.endExDateOfView = new Date( newYear, newMonth,  42 - firstDateCol, 0, 0, 0 );
    
   // hide or unhide columns for days off
   for(var day = 0; day < 7; day++) {

@@ -114,7 +114,7 @@ function printCalendar() {
       //multiweek and month views call their display range something else
       if(!displayStart) {
         displayStart = gCalendarWindow.currentView.firstDateOfView;
-        displayEnd = gCalendarWindow.currentView.lastDateOfView;
+        displayEnd = gCalendarWindow.currentView.endExDateOfView;
       }
       ccalendar.getItems(filter, 0, jsDateToDateTime(displayStart), jsDateToDateTime(displayEnd), listener);
       break;

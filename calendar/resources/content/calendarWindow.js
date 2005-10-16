@@ -665,7 +665,7 @@ CalendarView.prototype.createEventBox = function(aItemOccurrence, aInteralFuncti
     //multiweek and month views call their display range something else
     if(!displayStart) {
         displayStart = gCalendarWindow.currentView.firstDateOfView;
-        displayEnd = gCalendarWindow.currentView.lastDateOfView;
+        displayEnd = gCalendarWindow.currentView.endExDateOfView;
     }
     if(startDate.jsDate < displayStart) {
         startDate.jsDate = displayStart;
