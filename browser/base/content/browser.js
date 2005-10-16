@@ -894,8 +894,6 @@ function delayedStartup()
 
   gClickSelectsAll = gPrefService.getBoolPref("browser.urlbar.clickSelectsAll");
 
-  clearObsoletePrefs();
-
 #ifdef HAVE_SHELL_SERVICE
   // Perform default browser checking (after window opens).
   var shell = getShellService();
@@ -5469,65 +5467,6 @@ function updatePageStyles(evt)
 }
 #endif
 /* End of the Page Style functions */
-
-function clearObsoletePrefs()
-{
-  // removed 10/03/2003
-  try {
-    PREF.clearUserPref("timebomb.first_launch_time");
-  } catch (e) {}
-
-  // removed 10/16/2003
-  // migrate firebird cookie prefs, if they exist.
-  try {
-    PREF.clearUserPref("network.cookie.enable");
-    // No error: it means this pref was not the default one, cookie were disabled.
-    PREF.SetIntPref("network.cookie.cookieBehavior", 2);
-  } catch (e) {
-    try {
-      PREF.clearUserPref("network.cookie.enableForOriginatingWebsiteOnly");
-      // No error: it means that enableForOriginatingWebsiteOnly was true.
-      PREF.SetIntPref("network.cookie.cookieBehavior", 1);
-    } catch (e) {
-    // here, either we already have migrated the cookie pref
-    // or the new and old behavior are the same (0). In any case: nothing to do.
-    }
-  }
-
-  // removed 03/09/2003
-  // last of the forked cookie prefs
-  try {
-    PREF.clearUserPref("network.cookie.enableForCurrentSessionOnly");
-    // No error, therefore we were limiting cookies to session
-    PREF.setIntPref("network.cookie.lifetimePolicy", 2);
-  } catch (e) {
-    // nothing to do in this case
-  }
-
-  try {
-    PREF.clearUserPref("network.cookie.warnAboutCookies");
-    // No error: the pref is set to ask for cookies, set the correct pref
-    // This will replace the setting if enableForCurrentSessionOnly was
-    // also true, because dialogs explictly allow accepting for session
-    PREF.setIntPref("network.cookie.lifetimePolicy", 1);
-  } catch (e) {
-    // nothing to do in this case
-  }
-
-  // removed 10/22/2003
-  try {
-    PREF.clearUserPref("browser.search.defaultengine");
-  } catch (e) {}
-
-  // removed 11/01/2003
-  try {
-    PREF.clearUserPref("print.use_global_printsettings");
-  } catch (e) {}
-  try {
-    PREF.clearUserPref("print.save_print_settings");
-  } catch (e) {}
-
-}
 
 var BrowserOffline = {
   /////////////////////////////////////////////////////////////////////////////
