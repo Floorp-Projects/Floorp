@@ -45,11 +45,13 @@ var expect;
 printBugNumber (bug);
 printStatus (summary);
 
+XML.ignoreWhitespace = false;
+
 var x = <bye> <![CDATA[ duh ]]>
     there </bye>;
 
 actual = x.toString();
-expect = 'duh \n    there ';
+expect = '  duh \n    there ';
 TEST(1, expect, actual);
 
 END();
