@@ -62,7 +62,7 @@ catch (e)
 reportCompare(expect, actual, status);
 
 status = summary + ': Throw Error with Unicode message';
-expect = 'test \u0440\u0441\u0442';
+expect = 'test \u0440\u0441';
 try
 {
   throw Error (expect);
@@ -71,7 +71,64 @@ catch (e)
 {
   actual = e.message;
 }
-
-
 reportCompare(expect, actual, status);
 
+var inShell = (typeof stringsAreUtf8 == "function");
+
+if (inShell && stringsAreUtf8()) 
+{
+    status = summary + ': UTF-8 test: bad UTF-08 sequence';
+    expect = 'Error';
+    actual = 'No error!';
+    try
+    {
+        testUtf8(1);
+    }
+    catch (e)
+    {
+        actual = 'Error';
+    }
+    reportCompare(expect, actual, status);
+
+    status = summary + ': UTF-8 character too big to fit into Unicode surrogate pairs';
+    expect = 'Error';
+    actual = 'No error!';
+    try
+    {
+        testUtf8(2);
+    }
+    catch (e)
+    {
+        actual = 'Error';
+    }
+    reportCompare(expect, actual, status);
+
+    status = summary + ': bad Unicode surrogate character';
+    expect = 'Error';
+    actual = 'No error!';
+    try
+    {
+        testUtf8(3);
+    }
+    catch (e)
+    {
+        actual = 'Error';
+    }
+    reportCompare(expect, actual, status);
+}
+
+if (inShell)
+{
+    status = summary + ': conversion target buffer overrun';
+    expect = 'Error';
+    actual = 'No error!';
+    try
+    {
+        testUtf8(4);
+    }
+    catch (e)
+    {
+        actual = 'Error';
+    }
+    reportCompare(expect, actual, status);
+}
