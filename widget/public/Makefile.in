@@ -69,6 +69,7 @@ EXPORTS		= \
 		nsIDragSessionXlib.h \
 		nsIDragSessionMac.h \
 		nsIDragSessionOS2.h \
+		nsIDragSessionBeOS.h \
 		nsIPluginWidget.h \
 		nsINativeKeyBindings.h \
 		$(NULL)
