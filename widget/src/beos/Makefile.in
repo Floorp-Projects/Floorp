@@ -60,13 +60,14 @@ REQUIRES	= xpcom \
 		  gfx \
 		  layout \
 		  content \
-		  timer \
 		  gfx \
 		  dom \
 		  intl \
 		  uconv \
 		  necko \
 		  pref \
+		  view \
+		  locale \
 		  $(NULL)
 
 CPPSRCS		= \
@@ -102,5 +103,4 @@ CXXFLAGS	+= $(TK_CFLAGS)
 INCLUDES += \
 		-I$(srcdir)/../xpwidgets \
 		-I$(srcdir) \
-		-I$(srcdir)/../../timer/src/beos \
 		$(NULL)

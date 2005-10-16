@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Paul Ashford <arougthopher@lizardland.net>
  *   Sergei Dolgov <sergei_d@fi.tartu.ee>
+ *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -248,6 +249,7 @@ public:	// public on BeOS to allow BViews to access it
 	    SET_CURSOR,
 	    CREATE_HACK,
 	    ONMOUSE,
+	    ONDROP,
 	    ONWHEEL,
 	    ONPAINT,
 	    ONSCROLL,
