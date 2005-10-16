@@ -24,6 +24,7 @@
  *   Ben Bucksch <mozilla@bucksch.org>
  *   Håkan Waara <hwaara@chello.se>
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -3709,41 +3710,14 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* scheme, const char* char
 
   if (PL_strncasestr(scheme, "file:", 5)) 
   {
-    // first try, filesystem character encoding
-    rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(scheme), 
-         nsMsgI18NFileSystemCharset(), utf8Scheme);
-    if (NS_FAILED(rv))
-    {
-      // try |charset| if it's set. otherwise, UTF-8. 
-      rv = utf8Cvt->ConvertURISpecToUTF8(nsDependentCString(scheme), 
-           (!charset || !*charset) ? "UTF-8" : charset, utf8Scheme);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    nsCOMPtr<nsIURI> uri;  
-    rv = NS_NewURI(getter_AddRefs(uri), utf8Scheme);
-    nsCOMPtr<nsIURL> url (do_QueryInterface(uri, &rv));
-    _retval.Truncate();
-    if (NS_SUCCEEDED(rv)) {
-      nsCAutoString leafName;  
-      rv = url->GetFileName(leafName); // leafName is in UTF-8 (escaped).
-      if (NS_SUCCEEDED(rv)) {
-        NS_UnescapeURL(leafName.get(), leafName.Length(),
-                       esc_SkipControl | esc_AlwaysCopy, _retval);
-       // XXX : consider an alternative in bug 227547 later.
-#ifdef XP_MACOSX
-        nsCOMPtr<nsIUnicodeNormalizer>
-          normalizer (do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID));
-        if (normalizer) {
-          nsAutoString decomposedName;
-          nsAutoString composedName;
-          CopyUTF8toUTF16(_retval, decomposedName);
-          normalizer->NormalizeUnicodeNFC(decomposedName, composedName);
-          CopyUTF16toUTF8(composedName, _retval);
-        }
-#endif
-      }
-    }
+    nsCOMPtr<nsIFile> file;
+    rv = NS_GetFileFromURLSpec(nsDependentCString(scheme),
+                               getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsAutoString leafName;
+    rv = file->GetLeafName(leafName);
+    NS_ENSURE_SUCCESS(rv, rv);
+    CopyUTF16toUTF8(leafName, _retval);
     return rv;
   }
 
