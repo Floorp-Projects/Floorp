@@ -131,6 +131,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 	mJustGotActivate    = PR_FALSE;
 	mJustGotDeactivate  = PR_FALSE;
 	mIsScrolling        = PR_FALSE;
+	mParent             = nsnull;
 	mUpdateArea = do_CreateInstance(kRegionCID);
 	if (mUpdateArea)
 	{
@@ -386,7 +387,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 	BView *parent;
 	if (nsnull != aParent) // has a nsIWidget parent
 	{
-		parent = ((aParent) ? (BView *)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
+		parent = ((aParent) ? (BView *)aParent->GetNativeData(NS_NATIVE_WIDGET) : nsnull);
 	}
 	else // has a nsNative parent
 	{
@@ -395,7 +396,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
 	// Only popups have mBorderlessParents
 	mBorderlessParent = NULL;
-
+	mParent = aParent;
 	mView = CreateBeOSView();
 	if (mView)
 	{
@@ -669,6 +670,7 @@ NS_METHOD nsWindow::Destroy()
 			nsBaseWidget::Destroy();
 		}
 	}
+	mParent = 0;
 	return NS_OK;
 }
 
@@ -680,24 +682,13 @@ NS_METHOD nsWindow::Destroy()
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
+	//We cannot addref mParent directly
 	nsIWidget	*widget = 0;
-	BView		*parent;
-	if (mView && (parent = mView->Parent()) != 0)
-	{
-		nsIWidgetStore *ws = dynamic_cast<nsIWidgetStore *>(parent);
-		NS_ASSERTION(ws != 0, "view must be derived from nsIWidgetStore");
-		if ((widget = ws->GetMozillaWidget()) != 0)
-		{
-			// If the widget is in the process of being destroyed then
-			// do NOT return it
-			if (((nsWindow *)widget)->mIsDestroying)
-				widget = 0;
-			else
-				NS_ADDREF(widget);
-		}
-	}
-
-	return widget;
+	if (mIsTopWidgetWindow || mIsDestroying || mOnDestroyCalled)
+		return nsnull;
+	widget = (nsIWidget *)mParent;
+	NS_IF_ADDREF(widget);
+	return  widget;
 }
 
 
@@ -831,11 +822,15 @@ NS_METHOD nsWindow::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aD
 PRBool nsWindow::EventIsInsideWindow(nsWindow* aWindow, nsPoint pos)
 {
 	BRect r;
-	BView *view = (BView *) aWindow->GetNativeData(NS_NATIVE_WIDGET);
-	if (view && view->LockLooper() )
+	BWindow *window = (BWindow *)aWindow->GetNativeData(NS_NATIVE_WINDOW);
+	if (window)
 	{
-		r = view->ConvertToScreen(view->Bounds());
-		view->UnlockLooper();
+		r = window->Frame();
+	}
+	else
+	{
+		// Bummer!
+		return PR_FALSE;
 	}
 
 	if (pos.x < r.left || pos.x > r.right ||
@@ -1591,10 +1586,13 @@ NS_IMETHODIMP nsWindow::Update()
 //-------------------------------------------------------------------------
 void* nsWindow::GetNativeData(PRUint32 aDataType)
 {
+	if (!mView)
+		return NULL;	
 	switch(aDataType) 
 	{
-		case NS_NATIVE_WIDGET:
 		case NS_NATIVE_WINDOW:
+			return (void *)(mView->Window());
+		case NS_NATIVE_WIDGET:
 		case NS_NATIVE_PLUGIN_PORT:
 		case NS_NATIVE_GRAPHIC:
 			return (void *)((BView *)mView);
@@ -1602,7 +1600,6 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 		default:
 			break;
 	}
-
 	return NULL;
 }
 
@@ -1707,8 +1704,17 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 			nsRect bounds = childWidget->mBounds;
 			bounds.x += aDx;
 			bounds.y += aDy; 
-			childWidget->SetBounds(bounds);
-			((BView *)kid->GetNativeData(NS_NATIVE_WIDGET))->MoveBy(aDx, aDy);
+			BView *child = ((BView *)kid->GetNativeData(NS_NATIVE_WIDGET));
+			if (child)
+			{
+				//There is native child
+				childWidget->SetBounds(bounds);
+				child->MoveBy(aDx, aDy);
+			}
+			else
+			{
+				childWidget->Move(bounds.x, bounds.y);
+			}
 		}			
 		//OnPaint don't need Lock()
 		mView->UnlockLooper();
