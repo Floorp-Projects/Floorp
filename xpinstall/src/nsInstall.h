@@ -332,7 +332,7 @@ class nsInstall
         void                SetChromeRegistry(CHROMEREG_IFACE* reg)
                                 { mChromeRegistry = reg; }
 
-        PRUint32   GetFinalStatus() { return mFinalStatus; }
+        PRInt32    GetFinalStatus() { return mFinalStatus; }
         PRBool     InInstallTransaction(void) { return mInstalledFiles != nsnull; }
 
         PRInt32    Alert(nsString& string);
@@ -361,7 +361,7 @@ class nsInstall
         nsInstallFolder*    mPackageFolder;
 
         PRBool              mUserCancelled;
-        PRUint32            mFinalStatus;
+        PRInt32             mFinalStatus;
 
         PRBool              mUninstallPackage;
         PRBool              mRegisterPackage;

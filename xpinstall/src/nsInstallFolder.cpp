@@ -650,7 +650,7 @@ nsInstallFolder::AppendXPPath(const nsString& aRelativePath)
             mFileSpec = nsnull;
             break;
         }
-        else if ( curr == kNotFound )
+        else if ( curr == PRUint32(kNotFound) )
         {
             // last segment
             aRelativePath.Right(segment,aRelativePath.Length() - start);

@@ -181,13 +181,10 @@ nsInstallTrigger::HandleContent(const char * aContentType,
 
 
     // Get the global object of the target window for StartSoftwareUpdate
-    nsIScriptGlobalObject* globalObject;
     nsCOMPtr<nsIScriptGlobalObjectOwner> globalObjectOwner = 
                                          do_QueryInterface(aWindowContext);
-    if ( globalObjectOwner )
-    {
-        globalObject = globalObjectOwner->GetScriptGlobalObject();
-    }
+    nsIScriptGlobalObject* globalObject =
+      globalObjectOwner ? globalObjectOwner->GetScriptGlobalObject() : nsnull;
     if ( !globalObject )
         return NS_ERROR_INVALID_ARG;
 
