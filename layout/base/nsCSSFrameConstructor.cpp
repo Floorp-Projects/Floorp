@@ -11593,12 +11593,15 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
       ApplyRenderingChangeToTree(presContext, ancestor, nsnull,
                                  nsChangeHint_RepaintFrame);
 
-    // If the frame is an anonymous frame created as part of
-    // inline-in-block splitting --- or if its parent is
-    // such an anonymous frame (i.e., this frame was the cause
-    // of such splitting), then recreate the containing block.
+    // If the frame is an anonymous frame created as part of inline-in-block
+    // splitting --- or if its parent is such an anonymous frame (i.e., this
+    // frame might have been the cause of such splitting), then recreate the
+    // containing block.  Note that if |frame| is an inline, then it can't
+    // possibly have caused the splitting, and if the inline is changing to a
+    // block, any reframing that's needed will happen in ContentInserted.
     if (MaybeRecreateContainerForIBSplitterFrame(frame, &rv) ||
-        MaybeRecreateContainerForIBSplitterFrame(frame->GetParent(), &rv))
+        (!IsInlineFrame(frame) &&
+         MaybeRecreateContainerForIBSplitterFrame(frame->GetParent(), &rv)))
       return rv;
   }
 
