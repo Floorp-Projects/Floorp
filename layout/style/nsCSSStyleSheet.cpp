@@ -2958,6 +2958,20 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       } while (child && !IsSignificantChild(child, PR_TRUE, isWhitespaceSignificant));
       result = localTrue == (child == nsnull);
     }
+    else if (nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname == pseudoClass->mAtom) {
+      NS_ASSERTION(pseudoClass->mString, "Must have string!");
+      nsIContent *child = nsnull;
+      nsIContent *element = data.mContent;
+      PRInt32 index = -1;
+
+      do {
+        child = element->GetChildAt(++index);
+      } while (child &&
+               (!IsSignificantChild(child, PR_TRUE, PR_FALSE) ||
+                (child->GetNameSpaceID() == element->GetNameSpaceID() &&
+                 child->Tag()->Equals(nsDependentString(pseudoClass->mString)))));
+      result = localTrue == (child == nsnull);
+    }
     else if (nsCSSPseudoClasses::root == pseudoClass->mAtom) {
       if (data.mParentContent) {
         result = localFalse;
