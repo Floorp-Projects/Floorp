@@ -3616,8 +3616,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   nsPluginEvent * pPluginEvent = (nsPluginEvent *)anEvent.nativeMsg;
   // we can get synthetic events from the nsEventStateManager... these
   // have no nativeMsg
+  nsPluginEvent pluginEvent;
   if (!pPluginEvent) {
-    nsPluginEvent pluginEvent;
     switch (anEvent.message) {
       case NS_FOCUS_CONTENT:
         pluginEvent.event = WM_SETFOCUS;
