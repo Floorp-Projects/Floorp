@@ -254,8 +254,9 @@ protected:
                                                        nsresult&      aErrorCode,
                                                        PRBool         aIsNegated);
 
-  nsSelectorParsingStatus ParseLangSelector(nsCSSSelector& aSelector,
-                                            nsresult&      aErrorCode);
+  nsSelectorParsingStatus ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
+                                                       nsIAtom*       aPseudo,
+                                                       nsresult&      aErrorCode);
 
   nsSelectorParsingStatus ParseNegatedSimpleSelector(PRInt32&       aDataMask,
                                                      nsCSSSelector& aSelector,
@@ -2445,7 +2446,9 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
        isTree ||
 #endif
        nsCSSPseudoClasses::notPseudo == pseudo ||
-       nsCSSPseudoClasses::lang == pseudo)) { // There are no other function pseudos
+       nsCSSPseudoClasses::lang == pseudo ||
+       nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname == pseudo)) {
+    // There are no other function pseudos
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelNonFunc);
     UngetToken();
     return eSelectorParsingStatus_Error;
@@ -2475,8 +2478,10 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
   }    
   else if (!parsingPseudoElement && isPseudoClass) {
     aDataMask |= SEL_MASK_PCLASS;
-    if (nsCSSPseudoClasses::lang == pseudo) {
-      nsSelectorParsingStatus parsingStatus = ParseLangSelector(aSelector, aErrorCode);
+    if (nsCSSPseudoClasses::lang == pseudo ||
+        nsCSSPseudoClasses::mozEmptyExceptChildrenWithLocalname == pseudo) {
+      nsSelectorParsingStatus parsingStatus =
+        ParsePseudoClassWithIdentArg(aSelector, pseudo, aErrorCode);
       if (eSelectorParsingStatus_Continue != parsingStatus) {
         return parsingStatus;
       }
@@ -2628,34 +2633,36 @@ CSSParserImpl::ParseNegatedSimpleSelector(PRInt32&       aDataMask,
 }
 
 //
-// Parse the argument of a pseudo-class :lang()
+// Parse the argument of a pseudo-class that has an ident arg
 //
 CSSParserImpl::nsSelectorParsingStatus
-CSSParserImpl::ParseLangSelector(nsCSSSelector& aSelector, nsresult& aErrorCode)
+CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
+                                            nsIAtom*       aPseudo,
+                                            nsresult&      aErrorCode)
 {
   // Check if we have the first parenthesis
   if (!ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
-    REPORT_UNEXPECTED_TOKEN(PELangNoArg);
+    REPORT_UNEXPECTED_TOKEN(PEPseudoClassNoArg);
     return eSelectorParsingStatus_Error;
   }
 
   if (! GetToken(aErrorCode, PR_TRUE)) { // premature eof
-    REPORT_UNEXPECTED_EOF(PELangArgEOF);
+    REPORT_UNEXPECTED_EOF(PEPseudoClassArgEOF);
     return eSelectorParsingStatus_Error;
   }
   // We expect an identifier with a language abbreviation
   if (eCSSToken_Ident != mToken.mType) {
-    REPORT_UNEXPECTED_TOKEN(PELangArgNotIdent);
+    REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotIdent);
     UngetToken();
     return eSelectorParsingStatus_Error;
   }
 
   // Add the pseudo with the language parameter
-  aSelector.AddPseudoClass(nsCSSPseudoClasses::lang, mToken.mIdent.get());
+  aSelector.AddPseudoClass(aPseudo, mToken.mIdent.get());
 
   // close the parenthesis
   if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-    REPORT_UNEXPECTED_TOKEN(PELangNoClose);
+    REPORT_UNEXPECTED_TOKEN(PEPseudoClassNoClose);
     return eSelectorParsingStatus_Error;
   }
 
