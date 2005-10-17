@@ -428,7 +428,7 @@ if ($action eq 'search') {
         'SELECT COUNT(*) FROM bugs_activity WHERE who = ?',
         undef, $otherUserID);
     $vars->{'flags'}{'requestee'} = $dbh->selectrow_array(
-        'SELECT COUNT(*) FROM flags WHERE requestee_id = ?',
+        'SELECT COUNT(*) FROM flags WHERE requestee_id = ? AND is_active = 1',
         undef, $otherUserID);
     $vars->{'flags'}{'setter'} = $dbh->selectrow_array(
         'SELECT COUNT(*) FROM flags WHERE setter_id = ?',
