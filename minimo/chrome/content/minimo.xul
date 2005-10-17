@@ -82,6 +82,8 @@
     <command id="cmd_BrowserStop"            oncommand="BrowserStop()" />
     <command id="cmd_BrowserZoomPlus"        oncommand="BrowserResetZoomPlus()" />
     <command id="cmd_BrowserZoomMinus"       oncommand="BrowserResetZoomMinus()" />
+    <command id="cmd_UIZoomPlus"             oncommand="BrowserUIResetZoomPlus()" />
+    <command id="cmd_UIZoomMinus"            oncommand="BrowserUIResetZoomMinus()" />
     <command id="cmd_DoPanelPreferences"     oncommand="DoPanelPreferences()" /> 
     <command id="cmd_DoBrowserRSS"           oncommand="DoBrowserRSS()" />
     <command id="cmd_BrowserMenu"            oncommand="BrowserMenuPopup()" />
@@ -125,9 +127,14 @@
 						<toolbarbutton tabindex="10" accessrule="toolbar-view" id="zoomplusitem" class="button-border" command="cmd_BrowserZoomPlus" label="&zoomTextPlus.label;" />
 		                <toolbarbutton tabindex="11" accessrule="toolbar-view" class="button-border" command="cmd_BrowserZoomMinus" label="&zoomTextMinus.label;" />	
 					</hbox>
+					<hbox flex="1" style="margin-top:4px ! important">
+						<label value="&zoomUIText.label;" />
+						<toolbarbutton tabindex="12" accessrule="toolbar-view" id="uizoomplusitem" class="button-border" command="cmd_UIZoomPlus" label="&zoomTextPlus.label;" />
+		                <toolbarbutton tabindex="13" accessrule="toolbar-view" class="button-border" command="cmd_UIZoomMinus" label="&zoomTextMinus.label;" />	
+					</hbox>
 				</vbox>
 				<vbox>
-				<toolbarbutton tabindex="12" accessrule="toolbar-view"  class="button-close" width="10" height="10" align="top" flex="0" id="close-button" command="cmd_ViewOptions"/>  
+				<toolbarbutton tabindex="14" accessrule="toolbar-view"  class="button-close" width="10" height="10" align="top" flex="0" id="close-button" command="cmd_ViewOptions"/>  
 				</vbox>
 			</hbox>
 		</groupbox>
@@ -147,11 +154,11 @@
 
 					<hbox flex="1" style="margin-top:4px ! important">
 						 <label value="&rssText.label;"  />
-						 <textbox tabindex="13" accessrule="toolbar-rss"  id="toolbar-rss-rsstag" flex="1" onchange="return DoBrowserRSS();"/> 
+						 <textbox tabindex="15" accessrule="toolbar-rss"  id="toolbar-rss-rsstag" flex="1" onchange="return DoBrowserRSS();"/> 
 					</hbox>
 				</vbox>
 				<vbox>
-				<toolbarbutton tabindex="14" accessrule="toolbar-rss" id="rss-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewRSS"/>  
+				<toolbarbutton tabindex="16" accessrule="toolbar-rss" id="rss-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewRSS"/>  
 				</vbox>
 			</hbox>
 		</groupbox>
