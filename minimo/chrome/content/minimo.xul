@@ -85,6 +85,7 @@
     <command id="cmd_DoPanelPreferences"     oncommand="DoPanelPreferences()" /> 
     <command id="cmd_DoBrowserRSS"           oncommand="DoBrowserRSS()" />
     <command id="cmd_BrowserMenu"            oncommand="BrowserMenuPopup()" />
+    <command id="cmd_Quit"                   oncommand="window.close();" />
           
     <toolbar id="nav-bar" accessfocus="menu-button" accessnextrule="toolbar-view"  accessprevrule="accesstabcontent"  >
     
@@ -205,6 +206,9 @@
         <!-- separator for now in CSS - need to redesign -->
         <menuitem id="command_ViewOptions" style='border-top:1px solid black' type="checkbox" command="cmd_ViewOptions" label="&zoom.label;"  /> 
         <menuitem id="command_ViewRSS"  type="checkbox" command="cmd_ViewRSS" label="&rssBMtitle.label;"  /> 
+        <!-- separator for now in CSS - need to redesign -->
+        <menuitem id="command_Quit" style='border-top:1px solid black'  command="cmd_Quit" label="&quit.label;"  /> 
+        
     </menupopup>  
   </popupset>
   
