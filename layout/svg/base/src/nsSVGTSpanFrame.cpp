@@ -83,7 +83,7 @@ nsSVGTSpanFrame::~nsSVGTSpanFrame()
   nsCOMPtr<nsIDOMSVGTextPositioningElement> element = do_QueryInterface(mContent);
 
   // clean up our listener refs:
-  {
+  if (element) {
     nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
     element->GetX(getter_AddRefs(animLengthList));
     if (animLengthList) {
@@ -94,7 +94,7 @@ nsSVGTSpanFrame::~nsSVGTSpanFrame()
     }
   }
 
-  {
+  if (element) {
     nsCOMPtr<nsIDOMSVGAnimatedLengthList> animLengthList;
     element->GetY(getter_AddRefs(animLengthList));
     if (animLengthList) {
