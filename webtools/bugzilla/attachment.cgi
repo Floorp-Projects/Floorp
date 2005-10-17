@@ -218,7 +218,7 @@ sub validateCanChangeAttachment
              ON bugs.bug_id = attachments.bug_id
              WHERE attach_id = $attachid");
     my $productid = FetchOneColumn();
-    CanEditProductId($productid)
+    Bugzilla->user->can_edit_product_id($productid)
       || ThrowUserError("illegal_attachment_edit",
                         { attach_id => $attachid });
 }

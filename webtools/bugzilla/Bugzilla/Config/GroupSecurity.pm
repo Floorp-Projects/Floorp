@@ -74,6 +74,12 @@ sub get_param_list {
    name => 'usevisibilitygroups',
    type => 'b',
    default => 0
+  }, 
+  
+  {
+   name => 'strict_isolation',
+   type => 'b',
+   default => 0
   } );
   return @param_list;
 }

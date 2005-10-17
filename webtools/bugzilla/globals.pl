@@ -372,27 +372,6 @@ sub AnyDefaultGroups {
     return $::CachedAnyDefaultGroups;
 }
 
-#
-# This function checks if, given a product id, the user can edit
-# bugs in this product at all.
-sub CanEditProductId {
-    my ($productid) = @_;
-    my $dbh = Bugzilla->dbh;
-    my $query = "SELECT group_id FROM group_control_map " .
-                "WHERE product_id = $productid " .
-                "AND canedit != 0 "; 
-    if (%{Bugzilla->user->groups}) {
-        $query .= "AND group_id NOT IN(" . 
-                   join(',', values(%{Bugzilla->user->groups})) . ") ";
-    }
-    $query .= $dbh->sql_limit(1);
-    PushGlobalSQLState();
-    SendSQL($query);
-    my ($result) = FetchSQLData();
-    PopGlobalSQLState();
-    return (!defined($result));
-}
-
 sub IsInClassification {
     my ($classification,$productname) = @_;
 

@@ -1303,6 +1303,17 @@ sub ValidateDependencies {
     return %deps;
 }
 
+#Verify if the new assignee belongs to the group of 
+#the product that the bug(s) is in.
+sub can_add_user_to_bug {
+    my ($prod_id, $id, $uid) = @_;
+    my $user = new Bugzilla::User($uid);
+    if (!$user->can_edit_product($prod_id)) {
+        ThrowUserError("invalid_user_group", { 'user' =>
+        $user->login, bug_id => $id });
+   } 
+}
+
 sub AUTOLOAD {
   use vars qw($AUTOLOAD);
   my $attr = $AUTOLOAD;

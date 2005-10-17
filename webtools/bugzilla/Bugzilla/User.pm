@@ -382,6 +382,26 @@ sub can_see_user {
     return Bugzilla->dbh->selectrow_array($query, undef, $otherUser->id);
 }
 
+sub can_edit_product {
+    my ($self, $prod_id) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $sth = $self->{sthCanEditProductId};
+    my $userid = $self->{id};
+    my $query = q{SELECT group_id FROM group_control_map 
+                   WHERE product_id =? 
+                     AND canedit != 0 };
+    if (%{$self->groups}) {
+        my $groups = join(',', values(%{$self->groups}));
+        $query .= qq{AND group_id NOT IN($groups)};
+    }
+    unless ($sth) { $sth = $dbh->prepare($query); }
+    $sth->execute($prod_id);
+    $self->{sthCanEditProductId} = $sth;
+    my $result = $sth->fetchrow_array();
+    
+    return (!defined($result));
+}
+
 sub can_see_bug {
     my ($self, $bugid) = @_;
     my $dbh = Bugzilla->dbh;
@@ -1534,6 +1554,11 @@ that you need to be aware of a group in order to bless a group.
 
 Returns 1 if the specified user account exists and is visible to the user,
 0 otherwise.
+
+=item C<can_edit_product(prod_id)>
+
+Determines if, given a product id, the user can edit bugs in this product
+at all.
 
 =item C<can_see_bug(bug_id)>
 

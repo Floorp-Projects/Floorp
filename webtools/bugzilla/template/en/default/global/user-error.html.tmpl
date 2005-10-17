@@ -665,6 +665,11 @@
     [% title = "Invalid regular expression" %]
     The regular expression you entered is invalid.
 
+  [% ELSIF error == "invalid_user_group" %]
+    [% title = "Invalid User Group" %]
+    User '[% user FILTER html %]' is not able to edit the 
+    [% terms.bug %] '[% bug_id FILTER html %]'.
+
   [% ELSIF error == "invalid_username" %]
     [% title = "Invalid Username" %]
     The name <tt>[% name FILTER html %]</tt> is not a valid username.  

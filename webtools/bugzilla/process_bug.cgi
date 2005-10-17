@@ -984,6 +984,11 @@ if (defined $cgi->param('qa_contact')
     # The QA contact cannot be deleted from show_bug.cgi for a single bug!
     if ($name ne $cgi->param('dontchange')) {
         $qacontact = DBNameToIdAndCheck($name) if ($name ne "");
+        if (Param("strict_isolation")) {
+                my $product_id = get_product_id($cgi->param('product'));
+                Bugzilla::Bug::can_add_user_to_bug(
+                    $product_id, $cgi->param('id'), $qacontact);
+        }
         DoComma();
         if($qacontact) {
             $::query .= "qa_contact = $qacontact";
@@ -1046,7 +1051,14 @@ SWITCH: for ($cgi->param('knob')) {
         }
         ChangeStatus('NEW');
         DoComma();
-        if (!defined $cgi->param('assigned_to')
+        if (defined $cgi->param('assigned_to')) { 
+            my $uid = DBNameToIdAndCheck($cgi->param('assigned_to'));
+            if (Param("strict_isolation")) {
+                my $product_id = get_product_id($cgi->param('product'));
+                Bugzilla::Bug::can_add_user_to_bug(
+                    $product_id, $cgi->param('id'), $uid);
+            }
+        } elsif (!defined $cgi->param('assigned_to')
             || trim($cgi->param('assigned_to')) eq "") {
             ThrowUserError("reassign_to_empty");
         }
@@ -1276,6 +1288,7 @@ sub LogDependencyActivity {
 # show_bug.cgi).
 #
 foreach my $id (@idlist) {
+    my $bug_obj = new Bugzilla::Bug($id, $whoid);
     my %dependencychanged;
     $bug_changed = 0;
     my $write = "WRITE";        # Might want to make a param to control
@@ -1350,7 +1363,16 @@ foreach my $id (@idlist) {
             ThrowUserError("illegal_change", $vars);
         }
     }
-
+    if ($cgi->param('assigned_to') && Param("strict_isolation")) { 
+        my $uid = DBNameToIdAndCheck($cgi->param('assigned_to'));
+        Bugzilla::Bug::can_add_user_to_bug(
+            $bug_obj->{'product_id'}, $id, $uid);
+    }
+    if ($cgi->param('qa_contact') && Param("strict_isolation")) { 
+        Bugzilla::Bug::can_add_user_to_bug(
+            $bug_obj->{'product_id'}, $id, $qacontact);
+    }
+    
     # When editing multiple bugs, users can specify a list of keywords to delete
     # from bugs.  If the list matches the current set of keywords on those bugs,
     # CheckCanChangeField above will fail to check permissions because it thinks
@@ -1370,7 +1392,7 @@ foreach my $id (@idlist) {
     }
 
     $oldhash{'product'} = get_product_name($oldhash{'product_id'});
-    if (!CanEditProductId($oldhash{'product_id'})) {
+    if (!Bugzilla->user->can_edit_product($oldhash{'product_id'})) {
         ThrowUserError("product_edit_denied",
                       { product => $oldhash{'product'} });
     }
@@ -1565,7 +1587,22 @@ foreach my $id (@idlist) {
             $oncc{FetchOneColumn()} = 1;
         }
 
-        my (@added, @removed) = ();
+        my (@added, @removed, @blocked_cc) = ();
+        
+        if (Param("strict_isolation")) {
+            foreach my $pid (keys %cc_add) {
+                my $user = Bugzilla::User->new($pid);
+                if (!$user->can_edit_product($bug_obj->{'product_id'})) {
+                    push (@blocked_cc, $cc_add{$pid});
+                }
+            }
+            if (scalar(@blocked_cc)) {
+                my $blocked_cc = join(", ", @blocked_cc);
+                ThrowUserError("invalid_user_group", 
+                    {'user' => $blocked_cc , bug_id => $id });
+            }
+        }
+ 
         foreach my $pid (keys %cc_add) {
             # If this person isn't already on the cc list, add them
             if (! $oncc{$pid}) {
