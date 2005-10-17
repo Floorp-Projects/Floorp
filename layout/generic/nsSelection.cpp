@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1320,6 +1321,47 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
     if (NS_FAILED(result))
       return result;
     SetDesiredX(desiredX);
+  }
+
+  PRInt32 caretStyle = nsContentUtils::GetIntPref("layout.selection.caret_style", 0);
+#ifdef XP_MACOSX
+  if (caretStyle == 0) {
+    caretStyle = 2; // put caret at the selection edge in the |aKeycode| direction
+  }
+#endif
+
+  if (!isCollapsed && !aContinueSelection && caretStyle == 2) {
+    switch (aKeycode){
+      case nsIDOMKeyEvent::DOM_VK_LEFT  :
+      case nsIDOMKeyEvent::DOM_VK_UP    :
+          if (mDomSelections[index]->GetDirection() == eDirPrevious) { //f,a
+            offsetused = mDomSelections[index]->FetchFocusOffset();
+            weakNodeUsed = mDomSelections[index]->FetchFocusNode();
+          }
+          else {
+            offsetused = mDomSelections[index]->FetchAnchorOffset();
+            weakNodeUsed = mDomSelections[index]->FetchAnchorNode();
+          }
+          result = mDomSelections[index]->Collapse(weakNodeUsed, offsetused);
+          mDomSelections[index]->ScrollIntoView();
+          mHint = HINTRIGHT;
+          return NS_OK;
+
+      case nsIDOMKeyEvent::DOM_VK_RIGHT :
+      case nsIDOMKeyEvent::DOM_VK_DOWN  :
+          if (mDomSelections[index]->GetDirection() == eDirPrevious) { //f,a
+            offsetused = mDomSelections[index]->FetchAnchorOffset();
+            weakNodeUsed = mDomSelections[index]->FetchAnchorNode();
+          }
+          else {
+            offsetused = mDomSelections[index]->FetchFocusOffset();
+            weakNodeUsed = mDomSelections[index]->FetchFocusNode();
+          }
+          result = mDomSelections[index]->Collapse(weakNodeUsed, offsetused);
+          mDomSelections[index]->ScrollIntoView();
+          mHint = HINTLEFT;
+          return NS_OK;
+    }
   }
 
   nsCOMPtr<nsICaret> caret;
@@ -5658,7 +5700,7 @@ nsTypedSelection::Collapse(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
     const char *tagString;
     content->Tag()->GetUTF8String(&tagString);
-    printf ("Sel. Collapse to %p %s %d\n", content, tagString, aOffset);
+    printf ("Sel. Collapse to %p %s %d\n", content.get(), tagString, aOffset);
   }
   else {
     printf ("Sel. Collapse set to null parent.\n");
@@ -6446,7 +6488,7 @@ nsTypedSelection::Extend(nsIDOMNode* aParentNode, PRInt32 aOffset)
 
     const char *tagString;
     content->Tag()->GetUTF8String(&tagString);
-    printf ("Sel. Extend to %p %s %d\n", content, tagString, aOffset);
+    printf ("Sel. Extend to %p %s %d\n", content.get(), tagString, aOffset);
   }
   else {
     printf ("Sel. Extend set to null parent.\n");
