@@ -1042,7 +1042,10 @@ var gDownloadingPage = {
     
     if (activeUpdate)
       this._setUIState(!updates.isDownloading);
-      
+
+    var link = document.getElementById("detailsLink");
+    link.href = gUpdates.update.detailsURL;
+
     gUpdates.setButtons(null, true, null, true, null, true, null, false, false,
                         null, false);
   },
