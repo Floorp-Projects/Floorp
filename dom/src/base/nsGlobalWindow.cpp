@@ -3402,6 +3402,18 @@ nsGlobalWindow::Focus()
 {
   FORWARD_TO_OUTER(Focus, (), NS_ERROR_NOT_INITIALIZED);
 
+  nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(mDocShell);
+
+  PRBool isVisible = PR_FALSE;
+  if (baseWin) {
+    baseWin->GetVisibility(&isVisible);
+  }
+
+  if (!isVisible) {
+    // A hidden tab is being focused, ignore this call.
+    return NS_OK;
+  }
+
   /*
    * If caller is not chrome and dom.disable_window_flip is true,
    * prevent bringing a window to the front if the window is not the
