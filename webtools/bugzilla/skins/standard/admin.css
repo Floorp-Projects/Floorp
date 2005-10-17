@@ -13,12 +13,20 @@
   * Contributor(s): Marc Schumann <wurblzap@gmail.com>
   */
 
-ul.warningmessages {
+.warningmessages, .criticalmessages {
     background-color: white;
     border-style: solid;
     border-width: 1px;
-    border-color: yellow;
     padding: 1ex 1ex 1ex 4ex;
+    margin: 1ex;
+}
+
+.warningmessages {
+    border-color: yellow;
+}
+
+.criticalmessages {
+    border-color: red;
 }
 
 p.areyoureallyreallysure {
