@@ -1,6 +1,7 @@
 <!-- Main menu --> 
 
 <!ENTITY prefs.label                  "Preferences...">
+<!ENTITY quit.label                   "Quit">
 
 <!-- Toolbar -->
 
