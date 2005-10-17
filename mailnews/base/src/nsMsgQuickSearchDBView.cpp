@@ -298,16 +298,23 @@ nsresult nsMsgQuickSearchDBView::SortThreads(nsMsgViewSortTypeValue sortType, ns
         continue;
       // it would be nice if GetInsertIndexHelper always found the hdr, but it doesn't.
       threadHdr->GetChildHdrAt(0, getter_AddRefs(rootHdr));
-      threadRootIndex = GetInsertIndexHelper(rootHdr, &threadRootIds, nsMsgViewSortOrder::ascending, sortType);
+      threadRootIndex = GetInsertIndexHelper(rootHdr, &threadRootIds, nsMsgViewSortOrder::ascending, nsMsgViewSortType::byId);
       threadRootIds.InsertAt(threadRootIndex, rootKey);
     }
   }
-  // now we've build up the list of thread ids - need to build the view
-  // from that. So for each thread id, we need to list the messages in the thread.
   m_origKeys.CopyArray(m_keys);
+  // need to sort the top level threads now by sort order, if it's not by id.
+  if (sortType != nsMsgViewSortType::byId)
+  {
+    m_keys.CopyArray(threadRootIds);
+    nsMsgDBView::Sort(sortType, sortOrder);
+    threadRootIds.CopyArray(m_keys);
+  }
   m_keys.RemoveAll();
   m_levels.RemoveAll();
   m_flags.RemoveAll();
+  // now we've build up the list of thread ids - need to build the view
+  // from that. So for each thread id, we need to list the messages in the thread.
   PRUint32 numThreads = threadRootIds.GetSize();
   for (PRUint32 threadIndex = 0; threadIndex < numThreads; threadIndex++)
   {
@@ -334,6 +341,7 @@ nsresult nsMsgQuickSearchDBView::SortThreads(nsMsgViewSortTypeValue sortType, ns
       }
     }
   }
+  NS_ASSERTION(m_origKeys.GetSize() == m_keys.GetSize(), "problem threading quick search");
   return NS_OK;
 }
 
