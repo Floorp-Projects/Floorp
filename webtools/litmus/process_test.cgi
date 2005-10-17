@@ -36,138 +36,150 @@ use Litmus::UserAgentDetect;
 use Litmus::SysConfig;
 use Litmus::Auth;
 use Litmus::Utils;
+use Litmus::DB::Resultbug;
 
 use CGI;
 use Date::Manip;
-
 use diagnostics;
-use Data::Dumper;
 
 my $c = new CGI; 
 
 my $user;
 my $sysconfig;
 if ($c->param("isSysConfig")) {
-    $sysconfig = Litmus::SysConfig->processForm($c);
-    my $email = $c->param("email");
-    $user = Litmus::DB::User->find_or_create(email => $email);
-    print $c->header(-cookie => [$sysconfig->setCookie(), Litmus::Auth::setCookie($user)]);
+  $sysconfig = Litmus::SysConfig->processForm($c);
+  my $email = $c->param("email");
+  $user = Litmus::DB::User->find_or_create(email => $email);
+  print $c->header(-cookie => [$sysconfig->setCookie(), Litmus::Auth::setCookie($user)]);
 } else {
-    print $c->header();
+  print $c->header();
 }
 
 my @names = $c->param();
 
-#print Dumper \@names;
-
 # find all the test numbers contained in this result submission
 my @tests;
 foreach my $curname (@names) {
-    if ($curname =~ /testresult_(\d*)/) {
-        push(@tests, $1);
-    }
+  if ($curname =~ /testresult_(\d*)/) {
+    push(@tests, $1);
+  }
 }
 
 # don't get to use the simple test interface if you really 
 # have more than one test (i.e. you cheated and changed the 
 # hidden input)
 if (scalar @tests > 1 && $c->param("isSimpleTest")) {
-    invalidInputError("Cannot use simpletest interface with more than one test");
+  invalidInputError("Cannot use simpletest interface with more than one test");
 }
 
 my $testcount;
 my %resultcounts;
 my $product;
 foreach my $curtestid (@tests) {
-    unless ($c->param("testresult_".$curtestid)) {
-        # user didn't submit a result for this test so just skip 
-        # it and move on...
-        next; 
-    }
-
-    my $curtest = Litmus::DB::Test->retrieve($curtestid);
-    unless ($curtest) {
-        # oddly enough, the test doesn't exist
-        next;
-    }
-    
-    $testcount++;
-    
-    $product = $curtest->product();
-    
-    my $ua = Litmus::UserAgentDetect->new();
-    # for simpletest, build a temporary sysconfig based on the 
-    # UA string and product of this test:
-    if ($c->param("isSimpleTest")) {
-        $sysconfig = Litmus::SysConfig->new(
-                                $curtest->product(), 
-                                $ua->platform($curtest->product()), 
-                                "NULL", # no way to autodetect the opsys
-                                $ua->branch($curtest->product()), 
-                                $ua->buildid(),
-                            );
-    }
-    
-    # get system configuration. If there is no configuration and we're 
-    # not doing the simpletest interface, then we make you enter it
-    # Get system configuration. If there is no configuration,
-    # then we make the user enter it.
-    if (!$sysconfig) {
-      $sysconfig = Litmus::SysConfig->getCookie($product);
-    }
-    
-    # Users who still don't have a sysconfig for this product
-    # should go configure themselves first.
-    if (!$sysconfig) {
-      Litmus::SysConfig->displayForm($product,
-                                     "process_test_results.cgi",
-                                     $c);
-      exit;
-    }
-    
-    my $result = Litmus::DB::Result->retrieve($c->param("testresult_".$curtestid));
-    $resultcounts{$result->name()}++;
-    
-    my $note = $c->param("testnote_".$curtestid);
-    
-    my $time = &Date::Manip::UnixDate("now","%q");
-    
-    # normally, the user comes with a cookie, but for simpletest
-    # users, we just use the web-user@mozilla.org user:
-    
-    if ($c->param("isSimpleTest")) {
-      $user = $user || Litmus::DB::User->search(email => 'web-tester@mozilla.org')->next();
-    } else {
-      $user = $user || Litmus::Auth::getCookie()->userid();
-    } 
-    
-    my $tr = Litmus::DB::Testresult->create({
-                                             user      => $user,
-                                             testid    => $curtest,
-                                             timestamp => $time,
-                                             last_updated => $time,
-                                             useragent => $ua,
-                                             result    => $result,
-                                             platform  => $sysconfig->platform(),
-                                             opsys     => $sysconfig->opsys(),
-                                             branch    => $sysconfig->branch(),
-                                             buildid   => $sysconfig->buildid(),
-                                            });
-    
-    # if there's a note, create an entry in the comments table for it
-    if ($note and
-        $note ne '') {
-      Litmus::DB::Comment->create({
-                                   testresult      => $tr,
-                                   submission_time => $time,
-                                   last_updated    => $time,
-                                   user            => $user,
-                                   comment         => $note
-                                  });
-    }
+  unless ($c->param("testresult_".$curtestid)) {
+    # user didn't submit a result for this test so just skip 
+    # it and move on...
+    next; 
+  }
   
+  my $curtest = Litmus::DB::Test->retrieve($curtestid);
+  unless ($curtest) {
+    # oddly enough, the test doesn't exist
+    next;
+  }
+  
+  $testcount++;
+  
+  $product = $curtest->product();
+  
+  my $ua = Litmus::UserAgentDetect->new();
+  # for simpletest, build a temporary sysconfig based on the 
+  # UA string and product of this test:
+  if ($c->param("isSimpleTest")) {
+    $sysconfig = Litmus::SysConfig->new(
+                                        $curtest->product(), 
+                                        $ua->platform($curtest->product()), 
+                                        "NULL", # no way to autodetect the opsys
+                                        $ua->branch($curtest->product()), 
+                                        $ua->buildid(),
+                                       );
+  }
+  
+  # get system configuration. If there is no configuration and we're 
+  # not doing the simpletest interface, then we make you enter it
+  # Get system configuration. If there is no configuration,
+  # then we make the user enter it.
+  if (!$sysconfig) {
+    $sysconfig = Litmus::SysConfig->getCookie($product);
+  }
+  
+  # Users who still don't have a sysconfig for this product
+  # should go configure themselves first.
+  if (!$sysconfig) {
+    Litmus::SysConfig->displayForm($product,
+                                   "process_test_results.cgi",
+                                   $c);
+    exit;
+  }
+  
+  my $result = Litmus::DB::Result->retrieve($c->param("testresult_".$curtestid));
+  $resultcounts{$result->name()}++;
+  
+  my $note = $c->param("comment_".$curtestid);
+  my $bugs = $c->param("bugs_".$curtestid);
+  
+  my $time = &Date::Manip::UnixDate("now","%q");
+  
+  # normally, the user comes with a cookie, but for simpletest
+  # users, we just use the web-user@mozilla.org user:
+  
+  if ($c->param("isSimpleTest")) {
+    $user = $user || Litmus::DB::User->search(email => 'web-tester@mozilla.org')->next();
+  } else {
+    $user = $user || Litmus::Auth::getCookie()->userid();
+  } 
+  
+  my $tr = Litmus::DB::Testresult->create({
+                                           user      => $user,
+                                           testid    => $curtest,
+                                           timestamp => $time,
+                                           last_updated => $time,
+                                           useragent => $ua,
+                                           result    => $result,
+                                           platform  => $sysconfig->platform(),
+                                           opsys     => $sysconfig->opsys(),
+                                           branch    => $sysconfig->branch(),
+                                           buildid   => $sysconfig->buildid(),
+                                          });
+  
+  # if there's a note, create an entry in the comments table for it
+  if ($note and
+      $note ne '') {
+    Litmus::DB::Comment->create({
+                                 testresult      => $tr,
+                                 submission_time => $time,
+                                 last_updated    => $time,
+                                 user            => $user,
+                                 comment         => $note
+                                });
+  }
+  
+  if ($bugs and
+      $bugs ne '') {
+    my @new_bugs = split(/,/,$bugs);
+    foreach my $new_bug (@new_bugs) {
+      my $bug = Litmus::DB::Resultbug->create({
+                                               testresult => $tr,
+                                               last_updated => $time,
+                                               submission_time => $time,
+                                               user => $user,
+                                               bug_id => $new_bug,
+                                              });
+    }
   }
 
+}
+  
 # process changes to testcases:
 my @changed;
 if ($c->param("editingTestcases") && 
