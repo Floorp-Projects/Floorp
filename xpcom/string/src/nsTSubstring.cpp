@@ -283,6 +283,15 @@ nsTSubstring_CharT::EnsureMutable()
 
 // ---------------------------------------------------------------------------
 
+  // This version of Assign is optimized for single-character assignment.
+void
+nsTSubstring_CharT::Assign( char_type c )
+  {
+    if (ReplacePrep(0, mLength, 1))
+      *mData = c;
+  }
+
+
 void
 nsTSubstring_CharT::Assign( const char_type* data, size_type length )
   {
@@ -418,6 +427,17 @@ nsTSubstring_CharT::Adopt( char_type* data, size_type length )
       {
         SetIsVoid(PR_TRUE);
       }
+  }
+
+
+  // This version of Replace is optimized for single-character replacement.
+void
+nsTSubstring_CharT::Replace( index_type cutStart, size_type cutLength, char_type c )
+  {
+    cutStart = PR_MIN(cutStart, Length());
+
+    if (ReplacePrep(cutStart, cutLength, 1))
+      mData[cutStart] = c;
   }
 
 
