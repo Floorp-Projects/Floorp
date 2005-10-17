@@ -45,6 +45,14 @@
  	border:1px solid black;
 }
 
+/* This CSS rule has to be here because JS code shall access it via */
+
+toolbar *, #appcontent *, * {
+  font-size: 10px;
+  padding: 0px ! important;
+  margin: 0px ! important;
+}
+
 #urlbar {
 	padding:1px;
 }
@@ -68,11 +76,7 @@
 }
 
 
-toolbar *, #appcontent * {
-  font-size: 10px ! important;
-  padding: 0px ! important;
-  margin: 0px ! important;
-}
+
 
 .button-close {
   background: url("chrome://minimo/skin/close.gif") no-repeat 50% 50%;
@@ -101,9 +105,7 @@ toolbar *, #appcontent * {
 
 */
 
-* {
-  font-size: 10px;  
-}
+
 
 #contentAreaContextMenu {
 
