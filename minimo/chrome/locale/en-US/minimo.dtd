@@ -30,6 +30,7 @@
 <!ENTITY zoomText.label                "Text zoom:" >
 <!ENTITY zoomTextPlus.label            "+" >
 <!ENTITY zoomTextMinus.label           "-" >
+<!ENTITY zoomUIText.label              "UI zoom:" >
 
 <!-- toolbar view rss --> 
 <!ENTITY rssText.label                 "Tag:" >
