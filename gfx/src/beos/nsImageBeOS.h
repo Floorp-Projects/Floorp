@@ -126,7 +126,6 @@ private:
 	PRUint8 mFlags;
 	PRInt8 mNumBytesPixel;
 	PRBool mImageCurrent;
-	PRBool mTileCurrent;
 	PRBool mOptimized;
 };
 
