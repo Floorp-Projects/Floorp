@@ -2854,11 +2854,19 @@ nsXULDocument::ResumeWalk()
                     rv = mContextStack.Push(protoele, child);
                     if (NS_FAILED(rv)) return rv;
                 }
-                else if (mState == eState_Master) {
-                    // If there are no children, and we're in the
-                    // master document, do post-order document hookup
-                    // immediately.
-                    AddElementToDocumentPost(child);
+                else {
+                    if (mState == eState_Master) {
+                        // If there are no children, and we're in the
+                        // master document, do post-order document hookup
+                        // immediately.
+                        AddElementToDocumentPost(child);
+                    }
+#ifdef MOZ_XTF
+                    if (child &&
+                        child->GetNameSpaceID() > kNameSpaceID_LastBuiltin) {
+                        child->DoneAddingChildren(PR_FALSE);
+                    }
+#endif
                 }
             }
             break;
