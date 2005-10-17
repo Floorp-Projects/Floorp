@@ -162,7 +162,6 @@ nsLinkableAccessible::nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* 
   nsAccessibleWrap(aNode, aShell),
   mActionContent(nsnull),
   mIsLink(PR_FALSE),
-  mIsLinkVisited(PR_FALSE),
   mIsOnclick(PR_FALSE)
 {
   CacheActionContent();
@@ -185,8 +184,14 @@ NS_IMETHODIMP nsLinkableAccessible::GetState(PRUint32 *aState)
   nsAccessible::GetState(aState);
   if (mIsLink) {
     *aState |= STATE_LINKED;
-    if (mIsLinkVisited)
-      *aState |= STATE_TRAVERSED;
+    nsCOMPtr<nsILink> link = do_QueryInterface(mActionContent);
+    if (link) {
+      nsLinkState linkState;
+      link->GetLinkState(linkState);
+      if (linkState == eLinkState_Visited) {
+        *aState |= STATE_TRAVERSED;
+      }
+    }
     // Make sure we also include all the states of the parent link, such as focusable, focused, etc.
     PRUint32 role;
     GetRole(&role);
@@ -300,10 +305,6 @@ void nsLinkableAccessible::CacheActionContent()
       if (uri) {
         mActionContent = walkUpContent;
         mIsLink = PR_TRUE;
-        nsLinkState linkState;
-        link->GetLinkState(linkState);
-        if (linkState == eLinkState_Visited)
-          mIsLinkVisited = PR_TRUE;
       }
     }
     if (walkUpContent->HasAttr(kNameSpaceID_None,
