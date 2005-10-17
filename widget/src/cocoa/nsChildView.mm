@@ -1095,6 +1095,7 @@ NS_IMETHODIMP nsChildView::EndDrawPlugin()
 //-------------------------------------------------------------------------
 void nsChildView::RemovedFromWindow()
 {
+  if (!mInWindow) return;
   mInWindow = PR_FALSE;
 
   if (mPluginPort && !mDestroyCalled)
@@ -1110,6 +1111,7 @@ void nsChildView::RemovedFromWindow()
 //-------------------------------------------------------------------------
 void nsChildView::AddedToWindow()
 {
+  if (mInWindow) return;
   mInWindow = PR_TRUE;
 
   if (mPluginPort)
