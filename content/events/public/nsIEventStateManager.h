@@ -177,5 +177,8 @@ public:
 #define NS_EVENT_STATE_USERDISABLED 0x00010000
 // Content suppressed by the user (ad blocking, etc)
 #define NS_EVENT_STATE_SUPPRESSED   0x00020000
+// Content is still loading such that there is nothing to show the
+// user (eg an image which hasn't started coming in yet)
+#define NS_EVENT_STATE_LOADING      0x00040000
 
 #endif // nsIEventStateManager_h__

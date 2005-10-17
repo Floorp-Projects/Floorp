@@ -3109,6 +3109,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     else if (nsCSSPseudoClasses::mozSuppressed == pseudoClass->mAtom) {
       result = STATE_CHECK(NS_EVENT_STATE_SUPPRESSED);
     }
+    else if (nsCSSPseudoClasses::mozLoading == pseudoClass->mAtom) {
+      result = STATE_CHECK(NS_EVENT_STATE_LOADING);
+    }
     else if (nsCSSPseudoClasses::required == pseudoClass->mAtom) {
       result = STATE_CHECK(NS_EVENT_STATE_REQUIRED);
     }
@@ -3648,6 +3651,7 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
         (pseudoClass->mAtom == nsCSSPseudoClasses::mozBroken) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::mozUserDisabled) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::mozSuppressed) ||
+        (pseudoClass->mAtom == nsCSSPseudoClasses::mozLoading) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::required) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::optional) ||
         (pseudoClass->mAtom == nsCSSPseudoClasses::valid) ||

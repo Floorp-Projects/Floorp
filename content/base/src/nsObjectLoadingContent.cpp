@@ -522,7 +522,7 @@ nsObjectLoadingContent::ObjectState() const
 {
   switch (mType) {
     case eType_Loading:
-      return 0;
+      return NS_EVENT_STATE_LOADING;
     case eType_Image:
       return ImageState();
     case eType_Plugin:

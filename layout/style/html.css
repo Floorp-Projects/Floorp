@@ -394,6 +394,7 @@ hr[size="1"] {
 
 img:-moz-broken::before, input:-moz-broken::before,
 img:-moz-user-disabled::before, input:-moz-user-disabled::before,
+img:-moz-loading::before, input:-moz-loading::before,
 /* Nonempty applets should just show their kids.
    XXXbz do we need a selector that will ignore <param> elements? */
 applet:empty:-moz-broken::before,
