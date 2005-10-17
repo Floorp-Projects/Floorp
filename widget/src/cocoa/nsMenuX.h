@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,17 +46,23 @@
 #include "nsIChangeManager.h"
 #include "nsWeakReference.h"
 
-#include <Menus.h>
-#include <UnicodeConverter.h>
-#include <CarbonEvents.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 
 
 class nsIMenuBar;
 class nsIMenuListener;
+class nsMenuX;
 
 
-//static PRInt16      mMacMenuIDCount;    // use GetUniqueMenuID()
-extern PRInt16 mMacMenuIDCount;// = kMacMenuID;
+// This class simply receives events from menus as a proxy for a gecko menu
+@interface MenuDelegate : NSObject
+{
+  nsMenuX* mGeckoMenu; // weak ref
+  BOOL mHaveInstalledCarbonEvents;
+}
+- (id)initWithGeckoMenu:(nsMenuX*)geckoMenu;
+@end
 
 
 class nsMenuX : public nsIMenu,
@@ -75,15 +82,15 @@ public:
     nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent); 
     nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
     nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
-    nsEventStatus MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
+    nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
                                 void * menuNode, void * aDocShell);
     nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
     nsEventStatus CheckRebuild(PRBool & aMenuEvent);
     nsEventStatus SetRebuild(PRBool aMenuEvent);
 
     // nsIMenu Methods
-    NS_IMETHOD Create ( nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                        nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode ) ;
+    NS_IMETHOD Create (nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
+                       nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode);
     NS_IMETHOD GetParent(nsISupports *&aParent);
     NS_IMETHOD GetLabel(nsString &aText);
     NS_IMETHOD SetLabel(const nsAString &aText);
@@ -105,37 +112,36 @@ public:
     NS_IMETHOD GetEnabled(PRBool* aIsEnabled);
     NS_IMETHOD IsHelpMenu(PRBool* aIsEnabled);
 
-    // 
     NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
     NS_IMETHOD AddMenu(nsIMenu * aMenu);
-
+    
 protected:
-      // Determines how many menus are visible among the siblings that are before me.
-      // It doesn't matter if I am visible.
-    nsresult CountVisibleBefore ( PRUint32* outVisibleBefore ) ;
+    // Determines how many menus are visible among the siblings that are before me.
+    // It doesn't matter if I am visible.
+    nsresult CountVisibleBefore(PRUint32* outVisibleBefore);
 
     // fetch the content node associated with the menupopup item
-    void GetMenuPopupContent ( nsIContent** aResult ) ;
+    void GetMenuPopupContent(nsIContent** aResult);
 
-      // Insert a new item in this menu with index |inItemIndex| with the text |inItemLabel|,
-      // middle-truncated to a certain pixel width with an elipsis.
-    void InsertMenuItemWithTruncation ( nsAutoString & inItemLabel, 
-                                          PRUint32 inItemIndex ) ;
+    // Insert a new item in this menu with index |inItemIndex| with the text |inItemLabel|,
+    // middle-truncated to a certain pixel width with an elipsis.
+    void InsertMenuItemWithTruncation(nsAutoString & inItemLabel, 
+                                      PRUint32 inItemIndex);
     
     // fire handlers for oncreate/ondestroy
-    PRBool OnDestroy() ;
-    PRBool OnCreate() ;
-    PRBool OnDestroyed() ;
-    PRBool OnCreated() ;
+    PRBool OnDestroy();
+    PRBool OnCreate();
+    PRBool OnDestroyed();
+    PRBool OnCreated();
 
-    void LoadMenuItem ( nsIMenu* pParentMenu, nsIContent* menuitemContent );  
-    void LoadSubMenu ( nsIMenu * pParentMenu, nsIContent* menuitemContent );
-    void LoadSeparator ( nsIContent* menuitemContent );
+    void LoadMenuItem(nsIMenu* pParentMenu, nsIContent* menuitemContent);  
+    void LoadSubMenu(nsIMenu * pParentMenu, nsIContent* menuitemContent);
+    void LoadSeparator(nsIContent* menuitemContent);
 
-    nsEventStatus HelpMenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
-                                      void* unused, void* aDocShell);
+    nsEventStatus HelpMenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
+                                    void* unused, void* aDocShell);
 
-    MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);
+    NSMenu* CreateMenuWithGeckoString(nsString& menuTitle);
 
 protected:
     nsString                    mLabel;
@@ -148,9 +154,10 @@ protected:
     nsCOMPtr<nsIContent>        mMenuContent;           // the |menu| tag, strong ref
     nsCOMPtr<nsIMenuListener>   mListener;              // strong ref
 
-    // MacSpecific
+    // Mac specific
     PRInt16                     mMacMenuID;
-    MenuHandle                  mMacMenuHandle;
+    NSMenu*                     mMacMenu;               // strong ref, we own it
+    MenuDelegate*               mMenuDelegate;          // strong ref, we keep this around to get events for us
     PRInt16                     mHelpMenuOSItemsCount;
     PRPackedBool                mIsHelpMenu;
     PRPackedBool                mIsEnabled;

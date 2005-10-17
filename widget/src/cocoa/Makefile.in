@@ -99,14 +99,14 @@ MAC_LCPPSRCS = \
 
 
 CPPSRCS =  \
-		nsMenuX.cpp \
-		nsMenuBarX.cpp \
-		nsMenuItemX.cpp \
 		$(MAC_LCPPSRCS) \
 		$(GFX_LCPPSRCS) \
 		$(NULL)
 
 CMMSRCS = \
+    nsMenuX.mm \
+		nsMenuBarX.mm \
+		nsMenuItemX.mm \
 		nsFilePicker.mm \
 		nsToolkit.mm \
 		nsAppShellCocoa.mm \
