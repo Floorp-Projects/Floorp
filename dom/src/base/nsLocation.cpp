@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -73,6 +74,31 @@
 #include "nsContentUtils.h"
 
 static nsresult
+GetContextFromStack(nsIJSContextStack *aStack, JSContext **aContext)
+{
+  nsCOMPtr<nsIJSContextStackIterator>
+    iterator(do_CreateInstance("@mozilla.org/js/xpc/ContextStackIteror;1"));
+  NS_ENSURE_TRUE(iterator, NS_ERROR_FAILURE);
+
+  nsresult rv = iterator->Reset(aStack);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  PRBool done;
+  while (NS_SUCCEEDED(iterator->Done(&done)) && !done) {
+    rv = iterator->Prev(aContext);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Broken iterator implementation");
+
+    if (nsJSUtils::GetDynamicScriptContext(*aContext)) {
+      return NS_OK;
+    }
+  }
+
+  *aContext = nsnull;
+
+  return NS_OK;
+}
+
+static nsresult
 GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
 {
   aCharset.Truncate();
@@ -84,7 +110,7 @@ GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
 
   JSContext *cx;
 
-  rv = stack->Peek(&cx);
+  rv = GetContextFromStack(stack, &cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (cx) {
@@ -149,7 +175,7 @@ nsLocation::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 
   JSContext *cx;
 
-  if (NS_FAILED(stack->Peek(&cx)))
+  if (NS_FAILED(GetContextFromStack(stack, &cx)))
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISupports> owner;
@@ -514,7 +540,7 @@ nsLocation::SetHref(const nsAString& aHref)
 
   JSContext *cx;
 
-  if (NS_FAILED(stack->Peek(&cx)))
+  if (NS_FAILED(GetContextFromStack(stack, &cx)))
     return NS_ERROR_FAILURE;
 
   if (cx) {
@@ -590,7 +616,7 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
     if (stack) {
       JSContext *cx;
 
-      result = stack->Peek(&cx);
+      result = GetContextFromStack(stack, &cx);
       if (cx) {
         nsIScriptContext *scriptContext =
           nsJSUtils::GetDynamicScriptContext(cx);
@@ -889,7 +915,7 @@ nsLocation::Replace(const nsAString& aUrl)
   if (stack) {
     JSContext *cx;
 
-    rv = stack->Peek(&cx);
+    rv = GetContextFromStack(stack, &cx);
     NS_ENSURE_SUCCESS(rv, rv);
     if (cx) {
       return SetHrefWithContext(cx, aUrl, PR_TRUE);

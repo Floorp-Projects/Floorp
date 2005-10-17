@@ -51,6 +51,32 @@ interface nsIJSContextStack : nsISupports
     void                        push(in JSContext cx);
 };
 
+[uuid(c7e6b7aa-fc12-4ca7-b140-98c38b698961)]
+interface nsIJSContextStackIterator : nsISupports
+{
+    /**
+     * Resets this iterator to the beginning of this thread's stack.
+     */
+    void reset(in nsIJSContextStack stack);
+
+    /**
+     * Returns true if this iterator is at the end of its stack's contexts.
+     * @throws NS_ERROR_NOT_INITIALIZED If there has not been a previous call
+     *         to reset.
+     */
+    boolean done();
+
+    /**
+     * Returns the prev JSContext off of stack. Note that because we're 
+     * iterating over a stack, this value would be the next popped value.
+     *
+     * @throws NS_ERROR_NOT_INITIALIZED If there has not been a previous call
+     *         to reset.
+     * @throws NS_ERROR_NOT_AVAILABLE if already at the end.
+     */
+    JSContext prev();
+};
+
 [uuid(a1339ae0-05c1-11d4-8f92-0010a4e73d9a)]
 interface nsIThreadJSContextStack : nsIJSContextStack
 {

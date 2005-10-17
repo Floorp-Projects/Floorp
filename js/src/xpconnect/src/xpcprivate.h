@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -51,6 +52,7 @@
 #include <math.h>
 #include "nscore.h"
 #include "nsXPCOM.h"
+#include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsIClassInfo.h"
@@ -2651,7 +2653,10 @@ public:
 
 #ifdef DEBUG
     JSBool DEBUG_StackHasJSContext(JSContext*  aJSContext);
-#endif    
+#endif
+
+    const nsDeque &GetStack()
+    { return mStack; }
 
 private:
     void SyncJSContexts();
@@ -2665,6 +2670,22 @@ private:
     JSContext*  mOwnSafeJSContext;
 };
 
+/***************************************************************************/
+
+#define NS_XPC_JSCONTEXT_STACK_ITERATOR_CID \
+{ 0x05bae29d, 0x8aef, 0x486d, \
+  { 0x84, 0xaa, 0x53, 0xf4, 0x8f, 0x14, 0x68, 0x11 } }
+
+class nsXPCJSContextStackIterator : public nsIJSContextStackIterator
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIJSCONTEXTSTACKITERATOR
+
+private:
+    // XXX These don't really want to be pointers.
+    nsAutoPtr<nsDequeIterator> mIterator;
+};
 
 /**************************************************************/
 // All of our thread local storage.
@@ -2832,6 +2853,7 @@ private:
          return data ? data->GetJSContextStack() : nsnull;}
 
     static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack;
+    friend class nsXPCJSContextStackIterator;
 };
 
 /***************************************************************************/
