@@ -534,48 +534,6 @@ IsSupportedDocument(nsIContent* aOurContent,
     supported != nsIWebNavigationInfo::PLUGIN;
 }
 
-nsresult
-nsObjectFrame::GetMIMEType(nsACString& aType)
-{
-  nsAutoString type;
-  nsresult rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-  if (rv != NS_CONTENT_ATTR_HAS_VALUE || type.IsEmpty()) {
-    // if we don't have a TYPE= try getting the mime-type via the DATA= url
-    nsAutoString data;
-    // If this is an OBJECT tag, we should look for a DATA attribute.
-    // If not, it's an EMBED tag, and so we should look for a SRC attribute.
-    if (mContent->Tag() == nsHTMLAtoms::object)
-      rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
-    else
-      rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, data);
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE || data.IsEmpty()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    
-    nsCOMPtr<nsIURI> uri;
-    nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
-    rv = NS_NewURI(getter_AddRefs(uri), data, mContent->GetOwnerDoc()->GetDocumentCharacterSet().get(), baseURI);
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsXPIDLCString contentType;
-    rv = mimeService->GetTypeFromURI(uri, contentType);
-    if (NS_FAILED(rv) || contentType.IsEmpty())
-      return NS_ERROR_NOT_AVAILABLE;
-    
-    aType = contentType;
-  } else {
-    CopyUTF16toUTF8(type, aType);
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsObjectFrame::SetInitialChildList(nsPresContext*  aPresContext,
                                    nsIAtom*        aListName,
