@@ -486,6 +486,16 @@ function BrowserResetZoomMinus() {
  	getBrowser().selectedBrowser.markupDocumentViewer.textZoom-= .25;
 }
 
+
+/* Reset the UI text size */ 
+function BrowserUIResetZoomPlus() {
+        document.styleSheets[1].cssRules[1].style.fontSize=parseInt(document.styleSheets[1].cssRules[1].style.fontSize)+3+"px";
+}
+
+function BrowserUIResetZoomMinus() {
+        document.styleSheets[1].cssRules[1].style.fontSize=parseInt(document.styleSheets[1].cssRules[1].style.fontSize)-3+"px";
+}
+
 /* 
   We want to intercept before it shows, 
   to evaluate when the selected content area is a phone number, 
