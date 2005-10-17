@@ -61,14 +61,14 @@ ParseVP(char *part, VersionPart &result)
 {
   char *dot;
 
-  if (!part) {
-    result.numA = 0;
-    result.strB = nsnull;
-    result.strBlen = 0;
-    result.numC = 0;
-    result.extraD = nsnull;
+  result.numA = 0;
+  result.strB = nsnull;
+  result.strBlen = 0;
+  result.numC = 0;
+  result.extraD = nsnull;
+
+  if (!part)
     return part;
-  }
 
   dot = strchr(part, '.');
   if (dot)
@@ -85,8 +85,6 @@ ParseVP(char *part, VersionPart &result)
   if (!*result.strB) {
     result.strB = nsnull;
     result.strBlen = 0;
-    result.numC = 0;
-    result.extraD = nsnull;
   }
   else {
     if (result.strB[0] == '+') {
@@ -100,8 +98,6 @@ ParseVP(char *part, VersionPart &result)
       const char *numstart = strpbrk(result.strB, "0123456789+-");
       if (!numstart) {
 	result.strBlen = strlen(result.strB);
-	result.numC = 0;
-	result.extraD = nsnull;
       }
       else {
 	result.strBlen = numstart - result.strB;
