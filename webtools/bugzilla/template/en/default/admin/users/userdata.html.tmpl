@@ -29,9 +29,12 @@
              id="login" value="[% otheruser.login FILTER html %]" />
       [% IF editform %]
         <input type="hidden" name="loginold"
-               value="[% otheruser.login FILTER html %]" /><br />
-        <a href="relogin.cgi?action=sudo&target_login=
-        [%- otheruser.login FILTER html %]">Impersonate this user</a>
+               value="[% otheruser.login FILTER html %]" />
+        [% IF !otheruser.groups.bz_sudo_protect %]
+          <br />
+          <a href="relogin.cgi?action=sudo&amp;target_login=
+          [%- otheruser.login FILTER html %]">Impersonate this user</a>
+        [% END %]
       [% END %]
     [% ELSE %]
       [% otheruser.login FILTER html %]
