@@ -3196,7 +3196,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         //result = lastFrame->GetNextSibling(&lastFrame, searchingLine);
         result = it->GetNextSiblingOnLine(lastFrame, searchingLine);
         if (NS_FAILED(result) || !lastFrame){
-          NS_ASSERTION(0,"should not be reached nsFrame\n");
+          NS_ERROR("GetLine promised more frames than could be found");
           return NS_ERROR_FAILURE;
         }
       }
