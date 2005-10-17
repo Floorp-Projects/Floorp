@@ -42,6 +42,7 @@ var expect = 'No Crash';
 
 printBugNumber (bug);
 printStatus (summary);
+expectExitCode(3)
 
 var a = new Array(); 
 
