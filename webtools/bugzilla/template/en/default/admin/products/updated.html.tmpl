@@ -21,33 +21,10 @@
 
 [%# INTERFACE:
   #
-  # updated_XXX : boolean; is true when the 'XXX' field has been updated.
-  # old_XXX : ... string; old value of the field 'XXX'.
-  # new_XXX : ... string; new value of the field 'XXX'.
+  # old_product : Bugzilla::Product Object; old product.
+  # product : Bugzilla::Product Object; new product.
   #
-  # updated_product: boolean; the name of the product was updated
-  #
-  # updated_description: boolean; the product description was updated
-  #
-  # updated_milestoneurl: boolean; the product milestone URL was updated
-  #
-  # updated_votesperuser: boolean; the votes per user was updated
-  #
-  # updated_maxvotesperbug: boolean; the max votes per bug was updated
-  #
-  # updated_votestoconfirm: boolean; the votes to confirm a bug was updated
-  #
-  # updated_defaultmilestone: boolean; the default milestone was updated
-  #
-  # updated_bugsubmitstatus: boolean; the open/closed for new bugs status 
-  #                          was updated (no 'old_XXX' value)
-  #
-  # classification: string; The product classification (may be empty or missing)
-  #
-  # changer: string; user id of the user making the changes, used for mailing
-  #          bug changes if necessary
-  #
-  # name: string; the product name
+  # classification: Bugzilla::Classification Object; The product classification (may be empty or missing)
   #
   # checkvotes: boolean; is true if vote related fields have changed. If so, 
   #             then the following parameters will be specified:
@@ -62,105 +39,110 @@
   #
   # confirmedbugs: list of bug ids, which were confirmed by votes
   #
+  # changer: string; user id of the user making the changes, used for mailing
+  #          bug changes if necessary
+  #
   #%]
 
 [% IF classification %]
   [% classification_url_part = BLOCK %]&amp;classification=
-     [%- classification FILTER url_quote %]
+     [%- classification.name FILTER url_quote %]
   [% END %]
   [% classification_text = BLOCK %] 
-    of classification '[% classification FILTER html %]'
+    of classification '[% classification.name FILTER html %]'
   [% END %]
 [% END %]
 
-[% title = BLOCK %]Updating Product '[% name FILTER html %]' 
+[% title = BLOCK %]Updating Product '[% product.name FILTER html %]' 
                    [% classification_text FILTER none %][% END %]
 [% PROCESS global/header.html.tmpl
   title = title
   style_urls = ['skins/standard/admin.css']
 %]
+[% updated = 0 %]
 
-[% IF updated_product %]
+[% IF product.name != old_product.name %]
   <p>
-  Updated product name from '[% old_product FILTER html %]' to 
+  Updated product name from '[% old_product.name FILTER html %]' to 
   <a href="editproducts.cgi?action=edit&amp;product=
-  [%- new_product FILTER url_quote %]
-  [%- classification_url_part FILTER none %]">[% new_product FILTER html %]</a>.
+  [%- product.name FILTER url_quote %]
+  [%- classification_url_part FILTER none %]">[% product.name FILTER html %]</a>.
+  [% updated = 1 %]
 [% END %]
 
 
-[% IF updated_description %]
+[% IF product.description != old_product.description %]
   <p>
     Updated description to:</p>
   </p>
-  <p style="margin: 1em 3em 1em 3em">[% new_description FILTER html %]</p>
+  <p style="margin: 1em 3em 1em 3em">[% product.description FILTER html %]</p>
+  [% updated = 1 %]
 [% END %]
 
-[% IF updated_bugsubmitstatus %]
+[% IF product.disallow_new != old_product.disallow_new %]
   <p>
   Product is now
-  [% IF new_bugsubmitstatus %]
+  [% IF product.disallow_new %]
     closed to
   [% ELSE %]
     open for 
   [% END %]
   new [% terms.bugs %].
+  [% updated = 1 %]
 [% END %]
 
-[% IF updated_milestoneurl %]
+[% IF product.milestone_url != old_product.milestone_url %]
   <p>
   Updated milestone URL 
-  [% IF old_milestoneurl != '' %]
-    from<br> <a href="[%- old_milestoneurl FILTER html %]">'
-    [%- old_milestoneurl FILTER html %]'</a>
+  [% IF old_product.milestone_url != '' %]
+    from<br> <a href="[%- old_product.milestone_url FILTER html %]">'
+    [%- old_product.milestone_url FILTER html %]'</a>
   [% END %]
   to
-  [% IF new_milestoneurl != '' %]
-     <br><a href="[%- new_milestoneurl FILTER html %]">'
-     [%- new_milestoneurl FILTER html %]'</a>.
+  [% IF product.milestone_url != '' %]
+     <br><a href="[%- product.milestone_url FILTER html %]">'
+     [%- product.milestone_url FILTER html %]'</a>.
   [% ELSE %]
     be empty.
   [% END %]
   </p>
+  [% updated = 1 %]
 [% END %]
 
-[% IF updated_defaultmilestone %]
+[% IF product.default_milestone != old_product.default_milestone %]
   <p>
-  Updated default milestone from '[% old_defaultmilestone FILTER html %]' to
-  '[% new_defaultmilestone FILTER html %]'.
+  Updated default milestone from '[% old_product.default_milestone FILTER html %]' to
+  '[% product.default_milestone FILTER html %]'.
   </p>
+  [% updated = 1 %]
 [% END %]
   
-[% IF updated_votesperuser %]
+[% IF product.votes_per_user != old_product.votes_per_user %]
   <p>
   Updated votes per user from
-  [%+ old_votesperuser FILTER html %] to 
-  [%+ new_votesperuser FILTER html %].
+  [%+ old_product.votes_per_user FILTER html %] to 
+  [%+ product.votes_per_user FILTER html %].
+  [% updated = 1 %]
 [% END %]
 
-[% IF updated_maxvotesperbug %]
+[% IF product.max_votes_per_bug != old_product.max_votes_per_bug %]
   <p>
   Updated maximum votes per [% terms.bug %] from 
-  [%+ old_maxvotesperbug FILTER html %] to 
-  [%+ new_maxvotesperbug FILTER html %].
+  [%+ old_product.max_votes_per_bug FILTER html %] to 
+  [%+ product.max_votes_per_bug FILTER html %].
+  [% updated = 1 %]
 [% END %]
 
-[% IF updated_votestoconfirm %]
+[% IF product.votes_to_confirm != old_product.votes_to_confirm %]
   <p>
   Updated number of votes needed to confirm a [% terms.bug %] from
-  [%+ old_votestoconfirm FILTER html %] to 
-  [%+ new_votestoconfirm FILTER html %].
+  [%+ old_product.votes_to_confirm FILTER html %] to 
+  [%+ product.votes_to_confirm FILTER html %].
+  [% updated = 1 %]
 [% END %]
 
-[% UNLESS updated_bugsubmitstatus ||
-          updated_description || 
-          updated_milestoneurl ||
-          updated_votesperuser ||
-          updated_maxvotesperbug ||
-          updated_votestoconfirm ||
-          updated_defaultmilestone ||
-          updated_product %]
-  <p>Nothing changed for product '[% name FILTER html %]'.
+[% UNLESS updated %]
+  <p>Nothing changed for product '[% product.name FILTER html %]'.
 [% END %]
 
 [%# Note that this display of changed votes and/or confirmed bugs is

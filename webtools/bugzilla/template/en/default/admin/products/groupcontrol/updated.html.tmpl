@@ -18,12 +18,12 @@
 [%# INTERFACE:
   #      removed_na: array of hashes; groups not applicable for the product.  
   # added_mandatory: array of hashes; groups mandatory for the product.  
-  #  classification: string; product classification name.
-  #         product: string; name of the product.
+  #  classification: Bugzilla::Classification object;  product classification.
+  #         product: Bugzilla::Product object; the product.
   #%]
 
 [% title = BLOCK %]
-    Update group access controls for [% product FILTER html %]
+    Update group access controls for [% product.name FILTER html %]
 [% END %]
 
 [% PROCESS global/header.html.tmpl
@@ -48,6 +48,6 @@
 
 Group control updates done<p>
 
-[% PROCESS admin/products/footer.html.tmpl name = product %]
+[% PROCESS admin/products/footer.html.tmpl %]
 
 [% PROCESS global/footer.html.tmpl %]

@@ -17,14 +17,15 @@
   #%]
 
 [%# INTERFACE:
-  # classification: string; name of classification product is in.
-  #        product: array;  an array of product objects.
+  # product: Bugzilla::Product object; The product
+  #
+  # classification: Bugzilla::Classifiation object; classification product is in.
   #%]
 
 [% IF Param('useclassification') %]
   <tr>
     <th align="right"><b>Classification:</b></th>
-    <td><b>[% classification FILTER html %]</b></td>
+    <td><b>[% classification.name FILTER html %]</b></td>
   </tr>
 [% END %]
     

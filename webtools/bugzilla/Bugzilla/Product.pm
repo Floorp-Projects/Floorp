@@ -187,6 +187,20 @@ sub bug_count {
     return $self->{'bug_count'};
 }
 
+sub bug_ids {
+    my $self = shift;
+    my $dbh = Bugzilla->dbh;
+
+    if (!defined $self->{'bug_ids'}) {
+        $self->{'bug_ids'} = 
+            $dbh->selectcol_arrayref(q{SELECT bug_id FROM bugs
+                                       WHERE product_id = ?},
+                                     undef, $self->id);
+    }
+    return $self->{'bug_ids'};
+}
+
+
 ###############################
 ####      Accessors      ######
 ###############################
@@ -253,6 +267,7 @@ Bugzilla::Product - Bugzilla product class.
     my @milestones      = $product->milestones();
     my @versions        = $product->versions();
     my $bugcount        = $product->bug_count();
+    my $bug_ids         = $product->bug_ids();
 
     my $id               = $product->id;
     my $name             = $product->name;
@@ -329,6 +344,14 @@ Product.pm represents a product object.
  Params:      none.
 
  Returns:     Integer with the number of bugs.
+
+=item C<bug_ids()>
+
+ Description: Returns the IDs of bugs that belong to the product.
+
+ Params:      none.
+
+ Returns:     An array of integer.
 
 =back
 

@@ -506,8 +506,6 @@
 ],
 
 'admin/products/groupcontrol/edit.html.tmpl' => [
-  'filt_classification', 
-  'filt_product', 
   'group.bugcount', 
   'group.id', 
   'const.CONTROLMAPNA', 
@@ -522,7 +520,6 @@
 
 'admin/products/confirm-delete.html.tmpl' => [
   'classification_url_part', 
-  'bug_count', 
 ],
 
 'admin/products/footer.html.tmpl' => [

@@ -17,13 +17,14 @@
   #%]
 
 [%# INTERFACE:
-  # classification: string; name of classification product is in.
-  #        product: an array of product objects.
-  #     components: an array of component object(s) related to the product.
-  #         groups: an array of group objects related to the product.
-  #       versions: an array of version objects related to product.
-  #     milestones: an array of milestones objects related to product.
-  #      bug_count: integer; number of bugs in this product.
+  # product: Bugzilla::Product object; The product
+  #
+  # (classification fields available if Param('useclassification') is enabled:)
+  #
+  # classification: Bugzilla::Classification object; The classification 
+  #                                                  the product is in
+  #
+  # groups_controls: a hash of group controls related to the product.
   #%]
 
 [% title = BLOCK %]Edit Product[% END %]
@@ -44,8 +45,8 @@
         </a>
       </th>
       <td>
-        [% IF components.size -%]
-          [% FOREACH component = components %]
+        [% IF product.components.size -%]
+          [% FOREACH component = product.components %]
             <b>[% component.name FILTER html %]:</b>&nbsp;
             [% IF component.description %]
               [% component.description FILTER none %]
@@ -65,9 +66,9 @@
 versions:</a>
       </th>
       <td>
-        [%- IF versions.size -%]
-          [% FOREACH v = versions %]
-            [% v FILTER html %]
+        [%- IF product.versions.size -%]
+          [% FOREACH v = product.versions %]
+            [% v.name FILTER html %]
             <br>
           [% END %]
         [% ELSE %]
@@ -82,9 +83,9 @@ versions:</a>
           Edit milestones:</a>
         </th>
         <td>
-          [%- IF milestones.size -%]
-            [%- FOREACH m = milestones -%]
-              [% m FILTER html %]
+          [%- IF product.milestones.size -%]
+            [%- FOREACH m = product.milestones -%]
+              [% m.name FILTER html %]
             <br>
             [% END %]
           [% ELSE %]
@@ -97,15 +98,15 @@ versions:</a>
       <th align="right" valign="top">
         <a href="editproducts.cgi?action=editgroupcontrols&product=
           [%- product.name FILTER url_quote %]&classification=
-          [%- classification FILTER url_quote %]">
+          [%- classification.name FILTER url_quote %]">
           Edit Group Access Controls:
         </a>
       </th>
       <td>
-        [% IF groups.size %]
-          [% FOREACH g = groups %]
-            <b>[% g.name FILTER html %]:</b>&nbsp;
-            [% IF g.isactive %]
+        [% IF group_controls.size %]
+          [% FOREACH g = group_controls.values %]
+            <b>[% g.group.name FILTER html %]:</b>&nbsp;
+            [% IF g.group.isactive %]
               [% g.membercontrol FILTER html %]/
               [% g.othercontrol FILTER html %]
               [% IF g.entry %], ENTRY[% END %]
@@ -122,32 +123,21 @@ versions:</a>
     </tr>
     <tr>
       <th align="right">[% terms.Bugs %]:</th>
-      <td>[% bug_count FILTER html %]</td>
+      <td><a href="buglist.cgi?product=[% product.name FILTER url_quote %]">
+            [% product.bug_count FILTER html %]</a></td>
     </tr>
   </table>
   
-  <input type="hidden" name="productold" 
+  <input type="hidden" name="product_old_name" 
         value="[% product.name FILTER html %]">
-  <input type="hidden" name="descriptionold"
-         value="[% product.description FILTER html %]">
-  <input type="hidden" name="milestoneurlold" 
-         value="[% product.milestoneurl FILTER html %]">
-  <input type="hidden" name="disallownewold"
-         value="[% product.disallownew FILTER html %]">
-  <input type="hidden" name="votesperuserold"
-       value="[% product.votesperuser FILTER html %]">
-  <input type="hidden" name="maxvotesperbugold" 
-         value="[% product.maxvotesperbug FILTER html %]">
-  <input type="hidden" name="votestoconfirmold" 
-         value="[% product.votestoconfirm FILTER html %]">
-  <input type="hidden" name="defaultmilestoneold"
-         value="[% product.defaultmilestone FILTER html %]">
   <input type="hidden" name="action" value="update">
   <input type="hidden" name="classification"
-         value="[% classification FILTER html %]">
+         value="[% classification.name FILTER html %]">
   <input type="submit" name="submit" value="Update">
 </form>
   
-[% PROCESS "admin/products/footer.html.tmpl" no_add_product_link = 1 %]
+[% PROCESS "admin/products/footer.html.tmpl"
+   no_add_product_link = 1 
+   no_edit_product_link = 1 %]
 
 [% PROCESS global/footer.html.tmpl %]

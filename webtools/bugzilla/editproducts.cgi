@@ -38,93 +38,13 @@ require "globals.pl";
 use Bugzilla::Bug;
 use Bugzilla::Series;
 use Bugzilla::Config qw(:DEFAULT $datadir);
+use Bugzilla::Product;
+use Bugzilla::Classification;
+use Bugzilla::Milestone;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
 use vars qw(@legal_bug_status @legal_resolution);
-
-# TestProduct:  just returns if the specified product does exists
-# CheckProduct: same check, optionally  emit an error text
-
-sub TestProduct
-{
-    my $prod = shift;
-
-    # does the product exist?
-    SendSQL("SELECT name
-             FROM products
-             WHERE name=" . SqlQuote($prod));
-    return FetchOneColumn();
-}
-
-sub CheckProduct
-{
-    my $prod = shift;
-
-    # do we have a product?
-    unless ($prod) {
-        ThrowUserError('product_not_specified');
-    }
-
-    unless (TestProduct($prod)) {
-        ThrowUserError('product_doesnt_exist',
-                       {'product' => $prod});
-    }
-}
-
-
-# TestClassification:  just returns if the specified classification does exists
-# CheckClassification: same check, optionally  emit an error text
-
-sub TestClassification
-{
-    my $cl = shift;
-
-    # does the classification exist?
-    SendSQL("SELECT name
-             FROM classifications
-             WHERE name=" . SqlQuote($cl));
-    return FetchOneColumn();
-}
-
-sub CheckClassification
-{
-    my $cl = shift;
-
-    # do we have a classification?
-    unless ($cl) {
-        ThrowUserError('classification_not_specified');    
-    }
-
-    unless (TestClassification($cl)) {
-        ThrowUserError('classification_doesnt_exist',
-                       {'name' => $cl});
-    }
-}
-
-sub CheckClassificationProduct
-{
-    my ($cl, $prod) = @_;
-    my $dbh = Bugzilla->dbh;
-    
-    CheckClassification($cl);
-
-    trick_taint($prod);
-    trick_taint($cl);
-
-    my ($res) = $dbh->selectrow_array(q{
-        SELECT products.name
-        FROM products
-        INNER JOIN classifications
-          ON products.classification_id = classifications.id
-        WHERE products.name = ? AND classifications.name = ?},
-        undef, ($prod, $cl));
-
-    unless ($res) {
-        ThrowUserError('classification_doesnt_exist_for_product',
-                       { product => $prod, classification => $cl });
-    }
-}
 
 #
 # Preliminary checks:
@@ -144,8 +64,8 @@ $user->in_group('editcomponents')
 #
 # often used variables
 #
-my $classification = trim($cgi->param('classification') || '');
-my $product = trim($cgi->param('product') || '');
+my $classification_name = trim($cgi->param('classification') || '');
+my $product_name = trim($cgi->param('product') || '');
 my $action  = trim($cgi->param('action')  || '');
 my $dbh = Bugzilla->dbh;
 
@@ -155,23 +75,14 @@ my $dbh = Bugzilla->dbh;
 #
 
 if (Param('useclassification') 
-    && !$classification
-    && !$product)
+    && !$classification_name
+    && !$product_name)
 {
-    my $query = 
-        "SELECT classifications.name, classifications.description,
-                COUNT(classification_id) AS product_count
-         FROM classifications
-         LEFT JOIN products
-              ON classifications.id = products.classification_id " .
-              $dbh->sql_group_by('classifications.id',
-                                 'classifications.name,
-                                  classifications.description') . "
-         ORDER BY name";
-
-    $vars->{'classifications'} = $dbh->selectall_arrayref($query,
-                                                          {'Slice' => {}});
-
+    my @classifications =
+        Bugzilla::Classification::get_all_classifications();
+    
+    $vars->{'classifications'} = \@classifications;
+    
     $template->process("admin/products/list-classifications.html.tmpl",
                        $vars)
         || ThrowTemplateError($template->error());
@@ -185,50 +96,21 @@ if (Param('useclassification')
 #                is already specified (then edit it)
 #
 
-if (!$action && !$product) {
+if (!$action && !$product_name) {
+    my @products;
 
     if (Param('useclassification')) {
-        CheckClassification($classification);
+        my $classification = 
+            Bugzilla::Classification::check_classification($classification_name);
+
+        @products = @{$classification->products};
+        $vars->{'classification'} = $classification;
+    } else {
+        @products = Bugzilla::Product::get_all_products;
     }
 
-    my @execute_params = ();
-    my @products = ();
+    $vars->{'products'} = \@products; 
 
-    my $query = "SELECT products.name,
-                        COALESCE(products.description,'') AS description, 
-                        disallownew = 0 AS status,
-                        votesperuser,  maxvotesperbug, votestoconfirm,
-                        COUNT(bug_id) AS bug_count
-                 FROM products";
-
-    if (Param('useclassification')) {
-        $query .= " INNER JOIN classifications " .
-                  "ON classifications.id = products.classification_id";
-    }
-
-    $query .= " LEFT JOIN bugs ON products.id = bugs.product_id";
-
-    if (Param('useclassification')) {
-        $query .= " WHERE classifications.name = ? ";
-
-        # trick_taint is OK because we use this in a placeholder in a SELECT
-        trick_taint($classification);
-
-        push(@execute_params,
-             $classification);
-    }
-
-    $query .= " " . $dbh->sql_group_by('products.name',
-                                       'products.description, disallownew,
-                                        votesperuser, maxvotesperbug,
-                                        votestoconfirm');
-    $query .= " ORDER BY products.name";
-
-    $vars->{'products'} = $dbh->selectall_arrayref($query,
-                                                   {'Slice' => {}},
-                                                   @execute_params);
-
-    $vars->{'classification'} = $classification;
     $template->process("admin/products/list.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -248,9 +130,10 @@ if (!$action && !$product) {
 if ($action eq 'add') {
 
     if (Param('useclassification')) {
-        CheckClassification($classification);
+        my $classification = 
+            Bugzilla::Classification::check_classification($classification_name);
+        $vars->{'classification'} = $classification;
     }
-    $vars->{'classification'} = $classification;
     $template->process("admin/products/create.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
 
@@ -268,30 +151,31 @@ if ($action eq 'new') {
 
     my $classification_id = 1;
     if (Param('useclassification')) {
-        CheckClassification($classification);
-        $classification_id = get_classification_id($classification);
+        my $classification = 
+            Bugzilla::Classification::check_classification($classification_name);
+        $classification_id = $classification->id;
         $vars->{'classification'} = $classification;
     }
 
-    unless ($product) {
+    unless ($product_name) {
         ThrowUserError("product_blank_name");  
     }
 
-    my $existing_product = TestProduct($product);
+    my $product = new Bugzilla::Product({name => $product_name});
 
-    if ($existing_product) {
+    if ($product) {
 
         # Check for exact case sensitive match:
-        if ($existing_product eq $product) {
+        if ($product->name eq $product_name) {
             ThrowUserError("prod_name_already_in_use",
-                           {'product' => $product});
+                           {'product' => $product->name});
         }
 
         # Next check for a case-insensitive match:
-        if (lc($existing_product) eq lc($product)) {
+        if (lc($product->name) eq lc($product_name)) {
             ThrowUserError("prod_name_diff_in_case",
-                           {'product' => $product,
-                            'existing_product' => $existing_product}); 
+                           {'product' => $product_name,
+                            'existing_product' => $product->name}); 
         }
     }
 
@@ -299,14 +183,14 @@ if ($action eq 'new') {
 
     if ($version eq '') {
         ThrowUserError("product_must_have_version",
-                       {'product' => $product});
+                       {'product' => $product_name});
     }
 
     my $description  = trim($cgi->param('description')  || '');
 
     if ($description eq '') {
         ThrowUserError('product_must_have_description',
-                       {'product' => $product});
+                       {'product' => $product_name});
     }
 
     my $milestoneurl = trim($cgi->param('milestoneurl') || '');
@@ -325,7 +209,7 @@ if ($action eq 'new') {
             "name, description, milestoneurl, disallownew, votesperuser, " .
             "maxvotesperbug, votestoconfirm, defaultmilestone, classification_id" .
             " ) VALUES ( " .
-            SqlQuote($product) . "," .
+            SqlQuote($product_name) . "," .
             SqlQuote($description) . "," .
             SqlQuote($milestoneurl) . "," .
             # had tainting issues under cygwin, IIS 5.0, perl -T %s %s
@@ -339,22 +223,23 @@ if ($action eq 'new') {
             SqlQuote($votestoconfirm) . "," .
             SqlQuote($defaultmilestone) . "," .
             SqlQuote($classification_id) . ")");
-    my $product_id = $dbh->bz_last_key('products', 'id');
 
+    $product = new Bugzilla::Product({name => $product_name});
+    
     SendSQL("INSERT INTO versions ( " .
           "value, product_id" .
           " ) VALUES ( " .
           SqlQuote($version) . "," .
-          $product_id . ")" );
+          $product->id . ")" );
 
     SendSQL("INSERT INTO milestones (product_id, value) VALUES (" .
-            $product_id . ", " . SqlQuote($defaultmilestone) . ")");
+            $product->id . ", " . SqlQuote($defaultmilestone) . ")");
 
     # If we're using bug groups, then we need to create a group for this
     # product as well.  -JMR, 2/16/00
     if (Param("makeproductgroups")) {
         # Next we insert into the groups table
-        my $productgroup = $product;
+        my $productgroup = $product->name;
         while (GroupExists($productgroup)) {
             $productgroup .= '_';
         }
@@ -362,7 +247,8 @@ if ($action eq 'new') {
                 "(name, description, isbuggroup, last_changed) " .
                 "VALUES (" .
                 SqlQuote($productgroup) . ", " .
-                SqlQuote("Access to bugs in the $product product") . ", 1, NOW())");
+                SqlQuote("Access to bugs in the " . $product->name . 
+                         " product") . ", 1, NOW())");
         my $gid = $dbh->bz_last_key('groups', 'id');
         my $admin = GroupNameToId('admin');
         # If we created a new group, give the "admin" group priviledges
@@ -378,7 +264,8 @@ if ($action eq 'new') {
         SendSQL("INSERT INTO group_control_map " .
                 "(group_id, product_id, entry, " .
                 "membercontrol, othercontrol, canedit) VALUES " .
-                "($gid, $product_id, " . Param("useentrygroupdefault") .
+                "($gid, " . $product->id . ", " . 
+                Param("useentrygroupdefault") .
                 ", " . CONTROLMAPDEFAULT . ", " .
                 CONTROLMAPNA . ", 0)");
     }
@@ -392,7 +279,6 @@ if ($action eq 'new') {
         # and never used again here, so we can trick_taint them.
         my $open_name = $cgi->param('open_name');
         trick_taint($open_name);
-        trick_taint($product);
     
         my @series;
     
@@ -415,10 +301,11 @@ if ($action eq 'new') {
         push(@series, [$open_name, $query]);
     
         foreach my $sdata (@series) {
-            my $series = new Bugzilla::Series(undef, $product, 
+            my $series = new Bugzilla::Series(undef, $product->name, 
                             scalar $cgi->param('subcategory'),
                             $sdata->[0], $::userid, 1,
-                            $sdata->[1] . "&product=" . url_quote($product), 1);
+                            $sdata->[1] . "&product=" .
+                            url_quote($product->name), 1);
             $series->writeToDatabase();
         }
     }
@@ -426,6 +313,7 @@ if ($action eq 'new') {
     unlink "$datadir/versioncache";
 
     $vars->{'product'} = $product;
+    
     $template->process("admin/products/created.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
     exit;
@@ -439,68 +327,21 @@ if ($action eq 'new') {
 
 if ($action eq 'del') {
     
-    if (!$product) {
-        ThrowUserError('product_not_specified');
-    }
-
-    my $product_id = get_product_id($product);
-    $product_id || ThrowUserError('product_doesnt_exist',
-                                  {product => $product});
-
-    my $classification_id = 1;
+    my $product = Bugzilla::Product::check_product($product_name);
 
     if (Param('useclassification')) {
-        CheckClassificationProduct($classification, $product);
-        $classification_id = get_classification_id($classification);
+        my $classification = 
+            Bugzilla::Classification::check_classification($classification_name);
+        if ($classification->id != $product->classification_id) {
+            ThrowUserError('classification_doesnt_exist_for_product',
+                           { product => $product->name,
+                             classification => $classification->name });
+        }
         $vars->{'classification'} = $classification;
     }
 
-    # Extract some data about the product
-    my $query = q{SELECT classifications.description,
-                         products.description,
-                         products.milestoneurl,
-                         products.disallownew
-                  FROM products
-                  INNER JOIN classifications
-                    ON products.classification_id = classifications.id
-                  WHERE products.id = ?};
+    $vars->{'product'} = $product;
 
-    my ($class_description,
-        $prod_description,
-        $milestoneurl,
-        $disallownew) = $dbh->selectrow_array($query, undef,
-                                              $product_id);
-
-    $vars->{'class_description'} = $class_description;
-    $vars->{'product_id'}        = $product_id;
-    $vars->{'prod_description'}  = $prod_description;
-    $vars->{'milestoneurl'}      = $milestoneurl;
-    $vars->{'disallownew'}       = $disallownew;
-    $vars->{'product_name'}      = $product;
-
-    $vars->{'components'} = $dbh->selectall_arrayref(q{
-        SELECT name, description FROM components
-        WHERE product_id = ? ORDER BY name}, {'Slice' => {}},
-        $product_id);
-
-    $vars->{'versions'} = $dbh->selectcol_arrayref(q{
-            SELECT value FROM versions
-            WHERE product_id = ? ORDER BY value}, undef,
-            $product_id);
-
-    # Adding listing for associated target milestones - 
-    # matthew@zeroknowledge.com
-    if (Param('usetargetmilestone')) {
-        $vars->{'milestones'} = $dbh->selectcol_arrayref(q{
-            SELECT value FROM milestones
-            WHERE product_id = ?
-            ORDER BY sortkey, value}, undef, $product_id);
-    }
-
-    ($vars->{'bug_count'}) = $dbh->selectrow_array(q{
-        SELECT COUNT(*) FROM bugs WHERE product_id = ?},
-        undef, $product_id) || 0;
- 
     $template->process("admin/products/confirm-delete.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
     exit;
@@ -512,33 +353,32 @@ if ($action eq 'del') {
 
 if ($action eq 'delete') {
     
-    if (!$product) {
-        ThrowUserError('product_not_specified');
+    my $product = Bugzilla::Product::check_product($product_name);
+    
+    $vars->{'product'} = $product;
+
+    if (Param('useclassification')) {
+        my $classification = 
+            Bugzilla::Classification::check_classification($classification_name);
+        if ($classification->id != $product->classification_id) {
+            ThrowUserError('classification_doesnt_exist_for_product',
+                           { product => $product->name,
+                             classification => $classification->name });
+        }
+        $vars->{'classification'} = $classification;
     }
 
-    my $product_id = get_product_id($product);
-    $product_id || ThrowUserError('product_doesnt_exist',
-                                  {product => $product});
-
-    $vars->{'product'} = $product;
-    $vars->{'classification'} = $classification;
-
-    my $bug_ids = $dbh->selectcol_arrayref(q{
-        SELECT bug_id FROM bugs
-        WHERE product_id = ?}, undef, $product_id);
-
-    my $nb_bugs = scalar(@$bug_ids);
-    if ($nb_bugs) {
+    if ($product->bug_count) {
         if (Param("allowbugdeletion")) {
-            foreach my $bug_id (@$bug_ids) {
+            foreach my $bug_id (@{$product->bug_ids}) {
                 my $bug = new Bugzilla::Bug($bug_id, $whoid);
                 $bug->remove_from_db();
             }
         }
         else {
-            ThrowUserError("product_has_bugs", { nb => $nb_bugs });
+            ThrowUserError("product_has_bugs", 
+                           { nb => $product->bug_count });
         }
-        $vars->{'nb_bugs'} = $nb_bugs;
     }
 
     $dbh->bz_lock_tables('products WRITE', 'components WRITE',
@@ -547,25 +387,25 @@ if ($action eq 'delete') {
                          'flaginclusions WRITE', 'flagexclusions WRITE');
 
     $dbh->do("DELETE FROM components WHERE product_id = ?",
-             undef, $product_id);
+             undef, $product->id);
 
     $dbh->do("DELETE FROM versions WHERE product_id = ?",
-             undef, $product_id);
+             undef, $product->id);
 
     $dbh->do("DELETE FROM milestones WHERE product_id = ?",
-             undef, $product_id);
+             undef, $product->id);
 
     $dbh->do("DELETE FROM group_control_map WHERE product_id = ?",
-             undef, $product_id);
+             undef, $product->id);
 
     $dbh->do("DELETE FROM flaginclusions WHERE product_id = ?",
-             undef, $product_id);
+             undef, $product->id);
              
     $dbh->do("DELETE FROM flagexclusions WHERE product_id = ?",
-             undef, $product_id);
+             undef, $product->id);
              
     $dbh->do("DELETE FROM products WHERE id = ?",
-             undef, $product_id);
+             undef, $product->id);
 
     $dbh->bz_unlock_tables();
 
@@ -583,74 +423,28 @@ if ($action eq 'delete') {
 # (next action would be 'update')
 #
 
-if ($action eq 'edit' || (!$action && $product)) {
-    CheckProduct($product);
-    trick_taint($product);
-    my $product_id = get_product_id($product); 
-    my $classification_id=1;
+if ($action eq 'edit' || (!$action && $product_name)) {
+
+    my $product = Bugzilla::Product::check_product($product_name);
+
     if (Param('useclassification')) {
-        # If a product has been given with no classification associated
-        # with it, take this information from the DB
-        if ($classification) {
-            CheckClassificationProduct($classification, $product);
+        my $classification; 
+        if (!$classification_name) {
+            $classification = 
+                new Bugzilla::Classification($product->classification_id);
         } else {
-            $classification =
-                $dbh->selectrow_array("SELECT classifications.name
-                                       FROM products, classifications
-                                       WHERE products.name = ?
-                                       AND classifications.id = products.classification_id",
-                                       undef, $product);
+            $classification = 
+                Bugzilla::Classification::check_classification($classification_name);
+            if ($classification->id != $product->classification_id) {
+                ThrowUserError('classification_doesnt_exist_for_product',
+                               { product => $product->name,
+                                 classification => $classification->name });
+            }
         }
-        $classification_id = get_classification_id($classification);
+        $vars->{'classification'} = $classification;
     }
-    
-    $vars->{'classification'} = $classification;
-
-    # get data of product
-    $vars->{'product'} = $dbh->selectrow_hashref(qq{
-            SELECT id, name, classification_id, description,
-                   milestoneurl, disallownew, votesperuser,
-                   maxvotesperbug, votestoconfirm, defaultmilestone
-              FROM products
-             WHERE id = ?}, undef, $product_id);
-    
-   
-    $vars->{'components'} = $dbh->selectall_arrayref(qq{
-            SELECT name, description
-              FROM components
-             WHERE product_id = ?
-          ORDER BY name}, {'Slice' => {}},$product_id); 
-    
-    
-    $vars->{'versions'} = $dbh->selectcol_arrayref(q{
-        SELECT value FROM versions
-         WHERE product_id = ?
-      ORDER BY value}, undef, $product_id);
-
-    if (Param('usetargetmilestone')) {
-        $vars->{'milestones'} = $dbh->selectcol_arrayref(q{
-                                    SELECT value 
-                                      FROM milestones
-                                     WHERE product_id = ?
-                                  ORDER BY sortkey, value}, 
-                                     undef, $product_id);
-    }
+    my $group_controls = $product->group_controls;
         
-    my $query = qq{SELECT
-                       groups.id, groups.name, groups.isactive,
-                       group_control_map.entry,
-                       group_control_map.membercontrol,
-                       group_control_map.othercontrol,
-                       group_control_map.canedit
-                  FROM groups
-                 INNER JOIN group_control_map
-                        ON groups.id = group_control_map.group_id
-                  WHERE group_control_map.product_id = ?
-                  AND   groups.isbuggroup != 0
-                  ORDER BY groups.name};
-    my $groups = $dbh->selectall_arrayref($query, {'Slice' => {}},
-                                          $product_id);
-    
     # Convert Group Controls(membercontrol and othercontrol) from 
     # integer to string to display Membercontrol/Othercontrol names
     # at the template. <gabriel@async.com.br>
@@ -660,19 +454,16 @@ if ($action eq 'edit' || (!$action && $product)) {
         (CONTROLMAPDEFAULT) => 'Default',
         (CONTROLMAPMANDATORY) => 'Mandatory'};
 
-    foreach my $group (@$groups) {
-        $group->{'membercontrol'} =
-            $constants->{$group->{'membercontrol'}};
-        $group->{'othercontrol'} =
-            $constants->{$group->{'othercontrol'}};
+    foreach my $group (keys(%$group_controls)) {
+        foreach my $control ('membercontrol', 'othercontrol') {
+            $group_controls->{$group}->{$control} = 
+                $constants->{$group_controls->{$group}->{$control}};
+        }
     }
-   
-    $vars->{'groups'} = $groups;
-    
-    $vars->{'bug_count'} = $dbh->selectrow_array(qq{
-            SELECT COUNT(*) FROM bugs
-            WHERE product_id = ?}, undef, $product_id);
-    
+    $vars->{'group_controls'} = $group_controls;
+
+    $vars->{'product'} = $product;
+        
     $template->process("admin/products/edit.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
 
@@ -684,7 +475,8 @@ if ($action eq 'edit' || (!$action && $product)) {
 #
 
 if ($action eq 'updategroupcontrols') {
-    my $product_id = get_product_id($product);
+
+    my $product = Bugzilla::Product::check_product($product_name);
     my @now_na = ();
     my @now_mandatory = ();
     foreach my $f ($cgi->param()) {
@@ -705,7 +497,7 @@ if ($action eq 'updategroupcontrols') {
                      WHERE groups.id IN(" . join(', ', @now_na) . ")
                      AND bug_group_map.group_id = groups.id
                      AND bug_group_map.bug_id = bugs.bug_id
-                     AND bugs.product_id = $product_id " .
+                     AND bugs.product_id = " . $product->id . " " .
                     $dbh->sql_group_by('groups.name'));
             while (MoreSQLData()) {
                 my ($groupname, $bugcount) = FetchSQLData();
@@ -725,7 +517,7 @@ if ($action eq 'updategroupcontrols') {
                  INNER JOIN groups
                          ON bug_group_map.group_id = groups.id
                       WHERE groups.id IN(" . join(', ', @now_mandatory) . ")
-                        AND bugs.product_id = $product_id
+                        AND bugs.product_id = " . $product->id . " 
                         AND bug_group_map.bug_id IS NULL " .
                         $dbh->sql_group_by('groups.name'));
             while (MoreSQLData()) {
@@ -775,8 +567,8 @@ if ($action eq 'updategroupcontrols') {
     SendSQL("SELECT id, name, entry, membercontrol, othercontrol, canedit " .
             "FROM groups " .
             "LEFT JOIN group_control_map " .
-            "ON group_control_map.group_id = id AND product_id = $product_id " .
-            "WHERE isbuggroup != 0 AND isactive != 0");
+            "ON group_control_map.group_id = id AND product_id = " .
+            $product->id . " WHERE isbuggroup != 0 AND isactive != 0");
     while (MoreSQLData()) {
         my ($groupid, $groupname, $entry, $membercontrol, 
             $othercontrol, $canedit) = FetchSQLData();
@@ -800,7 +592,7 @@ if ($action eq 'updategroupcontrols') {
                     "(group_id, product_id, entry, " .
                     "membercontrol, othercontrol, canedit) " .
                     "VALUES " .
-                    "($groupid, $product_id, $newentry, " .
+                    "($groupid, " . $product->id . ", $newentry, " .
                     "$newmembercontrol, $newothercontrol, $newcanedit)");
             PopGlobalSQLState();
         } elsif (($newentry != $entry) 
@@ -814,7 +606,7 @@ if ($action eq 'updategroupcontrols') {
                     "othercontrol = $newothercontrol, " .
                     "canedit = $newcanedit " .
                     "WHERE group_id = $groupid " .
-                    "AND product_id = $product_id");
+                    "AND product_id = " . $product->id);
             PopGlobalSQLState();
         }
 
@@ -823,7 +615,7 @@ if ($action eq 'updategroupcontrols') {
             PushGlobalSQLState();
             SendSQL("DELETE FROM group_control_map " .
                     "WHERE group_id = $groupid " .
-                    "AND product_id = $product_id");
+                    "AND product_id = " . $product->id);
             PopGlobalSQLState();
         }
     }
@@ -836,7 +628,7 @@ if ($action eq 'updategroupcontrols') {
                  FROM bugs, bug_group_map
                  WHERE group_id = $groupid
                  AND bug_group_map.bug_id = bugs.bug_id
-                 AND bugs.product_id = $product_id
+                 AND bugs.product_id = " . $product->id . "
                  ORDER BY bugs.bug_id");
         while (MoreSQLData()) {
             my ($bugid, $mailiscurrent) = FetchSQLData();
@@ -871,7 +663,7 @@ if ($action eq 'updategroupcontrols') {
                  LEFT JOIN bug_group_map
                  ON bug_group_map.bug_id = bugs.bug_id
                  AND group_id = $groupid
-                 WHERE bugs.product_id = $product_id
+                 WHERE bugs.product_id = " . $product->id . "
                  AND bug_group_map.bug_id IS NULL
                  ORDER BY bugs.bug_id");
         while (MoreSQLData()) {
@@ -903,8 +695,6 @@ if ($action eq 'updategroupcontrols') {
 
     $vars->{'added_mandatory'} = \@added_mandatory;
 
-    $vars->{'classification'} = $classification;
-
     $vars->{'product'} = $product;
 
     $template->process("admin/products/groupcontrol/updated.html.tmpl", $vars)
@@ -917,28 +707,45 @@ if ($action eq 'updategroupcontrols') {
 #
 if ($action eq 'update') {
 
-    $vars->{'classification'} = $classification;
-
-    my $productold          = trim($cgi->param('productold')          || '');
+    my $product_old_name    = trim($cgi->param('product_old_name')    || '');
     my $description         = trim($cgi->param('description')         || '');
-    my $descriptionold      = trim($cgi->param('descriptionold')      || '');
     my $disallownew         = trim($cgi->param('disallownew')         || '');
-    my $disallownewold      = trim($cgi->param('disallownewold')      || '');
     my $milestoneurl        = trim($cgi->param('milestoneurl')        || '');
-    my $milestoneurlold     = trim($cgi->param('milestoneurlold')     || '');
     my $votesperuser        = trim($cgi->param('votesperuser')        || 0);
-    my $votesperuserold     = trim($cgi->param('votesperuserold')     || 0);
     my $maxvotesperbug      = trim($cgi->param('maxvotesperbug')      || 0);
-    my $maxvotesperbugold   = trim($cgi->param('maxvotesperbugold')   || 0);
     my $votestoconfirm      = trim($cgi->param('votestoconfirm')      || 0);
-    my $votestoconfirmold   = trim($cgi->param('votestoconfirmold')   || 0);
     my $defaultmilestone    = trim($cgi->param('defaultmilestone')    || '---');
-    my $defaultmilestoneold = trim($cgi->param('defaultmilestoneold') || '---');
 
     my $checkvotes = 0;
 
-    CheckProduct($productold);
-    my $product_id = get_product_id($productold);
+    my $product_old = Bugzilla::Product::check_product($product_old_name);
+
+    if (Param('useclassification')) {
+        my $classification; 
+        if (!$classification_name) {
+            $classification = 
+                new Bugzilla::Classification($product_old->classification_id);
+        } else {
+            $classification = 
+                Bugzilla::Classification::check_classification($classification_name);
+            if ($classification->id != $product_old->classification_id) {
+                ThrowUserError('classification_doesnt_exist_for_product',
+                               { product => $product_old->name,
+                                 classification => $classification->name });
+            }
+        }
+        $vars->{'classification'} = $classification;
+    }
+
+    unless ($product_name) {
+        ThrowUserError('prod_cant_delete_name',
+                       {product => $product_old->name});
+    }
+
+    unless ($description) {
+        ThrowUserError('prod_cant_delete_description',
+                       {product => $product_old->name});
+    }
 
     my $stored_maxvotesperbug = $maxvotesperbug;
     if (!detaint_natural($maxvotesperbug)) {
@@ -958,9 +765,6 @@ if ($action eq 'update') {
                        {votestoconfirm => $stored_votestoconfirm});
     }
 
-    # Note that we got the $product_id using $productold above so it will
-    # remain static even after we rename the product in the database.
-
     $dbh->bz_lock_tables('products WRITE',
                          'versions READ',
                          'groups WRITE',
@@ -968,119 +772,86 @@ if ($action eq 'update') {
                          'profiles WRITE',
                          'milestones READ');
 
-    if ($disallownew ne $disallownewold) {
-        $disallownew = $disallownew ? 1 : 0;
-        SendSQL("UPDATE products
-                 SET disallownew=$disallownew
-                 WHERE id=$product_id");
-        $vars->{'updated_bugsubmitstatus'} = 1;
-        $vars->{'new_bugsubmitstatus'} = $disallownew;        
+    my $testproduct = 
+        new Bugzilla::Product({name => $product_name});
+    if (lc($product_name) ne lc($product_old->name) &&
+        $testproduct) {
+        ThrowUserError('prod_name_already_in_use',
+                       {product => $product_name});
     }
 
-    if ($description ne $descriptionold) {
-        unless ($description) {
-            ThrowUserError('prod_cant_delete_description',
-                           {product => $productold});
-        }
+    my $milestone = new Bugzilla::Milestone($product_old->id,
+                                            $defaultmilestone);
+    if (!$milestone) {
+        ThrowUserError('prod_must_define_defaultmilestone',
+                       {product          => $product_old->name,
+                        defaultmilestone => $defaultmilestone,
+                        classification   => $classification_name});
+    }
+
+    $disallownew = $disallownew ? 1 : 0;
+    if ($disallownew ne $product_old->disallow_new) {
+        SendSQL("UPDATE products
+                 SET disallownew=$disallownew
+                 WHERE id = " . $product_old->id);
+    }
+
+    if ($description ne $product_old->description) {
         SendSQL("UPDATE products
                  SET description=" . SqlQuote($description) . "
-                 WHERE id=$product_id");
-        $vars->{'updated_description'} = 1;
-        $vars->{'old_description'} = $descriptionold;        
-        $vars->{'new_description'} = $description;        
+                 WHERE id = " . $product_old->id);
     }
 
     if (Param('usetargetmilestone')
-        && ($milestoneurl ne $milestoneurlold)) {
+        && ($milestoneurl ne $product_old->milestone_url)) {
         SendSQL("UPDATE products
                  SET milestoneurl=" . SqlQuote($milestoneurl) . "
-                 WHERE id=$product_id");
-        $vars->{'updated_milestoneurl'} = 1;
-        $vars->{'old_milestoneurl'} = $milestoneurlold;        
-        $vars->{'new_milestoneurl'} = $milestoneurl;        
+                 WHERE id = " . $product_old->id);
     }
 
 
-    if ($votesperuser ne $votesperuserold) {
+    if ($votesperuser ne $product_old->votes_per_user) {
         SendSQL("UPDATE products
                  SET votesperuser=$votesperuser
-                 WHERE id=$product_id");
-        $vars->{'updated_votesperuser'} = 1;
-        $vars->{'old_votesperuser'} = $votesperuserold;        
-        $vars->{'new_votesperuser'} = $votesperuser;        
-
+                 WHERE id = " . $product_old->id);
         $checkvotes = 1;
     }
 
 
-    if ($maxvotesperbug ne $maxvotesperbugold) {
+    if ($maxvotesperbug ne $product_old->max_votes_per_bug) {
         SendSQL("UPDATE products
                  SET maxvotesperbug=$maxvotesperbug
-                 WHERE id=$product_id");
-        $vars->{'updated_maxvotesperbug'} = 1;
-        $vars->{'old_maxvotesperbug'} = $maxvotesperbugold;        
-        $vars->{'new_maxvotesperbug'} = $maxvotesperbug;        
-
+                 WHERE id = " . $product_old->id);
         $checkvotes = 1;
     }
 
 
-    if ($votestoconfirm ne $votestoconfirmold) {
+    if ($votestoconfirm ne $product_old->votes_to_confirm) {
         SendSQL("UPDATE products
                  SET votestoconfirm=$votestoconfirm
-                 WHERE id=$product_id");
-
-        $vars->{'updated_votestoconfirm'} = 1;
-        $vars->{'old_votestoconfirm'} = $votestoconfirmold;
-        $vars->{'new_votestoconfirm'} = $votestoconfirm;
+                 WHERE id = " . $product_old->id);
 
         $checkvotes = 1;
     }
 
 
-    if ($defaultmilestone ne $defaultmilestoneold) {
-        SendSQL("SELECT value FROM milestones " .
-                "WHERE value = " . SqlQuote($defaultmilestone) .
-                "  AND product_id = $product_id");
-        if (!FetchOneColumn()) {
-            ThrowUserError('prod_must_define_defaultmilestone',
-                           {product          => $productold,
-                            defaultmilestone => $defaultmilestone,
-                            classification   => $classification});
-        }
+    if ($defaultmilestone ne $product_old->default_milestone) {
         SendSQL("UPDATE products " .
                 "SET defaultmilestone = " . SqlQuote($defaultmilestone) .
-                "WHERE id=$product_id");
+                "WHERE id = " . $product_old->id);
 
-        $vars->{'updated_defaultmilestone'} = 1;
-        $vars->{'old_defaultmilestone'} = $defaultmilestoneold;
-        $vars->{'new_defaultmilestone'} = $defaultmilestone;
     }
 
-    my $qp = SqlQuote($product);
-    my $qpold = SqlQuote($productold);
+    my $qp = SqlQuote($product_name);
 
-    if ($product ne $productold) {
-        unless ($product) {
-            ThrowUserError('prod_cant_delete_name',
-                           {product => $productold});
-        }
-
-        if (lc($product) ne lc($productold) &&
-            TestProduct($product)) {
-            ThrowUserError('prod_name_already_in_use',
-                           {product => $product});
-        }
-
-        SendSQL("UPDATE products SET name=$qp WHERE id=$product_id");
-
-        $vars->{'updated_product'} = 1;
-        $vars->{'old_product'} = $productold;
-        $vars->{'new_product'} = $product;
+    if ($product_name ne $product_old->name) {
+        SendSQL("UPDATE products SET name=$qp WHERE id= ".$product_old->id);
 
     }
     $dbh->bz_unlock_tables();
     unlink "$datadir/versioncache";
+
+    my $product = new Bugzilla::Product({name => $product_name});
 
     if ($checkvotes) {
         $vars->{'checkvotes'} = 1;
@@ -1092,7 +863,7 @@ if ($action eq 'update') {
             SendSQL("SELECT votes.who, votes.bug_id " .
                     "FROM votes, bugs " .
                     "WHERE bugs.bug_id = votes.bug_id " .
-                    " AND bugs.product_id = $product_id " .
+                    " AND bugs.product_id = " . $product->id .
                     " AND votes.vote_count > $maxvotesperbug");
             my @list;
             while (MoreSQLData()) {
@@ -1122,7 +893,7 @@ if ($action eq 'update') {
 
         SendSQL("SELECT votes.who, votes.vote_count FROM votes, bugs " .
                 "WHERE bugs.bug_id = votes.bug_id " .
-                " AND bugs.product_id = $product_id");
+                " AND bugs.product_id = " . $product->id);
         my %counts;
         while (MoreSQLData()) {
             my ($who, $count) = (FetchSQLData());
@@ -1137,7 +908,7 @@ if ($action eq 'update') {
             if ($counts{$who} > $votesperuser) {
                 SendSQL("SELECT votes.bug_id FROM votes, bugs " .
                         "WHERE bugs.bug_id = votes.bug_id " .
-                        " AND bugs.product_id = $product_id " .
+                        " AND bugs.product_id = " . $product->id .
                         " AND votes.who = $who");
                 while (MoreSQLData()) {
                     my ($id) = FetchSQLData();
@@ -1157,7 +928,7 @@ if ($action eq 'update') {
                                                  WHERE product_id = ?
                                                  AND bug_status = 'UNCONFIRMED'
                                                  AND votes >= ?",
-                                                 undef, ($product_id, $votestoconfirm));
+                                                 undef, ($product->id, $votestoconfirm));
 
         my @updated_bugs = ();
         foreach my $bug_id (@$bug_list) {
@@ -1170,7 +941,9 @@ if ($action eq 'update') {
 
     }
 
-    $vars->{'name'} = $product;
+    $vars->{'old_product'} = $product_old;
+    $vars->{'product'} = $product;
+
     $template->process("admin/products/updated.html.tmpl", $vars)
         || ThrowTemplateError($template->error());
 
@@ -1182,22 +955,20 @@ if ($action eq 'update') {
 #
 
 if ($action eq 'editgroupcontrols') {
-    my $product_id = get_product_id($product);
-    $product_id
-      || ThrowUserError("invalid_product_name", { product => $product });
+    my $product = Bugzilla::Product::check_product($product_name);
     # Display a group if it is either enabled or has bugs for this product.
     SendSQL("SELECT id, name, entry, membercontrol, othercontrol, canedit, " .
             "isactive, COUNT(bugs.bug_id) " .
             "FROM groups " .
             "LEFT JOIN group_control_map " .
             "ON group_control_map.group_id = id " .
-            "AND group_control_map.product_id = $product_id " .
-            "LEFT JOIN bug_group_map " .
+            "AND group_control_map.product_id = " . $product->id .
+            " LEFT JOIN bug_group_map " .
             "ON bug_group_map.group_id = groups.id " .
             "LEFT JOIN bugs " .
             "ON bugs.bug_id = bug_group_map.bug_id " .
-            "AND bugs.product_id = $product_id " .
-            "WHERE isbuggroup != 0 " .
+            "AND bugs.product_id = " . $product->id .
+            " WHERE isbuggroup != 0 " .
             "AND (isactive != 0 OR entry IS NOT NULL " .
             "OR bugs.bug_id IS NOT NULL) " .
             $dbh->sql_group_by('name', 'id, entry, membercontrol,
@@ -1218,8 +989,9 @@ if ($action eq 'editgroupcontrols') {
         push @groups,\%group;
     }
     $vars->{'product'} = $product;
-    $vars->{'classification'} = $classification;
+
     $vars->{'groups'} = \@groups;
+    
     $vars->{'const'} = {
         'CONTROLMAPNA' => CONTROLMAPNA,
         'CONTROLMAPSHOWN' => CONTROLMAPSHOWN,

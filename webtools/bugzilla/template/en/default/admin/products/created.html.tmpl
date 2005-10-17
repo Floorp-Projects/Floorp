@@ -14,18 +14,23 @@
   # Contributor(s): Gabriel S. Oliveira <gabriel@async.com.br>
   #%]
 
+[%# INTERFACE:
+  # product: Bugzilla::Product object; the Product created.
+  #
+  #%]
+
 [% PROCESS global/header.html.tmpl 
   title = 'New Product Created'
 %]
 <br>
 <div style='border: 1px red solid; padding: 1ex;'>
   <b>You will need to   
-   <a href="editcomponents.cgi?action=add&product=[% product FILTER url_quote %]">
+   <a href="editcomponents.cgi?action=add&product=[% product.name FILTER url_quote %]">
      add at least one component
    </a> before you can enter [% terms.bugs %] against this product
   </b>
 </div>
 
-[% PROCESS "admin/products/footer.html.tmpl" name = product %]
+[% PROCESS "admin/products/footer.html.tmpl" %]
 
 [% PROCESS global/footer.html.tmpl %]

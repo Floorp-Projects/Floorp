@@ -15,8 +15,9 @@
   #%]
 
 [%# INTERFACE:
-  # classification: string; name of the classification in which the new
-  #                         product is  created.
+  # classification: Bugzilla::Classification object; If classifications
+  #                         are enabled, then this is 
+  #                         the currently selected classification
   #
   #%]
 
@@ -56,9 +57,11 @@
   <input type="hidden" name="open_name"   value="All Open">
   <input type="hidden" name="action" value="new">
   <input type="hidden" name="classification"
-        value="[% classification FILTER html %]">
+        value="[% classification.name FILTER html %]">
 </form>
 
-[% PROCESS "admin/products/footer.html.tmpl" no_add_product_link = 1 %]
+[% PROCESS "admin/products/footer.html.tmpl"
+   no_add_product_link = 1 
+   no_edit_product_link = 1 %]
 
 [% PROCESS global/footer.html.tmpl %]
