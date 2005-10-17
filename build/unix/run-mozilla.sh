@@ -328,7 +328,14 @@ if [ -z "$MRE_HOME" ]; then
 fi
 ##
 ## Set LD_LIBRARY_PATH
-LD_LIBRARY_PATH=${MOZ_DIST_BIN}:${MOZ_DIST_BIN}/plugins:${MRE_HOME}${LD_LIBRARY_PATH+":$LD_LIBRARY_PATH"}
+## On Solaris we use $ORIGIN instead of LD_LIBRARY_PATH unless
+## $MOZ_PROGRAM is a symbolic link, in this case we need to set
+## LD_LIBRARY_PATH because $ORIGIN doesn't work on a symbolic link.
+if [ `uname -s` != "SunOS" -o -h "$MOZ_PROGRAM" ]
+then
+	LD_LIBRARY_PATH=${MOZ_DIST_BIN}:${MOZ_DIST_BIN}/plugins:${MRE_HOME}${LD_LIBRARY_PATH+":$LD_LIBRARY_PATH"}
+fi 
+
 if [ -n "$LD_LIBRARYN32_PATH" ]
 then
 	LD_LIBRARYN32_PATH=${MOZ_DIST_BIN}:${MOZ_DIST_BIN}/plugins:${MRE_HOME}${LD_LIBRARYN32_PATH+":$LD_LIBRARYN32_PATH"}
