@@ -354,16 +354,17 @@ const int kReuseWindowOnAE = 2;
   
   [NetworkServices shutdownNetworkServices];
 
-  [[BookmarkManager sharedBookmarkManager] shutdown];
+  // make sure the info window is closed
+  [BookmarkInfoController closeBookmarkInfoController];
+
+  // shut down bookmarks (if we made them)
+  [[BookmarkManager sharedBookmarkManagerDontCreate] shutdown];
 
   // Autosave one of the windows.
   [[[mApplication mainWindow] windowController] autosaveWindowFrame];
   
   // Cancel outstanding site icon loads
   [[RemoteDataProvider sharedRemoteDataProvider] cancelOutstandingRequests];
-  
-  // make sure the info window is closed
-  [BookmarkInfoController closeBookmarkInfoController];
     
   // Release before calling TermEmbedding since we need to access XPCOM
   // to save preferences

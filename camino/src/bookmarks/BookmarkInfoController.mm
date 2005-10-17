@@ -57,20 +57,20 @@
 @implementation BookmarkInfoController
 
 /* BookmarkInfoController singelton */
-static BookmarkInfoController *sharedBookmarkInfoController = nil;
+static BookmarkInfoController* gSharedBookmarkInfoController = nil;
 
 + (id)sharedBookmarkInfoController
 {
-  if (!sharedBookmarkInfoController) {
-    sharedBookmarkInfoController = [[BookmarkInfoController alloc] initWithWindowNibName:@"BookmarkInfoPanel"];
+  if (!gSharedBookmarkInfoController) {
+    gSharedBookmarkInfoController = [[BookmarkInfoController alloc] initWithWindowNibName:@"BookmarkInfoPanel"];
   }
-  return sharedBookmarkInfoController;
+  return gSharedBookmarkInfoController;
 }
 
 + (void)closeBookmarkInfoController
 {
-  if (sharedBookmarkInfoController)
-    [sharedBookmarkInfoController close];
+  if (gSharedBookmarkInfoController)
+    [gSharedBookmarkInfoController close];
 }
 
 - (id)initWithWindowNibName:(NSString *)windowNibName
@@ -101,8 +101,8 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
 -(void)dealloc
 {
   // this is never called
-  if (self == sharedBookmarkInfoController)
-    sharedBookmarkInfoController = nil;
+  if (self == gSharedBookmarkInfoController)
+    gSharedBookmarkInfoController = nil;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [mBookmarkItem release];

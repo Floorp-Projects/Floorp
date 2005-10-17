@@ -77,6 +77,7 @@ extern NSString* const kBookmarksMenuFolderIdentifier;
 
 // Class Methods & shutdown stuff
 + (BookmarkManager*)sharedBookmarkManager;
++ (BookmarkManager*)sharedBookmarkManagerDontCreate;
 
 - (void)loadBookmarksLoadingSynchronously:(BOOL)loadSync;
 

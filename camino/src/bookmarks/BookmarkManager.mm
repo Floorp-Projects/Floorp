@@ -127,13 +127,19 @@ enum {
 
 static NSString* const    kWriteBookmarkNotification = @"write_bms";
 
+static BookmarkManager* gBookmarkManager = nil;
+
 + (BookmarkManager*)sharedBookmarkManager
 {
-  static BookmarkManager* sBookmarkManager = nil;
-  if (!sBookmarkManager)
-    sBookmarkManager = [[BookmarkManager alloc] init];
+  if (!gBookmarkManager)
+    gBookmarkManager = [[BookmarkManager alloc] init];
 
-  return sBookmarkManager;
+  return gBookmarkManager;
+}
+
++ (BookmarkManager*)sharedBookmarkManagerDontCreate
+{
+  return gBookmarkManager;
 }
 
 // serialize to an array of UUIDs
@@ -209,6 +215,9 @@ static NSString* const    kWriteBookmarkNotification = @"write_bms";
 
 -(void) dealloc
 {
+  if (gBookmarkManager == self)
+    gBookmarkManager = nil;
+
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
   [mTop10Container release];
