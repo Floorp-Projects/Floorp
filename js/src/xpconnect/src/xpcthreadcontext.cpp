@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -555,3 +556,55 @@ XPCPerThreadData::IterateThreads(XPCPerThreadData** iteratorp)
     *iteratorp = (*iteratorp == nsnull) ? gThreads : (*iteratorp)->mNextThread;
     return *iteratorp;
 }
+
+NS_IMPL_ISUPPORTS1(nsXPCJSContextStackIterator, nsIJSContextStackIterator)
+
+NS_IMETHODIMP
+nsXPCJSContextStackIterator::Reset(nsIJSContextStack *aStack)
+{
+    // XXX This is pretty ugly.
+    nsXPCThreadJSContextStackImpl *impl =
+        NS_STATIC_CAST(nsXPCThreadJSContextStackImpl*, aStack);
+    XPCJSContextStack *stack = impl->GetStackForCurrentThread();
+    if(!stack)
+        return NS_ERROR_FAILURE;
+    const nsDeque &deque = stack->GetStack();
+
+    if(deque.GetSize() == 0)
+    {
+        mIterator = nsnull;
+        return NS_OK;
+    }
+
+    mIterator = new nsDequeIterator(deque.End());
+    if(!mIterator)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCJSContextStackIterator::Done(PRBool *aDone)
+{
+    *aDone = !mIterator;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCJSContextStackIterator::Prev(JSContext **aContext)
+{
+    if(!mIterator)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    *aContext = (JSContext*)(mIterator->GetCurrent());
+
+    // XXX This temporary shouldn't be necessary.
+    nsDequeIterator first(*mIterator);
+    if(*mIterator == first.First())
+        mIterator = nsnull;
+    else
+        --*mIterator;
+
+    return NS_OK;
+}
+
