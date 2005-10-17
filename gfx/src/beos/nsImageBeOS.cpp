@@ -65,7 +65,6 @@ nsImageBeOS::nsImageBeOS()
   , mImageCurrent(PR_FALSE)
   , mOptimized(PR_FALSE)
   , mTileBitmap(nsnull)
-  , mTileCurrent(PR_FALSE)
 {
 }
 
@@ -373,12 +372,6 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsIDrawingSur
 					mTileBitmap = nsnull;
 				}
 				mTileBitmap = new BBitmap(BRect(0, 0, aTileRect.width - 1, aTileRect.height -1), mImage->ColorSpace(), false);
-				mTileCurrent = PR_FALSE;
-			}
-			else
-			{
-				//Don't bother with filling tile bitmap - use existing!
-				mTileCurrent = mImageCurrent;
 			}
 			
 			int32 tmpbitlength = mTileBitmap->BitsLength();
@@ -389,7 +382,6 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsIDrawingSur
 				((nsRenderingContextBeOS&)aContext).UnlockView();
 				if (mTileBitmap)
 				{
-					mTileCurrent = PR_FALSE;
 					delete mTileBitmap;
 					mTileBitmap = nsnull;
 				}
@@ -397,51 +389,47 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsIDrawingSur
 				return NS_ERROR_FAILURE;
 			}
 
-			// Check if we need update tile-bitmap
-			if (!mTileCurrent)
+			uint32 *dst0 = (uint32 *)mTileBitmap->Bits();
+			uint32 *src0 = (uint32 *)mImage->Bits();
+			uint32 *dst = dst0;
+			uint32 dstRowLength = mTileBitmap->BytesPerRow()/4;
+			uint32 dstColHeight = tmpbitlength/mTileBitmap->BytesPerRow();
+
+			// Filling mTileBitmap with transparent color to preserve padding areas on destination 
+			uint32 filllength = tmpbitlength/4;
+			if (0 != mAlphaDepth  || aPadX || aPadY) 
 			{
-				uint32 *dst0 = (uint32 *)mTileBitmap->Bits();
-				uint32 *src0 = (uint32 *)mImage->Bits();
-				uint32 *dst = dst0;
-				uint32 dstRowLength = mTileBitmap->BytesPerRow()/4;
-				uint32 dstColHeight = tmpbitlength/mTileBitmap->BytesPerRow();
+				for (uint32 i=0, *dst = dst0; i < filllength; ++i)
+					*(dst++) = B_TRANSPARENT_MAGIC_RGBA32;
+			}
 
-				// Filling mTileBitmap with transparent color to preserve padding areas on destination 
-				uint32 filllength = tmpbitlength/4;
-				if (0 != mAlphaDepth  || aPadX || aPadY) 
+			// Rendering mImage tile to temporary bitmap
+			uint32 *src = src0; dst = dst0;
+			for (uint32 y = 0, yy = aSYOffset; y < dstColHeight; ++y) 
+			{					
+				src = src0 + yy*mWidth;
+				dst = dst0 + y*dstRowLength;
+				// Avoid unnecessary job outside update rect
+				if (yy >= validY && yy <= validMostY)
 				{
-					for (uint32 i=0, *dst = dst0; i < filllength; ++i)
-						*(dst++) = B_TRANSPARENT_MAGIC_RGBA32;
-				}
-
-				// Rendering mImage tile to temporary bitmap
-				uint32 *src = src0; dst = dst0;
-				for (uint32 y = 0, yy = aSYOffset; y < dstColHeight; ++y) 
-				{					
-					src = src0 + yy*mWidth;
-					dst = dst0 + y*dstRowLength;
-					// Avoid unnecessary job outside update rect
-					if (yy >= validY && yy <= validMostY)
+					for (uint32 x = 0, xx = aSXOffset; x < dstRowLength; ++x) 
 					{
-						for (uint32 x = 0, xx = aSXOffset; x < dstRowLength; ++x) 
+						// Avoid memwrite if outside update rect
+						if (xx >= validX && xx <= validMostX)
+							dst[x] = src[xx];
+						if (++xx == mWidth)
 						{
-							// Avoid memwrite if outside update rect
-							if (xx >= validX && xx <= validMostX)
-								dst[x] = src[xx];
-							if (++xx == mWidth)
-							{
-								// Width of source reached. Adding horizontal paddding.
-								xx = 0;
-								x += aPadX;
-							}
+							// Width of source reached. Adding horizontal paddding.
+							xx = 0;
+							x += aPadX;
 						}
 					}
-					if (++yy == mHeight)
-					{
-						// Height of source reached. Adding vertical paddding.
-						yy = 0;
-						y += aPadY;
-					}
+				}
+				if (++yy == mHeight)
+				{
+					// Height of source reached. Adding vertical paddding.
+					yy = 0;
+					y += aPadY;
 				}
 			}
 			// Flushing tile bitmap to proper area in drawable BView	
@@ -522,7 +510,7 @@ void nsImageBeOS::CreateImage(nsIDrawingSurface* aSurface)
 		if (nsnull != mImage) 
 		{
 			BRect bounds = mImage->Bounds();
-			if (bounds.IntegerWidth() != validMostX - 1 || bounds.IntegerHeight() != validMostY - 1 ||
+			if (bounds.IntegerWidth() < validMostX - 1 || bounds.IntegerHeight() < validMostY - 1 ||
 				mImage->ColorSpace() != cs) 
 			{
 				
@@ -577,7 +565,7 @@ void nsImageBeOS::CreateImage(nsIDrawingSurface* aSurface)
 					src = src0 + y*mRowBytes;
 					for (int x = validX; x < validMostX; ++x) 
 					{
-						if (1 == mAlphaDepth)
+						if(1 == mAlphaDepth)
 							a = (alpha[x / 8] & (1 << (7 - (x % 8)))) ? 255 : 0;
 						else
 							a = alpha[x];
