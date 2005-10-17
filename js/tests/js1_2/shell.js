@@ -192,3 +192,130 @@ function stopTest() {
     gc();
   }
 }
+
+/* JavaScriptOptions
+   encapsulate the logic for setting and retrieving the values
+   of the javascript options.
+   
+   Note: in shell, options() takes an optional comma delimited list
+   of option names, toggles the values for each option and returns the
+   list of option names which were set before the call. 
+   If no argument is passed to options(), it returns the current
+   options with value true.
+
+   Usage;
+
+   // create and initialize object.
+   jsOptions = new JavaScriptOptions();
+
+   // set a particular option
+   jsOptions.setOption(name, boolean);
+
+   // reset all options to their original values.
+   jsOptions.reset();
+*/
+
+function JavaScriptOptions()
+{
+  this.orig   = {};
+  this.orig.strict = this.strict = false;
+  this.orig.werror = this.werror = false;
+
+  this.privileges = 'UniversalXPConnect';
+
+  if (typeof options == 'function')
+  {
+    // shell
+    var optString = options();
+    if (optString)
+    {
+      var optList = optString.split(',');
+      for (iOpt = 0; i < optList.length; iOpt++)
+      {
+        optName = optList[iOpt];
+        this[optName] = true;
+      }
+    }
+  }
+  else if (typeof document != 'undefined')
+  {
+    // browser
+    netscape.security.PrivilegeManager.enablePrivilege(this.privileges);
+
+    var preferences = Components.classes['@mozilla.org/preferences;1'];
+    if (!preferences)
+    {
+      throw 'JavaScriptOptions: unable to get @mozilla.org/preference;1';
+    }
+
+    var prefService = preferences.
+      getService(Components.interfaces.nsIPrefService);
+
+    if (!prefService)
+    {
+      throw 'JavaScriptOptions: unable to get nsIPrefService';
+    }
+
+    var pref = prefService.getBranch('');
+
+    if (!pref)
+    {
+      throw 'JavaScriptOptions: unable to get prefService branch';
+    }
+
+    this.orig.strict = this.strict = pref.getBoolPref('javascript.options.strict');
+    this.orig.werror = this.werror = pref.getBoolPref('javascript.options.werror');
+  }
+}
+
+JavaScriptOptions.prototype.setOption = 
+function (optionName, optionValue)
+{
+  if (typeof options == 'function')
+  {
+    // shell
+    if (this[optionName] != optionValue)
+    {
+      options(optionName);
+    }
+  }
+  else if (typeof document != 'undefined')
+  {
+    // browser
+    netscape.security.PrivilegeManager.enablePrivilege(this.privileges);
+
+    var preferences = Components.classes['@mozilla.org/preferences;1'];
+    if (!preferences)
+    {
+      throw 'setOption: unable to get @mozilla.org/preference;1';
+    }
+
+    var prefService = preferences.
+    getService(Components.interfaces.nsIPrefService);
+
+    if (!prefService)
+    {
+      throw 'setOption: unable to get nsIPrefService';
+    }
+
+    var pref = prefService.getBranch('');
+
+    if (!pref)
+    {
+      throw 'setOption: unable to get prefService branch';
+    }
+
+    pref.setBoolPref('javascript.options.' + optionName, optionValue);
+  }
+
+  this[optionName] = optionValue;
+
+  return;
+}
+
+
+JavaScriptOptions.prototype.reset = function ()
+{
+  this.setOption('strict', this.orig.strict);
+  this.setOption('werror', this.orig.werror);
+}

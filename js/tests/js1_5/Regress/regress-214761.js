@@ -43,14 +43,8 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
-if (typeof document == "undefined" && typeof options == 'function')
-{
-  prefValue = options("strict");
-}
-else
-{
-  prefValue = setBoolPref("javascript.options.strict", true);
-}
+var jsOptions = new JavaScriptOptions();
+jsOptions.setOption('strict', true);
 
 var code = "var bar1=new Array();\n" +
 "bar1[0]='foo';\n" +
@@ -80,13 +74,6 @@ catch(e)
 {
 }
   
-if (typeof prefValue == 'boolean')
-{
-  setBoolPref("javascript.options.strict", prefValue);
-}
-else 
-{
-  options(prefValue);
-}
+jsOptions.reset();
 
 reportCompare(expect, actual, summary);

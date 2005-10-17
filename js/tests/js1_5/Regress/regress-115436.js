@@ -45,14 +45,8 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
-if (typeof document == "undefined" && typeof options == 'function')
-{
-  prefValue = options("strict");
-}
-else
-{
-  prefValue = setBoolPref("javascript.options.strict", true);
-}
+var jsOptions = new JavaScriptOptions();
+jsOptions.setOption('strict', true);
 
 function x(y,y) 
 {
@@ -61,13 +55,6 @@ function x(y,y)
 
 var z = x(4,5);
 
-if (typeof prefValue == 'boolean')
-{
-  setBoolPref("javascript.options.strict", prefValue);
-}
-else 
-{
-  options(prefValue);
-}
+jsOptions.reset();
 
 reportCompare(expect, actual, summary);
