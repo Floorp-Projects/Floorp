@@ -366,10 +366,10 @@
                                getService(Components.interfaces.nsIFormFillController);
 
             var popup = document.getElementById(this.getAttribute("autocompletepopup"));
-            if (popup)
+            if (popup) {
               controller.attachToBrowser(this.docShell, popup.QueryInterface(Components.interfaces.nsIAutoCompletePopup));
-            
-            this.mFormFillAttached = true;
+              this.mFormFillAttached = true;
+            }
           }
           ]]>
         </body>
