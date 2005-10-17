@@ -145,7 +145,8 @@ public:
   struct message_header m_mdn_original_recipient;
   struct message_header m_return_path;
   struct message_header m_mdn_dnt; /* MDN Disposition-Notification-To: header */
-  
+
+  PRTime m_receivedTime;
   PRUint16			m_body_lines;
   
   PRBool			m_IgnoreXMozillaStatus;
