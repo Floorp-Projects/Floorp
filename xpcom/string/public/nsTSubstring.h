@@ -300,7 +300,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * assignment
          */
 
-      void Assign( char_type c )                                                                { Assign(&c, 1); }
+      NS_COM void NS_FASTCALL Assign( char_type c );
       NS_COM void NS_FASTCALL Assign( const char_type* data, size_type length = size_type(-1) );
       NS_COM void NS_FASTCALL Assign( const self_type& );
       NS_COM void NS_FASTCALL Assign( const substring_tuple_type& );
@@ -341,7 +341,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
          * buffer manipulation
          */
 
-             void Replace( index_type cutStart, size_type cutLength, char_type c )               { Replace(cutStart, cutLength, &c, 1); }
+      NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, char_type c );
       NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) );
              void Replace( index_type cutStart, size_type cutLength, const self_type& str )      { Replace(cutStart, cutLength, str.Data(), str.Length()); }
       NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& tuple );
