@@ -1066,7 +1066,8 @@
             b.setAttribute("message", "true");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
-            b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
+            if (this.hasAttribute("autocompletepopup"))
+              b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
 
             // Add the Message and the Browser to the box            
             var vbox = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
