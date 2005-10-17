@@ -515,8 +515,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   nsresult res = TruncateInsertionIfNeeded(aSelection, inString, outString, aMaxLength);
   if (NS_FAILED(res)) return res;
   
-  PRInt32 start = 0;
-  PRInt32 end = 0;  
+  PRUint32 start = 0;
+  PRUint32 end = 0;  
 
   // handle password field docs
   if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
@@ -860,9 +860,10 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
   if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
   {
     // manage the password buffer
-    PRInt32 start, end;
+    PRUint32 start, end;
     mEditor->GetTextSelectionOffsets(aSelection, start, end);
-    if (end==start)
+    NS_ENSURE_SUCCESS(res, res);
+    if (end == start)
     { // collapsed selection
       if (nsIEditor::ePrevious==aCollapsedAction && 0<start) { // del back
         mPasswordText.Cut(start-1, 1);
@@ -906,7 +907,7 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
         if (NS_FAILED(res)) return res;
         // if it has a length and we aren't at the edge, we are done
         if (strLength && !( ((aCollapsedAction == nsIEditor::ePrevious) && startOffset) ||
-                            ((aCollapsedAction == nsIEditor::eNext) && startOffset==strLength) ) )
+                            ((aCollapsedAction == nsIEditor::eNext) && startOffset==PRInt32(strLength)) ) )
           return NS_OK;
         
         // remember where we are
@@ -1334,26 +1335,27 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
     PRInt32 docLength;
     res = mEditor->GetTextLength(&docLength);
     if (NS_FAILED(res)) { return res; }
-    PRInt32 start, end;
+
+    PRUint32 start, end;
     res = mEditor->GetTextSelectionOffsets(aSelection, start, end);
     if (NS_FAILED(res)) { return res; }
-    PRInt32 selectionLength = end-start;
-    if (selectionLength<0) { selectionLength *= (-1); }
+
     PRInt32 oldCompStrLength;
     res = mEditor->GetIMEBufferLength(&oldCompStrLength);
     if (NS_FAILED(res)) { return res; }
-    PRInt32 resultingDocLength = docLength - selectionLength - oldCompStrLength;
-    if (resultingDocLength >= aMaxLength) 
+
+    const PRInt32 selectionLength = end - start;
+    const PRInt32 resultingDocLength = docLength - selectionLength - oldCompStrLength;
+    if (resultingDocLength >= aMaxLength)
     {
       aOutString->Truncate();
-      return res;
     }
     else
     {
       PRInt32 inCount = aOutString->Length();
-      if ((inCount+resultingDocLength) > aMaxLength)
+      if (inCount + resultingDocLength > aMaxLength)
       {
-        aOutString->Truncate(aMaxLength-resultingDocLength);
+        aOutString->Truncate(aMaxLength - resultingDocLength);
       }
     }
   }
@@ -1368,7 +1370,7 @@ nsTextEditRules::ResetIMETextPWBuf()
 }
 
 nsresult
-nsTextEditRules::RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAString *aIMEString)
+nsTextEditRules::RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString)
 {
   if (!aIMEString) {
     return NS_ERROR_NULL_POINTER;

@@ -74,11 +74,13 @@ interface nsIPlaintextEditor : nsISupports
 
   /**
     * The length of the contents in characters.
+    * XXX change this type to 'unsigned long'
     */
   readonly attribute long textLength;
 
   /**
     * The maximum number of characters allowed.
+    *   default: -1 (unlimited).
     */
   attribute long maxTextLength;
 

@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Glazman <glazman@netscape.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -554,114 +555,86 @@ NS_IMETHODIMP nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode> *outBRNode)
   return selection->Collapse(selNode, selOffset+1);
 }
 
-nsresult nsPlaintextEditor::GetTextSelectionOffsets(nsISelection *aSelection,
-                                               PRInt32 &aOutStartOffset, 
-                                               PRInt32 &aOutEndOffset)
-{
-  if(!aSelection) { return NS_ERROR_NULL_POINTER; }
-  // initialize out params
-  aOutStartOffset = 0; // default to first char in selection
-  aOutEndOffset = -1;  // default to total length of text in selection
-
-  nsCOMPtr<nsIDOMNode> startNode, endNode, parentNode;
-  PRInt32 startOffset, endOffset;
-  aSelection->GetAnchorNode(getter_AddRefs(startNode));
-  aSelection->GetAnchorOffset(&startOffset);
-  aSelection->GetFocusNode(getter_AddRefs(endNode));
-  aSelection->GetFocusOffset(&endOffset);
-
-  nsCOMPtr<nsIEnumerator> enumerator;
-  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
-  nsresult result = selPriv->GetEnumerator(getter_AddRefs(enumerator));
-  if (NS_FAILED(result)) return result;
-  if (!enumerator) return NS_ERROR_NULL_POINTER;
-
-  // don't use "result" in this block
-  enumerator->First(); 
-  nsCOMPtr<nsISupports> currentItem;
-  nsresult findParentResult = enumerator->CurrentItem(getter_AddRefs(currentItem));
-  if ((NS_SUCCEEDED(findParentResult)) && (currentItem))
-  {
-    nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-    range->GetCommonAncestorContainer(getter_AddRefs(parentNode));
-  }
-  else 
-  {
-    parentNode = do_QueryInterface(startNode);
-  }
-
-
-  return GetAbsoluteOffsetsForPoints(startNode, startOffset, 
-                                     endNode, endOffset, 
-                                     parentNode,
-                                     aOutStartOffset, aOutEndOffset);
-}
-
 nsresult
-nsPlaintextEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
-                                          PRInt32 aInStartOffset,
-                                          nsIDOMNode *aInEndNode,
-                                          PRInt32 aInEndOffset,
-                                          nsIDOMNode *aInCommonParentNode,
-                                          PRInt32 &aOutStartOffset, 
-                                          PRInt32 &aOutEndOffset)
+nsPlaintextEditor::GetTextSelectionOffsets(nsISelection *aSelection,
+                                           PRUint32 &aOutStartOffset, 
+                                           PRUint32 &aOutEndOffset)
 {
-  if(!aInStartNode || !aInEndNode || !aInCommonParentNode)
-    return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION(aSelection, "null selection");
 
-  // initialize out params
-  aOutStartOffset = 0; // default to first char in selection
-  aOutEndOffset = -1;  // default to total length of text in selection
+  nsresult rv;
+  nsCOMPtr<nsIDOMNode> startNode, endNode;
+  PRInt32 startNodeOffset, endNodeOffset;
+  aSelection->GetAnchorNode(getter_AddRefs(startNode));
+  aSelection->GetAnchorOffset(&startNodeOffset);
+  aSelection->GetFocusNode(getter_AddRefs(endNode));
+  aSelection->GetFocusOffset(&endNodeOffset);
 
-  nsresult result;
-  nsCOMPtr<nsIContentIterator> iter = do_CreateInstance(
-                     "@mozilla.org/content/post-content-iterator;1", &result);
-  if (NS_FAILED(result)) return result;
-  if (!iter) return NS_ERROR_NULL_POINTER;
+  nsIDOMElement* rootNode = GetRoot();
+  NS_ENSURE_TRUE(rootNode, NS_ERROR_NULL_POINTER);
+
+  PRInt32 startOffset = -1;
+  PRInt32 endOffset = -1;
+
+  nsCOMPtr<nsIContentIterator> iter =
+    do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
     
-  PRUint32 totalLength=0;
-  nsCOMPtr<nsIDOMCharacterData>textNode;
-  nsCOMPtr<nsIContent>blockParentContent = do_QueryInterface(aInCommonParentNode);
-  iter->Init(blockParentContent);
-  // loop through the content iterator for each content node
-  while (!iter->IsDone())
-  {
-    textNode = do_QueryInterface(iter->GetCurrentNode());
-    if (textNode)
-    {
-      nsCOMPtr<nsIDOMNode>currentNode = do_QueryInterface(textNode);
-      if (!currentNode) {return NS_ERROR_NO_INTERFACE;}
-      if (IsEditable(currentNode))
-      {
-        if (currentNode.get() == aInStartNode)
-        {
-          aOutStartOffset = totalLength + aInStartOffset;
-        }
-        if (currentNode.get() == aInEndNode)
-        {
-          aOutEndOffset = totalLength + aInEndOffset;
-          break;
-        }
+#ifdef NS_DEBUG
+  PRInt32 nodeCount = 0; // only needed for the assertions below
+#endif
+  PRUint32 totalLength = 0;
+  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(rootNode);
+  iter->Init(rootContent);
+  for (; !iter->IsDone() && (startOffset == -1 || endOffset == -1); iter->Next()) {
+    nsCOMPtr<nsIDOMNode> currentNode = do_QueryInterface(iter->GetCurrentNode());
+    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(currentNode);
+    if (textNode) {
+      // Note that sometimes we have an empty #text-node as start/endNode,
+      // which we regard as not editable because the frame width == 0,
+      // see nsEditor::IsEditable().
+      PRBool editable = IsEditable(currentNode);
+      if (currentNode == startNode) {
+        startOffset = totalLength + (editable ? startNodeOffset : 0);
+      }
+      if (currentNode == endNode) {
+        endOffset = totalLength + (editable ? endNodeOffset : 0);
+      }
+      if (editable) {
         PRUint32 length;
         textNode->GetLength(&length);
         totalLength += length;
       }
     }
-    iter->Next();
-  }
-  if (-1==aOutEndOffset) {
-    aOutEndOffset = totalLength;
+#ifdef NS_DEBUG
+    ++nodeCount;
+#endif
   }
 
-  // guarantee that aOutStartOffset <= aOutEndOffset
-  if (aOutEndOffset<aOutStartOffset) 
-  {
-    PRInt32 temp = aOutStartOffset;
-    aOutStartOffset= aOutEndOffset;
-    aOutEndOffset = temp;
+  if (endOffset == -1) {
+    NS_ASSERTION(endNode == rootNode, "failed to find the end node");
+    NS_ASSERTION(endNodeOffset == nodeCount-1 || endNodeOffset == 0,
+                 "invalid end node offset");
+    endOffset = endNodeOffset == 0 ? 0 : totalLength;
   }
-  NS_POSTCONDITION(aOutStartOffset <= aOutEndOffset, "start > end");
-  return result;
+  if (startOffset == -1) {
+    NS_ASSERTION(startNode == rootNode, "failed to find the start node");
+    NS_ASSERTION(startNodeOffset == nodeCount-1 || startNodeOffset == 0,
+                 "invalid start node offset");
+    startOffset = startNodeOffset == 0 ? 0 : totalLength;
+  }
+
+  // Make sure aOutStartOffset <= aOutEndOffset.
+  if (startOffset <= endOffset) {
+    aOutStartOffset = startOffset;
+    aOutEndOffset = endOffset;
+  }
+  else {
+    aOutStartOffset = endOffset;
+    aOutEndOffset = startOffset;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
@@ -724,13 +697,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
           result = NS_OK;
           break;
     }
-    if (NS_FAILED(result))
-    {
-#ifdef DEBUG
-      printf("Selection controller interface didn't work!\n");
-#endif
-      return result;
-    }
+    NS_ENSURE_SUCCESS(result, result);
   }
 
   // pre-process
@@ -913,47 +880,40 @@ nsPlaintextEditor::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
 NS_IMETHODIMP
 nsPlaintextEditor::GetTextLength(PRInt32 *aCount)
 {
-  if (!aCount) { return NS_ERROR_NULL_POINTER; }
+  NS_ASSERTION(aCount, "null pointer");
+
   // initialize out params
   *aCount = 0;
   
-  // special-case for empty document, to account for the bogus text node
+  // special-case for empty document, to account for the bogus node
   PRBool docEmpty;
-  nsresult result = GetDocumentIsEmpty(&docEmpty);
-  if (NS_FAILED(result)) return result;
+  nsresult rv = GetDocumentIsEmpty(&docEmpty);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (docEmpty)
     return NS_OK;
-  
-  // get the root node
-  nsIDOMElement *rootElement = GetRoot();
-  if (!rootElement)
-  {
-    return NS_ERROR_NULL_POINTER;
-  }
 
-  // get the offsets of the first and last children of the body node
-  nsCOMPtr<nsIDOMNode>lastChild;
-  result = rootElement->GetLastChild(getter_AddRefs(lastChild));
-  if (NS_FAILED(result)) { return result; }
-  if (!lastChild) { return NS_ERROR_NULL_POINTER; }
-  PRInt32 numBodyChildren = 0;
-  result = GetChildOffset(lastChild, rootElement, numBodyChildren);
-  if (NS_FAILED(result)) { return result; }
+  nsIDOMElement* rootNode = GetRoot();
+  NS_ENSURE_TRUE(rootNode, NS_ERROR_NULL_POINTER);
 
-  // count
-  PRInt32 start, end;
-  result = GetAbsoluteOffsetsForPoints(rootElement, 0, 
-                                       rootElement, numBodyChildren, 
-                                       rootElement, start, end);
-  if (NS_SUCCEEDED(result))
-  {
-    NS_ASSERTION(0==start, "GetAbsoluteOffsetsForPoints failed to set start correctly.");
-    NS_ASSERTION(0<=end, "GetAbsoluteOffsetsForPoints failed to set end correctly.");
-    if (0<=end) {
-      *aCount = end;
+  nsCOMPtr<nsIContentIterator> iter =
+    do_CreateInstance("@mozilla.org/content/post-content-iterator;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 totalLength = 0;
+  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(rootNode);
+  iter->Init(rootContent);
+  for (; !iter->IsDone(); iter->Next()) {
+    nsCOMPtr<nsIDOMNode> currentNode = do_QueryInterface(iter->GetCurrentNode());
+    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(currentNode);
+    if (textNode && IsEditable(currentNode)) {
+      PRUint32 length;
+      textNode->GetLength(&length);
+      totalLength += length;
     }
   }
-  return result;
+
+  *aCount = totalLength;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1544,7 +1504,6 @@ nsPlaintextEditor::StripCites()
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
-  if (NS_FAILED(rv)) return rv;
   if (!citer) return NS_ERROR_UNEXPECTED;
 
   nsString stripped;
@@ -1675,7 +1634,7 @@ nsPlaintextEditor::GetReconversionString(nsReconversionEventReply* aReply)
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_FAILURE;
 
-  // get the first range in the selection.  Since it is
+  // XXX get the first range in the selection.  Since it is
   // unclear what to do if reconversion happens with a 
   // multirange selection, we will ignore any additional ranges.
   

@@ -152,20 +152,13 @@ public:
   /* ------------ Utility Routines, not part of public API -------------- */
   NS_IMETHOD TypedText(const nsAString& aString, PRInt32 aAction);
 
-  /** returns the absolute position of the end points of aSelection
-    * in the document as a text stream.
-    */
+  /** Returns the absolute position of the end points of aSelection
+   * in the document as a text stream.
+   * Invariant: aStartOffset <= aEndOffset.
+   */
   nsresult GetTextSelectionOffsets(nsISelection *aSelection,
-                                   PRInt32 &aStartOffset, 
-                                   PRInt32 &aEndOffset);
-
-  nsresult GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
-                                       PRInt32 aInStartOffset,
-                                       nsIDOMNode *aInEndNode,
-                                       PRInt32 aInEndOffset,
-                                       nsIDOMNode *aInCommonParentNode,
-                                       PRInt32 &aOutStartOffset, 
-                                       PRInt32 &aEndOffset);
+                                   PRUint32 &aStartOffset, 
+                                   PRUint32 &aEndOffset);
 
   nsresult InsertTextAt(const nsAString &aStringToInsert,
                         nsIDOMNode *aDestinationNode,
