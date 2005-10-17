@@ -125,41 +125,6 @@ function version(v)
   return gVersion; 
 }
 
-var gPrivileges = 'UniversalXPConnect';
-
-function setBoolPref(prefName, newValue)
-{
-  var prevValue = false;
-
-  try
-  {
-    netscape.security.PrivilegeManager.
-      enablePrivilege(gPrivileges);
-
-    var preferences = Components.classes['@mozilla.org/preferences;1'];
-    if (preferences)
-    {
-      var prefService = preferences.
-                         getService(Components.interfaces.nsIPrefService);
-      var pref = prefService.getBranch('');
-      try
-      {
-        prevValue = pref.getBoolPref(prefName);
-      }
-      catch(eget)
-      {
-        writeLineToLog('Unable to get preference ' +  prefName);
-      }
-      pref.setBoolPref(prefName, newValue);
-    }
-  }
-  catch (e)
-  {
-    writeLineToLog('Unable to set preference ' + 
-                   prefName + ' to ' + prevValue);
-  }
-  return prevValue;
-}
 
 function gc()
 {

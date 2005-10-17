@@ -64,14 +64,9 @@ var actual = 'no error';
 var prefValue;
 
 writeLineToLog("This test requires option javascript.options.strict enabled");
-if (typeof document == "undefined" && typeof options == 'function')
-{
-  options("strict", "werror");
-}
-else
-{
-  prefValue = setBoolPref("javascript.options.werror", true);
-}
+var jsOptions = new JavaScriptOptions();
+jsOptions.setOption('strict', true);
+jsOptions.setOption('werror', true);
 
 try
 {
@@ -82,10 +77,7 @@ catch(e)
   actual = 'error';
 }
 
-if (typeof prefValue == 'boolean')
-{
-  setBoolPref("javascript.options.werror", prefValue);
-}
+jsOptions.reset();
 
 DESCRIPTION = "var super = true"
 EXPECTED = "error";

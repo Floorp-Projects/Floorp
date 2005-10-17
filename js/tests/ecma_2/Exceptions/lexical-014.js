@@ -27,15 +27,9 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 writeLineToLog("This test requires option javascript.options.strict enabled");
 
-var prefValue;
-if (typeof document == "undefined" && typeof options == 'function')
-{
-  options("strict", "werror");
-}
-else
-{
-  prefValue = setBoolPref("javascript.options.werror", true);
-}
+var jsOptions = new JavaScriptOptions();
+jsOptions.setOption('strict', true);
+jsOptions.setOption('werror', true);
 
 var result = "Failed";
 var exception = "No exception thrown";
@@ -48,10 +42,7 @@ try {
   exception = e.toString();
 }
 
-if (typeof prefValue == 'boolean')
-{
-  setBoolPref("javascript.options.werror", prefValue);
-}
+jsOptions.reset();
 
 new TestCase(
   SECTION,
