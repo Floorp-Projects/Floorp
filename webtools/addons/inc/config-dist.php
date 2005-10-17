@@ -29,4 +29,7 @@ define('DB_USER','username');
 define('DB_PASS','password');
 define('DB_HOST','localhost');
 define('DB_NAME','database');
+define('DB_PORT', '3306');
+
+define('USE_DB_SESSIONS', TRUE);
 ?>
