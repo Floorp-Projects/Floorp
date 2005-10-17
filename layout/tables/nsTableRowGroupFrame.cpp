@@ -1879,6 +1879,7 @@ nsTableRowGroupFrame::GetLine(PRInt32    aLineNumber,
   if (!firstCellData)
     return NS_ERROR_FAILURE;
 
+  *aNumFramesOnLine = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
   *aFirstFrameOnLine = (nsIFrame*)firstCellData->GetCellFrame();
   if (!(*aFirstFrameOnLine))
   {
@@ -1889,7 +1890,10 @@ nsTableRowGroupFrame::GetLine(PRInt32    aLineNumber,
       *aFirstFrameOnLine = (nsIFrame*)firstCellData->GetCellFrame();
     }
   }
-  *aNumFramesOnLine = cellMap->GetNumCellsOriginatingInRow(aLineNumber);
+  if  (!(*aFirstFrameOnLine)) {
+    NS_ERROR("Failed to find cell frame for cell data");
+    *aNumFramesOnLine = 0;
+  }
   return NS_OK;
 }
   
