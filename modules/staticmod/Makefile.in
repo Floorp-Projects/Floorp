@@ -103,7 +103,7 @@ ifndef NO_RECURSE
 libs clean distclean clobber realclean clobber_all::
 	set -e; \
 	for f in $(MOZ_META_COMPONENTS); do \
-		$(MAKE) NO_RECURSE=1 BUILD_SHARED_LIBS=1 BUILD_STATIC_LIBS= LIBRARY_NAME=meta_$$f CPPSRCS=nsMetaModule_$$f.cpp _COMPONENT_BASE=$$f $@ ; \
+		$(MAKE) NO_RECURSE=1 BUILD_STATIC_LIBS= LIBRARY_NAME=meta_$$f CPPSRCS=nsMetaModule_$$f.cpp _COMPONENT_BASE=$$f $@ ; \
 	done
 endif
 

@@ -326,30 +326,28 @@ endif
 # profile data that will still be valid when the object files are linked into
 # shared libraries.
 ifdef MOZ_PROFILE_GENERATE
-ifdef BUILD_SHARED_LIBS
-BUILD_SHARED_LIBS=
 BUILD_STATIC_LIBS=1
-MOZ_STATIC_COMPONENT_LIBS=1
 STATIC_BUILD_PIC=1
-endif
 endif
 
 #
 # Build using PIC by default
 # Do not use PIC if not building a shared lib (see exceptions below)
 #
-#ifeq (,$(PROGRAM)$(SIMPLE_PROGRAMS)$(HOST_PROGRAM)$(HOST_SIMPLE_PROGRAMS))
-ifneq (,$(BUILD_SHARED_LIBS)$(FORCE_SHARED_LIB)$(FORCE_USE_PIC))
+
+ifndef BUILD_STATIC_LIBS
 _ENABLE_PIC=1
 endif
-#endif
+ifneq (,$(FORCE_SHARED_LIB)$(FORCE_USE_PIC))
+_ENABLE_PIC=1
+endif
 
 # If module is going to be merged into the nsStaticModule, 
 # make sure that the entry points are translated and 
 # the module is built static.
 
 ifdef IS_COMPONENT
-ifneq (,$(MOZ_STATIC_COMPONENT_LIBS))
+ifneq (,$(BUILD_STATIC_LIBS))
 ifdef MODULE_NAME
 DEFINES += -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT=1
 FORCE_STATIC_LIB=1
@@ -463,7 +461,7 @@ endif
 # building them into the executable.
 
 ifeq (,$(filter-out WINNT WINCE, $(OS_ARCH)))
-ifdef MOZ_STATIC_COMPONENT_LIBS
+ifdef BUILD_STATIC_LIBS
 DEFINES += \
         -D_IMPL_NS_GFX \
         -D_IMPL_NS_MSG_BASE \

@@ -62,7 +62,6 @@ include $(srcdir)/config/qtconfig.mk
 # when building the mozcomps meta component
 ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
 BUILD_STATIC_LIBS=
-BUILD_SHARED_LIBS=1
 endif
 
 SHARED_LIBRARY_LIBS= \

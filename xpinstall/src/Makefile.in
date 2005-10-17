@@ -52,7 +52,7 @@ ifndef MOZ_ENABLE_LIBXUL
 # Make this a true dynamic component even in static builds because
 # this component is shared by installer
 FORCE_SHARED_LIB	= 1
-MOZ_STATIC_COMPONENT_LIBS=
+BUILD_STATIC_LIBS=
 SHORT_LIBNAME	= xpinstal
 endif
 IS_COMPONENT	= 1

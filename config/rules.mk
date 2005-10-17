@@ -99,11 +99,8 @@ endif
 #
 # Library rules
 #
-# If BUILD_SHARED_LIBS or FORCE_SHARED_LIB is set and 
-#    FORCE_STATIC_LIB is not set, 
-#	the shared library will be built.
-# If BUILD_STATIC_LIBS or FORCE_STATIC_LIB is set, 
-#	the static library will  be built.
+# If BUILD_STATIC_LIBS or FORCE_STATIC_LIB is set, build a static library.
+# Otherwise, build a shared library.
 #
 
 ifndef LIBRARY
@@ -124,7 +121,7 @@ endif
 endif
 
 ifdef LIBRARY
-ifneq (,$(BUILD_SHARED_LIBS)$(FORCE_SHARED_LIB))
+ifneq (_1,$(FORCE_SHARED_LIB)_$(BUILD_STATIC_LIBS))
 ifdef MKSHLIB
 
 ifdef LIB_IS_C_ONLY
@@ -142,14 +139,14 @@ IMPORT_LIBRARY		:= $(LIB_PREFIX)$(LIBRARY_NAME).$(IMPORT_LIB_SUFFIX)
 endif
 
 endif # MKSHLIB
-endif # BUILD_SHARED_LIBS || FORCE_SHARED_LIB
+endif # FORCE_SHARED_LIB && !BUILD_STATIC_LIBS
 endif # LIBRARY
 
 ifeq (,$(BUILD_STATIC_LIBS)$(FORCE_STATIC_LIB))
 LIBRARY			:= $(NULL)
 endif
 
-ifeq (,$(BUILD_SHARED_LIBS)$(FORCE_SHARED_LIB))
+ifeq (_1,$(FORCE_SHARED_LIB)_$(BUILD_STATIC_LIBS))
 SHARED_LIBRARY		:= $(NULL)
 DEF_FILE		:= $(NULL)
 IMPORT_LIBRARY		:= $(NULL)

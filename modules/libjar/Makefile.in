@@ -53,9 +53,7 @@ DIRS		= standalone
 ifndef MINIMO
 # we don't care about the installer for MINIMO
 ifndef MOZ_ENABLE_LIBXUL
-MOZ_STATIC_COMPONENT_LIBS=
 BUILD_STATIC_LIBS=
-BUILD_SHARED_LIBS=1
 endif
 endif
 endif

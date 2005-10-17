@@ -3955,7 +3955,6 @@ MOZ_ARG_HEADER(Application)
 
 ACCESSIBILITY=1
 BUILD_MODULES=all
-BUILD_SHARED_LIBS=1
 BUILD_STATIC_LIBS=
 ENABLE_TESTS=1
 MOZ_ACTIVEX_SCRIPTING_SUPPORT=
@@ -3992,7 +3991,6 @@ MOZ_PYTHON_VER_DOTTED=
 MOZ_REFLOW_PERF=
 MOZ_REORDER=
 MOZ_SINGLE_PROFILE=
-MOZ_STATIC_COMPONENT_LIBS=
 MOZ_STATIC_MAIL_BUILD=
 MOZ_TIMELINE=
 MOZ_UI_LOCALE=en-US
@@ -6063,19 +6061,11 @@ dnl = Static Build Options
 dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
-MOZ_ARG_DISABLE_BOOL(shared,
-[  --disable-shared        Disable building of internal shared libs],
-    BUILD_SHARED_LIBS=)
 
 MOZ_ARG_ENABLE_BOOL(static,
 [  --enable-static         Enable building of internal static libs],
-    BUILD_STATIC_LIBS=1
-    MOZ_STATIC_COMPONENT_LIBS=1)
-
-if (test -z "$BUILD_SHARED_LIBS" && test -z "$BUILD_STATIC_LIBS") ||
-    (test -n "$BUILD_SHARED_LIBS" && test -n "$BUILD_STATIC_LIBS") ; then
-    AC_MSG_ERROR([Only one of --enable-shared or --enable-static must be specified.])
-fi
+    BUILD_STATIC_LIBS=1,
+    BUILD_STATIC_LIBS=)
 
 MOZ_ARG_ENABLE_BOOL(libxul,
 [  --enable-libxul         Enable building of libxul],
@@ -6713,9 +6703,7 @@ AC_SUBST(MOZ_XINERAMA_LIBS)
 AC_SUBST(MOZ_ENABLE_XINERAMA)
 
 AC_SUBST(XPCOM_USE_LEA)
-AC_SUBST(BUILD_SHARED_LIBS)
 AC_SUBST(BUILD_STATIC_LIBS)
-AC_SUBST(MOZ_STATIC_COMPONENT_LIBS)
 AC_SUBST(MOZ_ENABLE_LIBXUL)
 AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)

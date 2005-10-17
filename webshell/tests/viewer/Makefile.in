@@ -195,7 +195,6 @@ include $(topsrcdir)/config/config.mk
 # when building the mozcomps meta component
 ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
 BUILD_STATIC_LIBS=
-BUILD_SHARED_LIBS=1
 endif
 
 # Force a build thru DIRS so that dependencies are updated properly
@@ -206,7 +205,6 @@ libs::
 # when building the mozcomps meta component
 ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
 BUILD_STATIC_LIBS=
-BUILD_SHARED_LIBS=1
 endif
 
 ifdef BUILD_STATIC_LIBS

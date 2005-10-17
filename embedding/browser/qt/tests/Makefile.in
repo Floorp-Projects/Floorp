@@ -48,7 +48,6 @@ include $(srcdir)/../src/config/qtconfig.mk
 # when building the mozcomps meta component
 ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
 BUILD_STATIC_LIBS=
-BUILD_SHARED_LIBS=1
 endif
 
 ifdef NS_TRACE_MALLOC
