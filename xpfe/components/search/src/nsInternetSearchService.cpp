@@ -1003,6 +1003,10 @@ InternetSearchDataSource::DeferredInit()
         GetSearchEngineList(dir, PR_FALSE);
       }
     }
+#ifdef MOZ_PHOENIX
+    if (!gReorderedEngineList)
+      ReorderEngineList();
+#endif
   }
 
   // read in category list
@@ -4441,10 +4445,6 @@ InternetSearchDataSource::GetSearchEngineList(nsIFile *searchDir,
 		SaveEngineInfoIntoGraph(dirEntry, iconFile, nsnull, nsnull, isSystemSearchFile);
 	}
 
-#ifdef MOZ_PHOENIX
-    if (!gReorderedEngineList)
-      ReorderEngineList();
-#endif
 	return(rv);
 }
 
