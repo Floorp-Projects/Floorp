@@ -60,8 +60,15 @@ make_patch_instruction() {
 }
 
 append_remove_instructions() {
-  listfile="$1"
-  if [ -f "$listfile" ]; then
+  dir="$1"
+  if [ -f "$dir/removed-files" ]; then
+    prefix=
+    listfile="$dir/removed-files"
+  elif [ -f "$dir/Contents/MacOS/removed-files" ]; then
+    prefix=Contents/MacOS/
+    listfile="$dir/Contents/MacOS/removed-files"
+  fi
+  if [ -n "$listfile" ]; then
     # Map spaces to pipes so that we correctly handle filenames with spaces.
     files=($(cat "$listfile" | tr " " "|"))  
     num_files=${#files[*]}
@@ -72,7 +79,7 @@ append_remove_instructions() {
       # directories.  The updater doesn't know how to remove entire directories.
       if [ -n "$f" ]; then
         if [ $(echo "$f" | grep -c '\/$') = 0 ]; then
-          echo "remove \"$f\""
+          echo "remove \"$prefix$f\""
         else
           notice "ignoring remove instruction for directory: $f"
         fi

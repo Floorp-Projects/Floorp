@@ -61,7 +61,7 @@ for ((i=0; $i<$num_files; i=$i+1)); do
 done
 
 # Append remove instructions for any dead files.
-append_remove_instructions "$targetdir/removed-files" >> $manifest
+append_remove_instructions "$targetdir" >> $manifest
 
 $BZIP2 -z9 "$manifest" && mv -f "$manifest.bz2" "$manifest"
 
