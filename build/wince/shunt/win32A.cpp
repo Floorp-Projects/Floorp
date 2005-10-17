@@ -967,23 +967,15 @@ MOZCE_SHUNT_API HWND mozce_FindWindowA(LPCSTR inClass, LPCSTR inWindow)
     HWND retval = NULL;
 
     LPTSTR wClass = a2w_malloc(inClass, -1, NULL);
-    if(NULL != wClass)
-    {
-        if(NULL == inWindow)
-        {
-            retval = FindWindow(wClass, NULL);
-        }
-        else
-        {
-            LPTSTR wWindow = a2w_malloc(inWindow, -1, NULL);
-            if(NULL != wWindow)
-            {
-                retval = FindWindow(wClass, wWindow);
-                free(wWindow);
-            }
-        }
+    LPTSTR wWindow = a2w_malloc(inWindow, -1, NULL); 
+   
+    retval = FindWindow(wClass, NULL);
+    
+    if (!wWindow)
+        free(wWindow);
+
+    if (!wClass)
         free(wClass);
-    }
 
     return retval;
 }
