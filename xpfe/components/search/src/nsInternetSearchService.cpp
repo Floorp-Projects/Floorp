@@ -5191,6 +5191,11 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		busySchedule = PR_FALSE;
 		busyResource = nsnull;
 
+		// mark now as the last time we stat'ted the search engine
+		// regardless of HTTP status
+		rv = validateEngineNow(theEngine);
+		NS_ENSURE_SUCCESS(rv, rv);
+
 		// we only have HTTP "HEAD" information when doing updates
 		nsCOMPtr<nsIHttpChannel> httpChannel (do_QueryInterface(channel));
 		if (!httpChannel)	return(NS_ERROR_UNEXPECTED);
@@ -5267,9 +5272,6 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 				}
 			}
 		}
-
-		// mark now as the last time we stat'ted the search engine
-		validateEngineNow(theEngine);
 
     if (updateSearchEngineFile)
 		{
