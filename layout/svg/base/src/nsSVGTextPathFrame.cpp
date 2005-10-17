@@ -98,6 +98,8 @@ private:
   nsCOMPtr<nsIDOMSVGLength> mStartOffset;
   nsCOMPtr<nsIDOMSVGAnimatedString> mHref;
   nsCOMPtr<nsIDOMSVGPathSegList> mSegments;
+
+  nsCOMPtr<nsISVGLengthList> mX;
 };
 
 NS_INTERFACE_MAP_BEGIN(nsSVGTextPathFrame)
@@ -157,6 +159,13 @@ nsSVGTextPathFrame::InitSVG()
     NS_ASSERTION(mStartOffset, "no startOffset");
     if (!mStartOffset)
       return NS_ERROR_FAILURE;
+
+    NS_NewSVGLengthList(getter_AddRefs(mX));
+    if (mX) {
+      nsCOMPtr<nsIDOMSVGLength> length;
+      mX->AppendItem(mStartOffset, getter_AddRefs(length));
+    }
+
     NS_ADD_SVGVALUE_OBSERVER(mStartOffset);
   }
 
@@ -168,10 +177,6 @@ nsSVGTextPathFrame::InitSVG()
       return NS_ERROR_FAILURE;
     NS_ADD_SVGVALUE_OBSERVER(mHref);
   }
-
-  nsresult rv = nsSVGTextPathFrameBase::InitSVG();
-  if (NS_FAILED(rv))
-    return rv;
 
   return NS_OK;
 }
@@ -186,12 +191,8 @@ nsSVGTextPathFrame::GetType() const
 NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGLengthList>)
 nsSVGTextPathFrame::GetX()
 {
-  nsISVGLengthList *retval;
-
-  NS_NewSVGLengthList(&retval);
-  nsCOMPtr<nsIDOMSVGLength> length;
-  retval->AppendItem(mStartOffset, getter_AddRefs(length));
-
+  nsISVGLengthList *retval = mX;
+  NS_IF_ADDREF(retval);
   return retval;
 }
 
