@@ -97,7 +97,6 @@ protected:
   virtual void CacheActionContent();
   nsCOMPtr<nsIContent> mActionContent;
   PRPackedBool mIsLink;
-  PRPackedBool mIsLinkVisited;
   PRPackedBool mIsOnclick;
 };
 
