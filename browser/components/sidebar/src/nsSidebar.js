@@ -130,37 +130,19 @@ function (engineURL, iconURL, suggestedTitle, suggestedCategory)
 
     try
     {
-        // make sure using HTTP (for both engine as well as icon URLs)
+        // make sure using HTTP or HTTPS and refering to a .src file
+        // for the engine.
+        if (! /^https?:\/\/.+\.src$/i.test(engineURL))
+            throw "Unsupported search engine URL";
 
-        if (engineURL.search(/^http:\/\//i) == -1)
-        {
-            debug ("must use HTTP to fetch search engine file");
-            throw Components.results.NS_ERROR_INVALID_ARG;
-        }
-
-        if (iconURL.search(/^http:\/\//i) == -1)
-        {
-            debug ("must use HTTP to fetch search icon file");
-            throw Components.results.NS_ERROR_INVALID_ARG;
-        }
-
-        // make sure engineURL refers to a .src file
-        if (engineURL.search(/\.src$/i) == -1)
-        {
-            debug ("engineURL doesn't reference a .src file");
-            throw Components.results.NS_ERROR_INVALID_ARG;
-        }
-
-        // make sure iconURL refers to a .gif/.jpg/.jpeg/.png file
-        if (iconURL.search(/\.(gif|jpg|jpeg|png)$/i) == -1)
-        {
-            debug ("iconURL doesn't reference a supported image file");
-            throw Components.results.NS_ERROR_INVALID_ARG;
-        }
-
+        // make sure using HTTP or HTTPS and refering to a
+        // .gif/.jpg/.jpeg/.png file for the icon.
+        if (! /^https?:\/\/.+\.(gif|jpg|jpeg|png)$/i.test(iconURL))
+            throw "Unsupported search icon URL";
     }
     catch(ex)
     {
+        debug(ex);
         this.promptService.alert(null, "Failed to add the search engine.");
         throw Components.results.NS_ERROR_INVALID_ARG;
     }
