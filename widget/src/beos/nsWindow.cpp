@@ -2863,18 +2863,21 @@ void nsViewBeOS::Validate(BRect r)
 void nsViewBeOS::MouseDown(BPoint point)
 {
 	if (!restoreMouseMask)
-		mouseMask = SetMouseEventMask(B_POINTER_EVENTS | B_KEYBOARD_EVENTS);
+		mouseMask = SetMouseEventMask(B_POINTER_EVENTS);
 	restoreMouseMask = true;
+	
+	//To avoid generating extra mouseevents when there is no change in pos.
+	mousePos = point;
 
 	uint32 clicks = 0;
 	BMessage *msg = Window()->CurrentMessage();
-	msg->FindInt32("buttons", (int32 *)&buttons);
-	msg->FindInt32("clicks", (int32 *)&clicks);
+	msg->FindInt32("buttons", (int32 *) &buttons);
+	msg->FindInt32("clicks", (int32 *) &clicks);
 
-	if ( 0 == buttons)
+	if (0 == buttons)
 		return;
 
-	nsWindow	*w = (nsWindow *)GetMozillaWidget();
+	nsWindow	*w = (nsWindow *) GetMozillaWidget();
 	if (w == NULL)
 		return;
 		
@@ -2899,8 +2902,14 @@ void nsViewBeOS::MouseDown(BPoint point)
 
 void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 {
+	//To avoid generating extra mouseevents when there is no change in pos.
+	//and not entering exiting view.
+	if (mousePos == point && (transit == B_INSIDE_VIEW || transit == B_OUTSIDE_VIEW))
+		return;
+
+	mousePos = point;
+		
 	//We didn't start the mouse down and there is no drag in progress, so ignore.
-	Window()->CurrentMessage()->FindInt32("buttons", (int32 *)&buttons);
 	if (NULL == msg && !restoreMouseMask && buttons)
 		return;
 		
@@ -2957,10 +2966,15 @@ void nsViewBeOS::MouseUp(BPoint point)
 		restoreMouseMask = false;
 	}
 	
-	//This only works because it's updated in both MouseDown and MouseMoved.
-	if ( 0 == buttons)
-		return;
-		
+	//To avoid generating extra mouseevents when there is no change in pos.
+	mousePos = point;
+
+	int32 ev = (buttons & B_PRIMARY_MOUSE_BUTTON) ? NS_MOUSE_LEFT_BUTTON_UP :
+	           ((buttons & B_SECONDARY_MOUSE_BUTTON) ? NS_MOUSE_RIGHT_BUTTON_UP :
+	            NS_MOUSE_MIDDLE_BUTTON_UP);
+	            
+	buttons = 0;
+	
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	if (w == NULL)
 		return;
@@ -2968,9 +2982,6 @@ void nsViewBeOS::MouseUp(BPoint point)
 	if (t == NULL)
 		return;
 
-	int32 ev = (buttons & B_PRIMARY_MOUSE_BUTTON) ? NS_MOUSE_LEFT_BUTTON_UP :
-	           ((buttons & B_SECONDARY_MOUSE_BUTTON) ? NS_MOUSE_RIGHT_BUTTON_UP :
-	            NS_MOUSE_MIDDLE_BUTTON_UP);
 
 	uint32	args[5];
 	args[0] = ev;
@@ -2982,7 +2993,6 @@ void nsViewBeOS::MouseUp(BPoint point)
 	if (nsnull != (info = new MethodInfo(w, w, nsWindow::BTNCLICK, 5, args)))
 		t->CallMethodAsync(info);
 	NS_RELEASE(t);
-	buttons = 0;
 }
 
 void nsViewBeOS::MessageReceived(BMessage *msg)
