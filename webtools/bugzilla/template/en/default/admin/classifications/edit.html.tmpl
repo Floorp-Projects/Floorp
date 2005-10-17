@@ -49,7 +49,7 @@
                 <th align=right valign=top>[% product.name FILTER html %]</th>
                 <td valign=top>
                   [% IF product.description %]
-                    [% product.description FILTER html %]
+                    [% product.description FILTER none %]
                   [% ELSE %]
                     <font color="red">description missing</font>
                   [% END %]

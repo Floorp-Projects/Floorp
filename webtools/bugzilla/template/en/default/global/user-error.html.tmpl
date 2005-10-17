@@ -1276,7 +1276,7 @@
   <p>  
     Alternatively, you can    
     <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
-                  [% namedcmd FILTER html %]">forget</a>
+                  [% namedcmd FILTER url_quote %]">forget</a>
                   
     [% FOREACH q = Bugzilla.user.queries %]
       [% IF q.name == namedcmd %]

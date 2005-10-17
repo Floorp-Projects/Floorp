@@ -243,7 +243,7 @@ tbody.file pre:empty {
   [% IF headers %]
     <a href="[% PROCESS viewurl id=attachid %]">View</a>
     | <a href="[% PROCESS editurl id=attachid %]">Edit</a>
-    | <a href="[% PROCESS diffurl id=attachid %]&amp;context=[% context FILTER html %]&amp;collapsed=[% collapsed FILTER html %]&amp;headers=[% headers FILTER html %]&amp;format=raw">Raw&nbsp;Unified</a>
+    | <a href="[% PROCESS diffurl id=attachid %]&amp;context=[% context FILTER url_quote %]&amp;collapsed=[% collapsed FILTER url_quote %]&amp;headers=[% headers FILTER url_quote %]&amp;format=raw">Raw&nbsp;Unified</a>
   [% END %]
   [% IF other_patches.size > 0 %]
     [% IF headers %] |[%END%]
@@ -287,12 +287,12 @@ tbody.file pre:empty {
   [% IF context == "patch" %]
     (<strong>Patch</strong> / 
   [% ELSE %]
-    (<a href="[% PROCESS diffurl id=attachid %]&amp;headers=[% headers FILTER html %]">Patch</a> / 
+    (<a href="[% PROCESS diffurl id=attachid %]&amp;headers=[% headers FILTER url_quote %]">Patch</a> / 
   [% END %]
   [% IF context == "file" %]
     <strong>File</strong> /
   [% ELSE %]
-    <a href="[% PROCESS diffurl id=attachid %]&amp;headers=[% headers FILTER html %]&amp;context=file">File</a> / 
+    <a href="[% PROCESS diffurl id=attachid %]&amp;headers=[% headers FILTER url_quote %]&amp;context=file">File</a> / 
   [% END %]
 
   [% IF context == "patch" || context == "file" %]

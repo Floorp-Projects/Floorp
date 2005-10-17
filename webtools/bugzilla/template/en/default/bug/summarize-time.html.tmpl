@@ -324,6 +324,6 @@
   #%]
 
 [% BLOCK buglink %]
-    <a href="show_bug.cgi?id=[% id FILTER html %]"><b>[% terms.Bug %]&nbsp;[% id FILTER html %]</b></a>
+    <a href="show_bug.cgi?id=[% id FILTER url_quote %]"><b>[% terms.Bug %]&nbsp;[% id FILTER html %]</b></a>
 [% END %]
 

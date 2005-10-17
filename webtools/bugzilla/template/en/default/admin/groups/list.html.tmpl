@@ -67,9 +67,9 @@
       </td>
 
       <td align="center" valign="middle">
-        <a href="editgroups.cgi?action=changeform&amp;group=[% group.id FILTER html %]">Edit</a>
+        <a href="editgroups.cgi?action=changeform&amp;group=[% group.id FILTER url_quote %]">Edit</a>
         [% IF (group.isbuggroup) %]
-          | <a href="editgroups.cgi?action=del&amp;group=[% group.id FILTER html %]">Delete</a>
+          | <a href="editgroups.cgi?action=del&amp;group=[% group.id FILTER url_quote %]">Delete</a>
         [% END %]
       </td>
     </tr>
