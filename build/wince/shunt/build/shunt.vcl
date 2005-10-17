@@ -6,6 +6,9 @@
 --------------------Configuration: shunt - Win32 (WCE ARMV4) SmartPhone--------------------
 </h3>
 <h3>Command Lines</h3>
+Signing c:\builds\minimo\mozilla\build\wince\shunt\build\ARMV4SmartPhone\shunt.dll
+Warning: This file is signed, but not timestamped.
+Succeeded
 
 
 
@@ -17,6 +20,9 @@ shunt.dll - 0 error(s), 0 warning(s)
 --------------------Configuration: shunt - Win32 (WCE ARMV4) Debug--------------------
 </h3>
 <h3>Command Lines</h3>
+Signing c:\builds\minimo\mozilla\build\wince\shunt\build\ARMV4Dbg\shunt.dll
+Warning: This file is signed, but not timestamped.
+Succeeded
 
 
 
@@ -28,6 +34,9 @@ shunt.dll - 0 error(s), 0 warning(s)
 --------------------Configuration: shunt - Win32 (WCE emulator) Release--------------------
 </h3>
 <h3>Command Lines</h3>
+Signing c:\builds\minimo\mozilla\build\wince\shunt\build\emulatorRel\shunt.dll
+Warning: This file is signed, but not timestamped.
+Succeeded
 
 
 
@@ -39,6 +48,9 @@ shunt.dll - 0 error(s), 0 warning(s)
 --------------------Configuration: shunt - Win32 (WCE ARMV4) Release--------------------
 </h3>
 <h3>Command Lines</h3>
+Signing c:\builds\minimo\mozilla\build\wince\shunt\build\ARMV4Rel\shunt.dll
+Warning: This file is signed, but not timestamped.
+Succeeded
 
 
 
@@ -50,6 +62,9 @@ shunt.dll - 0 error(s), 0 warning(s)
 --------------------Configuration: shunt - Win32 (WCE emulator) Debug--------------------
 </h3>
 <h3>Command Lines</h3>
+Signing c:\builds\minimo\mozilla\build\wince\shunt\build\emulatorDbg\shunt.dll
+Warning: This file is signed, but not timestamped.
+Succeeded
 
 
 
