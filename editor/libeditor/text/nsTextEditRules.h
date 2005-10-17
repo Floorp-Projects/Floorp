@@ -187,7 +187,7 @@ protected:
   nsresult EchoInsertionToPWBuff(PRInt32 aStart, PRInt32 aEnd, nsAString *aOutString);
 
   /** Remove IME composition text from password buffer */
-  nsresult RemoveIMETextFromPWBuf(PRInt32 &aStart, nsAString *aIMEString);
+  nsresult RemoveIMETextFromPWBuf(PRUint32 &aStart, nsAString *aIMEString);
 
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
@@ -202,7 +202,7 @@ protected:
   nsPlaintextEditor   *mEditor;        // note that we do not refcount the editor
   nsString             mPasswordText;  // a buffer we use to store the real value of password editors
   nsString             mPasswordIMEText;  // a buffer we use to track the IME composition string
-  PRInt32              mPasswordIMEIndex;
+  PRUint32             mPasswordIMEIndex;
   nsCOMPtr<nsIDOMNode> mBogusNode;     // magic node acts as placeholder in empty doc
   nsCOMPtr<nsIDOMNode> mBody;          // cached root node
   nsCOMPtr<nsIDOMNode> mCachedSelectionNode;    // cached selected node

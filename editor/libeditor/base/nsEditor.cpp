@@ -2149,7 +2149,6 @@ GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget
 
   *aResult = 0;
 
-  nsresult result;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aRoot);
 
   if (!content)
