@@ -320,6 +320,9 @@ to extract flag type IDs from form field names by matching columns
 whose name looks like "flag_type-nnn", where "nnn" is the ID,
 and returning just the ID portion of matching field names.
 
+If the attachment is new, it has no ID yet and $attach_id is set
+to -1 to force its check anyway.
+
 =back
 
 =cut

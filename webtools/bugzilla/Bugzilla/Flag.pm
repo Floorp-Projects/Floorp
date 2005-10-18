@@ -228,9 +228,12 @@ sub count {
 
 =over
 
-=item C<validate($cgi, $bug_id)>
+=item C<validate($cgi, $bug_id, $attach_id)>
 
 Validates fields containing flag modifications.
+
+If the attachment is new, it has no ID yet and $attach_id is set
+to -1 to force its check anyway.
 
 =back
 
