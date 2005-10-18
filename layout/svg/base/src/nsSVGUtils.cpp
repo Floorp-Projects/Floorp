@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -154,82 +153,21 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext, nsIContent *aContent,
   return val;
 }
 
-nsresult nsSVGUtils::GetReferencedFrame(nsIFrame **aRefFrame, nsCAutoString& uriSpec, nsIContent *aContent, 
+nsresult nsSVGUtils::GetReferencedFrame(nsIFrame **aRefFrame, nsIURI* aURI, nsIContent *aContent, 
                                         nsIPresShell *aPresShell)
 {
-  nsresult rv = NS_OK;
-  *aRefFrame = nsnull;
-
-  // Get the ID from the spec (no ID = an error)
-  PRInt32 pos = uriSpec.FindChar('#');
-  if (pos == -1) {
-    NS_ASSERTION(pos != -1, "URI Spec not a reference");
+  nsIContent* content = nsContentUtils::GetReferencedElement(aURI, aContent);
+  if (!content)
     return NS_ERROR_FAILURE;
-  }
-
-  // Get the current document
-  nsIDocument *myDoc = aContent->GetCurrentDoc();
-  if (!myDoc) {
-    NS_WARNING("Content doesn't reference a Document!");
-    return NS_ERROR_FAILURE;
-  }
-
-  // Get our URI
-  nsCOMPtr<nsIURI> myURI = myDoc->GetDocumentURI();
-
-#ifdef DEBUG_scooter
-    // Get the uri Spec
-    nsCAutoString dSpec;
-    myURI->GetSpec(dSpec);
-    printf("Document URI = %s, target URI = %s\n",dSpec.get(), uriSpec.get());
-#endif
-
-  // Create a URI out of the target
-  nsCAutoString aURISName;
-  uriSpec.Left(aURISName, pos);
-  nsCOMPtr<nsIURI> targetURI;
-  NS_NewURI(getter_AddRefs(targetURI), aURISName, nsnull, myDoc->GetBaseURI());
-  PRBool match;
-  myURI->Equals(targetURI, &match);
-  if (!match) {
-    // Oops -- we don't support off-document references
-    return NS_ERROR_FAILURE;
-  }
-
-  // At this point, we know we have a target within our document, but
-  // it may not point to anything
-  // Strip off the hash and get the name
-  nsCAutoString aURICName;
-  uriSpec.Right(aURICName, uriSpec.Length()-(pos + 1));
-
-  // Get a unicode string
-  nsAutoString  aURIName;
-  CopyUTF8toUTF16(aURICName, aURIName);
-
-  // Get the domDocument
-  nsCOMPtr<nsIDOMDocument>domDoc = do_QueryInterface(myDoc);
-  NS_ASSERTION(domDoc, "Content doesn't reference a dom Document");
-  if (domDoc == nsnull) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Get the element
-  nsCOMPtr<nsIDOMElement> element;
-  rv = domDoc->GetElementById(aURIName, getter_AddRefs(element));
-  if (!NS_SUCCEEDED(rv) || element == nsnull) {
-    return NS_ERROR_FAILURE;  
-  }
 
   // Get the Primary Frame
-  nsCOMPtr<nsIContent> aGContent = do_QueryInterface(element);
   NS_ASSERTION(aPresShell, "Get referenced SVG frame -- no pres shell provided");
   if (!aPresShell)
     return NS_ERROR_FAILURE;
 
-  *aRefFrame = aPresShell->GetPrimaryFrameFor(aGContent);
-  NS_ASSERTION(*aRefFrame, "Get referenced SVG frame -- can't find primary frame");
+  *aRefFrame = aPresShell->GetPrimaryFrameFor(content);
   if (!(*aRefFrame)) return NS_ERROR_FAILURE;
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsSVGUtils::GetPaintType(PRUint16 *aPaintType, const nsStyleSVGPaint& aPaint, 
@@ -238,18 +176,14 @@ nsresult nsSVGUtils::GetPaintType(PRUint16 *aPaintType, const nsStyleSVGPaint& a
   *aPaintType = aPaint.mType;
   // If the type is a Paint Server, determine what kind
   if (*aPaintType == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
-    nsIURI *aServer = aPaint.mPaint.mPaintServer;
-    if (aServer == nsnull)
+    nsIURI *server = aPaint.mPaint.mPaintServer;
+    if (server == nsnull)
       return NS_ERROR_FAILURE;
-
-    // Get the uri Spec
-    nsCAutoString uriSpec;
-    aServer->GetSpec(uriSpec);
 
     // Get the frame
     nsIFrame *aFrame = nsnull;
     nsresult rv;
-    rv = nsSVGUtils::GetReferencedFrame(&aFrame, uriSpec, aContent, aPresShell);
+    rv = GetReferencedFrame(&aFrame, server, aContent, aPresShell);
     if (!NS_SUCCEEDED(rv) || !aFrame)
       return NS_ERROR_FAILURE;
 

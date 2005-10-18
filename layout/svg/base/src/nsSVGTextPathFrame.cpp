@@ -42,6 +42,7 @@
 #include "nsISVGPathFlatten.h"
 #include "nsSVGLength.h"
 #include "nsSVGUtils.h"
+#include "nsNetUtil.h"
 
 #include "nsIDOMSVGAnimatedPathData.h"
 #include "nsIDOMSVGPathSegList.h"
@@ -222,15 +223,16 @@ nsSVGTextPathFrame::GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent) {
   *data = nsnull;
   nsIFrame *path;
 
-  nsAutoString aStr;
-  mHref->GetAnimVal(aStr);
+  nsAutoString str;
+  mHref->GetAnimVal(str);
 
-  nsCAutoString aCStr;
-  CopyUTF16toUTF8(aStr, aCStr);
+  nsCOMPtr<nsIURI> targetURI;
+  nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
+  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI),
+   str, mContent->GetCurrentDoc(), base);
 
-  nsSVGUtils::GetReferencedFrame(&path, aCStr, mContent,
+  nsSVGUtils::GetReferencedFrame(&path, targetURI, mContent,
                                  GetPresContext()->PresShell());
-
   if (!path)
     return NS_ERROR_FAILURE;
 

@@ -655,12 +655,14 @@ nsSVGGradientFrame::checkURITarget(void) {
     return PR_FALSE; // No, return the default
   }
 
-  // Get the Gradient
-  nsCAutoString aGradStr;
-  CopyUTF16toUTF8(mNextGradStr, aGradStr);
+  nsCOMPtr<nsIURI> targetURI;
+  nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
+  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI),
+    mNextGradStr, mContent->GetCurrentDoc(), base);
+
   // Note that we are using *our* frame tree for this call, otherwise we're going to have
   // to get the PresShell in each call
-  if (nsSVGUtils::GetReferencedFrame(&aNextGrad, aGradStr, mContent, GetPresContext()->PresShell()) == NS_OK) {
+  if (nsSVGUtils::GetReferencedFrame(&aNextGrad, targetURI, mContent, GetPresContext()->PresShell()) == NS_OK) {
     nsIAtom* frameType = aNextGrad->GetType();
     if ((frameType != nsLayoutAtoms::svgLinearGradientFrame) && 
         (frameType != nsLayoutAtoms::svgRadialGradientFrame))
@@ -1237,15 +1239,13 @@ nsresult NS_GetSVGGradient(nsISVGGradient **aGrad, nsIURI *aURI, nsIContent *aCo
 {
   *aGrad = nsnull;
 
-  // Get the spec from the URI
+#ifdef DEBUG_scooter
   nsCAutoString uriSpec;
   aURI->GetSpec(uriSpec);
-#ifdef DEBUG_scooter
   printf("NS_GetSVGGradient: uri = %s\n",uriSpec.get());
 #endif
   nsIFrame *result;
-  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&result, 
-                                                   uriSpec, aContent, aPresShell))) {
+  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&result, aURI, aContent, aPresShell))) {
     return NS_ERROR_FAILURE;
   }
   return result->QueryInterface(NS_GET_IID(nsISVGGradient), (void **)aGrad);

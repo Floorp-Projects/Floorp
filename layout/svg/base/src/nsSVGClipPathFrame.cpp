@@ -109,14 +109,9 @@ NS_GetSVGClipPathFrame(nsSVGClipPathFrame **aResult, nsIURI *aURI, nsIContent *a
   }
   nsIPresShell *aPresShell = myDoc->GetShellAt(0);
 
-  // Get the URI Spec
-  nsCAutoString uriSpec;
-  aURI->GetSpec(uriSpec);
-
   // Find the referenced frame
   nsIFrame *cpframe;
-  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&cpframe, 
-                                                   uriSpec, aContent, aPresShell)))
+  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&cpframe, aURI, aContent, aPresShell)))
     return NS_ERROR_FAILURE;
 
   nsIAtom* frameType = cpframe->GetType();

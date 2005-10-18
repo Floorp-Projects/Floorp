@@ -810,12 +810,14 @@ nsSVGPatternFrame::checkURITarget(void) {
     return PR_FALSE; // No, return the default
   }
 
-  // Get the Pattern
-  nsCAutoString aPatternStr;
-  CopyUTF16toUTF8(mNextPatternStr, aPatternStr);
+  nsCOMPtr<nsIURI> targetURI;
+  nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
+  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI),
+    mNextPatternStr, mContent->GetCurrentDoc(), base);
+
   // Note that we are using *our* frame tree for this call, 
   // otherwise we're going to have to get the PresShell in each call
-  if (nsSVGUtils::GetReferencedFrame(&aNextPattern, aPatternStr, mContent, GetPresContext()->PresShell()) == NS_OK) {
+  if (nsSVGUtils::GetReferencedFrame(&aNextPattern, targetURI, mContent, GetPresContext()->PresShell()) == NS_OK) {
     nsIAtom* frameType = aNextPattern->GetType();
     if (frameType != nsLayoutAtoms::svgPatternFrame)
       return PR_FALSE;
@@ -1221,15 +1223,13 @@ nsresult NS_GetSVGPattern(nsISVGPattern **aPattern, nsIURI *aURI,
 {
   *aPattern = nsnull;
 
-  // Get the spec from the URI
+#ifdef scooter_DEBUG
   nsCAutoString uriSpec;
   aURI->GetSpec(uriSpec);
-#ifdef scooter_DEBUG
   printf("NS_GetSVGGradient: uri = %s\n",uriSpec.get());
 #endif
   nsIFrame *result;
-  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&result, 
-                                                   uriSpec, 
+  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&result, aURI,
                                                    aContent, aPresShell)))
     return NS_ERROR_FAILURE;
   return result->QueryInterface(NS_GET_IID(nsISVGPattern), (void **)aPattern);
