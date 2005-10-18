@@ -43,6 +43,7 @@ use strict;
 my $UserInEditGroupSet = -1;
 my $UserInCanConfirmGroupSet = -1;
 my $PrivilegesRequired = 0;
+my $lastbugid = 0;
 
 use lib qw(.);
 
@@ -144,14 +145,32 @@ ValidateComment(scalar $cgi->param('comment'));
 # is a bug alias that gets converted to its corresponding bug ID
 # during validation.
 foreach my $field ("dependson", "blocked") {
-    if ($cgi->param($field)) {
-        my @validvalues;
+    if ($cgi->param('id')) {
+        my $bug = new Bugzilla::Bug($cgi->param('id'), $user->id);
+        my @old = @{$bug->$field};
+        my @new;
         foreach my $id (split(/[\s,]+/, $cgi->param($field))) {
             next unless $id;
             ValidateBugID($id, $field);
-            push(@validvalues, $id);
+            push @new, $id;
         }
-        $cgi->param($field, join(",", @validvalues));
+        $cgi->param($field, join(",", @new));
+        my ($added, $removed) = Bugzilla::Util::diff_arrays(\@old, \@new);
+        foreach my $id (@$added , @$removed) {
+            # ValidateBugID is called without $field here so that it will
+            # throw an error if any of the changed bugs are not visible.
+            ValidateBugID($id);
+            if (!CheckCanChangeField($field, $bug->bug_id, 0, 1)) {
+                $vars->{'privs'} = $PrivilegesRequired;
+                $vars->{'field'} = $field;
+                ThrowUserError("illegal_change", $vars);
+            }
+        }
+    } else {
+        # Bugzilla does not support mass-change of dependencies so they
+        # are not validated.  To prevent a URL-hacking risk, the dependencies
+        # are deleted for mass-changes.
+        $cgi->delete($field);
     }
 }
 
@@ -353,7 +372,6 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
 # now, the rules are pretty simple, and don't look at the field itself very
 # much, but that could be enhanced.
 
-my $lastbugid = 0;
 my $ownerid;
 my $reporterid;
 my $qacontactid;

@@ -524,8 +524,13 @@
     [% title = "Not allowed" %]
     You tried to change the 
     <strong>[% field_descs.$field FILTER html %]</strong> field 
-    from <em>[% oldvalue FILTER html %]</em> to 
-    <em>[% newvalue FILTER html %]</em>, but only
+    [% IF oldvalue %]
+      from <em>[% oldvalue FILTER html %]</em>
+    [% END %]
+    [% IF newvalue %]
+      to <em>[% newvalue FILTER html %]</em>
+    [% END %]
+    , but only
     [% IF privs < 3 %]
       the assignee
       [% IF privs < 2 %] or reporter [% END %]

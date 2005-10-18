@@ -261,7 +261,9 @@ foreach my $field ("dependson", "blocked") {
         my @validvalues;
         foreach my $id (split(/[\s,]+/, $cgi->param($field))) {
             next unless $id;
-            ValidateBugID($id, $field);
+            # $field is not passed to ValidateBugID to prevent adding new 
+            # dependencies on inacessible bugs.
+            ValidateBugID($id);
             push(@validvalues, $id);
         }
         $cgi->param(-name => $field, -value => join(",", @validvalues));
