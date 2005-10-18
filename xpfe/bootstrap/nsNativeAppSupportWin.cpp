@@ -1912,6 +1912,10 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow, nsIDOMWi
     rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
     if (NS_FAILED(rv) || defaultArgs.IsEmpty()) return rv;
 
+    // force a new window for a home page group
+    if (FindCharInString(defaultArgs, '\n') != kNotFound)
+        newWindow = PR_TRUE;
+
     NS_ConvertUTF16toUTF8 url( defaultArgs );
     return OpenBrowserWindow(url.get(), newWindow, aResult);
 }
