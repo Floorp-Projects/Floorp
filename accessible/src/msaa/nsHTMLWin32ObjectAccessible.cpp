@@ -85,7 +85,7 @@ NS_IMETHODIMP nsHTMLWin32ObjectOwnerAccessible::GetChildCount(PRInt32 *aChildCou
 }
 
 nsHTMLWin32ObjectAccessible::nsHTMLWin32ObjectAccessible(void* aHwnd):
-nsAccessibleWrap(nsnull, nsnull)
+nsLeafAccessible(nsnull, nsnull)
 {
   mHwnd = aHwnd;
   if (mHwnd) {
