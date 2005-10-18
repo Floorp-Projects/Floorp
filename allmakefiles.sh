@@ -806,6 +806,7 @@ embedding/minimo/app/Makefile
 embedding/minimo/popuplite/Makefile
 minimo/Makefile
 minimo/base/Makefile
+minimo/base/wince/Makefile
 minimo/components/Makefile
 minimo/components/phone/Makefile
 minimo/components/softkb/Makefile
