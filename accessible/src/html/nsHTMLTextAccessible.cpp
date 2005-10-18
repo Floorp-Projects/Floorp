@@ -59,12 +59,20 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetName(nsAString& aName)
   if (!mDOMNode) {
     return NS_ERROR_FAILURE;
   }
+
+  nsIFrame *frame = GetFrame();
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+
   nsAutoString name;
   nsresult rv = mDOMNode->GetNodeValue(name);
-  if (NS_SUCCEEDED(rv)) {
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!frame->GetStyleText()->WhiteSpaceIsSignificant()) {
+    // Replace \r\n\t in markup with space unless in this is preformatted text
+    // where those characters are significant
     name.ReplaceChar("\r\n\t", ' ');
-    aName = name;
   }
+  aName = name;
   return rv;
 }
 
