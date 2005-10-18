@@ -1489,9 +1489,8 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 
       // Update the registry keys that the installer scripts use to determine
       // what shortcuts to create
-      result = RegOpenKeyEx(HKEY_CURRENT_USER, diWindowsIntegration.szRegistryKey, 0, KEY_READ | KEY_WRITE, &theKey);
-      if (result == ERROR_FILE_NOT_FOUND)
-        result = RegCreateKey(HKEY_CURRENT_USER, diWindowsIntegration.szRegistryKey, &theKey);
+      result = RegCreateKeyEx(HKEY_CURRENT_USER, diWindowsIntegration.szRegistryKey, 0, NULL,
+                              0, KEY_READ | KEY_WRITE, NULL, &theKey, NULL);
       if (result == ERROR_SUCCESS) {
         RegSetValueEx(theKey, "Create Desktop Shortcut", 0, REG_DWORD, 
                       (LPBYTE)&(diWindowsIntegration.wiCB0.bCheckBoxState), 
@@ -1502,6 +1501,7 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
         RegSetValueEx(theKey, "Create Quick Launch Shortcut", 0, REG_DWORD, 
                       (LPBYTE)&(diWindowsIntegration.wiCB2.bCheckBoxState), 
                       sizeof(DWORD));
+        RegCloseKey(theKey);
       }
 
       // Show the components we're going to install
@@ -2119,7 +2119,6 @@ LRESULT CALLBACK DlgProcInstallSuccessful(HWND hDlg, UINT msg, WPARAM wParam, LO
   LPNMHDR notifyMessage;
   static BOOL launchAppChecked = TRUE;
   DWORD result;
-  HKEY theKey;
   
   switch(msg) {
   case WM_INITDIALOG:
