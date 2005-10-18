@@ -44,14 +44,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_XUL_APP
-XPI_NAME               = reporter
-USE_EXTENSION_MANIFEST = 1
-NO_JAR_AUTO_REG        = 1
-INSTALL_EXTENSION_ID   = reporter@mozilla.org
-XPI_PKGNAME            = reporter-$(MOZ_APP_VERSION)
-endif
-
+ifdef BUILD_ALL_LOCALES
 ALL_LOCALES = \
 	en-US \
 	ar \
@@ -93,18 +86,9 @@ ALL_LOCALES = \
 	zh-CN \
 	zh-TW \
 	$(NULL)
-
-DIST_FILES = install.rdf
-
-# We should really pull FIREFOX_VERSION and THUNDERBIRD_VERSION from
-# # browser/config/version.txt mail/config/version.txt but we can't be assured
-# # that we've even pulled those files. So we hardcode them.
-
-XULAPP_DEFINES = \
-	-DFIREFOX_VERSION=$(FIREFOX_VERSION) \
-	-DTHUNDERBIRD_VERSION=$(THUNDERBIRD_VERSION) \
-	-DEXTENSION_VERSION=$(MOZILLA_VERSION) \
-	$(NULL)
+else
+ALL_LOCALES = $(AB_CD)
+endif
 
 PREF_JS_EXPORTS = $(srcdir)/resources/content/prefs/reporter.js
 

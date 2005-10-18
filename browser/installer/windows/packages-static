@@ -206,6 +206,9 @@ bin\chrome\comm.jar
 bin\chrome\comm.manifest
 bin\chrome\toolkit.jar
 bin\chrome\toolkit.manifest
+bin\chrome\reporter.manifest
+bin\chrome\reporter.jar
+bin\defaults\pref\reporter.js
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
@@ -312,9 +315,3 @@ bin\extensions\talkback@mozilla.org\components\talkback-l10n.ini
 bin\extensions\talkback@mozilla.org\components\talkback.cnt
 bin\extensions\talkback@mozilla.org\components\talkback.exe
 bin\extensions\talkback@mozilla.org\components\talkback.hlp
-
-[reporter]
-bin\extensions\reporter@mozilla.org\install.rdf
-bin\extensions\reporter@mozilla.org\chrome.manifest
-bin\extensions\reporter@mozilla.org\chrome\reporter.jar
-bin\extensions\reporter@mozilla.org\defaults\preferences\reporter.js
