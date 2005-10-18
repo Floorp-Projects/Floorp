@@ -718,6 +718,10 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame *aFrame,
   nsIFrame *frame;
   GetInfo(NS_STATIC_CAST(nsIFrame*, aFrame), &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
 
+  *aAccessible = nsnull;
+  if (!frame || frame->GetRect().IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
   // 1) for object elements containing either HTML or TXT documents
   nsCOMPtr<nsIDOMDocument> domDoc;
   nsCOMPtr<nsIDOMHTMLObjectElement> obj(do_QueryInterface(node));
