@@ -187,6 +187,8 @@ var nsMailDefaultHandler = {
                                    .getService(nsIWindowWatcher);
             var argstring = Components.classes["@mozilla.org/supports-string;1"]
                                       .createInstance(nsISupportsString);
+            remoteParams.shift();
+            argstring.data = remoteParams.join(",");
             wwatch.openWindow(null, "chrome://messenger/content/messengercompose/messengercompose.xul", "_blank",
                               "chrome,dialog=no,all", argstring);
             break;
