@@ -397,7 +397,12 @@ nsHTMLSelectListAccessible::CacheOptSiblings(nsIAccessibilityService *aAccServic
       }
     }
   }
-  NS_IF_ADDREF(aLastGoodAccessible = lastGoodAccessible);
+  if (lastGoodAccessible) {
+    nsCOMPtr<nsPIAccessible> privateLastAcc =
+      do_QueryInterface(lastGoodAccessible);
+    privateLastAcc->SetNextSibling(nsnull);
+    NS_ADDREF(aLastGoodAccessible = lastGoodAccessible);
+  }
   return aLastGoodAccessible;
 }
 
