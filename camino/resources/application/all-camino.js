@@ -54,6 +54,10 @@ pref("camino.use_system_proxy_settings", true);
 
 pref("camino.enable_plugins", true);
 
+// show warning when closing window or quitting
+pref("camino.warn_when_closing", true);
+pref("camino.warn_when_quitting", true);
+
 // turn off dumping of JS and CSS errors to the console
 pref("chimera.log_js_to_console", false);
 

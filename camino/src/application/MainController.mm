@@ -39,6 +39,7 @@
 
 #import <Carbon/Carbon.h>
 
+#import "NSArray+Utils.h"
 #import "NSString+Utils.h"
 #import "NSResponder+Utils.h"
 #import "NSMenu+Utils.h"
@@ -119,6 +120,8 @@ const int kReuseWindowOnAE = 2;
 - (void)showCertificatesNotification:(NSNotification*)inNotification;
 - (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
 
+-(NSArray*)browserWindows;
+
 @end
 
 #pragma mark -
@@ -181,7 +184,7 @@ const int kReuseWindowOnAE = 2;
       NSString* appName = NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil);
       NSString* alert = [NSString stringWithFormat: NSLocalizedString(@"RequiredVersionNotMetTitle", @""), appName];
       NSString* message = [NSString stringWithFormat: NSLocalizedString(@"RequiredVersionNotMet", @""), appName];
-      NSString* quit = NSLocalizedString(@"AlreadyRunningButton",@"");
+      NSString* quit = NSLocalizedString(@"QuitButtonText",@"");
       NSRunAlertPanel(alert, message, quit, nil, nil);
       [NSApp terminate:self];
     }
@@ -342,7 +345,56 @@ const int kReuseWindowOnAE = 2;
 {
   ProgressDlgController* progressWindowController = [ProgressDlgController existingSharedDownloadController];
   if (progressWindowController)
-    return [progressWindowController allowTerminate];
+  {
+    NSApplicationTerminateReply progressTerminateReply = [progressWindowController allowTerminate];
+    if (progressTerminateReply != NSTerminateNow)
+      return progressTerminateReply;
+  }
+
+  PreferenceManager* prefManager = [PreferenceManager sharedInstanceDontCreate];
+  if (!prefManager) return NSTerminateNow;    // we didn't fully launch
+
+  if (![prefManager getBooleanPref:"camino.warn_when_quitting" withSuccess:NULL])
+    return NSTerminateNow;
+
+  NSString* quitAlertMsg = nil;
+  NSString* quitAlertExpl = nil;
+
+  NSArray* openBrowserWins = [self browserWindows];
+  if ([openBrowserWins count] == 1)
+  {
+    BrowserWindowController* bwc = [[openBrowserWins firstObject] windowController];
+    unsigned int numTabs = [[bwc getTabBrowser] numberOfTabViewItems];
+    if (numTabs > 1)
+    {
+      quitAlertMsg = NSLocalizedString(@"QuitWithMultipleTabsMsg", @"");
+      quitAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"QuitWithMultipleTabsExpl", @""), numTabs];
+    }
+  }
+  else if ([openBrowserWins count] > 1)
+  {
+    quitAlertMsg = NSLocalizedString(@"QuitWithMultipleWindowsMsg", @"");
+    quitAlertExpl = [NSString stringWithFormat:NSLocalizedString(@"QuitWithMultipleWindowsExpl", @""), [openBrowserWins count]];
+  }
+
+  if (quitAlertMsg)
+  {
+    nsAlertController* controller = CHBrowserService::GetAlertController();
+    BOOL dontShowAgain = NO;
+    BOOL confirmed = [controller confirmCheckEx:nil
+                                          title:quitAlertMsg
+                                            text:quitAlertExpl
+                                         button1:NSLocalizedString(@"QuitButtonText", @"")
+                                         button2:NSLocalizedString(@"CancelButtonText", @"")
+                                         button3:nil
+                                        checkMsg:NSLocalizedString(@"QuitWithMultipleTabsCheckboxLabel", @"")
+                                      checkValue:&dontShowAgain];
+    if (dontShowAgain)
+      [prefManager setPref:"camino.warn_when_quitting" toBoolean:NO];
+
+    return (confirmed) ? NSTerminateNow : NSTerminateCancel;
+  }
+  
   return NSTerminateNow;
 }
 
@@ -978,33 +1030,55 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 - (NSView*)getSavePanelView
 {
   if (!mFilterView)
+  {
+    // note that this will cause our -awakeFromNib to get called again
     [NSBundle loadNibNamed:@"AccessoryViews" owner:self];
+  }
   return mFilterView;
 }
+
+-(NSArray*)browserWindows
+{
+  NSEnumerator* windowEnum = [[NSApp orderedWindows] objectEnumerator];
+  NSMutableArray* windowArray = [NSMutableArray array];
+
+  NSWindow* curWindow;
+  while ((curWindow = [windowEnum nextObject]))
+  {
+    // not all browser windows are created equal. We only consider those with
+    // an empty chrome mask, or ones with a toolbar, status bar, and resize control
+    // to be real top-level browser windows for purposes of saving size and 
+    // loading urls in. Others are popups and are transient.
+    if ([[curWindow windowController] isMemberOfClass:[BrowserWindowController class]] &&
+        [[curWindow windowController] hasFullBrowserChrome])
+    {
+      [windowArray addObject:curWindow];
+    }
+  }
+
+  return windowArray;
+}
+
 
 -(NSWindow*)getFrontmostBrowserWindow
 {
   // for some reason, [NSApp mainWindow] doesn't always work, so we have to
   // do this manually
-  NSArray *windowList = [NSApp orderedWindows];
-  NSWindow *foundWindow = nil;
+  NSEnumerator* windowEnum = [[NSApp orderedWindows] objectEnumerator];
+  NSWindow* foundWindow = nil;
 
-  for (unsigned int i = 0; i < [windowList count]; i ++) {
-    NSWindow*	thisWindow = [windowList objectAtIndex:i];
-    
+  NSWindow* curWindow;
+  while ((curWindow = [windowEnum nextObject]))
+  {
     // not all browser windows are created equal. We only consider those with
     // an empty chrome mask, or ones with a toolbar, status bar, and resize control
     // to be real top-level browser windows for purposes of saving size and 
     // loading urls in. Others are popups and are transient.
-    if ([[thisWindow windowController] isMemberOfClass:[BrowserWindowController class]]) {
-      unsigned int chromeMask = [[thisWindow windowController] chromeMask];
-      if (chromeMask == 0 || 
-            (chromeMask & nsIWebBrowserChrome::CHROME_TOOLBAR &&
-             chromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR &&
-             chromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)) {
-        foundWindow = thisWindow;
-        break;
-      }
+    if ([[curWindow windowController] isMemberOfClass:[BrowserWindowController class]] &&
+        [[curWindow windowController] hasFullBrowserChrome]) 
+    {
+      foundWindow = curWindow;
+      break;
     }
   }
 

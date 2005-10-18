@@ -290,6 +290,8 @@ typedef enum
 -(void)setChromeMask:(unsigned int)aMask;
 -(unsigned int)chromeMask;
 
+-(BOOL)hasFullBrowserChrome;
+
 // Called when a context menu should be shown.
 - (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode;
 - (void)prepareAddToAddressBookMenuItem:(NSMenuItem*)addToAddressBookItem address:(NSString*)emailAddress;

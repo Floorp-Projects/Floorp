@@ -562,6 +562,36 @@ enum BWCOpenDest {
   mShouldLoadHomePage = NO;
 }
 
+- (BOOL)windowShouldClose:(id)sender 
+{
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"camino.warn_when_closing" withSuccess:NULL])
+  {
+    unsigned int numberOfTabs = [mTabBrowser numberOfTabViewItems];
+    if (numberOfTabs > 1)
+    {
+      NSString* closeMultipleTabWarning = NSLocalizedString(@"CloseWindowWithMultipleTabsExplFormat", @"");
+
+      nsAlertController* controller = CHBrowserService::GetAlertController();
+      BOOL dontShowAgain = NO;
+      // note that this is a pseudo-sheet (and causes Cocoa to complain about runModalForWindow:relativeToWindow).
+      // Ideally, we'd be able to get a panel from nsAlertController and run it as a sheet ourselves.
+      int result = [controller confirmCheckEx:[self window]
+                                        title:NSLocalizedString(@"CloseWindowWithMultipleTabsMsg", @"")
+                                         text:[NSString stringWithFormat:closeMultipleTabWarning, numberOfTabs]
+                                      button1:NSLocalizedString(@"CloseWindowWithMultipleTabsButton", @"")
+                                      button2:NSLocalizedString(@"CancelButtonText", @"")
+                                      button3:nil
+                                     checkMsg:NSLocalizedString(@"CloseWindowWithMultipleTabsCheckboxLabel", @"")
+                                   checkValue:&dontShowAgain];
+      if (dontShowAgain)
+        [[PreferenceManager sharedInstance] setPref:"camino.warn_when_closing" toBoolean:NO];
+      
+      return (result == NSAlertDefaultReturn);
+    }
+  }
+  return YES;
+}
+
 - (void)windowWillClose:(NSNotification *)notification
 {
   mClosingWindow = YES;
@@ -2874,6 +2904,14 @@ enum BWCOpenDest {
 -(unsigned int)chromeMask
 {
   return mChromeMask;
+}
+
+-(BOOL)hasFullBrowserChrome
+{
+  return (mChromeMask == 0 || 
+            (mChromeMask & nsIWebBrowserChrome::CHROME_TOOLBAR &&
+             mChromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR &&
+             mChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE));
 }
 
 - (IBAction)biggerTextSize:(id)aSender

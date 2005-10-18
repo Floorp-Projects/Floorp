@@ -41,15 +41,19 @@
 
 @interface OrgMozillaChimeraPreferenceNavigation : PreferencePaneBase
 {
-	IBOutlet NSTextField*   textFieldHomePage;
+  IBOutlet NSTextField*   textFieldHomePage;
   
   IBOutlet NSButton*      checkboxNewTabBlank;
   IBOutlet NSButton*      checkboxNewWindowBlank;
   IBOutlet NSPopUpButton* defaultBrowserPopUp;
   IBOutlet NSButton*      checkboxCheckDefaultBrowserOnLaunch;
+
+  IBOutlet NSButton*      checkboxWarnWhenClosingWindow;
+  IBOutlet NSButton*      checkboxWarnWhenQuitting;
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender;
 - (IBAction)defaultBrowserChange:(id)sender;
+- (IBAction)warningCheckboxClicked:(id)sender;
 
 @end

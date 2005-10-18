@@ -346,7 +346,7 @@ static BOOL gMadePrefManager;
   NSString* errorString   = [NSString stringWithFormat:inTitleFormat, applicationName];
   NSString* messageString = [NSString stringWithFormat:inMessageFormat, applicationName];
 
-  NSRunAlertPanel(errorString, messageString, NSLocalizedString(@"QuitButton", @""), nil, nil);
+  NSRunAlertPanel(errorString, messageString, NSLocalizedString(@"QuitButtonText", @""), nil, nil);
   [NSApp terminate:self];
 }
 
