@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGStylableElement.h"
+#include "nsSVGGraphicElement.h"
 #include "nsSVGAtoms.h"
 #include "nsIDOMSVGTSpanElement.h"
 #include "nsCOMPtr.h"
@@ -45,7 +45,7 @@
 #include "nsISVGSVGElement.h"
 #include "nsSVGCoordCtxProvider.h"
 
-typedef nsSVGStylableElement nsSVGTSpanElementBase;
+typedef nsSVGGraphicElement nsSVGTSpanElementBase;
 
 class nsSVGTSpanElement : public nsSVGTSpanElementBase,
                           public nsIDOMSVGTSpanElement // : nsIDOMSVGTextPositioningElement
@@ -262,8 +262,15 @@ NS_IMETHODIMP nsSVGTSpanElement::GetNumberOfChars(PRInt32 *_retval)
 /* float getComputedTextLength (); */
 NS_IMETHODIMP nsSVGTSpanElement::GetComputedTextLength(float *_retval)
 {
-  NS_NOTYETIMPLEMENTED("nsSVGTSpanElement::GetComputedTextLength");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMSVGRect> bbox;
+
+  GetBBox(getter_AddRefs(bbox));
+  if (bbox)
+    bbox->GetWidth(_retval);
+  else
+    *_retval = 0;
+  
+  return NS_OK;
 }
 
 /* float getSubStringLength (in unsigned long charnum, in unsigned long nchars); */
