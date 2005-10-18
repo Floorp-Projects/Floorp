@@ -909,6 +909,7 @@ nsWindow::~nsWindow()
 
   if (MouseTrailer::GetSingleton().GetMouseTrailerWindow() == this) {
     MouseTrailer::GetSingleton().DestroyTimer();
+    MouseTrailer::GetSingleton().SetMouseTrailerWindow(nsnull);
   }
 
   // If the widget was released without calling Destroy() then the native
@@ -1606,6 +1607,12 @@ NS_METHOD nsWindow::Destroy()
   // disconnect from the parent
   if (!mIsDestroying) {
     nsBaseWidget::Destroy();
+  }
+
+  // get rid of any mouse trailer references to self
+  if (MouseTrailer::GetSingleton().GetMouseTrailerWindow() == this) {
+      MouseTrailer::GetSingleton().DestroyTimer();
+      MouseTrailer::GetSingleton().SetMouseTrailerWindow(nsnull);
   }
 
   // just to be safe. If we're going away and for some reason we're still
