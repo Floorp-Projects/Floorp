@@ -6,6 +6,7 @@ browser.jar:
 %  overlay chrome://mozapps/content/extensions/extensions.xul?type=extensions chrome://browser/content/extensionsManagerOverlay.xul
 %  overlay chrome://mozapps/content/extensions/extensions.xul?type=themes chrome://browser/content/extensionsManagerOverlay.xul
 %  overlay chrome://global/content/console.xul chrome://browser/content/jsConsoleOverlay.xul
+%  overlay chrome://mozapps/content/update/updates.xul chrome://browser/content/softwareUpdateOverlay.xul
 #endif
 %  overlay chrome://global/content/viewSource.xul chrome://browser/content/viewSourceOverlay.xul
 %  overlay chrome://global/content/viewPartialSource.xul chrome://browser/content/viewSourceOverlay.xul
@@ -46,6 +47,7 @@ browser.jar:
 *       content/browser/downloadManagerOverlay.xul    (content/downloadManagerOverlay.xul)
 *       content/browser/extensionsManagerOverlay.xul  (content/extensionsManagerOverlay.xul)
 *       content/browser/jsConsoleOverlay.xul          (content/jsConsoleOverlay.xul)
+*       content/browser/softwareUpdateOverlay.xul  (content/softwareUpdateOverlay.xul)
 #endif
 *       content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
 #ifdef MOZ_USE_GENERIC_BRANDING
