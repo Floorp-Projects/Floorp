@@ -3209,8 +3209,12 @@ public:
     if (mDocument && mDocument == mParent->GetCurrentDoc()) {
       PRInt32 newCount = mParent->GetChildCount();
       if (newCount > mOldChildCount) {
+        PRUint32 notifySlot = mOldChildCount;
+        // Make sure to update mOldChildCount so that if ContentAppended calls
+        // BeginUpdate for some reason (eg XBL) so we reenter Notify() we won't
+        // double-notify.
         mOldChildCount = newCount;
-        mDocument->ContentAppended(mParent, mOldChildCount);
+        mDocument->ContentAppended(mParent, notifySlot);
       }
     }
   }
