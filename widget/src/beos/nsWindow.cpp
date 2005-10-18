@@ -1002,8 +1002,8 @@ nsresult nsWindow::Move(PRInt32 aX, PRInt32 aY)
 	mBounds.x = aX;
 	mBounds.y = aY;
 
-	if (eWindowType_child == mWindowType)
-		HideKids(PR_TRUE);
+	// We may reset children visibility here, but it needs special care 
+	// - see comment 18 in Bug 311651. More sofisticated code needed.
 
 	// until we lack separate window and widget, we "cannot" move BWindow without BView
 	if (mView && mView->LockLooper())
