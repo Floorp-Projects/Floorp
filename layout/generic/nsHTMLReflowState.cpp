@@ -112,6 +112,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*      aPresContext,
   mFlags.mSpecialHeightReflow = PR_FALSE;
   mFlags.mIsTopOfPage = PR_FALSE;
   mFlags.mNextInFlowUntouched = PR_FALSE;
+  mFlags.mAssumingHScrollbar = mFlags.mAssumingVScrollbar = PR_FALSE;
   mFlags.mHasClearance = PR_FALSE;
   mDiscoveredClearance = nsnull;
   mPercentHeightObserver = nsnull;
@@ -146,6 +147,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*      aPresContext,
   mFlags.mSpecialHeightReflow = PR_FALSE;
   mFlags.mIsTopOfPage = PR_FALSE;
   mFlags.mNextInFlowUntouched = PR_FALSE;
+  mFlags.mAssumingHScrollbar = mFlags.mAssumingVScrollbar = PR_FALSE;
   mFlags.mHasClearance = PR_FALSE;
   mDiscoveredClearance = nsnull;
   mPercentHeightObserver = nsnull;
@@ -198,6 +200,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
   mFlags.mNextInFlowUntouched = aParentReflowState.mFlags.mNextInFlowUntouched &&
     CheckNextInFlowParenthood(aFrame, aParentReflowState.frame);
+  mFlags.mAssumingHScrollbar = mFlags.mAssumingVScrollbar = PR_FALSE;
   mFlags.mHasClearance = PR_FALSE;
   mDiscoveredClearance = nsnull;
   mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
@@ -247,6 +250,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
   mFlags.mNextInFlowUntouched = aParentReflowState.mFlags.mNextInFlowUntouched &&
     CheckNextInFlowParenthood(aFrame, aParentReflowState.frame);
+  mFlags.mAssumingHScrollbar = mFlags.mAssumingVScrollbar = PR_FALSE;
   mFlags.mHasClearance = PR_FALSE;
   mDiscoveredClearance = nsnull;
   mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
@@ -296,6 +300,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
   mFlags.mIsTopOfPage = aParentReflowState.mFlags.mIsTopOfPage;
   mFlags.mNextInFlowUntouched = aParentReflowState.mFlags.mNextInFlowUntouched &&
     CheckNextInFlowParenthood(aFrame, aParentReflowState.frame);
+  mFlags.mAssumingHScrollbar = mFlags.mAssumingVScrollbar = PR_FALSE;
   mFlags.mHasClearance = PR_FALSE;
   mDiscoveredClearance = nsnull;
   mPercentHeightObserver = (aParentReflowState.mPercentHeightObserver && 
