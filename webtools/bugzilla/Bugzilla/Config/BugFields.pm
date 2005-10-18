@@ -84,30 +84,34 @@ sub get_param_list {
 
   {
    name => 'defaultpriority',
-   type => 't',
-   default => 'P2',
+   type => 's',
+   choices => \@::legal_priority,
+   default => $::legal_priority[-1],
    checker => \&check_priority
   },
 
   {
    name => 'defaultseverity',
-   type => 't',
-   default => 'normal',
+   type => 's',
+   choices => \@::legal_severity,
+   default => $::legal_severity[-1],
    checker => \&check_severity
   },
 
   {
-    name => 'defaultplatform',
-    type => 't',
-    default => '',
-    checker => \&check_platform
+   name => 'defaultplatform',
+   type => 's',
+   choices => ['', @::legal_platform],
+   default => '',
+   checker => \&check_platform
   },
 
   {
-    name => 'defaultopsys',
-    type => 't',
-    default => '',
-    checker => \&check_opsys
+   name => 'defaultopsys',
+   type => 's',
+   choices => ['', @::legal_opsys],
+   default => '',
+   checker => \&check_opsys
   } );
   return @param_list;
 }

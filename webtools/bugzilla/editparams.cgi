@@ -48,6 +48,8 @@ my $current_panel = $cgi->param('section') || 'core';
 $current_panel =~ /^([A-Za-z0-9_-]+)$/;
 $current_panel = $1;
 
+GetVersionTable();
+
 my $current_module;
 my @panels = ();
 foreach my $panel (@parampanels) {
