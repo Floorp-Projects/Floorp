@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@mozilla.org> (Original Author)
+ *  Asaf Romano <mozilla.mano@sent.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -170,7 +171,12 @@ var gUpdates = {
     
     // update button state using the wizard commands
     this.wiz.canRewind  = !backButtonDisabled;
-    this.wiz.canAdvance = !(nextButtonDisabled && finishButtonDisabled);
+    // The Finish and Next buttons are never exposed at the same time
+    if (this.wiz.onLastPage)
+      this.wiz.canAdvance = !finishButtonDisabled;
+    else
+      this.wiz.canAdvance = !nextButtonDisabled;
+
     bf.disabled = finishButtonDisabled;
     bc.disabled = cancelButtonDisabled;
     be.disabled = extraButtonDisabled;
@@ -1354,14 +1360,20 @@ var gErrorsPage = {
 var gFinishedPage = {
   /**
    * Called to initialize the Wizard Page.
+   * @param   aDelayRestart
+   *          true if the Restart Application button should be disabled for a
+   *          short delay
    */
-  onPageShow: function() {  
+  onPageShow: function(aDelayRestart) {  
     var restart = gUpdates.strings.getFormattedString("restartButton",
       [gUpdates.brandName]);
     var later = gUpdates.strings.getString("laterButton");
-    gUpdates.setButtons(null, true, null, true, restart, false, later, false, 
-                        false, null, false);
-    gUpdates.wiz.getButton("finish").focus();
+    gUpdates.setButtons(null, true, null, true, restart, aDelayRestart, later,
+                        false, false, null, false);
+    if (aDelayRestart)
+      setTimeout(this._enableRestartButton, 2000);
+    else
+      gUpdates.wiz.getButton("finish").focus();
   },
   
   /**
@@ -1379,7 +1391,7 @@ var gFinishedPage = {
     var link = document.getElementById("finishedBackgroundLink");
     link.href = gUpdates.update.detailsURL;
     
-    this.onPageShow();
+    this.onPageShow(true);
 
     if (getPref("getBoolPref", PREF_UPDATE_TEST_LOOP, false)) {
       window.restart = function () {
@@ -1389,6 +1401,16 @@ var gFinishedPage = {
     }
   },
   
+  /**
+   * Re-enables and focuses the Restart Application button
+   */
+  _enableRestartButton: function() {
+    gUpdates.wiz.canAdvance = true;
+    var finishButton = gUpdates.wiz.getButton("finish");
+    finishButton.disabled = false;
+    finishButton.focus();
+  },
+
   /**
    * Called when the wizard finishes, i.e. the "Restart Now" button is 
    * clicked. 
