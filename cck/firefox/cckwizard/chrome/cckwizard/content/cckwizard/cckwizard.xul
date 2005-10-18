@@ -601,7 +601,11 @@
     <groupbox>
       <caption label="Certificates"/>
       <description>
-        You may select up to five certificates to be preinstalled.
+        You may select up to five certificates to be preinstalled.<html:br/><html:br/>
+        <html:b>IMPORTANT: If you add certificates to Firefox, you CANNOT
+        ship a browser outside of your company or institution and call it Firefox.
+        This feature is intended primarily for corporate and institutional users
+        that will be deploying Firefox inside their organization.</html:b>
       </description>
       <hbox>
         <textbox readonly="true" id="CertPath1" flex="1"/>

@@ -1115,13 +1115,15 @@ function CCKReadConfigFile(srcdir)
   do {
     var more = lis.readLine(line);
     var str = line.value;
-    var linearray = str.split("=");
-    if (linearray[0].length) {
-      document.getElementById(linearray[0]).value = linearray[1];
-      if (linearray[0] == "ProxyType") {
+    var equals = str.indexOf('=');
+    if (equals != -1) {
+      firstpart = str.substring(0,equals);
+      secondpart = str.substring(equals+1);
+      document.getElementById(firstpart).value = secondpart;
+      if (firstpart == "ProxyType") {
         DoEnabling();
       }
-      if (linearray[0] == "shareAllProxies") {
+      if (firstpart == "shareAllProxies") {
         toggleProxySettings();
       }
     }
