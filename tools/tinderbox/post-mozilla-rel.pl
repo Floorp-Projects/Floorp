@@ -322,16 +322,10 @@ sub packit {
 
     my(@xforms_xpi);
     if ($Settings::BuildXForms) {
-    TinderUtils::run_shell_command "cd $builddir/extensions/schema-validation; $builddir/build/autoconf/make-makefile -t $builddir -d ../..";
-    TinderUtils::run_shell_command "make -C $builddir/extensions/schema-validation";
+      TinderUtils::run_shell_command "cd $builddir/extensions/xforms; $builddir/build/autoconf/make-makefile -t $builddir -d ../..";
+      TinderUtils::run_shell_command "make -C $builddir/extensions/xforms";
 
-    TinderUtils::run_shell_command "cd $builddir/extensions/xforms; $builddir/build/autoconf/make-makefile -t $builddir -d ../..";
-    TinderUtils::run_shell_command "make -C $builddir/extensions/xforms";
-
-    TinderUtils::run_shell_command "cd $builddir/extensions/xforms/package; $builddir/build/autoconf/make-makefile -t $builddir -d ../../..";
-    TinderUtils::run_shell_command "make -C $builddir/extensions/xforms/package xpi";
-
-      @xforms_xpi = grep { -f $_ } <${builddir}/extensions/xforms/package/stage/xforms/xforms.xpi>;
+      @xforms_xpi = grep { -f $_ } <${builddir}/dist/xpi-stage/xforms.xpi>;
     }
 
     if (is_windows()) {
