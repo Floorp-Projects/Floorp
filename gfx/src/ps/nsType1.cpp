@@ -96,8 +96,16 @@ struct FT2PT1_info {
   int            wmode;
 };
 
-static int cubicto(FT_Vector *aControlPt1, FT_Vector *aControlPt2, 
-                   FT_Vector *aEndPt, void *aClosure);
+// In FT 2.2.0, 'const' was added to the prototypes of some callback functions.
+#if (FREETYPE_MAJOR == 2) && (FREETYPE_MINOR >= 2) 
+#define nsFT_CONST const
+#else 
+#define nsFT_CONST
+#endif
+
+static int cubicto(nsFT_CONST FT_Vector *aControlPt1,
+                   nsFT_CONST FT_Vector *aControlPt2, 
+                   nsFT_CONST FT_Vector *aEndPt, void *aClosure);
 static int Type1CharStringCommand(unsigned char **aBufPtrPtr, int aCmd);
 static int Type1EncodeCharStringInt(unsigned char **aBufPtrPtr, int aValue);
 
@@ -195,7 +203,7 @@ Type1EncryptString(unsigned char *aInBuf, unsigned char *aOutBuf, int aLen)
 }
 
 static PRBool
-sideWidthAndBearing(FT_Vector *aEndPt, FT2PT1_info *aFti)
+sideWidthAndBearing(const FT_Vector *aEndPt, FT2PT1_info *aFti)
 {
   int aw = 0;
   int ah = 0;
@@ -245,7 +253,7 @@ sideWidthAndBearing(FT_Vector *aEndPt, FT2PT1_info *aFti)
 }
 
 static int
-moveto(FT_Vector *aEndPt, void *aClosure)
+moveto(nsFT_CONST FT_Vector *aEndPt, void *aClosure)
 {
   FT2PT1_info *fti = (FT2PT1_info *)aClosure;
   FT_UShort upm = fti->face->units_per_EM;
@@ -282,7 +290,7 @@ moveto(FT_Vector *aEndPt, void *aClosure)
 }
 
 static int
-lineto(FT_Vector *aEndPt, void *aClosure)
+lineto(nsFT_CONST FT_Vector *aEndPt, void *aClosure)
 {
   FT2PT1_info *fti = (FT2PT1_info *)aClosure;
   FT_UShort upm = fti->face->units_per_EM;
@@ -308,7 +316,8 @@ lineto(FT_Vector *aEndPt, void *aClosure)
 }
 
 static int
-conicto(FT_Vector *aControlPt, FT_Vector *aEndPt, void *aClosure)
+conicto(nsFT_CONST FT_Vector *aControlPt, nsFT_CONST FT_Vector *aEndPt,
+        void *aClosure)
 {
   FT2PT1_info *ftinfo = (FT2PT1_info *)aClosure;
   FT_UShort upm = ftinfo->face->units_per_EM;
@@ -340,8 +349,8 @@ conicto(FT_Vector *aControlPt, FT_Vector *aEndPt, void *aClosure)
 }
 
 static int
-cubicto(FT_Vector *aControlPt1, FT_Vector *aControlPt2, FT_Vector *aEndPt,
-        void *aClosure)
+cubicto(nsFT_CONST FT_Vector *aControlPt1, nsFT_CONST FT_Vector *aControlPt2,
+        nsFT_CONST FT_Vector *aEndPt, void *aClosure)
 {
   FT2PT1_info *ftinfo = (FT2PT1_info *)aClosure;
   FT_UShort upm = ftinfo->face->units_per_EM;
