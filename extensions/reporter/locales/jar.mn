@@ -1,6 +1,10 @@
 #filter substitution
 
+#ifdef MOZ_XUL_APP
+@AB_CD@.jar:
+#else
 reporter.jar:
+#endif
 * locale/@AB_CD@/reporter/contents.rdf                      (generic/chrome/contents.rdf)
 % locale reporter @AB_CD@ %locale/@AB_CD@/reporter/
   locale/@AB_CD@/reporter/reportWizard.dtd                  (@AB_CD@/chrome/reportWizard.dtd)

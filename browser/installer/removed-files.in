@@ -46,3 +46,7 @@ components/talkback/master.ini
 components/talkback/talkback
 components/talkback/talkback.so
 components/talkback/XTalkback.ad
+extensions/reporter@mozilla.org/install.rdf
+extensions/reporter@mozilla.org/chrome.manifest
+extensions/reporter@mozilla.org/chrome/reporter.jar
+extensions/reporter@mozilla.org/defaults/preferences/reporter.js

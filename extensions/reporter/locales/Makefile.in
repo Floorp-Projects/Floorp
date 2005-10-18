@@ -42,12 +42,6 @@ relativesrcdir = extensions/reporter/locales
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_XUL_APP
-XPI_NAME               = reporter
-USE_EXTENSION_MANIFEST = 1
-NO_JAR_AUTO_REG        = 1
-endif
-
 DEFINES += -DAB_CD=$(AB_CD)
 
 include $(topsrcdir)/config/rules.mk

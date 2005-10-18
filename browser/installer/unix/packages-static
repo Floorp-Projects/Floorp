@@ -212,6 +212,9 @@ bin/chrome/comm.manifest
 bin/chrome/toolkit.jar
 bin/chrome/toolkit.manifest
 bin/chrome/icons/default/default.xpm
+bin/chrome/reporter.manifest
+bin/chrome/reporter.jar
+bin/defaults/pref/reporter.js
 
 ; shell icons
 bin/icons/*.xpm
@@ -318,9 +321,3 @@ bin/extensions/talkback@mozilla.org/install.rdf
 bin/extensions/talkback@mozilla.org/components/libqfaservices.so
 bin/extensions/talkback@mozilla.org/components/qfaservices.xpt
 bin/extensions/talkback@mozilla.org/components/talkback/*
-
-[reporter]
-bin/extensions/reporter@mozilla.org/install.rdf
-bin/extensions/reporter@mozilla.org/chrome.manifest
-bin/extensions/reporter@mozilla.org/chrome/reporter.jar
-bin/extensions/reporter@mozilla.org/defaults/preferences/reporter.js

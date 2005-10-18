@@ -61,9 +61,7 @@ PP_LOCALIZED_FILES = \
 INSTALLER_FILES = \
 	abe.jst \
 	adt.jst \
-	reporter.jst \
 	browser.jst \
-	reporter.jst \
 	talkback.jst \
 	xpcom.jst \
 	$(NULL)

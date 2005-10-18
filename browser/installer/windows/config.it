@@ -217,10 +217,9 @@ C0=Component XPCOM
 C1=Component Browser
 C2=Component Uninstaller
 C3=Component Langpack
-C4=Component RPT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C5=Component QFA
+C4=Component QFA
 
 [Setup Type1]
 Description Short={TYPE_CUSTOM}
@@ -234,10 +233,9 @@ C1=Component Browser
 C2=Component ADT
 C3=Component Uninstaller
 C4=Component Langpack
-C5=Component RPT
 ; Make sure Component QFA is LAST so 3rd party developers who might not want
 ; this component can easily remove it.
-C6=Component QFA
+C5=Component QFA
 
 [Dialog Select Components]
 Show Dialog=TRUE
@@ -568,16 +566,6 @@ Install Size System=1
 Install Size Archive=512
 Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\chrome\{AB_CD}.jar
-FileCount=$FileCount$
-
-[Component RPT]
-Description Short={RPT_SHORT}
-Description Long={RPT_LONG} 
-Archive=reporter.xpi
-$InstallSize$:reporter
-$InstallSizeArchive$:reporter.xpi
-Attributes=SELECTED|VISIBLE|FORCE_UPGRADE
-Force Upgrade File0=[SETUP PATH]\chrome\reporter.jar
 FileCount=$FileCount$
 
 [Component QFA]
