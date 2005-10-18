@@ -2576,10 +2576,28 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
       if (cssParser) {
         nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
 
+#ifdef MOZ_SVG
+        // SVG and CSS differ slightly in their interpretation of some of
+        // the attributes.  SVG allows attributes of the form: font-size="5" 
+        // (style="font-size: 5" if using a style attribute)
+        // where CSS requires units: font-size="5pt" (style="font-size: 5pt")
+        // Set a flag to pass information to the parser so that we can use
+        // the CSS parser to parse the font-size attribute.  Note that this
+        // does *not* effect the use of CSS stylesheets, which will still
+        // require units
+        PRBool isSVG = (aContent->GetNameSpaceID() == kNameSpaceID_SVG);
+        if (isSVG)
+          cssParser->SetSVGMode(PR_TRUE);
+#endif
+
         nsCOMPtr<nsICSSStyleRule> rule;
         result = cssParser->ParseStyleAttribute(aValue, doc->GetDocumentURI(),
                                                 baseURI,
                                                 getter_AddRefs(rule));
+#ifdef MOZ_SVG
+        if (isSVG)
+          cssParser->SetSVGMode(PR_FALSE);
+#endif
         cssLoader->RecycleParser(cssParser);
 
         if (rule) {
