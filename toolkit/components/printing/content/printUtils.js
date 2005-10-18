@@ -53,6 +53,12 @@ var PrintUtils = {
       var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                      .getService(Components.interfaces.nsIPrintingPromptService);
       PRINTPROMPTSVC.showPageSetup(window, printSettings, null);
+      if (gSavePrintSettings) {
+        // Page Setup data is a "native" setting on the Mac
+        var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                              .getService(Components.interfaces.nsIPrintSettingsService);
+        PSSVC.savePrintSettingsToPrefs(printSettings, true, printSettings.kInitSaveNativeData);
+      }
     } catch (e) {
       dump("showPageSetup "+e+"\n");
       return false;
