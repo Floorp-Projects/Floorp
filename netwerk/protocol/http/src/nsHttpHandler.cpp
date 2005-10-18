@@ -29,6 +29,7 @@
  *   Gervase Markham <gerv@gerv.net>
  *   Bradley Baetz <bbaetz@netscape.com>
  *   Benjamin Smedberg <bsmedberg@covad.net>
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -78,10 +79,6 @@
 
 #if defined(XP_WIN)
 #include <windows.h>
-#endif
-
-#if defined(XP_MAC)
-#include <Gestalt.h>
 #endif
 
 #ifdef DEBUG
@@ -604,7 +601,7 @@ nsHttpHandler::InitUserAgentComponents()
     "OS/2"
 #elif defined(XP_WIN)
     "Windows"
-#elif defined(XP_MAC) || defined(XP_MACOSX)
+#elif defined(XP_MACOSX)
     "Macintosh"
 #elif defined(XP_BEOS)
     "BeOS"
@@ -675,14 +672,10 @@ nsHttpHandler::InitUserAgentComponents()
             }
         }
     }
-#elif defined (XP_MACOSX)
+#elif defined (XP_MACOSX) && defined(__ppc__)
     mOscpu.AssignLiteral("PPC Mac OS X Mach-O");
-#elif defined (XP_MAC)
-    long version;
-    if (::Gestalt(gestaltSystemVersion, &version) == noErr && version >= 0x00001000)
-        mOscpu.AssignLiteral("PPC Mac OS X");
-    else
-        mOscpu.AssignLiteral("PPC");
+#elif defined (XP_MACOSX) && defined(__i386__)
+    mOscpu.AssignLiteral("Intel Mac OS X");
 #elif defined (XP_UNIX) || defined (XP_BEOS)
     struct utsname name;
     
