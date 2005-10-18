@@ -53,7 +53,6 @@ fLineOfTokens(nsnull),
 fStartOfLineOfTokens(nsnull),
 fCurrentTokenPlaceHolder(nsnull),
 fAtEndOfLine(PR_FALSE),
-fSyntaxErrorLine(nsnull),
 fSyntaxError(PR_FALSE),
 fDisconnected(PR_FALSE)
 {
@@ -63,7 +62,6 @@ nsIMAPGenericParser::~nsIMAPGenericParser()
 {
   PR_FREEIF( fCurrentLine );
   PR_FREEIF( fStartOfLineOfTokens);
-  PR_FREEIF( fSyntaxErrorLine );
 }
 
 void nsIMAPGenericParser::HandleMemoryFailure()
@@ -88,21 +86,8 @@ PRBool nsIMAPGenericParser::LastCommandSuccessful()
 void nsIMAPGenericParser::SetSyntaxError(PRBool error)
 {
   fSyntaxError = error;
-  PR_FREEIF( fSyntaxErrorLine );
-  if (error)
-  {
-    NS_ASSERTION(PR_FALSE, "syntax error in generic parser");	
-    fSyntaxErrorLine = PL_strdup(fCurrentLine);
-  }
-  else
-    fSyntaxErrorLine = NULL;
+  NS_ASSERTION(!error, "syntax error in generic parser");	
 }
-
-char *nsIMAPGenericParser::CreateSyntaxErrorLine()
-{
-  return PL_strdup(fSyntaxErrorLine);
-}
-
 
 PRBool nsIMAPGenericParser::SyntaxError()
 {

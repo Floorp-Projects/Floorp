@@ -66,8 +66,6 @@ public:
   PRBool			    Connected();
   virtual void        SetConnected(PRBool error);
     
-  char        *CreateSyntaxErrorLine();
-
 protected:
 
 	// This is a pure virtual member which must be overridden in the derived class
@@ -103,8 +101,6 @@ protected:
   char           *fStartOfLineOfTokens;
   char           *fCurrentTokenPlaceHolder;
   PRBool          fAtEndOfLine;
-
-  char           *fSyntaxErrorLine;
   PRBool          fSyntaxError;
 private:
   PRBool          fDisconnected;

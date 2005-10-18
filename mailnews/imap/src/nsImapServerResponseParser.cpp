@@ -2928,17 +2928,17 @@ void nsImapServerResponseParser::SetSyntaxError(PRBool error)
   nsIMAPGenericParser::SetSyntaxError(error);
   if (error)
   {
-    if (!fSyntaxErrorLine)
+    if (!fCurrentLine)
     {
       HandleMemoryFailure();
       fServerConnection.Log("PARSER", ("Internal Syntax Error: <no line>"), nsnull);
     }
     else
     {
-      if (!nsCRT::strcmp(fSyntaxErrorLine, CRLF))
+      if (!nsCRT::strcmp(fCurrentLine, CRLF))
         fServerConnection.Log("PARSER", "Internal Syntax Error: <CRLF>", nsnull);
       else
-        fServerConnection.Log("PARSER", "Internal Syntax Error: %s", fSyntaxErrorLine);
+        fServerConnection.Log("PARSER", "Internal Syntax Error: %s", fCurrentLine);
     }
   }
 }
