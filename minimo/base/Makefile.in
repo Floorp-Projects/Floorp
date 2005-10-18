@@ -44,6 +44,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MOZILLA_INTERNAL_API = 1
 
+
+ifdef WINCE
+DIRS        = wince
+endif
+
 PROGRAM		= minimo$(BIN_SUFFIX)
 
 MODULE		= minimo
@@ -79,7 +84,7 @@ CPPSRCS	    = Minimo.cpp		  \
 		      WindowCreator.cpp	  \
 		      SplashScreen.cpp	  \
 		      nsConsoleWriter.cpp \
-	          $(NULL)			  \
+	          $(NULL)
 
 
 # this should move into the toolkit!

@@ -470,66 +470,6 @@ void OverrideComponents()
   }
 }
 
-#ifdef WINCE
-typedef struct FindAppStruct
-{
-  HWND hwnd;
-} FindAppStruct;
-
-BOOL CALLBACK FindApplicationWindowProc(HWND hwnd, LPARAM lParam)
-{
-  FindAppStruct* findApp = (FindAppStruct*) lParam;
-  
-  unsigned short windowName[MAX_PATH];
-  GetWindowTextW(hwnd, windowName, MAX_PATH);
-  
-  if (wcsstr(windowName, L"Minimo"))
-  {
-    findApp->hwnd = hwnd;
-    return FALSE;
-  }
-  return TRUE;
-} 
-
-#define USE_MUTEX
-
-PRBool DoesProcessAlreadyExist()
-{
-#ifdef USE_MUTEX
-
-    const HANDLE hMutex = CreateMutexW(0, 0, L"_MINIMO_EXE_MUTEX_");
-    
-	if(hMutex)
-    {
-      if(ERROR_ALREADY_EXISTS == GetLastError()) 
-      {
-        FindAppStruct findApp;
-        findApp.hwnd = NULL;
-        
-        EnumWindows(FindApplicationWindowProc, (LPARAM)&findApp);
-        
-        if (findApp.hwnd)
-        {
-          SetForegroundWindow(findApp.hwnd);
-          return TRUE;
-        }
-
-        MessageBox(0, "Minimo is running, but can't be switched to.", "Unexpected Error", 0);
-        return TRUE;
-      }
-      return FALSE;
-    }
-    MessageBox(0, "Can not start Minimo", "Unexpected Error", 0);
-    return TRUE;
-#else
-    return FALSE;
-#endif
-}
-#else
-PRBool DoesProcessAlreadyExist() {return PR_FALSE;}
-#endif
-
-
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  *   Complete hack below.  We to ensure that the layout of all
@@ -586,9 +526,6 @@ int main(int argc, char *argv[])
   gtk_set_locale();
   gtk_init(&argc, &argv);
 #endif
-  
-  if (DoesProcessAlreadyExist())
-    return 0;
   
   CreateSplashScreen();
   
