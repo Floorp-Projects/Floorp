@@ -154,6 +154,7 @@ private:
 	MSG_ComposeType                           mType;		          // Message type
   nsCOMPtr<nsISupportsArray>                mStateListeners;		// contents are nsISupports
   PRBool                                    mCharsetOverride;
+  PRBool                                    mDeleteDraft;
   nsCOMPtr <nsIMsgDBHdr>                    mOrigMsgHdr;
 
   nsCOMPtr<nsIMsgSendListener>              mExternalSendListener;

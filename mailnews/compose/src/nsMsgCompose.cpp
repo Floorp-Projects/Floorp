@@ -224,6 +224,7 @@ nsMsgCompose::nsMsgCompose()
   m_editor = nsnull;
   mQuoteStreamListener=nsnull;
   mCharsetOverride = PR_FALSE;
+  mDeleteDraft = PR_FALSE;
   m_compFields = nsnull;    //m_compFields will be set during nsMsgCompose::Initialize
   mType = nsIMsgCompType::New;
 
@@ -1191,6 +1192,20 @@ NS_IMETHODIMP nsMsgCompose::SetRecycledWindow(PRBool aRecycledWindow)
   return NS_OK;
 }
 
+/* attribute boolean deleteDraft */
+NS_IMETHODIMP nsMsgCompose::GetDeleteDraft(PRBool *aDeleteDraft)
+{
+  NS_ENSURE_ARG_POINTER(aDeleteDraft);
+  *aDeleteDraft = mDeleteDraft;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompose::SetDeleteDraft(PRBool aDeleteDraft)
+{
+  mDeleteDraft = aDeleteDraft;
+  return NS_OK;
+}
+
 #if !defined(XP_MAC)
 PRBool nsMsgCompose::IsLastWindow()
 {
@@ -1444,7 +1459,9 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
   mType = type;
 
+  mDeleteDraft = (type == nsIMsgCompType::Draft);
   nsCAutoString msgUri(originalMsgURI);
+  // check if we're dealing with an opened .eml file msg
   PRBool fileUrl = StringBeginsWith(msgUri, NS_LITERAL_CSTRING("file:"));
   if (fileUrl)
   {
@@ -2934,9 +2951,9 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       }
 
       // Remove the current draft msg when sending draft is done.
-      MSG_ComposeType compType = nsIMsgCompType::Draft;
-      compose->GetType(&compType);
-      if (compType == nsIMsgCompType::Draft)
+      PRBool deleteDraft;
+      compose->GetDeleteDraft(&deleteDraft);
+      if (deleteDraft)
         RemoveCurrentDraftMessage(compose, PR_FALSE);
     }
     else
@@ -3039,10 +3056,8 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
         compose->NotifyStateListeners(eSaveInFolderDone,aStatus);
         if (mDeliverMode == nsIMsgSend::nsMsgSaveAsDraft || mDeliverMode == nsIMsgSend::nsMsgSaveAsTemplate)
         { 
-          // Remove the current draft msg when saving to draft is done. Also,
-          // if it was a NEW comp type, it's now DRAFT comp type. Otherwise
-          // if the msg is then sent we won't be able to remove the saved msg.
-          compose->SetType(nsIMsgCompType::Draft);
+          // Remove the current draft msg when saving to draft is done.
+          compose->SetDeleteDraft(PR_TRUE);
           RemoveCurrentDraftMessage(compose, PR_TRUE);
         }
       }

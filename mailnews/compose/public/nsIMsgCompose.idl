@@ -131,25 +131,25 @@ interface nsIMsgComposeRecyclingListener : nsISupports {
 };
 
 
-[scriptable, uuid(6ed82ccd-21a3-4ee5-83b0-8d39e0d65a83)]
+[scriptable, uuid(a56e2be5-76c2-4647-857d-ca71b129b4d6)]
 interface nsIMsgCompose : nsISupports {
 
-	/* ... */
-	void Initialize(in nsIDOMWindowInternal aWindow, in nsIMsgComposeParams aParams); 
+  /* ... */
+  void Initialize(in nsIDOMWindowInternal aWindow, in nsIMsgComposeParams aParams); 
 
-	/* ... */
-	void SetDocumentCharset(in string charset);
-	
-	/* ... */
-	void RegisterStateListener(in nsIMsgComposeStateListener stateListener);
+  /* ... */
+  void SetDocumentCharset(in string charset);
+  
+  /* ... */
+  void RegisterStateListener(in nsIMsgComposeStateListener stateListener);
 
-	/* ... */
-	void UnregisterStateListener(in nsIMsgComposeStateListener stateListener);
+  /* ... */
+  void UnregisterStateListener(in nsIMsgComposeStateListener stateListener);
 
-	/* ... */
-	void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity, in string accountKey, in nsIMsgWindow aMsgWindow, in nsIMsgProgress progress);
+  /* ... */
+  void SendMsg(in MSG_DeliverMode deliverMode, in nsIMsgIdentity identity, in string accountKey, in nsIMsgWindow aMsgWindow, in nsIMsgProgress progress);
 
-	/* ... */
+  /* ... */
   void CloseWindow(in boolean reclycleIt);
 
   /* ... */
@@ -166,13 +166,13 @@ interface nsIMsgCompose : nsISupports {
   */
   AUTF8String AttachmentPrettyName(in string url, in string charset);
     
-	/*
-		CheckAndPopulateRecipients will perform several tasks:
-		  1) if populateMailList is true, it will populate mailing presents in the compose field
-		  2) if returnNoHTMLRecipients is true, build a list of non HTML recipient
-		  3) return the lowest common format preferred by recipients (unknown, plaintext or html)
-	*/
-	unsigned long CheckAndPopulateRecipients(in boolean populateMailList, in boolean returnNonHTMLRecipients, out wstring nonHTMLRecipients);
+  /*
+    CheckAndPopulateRecipients will perform several tasks:
+      1) if populateMailList is true, it will populate mailing presents in the compose field
+      2) if returnNoHTMLRecipients is true, build a list of non HTML recipient
+      3) return the lowest common format preferred by recipients (unknown, plaintext or html)
+  */
+  unsigned long CheckAndPopulateRecipients(in boolean populateMailList, in boolean returnNonHTMLRecipients, out wstring nonHTMLRecipients);
   
   /* bodyConvertible: The level of "convertibility" to plaintext
    * @return a value from nsIMsgCompConvertible.
@@ -208,14 +208,14 @@ interface nsIMsgCompose : nsISupports {
 	/* ... */
   readonly attribute long wrapLength;
 
-	/* by reading this value, you can determine if yes or not the message has been mofified
-	   by the user. When you set this value to false, you reset the modification count
-	   of the body to 0 (clean).
-	*/
-	attribute boolean bodyModified;
+  /* by reading this value, you can determine if yes or not the message has been mofified
+     by the user. When you set this value to false, you reset the modification count
+     of the body to 0 (clean).
+  */
+  attribute boolean bodyModified;
 
 
-	/**
+  /**
    *  Init the editor THIS USED TO BE [noscript]
    *  Now, this is called after editor is created,
    *  which is triggered by loading startup url from JS.
@@ -224,13 +224,13 @@ interface nsIMsgCompose : nsISupports {
    */
   void initEditor(in nsIEditor editor, in nsIDOMWindow contentWindow);
 
-	/* The following functions are for internal use, essentially for the listener */
+  /* The following functions are for internal use, essentially for the listener */
 
-	/* Clear the editor */
-	[noscript] void clearEditor();
+  /* Clear the editor */
+  [noscript] void clearEditor();
 
-	/* ... */
-	[noscript] void setCiteReference(in nsString citeReference);
+  /* ... */
+  [noscript] void setCiteReference(in nsString citeReference);
 
   /* Set the URI of the folder where the message has been saved */
   [noscript] attribute string savedFolderURI;
@@ -272,10 +272,12 @@ interface nsIMsgCompose : nsISupports {
  	/* ... */
   attribute nsIMsgComposeRecyclingListener recyclingListener;
   
- 	/* ... */
- 	attribute boolean recycledWindow;
+  /* ... */
+  attribute boolean recycledWindow;
   
   readonly attribute string originalMsgURI;
+
+  attribute boolean deleteDraft;
 };
 
 /* send listener interface */
