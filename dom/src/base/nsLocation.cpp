@@ -77,7 +77,7 @@ static nsresult
 GetContextFromStack(nsIJSContextStack *aStack, JSContext **aContext)
 {
   nsCOMPtr<nsIJSContextStackIterator>
-    iterator(do_CreateInstance("@mozilla.org/js/xpc/ContextStackIteror;1"));
+    iterator(do_CreateInstance("@mozilla.org/js/xpc/ContextStackIterator;1"));
   NS_ENSURE_TRUE(iterator, NS_ERROR_FAILURE);
 
   nsresult rv = iterator->Reset(aStack);
