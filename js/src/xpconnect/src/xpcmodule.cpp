@@ -55,7 +55,7 @@ NS_DECL_CLASSINFO(XPCVariant)
       { 0x9a, 0xc7, 0xaa, 0xa7, 0x84, 0xb1, 0x7c, 0x1c } }
 
 #define XPCVARIANT_CONTRACTID "@mozilla.org/xpcvariant;1"
-#define XPC_JSCONTEXT_STACK_ITERATOR_CONTRACTID "@mozilla.org/js/xpc/ContextStackIteror;1"
+#define XPC_JSCONTEXT_STACK_ITERATOR_CONTRACTID "@mozilla.org/js/xpc/ContextStackIterator;1"
 
 // {FE4F7592-C1FC-4662-AC83-538841318803}
 #define SCRIPTABLE_INTERFACES_CID \
