@@ -7434,10 +7434,10 @@ nsNavigator::GetPlatform(nsAString& aPlatform)
     // here (bug 47080)
 #if defined(WIN32)
     aPlatform.AssignLiteral("Win32");
-#elif defined(XP_MAC) || defined(XP_MACOSX)
-    // XXX not sure what to do about Mac OS X on non-PPC, but since Comm 4.x
-    // doesn't know about it this will actually be backward compatible
+#elif defined(XP_MACOSX) && defined(__ppc__)
     aPlatform.AssignLiteral("MacPPC");
+#elif defined(XP_MACOSX) && defined(__i386__)
+    aPlatform.AssignLiteral("MacIntel");
 #elif defined(XP_OS2)
     aPlatform.AssignLiteral("OS/2");
 #else
