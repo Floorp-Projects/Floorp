@@ -119,6 +119,14 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIEventQueueService.h"
 #include "jsdbgapi.h"
 #include "nsIJSRuntimeService.h"
+#include "nsIDOMDocumentXBL.h"
+#include "nsIBindingManager.h"
+#include "nsIURI.h"
+#include "nsIURL.h"
+#include "nsXBLBinding.h"
+#include "nsXBLPrototypeBinding.h"
+#include "nsEscape.h"
+#include "nsICharsetConverterManager.h"
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -2464,4 +2472,211 @@ nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
 
   PRBool dummy;
   return target->DispatchEvent(event, aDefaultAction ? aDefaultAction : &dummy);
+}
+
+static nsIContent*
+MatchElementId(nsIContent *aContent,
+               const nsACString& aUTF8Id, const nsAString& aId)
+{
+  if (aContent->IsContentOfType(nsIContent::eHTML)) {
+    if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::id)) {
+      nsAutoString value;
+      aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
+
+      if (aId.Equals(value)) {
+        return aContent;
+      }
+    }
+  }
+  else if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
+    nsCOMPtr<nsIXMLContent> xmlContent = do_QueryInterface(aContent);
+
+    if (xmlContent) {
+      nsIAtom* value = xmlContent->GetID();
+      if (value && value->EqualsUTF8(aUTF8Id)) {
+        return aContent;
+      }
+    }
+  }
+
+  nsIContent *result = nsnull;
+  PRUint32 i, count = aContent->GetChildCount();
+
+  for (i = 0; i < count && result == nsnull; i++) {
+    result = MatchElementId(aContent->GetChildAt(i), aUTF8Id, aId);
+  }
+
+  return result;
+}
+
+// Id attribute matching function used by nsXMLDocument and
+// nsHTMLDocument and others.
+/* static */
+nsIContent *
+nsContentUtils::MatchElementId(nsIContent *aContent, const nsAString& aId)
+{
+  return ::MatchElementId(aContent, NS_ConvertUTF16toUTF8(aId), aId);
+}
+
+// Convert the string from the given charset to Unicode.
+/* static */
+nsresult
+nsContentUtils::ConvertStringFromCharset(const nsACString& aCharset,
+                                         const nsACString& aInput,
+                                         nsAString& aOutput)
+{
+  if (aCharset.IsEmpty()) {
+    // Treat the string as UTF8
+    CopyUTF8toUTF16(aInput, aOutput);
+    return NS_OK;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsICharsetConverterManager> ccm =
+    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIUnicodeDecoder> decoder;
+  rv = ccm->GetUnicodeDecoder(PromiseFlatCString(aCharset).get(),
+                              getter_AddRefs(decoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsPromiseFlatCString flatInput(aInput);
+  PRInt32 srcLen = flatInput.Length();
+  PRInt32 dstLen;
+  rv = decoder->GetMaxLength(flatInput.get(), srcLen, &dstLen);
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRUnichar *ustr = (PRUnichar *)nsMemory::Alloc((dstLen + 1) *
+                                                 sizeof(PRUnichar));
+  if (!ustr)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = decoder->Convert(flatInput.get(), &srcLen, ustr, &dstLen);
+  if (NS_SUCCEEDED(rv)) {
+    ustr[dstLen] = 0;
+    aOutput.Assign(ustr, dstLen);
+  }
+
+  nsMemory::Free(ustr);
+  return rv;
+}
+
+static PRBool EqualExceptRef(nsIURL* aURL1, nsIURL* aURL2)
+{
+  nsCOMPtr<nsIURI> u1;
+  nsCOMPtr<nsIURI> u2;
+
+  nsresult rv = aURL1->Clone(getter_AddRefs(u1));
+  if (NS_SUCCEEDED(rv)) {
+    rv = aURL2->Clone(getter_AddRefs(u2));
+  }
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  nsCOMPtr<nsIURL> url1 = do_QueryInterface(u1);
+  nsCOMPtr<nsIURL> url2 = do_QueryInterface(u2);
+  if (!url1 || !url2) {
+    NS_WARNING("Cloning a URL produced a non-URL");
+    return PR_FALSE;
+  }
+  url1->SetRef(EmptyCString());
+  url2->SetRef(EmptyCString());
+
+  PRBool equal;
+  rv = url1->Equals(url2, &equal);
+  return NS_SUCCEEDED(rv) && equal;
+}
+
+/* static */
+nsIContent*
+nsContentUtils::GetReferencedElement(nsIURI* aURI, nsIContent *aFromContent)
+{
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+  if (!url)
+    return nsnull;
+
+  nsCAutoString refPart;
+  url->GetRef(refPart);
+  // Unescape %-escapes in the reference. The result will be in the
+  // origin charset of the URL, hopefully...
+  NS_UnescapeURL(refPart);
+
+  nsCAutoString charset;
+  url->GetOriginCharset(charset);
+  nsAutoString ref;
+  nsresult rv = ConvertStringFromCharset(charset, refPart, ref);
+  if (NS_FAILED(rv)) {
+    CopyUTF8toUTF16(refPart, ref);
+  }
+  if (ref.IsEmpty())
+    return nsnull;
+
+  // Get the current document
+  nsIDocument *doc = aFromContent->GetCurrentDoc();
+  if (!doc)
+    return nsnull;
+
+  // This will be the URI of the document the content belongs to
+  // (the URI of the XBL document if the content is anonymous
+  // XBL content)
+  nsCOMPtr<nsIURL> documentURL = do_QueryInterface(doc->GetDocumentURI());
+  nsIContent* bindingParent = aFromContent->GetBindingParent();
+  PRBool isXBL = PR_FALSE;
+  if (bindingParent) {
+    nsXBLBinding* binding = doc->BindingManager()->GetBinding(bindingParent);
+    if (binding) {
+      // XXX sXBL/XBL2 issue
+      // If this is an anonymous XBL element then the URI is
+      // relative to the binding document. A full fix requires a
+      // proper XBL2 implementation but for now URIs that are
+      // relative to the binding document should be resolve to the
+      // copy of the target element that has been inserted into the
+      // bound document.
+      documentURL = do_QueryInterface(binding->PrototypeBinding()->DocURI());
+      isXBL = PR_TRUE;
+    }
+  }
+  if (!documentURL)
+    return nsnull;
+
+  if (!EqualExceptRef(url, documentURL)) {
+    // Oops -- we don't support off-document references
+    return nsnull;
+  }
+
+  // Get the element
+  nsCOMPtr<nsIContent> content;
+  if (isXBL) {
+    nsCOMPtr<nsIDOMNodeList> anonymousChildren;
+    doc->BindingManager()->
+      GetAnonymousNodesFor(bindingParent, getter_AddRefs(anonymousChildren));
+
+    if (anonymousChildren) {
+      PRUint32 length;
+      anonymousChildren->GetLength(&length);
+      for (PRUint32 i = 0; i < length && !content; ++i) {
+        nsCOMPtr<nsIDOMNode> node;
+        anonymousChildren->Item(i, getter_AddRefs(node));
+        nsCOMPtr<nsIContent> c = do_QueryInterface(node);
+        if (c) {
+          content = MatchElementId(c, ref);
+        }
+      }
+    }
+  } else {
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+    NS_ASSERTION(domDoc, "Content doesn't reference a dom Document");
+
+    nsCOMPtr<nsIDOMElement> element;
+    rv = domDoc->GetElementById(ref, getter_AddRefs(element));
+    if (element) {
+      content = do_QueryInterface(element);
+    }
+  }
+
+  return content;
 }

@@ -728,42 +728,6 @@ nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   return CallQueryInterface(newDoc, aReturn);
 }
  
-// Id attribute matching function used by nsXMLDocument and
-// nsHTMLDocument.
-nsIContent *
-MatchElementId(nsIContent *aContent, const nsACString& aUTF8Id, const nsAString& aId)
-{
-  if (aContent->IsContentOfType(nsIContent::eHTML)) {
-    if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::id)) {
-      nsAutoString value;
-      aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
-
-      if (aId.Equals(value)) {
-        return aContent;
-      }
-    }
-  }
-  else if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
-    nsCOMPtr<nsIXMLContent> xmlContent = do_QueryInterface(aContent);    
-
-    if (xmlContent) {
-      nsIAtom* value = xmlContent->GetID();
-      if (value && value->EqualsUTF8(aUTF8Id)) {
-        return aContent;
-      }
-    }
-  }
-  
-  nsIContent *result = nsnull;
-  PRUint32 i, count = aContent->GetChildCount();
-
-  for (i = 0; i < count && result == nsnull; i++) {
-    result = MatchElementId(aContent->GetChildAt(i), aUTF8Id, aId);
-  }  
-
-  return result;
-}
-
 // nsIDOMDocument interface
 
 NS_IMETHODIMP
@@ -786,9 +750,8 @@ nsXMLDocument::GetElementById(const nsAString& aElementId,
   // XXX For now, we do a brute force search of the content tree.
   // We should come up with a more efficient solution.
   // Note that content is *not* refcounted here, so do *not* release it!
-  nsIContent *content = MatchElementId(mRootContent,
-                                       NS_ConvertUCS2toUTF8(aElementId),
-                                       aElementId);
+  nsIContent *content =
+    nsContentUtils::MatchElementId(mRootContent, aElementId);
 
   if (!content) {
     return NS_OK;

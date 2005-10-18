@@ -196,6 +196,31 @@ public:
                                                nsIDOMNode *aOther);
 
   /**
+   * Brute-force search of the element subtree rooted at aContent for
+   * an element with the given id.
+   */
+  static nsIContent* MatchElementId(nsIContent *aContent,
+                                    const nsAString& aId);
+
+  /**
+   * Given a URI containing an element reference (#whatever),
+   * resolve it to the target content element with the given ID.
+   *
+   * If aFromContent is anonymous XBL content then the URI
+   * must refer to its binding document and we will return
+   * a node in the same anonymous content subtree as aFromContent,
+   * if one exists with the correct ID.
+   *
+   * @param aFromContent the context of the reference;
+   *   currently we only support references to elements in the
+   *   same document as the context, so this must be non-null
+   *
+   * @return the element, or nsnull on failure
+   */
+  static nsIContent* GetReferencedElement(nsIURI* aURI,
+                                          nsIContent *aFromContent);
+
+  /**
    * Reverses the document position flags passed in.
    *
    * @param   aDocumentPosition   The document position flags to be reversed.
@@ -303,6 +328,15 @@ public:
                                             const nsAString& aSpec,
                                             nsIDocument* aDocument,
                                             nsIURI* aBaseURI);
+
+  /**
+   * Convert aInput (in charset aCharset) to UTF16 in aOutput.
+   *
+   * @param aCharset the name of the charset; if empty, we assume UTF8
+   */
+  static nsresult ConvertStringFromCharset(const nsACString& aCharset,
+                                           const nsACString& aInput,
+                                           nsAString& aOutput);
 
   /**
    * Determine whether aContent is in some way associated with aForm.  If the

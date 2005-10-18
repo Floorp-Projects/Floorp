@@ -113,14 +113,9 @@ NS_GetSVGMarkerFrame(nsSVGMarkerFrame **aResult, nsIURI *aURI, nsIContent *aCont
   }
   nsIPresShell *aPresShell = myDoc->GetShellAt(0);
 
-  // Get the URI Spec
-  nsCAutoString uriSpec;
-  aURI->GetSpec(uriSpec);
-
   // Find the referenced frame
   nsIFrame *marker;
-  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&marker, 
-                                                   uriSpec, aContent, aPresShell)))
+  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&marker, aURI, aContent, aPresShell)))
     return NS_ERROR_FAILURE;
 
   nsIAtom* frameType = marker->GetType();

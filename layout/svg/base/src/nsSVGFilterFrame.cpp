@@ -154,14 +154,9 @@ NS_GetSVGFilterFrame(nsISVGFilterFrame **aResult,
   }
   nsIPresShell *aPresShell = myDoc->GetShellAt(0);
 
-  // Get the URI Spec
-  nsCAutoString uriSpec;
-  aURI->GetSpec(uriSpec);
-
   // Find the referenced frame
   nsIFrame *filter;
-  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&filter,
-                                                   uriSpec, aContent, aPresShell)))
+  if (!NS_SUCCEEDED(nsSVGUtils::GetReferencedFrame(&filter, aURI, aContent, aPresShell)))
     return NS_ERROR_FAILURE;
 
   nsIAtom* frameType = filter->GetType();

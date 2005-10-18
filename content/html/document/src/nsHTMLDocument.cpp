@@ -155,11 +155,6 @@ static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 static PRBool
 IsNamedItem(nsIContent* aContent, nsIAtom *aTag, nsAString& aName);
 
-// MatchElementId is defined in nsXMLDocument.cpp
-nsIContent *
-MatchElementId(nsIContent *aContent, const nsACString& aUTF8Id, const nsAString& aId);
-
-
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 PRUint32       nsHTMLDocument::gWyciwygSessionCnt = 0;
@@ -2394,8 +2389,7 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
                        "getElementById(\"\") called, fix caller?");
 
       if (mRootContent && !aElementId.IsEmpty()) {
-        e = MatchElementId(mRootContent, NS_ConvertUCS2toUTF8(aElementId),
-                           aElementId);
+        e = nsContentUtils::MatchElementId(mRootContent, aElementId);
       }
     }
 

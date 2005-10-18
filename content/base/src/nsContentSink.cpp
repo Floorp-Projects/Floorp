@@ -67,7 +67,6 @@
 #include "nsICookieService.h"
 #include "nsIPrompt.h"
 #include "nsServiceManagerUtils.h"
-#include "nsICharsetConverterManager.h"
 #include "nsContentUtils.h"
 #include "nsParserUtils.h"
 #include "nsCRT.h"
@@ -737,53 +736,6 @@ nsContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
 }
 
 
-// Convert the ref from document charset to unicode.
-static nsresult
-CharsetConvRef(const nsACString& aDocCharset,
-               const nsCString& aRefInDocCharset,
-               nsString& aRefInUnicode)
-{
-  nsresult rv;
-
-  nsCOMPtr <nsIAtom> docCharsetAtom;
-  nsCOMPtr<nsICharsetConverterManager> ccm =
-    do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  nsCOMPtr<nsIUnicodeDecoder> decoder;
-  rv = ccm->GetUnicodeDecoder(PromiseFlatCString(aDocCharset).get(),
-                              getter_AddRefs(decoder));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRInt32 srcLen = aRefInDocCharset.Length();
-  PRInt32 dstLen;
-  rv = decoder->GetMaxLength(aRefInDocCharset.get(), srcLen, &dstLen);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  PRUnichar *ustr = (PRUnichar *)nsMemory::Alloc((dstLen + 1) *
-                                                 sizeof(PRUnichar));
-  if (!ustr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  rv = decoder->Convert(aRefInDocCharset.get(), &srcLen, ustr, &dstLen);
-  if (NS_SUCCEEDED(rv)) {
-    ustr[dstLen] = 0;
-    aRefInUnicode.Assign(ustr, dstLen);
-  }
-
-  nsMemory::Free(ustr);
-
-  return rv;
-}
-
 PRBool
 nsContentSink::ScrollToRef(PRBool aReallyScroll)
 {
@@ -826,7 +778,7 @@ nsContentSink::ScrollToRef(PRBool aReallyScroll)
       if (NS_FAILED(rv)) {
         const nsACString &docCharset = mDocument->GetDocumentCharacterSet();
 
-        rv = CharsetConvRef(docCharset, unescapedRef, ref);
+        rv = nsContentUtils::ConvertStringFromCharset(docCharset, unescapedRef, ref);
 
         if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
           rv = shell->GoToAnchor(ref, aReallyScroll);

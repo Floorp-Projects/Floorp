@@ -50,6 +50,7 @@ struct nsStyleSVGPaint;
 class nsISVGRendererRegion;
 class nsIDOMSVGLength;
 class nsIDOMSVGMatrix;
+class nsIURI;
 
 class nsSVGUtils
 {
@@ -70,9 +71,8 @@ public:
    * Gets an internal frame for an element referenced by a URI.  Note that this
    * only works for URIs that reference elements within the same document.
    */
-  static nsresult GetReferencedFrame(nsIFrame **aRefFrame, nsCAutoString& uriSpec, 
-                                     nsIContent *aContent, 
-                                     nsIPresShell *aPresShell);
+  static nsresult GetReferencedFrame(nsIFrame **aRefFrame, nsIURI* aURI,
+                                     nsIContent *aContent, nsIPresShell *aPresShell);
   /*
    * For SVGPaint attributes (fills, strokes), return the type of the Paint.  This
    * is an expanded type that includes whether this is a solid fill, a gradient, or
