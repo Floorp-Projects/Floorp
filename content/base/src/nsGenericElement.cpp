@@ -3166,6 +3166,64 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
   return PR_FALSE;
 }
 
+class nsFragmentObserver : public nsStubDocumentObserver {
+public:
+  NS_DECL_ISUPPORTS
+  
+  nsFragmentObserver(PRUint32 aOldChildCount, nsIContent* aParent,
+                     nsIDocument* aDocument) :
+    mOldChildCount(aOldChildCount), mParent(aParent), mDocument(aDocument)
+  {
+    NS_ASSERTION(mParent, "Must have parent!");
+  }
+
+  virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType) {
+    // Make sure to notify on whatever content has been appended thus far
+    Notify();
+  }
+
+  virtual void DocumentWillBeDestroyed(nsIDocument *aDocument) {
+    Disconnect();
+  }
+
+  void Connect() {
+    if (mDocument) {
+      mDocument->AddObserver(this);
+    }
+  }
+
+  void Disconnect() {
+    if (mDocument) {
+      mDocument->RemoveObserver(this);
+    }
+    mDocument = nsnull;
+  }
+
+  void Finish() {
+    // Notify on any remaining content
+    Notify();
+    Disconnect();
+  }
+
+  void Notify() {
+    if (mDocument && mDocument == mParent->GetCurrentDoc()) {
+      PRInt32 newCount = mParent->GetChildCount();
+      if (newCount > mOldChildCount) {
+        mOldChildCount = newCount;
+        mDocument->ContentAppended(mParent, mOldChildCount);
+      }
+    }
+  }
+
+private:
+  PRUint32 mOldChildCount;
+  nsCOMPtr<nsIContent> mParent;
+  nsIDocument* mDocument;
+};
+
+
+NS_IMPL_ISUPPORTS1(nsFragmentObserver, nsIDocumentObserver)
+
 /* static */
 nsresult
 nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
@@ -3267,13 +3325,19 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
     nsCOMPtr<nsIDocumentFragment> doc_fragment(do_QueryInterface(newContent));
     NS_ENSURE_TRUE(doc_fragment, NS_ERROR_UNEXPECTED);
 
-    doc_fragment->DisconnectChildren();
-
     PRUint32 count = newContent->GetChildCount();
-
     PRUint32 old_count = container.GetChildCount();
 
     PRBool do_notify = !!aRefChild || !aParent;
+
+    nsRefPtr<nsFragmentObserver> fragmentObs;
+    if (count && !do_notify) {
+      fragmentObs = new nsFragmentObserver(old_count, aParent, aDocument);
+      NS_ENSURE_TRUE(fragmentObs, NS_ERROR_OUT_OF_MEMORY);
+      fragmentObs->Connect();
+    }
+
+    doc_fragment->DisconnectChildren();
 
     // If do_notify is true, then we don't have to handle the notifications
     // ourselves...  Also, if count is 0 there will be no updates.  So we only
@@ -3314,13 +3378,16 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
       // them from the element or document they were inserted into.
 
       doc_fragment->ReconnectChildren();
+      if (fragmentObs) {
+        fragmentObs->Disconnect();
+      }
 
       return res;
     }
 
-    if (count && !do_notify && aDocument) {
-      NS_ASSERTION(aParent, "Must have parent here!");
-      aDocument->ContentAppended(aParent, old_count);
+    if (fragmentObs) {
+      NS_ASSERTION(count && !do_notify, "Unexpected state");
+      fragmentObs->Finish();
     }
 
     doc_fragment->DropChildReferences();
