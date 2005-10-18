@@ -2656,6 +2656,21 @@ enum BWCOpenDest {
   }
 }
 
+- (IBAction)reloadAllTabs:(id)sender
+{
+  unsigned int reloadFlags = NSLoadFlagsNone;
+  if (([[NSApp currentEvent] modifierFlags] & NSShiftKeyMask) != 0)
+    reloadFlags = NSLoadFlagsBypassCacheAndProxy;
+
+  NSEnumerator* tabsEnum = [[mTabBrowser tabViewItems] objectEnumerator];
+  BrowserTabViewItem* curTabItem;
+  while ((curTabItem = [tabsEnum nextObject]))
+  {
+    if ([curTabItem isKindOfClass:[BrowserTabViewItem class]])
+      [[[curTabItem view] getBrowserView] reload:reloadFlags];
+  }
+}
+
 - (IBAction)moveTabToNewWindow:(id)sender
 {
   if ([sender isMemberOfClass:[NSMenuItem class]])

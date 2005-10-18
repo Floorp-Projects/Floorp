@@ -253,6 +253,7 @@ typedef enum
 
 - (IBAction)closeSendersTab:(id)sender;
 - (IBAction)closeOtherTabs:(id)sender;
+- (IBAction)reloadAllTabs:(id)sender;
 - (IBAction)reloadSendersTab:(id)sender;
 - (IBAction)moveTabToNewWindow:(id)sender;
 

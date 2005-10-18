@@ -132,6 +132,7 @@
                 previousTab = id; 
                 printDocument = id; 
                 reload = id; 
+                reloadAllTabs = id; 
                 reloadSendersTab = id; 
                 reloadWithNewCharset = id; 
                 saveFrameAs = id; 
