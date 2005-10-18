@@ -291,46 +291,54 @@
       </property>
       <property name="href" onget="return this.getAttribute('href');"
                             onset="this.setAttribute('href', val); return val;" />
-    </implementation>
-    <handlers>
-      <handler event="click" phase="capturing" button="0">
-      <![CDATA[
-        if (this.disabled || event.getPreventDefault())
-          return;
-        var href = this.getAttribute('href');
+      <method name="open">    
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          if (this.disabled || aEvent.getPreventDefault())
+            return;
+          var href = this.getAttribute('href');
 
-        dump('calling text link with: ' + href + '\n');
-        if (href)
-        {
-          try {
-            var uri = Components.classes["@mozilla.org/network/io-service;1"]
-                                .getService(Components.interfaces.nsIIOService)
-                                .newURI(href, null, null);
+          dump('calling text link with: ' + href + '\n');
+          if (href)
+          {
+            try {
+              var uri = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(Components.interfaces.nsIIOService)
+                                  .newURI(href, null, null);
 
-            var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-                                        .getService(Components.interfaces.nsIExternalProtocolService);
-            // if the scheme is not an exposed protocol, then opening this link should 
-            // be deferred to the system's external protocol handler
-            if (!protocolSvc.isExposedProtocol(uri.scheme))
-            {
-              protocolSvc.loadUrl(uri);
-              return;
+              var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
+                                          .getService(Components.interfaces.nsIExternalProtocolService);
+              // if the scheme is not an exposed protocol, then opening this link should 
+              // be deferred to the system's external protocol handler
+              if (!protocolSvc.isExposedProtocol(uri.scheme))
+              {
+                protocolSvc.loadUrl(uri);
+                aEvent.preventDefault()
+                return;
+              }
             }
-          }
-          catch (ex) {}
+            catch (ex) {}
           
-          // otherwise, fall back to opening the anchor directly
-          var win = window;
-          if (window instanceof Components.interfaces.nsIDOMChromeWindow) {
-            while (win.opener && !win.opener.closed) 
-              win = win.opener;
+            // otherwise, fall back to opening the anchor directly
+            var win = window;
+            if (window instanceof Components.interfaces.nsIDOMChromeWindow) {
+              while (win.opener && !win.opener.closed) 
+                win = win.opener;
+            }
+            win.open(href);
+
+            aEvent.preventDefault();
           }
-          win.open(href);
-        }
-      ]]>
-      </handler>
-      <handler event="keypress" keycode="VK_ENTER" action="this.click()" />
-      <handler event="keypress" keycode="VK_RETURN" action="this.click()" />
+        ]]>
+        </body>
+      </method>
+    </implementation>
+
+    <handlers>
+      <handler event="click" phase="capturing" button="0" action="this.open(event)">
+      <handler event="keypress" keycode="VK_ENTER" action="this.open(event)" />
+      <handler event="keypress" keycode="VK_RETURN" action="this.open(event)" />
     </handlers>
   </binding>
 
