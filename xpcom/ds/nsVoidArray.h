@@ -54,7 +54,7 @@ class NS_COM nsVoidArray {
 public:
   nsVoidArray();
   nsVoidArray(PRInt32 aCount);  // initial count of aCount elements set to nsnull
-  virtual ~nsVoidArray();
+  ~nsVoidArray();
 
   nsVoidArray& operator=(const nsVoidArray& other);
 
@@ -116,12 +116,12 @@ public:
   PRBool RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount);
   PRBool RemoveElementAt(PRInt32 aIndex) { return RemoveElementsAt(aIndex,1); }
 
-  virtual void   Clear();
+  void   Clear();
 
-  virtual PRBool SizeTo(PRInt32 aMin);
+  PRBool SizeTo(PRInt32 aMin);
   // Subtly different - Compact() tries to be smart about whether we
-  // should reallocate the array; SizeTo() just does it.
-  virtual void Compact();
+  // should reallocate the array; SizeTo() always reallocates.
+  void Compact();
 
   void Sort(nsVoidArrayComparatorFunc aFunc, void* aData);
 
@@ -129,7 +129,7 @@ public:
   PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
 
 protected:
-  virtual PRBool GrowArrayBy(PRInt32 aGrowBy);
+  PRBool GrowArrayBy(PRInt32 aGrowBy);
 
   struct Impl {
     /**
@@ -160,14 +160,20 @@ protected:
 
   enum {
     kArrayOwnerMask = 1 << 31,
-    kArraySizeMask = ~kArrayOwnerMask
+    kArrayHasAutoBufferMask = 1 << 30,
+    kArraySizeMask = ~(kArrayOwnerMask | kArrayHasAutoBufferMask)
   };
+  enum { kAutoBufSize = 8 };
 
 
   // bit twiddlers
-  void SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount, PRBool owner);
+  void SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount, PRBool aOwner,
+                PRBool aHasAuto);
   inline PRBool IsArrayOwner() const {
-    return mImpl ? (PRBool(mImpl->mBits) & kArrayOwnerMask) : PR_FALSE;
+    return mImpl && (mImpl->mBits & kArrayOwnerMask);
+  }
+  inline PRBool HasAutoBuffer() const {
+    return mImpl && (mImpl->mBits & kArrayHasAutoBufferMask);
   }
 
 private:
@@ -180,14 +186,15 @@ private:
 class NS_COM nsAutoVoidArray : public nsVoidArray {
 public:
   nsAutoVoidArray();
-  void Clear();
 
-  virtual PRBool SizeTo(PRInt32 aMin);
-  virtual void Compact();
+  void ResetToAutoBuffer()
+  {
+    SetArray(NS_REINTERPRET_CAST(Impl*, mAutoBuf), kAutoBufSize, 0, PR_FALSE,
+             PR_TRUE);
+  }
   
 protected:
   // The internal storage
-  enum { kAutoBufSize = 8 };
   char mAutoBuf[sizeof(Impl) + (kAutoBufSize - 1) * sizeof(void*)];
 };
 
@@ -199,7 +206,7 @@ typedef int (* PR_CALLBACK nsStringArrayComparatorFunc)
 
 typedef PRBool (*nsStringArrayEnumFunc)(nsString& aElement, void *aData);
 
-class NS_COM nsStringArray: protected nsVoidArray
+class NS_COM nsStringArray: private nsVoidArray
 {
 public:
   nsStringArray(void);
@@ -258,7 +265,7 @@ class NS_COM nsCStringArray: protected nsVoidArray
 public:
   nsCStringArray(void);
   nsCStringArray(PRInt32 aCount); // Storage for aCount elements will be pre-allocated
-  virtual ~nsCStringArray(void);
+  ~nsCStringArray(void);
 
   nsCStringArray& operator=(const nsCStringArray& other);
 
@@ -334,10 +341,9 @@ private:
 // today, there should not be any virtualness to it to avoid the vtable
 // ptr overhead.
 
-class NS_COM nsSmallVoidArray
+class NS_COM nsSmallVoidArray : private nsVoidArray
 {
 public:
-  nsSmallVoidArray();
   ~nsSmallVoidArray();
 
   nsSmallVoidArray& operator=(nsSmallVoidArray& other);
@@ -346,12 +352,22 @@ public:
   PRInt32 GetArraySize() const;
 
   PRInt32 Count() const;
-  void* ElementAt(PRInt32 aIndex) const;
+  void* FastElementAt(PRInt32 aIndex) const;
+  // This both asserts and bounds-checks, because (1) we don't want
+  // people to write bad code, but (2) we don't want to change it to
+  // crashing for backwards compatibility.  See bug 96108.
+  void* ElementAt(PRInt32 aIndex) const
+  {
+    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "index out of range");
+    return SafeElementAt(aIndex);
+  }
   void* SafeElementAt(PRInt32 aIndex) const {
     // let compiler inline; it may be able to remove these checks
-    if (aIndex < 0 || aIndex >= Count())
+    if (PRUint32(aIndex) >= PRUint32(Count())) // handles aIndex < 0 too
+    {
       return nsnull;
-    return ElementAt(aIndex);
+    }
+    return FastElementAt(aIndex);
   }
   PRInt32 IndexOf(void* aPossibleElement) const;
   PRBool InsertElementAt(void* aElement, PRInt32 aIndex);
@@ -375,32 +391,39 @@ public:
   PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
 
 private:
-  typedef unsigned long PtrBits;
 
-  PRBool HasSingleChild() const
+  PRBool HasSingle() const
   {
-    return (mChildren && (PtrBits(mChildren) & 0x1));
+    return NS_REINTERPRET_CAST(PRWord, mImpl) & 0x1;
   }
-  PRBool HasVector() const
+  void* GetSingle() const
   {
-    return (mChildren && !(PtrBits(mChildren) & 0x1));
+    NS_ASSERTION(HasSingle(), "wrong type");
+    return NS_REINTERPRET_CAST(void*,
+                               NS_REINTERPRET_CAST(PRWord, mImpl) & ~0x1);
   }
-  void* GetSingleChild() const
+  void SetSingle(void *aChild)
   {
-    return (mChildren ? ((void*)(PtrBits(mChildren) & ~0x1)) : nsnull);
+    NS_ASSERTION(HasSingle() || !mImpl, "overwriting array");
+    mImpl = NS_REINTERPRET_CAST(Impl*,
+                                NS_REINTERPRET_CAST(PRWord, aChild) | 0x1);
   }
-  void SetSingleChild(void *aChild);
-  nsVoidArray* GetChildVector() const
+  PRBool IsEmpty() const
   {
-    return (nsVoidArray*)mChildren;
+    // Note that this isn't the same as Count()==0
+    return !mImpl;
   }
-  nsVoidArray* SwitchToVector();
-
-  // A tagged pointer that's either a pointer to a single child
-  // or a pointer to a vector of multiple children. This is a space
-  // optimization since a large number of containers have only a 
-  // single child.
-  void *mChildren;  
+  const nsVoidArray* AsArray() const
+  {
+    NS_ASSERTION(!HasSingle(), "This is a single");
+    return this;
+  }
+  nsVoidArray* AsArray()
+  {
+    NS_ASSERTION(!HasSingle(), "This is a single");
+    return this;
+  }
+  PRBool EnsureArray();
 };
 
 #endif /* nsVoidArray_h___ */
