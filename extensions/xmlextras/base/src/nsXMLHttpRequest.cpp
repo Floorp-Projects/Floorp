@@ -1611,6 +1611,10 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   if (!(mState & XML_HTTP_REQUEST_ASYNC)) {
     while (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
       modalEventQueue->ProcessPendingEvents();
+
+      // Be sure not to busy wait! (see bug 273578)
+      if (mState & XML_HTTP_REQUEST_SYNCLOOPING)
+        PR_Sleep(PR_MillisecondsToInterval(10));
     }
 
     mEventQService->PopThreadEventQueue(modalEventQueue);
