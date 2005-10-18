@@ -179,9 +179,6 @@ nsWebShell::~nsWebShell()
 {
    Destroy();
 
-  // Cancel any timers that were set for this loader.
-  CancelRefreshURITimers();
-
   ++mRefCnt; // following releases can cause this destructor to be called
              // recursively if the refcount is allowed to remain 0
 

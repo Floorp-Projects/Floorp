@@ -3555,7 +3555,11 @@ nsDocShell::Destroy()
 
     // required to break ref cycle
     mSecurityUI = nsnull;
-    
+
+    // Cancel any timers that were set for this docshell; this is needed
+    // to break the cycle between us and the timers.
+    CancelRefreshURITimers();
+
     return NS_OK;
 }
 
@@ -4437,25 +4441,32 @@ NS_IMETHODIMP nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
     return rv;
 }
 
-NS_IMETHODIMP
-nsDocShell::CancelRefreshURITimers()
+static void
+DoCancelRefreshURITimers(nsISupportsArray* aTimerList)
 {
-    if (!mRefreshURIList)
-        return NS_OK;
+    if (!aTimerList)
+        return;
 
     PRUint32 n=0;
-    mRefreshURIList->Count(&n);
+    aTimerList->Count(&n);
 
     while (n) {
-        nsCOMPtr<nsISupports> element;
-        mRefreshURIList->GetElementAt(--n, getter_AddRefs(element));
-        nsCOMPtr<nsITimer> timer(do_QueryInterface(element));
+        nsCOMPtr<nsITimer> timer(do_QueryElementAt(aTimerList, --n));
 
-        mRefreshURIList->RemoveElementAt(n);    // bye bye owning timer ref
+        aTimerList->RemoveElementAt(n);    // bye bye owning timer ref
 
         if (timer)
             timer->Cancel();        
     }
+}
+
+NS_IMETHODIMP
+nsDocShell::CancelRefreshURITimers()
+{
+    DoCancelRefreshURITimers(mRefreshURIList);
+    DoCancelRefreshURITimers(mSavedRefreshURIList);
+    mRefreshURIList = nsnull;
+    mSavedRefreshURIList = nsnull;
 
     return NS_OK;
 }
