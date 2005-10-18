@@ -2130,7 +2130,7 @@ void nsImapServerResponseParser::msg_obsolete()
 }
 void nsImapServerResponseParser::capability_data()
 {
-  fCapabilityFlag = fCapabilityFlag | kCapabilityDefined;
+  fCapabilityFlag = kCapabilityDefined;
   do {
     AdvanceToNextToken();
     // for now we only care about AUTH=LOGIN
