@@ -70,6 +70,8 @@ public:
   /**
    * Return the actual sizes of all possible scrollbars. Returns 0 for scrollbar
    * positions that don't have a scrollbar or where the scrollbar is not visible.
+   * Do not call this while this frame's descendants are being reflowed, it won't be
+   * accurate.
    */
   virtual nsMargin GetActualScrollbarSizes() const = 0;
 

@@ -265,6 +265,10 @@ struct nsHTMLReflowState {
     PRUint16 mBlinks:1;              // Keep track of text-decoration: blink
     PRUint16 mVisualBidiFormControl:1; // Keep track of descendants of form controls on Visual Bidi pages
     PRUint16 mHasClearance:1;        // Block has clearance
+    PRUint16 mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
+                                     // is assuming a horizontal scrollbar
+    PRUint16 mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
+                                     // is assuming a vertical scrollbar
   } mFlags;
 
 #ifdef IBMBIDI

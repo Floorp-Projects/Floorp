@@ -198,6 +198,7 @@ public:
                    PRBool aAssumeVScroll, PRBool aAssumeHScroll,
                    PRBool aForce);
   nsresult ReflowScrolledFrame(const ScrollReflowState& aState,
+                               PRBool aAssumeHScroll,
                                PRBool aAssumeVScroll,
                                nsHTMLReflowMetrics* aMetrics,
                                PRBool aFirstPass);
