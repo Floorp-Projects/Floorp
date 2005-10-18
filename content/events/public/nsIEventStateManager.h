@@ -152,33 +152,36 @@ public:
   NS_IMETHOD ShiftFocus(PRBool aDirection, nsIContent* aStart)=0;
 };
 
-#define NS_EVENT_STATE_ACTIVE       0x00000001 // mouse is down on content
-#define NS_EVENT_STATE_FOCUS        0x00000002 // content has focus
-#define NS_EVENT_STATE_HOVER        0x00000004 // mouse is hovering over content
-#define NS_EVENT_STATE_DRAGOVER     0x00000008 // drag  is hovering over content
-#define NS_EVENT_STATE_URLTARGET    0x00000010 // content is URL's target (ref)
+#define NS_EVENT_STATE_ACTIVE        0x00000001 // mouse is down on content
+#define NS_EVENT_STATE_FOCUS         0x00000002 // content has focus
+#define NS_EVENT_STATE_HOVER         0x00000004 // mouse is hovering over content
+#define NS_EVENT_STATE_DRAGOVER      0x00000008 // drag  is hovering over content
+#define NS_EVENT_STATE_URLTARGET     0x00000010 // content is URL's target (ref)
 
 // The following states are used only for ContentStatesChanged
 
-#define NS_EVENT_STATE_CHECKED      0x00000020 // CSS3-Selectors
-#define NS_EVENT_STATE_ENABLED      0x00000040 // CSS3-Selectors
-#define NS_EVENT_STATE_DISABLED     0x00000080 // CSS3-Selectors
-#define NS_EVENT_STATE_REQUIRED     0x00000100 // CSS3-UI
-#define NS_EVENT_STATE_OPTIONAL     0x00000200 // CSS3-UI
-#define NS_EVENT_STATE_VISITED      0x00000400 // CSS2
-#define NS_EVENT_STATE_VALID        0x00000800 // CSS3-UI
-#define NS_EVENT_STATE_INVALID      0x00001000 // CSS3-UI
-#define NS_EVENT_STATE_INRANGE      0x00002000 // CSS3-UI
-#define NS_EVENT_STATE_OUTOFRANGE   0x00004000 // CSS3-UI
+#define NS_EVENT_STATE_CHECKED       0x00000020 // CSS3-Selectors
+#define NS_EVENT_STATE_ENABLED       0x00000040 // CSS3-Selectors
+#define NS_EVENT_STATE_DISABLED      0x00000080 // CSS3-Selectors
+#define NS_EVENT_STATE_REQUIRED      0x00000100 // CSS3-UI
+#define NS_EVENT_STATE_OPTIONAL      0x00000200 // CSS3-UI
+#define NS_EVENT_STATE_VISITED       0x00000400 // CSS2
+#define NS_EVENT_STATE_VALID         0x00000800 // CSS3-UI
+#define NS_EVENT_STATE_INVALID       0x00001000 // CSS3-UI
+#define NS_EVENT_STATE_INRANGE       0x00002000 // CSS3-UI
+#define NS_EVENT_STATE_OUTOFRANGE    0x00004000 // CSS3-UI
+// these two are temporary (see bug 302188)
+#define NS_EVENT_STATE_MOZ_READONLY  0x00008000 // CSS3-UI
+#define NS_EVENT_STATE_MOZ_READWRITE 0x00010000 // CSS3-UI
 
 // Content could not be rendered (image/object/etc).
-#define NS_EVENT_STATE_BROKEN       0x00008000
+#define NS_EVENT_STATE_BROKEN        0x00020000
 // Content disabled by the user (images turned off, say)
-#define NS_EVENT_STATE_USERDISABLED 0x00010000
+#define NS_EVENT_STATE_USERDISABLED  0x00040000
 // Content suppressed by the user (ad blocking, etc)
-#define NS_EVENT_STATE_SUPPRESSED   0x00020000
+#define NS_EVENT_STATE_SUPPRESSED    0x00080000
 // Content is still loading such that there is nothing to show the
 // user (eg an image which hasn't started coming in yet)
-#define NS_EVENT_STATE_LOADING      0x00040000
+#define NS_EVENT_STATE_LOADING       0x00100000
 
 #endif // nsIEventStateManager_h__
