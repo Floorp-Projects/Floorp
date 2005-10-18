@@ -301,6 +301,8 @@
 
 // From stdio.h
 
+#define _MAX_FNAME     256
+
 #define BUFSIZ 512
 #define O_RDONLY       0x0000  // open for reading only
 #define O_WRONLY       0x0001  // open for writing only
