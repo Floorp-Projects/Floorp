@@ -118,8 +118,10 @@ nsDNSRecord::GetNextAddr(PRUint16 port, PRNetAddr *addr)
             return NS_ERROR_NOT_AVAILABLE;
     }
     else {
+        // This should never be null (but see bug 290190) :-(
+        NS_ENSURE_STATE(mHostRecord->addr);
+
         mIter = nsnull; // no iterations
-        NS_ASSERTION(mHostRecord->addr, "no addr");
         memcpy(addr, mHostRecord->addr, sizeof(PRNetAddr));
         // set given port
         port = PR_htons(port);
