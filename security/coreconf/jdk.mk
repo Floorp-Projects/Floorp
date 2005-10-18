@@ -250,15 +250,23 @@ ifeq ($(OS_ARCH), Linux)
         		JAVA_CPU = i386
         	endif
 	endif
+
+	# Sun JDK
 	JAVA_LIBDIR = jre/lib/$(JAVA_CPU)
+	# IBM JDK
+	IBM_JAVA_LIBDIR = jre/bin
 
 	JAVA_CLIBS =
 
         ifeq ($(JDK_VERSION), 1.4)
-		JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/server -ljvm
+		JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/server \
+			     -L$(JAVA_HOME)/$(IBM_JAVA_LIBDIR)/classic \
+			     -ljvm
 	endif
 
-	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR) -ljava
+	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR) \
+		     -L$(JAVA_HOME)/$(IBM_JAVA_LIBDIR) \
+		     -ljava
 	JAVA_LIBS += $(JAVA_CLIBS)
 
 	LDFLAGS += $(JAVA_LIBS)
