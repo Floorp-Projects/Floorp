@@ -39,106 +39,132 @@ import java.io.*;
 import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.util.Password;
 import org.mozilla.jss.util.Debug;
-import org.mozilla.jss.crypto.CryptoToken;
 import java.security.MessageDigest;
+import java.security.Provider;
+import java.security.Security;
 
 public class DigestTest {
-    public static boolean messageDigest(String alg, byte[] toBeDigested)
+
+    /**
+     * This is the name of the JSS crypto provider for use with
+     * MessageDigest.getInstance().
+     */
+    static final String MOZ_PROVIDER_NAME = "Mozilla-JSS";
+
+    /**
+     * List all the Digest Algorithms that JSS implenents.
+     */
+    static final String JSS_Digest_Algs[] = { "MD2", "MD5", "SHA-1",
+                                            "SHA-256", "SHA-384","SHA-512"};
+
+    public static boolean messageDigestCompare(String alg, byte[] toBeDigested)
     throws Exception {
-        byte[] nsdigestOut;
-        byte[] sundigestOut;
-        
-        java.security.MessageDigest nsdigest =
-                java.security.MessageDigest.getInstance(alg, "Mozilla-JSS");
-        java.security.MessageDigest sundigest =
-                java.security.MessageDigest.getInstance(alg, "SUN");
+        byte[] otherDigestOut;
+        byte[] mozillaDigestOut;
+        boolean bTested = false;
 
-        nsdigestOut = nsdigest.digest(toBeDigested);
-        sundigestOut = sundigest.digest(toBeDigested);
+        // get the digest for the Mozilla-JSS provider
+        java.security.MessageDigest mozillaDigest =
+                java.security.MessageDigest.getInstance(alg,
+                MOZ_PROVIDER_NAME);
+        mozillaDigestOut = mozillaDigest.digest(toBeDigested);
 
-        if( MessageDigest.isEqual(nsdigestOut, sundigestOut) ) {
-            System.out.println("Sun and Mozilla give same " + alg + " hash");
-        } else {
-            throw new Exception("ERROR: Sun and Mozilla give different "+
-                alg + " hashes");
-        }        
-        return true;
+        // loop through all the providers that support the algorithm
+        // compare the result to Mozilla-JSS's digest
+        Provider[] providers = Security.getProviders("MessageDigest." + alg);
+        String provider = null;
+
+        for (int i = 0; i < providers.length; ++i) {
+
+            provider = providers[i].getName();
+            if (provider.equals(MOZ_PROVIDER_NAME)) {
+                continue;
+            }
+
+            java.security.MessageDigest otherDigest =
+                    java.security.MessageDigest.getInstance(alg, provider);
+
+            otherDigestOut =
+                    otherDigest.digest(toBeDigested);
+
+            if( MessageDigest.isEqual(mozillaDigestOut, otherDigestOut) ) {
+                System.out.println(provider + " and " + MOZ_PROVIDER_NAME +
+                                   " give same " + alg + " message digests");
+                bTested = true;
+            } else {
+                throw new Exception("ERROR: " + provider + " and " +
+                                    MOZ_PROVIDER_NAME + " give different " +
+                                    alg + " message digests");
+            }
+        }
+
+        return bTested;
     }
-    
+
     public static boolean testJSSDigest(String alg, byte[] toBeDigested)
     throws Exception {
-        byte[] nsdigestOut;
-        byte[] sundigestOut;
-        
-        java.security.MessageDigest nsdigest =
-                java.security.MessageDigest.getInstance(alg, "Mozilla-JSS");
+        byte[] mozillaDigestOut;
+ 
+        java.security.MessageDigest mozillaDigest =
+                java.security.MessageDigest.getInstance(alg, MOZ_PROVIDER_NAME);
 
-        nsdigestOut = nsdigest.digest(toBeDigested);
+        mozillaDigestOut = mozillaDigest.digest(toBeDigested);
 
-        System.out.println("Provider " + nsdigest.getProvider());
-        System.out.println("algorithm " + nsdigest.getAlgorithm());
-        System.out.println("length of digest " + nsdigest.getDigestLength());
-        
-        if( nsdigestOut.length == nsdigest.getDigestLength() ) {
-            System.out.println("digest output size is " + nsdigestOut.length);
+        if( mozillaDigestOut.length == mozillaDigest.getDigestLength() ) {
+            System.out.println(mozillaDigest.getAlgorithm() + " " +
+                    " digest output size is " + mozillaDigestOut.length);
         } else {
             throw new Exception("ERROR: digest output size is "+
-            nsdigestOut.length + ", should be "+nsdigest.getDigestLength() );
+                    mozillaDigestOut.length + ", should be "+ 
+                    mozillaDigest.getDigestLength() );
         }
-        
+ 
         return true;
     }
-    
-    
+
 
     public static void main(String []argv) {
 
-      try {
+        try {
 
-        if( argv.length != 2 ) {
-	    System.out.println(
-		"Usage: java org.mozilla.jss.tests.DigestTest " + 
-		"<dbdir> <File>");
-            System.exit(1);
-        }
-        String dbdir = argv[0];
-        FileInputStream fis = new FileInputStream(argv[1]);
-        byte[] toBeDigested = new byte[ fis.available() ];
-        int read = fis.read( toBeDigested );
-        System.out.println(read + " bytes to be digested");
+            if( argv.length != 2 ) {
+                System.out.println(
+                        "Usage: java org.mozilla.jss.tests.DigestTest " +
+                        "<dbdir> <File>");
+                System.exit(1);
+            }
+            String dbdir = argv[0];
+            FileInputStream fis = new FileInputStream(argv[1]);
+            byte[] toBeDigested = new byte[ fis.available() ];
+            int read = fis.read( toBeDigested );
+            System.out.println(read + " bytes to be digested");
 
-        CryptoManager.initialize(dbdir);
+            CryptoManager.initialize(dbdir);
 
-        Debug.setLevel(Debug.OBNOXIOUS);
+            Debug.setLevel(Debug.OBNOXIOUS);
 
-        /////////////////////////////////////////////////////////////
-        // Install SUN provider
-        java.security.Security.addProvider(new sun.security.provider.Sun() );
+            /////////////////////////////////////////////////////////////
+            // Test all available algorithms
+            /////////////////////////////////////////////////////////////
+            String javaVersion = System.getProperty("java.version");
+            System.out.println("The Java version is: " + javaVersion);
 
-        /////////////////////////////////////////////////////////////
-        // Test all available algorithms
-        /////////////////////////////////////////////////////////////
-        String javaVersion = System.getProperty("java.version");
-        System.out.println("the java version is: " + javaVersion);
-        messageDigest("SHA1", toBeDigested);
-        if  ( javaVersion.indexOf("1.4") == -1) {
-            // JDK 1.5 or greater 
-            messageDigest("MD2", toBeDigested);
-        }  else {
-            System.out.println("JDK 1.4  does not implement MD2");
-            testJSSDigest("MD2", toBeDigested);
-        }
-        messageDigest("MD5", toBeDigested);
-        messageDigest("SHA-256", toBeDigested);
-        messageDigest("SHA-384", toBeDigested);
-        messageDigest("SHA-512", toBeDigested);
-            
-         //HMAC examples in org.mozilla.jss.tests.HMACTest
-      
-      } catch( Exception e ) {
+            for (int i = 0; i < JSS_Digest_Algs.length; i++) {
+                // compare Mozilla-JSS implemenation with all providers
+                // that also support the given algorithm
+                if (messageDigestCompare(JSS_Digest_Algs[i], toBeDigested) 
+                    == false) {
+                    // no provider to compare results with
+                    testJSSDigest(JSS_Digest_Algs[i], toBeDigested);
+                }
+            }
+
+            //HMAC examples in org.mozilla.jss.tests.HMACTest
+
+        } catch( Exception e ) {
             e.printStackTrace();
             System.exit(1);
-      }
-      System.exit(0);
+        }
+        System.exit(0);
     }
 }
