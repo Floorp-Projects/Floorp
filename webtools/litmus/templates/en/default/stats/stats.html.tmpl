@@ -73,7 +73,7 @@ Top Testers
 [% FOREACH curtester = toptesters %]
 <tr [% IF not (loop.count % 2) %]class="even"[% ELSE %]class="odd"[% END %]>
     <td align="center">[% loop.count %]</td>
-    <td align="center">[% IF curtester.email %]<a href="mailto:[% curtester.email.replace('\@','&#64;') %]">[% curtester.email.replace('\@','&#64;') %]</a>[% ELSE %]Anonymous[% END %]</td>
+    <td align="center">[% IF curtester.email %]<a href="mailto:[% curtester.email FILTER email %]">[% curtester.email FILTER email %]</a>[% ELSE %]Anonymous[% END %]</td>
     <td align="center">[% curtester.numtests %]</td>
 </tr>
 [% END %]

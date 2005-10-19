@@ -6,7 +6,7 @@
   var comments = new Array();
   [% subscript=0 %]
   [% FOREACH result=results %]
-  comments[[% subscript %]] = "[% IF result.comments %][% FOREACH comment=result.comments %][% IF loop.count>1 %]<hr/>[% END %]<p class='comment'><b>[% IF comment.user.email %]<a href=\"mailto:[% comment.user.email.replace('\@','&#64;') %]\">[% comment.user.email.replace('\@','&#64;') %]</a>[% ELSE %]Anonymous[% END %]<br/>[% comment.submission_time.strftime("%Y-%m-%d&nbsp;%T %Z") %]</b><br/>[% icon %]&nbsp;[% comment.comment.replace('"','\"').replace('\r\n','') %]<br/></p>[% END %][% END %]";
+  comments[[% subscript %]] = "[% IF result.comments %][% FOREACH comment=result.comments %][% IF loop.count>1 %]<hr/>[% END %]<p class='comment'><b>[% IF comment.user.email %]<a href=\"mailto:[% comment.user.email FILTER email %]\">[% comment.user.email FILTER email %]</a>[% ELSE %]Anonymous[% END %]<br/>[% comment.submission_time.strftime("%Y-%m-%d&nbsp;%T %Z") %]</b><br/>[% icon %]&nbsp;[% comment.comment FILTER js %]<br/></p>[% END %][% END %]";
   [% subscript=subscript+1 %]
   [% END %]
 </script>
@@ -39,7 +39,7 @@
   [% FOREACH result=results %]
 <tr class="[% result.result_status_class %]">
   <td colspan="2" align="center">[% result.created %]</td>
-  <td align="center">[% IF result.comments %]<a href="" onclick="return comment(event,[% subscript %],'');">[% icon %]</a>[% END %]<a href="single_result.cgi?id=[% result.testresult_id %]">[% result.testresult_id %]</a></td>
+  <td align="center"><a href="single_result.cgi?id=[% result.testresult_id %]">[% result.testresult_id %]</a><br/>[% IF result.comments %]<a href="" onclick="return comment(event,[% subscript %],'');">[% icon %]</a>[% END %]</td>
   <td align="left"><a href="show_test.cgi?id=[% result.test_id %]">[% result.test_id %]</a>: [% result.summary %]</td> 
   <td align="center">[% result.test_group_name %]</td>
   <td align="center">[% result.product_name %]</td>

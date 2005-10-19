@@ -87,12 +87,12 @@ pr, test_result_status_lookup trsl, test_groups tg, subgroups sg
     LIMIT $_num_results_default 
 });
 
-Litmus::DB::Testresult->set_sql(CommonFailures => qq{ 
-    SELECT COUNT(tr.test_id) AS num_failures, tr.test_id, t.summary, MAX(tr.submission_time) AS most_recent, MAX(tr.testresult_id) AS max_id 
+Litmus::DB::Testresult->set_sql(CommonResults => qq{ 
+    SELECT COUNT(tr.test_id) AS num_results, tr.test_id, t.summary, MAX(tr.submission_time) AS most_recent, MAX(tr.testresult_id) AS max_id 
     FROM test_results tr, tests t, test_result_status_lookup trsl 
-    WHERE tr.test_id=t.test_id AND tr.result_id=trsl.result_status_id AND trsl.class_name='fail' 
+    WHERE tr.test_id=t.test_id AND tr.result_id=trsl.result_status_id AND trsl.class_name=? 
     GROUP BY tr.test_id 
-    ORDER BY num_failures DESC, tr.testresult_id DESC 
+    ORDER BY num_results DESC, tr.testresult_id DESC 
     LIMIT 15
     });
 
@@ -368,14 +368,18 @@ sub _processSearchField(\%) {
 
 #########################################################################
 #########################################################################
-sub getCommonFailures($$) {
-    my ($self,$limit_value) = @_;
+sub getCommonResults($$) {
+    my ($self,$status,$limit_value) = @_;
+    
+    if (!$status) {
+      return undef;
+    }
     
     if (!$limit_value) {
         $limit_value = $_num_results_default;
     }
 
-    my @rows = $self->search_CommonFailures();
+    my @rows = $self->search_CommonResults($status);
     return \@rows;    
 }
 
