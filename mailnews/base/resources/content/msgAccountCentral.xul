@@ -39,12 +39,13 @@
 <?xml-stylesheet href="chrome://messenger/skin/accountCentral.css" type="text/css"?>
 
 <!DOCTYPE page [
- <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
- %brandDTD;
- <!ENTITY % acctCentralDTD SYSTEM "chrome://messenger/locale/msgAccountCentral.dtd">
- %acctCentralDTD;
+   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+   %brandDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+   <!ENTITY % acctCentralDTD SYSTEM "chrome://messenger/locale/msgAccountCentral.dtd">
+   %acctCentralDTD;
 ]>
-
 
 <page
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -83,13 +84,13 @@
       <separator id="EmailHeader.separator" class="thin"/>
       <row id="ReadMessages" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&readMsgsLink.label;" onclick="ReadMessages();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&readMsgsLink.label;" chromedir="&locale.dir;" onclick="ReadMessages();"/> 
         </hbox>
       </row>
       <separator id="ReadMessages.separator" class="thin"/>
       <row id="ComposeMessage" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&composeMsgLink.label;" onclick="ComposeAMessage();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&composeMsgLink.label;" chromedir="&locale.dir;" onclick="ComposeAMessage();"/> 
         </hbox> 
       </row>
       <separator id="ComposeMessage.separator" class="thin"/>
@@ -108,7 +109,7 @@
       <separator id="NewsHeader.separator" class="thin"/>
       <row id="SubscribeNewsgroups" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&subscribeNewsLink.label;" onclick="Subscribe();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&subscribeNewsLink.label;" chromedir="&locale.dir;" onclick="Subscribe();"/> 
         </hbox> 
       </row>
       <separator id="SubscribeNewsgroups.separator" class="thin"/>
@@ -127,7 +128,7 @@
       <separator id="rssHeader.separator" class="thin"/>
       <row id="SubscribeRSS" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&subscibeRSS.label;" onclick="Subscribe();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&subscibeRSS.label;" chromedir="&locale.dir;" onclick="Subscribe();"/> 
         </hbox> 
       </row>
       <separator id="SubscribeRSS.separator" class="thin"/>
@@ -144,13 +145,13 @@
       <separator id="AccountsHeader.separator" class="thin"/>
       <row id="AccountSettings" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&settingsLink.label;" onclick="ViewSettings(null);"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&settingsLink.label;" chromedir="&locale.dir;" onclick="ViewSettings(null);"/> 
         </hbox> 
       </row>
       <separator id="AccountSettings.separator" class="thin"/>
       <row id="CreateAccount" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&newAcctLink.label;" onclick="CreateNewAccount();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&newAcctLink.label;" chromedir="&locale.dir;" onclick="CreateNewAccount();"/> 
         </hbox> 
       </row>
       <separator id="CreateAccount.separator" class="thin"/>
@@ -167,25 +168,25 @@
       <separator id="AdvancedFeaturesHeader.separator" class="thin"/>
       <row id="SearchMessages" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&searchMsgsLink.label;" onclick="SearchMessages();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&searchMsgsLink.label;" chromedir="&locale.dir;" onclick="SearchMessages();"/> 
         </hbox> 
       </row>
       <separator id="SearchMessages.separator" class="thin"/>
       <row id="CreateFilters" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&filtersLink.label;" onclick="CreateMsgFilters();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&filtersLink.label;" chromedir="&locale.dir;" onclick="CreateMsgFilters();"/> 
         </hbox> 
       </row>
       <separator id="SubscribeImapFolders.separator" class="thin"/>
       <row id="SubscribeImapFolders" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&subscribeImapFolders.label;" onclick="Subscribe();"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&subscribeImapFolders.label;" chromedir="&locale.dir;" onclick="Subscribe();"/> 
         </hbox> 
       </row>
       <separator id="CreateFilters.separator" class="thin"/>
       <row id="OfflineSettings" class="acctCentralRow">
         <hbox> 
-          <label class="acctCentralText acctCentralLinkText" value="&offlineLink.label;" onclick="ViewSettings('am-offline.xul');"/> 
+          <label class="acctCentralText acctCentralLinkText" value="&offlineLink.label;" chromedir="&locale.dir;" onclick="ViewSettings('am-offline.xul');"/> 
         </hbox> 
       </row>
       <separator id="OfflineSettings.separator" class="thin"/>
