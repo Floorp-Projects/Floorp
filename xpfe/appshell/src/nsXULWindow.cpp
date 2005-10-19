@@ -739,9 +739,12 @@ NS_IMETHODIMP nsXULWindow::GetVisibility(PRBool* aVisibility)
 {
   NS_ENSURE_ARG_POINTER(aVisibility);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+  // Always claim to be visible for now. See bug
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=306245.
+
+  *aVisibility = PR_TRUE;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)

@@ -3757,8 +3757,16 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
         treeItem->GetParent(getter_AddRefs(parentItem));
     }
 
-    *aVisibility = PR_TRUE;
-    return NS_OK;
+    nsCOMPtr<nsIBaseWindow>
+        treeOwnerAsWin(do_QueryInterface(mTreeOwner));
+    if (!treeOwnerAsWin) {
+        *aVisibility = PR_TRUE;
+        return NS_OK;
+    }
+
+    // Check with the tree owner as well to give embedders a chance to
+    // expose visibility as well.
+    return treeOwnerAsWin->GetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP
