@@ -1,3 +1,8 @@
+2005-10-18  Mike Taylor <bear@code-bear.com>
+  * src/lib/TinderDB/VC_SVN.pm
+    New TinderDB code to gather SVN information for a given
+    date/time for display in the "blame" column
+  
 2005-10-11  Mike Taylor <bear@code-bear.com>
   * configure
     applied patch to remove the spurious output from the xarg
