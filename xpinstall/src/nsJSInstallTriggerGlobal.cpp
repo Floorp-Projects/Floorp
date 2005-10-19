@@ -438,8 +438,7 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
       globalObject = scriptContext->GetGlobalObject();
 
   PRBool enabled = PR_FALSE;
-  PRBool useWhitelist = ( chromeType != CHROME_SKIN );
-  nativeThis->UpdateEnabled(globalObject, useWhitelist, &enabled);
+  nativeThis->UpdateEnabled(globalObject, XPI_WHITELIST, &enabled);
   if (!enabled || !globalObject)
   {
     nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
