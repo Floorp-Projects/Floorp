@@ -370,42 +370,56 @@ calICSCalendar.prototype = {
         // We should not accidently overwrite third party files.
         // XXX Fix that
         try {
-            var calComp = this.mICSService.parseICS(str);
+            var rootComp = this.mICSService.parseICS(str);
 
-            // Get unknown properties
-            var prop = calComp.getFirstProperty("ANY");
-            while (prop) {
-                if (!this.calendarPromotedProps[prop.propertyName]) {
-                    this.unmappedProperties.push(prop);
-                    dump(prop.propertyName+"\n");
-                }
-                prop = calComp.getNextProperty("ANY");
+            var calComp;
+            // libical returns the vcalendar component if there is just
+            // one vcalendar. If there are multiple vcalendars, it returns
+            // an xroot component, with those vcalendar childs. We need to
+            // handle both.
+            if (rootComp.componentType == 'VCALENDAR') {
+                calComp = rootComp;
+            } else {
+                calComp = rootComp.getFirstSubcomponent('VCALENDAR');
             }
 
-            var subComp = calComp.getFirstSubcomponent("ANY");
-            while (subComp) {
-                switch (subComp.componentType) {
-                case "VEVENT":
-                    var event = Components.classes["@mozilla.org/calendar/event;1"]
-                                          .createInstance(Components.interfaces.calIEvent);
-                    event.icalComponent = subComp;
-                    this.mMemoryCalendar.addItem(event, null);
-                    break;
-                case "VTODO":
-                    // XXX Last time i tried, vtodo didn't work. Sadly no time to
-                    // debug now.
-                    var todo = Components.classes["@mozilla.org/calendar/todo;1"]
-                                         .createInstance(Components.interfaces.calITodo);
-                    todo.icalComponent = subComp;
-                    this.mMemoryCalendar.addItem(todo, null);
-                    break;
-                default:
-                    this.unmappedComponents.push(subComp);
-                    dump(subComp.componentType+"\n");
+            while (calComp) {
+                // Get unknown properties
+                var prop = calComp.getFirstProperty("ANY");
+                while (prop) {
+                    if (!this.calendarPromotedProps[prop.propertyName]) {
+                        this.unmappedProperties.push(prop);
+                        dump(prop.propertyName+"\n");
+                    }
+                    prop = calComp.getNextProperty("ANY");
                 }
-                subComp = calComp.getNextSubcomponent("ANY");
+
+                var subComp = calComp.getFirstSubcomponent("ANY");
+                while (subComp) {
+                    switch (subComp.componentType) {
+                    case "VEVENT":
+                        var event = Components.classes["@mozilla.org/calendar/event;1"]
+                                              .createInstance(Components.interfaces.calIEvent);
+                        event.icalComponent = subComp;
+                        this.mMemoryCalendar.addItem(event, null);
+                        break;
+                    case "VTODO":
+                        // XXX Last time i tried, vtodo didn't work. Sadly no time to
+                        // debug now.
+                        var todo = Components.classes["@mozilla.org/calendar/todo;1"]
+                                             .createInstance(Components.interfaces.calITodo);
+                        todo.icalComponent = subComp;
+                        this.mMemoryCalendar.addItem(todo, null);
+                        break;
+                    default:
+                        this.unmappedComponents.push(subComp);
+                        dump(subComp.componentType+"\n");
+                    }
+                    subComp = calComp.getNextSubcomponent("ANY");
+                }
+                calComp = rootComp.getNextSubcomponent('VCALENDAR');
             }
-            
+
         } catch(e) { dump(e+"\n");}
 
         this.mObserver.onEndBatch();
