@@ -30,8 +30,8 @@
 use strict;
 $|++;
 
-use Time::HiRes qw( gettimeofday tv_interval );
-my $t0 = [gettimeofday];
+#use Time::HiRes qw( gettimeofday tv_interval );
+#my $t0 = [gettimeofday];
 
 use Litmus;
 use Litmus::Auth;
@@ -67,7 +67,7 @@ my $vars = {
 
 # Only include results if we have them.
 if ($results and scalar @$results > 0) {
-    $vars->{results} = $results;
+  $vars->{results} = $results;
 }
 
 my $cookie =  Litmus::Auth::getCookie();
@@ -75,10 +75,10 @@ $vars->{"defaultemail"} = $cookie;
 $vars->{"show_admin"} = Litmus::Auth::istrusted($cookie);
 
 Litmus->template()->process("index.tmpl", $vars) ||
-    internalError(Litmus->template()->error());
+  internalError(Litmus->template()->error());
 
-my $elapsed = tv_interval ( $t0 );
-printf  "<div id='pageload'>Page took %f seconds to load.</div>", $elapsed;
+#my $elapsed = tv_interval ( $t0 );
+#printf  "<div id='pageload'>Page took %f seconds to load.</div>", $elapsed;
 
 exit 0;
 

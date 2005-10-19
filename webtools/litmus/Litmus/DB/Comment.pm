@@ -35,6 +35,8 @@ package Litmus::DB::Comment;
 use strict;
 use base 'Litmus::DBI';
 
+use Time::Piece;
+
 Litmus::DB::Comment->table('test_result_comments');
 
 Litmus::DB::Comment->columns(All => qw/comment_id test_result_id last_updated submission_time user_id comment/);
@@ -46,6 +48,7 @@ Litmus::DB::Comment->column_alias("user_id", "user");
 Litmus::DB::Comment->has_a(test_result_id => "Litmus::DB::Testresult");
 Litmus::DB::Comment->has_a(user => "Litmus::DB::User");
 
-Litmus::DB::Testresult->autoinflate(dates => 'Time::Piece');
+Litmus::DB::Comment->autoinflate(dates => 'Time::Piece');
 
 1;
+

@@ -1,32 +1,56 @@
+[% icon="<img class=icon src='images/star1.gif' title='This result has comments' alt='*'>" %]
+
+[% IF results %]
+<script src="js/Comments.js"></script>
+<script>
+  var comments = new Array();
+  [% subscript=0 %]
+  [% FOREACH result=results %]
+  comments[[% subscript %]] = "[% IF result.comments %][% FOREACH comment=result.comments %][% IF loop.count>1 %]<hr/>[% END %]<p class='comment'><b>[% IF comment.user.email %]<a href=\"mailto:[% comment.user.email.replace('\@','&#64;') %]\">[% comment.user.email.replace('\@','&#64;') %]</a>[% ELSE %]Anonymous[% END %]<br/>[% comment.submission_time.strftime("%Y-%m-%d&nbsp;%T %Z") %]</b><br/>[% icon %]&nbsp;[% comment.comment %]<br/></p>[% END %][% END %]";
+  [% subscript=subscript+1 %]
+  [% END %]
+</script>
+[% END %]
+
+[% IF show_instructions==1 %]
+<div class="instructions"><strong>Navigation:</strong>
+<ul class="instructions">
+<li>results marked with the star icon ([% icon %]) have comments associated with them. Clicking on the star will display the comments in-page;</li>
+<li>click on the number in the "result id#" column to see a full listing of the test result, including comments;</li>
+<li>click on the number at the start of the "testcase id#: summary" column to see a more detailed description of that particular testcase;</li>
+</ul>
+</div>
+[% END %]
+
 <table class="test-results">
   <tr>
-    <td colspan="2" class="header">Date</td>
+    <td colspan="2" class="header">Submission Date</td>
+    <td class="header">Result ID#</td>	
+    <td class="header">Testcase ID#: Summary</td>
+    <td class="header">Testgroup</td>
     <td class="header">Product</td>
     <td class="header">Platform</td>
-    <td class="header">Testgroup</td>
-    <td class="header">Testcase ID#</td>
-    <td class="header">Summary</td>
-    <td class="header">Status</td>
     <td class="header">Branch</td>
   </tr>
 <tr>
 
 [% IF results AND results.size > 0 %]
+  [% subscript=0 %]
   [% FOREACH result=results %]
 <tr class="[% result.result_status_class %]">
   <td colspan="2" align="center">[% result.created %]</td>
+  <td align="center">[% IF result.comments %]<a href="" onclick="return comment(event,[% subscript %],'');">[% icon %]</a>[% END %]<a href="single_result.cgi?id=[% result.testresult_id %]">[% result.testresult_id %]</a></td>
+  <td align="left"><a href="show_test.cgi?id=[% result.test_id %]">[% result.test_id %]</a>: [% result.summary %]</td> 
+  <td align="center">[% result.test_group_name %]</td>
   <td align="center">[% result.product_name %]</td>
   <td align="center">[% result.platform_name %]</td>
-  <td align="center">[% result.test_group_name %]</td>
-  <td align="center"><a href="show_test.cgi?id=[% result.test_id %]">[% result.test_id %]</a></td>
-  <td>[% result.summary %]</td>
-  <td align="center"><a href="single_result.cgi?id=[% result.testresult_id %]">[% result.result_status_class %]</a></td>
   <td align="center">[% result.branch_name %]</td>
 </tr>
+  [% subscript=subscript+1 %]
   [% END %]
 [% ELSE %]
   <tr>
-    <td class="no-results" colspan="9">No test results match the search criteria.</td>
+    <td class="no-results" colspan="8">No test results match the search criteria.</td>
   </tr>
 [% END %]
 
@@ -36,8 +60,3 @@
 
 </table>
 </form>
-
-
-
-
-
