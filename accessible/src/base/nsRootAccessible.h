@@ -113,6 +113,7 @@ class nsRootAccessible : public nsDocAccessibleWrap,
                                   nsIDOMNode *focusNode);
     void FireAccessibleFocusEvent(nsIAccessible *focusAccessible,
                                   nsIDOMNode *focusNode,
+                                  nsIDOMEvent *aFocusEvent,
                                   PRBool aForceEvent = PR_FALSE);
     void FireCurrentFocusEvent();
     void GetChromeEventHandler(nsIDOMEventTarget **aChromeTarget);

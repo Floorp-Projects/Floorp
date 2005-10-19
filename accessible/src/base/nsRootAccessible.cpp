@@ -427,6 +427,7 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIAccessible *aAccessible, nsIDOMN
 
 void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
                                                 nsIDOMNode *aNode,
+                                                nsIDOMEvent *aFocusEvent,
                                                 PRBool aForceEvent)
 {
   NS_ASSERTION(aAccessible, "Attempted to fire focus event for no accessible");
@@ -468,9 +469,18 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
 
   privateAccessible->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS,
                                       aAccessible, nsnull);
-
-  if (mCaretAccessible)
-    mCaretAccessible->AttachNewSelectionListener(aNode);
+  if (mCaretAccessible) {
+    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(aFocusEvent));
+    if (nsevent) {
+      // Use the originally focused node where the selection lives.
+      // For example, use the anonymous HTML:input instead of the containing
+      // XUL:textbox.
+      nsCOMPtr<nsIDOMEventTarget> domEventTarget;
+      nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
+      nsCOMPtr<nsIDOMNode> realFocusedNode = do_QueryInterface(domEventTarget);
+      mCaretAccessible->AttachNewSelectionListener(realFocusedNode);
+    }
+  }
 }
 
 void nsRootAccessible::FireCurrentFocusEvent()
@@ -536,11 +546,11 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   targetNode->GetLocalName(localName);
 #ifdef DEBUG_aleventhal
   // Very useful for debugging, please leave this here.
-  if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
+  if (eventType.LowerCaseEqualsLiteral("popupshown")) {
     printf("\ndebugging dommenuitemactive events for %s", NS_ConvertUCS2toUTF8(localName).get());
   }
-  if (localName.EqualsIgnoreCase("tree")) {
-    printf("\ndebugging events in tree, event is %s", NS_ConvertUCS2toUTF8(eventType).get());
+  if (localName.EqualsIgnoreCase("popup")) {
+    printf("\ndebugging events in popup, event is %s", NS_ConvertUCS2toUTF8(eventType).get());
   }
   if (localName.EqualsIgnoreCase("select")) {
     printf("\ndebugging events in select, event is %s", NS_ConvertUCS2toUTF8(eventType).get());
@@ -630,10 +640,10 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     }
   else if (treeItemAccessible) {
     if (eventType.LowerCaseEqualsLiteral("focus")) {
-      FireAccessibleFocusEvent(accessible, targetNode); // Tree has focus
+      FireAccessibleFocusEvent(accessible, targetNode, aEvent); // Tree has focus
     }
     else if (eventType.LowerCaseEqualsLiteral("dommenuitemactive")) {
-      FireAccessibleFocusEvent(treeItemAccessible, targetNode, PR_TRUE);
+      FireAccessibleFocusEvent(treeItemAccessible, targetNode, aEvent, PR_TRUE);
     }
     else if (eventType.LowerCaseEqualsLiteral("namechange")) {
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE, 
@@ -680,7 +690,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
 
     // Only fire focus event for DOMMenuItemActive is not inside collapsed popup
     if (0 == (containerState & STATE_COLLAPSED)) {
-      FireAccessibleFocusEvent(accessible, targetNode, PR_TRUE);
+      FireAccessibleFocusEvent(accessible, targetNode, aEvent, PR_TRUE);
     }
   }
   else if (eventType.LowerCaseEqualsLiteral("focus")) {
@@ -714,7 +724,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       NS_IF_ADDREF(gLastFocusedNode);
       return NS_OK;
     }
-    FireAccessibleFocusEvent(accessible, targetNode);
+    FireAccessibleFocusEvent(accessible, targetNode, aEvent);
   }
   else if (eventType.LowerCaseEqualsLiteral("namechange")) {
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_NAME_CHANGE,
@@ -746,7 +756,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
                                                        getter_AddRefs(accessible)))) {
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
                                 accessible, nsnull);
-      FireAccessibleFocusEvent(accessible, targetNode);
+      FireAccessibleFocusEvent(accessible, targetNode, aEvent);
     }
     else { // for the html radio buttons -- apparently the focus code just works. :-)
       privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, 
@@ -810,7 +820,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       }
     }
     else
-      FireAccessibleFocusEvent(accessible, targetNode);
+      FireAccessibleFocusEvent(accessible, targetNode, aEvent);
   }
   else if (eventType.LowerCaseEqualsLiteral("select")) {
     if (treeItemAccessible) { // it's a XUL <tree>
@@ -839,7 +849,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     stateData.state = STATE_CHECKED;
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);
     if (eventType.LowerCaseEqualsLiteral("radiostatechange")) {
-      FireAccessibleFocusEvent(accessible, targetNode);
+      FireAccessibleFocusEvent(accessible, targetNode, aEvent);
     }
   }
   else if (eventType.LowerCaseEqualsLiteral("openstatechange")) { // collapsed/expanded changed
@@ -865,7 +875,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     FireCurrentFocusEvent();
   }
   else if (eventType.LowerCaseEqualsLiteral("popupshown")) {
-    FireAccessibleFocusEvent(accessible, targetNode);
+    FireAccessibleFocusEvent(accessible, targetNode, aEvent);
   }
   else if (eventType.EqualsLiteral("DOMMenuInactive")) {
     //FireAccessibleFocusEvent(accessible, targetNode);  // Not yet used in ATK
