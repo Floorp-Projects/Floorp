@@ -1,4 +1,0 @@
-overlay	chrome://browser/content/preferences/preferences.xul	chrome://xforms/content/xforms-prefs.xul
-
-content	xforms	jar:chrome/xforms.jar!/content/xforms/
-locale	xforms	en-US	jar:chrome/xforms.jar!/locale/en-US/xforms/

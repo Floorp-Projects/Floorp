@@ -22,6 +22,7 @@
 #
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
+#  Allan Beaufour <allan@beaufour.dk>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,6 +45,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Module setup
 MODULE		= xforms
 LIBRARY_NAME	= xforms
 IS_COMPONENT	= 1
@@ -52,6 +54,29 @@ IS_COMPONENT	= 1
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
 
+# Also build schema-validation
+DIRS			= ../schema-validation \
+		  	  $(NULL)
+# XPI settings
+# XPI_NAME is exported to include schema-validation in xforms package
+export XPI_NAME	       = xforms
+XPI_PKGNAME            = xforms
+USE_EXTENSION_MANIFEST = 1
+NO_JAR_AUTO_REG        = 1
+INSTALL_EXTENSION_ID   = {cf2812dc-6a7c-4402-b639-4d277dac4c36}
+PACKAGE_VERSION        = 0.2
+
+XULAPP_DEFINES = \
+	-DFIREFOX_VERSION=$(FIREFOX_VERSION) \
+	-DMOZILLA_VERSION_U=$(MOZILLA_VERSION) \
+	-DPACKAGE_VERSION=$(PACKAGE_VERSION) \
+	-DID=${INSTALL_EXTENSION_ID} \
+	$(NULL)
+
+# Include these in the XPI
+DIST_FILES = install.rdf install.js
+
+# XForms depends
 REQUIRES	= \
 		xpcom \
 		string \
@@ -74,6 +99,7 @@ REQUIRES	= \
 		htmlparser \
 		$(NULL)
 
+# XForms IDLs
 XPIDLSRCS	= \
 		nsIXFormsModelElement.idl \
 		nsIInstanceElementPrivate.idl \
@@ -99,6 +125,7 @@ XPIDLSRCS	= \
 		nsIXFormsItemSetUIElement.idl \
 		$(NULL)
 
+# XForms source files
 CPPSRCS		= \
 		nsXFormsElementFactory.cpp \
 		nsXFormsUtils.cpp \
@@ -153,6 +180,16 @@ CPPSRCS		= \
 		nsXFormsDelegateStub.cpp \
 		$(NULL)
 
+# Standard Mozilla make rules
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
+
+# Temporary files that will be deleted on f.x. make clean
+GARBAGE		+= install.js install.template
+
+# Create install.js script for suite
+install.js:	install.jst
+		@echo Creating install.js...
+		rm -f install.js
+		$(PERL) $(topsrcdir)/toolkit/mozapps/installer/makejs.pl $(srcdir)/install.jst $(PACKAGE_VERSION) $(FINAL_TARGET)

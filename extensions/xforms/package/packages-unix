@@ -1,7 +1,0 @@
-[xforms]
-chrome/xforms.jar
-components/libschemavalidation.so
-components/schemavalidation.xpt
-components/nsSchemaValidatorRegexp.js
-components/libxforms.so
-components/xforms.xpt
