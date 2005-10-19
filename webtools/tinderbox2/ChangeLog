@@ -1,4 +1,10 @@
 2005-10-18  Mike Taylor <bear@code-bear.com>
+  * ReadMe, Install
+    Updated to mention VC_SVN
+
+  * src/lib/TinderDB.pm
+    Updated to include references to VC_SVN
+
   * src/lib/TinderDB/VC_SVN.pm
     New TinderDB code to gather SVN information for a given
     date/time for display in the "blame" column

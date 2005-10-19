@@ -239,7 +239,9 @@ the other files depending on how you wish to have Tinderbox configured.
 
     For SVN systems - make sure that the when Tinderbox2 runs it has access
     to the "svn log" command and that command can access the repository as
-    defined in TreeData.pm
+    defined in TreeData.pm.  If the svn repository is local to the Tinderbox2
+    server then you can specify the repository using file:/// - if it is
+    remote, then use either http:// or svn+ssh:// as required.
 
 10. Configure the build machines to mail their build logs (with Tinderbox2
     variables on the top) to the web server machine.  New builds must not

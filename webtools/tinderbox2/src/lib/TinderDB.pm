@@ -1,30 +1,27 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# TinderDB.pm - the persistant storage for tinterbox.  This package
-# allows the user to define which features (columns of the status
-# table) are available and provide a consistant interface to
-# store/load the data and render the HTML to display the data.
-
+# TinderDB.pm - the persistant storage for Tinderbox2.
+#
+# This package allows the user to define which features (columns of the
+# status table) are available and provides a consistent interface to
+# store/load the data and render the HTML that displays the data.
 
 # The class TinderDB is a wrapper which knows how to call the
-# individual databases to present a coheriant interface for the
+# individual databases to present a coherent interface for the
 # implementations which are defined.  Any implementation can be left
 # out if you do not wish to run with it in your shop.  This interface
 # will do the right thing with your configuration.  Configurations are
 # defined by adjusting the 'use' statements below.
 
-
 # This interface controls the Databases:
-#	Time Column, Version Control (VC) checkin lists, 
-#       notice board display,  build display (colored squares)
+#     Time Column, Version Control (VC) checkin lists, 
+#     notice board display,  build display (colored squares)
 
-
-# $Revision: 1.22 $ 
-# $Date: 2003/08/17 01:44:07 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.23 $ 
+# $Date: 2005/10/19 04:20:35 $ 
+# $Author: bear%code-bear.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
-
 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -49,20 +46,12 @@
 # Contributor(s): 
 
 
-
-
-
 package TinderDB;
 
-
-# Standard perl libraries
-
+  # Standard perl libraries
 use File::Basename;
 
-
-
-# Tinderbox Specific Libraries
-
+  # Tinderbox Specific Libraries
 use lib '#tinder_libdir#';
 
 use Utils;
@@ -75,8 +64,7 @@ use TinderDB::Notice;
 # include order is the order in which the columns are displayed.
 
 # The main choice of implementations is how to gather information
-# about checkins.  You can currently choose wether you are using
-# bonsai or are using CVS raw.
+# about checkins.
 
 if ( defined(@TinderConfig::DBImpl) ) {
   @IMPLS = @TinderConfig::DBImpl;
@@ -84,6 +72,7 @@ if ( defined(@TinderConfig::DBImpl) ) {
   @IMPLS = (
             'TinderDB::Time',
             'TinderDB::VC_CVS',
+            'TinderDB::VC_SVN',
             'TinderDB::Notice',
             'TinderDB::BT_Generic',
             'TinderDB::Build',
@@ -108,32 +97,29 @@ sub strings2columns {
 main::require_modules(@IMPLS);
 @HTML_COLUMNS = strings2columns(@IMPLS);
 
-# We need to know if these columns are present or not.
+  # We need to know if these columns are present or not.
 
 $IS_NOTICE_COLUMN = scalar(grep(/Notice/, @HTML_COLUMNS));
 $IS_VC_COLUMN = scalar(grep(/VC_/, @HTML_COLUMNS));
 $IS_BUILD = scalar(grep(/Build/, @HTML_COLUMNS));
 
-# now the notice column is special, it may not be a column but several
-# columns use it and it needs to have some column like behavior.
+  # now the notice column is special, it may not be a column but several
+  # columns use it and it needs to have some column like behavior.
 
 $NOTICE= TinderDB::Notice->new();
 
-
-# It would be nice if we had some kind of display of the bug tracking
-# system as well.
+  # It would be nice if we had some kind of display of the bug tracking
+  # system as well.
 
 $VERSION = '#tinder_version#';
 
-
-# Should we turn on assertion checking?
+  # Should we turn on assertion checking?
 
 $DEBUG = 1;
 
-
-# What border should the status legends use?  new browers allow us to
-# frame the parts of the legend without putting a border arround the
-# individual cells.
+  # What border should the status legends use?  new browers allow us to
+  # frame the parts of the legend without putting a border arround the
+  # individual cells.
 
 if ( defined($TinderConfig::DB_LEGEND_BORDER) ) {
   $LEGEND_BORDER = $TinderConfig::DB_LEGEND_BORDER
@@ -147,49 +133,46 @@ if ( defined($TinderConfig::DB_LEGEND_BORDER) ) {
   # "border rules=none";
 }
   
-# finest spacing on html page (in minutes), this resticts the
-# minimum time between builds (to this value plus 5 minutes).
+  # finest spacing on html page (in minutes), this resticts the
+  # minimum time between builds (to this value plus 5 minutes).
 
 $TABLE_SPACING = $TinderConfig::DB_TABLE_SPACING || (5);
 
-# number of times a database can be updated before its contents must
-# be trimmed of old data.  This scan of the database is used to
-# collect data about average build time so we do not want it
-# performed too infrequently.
+  # number of times a database can be updated before its contents must
+  # be trimmed of old data.  This scan of the database is used to
+  # collect data about average build time so we do not want it
+  # performed too infrequently.
 
 $MAX_UPDATES_SINCE_TRIM = $TinderConfig::DB_MAX_UPDATES_SINCE_TRIM || (50);
 
-# Number of seconds to keep in Database, older data will be trimmed
-# away.
+  # Number of seconds to keep in Database, older data will be trimmed away.
 
 $TRIM_SECONDS = $TinderConfig::DB_TRIM_SECONDS || (60 * 60 * 24 * 8);
 
-$ROW_SPACING_DISIPLINE = $TinderConfig::ROW_SPACING_DISIPLINE ||
-    'uniform';
+$ROW_SPACING_DISIPLINE = $TinderConfig::ROW_SPACING_DISIPLINE || 'uniform';
 
-# The DB implemenations are sourced in TinderConfig.pm just before
-# this wrapper class is sourced.  It is expected that the
-# implementations will need adjustment and other fiddling so we moved
-# all the requires out of this file into the configuraiton file.
+  # The DB implemenations are sourced in TinderConfig.pm just before
+  # this wrapper class is sourced.  It is expected that the
+  # implementations will need adjustment and other fiddling so we moved
+  # all the requires out of this file into the configuration file.
 
-
-# Build a DB object to represent the columns of the build page.  Each
-# db subclass has already added, at the time it was required, an empty
-# object to HTML_COLUMNS.  This is how we track the impelmentations we
-# are going to use and the correct order of the columns in the status
-# table.
+  # Build a DB object to represent the columns of the build page.  Each
+  # db subclass has already added, at the time it was required, an empty
+  # object to HTML_COLUMNS.  This is how we track the impelmentations we
+  # are going to use and the correct order of the columns in the status
+  # table.
 
 $DB = bless(\@TinderDB::HTML_COLUMNS);
 
-# We may want the administration page to have the power to rearange
-# the columns.  Don't forget that the way to get the DB column names
-# is:
+  # We may want the administration page to have the power to rearange
+  # the columns.  Don't forget that the way to get the DB column names
+  # is:
 
 sub get_db_column_names {
     @out = ();
 
     foreach $obj (@{$TinderDB::DB}) { 
-	push @out, ref($obj); 
+        push @out, ref($obj); 
     }
 
     return @out;
@@ -199,10 +182,8 @@ sub get_db_column_names {
 # You should not need to configure anything below this line
 #-----------------------------------------------------------
 
-
-
-# Create a list of uniformly separated times which determine the build
-# table row spacing.  All times are stored in time() format.
+  # Create a list of uniformly separated times which determine the build
+  # table row spacing.  All times are stored in time() format.
 
 sub construct_uniform_times_vec {
   my ($start_time, $end_time, $table_spacing, ) = @_;
@@ -229,9 +210,9 @@ sub construct_uniform_times_vec {
 } # construct_uniform_vec
 
 
-# Create a list of times, based on when events occurred, which
-# determine the build table row spacing.  All times are stored in
-# time() format.
+  # Create a list of times, based on when events occurred, which
+  # determine the build table row spacing.  All times are stored in
+  # time() format.
 
 sub construct_event_times_vec {
   my ($start_time, $end_time, $tree) = @_;
@@ -253,9 +234,9 @@ sub construct_event_times_vec {
 } # construct_event_times_vec
 
 
-# Create a list of times, based on when build events occurred, which
-# determine the build table row spacing.  This is traditional
-# Tinderbox1 behavior. All times are stored in time() format.
+  # Create a list of times, based on when build events occurred, which
+  # determine the build table row spacing.  This is traditional
+  # Tinderbox1 behavior. All times are stored in time() format.
 
 sub construct_build_event_times_vec {
   my ($start_time, $end_time, $tree) = @_;
@@ -267,7 +248,6 @@ sub construct_build_event_times_vec {
           "Tree: $tree, not defined.");
   }
 
-
   # we need an eval since the builds may not be configured.
 
   # we do not need to loadtree_db() since if we do not have it already
@@ -278,9 +258,9 @@ sub construct_build_event_times_vec {
       local $SIG{'__DIE__'} = sub { };
 
       use TinderDB::Build;
-      
+
       my ($build_obj) = TinderDB::Build->new();
-      
+
       @out= $build_obj->start_times_vec($start_time, $end_time, $tree);
   };
 
@@ -311,10 +291,10 @@ sub construct_times_vec {
 }
 
 
-# Our functions for database methods just iterate over the available
-# implementations.
+  # Our functions for database methods just iterate over the available
+  # implementations.
 
-# the next set of functions manipulate the persistant database.
+  # the next set of functions manipulate the persistant database.
 
 sub loadtree_db {
   my ($tree, ) = @_;
@@ -393,8 +373,8 @@ sub trim_db_history {
 }
 
 
-# where can people attach notices to?
-# Really this is the names the columns produced by this DB
+  # where can people attach notices to?
+  # Really this is the names the columns produced by this DB
 
 sub notice_association {
   my ($tree,) = @_;
@@ -436,7 +416,7 @@ sub savetree_db {
 }
 
 
-# the next set of function make columns of the build page
+  # the next set of function make columns of the build page
 
 sub status_table_legend {
 
@@ -485,7 +465,6 @@ sub status_table_start {
 
   return ;
 }
-
 
 
 sub status_table_row {
@@ -547,30 +526,28 @@ __END__
 
 =head1 NAME
 
-TinderDB.pm - abstract interface to the tinderbox persistant datastores.
+TinderDB.pm - abstract interface to the Tinderbox2 persistent datastores.
 
 =head1 DESCRIPTION
 
-This is an abstract interface into all the columns of the Tinderbox
+This is an abstract interface into all the columns of the Tinderbox2
 HTML page.  Each set of columns (Build, Version-Control, Notes event
-the times in the first column) knows how to generate its own html and
-the full table is generated by concatinating their individual output.
+the times in the first column) knows how to generate its own HTML and
+the full table is generated by concatenating their individual output.
 The set of columns are managed separately and may be rearanged,
 execluded from a site or run with varing implementations.  Each set of
 columns must manage its own historical data in a database and create
-the html rows needed for display.  This module provides a single
+the HTML rows needed for display.  This module provides a single
 abstract interface which can access all the databases and makes it
-possible to easily configure tinderbox to run without some of the
-databases.  This would be needed if you wish to run tinderbox but have
+possible to easily configure Tinderbox2 to run without some of the
+databases.  This would be needed if you wish to run Tinderbox2 but have
 no Version-Control system compatible with the current interface or
-wished to run tinderbox ONLY for continual monitoring of the
+wished to run Tinderbox2 ONLY for continual monitoring of the
 Version-Control system and not run any builds. 
-
 
 The separate implemenatation modules manipulated are:
 
 =head1 Implementations
-
 
 =over 4
 
@@ -579,9 +556,7 @@ The separate implemenatation modules manipulated are:
 The column which displays the times and may optionally have URLS to 
 the version control web query interface.
 
-
 =back
-
 
 =over 4
 
@@ -589,17 +564,15 @@ the version control web query interface.
 
 The column which displays who checked in at what time in the build
 cyle.  This column must have an implementation which is specific to
-the version contol (VC) software in use.
+the version control (VC) software in use.
 
 =back
-
 
 =over 4
 
 =item B<TinderDB::Notice>
 
 The column displays all notices sent by users to the web interface.
-
 
 =back
 
@@ -618,7 +591,6 @@ bug tracking system uses an exotic mail notification format.
 
 =back
 
-
 =over 4
 
 =item B<TinderDB::Build>
@@ -631,80 +603,71 @@ test, and multiplatform compilation of the source code.
 
 =back
 
-
 =head1 INTERNALS
 
 The databases are never locked by the client software (notice board,
 mail processing software, version control software if some form of
 push is used).  So if many different pieces of data arrive
-simultaniously for the tinderbox server they must all be stored in
+simultaneously for the Tinderbox2 server they must all be stored in
 separate files.  The regular updates (pushed data for example the
 build log updates or the notice board updates) are passed to the
-tinderbox server as text files which contain perl code to be
+Tinderbox2 server as text files which contain perl code to be
 evaluated.  Each data update is stored in a file with a known name and
-a unique extension.  The tinderbox server is run periodically in
+a unique extension.  The Tinderbox2 server is run periodically in
 daemon_mode and will assimilate all outstanding updates then update
-the static html files which describe the state of the build.  When
-tinderbox runs it looks for files with the known prefix then it reads
+the static HTML files which describe the state of the build.  When
+Tinderbox2 runs it looks for files with the known prefix then it reads
 each one in turn, loads it into a common database then deletes the
-file.  To ensure that tinderbox never encounters a partially written
-file each file is written to the disk using a a name with a different
+file.  To ensure that Tinderbox2 never encounters a partially written
+file each file is written to the disk using a name with a different
 prefix then the server looks for (beginning with 'Tmp') then the name
-is changed to be the name tinderbox looks for.  Since name changes, on
-Unix systems, in the same directory, are atomic, tinderbox will never
+is changed to be the name Tinderbox2 looks for.  Since name changes, on
+Unix systems, in the same directory, are atomic, Tinderbox2 will never
 be confused by incomplete updates.
 
-
-The build module has several lists which the tinder server accesses via
+The build module has several lists which the Tinderbox2 server accesses via
 known functions.  These are used to generate summary data in various
 formats.  (@LATEST_STATUS; @BUILD_NAMES; etc;)
-
 
 Note: that the VC DB module gets the current tree state from the
 TinderHeader::TreeState and records that value in its database so that
 it can shade the VC column correctly.  This does not require any
 locking or data storage on the part of the TreeState module.
 
-
-The tinderbox server can be run by the webserver in cgi_mode (non
+The Tinderbox2 server can be run by the web server in cgi_mode (non
 daemon_mode) this does not allow any databases to be updated and does
-not update any static html files but will allow users to generate the
+not update any static HTML files but will allow users to generate the
 build data pages using different configuration parameters then is
 standard.
 
-The tinderbox server does not use any information about the internal
+The Tinderbox2 server does not use any information about the internal
 DB format.  Each module can use any convenient means to store and
-retrive the required data.  Different implementations of the same
-module may even use different methods of storage.  The tinderbox
+retrieve the required data.  Different implementations of the same
+module may even use different methods of storage.  The Tinderbox2
 server will ask each module which is implemented to load their
 database with fresh data then it will call each module and ask to
-create the html for each row in turn.  No information stored in any
+create the HTML for each row in turn.  No information stored in any
 database depends on the table grid size.  The grid is specified at the
-time the html is generated.  The html for each set of columns is
+time the HTML is generated.  The HTML for each set of columns is
 generated by comparing the contents of the database against a vector
 of times in time() format (which represents the time label for each
 row) and a row index (which represents which row we are building the
-html for).
-
+HTML for).
 
 Many of the database implementations inherit their database file
 manipulation from the module BasicTxtDB.pm which provides safe methods
 for loading and saving databases.
-
-
 
 Each function described here builds an $out string.  If there are bugs
 in the resulting HTML you can put your perl breakpoint on the return
 statement of any function and look at the completed string before it
 is returned.
 
-
 Each module must implement the following functions.  The TinderDB.pm
 module just cycles through all implementations and performs the
 function call on each one.
 
 =head1 METHODS
-
 
 =over 4
 
@@ -713,7 +676,6 @@ function call on each one.
 Load the database for the current tree
 
 =back
-
 
 =over 4
 
@@ -746,43 +708,36 @@ Save the current database to disk.  This should not be called
 directly, rather it is called every time that apply_db_updates() is
 called.
 
-
 =back
 
 =over 4
 
 =item B<trim_db_history>
 
-Purge any history from this trees database which is older then the
+Purge any history from this tree's database which is older then the
 time given.  This should not be called directly, rather it is called
 every time the number of updates made by apply_db_updates() since the
 last purge is greater then $MAX_UPDATES_SINCE_TRIM.
 
-
 =back
-
 
 =over 4
 
 =item B<status_table_legend>
 
-return a table representing the legend for the set of columns this
+Return a table representing the legend for the set of columns this
 implementation puts into the build table.
 
-
 =back
-
 
 =over 4
 
 =item B<status_table_header>
 
-return a header line appropriate for the set of columns this
+Return a header line appropriate for the set of columns this
 implementation puts into the build table.
 
-
 =back
-
 
 =over 4
 
@@ -797,12 +752,11 @@ it is called by status_table_body().
 
 =back
 
-
 =over 4
 
 =item B<status_table_row>
 
-return a html representation of the given row.  It accepts the vector
+Return a HTML representation of the given row.  It accepts the vector
 of row times and the current row number.  Each row will be created in
 order from row 0 to row \$\#row_times.  By allowing the
 implementations to know the order of row traversal and the times that
@@ -810,31 +764,23 @@ each row symbolizes, implementations may use large rowspans and
 provide blank output when their results are not needed. This should
 not be called directly, it is called by status_table_body().
 
-
-
 =back
-
 
 =over 4
 
 =item B<status_table_row>
 
-return a html representation of the body of the status table. 
+Return a HTML representation of the body of the status table. 
 this method is just a wrapper for status_table_start() and
 status_table_row().
 
-
-
 =back
-
 
 =over 4
 
 =item B<event_times_vec>
 
-return a list of all the times where an even occured.
-
-
+Return a list of all the times where an event occured.
 
 =back
 
@@ -842,18 +788,16 @@ return a list of all the times where an even occured.
 
 =item B<notice_association>
 
-return a list of all the columns which users can attach notices to.
+Return a list of all the columns which users can attach notices to.
 This is important for companies like Netscape where they do not have a
 notice column but they attach comments to individual builds which are
 not green.
-
-
 
 =back
 
 =head1 AUTHOR
 
 Ken Estes
-
+Updated by Mike Taylor
 
 =cut
