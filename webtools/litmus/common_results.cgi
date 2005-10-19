@@ -65,7 +65,7 @@ if ($c->param('status') eq 'pass') {
 } elsif ($c->param('status') eq 'fail') {
   $title = "Most Common Failures";
 } elsif ($c->param('status') eq 'unclear') {
-  $title = "Most Frequently Unclear";
+  $title = "Testcases Most Frequently Marked As Unclear";
 } 
 
 my $vars = {
