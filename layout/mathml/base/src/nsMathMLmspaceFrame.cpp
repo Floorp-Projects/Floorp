@@ -135,6 +135,8 @@ nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
   mBoundingMetrics.width = mWidth;
   mBoundingMetrics.ascent = mHeight;
   mBoundingMetrics.descent = mDepth;
+  mBoundingMetrics.leftBearing = 0;
+  mBoundingMetrics.rightBearing = mWidth;
 
   aDesiredSize.ascent = mHeight;
   aDesiredSize.descent = mDepth;

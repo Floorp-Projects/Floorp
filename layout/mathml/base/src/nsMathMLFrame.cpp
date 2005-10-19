@@ -330,7 +330,7 @@ The REC says:
   %   percentage of default value
 
 Implementation here:
-  The numeric value is valid only if it is of the form nnn.nnn [h/v-unit]
+  The numeric value is valid only if it is of the form [-] nnn.nnn [h/v-unit]
 */
 
 /* static */ PRBool
@@ -346,10 +346,21 @@ nsMathMLFrame::ParseNumericValue(nsString&   aString,
 
   nsAutoString number, unit;
 
+  // see if the negative sign is there
+  PRInt32 i = 0;
+  PRUnichar c = aString[0];
+  if (c == '-') {
+    number.Append(c);
+    i++;
+
+    // skip any space after the negative sign
+    if (i < stringLength && nsCRT::IsAsciiSpace(aString[i]))
+      i++;
+  }
+
   // Gather up characters that make up the number
   PRBool gotDot = PR_FALSE;
-  PRUnichar c;
-  for (PRInt32 i = 0; i < stringLength; i++) {
+  for ( ; i < stringLength; i++) {
     c = aString[i];
     if (gotDot && c == '.')
       return PR_FALSE;  // two dots encountered
