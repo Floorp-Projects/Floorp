@@ -873,9 +873,12 @@ function FolderPaneSelectionChange()
                 var msgDatabase = msgFolder.getMsgDatabase(msgWindow);
                 if (msgDatabase)
                 {
+                  gSearchSession = null;
                   var dbFolderInfo = msgDatabase.dBFolderInfo;
                   sortType = dbFolderInfo.sortType;
                   sortOrder = dbFolderInfo.sortOrder;
+                  viewType = dbFolderInfo.viewType;
+                  viewFlags = dbFolderInfo.viewFlags;
                   if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
                   {
                     viewType = nsMsgViewType.eShowQuickSearchResults;
@@ -900,7 +903,6 @@ function FolderPaneSelectionChange()
                     }
                     else
                     {
-                      gSearchSession = null;
                       uriToLoad = srchFolderUri;
                       // we need to load the db for the actual folder so that many hdrs to download
                       // will return false...
@@ -912,12 +914,6 @@ function FolderPaneSelectionChange()
                       gVirtualFolderTerms = CreateGroupedSearchTerms(tempFilter.searchTerms);
 //                      gSearchInput.showingSearchCriteria = false;
                     }
-                  }
-                  else
-                  {
-                    gSearchSession = null;
-                    viewFlags = dbFolderInfo.viewFlags;
-                    viewType = dbFolderInfo.viewType;
                   }
                   msgDatabase = null;
                   dbFolderInfo = null;
