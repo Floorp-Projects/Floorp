@@ -284,7 +284,7 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
         case kHICommandPreferences:
         {
           nsEventStatus status = self->ExecuteCommand(self->mPrefItemContent);
-          if (status == nsEventStatus_eConsumeNoDefault)    // event handled, no other processing
+          if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
             handled = noErr;
           break;
         }
@@ -292,7 +292,7 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
         case kHICommandQuit:
         {
           nsEventStatus status = self->ExecuteCommand(self->mQuitItemContent);
-          if (status == nsEventStatus_eConsumeNoDefault)    // event handled, no other processing
+          if (status == nsEventStatus_eConsumeNoDefault) // event handled, no other processing
             handled = noErr;
           break;
         }
@@ -326,9 +326,8 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
             content->DoCommand();
             handled = noErr;
           }        
-          break; 
-        }        
-          
+          break;
+        }
       } // switch on commandID
       break;
     }
