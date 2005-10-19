@@ -250,7 +250,7 @@
 
               case "right":
                 this.dirsign = -1;
-                this.stopAt  = (this.behaviorField != 'alternate') ? this.innerDiv.offsetLeft - this.outerDiv.offsetWidth : this.innerDiv.offsetWidth;
+                this.stopAt  = (this.behaviorField != 'alternate') ? 0 : this.innerDiv.offsetWidth;
                 this.startAt = this.outerDiv.offsetWidth 
                                + ((this.behaviorField != 'alternate') ? (this.innerDiv.offsetWidth + this.stopAt) : 0);   
               break;
@@ -258,7 +258,7 @@
               case "left":
               default:
                 this.dirsign = 1;
-                this.startAt = (this.behaviorField != 'alternate') ? (this.innerDiv.offsetLeft - this.outerDiv.offsetWidth) : this.innerDiv.offsetWidth;
+                this.startAt = (this.behaviorField != 'alternate') ? 0 : this.innerDiv.offsetWidth;
                 this.stopAt  = this.outerDiv.offsetWidth
                                + ((this.behaviorField != 'alternate') ? (this.innerDiv.offsetWidth + this.startAt) : 0);
             }
