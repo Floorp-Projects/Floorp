@@ -191,7 +191,9 @@ sub find_libraries
 {
     /\.so$/ && push @libraryList, $File::Find::name;
     /-bin$/ && push @libraryList, $File::Find::name;
-    /^xpicleanup$/ && push @libraryList, $File::Find::name;
+    /xpicleanup$/ && push @libraryList, $File::Find::name;
+    /mozilla-xremote-client$/ && push @libraryList, $File::Find::name;
+    /updater$/ && push @libraryList, $File::Find::name;
 }
 
 sub GetTopSrcDir
