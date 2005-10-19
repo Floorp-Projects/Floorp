@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,12 +50,8 @@
 #include "nsWeakReference.h"
 #include "nsIContent.h"
 
-#include <MacTypes.h>
-#include <UnicodeConverter.h>
-#include <Menus.h>
-#include <CarbonEvents.h>
-
-extern nsWeakPtr gMacMenubarX;
+#import  <Carbon/Carbon.h>
+#import  <Cocoa/Cocoa.h>
 
 class nsIWidget;
 class nsIDocument;
@@ -62,28 +59,29 @@ class nsIDOMNode;
 
 namespace MenuHelpersX
 {
-    // utility routine for getting a PresContext out of a docShell
-  nsresult DocShellToPresContext ( nsIDocShell* inDocShell, nsPresContext** outContext ) ;
-
+  // utility routine for getting a PresContext out of a docShell
+  nsresult DocShellToPresContext(nsIDocShell* inDocShell, nsPresContext** outContext);
+  nsEventStatus DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
+                                  nsIContent* aTargetContent);
 }
 
 
-/**
- * Native Mac MenuBar wrapper
- */
+//
+// Native Mac menu bar wrapper
+//
 
-class nsMenuBarX :  public nsIMenuBar,
-                    public nsIMenuListener,
-                    public nsIDocumentObserver,
-                    public nsIChangeManager,
-                    public nsIMenuCommandDispatcher,
-                    public nsSupportsWeakReference
+class nsMenuBarX : public nsIMenuBar,
+                   public nsIMenuListener,
+                   public nsIDocumentObserver,
+                   public nsIChangeManager,
+                   public nsIMenuCommandDispatcher,
+                   public nsSupportsWeakReference
 {
 public:
     nsMenuBarX();
     virtual ~nsMenuBarX();
-
-    enum { kAppleMenuID = 1 } ;
+    
+    enum {kApplicationMenuID = 1};
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSICHANGEMANAGER
@@ -119,44 +117,44 @@ public:
     
 protected:
 
-    void GetDocument ( nsIDocShell* inDocShell, nsIDocument** outDocument ) ;
-    void RegisterAsDocumentObserver ( nsIDocShell* inDocShell ) ;
+    void GetDocument(nsIDocShell* inDocShell, nsIDocument** outDocument) ;
+    void RegisterAsDocumentObserver(nsIDocShell* inDocShell);
     
-      // Make our menubar conform to Aqua UI guidelines
-    void AquifyMenuBar ( ) ;
-    void HideItem ( nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode ) ;
-    OSStatus InstallCommandEventHandler ( ) ;
+    // Make our menubar conform to Aqua UI guidelines
+    void AquifyMenuBar();
+    void HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode);
+    OSStatus InstallCommandEventHandler();
 
-      // command handler for some special menu items (prefs/quit/etc)
-    pascal static OSStatus CommandEventHandler ( EventHandlerCallRef inHandlerChain, 
-                                                  EventRef inEvent, void* userData ) ;
-    nsEventStatus ExecuteCommand ( nsIContent* inDispatchTo ) ;
+    // command handler for some special menu items (prefs/quit/etc)
+    pascal static OSStatus CommandEventHandler(EventHandlerCallRef inHandlerChain, 
+                                               EventRef inEvent, void* userData);
+    nsEventStatus ExecuteCommand(nsIContent* inDispatchTo);
     
-      // build the Apple menu shared by all menu bars.
-    nsresult CreateAppleMenu ( nsIMenu* inMenu ) ;
+    // build the Application menu shared by all menu bars.
+    nsresult CreateApplicationMenu(nsIMenu* inMenu);
 
-    nsHashtable             mObserverTable;     // stores observers for content change notification
-    nsHashtable             mCommandMapTable;   // maps CommandIDs to content nodes for CarbonEvent item selection
-    PRUint32                mCurrentCommandID;  // unique command id (per menu-bar) to give to next item that asks
+    nsHashtable             mObserverTable;       // stores observers for content change notification
+    nsHashtable             mCommandMapTable;     // maps CommandIDs to content nodes for CarbonEvent item selection
 
     PRUint32                mNumMenus;
-    nsSupportsArray         mMenusArray;        // holds refs
-    nsCOMPtr<nsIContent>    mMenuBarContent;    // menubar content node, strong ref
-    nsCOMPtr<nsIContent>    mPrefItemContent;   // on X, holds the content node for the prefs item that has
-                                                // been removed from the menubar
-    nsCOMPtr<nsIContent>    mQuitItemContent;   // as above, but for quit
-    nsIWidget*              mParent;            // weak ref
-
+    nsSupportsArray         mMenusArray;          // holds refs
+    nsCOMPtr<nsIContent>    mMenuBarContent;      // menubar content node, strong ref
+    nsCOMPtr<nsIContent>    mPrefItemContent;     // on X, holds the content node for the prefs item that has
+                                                  // been removed from the menubar
+    nsCOMPtr<nsIContent>    mQuitItemContent;     // as above, but for quit
+    nsIWidget*              mParent;              // weak ref
     PRBool                  mIsMenuBarAdded;
+    PRUint32                mCurrentCommandID;    // unique command id (per menu-bar) to give to next item that asks
 
-    nsWeakPtr               mDocShellWeakRef;   // weak ref to docshell
-    nsIDocument*            mDocument;          // pointer to document
 
-    MenuRef                 mRootMenu;          // root menu, representing entire menu bar.
+    nsWeakPtr               mDocShellWeakRef;     // weak ref to docshell
+    nsIDocument*            mDocument;            // pointer to document
+
+    NSMenu*                 mRootMenu;            // root menu, representing entire menu bar.
     
-    static MenuRef          sAppleMenu;         // AppleMenu shared by all menubars
+    static NSMenu*          sApplicationMenu;     // Application menu shared by all menubars
  
-    static EventHandlerUPP  sCommandEventHandler;   // carbon event handler for commands, shared
+    static EventHandlerUPP  sCommandEventHandler; // carbon event handler for commands, shared
 };
 
 #endif // nsMenuBarX_h__
