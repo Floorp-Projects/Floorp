@@ -471,8 +471,10 @@ jsj_ConnectToJavaVM(JSJavaVM *jsjava_vm)
         JS_ASSERT(JSJ_callbacks->create_java_vm);
         JS_ASSERT(JSJ_callbacks->destroy_java_vm);
 
-        ok = JSJ_callbacks->create_java_vm(&jsjava_vm->java_vm, &jsjava_vm->main_thread_env, jsjava_vm->init_args);
-        if (!ok || jsjava_vm->java_vm == NULL) {
+        ok = JSJ_callbacks->create_java_vm(&jsjava_vm->java_vm,
+                                           &jsjava_vm->main_thread_env,
+                                           jsjava_vm->init_args);
+        if (!ok) {
             jsj_LogError("Failed to create Java VM\n");
             return JS_FALSE;
         }

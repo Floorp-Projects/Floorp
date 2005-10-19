@@ -337,12 +337,16 @@ JS_STATIC_DLL_CALLBACK(PRBool)
 create_java_vm_impl(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
 {
     // const char* classpath = (const char*)initargs;
-     nsresult rv;
-     nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
-     if (NS_FAILED(rv)) return PR_FALSE;
-    *jvm = NS_REINTERPRET_CAST(SystemJavaVM*, managerService.get());  // unused in the browse
+    nsCOMPtr<nsIJVMManager> serv = do_GetService(kJVMManagerCID);
+    if (!serv)
+        return PR_FALSE;
     *initialEnv = JVM_GetJNIEnv();
-    return (*jvm != NULL && *initialEnv != NULL);
+    if (!*initialEnv)
+        return PR_FALSE;
+    // serv will be released when this function returns, but that's OK because
+    // the XPCOM service manager will keep it alive.
+    *jvm = NS_REINTERPRET_CAST(SystemJavaVM*, serv.get());
+    return PR_TRUE;
 }
 
 JS_STATIC_DLL_CALLBACK(PRBool)
