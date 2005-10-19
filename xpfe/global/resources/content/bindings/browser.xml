@@ -450,7 +450,6 @@
             this.mDragDropHandler.detach();
           this.mDragDropHandler = null;
 
-          this.securityUI = null;
           this.focusedWindow = null;
           this.focusedElement = null;
           this._webBrowserFind = null;
