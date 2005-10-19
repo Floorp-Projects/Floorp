@@ -1217,9 +1217,7 @@ NS_IMETHODIMP nsPrinterEnumeratorXlib::InitPrintSettingsFromPrinter(const PRUnic
       if (paper.Find(papername)) {
         DO_PR_DEBUG_LOG(("setting default paper size to '%s' (%g mm/%g mm)\n",
               paper.Name(), paper.Width_mm(), paper.Height_mm()));
-        aPrintSettings->SetPaperSizeUnit(paper.IsMetric() ?
-            (int)nsIPrintSettings::kPaperSizeMillimeters :
-            (int)nsIPrintSettings::kPaperSizeInches);
+        aPrintSettings->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
         aPrintSettings->SetPaperWidth(paper.Width_mm());
         aPrintSettings->SetPaperHeight(paper.Height_mm());
         aPrintSettings->SetPaperName(NS_ConvertASCIItoUCS2(paper.Name()).get());
