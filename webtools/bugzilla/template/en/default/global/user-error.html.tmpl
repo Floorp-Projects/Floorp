@@ -384,6 +384,15 @@
     The value '[% value FILTER html %]' does not exist for
     the '[% field FILTER html %]' field.
 
+  [% ELSIF error == "fieldvalue_is_default" %]
+    [% title = "Specified Field Value Is Default" %]
+    '[% value FILTER html %]' is the default value for
+    the '[% field FILTER html %]' field and cannot be deleted.
+    [% IF user.groups.tweakparams %]
+      You have to <a href="editparams.cgi?section=bugfields#
+      [%- param_name FILTER url_quote %]">change</a> the default value first.
+    [% END %]
+
   [% ELSIF error == "fieldvalue_name_too_long" %]
     [% title = "Field Value Is Too Long" %]
     The value of a field is limited to 60 characters.

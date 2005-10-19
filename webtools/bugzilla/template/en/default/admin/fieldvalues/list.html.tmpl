@@ -50,18 +50,28 @@
        name => "sortkey"
        heading => "Sortkey"
      },
-   ]
+     {
+       name => "action"
+       heading => "Action"
+       content => "Delete"
+       contentlink => delete_contentlink
+     } ]
 %]
 
-[% columns.push({
-     heading => "Action"
-     content => "Delete"
-     contentlink => delete_contentlink
-   }) %]
+[% overrides.action = [ {
+     match_value => "$default"
+     match_field => 'name'
+     override_content => 1
+     content => "(Default value)"
+     override_contentlink => 1
+     contentlink => undef
+   } ]
+%] 
 
 [% PROCESS admin/table.html.tmpl
      columns = columns
      data = values
+     overrides = overrides
 %]
 
 <p>

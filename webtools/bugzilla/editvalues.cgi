@@ -12,6 +12,7 @@
 # The Original Code is the Bugzilla Bug Tracking System.
 #
 # Contributor(s): Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Frédéric Buclin <LpSolit@gmail.com>
 
 # This is a script to edit the values of fields that have drop-down
 # or select boxes. It is largely a copy of editmilestones.cgi, but 
@@ -20,11 +21,12 @@
 use strict;
 use lib ".";
 
+require "globals.pl";
 use Bugzilla;
 use Bugzilla::Util;
 use Bugzilla::Error;
 use Bugzilla::Constants;
-use Bugzilla::Config qw(:DEFAULT :locations);
+use Bugzilla::Config qw(:DEFAULT :admin :locations);
 
 # List of different tables that contain the changeable field values
 # (the old "enums.") Keep them in alphabetical order by their 
@@ -115,6 +117,13 @@ my $value   = trim($cgi->param('value')   || '');
 my $sortkey = trim($cgi->param('sortkey') || '0');
 my $action  = trim($cgi->param('action')  || '');
 
+# Gives the name of the parameter associated with the field
+# and representing its default value.
+my %defaults = {};
+$defaults{'op_sys'} = 'defaultopsys';
+$defaults{'rep_platform'} = 'defaultplatform';
+$defaults{'priority'} = 'defaultpriority';
+$defaults{'bug_severity'} = 'defaultseverity';
 
 #
 # field = '' -> Show nice list of fields
@@ -148,6 +157,7 @@ unless ($action) {
                                  {Slice =>{}});
     $vars->{'field'} = $field;
     $vars->{'values'} = $fieldvalues;
+    $vars->{'default'} = Param($defaults{$field});
     $template->process("admin/fieldvalues/list.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -237,6 +247,7 @@ if ($action eq 'del') {
 
     $vars->{'value'} = $value;
     $vars->{'field'} = $field;
+    $vars->{'param_name'} = $defaults{$field};
     $template->process("admin/fieldvalues/confirm-delete.html.tmpl",
                        $vars)
       || ThrowTemplateError($template->error());
@@ -250,6 +261,11 @@ if ($action eq 'del') {
 #
 if ($action eq 'delete') {
     ValueMustExist($field, $value);
+    if ($value eq Param($defaults{$field})) {
+        ThrowUserError('fieldvalue_is_default', {field      => $field,
+                                                 value      => $value,
+                                                 param_name => $defaults{$field}})
+    }
     trick_taint($field);
     trick_taint($value);
 
@@ -366,7 +382,20 @@ if ($action eq 'update') {
         $vars->{'updated_value'} = 1;
     }
 
-    $dbh->bz_unlock_tables(); 
+    $dbh->bz_unlock_tables();
+
+    # If the old value was the default value for the field,
+    # update data/params accordingly.
+    # This update is done while tables are unlocked due to the
+    # annoying call to GetVersionTable in Bugzilla/Config/Common.pm.
+    if ($value ne $valueold
+        && $valueold eq Param($defaults{$field}))
+    {
+        SetParam($defaults{$field}, $value);
+        WriteParams();
+        unlink "$datadir/versioncache";
+        $vars->{'default_value_updated'} = 1;
+    }
 
     $vars->{'value'} = $value;
     $vars->{'field'} = $field;
