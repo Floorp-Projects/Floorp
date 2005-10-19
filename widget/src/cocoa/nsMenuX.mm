@@ -231,37 +231,33 @@ NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   aMenuItem->GetLabel(label);
   InsertMenuItemWithTruncation(label, currItemIndex);
   
-  /*
-  // I want to be internationalized too!
-  nsAutoString keyEquivalent(NS_LITERAL_STRING(" "));
-  aMenuItem->GetShortcutChar(keyEquivalent);
-
-  if (!keyEquivalent.EqualsLiteral(" ")) {
-    ToUpperCase(keyEquivalent);
-    char keyStr[2];
-    keyEquivalent.ToCString(keyStr, sizeof(keyStr));
-    short inKey = keyStr[0];
-    ::SetItemCmd(mMacMenu, currItemIndex, inKey);
-  }
+  NSMenuItem *newNativeMenuItem = [mMacMenu itemAtIndex:currItemIndex];
   
+  // set up shortcut keys
+  nsAutoString geckoKeyEquivalent(NS_LITERAL_STRING(" "));
+  aMenuItem->GetShortcutChar(geckoKeyEquivalent);
+  NSString *keyEquivalent = [[NSString stringWithCharacters:(unichar*)geckoKeyEquivalent.get()
+                                                     length:geckoKeyEquivalent.Length()] lowercaseString];
+  if (![keyEquivalent isEqualToString:@" "])
+    [newNativeMenuItem setKeyEquivalent:keyEquivalent];
+  
+  // set up shortcut key modifiers
   PRUint8 modifiers;
   aMenuItem->GetModifiers(&modifiers);
-  PRUint8 macModifiers = kMenuNoModifiers;
+  unsigned int macModifiers = 0;
   if (knsMenuItemShiftModifier & modifiers)
-    macModifiers |= kMenuShiftModifier;
-
+    macModifiers |= NSShiftKeyMask;
   if (knsMenuItemAltModifier & modifiers)
-    macModifiers |= kMenuOptionModifier;
-
+    macModifiers |= NSAlternateKeyMask;
   if (knsMenuItemControlModifier & modifiers)
-    macModifiers |= kMenuControlModifier;
+    macModifiers |= NSControlKeyMask;
+  if (knsMenuItemCommandModifier & modifiers)
+    macModifiers |= NSCommandKeyMask;
+  [newNativeMenuItem setKeyEquivalentModifierMask:macModifiers];
 
-  if (!(knsMenuItemCommandModifier & modifiers))
-    macModifiers |= kMenuNoCommandModifier;
-
-  // ::SetMenuItemModifiers(mMacMenu, currItemIndex, macModifiers);
-
+  /*
   // set its command. we get the unique command id from the menubar
+  //XXXJOSH we should no longer handle this with carbon events
   nsCOMPtr<nsIMenuCommandDispatcher> dispatcher(do_QueryInterface(mManager));
   if (dispatcher) {
     PRUint32 commandID = 0L;
@@ -269,20 +265,21 @@ NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
     if (commandID)
       ::SetMenuItemCommandID(mMacMenu, currItemIndex, commandID);
   }
-  */
+   */
+  
   PRBool isEnabled;
   aMenuItem->GetEnabled(&isEnabled);
   if (isEnabled)
-    [[mMacMenu itemAtIndex:currItemIndex] setEnabled:YES];
+    [newNativeMenuItem setEnabled:YES];
   else
-    [[mMacMenu itemAtIndex:currItemIndex] setEnabled:NO];
+    [newNativeMenuItem setEnabled:NO];
 
   PRBool isChecked;
   aMenuItem->GetChecked(&isChecked);
   if (isChecked)
-    [[mMacMenu itemAtIndex:currItemIndex] setState:NSOnState];
+    [newNativeMenuItem setState:NSOnState];
   else
-    [[mMacMenu itemAtIndex:currItemIndex] setState:NSOffState];
+    [newNativeMenuItem setState:NSOffState];
 
   return NS_OK;
 }
@@ -301,7 +298,6 @@ NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
   PRUint32 currItemIndex;
   mMenuItemsArray.Count(&currItemIndex);
   mMenuItemsArray.AppendElement(supports); // owning ref
-
   mNumMenuItems++;
 
   // We have to add it as a menu item and then associate it with the item
@@ -1272,7 +1268,6 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
   OSStatus result = eventNotHandledErr;
   UInt32 kind = ::GetEventKind(event);
   if (kind == kEventMenuOpening || kind == kEventMenuClosed) {
-    //XXXJOSH userData is always null here!!!
     nsISupports* supports = reinterpret_cast<nsISupports*>(userData);
     nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(supports));
     if (listener) {
@@ -1367,5 +1362,11 @@ static MenuRef GetCarbonMenuRef(NSMenu* aMenu)
     }
   }
 }
+
+// this gets called when some menu item in this menu get hit
+- (IBAction)menuItemHit:(id)sender {
+  NSLog(@"Your friendly Cocoa menu item delegat object would like to inform you that a menu item got hit\n");  
+}
+
 
 @end
