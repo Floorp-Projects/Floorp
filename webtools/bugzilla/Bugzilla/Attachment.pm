@@ -91,6 +91,7 @@ sub _retrieve {
                                        '%Y.%m.%d %H:%i') . " AS attached",
         'attachments.filename AS filename',
         'attachments.ispatch AS ispatch',
+        'attachments.isurl AS isurl',
         'attachments.isobsolete AS isobsolete',
         'attachments.isprivate AS isprivate'
     );

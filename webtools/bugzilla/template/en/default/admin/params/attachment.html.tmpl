@@ -25,6 +25,9 @@
 %]
 
 [% param_descs = {
+  allow_attach_url => "If this option is on, it will be possible to " _
+                      "specify a URL when creating an attachment and " _
+                      "treat the URL itself as if it were an attachment.",
   maxpatchsize => "The maximum size (in kilobytes) of patches. $terms.Bugzilla will not " _
                   "accept patches greater than this number of kilobytes in size. " _
                   "To accept patches of any size (subject to the limitations of " _

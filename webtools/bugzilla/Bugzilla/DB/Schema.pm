@@ -313,6 +313,8 @@ use constant ABSTRACT_SCHEMA => {
                              DEFAULT => 'FALSE'},
             isprivate    => {TYPE => 'BOOLEAN', NOTNULL => 1,
                              DEFAULT => 'FALSE'},
+            isurl        => {TYPE => 'BOOLEAN', NOTNULL => 1,
+                             DEFAULT => 'FALSE'},
         ],
         INDEXES => [
             attachments_bug_id_idx => ['bug_id'],

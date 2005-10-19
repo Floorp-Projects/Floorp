@@ -911,13 +911,31 @@ sub insert
     ValidateBugID($bugid);
     validateCanChangeBug($bugid);
     ValidateComment(scalar $cgi->param('comment'));
-    my $filename = validateFilename();
+    my $attachurl = $cgi->param('attachurl') || '';
+    my $data;
+    my $filename;
+    my $contenttype;
+    my $isurl;
     validateIsPatch();
     validateDescription();
-    # need to validate content type before data as
-    # we now check the content type for image/bmp in validateData()
-    validateContentType() unless $cgi->param('ispatch');
-    my $data = validateData();
+  
+    if (($attachurl =~ /^(http|https|ftp):\/\/\S+/) 
+         && !(defined $cgi->upload('data'))) {
+        $filename = '';
+        $data = $attachurl;
+        $isurl = 1;
+        $contenttype = SqlQuote('text/plain');
+        $cgi->param('ispatch', 0);
+        $cgi->delete('bigfile');
+    } else {
+        $filename = validateFilename();
+        # need to validate content type before data as
+        # we now check the content type for image/bmp in validateData()
+        validateContentType() unless $cgi->param('ispatch');
+        $data = validateData();
+        $contenttype = SqlQuote($cgi->param('contenttype'));
+        $isurl = 0;
+    }
 
     my @obsolete_ids = ();
     @obsolete_ids = validateObsolete() if $cgi->param('obsolete');
@@ -946,7 +964,6 @@ sub insert
     # Escape characters in strings that will be used in SQL statements.
     my $sql_filename = SqlQuote($filename);
     my $description = SqlQuote($cgi->param('description'));
-    my $contenttype = SqlQuote($cgi->param('contenttype'));
     my $isprivate = $cgi->param('isprivate') ? 1 : 0;
 
   # Figure out when the changes were made.
@@ -956,10 +973,10 @@ sub insert
   # Insert the attachment into the database.
   my $sth = $dbh->prepare("INSERT INTO attachments
       (bug_id, creation_ts, filename, description,
-       mimetype, ispatch, isprivate, submitter_id) 
+       mimetype, ispatch, isurl, isprivate, submitter_id) 
       VALUES ($bugid, $sql_timestamp, $sql_filename,
               $description, $contenttype, " . $cgi->param('ispatch') . ",
-              $isprivate, $userid)");
+              $isurl, $isprivate, $userid)");
   $sth->execute();
   # Retrieve the ID of the newly created attachment record.
   my $attachid = $dbh->bz_last_key('attachments', 'attach_id');
@@ -1096,14 +1113,20 @@ sub edit
   my ($attach_id) = validateID();
 
   # Retrieve the attachment from the database.
-  SendSQL("SELECT description, mimetype, filename, bug_id, ispatch, isobsolete, isprivate, LENGTH(thedata)
+  SendSQL("SELECT description, mimetype, filename, bug_id, ispatch, isurl,
+                  isobsolete, isprivate, LENGTH(thedata)
            FROM attachments
            INNER JOIN attach_data
            ON id = attach_id
            WHERE attach_id = $attach_id");
-  my ($description, $contenttype, $filename, $bugid, $ispatch, $isobsolete, $isprivate, $datasize) = FetchSQLData();
+  my ($description, $contenttype, $filename, $bugid, $ispatch, $isurl, $isobsolete, $isprivate, $datasize) = FetchSQLData();
 
-  my $isviewable = isViewable($contenttype);
+  my $isviewable = !$isurl && isViewable($contenttype);
+  my $thedata;
+  if ($isurl) {
+      SendSQL("SELECT thedata FROM attach_data WHERE id = $attach_id");
+      ($thedata) = FetchSQLData();
+  }
 
   # Retrieve a list of attachments for this bug as well as a summary of the bug
   # to use in a navigation bar across the top of the screen.
@@ -1135,9 +1158,11 @@ sub edit
   $vars->{'bugid'} = $bugid; 
   $vars->{'bugsummary'} = $bugsummary; 
   $vars->{'ispatch'} = $ispatch; 
+  $vars->{'isurl'} = $isurl; 
   $vars->{'isobsolete'} = $isobsolete; 
   $vars->{'isprivate'} = $isprivate; 
   $vars->{'datasize'} = $datasize;
+  $vars->{'thedata'} = $thedata;
   $vars->{'isviewable'} = $isviewable; 
   $vars->{'attachments'} = \@bugattachments; 
   $vars->{'GetBugLink'} = \&GetBugLink;

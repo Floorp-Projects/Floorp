@@ -1742,6 +1742,7 @@ AddFDef("content", "Content", 0);
 
 $dbh->do("DELETE FROM fielddefs WHERE name='attachments.thedata'");
 AddFDef("attach_data.thedata", "Attachment data", 0);
+AddFDef("attachments.isurl", "Attachment is a URL", 0);
 
 ###########################################################################
 # Detect changed local settings
@@ -4033,6 +4034,9 @@ if ($dbh->bz_column_info("series", "public")) {
     $dbh->bz_rename_column('series', 'public', 'is_public');
 }
 
+# 2005-09-28 bugreport@peshkin.net Bug 149504
+$dbh->bz_add_column('attachments', 'isurl',
+                    {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 0});
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

@@ -209,16 +209,21 @@
         <b>Description:</b><br>
           <textarea rows="3" cols="25" name="description" wrap="soft">[% description FILTER html %]</textarea><br>
 
-        <b>Filename:</b><br>
-          <input type="text" size="20" name="filename" value="[% filename FILTER html %]"><br>
-        <b>Size: </b>[% datasize FILTER unitconvert %]<br>
+        [% IF isurl %]
+            <input type="hidden" name="filename" value="[% filename FILTER html %]"><br>
+            <input type="hidden" name="contenttypeentry" value="[% contenttype FILTER html %]"><br>
+        [% ELSE %]
+          <b>Filename:</b><br>
+            <input type="text" size="20" name="filename" value="[% filename FILTER html %]"><br>
+          <b>Size: </b>[% datasize FILTER unitconvert %]<br>
 
-        <b>MIME Type:</b><br>
-          <input type="text" size="20" name="contenttypeentry" value="[% contenttype FILTER html %]"><br>
+          <b>MIME Type:</b><br>
+            <input type="text" size="20" name="contenttypeentry" value="[% contenttype FILTER html %]"><br>
 
           <input type="checkbox" id="ispatch" name="ispatch" value="1"
                  [% 'checked="checked"' IF ispatch %]>
           <label for="ispatch">patch</label>
+        [% END %]
           <input type="checkbox" id="isobsolete" name="isobsolete" value="1"
                  [% 'checked="checked"' IF isobsolete %]>
           <label for="isobsolete">obsolete</label><br>
@@ -237,7 +242,8 @@
         </div>
 
         <input type="submit" value="Submit"><br><br>
-        <strong>Actions:</strong> <a href="attachment.cgi?id=[% attachid %]">View</a>
+        <strong>Actions:</strong>
+        <a href="attachment.cgi?id=[% attachid %]">View</a>
         [% IF ispatch && patchviewerinstalled %]
          | <a href="attachment.cgi?id=[% attachid %]&action=diff">Diff</a>
         [% END %]
@@ -267,6 +273,18 @@
             }
             //-->
           </script>
+        </td>
+      [% ELSIF isurl %]
+        <td width="75%">
+          <a href="[% thedata FILTER html %]">
+            [% IF datasize < 120 %]
+              [% thedata FILTER html %]
+            [% ELSE %]
+              [% thedata FILTER truncate(80) FILTER html %]
+              &nbsp;...
+              [% thedata.match(".*(.{20})$").0 FILTER html %]
+            [% END %]
+          </a>
         </td>
       [% ELSE %]
         <td id="noview" width="50%">

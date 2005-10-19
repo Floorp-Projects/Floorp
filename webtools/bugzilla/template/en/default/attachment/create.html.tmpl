@@ -17,6 +17,8 @@
   # Rights Reserved.
   #
   # Contributor(s): Myk Melez <myk@mozilla.org>
+  #                 Joel Peshkin <bugreport@peshkin.net>
+  #                 Erik Stambaugh <erik@dasbistro.com>
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -53,6 +55,58 @@
   onload="setContentTypeDisabledState();"
 %]
 
+[% IF Param("allow_attach_url") %]
+    <script type="text/javascript">
+
+        function URLFieldHandler() {
+            var field_attachurl = document.getElementById("attachurl");
+            var greyfields = new Array("data", "ispatch", "autodetect",
+                                       "list", "manual", "bigfile",
+                                       "contenttypeselection",
+                                       "contenttypeentry");
+            var i;
+            if (field_attachurl.value.match(/^\s*$/)) {
+                for (i = 0; i < greyfields.length; i++) {
+                    thisfield = document.getElementById(greyfields[i]);
+                    if (thisfield) {
+                        thisfield.removeAttribute("disabled");
+                    }
+                }
+            } else {
+                for (i = 0; i < greyfields.length; i++) {
+                    thisfield = document.getElementById(greyfields[i]);
+                    if (thisfield) {
+                        thisfield.setAttribute("disabled", "disabled");
+                    }
+                }
+            }
+        }
+
+        function DataFieldHandler() {
+            var field_data = document.getElementById("data");
+            var greyfields = new Array("attachurl");
+            if (field_data.value.match(/^\s*$/)) {
+                var i;
+                for (i = 0; i < greyfields.length; i++) {
+                    thisfield = document.getElementById(greyfields[i]);
+                    if (thisfield) {
+                        thisfield.removeAttribute("disabled");
+                    }
+                }
+            } else {
+                for (i = 0; i < greyfields.length; i++) {
+                    thisfield = document.getElementById(greyfields[i]);
+                    if (thisfield) {
+                        thisfield.setAttribute("disabled", "disabled");
+                    }
+                }
+            }
+        }
+
+    </script>
+[% END %]
+
+
 <form name="entryform" method="post" action="attachment.cgi" enctype="multipart/form-data">
   <input type="hidden" name="bugid" value="[% bugid %]">
   <input type="hidden" name="action" value="insert">
@@ -62,7 +116,11 @@
       <th><label for="data">File:</label></th>
       <td>
         <em>Enter the path to the file on your computer.</em><br>
-        <input type="file" id="data" name="data" size="50">
+        <input type="file" id="data" name="data" size="50"
+          [% IF Param("allow_attach_url") %]
+            onchange="DataFieldHandler()" 
+          [% END %]
+        >
       </td>
     </tr>
     [% IF Param("maxlocalattachment") %]
@@ -74,6 +132,17 @@
         <label for="bigfile">
           Big File - Stored locally and may be purged
         </label>
+      </td>
+    </tr>
+    [% END %]
+    [% IF Param("allow_attach_url") %]
+    <tr>
+      <th><label for="attachurl">AttachURL:</label></th>
+      <td>
+        <em>URL to be attached instead.</em><br>
+        <input type="text" id="attachurl" name="attachurl" size="60" 
+               maxlength="2000"
+               onkeyup="URLFieldHandler()" onblur="URLFieldHandler()">
       </td>
     </tr>
     [% END %]
@@ -104,14 +173,15 @@
         <input type="radio" id="list"
                name="contenttypemethod" value="list">
           <label for="list">select from list:</label>
-          <select name="contenttypeselection"
+          <select name="contenttypeselection" id="contenttypeselection"
                   onchange="this.form.contenttypemethod[1].checked = true;">
             [% PROCESS "attachment/content-types.html.tmpl" %]
           </select><br>
         <input type="radio" id="manual"
                      name="contenttypemethod" value="manual">
           <label for="manual">enter manually:</label>
-          <input type="text" name="contenttypeentry" size="30" maxlength="200"
+          <input type="text" name="contenttypeentry" id="contenttypeentry"
+                 size="30" maxlength="200"
                  onchange="if (this.value) this.form.contenttypemethod[2].checked = true;">
       </td>
     </tr>

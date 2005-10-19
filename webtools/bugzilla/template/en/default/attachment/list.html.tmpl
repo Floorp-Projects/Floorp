@@ -43,6 +43,8 @@
         <td valign="top">
           [% IF attachment.ispatch %]
             <i>patch</i>
+          [% ELSIF attachment.isurl %]
+            <i>url</i>
           [% ELSE %]
             [% attachment.contenttype FILTER html %]
           [% END %]
