@@ -135,6 +135,11 @@ menuitem.bookmark-item {
   max-width: 26em;
 }
 
+.bookmark-item > .menu-iconic-left {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 .bookmark-item > .menu-iconic-left > .menu-iconic-icon {
   width: 16px;
   height: 16px;
