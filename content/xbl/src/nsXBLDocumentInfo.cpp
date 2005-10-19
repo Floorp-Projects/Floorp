@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -49,6 +50,8 @@
 #include "nsIScriptError.h"
 #include "nsIChromeRegistry.h"
 #include "nsIPrincipal.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -98,7 +101,50 @@ protected:
   static JSClass gSharedGlobalClass;
 };
 
-void PR_CALLBACK nsXBLDocGlobalObject_finalize(JSContext *cx, JSObject *obj)
+static JSBool
+doCheckAccess(JSContext *cx, JSObject *obj, jsval id, PRUint32 accessType)
+{
+  nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
+  if (!ssm) {
+    ::JS_ReportError(cx, "Unable to verify access to a global object property.");
+    return JS_FALSE;
+  }
+
+  nsresult rv = ssm->CheckPropertyAccess(cx, obj, JS_GET_CLASS(cx, obj)->name,
+                                         id, accessType);
+  return NS_SUCCEEDED(rv);
+}
+
+PR_STATIC_CALLBACK(JSBool)
+nsXBLDocGlobalObject_getProperty(JSContext *cx, JSObject *obj,
+                                 jsval id, jsval *vp)
+{
+  return doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+}
+
+PR_STATIC_CALLBACK(JSBool)
+nsXBLDocGlobalObject_setProperty(JSContext *cx, JSObject *obj,
+                                 jsval id, jsval *vp)
+{
+  return doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+}
+
+PR_STATIC_CALLBACK(JSBool)
+nsXBLDocGlobalObject_checkAccess(JSContext *cx, JSObject *obj, jsval id,
+                                 JSAccessMode mode, jsval *vp)
+{
+  PRUint32 translated;
+  if (mode & JSACC_WRITE) {
+    translated = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
+  } else {
+    translated = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
+  }
+
+  return doCheckAccess(cx, obj, id, translated);
+}
+
+PR_STATIC_CALLBACK(void)
+nsXBLDocGlobalObject_finalize(JSContext *cx, JSObject *obj)
 {
   nsISupports *nativeThis = (nsISupports*)JS_GetPrivate(cx, obj);
 
@@ -111,8 +157,8 @@ void PR_CALLBACK nsXBLDocGlobalObject_finalize(JSContext *cx, JSObject *obj)
   NS_RELEASE(nativeThis);
 }
 
-
-JSBool PR_CALLBACK nsXBLDocGlobalObject_resolve(JSContext *cx, JSObject *obj, jsval id)
+PR_STATIC_CALLBACK(JSBool)
+nsXBLDocGlobalObject_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
   JSBool did_resolve = JS_FALSE;
   return JS_ResolveStandardClass(cx, obj, id, &did_resolve);
@@ -122,9 +168,11 @@ JSBool PR_CALLBACK nsXBLDocGlobalObject_resolve(JSContext *cx, JSObject *obj, js
 JSClass nsXBLDocGlobalObject::gSharedGlobalClass = {
     "nsXBLPrototypeScript compilation scope",
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS,
-    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
-    JS_EnumerateStub, nsXBLDocGlobalObject_resolve,  JS_ConvertStub,
-    nsXBLDocGlobalObject_finalize
+    JS_PropertyStub,  JS_PropertyStub,
+    nsXBLDocGlobalObject_getProperty, nsXBLDocGlobalObject_setProperty,
+    JS_EnumerateStub, nsXBLDocGlobalObject_resolve,
+    JS_ConvertStub, nsXBLDocGlobalObject_finalize,
+    NULL, nsXBLDocGlobalObject_checkAccess
 };
 
 //----------------------------------------------------------------------
