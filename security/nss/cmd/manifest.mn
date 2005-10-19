@@ -54,6 +54,7 @@ DIRS = lib  \
  dbtest \
  derdump  \
  digest  \
+ fipstest  \
  makepqg  \
  ocspclnt  \
  oidcalc  \
