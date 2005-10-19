@@ -41,6 +41,10 @@
 #include "nsXFormsInstanceElement.h"
 #include "nsXFormsSubmissionElement.h"
 #include "nsXFormsStubElement.h"
+#include "nsIDOMDocument.h"
+#include "nsXFormsAtoms.h"
+#include "nsIDocument.h"
+#include "nsIDOMNode.h"
 #include "nsString.h"
 
 // Form controls
@@ -195,8 +199,10 @@ nsXFormsElementFactory::HasFeature(nsISupports *aObject,
                                    const nsAString& aVersion,
                                    PRBool *aReturn)
 {
-  *aReturn = aFeature.EqualsLiteral("org.w3c.xforms.dom") &&
-             aVersion.EqualsLiteral("1.0");
+  *aReturn = (aFeature.EqualsLiteral("org.w3c.xforms.dom") &&
+              aVersion.EqualsLiteral("1.0")) ||
+             (aFeature.EqualsLiteral(NS_XFORMS_INSTANCE_OWNER) &&
+              aVersion.EqualsLiteral("1.0"));
   return NS_OK;
 }
 
@@ -206,5 +212,29 @@ nsXFormsElementFactory::GetFeature(nsISupports *aObject,
                                    const nsAString & aVersion,
                                    nsISupports **aReturn)
 {
+  *aReturn = nsnull;
+  if (aFeature.EqualsLiteral(NS_XFORMS_INSTANCE_OWNER) &&
+      aVersion.EqualsLiteral("1.0")) {
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aObject));
+    NS_ENSURE_STATE(node);
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    node->GetOwnerDocument(getter_AddRefs(domDoc));
+    if (!domDoc) {
+      // if node is nsIDOMDocument the ownerDocument is null.
+      domDoc = do_QueryInterface(node);
+    }
+    NS_ENSURE_STATE(domDoc);
+
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+    NS_ENSURE_STATE(doc);
+
+    nsISupports* owner =
+      NS_STATIC_CAST(nsISupports*,
+                     doc->GetProperty(nsXFormsAtoms::instanceDocumentOwner));
+    NS_IF_ADDREF(*aReturn = owner);
+    return NS_OK;
+  }
+
   return NS_ERROR_NOT_AVAILABLE;
 }

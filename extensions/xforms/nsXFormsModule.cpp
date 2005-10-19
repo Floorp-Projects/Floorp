@@ -74,6 +74,13 @@ RegisterXFormsModule(nsIComponentManager *aCompMgr,
                              PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv =
+    catman->AddCategoryEntry(NS_DOMNS_FEATURE_PREFIX NS_XFORMS_INSTANCE_OWNER,
+                             "1.0",
+                             NS_XTF_ELEMENT_FACTORY_CONTRACTID_PREFIX NS_NAMESPACE_XFORMS,
+                             PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return catman->AddCategoryEntry("agent-style-sheets",
                                   "xforms stylesheet",
                                   "chrome://xforms/content/xforms.css",
@@ -93,6 +100,9 @@ UnregisterXFormsModule(nsIComponentManager *aCompMgr,
     return NS_ERROR_FAILURE;
 
   catman->DeleteCategoryEntry(NS_DOMNS_FEATURE_PREFIX "org.w3c.xforms.dom",
+                              "1.0", PR_TRUE);
+
+  catman->DeleteCategoryEntry(NS_DOMNS_FEATURE_PREFIX NS_XFORMS_INSTANCE_OWNER,
                               "1.0", PR_TRUE);
 
   return catman->DeleteCategoryEntry("agent-style-sheets",
