@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -706,7 +707,8 @@ nsresult DoCommandLines(nsICmdLineService* cmdLineArgs, PRBool *windowOpened)
 
     if (NS_SUCCEEDED(rv)) {
       // convert the cmdLine URL to Unicode
-      NS_ConvertUTF8toUTF16 url(urlToLoad);
+      nsAutoString url;
+      NS_CopyNativeToUnicode(urlToLoad, url);
       rv = OpenWindow(chromeUrlForTask, url, width, height);
     }
 

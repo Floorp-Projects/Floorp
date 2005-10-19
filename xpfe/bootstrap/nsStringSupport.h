@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Darin Fisher <darin@meer.net>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -93,6 +94,12 @@ inline void
 NS_CopyUnicodeToNative(const nsAString &input, nsACString &output)
 {
   NS_UTF16ToCString(input, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM, output);
+}
+
+inline void
+NS_CopyNativeToUnicode(const nsACString &input, nsAString &output)
+{
+  NS_CStringToUTF16(input, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM, output);
 }
 
 inline void
