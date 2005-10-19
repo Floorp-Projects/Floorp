@@ -161,14 +161,10 @@ private:
    * @param aElement          The element to dispatch events to and set states on
    * @param aState            The state value
    * @param aOnEvent          The on event for the state.
-   * @param aAttributePos     The position of the "on" attribute in kStateAttributes
-   *
-   * @note aAttributePos is only needed until bug 271720 is landed.
    */
   NS_HIDDEN_(void)     SetSingleState(nsIDOMElement *aElement,
                                       PRBool         aState,
-                                      nsXFormsEvent  aOnEvent,
-                                      PRUint32       aAttributePos);
+                                      nsXFormsEvent  aOnEvent);
 
   /**
    * Call the Bind() and Refresh() on controls which was deferred because

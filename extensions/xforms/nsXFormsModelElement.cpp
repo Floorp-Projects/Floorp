@@ -76,6 +76,7 @@
 #include "nsAutoPtr.h"
 #include "nsArray.h"
 #include "nsIDOMDocumentXBL.h"
+#include "nsIEventStateManager.h"
 
 #define XFORMS_LAZY_INSTANCE_BINDING \
   "chrome://xforms/content/xforms.xml#xforms-lazy-instance"
@@ -624,18 +625,10 @@ nsXFormsModelElement::Recalculate()
 void
 nsXFormsModelElement::SetSingleState(nsIDOMElement *aElement,
                                      PRBool         aState,
-                                     nsXFormsEvent  aOnEvent,
-                                     PRUint32       aAttributePos)
+                                     nsXFormsEvent  aOnEvent)
 {
   nsXFormsEvent event = aState ? aOnEvent : (nsXFormsEvent) (aOnEvent + 1);
 
-  // Set pseudo class
-  ///
-  /// @bug Set via attributes right now. Bug 271720. (XXX)
-  aElement->SetAttribute(kStateAttributes[aState ? aAttributePos : aAttributePos + 1],
-                         NS_LITERAL_STRING("1"));
-  aElement->RemoveAttribute(kStateAttributes[aState ? aAttributePos + 1 : aAttributePos]);
-  
   // Dispatch event
   nsXFormsUtils::DispatchEvent(aElement, event);
 }
@@ -653,24 +646,37 @@ nsXFormsModelElement::SetStatesInternal(nsIXFormsControl *aControl,
   aControl->GetElement(getter_AddRefs(element));
   NS_ENSURE_STATE(element);
 
+  nsCOMPtr<nsIXTFElementWrapper> xtfWrap(do_QueryInterface(element));
+  NS_ENSURE_STATE(xtfWrap);
+
   const nsXFormsNodeState *ns = mMDG.GetNodeState(aNode);
   NS_ENSURE_STATE(ns);
 
-  /// @todo the last argument (0, 2, 4, and 6) to SetSingleState is the
-  /// position of the attribute in kStateAttributes. It's hacky and only
-  /// temporary, until bug 271720 lands. (XXX)
+  // XXX nsXFormsNodeState could expose a bitmask using NS_EVENTs, to avoid
+  // most of this...
+  PRBool tmp = ns->IsValid();
+  PRUint32 state =  tmp ? NS_EVENT_STATE_VALID : NS_EVENT_STATE_INVALID;
   if (aAllStates || ns->ShouldDispatchValid()) {
-    SetSingleState(element, ns->IsValid(), eEvent_Valid, 0);
+    SetSingleState(element, tmp, eEvent_Valid);
   }
+  tmp = ns->IsReadonly();
+  state |= tmp ? NS_EVENT_STATE_MOZ_READONLY : NS_EVENT_STATE_MOZ_READWRITE;
   if (aAllStates || ns->ShouldDispatchReadonly()) {
-    SetSingleState(element, ns->IsReadonly(), eEvent_Readonly, 2);
+    SetSingleState(element, tmp, eEvent_Readonly);
   }
+  tmp = ns->IsRequired();
+  state |= tmp ? NS_EVENT_STATE_REQUIRED : NS_EVENT_STATE_OPTIONAL;
   if (aAllStates || ns->ShouldDispatchRequired()) {
-    SetSingleState(element, ns->IsRequired(), eEvent_Required, 4);
+    SetSingleState(element, tmp, eEvent_Required);
   }
+  tmp = ns->IsRelevant();
+  state |= tmp ? NS_EVENT_STATE_ENABLED : NS_EVENT_STATE_DISABLED;
   if (aAllStates || ns->ShouldDispatchRelevant()) {
-    SetSingleState(element, ns->IsRelevant(), eEvent_Enabled, 6);
+    SetSingleState(element, tmp, eEvent_Enabled);
   }
+
+  nsresult rv = xtfWrap->SetIntrinsicState(state);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (ns->ShouldDispatchValueChanged()) {
     nsXFormsUtils::DispatchEvent(element, eEvent_ValueChanged);

@@ -173,19 +173,6 @@ static const EventData sEventDefaultsEntries[] = {
 static nsDataHashtable<nsStringHashKey,PRUint32> sXFormsEvents;
 static nsDataHashtable<nsStringHashKey,PRUint32> sEventDefaults;
 
-/**
- * @todo The attribute names used on the elements to reflect the pseudo class
- * state until bug 271720 is landed. (XXX)
- */
-const nsString kStateAttributes[8] = { NS_LITERAL_STRING("valid"),
-                                       NS_LITERAL_STRING("invalid"),
-                                       NS_LITERAL_STRING("read-only"),
-                                       NS_LITERAL_STRING("read-write"),
-                                       NS_LITERAL_STRING("required"),
-                                       NS_LITERAL_STRING("optional"),
-                                       NS_LITERAL_STRING("enabled"),
-                                       NS_LITERAL_STRING("disabled") };
-
 /* static */ nsresult
 nsXFormsUtils::Init()
 {

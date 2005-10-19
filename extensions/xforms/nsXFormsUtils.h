@@ -128,12 +128,6 @@ struct EventData
 extern const EventData sXFormsEventsEntries[42];
 
 /**
- * @todo The attribute names used on the elements to reflect the pseudo class
- * state until bug 271720 is landed. (XXX)
- */
-extern const nsString kStateAttributes[8];
-
-/**
  * This class has static helper methods that don't fit into a specific place
  * in the class hierarchy.
  */
