@@ -104,7 +104,7 @@ CPPSRCS =  \
 		$(NULL)
 
 CMMSRCS = \
-    nsMenuX.mm \
+		nsMenuX.mm \
 		nsMenuBarX.mm \
 		nsMenuItemX.mm \
 		nsFilePicker.mm \
