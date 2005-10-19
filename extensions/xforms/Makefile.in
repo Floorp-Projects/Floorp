@@ -193,3 +193,6 @@ install.js:	install.jst
 		@echo Creating install.js...
 		rm -f install.js
 		$(PERL) $(topsrcdir)/toolkit/mozapps/installer/makejs.pl $(srcdir)/install.jst $(PACKAGE_VERSION) $(FINAL_TARGET)
+
+# Do not clean schema-validation on distclean, it should handle that itself
+distclean: DIRS=
