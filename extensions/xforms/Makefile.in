@@ -183,6 +183,9 @@ CPPSRCS		= \
 # Standard Mozilla make rules
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
+# Do not clean schema-validation on distclean, it should handle that itself
+distclean:: DIRS=
+
 include $(topsrcdir)/config/rules.mk
 
 # Temporary files that will be deleted on f.x. make clean
@@ -193,6 +196,3 @@ install.js:	install.jst
 		@echo Creating install.js...
 		rm -f install.js
 		$(PERL) $(topsrcdir)/toolkit/mozapps/installer/makejs.pl $(srcdir)/install.jst $(PACKAGE_VERSION) $(FINAL_TARGET)
-
-# Do not clean schema-validation on distclean, it should handle that itself
-distclean: DIRS=
