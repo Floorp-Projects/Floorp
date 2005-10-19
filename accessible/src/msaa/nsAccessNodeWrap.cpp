@@ -561,26 +561,6 @@ void nsAccessNodeWrap::InitAccessibility()
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefBranch) {
     prefBranch->GetBoolPref("accessibility.disableenumvariant", &gIsEnumVariantSupportDisabled);
-
-    PRBool isJavaEnabled;
-    prefBranch->GetBoolPref("security.enable_java", &isJavaEnabled);
-    if (isJavaEnabled) {
-      // Java is enabled
-      PRBool isJavaEnabledByUser;
-      prefBranch->PrefHasUserValue("security.enable_java", &isJavaEnabledByUser);
-      if (!isJavaEnabledByUser) {
-        // Java is enabled by default, not explicitly by the user
-        PRBool isScreenReaderActive;
-        if (SUCCEEDED(SystemParametersInfo(SPI_GETSCREENREADER, 0, &isScreenReaderActive, 0)) && 
-            isScreenReaderActive) {
-          // A screen reader is running, so let's turn off the default
-          // Java support to save ourselves from heap corruption.
-          // XXX only a temporary work around to this issue. It seems to be specific JRE 
-          // builds that have the problem
-          prefBranch->SetBoolPref("security.enable_java", PR_FALSE);
-        }
-      }
-    }
   }
 
   if (!gmUserLib) {
