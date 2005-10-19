@@ -100,7 +100,8 @@ sub components {
     if (!defined $self->{components}) {
         my $ids = $dbh->selectcol_arrayref(q{
             SELECT id FROM components
-            WHERE product_id = ?}, undef, $self->id);
+            WHERE product_id = ?
+            ORDER BY name}, undef, $self->id);
 
         my @components;
         foreach my $id (@$ids) {
@@ -145,7 +146,8 @@ sub versions {
     if (!defined $self->{versions}) {
         my $values = $dbh->selectcol_arrayref(q{
             SELECT value FROM versions
-            WHERE product_id = ?}, undef, $self->id);
+            WHERE product_id = ?
+            ORDER BY value}, undef, $self->id);
 
         my @versions;
         foreach my $value (@$values) {
@@ -163,7 +165,8 @@ sub milestones {
     if (!defined $self->{milestones}) {
         my $values = $dbh->selectcol_arrayref(q{
             SELECT value FROM milestones
-            WHERE product_id = ?}, undef, $self->id);
+            WHERE product_id = ?
+            ORDER BY sortkey}, undef, $self->id);
  
         my @milestones;
         foreach my $value (@$values) {

@@ -100,7 +100,8 @@ sub products {
     if (!$self->{'products'}) {
         my $product_ids = $dbh->selectcol_arrayref(q{
             SELECT id FROM products
-            WHERE classification_id = ?}, undef, $self->id);
+            WHERE classification_id = ?
+            ORDER BY name}, undef, $self->id);
  
         my @products;
         foreach my $product_id (@$product_ids) {
