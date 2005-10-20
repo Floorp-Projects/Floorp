@@ -379,6 +379,7 @@ const int kReuseWindowOnAE = 2;
 
   if (quitAlertMsg)
   {
+    [NSApp activateIgnoringOtherApps:YES];
     nsAlertController* controller = CHBrowserService::GetAlertController();
     BOOL dontShowAgain = NO;
     BOOL confirmed = [controller confirmCheckEx:nil
