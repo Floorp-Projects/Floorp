@@ -590,6 +590,9 @@ nsSoftKeyBoard::OpenSIP()
     ::ShowWindow( hWndSIP, SW_SHOW);
 
   SHSipPreference(NULL, SIP_UP);
+
+  SHFullScreen(GetForegroundWindow(), SHFS_SHOWSIPBUTTON);
+
 #endif
 }
 
@@ -600,15 +603,23 @@ nsSoftKeyBoard::CloseSIP()
   if (IsSmartphone())
     return;
 
-  HWND hWndSIP = ::FindWindow( _T( "SipWndClass" ), NULL );
+  HWND hWndSIP = FindWindow( _T( "SipWndClass" ), NULL );
   if (hWndSIP)
-    ::ShowWindow( hWndSIP, SW_HIDE );
+  {
+    ShowWindow( hWndSIP, SW_HIDE );
+    SetWindowPos(hWndSIP, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+  }
 
-  hWndSIP = ::FindWindow( _T( "MS_SIPBUTTON" ), NULL );
-  if (hWndSIP)
-    ::ShowWindow( hWndSIP, SW_HIDE );
+  hWndSIP = FindWindow( _T( "MS_SIPBUTTON" ), NULL );
+  if (hWndSIP) 
+  {
+    ShowWindow( hWndSIP, SW_HIDE );
+    SetWindowPos(hWndSIP, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+  }
 
   SHSipPreference(NULL, SIP_DOWN);
+
+  SHFullScreen(GetForegroundWindow(), SHFS_HIDESIPBUTTON);
 #endif
 }
 
