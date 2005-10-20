@@ -1,0 +1,216 @@
+<?xml version="1.0"?> 
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
+
+<!-- The folling has to be exactly defined here, there is JS function accessing the styleSheet direct 
+     for ZOOMing --> 
+<?xml-stylesheet href="chrome://minimo/skin/minimo.css" type="text/css"?> 
+
+<?xml-stylesheet href="chrome://minimo/skin/preferences.css" type="text/css"?>
+
+<!DOCTYPE prefwindow [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://minimo/locale/preferences.dtd">
+  %preferencesDTD;
+]>
+
+<window id="pref-window"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  windowtype="Browser:page-preferences-mini"
+  title="Minimo Preferences" 
+  onload="prefStartup()"
+  onunload="" >
+
+  <script type="application/x-javascript" src="chrome://minimo/content/preferences/preferences.js"/>
+  <script type="application/x-javascript" src="chrome://minimo/content/common.js"/>
+
+  <stringbundle id="bundlePreferences"    src="chrome://minimo/locale/minimo.properties"/>
+     
+  <command id="cmd_PrefOkay"      oncommand="PrefOkay()" />
+  <command id="cmd_PrefCancel"    oncommand="PrefCancel();" />
+
+  <vbox flex="1">
+
+    <hbox>
+      <toolbar flex="1" id="pref-bar" accessfocus="general-button" accessnextrule="general-pane"  accessprevrule="general-pane"  >    
+        <toolbarbutton class="base-button" tabindex="1" accessrule="pref-bar" onfocus="show('general-pane',this)" accessfocus="general-pane" id="general-button" accesskey="m" command="cmd_BrowserMenu" />  
+        <toolbarbutton class="base-button" tabindex="2" accessrule="pref-bar" onfocus="show('advanced-pane',this)" accessfocus="advanced-pane" id="advanced-button" command="cmd_BrowserMenu" />  
+        <toolbarbutton class="base-button" tabindex="3" accessrule="pref-bar" onfocus="show('privacy-pane',this)" accessfocus="advanced-pane" id="privacy-button" command="cmd_BrowserMenu" />  
+        <toolbarbutton class="base-button" tabindex="4" accessrule="pref-bar" onfocus="show('connection-pane',this)" accessfocus="advanced-pane" id="connection-button" command="cmd_BrowserMenu" />  
+      </toolbar>
+      <toolbar >
+        <toolbarbutton tabindex="8" accessrule="pref-bar" onfocus="show('summary-pane',this )" accessfocus="advanced-pane" id="okay-button" class='' command="cmd_PrefOkay"><label class='prefbutton' value="&okayButton.label;" /></toolbarbutton>  
+        <toolbarbutton tabindex="9" accessrule="pref-bar" onfocus="show('summary-pane',this )" accessfocus="advanced-pane" id="cancel-button" class='' command="cmd_PrefCancel"><label class='prefbutton' value="&cancelButton.label;" /></toolbarbutton>  
+      </toolbar>
+    </hbox>
+    
+      <!-- GENERAL PANE -->
+
+	<hbox class="panel-container" flex="1" id="general-pane"
+            accessfocus="enableImages"
+            accessnextrule="advanced-pane"
+            accessprevrule="pref-bar" >
+
+            <groupbox flex="1" class="box-floatoptions" >
+		    <caption label="&general.label;" /> 
+			<hbox flex="1" >
+				<vbox flex="1" style="padding:4px ! important">
+
+				   <groupbox class='box-prefgroupitem' >
+
+				        <caption label="&homeCaption.label;"/>
+
+					  <box>
+                                <textbox id="browserStartupHomepage"
+                                         style="margin:3px ! important;" flex="1"
+                                         onchange="syncPref(this)" preference="browser.startup.homepage" preftype="string"/>
+					  </box>
+
+				    </groupbox>
+    
+				    <groupbox  class='box-prefgroupitem'>
+
+				        <caption label="&sssCaption.label;"/>
+
+					  <vbox class="box-prefpadding"> 
+
+                                <checkbox id="enableImages"
+                                          tabindex="10" accessrule="general-pane"
+                                          label="&imagesCheckbox.label;"
+                                          preference="permissions.default.image" preftype="int" prefvalue=""
+				                  onsyncfrompreference="return readEnableImagesPref();"
+				                  onsynctopreference="return writeEnableImagesPref();" 
+                                          />
+
+                                <checkbox id="ssr"
+                                          tabindex="11" accessrule="general-pane"
+                                          label="&useSSRCheckbox.label;"
+                                          preference="ssr.enabled" preftype="bool"
+                                          />
+
+                                <checkbox id="sitessr" 
+                                          tabindex="12" accessrule="general-pane"
+                                          label="&usesiteSSRCheckbox.label;"
+                                          preference="ssr.site.enabled" preftype="bool"
+                                          />
+
+                                </vbox>
+
+				    </groupbox>
+
+
+				   <groupbox class='box-prefgroupitem' >
+
+				        <caption label="&zoom.label;"/>
+
+					  <box class="box-prefgroupitem">
+					  <label value="&zoomui.label;" />
+                                <textbox id="browserDisplayZoomUI" size="5"
+                                         style="margin:3px ! important;" 
+                                         onchange="syncPref(this)" preference="browser.display.zoomui" preftype="int"/>
+
+					  </box>
+
+					  <box class="box-prefgroupitem">
+					  <label value="&zoomcontent.label;" />
+                                <textbox id="browserDisplayZoomContent" size="5"
+                                         style="margin:3px ! important;" 
+                                         onchange="syncPref(this)" preference="browser.display.zoomcontent" preftype="int"/>
+
+					  </box>
+
+				    </groupbox>
+    
+				</vbox>
+
+			</hbox>
+
+            </groupbox> 
+
+	</hbox>	
+
+      <!-- ADVANCED PANE --> 
+
+	<hbox class="panel-container" flex="1" id="advanced-pane"
+			 accessfocus="skey"
+			 accessnextrule="pref-bar"
+			 accessprevrule="general-pane"
+			 collapsed="true"  >
+
+        <groupbox flex="1" class="box-floatoptions" >
+		    <caption label="&advanced.label;" /> 
+			<hbox flex="1" >
+				<vbox flex="1" style="padding:4px ! important">
+    				    <checkbox tabindex="30" id="skey" label="&useSWKeyboard.label;" preference="skey.enabled"/>
+   				    <checkbox tabindex="31" id="dumpJS" label="&dumpJSConsole.label;" preference="config.wince.dumpJSConsole"/>
+				</vbox>
+			</hbox>
+	  </groupbox> 
+	</hbox>	
+
+      <!-- PRIVACY PANE --> 
+
+	<hbox id="privacy-pane"
+                   class="panel-container"  
+                   flex="1"
+			 accessfocus="privacySanitize"
+			 accessnextrule="connection-pane"
+			 accessprevrule="general-pane"
+                   collapsed="true"  >
+
+             <groupbox flex="1" class="box-floatoptions" >
+		    <caption label="&privacy.label;" /> 
+	
+		    <box class="box-prefpadding">
+	                <button  class='box-prefgroupitem' id="privacySanitize" label="&sanitizeButton.label;" oncommand="sanitizeAll();"/>
+		 	</box>
+             </groupbox> 
+
+	</hbox>
+
+      <!-- CONNECTION PANE --> 
+
+	<hbox id="connection-pane"
+                   class="panel-container"
+			 accessfocus="UseProxy"
+			 accessnextrule="pref-bar"
+			 accessprevrule="privacy-pane"
+                   flex="1" collapsed="true"  >
+
+	    <groupbox flex="1" class="box-floatoptions">
+	      <caption label="&proxyCaption.label;"/>
+
+		<box class="box-prefpadding">
+	        <checkbox id="UseProxy" label="&useproxyCheckbox.label;" preference="network.proxy.type" 
+	                  onsyncfrompreference="return readProxyPref();"
+	                  onsynctopreference="return writeProxyPref();"/>
+
+	      	<hbox>
+	      	  <textbox id="networkProxyHTTP" preference="network.proxy.http"/>
+	      	  <label   value="&proxyPortCaption.label;"/>
+	      	  <textbox id="networkProxyHTTP_Port" size="5" preference="network.proxy.http_port"/>
+	      	</hbox>
+
+		</box>
+
+	    </groupbox>
+
+	</hbox>
+
+      <!-- SUMMARY OKAY CANCEL PANE -->
+
+	<hbox id="summary-pane"
+                   class="panel-container"
+                   flex="1" collapsed="true"  >
+
+            <groupbox flex="1" class="box-floatoptions">
+                <caption label="Changed preferences..."/>
+
+                <textbox flex="1" class="okay-panel-textbox" id="textbox-okay-pane" />
+
+            </groupbox>
+
+	</hbox>
+
+  </vbox>
+
+</window>
