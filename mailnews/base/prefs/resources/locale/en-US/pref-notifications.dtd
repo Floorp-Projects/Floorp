@@ -36,6 +36,7 @@
  ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY pref.notifications.title         "Notifications">
+<!ENTITY notifications.caption            "Notifications">
 <!ENTITY newMessagesArrive.label          "When new messages arrive:">
 <!ENTITY playSound.label                  "Play a sound">
 <!ENTITY playSound.accesskey              "P">

@@ -62,7 +62,7 @@
   </script>
   
   <groupbox>
-    <caption label="&generalSettings.label;"/>
+    <caption label="&generalSettings.caption;"/>
     
     <hbox align="center">
       <checkbox id="mailnewsConfirmMoveFoldersToTrash" label="&confirmMove.label;"
@@ -88,7 +88,7 @@
   </groupbox>
 
   <groupbox>
-    <caption label="&messengerStartPage.label;"/>
+    <caption label="&messengerStartPage.caption;"/>
       <hbox align="center">
         <checkbox id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
                   prefstring="mailnews.start_page.enabled" oncommand="StartPageCheck();"
@@ -114,7 +114,7 @@
 
   <!-- toolbar buttons customization -->
   <groupbox flex="1" orient="horizontal">
-    <caption label="&toolbarIntro.label;"/>
+    <caption label="&toolbarIntro.caption;"/>
     <vbox>
       <checkbox id="fileButton"
                 label="&fileButton.label;" accesskey="&fileButton.accesskey;"

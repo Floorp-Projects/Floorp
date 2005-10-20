@@ -36,7 +36,7 @@
  ***** END LICENSE BLOCK ***** -->
 
 <!ENTITY pref.mailnews.title              "Mail &amp; Newsgroups">
-<!ENTITY generalSettings.label            "General Settings">
+<!ENTITY generalSettings.caption          "General Settings">
 <!ENTITY confirmMove.label                "Confirm when moving folders to the Trash">
 <!ENTITY confirmMove.accesskey            "C">
 <!ENTITY useMessenger.label               "Use Mail from MAPI-based applications">
@@ -44,8 +44,8 @@
 <!ENTITY autounzip.label                  "Automatically expand zip files when saving attachments">
 <!ENTITY autounzip.accesskey              "A">
 <!ENTITY preserveThreading.label          "Preserve threading when sorting messages">
-<!ENTITY preserveThreading.accesskey      "t">
-<!ENTITY messengerStartPage.label         "Mail Start Page">
+<!ENTITY preserveThreading.accesskey      "v">
+<!ENTITY messengerStartPage.caption       "Mail Start Page">
 <!ENTITY enableStartPage.label            "When Mail launches, show the Start Page in the message area">
 <!ENTITY enableStartPage.accesskey        "W">
 <!ENTITY location.label                   "Location:">
@@ -54,7 +54,7 @@
 <!ENTITY useDefault.accesskey             "D">
 <!ENTITY rememberLastMsg.label            "Remember the last selected message">
 <!ENTITY rememberLastMsg.accesskey        "e">
-<!ENTITY toolbarIntro.label               "Select the buttons you want to see in the toolbar">
+<!ENTITY toolbarIntro.caption             "Select the buttons you want to see in the toolbar">
 <!ENTITY fileButton.label                 "File">
 <!ENTITY fileButton.accesskey             "F">
 <!ENTITY nextButton.label                 "Next">

@@ -37,19 +37,17 @@
 
 <!-- LOCALIZATION NOTE pref-receipts.dtd: UI for Mail/News Return Receipts prefs -->
 <!ENTITY pref.receipts.title          "Return Receipts">
-<!ENTITY pref.receipts.caption        "Return Receipts">
+<!ENTITY prefReceipts.caption         "Return Receipts">
 <!ENTITY requestReceipt.label         "When sending messages, always request a return receipt">
 <!ENTITY requestReceipt.accesskey     "W">
-<!-- LOCALIZATION NOTE dsn.label: don't translate "DSN"  -->
 <!ENTITY receiptArrive.label          "When a receipt arrives:">
 <!ENTITY leaveIt.label                "Leave it in my Inbox">
-<!ENTITY leaveIt.accesskey            "I">
-<!-- LOCALIZATION NOTE moveToSent.label Translate: 'Sent' according to Netscape glossary -->
+<!ENTITY leaveIt.accesskey            "L">
 <!ENTITY moveToSent.label             "Move it to my &quot;Sent&quot; folder">
 <!ENTITY moveToSent.accesskey         "M">
 <!ENTITY requestMDN.label             "When I receive a request for a return receipt:">
 <!ENTITY returnSome.label             "Allow return receipts for some messages">
-<!ENTITY returnSome.accesskey         "e">
+<!ENTITY returnSome.accesskey         "A">
 <!ENTITY never.label                  "Never send a return receipt">
 <!ENTITY never.accesskey              "N">
 <!ENTITY notInToCc.label              "If I'm not in the To or Cc of the message:">

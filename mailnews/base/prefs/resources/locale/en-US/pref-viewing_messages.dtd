@@ -49,7 +49,7 @@
 <!ENTITY smaller.label                    "Smaller">
 <!ENTITY color.label                      "Color:">
 <!ENTITY color.accesskey                  "C">
-<!ENTITY displayPlainText.label           "When displaying plain text messages">
+<!ENTITY displayPlainText.caption         "Plain text messages">
 <!ENTITY plainTextFont.label              "Use the following font width:">
 <!ENTITY displayQuoted.label              "Settings for quoted messages:">
 <!ENTITY fixedWidth.label                 "Fixed">
@@ -63,7 +63,7 @@
 <!-- LOCALIZATION NOTE : (convertEmoticons.label) 'Emoticons' are also known as 'Smileys', e.g. :-)   -->
 <!ENTITY convertEmoticons.label           "Display emoticons as graphics">
 <!ENTITY convertEmoticons.accesskey       "D">
-<!ENTITY generalMessageDisplay.label      "General">
+<!ENTITY generalMessageDisplay.caption    "General">
 <!-- LOCALIZATION NOTE (markMessagesRead.label): This will concatenate with
      "xxx seconds before marking a message as read", using a number and
      (seconds.label). -->

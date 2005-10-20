@@ -60,8 +60,9 @@
   </script>
   
   <groupbox id="newMessagesArrivePrefs">
-    <caption id="newMessagesArriveCaption" label="&newMessagesArrive.label;"/>
+    <caption label="&notifications.caption;"/>
 
+    <label value="&newMessagesArrive.label;"/>
     <vbox align="start">
       <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
                 prefstring="mail.biff.show_alert"

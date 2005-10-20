@@ -56,7 +56,7 @@
 
 
   <groupbox>
-    <caption label="&pref.receipts.caption;"/>
+    <caption label="&prefReceipts.caption;"/>
 
     <vbox id="returnReceiptSettings" align="start">
       <checkbox id="alwaysRequest" label="&requestReceipt.label;"

@@ -34,7 +34,7 @@
   </script>
 
   <groupbox align="start">
-    <caption label="&generalMessageDisplay.label;"/>
+    <caption label="&generalMessageDisplay.caption;"/>
     <label value="&openingMessages.label;"/>
     <hbox class="indent" align="center">
       <radiogroup id="reuseMessageWindow" orient="horizontal"
@@ -66,7 +66,7 @@
   </groupbox>
 
   <groupbox>
-    <caption label="&displayPlainText.label;"/>
+    <caption label="&displayPlainText.caption;"/>
     <label value="&plainTextFont.label;"/>
     <hbox class="indent" align="center">
       <radiogroup id="mailFixedWidthMessages" orient="horizontal"
