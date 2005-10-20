@@ -287,20 +287,6 @@ pref("network.http.pipelining.maxrequests" , 4);
 // are handled.  IDN requires a nsIIDNService implementation.
 pref("network.enableIDN", false);
 
-// This preference, if true, causes all UTF-8 domain names to be normalized to
-// punycode.  The intention is to allow UTF-8 domain names as input, but never
-// generate them from punycode.
-pref("network.IDN_show_punycode", false);
-
-// If a domain includes any of the following characters, it may be a spoof 
-// attempt and so we always display the domain name as punycode. This would 
-// override the settings "network.IDN_show_punycode" and 
-// "netword.IDN.whitelist.*".
-// The list currently contains the characters:
-// U+2044 FRACTION SLASH
-// U+2215 DIVISION SLASH
-pref("network.IDN.blacklist_chars", "????????????");
-
 // This preference specifies a list of domains for which DNS lookups will be
 // IPv4 only. Works around broken DNS servers which can't handle IPv6 lookups
 // and/or allows the user to disable IPv6 on a per-domain basis. See bug 68796.
