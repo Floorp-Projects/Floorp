@@ -16,10 +16,11 @@ function readEnableImagesPref()
 function writeEnableImagesPref()
 { 
   var checkbox = document.getElementById("enableImages");
-  if (checkbox.checked) {
+  if (checkbox.checked==true) {
     return 1;
-  }
-  return 2;
+  } else {
+    return 2;
+  } 
 }
   
 function readProxyPref()
@@ -102,6 +103,7 @@ function prefStartup() {
                          .getService(Components.interfaces.nsIPrefBranch);
 
     } catch (ignore) { alert(ignore)}
+
     syncPrefLoadDOM(regPrefElements);
 
     syncUIZoom(); // from common.js 
@@ -197,7 +199,6 @@ function findRuleById(outnavTarget,ruleattribute) {
 var gPrefQueue=new Array();
 
 function syncPref(refElement) {
-
 	var refElementPref=refElement.getAttribute("preference");
 	if(refElementPref!="") {
 		// has pref sync definition,..
@@ -218,8 +219,28 @@ function syncPref(refElement) {
 
 function PrefOkay() {
 
+	for(var strCurKey in gPrefQueue) {
+		var elRef=gPrefQueue[strCurKey];
+		var prefName=elRef.getAttribute("preference");
+		var transValidator=elRef.getAttribute("onsynctopreference");
+		var prefSETValue=null;
+	
+		if(transValidator!="") {
+			prefSETValue=eval(transValidator);
+		}
 
+		if (gPref.getPrefType(prefName) == gPref.PREF_STRING){
+			gPref.setCharPref(prefName, prefSETValue);
+		} 
 
+		if (gPref.getPrefType(prefName) == gPref.PREF_INT) {
+			gPref.setIntPref(prefName, prefSETValue);
+ 	 	}
+
+		if (gPref.getPrefType(prefName) == gPref.PREF_BOOL) {
+			gPref.setBoolPref(prefName, prefSETValue);
+		}
+	}
 }
 
 /* 
