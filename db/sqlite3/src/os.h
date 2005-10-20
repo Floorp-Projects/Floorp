@@ -29,12 +29,19 @@
 #   if defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__)
 #     define OS_WIN 1
 #     define OS_UNIX 0
+#     define OS_OS2 0
+#   elif defined(_EMX_) || defined(_OS2) || defined(OS2) || defined(OS_OS2)
+#     define OS_WIN 0
+#     define OS_UNIX 0
+#     define OS_OS2 1
 #   else
 #     define OS_WIN 0
 #     define OS_UNIX 1
+#     define OS_OS2 0
 #  endif
 # else
 #  define OS_UNIX 0
+#  define OS_OS2 0
 # endif
 #else
 # ifndef OS_WIN
@@ -53,6 +60,9 @@
 #endif
 #if OS_WIN
 # include "os_win.h"
+#endif
+#if OS_OS2
+# include "os_os2.h"
 #endif
 
 /* os_other.c and os_other.h are not delivered with SQLite.  These files
