@@ -1474,6 +1474,12 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
   //   NS_ASSERTION((w >=0 ), "Negative width passed to nsWindow::Resize");
   //   NS_ASSERTION((h >=0 ), "Negative height passed to nsWindow::Resize");
 
+   // Set cached value for lightweight and printing
+   mBounds.x      = aX;
+   mBounds.y      = aY;
+   mBounds.width  = w;
+   mBounds.height = h;
+
    // WinSetWindowPos() appears not to require a msgq
    if( mWnd)
    {
@@ -1500,13 +1506,6 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
    printf("+++++++++++Resized 0x%lx at %ld, %ld to %d x %d (%d,%d)\n", mWnd, ptl.x, ptl.y, w, h, aX, aY);
 #endif
 
-   }
-   else
-   {
-      mBounds.x = aX;
-      mBounds.y = aY;
-      mBounds.width = w;
-      mBounds.height = h;
    }
    return NS_OK;
 }
