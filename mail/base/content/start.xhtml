@@ -83,14 +83,12 @@ h2 {
   font-weight: normal;
   font-size: 100%;
   letter-spacing: 2px;
-  margin-left: -25px;
+  -moz-margin-start: -25px;
   padding: 0px 0px 0px 25px;
 }
 
 body[dir="rtl"] h2 {
   background: transparent url(startpage-h2-rtl.png) no-repeat bottom right;
-  margin-left: 0px;
-  margin-right: -25px;
   padding: 0px 25px 0px 0px;
 }
 
@@ -102,7 +100,7 @@ body[dir="rtl"] h2 {
 }
 
 body[dir="rtl"] #indent {
-  background: url(chrome://branding/content/thunderbird-watermark-rtl.png) no-repeat top left;
+  background: url(chrome://branding/content/thunderbird-watermark.png) no-repeat top left;
 }
 
 p, li {
@@ -111,14 +109,8 @@ p, li {
 }
 
 ul {
-  margin-left: 30px;
-  padding-left: 0px;
-  line-height: 1.2em;
-}
-
-body[dir="rtl"] ul {
-  margin-right: 30px;
-  padding-right: 0px;
+  -moz-margin-start: 30px;
+  -moz-padding-start: 0px;
   line-height: 1.2em;
 }
 
@@ -160,7 +152,7 @@ body[dir="rtl"] #gecko {
 #gecko a:link, #gecko a:visited {
   color: #fff;
   background: transparent;
-  padding-right: 5px;
+  -moz-padding-end: 5px;
 }
 
   </style> 
