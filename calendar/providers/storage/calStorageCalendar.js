@@ -1556,7 +1556,7 @@ calStorageCalendar.prototype = {
 
         ip.title = item.getUnproxiedProperty("SUMMARY");
         ip.priority = item.getUnproxiedProperty("PRIORITY");
-        ip.privacy = item.getUnproxiedProperty("PRIVACY");
+        ip.privacy = item.getUnproxiedProperty("CLASS");
         ip.ical_status = item.getUnproxiedProperty("STATUS");
 
         if (!item.parentItem)
