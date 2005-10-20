@@ -75,6 +75,7 @@
 #include "nsIAuthPrompt.h"
 #include "nsIStringStream.h"
 #include "nsIStreamConverterService.h"
+#include "nsICachingChannel.h"
 
 static const char* kLoadAsData = "loadAsData";
 #define LOADSTR NS_LITERAL_STRING("load")
@@ -112,6 +113,15 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
    XML_HTTP_REQUEST_SENT |                  \
    XML_HTTP_REQUEST_STOPPED)
 
+// This helper function adds the given load flags to the request's existing
+// load flags.
+static void AddLoadFlags(nsIRequest *request, nsLoadFlags newFlags)
+{
+  nsLoadFlags flags;
+  request->GetLoadFlags(&flags);
+  flags |= newFlags;
+  request->SetLoadFlags(flags);
+}
 
 // Helper proxy class to be used when expecting an
 // multipart/x-mixed-replace stream of XML documents.
@@ -1585,10 +1595,15 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   //    allow our consumers to specify a "cache key" to access old POST
   //    responses, so they are not worth caching.
   if ((mState & XML_HTTP_REQUEST_MULTIPART) || method.EqualsLiteral("POST")) {
-    nsLoadFlags flags;
-    mChannel->GetLoadFlags(&flags);
-    flags |= nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::INHIBIT_CACHING;
-    mChannel->SetLoadFlags(flags);
+    AddLoadFlags(mChannel,
+        nsIRequest::LOAD_BYPASS_CACHE | nsIRequest::INHIBIT_CACHING);
+  }
+  // When we are sync loading, we need to bypass the local cache when it would
+  // otherwise block us waiting for exclusive access to the cache.  If we don't
+  // do this, then we could dead lock in some cases (see bug 309424).
+  else if (mState & XML_HTTP_REQUEST_SYNCLOOPING) {
+    AddLoadFlags(mChannel,
+        nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
   }
 
   // Since we expect XML data, set the type hint accordingly
