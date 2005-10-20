@@ -75,6 +75,9 @@
             <content uri="?container"/> 
             <member container="?container" child="?member"/>
             <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#Virtual" object="false"/>
+            <content uri="?container"/>
+            <member container="?container" child="?member" isDeferred="?isDeferred" />
+            <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#IsDeferred" object="false"/>
           </conditions>
           
           <bindings>
