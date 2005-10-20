@@ -129,3 +129,67 @@ radio[pane=Advanced] {
  -moz-image-region: rect(0px, 32px, 32px, 0px)
 } 
 
+
+/* New preference panel in XUL 
+ * Minimo Implementation
+ * 
+ */
+ 
+.base-button {
+  list-style-image: url("chrome://minimo/skin/preferences/options.png");
+}
+
+#general-button {
+  -moz-image-region: rect(0px, 32px, 32px, 0px)
+}
+
+#advanced-button {
+  -moz-image-region: rect(0px, 160px, 32px, 128px)
+
+}
+
+#privacy-button {
+  -moz-image-region: rect(0px, 64px, 32px, 32px)
+
+}
+
+#connection-button {
+  -moz-image-region: rect(0px, 192px, 32px, 160px)
+
+}
+
+.panel-container {
+  margin:3px ! important;
+}
+
+toolbar {
+  border:0px;
+}
+
+.prefbutton {
+   -moz-border-radius:4px;
+   background-color:#eeeeee;
+   padding:2px ! important;
+   margin:1px ! important;
+}
+
+.prefselectedbutton {
+   -moz-border-radius:4px;
+   background-color:#eeeeee;   
+}
+ 
+.okay-panel-textbox  {
+  border:0px solid gray ! important; 
+  margin:6px ! important;
+  background-color:transparent ! important;
+}
+
+.box-prefgroupitem {
+  margin:2px ! important;
+}
+
+.box-prefpadding {
+  margin:4px ! important;
+}
+
+
