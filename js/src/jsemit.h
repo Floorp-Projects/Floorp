@@ -397,13 +397,16 @@ typedef enum JSSrcNoteType {
                                    also used on JSOP_ENDINIT if extra comma
                                    at end of array literal: [1,2,,] */
     SRC_VAR         = 6,        /* JSOP_NAME/SETNAME/FORNAME in a var decl */
-    SRC_PCDELTA     = 7,        /* offset from comma-operator to next POP,
-                                   or from CONDSWITCH to first CASE opcode */
+    SRC_PCDELTA     = 7,        /* distance from comma-operator to next POP,
+                                   or from CONDSWITCH to first CASE opcode --
+                                   or SRC_PCBASE variant for obj.function::foo
+                                   gets and sets */
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
     SRC_RESERVED0   = 10,       /* reserved for future use */
     SRC_HIDDEN      = 11,       /* opcode shouldn't be decompiled */
-    SRC_PCBASE      = 12,       /* offset of first obj.prop.subprop bytecode */
+    SRC_PCBASE      = 12,       /* distance back from annotated get- or setprop
+                                   op to first obj.prop.subprop bytecode */
     SRC_LABEL       = 13,       /* JSOP_NOP for label: with atomid immediate */
     SRC_LABELBRACE  = 14,       /* JSOP_NOP for label: {...} begin brace */
     SRC_ENDBRACE    = 15,       /* JSOP_NOP for label: {...} end brace */

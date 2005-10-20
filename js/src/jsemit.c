@@ -2066,6 +2066,25 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
     return ok;
 }
 
+/*
+ * Secret handshake with js_EmitTree's TOK_LP/TOK_NEW case logic, to flag all
+ * uses of JSOP_GETMETHOD that implicitly qualify the method-property name with
+ * a function:: prefix.  All other JSOP_GETMETHOD and JSOP_SETMETHOD uses must
+ * be explicit, so need a distinct source note (SRC_PCDELTA rather than PCBASE)
+ * for round-tripping through the beloved decompiler.
+ */
+#define JSPROP_IMPLICIT_FUNCTION_NAMESPACE      0x100
+
+static jssrcnote
+SrcNoteForPropOp(JSParseNode *pn, JSOp op)
+{
+    return ((op == JSOP_GETMETHOD &&
+             !(pn->pn_attrs & JSPROP_IMPLICIT_FUNCTION_NAMESPACE)) ||
+            op == JSOP_SETMETHOD)
+           ? SRC_PCDELTA
+           : SRC_PCBASE;
+}
+
 static JSBool
 EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
@@ -2111,7 +2130,7 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 
         do {
             /* Walk back up the list, emitting annotated name ops. */
-            if (js_NewSrcNote2(cx, cg, SRC_PCBASE,
+            if (js_NewSrcNote2(cx, cg, SrcNoteForPropOp(pndot, pndot->pn_op),
                                CG_OFFSET(cg) - pndown->pn_offset) < 0) {
                 return JS_FALSE;
             }
@@ -2128,8 +2147,10 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             return JS_FALSE;
     }
 
-    if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - pn2->pn_offset) < 0)
+    if (js_NewSrcNote2(cx, cg, SrcNoteForPropOp(pn, op),
+                       CG_OFFSET(cg) - pn2->pn_offset) < 0) {
         return JS_FALSE;
+    }
     if (!pn->pn_atom) {
         JS_ASSERT(op == JSOP_IMPORTALL);
         if (js_Emit1(cx, cg, op) < 0)
@@ -4102,9 +4123,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 
         /* Left parts such as a.b.c and a[b].c need a decompiler note. */
-        if (pn2->pn_type != TOK_NAME) {
-            if (js_NewSrcNote2(cx, cg, SRC_PCBASE, CG_OFFSET(cg) - top) < 0)
-                return JS_FALSE;
+        if (pn2->pn_type != TOK_NAME &&
+            js_NewSrcNote2(cx, cg, SrcNoteForPropOp(pn2, pn2->pn_op),
+                           CG_OFFSET(cg) - top) < 0) {
+            return JS_FALSE;
         }
 
         /* Finally, emit the specialized assignment bytecode. */
@@ -4461,6 +4483,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         if (pn2->pn_type == TOK_DOT && pn2->pn_op != JSOP_GETMETHOD) {
             JS_ASSERT(pn2->pn_op == JSOP_GETPROP);
             pn2->pn_op = JSOP_GETMETHOD;
+            pn2->pn_attrs |= JSPROP_IMPLICIT_FUNCTION_NAMESPACE;
         }
 #endif
         if (!js_EmitTree(cx, cg, pn2))

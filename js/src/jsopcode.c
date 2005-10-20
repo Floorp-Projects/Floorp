@@ -1888,34 +1888,37 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
               do_getprop:
                 GET_QUOTE_AND_FMT("%s[%s]", "%s.%s", rval);
+
+              do_getprop_lval:
                 lval = POP_STR();
                 todo = Sprint(&ss->sprinter, fmt, lval, rval);
                 break;
 
 #if JS_HAS_XML_SUPPORT
               BEGIN_LITOPX_CASE(JSOP_GETMETHOD)
+                sn = js_GetSrcNote(jp->script, pc);
+                if (sn && SN_TYPE(sn) == SRC_PCBASE)
+                    goto do_getprop;
                 GET_QUOTE_AND_FMT("%s.function::[%s]", "%s.function::%s", rval);
-                lval = POP_STR();
-                todo = Sprint(&ss->sprinter, fmt, lval, rval);
-              END_LITOPX_CASE
+                goto do_getprop_lval;
 
               BEGIN_LITOPX_CASE(JSOP_SETMETHOD)
-                GET_ATOM_QUOTE_AND_FMT("%s.function::[%s] %s= %s",
-                                       "%s.function::%s %s= %s",
-                                       xval);
-                rval = POP_STR();
-                lval = POP_STR();
-                sn = js_GetSrcNote(jp->script, pc - 1);
-                todo = Sprint(&ss->sprinter, fmt, lval, xval,
-                              (sn && SN_TYPE(sn) == SRC_ASSIGNOP)
-                              ? js_CodeSpec[lastop].token
-                              : "",
-                              rval);
-              END_LITOPX_CASE
+                sn = js_GetSrcNote(jp->script, pc);
+                if (sn && SN_TYPE(sn) == SRC_PCBASE)
+                    goto do_setprop;
+                GET_QUOTE_AND_FMT("%s.function::[%s] %s= %s",
+                                  "%s.function::%s %s= %s",
+                                  xval);
+                goto do_setprop_rval;
 #endif
 
               case JSOP_SETPROP:
-                GET_ATOM_QUOTE_AND_FMT("%s[%s] %s= %s", "%s.%s %s= %s", xval);
+                atom = GET_ATOM(cx, jp->script, pc);
+
+              do_setprop:
+                GET_QUOTE_AND_FMT("%s[%s] %s= %s", "%s.%s %s= %s", xval);
+
+              do_setprop_rval:
                 rval = POP_STR();
                 lval = POP_STR();
                 sn = js_GetSrcNote(jp->script, pc - 1);
@@ -2987,7 +2990,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
         begin = pc;
     } else {
         sn = js_GetSrcNote(script, pc);
-        if (!sn || SN_TYPE(sn) != SRC_PCBASE) {
+        if (!sn || SN_TYPE(sn) != SRC_PCBASE && SN_TYPE(sn) != SRC_PCDELTA) {
             if (cs->token)
                 return JS_NewStringCopyZ(cx, cs->token);
             goto do_fallback;
