@@ -299,7 +299,7 @@ pref("network.IDN_show_punycode", false);
 // The list currently contains the characters:
 // U+2044 FRACTION SLASH
 // U+2215 DIVISION SLASH
-pref("network.IDN.blacklist_chars", "ââ");
+pref("network.IDN.blacklist_chars", "????????????");
 
 // This preference specifies a list of domains for which DNS lookups will be
 // IPv4 only. Works around broken DNS servers which can't handle IPv6 lookups
@@ -653,3 +653,9 @@ pref("skey.enabled", true);
 
 pref("browser.startup.homepage", "http://www.google.com/xhtml");
 
+pref("browser.display.zoomui",10);
+pref("browser.display.zoomcontent",10);
+
+/* So forcing this to false, so it's possible to test the toggle */ 
+/* This is being used in the code, as the state holder */ 
+pref("snav.enabled", false);
