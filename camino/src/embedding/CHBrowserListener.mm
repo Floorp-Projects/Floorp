@@ -453,18 +453,15 @@ NS_IMETHODIMP
 CHBrowserListener::GetVisibility(PRBool *aVisibility)
 {
   NS_ENSURE_ARG_POINTER(aVisibility);
-
-  if (!mView) {
+  *aVisibility = PR_FALSE;
+  
+  if (!mView)
     return NS_ERROR_FAILURE;
-  }
 
-  NSWindow* window = [mView getNativeWindow];
-  if (!window) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aVisibility = [window isVisible];
-
+  // Only return PR_TRUE if the view is the current tab
+  // (so its -window is non-nil). See bug 306245.
+  // XXX should we bother testing [window isVisible]?
+  *aVisibility = [mView window] && [[mView window] isVisible];
   return NS_OK;
 }
 
@@ -489,6 +486,7 @@ CHBrowserListener::SetVisibility(PRBool aVisibility)
   }
   else						// hiding
   {
+    // XXX should we really hide a window that may have other tabs?
     if ([window isVisible])
       [window orderOut:nil];
   }
