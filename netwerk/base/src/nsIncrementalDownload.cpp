@@ -43,6 +43,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
+#include "nsIPropertyBag2.h"
 #include "nsIServiceManager.h"
 #include "nsILocalFile.h"
 #include "nsITimer.h"
@@ -50,6 +51,7 @@
 #include "nsNetUtil.h"
 #include "nsAutoPtr.h"
 #include "nsWeakReference.h"
+#include "nsChannelProperties.h"
 #include "prio.h"
 #include "prprf.h"
 
@@ -58,9 +60,17 @@
 #define NS_ERROR_DOWNLOAD_COMPLETE \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 1)
 
+// Error code used internally by the incremental downloader to cancel the
+// network channel when the response to a range request is 200 instead of 206.
+#define NS_ERROR_DOWNLOAD_NOT_PARTIAL \
+    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 2)
+
 // Default values used to initialize a nsIncrementalDownload object.
 #define DEFAULT_CHUNK_SIZE (4096 * 16)  // bytes
 #define DEFAULT_INTERVAL    60          // seconds
+
+// Number of times to retry a failed byte-range request.
+#define MAX_RETRY_COUNT 20
 
 //-----------------------------------------------------------------------------
 
@@ -72,7 +82,8 @@ WriteToFile(nsILocalFile *lf, const char *data, PRUint32 len, PRInt32 flags)
   if (NS_FAILED(rv))
     return rv;
 
-  rv = PR_Write(fd, data, len) == PRInt32(len) ? NS_OK : NS_ERROR_FAILURE;
+  if (len)
+    rv = PR_Write(fd, data, len) == PRInt32(len) ? NS_OK : NS_ERROR_FAILURE;
 
   PR_Close(fd);
   return rv;
@@ -150,6 +161,7 @@ private:
   nsInt64                        mTotalSize;
   nsInt64                        mCurrentSize;
   PRUint32                       mLoadFlags;
+  PRInt32                        mNonPartialCount;
   nsresult                       mStatus;
   PRPackedBool                   mIsPending;
   PRPackedBool                   mDidOnStartRequest;
@@ -162,6 +174,7 @@ nsIncrementalDownload::nsIncrementalDownload()
   , mTotalSize(-1)
   , mCurrentSize(-1)
   , mLoadFlags(LOAD_NORMAL)
+  , mNonPartialCount(0)
   , mStatus(NS_OK)
   , mIsPending(PR_FALSE)
   , mDidOnStartRequest(PR_FALSE)
@@ -255,12 +268,16 @@ nsIncrementalDownload::ProcessTimeout()
   NS_ASSERTION(mCurrentSize != nsInt64(-1),
       "we should know the current file size by now");
 
-  nsCAutoString range;
-  MakeRangeSpec(mCurrentSize, mTotalSize, mChunkSize, mInterval == 0, range);
+  // Don't bother making a range request if we are just going to fetch the
+  // entire document.
+  if (mInterval || mCurrentSize != nsInt64(0)) {
+    nsCAutoString range;
+    MakeRangeSpec(mCurrentSize, mTotalSize, mChunkSize, mInterval == 0, range);
 
-  rv = http->SetRequestHeader(NS_LITERAL_CSTRING("Range"), range, PR_FALSE);
-  if (NS_FAILED(rv))
-    return rv;
+    rv = http->SetRequestHeader(NS_LITERAL_CSTRING("Range"), range, PR_FALSE);
+    if (NS_FAILED(rv))
+      return rv;
+  }
 
   rv = channel->AsyncOpen(this, nsnull);
   if (NS_FAILED(rv))
@@ -411,9 +428,9 @@ nsIncrementalDownload::Init(nsIURI *uri, nsIFile *dest,
   mURI = uri;
   mFinalURI = uri;
 
-  if (chunkSize != -1)
+  if (chunkSize > 0)
     mChunkSize = chunkSize;
-  if (interval != -1)
+  if (interval >= 0)
     mInterval = interval;
   return NS_OK;
 }
@@ -517,8 +534,32 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
       // Return an error code here to suppress OnDataAvailable.
       return NS_ERROR_DOWNLOAD_COMPLETE;
     }
-    NS_WARNING("server response was unexpected");
-    return NS_ERROR_UNEXPECTED;
+    // The server may have decided to give us all of the data in one chunk.  If
+    // we requested a partial range, then we don't want to download all of the
+    // data at once.  So, we'll just try again, but if this keeps happening then
+    // we'll eventually give up.
+    if (code == 200) {
+      if (mInterval) {
+        mChannel = nsnull;
+        if (++mNonPartialCount > MAX_RETRY_COUNT) {
+          NS_WARNING("unable to fetch a byte range; giving up");
+          return NS_ERROR_FAILURE;
+        }
+        // Increase delay with each failure.
+        StartTimer(mInterval * mNonPartialCount);
+        return NS_ERROR_DOWNLOAD_NOT_PARTIAL;
+      }
+      // Since we have been asked to download the rest of the file, we can deal
+      // with a 200 response.  This may result in downloading the beginning of
+      // the file again, but that can't really be helped.
+    } else {
+      NS_WARNING("server response was unexpected");
+      return NS_ERROR_UNEXPECTED;
+    }
+  } else {
+    // We got a partial response, so clear this counter in case the next chunk
+    // results in a 200 response.
+    mNonPartialCount = 0;
   }
 
   // Do special processing after the first response.
@@ -528,19 +569,39 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
     if (NS_FAILED(rv))
       return rv;
 
-    // OK, read the Content-Range header to determine the total size of this
-    // download file.
-    nsCAutoString buf;
-    rv = http->GetResponseHeader(NS_LITERAL_CSTRING("Content-Range"), buf);
-    if (NS_FAILED(rv))
-      return rv;
-    PRInt32 slash = buf.FindChar('/');
-    if (slash == kNotFound) {
-      NS_WARNING("server returned invalid Content-Range header!");
-      return NS_ERROR_UNEXPECTED;
+    if (code == 206) {
+      // OK, read the Content-Range header to determine the total size of this
+      // download file.
+      nsCAutoString buf;
+      rv = http->GetResponseHeader(NS_LITERAL_CSTRING("Content-Range"), buf);
+      if (NS_FAILED(rv))
+        return rv;
+      PRInt32 slash = buf.FindChar('/');
+      if (slash == kNotFound) {
+        NS_WARNING("server returned invalid Content-Range header!");
+        return NS_ERROR_UNEXPECTED;
+      }
+      if (PR_sscanf(buf.get() + slash + 1, "%lld", (PRInt64 *) &mTotalSize) != 1)
+        return NS_ERROR_UNEXPECTED;
+    } else {
+      // Use nsIPropertyBag2 to fetch the content length as it exposes the
+      // value as a 64-bit number.
+      nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(request, &rv);
+      if (NS_FAILED(rv))
+        return rv;
+      rv = props->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
+                                     &mTotalSize.mValue);
+      // We need to know the total size of the thing we're trying to download.
+      if (mTotalSize == nsInt64(-1)) {
+        NS_WARNING("server returned no content-length header!");
+        return NS_ERROR_UNEXPECTED;
+      }
+      // Need to truncate the file since we are downloading the whole thing.
+      if (mCurrentSize != nsInt64(0)) {
+        WriteToFile(mDest, nsnull, 0, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE);
+        mCurrentSize = 0;
+      }
     }
-    if (PR_sscanf(buf.get() + slash + 1, "%lld", (PRInt64 *) &mTotalSize) != 1)
-      return NS_ERROR_UNEXPECTED;
 
     // Notify observer that we are starting...
     rv = CallOnStartRequest();
@@ -565,6 +626,11 @@ nsIncrementalDownload::OnStopRequest(nsIRequest *request,
                                      nsISupports *context,
                                      nsresult status)
 {
+  // Not a real error; just a trick to kill off the channel without our
+  // listener having to care.
+  if (status == NS_ERROR_DOWNLOAD_NOT_PARTIAL)
+    return NS_OK;
+
   // Not a real error; just a trick used to suppress OnDataAvailable calls.
   if (status == NS_ERROR_DOWNLOAD_COMPLETE)
     status = NS_OK;
@@ -690,6 +756,11 @@ nsIncrementalDownload::OnChannelRedirect(nsIChannel *oldChannel,
   nsCOMPtr<nsIChannelEventSink> sink = do_GetInterface(mObserver);
   if (sink)
     rv = sink->OnChannelRedirect(oldChannel, newChannel, flags);
+
+  // Update mChannel, so we can Cancel the new channel.
+  if (NS_SUCCEEDED(rv))
+    mChannel = newChannel;
+
   return rv;
 }
 
