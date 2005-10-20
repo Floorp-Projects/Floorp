@@ -23,6 +23,7 @@ echo Copying over files from OBJDIR
 mkdir minimo
 cp -a bin/js3250.dll                                     minimo
 cp -a bin/minimo.exe                                     minimo
+cp -a bin/minimo_runner.exe                              minimo
 cp -a bin/nspr4.dll                                      minimo
 cp -a bin/plc4.dll                                       minimo
 cp -a bin/plds4.dll                                      minimo

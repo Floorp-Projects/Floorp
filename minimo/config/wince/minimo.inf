@@ -27,6 +27,7 @@ CEShortcuts=Shortcuts
 [SourceDisksFiles]
 js3250.dll=1
 minimo.exe=1
+minimo_runner.exe=1
 nspr4.dll=1
 nss3.dll=1
 nssckbi.dll=1
@@ -97,6 +98,7 @@ Shortcuts=0,%CE11% ; Start Menuz
 [Files.minimo]
 js3250.dll,,,0
 minimo.exe,,,0
+minimo_runner.exe,,,0
 nspr4.dll,,,0
 nss3.dll,,,0
 nssckbi.dll,,,0
@@ -161,6 +163,6 @@ fontEncoding.properties,,,0
 fontNameMap.properties,,,0
 
 [Shortcuts]
-Minimo,0,minimo.exe,%CE11% ; windows\start menu\programs
+Minimo,0,minimo_runner.exe,%CE11% ; windows\start menu\programs
 
 
