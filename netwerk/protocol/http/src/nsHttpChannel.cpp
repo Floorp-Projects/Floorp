@@ -73,6 +73,11 @@
 #include "nsIVariant.h"
 #include "nsChannelProperties.h"
 
+// True if the local cache should be bypassed when processing a request.
+#define BYPASS_LOCAL_CACHE(loadFlags) \
+        (loadFlags & (nsIRequest::LOAD_BYPASS_CACHE | \
+                      nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE))
+
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
 static NS_METHOD DiscardSegments(nsIInputStream *input,
@@ -1310,11 +1315,11 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     if (offline || (mLoadFlags & INHIBIT_CACHING)) {
         // If we have been asked to bypass the cache and not write to the
         // cache, then don't use the cache at all.
-        if (mLoadFlags & LOAD_BYPASS_CACHE && !offline)
+        if (BYPASS_LOCAL_CACHE(mLoadFlags) && !offline)
             return NS_ERROR_NOT_AVAILABLE;
         accessRequested = nsICache::ACCESS_READ;
     }
-    else if (mLoadFlags & LOAD_BYPASS_CACHE)
+    else if (BYPASS_LOCAL_CACHE(mLoadFlags))
         accessRequested = nsICache::ACCESS_WRITE; // replace cache entry
     else
         accessRequested = nsICache::ACCESS_READ_WRITE; // normal browsing
@@ -1325,7 +1330,12 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     rv = session->OpenCacheEntry(cacheKey, accessRequested, PR_FALSE,
                                  getter_AddRefs(mCacheEntry));
     if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
-        // access to the cache entry has been denied
+        // access to the cache entry has been denied (because the cache entry
+        // is probably in use by another channel).
+        if (mLoadFlags & LOAD_BYPASS_LOCAL_CACHE_IF_BUSY) {
+            LOG(("bypassing local cache since it is busy\n"));
+            return NS_ERROR_NOT_AVAILABLE;
+        }
         rv = session->AsyncOpenCacheEntry(cacheKey, accessRequested, this);
         if (NS_FAILED(rv)) return rv;
         // we'll have to wait for the cache entry

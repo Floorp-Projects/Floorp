@@ -116,6 +116,19 @@ interface nsICachingChannel : nsISupports
      */
 
     /**
+     * This load flag causes the local cache to be skipped when fetching a
+     * request.  Unlike LOAD_BYPASS_CACHE, it does not force an end-to-end load
+     * (i.e., it does not affect proxy caches).
+     */
+    const unsigned long LOAD_BYPASS_LOCAL_CACHE = 1 << 28;
+
+    /**
+     * This load flag causes the local cache to be skipped if the request
+     * would otherwise block waiting to access the cache.
+     */
+    const unsigned long LOAD_BYPASS_LOCAL_CACHE_IF_BUSY = 1 << 29;
+
+    /**
      * This load flag inhibits fetching from the net if the data in the cache
      * has been evicted.  An error of NS_ERROR_DOCUMENT_NOT_CACHED will be sent
      * to the listener's onStopRequest in this case.
