@@ -1228,7 +1228,8 @@ mozJSComponentLoader::StartFastLoad(nsIFastLoadService *flSvc)
         mFastLoadTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = mFastLoadTimer->InitWithFuncCallback(CloseFastLoad, this,
+        rv = mFastLoadTimer->InitWithFuncCallback(mozJSComponentLoader::CloseFastLoad,
+                                                  this,
                                                   kFastLoadWriteDelay,
                                                   nsITimer::TYPE_ONE_SHOT);
     } else {
