@@ -740,6 +740,37 @@ function my_remfgraph (user)
 
 }
 
+CIRCChannel.prototype._updateConferenceMode =
+function my_updateconfmode()
+{
+    const minDiff = client.CONFERENCE_LOW_PASS;
+
+    var enabled   = this.prefs["conference.enabled"];
+    var userLimit = this.prefs["conference.limit"];
+    var userCount = this.getUsersLength();
+
+    if (userLimit == 0)
+    {
+        // userLimit == 0 --> always off.
+        if (enabled)
+            this.prefs["conference.enabled"] = false;
+    }
+    else if (userLimit == 1)
+    {
+        // userLimit == 1 --> always on.
+        if (!enabled)
+            this.prefs["conference.enabled"] = true;
+    }
+    else if (enabled && (userCount < userLimit - minDiff))
+    {
+        this.prefs["conference.enabled"] = false;
+    }
+    else if (!enabled && (userCount > userLimit + minDiff))
+    {
+        this.prefs["conference.enabled"] = true;
+    }
+}
+
 CIRCServer.prototype.CTCPHelpClientinfo =
 function serv_ccinfohelp()
 {
@@ -1926,6 +1957,9 @@ function my_366 (e)
                                     e.params[3], "366");
     }
     this.pendingNamesReply = false;
+
+    // Update conference mode now we have a complete user list.
+    this._updateConferenceMode();
 }
 
 CIRCChannel.prototype.onTopic = /* user changed topic */
@@ -2020,8 +2054,8 @@ function my_cjoin (e)
     if (userIsMe(e.user))
     {
         var params = [e.user.unicodeName, e.channel.unicodeName];
-        this.display (getMsg(MSG_YOU_JOINED, params), "JOIN", 
-                      e.server.me, this);
+        this.display(getMsg(MSG_YOU_JOINED, params), "JOIN", 
+                     e.server.me, this);
         if (client.globalHistory)
             client.globalHistory.addPage(this.getURL());
 
@@ -2041,10 +2075,20 @@ function my_cjoin (e)
     }
     else
     {
-        this.display(getMsg(MSG_SOMEONE_JOINED,
-                            [e.user.unicodeName, e.user.name, e.user.host,
-                             e.channel.unicodeName]),
-                     "JOIN", e.user, this);
+        if (!this.prefs["conference.enabled"])
+        {
+            this.display(getMsg(MSG_SOMEONE_JOINED,
+                                [e.user.unicodeName, e.user.name, e.user.host,
+                                 e.channel.unicodeName]),
+                         "JOIN", e.user, this);
+        }
+
+        /* Only do this for non-me joins so us joining doesn't reset it (when
+         * we join the usercount is always 1). Also, do this after displaying
+         * the join message so we don't get cryptic effects such as a user
+         * joining causes *only* a "Conference mode enabled" message.
+         */
+        this._updateConferenceMode();
     }
 
     this._addUserToGraph(e.user);
@@ -2096,18 +2140,20 @@ function my_cpart (e)
     }
     else
     {
-        if (e.reason)
+        /* We're ok to update this before the message, because the only thing
+         * that can happen is *disabling* of conference mode.
+         */
+        this._updateConferenceMode();
+
+        if (!this.prefs["conference.enabled"])
         {
-            this.display (getMsg(MSG_SOMEONE_LEFT_REASON,
-                                 [e.user.unicodeName, e.channel.unicodeName,
-                                  e.reason]),
-                          "PART", e.user, this);
-        }
-        else
-        {
-            this.display (getMsg(MSG_SOMEONE_LEFT,
-                                 [e.user.unicodeName, e.channel.unicodeName]),
-                          "PART", e.user, this);
+            var msg = MSG_SOMEONE_LEFT;
+            if (e.reason)
+                msg = MSG_SOMEONE_LEFT_REASON;
+
+            this.display(getMsg(msg, [e.user.unicodeName, e.channel.unicodeName,
+                                      e.reason]),
+                         "PART", e.user, this);
         }
     }
 }
@@ -2155,9 +2201,10 @@ function my_ckick (e)
             enforcerNick = MSG_SERVER;
         }
 
-        this.display (getMsg(MSG_SOMEONE_GONE,
-                             [e.lamer.unicodeName, e.channel.unicodeName,
-                              enforcerProper, e.reason]), "KICK", e.user, this);
+        this.display(getMsg(MSG_SOMEONE_GONE,
+                            [e.lamer.unicodeName, e.channel.unicodeName,
+                             enforcerProper, e.reason]),
+                     "KICK", e.user, this);
     }
 
     this._removeUserFromGraph(e.lamer);
@@ -2204,9 +2251,10 @@ function my_cnick (e)
         }
         this.parent.parent.updateHeader();
     }
-    else
+    else if (!this.prefs["conference.enabled"])
     {
-        this.display(getMsg(MSG_NEWNICK_NOTYOU, [e.oldNick, e.user.unicodeName]),
+        this.display(getMsg(MSG_NEWNICK_NOTYOU, [e.oldNick,
+                                                 e.user.unicodeName]),
                      "NICK", e.user, this);
     }
 
@@ -2233,10 +2281,16 @@ function my_cquit (e)
     }
     else
     {
-        this.display (getMsg(MSG_SOMEONE_QUIT,
-                             [e.user.unicodeName, e.server.parent.unicodeName,
-                              e.reason]),
-                      "QUIT", e.user, this);
+        // See onPart for why this is ok before the message.
+        this._updateConferenceMode();
+
+        if (!this.prefs["conference.enabled"])
+        {
+            this.display(getMsg(MSG_SOMEONE_QUIT,
+                                [e.user.unicodeName,
+                                 e.server.parent.unicodeName, e.reason]),
+                         "QUIT", e.user, this);
+        }
     }
 
     this._removeUserFromGraph(e.user);

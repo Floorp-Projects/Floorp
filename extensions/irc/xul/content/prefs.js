@@ -127,6 +127,7 @@ function initPrefs()
          ["clientMaxLines",     200,      "global.maxLines"],
          ["collapseActions",    true,     "appearance.misc"],
          ["collapseMsgs",       false,    "appearance.misc"],
+         ["conference.limit",   150,      "appearance.misc"],
          ["connectTries",       5,        ".connect"],
          ["copyMessages",       true,     "global"],
          ["dcc.enabled",        true,     "dcc"],
@@ -386,6 +387,7 @@ function getNetworkPrefManager(network)
          ["charset",          defer, ".connect"],
          ["collapseActions",  defer, "appearance.misc"],
          ["collapseMsgs",     defer, "appearance.misc"],
+         ["conference.limit", defer, "appearance.misc"],
          ["connectTries",     defer, ".connect"],
          ["dcc.useServerIP",  defer, "dcc"],
          ["desc",             defer, ".ident"],
@@ -472,6 +474,8 @@ function getChannelPrefManager(channel)
          ["charset",          defer, ".connect"],
          ["collapseActions",  defer, "appearance.misc"],
          ["collapseMsgs",     defer, "appearance.misc"],
+         ["conference.enabled", false, "hidden"],
+         ["conference.limit", defer, "appearance.misc"],
          ["displayHeader",    client.prefs["channelHeader"],
                                                              "appearance.misc"],
          ["font.family",      defer, "appearance.misc"],
@@ -750,6 +754,21 @@ function onChannelPrefChanged(channel, prefName, newValue, oldValue)
 
     switch (prefName)
     {
+        case "conference.enabled":
+            // Wouldn't want to display a message to a hidden view.
+            if ("messages" in channel)
+            {
+                if (newValue)
+                    channel.display(MSG_CONF_MODE_ON);
+                else
+                    channel.display(MSG_CONF_MODE_OFF);
+            }
+            break;
+            
+        case "conference.limit":
+            channel._updateConferenceMode();
+            break;
+        
         case "font.family":
         case "font.size":
             channel.dispatch("sync-font");

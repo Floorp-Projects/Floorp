@@ -101,6 +101,11 @@ client.HIDE_CODES = true;      /* true if you'd prefer to show numeric response
  * copy to work properly. */
 client.NO_BROWSER_FOCUS = (navigator.platform.search(/mac|win/i) == -1);
 client.DEFAULT_RESPONSE_CODE = "===";
+/* Minimum number of users above or below the conference limit the user count
+ * must go, before it is changed. This allows the user count to fluctuate
+ * around the limit without continously going on and off.
+ */
+client.CONFERENCE_LOW_PASS = 10;
 
 
 client.viewsArray = new Array();
