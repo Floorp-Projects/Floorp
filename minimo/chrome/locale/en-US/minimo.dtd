@@ -27,7 +27,8 @@
 <!-- toolbar view options --> 
 
 <!ENTITY zoom.label                    "Zoom" >
-<!ENTITY zoomText.label                "Text zoom:" >
+<!ENTITY zoomText.label                "Text:" >
+<!ENTITY zoomUIText.label              "UI:" >
 <!ENTITY zoomTextPlus.label            "+" >
 <!ENTITY zoomTextMinus.label           "-" >
 <!ENTITY zoomUIText.label              "UI zoom:" >
