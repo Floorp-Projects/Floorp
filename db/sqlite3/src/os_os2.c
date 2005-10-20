@@ -49,6 +49,13 @@
 #endif
 
 /*
+** Do not include any of the File I/O interface procedures if the
+** SQLITE_OMIT_DISKIO macro is defined (indicating that there database
+** will be in-memory only)
+*/
+#ifndef SQLITE_OMIT_DISKIO
+
+/*
 ** Delete the named file
 */
 int sqlite3OsDelete(const char *zFilename){
@@ -547,6 +554,32 @@ int sqlite3OsClose(OsFile *id){
 }
 
 /*
+** Turn a relative pathname into a full pathname.  Return a pointer
+** to the full pathname stored in space obtained from sqliteMalloc().
+** The calling function is responsible for freeing this space once it
+** is no longer needed.
+*/
+char *sqlite3OsFullPathname(const char *zRelative){
+  char *zFull = 0;
+  char zPath[260];    /* max OS/2 path length, incl drive */
+  if( !_abspath(zPath, zRelative, sizeof(zPath)) ){
+    sqlite3SetString(&zFull, zPath, 0);
+  }else{
+    char zBuf[260];
+    snprintf(zPath, sizeof(zPath), "%s/%s",
+             getcwd(zBuf, sizeof(zBuf)), zRelative);
+    sqlite3SetString(&zFull, zPath, 0);
+  }
+  return zFull;
+}
+
+#endif /* SQLITE_OMIT_DISKIO */
+/***************************************************************************
+** Everything above deals with file I/O.  Everything that follows deals
+** with other miscellanous aspects of the operating system interface
+****************************************************************************/
+
+/*
 ** Get information to seed the random number generator.  The seed
 ** is written into the buffer zBuf[256].  The calling function must
 ** supply a sufficiently large buffer.
@@ -618,26 +651,6 @@ void sqlite3OsLeaveMutex(){
 }
 
 /*
-** Turn a relative pathname into a full pathname.  Return a pointer
-** to the full pathname stored in space obtained from sqliteMalloc().
-** The calling function is responsible for freeing this space once it
-** is no longer needed.
-*/
-char *sqlite3OsFullPathname(const char *zRelative){
-  char *zFull = 0;
-  char zPath[260];    /* max OS/2 path length, incl drive */
-  if( !_abspath(zPath, zRelative, sizeof(zPath)) ){
-    sqlite3SetString(&zFull, zPath, 0);
-  }else{
-    char zBuf[260];
-    snprintf(zPath, sizeof(zPath), "%s/%s",
-             getcwd(zBuf, sizeof(zBuf)), zRelative);
-    sqlite3SetString(&zFull, zPath, 0);
-  }
-  return zFull;
-}
-
-/*
 ** The following variable, if set to a non-zero value, becomes the result
 ** returned from sqlite3OsCurrentTime().  This is used for testing.
 */
@@ -661,25 +674,5 @@ int sqlite3OsCurrentTime(double *prNow){
 #endif
   return 0;
 }
-
-#if 0 /* NOT USED */
-/*
-** Find the time that the file was last modified.  Write the
-** modification time and date as a Julian Day number into *prNow and
-** return SQLITE_OK.  Return SQLITE_ERROR if the modification
-** time cannot be found.
-*/
-int sqlite3OsFileModTime(OsFile *id, double *prNow){
-  int rc;
-  struct stat statbuf;
-  if( fstat(id->h, &statbuf)==0 ){
-    *prNow = statbuf.st_mtime/86400.0 + 2440587.5;
-    rc = SQLITE_OK;
-  }else{
-    rc = SQLITE_ERROR;
-  }
-  return rc;
-}
-#endif /* NOT USED */
 
 #endif /* OS_OS2 */
