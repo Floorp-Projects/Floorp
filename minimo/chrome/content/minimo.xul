@@ -61,6 +61,7 @@
   onunload="MiniNavShutdown()">
 
   <script type="application/x-javascript" src="chrome://minimo/content/minimo.js"/>
+  <script type="application/x-javascript" src="chrome://minimo/content/common.js"/>
   <script type="application/x-javascript" src="chrome://minimo/content/rssview/rssload.js"/>
 
   <popupset id="mainPopupSet">

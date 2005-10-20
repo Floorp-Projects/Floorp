@@ -4,6 +4,7 @@ minimo.jar:
 %   locale  minimo   en-US       %locale/en-US/minimo/
 %   locale  branding en-US       %branding/locale/
 	content/minimo/minimo.js		 (content/minimo.js)
+	content/minimo/common.js		 (content/common.js)
 	content/minimo/minimo.xul		 (content/minimo.xul)
 	content/minimo/preferences.js    (content/preferences.js)
 	content/minimo/preferences.xul   (content/preferences.xul)
