@@ -39,6 +39,7 @@
 #include "msgCore.h"
 #include "nsMsgSearchCore.h"
 #include "nsMsgSearchAdapter.h"
+#include "nsMsgSearchBoolExpression.h"
 #include "nsMsgSearchSession.h"
 #include "nsMsgResultElement.h"
 #include "nsMsgSearchTerm.h"
