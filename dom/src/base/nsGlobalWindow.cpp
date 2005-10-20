@@ -367,6 +367,7 @@ nsGlobalWindow::~nsGlobalWindow()
   }
 
   mDocument = nsnull;           // Forces Release
+  mDoc = nsnull;
 
   NS_ASSERTION(!mArguments, "mArguments wasn't cleaned up properly!");
 
@@ -454,15 +455,15 @@ nsGlobalWindow::FreeInnerObjects(JSContext *cx)
   }
 
   if (mDocument) {
-    nsCOMPtr<nsIDocument> doc =
-      do_QueryInterface(mDocument);
+    NS_ASSERTION(mDoc, "Why is mDoc null?");
 
     // Remember the document's principal.
-    mDocumentPrincipal = doc->GetPrincipal();
+    mDocumentPrincipal = mDoc->GetPrincipal();
   }
 
   // Remove our reference to the document and the document principal.
   mDocument = nsnull;
+  mDoc = nsnull;
 
   if (mJSObject && cx) {
     ::JS_ClearScope(cx, mJSObject);
@@ -568,8 +569,7 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocUR
   // -- The new URI has the same origin as the script opener uri for our current
   //    window.
 
-  nsCOMPtr<nsIDocument> curDoc(do_QueryInterface(mDocument));
-  if (!curDoc || !aNewDocument) {
+  if (!mDoc || !aNewDocument) {
     return PR_FALSE;
   }
 
@@ -584,7 +584,7 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocUR
     }
   }
 
-  nsIURI* curURI = curDoc->GetDocumentURI();
+  nsIURI* curURI = mDoc->GetDocumentURI();
   if (!curURI || !newURI) {
     return PR_FALSE;
   }
@@ -602,7 +602,7 @@ nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument, PRBool useDocUR
   
   // Great, we're an about:blank document, check for one of the other
   // conditions.
-  if (curDoc == aNewDocument) {
+  if (mDoc == aNewDocument) {
     // aClearScopeHint is false.
     return PR_TRUE;
   }
@@ -957,6 +957,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
   // document.
 
   mDocument = aDocument;
+  mDoc = newDoc;
 
   if (IsOuterWindow()) {
     scx->WillInitializeContext();
@@ -1120,6 +1121,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
           // to the document to prevent it from keeping everything
           // around. But remember the document's principal.
           currentInner->mDocument = nsnull;
+          currentInner->mDoc = nsnull;
           currentInner->mDocumentPrincipal = oldPrincipal;
         }
       }
@@ -1217,6 +1219,7 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
     if (!aState) {
       if (reUseInnerWindow) {
         newInnerWindow->mDocument = aDocument;
+        newInnerWindow->mDoc = newDoc;
 
         // We're reusing the inner window for a new document. In this
         // case we don't clear the inner window's scope, but we must
@@ -1295,14 +1298,14 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
     if (currentInner) {
       currentInner->FreeInnerObjects(cx);
 
-      nsCOMPtr<nsIDocument> doc =
-        do_QueryInterface(mDocument);
-
+      NS_ASSERTION(mDoc, "Must have doc!");
+      
       // Remember the document's principal.
-      mDocumentPrincipal = doc->GetPrincipal();
+      mDocumentPrincipal = mDoc->GetPrincipal();
 
       // Release our document reference
       mDocument = nsnull;
+      mDoc = nsnull;
 
       if (mJSObject) {
         ::JS_ClearScope(cx, mJSObject);
@@ -1510,8 +1513,8 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     // down.
     if (aEvent->message == NS_PAGE_UNLOAD && mDocument &&
         !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-      doc->BindingManager()->ExecuteDetachedHandlers();
+      NS_ASSERTION(mDoc, "Must have doc");
+      mDoc->BindingManager()->ExecuteDetachedHandlers();
     }
   }
 
@@ -1720,12 +1723,9 @@ nsGlobalWindow::SetNewArguments(PRUint32 aArgc, void* aArgv)
 nsIPrincipal*
 nsGlobalWindow::GetPrincipal()
 {
-  if (mDocument) {
+  if (mDoc) {
     // If we have a document, get the principal from the document
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-    NS_ENSURE_TRUE(doc, nsnull);
-
-    return doc->GetPrincipal();
+    return mDoc->GetPrincipal();
   }
 
   if (mDocumentPrincipal) {
@@ -3079,10 +3079,8 @@ nsGlobalWindow::EnsureReflowFlushAndPaint()
     return;
 
   // Flush pending reflows.
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-
-  if (doc) {
-    doc->FlushPendingNotifications(Flush_Layout);
+  if (mDoc) {
+    mDoc->FlushPendingNotifications(Flush_Layout);
   }
 
   // Unsuppress painting.
@@ -4683,11 +4681,8 @@ nsGlobalWindow::ConvertCharset(const nsAString& aStr, char** aDest)
 
   // Get the document character set
   nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8")); // default to utf-8
-  if (mDocument) {
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-
-    if (doc)
-      charset = doc->GetDocumentCharacterSet();
+  if (mDoc) {
+    charset = mDoc->GetDocumentCharacterSet();
   }
 
   // Get an encoder for the character set
@@ -5038,10 +5033,8 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
 {
   FORWARD_TO_INNER_CREATE(AddEventListener, (aType, aListener, aUseCapture));
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-
   return AddEventListener(aType, aListener, aUseCapture,
-                          !nsContentUtils::IsChromeDoc(doc));
+                          !nsContentUtils::IsChromeDoc(mDoc));
 }
 
 NS_IMETHODIMP
@@ -5057,13 +5050,12 @@ nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, PRBool* _retval)
 {
   FORWARD_TO_INNER(DispatchEvent, (aEvent, _retval), NS_OK);
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-  if (!doc) {
+  if (!mDoc) {
     return NS_ERROR_FAILURE;
   }
 
   // Obtain a presentation shell
-  nsIPresShell *shell = doc->GetShellAt(0);
+  nsIPresShell *shell = mDoc->GetShellAt(0);
   if (!shell) {
     return NS_OK;
   }
@@ -5494,8 +5486,7 @@ nsGlobalWindow::GetDocument(nsIDOMDocumentView ** aDocumentView)
   nsresult rv = NS_OK;
 
   if (mDocument) {
-    rv = mDocument->QueryInterface(NS_GET_IID(nsIDOMDocumentView),
-                                   (void **) aDocumentView);
+    rv = CallQueryInterface(mDocument, aDocumentView);
   }
   else {
     *aDocumentView = nsnull;
@@ -5554,9 +5545,8 @@ nsGlobalWindow::GetInterface(const nsIID & aIID, void **aSink)
   }
 #endif
   else if (aIID.Equals(NS_GET_IID(nsIScriptEventManager))) {
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-    if (doc) {
-      nsIScriptEventManager* mgr = doc->GetScriptEventManager();
+    if (mDoc) {
+      nsIScriptEventManager* mgr = mDoc->GetScriptEventManager();
       if (mgr) {
         *aSink = mgr;
         NS_ADDREF(((nsISupports *) *aSink));
@@ -6781,9 +6771,8 @@ nsGlobalWindow::SecurityCheckURL(const char *aURL)
 void
 nsGlobalWindow::FlushPendingNotifications(mozFlushType aType)
 {
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-  if (doc) {
-    doc->FlushPendingNotifications(aType);
+  if (mDoc) {
+    mDoc->FlushPendingNotifications(aType);
   }
 }
 
