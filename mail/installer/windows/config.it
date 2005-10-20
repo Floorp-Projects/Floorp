@@ -564,7 +564,7 @@ Description Long={Component_RSS_Long}
 Archive=newsblog.xpi
 $InstallSize$:newsblog
 $InstallSizeArchive$:newsblog.xpi
-Attributes=SELECTED|FORCE_UPGRADE|VISIBLE
+Attributes=SELECTED|FORCE_UPGRADE|INVISIBLE
 Force Upgrade File0=[SETUP PATH]\chrome\newsblog.jar
 FileCount=$FileCount$
 
