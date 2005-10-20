@@ -4134,7 +4134,7 @@ static int CompareExtensions(const char *aExtensionList, const char *aExtension)
   while(pComma != nsnull)
   {
     int length = pComma - pExt;
-    if(0 == PL_strncasecmp(pExt, aExtension, length))
+    if(0 == PL_strncasecmp(aExtension, pExt, length))
       return 0;
 
     pComma++;
@@ -4167,20 +4167,22 @@ nsPluginHostImpl::IsPluginEnabledForExtension(const char* aExtension,
     {
       variants = plugins->mVariants;
 
-      for (cnt = 0; cnt < variants; cnt++)
+      if (plugins->mExtensionsArray)
       {
-        //if (0 == strcmp(plugins->mExtensionsArray[cnt], aExtension))
-        // mExtensionsArray[cnt] could be not a single extension but
-        // rather a list separated by commas
-        if (0 == CompareExtensions(plugins->mExtensionsArray[cnt], aExtension))
+        for (cnt = 0; cnt < variants; cnt++)
         {
-          aMimeType = plugins->mMimeTypeArray[cnt];
-          return NS_OK;
+          // mExtensionsArray[cnt] is a list of extensions separated
+          // by commas
+          if (0 == CompareExtensions(plugins->mExtensionsArray[cnt], aExtension))
+          {
+            aMimeType = plugins->mMimeTypeArray[cnt];
+            return NS_OK;
+          }
         }
-      }
 
-      if (cnt < variants)
-        break;
+        if (cnt < variants)
+          break;
+      }
 
       plugins = plugins->mNext;
     }
