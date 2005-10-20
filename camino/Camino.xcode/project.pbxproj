@@ -71,7 +71,7 @@
 			sourceTree = "<group>";
 		};
 		032FFDD3077351A800440548 = {
-			fileEncoding = 30;
+			fileEncoding = 10;
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.strings;
 			name = English;
@@ -257,7 +257,7 @@
 			sourceTree = "<group>";
 		};
 		035A4987079DCA100084B05F = {
-			fileEncoding = 30;
+			fileEncoding = 10;
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.strings;
 			name = English;
@@ -747,7 +747,7 @@
 			sourceTree = "<group>";
 		};
 		03E2D85B0771F78500BD2443 = {
-			fileEncoding = 30;
+			fileEncoding = 10;
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.strings;
 			name = English;
@@ -10531,7 +10531,7 @@
 			sourceTree = SOURCE_ROOT;
 		};
 		3F8C005006800D8D00658CBC = {
-			fileEncoding = 30;
+			fileEncoding = 10;
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.strings;
 			name = English;
@@ -10556,7 +10556,7 @@
 			sourceTree = SOURCE_ROOT;
 		};
 		3F8C005606800E1300658CBC = {
-			fileEncoding = 30;
+			fileEncoding = 10;
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.strings;
 			name = English;
@@ -14230,7 +14230,7 @@
 			sourceTree = SOURCE_ROOT;
 		};
 		F5170530034B5E9701026D5D = {
-			fileEncoding = 30;
+			fileEncoding = 10;
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.strings;
 			name = English;
@@ -15685,7 +15685,7 @@
 			sourceTree = SOURCE_ROOT;
 		};
 		F56F837202E47CCD01EF35C9 = {
-			fileEncoding = 30;
+			fileEncoding = 10;
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.strings;
 			name = RegionNames.strings;
@@ -16735,7 +16735,7 @@
 			sourceTree = SOURCE_ROOT;
 		};
 		F5FCDD5D03A035E001A9666E = {
-			fileEncoding = 30;
+			fileEncoding = 10;
 			isa = PBXFileReference;
 			lastKnownFileType = text.plist.strings;
 			name = Localizable.strings;

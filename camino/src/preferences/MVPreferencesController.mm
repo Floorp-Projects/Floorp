@@ -161,7 +161,7 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
 
 - (void) awakeFromNib
 {
-  NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:@"preferences.toolbar"] autorelease];
+  NSToolbar *toolbar = [[[NSToolbar alloc] initWithIdentifier:@"preferences.toolbar.1"] autorelease];
 
   [mWindow setDelegate:self];
   [mWindow setFrameAutosaveName:@"CaminoPreferenceWindowFrame"];
@@ -192,8 +192,8 @@ static NSString* const CacheInfoPaneSeenKey   = @"MVPreferencePaneSeen";    // N
 
   // If a pref pane is not showing, then show the general pane
   if (!mCurrentPaneIdentifier && (![[mWindow contentView] isEqual:mMainView]))
-    [self selectPreferencePaneByIdentifier:@"org.mozilla.chimera.preference.navigation"];
-    
+    [self selectPreferencePaneByIdentifier:@"org.mozilla.camino.preference.navigation"];
+
   [mWindow makeKeyAndOrderFront:nil];
 }
 

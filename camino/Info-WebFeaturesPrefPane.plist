@@ -11,7 +11,7 @@
 	<key>CFBundleIconFile</key>
 	<string>WebFeatures.tiff</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.chimera.preference.webfeatures</string>
+	<string>org.mozilla.camino.preference.webfeatures</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

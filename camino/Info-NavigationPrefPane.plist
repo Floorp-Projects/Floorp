@@ -11,7 +11,7 @@
 	<key>CFBundleIconFile</key>
 	<string>Navigation.tiff</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.chimera.preference.navigation</string>
+	<string>org.mozilla.camino.preference.navigation</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>

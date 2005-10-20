@@ -3392,7 +3392,7 @@ enum BWCOpenDest {
 - (IBAction)configurePopupBlocking:(id)sender
 {
   [[MVPreferencesController sharedInstance] showPreferences:nil];
-  [[MVPreferencesController sharedInstance] selectPreferencePaneByIdentifier:@"org.mozilla.chimera.preference.webfeatures"];
+  [[MVPreferencesController sharedInstance] selectPreferencePaneByIdentifier:@"org.mozilla.camino.preference.webfeatures"];
 }
 
 // updateLock:

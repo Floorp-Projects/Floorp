@@ -11,7 +11,7 @@
 	<key>CFBundleIconFile</key>
 	<string>Security.tiff</string>
 	<key>CFBundleIdentifier</key>
-	<string>org.mozilla.chimera.preference.security</string>
+	<string>org.mozilla.camino.preference.security</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
