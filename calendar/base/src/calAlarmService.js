@@ -331,7 +331,8 @@ calAlarmService.prototype = {
         };
 
         if ((alarmTime.compare(now) >= 0 && alarmTime.compare(this.mRangeEnd) <= 0) || skipCheck) {
-            var timeout = alarmTime.subtractDate(now).inSeconds;
+            // delay is in msec, so don't forget to multiply
+            var timeout = alarmTime.subtractDate(now).inSeconds * 1000;
             this.mEvents[aItem.id] = newTimerWithCallback(callbackObj, timeout, false);
             dump("adding alarm timeout (" + timeout + ") for " + aItem + " at " + aItem.alarmTime + "\n");
         }
