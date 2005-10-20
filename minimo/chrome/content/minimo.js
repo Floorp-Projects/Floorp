@@ -552,6 +552,11 @@ function DoPanelPreferences() {
   BrowserReload(); 
 }
 
+function DoPanelPreferences2() {
+  window.openDialog("chrome://minimo/content/preferences/preferences.xul","preferences","modal,centerscreeen,chrome,resizable=no");
+  BrowserReload(); 
+}
+
 /* 
   Testing the SMS and Call Services 
 */
