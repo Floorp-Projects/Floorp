@@ -282,6 +282,13 @@ function MiniNavStartup()
    
   document.__defineSetter__("title",function(x){}); // Stays with the titled defined by the XUL element. 
   
+  
+  /*
+   * Sync UI zoom level 
+   */
+ 
+  syncUIZoom();
+  
 }
 
 /* 
