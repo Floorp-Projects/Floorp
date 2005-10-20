@@ -70,7 +70,11 @@
 #include <Screen.h>
 
 #include <nsBeOSCursors.h>
-
+#if defined(BeIME)
+#include <Input.h>
+#include <InputServerMethod.h>
+#include <String.h>
+#endif
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 
@@ -104,8 +108,176 @@ static nsVoidArray		gCursorArray(17);
 #define kWindowTitleBarHeight 24
 
 // TODO: make a #def for using OutLine view or not (see TODO below)
+#if defined(BeIME)
+#include "nsUTF8Utils.h"
+static inline uint32 utf8_str_len(const char* ustring, int32 length) 
+{
+	CalculateUTF8Length cutf8;
+	cutf8.write(ustring, length);
+	return cutf8.Length();       
+}
 
+nsIMEBeOS::nsIMEBeOS()
+	: imeTarget(NULL)
+	, imeState(NS_COMPOSITION_END), imeWidth(14)
+{
+}
+/* placeholder for possible cleanup
+nsIMEBeOS::~nsIMEBeOS()
+{
+}
+*/								
+void nsIMEBeOS::RunIME(uint32 *args, nsWindow *target, BView *fView)
+{
+	BMessage msg;
+	msg.Unflatten((const char*)args);
 
+	switch (msg.FindInt32("be:opcode")) 
+	{
+	case B_INPUT_METHOD_CHANGED:
+		if (msg.HasString("be:string")) 
+		{
+			const char* src = msg.FindString("be:string");
+			CopyUTF8toUTF16(src, imeText);
+ 
+    		if (msg.FindBool("be:confirmed")) 
+    		{	
+    			if (imeState != NS_COMPOSITION_END)
+   					DispatchText(imeText, 0, NULL);
+   			}
+   			else 
+   			{
+   				nsTextRange txtRuns[2];
+   				PRUint32 txtCount = 2;
+
+	 	    	int32 select[2];
+ 				select[0] = msg.FindInt32("be:selection", int32(0));
+				select[1] = msg.FindInt32("be:selection", 1);
+
+	 			txtRuns[0].mStartOffset = (select[0] == select[1]) ? 0 : utf8_str_len(src, select[1]);
+	 			txtRuns[0].mEndOffset	= imeText.Length();
+				txtRuns[0].mRangeType	= NS_TEXTRANGE_CONVERTEDTEXT;
+				if (select[0] == select[1])
+					txtCount = 1;
+				else 
+				{
+	 				txtRuns[1].mStartOffset = utf8_str_len(src, select[0]);
+	 				txtRuns[1].mEndOffset	= utf8_str_len(src, select[1]);
+	 				txtRuns[1].mRangeType	= NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+	 			}
+	 			imeTarget = target;
+				DispatchText(imeText, txtCount, txtRuns);
+			}	
+		}	
+		break;
+
+	case B_INPUT_METHOD_LOCATION_REQUEST:
+		if (fView && fView->LockLooper()) 
+		{
+			BPoint caret(imeCaret);
+			DispatchIME(NS_COMPOSITION_QUERY);
+			if (caret.x > imeCaret.x) 
+				caret.x = imeCaret.x - imeWidth * imeText.Length();	/* back */
+
+			BMessage reply(B_INPUT_METHOD_EVENT);
+			reply.AddInt32("be:opcode", B_INPUT_METHOD_LOCATION_REQUEST);
+			for (int32 s= 0; imeText[s]; s++) 
+			{ 
+				reply.AddPoint("be:location_reply", fView->ConvertToScreen(caret));
+				reply.AddFloat("be:height_reply", imeHeight);
+				caret.x += imeWidth;
+			}
+			imeMessenger.SendMessage(&reply);
+			fView->UnlockLooper();
+		}
+		break;
+
+	case B_INPUT_METHOD_STARTED:
+		imeTarget = target;
+		DispatchIME(NS_COMPOSITION_START);
+		DispatchIME(NS_COMPOSITION_QUERY);
+
+		msg.FindMessenger("be:reply_to", &imeMessenger);
+		break;
+	
+	case B_INPUT_METHOD_STOPPED:
+		if (imeState != NS_COMPOSITION_END)
+			DispatchIME(NS_COMPOSITION_END);
+		imeText.Truncate();
+		break;
+	};
+}
+
+void nsIMEBeOS::DispatchText(nsString &text, PRUint32 txtCount, nsTextRange* txtRuns)
+{
+	nsTextEvent textEvent(PR_TRUE,NS_TEXT_TEXT, imeTarget);
+
+	textEvent.time 		= 0;
+	textEvent.isShift   = 
+	textEvent.isControl =
+	textEvent.isAlt 	= 
+	textEvent.isMeta 	= PR_FALSE;
+  
+	textEvent.refPoint.x	= 
+	textEvent.refPoint.y	= 0;
+
+	textEvent.theText 	= text.get();
+	textEvent.isChar	= PR_TRUE;
+	textEvent.rangeCount= txtCount;
+	textEvent.rangeArray= txtRuns;
+
+	DispatchWindowEvent(&textEvent);
+}
+
+void nsIMEBeOS::DispatchCancelIME()
+{
+	if (imeText.Length() && imeState != NS_COMPOSITION_END) 
+	{
+		BMessage reply(B_INPUT_METHOD_EVENT);
+		reply.AddInt32("be:opcode", B_INPUT_METHOD_STOPPED);
+		imeMessenger.SendMessage(&reply);
+
+		DispatchText(imeText, 0, NULL);
+		DispatchIME(NS_COMPOSITION_END);
+
+		imeText.Truncate();
+	}
+}
+
+void nsIMEBeOS::DispatchIME(PRUint32 what)
+{
+	nsCompositionEvent compEvent(PR_TRUE, what, imeTarget);
+
+	compEvent.refPoint.x =
+	compEvent.refPoint.y = 0;
+	compEvent.time 	 = 0;
+
+	DispatchWindowEvent(&compEvent);
+	imeState = what;
+
+	if (what == NS_COMPOSITION_QUERY) 
+	{
+		imeCaret.Set(compEvent.theReply.mCursorPosition.x,
+		           compEvent.theReply.mCursorPosition.y);
+		imeHeight = compEvent.theReply.mCursorPosition.height+4;
+	}
+}
+
+PRBool nsIMEBeOS::DispatchWindowEvent(nsGUIEvent* event)
+{
+	nsEventStatus status;
+	imeTarget->DispatchEvent(event, status);
+	return PR_FALSE;
+}
+// There is only one IME instance per app, actually it may be set as global
+nsIMEBeOS *nsIMEBeOS::GetIME()
+{
+	if(beosIME == 0)
+		beosIME = new nsIMEBeOS();
+	return beosIME;
+}
+nsIMEBeOS *nsIMEBeOS::beosIME = 0;
+#endif
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -416,6 +588,9 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 				mustunlock = true;
 			}
 			mView->SetFlags(mView->Flags() | B_WILL_DRAW);
+#if defined(BeIME)
+			mView->SetFlags(mView->Flags() | B_INPUT_METHOD_AWARE);
+#endif
 			parent->AddChild(mView);
 			mView->MoveTo(aRect.x, aRect.y);
 			mView->ResizeTo(aRect.width-1, GetHeight(aRect.height)-1);
@@ -1814,6 +1989,14 @@ bool nsWindow::CallMethod(MethodInfo *info)
 	case nsWindow::KILL_FOCUS:
 		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
 		DispatchFocus(NS_LOSTFOCUS);
+#if defined BeIME
+		nsIMEBeOS::GetIME()->DispatchCancelIME();
+		if (mView && mView->LockLooper())
+ 		{
+ 			mView->SetFlags(mView->Flags() & ~B_NAVIGABLE);
+ 			mView->UnlockLooper();
+ 		}
+#endif
 		break;
 
 	case nsWindow::BTNCLICK :
@@ -1956,13 +2139,24 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 
 	case nsWindow::ONMOUSE :
-		NS_ASSERTION(info->nArgs == 4, "Wrong number of arguments to CallMethod");
-		if (!mEnabled)
-			return false;
-		DispatchMouseEvent(((int32 *)info->args)[0],
-		                   nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
-		                   0,
-		                   ((int32 *)info->args)[3]);
+		{
+		NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
+			if (!mEnabled)
+				return false;
+			BPoint cursor(0,0);
+			uint32 buttons;
+			
+			if(mView && mView->LockLooper())
+			{
+				mView->GetMouse(&cursor, &buttons, true);
+				mView->UnlockLooper();
+			}
+
+			DispatchMouseEvent(((int32 *)info->args)[0],
+			                   nsPoint(int32(cursor.x), int32(cursor.y)),
+			                   0,
+		    	               modifiers());
+		}
 		break;
 
 	case nsWindow::ONDROP :
@@ -2003,7 +2197,12 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 				//Testing if BWindow is really deactivated.
 				if (!mView->Window()->IsActive())
+				{
 					DispatchFocus(NS_DEACTIVATE);
+#if defined(BeIME)
+					nsIMEBeOS::GetIME()->DispatchCancelIME();
+#endif
+				}
 			} 
 			else 
 			{
@@ -2036,6 +2235,17 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		}
 		break;
 
+#if defined(BeIME)
+ 	case nsWindow::ONIME:
+ 		//No assertion used, as number of arguments varies here
+ 		if (mView && mView->LockLooper())
+ 		{
+ 			mView->SetFlags(mView->Flags() | B_NAVIGABLE);
+ 			mView->UnlockLooper();
+ 		}
+ 		nsIMEBeOS::GetIME()->RunIME(info->args, this, mView);
+ 		break;
+#endif
 		default:
 			bRet = FALSE;
 			break;
@@ -2920,10 +3130,10 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 	if (t == NULL)
 		return;
 
-	uint32	args[4];
-	args[1] = (int32) point.x;
+	uint32	args[1];
+/*	args[1] = (int32) point.x;
 	args[2] = (int32) point.y;
-	args[3] = modifiers();
+	args[3] = modifiers();*/
 
 	switch (transit)
  	{
@@ -2953,7 +3163,7 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
  	}
  	
 	MethodInfo *moveInfo = nsnull;
-	if (nsnull != (moveInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 4, args)))
+	if (nsnull != (moveInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 1, args)))
 		t->CallMethodAsync(moveInfo);
 	NS_RELEASE(t);
 }
@@ -3071,7 +3281,11 @@ void nsViewBeOS::MessageReceived(BMessage *msg)
 			}
 		}
 		break;
-
+#if defined(BeIME)
+	case B_INPUT_METHOD_EVENT:
+		DoIME(msg);
+		break;
+#endif
 	default :
 		BView::MessageReceived(msg);
 		break;
@@ -3162,4 +3376,28 @@ void nsViewBeOS::MakeFocus(bool focused)
 		NS_RELEASE(t);
 	}
 }
+#if defined(BeIME)
+void nsViewBeOS::DoIME(BMessage *msg)
+{
+	nsWindow	*w = (nsWindow *)GetMozillaWidget();
+	nsToolkit	*t;
 
+	if(w && (t = w->GetToolkit()) != 0) 
+	{
+		ssize_t size = msg->FlattenedSize();
+		int32		argc = (size+3)/4;
+		uint32 *args = new uint32[argc];
+		if (args) 
+		{
+			msg->Flatten((char*)args, size);
+			MethodInfo *info = new MethodInfo(w, w, nsWindow::ONIME, argc, args);
+			if (info) 
+			{
+				t->CallMethodAsync(info);
+				NS_RELEASE(t);
+			}
+			delete[] args;
+		}	
+	}
+}
+#endif

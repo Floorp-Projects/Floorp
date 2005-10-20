@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 #ifndef Window_h__
 #define Window_h__
+#define BeIME
 
 #include "nsBaseWidget.h"
 #include "nsdefs.h"
@@ -59,12 +60,19 @@
 #include <View.h>
 #include <Region.h>
 
+#if defined(BeIME)
+#include <Messenger.h>
+#endif
+
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
 
 // forward declaration
 class nsViewBeOS;
 class nsIRollupListener;
+#if defined(BeIME)
+class nsIMEBeOS;
+#endif
 
 /**
  * Native BeOS window wrapper. 
@@ -262,6 +270,10 @@ public:	// public on BeOS to allow BViews to access it
 	    ONACTIVATE,
 	    ONMOVE,
 	    ONWORKSPACE
+#if defined(BeIME)
+	    ,
+		ONIME
+#endif
 	};
 	nsToolkit *GetToolkit() { return (nsToolkit *)nsBaseWidget::GetToolkit(); }
 };
@@ -336,6 +348,9 @@ public:
 
 private:
 	void                 DoDraw(BRect updateRect);
+#if defined(BeIME)
+ 	void                 DoIME(BMessage *msg);
+#endif
 	BPoint               mousePos;
 	uint32               mouseMask;
 	bool                 restoreMouseMask;	
@@ -349,5 +364,27 @@ public:
 	                        ChildWindow() {};
 	virtual PRBool          IsChild() { return(PR_TRUE); };
 };
+#if defined(BeIME)
+class nsIMEBeOS 
+{
+public:
+	nsIMEBeOS();
+//	virtual ~nsIMEBeOS();
+	void	RunIME(uint32 *args, nsWindow *owner, BView* view);
+	void	DispatchText(nsString &text, PRUint32 txtCount, nsTextRange* txtRuns);
+	void	DispatchIME(PRUint32 what);
+	void	DispatchCancelIME();
+	PRBool	DispatchWindowEvent(nsGUIEvent* event);
+	
+	static  nsIMEBeOS *GetIME();
 
+private:
+	nsWindow*	imeTarget;
+	BMessenger	imeMessenger;
+	nsString	imeText;
+	BPoint		imeCaret;
+	PRUint32	imeState, imeWidth, imeHeight;
+	static	    nsIMEBeOS *beosIME;
+};
+#endif
 #endif // Window_h__
