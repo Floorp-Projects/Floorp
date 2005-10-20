@@ -548,8 +548,6 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
 {
   if (![self isRoot]) {
     Bookmark *theBookmark = [[Bookmark alloc] init];
-    [self insertChild:theBookmark atIndex:aPosition isMove:NO];
-    [theBookmark release];
     [theBookmark setTitle:aTitle];
     [theBookmark setKeyword:aKeyword];
     [theBookmark setUrl:aURL];
@@ -557,6 +555,8 @@ NSString* const BookmarkFolderDockMenuChangeNotificaton = @"bf_dmc";
     [theBookmark setLastVisit:aDate];
     [theBookmark setStatus:aStatus];
     [theBookmark setIsSeparator:aSeparator];
+    [self insertChild:theBookmark atIndex:aPosition isMove:NO];
+    [theBookmark release];
     return theBookmark;
   }
   return nil;

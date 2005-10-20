@@ -109,9 +109,14 @@
       return;
     }
     [self setAction:@selector(openBookmark:)];
-    [self setToolTip:[NSString stringWithFormat:NSLocalizedString(@"BookmarkButtonTooltipFormat", @""),
+    
+    NSString* tooltipString = [NSString stringWithFormat:NSLocalizedString(@"BookmarkButtonTooltipFormat", @""),
                                                 [bookmarkItem title],
-                                                [bookmarkItem url]]];
+                                                [bookmarkItem url]];
+    // using "\n\n" as a tooltip string causes Cocoa to hang when displaying the tooltip,
+    // so be paranoid about not doing that
+    if (![tooltipString isEqualToString:@"\n\n"])
+      [self setToolTip:tooltipString];
   }
   else {
     [[self cell] setClickHoldTimeout:0.5];
