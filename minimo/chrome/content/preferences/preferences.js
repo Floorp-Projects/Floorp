@@ -227,6 +227,8 @@ function PrefOkay() {
 	
 		if(transValidator!="") {
 			prefSETValue=eval(transValidator);
+		} else {
+			prefSETValue=elRef.value;
 		}
 
 		if (gPref.getPrefType(prefName) == gPref.PREF_STRING){
