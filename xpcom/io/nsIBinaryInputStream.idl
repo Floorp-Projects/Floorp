@@ -90,6 +90,9 @@ interface nsIBinaryInputStream : nsIInputStream {
 
 %{C++
 
+#ifdef MOZILLA_INTERNAL_API
+#include "nsString.h"
+
 inline nsresult
 NS_ReadOptionalCString(nsIBinaryInputStream* aStream, nsACString& aResult)
 {
@@ -117,5 +120,6 @@ NS_ReadOptionalString(nsIBinaryInputStream* aStream, nsAString& aResult)
     }
     return rv;
 }
+#endif
 
 %}

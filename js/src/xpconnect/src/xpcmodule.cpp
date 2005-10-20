@@ -95,7 +95,7 @@ static const nsModuleComponentInfo components[] = {
 #ifdef MOZ_JSLOADER
   // jsloader stuff
  ,{ "JS component loader", MOZJSCOMPONENTLOADER_CID,
-    mozJSComponentLoaderContractID, mozJSComponentLoaderConstructor,
+    MOZJSCOMPONENTLOADER_CONTRACTID, mozJSComponentLoaderConstructor,
     RegisterJSLoader, UnregisterJSLoader }
 #ifndef NO_SUBSCRIPT_LOADER
  ,{ "JS subscript loader", MOZ_JSSUBSCRIPTLOADER_CID,

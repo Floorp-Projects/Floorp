@@ -256,6 +256,10 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     else if (!strcmp(aProperty, NS_APP_PROFILE_DIR_STARTUP) && mProfileDir) {
       return mProfileDir->Clone(aFile);
     }
+    else if (!strcmp(aProperty, NS_APP_PROFILE_LOCAL_DIR_STARTUP) &&
+             mProfileLocalDir) {
+      return mProfileLocalDir->Clone(aFile);
+    }
     else if (mProfileNotified) {
       if (!strcmp(aProperty, NS_APP_USER_PROFILE_50_DIR) ||
           !strcmp(aProperty, NS_APP_PREFS_50_DIR)) {

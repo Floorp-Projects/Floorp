@@ -114,15 +114,33 @@ nsFastLoadService::NewFastLoadFile(const char* aBaseName, nsIFile* *aResult)
 {
     nsresult rv;
 
+    // Try "ProfDS" first, so that we can get the profile directory
+    // during startup.
     nsCOMPtr<nsIFile> profFile;
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+    rv = NS_GetSpecialDirectory("ProfDS",
                                 getter_AddRefs(profFile));
-    if (NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) {
+        // The directory service doesn't know about "ProfDS", so just ask
+        // for the regular profile directory key.  Note, however, that this
+        // will fail if a profile hasn't yet been selected.
+        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                    getter_AddRefs(profFile));
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
 
+    // Try "ProfLDS" first, so that we can get the local profile directory
+    // during startup.
     nsCOMPtr<nsIFile> file;
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
-                                getter_AddRefs(file));
+    rv = NS_GetSpecialDirectory("ProfLDS", getter_AddRefs(file));
+    if (NS_FAILED(rv)) {
+        // The directory service doesn't know about "ProfLDS", so just ask
+        // for the regular local profile directory key.  Note, however, that
+        // this will fail if a profile hasn't yet been selected.
+        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
+                                    getter_AddRefs(file));
+    }
     if (NS_FAILED(rv))
         file = profFile;
 
