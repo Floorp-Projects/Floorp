@@ -193,6 +193,7 @@ typedef enum EBookmarkOpenBehavior
 
 // if the main window is a browser window, return its controller, otherwise nil
 - (BrowserWindowController*)getMainWindowBrowserController;
+- (BrowserWindowController*)getKeyWindowBrowserController;
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle;
 
