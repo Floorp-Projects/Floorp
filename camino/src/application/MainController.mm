@@ -1323,6 +1323,15 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
   return nil;
 }
 
+- (BrowserWindowController*)getKeyWindowBrowserController
+{
+  NSWindowController* keyWindowController = [[mApplication keyWindow] windowController];
+  if (keyWindowController && [keyWindowController isMemberOfClass:[BrowserWindowController class]])
+    return (BrowserWindowController*)keyWindowController;
+  
+  return nil;
+}
+
 - (void)adjustCloseWindowMenuItemKeyEquivalent:(BOOL)inHaveTabs
 {
   // capitalization of the key equivalent affects whether the shift modifer is used.
@@ -1356,7 +1365,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 // Close Tab/Close Window accordingly
 - (void)fixCloseMenuItemKeyEquivalents
 {
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  BrowserWindowController* browserController = [self getKeyWindowBrowserController];
   BOOL windowWithMultipleTabs = (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);    
   [self adjustCloseWindowMenuItemKeyEquivalent:windowWithMultipleTabs];
   [self adjustCloseTabMenuItemKeyEquivalent:windowWithMultipleTabs];
@@ -1448,9 +1457,14 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     return (browserController != nil) || ([NSApp mainWindow] == nil);
   }
   
+  if (action == @selector(closeTab:))
+  {
+    BrowserWindowController* keyBWC = [self getKeyWindowBrowserController];
+    return (keyBWC && [[keyBWC getTabBrowser] numberOfTabViewItems] > 1);
+  }
+
   // only activate if we've got multiple tabs open.
-  if ((action == @selector(closeTab:) ||
-       action == @selector(nextTab:) ||
+  if ((action == @selector(nextTab:) ||
        action == @selector(previousTab:)))
   {
     return (browserController && [[browserController getTabBrowser] numberOfTabViewItems] > 1);
