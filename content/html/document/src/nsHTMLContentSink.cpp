@@ -1102,7 +1102,8 @@ SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
     mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
   }
 
-  if ((mStackPos == 2) && (mSink->mBody == mStack[1].mContent)) {
+  if ((mStackPos == 2) && (mSink->mBody == mStack[1].mContent ||
+                           mSink->mFrameset == mStack[1].mContent)) {
     // We just finished adding something to the body
     mNotifyLevel = 0;
   }
@@ -2231,7 +2232,7 @@ HTMLContentSink::DidBuildModel(void)
   }
 
   // Reflow the last batch of content
-  if (mBody) {
+  if (mBody || mFrameset) {
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("HTMLContentSink::DidBuildModel: layout final content"));
     mCurrentContext->FlushTags(PR_TRUE);
@@ -2843,17 +2844,20 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
   CloseHeadContext(); // do this just in case if the HEAD was left open!
 
   nsresult rv = mCurrentContext->OpenContainer(aNode);
+  PRBool isFirstFrameset = PR_FALSE;
   if (NS_SUCCEEDED(rv) && !mFrameset &&
       (mFlags & NS_SINK_FLAG_FRAMES_ENABLED)) {
     mFrameset =
       mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
     NS_ADDREF(mFrameset);
+    isFirstFrameset = PR_TRUE;
   }
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::OpenFrameset()\n"));
   MOZ_TIMER_STOP(mWatch);
 
-  if (mFrameset && mCurrentContext->mStackPos > 1) {
+  if (isFirstFrameset && mCurrentContext->mStackPos > 1) {
+    NS_ASSERTION(mFrameset, "Must have frameset!");
     // Have to notify for the frameset now, since we never actually
     // close out <html>, so won't notify for it then.
     PRInt32 parentIndex    = mCurrentContext->mStackPos - 2;
@@ -2890,7 +2894,26 @@ HTMLContentSink::CloseFrameset()
   SinkContext* sc = mCurrentContext;
   nsGenericHTMLElement* fs = sc->mStack[sc->mStackPos - 1].mContent;
   PRBool done = fs == mFrameset;
-  nsresult rv = sc->CloseContainer(eHTMLTag_frameset);
+
+  nsresult rv;
+  if (done) {
+    PRBool didFlush;
+    rv = sc->FlushTextAndRelease(&didFlush);
+    if (NS_FAILED(rv)) {
+      MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseFrameset()\n"));
+      MOZ_TIMER_STOP(mWatch);
+
+      return rv;
+    }
+
+    // Flush out anything that's left
+    SINK_TRACE(SINK_TRACE_REFLOW,
+               ("HTMLContentSink::CloseFrameset: layout final content"));
+
+    sc->FlushTags(PR_TRUE);
+  }
+
+  rv = sc->CloseContainer(eHTMLTag_frameset);    
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseFrameset()\n"));
   MOZ_TIMER_STOP(mWatch);
