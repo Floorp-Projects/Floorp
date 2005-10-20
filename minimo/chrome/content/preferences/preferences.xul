@@ -25,6 +25,8 @@
 
   <stringbundle id="bundlePreferences"    src="chrome://minimo/locale/minimo.properties"/>
      
+  <prefitem />
+
   <command id="cmd_PrefOkay"      oncommand="PrefOkay()" />
   <command id="cmd_PrefCancel"    oncommand="PrefCancel();" />
 
@@ -79,18 +81,21 @@
                                           preference="permissions.default.image" preftype="int" prefvalue=""
 				                  onsyncfrompreference="return readEnableImagesPref();"
 				                  onsynctopreference="return writeEnableImagesPref();" 
+							onchange="syncPref(this)" 
                                           />
 
                                 <checkbox id="ssr"
                                           tabindex="11" accessrule="general-pane"
                                           label="&useSSRCheckbox.label;"
                                           preference="ssr.enabled" preftype="bool"
+							onchange="syncPref(this)" 
                                           />
 
                                 <checkbox id="sitessr" 
                                           tabindex="12" accessrule="general-pane"
                                           label="&usesiteSSRCheckbox.label;"
                                           preference="ssr.site.enabled" preftype="bool"
+							onchange="syncPref(this)" 
                                           />
 
                                 </vbox>
@@ -106,7 +111,9 @@
 					  <label value="&zoomui.label;" />
                                 <textbox id="browserDisplayZoomUI" size="5"
                                          style="margin:3px ! important;" 
-                                         onchange="syncPref(this)" preference="browser.display.zoomui" preftype="int"/>
+                                         preference="browser.display.zoomui" preftype="int" 
+						     onchange="syncPref(this)" 
+						     />
 
 					  </box>
 
@@ -140,8 +147,8 @@
 		    <caption label="&advanced.label;" /> 
 			<hbox flex="1" >
 				<vbox flex="1" style="padding:4px ! important">
-    				    <checkbox tabindex="30" id="skey" label="&useSWKeyboard.label;" preference="skey.enabled"/>
-   				    <checkbox tabindex="31" id="dumpJS" label="&dumpJSConsole.label;" preference="config.wince.dumpJSConsole"/>
+    				    <checkbox tabindex="30" id="skey" label="&useSWKeyboard.label;" preference="skey.enabled" onchange="syncPref(this)" />
+   				    <checkbox tabindex="31" id="dumpJS" label="&dumpJSConsole.label;" preference="config.wince.dumpJSConsole" onchange="syncPref(this)" />
 				</vbox>
 			</hbox>
 	  </groupbox> 
@@ -181,6 +188,7 @@
 
 		<vbox class="box-prefpadding" flex="1">
 	        <checkbox id="UseProxy" label="&useproxyCheckbox.label;" preference="network.proxy.type" 
+				onchange="syncPref(this)" 
 	                  onsyncfrompreference="return readProxyPref();"
 	                  onsynctopreference="return writeProxyPref();"/>
 
@@ -190,8 +198,8 @@
 				        <caption label="&proxyURL.label; and &proxyPortCaption.label;"/>
 
 					  <hbox flex="1">
-	      				  <textbox flex="1"  style="margin:3px ! important;"  id="networkProxyHTTP" preference="network.proxy.http"/>
-		      			  <textbox id="networkProxyHTTP_Port" size="5"  style="margin:3px ! important;width:40px"  preference="network.proxy.http_port"/>
+	      				  <textbox onchange="syncPref(this)"  flex="1"  style="margin:3px ! important;"  id="networkProxyHTTP" preference="network.proxy.http"/>
+		      			  <textbox onchange="syncPref(this)"  id="networkProxyHTTP_Port" size="5"  style="margin:3px ! important;width:40px"  preference="network.proxy.http_port"/>
 
 					</hbox>
 		
