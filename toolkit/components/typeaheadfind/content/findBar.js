@@ -371,7 +371,7 @@ function fireKeypressEvent(target, evt)
   target.dispatchEvent(event);
 }
 
-function updateStatusBar()
+function updateStatusBarFind()
 {
   var xulBrowserWindow = window.XULBrowserWindow;
   if (!xulBrowserWindow)
@@ -423,7 +423,7 @@ function setFoundLink(foundLink)
   // fired by scroll event. So, we need to change the status bar text after
   // mouse event.
   if (gFindMode != FIND_NORMAL)
-    setTimeout(updateStatusBar, 0);
+    setTimeout(updateStatusBarFind, 0);
 }
 
 function finishFAYT(aKeypressEvent)
