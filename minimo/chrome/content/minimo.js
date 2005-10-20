@@ -489,11 +489,17 @@ function BrowserResetZoomMinus() {
 
 /* Reset the UI text size */ 
 function BrowserUIResetZoomPlus() {
-        document.styleSheets[1].cssRules[1].style.fontSize=parseInt(document.styleSheets[1].cssRules[1].style.fontSize)+3+"px";
+    var currentUILevel=gPref.getIntPref("browser.display.zoomui");
+    currentUILevel+=3;
+    gPref.setIntPref("browser.display.zoomui", currentUILevel);
+    syncUIZoom();
 }
 
 function BrowserUIResetZoomMinus() {
-        document.styleSheets[1].cssRules[1].style.fontSize=parseInt(document.styleSheets[1].cssRules[1].style.fontSize)-3+"px";
+    var currentUILevel=gPref.getIntPref("browser.display.zoomui");
+    currentUILevel-=3;
+    gPref.setIntPref("browser.display.zoomui", currentUILevel);
+    syncUIZoom();
 }
 
 /* 
