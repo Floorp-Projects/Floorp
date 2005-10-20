@@ -21,6 +21,7 @@
 <!ENTITY proxyCaption.label          "HTTP Proxy Settings">
 <!ENTITY useproxyCheckbox.label      "Use Proxy">
 <!ENTITY proxyPortCaption.label      "Port">
+<!ENTITY proxyURL.label              "URL">
 
 <!-- Home pane --> 
 
