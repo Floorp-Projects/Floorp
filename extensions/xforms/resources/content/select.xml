@@ -84,7 +84,8 @@
         </html:span>
         <html:select xbl:inherits="style"
                      onchange="this.parentNode.parentNode.selectionChanged();"
-                     onblur="this.parentNode.parentNode.handleBlur();"
+                     onfocus="this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusIn');"
+                     onblur="this.parentNode.parentNode.handleBlur(); this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusOut');"
                      multiple="true"
                      size="5"
                      anonid="select"/>
@@ -514,7 +515,8 @@
     </implementation>
   </binding>
 
- <!-- SELECT: <FULL> -->
+  <!-- SELECT: <FULL> -->
+  <!-- XXX: need to send DOMFocusIn/DOMFocusOut events -->
   <binding id="xformswidget-select-full"
            extends="chrome://xforms/content/select.xml#xformswidget-select">
     <content>

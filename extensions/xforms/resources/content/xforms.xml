@@ -104,14 +104,16 @@
         </body>
       </method>
 
-      <method name="dispatchDOMActivate">
+      <method name="dispatchDOMUIEvent">
+        <parameter name="aType"/>
         <body>
           var ev = document.createEvent("UIEvents");
-          ev.initUIEvent("DOMActivate", true, true, window, 1);
+          ev.initUIEvent(aType, true, true, window, 1);
           this.dispatchEvent(ev);
           return true;
         </body>
       </method>
+
     </implementation>
   </binding>
   
@@ -170,10 +172,11 @@
     <content>
       <children includes="label"/>
       <html:input anonid="control"
-                  onblur="this.parentNode.delegate.value = this.value;"
+                  onblur="this.parentNode.delegate.value = this.value; this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
+                  onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
                   onclick="this.parentNode._change();"
                   onkeyup="this.parentNode._change();"
-                  onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMActivate();"
+                  onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
                   xbl:inherits="accesskey"/>
       <children/>
     </content>
@@ -285,7 +288,8 @@
     <content>
       <children includes="label"/>
       <html:textarea anonid="control"
-                     onblur="this.parentNode.delegate.value = this.value;"
+                     onblur="this.parentNode.delegate.value = this.value; this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
+                     onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
                      onkeyup="this.parentNode._change();"
                      xbl:inherits="accesskey"/>
       <children/>
@@ -339,7 +343,9 @@
   <binding id="xformswidget-trigger"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
-      <html:button anonid="thebutton" xbl:inherits="accesskey">
+      <html:button anonid="thebutton" xbl:inherits="accesskey" 
+                   onblur="this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
+                   onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')">
         <children/>
       </html:button>
     </content>
@@ -373,7 +379,9 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
       <html:span tabindex="0" anonid="thespan" xbl:inherits="accesskey"
-                 onclick="if (!this._disabled) this.parentNode.dispatchDOMActivate();">
+                 onclick="if (!this._disabled) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
+                 onblur="this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
+                 onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')">
         <children/>
       </html:span>
     </content>

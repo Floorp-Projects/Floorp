@@ -62,7 +62,8 @@
                  anonid="container"><html:input
                  class="-moz-xforms-select1-input"
                  anonid="control"
-                 onblur="this.parentNode.parentNode.handleBlur();"
+                 onfocus="this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
+                 onblur="this.parentNode.parentNode.handleBlur(); this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusOut');"
                  onclick="this.parentNode.parentNode.handleControlClick();"
                  onkeypress="this.parentNode.parentNode.handleKeyPress(event);"
                  onkeyup="this.parentNode.parentNode.handleKeyUp(event);"
