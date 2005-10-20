@@ -628,7 +628,7 @@ js_LeaveSharpObject(JSContext *cx, JSIdArray **idap)
     }
 }
 
-#define OBJ_TOSTRING_EXTRA      3       /* for 3 local GC roots */
+#define OBJ_TOSTRING_EXTRA      4       /* for 4 local GC roots */
 
 #if JS_HAS_INITIALIZERS || JS_HAS_TOSOURCE
 JSBool
@@ -649,7 +649,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSProperty *prop;
     uintN attrs;
 #endif
-    jsval val[2];
+    jsval *val;
     JSString *gsop[2];
     JSAtom *atom;
     JSString *idstr, *valstr, *str;
@@ -759,6 +759,13 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     comma = NULL;
 
+    /*
+     * We have four local roots for cooked and raw value GC safety.  Hoist the
+     * "argv + 2" out of the loop using the val local, which refers to the raw
+     * (unconverted, "uncooked") values.
+     */
+    val = argv + 2;
+
     for (i = 0, length = ida->length; i < length; i++) {
         /* Get strings for id and value and GC-root them via argv. */
         id = ida->vector[i];
@@ -826,7 +833,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             ok = JS_FALSE;
             goto error;
         }
-        argv[0] = STRING_TO_JSVAL(idstr);
+        *rval = STRING_TO_JSVAL(idstr);         /* local root */
 
         /*
          * If id is a string that's a reserved identifier, or else id is not
@@ -841,7 +848,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 ok = JS_FALSE;
                 goto error;
             }
-            argv[0] = STRING_TO_JSVAL(idstr);
+            *rval = STRING_TO_JSVAL(idstr);     /* local root */
         }
         idstrchars = JSSTRING_CHARS(idstr);
         idstrlength = JSSTRING_LENGTH(idstr);
@@ -853,7 +860,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 ok = JS_FALSE;
                 goto error;
             }
-            argv[1+j] = STRING_TO_JSVAL(valstr);
+            argv[j] = STRING_TO_JSVAL(valstr);  /* local root */
             vchars = JSSTRING_CHARS(valstr);
             vlength = JSSTRING_LENGTH(valstr);
 
