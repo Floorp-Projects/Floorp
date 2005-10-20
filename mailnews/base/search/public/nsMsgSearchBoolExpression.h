@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Howard Chu <hyc@symas.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -51,13 +52,11 @@
    representing the search terms and their boolean operators as a binary
    expression tree. Each node in the tree consists of either
      (1) a boolean operator and two nsMsgSearchBoolExpressions or 
-	 (2) if the node is a leaf node then it contains a search term.
-   With each search term that is part of the expression we also keep
-   track of either an evaluation value (XP_BOOL) or a character string.
-   Evaluation values are used for offline searching. The character 
+     (2) if the node is a leaf node then it contains a search term.
+   With each search term that is part of the expression we may also keep
+   a character string. The character 
    string is used to store the IMAP/NNTP encoding of the search term. This
-   makes evaluating the expression (for offline) or generating a search
-   encoding (for online) easier.
+   makes generating a search encoding (for online) easier.
 
    For IMAP/NNTP: nsMsgSearchBoolExpression has/assumes knowledge about how
    AND and OR search terms are combined according to IMAP4 and NNTP protocol.
@@ -76,9 +75,7 @@ public:
 
 	// create a leaf node expression
 	nsMsgSearchBoolExpression(nsIMsgSearchTerm * aNewTerm,
-                              PRBool aEvaluationValue = PR_TRUE,
                               char * aEncodingString = NULL);         
-	nsMsgSearchBoolExpression(nsIMsgSearchTerm * aNewTerm, char * aEncodingString);
 
 	// create a non-leaf node expression containing 2 expressions
     // and a boolean operator
@@ -90,18 +87,19 @@ public:
 	~nsMsgSearchBoolExpression();  // recursively destroys all sub
                                    // expressions as well
 
-	// accesors
+	// accessors
     
     // Offline
-	static nsMsgSearchBoolExpression * AddSearchTerm (nsMsgSearchBoolExpression * aOrigExpr, nsIMsgSearchTerm * aNewTerm, PRBool aEvaluationValue);
-	static nsMsgSearchBoolExpression * AddSearchTermWithEncoding (nsMsgSearchBoolExpression * aOrigExpr, nsIMsgSearchTerm * aNewTerm, char * aEncodingStr); // IMAP/NNTP
+	static nsMsgSearchBoolExpression * AddSearchTerm (nsMsgSearchBoolExpression * aOrigExpr, nsIMsgSearchTerm * aNewTerm, char * aEncodingStr); // IMAP/NNTP
     static nsMsgSearchBoolExpression * AddExpressionTree(nsMsgSearchBoolExpression * aOrigExpr, nsMsgSearchBoolExpression * aExpression, PRBool aBoolOp);
 
     // parses the expression tree and all
-    // expressions underneath this node using
-    // each EvaluationValue at each leaf to
+    // expressions underneath this node to
     // determine if the end result is PR_TRUE or PR_FALSE.
-	PRBool OfflineEvaluate();
+	PRBool OfflineEvaluate(nsIMsgDBHdr *msgToMatch,
+          const char *defaultCharset, nsIMsgSearchScopeTerm *scope,
+          nsIMsgDatabase *db, const char *headers, PRUint32 headerSize,
+          PRBool Filtering);
     
     // assuming the expression is for online
     // searches, determine the length of the
@@ -112,15 +110,6 @@ public:
     // memory in buffer with 
     // the IMAP/NNTP encoding for the expression
 	void GenerateEncodeStr(nsCString * buffer); 
-protected:
-	// if we are a leaf node, all we have is a search term
-    // and a Evaluation value for that search term
-    
-    nsIMsgSearchTerm * m_term;
-	PRBool m_evalValue;
-    
-    // store IMAP/NNTP encoding for the search term if applicable
-	nsCString m_encodingStr;     
 
 	// if we are not a leaf node, then we have two other expressions
     // and a boolean operator
@@ -128,6 +117,13 @@ protected:
 	nsMsgSearchBoolExpression * m_rightChild;
 	nsMsgSearchBooleanOperator m_boolOp;
 
+protected:
+	// if we are a leaf node, all we have is a search term
+    
+    nsIMsgSearchTerm * m_term;
+    
+    // store IMAP/NNTP encoding for the search term if applicable
+	nsCString m_encodingStr;     
 
 	// internal methods
 
@@ -138,7 +134,6 @@ protected:
     // that by calling leftToRightAddTerm. If future forms of evaluation
     // need to be supported, add new methods here for proper tree construction.
 	nsMsgSearchBoolExpression * leftToRightAddTerm(nsIMsgSearchTerm * newTerm,
-                                                   PRBool EvaluationValue,
                                                    char * encodingStr); 
 };
 

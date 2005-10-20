@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Howard Chu <hyc@symas.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -59,6 +60,7 @@ nsMsgSearchSession::nsMsgSearchSession()
   m_idxRunningScope = 0; 
   m_urlQueueIndex = 0;
   m_handlingError = PR_FALSE;
+  m_expressionTree = nsnull;
   m_searchPaused = PR_FALSE;
   NS_NewISupportsArray(getter_AddRefs(m_termList));
 }
@@ -66,6 +68,7 @@ nsMsgSearchSession::nsMsgSearchSession()
 nsMsgSearchSession::~nsMsgSearchSession()
 {
   InterruptSearch();
+  delete m_expressionTree;
   DestroyResultList ();
   DestroyScopeList ();
   DestroyTermList ();
@@ -90,6 +93,8 @@ nsMsgSearchSession::AddSearchTerm(nsMsgSearchAttribValue attrib,
 	if (nsnull == pTerm)
 		return NS_ERROR_OUT_OF_MEMORY;
 	m_termList->AppendElement (pTerm);
+        // force the expression tree to rebuild whenever we change the terms
+        delete m_expressionTree;
 	return NS_OK;
 }
 
@@ -98,6 +103,7 @@ nsMsgSearchSession::AppendTerm(nsIMsgSearchTerm *aTerm)
 {
     NS_ENSURE_ARG_POINTER(aTerm);
     NS_ENSURE_TRUE(m_termList, NS_ERROR_NOT_INITIALIZED);
+    delete m_expressionTree;
     return m_termList->AppendElement(aTerm);
 }
 
@@ -641,6 +647,7 @@ void nsMsgSearchSession::DestroyScopeList()
 
 void nsMsgSearchSession::DestroyTermList ()
 {
+    delete m_expressionTree;
     m_termList->Clear();
 }
 
@@ -746,7 +753,7 @@ nsMsgSearchSession::MatchHdr(nsIMsgDBHdr *aMsgHdr, nsIMsgDatabase *aDatabase, PR
       nsXPIDLString nullCharset, folderCharset;
       scope->m_adapter->GetSearchCharsets(getter_Copies(nullCharset), getter_Copies(folderCharset));
       NS_ConvertUCS2toUTF8 charset(folderCharset.get());
-      nsMsgSearchOfflineMail::MatchTermsForSearch(aMsgHdr, m_termList, charset.get(), scope, aDatabase, aResult);
+      nsMsgSearchOfflineMail::MatchTermsForSearch(aMsgHdr, m_termList, charset.get(), scope, aDatabase, &m_expressionTree, aResult);
     }
   }
   return NS_OK;

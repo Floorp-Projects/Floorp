@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Howard Chu <hyc@symas.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -786,7 +787,7 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsISupportsArray 
     err = EncodeImapTerm (pTerm, reallyDredd, srcCharset, destCharset, &termEncoding);
     if (NS_SUCCEEDED(err) && nsnull != termEncoding)
     {
-      expression = nsMsgSearchBoolExpression::AddSearchTermWithEncoding(expression, pTerm, termEncoding);
+      expression = nsMsgSearchBoolExpression::AddSearchTerm(expression, pTerm, termEncoding);
       delete [] termEncoding;
     }
   }

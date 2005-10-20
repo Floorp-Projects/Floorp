@@ -50,6 +50,7 @@
 #include "nsWeakReference.h"
 
 class nsMsgSearchAdapter;
+class nsMsgSearchBoolExpression;
 
 class nsMsgSearchSession : public nsIMsgSearchSession, public nsIUrlListener, public nsSupportsWeakReference
 {
@@ -103,6 +104,7 @@ protected:
   nsCStringArray m_urlQueue;
   nsCOMPtr <nsITimer> m_backgroundTimer;
   PRBool m_searchPaused;
+  nsMsgSearchBoolExpression *m_expressionTree;
 };
 
 #endif

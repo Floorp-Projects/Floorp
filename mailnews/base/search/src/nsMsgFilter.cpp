@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Howard Chu <hyc@symas.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -170,7 +171,8 @@ nsMsgRuleAction::GetStrValue(char **aStrValue)
 nsMsgFilter::nsMsgFilter():
     m_temporary(PR_FALSE),
     m_unparseable(PR_FALSE),
-    m_filterList(nsnull)
+    m_filterList(nsnull),
+    m_expressionTree(nsnull)
 {
   NS_NewISupportsArray(getter_AddRefs(m_termList));
   NS_NewISupportsArray(getter_AddRefs(m_actionList));
@@ -180,6 +182,7 @@ nsMsgFilter::nsMsgFilter():
 
 nsMsgFilter::~nsMsgFilter()
 {
+  delete m_expressionTree;
 }
 
 NS_IMPL_ISUPPORTS1(nsMsgFilter, nsIMsgFilter)
@@ -243,7 +246,8 @@ NS_IMETHODIMP nsMsgFilter::AddTerm(
 NS_IMETHODIMP nsMsgFilter::AppendTerm(nsIMsgSearchTerm * aTerm)
 {
     NS_ENSURE_TRUE(aTerm, NS_ERROR_NULL_POINTER);
-    
+    // invalidate expression tree if we're changing the terms
+    delete m_expressionTree;
     return m_termList->AppendElement(NS_STATIC_CAST(nsISupports*,aTerm));
 }
 
@@ -391,6 +395,7 @@ NS_IMETHODIMP nsMsgFilter::GetSearchTerms(nsISupportsArray **aResult)
 
 NS_IMETHODIMP nsMsgFilter::SetSearchTerms(nsISupportsArray *aSearchList)
 {
+    delete m_expressionTree;
     m_termList = aSearchList;
     return NS_OK;
 }
@@ -511,7 +516,7 @@ NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, n
   nsXPIDLCString folderCharset;
   folder->GetCharset(getter_Copies(folderCharset));
   nsresult rv = nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
-                  folderCharset.get(),  scope,  db,  headers,  headersSize, pResult);
+                  folderCharset.get(),  scope,  db,  headers,  headersSize, &m_expressionTree, pResult);
   delete scope;
   return rv;
 }

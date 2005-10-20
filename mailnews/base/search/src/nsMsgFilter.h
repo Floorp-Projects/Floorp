@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   David Bienvenu (bienvenu@nventure.com)
+ *   Howard Chu <hyc@symas.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,6 +45,7 @@
 #include "nsIMsgFilter.h"
 #include "nsMsgSearchArray.h"
 #include "nsIMsgSearchScopeTerm.h"
+#include "nsMsgSearchBoolExpression.h"
 
 class nsMsgRuleAction : public nsIMsgRuleAction
 {
@@ -120,6 +122,7 @@ protected:
   nsCOMPtr<nsIMsgSearchScopeTerm> m_scope;         /* default for mail rules is inbox, but news rules could
                                                   have a newsgroup - LDAP would be invalid */
   nsCOMPtr<nsISupportsArray> m_actionList;
+  nsMsgSearchBoolExpression *m_expressionTree;
 };
 
 #endif

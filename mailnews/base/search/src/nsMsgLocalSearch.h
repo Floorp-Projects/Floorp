@@ -73,39 +73,19 @@ public:
                                          nsIMsgDatabase * db, 
                                          const char * headers,
                                          PRUint32 headerSize,
+                                         nsMsgSearchBoolExpression ** aExpressionTree,
 										 PRBool *pResult);
 
   static nsresult MatchTermsForSearch(nsIMsgDBHdr * msgTomatch,
                                       nsISupportsArray * termList,
                                       const char *defaultCharset,
                                       nsIMsgSearchScopeTerm *scope,
-                                      nsIMsgDatabase *db, PRBool *pResult);
+                                      nsIMsgDatabase *db,
+                                      nsMsgSearchBoolExpression ** aExpressionTree,
+ PRBool *pResult);
 
 	virtual nsresult OpenSummaryFile ();
 
-protected:
-	static nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,
-                                nsISupportsArray *termList,
-                                const char *defaultCharset,
-                                nsIMsgSearchScopeTerm *scope, 
-                                nsIMsgDatabase * db, 
-                                const char * headers,
-                                PRUint32 headerSize,
-                                PRBool ForFilters,
-								PRBool *pResult);
-
-    static nsresult ConstructExpressionTree(nsIMsgDBHdr *msgToMatch,
-                                      nsISupportsArray * termList,
-                                      PRUint32 &aStartPosInList,
-                                      const char *defaultCharset,
-                                      nsIMsgSearchScopeTerm * scope,
-                                      nsIMsgDatabase * db, 
-                                      const char * headers,
-                                      PRUint32 headerSize,
-                                      PRBool Filtering,
-                                      nsMsgSearchBoolExpression ** aExpressionTree,
-				        			  PRBool *pResult);
-    
      static nsresult ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
                                nsIMsgSearchTerm * aTerm,
                                const char *defaultCharset,
@@ -115,6 +95,23 @@ protected:
                                PRUint32 headerSize,
                                PRBool Filtering,
 							   PRBool *pResult); 
+protected:
+	static nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,
+                                nsISupportsArray *termList,
+                                const char *defaultCharset,
+                                nsIMsgSearchScopeTerm *scope, 
+                                nsIMsgDatabase * db, 
+                                const char * headers,
+                                PRUint32 headerSize,
+                                PRBool ForFilters,
+                                nsMsgSearchBoolExpression ** aExpressionTree,
+								PRBool *pResult);
+
+    static nsresult ConstructExpressionTree(nsISupportsArray * termList,
+                                      PRUint32 termCount,
+                                      PRUint32 &aStartPosInList,
+                                      nsMsgSearchBoolExpression ** aExpressionTree);
+    
 	nsCOMPtr <nsIMsgDatabase> m_db;
 	nsCOMPtr<nsISimpleEnumerator> m_listContext;
 	void CleanUpScope();
