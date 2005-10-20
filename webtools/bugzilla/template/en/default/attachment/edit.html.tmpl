@@ -184,11 +184,11 @@
 
     var small = document.getElementById('smallCommentFrame');
     var big = document.getElementById('editFrame');
-    if ( small.style.display == 'none' )
+    if ( (small) && (small.style.display == 'none') )
     {
       small.parentNode.removeChild(small);
     }
-    if ( big.style.display == 'none' )
+    if ( (big) && (big.style.display == 'none') )
     {
       big.parentNode.removeChild(big);
     }
