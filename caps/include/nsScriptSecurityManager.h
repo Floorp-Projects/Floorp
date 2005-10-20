@@ -65,6 +65,7 @@ class nsIXPConnect;
 class nsIStringBundle;
 class nsSystemPrincipal;
 struct ClassPolicy;
+class ClassInfoData;
 
 #if defined(DEBUG_mstoltz) || defined(DEBUG_caillon)
 #define DEBUG_CAPS_HACKER
@@ -421,7 +422,7 @@ private:
 
     nsresult
     LookupPolicy(nsIPrincipal* principal,
-                 const char* aClassName, jsval aProperty,
+                 ClassInfoData& aClassData, jsval aProperty,
                  PRUint32 aAction,
                  ClassPolicy** aCachedClassPolicy,
                  SecurityLevel* result);

@@ -624,7 +624,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 
     //-- Look up the security policy for this class and subject domain
     SecurityLevel securityLevel;
-    rv = LookupPolicy(subjectPrincipal, classInfoData.GetName(), aProperty, aAction, 
+    rv = LookupPolicy(subjectPrincipal, classInfoData, aProperty, aAction, 
                       (ClassPolicy**)aCachedClassPolicy, &securityLevel);
     if (NS_FAILED(rv))
         return rv;
@@ -923,10 +923,11 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
 
 nsresult
 nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
-                                     const char* aClassName, jsval aProperty,
-                                     PRUint32 aAction,
-                                     ClassPolicy** aCachedClassPolicy,
-                                     SecurityLevel* result)
+                                      ClassInfoData& aClassData,
+                                      jsval aProperty,
+                                      PRUint32 aAction,
+                                      ClassPolicy** aCachedClassPolicy,
+                                      SecurityLevel* result)
 {
     nsresult rv;
     result->level = SCRIPT_SECURITY_UNDEFINED_ACCESS;
@@ -1024,7 +1025,7 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
 
         cpolicy = NS_STATIC_CAST(ClassPolicy*,
                                  PL_DHashTableOperate(dpolicy,
-                                                      aClassName,
+                                                      aClassData.GetName(),
                                                       PL_DHASH_LOOKUP));
 
         if (PL_DHASH_ENTRY_IS_FREE(cpolicy))
@@ -1068,7 +1069,7 @@ nsScriptSecurityManager::LookupPolicy(nsIPrincipal* aPrincipal,
     {
         cpolicy = NS_STATIC_CAST(ClassPolicy*,
                                  PL_DHashTableOperate(mDefaultPolicy,
-                                                      aClassName,
+                                                      aClassData.GetName(),
                                                       PL_DHASH_LOOKUP));
 
         if (PL_DHASH_ENTRY_IS_BUSY(cpolicy))
@@ -1341,11 +1342,10 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
 
                     // Now check capability policies
                     static const char loadURIPrefGroup[] = "checkloaduri";
+                    ClassInfoData nameData(nsnull, loadURIPrefGroup);
 
                     SecurityLevel secLevel;
-                    rv = LookupPolicy(aPrincipal,
-                                      (char*)loadURIPrefGroup,
-                                      sEnabledID,
+                    rv = LookupPolicy(aPrincipal, nameData, sEnabledID,
                                       nsIXPCSecurityManager::ACCESS_GET_PROPERTY, 
                                       nsnull, &secLevel);
                     if (NS_SUCCEEDED(rv) && secLevel.level == SCRIPT_SECURITY_ALL_ACCESS)
@@ -1624,9 +1624,10 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
 
     //-- Check for a per-site policy
     static const char jsPrefGroupName[] = "javascript";
+    ClassInfoData nameData(nsnull, jsPrefGroupName);
 
     SecurityLevel secLevel;
-    rv = LookupPolicy(aPrincipal, (char*)jsPrefGroupName, sEnabledID,
+    rv = LookupPolicy(aPrincipal, nameData, sEnabledID,
                       nsIXPCSecurityManager::ACCESS_GET_PROPERTY, 
                       nsnull, &secLevel);
     if (NS_FAILED(rv) || secLevel.level == SCRIPT_SECURITY_NO_ACCESS)
@@ -2698,8 +2699,9 @@ nsScriptSecurityManager::CheckComponentPermissions(JSContext *cx,
     // while this isn't a property we'll treat it as such, using ACCESS_CALL_METHOD
     jsval cidVal = STRING_TO_JSVAL(::JS_InternString(cx, cid.get()));
 
+    ClassInfoData nameData(nsnull, "ClassID");
     SecurityLevel securityLevel;
-    rv = LookupPolicy(subjectPrincipal, "ClassID", cidVal,
+    rv = LookupPolicy(subjectPrincipal, nameData, cidVal,
                       nsIXPCSecurityManager::ACCESS_CALL_METHOD, 
                       nsnull, &securityLevel);
     if (NS_FAILED(rv))
