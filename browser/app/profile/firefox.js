@@ -417,3 +417,9 @@ pref("browser.download.hide_plugins_without_extensions", true);
 // Setting this pref to |true| forces BiDi UI menu items and keyboard shortcuts
 // to be exposed. By default, only expose it for bidi-associated system locales.
 pref("bidi.browser.ui", false);
+
+// Backspace and Shift+Backspace behavior
+// 0 goes Back/Forward
+// 1 act like PgUp/PgDown
+// 2 and other values, nothing
+pref("browser.backspace_action", 0);

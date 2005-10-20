@@ -83,8 +83,8 @@
     <command id="cmd_bm_moveBookmark"              oncommand="goDoCommand('cmd_bm_moveBookmark');"/>
     <command id="cmd_bm_sortbyname"                oncommand="goDoCommand('cmd_bm_sortbyname');"/>
 
-    <command id="cmd_handleBackspace"  oncommand="BrowserHandleBackspace();" />
-
+    <command id="cmd_handleBackspace" oncommand="BrowserHandleBackspace();" />
+    <command id="cmd_handleShiftBackspace" oncommand="BrowserHandleShiftBackspace();" />
     <command id="cmd_newNavigatorTab" oncommand="BrowserOpenTab();"/>
     <command id="Browser:OpenFile"  oncommand="BrowserOpenFileWindow();"/>
     <command id="Browser:SavePage" oncommand="saveDocument(window.content.document);"/>
@@ -266,7 +266,7 @@
     <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
 
     <key keycode="VK_BACK" command="cmd_handleBackspace"/>
-    <key keycode="VK_BACK" command="Browser:Forward" modifiers="shift"/>
+    <key keycode="VK_BACK" command="cmd_handleShiftBackspace" modifiers="shift"/>
 #ifndef XP_MACOSX
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
