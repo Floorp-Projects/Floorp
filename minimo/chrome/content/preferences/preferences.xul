@@ -179,18 +179,25 @@
 	    <groupbox flex="1" class="box-floatoptions">
 	      <caption label="&proxyCaption.label;"/>
 
-		<box class="box-prefpadding">
+		<vbox class="box-prefpadding" flex="1">
 	        <checkbox id="UseProxy" label="&useproxyCheckbox.label;" preference="network.proxy.type" 
 	                  onsyncfrompreference="return readProxyPref();"
 	                  onsynctopreference="return writeProxyPref();"/>
 
-	      	<hbox>
-	      	  <textbox id="networkProxyHTTP" preference="network.proxy.http"/>
-	      	  <label   value="&proxyPortCaption.label;"/>
-	      	  <textbox id="networkProxyHTTP_Port" size="5" preference="network.proxy.http_port"/>
-	      	</hbox>
+				
+				   <groupbox class='box-prefgroupitem' >
 
-		</box>
+				        <caption label="&proxyURL.label; and &proxyPortCaption.label;"/>
+
+					  <hbox flex="1">
+	      				  <textbox flex="1"  style="margin:3px ! important;"  id="networkProxyHTTP" preference="network.proxy.http"/>
+		      			  <textbox id="networkProxyHTTP_Port" size="5"  style="margin:3px ! important;width:40px"  preference="network.proxy.http_port"/>
+
+					</hbox>
+		
+				   </groupbox>
+	
+		</vbox>
 
 	    </groupbox>
 
