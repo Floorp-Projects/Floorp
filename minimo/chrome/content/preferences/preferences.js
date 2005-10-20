@@ -143,6 +143,11 @@ function eventHandlerMenu(e) {
     e.preventBubble();
   } 
  
+   if(e.keyCode==134 || e.keyCode==70) /*SoftKey1 or HWKey1*/ {
+  	document.getElementById("general-button").focus();
+    e.preventBubble();
+  } 
+  
   var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
   if(outnavTarget!="" && (e.keyCode==40||e.keyCode==38)) {
       e.preventBubble();
