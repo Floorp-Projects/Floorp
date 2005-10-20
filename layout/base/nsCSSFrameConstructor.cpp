@@ -10031,6 +10031,11 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
         // placeholder
         rv = frameManager->RemoveFrame(parentFrame,
                                        nsLayoutAtoms::floatList, childFrame);
+        if (NS_FAILED(rv)) {
+          // We might have made it normal content instead. Try removing it from
+          // the normal child list.
+          rv = frameManager->RemoveFrame(parentFrame, nsnull, childFrame);
+        }
 
         // Remove the placeholder frame first (XXX second for now) (so
         // that it doesn't retain a dangling pointer to memory)
@@ -10057,6 +10062,11 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
         rv = frameManager->RemoveFrame(parentFrame,
            (NS_STYLE_POSITION_FIXED == display->mPosition) ?
            nsLayoutAtoms::fixedList : nsLayoutAtoms::absoluteList, childFrame);
+        if (NS_FAILED(rv)) {
+          // We might have made it normal content instead. Try removing it from
+          // the normal child list.
+          rv = frameManager->RemoveFrame(parentFrame, nsnull, childFrame);
+        }
 
         // Now the placeholder frame
         if (placeholderFrame) {
