@@ -1,4 +1,13 @@
 
+
+<!ENTITY advanced.label              "Advanced">
+<!ENTITY privacy.label               "Privacy"> 
+<!ENTITY proxy.label                 "Proxy">
+<!ENTITY general.label               "General">
+<!ENTITY okayButton.label            "OK">
+<!ENTITY cancelButton.label          "Cancel">
+
+
 <!-- Toolbar -->
 
 <!ENTITY closeWindow "C">
@@ -11,10 +20,14 @@
 
 <!ENTITY proxyCaption.label          "HTTP Proxy Settings">
 <!ENTITY useproxyCheckbox.label      "Use Proxy">
+<!ENTITY proxyPortCaption.label      "Port">
 
 <!-- Home pane --> 
 
 <!ENTITY homeCaption.label           "Home Page">
+<!ENTITY zoom.label                  "Zoom Controls">
+<!ENTITY zoomui.label               "User Interface">
+<!ENTITY zoomcontent.label           "Site Content">
 
 <!-- Small Screen Settings --> 
 
