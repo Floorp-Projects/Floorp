@@ -561,6 +561,7 @@ pref("mailnews.show_send_progress", true); //Will show a progress dialog when sa
 pref("mail.server.default.retainBy", 1);
 
 pref("mailnews.ui.junk.firstuse", true);
+pref("mailnews.ui.junk.manualMarkAsJunkMarksRead", true);
 
 // for manual upgrades of certain UI features.
 // 1 -> 2 is for the folder pane tree landing, to hide the

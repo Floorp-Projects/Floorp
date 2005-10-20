@@ -746,12 +746,13 @@ function JunkSelectedMessages(setAsJunk)
 {
   MsgJunkMailInfo(true);
 
-  // When the user explicitly marks a message as junk, he doesn't want it to
-  // stay unread (even if he does want that for automatically-classified ones),
-  // so we always mark as read here (pref-independent, see bug 220933).
+  // When the user explicitly marks a message as junk, we can mark it as read,
+  // too. This is independent of the "markAsReadOnSpam" pref, which applies
+  // only to automatically-classified messages.
   // Note that this behaviour should match the one in the back end for marking
   // as junk via clicking the 'junk' column.
-  if (setAsJunk)
+  
+  if (setAsJunk && pref.getBoolPref("mailnews.ui.junk.manualMarkAsJunkMarksRead"))
     MarkSelectedMessagesRead(true);
 
   gDBView.doCommand(setAsJunk ? nsMsgViewCommandType.junk
