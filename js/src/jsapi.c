@@ -3486,7 +3486,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      * the class constructor object, e.g. Array.  Then call the corresponding
      * prototype native method with our first argument passed as |this|.
      */
-    memmove(argv - 1, argv, (fs->nargs + 1) * sizeof(jsval));
+    memmove(argv - 1, argv, JS_MAX(fs->nargs + 1, argc) * sizeof(jsval));
 
     /*
      * Follow Function.prototype.apply and .call by using the global object as
