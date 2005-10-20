@@ -2086,8 +2086,10 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   if (labelContent) {
     // set the value of the text node
     mDisplayContent.swap(labelContent);
-    mDisplayedIndex = -1;
-    mDisplayedOptionText.Truncate();
+    mListControlFrame->GetSelectedIndex(&mDisplayedIndex);
+    if (mDisplayedIndex != -1) {
+      mListControlFrame->GetOptionText(mDisplayedIndex, mDisplayedOptionText);
+    }
     ActuallyDisplayText(PR_FALSE);
 
     nsCOMPtr<nsINodeInfo> nodeInfo;
