@@ -142,6 +142,7 @@ static NS_DEFINE_CID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static const PRInt32 DEFAULT_COLS = 20;
 static const PRInt32 DEFAULT_ROWS = 1;
 static const PRInt32 DEFAULT_ROWS_TEXTAREA = 2;
+static const PRInt32 DEFAULT_UNDO_CAP = 1000;
 
 static nsINativeKeyBindings *sNativeInputBindings = nsnull;
 static nsINativeKeyBindings *sNativeTextAreaBindings = nsnull;
@@ -1747,6 +1748,12 @@ nsTextControlFrame::InitEditor()
     if (NS_FAILED(rv))
       return rv;
   }
+
+  nsCOMPtr<nsITransactionManager> transMgr;
+  mEditor->GetTransactionManager(getter_AddRefs(transMgr));
+  NS_ENSURE_TRUE(transMgr, NS_ERROR_FAILURE);
+
+  transMgr->SetMaxTransactionCount(DEFAULT_UNDO_CAP);
 
   if (IsPasswordTextControl()) {
     // Disable undo for password textfields.  Note that we want to do this at
