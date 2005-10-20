@@ -4958,26 +4958,27 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     case WM_GETOBJECT:
     {
       LRESULT lAcc = 0;
-      nsIAccessible *rootAccessible = GetRootAccessible();
-      if (rootAccessible) {
-        IAccessible *msaaAccessible = NULL;
-        if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
+      IAccessible *msaaAccessible = NULL;
+      if (lParam == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
+        nsIAccessible *rootAccessible = GetRootAccessible(); // Held by a11y cache
+        if (rootAccessible) {
           rootAccessible->GetNativeInterface((void**)&msaaAccessible); // does an addref
         }
-        else if (lParam == OBJID_CARET) {  // each root accessible owns a caret accessible
-          nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(rootAccessible));
-          if (accDoc) {
-            nsCOMPtr<nsIAccessible> accessibleCaret;
-            accDoc->GetCaretAccessible(getter_AddRefs(accessibleCaret));
-            if (accessibleCaret) {
-              accessibleCaret->GetNativeInterface((void**)&msaaAccessible);
-            }
+      }
+      else if (lParam == OBJID_CARET) {  // each root accessible owns a caret accessible
+        nsIAccessible *rootAccessible = GetRootAccessible();  // Held by a11y cache
+        nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(rootAccessible));
+        if (accDoc) {
+          nsCOMPtr<nsIAccessible> accessibleCaret;
+          accDoc->GetCaretAccessible(getter_AddRefs(accessibleCaret));
+          if (accessibleCaret) {
+            accessibleCaret->GetNativeInterface((void**)&msaaAccessible);
           }
         }
-        if (msaaAccessible) {
-          lAcc = LresultFromObject(IID_IAccessible, wParam, msaaAccessible); // does an addref
-          msaaAccessible->Release(); // release extra addref
-        }
+      }
+      if (msaaAccessible) {
+        lAcc = LresultFromObject(IID_IAccessible, wParam, msaaAccessible); // does an addref
+        msaaAccessible->Release(); // release extra addref
       }
       return (*aRetValue = lAcc) != 0;
     }
