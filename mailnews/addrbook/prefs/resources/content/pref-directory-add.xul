@@ -129,6 +129,9 @@
                       oncommand="DownloadNow();"/>
                   <spacer flex="1"/>
               </hbox>
+              <description id="downloadDisabledMsg"
+                           hidden="true"
+                           class="error">&downloadDisabledMsg.label;</description>
           </vbox>
           <grid>
              <columns>

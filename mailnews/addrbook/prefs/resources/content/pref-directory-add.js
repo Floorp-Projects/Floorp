@@ -132,6 +132,10 @@ function fillDefaultSettings()
   document.getElementById("results").value = kDefaultMaxHits;
   var sub = document.getElementById("sub");
   sub.radioGroup.selectedItem = sub;
+
+  // Disable the download button and add some text indicating why.
+  document.getElementById("download").disabled = true;
+  document.getElementById("downloadDisabledMsg").hidden = false;
 }
 
 function hasOnlyWhitespaces(string)
@@ -249,12 +253,20 @@ function onAccept()
       window.opener.gUpdate = true; 
     } else {
       var addressBookBundle = document.getElementById("bundle_addressBook");
-      var errorMsg = addressBookBundle.getString(errorValue);
-      alert(errorMsg);
+
+      var promptService = Components.
+                          classes["@mozilla.org/embedcomp/prompt-service;1"].
+                          getService(Components.interfaces.nsIPromptService);
+
+      promptService.alert(window,
+                          document.title,
+                          addressBookBundle.getString(errorValue));
+      return false;
     }
   } catch (outer) {
     dump("Internal error in pref-directory-add.js:onAccept() " + outer + "\n");
   }
+  return true;
 }
 
 function onCancel()

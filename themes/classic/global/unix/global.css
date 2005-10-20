@@ -169,3 +169,7 @@ resizer[dir="bottomright"] {
 .toolbar-focustarget {
   -moz-user-focus: ignore !important;
 }
+
+description.error {
+  color: #FF0000;
+}
