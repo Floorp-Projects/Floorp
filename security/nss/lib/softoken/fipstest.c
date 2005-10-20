@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: fipstest.c,v 1.11 2005/10/05 22:03:14 wtchang%redhat.com Exp $ */
+/* $Id: fipstest.c,v 1.12 2005/10/20 21:46:51 wtchang%redhat.com Exp $ */
 
 #include "softoken.h"   /* Required for RC2-ECB, RC2-CBC, RC4, DES-ECB,  */
                         /*              DES-CBC, DES3-ECB, DES3-CBC, RSA */
@@ -805,6 +805,103 @@ sftk_fips_MD5_PowerUpSelfTest( void )
     return( CKR_OK );
 }
 
+/****************************************************/
+/* Single Round HMAC SHA-X test                     */
+/****************************************************/
+static SECStatus
+sftk_fips_HMAC(unsigned char *hmac_computed,
+               const PRUint8 *secret_key,
+               unsigned int secret_key_length,
+               const PRUint8 *message,
+               unsigned int message_length,
+               HASH_HashType hashAlg )
+{
+    SECStatus hmac_status = SECFailure;
+    HMACContext *cx = NULL;
+    SECHashObject *hashObj = NULL;
+    unsigned int bytes_hashed = 0;
+
+    hashObj = (SECHashObject *) HASH_GetRawHashObject(hashAlg);
+ 
+    if (!hashObj) 
+        return( SECFailure );
+
+    cx = HMAC_Create(hashObj, secret_key, 
+                     secret_key_length, 
+                     PR_TRUE);  /* PR_TRUE for in FIPS mode */
+
+    if (cx == NULL) 
+        return( SECFailure );
+
+    HMAC_Begin(cx);
+    HMAC_Update(cx, message, message_length);
+    hmac_status = HMAC_Finish(cx, hmac_computed, &bytes_hashed, 
+                              hashObj->length);
+
+    HMAC_Destroy(cx, PR_TRUE);
+
+    return( hmac_status );
+}
+
+static CK_RV
+sftk_fips_HMAC_PowerUpSelfTest( void )
+{
+    static const PRUint8 HMAC_known_secret_key[] = {
+                         "Firefox and ThunderBird are awesome!"};
+
+    static const PRUint8 HMAC_known_secret_key_length 
+                         = sizeof HMAC_known_secret_key;
+
+    /* known SHA1 hmac (20 bytes) */
+    static const PRUint8 known_SHA1_hmac[] = {
+        0xd5, 0x85, 0xf6, 0x5b, 0x39, 0xfa, 0xb9, 0x05, 
+        0x3b, 0x57, 0x1d, 0x61, 0xe7, 0xb8, 0x84, 0x1e, 
+        0x5d, 0x0e, 0x1e, 0x11};
+
+    /* known SHA256 hmac (32 bytes) */
+    static const PRUint8 known_SHA256_hmac[] = {
+        0x05, 0x75, 0x9a, 0x9e, 0x70, 0x5e, 0xe7, 0x44, 
+        0xe2, 0x46, 0x4b, 0x92, 0x22, 0x14, 0x22, 0xe0, 
+        0x1b, 0x92, 0x8a, 0x0c, 0xfe, 0xf5, 0x49, 0xe9, 
+        0xa7, 0x1b, 0x56, 0x7d, 0x1d, 0x29, 0x40, 0x48};        
+
+    SECStatus    hmac_status;
+    PRUint8      hmac_computed[HASH_LENGTH_MAX]; 
+
+    /***************************************************/
+    /* HMAC SHA-1 Single-Round Known Answer HMAC Test. */
+    /***************************************************/
+
+    hmac_status = sftk_fips_HMAC(hmac_computed, 
+                                 HMAC_known_secret_key,
+                                 HMAC_known_secret_key_length,
+                                 known_hash_message,
+                                 FIPS_KNOWN_HASH_MESSAGE_LENGTH,
+                                 HASH_AlgSHA1); 
+
+    if( ( hmac_status != SECSuccess ) || 
+        ( PORT_Memcmp( hmac_computed, known_SHA1_hmac,
+                       SHA1_LENGTH ) != 0 ) )
+        return( CKR_DEVICE_ERROR );
+
+    /***************************************************/
+    /* HMAC SHA-256 Single-Round Known Answer Test.    */
+    /***************************************************/
+
+    hmac_status = sftk_fips_HMAC(hmac_computed, 
+                                 HMAC_known_secret_key,
+                                 HMAC_known_secret_key_length,
+                                 known_hash_message,
+                                 FIPS_KNOWN_HASH_MESSAGE_LENGTH,
+                                 HASH_AlgSHA256); 
+
+    if( ( hmac_status != SECSuccess ) || 
+        ( PORT_Memcmp( hmac_computed, known_SHA256_hmac,
+                       SHA256_LENGTH ) != 0 ) )
+        return( CKR_DEVICE_ERROR );
+
+    return( CKR_OK );
+}
 
 static CK_RV
 sftk_fips_SHA_PowerUpSelfTest( void )
@@ -1318,6 +1415,12 @@ sftk_fipsPowerUpSelfTest( void )
     /* SHA-X Power-Up SelfTest(s). */
     rv = sftk_fips_SHA_PowerUpSelfTest();
 
+    if( rv != CKR_OK )
+        return rv;
+
+    /* HMAC SHA-X Power-Up SelfTest(s). */
+    rv = sftk_fips_HMAC_PowerUpSelfTest();
+ 
     if( rv != CKR_OK )
         return rv;
 
