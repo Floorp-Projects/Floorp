@@ -75,11 +75,12 @@ interface nsIIncrementalDownload : nsIRequest
    * @param destination
    *        The location where the file is to be stored.
    * @param chunkSize
-   *        The size of the chunks to fetch.
+   *        The size of the chunks to fetch.  A non-positive value results in
+   *        the default chunk size being used.
    * @param intervalInSeconds
-   *        The amount of time to wait between fetching chunks.  Pass -1 to use
-   *        the default interval, or 0 to fetch the remaining part of the file
-   *        in one chunk.
+   *        The amount of time to wait between fetching chunks.  Pass a
+   *        negative to use the default interval, or 0 to fetch the remaining
+   *        part of the file in one chunk.
    */
   void init(in nsIURI uri, in nsIFile destination, in long chunkSize,
             in long intervalInSeconds);
