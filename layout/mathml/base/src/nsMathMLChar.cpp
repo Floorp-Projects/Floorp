@@ -2210,6 +2210,8 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
     aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
     nsMathMLFrame::GetRuleThickness(fm, overlap);
     overlap = 2 * PR_MAX(overlap, onePixel);
+    while (overlap > onePixel && bmdata[3].ascent + bmdata[3].descent <= 2*overlap)
+      overlap -= onePixel;
 
     // to protect against gaps, pretend the glue is smaller than 
     // it says to allow a small overlap when adjoining it
@@ -2396,6 +2398,8 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
     aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
     nsMathMLFrame::GetRuleThickness(fm, overlap);
     overlap = 2 * PR_MAX(overlap, onePixel);
+    while (overlap > onePixel && bmdata[3].rightBearing - bmdata[3].leftBearing <= 2*overlap)
+      overlap -= onePixel;
 
     // to protect against gaps, pretend the glue is smaller than 
     // it says to allow a small overlap when adjoining it
