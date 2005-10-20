@@ -8,6 +8,8 @@ minimo.jar:
 	content/minimo/minimo.xul		 (content/minimo.xul)
 	content/minimo/preferences.js    (content/preferences.js)
 	content/minimo/preferences.xul   (content/preferences.xul)
+	content/minimo/preferences/preferences.js    (content/preferences/preferences.js)
+	content/minimo/preferences/preferences.xul   (content/preferences/preferences.xul)
 	content/minimo/rssview/rssblank.xhtml   (content/rssview/rssblank.xhtml)
 	content/minimo/rssview/rssload.js       (content/rssview/rssload.js)
 	content/minimo/rssview/rss_template_html.xml  (content/rssview/rss_template_html.xml)
