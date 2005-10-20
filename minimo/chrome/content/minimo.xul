@@ -86,6 +86,7 @@
     <command id="cmd_UIZoomPlus"             oncommand="BrowserUIResetZoomPlus()" />
     <command id="cmd_UIZoomMinus"            oncommand="BrowserUIResetZoomMinus()" />
     <command id="cmd_DoPanelPreferences"     oncommand="DoPanelPreferences()" /> 
+    <command id="cmd_DoPanelPreferences2"     oncommand="DoPanelPreferences2()" /> 
     <command id="cmd_DoBrowserRSS"           oncommand="DoBrowserRSS()" />
     <command id="cmd_BrowserMenu"            oncommand="BrowserMenuPopup()" />
     <command id="cmd_Quit"                   oncommand="window.close();" />
@@ -210,7 +211,8 @@
 <!--    not working just yet.
 		<menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
 -->
-        <menuitem id="command_DoPanelPreferences" command="cmd_DoPanelPreferences" label="&prefs.label;"  /> 
+        <menuitem id="command_DoPanelPreferences" command="cmd_DoPanelPreferences" label="Pref old"  /> 
+        <menuitem id="command_DoPanelPreferences2" command="cmd_DoPanelPreferences2" label="&prefs.label;"  /> 
         <!-- separator for now in CSS - need to redesign -->
         <menuitem id="command_ViewOptions" style='border-top:1px solid black' type="checkbox" command="cmd_ViewOptions" label="&zoom.label;"  /> 
         <menuitem id="command_ViewRSS"  type="checkbox" command="cmd_ViewRSS" label="&rssBMtitle.label;"  /> 
