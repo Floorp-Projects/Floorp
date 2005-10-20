@@ -652,7 +652,8 @@
     </implementation>
   </binding>
 
-  <binding id="xformswidget-itemset">
+  <binding id="xformswidget-itemset"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
       <html:div style="display:none;">
         <children/>
