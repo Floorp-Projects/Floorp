@@ -510,12 +510,17 @@ nsHttpTransaction::Close(nsresult reason)
 
     PRBool relConn = PR_TRUE;
     if (NS_SUCCEEDED(reason)) {
-        // the server has not sent the final \r\n terminating the header section,
-        // and there is still a header line unparsed.  let's make sure we parse
-        // the remaining header line, and then hopefully, the response will be
-        // usable (see bug 88792).
-        if (!mHaveAllHeaders && !mLineBuf.IsEmpty())
-            ParseLineSegment("\n", 1);
+        // the server has not sent the final \r\n terminating the header
+        // section, and there may still be a header line unparsed.  let's make
+        // sure we parse the remaining header line, and then hopefully, the
+        // response will be usable (see bug 88792).  related to that, we may
+        // also have an empty response containing no headers.  we should treat
+        // that as an empty HTTP/0.9 response (see bug 300613).
+        if (!mHaveAllHeaders) {
+            char data = '\n';
+            PRUint32 unused;
+            ParseHead(&data, 1, &unused);
+        }
 
         // honor the sticky connection flag...
         if (mCaps & NS_HTTP_STICKY_CONNECTION)
