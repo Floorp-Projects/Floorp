@@ -92,23 +92,23 @@
                                               tabindex="10" accessrule="general-pane"
                                               label="&imagesCheckbox.label;"
                                               preference="permissions.default.image" preftype="int" prefvalue=""
-                                              onsyncfrompreference="return readEnableImagesPref();"
-                                              onsynctopreference="return writeEnableImagesPref();" 
-                                              onchange="syncPref(this)" 
+                                              onsyncfrompreference="readEnableImagesPref();"
+                                              onsynctopreference="writeEnableImagesPref();" 
+                                              onclick="syncPref(this)" 
                                               />
     
                                 <checkbox id="ssr"
                                               tabindex="11" accessrule="general-pane"
                                               label="&useSSRCheckbox.label;"
                                               preference="ssr.enabled" preftype="bool"
-                                              onchange="syncPref(this)" 
+                                              onclick="syncPref(this)" 
                                               />
     
                                 <checkbox id="sitessr" 
                                               tabindex="12" accessrule="general-pane"
                                               label="&usesiteSSRCheckbox.label;"
                                               preference="ssr.site.enabled" preftype="bool"
-                                              onchange="syncPref(this)" 
+                                              onclick="syncPref(this)" 
                                               />
                             </vbox>
     				    </groupbox>
@@ -153,13 +153,13 @@
                     <checkbox tabindex="30" id="skey"
                               label="&useSWKeyboard.label;"
                               preference="skey.enabled"
-                              onchange="syncPref(this)" />
+                              onclick="syncPref(this)" />
                               
                     <checkbox tabindex="31"
                               id="dumpJS"
                               label="&dumpJSConsole.label;"
                               preference="config.wince.dumpJSConsole"
-                              onchange="syncPref(this)" />
+                              onclick="syncPref(this)" />
                 </vbox>
             </hbox>
         </groupbox> 
@@ -205,7 +205,7 @@
                 <checkbox id="UseProxy"
                           label="&useproxyCheckbox.label;"
                           preference="network.proxy.type" 
-                          onchange="syncPref(this)" 
+                          onclick="syncPref(this)" 
                           onsyncfrompreference="return readProxyPref();"
                           onsynctopreference="return writeProxyPref();"
                           />
