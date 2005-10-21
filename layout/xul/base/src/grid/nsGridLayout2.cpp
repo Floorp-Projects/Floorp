@@ -285,6 +285,39 @@ nsGridLayout2::GetRowCount(PRInt32& aRowCount)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGridLayout2::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
+                                nsIBox* aPrevBox, nsIBox* aChildList)
+{
+  mGrid.NeedsRebuild(aState);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGridLayout2::ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,
+                                nsIBox* aChildList)
+{
+  mGrid.NeedsRebuild(aState);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsGridLayout2::ChildrenRemoved(nsIBox* aBox, nsBoxLayoutState& aState,
+                               nsIBox* aChildList)
+{
+  mGrid.NeedsRebuild(aState);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsGridLayout2::ChildrenSet(nsIBox* aBox, nsBoxLayoutState& aState,
+                           nsIBox* aChildList)
+{
+  mGrid.NeedsRebuild(aState);
+  return NS_OK;
+}
 
 NS_IMPL_ADDREF_INHERITED(nsGridLayout2, nsStackLayout)
 NS_IMPL_RELEASE_INHERITED(nsGridLayout2, nsStackLayout)
