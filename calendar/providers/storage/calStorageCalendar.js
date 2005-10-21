@@ -259,6 +259,13 @@ calStorageCalendar.prototype = {
     // readonly attribute AUTF8String type;
     get type() { return "storage"; },
 
+    get readOnly() { 
+        return getCalendarManager().getCalendarPref(this, "READONLY") == 'true';
+    },
+    set readOnly(bool) {
+        getCalendarManager().setCalendarPref(this, "READONLY", bool);
+    },
+
     mURI: null,
     // attribute nsIURI uri;
     get uri() { return this.mURI; },
@@ -304,10 +311,6 @@ calStorageCalendar.prototype = {
         // no-op
     },
 
-    // attribute boolean readOnly;
-    get readOnly() { return false; },
-    set readOnly() { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
-
     // attribute boolean suppressAlarms;
     get suppressAlarms() { return false; },
     set suppressAlarms(aSuppressAlarms) { throw Components.results.NS_ERROR_NOT_IMPLEMENTED; },
@@ -334,6 +337,8 @@ calStorageCalendar.prototype = {
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
+        if (this.readOnly) 
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         // Ensure that we're looking at the base item
         // if we were given an occurrence.  Later we can
         // optimize this.
@@ -379,6 +384,8 @@ calStorageCalendar.prototype = {
 
     // void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, in calIOperationListener aListener );
     modifyItem: function (aNewItem, aOldItem, aListener) {
+        if (this.readOnly) 
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         function reportError(errId, errStr) {
             if (aListener)
                 aListener.onOperationComplete (this,
@@ -445,6 +452,8 @@ calStorageCalendar.prototype = {
 
     // void deleteItem( in string id, in calIOperationListener aListener );
     deleteItem: function (aItem, aListener) {
+        if (this.readOnly) 
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         if (aItem.parentItem != aItem) {
             aItem.parentItem.recurrenceInfo.removeExceptionFor(aItem.recurrenceId);
             return;

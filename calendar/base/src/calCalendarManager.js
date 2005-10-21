@@ -58,6 +58,7 @@ function calCalendarManager() {
     this.wrappedJSObject = this;
     this.initDB();
     this.mCache = {};
+    this.setUpReadOnlyObservers();
 }
 
 function makeURI(uriString)
@@ -100,6 +101,18 @@ calCalendarManager.prototype = {
         }
 
         return this;
+    },
+
+    // When a calendar fails, its onError doesn't point back to the calendar.
+    // Therefore, we add a new announcer for each calendar to tell the user that
+    // a specific calendar has failed.  The calendar itself is responsible for
+    // putting itself in readonly mode.
+    setUpReadOnlyObservers: function() {
+        var calendars = this.getCalendars({});
+        for each(calendar in calendars) {
+            var newObserver = new readOnlyAnnouncer(calendar);
+            calendar.addObserver(newObserver.observer);
+        }
     },
 
     initDB: function() {
@@ -195,6 +208,10 @@ calCalendarManager.prototype = {
             dump ("registerCalendar: calendar already registered\n");
             throw Components.results.NS_ERROR_FAILURE;
         }
+
+        // Add an observer to track readonly-mode triggers
+        var newObserver = new readOnlyAnnouncer(calendar);
+        calendar.addObserver(newObserver.observer);
 
         var pp = this.mRegisterCalendar.params;
         pp.type = calendar.type;
@@ -343,3 +360,36 @@ calCalendarManager.prototype = {
         this.mObservers = this.mObservers.filter(notThis);
     }
 };
+
+// This is a prototype object for announcing the fact that a calendar error has
+// happened and that the calendar has therefore been put in readOnly mode.  We
+// implement a new one of these for each calendar registered to the calmgr.
+function readOnlyAnnouncer(calendar) {
+    this.calendar = calendar;
+    var announcer = this;
+    this.observer = {
+        onStartBatch: function() {},
+        onEndBatch: function() {},
+        onLoad: function() {},
+        onAddItem: function(aItem) {},
+        onModifyItem: function(aNewItem, aOldItem) {},
+        onDeleteItem: function(aDeletedItem) {},
+        onAlarm: function(aAlarmItem) {},
+        onError: function(aErrNo, aMessage) {
+            if (!announcer.calendar.readOnly)
+                return;
+            announcer.announceError();
+        }
+    }
+}
+
+readOnlyAnnouncer.prototype.announceError = function(aErrNo) {
+    var promptService = Components.classes[
+                        "@mozilla.org/embedcomp/prompt-service;1"]
+                        .getService(Components.interfaces.nsIPromptService);
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                    .getService(Components.interfaces.nsIStringBundleService);
+    var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
+    var emessage = props.formatStringFromName("readOnlyMode", [this.calendar.name],1);
+    promptService.alert(null, 'Warning', emessage);
+}

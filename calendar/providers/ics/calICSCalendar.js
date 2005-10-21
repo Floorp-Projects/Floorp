@@ -109,6 +109,13 @@ calICSCalendar.prototype = {
 
     get type() { return "ics"; },
 
+    get readOnly() { 
+        return getCalendarManager().getCalendarPref(this, "READONLY") == 'true';
+    },
+    set readOnly(bool) {
+        getCalendarManager().setCalendarPref(this, "READONLY", bool);
+    },
+
     mUri: null,
     get uri() { return this.mUri },
     set uri(aUri) {
@@ -419,8 +426,12 @@ calICSCalendar.prototype = {
                 }
                 calComp = rootComp.getNextSubcomponent('VCALENDAR');
             }
-
-        } catch(e) { dump(e+"\n");}
+        } catch(e) {
+            dump(e+"\n");
+            this.readOnly = true;
+            // XXX fix error number/message
+            this.mObserver.onError(0, e);
+        }
 
         this.mObserver.onEndBatch();
         this.mObserver.onLoad();
@@ -538,17 +549,23 @@ calICSCalendar.prototype = {
     // this.mMemoryCalendar.addItem() and friends are called. less
     // copied code.
     addItem: function (aItem, aListener) {
+        if (this.readOnly) 
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         this.queue.push({action:'add', item:aItem, listener:aListener});
         this.processQueue();
     },
 
     modifyItem: function (aNewItem, aOldItem, aListener) {
+        if (this.readOnly) 
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         this.queue.push({action:'modify', oldItem: aOldItem,
                          newItem: aNewItem, listener:aListener});
         this.processQueue();
     },
 
     deleteItem: function (aItem, aListener) {
+        if (this.readOnly) 
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         this.queue.push({action:'delete', item:aItem, listener:aListener});
         this.processQueue();
     },

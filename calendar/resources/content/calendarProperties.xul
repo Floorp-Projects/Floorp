@@ -89,6 +89,10 @@
                 <label value="&calendarproperties.location.label;"/>
                 <textbox id="calendar-uri" oninput="checkURL()"/>
             </row>
+            <row align="center">
+                <checkbox id="read-only" label="Read-only"/>
+                <spacer />
+            </row>
 
         </rows>
     </grid> 

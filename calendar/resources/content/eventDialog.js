@@ -83,6 +83,7 @@
 
 var gDebugEnabled=true;
 
+var gReadOnlyMode;
 var gOnOkFunction;   // function to be called when user clicks OK
 var gDurationMSec;   // current duration, for updating end date when start date is changed
 
@@ -105,6 +106,9 @@ function loadCalendarEventDialog()
     gOnOkFunction = args.onOk;
 
     var event = args.calendarEvent;
+
+    if (event.calendar && event.calendar.readOnly)
+        gReadOnlyMode = true;
 
     // Set up dialog as event or todo
     var componentType;
@@ -464,6 +468,8 @@ function loadCalendarEventDialog()
     opener.setCursor("auto");
 
     self.focus();
+
+    updateOKButton();
 
     // fix a strict warning about not always returning a value
     return true;
@@ -929,6 +935,7 @@ function setOkButton(state)
 
 function updateOKButton()
 {
+    var notReadOnly = checkReadOnlyCal();
     var checkRecur = checkSetRecur();
     var componentType = getElementValue("component-type");
     var checkTimeDate;
@@ -936,10 +943,18 @@ function updateOKButton()
         checkTimeDate = checkSetTimeDate();
     else
         checkTimeDate = checkDueSetTimeDate();
-    setOkButton(checkRecur && checkTimeDate);
+    setOkButton(checkRecur && checkTimeDate && notReadOnly);
     //this.sizeToContent();
 }
 
+function checkReadOnlyCal() {
+    setElementValue("read-only-item", !gReadOnlyMode, "hidden");
+    if (gReadOnlyMode)
+        return false;
+    var cal = document.getElementById("server-field").selectedItem.calendar;
+    setElementValue("read-only-cal", !cal.readOnly, "hidden");
+    return !cal.readOnly;
+}
 
 function updateDuration() {
     var startDate = getElementValue("start-datetime");

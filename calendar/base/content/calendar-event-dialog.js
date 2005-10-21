@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var gReadOnlyMode = false;
+
 /* dialog stuff */
 function onLoad()
 {
@@ -44,6 +46,10 @@ function onLoad()
     window.calendarItem = args.calendarEvent;
     window.mode = args.mode;
     window.recurrenceInfo = null;
+
+    if (window.calendarItem.calendar && window.calendarItem.calendar.readOnly) {
+        gReadOnlyMode = true;
+    }
 
     /* add calendars to the calendar menulist */
     var calendarList = document.getElementById("item-calendar");
@@ -329,6 +335,14 @@ function updateAccept()
         acceptButton.removeAttribute("disabled");
     }
 
+    // can't add/edit items in readOnly calendars
+    document.getElementById("read-only-item").setAttribute("hidden", !gReadOnlyMode);
+    var cal = document.getElementById("item-calendar").selectedItem.calendar;
+    document.getElementById("read-only-cal").setAttribute("hidden", 
+                                              !cal.readOnly);
+    if (gReadOnlyMode || cal.readOnly) {
+        acceptButton.setAttribute("disabled", "true");
+    }
     return;
 }
 

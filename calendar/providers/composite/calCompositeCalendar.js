@@ -267,6 +267,14 @@ calCompositeCalendar.prototype = {
         throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
     },
 
+    get readOnly() { 
+        return getCalendarManager().getCalendarPref(this, "READONLY") == 'true';
+    },
+    set readOnly(bool) {
+        // You really don't want to set this as true, but in theory, you could
+        getCalendarManager().setCalendarPref(this, "READONLY", bool);
+    },
+
     // void addObserver( in calIObserver observer );
     mCompositeObservers: Array(),
     mObservers: Array(),
@@ -300,6 +308,8 @@ calCompositeCalendar.prototype = {
 
     // void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, in calIOperationListener aListener );
     modifyItem: function (aNewItem, aOldItem, aListener) {
+        if (this.readOnly) 
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         if (aNewItem.calendar == null) {
             // XXX Can't modify item with NULL parent
             throw Components.results.NS_ERROR_FAILURE;
@@ -310,6 +320,8 @@ calCompositeCalendar.prototype = {
 
     // void deleteItem( in string id, in calIOperationListener aListener );
     deleteItem: function (aItem, aListener) {
+        if (this.readOnly) 
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         if (aItem.calendar == null) {
             // XXX Can't delete item with NULL parent
             throw Components.results.NS_ERROR_FAILURE;
@@ -320,6 +332,8 @@ calCompositeCalendar.prototype = {
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
+        if (this.readOnly) 
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
         this.mDefaultCalendar.addItem (aItem, aListener);
     },
 

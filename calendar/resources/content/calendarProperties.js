@@ -55,6 +55,7 @@ function loadCalendarPropertiesDialog()
    document.getElementById("calendar-color").color = 
        calManager.getCalendarPref(gCalendar, 'color');
    document.getElementById("calendar-uri").value = gCalendar.uri.spec;
+   document.getElementById("read-only").checked = gCalendar.readOnly;
    
    // start focus on title
    document.getElementById("calendar-name").focus();
@@ -74,6 +75,7 @@ function onOKCommand()
 
    calManager.setCalendarPref(gCalendar, 'color',
                               document.getElementById("calendar-color").color);
+   gCalendar.readOnly = document.getElementById("read-only").checked;
    
    // tell standard dialog stuff to close the dialog
    return true;

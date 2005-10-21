@@ -62,6 +62,11 @@ interface calIErrors : nsISupports
    */
   const unsigned long INVALID_TIMEZONE = ERROR_BASE + 1;
 
+  /**
+   * Attempted to modify a readOnly calendar.
+   */
+  const unsigned long CAL_IS_READONLY = ERROR_BASE + 2;  
+
 
   /* ICS specific errors */
   const unsigned long ICS_ERROR_BASE = ERROR_BASE + 0x100;

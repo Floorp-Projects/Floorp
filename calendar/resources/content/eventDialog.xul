@@ -113,7 +113,8 @@
 </dataset>
 
 <!-- Dialog content -->
-
+<label id="read-only-item" value="&newevent.readonly.item.warning;" 
+       class="warning-text-class" hidden="true"/>
 <tabbox>
   <tabs>
     <tab label="&newevent.general.tab.label;"/>
@@ -176,7 +177,10 @@
                     <!-- Server -->
                     <hbox align="center" flex="1">
                       <label id="server-field-label" value="&newevent.server.label;"/>
-                      <menulist id="server-field"/>
+                      <menulist id="server-field" oncommand="updateOKButton()"/>
+                      <label id="read-only-cal" 
+                             value="&newevent.readonly.cal.warning;" 
+                             class="warning-text-class" hidden="true"/>
                     </hbox>
                   </hbox>
                 </row>

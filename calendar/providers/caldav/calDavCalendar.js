@@ -135,6 +135,13 @@ calDavCalendar.prototype = {
     // readonly attribute AUTF8String type;
     get type() { return "caldav"; },
 
+    get readOnly() { 
+        return getCalendarManager().getCalendarPref(this, "READONLY") == 'true';
+    },
+    set readOnly(bool) {
+        getCalendarManager().setCalendarPref(this, "READONLY", bool);
+    },
+
     // attribute nsIURI uri;
     mUri: null,
     get uri() { return this.mUri; },
@@ -173,6 +180,9 @@ calDavCalendar.prototype = {
 
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
+        if (this.readOnly) {
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
+        }
 
         if (aItem.id == null && aItem.isMutable)
             // XXX real UUID here!!
@@ -263,6 +273,9 @@ calDavCalendar.prototype = {
 
     // void modifyItem( in calIItemBase aNewItem, in calIItemBase aOldItem, in calIOperationListener aListener );
     modifyItem: function modifyItem(aNewItem, aOldItem, aListener) {
+        if (this.readOnly) {
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
+        }
 
         if (aNewItem.id == null) {
 
@@ -358,6 +371,9 @@ calDavCalendar.prototype = {
 
     // void deleteItem( in calIItemBase aItem, in calIOperationListener aListener );
     deleteItem: function (aItem, aListener) {
+        if (this.readOnly) {
+            throw Components.interfaces.calIErrors.CAL_IS_READONLY;
+        }
 
         if (aItem.id == null) {
             if (aListener)

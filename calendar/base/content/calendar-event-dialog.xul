@@ -42,6 +42,11 @@
 <?xml-stylesheet href="chrome://calendar/content/calendar-event-dialog.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
 
+<!DOCTYPE dialog 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd1;
+]>
+
 <dialog
   id="calendar-event-dialog"
   title="Edit Item"
@@ -59,6 +64,8 @@
 
 
   <vbox id="dialog-box" flex="1">
+    <label id="read-only-item" value="&newevent.readonly.item.warning;" 
+           class="warning-text-class" hidden="true"/>
 
     <grid flex="1">
       <columns>
@@ -133,8 +140,10 @@
           <row align="center">
             <label value="Calendar" class="label"/>
             <hbox>
-              <menulist id="item-calendar"/>
-              <spacer flex="1"/>
+              <menulist id="item-calendar" oncommand="updateAccept()"/>
+              <label id="read-only-cal" 
+                     value="&newevent.readonly.cal.warning;" 
+                     class="warning-text-class" hidden="true"/>
             </hbox>
           </row>
 
