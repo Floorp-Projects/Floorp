@@ -944,6 +944,9 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
 {
   lockIconState newSecurityState;
 
+  PRBool showWarning = PR_FALSE;
+  lockIconState warnSecurityState;
+
   if (mNewToplevelSecurityState & STATE_IS_SECURE)
   {
     if (mNewToplevelSecurityState & STATE_SECURE_LOW
@@ -1037,7 +1040,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
       high        high
     */
 
-    PRBool showWarning = PR_TRUE;
+    showWarning = PR_TRUE;
     
     switch (mPreviousSecurityState)
     {
@@ -1057,30 +1060,12 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
       default:
         break;
     }
-    
+
     if (showWarning)
     {
-      switch (newSecurityState)
-      {
-        case lis_no_security:
-        case lis_broken_security:
-          ConfirmLeavingSecure();
-          break;
-
-        case lis_mixed_security:
-          ConfirmMixedMode();
-          break;
-
-        case lis_low_security:
-          ConfirmEnteringWeak();
-          break;
-
-        case lis_high_security:
-          ConfirmEnteringSecure();
-          break;
-      }
+      warnSecurityState = newSecurityState;
     }
-
+    
     mPreviousSecurityState = newSecurityState;
 
     if (lis_no_security == newSecurityState)
@@ -1131,6 +1116,29 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
            ("SecureUI:%p: UpdateSecurityState: NO mToplevelEventSink!\n", this
             ));
 
+  }
+
+  if (showWarning)
+  {
+    switch (warnSecurityState)
+    {
+      case lis_no_security:
+      case lis_broken_security:
+        ConfirmLeavingSecure();
+        break;
+
+      case lis_mixed_security:
+        ConfirmMixedMode();
+        break;
+
+      case lis_low_security:
+        ConfirmEnteringWeak();
+        break;
+
+      case lis_high_security:
+        ConfirmEnteringSecure();
+        break;
+    }
   }
 
   return NS_OK; 
