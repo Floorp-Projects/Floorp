@@ -85,9 +85,46 @@
 
 #include "nsLayoutUtils.h"
 
+#include "nsUnicharUtils.h"
+
 static const int NS_FORM_CONTROL_LIST_HASHTABLE_SIZE = 16;
 
 class nsFormControlList;
+
+/**
+ * hashkey wrapper using nsAString KeyType
+ *
+ * @see nsTHashtable::EntryType for specification
+ */
+class nsStringCaseInsensitiveHashKey : public PLDHashEntryHdr
+{
+public:
+  typedef const nsAString& KeyType;
+  typedef const nsAString* KeyTypePointer;
+  nsStringCaseInsensitiveHashKey(KeyTypePointer aStr) : mStr(*aStr) { } //take it easy just deal HashKey 
+  nsStringCaseInsensitiveHashKey(const nsStringCaseInsensitiveHashKey& toCopy) : mStr(toCopy.mStr) { }
+  ~nsStringCaseInsensitiveHashKey() { }
+
+  KeyType GetKey() const { return mStr; }
+  KeyTypePointer GetKeyPointer() const { return &mStr; }
+  PRBool KeyEquals(const KeyTypePointer aKey) const
+  {
+    return mStr.Equals(*aKey,nsCaseInsensitiveStringComparator());
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(const KeyTypePointer aKey)
+  {
+      nsAutoString tmKey(*aKey);
+      ToLowerCase(tmKey);
+      return HashString(tmKey);
+  }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+private:
+  const nsString mStr;
+};
+
 
 // nsHTMLFormElement
 
@@ -266,7 +303,7 @@ protected:
   /** The list of controls (form.elements as well as stuff not in elements) */
   nsFormControlList *mControls;
   /** The currently selected radio button of each group */
-  nsInterfaceHashtable<nsStringHashKey,nsIDOMHTMLInputElement> mSelectedRadioButtons;
+  nsInterfaceHashtable<nsStringCaseInsensitiveHashKey,nsIDOMHTMLInputElement> mSelectedRadioButtons;
   /** Whether we are currently processing a submit event or not */
   PRPackedBool mGeneratingSubmit;
   /** Whether we are currently processing a reset event or not */
