@@ -13,6 +13,8 @@ minimo.jar:
 	content/minimo/rssview/rssblank.xhtml   (content/rssview/rssblank.xhtml)
 	content/minimo/rssview/rssload.js       (content/rssview/rssload.js)
 	content/minimo/rssview/rss_template_html.xml  (content/rssview/rss_template_html.xml)
+	content/minimo/bindings/preferences.css  (content/bindings/preferences.css)
+	content/minimo/bindings/preferences.xml  (content/bindings/preferences.xml)
 	locale/en-US/minimo/minimo.dtd	 (locale/en-US/minimo.dtd)
     locale/en-US/minimo/minimo.properties (locale/en-US/minimo.properties)
     locale/en-US/minimo/preferences.dtd (locale/en-US/preferences.dtd)
