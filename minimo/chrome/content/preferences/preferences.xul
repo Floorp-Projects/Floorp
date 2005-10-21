@@ -33,11 +33,11 @@
   <vbox flex="1">
 
     <hbox>
-      <toolbar flex="1" id="pref-bar" accessfocus="general-button" accessnextrule="general-pane"  accessprevrule="general-pane"  >    
-        <toolbarbutton class="base-button" tabindex="1" accessrule="pref-bar" onfocus="show('general-pane',this)" accessfocus="general-pane" id="general-button" accesskey="m" command="cmd_BrowserMenu" />  
-        <toolbarbutton class="base-button" tabindex="2" accessrule="pref-bar" onfocus="show('advanced-pane',this)" accessfocus="advanced-pane" id="advanced-button" command="cmd_BrowserMenu" />  
-        <toolbarbutton class="base-button" tabindex="3" accessrule="pref-bar" onfocus="show('privacy-pane',this)" accessfocus="advanced-pane" id="privacy-button" command="cmd_BrowserMenu" />  
-        <toolbarbutton class="base-button" tabindex="4" accessrule="pref-bar" onfocus="show('connection-pane',this)" accessfocus="advanced-pane" id="connection-button" command="cmd_BrowserMenu" />  
+      <toolbar flex="1" id="pref-bar" accessfocus="general-button" accessnextrule="general-pane"  accessprevrule="general-pane" >    
+        <toolbarbutton class="base-button" tabindex="1" accessrule="pref-bar" onfocus="show('general-pane',this)" accessfocus="general-pane" id="general-button" accesskey="m" />  
+        <toolbarbutton class="base-button" tabindex="2" accessrule="pref-bar" onfocus="show('advanced-pane',this)" accessfocus="advanced-pane" id="advanced-button" />  
+        <toolbarbutton class="base-button" tabindex="3" accessrule="pref-bar" onfocus="show('privacy-pane',this)" accessfocus="advanced-pane" id="privacy-button"  />  
+        <toolbarbutton class="base-button" tabindex="4" accessrule="pref-bar" onfocus="show('connection-pane',this)" accessfocus="advanced-pane" id="connection-button" />  
       </toolbar>
       <toolbar >
         <toolbarbutton tabindex="8" accessrule="pref-bar" onfocus="show('summary-pane',this )" accessfocus="advanced-pane" id="okay-button" class='' command="cmd_PrefOkay"><label class='prefbutton' value="&okayButton.label;" /></toolbarbutton>  
@@ -45,94 +45,76 @@
       </toolbar>
     </hbox>
     
-      <!-- GENERAL PANE -->
-
+    <!-- GENERAL PANE -->
+    
 	<hbox class="panel-container" flex="1" id="general-pane"
             accessfocus="enableImages"
             accessnextrule="advanced-pane"
             accessprevrule="pref-bar" >
-
+            
             <groupbox flex="1" class="box-floatoptions" >
-		    <caption label="&general.label;" /> 
-			<hbox flex="1" >
-				<vbox flex="1" style="padding:4px ! important">
-
-				   <groupbox class='box-prefgroupitem' >
-
-				        <caption label="&homeCaption.label;"/>
-
-					  <box>
-                                <textbox id="browserStartupHomepage"
-                                         style="margin:3px ! important;" flex="1"
-                                         onchange="syncPref(this)" preference="browser.startup.homepage" preftype="string"/>
-					  </box>
-
-				    </groupbox>
-    
-				    <groupbox  class='box-prefgroupitem'>
-
-				        <caption label="&sssCaption.label;"/>
-
-					  <vbox class="box-prefpadding"> 
-
+                <caption label="&general.label;" /> 
+                <hbox flex="1" >
+                    <vbox flex="1" style="padding:4px ! important">
+                        <groupbox class='box-prefgroupitem' >
+                            <caption label="&homeCaption.label;"/>
+                                <box>
+                                    <textbox id="browserStartupHomepage"
+                                             style="margin:3px ! important;" flex="1"
+                                             onchange="syncPref(this)" preference="browser.startup.homepage" preftype="string"/>
+                                </box>
+                        </groupbox>
+                        <groupbox  class='box-prefgroupitem'>
+                                <caption label="&sssCaption.label;"/>
+                                <vbox class="box-prefpadding">                        
                                 <checkbox id="enableImages"
-                                          tabindex="10" accessrule="general-pane"
-                                          label="&imagesCheckbox.label;"
-                                          preference="permissions.default.image" preftype="int" prefvalue=""
-				                  onsyncfrompreference="return readEnableImagesPref();"
-				                  onsynctopreference="return writeEnableImagesPref();" 
-							onchange="syncPref(this)" 
-                                          />
-
-                                <checkbox id="ssr"
-                                          tabindex="11" accessrule="general-pane"
-                                          label="&useSSRCheckbox.label;"
-                                          preference="ssr.enabled" preftype="bool"
-							onchange="syncPref(this)" 
-                                          />
-
-                                <checkbox id="sitessr" 
-                                          tabindex="12" accessrule="general-pane"
-                                          label="&usesiteSSRCheckbox.label;"
-                                          preference="ssr.site.enabled" preftype="bool"
-							onchange="syncPref(this)" 
-                                          />
-
-                                </vbox>
-
-				    </groupbox>
-
-
-				   <groupbox class='box-prefgroupitem' >
-
-				        <caption label="&zoom.label;"/>
-
-					  <box class="box-prefgroupitem">
-					  <label value="&zoomui.label;" />
-                                <textbox id="browserDisplayZoomUI" size="5"
-                                         style="margin:3px ! important;" 
-                                         preference="browser.display.zoomui" preftype="int" 
-						     onchange="syncPref(this)" 
-						     />
-
-					  </box>
-
-					  <box class="box-prefgroupitem">
-					  <label value="&zoomcontent.label;" />
-                                <textbox id="browserDisplayZoomContent" size="5"
-                                         style="margin:3px ! important;" 
-                                         onchange="syncPref(this)" preference="browser.display.zoomcontent" preftype="int"/>
-
-					  </box>
-
-				    </groupbox>
+                                              tabindex="10" accessrule="general-pane"
+                                              label="&imagesCheckbox.label;"
+                                              preference="permissions.default.image" preftype="int" prefvalue=""
+                                              onsyncfrompreference="return readEnableImagesPref();"
+                                              onsynctopreference="return writeEnableImagesPref();" 
+                                              onchange="syncPref(this)" 
+                                              />
     
-				</vbox>
-
-			</hbox>
-
+                                <checkbox id="ssr"
+                                              tabindex="11" accessrule="general-pane"
+                                              label="&useSSRCheckbox.label;"
+                                              preference="ssr.enabled" preftype="bool"
+                                              onchange="syncPref(this)" 
+                                              />
+    
+                                <checkbox id="sitessr" 
+                                              tabindex="12" accessrule="general-pane"
+                                              label="&usesiteSSRCheckbox.label;"
+                                              preference="ssr.site.enabled" preftype="bool"
+                                              onchange="syncPref(this)" 
+                                              />
+                            </vbox>
+    				    </groupbox>
+    				    <groupbox class='box-prefgroupitem' >
+                            <caption label="&zoom.label;"/>
+                            <box class="box-prefgroupitem">
+                                <label value="&zoomui.label;" />
+                                    <textbox id="browserDisplayZoomUI" size="5"
+                                             style="margin:3px ! important;" 
+                                             preference="browser.display.zoomui" preftype="int" 
+                                             onchange="syncPref(this)" 
+                                             />
+                            </box>
+    
+                            <box class="box-prefgroupitem">
+                                <label value="&zoomcontent.label;" />
+                                    <textbox id="browserDisplayZoomContent" size="5"
+                                             style="margin:3px ! important;" 
+                                             onchange="syncPref(this)"
+                                             preference="browser.display.zoomcontent"
+                                             preftype="int"
+                                             />
+                            </box>
+                        </groupbox>
+                    </vbox>
+                </hbox>
             </groupbox> 
-
 	</hbox>	
 
       <!-- ADVANCED PANE --> 
