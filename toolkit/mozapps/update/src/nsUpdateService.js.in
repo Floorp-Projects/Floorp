@@ -950,6 +950,18 @@ UpdateService.prototype = {
       var bundle = sbs.createBundle(URI_UPDATES_PROPERTIES);
       if (status == STATE_SUCCEEDED) {
         update.statusText = bundle.GetStringFromName("installSuccess");
+        
+        // Dig through the update history to find the patch that was just
+        // installed and update its metadata.
+        for (var i = 0; i < um.updateCount; ++i) {
+          var umUpdate = um.getUpdateAt(i);
+          if (umUpdate && umUpdate.version == update.version &&
+                          umUpdate.buildID == update.buildID) {
+            umUpdate.statusText = update.statusText;
+            break;
+          }
+        }
+
         LOG("UpdateService", "_postUpdateProcessing: Install Succeeded, Showing UI");
         prompter.showUpdateInstalled(update);
 
@@ -1408,9 +1420,15 @@ UpdateManager.prototype = {
    * Load the update manager, initializing state from state files.
    */
   _ensureUpdates: function() {
-    if (!this._updates)
+    if (!this._updates) {
       this._updates = this._loadXMLFileIntoArray(getFile(KEY_APPDIR, 
                         [FILE_UPDATES_DB]));
+
+      // Make sure that any active update is part of our updates list
+      var active = this.activeUpdate;
+      if (active)
+        this._addUpdate(active);
+    }
   },
 
   /**
