@@ -213,11 +213,6 @@ treecolpicker:hover:active {
   -moz-border-bottom-colors: ThreeDDarkShadow;
   -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
   background-color: #666666;
-  padding: 1px 4px 0px 5px;
-}
-
-.treecol-image:hover:active {
-  padding: 1px 1px 0px 2px;
 }
 
 /* ::::: column drag and drop styles ::::: */
