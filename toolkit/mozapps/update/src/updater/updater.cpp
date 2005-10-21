@@ -76,6 +76,7 @@
 # define putenv _putenv
 # define fchmod(a,b)
 # define mkdir(path, perm) _mkdir(path)
+# define chdir(path) _chdir(path)
 #else
 # include <sys/wait.h>
 # include <unistd.h>
@@ -984,9 +985,12 @@ PatchIfFile::Finish(int status)
 #endif
 
 static void
-LaunchCallbackApp(int argc, char **argv)
+LaunchCallbackApp(const char *workingDir, int argc, char **argv)
 {
   putenv("NO_EM_RESTART=");
+
+  // Run from the specified working directory (see bug 312360).
+  chdir(workingDir);
 
 #if defined(USE_EXECV)
   execv(argv[0], argv);
@@ -1059,7 +1063,7 @@ int main(int argc, char **argv)
   // be altered.
 
   if (argc < 3) {
-    fprintf(stderr, "Usage: updater <dir-path> <parent-pid> [callback args...]\n");
+    fprintf(stderr, "Usage: updater <dir-path> <parent-pid> [working-dir callback args...]\n");
     return 1;
   }
 
@@ -1100,9 +1104,10 @@ int main(int argc, char **argv)
   LogFinish();
 
   // The callback to execute is given as the last N arguments of our command
-  // line.
-  if (argc > 3)
-    LaunchCallbackApp(argc - 3, argv + 3);
+  // line.  The first of those arguments specifies the working directory for
+  // the callback.
+  if (argc > 4)
+    LaunchCallbackApp(argv[3], argc - 4, argv + 4);
 
   return 0;
 }
