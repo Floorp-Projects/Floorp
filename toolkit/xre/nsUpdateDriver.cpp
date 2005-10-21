@@ -55,6 +55,8 @@
 # include <direct.h>
 # include <process.h>
 # include <windows.h>
+# define getcwd(path, size) _getcwd(path, size)
+# define getpid() GetCurrentProcessId()
 #elif defined(XP_UNIX) || defined(XP_OS2)
 # include <unistd.h>
 #endif
@@ -97,6 +99,22 @@ static const char kUpdaterINI[] = "updater.ini";
 #ifdef XP_MACOSX
 static const char kUpdaterApp[] = "updater.app";
 #endif
+
+static nsresult
+GetCurrentWorkingDir(char *buf, size_t size)
+{
+  // Cannot use NS_GetSpecialDirectory because XPCOM is not yet initialized.
+  // This code is duplicated from xpcom/io/SpecialSystemDirectory.cpp:
+
+#if defined(XP_OS2)
+  if (DosQueryPathInfo( ".", FIL_QUERYFULLNAME, buf, size))
+    return NS_ERROR_FAILURE;
+#else
+  if(!getcwd(buf, size))
+    return NS_ERROR_FAILURE;
+#endif
+  return NS_OK;
+}
 
 PR_STATIC_CALLBACK(int)
 ScanDirComparator(nsIFile *a, nsIFile *b, void *unused)
@@ -310,6 +328,12 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   if (NS_FAILED(rv))
     return;
 
+  // Get the current working directory.
+  char workingDirPath[MAXPATHLEN];
+  rv = GetCurrentWorkingDir(workingDirPath, sizeof(workingDirPath));
+  if (NS_FAILED(rv))
+    return;
+
   if (!SetStatus(statusFile, "applying")) {
     LOG(("failed setting status to 'applying'\n"));
     return;
@@ -321,27 +345,24 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
   NS_NAMED_LITERAL_CSTRING(pid, "0");
 #else
   nsCAutoString pid;
-  pid.AppendInt((PRInt32)
-# if defined(XP_WIN)
-    GetCurrentProcessId()
-# else
-    getpid()
-# endif
-    );
+  pid.AppendInt((PRInt32) getpid());
 #endif
 
-  char **argv = new char*[4 + appArgc];
+  char **argv = new char*[5 + appArgc];
   if (!argv)
     return;
   argv[0] = (char*) updaterPath.get();
   argv[1] = (char*) updateDirPath.get();
   argv[2] = (char*) pid.get();
   if (appArgc) {
-    argv[3] = (char*) appFilePath.get();
+    argv[3] = workingDirPath;
+    argv[4] = (char*) appFilePath.get();
     for (int i = 1; i < appArgc; ++i)
-      argv[3 + i] = appArgv[i];
+      argv[4 + i] = appArgv[i];
+    argv[4 + appArgc] = nsnull;
+  } else {
+    argv[3] = nsnull;
   }
-  argv[3 + appArgc] = nsnull;
 
   LOG(("spawning updater process [%s]\n", updaterPath.get()));
 
