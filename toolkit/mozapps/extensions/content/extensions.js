@@ -802,8 +802,11 @@ var gExtensionsDNDObserver =
     if (xpiCount > 0) 
       InstallTrigger.install(xpinstallObj);
     if (themeCount > 0) {
-      for (var fileName in themes)
+      // XXXrstrong Only allow the install of one theme due to bug 257992
+      for (var fileName in themes) {
         InstallTrigger.installChrome(InstallTrigger.SKIN, themes[fileName], fileName);
+        break;
+      }
     }
   },
   _flavourSet: null,  
