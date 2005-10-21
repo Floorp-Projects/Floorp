@@ -27,7 +27,7 @@
 
 <!ENTITY homeCaption.label           "Home Page">
 <!ENTITY zoom.label                  "Zoom Controls">
-<!ENTITY zoomui.label               "User Interface">
+<!ENTITY zoomui.label                "User Interface">
 <!ENTITY zoomcontent.label           "Site Content">
 
 <!-- Small Screen Settings --> 
@@ -42,3 +42,7 @@
 <!ENTITY miscCaption.label           "Random Settings">
 <!ENTITY useSWKeyboard.label         "Use Software Keyboard">
 <!ENTITY dumpJSConsole.label         "Dump JS console at shutdown">
+
+<!-- Summary Pane -->
+
+<!ENTITY summaryCaption.label        "Changes Summary">
