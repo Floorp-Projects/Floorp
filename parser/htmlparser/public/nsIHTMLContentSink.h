@@ -102,94 +102,11 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTML_CONTENT_SINK_IID)
 
   /**
-   * This method is used to open the outer HTML container.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD OpenHTML(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This method is used to close the outer HTML container.
-   *
-   */     
-  NS_IMETHOD CloseHTML() = 0;
-
-  /**
-   * This method is used to open the only HEAD container.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD OpenHead(const nsIParserNode& aNode) = 0;
-
-  /**
    * This method is used to open the HEAD container. It is useful if a tag
    * is forcing us to open the head (probably again), like if we find a <meta>
    * tag in the body.
    */
   NS_IMETHOD OpenHead() = 0;
-
-  /**
-   * This method is used to close the only HEAD container.
-   */     
-  NS_IMETHOD CloseHead() = 0;
-  
-  /**
-   * This method is used to open the main BODY container.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD OpenBody(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This method is used to close the main BODY container.
-   *
-   */     
-  NS_IMETHOD CloseBody() = 0;
-
-  /**
-   * This method is used to open a new FORM container.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD OpenForm(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This method is used to close the outer FORM container.
-   *
-   */     
-  NS_IMETHOD CloseForm() = 0;
-
-  /**
-   * This method is used to open a new MAP container.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD OpenMap(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This method is used to close the MAP container.
-   *
-   */     
-  NS_IMETHOD CloseMap() = 0;
-        
-  /**
-   * This method is used to open the FRAMESET container.
-   *
-   * @update 4/1/98 gess
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD OpenFrameset(const nsIParserNode& aNode) = 0;
-
-  /**
-   * This method is used to close the FRAMESET container.
-   *
-   */     
-  NS_IMETHOD CloseFrameset() = 0;
 
   /**
    * This gets called when handling illegal contents, especially

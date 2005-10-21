@@ -291,29 +291,15 @@ public:
      * @return  error code representing error condition-- usually 0.
      */
     nsresult OpenHTML(const nsCParserNode *aNode);
-    nsresult OpenHead(const nsIParserNode *aNode);
     nsresult OpenBody(const nsCParserNode *aNode);
-    nsresult OpenForm(const nsIParserNode *aNode);
-    nsresult OpenMap(const nsCParserNode *aNode);
-    nsresult OpenFrameset(const nsCParserNode *aNode);
     nsresult OpenContainer(const nsCParserNode *aNode,
                            eHTMLTags aTag,
-                           PRBool aClosedByStartTag,
                            nsEntryStack* aStyleStack=0);
 
     /**
-     * The next set of methods close the given HTML element.
-     * 
-     * @update	gess5/11/98
-     * @param   HTML (node) to be opened in content sink.
-     * @return  error code - 0 if all went well.
+     * Close head element if it is open.
      */
-    nsresult CloseHTML();
     nsresult CloseHead();
-    nsresult CloseBody();
-    nsresult CloseForm();
-    nsresult CloseMap();
-    nsresult CloseFrameset();
     
     /**
      * The special purpose methods automatically close
@@ -321,9 +307,7 @@ public:
      * @update	gess5/11/98
      * @return  error code - 0 if all went well.
      */
-    nsresult CloseContainer(const eHTMLTags aTag,
-                            eHTMLTags aTarget,
-                            PRBool aClosedByStartTag);
+    nsresult CloseContainer(const eHTMLTags aTag);
     nsresult CloseContainersTo(eHTMLTags aTag,
                                PRBool aClosedByStartTag);
     nsresult CloseContainersTo(PRInt32 anIndex,

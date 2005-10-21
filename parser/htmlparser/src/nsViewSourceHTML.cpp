@@ -526,11 +526,11 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
 
       CStartToken htmlToken(NS_LITERAL_STRING("HTML"), eHTMLTag_html);
       nsCParserNode htmlNode(&htmlToken, 0/*stack token*/);
-      mSink->OpenHTML(htmlNode);
+      mSink->OpenContainer(htmlNode);
 
       CStartToken headToken(NS_LITERAL_STRING("HEAD"), eHTMLTag_head);
       nsCParserNode headNode(&headToken, 0/*stack token*/);
-      mSink->OpenHead(headNode);
+      mSink->OpenContainer(headNode);
 
       CStartToken titleToken(NS_LITERAL_STRING("TITLE"), eHTMLTag_title);
       nsCParserNode titleNode(&titleToken, 0/*stack token*/);
@@ -578,9 +578,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
         }
       }
 
-      CEndToken endHeadToken(eHTMLTag_head);
-      nsCParserNode endHeadNode(&endHeadToken, 0/*stack token*/);
-      result = mSink->CloseHead();
+      result = mSink->CloseContainer(eHTMLTag_head);
       if(NS_SUCCEEDED(result)) {
         mHasOpenRoot = PR_TRUE;
         if (didBlock) {
@@ -607,7 +605,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
                           NS_LITERAL_STRING("class"),
                           NS_ConvertASCIItoUCS2(kBodyClassWrap));
           }
-          result = mSink->OpenBody(bodyNode);
+          result = mSink->OpenContainer(bodyNode);
           if(NS_SUCCEEDED(result)) mHasOpenBody=PR_TRUE;
         }
         
@@ -768,17 +766,9 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
 #endif // DUMP_TO_FILE
 
       if(ePlainText!=mDocType) {
-        CEndToken theToken(eHTMLTag_pre);
-        nsCParserNode preNode(&theToken, 0/*stack token*/);
         mSink->CloseContainer(eHTMLTag_pre);
-        
-        CEndToken bodyToken(eHTMLTag_body);
-        nsCParserNode bodyNode(&bodyToken, 0/*stack token*/);
-        mSink->CloseBody();
-        
-        CEndToken htmlToken(eHTMLTag_html);
-        nsCParserNode htmlNode(&htmlToken, 0/*stack token*/);
-        mSink->CloseHTML();
+        mSink->CloseContainer(eHTMLTag_body);
+        mSink->CloseContainer(eHTMLTag_html);
       }
       result = mSink->DidBuildModel();
     }

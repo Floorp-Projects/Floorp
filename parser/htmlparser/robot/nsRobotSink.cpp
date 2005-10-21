@@ -75,19 +75,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIHTMLContentSink
-  NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
-  NS_IMETHOD CloseHTML();
-  NS_IMETHOD OpenHead(const nsIParserNode& aNode);
   NS_IMETHOD OpenHead();
-  NS_IMETHOD CloseHead();
-  NS_IMETHOD OpenBody(const nsIParserNode& aNode);
-  NS_IMETHOD CloseBody();
-  NS_IMETHOD OpenForm(const nsIParserNode& aNode);
-  NS_IMETHOD CloseForm();
-  NS_IMETHOD OpenMap(const nsIParserNode& aNode);
-  NS_IMETHOD CloseMap();
-  NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
-  NS_IMETHOD CloseFrameset();
   NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn) { return NS_OK; }
   NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
 
@@ -176,67 +164,7 @@ NS_IMETHODIMP RobotSink::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP RobotSink::OpenHTML(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::CloseHTML()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::OpenHead(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP RobotSink::OpenHead()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::CloseHead()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::OpenBody(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::CloseBody()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::OpenForm(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::CloseForm()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::OpenMap(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::CloseMap()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::OpenFrameset(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP RobotSink::CloseFrameset()
 {
   return NS_OK;
 }
