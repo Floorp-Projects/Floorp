@@ -415,11 +415,11 @@ nsFolderCompactState::FinishCompact()
   PRBool folderRenameSucceeded = PR_FALSE;
   PRBool msfRenameSucceeded = PR_FALSE;
     // remove the old folder and database
-  fileSpec.Delete(PR_FALSE);
-  if (!fileSpec.Exists())
+  summarySpec.Delete(PR_FALSE);
+  if (!summarySpec.Exists())
   {
-    summarySpec.Delete(PR_FALSE);
-    if (!summarySpec.Exists())
+    fileSpec.Delete(PR_FALSE);
+    if (!fileSpec.Exists())
     {
       // rename the copied folder and database to be the original folder and
       // database 
