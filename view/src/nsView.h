@@ -302,6 +302,10 @@ public:
   virtual ~nsView();
 
 protected:
+  // Do the actual work of ResetWidgetBounds, unconditionally.  Don't
+  // call this method if we have no widget.
+  void DoResetWidgetBounds(PRBool aMoveOnly, PRBool aInvalidateChangedSize);
+  
   nsZPlaceholderView* mZParent;
 
   // mClipRect is relative to the view's origin.
