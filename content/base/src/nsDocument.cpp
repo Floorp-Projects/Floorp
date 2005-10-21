@@ -4391,7 +4391,10 @@ nsresult
 nsDocument::GetRadioGroup(const nsAString& aName,
                           nsRadioGroupStruct **aRadioGroup)
 {
-  nsStringKey key(aName);
+  nsAutoString tmKey(aName);
+  if(!IsCaseSensitive())
+     ToLowerCase(tmKey); //should case-insensitive.
+  nsStringKey key(tmKey);
   nsRadioGroupStruct *radioGroup =
     NS_STATIC_CAST(nsRadioGroupStruct *, mRadioGroups.Get(&key));
 
