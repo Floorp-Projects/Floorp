@@ -137,6 +137,9 @@
       <field name="mCurrentTab">
         null
       </field>
+      <field name="mPreviousTab">
+        null
+      </field>
       <field name="mCurrentBrowser">
         null
       </field>
@@ -542,6 +545,10 @@
       <method name="updateCurrentBrowser">
         <body>
           <![CDATA[
+            // we only want to return to the parent tab if no other
+            // tabs have been opened and the user hasn't switched tabs
+            this.mPreviousTab = null;
+
             var newBrowser = this.mPanelContainer.childNodes[this.mPanelContainer.selectedIndex];
             if (this.mCurrentBrowser) {
               // Only save the focused element if it is in our content window
@@ -842,6 +849,7 @@
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
         <parameter name="aCharset"/>
+        <parameter name="aFocusNewTab"/>
         <body>
           <![CDATA[
             var t = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
@@ -895,6 +903,16 @@
 
               b.loadURI(aURI, aReferrerURI, aCharset);
             }
+
+            if (aFocusNewTab) {
+              var parentTab = this.selectedTab;
+              this.selectedTab = t;
+              this.mPreviousTab = parentTab;
+            }
+            else
+              // The user opened a background tab, so updateCurrentBrowser
+              // won't be called.  Explicitly clear the previous tab.
+              this.mPreviousTab = null;
 
             return t;
           ]]>
@@ -1045,11 +1063,19 @@
 
             // When the current tab is removed select a new tab
             // and fire select events on tabpanels and tabs
-            this.mTabContainer.selectedIndex = newIndex;
+            if (this.mPreviousTab && (oldTab == this.mCurrentTab))
+              this.selectedTab = this.mPreviousTab;
+            else {
+              this.mTabContainer.selectedIndex = newIndex;
 
-            // When removing a tab to the left of the current tab
-            // fix up the panel index without firing any events
-            this.mPanelContainer.selectedIndex = newIndex;
+              // When removing a tab to the left of the current tab
+              // fix up the panel index without firing any events
+              this.mPanelContainer.selectedIndex = newIndex;
+              
+              // We need to explicitly clear this, because updateCurrentBrowser
+              // doesn't get called for a background tab
+              this.mPreviousTab = null;
+            }
           ]]>
         </body>
       </method>
