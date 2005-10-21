@@ -985,6 +985,11 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
         return JS_FALSE;
     cx->creatingException = JS_TRUE;
 
+    /* Protect the newly-created strings below from nesting GCs. */
+    ok = js_EnterLocalRootScope(cx);
+    if (!ok)
+        goto out;
+
     /*
      * Try to get an appropriate prototype by looking up the corresponding
      * exception constructor name in the scope chain of the current context's
@@ -1047,6 +1052,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     reportp->flags |= JSREPORT_EXCEPTION;
 
 out:
+    js_LeaveLocalRootScope(cx);
     cx->creatingException = JS_FALSE;
     return ok;
 }
