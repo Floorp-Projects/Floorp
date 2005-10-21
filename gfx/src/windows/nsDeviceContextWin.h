@@ -118,8 +118,6 @@ protected:
   nsIDeviceContextSpec  *mSpec;
 
   nsCOMPtr<nsIScreenManager> mScreenManager;    // cache the screen service
-  nsCOMPtr<nsIScreen> mPrimaryScreen;           // cache the screen for single-monitor systems
-  static PRUint32 sNumberOfScreens;
 
 public:
   HDC                   mDC;
