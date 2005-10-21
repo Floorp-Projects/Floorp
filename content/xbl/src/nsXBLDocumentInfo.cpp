@@ -90,7 +90,10 @@ public:
 
   // nsIScriptObjectPrincipal methods
   virtual nsIPrincipal* GetPrincipal();
-    
+
+  static JSBool doCheckAccess(JSContext *cx, JSObject *obj, jsval id,
+                              PRUint32 accessType);
+
 protected:
   virtual ~nsXBLDocGlobalObject();
 
@@ -101,13 +104,23 @@ protected:
   static JSClass gSharedGlobalClass;
 };
 
-static JSBool
-doCheckAccess(JSContext *cx, JSObject *obj, jsval id, PRUint32 accessType)
+JSBool
+nsXBLDocGlobalObject::doCheckAccess(JSContext *cx, JSObject *obj, jsval id, PRUint32 accessType)
 {
   nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
   if (!ssm) {
     ::JS_ReportError(cx, "Unable to verify access to a global object property.");
     return JS_FALSE;
+  }
+
+  // Make sure to actually operate on our object, and not some object further
+  // down on the proto chain.
+  while (JS_GET_CLASS(cx, obj) != &nsXBLDocGlobalObject::gSharedGlobalClass) {
+    obj = ::JS_GetPrototype(cx, obj);
+    if (!obj) {
+      ::JS_ReportError(cx, "Invalid access to a global object property.");
+      return JS_FALSE;
+    }
   }
 
   nsresult rv = ssm->CheckPropertyAccess(cx, obj, JS_GET_CLASS(cx, obj)->name,
@@ -119,14 +132,16 @@ PR_STATIC_CALLBACK(JSBool)
 nsXBLDocGlobalObject_getProperty(JSContext *cx, JSObject *obj,
                                  jsval id, jsval *vp)
 {
-  return doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
+  return nsXBLDocGlobalObject::
+    doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 }
 
 PR_STATIC_CALLBACK(JSBool)
 nsXBLDocGlobalObject_setProperty(JSContext *cx, JSObject *obj,
                                  jsval id, jsval *vp)
 {
-  return doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+  return nsXBLDocGlobalObject::
+    doCheckAccess(cx, obj, id, nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 }
 
 PR_STATIC_CALLBACK(JSBool)
@@ -140,7 +155,8 @@ nsXBLDocGlobalObject_checkAccess(JSContext *cx, JSObject *obj, jsval id,
     translated = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
   }
 
-  return doCheckAccess(cx, obj, id, translated);
+  return nsXBLDocGlobalObject::
+    doCheckAccess(cx, obj, id, translated);
 }
 
 PR_STATIC_CALLBACK(void)
