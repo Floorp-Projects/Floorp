@@ -330,8 +330,11 @@ function writeStatusFile(dir, state) {
  * Removes the Updates Directory
  */
 function cleanUpUpdatesDir() {
+  // Bail out if we don't have appropriate permissions
+  if (!this.canUpdate)
+    return;
+    
   var updateDir = getUpdatesDir();
-  
   var e = updateDir.directoryEntries;
   while (e.hasMoreElements()) {
     var f = e.getNext().QueryInterface(Components.interfaces.nsIFile);
@@ -922,6 +925,11 @@ UpdateService.prototype = {
    */
   _postUpdateProcessing: function() {
     // Detect installation failures and notify
+    
+    // Bail out if we don't have appropriate permissions
+    if (!this.canUpdate)
+      return;
+      
     var status = readStatusFile(getUpdatesDir()); 
     if (status == STATE_DOWNLOADING) {
       LOG("UpdateService", "_postUpdateProcessing: Downloading patch, resuming...");
