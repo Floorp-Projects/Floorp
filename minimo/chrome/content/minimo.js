@@ -548,11 +548,6 @@ function DoBrowserRSS() {
 }
 
 function DoPanelPreferences() {
-  window.openDialog("chrome://minimo/content/preferences.xul","preferences","modal,centerscreeen,chrome,resizable=no");
-  BrowserReload(); 
-}
-
-function DoPanelPreferences2() {
   window.openDialog("chrome://minimo/content/preferences/preferences.xul","preferences","modal,centerscreeen,chrome,resizable=no");
   BrowserReload(); 
 }
