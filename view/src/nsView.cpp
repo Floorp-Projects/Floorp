@@ -370,68 +370,74 @@ void nsView::ResetWidgetBounds(PRBool aRecurse, PRBool aMoveOnly,
       return;
     }
 
-    // The geometry of a root view's widget is controlled externally,
-    // NOT by sizing or positioning the view
-    if (mViewManager->GetRootView() == this) {
-      return;
-    }
-
-    nsIDeviceContext  *dx;
-    float             t2p, p2t;
-  
-    mViewManager->GetDeviceContext(dx);
-    t2p = dx->AppUnitsToDevUnits();
-    p2t = dx->DevUnitsToAppUnits();
-    NS_RELEASE(dx);
-
-    nsPoint offset(0, 0);
-    if (GetParent()) {
-      nsIWidget* parentWidget = GetParent()->GetNearestWidget(&offset);
-
-      nsWindowType type;
-      mWindow->GetWindowType(type);
-      if (type == eWindowType_popup) {
-        // put offset into screen coordinates
-        nsRect screenRect(0,0,1,1);
-        parentWidget->WidgetToScreen(screenRect, screenRect);
-        offset += nsPoint(NSIntPixelsToTwips(screenRect.x, p2t),
-                          NSIntPixelsToTwips(screenRect.y, p2t));
-      }
-    }
-
-    nsRect newBounds(NSTwipsToIntPixels((mDimBounds.x + offset.x), t2p),
-                     NSTwipsToIntPixels((mDimBounds.y + offset.y), t2p),
-                     NSTwipsToIntPixels(mDimBounds.width, t2p),
-                     NSTwipsToIntPixels(mDimBounds.height, t2p));
-    
-    PRBool changedPos = PR_TRUE;
-    PRBool changedSize = PR_TRUE;
-    if (!(mVFlags & NS_VIEW_FLAG_HAS_POSITIONED_WIDGET)) {
-      mVFlags |= NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
-    } else {
-      nsRect curBounds;
-      mWindow->GetBounds(curBounds);
-      changedPos = curBounds.TopLeft() != newBounds.TopLeft();
-      changedSize = curBounds.Size() != newBounds.Size();
-    }
-
-    if (changedPos) {
-      if (changedSize && !aMoveOnly) {
-        mWindow->Resize(newBounds.x, newBounds.y, newBounds.width, newBounds.height,
-                        aInvalidateChangedSize);
-      } else {
-        mWindow->Move(newBounds.x, newBounds.y);
-      }
-    } else {
-      if (changedSize && !aMoveOnly) {
-        mWindow->Resize(newBounds.width, newBounds.height, aInvalidateChangedSize);
-      } // else do nothing!
-    }
+    DoResetWidgetBounds(aMoveOnly, aInvalidateChangedSize);
   } else if (aRecurse) {
     // reposition any widgets under this view
     for (nsView* v = GetFirstChild(); v; v = v->GetNextSibling()) {
       v->ResetWidgetBounds(PR_TRUE, aMoveOnly, aInvalidateChangedSize);
     }
+  }
+}
+
+void nsView::DoResetWidgetBounds(PRBool aMoveOnly,
+                                 PRBool aInvalidateChangedSize) {
+  // The geometry of a root view's widget is controlled externally,
+  // NOT by sizing or positioning the view
+  if (mViewManager->GetRootView() == this) {
+    return;
+  }
+
+  NS_PRECONDITION(mWindow, "Why was this called??");
+  nsIDeviceContext  *dx;
+  float             t2p, p2t;
+  
+  mViewManager->GetDeviceContext(dx);
+  t2p = dx->AppUnitsToDevUnits();
+  p2t = dx->DevUnitsToAppUnits();
+  NS_RELEASE(dx);
+
+  nsPoint offset(0, 0);
+  if (GetParent()) {
+    nsIWidget* parentWidget = GetParent()->GetNearestWidget(&offset);
+
+    nsWindowType type;
+    mWindow->GetWindowType(type);
+    if (type == eWindowType_popup) {
+      // put offset into screen coordinates
+      nsRect screenRect(0,0,1,1);
+      parentWidget->WidgetToScreen(screenRect, screenRect);
+      offset += nsPoint(NSIntPixelsToTwips(screenRect.x, p2t),
+                        NSIntPixelsToTwips(screenRect.y, p2t));
+    }
+  }
+
+  nsRect newBounds(NSTwipsToIntPixels((mDimBounds.x + offset.x), t2p),
+                   NSTwipsToIntPixels((mDimBounds.y + offset.y), t2p),
+                   NSTwipsToIntPixels(mDimBounds.width, t2p),
+                   NSTwipsToIntPixels(mDimBounds.height, t2p));
+    
+  PRBool changedPos = PR_TRUE;
+  PRBool changedSize = PR_TRUE;
+  if (!(mVFlags & NS_VIEW_FLAG_HAS_POSITIONED_WIDGET)) {
+    mVFlags |= NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
+  } else {
+    nsRect curBounds;
+    mWindow->GetBounds(curBounds);
+    changedPos = curBounds.TopLeft() != newBounds.TopLeft();
+    changedSize = curBounds.Size() != newBounds.Size();
+  }
+
+  if (changedPos) {
+    if (changedSize && !aMoveOnly) {
+      mWindow->Resize(newBounds.x, newBounds.y, newBounds.width, newBounds.height,
+                      aInvalidateChangedSize);
+    } else {
+      mWindow->Move(newBounds.x, newBounds.y);
+    }
+  } else {
+    if (changedSize && !aMoveOnly) {
+      mWindow->Resize(newBounds.width, newBounds.height, aInvalidateChangedSize);
+    } // else do nothing!
   }
 }
 
@@ -469,7 +475,10 @@ NS_IMETHODIMP nsView::SetVisibility(nsViewVisibility aVisibility)
   {
 #ifndef HIDE_ALL_WIDGETS
     if (mVis == nsViewVisibility_kShow)
+    {
+      DoResetWidgetBounds(PR_FALSE, PR_TRUE);
       mWindow->Show(PR_TRUE);
+    }
     else
 #endif
       mWindow->Show(PR_FALSE);
