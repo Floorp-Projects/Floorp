@@ -316,34 +316,6 @@ mozSanitizingHTMLSerializer::AddLeaf(const nsIParserNode& aNode)
   return DoAddLeaf(type, text);
 }
 
-NS_IMETHODIMP
-mozSanitizingHTMLSerializer::OpenHTML(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseHTML()
-{
-  return CloseContainer(eHTMLTag_html);
-}
-
-NS_IMETHODIMP
-mozSanitizingHTMLSerializer::SetTitle(const nsString& aValue)
-{
-  if (IsAllowedTag(eHTMLTag_title))
-  {
-    // See bug 195020 for a good reason to output the tags.
-    // It will make sure we have a closing tag, and a
-    // missing </title> tag won't result in everything
-    // being eaten up as the title.
-    Write(NS_LITERAL_STRING("<title>"));
-    Write(nsAdoptingString(escape(aValue)));
-    Write(NS_LITERAL_STRING("</title>"));
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 mozSanitizingHTMLSerializer::AddDocTypeDecl(const nsIParserNode& aNode)
 {
@@ -363,73 +335,12 @@ mozSanitizingHTMLSerializer::SetDocumentCharset(nsACString& aCharset)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::OpenHead(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
 mozSanitizingHTMLSerializer::OpenHead()
 {
   // XXX We don't have a parser node here, is it okay to ignore this?
   // return OpenContainer(aNode);
   return NS_OK;
 }
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseHead()
-{
-  return CloseContainer(eHTMLTag_head);
-}
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::OpenBody(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseBody()
-{
-  return CloseContainer(eHTMLTag_body);
-}
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::OpenForm(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseForm()
-{
-  return CloseContainer(eHTMLTag_form);
-}
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::OpenMap(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseMap()
-{
-  return CloseContainer(eHTMLTag_map);
-}
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::OpenFrameset(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseFrameset()
-{
-  return CloseContainer(eHTMLTag_frameset);
-}
-
 
 // Here comes the actual code...
 

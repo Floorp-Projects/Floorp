@@ -76,19 +76,7 @@ public:
   virtual nsISupports *GetTarget() { return nsnull; }
 
   // nsIHTMLContentSink
-  NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
-  NS_IMETHOD CloseHTML();
-  NS_IMETHOD OpenHead(const nsIParserNode& aNode);
   NS_IMETHOD OpenHead();
-  NS_IMETHOD CloseHead();
-  NS_IMETHOD OpenBody(const nsIParserNode& aNode);
-  NS_IMETHOD CloseBody();
-  NS_IMETHOD OpenForm(const nsIParserNode& aNode);
-  NS_IMETHOD CloseForm();
-  NS_IMETHOD OpenMap(const nsIParserNode& aNode);
-  NS_IMETHOD CloseMap();
-  NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
-  NS_IMETHOD CloseFrameset();
   NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn) 
   /* Take the largest possible feature set. */
   { NS_ENSURE_ARG_POINTER(aReturn); *aReturn = PR_TRUE; return NS_OK; }

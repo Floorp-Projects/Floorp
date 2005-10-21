@@ -456,12 +456,22 @@ nsPlainTextSerializer::OpenContainer(const nsIParserNode& aNode)
 {
   PRInt32 type = aNode.GetNodeType();
 
+  if (type == eHTMLTag_head) {
+    mInHead = PR_TRUE;
+    return NS_OK;
+  }
+
   return DoOpenContainer(&aNode, type);
 }
 
 NS_IMETHODIMP 
 nsPlainTextSerializer::CloseContainer(const nsHTMLTag aTag)
 {
+  if (aTag == eHTMLTag_head) {
+    mInHead = PR_FALSE;
+    return NS_OK;
+  }
+
   return DoCloseContainer(aTag);
 }
 
@@ -492,85 +502,11 @@ nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
   }
 }
 
-NS_IMETHODIMP
-nsPlainTextSerializer::OpenHTML(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::CloseHTML()
-{
-  return CloseContainer(eHTMLTag_html);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::OpenHead(const nsIParserNode& aNode)
-{
-  mInHead = PR_TRUE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsPlainTextSerializer::OpenHead()
 {
   mInHead = PR_TRUE;
   return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::CloseHead()
-{
-  mInHead = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::OpenBody(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::CloseBody()
-{
-  return CloseContainer(eHTMLTag_body);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::OpenForm(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::CloseForm()
-{
-  return CloseContainer(eHTMLTag_form);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::OpenMap(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::CloseMap()
-{
-  return CloseContainer(eHTMLTag_map);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::OpenFrameset(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP 
-nsPlainTextSerializer::CloseFrameset()
-{
-  return CloseContainer(eHTMLTag_frameset);
 }
 
 NS_IMETHODIMP

@@ -1158,7 +1158,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsC
   }
   
   if(theChildIsContainer){
-    result=OpenContainer(aNode,aChildTag,PR_TRUE);
+    result=OpenContainer(aNode,aChildTag);
   }
   else {  //we're writing a leaf...
     result=AddLeaf(aNode);
@@ -1439,13 +1439,13 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         switch(theChildTag){
           case eHTMLTag_html:
             if(mBodyContext->GetCount()>0) {
-              result=OpenContainer(theNode,theChildTag,PR_FALSE);
+              result=OpenContainer(theNode,theChildTag);
               isTokenHandled=PR_TRUE;
             }
             break;
           case eHTMLTag_body:
             if(mFlags & NS_DTD_FLAG_HAS_OPEN_BODY) {
-              result=OpenContainer(theNode,theChildTag,PR_FALSE);
+              result=OpenContainer(theNode,theChildTag);
               isTokenHandled=PR_TRUE;
             }
             break;
@@ -1704,11 +1704,11 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     case eHTMLTag_head:
       StripWSFollowingTag(theChildTag,mTokenizer, mTokenAllocator, mLineNumber);
-      result = CloseContainer(eHTMLTag_head, theChildTag, PR_FALSE);
+      result = CloseContainer(eHTMLTag_head);
       break;
 
     case eHTMLTag_form:
-      result = CloseContainer(eHTMLTag_form, theChildTag, PR_FALSE);
+      result = CloseContainer(eHTMLTag_form);
       break;
 
     case eHTMLTag_br:
@@ -1742,7 +1742,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       }
 
       mBodyContext->Pop();
-      result = CloseContainer(eHTMLTag_script, theChildTag, PR_FALSE);
+      result = CloseContainer(eHTMLTag_script);
       break;
 
     default:
@@ -2570,11 +2570,11 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aChildTag, PRBool aCloseInvalid)
                   // should not get carried over to cases other than heading.
                   CAttributeToken theAttrToken(NS_LITERAL_STRING("_moz-rs-heading"), EmptyString());
                   theNode->AddAttribute(&theAttrToken);
-                  result = OpenContainer(theNode,theNodeTag,PR_FALSE,theStack);
+                  result = OpenContainer(theNode,theNodeTag,theStack);
                   theNode->PopAttributeToken();
                 }
                 else { 
-                  result = OpenContainer(theNode,theNodeTag,PR_FALSE,theStack);
+                  result = OpenContainer(theNode,theNodeTag,theStack);
                 }
               }
               else if (aCloseInvalid) {
@@ -2650,7 +2650,7 @@ nsresult CNavDTD::OpenHTML(const nsCParserNode *aNode){
   STOP_TIMER();
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenHTML(), this=%p\n", this));
 
-  nsresult result = (mSink) ? mSink->OpenHTML(*aNode) : NS_OK; 
+  nsresult result = (mSink) ? mSink->OpenContainer(*aNode) : NS_OK; 
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenHTML(), this=%p\n", this));
   START_TIMER();
@@ -2658,87 +2658,6 @@ nsresult CNavDTD::OpenHTML(const nsCParserNode *aNode){
   // Don't push more than one HTML tag into the stack...
   if (mBodyContext->GetCount() == 0) 
     mBodyContext->Push(NS_CONST_CAST(nsCParserNode*, aNode), 0, PR_FALSE); 
-
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- *
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CNavDTD::CloseHTML(){
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseHTML(), this=%p\n", this));
-
-  nsresult result = (mSink) ? mSink->CloseHTML() : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseHTML(), this=%p\n", this));
-  START_TIMER();
-
-  return result;
-}
-
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CNavDTD::OpenHead(const nsIParserNode *aNode)
-{
-  nsresult result = NS_OK;
-
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenHead(), this=%p\n", this));
-
-  if (!(mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)) {
-    mFlags |= NS_DTD_FLAG_HAS_OPEN_HEAD;
-    if (mSink && aNode) {
-      result = mSink->OpenHead(*aNode);
-    }
-    else if (mSink) {
-      result = mSink->OpenHead();
-    }
-  }
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenHead(), this=%p\n", this));
-  START_TIMER();
-
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CNavDTD::CloseHead()
-{
-  nsresult result = NS_OK;
-
-  if (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD) {
-    mFlags &= ~NS_DTD_FLAG_HAS_OPEN_HEAD;
-
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseHead(), this=%p\n", this));
-
-    result = mSink ? mSink->CloseHead() : NS_OK;
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseHead(), this=%p\n", this));
-    START_TIMER();
-  }
 
   return result;
 }
@@ -2765,10 +2684,10 @@ nsresult CNavDTD::OpenBody(const nsCParserNode *aNode)
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenBody(), this=%p\n", this));
 
     // Make sure the head is closed by the time the body is opened.
-    CloseHead();
+    CloseContainer(eHTMLTag_head);
 
     // Now we can open the body.
-    result = (mSink) ? mSink->OpenBody(*aNode) : NS_OK; 
+    result = (mSink) ? mSink->OpenContainer(*aNode) : NS_OK; 
 
     MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenBody(), this=%p\n", this));
     START_TIMER();
@@ -2778,173 +2697,6 @@ nsresult CNavDTD::OpenBody(const nsCParserNode *aNode)
       mTokenizer->PrependTokens(mMisplacedContent);
     }
   }
-
-  return result;
-}
-
-/**
- * This method does two things: 1st, help close
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CNavDTD::CloseBody()
-{
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseBody(), this=%p\n", this));
-
-  nsresult result= (mSink) ? mSink->CloseBody() : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseBody(), this=%p\n", this));
-  START_TIMER();
-
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CNavDTD::OpenForm(const nsIParserNode *aNode)
-{
-  nsresult result = NS_OK;
-  if (!(mFlags & NS_DTD_FLAG_HAS_OPEN_FORM)) { // discard nested forms - bug 72639
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenForm(), this=%p\n", this));
-
-    result = (mSink) ? mSink->OpenForm(*aNode) : NS_OK; 
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenForm(), this=%p\n", this));
-    START_TIMER();
-    if (NS_OK == result) {
-      mFlags |= NS_DTD_FLAG_HAS_OPEN_FORM;
-    }
-  }
-
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CNavDTD::CloseForm()
-{
-  nsresult result = NS_OK;
-  if (mFlags & NS_DTD_FLAG_HAS_OPEN_FORM) {
-    mFlags &= ~NS_DTD_FLAG_HAS_OPEN_FORM;
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
-
-    result = (mSink) ? mSink->CloseForm() : NS_OK; 
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
-    START_TIMER();
-  }
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CNavDTD::OpenMap(const nsCParserNode *aNode)
-{
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenMap(), this=%p\n", this));
-
-  nsresult result = (mSink) ? mSink->OpenMap(*aNode) : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenMap(), this=%p\n", this));
-  START_TIMER();
-
-  if (NS_OK == result) {
-    mBodyContext->Push(NS_CONST_CAST(nsCParserNode*, aNode), 0, PR_FALSE);
-    ++mOpenMapCount;
-  }
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CNavDTD::CloseMap()
-{
-  nsresult result = NS_OK;
-  if (mOpenMapCount) {
-    mOpenMapCount--;
-    STOP_TIMER();
-    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseMap(), this=%p\n", this));
-
-    result = (mSink) ? mSink->CloseMap() : NS_OK; 
-
-    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseMap(), this=%p\n", this));
-    START_TIMER();
-  }
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be added to model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CNavDTD::OpenFrameset(const nsCParserNode *aNode)
-{
-  NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
-
-  mFlags |= NS_DTD_FLAG_HAD_FRAMESET;
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenFrameset(), this=%p\n", this));
-
-  nsresult result = (mSink) ? mSink->OpenFrameset(*aNode) : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenFrameset(), this=%p\n", this));
-  START_TIMER();
-  mBodyContext->Push(NS_CONST_CAST(nsCParserNode*, aNode), 0, PR_FALSE);
-
-  return result;
-}
-
-/**
- * This method does two things: 1st, help construct
- * our own internal model of the content-stack; and
- * 2nd, pass this message on to the sink.
- * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
- * @return  TRUE if ok, FALSE if error
- */
-nsresult CNavDTD::CloseFrameset()
-{
-  STOP_TIMER();
-  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseFrameset(), this=%p\n", this));
-
-  nsresult result = (mSink) ? mSink->CloseFrameset() : NS_OK; 
-
-  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseFrameset(), this=%p\n", this));
-  START_TIMER();
 
   return result;
 }
@@ -2961,7 +2713,6 @@ nsresult CNavDTD::CloseFrameset()
 nsresult
 CNavDTD::OpenContainer(const nsCParserNode *aNode,
                        eHTMLTags aTag,
-                       PRBool aClosedByStartTag,
                        nsEntryStack* aStyleStack)
 {
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
@@ -2992,7 +2743,10 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
       result=OpenHTML(aNode); break;
 
     case eHTMLTag_head:
-      result=OpenHead(aNode); 
+      if (!(mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)) {
+        mFlags |= NS_DTD_FLAG_HAS_OPEN_HEAD;
+        done = PR_FALSE;
+      }
       break;
 
     case eHTMLTag_body:
@@ -3009,15 +2763,20 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
       break;
 
     case eHTMLTag_map:
-      result = OpenMap(aNode);
+      ++mOpenMapCount;
+      done = PR_FALSE;
       break;
 
     case eHTMLTag_form:
-      result = OpenForm(aNode); 
+      if (!(mFlags & NS_DTD_FLAG_HAS_OPEN_FORM)) { // discard nested forms - bug 72639
+        mFlags |= NS_DTD_FLAG_HAS_OPEN_FORM;
+        done = PR_FALSE;
+      }
       break;
 
     case eHTMLTag_frameset:
-      result = OpenFrameset(aNode); 
+      mFlags |= NS_DTD_FLAG_HAD_FRAMESET;
+      done = PR_FALSE;
       break;
 
     case eHTMLTag_noembed:
@@ -3072,42 +2831,37 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
  * our own internal model of the content-stack; and
  * 2nd, pass this message on to the sink.
  * @update  gess4/6/98
- * @param   aNode -- next node to be removed from our model
  * @param   aTag  -- id of tag to be closed
- * @param   aClosedByStartTag -- ONLY TRUE if the container is being closed by opening of another container.
  * @return  TRUE if ok, FALSE if error
  */
 nsresult
-CNavDTD::CloseContainer(const eHTMLTags aTag, eHTMLTags aTarget,PRBool aClosedByStartTag)
+CNavDTD::CloseContainer(const eHTMLTags aTag)
 {
   nsresult   result = NS_OK;
+  PRBool     done   = PR_TRUE;
 
   switch (aTag) {
-
-    case eHTMLTag_html:
-      result=CloseHTML();
-      break;
-
     case eHTMLTag_head:
-      result=CloseHead(); 
-      break;
-
-    case eHTMLTag_body:
-      result=CloseBody(); 
+      if (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD) {
+        mFlags &= ~NS_DTD_FLAG_HAS_OPEN_HEAD;
+        done = PR_FALSE;
+      }
       break;
 
     case eHTMLTag_map:
-      result=CloseMap();
+      if (mOpenMapCount) {
+        mOpenMapCount--;
+        done = PR_FALSE;
+      }
       break;
 
     case eHTMLTag_form:
-      result=CloseForm(); 
+      if (mFlags & NS_DTD_FLAG_HAS_OPEN_FORM) {
+        mFlags &= ~NS_DTD_FLAG_HAS_OPEN_FORM;
+        done = PR_FALSE;
+      }
       break;
 
-    case eHTMLTag_frameset:
-      result=CloseFrameset(); 
-      break;
-    
     case eHTMLTag_iframe:
     case eHTMLTag_noembed:
     case eHTMLTag_noscript:
@@ -3116,32 +2870,34 @@ CNavDTD::CloseContainer(const eHTMLTags aTag, eHTMLTags aTarget,PRBool aClosedBy
       mFlags &= ~NS_DTD_FLAG_ALTERNATE_CONTENT;
       // falling thro' intentionally....
     default:
-      STOP_TIMER();
-      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
+      done = PR_FALSE;
+  }
 
-      result = mSink
-               ? mSink->CloseContainer(aTag)
-               : NS_OK; // XXX Can this case really happen?
+  if (!done) {
+    STOP_TIMER();
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
 
-      // If we were dealing with a head container in the body, make sure to
-      // close the head context now, so that body content doesn't get sucked
-      // into the head.
-      if (mBodyContext->GetCount() == mHeadContainerPosition) {
-        nsresult headresult = CloseHead();
+    result = mSink
+             ? mSink->CloseContainer(aTag)
+             : NS_OK; // XXX Can this case really happen?
 
-        // Note: we could be assigning NS_OK into NS_OK here, but that's ok.
-        // This test is to avoid a successful CloseHead result stomping over a
-        // request to block the parser.
-        if (NS_SUCCEEDED(result)) {
-          result = headresult;
-        }
+    // If we were dealing with a head container in the body, make sure to
+    // close the head context now, so that body content doesn't get sucked
+    // into the head.
+    if (mBodyContext->GetCount() == mHeadContainerPosition) {
+      mHeadContainerPosition = -1;
+      nsresult headresult = CloseContainer(eHTMLTag_head);
 
-        mHeadContainerPosition = -1;
+      // Note: we could be assigning NS_OK into NS_OK here, but that's ok.
+      // This test is to avoid a successful CloseHead result stomping over a
+      // request to block the parser.
+      if (NS_SUCCEEDED(result)) {
+        result = headresult;
       }
+    }
 
-      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
-      START_TIMER();
-      break;
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
+    START_TIMER();
   }
 
   return result;
@@ -3169,7 +2925,7 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
       nsEntryStack* theChildStyleStack = 0;      
       eHTMLTags theTag = mBodyContext->Last();
       nsCParserNode* theNode = mBodyContext->Pop(theChildStyleStack);
-      result = CloseContainer(theTag, aTarget,aClosedByStartTag);  
+      result = CloseContainer(theTag);  
 
 #ifdef  ENABLE_RESIDUALSTYLE
 
@@ -3416,8 +3172,11 @@ nsresult CNavDTD::AddHeadContent(nsIParserNode *aNode){
     STOP_TIMER();
     MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadContent(), this=%p\n", this));
 
-    // Make sure the head is opened. This might just be a no-op.
-    result = OpenHead(nsnull);
+    // Make sure the head is opened.
+    if (!(mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)) {
+      mFlags |= NS_DTD_FLAG_HAS_OPEN_HEAD;
+      result = mSink->OpenHead();
+    }
 
     // Note: userdefined tags in the head are treated as leaves.
     if (!nsHTMLElement::IsContainer(theTag) || theTag == eHTMLTag_userdefined) {
@@ -3425,7 +3184,7 @@ nsresult CNavDTD::AddHeadContent(nsIParserNode *aNode){
 
       if (mFlags & NS_DTD_FLAG_HAS_MAIN_CONTAINER) {
         // Close the head now so that body content doesn't get sucked into it.
-        CloseHead();
+        CloseContainer(eHTMLTag_head);
       }
     }
     else {

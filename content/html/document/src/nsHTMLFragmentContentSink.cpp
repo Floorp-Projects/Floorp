@@ -90,24 +90,12 @@ public:
   // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);
   NS_IMETHOD EndContext(PRInt32 aID);
-  NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
-  NS_IMETHOD CloseHTML();
-  NS_IMETHOD OpenHead(const nsIParserNode& aNode);
   NS_IMETHOD OpenHead();
-  NS_IMETHOD CloseHead();
-  NS_IMETHOD OpenBody(const nsIParserNode& aNode);
-  NS_IMETHOD CloseBody();
-  NS_IMETHOD OpenForm(const nsIParserNode& aNode);
-  NS_IMETHOD CloseForm();
-  NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
-  NS_IMETHOD CloseFrameset();
   NS_IMETHOD IsEnabled(PRInt32 aTag, PRBool* aReturn) {
     *aReturn = PR_TRUE;
     return NS_OK;
   }
   NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
-  NS_IMETHOD OpenMap(const nsIParserNode& aNode);
-  NS_IMETHOD CloseMap();
   NS_IMETHOD WillProcessTokens(void) { return NS_OK; }
   NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
   NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
@@ -300,94 +288,10 @@ nsHTMLFragmentContentSink::EndContext(PRInt32 aID)
 }
 
 NS_IMETHODIMP
-nsHTMLFragmentContentSink::OpenHTML(const nsIParserNode& aNode)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::CloseHTML()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::OpenHead(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP
 nsHTMLFragmentContentSink::OpenHead()
 {
   mIgnoreNextCloseHead = PR_TRUE;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::CloseHead()
-{
-  if (mIgnoreNextCloseHead) {
-    mIgnoreNextCloseHead = PR_FALSE;
-    return NS_OK;
-  }
-
-  return CloseContainer(eHTMLTag_head);
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::OpenBody(const nsIParserNode& aNode)
-{
-  // Ignore repeated BODY elements. The DTD is just sending them
-  // to us for compatibility reasons that don't apply here.
-  if (!mSeenBody) {
-    mSeenBody = PR_TRUE;
-    return OpenContainer(aNode);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::CloseBody()
-{
-  return CloseContainer(eHTMLTag_body);
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::OpenForm(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::CloseForm()
-{
-  return CloseContainer(eHTMLTag_form);
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::OpenFrameset(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::CloseFrameset()
-{
-  return CloseContainer(eHTMLTag_frameset);
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::OpenMap(const nsIParserNode& aNode)
-{
-  return OpenContainer(aNode);
-}
-
-NS_IMETHODIMP
-nsHTMLFragmentContentSink::CloseMap()
-{
-  return CloseContainer(eHTMLTag_map);
 }
 
 void
@@ -421,6 +325,19 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
   NS_ENSURE_TRUE(mNodeInfoManager, NS_ERROR_NOT_INITIALIZED);
 
   nsresult result = NS_OK;
+
+  if (aNode.GetNodeType() == eHTMLTag_html) {
+    return NS_OK;
+  }
+
+  // Ignore repeated BODY elements. The DTD is just sending them
+  // to us for compatibility reasons that don't apply here.
+  if (aNode.GetNodeType() == eHTMLTag_body) {
+    if (mSeenBody) {
+      return NS_OK;
+    }
+    mSeenBody = PR_TRUE;
+  }
 
   if (mProcessing && !mIgnoreContainer) {
     FlushText();
@@ -485,6 +402,14 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::CloseContainer(const nsHTMLTag aTag)
 {
+  if (aTag == eHTMLTag_html) {
+    return NS_OK;
+  }
+  if (mIgnoreNextCloseHead && aTag == eHTMLTag_head) {
+    mIgnoreNextCloseHead = PR_FALSE;
+    return NS_OK;
+  }
+
   if (mProcessing && (nsnull != GetCurrentContent())) {
     nsIContent* content;
     FlushText();
