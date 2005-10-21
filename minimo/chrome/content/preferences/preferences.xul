@@ -73,7 +73,7 @@
             accessnextrule="advanced-pane"
             accessprevrule="pref-bar" >
             
-            <groupbox flex="1" class="box-floatoptions" >
+            <groupbox flex="1" class="box-floatoptions scrolling"  >
                 <caption label="&general.label;" /> 
                 <hbox flex="1" >
                     <vbox flex="1" style="padding:4px ! important">
@@ -146,7 +146,7 @@
           accessprevrule="general-pane"
           collapsed="true"  >
           
-        <groupbox flex="1" class="box-floatoptions" >
+        <groupbox flex="1" class="box-floatoptions scrolling" >
             <caption label="&advanced.label;" /> 
             <hbox flex="1" >
                 <vbox flex="1" style="padding:4px ! important">
@@ -175,7 +175,7 @@
           accessprevrule="general-pane"
           collapsed="true"  >
           
-        <groupbox flex="1" class="box-floatoptions" >
+        <groupbox flex="1" class="box-floatoptions scrolling" >
             <caption label="&privacy.label;" /> 
             <box class="box-prefpadding">
 
@@ -198,7 +198,7 @@
           flex="1"
           collapsed="true"  >
           
-        <groupbox flex="1" class="box-floatoptions">
+        <groupbox flex="1" class="box-floatoptions scrolling">
             <caption label="&proxyCaption.label;"/>
             <vbox class="box-prefpadding" flex="1">
             
@@ -206,8 +206,8 @@
                           label="&useproxyCheckbox.label;"
                           preference="network.proxy.type" 
                           onclick="syncPref(this)" 
-                          onsyncfrompreference="return readProxyPref();"
-                          onsynctopreference="return writeProxyPref();"
+                          onsyncfrompreference="readProxyPref();"
+                          onsynctopreference="writeProxyPref();"
                           />
 
 				
@@ -242,9 +242,9 @@
           collapsed="true" 
           >
 
-        <groupbox flex="1" class="box-floatoptions">
+        <groupbox flex="1" class="box-floatoptions scrolling" >
             <caption label="&summaryCaption.label;"/>
-            <textbox flex="1" class="okay-panel-textbox" id="textbox-okay-pane" />
+            <label flex="1" class="okay-panel-textbox" id="textbox-okay-pane" />
         </groupbox>
 
     </hbox>
