@@ -37,15 +37,22 @@
 
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
+#include "nsDOMClassInfo.h"
+#include "nsDOMError.h"
 
 #include "nsDOMWindowUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 
+#include "nsContentUtils.h"
+
+#include "nsIFrame.h"
+
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WindowUtils)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF(nsDOMWindowUtils)
@@ -100,6 +107,11 @@ NS_IMETHODIMP
 nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
                                       nsAString& aValue)
 {
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::SecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
+      || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
   if (mWindow) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
     if (doc) {
@@ -111,4 +123,28 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
   
   aValue.Truncate();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::Redraw()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIDocShell> docShell = mWindow->GetDocShell();
+  if (docShell) {
+    nsCOMPtr<nsIPresShell> presShell;
+
+    rv = docShell->GetPresShell(getter_AddRefs(presShell));
+    if (NS_SUCCEEDED(rv) && presShell) {
+      nsIFrame *rootFrame = presShell->GetRootFrame();
+
+      if (rootFrame) {
+        nsRect r(nsPoint(0, 0), rootFrame->GetSize());
+        rootFrame->Invalidate(r, PR_TRUE);
+
+        return NS_OK;
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
 }

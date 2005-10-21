@@ -38,12 +38,14 @@
 #include "nsISupports.idl"
 
 /**
- * nsIDOMWindowUtils is intended for giving privileged script access to
- * additional properties and methods of nsIDOMWindow unavailable to
- * content script. Access this interface by calling getInterface on a DOMWindow.
+ * nsIDOMWindowUtils is intended for infrequently-used methods related
+ * to the current nsIDOMWindow.  Some of the methods may require
+ * elevated privileges; the method implementations should contain the
+ * necessary security checks.  Access this interface by calling
+ * getInterface on a DOMWindow.
  */
 
-[scriptable, uuid(8a157a4f-a81e-489f-baf2-bc8970d60472)]
+[scriptable, uuid(cc7f4216-ad89-4687-a793-980662bd10bd)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -69,6 +71,14 @@ interface nsIDOMWindowUtils : nsISupports {
    * Function to get metadata associated with the window's current document
    * @param aName the name of the metadata.  This should be all lowercase.
    * @return the value of the metadata, or the empty string if it's not set
+   *
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
    */
   AString getDocumentMetadata(in AString aName);
+
+  /**
+   * Force an immediate redraw of this window.
+   */
+  void redraw();
 };

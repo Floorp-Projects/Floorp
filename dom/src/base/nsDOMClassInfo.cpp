@@ -76,6 +76,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsContentUtils.h"
+#include "nsDOMWindowUtils.h"
 
 // Window scriptable helper includes
 #include "nsIDocShell.h"
@@ -1049,10 +1050,12 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 #endif // MOZ_ENABLE_CANVAS
 
- NS_DEFINE_CLASSINFO_DATA(SmartCardEvent, nsDOMGenericSH,
-                          DOM_DEFAULT_SCRIPTABLE_FLAGS)
- NS_DEFINE_CLASSINFO_DATA(PageTransitionEvent, nsDOMGenericSH,
-                          DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(SmartCardEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(PageTransitionEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(WindowUtils, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // Define MOZ_SVG_FOREIGNOBJECT here so that when it gets switched on,
   // we preserve binary compatibility. New classes should be added
@@ -1672,6 +1675,10 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(WindowUtils, nsIDOMWindowUtils)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowUtils)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Location, nsIDOMLocation)
