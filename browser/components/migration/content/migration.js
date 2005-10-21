@@ -330,22 +330,18 @@ var MigrationWizard = {
   {
     switch (aTopic) {
     case "Migration:Started":
-      dump("*** started\n");
       break;
     case "Migration:ItemBeforeMigrate":
-      dump("*** before " + aData + "\n");
       var label = document.getElementById(aData + "_migrated");
       if (label)
         label.setAttribute("style", "font-weight: bold");
       break;
     case "Migration:ItemAfterMigrate":
-      dump("*** after " + aData + "\n");
       var label = document.getElementById(aData + "_migrated");
       if (label)
         label.removeAttribute("style");
       break;
     case "Migration:Ended":
-      dump("*** done\n");
       if (this._autoMigrate) {
         // We're done now.
         this._wiz.canAdvance = true;
