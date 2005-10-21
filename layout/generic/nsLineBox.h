@@ -97,7 +97,11 @@ protected:
 
 class nsFloatCacheList {
 public:
+#ifdef NS_BUILD_REFCNT_LOGGING
+  nsFloatCacheList();
+#else
   nsFloatCacheList() : mHead(nsnull) { }
+#endif
   ~nsFloatCacheList();
 
   PRBool IsEmpty() const {
@@ -116,6 +120,8 @@ public:
 
   nsFloatCache* Find(nsIFrame* aOutOfFlowFrame);
 
+  // Remove a nsFloatCache from this list.  Deleting this nsFloatCache
+  // becomes the caller's responsibility.
   void Remove(nsFloatCache* aElement);
 
   void Append(nsFloatCacheFreeList& aList);
@@ -130,8 +136,13 @@ protected:
 
 class nsFloatCacheFreeList : public nsFloatCacheList {
 public:
+#ifdef NS_BUILD_REFCNT_LOGGING
+  nsFloatCacheFreeList();
+  ~nsFloatCacheFreeList();
+#else
   nsFloatCacheFreeList() : mTail(nsnull) { }
   ~nsFloatCacheFreeList() { }
+#endif
 
   // Steal away aList's nsFloatCache objects and put them on this
   // free-list.

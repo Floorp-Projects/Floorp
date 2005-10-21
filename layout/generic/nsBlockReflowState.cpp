@@ -638,6 +638,9 @@ nsBlockReflowState::AddFloat(nsLineLayout&       aLineLayout,
       // Record this float in the current-line list
       mCurrentLineFloats.Append(fc);
     }
+    else {
+      delete fc;
+    }
 
     // Restore coordinate system
     mSpaceManager->Translate(dx, dy);
