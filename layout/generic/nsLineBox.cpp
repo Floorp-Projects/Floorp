@@ -472,6 +472,7 @@ nsLineBox::RemoveFloat(nsIFrame* aFrame)
       // Note: the placeholder is part of the line's child list
       // and will be removed later.
       mInlineData->mFloats.Remove(fc);
+      delete fc;
       MaybeFreeData();
       return PR_TRUE;
     }
@@ -845,6 +846,16 @@ nsLineIterator::GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber)
 
 //----------------------------------------------------------------------
 
+MOZ_DECL_CTOR_COUNTER(nsFloatCacheList)
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsFloatCacheList::nsFloatCacheList() :
+  mHead(nsnull)
+{
+  MOZ_COUNT_CTOR(nsFloatCacheList);
+}
+#endif
+
 nsFloatCacheList::~nsFloatCacheList()
 {
   nsFloatCache* fc = mHead;
@@ -854,6 +865,7 @@ nsFloatCacheList::~nsFloatCacheList()
     fc = next;
   }
   mHead = nsnull;
+  MOZ_COUNT_DTOR(nsFloatCacheList);
 }
 
 nsFloatCache*
@@ -874,9 +886,11 @@ nsFloatCacheList::Append(nsFloatCacheFreeList& aList)
 {
   nsFloatCache* tail = Tail();
   if (tail) {
+    NS_ASSERTION(!tail->mNext, "Bogus!");
     tail->mNext = aList.mHead;
   }
   else {
+    NS_ASSERTION(!mHead, "Bogus!");
     mHead = aList.mHead;
   }
   aList.mHead = nsnull;
@@ -912,13 +926,30 @@ nsFloatCacheList::Remove(nsFloatCache* aElement)
 
 //----------------------------------------------------------------------
 
+MOZ_DECL_CTOR_COUNTER(nsFloatCacheFreeList)
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsFloatCacheFreeList::nsFloatCacheFreeList() :
+  mTail(nsnull)
+{
+  MOZ_COUNT_CTOR(nsFloatCacheFreeList);
+}
+
+nsFloatCacheFreeList::~nsFloatCacheFreeList()
+{
+  MOZ_COUNT_DTOR(nsFloatCacheFreeList);
+}
+#endif
+  
 void
 nsFloatCacheFreeList::Append(nsFloatCacheList& aList)
 {
   if (mTail) {
+    NS_ASSERTION(!mTail->mNext, "Bogus");
     mTail->mNext = aList.mHead;
   }
   else {
+    NS_ASSERTION(!mHead, "Bogus");
     mHead = aList.mHead;
   }
   mTail = aList.Tail();
@@ -947,12 +978,15 @@ nsFloatCacheFreeList::Alloc()
 void
 nsFloatCacheFreeList::Append(nsFloatCache* aFloat)
 {
+  NS_ASSERTION(!aFloat->mNext, "Bogus!");
   aFloat->mNext = nsnull;
   if (mTail) {
+    NS_ASSERTION(!mTail->mNext, "Bogus!");
     mTail->mNext = aFloat;
     mTail = aFloat;
   }
   else {
+    NS_ASSERTION(!mHead, "Bogus!");
     mHead = mTail = aFloat;
   }
 }
