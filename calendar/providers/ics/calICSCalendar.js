@@ -235,6 +235,22 @@ calICSCalendar.prototype = {
 
             return;
         }
+        
+        function copyToOverwriting(oldFile, newParentDir, newName) {
+            try {
+                var newFile = newParentDir.clone();
+                newFile.append(newName);
+            
+                if (newFile.exists()) {
+                    newFile.remove(false);
+                }
+                oldFile.copyTo(newParentDir, newName);
+            } catch(e) {
+                Components.utils.reportError("Backup failed, no copy:"+e);
+                // Error in making a daily/initial backup.
+                // not fatal, so just continue
+            }
+        }
 
         function getIntPrefSafe(prefName, defaultValue)
         {
@@ -286,8 +302,8 @@ calICSCalendar.prototype = {
             doInitialBackup = true;
 
         var doDailyBackup = false;
-        var backupTime = getCalendarManager()
-                         .getCalendarPref(this, 'backup-time');
+        var backupTime = new Number(getCalendarManager().
+                                       getCalendarPref(this, 'backup-time'));
         if (!backupTime ||
             (new Date().getTime() > backupTime + backupDays*24*60*60*1000)) {
             // It's time do to a daily backup
@@ -321,9 +337,9 @@ calICSCalendar.prototype = {
         var listener = {
             onDownloadComplete: function(downloader, request, ctxt, status, result) {
                 if (doInitialBackup)
-                    result.copyTo(backupDir, makeName('initial'));
+                    copyToOverwriting(result, backupDir, makeName('initial'));
                 if (doDailyBackup)
-                    result.copyTo(backupDir, dailyBackupFileName);
+                    copyToOverwriting(result, backupDir, dailyBackupFileName);
 
                 provider.doWriteICS();
             },
