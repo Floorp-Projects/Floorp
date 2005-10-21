@@ -2319,11 +2319,6 @@ doContent(XML_Parser parser,
           if (startElementHandler)
             *eventPP = *eventEndPP;
           endElementHandler(handlerArg, name.str);
-/* BEGIN MOZILLA CHANGE (Blocking parser) */
-          if (blocked) {
-            return XML_ERROR_SUSPENDED;
-          }
-/* END MOZILLA CHANGE */
           noElmHandlers = XML_FALSE;
         }
         if (noElmHandlers && defaultHandler)
@@ -2338,6 +2333,11 @@ doContent(XML_Parser parser,
           freeBindingList = b;
           b->prefix->binding = b->prevPrefixBinding;
         }
+/* BEGIN MOZILLA CHANGE (Blocking parser) */
+        if (blocked) {
+          return XML_ERROR_SUSPENDED;
+        }
+/* END MOZILLA CHANGE */
       }
       if (tagLevel == 0)
         return epilogProcessor(parser, next, end, nextPtr);
@@ -2404,12 +2404,6 @@ doContent(XML_Parser parser,
             *uri = XML_T('\0');
           }
           endElementHandler(handlerArg, tag->name.str);
-/* BEGIN MOZILLA CHANGE (Blocking parser) */
-          if (blocked) {
-            *eventPP = s = next; /* fix bug 119727 */
-            return XML_ERROR_SUSPENDED;
-          }
-/* END MOZILLA CHANGE */
         }
         else if (defaultHandler)
           reportDefault(parser, enc, s, next);
@@ -2422,6 +2416,12 @@ doContent(XML_Parser parser,
           freeBindingList = b;
           b->prefix->binding = b->prevPrefixBinding;
         }
+/* BEGIN MOZILLA CHANGE (Blocking parser) */
+        if (blocked) {
+          *eventPP = s = next; /* fix bug 119727 */
+          return XML_ERROR_SUSPENDED;
+        }
+/* END MOZILLA CHANGE */
         if (tagLevel == 0)
           return epilogProcessor(parser, next, end, nextPtr);
       }
