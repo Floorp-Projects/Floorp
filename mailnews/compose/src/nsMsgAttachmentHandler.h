@@ -156,6 +156,7 @@ public:
   PRUint32              m_highbit_count;
   PRUint32              m_ctl_count;
   PRUint32              m_null_count;
+  PRUint8               m_have_cr, m_have_lf, m_have_crlf; 
   PRUint32              m_current_column;
   PRUint32              m_max_column;
   PRUint32              m_lines;

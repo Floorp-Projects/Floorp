@@ -115,6 +115,7 @@ nsMsgAttachmentHandler::nsMsgAttachmentHandler()
   m_file_analyzed = PR_FALSE;
   m_ctl_count = 0;
   m_null_count = 0;
+  m_have_cr = m_have_lf = m_have_crlf = 0;
   m_current_column = 0;
   m_max_column = 0;
   m_lines = 0;
@@ -198,8 +199,18 @@ nsMsgAttachmentHandler::AnalyzeDataChunk(const char *chunk, PRInt32 length)
 
     if (*s == nsCRT::CR || *s == nsCRT::LF)
     {
-      if (s+1 < end && s[0] == nsCRT::CR && s[1] == nsCRT::LF)
-        s++;
+      if (*s == nsCRT::CR)
+      {
+        if (s+1 < end && s[1] == nsCRT::LF)
+        {
+          s++;
+          m_have_crlf = 1;
+        }
+        else
+          m_have_cr = 1;
+      }
+      else
+        m_have_lf = 1;
       if (m_max_column < m_current_column)
         m_max_column = m_current_column;
       m_current_column = 0;
@@ -264,9 +275,11 @@ nsMsgAttachmentHandler::PickEncoding(const char *charset, nsIMsgSend *mime_deliv
   if (pPrefBranch) 
     pPrefBranch->GetBoolPref ("mail.file_attach_binary", &forceB64);
   
-  if (!mMainBody && (forceB64 || mime_type_requires_b64_p (m_type)))
+  if (!mMainBody && (forceB64 || mime_type_requires_b64_p (m_type) ||
+    m_have_cr+m_have_lf+m_have_crlf != 1 || m_current_column != 0))
   {
-  /* If the content-type is "image/" or something else known to be binary,
+  /* If the content-type is "image/" or something else known to be binary
+  or several flavors of newlines are present or last line is incomplete,
   always use base64 (so that we don't get confused by newline
   conversions.)
      */
