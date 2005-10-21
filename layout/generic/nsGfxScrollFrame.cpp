@@ -689,9 +689,6 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
                             PR_MAX(childOverflow.XMost(), aState.mScrollPortRect.width),
                             PR_MAX(childOverflow.YMost(), aState.mScrollPortRect.height));
   mInner.mScrolledFrame->SetRect(childRect);
-  // XXX hack! force the scrolled frame to think it has overflow
-  // to avoid problems with incorrect event targeting.
-  mInner.mScrolledFrame->AddStateBits(NS_FRAME_OUTSIDE_CHILDREN);
 
   nsContainerFrame::SyncFrameViewAfterReflow(mInner.mScrolledFrame->GetPresContext(),
                                              mInner.mScrolledFrame,
@@ -2116,10 +2113,6 @@ nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState, const nsRect& aRect
 
   aState.SetLayoutFlags(oldflags);
 
-  // XXX hack! force the scrolled frame to think it has overflow
-  // to avoid problems with incorrect event targeting.
-  mInner.mScrolledFrame->AddStateBits(NS_FRAME_OUTSIDE_CHILDREN);
-  
   mInner.PostOverflowEvents();
 }
 
