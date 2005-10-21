@@ -2990,7 +2990,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
         begin = pc;
     } else {
         sn = js_GetSrcNote(script, pc);
-        if (!sn || SN_TYPE(sn) != SRC_PCBASE && SN_TYPE(sn) != SRC_PCDELTA) {
+        if (!sn || (SN_TYPE(sn) != SRC_PCBASE && SN_TYPE(sn) != SRC_PCDELTA)) {
             if (cs->token)
                 return JS_NewStringCopyZ(cx, cs->token);
             goto do_fallback;
