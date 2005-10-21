@@ -184,7 +184,7 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
 # Do not clean schema-validation on distclean, it should handle that itself
-distclean:: DIRS=
+distclean:: LOOP_OVER_DIRS=
 
 include $(topsrcdir)/config/rules.mk
 
