@@ -2765,7 +2765,6 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
       (mFlags & NS_SINK_FLAG_FRAMES_ENABLED)) {
     mFrameset =
       mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
-    NS_ADDREF(mFrameset);
     isFirstFrameset = PR_TRUE;
   }
 
