@@ -108,7 +108,7 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
                                       nsAString& aValue)
 {
   PRBool hasCap = PR_FALSE;
-  if (NS_FAILED(nsContentUtils::SecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap))
       || !hasCap)
     return NS_ERROR_DOM_SECURITY_ERR;
 
