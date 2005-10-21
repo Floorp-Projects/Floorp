@@ -337,8 +337,8 @@
 
     <handlers>
       <handler event="click" phase="capturing" button="0" action="this.open(event)"/>
-      <handler event="keypress" keycode="VK_ENTER" action="this.open(event)" />
-      <handler event="keypress" keycode="VK_RETURN" action="this.open(event)" />
+      <handler event="keypress" preventdefault="true" keycode="VK_ENTER" action="this.click()" />
+      <handler event="keypress" preventdefault="true" keycode="VK_RETURN" action="this.click()" />
     </handlers>
   </binding>
 
