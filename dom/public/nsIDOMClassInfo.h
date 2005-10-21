@@ -352,6 +352,9 @@ enum nsDOMClassInfoID {
   // PageTransition Events
   eDOMClassInfo_PageTransitionEvent_id,
 
+  // WindowUtils
+  eDOMClassInfo_WindowUtils_id,
+
   // Define this near the end so that enabling/disabling foreignobject doesn't
   // break binary compatibility
 #if defined(MOZ_SVG) && defined(MOZ_SVG_FOREIGNOBJECT)
