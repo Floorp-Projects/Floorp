@@ -5058,15 +5058,6 @@ xml_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 }
 
 static JSBool
-xml_checkAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
-                jsval *vp, uintN *attrsp)
-{
-    if (!cx->runtime->checkObjectAccess)
-        return JS_TRUE;
-    return cx->runtime->checkObjectAccess(cx, obj, ID_TO_VALUE(id), mode, vp);
-}
-
-static JSBool
 xml_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
     return JS_TRUE;
@@ -5349,7 +5340,7 @@ JS_FRIEND_DATA(JSXMLObjectOps) js_XMLObjectOps = {
     xml_getProperty,            xml_setProperty,
     xml_getAttributes,          xml_setAttributes,
     xml_deleteProperty,         xml_defaultValue,
-    xml_enumerate,              xml_checkAccess,
+    xml_enumerate,              js_CheckAccess,
     NULL,                       NULL,
     NULL,                       NULL,
     NULL,                       xml_hasInstance,
