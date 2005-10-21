@@ -492,3 +492,13 @@ var calCompositeCalendarModule = {
 function NSGetModule(compMgr, fileSpec) {
     return calCompositeCalendarModule;
 }
+
+var activeCalendarManager = null;
+function getCalendarManager() {
+    if (!activeCalendarManager) {
+        activeCalendarManager = 
+            Components.classes["@mozilla.org/calendar/manager;1"]
+                      .getService(Components.interfaces.calICalendarManager);
+    }
+    return activeCalendarManager;
+}
