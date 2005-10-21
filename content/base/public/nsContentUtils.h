@@ -197,7 +197,8 @@ public:
 
   /**
    * Brute-force search of the element subtree rooted at aContent for
-   * an element with the given id.
+   * an element with the given id.  aId must be nonempty, otherwise
+   * this method may return nodes even if they have no id!
    */
   static nsIContent* MatchElementId(nsIContent *aContent,
                                     const nsAString& aId);

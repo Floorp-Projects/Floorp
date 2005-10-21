@@ -2475,35 +2475,19 @@ nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
 }
 
 static nsIContent*
-MatchElementId(nsIContent *aContent,
-               const nsACString& aUTF8Id, const nsAString& aId)
+MatchElementId(nsIContent *aContent, nsIAtom* aId)
 {
-  if (aContent->IsContentOfType(nsIContent::eHTML)) {
-    if (aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::id)) {
-      nsAutoString value;
-      aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
-
-      if (aId.Equals(value)) {
-        return aContent;
-      }
-    }
+  nsIAtom* idAttrName = aContent->GetIDAttributeName();
+  if (idAttrName && aContent->AttrValueIs(kNameSpaceID_None, idAttrName, aId,
+                                          eCaseMatters)) {
+    return aContent;
   }
-  else if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
-    nsCOMPtr<nsIXMLContent> xmlContent = do_QueryInterface(aContent);
-
-    if (xmlContent) {
-      nsIAtom* value = xmlContent->GetID();
-      if (value && value->EqualsUTF8(aUTF8Id)) {
-        return aContent;
-      }
-    }
-  }
-
+  
   nsIContent *result = nsnull;
   PRUint32 i, count = aContent->GetChildCount();
 
   for (i = 0; i < count && result == nsnull; i++) {
-    result = MatchElementId(aContent->GetChildAt(i), aUTF8Id, aId);
+    result = MatchElementId(aContent->GetChildAt(i), aId);
   }
 
   return result;
@@ -2515,7 +2499,16 @@ MatchElementId(nsIContent *aContent,
 nsIContent *
 nsContentUtils::MatchElementId(nsIContent *aContent, const nsAString& aId)
 {
-  return ::MatchElementId(aContent, NS_ConvertUTF16toUTF8(aId), aId);
+  NS_PRECONDITION(!aId.IsEmpty(), "Will match random elements");
+  
+  // ID attrs are generally stored as atoms, so just atomize this up front
+  nsCOMPtr<nsIAtom> id(do_GetAtom(aId));
+  if (!id) {
+    // OOM, so just bail
+    return nsnull;
+  }
+
+  return ::MatchElementId(aContent, id);
 }
 
 // Convert the string from the given charset to Unicode.
