@@ -1492,10 +1492,24 @@ case "$target" in
     mips)
 	    AC_DEFINE(_MIPS_)
 	    ;;
+    x86_64)
+	    AC_DEFINE(_AMD64_)
+	    AC_DEFINE(_M_AMD64)
+	    USE_64=1
+	    ;;
+    ia64)
+	    AC_DEFINE(_IA64_)
+	    AC_DEFINE(_M_IA64)
+	    USE_64=1
+	    ;;
     *)
 	    AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
 	    ;;
     esac
+
+    if test "$USE_64"; then
+        AC_DEFINE(_WIN64)
+    fi
 
     ;;
 

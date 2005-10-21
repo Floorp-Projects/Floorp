@@ -316,11 +316,13 @@ OBJS += memory/$(OBJDIR)/prgcleak.$(OBJ_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH), WINNT)
+ifndef USE_64
 ifdef NS_USE_GCC
 DLLBASE=-Wl,--image-base -Wl,0x30000000
 else
 DLLBASE=-BASE:0x30000000
 endif # GCC
+endif # !USE_64
 RES=$(OBJDIR)/nspr.res
 RESNAME=nspr.rc
 endif # WINNT

@@ -55,11 +55,11 @@ void _PR_InitIO(void)
     _pr_flock_cv = PR_NewCondVar(_pr_flock_lock);
 
 #ifdef WIN32
-    _pr_stdin = PR_AllocFileDesc((PRInt32)GetStdHandle(STD_INPUT_HANDLE),
+    _pr_stdin = PR_AllocFileDesc((PROsfd)GetStdHandle(STD_INPUT_HANDLE),
             methods);
-    _pr_stdout = PR_AllocFileDesc((PRInt32)GetStdHandle(STD_OUTPUT_HANDLE),
+    _pr_stdout = PR_AllocFileDesc((PROsfd)GetStdHandle(STD_OUTPUT_HANDLE),
             methods);
-    _pr_stderr = PR_AllocFileDesc((PRInt32)GetStdHandle(STD_ERROR_HANDLE),
+    _pr_stderr = PR_AllocFileDesc((PROsfd)GetStdHandle(STD_ERROR_HANDLE),
             methods);
 #ifdef WINNT
     _pr_stdin->secret->md.sync_file_io = PR_TRUE;
@@ -118,7 +118,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD osfd)
 }
 
 PR_IMPLEMENT(PRFileDesc*) PR_AllocFileDesc(
-    PRInt32 osfd, const PRIOMethods *methods)
+    PROsfd osfd, const PRIOMethods *methods)
 {
     PRFileDesc *fd;
 

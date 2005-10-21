@@ -118,7 +118,7 @@ PRInt32 IsFileLocal(HANDLE hFile);
 
 static PRInt32 _md_MakeNonblock(HANDLE);
 
-static PRInt32 _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr *addr, int *addrlen, PRIntervalTime);
+static PROsfd _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr *addr, int *addrlen, PRIntervalTime);
 static PRInt32 _nt_nonblock_connect(PRFileDesc *fd, struct sockaddr *addr, int addrlen, PRIntervalTime);
 static PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, int flags, PRIntervalTime);
 static PRInt32 _nt_nonblock_send(PRFileDesc *fd, char *buf, int len, PRIntervalTime);
@@ -1045,7 +1045,7 @@ static int missing_completions = 0;
 static int max_wait_loops = 0;
 
 static PRInt32
-_NT_IO_ABORT(PRInt32 sock)
+_NT_IO_ABORT(PROsfd sock)
 {
     PRThread *me = _PR_MD_CURRENT_THREAD();
     PRBool fWait;
@@ -1136,7 +1136,7 @@ _NT_IO_ABORT(PRInt32 sock)
 }
 
 
-PRInt32
+PROsfd
 _PR_MD_SOCKET(int af, int type, int flags)
 {
     SOCKET sock;
@@ -1147,13 +1147,13 @@ _PR_MD_SOCKET(int af, int type, int flags)
         _PR_MD_MAP_SOCKET_ERROR(WSAGetLastError());
     }
 
-    return (PRInt32)sock;
+    return (PROsfd)sock;
 }
 
 struct connect_data_s {
     PRInt32 status;
     PRInt32 error;
-    PRInt32 osfd;
+    PROsfd  osfd;
     struct sockaddr *addr;
     PRUint32 addrlen;
     PRIntervalTime timeout;
@@ -1177,7 +1177,7 @@ PRInt32
 _PR_MD_CONNECT(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen, 
                PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
     u_long nbio;
     PRInt32 rc;
@@ -1245,7 +1245,7 @@ _PR_MD_BIND(PRFileDesc *fd, const PRNetAddr *addr, PRUint32 addrlen)
     return 0;
 }
 
-void _PR_MD_UPDATE_ACCEPT_CONTEXT(PRInt32 accept_sock, PRInt32 listen_sock)
+void _PR_MD_UPDATE_ACCEPT_CONTEXT(PROsfd accept_sock, PROsfd listen_sock)
 {
     /* Sockets accept()'d with AcceptEx need to call this setsockopt before
      * calling anything other than ReadFile(), WriteFile(), send(), recv(), 
@@ -1268,12 +1268,12 @@ void _PR_MD_UPDATE_ACCEPT_CONTEXT(PRInt32 accept_sock, PRInt32 listen_sock)
 }
 
 #define INET_ADDR_PADDED (sizeof(PRNetAddr) + 16)
-PRInt32
+PROsfd
 _PR_MD_FAST_ACCEPT(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
               PRIntervalTime timeout, PRBool fast, 
               _PR_AcceptTimeoutCallback callback, void *callbackArg)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRThread *me = _PR_MD_CURRENT_THREAD();
     SOCKET accept_sock;
     int bytes;
@@ -1420,12 +1420,12 @@ _PR_MD_FAST_ACCEPT(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
 }
 
 PRInt32
-_PR_MD_FAST_ACCEPT_READ(PRFileDesc *sd, PRInt32 *newSock, PRNetAddr **raddr, 
+_PR_MD_FAST_ACCEPT_READ(PRFileDesc *sd, PROsfd *newSock, PRNetAddr **raddr, 
                    void *buf, PRInt32 amount, PRIntervalTime timeout, 
                    PRBool fast, _PR_AcceptTimeoutCallback callback, 
                    void *callbackArg)
 {
-    PRInt32 sock = sd->secret->md.osfd;
+    PROsfd sock = sd->secret->md.osfd;
     PRThread *me = _PR_MD_CURRENT_THREAD();
     int bytes;
     PRNetAddr *Laddr;
@@ -1707,7 +1707,7 @@ PRInt32
 _PR_MD_RECV(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags, 
             PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRThread *me = _PR_MD_CURRENT_THREAD();
     int bytes;
     int rv, err;
@@ -1806,7 +1806,7 @@ PRInt32
 _PR_MD_SEND(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
             PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRThread *me = _PR_MD_CURRENT_THREAD();
     int bytes;
     int rv, err;
@@ -1901,7 +1901,7 @@ PRInt32
 _PR_MD_SENDTO(PRFileDesc *fd, const void *buf, PRInt32 amount, PRIntn flags,
               const PRNetAddr *addr, PRUint32 addrlen, PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRInt32 rv;
 
     if (!fd->secret->md.io_model_committed) {
@@ -1919,7 +1919,7 @@ PRInt32
 _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
                 PRNetAddr *addr, PRUint32 *addrlen, PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRInt32 rv;
 
     if (!fd->secret->md.io_model_committed) {
@@ -1937,7 +1937,7 @@ _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
 PRInt32
 _PR_MD_WRITEV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size, PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     int index;
     int sent = 0;
     int rv;
@@ -2082,7 +2082,7 @@ _PR_MD_SETSOCKOPT(PRFileDesc *fd, PRInt32 level, PRInt32 optname, const char* op
 
 /* --- FILE IO ----------------------------------------------------------- */
 
-PRInt32
+PROsfd
 _PR_MD_OPEN(const char *name, PRIntn osflags, PRIntn mode)
 {
     HANDLE file;
@@ -2125,10 +2125,10 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, PRIntn mode)
         }
     }
 
-    return (PRInt32)file;
+    return (PROsfd)file;
 }
 
-PRInt32
+PROsfd
 _PR_MD_OPEN_FILE(const char *name, PRIntn osflags, PRIntn mode)
 {
     HANDLE file;
@@ -2187,13 +2187,13 @@ _PR_MD_OPEN_FILE(const char *name, PRIntn osflags, PRIntn mode)
         }
     }
 
-    return (PRInt32)file;
+    return (PROsfd)file;
 }
 
 PRInt32 
 _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
 {
-    PRInt32 f = fd->secret->md.osfd;
+    PROsfd f = fd->secret->md.osfd;
     PRUint32 bytes;
     int rv, err;
     LONG hiOffset = 0;
@@ -2344,7 +2344,7 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
 PRInt32
 _PR_MD_WRITE(PRFileDesc *fd, const void *buf, PRInt32 len)
 {
-    PRInt32 f = fd->secret->md.osfd;
+    PROsfd f = fd->secret->md.osfd;
     PRInt32 bytes;
     int rv, err;
     LONG hiOffset = 0;
@@ -2613,7 +2613,7 @@ _PR_MD_FSYNC(PRFileDesc *fd)
 }
 
 PRInt32
-_PR_MD_CLOSE(PRInt32 osfd, PRBool socket)
+_PR_MD_CLOSE(PROsfd osfd, PRBool socket)
 {
     PRInt32 rv;
     PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -3268,7 +3268,7 @@ _PR_MD_RMDIR(const char *name)
 }
 
 PRStatus
-_PR_MD_LOCKFILE(PRInt32 f)
+_PR_MD_LOCKFILE(PROsfd f)
 {
     PRInt32 rv, err;
     PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -3387,7 +3387,7 @@ _PR_MD_LOCKFILE(PRInt32 f)
 }
 
 PRStatus
-_PR_MD_TLOCKFILE(PRInt32 f)
+_PR_MD_TLOCKFILE(PROsfd f)
 {
     PRInt32 rv, err;
     PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -3500,7 +3500,7 @@ _PR_MD_TLOCKFILE(PRInt32 f)
 
 
 PRStatus
-_PR_MD_UNLOCKFILE(PRInt32 f)
+_PR_MD_UNLOCKFILE(PROsfd f)
 {
     PRInt32 rv;
     PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -3792,9 +3792,10 @@ PR_IMPLEMENT(PRStatus) PR_NT_CancelIo(PRFileDesc *fd)
 	return PR_SUCCESS;
 }
 
-static PRInt32 _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr *addr, int *addrlen, PRIntervalTime timeout)
+static PROsfd _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr *addr, int *addrlen, PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
+    SOCKET sock;
     PRInt32 rv, err;
     fd_set rd;
     struct timeval tv, *tvp;
@@ -3802,10 +3803,10 @@ static PRInt32 _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr *addr, int *a
     FD_ZERO(&rd);
     FD_SET((SOCKET)osfd, &rd);
     if (timeout == PR_INTERVAL_NO_TIMEOUT) {
-        while ((rv = accept(osfd, addr, addrlen)) == -1) {
+        while ((sock = accept(osfd, addr, addrlen)) == -1) {
             if (((err = WSAGetLastError()) == WSAEWOULDBLOCK)
                     && (!fd->secret->nonblocking)) {
-                if ((rv = _PR_NTFiberSafeSelect(osfd + 1, &rd, NULL, NULL,
+                if ((rv = _PR_NTFiberSafeSelect(0, &rd, NULL, NULL,
                         NULL)) == -1) {
                     _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                     break;
@@ -3816,7 +3817,7 @@ static PRInt32 _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr *addr, int *a
             }
         }
     } else if (timeout == PR_INTERVAL_NO_WAIT) {
-        if ((rv = accept(osfd, addr, addrlen)) == -1) {
+        if ((sock = accept(osfd, addr, addrlen)) == -1) {
             if (((err = WSAGetLastError()) == WSAEWOULDBLOCK)
                     && (!fd->secret->nonblocking)) {
                 PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
@@ -3826,7 +3827,7 @@ static PRInt32 _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr *addr, int *a
         }
     } else {
 retry:
-        if ((rv = accept(osfd, addr, addrlen)) == -1) {
+        if ((sock = accept(osfd, addr, addrlen)) == -1) {
             if (((err = WSAGetLastError()) == WSAEWOULDBLOCK)
                     && (!fd->secret->nonblocking)) {
                 tv.tv_sec = PR_IntervalToSeconds(timeout);
@@ -3834,12 +3835,11 @@ retry:
                     timeout - PR_SecondsToInterval(tv.tv_sec));
                 tvp = &tv;
 
-                rv = _PR_NTFiberSafeSelect(osfd + 1, &rd, NULL, NULL, tvp);
+                rv = _PR_NTFiberSafeSelect(0, &rd, NULL, NULL, tvp);
                 if (rv > 0) {
                     goto retry;
                 } else if (rv == 0) {
                     PR_SetError(PR_IO_TIMEOUT_ERROR, 0);
-                    rv = -1;
                 } else {
                     _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                 }
@@ -3848,12 +3848,12 @@ retry:
             }
         }
     }
-    return(rv);
+    return (PROsfd)sock;
 }
 
 static PRInt32 _nt_nonblock_connect(PRFileDesc *fd, struct sockaddr *addr, int addrlen, PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRInt32 rv;
     int err;
     fd_set wr, ex;
@@ -3874,7 +3874,7 @@ static PRInt32 _nt_nonblock_connect(PRFileDesc *fd, struct sockaddr *addr, int a
             FD_ZERO(&ex);
             FD_SET((SOCKET)osfd, &wr);
             FD_SET((SOCKET)osfd, &ex);
-            if ((rv = _PR_NTFiberSafeSelect(osfd + 1, NULL, &wr, &ex,
+            if ((rv = _PR_NTFiberSafeSelect(0, NULL, &wr, &ex,
                     tvp)) == -1) {
                 _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                 return rv;
@@ -3906,7 +3906,7 @@ static PRInt32 _nt_nonblock_connect(PRFileDesc *fd, struct sockaddr *addr, int a
 
 static PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, int flags, PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
     struct timeval tv, *tvp;
     fd_set rd;
@@ -3931,7 +3931,7 @@ static PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, int flags, 
                 timeout - PR_SecondsToInterval(tv.tv_sec));
                 tvp = &tv;
             }
-            if ((rv = _PR_NTFiberSafeSelect(osfd + 1, &rd, NULL, NULL,
+            if ((rv = _PR_NTFiberSafeSelect(0, &rd, NULL, NULL,
                     tvp)) == -1) {
                 _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                 break;
@@ -3950,7 +3950,7 @@ static PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, int flags, 
 
 static PRInt32 _nt_nonblock_send(PRFileDesc *fd, char *buf, int len, PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
     struct timeval tv, *tvp;
     fd_set wd;
@@ -3970,7 +3970,7 @@ static PRInt32 _nt_nonblock_send(PRFileDesc *fd, char *buf, int len, PRIntervalT
                 }
                 FD_ZERO(&wd);
                 FD_SET((SOCKET)osfd, &wd);
-                if ((rv = _PR_NTFiberSafeSelect(osfd + 1, NULL, &wd, NULL,
+                if ((rv = _PR_NTFiberSafeSelect(0, NULL, &wd, NULL,
                         tvp)) == -1) {
                     _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                     return -1;
@@ -3999,7 +3999,7 @@ static PRInt32 _nt_nonblock_send(PRFileDesc *fd, char *buf, int len, PRIntervalT
             }
             FD_ZERO(&wd);
             FD_SET((SOCKET)osfd, &wd);
-            if ((rv = _PR_NTFiberSafeSelect(osfd + 1, NULL, &wd, NULL,
+            if ((rv = _PR_NTFiberSafeSelect(0, NULL, &wd, NULL,
                     tvp)) == -1) {
                 _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                 return -1;
@@ -4046,7 +4046,7 @@ static PRInt32 _nt_nonblock_sendto(
     PRFileDesc *fd, const char *buf, int len,
     const struct sockaddr *addr, int addrlen, PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
     struct timeval tv, *tvp;
     fd_set wd;
@@ -4066,7 +4066,7 @@ static PRInt32 _nt_nonblock_sendto(
                 }
                 FD_ZERO(&wd);
                 FD_SET((SOCKET)osfd, &wd);
-                if ((rv = _PR_NTFiberSafeSelect(osfd + 1, NULL, &wd, NULL,
+                if ((rv = _PR_NTFiberSafeSelect(0, NULL, &wd, NULL,
                         tvp)) == -1) {
                     _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                     return -1;
@@ -4095,7 +4095,7 @@ static PRInt32 _nt_nonblock_sendto(
             }
             FD_ZERO(&wd);
             FD_SET((SOCKET)osfd, &wd);
-            if ((rv = _PR_NTFiberSafeSelect(osfd + 1, NULL, &wd, NULL,
+            if ((rv = _PR_NTFiberSafeSelect(0, NULL, &wd, NULL,
                     tvp)) == -1) {
                 _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                 return -1;
@@ -4111,7 +4111,7 @@ static PRInt32 _nt_nonblock_sendto(
 
 static PRInt32 _nt_nonblock_recvfrom(PRFileDesc *fd, char *buf, int len, struct sockaddr *addr, int *addrlen, PRIntervalTime timeout)
 {
-    PRInt32 osfd = fd->secret->md.osfd;
+    PROsfd osfd = fd->secret->md.osfd;
     PRInt32 rv, err;
     struct timeval tv, *tvp;
     fd_set rd;
@@ -4129,7 +4129,7 @@ static PRInt32 _nt_nonblock_recvfrom(PRFileDesc *fd, char *buf, int len, struct 
             }
             FD_ZERO(&rd);
             FD_SET((SOCKET)osfd, &rd);
-            if ((rv = _PR_NTFiberSafeSelect(osfd + 1, &rd, NULL, NULL,
+            if ((rv = _PR_NTFiberSafeSelect(0, &rd, NULL, NULL,
                     tvp)) == -1) {
                 _PR_MD_MAP_SELECT_ERROR(WSAGetLastError());
                 break;

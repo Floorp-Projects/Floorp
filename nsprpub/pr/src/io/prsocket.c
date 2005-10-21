@@ -190,7 +190,7 @@ PRInt32 iov_size, PRIntervalTime timeout)
 
 /************************************************************************/
 
-PR_IMPLEMENT(PRFileDesc *) PR_ImportTCPSocket(PRInt32 osfd)
+PR_IMPLEMENT(PRFileDesc *) PR_ImportTCPSocket(PROsfd osfd)
 {
 PRFileDesc *fd;
 
@@ -204,7 +204,7 @@ PRFileDesc *fd;
 	return(fd);
 }
 
-PR_IMPLEMENT(PRFileDesc *) PR_ImportUDPSocket(PRInt32 osfd)
+PR_IMPLEMENT(PRFileDesc *) PR_ImportUDPSocket(PROsfd osfd)
 {
 PRFileDesc *fd;
 
@@ -221,7 +221,7 @@ PRFileDesc *fd;
 
 static const PRIOMethods* PR_GetSocketPollFdMethods(void);
 
-PR_IMPLEMENT(PRFileDesc*) PR_CreateSocketPollFd(PRInt32 osfd)
+PR_IMPLEMENT(PRFileDesc*) PR_CreateSocketPollFd(PROsfd osfd)
 {
     PRFileDesc *fd;
 
@@ -287,7 +287,7 @@ static PRStatus PR_CALLBACK SocketConnect(
 static PRStatus PR_CALLBACK SocketConnectContinue(
     PRFileDesc *fd, PRInt16 out_flags)
 {
-    PRInt32 osfd;
+    PROsfd osfd;
     int err;
 
     if (out_flags & PR_POLL_NVAL) {
@@ -397,7 +397,7 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
 static PRFileDesc* PR_CALLBACK SocketAccept(PRFileDesc *fd, PRNetAddr *addr,
 PRIntervalTime timeout)
 {
-	PRInt32 osfd;
+	PROsfd osfd;
 	PRFileDesc *fd2;
 	PRUint32 al;
 	PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -476,7 +476,7 @@ PRIntervalTime timeout)
 PR_IMPLEMENT(PRFileDesc*) PR_NTFast_Accept(PRFileDesc *fd, PRNetAddr *addr,
 PRIntervalTime timeout)
 {
-	PRInt32 osfd;
+	PROsfd osfd;
 	PRFileDesc *fd2;
 	PRIntn al;
 	PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -596,8 +596,9 @@ PRIntervalTime timeout)
 		return -1;
 	}
 
-	PR_LOG(_pr_io_lm, PR_LOG_MAX, ("recv: fd=%p osfd=%d buf=%p amount=%d flags=%d",
-		    						fd, fd->secret->md.osfd, buf, amount, flags));
+	PR_LOG(_pr_io_lm, PR_LOG_MAX,
+		("recv: fd=%p osfd=%" PR_PRIdOSFD " buf=%p amount=%d flags=%d",
+		fd, fd->secret->md.osfd, buf, amount, flags));
 
 #ifdef _PR_HAVE_PEEK_BUFFER
 	if (fd->secret->peekBytes != 0) {
@@ -678,7 +679,7 @@ PRIntn flags, PRIntervalTime timeout)
 	count = 0;
 	while (amount > 0) {
 		PR_LOG(_pr_io_lm, PR_LOG_MAX,
-		    ("send: fd=%p osfd=%d buf=%p amount=%d",
+		    ("send: fd=%p osfd=%" PR_PRIdOSFD " buf=%p amount=%d",
 		    fd, fd->secret->md.osfd, buf, amount));
 		temp = _PR_MD_SEND(fd, buf, amount, flags, timeout);
 		if (temp < 0) {
@@ -865,7 +866,7 @@ PRIntervalTime timeout)
 
 #if defined(WINNT)
 	{
-	PRInt32 newSock;
+	PROsfd newSock;
 	PRNetAddr *raddrCopy;
 
 	if (raddr == NULL) {
@@ -905,7 +906,7 @@ PRNetAddr **raddr, void *buf, PRInt32 amount,
 PRIntervalTime timeout)
 {
 	PRInt32 rv;
-	PRInt32 newSock;
+	PROsfd newSock;
 	PRThread *me = _PR_MD_CURRENT_THREAD();
 	PRNetAddr *raddrCopy;
 
@@ -956,7 +957,7 @@ _PR_AcceptTimeoutCallback callback,
 void *callbackArg)
 {
 	PRInt32 rv;
-	PRInt32 newSock;
+	PROsfd newSock;
 	PRThread *me = _PR_MD_CURRENT_THREAD();
 	PRNetAddr *raddrCopy;
 
@@ -1254,7 +1255,7 @@ PR_EXTERN(PRBool) _pr_ipv6_is_present;
 
 PR_IMPLEMENT(PRBool) _pr_test_ipv6_socket()
 {
-PRInt32 osfd;
+	PROsfd osfd;
 
 	osfd = _PR_MD_SOCKET(AF_INET6, SOCK_STREAM, 0);
 	if (osfd != -1) {
@@ -1269,7 +1270,7 @@ PRInt32 osfd;
 
 PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 {
-	PRInt32 osfd;
+	PROsfd osfd;
 	PRFileDesc *fd;
 	PRInt32 tmp_domain = domain;
 
@@ -1579,7 +1580,7 @@ failed:
 #endif
 }
 
-PR_IMPLEMENT(PRInt32)
+PR_IMPLEMENT(PROsfd)
 PR_FileDesc2NativeHandle(PRFileDesc *fd)
 {
     if (fd) {
@@ -1593,7 +1594,7 @@ PR_FileDesc2NativeHandle(PRFileDesc *fd)
 }
 
 PR_IMPLEMENT(void)
-PR_ChangeFileDescNativeHandle(PRFileDesc *fd, PRInt32 handle)
+PR_ChangeFileDescNativeHandle(PRFileDesc *fd, PROsfd handle)
 {
 	if (fd)
 		fd->secret->md.osfd = handle;
@@ -1640,14 +1641,14 @@ PR_IMPLEMENT(PRInt32) PR_FD_ISSET(PRFileDesc *fh, PR_fd_set *set)
 	return 0;
 }
 
-PR_IMPLEMENT(void) PR_FD_NSET(PRInt32 fd, PR_fd_set *set)
+PR_IMPLEMENT(void) PR_FD_NSET(PROsfd fd, PR_fd_set *set)
 {
 	PR_ASSERT( set->nsize < PR_MAX_SELECT_DESC );
 
 	set->narray[set->nsize++] = fd;
 }
 
-PR_IMPLEMENT(void) PR_FD_NCLR(PRInt32 fd, PR_fd_set *set)
+PR_IMPLEMENT(void) PR_FD_NCLR(PROsfd fd, PR_fd_set *set)
 {
 	PRUint32 index, index2;
 
@@ -1661,7 +1662,7 @@ PR_IMPLEMENT(void) PR_FD_NCLR(PRInt32 fd, PR_fd_set *set)
 		}
 }
 
-PR_IMPLEMENT(PRInt32) PR_FD_NISSET(PRInt32 fd, PR_fd_set *set)
+PR_IMPLEMENT(PRInt32) PR_FD_NISSET(PROsfd fd, PR_fd_set *set)
 {
 	PRUint32 index;
 	for (index = 0; index<set->nsize; index++)

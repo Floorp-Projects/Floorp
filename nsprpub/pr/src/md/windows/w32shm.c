@@ -92,7 +92,7 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
         return(NULL);
     }
 
-    shm->ipcname = PR_MALLOC( strlen( ipcname ) + 1 );
+    shm->ipcname = PR_MALLOC( (PRUint32) (strlen( ipcname ) + 1) );
     if ( NULL == shm->ipcname )
     {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0 );
@@ -109,9 +109,8 @@ extern PRSharedMemory * _MD_OpenSharedMemory(
     shm->ident = _PR_SHM_IDENT;
 
     if (flags & PR_SHM_CREATE ) {
-        /* XXX: Not 64bit safe. Fix when WinNT goes 64bit. */
-        dwHi = 0;
-        dwLo = shm->size;
+        dwHi = (DWORD) (((PRUint64) shm->size >> 32) & 0xffffffff);
+        dwLo = (DWORD) (shm->size & 0xffffffff);
 
         if (_PR_NT_MakeSecurityDescriptorACL(mode, filemapAccessTable,
                 &pSD, &pACL) == PR_SUCCESS) {
@@ -305,9 +304,8 @@ extern PRStatus _md_ExportFileMapAsString(
 {
     PRIntn  written;
 
-    written = PR_snprintf( buf, bufSize, "%d:%ld:%ld",
-        (PRIntn)fm->prot, (PRInt32)fm->md.hFileMap, (PRInt32)fm->md.dwAccess );
-    /* Watch out on the above snprintf(). Windows HANDLE assumes 32bits; windows calls it void* */
+    written = PR_snprintf( buf, (PRUint32) bufSize, "%d:%" PR_PRIdOSFD ":%ld",
+        (PRIntn)fm->prot, (PROsfd)fm->md.hFileMap, (PRInt32)fm->md.dwAccess );
 
     PR_LOG( _pr_shma_lm, PR_LOG_DEBUG,
         ("_md_ExportFileMapAsString(): prot: %x, hFileMap: %x, dwAccess: %x",
@@ -326,11 +324,12 @@ extern PRFileMap * _md_ImportFileMapFromString(
 )
 {
     PRIntn  prot;
-    PRInt32 hFileMap;
+    PROsfd hFileMap;
     PRInt32 dwAccess;
     PRFileMap *fm = NULL;
 
-    PR_sscanf( fmstring, "%d:%ld:%ld", &prot, &hFileMap, &dwAccess  );
+    PR_sscanf( fmstring, "%d:%" PR_SCNdOSFD ":%ld",
+        &prot, &hFileMap, &dwAccess );
 
     fm = PR_NEWZAP(PRFileMap);
     if ( NULL == fm ) {
@@ -340,7 +339,7 @@ extern PRFileMap * _md_ImportFileMapFromString(
     }
 
     fm->prot = (PRFileMapProtect)prot;
-    fm->md.hFileMap = (HANDLE)hFileMap;  /* Assumes HANDLE is 32bit */
+    fm->md.hFileMap = (HANDLE)hFileMap;
     fm->md.dwAccess = (DWORD)dwAccess;
     fm->fd = (PRFileDesc*)-1;
 

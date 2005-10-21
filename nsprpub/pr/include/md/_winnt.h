@@ -64,7 +64,15 @@
 
 #define PR_LINKER_ARCH      "win32"
 #define _PR_SI_SYSNAME        "WINNT"
-#define _PR_SI_ARCHITECTURE   "x86"    /* XXXMB hardcode for now */
+#if defined(_M_IX86) || defined(_X86_)
+#define _PR_SI_ARCHITECTURE   "x86"
+#elif defined(_AMD64_)
+#define _PR_SI_ARCHITECTURE   "x86-64"
+#elif defined(_IA64_)
+#define _PR_SI_ARCHITECTURE   "ia64"
+#else
+#error unknown processor architecture
+#endif
 
 #define HAVE_DLL
 #define HAVE_CUSTOM_USER_THREADS
@@ -106,7 +114,9 @@ struct _md_sockaddr_in6 {
 #endif
 #define _PR_HAVE_THREADSAFE_GETHOST
 #define _PR_HAVE_ATOMIC_OPS
+#if defined(_M_IX86) || defined(_X86_)
 #define _PR_HAVE_ATOMIC_CAS
+#endif
 #define PR_HAVE_WIN32_NAMED_SHARED_MEMORY
 #define _PR_HAVE_PEEK_BUFFER
 #define _PR_PEEK_BUFFER_MAX (32 * 1024)
@@ -231,7 +241,7 @@ struct _MDSemaphore {
 };
 
 struct _MDFileDesc {
-    PRInt32 osfd;    /* The osfd can come from one of three spaces:
+    PROsfd osfd;     /* The osfd can come from one of three spaces:
                       * - For stdin, stdout, and stderr, we are using
                       *   the libc file handle (0, 1, 2), which is an int.
                       * - For files and pipes, we are using Win32 HANDLE,
@@ -281,7 +291,7 @@ extern void _PR_NT_FreeSecurityDescriptorACL(
 /* --- IO stuff --- */
 
 extern PRInt32 _md_Associate(HANDLE);
-extern PRInt32 _PR_MD_CLOSE(PRInt32 osfd, PRBool socket);
+extern PRInt32 _PR_MD_CLOSE(PROsfd osfd, PRBool socket);
 
 #define _MD_OPEN                      _PR_MD_OPEN
 #define _MD_OPEN_FILE                 _PR_MD_OPEN_FILE

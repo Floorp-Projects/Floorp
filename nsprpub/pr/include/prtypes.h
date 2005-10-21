@@ -442,7 +442,11 @@ typedef ptrdiff_t PRPtrdiff;
 **  A type for pointer difference. Variables of this type are suitable
 **      for storing a pointer or pointer sutraction. 
 ************************************************************************/
+#ifdef _WIN64
+typedef unsigned __int64 PRUptrdiff;
+#else
 typedef unsigned long PRUptrdiff;
+#endif
 
 /************************************************************************
 ** TYPES:       PRBool
@@ -495,8 +499,13 @@ typedef PRUint16 PRUnichar;
 ** Specification, Addison-Wesley, September 1996.
 ** http://java.sun.com/docs/books/vmspec/index.html.)
 */
+#ifdef _WIN64
+typedef __int64 PRWord;
+typedef unsigned __int64 PRUword;
+#else
 typedef long PRWord;
 typedef unsigned long PRUword;
+#endif
 
 #if defined(NO_NSPR_10_SUPPORT)
 #else
