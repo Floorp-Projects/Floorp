@@ -107,7 +107,7 @@
     <!-- GENERAL PANE -->
     
 	<hbox class="panel-container" flex="1" id="general-pane"
-            accessfocus="enableImages"
+            accessfocus="browserStartupHomepage"
             accessnextrule="advanced-pane"
             accessprevrule="pref-bar" >
             
@@ -118,7 +118,7 @@
                         <groupbox class='box-prefgroupitem' >
                             <caption label="&homeCaption.label;"/>
                                 <box>
-                                    <textbox id="browserStartupHomepage"
+                                    <textbox id="browserStartupHomepage" keyup=""  tabindex="10"
                                              style="margin:3px ! important;" flex="1"
                                              onchange="syncPref(this)" preference="browser.startup.homepage" preftype="string"/>
                                 </box>
@@ -126,8 +126,8 @@
                         <groupbox  class='box-prefgroupitem'>
                                 <caption label="&sssCaption.label;"/>
                                 <vbox class="box-prefpadding">                        
-                                <checkbox id="enableImages"
-                                              tabindex="10" accessrule="general-pane"
+                                <checkbox id="enableImages" 
+                                              tabindex="11" 
                                               label="&imagesCheckbox.label;"
                                               preference="permissions.default.image" preftype="int" prefvalue=""
                                               onsyncfrompreference="readEnableImagesPref();"
@@ -136,14 +136,14 @@
                                               />
     
                                 <checkbox id="ssr"
-                                              tabindex="11" accessrule="general-pane"
+                                              tabindex="12" 
                                               label="&useSSRCheckbox.label;"
                                               preference="ssr.enabled" preftype="bool"
                                               onclick="syncPref(this)" 
                                               />
     
                                 <checkbox id="sitessr" 
-                                              tabindex="12" accessrule="general-pane"
+                                              tabindex="13" 
                                               label="&usesiteSSRCheckbox.label;"
                                               preference="ssr.site.enabled" preftype="bool"
                                               onclick="syncPref(this)" 
@@ -154,7 +154,8 @@
                             <caption label="&zoom.label;"/>
                             <box class="box-prefgroupitem">
                                 <label value="&zoomui.label;" />
-                                    <textbox id="browserDisplayZoomUI" size="5"
+
+                                    <textbox id="browserDisplayZoomUI" size="5" tabindex="14"
                                              style="margin:3px ! important;" 
                                              preference="browser.display.zoomui" preftype="int" 
                                              onchange="syncPref(this)" 
@@ -163,7 +164,7 @@
     
                             <box class="box-prefgroupitem">
                                 <label value="&zoomcontent.label;" />
-                                    <textbox id="browserDisplayZoomContent" size="5"
+                                    <textbox id="browserDisplayZoomContent" size="5" tabindex="15" accessrule="general-pane"
                                              style="margin:3px ! important;" 
                                              onchange="syncPref(this)"
                                              preference="browser.display.zoomcontent"
@@ -180,7 +181,7 @@
 
     <hbox class="panel-container" flex="1" id="advanced-pane"
           accessfocus="skey"
-          accessnextrule="pref-bar"
+          accessnextrule="privacy-pane"
           accessprevrule="general-pane"
           collapsed="true"  >
           
@@ -196,7 +197,7 @@
                     <checkbox tabindex="31"
                               id="dumpJS"
                               label="&dumpJSConsole.label;"
-                              preference="config.wince.dumpJSConsole"
+                              preference="config.wince.dumpJSConsole" accessrule="advanced-pane"
                               onclick="syncPref(this)" />
                 </vbox>
             </hbox>
@@ -210,16 +211,16 @@
           flex="1"
           accessfocus="privacySanitize"
           accessnextrule="connection-pane"
-          accessprevrule="general-pane"
+          accessprevrule="advanced-pane"
           collapsed="true"  >
           
         <groupbox flex="1" class="box-floatoptions scrolling" >
             <caption label="&privacy.label;" /> 
             <box class="box-prefpadding">
 
-                <button id="privacySanitize"
+                <button id="privacySanitize" tabindex="40"
                         class='box-prefgroupitem'
-                        label="&sanitizeButton.label;"
+                        label="&sanitizeButton.label;" accessrule="privacy-pane"
                         oncommand="sanitizeAll();"/>
 
             </box>
@@ -240,7 +241,7 @@
             <caption label="&proxyCaption.label;"/>
             <vbox class="box-prefpadding" flex="1">
             
-                <checkbox id="UseProxy"
+                <checkbox id="UseProxy" tabindex="50"
                           label="&useproxyCheckbox.label;"
                           preference="network.proxy.type" 
                           onclick="syncPref(this)" 
@@ -252,7 +253,7 @@
                 <groupbox class='box-prefgroupitem' >
                     <caption label="&proxyURL.label; and &proxyPortCaption.label;"/>
                     <hbox flex="1">
-                        <textbox onchange="syncPref(this)" 
+                        <textbox onchange="syncPref(this)"  tabindex="51"
                                  flex="1" 
                                  style="margin:3px ! important;" 
                                  id="networkProxyHTTP"
@@ -260,10 +261,10 @@
                                  />
                                  
                         <textbox onchange="syncPref(this)" 
-                                 id="networkProxyHTTP_Port" 
+                                 id="networkProxyHTTP_Port"  tabindex="52"
                                  size="5"  
                                  style="margin:3px ! important;"  
-                                 preference="network.proxy.http_port"
+                                 preference="network.proxy.http_port" accessrule="connection-pane"
                                  />              
                                            
                     </hbox>		
