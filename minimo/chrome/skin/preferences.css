@@ -97,6 +97,10 @@ radio[pane=Advanced] {
  * 
  */
  
+groupbox.scrolling {
+  overflow:auto;
+}
+ 
 .base-button {
   list-style-image: url("chrome://minimo/skin/preferences/options.png");
 }
