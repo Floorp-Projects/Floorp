@@ -99,3 +99,9 @@
   padding: 0px;
   background-image: url("chrome://communicator/skin/icons/autoscroll.gif");
 }
+#autoscroller[scrolldir="NS"] {
+  background-image: url("chrome://communicator/skin/icons/autoscroll-ns.gif");
+}
+#autoscroller[scrolldir="EW"] {
+  background-image: url("chrome://communicator/skin/icons/autoscroll-ew.gif");
+}

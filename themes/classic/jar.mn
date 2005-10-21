@@ -56,6 +56,8 @@ classic.jar:
   skin/classic/communicator/brand/throbber16-single.gif                 (communicator/brand/throbber16-single.gif)
   skin/classic/communicator/brand/throbber16-anim.gif                   (communicator/brand/throbber16-anim.gif)
   skin/classic/communicator/icons/autoscroll.gif                        (communicator/icons/autoscroll.gif)
+  skin/classic/communicator/icons/autoscroll-ns.gif                     (communicator/icons/autoscroll-ns.gif)
+  skin/classic/communicator/icons/autoscroll-ew.gif                     (communicator/icons/autoscroll-ew.gif)
   skin/classic/communicator/icons/offline.gif                           (communicator/icons/offline.gif)
   skin/classic/communicator/icons/online.gif                            (communicator/icons/online.gif)
   skin/classic/communicator/icons/search-act.gif                        (communicator/icons/search-act.gif)

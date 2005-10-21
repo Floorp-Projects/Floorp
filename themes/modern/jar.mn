@@ -29,6 +29,8 @@ modern.jar:
   skin/modern/communicator/directory/file-icon.gif                 (communicator/directory/file-icon.gif)
   skin/modern/communicator/directory/directory.css                 (communicator/directory/directory.css)
   skin/modern/communicator/icons/autoscroll.gif                    (communicator/icons/autoscroll.gif)
+  skin/modern/communicator/icons/autoscroll-ns.gif                 (communicator/icons/autoscroll-ns.gif)
+  skin/modern/communicator/icons/autoscroll-ew.gif                 (communicator/icons/autoscroll-ew.gif)
   skin/modern/communicator/icons/loading.gif                       (communicator/icons/loading.gif)
   skin/modern/communicator/icons/lock-broken.gif                   (communicator/icons/lock-broken.gif)
   skin/modern/communicator/icons/lock-insecure.gif                 (communicator/icons/lock-insecure.gif)
