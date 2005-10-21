@@ -92,10 +92,6 @@ function prefStartup() {
     gToolbarButtonSelected=document.getElementById("general-button");
     gToolbarButtonSelected.className="base-button prefselectedbutton";  // local to preferences.css (may have to be promoted minimo.css)
 
-    /* This should be moved to the XUL, the list of pref items.  */ 
-
-    var regPrefElements= new Array ( 'browserStartupHomepage', 'enableImages', 'ssr', 'sitessr','skey', 'dumpJS', 'UseProxy', 'networkProxyHTTP', 'networkProxyHTTP_Port', 'browserDisplayZoomUI', 'browserDisplayZoomContent'  );
-
     /* Initialize the pref service instance */ 
 
     try {
@@ -104,7 +100,12 @@ function prefStartup() {
 
     } catch (ignore) { alert(ignore)}
 
-    syncPrefLoadDOM(regPrefElements);
+    // This is now deprecated, since we have XBL-defined elements to handle the list of registered pref ID elements. 
+    // var regPrefElements= new Array ( 'browserStartupHomepage', 'enableImages', 'ssr', 'sitessr','skey', 'dumpJS', 'UseProxy', 'networkProxyHTTP', 'networkProxyHTTP_Port', 'browserDisplayZoomUI', 'browserDisplayZoomContent'  );
+    // Now depends on the preferenceset.preferenceitem XBL implementation. 
+    // in minimo/content/bindings/preferences.css and preferences.xml
+
+    syncPrefLoadDOM(document.getElementById("prefsInstance").prefArray);
 
     syncUIZoom(); // from common.js 
 
@@ -201,14 +202,8 @@ var gPrefQueue=new Array();
 function syncPref(refElement) {
 	var refElementPref=refElement.getAttribute("preference");
 	if(refElementPref!="") {
-		// has pref sync definition,..
-
-		/* Assume it's a textbox */
-
 		gPrefQueue[refElementPref]=refElement;
-
             document.getElementById("textbox-okay-pane").value+= "Changed key ="+gPrefQueue[refElementPref].value+"\n";
-				
 	}
 }
 
@@ -243,6 +238,8 @@ function PrefOkay() {
 			gPref.setBoolPref(prefName, prefSETValue);
 		}
 	}
+
+	window.close();
 }
 
 /* 
@@ -255,8 +252,8 @@ function PrefCancel() {
 
 
 function syncPrefLoadDOM(elementList) {
-
 	for(var strCurKey in elementList) {
+
 		var elementAndPref=document.getElementById(elementList[strCurKey]);
 		var prefName=elementAndPref.getAttribute("preference");
 		var prefType=elementAndPref.getAttribute("preftype");
@@ -290,8 +287,4 @@ function syncPrefLoadDOM(elementList) {
 
 	}
 }
-
-
-
-
 
