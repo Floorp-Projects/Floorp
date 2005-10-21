@@ -293,7 +293,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mDestroyCalled(PR_FALSE)
 , mDestructorCalled(PR_FALSE)
 , mVisible(PR_FALSE)
-, mInWindow(PR_FALSE)
 , mDrawing(PR_FALSE)
 , mTempRenderingContextMadeHere(PR_FALSE)
 , mAcceptFocusOnClick(PR_TRUE)
@@ -421,12 +420,6 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     {
       [mView setNativeWindow: [mParentView getNativeWindow]];
     }
-
-    mInWindow = ([mParentView window] != nil);
-  }
-  else
-  {
-    mInWindow = PR_FALSE;
   }
   
   // if this is a ChildView, make sure that our per-window data
@@ -996,7 +989,7 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOr
   outClipRect.x      = (nscoord)clipOrigin.x;
   outClipRect.y      = (nscoord)clipOrigin.y;
   
-  if (mInWindow)
+  if ([mView window] != nil)
   {
     outClipRect.width  = (nscoord)visibleBounds.size.width;
     outClipRect.height = (nscoord)visibleBounds.size.height;
@@ -1087,40 +1080,6 @@ NS_IMETHODIMP nsChildView::EndDrawPlugin()
   //[mView unlockFocus];
   mPluginDrawing = PR_FALSE;
   return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-// 
-//
-//-------------------------------------------------------------------------
-void nsChildView::RemovedFromWindow()
-{
-  if (!mInWindow) return;
-  mInWindow = PR_FALSE;
-
-  if (mPluginPort && !mDestroyCalled)
-  {
-    // force a redraw, so that the plugin knows that it's view is being hidden
-    Invalidate(PR_TRUE);
-  }
-}
-
-//-------------------------------------------------------------------------
-// 
-//
-//-------------------------------------------------------------------------
-void nsChildView::AddedToWindow()
-{
-  if (mInWindow) return;
-  mInWindow = PR_TRUE;
-
-  if (mPluginPort)
-  {
-    // force a redraw, so that the plugin knows that it's view is being shown
-    // note that we can't do a sync invalidate here, because the view
-    // hierarchy is in flux.
-    Invalidate(PR_FALSE);
-  }
 }
 
 //-------------------------------------------------------------------------
@@ -2393,9 +2352,6 @@ nsChildView::Idle()
 
 - (void)viewWillMoveToWindow:(NSWindow *)newWindow
 {
-  if (mGeckoChild && !newWindow)
-    mGeckoChild->RemovedFromWindow();
-
   if (mMouseEnterExitTag)
     [self removeTrackingRect:mMouseEnterExitTag];
 
@@ -2404,9 +2360,6 @@ nsChildView::Idle()
 
 - (void)viewDidMoveToWindow
 {
-  if (mGeckoChild && [self window])
-    mGeckoChild->AddedToWindow();
-
   if ([self window])
     mMouseEnterExitTag = [self addTrackingRect:[self bounds] owner:self
                                       userData:nil assumeInside: [[self window]
