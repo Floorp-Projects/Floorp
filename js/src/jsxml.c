@@ -3559,6 +3559,20 @@ Equals(JSContext *cx, JSXML *xml, jsval v, JSBool *bp)
 static JSBool
 Replace(JSContext *cx, JSXML *xml, jsval id, jsval v);
 
+static JSBool
+CheckCycle(JSContext *cx, JSXML *xml, JSXML *kid)
+{
+    do {
+        if (xml == kid) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_CYCLIC_VALUE, js_XML_str);
+            return JS_FALSE;
+        }
+    } while ((xml = xml->parent) != NULL);
+
+    return JS_TRUE;
+}
+
 /* ECMA-357 9.1.1.11 XML [[Insert]]. */
 static JSBool
 Insert(JSContext *cx, JSXML *xml, jsval id, jsval v)
@@ -3581,6 +3595,8 @@ Insert(JSContext *cx, JSXML *xml, jsval id, jsval v)
         vobj = JSVAL_TO_OBJECT(v);
         if (OBJECT_IS_XML(cx, vobj)) {
             vxml = (JSXML *) JS_GetPrivate(cx, vobj);
+            if (!CheckCycle(cx, xml, vxml))
+                return JS_FALSE;
             if (vxml->xml_class == JSXML_CLASS_LIST)
                 n = vxml->xml_kids.length;
         }
@@ -3680,6 +3696,8 @@ Replace(JSContext *cx, JSXML *xml, jsval id, jsval v)
     switch (vxml ? vxml->xml_class : JSXML_CLASS_LIMIT) {
       case JSXML_CLASS_ELEMENT:
         /* OPTION: enforce that descendants have superset namespaces. */
+        if (!CheckCycle(cx, xml, vxml))
+            return JS_FALSE;
       case JSXML_CLASS_COMMENT:
       case JSXML_CLASS_PROCESSING_INSTRUCTION:
       case JSXML_CLASS_TEXT:
