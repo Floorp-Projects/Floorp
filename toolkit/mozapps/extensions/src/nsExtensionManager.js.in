@@ -483,7 +483,8 @@ function closeSafeFileOutputStream(stream) {
  *          The string to write to the error console..
  */  
 function LOG(string) {
-  dump("*** " + string + "\n");
+  if (gLoggingEnabled)  
+    dump("*** " + string + "\n");
   gConsole.logStringMessage(string);
 }
 
@@ -5390,20 +5391,19 @@ RDFItemUpdater.prototype = {
     // installed ExtensionX (0.5) is freshened with the new maxVersion, 
     // and we advance to the next item WITHOUT any download/install 
     // updates.
-    if (gLoggingEnabled) { 
-      if (!aDatasource.GetAllResources().hasMoreElements()) {
-        LOG("RDFItemUpdater:onDatasourceLoaded: Datasource empty.\r\n" + 
-            "If you are an Extension developer and were expecting there to be\r\n" + 
-            "updates, this could mean any number of things, since the RDF system\r\n" + 
-            "doesn't give up much in the way of information when the load fails.\r\n" + 
-            "\r\nTry checking that: \r\n" + 
-            " 1. Your remote RDF file exists at the location.\r\n" + 
-            " 2. Your RDF file is valid XML (starts with <?xml version=\"1.0?\">\r\n" + 
-            "    and loads in Firefox displaying pretty printed like other XML documents\r\n" + 
-            " 3. Your server is sending the data in the correct MIME\r\n" + 
-            "    type (text/xml)");
-      }      
-    }
+    if (!aDatasource.GetAllResources().hasMoreElements()) {
+      LOG("RDFItemUpdater:onDatasourceLoaded: Datasource empty.\r\n" + 
+          "If you are an Extension developer and were expecting there to be\r\n" + 
+          "updates, this could mean any number of things, since the RDF system\r\n" + 
+          "doesn't give up much in the way of information when the load fails.\r\n" + 
+          "\r\nTry checking that: \r\n" + 
+          " 1. Your remote RDF file exists at the location.\r\n" + 
+          " 2. Your RDF file is valid XML (starts with <?xml version=\"1.0?\">\r\n" + 
+          "    and loads in Firefox displaying pretty printed like other XML documents\r\n" + 
+          " 3. Your server is sending the data in the correct MIME\r\n" + 
+          "    type (text/xml)");
+    }      
+    
   
     // Parse the response RDF
     function UpdateData() {}; 
