@@ -53,8 +53,6 @@
 
 #define DOC_TITLE_LENGTH      64
 
-PRUint32 nsDeviceContextWin::sNumberOfScreens = 0;
-
 #include "prlog.h"
 #ifdef PR_LOGGING 
 PRLogModuleInfo * kGfxPrintingLogMod = PR_NewLogModule("printing-gfx");
@@ -161,8 +159,6 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
     // screen objects. We'll save the result 
     nsresult ignore;
     mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1", &ignore);   
-    if ( !sNumberOfScreens )
-      mScreenManager->GetNumberOfScreens(&sNumberOfScreens);
   } // if this dc is not a print device
   mTwipsToPixels = 1.0 / mPixelsToTwips;
 
@@ -173,29 +169,25 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
 void
 nsDeviceContextWin :: ComputeClientRectUsingScreen ( nsRect* outRect )
 {
-  // if we have more than one screen, we always need to recompute the clientRect
+  // we always need to recompute the clientRect
   // because the window may have moved onto a different screen. In the single
   // monitor case, we only need to do the computation if we haven't done it
   // once already, and remember that we have because we're assured it won't change.
-  if ( sNumberOfScreens > 1 || !mCachedClientRect ) {
-    nsCOMPtr<nsIScreen> screen;
-    FindScreen ( getter_AddRefs(screen) );
-    if ( screen ) {
-      PRInt32 x, y, width, height;
-      screen->GetAvailRect ( &x, &y, &width, &height );
-    
-      // convert to device units
-      outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
-      outRect->x = NSToIntRound(x * mDevUnitsToAppUnits);
-      outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
-      outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
+  nsCOMPtr<nsIScreen> screen;
+  FindScreen ( getter_AddRefs(screen) );
+  if ( screen ) {
+    PRInt32 x, y, width, height;
+    screen->GetAvailRect ( &x, &y, &width, &height );
+  
+    // convert to device units
+    outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
+    outRect->x = NSToIntRound(x * mDevUnitsToAppUnits);
+    outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
+    outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
 
-      mCachedClientRect = PR_TRUE;
-      mClientRect = *outRect;
-    }
-  } // if we need to recompute the client rect
-  else
-    *outRect = mClientRect;
+    mCachedClientRect = PR_TRUE;
+    mClientRect = *outRect;
+  }
 
 } // ComputeClientRectUsingScreen
 
@@ -207,29 +199,21 @@ nsDeviceContextWin :: ComputeFullAreaUsingScreen ( nsRect* outRect )
   // because the window may have moved onto a different screen. In the single
   // monitor case, we only need to do the computation if we haven't done it
   // once already, and remember that we have because we're assured it won't change.
-  if ( sNumberOfScreens > 1 || !mCachedFullRect ) {
-    nsCOMPtr<nsIScreen> screen;
-    FindScreen ( getter_AddRefs(screen) );
-    if ( screen ) {
-      PRInt32 x, y, width, height;
-      screen->GetRect ( &x, &y, &width, &height );
-    
-      // convert to device units
-      outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
-      outRect->x = NSToIntRound(x * mDevUnitsToAppUnits);
-      outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
-      outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
+  nsCOMPtr<nsIScreen> screen;
+  FindScreen ( getter_AddRefs(screen) );
+  if ( screen ) {
+    PRInt32 x, y, width, height;
+    screen->GetRect ( &x, &y, &width, &height );
+  
+    // convert to device units
+    outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
+    outRect->x = NSToIntRound(x * mDevUnitsToAppUnits);
+    outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
+    outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
 
-      mWidth = width;
-      mHeight = height;
-      mCachedFullRect = PR_TRUE;
-    }
-  } // if we need to recompute the client rect
-  else {
-      outRect->y = 0;
-      outRect->x = 0;
-      outRect->width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
-      outRect->height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+    mWidth = width;
+    mHeight = height;
+    mCachedFullRect = PR_TRUE;
   }
  
 } // ComputeFullRectUsingScreen
@@ -243,14 +227,6 @@ nsDeviceContextWin :: ComputeFullAreaUsingScreen ( nsRect* outRect )
 void
 nsDeviceContextWin :: FindScreen ( nsIScreen** outScreen )
 {
-  // optimize for the case where we only have one monitor.
-  if ( !mPrimaryScreen && mScreenManager )
-    mScreenManager->GetPrimaryScreen ( getter_AddRefs(mPrimaryScreen) );  
-  if ( sNumberOfScreens == 1 ) {
-    NS_IF_ADDREF(*outScreen = mPrimaryScreen.get());
-    return;
-  }
-  
   // now then, if we have more than one screen, we need to find which screen this
   // window is on.
   HWND window = NS_REINTERPRET_CAST(HWND, mWidget);
