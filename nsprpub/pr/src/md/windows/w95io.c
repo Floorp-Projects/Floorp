@@ -189,7 +189,7 @@ _PR_MD_WAKEUP_WAITER(PRThread *thread)
  *  as in 0666, in the case of opening the logFile. 
  *
  */
-PRInt32
+PROsfd
 _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
 {
     HANDLE file;
@@ -230,10 +230,10 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
         return -1; 
 	}
 
-    return (PRInt32)file;
+    return (PROsfd)file;
 }
 
-PRInt32
+PROsfd
 _PR_MD_OPEN_FILE(const char *name, PRIntn osflags, int mode)
 {
     HANDLE file;
@@ -291,7 +291,7 @@ _PR_MD_OPEN_FILE(const char *name, PRIntn osflags, int mode)
         return -1; 
 	}
 
-    return (PRInt32)file;
+    return (PROsfd)file;
 }
 
 PRInt32
@@ -324,7 +324,7 @@ _PR_MD_READ(PRFileDesc *fd, void *buf, PRInt32 len)
 PRInt32
 _PR_MD_WRITE(PRFileDesc *fd, const void *buf, PRInt32 len)
 {
-    PRInt32 f = fd->secret->md.osfd;
+    PROsfd f = fd->secret->md.osfd;
     PRInt32 bytes;
     int rv;
     PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -448,7 +448,7 @@ _PR_MD_FSYNC(PRFileDesc *fd)
 }
 
 PRInt32
-_MD_CloseFile(PRInt32 osfd)
+_MD_CloseFile(PROsfd osfd)
 {
     PRInt32 rv;
     
@@ -463,9 +463,9 @@ _MD_CloseFile(PRInt32 osfd)
 #define GetFileFromDIR(d)       (d)->d_entry.cFileName
 #define FileIsHidden(d)	((d)->d_entry.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 
-void FlipSlashes(char *cp, int len)
+void FlipSlashes(char *cp, size_t len)
 {
-    while (--len >= 0) {
+    while (len-- > 0) {
         if (cp[0] == '/') {
             cp[0] = PR_DIRECTORY_SEPARATOR;
         }
@@ -502,7 +502,7 @@ PRStatus
 _PR_MD_OPEN_DIR(_MDDir *d, const char *name)
 {
     char filename[ MAX_PATH ];
-    int len;
+    size_t len;
 
     len = strlen(name);
     /* Need 5 bytes for \*.* and the trailing null byte. */
@@ -652,7 +652,7 @@ _PR_MD_STAT(const char *fn, struct stat *info)
          * try again.
          */
 
-        int len = strlen(fn);
+        size_t len = strlen(fn);
         if (len > 0 && len <= _MAX_PATH
                 && (fn[len - 1] == '\\' || fn[len - 1] == '/')) {
             char newfn[_MAX_PATH + 1];
@@ -1047,7 +1047,7 @@ _PR_MD_RMDIR(const char *name)
 }
 
 PRStatus
-_PR_MD_LOCKFILE(PRInt32 f)
+_PR_MD_LOCKFILE(PROsfd f)
 {
     PRStatus  rc = PR_SUCCESS;
 	DWORD     rv;
@@ -1066,7 +1066,7 @@ _PR_MD_LOCKFILE(PRInt32 f)
 } /* end _PR_MD_LOCKFILE() */
 
 PRStatus
-_PR_MD_TLOCKFILE(PRInt32 f)
+_PR_MD_TLOCKFILE(PROsfd f)
 {
     PR_SetError( PR_NOT_IMPLEMENTED_ERROR, 0 );
     return PR_FAILURE;
@@ -1074,7 +1074,7 @@ _PR_MD_TLOCKFILE(PRInt32 f)
 
 
 PRStatus
-_PR_MD_UNLOCKFILE(PRInt32 f)
+_PR_MD_UNLOCKFILE(PROsfd f)
 {
 	PRInt32   rv;
     
@@ -1139,9 +1139,9 @@ static void InitUnicodeSupport(void)
 }
 
 /* ================ UTF16 Interfaces ================================ */
-void FlipSlashesW(PRUnichar *cp, int len)
+void FlipSlashesW(PRUnichar *cp, size_t len)
 {
-    while (--len >= 0) {
+    while (len-- > 0) {
         if (cp[0] == L'/') {
             cp[0] = L'\\';
         }
@@ -1149,7 +1149,7 @@ void FlipSlashesW(PRUnichar *cp, int len)
     }
 } /* end FlipSlashesW() */
 
-PRInt32
+PROsfd
 _PR_MD_OPEN_FILE_UTF16(const PRUnichar *name, PRIntn osflags, int mode)
 {
     HANDLE file;
@@ -1212,7 +1212,7 @@ _PR_MD_OPEN_FILE_UTF16(const PRUnichar *name, PRIntn osflags, int mode)
         return -1;
     }
  
-    return (PRInt32)file;
+    return (PROsfd)file;
 }
  
 PRStatus

@@ -112,7 +112,7 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
 {
     char *const *arg;
     char *p, *q;
-    int cmdLineSize;
+    size_t cmdLineSize;
     int numBackslashes;
     int i;
     int argNeedQuotes;
@@ -133,7 +133,7 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
                 + 2                      /* we quote every argument */
                 + 1;                     /* space in between, or final null */
     }
-    p = *cmdLine = PR_MALLOC(cmdLineSize);
+    p = *cmdLine = PR_MALLOC((PRUint32) cmdLineSize);
     if (p == NULL) {
         return -1;
     }
@@ -226,7 +226,7 @@ static int assembleEnvBlock(char **envp, char **envBlock)
     char **env;
     char *curEnv;
     char *cwdStart, *cwdEnd;
-    int envBlockSize;
+    size_t envBlockSize;
 
     if (envp == NULL) {
         *envBlock = NULL;
@@ -261,7 +261,7 @@ static int assembleEnvBlock(char **envp, char **envBlock)
     }
     envBlockSize++;
 
-    p = *envBlock = PR_MALLOC(envBlockSize);
+    p = *envBlock = PR_MALLOC((PRUint32) envBlockSize);
     if (p == NULL) {
         FreeEnvironmentStrings(curEnv);
         return -1;
@@ -583,7 +583,7 @@ PRStatus _MD_CreateFileMap(PRFileMap *fmap, PRInt64 size)
 {
     DWORD dwHi, dwLo;
     DWORD flProtect;
-    PRUint32    osfd;
+    PROsfd osfd;
 
     osfd = ( fmap->fd == (PRFileDesc*)-1 )?  -1 : fmap->fd->secret->md.osfd;
 

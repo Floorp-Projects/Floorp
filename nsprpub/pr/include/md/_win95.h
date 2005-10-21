@@ -50,7 +50,15 @@
 
 #define PR_LINKER_ARCH      "win32"
 #define _PR_SI_SYSNAME        "WIN95"
-#define _PR_SI_ARCHITECTURE   "x86"    /* XXXMB hardcode for now */
+#if defined(_M_IX86) || defined(_X86_)
+#define _PR_SI_ARCHITECTURE   "x86"
+#elif defined(_AMD64_)
+#define _PR_SI_ARCHITECTURE   "x86-64"
+#elif defined(_IA64_)
+#define _PR_SI_ARCHITECTURE   "ia64"
+#else
+#error unknown processor architecture
+#endif
 
 #define HAVE_DLL
 #undef  HAVE_THREAD_AFFINITY
@@ -208,7 +216,7 @@ struct _MDSemaphore {
 };
 
 struct _MDFileDesc {
-    PRInt32 osfd;    /* The osfd can come from one of three spaces:
+    PROsfd osfd;     /* The osfd can come from one of three spaces:
                       * - For stdin, stdout, and stderr, we are using
                       *   the libc file handle (0, 1, 2), which is an int.
                       * - For files and pipes, we are using Win32 HANDLE,
@@ -248,7 +256,7 @@ extern void _PR_NT_FreeSecurityDescriptorACL(
 #define _MD_WRITEV                    _PR_MD_WRITEV
 #define _MD_LSEEK                     _PR_MD_LSEEK
 #define _MD_LSEEK64                   _PR_MD_LSEEK64
-extern PRInt32 _MD_CloseFile(PRInt32 osfd);
+extern PRInt32 _MD_CloseFile(PROsfd osfd);
 #define _MD_CLOSE_FILE                _MD_CloseFile
 #define _MD_GETFILEINFO               _PR_MD_GETFILEINFO
 #define _MD_GETFILEINFO64             _PR_MD_GETFILEINFO64
@@ -305,7 +313,7 @@ extern void _MD_MakeNonblock(PRFileDesc *f);
 #define _MD_QUERY_FD_INHERITABLE      _PR_MD_QUERY_FD_INHERITABLE
 #define _MD_SHUTDOWN                  _PR_MD_SHUTDOWN
 #define _MD_LISTEN                    _PR_MD_LISTEN
-extern PRInt32 _MD_CloseSocket(PRInt32 osfd);
+extern PRInt32 _MD_CloseSocket(PROsfd osfd);
 #define _MD_CLOSE_SOCKET              _MD_CloseSocket
 #define _MD_SENDTO                    _PR_MD_SENDTO
 #define _MD_RECVFROM                  _PR_MD_RECVFROM
@@ -341,7 +349,7 @@ extern PRInt32 _MD_SocketAvailable(PRFileDesc *fd);
 #define _MD_SOCKETAVAILABLE           _MD_SocketAvailable
 #define _MD_PIPEAVAILABLE             _PR_MD_PIPEAVAILABLE
 #define _MD_CONNECT                   _PR_MD_CONNECT
-extern PRInt32 _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
+extern PROsfd _MD_Accept(PRFileDesc *fd, PRNetAddr *raddr, PRUint32 *rlen,
         PRIntervalTime timeout);
 #define _MD_ACCEPT                    _MD_Accept
 #define _MD_BIND                      _PR_MD_BIND
