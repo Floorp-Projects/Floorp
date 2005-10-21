@@ -252,9 +252,6 @@ public:
   PRBool            AcceptFocusOnClick() { return mAcceptFocusOnClick;};
   void              Flash(nsPaintEvent  &aEvent);
   
-  void              RemovedFromWindow();
-  void              AddedToWindow();
-
   void              LiveResizeStarted();
   void              LiveResizeEnded();
   
@@ -294,7 +291,6 @@ protected:
   PRPackedBool          mDestroyCalled;
   PRPackedBool          mDestructorCalled;
   PRPackedBool          mVisible;
-  PRPackedBool          mInWindow;    // true if the widget is in a visible tab
 
   PRPackedBool          mDrawing;
   PRPackedBool          mTempRenderingContextMadeHere;
