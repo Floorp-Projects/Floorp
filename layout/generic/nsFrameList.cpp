@@ -567,16 +567,19 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   nsIFrame* blockFrame = aFrame->GetParent();
   if (!blockFrame)
     return GetPrevSiblingFor(aFrame);
+
+  PRUint8 direction = blockFrame->GetStyleVisibility()->mDirection;
+
   nsresult result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
   if (NS_FAILED(result) || !iter) { // If the parent is not a block frame, just check all the siblings
 
-    PRInt32 maxX, limX;
-    maxX = -0x7fffffff;
-    limX = aFrame->GetRect().x;
+    nsFrameOrigin maxOrig(0, direction == NS_STYLE_DIRECTION_LTR ? XCOORD_MIN : XCOORD_MAX, direction);
+    nsFrameOrigin limOrig(0, aFrame->GetRect().x, direction);
+    
     while (frame) {
-      nsRect tempRect = frame->GetRect();
-      if (tempRect.x > maxX && tempRect.x < limX) { // we are looking for the highest value less than the current one
-        maxX = tempRect.x;
+      nsFrameOrigin testOrig(0, frame->GetRect().x, direction);
+      if (testOrig > maxOrig && testOrig < limOrig) { // we are looking for the highest value less than the current one
+        maxOrig = testOrig;
         furthestFrame = frame;
       }
       frame = frame->GetNextSibling();
@@ -589,7 +592,6 @@ nsFrameList::GetPrevVisualFor(nsIFrame* aFrame) const
   if (!blockFrame || !iter)
     return nsnull;
 
-  PRUint8 direction = blockFrame->GetStyleVisibility()->mDirection;
   nsFrameOrigin maxOrig(LINE_MIN, direction == NS_STYLE_DIRECTION_LTR ? XCOORD_MIN : XCOORD_MAX, direction);
   PRInt32 testLine, thisLine;
 
@@ -632,16 +634,18 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   nsIFrame* blockFrame = aFrame->GetParent();
   if (!blockFrame)
     return GetPrevSiblingFor(aFrame);
+
+  PRUint8 direction = blockFrame->GetStyleVisibility()->mDirection;
+  
   nsresult result = blockFrame->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&iter);
   if (NS_FAILED(result) || !iter) { // If the parent is not a block frame, just check all the siblings
 
-    PRInt32 minX, limX;
-    minX = 0x7fffffff;
-    limX = aFrame->GetRect().x;
+    nsFrameOrigin minOrig(0, direction == NS_STYLE_DIRECTION_LTR ? XCOORD_MAX : XCOORD_MIN, direction);
+    nsFrameOrigin limOrig(0, aFrame->GetRect().x, direction);
     while (frame) {
-      nsRect tempRect = frame->GetRect();
-      if (tempRect.x < minX && tempRect.x > limX) { // we are looking for the lowest value greater than the current one
-        minX = tempRect.x;
+      nsFrameOrigin testOrig(0, frame->GetRect().x, direction);
+      if (testOrig < minOrig && testOrig > limOrig) { // we are looking for the lowest value greater than the current one
+        minOrig = testOrig;
         nearestFrame = frame;
       }
       frame = frame->GetNextSibling();
@@ -653,7 +657,6 @@ nsFrameList::GetNextVisualFor(nsIFrame* aFrame) const
   if (!blockFrame || !iter)
     return nsnull;
 
-  PRUint8 direction = blockFrame->GetStyleVisibility()->mDirection;
   nsFrameOrigin minOrig(MY_LINE_MAX, direction == NS_STYLE_DIRECTION_LTR ? XCOORD_MAX : XCOORD_MIN, direction);
   PRInt32 testLine, thisLine;
 
