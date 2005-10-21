@@ -657,7 +657,6 @@ nsImapIncomingServer::ConnectionTimeOut(nsIImapProtocol* aConnection)
     if (!aConnection) return retVal;
     nsresult rv;
 
-    PR_CEnterMonitor(this);
     PRInt32 timeoutInMinutes = 0;
     rv = GetTimeOutLimits(&timeoutInMinutes);
     if (NS_FAILED(rv) || timeoutInMinutes <= 0 || timeoutInMinutes > 29)
@@ -683,12 +682,11 @@ nsImapIncomingServer::ConnectionTimeOut(nsIImapProtocol* aConnection)
                                                               &rv));
         if (NS_SUCCEEDED(rv) && aProtocol)
         {
-            m_connectionCache->RemoveElement(aConnection);
+            RemoveConnection(aConnection);
             aProtocol->TellThreadToDie(PR_FALSE);
             retVal = PR_TRUE;
         }
     }
-    PR_CExitMonitor(this);
     return retVal;
 }
 
