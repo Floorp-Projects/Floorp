@@ -45,6 +45,13 @@
       </toolbar>
     </hbox>
     
+    <!-- MINIMO PREFERENCES XUL, NOT IN XBL, SO INSTRUCTIONS --> 
+    <!-- =================================================== -->
+    <!-- For each pref use attribute preference="prefname"   --> 
+    <!-- and onchange="syncPref(this)" or onclick="syncPref( --> 
+    <!-- the syncPref tells the OKAY function to push prefs  --> 
+    <!-- =================================================== -->
+    
     <!-- GENERAL PANE -->
     
 	<hbox class="panel-container" flex="1" id="general-pane"
@@ -117,96 +124,103 @@
             </groupbox> 
 	</hbox>	
 
-      <!-- ADVANCED PANE --> 
+    <!-- ADVANCED PANE --> 
 
-	<hbox class="panel-container" flex="1" id="advanced-pane"
-			 accessfocus="skey"
-			 accessnextrule="pref-bar"
-			 accessprevrule="general-pane"
-			 collapsed="true"  >
-
+    <hbox class="panel-container" flex="1" id="advanced-pane"
+          accessfocus="skey"
+          accessnextrule="pref-bar"
+          accessprevrule="general-pane"
+          collapsed="true"  >
+          
         <groupbox flex="1" class="box-floatoptions" >
-		    <caption label="&advanced.label;" /> 
-			<hbox flex="1" >
-				<vbox flex="1" style="padding:4px ! important">
-    				    <checkbox tabindex="30" id="skey" label="&useSWKeyboard.label;" preference="skey.enabled" onchange="syncPref(this)" />
-   				    <checkbox tabindex="31" id="dumpJS" label="&dumpJSConsole.label;" preference="config.wince.dumpJSConsole" onchange="syncPref(this)" />
-				</vbox>
-			</hbox>
-	  </groupbox> 
-	</hbox>	
+            <caption label="&advanced.label;" /> 
+            <hbox flex="1" >
+                <vbox flex="1" style="padding:4px ! important">
+                    <checkbox tabindex="30" id="skey"
+                              label="&useSWKeyboard.label;"
+                              preference="skey.enabled"
+                              onchange="syncPref(this)" />
+                              
+                    <checkbox tabindex="31"
+                              id="dumpJS"
+                              label="&dumpJSConsole.label;"
+                              preference="config.wince.dumpJSConsole"
+                              onchange="syncPref(this)" />
+                </vbox>
+            </hbox>
+        </groupbox> 
+    </hbox>	
 
-      <!-- PRIVACY PANE --> 
+    <!-- PRIVACY PANE --> 
 
-	<hbox id="privacy-pane"
-                   class="panel-container"  
-                   flex="1"
-			 accessfocus="privacySanitize"
-			 accessnextrule="connection-pane"
-			 accessprevrule="general-pane"
-                   collapsed="true"  >
+    <hbox id="privacy-pane"
+          class="panel-container"  
+          flex="1"
+          accessfocus="privacySanitize"
+          accessnextrule="connection-pane"
+          accessprevrule="general-pane"
+          collapsed="true"  >
+          
+        <groupbox flex="1" class="box-floatoptions" >
+            <caption label="&privacy.label;" /> 
+            <box class="box-prefpadding">
 
-             <groupbox flex="1" class="box-floatoptions" >
-		    <caption label="&privacy.label;" /> 
-	
-		    <box class="box-prefpadding">
-	                <button  class='box-prefgroupitem' id="privacySanitize" label="&sanitizeButton.label;" oncommand="sanitizeAll();"/>
-		 	</box>
-             </groupbox> 
+                <button id="privacySanitize"
+                        class='box-prefgroupitem'
+                        label="&sanitizeButton.label;"
+                        oncommand="sanitizeAll();"/>
 
-	</hbox>
+            </box>
+        </groupbox> 
+    </hbox>
 
-      <!-- CONNECTION PANE --> 
+    <!-- CONNECTION PANE --> 
 
-	<hbox id="connection-pane"
-                   class="panel-container"
-			 accessfocus="UseProxy"
-			 accessnextrule="pref-bar"
-			 accessprevrule="privacy-pane"
-                   flex="1" collapsed="true"  >
-
-	    <groupbox flex="1" class="box-floatoptions">
-	      <caption label="&proxyCaption.label;"/>
-
-		<vbox class="box-prefpadding" flex="1">
-	        <checkbox id="UseProxy" label="&useproxyCheckbox.label;" preference="network.proxy.type" 
-				onchange="syncPref(this)" 
-	                  onsyncfrompreference="return readProxyPref();"
-	                  onsynctopreference="return writeProxyPref();"/>
+    <hbox id="connection-pane"
+          class="panel-container"
+          accessfocus="UseProxy"
+          accessnextrule="pref-bar"
+          accessprevrule="privacy-pane"
+          flex="1"
+          collapsed="true"  >
+          
+        <groupbox flex="1" class="box-floatoptions">
+            <caption label="&proxyCaption.label;"/>
+            <vbox class="box-prefpadding" flex="1">
+            
+                <checkbox id="UseProxy"
+                          label="&useproxyCheckbox.label;"
+                          preference="network.proxy.type" 
+                          onchange="syncPref(this)" 
+                          onsyncfrompreference="return readProxyPref();"
+                          onsynctopreference="return writeProxyPref();"
+                          />
 
 				
-				   <groupbox class='box-prefgroupitem' >
+                <groupbox class='box-prefgroupitem' >
+                    <caption label="&proxyURL.label; and &proxyPortCaption.label;"/>
+                    <hbox flex="1">
+                        <textbox onchange="syncPref(this)"  flex="1"  style="margin:3px ! important;"  id="networkProxyHTTP" preference="network.proxy.http"/>
+                        <textbox onchange="syncPref(this)"  id="networkProxyHTTP_Port" size="5"  style="margin:3px ! important;width:40px"  preference="network.proxy.http_port"/>                        
+                    </hbox>		
+                </groupbox>
+            </vbox>
+        </groupbox>
+    </hbox>
 
-				        <caption label="&proxyURL.label; and &proxyPortCaption.label;"/>
+    <!-- SUMMARY OKAY CANCEL PANE -->
 
-					  <hbox flex="1">
-	      				  <textbox onchange="syncPref(this)"  flex="1"  style="margin:3px ! important;"  id="networkProxyHTTP" preference="network.proxy.http"/>
-		      			  <textbox onchange="syncPref(this)"  id="networkProxyHTTP_Port" size="5"  style="margin:3px ! important;width:40px"  preference="network.proxy.http_port"/>
+    <hbox id="summary-pane"
+          class="panel-container"
+          flex="1" 
+          collapsed="true" 
+          >
 
-					</hbox>
-		
-				   </groupbox>
-	
-		</vbox>
-
-	    </groupbox>
-
-	</hbox>
-
-      <!-- SUMMARY OKAY CANCEL PANE -->
-
-	<hbox id="summary-pane"
-                   class="panel-container"
-                   flex="1" collapsed="true"  >
-
-            <groupbox flex="1" class="box-floatoptions">
-                <caption label="Changed preferences..."/>
-
-                <textbox flex="1" class="okay-panel-textbox" id="textbox-okay-pane" />
-
-            </groupbox>
-
-	</hbox>
+        <groupbox flex="1" class="box-floatoptions">
+            <caption label="Changed preferences..."/>
+            <textbox flex="1" class="okay-panel-textbox" id="textbox-okay-pane" />
+        </groupbox>
+    </hbox>
 
   </vbox>
 
