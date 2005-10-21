@@ -5,8 +5,8 @@
 <!-- The folling has to be exactly defined here, there is JS function accessing the styleSheet direct 
      for ZOOMing --> 
 <?xml-stylesheet href="chrome://minimo/skin/minimo.css" type="text/css"?> 
-
 <?xml-stylesheet href="chrome://minimo/skin/preferences.css" type="text/css"?>
+<?xml-stylesheet href="chrome://minimo/content/bindings/preferences.css" type="text/css"?> 
 
 <!DOCTYPE prefwindow [
   <!ENTITY % preferencesDTD SYSTEM "chrome://minimo/locale/preferences.dtd">
@@ -24,8 +24,22 @@
   <script type="application/x-javascript" src="chrome://minimo/content/common.js"/>
 
   <stringbundle id="bundlePreferences"    src="chrome://minimo/locale/minimo.properties"/>
-     
-  <prefitem />
+    
+  <!-- defined in minimo/content/bindings/preferences.css and preferences.xml -->  
+
+  <preferenceset id="prefsInstance" >
+      <preferenceitem name="browserStartupHomepage" />
+      <preferenceitem name="enableImages" />
+      <preferenceitem name="ssr"/>
+      <preferenceitem name="sitessr" />
+      <preferenceitem name="skey" />
+      <preferenceitem name="dumpJS" />
+      <preferenceitem name="UseProxy" />
+      <preferenceitem name="networkProxyHTTP" />
+      <preferenceitem name="networkProxyHTTP_Port" />
+      <preferenceitem name="browserDisplayZoomUI"/>
+      <preferenceitem name="browserDisplayZoomContent"/> 
+  </preferenceset>
 
   <command id="cmd_PrefOkay"      oncommand="PrefOkay()" />
   <command id="cmd_PrefCancel"    oncommand="PrefCancel();" />
@@ -200,8 +214,20 @@
                 <groupbox class='box-prefgroupitem' >
                     <caption label="&proxyURL.label; and &proxyPortCaption.label;"/>
                     <hbox flex="1">
-                        <textbox onchange="syncPref(this)"  flex="1"  style="margin:3px ! important;"  id="networkProxyHTTP" preference="network.proxy.http"/>
-                        <textbox onchange="syncPref(this)"  id="networkProxyHTTP_Port" size="5"  style="margin:3px ! important;width:40px"  preference="network.proxy.http_port"/>                        
+                        <textbox onchange="syncPref(this)" 
+                                 flex="1" 
+                                 style="margin:3px ! important;" 
+                                 id="networkProxyHTTP"
+                                 preference="network.proxy.http"
+                                 />
+                                 
+                        <textbox onchange="syncPref(this)" 
+                                 id="networkProxyHTTP_Port" 
+                                 size="5"  
+                                 style="margin:3px ! important;"  
+                                 preference="network.proxy.http_port"
+                                 />              
+                                           
                     </hbox>		
                 </groupbox>
             </vbox>
@@ -217,9 +243,10 @@
           >
 
         <groupbox flex="1" class="box-floatoptions">
-            <caption label="Changed preferences..."/>
+            <caption label="&summaryCaption.label;"/>
             <textbox flex="1" class="okay-panel-textbox" id="textbox-okay-pane" />
         </groupbox>
+
     </hbox>
 
   </vbox>
