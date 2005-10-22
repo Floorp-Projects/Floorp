@@ -752,7 +752,10 @@ nsFeedLoadListener::TryParseAsSimpleRSS ()
         return NS_OK;
     }
 
-    return NS_ERROR_FAILURE;
+    // not finding any items would amount to NS_ERROR_FAILURE if we had 
+    // another parser to try, but could just be an empty feed
+    // so returning NS_OK lets it pick up the default '(Empty)' item
+    return NS_OK;
 }
 
 
