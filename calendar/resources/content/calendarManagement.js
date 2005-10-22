@@ -306,7 +306,7 @@ function updateStyleSheetForObject(object) {
     {
         for (var i = 0; i < calStyleSheet.cssRules.length; i++) {
             var rule = calStyleSheet.cssRules[i];
-            if (rule.selectorText == selectorForObject(name))
+            if (rule.selectorText && (rule.selectorText == selectorForObject(name)))
                 return rule;
         }
         return null;
