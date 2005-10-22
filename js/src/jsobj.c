@@ -1052,8 +1052,9 @@ obj_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
  * if so (or if scopeobj has no principals, for backward compatibility with
  * the JS API, which does not require principals), and false otherwise.
  */
-static JSBool
-CheckEvalAccess(JSContext *cx, JSObject *scopeobj, JSPrincipals *principals)
+JSBool
+js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
+                         JSPrincipals *principals, const char *caller)
 {
     JSRuntime *rt;
     JSPrincipals *scopePrincipals;
@@ -1064,18 +1065,25 @@ CheckEvalAccess(JSContext *cx, JSObject *scopeobj, JSPrincipals *principals)
         if (!principals || !scopePrincipals ||
             !principals->subsume(principals, scopePrincipals)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_INDIRECT_CALL, js_eval_str);
+                                 JSMSG_BAD_INDIRECT_CALL, caller);
             return JS_FALSE;
         }
     }
     return JS_TRUE;
 }
 
-JSBool
+JSObject *
 js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller)
 {
     JSClass *clasp;
     JSExtendedClass *xclasp;
+    JSObject *inner;
+
+    OBJ_TO_INNER_OBJECT(cx, scopeobj);
+    if (!scopeobj)
+        return NULL;
+
+    inner = scopeobj;
 
     /* XXX This is an awful gross hack. */
     while (scopeobj) {
@@ -1086,14 +1094,14 @@ js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller
                 xclasp->innerObject(cx, scopeobj) != scopeobj) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                      JSMSG_BAD_INDIRECT_CALL, caller);
-                return JS_FALSE;
+                return NULL;
             }
         }
 
         scopeobj = OBJ_GET_PARENT(cx, scopeobj);
     }
 
-    return JS_TRUE;
+    return inner;
 }
 
 static JSBool
@@ -1151,8 +1159,11 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (indirectCall) {
             callerScopeChain = caller->scopeChain;
             if (obj != callerScopeChain) {
-                if (!CheckEvalAccess(cx, obj, caller->script->principals))
+                if (!js_CheckPrincipalsAccess(cx, obj,
+                                              caller->script->principals,
+                                              js_eval_str)) {
                     return JS_FALSE;
+                }
 
                 scopeobj = js_NewObject(cx, &js_WithClass, obj,
                                         callerScopeChain);
@@ -1185,11 +1196,8 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     /* Ensure we compile this eval with the right object in the scope chain. */
-    OBJ_TO_INNER_OBJECT(cx, scopeobj);
+    scopeobj = js_CheckScopeChainValidity(cx, scopeobj, js_eval_str);
     if (!scopeobj)
-        return JS_FALSE;
-
-    if (!js_CheckScopeChainValidity(cx, scopeobj, js_eval_str))
         return JS_FALSE;
 
     str = JSVAL_TO_STRING(argv[0]);
@@ -1239,7 +1247,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * Belt-and-braces: check that the lesser of eval's principals and the
      * caller's principals has access to scopeobj.
      */
-    ok = CheckEvalAccess(cx, scopeobj, principals);
+    ok = js_CheckPrincipalsAccess(cx, scopeobj, principals, js_eval_str);
     if (!ok)
         goto out;
 
