@@ -58,6 +58,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIEventStateManager.h"
+#include "nsIContent.h"
 
 /** This class is used to generate xforms-hint and xforms-help events.*/
 class nsXFormsHintHelpListener : public nsIDOMEventListener {
@@ -318,8 +319,9 @@ PRBool
 nsXFormsControlStubBase::GetReadOnlyState()
 {
   PRBool res = PR_FALSE;
-  if (mElement) {
-    mElement->HasAttribute(NS_LITERAL_STRING("read-only"), &res);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+  if (content && (content->IntrinsicState() & NS_EVENT_STATE_MOZ_READONLY)) {
+    res = PR_TRUE;
   }  
   return res;
 }
@@ -328,8 +330,9 @@ PRBool
 nsXFormsControlStubBase::GetRelevantState()
 {
   PRBool res = PR_FALSE;
-  if (mElement) {
-    mElement->HasAttribute(NS_LITERAL_STRING("enabled"), &res);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+  if (content && (content->IntrinsicState() & NS_EVENT_STATE_ENABLED)) {
+    res = PR_TRUE;
   }  
   return res;
 }

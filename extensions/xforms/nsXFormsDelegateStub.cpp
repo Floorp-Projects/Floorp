@@ -54,6 +54,8 @@
 #include "nsXFormsUtils.h"
 #include "nsIServiceManager.h"
 #include "nsXFormsModelElement.h"
+#include "nsIContent.h"
+#include "nsIEventStateManager.h"
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsDelegateStub,
                              nsXFormsBindableControlStub,
@@ -168,39 +170,41 @@ nsXFormsDelegateStub::SetValue(const nsAString& aValue)
 }
 
 nsresult
-nsXFormsDelegateStub::GetState(const nsAString &aState, PRBool *aStateVal)
+nsXFormsDelegateStub::GetState(PRInt32 aState, PRBool *aStateVal)
 {
   NS_ENSURE_ARG_POINTER(aStateVal);
-
-  if (mElement) {
-    mElement->HasAttribute(aState, aStateVal);
-  }
-
+  *aStateVal = PR_FALSE;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+  if (content && (content->IntrinsicState() & aState)) {
+    *aStateVal = PR_TRUE;
+  }  
   return NS_OK;
 }
+
+// XXXbeaufour search for "enabled", "disabled", HasAttribute() and SetAttribute()
 
 NS_IMETHODIMP
 nsXFormsDelegateStub::GetIsReadonly(PRBool *aStateVal)
 {
-  return GetState(NS_LITERAL_STRING("read-only"), aStateVal);
+  return GetState(NS_EVENT_STATE_MOZ_READONLY, aStateVal);
 }
 
 NS_IMETHODIMP
 nsXFormsDelegateStub::GetIsEnabled(PRBool *aStateVal)
 {
-  return GetState(NS_LITERAL_STRING("enabled"), aStateVal);
+  return GetState(NS_EVENT_STATE_ENABLED, aStateVal);
 }
 
 NS_IMETHODIMP
 nsXFormsDelegateStub::GetIsRequired(PRBool *aStateVal)
 {
-  return GetState(NS_LITERAL_STRING("required"), aStateVal);
+  return GetState(NS_EVENT_STATE_REQUIRED, aStateVal);
 }
 
 NS_IMETHODIMP
 nsXFormsDelegateStub::GetIsValid(PRBool *aStateVal)
 {
-  return GetState(NS_LITERAL_STRING("valid"), aStateVal);
+  return GetState(NS_EVENT_STATE_VALID, aStateVal);
 }
 
 NS_IMETHODIMP

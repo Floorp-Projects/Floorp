@@ -97,7 +97,7 @@ public:
 
 protected:
   // Checks the status of the model item properties.
-  nsresult GetState(const nsAString &aState, PRBool *aStateVal);
+  nsresult GetState(PRInt32 aState, PRBool *aStateVal);
   
   // This is called when XBL widget is attached to the XForms control.
   // It checks the ancestors of the element and returns an nsRepeatState
