@@ -103,13 +103,46 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 }
 
 #ifdef __GNUC__         /* Gnu Compiler. */
+
+#ifdef XP_MACOSX
+/* Make sure the stack is 16-byte aligned.  Do that by aligning to 16 bytes and
+ * then subtracting 4 so the three subsequent pushes result in a 16-byte aligned
+ * stack. */
+#define ALIGN_STACK	\
+    "addl $0x4, %%esp\n\t" \
+    "andl $0xfffffff0, %%esp\n\t" \
+    "subl $0x4, %%esp\n\t"
+
+#define REGS_TRASHED	\
+	, "%esp"
+
+#define SAVE_STACK \
+  unsigned int saved_esp; \
+  __asm__ __volatile__( \
+    "movl %%esp, %0\n\t" \
+    : "=r"(saved_esp));
+
+#define RESTORE_STACK	\
+ __asm__ __volatile__( \
+    "movl %0, %%esp\n\t" \
+    : \
+    : "r"(saved_esp));
+#else
+#define ALIGN_STACK
+#define REGS_TRASHED
+#define SAVE_STACK
+#define RESTORE_STACK
+#endif
+
 #define STUB_ENTRY(n) \
 nsresult nsXPTCStubBase::Stub##n() \
 { \
   register nsresult (*method) (nsXPTCStubBase *, uint32, PRUint32 *) = PrepareAndDispatch; \
   int temp0, temp1; \
   register nsresult result; \
+  SAVE_STACK \
   __asm__ __volatile__( \
+    ALIGN_STACK \
     "leal   0x0c(%%ebp), %%ecx\n\t"    /* args */ \
     "pushl  %%ecx\n\t" \
     "pushl  $"#n"\n\t"                 /* method index */ \
@@ -121,7 +154,10 @@ nsresult nsXPTCStubBase::Stub##n() \
       "=&c" (temp0),    /* %1 */ \
       "=d" (temp1)      /* %2 */ \
     : "2" (method)      /* %2 */ \
-    : "memory" ); \
+    : "memory" \
+	REGS_TRASHED \
+	); \
+	RESTORE_STACK \
     return result; \
 }
 
