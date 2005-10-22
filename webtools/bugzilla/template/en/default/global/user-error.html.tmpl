@@ -547,6 +547,13 @@
     [% END %]
     a sufficiently empowered user may change that field.
 
+  [% ELSIF error == "illegal_change_deps" %]
+    [% title = "Not allowed" %]
+    You tried to change the 
+    <strong>[% field_descs.$field FILTER html %]</strong> field 
+    but only a user empowered to edit 
+    both involved [% terms.bugs %] may change that field.
+
   [% ELSIF error == "illegal_changed_in_last_x_days" %]
     [% title = "Your Search Makes No Sense" %]
     The <em>Changed in last ___ days</em> field must be a simple number. 

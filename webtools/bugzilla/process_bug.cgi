@@ -165,6 +165,13 @@ foreach my $field ("dependson", "blocked") {
                 $vars->{'field'} = $field;
                 ThrowUserError("illegal_change", $vars);
             }
+            if (Param("strict_isolation")) {
+                my $deltabug = new Bugzilla::Bug($id, $user);
+                if (!$user->can_edit_product($deltabug->{'product_id'})) {
+                    $vars->{'field'} = $field;
+                    ThrowUserError("illegal_change_deps", $vars);
+                }
+            }
         }
     } else {
         # Bugzilla does not support mass-change of dependencies so they

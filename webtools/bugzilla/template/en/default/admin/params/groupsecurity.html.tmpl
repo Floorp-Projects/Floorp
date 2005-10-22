@@ -49,6 +49,12 @@
   usevisibilitygroups => "Do you wish to restrict visibility of users to members of " _
                          "specific groups?",
   
-  strict_isolation => "Don't allow users to assign, be qa-contacts or add to CC list " _
-                      "any user that do not have permission to edit the bug." }
+  strict_isolation => "Don't allow users to be assigned to, " _
+                      "be qa-contacts on, " _
+                      "be added to CC list, " _
+                      "or make or remove dependencies " _
+                      "involving any bug that is in a product on which that " _
+                      "user is forbidden to edit.", 
+
+ }
 %]
