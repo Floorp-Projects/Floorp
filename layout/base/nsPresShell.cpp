@@ -6202,8 +6202,11 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
     instance->Destroy();
   }
 
+  // XXXbz have to use the plugin manager contract because the plugin host
+  // registers for two different contracts with two difference CIDs!  We want
+  // the plugin manager CID, since that's the one nsObjectFrame gets.
   nsCOMPtr<nsIPluginHost> pluginHost =
-    do_GetService("@mozilla.org/plugin/host;1");
+    do_GetService("@mozilla.org/plugin/manager;1");
   if (pluginHost)
     pluginHost->StopPluginInstance(instance);
 }
