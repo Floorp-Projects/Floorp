@@ -507,6 +507,7 @@ function readStringFromFile(file) {
  * @constructor
  */
 function UpdatePatch(patch) {
+  this._properties = {};
   for (var i = 0; i < patch.attributes.length; ++i) {
     var attr = patch.attributes.item(i);
     attr.QueryInterface(Components.interfaces.nsIDOMAttr);
@@ -545,7 +546,7 @@ UpdatePatch.prototype = {
   /**
    * A hash of custom properties
    */
-  _properties: { },
+  _properties: null,
   
   /**
    * See nsIWritablePropertyBag.idl
@@ -627,6 +628,7 @@ UpdatePatch.prototype = {
  * @constructor
  */
 function Update(update) {
+  this._properties = {};
   this._patches = [];
   this.installDate = 0;
   this.isCompleteUpdate = false;
@@ -778,7 +780,7 @@ Update.prototype = {
   /**
    * A hash of custom properties
    */
-  _properties: { },
+  _properties: null,
   
   /**
    * See nsIWritablePropertyBag.idl
