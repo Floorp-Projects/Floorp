@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -1709,6 +1710,10 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         lineno = 0;
         principals = NULL;
     }
+
+    /* Belt-and-braces: check that the caller has access to parent. */
+    if (!js_CheckPrincipalsAccess(cx, parent, principals, "Function"))
+        return JS_FALSE;
 
     n = argc ? argc - 1 : 0;
     if (n > 0) {

@@ -488,9 +488,12 @@ js_GetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot);
 extern JSBool
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v);
 
-extern JSBool
+extern JSObject *
 js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller);
 
+extern JSBool
+js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
+                         JSPrincipals *principals, const char *caller);
 JS_END_EXTERN_C
 
 #endif /* jsobj_h___ */

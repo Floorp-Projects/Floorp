@@ -65,6 +65,7 @@
 #if JS_HAS_SCRIPT_OBJECT
 
 static const char js_script_exec[] = "Script.prototype.exec";
+static const char js_script_compile[] = "Script.prototype.compile";
 
 #if JS_HAS_TOSOURCE
 static JSBool
@@ -205,7 +206,7 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     /* Ensure we compile this script with the right (inner) principals. */
-    OBJ_TO_INNER_OBJECT(cx, scopeobj);
+    scopeobj = js_CheckScopeChainValidity(cx, scopeobj, js_script_compile);
     if (!scopeobj)
         return JS_FALSE;
 
@@ -248,7 +249,6 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject *scopeobj, *parent;
     JSStackFrame *fp, *caller;
     JSPrincipals *principals, *scopePrincipals;
-    JSRuntime *rt;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
         return JS_FALSE;
@@ -308,26 +308,14 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
     }
 
-    OBJ_TO_INNER_OBJECT(cx, scopeobj);
+    scopeobj = js_CheckScopeChainValidity(cx, scopeobj, js_script_exec);
     if (!scopeobj)
-        return JS_FALSE;
-
-    if (!js_CheckScopeChainValidity(cx, scopeobj, js_script_exec))
         return JS_FALSE;
 
     /* Belt-and-braces: check that this script object has access to scopeobj. */
     principals = script->principals;
-    rt = cx->runtime;
-    if (rt->findObjectPrincipals) {
-        scopePrincipals = rt->findObjectPrincipals(cx, scopeobj);
-        if (!principals || !scopePrincipals ||
-            !principals->subsume(principals, scopePrincipals)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_INDIRECT_CALL,
-                                 js_script_exec);
-            return JS_FALSE;
-        }
-    }
+    if (!js_CheckPrincipalsAccess(cx, scopeobj, principals, js_script_exec))
+        return JS_FALSE;
 
     return js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 }
