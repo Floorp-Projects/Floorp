@@ -1214,7 +1214,14 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   // Make sure the displayed text is the same as the selected option, bug 297389.
   PRInt32 selectedIndex;
   nsAutoString selectedOptionText;
-  mListControlFrame->GetSelectedIndex(&selectedIndex);
+  if (!mDroppedDown) {
+    mListControlFrame->GetSelectedIndex(&selectedIndex);
+  }
+  else {
+    // In dropped down mode the "selected index" is the hovered menu item,
+    // we want the last selected item which is |mDisplayedIndex| in this case.
+    selectedIndex = mDisplayedIndex;
+  }
   if (selectedIndex != -1) {
     mListControlFrame->GetOptionText(selectedIndex, selectedOptionText);
   }
