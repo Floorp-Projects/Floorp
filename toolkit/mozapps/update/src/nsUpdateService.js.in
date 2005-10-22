@@ -1396,14 +1396,9 @@ UpdateManager.prototype = {
                                .createInstance(Components.interfaces.nsIFileInputStream);
     fileStream.init(file, MODE_RDONLY, PERMS_FILE, 0);
     try {
-      var sis =
-          Components.classes["@mozilla.org/scriptableinputstream;1"].
-          createInstance(Components.interfaces.nsIScriptableInputStream);
-      sis.init(fileStream);
-      var data = sis.read(sis.available());
       var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
                             .createInstance(Components.interfaces.nsIDOMParser);
-      var doc = parser.parseFromString(data, "text/xml");
+      var doc = parser.parseFromStream(fileStream, "UTF-8", fileStream.available(), "text/xml");
       
       var updateCount = doc.documentElement.childNodes.length;
       for (var i = 0; i < updateCount; ++i) {
