@@ -248,7 +248,7 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSScript *script;
     JSObject *scopeobj, *parent;
     JSStackFrame *fp, *caller;
-    JSPrincipals *principals, *scopePrincipals;
+    JSPrincipals *principals;
 
     if (!JS_InstanceOf(cx, obj, &js_ScriptClass, argv))
         return JS_FALSE;
