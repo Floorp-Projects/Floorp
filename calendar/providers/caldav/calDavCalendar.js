@@ -135,11 +135,13 @@ calDavCalendar.prototype = {
     // readonly attribute AUTF8String type;
     get type() { return "caldav"; },
 
+    mReadOnly: false,
+
     get readOnly() { 
-        return getCalendarManager().getCalendarPref(this, "READONLY") == 'true';
+        return this.mReadOnly;
     },
     set readOnly(bool) {
-        getCalendarManager().setCalendarPref(this, "READONLY", bool);
+        this.mReadOnly = bool;
     },
 
     // attribute nsIURI uri;

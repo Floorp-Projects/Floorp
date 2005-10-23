@@ -102,12 +102,14 @@ calMemoryCalendar.prototype = {
     // readonly attribute AUTF8String type;
     get type() { return "memory"; },
 
+    mReadOnly: false,
+
     // Most of the time you can just let the ics calendar handle this
     get readOnly() { 
-        return getCalendarManager().getCalendarPref(this, "READONLY") == 'true';
+        return this.mReadOnly;
     },
     set readOnly(bool) {
-        getCalendarManager().setCalendarPref(this, "READONLY", bool);
+        this.mReadOnly = bool;
     },
 
     // attribute nsIURI uri;

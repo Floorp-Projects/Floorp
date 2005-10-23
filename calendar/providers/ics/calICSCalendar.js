@@ -109,11 +109,13 @@ calICSCalendar.prototype = {
 
     get type() { return "ics"; },
 
+    mReadOnly: false,
+
     get readOnly() { 
-        return getCalendarManager().getCalendarPref(this, "READONLY") == 'true';
+        return this.mReadOnly;
     },
     set readOnly(bool) {
-        getCalendarManager().setCalendarPref(this, "READONLY", bool);
+        this.mReadOnly = bool;
     },
 
     mUri: null,
