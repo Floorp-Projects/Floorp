@@ -50,5 +50,8 @@ marquee[height*="7"], marquee[height*="8"], marquee[height*="9"] {
     margin: 0 !important; 
     padding: 0 !important;
   } /* This hack is needed until bug 119078 gets fixed */
- 
+
+  .innerDiv {
+    white-space: normal !important;
+  }
 }

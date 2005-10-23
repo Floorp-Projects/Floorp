@@ -137,7 +137,7 @@
       />
 
       <property name="innerDiv"
-        onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'innerDiv');"
+        onget="return document.getAnonymousElementByAttribute(this, 'class', 'innerDiv');"
       />
 
       <property name="height"
@@ -224,12 +224,6 @@
 
               this.innerDiv.style.padding = height + " 0";
               this.innerDiv.style.whiteSpace = "";
-            }
-            else {
-              this.outerDiv.style.height = "";
-
-              this.innerDiv.style.padding = "0px";
-              this.innerDiv.style.whiteSpace = "nowrap";
             }
 
             switch (this.directionField)
@@ -379,8 +373,8 @@
 
     <content>
       <html:div xbl:inherits="" style="overflow: -moz-scrollbars-none">
-        <html:div style="display:table; margin: 0 100%;">
-          <html:div anonid="innerDiv">
+        <html:div style="display:table; border-spacing:0; margin: 0 100%;">
+          <html:div class="innerDiv" style="white-space: nowrap;">
             <children/>
           </html:div>
         </html:div>
@@ -394,7 +388,7 @@
 
     <content>
       <html:div xbl:inherits="" style="overflow: -moz-scrollbars-none">
-        <html:div anonid="innerDiv">
+        <html:div class="innerDiv">
           <children/>
         </html:div>
       </html:div>
