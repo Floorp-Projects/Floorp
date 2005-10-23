@@ -110,6 +110,28 @@ function loadCalendarEventDialog()
     if (event.calendar && event.calendar.readOnly)
         gReadOnlyMode = true;
 
+    // The event calendar is its current calendar, or for a new event,
+    // the selected calendar in the calendar list, passed in args.calendar.
+    var eventCalendar = event.calendar || args.calendar;
+
+    // Initialize calendar names in drop down list.
+    var calendarField = document.getElementById('server-field');
+    var calendars = getCalendarManager().getCalendars({});
+    for (i in calendars) {
+        try {
+            var menuitem = calendarField.appendItem(calendars[i].name,
+                                                    calendars[i].uri);
+            menuitem.calendar = calendars[i];
+            // compare cal.uri because there may be multiple instances of
+            // calICalendar or uri for the same spec, and those instances are
+            // not ==.
+            if (eventCalendar && eventCalendar.uri.equals(calendars[i].uri))
+                calendarField.selectedIndex = i;
+        } catch(ex) {
+            dump("eventCalendar.uri not found...\n");
+        }
+    }
+
     // Set up dialog as event or todo
     var componentType;
     if (isEvent(event)) {
@@ -433,27 +455,6 @@ function loadCalendarEventDialog()
         document.getElementById("categories-field").selectedIndex = -1;
     } catch (ex) {
         dump("unable to do categories stuff in event dialog\n");
-    }
-    // The event calendar is its current calendar, or for a new event,
-    // the selected calendar in the calendar list, passed in args.calendar.
-    var eventCalendar = event.calendar || args.calendar;
-
-    // Initialize calendar names in drop down list.
-    var calendarField = document.getElementById('server-field');
-    var calendars = getCalendarManager().getCalendars({});
-    for (i in calendars) {
-        try {
-            var menuitem = calendarField.appendItem(calendars[i].name,
-                                                    calendars[i].uri);
-            menuitem.calendar = calendars[i];
-            // compare cal.uri because there may be multiple instances of
-            // calICalendar or uri for the same spec, and those instances are
-            // not ==.
-            if (eventCalendar && eventCalendar.uri.equals(calendars[i].uri))
-                calendarField.selectedIndex = i;
-        } catch(ex) {
-            dump("eventCalendar.uri not found...\n");
-        }
     }
 
     // update enabling and disabling
