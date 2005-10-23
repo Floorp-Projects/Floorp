@@ -237,8 +237,12 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * Triggers frame construction as needed. mType must be set correctly when
      * this method is called. This method is cheap if the type and state didn't
      * actually change.
+     *
+     * @param aSync If a synchronous frame construction is required. If false,
+     *              the construction may either be sync or async.
      */
-    void NotifyStateChanged(ObjectType aOldType, PRInt32 aOldState);
+    void NotifyStateChanged(ObjectType aOldType, PRInt32 aOldState,
+                            PRBool aSync);
 
     ObjectType GetTypeOfContent(const nsCString& aMIMEType);
 
