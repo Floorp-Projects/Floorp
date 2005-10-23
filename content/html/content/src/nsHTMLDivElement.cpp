@@ -42,9 +42,6 @@
 #include "nsPresContext.h"
 #include "nsMappedAttributes.h"
 
-// XXX support missing nav attributes? gutter, cols, width
-
-
 class nsHTMLDivElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLDivElement
 {
@@ -111,17 +108,19 @@ nsHTMLDivElement::ParseAttribute(nsIAtom* aAttribute,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::align) {
+  if (mNodeInfo->Equals(nsHTMLAtoms::marquee)) {
+   if ((aAttribute == nsHTMLAtoms::width) ||
+       (aAttribute == nsHTMLAtoms::height)) {
+     return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+   }
+   else if ((aAttribute == nsHTMLAtoms::hspace) ||
+            (aAttribute == nsHTMLAtoms::vspace)) {
+     return aResult.ParseIntWithBounds(aValue, 0);
+   }
+  }
+
+  if (mNodeInfo->Equals(nsHTMLAtoms::div) && aAttribute == nsHTMLAtoms::align) {
     return ParseDivAlignValue(aValue, aResult);
-  }
-  if (aAttribute == nsHTMLAtoms::cols) {
-    return aResult.ParseIntWithBounds(aValue, 0);
-  }
-  if (aAttribute == nsHTMLAtoms::gutter) {
-    return aResult.ParseIntWithBounds(aValue, 1);
-  }
-  if (aAttribute == nsHTMLAtoms::width) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
@@ -134,19 +133,43 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
+static void
+MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
+{
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+}
+
 NS_IMETHODIMP_(PRBool)
 nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const MappedAttributeEntry* const map[] = {
-    sDivAlignAttributeMap,
-    sCommonAttributeMap
-  };
-  
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  if (mNodeInfo->Equals(nsHTMLAtoms::div)) {
+    static const MappedAttributeEntry* const map[] = {
+      sDivAlignAttributeMap,
+      sCommonAttributeMap
+    };
+    return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  }
+  if (mNodeInfo->Equals(nsHTMLAtoms::marquee)) {  
+    static const MappedAttributeEntry* const map[] = {
+      sImageMarginSizeAttributeMap,
+      sCommonAttributeMap
+    };
+    return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  }
+
+  return nsGenericHTMLElement::IsAttributeMapped(aAttribute);
 }
 
 nsMapRuleToAttributesFunc
 nsHTMLDivElement::GetAttributeMappingFunction() const
 {
-  return &MapAttributesIntoRule;
+  if (mNodeInfo->Equals(nsHTMLAtoms::div)) {
+    return &MapAttributesIntoRule;
+  }
+  if (mNodeInfo->Equals(nsHTMLAtoms::marquee)) {
+    return &MapMarqueeAttributesIntoRule;
+  }  
+  return nsGenericHTMLElement::GetAttributeMappingFunction();
 }
