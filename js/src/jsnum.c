@@ -114,25 +114,25 @@ num_parseFloat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 static JSBool
 num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSString *str;
     jsint radix;
+    JSString *str;
     jsdouble d;
     const jschar *bp, *ep;
-
-    str = js_ValueToString(cx, argv[0]);
-    if (!str)
-        return JS_FALSE;
 
     if (argc > 1) {
         if (!js_ValueToECMAInt32(cx, argv[1], &radix))
             return JS_FALSE;
-    } else
+    } else {
         radix = 0;
-
+    }
     if (radix != 0 && (radix < 2 || radix > 36)) {
         *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
     }
+
+    str = js_ValueToString(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
     /* XXXbe js_strtointeger shouldn't require NUL termination */
     bp = js_UndependString(cx, str);
     if (!bp)
