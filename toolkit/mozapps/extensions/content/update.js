@@ -104,7 +104,7 @@ var gUpdateWizard = {
     if (aButtonKey) {
       button.label = strings.getString(aButtonKey);
       try {
-        button.accesskey = strings.getString(aButtonKey + "Accesskey");
+        button.setAttribute("accesskey", strings.getString(aButtonKey + "Accesskey"));
       }
       catch (e) {
       }
