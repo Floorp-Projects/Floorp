@@ -145,7 +145,7 @@ class AutoNotifier {
     }
     ~AutoNotifier() {
       if (mNotify) {
-        mContent->NotifyStateChanged(mOldType, mOldState);
+        mContent->NotifyStateChanged(mOldType, mOldState, PR_FALSE);
       }
     }
 
@@ -157,7 +157,7 @@ class AutoNotifier {
     void Notify() {
       NS_ASSERTION(mNotify, "Should not notify when notify=false");
 
-      mContent->NotifyStateChanged(mOldType, mOldState);
+      mContent->NotifyStateChanged(mOldType, mOldState, PR_TRUE);
       mOldType = mContent->Type();
       mOldState = mContent->ObjectState();
     }
@@ -328,9 +328,14 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
       }
       nsIObjectFrame* frame;
       frame = GetFrame();
-      if (frame) {
-        rv = frame->Instantiate(chan, getter_AddRefs(mFinalListener));
+      if (!frame) {
+        // Do nothing in this case: This is probably due to a display:none
+        // frame. If we ever get a frame, HasNewFrame will do the right thing.
+        // Abort the load though, we have no use for the data.
+        mInstantiating = PR_FALSE;
+        return NS_BINDING_ABORTED;
       }
+      rv = frame->Instantiate(chan, getter_AddRefs(mFinalListener));
       mInstantiating = PR_FALSE;
       break;
     case eType_Loading:
@@ -952,7 +957,8 @@ nsObjectLoadingContent::UnloadContent()
 
 void
 nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
-                                          PRInt32 aOldState)
+                                          PRInt32 aOldState,
+                                          PRBool aSync)
 {
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
@@ -970,8 +976,15 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     NS_ASSERTION(thisContent->IsInDoc(), "Something is confused");
     PRInt32 changedBits = aOldState ^ newState;
 
-    mozAutoDocUpdate(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-    doc->ContentStatesChanged(thisContent, nsnull, changedBits);
+    {
+      mozAutoDocUpdate(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      doc->ContentStatesChanged(thisContent, nsnull, changedBits);
+    }
+    if (aSync) {
+      // Make sure that frames are actually constructed, and do it after
+      // EndUpdate was called.
+      doc->FlushPendingNotifications(Flush_Frames);
+    }
   } else if (aOldType != mType) {
     // If our state changed, then we already recreated frames
     // Otherwise, need to do that here
