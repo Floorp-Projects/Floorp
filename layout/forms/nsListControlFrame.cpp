@@ -436,8 +436,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
   nsIPresShell *presShell = presContext->GetPresShell();
   if (!presShell) return;
 
-  nsIFrame* containerFrame;
-  GetOptionsContainer(presContext, &containerFrame);
+  nsIFrame* containerFrame = GetOptionsContainer();
   if (!containerFrame) return;
 
   nsIFrame * childframe = nsnull;
@@ -931,9 +930,7 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
    // list by using the tallest of the grandchildren, since there may be
    // option groups in addition to option elements, either of which may
    // be visible or invisible.
-  nsIFrame *optionsContainer;
-  GetOptionsContainer(aPresContext, &optionsContainer);
-  PRInt32 heightOfARow = GetMaxOptionHeight(optionsContainer);
+  PRInt32 heightOfARow = GetMaxOptionHeight(GetOptionsContainer());
 
   // Check to see if we have zero items 
   PRInt32 length = 0;
@@ -1214,9 +1211,7 @@ nsListControlFrame::IsOptionElement(nsIContent* aContent)
 
 nsIFrame*
 nsListControlFrame::GetContentInsertionFrame() {
-  nsIFrame* frame;
-  GetOptionsContainer(GetPresContext(), &frame);
-  return frame->GetContentInsertionFrame();
+  return GetOptionsContainer()->GetContentInsertionFrame();
 }
 
 //---------------------------------------------------------
@@ -2164,14 +2159,6 @@ nsListControlFrame::ComboboxFinish(PRInt32 aIndex)
     mComboboxFrame->RollupFromList(GetPresContext());
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsListControlFrame::GetOptionsContainer(nsPresContext* aPresContext,
-                                        nsIFrame** aFrame)
-{
-  *aFrame = GetScrolledFrame();
   return NS_OK;
 }
 
