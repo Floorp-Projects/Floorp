@@ -119,8 +119,8 @@ calICSCalendar.prototype = {
     mUri: null,
     get uri() { return this.mUri },
     set uri(aUri) {
-        this.mMemoryCalendar.uri = this.mUri;
         this.mUri = aUri;
+        this.mMemoryCalendar.uri = this.mUri;
 
         this.refresh();
     },
