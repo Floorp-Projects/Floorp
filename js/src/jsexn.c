@@ -1087,8 +1087,8 @@ js_ReportUncaughtException(JSContext *cx)
      */
     if (JSVAL_IS_PRIMITIVE(exn)) {
         exnObject = NULL;
-#ifdef __GNUC__         /* suppress bogus gcc warnings */
         vp = NULL;
+#ifdef __GNUC__         /* suppress bogus gcc warnings */
         mark = NULL;
 #endif
     } else {
@@ -1112,7 +1112,8 @@ js_ReportUncaughtException(JSContext *cx)
     if (!str) {
         bytes = "unknown (can't convert to string)";
     } else {
-        vp[1] = STRING_TO_JSVAL(str);
+        if (vp)
+            vp[1] = STRING_TO_JSVAL(str);
         bytes = js_GetStringBytes(str);
     }
     ok = JS_TRUE;
