@@ -59,7 +59,8 @@ catch(e)
 {
   actual = e.name;
 }
+jsOptions.reset();
+
 reportCompare(expect, actual, summary);
 
-jsOptions.reset();
   
