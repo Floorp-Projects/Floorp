@@ -171,7 +171,6 @@ public:
   NS_IMETHOD AboutToRollup();
   NS_IMETHOD UpdateSelection();
   NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
-  NS_IMETHOD GetOptionsContainer(nsPresContext* aPresContext, nsIFrame** aFrame);
   NS_IMETHOD FireOnChange();
   NS_IMETHOD ComboboxFinish(PRInt32 aIndex);
 
@@ -260,6 +259,10 @@ protected:
   PRBool   HandleListSelection(nsIDOMEvent * aDOMEvent, PRInt32 selectedIndex);
   void     InitSelectionRange(PRInt32 aClickedIndex);
 
+  nsIFrame* GetOptionsContainer() {
+    return GetScrolledFrame();
+  }
+  
   // Data Members
   PRInt32      mStartSelectionIndex;
   PRInt32      mEndSelectionIndex;

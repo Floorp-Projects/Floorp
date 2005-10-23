@@ -118,12 +118,6 @@ public:
   NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) = 0;
 
   /**
-   *  Return the the frame that the options will be inserted into
-   */
-  NS_IMETHOD GetOptionsContainer(nsPresContext* aPresContext,
-                                 nsIFrame** aFrame) = 0;
-
-  /**
    * Tell the selected list to roll up and ensure that the proper index is
    * selected, possibly firing onChange if the index has changed
    *
