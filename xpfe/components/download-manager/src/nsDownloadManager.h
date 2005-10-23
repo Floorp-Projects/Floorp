@@ -58,6 +58,7 @@
 #include "nsIStringBundle.h"
 #include "nsIProgressDialog.h"
 #include "nsIMIMEInfo.h"
+#include "nsISound.h"
  
 enum DownloadState { NOTSTARTED = -1, DOWNLOADING, FINISHED, FAILED, CANCELED };
 
@@ -88,6 +89,8 @@ protected:
   nsresult DownloadStarted(const nsACString& aTargetPath);
   nsresult DownloadEnded(const nsACString& aTargetPath, const PRUnichar* aMessage);
   PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
+
+  nsCOMPtr<nsISound> mSoundInterface;
 
 private:
   nsCOMPtr<nsIRDFDataSource> mDataSource;

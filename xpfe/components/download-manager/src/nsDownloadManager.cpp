@@ -60,7 +60,6 @@
 #include "nsIPromptService.h"
 #include "nsIObserverService.h"
 #include "nsIProfileChangeStatus.h"
-#include "nsISound.h"
 #include "nsIPrefService.h"
 #include "nsIFileURL.h"
 #ifndef MOZ_THUNDERBIRD
@@ -1233,16 +1232,18 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       }
 
       if (!soundStr.IsEmpty()) {
-        nsCOMPtr<nsISound> snd = do_CreateInstance("@mozilla.org/sound;1");
-        if (snd) {
+        if (!mDownloadManager->mSoundInterface) {
+          mDownloadManager->mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
+        }
+        if (mDownloadManager->mSoundInterface) {
           nsCOMPtr<nsIURI> soundURI;
           
           NS_NewURI(getter_AddRefs(soundURI), soundStr);
           nsCOMPtr<nsIURL> soundURL(do_QueryInterface(soundURI));
           if (soundURL)
-            snd->Play(soundURL);
+            mDownloadManager->mSoundInterface->Play(soundURL);
           else
-            snd->Beep();
+            mDownloadManager->mSoundInterface->Beep();
         }
       }
       if (showAlert)
