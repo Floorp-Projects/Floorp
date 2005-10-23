@@ -55,11 +55,11 @@ li.setChildren("Second");
 ul.appendChild(li);
 
 XML.ignoreWhitespace = true;
-XML.prettyPrint = true;
+XML.prettyPrinting = true;
 
 expect = (
   <ul>
-    <li>First</li>
+    <li>Second</li>
     <li>Second</li>
   </ul>
     ).toXMLString().replace(/</g, '&lt;');
