@@ -50,13 +50,14 @@ jsOptions.setOption('strict', false);
 jsOptions.setOption('werror', false);
 expect = null;
 actual = /.\011/.exec ('a'+String.fromCharCode(0)+'11');
+jsOptions.reset();
 reportCompare(expect, actual, summary);
 
 // strict
 jsOptions.setOption('strict', true);
 expect = null;
 actual = /.\011/.exec ('a'+String.fromCharCode(0)+'11');
+jsOptions.reset();
 reportCompare(expect, actual, summary);
 
-jsOptions.reset();
   
