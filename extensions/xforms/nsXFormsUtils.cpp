@@ -754,11 +754,10 @@ nsXFormsUtils::SetNodeValue(nsIDOMNode* aDataNode, const nsString& aNodeValue)
   }
 }
 
-///
-/// @todo Use this consistently, or delete? (XXX)
 /* static */ PRBool
-nsXFormsUtils::GetSingleNodeBindingValue(nsIDOMElement* aElement,
-                                         nsString& aValue)
+nsXFormsUtils::GetSingleNodeBinding(nsIDOMElement* aElement,
+                                    nsIDOMNode** aNode,
+                                    nsIModelElementPrivate** aModel)
 {
   if (!aElement)
     return PR_FALSE;
@@ -781,8 +780,42 @@ nsXFormsUtils::GetSingleNodeBindingValue(nsIDOMElement* aElement,
   if (!singleNode)
     return PR_FALSE;
 
-  nsXFormsUtils::GetNodeValue(singleNode, aValue);
+  singleNode.swap(*aNode);
+  if (aModel)
+    model.swap(*aModel);  // transfers ref
   return PR_TRUE;
+}
+
+///
+/// @todo Use this consistently, or delete? (XXX)
+/* static */ PRBool
+nsXFormsUtils::GetSingleNodeBindingValue(nsIDOMElement* aElement,
+                                         nsString& aValue)
+{
+  nsCOMPtr<nsIDOMNode> node;
+  if (GetSingleNodeBinding(aElement, getter_AddRefs(node), nsnull)) {
+    nsXFormsUtils::GetNodeValue(node, aValue);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+/* static */ PRBool
+nsXFormsUtils::SetSingleNodeBindingValue(nsIDOMElement *aElement,
+                                         const nsAString &aValue,
+                                         PRBool *aChanged)
+{
+  *aChanged = PR_FALSE;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIModelElementPrivate> model;
+  if (GetSingleNodeBinding(aElement, getter_AddRefs(node),
+                           getter_AddRefs(model)))
+  {
+    nsresult rv = model->SetNodeValue(node, aValue, aChanged);
+    if (NS_SUCCEEDED(rv))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 /* static */ nsresult

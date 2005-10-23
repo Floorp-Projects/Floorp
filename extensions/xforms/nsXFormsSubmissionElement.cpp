@@ -1289,8 +1289,8 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
         nsCOMPtr<nsIContent> content = do_QueryInterface(currentNode);
         NS_ENSURE_STATE(content);
 
-        nsILocalFile *file =
-            NS_STATIC_CAST(nsILocalFile *,
+        nsIFile *file =
+            NS_STATIC_CAST(nsIFile *,
                            content->GetProperty(nsXFormsAtoms::uploadFileProperty));
         // NOTE: this value may be null if a file hasn't been selected.
 
@@ -1655,8 +1655,8 @@ nsXFormsSubmissionElement::AppendMultipartFormData(nsIDOMNode *data,
       nsCOMPtr<nsIContent> content = do_QueryInterface(data);
       NS_ENSURE_STATE(content);
 
-      nsILocalFile *file =
-          NS_STATIC_CAST(nsILocalFile *,
+      nsIFile *file =
+          NS_STATIC_CAST(nsIFile *,
                          content->GetProperty(nsXFormsAtoms::uploadFileProperty));
 
       nsAutoString leafName;

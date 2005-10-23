@@ -97,6 +97,7 @@ REQUIRES	= \
 		intl \
 		pref \
 		htmlparser \
+		exthandler \
 		$(NULL)
 
 # XForms IDLs
@@ -123,6 +124,8 @@ XPIDLSRCS	= \
 		nsIXFormsItemElement.idl \
 		nsIXFormsLabelElement.idl \
 		nsIXFormsItemSetUIElement.idl \
+		nsIXFormsUploadElement.idl \
+		nsIXFormsUploadUIElement.idl \
 		$(NULL)
 
 # XForms source files

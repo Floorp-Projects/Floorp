@@ -38,6 +38,11 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!DOCTYPE bindings [
+<!ENTITY % xformsDTD SYSTEM "chrome://xforms/locale/xforms.dtd">
+  %xformsDTD;
+]>
+
 <bindings id="xformsBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:html="http://www.w3.org/1999/xhtml"
@@ -443,4 +448,111 @@
       </method>
     </implementation>
   </binding>
+
+  <!-- UPLOAD: <DEFAULT> -->
+  <binding id="xformswidget-upload"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <children includes="label"/>
+      <html:input anonid="upload_text_control"
+                  readonly="true"
+                  xbl:inherits="accesskey"/>
+      <html:button anonid="upload_browse_button"
+                   type="button"
+                   onclick="this.parentNode.uploadElem.pickFile();"
+                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMActivate();"
+                   xbl:inherits="accesskey"> &xforms.upload.browsetext; </html:button>
+      <html:button anonid="upload_clear_button"
+                   type="button"
+                   onclick="this.parentNode.uploadElem.clearFile();"
+                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMActivate();"
+                   xbl:inherits="accesskey"> &xforms.upload.cleartext; </html:button>
+      <children/>
+    </content>
+
+    <implementation implements="nsIXFormsUIWidget, nsIXFormsUploadUIElement">
+      <destructor>
+        this._uploadElem = null;
+        this._textControl = null;
+        this._browseButton = null;
+        this._clearButton = null;
+      </destructor>
+
+      <field name="_uploadElem">null</field>
+
+      <property name="uploadElem" readonly="true">
+        <getter>
+          if (!this._uploadElem) {
+            this._uploadElem =
+              this.QueryInterface(Components.interfaces.nsIXFormsUploadElement);
+          }
+          return this._uploadElem;
+        </getter>
+      </property>
+
+      <field name="_textControl">null</field>
+
+      <property name="textControl" readonly="true">
+        <getter>
+          if (!this._textControl) {
+            this._textControl =
+              document.getAnonymousElementByAttribute(this, "anonid",
+                                                      "upload_text_control");
+          }
+          return this._textControl;
+        </getter>
+      </property>
+
+      <field name="_browseButton">null</field>
+
+      <property name="browseButton" readonly="true">
+        <getter>
+          if (!this._browseButton) {
+            this._browseButton =
+              document.getAnonymousElementByAttribute(this, "anonid",
+                                                      "upload_browse_button");
+          }
+          return this._browseButton;
+        </getter>
+      </property>
+
+      <field name="_clearButton">null</field>
+
+      <property name="clearButton" readonly="true">
+        <getter>
+          if (!this._clearButton) {
+            this._clearButton =
+              document.getAnonymousElementByAttribute(this, "anonid",
+                                                      "upload_clear_button");
+          }
+          return this._clearButton;
+        </getter>
+      </property>
+
+      <method name="setFieldText">
+        <parameter name="aString"/>
+        <body>
+          this.textControl.value = aString;
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <!-- UPLOAD: DISABLED -->
+  <binding id="xformswidget-upload-disabled"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <children includes="label"/>
+      <html:input readonly="true"
+                  xbl:inherits="accesskey"/>
+      <html:button type="button"
+                   disabled="true"
+                   xbl:inherits="accesskey"> &xforms.upload.browsetext; </html:button>
+      <html:button type="button"
+                   disabled="true"
+                   xbl:inherits="accesskey"> &xforms.upload.cleartext; </html:button>
+      <children/>
+    </content>
+  </binding>
+
 </bindings>

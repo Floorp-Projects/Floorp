@@ -255,4 +255,19 @@ select html|div.select-choice-content {
   padding-left: 10px;
 }
 
+upload {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-upload-disabled');
+}
+
+upload[mozType|type="http://www.w3.org/2001/XMLSchema#anyURI"] {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-upload');
+}
+
+upload[mozType|type="http://www.w3.org/2001/XMLSchema#base64Binary"] {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-upload');
+}
+
+upload[mozType|type="http://www.w3.org/2001/XMLSchema#hexBinary"] {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-upload');
+}
 

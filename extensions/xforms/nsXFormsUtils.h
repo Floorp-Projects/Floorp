@@ -253,6 +253,15 @@ public:
                                        const nsString &aNodeValue);
 
   /**
+   * Convenience method for doing XPath evaluations to get bound node
+   * for an element.  Also returns the associated model if aModel != null.
+   * Returns PR_TRUE if the evaluation succeeds.
+   */
+  static NS_HIDDEN_(PRBool)
+    GetSingleNodeBinding(nsIDOMElement* aElement, nsIDOMNode** aNode,
+                         nsIModelElementPrivate** aModel);
+
+  /**
    * Convenience method for doing XPath evaluations to get string value
    * for an element.
    * Returns PR_TRUE if the evaluation succeeds.
@@ -260,6 +269,14 @@ public:
   static NS_HIDDEN_(PRBool)
     GetSingleNodeBindingValue(nsIDOMElement* aElement, nsString& aValue);
 
+  /**
+   * Convenience method for doing XPath evaluations to set string value
+   * for an element.
+   * Returns PR_TRUE if the evaluation succeeds.
+   */
+  static NS_HIDDEN_(PRBool)
+    SetSingleNodeBindingValue(nsIDOMElement *aElement, const nsAString &aValue,
+                              PRBool *aChanged);
   /**
    * Dispatch an XForms event.  aDefaultActionEnabled is returned indicating
    * if the default action of the dispatched event was enabled.

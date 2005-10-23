@@ -178,9 +178,6 @@ protected:
    */
   PRInt32 mBindAttrsCount;
 
-  /** Returns the read only state of the control (ie. mBoundNode) */
-  PRBool GetReadOnlyState();
-  
   /** Returns the relevant state of the control */
   PRBool GetRelevantState();
 

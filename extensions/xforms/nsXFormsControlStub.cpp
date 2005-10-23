@@ -316,17 +316,6 @@ nsXFormsControlStubBase::ResetHelpAndHint(PRBool aInitialize)
 }
 
 PRBool
-nsXFormsControlStubBase::GetReadOnlyState()
-{
-  PRBool res = PR_FALSE;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
-  if (content && (content->IntrinsicState() & NS_EVENT_STATE_MOZ_READONLY)) {
-    res = PR_TRUE;
-  }  
-  return res;
-}
-
-PRBool
 nsXFormsControlStubBase::GetRelevantState()
 {
   PRBool res = PR_FALSE;
