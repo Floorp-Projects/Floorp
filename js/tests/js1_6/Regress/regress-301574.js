@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): Wladimir Palant 
+ *                 shutdown
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -52,4 +53,15 @@ catch(e)
   actual = 'error: ' + e;
 }  
 
-reportCompare(expect, actual, summary);
+reportCompare(expect, actual, summary + ': XML()');
+
+try
+{
+  var xml = XML('<p>text</p>');
+}
+catch(e)
+{
+  actual = 'error: ' + e;
+}  
+
+reportCompare(expect, actual, summary + ': XMLList()');
