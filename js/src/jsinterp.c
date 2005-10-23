@@ -3039,13 +3039,19 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 proto = parent = NULL;
                 fun = NULL;
             } else {
-                /* Get the constructor prototype object for this function. */
+                /*
+                 * Get the constructor prototype object for this function.
+                 * Use the nominal |this| parameter slot, vp[1], as a local
+                 * root to protect this prototype, in case it has no other
+                 * strong refs.
+                 */
                 ok = OBJ_GET_PROPERTY(cx, obj2,
                                       ATOM_TO_JSID(rt->atomState
                                                    .classPrototypeAtom),
-                                      &rval);
+                                      &vp[1]);
                 if (!ok)
                     goto out;
+                rval = vp[1];
                 proto = JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : NULL;
                 parent = OBJ_GET_PARENT(cx, obj2);
 
