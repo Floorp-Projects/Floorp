@@ -185,7 +185,6 @@
 <!ENTITY event.title.alarm         "Alarm" >
 <!ENTITY event.title.new         "New Event" >
 <!ENTITY event.title.edit        "Edit Event" >
-<!ENTITY event.title.heading        "Calendar Alarm" >
 
 <!ENTITY onthe-text            "On the ">
 <!ENTITY last-text             "Last ">
@@ -444,6 +443,7 @@
 <!ENTITY calendar.alarm.editevent.label             "Edit Event" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Acknowledge All Alarms" >
 <!ENTITY calendar.alarm.snooze.label                "Snooze" >
+<!ENTITY calendar.alarm.title.label                "Calendar Alarm" >
 
 
 <!-- Calendar Server Dialog -->
