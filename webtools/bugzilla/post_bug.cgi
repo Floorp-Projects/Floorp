@@ -328,7 +328,7 @@ foreach my $b (grep(/^bit-\d*$/, $cgi->param())) {
     if ($cgi->param($b)) {
         my $v = substr($b, 4);
         detaint_natural($v)
-          || ThrowCodeError("group_id_invalid");
+          || ThrowUserError("invalid_group_ID");
         if (!GroupIsActive($v)) {
             # Prevent the user from adding the bug to an inactive group.
             # Should only happen if there is a bug in Bugzilla or the user

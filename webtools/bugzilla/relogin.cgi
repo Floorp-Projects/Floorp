@@ -56,7 +56,7 @@ if ($action eq 'sudo') {
     
     # Do not try to start a new session if one is already in progress!
     if (defined(Bugzilla->sudoer)) {
-        ThrowUserError('sudo-in-progress', { target => $user->login });
+        ThrowUserError('sudo_in_progress', { target => $user->login });
     }
 
     # We may have been given a value to put into the field

@@ -290,7 +290,7 @@ elsif ($action eq "plot") {
     $vars->{'data'} = \@image_data;
 }
 else {
-    ThrowUserError("unknown_action", {action => $cgi->param('action')});
+    ThrowCodeError("unknown_action", {action => $cgi->param('action')});
 }
 
 my $format = $template->get_format("reports/report", $formatparam,

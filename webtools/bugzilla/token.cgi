@@ -67,10 +67,8 @@ if ($cgi->param('t')) {
   $::token = $cgi->param('t');
   
   # Make sure the token contains only valid characters in the right amount.
-  my $validationerror = ValidatePassword($::token);
-  if ($validationerror) {
-      ThrowUserError("token_invalid");
-  }
+  # Validate password will throw an error if token is invalid
+  ValidatePassword($::token);
   trick_taint($::token); # Only used in placeholders
 
   Bugzilla::Token::CleanTokenTable();

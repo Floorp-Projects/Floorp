@@ -334,10 +334,7 @@ GetVersionTable();
 
 my $product_id = get_product_id($product);
 
-if (0 == @{$::components{$product}}) {        
-    ThrowUserError("no_components", {product => $product});   
-} 
-elsif (1 == @{$::components{$product}}) {
+if (1 == @{$::components{$product}}) {
     # Only one component; just pick it.
     $cgi->param('component', $::components{$product}->[0]);
 }

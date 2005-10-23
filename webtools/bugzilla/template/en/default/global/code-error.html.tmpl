@@ -154,11 +154,6 @@
       [%+ terms.bug %] [%+ bug_id FILTER html %].
     [% END %]
 
-  [% ELSIF error == "invalid_isactive_flag" %]
-    [% title = "Invalid isactive flag" %]        
-    The active flag was improperly set.  There may be
-    a problem with [% terms.Bugzilla %] or [% terms.abug %] in your browser.
-
   [% ELSIF error == "invalid_numeric_argument" %]
     [% title = "Invalid number argument" %]
     The argument <code>[% argument FILTER html %] = [% value FILTER html %]</code>
@@ -245,12 +240,11 @@
     [%+ series.subcategory FILTER html %] / 
     [%+ series.name FILTER html %].
     
-  [% ELSIF error == "no_y_axis_defined" %]
-    No Y axis was defined when creating report. The X axis is optional,
-    but the Y axis is compulsory.
-    
   [% ELSIF error == "need_quipid" %]
     A valid quipid is needed.
+
+  [% ELSIF error == "unknown_comparison_type" %]
+    Specified comparison type is not supported.
 
   [% ELSIF error == "request_queue_group_invalid" %]
     The group field <em>[% group FILTER html %]</em> is invalid.
@@ -297,6 +291,10 @@
     [% ELSE %]
        I could not figure out what you wanted to do.
     [% END %]
+
+  [% ELSIF error == "must_be_patch" %]
+    [% title = "Attachment Must Be Patch" %]
+    Attachment #[% attach_id FILTER html %] must be a patch.
 
   [% ELSIF error == "nested_transaction" %]
     Attempted to start a new transaction without finishing previous one first.

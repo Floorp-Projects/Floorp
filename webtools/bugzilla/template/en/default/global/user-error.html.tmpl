@@ -276,15 +276,6 @@
     You must reassign those [% terms.bugs %] to another component before you
     can delete this one.
 
-  [% ELSIF error == "component_must_have_a_name" %]
-    [% title = "Blank Component Name Not Allowed" %]
-    You cannot delete the component name for component '[% name FILTER html %]'.
-     
-  [% ELSIF error == "component_cant_del_description" %]
-    [% title = "Blank Component Description Not Allowed" %]
-    You cannot delete the component description for 
-    component '[% name FILTER html %]'.
-
   [% ELSIF error == "component_name_too_long" %]
     [% title = "Component Name Is Too Long" %]
     The name of a component is limited to 64 characters. 
@@ -293,10 +284,6 @@
   [% ELSIF error == "component_need_initialowner" %]
     [% title = "Component Requires Default Assignee" %]
     You must enter a default assignee for component '[% name FILTER html %]'.
-
-  [% ELSIF error == "component_not_specified" %]
-    [% title = "No Component Specified" %]
-    No component specified when trying to edit components.
 
   [% ELSIF error == "component_not_valid" %]
     [% title = "Specified Component Does Not Exist" %]
@@ -601,11 +588,6 @@
     You are not authorised to edit this series. To do this, you must either
     be its creator, or an administrator.
         
-  [% ELSIF error == "insufficient_data" %]
-    [% title = "Insufficient Data" %]
-    None of the series you selected have any data associated with them, so a
-    chart cannot be plotted.
-        
   [% ELSIF error == "insufficient_data_points" %]
     We don't have enough data points to make a graph (yet).
         
@@ -842,10 +824,6 @@
     Sorry, [% terms.bug %] moving has been disabled. If you need
     to move [% terms.abug %], please contact [% Param("maintainer") %].
 
-  [% ELSIF error == "must_be_patch" %]
-    [% title = "Attachment Must Be Patch" %]
-    Attachment #[% attach_id FILTER html %] must be a patch.
-
   [% ELSIF error == "missing_subcategory" %]
     [% title = "Missing Subcategory" %]
     You did not specify a subcategory for this series.
@@ -1077,10 +1055,6 @@
     To reassign [% terms.abug %], you must provide an address for
     the new assignee.
 
-  [% ELSIF error == "report_access_denied" %]
-    [% title = "Access Denied" %]
-    You do not have the permissions necessary to view reports for this product.
-
   [% ELSIF error == "require_component" %]
     [% title = "Component Needed" %]
     To file this [% terms.bug %], you must first choose a component.
@@ -1199,11 +1173,6 @@
     version! You must reassign those [% terms.bugs %] to another version
     before you can delete this one.
 
-  [% ELSIF error == "version_name_too_long" %]
-    [% title = "Version Name Is Too Long" %]
-    The name of a version is limited to 20 characters. 
-    '[% name FILTER html %]' is too long ([% name.length %] characters).
-
   [% ELSIF error == "version_not_specified" %]
     [% title = "No Version Specified" %]
     No version specified when trying to edit versions.
@@ -1239,14 +1208,13 @@
     [% title = "Wrong Token" %]
     That token cannot be used to change your password.
 
+  [% ELSIF error == "extern_id_conflict" %]
+    [% title = "Extern ID Conflict" %]
+    Someone with a different external ID has that address.
+
   [% ELSIF error == "wrong_token_for_confirming_email_change" %]
     [% title = "Wrong Token" %]
     That token cannot be used to change your email address.
-
-  [% ELSIF error == "value_out_of_range" %]
-    [% title = "Value Out Of Range" %]
-    Value is out of range for field 
-    <em>[% field_descs.$field FILTER html %]</em>.
 
   [% ELSIF error == "zero_length_file" %]
     [% title = "File Is Empty" %]
