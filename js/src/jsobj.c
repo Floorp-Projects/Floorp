@@ -3808,6 +3808,18 @@ GetClassPrototype(JSContext *cx, JSObject *scope, const char *name,
                               &v)) {
             return JS_FALSE;
         }
+        if (!JSVAL_IS_PRIMITIVE(v)) {
+            /*
+             * Set the newborn root in case v is otherwise unreferenced.
+             * It's ok to overwrite newborn roots here, since the getter
+             * called just above could have.  Unlike the common GC rooting
+             * model, our callers do not have to protect protop thanks to
+             * this newborn root, since they all immediately create a new
+             * instance that delegates to this object, or just query the
+             * prototype for its class.
+             */
+            cx->newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(v);
+        }
     }
     *protop = JSVAL_IS_OBJECT(v) ? JSVAL_TO_OBJECT(v) : NULL;
     return JS_TRUE;
@@ -4023,7 +4035,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
 
     if (xdr->mode != JSXDR_ENCODE) {
         if (classDef) {
-            ok = js_GetClassPrototype(cx, className, &proto);
+            ok = GetClassPrototype(cx, NULL, className, &proto);
             if (!ok)
                 goto out;
             clasp = OBJ_GET_CLASS(cx, proto);

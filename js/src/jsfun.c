@@ -1040,13 +1040,20 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                                   &pval)) {
                 return JS_FALSE;
             }
-            if (JSVAL_IS_OBJECT(pval))
+            if (!JSVAL_IS_PRIMITIVE(pval)) {
+                /*
+                 * We are about to allocate a new object, so hack the newborn
+                 * root until then to protect pval in case it is figuratively
+                 * up in the air, with no strong refs protecting it.
+                 */
+                cx->newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(pval);
                 parentProto = JSVAL_TO_OBJECT(pval);
+            }
         }
 
         /*
          * Beware of the wacky case of a user function named Object -- trying
-         * to find a prototype for that will recur back here ad perniciem.
+         * to find a prototype for that will recur back here _ad perniciem_.
          */
         if (!parentProto && fun->atom == cx->runtime->atomState.ObjectAtom)
             return JS_TRUE;
