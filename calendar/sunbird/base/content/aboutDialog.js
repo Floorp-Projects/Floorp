@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var gSelectedPage = 0;
+
 function init(aEvent) 
 {
   if (aEvent.target != document)
@@ -44,7 +46,6 @@ function init(aEvent)
 
   var button = document.documentElement.getButton("extra2");
   button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
-  gSelectedPage = 0;
   button.addEventListener("command", switchPage, false);
 
   document.documentElement.getButton("accept").focus();
