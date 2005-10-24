@@ -69,7 +69,7 @@ var client = new Object();
 
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
-client.STEP_TIMEOUT = 100;
+client.STEP_TIMEOUT = 500;
 client.MAX_MESSAGES = 200;
 client.MAX_HISTORY = 50;
 /* longest nick to show in display before forcing the message to a block level
