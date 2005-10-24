@@ -43,6 +43,7 @@
 #define nsIFocusController_h__
 
 #include "nsISupports.h"
+#include "nsCOMPtr.h"
 
 class nsIDOMElement;
 class nsIDOMNode;
