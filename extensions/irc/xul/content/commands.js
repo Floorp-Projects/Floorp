@@ -1763,7 +1763,7 @@ function cmdMe(e)
         return;
     }
 
-    var msg = filterOutput(e.action, "ACTION", "ME!");
+    var msg = filterOutput(e.action, "ACTION", e.sourceObject);
     e.sourceObject.display(msg, "ACTION", "ME!", e.sourceObject);
     e.sourceObject.act(msg);
 }
@@ -1772,7 +1772,7 @@ function cmdDescribe(e)
 {
     var target = e.server.addTarget(e.target);
 
-    var msg = filterOutput(e.action, "ACTION", "ME!");
+    var msg = filterOutput(e.action, "ACTION", target);
     e.sourceObject.display(msg, "ACTION", "ME!", target);
     target.act(msg);
 }
@@ -1901,7 +1901,7 @@ function cmdQuery(e)
 
     if (e.message)
     {
-        e.message = filterOutput(e.message, "PRIVMSG", "ME!");
+        e.message = filterOutput(e.message, "PRIVMSG", user);
         user.display(e.message, "PRIVMSG", "ME!", user);
         user.say(e.message);
     }
@@ -1917,7 +1917,7 @@ function cmdSay(e)
         return;
     }
 
-    var msg = filterOutput(e.message, "PRIVMSG", "ME!");
+    var msg = filterOutput(e.message, "PRIVMSG", e.sourceObject);
     e.sourceObject.display(msg, "PRIVMSG", "ME!", e.sourceObject);
     e.sourceObject.say(msg);
 }
@@ -1926,7 +1926,7 @@ function cmdMsg(e)
 {
     var target = e.server.addTarget(e.nickname);
 
-    var msg = filterOutput(e.message, "PRIVMSG", "ME!");
+    var msg = filterOutput(e.message, "PRIVMSG", target);
     e.sourceObject.display(msg, "PRIVMSG", "ME!", target);
     target.say(msg);
 }
@@ -1959,7 +1959,7 @@ function cmdNotice(e)
 {
     var target = e.server.addTarget(e.nickname);
 
-    var msg = filterOutput(e.message, "NOTICE", "ME!");
+    var msg = filterOutput(e.message, "NOTICE", target);
     e.sourceObject.display(msg, "NOTICE", "ME!", target);
     target.notice(msg);
 }

@@ -2083,13 +2083,13 @@ function gotoIRCURL (url)
             var msg;
             if (url.msg.indexOf("\01ACTION") == 0)
             {
-                msg = filterOutput(url.msg, "ACTION", "ME!");
+                msg = filterOutput(url.msg, "ACTION", targetObject);
                 targetObject.display(msg, "ACTION", "ME!",
                                      client.currentObject);
             }
             else
             {
-                msg = filterOutput(url.msg, "PRIVMSG", "ME!");
+                msg = filterOutput(url.msg, "PRIVMSG", targetObject);
                 targetObject.display(msg, "PRIVMSG", "ME!",
                                      client.currentObject);
             }
@@ -3062,14 +3062,14 @@ function deleteTab (tb)
     return key;
 }
 
-function filterOutput (msg, msgtype)
+function filterOutput(msg, msgtype, dest)
 {
     if ("outputFilters" in client)
     {
         for (var f in client.outputFilters)
         {
             if (client.outputFilters[f].enabled)
-                msg = client.outputFilters[f].func(msg, msgtype);
+                msg = client.outputFilters[f].func(msg, msgtype, dest);
         }
     }
 
@@ -3166,7 +3166,7 @@ function cli_say(msg)
 {
     if ("say" in client.currentObject)
     {
-        msg = filterOutput (msg, "PRIVMSG");
+        msg = filterOutput(msg, "PRIVMSG", client.currentObject);
         display(msg, "PRIVMSG", "ME!", client.currentObject);
         client.currentObject.say(msg);
 
