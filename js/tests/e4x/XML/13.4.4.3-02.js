@@ -45,11 +45,11 @@ var expect = 'error';
 printBugNumber (bug);
 printStatus (summary);
 
-var node = <node/>;
-node.appendChild(node);
-
 try
 {
+    var node = <node/>;
+    node.appendChild(node);
+
     var result = String(node);
     actual = 'no error';
 }
