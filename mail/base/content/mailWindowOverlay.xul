@@ -43,13 +43,15 @@
 <?xul-overlay href="chrome://messenger/content/mailWindowExtrasOverlay.xul"?>
 
 <!DOCTYPE overlay [
-<!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
-%messengerDTD;
-<!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
-%contentAreaCommandsDTD;
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-%brandDTD;
-]>  
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+  <!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd">
+  %messengerDTD;
+  <!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd">
+  %contentAreaCommandsDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  %brandDTD;
+]>
 
 <overlay
   xmlns:nc="http://home.netscape.com/NC-rdf#"
@@ -1877,8 +1879,8 @@
         <menupopup/>
       </toolbarbutton>
       
-      <toolbarbutton class="toolbarbutton-1" id="button-previous" label="&previousButton.label;" oncommand="goDoCommand('button_previous')" tooltiptext="&previousButton.tooltip;" observes="button_previous"/>      
-      <toolbarbutton class="toolbarbutton-1" id="button-next"     label="&nextButton.label;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-previous" label="&previousButton.label;" chromedir="&locale.dir;" oncommand="goDoCommand('button_previous')" tooltiptext="&previousButton.tooltip;" observes="button_previous"/>      
+      <toolbarbutton class="toolbarbutton-1" id="button-next"     label="&nextButton.label;" chromedir="&locale.dir;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
 
       <toolbaritem id="button-junk">       
         <deck id="junk-deck" observes="button_junk">
