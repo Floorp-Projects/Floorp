@@ -93,6 +93,7 @@ public:
     Unsuppress();
   }
 
+  // Note: We assume that aReason outlives the instance of this class.
   void Suppress(nsIFocusController *aController, const char *aReason)
   {
     Unsuppress();
