@@ -1125,3 +1125,44 @@ function isinstance(inst, base)
     return (inst && inst.constructor && base &&
             (inst.constructor.name == base.name));
 }
+
+function scaleNumberBy1024(number)
+{
+    var scale = 0;
+    while ((number >= 1000) && (scale < 6))
+    {
+        scale++;
+        number /= 1024;
+    }
+
+    return [scale, number];
+}
+
+function getSISize(size)
+{
+    var data = scaleNumberBy1024(size);
+
+    if (data[1] < 10)
+        data[1] = data[1].toFixed(2);
+    else if (data[1] < 100)
+        data[1] = data[1].toFixed(1);
+    else
+        data[1] = data[1].toFixed(0);
+
+    return getMsg(MSG_SI_SIZE, [data[1], getMsg("msg.si.size." + data[0])]);
+}
+
+function getSISpeed(speed)
+{
+    var data = scaleNumberBy1024(speed);
+
+    if (data[1] < 10)
+        data[1] = data[1].toFixed(2);
+    else if (data[1] < 100)
+        data[1] = data[1].toFixed(1);
+    else
+        data[1] = data[1].toFixed(0);
+
+    return getMsg(MSG_SI_SPEED, [data[1], getMsg("msg.si.speed." + data[0])]);
+}
+

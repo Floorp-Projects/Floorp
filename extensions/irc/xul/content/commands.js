@@ -3569,8 +3569,8 @@ function cmdDCCChat(e)
 
     client.munger.entries[".inline-buttons"].enabled = true;
     var cmd = getMsg(MSG_DCC_COMMAND_CANCEL, "dcc-close " + c.id);
-    display(getMsg(MSG_DCCCHAT_SENT_REQUEST, [u.unicodeName, c.localIP,
-                                              c.port, cmd]), "DCC-CHAT");
+    display(getMsg(MSG_DCCCHAT_SENT_REQUEST, c._getParams().concat(cmd)),
+            "DCC-CHAT");
     client.munger.entries[".inline-buttons"].enabled = false;
 
     return true;
@@ -3688,8 +3688,9 @@ function cmdDCCSend(e)
 
     client.munger.entries[".inline-buttons"].enabled = true;
     var cmd = getMsg(MSG_DCC_COMMAND_CANCEL, "dcc-close " + c.id);
-    display(getMsg(MSG_DCCFILE_SENT_REQUEST, [u.unicodeName, c.localIP, c.port,
-                                              file.leafName, c.size, cmd]),
+    display(getMsg(MSG_DCCFILE_SENT_REQUEST, [c.user.unicodeName, c.localIP,
+                                              c.port, c.filename,
+                                              getSISize(c.size), cmd]),
             "DCC-FILE");
     client.munger.entries[".inline-buttons"].enabled = false;
 
@@ -3756,7 +3757,8 @@ function cmdDCCList(e) {
                 {
                     state = getMsg(MSG_DCC_STATE_CONNECTPRO,
                                    [Math.floor(100 * c.position / c.size),
-                                    c.position, c.size]);
+                                    getSISize(c.position), getSISize(c.size),
+                                    getSISpeed(c.speed)]);
                 }
                 counts.connected++;
                 break;
@@ -3809,12 +3811,10 @@ function cmdDCCAccept(e)
         c.accept(pickerRv.file);
 
         if (c.TYPE == "CIRCDCCChat")
-            display(getMsg(MSG_DCCCHAT_ACCEPTED, [c.unicodeName, c.remoteIP,
-                                                  c.port]),
+            display(getMsg(MSG_DCCCHAT_ACCEPTED, c._getParams()),
                     "DCC-CHAT");
         else
-            display(getMsg(MSG_DCCFILE_ACCEPTED, [c.filename, c.unicodeName,
-                                                  c.remoteIP, c.port]),
+            display(getMsg(MSG_DCCFILE_ACCEPTED, c._getParams()),
                     "DCC-FILE");
         return true;
     };

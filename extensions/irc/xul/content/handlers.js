@@ -2391,7 +2391,7 @@ function my_dccchat(e)
     var cmds = getMsg(MSG_DCC_COMMAND_ACCEPT, "dcc-accept " + c.id) + " " +
                getMsg(MSG_DCC_COMMAND_DECLINE, "dcc-decline " + c.id);
     this.parent.parent.display(getMsg(MSG_DCCCHAT_GOT_REQUEST,
-                                      [e.user.unicodeName, e.host, e.port, cmds]),
+                                      c._getParams().concat(cmds)),
                                "DCC-CHAT");
     client.munger.entries[".inline-buttons"].enabled = false;
 
@@ -2415,7 +2415,7 @@ function my_dccchat(e)
                getMsg(MSG_DCC_COMMAND_DECLINE, "dcc-decline " + f.id);
     this.parent.parent.display(getMsg(MSG_DCCFILE_GOT_REQUEST,
                                       [e.user.unicodeName, e.host, e.port,
-                                       e.file, e.size, cmds]),
+                                       e.file, getSISize(e.size), cmds]),
                                "DCC-FILE");
     client.munger.entries[".inline-buttons"].enabled = false;
 
@@ -2525,7 +2525,7 @@ function my_dccfilegetparams()
         dir = MSG_DCCLIST_TO;
 
     return [this.filename, dir, this.user.unicodeName,
-            this.localIP, this.port];
+            this.localIP/*FIXME*/, this.port/*FIXME?*/];
 }
 
 CIRCDCCFileTransfer.prototype.onConnect =
@@ -2534,9 +2534,11 @@ function my_dccfileconnect(e)
     this.displayHere(getMsg(MSG_DCCFILE_OPENED, this._getParams()), "DCC-FILE");
     this.busy = true;
     this.progress = 0;
+    this.speed = 0;
     updateProgress();
     this._lastUpdate = new Date();
     this._lastPosition = 0;
+    this._lastSpeedTime = new Date();
 }
 
 CIRCDCCFileTransfer.prototype.onProgress =
@@ -2556,8 +2558,15 @@ function my_dccfileprogress(e)
         if (tab)
             tab.setAttribute("label", this.viewName + " (" + pcent + "%)");
 
-        this.updateHeader();
+        var change = (this.position - this._lastPosition);
+        var speed = change / ((now - this._lastSpeedTime) / 1000); // B/s
+        this._lastSpeedTime = now;
 
+        /* Use an average of the last speed, and this speed, so we get a little
+         * smoothing to it.
+         */
+        this.speed = (this.speed + speed) / 2;
+        this.updateHeader();
         this._lastPosition = this.position;
     }
 
@@ -2565,7 +2574,8 @@ function my_dccfileprogress(e)
     if (now - this._lastUpdate > 10000)
     {
         this.displayHere(getMsg(MSG_DCCFILE_PROGRESS,
-                                [pcent, this.position, this.size]),
+                                [pcent, getSISize(this.position),
+                                 getSISize(this.size), getSISpeed(this.speed)]),
                          "DCC-FILE");
 
         this._lastUpdate = now;

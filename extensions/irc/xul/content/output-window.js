@@ -507,7 +507,9 @@ function updateDCCFile()
     
     setText("file", view.filename);
     setText("progress", getMsg(MSG_DCCFILE_PROGRESS,
-                               [pcent, view.position, view.size]));
+                               [pcent, mainWindow.getSISize(view.position),
+                                mainWindow.getSISize(view.size),
+                                mainWindow.getSISpeed(view.speed)]));
 
     setAttribute("progressbar", "width", pcent + "%");
 }
