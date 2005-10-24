@@ -48,10 +48,11 @@ expectExitCode(3);
 
 // Not a performance problem.
 var xmlOl = new XML('<ol><li>Item 1<\/li><li>Item 2<\/li><\/ol>');
+var list =  xmlOl.li;
 
 for(i = 0; i < 30000; i++)
 {
-    xmlOl.li[i+2] = "Item " + (i+3); // This code is slow.
+    list[i+2] = "Item " + (i+3); // This code is slow.
 }
 
 var s = xmlOl.toXMLString();
