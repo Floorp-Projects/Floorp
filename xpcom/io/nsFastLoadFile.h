@@ -296,6 +296,9 @@ class nsFastLoadFileReader
     NS_IMETHODIMP ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
                                PRUint32 aCount, PRUint32 *aResult);
 
+    // Override SetInputStream so we can update mSeekableInput
+    NS_IMETHOD SetInputStream(nsIInputStream* aInputStream);
+
     nsresult ReadHeader(nsFastLoadHeader *aHeader);
 
     /**
@@ -384,6 +387,9 @@ class nsFastLoadFileReader
     NS_IMETHOD Close();
 
   protected:
+    // Kept in sync with mInputStream to avoid repeated QI
+    nsCOMPtr<nsISeekableStream> mSeekableInput;
+
     nsFastLoadHeader mHeader;
     nsFastLoadFooter mFooter;
 
@@ -446,6 +452,9 @@ class nsFastLoadFileWriter
                                    PRBool aIsStrongRef);
     NS_IMETHOD WriteID(const nsID& aID);
 
+    // Override SetOutputStream so we can update mSeekableOutput
+    NS_IMETHOD SetOutputStream(nsIOutputStream* aOutputStream);
+
     // nsIFastLoadFileControl methods
     NS_DECL_NSIFASTLOADFILECONTROL
 
@@ -498,6 +507,9 @@ class nsFastLoadFileWriter
                            void *aData);
 
   protected:
+    // Kept in sync with mOutputStream to avoid repeated QI
+    nsCOMPtr<nsISeekableStream> mSeekableOutput;
+
     nsFastLoadHeader mHeader;
 
     PLDHashTable mIDMap;
@@ -556,6 +568,9 @@ class nsFastLoadFileUpdater
 
   protected:
     nsCOMPtr<nsIInputStream> mInputStream;
+
+    // Kept in sync with mInputStream to avoid repeated QI
+    nsCOMPtr<nsISeekableStream> mSeekableInput;
 };
 
 NS_COM nsresult
