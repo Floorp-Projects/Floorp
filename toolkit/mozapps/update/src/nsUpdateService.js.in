@@ -2805,11 +2805,11 @@ function showPromptIfNoIncompatibilities(update) {
   };
   
   if (!isCompatible(update)) {
-    var listener = new Listener(em.getIncompatibleItemList("", 
-      update.extensionVersion, nsIUpdateItem.TYPE_ADDON, false, { }));
     var em = 
         Components.classes["@mozilla.org/extensions/manager;1"].
         getService(Components.interfaces.nsIExtensionManager);
+    var listener = new Listener(em.getIncompatibleItemList("", 
+      update.extensionVersion, nsIUpdateItem.TYPE_ADDON, false, { }));
     // See documentation on |mode| above. 
     var mode = getPref("getIntPref", PREF_APP_UPDATE_INCOMPATIBLE_MODE, 
                        INCOMPATIBLE_MODE_NEWVERSIONS);
