@@ -573,8 +573,7 @@ sub update_create_package {
       # Push the build schema 2 data.
       {
           TinderUtils::print_log "\nPushing third-gen update info...\n";
-          #my $path = "/opt/aus2/build/0";
-          my $path = "/tmp/l10n-test3/opt/aus2/build/0";
+          my $path = "/opt/aus2/build/0";
           $path = "$path/$update_product/$update_version/$update_platform/$buildid/$locale";
 
           TinderUtils::run_shell_command "ssh -i $ENV{HOME}/.ssh/aus cltbld\@aus-staging.mozilla.org mkdir -p $path";
