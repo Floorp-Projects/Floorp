@@ -63,7 +63,6 @@ function autoDispatch(id){
     }
     var xml = this;
     xml.request = request;
-    alert(xml.toString());
     return(xml.toString());
 }
 
