@@ -2770,7 +2770,7 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
     case eHTMLTag_form:
       if (!(mFlags & NS_DTD_FLAG_HAS_OPEN_FORM)) { // discard nested forms - bug 72639
         mFlags |= NS_DTD_FLAG_HAS_OPEN_FORM;
-        done = PR_FALSE;
+        result = mSink ? mSink->OpenContainer(*aNode) : NS_OK;
       }
       break;
 
