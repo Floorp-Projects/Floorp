@@ -75,26 +75,41 @@ function ics_importFromStream(aStream, aCount) {
 
     icssrv = Components.classes["@mozilla.org/calendar/ics-service;1"]
                        .getService(Components.interfaces.calIICSService);
-    var calComp = icssrv.parseICS(str);
-    var subComp = calComp.getFirstSubcomponent("ANY");
-    while (subComp) {
-        switch (subComp.componentType) {
-        case "VEVENT":
-            var event = Components.classes["@mozilla.org/calendar/event;1"]
-                                  .createInstance(Components.interfaces.calIEvent);
-            event.icalComponent = subComp;
-            items.push(event);
-            break;
-        case "VTODO":
-            var todo = Components.classes["@mozilla.org/calendar/todo;1"]
-                                 .createInstance(Components.interfaces.calITodo);
-            todo.icalComponent = subComp;
-            items.push(todo);
-            break;
-        default:
-            // Nothing
+
+    var rootComp = icssrv.parseICS(str);
+    var calComp;
+    // libical returns the vcalendar component if there is just
+    // one vcalendar. If there are multiple vcalendars, it returns
+    // an xroot component, with those vcalendar childs. We need to
+    // handle both.
+    if (rootComp.componentType == 'VCALENDAR') {
+        calComp = rootComp;
+    } else {
+        calComp = rootComp.getFirstSubcomponent('VCALENDAR');
+    }
+
+    while (calComp) {
+        var subComp = calComp.getFirstSubcomponent("ANY");
+        while (subComp) {
+            switch (subComp.componentType) {
+            case "VEVENT":
+                var event = Components.classes["@mozilla.org/calendar/event;1"]
+                                      .createInstance(Components.interfaces.calIEvent);
+                event.icalComponent = subComp;
+                items.push(event);
+                break;
+            case "VTODO":
+                var todo = Components.classes["@mozilla.org/calendar/todo;1"]
+                                     .createInstance(Components.interfaces.calITodo);
+                todo.icalComponent = subComp;
+                items.push(todo);
+                break;
+            default:
+                // Nothing
+            }
+            subComp = calComp.getNextSubcomponent("ANY");
         }
-        subComp = calComp.getNextSubcomponent("ANY");
+        calComp = rootComp.getNextSubcomponent('VCALENDAR');
     }
 
     aCount.value = items.length;
