@@ -29,10 +29,10 @@ use Bugzilla::Constants; # LOGIN_*
 use Bugzilla::User;      # UserInGroup
 require "globals.pl";
 
-GetVersionTable();
+my $template = Bugzilla->template;
+my $vars = {};
 
-# Use global template variables.
-use vars qw($template $vars);
+GetVersionTable();
 
 #
 # Date handling

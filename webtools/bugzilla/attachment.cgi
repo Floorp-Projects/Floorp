@@ -35,8 +35,6 @@ use strict;
 
 use lib qw(.);
 
-use vars qw($template $vars);
-
 # Include the Bugzilla CGI and general utility library.
 require "globals.pl";
 use Bugzilla::Config qw(:locations);
@@ -53,6 +51,8 @@ use Bugzilla::Field;
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 
 ################################################################################
 # Main Body Execution

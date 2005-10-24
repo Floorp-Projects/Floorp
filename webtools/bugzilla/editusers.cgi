@@ -21,8 +21,6 @@ use lib ".";
 
 require "globals.pl";
 
-use vars qw( $vars );
-
 use Bugzilla;
 use Bugzilla::User;
 use Bugzilla::Bug;
@@ -36,6 +34,7 @@ Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi       = Bugzilla->cgi;
 my $template  = Bugzilla->template;
+my $vars      = {};
 my $dbh       = Bugzilla->dbh;
 my $user      = Bugzilla->user;
 my $userid    = $user->id;

@@ -34,13 +34,13 @@ use Bugzilla::Flag;
 use Bugzilla::FlagType;
 use Bugzilla::User;
 
-use vars qw($template $vars);
-
 # Make sure the user is logged in.
 my $user = Bugzilla->login();
 my $userid = $user->id;
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 
 
 ################################################################################

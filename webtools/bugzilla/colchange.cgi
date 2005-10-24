@@ -27,8 +27,6 @@ use lib qw(.);
 
 use vars qw(
   @legal_keywords
-  $template
-  $vars
 );
 
 use Bugzilla;
@@ -41,6 +39,8 @@ Bugzilla->login();
 GetVersionTable();
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 
 # The master list not only says what fields are possible, but what order
 # they get displayed in.

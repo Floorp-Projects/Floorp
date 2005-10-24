@@ -62,6 +62,7 @@ Bugzilla->switch_to_shadow_db();
 
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
+my $vars = {};
 
 # We only want those products that the user has permissions for.
 my @myproducts;
@@ -90,6 +91,7 @@ if (! defined $cgi->param('product')) {
     print $cgi->header(-Content_Disposition=>'inline; filename=bugzilla_report.html');
 
     $template->put_header("Bug Charts");
+    $vars->{'header_done'} = 1;
 
     show_chart($product);
 
@@ -116,6 +118,7 @@ sub choose_product {
  
     print $cgi->header();
     $template->put_header("Bug Charts");
+    $vars->{'header_done'} = 1;
 
     print <<FIN;
 <center>
@@ -185,7 +188,7 @@ sub show_chart {
     my ($product) = @_;
 
     if (! defined $cgi->param('datasets')) {
-        ThrowUserError("missing_datasets");
+        ThrowUserError("missing_datasets", $vars);
     }
     my $datasets = join('', $cgi->param('datasets'));
 
@@ -258,7 +261,8 @@ sub generate_chart {
             $product = '';
         }
 
-        ThrowCodeError("chart_data_not_generated", {'product' => $product});
+        $vars->{'product'} = $product;
+        ThrowCodeError("chart_data_not_generated", $vars);
     }
 
     my @fields;
@@ -272,15 +276,19 @@ sub generate_chart {
         if (/^#/) {
             if (/^# fields?: (.*)\s*$/) {
                 @fields = split /\||\r/, $1;
-                ThrowCodeError("chart_datafile_corrupt", {file => $data_file})
-                  unless $fields[0] =~ /date/i;
+                unless ($fields[0] =~ /date/i) {
+                    $vars->{'file'} = $data_file;
+                    ThrowCodeError("chart_datafile_corrupt", $vars);
+                }
                 push @labels, grep($datasets{$_}, @fields);
             }
             next;
         }
 
-        ThrowCodeError("chart_datafile_corrupt", {file => $data_file})
-          unless @fields;
+        unless (@fields) {
+            $vars->{'file'} = $data_file;
+            ThrowCodeError("chart_datafile_corrupt", $vars);
+        }
         
         my @line = split /\|/;
         my $date = $line[0];
@@ -306,7 +314,7 @@ sub generate_chart {
     close FILE;
 
     if (! @{$data{DATE}}) {
-        ThrowUserError("insufficient_data_points");
+        ThrowUserError("insufficient_data_points", $vars);
     }
     
     my $img = Chart::Lines->new (800, 600);

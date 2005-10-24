@@ -38,10 +38,10 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Product;
 use Bugzilla::Version;
 
-use vars qw($template $vars);
-
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $template = Bugzilla->template;
+my $vars = {};
 
 #
 # Preliminary checks:

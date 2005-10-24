@@ -60,8 +60,8 @@ sub IssueEmailChangeToken {
 
     # Mail the user the token along with instructions for using it.
 
-    my $template = $::template;
-    my $vars = $::vars;
+    my $template = Bugzilla->template;
+    my $vars = {};
 
     $vars->{'oldemailaddress'} = $old_email . Param('emailsuffix');
     $vars->{'newemailaddress'} = $new_email . Param('emailsuffix');
@@ -115,8 +115,8 @@ sub IssuePasswordToken {
 
     # Mail the user the token along with instructions for using it.
     
-    my $template = $::template;
-    my $vars = $::vars;
+    my $template = Bugzilla->template;
+    my $vars = {};
 
     $vars->{'token'} = $token;
     $vars->{'emailaddress'} = $loginname . Param('emailsuffix');
@@ -180,9 +180,10 @@ sub Cancel {
     # This should only happen when the user accidentally makes a token request
     # or when a malicious hacker makes a token request on behalf of a user.
     
-    my ($token, $cancelaction) = @_;
+    my ($token, $cancelaction, $vars) = @_;
 
     my $dbh = Bugzilla->dbh;
+    $vars ||= {};
 
     # Quote the token for inclusion in SQL statements.
     my $quotedtoken = &::SqlQuote($token);
@@ -198,8 +199,7 @@ sub Cancel {
     # Get the email address of the Bugzilla maintainer.
     my $maintainer = Param('maintainer');
 
-    my $template = $::template;
-    my $vars = $::vars;
+    my $template = Bugzilla->template;
 
     $vars->{'emailaddress'} = $loginname . Param('emailsuffix');
     $vars->{'maintainer'} = $maintainer;

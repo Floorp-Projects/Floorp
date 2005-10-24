@@ -892,8 +892,6 @@ sub match_field {
 
     # prepare default form values
 
-    my $vars = $::vars;
-
     # What does a "--do_not_change--" field look like (if any)?
     my $dontchange = $cgi->param('dontchange');
 
@@ -1056,6 +1054,9 @@ sub match_field {
     # Skip confirmation if we were told to, or if we don't need to confirm.
     return $retval if ($behavior == MATCH_SKIP_CONFIRM || !$need_confirm);
 
+    my $template = Bugzilla->template;
+    my $vars = {};
+
     $vars->{'script'}        = $ENV{'SCRIPT_NAME'}; # for self-referencing URLs
     $vars->{'fields'}        = $fields; # fields being matched
     $vars->{'matches'}       = $matches; # matches that were made
@@ -1063,8 +1064,8 @@ sub match_field {
 
     print Bugzilla->cgi->header();
 
-    $::template->process("global/confirm-user-match.html.tmpl", $vars)
-      || ThrowTemplateError($::template->error());
+    $template->process("global/confirm-user-match.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 
     exit;
 

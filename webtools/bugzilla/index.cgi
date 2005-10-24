@@ -32,8 +32,6 @@ use strict;
 use lib ".";
 require "globals.pl";
 
-use vars qw($vars);
-
 # Check whether or not the user is logged in and, if so, set the $::userid 
 use Bugzilla::Constants;
 Bugzilla->login(LOGIN_OPTIONAL);
@@ -55,5 +53,5 @@ my $template = Bugzilla->template;
 print $cgi->header();
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("index.html.tmpl", $vars)
+$template->process("index.html.tmpl")
   || ThrowTemplateError($template->error());

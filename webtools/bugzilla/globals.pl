@@ -60,9 +60,7 @@ sub globals_pl_sillyness {
     $zz = @main::milestoneurl;
     $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
-    $zz = $main::template;
     $zz = $main::userid;
-    $zz = $main::vars;
 }
 
 #
@@ -807,9 +805,5 @@ sub OpenStates {
 ############# Live code below here (that is, not subroutine defs) #############
 
 use Bugzilla;
-
-$::template = Bugzilla->template();
-
-$::vars = {};
 
 1;

@@ -32,10 +32,9 @@ use Bugzilla::Bug;
 
 require "globals.pl";
 
-# Use global template variables
-use vars qw($template $vars);
-
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 
 # If the action is show_bug, you need a bug_id.
 # If the action is show_user, you can supply a userid to show the votes for

@@ -50,12 +50,12 @@ use vars qw(
     @log_columns
     %versions
     %components
-    $template
-    $vars
 );
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $template = Bugzilla->template;
+my $vars = {};
 my $buffer = $cgi->query_string();
 
 if ($cgi->param("GoAheadAndLogIn")) {

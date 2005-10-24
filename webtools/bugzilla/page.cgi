@@ -36,11 +36,10 @@ use Bugzilla;
 
 require "globals.pl";
 
-use vars qw($template $vars);
-
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
 
 my $id = $cgi->param('id');
 if ($id) {
@@ -58,7 +57,7 @@ if ($id) {
 
     print $cgi->header($format->{'ctype'});
 
-    $template->process("$format->{'template'}", $vars)
+    $template->process("$format->{'template'}")
       || ThrowTemplateError($template->error());
 }
 else {

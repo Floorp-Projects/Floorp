@@ -44,8 +44,6 @@ use Bugzilla::User;
 require "globals.pl";
 
 use vars qw(
-  $template
-  $vars
   @enterable_products
   @legal_opsys
   @legal_platform
@@ -66,6 +64,8 @@ my $cloned_bug;
 my $cloned_bug_id;
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 
 my $product = $cgi->param('product');
 

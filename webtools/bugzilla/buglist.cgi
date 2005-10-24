@@ -34,8 +34,6 @@ use strict;
 
 use lib qw(.);
 
-use vars qw($template $vars);
-
 use Bugzilla;
 use Bugzilla::Search;
 use Bugzilla::Search::Quicksearch;
@@ -59,6 +57,8 @@ use vars qw($db_name
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $template = Bugzilla->template;
+my $vars = {};
 my $buffer = $cgi->query_string();
 
 if (length($buffer) == 0) {

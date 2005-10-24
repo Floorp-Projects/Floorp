@@ -36,12 +36,14 @@ require "globals.pl";
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 
 # Connect to the shadow database if this installation is using one to improve
 # performance.
 Bugzilla->switch_to_shadow_db();
 
-use vars qw($template $vars $userid);
+use vars qw($userid);
 
 my %seen;
 my %edgesdone;

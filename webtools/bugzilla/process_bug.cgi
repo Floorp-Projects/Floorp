@@ -80,10 +80,10 @@ my $grouplist = $user->groups_as_string;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $template = Bugzilla->template;
+my $vars = {};
 
 my $requiremilestone = 0;
-
-use vars qw($template $vars);
 
 ######################################################################
 # Begin Data/Security Validation

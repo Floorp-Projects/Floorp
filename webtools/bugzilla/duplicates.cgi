@@ -50,8 +50,8 @@ if (defined $cgi->param('ctype') && $cgi->param('ctype') eq "xul") {
     exit;
 }
 
-# Use global templatisation variables.
-use vars qw($template $vars);
+my $template = Bugzilla->template;
+my $vars = {};
 
 GetVersionTable();
 

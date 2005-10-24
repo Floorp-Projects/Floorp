@@ -30,11 +30,12 @@ use Bugzilla::Config qw(:DEFAULT :admin :params $datadir);
 use Bugzilla::Config::Common;
 
 require "globals.pl";
-use vars qw($vars @parampanels);
+use vars qw(@parampanels);
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
+my $vars = {};
 
 print $cgi->header();
 

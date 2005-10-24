@@ -48,12 +48,12 @@ sub sillyness {
     $zz = %::target_milestone;
 }
 
-# Use global template variables.
-use vars qw($vars $template);
-
 my $user = Bugzilla->login(LOGIN_REQUIRED);
+
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $template = Bugzilla->template;
+my $vars = {};
 
 # do a match on the fields if applicable
 

@@ -74,10 +74,6 @@ use Bugzilla::BugMail;
 use Bugzilla::Constants;
 use Bugzilla::Field;
 
-# Note that this line doesn't actually import these variables for some reason,
-# so I have to use them as $::template and $::vars in the package code.
-use vars qw($template $vars); 
-
 ######################################################################
 # Global Variables
 ######################################################################
@@ -947,6 +943,9 @@ Sends an email notification about a flag being created or fulfilled.
 sub notify {
     my ($flag, $template_file) = @_;
 
+    my $template = Bugzilla->template;
+    my $vars = {};
+    
     my $attachment_is_private = $flag->{'target'}->{'attachment'} ?
       $flag->{'target'}->{'attachment'}->{'isprivate'} : undef;
 
@@ -971,14 +970,14 @@ sub notify {
 
     $flag->{'requestee'}->{'email'} .= Param('emailsuffix');
     $flag->{'setter'}->{'email'} .= Param('emailsuffix');
-    $::vars->{'flag'} = $flag;
+    $vars->{'flag'} = $flag;
     
     my $message;
     my $rv = 
-      $::template->process($template_file, $::vars, \$message);
+      $template->process($template_file, $vars, \$message);
     if (!$rv) {
         Bugzilla->cgi->header();
-        ThrowTemplateError($::template->error());
+        ThrowTemplateError($template->error());
     }
 
     Bugzilla::BugMail::MessageToMTA($message);

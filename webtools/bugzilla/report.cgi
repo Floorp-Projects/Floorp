@@ -26,12 +26,14 @@ use lib ".";
 
 require "globals.pl";
 
-use vars qw($template $vars @legal_opsys @legal_platform @legal_severity);
+use vars qw(@legal_opsys @legal_platform @legal_severity);
 
 use Bugzilla;
 use Bugzilla::Constants;
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 my $buffer = $cgi->query_string();
 
 # Go straight back to query.cgi if we are adding a boolean chart.

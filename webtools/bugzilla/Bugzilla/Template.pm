@@ -44,7 +44,6 @@ use MIME::Base64;
 use Date::Format ();
 
 use base qw(Template);
-use vars qw($vars);
 
 # Convert the constants in the Bugzilla::Constants module into a hash we can
 # pass to the template object for reflection into its "constants" namespace
@@ -165,6 +164,7 @@ sub getTemplateIncludePath {
 
 sub put_header {
     my $self = shift;
+    my $vars = {};
     ($vars->{'title'}, $vars->{'h1'}, $vars->{'h2'}) = (@_);
      
     $self->process("global/header.html.tmpl", $vars)
@@ -174,7 +174,7 @@ sub put_header {
 
 sub put_footer {
     my $self = shift;
-    $self->process("global/footer.html.tmpl", $vars)
+    $self->process("global/footer.html.tmpl")
       || ThrowTemplateError($self->error());
 }
 

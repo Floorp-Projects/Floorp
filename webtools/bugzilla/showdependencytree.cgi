@@ -30,12 +30,11 @@ require "globals.pl";
 use Bugzilla::User;
 use Bugzilla::Bug;
 
-# Use global template variables.
-use vars qw($template $vars);
-
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 
 # Connect to the shadow database if this installation is using one to improve
 # performance.

@@ -36,8 +36,8 @@ require "globals.pl";
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
-
-use vars qw($template $vars);
+my $template = Bugzilla->template;
+my $vars = {};
 
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 

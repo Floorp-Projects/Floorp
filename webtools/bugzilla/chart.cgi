@@ -52,10 +52,9 @@ use Bugzilla::Chart;
 use Bugzilla::Series;
 use Bugzilla::User;
 
-use vars qw($vars);
-
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
+my $vars = {};
 
 # Go back to query.cgi if we are adding a boolean chart parameter.
 if (grep(/^cmd-/, $cgi->param())) {

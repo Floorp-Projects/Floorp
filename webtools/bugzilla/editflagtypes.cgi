@@ -39,7 +39,8 @@ use Bugzilla::FlagType;
 use Bugzilla::Group;
 use Bugzilla::Util;
 
-use vars qw( $template $vars );
+my $template = Bugzilla->template;
+my $vars = {};
 
 # Make sure the user is logged in and is an administrator.
 my $user = Bugzilla->login(LOGIN_REQUIRED);

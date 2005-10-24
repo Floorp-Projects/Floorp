@@ -30,8 +30,6 @@ use strict;
 use lib ".";
 require "globals.pl";
 
-use vars qw( $vars );
-
 use Bugzilla::Constants;
 use Bugzilla::User;
 use Bugzilla::Group;
@@ -44,6 +42,7 @@ my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi      = Bugzilla->cgi;
 my $template = Bugzilla->template;
+my $vars     = {};
 my $dbh      = Bugzilla->dbh;
 
 my $userid   = $user->id;

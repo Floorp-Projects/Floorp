@@ -31,9 +31,8 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
-
-use vars qw($template $vars);
-
+my $template = Bugzilla->template;
+my $vars = {};
 
 sub Validate {
     my ($name, $description) = @_;

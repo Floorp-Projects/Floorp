@@ -29,13 +29,12 @@ use Bugzilla::User;
 
 require "globals.pl";
 
-# Use the global template variables. 
-use vars qw($vars $template);
-
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $template = Bugzilla->template;
+my $vars = {};
 
 SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
                 COUNT(keywords.bug_id)

@@ -28,7 +28,7 @@ use Bugzilla;
 use Bugzilla::Constants;
 require "globals.pl";
 
-use vars qw($vars @legal_product);
+use vars qw(@legal_product);
 
 my $user = Bugzilla->login();
 
@@ -36,6 +36,7 @@ GetVersionTable();
 
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
+my $vars = {};
 my $product = trim($cgi->param('product') || '');
 my $product_id = get_product_id($product);
 

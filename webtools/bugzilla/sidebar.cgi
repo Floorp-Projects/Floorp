@@ -20,12 +20,10 @@ use strict;
 use lib ".";
 require "globals.pl";
 
-# Shut up "Used Only Once" errors
-use vars qw($template $vars);
-
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
 
 ###############################################################################
 # Main Body Execution
@@ -43,7 +41,7 @@ my $useragent = $ENV{HTTP_USER_AGENT};
 if ($useragent =~ m:Mozilla/([1-9][0-9]*):i && $1 >= 5 && $useragent !~ m/compatible/i) {
     print $cgi->header("application/vnd.mozilla.xul+xml");
     # Generate and return the XUL from the appropriate template.
-    $template->process("sidebar.xul.tmpl", $vars)
+    $template->process("sidebar.xul.tmpl")
       || ThrowTemplateError($template->error());
 } else {
     ThrowUserError("sidebar_supports_mozilla_only");

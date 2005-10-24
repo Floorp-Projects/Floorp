@@ -25,7 +25,7 @@
 
 use strict;
 
-use vars qw($userid $template $vars);
+use vars qw($userid);
 
 use lib qw(.);
 
@@ -36,6 +36,8 @@ use Bugzilla::Constants;
 Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 
 my $action = $cgi->param('action') || "";
 

@@ -29,14 +29,14 @@ use strict;
 
 use lib qw(.);
 
-use vars qw($template $vars);
-
 use Bugzilla;
 use Bugzilla::Constants;
 use Bugzilla::Util;
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
+my $template = Bugzilla->template;
+my $vars = {};
 
 # Include the Bugzilla CGI and general utility library.
 require "globals.pl";
@@ -250,7 +250,7 @@ sub changeEmail {
     # confirmed initially so cancel token if it is not still available
     if (! is_available_username($new_email,$old_email)) {
         $vars->{'email'} = $new_email; # Needed for Bugzilla::Token::Cancel's mail
-        Bugzilla::Token::Cancel($::token,"account_exists");
+        Bugzilla::Token::Cancel($::token, "account_exists", $vars);
         ThrowUserError("account_exists", { email => $new_email } );
     } 
 
@@ -324,7 +324,7 @@ sub cancelChangeEmail {
 
     $vars->{'old_email'} = $old_email;
     $vars->{'new_email'} = $new_email;
-    Bugzilla::Token::Cancel($::token, $vars->{'message'});
+    Bugzilla::Token::Cancel($::token, $vars->{'message'}, $vars);
 
     $dbh->bz_lock_tables('tokens WRITE');
     $dbh->do(q{DELETE FROM tokens WHERE userid = ?

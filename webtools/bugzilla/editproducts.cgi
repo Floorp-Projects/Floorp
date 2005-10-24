@@ -33,7 +33,6 @@
 
 use strict;
 use lib ".";
-use vars qw ($template $vars);
 use Bugzilla::Constants;
 require "globals.pl";
 use Bugzilla::Bug;
@@ -55,6 +54,9 @@ my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $whoid = $user->id;
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
+
 print $cgi->header();
 
 $user->in_group('editcomponents')

@@ -25,13 +25,14 @@
 use strict;
 
 use lib qw(.);
-use vars qw ($template $vars);
 
 require "globals.pl";
 
 use Bugzilla::Bug;
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 
 ###############################################################################
 # Begin Data/Security Validation

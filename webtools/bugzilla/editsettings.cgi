@@ -25,8 +25,8 @@ use Bugzilla::User::Setting;
 
 require "globals.pl";
 
-# Use global template variables.
-use vars qw($template $vars);
+my $template = Bugzilla->template;
+my $vars = {};
 
 ###############################
 ###  Subroutine Definitions ###

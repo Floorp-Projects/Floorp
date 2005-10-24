@@ -30,11 +30,13 @@ use Bugzilla::User;
 
 require "globals.pl";
 
-use vars qw($template $vars $userid);
+use vars qw($userid);
 
 use Bugzilla::Bug;
 
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
 
 if ($cgi->param('GoAheadAndLogIn')) {
     Bugzilla->login(LOGIN_REQUIRED);

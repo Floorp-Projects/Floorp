@@ -51,7 +51,6 @@ use vars
 
 # Use the global template variables defined in globals.pl 
 # to generate the output.
-use vars qw($vars);
 
 my $user = Bugzilla->login(LOGIN_OPTIONAL);
 
@@ -65,6 +64,7 @@ if (Param('requirelogin') && !$user->id) {
 GetVersionTable();
 
 # Pass a bunch of Bugzilla configuration to the templates.
+my $vars = {};
 $vars->{'priority'}  = \@::legal_priority;
 $vars->{'severity'}  = \@::legal_severity;
 $vars->{'platform'}   = \@::legal_platform;

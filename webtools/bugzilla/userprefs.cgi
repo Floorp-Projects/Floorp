@@ -35,7 +35,10 @@ use Bugzilla::User;
 require "globals.pl";
 
 # Use global template variables.
-use vars qw($template $vars $userid);
+use vars qw($userid);
+
+my $template = Bugzilla->template;
+my $vars = {};
 
 ###############################################################################
 # Each panel has two functions - panel Foo has a DoFoo, to get the data 

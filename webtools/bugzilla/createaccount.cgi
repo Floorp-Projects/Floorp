@@ -36,9 +36,6 @@ use Bugzilla::User;
 use Bugzilla::BugMail;
 use Bugzilla::Util;
 
-# Shut up misguided -w warnings about "used only once":
-use vars qw($template $vars);
-
 # Just in case someone already has an account, let them get the correct footer
 # on an error message. The user is logged out just after the account is
 # actually created.
@@ -46,6 +43,9 @@ Bugzilla->login(LOGIN_OPTIONAL);
 
 my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
+my $template = Bugzilla->template;
+my $vars = {};
+
 print $cgi->header();
 
 # If we're using LDAP for login, then we can't create a new account here.
