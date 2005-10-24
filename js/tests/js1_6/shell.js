@@ -260,6 +260,8 @@ function BigO(data)
         this.Xavg += X[i];
         this.Yavg += Y[i];
       }
+      this.Xavg /= length;
+      this.Yavg /= length;
 
       var sumXdiffYdiff = 0;
       var sumXdiffsquared = 0;
