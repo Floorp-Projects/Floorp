@@ -527,9 +527,16 @@ str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
+
+    /*
+     * Call js_ValueToString because getters and setters can be invoked on
+     * objects of different class, unlike enumerate, resolve, and the other
+     * class hooks.
+     */
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
     if (!str)
         return JS_FALSE;
+
     slot = JSVAL_TO_INT(id);
     if (slot == STRING_LENGTH)
         *vp = INT_TO_JSVAL((jsint) JSSTRING_LENGTH(str));
@@ -548,9 +555,10 @@ str_enumerate(JSContext *cx, JSObject *obj)
     if (JS_VERSION_IS_1_2(cx))
         return JS_TRUE;
 
-    str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
+    str = (JSString *) JS_GetPrivate(cx, obj);
     if (!str)
-        return JS_FALSE;
+        return JS_TRUE;
+
     length = JSSTRING_LENGTH(str);
     for (i = 0; i < length; i++) {
         str1 = js_NewDependentString(cx, str, i, 1, 0);
@@ -575,9 +583,10 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     if (!JSVAL_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
         return JS_TRUE;
 
-    str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
+    str = (JSString *) JS_GetPrivate(cx, obj);
     if (!str)
-        return JS_FALSE;
+        return JS_TRUE;
+
     slot = JSVAL_TO_INT(id);
     if ((size_t)slot < JSSTRING_LENGTH(str)) {
         str1 = js_NewDependentString(cx, str, (size_t)slot, 1, 0);
@@ -615,6 +624,8 @@ str_quote(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
     if (!str)
         return JS_FALSE;
+    argv[-1] = STRING_TO_JSVAL(str);
+
     str = js_QuoteString(cx, str, '"');
     if (!str)
         return JS_FALSE;
@@ -755,6 +766,8 @@ str_toLowerCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
     if (!str)
         return JS_FALSE;
+    argv[-1] = STRING_TO_JSVAL(str);
+
     n = JSSTRING_LENGTH(str);
     news = (jschar *) JS_malloc(cx, (n + 1) * sizeof(jschar));
     if (!news)
@@ -786,6 +799,7 @@ str_toLocaleLowerCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
         if (!str)
             return JS_FALSE;
+        argv[-1] = STRING_TO_JSVAL(str);
         return cx->localeCallbacks->localeToLowerCase(cx, str, rval);
     }
     return str_toLowerCase(cx, obj, 0, argv, rval);
@@ -802,6 +816,8 @@ str_toUpperCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
     if (!str)
         return JS_FALSE;
+    argv[-1] = STRING_TO_JSVAL(str);
+
     n = JSSTRING_LENGTH(str);
     news = (jschar *) JS_malloc(cx, (n + 1) * sizeof(jschar));
     if (!news)
@@ -833,6 +849,7 @@ str_toLocaleUpperCase(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
         if (!str)
             return JS_FALSE;
+        argv[-1] = STRING_TO_JSVAL(str);
         return cx->localeCallbacks->localeToUpperCase(cx, str, rval);
     }
     return str_toUpperCase(cx, obj, 0, argv, rval);
@@ -855,8 +872,10 @@ str_localeCompare(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         thatStr = js_ValueToString(cx, argv[0]);
         if (!thatStr)
             return JS_FALSE;
-        if (cx->localeCallbacks && cx->localeCallbacks->localeCompare)
+        if (cx->localeCallbacks && cx->localeCallbacks->localeCompare) {
+            argv[0] = STRING_TO_JSVAL(thatStr);
             return cx->localeCallbacks->localeCompare(cx, str, thatStr, rval);
+        }
         *rval = INT_TO_JSVAL(js_CompareStrings(str, thatStr));
     }
     return JS_TRUE;
@@ -2006,6 +2025,7 @@ str_substr(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
     if (!str)
         return JS_FALSE;
+    argv[-1] = STRING_TO_JSVAL(str);
 
     if (argc != 0) {
         if (!js_ValueToNumber(cx, argv[0], &d))
@@ -2352,6 +2372,7 @@ String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         str = js_ValueToString(cx, argv[0]);
         if (!str)
             return JS_FALSE;
+        argv[0] = STRING_TO_JSVAL(str);
     } else {
         str = cx->runtime->emptyString;
     }
@@ -4492,6 +4513,7 @@ str_decodeURI(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     str = js_ValueToString(cx, argv[0]);
     if (!str)
         return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
     return Decode(cx, str, js_uriReservedPlusPound_ucstr, rval);
 }
 
@@ -4504,6 +4526,7 @@ str_decodeURI_Component(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     str = js_ValueToString(cx, argv[0]);
     if (!str)
         return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
     return Decode(cx, str, js_empty_ucstr, rval);
 }
 
@@ -4516,6 +4539,7 @@ str_encodeURI(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     str = js_ValueToString(cx, argv[0]);
     if (!str)
         return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
     return Encode(cx, str, js_uriReservedPlusPound_ucstr, js_uriUnescaped_ucstr,
                   rval);
 }
@@ -4529,6 +4553,7 @@ str_encodeURI_Component(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     str = js_ValueToString(cx, argv[0]);
     if (!str)
         return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
     return Encode(cx, str, js_uriUnescaped_ucstr, NULL, rval);
 }
 
