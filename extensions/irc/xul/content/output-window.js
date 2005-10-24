@@ -437,8 +437,9 @@ function updateChannel()
 
         if (view.topic)
         {
-            var nodes = client.munger.munge(view.topic, null,
-                                            getObjectDetails(view));
+            var data = getObjectDetails(view);
+            data.dontLogURLs = true;
+            var nodes = client.munger.munge(view.topic, null, data);
             header["topicnodes"].appendChild(nodes);
         }
         else
@@ -475,9 +476,10 @@ function updateUser()
     header["descnodes"].removeChild(header["descnodes"].firstChild);
     if (typeof view.desc != "undefined")
     {
-        var nodes = client.munger.munge(view.desc, null,
-                                        getObjectDetails(view));
-            header["descnodes"].appendChild(nodes);
+        var data = getObjectDetails(view);
+        data.dontLogURLs = true;
+        var nodes = client.munger.munge(view.desc, null, data);
+        header["descnodes"].appendChild(nodes);
     }
     else
     {

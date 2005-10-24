@@ -727,7 +727,7 @@ function getConnectedNetworks()
     return rv;
 }
 
-function insertLink (matchText, containerTag)
+function insertLink (matchText, containerTag, data)
 {
     var href;
     var linkText;
@@ -773,10 +773,19 @@ function insertLink (matchText, containerTag)
         href = "http://" + linkText;
     }
 
-    var max = client.prefs["urls.store.max"];
-    if (client.prefs["urls.list"].unshift(href) > max)
-        client.prefs["urls.list"].pop();
-    client.prefs["urls.list"].update();
+    /* This gives callers to the munger control over URLs being logged; the
+     * channel topic munger uses this, as well as the "is important" checker.
+     * If either of |dontLogURLs| or |noStateChange| is present and true, we
+     * don't log.
+     */
+    if ((!("dontLogURLs" in data) || !data.dontLogURLs) &&
+        (!("noStateChange" in data) || !data.noStateChange))
+    {
+        var max = client.prefs["urls.store.max"];
+        if (client.prefs["urls.list"].unshift(href) > max)
+            client.prefs["urls.list"].pop();
+        client.prefs["urls.list"].update();
+    }
 
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
@@ -957,8 +966,15 @@ function insertSmiley(emoticon, containerTag)
 
 function mircChangeColor (colorInfo, containerTag, data)
 {
-    if (!client.enableColors)
+    /* If colors are disabled, the caller doesn't want colors specifically, or
+     * the caller doesn't want any state-changing effects, we drop out.
+     */
+    if (!client.enableColors ||
+        (("noMircColors" in data) && data.noMircColors) ||
+        (("noStateChange" in data) && data.noStateChange))
+    {
         return;
+    }
 
     var ary = colorInfo.match (/.(\d{1,2}|)(,(\d{1,2})|)/);
 
@@ -1004,8 +1020,12 @@ function mircChangeColor (colorInfo, containerTag, data)
 
 function mircToggleBold (colorInfo, containerTag, data)
 {
-    if (!client.enableColors)
+    if (!client.enableColors ||
+        (("noMircColors" in data) && data.noMircColors) ||
+        (("noStateChange" in data) && data.noStateChange))
+    {
         return;
+    }
 
     if ("isBold" in data)
         delete data.isBold;
@@ -1016,8 +1036,12 @@ function mircToggleBold (colorInfo, containerTag, data)
 
 function mircToggleUnder (colorInfo, containerTag, data)
 {
-    if (!client.enableColors)
+    if (!client.enableColors ||
+        (("noMircColors" in data) && data.noMircColors) ||
+        (("noStateChange" in data) && data.noStateChange))
+    {
         return;
+    }
 
     if ("isUnderline" in data)
         delete data.isUnderline;
@@ -1028,8 +1052,13 @@ function mircToggleUnder (colorInfo, containerTag, data)
 
 function mircResetColor (text, containerTag, data)
 {
-    if (!client.enableColors || !("hasColorInfo" in data))
+    if (!client.enableColors ||
+        (("noMircColors" in data) && data.noMircColors) ||
+        (("noStateChange" in data) && data.noStateChange) ||
+        !("hasColorInfo" in data))
+    {
         return;
+    }
 
     delete data.currFgColor;
     delete data.currBgColor;
@@ -1040,8 +1069,12 @@ function mircResetColor (text, containerTag, data)
 
 function mircReverseColor (text, containerTag, data)
 {
-    if (!client.enableColors)
+    if (!client.enableColors ||
+        (("noMircColors" in data) && data.noMircColors) ||
+        (("noStateChange" in data) && data.noStateChange))
+    {
         return;
+    }
 
     var tempColor = ("currFgColor" in data ? data.currFgColor : "01");
 
@@ -1370,8 +1403,11 @@ function msgIsImportant (msg, sourceNick, network)
      *   a) works, and
      *   b) is fast enough to not cause problems,
      * so it will do for now.
+     *
+     * Note also that we don't want to log URLs munged here, or generally do
+     * any state-changing stuff.
      */
-    var plainMsg = client.munger.munge(msg, null, {});
+    var plainMsg = client.munger.munge(msg, null, { noStateChange: true });
     plainMsg = plainMsg.innerHTML.replace(/<[^>]+>/g, "");
 
     var re = network.stalkExpression;
@@ -2067,17 +2103,6 @@ function gotoIRCURL (url)
             network.displayHere (getMsg(MSG_NETWORK_OPENED, network.unicodeName));
         dispatch("set-current-view", { view: network });
     }
-}
-
-function setTopicText (text)
-{
-    var topic = client.statusBar["channel-topic"];
-    var span = document.createElementNS ("http://www.w3.org/1999/xhtml",
-                                         "html:span");
-
-    span.appendChild(stringToMsg(text, client.currentObject));
-    topic.removeChild(topic.firstChild);
-    topic.appendChild(span);
 }
 
 function updateProgress()
