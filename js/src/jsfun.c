@@ -1417,6 +1417,7 @@ js_fun_toString(JSContext *cx, JSObject *obj, uint32 indent,
                                                      &fval)) {
                     return JS_FALSE;
                 }
+                argv[-1] = fval;
             }
             if (!JSVAL_IS_FUNCTION(cx, fval)) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
