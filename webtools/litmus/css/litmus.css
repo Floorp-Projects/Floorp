@@ -31,7 +31,7 @@ h1.firstHeading, h1.errorHeading {
 	padding-top: 15px;
 	border-bottom: none;
 	margin-top: 0;
-	font-size: 1.8em;
+	font-size: 1.4em;
 	line-height: 1.2em;
 	text-transform: lowercase; 
 }
@@ -235,7 +235,7 @@ a:active {
 	right: 0;
 	margin: 0; 
 	padding: 0 0.4em 0 0;
-	height: 1.8em;
+	height: 1.4em;
 	list-style-type: none;
 	background: url("images/navigation-bottom-right.gif") no-repeat bottom right; 
 }
@@ -425,7 +425,7 @@ table.section {
 .test-results td, .single-result td, .comments td {
         vertical-align: top;
         padding: 3px 5px 3px 5px;
-        font-size: .90em;
+        font-size: .8em;
 }
 
 .single-result td {
@@ -446,7 +446,7 @@ td.header, th {
         background: #DDD;
         border: solid #BBB 1px;
         font-weight: bold;
-        font-size: 1.05em;
+        font-size: .85em;
 	text-transform: lowercase; 
         text-align: center;
 	color: #666666;
@@ -548,7 +548,7 @@ table.radio-testresults tr {
         vertical-align: top;
         padding: 3px 5px 3px 5px;
         border: solid #BBB 1px;
-        font-size: .90em;
+        font-size: .8em;
         text-align: center;
 }
 
@@ -601,8 +601,8 @@ div.sec_head td.l, div.testcase-head td.l {
 	padding-left: 10px;
 	padding-right: 10px;
 	font-weight: bold;
-	font-size: 1.4em;
-	line-height: 1.4em;
+	font-size: 1.0em;
+	line-height: 1.0em;
 	text-transform: lowercase;
 	color: #666666;
 }
@@ -614,7 +614,7 @@ div.sec_head td.r, div.testcase-head td.r {
 	text-align: right;
 	padding: 5px;	
 	vertical-align: middle;
-	font-size: 0.8em;
+	font-size: 0.7em;
 }
 
 div.nav { 
@@ -635,14 +635,19 @@ div.nav a:hover {
 }
 
 div.summary { 
-	display:block; 
+	background-color: #efefef; 
 }
 
 div.summary td { 
-	vertical-align:top;
-	background-color:#efefef; 
-	padding:10px; width:25%;
+	vertical-align:   top;
+	background-color: #efefef; 
+	padding:          10px;
+        width:            25%;
 }
+
+div.summary p {
+	padding:          10px;
+}	
 
 table.tc_nav { 
 	width:100%;
@@ -753,7 +758,7 @@ fieldset {
 
 legend {
         font-weight: bold;
-        font-size: 1.1em;
+        font-size: 1.0em;
 }
 
 div.error {
@@ -802,16 +807,16 @@ textarea {
 	font-weight: normal;
 }
 
-/* #content ul {
- *       list-style-type: none;
- *	margin: 0;
- *	padding: 5px;
-*}
-*/
+ul.select-group {
+	list-style-type: none;
+	margin: 0;
+	padding: 5px;
+}
 
 div.instructions {
-	padding: 10px;
-	font-size: 0.8em;
+        border-collapse: collapse;
+	padding:         10px;
+	font-size:       0.8em;
 }
 
 ul.instructions {
@@ -847,7 +852,7 @@ ol {
     background-color: #666666;
 }
 
-div.section-full, div.instructions {
+div.section-full {
         border: solid #bbbbbb 1px;
         margin-bottom: 5px;	
 	background-color: #dddddd;
@@ -859,8 +864,8 @@ div.section-full {
 
 div.section-header {
 	padding: 10px;
-	font-size: 1.4em;
-	line-height: 1.4em;
+	font-size: 1.0em;
+	line-height: 1.0em;
 	font-weight: bold;
 	color: #666666;
 	text-transform: lowercase;
@@ -870,6 +875,7 @@ div.section-content {
 	padding: 5px;
 	padding-left: 10px;
 	padding-right: 10px;
+	font-size: 0.8em;
 }
 
 .submit {

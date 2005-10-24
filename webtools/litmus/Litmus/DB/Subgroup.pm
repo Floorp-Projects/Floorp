@@ -50,15 +50,15 @@ Litmus::DB::Subgroup->has_a(testgroup => "Litmus::DB::Testgroup");
 
 Litmus::DB::Subgroup->has_many(tests => "Litmus::DB::Test");
 
-# find the percentage of testing completed for a particular platform in
-# this subgroup, optionally restricting to community enabled tests only
-sub percentcompleted {
+#########################################################################
+sub community_coverage() {
   my $self = shift;
   my $platform = shift;
-  my $communityonly = shift;
+  my $build_id = shift;
+  my $community_only = shift;
   
   my @tests;
-  if (! $communityonly) {    
+  if (! $community_only) {    
     @tests = Litmus::DB::Test->search(
                                       subgroup => $self,
                                       status => Litmus::DB::Status->search(name => "Enabled"),
@@ -71,24 +71,60 @@ sub percentcompleted {
                                      );    
   }
   if (@tests == 0) { return "N/A" }
-  my $numcompleted = 0;
+  my $num_completed = 0;
   foreach my $curtest (@tests) {
-    if ($curtest->iscompleted($platform)) {
-      $numcompleted++;
+    if ($curtest->is_completed($platform,$build_id)) {
+      $num_completed++;
     }
   }
-    
-  my $result = ($numcompleted/scalar @tests) * 100;
+  
+  my $result = $num_completed/(scalar @tests) * 100;
   unless ($result) {                   
     return "0";
   }
-  # truncate to a whole number:
-  if ($result =~ /\./) {
-    $result =~ /^(\d*)/;
-    return $1;
+
+  return sprintf("%d",$result);  
+}
+
+#########################################################################
+sub personal_coverage() {
+  my $self = shift;
+  my $platform = shift;
+  my $build_id = shift;
+  my $community_only = shift;
+  my $user = shift;
+  
+  my @tests;
+  if (! $community_only) {    
+    @tests = Litmus::DB::Test->search(
+                                      subgroup => $self,
+                                      status => Litmus::DB::Status->search(name => "Enabled"),
+                                     );    
   } else {
-    return $result;
+    @tests = Litmus::DB::Test->search(
+                                      subgroup => $self,
+                                      status => Litmus::DB::Status->search(name => "Enabled"),
+                                      communityenabled => 1,
+                                     );    
   }
+  if (@tests == 0) { return "N/A" }
+  my $num_completed = 0;
+  foreach my $curtest (@tests) {
+    if ($curtest->is_completed($platform,$build_id,$user)) {
+      $num_completed++;
+    }
+  }
+  
+  my $result = $num_completed/(scalar @tests) * 100;
+  unless ($result) {                   
+    return "0";
+  }
+
+  return sprintf("%d",$result);  
 }
 
 1;
+
+
+
+

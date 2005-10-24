@@ -13,12 +13,20 @@
 [% END %]
 
 [% IF show_instructions==1 %]
-<div class="instructions"><strong>Navigation:</strong>
-<ul class="instructions">
-<li>results marked with the star icon ([% icon %]) have comments associated with them. Clicking on the star will display the comments in-page;</li>
-<li>click on the number in the "result id#" column to see a full listing of the test result, including comments;</li>
-<li>click on the number at the start of the "testcase id#: summary" column to see a more detailed description of that particular testcase;</li>
-</ul>
+<div class="section-full">
+<div class="sec_head">
+<table width="100%">
+<tr>
+<td class="l">&raquo;&nbsp;Navigation</td>
+<td class="r"><a href="#" onclick="divSWAP('instructions'); return false;">Hide / Show</a></td>
+</tr>
+</table>
+</div>
+
+<div id="instructions" class="instructions" style="display: none;">
+[% INCLUDE instructions/test_result_navigation.tmpl %]
+</div>
+
 </div>
 [% END %]
 

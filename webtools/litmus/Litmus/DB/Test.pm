@@ -57,48 +57,10 @@ Litmus::DB::Test->has_a("format" => "Litmus::DB::Format");
 
 Litmus::DB::Test->has_many(testresults => "Litmus::DB::Testresult", {order_by => 'submission_time DESC'});
 
-# we override Class::DBI's find_column() so that when we refer to 
-# formatted names like steps and expected results, we use the actual
-# database columns t1 and t2. 
-#memoize('find_column'); # we use this _a lot_
-#sub find_column {
-#    my $self = shift;
-#    my $want = shift;
-#
-#    my $col = undef;
-#    if (ref $self) {
-#        $want =~ s/^.*::(\w+)$/$1/;
-#        $col = $self->format_id()->getColumnMapping($want);
-#    }
-#    
-#    if ($col) {
-#        return $self->SUPER::find_column($col);
-#    } else {
-#        # didn't find it, so we fall back on the normal 
-#        # find_column from Litmus::DBI:
-#        $self->SUPER::find_column($want);
-#    }
-#}
-
-# we need to have accessors that correspond to 
-# the "virtual columns" created by our format. sounds like a job for 
-# autoload...
-#sub AUTOLOAD {
-#    my $self = shift;
-#    my @args = @_;
-#    my $name = our $AUTOLOAD;
-#    
-#    my $col = $self->find_column($name);
-#    
-#    if (!$col) {
-#        internalError("tried to call Litmus::DB::Test method $name which does not exist");
-#    }
-#    
-#    return $self->$col(@args);
-#}
-
+#########################################################################
 # does the test have at least one recent result?
 # optionally, just check for a particular platform.
+#########################################################################
 memoize('isrecent');
 sub isrecent {
   my $self = shift;
@@ -116,22 +78,37 @@ sub isrecent {
   return 0;
 }
 
-# Right now, a test is considered completed as long as it has at least 
-# one recent result for that platform. In the future, we would want to 
-# use some sort of more advanced system where we look at what results 
-# were found and schedule tests with inconsistant results as incomplete. 
-memoize('iscompleted');
-sub iscompleted {
-    my $self = shift;
-    my $platform = shift;
-    
-    if ($self->isrecent($platform)) {
-        return 1;
-    } else {
-        return 0;
-    }
+#########################################################################
+# is_completed($$$$)
+#
+# Check whether we have test results for the current test that correspond
+# to the provided platform, build_id, and user(optional).
+#########################################################################
+memoize('is_completed');
+sub is_completed {
+  my $self = shift;
+  my $platform = shift;
+  my $build_id = shift;
+  my $user = shift;        # optional
+
+  my @results;
+  if ($user) {
+    @results = $self->testresults(
+                                  platform => $platform,
+                                  buildid => $build_id,
+                                  user => $user,
+                                 );
+  } else {
+    @results = $self->testresults(
+                                  platform => $platform,
+                                  buildid => $build_id,
+                                 );
+  }
+  
+  return scalar @results;  
 }
 
+#########################################################################
 # You might think that getting the state of a test for a particular platform 
 # would be pretty easy. In reality, it's more of an art then a science, since 
 # we get to consider all the test results submitted for a particular test, 
@@ -141,6 +118,11 @@ sub iscompleted {
 # have bugs, then they'd be algorithms."
 #
 # XXX: Rewrite all this as an SQL query so it doesn't take so long. 
+#
+# YYY: 'state' is even less simple than you might think, and should be
+# based per-branch and make note of the most recent build ID per 
+# platform.
+#########################################################################
 memoize('state');
 sub state {
     my $self = shift;
@@ -211,8 +193,10 @@ sub state {
     return Litmus::DB::Result->retrieve($maxkey);
 }
 
+#########################################################################
 # calculate the percent of the time this test has been in existance that it
 # has had a particular state (default state is the current one)
+#########################################################################
 sub percentinstate {
     my $self = shift;
     my $state = shift || $self->state();
@@ -220,7 +204,9 @@ sub percentinstate {
     
 }
 
+#########################################################################
 # find the number of recent results for this test
+#########################################################################
 memoize('num_recent_results');
 sub num_recent_results {
     my $self = shift;
@@ -234,16 +220,29 @@ sub num_recent_results {
     return $count;
 }
 
+#########################################################################
 # these are just convenience functions since they are pretty common needs 
 # and templates would be pretty verbose without them:
+#########################################################################
 sub product {
     my $self = shift;
     return $self->testgroup()->product();
 }
 
+#########################################################################
+#########################################################################
 sub testgroup {
     my $self = shift;
     return $self->subgroup()->testgroup();
 }
 
 1;
+
+
+
+
+
+
+
+
+

@@ -119,11 +119,12 @@ sub page_pickGroupSubgroup {
     }
     
     my $vars = {
-        title => $title,
-        opsys     => $sysconfig->opsys(),
-        groups    => \@groups,
-        subgroups => \%subgroups,
-        sysconfig => $sysconfig,
+        title        => $title,
+        user         => $user,
+        opsys        => $sysconfig->opsys(),
+        groups       => \@groups,
+        subgroups    => \%subgroups,
+        sysconfig    => $sysconfig,
         defaultgroup => $defaultgroup,
     };
 

@@ -47,36 +47,72 @@ Litmus::DB::Testgroup->has_a(product => "Litmus::DB::Product");
 
 Litmus::DB::Testgroup->has_many(subgroups => "Litmus::DB::Subgroup");
 
-# find the total number of tests completed for the group for 
-# a particular platform and optionally just for community enabled tests
-sub percentcompleted {
+#########################################################################
+sub community_coverage {
   my $self = shift;
   my $platform = shift;
-  my $communityonly = shift;
-  my $percentcompleted;
-  
+  my $build_id = shift;
+  my $community_only = shift;
+
+  my $percent_completed = 0;
+
   my @subgroups = $self->subgroups();
-  my $numemptysubgroups = 0;
-  foreach my $cursubgroup (@subgroups) {
-    if ($cursubgroup->percentcompleted($platform, $communityonly) eq "N/A") {
-      $numemptysubgroups++;
+  my $num_empty_subgroups = 0;
+  foreach my $subgroup (@subgroups) {
+    my $subgroup_percent = $subgroup->community_coverage(
+                                                         $platform, 
+                                                         $build_id, 
+                                                         $community_only
+                                                        );
+    if ($subgroup_percent eq "N/A") {
+      $num_empty_subgroups++;
     } else {
-      $percentcompleted += $cursubgroup->percentcompleted($platform, 
-                                                          $communityonly);
+      $percent_completed += $subgroup_percent;
     }
   }
   
-  if (scalar(@subgroups) - $numemptysubgroups == 0) { return "N/A" }
-  my $totalpercentage = $percentcompleted/(scalar @subgroups - $numemptysubgroups);
-  
-  # truncate to a whole number:
-  if ($totalpercentage =~ /\./) {
-    $totalpercentage =~ /^(\d*)/;
-    my $percentage = $1;
-    return $1;
-  } else {
-    return $totalpercentage;
+  if (scalar(@subgroups) - $num_empty_subgroups == 0) { 
+    return "N/A"
   }
+  my $total_percentage = $percent_completed / 
+    (scalar @subgroups - $num_empty_subgroups);
+  
+  return sprintf("%d",$total_percentage);
+}
+
+#########################################################################
+sub personal_coverage {
+  my $self = shift;
+  my $platform = shift;
+  my $build_id = shift;
+  my $community_only = shift;
+  my $user = shift;
+
+  my $percent_completed = 0;
+
+  my @subgroups = $self->subgroups();
+  my $num_empty_subgroups = 0;
+  foreach my $subgroup (@subgroups) {
+    my $subgroup_percent = $subgroup->personal_coverage(
+                                                        $platform, 
+                                                        $build_id, 
+                                                        $community_only,
+                                                        $user,
+                                                       );
+    if ($subgroup_percent eq "N/A") {
+      $num_empty_subgroups++;
+    } else {
+      $percent_completed += $subgroup_percent;
+    }
+  }
+  
+  if (scalar(@subgroups) - $num_empty_subgroups == 0) { 
+    return "N/A"
+  }
+  my $total_percentage = $percent_completed / 
+    (scalar @subgroups - $num_empty_subgroups);
+  
+  return sprintf("%d",$total_percentage);
 }
 
 1;

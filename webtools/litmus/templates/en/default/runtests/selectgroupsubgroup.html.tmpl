@@ -44,13 +44,13 @@
 <div class="sec_head">
 <table width="100%">
 <tr>
-<td class="l">Testing Summary</td>
-<td class="r"><a href="#" onclick="divSWAP('sum'); return false;">Hide / Show Summary</a></td>
+<td class="l">&raquo;&nbsp;Testing Configuration Summary</td>
+<td class="r"><a href="#" onclick="divSWAP('sum'); return false;">Hide / Show</a></td>
 </tr>
 </table>
 </div>
 
-  <div id="sum" class="summary">
+  <div id="sum" class="summary" style="display: none;">
   <table class="test-config">
   <tr>
 
@@ -69,9 +69,25 @@
   </tr>
   </table>
 
-  </div> <!--END section-content-->
+  </div> <!--END sum-->
 
 </div> <!--END section-full-->
+
+<div class="section-full">
+<div class="sec_head">
+<table width="100%">
+<tr>
+<td class="l">&raquo;&nbsp;Percentages Explained</td>
+<td class="r"><a href="#" onclick="divSWAP('instructions'); return false;">Hide / Show</a></td>
+</tr>
+</table>
+</div>
+
+<div id="instructions" class="instructions" style="display: none;">
+[% INCLUDE instructions/percentages_explained.tmpl %]
+</div>
+
+</div>
 
 <hr />
 
@@ -80,9 +96,16 @@
 Select Testing Group
   </div>
   <div class="section-content">
-
 <form action="run_tests.cgi" method="post" name="form" id="form">
-<ul>
+
+<p>
+
+<table class="run-tests">
+<tr>
+<th>Name</th>
+<th>Personal Testing Coverage</th>
+<th>Community Testing Coverage</th>
+</tr>
 
 [% IF defaultgroup.testgroupid=="" %]
   [% select_first_avail_group=1 %]
@@ -90,24 +113,48 @@ Select Testing Group
   [% select_first_avail_group=0 %]
 [% END %]
 [% FOREACH curgroup = groups %]
-    [% group_completed = curgroup.percentcompleted(sysconfig.platform, 0) %]
-    [% IF group_completed != 100 AND group_completed!= 'N/A' AND (defaultgroup.testgroupid==curgroup.testgroupid OR select_first_avail_group==1) %]
+
+  [% community_completed = curgroup.community_coverage(sysconfig.platform, sysconfig.buildid, 0) %]
+  [% personal_completed = curgroup.personal_coverage(sysconfig.platform, sysconfig.buildid, 0, user) %]
+
+  [% IF community_completed == 100 OR completed == 'N/A' %]
+    [% groupstyle = 'completegroup' %]
+  [% ELSE %]
+    [% IF not (loop.count % 2) %]
+      [% groupstyle = 'even' %]
+    [% ELSE %]
+      [% groupstyle = 'odd' %]
+    [% END %]
+  [% END %]
+            
+<tr class="[% groupstyle %]">
+
+  [% IF personal_completed != 100 AND 
+	personal_completed != 'N/A' AND 
+	(defaultgroup.testgroupid==curgroup.testgroupid OR 
+	 select_first_avail_group==1) %]
       [% selected = "checked" %]
       [% select_first_avail_group=0 %]
     [% ELSE %] 
       [% selected = "" %]
     [% END %]
 
-    <li><input [% IF group_completed == 100 OR group_completed == 'N/A' %]disabled [% END %] type="radio" name="group" value="[% curgroup.testgroupid FILTER html %]"
+    <td><input [% IF personal_completed == 100 OR 
+                 personal_completed == 'N/A' %]disabled [% END %] type="radio" name="group" value="[% curgroup.testgroupid FILTER html %]"
         onchange="showsubgroup()" [% selected %]>
-         [% curgroup.name FILTER html %] - [% group_completed %][% IF group_completed != 'N/A' %]%[% END %]</li>
+         [% curgroup.name FILTER html %]</td>
+    <td align="center">[% personal_completed FILTER html %][% IF personal_completed != 'N/A' %]%[% END %]</td>
+    <td align="center">[% community_completed FILTER html %][% IF community_completed != 'N/A' %]%[% END %]</td>
+</tr>
 [% END %]
 [% # for some boneheaded reason, our js breaks if there is only one group, 
    # so we create a fake dummy group if this is the case: %]
 [% IF groups.size == 1 %]
     <input type="radio" name="group" value="null" style="visibility: hidden;">
 [% END %]
-</ul>
+
+</table>
+
 </p>
 
   </div> <!--END section-content-->
@@ -120,13 +167,13 @@ Select Subgroup
   </div>
   <div class="section-content">
 <p>
-[% headerrow = '<tr><th>Name</th><th>Number of Tests</th><th>% Completed</th></tr>' %]
+[% headerrow = '<tr><th>Name</th><th>Number of Tests</th><th>Personal Testing Coverage</th><th>Community Testing Coverage</th></tr>' %]
     
 <div id="divsubgroup_null" style="visibility: visible;">
 <table class="run-tests">
 [% headerrow %]
 <tr>
-<td colspan="3" class="no-results">
+<td colspan="4" class="no-results">
 Please select a testing group with testcases, or that has not yet been tested in its entirety.
 </td>
 </tr>
@@ -138,10 +185,13 @@ Please select a testing group with testcases, or that has not yet been tested in
     <div id="divsubgroup_[% curgroup FILTER html %]" style="display: none;">
         <table class="run-tests">
             [% headerrow %]
+            [% select_first_avail_subgroup=1 %] 
             [% FOREACH cursubgroup = cursubgrouplist %]
-            
-            [% completed = cursubgroup.percentcompleted(sysconfig.platform, 0) %]
-            [% IF completed == 100 OR completed == 'N/A' %]
+
+            [% community_completed = cursubgroup.community_coverage(sysconfig.platform, sysconfig.buildid, 0) %]
+            [% personal_completed = cursubgroup.personal_coverage(sysconfig.platform, sysconfig.buildid, 0, user) %]
+
+            [% IF community_completed == 100 OR completed == 'N/A' %]
                 [% groupstyle = 'completegroup' %]
             [% ELSE %]
 		[% IF not (loop.count % 2) %]
@@ -152,7 +202,7 @@ Please select a testing group with testcases, or that has not yet been tested in
             [% END %]
             
             <tr class="[% groupstyle %]">
-                <td align="left"><input [% IF completed == 100 OR completed == 'N/A' %]disabled [% END %]type="radio" name="subgroup_[% curgroup FILTER html %]" 
+                <td align="left"><input [% IF personal_completed == 100 OR personal_completed == 'N/A' %]disabled [% ELSIF select_first_avail_subgroup==1 %][% select_first_avail_subgroup=0 %]checked [% END %]type="radio" name="subgroup_[% curgroup FILTER html %]" 
                     value="[% cursubgroup.id FILTER html %]">
                     [% cursubgroup.name FILTER html %]</input></td>
                 <td align="center">[% counttests = cursubgroup.tests %]
@@ -160,7 +210,8 @@ Please select a testing group with testcases, or that has not yet been tested in
                     [% ELSIF ! counttests.testid %][% counttests.list.size %]
                     [% ELSE %]
                     1[% END %]</td>
-                <td align="center">[% completed FILTER html %][% IF completed != 'N/A' %]%[% END %]</td>
+                <td align="center">[% personal_completed FILTER html %][% IF personal_completed != 'N/A' %]%[% END %]</td>
+                <td align="center">[% community_completed FILTER html %][% IF community_completed != 'N/A' %]%[% END %]</td>
             </tr>
             [% END %]
         </table>
