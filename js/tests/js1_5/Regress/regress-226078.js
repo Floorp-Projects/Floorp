@@ -49,11 +49,11 @@ function SetLangHead(l){
   with(p){
     for(var i=0 in x)
       if(getElementById("TxtH"+i)!=undefined)
-        print('huh');
+        printStatus('huh');
   }
 }
 x=[0,1,2,3];
-p={getElementById: function (id){print(uneval(this), id); return undefined;}};
+p={getElementById: function (id){printStatus(uneval(this), id); return undefined;}};
 SetLangHead(1);
 
 reportCompare(expect, actual, summary);
