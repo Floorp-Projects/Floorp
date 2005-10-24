@@ -397,12 +397,11 @@ nsAuthGSSAPI::GetNextToken(const void *inToken,
     // Suppress Kerberos prompts to get credentials.  See bug 240643.
     // We can only use Mac OS X specific kerb functions if we are using 
     // the native lib
-
-    KLBoolean found;
-    if (gssNativeImp &&
-         (KLCacheHasValidTickets_ptr(NULL, kerberosVersion_V5, &found, NULL,
-                                NULL)
-         != klNoErr || !found))
+    KLBoolean found;    
+    PRBool doingMailTask = mServiceName.Find("imap@") || mServiceName.Find("pop@") || mServiceName.Find("smtp@");
+    
+    if (!doingMailTask && (gssNativeImp &&
+         (KLCacheHasValidTickets_ptr(NULL, kerberosVersion_V5, &found, NULL, NULL) != klNoErr || !found)))
     {
         major_status = GSS_S_FAILURE;
         minor_status = 0;
