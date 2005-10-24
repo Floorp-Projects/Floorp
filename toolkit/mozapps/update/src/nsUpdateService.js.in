@@ -331,10 +331,14 @@ function writeStatusFile(dir, state) {
  */
 function cleanUpUpdatesDir() {
   // Bail out if we don't have appropriate permissions
-  if (!this.canUpdate)
+  var updateDir;
+  try {
+    updateDir = getUpdatesDir();
+  }
+  catch (e) {
     return;
-    
-  var updateDir = getUpdatesDir();
+  }
+        
   var e = updateDir.directoryEntries;
   while (e.hasMoreElements()) {
     var f = e.getNext().QueryInterface(Components.interfaces.nsIFile);
