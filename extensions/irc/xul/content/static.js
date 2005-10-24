@@ -3852,7 +3852,9 @@ function addHistory (source, obj, mergeData)
 
             // Does the motif collapse everything, regardless of type?
             // NOTE: the collapseActions pref can override this for actions
-            needSameType = !("collapsemore" in source.motifSettings);
+            needSameType = !(("motifSettings" in source) &&
+                             source.motifSettings &&
+                             ("collapsemore" in source.motifSettings));
         }
 
         if (sameNick && sameDest && (haveSameType || !needSameType) &&
