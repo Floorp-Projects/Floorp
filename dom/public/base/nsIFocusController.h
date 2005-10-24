@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: set ts=3 sw=2 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -83,6 +84,43 @@ public:
   NS_IMETHOD RewindFocusState()=0;
 
   NS_IMETHOD ResetElementFocus() = 0;
+};
+
+class nsFocusSuppressor {
+public:
+  ~nsFocusSuppressor()
+  {
+    Unsuppress();
+  }
+
+  void Suppress(nsIFocusController *aController, const char *aReason)
+  {
+    Unsuppress();
+
+    mController = aController;
+    mReason = aReason;
+    if (aController) {
+      mController->SetSuppressFocus(PR_TRUE, mReason);
+    }
+  }
+
+  void Unsuppress()
+  {
+    if (mController) {
+      mController->SetSuppressFocus(PR_FALSE, mReason);
+      mController = nsnull;
+      mReason = nsnull;
+    }
+  }
+
+  PRBool Suppressing()
+  {
+    return mController != nsnull;
+  }
+
+private:
+  nsCOMPtr<nsIFocusController> mController;
+  const char *mReason;
 };
 
 #endif // nsIFocusController_h__
