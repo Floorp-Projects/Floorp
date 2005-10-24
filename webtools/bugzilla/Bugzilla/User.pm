@@ -25,6 +25,7 @@
 #                 Shane H. W. Travis <travis@sedsystems.ca>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Gervase Markham <gerv@gerv.net>
+#                 Lance Larsh <lance.larsh@oracle.com>
 
 ################################################################################
 # Module Initialization
@@ -509,7 +510,8 @@ sub can_enter_product {
     trick_taint($product_name);
 
     # Checks whether the user has access to the product.
-    my $has_access = $dbh->selectrow_array('SELECT group_id IS NULL
+    my $has_access = $dbh->selectrow_array('SELECT CASE WHEN group_id IS NULL
+                                                        THEN 1 ELSE 0 END
                                               FROM products
                                          LEFT JOIN group_control_map
                                                 ON group_control_map.product_id = products.id
@@ -527,8 +529,10 @@ sub can_enter_product {
     # Checks whether the product is open for new bugs and
     # has at least one component and one version.
     my ($is_open, $has_version) = 
-        $dbh->selectrow_array('SELECT CASE WHEN disallownew = 0 THEN 1 ELSE 0 END,
-                                      versions.value IS NOT NULL
+        $dbh->selectrow_array('SELECT CASE WHEN disallownew = 0
+                                           THEN 1 ELSE 0 END,
+                                      CASE WHEN versions.value IS NOT NULL
+                                           THEN 1 ELSE 0 END
                                  FROM products
                            INNER JOIN components
                                    ON components.product_id = products.id

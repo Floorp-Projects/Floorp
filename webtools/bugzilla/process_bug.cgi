@@ -25,6 +25,7 @@
 #                 Myk Melez <myk@mozilla.org>
 #                 Jeff Hedlund <jeff.hedlund@matrixsi.com>
 #                 Frédéric Buclin <LpSolit@gmail.com>
+#                 Lance Larsh <lance.larsh@oracle.com>
 
 # Implementation notes for this file:
 #
@@ -1730,7 +1731,8 @@ foreach my $id (@idlist) {
         SendSQL("SELECT DISTINCT groups.id, isactive, " .
                 "oldcontrolmap.membercontrol, newcontrolmap.membercontrol, " .
                 "CASE WHEN groups.id IN ($grouplist) THEN 1 ELSE 0 END, " .
-                "bug_group_map.group_id IS NOT NULL " .
+                "CASE WHEN bug_group_map.group_id IS NOT NULL " .
+                "THEN 1 ELSE 0 END " .
                 "FROM groups " .
                 "LEFT JOIN group_control_map AS oldcontrolmap " .
                 "ON oldcontrolmap.group_id = groups.id " .

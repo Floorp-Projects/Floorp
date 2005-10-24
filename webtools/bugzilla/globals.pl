@@ -25,6 +25,7 @@
 #                 Joel Peshkin <bugreport@peshkin.net>
 #                 Dave Lawrence <dkl@redhat.com>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
+#                 Lance Larsh <lance.larsh@oracle.com>
 
 # Contains some global variables and routines used throughout bugzilla.
 
@@ -734,7 +735,8 @@ sub get_legal_field_values {
 sub BugInGroupId {
     my ($bugid, $groupid) = (@_);
     PushGlobalSQLState();
-    SendSQL("SELECT bug_id != 0 FROM bug_group_map
+    SendSQL("SELECT CASE WHEN bug_id != 0 THEN 1 ELSE 0 END
+            FROM bug_group_map
             WHERE bug_id = $bugid
             AND group_id = $groupid");
     my $bugingroup = FetchOneColumn();

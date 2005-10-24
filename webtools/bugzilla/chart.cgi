@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Gervase Markham <gerv@gerv.net>
+#                 Lance Larsh <lance.larsh@oracle.com>
 
 # Glossary:
 # series:   An individual, defined set of data plotted over time.
@@ -207,7 +208,8 @@ sub assertCanEdit {
     return if UserInGroup("admin");
 
     my $dbh = Bugzilla->dbh;
-    my $iscreator = $dbh->selectrow_array("SELECT creator = ? FROM series " .
+    my $iscreator = $dbh->selectrow_array("SELECT CASE WHEN creator = ? " .
+                                          "THEN 1 ELSE 0 END FROM series " .
                                           "WHERE series_id = ?", undef,
                                           $::userid, $series_id);
     $iscreator || ThrowUserError("illegal_series_edit");

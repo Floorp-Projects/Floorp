@@ -24,6 +24,7 @@
 #                 Dave Miller    <justdave@bugzilla.org>
 #                 Max Kanat-Alexander <mkanat@bugzilla.org>
 #                 Frédéric Buclin <LpSolit@gmail.com>
+#                 Lance Larsh <lance.larsh@oracle.com>
 
 package Bugzilla::Bug;
 
@@ -547,7 +548,8 @@ sub groups {
     my $grouplist = Bugzilla->user->groups_as_string;
     my $sth = $dbh->prepare(
              "SELECT DISTINCT groups.id, name, description," .
-             " bug_group_map.group_id IS NOT NULL," .
+             " CASE WHEN bug_group_map.group_id IS NOT NULL" .
+             " THEN 1 ELSE 0 END," .
              " CASE WHEN groups.id IN($grouplist) THEN 1 ELSE 0 END," .
              " isactive, membercontrol, othercontrol" .
              " FROM groups" . 

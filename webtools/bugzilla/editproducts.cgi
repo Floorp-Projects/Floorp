@@ -25,6 +25,7 @@
 #               Gavin Shelley <bugzilla@chimpychompy.org>
 #               Fr��ic Buclin <LpSolit@gmail.com>
 #               Greg Hendricks <ghendricks@novell.com>
+#               Lance Larsh <lance.larsh@oracle.com>
 #
 # Direct any questions on this source code to
 #
@@ -624,7 +625,7 @@ if ($action eq 'updategroupcontrols') {
     foreach my $groupid (@now_na) {
         my $count = 0;
         SendSQL("SELECT bugs.bug_id, 
-                 (lastdiffed >= delta_ts)
+                 CASE WHEN (lastdiffed >= delta_ts) THEN 1 ELSE 0 END
                  FROM bugs, bug_group_map
                  WHERE group_id = $groupid
                  AND bug_group_map.bug_id = bugs.bug_id
@@ -658,7 +659,7 @@ if ($action eq 'updategroupcontrols') {
     foreach my $groupid (@now_mandatory) {
         my $count = 0;
         SendSQL("SELECT bugs.bug_id,
-                 (lastdiffed >= delta_ts)
+                 CASE WHEN (lastdiffed >= delta_ts) THEN 1 ELSE 0 END
                  FROM bugs
                  LEFT JOIN bug_group_map
                  ON bug_group_map.bug_id = bugs.bug_id
