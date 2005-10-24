@@ -53,7 +53,7 @@ my $hook       = shift @ARGV || die usage();
 my $chromeurl;
 my $testUrl;
 
-editTalkback($browserexe, $jsfile);
+editTalkback($browserexe, 'js:' + $jsfile);
 
 my $testrunner = "http://" . 
     $ENV{TEST_HTTP} . 
