@@ -128,7 +128,7 @@ function initPrefs()
          ["collapseActions",    true,     "appearance.misc"],
          ["collapseMsgs",       false,    "appearance.misc"],
          ["conference.limit",   150,      "appearance.misc"],
-         ["connectTries",       5,        ".connect"],
+         ["connectTries",       -1,       ".connect"],
          ["copyMessages",       true,     "global"],
          ["dcc.enabled",        true,     "dcc"],
          ["dcc.listenPorts",    [],       "dcc.ports"],

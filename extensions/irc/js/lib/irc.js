@@ -127,6 +127,7 @@ CIRCNetwork.prototype.INITIAL_CHANNEL = "#jsbot";
 CIRCNetwork.prototype.INITIAL_UMODE = "+iw";
 
 CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = 5;
+CIRCNetwork.prototype.getReconnectDelayMs = function() { return 15000; }
 CIRCNetwork.prototype.stayingPower = false;
 
 CIRCNetwork.prototype.TYPE = "IRCNetwork";
@@ -192,6 +193,38 @@ function net_hasSecure()
     return false;
 }
 
+/** Trigger an onDoConnect event after a delay. */
+CIRCNetwork.prototype.delayedConnect =
+function net_delayedConnect(eventProperties)
+{
+    function reconnectFn(network, eventProperties)
+    {
+        network.immediateConnect(eventProperties);
+    };
+
+    this.state = NET_WAITING;
+    this.reconnectTimer = setTimeout(reconnectFn,
+                                     this.getReconnectDelayMs(),
+                                     this,
+                                     eventProperties);
+}
+
+/**
+ * Immediately trigger an onDoConnect event. Use delayedConnect for automatic
+ * repeat attempts, instead, to throttle the attempts to a reasonable pace.
+ */
+CIRCNetwork.prototype.immediateConnect =
+function net_immediateConnect(eventProperties)
+{
+    var ev = new CEvent("network", "do-connect", this, "onDoConnect");
+
+    if (typeof eventProperties != "undefined")
+        for (var key in eventProperties)
+            ev[key] = eventProperties[key];
+
+    this.eventPump.addEvent(ev);
+}
+
 CIRCNetwork.prototype.connect =
 function net_connect(requireSecurity)
 {
@@ -213,12 +246,11 @@ function net_connect(requireSecurity)
     }
 
     this.state = NET_CONNECTING;
-    this.connectAttempt = 0;
+    this.connectAttempt = 0;            // actual connection attempts
+    this.connectCandidate = 0;          // incl. requireSecurity non-attempts
     this.nextHost = 0;
     this.requireSecurity = requireSecurity || false;
-    var ev = new CEvent("network", "do-connect", this, "onDoConnect");
-    ev.password = null;
-    this.eventPump.addEvent(ev);
+    this.immediateConnect({"password": null});
     return true;
 }
 
@@ -242,8 +274,7 @@ function net_cancel()
         this.state = NET_CANCELLING;
 
         // ...try a reconnect (which will fail us).
-        var ev = new CEvent("network", "do-connect", this, "onDoConnect");
-        this.eventPump.addEvent(ev);
+        this.immediateConnect();
     }
     else
     {
@@ -288,7 +319,11 @@ function net_doconnect(e)
     if ("primServ" in this && this.primServ.isConnected)
         return true;
 
-    if (this.connectAttempt++ >= this.MAX_CONNECT_ATTEMPTS)
+    this.connectAttempt++;
+    this.connectCandidate++;
+
+    if ((-1 != this.MAX_CONNECT_ATTEMPTS) &&
+        (this.connectAttempt > this.MAX_CONNECT_ATTEMPTS))
     {
         this.state = NET_OFFLINE;
 
@@ -321,6 +356,7 @@ function net_doconnect(e)
         ev.port = this.serverList[host].port;
         ev.server = this.serverList[host];
         ev.connectAttempt = this.connectAttempt;
+        ev.reconnectDelayMs = this.getReconnectDelayMs();
         this.eventPump.addEvent (ev);
 
         try
@@ -328,8 +364,7 @@ function net_doconnect(e)
             if (!this.serverList[host].connect(null))
             {
                 /* connect failed, try again  */
-                ev = new CEvent ("network", "do-connect", this, "onDoConnect");
-                this.eventPump.addEvent (ev);
+                this.delayedConnect();
             }
         }
         catch(ex)
@@ -350,8 +385,7 @@ function net_doconnect(e)
         /* Server doesn't use SSL as requested, try next one.
          * In the meantime, correct the connection attempt counter  */
         this.connectAttempt--;
-        ev = new CEvent ("network", "do-connect", this, "onDoConnect");
-        this.eventPump.addEvent (ev);
+        this.immediateConnect();
     }
 
     return true;
@@ -907,19 +941,16 @@ function serv_disconnect(e)
         network.state = state;
     };
 
+    function delayedConnectFn(network) {
+        network.delayedConnect();
+    };
+
     if ((this.parent.state == NET_CONNECTING) ||
         /* fell off while connecting, try again */
         (this.parent.primServ == this) && (this.parent.state == NET_ONLINE) &&
         (!("quitting" in this) && this.parent.stayingPower))
     { /* fell off primary server, reconnect to any host in the serverList */
-        var reconnectFn = function(server) {
-            delete server.parent.reconnectTimer;
-            var ev = new CEvent("network", "do-connect", server.parent,
-                                "onDoConnect");
-            server.parent.eventPump.addEvent(ev);
-        };
-        setTimeout(stateChangeFn, 0, this.parent, NET_WAITING);
-        this.parent.reconnectTimer = setTimeout(reconnectFn, 15000, this);
+        setTimeout(delayedConnectFn, 0, this.parent);
     }
     else
     {
@@ -1301,6 +1332,7 @@ CIRCServer.prototype.on001 =
 function serv_001 (e)
 {
     this.parent.connectAttempt = 0;
+    this.parent.connectCandidate = 0;
     this.parent.state = NET_ONLINE;
 
     /* servers won't send a nick change notification if user was forced

@@ -120,6 +120,8 @@ CIRCNetwork.prototype.MAX_MESSAGES = 100;
 CIRCNetwork.prototype.IGNORE_MOTD = false;
 CIRCNetwork.prototype.RECLAIM_WAIT = 15000;
 CIRCNetwork.prototype.RECLAIM_TIMEOUT = 400000;
+CIRCNetwork.prototype.MIN_RECONNECT_MS = 15 * 1000;             // 15s
+CIRCNetwork.prototype.MAX_RECONNECT_MS = 2 * 60 * 60 * 1000;    // 2h
 
 CIRCServer.prototype.READ_TIMEOUT = 0;
 CIRCServer.prototype.PRUNE_OLD_USERS = 0; // prune on user quit.

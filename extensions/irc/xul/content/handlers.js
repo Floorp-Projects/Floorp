@@ -825,6 +825,35 @@ function serv_ccinfohelp()
     return MSG_CTCPHELP_DCC;
 }
 
+/**
+ * Calculates delay before the next automatic connection attempt.
+ *
+ * If the number of connection attempts is limited, use fixed interval
+ * MIN_RECONNECT_MS. For unlimited attempts (-1), use exponential backoff: the
+ * interval between connection attempts to the network (not individual
+ * servers) is doubled after each attempt, up to MAX_RECONNECT_MS.
+ */
+CIRCNetwork.prototype.getReconnectDelayMs =
+function my_getReconnectDelayMs()
+{
+    var nServers = this.serverList.length;
+
+    if ((-1 != this.MAX_CONNECT_ATTEMPTS) ||
+        (0 != this.connectCandidate % nServers))
+    {
+        return this.MIN_RECONNECT_MS;
+    }
+
+    var networkRound = Math.ceil(this.connectCandidate / nServers);
+
+    var rv = this.MIN_RECONNECT_MS * Math.pow(2, networkRound - 1);
+
+    // clamp rv between MIN/MAX_RECONNECT_MS
+    rv = Math.min(Math.max(rv, this.MIN_RECONNECT_MS), this.MAX_RECONNECT_MS);
+
+    return rv;
+}
+
 CIRCNetwork.prototype.onInit =
 function net_oninit ()
 {
@@ -1633,9 +1662,18 @@ function my_sconnect (e)
     if ("_firstNick" in this)
         delete this._firstNick;
 
-    this.display (getMsg(MSG_CONNECTION_ATTEMPT,
-                         [this.getURL(), e.server.getURL(), e.connectAttempt,
-                          this.MAX_CONNECT_ATTEMPTS]), "INFO");
+    if (-1 == this.MAX_CONNECT_ATTEMPTS)
+        this.display (getMsg(MSG_CONNECTION_ATTEMPT_UNLIMITED,
+                             [this.getURL(),
+                              e.server.getURL(),
+                              e.connectAttempt,
+                              e.reconnectDelayMs / 1000]), "INFO");
+    else
+        this.display (getMsg(MSG_CONNECTION_ATTEMPT,
+                             [this.getURL(),
+                              e.server.getURL(),
+                              e.connectAttempt,
+                              this.MAX_CONNECT_ATTEMPTS]), "INFO");
 }
 
 CIRCNetwork.prototype.onError =
