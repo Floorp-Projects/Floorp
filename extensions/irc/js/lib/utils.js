@@ -1053,7 +1053,7 @@ function prompt(msg, initial, parent, title)
         parent = window;
     if (!title)
         title = MSG_PROMPT;
-    rv = { value: initial };
+    var rv = { value: initial };
 
     if (!ps.prompt (parent, title, msg, rv, null, {value: null}))
         return null;
