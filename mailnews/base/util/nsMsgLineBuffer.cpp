@@ -400,23 +400,22 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
     if (numBytesToCopy > 0)
     {
       // read the data into the end of our data buffer
-      rv = aInputStream->Read(startOfLine + m_numBytesInBuffer, numBytesToCopy,
-                              &numBytesCopied);
+      char *startOfNewData = startOfLine + m_numBytesInBuffer;
+      rv = aInputStream->Read(startOfNewData, numBytesToCopy, &numBytesCopied);
       if (prv)
         *prv = rv;
       PRUint32 i;
-      PRUint32 endBufPos = m_numBytesInBuffer + numBytesCopied;
-      for (i = m_numBytesInBuffer; i < endBufPos; i++)  // replace nulls with spaces
+      for (i = 0; i < numBytesCopied; i++)  // replace nulls with spaces
       {
-        if (!startOfLine[i])
-          startOfLine[i] = ' ';
+        if (!startOfNewData[i])
+          startOfNewData[i] = ' ';
       }
       m_numBytesInBuffer += numBytesCopied;
       m_dataBuffer[m_startPos + m_numBytesInBuffer] = '\0';
 
       // okay, now that we've tried to read in more data from the stream,
-      // look for another end of line character 
-      endOfLine = PL_strchr(startOfLine, m_lineToken);
+      // look for another end of line character in the new data
+      endOfLine = PL_strchr(startOfNewData, m_lineToken);
     }
   }
   
