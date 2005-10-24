@@ -778,9 +778,13 @@ function ChangeMessagePaneVisibility(now_hidden)
     node.hidden = now_hidden;
 
   if (gDBView) {
+    // clear the subject, collapsing won't automatically do this
+    setTitleFromFolder(GetThreadPaneFolder(), null);
     // the collapsed state is the state after we released the mouse 
     // so we take it as it is
     gDBView.suppressMsgDisplay = now_hidden;
+    // set the subject, uncollapsing won't automatically do this
+    gDBView.reloadMessage();
   }
   var event = document.createEvent('Events');
   if (now_hidden) {

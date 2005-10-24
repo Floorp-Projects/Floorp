@@ -104,7 +104,8 @@ nsMsgDBViewCommandUpdater.prototype =
 
   displayMessageChanged : function(aFolder, aSubject, aKeywords)
   {
-    setTitleFromFolder(aFolder, aSubject);
+    if (!gDBView.suppressMsgDisplay)
+      setTitleFromFolder(aFolder, aSubject);
     ClearPendingReadTimer(); // we are loading / selecting a new message so kill the mark as read timer for the currently viewed message
     gHaveLoadedMessage = true;
     SetKeywords(aKeywords);
