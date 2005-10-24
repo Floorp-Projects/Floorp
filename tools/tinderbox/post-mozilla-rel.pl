@@ -214,7 +214,7 @@ sub processtalkback {
 
 sub packit {
   my ($packaging_dir, $package_location, $url, $stagedir, $builddir, $cachebuild) = @_;
-  my $status;
+  my $status = 0;
 
   if (is_windows()) {
     # need to convert the path in case we're using activestate perl
@@ -246,7 +246,7 @@ sub packit {
       $ENV{PATH} = $Settings::as_perl_path.":".$ENV{PATH};
     }
 
-    # the one operation we care about saving status of
+    # one of the operations we care about saving status of
     if ($Settings::sea_installer || $Settings::stub_installer) {
       $status = TinderUtils::run_shell_command "make -C $packaging_dir installer";
     } else {
@@ -381,11 +381,11 @@ sub packit {
     }
   }
 
-  if ($cachebuild and $Settings::update_package) {
-    update_create_package( objdir => $builddir,
-                           stagedir => $stagedir,
-                           url => $url,
-                         );
+  if (!$status and $cachebuild and $Settings::update_package) {
+    $status = update_create_package( objdir => $builddir,
+                                     stagedir => $stagedir,
+                                     url => $url,
+                                     );
   }
 
   # need to reverse status, since it's a "unix" truth value, where 0 means 
@@ -395,6 +395,8 @@ sub packit {
 
 sub update_create_package {
     my %args = @_;
+
+    my $status = 0;
 
     my $locale = $args{'locale'};
     my $objdir = $args{'objdir'};
@@ -407,6 +409,19 @@ sub update_create_package {
     $distdir = "$objdir/dist" if !defined($distdir);
     $locale = "en-US" if !defined($locale);
 
+    if (is_windows()) {
+      # need to convert paths for use by Cygwin utilities which treat
+      # "drive:/path" interpret drive as a host.
+      $objdir = `cygpath -u $objdir`;
+      chomp($objdir);
+
+      $stagedir = `cygpath -u $stagedir`;
+      chomp($stagedir);
+
+      $distdir = `cygpath -u $distdir`;
+      chomp($distdir);
+    }
+
     my($update_product, $update_version, $update_platform);
     my($update_appv, $update_extv);
 
@@ -414,6 +429,7 @@ sub update_create_package {
         $update_product = $Settings::update_product;
     } else {
         TinderUtils::print_log "update_product is undefined, skipping update generation.\n";
+        $status = 1;
         goto NOUPDATE;
     }
 
@@ -421,6 +437,7 @@ sub update_create_package {
         $update_version = $Settings::update_version;
     } else {
         TinderUtils::print_log "update_version is undefined, skipping update generation.\n";
+        $status = 1;
         goto NOUPDATE;
     }
 
@@ -428,6 +445,7 @@ sub update_create_package {
         $update_platform = $Settings::update_platform;
     } else {
         TinderUtils::print_log "update_platform is undefined, skipping update generation.\n";
+        $status = 1;
         goto NOUPDATE;
     }
 
@@ -435,6 +453,7 @@ sub update_create_package {
         $update_appv = $Settings::update_appv;
     } else {
         TinderUtils::print_log "update_appv is undefined, skipping update generation.\n";
+        $status = 1;
         goto NOUPDATE;
     }
 
@@ -442,6 +461,7 @@ sub update_create_package {
         $update_extv = $Settings::update_extv;
     } else {
         TinderUtils::print_log "update_extv is undefined, skipping update generation.\n";
+        $status = 1;
         goto NOUPDATE;
     }
 
@@ -449,21 +469,46 @@ sub update_create_package {
     TinderUtils::print_log "\nGenerating complete update...\n";
     my $temp_stagedir = "$stagedir/build.$$";
     system("mkdir -p $temp_stagedir");
-    TinderUtils::run_shell_command "make -C $objdir/tools/update-packaging full-update STAGE_DIR=$temp_stagedir DIST=$distdir AB_CD=$locale";
+
+    my $up_temp_stagedir = $temp_stagedir;
+    my $up_distdir = $distdir;
+    if (is_windows()) {
+      # need to convert paths for use by the mar utility, which doesn't know
+      # how to handle non-Windows paths.
+      $up_temp_stagedir = `cygpath -m $up_temp_stagedir`;
+      chomp($up_temp_stagedir);
+
+      $up_distdir = `cygpath -m $up_distdir`;
+      chomp($up_distdir);
+    }
+
+    TinderUtils::run_shell_command "make -C $objdir/tools/update-packaging full-update STAGE_DIR=$up_temp_stagedir DIST=$up_distdir AB_CD=$locale";
 
     my $update_file = "update.mar";
     my @updatemar;
-    @updatemar = grep { -f $_ } <${temp_stagedir}/*.mar>;
+    my $update_glob = "${temp_stagedir}/*.mar";
+    @updatemar = grep { -f $_ } glob($update_glob);
     if ( scalar(@updatemar) ge 1 ) {
       $update_file = $updatemar[0];
       $update_file =~ s:^$temp_stagedir/(.*)$:$1:g;
+    } else {
+      TinderUtils::print_log "No MAR file found matching '$update_glob', update generation failed.\n";
+      $status = 1;
+      goto NOUPDATE;
     }
 
-    system("rsync -av $temp_stagedir/$update_file $stagedir/");
-    system("rm -rf $temp_stagedir");
+    TinderUtils::run_shell_command "rsync -av $temp_stagedir/$update_file $stagedir/";
 
     my $update_path = "$stagedir/$update_file";
     my $update_fullurl = "$url/$update_file";
+
+    if ( ! -f $update_path ) {
+      TinderUtils::print_log "Error: Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
+      $status = 1;
+      goto NOUPDATE;
+    }
+
+    TinderUtils::run_shell_command "rm -rf $temp_stagedir";
 
     if ( -f $update_path ) {
       # Make update dist directory.
@@ -538,11 +583,11 @@ sub update_create_package {
 
       TinderUtils::print_log "\nCompleted pushing update info...\n";
       TinderUtils::print_log "\nUpdate build completed.\n\n";
-    } else {
-      TinderUtils::print_log "Error: Unable to get info on '$update_path' or include in upload because it doesn't exist!\n";
     }
 
     NOUPDATE:
+
+    return $status;
 }
 
 sub read_file {
@@ -633,7 +678,7 @@ sub update_create_stats {
 
 sub packit_l10n {
   my ($srcdir, $objdir, $packaging_dir, $package_location, $url, $stagedir, $cachebuild) = @_;
-  my $status;
+  my $status = 0;
 
   TinderUtils::print_log "Starting l10n builds\n";
 
@@ -785,12 +830,14 @@ sub packit_l10n {
         }
 
         system("cd $objdir/dist/l10n-stage; ln -s ../host .");
-        update_create_package( objdir => $objdir,
-                               stagedir => $stagedir,
-                               url => $url,
-                               locale => $locale,
-                               distdir => "$objdir/dist/l10n-stage",
-                             );
+        $status = update_create_package( objdir => $objdir,
+                                         stagedir => $stagedir,
+                                         url => $url,
+                                         locale => $locale,
+                                         distdir => "$objdir/dist/l10n-stage",
+                                         );
+
+        $tinderstatus = 'busted' if ($status);
       }
     }
 
@@ -1012,6 +1059,12 @@ sub PreBuild {
     if ($Settings::clean_srcdir) {
       if ( -d "mozilla") {
         TinderUtils::run_shell_command "rm -rf mozilla";
+        $cachebuild = 1;
+      } else {
+        TinderUtils::print_log "starting non-release build\n";
+        # Bug 305233 
+        TinderUtils::run_shell_command "rm -rf mozilla/dist";
+        $cachebuild = 0;
       }
     }
     if ( -d "l10n" ) {
@@ -1030,14 +1083,16 @@ sub main {
 
   chdir $mozilla_build_dir;
 
-  if (is_windows()) {
-    #$mozilla_build_dir = `cygpath $mozilla_build_dir`; # cygnusify the path
-    #chop $mozilla_build_dir; # remove whitespace
+  if (0 and is_windows()) {
+    $mozilla_build_dir = `cygpath -m $mozilla_build_dir`; # cygnusify the path
+    chomp($mozilla_build_dir); # remove whitespace
   
-    #unless ( -e $mozilla_build_dir) {
-      #TinderUtils::print_log "No cygnified $mozilla_build_dir to make packages in.\n";
-      #return (("testfailed")) ;
-    #}
+    if ( -e $mozilla_build_dir ) {
+      TinderUtils::print_log "Using cygnified $mozilla_build_dir to make packages in.\n";
+    } else {
+      TinderUtils::print_log "No cygnified $mozilla_build_dir to make packages in.\n";
+      return (("testfailed")) ;
+    }
   }
 
   my $srcdir = "$mozilla_build_dir/${Settings::Topsrcdir}";
@@ -1050,7 +1105,7 @@ sub main {
     return (("testfailed")) ;
   }
 
-  system("rm -f $objdir/dist/bin/codesighs");
+  TinderUtils::run_shell_command "rm -f $objdir/dist/bin/codesighs";
 
   # set up variables with default values
   # need to modify the settings from tinder-config.pl
