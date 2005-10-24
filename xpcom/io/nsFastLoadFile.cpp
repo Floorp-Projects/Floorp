@@ -538,10 +538,9 @@ nsFastLoadFileReader::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
     nsDocumentMapReadEntry* entry = mCurrentDocumentMapEntry;
     if (entry) {
         // Don't call our Seek wrapper, as it clears mCurrentDocumentMapEntry.
-        nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mInputStream));
         if (entry->mNeedToSeek) {
-            rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                                entry->mSaveOffset);
+            rv = mSeekableInput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                      entry->mSaveOffset);
             if (NS_FAILED(rv))
                 return rv;
 
@@ -559,8 +558,8 @@ nsFastLoadFileReader::Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead)
             if (entry->mNextSegmentOffset == 0)
                 return NS_ERROR_UNEXPECTED;
 
-            rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                                entry->mNextSegmentOffset);
+            rv = mSeekableInput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                      entry->mNextSegmentOffset);
             if (NS_FAILED(rv))
                 return rv;
 
@@ -623,6 +622,16 @@ nsFastLoadFileReader::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
     return rv;
 }
 
+NS_IMETHODIMP
+nsFastLoadFileReader::SetInputStream(nsIInputStream *aInputStream)
+{
+    nsresult rv = nsBinaryInputStream::SetInputStream(aInputStream);
+    mSeekableInput = do_QueryInterface(aInputStream);
+    NS_ASSERTION(!mInputStream || mSeekableInput,
+                 "FastLoad requires a seekable input stream");
+    return rv;
+}
+
 /**
  * XXX tuneme
  */
@@ -632,16 +641,15 @@ NS_IMETHODIMP
 nsFastLoadFileReader::ComputeChecksum(PRUint32 *aResult)
 {
     nsCOMPtr<nsIInputStream> stream = mInputStream;
+    nsCOMPtr<nsISeekableStream> seekable = mSeekableInput;
 
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(stream));
     PRInt64 saveOffset;
     nsresult rv = seekable->Tell(&saveOffset);
     if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIStreamBufferAccess> bufferAccess(do_QueryInterface(stream));
-    if (bufferAccess) {
-        rv = bufferAccess->GetUnbufferedStream(getter_AddRefs(stream));
+    if (mBufferAccess) {
+        rv = mBufferAccess->GetUnbufferedStream(getter_AddRefs(stream));
         if (NS_FAILED(rv))
             return rv;
 
@@ -932,22 +940,16 @@ nsFastLoadFileReader::ReadMuxedDocumentInfo(nsFastLoadMuxedDocumentInfo *aInfo)
 nsresult
 nsFastLoadFileReader::Open()
 {
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mInputStream));
-    if (!seekable)
-        return NS_ERROR_UNEXPECTED;
-
     nsresult rv;
 
     // Don't bother buffering the header, as we immediately seek to EOF.
-    nsCOMPtr<nsIStreamBufferAccess>
-        bufferAccess(do_QueryInterface(mInputStream));
-    if (bufferAccess)
-        bufferAccess->DisableBuffering();
+    if (mBufferAccess)
+        mBufferAccess->DisableBuffering();
 
     rv = ReadHeader(&mHeader);
 
-    if (bufferAccess)
-        bufferAccess->EnableBuffering();
+    if (mBufferAccess)
+        mBufferAccess->EnableBuffering();
     if (NS_FAILED(rv))
         return rv;
 
@@ -956,12 +958,12 @@ nsFastLoadFileReader::Open()
     if (mHeader.mFooterOffset == 0)
         return NS_ERROR_UNEXPECTED;
 
-    rv = seekable->Seek(nsISeekableStream::NS_SEEK_END, 0);
+    rv = mSeekableInput->Seek(nsISeekableStream::NS_SEEK_END, 0);
     if (NS_FAILED(rv))
         return rv;
 
     PRInt64 fileSize;
-    rv = seekable->Tell(&fileSize);
+    rv = mSeekableInput->Tell(&fileSize);
     if (NS_FAILED(rv))
         return rv;
 
@@ -971,8 +973,8 @@ nsFastLoadFileReader::Open()
     if ((PRUint32) fileSize64 != mHeader.mFileSize)
         return NS_ERROR_UNEXPECTED;
 
-    rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                        PRInt32(mHeader.mFooterOffset));
+    rv = mSeekableInput->Seek(nsISeekableStream::NS_SEEK_SET,
+                              PRInt32(mHeader.mFooterOffset));
     if (NS_FAILED(rv))
         return rv;
 
@@ -980,8 +982,8 @@ nsFastLoadFileReader::Open()
     if (NS_FAILED(rv))
         return rv;
 
-    return seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                          sizeof(nsFastLoadHeader));
+    return mSeekableInput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                sizeof(nsFastLoadHeader));
 }
 
 NS_IMETHODIMP
@@ -1063,11 +1065,10 @@ nsFastLoadFileReader::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
         // Check whether we've already deserialized the object for this OID.
         object = entry->mReadObject;
         if (!object) {
-            nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mInputStream));
             PRInt64 saveOffset;
             nsDocumentMapReadEntry* saveDocMapEntry = nsnull;
 
-            rv = seekable->Tell(&saveOffset);
+            rv = mSeekableInput->Tell(&saveOffset);
             if (NS_FAILED(rv))
                 return rv;
 
@@ -1087,8 +1088,8 @@ nsFastLoadFileReader::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
                 // or more multiplexed documents in the FastLoad file.
                 saveDocMapEntry = mCurrentDocumentMapEntry;
                 mCurrentDocumentMapEntry = nsnull;
-                rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                                    entry->mCIDOffset);
+                rv = mSeekableInput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                          entry->mCIDOffset);
                 if (NS_FAILED(rv))
                     return rv;
             }
@@ -1100,14 +1101,15 @@ nsFastLoadFileReader::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
             if (entry->mCIDOffset != saveOffset32) {
                 // Save the "skip offset" in case we need to skip this object
                 // definition when reading forward, later on.
-                rv = seekable->Tell(&entry->mSkipOffset);
+                rv = mSeekableInput->Tell(&entry->mSkipOffset);
                 if (NS_FAILED(rv))
                     return rv;
 
                 // Restore stream offset and mCurrentDocumentMapEntry in case
                 // we're still reading forward through a part of the multiplex
                 // to get object definitions eagerly.
-                rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, saveOffset);
+                rv = mSeekableInput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                          saveOffset);
                 if (NS_FAILED(rv))
                     return rv;
                 mCurrentDocumentMapEntry = saveDocMapEntry;
@@ -1122,10 +1124,8 @@ nsFastLoadFileReader::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
             // We must skip over the object definition.
             if (oid & MFL_OBJECT_DEF_TAG) {
                 NS_ASSERTION(entry->mSkipOffset != 0, "impossible! see above");
-                nsCOMPtr<nsISeekableStream>
-                    seekable(do_QueryInterface(mInputStream));
-                rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                                    entry->mSkipOffset);
+                rv = mSeekableInput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                          entry->mSkipOffset);
                 if (NS_FAILED(rv))
                     return rv;
             }
@@ -1181,22 +1181,19 @@ NS_IMETHODIMP
 nsFastLoadFileReader::Seek(PRInt32 aWhence, PRInt64 aOffset)
 {
     mCurrentDocumentMapEntry = nsnull;
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mInputStream));
-    return seekable->Seek(aWhence, aOffset);
+    return mSeekableInput->Seek(aWhence, aOffset);
 }
 
 NS_IMETHODIMP
 nsFastLoadFileReader::Tell(PRInt64 *aResult)
 {
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mInputStream));
-    return seekable->Tell(aResult);
+    return mSeekableInput->Tell(aResult);
 }
 
 NS_IMETHODIMP
 nsFastLoadFileReader::SetEOF()
 {
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mInputStream));
-    return seekable->SetEOF();
+    return mSeekableInput->SetEOF();
 }
 
 NS_COM nsresult
@@ -1436,13 +1433,10 @@ NS_IMETHODIMP
 nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
                                           nsISupports** aResult)
 {
-    // Avoid repeatedly QI'ing to nsISeekableStream as we tell and seek.
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mOutputStream));
-
     // Capture the current file offset (XXXbe maintain our own via Write?)
     nsresult rv;
     PRInt64 currentSegmentOffset;
-    rv = seekable->Tell(&currentSegmentOffset);
+    rv = mSeekableOutput->Tell(&currentSegmentOffset);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1491,8 +1485,8 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
         TRACE_MUX(('w', "select prev %s offset %lu\n",
                    prevDocMapEntry->mString, prevSegmentOffset));
 
-        rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                            prevSegmentOffset + 4);
+        rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                   prevSegmentOffset + 4);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1506,8 +1500,8 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
         // back to *this* entry's last "current" segment offset and write its
         // next segment offset at the first PRUint32 of the segment.
         if (!docMapEntry->mInitialSegmentOffset) {
-            rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                                currentSegmentOffset);
+            rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                       currentSegmentOffset);
             if (NS_FAILED(rv))
                 return rv;
         }
@@ -1519,8 +1513,8 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
     if (!docMapEntry->mInitialSegmentOffset) {
         docMapEntry->mInitialSegmentOffset = currentSegmentOffset32;
     } else {
-        rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                            docMapEntry->mCurrentSegmentOffset);
+        rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                   docMapEntry->mCurrentSegmentOffset);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1528,8 +1522,8 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
         if (NS_FAILED(rv))
             return rv;
 
-        rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                            currentSegmentOffset);
+        rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                   currentSegmentOffset);
         if (NS_FAILED(rv))
             return rv;
     }
@@ -1918,14 +1912,10 @@ nsFastLoadFileWriter::Init()
 nsresult
 nsFastLoadFileWriter::Open()
 {
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mOutputStream));
-    if (!seekable)
-        return NS_ERROR_UNEXPECTED;
-
     nsresult rv;
 
-    rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                        sizeof(nsFastLoadHeader));
+    rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET,
+                               sizeof(nsFastLoadHeader));
     if (NS_FAILED(rv))
         return rv;
 
@@ -1941,10 +1931,8 @@ nsFastLoadFileWriter::Close()
     mHeader.mChecksum = 0;
     mHeader.mVersion = MFL_FILE_VERSION;
 
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mOutputStream));
-
     PRInt64 footerOffset;
-    rv = seekable->Tell(&footerOffset);
+    rv = mSeekableOutput->Tell(&footerOffset);
 
     LL_L2UI(mHeader.mFooterOffset, footerOffset);
     if (NS_FAILED(rv))
@@ -1955,8 +1943,8 @@ nsFastLoadFileWriter::Close()
     if (mCurrentDocumentMapEntry) {
         PRUint32 currentSegmentOffset =
             mCurrentDocumentMapEntry->mCurrentSegmentOffset;
-        rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                            currentSegmentOffset + 4);
+        rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                   currentSegmentOffset + 4);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1965,8 +1953,8 @@ nsFastLoadFileWriter::Close()
             return rv;
 
         // Seek back to the current offset to write the footer.
-        rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                            mHeader.mFooterOffset);
+        rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET,
+                                   mHeader.mFooterOffset);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1977,12 +1965,12 @@ nsFastLoadFileWriter::Close()
     if (NS_FAILED(rv))
         return rv;
     PRInt64 fileSize;
-    rv = seekable->Tell(&fileSize);
+    rv = mSeekableOutput->Tell(&fileSize);
     LL_L2UI(mHeader.mFileSize, fileSize);
     if (NS_FAILED(rv))
         return rv;
 
-    rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+    rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET, 0);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1996,10 +1984,8 @@ nsFastLoadFileWriter::Close()
         // Get the unbuffered output stream, which flushes the buffered header
         // so we can read and checksum it along with the rest of the file, and
         // which allows us to write the checksum directly.
-        nsCOMPtr<nsIStreamBufferAccess>
-            bufferAccess(do_QueryInterface(mOutputStream));
         nsCOMPtr<nsIOutputStream> output;
-        rv = bufferAccess->GetUnbufferedStream(getter_AddRefs(output));
+        rv = mBufferAccess->GetUnbufferedStream(getter_AddRefs(output));
         if (NS_FAILED(rv) || !output)
             return NS_ERROR_UNEXPECTED;
 
@@ -2011,14 +1997,15 @@ nsFastLoadFileWriter::Close()
         // Get the unbuffered input stream, to avoid copying overhead and to
         // keep our view of the file coherent with the writer -- we don't want
         // to hit a stale buffer in the reader's underlying stream.
-        bufferAccess = do_QueryInterface(input);
+        nsCOMPtr<nsIStreamBufferAccess> bufferAccess =
+            do_QueryInterface(input);
         rv = bufferAccess->GetUnbufferedStream(getter_AddRefs(input));
         if (NS_FAILED(rv) || !input)
             return NS_ERROR_UNEXPECTED;
 
         // Seek the input stream to offset 0, in case it's a reader who has
         // already been used to consume some of the FastLoad file.
-        seekable = do_QueryInterface(input);
+        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(input);
         rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
         if (NS_FAILED(rv))
             return rv;
@@ -2280,22 +2267,27 @@ NS_IMETHODIMP
 nsFastLoadFileWriter::Seek(PRInt32 aWhence, PRInt64 aOffset)
 {
     mCurrentDocumentMapEntry = nsnull;
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mOutputStream));
-    return seekable->Seek(aWhence, aOffset);
+    return mSeekableOutput->Seek(aWhence, aOffset);
 }
 
 NS_IMETHODIMP
 nsFastLoadFileWriter::Tell(PRInt64 *aResult)
 {
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mOutputStream));
-    return seekable->Tell(aResult);
+    return mSeekableOutput->Tell(aResult);
 }
 
 NS_IMETHODIMP
 nsFastLoadFileWriter::SetEOF()
 {
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mOutputStream));
-    return seekable->SetEOF();
+    return mSeekableOutput->SetEOF();
+}
+
+NS_IMETHODIMP
+nsFastLoadFileWriter::SetOutputStream(nsIOutputStream *aStream)
+{
+    nsresult rv = nsBinaryOutputStream::SetOutputStream(aStream);
+    mSeekableOutput = do_QueryInterface(mOutputStream);
+    return rv;
 }
 
 NS_COM nsresult
@@ -2376,10 +2368,6 @@ nsFastLoadFileUpdater::CopyReadDocumentMapEntryToUpdater(PLDHashTable *aTable,
 nsresult
 nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
 {
-    nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mOutputStream));
-    if (!seekable)
-        return NS_ERROR_UNEXPECTED;
-
     nsresult rv;
     rv = nsFastLoadFileWriter::Init();
     if (NS_FAILED(rv))
@@ -2406,7 +2394,7 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
     // Prepare to save aReader state in case we need to seek back and read a
     // singleton object that might otherwise get written by this updater.
     nsDocumentMapReadEntry* saveDocMapEntry = nsnull;
-    nsCOMPtr<nsISeekableStream> inputSeekable;
+    nsISeekableStream* inputSeekable = nsnull;
     PRInt64 saveOffset = 0;
 
     for (i = 0, n = aReader->mFooter.mNumSharpObjects; i < n; i++) {
@@ -2424,7 +2412,7 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
         nsISupports* obj = readEntry->mReadObject;
         if (!obj && MFL_GET_SINGLETON_FLAG(readEntry)) {
             if (!saveDocMapEntry) {
-                inputSeekable = do_QueryInterface(aReader->mInputStream);
+                inputSeekable = aReader->mSeekableInput;
                 rv = inputSeekable->Tell(&saveOffset);
                 if (NS_FAILED(rv))
                     return rv;
@@ -2525,8 +2513,8 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
     // update the header to have a zero mFooterOffset, which will invalidate
     // the FastLoad file on next startup read attempt, should we crash before
     // completing this update.
-    rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                        offsetof(nsFastLoadHeader, mFooterOffset));
+    rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET,
+                               offsetof(nsFastLoadHeader, mFooterOffset));
     if (NS_FAILED(rv))
         return rv;
 
@@ -2534,8 +2522,8 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
     if (NS_FAILED(rv))
         return rv;
 
-    rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
-                        aReader->mHeader.mFooterOffset);
+    rv = mSeekableOutput->Seek(nsISeekableStream::NS_SEEK_SET,
+                               aReader->mHeader.mFooterOffset);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2545,6 +2533,7 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
     // that we override Close to break the resulting zero-length cycle.
     mFileIO = this;
     mInputStream = aReader->mInputStream;
+    mSeekableInput = aReader->mSeekableInput;
     return NS_OK;
 }
 
