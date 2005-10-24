@@ -119,7 +119,7 @@ my $action  = trim($cgi->param('action')  || '');
 
 # Gives the name of the parameter associated with the field
 # and representing its default value.
-my %defaults = {};
+my %defaults;
 $defaults{'op_sys'} = 'defaultopsys';
 $defaults{'rep_platform'} = 'defaultplatform';
 $defaults{'priority'} = 'defaultpriority';
