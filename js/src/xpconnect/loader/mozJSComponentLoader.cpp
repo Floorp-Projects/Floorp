@@ -1012,6 +1012,7 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
     he = PL_HashTableRawAdd(mModules, hep, hash,
                             nsCRT::strdup(registryLocation), module);
 
+    *status = NS_OK;
     return module;
 }
 
