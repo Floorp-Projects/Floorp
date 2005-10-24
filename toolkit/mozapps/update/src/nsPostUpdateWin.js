@@ -328,6 +328,7 @@ RegKey.prototype = {
   ACCESS_WRITE: nsIWindowsRegKey.ACCESS_WRITE,
   ACCESS_ALL:   nsIWindowsRegKey.ACCESS_ALL,
 
+  ROOT_KEY_CURRENT_USER: nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
   ROOT_KEY_LOCAL_MACHINE: nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
 
   close: function() {
@@ -396,6 +397,9 @@ RegKey.prototype = {
     switch (this._root) {
     case this.ROOT_KEY_LOCAL_MACHINE:
       root = "HKEY_LOCAL_MACHINE";
+      break;
+    case this.ROOT_KEY_CURRENT_USER:
+      root = "HKEY_CURRENT_USER";
       break;
     default:
       LOG("unknown root key");
@@ -554,7 +558,7 @@ function deleteOldRegKeys(key, info) {
  * existing key that references the same install directory.  We assume that
  * the value of vendorShortName does not change across updates.
  */
-function updateRegistry() {
+function updateRegistry(rootKey) {
   LOG("updateRegistry");
 
   var ourInstallDir = getFile(KEY_APPDIR);
@@ -575,8 +579,7 @@ function updateRegistry() {
 
   var oldInstall;
   try {
-    key.open(key.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\" + vendorShortName,
-             key.ACCESS_READ);
+    key.open(rootKey, "SOFTWARE\\" + vendorShortName, key.ACCESS_READ);
     oldInstall = locateOldInstall(key, ourInstallDir);
   } finally {
     key.close();
@@ -596,8 +599,7 @@ function updateRegistry() {
 
   // Delete the old keys:
   try {
-    key.open(key.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE\\" + vendorShortName,
-             key.ACCESS_READ);
+    key.open(rootKey, "SOFTWARE\\" + vendorShortName, key.ACCESS_READ);
     deleteOldRegKeys(key, oldInstall);
   } finally {
     key.close();
@@ -672,11 +674,14 @@ function updateRegistry() {
   };
 
   try {
-    key.open(key.ROOT_KEY_LOCAL_MACHINE, "SOFTWARE", key.ACCESS_READ);
+    key.open(rootKey, "SOFTWARE", key.ACCESS_READ);
     createRegistryKeys(key, Key_brand);
   } finally {
     key.close();
   }
+
+  if (rootKey != RegKey.prototype.ROOT_KEY_LOCAL_MACHINE)
+    return;
 
   // Now, do the same thing for the Add/Remove Programs control panel:
 
@@ -684,7 +689,7 @@ function updateRegistry() {
       "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
 
   try {
-    key.open(key.ROOT_KEY_LOCAL_MACHINE, uninstallRoot, key.ACCESS_READ);
+    key.open(rootKey, uninstallRoot, key.ACCESS_READ);
     var oldName = oldInstall.fullName + " (" + oldInstall.version + ")";
     deleteRegistryKey(key, oldName, false);
   } finally {
@@ -718,7 +723,7 @@ function updateRegistry() {
 
   var child;
   try {
-    key.open(key.ROOT_KEY_LOCAL_MACHINE, uninstallRoot, key.ACCESS_READ);
+    key.open(rootKey, uninstallRoot, key.ACCESS_READ);
     createRegistryKeys(key, Key_uninstall);
 
     // Create additional DWORD keys for NoModify and NoRepair:
@@ -753,7 +758,8 @@ nsPostUpdateWin.prototype = {
       installLogWriter = new InstallLogWriter();
       try {
         installLogWriter.begin();
-        updateRegistry();
+        updateRegistry(RegKey.prototype.ROOT_KEY_CURRENT_USER);
+        updateRegistry(RegKey.prototype.ROOT_KEY_LOCAL_MACHINE);
       } finally {
         installLogWriter.end();
         installLogWriter = null;
