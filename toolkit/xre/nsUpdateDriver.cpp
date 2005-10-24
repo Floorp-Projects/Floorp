@@ -57,7 +57,11 @@
 # include <windows.h>
 # define getcwd(path, size) _getcwd(path, size)
 # define getpid() GetCurrentProcessId()
-#elif defined(XP_UNIX) || defined(XP_OS2)
+#elif defined(XP_OS2)
+# include <unistd.h>
+# define INCL_DOSFILEMGR
+# include <os2.h>
+#elif defined(XP_UNIX)
 # include <unistd.h>
 #endif
 
