@@ -82,8 +82,8 @@ jsshell:
 		-s $(TEST_JS_EXE) \
 		-e sm$(TEST_OPTDEBUG) \
 		-o '-S 524288' \
+		-k \
 		-f $(LOG)-results-js.html 2>&1 | $(call prepend,jsshell)
-	$(call html2text,$(LOG)-results-js.html) | $(call prepend,jsshell)
 	$(call msg,jsshell,End JavaScript Test Suite)
 
 e4xshell:
@@ -93,8 +93,8 @@ e4xshell:
 		-s $(TEST_JS_EXE) \
 		-o '-S 524288 -x' \
 		-e sm$(TEST_OPTDEBUG) \
+		-k \
 		-f $(LOG)-results-e4x.html 2>&1 | $(call prepend,jse4xshell)
-	$(call html2text,$(LOG)-results-e4x.html) | $(call prepend,jse4xshell)
 	$(call msg,jse4xshell,End JavaScript Test Suite)
 
 #
