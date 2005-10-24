@@ -23,13 +23,13 @@ class AMO_Session
     * SQL Pear::DB wrapper
     * @var SQL
     */
-   private static $db;
+   var $db;
    
    /**
     * The table in which sessions are stored 
     * @var string
     */
-   private static $dbTable = 'PHPSESSION';
+   var $dbTable = 'PHPSESSION';
    
    /**
     * Constructor
@@ -37,7 +37,7 @@ class AMO_Session
     */
    function __construct(&$aDb)
    {
-       self::$db = $aDb;
+       $this->db = $aDb;
    }
 
    /**
@@ -65,7 +65,7 @@ class AMO_Session
         * If we don't have a database connection then we
         * can't really continue
         */
-       if (empty(self::$db))
+       if (empty($this->db))
            return FALSE;
            
        $out = array();
@@ -73,7 +73,7 @@ class AMO_Session
        {
            // TODO: when the SQL class gets it's own escapeSimple then
            //  change this to use that instead
-           $out[$key] = self::$db->db->escapeSimple($value);
+           $out[$key] = $this->db->db->escapeSimple($value);
        }
 
        return $out;
@@ -92,7 +92,7 @@ class AMO_Session
         * Return FALSE if we don't have a database to use 
         */
 
-       return empty(self::$db) == FALSE;
+       return empty($this->db) == FALSE;
    }
 
    /**
@@ -118,7 +118,7 @@ class AMO_Session
         * If for some reason we don't have a database handle, then
         * we can't really continue here
         */
-       if (empty(self::$db))
+       if (empty($this->db))
            return '';
        
        /**
@@ -129,21 +129,21 @@ class AMO_Session
        /**
         * We only want the data, don't care about anything else
         */ 
-       $sql = sprintf("SELECT SESSIONDATA FROM %s WHERE SESSIONID='%s'", self::$dbTable, $clean['SessId']);
+       $sql = sprintf("SELECT SESSIONDATA FROM %s WHERE SESSIONID='%s'", $this->dbTable, $clean['SessId']);
        $data = '';
        
-       if (self::$db->query($sql, SQL_INIT, SQL_ASSOC))
+       if ($this->db->query($sql, SQL_INIT, SQL_ASSOC))
        {
            /**
             * Anything other than 1 row should indicate an error, so don't
             * propagate this but rather handle it as if there was no data
             * at all. 
             */
-           if (self::$db->result->numRows() == 1)
+           if ($this->db->result->numRows() == 1)
            {
-               $data = self::$db->record['SESSIONDATA'];
+               $data = $this->db->record['SESSIONDATA'];
            }
-           self::$db->result->free();
+           $this->db->result->free();
        }
 
        return $data;
@@ -160,7 +160,7 @@ class AMO_Session
         * If for some reason we don't have a database handle, then
         * we can't really continue here
         */
-       if (empty(self::$db))
+       if (empty($this->db))
            return FALSE;
 
        /**
@@ -179,8 +179,8 @@ class AMO_Session
         * an automatic default then it will get lost between writes unless it is included
         * in the statement.
         */
-       $sql = sprintf("REPLACE %s SET SESSIONID='%s', SESSIONDATA='%s'", self::$dbTable, $clean['SessId'], $clean['SessData']);
-       return self::$db->query($sql, SQL_NONE);
+       $sql = sprintf("REPLACE %s SET SESSIONID='%s', SESSIONDATA='%s'", $this->dbTable, $clean['SessId'], $clean['SessData']);
+       return $this->db->query($sql, SQL_NONE);
    }
    
    /**
@@ -194,7 +194,7 @@ class AMO_Session
         * If for some reason we don't have a database handle, then
         * we can't really continue here
         */
-       if (empty(self::$db))
+       if (empty($this->db))
            return FALSE;
            
        /**
@@ -202,9 +202,9 @@ class AMO_Session
         */
        $clean = $this->_prepareForSql(array('SessId' => $aSessId));
        
-       $sql = sprintf("DELETE FROM %s WHERE SESSIONID='%s'", self::$dbTable, $clean['SessId']);
+       $sql = sprintf("DELETE FROM %s WHERE SESSIONID='%s'", $this->dbTable, $clean['SessId']);
        
-       return self::$db->db->query($sql);
+       return $this->db->db->query($sql);
    }
    
    /**
