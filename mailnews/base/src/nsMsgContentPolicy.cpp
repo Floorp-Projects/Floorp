@@ -63,6 +63,8 @@
 #include "nsCExternalHandlerService.h"
 
 // needed for the cookie policy manager
+#include "nsNetUtil.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsICookie2.h"
 #include "nsICookieManager2.h"
 
@@ -413,13 +415,26 @@ NS_IMETHODIMP nsMsgCookiePolicy::CanAccess(nsIURI         *aURI,
 {
   // by default we deny all cookies in mail
   *aResult = ACCESS_DENY;
+  NS_ENSURE_ARG_POINTER(aChannel);
   
-  // If aFirstURI is an RSS article, then we do allow cookies. 
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem;
+  NS_QueryNotificationCallbacks(aChannel, docShellTreeItem);
+
+  NS_ENSURE_TRUE(docShellTreeItem, NS_OK);
+  PRInt32 itemType;
+  docShellTreeItem->GetItemType(&itemType);
+
+  // allow chome docshells to set cookies
+  if (itemType == nsIDocShellTreeItem::typeChrome)
+    *aResult = ACCESS_DEFAULT;
+  else // allow RSS articles in content to access cookies
+  {
   NS_ENSURE_TRUE(aFirstURI, NS_OK);  
   PRBool isRSS = PR_FALSE;
   IsRSSArticle(aFirstURI, &isRSS);
   if (isRSS)
     *aResult = ACCESS_DEFAULT;
+  }
 
   return NS_OK;
 }
