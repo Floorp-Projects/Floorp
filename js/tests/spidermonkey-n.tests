@@ -26,3 +26,9 @@ e4x/Regress/regress-278112.js
 # see bug 309840
 #
 js1_5/Regress/regress-173067.js
+#
+# The following tests are excluded from normal
+# runs as they are not fixed and cause the shell/browser
+# to hang.
+#
+ecma_3/RegExp/regress-307456.js
