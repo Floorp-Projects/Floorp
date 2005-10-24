@@ -915,6 +915,15 @@ sub reportRelease {
   return (("success", "$url"));
 }
 
+sub cleanup {
+  # As it's a temporary file meant to control the last-built file, remove
+  # last-built.new when we are done.
+
+  if ( -e "last-built.new" ) {
+    unlink "last-built.new";
+  }
+}
+
 sub returnStatus{
   # build-seamonkey-util.pl expects an array, if no package is uploaded,
   # a single-element array with 'busted', 'testfailed', or 'success' works.
@@ -924,6 +933,15 @@ sub returnStatus{
 }
 
 sub PreBuild {
+
+  # last-built.new is used to track a respin as it is currently happening and
+  # later takes the place of last-built.  If it exists at this point in the
+  # build, remove it because we do not want old last-built.new files to
+  # introduce noise or odd conditions in the build.
+
+  if ( -e "last-built.new" ) {
+    unlink "last-built.new";
+  }
 
   # We want to be able to remove the last-built file at any time of
   # day to trigger a respin, even if it's before the designated build
@@ -935,7 +953,7 @@ sub PreBuild {
   #    build hour (which may not be today!)
   # (3) subsumes (2), so there's no need to check for (2) explicitly.
 
-  if ( -e "last-built") {
+  if ( -e "last-built" ) {
     my $last = (stat "last-built")[9];
     TinderUtils::print_log "Most recent nightly build: " .
       localtime($last) . "\n";
@@ -964,6 +982,19 @@ sub PreBuild {
   }
 
   if ($cachebuild) {
+    # Within a cachebuild cycle (when it's determined a release build is
+    # needed), create a last-built.new file.  Later, if last-built.new exists,
+    # we move last-built.new to last-built.  If last-built.new doesn't exist,
+    # we do nothing.
+    #
+    # This allows us to remove last-built.new and have the next build cycle
+    # be a respin even if the current cycle already is one.
+
+    if ( ! -e "last-built.new" ) {
+      open BLAH, ">last-built.new";
+      close BLAH;
+    }
+
     TinderUtils::print_log "starting nightly release build\n";
     # clobber the tree if set to do so
     $Settings::clean_objdir = 1 if !defined($Settings::clean_objdir);
@@ -1069,6 +1100,7 @@ sub main {
 
   if (!$Settings::ConfigureOnly) {
     unless (packit($package_creation_path,$package_location,$url_path,$upload_directory,$objdir,$cachebuild)) {
+      cleanup();
       return returnStatus("Packaging failed", ("testfailed"));
     }
   }
@@ -1089,6 +1121,7 @@ sub main {
 
   unless (pushit($Settings::ssh_server,
                  $ftp_path,$upload_directory, $cachebuild)) {
+    cleanup();
     return returnStatus("Pushing package $upload_directory failed", ("testfailed"));
   }
 
@@ -1097,9 +1130,13 @@ sub main {
     TinderUtils::run_shell_command "find $mozilla_build_dir -type d -name \"200*-*\" -maxdepth 1 -prune -mtime +7 -print | xargs rm -rf";
     TinderUtils::run_shell_command "cp -rpf $upload_directory $mozilla_build_dir/$datestamp";
 
-    unlink "last-built";
-    open BLAH, ">last-built"; 
-    close BLAH;
+    # Above, we created last-built.new at the start of the cachebuild cycle.
+    # If the last-built.new file still exists, move it to the last-built file.
+
+    if ( -e "last-built.new" ) {
+      system("mv last-built.new last-built");
+    }
+
     return reportRelease ("$url_path\/", "$datestamp");
   } else {
     return (("success"));
