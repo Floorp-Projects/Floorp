@@ -50,7 +50,7 @@ function q1(n) {
     var d = Date.now();
     var e = c.match(/(.*)foo$/);
     var f = Date.now();
-    return [f - d];
+    return (f - d);
 }
 
 function q2(n) {
@@ -60,7 +60,7 @@ function q2(n) {
     var d = Date.now();
     var e = /foo$/.test(c) && c.match(/(.*)foo$/);
     var f = Date.now();
-    return [f - d];
+    return (f - d);
 }
 
 var data1 = {X:[], Y:[]};
