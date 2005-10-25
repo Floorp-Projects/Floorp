@@ -36,14 +36,14 @@
  * ***** END LICENSE BLOCK ***** */
 //-----------------------------------------------------------------------------
 var bug = 304897;
-var summary = 'uneval("\t"), uneval("\x09")';
+var summary = 'uneval("\\t"), uneval("\\x09")';
 var actual = '';
 var expect = '';
 
 printBugNumber (bug);
 printStatus (summary);
 
-expect = '"\t"';
+expect = '"\\t"';
 actual = uneval('\t');  
 reportCompare(expect, actual, summary);
 
