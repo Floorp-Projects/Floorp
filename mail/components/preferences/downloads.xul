@@ -85,7 +85,7 @@
             <button id="chooseFolder" oncommand="gDownloadsPane.chooseFolder();"
                     preference="browser.download.folderList"
                     onsynctopreference="return gDownloadsPane.writeFolderList()"
-#ifdef XP_MACSOX
+#ifdef XP_MACOSX
                     accesskey="&chooseFolderMac.accesskey;" label="&chooseFolderMac.label;"/>
 #else
                     accesskey="&chooseFolderWin.accesskey;" label="&chooseFolderWin.label;"/>
