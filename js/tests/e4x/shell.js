@@ -81,6 +81,7 @@ function reportFailure (section, msg)
  */
 function printStatus (msg)
 {
+    msg = msg.toString();
     var lines = msg.split ("\n");
     var l;
 
