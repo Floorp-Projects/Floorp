@@ -3549,13 +3549,15 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
         return OBJ_CHECK_ACCESS(cx, pobj, id, mode, vp, attrsp);
     }
     sprop = (JSScopeProperty *)prop;
-    *vp = (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)))
-          ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
-          : ((mode & JSACC_WATCH) == JSACC_PROTO)
-          ? LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PROTO)
-          : (mode == JSACC_PARENT)
-          ? LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PARENT)
-          : JSVAL_VOID;
+    if (!(mode & JSACC_WRITE)) {
+        *vp = (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(pobj)))
+            ? LOCKED_OBJ_GET_SLOT(pobj, sprop->slot)
+            : ((mode & JSACC_WATCH) == JSACC_PROTO)
+            ? LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PROTO)
+            : (mode == JSACC_PARENT)
+            ? LOCKED_OBJ_GET_SLOT(obj, JSSLOT_PARENT)
+            : JSVAL_VOID;
+    }
     *attrsp = sprop->attrs;
 
     /*
@@ -3856,13 +3858,12 @@ static JSBool
 CheckCtorSetAccess(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSAtom *atom;
-    jsval oldval;
     uintN attrs;
 
     atom = cx->runtime->atomState.constructorAtom;
     JS_ASSERT(id == ATOM_KEY(atom));
     return OBJ_CHECK_ACCESS(cx, obj, ATOM_TO_JSID(atom), JSACC_WRITE,
-                            &oldval, &attrs);
+                            vp, &attrs);
 }
 
 JSBool
