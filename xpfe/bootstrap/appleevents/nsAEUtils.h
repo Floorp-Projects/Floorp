@@ -122,31 +122,6 @@ OSErr AEReplaceDescData(DescType typeCode, const void *dataPtr, Size dataSize, A
 #endif
 
 
-// utility port setting class
-
-class StPortSetter
-{
-public:
-				StPortSetter(WindowPtr destWindowPort)
-				{
-					::GetPort(&mOldPort);
-#if TARGET_CARBON
-					::SetPortWindowPort(destWindowPort);
-#else
-					::SetPort(destWindowPort);
-#endif
-				}
-				
-				~StPortSetter()
-				{
-					::SetPort(mOldPort);
-				}
-				
-protected:
-	GrafPtr		mOldPort;
-};
-
-
 // a stack-based, exception safely class for an AEDesc
 
 class StAEDesc: public AEDesc
@@ -275,27 +250,6 @@ protected:
 	
 	Handle			mHandle;
 	SInt32			mLockCount;
-	UInt8			mOldHandleState;
-};
-
-
-class StHandleLocker
-{
-public:
-					StHandleLocker(Handle inHandle)
-					:	mHandle(inHandle)
-					{
-						AE_ASSERT(mHandle, "No handle");
-						mOldHandleState = HGetState(mHandle);
-						HLock(mHandle);
-					}
-					
-					~StHandleLocker()
-					{
-						HSetState(mHandle, mOldHandleState);
-					}
-protected:
-	Handle			mHandle;
 	UInt8			mOldHandleState;
 };
 
