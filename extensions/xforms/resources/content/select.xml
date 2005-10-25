@@ -83,6 +83,7 @@
            <children includes="label"/>
         </html:span>
         <html:select xbl:inherits="style"
+                     class="xf-value"
                      onchange="this.parentNode.parentNode.selectionChanged();"
                      onfocus="this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusIn');"
                      onblur="this.parentNode.parentNode.handleBlur(); this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusOut');"
@@ -526,6 +527,7 @@
             <children includes="label"/>
           </html:td>
           <html:td anonid="checkbox-group"
+                   class="xf-value"
                    onchange="this.parentNode.parentNode.parentNode.selectionChanged();">
           </html:td>
         </html:tr>

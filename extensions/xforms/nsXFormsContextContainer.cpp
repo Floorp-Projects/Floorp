@@ -82,9 +82,12 @@ protected:
   /** The context size for the element */
   PRInt32 mContextSize;
 
+  /** Does this element have the repeat-index? */
+  PRBool mHasIndex;
+
 public:
   nsXFormsContextContainer()
-    : mContextPosition(1), mContextSize(1) {}
+    : mContextPosition(1), mContextSize(1), mHasIndex(PR_FALSE) {}
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -260,12 +263,13 @@ NS_IMETHODIMP
 nsXFormsContextContainer::SetIndexState(PRBool aHasIndex)
 {
   if (mElement) {
-    NS_NAMED_LITERAL_STRING(repIndex, "repeat-index");
+    mHasIndex = aHasIndex;
+    NS_NAMED_LITERAL_STRING(classStr, "class");
     if (aHasIndex) {
-      mElement->SetAttribute(repIndex,
-                             NS_LITERAL_STRING("1"));
+      mElement->SetAttribute(classStr,
+                             NS_LITERAL_STRING("xf-repeat-item xf-repeat-index"));
     } else {
-      mElement->RemoveAttribute(repIndex);
+      mElement->SetAttribute(classStr, NS_LITERAL_STRING("xf-repeat-item"));
     }
   }
   return NS_OK;
@@ -273,8 +277,10 @@ nsXFormsContextContainer::SetIndexState(PRBool aHasIndex)
 
 NS_IMETHODIMP
 nsXFormsContextContainer::GetIndexState(PRBool *aHasIndex)
-{  
-  return mElement->HasAttribute(NS_LITERAL_STRING("repeat-index"), aHasIndex);
+{
+  NS_ENSURE_ARG(aHasIndex);
+  *aHasIndex = mHasIndex;
+  return NS_OK;
 }
 
 // Factory

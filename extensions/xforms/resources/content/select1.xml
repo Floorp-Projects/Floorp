@@ -67,7 +67,7 @@
                  onclick="this.parentNode.parentNode.handleControlClick();"
                  onkeypress="this.parentNode.parentNode.handleKeyPress(event);"
                  onkeyup="this.parentNode.parentNode.handleKeyUp(event);"
-      /><html:input class="-moz-xforms-select1-dropdown"
+      /><html:input class="-moz-xforms-select1-dropdown xf-value"
                     type="button"
                     anonid="dropmarker"
                     tabindex="-1"

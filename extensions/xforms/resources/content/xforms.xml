@@ -127,7 +127,7 @@
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
     <content>
       <children includes="label"/>
-      <html:span anonid="content"></html:span>
+      <html:span class="xf-value" anonid="content"></html:span>
       <children/>
     </content>
     
@@ -177,6 +177,7 @@
     <content>
       <children includes="label"/>
       <html:input anonid="control"
+                  class="xf-value"
                   onblur="this.parentNode.delegate.value = this.value; this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
                   onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
                   onclick="this.parentNode._change();"
@@ -293,6 +294,7 @@
     <content>
       <children includes="label"/>
       <html:textarea anonid="control"
+                     class="xf-value"
                      onblur="this.parentNode.delegate.value = this.value; this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
                      onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
                      onkeyup="this.parentNode._change();"
@@ -455,6 +457,7 @@
     <content>
       <children includes="label"/>
       <html:input anonid="upload_text_control"
+                  class="xf-value"
                   readonly="true"
                   xbl:inherits="accesskey"/>
       <html:button anonid="upload_browse_button"
@@ -544,6 +547,7 @@
     <content>
       <children includes="label"/>
       <html:input readonly="true"
+                  class="xf-value"
                   xbl:inherits="accesskey"/>
       <html:button type="button"
                    disabled="true"
