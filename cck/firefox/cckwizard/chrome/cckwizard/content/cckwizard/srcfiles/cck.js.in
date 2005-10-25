@@ -1,6 +1,0 @@
-function getCCKLink(item)
-{
-  var bundle = document.getElementById("bundle_cck");
-
-  return bundle.getString(item);
-}
