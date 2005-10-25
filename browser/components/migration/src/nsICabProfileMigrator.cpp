@@ -103,6 +103,13 @@ nsICabProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsICabProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
+{
+  aResult.Truncate();
+  return NS_OK;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsICabProfileMigrator
 
