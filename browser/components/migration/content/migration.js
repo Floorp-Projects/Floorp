@@ -292,7 +292,7 @@ var MigrationWizard = {
 
     var numberOfChoices = 0;
     try {
-      var bundle = document.getElementById("browserconfigBundle");
+      var bundle = document.getElementById("brandBundle");
       var pageTitle = bundle.getString("homePageMigrationPageTitle");
       var pageDesc = bundle.getString("homePageMigrationDescription");
       var startPages = bundle.getString("homePageOptionCount");
