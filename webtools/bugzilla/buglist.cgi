@@ -39,6 +39,7 @@ use Bugzilla::Search;
 use Bugzilla::Search::Quicksearch;
 use Bugzilla::Constants;
 use Bugzilla::User;
+use Bugzilla::Bug;
 
 # Include the Bugzilla CGI and general utility library.
 require "globals.pl";
@@ -207,6 +208,7 @@ sub LookupNamedQuery {
     my $dbh = Bugzilla->dbh;
     # $name is safe -- we only use it below in a SELECT placeholder and then 
     # in error messages (which are always HTML-filtered).
+    $name || ThrowUserError("query_name_missing");
     trick_taint($name);
     my $result = $dbh->selectrow_array("SELECT query FROM namedqueries" 
                           . " WHERE userid = ? AND name = ?"
@@ -232,14 +234,17 @@ sub LookupNamedQuery {
 #         empty, or we will throw a UserError.
 # link_in_footer (optional) - 1 if the Named Query should be 
 # displayed in the user's footer, 0 otherwise.
+# query_type (optional) - 1 if the Named Query contains a list of
+# bug IDs only, 0 otherwise (default).
 #
 # All parameters are validated before passing them into the database.
 #
 # Returns: A boolean true value if the query existed in the database 
 # before, and we updated it. A boolean false value otherwise.
 sub InsertNamedQuery {
-    my ($userid, $query_name, $query, $link_in_footer) = @_;
+    my ($userid, $query_name, $query, $link_in_footer, $query_type) = @_;
     $link_in_footer ||= 0;
+    $query_type ||= QUERY_LIST;
     $query_name = trim($query_name);
     Bugzilla->login(LOGIN_REQUIRED);
     my $dbh = Bugzilla->dbh;
@@ -268,15 +273,15 @@ sub InsertNamedQuery {
     if ($result) {
         $query_existed_before = 1;
         $dbh->do("UPDATE namedqueries"
-            . " SET query = ?, linkinfooter = ?"
+            . " SET query = ?, linkinfooter = ?, query_type = ?"
             . " WHERE userid = ? AND name = ?"
-            , undef, ($query, $link_in_footer, $userid, $query_name));
+            , undef, ($query, $link_in_footer, $query_type, $userid, $query_name));
     } else {
         $query_existed_before = 0;
         $dbh->do("INSERT INTO namedqueries"
-            . " (userid, name, query, linkinfooter)"
-            . " VALUES (?, ?, ?, ?)"
-            , undef, ($userid, $query_name, $query, $link_in_footer));
+            . " (userid, name, query, linkinfooter, query_type)"
+            . " VALUES (?, ?, ?, ?, ?)"
+            , undef, ($userid, $query_name, $query, $link_in_footer, $query_type));
     }
 
     $dbh->bz_unlock_tables();
@@ -436,11 +441,35 @@ elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
         Bugzilla->login(LOGIN_REQUIRED);
         my $userid = Bugzilla->user->id;
         my $query_name = $cgi->param('newqueryname');
+        my $new_query = $cgi->param('newquery');
+        my $query_type = QUERY_LIST;
+        # If add_bugids is true, we are adding individual bugs to a saved
+        # search. We get the existing list of bug IDs (if any) and append
+        # the new ones.
+        if ($cgi->param('add_bugids')) {
+            my %bug_ids;
+            foreach my $bug_id (split(/[\s,]+/, $cgi->param('bug_ids'))) {
+                next unless $bug_id;
+                ValidateBugID($bug_id);
+                $bug_ids{$bug_id} = 1;
+            }
+            ThrowUserError("no_bug_ids") unless scalar(keys %bug_ids);
 
+            if (!trim($query_name)) {
+                # No new query name has been given. We append new bug IDs
+                # to the existing list.
+                $query_name = $cgi->param('oldqueryname');
+                my $old_query = LookupNamedQuery($query_name);
+                foreach my $bug_id (split(/[\s,=]+/, $old_query)) {
+                    $bug_ids{$bug_id} = 1 if detaint_natural($bug_id);
+                }
+            }
+            $new_query = "bug_id=" . join(',', sort {$a <=> $b} keys %bug_ids);
+            $query_type = LIST_OF_BUGS;
+        }
         my $tofooter = 1;
-        my $existed_before = InsertNamedQuery($userid, $query_name, 
-                                              scalar $cgi->param('newquery'),
-                                              $tofooter);
+        my $existed_before = InsertNamedQuery($userid, $query_name, $new_query,
+                                              $tofooter, $query_type);
         if ($existed_before) {
             $vars->{'message'} = "buglist_updated_named_query";
         }

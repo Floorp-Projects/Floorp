@@ -4038,6 +4038,10 @@ if ($dbh->bz_column_info("series", "public")) {
 $dbh->bz_add_column('attachments', 'isurl',
                     {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 0});
 
+# 2005-10-21 LpSolit@gmail.com - Bug 313020
+$dbh->bz_add_column('namedqueries', 'query_type',
+                    {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 0});
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
@@ -4179,6 +4183,9 @@ add_setting ("post_bug_submit_action", {"next_bug" => 1,
 
 # 2005-06-29 wurblzap@gmail.com -- Bug 257767
 add_setting ('csv_colsepchar', {',' => 1, ';' => 2 }, ',' );
+
+# 2005-10-21 LpSolit@gmail.com -- Bug 313020
+add_setting('per_bug_queries', {'on' => 1, 'off' => 2}, 'on');
 
 ###########################################################################
 # Create Administrator  --ADMIN--

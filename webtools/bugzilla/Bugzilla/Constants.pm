@@ -65,6 +65,9 @@ use base qw(Exporter);
     DEFAULT_COLUMN_LIST
     DEFAULT_QUERY_NAME
 
+    QUERY_LIST
+    LIST_OF_BUGS
+
     COMMENT_COLS
 
     UNLOCK_ABORT
@@ -172,6 +175,10 @@ use constant DEFAULT_COLUMN_LIST => (
 # Used by query.cgi and buglist.cgi as the named-query name
 # for the default settings.
 use constant DEFAULT_QUERY_NAME => '(Default query)';
+
+# The possible types for saved searches.
+use constant QUERY_LIST => 0;
+use constant LIST_OF_BUGS => 1;
 
 # The column length for displayed (and wrapped) bug comments.
 use constant COMMENT_COLS => 80;

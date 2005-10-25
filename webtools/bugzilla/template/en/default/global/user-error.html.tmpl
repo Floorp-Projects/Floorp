@@ -866,6 +866,10 @@
     [% title = BLOCK %]No [% terms.Bugs %] Chosen[% END %]
     You apparently didn't choose any [% terms.bugs %] to modify.
 
+  [% ELSIF error == "no_bug_ids" %]
+    [% title = BLOCK %]No [% terms.Bugs %] Chosen[% END %]
+    You didn't choose any [% terms.bugs %] to add to the saved search.
+
   [% ELSIF error == "no_component_change_for_multiple_products" %]
     [% title = "Action Not Permitted" %]
     You cannot change the component for a list of [% terms.bugs %] covering more than

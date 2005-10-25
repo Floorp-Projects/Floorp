@@ -198,7 +198,7 @@ sub queries {
 
     my $dbh = Bugzilla->dbh;
     my $sth = $dbh->prepare(q{ SELECT
-                             DISTINCT name, query, linkinfooter,
+                             DISTINCT name, query, linkinfooter, query_type,
                                       CASE WHEN whine_queries.id IS NOT NULL
                                       THEN 1 ELSE 0 END,
                                       UPPER(name) AS uppername 
@@ -221,7 +221,8 @@ sub queries {
                           name         => $row->[0],
                           query        => $row->[1],
                           linkinfooter => $row->[2],
-                          usedinwhine  => $row->[3],
+                          query_type   => $row->[3],
+                          usedinwhine  => $row->[4],
                         });
     }
     $self->{queries} = \@queries;

@@ -134,6 +134,10 @@
     </div>
   </div>
 
+  [%# Individual bugs addition %]
+
+  [% PROCESS "global/per-bug-queries.html.tmpl" %]
+
   [%# Sections of links to more things users can do on this installation. %]
   [% Hook.process("end") %]
 </div>

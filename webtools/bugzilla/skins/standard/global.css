@@ -210,7 +210,8 @@ body
 
     #footer #links-actions,
     #footer #links-edit,
-    #footer #links-saved
+    #footer #links-saved,
+    #footer #links-special
     {
         display: table-row;
     }

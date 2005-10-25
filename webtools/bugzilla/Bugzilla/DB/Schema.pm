@@ -665,6 +665,7 @@ use constant ABSTRACT_SCHEMA => {
             name         => {TYPE => 'varchar(64)', NOTNULL => 1},
             linkinfooter => {TYPE => 'BOOLEAN', NOTNULL => 1},
             query        => {TYPE => 'MEDIUMTEXT', NOTNULL => 1},
+            query_type   => {TYPE => 'BOOLEAN', NOTNULL => 1},
         ],
         INDEXES => [
             namedqueries_userid_idx => {FIELDS => [qw(userid name)],
