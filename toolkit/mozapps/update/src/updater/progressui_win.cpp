@@ -123,6 +123,11 @@ InitDialog(HWND hDlg)
   SetItemText(hDlg, "Title", filename);
   SetItemText(GetDlgItem(hDlg, IDC_INFO), "Info", filename);
 
+  // Set dialog icon
+  HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DIALOG));
+  if (hIcon)
+    SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM) hIcon);
+
   SendMessage(GetDlgItem(hDlg, IDC_PROGRESS), PBM_SETRANGE, 0,
               MAKELPARAM(0, 100));
 

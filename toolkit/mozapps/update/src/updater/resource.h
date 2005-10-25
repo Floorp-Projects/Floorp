@@ -5,6 +5,7 @@
 #define IDD_DIALOG                      101
 #define IDC_PROGRESS                    1000
 #define IDC_INFO                        1002
+#define IDI_DIALOG                      1003
 
 // Next default values for new objects
 // 
