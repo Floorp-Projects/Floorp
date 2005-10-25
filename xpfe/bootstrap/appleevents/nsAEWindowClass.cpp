@@ -52,6 +52,8 @@
 
 #include "nsAEWindowClass.h"
 
+#include "nsGfxUtils.h"
+
 using namespace nsWindowUtils;
 
 /*----------------------------------------------------------------------------
@@ -239,7 +241,6 @@ void AEWindowClass::CountObjects(				DescType 		 	desiredType,
 void AEWindowClass::HandleClose(AEDesc *token, const AppleEvent *appleEvent, AppleEvent *reply)
 {
 	OSErr 		err 	= noErr;	
-	DescType		typeCode = 0L;
 	
 	StAEDesc		saving;
 	StAEDesc		savingIn;
@@ -422,7 +423,6 @@ void AEWindowClass::GetDataFromObject(const AEDesc *token, AEDesc *desiredTypes,
 	char*				urlString = NULL;
 	
 	DescType 			propertyCode 		= tokenDesc.GetPropertyCode();
-	Boolean			usePropertyCode	= tokenDesc.UsePropertyCode();
 	WindowPtr		window        	 	= tokenDesc.GetWindowPtr();
 		
 	switch (propertyCode)
@@ -785,11 +785,10 @@ void AEWindowClass::SetWindowProperties(WindowPtr window, const AEDesc *property
 
 		if (err == noErr)
 		{		
-			short windowWidth =  r.right - r.left;
-			short windowDepth =  r.bottom - r.top;
-				
  			MoveWindow(window, r.left, r.top, false);
- 			// ¥¥¥ÊDoResize(window, windowWidth, windowDepth);
+			// short windowWidth =  r.right - r.left;
+			// short windowDepth =  r.bottom - r.top;
+ 			// DoResize(window, windowWidth, windowDepth);
 		}
 					
 		data.Clear();

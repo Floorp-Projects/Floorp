@@ -45,6 +45,8 @@
 
 #include "AEWordClass.h"
 
+#include "nsGfxUtils.h"
+
 
 /*----------------------------------------------------------------------------
 	GetNumItems 
