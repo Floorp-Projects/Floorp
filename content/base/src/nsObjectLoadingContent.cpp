@@ -989,9 +989,6 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     // If our state changed, then we already recreated frames
     // Otherwise, need to do that here
 
-    // Need the following line before calling RecreateFramesFor
-    mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-
     PRUint32 numShells = doc->GetNumberOfShells();
     for (PRUint32 i = 0; i < numShells; ++i) {
       nsIPresShell* shell = doc->GetShellAt(i);

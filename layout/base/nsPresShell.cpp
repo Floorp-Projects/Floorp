@@ -3738,11 +3738,16 @@ PresShell::RecreateFramesFor(nsIContent* aContent)
   // Don't call RecreateFramesForContent since that is not exported and we want
   // to keep the number of entrypoints down.
 
+  NS_ASSERTION(mViewManager, "Should have view manager");
+  mViewManager->BeginUpdateViewBatch();
+
+  // Have to make sure that the content notifications are flushed before we
+  // start messing with the frame model; otherwise we can get content doubling.
+  mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
+
   nsStyleChangeList changeList;
   changeList.AppendChange(nsnull, aContent, nsChangeHint_ReconstructFrame);
 
-  NS_ASSERTION(mViewManager, "Should have view manager");
-  mViewManager->BeginUpdateViewBatch();
   nsresult rv = mFrameConstructor->ProcessRestyledFrames(changeList);
   mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 #ifdef ACCESSIBILITY
