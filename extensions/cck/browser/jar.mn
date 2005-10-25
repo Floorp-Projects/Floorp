@@ -1,0 +1,18 @@
+cckwizard.jar:
+% content cckwizard %content/cckwizard/
+% overlay chrome://browser/content/browser.xul         chrome://cckwizard/content/cckwizard-browser-overlay.xul
+ content/cckwizard/cckwizard-browser-overlay.xul          (resources/content/cckwizard/cckwizard-browser-overlay.xul)
+ content/cckwizard/cckwizard.js                           (resources/content/cckwizard/cckwizard.js)
+ content/cckwizard/cckwizard.png                          (resources/content/cckwizard/cckwizard.png)
+ content/cckwizard/cckwizard.xul                          (resources/content/cckwizard/cckwizard.xul)
+ content/cckwizard/cckwizard.properties                   (resources/content/cckwizard/cckwizard.properties)
+ content/cckwizard/config.xul                             (resources/content/cckwizard/config.xul)
+ content/cckwizard/showconfig.xul                         (resources/content/cckwizard/showconfig.xul)
+ content/cckwizard/srcfiles/cck-browser-overlay.xul.in    (resources/content/cckwizard/srcfiles/cck-browser-overlay.xul.in)
+ content/cckwizard/srcfiles/cck.dtd.in                    (resources/content/cckwizard/srcfiles/cck.dtd.in)
+ content/cckwizard/srcfiles/cck.js.in                     (resources/content/cckwizard/srcfiles/cck.js.in)
+ content/cckwizard/srcfiles/cck.properties.in             (resources/content/cckwizard/srcfiles/cck.properties.in)
+ content/cckwizard/srcfiles/cckService.js.in              (resources/content/cckwizard/srcfiles/cckService.js.in)
+ content/cckwizard/srcfiles/chrome.manifest.in            (resources/content/cckwizard/srcfiles/chrome.manifest.in)
+ content/cckwizard/srcfiles/install.js.in                 (resources/content/cckwizard/srcfiles/install.js.in)
+ content/cckwizard/srcfiles/install.rdf.in                (resources/content/cckwizard/srcfiles/install.rdf.in)

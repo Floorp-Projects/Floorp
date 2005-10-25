@@ -1,0 +1,173 @@
+<!ENTITY  cckWizard.title               "Firefox Client Customization Kit (CCK)">
+<!ENTITY  cckWizard.description         "This tool helps you create an extension that customizes Firefox. This extension can either be installed by the user or included in an install package.">
+<!ENTITY  cckWizard.oncancel            "All changed data will be saved">
+<!ENTITY  beforeYouBegin.label          "Before You Begin">
+<!ENTITY  beforeYouBegin.description    "Decide which customizations you want to make and create/collect the customized files, such as:
+                                         <html:ul>
+                                         <html:li>Custom animation files for browser's animated logo</html:li>
+                                         <html:li>Search pluginsfdsafdsafs</html:li>
+                                         <html:li>Browser plug-ins</html:li>
+                                         </html:ul>">
+<!ENTITY  selectConfig.label            "Select an Existing Configuration or Create a New One">
+<!ENTITY  selectConfig.description      "Select an existing configuration, or click 'New' to create a new configuration and workspace in which to store your custom files. To edit an existing configuration without overwriting the original configuration, select it from the list and click 'Copy'.">
+<!ENTITY  showConfig.label              "Show Config Info">
+<!ENTITY  newConfig.label               "New">
+<!ENTITY  copyConfig.label              "Copy">
+<!ENTITY  deleteConfig.label            "Delete">
+
+<!ENTITY  customizeExt.label            "Customize Extension">
+<!ENTITY  customizeExt.description      "">
+
+
+<!ENTITY  id.label                      "Unique ID:">
+<!ENTITY  name.label                    "Name:">
+<!ENTITY  version.label                 "Version:">
+<!ENTITY  description.label             "Description:">
+<!ENTITY  creator.label                 "Creator:">
+<!ENTITY  homepageURL.label             "Homepage URL:">
+<!ENTITY  updateURL.label               "Update URL:">
+<!ENTITY  icon.label                    "Icon:">
+<!ENTITY  chooseFile.label              "Choose File...">
+<!ENTITY  chooseDir.label               "Choose Dir...">
+
+<!ENTITY  filename.label                "Filename:">
+
+<!ENTITY  customizePartOne.label        "Customize the Browser - Part One">
+
+<!ENTITY  orgName.error                 "Company Identifier is required">
+<!ENTITY  orgName.description           "The Company Identifier is included as part of the browser's user agent string which appears when you open the Help menu and select About Mozilla Firefox.">
+<!ENTITY  orgName.label                 "Enter Your Company Identifier (up to 10 characters; no spaces):">
+<!ENTITY  orgName.caption               "Company Identifier">
+
+<!ENTITY  homePage.caption              "Default Home Page">
+<!ENTITY  homePage.label                "Home Page URL:">
+<!ENTITY  homePage.description          "This page is displayed when users first start the Firefox browser, or when they click the Home button.">
+
+<!ENTITY  titleBar.caption              "Browser Window's Title Bar Text">
+<!ENTITY  titleBar.label                "Custom Title Bar Text:">
+<!ENTITY  titleBar.description          "The text you enter (for example, your company name) appears after the page title in the title bar. It is recommended that you use the format
+                                         <html:i>Mozilla Firefox: Companyname Edition</html:i>">
+
+<!ENTITY  customizePartTwo.label        "Customize the Browser - Part Two">
+
+<!ENTITY  animLogo.caption              "Animated Logo">
+<!ENTITY  animLogoURL.label             "Logo Button URL:">
+<!ENTITY  animLogoURL.description       "Enter the URL that users will go to when they click the animated logo button.">
+<!ENTITY  animLogoTooltip.description   "Enter the tooltip that users will see when they mouse over the animated logo button.">
+<!ENTITY  animLogoTooltip.label         "Logo Button Tooltip:">
+<!ENTITY  animLogoAnim.description      "Path to Your Animated GIF File (16x16 pixels):">
+<!ENTITY  animLogoStill.description     "Path to Your At Rest GIF or PNG File (16x16 pixels):">
+
+<!ENTITY  customizePartThree.label      "Customize the Browser - Part Three">
+
+<!ENTITY  helpMenu.caption              "Help Menu">
+<!ENTITY  helpMenu.description          "You can add an item to the Help Menu which provides a link to your online customer support page.">
+<!ENTITY  helpMenuText.label            "Menu Item Text:">
+<!ENTITY  helpMenuURL.label             "Help Menu Item URL:">
+<!ENTITY  helpMenuAccesskey.label       "Help Menu Item Accesskey:">
+
+<!ENTITY  allowedSites.caption          "Allowed Sites">
+<!ENTITY  allowedSites.description      "You can specify domains for which popups and/or XPI installs are allowed. List the domains, separated by a comma.">
+<!ENTITY  popupAllowedSites.label       "Popup Allowed Sites:">
+<!ENTITY  installAllowedSites.label     "Install Allowed Sites:">
+
+<!ENTITY  customizeBrowserPlugins.label "Customize Browser Plug-ins">
+<!ENTITY  browserPlugins.description    "You may select up to five browser plug-ins to be preinstalled.">
+
+
+
+
+<!ENTITY  customizeSearchPlugins.label  "Customize Search Plugins">
+<!ENTITY  searchPlugins.description     "You may select up to five search plugins to be preinstalled.">
+
+<!ENTITY  file.label                    "File:">
+<!ENTITY  icon.label                    "Icon:">
+<!ENTITY  folderTitle.label             "Folder Title:">
+
+<!ENTITY  customizeToolbarOne.label     "Customize the Personal Toolbar - Part One">
+
+<!ENTITY  addToolbarFolder.caption      "Add a folder to the personal toolbar">
+<!ENTITY  addToolbarFolder.description  "You can add a folder with up to five bookmarks to the personal toolbar.">
+<!ENTITY  addToolbarBookmark.caption    "Add bookmarks to the personal toolbar">
+<!ENTITY  addToolbarBookmark.description "You can add up to five bookmarks to the personal toolbar.">
+
+
+
+<!ENTITY  customizeToolbarTwo.label     "Customize the Personal Toolbar - Part Two">
+
+<!ENTITY  customizeBookmarksOne.label   "Customize Bookmarks - Part One">
+<!ENTITY  customizeBookmarksTwo.label   "Customize Bookmarks - Part Two">
+
+<!ENTITY  addBookmarkFolder.caption      "Add a folder to bookmarks">
+<!ENTITY  addBookmarkFolder.description  "You can add a folder with up to five bookmarks to bookmarks.">
+<!ENTITY  addBookmark.caption            "Add bookmarks">
+<!ENTITY  addBookmark.description        "You can add up to five bookmarks.">
+
+
+
+<!ENTITY  bookmarkTitle.label           "Bookmark Title">
+<!ENTITY  bookmarkURL.label             "URL">
+
+
+<!ENTITY  customizePrefs.label          "Customize Preferences">
+<!ENTITY  prefs.label                   "Preferences">
+<!ENTITY  prefs.description             "You can add up to five custom preferences. Note these preferences are stored exactly as written, so put quotes around string preferences.">
+
+<!ENTITY  prefName.label                "Preference Name">
+<!ENTITY  prefValue.label               "Value: ">
+
+<!ENTITY  customizeCerts.label          "Customize Certificates">
+<!ENTITY  customizeCerts.warning       "You may select up to five certificates to be preinstalled.<html:br/><html:br/>
+                                        <html:b>IMPORTANT: If you add certificates to Firefox, you CANNOT
+                                        ship a browser outside of your company or institution and call it Firefox.
+                                        This feature is intended primarily for corporate and institutional users
+                                        that will be deploying Firefox inside their organization.</html:b>">
+
+<!ENTITY  customizeProxy.label          "Customize Proxy Configurations">
+
+<!ENTITY  proxyTitle.label              "Configure Proxies to Access the Internet">
+<!ENTITY  directTypeRadio.label         "Direct connection to the Internet">
+<!ENTITY  directTypeRadio.accesskey     "d">
+<!ENTITY  WPADTypeRadio.label           "Auto-detect proxy settings for this network">
+<!ENTITY  WPADTypeRadio.accesskey       "w">
+<!ENTITY  manualTypeRadio.label         "Manual proxy configuration:">
+<!ENTITY  manualTypeRadio.accesskey     "m">
+<!ENTITY  autoTypeRadio.label           "Automatic proxy configuration URL:">
+<!ENTITY  autoTypeRadio.accesskey       "a">
+<!ENTITY  configAutoconfigText.label    "Configuration location (URL):">
+<!ENTITY  configAutoconfigText.accesskey "u">
+<!ENTITY  reload.label                  "Reload">
+<!ENTITY  reload.accesskey              "l">
+<!ENTITY  ftp.label                     "FTP Proxy:">
+<!ENTITY  ftp.accesskey                 "f">
+<!ENTITY  gopher.label                  "Gopher Proxy:">
+<!ENTITY  gopher.accesskey              "g">
+<!ENTITY  http.label                    "HTTP Proxy:">
+<!ENTITY  http.accesskey                "h">
+<!ENTITY  ssl.label                     "SSL Proxy:">
+<!ENTITY  ssl.accesskey                 "s">
+<!ENTITY  socks.label                   "SOCKS Host:">
+<!ENTITY  socks.accesskey               "c">
+<!ENTITY  socks4.label                  "SOCKS v4">
+<!ENTITY  socks4.accesskey              "k">
+<!ENTITY  socks5.label                  "SOCKS v5">
+<!ENTITY  socks5.accesskey              "v">
+<!ENTITY  port.label                    "Port:">
+<!ENTITY  HTTPport.accesskey            "p">
+<!ENTITY  SSLport.accesskey             "o">
+<!ENTITY  FTPport.accesskey             "r">
+<!-- No accesskey for gopher (':' doesn't go well) - mpt's going to redesign the window -->
+<!ENTITY  gopherPort.accesskey          "">
+<!ENTITY  SOCKSport.accesskey           "t">
+<!ENTITY  noproxy.label                 "No Proxy for:">
+<!ENTITY  noproxy.accesskey             "n">
+<!ENTITY  noproxyExplain.label          "Example: .mozilla.org, .net.nz, 192.168.1.0/24">
+<!ENTITY  shareproxy.label              "Use this proxy server for all protocols">
+<!ENTITY  shareproxy.accesskey          "x">
+
+
+<!ENTITY  showConfig.title              "Show Configuration">
+
+<!ENTITY  createConfig.title            "Create New Configuration">
+<!ENTITY  configName.label              "Name of new configuration">
+<!ENTITY  configLocation.label          "Location of new configuration">

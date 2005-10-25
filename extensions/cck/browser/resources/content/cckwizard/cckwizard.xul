@@ -1,0 +1,665 @@
+<?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+#if 0
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is the Client Customization Kit (CCK).
+   -
+   - The Initial Developer of the Original Code is IBM Corp.
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+#endif
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE prefwindow SYSTEM "chrome://cckwizard/locale/cckWizard.dtd">
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<wizard id="example-window" title="&cckWizard.title;"
+  height="480"
+  width="640"
+  onwizardcancel="alert('&cckWizard.oncancel;');saveconfig();"
+  onwizardfinish="CreateCCK();"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://cckwizard/content/cckwizard.js"/>
+
+  <wizardpage onpageshow="ShowMain();">
+    <description>&cckWizard.description;</description>
+    <groupbox>
+      <caption label="&beforeYouBegin.label;"/>
+      <description>&beforeYouBegin.description;</description>
+    </groupbox>
+    <groupbox>
+      <caption label="&selectConfig.label;"/>
+      <description>&selectConfig.description;</description>
+      <hbox>
+      <menulist style="min-width: 50px;" flex="1" id="byb-configs" sizetopopup="false" oncommand="setcurrentconfig(this.selectedItem.value);">
+        <menupopup>
+        </menupopup>
+      </menulist>
+      <button label="&showConfig.label;" oncommand="ShowConfigInfo()"/>
+      <button label="&newConfig.label;" oncommand="CreateConfig();"/>
+      <button label="&copyConfig.label;" disabled="true" oncommand="CopyConfig();"/>/>
+      <button label="&deleteConfig.label;" id="deleteconfig" oncommand="DeleteConfig();"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+  
+  <wizardpage label="&customizeExt.label;" description="&customizeExt.description;" onpageshow="initimage('iconURL','icon');" onpageadvanced="return ValidateFile('iconURL')">
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&id.label;</label>
+      <textbox id="id" style="width: 350px;" tooltiptext="Format: cck-companyname@extensions.domainname.tld"/>
+    </hbox>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&name.label;</label>
+    <textbox id="name" style="width: 350px;"/>
+    </hbox>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&version.label;</label>
+      <textbox id="version" style="width: 350px;"/>
+    </hbox>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&description.label;</label>
+      <textbox id="description" style="width: 350px;"/>
+    </hbox>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&creator.label;</label>
+      <textbox id="creator" style="width: 350px;"/>
+    </hbox>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&homepageURL.label;</label>
+      <textbox id="homepageURL" style="width: 350px;"/>
+    </hbox>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&updateURL.label;</label>
+      <textbox id="updateURL" style="width: 350px;"/>
+    </hbox>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&icon.label;</label>
+      <hbox>
+      <textbox style="min-width: 226px;" flex="1" id="iconURL"/>
+      </hbox>
+      <hbox>
+      <image id="icon" src='' width='32' height='32'/>
+      </hbox>
+      <hbox>
+        <button label="&chooseFile.label;" oncommand="chooseimage('iconURL','icon');"/>
+      </hbox>
+    </hbox>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&filename.label;</label>
+      <textbox id="filename" style="width: 335px;"/>
+      <label>.xpi</label>      
+    </hbox>
+  </wizardpage>
+
+  <wizardpage label="&customizePartOne.label;" onpageadvanced="return Validate('OrganizationName','&orgName.error;')">
+    <groupbox>
+      <caption label="&orgName.caption;"/>
+      <description>&orgName.description;</description>
+      <hbox align="center">
+        <label>&orgName.label;</label>
+        <textbox id="OrganizationName" maxlength="10" flex="1"/>
+      </hbox>
+    </groupbox>
+    <groupbox>
+      <caption label="&homePage.caption;"/>
+      <description>&homePage.description;</description>
+      <hbox align="center">
+        <label>&homePage.label;</label>
+        <textbox id="HomePageURL" flex="1"/>
+      </hbox>
+    </groupbox>
+    <groupbox>
+      <caption label="&titleBar.caption;"/>
+      <description>&titleBar.description;</description>
+      <hbox align="center">
+        <label>&titleBar.label;</label>
+        <textbox id="CompanyName" flex="1"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage label="&customizePartTwo.label;" onpageshow="initimage('LargeStillPath','LargeStill');initimage('LargeAnimPath','LargeAnim');" onpageadvanced="return ValidateFile('LargeAnimPath','LargeStillPath');">
+    <groupbox>
+      <caption label="&animLogo.caption;"/>
+      <description>&animLogoURL.description;</description>
+      <hbox align="center">
+        <label>&animLogoURL.label;</label>
+        <textbox flex="1" id="AnimatedLogoURL"/>
+      </hbox>
+      <description>&animLogoTooltip.description;</description>
+      <hbox align="center">
+        <label>&animLogoTooltip.label;</label>
+        <textbox flex="1" id="AnimatedLogoTooltip"/>
+      </hbox>
+      <description>&animLogoAnim.description;</description>
+      <hbox align="center">
+        <textbox id="LargeAnimPath" flex="1"/>
+        <image id="LargeAnim" src='' width='16' height='16'/>
+        <button label="&chooseFile.label;" oncommand="chooseimage('LargeAnimPath','LargeAnim');"/>
+      </hbox>
+      <description>&animLogoStill.description;</description>
+      <hbox align="center">
+        <textbox id="LargeStillPath" flex="1"/>
+        <image id="LargeStill" src='' width='16' height='16'/>
+        <button label="&chooseFile.label;" oncommand="chooseimage('LargeStillPath','LargeStill');"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage label="&customizePartThree.label;">
+    <groupbox>
+      <caption label="&helpMenu.caption;"/>
+      <description>&helpMenu.description;</description>
+      <vbox>
+        <label>&helpMenuText.label;</label>
+        <textbox id="HelpMenuCommandName" flex="1"/>
+      </vbox>
+      <vbox>
+        <label>&helpMenuURL.label;</label>
+        <textbox id="HelpMenuCommandURL" flex="1"/>
+      </vbox>
+      <vbox>
+        <label>&helpMenuAccesskey.label;</label>
+        <textbox id="HelpMenuCommandAccesskey" flex="1"/>
+      </vbox>
+    </groupbox>
+    <groupbox>
+      <caption label="&allowedSites.caption;"/>
+      <description>&allowedSites.description;</description>
+      <vbox>
+        <label>&popupAllowedSites.label;</label>
+        <textbox id="PopupAllowedSites" flex="1"/>
+      </vbox>
+      <vbox>
+        <label>&installAllowedSites.label;</label>
+        <textbox id="InstallAllowedSites" flex="1"/>
+      </vbox>
+    </groupbox>
+  </wizardpage>
+
+  
+  <wizardpage label="&customizeBrowserPlugins.label;" onpageadvanced="return ValidateFile('BrowserPluginPath1','BrowserPluginPath2','BrowserPluginPath3','BrowserPluginPath4','BrowserPluginPath5');">
+    <description>&browserPlugins.description;</description>
+    <hbox>
+      <textbox id="BrowserPluginPath1" flex="1"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath1');"/>
+    </hbox>
+    <hbox>
+      <textbox id="BrowserPluginPath2" flex="1"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath3');"/>
+    </hbox>
+    <hbox>
+      <textbox id="BrowserPluginPath3" flex="1"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath3');"/>
+    </hbox>
+    <hbox>
+      <textbox id="BrowserPluginPath4" flex="1"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath4');"/>
+    </hbox>
+    <hbox>
+      <textbox id="BrowserPluginPath5" flex="1"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('BrowserPluginPath5');"/>
+    </hbox>
+  </wizardpage>
+
+  <wizardpage label="&customizeSearchPlugins.label;" onpageadvanced="return ValidateFile('SearchPlugin1','SearchPluginIcon1','SearchPlugin2','SearchPluginIcon2','SearchPlugin3','SearchPluginIcon3','SearchPlugin4','SearchPluginIcon4','SearchPlugin5','SearchPluginIcon5');">
+    <description>&searchPlugins.description;</description>
+    <html:hr/>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&file.label;</label>
+      <textbox id="SearchPlugin1" style="min-width: 375px;" flex="1" />
+      <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin1');"/>
+    </hbox>
+      <hbox style="width: 350px;">
+      <spacer flex="1"/>
+      <label>&icon.label;</label>
+      <textbox id="SearchPluginIcon1" style="min-width: 380px;" flex="1" />
+      <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon1');"/>
+    </hbox>
+    <html:hr/>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&file.label;</label>
+      <textbox id="SearchPlugin2" style="min-width: 375px;" flex="1" />
+      <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin2');"/>
+    </hbox>
+      <hbox style="width: 350px;">
+      <spacer flex="1"/>
+      <label>&icon.label;</label>
+      <textbox id="SearchPluginIcon2" style="min-width: 380px;" flex="1" />
+      <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon2');"/>
+    </hbox>
+    <html:hr/>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&file.label;</label>
+      <textbox id="SearchPlugin3" style="min-width: 375px;" flex="1" />
+      <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin3');"/>
+    </hbox>
+      <hbox style="width: 350px;">
+      <spacer flex="1"/>
+      <label>&icon.label;</label>
+      <textbox id="SearchPluginIcon3" style="min-width: 380px;" flex="1" />
+      <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon3');"/>
+    </hbox>
+    <html:hr/>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&file.label;</label>
+      <textbox id="SearchPlugin4" style="min-width: 375px;" flex="1" />
+      <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin4');"/>
+    </hbox>
+      <hbox style="width: 350px;">
+      <spacer flex="1"/>
+      <label>&icon.label;</label>
+      <textbox id="SearchPluginIcon4" style="min-width: 380px;" flex="1" />
+      <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon4');"/>
+    </hbox>
+    <html:hr/>
+    <hbox align="center">
+      <spacer flex="1"/>
+      <label>&file.label;</label>
+      <textbox id="SearchPlugin5" style="min-width: 375px;" flex="1" />
+      <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin5');"/>
+    </hbox>
+      <hbox style="width: 350px;">
+      <spacer flex="1"/>
+      <label>&icon.label;</label>
+      <textbox id="SearchPluginIcon5" style="min-width: 380px;" flex="1" />
+      <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon5');"/>
+    </hbox>
+    <html:hr/>
+  </wizardpage>
+
+  <wizardpage label="&customizeToolbarOne.label;">
+    <groupbox>
+      <caption label="&addToolbarFolder.caption;"/>
+      <description>&addToolbarFolder.description;</description>
+      <hbox>
+        <label>&folderTitle.label;</label>
+        <textbox id="ToolbarFolder1"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;1:</label>
+        <textbox id="ToolbarFolder1.BookmarkTitle1"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="ToolbarFolder1.BookmarkURL1"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;2:</label>
+        <textbox id="ToolbarFolder1.BookmarkTitle2"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="ToolbarFolder1.BookmarkURL2"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;3:</label>
+        <textbox id="ToolbarFolder1.BookmarkTitle3"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="ToolbarFolder1.BookmarkURL3"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;4:</label>
+        <textbox id="ToolbarFolder1.BookmarkTitle4"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="ToolbarFolder1.BookmarkURL4"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;5:</label>
+        <textbox id="ToolbarFolder1.BookmarkTitle5"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="ToolbarFolder1.BookmarkURL5"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage label="&customizeToolbarTwo.label;">
+    <groupbox>
+      <caption label="&addToolbarBookmark.caption;"/>
+      <description>&addToolbarBookmark.description;</description>
+      <hbox>
+        <label>&bookmarkTitle.label;1:</label>
+        <textbox id="ToolbarBookmarkTitle1"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="ToolbarBookmarkURL1"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;2:</label>
+        <textbox id="ToolbarBookmarkTitle2"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="ToolbarBookmarkURL2"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;3:</label>
+        <textbox id="ToolbarBookmarkTitle3"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="ToolbarBookmarkURL3"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;4:</label>
+        <textbox id="ToolbarBookmarkTitle4"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="ToolbarBookmarkURL4"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;5:</label>
+        <textbox id="ToolbarBookmarkTitle5"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="ToolbarBookmarkURL5"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage label="&customizeBookmarksOne.label;">
+    <groupbox>
+      <caption label="&addBookmarkFolder.caption;"/>
+      <description>&addBookmarkFolder.description;</description>
+      <hbox>
+        <label>&folderTitle.label;</label>
+        <textbox id="BookmarkFolder1"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;1:</label>
+        <textbox id="BookmarkFolder1.BookmarkTitle1"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="BookmarkFolder1.BookmarkURL1"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;2:</label>
+        <textbox id="BookmarkFolder1.BookmarkTitle2"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="BookmarkFolder1.BookmarkURL2"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;3:</label>
+        <textbox id="BookmarkFolder1.BookmarkTitle3"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="BookmarkFolder1.BookmarkURL3"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;4:</label>
+        <textbox id="BookmarkFolder1.BookmarkTitle4"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="BookmarkFolder1.BookmarkURL4"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;5:</label>
+        <textbox id="BookmarkFolder1.BookmarkTitle5"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="BookmarkFolder1.BookmarkURL5"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage label="&customizeBookmarksTwo.label;">
+    <groupbox>
+      <caption label="&addBookmark.caption;"/>
+      <description>&addBookmark.description;</description>
+      <hbox>
+        <label>&bookmarkTitle.label;1:</label>
+        <textbox id="BookmarkTitle1"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="BookmarkURL1"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;2:</label>
+        <textbox id="BookmarkTitle2"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="BookmarkURL2"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;3:</label>
+        <textbox id="BookmarkTitle3"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="BookmarkURL3"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;4:</label>
+        <textbox id="BookmarkTitle4"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="BookmarkURL4"/>
+      </hbox>
+      <hbox>
+        <label>&bookmarkTitle.label;5:</label>
+        <textbox id="BookmarkTitle5"/>
+        <label>&bookmarkURL.label;1:</label>
+        <textbox id="BookmarkURL5"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage label="&customizePrefs.label;">
+    <groupbox>
+      <caption label="&prefs.label;"/>
+      <description>&prefs.description;</description>
+      <hbox>
+        <label>&prefName.label;1:</label>
+        <textbox id="PreferenceName1"/>
+        <label>&prefValue.label;</label>
+        <textbox id="PreferenceValue1"/>
+      </hbox>
+      <hbox>
+        <label>&prefName.label;2:</label>
+        <textbox id="PreferenceName2"/>
+        <label>&prefValue.label;</label>
+        <textbox id="PreferenceValue2"/>
+      </hbox>
+      <hbox>
+        <label>&prefName.label;3:</label>
+        <textbox id="PreferenceName3"/>
+        <label>&prefValue.label;</label>
+        <textbox id="PreferenceValue3"/>
+      </hbox>
+      <hbox>
+        <label>&prefName.label;4:</label>
+        <textbox id="PreferenceName4"/>
+        <label>&prefValue.label;</label>
+        <textbox id="PreferenceValue4"/>
+      </hbox>
+      <hbox>
+        <label>&prefName.label;5:</label>
+        <textbox id="PreferenceName5"/>
+        <label>&prefValue.label;</label>
+        <textbox id="PreferenceValue5"/>
+      </hbox>
+      <hbox>
+        <label>&prefName.label;6:</label>
+        <textbox id="PreferenceName6"/>
+        <label>&prefValue.label;</label>
+        <textbox id="PreferenceValue6"/>
+      </hbox>
+      <hbox>
+        <label>&prefName.label;7:</label>
+        <textbox id="PreferenceName7"/>
+        <label>&prefValue.label;</label>
+        <textbox id="PreferenceValue7"/>
+      </hbox>
+      <hbox>
+        <label>&prefName.label;8:</label>
+        <textbox id="PreferenceName8"/>
+        <label>&prefValue.label;</label>
+        <textbox id="PreferenceValue8"/>
+      </hbox>
+      <hbox>
+        <label>&prefName.label;9:</label>
+        <textbox id="PreferenceName9"/>
+        <label>&prefValue.label;</label>
+        <textbox id="PreferenceValue9"/>
+      </hbox>
+      <hbox>
+        <label>&prefName.label;10:</label>
+        <textbox id="PreferenceName10"/>
+        <label>&prefValue.label;</label>
+        <textbox id="PreferenceValue10"/>
+      </hbox>
+    </groupbox>
+  </wizardpage>
+
+  <wizardpage label="&customizeCerts.label;" onpageadvanced="return ValidateFile('CertPath1','CertPath2','CertPath3','CertPath4','CertPath5');">>
+    <description>&customizeCerts.warning;</description>
+    <hbox>
+      <textbox id="CertPath1" flex="1"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('CertPath1');"/>
+    </hbox>
+    <hbox>
+      <textbox id="CertPath2" flex="1"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('CertPath2');"/>
+    </hbox>
+    <hbox>
+      <textbox id="CertPath3" flex="1"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('CertPath3');"/>
+    </hbox>
+    <hbox>
+      <textbox id="CertPath4" flex="1"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('CertPath4');"/>
+    </hbox>
+    <hbox>
+      <textbox id="CertPath5" flex="1"/>
+      <button label="&chooseFile.label;" oncommand="choosefile('CertPath5');"/>
+    </hbox>
+  </wizardpage>
+  
+  <wizardpage label="&customizeProxy.label;">
+  <groupbox>
+      <caption label="&proxyTitle.label;"/>
+
+      <radiogroup id="ProxyType" preference="network.proxy.type"
+                  onpreferenceread="return gConnectionsDialog.readProxyType();">
+        <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <radio value="4" label="&WPADTypeRadio.label;" accesskey="&WPADTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <grid class="indent" flex="1">
+          <columns>
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&http.label;" accesskey="&http.accesskey;" control="HTTPproxyname"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="HTTPproxyname" flex="1" preference="network.proxy.http"/>
+                <label value="&port.label;" accesskey="&HTTPport.accesskey;" control="HTTPportno"/>
+                <textbox id="HTTPportno" size="5" preference="network.proxy.http_port"/>
+              </hbox>
+            </row>
+            <row>
+              <hbox/>
+              <hbox>
+                <checkbox id="shareAllProxies" label="&shareproxy.label;" accesskey="&shareproxy.accesskey;"
+                          preference="network.proxy.share_proxy_settings" oncommand="toggleProxySettings()"/>
+              </hbox>
+            </row>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="SSLproxyname"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="SSLproxyname" flex="1" preference="network.proxy.ssl"/>
+                <label value="&port.label;" accesskey="&SSLport.accesskey;" control="SSLportno"/>
+                <textbox id="SSLportno" size="5" preference="network.proxy.ssl_port"/>
+              </hbox>
+            </row>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&ftp.label;" accesskey="&ftp.accesskey;" control="FTPproxyname"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="FTPproxyname" flex="1" preference="network.proxy.ftp"/>
+                <label value="&port.label;" accesskey="&FTPport.accesskey;" control="FTPportno"/>
+                <textbox id="FTPportno" size="5" preference="network.proxy.ftp_port"/>
+              </hbox>
+            </row>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&gopher.label;" accesskey="&gopher.accesskey;" control="Gopherproxyname"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="Gopherproxyname" flex="1" preference="network.proxy.gopher"/>
+                <label value="&port.label;" accesskey="&gopherPort.accesskey;" control="Gopherportno"/>
+                <textbox id="Gopherportno" size="5" preference="network.proxy.gopher_port"/>
+              </hbox>
+            </row>
+            <row align="center">
+              <hbox pack="end">
+                <label value="&socks.label;" accesskey="&socks.accesskey;" control="SOCKShostname"/>
+              </hbox>
+              <hbox align="center">
+                <textbox id="SOCKShostname" flex="1" preference="network.proxy.socks"/>
+                <label value="&port.label;" accesskey="&SOCKSport.accesskey;" control="SOCKSportno"/>
+                <textbox id="SOCKSportno" size="5" preference="network.proxy.socks_port"/>
+              </hbox>
+            </row>
+            <row>
+              <spacer/>
+              <radiogroup id="socksv" orient="horizontal"
+                          preference="network.proxy.socks_version">
+                <radio id="SOCKSVersion4" value="4" label="&socks4.label;" accesskey="&socks4.accesskey;" />
+                <radio id="SOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;" />
+              </radiogroup>
+            </row>
+
+            <row align="center"> 
+              <hbox align="center" pack="end">
+                <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
+              </hbox>
+              <textbox id="NoProxyname" preference="network.proxy.no_proxies_on"/>
+            </row>
+            <row>
+              <spacer/>
+              <label value="&noproxyExplain.label;" control="networkProxyNone"/>
+            </row>
+          </rows>
+        </grid>
+        <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <hbox class="indent" flex="1" align="center">
+          <textbox id="autoproxyurl" flex="1" preference="network.proxy.autoconfig_url"/>
+        </hbox>
+      </radiogroup>
+    </groupbox>
+  </wizardpage>
+  
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="bundle_cckwizard" src="chrome://cckwizard/content/cckwizard.properties"/>
+  </stringbundleset>
+
+</wizard>

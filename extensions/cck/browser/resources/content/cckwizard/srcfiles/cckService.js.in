@@ -1,0 +1,454 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Client Customization Kit (CCK).
+ *
+ * The Initial Developer of the Original Code is
+ * Giorgio Maonem <g.maone@informaction.com>
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   IBM Corp.
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+function CCKService() {
+  this.register();
+}
+
+CCKService.prototype={
+    get wrappedJSObject() {
+    return this;
+  }
+,
+  QueryInterface: function(iid) {
+     this.queryInterfaceSupport(iid,SERVICE_IIDS);
+     return this;
+  }
+,
+  // nsIObserver implementation 
+  observe: function(subject, topic, data) {
+    // dump(SERVICE_NAME+" notified of "+subject+","+topic+","+data); //DDEBUG
+    
+    switch(topic) {
+      case "xpcom-shutdown":
+        this.unregister();
+        break;
+      case "profile-after-change":
+        this.init();
+        break;
+    }
+  }
+,  
+  register: function() {
+    const osvr=Components.classes['@mozilla.org/observer-service;1'].getService(
+    Components.interfaces.nsIObserverService);
+    osvr.addObserver(this,"xpcom-shutdown",false);
+    osvr.addObserver(this,"profile-after-change",false);
+  }
+,
+  unregister: function() {
+    const osvr=Components.classes['@mozilla.org/observer-service;1'].getService(
+      Components.interfaces.nsIObserverService);
+    osvr.removeObserver(this,"xpcom-shutdown");
+    osvr.removeObserver(this,"profile-after-change");
+  }
+,
+  _inited: false
+,
+  init: function() {
+    if(this._inited) return;
+    this._inited=true;
+    var prefbranch;
+    try {
+      prefbranch=Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+    } catch (ex) {
+      return;
+    }
+	var cckinited;
+	try {
+	  cckinited = prefbranch.getBoolPref("cck.initialized");
+	} catch (ex) {
+	  cckinited = false;
+	}
+    
+    var sbs;
+    var bundle;
+    var pm;
+    var ioService;
+    try {
+      sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                      .getService(Components.interfaces.nsIStringBundleService	);
+      bundle = sbs.createBundle("chrome://cck/content/cck.properties");
+      pm = Components.classes["@mozilla.org/permissionmanager;1"].getService(Components.interfaces.nsIPermissionManager);
+      ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);	  
+    } catch (ex) {
+      return;
+    }
+    
+    const nsIX509CertDB2 = Components.interfaces.nsIX509CertDB2;
+    const nsX509CertDBContractID = "@mozilla.org/security/x509certdb;1";
+    var certDB = Components.classes[nsX509CertDBContractID].getService(nsIX509CertDB2);
+
+    for (var i=1; i<=5; i++) {
+      try {
+        CertName = bundle.GetStringFromName("Cert" + i);
+      } catch (ex) {
+        CertName = "";
+      }
+      if (CertName && CertName.length) {
+        var ioService=Components.classes["@mozilla.org/network/io-service;1"]
+                                .getService(Components.interfaces.nsIIOService);
+        var scriptableStream=Components.classes["@mozilla.org/scriptableinputstream;1"]
+                                       .getService(Components.interfaces.nsIScriptableInputStream);
+
+        var channel=ioService.newChannel("chrome://cck/content/"+CertName,null,null);
+        var input=channel.open();
+        scriptableStream.init(input);
+        var cert=scriptableStream.read(input.available());
+        scriptableStream.close();
+        input.close();
+        cert = cert.replace(/-----BEGIN CERTIFICATE-----[\r\n]/, "");
+        cert = cert.replace(/-----END CERTIFICATE-----[\r\n]/, "");
+        cert = cert.replace(/[\r\n]/g, "");
+        if (!cert.isPerm )
+          certDB.addCertFromBase64(cert, "C,C,C", "");
+      }
+    }
+
+    var popupAllowedSites;
+    try {
+      popupAllowedSites = bundle.GetStringFromName("PopupAllowedSites");
+    } catch (ex) {}
+    if (popupAllowedSites) {
+      var popupAllowedSitesArray = popupAllowedSites.split(",");
+      for (var i=0; i < popupAllowedSitesArray.length; i++) {
+        try {
+          var uri = ioService.newURI("http://" + popupAllowedSitesArray[i], null, null);
+          pm.add(uri, "popup", 1);
+        } catch (ex) {}
+      }
+    }
+      
+    var installAllowedSites;
+    try {             
+      installAllowedSites = bundle.GetStringFromName("InstallAllowedSites");
+    } catch (ex) {}
+    if (popupAllowedSites) {
+      var installAllowedSitesArray = installAllowedSites.split(",");
+      for (var i=0; i < installAllowedSitesArray.length; i++) {
+        try {
+          var uri = ioService.newURI("http://" + installAllowedSitesArray[i], null, null);
+          pm.add(uri, "install", 1);
+        } catch (ex) {}
+      }
+    }
+
+    /* Only do bookmarks if we haven't been inited to avoid duplicated */
+    if (!cckinited) {
+      var RDF;
+      var BMSVC;
+      var bmRoot;
+
+      try {
+        RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService)
+        BMSVC  = RDF.GetDataSource("rdf:bookmarks").QueryInterface(Components.interfaces.nsIBookmarksService);;
+	    BMSVC.readBookmarks();
+        bmRoot = RDF.GetResource("NC:BookmarksRoot");
+      } catch (ex) {
+        return false;
+      }
+
+      var ToolbarLocation;
+      var tbIndex = -1; // last
+      
+      try {
+        ToolbarLocation = bundle.GetStringFromName("ToolbarLocation");
+      } catch (ex) {}
+      if ((ToolbarLocation) && (ToolbarLocation == "First")) {
+        tbIndex = 1;
+        addBookmarks(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
+        addLivemarks(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
+        addFolder(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
+      } else {
+        addFolder(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
+        addLivemarks(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
+        addBookmarks(bundle, BMSVC, "Toolbar", BMSVC.getBookmarksToolbarFolder(), tbIndex);
+      }
+
+      var BookmarkLocation;
+      var bmIndex = -1; // last
+      
+      try {
+        BookmarkLocation = bundle.GetStringFromName("BookmarkLocation");
+      } catch (ex) {}
+      if ((BookmarkLocation) && (BookmarkLocation == "First")) {
+        bmIndex = 1;
+        addLivemarks(bundle, BMSVC, "Bookmark", bmRoot, bmIndex);
+        addBookmarks(bundle, BMSVC, "", bmRoot, bmIndex);
+        addFolder(bundle, BMSVC, "Bookmark", bmRoot, bmIndex);
+      } else {
+        addFolder(bundle, BMSVC, "Bookmark", bmRoot, bmIndex);
+        addBookmarks(bundle,  BMSVC, "", bmRoot, bmIndex);
+        addLivemarks(bundle, BMSVC, "Bookmark", bmRoot, bmIndex);
+      }
+
+	  prefbranch.setBoolPref("cck.initialized", true);
+    }
+  }
+}
+
+function addLivemarks(bundle, BMSVC, prefix, folder, location)
+{
+  var LivemarkTitle;
+  var LivemarkRSSURL;
+
+  // items are added in reverse order if we are set to "First"
+  var start, end, increment;
+  
+  if (location == -1) {
+    start = 1;
+    end = 6;
+    increment = 1;
+  } else {
+    start = 5;
+    end = 0;
+    increment = -1;
+  }
+
+  for (var i=start; i!=end; i+=increment) {
+    try {
+      LivemarkTitle = bundle.GetStringFromName(prefix + "LivemarkTitle" + i);
+    } catch (ex) {
+    LivemarkTitle = "";
+  }
+  if ((LivemarkTitle) && (LivemarkTitle.length)) {
+    try {
+      LivemarkRSSURL = bundle.GetStringFromName(prefix + "LivemarkRSSURL" + i);
+    } catch (ex) {
+      LivemarkRSSURL = "";
+    }
+    if ((LivemarkRSSURL) && (LivemarkRSSURL.length)) {
+      if (BMSVC.createLivemarkInContainer)
+        BMSVC.createLivemarkInContainer(LivemarkTitle, "", LivemarkRSSURL, "", folder, location);
+      }
+    }
+  }
+}
+
+function addBookmarks(bundle, BMSVC, prefix, folder, location)
+{
+  var BookmarkTitle;
+  var BookmarkURL;
+
+  // items are added in reverse order if we are set to "First"
+  var start, end, increment;
+  
+  if (location == -1) {
+    start = 1;
+    end = 6;
+    increment = 1;
+  } else {
+    start = 5;
+    end = 0;
+    increment = -1;
+  }
+
+  for (var i=start; i!=end; i+=increment) {
+    try {
+      BookmarkTitle = bundle.GetStringFromName(prefix + "BookmarkTitle" + i);
+    } catch (ex) {
+      BookmarkTitle = "";
+    }
+    if ((BookmarkTitle) && (BookmarkTitle.length)) {
+      try {
+        BookmarkURL = bundle.GetStringFromName(prefix + "BookmarkURL" + i);
+      } catch (ex) {
+        BookmarkURL = "";          
+      }
+      if ((BookmarkURL) && (BookmarkURL.length)) {
+        if (BMSVC.createBookmarkInContainer.length == 8)
+          BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", "", folder, location);
+        else
+          BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", folder, location);
+      }
+    }
+  }
+}
+
+function addFolder(bundle, BMSVC, prefix, folder, location)
+{
+  var BookmarkFolder;
+  var BookmarkTitle;
+  var BookmarkURL;
+  
+  // items are added in reverse order if we are set to "First"
+  var start, end, increment;
+  
+  if (location == -1) {
+    start = 1;
+    end = 6;
+    increment = 1;
+  } else {
+    start = 5;
+    end = 0;
+    increment = -1;
+  }
+      
+  // Bookmarks folder with bookmarks
+  for (var i=start; i!=end; i+=increment) {
+    try {
+      BookmarkFolder = bundle.GetStringFromName(prefix + "Folder" + i);
+    } catch (ex) {
+      BookmarkFolder = "";
+    }
+    if ((BookmarkFolder) && (BookmarkFolder.length)) {
+      var newfolder;
+      if (BMSVC.createBookmarkInContainer.length == 8)
+        newfolder = BMSVC.createFolderInContainer(BookmarkFolder, folder, location);
+      else
+        newfolder = BMSVC.createFolderInContainer(BookmarkFolder, folder, location);
+      for (var j=1; j<=5; j++) {
+        try {
+          BookmarkTitle = bundle.GetStringFromName(prefix + "Folder" + i + ".BookmarkTitle" + j);
+        } catch (ex) {
+          BookmarkTitle = "";
+        }
+        if ((BookmarkTitle) && (BookmarkTitle.length)) {
+          try {
+            BookmarkURL = bundle.GetStringFromName(prefix + "Folder" + i + ".BookmarkURL" + j);
+          } catch (ex) {
+            BookmarkURL = "";
+          }
+          if ((BookmarkURL) && (BookmarkURL.length)) {
+            if (BMSVC.createBookmarkInContainer.length == 8)
+              BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", "", newfolder, -1);
+            else
+              BMSVC.createBookmarkInContainer(BookmarkTitle, BookmarkURL, "", "", "", newfolder, -1);
+	      }
+	    }
+      }
+    }
+  }
+}
+
+// XPCOM Scaffolding code
+
+// component defined in this file
+const EXTENSION_ID="{73a6fe31-595d-460b-a920-fcc0f8843233}";
+const SERVICE_NAME="CCK Service";
+const SERVICE_ID="{31aec909-8e86-4397-9380-63a59e0c5ff6}";
+const SERVICE_CTRID = "@mozilla.org/cck-service;1";
+const SERVICE_CONSTRUCTOR=CCKService;
+
+const SERVICE_CID = Components.ID(SERVICE_ID);
+
+// interfaces implemented by this component
+const SERVICE_IIDS = 
+[ 
+Components.interfaces.nsIObserver,
+Components.interfaces.nsISupports,
+Components.interfaces.nsISupportsWeakReference
+];
+
+// Factory object
+const SERVICE_FACTORY = {
+  _instance: new SERVICE_CONSTRUCTOR(),
+  createInstance: function (outer, iid) {
+    if (outer != null)
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
+
+    xpcom_checkInterfaces(iid,SERVICE_IIDS,Components.results.NS_ERROR_INVALID_ARG);
+    // kept this for flexibility sake, but we're really adopting an
+    // early instantiation and late init singleton pattern
+    return this._instance==null?this._instance=new SERVICE_CONSTRUCTOR():this._instance;
+  }
+};
+
+function xpcom_checkInterfaces(iid,iids,ex) {
+  for(var j=iids.length; j-- >0;) {
+    if(iid.equals(iids[j])) return true;
+  }
+  throw ex;
+}
+
+// Module
+
+var Module = new Object();
+Module.firstTime=true;
+Module.registerSelf = function (compMgr, fileSpec, location, type) {
+  if(this.firstTime) {
+   
+    debug("*** Registering "+SERVICE_CTRID+".\n");
+    
+    compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar
+      ).registerFactoryLocation(SERVICE_CID,
+      SERVICE_NAME,
+      SERVICE_CTRID, 
+      fileSpec,
+      location, 
+      type);
+      
+    Components.classes['@mozilla.org/categorymanager;1'].getService(
+      Components.interfaces.nsICategoryManager
+     ).addCategoryEntry("app-startup",
+        SERVICE_NAME, "service," + SERVICE_CTRID, true, true, null);
+      
+    this.firstTime=false;
+  } 
+}
+Module.unregisterSelf = function(compMgr, fileSpec, location) {
+  compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar
+    ).unregisterFactoryLocation(SERVICE_CID, fileSpec);
+  Components.classes['@mozilla.org/categorymanager;1'].getService(
+      Components.interfaces.nsICategoryManager
+     ).deleteCategoryEntry("app-startup",SERVICE_NAME, true);
+}
+
+Module.getClassObject = function (compMgr, cid, iid) {
+  if(cid.equals(SERVICE_CID))
+    return SERVICE_FACTORY;
+
+  if (!iid.equals(Components.interfaces.nsIFactory))
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+  
+  throw Components.results.NS_ERROR_NO_INTERFACE;
+    
+}
+
+Module.canUnload = function(compMgr) {
+  return true;
+}
+
+// entrypoint
+function NSGetModule(compMgr, fileSpec) {
+  return Module;
+}
+
+
+
