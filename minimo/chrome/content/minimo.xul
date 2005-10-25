@@ -205,7 +205,7 @@
          <toolbarbutton class="reload-button"  command="cmd_BrowserReload"/>
        </toolbar>
        
-       <menuitem id="link_as_new_tab" label="Open link as New Tab" oncommand="BrowserOpenLinkAsTab()" hidden="true"/>
+       <menuitem id="link_as_new_tab" label="&linknewtab.label;" oncommand="BrowserOpenLinkAsTab()" hidden="true"/>
 	   <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand=""/>
 	   <menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
 	   <menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
@@ -216,12 +216,12 @@
 	 <!-- somehow tabbedbrowser needs this. Have to check its implementation and eliminate --> 
 	 <popup id="menu_FilePopup"> 
          <menuitem id="menu_close"/>
-		 <menuitem id="menu_closeWindow" command="cmd_closeWindow" key="key_closeWindow" label="about"  />
+		 <menuitem id="menu_closeWindow" command="cmd_closeWindow" key="key_closeWindow" label=""  />
 	</popup>
     
     <menupopup id="menu_MainPopup" onpopupshowing="MenuPopupShowing()"  onpopuphidden="MenuPopupHidden()">
     
-        <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
+        <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="&newtab.label;"  /> 
 <!--    not working just yet.
 		<menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
 -->

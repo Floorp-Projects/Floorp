@@ -2,6 +2,7 @@
 
 <!ENTITY prefs.label                  "Preferences...">
 <!ENTITY quit.label                   "Quit">
+<!ENTITY newtab.label                 "New Tab">
 
 <!-- Toolbar -->
 
@@ -23,6 +24,7 @@
 <!ENTITY forwardCmd.label             "Forward">
 <!ENTITY stopCmd.label                "Stop">
 <!ENTITY reloadCmd.label              "Reload">
+<!ENTITY linknewtab.label             "Open link in New Tab">
 
 <!-- toolbar view options --> 
 
