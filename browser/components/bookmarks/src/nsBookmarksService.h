@@ -62,7 +62,7 @@
 class nsIOutputStream;
 
 #ifdef DEBUG
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #include <Timer.h>
 #endif
 #endif
