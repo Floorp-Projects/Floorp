@@ -154,6 +154,11 @@ toolbar {
   margin:2px ! important;
 }
 
+.box-prefgroupitem2 {
+  margin:2px ! important;
+  background-color:white;
+}
+
 .box-prefpadding {
   margin:4px ! important;
 }
