@@ -204,6 +204,33 @@ nsSafariProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSafariProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
+{
+  aResult.Truncate();
+
+  ICInstance internetConfig;
+  OSStatus error = ::ICStart(&internetConfig, 'FRFX');
+  if (error != noErr)
+    return NS_ERROR_FAILURE;
+
+  ICAttr dummy;
+  Str255 homePagePValue;
+  long prefSize = sizeof(homePagePValue);
+  error = ::ICGetPref(internetConfig, kICWWWHomePage, &dummy,
+                      homePagePValue, &prefSize);
+  if (error != noErr)
+    return NS_ERROR_FAILURE;
+
+  char homePageValue[256] = "";
+  CopyPascalStringToC((ConstStr255Param)homePagePValue, homePageValue);
+  aResult.Assign(homePageValue);
+
+  ::ICStop(internetConfig);
+
+  return NS_OK;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // nsSafariProfileMigrator
 
@@ -717,43 +744,6 @@ nsSafariProfileMigrator::CopyPreferences(PRBool aReplace)
 
   ::CFRelease(safariPrefs);
 
-#if 0
-  // XXXmano 7/9/2005: I'm keeping this code for reference. For the time being,
-  // importing the homepage setting isn't a desired feature.
-
-  // Now get some of the stuff that only InternetConfig has for us, such as
-  // the default home page.
-
-  ICInstance internetConfig;
-  OSStatus error = ::ICStart(&internetConfig, 'FRFX');
-  if (error == noErr) {
-    ICAttr dummy;
-
-    char* buf = nsnull;
-    SInt32 size = 256;
-    do {
-      buf = (char*)malloc((unsigned int)size+1);
-      if (!buf)
-        break;
-
-      error = ::ICGetPref(internetConfig, kICWWWHomePage, &dummy, buf, &size);
-      if (error != noErr && error != icTruncatedErr)
-        FreeNullTerminatedString(buf);
-      size *= 2;
-    }
-    while (error == icTruncatedErr);
-
-    if (buf && *buf != 0) {
-      CopyPascalStringToC((ConstStr255Param)buf, buf);
-      branch->SetCharPref("browser.startup.homepage", buf);
-    }
-
-    if (buf)
-      FreeNullTerminatedString(buf);
-
-    ::ICStop(internetConfig);
-  }
-#endif
   // Safari stores the Cookie "Accept/Don't Accept/Don't Accept Foreign" cookie
   // setting in a separate WebFoundation preferences PList.
   nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));

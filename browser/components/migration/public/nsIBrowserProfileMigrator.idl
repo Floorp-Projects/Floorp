@@ -90,5 +90,9 @@ interface nsIBrowserProfileMigrator : nsISupports
    * not support profiles, this attribute is null.
    */
   readonly attribute nsISupportsArray sourceProfiles;
-};  
-
+  
+  /**
+   * The import source homepage.  Returns null if not present/available
+   */
+  readonly attribute AUTF8String      sourceHomePageURL;
+};
