@@ -989,6 +989,11 @@ var gDownloadingPage = {
   _downloadThrobber : null,
   _pauseButton      : null,
   
+  /**
+   * Label cache to hold the 'Connecting' string
+   */
+  _label_downloadStatus : null,
+
   /** 
    * An instance of the status formatter object
    */
@@ -1008,6 +1013,7 @@ var gDownloadingPage = {
     this._downloadProgress = document.getElementById("downloadProgress");
     this._downloadThrobber = document.getElementById("downloadThrobber");
     this._pauseButton = document.getElementById("pauseButton");
+    this._label_downloadStatus = this._downloadStatus.textContent;
   
     var updates = 
         Components.classes["@mozilla.org/updates/update-service;1"].
@@ -1021,7 +1027,7 @@ var gDownloadingPage = {
       gUpdates.setUpdate(activeUpdate);
     
     if (!gUpdates.update) {
-      LOG("UI:DownloadingPage.Progress", "no valid update to download?!");
+      LOG("UI:DownloadingPage", "onPageShow: no valid update to download?!");
       return;
     }
     
@@ -1060,6 +1066,10 @@ var gDownloadingPage = {
    * Updates the text status message
    */
   _setStatus: function(status) {
+    // Don't bother setting the same text more than once. This can happen
+    // due to the asynchronous behavior of the downloader.
+    if (this._downloadStatus.textContent == status)
+      return;
     while (this._downloadStatus.hasChildNodes())
       this._downloadStatus.removeChild(this._downloadStatus.firstChild);
     this._downloadStatus.appendChild(document.createTextNode(status));
@@ -1071,51 +1081,35 @@ var gDownloadingPage = {
   _paused       : false,
   
   /**
-   * The status before we were paused
-   */
-  _oldStatus    : null,
-
-  /**
-   * The mode of the <progressmeter> before we were paused
-   */
-  _oldMode      : null,
-
-  /**
-   * The progress through the download before we were paused
-   */
-  _oldProgress  : 0,
-  
-  /**
    * Adjust UI to suit a certain state of paused-ness
    * @param   paused
    *          Whether or not the download is paused
    */
   _setUIState: function(paused) {
     var u = gUpdates.update;
-    var p = u.selectedPatch.QueryInterface(Components.interfaces.nsIPropertyBag);
-    var status = p.getProperty("status");
     if (paused) {
-      this._oldStatus = this._downloadStatus.textContent;
-      this._oldMode = this._downloadProgress.mode;
-      this._oldProgress = parseInt(this._downloadProgress.progress);
+      if (this._downloadThrobber.hasAttribute("state"))
+        this._downloadThrobber.removeAttribute("state");
+      if (this._downloadProgress.mode != "normal")
+        this._downloadProgress.mode = "normal";
       this._downloadName.value = gUpdates.strings.getFormattedString(
         "pausedName", [u.name]);
+      this._pauseButton.label = gUpdates.strings.getString("pauseButtonResume");
+      var p = u.selectedPatch.QueryInterface(Components.interfaces.nsIPropertyBag);
+      var status = p.getProperty("status");
       if (status)
         this._setStatus(status);
-      this._downloadProgress.mode = "normal";
-      this._pauseButton.label = gUpdates.strings.getString("pauseButtonResume");
     }
     else {
+      if (!(this._downloadThrobber.hasAttribute("state") &&
+           (this._downloadThrobber.getAttribute("state") == "loading")))
+        this._downloadThrobber.setAttribute("state", "loading");
+      if (this._downloadProgress.mode != "undetermined")
+        this._downloadProgress.mode = "undetermined";
       this._downloadName.value = gUpdates.strings.getFormattedString(
         "downloadingPrefix", [u.name]);
-      if (this._oldStatus)
-        this._setStatus(this._oldStatus);
-      else if (status)
-        this._setStatus(status);
-      this._downloadProgress.value = 
-        this._oldProgress || parseInt(p.getProperty("progress"));
-      this._downloadProgress.mode = this._oldMode || "normal";
       this._pauseButton.label = gUpdates.strings.getString("pauseButtonPause");
+      this._setStatus(this._label_downloadStatus);
     }
   },
 
@@ -1131,9 +1125,9 @@ var gDownloadingPage = {
     else {
       var patch = gUpdates.update.selectedPatch;
       patch.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
-      patch.setProperty("status", 
+      patch.setProperty("status",
         gUpdates.strings.getFormattedString("pausedStatus", 
-          [this.statusFormatter.progress]));
+        [this.statusFormatter.progress]));
       updates.pauseDownload();
     }
     this._paused = !this._paused;
@@ -1193,7 +1187,17 @@ var gDownloadingPage = {
     request.QueryInterface(nsIIncrementalDownload);
     LOG("UI:DownloadingPage", "onStartRequest: " + request.URI.spec);
     
-    this._downloadThrobber.setAttribute("state", "loading");
+    // This !paused test is necessary because onStartRequest may fire after
+    // the download was paused (for those speedy clickers...)
+    if (this._paused)
+      return;
+      
+    if (!(this._downloadThrobber.hasAttribute("state") &&
+          (this._downloadThrobber.getAttribute("state") == "loading")))
+      this._downloadThrobber.setAttribute("state", "loading");
+    if (this._downloadProgress.mode != "undetermined")
+      this._downloadProgress.mode = "undetermined";
+    this._setStatus(this._label_downloadStatus);
   },
   
   /** 
@@ -1209,23 +1213,32 @@ var gDownloadingPage = {
    */
   onProgress: function(request, context, progress, maxProgress) {
     request.QueryInterface(nsIIncrementalDownload);
-    LOG("UI:DownloadingPage.onProgress", request.URI.spec + ", " + progress + 
+    LOG("UI:DownloadingPage.onProgress", " " + request.URI.spec + ", " + progress + 
         "/" + maxProgress);
+
+    var name = gUpdates.strings.getFormattedString("downloadingPrefix", [gUpdates.update.name]);
+    var status = this.statusFormatter.formatStatus(progress, maxProgress);
+    var progress = Math.round(100 * (progress/maxProgress));
 
     var p = gUpdates.update.selectedPatch;
     p.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
-    p.setProperty("progress", Math.round(100 * (progress/maxProgress)));
-    p.setProperty("status", 
-      this.statusFormatter.formatStatus(progress, maxProgress));
+    p.setProperty("progress", progress);
+    p.setProperty("status", status);
+    
+    // This !paused test is necessary because onProgress may fire after
+    // the download was paused (for those speedy clickers...)
+    if (this._paused)
+      return;
 
-    this._downloadProgress.mode = "normal";
-    this._downloadProgress.value = parseInt(p.getProperty("progress"));
+    if (!(this._downloadThrobber.hasAttribute("state") &&
+         (this._downloadThrobber.getAttribute("state") == "loading")))
+      this._downloadThrobber.setAttribute("state", "loading");
+    if (this._downloadProgress.mode != "normal")
+      this._downloadProgress.mode = "normal";
+    this._downloadProgress.value = progress;
     this._pauseButton.disabled = false;
-    var name = gUpdates.strings.getFormattedString("downloadingPrefix", [gUpdates.update.name]);
     this._downloadName.value = name;
-    var status = p.getProperty("status");
-    if (status)
-      this._setStatus(status);
+    this._setStatus(status);
   },
   
   /** 
@@ -1260,7 +1273,10 @@ var gDownloadingPage = {
     LOG("UI:DownloadingPage", "onStopRequest: " + request.URI.spec + 
         ", status = " + status);
     
-    this._downloadThrobber.removeAttribute("state");
+    if (this._downloadThrobber.hasAttribute("state"))
+      this._downloadThrobber.removeAttribute("state");
+    if (this._downloadProgress.mode != "normal")
+      this._downloadProgress.mode = "normal";
 
     var u = gUpdates.update;
     const NS_BINDING_ABORTED = 0x804b0002;
