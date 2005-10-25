@@ -1299,21 +1299,14 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsval id, jsval old, jsval *nvp,
 static JSBool
 obj_watch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    JSObject *funobj;
-    JSFunction *fun;
+    JSObject *callable;
     jsval userid, value;
     jsid propid;
     uintN attrs;
 
-    if (JSVAL_IS_FUNCTION(cx, argv[1])) {
-        funobj = JSVAL_TO_OBJECT(argv[1]);
-    } else {
-        fun = js_ValueToFunction(cx, &argv[1], 0);
-        if (!fun)
-            return JS_FALSE;
-        funobj = fun->object;
-    }
-    argv[1] = OBJECT_TO_JSVAL(funobj);
+    callable = js_ValueToCallableObject(cx, &argv[1], 0);
+    if (!callable)
+        return JS_FALSE;
 
     /* Compute the unique int/atom symbol id needed by js_LookupProperty. */
     userid = argv[0];
@@ -1324,7 +1317,7 @@ obj_watch(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     if (attrs & JSPROP_READONLY)
         return JS_TRUE;
-    return JS_SetWatchPoint(cx, obj, userid, obj_watch_handler, funobj);
+    return JS_SetWatchPoint(cx, obj, userid, obj_watch_handler, callable);
 }
 
 static JSBool
@@ -3986,8 +3979,6 @@ js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
         ok = JS_TRUE;
     } else if (!JSVAL_IS_PRIMITIVE(fval)) {
         ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
-        if (!ok)
-            JS_ClearPendingException(cx);
     } else {
         ok = JS_TRUE;
     }

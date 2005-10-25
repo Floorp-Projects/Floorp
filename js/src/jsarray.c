@@ -1524,7 +1524,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
             ArrayExtraMode mode)
 {
     jsuint length, newlen, i;
-    JSObject *funobj, *thisp, *newarr;
+    JSObject *callable, *thisp, *newarr;
     jsval *sp, *origsp, *oldsp;
     void *mark;
     JSStackFrame *fp;
@@ -1534,18 +1534,12 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         return JS_FALSE;
 
     /*
-     * First, get our callee, so that we error out consistently when passed
-     * a non-callable.
+     * First, get or compute our callee, so that we error out consistently
+     * when passed a non-callable object.
      */
-    if (JSVAL_IS_FUNCTION(cx, argv[0])) {
-        funobj = JSVAL_TO_OBJECT(argv[0]);
-    } else {
-        JSFunction *fun = js_ValueToFunction(cx, &argv[0], 0);
-        if (!fun)
-            return JS_FALSE;
-        funobj = fun->object;
-        argv[0] = OBJECT_TO_JSVAL(funobj);
-    }
+    callable = js_ValueToCallableObject(cx, &argv[0], 0);
+    if (!callable)
+        return JS_FALSE;
 
     /*
      * Set our initial return condition, used for zero-length array cases
@@ -1579,7 +1573,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         argv[1] = OBJECT_TO_JSVAL(thisp);
     } else {
         JSObject *tmp;
-        thisp = funobj;
+        thisp = callable;
         while ((tmp = OBJ_GET_PARENT(cx, thisp)) != NULL)
             thisp = tmp;
     }
@@ -1606,9 +1600,9 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         if (!ok)
             break;
 
-        /* Push funobj and 'this', then args. */
+        /* Push callable and 'this', then args. */
         sp = origsp;
-        *sp++ = OBJECT_TO_JSVAL(funobj);
+        *sp++ = OBJECT_TO_JSVAL(callable);
         *sp++ = OBJECT_TO_JSVAL(thisp);
         *sp++ = v;
         *sp++ = INT_TO_JSVAL(i);

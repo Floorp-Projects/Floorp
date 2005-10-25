@@ -122,6 +122,12 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
 extern JSFunction *
 js_ValueToFunction(JSContext *cx, jsval *vp, uintN flags);
 
+extern JSObject *
+js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags);
+
+extern JSObject *
+js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags);
+
 extern void
 js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags);
 
