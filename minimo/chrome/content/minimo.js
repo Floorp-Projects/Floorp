@@ -495,6 +495,18 @@ function BrowserViewRSS() {
   }
 }
 
+/**
+  * Has to go through some other approach like a XML-based rule system. 
+  * Those are constraints conditions and action. 
+  **/
+  
+function BrowserViewSearch() {
+  document.getElementById("toolbar-search").collapsed=!document.getElementById("toolbar-search").collapsed;
+  if(document.getElementById("toolbar-search").collapsed &&  document.getElementById("command_ViewSearch").getAttribute("checked")=="true") {
+	document.getElementById("command_ViewSearch").setAttribute("checked","false");
+  }
+}
+
 /** 
   * urlbar indentity, style, progress indicator.
   **/ 
@@ -561,6 +573,23 @@ function BrowserPopupShowing () {
     }
   }
 }
+
+/* Toolbar specific code - to be removed from here */ 
+
+function DoBrowserSearch() {
+  BrowserViewSearch();
+  try { 
+    var vQuery=document.getElementById("toolbar-search-tag").value;
+    if(vQuery!="") {
+	 getBrowser().selectedTab = getBrowser().addTab('http://www.google.com/xhtml?q='+vQuery+'&hl=en&lr=&safe=off&btnG=Search&site=search&mrestrict=xhtml');
+   	 browserInit(getBrowser().selectedTab);
+    }
+  } catch (e) {
+   
+  }  
+}
+
+/* Toolbar specific code - to be removed from here */ 
 
 function DoBrowserRSS() {
   BrowserViewRSS();

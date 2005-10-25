@@ -38,4 +38,7 @@
 <!-- toolbar view rss --> 
 <!ENTITY rssText.label                 "Tag:" >
 <!ENTITY rssBMtitle.label              "Social Bookmarks" >
-<!-- context menu items -->
+
+<!-- toolbar search -->
+<!ENTITY searchText.label              "Search for: " >
+<!ENTITY searchToolbar.label           "Search" >
