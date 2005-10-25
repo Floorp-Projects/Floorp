@@ -57,10 +57,10 @@
 #include "prtime.h"
 #include "prprf.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #define NEED_TO_FIX_4X_COOKIES 1
 #define SECONDS_BETWEEN_1900_AND_1970 2208988800UL
-#endif /* XP_MAC */
+#endif /* XP_MACOSX */
 
 #define FILE_NAME_PREFS_5X NS_LITERAL_STRING("prefs.js")
 
