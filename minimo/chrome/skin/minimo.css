@@ -171,3 +171,7 @@ caption {
   {
 	  list-style-image      : url("chrome://minimo/skin/reload.gif");
   }
+  
+.separator-menu {
+	border-top:1px solid black;
+}

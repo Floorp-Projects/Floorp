@@ -218,18 +218,20 @@
 	</popup>
     
     <menupopup id="menu_MainPopup" onpopupshowing="MenuPopupShowing()"  onpopuphidden="MenuPopupHidden()">
+    
         <menuitem id="command_BrowserOpenTab" command="cmd_BrowserOpenTab" label="New Tab"  /> 
 <!--    not working just yet.
 		<menuitem id="command_BrowserScreenRotate" command="cmd_BrowserScreenRotate" label="Rotate Screen"  /> 
 -->
         <menuitem id="command_DoPanelPreferences" command="cmd_DoPanelPreferences" label="&prefs.label;"  /> 
         <!-- separator for now in CSS - need to redesign -->
-        <menuitem id="command_ViewOptions" style='border-top:1px solid black' type="checkbox" command="cmd_ViewOptions" label="&zoom.label;"  /> 
+        <menuitem id="command_ViewOptions" class="separator-menu"  type="checkbox" command="cmd_ViewOptions" label="&zoom.label;"  /> 
         <menuitem id="command_ViewRSS"  type="checkbox" command="cmd_ViewRSS" label="&rssBMtitle.label;"  /> 
         <!-- separator for now in CSS - need to redesign -->
-        <menuitem id="command_Quit" style='border-top:1px solid black'  command="cmd_Quit" label="&quit.label;"  /> 
+        <menuitem id="command_Quit" class="separator-menu"  command="cmd_Quit" label="&quit.label;"  /> 
         
     </menupopup>  
+    
   </popupset>
   
 </window>
