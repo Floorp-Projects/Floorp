@@ -48,6 +48,7 @@
 class nsIMAPNamespace;
 class nsIMAPNamespaceList;
 class nsIMAPBodyShell;
+class nsIMAPBodypart;
 class nsImapSearchResultIterator;
 class nsImapFlagAndUidState;
 class nsCString;
@@ -183,6 +184,9 @@ protected:
   virtual void	  myrights_data();
   virtual void	  acl_data();
   virtual void	  bodystructure_data();
+  nsIMAPBodypart  *bodystructure_part(char *partNum, nsIMAPBodypart *parentPart);
+  nsIMAPBodypart  *bodystructure_leaf(char *partNum, nsIMAPBodypart *parentPart);
+  nsIMAPBodypart  *bodystructure_multipart(char *partNum, nsIMAPBodypart *parentPart);
   virtual void	  mime_data();
   virtual void	  mime_part_data();
   virtual void	  mime_header_data();

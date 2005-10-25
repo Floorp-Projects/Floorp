@@ -124,37 +124,33 @@ void nsIMAPGenericParser::skip_to_CRLF()
 void nsIMAPGenericParser::skip_to_close_paren()
 {
   int numberOfCloseParensNeeded = 1;
-  if (fNextToken && *fNextToken == ')')
+  while (ContinueParse())
   {
-    numberOfCloseParensNeeded--;
-    fNextToken++;
-    if (!fNextToken || !*fNextToken)
-      AdvanceToNextToken();
-  }
-  
-  while (ContinueParse() && numberOfCloseParensNeeded > 0)
-  {
-    // go through fNextToken, count the number
-    // of open and close parens, to account
-    // for nested parens which might come in
-    // the response
-    char *loc = 0;
+    // go through fNextToken, account for nested parens
+    char *loc;
     for (loc = fNextToken; loc && *loc; loc++)
     {
       if (*loc == '(')
         numberOfCloseParensNeeded++;
       else if (*loc == ')')
-        numberOfCloseParensNeeded--;
-      if (numberOfCloseParensNeeded == 0)
       {
-        fNextToken = loc + 1;
-        if (!fNextToken || !*fNextToken)
-          AdvanceToNextToken();
-        break;	// exit the loop
+        numberOfCloseParensNeeded--;
+        if (numberOfCloseParensNeeded == 0)
+        {
+          fNextToken = loc + 1;
+          if (!fNextToken || !*fNextToken)
+            AdvanceToNextToken();
+          return;
+        }
+      }
+      else if (*loc == '{' || *loc == '"') {
+        // quoted or literal  
+        char *a = CreateAstring();
+        PR_FREEIF(a);
+        break; // move to next token
       }
     }
-    
-    if (numberOfCloseParensNeeded > 0)
+    if (ContinueParse())
       AdvanceToNextToken();
   }
 }
