@@ -205,10 +205,12 @@
          <toolbarbutton class="reload-button"  command="cmd_BrowserReload"/>
        </toolbar>
        
+       <menuitem id="link_as_new_tab" label="Open link as New Tab" oncommand="BrowserOpenLinkAsTab()" hidden="true"/>
 	   <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand=""/>
 	   <menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
 	   <menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
        <menuitem id="item-paste"  label="Paste" oncommand="DoClipPaste()"/>
+       
 	</popup>
 	
 	 <!-- somehow tabbedbrowser needs this. Have to check its implementation and eliminate --> 

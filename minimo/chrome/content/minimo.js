@@ -429,6 +429,9 @@ function BrowserReload()
   getWebNavigation().reload(nsIWebNavigation.LOAD_FLAGS_NONE);
 }
 
+/* 
+ * Combine the two following functions in one
+ */
 function BrowserOpenTab()
 {
   try { 
@@ -439,6 +442,21 @@ function BrowserOpenTab()
   }
   //  if (gURLBar) setTimeout(function() { gURLBar.focus(); }, 0);
 
+}
+
+/* 
+ * Used by the Context Menu - Open link as Tab 
+ */
+function BrowserOpenLinkAsTab() 
+{
+  if(document.commandDispatcher.focusedElement.href) {
+    try { 
+      getBrowser().selectedTab = getBrowser().addTab(document.commandDispatcher.focusedElement.href);
+      browserInit(getBrowser().selectedTab);
+    } catch (e) {
+      alert(e);
+    }
+  }
 }
 
 /**
@@ -515,6 +533,16 @@ function BrowserUIResetZoomMinus() {
   thus mutate the popup menu to the right make call item 
 */ 
 function BrowserPopupShowing () {
+
+  /*
+   * Open Link as New Tab  
+   */ 
+  if(document.commandDispatcher.focusedElement && document.commandDispatcher.focusedElement.href) {
+	document.getElementById("link_as_new_tab").hidden=false;
+  } else {
+	document.getElementById("link_as_new_tab").hidden=true;
+  }
+
   var selectedRange=getBrowser().selectedBrowser.contentDocument.getSelection();
   document.getElementById("item-call").label="Call \""+ selectedRange + " \"";
   document.getElementById("item-call").setAttribute("oncommand","DoTestSendCall("+selectedRange+")");
