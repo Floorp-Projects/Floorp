@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -141,7 +142,19 @@ nsXULCommandDispatcher::GetFocusedElement(nsIDOMElement** aElement)
   EnsureFocusController();
   NS_ENSURE_TRUE(mFocusController, NS_ERROR_FAILURE);
 
-  return mFocusController->GetFocusedElement(aElement);
+  nsresult rv = mFocusController->GetFocusedElement(aElement);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Make sure the caller can access the focused element.
+  if (*aElement && !nsContentUtils::CanCallerAccess(*aElement)) {
+    // XXX This might want to return null, but we use that return value
+    // to mean "there is no focused element," so to be clear, throw an
+    // exception.
+    NS_RELEASE(*aElement);
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -154,7 +167,23 @@ nsXULCommandDispatcher::GetFocusedWindow(nsIDOMWindow** aWindow)
   nsresult rv = mFocusController->GetFocusedWindow(getter_AddRefs(window));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && window, rv);
 
-  return CallQueryInterface(window, aWindow);
+  rv = CallQueryInterface(window, aWindow);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Make sure the caller can access this window. The caller can access this
+  // window iff it can access the document.
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  rv = (*aWindow)->GetDocument(getter_AddRefs(domdoc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Note: If there is no document, then this window has been cleared and
+  // there's nothing left to protect, so let the window pass through.
+  if (domdoc && !nsContentUtils::CanCallerAccess(domdoc)) {
+    NS_RELEASE(*aWindow);
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
