@@ -394,8 +394,11 @@ args_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       default:
-        if ((uintN)slot < fp->argc && !ArgWasDeleted(cx, fp, slot))
+        if (fp->fun->interpreted &&
+            (uintN)slot < fp->argc &&
+            !ArgWasDeleted(cx, fp, slot)) {
             fp->argv[slot] = *vp;
+        }
         break;
     }
     return JS_TRUE;
