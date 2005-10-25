@@ -6185,6 +6185,10 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
   if (!instance)
     return;
 
+  // Note on the frame that it used to have a plugin instance, since
+  // we're about to make said instance go away
+  frame->SetProperty(nsLayoutAtoms::objectFrame, NS_INT32_TO_PTR(1));
+
   // Check whether the plugin wants SetWindow to be called before or after
   // Stop/Destroy.  This is similar to nsObjectFrame::Destroy(), but we
   // don't want to destroy the frame just yet.
@@ -6244,17 +6248,17 @@ static void
 StartPluginInstance(PresShell *aShell, nsIContent *aContent)
 {
   // For now we just reconstruct the frame, but only if the element
-  // has a plugin instance.
+  // had a plugin instance before we stopped it.  Other types of
+  // embedded content (eg SVG) become unhappy if we do a frame
+  // reconstruct here.
   nsIFrame *frame = aShell->GetPrimaryFrameFor(aContent);
   if (frame) {
     nsIObjectFrame *objFrame = nsnull;
     CallQueryInterface(frame, &objFrame);
-    if (objFrame) {
-      nsCOMPtr<nsIPluginInstance> instance;
-      objFrame->GetPluginInstance(*getter_AddRefs(instance));
-      if (instance) {
-        aShell->RecreateFramesFor(aContent);
-      }
+    if (objFrame && frame->GetProperty(nsLayoutAtoms::objectFrame)) {
+      // Note: no need to remove the property here, since we're about
+      // to blow away the frame
+      aShell->RecreateFramesFor(aContent);
     }
   }
 }
