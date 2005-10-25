@@ -193,6 +193,17 @@
   <!-- place holder for our app popups and hook to the overlay --> 
   <popupset>
 	<popup id="contentAreaContextMenu" onpopupshowing="BrowserPopupShowing()">
+
+	   <!-- This toolbar menu works only with Mouse so far and shows 
+	        when gFullScreen mode is true --> 
+	        
+       <toolbar id="nav-bar-contextual" hidden="true">
+         <toolbarbutton class="menu-button"    command="cmd_BrowserMenuContextual" />  
+         <toolbarbutton class="back-button"    command="cmd_BrowserBack" />  
+         <toolbarbutton class="forward-button" command="cmd_BrowserForward" />  
+         <toolbarbutton class="reload-button"  command="cmd_BrowserReload"/>
+       </toolbar>
+       
 	   <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand=""/>
 	   <menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
 	   <menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
