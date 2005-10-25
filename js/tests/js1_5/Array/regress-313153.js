@@ -44,6 +44,6 @@ printBugNumber (bug);
 printStatus (summary);
 
 expect = '1,2,3';
-actual = (function (){return Array.concat.apply([], arguments)})(1,2,3);
+actual = (function (){return Array.concat.apply([], arguments)})(1,2,3).toString();
   
 reportCompare(expect, actual, summary);
