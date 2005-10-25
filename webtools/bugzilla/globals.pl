@@ -437,15 +437,6 @@ sub DBNameToIdAndCheck {
     ThrowUserError("invalid_username", { name => $name });
 }
 
-sub get_classification_id {
-    my ($classification) = @_;
-    PushGlobalSQLState();
-    SendSQL("SELECT id FROM classifications WHERE name = " . SqlQuote($classification));
-    my ($classification_id) = FetchSQLData();
-    PopGlobalSQLState();
-    return $classification_id;
-}
-
 sub get_product_id {
     my ($prod) = @_;
     PushGlobalSQLState();
