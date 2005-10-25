@@ -522,24 +522,29 @@ static JSPropertySpec string_props[] = {
 static JSBool
 str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+    jsval v;
     JSString *str;
     jsint slot;
 
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
 
-    /*
-     * Call js_ValueToString because getters and setters can be invoked on
-     * objects of different class, unlike enumerate, resolve, and the other
-     * class hooks.
-     */
-    str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
-    if (!str)
-        return JS_FALSE;
-
     slot = JSVAL_TO_INT(id);
-    if (slot == STRING_LENGTH)
+    if (slot == STRING_LENGTH) {
+        if (OBJ_GET_CLASS(cx, obj) == &js_StringClass) {
+            /* Follow ECMA-262 by fetching intrinsic length of our string. */
+            v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+            JS_ASSERT(JSVAL_IS_STRING(v));
+            str = JSVAL_TO_STRING(v);
+        } else {
+            /* Preserve compatibility: convert obj to a string primitive. */
+            str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
+            if (!str)
+                return JS_FALSE;
+        }
+
         *vp = INT_TO_JSVAL((jsint) JSSTRING_LENGTH(str));
+    }
     return JS_TRUE;
 }
 
@@ -548,6 +553,7 @@ str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 str_enumerate(JSContext *cx, JSObject *obj)
 {
+    jsval v;
     JSString *str, *str1;
     size_t i, length;
 
@@ -555,10 +561,9 @@ str_enumerate(JSContext *cx, JSObject *obj)
     if (JS_VERSION_IS_1_2(cx))
         return JS_TRUE;
 
-    str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
-    if (!str)
-        return JS_TRUE;
-    cx->newborn[GCX_STRING] = (JSGCThing *) str;
+    v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    JS_ASSERT(JSVAL_IS_STRING(v));
+    str = JSVAL_TO_STRING(v);
 
     length = JSSTRING_LENGTH(str);
     for (i = 0; i < length; i++) {
@@ -578,16 +583,16 @@ static JSBool
 str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
             JSObject **objp)
 {
+    jsval v;
     JSString *str, *str1;
     jsint slot;
 
     if (!JSVAL_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
         return JS_TRUE;
 
-    str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
-    if (!str)
-        return JS_TRUE;
-    cx->newborn[GCX_STRING] = (JSGCThing *) str;
+    v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
+    JS_ASSERT(JSVAL_IS_STRING(v));
+    str = JSVAL_TO_STRING(v);
 
     slot = JSVAL_TO_INT(id);
     if ((size_t)slot < JSSTRING_LENGTH(str)) {
