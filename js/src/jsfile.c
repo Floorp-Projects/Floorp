@@ -462,7 +462,7 @@ js_canonicalPath(JSContext *cx, char *oldpath)
     /* file:// support. */
     if (!strncmp(path, URL_PREFIX, strlen(URL_PREFIX))) {
         tmp = js_canonicalPath(cx, path + strlen(URL_PREFIX));
-        JS_free(path);
+        JS_free(cx, path);
         return tmp;
     }
 
@@ -1172,12 +1172,29 @@ js_parent(JSContext *cx, JSFile *file, jsval *resultp)
     return JS_TRUE;
 }
 
-static jsval
-js_name(JSContext *cx, JSFile *file){
-    /* XXX This needs to return PRBool and handle failure. */
-    return file->isPipe
-           ? JSVAL_VOID
-           : STRING_TO_JSVAL(JS_NewString(cx, js_fileBaseName(cx, file->path)));
+static JSBool
+js_name(JSContext *cx, JSFile *file, jsval *vp)
+{
+    char *name;
+    JSString *str;
+
+    if (file->isPipe) {
+        *vp = JSVAL_VOID;
+        return JS_TRUE;
+    }
+
+    name = js_fileBaseName(cx, file->path);
+    if (!name)
+        return JS_FALSE;
+
+    str = JS_NewString(cx, name, strlen(name));
+    if (!str) {
+        JS_free(cx, name);
+        return JS_FALSE;
+    }
+
+    *vp = STRING_TO_JSVAL(str);
+    return JS_TRUE;
 }
 
 /* ------------------------------ File object methods ---------------------------- */
@@ -1769,7 +1786,7 @@ file_readln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 eof:
     if (offset == 0) {
-        *rval = JSVAL_FALSE;
+        *rval = JSVAL_NULL;
         return JS_TRUE;
     }
 
@@ -2246,15 +2263,16 @@ static JSBool
 file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSFile      *file = JS_GetInstancePrivate(cx, obj, &file_class, NULL);
-    char        *str;
+    char        *bytes;
+    JSString    *str;
     jsint       tiny;
     PRFileInfo  info;
-	JSBool		flag;
-    PRExplodedTime
-                expandedTime;
+    JSBool      flag;
+    PRExplodedTime expandedTime;
 
     tiny = JSVAL_TO_INT(id);
-    if(!file) return JS_TRUE;
+    if (!file)
+        return JS_TRUE;
 
     switch (tiny) {
     case FILE_PARENT:
@@ -2263,10 +2281,14 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             return JS_FALSE;
         break;
     case FILE_PATH:
-        *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, file->path));
+        str = JS_NewStringCopyZ(cx, file->path);
+        if (!str)
+            return JS_FALSE;
+        *vp = STRING_TO_JSVAL(str);
         break;
     case FILE_NAME:
-        *vp = js_name(cx, file);
+        if (!js_name(cx, file, vp))
+            return JS_FALSE;
         break;
     case FILE_ISDIR:
         SECURITY_CHECK(cx, NULL, "isDirectory", file);
@@ -2339,47 +2361,47 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     case FILE_MODE:
         SECURITY_CHECK(cx, NULL, "mode", file);
         JSFILE_CHECK_OPEN("mode");
-        str = (char*)JS_malloc(cx, MODE_SIZE);
-        str[0] = '\0';
+        bytes = JS_malloc(cx, MODE_SIZE);
+        bytes[0] = '\0';
         flag = JS_FALSE;
 
         if ((file->mode&PR_RDONLY)==PR_RDONLY) {
-            if (flag) strcat(str, ",");
-            strcat(str, "read");
+            if (flag) strcat(bytes, ",");
+            strcat(bytes, "read");
             flag = JS_TRUE;
         }
         if ((file->mode&PR_WRONLY)==PR_WRONLY) {
-            if (flag) strcat(str, ",");
-            strcat(str, "write");
+            if (flag) strcat(bytes, ",");
+            strcat(bytes, "write");
             flag = JS_TRUE;
         }
         if ((file->mode&PR_RDWR)==PR_RDWR) {
-            if (flag) strcat(str, ",");
-            strcat(str, "readWrite");
+            if (flag) strcat(bytes, ",");
+            strcat(bytes, "readWrite");
             flag = JS_TRUE;
         }
         if ((file->mode&PR_APPEND)==PR_APPEND) {
-            if (flag) strcat(str, ",");
-            strcat(str, "append");
+            if (flag) strcat(bytes, ",");
+            strcat(bytes, "append");
             flag = JS_TRUE;
         }
         if ((file->mode&PR_CREATE_FILE)==PR_CREATE_FILE) {
-            if (flag) strcat(str, ",");
-            strcat(str, "create");
+            if (flag) strcat(bytes, ",");
+            strcat(bytes, "create");
             flag = JS_TRUE;
         }
         if ((file->mode&PR_TRUNCATE)==PR_TRUNCATE) {
-            if (flag) strcat(str, ",");
-            strcat(str, "replace");
+            if (flag) strcat(bytes, ",");
+            strcat(bytes, "replace");
             flag = JS_TRUE;
         }
         if (file->hasAutoflush) {
-            if (flag) strcat(str, ",");
-            strcat(str, "hasAutoFlush");
+            if (flag) strcat(bytes, ",");
+            strcat(bytes, "hasAutoFlush");
             flag = JS_TRUE;
         }
-        *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, str));
-        JS_free(cx, str);
+        *vp = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, bytes));
+        JS_free(cx, bytes);
         break;
     case FILE_CREATED:
         SECURITY_CHECK(cx, NULL, "creationTime", file);
@@ -2489,31 +2511,39 @@ file_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
     default:
         SECURITY_CHECK(cx, NULL, "file_access", file);
-		/* this is some other property -- try to use the dir["file"] syntax */
-        if(js_isDirectory(cx, file)){
-			PRDir *dir = NULL;
-			PRDirEntry *entry = NULL;
-            char *prop_name = JS_GetStringBytes(JS_ValueToString(cx, id));
+
+        /* this is some other property -- try to use the dir["file"] syntax */
+        if (js_isDirectory(cx, file)) {
+            PRDir *dir = NULL;
+            PRDirEntry *entry = NULL;
+            char *prop_name;
+
+            str = JS_ValueToString(cx, id);
+            if (!str)
+                return JS_FALSE;
+
+            prop_name = JS_GetStringBytes(str);
 
             /* no native files past this point */
             dir = PR_OpenDir(file->path);
             if(!dir) {
                 /* This is probably not a directory */
-				JS_ReportWarning(cx, "Can't open directory %s", file->path);
+                JS_ReportWarning(cx, "Can't open directory %s", file->path);
                 return JS_FALSE;
             }
 
-            while((entry = PR_ReadDir(dir, PR_SKIP_NONE))!=NULL){
-				if(!strcmp(entry->name, prop_name)){
-                    str = js_combinePath(cx, file->path, prop_name);
-                    *vp = OBJECT_TO_JSVAL(js_NewFileObject(cx, str));
-					JS_free(cx, str);
+            while ((entry = PR_ReadDir(dir, PR_SKIP_NONE)) != NULL) {
+                if (!strcmp(entry->name, prop_name)){
+                    bytes = js_combinePath(cx, file->path, prop_name);
+                    *vp = OBJECT_TO_JSVAL(js_NewFileObject(cx, bytes));
+                    JS_free(cx, bytes);
                     return JS_TRUE;
-				}
-			}
-		}
+                }
+            }
+        }
     }
     return JS_TRUE;
+
 out:
     return JS_FALSE;
 }
