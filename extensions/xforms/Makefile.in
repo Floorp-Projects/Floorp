@@ -57,6 +57,8 @@ MOZILLA_INTERNAL_API = 1
 # Also build schema-validation
 DIRS			= ../schema-validation \
 		  	  $(NULL)
+
+ifdef MOZ_XUL_APP
 # XPI settings
 # XPI_NAME is exported to include schema-validation in xforms package
 export XPI_NAME	       = xforms
@@ -75,6 +77,7 @@ XULAPP_DEFINES = \
 
 # Include these in the XPI
 DIST_FILES = install.rdf install.js
+endif
 
 # XForms depends
 REQUIRES	= \
