@@ -278,6 +278,7 @@ bin\components\necko_strconv.xpt
 bin\components\necko_file.xpt
 bin\components\necko_cache.xpt
 bin\components\necko_cookie.xpt         
+bin\components\necko_socket.xpt         
 bin\components\nsProxyAutoConfig.js
  
 ; extensions
