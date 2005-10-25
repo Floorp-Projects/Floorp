@@ -19,6 +19,7 @@ calendar.jar:
     content/calendar/calendarOverlay.xul (content/calendarOverlay.xul) 
     content/calendar/calendarSelection.js (content/calendarSelection.js) 
     content/calendar/calendarWindow.js (content/calendarWindow.js)
+    content/calendar/calErrorPrompt.xul (/calendar/base/content/calErrorPrompt.xul)
     content/calendar/calPrintEngine.js (content/calPrintEngine.js)
     content/calendar/calPrintEngine.xul (content/calPrintEngine.xul)
     content/calendar/calPrintEngine.css (content/calPrintEngine.css)

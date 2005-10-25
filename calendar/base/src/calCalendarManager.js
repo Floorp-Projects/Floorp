@@ -110,7 +110,7 @@ calCalendarManager.prototype = {
     setUpReadOnlyObservers: function() {
         var calendars = this.getCalendars({});
         for each(calendar in calendars) {
-            var newObserver = new readOnlyAnnouncer(calendar);
+            var newObserver = new errorAnnouncer(calendar);
             calendar.addObserver(newObserver.observer);
         }
     },
@@ -210,7 +210,7 @@ calCalendarManager.prototype = {
         }
 
         // Add an observer to track readonly-mode triggers
-        var newObserver = new readOnlyAnnouncer(calendar);
+        var newObserver = new errorAnnouncer(calendar);
         calendar.addObserver(newObserver.observer);
 
         var pp = this.mRegisterCalendar.params;
@@ -364,8 +364,10 @@ calCalendarManager.prototype = {
 // This is a prototype object for announcing the fact that a calendar error has
 // happened and that the calendar has therefore been put in readOnly mode.  We
 // implement a new one of these for each calendar registered to the calmgr.
-function readOnlyAnnouncer(calendar) {
+function errorAnnouncer(calendar) {
     this.calendar = calendar;
+    // We compare this to determine if the state actually changed.
+    this.storedReadOnly = calendar.readOnly;
     var announcer = this;
     this.observer = {
         onStartBatch: function() {},
@@ -376,20 +378,40 @@ function readOnlyAnnouncer(calendar) {
         onDeleteItem: function(aDeletedItem) {},
         onAlarm: function(aAlarmItem) {},
         onError: function(aErrNo, aMessage) {
-            if (!announcer.calendar.readOnly)
-                return;
-            announcer.announceError();
+            announcer.announceError(aErrNo, aMessage);
         }
     }
 }
 
-readOnlyAnnouncer.prototype.announceError = function(aErrNo) {
-    var promptService = Components.classes[
-                        "@mozilla.org/embedcomp/prompt-service;1"]
-                        .getService(Components.interfaces.nsIPromptService);
+errorAnnouncer.prototype.announceError = function(aErrNo, aMessage) {
+    var paramBlock = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
+                               .createInstance(Components.interfaces.nsIDialogParamBlock);
     var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                    .getService(Components.interfaces.nsIStringBundleService);
+                        .getService(Components.interfaces.nsIStringBundleService);
     var props = sbs.createBundle("chrome://calendar/locale/calendar.properties");
-    var emessage = props.formatStringFromName("readOnlyMode", [this.calendar.name],1);
-    promptService.alert(null, 'Warning', emessage);
+    var errMsg;
+    paramBlock.SetNumberStrings(3);
+    if (!this.storedReadOnly && this.calendar.readOnly) {
+        // Major errors change the calendar to readOnly
+        errMsg = props.formatStringFromName("readOnlyMode", [this.calendar.name], 1);
+    } else if (!this.storedReadOnly && !this.calendar.readOnly) {
+        // Minor errors don't, but still tell the user something went wrong
+        errMsg = props.formatStringFromName("minorError", [this.calendar.name], 1);
+    } else {
+        // The calendar was already in readOnly mode, but still tell the user
+        errMsg = props.formatStringFromName("stillReadOnlyError", [this.calendar.name], 1);
+    }
+    paramBlock.SetString(0, errMsg);
+    paramBlock.SetString(1, "0x"+aErrNo.toString(16));
+    paramBlock.SetString(2, aMessage);
+
+    this.storedReadOnly = this.calendar.readOnly;
+
+    var wWatcher = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(Components.interfaces.nsIWindowWatcher);
+    wWatcher.openWindow(null,
+                        "chrome://calendar/content/calErrorPrompt.xul",
+                        "_blank",
+                        "chrome,dialog=yes",
+                        paramBlock);
 }

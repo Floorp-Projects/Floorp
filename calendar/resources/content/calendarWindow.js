@@ -177,12 +177,7 @@ function CalendarWindow( )
                 calendarWindow.currentView.refreshEvents();
         },
         onAlarm: function(aAlarmItem) {},
-        onError: function(aErrNo, aMessage) {
-            var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                          .getService(Components.interfaces.nsIPromptService);
-            promptService.alert(null, 'Error',
-                                aMessage);
-        },
+        onError: function(aErrNo, aMessage) {},
 
         onCalendarAdded: function(aDeletedItem) {
             if (!this.mInBatch)

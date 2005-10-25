@@ -519,6 +519,13 @@
 <!ENTITY calendar.print.onlyitemsstatus.label "Print only items with this status:">
 <!ENTITY calendar.print.onlyitemscategory.label "Print only items with this category:">
 
+<!-- Error reporting -->
+<!ENTITY calendar.error.detail "Details...">
+<!ENTITY calendar.error.number "Error number:">
+<!ENTITY calendar.error.description "Description:">
+<!ENTITY calendar.error.title "An error has occurred">
+
+
 <!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
 <!ENTITY mainWindow.title "&brandFullName;">
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifier) : DONT_TRANSLATE -->

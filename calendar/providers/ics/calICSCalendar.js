@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir.vukicevic@oracle.com>
  *   Dan Mosedale <dan.mosedale@oracle.com>
+ *   Joey Minta <jminta@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -364,7 +365,6 @@ calICSCalendar.prototype = {
     // nsIStreamLoaderObserver impl
     // Listener for download. Parse the downloaded file
 
-    // XXX use the onError observer calls
     onStreamComplete: function(loader, ctxt, status, resultLength, result)
     {
         // Create a new calendar, to get rid of all the old events
@@ -392,8 +392,7 @@ calICSCalendar.prototype = {
 
         // Wrap parsing in a try block. Will ignore errors. That's a good thing
         // for non-existing or empty files, but not good for invalid files.
-        // We should not accidently overwrite third party files.
-        // XXX Fix that
+        // That's why we put them in readOnly mode
         try {
             var rootComp = this.mICSService.parseICS(str);
 
@@ -421,34 +420,37 @@ calICSCalendar.prototype = {
 
                 var subComp = calComp.getFirstSubcomponent("ANY");
                 while (subComp) {
-                    switch (subComp.componentType) {
-                    case "VEVENT":
-                        var event = Components.classes["@mozilla.org/calendar/event;1"]
-                                              .createInstance(Components.interfaces.calIEvent);
-                        event.icalComponent = subComp;
-                        this.mMemoryCalendar.addItem(event, null);
-                        break;
-                    case "VTODO":
-                        // XXX Last time i tried, vtodo didn't work. Sadly no time to
-                        // debug now.
-                        var todo = Components.classes["@mozilla.org/calendar/todo;1"]
-                                             .createInstance(Components.interfaces.calITodo);
-                        todo.icalComponent = subComp;
-                        this.mMemoryCalendar.addItem(todo, null);
-                        break;
-                    default:
-                        this.unmappedComponents.push(subComp);
-                        dump(subComp.componentType+"\n");
+                    // Place each subcomp in a try block, to hopefully get as
+                    // much of a bad calendar as possible
+                    try {
+                        switch (subComp.componentType) {
+                        case "VEVENT":
+                            var event = Components.classes["@mozilla.org/calendar/event;1"]
+                                                  .createInstance(Components.interfaces.calIEvent);
+                            event.icalComponent = subComp;
+                            this.mMemoryCalendar.addItem(event, null);
+                            break;
+                        case "VTODO":
+                            var todo = Components.classes["@mozilla.org/calendar/todo;1"]
+                                                 .createInstance(Components.interfaces.calITodo);
+                            todo.icalComponent = subComp;
+                            this.mMemoryCalendar.addItem(todo, null);
+                            break;
+                        default:
+                            this.unmappedComponents.push(subComp);
+                            dump(subComp.componentType+"\n");
+                        }
+                    }
+                    catch(ex) { 
+                        this.mObserver.onError(ex.result, ex.toString());
                     }
                     subComp = calComp.getNextSubcomponent("ANY");
                 }
                 calComp = rootComp.getNextSubcomponent('VCALENDAR');
             }
         } catch(e) {
-            dump(e+"\n");
-            this.readOnly = true;
-            // XXX fix error number/message
-            this.mObserver.onError(0, e);
+            dump("Parsing the file failed:"+e+"\n");
+            this.mObserver.onError(e.result, e.toString());
         }
 
         this.mObserver.onEndBatch();
@@ -542,13 +544,13 @@ calICSCalendar.prototype = {
         }
 
         if (channel && !channel.requestSucceeded) {
-            ctxt.mObserver.onError(null,
+            ctxt.mObserver.onError(channel.requestSucceeded,
                                    "Publishing the calendar file failed\n" +
                                        "Status code: "+channel.responseStatus+": "+channel.responseStatusText+"\n");
         }
 
         else if (!channel && !Components.isSuccessCode(request.status)) {
-            ctxt.mObserver.onError(null,
+            ctxt.mObserver.onError(request.status,
                                    "Publishing the calendar file failed\n" +
                                        "Status code: "+request.status.toString(16)+"\n");
         }
@@ -692,7 +694,21 @@ calICSObserver.prototype = {
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].onAlarm(aAlarmItem);
     },
+
+    // Unless an error number is in this array, we consider it very bad, set
+    // the calendar to readOnly, and give up.
+    acceptableErrorNums: [],
+
     onError: function(aErrNo, aMessage) {
+        var errorIsOk = false;
+        for each (num in this.acceptableErrorNums) {
+            if (num == aErrNo) {
+                errorIsOk = true;
+                break;
+            }
+        }
+        if (!errorIsOk)
+            this.mCalendar.readOnly = true;
         for (var i = 0; i < this.mObservers.length; i++)
             this.mObservers[i].onError(aErrNo, aMessage);
     },
