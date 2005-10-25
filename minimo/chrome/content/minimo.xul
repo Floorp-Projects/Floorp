@@ -254,6 +254,8 @@
         <!-- separator for now in CSS - need to redesign -->
         <menuitem id="command_ViewOptions" class="separator-menu"  type="checkbox" command="cmd_ViewOptions" label="&zoom.label;"  /> 
         <menuitem id="command_ViewRSS"  type="checkbox" command="cmd_ViewRSS" label="&rssBMtitle.label;"  /> 
+        <menuitem id="command_ViewSearch"  type="checkbox" command="cmd_ViewSearch" label="&searchToolbar.label;"  /> 
+        
         <!-- separator for now in CSS - need to redesign -->
         <menuitem id="command_Quit" class="separator-menu"  command="cmd_Quit" label="&quit.label;"  /> 
         
