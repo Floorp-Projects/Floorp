@@ -466,6 +466,8 @@ nsScriptSecurityManager::CheckObjectAccess(JSContext *cx, JSObject *obj,
     // Pass the parent object's class name, as we have no class-info for it.
     nsresult rv =
         ssm->CheckPropertyAccess(cx, target, JS_GetClass(cx, obj)->name, id,
+                                 (mode & JSACC_WRITE) ?
+                                 nsIXPCSecurityManager::ACCESS_SET_PROPERTY :
                                  nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
     if (NS_FAILED(rv))
