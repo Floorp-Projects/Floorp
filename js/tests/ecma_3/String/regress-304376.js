@@ -44,6 +44,8 @@ printBugNumber (bug);
 printStatus (summary);
 
 expect = 'String';
+
+var saveString = String;
   
 String = Array;
 
@@ -51,5 +53,7 @@ actual = (new String()).constructor.name;
 
 // see if we can crash...
 "".join();
+
+String = saveString;
 
 reportCompare(expect, actual, summary);
