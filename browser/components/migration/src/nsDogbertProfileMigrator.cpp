@@ -381,6 +381,12 @@ nsDogbertProfileMigrator::GetSourceProfile(const PRUnichar* aProfile)
 }
 #endif // GetSourceProfiles
 
+NS_IMETHODIMP
+nsDogbertProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
+{
+  aResult.Truncate();
+  return NS_OK;
+}
 ///////////////////////////////////////////////////////////////////////////////
 // nsDogbertProfileMigrator
 #define F(a) nsDogbertProfileMigrator::a

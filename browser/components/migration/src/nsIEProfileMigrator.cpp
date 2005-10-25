@@ -490,6 +490,40 @@ nsIEProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
+{
+  HKEY            regKey;
+  DWORD           regType;
+  DWORD           regLength;
+  unsigned char   regValue[MAX_PATH];
+  nsresult        rv;
+  
+  if (::RegOpenKeyEx(HKEY_CURRENT_USER, 
+                     "Software\\Microsoft\\Internet Explorer\\Main",
+                     0, KEY_READ, &regKey) != ERROR_SUCCESS)
+    return NS_OK;
+
+  // read registry data
+  regLength = MAX_PATH;
+  if (::RegQueryValueEx(regKey, "Start Page", 0,
+                        &regType, regValue, &regLength) == ERROR_SUCCESS) {
+
+    if (regType == REG_SZ) {
+      regValue[MAX_PATH] = '\0';
+      nsCAutoString  homePageURL;
+      nsCOMPtr<nsIURI> homePageURI;
+      NS_NewURI(getter_AddRefs(homePageURI), NS_REINTERPRET_CAST(char *, regValue), nsnull, nsnull);
+      rv = homePageURI->GetSpec(homePageURL);
+
+      if (NS_SUCCEEDED(rv) && !homePageURL.IsEmpty())
+        aResult.Assign(homePageURL);
+    }
+  }
+  ::RegCloseKey(regKey);
+  return NS_OK;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIEProfileMigrator

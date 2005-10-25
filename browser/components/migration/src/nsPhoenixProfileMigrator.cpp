@@ -243,7 +243,12 @@ nsPhoenixProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
   NS_IF_ADDREF(*aResult = mProfileNames);
   return NS_OK;
 }
-
+NS_IMETHODIMP
+nsPhoenixProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
+{
+  aResult.Truncate();
+  return NS_OK;
+}
 ///////////////////////////////////////////////////////////////////////////////
 // nsPhoenixProfileMigrator
 

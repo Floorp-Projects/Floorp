@@ -282,6 +282,37 @@ nsOperaProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOperaProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
+{
+  nsresult rv;
+  nsCAutoString val;
+
+  nsCOMPtr<nsIFile> operaPrefs;
+  mOperaProfile->Clone(getter_AddRefs(operaPrefs));
+  operaPrefs->Append(OPERA_PREFERENCES_FILE_NAME);
+
+  nsCOMPtr<nsILocalFile> lf(do_QueryInterface(operaPrefs));
+  NS_ENSURE_TRUE(lf, NS_ERROR_UNEXPECTED);
+
+  nsINIParser parser;
+  rv = parser.Init(lf);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = parser.GetString("User Prefs",
+                        "Home URL",
+                        val);
+
+  if (NS_SUCCEEDED(rv))
+    aResult.Assign(val);
+
+  if (aResult.Length() > 0)
+    printf(val.get());
+
+  return NS_OK;
+}
+ 
+
 #define _OPM(type) nsOperaProfileMigrator::type
 
 static
@@ -293,7 +324,6 @@ nsOperaProfileMigrator::PrefTransform gTransforms[] = {
   { nsnull, "Allow script to move window", _OPM(BOOL), "dom.disable_window_move_resize", _OPM(SetBool), PR_FALSE, -1 },
   { nsnull, "Allow script to raise window", _OPM(BOOL), "dom.disable_window_flip", _OPM(SetBool), PR_FALSE, -1 },
   { nsnull, "Allow script to change status", _OPM(BOOL), "dom.disable_window_status_change", _OPM(SetBool), PR_FALSE, -1 },
-  { nsnull, "Home URL", _OPM(STRING), "browser.startup.homepage", _OPM(SetWString), PR_FALSE, -1 },
   { nsnull, "Ignore Unrequested Popups", _OPM(BOOL), "dom.disable_open_during_load", _OPM(SetBool), PR_FALSE, -1 },
   { nsnull, "Load Figures", _OPM(BOOL), "permissions.default.image", _OPM(SetImageBehavior), PR_FALSE, -1 },
 
