@@ -376,7 +376,7 @@ ApplyUpdate(nsIFile *appDir, nsIFile *updateDir, nsILocalFile *statusFile,
 #elif defined(XP_WIN)
   _chdir(appDirPath.get());
 
-  if (!WinLaunchChild(updaterPath.get(), appArgc + 3, argv))
+  if (!WinLaunchChild(updaterPath.get(), appArgc + 4, argv))
     return;
   _exit(0);
 #else
