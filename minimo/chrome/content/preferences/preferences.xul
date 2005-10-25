@@ -107,27 +107,28 @@
     <!-- GENERAL PANE -->
     
 	<hbox class="panel-container" flex="1" id="general-pane"
-            accessfocus="browserStartupHomepage"
+            accessfocus="browserStartupHomepage" 
             accessnextrule="advanced-pane"
             accessprevrule="pref-bar" >
             
-            <groupbox flex="1" class="box-floatoptions scrolling"  >
+            <groupbox flex="1" class="box-floatoptions scrolling"   >
                 <caption label="&general.label;" /> 
                 <hbox flex="1" >
                     <vbox flex="1" style="padding:4px ! important">
-                        <groupbox class='box-prefgroupitem' >
+                        <groupbox class='box-prefgroupitem' id='home-box'>
                             <caption label="&homeCaption.label;"/>
                                 <box>
-                                    <textbox id="browserStartupHomepage" keyup=""  tabindex="10"
-                                             style="margin:3px ! important;" flex="1"
+                                    <textbox id="browserStartupHomepage" keyup=""  tabindex="10" 
+                                             style="margin:3px ! important;" flex="1"  onfocus="prefFocus('home-box')" onblur="prefBlur('home-box')"
                                              onchange="syncPref(this)" preference="browser.startup.homepage" preftype="string"/>
                                 </box>
                         </groupbox>
-                        <groupbox  class='box-prefgroupitem'>
+                        <groupbox  class='box-prefgroupitem' id='ssrimage-box'>
                                 <caption label="&sssCaption.label;"/>
                                 <vbox class="box-prefpadding">                        
                                 <checkbox id="enableImages" 
                                               tabindex="11" 
+                                              onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
                                               label="&imagesCheckbox.label;"
                                               preference="permissions.default.image" preftype="int" prefvalue=""
                                               onsyncfrompreference="readEnableImagesPref();"
@@ -136,6 +137,7 @@
                                               />
     
                                 <checkbox id="ssr"
+                                              onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
                                               tabindex="12" 
                                               label="&useSSRCheckbox.label;"
                                               preference="ssr.enabled" preftype="bool"
@@ -143,6 +145,7 @@
                                               />
     
                                 <checkbox id="sitessr" 
+                                              onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
                                               tabindex="13" 
                                               label="&usesiteSSRCheckbox.label;"
                                               preference="ssr.site.enabled" preftype="bool"
@@ -150,12 +153,13 @@
                                               />
                             </vbox>
     				    </groupbox>
-    				    <groupbox class='box-prefgroupitem' >
+    				    <groupbox class='box-prefgroupitem' id='zoom-box' >
                             <caption label="&zoom.label;"/>
                             <box class="box-prefgroupitem">
                                 <label value="&zoomui.label;" />
 
                                     <textbox id="browserDisplayZoomUI" size="5" tabindex="14"
+                                             onfocus="prefFocus('zoom-box')" onblur="prefBlur('zoom-box')"
                                              style="margin:3px ! important;" 
                                              preference="browser.display.zoomui" preftype="int" 
                                              onchange="syncPref(this)" 
@@ -165,6 +169,7 @@
                             <box class="box-prefgroupitem">
                                 <label value="&zoomcontent.label;" />
                                     <textbox id="browserDisplayZoomContent" size="5" tabindex="15" accessrule="general-pane"
+                                             onfocus="prefFocus('zoom-box')" onblur="prefBlur('zoom-box')"
                                              style="margin:3px ! important;" 
                                              onchange="syncPref(this)"
                                              preference="browser.display.zoomcontent"

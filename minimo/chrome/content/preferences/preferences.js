@@ -150,8 +150,19 @@ function eventHandlerMenu(e) {
   	document.getElementById("general-button").focus();
     e.preventBubble();
   } 
-  
+
   var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
+
+  if(!outnavTarget && (e.keyCode==40||e.keyCode==38)) {
+e.preventDefault();
+	if(e.keyCode==38) { 
+		document.commandDispatcher.rewindFocus();
+	}
+	if(e.keyCode==40) {
+		document.commandDispatcher.advanceFocus();
+	}
+
+  }
   if(outnavTarget!="" && (e.keyCode==40||e.keyCode==38)) {
       e.preventBubble();
       if(e.keyCode==40) {
@@ -161,7 +172,6 @@ function eventHandlerMenu(e) {
         ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
       }
 	  var tempElement=ruleElement.getAttribute("accessfocus");
-
       if(tempElement.indexOf("#")>-1) {
       
         if(tempElement=="#tabContainer") { 
@@ -219,13 +229,13 @@ function PrefOkay() {
 		var prefName=elRef.getAttribute("preference");
 		var transValidator=elRef.getAttribute("onsynctopreference");
 		var prefSETValue=null;
-	
 		if(transValidator!="") {
 			prefSETValue=eval(transValidator);
+
+
 		} else {
 			prefSETValue=elRef.value;
 		}
-
 		if (gPref.getPrefType(prefName) == gPref.PREF_STRING){
 			gPref.setCharPref(prefName, prefSETValue);
 		} 
@@ -288,3 +298,11 @@ function syncPrefLoadDOM(elementList) {
 	}
 }
 
+
+function prefFocus(el) {
+	document.getElementById(el).className="box-prefgroupitem2";
+}
+
+function prefBlur(el) {
+	document.getElementById(el).className="box-prefgroupitem";
+}
