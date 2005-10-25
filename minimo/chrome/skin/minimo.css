@@ -144,6 +144,24 @@ caption {
 	  list-style-image      : url("chrome://minimo/skin/stop.gif");
   }
 
+.menu-button
+  {
+    background: url("chrome://minimo/skin/m.png") no-repeat 50% 50%;
+    width:20px !important;
+    height:12px !important;
+  }
+
+.back-button
+  {
+	  list-style-image      : url("chrome://minimo/skin/back.gif");
+	  margin-left:2px;
+  }
+
+.forward-button
+  {
+	  list-style-image      : url("chrome://minimo/skin/forward.gif");
+  }
+
 .stop-button 
   {
 	  list-style-image      : url("chrome://minimo/skin/stop.gif");
