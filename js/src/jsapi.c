@@ -247,19 +247,10 @@ JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
             *va_arg(ap, JSObject **) = obj;
             break;
           case 'f':
-            /*
-             * Don't convert a cloned function object to its shared private
-             * data, then follow fun->object back to the clone-parent.
-             */
-            if (JSVAL_IS_FUNCTION(cx, *sp)) {
-                fun = (JSFunction *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(*sp));
-            } else {
-                fun = js_ValueToFunction(cx, sp, 0);
-                if (!fun)
-                    return JS_FALSE;
-                *sp = OBJECT_TO_JSVAL(fun->object);
-            }
-            *va_arg(ap, JSFunction **) = fun;
+            obj = js_ValueToFunctionObject(cx, sp, 0);
+            if (!obj)
+                return JS_FALSE;
+            *va_arg(ap, JSFunction **) = (JSFunction *) JS_GetPrivate(cx, obj);
             break;
           case 'v':
             *va_arg(ap, jsval *) = *sp;
@@ -461,7 +452,6 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
 {
     JSBool ok, b;
     JSObject *obj;
-    JSFunction *fun;
     JSString *str;
     jsdouble d, *dp;
 
@@ -477,19 +467,9 @@ JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
             *vp = OBJECT_TO_JSVAL(obj);
         break;
       case JSTYPE_FUNCTION:
-        /*
-         * Don't convert a cloned function object to its shared private data,
-         * then follow fun->object back to the clone-parent.
-         */
-        if (JSVAL_IS_FUNCTION(cx, v)) {
-            ok = JS_TRUE;
-            *vp = v;
-        } else {
-            fun = js_ValueToFunction(cx, &v, JSV2F_SEARCH_STACK);
-            ok = (fun != NULL);
-            if (ok)
-                *vp = OBJECT_TO_JSVAL(fun->object);
-        }
+        *vp = v;
+        obj = js_ValueToFunctionObject(cx, vp, JSV2F_SEARCH_STACK);
+        ok = (obj != NULL);
         break;
       case JSTYPE_STRING:
         str = js_ValueToString(cx, v);
@@ -3486,7 +3466,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      * the class constructor object, e.g. Array.  Then call the corresponding
      * prototype native method with our first argument passed as |this|.
      */
-    memmove(argv - 1, argv, JS_MAX(fs->nargs + 1, argc) * sizeof(jsval));
+    memmove(argv - 1, argv, JS_MAX(fs->nargs + 1U, argc) * sizeof(jsval));
 
     /*
      * Follow Function.prototype.apply and .call by using the global object as

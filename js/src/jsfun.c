@@ -2075,6 +2075,49 @@ js_ValueToFunction(JSContext *cx, jsval *vp, uintN flags)
     return (JSFunction *) JS_GetPrivate(cx, obj);
 }
 
+JSObject *
+js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags)
+{
+    JSFunction *fun;
+    JSObject *funobj;
+    JSStackFrame *caller;
+
+    if (JSVAL_IS_FUNCTION(cx, *vp))
+        return JSVAL_TO_OBJECT(*vp);
+
+    fun = js_ValueToFunction(cx, vp, flags);
+    if (!fun)
+        return NULL;
+    funobj = fun->object;
+    *vp = OBJECT_TO_JSVAL(funobj);
+
+    caller = JS_GetScriptedCaller(cx, cx->fp);
+    if (caller &&
+        !js_CheckPrincipalsAccess(cx, funobj,
+                                  caller->script->principals,
+                                  JS_GetFunctionName(fun))) {
+        return NULL;
+    }
+    return funobj;
+}
+
+JSObject *
+js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags)
+{
+    JSObject *callable;
+
+    callable = JSVAL_IS_PRIMITIVE(*vp) ? NULL : JSVAL_TO_OBJECT(*vp);
+    if (callable &&
+        ((callable->map->ops == &js_ObjectOps)
+         ? OBJ_GET_CLASS(cx, callable)->call
+         : callable->map->ops->call)) {
+        *vp = OBJECT_TO_JSVAL(callable);
+    } else {
+        callable = js_ValueToFunctionObject(cx, vp, flags);
+    }
+    return callable;
+}
+
 void
 js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
 {
