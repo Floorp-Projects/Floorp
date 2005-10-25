@@ -103,6 +103,12 @@ nsCaminoProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCaminoProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
+{
+  aResult.Truncate();
+  return NS_OK;
+}
 ///////////////////////////////////////////////////////////////////////////////
 // nsCaminoProfileMigrator
 

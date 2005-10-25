@@ -103,6 +103,12 @@ nsOmniWebProfileMigrator::GetSourceProfiles(nsISupportsArray** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOmniWebProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
+{
+  aResult.Truncate();
+  return NS_OK;
+}
 ///////////////////////////////////////////////////////////////////////////////
 // nsOmniWebProfileMigrator
 
