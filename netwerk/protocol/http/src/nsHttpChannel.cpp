@@ -776,11 +776,12 @@ nsHttpChannel::ProcessResponse()
     LOG(("nsHttpChannel::ProcessResponse [this=%x httpStatus=%u]\n",
         this, httpStatus));
 
-    // set cookies, if any exist
-    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
-
     // notify "http-on-examine-response" observers
     gHttpHandler->OnExamineResponse(this);
+
+    // set cookies, if any exist; done after OnExamineResponse to allow those
+    // observers to modify the cookie response headers
+    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
     // handle unused username and password in url (see bug 232567)
     if (httpStatus != 401 && httpStatus != 407) {
