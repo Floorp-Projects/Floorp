@@ -118,7 +118,7 @@ if ($action eq 'new') {
 
     if ($id) {
         $vars->{'name'} = $name;
-        ThrowUserError("keyword_already_exists");
+        ThrowUserError("keyword_already_exists", $vars);
     }
 
 
