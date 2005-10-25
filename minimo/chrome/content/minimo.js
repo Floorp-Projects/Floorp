@@ -569,6 +569,9 @@ function DoFullScreen()
 
   getBrowser().setStripVisibilityTo(!gFullScreen);
   window.fullScreen = gFullScreen;  
+
+  document.getElementById("nav-bar-contextual").hidden = !gFullScreen;    
+  
 }
 
 /* 
