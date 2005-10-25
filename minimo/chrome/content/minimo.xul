@@ -88,6 +88,7 @@
     <command id="cmd_DoPanelPreferences"     oncommand="DoPanelPreferences()" /> 
     <command id="cmd_DoBrowserRSS"           oncommand="DoBrowserRSS()" />
     <command id="cmd_BrowserMenu"            oncommand="BrowserMenuPopup()" />
+    <command id="cmd_BrowserMenuContextual"   oncommand="BrowserMenuPopupContextualMenu()" />
     <command id="cmd_Quit"                   oncommand="window.close();" />
           
     <toolbar id="nav-bar" accessfocus="menu-button" accessnextrule="toolbar-view"  accessprevrule="accesstabcontent"  >

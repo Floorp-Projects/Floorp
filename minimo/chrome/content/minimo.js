@@ -675,17 +675,24 @@ function BrowserScreenRotate()
 function BrowserMenuPopup() {
     document.getElementById("menu_MainPopup").showPopup(document.getElementById("menu-button"),-1,-1,"popup","bottomleft", "topleft");
 }
+
 function BrowserMenuPopupFalse() {
     document.getElementById("menu_MainPopup").hidePopup();
 }
 
+function BrowserMenuPopupContextualMenu() {
+    document.getElementById("contentAreaContextMenu").hidePopup();
+    DoFullScreen();
+    BrowserMenuPopup();
+}
+
 function MenuPopupShowing() {
-      gShowingMenuPopup=true;
-	document.getElementById("menu-button").focus();
+    gShowingMenuPopup=true;
+    document.getElementById("menu-button").focus();
 }
 
 function MenuPopupHidden() {
-      gShowingMenuPopup=false;
+    gShowingMenuPopup=false;
 }
 
 /*
