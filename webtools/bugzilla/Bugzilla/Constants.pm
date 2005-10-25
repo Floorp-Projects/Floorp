@@ -168,7 +168,7 @@ use constant MAILTO_GROUP => 1;
 
 # The default list of columns for buglist.cgi
 use constant DEFAULT_COLUMN_LIST => (
-    "bug_severity", "priority", "rep_platform","assigned_to",
+    "bug_severity", "priority", "op_sys","assigned_to",
     "bug_status", "resolution", "short_short_desc"
 );
 
