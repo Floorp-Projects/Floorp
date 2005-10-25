@@ -87,7 +87,7 @@
         
   [% ELSIF error == "chart_dir_nonexistent" %]
     One of the directories <tt>[% dir FILTER html %]</tt> and 
-    <tt>[% graphdir FILTER html %]</tt> does not exist.
+    <tt>[% graph_dir FILTER html %]</tt> does not exist.
   
   [% ELSIF error == "chart_file_open_fail" %]
     Unable to open the chart datafile <tt>[% filename FILTER html %]</tt>.
