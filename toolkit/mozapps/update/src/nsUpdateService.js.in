@@ -937,6 +937,11 @@ UpdateService.prototype = {
       return;
       
     var status = readStatusFile(getUpdatesDir()); 
+
+    // Make sure to cleanup after an update that failed for an unknown reason
+    if (status == "null")
+      status = null;
+
     if (status == STATE_DOWNLOADING) {
       LOG("UpdateService", "_postUpdateProcessing: Downloading patch, resuming...");
     }
