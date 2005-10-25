@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set ts=4 sw=4 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1607,6 +1608,11 @@ nsXULDocument::GetPopupNode(nsIDOMNode** aNode)
     // get popup node
     rv = focusController->GetPopupNode(aNode); // addref happens here
 
+    if (NS_SUCCEEDED(rv) && *aNode && !nsContentUtils::CanCallerAccess(*aNode)) {
+        NS_RELEASE(*aNode);
+        return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
     return rv;
 }
 
@@ -1628,6 +1634,9 @@ nsXULDocument::SetPopupNode(nsIDOMNode* aNode)
 NS_IMETHODIMP
 nsXULDocument::GetTooltipNode(nsIDOMNode** aNode)
 {
+    if (mTooltipNode && !nsContentUtils::CanCallerAccess(mTooltipNode)) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+    }
     *aNode = mTooltipNode;
     NS_IF_ADDREF(*aNode);
     return NS_OK;
