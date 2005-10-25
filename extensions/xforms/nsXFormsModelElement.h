@@ -42,14 +42,17 @@
 
 #include "nsXFormsStubElement.h"
 #include "nsIModelElementPrivate.h"
+#include "nsIXFormsNSModelElement.h"
 #include "nsIDOMEventListener.h"
 #include "nsISchema.h"
 #include "nsCOMArray.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNodeList.h"
 #include "nsXFormsMDGEngine.h"
 #include "nsXFormsUtils.h"
+#include "nsIClassInfo.h"
 
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
@@ -60,6 +63,51 @@ class nsIDOMNode;
 class nsIXFormsXPathEvaluator;
 class nsIDOMXPathResult;
 class nsXFormsControl;
+class nsXFormsModelInstanceDocuments;
+
+/**
+ * Implementation of the instance node list returned by
+ * nsIXFormsModel::getInstanceDocuments.
+ *
+ * Manages the list of all instance elements that belong to a given
+ * nsXFormsModelElement.
+ */
+class nsXFormsModelInstanceDocuments : public nsIDOMNodeList,
+                                       public nsIClassInfo
+{
+public:
+  nsXFormsModelInstanceDocuments();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICLASSINFO
+  NS_DECL_NSIDOMNODELIST
+
+  /**
+   * Add an instance element
+   *
+   * @param aInstance         The new instance element
+   */
+  void AddInstance(nsIInstanceElementPrivate *aInstance);
+
+  /**
+   * Get the instance document at a given index
+   *
+   * @note Does NOT addref the returned element!
+   *
+   * @param aIndex            The index
+   * @return                  The instance element (or nsnull if not found)
+   */
+  nsIInstanceElementPrivate* GetInstanceAt(PRUint32 aIndex);
+
+  /**
+   * Instructs the class to drop references to all instance elements
+   */
+  void DropReferences();
+
+protected:
+  /** The array holding the instance elements */
+  nsCOMArray<nsIInstanceElementPrivate>    mInstanceList;
+};
 
 /**
  * Implementation of the XForms \<model\> element.
@@ -71,6 +119,7 @@ class nsXFormsControl;
  */
 class nsXFormsModelElement : public nsXFormsStubElement,
                              public nsIModelElementPrivate,
+                             public nsIXFormsNSModelElement,
                              public nsISchemaLoadListener,
                              public nsIDOMEventListener,
                              public nsIXFormsContextControl
@@ -81,6 +130,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXFORMSMODELELEMENT
   NS_DECL_NSIMODELELEMENTPRIVATE
+  NS_DECL_NSIXFORMSNSMODELELEMENT
   NS_DECL_NSISCHEMALOADLISTENER
   NS_DECL_NSIWEBSERVICEERRORHANDLER
   NS_DECL_NSIDOMEVENTLISTENER
@@ -204,10 +254,10 @@ private:
   PRBool mNeedsRefresh;
 
   /**
-   * List of instance elements contained by this model, including lazy-authored
-   * instance elements.
+   * All instance documents contained by this model, including lazy-authored
+   * instance documents.
    */
-  nsCOMArray<nsIInstanceElementPrivate>    mInstanceList;
+  nsRefPtr<nsXFormsModelInstanceDocuments> mInstanceDocuments;
 
   /** Indicates whether the model's instance was built by lazy authoring */
   PRBool mLazyModel;

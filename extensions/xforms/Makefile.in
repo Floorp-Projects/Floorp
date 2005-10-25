@@ -106,6 +106,7 @@ REQUIRES	= \
 # XForms IDLs
 XPIDLSRCS	= \
 		nsIXFormsModelElement.idl \
+		nsIXFormsNSModelElement.idl \
 		nsIInstanceElementPrivate.idl \
 		nsIModelElementPrivate.idl \
 		nsIXFormsControl.idl \

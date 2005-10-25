@@ -565,10 +565,10 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
               }
 
               if (NS_SUCCEEDED(rv)) {
-                nsCOMArray<nsIInstanceElementPrivate> *instList = nsnull;
-                (*aModel)->GetInstanceList(&instList);
-                nsCOMPtr<nsIInstanceElementPrivate> instance = 
-                  instList->ObjectAt(0);
+                nsCOMPtr<nsIInstanceElementPrivate> instance;
+                rv = (*aModel)->FindInstanceElement(EmptyString(),
+                                                    getter_AddRefs(instance));
+                NS_ENSURE_SUCCESS(rv, rv);
                 nsCOMPtr<nsIDOMDocument> domdoc;
                 instance->GetDocument(getter_AddRefs(domdoc));
                 nsCOMPtr<nsIDOMElement> instanceDataEle;

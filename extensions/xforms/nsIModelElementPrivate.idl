@@ -42,17 +42,12 @@ interface nsIXFormsControl;
 interface nsISchemaType;
 interface nsIInstanceElementPrivate;
 interface nsIDOMNode;
-%{C++
-  #include "nsCOMArray.h"
-%}
-
-[ptr] native nsCOMArrayPtr(nsCOMArray<nsIInstanceElementPrivate>);
 
 /**
  * Private interface implemented by the model element for other
  * elements to use.
  */
-[uuid(b21b65d3-3305-4ce0-a604-3648cff61aca)]
+[uuid(8c5e2b7d-043e-4278-bc3e-1519bd9c62ec)]
 interface nsIModelElementPrivate : nsIXFormsModelElement
 {
   /**
@@ -124,12 +119,6 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * @param aBoundNode        The node the control is bound to
    */
   void setStates(in nsIXFormsControl aControl, in nsIDOMNode aBoundNode);
-
-  /**
-   * The list of instance elements held by this model.  Includes lazy-authored
-   * instance elements
-   */
-  readonly attribute nsCOMArrayPtr instanceList;
 
   /**
    * Add an instance element to the model's instance list
