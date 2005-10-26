@@ -386,6 +386,7 @@ NS_IMETHODIMP nsMenuX::RemoveItem(const PRUint32 aPos)
 
 NS_IMETHODIMP nsMenuX::RemoveAll()
 {
+  //XXXJOSH why don't we set |mNumMenuItems| to 0 after removing all menu items?
   if (mMacMenu != NULL) {
     /*
     // clear command id's
@@ -399,9 +400,7 @@ NS_IMETHODIMP nsMenuX::RemoveAll()
       }
     }
      */
-    //XXXJOSH we crash here sometimes, log message shows
-    // nsMenuX::RemoveAll: Total menu count is 16, attempting to access 31
-    for (int i = mNumMenuItems - 1; i >= 0; i--) {
+    for (int i = [mMacMenu numberOfItems] - 1; i >= 0; i--) {
       [mMacMenu removeItemAtIndex:i];
     }
   }
