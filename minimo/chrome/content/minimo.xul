@@ -142,13 +142,13 @@
                       <rows>
                         <row>
                           <label value="&zoomText.label;" />
-                          <toolbarbutton tabindex="10" accessrule="focus_toolbar-view" id="zoomplusitem" class="button-border" command="cmd_BrowserZoomPlus" label="&zoomTextPlus.label;" />
-                          <toolbarbutton tabindex="11" accessrule="focus_toolbar-view" class="button-border" command="cmd_BrowserZoomMinus" label="&zoomTextMinus.label;" />	
+                          <toolbarbutton tabindex="10" accessrule="focus_toolbar-view" id="zoomplusitem" class="button-border" command="cmd_BrowserZoomPlus"  />
+                          <toolbarbutton tabindex="11" accessrule="focus_toolbar-view" id="zoomminusitem" class="button-border" command="cmd_BrowserZoomMinus" />	
                         </row>
                         <row style="margin-top:2px ! important">
                           <label value="&zoomUIText.label;" />
-                          <toolbarbutton tabindex="12" accessrule="focus_toolbar-view" id="uizoomplusitem" class="button-border" command="cmd_UIZoomPlus" label="&zoomTextPlus.label;" />
-                          <toolbarbutton tabindex="13" accessrule="focus_toolbar-view" id="uizoomminusitem" class="button-border" command="cmd_UIZoomMinus" label="&zoomTextMinus.label;" />	
+                          <toolbarbutton tabindex="12" accessrule="focus_toolbar-view" class="button-border" id="uizoomplusitem" command="cmd_UIZoomPlus"  />
+                          <toolbarbutton tabindex="13" accessrule="focus_toolbar-view" class="button-border" id="uizoomminusitem"  command="cmd_UIZoomMinus" />	
                         </row>
                       </rows>
 				   </grid>
