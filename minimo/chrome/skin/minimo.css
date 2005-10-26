@@ -74,11 +74,12 @@ toolbar *, #appcontent *, * {
     list-style-image: url("chrome://minimo/skin/security-notbroken.png");
 }
 
+
 .button-close {
-  background: url("chrome://minimo/skin/close.png") no-repeat 50% 50%;
+  background: #cccccc url("chrome://minimo/skin/close.png") no-repeat 50% 50%;
   margin-right:4px ! important;
   margin-top:0px ! important;
-  border:1px solid black;
+  border:1px outset #bbbbbb;
 }
 
 .button-border {
