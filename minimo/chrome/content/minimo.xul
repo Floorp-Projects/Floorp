@@ -198,7 +198,7 @@
       <hbox id="browser" context="context" flex="1">
         <tabbrowser contentcontextmenu="contentAreaContextMenu"
                     context="context" disablehistory="false"
-                    accessnextrule="accesstabcontent" accessrule="content" accessprevrule="toolbar-rss" accessfocus="#tabContainer"                   
+                    accessnextrule="accesstabcontent" accessrule="content" accessprevrule="toolbar-search" accessfocus="#tabContainer"                   
                     type="content-primary"
                     id="content" 
                     src="about:blank"
