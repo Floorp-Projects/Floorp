@@ -31,6 +31,8 @@ minimo.jar:
 	skin/classic/minimo/stop.gif     (skin/stop.gif)
 	skin/classic/minimo/close.gif    (skin/close.gif)
 	skin/classic/minimo/close.png    (skin/close.png)
+    skin/classic/minimo/up.png       (skin/up.png)
+    skin/classic/minimo/down.png     (skin/down.png)
 	skin/classic/minimo/transfer.jpg (skin/transfer.jpg)
 	skin/classic/minimo/preferences/options.png (skin/preferences/options.png)
     branding/locale/brand.dtd        (locale/en-US/brand.dtd)
