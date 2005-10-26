@@ -324,18 +324,19 @@ function eventHandlerMenu(e) {
   if(outnavTarget!="" && (e.keyCode==40||e.keyCode==38) && !gShowingMenuPopup) {
       e.preventBubble();
       if(e.keyCode==40) {
+
         ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"),"accessnextrule");
       }
       if(e.keyCode==38) {
+
         ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
       }
 	  var tempElement=ruleElement.getAttribute("accessfocus");
-
       if(tempElement.indexOf("#")>-1) {
-      
+
         if(tempElement=="#tabContainer") { 
-          if(ruleElement.tabContainer) {
-            ruleElement.selectedTab.focus();
+          if(getBrowser().tabContainer) {
+            getBrowser().selectedTab.focus();
           }
         } 
 		if(tempElement=="#tabContent") { 
@@ -355,7 +356,7 @@ function eventHandlerMenu(e) {
 function findRuleById(outnavTarget,ruleattribute) {
   var ruleElement=document.getElementById(outnavTarget);
 
-  if(ruleElement.collapsed) {
+  if(document.getElementById(ruleElement.getAttribute("target")).collapsed) {
       return findRuleById(ruleElement.getAttribute(ruleattribute), ruleattribute);
   } else {
 	return ruleElement;
@@ -374,7 +375,7 @@ function browserInit(refTab)
    * addRule access navigational rule to each tab 
    */
 
-  refTab.setAttribute("accessrule","content");
+  refTab.setAttribute("accessrule","focus_content");
   
   /*
    * 

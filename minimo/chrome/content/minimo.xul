@@ -89,15 +89,26 @@
     <command id="cmd_DoPanelPreferences"     oncommand="DoPanelPreferences()" /> 
     <command id="cmd_DoBrowserRSS"           oncommand="DoBrowserRSS()" />
     <command id="cmd_BrowserMenu"            oncommand="BrowserMenuPopup()" />
-    <command id="cmd_BrowserMenuContextual"   oncommand="BrowserMenuPopupContextualMenu()" />
+    <command id="cmd_BrowserMenuContextual"  oncommand="BrowserMenuPopupContextualMenu()" />
     <command id="cmd_Quit"                   oncommand="window.close();" />
-          
-    <toolbar id="nav-bar" accessfocus="menu-button" accessnextrule="toolbar-view"  accessprevrule="accesstabcontent"  >
+
+    <!-- Keyboard Focus Handler Controls --> 
+
+    <focusnavigation>           
+     <focushandler id="focus_tabcontent"     target="content" accessfocus="#tabContent"  />
+     <focushandler id="focus_nav-bar"        target="nav-bar" accessfocus="menu-button"   accessnextrule="focus_toolbar-view"   accessprevrule="focus_tabcontent" />
+     <focushandler id="focus_toolbar-view"   target="toolbar-view" accessfocus="zoomplusitem"  accessnextrule="focus_toolbar-rss"    accessprevrule="focus_nav-bar" />
+     <focushandler id="focus_toolbar-rss"    target="toolbar-rss" accessfocus="rss-close"     accessnextrule="focus_toolbar-search" accessprevrule="focus_toolbar-view" />
+     <focushandler id="focus_toolbar-search" target="toolbar-search" accessfocus="search-close"  accessnextrule="focus_content"        accessprevrule="focus_toolbar-rss" />
+     <focushandler id="focus_content"        target="content" accessfocus="#tabContainer" accessnextrule="focus_tabcontent"     accessprevrule="focus_toolbar-search" />
+    </focusnavigation>  
+
+    <toolbar id="nav-bar" >
     
-        <toolbarbutton tabindex="1" accessrule="nav-bar"  id="menu-button" accesskey="m" command="cmd_BrowserMenu" />  
-        <toolbarbutton tabindex="2" accessrule="nav-bar"  id="back-button" command="cmd_BrowserBack" />  
-        <toolbarbutton tabindex="3" accessrule="nav-bar"  id="forward-button" command="cmd_BrowserForward" />  
-        <toolbarbutton tabindex="4" accessrule="nav-bar"  id="reload-stop-button" class="reload-button" command="cmd_BrowserReload"/>
+        <toolbarbutton tabindex="1" accessrule="focus_nav-bar"  id="menu-button" accesskey="m" command="cmd_BrowserMenu" />  
+        <toolbarbutton tabindex="2" accessrule="focus_nav-bar"  id="back-button" command="cmd_BrowserBack" />  
+        <toolbarbutton tabindex="3" accessrule="focus_nav-bar"  id="forward-button" command="cmd_BrowserForward" />  
+        <toolbarbutton tabindex="4" accessrule="focus_nav-bar"  id="reload-stop-button" class="reload-button" command="cmd_BrowserReload"/>
 
         <textbox tabindex="5" 
                  id="urlbar" 
@@ -114,11 +125,7 @@
 
     </toolbar>
     
-	<toolbar id="toolbar-view"   accessfocus="zoomplusitem"
-                                 accessnextrule="toolbar-rss"
-                                 accessprevrule="nav-bar" 
-                                 flex="1"
-                                 collapsed="true" >
+	<toolbar id="toolbar-view" flex="1" collapsed="true" >
                                  
 		<groupbox flex="1" class="box-floatoptions">
 		    <caption label="&zoom.label;"/>
@@ -127,28 +134,23 @@
 
 					<hbox flex="1" style="margin-top:4px ! important">
 						<label value="&zoomText.label;" />
-						<toolbarbutton tabindex="10" accessrule="toolbar-view" id="zoomplusitem" class="button-border" command="cmd_BrowserZoomPlus" label="&zoomTextPlus.label;" />
-		                <toolbarbutton tabindex="11" accessrule="toolbar-view" class="button-border" command="cmd_BrowserZoomMinus" label="&zoomTextMinus.label;" />	
+						<toolbarbutton tabindex="10" accessrule="focus_toolbar-view" id="zoomplusitem" class="button-border" command="cmd_BrowserZoomPlus" label="&zoomTextPlus.label;" />
+		                <toolbarbutton tabindex="11" accessrule="focus_toolbar-view" class="button-border" command="cmd_BrowserZoomMinus" label="&zoomTextMinus.label;" />	
 					</hbox>
 					<hbox flex="1" style="margin-top:4px ! important">
 						<label value="&zoomUIText.label;" />
-						<toolbarbutton tabindex="12" accessrule="toolbar-view" id="uizoomplusitem" class="button-border" command="cmd_UIZoomPlus" label="&zoomTextPlus.label;" />
-		                <toolbarbutton tabindex="13" accessrule="toolbar-view" class="button-border" command="cmd_UIZoomMinus" label="&zoomTextMinus.label;" />	
+						<toolbarbutton tabindex="12" accessrule="focus_toolbar-view" id="uizoomplusitem" class="button-border" command="cmd_UIZoomPlus" label="&zoomTextPlus.label;" />
+		                <toolbarbutton tabindex="13" accessrule="focus_toolbar-view" class="button-border" command="cmd_UIZoomMinus" label="&zoomTextMinus.label;" />	
 					</hbox>
 				</vbox>
 				<vbox>
-				<toolbarbutton tabindex="14" accessrule="toolbar-view"  class="button-close" width="10" height="10" align="top" flex="0" id="close-button" command="cmd_ViewOptions"/>  
+				<toolbarbutton tabindex="14" accessrule="focus_toolbar-view"  class="button-close" width="10" height="10" align="top" flex="0" id="close-button" command="cmd_ViewOptions"/>  
 				</vbox>
 			</hbox>
 		</groupbox>
     </toolbar>
     
-    <toolbar id="toolbar-rss" 
-                               accessfocus="rss-close"
-                               accessnextrule="toolbar-search" 
-                               accessprevrule="toolbar-view" 
-                               flex="1"
-                               collapsed="true" >
+    <toolbar id="toolbar-rss" flex="1" collapsed="true" >
                                
         <groupbox flex="1" class="box-floatoptions">
 		    <caption label="&rssBMtitle.label;"/>
@@ -157,22 +159,17 @@
 
 					<hbox flex="1" style="margin-top:4px ! important">
 						 <label value="&rssText.label;"  />
-						 <textbox tabindex="15" accessrule="toolbar-rss"  id="toolbar-rss-rsstag" flex="1" onchange="return DoBrowserRSS();"/> 
+						 <textbox tabindex="15" accessrule="focus_toolbar-rss"  id="toolbar-rss-rsstag" flex="1" onchange="return DoBrowserRSS();"/> 
 					</hbox>
 				</vbox>
 				<vbox>
-				<toolbarbutton tabindex="16" accessrule="toolbar-rss" id="rss-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewRSS"/>  
+				<toolbarbutton tabindex="16" accessrule="focus_toolbar-rss" id="rss-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewRSS"/>  
 				</vbox>
 			</hbox>
 		</groupbox>
     </toolbar>   
     
-    <toolbar id="toolbar-search" 
-                               accessfocus="search-close"
-                               accessnextrule="content" 
-                               accessprevrule="toolbar-rss" 
-                               flex="1"
-                               collapsed="true" >
+    <toolbar id="toolbar-search" flex="1" collapsed="true" >
                                
         <groupbox flex="1" class="box-floatoptions">
 		    <caption label="&searchToolbar.label;"/>
@@ -181,11 +178,11 @@
 
 					<hbox flex="1" style="margin-top:4px ! important">
 						 <label value="&searchText.label;"  />
-						 <textbox tabindex="17" accessrule="toolbar-search"  id="toolbar-search-tag" flex="1" onchange="return DoBrowserSearch();"/> 
+						 <textbox tabindex="17" accessrule="focus_toolbar-search"  id="toolbar-search-tag" flex="1" onchange="return DoBrowserSearch();"/> 
 					</hbox>
 				</vbox>
 				<vbox>
-				<toolbarbutton tabindex="18" accessrule="toolbar-search" id="search-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewSearch"/>  
+				<toolbarbutton tabindex="18" accessrule="focus_toolbar-search" id="search-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewSearch"/>  
 				</vbox>
 			</hbox>
 		</groupbox>
@@ -198,21 +195,14 @@
       <hbox id="browser" context="context" flex="1">
         <tabbrowser contentcontextmenu="contentAreaContextMenu"
                     context="context" disablehistory="false"
-                    accessnextrule="accesstabcontent" accessrule="content" accessprevrule="toolbar-search" accessfocus="#tabContainer"                   
+                    accessrule="access_content" 
                     type="content-primary"
                     id="content" 
                     src="about:blank"
                     flex="1" 
                     autocompletepopup="PopupAutoComplete"
                     onnewtab="BrowserOpenTab()"/>
-                    
-        <!-- This element is here to store information for the keyboard access functions --> 
-        <!-- see that id=content's accessnextrule attribute points to this element.      --> 
-        <!-- Then the accessfocus="#tabContent" is a special, check the eventHandlerMenu --> 
-        
-        <hiddenelement id="accesstabcontent" accessfocus="#tabContent" />
-                    
-      </hbox>
+       </hbox>
     </hbox>
   </hbox>
 
