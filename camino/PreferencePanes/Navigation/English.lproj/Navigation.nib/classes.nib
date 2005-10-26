@@ -24,8 +24,7 @@
                 checkboxCheckDefaultBrowserOnLaunch = NSButton; 
                 checkboxNewTabBlank = NSButton; 
                 checkboxNewWindowBlank = NSButton; 
-                checkboxWarnWhenClosingWindow = NSButton; 
-                checkboxWarnWhenQuitting = NSButton; 
+                checkboxWarnWhenClosing = NSButton; 
                 defaultBrowserPopUp = NSPopUpButton; 
                 textFieldHomePage = NSTextField; 
             }; 

@@ -48,8 +48,7 @@
   IBOutlet NSPopUpButton* defaultBrowserPopUp;
   IBOutlet NSButton*      checkboxCheckDefaultBrowserOnLaunch;
 
-  IBOutlet NSButton*      checkboxWarnWhenClosingWindow;
-  IBOutlet NSButton*      checkboxWarnWhenQuitting;
+  IBOutlet NSButton*      checkboxWarnWhenClosing;
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender;

@@ -110,11 +110,8 @@ static int CompareBundleIDAppDisplayNames(id a, id b, void *context)
     [checkboxCheckDefaultBrowserOnLaunch setState:NSOnState];
 
   if ([self getBooleanPref:"camino.warn_when_closing" withSuccess:&gotPref])
-    [checkboxWarnWhenClosingWindow setState:NSOnState];
-
-  if ([self getBooleanPref:"camino.warn_when_quitting" withSuccess:&gotPref])
-    [checkboxWarnWhenQuitting setState:NSOnState];
-
+    [checkboxWarnWhenClosing setState:NSOnState];
+  
   [textFieldHomePage setStringValue:[self getCurrentHomePage]];
   
   // set up default browser menu
@@ -134,8 +131,7 @@ static int CompareBundleIDAppDisplayNames(id a, id b, void *context)
 
   [self setPref:"camino.check_default_browser" toBoolean:([checkboxCheckDefaultBrowserOnLaunch state] == NSOnState)];
 
-  [self setPref:"camino.warn_when_closing"  toBoolean:([checkboxWarnWhenClosingWindow state] == NSOnState)];
-  [self setPref:"camino.warn_when_quitting" toBoolean:([checkboxWarnWhenQuitting state] == NSOnState)];
+  [self setPref:"camino.warn_when_closing"  toBoolean:([checkboxWarnWhenClosing state] == NSOnState)];
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender
@@ -155,11 +151,8 @@ static int CompareBundleIDAppDisplayNames(id a, id b, void *context)
 
 - (IBAction)warningCheckboxClicked:(id)sender
 {
-  if (sender == checkboxWarnWhenClosingWindow)
+  if (sender == checkboxWarnWhenClosing)
     [self setPref:"camino.warn_when_closing" toBoolean:([sender state] == NSOnState)];
-
-  if (sender == checkboxWarnWhenQuitting)
-    [self setPref:"camino.warn_when_quitting" toBoolean:([sender state] == NSOnState)];
 }
 
 - (NSString*)getCurrentHomePage
