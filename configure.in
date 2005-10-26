@@ -590,68 +590,81 @@ dnl ========================================================
 dnl = Mac OS X SDK support
 dnl ========================================================
 MACOS_SDK_DIR=
+NEXT_ROOT=
 MOZ_ARG_WITH_STRING(macos-sdk,
 [  --with-macos-sdk=dir   Location of platform SDK to use (Mac OS X only)],
     MACOS_SDK_DIR=$withval)
 
+dnl MACOS_SDK_DIR will be set to the SDK location whenever one is in use.
+dnl NEXT_ROOT will be set and exported only if it's needed.
 AC_SUBST(MACOS_SDK_DIR)
+AC_SUBST(NEXT_ROOT)
 
 if test "$MACOS_SDK_DIR"; then
+  dnl Sync this section with the ones in NSPR and NSS.
+  dnl Changes to the cross environment here need to be accounted for in
+  dnl the libIDL checks (below) and xpidl build.
+
   if test ! -d "$MACOS_SDK_DIR"; then
     AC_MSG_ERROR([SDK not found.  When using --with-macos-sdk, you must
 specify a valid SDK.  SDKs are installed when the optional cross-development
 tools are selected during the Xcode/Developer Tools installation.])
   fi
 
-  export NEXT_ROOT=$MACOS_SDK_DIR
-
-  dnl Sync this block with the NEXT_ROOT block in nsprpub/configure.in
-  dnl
-  dnl Changes to the cross environment here need to be accounted for in
-  dnl the libIDL checks (below) and xpidl build.
-
   GCC_VERSION_MAJOR=`echo $GCC_VERSION_FULL | $PERL -pe 's/(^\d*).*/$1/;'`
   if test "$GCC_VERSION_MAJOR" -lt "4" ; then
-    dnl gcc < 4.0 only supports PowerPC, OK to hard-code
-    TARGET_ARCH_LIB="darwin"
-    TARGET_ARCH_INCLUDE="ppc-darwin"
     SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION} -isystem ${MACOS_SDK_DIR}/usr/include -F${MACOS_SDK_DIR}/System/Library/Frameworks"
-  else
-    dnl If gcc >= 4, use cpu-apple-darwin#, where # is the version of
-    dnl the Darwin release corresponding to the target Mac OS X release.
-    dnl For OS X >= 10.1.1, take the minor version number and add 4 to get
-    dnl the Darwin major version number.  If it can't be determined, use the
-    dnl current Darwin major version number and hope that there's a symlink.
-    TARGET_ARCH_LIB=${target_cpu}-${target_vendor}-darwin`echo $MACOS_SDK_DIR | $PERL -pe 's/MacOSX10\.([\d]*)//;if ($1) {$_=$1+4;} else {$_="'${target_os}'";s/(\d+)//;$_=$1;}'`
-    TARGET_ARCH_INCLUDE=$TARGET_ARCH_LIB
-    SDK_C_INCLUDE="-isystem ${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB}/${GCC_VERSION_FULL}/include -isystem ${MACOS_SDK_DIR}/usr/include -F${MACOS_SDK_DIR}/System/Library/Frameworks"
-  fi
-
-  if test -d "${MACOS_SDK_DIR}/Library/Frameworks" ; then
-    SDK_C_INCLUDE="$SDK_C_INCLUDE -F${MACOS_SDK_DIR}/Library/Frameworks"
-  fi
-
-  SDK_CXX_INCLUDE="-I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++ -I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++/${TARGET_ARCH_INCLUDE} -I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++/backward"
-  CFLAGS="$CFLAGS -nostdinc ${SDK_C_INCLUDE}"
-  CXXFLAGS="$CXXFLAGS -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
-
-  dnl CPP/CXXCPP needs to be set for AC_CHECK_HEADER.
-  CPP="$CPP -nostdinc ${SDK_C_INCLUDE}"
-  CXXCPP="$CXXCPP -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
-
-  LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB} -L${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB}/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
-
-  dnl Make sure that all of the paths that were just set will work
-  if test ! -d "${MACOS_SDK_DIR}/usr/lib/gcc/${TARGET_ARCH_LIB}/${GCC_VERSION_FULL}"; then
-    if test "$GCC_VERSION" = "4.0" ; then
-      COMPILER_SPECIFIC_MESSAGE="The selected compiler, gcc 4.0, requires SDK 10.3.9 or greater.
-"
+    if test -d "${MACOS_SDK_DIR}/Library/Frameworks" ; then
+      SDK_C_INCLUDE="$SDK_C_INCLUDE -F${MACOS_SDK_DIR}/Library/Frameworks"
     fi
-    AC_MSG_ERROR([The selected SDK does not support the chosen compiler.
-Either switch to a different compiler or choose a different SDK.
-${COMPILER_SPECIFIC_MESSAGE}You can change the system's default compiler to gcc 3.3 by running
-\"sudo gcc_select 3.3\".
-You can change the target SDK by using a different --with-macos-sdk option.])
+    SDK_CXX_INCLUDE="-I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++ -I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++/ppc-darwin -I${MACOS_SDK_DIR}/usr/include/gcc/darwin/${GCC_VERSION}/c++/backward"
+
+    CFLAGS="$CFLAGS -nostdinc ${SDK_C_INCLUDE}"
+    CXXFLAGS="$CXXFLAGS -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
+
+    dnl CPP/CXXCPP needs to be set for AC_CHECK_HEADER.
+    CPP="$CPP -nostdinc ${SDK_C_INCLUDE}"
+    CXXCPP="$CXXCPP -nostdinc -nostdinc++ ${SDK_CXX_INCLUDE} ${SDK_C_INCLUDE}"
+
+    dnl ld support for -syslibroot is compiler-agnostic, but only available
+    dnl on Tiger.  Although it's possible to switch on the build host's
+    dnl OS release to use ld -syslibroot when available, ld -syslibroot will
+    dnl cause warnings as long as NEXT_ROOT is set.  NEXT_ROOT should be
+    dnl set because both the compiler and linker use it.
+    LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin -L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION_FULL} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
+    export NEXT_ROOT=$MACOS_SDK_DIR
+  else
+    dnl gcc >= 4.0 uses different paths than above, but knows how to find
+    dnl them itself.
+    CFLAGS="$CFLAGS -isysroot ${MACOS_SDK_DIR}"
+    CXXFLAGS="$CXXFLAGS -isysroot ${MACOS_SDK_DIR}"
+
+    dnl CPP/CXXCPP needs to be set for AC_CHECK_HEADER.
+    CPP="$CPP -isysroot ${MACOS_SDK_DIR}"
+    CXXCPP="$CXXCPP -isysroot ${MACOS_SDK_DIR}"
+
+    if test "$GCC_VERSION_FULL" = "4.0.0" ; then
+      dnl If gcc >= 4.0, we're guaranteed to be on Tiger, which has an ld
+      dnl that supports -syslibroot.  Don't set NEXT_ROOT because it will
+      dnl be ignored and cause warnings when -syslibroot is specified.
+      dnl gcc 4.0.1 will pass -syslibroot to ld automatically based on
+      dnl the -isysroot it receives, so this is only needed with 4.0.0.
+      LDFLAGS="$LDFLAGS -Wl,-syslibroot,${MACOS_SDK_DIR}"
+    fi
+  fi
+
+  AC_MSG_CHECKING([for valid compiler/Mac OS X SDK combination])
+  AC_LANG_CPLUSPLUS
+  AC_TRY_RUN([#include <new>
+              int main() { return 0; }],
+   result=yes,
+   result=no,
+   result=maybe)
+  AC_LANG_RESTORE
+  AC_MSG_RESULT($result)
+
+  if test "$result" = "no" ; then
+    AC_MSG_ERROR([The selected compiler and Mac OS X SDK are incompatible.])
   fi
 fi
 
@@ -1336,27 +1349,30 @@ case "$target" in
     DLL_SUFFIX=".dylib"
     DSO_LDOPTS=''
     STRIP="$STRIP -x -S"
+    _PLATFORM_DEFAULT_TOOLKIT='mac'
+    MOZ_ENABLE_POSTSCRIPT=
+    # set MACOSX to generate lib/mac/MoreFiles/Makefile
+    MACOSX=1
 
     dnl check for the presence of the -dead_strip linker flag
-    HAVE_DEAD_STRIP=
-    if gcc -o conftest -dynamiclib -Wl,-dead_strip >/dev/null 2>&1 ; then
-        rm conftest
+    AC_MSG_CHECKING([for -dead_strip option to ld])
+    _SAVE_LDFLAGS=$LDFLAGS
+    LDFLAGS="$LDFLAGS -Wl,-dead_strip"
+    AC_TRY_LINK(,[return 0;],_HAVE_DEAD_STRIP=1,_HAVE_DEAD_STRIP=)
+    if test -n "$_HAVE_DEAD_STRIP" ; then
+        AC_MSG_RESULT([yes])
         MOZ_OPTIMIZE_LDFLAGS="-Wl,-dead_strip"
+    else
+        AC_MSG_RESULT([no])
     fi
+    LDFLAGS=$_SAVE_LDFLAGS
+
     case "${target_cpu}" in
     powerpc*)
-        _PLATFORM_DEFAULT_TOOLKIT='mac'
         DSO_LDOPTS="$DSO_LDOPTS -arch ppc"
-        MOZ_ENABLE_POSTSCRIPT=
-        # set MACOSX to generate lib/mac/MoreFiles/Makefile
-        MACOSX=1
         ;;
     i*86*)
-        _PLATFORM_DEFAULT_TOOLKIT='mac'
         DSO_LDOPTS="$DSO_LDOPTS -arch i386"
-        MOZ_ENABLE_POSTSCRIPT=
-        # set MACOSX to generate lib/mac/MoreFiles/Makefile
-        MACOSX=1
         ;;
     esac
     ;;
@@ -6140,10 +6156,12 @@ then
       dnl Don't build it against the SDK, as that causes problems.
       _MACSAVE_CFLAGS="$CFLAGS"
       _MACSAVE_LIBS="$LIBS"
+      _MACSAVE_LDFLAGS="$LDFLAGS"
       _MACSAVE_NEXT_ROOT="$NEXT_ROOT"
       changequote(,)
-      CFLAGS=`echo $CFLAGS|sed -E -e "s%((-I|-isystem )${MACOS_SDK_DIR}/usr/(include|lib/gcc)[^ ]*)|-F${MACOS_SDK_DIR}(/System)?/Library/Frameworks[^ ]*|-nostdinc[^ ]*%%g"`
+      CFLAGS=`echo $CFLAGS|sed -E -e "s%((-I|-isystem )${MACOS_SDK_DIR}/usr/(include|lib/gcc)[^ ]*)|-F${MACOS_SDK_DIR}(/System)?/Library/Frameworks[^ ]*|-nostdinc[^ ]*|-isysroot ${MACOS_SDK_DIR}%%g"`
       LIBS=`echo $LIBS|sed -e "s?-L${MACOS_SDK_DIR}/usr/lib[^ ]*??g"`
+      LDFLAGS=`echo $LDFLAGS|sed -e "s?-Wl,-syslibroot,${MACOS_SDK_DIR}??g"`
       changequote([,])
       unset NEXT_ROOT
     fi
@@ -6211,7 +6229,10 @@ int main() {
     if test "$MACOS_SDK_DIR"; then
       CFLAGS="$_MACSAVE_CFLAGS"
       LIBS="$_MACSAVE_LIBS"
-      export NEXT_ROOT="$_MACSAVE_NEXT_ROOT"
+      LDFLAGS="$_MACSAVE_LDFLAGS"
+      if test -n "$_MACSAVE_NEXT_ROOT" ; then
+        export NEXT_ROOT="$_MACSAVE_NEXT_ROOT"
+      fi
     fi
 fi
 
