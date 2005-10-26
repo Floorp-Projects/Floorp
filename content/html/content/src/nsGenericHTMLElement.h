@@ -443,6 +443,7 @@ public:
   static const MappedAttributeEntry sImageAlignAttributeMap[];
   static const MappedAttributeEntry sDivAlignAttributeMap[];
   static const MappedAttributeEntry sBackgroundAttributeMap[];
+  static const MappedAttributeEntry sBackgroundColorAttributeMap[];
   static const MappedAttributeEntry sScrollingAttributeMap[];
   
   /**
@@ -493,6 +494,26 @@ public:
    */
   static void MapImageSizeAttributesInto(const nsMappedAttributes* aAttributes,
                                          nsRuleData* aData);
+  /**
+   * Helper to map the background attribute
+   * into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
+  static void MapBackgroundInto(const nsMappedAttributes* aAttributes,
+                                nsRuleData* aData);
+  /**
+   * Helper to map the bgcolor attribute
+   * into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
+  static void MapBGColorInto(const nsMappedAttributes* aAttributes,
+                             nsRuleData* aData);
   /**
    * Helper to map the background attributes (currently background and bgcolor)
    * into a style struct.

@@ -2671,6 +2671,12 @@ nsGenericHTMLElement::sBackgroundAttributeMap[] = {
 };
 
 /* static */ const nsGenericElement::MappedAttributeEntry
+nsGenericHTMLElement::sBackgroundColorAttributeMap[] = {
+  { &nsHTMLAtoms::bgcolor },
+  { nsnull }
+};
+
+/* static */ const nsGenericElement::MappedAttributeEntry
 nsGenericHTMLElement::sScrollingAttributeMap[] = {
   { &nsHTMLAtoms::scrolling },
   { nsnull }
@@ -2839,7 +2845,7 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAtt
 }
 
 void
-nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAttributes,
+nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
                                                   nsRuleData* aData)
 {
   if (aData->mSID != eStyleStruct_Background)
@@ -2882,8 +2888,15 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
       }
     }
   }
+}
 
-  // bgcolor
+void
+nsGenericHTMLElement::MapBGColorInto(const nsMappedAttributes* aAttributes,
+                                     nsRuleData* aData)
+{
+  if (aData->mSID != eStyleStruct_Background)
+    return;
+
   if (aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null) {
     const nsAttrValue* value = aAttributes->GetAttr(nsHTMLAtoms::bgcolor);
     nscolor color;
@@ -2891,6 +2904,14 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAtt
       aData->mColorData->mBackColor.SetColorValue(color);
     }
   }
+}
+
+void
+nsGenericHTMLElement::MapBackgroundAttributesInto(const nsMappedAttributes* aAttributes,
+                                                  nsRuleData* aData)
+{
+  MapBackgroundInto(aAttributes, aData);
+  MapBGColorInto(aAttributes, aData);
 }
 
 void
