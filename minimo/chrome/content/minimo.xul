@@ -148,7 +148,7 @@
                         <row style="margin-top:2px ! important">
                           <label value="&zoomUIText.label;" />
                           <toolbarbutton tabindex="12" accessrule="focus_toolbar-view" id="uizoomplusitem" class="button-border" command="cmd_UIZoomPlus" label="&zoomTextPlus.label;" />
-                          <toolbarbutton tabindex="13" accessrule="focus_toolbar-view" class="button-border" command="cmd_UIZoomMinus" label="&zoomTextMinus.label;" />	
+                          <toolbarbutton tabindex="13" accessrule="focus_toolbar-view" id="uizoomminusitem" class="button-border" command="cmd_UIZoomMinus" label="&zoomTextMinus.label;" />	
                         </row>
                       </rows>
 				   </grid>
