@@ -34,68 +34,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
-prefpane {
- padding: 1px 1px 0 1px;
-}
-
-.paneSelector {
-  list-style-image: url("chrome://minimo/skin/preferences/options.png");
-  padding: 0 5px;
-  border-bottom: 1px solid #a3a3a3;
-  margin: 0;
-}
-
-.paneButtonIcon {
-  width: 32px;
-  height: 32px;
-}
-
- .paneSelector radio {
- border-right: 1px solid transparent;
- border-left: 1px solid transparent;
- padding: 3px 0 3px 0;
- margin: 0;
- -moz-appearance: none !important;
-
- }
- 
- radio[pane][selected="true"] {
- background-color: #DDDDDD;
- background-image: none;
- border-right: 1px solid #b9b9b9;
- border-left: 1px solid #b9b9b9;
- color: ButtonText !important;
- }
-
-
-.paneSelector label {
-  display:none;
-}
-
- radio[pane=GeneralPane] {
--moz-image-region: rect(0px, 160px, 32px, 128px)
-
- }
-
-radio[pane=ConnectionsDialogPane] {
- -moz-image-region: rect(0px, 64px, 32px, 32px)
- }
-
-radio[pane=Privacy] {
--moz-image-region: rect(0px, 192px, 32px, 160px)
-} 
-
-radio[pane=Advanced] {
-
- -moz-image-region: rect(0px, 32px, 32px, 0px)
-} 
-
-
-/* New preference panel in XUL 
- * Minimo Implementation
- * 
- */
  
 groupbox.scrolling {
   overflow:auto;
@@ -124,12 +62,12 @@ groupbox.scrolling {
 
 }
 
-.panel-container {
-  margin:3px ! important;
-}
-
 toolbar {
   border:0px;
+}
+
+.panel-container {
+  margin:3px ! important;
 }
 
 .prefbutton {
