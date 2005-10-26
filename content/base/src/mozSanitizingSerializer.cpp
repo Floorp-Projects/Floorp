@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -89,7 +90,8 @@ nsresult NS_NewSanitizingHTMLSerializer(nsIContentSerializer** aSerializer)
 }
 
 mozSanitizingHTMLSerializer::mozSanitizingHTMLSerializer()
-  : mAllowedTags(30) // Just some initial buffer size
+  : mSkipLevel(0),
+    mAllowedTags(30) // Just some initial buffer size
 {
   mOutputString = nsnull;
 }
@@ -349,7 +351,7 @@ mozSanitizingHTMLSerializer::DoOpenContainer(PRInt32 aTag)
 {
   eHTMLTags type = (eHTMLTags)aTag;
 
-  if (IsAllowedTag(type))
+  if (mSkipLevel == 0 && IsAllowedTag(type))
   {
     nsIParserService* parserService = nsContentUtils::GetParserService();
     if (!parserService)
@@ -384,6 +386,8 @@ mozSanitizingHTMLSerializer::DoOpenContainer(PRInt32 aTag)
 
     Write(NS_LITERAL_STRING(">"));
   }
+  else if (mSkipLevel != 0 || type == eHTMLTag_script || type == eHTMLTag_style)
+    ++mSkipLevel;
   else
     Write(NS_LITERAL_STRING(" "));
 
@@ -396,7 +400,7 @@ mozSanitizingHTMLSerializer::DoCloseContainer(PRInt32 aTag)
 {
   eHTMLTags type = (eHTMLTags)aTag;
 
-  if (IsAllowedTag(type)) {
+  if (mSkipLevel == 0 && IsAllowedTag(type)) {
     nsIParserService* parserService = nsContentUtils::GetParserService();
     if (!parserService)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -406,8 +410,10 @@ mozSanitizingHTMLSerializer::DoCloseContainer(PRInt32 aTag)
     Write(NS_LITERAL_STRING("</") + nsDependentString(tag_name)
           + NS_LITERAL_STRING(">"));
   }
-  else
+  else if (mSkipLevel == 0)
     Write(NS_LITERAL_STRING(" "));
+  else
+    --mSkipLevel;
 
   return NS_OK;
 }
@@ -416,6 +422,9 @@ nsresult
 mozSanitizingHTMLSerializer::DoAddLeaf(PRInt32 aTag,
                                        const nsAString& aText)
 {
+  if (mSkipLevel != 0)
+    return NS_OK;
+
   eHTMLTags type = (eHTMLTags)aTag;
 
   nsresult rv = NS_OK;
