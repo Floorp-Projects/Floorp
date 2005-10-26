@@ -44,6 +44,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+ifdef MOZ_XUL_APP
+NO_JAR_AUTO_REG = 1
+endif
+
 ifdef BUILD_ALL_LOCALES
 ALL_LOCALES = \
 	en-US \
