@@ -17,7 +17,7 @@
  * Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
+ * the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
  *
  * Contributor(s):
  *
@@ -35,14 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <unistd.h>
-#include <stdlib.h>
-
-#include <CFBundle.h>
-#include <Processes.h>
-
 #include "nsXPCOMGlue.h"
 #include "nsINIParser.h"
+#include "prtypes.h"
+#include "nsXPCOMPrivate.h" // for XP MAXPATHLEN
+
+#ifdef XP_WIN
+#include <windows.h>
+#define snprintf _snprintf
+#define PATH_SEPARATOR_CHAR '\\'
+#define XULRUNNER_BIN "xulrunner.exe"
+#include "nsWindowsRestart.cpp"
+#else
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#define PATH_SEPARATOR_CHAR '/'
+#define XULRUNNER_BIN "xulrunner-bin"
+#endif
 
 #define VERSION_MAXLEN 128
 
@@ -50,41 +60,57 @@ int
 main(int argc, char **argv)
 {
   nsresult rv;
+  char *lastSlash;
 
-  CFBundleRef appBundle = CFBundleGetMainBundle();
-  if (!appBundle)
+  char iniPath[MAXPATHLEN];
+
+#ifdef XP_WIN
+  if (!::GetModuleFileName(NULL, iniPath, sizeof(iniPath)))
     return 1;
 
-  CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(appBundle);
-  if (!resourcesURL)
+#else
+
+  // on unix, there is no official way to get the path of the current binary.
+  // instead of using the MOZILLA_FIVE_HOME hack, which doesn't scale to
+  // multiple applications, we will try a series of techniques:
+  //
+  // 1) use realpath() on argv[0], which works unless we're loaded from the
+  //    PATH
+  // 2) manually walk through the PATH and look for ourself
+  // 3) give up
+
+  struct stat fileStat;
+
+  if (!realpath(argv[0], iniPath) || stat(iniPath, &fileStat)) {
+    const char *path = getenv("PATH");
+    if (!path)
+      return 1;
+
+    char *pathdup = strdup(path);
+    if (!pathdup)
+      return 1;
+
+    PRBool found = PR_FALSE;
+    char *token = strtok(pathdup, ":");
+    while (token) {
+      sprintf(iniPath, "%s/%s", token, argv[0]);
+      if (stat(iniPath, &fileStat) == 0) {
+        found = PR_TRUE;
+        break;
+      }
+    }
+    free (pathdup);
+    if (!found)
+      return 1;
+  }
+
+#endif
+
+  lastSlash = strrchr(iniPath, PATH_SEPARATOR_CHAR);
+  if (!lastSlash)
     return 1;
 
-  CFURLRef absResourcesURL = CFURLCopyAbsoluteURL(resourcesURL);
-  CFRelease(resourcesURL);
-  if (!absResourcesURL)
-    return 1;
-
-  CFURLRef iniFileURL =
-    CFURLCreateCopyAppendingPathComponent(kCFAllocatorDefault,
-                                          absResourcesURL,
-                                          CFSTR("application.ini"),
-                                          false);
-  CFRelease(absResourcesURL);
-
-  if (!iniFileURL)
-    return 1;
-
-  CFStringRef iniPathStr =
-    CFURLCopyFileSystemPath(iniFileURL, kCFURLPOSIXPathStyle);
-  CFRelease(iniFileURL);
-
-  if (!iniPathStr)
-    return 1;
-
-  char iniPath[PATH_MAX];
-  CFStringGetCString(iniPathStr, iniPath, sizeof(iniPath),
-                     kCFStringEncodingUTF8);
-  CFRelease(iniPathStr);
+  strcpy(lastSlash + 1, "application.ini");
 
   nsINIParser parser;
   rv = parser.Init(iniPath);
@@ -93,7 +119,7 @@ main(int argc, char **argv)
     return 1;
   }
 
-  char greDir[PATH_MAX];
+  char greDir[MAXPATHLEN];
   char minVersion[VERSION_MAXLEN];
 
   // If a gecko maxVersion is not specified, we assume that the app uses only
@@ -130,22 +156,24 @@ main(int argc, char **argv)
     return 1;
   }
 
-  char *lastSlash = strrchr(greDir, '/');
+  lastSlash = strrchr(greDir, PATH_SEPARATOR_CHAR);
   if (lastSlash) {
     *lastSlash = '\0';
   }
 
-  char **argv2 = (char**) alloca(sizeof(char*) * (argc + 2));
+  char **argv2 = (char**) malloc(sizeof(char*) * (argc + 2));
+  if (!argv2)
+    return 1;
 
-  char xulBin[PATH_MAX];
-  snprintf(xulBin, sizeof(xulBin), "%s/xulrunner-bin", greDir);
+  char xulBin[MAXPATHLEN];
+  snprintf(xulBin, sizeof(xulBin),
+           "%s" XPCOM_FILE_PATH_SEPARATOR XULRUNNER_BIN, greDir);
 
-  setenv("DYLD_LIBRARY_PATH", greDir, 1);
-  setenv("XRE_BINARY_PATH", xulBin, 1);
+#ifndef XP_WIN
+  setenv(XPCOM_SEARCH_KEY, greDir, 1);
+#endif
 
-  // IMPORTANT: we lie to argv[0] about what binary is being run, so that it
-  // thinks it's in the current app bundle, not the XUL.framework.
-  argv2[0] = argv[0];
+  argv2[0] = xulBin;
   argv2[1] = iniPath;
 
   for (int i = 1; i < argc; ++i)
@@ -153,6 +181,15 @@ main(int argc, char **argv)
 
   argv2[argc + 1] = NULL;
 
+#ifdef XP_WIN
+  BOOL ok = WinLaunchChild(xulBin, argc + 1, argv2);
+
+  free (argv2);
+
+  return !ok;
+#else
   execv(xulBin, argv2);
+
   return 1;
+#endif
 }

@@ -51,4 +51,6 @@ XPIDLSRCS = \
 
 EXTRA_PP_COMPONENTS = nsXULAppInstall.js
 
+DEFINES = -DBIN_SUFFIX=$(BIN_SUFFIX)
+
 include $(topsrcdir)/config/rules.mk

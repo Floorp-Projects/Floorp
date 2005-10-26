@@ -1,4 +1,6 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+#filter substitution
+#if 0
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -35,6 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#endif
 
 const nsIFile             = Components.interfaces.nsIFile;
 const nsIINIParser        = Components.interfaces.nsIINIParser;
@@ -338,7 +341,11 @@ const AppInstall = {
     extractor.copyTo(aDirectory);
 #else
     extractor.copyTo(aDirectory);
-    // Need to copy the XULRunner stub (which doesn't exist yet)
+
+    var xulrunnerBinary = getDirectoryKey("XCurProcD");
+    xulrunnerBinary.append("xulrunner-stub@BIN_SUFFIX@");
+
+    xulrunnerBinary.copyTo(aDirectory, appName.toLowerCase() + "@BIN_SUFFIX@");
 #endif
   }
 };
