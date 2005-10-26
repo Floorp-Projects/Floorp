@@ -39,7 +39,7 @@
 #urlbar input {
 	background-position:0px 100%;
 	background-repeat:no-repeat;
-	background-image:url(chrome://minimo/skin/transfer.gif);
+	background-image:url(chrome://minimo/skin/transfer.jpg);
 	padding:0px;
 	margin:0px;
  	border:1px solid black;
@@ -58,9 +58,8 @@ toolbar *, #appcontent *, * {
 }
 
 .tabs-closebutton-box{
-    list-style-image: url("chrome://minimo/skin/close.gif");
+    list-style-image: url("chrome://minimo/skin/close.png");
 }
-
 
 #lock-icon.security-na {
 }
@@ -74,9 +73,6 @@ toolbar *, #appcontent *, * {
     margin-left:2px;
     list-style-image: url("chrome://minimo/skin/security-notbroken.png");
 }
-
-
-
 
 .button-close {
   background: url("chrome://minimo/skin/close.gif") no-repeat 50% 50%;
@@ -102,6 +98,7 @@ toolbar *, #appcontent *, * {
   padding:8px;
 }
 
+
 caption {
 	-moz-border-radius:4px;
 	border:1px solid #eeeeee;
@@ -115,8 +112,6 @@ caption {
 }
 
 */
-
-
 
 #contentAreaContextMenu {
 
