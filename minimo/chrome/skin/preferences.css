@@ -91,11 +91,11 @@ toolbar {
  */
 #pref-bar .prefselectedbutton {
 
-   background-color:#cccccc;   
+   background-color:rgb(212,208,200);   
 }
 
 #dialog-bar .prefselectedbutton .dialog-button {
-   background-color:#cccccc;   
+   background-color:rgb(212,208,200);   
 }
 
 /*
