@@ -513,7 +513,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
 
 #ifdef XPC_IDISPATCH_SUPPORT
     // If IDispatch is enabled and we're QI'ing to IDispatch
-    else if(nsXPConnect::IsIDispatchEnabled() && aIID.Equals(NSID_IDISPATCH))
+    if(nsXPConnect::IsIDispatchEnabled() && aIID.Equals(NSID_IDISPATCH))
     {
         return XPCIDispatchExtension::IDispatchQIWrappedJS(self, aInstancePtr);
     }
@@ -584,10 +584,34 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     // else we do the more expensive stuff...
 
     // check if the JSObject claims to implement this interface
-    JSObject* jsobj = CallQueryInterfaceOnJSObject(ccx, self->GetJSObject(), aIID);
-    if(jsobj && XPCConvert::JSObject2NativeInterface(ccx, aInstancePtr, jsobj,
-                                                     &aIID, nsnull, nsnull))
-        return NS_OK;
+    JSObject* jsobj = CallQueryInterfaceOnJSObject(ccx, self->GetJSObject(),
+                                                   aIID);
+    if(jsobj)
+    {
+        // We can't use XPConvert::JSObject2NativeInterface() here
+        // since that can find a XPCWrappedNative directly on the
+        // proto chain, and we don't want that here. We need to find
+        // the actual JS object that claimed it supports the interface
+        // we're looking for or we'll potentially bypass security
+        // checks etc by calling directly through to a native found on
+        // the prototype chain.
+        //
+        // Instead, simply do the nsXPCWrappedJS part of
+        // XPConvert::JSObject2NativeInterface() here to make sure we
+        // get a new (or used) nsXPCWrappedJS.
+        nsXPCWrappedJS* wrapper;
+        nsresult rv = nsXPCWrappedJS::GetNewOrUsed(ccx, jsobj, aIID, nsnull,
+                                                   &wrapper);
+        if(NS_SUCCEEDED(rv) && wrapper)
+        {
+            // We need to go through the QueryInterface logic to make
+            // this return the right thing for the various 'special'
+            // interfaces; e.g.  nsIPropertyBag.
+            rv = wrapper->QueryInterface(aIID, aInstancePtr);
+            NS_RELEASE(wrapper);
+            return rv;
+        }
+    }
 
     // else...
     // no can do
