@@ -541,6 +541,16 @@ nsresult nsProfileLock::Lock(nsILocalFile* aProfileDir,
         // mark it "obsolete" so that other newer builds can break the lock
         // if they obtain the fcntl lock
         rv = LockWithSymlink(oldFilePath, PR_TRUE);
+
+        // If the symlink failed for some reason other than it already
+        // exists, then something went wrong e.g. the file system
+        // doesn't support symlinks, or we don't have permission to
+        // create a symlink there.  In such cases we should just
+        // continue because it's unlikely there is an old build
+        // running with a symlink there and we've already successfully
+        // placed a fcntl lock.
+        if (rv != NS_ERROR_FILE_ACCESS_DENIED)
+            rv = NS_OK;
     }
     else if (rv != NS_ERROR_FILE_ACCESS_DENIED)
     {
