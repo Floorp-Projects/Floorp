@@ -170,3 +170,21 @@ caption {
 .separator-menu {
 	border-top:1px solid black;
 }
+
+#uizoomplusitem {
+  list-style-image: url("chrome://minimo/skin/up.png");
+}
+
+#uizoomminusitem {
+  list-style-image: url("chrome://minimo/skin/down.png");
+}
+
+#zoomplusitem {
+  list-style-image: url("chrome://minimo/skin/up.png");
+}
+
+#zoomminusitem {
+  list-style-image: url("chrome://minimo/skin/down.png");
+}
+
+
