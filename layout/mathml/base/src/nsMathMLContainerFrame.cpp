@@ -914,7 +914,12 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIFrame* aParentFrame)
   }
 
   // Ask our parent frame to reflow us
-  return frame->ReflowDirtyChild(frame->GetPresContext()->PresShell(), nsnull);
+  nsIFrame* parent = frame->GetParent();
+  NS_ASSERTION(parent, "No parent to pass the reflow request up to");
+  if (!parent)
+    return NS_OK;
+
+  return parent->ReflowDirtyChild(frame->GetPresContext()->PresShell(), frame);
 }
 
 // There are precise rules governing children of a MathML frame,
