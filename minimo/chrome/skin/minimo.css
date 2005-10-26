@@ -75,7 +75,7 @@ toolbar *, #appcontent *, * {
 }
 
 .button-close {
-  background: url("chrome://minimo/skin/close.gif") no-repeat 50% 50%;
+  background: url("chrome://minimo/skin/close.png") no-repeat 50% 50%;
   margin-right:4px ! important;
   margin-top:0px ! important;
   border:1px solid black;
