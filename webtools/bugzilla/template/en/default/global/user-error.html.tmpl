@@ -841,15 +841,6 @@
       to add a version to this product.
     [% END %]
 
-  [% ELSIF error == "need_component" %]
-    [% title = "Component Required" %]
-    You must specify a component to help determine the new assignee of these 
-    [% terms.bugs %].
-
-  [% ELSIF error == "need_product" %]
-    [% title = "Product Required" %]
-    You must specify a product to help determine the new assignee of these [% terms.bugs %].
-
   [% ELSIF error == "need_quip" %]
     [% title = "Quip Required" %]
     Please enter a quip in the text field.

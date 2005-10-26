@@ -850,7 +850,7 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
     }
 }
 
-my $prod_id; # Remember, can't use this for mass changes
+my $prod_id;
 if ($cgi->param('product') ne $cgi->param('dontchange')) {
     $prod_id = get_product_id($cgi->param('product'));
     $prod_id ||
@@ -866,7 +866,7 @@ if ($cgi->param('product') ne $cgi->param('dontchange')) {
     $prod_id = undef if (FetchOneColumn());
 }
 
-my $comp_id; # Remember, can't use this for mass changes
+my $comp_id;
 if ($cgi->param('component') ne $cgi->param('dontchange')) {
     if (!defined $prod_id) {
         ThrowUserError("no_component_change_for_multiple_products");
@@ -1093,35 +1093,12 @@ SWITCH: for ($cgi->param('knob')) {
         last SWITCH;
     };
     /^reassignbycomponent$/  && CheckonComment( "reassignbycomponent" ) && do {
-        if ($cgi->param('product') eq $cgi->param('dontchange')) {
-            ThrowUserError("need_product");
-        }
-        if ($cgi->param('component') eq $cgi->param('dontchange')) {
-            ThrowUserError("need_component");
-        }
         if ($cgi->param('compconfirm')) {
             DoConfirm();
         }
         ChangeStatus('NEW');
-        SendSQL("SELECT initialowner FROM components " .
-                "WHERE components.id = $comp_id");
-        $assignee = FetchOneColumn();
-        DoComma();
-        $::query .= "assigned_to = $assignee";
-        if (Param("useqacontact")) {
-            SendSQL("SELECT initialqacontact FROM components " .
-                    "WHERE components.id = $comp_id");
-            $qacontact = FetchOneColumn();
-            DoComma();
-            if ($qacontact) {
-                $::query .= "qa_contact = $qacontact";
-            }
-            else {
-                $::query .= "qa_contact = NULL";
-            }
-        }
         last SWITCH;
-    };   
+    };
     /^reopen$/  && CheckonComment( "reopen" ) && do {
         ChangeStatus('REOPENED');
         ChangeResolution('');
@@ -1314,7 +1291,33 @@ sub LogDependencyActivity {
 # show_bug.cgi).
 #
 foreach my $id (@idlist) {
+    my $query = $basequery;
     my $bug_obj = new Bugzilla::Bug($id, $whoid);
+
+    if ($cgi->param('knob') eq 'reassignbycomponent') {
+        # We have to check whether the bug is moved to another product
+        # and/or component before reassigning. If $comp_id is defined,
+        # use it; else use the product/component the bug is already in.
+        my $new_comp_id = $comp_id || $bug_obj->{'component_id'};
+        $assignee = $dbh->selectrow_array('SELECT initialowner
+                                           FROM components
+                                           WHERE components.id = ?',
+                                           undef, $new_comp_id);
+        $query .= ", assigned_to = $assignee";
+        if (Param("useqacontact")) {
+            $qacontact = $dbh->selectrow_array('SELECT initialqacontact
+                                                FROM components
+                                                WHERE components.id = ?',
+                                                undef, $new_comp_id);
+            if ($qacontact) {
+                $query .= ", qa_contact = $qacontact";
+            }
+            else {
+                $query .= ", qa_contact = NULL";
+            }
+        }
+    }
+
     my %dependencychanged;
     $bug_changed = 0;
     my $write = "WRITE";        # Might want to make a param to control
@@ -1534,7 +1537,7 @@ foreach my $id (@idlist) {
                      undef, join(', ', @list), $id);
         }
     }
-    my $query = "$basequery\nwhere bug_id = $id";
+    $query .= " where bug_id = $id";
     
     if ($::comma ne "") {
         SendSQL($query);
