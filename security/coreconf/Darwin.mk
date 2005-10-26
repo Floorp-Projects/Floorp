@@ -51,30 +51,35 @@ OS_REL_CFLAGS	= -Dppc
 CPU_ARCH	= ppc
 endif
 
-ifneq (,$(NEXT_ROOT))
+ifneq (,$(MACOS_SDK_DIR))
     GCC_VERSION_FULL := $(shell $(CC) -v 2>&1 | grep "gcc version" | sed -e "s/^.*gcc version[  ]*//" | awk '{ print $$1 }')
     GCC_VERSION_MAJOR := $(shell echo $(GCC_VERSION_FULL) | awk -F. '{ print $$1 }')
     GCC_VERSION_MINOR := $(shell echo $(GCC_VERSION_FULL) | awk -F. '{ print $$2 }')
-    GCC_VERSION := $(GCC_VERSION_MAJOR).$(GCC_VERSION_MINOR)
-
-    DARWIN_SDK_CFLAGS := -nostdinc
+    GCC_VERSION = $(GCC_VERSION_MAJOR).$(GCC_VERSION_MINOR)
 
     ifeq (,$(filter-out 2 3,$(GCC_VERSION_MAJOR)))
         # GCC <= 3
-        DARWIN_TARGET_ARCH_LIB := darwin
-        DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/include/gcc/darwin/$(GCC_VERSION)
+        DARWIN_SDK_CFLAGS = -nostdinc -isystem $(MACOS_SDK_DIR)/usr/include/gcc/darwin/$(GCC_VERSION) -isystem $(MACOS_SDK_DIR)/usr/include -F$(MACOS_SDK_DIR)/System/Library/Frameworks
+        ifneq (,$(shell find $(MACOS_SDK_DIR)/Library/Frameworks -maxdepth 0))
+            DARWIN_SDK_CFLAGS += -F$(MACOS_SDK_DIR)/Library/Frameworks
+        endif
+        DARWIN_SDK_LDFLAGS = -L$(MACOS_SDK_DIR)/usr/lib/gcc/darwin -L$(MACOS_SDK_DIR)/usr/lib/gcc/darwin/$(GCC_VERSION_FULL) -L$(MACOS_SDK_DIR)/usr/lib
+        NEXT_ROOT = $(MACOS_SDK_DIR)
+        export NEXT_ROOT
     else
         # GCC >= 4
-        CPU_ARCH_LONG := $(shell uname -p)
-        DARWIN_TARGET_ARCH_LIB := $(CPU_ARCH_LONG)-apple-darwin$(shell echo $NEXT_ROOT | perl -pe 's/MacOSX10\.([\d]*)//;if ($$1) {$$_=$$1+4;} else {$$_="'${OS_RELEASE}'";s/(\d+)//;$$_=$$1;}')
-        DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/lib/gcc/$(DARWIN_TARGET_ARCH_LIB)/$(GCC_VERSION_FULL)/include
-    endif
-
-    DARWIN_SDK_CFLAGS += -isystem $(NEXT_ROOT)/usr/include -F$(NEXT_ROOT)/System/Library/Frameworks
-    DARWIN_SDK_LDFLAGS := -L$(NEXT_ROOT)/usr/lib/gcc/$(DARWIN_TARGET_ARCH_LIB) -L$(NEXT_ROOT)/usr/lib/gcc/$(DARWIN_TARGET_ARCH_LIB)/$(GCC_VERSION_FULL) -L$(NEXT_ROOT)/usr/lib
-
-    ifneq (,$(shell find $(NEXT_ROOT)/Library/Frameworks -maxdepth 0))
-        DARWIN_SDK_CFLAGS += -F$(NEXT_ROOT)/Library/Frameworks
+        DARWIN_SDK_CFLAGS = -isysroot $(MACOS_SDK_DIR)
+        ifneq (4.0.0,$(GCC_VERSION_FULL))
+            # gcc > 4.0.0 passes -syslibroot to ld based on -isysroot.
+            # Don't add -isysroot to DARWIN_SDK_LDFLAGS, because the programs
+            # that are linked with those flags also get DARWIN_SDK_CFLAGS.
+            DARWIN_SDK_DSOFLAGS = -isysroot $(MACOS_SDK_DIR)
+        else
+            # gcc 4.0.0 doesn't pass -syslibroot to ld, it needs to be
+            # explicit.
+            DARWIN_SDK_LDFLAGS = -Wl,-syslibroot,$(MACOS_SDK_DIR)
+            DARWIN_SDK_DSOFLAGS = -Wl,-syslibroot,$(MACOS_SDK_DIR)
+        endif
     endif
 
     LDFLAGS += $(DARWIN_SDK_LDFLAGS)
@@ -100,7 +105,7 @@ ARCH		= darwin
 
 DSO_CFLAGS	= -fPIC
 # May override this with -bundle to create a loadable module.
-DSO_LDOPTS	= -dynamiclib -compatibility_version 1 -current_version 1 -install_name @executable_path/$(notdir $@) -headerpad_max_install_names $(DARWIN_SDK_LDFLAGS)
+DSO_LDOPTS	= -dynamiclib -compatibility_version 1 -current_version 1 -install_name @executable_path/$(notdir $@) -headerpad_max_install_names $(DARWIN_SDK_DSOFLAGS)
 
 MKSHLIB		= $(CC) -arch $(CPU_ARCH) $(DSO_LDOPTS)
 DLL_SUFFIX	= dylib
