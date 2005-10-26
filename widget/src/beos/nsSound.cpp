@@ -38,18 +38,27 @@
 
 
 #include "nscore.h"
-#include "nsIMemory.h"
 #include "plstr.h"
 #include <stdio.h>
-
+#include "nsIURL.h"
+#include "nsString.h"
+#include "nsIFileURL.h"
 #include "nsSound.h"
+#include "nsNetUtil.h"
+#include "nsIPref.h"
+
+#include "nsDirectoryServiceDefs.h"
+
+#include "nsNativeCharsetUtils.h"
 
 #include <OS.h>
 #include <SimpleGameSound.h>
-#include <Entry.h>
 #include <Beep.h>
+#include <unistd.h>
 
-NS_IMPL_ISUPPORTS1(nsSound, nsISound)
+
+
+NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()
@@ -59,55 +68,104 @@ nsSound::nsSound()
 
 nsSound::~nsSound()
 {
-	delete mSound;
+	Init();
 }
 
-nsresult NS_NewSound(nsISound** aSound)
+NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
+                                        nsISupports *context,
+                                        nsresult aStatus,
+                                        PRUint32 dataLen,
+                                        const PRUint8 *data)
 {
-  NS_PRECONDITION(aSound != nsnull, "null ptr");
-  if (! aSound)
-    return NS_ERROR_NULL_POINTER;
-  
-  *aSound = new nsSound();
-  if (! *aSound)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  NS_ADDREF(*aSound);
-  return NS_OK;
+	// print a load error on bad status
+	if (NS_FAILED(aStatus))
+	{
+#ifdef DEBUG
+		printf("Failed load sound file");
+#endif
+		return aStatus;
+	}
+	// In theory, BeOS can play any sound format supported by MediaKit,
+	// we can also play it from data, but it needs parsing format and 
+	// providing it to sound player, so let MediaKit to do it by self
+	static const char kSoundTmpFileName[] = "mozsound";
+	nsCOMPtr<nsIFile> soundTmp;
+	nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(soundTmp));
+	NS_ENSURE_SUCCESS(rv, rv);
+	rv = soundTmp->AppendNative(nsDependentCString(kSoundTmpFileName));
+	NS_ENSURE_SUCCESS(rv, rv);
+	nsCAutoString soundFilename;
+	(void) soundTmp->GetNativePath(soundFilename);
+	FILE *fp = fopen(soundFilename.get(), "wb+");
+#ifdef DEBUG
+	printf("Playing sound file%s\n",soundFilename.get());
+#endif
+	if (fp) 
+	{
+		fwrite(data, 1, dataLen, fp);
+		fflush(fp);
+		fclose(fp);
+		Init();
+		mSound = new BSimpleGameSound(soundFilename.get());
+		if (mSound != NULL && mSound->InitCheck() == B_OK)
+		{
+			mSound->SetIsLooping(false);
+			mSound->StartPlaying();
+			rv = NS_OK;
+		}
+		else
+		{
+			rv = NS_ERROR_FAILURE;
+		}
+		unlink(soundFilename.get());
+	}
+	else
+	{
+		return Beep();
+	}
+	return rv;
 }
 
 NS_IMETHODIMP nsSound::Init(void)
 {
-  return NS_OK;
+	if (mSound)
+	{
+		mSound->StopPlaying();
+		delete mSound;
+		mSound = NULL;
+	}
+	return NS_OK;
 }
 
 NS_METHOD nsSound::Beep()
 {
-  ::beep();
-
-  return NS_OK;
+	::beep();
+	return NS_OK;
 }
 
 NS_METHOD nsSound::Play(nsIURL *aURL)
 {
-/*
-	char *filename;
-	filespec->GetNativePath(&filename);
-
-	delete mSound;
-	entry_ref	ref;
-	BEntry e(filename);
-	e.GetRef(&ref);
-	mSound = new BSimpleGameSound(&ref);
-	if(mSound->InitCheck() == B_OK)
-		mSound->StartPlaying();
-
-	nsCRT::free(filename);
-*/
-	return NS_OK;
+	nsresult rv;
+	nsCOMPtr<nsIStreamLoader> loader;
+	rv = NS_NewStreamLoader(getter_AddRefs(loader), aURL, this);
+	return rv;
 }
 
 NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
 {
-  return Beep();
+	nsresult rv = NS_ERROR_FAILURE;
+	if (aSoundAlias.EqualsLiteral("_moz_mailbeep")) 
+		return Beep();
+	nsCOMPtr <nsIURI> fileURI;
+	// create a nsILocalFile and then a nsIFileURL from that
+	nsCOMPtr <nsILocalFile> soundFile;
+	rv = NS_NewLocalFile(aSoundAlias, PR_TRUE, 
+    					getter_AddRefs(soundFile));
+	NS_ENSURE_SUCCESS(rv,r v);
+	rv = NS_NewFileURI(getter_AddRefs(fileURI), soundFile);
+	NS_ENSURE_SUCCESS(rv, rv);
+	nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(fileURI, &rv);
+	NS_ENSURE_SUCCESS(rv, rv);
+	rv = Play(fileURL);
+	return rv;
 }
