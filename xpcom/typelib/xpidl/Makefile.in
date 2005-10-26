@@ -96,9 +96,10 @@ endif
 ifdef MACOS_SDK_DIR
 # xpidl is for the build host, pull out the cross-compilation stuff
 NEXT_ROOT=
-OS_CFLAGS := $(shell echo $(OS_CFLAGS)|sed -E -e "s%((-I|-isystem )$(MACOS_SDK_DIR)/usr/(include|lib/gcc)[^ ]*)|-F$(MACOS_SDK_DIR)(/System)?/Library/Frameworks[^ ]*|-nostdinc[^ ]*%%g")
+OS_CFLAGS := $(shell echo $(OS_CFLAGS)|sed -E -e "s%((-I|-isystem )$(MACOS_SDK_DIR)/usr/(include|lib/gcc)[^ ]*)|-F$(MACOS_SDK_DIR)(/System)?/Library/Frameworks[^ ]*|-nostdinc[^ ]*|-isysroot $(MACOS_SDK_DIR)%%g")
 OS_CFLAGS := $(patsubst -I$(MACOS_SDK_DIR)%,-I%,$(OS_CFLAGS))
 OS_LIBS := $(patsubst -L$(MACOS_SDK_DIR)/usr/lib%,,$(OS_LIBS))
+LDFLAGS := $(shell echo $(LDFLAGS)|sed -E -e "s%-Wl,-syslibroot,$(MACOS_SDK_DIR)%%g")
 endif
 
 export::
