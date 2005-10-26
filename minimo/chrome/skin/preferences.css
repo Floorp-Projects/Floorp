@@ -63,7 +63,7 @@ toolbarbutton.base-button {
 }
 
 #connection-button {
-  -moz-image-region: rect(0px, 192px, 32px, 160px)
+  -moz-image-region: rect(0px, 96px, 32px, 64px)
 
 }
 
