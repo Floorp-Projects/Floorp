@@ -115,6 +115,12 @@ toolbar {
   margin:4px ! important;
 }
 
+checkbox > * {
+  margin-left:2px ! important;
+}
+
+
+
 /*
  * OKAY-panel 
  */
