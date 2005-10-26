@@ -133,17 +133,25 @@
 		    <caption label="&zoom.label;"/>
 			<hbox flex="1" >
 				<vbox flex="1"  style="padding:4px ! important">
-
-					<hbox flex="1" style="margin-top:4px ! important">
-						<label value="&zoomText.label;" />
-						<toolbarbutton tabindex="10" accessrule="focus_toolbar-view" id="zoomplusitem" class="button-border" command="cmd_BrowserZoomPlus" label="&zoomTextPlus.label;" />
-		                <toolbarbutton tabindex="11" accessrule="focus_toolbar-view" class="button-border" command="cmd_BrowserZoomMinus" label="&zoomTextMinus.label;" />	
-					</hbox>
-					<hbox flex="1" style="margin-top:4px ! important">
-						<label value="&zoomUIText.label;" />
-						<toolbarbutton tabindex="12" accessrule="focus_toolbar-view" id="uizoomplusitem" class="button-border" command="cmd_UIZoomPlus" label="&zoomTextPlus.label;" />
-		                <toolbarbutton tabindex="13" accessrule="focus_toolbar-view" class="button-border" command="cmd_UIZoomMinus" label="&zoomTextMinus.label;" />	
-					</hbox>
+				   <grid>
+                      <columns>
+                        <column />
+                        <column />
+                        <column />
+                      </columns>
+                      <rows>
+                        <row>
+                          <label value="&zoomText.label;" />
+                          <toolbarbutton tabindex="10" accessrule="focus_toolbar-view" id="zoomplusitem" class="button-border" command="cmd_BrowserZoomPlus" label="&zoomTextPlus.label;" />
+                          <toolbarbutton tabindex="11" accessrule="focus_toolbar-view" class="button-border" command="cmd_BrowserZoomMinus" label="&zoomTextMinus.label;" />	
+                        </row>
+                        <row style="margin-top:2px ! important">
+                          <label value="&zoomUIText.label;" />
+                          <toolbarbutton tabindex="12" accessrule="focus_toolbar-view" id="uizoomplusitem" class="button-border" command="cmd_UIZoomPlus" label="&zoomTextPlus.label;" />
+                          <toolbarbutton tabindex="13" accessrule="focus_toolbar-view" class="button-border" command="cmd_UIZoomMinus" label="&zoomTextMinus.label;" />	
+                        </row>
+                      </rows>
+				   </grid>
 				</vbox>
 				<vbox>
 				<toolbarbutton tabindex="14" accessrule="focus_toolbar-view"  class="button-close" width="10" height="10" align="top" flex="0" id="close-button" command="cmd_ViewOptions"/>  
