@@ -3241,23 +3241,14 @@ nsGlobalWindow::Alert(const nsAString& aString)
 
   const nsAString *str = DOMStringIsNull(aString) ? &null_str : &aString;
 
-  // Test whether title needs to prefixed with [script]
-  nsAutoString newTitle;
-  const PRUnichar *title = nsnull;
-  if (!IsCallerChrome()) {
-      MakeScriptDialogTitle(EmptyString(), newTitle);
-      title = newTitle.get();
-  }
-  else {
-      NS_WARNING("chrome shouldn't be calling alert(), use the prompt "
-                 "service");
-  }
-
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  return prompter->Alert(title, PromiseFlatString(*str).get());
+  nsAutoString title;
+  MakeScriptDialogTitle(EmptyString(), title);
+
+  return prompter->Alert(title.get(), PromiseFlatString(*str).get());
 }
 
 NS_IMETHODIMP
@@ -3275,23 +3266,14 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
 
   *aReturn = PR_FALSE;
 
-  // Test whether title needs to prefixed with [script]
-  nsAutoString newTitle;
-  const PRUnichar *title = nsnull;
-  if (!IsCallerChrome()) {
-      MakeScriptDialogTitle(EmptyString(), newTitle);
-      title = newTitle.get();
-  }
-  else {
-      NS_WARNING("chrome shouldn't be calling confirm(), use the prompt "
-                 "service");
-  }
-
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  return prompter->Confirm(title, PromiseFlatString(aString).get(), aReturn);
+  nsAutoString title;
+  MakeScriptDialogTitle(EmptyString(), title);
+
+  return prompter->Confirm(title.get(), PromiseFlatString(aString).get(), aReturn);
 }
 
 NS_IMETHODIMP
@@ -3322,15 +3304,8 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   // pending reflows.
   EnsureReflowFlushAndPaint();
 
-  // Test whether title needs to prefixed with [script]
   nsAutoString title;
-  if (!IsCallerChrome()) {
-    MakeScriptDialogTitle(aTitle, title);
-  } else {
-    NS_WARNING("chrome shouldn't be calling prompt(), use the prompt "
-               "service");
-    title.Assign(aTitle);
-  }
+  MakeScriptDialogTitle(aTitle, title);
 
   rv = prompter->Prompt(title.get(), PromiseFlatString(aMessage).get(), nsnull,
                         aSavePassword, PromiseFlatString(aInitial).get(),
@@ -5655,7 +5630,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
   // determine whether we must divert the open window to a new tab.
 
-  PRBool divertOpen = !WindowExists(aName);
+  PRBool divertOpen = aName.IsEmpty() || !WindowExists(aName);
 
   // also check what the prefs prescribe?
   // XXXbz this duplicates docshell code.  Need to consolidate.
@@ -7030,7 +7005,12 @@ nsGlobalChromeWindow::GetTitle(nsAString& aTitle)
   nsresult rv;
   nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(mDocument, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  return nsdoc->GetTitle(aTitle);
+  rv = nsdoc->GetTitle(aTitle);
+  if (!aTitle.IsEmpty() && aTitle.First() == 0253)
+    aTitle.Cut(0, 1);
+  if (!aTitle.IsEmpty() && aTitle.Last() == 0273)
+    aTitle.Truncate(aTitle.Length() - 1);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -7042,7 +7022,7 @@ nsGlobalChromeWindow::SetTitle(const nsAString& aTitle)
   nsresult rv;
   nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(mDocument, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  return nsdoc->SetTitle(aTitle);
+  return nsdoc->SetTitle(NS_LITERAL_STRING("\253") + aTitle + NS_LITERAL_STRING("\273"));
 }
 
 NS_IMETHODIMP
