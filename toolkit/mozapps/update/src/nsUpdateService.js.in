@@ -960,8 +960,12 @@ UpdateService.prototype = {
 
       var shouldCleanup = true;
       var update = um.activeUpdate;
-      if (!update)
-        update = new Update(null);
+      if (!update) {
+        if ((status == STATE_SUCCEEDED) && (um.updateCount >= 1))
+          update = um.getUpdateAt(0);
+        else
+          update = new Update(null);
+      }
       update.state = status;
       var sbs = 
           Components.classes["@mozilla.org/intl/stringbundle;1"].
