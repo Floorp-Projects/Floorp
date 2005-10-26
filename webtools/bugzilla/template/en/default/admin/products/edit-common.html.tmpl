@@ -64,13 +64,22 @@
              checked="checked"[% END %]>
   </td>
 </tr>
-<tr>
+
+[% IF !Param('usevotes') %]
+<tr class="param_disabled">
+  <td colspan="2"
+      style="font-family: arial; font-style: italic; font-size: 0.7em; text-align: center;">
+    The 'usevotes' parameter is currently 'off'. These voting
+    settings will take effect when the parameter is next enabled.</td>
+</tr>
+[% END %]
+<tr [% IF !Param('usevotes') %]class="param_disabled" [% END %]>
   <th align="right">Maximum votes per person:</th>
   <td><input size="5" maxlength="5" name="votesperuser" 
              value="[% product.votesperuser FILTER html %]">
   </td>
 </tr>
-<tr>
+<tr [% IF !Param('usevotes') %]class="param_disabled" [% END %]>
   <th align="right">
     Maximum votes a person can put on a single [% terms.bug %]:
   </th>
@@ -78,7 +87,7 @@
              value="[% product.maxvotesperbug FILTER html %]">
   </td>
 </tr>
-<tr>
+<tr [% IF !Param('usevotes') %]class="param_disabled" [% END %]>
   <th align="right">
     Number of votes [% terms.abug %] in this product needs to
     automatically get out of the
