@@ -540,7 +540,7 @@ js_printf(JSPrinter *jp, const char *format, ...)
 
     /* Suppress newlines (must be once per format, at the end) if not pretty. */
     fp = NULL;
-    if (!jp->pretty && format[cc = strlen(format)-1] == '\n') {
+    if (!jp->pretty && format[cc = strlen(format) - 1] == '\n') {
         fp = JS_strdup(jp->sprinter.context, format);
         if (!fp)
             return -1;
@@ -2448,13 +2448,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
                               rval);
 #else
                 if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
-                    todo = Sprint(&ss->sprinter, "%s%s%s %s%s",
+                    rval += strlen(js_function_str) + 1;
+                    todo = Sprint(&ss->sprinter, "%s%s%s %s%.*s",
                                   lval,
                                   (lval[1] != '\0') ? ", " : "",
                                   (lastop == JSOP_GETTER)
                                   ? js_get_str : js_set_str,
                                   xval,
-                                  rval + strlen(js_function_str) + 1);
+                                  strlen(rval) - 1,
+                                  rval);
                 } else {
                     todo = Sprint(&ss->sprinter, "%s%s%s:%s",
                                   lval,
