@@ -531,6 +531,14 @@ function BrowserUIResetZoomPlus() {
     currentUILevel+=3;
     gPref.setIntPref("browser.display.zoomui", currentUILevel);
     syncUIZoom();
+    
+    /* 
+     * YES I know. 
+     * I do this because somehow the grid does not expand
+     * when the style CSS syncUIzoom kicks in 
+     */
+    document.getElementById("uizoomminusitem").focus();
+    document.getElementById("uizoomplusitem").focus();
 }
 
 function BrowserUIResetZoomMinus() {
@@ -538,7 +546,16 @@ function BrowserUIResetZoomMinus() {
     currentUILevel-=3;
     gPref.setIntPref("browser.display.zoomui", currentUILevel);
     syncUIZoom();
+
+     /* 
+     * YES I know. 
+     * I do this because somehow the grid does not expand
+     * when the style CSS syncUIzoom kicks in 
+     */
+    document.getElementById("uizoomplusitem").focus();
+    document.getElementById("uizoomminusitem").focus();
 }
+
 
 /* 
   We want to intercept before it shows, 
