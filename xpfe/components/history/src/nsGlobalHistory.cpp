@@ -1823,6 +1823,9 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
         rv = GetRowValue(row, kToken_ReferrerColumn, str);
       
       if (NS_FAILED(rv)) return rv;
+      // Avoid trying to create a resource from an empty string, which
+      // will raise an exception
+      if (str.IsEmpty()) return NS_RDF_NO_VALUE;
       
       nsCOMPtr<nsIRDFResource> resource;
       rv = gRDFService->GetResource(str,
