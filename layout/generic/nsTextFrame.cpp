@@ -1639,7 +1639,7 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 // XXX word-spacing
 #if defined(XP_MACOSX)
 #define NO_INVERT
-#elif defined(XP_WIN) || defined(XP_OS2) || defined(XP_UNIX)
+#elif defined(XP_WIN) || defined(XP_OS2) || defined(XP_UNIX) || defined(XP_BEOS)
 #define USE_INVERT_FOR_SELECTION
 #endif
 
