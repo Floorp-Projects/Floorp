@@ -59,6 +59,11 @@
   [% END %]
 
   [% IF debug %]
+    <p>
+      [% FOREACH debugline = debugdata %]
+        [% debugline FILTER html %]<br>
+      [% END %]
+    </p>
     <p>[% query FILTER html %]</p>
   [% END %]
 

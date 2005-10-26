@@ -102,6 +102,8 @@ sub init {
     my @orderby;
 
     my $debug = 0;
+    my @debugdata;
+    if ($params->param('debug')) { $debug = 1; }
 
     my @fields;
     my @supptables;
@@ -1160,7 +1162,9 @@ sub init {
             $params->param("type$chart-$row-$col", shift(@$ref));
             $params->param("value$chart-$row-$col", shift(@$ref));
             if ($debug) {
-                print qq{<p>$params->param("field$chart-$row-$col") | $params->param("type$chart-$row-$col") | $params->param("value$chart-$row-$col")*</p>\n};
+                push(@debugdata, "$row-$col = " .
+                               $params->param("field$chart-$row-$col") . ' | ' .                               $params->param("type$chart-$row-$col") . ' | ' .
+                               $params->param("value$chart-$row-$col") . ' *');
             }
             $col++;
 
@@ -1298,7 +1302,7 @@ sub init {
                     if ("$f,$t,$rhs" =~ m/$key/) {
                         my $ref = $funcsbykey{$key};
                         if ($debug) {
-                            print "<p>$key ($f , $t , $rhs ) => ";
+                            push(@debugdata, "$key ($f / $t / $rhs) =>");
                         }
                         $ff = $f;
                         if ($f !~ /\./) {
@@ -1306,7 +1310,8 @@ sub init {
                         }
                         &$ref;
                         if ($debug) {
-                            print "$f , $t , $v , $term</p>";
+                            push(@debugdata, "$f / $t / $v / " .
+                                             ($term || "undef") . " *");
                         }
                         if ($term) {
                             last;
@@ -1436,12 +1441,8 @@ sub init {
         $query .= " ORDER BY " . join(',', @orderby);
     }
 
-    if ($debug) {
-        print "<p><code>" . value_quote($query) . "</code></p>\n";
-        exit;
-    }
-    
     $self->{'sql'} = $query;
+    $self->{'debugdata'} = \@debugdata;
 }
 
 ###############################################################################
@@ -1599,6 +1600,11 @@ sub GetByWordListSubstr {
 sub getSQL {
     my $self = shift;
     return $self->{'sql'};
+}
+
+sub getDebugData {
+    my $self = shift;
+    return $self->{'debugdata'};
 }
 
 sub pronoun {

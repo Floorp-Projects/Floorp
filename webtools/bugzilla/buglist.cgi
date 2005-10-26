@@ -847,6 +847,7 @@ elsif ($fulltext) {
 if ($cgi->param('debug')) {
     $vars->{'debug'} = 1;
     $vars->{'query'} = $query;
+    $vars->{'debugdata'} = $search->getDebugData();
 }
 
 # Time to use server push to display an interim message to the user until
