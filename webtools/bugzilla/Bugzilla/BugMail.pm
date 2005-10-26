@@ -152,8 +152,21 @@ sub ProcessOneBug {
     my $reporter = $values{'reporter'};
     my @assignees = ($values{'assigned_to'});
     my @qa_contacts = ($values{'qa_contact'});
-    my @ccs = @{$dbh->selectcol_arrayref("SELECT who 
-                                          FROM cc WHERE bug_id = $id")};
+
+    my $cc_users = $dbh->selectall_arrayref(
+           "SELECT cc.who, profiles.login_name
+              FROM cc
+        INNER JOIN profiles
+                ON cc.who = profiles.userid
+             WHERE bug_id = ?",
+           undef, $id);
+
+    my (@ccs, @cc_login_names);
+    foreach my $cc_user (@$cc_users) {
+        my ($user_id, $user_login) = @$cc_user;
+        push (@ccs, $user_id);
+        push (@cc_login_names, $user_login);
+    }
 
     # Include the people passed in as being in particular roles.
     # This can include people who used to hold those roles.
@@ -179,6 +192,7 @@ sub ProcessOneBug {
     if ($values{'qa_contact'}) {
         $values{'qa_contact'} = &::DBID_to_name($values{'qa_contact'});
     }
+    $values{'cc'} = join(', ', @cc_login_names);
     $values{'estimated_time'} = format_time_decimal($values{'estimated_time'});
 
     if ($values{'deadline'}) {
