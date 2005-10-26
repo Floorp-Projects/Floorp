@@ -4992,15 +4992,7 @@ MOZ_ARG_ENABLE_BOOL(svg,
 if test -n "$MOZ_SVG"; then
   AC_DEFINE(MOZ_SVG)
 
-  dnl default svg renderer - gdiplus on win32, cairo everywhere else
-  case "$target_os" in
-  msvc*|mks*|cygwin*|mingw*)
-    SVG_DEFAULT_RENDERER=gdiplus
-    ;;
-  *)
-    SVG_DEFAULT_RENDERER=cairo
-    ;;
-  esac
+  SVG_DEFAULT_RENDERER=cairo
 
   MOZ_ARG_ENABLE_STRING(svg-renderer,
   [  --enable-svg-renderer={gdiplus,libart,cairo}],
