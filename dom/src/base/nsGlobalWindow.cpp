@@ -5630,7 +5630,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
 
   // determine whether we must divert the open window to a new tab.
 
-  PRBool divertOpen = aName.IsEmpty() || !WindowExists(aName);
+  PRBool divertOpen = !WindowExists(aName);
 
   // also check what the prefs prescribe?
   // XXXbz this duplicates docshell code.  Need to consolidate.
@@ -7005,12 +7005,7 @@ nsGlobalChromeWindow::GetTitle(nsAString& aTitle)
   nsresult rv;
   nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(mDocument, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = nsdoc->GetTitle(aTitle);
-  if (!aTitle.IsEmpty() && aTitle.First() == 0253)
-    aTitle.Cut(0, 1);
-  if (!aTitle.IsEmpty() && aTitle.Last() == 0273)
-    aTitle.Truncate(aTitle.Length() - 1);
-  return rv;
+  return nsdoc->GetTitle(aTitle);
 }
 
 NS_IMETHODIMP
@@ -7022,7 +7017,7 @@ nsGlobalChromeWindow::SetTitle(const nsAString& aTitle)
   nsresult rv;
   nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(mDocument, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  return nsdoc->SetTitle(NS_LITERAL_STRING("\253") + aTitle + NS_LITERAL_STRING("\273"));
+  return nsdoc->SetTitle(aTitle);
 }
 
 NS_IMETHODIMP
