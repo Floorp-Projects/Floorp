@@ -39,8 +39,13 @@ groupbox.scrolling {
   overflow:auto;
 }
  
-.base-button {
+toolbarbutton.base-button {
+  padding-left:2px ! important;
   list-style-image: url("chrome://minimo/skin/preferences/options.png");
+}
+
+.pref-toolbar {
+  background-color:white;
 }
 
 #general-button {
@@ -70,23 +75,32 @@ toolbar {
   margin:3px ! important;
 }
 
-.prefbutton {
-   -moz-border-radius:4px;
-   background-color:#eeeeee;
+/* 
+ * OKAY / CANCEL buttons look 
+ */ 
+.dialog-button {
+   border:1px outset #cccccc;
+   background-color: #cccccc;
    padding:2px ! important;
-   margin:1px ! important;
+   margin:2px ! important;
 }
 
-.prefselectedbutton {
-   -moz-border-radius:4px;
-   background-color:#eeeeee;   
+/* This is the feedback class that gets applied to the icons on top 
+ * When an item is selected. When an item is selected, the
+ * .prefselectedbutton gets applied to the toolbarbutton element. 
+ */
+#pref-bar .prefselectedbutton {
+
+   background-color:#cccccc;   
 }
- 
-.okay-panel-textbox  {
-  border:0px solid gray ! important; 
-  margin:6px ! important;
-  background-color:transparent ! important;
+
+#dialog-bar .prefselectedbutton .dialog-button {
+   background-color:#cccccc;   
 }
+
+/*
+ * 
+ */
 
 .box-prefgroupitem {
   margin:2px ! important;
@@ -101,4 +115,12 @@ toolbar {
   margin:4px ! important;
 }
 
-
+/*
+ * OKAY-panel 
+ */
+ 
+.okay-panel-textbox  {
+  border:0px solid gray ! important; 
+  margin:6px ! important;
+  background-color:transparent ! important;
+}

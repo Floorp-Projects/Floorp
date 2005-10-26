@@ -81,19 +81,21 @@
 
   <command id="cmd_PrefOkay"      oncommand="PrefOkay()" />
   <command id="cmd_PrefCancel"    oncommand="PrefCancel();" />
-
   <vbox flex="1">
 
-    <hbox>
-      <toolbar flex="1" id="pref-bar" accessfocus="general-button" accessnextrule="general-pane"  accessprevrule="general-pane" >    
-        <toolbarbutton class="base-button" tabindex="1" accessrule="pref-bar" onfocus="show('general-pane',this)" accessfocus="general-pane" id="general-button" accesskey="m" />  
+    <hbox class="pref-toolbar">
+      <toolbar id="pref-bar" flex="1" accessfocus="general-button" accessnextrule="general-pane"  accessprevrule="general-pane" >    
+        <toolbarbutton class="base-button" tabindex="1" accessrule="pref-bar" onfocus="show('general-pane',this)" accessfocus="general-pane" id="general-button" accesskey="m" ></toolbarbutton>  
         <toolbarbutton class="base-button" tabindex="2" accessrule="pref-bar" onfocus="show('advanced-pane',this)" accessfocus="advanced-pane" id="advanced-button" />  
         <toolbarbutton class="base-button" tabindex="3" accessrule="pref-bar" onfocus="show('privacy-pane',this)" accessfocus="advanced-pane" id="privacy-button"  />  
         <toolbarbutton class="base-button" tabindex="4" accessrule="pref-bar" onfocus="show('connection-pane',this)" accessfocus="advanced-pane" id="connection-button" />  
       </toolbar>
-      <toolbar >
-        <toolbarbutton tabindex="8" accessrule="pref-bar" onfocus="show('summary-pane',this )" accessfocus="advanced-pane" id="okay-button" class='' command="cmd_PrefOkay"><label class='prefbutton' value="&okayButton.label;" /></toolbarbutton>  
-        <toolbarbutton tabindex="9" accessrule="pref-bar" onfocus="show('summary-pane',this )" accessfocus="advanced-pane" id="cancel-button" class='' command="cmd_PrefCancel"><label class='prefbutton' value="&cancelButton.label;" /></toolbarbutton>  
+ 
+      <!-- For the OKAY CANCEL buttons --> 
+
+      <toolbar id="dialog-bar">
+        <toolbarbutton tabindex="8" accessrule="pref-bar" onfocus="show('summary-pane',this )" accessfocus="advanced-pane" id="okay-button"  command="cmd_PrefOkay"><label class='dialog-button' value="&okayButton.label;" /></toolbarbutton>  
+        <toolbarbutton tabindex="9" accessrule="pref-bar" onfocus="show('summary-pane',this )" accessfocus="advanced-pane" id="cancel-button"  command="cmd_PrefCancel"><label class='dialog-button' value="&cancelButton.label;" /></toolbarbutton>  
       </toolbar>
     </hbox>
     
