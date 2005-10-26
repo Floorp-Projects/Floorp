@@ -52,7 +52,7 @@ class nsGridRowGroupFrame : public nsBoxFrame
 {
 public:
 
-  friend nsresult NS_NewGridRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager);
+  friend nsIFrame* NS_NewGridRowGroupFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const

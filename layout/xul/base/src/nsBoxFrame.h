@@ -73,19 +73,17 @@ class nsHTMLInfo;
 #define NS_STATE_EQUAL_SIZE              0x40000000
 //#define NS_STATE_IS_DIRECTION_NORMAL     0x80000000  moved to nsIFrame.h
 
-nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, 
-                        nsIFrame** aNewFrame, 
-                        PRBool aIsRoot = PR_FALSE,
-                        nsIBoxLayout* aLayoutManager = nsnull);
+nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, 
+                         PRBool aIsRoot = PR_FALSE,
+                         nsIBoxLayout* aLayoutManager = nsnull);
 
 class nsBoxFrame : public nsContainerFrame
 {
 public:
 
-  friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, 
-                                 nsIFrame** aNewFrame, 
-                                 PRBool aIsRoot,
-                                 nsIBoxLayout* aLayoutManager);
+  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell, 
+                                  PRBool aIsRoot,
+                                  nsIBoxLayout* aLayoutManager);
 
   // gets the rect inside our border and debug border. If you wish to paint inside a box
   // call this method to get the rect so you don't draw on the debug border or outer border.

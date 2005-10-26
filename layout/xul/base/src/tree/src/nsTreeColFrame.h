@@ -39,10 +39,9 @@
 #include "nsBoxFrame.h"
 #include "nsITreeColumns.h"
 
-nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell, 
-                            nsIFrame** aNewFrame, 
-                            PRBool aIsRoot = PR_FALSE,
-                            nsIBoxLayout* aLayoutManager = nsnull);
+nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell, 
+                             PRBool aIsRoot = PR_FALSE,
+                             nsIBoxLayout* aLayoutManager = nsnull);
 
 class nsTreeColFrame : public nsBoxFrame
 {
@@ -68,10 +67,9 @@ public:
   NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                        PRBool aRemoveOverflowArea = PR_FALSE);
 
-  friend nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell, 
-                                     nsIFrame** aNewFrame, 
-                                     PRBool aIsRoot,
-                                     nsIBoxLayout* aLayoutManager);
+  friend nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell, 
+                                      PRBool aIsRoot,
+                                      nsIBoxLayout* aLayoutManager);
 
 protected:
   nsTreeColFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);

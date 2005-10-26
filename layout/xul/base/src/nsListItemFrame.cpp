@@ -97,20 +97,9 @@ nsListItemFrame::GetFrameForPoint(const nsPoint& aPoint,
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
-nsresult
-NS_NewListItemFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
-                        nsIBoxLayout* aLayoutManager)
+nsIFrame*
+NS_NewListItemFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsListItemFrame* it = new (aPresShell) nsListItemFrame(aPresShell, aIsRoot, aLayoutManager);
-  if (!it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsListItemFrame(aPresShell, aIsRoot, aLayoutManager);
 } // NS_NewListItemFrame
 

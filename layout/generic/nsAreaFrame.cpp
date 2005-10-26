@@ -55,20 +55,15 @@
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_FINAL_SIZE
 
-nsresult
-NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
+nsIFrame*
+NS_NewAreaFrame(nsIPresShell* aPresShell, PRUint32 aFlags)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
   nsAreaFrame* it = new (aPresShell) nsAreaFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  it->SetFlags(aFlags);
-  *aNewFrame = it;
-  return NS_OK;
+  
+  if (it != nsnull)
+    it->SetFlags(aFlags);
+
+  return it;
 }
 
 nsAreaFrame::nsAreaFrame()

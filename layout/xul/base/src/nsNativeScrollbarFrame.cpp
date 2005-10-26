@@ -52,22 +52,12 @@
 //
 // NS_NewNativeScrollbarFrame
 //
-// Creates a new scrollbar frame and returns it in |aNewFrame|
+// Creates a new scrollbar frame and returns it
 //
-nsresult
-NS_NewNativeScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+nsIFrame*
+NS_NewNativeScrollbarFrame (nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsNativeScrollbarFrame* it = new (aPresShell) nsNativeScrollbarFrame (aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsNativeScrollbarFrame (aPresShell);
 } // NS_NewNativeScrollbarFrame
 
 

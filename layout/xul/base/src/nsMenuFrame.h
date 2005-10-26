@@ -58,7 +58,7 @@
 #include "nsIContent.h"
 #include "nsIScrollableViewProvider.h"
 
-nsresult NS_NewMenuFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags) ;
+nsIFrame* NS_NewMenuFrame(nsIPresShell* aPresShell, PRUint32 aFlags);
 
 class nsMenuBarFrame;
 class nsMenuPopupFrame;

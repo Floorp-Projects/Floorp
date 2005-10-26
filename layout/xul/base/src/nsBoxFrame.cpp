@@ -128,22 +128,10 @@ PRBool nsBoxFrame::gDebug = PR_FALSE;
 nsIBox* nsBoxFrame::mDebugChild = nsnull;
 #endif
 
-nsresult
-NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+nsIFrame*
+NS_NewBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsBoxFrame* it = new (aPresShell) nsBoxFrame(aPresShell, aIsRoot, aLayoutManager);
-
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
-  
+  return new (aPresShell) nsBoxFrame(aPresShell, aIsRoot, aLayoutManager);
 } // NS_NewBoxFrame
 
 nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)

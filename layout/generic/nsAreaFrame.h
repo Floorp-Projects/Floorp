@@ -54,7 +54,7 @@ struct nsStylePosition;
 class nsAreaFrame : public nsBlockFrame
 {
 public:
-  friend nsresult NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags);
+  friend nsIFrame* NS_NewAreaFrame(nsIPresShell* aPresShell, PRUint32 aFlags);
   
   // nsIFrame
 

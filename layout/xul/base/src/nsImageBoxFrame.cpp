@@ -226,22 +226,12 @@ FireDOMEvent(nsIContent* aContent, PRUint32 aMessage)
 //
 // NS_NewImageBoxFrame
 //
-// Creates a new image frame and returns it in |aNewFrame|
+// Creates a new image frame and returns it
 //
-nsresult
-NS_NewImageBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+nsIFrame*
+NS_NewImageBoxFrame (nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsImageBoxFrame* it = new (aPresShell) nsImageBoxFrame (aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsImageBoxFrame (aPresShell);
 } // NS_NewTitledButtonFrame
 
 NS_IMETHODIMP

@@ -58,21 +58,10 @@
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
 
-nsresult
-NS_NewStackFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager)
+nsIFrame*
+NS_NewStackFrame ( nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsStackFrame* it = new (aPresShell) nsStackFrame(aPresShell, aLayoutManager);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
-  
+  return new (aPresShell) nsStackFrame(aPresShell, aLayoutManager);
 } // NS_NewStackFrame
 
 nsStackFrame::nsStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager):nsBoxFrame(aPresShell)

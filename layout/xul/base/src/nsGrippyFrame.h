@@ -54,7 +54,7 @@ class nsGrippyFrame : public nsButtonBoxFrame
 {
 public:
 
-  friend nsresult NS_NewGrippyFrame(nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewGrippyFrame(nsIPresShell* aPresShell);
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;

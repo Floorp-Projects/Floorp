@@ -422,8 +422,8 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
 
         mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
       } else { // frame
-        result = NS_NewSubDocumentFrame(shell, &frame);
-        if (NS_FAILED(result))
+        frame = NS_NewSubDocumentFrame(shell);
+        if (NS_UNLIKELY(!frame))
           return NS_ERROR_OUT_OF_MEMORY;
 
         result = frame->Init(aPresContext, child, this, kidSC, nsnull);

@@ -519,19 +519,10 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
   return NS_OK;
 }
 
-nsresult
-NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSubDocumentFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsSubDocumentFrame* it = new (aPresShell) nsSubDocumentFrame;
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsSubDocumentFrame;
 }
 
 NS_IMETHODIMP

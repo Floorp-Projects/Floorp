@@ -55,23 +55,12 @@
 //
 // NS_NewXULButtonFrame
 //
-// Creates a new Button frame and returns it in |aNewFrame|
+// Creates a new Button frame and returns it
 //
-nsresult
-NS_NewButtonBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+nsIFrame*
+NS_NewButtonBoxFrame (nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsButtonBoxFrame* it = new (aPresShell) nsButtonBoxFrame(aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // it->SetFlags(aFlags);
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsButtonBoxFrame(aPresShell);
 } // NS_NewXULButtonFrame
 
 nsButtonBoxFrame::nsButtonBoxFrame(nsIPresShell* aPresShell)

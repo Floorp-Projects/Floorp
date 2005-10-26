@@ -102,9 +102,8 @@ NS_NewSelectsAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
                        PRUint32 aFlags);
 
 // Create a basic area frame.
-nsresult
-NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
-                PRUint32 aFlags);
+nsIFrame*
+NS_NewAreaFrame(nsIPresShell* aPresShell, PRUint32 aFlags);
 
 // These AreaFrame's shrink wrap around their contents
 inline nsresult
@@ -115,28 +114,28 @@ NS_NewTableCellInnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
 
 // This type of AreaFrame is the document root, a margin root, and the
 // initial containing block for absolutely positioned elements
-inline nsresult
-NS_NewDocumentElementFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aPresShell, aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
+inline nsIFrame*
+NS_NewDocumentElementFrame(nsIPresShell* aPresShell) {
+  return NS_NewAreaFrame(aPresShell, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame is a margin root, but does not shrink wrap
-inline nsresult
-NS_NewAbsoluteItemWrapperFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aPresShell, aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
+inline nsIFrame*
+NS_NewAbsoluteItemWrapperFrame(nsIPresShell* aPresShell) {
+  return NS_NewAreaFrame(aPresShell, NS_BLOCK_SPACE_MGR|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame shrink wraps
-inline nsresult
-NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aPresShell, aNewFrame, NS_BLOCK_SPACE_MGR|NS_BLOCK_SHRINK_WRAP|NS_BLOCK_MARGIN_ROOT);
+inline nsIFrame*
+NS_NewFloatingItemWrapperFrame(nsIPresShell* aPresShell) {
+  return NS_NewAreaFrame(aPresShell, NS_BLOCK_SPACE_MGR|NS_BLOCK_SHRINK_WRAP|NS_BLOCK_MARGIN_ROOT);
 }
 
 // This type of AreaFrame doesn't use its own space manager and
 // doesn't shrink wrap.
-inline nsresult
-NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame) {
-  return NS_NewAreaFrame(aPresShell, aNewFrame, 0);
+inline nsIFrame*
+NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell) {
+  return NS_NewAreaFrame(aPresShell, 0);
 }
 
 nsresult
@@ -146,8 +145,8 @@ nsresult
 NS_NewCommentFrame(nsIPresShell* aPresShell, nsIFrame** aFrameResult);
 
 // <frame> and <iframe> 
-nsresult
-NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsIFrame*
+NS_NewSubDocumentFrame(nsIPresShell* aPresShell);
 // <frameset>
 nsresult
 NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);

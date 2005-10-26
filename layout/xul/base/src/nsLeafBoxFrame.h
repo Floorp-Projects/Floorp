@@ -46,7 +46,7 @@ class nsLeafBoxFrame : public nsLeafFrame
 {
 public:
 
-  friend nsresult NS_NewLeafBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 

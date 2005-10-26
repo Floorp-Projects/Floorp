@@ -48,20 +48,10 @@
 #include "nsBoxLayoutState.h"
 #include "nsGridLayout2.h"
 
-nsresult
-NS_NewGridRowLeafFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
+nsIFrame*
+NS_NewGridRowLeafFrame ( nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
 {
-    NS_PRECONDITION(aNewFrame, "null OUT ptr");
-    if (nsnull == aNewFrame) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    nsGridRowLeafFrame* it = new (aPresShell) nsGridRowLeafFrame (aPresShell, aIsRoot, aLayoutManager);
-    if (nsnull == it)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    *aNewFrame = it;
-    return NS_OK;
-
+    return new (aPresShell) nsGridRowLeafFrame (aPresShell, aIsRoot, aLayoutManager);
 } 
 
 nsGridRowLeafFrame::nsGridRowLeafFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)

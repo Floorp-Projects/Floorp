@@ -124,9 +124,8 @@ nsHTMLButtonControlFrame::Init(nsPresContext*  aPresContext,
     flags |= NS_BLOCK_SHRINK_WRAP;
   }
 
-  nsIFrame* areaFrame;
   nsIPresShell *shell = aPresContext->PresShell();
-  NS_NewAreaFrame(shell, &areaFrame, flags);
+  nsIFrame* areaFrame = NS_NewAreaFrame(shell, flags);
   mFrames.SetFrames(areaFrame);
 
   // Resolve style and initialize the frame

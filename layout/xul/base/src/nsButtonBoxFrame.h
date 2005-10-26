@@ -43,7 +43,7 @@
 class nsButtonBoxFrame : public nsBoxFrame
 {
 public:
-  friend nsresult NS_NewButtonBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell);
 
   nsButtonBoxFrame(nsIPresShell* aPresShell);
 

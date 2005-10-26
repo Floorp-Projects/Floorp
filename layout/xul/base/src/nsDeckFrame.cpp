@@ -57,21 +57,10 @@
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
 
-nsresult
-NS_NewDeckFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame,
-                nsIBoxLayout* aLayoutManager)
+nsIFrame*
+NS_NewDeckFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (!aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsDeckFrame* it = new (aPresShell) nsDeckFrame(aPresShell, aLayoutManager);
-  if (!it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsDeckFrame(aPresShell, aLayoutManager);
 } // NS_NewDeckFrame
 
 

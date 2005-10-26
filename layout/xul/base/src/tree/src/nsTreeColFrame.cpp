@@ -55,21 +55,11 @@
 //
 // Creates a new col frame
 //
-nsresult
-NS_NewTreeColFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
+nsIFrame*
+NS_NewTreeColFrame(nsIPresShell* aPresShell, PRBool aIsRoot, 
                    nsIBoxLayout* aLayoutManager)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTreeColFrame* it = new (aPresShell) nsTreeColFrame(aPresShell, aIsRoot, aLayoutManager);
-  if (!it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsTreeColFrame(aPresShell, aIsRoot, aLayoutManager);
 } // NS_NewTreeColFrame
 
 NS_IMETHODIMP_(nsrefcnt) 

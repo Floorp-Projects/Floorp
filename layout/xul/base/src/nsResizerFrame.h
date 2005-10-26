@@ -57,7 +57,7 @@ protected:
   
 
 public:
-  friend nsresult NS_NewResizerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);  
+  friend nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell);  
 
   nsResizerFrame(nsIPresShell* aPresShell);
 

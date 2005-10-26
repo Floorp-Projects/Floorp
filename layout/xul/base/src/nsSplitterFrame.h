@@ -48,7 +48,7 @@
 class nsISupportsArray;
 class nsSplitterFrameInner;
 
-nsresult NS_NewSplitterFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
+nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell);
 
 class nsSplitterFrame : public nsBoxFrame
 {

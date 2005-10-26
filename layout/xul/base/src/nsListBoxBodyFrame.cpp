@@ -1436,19 +1436,10 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
 
 // Creation Routines ///////////////////////////////////////////////////////////////////////
 
-nsresult
-NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, 
+nsIFrame*
+NS_NewListBoxBodyFrame(nsIPresShell* aPresShell, PRBool aIsRoot, 
                        nsIBoxLayout* aLayoutManager)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsListBoxBodyFrame* it = new (aPresShell) nsListBoxBodyFrame(aPresShell, aIsRoot, aLayoutManager);
-  if (!it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return 
+    new (aPresShell) nsListBoxBodyFrame(aPresShell, aIsRoot, aLayoutManager);
 }

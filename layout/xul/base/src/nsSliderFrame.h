@@ -52,7 +52,7 @@ class nsISupportsArray;
 class nsITimer;
 class nsSliderFrame;
 
-nsresult NS_NewSliderFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
+nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell);
 
 
 class nsSliderMediator : public nsIDOMMouseListener, 

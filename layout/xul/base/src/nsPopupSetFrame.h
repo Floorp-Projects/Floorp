@@ -54,7 +54,7 @@
 #include "nsITimer.h"
 #include "nsISupportsArray.h"
 
-nsresult NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
+nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell);
 
 struct nsPopupFrameList {
   nsPopupFrameList* mNextPopup;  // The next popup in the list.

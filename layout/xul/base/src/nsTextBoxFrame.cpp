@@ -101,23 +101,12 @@ PRBool nsTextBoxFrame::gInsertSeparatorPrefInitialized = PR_FALSE;
 //
 // NS_NewToolbarFrame
 //
-// Creates a new Toolbar frame and returns it in |aNewFrame|
+// Creates a new Toolbar frame and returns it
 //
-nsresult
-NS_NewTextBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+nsIFrame*
+NS_NewTextBoxFrame (nsIPresShell* aPresShell)
 {
-    NS_PRECONDITION(aNewFrame, "null OUT ptr");
-    if (nsnull == aNewFrame) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    nsTextBoxFrame* it = new (aPresShell) nsTextBoxFrame (aPresShell);
-    if (nsnull == it)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    // it->SetFlags(aFlags);
-    *aNewFrame = it;
-    return NS_OK;
-
+    return new (aPresShell) nsTextBoxFrame (aPresShell);
 } // NS_NewTextFrame
 
 

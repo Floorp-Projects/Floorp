@@ -49,7 +49,7 @@
 class nsISupportsArray;
 class nsIScrollbarMediator;
 
-nsresult NS_NewScrollbarFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
+nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell);
 
 class nsScrollbarFrame : public nsBoxFrame, public nsIScrollbarFrame
 {
