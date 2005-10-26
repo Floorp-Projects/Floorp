@@ -354,7 +354,7 @@ const int kReuseWindowOnAE = 2;
   PreferenceManager* prefManager = [PreferenceManager sharedInstanceDontCreate];
   if (!prefManager) return NSTerminateNow;    // we didn't fully launch
 
-  if (![prefManager getBooleanPref:"camino.warn_when_quitting" withSuccess:NULL])
+  if (![prefManager getBooleanPref:"camino.warn_when_closing" withSuccess:NULL])
     return NSTerminateNow;
 
   NSString* quitAlertMsg = nil;
@@ -391,7 +391,7 @@ const int kReuseWindowOnAE = 2;
                                         checkMsg:NSLocalizedString(@"QuitWithMultipleTabsCheckboxLabel", @"")
                                       checkValue:&dontShowAgain];
     if (dontShowAgain)
-      [prefManager setPref:"camino.warn_when_quitting" toBoolean:NO];
+      [prefManager setPref:"camino.warn_when_closing" toBoolean:NO];
 
     return (confirmed) ? NSTerminateNow : NSTerminateCancel;
   }
