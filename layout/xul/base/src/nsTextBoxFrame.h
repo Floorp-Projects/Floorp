@@ -56,7 +56,7 @@ public:
 
   enum CroppingStyle { CropNone, CropLeft, CropRight, CropCenter };
 
-  friend nsresult NS_NewTextBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell);
 
   NS_IMETHOD  Init(nsPresContext*  aPresContext,
                    nsIContent*      aContent,

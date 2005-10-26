@@ -92,20 +92,10 @@ GetContentOfBox(nsIBox *aBox)
   return content;
 }
 
-nsresult
-NS_NewSliderFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSliderFrame (nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsSliderFrame* it = new (aPresShell) nsSliderFrame(aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-
+  return new (aPresShell) nsSliderFrame(aPresShell);
 } // NS_NewSliderFrame
 
 nsSliderFrame::nsSliderFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell),

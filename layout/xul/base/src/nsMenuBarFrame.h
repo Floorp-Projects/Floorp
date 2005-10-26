@@ -57,7 +57,7 @@
 class nsIContent;
 class nsIMenuFrame;
 
-nsresult NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
+nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell);
 
 class nsMenuBarFrame : public nsBoxFrame, public nsIMenuParent
 {

@@ -64,7 +64,7 @@
 //  need to find a good place to put them together.
 //  if someone changes one, please also change the other.
 
-nsresult NS_NewMenuPopupFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
+nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell) ;
 
 class nsIViewManager;
 class nsIView;

@@ -72,7 +72,7 @@ public:
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent);
   NS_IMETHOD NeedsRecalc();
 
-  friend nsresult NS_NewImageBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell);
 
   // nsIBox frame interface
 

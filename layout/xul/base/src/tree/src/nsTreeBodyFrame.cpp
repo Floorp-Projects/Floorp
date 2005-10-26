@@ -128,20 +128,10 @@ CancelImageRequest(nsHashKey* aKey, void* aData, void* aClosure)
 //
 // Creates a new tree frame
 //
-nsresult
-NS_NewTreeBodyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewTreeBodyFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTreeBodyFrame* it = new (aPresShell) nsTreeBodyFrame(aPresShell);
-  if (!it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsTreeBodyFrame(aPresShell);
 } // NS_NewTreeFrame
 
 

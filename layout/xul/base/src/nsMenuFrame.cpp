@@ -108,20 +108,15 @@ nsString *nsMenuFrame::gModifierSeparator = nsnull;
 //
 // Wrapper for creating a new menu popup container
 //
-nsresult
-NS_NewMenuFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
+nsIFrame*
+NS_NewMenuFrame(nsIPresShell* aPresShell, PRUint32 aFlags)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
   nsMenuFrame* it = new (aPresShell) nsMenuFrame (aPresShell);
-  if ( !it )
-    return NS_ERROR_OUT_OF_MEMORY;
-  *aNewFrame = it;
-  if (aFlags)
+  
+  if ((it != nsnull) && aFlags)
     it->SetIsMenu(PR_TRUE);
-  return NS_OK;
+
+  return it;
 }
 
 NS_IMETHODIMP_(nsrefcnt) 

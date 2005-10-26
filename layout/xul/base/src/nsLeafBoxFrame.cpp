@@ -62,26 +62,15 @@
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 
 //
-// NS_NewToolbarFrame
+// NS_NewLeafBoxFrame
 //
-// Creates a new Toolbar frame and returns it in |aNewFrame|
+// Creates a new Toolbar frame and returns it
 //
-nsresult
-NS_NewLeafBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+nsIFrame*
+NS_NewLeafBoxFrame (nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsLeafBoxFrame* it = new (aPresShell) nsLeafBoxFrame(aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // it->SetFlags(aFlags);
-  *aNewFrame = it;
-  return NS_OK;
-  
-} // NS_NewTextFrame
+  return new (aPresShell) nsLeafBoxFrame(aPresShell);
+} // NS_NewLeafBoxFrame
 
 nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell)
     : mMouseThrough(unset)

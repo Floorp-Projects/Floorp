@@ -57,26 +57,15 @@
 #include "nsGUIEvent.h"
 
 //
-// NS_NewXULButtonFrame
+// NS_NewResizerFrame
 //
-// Creates a new Button frame and returns it in |aNewFrame|
+// Creates a new Resizer frame and returns it
 //
-nsresult
-NS_NewResizerFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+nsIFrame*
+NS_NewResizerFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTitleBarFrame* it = new (aPresShell) nsResizerFrame(aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // it->SetFlags(aFlags);
-  *aNewFrame = it;
-  return NS_OK;
-  
-} // NS_NewTitleBarFrame
+  return new (aPresShell) nsResizerFrame(aPresShell);
+} // NS_NewResizerFrame
 
 nsResizerFrame::nsResizerFrame(nsIPresShell* aPresShell)
 :nsTitleBarFrame(aPresShell) 

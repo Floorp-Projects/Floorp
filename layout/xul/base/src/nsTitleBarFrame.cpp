@@ -53,23 +53,12 @@
 //
 // NS_NewTitleBarFrame
 //
-// Creates a new TitleBar frame and returns it in |aNewFrame|
+// Creates a new TitleBar frame and returns it
 //
-nsresult
-NS_NewTitleBarFrame( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+nsIFrame*
+NS_NewTitleBarFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTitleBarFrame* it = new (aPresShell) nsTitleBarFrame(aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // it->SetFlags(aFlags);
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsTitleBarFrame(aPresShell);
 } // NS_NewTitleBarFrame
 
 nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell)

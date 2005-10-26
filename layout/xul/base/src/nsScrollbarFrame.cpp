@@ -53,22 +53,12 @@
 //
 // NS_NewToolbarFrame
 //
-// Creates a new Toolbar frame and returns it in |aNewFrame|
+// Creates a new Toolbar frame and returns it
 //
-nsresult
-NS_NewScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+nsIFrame*
+NS_NewScrollbarFrame (nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsScrollbarFrame* it = new (aPresShell) nsScrollbarFrame (aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsScrollbarFrame (aPresShell);
 } // NS_NewScrollbarFrame
 
 //

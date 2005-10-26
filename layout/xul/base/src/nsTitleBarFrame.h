@@ -44,7 +44,7 @@ class nsTitleBarFrame : public nsBoxFrame
 {
 
 public:
-  friend nsresult NS_NewTitleBarFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);  
+  friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell);  
 
   nsTitleBarFrame(nsIPresShell* aPresShell);
 

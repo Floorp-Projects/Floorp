@@ -40,20 +40,18 @@
 #include "nsBoxFrame.h"
 #include "nsGridRowLeafFrame.h"
 
-nsresult NS_NewListItemFrame(nsIPresShell* aPresShell, 
-                             nsIFrame** aNewFrame, 
-                             PRBool aIsRoot = PR_FALSE,
-                             nsIBoxLayout* aLayoutManager = nsnull);
+nsIFrame* NS_NewListItemFrame(nsIPresShell* aPresShell, 
+                              PRBool aIsRoot = PR_FALSE,
+                              nsIBoxLayout* aLayoutManager = nsnull);
 
 class nsListItemFrame : public nsGridRowLeafFrame
 {
 public:
   NS_DECL_ISUPPORTS
 
-  friend nsresult NS_NewListItemFrame(nsIPresShell* aPresShell, 
-                                      nsIFrame** aNewFrame, 
-                                      PRBool aIsRoot,
-                                      nsIBoxLayout* aLayoutManager);
+  friend nsIFrame* NS_NewListItemFrame(nsIPresShell* aPresShell, 
+                                       PRBool aIsRoot,
+                                       nsIBoxLayout* aLayoutManager);
 
   // overridden so that children of listitems don't handle mouse events,
   // unless allowevents="true" is specified on the listitem

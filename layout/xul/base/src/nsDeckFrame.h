@@ -52,9 +52,8 @@ class nsDeckFrame : public nsBoxFrame
 {
 public:
 
-  friend nsresult NS_NewDeckFrame(nsIPresShell* aPresShell,
-                                  nsIFrame** aNewFrame,
-                                  nsIBoxLayout* aLayoutManager);
+  friend nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell,
+                                   nsIBoxLayout* aLayoutManager);
 
   NS_IMETHOD AttributeChanged(PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,

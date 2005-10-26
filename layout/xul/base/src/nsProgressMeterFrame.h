@@ -56,7 +56,7 @@ class nsPresContext;
 class nsProgressMeterFrame : public nsBoxFrame
 {
 public:
-  friend nsresult NS_NewProgressMeterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewProgressMeterFrame(nsIPresShell* aPresShell);
 
   NS_IMETHOD SetInitialChildList(nsPresContext* aPresContext,
                                      nsIAtom*        aListName,

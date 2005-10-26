@@ -91,20 +91,10 @@ public:
 };
 */
 
-nsresult
-NS_NewGroupBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewGroupBoxFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsGroupBoxFrame* it = new (aPresShell) nsGroupBoxFrame(aPresShell);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsGroupBoxFrame(aPresShell);
 }
 
 nsGroupBoxFrame::nsGroupBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell)

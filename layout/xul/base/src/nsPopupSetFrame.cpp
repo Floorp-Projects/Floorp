@@ -107,18 +107,10 @@ nsPopupFrameList* nsPopupFrameList::GetEntryByFrame(nsIFrame* aPopupFrame) {
 //
 // Wrapper for creating a new menu popup container
 //
-nsresult
-NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewPopupSetFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsPopupSetFrame* it = new (aPresShell) nsPopupSetFrame (aPresShell);
-  if ( !it )
-    return NS_ERROR_OUT_OF_MEMORY;
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsPopupSetFrame (aPresShell);
 }
 
 NS_IMETHODIMP_(nsrefcnt) 

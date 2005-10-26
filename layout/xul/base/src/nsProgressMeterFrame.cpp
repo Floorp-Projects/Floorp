@@ -54,22 +54,12 @@
 //
 // NS_NewToolbarFrame
 //
-// Creates a new Toolbar frame and returns it in |aNewFrame|
+// Creates a new Toolbar frame and returns it
 //
-nsresult
-NS_NewProgressMeterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+nsIFrame*
+NS_NewProgressMeterFrame (nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsProgressMeterFrame* it = new (aPresShell) nsProgressMeterFrame(aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsProgressMeterFrame(aPresShell);
 } // NS_NewProgressMeterFrame
 
 //

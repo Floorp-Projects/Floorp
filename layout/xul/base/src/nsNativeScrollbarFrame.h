@@ -56,7 +56,7 @@ class nsPresContext;
 class nsIContent;
 class nsStyleContext;
 
-nsresult NS_NewNativeScrollbarFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
+nsIFrame* NS_NewNativeScrollbarFrame(nsIPresShell* aPresShell);
 
 
 class nsNativeScrollbarFrame : public nsBoxFrame

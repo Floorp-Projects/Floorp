@@ -67,7 +67,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsAutoRepeatBoxFrame(nsIPresShell* aPresShell);
-  friend nsresult NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell);
 
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
@@ -81,20 +81,10 @@ protected:
   PRPackedBool mTrustedEvent;
 };
 
-nsresult
-NS_NewAutoRepeatBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
+nsIFrame*
+NS_NewAutoRepeatBoxFrame (nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsAutoRepeatBoxFrame* it = new (aPresShell) nsAutoRepeatBoxFrame (aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
-  
+  return new (aPresShell) nsAutoRepeatBoxFrame (aPresShell);
 } // NS_NewScrollBarButtonFrame
 
 

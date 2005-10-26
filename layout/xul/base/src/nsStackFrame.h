@@ -52,7 +52,7 @@ class nsStackFrame : public nsBoxFrame
 {
 public:
 
-  friend nsresult NS_NewStackFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayout = nsnull);
+  friend nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell, nsIBoxLayout* aLayout = nsnull);
 
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const

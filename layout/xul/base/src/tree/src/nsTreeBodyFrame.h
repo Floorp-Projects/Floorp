@@ -194,8 +194,7 @@ public:
                             const nsRect&        aRect,
                             const nsRect&        aDirtyRect);
 
-  friend nsresult NS_NewTreeBodyFrame(nsIPresShell* aPresShell, 
-                                          nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell);
 
 protected:
   PRInt32 GetLastVisibleRow() {
