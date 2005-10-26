@@ -9,4 +9,15 @@ ac_add_options --disable-jsd
 ac_add_options --disable-mathml
 ac_add_options --without-system-zlib
 ac_add_options --enable-single-profile
-ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.2.8.sdk
+
+# Pick the right SDK depending on the CPU.  This doesn't even pretend to be
+# cross-friendly, but neither do other parts of the Camino build, and it's
+# overridden easily enough.
+case `/usr/bin/uname -p` in
+  powerpc*)
+    ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.2.8.sdk
+    ;;
+  i*86*)
+    ac_add_options --with-macos-sdk=/Developer/SDKs/MacOSX10.4u.sdk
+    ;;
+esac
