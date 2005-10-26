@@ -118,16 +118,21 @@
                 <hbox flex="1" >
                     <vbox flex="1" style="padding:4px ! important">
                         <groupbox class='box-prefgroupitem' id='home-box'>
+
                             <caption label="&homeCaption.label;"/>
-                                <box>
+
+                                <box class="box-prefpadding">
                                     <textbox id="browserStartupHomepage" keyup=""  tabindex="10" 
                                              style="margin:3px ! important;" flex="1"  onfocus="prefFocus('home-box')" onblur="prefBlur('home-box')"
                                              onchange="syncPref(this)" preference="browser.startup.homepage" preftype="string"/>
                                 </box>
+
                         </groupbox>
                         <groupbox  class='box-prefgroupitem' id='ssrimage-box'>
                                 <caption label="&sssCaption.label;"/>
-                                <vbox class="box-prefpadding">                        
+
+                                <vbox class="box-prefpadding">     
+                   
                                 <checkbox id="enableImages" 
                                               tabindex="11" 
                                               onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
@@ -157,19 +162,27 @@
     				    </groupbox>
     				    <groupbox class='box-prefgroupitem' id='zoom-box' >
                             <caption label="&zoom.label;"/>
-                            <box class="box-prefgroupitem">
-                                <label value="&zoomui.label;" />
+                            
+                            <grid class="box-prefpadding" >
+                              <columns>
+                                <column flex="1"/>
+                                <column />
+                              </columns>
+                              <rows>
+                               <row>
 
+                                    <label value="&zoomui.label;" />
                                     <textbox id="browserDisplayZoomUI" size="5" tabindex="14"
                                              onfocus="prefFocus('zoom-box')" onblur="prefBlur('zoom-box')"
                                              style="margin:3px ! important;" 
                                              preference="browser.display.zoomui" preftype="int" 
                                              onchange="syncPref(this)" 
                                              />
-                            </box>
-    
-                            <box class="box-prefgroupitem">
-                                <label value="&zoomcontent.label;" />
+
+                               </row>
+                               <row>    
+
+                                    <label value="&zoomcontent.label;" />
                                     <textbox id="browserDisplayZoomContent" size="5" tabindex="15" accessrule="general-pane"
                                              onfocus="prefFocus('zoom-box')" onblur="prefBlur('zoom-box')"
                                              style="margin:3px ! important;" 
@@ -177,7 +190,11 @@
                                              preference="browser.display.zoomcontent"
                                              preftype="int"
                                              />
-                            </box>
+                                             
+                               </row>
+                              </rows>
+                            </grid>
+                            
                         </groupbox>
                     </vbox>
                 </hbox>
