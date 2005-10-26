@@ -90,6 +90,7 @@ libs:: $(addprefix $(LOCALE_SRCDIR)/,$(README_FILES))
 libs-%:
 	@$(MAKE) -C ../../toolkit/locales libs-$*
 	@$(MAKE) -C ../../editor/ui/locales AB_CD=$* XPI_NAME=locale-$*
+	@$(MAKE) -C ../../extensions/spellcheck/locales AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/pref
 ifdef MOZ_BRANDING_DIRECTORY
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
