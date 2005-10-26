@@ -1725,6 +1725,13 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   res = mStartParent->GetOwnerDocument(getter_AddRefs(document));
   if (NS_FAILED(res)) return res;
 
+  if (!document) {
+    document = do_QueryInterface(mStartParent);
+  }
+
+  NS_ASSERTION(document, "CloneContents needs a document to continue.");
+  if (!document) return NS_ERROR_FAILURE;
+
   // Create a new document fragment in the context of this document,
   // which might be null
 
