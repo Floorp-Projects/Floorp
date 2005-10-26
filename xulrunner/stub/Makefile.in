@@ -42,14 +42,23 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE    = xulrunner
+
+REQUIRES  = xpcom
+
 ifeq ($(OS_ARCH),Darwin)
 
-MODULE    = xulrunner
 PROGRAM   = xulrunner$(BIN_SUFFIX)
 
 CPPSRCS   = nsXULStubOSX.cpp
 
-REQUIRES = xpcom
+else
+
+PROGRAM   = xulrunner-stub$(BIN_SUFFIX)
+
+CPPSRCS   = nsXULStub.cpp
+
+LOCAL_INCLUDES = -I$(topsrcdir)/xpcom/build
 
 endif # OS_ARCH
 
@@ -64,6 +73,10 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 LIBS            += \
 		$(TK_LIBS) \
 		$(NULL)
+endif
+
+ifeq (WINNT,$(OS_ARCH))
+LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 endif
 
 include $(topsrcdir)/config/rules.mk
