@@ -113,8 +113,11 @@ nsHTMLDivElement::ParseAttribute(nsIAtom* aAttribute,
        (aAttribute == nsHTMLAtoms::height)) {
      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
    }
-   else if ((aAttribute == nsHTMLAtoms::hspace) ||
-            (aAttribute == nsHTMLAtoms::vspace)) {
+   if (aAttribute == nsHTMLAtoms::bgcolor) {
+     return aResult.ParseColor(aValue, GetOwnerDoc());
+   }
+   if ((aAttribute == nsHTMLAtoms::hspace) ||
+       (aAttribute == nsHTMLAtoms::vspace)) {
      return aResult.ParseIntWithBounds(aValue, 0);
    }
   }
@@ -139,6 +142,7 @@ MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* 
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapBGColorInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP_(PRBool)
@@ -154,6 +158,7 @@ nsHTMLDivElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   if (mNodeInfo->Equals(nsHTMLAtoms::marquee)) {  
     static const MappedAttributeEntry* const map[] = {
       sImageMarginSizeAttributeMap,
+      sBackgroundColorAttributeMap,
       sCommonAttributeMap
     };
     return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));

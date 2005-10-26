@@ -142,34 +142,13 @@
 
       <property name="height"
         onget="return this.getAttribute('height');"
+        onset="this.setAttribute('height', val);"
       />
 
-      <property name="width">
-        <getter>
-          <![CDATA[
-          var rv = "1px";
-          if (this.hasAttribute("width"))
-            rv = this.getAttribute("width");
-          else if (this.offsetWidth) {
-            // if the element has an offsetWidth, don't set a width
-            rv = "";
-          } else if (this.offsetParent) {
-            var myElem = this.offsetParent;
-
-            // lets walk up the offsetParent tree looking for an
-            // element with a width.
-
-            while (myElem.offsetParent && (myElem.offsetWidth <= 0))
-              myElem = myElem.offsetParent;
-
-            if (myElem)
-              rv = myElem.offsetWidth + "px";
-          }
-
-          return rv;
-          ]]>
-        </getter>
-      </property>
+      <property name="width"
+        onget="return this.getAttribute('width');"
+        onset="this.setAttribute('width', val);"
+      />
 
       <!-- For sniffing purposes -->
       <field name="nsMarqueeVersion">"0.9.7"</field>
@@ -206,24 +185,9 @@
 
             if ((this.directionField == "up") || (this.directionField == "down"))
             {
-              // "", 0 and empty height should default to 200px
-              var height =
-                (this.getAttribute("height") != "0" &&
-                 this.getAttribute("height")) ||
-                (document.defaultView.getComputedStyle(this,"").height != "0px" &&
-                 document.defaultView.getComputedStyle(this,"").height) ||
-                 "200px";
-
-              // support % heights
-              if (/%/.test(height)) {
-                height = parseInt('0' + height, 10);
-                height = (height/100) * this.outerDiv.offsetHeight;
-              }
-
+              var height = document.defaultView.getComputedStyle(this, "").height;
               this.outerDiv.style.height = height;
-
               this.innerDiv.style.padding = height + " 0";
-              this.innerDiv.style.whiteSpace = "";
             }
 
             switch (this.directionField)
@@ -231,13 +195,13 @@
               case "up":
                 this.dirsign = 1;
                 this.startAt = (this.behaviorField == 'alternate') ? this.originalHeight : 0;
-                this.stopAt  = this.innerDiv.offsetHeight - parseInt(this.outerDiv.style.height) 
+                this.stopAt  = this.originalHeight + parseInt(height)
                                - ((this.behaviorField == 'alternate') ? this.originalHeight : 0);               
               break;
 
               case "down":
                 this.dirsign = -1;
-                this.startAt = this.innerDiv.offsetHeight - parseInt(this.outerDiv.style.height)
+                this.startAt = this.originalHeight + parseInt(height)
                                - ((this.behaviorField == 'alternate') ? this.originalHeight : 0);
                 this.stopAt  = (this.behaviorField == 'alternate') ? this.originalHeight : 0;
               break;
@@ -300,22 +264,9 @@
       <method name="init">
         <body>
         <![CDATA[
-          var height;
-
-          if (this.hasAttribute('height')) {
-            height = this.getAttribute('height');
-            this.outerDiv.style.height = height + "px";
-          }
-
-          this.outerDiv.style.width = this.width;
-
           // Some sites access the element via the evil IE way of elementID.foo()
           if (this.hasAttribute('id'))
             window[this.getAttribute('id')] = this;
-
-          // Website can define a background color via the bgcolor attribute
-          if (this.hasAttribute("bgcolor"))
-            this.outerDiv.style.backgroundColor = this.getAttribute("bgcolor");
 
           // store the original height before we add padding
           this.originalHeight = this.innerDiv.offsetHeight;
