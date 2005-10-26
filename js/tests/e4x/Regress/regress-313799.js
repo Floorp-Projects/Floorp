@@ -48,6 +48,6 @@ printStatus (summary);
 var val = <><t/></>.child(0);
 
 TEST(1, expect, actual);
-TEST(2, 'xml',  typeof x);
+TEST(2, 'xml',  typeof val);
 
 END();
