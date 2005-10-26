@@ -1186,6 +1186,10 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
 {
   nsresult rv = NS_OK;
 
+  nsCOMPtr<nsIObserverService> obs
+    (do_GetService("@mozilla.org/observer-service;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr <nsIScriptGlobalObject> globalScript = do_QueryInterface(aComposeWindow, &rv);
 
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1228,6 +1232,8 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
     if (aShow) {
       rv = windowMediator->RegisterWindow(xulWindow);
       NS_ENSURE_SUCCESS(rv,rv);
+
+      obs->NotifyObservers(xulWindow, "xul-window-registered", nsnull);
     }
 
     // hide (show) the cached window
@@ -1239,6 +1245,8 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
     if (!aShow) {
       rv = windowMediator->UnregisterWindow(xulWindow);
       NS_ENSURE_SUCCESS(rv,rv);
+
+      obs->NotifyObservers(xulWindow, "xul-window-destroyed", nsnull);
     }
   }
   else {
