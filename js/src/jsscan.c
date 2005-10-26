@@ -1687,11 +1687,14 @@ retry:
                         cp[5] == '[') {
                         SkipChars(ts, 6);
                         while ((c = GetChar(ts)) != ']' ||
-                               !MatchChar(ts, ']')) {
+                               !PeekChars(ts, 2, cp) ||
+                               cp[0] != ']' ||
+                               cp[1] != '>') {
                             if (c == EOF)
                                 goto bad_xml_markup;
                             ADD_TO_TOKENBUF(c);
                         }
+                        GetChar(ts);            /* discard ] but not > */
                         tt = TOK_XMLCDATA;
                         tp->t_op = JSOP_XMLCDATA;
                         goto finish_xml_markup;
