@@ -59,7 +59,7 @@ const int kTextFieldHeight = 19;
 const int kStaticTextFieldHeight = 14;	//  height of non-editable non-bordered text fields
 const int kFieldLabelSpacer = 4;				//  space between a static label and an editabe text field (horizontal)
 const int kOtherAltButtonSpace = 25;		//  minimum space between the 'other' and 'alternate' buttons
-const int kButtonEndCapWidth = 14;
+const int kButtonEndCapWidth = 6;
 const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed down to line up with checkbox
 
 
@@ -673,15 +673,15 @@ const int kLabelCheckboxAdjustment = 2; // # pixels the label must be pushed dow
   
   NSRect buttonFrame = [button frame];
   
-  //  sizeToFit doesn't leave large enough endcaps (it goes to the bare minimum size)
-  buttonFrame.size.width += 2*kButtonEndCapWidth;
-  
   //  make sure the button is within our allowed size range
-  if (NSWidth(buttonFrame) < kButtonMinWidth)
+  if (NSWidth(buttonFrame) < (kButtonMinWidth - 2 * kButtonEndCapWidth))
     buttonFrame.size.width = kButtonMinWidth;
-  else if (NSWidth(buttonFrame) > kButtonMaxWidth)
+  else
+     buttonFrame.size.width += 2 * kButtonEndCapWidth;
+
+  if (NSWidth(buttonFrame) > kButtonMaxWidth)
     buttonFrame.size.width = kButtonMaxWidth;
-    
+   
   [button setFrame: buttonFrame];
 
   return button;
