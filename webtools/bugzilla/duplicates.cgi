@@ -37,6 +37,7 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Constants;
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 
 # Go directly to the XUL version of the duplicates report (duplicates.xul)
 # if the user specified ctype=xul.  Adds params if they exist, and directs
@@ -231,13 +232,13 @@ if (scalar(%count)) {
                                      'params' => $params,
                                     );
 
-    SendSQL($query->getSQL());
+    my $results = $dbh->selectall_arrayref($query->getSQL());
 
-    while (MoreSQLData()) {
+    foreach my $result (@$results) {
         # Note: maximum row count is dealt with in the template.
 
         my ($id, $component, $bug_severity, $op_sys, $target_milestone, 
-            $short_desc, $bug_status, $resolution) = FetchSQLData();
+            $short_desc, $bug_status, $resolution) = @$result;
 
         push (@bugs, { id => $id,
                        count => $count{$id},

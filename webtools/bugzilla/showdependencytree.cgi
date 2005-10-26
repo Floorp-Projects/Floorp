@@ -33,6 +33,7 @@ use Bugzilla::Bug;
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
@@ -145,27 +146,26 @@ sub GetBug {
     # Retrieves the necessary information about a bug, stores it in the bug cache,
     # and returns it to the calling code.
     my ($id) = @_;
-    
+    my $dbh = Bugzilla->dbh;
+
     my $bug = {};
     if (Bugzilla->user->can_see_bug($id)) {
-        SendSQL("SELECT 1, 
+        ($bug->{'exists'},
+         $bug->{'status'},
+         $bug->{'summary'},
+         $bug->{'milestone'},
+         $bug->{'assignee_id'},
+         $bug->{'assignee_email'}) = $dbh->selectrow_array(
+                "SELECT 1,
                         bug_status, 
                         short_desc, 
                         $milestone_column, 
                         assignee.userid, 
                         assignee.login_name
-                 FROM   bugs
+                   FROM bugs
              INNER JOIN profiles AS assignee
                      ON bugs.assigned_to = assignee.userid
-                  WHERE bugs.bug_id = $id");
-
-
-        ($bug->{'exists'}, 
-         $bug->{'status'}, 
-         $bug->{'summary'}, 
-         $bug->{'milestone'}, 
-         $bug->{'assignee_id'}, 
-         $bug->{'assignee_email'}) = FetchSQLData();
+                  WHERE bugs.bug_id = ?", undef, $id);
      }
     
     $bug->{'open'} = $bug->{'exists'} && IsOpenedState($bug->{'status'});
@@ -176,19 +176,17 @@ sub GetBug {
 
 sub GetDependencies {
     # Returns a list of dependencies for a given bug.
-    
     my ($id, $relationship) = @_;
-    
+    my $dbh = Bugzilla->dbh;
+
     my $bug_type = ($relationship eq "blocked") ? "dependson" : "blocked";
     
-    SendSQL("  SELECT $relationship 
+    my $dependencies = $dbh->selectcol_arrayref(
+              "SELECT $relationship
                  FROM dependencies 
-                WHERE $bug_type = $id 
-             ORDER BY $relationship");
+                WHERE $bug_type = ?
+             ORDER BY $relationship", undef, $id);
     
-    my @dependencies = ();
-    push(@dependencies, FetchOneColumn()) while MoreSQLData();
-    
-    return @dependencies;
+    return @$dependencies;
 }
 

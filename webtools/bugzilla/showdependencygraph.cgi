@@ -36,6 +36,7 @@ require "globals.pl";
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
@@ -122,10 +123,11 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
 my %baselist;
 
 if ($cgi->param('doall')) {
-    SendSQL("SELECT blocked, dependson FROM dependencies");
+    my $dependencies = $dbh->selectall_arrayref(
+                           "SELECT blocked, dependson FROM dependencies");
 
-    while (MoreSQLData()) {
-        my ($blocked, $dependson) = FetchSQLData();
+    foreach my $dependency (@$dependencies) {
+        my ($blocked, $dependson) = @$dependency;
         AddLink($blocked, $dependson, $fh);
     }
 } else {
@@ -136,12 +138,14 @@ if ($cgi->param('doall')) {
     }
 
     my @stack = keys(%baselist);
+    my $sth = $dbh->prepare(
+                  q{SELECT blocked, dependson
+                      FROM dependencies
+                     WHERE blocked = ? or dependson = ?});
     foreach my $id (@stack) {
-        SendSQL("SELECT blocked, dependson 
-                 FROM   dependencies 
-                 WHERE  blocked = $id or dependson = $id");
-        while (MoreSQLData()) {
-            my ($blocked, $dependson) = FetchSQLData();
+        my $dependencies = $dbh->selectall_arrayref($sth, undef, ($id, $id));
+        foreach my $dependency (@$dependencies) {
+            my ($blocked, $dependson) = @$dependency;
             if ($blocked != $id && !exists $seen{$blocked}) {
                 push @stack, $blocked;
             }
@@ -159,16 +163,13 @@ if ($cgi->param('doall')) {
     }
 }
 
+my $sth = $dbh->prepare(
+              q{SELECT bug_status, resolution, short_desc
+                  FROM bugs
+                 WHERE bugs.bug_id = ?});
 foreach my $k (keys(%seen)) {
-    my $summary = "";
-    my $stat;
-    my $resolution;
-
     # Retrieve bug information from the database
- 
-    SendSQL("SELECT bug_status, resolution, short_desc FROM bugs " .
-            "WHERE bugs.bug_id = $k");
-    ($stat, $resolution, $summary) = FetchSQLData();
+    my ($stat, $resolution, $summary) = $dbh->selectrow_array($sth, undef, $k);
     $stat ||= 'NEW';
     $resolution ||= '';
     $summary ||= '';

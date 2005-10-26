@@ -157,14 +157,17 @@ sub queue {
     
     # Filter results by exact email address of requester or requestee.
     if (defined $cgi->param('requester') && $cgi->param('requester') ne "") {
-        push(@criteria, $dbh->sql_istrcmp('requesters.login_name',
-                                          SqlQuote($cgi->param('requester'))));
+        my $requester = $dbh->quote($cgi->param('requester'));
+        trick_taint($requester); # Quoted above
+        push(@criteria, $dbh->sql_istrcmp('requesters.login_name', $requester));
         push(@excluded_columns, 'requester') unless $cgi->param('do_union');
     }
     if (defined $cgi->param('requestee') && $cgi->param('requestee') ne "") {
         if ($cgi->param('requestee') ne "-") {
+            my $requestee = $dbh->quote($cgi->param('requestee'));
+            trick_taint($requestee); # Quoted above
             push(@criteria, $dbh->sql_istrcmp('requestees.login_name',
-                            SqlQuote($cgi->param('requestee'))));
+                            $requestee));
         }
         else { push(@criteria, "flags.requestee_id IS NULL") }
         push(@excluded_columns, 'requestee') unless $cgi->param('do_union');
@@ -203,8 +206,10 @@ sub queue {
             }
         }
         if (!$has_attachment_type) { push(@excluded_columns, 'attachment') }
-        
-        push(@criteria, "flagtypes.name = " . SqlQuote($form_type));
+
+        my $quoted_form_type = $dbh->quote($form_type);
+        trick_taint($quoted_form_type); # Already SQL quoted
+        push(@criteria, "flagtypes.name = " . $quoted_form_type);
         push(@excluded_columns, 'type') unless $cgi->param('do_union');
     }
     
@@ -252,10 +257,10 @@ sub queue {
     $vars->{'query'} = $query;
     $vars->{'debug'} = $cgi->param('debug') ? 1 : 0;
     
-    SendSQL($query);
+    my $results = $dbh->selectall_arrayref($query);
     my @requests = ();
-    while (MoreSQLData()) {
-        my @data = FetchSQLData();
+    foreach my $result (@$results) {
+        my @data = @$result;
         my $request = {
           'id'              => $data[0] , 
           'type'            => $data[1] , 
@@ -274,8 +279,9 @@ sub queue {
 
     # Get a list of request type names to use in the filter form.
     my @types = ("all");
-    SendSQL("SELECT DISTINCT(name) FROM flagtypes ORDER BY name");
-    push(@types, FetchOneColumn()) while MoreSQLData();
+    my $flagtypes = $dbh->selectcol_arrayref(
+                         "SELECT DISTINCT(name) FROM flagtypes ORDER BY name");
+    push(@types, @$flagtypes);
     
     $vars->{'products'} = $user->get_selectable_products;
     $vars->{'excluded_columns'} = \@excluded_columns;

@@ -36,25 +36,17 @@ my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 
-SendSQL("SELECT keyworddefs.name, keyworddefs.description, 
-                COUNT(keywords.bug_id)
-         FROM keyworddefs LEFT JOIN keywords
-         ON keyworddefs.id = keywords.keywordid " .
+my $keywords = $dbh->selectall_arrayref(
+                   q{SELECT keyworddefs.name, keyworddefs.description,
+                            COUNT(keywords.bug_id) AS bugcount
+                       FROM keyworddefs
+                  LEFT JOIN keywords
+                         ON keyworddefs.id = keywords.keywordid } .
          $dbh->sql_group_by('keyworddefs.id',
-                            'keyworddefs.name, keyworddefs.description') . "
-         ORDER BY keyworddefs.name");
+                            'keyworddefs.name, keyworddefs.description') .
+                 " ORDER BY keyworddefs.name", {'Slice' => {}});
 
-my @keywords;
-
-while (MoreSQLData()) {
-    my ($name, $description, $bugs) = FetchSQLData();
-   
-    push (@keywords, { name => $name, 
-                       description => $description,
-                       bugcount => $bugs });
-}
-   
-$vars->{'keywords'} = \@keywords;
+$vars->{'keywords'} = $keywords;
 $vars->{'caneditkeywords'} = UserInGroup("editkeywords");
 
 print Bugzilla->cgi->header();

@@ -35,6 +35,7 @@ my $user = Bugzilla->login();
 GetVersionTable();
 
 my $cgi = Bugzilla->cgi;
+my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
 my $product = trim($cgi->param('product') || '');
@@ -87,12 +88,13 @@ if (!$product_id || !$user->can_enter_product($product)) {
 ######################################################################
 
 my @components;
-SendSQL("SELECT name, initialowner, initialqacontact, description FROM " .
-        "components WHERE product_id = $product_id ORDER BY name");
-while (MoreSQLData()) {
-    my ($name, $initialowner, $initialqacontact, $description) =
-      FetchSQLData();
-
+my $comps = $dbh->selectall_arrayref(
+                  q{SELECT name, initialowner, initialqacontact, description
+                      FROM components
+                     WHERE product_id = ?
+                  ORDER BY name}, undef, $product_id);
+foreach my $comp (@$comps) {
+    my ($name, $initialowner, $initialqacontact, $description) = @$comp;
     my %component;
 
     $component{'name'} = $name;

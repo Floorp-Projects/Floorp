@@ -35,6 +35,7 @@ my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $vars = {};
 my $buffer = $cgi->query_string();
+my $dbh = Bugzilla->dbh;
 
 # Go straight back to query.cgi if we are adding a boolean chart.
 if (grep(/^cmd-/, $cgi->param())) {
@@ -149,7 +150,7 @@ my $query = $search->getSQL();
 $::SIG{TERM} = 'DEFAULT';
 $::SIG{PIPE} = 'DEFAULT';
 
-SendSQL($query);
+my $results = $dbh->selectall_arrayref($query);
 
 # We have a hash of hashes for the data itself, and a hash to hold the 
 # row/col/table names.
@@ -165,8 +166,8 @@ my $col_isnumeric = 1;
 my $row_isnumeric = 1;
 my $tbl_isnumeric = 1;
 
-while (MoreSQLData()) {
-    my ($row, $col, $tbl) = FetchSQLData();
+foreach my $result (@$results) {
+    my ($row, $col, $tbl) = @$result;
 
     # handle empty dimension member names
     $row = ' ' if ($row eq '');
