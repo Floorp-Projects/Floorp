@@ -107,6 +107,7 @@
 #include "nsICategoryManager.h"
 #include "nsIDOMNSFeatureFactory.h"
 #include "nsIDOMDocumentType.h"
+#include "nsIDOMUserDataHandler.h"
 
 
 /**
@@ -431,20 +432,28 @@ NS_IMETHODIMP
 nsNode3Tearoff::SetUserData(const nsAString& aKey,
                             nsIVariant* aData,
                             nsIDOMUserDataHandler* aHandler,
-                            nsIVariant** aReturn)
+                            nsIVariant** aResult)
 {
-  NS_NOTYETIMPLEMENTED("nsNode3Tearoff::SetUserData()");
+  nsIDocument *document = mContent->GetOwnerDoc();
+  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = document->SetUserData(mContent, aKey, aData, aHandler,
+                                      aResult);
+  if (NS_SUCCEEDED(rv)) {
+    mContent->SetHasProperties();
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
 nsNode3Tearoff::GetUserData(const nsAString& aKey,
-                            nsIVariant** aReturn)
+                            nsIVariant** aResult)
 {
-  NS_NOTYETIMPLEMENTED("nsNode3Tearoff::GetUserData()");
+  nsIDocument *document = mContent->GetOwnerDoc();
+  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return document->GetUserData(mContent, aKey, aResult);
 }
 
 NS_IMETHODIMP
@@ -857,7 +866,17 @@ nsGenericElement::~nsGenericElement()
 {
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
-  
+
+  if (HasProperties()) {
+    nsIDocument *document = GetOwnerDoc();
+    if (document) {
+      nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
+      document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
+                                    thisSupports, nsnull, nsnull);
+      document->PropertyTable()->DeleteAllPropertiesFor(thisSupports);
+    }
+  }
+
   // pop any enclosed ranges out
   // nsRange::OwnerGone(mContent); not used for now
 
@@ -1878,9 +1897,14 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // XXXbz sXBL/XBL2 issue!
     nsIDocument *ownerDocument = GetOwnerDoc();
     if (aDocument != ownerDocument) {
+      if (ownerDocument && HasProperties()) {
+        nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
 
-      if (HasProperties()) {
-        ownerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
+        // Copy UserData to the new document.
+        ownerDocument->CopyUserData(thisSupports, aDocument);
+
+        // Remove all properties.
+        ownerDocument->PropertyTable()->DeleteAllPropertiesFor(thisSupports);
       }
 
       // get a new nodeinfo
@@ -4399,7 +4423,9 @@ nsGenericElement::GetProperty(nsIAtom  *aPropertyName, nsresult *aStatus) const
   if (!doc)
     return nsnull;
 
-  return doc->PropertyTable()->GetProperty(this, aPropertyName, aStatus);
+  const nsISupports *thisSupports = NS_STATIC_CAST(const nsIContent*, this);
+  return doc->PropertyTable()->GetProperty(thisSupports, aPropertyName,
+                                           aStatus);
 }
 
 nsresult
@@ -4411,7 +4437,8 @@ nsGenericElement::SetProperty(nsIAtom            *aPropertyName,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsresult rv = doc->PropertyTable()->SetProperty(this, aPropertyName,
+  nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
+  nsresult rv = doc->PropertyTable()->SetProperty(thisSupports, aPropertyName,
                                                   aValue, aDtor, nsnull);
   if (NS_SUCCEEDED(rv))
     SetFlags(GENERIC_ELEMENT_HAS_PROPERTIES);
@@ -4426,7 +4453,8 @@ nsGenericElement::DeleteProperty(nsIAtom *aPropertyName)
   if (!doc)
     return nsnull;
 
-  return doc->PropertyTable()->DeleteProperty(this, aPropertyName);
+  nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
+  return doc->PropertyTable()->DeleteProperty(thisSupports, aPropertyName);
 }
 
 void*
@@ -4436,11 +4464,20 @@ nsGenericElement::UnsetProperty(nsIAtom  *aPropertyName, nsresult *aStatus)
   if (!doc)
     return nsnull;
 
-  return doc->PropertyTable()->UnsetProperty(this, aPropertyName, aStatus);
+  nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
+  return doc->PropertyTable()->UnsetProperty(thisSupports, aPropertyName,
+                                             aStatus);
+}
+
+void
+nsGenericElement::SetHasProperties()
+{
+  SetFlags(GENERIC_ELEMENT_HAS_PROPERTIES);
 }
 
 nsresult
-nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult) const
+nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode *aSource,
+                            nsIDOMNode **aResult) const
 {
   *aResult = nsnull;
 
@@ -4449,7 +4486,16 @@ nsGenericElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult) const
                              getter_AddRefs(newContent));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CallQueryInterface(newContent, aResult);
+  rv = CallQueryInterface(newContent, aResult);
+
+  nsIDocument *ownerDoc = GetOwnerDoc();
+  if (NS_SUCCEEDED(rv) && ownerDoc && HasProperties()) {
+    ownerDoc->CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
+                                  NS_STATIC_CAST(const nsIContent*, this),
+                                  aSource, *aResult);
+  }
+
+  return rv;
 }
 
 nsresult

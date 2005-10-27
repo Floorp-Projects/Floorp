@@ -42,7 +42,7 @@
 // Introduced in DOM Level 3:
 
 [scriptable, function, uuid(5470deff-03c9-41b7-a824-e3225266b343)]
-interface nsIDOMUserDataHandler
+interface nsIDOMUserDataHandler : nsISupports
 {
   // OperationType
   const unsigned short      NODE_CLONED                    = 1;

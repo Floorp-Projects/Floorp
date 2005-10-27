@@ -748,6 +748,8 @@ public:
   { if (aStatus) *aStatus = NS_ERROR_NOT_IMPLEMENTED; return nsnull; }
 
 
+  virtual void SetHasProperties() = 0;
+
   /**
    * Clones this node, using aNodeInfoManager to get the nodeinfo for the
    * clone. When cloning an element, all attributes of the element will be

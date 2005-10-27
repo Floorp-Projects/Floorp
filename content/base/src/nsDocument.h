@@ -651,6 +651,21 @@ public:
   virtual NS_HIDDEN_(void) ForgetLink(nsIContent* aContent);
   virtual NS_HIDDEN_(void) NotifyURIVisitednessChanged(nsIURI* aURI);
 
+  NS_HIDDEN_(nsresult) SetUserData(const nsISupports *aObject,
+                                   nsIAtom *aKey,
+                                   nsIVariant *aData,
+                                   nsIDOMUserDataHandler *aHandler,
+                                   nsIVariant **aReturn);
+  NS_HIDDEN_(nsresult) GetUserData(const nsISupports *aObject,
+                                   nsIAtom *aKey,
+                                   nsIVariant **aResult);
+  NS_HIDDEN_(void) CallUserDataHandler(PRUint16 aOperation,
+                                       const nsISupports *aObject,
+                                       nsIDOMNode *aSource,
+                                       nsIDOMNode *aDest);
+  NS_HIDDEN_(void) CopyUserData(const nsISupports *aObject,
+                                nsIDocument *aDestination);
+
 protected:
 
   void DispatchContentLoadedEvents();

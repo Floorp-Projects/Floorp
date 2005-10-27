@@ -151,9 +151,11 @@ public:
    * do the actual cloning of the node.
    *
    * @param aDeep if true all descendants will be cloned too
+   * @param aSource nsIDOMNode pointer to this node
    * @param aResult the clone
    */
-  nsresult CloneNode(PRBool aDeep, nsIDOMNode **aResult) const;
+  nsresult CloneNode(PRBool aDeep, nsIDOMNode *aSource,
+                     nsIDOMNode **aResult) const;
 
   nsresult LookupPrefix(const nsAString& aNamespaceURI,
                         nsAString& aPrefix);
@@ -226,6 +228,10 @@ public:
   virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
   virtual PRBool MayHaveFrame() const;
+  virtual void SetHasProperties()
+  {
+    SetIsInAHash();
+  }
 
   /**
    * This calls Clone to do the actual cloning so that we end up with the
@@ -264,6 +270,11 @@ protected:
    */
   virtual nsGenericDOMDataNode *Clone(nsINodeInfo *aNodeInfo,
                                       PRBool aCloneText) const = 0;
+
+  PRBool CouldHaveProperties() const
+  {
+    return GetIsInAHash();
+  }
 
   nsTextFragment mText;
 
@@ -390,7 +401,7 @@ private:
     return nsGenericDOMDataNode::IsSupported(aFeature, aVersion, aReturn);  \
   }                                                                         \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn) {                \
-    return nsGenericDOMDataNode::CloneNode(aDeep, aReturn);                 \
+    return nsGenericDOMDataNode::CloneNode(aDeep, this, aReturn);           \
   }                                                                         \
   virtual nsGenericDOMDataNode *Clone(nsINodeInfo *aNodeInfo,               \
                                       PRBool aCloneText) const;

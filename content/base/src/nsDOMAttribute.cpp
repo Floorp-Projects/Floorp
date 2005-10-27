@@ -46,6 +46,7 @@
 #include "nsDOMString.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMUserDataHandler.h"
 
 //----------------------------------------------------------------------
 PRBool nsDOMAttribute::sInitialized;
@@ -67,6 +68,9 @@ nsDOMAttribute::~nsDOMAttribute()
 {
   nsIDocument *doc = GetOwnerDoc();
   if (doc)
+    doc->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
+                             NS_STATIC_CAST(nsIDOMAttr*, this), nsnull,
+                             nsnull);
     doc->PropertyTable()->DeleteAllPropertiesFor(this);
 
   NS_IF_RELEASE(mChild);
@@ -347,17 +351,37 @@ nsDOMAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDOMAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
-  nsDOMAttribute* newAttr;
+  *aReturn = nsnull;
 
   nsAutoString value;
   GetValue(value);
-  newAttr = new nsDOMAttribute(nsnull, mNodeInfo, value);
 
+  nsCOMPtr<nsIDOMNode> newAttr = new nsDOMAttribute(nsnull, mNodeInfo, value);
   if (!newAttr) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return CallQueryInterface(newAttr, aReturn);
+  nsIDocument *document = GetOwnerDoc();
+  if (document) {
+    // XXX For now, nsDOMAttribute has only one child. We need to notify
+    //     about importing it, so we force creation here.
+    nsCOMPtr<nsIDOMNode> child, newChild;
+    GetFirstChild(getter_AddRefs(child));
+    newAttr->GetFirstChild(getter_AddRefs(newChild));
+
+    nsCOMPtr<nsISupports> childSupports = do_QueryInterface(child);
+    if (childSupports && newChild) {
+      document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
+                                    childSupports, child, newChild);
+    }
+    document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
+                                  NS_STATIC_CAST(nsIDOMAttr*, this), this,
+                                  newAttr);
+  }
+
+  newAttr.swap(*aReturn);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -625,23 +649,25 @@ nsDOMAttribute::GetFeature(const nsAString& aFeature,
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::SetUserData(const nsAString& aKey,
-                            nsIVariant* aData,
+nsDOMAttribute::SetUserData(const nsAString& aKey, nsIVariant* aData,
                             nsIDOMUserDataHandler* aHandler,
-                            nsIVariant** aReturn)
+                            nsIVariant** aResult)
 {
-  NS_NOTYETIMPLEMENTED("nsDocument::SetUserData()");
+  nsIDocument *document = GetOwnerDoc();
+  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return document->SetUserData(NS_STATIC_CAST(nsIDOMAttr*, this), aKey, aData,
+                               aHandler, aResult);
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::GetUserData(const nsAString& aKey,
-                            nsIVariant** aReturn)
+nsDOMAttribute::GetUserData(const nsAString& aKey, nsIVariant** aResult)
 {
-  NS_NOTYETIMPLEMENTED("nsDocument::GetUserData()");
+  nsIDocument *document = GetOwnerDoc();
+  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return document->GetUserData(NS_STATIC_CAST(nsIDOMAttr*, this), aKey,
+                               aResult);
 }
 
 NS_IMETHODIMP

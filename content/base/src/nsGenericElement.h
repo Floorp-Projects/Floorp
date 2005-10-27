@@ -433,6 +433,7 @@ public:
                                  nsresult *aStatus = nsnull);
   virtual void SetMayHaveFrame(PRBool aMayHaveFrame);
   virtual PRBool MayHaveFrame() const;
+  void SetHasProperties();
 
   /**
    * This calls Clone to do the actual cloning so that we end up with the
@@ -856,9 +857,11 @@ protected:
    *
    * @param aDeep if true all descendants will be cloned too (attributes on the
    *              element are always cloned)
+   * @param aSource nsIDOMNode pointer to this node
    * @param aResult the clone
    */
-  nsresult CloneNode(PRBool aDeep, nsIDOMNode **aResult) const;
+  nsresult CloneNode(PRBool aDeep, nsIDOMNode *aSource,
+                     nsIDOMNode **aResult) const;
 
   /**
    * Used for either storing flags for this element or a pointer to
@@ -990,9 +993,11 @@ public:
 
 
 /**
- * Macros to implement CloneNode().
+ * Macros to implement CloneNode(). _elementName is the class for which to
+ * implement CloneNode, _implClass is the class to use to cast to
+ * nsIDOMNode*.
  */
-#define NS_IMPL_DOM_CLONENODE(_elementName)                                 \
+#define NS_IMPL_DOM_CLONENODE_AMBIGUOUS(_elementName, _implClass)           \
 nsresult                                                                    \
 _elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
                     nsIContent **aResult) const                             \
@@ -1015,8 +1020,13 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
 NS_IMETHODIMP                                                               \
 _elementName::CloneNode(PRBool aDeep, nsIDOMNode **aResult)                 \
 {                                                                           \
-  return nsGenericElement::CloneNode(aDeep, aResult);                       \
+  return nsGenericElement::CloneNode(aDeep,                                 \
+                                     NS_STATIC_CAST(_implClass*, this),     \
+                                     aResult);                              \
 }
+
+#define NS_IMPL_DOM_CLONENODE(_elementName)                                 \
+NS_IMPL_DOM_CLONENODE_AMBIGUOUS(_elementName, _elementName)
 
 #define NS_IMPL_DOM_CLONENODE_WITH_INIT(_elementName)                       \
 nsresult                                                                    \
@@ -1042,7 +1052,7 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,                   \
 NS_IMETHODIMP                                                               \
 _elementName::CloneNode(PRBool aDeep, nsIDOMNode **aResult)                 \
 {                                                                           \
-  return nsGenericElement::CloneNode(aDeep, aResult);                       \
+  return nsGenericElement::CloneNode(aDeep, this, aResult);                 \
 }
 
 #endif /* nsGenericElement_h___ */
