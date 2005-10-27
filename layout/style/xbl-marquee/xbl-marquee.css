@@ -33,17 +33,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
-/* Marquees with a height attr that actually specifies a height should have
-   auto CSS height here.  Note that this rule has the same specificity as the
-   preceding one, so it has to come later in the sheet to work. */
-marquee[height*="1"], marquee[height*="2"], marquee[height*="3"],
-marquee[height*="4"], marquee[height*="5"], marquee[height*="6"],
-marquee[height*="7"], marquee[height*="8"], marquee[height*="9"] {
-  height: auto;
-}
 
-/* PRINT ONLY rules follow */
+/* PRINT ONLY rules */
 @media print {
 
   marquee > * > * { 
