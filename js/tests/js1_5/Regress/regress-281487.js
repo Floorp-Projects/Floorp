@@ -43,6 +43,11 @@ var expect = 'No Crash';
 printBugNumber (bug);
 printStatus (summary);
 
+printStatus('This test requires a DEBUG build and will cause a false ' +
+            'failure to be reported by jsDriver.pl since the tracing output ' +
+            'will contain the string FAILED.');
+printStatus('This test only fails if it causes a crash.');
+
 if (typeof tracing == 'function')
 {
   tracing(true);
