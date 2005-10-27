@@ -190,14 +190,14 @@ public:
   nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer);
 
 private:
-	// over-rides from nsMsgProtocol
-	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
-									      PRUint32 sourceOffset, PRUint32 length);
-	virtual nsresult CloseSocket();
+  // over-rides from nsMsgProtocol
+  virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
+									PRUint32 sourceOffset, PRUint32 length);
+  virtual nsresult CloseSocket();
 
-	// we have our own implementation of SendData which writes to the nntp log
-	// and then calls the base class to transmit the data
-	PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging = PR_FALSE);
+  // we have our own implementation of SendData which writes to the nntp log
+  // and then calls the base class to transmit the data
+  PRInt32 SendData(nsIURI * aURL, const char * dataBuffer, PRBool aSuppressLogging = PR_FALSE);
 
   nsresult CleanupAfterRunningUrl();
   void Cleanup(); //free char* member variables

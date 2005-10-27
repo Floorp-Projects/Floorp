@@ -316,47 +316,47 @@ NS_IMPL_RELEASE_INHERITED(nsNNTPProtocol, nsMsgProtocol)
 
 NS_INTERFACE_MAP_BEGIN(nsNNTPProtocol)
   NS_INTERFACE_MAP_ENTRY(nsINNTPProtocol)
-	NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsICacheListener)
 NS_INTERFACE_MAP_END_INHERITING(nsMsgProtocol)
 
 nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
-    : nsMsgProtocol(aURL)
+: nsMsgProtocol(aURL)
 {
-	if (!NNTP)
-		NNTP = PR_NewLogModule("NNTP");
-
-    m_ProxyServer = nsnull;
-    m_lineStreamBuffer = nsnull;
-    m_responseText = nsnull;
-    m_dataBuf = nsnull;
-    m_path = nsnull;
-    
-	m_cancelFromHdr = nsnull;
-	m_cancelNewsgroups = nsnull;
-	m_cancelDistribution = nsnull;
-	m_cancelID = nsnull;
-
-	m_messageID = nsnull;
-    m_key = nsMsgKey_None;
-
-    m_commandSpecificData = nsnull;
-    m_searchData = nsnull;
-
-	mBytesReceived = 0;
-    mBytesReceivedSinceLastStatusUpdate = 0;
-    m_startTime = PR_Now();
-
-    if (aMsgWindow) {
-        m_msgWindow = aMsgWindow;
-    }
-
-	m_runningURL = nsnull;
+  if (!NNTP)
+    NNTP = PR_NewLogModule("NNTP");
+  
+  m_ProxyServer = nsnull;
+  m_lineStreamBuffer = nsnull;
+  m_responseText = nsnull;
+  m_dataBuf = nsnull;
+  m_path = nsnull;
+  
+  m_cancelFromHdr = nsnull;
+  m_cancelNewsgroups = nsnull;
+  m_cancelDistribution = nsnull;
+  m_cancelID = nsnull;
+  
+  m_messageID = nsnull;
+  m_key = nsMsgKey_None;
+  
+  m_commandSpecificData = nsnull;
+  m_searchData = nsnull;
+  
+  mBytesReceived = 0;
+  mBytesReceivedSinceLastStatusUpdate = 0;
+  m_startTime = PR_Now();
+  
+  if (aMsgWindow) {
+    m_msgWindow = aMsgWindow;
+  }
+  
+  m_runningURL = nsnull;
   SetIsBusy(PR_FALSE);
   m_fromCache = PR_FALSE;
-    PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) creating",this));
-    PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) initializing, so unset m_currentGroup",this));
-	m_currentGroup.Truncate();
+  PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) creating",this));
+  PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) initializing, so unset m_currentGroup",this));
+  m_currentGroup.Truncate();
   LL_I2L(m_lastActiveTimeStamp, 0);
 }
 
@@ -392,79 +392,79 @@ void nsNNTPProtocol::Cleanup()  //free char* member variables
 
 NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
 {
-    nsresult rv = NS_OK;
-    PRBool isSecure = PR_FALSE;
-
-    if (aMsgWindow) {
-        m_msgWindow = aMsgWindow;
-    }
-    nsMsgProtocol::InitFromURI(aURL);
-
-    nsCAutoString userPass;
-    rv = m_url->GetUserPass(userPass);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCAutoString hostName;
-    rv = m_url->GetAsciiHost(hostName);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    char *unescapedUserPass = ToNewCString(userPass);
-    if (!unescapedUserPass)
-      return NS_ERROR_OUT_OF_MEMORY;
-    nsUnescape(unescapedUserPass);
-
-    // find the server
-    nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = accountManager->FindServer(unescapedUserPass, hostName.get(), "nntp",
-                                    getter_AddRefs(server));
-    PR_FREEIF(unescapedUserPass);
-    NS_ENSURE_SUCCESS(rv, NS_MSG_INVALID_OR_MISSING_SERVER);
-    if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
+  nsresult rv = NS_OK;
+  PRBool isSecure = PR_FALSE;
+  
+  if (aMsgWindow) {
+    m_msgWindow = aMsgWindow;
+  }
+  nsMsgProtocol::InitFromURI(aURL);
+  
+  nsCAutoString userPass;
+  rv = m_url->GetUserPass(userPass);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCAutoString hostName;
+  rv = m_url->GetAsciiHost(hostName);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr <nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  char *unescapedUserPass = ToNewCString(userPass);
+  if (!unescapedUserPass)
+    return NS_ERROR_OUT_OF_MEMORY;
+  nsUnescape(unescapedUserPass);
+  
+  // find the server
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = accountManager->FindServer(unescapedUserPass, hostName.get(), "nntp",
+    getter_AddRefs(server));
+  PR_FREEIF(unescapedUserPass);
+  NS_ENSURE_SUCCESS(rv, NS_MSG_INVALID_OR_MISSING_SERVER);
+  if (!server) return NS_MSG_INVALID_OR_MISSING_SERVER;
+  
+  m_nntpServer = do_QueryInterface(server, &rv);
+  NS_ENSURE_SUCCESS(rv, NS_MSG_INVALID_OR_MISSING_SERVER);
+  if (!m_nntpServer) return NS_MSG_INVALID_OR_MISSING_SERVER;
+  
+  rv = m_nntpServer->GetMaxArticles(&m_maxArticles);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = server->GetIsSecure(&isSecure);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PRInt32 port = 0;
+  rv = m_url->GetPort(&port);
+  if (NS_FAILED(rv) || (port<=0)) {
+    rv = server->GetPort(&port);
+    if (NS_FAILED(rv)) return rv;
     
-    m_nntpServer = do_QueryInterface(server, &rv);
-    NS_ENSURE_SUCCESS(rv, NS_MSG_INVALID_OR_MISSING_SERVER);
-    if (!m_nntpServer) return NS_MSG_INVALID_OR_MISSING_SERVER;
-
-    rv = m_nntpServer->GetMaxArticles(&m_maxArticles);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = server->GetIsSecure(&isSecure);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    PRInt32 port = 0;
-    rv = m_url->GetPort(&port);
-    if (NS_FAILED(rv) || (port<=0)) {
-		rv = server->GetPort(&port);
-        if (NS_FAILED(rv)) return rv;
-
-		if (port<=0) {
-			if (isSecure) {
-            	port = SECURE_NEWS_PORT;
-        	}
-        	else {
-            	port = NEWS_PORT;
-        	}
-		}
-
-        rv = m_url->SetPort(port);
-        if (NS_FAILED(rv)) return rv;
+    if (port<=0) {
+      if (isSecure) {
+        port = SECURE_NEWS_PORT;
+      }
+      else {
+        port = NEWS_PORT;
+      }
     }
-
-	NS_PRECONDITION(m_url , "invalid URL passed into NNTP Protocol");
-
-	m_runningURL = do_QueryInterface(m_url);
+    
+    rv = m_url->SetPort(port);
+    if (NS_FAILED(rv)) return rv;
+  }
+  
+  NS_PRECONDITION(m_url , "invalid URL passed into NNTP Protocol");
+  
+  m_runningURL = do_QueryInterface(m_url);
   SetIsBusy(PR_TRUE);
-
-	if (NS_SUCCEEDED(rv) && m_runningURL)
-	{
-  	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
+  
+  if (NS_SUCCEEDED(rv) && m_runningURL)
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
     if (mailnewsUrl)
     {
       mailnewsUrl->SetMsgWindow(aMsgWindow);
-
+      
       m_runningURL->GetNewsAction(&m_newsAction);
       if (m_newsAction == nsINntpUrl::ActionFetchArticle || m_newsAction == nsINntpUrl::ActionFetchPart
         || m_newsAction == nsINntpUrl::ActionSaveMessageToDisk) {
@@ -472,17 +472,17 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
         mailnewsUrl->GetMsgIsInLocalCache(&msgIsInLocalCache);
         if (msgIsInLocalCache)
           return NS_OK; // probably don't need to do anything else - definitely don't want
-                        // to open the socket.
+        // to open the socket.
       }
     }
-	}
+  }
   else {
     return rv;
   }
-	
+  
   if (!m_socketIsOpen)
   {
-
+    
     // When we are making a secure connection, we need to make sure that we
     // pass an interface requestor down to the socket transport so that PSM can
     // retrieve a nsIPrompt instance if needed.
@@ -492,65 +492,64 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
       aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
       ir = do_QueryInterface(docShell);
     }
-
+    
     PR_LOG(NNTP,PR_LOG_ALWAYS,("(%p) opening connection to %s on port %d",this, hostName.get(), port));
     // call base class to set up the transport
-
+    
     PRInt32 port = 0;
     nsXPIDLCString hostName;
     m_url->GetPort(&port);
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_nntpServer);
     if (server)
       server->GetRealHostName(getter_Copies(hostName));
-
+    
     nsCOMPtr<nsIProxyInfo> proxyInfo;
     rv = NS_ExamineForProxy("nntp", hostName.get(), port, getter_AddRefs(proxyInfo));
     if (NS_FAILED(rv)) proxyInfo = nsnull;
-
+    
     rv = OpenNetworkSocketWithInfo(hostName.get(), port, isSecure ? "ssl" : nsnull, proxyInfo, ir);
-
-	NS_ENSURE_SUCCESS(rv,rv);
-	m_nextState = NNTP_LOGIN_RESPONSE;
+    
+    NS_ENSURE_SUCCESS(rv,rv);
+    m_nextState = NNTP_LOGIN_RESPONSE;
   }
   else {
     m_nextState = SEND_FIRST_NNTP_COMMAND;
   }
-	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
-	m_dataBufSize = OUTPUT_BUFFER_SIZE;
-
+  m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
+  m_dataBufSize = OUTPUT_BUFFER_SIZE;
+  
   if (!m_lineStreamBuffer)
-	  m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE /* create new lines */);
-
-	m_typeWanted = 0;
-	m_responseCode = 0;
-	m_previousResponseCode = 0;
-	m_responseText = nsnull;
-
-	m_path = nsnull;
-
-	m_firstArticle = 0;
-	m_lastArticle = 0;
-	m_firstPossibleArticle = 0;
-	m_lastPossibleArticle = 0;
-	m_numArticlesLoaded = 0;
-	m_numArticlesWanted = 0;
-
-	m_newsRCListIndex = 0;
-    m_RCIndexToResumeAfterAuthRequest  = 0;
-	m_newsRCListCount = 0;
-	
-	PR_FREEIF(m_messageID);
-	m_messageID = nsnull;
-
-    m_key = nsMsgKey_None;
-
-	m_articleNumber = 0;
-	m_originalContentLength = 0;
-	m_cancelID = nsnull;
-	m_cancelFromHdr = nsnull;
-	m_cancelNewsgroups = nsnull;
-	m_cancelDistribution = nsnull;
-	return NS_OK;
+    m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, PR_TRUE /* create new lines */);
+  
+  m_typeWanted = 0;
+  m_responseCode = 0;
+  m_previousResponseCode = 0;
+  m_responseText = nsnull;
+  
+  m_path = nsnull;
+  
+  m_firstArticle = 0;
+  m_lastArticle = 0;
+  m_firstPossibleArticle = 0;
+  m_lastPossibleArticle = 0;
+  m_numArticlesLoaded = 0;
+  m_numArticlesWanted = 0;
+  
+  m_newsRCListIndex = 0;
+  m_RCIndexToResumeAfterAuthRequest  = 0;
+  m_newsRCListCount = 0;
+  
+  PR_FREEIF(m_messageID);
+  
+  m_key = nsMsgKey_None;
+  
+  m_articleNumber = 0;
+  m_originalContentLength = 0;
+  m_cancelID = nsnull;
+  m_cancelFromHdr = nsnull;
+  m_cancelNewsgroups = nsnull;
+  m_cancelDistribution = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsNNTPProtocol::GetIsBusy(PRBool *aIsBusy)
@@ -798,6 +797,14 @@ nsresult nsNNTPProtocol::ReadFromMemCache(nsICacheEntryDescriptor *entry)
 
 nsresult nsNNTPProtocol::ReadFromNewsConnection()
 {
+  // we might end up here if we thought we had a news message offline
+  // but it turned out not to be so. In which case, we need to
+  // recall Initialize().
+  if (!m_socketIsOpen || !m_dataBuf)
+  {
+    nsresult rv = Initialize(m_url, m_msgWindow);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return nsMsgProtocol::AsyncOpen(m_channelListener, m_channelContext);
 }
 
@@ -858,6 +865,8 @@ PRBool nsNNTPProtocol::ReadFromLocalCache()
           return PR_TRUE;
         }
       }
+      else
+        mailnewsUrl->SetMsgIsInLocalCache(PR_FALSE);
     }
   }
 
