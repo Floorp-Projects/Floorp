@@ -68,7 +68,7 @@ CallGetClassObject
   (const char *aContractID, const nsIID &aIID, void **aResult);
 
 
-class NS_COM nsCreateInstanceByCID : public nsCOMPtr_helper
+class NS_COM_GLUE nsCreateInstanceByCID : public nsCOMPtr_helper
 {
 public:
     nsCreateInstanceByCID( const nsCID& aCID, nsISupports* aOuter, nsresult* aErrorPtr )
@@ -87,7 +87,7 @@ private:
     nsresult*       mErrorPtr;
 };
 
-class NS_COM nsCreateInstanceByContractID : public nsCOMPtr_helper
+class NS_COM_GLUE nsCreateInstanceByContractID : public nsCOMPtr_helper
 {
 public:
     nsCreateInstanceByContractID( const char* aContractID, nsISupports* aOuter, nsresult* aErrorPtr )
@@ -106,7 +106,7 @@ private:
     nsresult*     mErrorPtr;
 };
 
-class NS_COM nsCreateInstanceFromFactory : public nsCOMPtr_helper
+class NS_COM_GLUE nsCreateInstanceFromFactory : public nsCOMPtr_helper
 {
 public:
     nsCreateInstanceFromFactory( nsIFactory* aFactory, nsISupports* aOuter, nsresult* aErrorPtr )
@@ -169,7 +169,7 @@ do_CreateInstance( nsIFactory* aFactory, nsISupports* aOuter, nsresult* error = 
 }
 
 
-class NS_COM nsGetClassObjectByCID : public nsCOMPtr_helper
+class NS_COM_GLUE nsGetClassObjectByCID : public nsCOMPtr_helper
 {
 public:
     nsGetClassObjectByCID( const nsCID& aCID, nsresult* aErrorPtr )
@@ -186,7 +186,7 @@ private:
     nsresult*       mErrorPtr;
 };
 
-class NS_COM nsGetClassObjectByContractID : public nsCOMPtr_helper
+class NS_COM_GLUE nsGetClassObjectByContractID : public nsCOMPtr_helper
 {
 public:
     nsGetClassObjectByContractID( const char* aContractID, nsresult* aErrorPtr )
