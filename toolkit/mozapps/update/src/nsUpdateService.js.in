@@ -349,7 +349,8 @@ function cleanUpUpdatesDir() {
         var dir = f.parent.parent;
         var logFile = dir.clone();
         logFile.append(FILE_LAST_LOG);
-        logFile.remove(false);
+        if (logFile.exists())
+          logFile.remove(false);
         f.copyTo(dir, FILE_LAST_LOG);
       }
       catch (e) {
