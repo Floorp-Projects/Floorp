@@ -2876,7 +2876,7 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
     DWORD tempExStyle = nsToolkit::mGetWindowLong(hwnd, GWL_EXSTYLE);
 
     style = tempStyle & ~(WS_CAPTION | WS_THICKFRAME);
-    exStyle = tempExStyle & ~(WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE |
+    exStyle = tempExStyle & ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE |
                               WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
 
     mOldStyle = tempStyle;
@@ -8168,7 +8168,7 @@ nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
     style = nsToolkit::mGetWindowLong(hWnd, GWL_STYLE) &
             ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
     exStyle = nsToolkit::mGetWindowLong(hWnd, GWL_EXSTYLE) &
-              ~(WS_EX_DLGMODALFRAME | WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+              ~(WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
 
     if (IsAlphaTranslucencySupported())
       exStyle |= WS_EX_LAYERED;
