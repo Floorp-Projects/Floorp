@@ -3930,7 +3930,11 @@ nsDocument::CallUserDataHandler(PRUint16 aOperation,
   NS_ASSERTION(object == aObject, "Use cannonical nsISupports pointer!");
 #endif
 
-  nsHandlerData handlerData = { aOperation, aSource, aDest, this };
+  nsHandlerData handlerData;
+  handlerData.mOperation = aOperation;
+  handlerData.mSource = aSource;
+  handlerData.mDest = aDest;
+  handlerData.mDocument = this;
 
   mPropertyTable.Enumerate(aObject, DOM_USER_DATA_HANDLER, CallHandler,
                            &handlerData);
