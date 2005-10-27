@@ -2228,6 +2228,20 @@ eHTMLTags nsHTMLElement::GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 
         
   }
 
+  else if(mTagID == eHTMLTag_legend)  {
+    while((--theIndex>=anIndex) && (eHTMLTag_unknown==result)){
+      eHTMLTags theTag = aContext.TagAt(theIndex);
+      if (theTag == mTagID) {
+        result = theTag;
+        break;
+      }
+
+      if (!CanContain(theTag, aMode)) {
+        break;
+      }
+    }
+  }
+
   return result;
 }
 
