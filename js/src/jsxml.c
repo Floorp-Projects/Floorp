@@ -5573,8 +5573,10 @@ xml_child(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
             vxml = (JSXML *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(v));
-            if (JSXML_LENGTH(vxml) != 0 && !Append(cx, list, vxml))
+            if ((!JSXML_HAS_KIDS(vxml) || vxml->xml_kids.length != 0) &&
+                !Append(cx, list, vxml)) {
                 return JS_FALSE;
+            }
         }
         return JS_TRUE;
     }
