@@ -41,7 +41,7 @@
 
 // Introduced in DOM Level 3:
 
-[scriptable, function, uuid(5470deff-03c9-41b7-a824-e3225266b343)]
+[scriptable, function, uuid(91afebdd-a201-4db0-b728-9d59580f0cfd)]
 interface nsIDOMUserDataHandler : nsISupports
 {
   // OperationType
