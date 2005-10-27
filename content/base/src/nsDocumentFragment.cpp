@@ -49,6 +49,7 @@
 #include "nsIDOM3Node.h"
 #include "nsLayoutAtoms.h"
 #include "nsDOMString.h"
+#include "nsIDOMUserDataHandler.h"
 
 class nsDocumentFragment : public nsGenericElement,
                            public nsIDocumentFragment,
@@ -423,20 +424,24 @@ NS_IMETHODIMP
 nsDocumentFragment::SetUserData(const nsAString& aKey,
                                 nsIVariant* aData,
                                 nsIDOMUserDataHandler* aHandler,
-                                nsIVariant** aReturn)
+                                nsIVariant** aResult)
 {
-  NS_NOTYETIMPLEMENTED("nsDocumentFragment::SetUserData()");
+  nsIDocument *document = GetOwnerDoc();
+  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return document->SetUserData(NS_STATIC_CAST(nsIContent*, this), aKey, aData,
+                               aHandler, aResult);
 }
 
 NS_IMETHODIMP
 nsDocumentFragment::GetUserData(const nsAString& aKey,
-                                nsIVariant** aReturn)
+                                nsIVariant** aResult)
 {
-  NS_NOTYETIMPLEMENTED("nsDocumentFragment::GetUserData()");
+  nsIDocument *document = GetOwnerDoc();
+  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return document->GetUserData(NS_STATIC_CAST(nsIContent*, this), aKey,
+                               aResult);
 }
 
 NS_IMETHODIMP

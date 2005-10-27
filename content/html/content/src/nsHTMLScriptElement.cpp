@@ -513,7 +513,7 @@ nsHTMLScriptElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
 NS_IMETHODIMP
 nsHTMLScriptElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
 {
-  return nsGenericElement::CloneNode(aDeep, aResult);
+  return nsGenericElement::CloneNode(aDeep, this, aResult);
 }
 
 NS_IMETHODIMP

@@ -54,8 +54,8 @@
 #include "nsPropertyTable.h"
 #include "nsHashSets.h"
 #include "nsAutoPtr.h"
+#include "nsIAtom.h"
 
-class nsIAtom;
 class nsIContent;
 class nsIStyledContent;
 class nsPresContext;
@@ -91,6 +91,8 @@ class nsICSSLoader;
 class nsHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 class nsILayoutHistoryState;
+class nsIVariant;
+class nsIDOMUserDataHandler;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -779,6 +781,114 @@ public:
    * and style related to elements linking to that URI should be updated.
    */
   virtual void NotifyURIVisitednessChanged(nsIURI* aURI) = 0;
+
+  /**
+   * Associate an object aData to aKey on node aObject. Should only be used to
+   * implement the DOM Level 3 UserData API.
+   *
+   * @param aObject cannonical nsISupports pointer of the node to add aData to
+   * @param aKey the key to associate the object to
+   * @param aData the object to associate to aKey on aObject
+   * @param aHandler the UserDataHandler to call when the node is
+   *                 cloned/deleted/imported/renamed
+   * @param aResult [out] the previously registered object for aKey on aObject,
+   *                      if any
+   * @return whether adding the object and UserDataHandler succeeded
+   */
+  nsresult SetUserData(const nsISupports *aObject, const nsAString &aKey,
+                       nsIVariant *aData, nsIDOMUserDataHandler *aHandler,
+                       nsIVariant **aResult)
+  {
+    nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+    if (!key) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    return SetUserData(aObject, key, aData, aHandler, aResult);
+  }
+
+  /**
+   * Associate an object aData to aKey on node aObject. If aData is null any
+   * previously registered object and UserDataHandler associated to aKey on
+   * aObject will be removed. Should only be used to implement the DOM Level 3
+   * UserData API.
+   *
+   * @param aObject cannonical nsISupports pointer of the node to add aData to
+   * @param aKey the key to associate the object to
+   * @param aData the object to associate to aKey on aObject (may be nulll)
+   * @param aHandler the UserDataHandler to call when the node is
+   *                 cloned/deleted/imported/renamed (may be nulll)
+   * @param aResult [out] the previously registered object for aKey on aObject,
+   *                      if any
+   * @return whether adding the object and UserDataHandler succeeded
+   */
+  virtual nsresult SetUserData(const nsISupports *aObject, nsIAtom *aKey,
+                               nsIVariant *aData,
+                               nsIDOMUserDataHandler *aHandler,
+                               nsIVariant **aResult) = 0;
+
+  /**
+   * Get the object associated to aKey on node aObject. This will return NS_OK
+   * if no object was associated to aKey on aObject. Should only be used to
+   * implement the DOM Level 3 UserData API.
+   *
+   * @param aObject cannonical nsISupports pointer of the node to get the
+   *                object for
+   * @param aKey the key the object is associated to
+   * @param aResult [out] the registered object for aKey on aObject, if any
+   * @return whether an error occured while looking up the registered object
+   */
+  nsresult GetUserData(nsISupports *aObject, const nsAString &aKey,
+                       nsIVariant **aResult)
+  {
+    nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+    if (!key) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    return GetUserData(aObject, key, aResult);
+  }
+
+  /**
+   * Get the object associated to aKey on node aObject. This will return NS_OK
+   * if no object was associated to aKey on aObject. Should only be used to
+   * implement the DOM Level 3 UserData API.
+   *
+   * @param aObject cannonical nsISupports pointer of the node to get the
+   *                object for
+   * @param aKey the key the object is associated to
+   * @param aResult [out] the registered object for aKey on aObject, if any
+   * @return whether an error occured while looking up the registered object
+   */
+  virtual nsresult GetUserData(const nsISupports *aObject, nsIAtom *aKey,
+                               nsIVariant **aResult) = 0;
+
+  /**
+   * Call the UserDataHandler associated with aKey on node aObject. Should only
+   * be used to implement the DOM Level 3 UserData API.
+   *
+   * @param aOperation the type of operation that is being performed on the
+   *                   node. @see nsIDOMUserDataHandler
+   * @param aObject cannonical nsISupports pointer of the node to call the
+   *                UserDataHandler for
+   * @param aSource the node that aOperation is being performed on, or null if
+   *                the operation is a deletion
+   * @param aDest the newly created node if any, or null
+   */
+  virtual void CallUserDataHandler(PRUint16 aOperation,
+                                   const nsISupports *aObject,
+                                   nsIDOMNode *aSource, nsIDOMNode *aDest) = 0;
+
+  /**
+   * Copy the objects and UserDataHandlers for node aObject to a new document.
+   * Should only be used to implement the DOM Level 3 UserData API.
+   *
+   * @param aObject cannonical nsISupports pointer of the node to copy objects
+   *                and UserDataHandlers for
+   * @param aDestination the new document
+   */
+  virtual void CopyUserData(const nsISupports *aObject,
+                            nsIDocument *aDestination) = 0;
 
 protected:
   ~nsIDocument()

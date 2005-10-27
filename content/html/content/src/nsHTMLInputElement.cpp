@@ -435,7 +435,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
 NS_IMETHODIMP
 nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
 {
-  return nsGenericElement::CloneNode(aDeep, aResult);
+  return nsGenericElement::CloneNode(aDeep, this, aResult);
 }
 
 void

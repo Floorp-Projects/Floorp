@@ -514,7 +514,7 @@ nsXULElement::Clone(nsINodeInfo *aNodeInfo, PRBool aDeep,
 NS_IMETHODIMP
 nsXULElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
 {
-    return nsGenericElement::CloneNode(aDeep, aResult);
+    return nsGenericElement::CloneNode(aDeep, this, aResult);
 }
 
 //----------------------------------------------------------------------
@@ -860,9 +860,14 @@ nsXULElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
         // XXXbz sXBL/XBL2 issue!
         nsIDocument *ownerDocument = GetOwnerDoc();
         if (aDocument != ownerDocument) {
+            if (ownerDocument && HasProperties()) {
+                nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
 
-            if (HasProperties()) {
-                ownerDocument->PropertyTable()->DeleteAllPropertiesFor(this);
+                // Copy UserData to the new document.
+                ownerDocument->CopyUserData(thisSupports, aDocument);
+
+                // Remove all properties.
+                ownerDocument->PropertyTable()->DeleteAllPropertiesFor(thisSupports);
             }
 
             // get a new nodeinfo
@@ -1080,7 +1085,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
       // and cells going away.
       // First, retrieve the tree.
       // Check first whether this element IS the tree
-      controlElement = do_QueryInterface((nsIDOMXULElement*)this);
+      controlElement = do_QueryInterface(NS_STATIC_CAST(nsIContent*, this));
 
       // If it's not, look at our parent
       if (!controlElement)

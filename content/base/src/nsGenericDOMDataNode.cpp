@@ -54,6 +54,7 @@
 #include "nsCOMPtr.h"
 #include "nsDOMString.h"
 #include "nsLayoutAtoms.h"
+#include "nsIDOMUserDataHandler.h"
 
 #include "pldhash.h"
 #include "prprf.h"
@@ -65,6 +66,16 @@ nsGenericDOMDataNode::nsGenericDOMDataNode(nsINodeInfo *aNodeInfo)
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
+  if (CouldHaveProperties()) {
+    nsIDocument *document = GetOwnerDoc();
+    if (document) {
+      nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
+      document->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
+                                    thisSupports, nsnull, nsnull);
+      document->PropertyTable()->DeleteAllPropertiesFor(thisSupports);
+    }
+  }
+
   if (CouldHaveEventListenerManager()) {
     PL_DHashTableOperate(&nsGenericElement::sEventListenerManagersHash,
                          this, PL_DHASH_REMOVE);
@@ -283,7 +294,8 @@ nsGenericDOMDataNode::GetBaseURI(nsAString& aURI)
 }
 
 nsresult
-nsGenericDOMDataNode::CloneNode(PRBool aDeep, nsIDOMNode **aResult) const
+nsGenericDOMDataNode::CloneNode(PRBool aDeep, nsIDOMNode *aSource,
+                                nsIDOMNode **aResult) const
 {
   *aResult = nsnull;
 
@@ -292,7 +304,16 @@ nsGenericDOMDataNode::CloneNode(PRBool aDeep, nsIDOMNode **aResult) const
                              getter_AddRefs(newContent));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CallQueryInterface(newContent, aResult);
+  rv = CallQueryInterface(newContent, aResult);
+
+  nsIDocument *ownerDoc = GetOwnerDoc();
+  if (NS_SUCCEEDED(rv) && ownerDoc && CouldHaveProperties()) {
+    ownerDoc->CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
+                                  NS_STATIC_CAST(const nsIContent*, this),
+                                  aSource, *aResult);
+  }
+
+  return rv;
 }
 
 nsresult
@@ -656,6 +677,16 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
     nsIDocument *ownerDocument = GetOwnerDoc();
     if (aDocument != ownerDocument) {
+      if (ownerDocument && CouldHaveProperties()) {
+        nsISupports *thisSupports = NS_STATIC_CAST(nsIContent*, this);
+
+        // Copy UserData to the new document.
+        ownerDocument->CopyUserData(thisSupports, aDocument);
+
+        // Remove all properties.
+        ownerDocument->PropertyTable()->DeleteAllPropertiesFor(thisSupports);
+      }
+
       // get a new nodeinfo
       nsNodeInfoManager *nodeInfoManager = aDocument->NodeInfoManager();
       nsCOMPtr<nsINodeInfo> newNodeInfo;

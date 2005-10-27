@@ -89,6 +89,7 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIJSContextStack.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsIDOMUserDataHandler.h"
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
@@ -725,7 +726,13 @@ nsXMLDocument::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     }
   }
 
-  return CallQueryInterface(newDoc, aReturn);
+  rv = CallQueryInterface(newDoc, aReturn);
+  if (NS_SUCCEEDED(rv)) {
+    CallUserDataHandler(nsIDOMUserDataHandler::NODE_CLONED,
+                        NS_STATIC_CAST(nsIDocument*, this), this, *aReturn);
+  }
+
+  return rv;
 }
  
 // nsIDOMDocument interface
