@@ -100,6 +100,7 @@
 #include "nsImapProtocol.h"
 #include "nsIMsgMailSession.h"
 #include "nsIStreamConverterService.h"
+#include "nsNetUtil.h"
 #include "nsInt64.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"            // old - for backward compatibility only
@@ -313,6 +314,10 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
 {
   nsresult rv = NS_OK;
 
+  if (PL_strstr(aMessageURI, "&type=application/x-message-display"))
+    return NS_NewURI(aURL, aMessageURI);
+
+
   nsCOMPtr<nsIMsgFolder> folder;
   nsXPIDLCString msgKey;
   rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
@@ -482,7 +487,37 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
   nsXPIDLCString mimePart;
   nsCAutoString	folderURI;
   nsMsgKey key;
-  
+  nsCAutoString messageURI(aMessageURI);
+
+  PRInt32 typeIndex = messageURI.Find("&type=application/x-message-display");
+  if (typeIndex != kNotFound)
+  {
+    // This happens with forward inline of a message/rfc822 attachment opened in
+    // a standalone msg window.
+    // So, just cut to the chase and call AsyncOpen on a channel.
+    nsCOMPtr <nsIURI> uri;
+    messageURI.Cut(typeIndex, sizeof("&type=application/x-message-display") - 1);
+    rv = NS_NewURI(getter_AddRefs(uri), messageURI.get());
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (aURL)
+      NS_IF_ADDREF(*aURL = uri);
+    nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
+    if (NS_SUCCEEDED(rv) && aStreamListener)
+    {
+      nsCOMPtr<nsIChannel> aChannel;
+      nsCOMPtr<nsILoadGroup> aLoadGroup;
+      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(uri, &rv);
+      if (NS_SUCCEEDED(rv) && mailnewsUrl)
+        mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
+      
+      rv = NewChannel(uri, getter_AddRefs(aChannel));
+      if (NS_FAILED(rv)) return rv;
+      
+      nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(uri);
+      //  now try to open the channel passing in our display consumer as the listener
+      return aChannel->AsyncOpen(aStreamListener, aCtxt);
+    }
+  }
   rv = DecomposeImapURI(aMessageURI, getter_AddRefs(folder), getter_Copies(msgKey));
   if (msgKey.IsEmpty())
     return NS_MSG_MESSAGE_NOT_FOUND;

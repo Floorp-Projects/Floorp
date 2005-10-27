@@ -461,6 +461,8 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
       
       PRBool convertData = PR_FALSE;
 
+      // need to check if we're fetching an rfc822 part in order to
+      // quote a message.
       if (m_mailboxAction == nsIMailboxUrl::ActionFetchMessage)
       {
         nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(m_runningUrl, &rv);

@@ -2082,6 +2082,10 @@ mime_bridge_create_draft_stream(
 
   if (NS_SUCCEEDED(aURL->GetSpec(urlString)))
   {
+    PRInt32 typeIndex = urlString.Find("&type=application/x-message-display");
+    if (typeIndex != kNotFound)
+      urlString.Cut(typeIndex, sizeof("&type=application/x-message-display") - 1);
+
     mdd->url_name = ToNewCString(urlString);
     if (!(mdd->url_name))
       goto FAIL;

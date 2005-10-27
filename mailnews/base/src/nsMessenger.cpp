@@ -617,6 +617,7 @@ nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
   NS_ENSURE_TRUE(!uriString.IsEmpty(), NS_ERROR_FAILURE);
   
   PRBool loadingFromFile = PR_FALSE;
+  PRBool getDummyMsgHdr = PR_FALSE;
   PRInt64 fileSize;
 
   if (StringBeginsWith(uriString, NS_LITERAL_STRING("file:")))
@@ -634,7 +635,10 @@ nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
     uriString.ReplaceSubstring(NS_LITERAL_STRING("file:"), NS_LITERAL_STRING("mailbox:"));
     uriString.Append(NS_LITERAL_STRING("&number=0"));
     loadingFromFile = PR_TRUE;
+    getDummyMsgHdr = PR_TRUE;
   }
+  else if (FindInReadable(NS_LITERAL_STRING("type=application/x-message-display"), uriString))
+    getDummyMsgHdr = PR_TRUE;
 
   nsCOMPtr<nsIURI> uri;
   rv = NS_NewURI(getter_AddRefs(uri), uriString);
@@ -645,21 +649,25 @@ nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
   if (msgurl)
   {
     msgurl->SetMsgWindow(mMsgWindow);
-    if (loadingFromFile)
+    if (loadingFromFile || getDummyMsgHdr)
     {
-      nsCOMPtr <nsIMailboxUrl> mailboxUrl = do_QueryInterface(msgurl, &rv);
-      mailboxUrl->SetMessageSize((PRUint32) fileSize);
-      nsCOMPtr <nsIMsgHeaderSink> headerSink;
-       // need to tell the header sink to capture some headers to create a fake db header
-       // so we can do reply to a .eml file or a rfc822 msg attachment.
-      mMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
-      if (headerSink)
+      if (loadingFromFile)
       {
-        nsCOMPtr <nsIMsgDBHdr> dummyHeader;
-        headerSink->GetDummyMsgHeader(getter_AddRefs(dummyHeader));
-        if (dummyHeader)
+        nsCOMPtr <nsIMailboxUrl> mailboxUrl = do_QueryInterface(msgurl, &rv);
+        mailboxUrl->SetMessageSize((PRUint32) fileSize);
+      }
+      if (getDummyMsgHdr)
+      {
+        nsCOMPtr <nsIMsgHeaderSink> headerSink;
+         // need to tell the header sink to capture some headers to create a fake db header
+         // so we can do reply to a .eml file or a rfc822 msg attachment.
+        mMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+        if (headerSink)
         {
-          dummyHeader->SetMessageSize((PRUint32) fileSize);
+          nsCOMPtr <nsIMsgDBHdr> dummyHeader;
+          headerSink->GetDummyMsgHeader(getter_AddRefs(dummyHeader));
+          if (dummyHeader && loadingFromFile)
+            dummyHeader->SetMessageSize((PRUint32) fileSize);
         }
       }
     }
@@ -805,7 +813,7 @@ nsMessenger::OpenAttachment(const char * aContentType, const char * aURL, const
       rv = messageService->OpenAttachment(aContentType, aDisplayName, aURL, aMessageUri, mDocShell, mMsgWindow, nsnull);
   }
 
-	return rv;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1391,7 +1399,7 @@ nsMessenger::MsgHdrFromURI(const char *aUri, nsIMsgDBHdr **aMsgHdr)
   nsCOMPtr <nsIMsgMessageService> msgService;
   nsresult rv;
  
-  if (!strncmp(aUri, "file:", 5))
+  if (!strncmp(aUri, "file:", 5) || PL_strstr(aUri, "type=application/x-message-display"))
   {
     nsCOMPtr <nsIMsgHeaderSink> headerSink;
     mMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));

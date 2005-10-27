@@ -1372,6 +1372,16 @@ mime_set_url_part(const char *url, const char *part, PRBool append_p)
 
   if (!url || !part) return 0;
 
+  nsCAutoString urlString(url);
+  PRInt32 typeIndex = urlString.Find("?type=application/x-message-display");
+  if (typeIndex != kNotFound)
+  {
+    urlString.Cut(typeIndex, sizeof("?type=application/x-message-display") - 1);
+    if (urlString.CharAt(typeIndex) == '&')
+      urlString.SetCharAt('?', typeIndex);
+    url = urlString.get();
+  }
+
   for (s = url; *s; s++)
 	{
 	  if (*s == '?')
@@ -1389,7 +1399,7 @@ mime_set_url_part(const char *url, const char *part, PRBool append_p)
 			;
 		  part_end = s;
 		  break;
-		}
+          }
 	}
 
   result = (char *) PR_MALLOC(strlen(url) + strlen(part) + 10);
@@ -1633,26 +1643,26 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
 {
   const char *q;
   MimeHeadersState default_headers = options->headers;
-
+  
   if (!url || !*url) return 0;
   if (!options) return 0;
-
+  
   q = PL_strrchr (url, '?');
   if (! q) return 0;
   q++;
   while (*q)
-	{
-	  const char *end, *value, *name_end;
-	  for (end = q; *end && *end != '&'; end++)
-		;
-	  for (value = q; *value != '=' && value < end; value++)
-		;
-	  name_end = value;
-	  if (value < end) value++;
-	  if (name_end <= q)
-		;
-	  else if (!nsCRT::strncasecmp ("headers", q, name_end - q))
-		{
+  {
+    const char *end, *value, *name_end;
+    for (end = q; *end && *end != '&'; end++)
+      ;
+    for (value = q; *value != '=' && value < end; value++)
+      ;
+    name_end = value;
+    if (value < end) value++;
+    if (name_end <= q)
+      ;
+    else if (!nsCRT::strncasecmp ("headers", q, name_end - q))
+    {
       if (end > value && !nsCRT::strncasecmp ("only", value, end-value))
         options->headers = MimeHeadersOnly;
       else if (end > value && !nsCRT::strncasecmp ("none", value, end-value))
@@ -1669,117 +1679,115 @@ mime_parse_url_options(const char *url, MimeDisplayOptions *options)
         options->headers = MimeHeadersCitation;
       else
         options->headers = default_headers;
-		}
-	  else if (!nsCRT::strncasecmp ("part", q, name_end - q))
-		{
-		  PR_FREEIF (options->part_to_load);
-		  if (end > value)
-			{
-			  options->part_to_load = (char *) PR_MALLOC(end - value + 1);
-			  if (!options->part_to_load)
-				return MIME_OUT_OF_MEMORY;
-			  memcpy(options->part_to_load, value, end-value);
-			  options->part_to_load[end-value] = 0;
-			}
-		}
-	  else if (!nsCRT::strncasecmp ("rot13", q, name_end - q))
-		{
-		  if (end <= value || !nsCRT::strncasecmp ("true", value, end - value))
-			options->rot13_p = PR_TRUE;
-		  else
-			options->rot13_p = PR_FALSE;
-		}
-
-	  q = end;
-	  if (*q)
-		q++;
-	}
-
-
-  /* Compatibility with the "?part=" syntax used in the old (Mozilla 2.0)
+    }
+    else if (!nsCRT::strncasecmp ("part", q, name_end - q) && 
+      options->format_out != nsMimeOutput::nsMimeMessageBodyQuoting)
+    {
+      PR_FREEIF (options->part_to_load);
+      if (end > value)
+      {
+        options->part_to_load = (char *) PR_MALLOC(end - value + 1);
+        if (!options->part_to_load)
+          return MIME_OUT_OF_MEMORY;
+        memcpy(options->part_to_load, value, end-value);
+        options->part_to_load[end-value] = 0;
+      }
+    }
+    else if (!nsCRT::strncasecmp ("rot13", q, name_end - q))
+    {
+      options->rot13_p = end <= value || !nsCRT::strncasecmp ("true", value, end - value);
+    }
+    
+    q = end;
+    if (*q)
+      q++;
+  }
+  
+  
+/* Compatibility with the "?part=" syntax used in the old (Mozilla 2.0)
 	 MIME parser.
+         
+   Basically, the problem is that the old part-numbering code was totally
+   busted: here's a comparison of the old and new numberings with a pair
+   of hypothetical messages (one with a single part, and one with nested
+   containers.)
+   NEW:      OLD:  OR:
+   message/rfc822
+   image/jpeg           1         0     0
+   
+  message/rfc822
+  multipart/mixed      1         0     0
+  text/plain         1.1       1     1
+  image/jpeg         1.2       2     2
+  message/rfc822     1.3       -     3
+  text/plain       1.3.1     3     -
+  message/rfc822     1.4       -     4
+  multipart/mixed  1.4.1     4     -
+  text/plain     1.4.1.1   4.1   -
+  image/jpeg     1.4.1.2   4.2   -
+  text/plain         1.5       5     5
 
-	 Basically, the problem is that the old part-numbering code was totally
-	 busted: here's a comparison of the old and new numberings with a pair
-	 of hypothetical messages (one with a single part, and one with nested
-	 containers.)
-                               NEW:      OLD:  OR:
-         message/rfc822
-           image/jpeg           1         0     0
+ The "NEW" column is how the current code counts.  The "OLD" column is
+ what "?part=" references would do in 3.0b4 and earlier; you'll see that
+ you couldn't directly refer to the child message/rfc822 objects at all!
+ But that's when it got really weird, because if you turned on
+ "Attachments As Links" (or used a URL like "?inline=false&part=...")
+ then you got a totally different numbering system (seen in the "OR"
+ column.)  Gag!
+ 
+ So, the problem is, ClariNet had been using these part numbers in their
+ HTML news feeds, as a sleazy way of transmitting both complex HTML layouts
+ and images using NNTP as transport, without invoking HTTP.
+   
+ The following clause is to provide some small amount of backward
+ compatibility.  By looking at that table, one can see that in the new
+ model, "part=0" has no meaning, and neither does "part=2" or "part=3"
+ and so on.
+     
+ "part=1" is ambiguous between the old and new way, as is any part
+ specification that has a "." in it.
+       
+ So, the compatibility hack we do here is: if the part is "0", then map
+ that to "1".  And if the part is >= "2", then prepend "1." to it (so that
+ we map "2" to "1.2", and "3" to "1.3".)
+ 
+ This leaves the URLs compatible in the cases of:
+ 
+ = single part messages
+ = references to elements of a top-level multipart except the first
+   
+ and leaves them incompatible for:
+     
+ = the first part of a top-level multipart
+ = all elements deeper than the outermost part
+ 
+ Life s#$%s when you don't properly think out things that end up turning
+ into de-facto standards...
+ */
 
-         message/rfc822
-           multipart/mixed      1         0     0
-             text/plain         1.1       1     1
-             image/jpeg         1.2       2     2
-             message/rfc822     1.3       -     3
-               text/plain       1.3.1     3     -
-             message/rfc822     1.4       -     4
-               multipart/mixed  1.4.1     4     -
-                 text/plain     1.4.1.1   4.1   -
-                 image/jpeg     1.4.1.2   4.2   -
-             text/plain         1.5       5     5
-
-	 The "NEW" column is how the current code counts.  The "OLD" column is
-	 what "?part=" references would do in 3.0b4 and earlier; you'll see that
-	 you couldn't directly refer to the child message/rfc822 objects at all!
-	 But that's when it got really weird, because if you turned on
-	 "Attachments As Links" (or used a URL like "?inline=false&part=...")
-	 then you got a totally different numbering system (seen in the "OR"
-	 column.)  Gag!
-
-	 So, the problem is, ClariNet had been using these part numbers in their
-	 HTML news feeds, as a sleazy way of transmitting both complex HTML layouts
-	 and images using NNTP as transport, without invoking HTTP.
-
-	 The following clause is to provide some small amount of backward
-	 compatibility.  By looking at that table, one can see that in the new
-	 model, "part=0" has no meaning, and neither does "part=2" or "part=3"
-	 and so on.
-
-     "part=1" is ambiguous between the old and new way, as is any part
-	 specification that has a "." in it.
-
-	 So, the compatibility hack we do here is: if the part is "0", then map
-	 that to "1".  And if the part is >= "2", then prepend "1." to it (so that
-	 we map "2" to "1.2", and "3" to "1.3".)
-
-	 This leaves the URLs compatible in the cases of:
-
-	   = single part messages
-	   = references to elements of a top-level multipart except the first
-
-     and leaves them incompatible for:
-
-	   = the first part of a top-level multipart
-	   = all elements deeper than the outermost part
-
-	 Life s#$%s when you don't properly think out things that end up turning
-	 into de-facto standards...
-   */
-  if (options->part_to_load &&
-	  !PL_strchr(options->part_to_load, '.'))		/* doesn't contain a dot */
-	{
-	  if (!nsCRT::strcmp(options->part_to_load, "0"))		/* 0 */
-		{
-		  PR_Free(options->part_to_load);
-		  options->part_to_load = nsCRT::strdup("1");
-		  if (!options->part_to_load)
-			return MIME_OUT_OF_MEMORY;
-		}
-	  else if (nsCRT::strcmp(options->part_to_load, "1"))	/* not 1 */
-		{
-		  const char *prefix = "1.";
-		  char *s = (char *) PR_MALLOC(strlen(options->part_to_load) +
-		                               strlen(prefix) + 1);
-		  if (!s) return MIME_OUT_OF_MEMORY;
-		  PL_strcpy(s, prefix);
-		  PL_strcat(s, options->part_to_load);
-		  PR_Free(options->part_to_load);
-		  options->part_to_load = s;
-		}
-	}
-
-
+ if (options->part_to_load &&
+   !PL_strchr(options->part_to_load, '.'))		/* doesn't contain a dot */
+ {
+   if (!nsCRT::strcmp(options->part_to_load, "0"))		/* 0 */
+   {
+     PR_Free(options->part_to_load);
+     options->part_to_load = nsCRT::strdup("1");
+     if (!options->part_to_load)
+       return MIME_OUT_OF_MEMORY;
+   }
+   else if (nsCRT::strcmp(options->part_to_load, "1"))	/* not 1 */
+   {
+     const char *prefix = "1.";
+     char *s = (char *) PR_MALLOC(strlen(options->part_to_load) +
+       strlen(prefix) + 1);
+     if (!s) return MIME_OUT_OF_MEMORY;
+     PL_strcpy(s, prefix);
+     PL_strcat(s, options->part_to_load);
+     PR_Free(options->part_to_load);
+     options->part_to_load = s;
+   }
+ }
+ 
   return 0;
 }
 
@@ -1954,6 +1962,18 @@ mime_get_base_url(const char *url)
     return nsnull;
 
   const char *s = strrchr(url, '?');
+  if (s && !strncmp(s, "?type=application/x-message-display", sizeof("?type=application/x-message-display") - 1))
+  {
+    const char *nextTerm = strchr(s, '&');
+    s = (nextTerm) ? nextTerm : s + strlen(s) - 1;
+  }
+  // we need to keep the ?number part of the url, or we won't know
+  // which local message the part belongs to. 
+  if (s && *s && *(s+1) && !strncmp(s + 1, "number=", sizeof("number=") - 1))
+  {
+    const char *nextTerm = strchr(++s, '&');
+    s = (nextTerm) ? nextTerm : s + strlen(s) - 1;
+  }
   char *result = (char *) PR_MALLOC(strlen(url) + 1);
   NS_ASSERTION(result, "out of memory");
   if (!result)

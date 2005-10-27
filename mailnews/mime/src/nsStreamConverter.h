@@ -107,6 +107,8 @@ private:
   nsCOMPtr<nsIMsgIdentity>      mIdentity;
   nsCString                     mOriginalMsgURI;
 
+  nsCString                     mFromType;
+  nsCString                     mToType;
 #ifdef DEBUG_mscott  
   PRTime mConvertContentTime;
 #endif

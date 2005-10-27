@@ -979,7 +979,8 @@ NS_IMETHODIMP nsMsgDBView::ReloadMessageWithAllParts()
     return NS_OK;
 
   nsCAutoString forceAllParts(m_currentlyDisplayedMsgUri);
-  forceAllParts.AppendLiteral("?fetchCompleteMessage=true");
+  forceAllParts += (forceAllParts.FindChar('?') == kNotFound) ? "?" : "&";
+  forceAllParts.AppendLiteral("fetchCompleteMessage=true");
   return mMessengerInstance->OpenURL(forceAllParts.get());
 }
 

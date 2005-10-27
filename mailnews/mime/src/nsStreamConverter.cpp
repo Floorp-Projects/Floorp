@@ -408,7 +408,7 @@ nsStreamConverter::DetermineOutputFormat(const char *aUrl, nsMimeOutputType *aNe
 
   // is this is a part that should just come out raw
   const char *part = FindQueryElementData(queryPart, "part=");
-  if (part)
+  if (part && !mToType.Equals("application/vnd.mozilla.xul+xml"))
   {
     // default for parts
     mOutputFormat = "raw";
@@ -486,7 +486,7 @@ nsStreamConverter::DetermineOutputFormat(const char *aUrl, nsMimeOutputType *aNe
       }
     }
   }
-  
+
   // default to html for just the body
   mOutputFormat = "text/html";
   *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
@@ -548,7 +548,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 
   nsresult rv = NS_OK; 
   mOutListener = aOutListener;
-  
+
   // mscott --> we need to look at the url and figure out what the correct output type is...
   nsMimeOutputType newType = mOutputType;
   if (!mAlreadyKnowOutputType)
@@ -1087,7 +1087,7 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const char   *aFromType,
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMsgQuote> aMsgQuote = do_QueryInterface(aCtxt, &rv);
   nsCOMPtr<nsIChannel> aChannel;
-  
+
   if (aMsgQuote)
   {
     nsCOMPtr<nsIMimeStreamConverterListener> quoteListener;
@@ -1100,6 +1100,9 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const char   *aFromType,
   {
     aChannel = do_QueryInterface(aCtxt, &rv);
   }
+
+  mFromType = aFromType;
+  mToType = aToType;
 
   NS_ASSERTION(aChannel && NS_SUCCEEDED(rv), "mailnews mime converter has to have the channel passed in...");
   if (NS_FAILED(rv)) return rv;
