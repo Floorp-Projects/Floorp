@@ -37,6 +37,7 @@
 
 #include "nsContentList.h"
 #include "nsIContent.h"
+#include "nsIStyledContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOM3Node.h"
 #include "nsIDocument.h"
@@ -525,7 +526,8 @@ nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
 }
 
 void
-nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
+nsContentList::AttributeChanged(nsIDocument *aDocument,
+                                nsIStyledContent* aContent,
                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                 PRInt32 aModType)
 {

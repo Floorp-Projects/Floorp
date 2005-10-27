@@ -129,6 +129,7 @@
 
 #include "nsIEditingSession.h"
 #include "nsNodeInfoManager.h"
+#include "nsIStyledContent.h"
 
 #define DETECTOR_CONTRACTID_MAX 127
 static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
@@ -1162,7 +1163,8 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
 }
 
 void
-nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
+nsHTMLDocument::AttributeChanged(nsIStyledContent* aContent,
+                                 PRInt32 aNameSpaceID,
                                  nsIAtom* aAttribute, PRInt32 aModType)
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");

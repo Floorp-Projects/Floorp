@@ -57,6 +57,7 @@
 
 class nsIAtom;
 class nsIContent;
+class nsIStyledContent;
 class nsPresContext;
 class nsIPresShell;
 
@@ -93,8 +94,8 @@ class nsILayoutHistoryState;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x977a6eea, 0xd06f, 0x43fd, \
- { 0xa5, 0x7e, 0xe8, 0xad, 0x4d, 0x64, 0x02, 0x43 } }
+{ 0x3bff36cc, 0xc546, 0x4af0, \
+ { 0xa4, 0xa3, 0xc4, 0x64, 0x0b, 0xe7, 0x03, 0xb6 } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -508,7 +509,7 @@ public:
   virtual void AttributeWillChange(nsIContent* aChild,
                                    PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute) = 0;
-  virtual void AttributeChanged(nsIContent* aChild,
+  virtual void AttributeChanged(nsIStyledContent* aChild,
                                 PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 PRInt32 aModType) = 0;

@@ -54,7 +54,8 @@ public:
     // nsIDocumentObserver
     virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
     virtual void EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);
-    virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
+    virtual void AttributeChanged(nsIDocument* aDocument,
+                                  nsIStyledContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType);
     virtual void ContentAppended(nsIDocument* aDocument,

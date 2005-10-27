@@ -54,6 +54,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "nsIContent.h"
+#include "nsIStyledContent.h"
 #include "nsIDOMDocumentFragment.h"
 
 NS_IMPL_ISUPPORTS1(nsXMLPrettyPrinter,
@@ -239,7 +240,7 @@ nsXMLPrettyPrinter::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
 
 void
 nsXMLPrettyPrinter::AttributeChanged(nsIDocument* aDocument,
-                                     nsIContent* aContent,
+                                     nsIStyledContent* aContent,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
                                      PRInt32 aModType)

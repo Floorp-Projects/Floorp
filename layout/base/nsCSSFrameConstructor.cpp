@@ -10638,7 +10638,7 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
 }
 
 nsresult
-nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
+nsCSSFrameConstructor::AttributeChanged(nsIStyledContent* aContent,
                                         PRInt32 aNameSpaceID,
                                         nsIAtom* aAttribute,
                                         PRInt32 aModType)
@@ -10660,12 +10660,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 #endif
 
   // the style tag has its own interpretation based on aHint 
-  nsChangeHint hint = NS_STYLE_HINT_NONE;
-  nsCOMPtr<nsIStyledContent> styledContent = do_QueryInterface(aContent);
-  if (styledContent) { 
-    // Get style hint from HTML content object. 
-    hint = styledContent->GetAttributeChangeHint(aAttribute, aModType);
-  } 
+  nsChangeHint hint = aContent->GetAttributeChangeHint(aAttribute, aModType);
 
   PRBool reframe = (hint & nsChangeHint_ReconstructFrame) != 0;
 
