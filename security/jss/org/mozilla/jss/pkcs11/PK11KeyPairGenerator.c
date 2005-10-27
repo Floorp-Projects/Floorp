@@ -126,7 +126,7 @@ int PK11_NumberObjectsFor(PK11SlotInfo*, CK_ATTRIBUTE*, int);
 JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
   (JNIEnv *env, jobject this, jobject token, jint keySize, jlong publicExponent,
-    jboolean temporary)
+    jboolean temporary, jint extractable)
 {
     PK11SlotInfo* slot;
     PK11RSAGenParams params;
@@ -134,6 +134,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
     SECKEYPublicKey *pubk=NULL;
     jobject keyPair=NULL;
     PRBool sensitive = !temporary;
+    PK11AttrFlags attrFlags = 0;
 
     PR_ASSERT(env!=NULL && this!=NULL && token!=NULL);
 
@@ -165,13 +166,31 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
     /**************************************************
      * generate the key pair on the token
      *************************************************/
-    privk = PK11_GenerateKeyPair(   slot,
-                                    CKM_RSA_PKCS_KEY_PAIR_GEN,
-                                    (void*) &params, /* params is not a ptr */
-                                    &pubk,
-                                    !temporary, /* token (permanent) object */
-                                    sensitive,
-                                    NULL /* default PW callback */ );
+    if( temporary ) {
+        attrFlags |= PK11_ATTR_SESSION;
+    } else {
+        attrFlags |= PK11_ATTR_TOKEN;
+    }
+    if( extractable == 1 ) {
+        attrFlags |= PK11_ATTR_EXTRACTABLE;
+    } else if( extractable == 0 ) {
+        attrFlags |= PK11_ATTR_UNEXTRACTABLE;
+    }
+    /*
+     * The PRIVATE/PUBLIC attributes are set this way to be backward
+     * compatible with the original PK11_GenerateKeyPair call.
+     */
+    if( sensitive ) {
+        attrFlags |= (PK11_ATTR_SENSITIVE | PK11_ATTR_PRIVATE);
+    } else {
+        attrFlags |= (PK11_ATTR_INSENSITIVE | PK11_ATTR_PUBLIC);
+    }
+    privk = PK11_GenerateKeyPairWithFlags(slot,
+                                          CKM_RSA_PKCS_KEY_PAIR_GEN,
+                                          &params, /* params is not a ptr */
+                                          &pubk,
+                                          attrFlags,
+                                          NULL /* default PW callback */ );
     if( privk == NULL ) {
         int errLength;
         char *errBuf;
@@ -225,7 +244,7 @@ finish:
 JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
   (JNIEnv *env, jobject this, jobject token, jbyteArray P, jbyteArray Q,
-    jbyteArray G, jboolean temporary)
+    jbyteArray G, jboolean temporary, jint extractable)
 {
     PK11SlotInfo *slot;
     SECKEYPrivateKey *privk=NULL;
@@ -234,6 +253,7 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
     PQGParams *params=NULL;
     jobject keyPair=NULL;
     PRBool sensitive = !temporary; /* workaround bug 129563 */
+    PK11AttrFlags attrFlags = 0;
 
     PR_ASSERT(env!=NULL && this!=NULL && token!=NULL && P!=NULL && Q!=NULL
                 && G!=NULL);
@@ -281,13 +301,31 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
     /**************************************************
      * generate the key pair on the token
      *************************************************/
-    privk = PK11_GenerateKeyPair(   slot,
-                                    CKM_DSA_KEY_PAIR_GEN,
-                                    (void*) params, /*params is a ptr*/
-                                    &pubk,
-                                    !temporary, /* token (permanent) object */
-                                    sensitive,
-                                    NULL /* default password callback */);
+    if( temporary ) {
+        attrFlags |= PK11_ATTR_SESSION;
+    } else {
+        attrFlags |= PK11_ATTR_TOKEN;
+    }
+    if( extractable == 1 ) {
+        attrFlags |= PK11_ATTR_EXTRACTABLE;
+    } else if( extractable == 0 ) {
+        attrFlags |= PK11_ATTR_UNEXTRACTABLE;
+    }
+    /*
+     * The PRIVATE/PUBLIC attributes are set this way to be backward
+     * compatible with the original PK11_GenerateKeyPair call.
+     */
+    if( sensitive ) {
+        attrFlags |= (PK11_ATTR_SENSITIVE | PK11_ATTR_PRIVATE);
+    } else {
+        attrFlags |= (PK11_ATTR_INSENSITIVE | PK11_ATTR_PUBLIC);
+    }
+    privk = PK11_GenerateKeyPairWithFlags(slot,
+                                          CKM_DSA_KEY_PAIR_GEN,
+                                          params, /* params is a ptr */
+                                          &pubk,
+                                          attrFlags,
+                                          NULL /* default PW callback */);
     if( privk == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION,
                 "Keypair Generation failed on PKCS #11 token");
