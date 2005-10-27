@@ -808,7 +808,7 @@ static int32
 js_FileRead(JSContext *cx, JSFile *file, jschar *buf, int32 len, int32 mode)
 {
     unsigned char *aux;
-    int32 count, i;
+    int32 count = 0, i;
     jsint remainder;
     unsigned char utfbuf[3];
 
@@ -892,7 +892,7 @@ js_FileRead(JSContext *cx, JSFile *file, jschar *buf, int32 len, int32 mode)
 static int32
 js_FileSeek(JSContext *cx, JSFile *file, int32 len, int32 mode)
 {
-    int32 count, i;
+    int32 count = 0, i;
     jsint remainder;
     unsigned char utfbuf[3];
     jschar tmp;
@@ -955,7 +955,7 @@ static int32
 js_FileWrite(JSContext *cx, JSFile *file, jschar *buf, int32 len, int32 mode)
 {
     unsigned char   *aux;
-    int32           count, i, j;
+    int32           count = 0, i, j;
     unsigned char   *utfbuf;
 
     switch (mode) {
@@ -1317,6 +1317,7 @@ file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                  JSFILEMSG_BIDIRECTIONAL_PIPE_NOT_SUPPORTED);
             goto out;
         } else {
+            int i = 0;
             char pipemode[3];
             SECURITY_CHECK(cx, NULL, "pipe_open", file);
 
@@ -1328,9 +1329,11 @@ file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     goto out;
                 }
                 /* open(SPOOLER, "| cat -v | lpr -h 2>/dev/null") -- pipe for writing */
-                pipemode[0] = 'r';
-                pipemode[1] = file->type==UTF8 ? 'b' : 't';
-                pipemode[2] = '\0';
+                pipemode[i++] = 'r';
+#ifndef XP_UNIX
+                pipemode[i++] = file->type==UTF8 ? 'b' : 't';
+#endif
+                pipemode[i++] = '\0';
                 file->nativehandle = POPEN(&file->path[1], pipemode);
             } else if(file->path[len-1] == PIPE_SYMBOL) {
                 char *command = JS_malloc(cx, len);
@@ -1338,9 +1341,11 @@ file_open(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 strncpy(command, file->path, len-1);
                 command[len-1] = '\0';
                 /* open(STATUS, "netstat -an 2>&1 |") */
-                pipemode[0] = 'w';
-                pipemode[1] = file->type==UTF8 ? 'b' : 't';
-                pipemode[2] = '\0';
+                pipemode[i++] = 'w';
+#ifndef XP_UNIX
+                pipemode[i++] = file->type==UTF8 ? 'b' : 't';
+#endif
+                pipemode[i++] = '\0';
                 file->nativehandle = POPEN(command, pipemode);
                 JS_free(cx, command);
             }
@@ -1817,23 +1822,26 @@ file_readAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject    *array;
     jsint       len;
     jsval       line;
+    JSBool      lineok = JS_FALSE;
 
     SECURITY_CHECK(cx, NULL, "readAll", file);
     JSFILE_CHECK_READ;
 
     array = JS_NewArrayObject(cx, 0, NULL);
+    if (!array)
+        return JS_FALSE;
+    *rval = OBJECT_TO_JSVAL(array);
+
     len = 0;
 
-    while(file_readln(cx, obj, 0, NULL, &line)){
-        JS_SetElement(cx, array, len, &line);
-        len++;
+    lineok = file_readln(cx, obj, 0, NULL, &line);
+    while (lineok && !JSVAL_IS_NULL(line)) {
+        JS_SetElement(cx, array, len++, &line);
+        lineok = file_readln(cx, obj, 0, NULL, &line);
     }
 
-    *rval = OBJECT_TO_JSVAL(array);
-    return JS_TRUE;
 out:
-    *rval = JSVAL_FALSE;
-    return JS_FALSE;
+    return lineok;
 }
 
 static JSBool
