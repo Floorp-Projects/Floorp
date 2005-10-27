@@ -574,9 +574,17 @@ function BrowserPopupShowing () {
   }
 
   var selectedRange=getBrowser().selectedBrowser.contentDocument.getSelection();
-  document.getElementById("item-call").label="Call \""+ selectedRange + " \"";
-  document.getElementById("item-call").setAttribute("oncommand","DoTestSendCall("+selectedRange+")");
+  if(selectedRange) {
   
+   	s=util_stripCharsFromString(selectedRange,"#_+()- ");
+	if(util_validateInteger(s) && s.length >= 7) {
+	  document.getElementById("item-call").hidden=false;
+      document.getElementById("item-call").label="Call \""+ selectedRange + " \"";
+      document.getElementById("item-call").setAttribute("oncommand","DoTestSendCall("+s+")");
+    } else {
+	  document.getElementById("item-call").hidden=true;    
+    }
+  }
   /* Enable Copy */
   if(selectedRange.toString()) {
     document.getElementById("item-copy").style.display="block";
@@ -783,18 +791,26 @@ function BrowserSNAVToggle(state) {
 
 
 /*
- * Util function for the phone call calculation. 
+ * Utils :  function for the phone call calculation. 
  */
  
-function util_stripCharsFromString (s, bag) {
-    var i;
-    var returnString = "";
-    for (i = 0; i < s.length; i++)
+function util_stripCharsFromString (s, charList) {
+    var resultS = "";
+    for (var i = 0; i < s.length; i++)
     {   
         var c = s.charAt(i);
-        if (bag.indexOf(c) == -1) returnString += c;
+        if (charList.indexOf(c) == -1) resultS += c;
     }
-    return returnString;
+    return resultS;
+}
+
+function util_validateInteger(s)
+{
+    for (var i = 0; i < s.length; i++)
+    {   
+        var c = s.charAt(i);
+        if (((c < "0") || (c > "9"))) return false;
+    }
+    return true;
 }
 	
-
