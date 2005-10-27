@@ -93,6 +93,5 @@ TEMPORARILY_DONT_BUILD = \
 # to build (requires allxpstr.h)
 #
 DONT_BULD = jar \
- swfort  \
  perror \
 $(NULL)
