@@ -76,7 +76,6 @@
 #include "nsIURI.h"
 #include "nsScriptLoader.h"
 #include "nsICSSLoader.h"
-#include "nsIDOMXPathEvaluator.h"
 #include "nsIRadioGroupContainer.h"
 #include "nsIScriptEventManager.h"
 #include "nsILayoutHistoryState.h"
@@ -103,7 +102,6 @@ class nsDOMStyleSheetList;
 class nsIOutputStream;
 class nsDocument;
 class nsIDTD;
-class nsXPathDocumentTearoff;
 class nsIRadioVisitor;
 class nsIFormControl;
 struct nsRadioGroupStruct;
@@ -768,7 +766,7 @@ private:
 
   nsSmallVoidArray mPresShells;
 
-  nsXPathDocumentTearoff* mXPathDocument;
+  nsCOMPtr<nsISupports> mXPathEvaluatorTearoff;
 
   // The layout history state that should be used by nodes in this
   // document.  We only actually store a pointer to it when:
