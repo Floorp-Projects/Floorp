@@ -94,6 +94,7 @@ function userOnAfterPage()
   win.selectAll('js1_3');
   win.selectAll('js1_4');
   win.selectAll('js1_5');
+  win.selectAll('js1_6');
 // so need to delay this call to make 
 // sure the previous ones have completed
   win.setTimeout("executeList()", 10000);

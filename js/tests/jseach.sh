@@ -41,7 +41,7 @@ TEST_TIMEOUT=$2
 TEST_EXE=$3
 TEST_PROFILE=$4
 
-find ecma ecma_2 ecma_3 js1_1 js1_2 js1_3 js1_4 js1_5  -mindepth 2 -name '*.js' -print | \
+find ecma ecma_2 ecma_3 js1_1 js1_2 js1_3 js1_4 js1_5 js1_6 -mindepth 2 -name '*.js' -print | \
 grep -v shell.js | \
 grep -v browser.js | \
 grep -v template.js | \
