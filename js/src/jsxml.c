@@ -5499,7 +5499,22 @@ xml_attributes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return GetProperty(cx, obj, name, rval);
 }
 
-/* XML and XMLList */
+static JSXML *
+xml_list_helper(JSContext *cx, JSXML *xml, jsval *rval)
+{
+    JSObject *listobj;
+    JSXML *list;
+
+    listobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
+    if (!listobj)
+        return NULL;
+
+    *rval = OBJECT_TO_JSVAL(listobj);
+    list = (JSXML *) JS_GetPrivate(cx, listobj);
+    list->xml_target = xml;
+    return list;
+}
+
 static JSBool
 xml_child_helper(JSContext *cx, JSObject *obj, JSXML *xml, jsval name,
                  jsval *rval)
@@ -5527,25 +5542,22 @@ xml_child_helper(JSContext *cx, JSObject *obj, JSXML *xml, jsval name,
     return GetProperty(cx, obj, name, rval);
 }
 
+/* XML and XMLList */
 static JSBool
 xml_child(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSXML *xml, *list, *kid, *vxml;
     jsval name, v;
     uint32 i, n;
-    JSObject *listobj, *kidobj;
+    JSObject *kidobj;
 
     XML_METHOD_PROLOG;
     name = argv[0];
     if (xml->xml_class == JSXML_CLASS_LIST) {
         /* ECMA-357 13.5.4.4 */
-        listobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
-        if (!listobj)
+        list = xml_list_helper(cx, xml, rval);
+        if (!list)
             return JS_FALSE;
-
-        *rval = OBJECT_TO_JSVAL(listobj);
-        list = (JSXML *) JS_GetPrivate(cx, listobj);
-        list->xml_target = xml;
 
         for (i = 0, n = xml->xml_kids.length; i < n; i++) {
             kid = XMLARRAY_MEMBER(&xml->xml_kids, i, JSXML);
@@ -5567,7 +5579,12 @@ xml_child(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_TRUE;
     }
 
-    return xml_child_helper(cx, obj, xml, name, rval);
+    /* ECMA-357 Edition 2 13.3.4.6 (note 13.3, not 13.4 as in Edition 1). */
+    if (!xml_child_helper(cx, obj, xml, name, rval))
+        return JS_FALSE;
+    if (JSVAL_IS_VOID(*rval) && !xml_list_helper(cx, xml, rval))
+        return JS_FALSE;
+    return JS_TRUE;
 }
 
 static JSBool
@@ -5608,19 +5625,15 @@ xml_comments(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
              jsval *rval)
 {
     JSXML *xml, *list, *kid, *vxml;
-    JSObject *listobj, *kidobj;
     JSBool ok;
     uint32 i, n;
+    JSObject *kidobj;
     jsval v;
 
     XML_METHOD_PROLOG;
-    listobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
-    if (!listobj)
+    list = xml_list_helper(cx, xml, rval);
+    if (!list)
         return JS_FALSE;
-
-    *rval = OBJECT_TO_JSVAL(listobj);
-    list = (JSXML *) JS_GetPrivate(cx, listobj);
-    list->xml_target = xml;
 
     ok = JS_TRUE;
 
@@ -5733,9 +5746,9 @@ xml_elements(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsval name, v;
     JSXMLQName *nameqn;
     jsid funid;
-    JSObject *listobj, *kidobj;
     JSBool ok;
     uint32 i, n;
+    JSObject *kidobj;
 
     XML_METHOD_PROLOG;
     name = (argc == 0) ? ATOM_KEY(cx->runtime->atomState.starAtom) : argv[0];
@@ -5744,15 +5757,12 @@ xml_elements(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     argv[0] = OBJECT_TO_JSVAL(nameqn->object);
 
-    listobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
-    if (!listobj)
+    list = xml_list_helper(cx, xml, rval);
+    if (!list)
         return JS_FALSE;
-    *rval = OBJECT_TO_JSVAL(listobj);
     if (funid)
         return JS_TRUE;
 
-    list = (JSXML *) JS_GetPrivate(cx, listobj);
-    list->xml_target = xml;
     list->xml_targetprop = nameqn;
     ok = JS_TRUE;
 
@@ -6325,9 +6335,9 @@ xml_processingInstructions(JSContext *cx, JSObject *obj, uintN argc,
     jsval name, v;
     JSXMLQName *nameqn;
     jsid funid;
-    JSObject *listobj, *kidobj;
     JSBool ok;
     uint32 i, n;
+    JSObject *kidobj;
 
     XML_METHOD_PROLOG;
     name = (argc == 0) ? ATOM_KEY(cx->runtime->atomState.starAtom) : argv[0];
@@ -6336,15 +6346,12 @@ xml_processingInstructions(JSContext *cx, JSObject *obj, uintN argc,
         return JS_FALSE;
     argv[0] = OBJECT_TO_JSVAL(nameqn->object);
 
-    listobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
-    if (!listobj)
+    list = xml_list_helper(cx, xml, rval);
+    if (!list)
         return JS_FALSE;
-    *rval = OBJECT_TO_JSVAL(listobj);
     if (funid)
         return JS_TRUE;
 
-    list = (JSXML *) JS_GetPrivate(cx, listobj);
-    list->xml_target = xml;
     list->xml_targetprop = nameqn;
     ok = JS_TRUE;
 
@@ -6761,19 +6768,15 @@ static JSBool
 xml_text(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSXML *xml, *list, *kid, *vxml;
-    JSObject *listobj, *kidobj;
     uint32 i, n;
     JSBool ok;
+    JSObject *kidobj;
     jsval v;
 
     XML_METHOD_PROLOG;
-    listobj = js_NewXMLObject(cx, JSXML_CLASS_LIST);
-    if (!listobj)
+    list = xml_list_helper(cx, xml, rval);
+    if (!list)
         return JS_FALSE;
-
-    *rval = OBJECT_TO_JSVAL(listobj);
-    list = (JSXML *) JS_GetPrivate(cx, listobj);
-    list->xml_target = xml;
 
     if (xml->xml_class == JSXML_CLASS_LIST) {
         ok = JS_TRUE;
