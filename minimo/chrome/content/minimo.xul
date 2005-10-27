@@ -38,17 +38,21 @@
 
  ***** END LICENSE BLOCK ***** -->
 
+
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://minimo/skin/minimo.css" type="text/css"?> 
 
+<?xul-overlay href="chrome://minimo/content/toolbars/toolbar-view.xul"?>
+<?xul-overlay href="chrome://minimo/content/toolbars/toolbar-rss.xul"?>
+<?xul-overlay href="chrome://minimo/content/toolbars/toolbar-search.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % minimoDTD SYSTEM "chrome://minimo/locale/minimo.dtd" >
 %minimoDTD;
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
-
 ]>
+
 
 <window id="main-window"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -68,7 +72,7 @@
     <popup type="autocomplete" id="PopupAutoComplete"/>
   </popupset>
 
-  <toolbox>
+  <toolbox id="mini-toolbars">
 
     <command id="cmd_BrowserOpenTab"         oncommand="BrowserOpenTab()"/>
     <command id="cmd_BrowserScreenRotate"    oncommand="BrowserScreenRotate()"/>
@@ -105,6 +109,7 @@
      <focushandler id="focus_content"        target="content"        accessfocus="#tabContainer" accessnextrule="focus_tabcontent"     accessprevrule="focus_toolbar-search" />
     </focusnavigation>  
 
+
     <toolbar id="nav-bar" >
     
         <toolbarbutton tabindex="1" accessrule="focus_nav-bar"  id="menu-button" accesskey="m" command="cmd_BrowserMenu" />  
@@ -126,77 +131,9 @@
         </textbox>
 
     </toolbar>
-    
-	<toolbar id="toolbar-view" flex="1" collapsed="true" >
-                                 
-		<groupbox flex="1" class="box-floatoptions">
-		    <caption label="&zoom.label;"/>
-			<hbox flex="1" >
-				<vbox flex="1"  style="padding:4px ! important">
-				   <grid>
-                      <columns>
-                        <column />
-                        <column />
-                        <column />
-                      </columns>
-                      <rows>
-                        <row>
-                          <label value="&zoomText.label;" />
-                          <toolbarbutton tabindex="10" accessrule="focus_toolbar-view" id="zoomplusitem" class="button-border" command="cmd_BrowserZoomPlus"  />
-                          <toolbarbutton tabindex="11" accessrule="focus_toolbar-view" id="zoomminusitem" class="button-border" command="cmd_BrowserZoomMinus" />	
-                        </row>
-                        <row style="margin-top:2px ! important">
-                          <label value="&zoomUIText.label;" />
-                          <toolbarbutton tabindex="12" accessrule="focus_toolbar-view" class="button-border" id="uizoomplusitem" command="cmd_UIZoomPlus"  />
-                          <toolbarbutton tabindex="13" accessrule="focus_toolbar-view" class="button-border" id="uizoomminusitem"  command="cmd_UIZoomMinus" />	
-                        </row>
-                      </rows>
-				   </grid>
-				</vbox>
-				<vbox>
-				<toolbarbutton tabindex="14" accessrule="focus_toolbar-view"  class="button-close" width="10" height="10" align="top" flex="0" id="close-button" command="cmd_ViewOptions"/>  
-				</vbox>
-			</hbox>
-		</groupbox>
-    </toolbar>
-    
-    <toolbar id="toolbar-rss" flex="1" collapsed="true" >
-                               
-        <groupbox flex="1" class="box-floatoptions">
-		    <caption label="&rssBMtitle.label;"/>
-			<hbox flex="1" >
-				<vbox flex="1"  style="padding:4px ! important">
 
-					<hbox flex="1" style="margin-top:4px ! important">
-						 <label value="&rssText.label;"  />
-						 <textbox tabindex="15" accessrule="focus_toolbar-rss"  id="toolbar-rss-rsstag" flex="1" onchange="return DoBrowserRSS();"/> 
-					</hbox>
-				</vbox>
-				<vbox>
-				<toolbarbutton tabindex="16" accessrule="focus_toolbar-rss" id="rss-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewRSS"/>  
-				</vbox>
-			</hbox>
-		</groupbox>
-    </toolbar>   
+    <!-- the toolbars shall be added here, check the overlay settings --> 
     
-    <toolbar id="toolbar-search" flex="1" collapsed="true" >
-                               
-        <groupbox flex="1" class="box-floatoptions">
-		    <caption label="&searchToolbar.label;"/>
-			<hbox flex="1" >
-				<vbox flex="1"  style="padding:4px ! important">
-
-					<hbox flex="1" style="margin-top:4px ! important">
-						 <label value="&searchText.label;"  />
-						 <textbox tabindex="17" accessrule="focus_toolbar-search"  id="toolbar-search-tag" flex="1" onchange="return DoBrowserSearch();"/> 
-					</hbox>
-				</vbox>
-				<vbox>
-				<toolbarbutton tabindex="18" accessrule="focus_toolbar-search" id="search-close" class="button-close" width="10" height="10" align="top" flex="0" command="cmd_ViewSearch"/>  
-				</vbox>
-			</hbox>
-		</groupbox>
-    </toolbar>   
 
   </toolbox>
 
@@ -217,6 +154,7 @@
   </hbox>
 
   <!-- place holder for our app popups and hook to the overlay --> 
+
   <popupset>
 	<popup id="contentAreaContextMenu" onpopupshowing="BrowserPopupShowing()">
 
@@ -231,9 +169,9 @@
        </toolbar>
        
        <menuitem id="link_as_new_tab" label="&linknewtab.label;" oncommand="BrowserOpenLinkAsTab()" hidden="true"/>
-       <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand="" hidden="true"/>
-       <menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
-       <menuitem id="item-copy"   label="Copy"  oncommand="DoClipCopy()" />
+	   <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand="" hidden="true"/>
+	   <menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
+	   <menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
        <menuitem id="item-paste"  label="Paste" oncommand="DoClipPaste()"/>
        
 	</popup>
