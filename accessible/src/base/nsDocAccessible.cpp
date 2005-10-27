@@ -45,6 +45,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
+#include "nsIStyledContent.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
@@ -733,7 +734,8 @@ NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsDocAccessible)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsDocAccessible)
 
 void
-nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
+nsDocAccessible::AttributeChanged(nsIDocument *aDocument,
+                                  nsIStyledContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType)
 {

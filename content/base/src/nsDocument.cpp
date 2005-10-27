@@ -137,6 +137,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
 #include "nsIComponentRegistrar.h"
+#include "nsIStyledContent.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -2388,11 +2389,16 @@ nsDocument::AttributeWillChange(nsIContent* aChild, PRInt32 aNameSpaceID,
 }
 
 void
-nsDocument::AttributeChanged(nsIContent* aChild, PRInt32 aNameSpaceID,
+nsDocument::AttributeChanged(nsIStyledContent* aChild, PRInt32 aNameSpaceID,
                              nsIAtom* aAttribute, PRInt32 aModType)
 {
   NS_ABORT_IF_FALSE(aChild, "Null child!");
 
+#ifdef DEBUG
+    nsCOMPtr<nsIContent> debugContent(do_QueryInterface(aChild));
+    NS_ASSERTION(debugContent == aChild, "nsIContent pointer mismatch?");
+#endif  
+  
   PRInt32 i;
   for (i = mObservers.Count() - 1; i >= 0; --i) {
     nsIDocumentObserver *observer =

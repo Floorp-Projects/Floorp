@@ -117,6 +117,7 @@
 #include "nsIParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIScriptError.h"
+#include "nsIStyledContent.h"
 
 //----------------------------------------------------------------------
 //
@@ -1073,11 +1074,18 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 }
 
 void
-nsXULDocument::AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
+nsXULDocument::AttributeChanged(nsIStyledContent* aElement,
+                                PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute, PRInt32 aModType)
 {
+#ifdef DEBUG
+    nsCOMPtr<nsIContent> debugContent(do_QueryInterface(aElement));
+    NS_ASSERTION(debugContent == aElement, "nsIContent pointer mismatch?");
+#endif
+    
     nsresult rv;
 
+    // XXXbz check aNameSpaceID, dammit!
     // First see if we need to update our element map.
     if ((aAttribute == nsXULAtoms::id) || (aAttribute == nsXULAtoms::ref)) {
 

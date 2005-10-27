@@ -652,7 +652,7 @@ nsSHEntry::CharacterDataChanged(nsIDocument* aDocument,
 
 void
 nsSHEntry::AttributeChanged(nsIDocument* aDocument,
-                            nsIContent* aContent,
+                            nsIStyledContent* aContent,
                             PRInt32 aNameSpaceID,
                             nsIAtom* aAttribute,
                             PRInt32 aModType)

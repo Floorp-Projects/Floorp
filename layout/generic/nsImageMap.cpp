@@ -47,6 +47,7 @@
 #include "nsNetUtil.h"
 #include "nsTextFragment.h"
 #include "nsIContent.h"
+#include "nsIStyledContent.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -969,11 +970,11 @@ nsImageMap::MaybeUpdateAreas(nsIContent *aContent)
 }
 
 void
-nsImageMap::AttributeChanged(nsIDocument *aDocument,
-                             nsIContent*  aContent,
-                             PRInt32      aNameSpaceID,
-                             nsIAtom*     aAttribute,
-                             PRInt32      aModType)
+nsImageMap::AttributeChanged(nsIDocument*       aDocument,
+                             nsIStyledContent*  aContent,
+                             PRInt32            aNameSpaceID,
+                             nsIAtom*           aAttribute,
+                             PRInt32            aModType)
 {
   // If the parent of the changing content node is our map then update
   // the map.  But only do this if the node is an HTML <area> or <a>

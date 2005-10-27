@@ -71,6 +71,7 @@
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsLayoutAtoms.h"
+#include "nsIContent.h"
 
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
@@ -288,7 +289,9 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
 
   frame->RecalculateBorderResize();
   if (doc) {
-    doc->AttributeChanged(frame->mContent,
+    nsCOMPtr<nsIStyledContent> content(do_QueryInterface(frame->GetContent()));
+    NS_ASSERTION(content, "Expected an element here!");
+    doc->AttributeChanged(content,
                           kNameSpaceID_None,
                           nsHTMLAtoms::frameborder,
                           nsIDOMMutationEvent::MODIFICATION);

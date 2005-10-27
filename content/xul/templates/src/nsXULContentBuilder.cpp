@@ -41,6 +41,7 @@
 
 #include "nsContentCID.h"
 #include "nsIDocument.h"
+#include "nsIStyledContent.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULDocument.h"
 #include "nsINodeInfo.h"
@@ -126,11 +127,11 @@ public:
     NS_IMETHOD CreateContents(nsIContent* aElement);
 
     // nsIDocumentObserver interface
-    virtual void AttributeChanged(nsIDocument* aDocument,
-                                  nsIContent*  aContent,
-                                  PRInt32      aNameSpaceID,
-                                  nsIAtom*     aAttribute,
-                                  PRInt32      aModType);
+    virtual void AttributeChanged(nsIDocument*       aDocument,
+                                  nsIStyledContent*  aContent,
+                                  PRInt32            aNameSpaceID,
+                                  nsIAtom*           aAttribute,
+                                  PRInt32            aModType);
 
     void DocumentWillBeDestroyed(nsIDocument* aDocument);
 
@@ -1547,11 +1548,11 @@ nsXULContentBuilder::CreateContents(nsIContent* aElement)
 //
 
 void
-nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
-                                      nsIContent*  aContent,
-                                      PRInt32      aNameSpaceID,
-                                      nsIAtom*     aAttribute,
-                                      PRInt32      aModType)
+nsXULContentBuilder::AttributeChanged(nsIDocument*       aDocument,
+                                      nsIStyledContent*  aContent,
+                                      PRInt32            aNameSpaceID,
+                                      nsIAtom*           aAttribute,
+                                      PRInt32            aModType)
 {
     // Handle "open" and "close" cases. We do this handling before
     // we've notified the observer, so that content is already created

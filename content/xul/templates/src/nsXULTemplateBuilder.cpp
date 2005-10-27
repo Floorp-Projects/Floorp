@@ -67,6 +67,7 @@
 #include "nsCRT.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsIContent.h"
+#include "nsIStyledContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
@@ -329,11 +330,11 @@ nsXULTemplateBuilder::RemoveListener(nsIXULBuilderListener* aListener)
 //
 
 void
-nsXULTemplateBuilder::AttributeChanged(nsIDocument *aDocument,
-                                       nsIContent*  aContent,
-                                       PRInt32      aNameSpaceID,
-                                       nsIAtom*     aAttribute,
-                                       PRInt32      aModType)
+nsXULTemplateBuilder::AttributeChanged(nsIDocument*      aDocument,
+                                       nsIStyledContent* aContent,
+                                       PRInt32           aNameSpaceID,
+                                       nsIAtom*          aAttribute,
+                                       PRInt32           aModType)
 {
     if (aContent == mRoot) {
         // Check for a change to the 'ref' attribute on an atom, in which

@@ -48,6 +48,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
+#include "nsIStyledContent.h"
 
 PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
                                                   nsXMLEventsManager * aManager,
@@ -359,7 +360,7 @@ nsXMLEventsManager::CharacterDataChanged(nsIDocument* aDocument,
                                          PRBool aAppend) {}
 void
 nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
-                                     nsIContent* aContent,
+                                     nsIStyledContent* aContent,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
                                      PRInt32 aModType)

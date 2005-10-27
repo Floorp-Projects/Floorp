@@ -91,7 +91,8 @@ public:
     NS_DECL_NSIXULTEMPLATEBUILDER
    
     // nsIDocumentObserver
-    virtual void AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
+    virtual void AttributeChanged(nsIDocument *aDocument,
+                                  nsIStyledContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType);
     virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);

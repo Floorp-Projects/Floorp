@@ -41,6 +41,7 @@
 
 class nsIAtom;
 class nsIContent;
+class nsIStyledContent;
 class nsIPresShell;
 class nsIStyleSheet;
 class nsIStyleRule;
@@ -48,7 +49,7 @@ class nsString;
 class nsIDocument;
 
 #define NS_IDOCUMENT_OBSERVER_IID \
-{ 0xb3f92460, 0x944c, 0x11d1, {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+{ 0xd5231ce1, 0x1129, 0x4c31, {0x9b, 0xa6, 0xce, 0x6b, 0x6d, 0x57, 0xc7, 0xb9}}
 
 typedef PRUint32 nsUpdateType;
 
@@ -160,11 +161,11 @@ public:
    * @param aModType Whether or not the attribute was added, changed, or removed.
    *   The constants are defined in nsIDOMMutationEvent.h.
    */
-  virtual void AttributeChanged(nsIDocument *aDocument,
-                                nsIContent*  aContent,
-                                PRInt32      aNameSpaceID,
-                                nsIAtom*     aAttribute,
-                                PRInt32      aModType) = 0;
+  virtual void AttributeChanged(nsIDocument*      aDocument,
+                                nsIStyledContent* aContent,
+                                PRInt32           aNameSpaceID,
+                                nsIAtom*          aAttribute,
+                                PRInt32           aModType) = 0;
 
   /**
    * Notifcation that the content model has had data appended to the
@@ -349,7 +350,7 @@ public:
                                       nsIContent* aContent2,                 \
                                       PRInt32 aStateMask);                   \
     virtual void AttributeChanged(nsIDocument* aDocument,                    \
-                                  nsIContent* aContent,                      \
+                                  nsIStyledContent* aContent,                \
                                   PRInt32 aNameSpaceID,                      \
                                   nsIAtom* aAttribute,                       \
                                   PRInt32 aModType);                         \
@@ -440,7 +441,7 @@ _class::CharacterDataChanged(nsIDocument* aDocument,                      \
 }                                                                         \
 void                                                                      \
 _class::AttributeChanged(nsIDocument* aDocument,                          \
-                         nsIContent* aContent,                            \
+                         nsIStyledContent* aContent,                      \
                          PRInt32 aNameSpaceID,                            \
                          nsIAtom* aAttribute,                             \
                          PRInt32 aModType)                                \
