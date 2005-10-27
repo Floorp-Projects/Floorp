@@ -78,7 +78,7 @@ protected:
   nsCOMArray <nsIDBChangeListener> m_pendingListeners;
 };
 
-class nsMsgDatabase : public nsIMsgDatabase 
+class nsMsgDatabase : public nsIMsgDatabase
 {
 public:
   friend class nsMsgDBService;
@@ -186,7 +186,11 @@ protected:
   
   // open db cache
   static void		AddToCache(nsMsgDatabase* pMessageDB) 
-  {GetDBCache()->AppendElement(pMessageDB);}
+  {
+#ifdef DEBUG_David_Bienvenu
+    NS_ASSERTION(GetNumInCache() < 28, "28 or more open db's");
+#endif
+    GetDBCache()->AppendElement(pMessageDB);}
   static void		RemoveFromCache(nsMsgDatabase* pMessageDB);
   static int		FindInCache(nsMsgDatabase* pMessageDB);
   PRBool	MatchDbName(nsFileSpec &dbName);	// returns TRUE if they match

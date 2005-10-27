@@ -236,6 +236,8 @@ NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
     // Reset incoming server pointer and pathname.
     mServer = nsnull;
     mPath = nsnull;
+    mHaveParsedURI = PR_FALSE;
+    mName.SetLength(0);
     mSubFolders->Clear();
   }
   return NS_OK;
@@ -458,12 +460,14 @@ NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
   //If there's no db then there's nothing to clear.
   if(mDatabase)
   {
-    nsMsgKeyArray *newMessageKeys = nsnull;
-    rv = mDatabase->GetNewList(&newMessageKeys);
+    PRUint32 numNewKeys;
+    PRUint32 *newMessageKeys;
+    rv = mDatabase->GetNewList(&numNewKeys, &newMessageKeys);
     if (NS_SUCCEEDED(rv) && newMessageKeys)
-      m_saveNewMsgs.CopyArray(newMessageKeys);
-    NS_DELETEXPCOM (newMessageKeys);
-    rv = mDatabase->ClearNewList(PR_TRUE);
+    {
+      m_saveNewMsgs.RemoveAll();
+      m_saveNewMsgs.Add(newMessageKeys, numNewKeys);
+    }
     m_newMsgs.RemoveAll();
   }
   mNumNewBiffMessages = 0;
@@ -675,13 +679,11 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileStream(nsMsgKey msgKey, PRUint32 *off
         // check if message starts with From, or is a draft and starts with FCC
         if (NS_FAILED(rv) || bytesRead != sizeof(startOfMsg) || 
           (strncmp(startOfMsg, "From ", 5) && (! (mFlags & MSG_FOLDER_FLAG_DRAFTS) || strncmp(startOfMsg, "FCC", 3))))
-        {
-          if (mDatabase)
-            mDatabase->MarkOffline(msgKey, PR_FALSE, nsnull);
           rv = NS_ERROR_FAILURE;
-        }
       }
     }
+    if (NS_FAILED(rv) && mDatabase)
+      mDatabase->MarkOffline(msgKey, PR_FALSE, nsnull);
   }
   return rv;
 }
@@ -789,11 +791,15 @@ nsMsgDBFolder::SetMsgDatabase(nsIMsgDatabase *aMsgDatabase)
     mDatabase->ClearCachedHdrs();
     if (!aMsgDatabase)
     {
-      nsMsgKeyArray *newMessageKeys = nsnull;
-      nsresult rv = mDatabase->GetNewList(&newMessageKeys);
+      PRUint32 numNewKeys;
+      PRUint32 *newMessageKeys;
+      nsresult rv = mDatabase->GetNewList(&numNewKeys, &newMessageKeys);
       if (NS_SUCCEEDED(rv) && newMessageKeys)
-        m_newMsgs.CopyArray(newMessageKeys);
-      NS_DELETEXPCOM (newMessageKeys);
+      {
+        m_newMsgs.RemoveAll();
+        m_newMsgs.Add(newMessageKeys, numNewKeys);
+      }
+      nsMemory::Free (newMessageKeys);
     }
   }
   mDatabase = aMsgDatabase;
@@ -1895,16 +1901,19 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
 
   // get the list of new messages
   //
-  nsMsgKeyArray *newMessageKeys;
-  rv = mDatabase->GetNewList(&newMessageKeys);
+  PRUint32 numNewKeys;
+  PRUint32 *newKeys;
+  rv = mDatabase->GetNewList(&numNewKeys, &newKeys);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!newMessageKeys && m_saveNewMsgs.GetSize() > 0)
-    newMessageKeys = new nsMsgKeyArray;
 
-  newMessageKeys->InsertAt(0, &m_saveNewMsgs);
+  nsMsgKeyArray newMessageKeys;
+  if (numNewKeys)
+    newMessageKeys.Add(newKeys, numNewKeys);
+
+  newMessageKeys.InsertAt(0, &m_saveNewMsgs);
   // if there weren't any, just return 
   //
-  if (!newMessageKeys || !newMessageKeys->GetSize()) 
+  if (!newMessageKeys.GetSize()) 
       return NS_OK;
 
   spamSettings->GetUseWhiteList(&useWhiteList);
@@ -1934,12 +1943,12 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
   nsXPIDLCString uri;
   nsMsgKeyArray keysToClassify;
 
-  PRUint32 numNewMessages = newMessageKeys->GetSize();
+  PRUint32 numNewMessages = newMessageKeys.GetSize();
   for ( PRUint32 i=0 ; i < numNewMessages ; ++i ) 
   {
       nsXPIDLCString junkScore;
       nsCOMPtr <nsIMsgDBHdr> msgHdr;
-      nsMsgKey msgKey = newMessageKeys->GetAt(i);
+      nsMsgKey msgKey = newMessageKeys.GetAt(i);
       rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
       if (!NS_SUCCEEDED(rv))
         continue;
@@ -1970,7 +1979,7 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
         }
       }
 
-      keysToClassify.Add(newMessageKeys->GetAt(i));
+      keysToClassify.Add(newMessageKeys.GetAt(i));
 
   }
 
@@ -2001,7 +2010,6 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow *aMsgWindow, PRBool *aFiltersRun)
 
   }
   m_saveNewMsgs.RemoveAll();
-  NS_DELETEXPCOM(newMessageKeys);
   return rv;
 }
 
@@ -3674,6 +3682,8 @@ NS_IMETHODIMP nsMsgDBFolder::SetFlag(PRUint32 flag)
   PRBool flagSet;
   nsresult rv;
 
+  PRBool dbWasOpen = mDatabase != nsnull;
+
   if (NS_FAILED(rv = GetFlag(flag, &flagSet)))
     return rv;
 
@@ -3682,6 +3692,8 @@ NS_IMETHODIMP nsMsgDBFolder::SetFlag(PRUint32 flag)
     mFlags |= flag;
     OnFlagChange(flag);
   }
+  if (!dbWasOpen && mDatabase)
+    SetMsgDatabase(nsnull);
 
   return NS_OK;
 }

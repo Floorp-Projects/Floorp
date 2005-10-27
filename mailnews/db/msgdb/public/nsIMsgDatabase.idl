@@ -117,7 +117,7 @@ interface nsIMsgDBService : nsISupports
     void unregisterPendingListener(in nsIDBChangeListener aListener);
 };
 
-[scriptable, uuid(1a706802-8121-4f91-a302-6e1f9a13204b)]
+[scriptable, uuid(7b510984-bbac-4e8f-b6cd-134509000776)]
 
 interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   void Open(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aLeaveInvalidDB);
@@ -296,10 +296,8 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
    * The list of messages currently in the NEW state.
    * 
    * If there are no such messages, a null pointer may be returned.
-   * Note that the since the structure itself is not refcounted, 
-   * the caller should free when done using NS_DELETEXPCOM().
+   * the caller should free when done using nsMemory::Free.
    */
-  [noscript]
-  readonly attribute nsMsgKeyArrayPtr newList;
+  void getNewList(out unsigned long count, [array, size_is(count)] out nsMsgKey newKeys);
 };
 

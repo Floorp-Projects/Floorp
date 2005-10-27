@@ -4756,23 +4756,25 @@ NS_IMETHODIMP nsMsgDatabase::SetFolderStream(nsIOFileStream *aFileStream)
 }
 
 /**
- * [noscript] readonly attribute nsMsgKeySetPtr newList;
+  void getNewList(out unsigned long count, [array, size_is(count)] out long newKeys);
  */
 NS_IMETHODIMP
-nsMsgDatabase::GetNewList(nsMsgKeyArray * *aNewList)
+nsMsgDatabase::GetNewList(PRUint32 *aCount, PRUint32 **aNewKeys)
 {
-    NS_ENSURE_ARG_POINTER(aNewList);
+    NS_ENSURE_ARG_POINTER(aCount);
+    NS_ENSURE_ARG_POINTER(aNewKeys);
 
-    if (m_newSet.GetSize() > 0)
+    *aCount = m_newSet.GetSize();
+    if (*aCount > 0)
     {
-      *aNewList = new nsMsgKeyArray;
-      if (!*aNewList)
+      *aNewKeys = NS_STATIC_CAST(PRUint32 *, nsMemory::Alloc(*aCount * sizeof(PRUint32)));
+      if (!*aNewKeys)
         return NS_ERROR_OUT_OF_MEMORY;
-      (*aNewList)->CopyArray(m_newSet);
+      memcpy(*aNewKeys, m_newSet.GetArray(), *aCount * sizeof(PRUint32));
       return NS_OK;
     }
     // if there were no new messages, signal this by returning a null pointer
     //
-    *aNewList = 0;
+    *aNewKeys = nsnull;
     return NS_OK;
 }
