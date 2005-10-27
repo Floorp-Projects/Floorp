@@ -163,17 +163,21 @@ nsXPath1SchemeProcessor::Evaluate(nsIDOMDocument *aDocument,
   if (!nsresolver) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsRefPtr<nsXPathEvaluator> e(new nsXPathEvaluator());
+  nsRefPtr<nsXPathEvaluator> e(new nsXPathEvaluator(nsnull));
   if (!e) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  nsresult rv = e->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIDOMXPathResult> result;
-  nsresult rv = e->Evaluate(aData,
-                            aDocument,
-                            nsresolver,
-                            nsIDOMXPathResult::ORDERED_NODE_ITERATOR_TYPE,
-                            nsnull,
-                            getter_AddRefs(result));
+  rv = e->Evaluate(aData,
+                   aDocument,
+                   nsresolver,
+                   nsIDOMXPathResult::ORDERED_NODE_ITERATOR_TYPE,
+                   nsnull,
+                   getter_AddRefs(result));
   if (NS_FAILED(rv)) {
     if ((rv == NS_ERROR_DOM_INVALID_EXPRESSION_ERR) ||
         (rv == NS_ERROR_DOM_NAMESPACE_ERR) ||

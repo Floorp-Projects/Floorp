@@ -118,6 +118,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsHTMLAtoms.h"
 
 #include "nsScriptEventManager.h"
+#include "nsIDOMXPathEvaluator.h"
 #include "nsIXPathEvaluatorInternal.h"
 #include "nsIParserService.h"
 #include "nsContentCreatorFunctions.h"
@@ -667,35 +668,6 @@ nsDocumentChildNodes::DropReference()
   mDocument = nsnull;
 }
 
-class nsXPathDocumentTearoff : public nsIDOMXPathEvaluator
-{
-public:
-  nsXPathDocumentTearoff(nsIDOMXPathEvaluator* aEvaluator,
-                         nsIDocument* aDocument)
-    : mEvaluator(aEvaluator), mDocument(aDocument)
-  {
-  }
-  virtual ~nsXPathDocumentTearoff()
-  {
-  }
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_FORWARD_NSIDOMXPATHEVALUATOR(mEvaluator->)
-
-private:
-  nsCOMPtr<nsIDOMXPathEvaluator> mEvaluator;
-  nsIDocument* mDocument;
-};
-
-NS_INTERFACE_MAP_BEGIN(nsXPathDocumentTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMXPathEvaluator)
-NS_INTERFACE_MAP_END_AGGREGATED(mDocument)
-
-NS_IMPL_ADDREF_USING_AGGREGATOR(nsXPathDocumentTearoff, mDocument)
-NS_IMPL_RELEASE_USING_AGGREGATOR(nsXPathDocumentTearoff, mDocument)
-
-
 // ==================================================================
 // =
 // ==================================================================
@@ -808,7 +780,6 @@ nsDocument::~nsDocument()
 
   delete mHeaderData;
   delete mBoxObjectTable;
-  delete mXPathDocument;
 }
 
 PRBool gCheckedForXPathDOM = PR_FALSE;
@@ -837,38 +808,32 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocument)
-  if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator))) {
-    nsresult rv;
-    if (!gCheckedForXPathDOM) {
-      nsCOMPtr<nsIComponentRegistrar> cr;
-      rv = NS_GetComponentRegistrar(getter_AddRefs(cr));
-      NS_ENSURE_SUCCESS(rv, rv);
+  if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
+      aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
+    if (!mXPathEvaluatorTearoff) {
+      nsresult rv;
+      if (!gCheckedForXPathDOM) {
+        nsCOMPtr<nsIComponentRegistrar> cr;
+        rv = NS_GetComponentRegistrar(getter_AddRefs(cr));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-      gCheckedForXPathDOM = PR_TRUE;
+        gCheckedForXPathDOM = PR_TRUE;
 
-      cr->IsContractIDRegistered(NS_XPATH_EVALUATOR_CONTRACTID,
-                                 &gHaveXPathDOM);
-    }
-
-    if (!gHaveXPathDOM) {
-      return NS_ERROR_NO_INTERFACE;
-    }
-
-    if (!mXPathDocument) {
-      nsCOMPtr<nsIDOMXPathEvaluator> evaluator;
-      evaluator = do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIXPathEvaluatorInternal> internal =
-          do_QueryInterface(evaluator);
-      if (internal) {
-        internal->SetDocument(this);
+        cr->IsContractIDRegistered(NS_XPATH_EVALUATOR_CONTRACTID,
+                                   &gHaveXPathDOM);
       }
 
-      mXPathDocument = new nsXPathDocumentTearoff(evaluator, this);
-      NS_ENSURE_TRUE(mXPathDocument, NS_ERROR_OUT_OF_MEMORY);
+      if (!gHaveXPathDOM) {
+        return NS_ERROR_NO_INTERFACE;
+      }
+
+      mXPathEvaluatorTearoff =
+        do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID,
+                          NS_STATIC_CAST(nsIDocument *, this), &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-    foundInterface = mXPathDocument;
+
+    return mXPathEvaluatorTearoff->QueryInterface(aIID, aInstancePtr);
   }
   else
 NS_INTERFACE_MAP_END
