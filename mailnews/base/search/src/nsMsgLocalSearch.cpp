@@ -125,11 +125,9 @@ nsMsgSearchBoolExpression::nsMsgSearchBoolExpression (nsMsgSearchBoolExpression 
 
 nsMsgSearchBoolExpression::~nsMsgSearchBoolExpression()
 {
-    // we must recursively destroy all sub expressions before we destroy ourself.....We leave search terms alone!
-    if (m_leftChild)
-        delete m_leftChild;
-    if (m_rightChild)
-        delete m_rightChild;
+  // we must recursively destroy all sub expressions before we destroy ourself.....We leave search terms alone!
+  delete m_leftChild;
+  delete m_rightChild;
 }
 
 nsMsgSearchBoolExpression *
@@ -590,7 +588,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
                                             PRUint32 headerSize,
                                             PRBool Filtering,
                                             nsMsgSearchBoolExpression ** aExpressionTree,
-											PRBool *pResult) 
+                                            PRBool *pResult) 
 {
   NS_ENSURE_ARG(aExpressionTree);
   nsresult err;

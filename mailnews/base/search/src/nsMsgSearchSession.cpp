@@ -96,6 +96,7 @@ nsMsgSearchSession::AddSearchTerm(nsMsgSearchAttribValue attrib,
 	m_termList->AppendElement (pTerm);
         // force the expression tree to rebuild whenever we change the terms
         delete m_expressionTree;
+        m_expressionTree = nsnull;
 	return NS_OK;
 }
 
@@ -105,6 +106,7 @@ nsMsgSearchSession::AppendTerm(nsIMsgSearchTerm *aTerm)
     NS_ENSURE_ARG_POINTER(aTerm);
     NS_ENSURE_TRUE(m_termList, NS_ERROR_NOT_INITIALIZED);
     delete m_expressionTree;
+    m_expressionTree = nsnull;
     return m_termList->AppendElement(aTerm);
 }
 
@@ -648,7 +650,6 @@ void nsMsgSearchSession::DestroyScopeList()
 
 void nsMsgSearchSession::DestroyTermList ()
 {
-    delete m_expressionTree;
     m_termList->Clear();
 }
 
