@@ -900,7 +900,7 @@ const nsHTMLElement gHTMLElements[] = {
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
     /*autoclose starttags and endtags*/ 0,0,0,0,
     /*parent,incl,exclgroups*/          kSpecial|kHeadMisc, (kFlowEntity|kSelf), kNone,
-    /*special props, prop-range*/       kNoStyleLeaksOut,kDefaultPropRange,
+    /*special props, prop-range*/       kNoStyleLeaksOut|kPreferBody,kDefaultPropRange,
     /*special parents,kids,skip*/       0,&gContainsParam,eHTMLTag_unknown,
     /*contain-func*/                    0
   },
