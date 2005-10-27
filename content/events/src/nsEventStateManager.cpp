@@ -220,7 +220,6 @@ nsEventStateManager::nsEventStateManager()
     mLClickCount(0),
     mMClickCount(0),
     mRClickCount(0),
-    mConsumeFocusEvents(PR_FALSE),
     mNormalLMouseEventInProcess(PR_FALSE),
     m_haveShutdown(PR_FALSE),
     mClearedFrameRefsDuringEvent(PR_FALSE),
@@ -1916,11 +1915,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         break;
       }
 
-      if (mConsumeFocusEvents) {
-        mConsumeFocusEvents = PR_FALSE;
-        break;
-      }
-
       if (nsEventStatus_eConsumeNoDefault != *aStatus) {
         nsCOMPtr<nsIContent> newFocus;
         PRBool suppressBlur = PR_FALSE;
@@ -2134,10 +2128,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       if (!keyEvent->isAlt) {
         switch(keyEvent->keyCode) {
           case NS_VK_TAB:
-            if (mConsumeFocusEvents) {
-              mConsumeFocusEvents = PR_FALSE;
-              break;
-            }
             if (!((nsInputEvent*)aEvent)->isControl) {
               //Shift focus forward or back depending on shift key
               ShiftFocus(!((nsInputEvent*)aEvent)->isShift);
@@ -2148,10 +2138,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             break;
 
           case NS_VK_F6:
-            if (mConsumeFocusEvents) {
-              mConsumeFocusEvents = PR_FALSE;
-              break;
-            }
             //Shift focus forward or back depending on shift key
             ShiftFocusByDoc(!((nsInputEvent*)aEvent)->isShift);
             *aStatus = nsEventStatus_eConsumeNoDefault;

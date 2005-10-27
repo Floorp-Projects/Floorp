@@ -134,9 +134,6 @@ public:
   // Must supply method that focus is being set with
   NS_IMETHOD ChangeFocusWith(nsIContent *aFocusContent, EFocusedWithType aFocusedWith) = 0;
 
-  // This is an experiment and may be temporary
-  NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) = 0;
-
   // Access Key Registration
   NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey) = 0;
   NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey) = 0;

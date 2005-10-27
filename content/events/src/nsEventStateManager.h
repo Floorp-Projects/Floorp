@@ -123,9 +123,6 @@ public:
   NS_IMETHOD ContentRemoved(nsIContent* aContent);
   NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK);
 
-  // This is an experiement and may be temporary
-  NS_IMETHOD ConsumeFocusEvents(PRBool aDoConsume) { mConsumeFocusEvents = aDoConsume; return NS_OK; }
-
   // Access Key Registration
   NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey);
   NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey);
@@ -349,8 +346,6 @@ protected:
   PRUint32 mLClickCount;
   PRUint32 mMClickCount;
   PRUint32 mRClickCount;
-
-  PRPackedBool mConsumeFocusEvents;
 
   PRPackedBool mNormalLMouseEventInProcess;
 
