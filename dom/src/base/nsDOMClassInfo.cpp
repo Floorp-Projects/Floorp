@@ -7403,7 +7403,8 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
     ToLowerCase(type);
     nsCAutoString actualType, dummy;
     NS_ParseContentType(NS_ConvertUTF16toUTF8(type), actualType, dummy);
-    if (!actualType.EqualsLiteral("text/html")) {
+    if (!actualType.EqualsLiteral("text/html") &&
+        !type.EqualsLiteral("replace")) {
       contentType = "text/plain";
     }
   }
