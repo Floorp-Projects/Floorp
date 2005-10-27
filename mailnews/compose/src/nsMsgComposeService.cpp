@@ -419,7 +419,9 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
     if (NS_SUCCEEDED(rv) && pMsgDraft)
     {
       nsCAutoString uriToOpen(originalMsgURI);
-      uriToOpen.Append("?fetchCompleteMessage=true"); 
+
+      uriToOpen += (uriToOpen.FindChar('?') == kNotFound) ? "?" : "&";
+      uriToOpen.Append("fetchCompleteMessage=true"); 
 
       switch(type)
       {
@@ -475,12 +477,12 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
         else
         {
           pMsgComposeParams->SetOriginalMsgURI(originalMsgURI);
-          if (PL_strstr(originalMsgURI, "?type=application/x-message-display"))
+          if (PL_strstr(originalMsgURI, "type=application/x-message-display"))
           {
             nsCOMPtr <nsIMsgDBHdr> msgHdr;
             if (strncmp(originalMsgURI, "file:", 5))
               rv = GetMsgDBHdrFromURI(originalMsgURI, getter_AddRefs(msgHdr));
-            else if (aMsgWindow)
+            if (aMsgWindow && !msgHdr)
             {
               nsCOMPtr <nsIMsgHeaderSink> headerSink;
               rv = aMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));

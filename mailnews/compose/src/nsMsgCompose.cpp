@@ -1458,6 +1458,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
   nsresult rv = NS_OK;
 
   mType = type;
+  mDraftDisposition = nsIMsgFolder::nsMsgDispositionState_None;
 
   mDeleteDraft = (type == nsIMsgCompType::Draft);
   nsCAutoString msgUri(originalMsgURI);
@@ -1473,8 +1474,20 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       // we also need to replace the next '&' with '?'
       if (msgUri.CharAt(typeIndex) == '&')
         msgUri.SetCharAt('?', typeIndex);
+      originalMsgURI = msgUri.get();
     }
-    originalMsgURI = msgUri.get();
+  }
+  else // check if we're dealing with a displayed message/rfc822 attachment
+  {
+    PRInt32 typeIndex = typeIndex = msgUri.Find("&type=application/x-message-display");
+    if (typeIndex != kNotFound)
+    {
+      msgUri.Cut(typeIndex, sizeof("&type=application/x-message-display") - 1);
+      // nsURLFetcher will check for "realtype=message/rfc822" and will set the
+      // content type to message/rfc822 in the forwarded message.
+      msgUri.Append("&realtype=message/rfc822");
+      originalMsgURI = msgUri.get();
+    }
   }
   if (compFields)
   {
@@ -1536,6 +1549,38 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
         m_compFields->SetBcc(bccStr.get());
       }
   }
+
+  if (mType == nsIMsgCompType::Draft)
+  {
+    nsXPIDLCString curDraftIdURL;
+
+    rv = m_compFields->GetDraftId(getter_Copies(curDraftIdURL));
+    NS_ASSERTION((NS_SUCCEEDED(rv) && (curDraftIdURL)), "RemoveCurrentDraftMessage can't get draft id");
+
+    // Skip if no draft id (probably a new draft msg).
+    if (NS_SUCCEEDED(rv) && curDraftIdURL.get() && strlen(curDraftIdURL.get()))
+    { 
+      nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
+      rv = GetMsgDBHdrFromURI(curDraftIdURL, getter_AddRefs(msgDBHdr));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveCurrentDraftMessage can't get msg header DB interface pointer.");
+      if (msgDBHdr)
+      {
+        nsXPIDLCString queuedDisposition;
+        msgDBHdr->GetStringProperty(QUEUED_DISPOSITION_PROPERTY, getter_Copies(queuedDisposition));
+        nsXPIDLCString originalMsgURIs;
+        msgDBHdr->GetStringProperty(ORIG_URI_PROPERTY, getter_Copies(originalMsgURIs));
+        mOriginalMsgURI = originalMsgURIs;
+        if (!queuedDisposition.IsEmpty())
+        {
+          if (queuedDisposition.Equals("replied"))
+             mDraftDisposition = nsIMsgFolder::nsMsgDispositionState_Replied;
+          else if (queuedDisposition.Equals("forward"))
+             mDraftDisposition = nsIMsgFolder::nsMsgDispositionState_Forwarded;
+        }
+      }
+    }
+  }
+
 
   // If we don't have an original message URI, nothing else to do...
   if (!originalMsgURI || *originalMsgURI == 0)
@@ -2728,7 +2773,8 @@ nsresult nsMsgCompose::ProcessReplyFlags()
       mType == nsIMsgCompType::ReplyToSender ||
       mType == nsIMsgCompType::ReplyToSenderAndGroup ||
       mType == nsIMsgCompType::ForwardAsAttachment ||              
-      mType == nsIMsgCompType::ForwardInline)
+      mType == nsIMsgCompType::ForwardInline ||
+      mDraftDisposition != nsIMsgFolder::nsMsgDispositionState_None)
   {
     if (!mOriginalMsgURI.IsEmpty())
     {
@@ -2749,8 +2795,12 @@ nsresult nsMsgCompose::ProcessReplyFlags()
           msgHdr->GetFolder(getter_AddRefs(msgFolder));
           if (msgFolder)
           {
+            // assume reply. If a draft with disposition, use that, otherwise,
+            // check if it's a forward.
             nsMsgDispositionState dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Replied;
-            if (mType == nsIMsgCompType::ForwardAsAttachment ||              
+            if (mDraftDisposition != nsIMsgFolder::nsMsgDispositionState_None)
+              dispositionSetting = mDraftDisposition;
+            else if (mType == nsIMsgCompType::ForwardAsAttachment ||              
                 mType == nsIMsgCompType::ForwardInline)
               dispositionSetting = nsIMsgFolder::nsMsgDispositionState_Forwarded;
 
@@ -3023,7 +3073,8 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
   nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);
   if (compose)
   {
-    if (mDeliverMode == nsIMsgSend::nsMsgQueueForLater)
+    if (mDeliverMode == nsIMsgSend::nsMsgQueueForLater || 
+          mDeliverMode == nsIMsgSend::nsMsgSaveAsDraft)
       compose->RememberQueuedDisposition();
       
     // Ok, if we are here, we are done with the send/copy operation so

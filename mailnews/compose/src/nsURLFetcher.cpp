@@ -489,16 +489,23 @@ NS_IMETHODIMP nsURLFetcherStreamConsumer::OnStopRequest(nsIRequest *aRequest, ns
   nsCAutoString contentType;
   nsCAutoString charset;
 
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest);
-  if(!aChannel) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  if(!channel) return NS_ERROR_FAILURE;
 
-  if (NS_SUCCEEDED(aChannel->GetContentType(contentType)) &&
+  if (NS_SUCCEEDED(channel->GetContentType(contentType)) &&
       !contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE))
   {
-    mURLFetcher->mContentType = contentType;
+    nsCAutoString uriSpec;
+    nsCOMPtr <nsIURI> channelURI;
+    channel->GetURI(getter_AddRefs(channelURI));
+    channelURI->GetSpec(uriSpec);
+    if (FindInReadable(NS_LITERAL_CSTRING("&realtype=message/rfc822"), uriSpec))
+      mURLFetcher->mContentType = MESSAGE_RFC822;
+    else
+      mURLFetcher->mContentType = contentType;
   }
 
-  if (NS_SUCCEEDED(aChannel->GetContentCharset(charset)) && !charset.IsEmpty())
+  if (NS_SUCCEEDED(channel->GetContentCharset(charset)) && !charset.IsEmpty())
   {
     mURLFetcher->mCharset = charset;
   }

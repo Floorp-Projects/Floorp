@@ -149,9 +149,9 @@ nsMsgDraft::ProcessDraftOrTemplateOperation(const char *msgURI, nsMimeOutputType
   nsCOMPtr<nsIURI> aURL;
   nsCAutoString uriString(msgURI);
   PRBool fileUrl = StringBeginsWith(uriString, NS_LITERAL_CSTRING("file:"));
+  PRBool forwardedMessage = PL_strstr(msgURI, "&type=application/x-message-display") != nsnull;
 
-  
-  if (fileUrl)
+  if (fileUrl || forwardedMessage)
     rv = NS_NewURI(getter_AddRefs(aURL), msgURI);
   else
     rv = mMessageService->GetUrlForUri(mURI, getter_AddRefs(aURL), aMsgWindow);
