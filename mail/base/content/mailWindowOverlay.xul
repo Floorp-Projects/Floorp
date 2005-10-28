@@ -306,7 +306,7 @@
 #endif
 
 <keyset id="mailKeys">
-  <key id="space" key=" " modifiers="space any" oncommand="SpaceHit(event);"/>
+  <key id="space" key=" " modifiers="shift any" oncommand="SpaceHit(event);"/>
 
   <!-- File Menu -->
   <key id="key_close"/>
