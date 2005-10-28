@@ -44,6 +44,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= triplescat$(BIN_SUFFIX)
+MOZILLA_INTERNAL_API = 1
+
 CPPSRCS		= triplescat.cpp
 REQUIRES	= xpcom \
 		  rdf \
