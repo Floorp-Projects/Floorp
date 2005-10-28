@@ -45,6 +45,7 @@ var abResultsPaneObserver = {
 
       aXferData.data.addDataForFlavour("moz/abcard", selectedRows);
       aXferData.data.addDataForFlavour("text/x-moz-address", selectedAddresses);
+      aXferData.data.addDataForFlavour("text/unicode", selectedAddresses);
     },
 
   onDrop: function (aEvent, aXferData, aDragSession)
