@@ -48,15 +48,27 @@ var jsOptions = new JavaScriptOptions();
 // non strict
 jsOptions.setOption('strict', false);
 jsOptions.setOption('werror', false);
-expect = null;
-actual = /.\011/.exec ('a'+String.fromCharCode(0)+'11');
+try
+{
+  expect = null;
+  actual = /.\011/.exec ('a'+String.fromCharCode(0)+'11');
+}
+catch(e)
+{
+}
 jsOptions.reset();
 reportCompare(expect, actual, summary);
 
 // strict
 jsOptions.setOption('strict', true);
 expect = null;
-actual = /.\011/.exec ('a'+String.fromCharCode(0)+'11');
+try
+{
+  actual = /.\011/.exec ('a'+String.fromCharCode(0)+'11');
+}
+catch(e)
+{
+}
 jsOptions.reset();
 reportCompare(expect, actual, summary);
 
