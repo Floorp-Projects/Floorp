@@ -46,6 +46,12 @@
 <?xml-stylesheet href="chrome://minimo/skin/preferences.css" type="text/css"?>
 <?xml-stylesheet href="chrome://minimo/content/bindings/preferences.css" type="text/css"?> 
 
+<?xul-overlay href="chrome://minimo/content/preferences/pane-general.xul"?>
+<?xul-overlay href="chrome://minimo/content/preferences/pane-advanced.xul"?>
+<?xul-overlay href="chrome://minimo/content/preferences/pane-privacy.xul"?>
+<?xul-overlay href="chrome://minimo/content/preferences/pane-connection.xul"?>
+<?xul-overlay href="chrome://minimo/content/preferences/pane-okaycancel.xul"?>
+
 <!DOCTYPE prefwindow [
   <!ENTITY % preferencesDTD SYSTEM "chrome://minimo/locale/preferences.dtd">
   %preferencesDTD;
@@ -106,211 +112,9 @@
     <!-- the syncPref tells the OKAY function to push prefs  --> 
     <!-- =================================================== -->
     
-    <!-- GENERAL PANE -->
-    
-	<hbox class="panel-container" flex="1" id="general-pane"
-            accessfocus="browserStartupHomepage" 
-            accessnextrule="advanced-pane"
-            accessprevrule="pref-bar" >
-            
-            <groupbox flex="1" class="box-floatoptions scrolling"   >
-                <caption label="&general.label;" /> 
-                <hbox flex="1" >
-                    <vbox flex="1" style="padding:4px ! important">
-                        <groupbox class='box-prefgroupitem' id='home-box'>
+    <box id="pref-panes" flex="1">  
 
-                            <caption label="&homeCaption.label;"/>
-
-                                <box class="box-prefpadding">
-                                    <textbox id="browserStartupHomepage" keyup=""  tabindex="10" 
-                                             style="margin:3px ! important;" flex="1"  onfocus="prefFocus('home-box')" onblur="prefBlur('home-box')"
-                                             onchange="syncPref(this)" preference="browser.startup.homepage" preftype="string"/>
-                                </box>
-
-                        </groupbox>
-                        <groupbox  class='box-prefgroupitem' id='ssrimage-box'>
-                                <caption label="&sssCaption.label;"/>
-
-                                <vbox class="box-prefpadding">     
-                   
-                                <checkbox id="enableImages" 
-                                              tabindex="11" 
-                                              onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
-                                              label="&imagesCheckbox.label;"
-                                              preference="permissions.default.image" preftype="int" prefvalue=""
-                                              onsyncfrompreference="readEnableImagesPref();"
-                                              onsynctopreference="writeEnableImagesPref();" 
-                                              onclick="syncPref(this)" 
-                                              />
-    
-                                <checkbox id="ssr"
-                                              onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
-                                              tabindex="12" 
-                                              label="&useSSRCheckbox.label;"
-                                              preference="ssr.enabled" preftype="bool"
-                                              onclick="syncPref(this)" 
-                                              />
-    
-                                <checkbox id="sitessr" 
-                                              onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
-                                              tabindex="13" 
-                                              label="&usesiteSSRCheckbox.label;"
-                                              preference="ssr.site.enabled" preftype="bool"
-                                              onclick="syncPref(this)" 
-                                              />
-                            </vbox>
-    				    </groupbox>
-    				    <groupbox class='box-prefgroupitem' id='zoom-box' >
-                            <caption label="&zoom.label;"/>
-                            
-                            <grid class="box-prefpadding" >
-                              <columns>
-                                <column flex="1"/>
-                                <column />
-                              </columns>
-                              <rows>
-                               <row>
-
-                                    <label value="&zoomui.label;" />
-                                    <textbox id="browserDisplayZoomUI" size="5" tabindex="14"
-                                             onfocus="prefFocus('zoom-box')" onblur="prefBlur('zoom-box')"
-                                             style="margin:3px ! important;" 
-                                             preference="browser.display.zoomui" preftype="int" 
-                                             onchange="syncPref(this)" 
-                                             />
-
-                               </row>
-                               <row>    
-
-                                    <label value="&zoomcontent.label;" />
-                                    <textbox id="browserDisplayZoomContent" size="5" tabindex="15" accessrule="general-pane"
-                                             onfocus="prefFocus('zoom-box')" onblur="prefBlur('zoom-box')"
-                                             style="margin:3px ! important;" 
-                                             onchange="syncPref(this)"
-                                             preference="browser.display.zoomcontent"
-                                             preftype="int"
-                                             />
-                                             
-                               </row>
-                              </rows>
-                            </grid>
-                            
-                        </groupbox>
-                    </vbox>
-                </hbox>
-            </groupbox> 
-	</hbox>	
-
-    <!-- ADVANCED PANE --> 
-
-    <hbox class="panel-container" flex="1" id="advanced-pane"
-          accessfocus="skey"
-          accessnextrule="privacy-pane"
-          accessprevrule="general-pane"
-          collapsed="true"  >
-          
-        <groupbox flex="1" class="box-floatoptions scrolling" >
-            <caption label="&advanced.label;" /> 
-            <hbox flex="1" >
-                <vbox flex="1" style="padding:4px ! important">
-                    <checkbox tabindex="30" id="skey"
-                              label="&useSWKeyboard.label;"
-                              preference="skey.enabled"
-                              onclick="syncPref(this)" />
-                              
-                    <checkbox tabindex="31"
-                              id="dumpJS"
-                              label="&dumpJSConsole.label;"
-                              preference="config.wince.dumpJSConsole" accessrule="advanced-pane"
-                              onclick="syncPref(this)" />
-                </vbox>
-            </hbox>
-        </groupbox> 
-    </hbox>	
-
-    <!-- PRIVACY PANE --> 
-
-    <hbox id="privacy-pane"
-          class="panel-container"  
-          flex="1"
-          accessfocus="privacySanitize"
-          accessnextrule="connection-pane"
-          accessprevrule="advanced-pane"
-          collapsed="true"  >
-          
-        <groupbox flex="1" class="box-floatoptions scrolling" >
-            <caption label="&privacy.label;" /> 
-            <box class="box-prefpadding">
-
-                <button id="privacySanitize" tabindex="40"
-                        class='box-prefgroupitem'
-                        label="&sanitizeButton.label;" accessrule="privacy-pane"
-                        oncommand="sanitizeAll();"/>
-
-            </box>
-        </groupbox> 
-    </hbox>
-
-    <!-- CONNECTION PANE --> 
-
-    <hbox id="connection-pane"
-          class="panel-container"
-          accessfocus="UseProxy"
-          accessnextrule="pref-bar"
-          accessprevrule="privacy-pane"
-          flex="1"
-          collapsed="true"  >
-          
-        <groupbox flex="1" class="box-floatoptions scrolling">
-            <caption label="&proxyCaption.label;"/>
-            <vbox class="box-prefpadding" flex="1">
-            
-                <checkbox id="UseProxy" tabindex="50"
-                          label="&useproxyCheckbox.label;"
-                          preference="network.proxy.type" 
-                          onclick="syncPref(this)" 
-                          onsyncfrompreference="readProxyPref();"
-                          onsynctopreference="writeProxyPref();"
-                          />
-
-				
-                <groupbox class='box-prefgroupitem' >
-                    <caption label="&proxyURL.label; and &proxyPortCaption.label;"/>
-                    <hbox flex="1">
-                        <textbox onchange="syncPref(this)"  tabindex="51"
-                                 flex="1" 
-                                 style="margin:3px ! important;" 
-                                 id="networkProxyHTTP"
-                                 preference="network.proxy.http"
-                                 />
-                                 
-                        <textbox onchange="syncPref(this)" 
-                                 id="networkProxyHTTP_Port"  tabindex="52"
-                                 size="5"  
-                                 style="margin:3px ! important;"  
-                                 preference="network.proxy.http_port" accessrule="connection-pane"
-                                 />              
-                                           
-                    </hbox>		
-                </groupbox>
-            </vbox>
-        </groupbox>
-    </hbox>
-
-    <!-- SUMMARY OKAY CANCEL PANE -->
-
-    <hbox id="summary-pane"
-          class="panel-container"
-          flex="1" 
-          collapsed="true" 
-          >
-
-        <groupbox flex="1" class="box-floatoptions scrolling" >
-            <caption label="&summaryCaption.label;"/>
-            <label flex="1" class="okay-panel-textbox" id="textbox-okay-pane" />
-        </groupbox>
-
-    </hbox>
+    </box>
 
   </vbox>
 
