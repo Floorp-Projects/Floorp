@@ -663,7 +663,7 @@ js_MarkLocalRoots(JSContext *cx, JSLocalRootStack *lrs)
                 lrc = lrc->down;
         }
         m = n & JSLRS_CHUNK_MASK;
-        mark = lrc->roots[m];
+        mark = JSVAL_TO_INT(lrc->roots[m]);
         if (m == 0)
             lrc = lrc->down;
     } while (n != 0);
