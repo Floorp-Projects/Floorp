@@ -48,18 +48,20 @@ import java.io.*;
  * <code>java.io.File</code> instead of <code>nsIFile</code>.
  * </p>
  *
- * @see GeckoEmbed#initEmbedding
- * @see XPCOM#initXPCOM
- * @see <a href="http://lxr.mozilla.org/mozilla/source/xpcom/io/nsIDirectoryService.idl">
+ * @see Mozilla#initEmbedding
+ * @see Mozilla#initXPCOM
+ * @see <a href=
+ *     "http://lxr.mozilla.org/mozilla/source/xpcom/io/nsIDirectoryService.idl">
  *      nsIDirectoryServiceProvider </a>
- * @see <a href="http://lxr.mozilla.org/mozilla/source/xpcom/io/nsDirectoryServiceDefs.h">
+ * @see <a href=
+ *    "http://lxr.mozilla.org/mozilla/source/xpcom/io/nsDirectoryServiceDefs.h">
  *      Directory Service property names </a>
  */
-public interface AppFileLocProvider {
+public interface IAppFileLocProvider {
 
   /**
    * Directory Service calls this when it gets the first request for
-   * a prop or on every request if the prop is not persistent.
+   * a property or on every request if the property is not persistent.
    *
    * @param prop        the symbolic name of the file
    * @param persistent  an array of length one used to supply the output value:
@@ -78,12 +80,13 @@ public interface AppFileLocProvider {
 
   /**
    * Directory Service calls this when it gets a request for
-   * a prop and the requested type is nsISimpleEnumerator.
+   * a property and the requested type is nsISimpleEnumerator.
    *
    * @param prop  the symbolic name of the file list
    *
-   * @return      an array for a list of file locations
+   * @return      an array of file locations
    */
   public File[] getFiles(String prop);
 
 }
+

@@ -42,52 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= javaxpcom
-LIBRARY_NAME	= javaxpcom
-MOZILLA_INTERNAL_API = 1
-
-# On Mac OS X, JNI libraries must end with a '.jnilib' extension
-ifeq ($(OS_ARCH),Darwin)
-DLL_SUFFIX = .jnilib
-endif
-
-REQUIRES	= xpcom \
-		  string \
-		  embed_base \
-		  $(NULL)
-
-DIRS = tools/genifaces build
-
-CPPSRCS		= \
-		nsAppFileLocProviderProxy.cpp \
-		nsJavaInterfaces.cpp \
-		nsJavaWrapper.cpp \
-		nsJavaXPTCStub.cpp \
-		nsJavaXPTCStubWeakRef.cpp \
-		nsJavaXPCOMBindingUtils.cpp \
-		$(NULL)
-
-LOCAL_INCLUDES	= -I$(JAVA_INCLUDE_PATH)
-
-ifeq ($(OS_ARCH),WINNT)
-LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/win32
-else
-LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
-endif
-
-EXTRA_DSO_LIBS = \
-	embed_base_s \
-	$(NULL)
-
-EXTRA_DSO_LDOPTS = \
-	$(LIBS_DIR) \
-	$(EXTRA_DSO_LIBS) \
-	$(MOZ_COMPONENT_LIBS) \
-	$(NULL)
+DIRS = tools/genifaces interfaces src
 
 include $(topsrcdir)/config/rules.mk
 
-XPCOMError.java: $(topsrcdir)/xpcom/base/nsError.h gen-nsError.pl Makefile Makefile.in
-	$(PERL) $(srcdir)/gen-nsError.pl < $< > $@
-
-export:: XPCOMError.java

@@ -224,7 +224,7 @@ InitializeJavaGlobals(JNIEnv *env)
     goto init_error;
   }
 
-  if (!(clazz = env->FindClass("org/mozilla/xpcom/XPCOMJavaProxy")) ||
+  if (!(clazz = env->FindClass("org/mozilla/xpcom/internal/XPCOMJavaProxy")) ||
       !(xpcomJavaProxyClass = (jclass) env->NewGlobalRef(clazz)) ||
       !(createProxyMID = env->GetStaticMethodID(clazz, "createProxy",
                                    "(Ljava/lang/Class;J)Ljava/lang/Object;")) ||
@@ -234,7 +234,7 @@ InitializeJavaGlobals(JNIEnv *env)
                                                        "getNativeXPCOMInstance",
                                                        "(Ljava/lang/Object;)J")))
   {
-    NS_WARNING("Problem creating org.mozilla.xpcom.XPCOMJavaProxy globals");
+    NS_WARNING("Problem creating org.mozilla.xpcom.internal.XPCOMJavaProxy globals");
     goto init_error;
   }
 
@@ -283,11 +283,14 @@ init_error:
 void
 FreeJavaGlobals(JNIEnv* env)
 {
-  PR_Lock(gJavaXPCOMLock);
+  PRLock* tempLock = nsnull;
+  if (gJavaXPCOMLock) {
+    PR_Lock(gJavaXPCOMLock);
 
-  // null out global lock so no one else can use it
-  PRLock* tempLock = gJavaXPCOMLock;
-  gJavaXPCOMLock = nsnull;
+    // null out global lock so no one else can use it
+    tempLock = gJavaXPCOMLock;
+    gJavaXPCOMLock = nsnull;
+  }
 
   gJavaXPCOMInitialized = PR_FALSE;
 
@@ -354,8 +357,10 @@ FreeJavaGlobals(JNIEnv* env)
     xpcomJavaProxyClass = nsnull;
   }
 
-  PR_Unlock(tempLock);
-  PR_DestroyLock(tempLock);
+  if (tempLock) {
+    PR_Unlock(tempLock);
+    PR_DestroyLock(tempLock);
+  }
 }
 
 

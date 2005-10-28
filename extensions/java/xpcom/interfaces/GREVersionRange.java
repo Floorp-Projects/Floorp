@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -38,57 +38,42 @@
 package org.mozilla.xpcom;
 
 
-/**
- * This exception is thrown whenever an internal XPCOM/Gecko error occurs.
- * You can query the error ID returned by XPCOM by checking
- * <code>errorcode</code> field.
- */
-public class XPCOMException extends RuntimeException {
+public class GREVersionRange {
 
-  /**
-   * The XPCOM error value.
-   */
-  public long errorcode;
+  private String lower;
+  private boolean lowerInclusive;
+  private String upper;
+  private boolean upperInclusive;
 
-  private static final long serialVersionUID = 198521829884000593L;
-
-  /**
-   * Constructs a new XPCOMException instance, with a default error
-   * (NS_ERROR_FAILURE) and message.
-   */
-  public XPCOMException() {
-    this(0x80004005L, "Unspecified internal XPCOM error");
+  public GREVersionRange(String aLower, boolean aLowerInclusive,
+                         String aUpper, boolean aUpperInclusive) {
+    lower = aLower;
+    lowerInclusive = aLowerInclusive;
+    upper = aUpper;
+    upperInclusive = aUpperInclusive;
   }
 
-  /**
-   * Constructs a new XPCOMException instance with the given message, passing
-   * NS_ERROR_FAILURE as the error code.
-   *
-   * @param message   detailed message of exception
-   */
-  public XPCOMException(String message) {
-    this(0x80004005L, message);
-  }
+  public boolean check(String aVersion) {
+    VersionComparator comparator = new VersionComparator();
+    int c = comparator.compare(aVersion, lower);
+    if (c < 0) {
+      return false;
+    }
 
-  /**
-   * Constructs a new XPCOMException instance with the given code, passing
-   * a default message.
-   *
-   * @param code      internal XPCOM error ID
-   */
-  public XPCOMException(long code) {
-    this(code, "Internal XPCOM error");
-  }
+    if (c == 0 && !lowerInclusive) {
+      return false;
+    }
 
-  /**
-   * Constructs a new XPCOMException instance with an error code and message.
-   *
-   * @param code      internal XPCOM error ID
-   * @param message   detailed message of exception
-   */
-  public XPCOMException(long code, String message) {
-    super(message + "  (0x" + Long.toHexString(code) + ")");
-    this.errorcode = code;
+    c = comparator.compare(aVersion, upper);
+    if (c > 0) {
+      return false;
+    }
+
+    if (c == 0 && !upperInclusive) {
+      return false;
+    }
+
+    return true;
   }
 
 }

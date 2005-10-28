@@ -35,61 +35,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.xpcom;
+package org.mozilla.xpcom.internal;
+
+import java.io.*;
+import org.mozilla.xpcom.*;
 
 
-/**
- * This exception is thrown whenever an internal XPCOM/Gecko error occurs.
- * You can query the error ID returned by XPCOM by checking
- * <code>errorcode</code> field.
- */
-public class XPCOMException extends RuntimeException {
+public class XPCOMImpl implements IXPCOM {
 
-  /**
-   * The XPCOM error value.
-   */
-  public long errorcode;
+  public native nsIComponentManager getComponentManager();
 
-  private static final long serialVersionUID = 198521829884000593L;
+  public native nsIComponentRegistrar getComponentRegistrar();
 
-  /**
-   * Constructs a new XPCOMException instance, with a default error
-   * (NS_ERROR_FAILURE) and message.
-   */
-  public XPCOMException() {
-    this(0x80004005L, "Unspecified internal XPCOM error");
-  }
+  public native nsIServiceManager getServiceManager();
 
-  /**
-   * Constructs a new XPCOMException instance with the given message, passing
-   * NS_ERROR_FAILURE as the error code.
-   *
-   * @param message   detailed message of exception
-   */
-  public XPCOMException(String message) {
-    this(0x80004005L, message);
-  }
+  public native nsIServiceManager initXPCOM(File aMozBinDirectory,
+          IAppFileLocProvider aAppFileLocProvider);
 
-  /**
-   * Constructs a new XPCOMException instance with the given code, passing
-   * a default message.
-   *
-   * @param code      internal XPCOM error ID
-   */
-  public XPCOMException(long code) {
-    this(code, "Internal XPCOM error");
-  }
+  public native nsILocalFile newLocalFile(String aPath, boolean aFollowLinks);
 
-  /**
-   * Constructs a new XPCOMException instance with an error code and message.
-   *
-   * @param code      internal XPCOM error ID
-   * @param message   detailed message of exception
-   */
-  public XPCOMException(long code, String message) {
-    super(message + "  (0x" + Long.toHexString(code) + ")");
-    this.errorcode = code;
-  }
+  public native void shutdownXPCOM(nsIServiceManager aServMgr);
 
 }
 
