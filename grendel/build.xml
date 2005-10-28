@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   - Kieran Maclean
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,88 +37,153 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <project name="Grendel" default="build" basedir=".">
+    <property name="version" value="0.1" />
 
+    <property name="base" value="."/>
+    <property name="lib" value="${base}/extlib"/>
+    <property name="src" value="sources"/>
+    <property name="dist" value="${base}/dist"/>
+    <property name="docs" value="${test.base}/docs"/>
+    
+    
     <target name="build" description="Compiles Grendel.">
-      <mkdir dir="dist"/>
-      <antcall target="unzipResources"/>
+        <mkdir dir="${dist}"/>
+        <antcall target="unzipResources"/>
 
-      <echo message="-- Compiling Grendel"/>
-      <javac srcdir="." destdir="dist"
-            classpath="**/*.jar"
+        <echo message="-- Compiling Grendel"/>
+        <javac srcdir="." destdir="${dist}"
             optimize="false"
             debug="true"
-            includes="**/*.java"/>
+            includes="${src}/**/*.java">
+            <classpath>
+                <fileset dir="${lib}" includes="*.jar"/>
+            </classpath>
+        </javac>
     </target>
 
     <target name="unzipResources">
-      <echo message="-- Unzipping jar files..."/>
-      <unzip dest="dist" overwrite="false">
-        <fileset dir="extlib">
-          <include name="**/*.jar"/>
-        </fileset>
-      </unzip>
 
-      <echo message="-- Copying resource files..."/>
-      <copy todir="dist">
-        <fileset dir="sources/grendel">
-          <include name="**/*.gif"/>
-          <include name="**/*.htm*"/>
-          <include name="**/*.png"/>
-          <include name="**/*.jpg"/>
-          <include name="**/*.tmpl"/>
-          <include name="**/*.xml"/>
-          <include name="**/*.dtd"/>
-          <include name="META-INF/*"/>
-        </fileset>
-      </copy>
-      <copy todir="dist">
-        <fileset dir="sources">
-          <include name="**/*.properties"/>
-        </fileset>
-      </copy>
+        <echo message="-- Copying resource files..."/>
+        <copy todir="${dist}">
+            <fileset dir="${src}/grendel">
+                <include name="**/*.gif"/>
+                <include name="**/*.htm*"/>
+                <include name="**/*.png"/>
+                <include name="**/*.jpg"/>
+                <include name="**/*.tmpl"/>
+                <include name="**/*.xml"/>
+                <include name="**/*.dtd"/>
+                <include name="META-INF/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${dist}">
+            <fileset dir="${src}">
+                <include name="**/*.properties"/>
+            </fileset>
+        </copy>
     </target>
 
     <target name="makeJar" description="Pumps all the libs into one big JAR for distribution. Grendel must be built before running this.">
-      <echo message="-- Creating Grendel JAR file"/>
-      <jar destfile="grendel.jar">
-        <fileset dir="dist">
-          <include name="**/*.*"/>
-        </fileset>
-        <manifest>
-          <attribute name="Main-Class" value="grendel.Main"/>
-        </manifest>
-      </jar>
+        <echo message="-- Creating Grendel JAR file"/>
+        <jar destfile="${dist}/grendel.jar">
+            <fileset dir="${dist}">
+                <include name="**/*.*"/>
+            </fileset>
+            <manifest>
+                <attribute name="Main-Class" value="grendel.Main"/>
+            </manifest>
+        </jar>
 
-      <echo message="-- Creating grendel.zip"/>
-      <zip destfile="dist/grendel.zip">
-        <fileset dir="sources/grendel">
-          <include name="**/*.gif"/>
-          <include name="**/*.png"/>
-          <include name="**/*.jpg"/>
-          <include name="**/*.tmpl"/>
-          <include name="**/*.xml"/>
-          <include name="**/*.dtd"/>
-        </fileset>
-        <fileset dir="sources">
-          <include name="**/*.properties"/>
-        </fileset>
-      </zip>
+        <echo message="-- Creating grendel.zip"/>
+        <zip destfile="${dist}/grendel.zip">
+            <fileset dir="${src}/grendel">
+                <include name="**/*.gif"/>
+                <include name="**/*.png"/>
+                <include name="**/*.jpg"/>
+                <include name="**/*.tmpl"/>
+                <include name="**/*.xml"/>
+                <include name="**/*.dtd"/>
+            </fileset>
+            <fileset dir="${src}">
+                <include name="**/*.properties"/>
+            </fileset>
+        </zip>
 
     </target>
 
     <target name="run" description="Runs Grendel after compiling.">
-      <java classname="grendel.Main" fork="true" dir="dist"/>
+        <java classname="grendel.Main" fork="true" dir="${dist}">
+            <classpath>
+                <fileset dir="${lib}" includes="*.jar"/>
+                <path path="${dist}" />
+            </classpath>
+        </java>
     </target>
 
     <target name="clean" description="Cleans up generated class files.">
-      <delete dir="dist"/>
-      <delete file="grendel.jar"/>
+        <delete dir="${dist}"/>
+        <delete file="${dist}/grendel.jar"/>
     </target>
 
     <target name="javadoc" description="Generate JavaDoc API information">
-      <mkdir dir="docs"/>
-      <javadoc destdir="docs">
-        <fileset dir="." includes="**/*.java"/>
-      </javadoc>
+        <mkdir dir="docs"/>
+        <javadoc destdir="${docs}" classpath="${dist}" private="true" windowtitle="Grendel" author="true" version="true" use="true" linksource="true" >
+            <doctitle>Grendel JavaDoc</doctitle>
+            <classpath>
+                <path path="${dist}" />
+            </classpath>
+            <packageset dir="${src}">
+                <include name="**" />
+            </packageset>
+        </javadoc>
+    </target>
+        
+    <target name="-test-init" description="Setup for JUnit Tests">
+        <property name="test.base" value="tests"/>
+        <property name="test.reports" value="${test.base}/report/"/>
+        <property name="test.reports.style" value="${test.base}/style/"/>
+        <property name="test.src" value="${test.base}/src"/>
+        <property name="test.dist" value="${test.base}/dist"/>
+        <path id="classpath.test">
+            <pathelement location="${test.base}/junit.jar" />
+            <pathelement path="${test.dist}" />
+            <pathelement path="${dist}" />
+            <fileset dir="${lib}" includes="*.jar"/>
+        </path>
+        <property environment="classpath" classpathref="classpath.test"/>
+    </target>
+    
+    <target name="test-compile" depends="-test-init">
+        <mkdir dir="${test.dist}" />
+        <delete>
+            <fileset dir="${test.dist}" includes="**/*.class" />
+        </delete>
+        <javac srcdir="${test.src}" destdir="${test.dist}" debug="true">
+            <classpath refid="classpath.test"/>
+        </javac>
+    </target>
+
+    <target name="test" depends="-test-init,test-compile,test-run,test-report"  description="Run JUnit Tests"/>
+    
+    <target name="test-run" depends="-test-init">
+        <junit fork="yes" printsummary="no" haltonfailure="no">
+            <classpath refid="classpath.test" />
+            <formatter type="plain" usefile="false" />
+            <formatter type="xml" />
+            <batchtest fork="yes" todir="${test.reports}">
+                <fileset dir="${test.src}">
+                    <include name="**/**/*.java" />
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+    
+    <target name="test-report" depends="-test-init">
+        <junitreport todir="${test.reports}">
+            <fileset dir="${test.reports}">
+                <include name="TEST-*.xml" />
+            </fileset>
+            <report todir="${test.reports}" styledir="${test.reports.style}"/>
+        </junitreport>
     </target>
 </project>
