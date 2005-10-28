@@ -197,12 +197,10 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
   }
 
   nsAutoString name;
-  if (NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
-                                                    nsAccessibilityAtoms::value,
-                                                    name) &&
-      NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
-                                                    nsAccessibilityAtoms::alt,
-                                                    name)) {
+  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
+                        name) &&
+      !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
+                        name)) {
     if (mRoleMapEntry) {
       // Use HTML label or DHTML accessibility's labelledby attribute for name
       GetHTMLName(name, PR_FALSE);
@@ -220,12 +218,10 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
       }
     }
     if (name.IsEmpty() &&
-        NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
-                                                      nsAccessibilityAtoms::title,
-                                                      name) &&
-        NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
-                                                      nsAccessibilityAtoms::src,
-                                                      name)) {
+        !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title,
+                          name) &&
+        !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::src,
+                          name)) {
       content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::data, name);
     }
   }

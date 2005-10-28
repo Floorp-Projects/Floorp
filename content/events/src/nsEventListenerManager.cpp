@@ -1581,48 +1581,46 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
         attrName = nsSVGAtoms::onzoom;
 #endif // MOZ_SVG
 
-      result = content->GetAttr(kNameSpaceID_None, attrName, handlerBody);
+      content->GetAttr(kNameSpaceID_None, attrName, handlerBody);
+
+      PRUint32 lineNo = 0;
+      nsCAutoString url (NS_LITERAL_CSTRING("javascript:alert('TODO: FIXME')"));
+      nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCurrentTarget);
+      if (!doc) {
+        nsCOMPtr<nsIContent> content = do_QueryInterface(aCurrentTarget);
+        if (content)
+          doc = content->GetOwnerDoc();
+      }
+      if (doc) {
+        nsIURI *uri = doc->GetDocumentURI();
+        if (uri) {
+          uri->GetSpec(url);
+          lineNo = 1;
+        }
+      }
+
+      if (handlerOwner) {
+        // Always let the handler owner compile the event
+        // handler, as it may want to use a special
+        // context or scope object.
+        result = handlerOwner->CompileEventHandler(aContext, jsobj, aName,
+                                                   handlerBody,
+                                                   url.get(), lineNo,
+                                                   &handler);
+      }
+      else {
+        const char *eventName =
+          nsContentUtils::GetEventArgName(content->GetNameSpaceID());
+
+        result = aContext->CompileEventHandler(jsobj, aName, eventName,
+                                               handlerBody,
+                                               url.get(), lineNo,
+                                               (handlerOwner != nsnull),
+                                               &handler);
+      }
 
       if (NS_SUCCEEDED(result)) {
-        PRUint32 lineNo = 0;
-        nsCAutoString url (NS_LITERAL_CSTRING("javascript:alert('TODO: FIXME')"));
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCurrentTarget);
-        if (!doc) {
-          nsCOMPtr<nsIContent> content = do_QueryInterface(aCurrentTarget);
-          if (content)
-            doc = content->GetOwnerDoc();
-        }
-        if (doc) {
-          nsIURI *uri = doc->GetDocumentURI();
-          if (uri) {
-            uri->GetSpec(url);
-            lineNo = 1;
-          }
-        }
-
-        if (handlerOwner) {
-          // Always let the handler owner compile the event
-          // handler, as it may want to use a special
-          // context or scope object.
-          result = handlerOwner->CompileEventHandler(aContext, jsobj, aName,
-                                                     handlerBody,
-                                                     url.get(), lineNo,
-                                                     &handler);
-        }
-        else {
-          const char *eventName =
-            nsContentUtils::GetEventArgName(content->GetNameSpaceID());
-
-          result = aContext->CompileEventHandler(jsobj, aName, eventName,
-                                                 handlerBody,
-                                                 url.get(), lineNo,
-                                                 (handlerOwner != nsnull),
-                                                 &handler);
-        }
-
-        if (NS_SUCCEEDED(result)) {
-          aListenerStruct->mHandlerIsString &= ~aSubType;
-        }
+        aListenerStruct->mHandlerIsString &= ~aSubType;
       }
     }
   }

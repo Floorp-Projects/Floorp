@@ -125,10 +125,9 @@ nsDOMAttribute::GetValue(nsAString& aValue)
   nsIContent* content = GetContentInternal();
   if (content) {
     nsAutoString tmpValue;
-    nsresult attrResult = content->GetAttr(mNodeInfo->NamespaceID(),
-                                           mNodeInfo->NameAtom(),
-                                           tmpValue);
-    if (NS_CONTENT_ATTR_NOT_THERE != attrResult) {
+    if (content->GetAttr(mNodeInfo->NamespaceID(),
+                         mNodeInfo->NameAtom(),
+                         tmpValue)) {
       mValue = tmpValue;
     }
   }
@@ -428,8 +427,7 @@ nsDOMAttribute::SetPrefix(const nsAString& aPrefix)
     PRInt32 nameSpaceID = mNodeInfo->NamespaceID();
 
     nsAutoString tmpValue;
-    rv = content->GetAttr(nameSpaceID, name, tmpValue);
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+    if (content->GetAttr(nameSpaceID, name, tmpValue)) {
       content->UnsetAttr(nameSpaceID, name, PR_TRUE);
 
       content->SetAttr(newNodeInfo->NamespaceID(), newNodeInfo->NameAtom(),

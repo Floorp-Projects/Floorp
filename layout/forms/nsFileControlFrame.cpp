@@ -541,7 +541,9 @@ nsFileControlFrame::GetSkipSides() const
 NS_IMETHODIMP
 nsFileControlFrame::GetName(nsAString* aResult)
 {
-  return nsFormControlHelper::GetName(mContent, aResult);
+  nsFormControlHelper::GetName(mContent, aResult);
+
+  return NS_OK;
 }
 
 void
@@ -549,8 +551,7 @@ nsFileControlFrame::SyncAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRInt32 aWhichControls)
 {
   nsAutoString value;
-  nsresult rv = mContent->GetAttr(aNameSpaceID, aAttribute, value);
-  if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+  if (mContent->GetAttr(aNameSpaceID, aAttribute, value)) {
     if (aWhichControls & SYNC_TEXT && mTextContent) {
       mTextContent->SetAttr(aNameSpaceID, aAttribute, value, PR_TRUE);
     }

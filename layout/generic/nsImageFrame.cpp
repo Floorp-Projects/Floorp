@@ -1519,9 +1519,7 @@ nsImageFrame::TriggerLink(nsPresContext* aPresContext,
 PRBool
 nsImageFrame::IsServerImageMap()
 {
-  nsAutoString ismap;
-  return NS_CONTENT_ATTR_HAS_VALUE ==
-    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::ismap, ismap);
+  return mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::ismap);
 }
 
 // Translate an point that is relative to our frame

@@ -294,10 +294,7 @@ nsHTMLAnchorElement::HandleDOMEvent(nsPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLAnchorElement::GetTarget(nsAString& aValue)
 {
-  aValue.Truncate();
-
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue);
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
   return NS_OK;

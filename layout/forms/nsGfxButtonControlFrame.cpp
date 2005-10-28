@@ -151,23 +151,19 @@ NS_IMETHODIMP
 nsGfxButtonControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
                                                 nsISupportsArray& aChildList)
 {
-  nsresult result;
-
   // Get the text from the "value" attribute.
   // If it is zero length, set it to a default value (localized)
   nsAutoString initvalue;
-  result = GetValue(&initvalue);
+  GetValue(&initvalue);
   nsXPIDLString value;
   value.Assign(initvalue);
-  if (result != NS_CONTENT_ATTR_HAS_VALUE && value.IsEmpty()) {
+  if (value.IsEmpty()) {
     // Generate localized label.
     // We can't make any assumption as to what the default would be
     // because the value is localized for non-english platforms, thus
     // it might not be the string "Reset", "Submit Query", or "Browse..."
-    result = GetDefaultLabel(value);
-    if (NS_FAILED(result)) {
-      return result;
-    }
+    nsresult rv = GetDefaultLabel(value);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Compress whitespace out of label if needed.
@@ -204,7 +200,7 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     mTextContent->SetText(value, PR_TRUE);
     aChildList.AppendElement(mTextContent);
   }
-  return result;
+  return NS_OK;
 }
 
 // Create the text content used as label for the button.
@@ -317,9 +313,7 @@ nsGfxButtonControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
   if (nsHTMLAtoms::value == aAttribute) {
     nsAutoString value;
     if (mTextContent && mContent) {
-      if (NS_CONTENT_ATTR_HAS_VALUE != mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value)) {
-        value.Truncate();
-      }
+      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value);
       mTextContent->SetText(value, PR_TRUE);
     } else {
       rv = NS_ERROR_UNEXPECTED;

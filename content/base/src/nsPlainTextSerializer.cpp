@@ -1763,8 +1763,7 @@ nsPlainTextSerializer::GetAttributeValue(const nsIParserNode* aNode,
                                          nsString& aValueRet)
 {
   if (mContent) {
-    if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttr(kNameSpaceID_None,
-                                                       aName, aValueRet)) {
+    if (mContent->GetAttr(kNameSpaceID_None, aName, aValueRet)) {
       return NS_OK;
     }
   }

@@ -480,7 +480,8 @@ nsHTMLButtonElement::HandleDOMEvent(nsPresContext* aPresContext,
 nsresult
 nsHTMLButtonElement::GetDefaultValue(nsAString& aDefaultValue)
 {
-  return GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aDefaultValue);
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aDefaultValue);
+  return NS_OK;
 }
 
 nsresult
@@ -521,9 +522,8 @@ nsHTMLButtonElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Get the name (if no name, no submit)
   //
   nsAutoString name;
-  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
-  if (NS_FAILED(rv) || rv == NS_CONTENT_ATTR_NOT_THERE) {
-    return rv;
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name)) {
+    return NS_OK;
   }
 
   //

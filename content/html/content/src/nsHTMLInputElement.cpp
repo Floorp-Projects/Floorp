@@ -238,8 +238,7 @@ protected:
    * @param true if the name existed, false if not
    */
   PRBool GetNameIfExists(nsAString& aName) {
-    return GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, aName) !=
-           NS_CONTENT_ATTR_NOT_THERE;
+    return GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, aName);
   }
 
   /**
@@ -524,8 +523,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         // We just got switched to be an image input; we should see
         // whether we have an image to load;
         nsAutoString src;
-        nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
-        if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+        if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src)) {
           ImageURIChanged(src, PR_FALSE, aNotify);
         }
       }
@@ -622,17 +620,13 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
   }
 
   // Treat value == defaultValue for other input elements
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
-
-  if (rv == NS_CONTENT_ATTR_NOT_THERE &&
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue) &&
       (mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_CHECKBOX)) {
     // The default value of a radio or checkbox input is "on".
     aValue.AssignLiteral("on");
-
-    return NS_OK;
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1056,9 +1050,7 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
     return;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_None,
-                                           nsHTMLAtoms::disabled, disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return;
   }
  
@@ -1099,10 +1091,8 @@ nsHTMLInputElement::Select()
     return NS_OK;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_None,
-                                           nsHTMLAtoms::disabled, disabled)) {
-    return rv;
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+    return NS_OK;
   }
 
   if (mType == NS_FORM_INPUT_PASSWORD || mType == NS_FORM_INPUT_TEXT) {
@@ -1197,9 +1187,8 @@ nsHTMLInputElement::Click()
 
   // first see if we are disabled or not. If disabled then do nothing.
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttr(kNameSpaceID_None,
-                                           nsHTMLAtoms::disabled, disabled)) {
-    return rv;
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
+    return NS_OK;
   }
 
   // see what type of input we are.  Only click button, checkbox, radio,
@@ -1696,8 +1685,7 @@ nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Our base URI may have changed; claim that our URI changed, and the
     // nsImageLoadingContent will decide whether a new image load is warranted.
     nsAutoString uri;
-    nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
-    if (result == NS_CONTENT_ATTR_HAS_VALUE) {
+    if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri)) {
       // Note: no need to notify here; since we're just now being bound
       // we don't have any frames or anything yet.
       ImageURIChanged(uri, PR_FALSE, PR_FALSE);
@@ -2157,11 +2145,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Get the name
   //
   nsAutoString name;
-  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  PRBool nameThere = (rv != NS_CONTENT_ATTR_NOT_THERE);
+  PRBool nameThere = GetNameIfExists(name);
 
   //
   // Submit .x, .y for input type=image

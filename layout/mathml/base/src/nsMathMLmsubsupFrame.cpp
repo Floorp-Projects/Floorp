@@ -110,8 +110,9 @@ nsMathMLmsubsupFrame::Place(nsIRenderingContext& aRenderingContext,
   // check if the subscriptshift attribute is there
   nsAutoString value;
   nscoord subScriptShift = 0;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::subscriptshift_, value)) {
+  GetAttribute(mContent, mPresentationData.mstyle,
+               nsMathMLAtoms::subscriptshift_, value);
+  if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
       subScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);
@@ -119,8 +120,9 @@ nsMathMLmsubsupFrame::Place(nsIRenderingContext& aRenderingContext,
   }
   // check if the superscriptshift attribute is there
   nscoord supScriptShift = 0;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::superscriptshift_, value)) {
+  GetAttribute(mContent, mPresentationData.mstyle,
+               nsMathMLAtoms::superscriptshift_, value);
+  if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
       supScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);

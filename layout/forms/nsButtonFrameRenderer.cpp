@@ -88,12 +88,8 @@ PRBool
 nsButtonFrameRenderer::isDisabled() 
 {
   // get the content
-  nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mFrame->GetContent()->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, value))
-    return PR_TRUE;
-
-  return PR_FALSE;
+  return mFrame->GetContent()->HasAttr(kNameSpaceID_None,
+                                       nsHTMLAtoms::disabled);
 }
 
 void 

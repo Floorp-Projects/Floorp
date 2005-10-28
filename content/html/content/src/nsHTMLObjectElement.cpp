@@ -268,12 +268,7 @@ nsHTMLObjectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                        nsIContent* aSubmitElement)
 {
   nsAutoString name;
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name)) {
     // No name, don't submit.
 
     return NS_OK;
@@ -304,7 +299,7 @@ nsHTMLObjectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   }
 
   nsAutoString value;
-  rv = pi_internal->GetFormValue(value);
+  nsresult rv = pi_internal->GetFormValue(value);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return aFormSubmission->AddNameValuePair(this, name, value);
@@ -410,16 +405,14 @@ nsHTMLObjectElement::GetAttributeMappingFunction() const
 void
 nsHTMLObjectElement::StartObjectLoad(PRBool aNotify)
 {
-  nsAutoString uri;
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, uri);
-  nsAutoString type;
+  nsAutoString uri, type;
   GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
   NS_ConvertUTF16toUTF8 ctype(type);
 
   // Be sure to call the nsIURI version if we have no attribute
   // That handles the case where no URI is specified. An empty string would get
   // interpreted as the page itself, instead of absence of URI.
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, uri)) {
     ObjectURIChanged(nsnull, aNotify, ctype);
   } else {
     ObjectURIChanged(uri, aNotify, ctype);

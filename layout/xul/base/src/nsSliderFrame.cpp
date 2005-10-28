@@ -201,8 +201,8 @@ PRInt32
 nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 defaultValue)
 {
     nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, atom, value))
-    {
+    content->GetAttr(kNameSpaceID_None, atom, value);
+    if (!value.IsEmpty()) {
       PRInt32 error;
 
       // convert it to an integer

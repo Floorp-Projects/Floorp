@@ -70,10 +70,10 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetName(nsAString & aName)
       return rv;
     }
   }
-  if (NS_CONTENT_ATTR_NO_VALUE ==
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt, aName) &&  
-      NS_CONTENT_ATTR_NO_VALUE ==
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aName)) {
+  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
+                        aName) &&  
+      !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title,
+                        aName)) {
     return GetValue(aName);
   }
 

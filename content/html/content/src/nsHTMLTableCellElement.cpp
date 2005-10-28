@@ -228,9 +228,7 @@ NS_IMPL_STRING_ATTR(nsHTMLTableCellElement, Width, width)
 NS_IMETHODIMP
 nsHTMLTableCellElement::GetAlign(nsAString& aValue)
 {
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, aValue);
-
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, aValue)) {
     // There's no align attribute, ask the row for the alignment.
 
     nsCOMPtr<nsIDOMHTMLTableRowElement> row;

@@ -134,16 +134,18 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes()
 
   // check if the subscriptshift attribute is there
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::subscriptshift_, value)) {
+  GetAttribute(mContent, mPresentationData.mstyle,
+               nsMathMLAtoms::subscriptshift_, value);
+  if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
       mSubScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);
     }
   }
   // check if the superscriptshift attribute is there
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::superscriptshift_, value)) {
+  GetAttribute(mContent, mPresentationData.mstyle,
+               nsMathMLAtoms::superscriptshift_, value);
+  if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
       mSupScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);

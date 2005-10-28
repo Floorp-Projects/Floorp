@@ -68,7 +68,7 @@ NS_WD_GetElementByTagName(nsIDOMElement *parentElt, const nsAString &tagName,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!node) {
-        return NS_CONTENT_ATTR_NO_VALUE;
+        return NS_OK;
     }
 
     return CallQueryInterface(node, elt);

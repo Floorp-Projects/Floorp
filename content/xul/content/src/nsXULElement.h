@@ -478,8 +478,8 @@ public:
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     virtual nsIAtom *GetIDAttributeName() const;
     virtual nsIAtom *GetClassAttributeName() const;
-    virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                             nsAString& aResult) const;
+    virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsAString& aResult) const;
     virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
     virtual PRBool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
                                const nsAString& aValue,

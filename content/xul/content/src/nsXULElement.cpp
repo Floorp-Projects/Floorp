@@ -1285,7 +1285,7 @@ nsXULElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr) const
     return nsnull;
 }
 
-nsresult
+PRBool
 nsXULElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                       nsAString& aResult) const
 {
@@ -1300,13 +1300,12 @@ nsXULElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         // something about the out parameters (someone may have
         // given us a non-empty string).
         aResult.Truncate();
-        return NS_CONTENT_ATTR_NOT_THERE;
+        return PR_FALSE;
     }
 
     val->ToString(aResult);
 
-    return aResult.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE :
-                               NS_CONTENT_ATTR_HAS_VALUE;
+    return PR_TRUE;
 }
 
 PRBool
@@ -2030,20 +2029,16 @@ NS_IMETHODIMP
 nsXULElement::GetResource(nsIRDFResource** aResource)
 {
     nsAutoString id;
-    nsresult rv = GetAttr(kNameSpaceID_None, nsXULAtoms::ref, id);
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
+    GetAttr(kNameSpaceID_None, nsXULAtoms::ref, id);
+    if (id.IsEmpty()) {
+        GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
     }
 
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = nsXULContentUtils::RDFService()->
+    if (!id.IsEmpty()) {
+        return nsXULContentUtils::RDFService()->
             GetUnicodeResource(id, aResource);
-        NS_ENSURE_SUCCESS(rv, rv);
     }
-    else {
-        *aResource = nsnull;
-    }
+    *aResource = nsnull;
 
     return NS_OK;
 }
@@ -2310,7 +2305,8 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
   NS_IMETHODIMP                                                     \
   nsXULElement::Get##_method(nsAString& aReturn)                    \
   {                                                                 \
-    return GetAttr(kNameSpaceID_None, nsXULAtoms::_atom, aReturn);  \
+    GetAttr(kNameSpaceID_None, nsXULAtoms::_atom, aReturn);         \
+    return NS_OK;                                                   \
   }                                                                 \
   NS_IMETHODIMP                                                     \
   nsXULElement::Set##_method(const nsAString& aValue)               \

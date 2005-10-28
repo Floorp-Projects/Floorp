@@ -90,8 +90,8 @@ public:
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    nsIAtom* aPrefix, const nsAString& aValue,
                    PRBool aNotify);
-  nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                   nsAString& aResult) const;
+  PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                 nsAString& aResult) const;
   PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   virtual PRBool AttrValueIs(PRInt32 aNameSpaceID, nsIAtom* aName,
                              const nsAString& aValue,

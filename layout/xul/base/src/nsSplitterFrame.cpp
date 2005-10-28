@@ -894,18 +894,14 @@ nsSplitterFrameInner::Reverse(nsSplitterInfo*& aChildInfos, PRInt32 aCount)
 nsSplitterFrameInner::CollapseDirection
 nsSplitterFrameInner::GetCollapseDirection()
 {
-    nsString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mOuter->mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::collapse, value))
-    {
-     if (value.EqualsLiteral("before"))
-         return Before;
-     else if (value.EqualsLiteral("after"))
-         return After;
-     else 
-       return None;
-    } else {
-        return None;
-    }
+  nsString value;
+  mOuter->mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::collapse, value);
+  if (value.EqualsLiteral("before"))
+    return Before;
+  else if (value.EqualsLiteral("after"))
+    return After;
+
+  return None;
 }
 
 void

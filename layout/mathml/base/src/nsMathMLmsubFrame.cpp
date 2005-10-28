@@ -105,8 +105,9 @@ nsMathMLmsubFrame::Place (nsIRenderingContext& aRenderingContext,
   // check if the subscriptshift attribute is there
   nscoord subScriptShift = 0;
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::subscriptshift_, value)) {
+  GetAttribute(mContent, mPresentationData.mstyle,
+               nsMathMLAtoms::subscriptshift_, value);
+  if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
       subScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);

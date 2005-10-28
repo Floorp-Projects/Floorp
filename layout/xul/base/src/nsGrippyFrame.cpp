@@ -60,6 +60,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
+#include "nsLayoutAtoms.h"
 
 
 //
@@ -88,12 +89,14 @@ nsGrippyFrame::MouseClicked (nsPresContext* aPresContext, nsGUIEvent* aEvent)
         // get the splitters content node
         nsIContent* content = splitter->GetContent();
  
-        nsAutoString newState(NS_LITERAL_STRING("collapsed"));
-        nsAutoString oldState;
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::state, oldState))
-        {
-            if (oldState.Equals(newState))
-                newState.AssignLiteral("open");
+        nsAutoString newState;
+        if (content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::state,
+                                 nsLayoutAtoms::collapsed,
+                                 eCaseMatters)) {
+            newState.AssignLiteral("open");
+        }
+        else {
+            newState.AssignLiteral("collapsed");
         }
 
         content->SetAttr(kNameSpaceID_None, nsXULAtoms::state, newState, PR_TRUE);
@@ -124,13 +127,9 @@ nsGrippyFrame::MouseClicked(nsPresContext* aPresContext)
 
     // get the collapse attribute. If the attribute is not set collapse
     // the child before otherwise collapse the child after
-    PRBool before = PR_TRUE;
-    nsString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::collapse, value))
-    {
-     if (value=="after")
-       before = PR_FALSE;
-    }
+    PRBool before =
+      !content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::collapse,
+                            NS_LITERAL_STRING("after"), eCaseMatters);
 
     // find the child just in the box just before the splitter. If we are not currently collapsed then
     // then get the childs style attribute and store it. Then set the child style attribute to be display none.

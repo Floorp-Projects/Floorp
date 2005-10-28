@@ -1521,7 +1521,6 @@ nsXFormsUtils::GetElementById(nsIDOMDocument   *aDoc,
 
   PRUint32 i;
   PRUint16 type;
-  nsAutoString idVal;
   nsCOMPtr<nsIDOMNode> childNode;
   for (i = 0; i < elements; ++i) {
     descendants->Item(i, getter_AddRefs(childNode));
@@ -1529,9 +1528,8 @@ nsXFormsUtils::GetElementById(nsIDOMDocument   *aDoc,
     if (type == nsIDOMNode::ELEMENT_NODE) {
       nsCOMPtr<nsIContent> content(do_QueryInterface(childNode));
       NS_ASSERTION(content, "An ELEMENT_NODE not implementing nsIContent?!");
-      rv = content->GetAttr(kNameSpaceID_None, content->GetIDAttributeName(),
-                            idVal);
-      if (rv == NS_CONTENT_ATTR_HAS_VALUE && idVal.Equals(aId)) {
+      if (content->AttrValueIs(kNameSpaceID_None, content->GetIDAttributeName(),
+                               aId, eCaseMatters)) {
         element = do_QueryInterface(childNode);
         break;
       }

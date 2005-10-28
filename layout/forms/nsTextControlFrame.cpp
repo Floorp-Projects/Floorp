@@ -1971,9 +1971,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 
     // Set max text field length
     PRInt32 maxLength;
-    rv = GetMaxLength(&maxLength);
-    if (NS_CONTENT_ATTR_NOT_THERE != rv)
-    { 
+    if (GetMaxLength(&maxLength)) { 
       textEditor->SetMaxTextLength(maxLength);
     }
   }
@@ -2005,26 +2003,14 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     if (NS_FAILED(rv))
       return rv;
 
-    nsAutoString resultValue;
-
     // Check if the readonly attribute is set.
 
-    rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::readonly, resultValue);
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (NS_CONTENT_ATTR_NOT_THERE != rv)
+    if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::readonly))
       editorFlags |= nsIPlaintextEditor::eEditorReadonlyMask;
 
     // Check if the disabled attribute is set.
 
-    rv = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, resultValue);
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+    if (mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) 
       editorFlags |= nsIPlaintextEditor::eEditorDisabledMask;
 
     // Disable the caret and selection if necessary.
@@ -2218,7 +2204,9 @@ nsTextControlFrame::IsLeaf() const
 NS_IMETHODIMP
 nsTextControlFrame::GetName(nsAString* aResult)
 {
-  return nsFormControlHelper::GetName(mContent, aResult);
+  nsFormControlHelper::GetName(mContent, aResult);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(PRInt32)
@@ -2799,12 +2787,12 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
   if (nsHTMLAtoms::maxlength == aAttribute) 
   {
     PRInt32 maxLength;
-    rv = GetMaxLength(&maxLength);
+    PRBool maxDefined = GetMaxLength(&maxLength);
     
     nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(mEditor);
     if (textEditor)
     {
-      if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+      if (maxDefined) 
       {  // set the maxLength attribute
           textEditor->SetMaxTextLength(maxLength);
         // if maxLength>docLength, we need to truncate the doc content
@@ -2877,7 +2865,7 @@ nsTextControlFrame::AttributeChanged(PRInt32         aNameSpaceID,
 NS_IMETHODIMP
 nsTextControlFrame::GetText(nsString* aText)
 {
-  nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
+  nsresult rv = NS_OK;
   if (IsSingleLineTextControl()) {
     // If we're going to remove newlines anyway, ignore the wrap property
     GetValue(*aText, PR_TRUE);
@@ -2923,7 +2911,7 @@ void nsTextControlFrame::RemoveNewlines(nsString &aString)
 }
 
 
-nsresult
+PRBool
 nsTextControlFrame::GetMaxLength(PRInt32* aSize)
 {
   *aSize = -1;
@@ -2934,10 +2922,10 @@ nsTextControlFrame::GetMaxLength(PRInt32* aSize)
     if (attr && attr->Type() == nsAttrValue::eInteger) {
       *aSize = attr->GetIntegerValue();
 
-      return NS_CONTENT_ATTR_HAS_VALUE;
+      return PR_TRUE;
     }
   }
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return PR_FALSE;
 }
 
 // this is where we propagate a content changed event
@@ -3028,12 +3016,9 @@ nsTextControlFrame::GetValue(nsAString& aValue, PRBool aIgnoreWrap)
 
     if (!aIgnoreWrap) {
       nsFormControlHelper::nsHTMLTextWrap wrapProp;
-      rv = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
-      if (rv != NS_CONTENT_ATTR_NOT_THERE) {
-        if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
-        {
-          flags |= nsIDocumentEncoder::OutputWrap;
-        }
+      if (nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp) &&
+          wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard) {
+        flags |= nsIDocumentEncoder::OutputWrap;
       }
     }
 

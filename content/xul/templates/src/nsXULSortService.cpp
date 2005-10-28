@@ -99,8 +99,6 @@ static NS_DEFINE_CID(kCollationFactoryCID,    NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,   NS_RDFCONTAINERUTILS_CID);
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkSeparator);
-
 typedef struct  _sortStruct  {
   PRBool firstFlag;
   nsCOMPtr<nsIRDFResource> sortProperty, sortProperty2;
@@ -167,9 +165,9 @@ private:
 
 nsresult FindDatabaseElement(nsIContent* aElement, nsIContent** aDatabaseElement);
 nsresult FindSortableContainer(nsIContent *tree, nsIContent **treeBody);
-nsresult SetSortHints(nsIContent *tree, const nsAString &sortResource, const nsAString &sortDirection, const nsAString &sortResource2, PRBool inbetweenSeparatorSort, PRBool found);
+void SetSortHints(nsIContent *tree, const nsAString &sortResource, const nsAString &sortDirection, const nsAString &sortResource2, PRBool inbetweenSeparatorSort, PRBool found);
 nsresult SetSortColumnHints(nsIContent *content, const nsAString &sortResource, const nsAString &sortDirection);
-nsresult GetSortColumnInfo(nsIContent *tree, nsAString &sortResource, nsAString &sortDirection, nsAString &sortResource2, PRBool &inbetweenSeparatorSort);
+void GetSortColumnInfo(nsIContent *tree, nsAString &sortResource, nsAString &sortDirection, nsAString &sortResource2, PRBool &inbetweenSeparatorSort);
 
 nsresult SortContainer(nsIContent *container, sortPtr sortInfo, PRBool merelyInvertFlag);
 nsresult InvertSortInfo(contentSortInfo **data, PRInt32 numItems);
@@ -330,7 +328,7 @@ XULSortServiceImpl::FindSortableContainer(nsIContent *aRoot,
   return NS_ERROR_FAILURE;
 }
 
-nsresult
+void
 XULSortServiceImpl::SetSortHints(nsIContent *tree,
                                  const nsAString &sortResource,
                                  const nsAString &sortDirection,
@@ -361,8 +359,6 @@ XULSortServiceImpl::SetSortHints(nsIContent *tree,
     tree->UnsetAttr(kNameSpaceID_None, nsXULAtoms::sortSeparators, PR_FALSE);
 
   SetSortColumnHints(tree, sortResource, sortDirection);
-
-  return NS_OK;
 }
 
 nsresult
@@ -388,24 +384,19 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
                  tag == nsXULAtoms::listcol ||
                  tag == nsXULAtoms::listheader) {
         nsAutoString value;
-
-        if (NS_SUCCEEDED(rv = child->GetAttr(kNameSpaceID_None,
-                                             nsXULAtoms::resource, value))
-            && rv == NS_CONTENT_ATTR_HAS_VALUE)
-        {
-          if (value == sortResource) {
-            child->SetAttr(kNameSpaceID_None, nsXULAtoms::sortActive,
-                           *kTrueStr, PR_TRUE);
-            child->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection,
-                           sortDirection, PR_TRUE);
-            // Note: don't break out of loop; want to set/unset
-            // attribs on ALL sort columns
-          } else {
-            child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::sortActive,
-                             PR_TRUE);
-            child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection,
-                             PR_TRUE);
-          }
+        child->GetAttr(kNameSpaceID_None, nsXULAtoms::resource, value);
+        if (value == sortResource) {
+          child->SetAttr(kNameSpaceID_None, nsXULAtoms::sortActive,
+                         *kTrueStr, PR_TRUE);
+          child->SetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection,
+                         sortDirection, PR_TRUE);
+          // Note: don't break out of loop; want to set/unset
+          // attribs on ALL sort columns
+        } else if (!value.IsEmpty()) {
+          child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::sortActive,
+                           PR_TRUE);
+          child->UnsetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection,
+                           PR_TRUE);
         }
       }
     }
@@ -414,61 +405,38 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
   return NS_OK;
 }
 
-nsresult
+void
 XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree,
                                       nsAString &sortResource,
                                       nsAString &sortDirection,
                                       nsAString &sortResource2,
                                       PRBool &inbetweenSeparatorSort)
 {
-  nsresult rv = NS_ERROR_FAILURE;
   inbetweenSeparatorSort = PR_FALSE;
 
-  nsAutoString value;
-  if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None,
-                                      nsXULAtoms::sortActive, value))
-    && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-  {
-    if (value.EqualsLiteral("true"))
-    {
-      if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None,
-                                          nsXULAtoms::sortResource,
-                                          sortResource))
-          && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-      {
-        if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None,
-                                            nsXULAtoms::sortDirection,
-                                            sortDirection))
-            && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-        {
-          rv = NS_OK;
-
-          // sort separator flag is optional
-          if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None,
-                                              nsXULAtoms::sortSeparators,
-                                              value)) &&
-              (rv == NS_CONTENT_ATTR_HAS_VALUE))
-          {
-            if (value.EqualsLiteral("true"))
-            {
-              inbetweenSeparatorSort = PR_TRUE;
-            }
-          }
-
-          // secondary sort info is optional
-          if (NS_FAILED(rv = tree->GetAttr(kNameSpaceID_None,
-                                           nsXULAtoms::sortResource2,
-                                           sortResource2)) ||
-              (rv != NS_CONTENT_ATTR_HAS_VALUE))
-          {
-            sortResource2.Truncate();
-          }
-        }
-      }
-    }
+  if (!tree->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortActive,
+                         nsXULAtoms::_true, eCaseMatters)) {
+    return;
   }
-  
-  return rv;
+
+  tree->GetAttr(kNameSpaceID_None, nsXULAtoms::sortResource, sortResource);
+  if (sortResource.IsEmpty()) {
+    return;
+  }
+
+  tree->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, sortDirection);
+  if (sortDirection.IsEmpty()) {
+    return;
+  }
+
+  // sort separator flag is optional
+  inbetweenSeparatorSort =
+    tree->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortSeparators,
+                      nsXULAtoms::_true, eCaseMatters);
+
+  // secondary sort info is optional
+  tree->GetAttr(kNameSpaceID_None, nsXULAtoms::sortResource2,
+                sortResource2);
 }
 
 nsresult
@@ -805,9 +773,8 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool fir
     nsCOMPtr<nsIDOMElement>  htmlDom = do_QueryInterface(node1);
     if (htmlDom) {
       nsAutoString htmlID;
-      if (NS_SUCCEEDED(rv = node1->GetAttr(kNameSpaceID_None, nsXULAtoms::id, htmlID)) 
-          && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-      {
+      node1->GetAttr(kNameSpaceID_None, nsXULAtoms::id, htmlID);
+      if (!htmlID.IsEmpty()) {
         if (NS_FAILED(rv = gRDFService->GetUnicodeResource(htmlID, getter_AddRefs(res1))))
           res1 = nsnull;
       }
@@ -883,9 +850,8 @@ XULSortServiceImpl::GetNodeValue(contentSortInfo *info1, sortPtr sortInfo, PRBoo
     nsCOMPtr<nsIDOMElement>  htmlDom = do_QueryInterface(node1);
     if (htmlDom) {
       nsAutoString htmlID;
-      if (NS_SUCCEEDED(rv = node1->GetAttr(kNameSpaceID_None, nsXULAtoms::id, htmlID))
-        && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-      {
+      node1->GetAttr(kNameSpaceID_None, nsXULAtoms::id, htmlID);
+      if (!htmlID.IsEmpty()) {
         if (NS_FAILED(rv = gRDFService->GetUnicodeResource(htmlID, getter_AddRefs(res1))))
           res1 = nsnull;
         info1->resource = res1;
@@ -1135,7 +1101,6 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
   // were to do this in a forward-looking manner it would be harder
   // (since we also skip over non XUL:treeitem nodes)
 
-  nsresult rv;
   currentElement = numChildren;
   PRUint32 childIndex;
   // childIndex is unsigned, so childIndex >= 0 would always test true
@@ -1167,22 +1132,20 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
     /* smart sorting (sort within separators) on name column */
     if (sortInfo->inbetweenSeparatorSort) {
       PRUint32 startIndex = currentElement;
-      nsAutoString  type;
       for (loop = currentElement; loop < currentElement + numElements;
            ++loop) {
-        if (NS_SUCCEEDED(rv = contentSortInfoArray[loop]->content->GetAttr(kNameSpaceID_RDF,
-            nsXULAtoms::type, type)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-        {
-          if (type.EqualsASCII(kURINC_BookmarkSeparator)) {
-            if (loop > startIndex + 1) {
-              if (merelyInvertFlag)
-                InvertSortInfo(&contentSortInfoArray[startIndex], loop-startIndex);
-              else
-                NS_QuickSort((void*)&contentSortInfoArray[startIndex], loop-startIndex,
-                             sizeof(contentSortInfo*), testSortCallback, (void*)sortInfo);
-              startIndex = loop+1;
-            }
-          }
+        
+        if (contentSortInfoArray[loop]->content->
+              AttrValueIs(kNameSpaceID_RDF, nsXULAtoms::type,
+                          NS_LITERAL_STRING("http://home.netscape.com/NC-rdf#BookmarkSeparator"),
+                          eCaseMatters) &&
+            loop > startIndex + 1) {
+          if (merelyInvertFlag)
+            InvertSortInfo(&contentSortInfoArray[startIndex], loop-startIndex);
+          else
+            NS_QuickSort((void*)&contentSortInfoArray[startIndex], loop-startIndex,
+                         sizeof(contentSortInfo*), testSortCallback, (void*)sortInfo);
+          startIndex = loop+1;
         }
       }
       
@@ -1234,8 +1197,8 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
       delete contentSortInfo;
 
       // if it's a container, find its treechildren nodes, and sort those
-      if (NS_FAILED(rv = parentNode->GetAttr(kNameSpaceID_None, nsXULAtoms::container, value)) ||
-        (rv != NS_CONTENT_ATTR_HAS_VALUE) || !value.EqualsLiteral("true"))
+      if (!parentNode->AttrValueIs(kNameSpaceID_None, nsXULAtoms::container,
+                                   nsXULAtoms::_true, eCaseMatters))
         continue;
         
       numChildren = parentNode->GetChildCount();
@@ -1308,19 +1271,14 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
 
   // look for sorting info on root node
 
-  if (NS_SUCCEEDED(rv = root->GetAttr(kNameSpaceID_None, nsXULAtoms::sortResource, sortResource))
-      && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+  root->GetAttr(kNameSpaceID_None, nsXULAtoms::sortResource, sortResource);
+  if (!sortResource.IsEmpty())
   {
-    if (NS_SUCCEEDED(rv = root->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, sortDirection))
-        && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+    root->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, sortDirection);
+    if (!sortDirection.IsEmpty())
     {
       sortInfoAvailable = PR_TRUE;
-
-      if (NS_FAILED(rv = root->GetAttr(kNameSpaceID_None, nsXULAtoms::sortResource2, sortResource2)) 
-          || (rv != NS_CONTENT_ATTR_HAS_VALUE))
-      {
-        sortResource2.Truncate();
-      }
+      root->GetAttr(kNameSpaceID_None, nsXULAtoms::sortResource2, sortResource2);
     }
   }
 
@@ -1419,9 +1377,9 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
     if (parent) {
       nsAutoString id;
 
-      rv = trueParent->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, id);
+      trueParent->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, id);
       if (id.IsEmpty())
-        rv = trueParent->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
+        trueParent->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
 
       if (!id.IsEmpty()) {
         nsCOMPtr<nsIRDFResource> containerRes;
@@ -1447,8 +1405,8 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
     PRInt32 staticCount = 0;
 
     nsAutoString staticValue;
-    if (NS_SUCCEEDED(rv = container->GetAttr(kNameSpaceID_None, nsXULAtoms::staticHint, staticValue))
-        && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+    container->GetAttr(kNameSpaceID_None, nsXULAtoms::staticHint, staticValue);
+    if (!staticValue.IsEmpty())
     {
       // found "static" XUL element count hint
       PRInt32 strErr=0;
@@ -1457,20 +1415,20 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
         staticCount = 0;
     } else {
       // compute the "static" XUL element count
-      nsAutoString  valueStr;
+      nsAutoString valueStr;
       for (PRUint32 childLoop = 0; childLoop < numChildren; ++childLoop) {
         child = container->GetChildAt(childLoop);
         if (!child) break;
 
-        if (NS_SUCCEEDED(rv = child->GetAttr(kNameSpaceID_None, nsXULAtoms::templateAtom, valueStr))
-            && (rv == NS_CONTENT_ATTR_HAS_VALUE))
+        child->GetAttr(kNameSpaceID_None, nsXULAtoms::templateAtom, valueStr);
+        if (!valueStr.IsEmpty())
           break;
         else
           ++staticCount;
       }
       
-      if (NS_SUCCEEDED(rv = root->GetAttr(kNameSpaceID_None, nsXULAtoms::sortStaticsLast, valueStr))
-          && (rv == NS_CONTENT_ATTR_HAS_VALUE) && valueStr.EqualsLiteral("true"))
+      if (root->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortStaticsLast,
+                            nsXULAtoms::_true, eCaseMatters))
       {
         // indicate that static XUL comes after RDF-generated content by making negative
         staticCount = -staticCount;
@@ -1583,24 +1541,17 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const nsAString& sortResource, const 
   // then just reverse-index the current tree
   PRBool invertTreeFlag = PR_FALSE;
   nsAutoString value;
-  if (NS_SUCCEEDED(rv = dbNode->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, value))
-      && (rv == NS_CONTENT_ATTR_HAS_VALUE) 
-      && value.EqualsLiteral("true"))
-  {
-    if (NS_SUCCEEDED(rv = dbNode->GetAttr(kNameSpaceID_None, nsXULAtoms::sortResource, value))
-        && (rv == NS_CONTENT_ATTR_HAS_VALUE) 
-        && (value.Equals(sortResource)))
-    {
-      if (NS_SUCCEEDED(rv = dbNode->GetAttr(kNameSpaceID_None, nsXULAtoms::sortDirection, value))
-          && (rv == NS_CONTENT_ATTR_HAS_VALUE))
-      {
-        if ((value.Equals(*kDescendingStr) && sortDirection.Equals(*kAscendingStr)) 
-            || (value.Equals(*kAscendingStr) && sortDirection.Equals(*kDescendingStr))) 
-        {
-          invertTreeFlag = PR_TRUE;
-        }
-      }
-    }
+  if (dbNode->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortActive,
+                          nsXULAtoms::_true, eCaseMatters) &&
+      dbNode->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortResource,
+                          sortResource, eCaseMatters) &&
+      ((sortDirection.Equals(*kAscendingStr) &&
+        dbNode->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortDirection,
+                            *kDescendingStr, eCaseMatters)) ||
+       (sortDirection.Equals(*kDescendingStr) &&
+        dbNode->AttrValueIs(kNameSpaceID_None, nsXULAtoms::sortDirection,
+                            *kAscendingStr, eCaseMatters)))) {
+    invertTreeFlag = PR_TRUE;
   }
 
   // remove any sort hints on tree root node

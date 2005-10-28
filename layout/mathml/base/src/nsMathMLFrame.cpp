@@ -205,41 +205,39 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
 }
 
 // helper to get an attribute from the content or the surrounding <mstyle> hierarchy
-/* static */ nsresult
+/* static */ PRBool
 nsMathMLFrame::GetAttribute(nsIContent* aContent,
                             nsIFrame*   aMathMLmstyleFrame,
                             nsIAtom*    aAttributeAtom,
                             nsString&   aValue)
 {
-  nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
-
   // see if we can get the attribute from the content
-  if (aContent) {
-    rv = aContent->GetAttr(kNameSpaceID_None, aAttributeAtom, aValue);
+  if (aContent && aContent->GetAttr(kNameSpaceID_None, aAttributeAtom,
+                                    aValue)) {
+    return PR_TRUE;
   }
 
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-    // see if we can get the attribute from the mstyle frame
-    if (aMathMLmstyleFrame) {
-      nsIFrame* mstyleParent = aMathMLmstyleFrame->GetParent();
+  // see if we can get the attribute from the mstyle frame
+  if (!aMathMLmstyleFrame) {
+    return PR_FALSE;
+  }
 
-      nsPresentationData mstyleParentData;
-      mstyleParentData.mstyle = nsnull;
+  nsIFrame* mstyleParent = aMathMLmstyleFrame->GetParent();
 
-      if (mstyleParent) {
-        nsIMathMLFrame* mathMLFrame;
-        mstyleParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-        if (mathMLFrame) {
-          mathMLFrame->GetPresentationData(mstyleParentData);
-        }
-      }
+  nsPresentationData mstyleParentData;
+  mstyleParentData.mstyle = nsnull;
 
-      // recurse all the way up into the <mstyle> hierarchy
-      rv = GetAttribute(aMathMLmstyleFrame->GetContent(),
-			mstyleParentData.mstyle, aAttributeAtom, aValue);
+  if (mstyleParent) {
+    nsIMathMLFrame* mathMLFrame;
+    mstyleParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    if (mathMLFrame) {
+      mathMLFrame->GetPresentationData(mstyleParentData);
     }
   }
-  return rv;
+
+  // recurse all the way up into the <mstyle> hierarchy
+  return GetAttribute(aMathMLmstyleFrame->GetContent(),
+                      mstyleParentData.mstyle, aAttributeAtom, aValue);
 }
 
 /* static */ void
@@ -486,8 +484,8 @@ nsMathMLFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
       // see if there is a <mstyle> that has overriden the default value
       // GetAttribute() will recurse all the way up into the <mstyle> hierarchy
       nsAutoString value;
-      if (NS_CONTENT_ATTR_HAS_VALUE ==
-          GetAttribute(nsnull, aMathMLmstyleFrame, namedspaceAtom, value)) {
+      GetAttribute(nsnull, aMathMLmstyleFrame, namedspaceAtom, value);
+      if (!value.IsEmpty()) {
         if (ParseNumericValue(value, aCSSValue) &&
             aCSSValue.IsLengthUnit()) {
           return PR_TRUE;

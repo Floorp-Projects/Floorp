@@ -60,8 +60,8 @@ NS_IMETHODIMP nsXULTextAccessible::GetName(nsAString& aName)
   if (!content) {
     return NS_ERROR_FAILURE;  // Node shut down
   }
-  nsresult rv = content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value, aName);
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
+                        aName)) {
     // if the value doesn't exist, flatten the inner content as the name (for descriptions)
     return AppendFlatStringFromSubtree(content, &aName);
   }
@@ -117,7 +117,8 @@ nsXULTextAccessible(aDomNode, aShell)
 NS_IMETHODIMP nsXULLinkAccessible::GetValue(nsAString& aValue)
 {
   if (mIsLink) {
-    return mActionContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, aValue);
+    mActionContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::href, aValue);
+    return NS_OK;
   }
   return NS_ERROR_NOT_IMPLEMENTED;
 }

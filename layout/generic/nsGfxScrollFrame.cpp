@@ -1579,8 +1579,8 @@ nsGfxScrollFrameInner::ReloadChildFrames()
       mScrolledFrame = frame;
     } else {
       nsAutoString value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None,
-                                                        nsXULAtoms::orient, value)) {
+      content->GetAttr(kNameSpaceID_None, nsXULAtoms::orient, value);
+      if (!value.IsEmpty()) {
         // probably a scrollbar then
         if (value.LowerCaseEqualsLiteral("horizontal")) {
           NS_ASSERTION(!mHScrollbarBox, "Found multiple horizontal scrollbars?");
@@ -1763,7 +1763,8 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent, PRInt32
     nscoord y = 0;
 
     nsAutoString value;
-    if (hcontent && NS_CONTENT_ATTR_HAS_VALUE == hcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value))
+    if (hcontent && hcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos,
+                                      value))
     {
       PRInt32 error;
 
@@ -1771,7 +1772,8 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent, PRInt32
       x = value.ToInteger(&error);
     }
 
-    if (vcontent && NS_CONTENT_ATTR_HAS_VALUE == vcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value))
+    if (vcontent && vcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos,
+                                      value))
     {
       PRInt32 error;
 
@@ -2553,7 +2555,8 @@ nsGfxScrollFrameInner::GetIntegerAttribute(nsIBox* aBox, nsIAtom* atom, PRInt32 
     nsIContent* content = aBox->GetContent();
 
     nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, atom, value))
+    content->GetAttr(kNameSpaceID_None, atom, value);
+    if (!value.IsEmpty())
     {
       PRInt32 error;
 

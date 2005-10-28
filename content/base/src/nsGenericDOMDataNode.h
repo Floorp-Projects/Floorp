@@ -195,8 +195,8 @@ public:
                            PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                           nsAString& aResult) const;
+  virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
+                         nsAString& aResult) const;
   virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const;
   virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
                                  nsIAtom** aName, nsIAtom** aPrefix) const;

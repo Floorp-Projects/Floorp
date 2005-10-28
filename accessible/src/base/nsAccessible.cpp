@@ -233,8 +233,7 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
       if (description.IsEmpty()) {
         nsIAtom *descAtom = isXUL ? nsAccessibilityAtoms::tooltiptext :
                                     nsAccessibilityAtoms::title;
-        if (NS_CONTENT_ATTR_HAS_VALUE ==
-            content->GetAttr(kNameSpaceID_None, descAtom, description)) {
+        if (content->GetAttr(kNameSpaceID_None, descAtom, description)) {
           nsAutoString name;
           GetName(name);
           if (name.IsEmpty() || description == name) {
@@ -315,10 +314,8 @@ NS_IMETHODIMP nsAccessible::Init()
 {
   nsIContent *content = GetRoleContent(mDOMNode);
   nsAutoString roleString;
-  if (content &&
-      NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_XHTML2_Unofficial, 
-                                                    nsAccessibilityAtoms::role, 
-                                                    roleString)) {
+  if (content && content->GetAttr(kNameSpaceID_XHTML2_Unofficial, 
+                                  nsAccessibilityAtoms::role, roleString)) {
     // QI to nsIDOM3Node causes some overhead. Unfortunately we need to do this each
     // time there is a role attribute, because the prefixe to namespace mappings
     // can change within any subtree via the xmlns attribute
@@ -1294,10 +1291,9 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
         aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::value,
                          textEquivalent);
       }
-      else if (NS_CONTENT_ATTR_HAS_VALUE !=
-               aContent->GetAttr(kNameSpaceID_None,
-                                 nsAccessibilityAtoms::tooltiptext,
-                                 textEquivalent)) {
+      else if (!aContent->GetAttr(kNameSpaceID_None,
+                                  nsAccessibilityAtoms::tooltiptext, textEquivalent) ||
+               textEquivalent.IsEmpty()) {
         AppendNameFromAccessibleFor(aContent, aFlatString, PR_TRUE /* use value */);
       }
       return AppendStringWithSpaces(aFlatString, textEquivalent);
@@ -1457,8 +1453,7 @@ nsresult nsAccessible::GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName
   NS_ASSERTION(content, "Called from shutdown accessible");
 
   nsAutoString id;
-  if (NS_CONTENT_ATTR_HAS_VALUE !=
-      content->GetAttr(kNameSpaceID_WAIProperties, aIDAttrib, id)) {
+  if (!content->GetAttr(kNameSpaceID_WAIProperties, aIDAttrib, id)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1557,8 +1552,8 @@ nsresult nsAccessible::GetHTMLName(nsAString& aLabel, PRBool aCanAggregateSubtre
   }
 
   // Still try the title as as fallback method in that case.
-  if (NS_CONTENT_ATTR_NOT_THERE ==
-      content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, aLabel)) {
+  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title,
+                        aLabel)) {
     aLabel.SetIsVoid(PR_TRUE);
   }
   return NS_OK;
@@ -1647,9 +1642,7 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel, PRBool aCanAggregateSubtree
   nsIContent *parent = bindingParent? bindingParent->GetParent() :
                                       content->GetParent();
   if (parent && parent->Tag() == nsAccessibilityAtoms::toolbaritem &&
-      NS_CONTENT_ATTR_HAS_VALUE == parent->GetAttr(kNameSpaceID_None,
-                                                   nsAccessibilityAtoms::title,
-                                                   label)) {
+      parent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title, label)) {
     label.CompressWhitespace();
     aLabel = label;
     return NS_OK;
@@ -1815,9 +1808,7 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
 
   nsAutoString attribValue;
   nsCOMPtr<nsIAtom> attribAtom = do_GetAtom(aStateMapEntry->attributeName); // XXX put atoms directly in entry
-  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_WAIProperties,
-                                                     attribAtom,
-                                                     attribValue)) {
+  if (aContent->GetAttr(kNameSpaceID_WAIProperties, attribAtom, attribValue)) {
     if (aStateMapEntry->attributeValue == BOOL_STATE) {
       // No attribute value map specified in state map entry indicates state cleared
       if (attribValue.EqualsLiteral("false")) {
@@ -1881,10 +1872,8 @@ NS_IMETHODIMP nsAccessible::GetFinalValue(nsAString& aValue)
       return NS_OK;
     }
     nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    if (content &&
-        NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_WAIProperties,
-                                                      nsAccessibilityAtoms::valuenow,
-                                                      aValue)) {
+    if (content && content->GetAttr(kNameSpaceID_WAIProperties,
+                                    nsAccessibilityAtoms::valuenow, aValue)) {
       return NS_OK;
     }
   }

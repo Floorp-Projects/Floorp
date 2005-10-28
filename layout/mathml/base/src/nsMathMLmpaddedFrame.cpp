@@ -125,29 +125,29 @@ nsMathMLmpaddedFrame::ProcessAttributes()
 
   // width
   mWidthSign = NS_MATHML_SIGN_INVALID;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, nsnull,
-                   nsMathMLAtoms::width_, value)) {
+  GetAttribute(mContent, nsnull, nsMathMLAtoms::width_, value);
+  if (!value.IsEmpty()) {
     ParseAttribute(value, mWidthSign, mWidth, mWidthPseudoUnit);
   }
 
   // height
   mHeightSign = NS_MATHML_SIGN_INVALID;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, nsnull,
-                   nsMathMLAtoms::height_, value)) {
+  GetAttribute(mContent, nsnull, nsMathMLAtoms::height_, value);
+  if (!value.IsEmpty()) {
     ParseAttribute(value, mHeightSign, mHeight, mHeightPseudoUnit);
   }
 
   // depth
   mDepthSign = NS_MATHML_SIGN_INVALID;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, nsnull,
-                   nsMathMLAtoms::depth_, value)) {
+  GetAttribute(mContent, nsnull, nsMathMLAtoms::depth_, value);
+  if (!value.IsEmpty()) {
     ParseAttribute(value, mDepthSign, mDepth, mDepthPseudoUnit);
   }
 
   // lspace
   mLeftSpaceSign = NS_MATHML_SIGN_INVALID;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, nsnull,
-                   nsMathMLAtoms::lspace_, value)) {
+  GetAttribute(mContent, nsnull, nsMathMLAtoms::lspace_, value);
+  if (!value.IsEmpty()) {
     ParseAttribute(value, mLeftSpaceSign, mLeftSpace, mLeftSpacePseudoUnit);
   }
 }

@@ -101,14 +101,9 @@ PRBool
 nsMathMLmfracFrame::IsBevelled()
 {
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == 
-      GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::bevelled_, value)) {
-    if (value.EqualsLiteral("true")) {
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
+  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::bevelled_,
+               value);
+  return value.EqualsLiteral("true");
 }
 
 NS_IMETHODIMP
@@ -423,21 +418,20 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
   width += leftSpace + rightSpace;
 
   // see if the numalign attribute is there 
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle, 
-                   nsMathMLAtoms::numalign_, value)) {
-    if (value.EqualsLiteral("left"))
-      dxNum = leftSpace;
-    else if (value.EqualsLiteral("right"))
-      dxNum = width - rightSpace - sizeNum.width;
-  }
+  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::numalign_,
+               value);
+  if (value.EqualsLiteral("left"))
+    dxNum = leftSpace;
+  else if (value.EqualsLiteral("right"))
+    dxNum = width - rightSpace - sizeNum.width;
+
   // see if the denomalign attribute is there 
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle, 
-                   nsMathMLAtoms::denomalign_, value)) {
-    if (value.EqualsLiteral("left"))
-      dxDen = leftSpace;
-    else if (value.EqualsLiteral("right"))
-      dxDen = width - rightSpace - sizeDen.width;
-  }
+  GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::denomalign_,
+               value);
+  if (value.EqualsLiteral("left"))
+    dxDen = leftSpace;
+  else if (value.EqualsLiteral("right"))
+    dxDen = width - rightSpace - sizeDen.width;
 
   mBoundingMetrics.rightBearing =
     PR_MAX(dxNum + bmNum.rightBearing, dxDen + bmDen.rightBearing);

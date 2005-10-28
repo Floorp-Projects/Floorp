@@ -98,32 +98,24 @@ public:
    * Get the name of the form control
    * @param aContent the content to get the name of
    * @param aResult the returned name of the form control [OUT]
-   * @return NS_CONTENT_ATTR_HAS_VALUE if things go well
-   * @return NS_CONTENT_ATTR_NO_VALUE if the name attr is present but is empty
-   * @return NS_CONTENT_ATTR_NOT_THERE if the name attribute is undefined
-   * @return NS_ERROR_FAILURE if aContent is null or is not HTML content
+   * @return PR_TRUE if things go well
+   *         PR_FALSE if the name attribute is undefined
    */
-  static nsresult GetName(nsIContent* aContent, nsAString* aResult);
+  static PRBool GetName(nsIContent* aContent, nsAString* aResult);
   /**
    * Get the type of the form control (if it's not obvious from the frame type)
    * @param aContent the content to get the name of
-   * @param aType the returned type of the form control [OUT]
-   * @return NS_CONTENT_ATTR_HAS_VALUE if things go well
-   * @return NS_CONTENT_ATTR_NO_VALUE if the type attr is present but is empty
-   * @return NS_CONTENT_ATTR_NOT_THERE if the type attribute is undefined
-   * @return NS_ERROR_FAILURE if aContent is null or is not HTML content
+   * @return the returned type of the form control [OUT]
    */
   static PRInt32 GetType(nsIContent* aContent);
   /**
    * Get the value of the form control (if it's just living in an attr)
    * @param aContent the content to get the name of
    * @param aResult the returned value of the form control [OUT]
-   * @return NS_CONTENT_ATTR_HAS_VALUE if things go well
-   * @return NS_CONTENT_ATTR_NO_VALUE if the value attr is present but is empty
-   * @return NS_CONTENT_ATTR_NOT_THERE if the value attribute is undefined
-   * @return NS_ERROR_FAILURE if aContent is null or is not HTML content
+   * @return PR_TRUE if things go well
+   *         PR_FALSE if the name attribute is undefined
    */
-  static nsresult GetValueAttr(nsIContent* aContent, nsAString* aResult);
+  static PRBool GetValueAttr(nsIContent* aContent, nsAString* aResult);
   /**
    * Cause the form control to reset its value
    * @param aFrame the frame who owns the form control
@@ -153,50 +145,12 @@ public:
 
   // wrap can be one of these three values.  
   typedef enum {
-    eHTMLTextWrap_Off     = 1,    // the default
-    eHTMLTextWrap_Hard    = 2,    // "hard" or "physical"
-    eHTMLTextWrap_Soft    = 3     // "soft" or "virtual"
+    eHTMLTextWrap_Off     = 1,    // "off"
+    eHTMLTextWrap_Hard    = 2,    // "hard"
+    eHTMLTextWrap_Soft    = 3     // the default
   } nsHTMLTextWrap;
 
-  /** returns the value of the "wrap" property in aOutValue
-    * returns NS_CONTENT_ATTR_NOT_THERE if the property does not exist for this
-    */
-  static nsresult GetWrapProperty(nsIContent * aContent, nsString &aOutValue);
-
-  static nsresult GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& aWrapProp);
-
-//
-//-------------------------------------------------------------------------------------
-//  Utility methods for managing checkboxes and radiobuttons
-//-------------------------------------------------------------------------------------
-//   
-   /**
-    * Get the state of the checked attribute.
-    * @param aState set to PR_TRUE if the checked attribute is set,
-    * PR_FALSE if the checked attribute has been removed
-    * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
-    */
-
-  //nsresult GetCurrentCheckState(PRBool* aState);
- 
-   /**
-    * Set the state of the checked attribute.
-    * @param aState set to PR_TRUE to set the attribute,
-    * PR_FALSE to unset the attribute
-    * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
-    */
-
-  nsresult SetCurrentCheckState(PRBool aState);
-
-   /**
-    * Get the state of the defaultchecked attribute.
-    * @param aState set to PR_TRUE if the defaultchecked attribute is set,
-    * PR_FALSE if the defaultchecked attribute has been removed
-    * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
-    */
- 
-  nsresult GetDefaultCheckState(PRBool* aState);
-
+  static PRBool GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& aWrapProp);
 
 //
 //-------------------------------------------------------------------------------------

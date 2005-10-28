@@ -370,8 +370,8 @@ MBool txIdPattern::matches(const txXPathNode& aNode, txIMatchContext* aContext)
     if (!idAttr) {
         return MB_FALSE; // no ID for this element defined, can't match
     }
-    nsresult rv = content->GetAttr(kNameSpaceID_None, idAttr, value);
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+    content->GetAttr(kNameSpaceID_None, idAttr, value);
+    if (value.IsEmpty()) {
         return MB_FALSE; // no ID attribute given
     }
 #endif // TX_EXE

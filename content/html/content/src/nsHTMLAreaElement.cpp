@@ -152,11 +152,7 @@ NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLAreaElement, TabIndex, tabindex, 0)
 NS_IMETHODIMP
 nsHTMLAreaElement::GetTarget(nsAString& aValue)
 {
-  aValue.Truncate();
-
-  nsresult rv;
-  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue);
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
   return NS_OK;

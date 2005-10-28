@@ -424,7 +424,9 @@ nsSVGElement::IsSupported(const nsAString& aFeature, const nsAString& aVersion, 
 /* attribute DOMString id; */
 NS_IMETHODIMP nsSVGElement::GetId(nsAString & aId)
 {
-  return GetAttr(kNameSpaceID_None, nsSVGAtoms::id, aId);
+  GetAttr(kNameSpaceID_None, nsSVGAtoms::id, aId);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsSVGElement::SetId(const nsAString & aId)

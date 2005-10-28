@@ -2446,15 +2446,8 @@ nsHTMLDocument::MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
 {
   NS_PRECONDITION(aContent, "Must have content node to work with!");
   
-  // Getting attrs is expensive, so use HasAttr() first.
-  if (!aContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::name)) {
-    return PR_FALSE;
-  }
-
-  nsAutoString value;
-  nsresult rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, value);
-
-  return NS_SUCCEEDED(rv) && value.Equals(aData);
+  return aContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name, aData,
+                               eCaseMatters);
 }
 
 NS_IMETHODIMP

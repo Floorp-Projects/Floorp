@@ -469,8 +469,7 @@ nsAccessibilityService::CreateHTMLButtonAccessibleXBL(nsIDOMNode *aNode, nsIAcce
 PRBool nsAccessibilityService::GetRole(nsIContent *aContent,
                                        nsAString& aRole)
 {
-  return NS_CONTENT_ATTR_HAS_VALUE ==
-         aContent->GetAttr(kNameSpaceID_XHTML2_Unofficial,
+  return aContent->GetAttr(kNameSpaceID_XHTML2_Unofficial,
                            nsAccessibilityAtoms::role, aRole);
 }
 

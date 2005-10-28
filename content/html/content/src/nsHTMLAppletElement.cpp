@@ -295,8 +295,7 @@ void
 nsHTMLAppletElement::StartAppletLoad(PRBool aNotify)
 {
   nsAutoString uri;
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, uri);
-  if (rv != NS_CONTENT_ATTR_NOT_THERE) {
+  if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::code, uri)) {
     ObjectURIChanged(uri, aNotify,
                      NS_LITERAL_CSTRING("application/x-java-vm"), PR_TRUE);
   } else {

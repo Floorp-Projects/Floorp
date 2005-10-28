@@ -139,10 +139,10 @@ public:
   {
     return NS_OK;
   }
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                           nsAString& aResult) const
+  virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                         nsAString& aResult) const
   {
-    return NS_CONTENT_ATTR_NOT_THERE;
+    return PR_FALSE;
   }
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
                              PRBool aNotify)

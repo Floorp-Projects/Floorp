@@ -526,8 +526,7 @@ nsHTMLSharedElement::BindToTree(nsIDocument* aDocument,
     GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
 
     nsAutoString uri;
-    nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
-    if (rv != NS_CONTENT_ATTR_NOT_THERE) {
+    if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri)) {
       // Don't notify: We aren't in a document yet, so we have no frames
       ObjectURIChanged(uri, PR_FALSE, NS_ConvertUTF16toUTF8(type), PR_TRUE);
     } else {

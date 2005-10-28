@@ -135,14 +135,11 @@ nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
   if (content->IsContentOfType(nsIContent::eHTML))
     return content->HasAttr(kNameSpaceID_None, aAtom);
 
-  nsAutoString attr;
-  content->GetAttr(kNameSpaceID_None, aAtom, attr);
-
   // For XML/XUL elements, an attribute must be equal to the literal
   // string "true" to be counted as true.  An empty string should _not_
   // be counted as true.
-
-  return attr.EqualsLiteral("true");
+  return content->AttrValueIs(kNameSpaceID_None, aAtom,
+                              NS_LITERAL_STRING("true"), eCaseMatters);
 }
 
 PRInt32
@@ -166,9 +163,8 @@ nsNativeTheme::GetAttr(nsIFrame* aFrame, nsIAtom* aAtom, nsAString& attrValue)
   if (!aFrame)
     return PR_FALSE;
 
-  nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attrValue);
-  return ((res != NS_CONTENT_ATTR_NOT_THERE) &&
-	  !(res != NS_CONTENT_ATTR_NO_VALUE && attrValue.IsEmpty()));
+  aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attrValue);
+  return !attrValue.IsEmpty();
 }
 
 PRBool

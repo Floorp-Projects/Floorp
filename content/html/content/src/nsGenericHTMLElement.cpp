@@ -1783,26 +1783,6 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   return nsGenericElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 
-nsresult
-nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                              nsAString& aResult) const
-{
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
-               "must have a real namespace ID!");
-
-  aResult.Truncate();
-
-  const nsAttrValue* attrValue =
-    mAttrsAndChildren.GetAttr(aAttribute, aNameSpaceID);
-  if (!attrValue) {
-    return NS_CONTENT_ATTR_NOT_THERE;
-  }
-
-  attrValue->ToString(aResult);
-
-  return NS_CONTENT_ATTR_HAS_VALUE;
-}
-
 const nsAttrValue*
 nsGenericHTMLElement::GetClasses() const
 {
@@ -1869,7 +1849,7 @@ nsGenericHTMLElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
       // XXXbz if the old rule points to the same declaration as the new one,
       // this is getting the new attr value, not the old one....
       modification = GetAttr(kNameSpaceID_None, nsHTMLAtoms::style,
-                             oldValueStr) != NS_CONTENT_ATTR_NOT_THERE;
+                             oldValueStr);
     }
     else if (aNotify) {
       modification = !!mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
@@ -2933,8 +2913,7 @@ nsGenericHTMLElement::GetStringAttrWithDefault(nsIAtom* aAttr,
                                                const char* aDefault,
                                                nsAString& aResult)
 {
-  nsresult rv = GetAttr(kNameSpaceID_None, aAttr, aResult);
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+  if (!GetAttr(kNameSpaceID_None, aAttr, aResult)) {
     CopyASCIItoUTF16(aDefault, aResult);
   }
   return NS_OK;
@@ -2983,8 +2962,7 @@ nsresult
 nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
 {
   nsAutoString attrValue;
-  nsresult rv = GetAttr(kNameSpaceID_None, aAttr, attrValue);
-  if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+  if (!GetAttr(kNameSpaceID_None, aAttr, attrValue)) {
     aResult.Truncate();
 
     return NS_OK;
@@ -2992,9 +2970,10 @@ nsGenericHTMLElement::GetURIAttr(nsIAtom* aAttr, nsAString& aResult)
 
   nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   nsCOMPtr<nsIURI> attrURI;
-  rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
-                                                 attrValue, GetOwnerDoc(),
-                                                 baseURI);
+  nsresult rv =
+    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
+                                              attrValue, GetOwnerDoc(),
+                                              baseURI);
   if (NS_FAILED(rv)) {
     // Just use the attr value as the result...
     aResult = attrValue;
@@ -3594,9 +3573,8 @@ nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
 {
   // first check to see if we have an access key
   nsAutoString accessKey;
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, accessKey);
-  if (NS_FAILED(rv) || NS_CONTENT_ATTR_NOT_THERE == rv ||
-      accessKey.IsEmpty()) {
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::accesskey, accessKey);
+  if (accessKey.IsEmpty()) {
     return;
   }
 

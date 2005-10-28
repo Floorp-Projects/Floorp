@@ -141,65 +141,56 @@ nsresult
 nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
 {
   nsresult rv;
-  nsAutoString value, data;
+  nsAutoString value;
   PRBool isMutable = PR_FALSE;
 
   //////////////  
   // see if the opening fence is there ...
-  rv = GetAttribute(mContent, mPresentationData.mstyle,
-                    nsMathMLAtoms::open_, value);
-  if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-    value.Trim(" ");
-    data = value;
+  if (!GetAttribute(mContent, mPresentationData.mstyle, nsMathMLAtoms::open_,
+                    value)) {
+    value = PRUnichar('('); // default as per the MathML REC
   }
-  else if (NS_CONTENT_ATTR_NOT_THERE == rv)
-    data = PRUnichar('('); // default as per the MathML REC
-  else
-    data.Truncate();
+  else {
+    value.Trim(" ");
+  }
 
-  if (!data.IsEmpty()) {
+  if (!value.IsEmpty()) {
     mOpenChar = new nsMathMLChar;
     if (!mOpenChar) return NS_ERROR_OUT_OF_MEMORY;
-    mOpenChar->SetData(aPresContext, data);
-    isMutable = nsMathMLOperators::IsMutableOperator(data);
+    mOpenChar->SetData(aPresContext, value);
+    isMutable = nsMathMLOperators::IsMutableOperator(value);
     ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mOpenChar, isMutable);
   }
 
   //////////////
   // see if the closing fence is there ...
-  rv = GetAttribute(mContent, mPresentationData.mstyle,
-                    nsMathMLAtoms::close_, value);
-  if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-    value.Trim(" ");
-    data = value;
+  if(!GetAttribute(mContent, mPresentationData.mstyle,
+                    nsMathMLAtoms::close_, value)) {
+    value = PRUnichar(')'); // default as per the MathML REC
   }
-  else if (NS_CONTENT_ATTR_NOT_THERE == rv)
-    data = PRUnichar(')'); // default as per the MathML REC
-  else
-    data.Truncate();
+  else {
+    value.Trim(" ");
+  }
 
-  if (!data.IsEmpty()) {
+  if (!value.IsEmpty()) {
     mCloseChar = new nsMathMLChar;
     if (!mCloseChar) return NS_ERROR_OUT_OF_MEMORY;
-    mCloseChar->SetData(aPresContext, data);
-    isMutable = nsMathMLOperators::IsMutableOperator(data);
+    mCloseChar->SetData(aPresContext, value);
+    isMutable = nsMathMLOperators::IsMutableOperator(value);
     ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, mCloseChar, isMutable);
   }
 
   //////////////
   // see if separators are there ...
-  rv = GetAttribute(mContent, mPresentationData.mstyle, 
-                    nsMathMLAtoms::separators_, value);
-  if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-    value.Trim(" ");
-    data = value;
+  if(!GetAttribute(mContent, mPresentationData.mstyle, 
+                   nsMathMLAtoms::separators_, value)) {
+    value = PRUnichar(','); // default as per the MathML REC
   }
-  else if (NS_CONTENT_ATTR_NOT_THERE == rv)
-    data = PRUnichar(','); // default as per the MathML REC
-  else
-    data.Truncate();
+  else {
+    value.Trim(" ");
+  }
 
-  mSeparatorsCount = data.Length();
+  mSeparatorsCount = value.Length();
   if (0 < mSeparatorsCount) {
     PRInt32 sepCount = mFrames.GetLength() - 1;
     if (0 < sepCount) {
@@ -208,11 +199,11 @@ nsMathMLmfencedFrame::CreateFencesAndSeparators(nsPresContext* aPresContext)
       nsAutoString sepChar;
       for (PRInt32 i = 0; i < sepCount; i++) {
         if (i < mSeparatorsCount) {
-          sepChar = data[i];
+          sepChar = value[i];
           isMutable = nsMathMLOperators::IsMutableOperator(sepChar);
         }
         else {
-          sepChar = data[mSeparatorsCount-1];
+          sepChar = value[mSeparatorsCount-1];
           // keep the value of isMutable that was set earlier
         }
         mSeparatorsChar[i].SetData(aPresContext, sepChar);

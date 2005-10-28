@@ -203,8 +203,8 @@ STDMETHODIMP nsAccessNodeWrap::get_attributes(
       aNameSpaceIDs[index] = NS_STATIC_CAST(short, nameSpaceID);
       nameAtom->GetUTF8String(&pszAttributeName);
       aAttribNames[index] = ::SysAllocString(NS_ConvertUTF8toUCS2(pszAttributeName).get());
-      if (NS_SUCCEEDED(content->GetAttr(nameSpaceID, nameAtom, attributeValue))) 
-        aAttribValues[index] = ::SysAllocString(attributeValue.get());
+      content->GetAttr(nameSpaceID, nameAtom, attributeValue);
+      aAttribValues[index] = ::SysAllocString(attributeValue.get());
     }
   }
 
@@ -526,8 +526,7 @@ nsAccessNodeWrap::get_language(BSTR __RPC_FAR *aLanguage)
 
   nsAutoString language;
   for (nsIContent *walkUp = content; walkUp = walkUp->GetParent(); walkUp) {
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        walkUp->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::lang, language)) {
+    if (walkUp->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::lang, language)) {
       break;
     }
   }

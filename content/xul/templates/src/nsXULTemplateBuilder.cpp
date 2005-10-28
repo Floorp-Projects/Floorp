@@ -1350,8 +1350,7 @@ nsXULTemplateBuilder::ComputeContainmentProperties()
     mContainmentProperties.Clear();
 
     nsAutoString containment;
-    rv = mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::containment, containment);
-    if (NS_FAILED(rv)) return rv;
+    mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::containment, containment);
 
     PRUint32 len = containment.Length();
     PRUint32 offset = 0;
@@ -2111,8 +2110,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
             continue;
 
         nsAutoString value;
-        rv = aRuleElement->GetAttr(attrNameSpaceID, attr, value);
-        if (NS_FAILED(rv)) return rv;
+        aRuleElement->GetAttr(attrNameSpaceID, attr, value);
 
         TestNode* testnode = nsnull;
 
@@ -2130,31 +2128,23 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
             nsRDFConInstanceTestNode::Test iscontainer =
                 nsRDFConInstanceTestNode::eDontCare;
 
-            rv = aRuleElement->GetAttr(kNameSpaceID_None, nsXULAtoms::iscontainer, value);
-            if (NS_FAILED(rv)) return rv;
-
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                if (value.EqualsLiteral("true")) {
-                    iscontainer = nsRDFConInstanceTestNode::eTrue;
-                }
-                else if (value.EqualsLiteral("false")) {
-                    iscontainer = nsRDFConInstanceTestNode::eFalse;
-                }
+            aRuleElement->GetAttr(kNameSpaceID_None, nsXULAtoms::iscontainer, value);
+            if (value.EqualsLiteral("true")) {
+                iscontainer = nsRDFConInstanceTestNode::eTrue;
+            }
+            else if (value.EqualsLiteral("false")) {
+                iscontainer = nsRDFConInstanceTestNode::eFalse;
             }
 
             nsRDFConInstanceTestNode::Test isempty =
                 nsRDFConInstanceTestNode::eDontCare;
 
-            rv = aRuleElement->GetAttr(kNameSpaceID_None, nsXULAtoms::isempty, value);
-            if (NS_FAILED(rv)) return rv;
-
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                if (value.EqualsLiteral("true")) {
-                    isempty = nsRDFConInstanceTestNode::eTrue;
-                }
-                else if (value.EqualsLiteral("false")) {
-                    isempty = nsRDFConInstanceTestNode::eFalse;
-                }
+            aRuleElement->GetAttr(kNameSpaceID_None, nsXULAtoms::isempty, value);
+            if (value.EqualsLiteral("true")) {
+                isempty = nsRDFConInstanceTestNode::eTrue;
+            }
+            else if (value.EqualsLiteral("false")) {
+                isempty = nsRDFConInstanceTestNode::eFalse;
             }
 
             testnode = new nsRDFConInstanceTestNode(aParentNode,
