@@ -552,44 +552,36 @@ nsXULElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 }
 
 nsresult
-nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsAString& aValue)
+nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
+                                             nsISupports** aTarget,
+                                             PRBool* aDefer)
 {
-    // XXX sXBL/XBL2 issue! Owner or current document?
-    // Note that If it's current, then we need to hook up listeners on the root
-    // when we BindToTree...
+    // XXXbz sXBL/XBL2 issue: should we instead use GetCurrentDoc()
+    // here, override BindToTree for those classes and munge event
+    // listeners there?
     nsIDocument* doc = GetOwnerDoc();
     if (!doc)
-        return NS_OK; // XXX
-
-    nsresult rv;
-
-    nsISupports *target = NS_STATIC_CAST(nsIContent *, this);
-    PRBool defer = PR_TRUE;
-
-    nsCOMPtr<nsIEventListenerManager> manager;
+        return NS_ERROR_UNEXPECTED; // XXX
 
     nsIContent *root = doc->GetRootContent();
-    nsCOMPtr<nsIContent> content(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this)));
-    if ((!root || root == content) && !mNodeInfo->Equals(nsXULAtoms::overlay)) {
+    if ((!root || root == this) && !mNodeInfo->Equals(nsXULAtoms::overlay)) {
         nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
 
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(global);
         if (! receiver)
             return NS_ERROR_UNEXPECTED;
 
-        rv = receiver->GetListenerManager(getter_AddRefs(manager));
-
-        target = global;
-        defer = PR_FALSE;
+        nsresult rv = receiver->GetListenerManager(aManager);
+        if (NS_SUCCEEDED(rv)) {
+            NS_ADDREF(*aTarget = global);
+        }
+        *aDefer = PR_FALSE;
+        return rv;
     }
-    else {
-        rv = GetListenerManager(getter_AddRefs(manager));
-    }
 
-    if (NS_FAILED(rv)) return rv;
-
-    return manager->AddScriptEventListener(target, aName, aValue, defer,
-                                           !nsContentUtils::IsChromeDoc(doc));
+    return nsGenericElement::GetEventListenerManagerForAttr(aManager,
+                                                            aTarget,
+                                                            aDefer);
 }
 
 nsresult
@@ -1195,185 +1187,79 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
     }
 }
 
-// XXX attribute code swiped from nsGenericContainerElement
-// this class could probably just use nsGenericContainerElement
-// needed to maintain attribute namespace ID as well as ordering
-// NOTE: Changes to this function may need to be made in
-// |SetInlineStyleRule| as well.
 nsresult
-nsXULElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
-                      const nsAString& aValue, PRBool aNotify)
+nsXULElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                            const nsAString* aValue, PRBool aNotify)
 {
-    nsAutoString oldValue;
-    PRBool hasListeners = PR_FALSE;
-    PRBool modification = PR_FALSE;
-
-    if (IsInDoc()) {
-        PRBool isAccessKey = aName == nsXULAtoms::accesskey &&
-                             aNamespaceID == kNameSpaceID_None;
-        hasListeners = nsGenericElement::HasMutationListeners(this,
-            NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
-
-        // If we have no listeners and aNotify is false, we are almost
-        // certainly coming from the content sink and will almost certainly
-        // have no previous value.  Even if we do, setting the value is cheap
-        // when we have no listeners and don't plan to notify.  The check for
-        // aNotify here is an optimization, the check for haveListeners is a
-        // correctness issue.
-        // The check for isAccessKey is so that we get the old value and can
-        // unregister the old key.
-        if (hasListeners || aNotify || isAccessKey) {
-            // Don't do any update if old == new.
-            const nsAttrValue* attrVal =
-                mAttrsAndChildren.GetAttr(aName, aNamespaceID);
-            if (attrVal) {
-                modification = PR_TRUE;
-                attrVal->ToString(oldValue);
-                if (aValue.Equals(oldValue)) {
-                    return NS_OK;
-                }
-            }
-
-            // If the accesskey attribute changes, unregister it here. It will
-            // be registered for the new value in the relevant frames. Also see
-            // nsAreaFrame, nsBoxFrame and nsTextBoxFrame's AttributeChanged
-            // If we want to merge with nsGenericElement then we could maybe
-            // do this in WillChangeAttr instead. That is only called when
-            // aNotify is true, but that might be enough.
-            if (isAccessKey) {
-                UnregisterAccessKey(oldValue);
-            }
+    if (aNamespaceID == kNameSpaceID_None && aName == nsXULAtoms::accesskey &&
+        IsInDoc()) {
+        const nsAttrValue* attrVal = FindLocalOrProtoAttr(aNamespaceID, aName);
+        if (attrVal) {
+            nsAutoString oldValue;
+            attrVal->ToString(oldValue);
+            UnregisterAccessKey(oldValue);
         }
     }
 
-    // XXX UnsetAttr handles more attributes then we do. See bug 233642.
+    return nsGenericElement::BeforeSetAttr(aNamespaceID, aName,
+                                           aValue, aNotify);
+}
 
-    // Parse into a nsAttrValue
-
-    // WARNING!!
-    // This code is largely duplicated in nsXULPrototypeElement::SetAttrAt.
-    // Any changes should be made to both functions.
-    nsAttrValue attrValue;
+nsresult
+nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                           const nsAString* aValue, PRBool aNotify)
+{
     if (aNamespaceID == kNameSpaceID_None) {
-        if (aName == nsXULAtoms::style) {
-            nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE, aValue,
-                                                      attrValue);
-        }
-        else if (aName == nsXULAtoms::id &&
-                 !aValue.IsEmpty()) {
-            // Store id as atom.
-            // id="" means that the element has no id. Not that it has
-            // emptystring as id.
-            attrValue.ParseAtom(aValue);
-        }
-        else if (aName == nsXULAtoms::clazz) {
-            attrValue.ParseAtomArray(aValue);
-        }
-        else {
-            attrValue.ParseStringOrAtom(aValue);
-        }
+        // XXX UnsetAttr handles more attributes then we do. See bug 233642.
 
         // Add popup and event listeners. We can't call AddListenerFor since
         // the attribute isn't set yet.
         MaybeAddPopupListener(aName);
-        if (IsEventHandler(aName)) {
-            AddScriptEventListener(aName, aValue);
+        if (IsEventHandler(aName) && aValue) {
+            AddScriptEventListener(aName, *aValue);
         }
 
         // Hide chrome if needed
         if (aName == nsXULAtoms::hidechrome &&
             mNodeInfo->Equals(nsXULAtoms::window)) {
-            HideWindowChrome(NS_LITERAL_STRING("true").Equals(aValue));
+            HideWindowChrome(aValue && NS_LITERAL_STRING("true").Equals(*aValue));
         }
 
-        // XXX need to check if they're changing an event handler: if so, then we need
-        // to unhook the old one.
-    }
-    else {
-        attrValue.ParseStringOrAtom(aValue);
+        // XXX need to check if they're changing an event handler: if
+        // so, then we need to unhook the old one.  Or something.
     }
 
-    return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
-                            attrValue, modification, hasListeners, aNotify);
+    return nsGenericElement::AfterSetAttr(aNamespaceID, aName,
+                                          aValue, aNotify);
 }
 
-nsresult
-nsXULElement::SetAttrAndNotify(PRInt32 aNamespaceID,
-                               nsIAtom* aAttribute,
-                               nsIAtom* aPrefix,
-                               const nsAString& aOldValue,
-                               nsAttrValue& aParsedValue,
-                               PRBool aModification,
-                               PRBool aFireMutation,
-                               PRBool aNotify)
+PRBool
+nsXULElement::ParseAttribute(nsIAtom* aAttribute,
+                             const nsAString& aValue,
+                             nsAttrValue& aResult)
 {
-    nsresult rv;
-    PRUint8 modType = aModification ?
-        NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::MODIFICATION) :
-        NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::ADDITION);
+    // Parse into a nsAttrValue
 
-    nsIDocument* doc = GetCurrentDoc();
-    mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-    if (aNotify && doc) {
-        doc->AttributeWillChange(this, aNamespaceID, aAttribute);
+    // WARNING!!
+    // This code is largely duplicated in nsXULPrototypeElement::SetAttrAt.
+    // Any changes should be made to both functions.
+    if (aAttribute == nsXULAtoms::style) {
+        nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE, aValue,
+                                                  aResult);
+        return PR_TRUE;
     }
 
-    if (aNamespaceID == kNameSpaceID_None) {
-        rv = mAttrsAndChildren.SetAndTakeAttr(aAttribute, aParsedValue);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-        nsCOMPtr<nsINodeInfo> ni;
-        rv = mNodeInfo->NodeInfoManager()->GetNodeInfo(aAttribute, aPrefix,
-                                                       aNamespaceID,
-                                                       getter_AddRefs(ni));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = mAttrsAndChildren.SetAndTakeAttr(ni, aParsedValue);
-        NS_ENSURE_SUCCESS(rv, rv);
+    if (aAttribute == nsXULAtoms::clazz) {
+        aResult.ParseAtomArray(aValue);
+        return PR_TRUE;
     }
 
-    if (doc) {
-        nsXBLBinding *binding = doc->BindingManager()->GetBinding(this);
-        if (binding) {
-            binding->AttributeChanged(aAttribute, aNamespaceID, PR_FALSE, aNotify);
-        }
-
-        if (aFireMutation) {
-            nsCOMPtr<nsIDOMEventTarget> node =
-                do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
-            nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED, node);
-
-            nsAutoString attrName;
-            aAttribute->ToString(attrName);
-            nsCOMPtr<nsIDOMAttr> attrNode;
-            GetAttributeNode(attrName, getter_AddRefs(attrNode));
-            mutation.mRelatedNode = attrNode;
-
-            mutation.mAttrName = aAttribute;
-            nsAutoString newValue;
-            // We don't really need to call GetAttr here, but lets do it
-            // anyway to ease future codeshare with nsGenericHTMLElement
-            // which has to call GetAttr here due to enums.
-            GetAttr(aNamespaceID, aAttribute, newValue);
-            if (!newValue.IsEmpty()) {
-                mutation.mNewAttrValue = do_GetAtom(newValue);
-            }
-            if (!aOldValue.IsEmpty()) {
-                mutation.mPrevAttrValue = do_GetAtom(aOldValue);
-            }
-            mutation.mAttrChange = modType;
-            nsEventStatus status = nsEventStatus_eIgnore;
-            HandleDOMEvent(nsnull, &mutation, nsnull,
-                           NS_EVENT_FLAG_INIT, &status);
-        }
-
-        if (aNotify) {
-            doc->AttributeChanged(this, aNamespaceID, aAttribute, modType);
-        }
+    if (!nsGenericElement::ParseAttribute(aAttribute, aValue, aResult)) {
+        // Fall back to parsing as atom for short values
+        aResult.ParseStringOrAtom(aValue);
     }
 
-    return NS_OK;
+    return PR_TRUE;
 }
 
 const nsAttrName*
@@ -2718,22 +2604,20 @@ NS_IMETHODIMP nsXULElement::HandleChromeEvent(nsPresContext* aPresContext,
 
 //----------------------------------------------------------------------
 
-const nsAttrValue*
-nsXULElement::FindLocalOrProtoAttr(PRInt32 aNamespaceID, nsIAtom *aName) const
+nsGenericElement::nsAttrInfo
+nsXULElement::GetAttrInfo(PRInt32 aNamespaceID, nsIAtom *aName) const
 {
 
-    const nsAttrValue* val = mAttrsAndChildren.GetAttr(aName, aNamespaceID);
-    if (val) {
-        return val;
+    nsAttrInfo info(nsGenericElement::GetAttrInfo(aNamespaceID, aName));
+    if (!info.mValue) {
+        nsXULPrototypeAttribute *protoattr =
+            FindPrototypeAttribute(aNamespaceID, aName);
+        if (protoattr) {
+            return nsAttrInfo(&protoattr->mName, &protoattr->mValue);
+        }
     }
 
-    nsXULPrototypeAttribute *protoattr =
-        FindPrototypeAttribute(aNamespaceID, aName);
-    if (protoattr) {
-        return &protoattr->mValue;
-    }
-
-    return nsnull;
+    return info;
 }
 
 

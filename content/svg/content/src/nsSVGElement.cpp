@@ -138,62 +138,50 @@ nsSVGElement::GetClassAttributeName() const
 }
 
 nsresult
-nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
-                      const nsAString& aValue,
-                      PRBool aNotify)
+nsSVGElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                            const nsAString* aValue, PRBool aNotify)
 {
-  NS_ENSURE_ARG_POINTER(aName);
-  NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
-               "Don't call SetAttr with unknown namespace");
-  
-  nsresult rv;
-  nsAutoString oldValue;
-  PRBool hasListeners = PR_FALSE;
-  PRBool modification = PR_FALSE;
-  
-  PRInt32 index = mAttrsAndChildren.IndexOfAttr(aName, aNamespaceID);
-  
-  if (IsInDoc()) {
-    hasListeners = nsGenericElement::HasMutationListeners(this,
-      NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
-    
-    // If we have no listeners and aNotify is false, we are almost certainly
-    // coming from the content sink and will almost certainly have no previous
-    // value.  Even if we do, setting the value is cheap when we have no
-    // listeners and don't plan to notify.  The check for aNotify here is an
-    // optimization, the check for haveListeners is a correctness issue.
-    if (index >= 0 && (hasListeners || aNotify)) {
-      modification = PR_TRUE;
-      // don't do any update if old == new.
-      mAttrsAndChildren.AttrAt(index)->ToString(oldValue);
-      if (aValue.Equals(oldValue) &&
-          aPrefix == mAttrsAndChildren.GetSafeAttrNameAt(index)->GetPrefix()) {
-        return NS_OK;
-      }
-    }
-  }
-  
   // If this is an svg presentation attribute we need to map it into
   // the content stylerule.
   // XXX For some reason incremental mapping doesn't work, so for now
   // just delete the style rule and lazily reconstruct it in
   // GetContentStyleRule()
-  if(aNamespaceID == kNameSpaceID_None && IsAttributeMapped(aName)) 
+  if (aNamespaceID == kNameSpaceID_None && IsAttributeMapped(aName)) {
     mContentStyleRule = nsnull;
-  
+  }
+
+  return nsGenericElement::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
+}
+
+nsresult
+nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                           const nsAString* aValue, PRBool aNotify)
+{  
+  if (IsEventName(aName) && aValue) {
+    nsresult rv = AddScriptEventListener(GetEventNameForAttr(aName), *aValue);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return nsGenericElement::AfterSetAttr(aNamespaceID, aName, aValue, aNotify);
+}
+
+PRBool
+nsSVGElement::ParseAttribute(nsIAtom* aAttribute,
+                             const nsAString& aValue,
+                             nsAttrValue& aResult)
+{
   // Parse value
-  nsAttrValue attrValue;
   nsCOMPtr<nsISVGValue> svg_value;
-  if (index >= 0) {
+  const nsAttrValue* val = mAttrsAndChildren.GetAttr(aAttribute);
+  if (val) {
     // Found the attr in the list.
-    const nsAttrValue* currVal = mAttrsAndChildren.AttrAt(index);
-    if (currVal->Type() == nsAttrValue::eSVGValue) {
-      svg_value = currVal->GetSVGValue();
+    if (val->Type() == nsAttrValue::eSVGValue) {
+      svg_value = val->GetSVGValue();
     }
   }
   else {
     // Could be a mapped attribute.
-    svg_value = GetMappedAttribute(aNamespaceID, aName);
+    svg_value = GetMappedAttribute(kNameSpaceID_None, aAttribute);
   }
   
   if (svg_value) {
@@ -204,43 +192,29 @@ nsSVGElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName, nsIAtom* aPrefix,
       // To accomodate this "erronous" value, we'll insert a proxy
       // object between ourselves and the actual value object:
       nsCOMPtr<nsISVGValue> proxy;
-      rv = NS_CreateSVGStringProxyValue(svg_value, getter_AddRefs(proxy));
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv =
+        NS_CreateSVGStringProxyValue(svg_value, getter_AddRefs(proxy));
+      // Failure means we'll store this attr as a string, not an SVGValue, but
+      // that's the best we can do short of throwing outright.
+      NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
       svg_value->RemoveObserver(this);
       proxy->SetValueString(aValue);
       proxy->AddObserver(this);
-      attrValue.SetTo(proxy);
+      aResult.SetTo(proxy);
     }
     else {
-      attrValue.SetTo(svg_value);
+      aResult.SetTo(svg_value);
     }
-  }
-  else if (aName == nsSVGAtoms::style && aNamespaceID == kNameSpaceID_None) {
-    nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE, aValue, attrValue);
-  }
-  // We don't have an nsISVGValue attribute.
-  else if (aName == nsSVGAtoms::id && aNamespaceID == kNameSpaceID_None){
-    attrValue.ParseAtom(aValue);
-  } 
-  else {
-    attrValue.SetTo(aValue);
+    return PR_TRUE;
   }
 
-  if (aNamespaceID == kNameSpaceID_None && IsEventName(aName)) {
-    nsCOMPtr<nsIEventListenerManager> manager;
-    GetListenerManager(getter_AddRefs(manager));
-    if (manager) {
-      nsIAtom* eventName = GetEventNameForAttr(aName);
-      nsIDocument *ownerDoc = GetOwnerDoc();
-      manager->AddScriptEventListener(NS_STATIC_CAST(nsIContent*, this), eventName,
-                                      aValue, PR_TRUE,
-                                      !nsContentUtils::IsChromeDoc(ownerDoc));
-    }
+  if (aAttribute == nsSVGAtoms::style) {
+    nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE, aValue, aResult);
+    return PR_TRUE;
   }
-  
-  return SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue, attrValue,
-                          modification, hasListeners, aNotify);
+
+  return nsGenericElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 nsresult
@@ -626,86 +600,6 @@ PRBool
 nsSVGElement::IsEventName(nsIAtom* aName)
 {
   return PR_FALSE;
-}
-
-nsresult
-nsSVGElement::SetAttrAndNotify(PRInt32 aNamespaceID, nsIAtom* aAttribute,
-                               nsIAtom* aPrefix, const nsAString& aOldValue,
-                               nsAttrValue& aParsedValue, PRBool aModification,
-                               PRBool aFireMutation, PRBool aNotify)
-{
-  nsresult rv;
-  PRUint8 modType = aModification ?
-    NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::MODIFICATION) :
-    NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::ADDITION);
-
-  nsIDocument* document = GetCurrentDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
-  if (aNotify && document) {
-    document->AttributeWillChange(this, aNamespaceID, aAttribute);
-  }
-
-  if (aNamespaceID == kNameSpaceID_None) {
-    // XXX doesn't check IsAttributeMapped here.
-    rv = mAttrsAndChildren.SetAndTakeAttr(aAttribute, aParsedValue);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    nsCOMPtr<nsINodeInfo> ni;
-    rv = mNodeInfo->NodeInfoManager()->GetNodeInfo(aAttribute, aPrefix,
-                                                   aNamespaceID,
-                                                   getter_AddRefs(ni));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = mAttrsAndChildren.SetAndTakeAttr(ni, aParsedValue);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (document) {
-    nsXBLBinding *binding = document->BindingManager()->GetBinding(this);
-    if (binding) {
-      binding->AttributeChanged(aAttribute, aNamespaceID, PR_FALSE, aNotify);
-    }
-
-    if (aFireMutation) {
-      nsCOMPtr<nsIDOMEventTarget> node = do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
-      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED, node);
-
-      nsAutoString attrName;
-      aAttribute->ToString(attrName);
-      nsCOMPtr<nsIDOMAttr> attrNode;
-      GetAttributeNode(attrName, getter_AddRefs(attrNode));
-      mutation.mRelatedNode = attrNode;
-
-      mutation.mAttrName = aAttribute;
-      nsAutoString newValue;
-      // We don't really need to call GetAttr here, but lets try to keep this
-      // code as similar to nsGenericHTMLElement::SetAttrAndNotify as possible
-      // so that they can merge sometime in the future.
-      GetAttr(aNamespaceID, aAttribute, newValue);
-      if (!newValue.IsEmpty()) {
-        mutation.mNewAttrValue = do_GetAtom(newValue);
-      }
-      if (!aOldValue.IsEmpty()) {
-        mutation.mPrevAttrValue = do_GetAtom(aOldValue);
-      }
-      mutation.mAttrChange = modType;
-      nsEventStatus status = nsEventStatus_eIgnore;
-      HandleDOMEvent(nsnull, &mutation, nsnull,
-                     NS_EVENT_FLAG_INIT, &status);
-    }
-
-    if (aNotify) {
-      document->AttributeChanged(this, aNamespaceID, aAttribute, modType);
-    }
-  }
-
-  if (aNamespaceID == kNameSpaceID_XMLEvents && 
-      aAttribute == nsHTMLAtoms::_event && GetOwnerDoc()) {
-    GetOwnerDoc()->AddXMLEventsContent(this);
-  }
-
-  return NS_OK;
 }
 
 void

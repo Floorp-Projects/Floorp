@@ -3789,43 +3789,24 @@ nsGenericElement::TriggerLink(nsPresContext* aPresContext,
 }
 
 nsresult
-nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
+nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
                                          const nsAString& aValue)
 {
-  nsresult rv = NS_OK;
-  nsISupports *target = NS_STATIC_CAST(nsIContent *, this);
+  NS_PRECONDITION(aEventName, "Must have event name!");
+  nsCOMPtr<nsISupports> target;
   PRBool defer = PR_TRUE;
-
   nsCOMPtr<nsIEventListenerManager> manager;
 
-  // Attributes on the body and frameset tags get set on the global object
-  if (mNodeInfo->Equals(nsHTMLAtoms::body) ||
-      mNodeInfo->Equals(nsHTMLAtoms::frameset)) {
-    nsIScriptGlobalObject *sgo;
-
-    // If we have a document, and it has a script global, add the
-    // event listener on the global. If not, proceed as normal.
-    // XXXbz should we instead use GetCurrentDoc() here, override
-    // BindToTree for those classes and munge event listeners there?
-    nsIDocument *document = GetOwnerDoc();
-    if (document && (sgo = document->GetScriptGlobalObject())) {
-      nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(sgo));
-      NS_ENSURE_TRUE(receiver, NS_ERROR_FAILURE);
-
-      receiver->GetListenerManager(getter_AddRefs(manager));
-
-      target = sgo;
-      defer = PR_FALSE;
-    }
-  } else {
-    GetListenerManager(getter_AddRefs(manager));
-  }
+  nsresult rv = GetEventListenerManagerForAttr(getter_AddRefs(manager),
+                                               getter_AddRefs(target),
+                                               &defer);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (manager) {
     nsIDocument *ownerDoc = GetOwnerDoc();
 
     rv =
-      manager->AddScriptEventListener(target, aAttribute, aValue, defer,
+      manager->AddScriptEventListener(target, aEventName, aValue, defer,
                                       !nsContentUtils::IsChromeDoc(ownerDoc));
   }
 
@@ -4001,47 +3982,82 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     }
   }
 
-  PRBool modification = PR_FALSE;
   nsAutoString oldValue;
+  PRBool hasListeners = PR_FALSE;
+  PRBool modification = PR_FALSE;
 
-  PRInt32 index = mAttrsAndChildren.IndexOfAttr(aName, aNamespaceID);
-  if (index >= 0) {
-    modification = PR_TRUE;
-    
-    // Get old value and see if it's the same as new one
-    const nsAttrName* attrName = mAttrsAndChildren.GetSafeAttrNameAt(index);
-    const nsAttrValue* val = mAttrsAndChildren.AttrAt(index);
-    NS_ASSERTION(attrName && val, "attribute is supposed to be there");
-    val->ToString(oldValue);
-    if (oldValue.Equals(aValue) &&
-        aPrefix == attrName->GetPrefix()) {
-      // Nothing to do
-
-      return NS_OK;
+  if (IsInDoc()) {
+    hasListeners =
+      HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED);
+  }
+  
+  // If we have no listeners and aNotify is false, we are almost certainly
+  // coming from the content sink and will almost certainly have no previous
+  // value.  Even if we do, setting the value is cheap when we have no
+  // listeners and don't plan to notify.  The check for aNotify here is an
+  // optimization, the check for haveListeners is a correctness issue.
+  if (hasListeners || aNotify) {
+    nsAttrInfo info(GetAttrInfo(aNamespaceID, aName));
+    if (info.mValue) {
+      // Check whether the old value is the same as the new one.  Note that we
+      // only need to actually _get_ the old value if we have listeners.
+      PRBool valueMatches;
+      if (hasListeners) {
+        // Need to store the old value
+        info.mValue->ToString(oldValue);
+        valueMatches = aValue.Equals(oldValue);
+      } else if (aNotify) {
+        valueMatches = info.mValue->Equals(aValue, eCaseMatters);
+      }
+      if (valueMatches && aPrefix == info.mName->GetPrefix()) {
+        return NS_OK;
+      }
     }
   }
 
-  // Begin the update _before_ changing the attr value
-  nsIDocument *document = GetCurrentDoc();
-  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
+  nsresult rv = BeforeSetAttr(aNamespaceID, aName, &aValue, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
   
+  nsAttrValue attrValue;
+  if (aNamespaceID != kNameSpaceID_None ||
+      !ParseAttribute(aName, aValue, attrValue)) {
+    attrValue.SetTo(aValue);
+  }
+
+  rv = SetAttrAndNotify(aNamespaceID, aName, aPrefix, oldValue,
+                        attrValue, modification, hasListeners, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return AfterSetAttr(aNamespaceID, aName, &aValue, aNotify);
+}
+  
+nsresult
+nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
+                                   nsIAtom* aName,
+                                   nsIAtom* aPrefix,
+                                   const nsAString& aOldValue,
+                                   nsAttrValue& aParsedValue,
+                                   PRBool aModification,
+                                   PRBool aFireMutation,
+                                   PRBool aNotify)
+{
+  nsresult rv;
+  PRUint8 modType = aModification ?
+    NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::MODIFICATION) :
+    NS_STATIC_CAST(PRUint8, nsIDOMMutationEvent::ADDITION);
+
+  nsIDocument* document = GetCurrentDoc();
+  mozAutoDocUpdate updateBatch(document, UPDATE_CONTENT_MODEL, aNotify);
   if (aNotify && document) {
     document->AttributeWillChange(this, aNamespaceID, aName);
   }
 
-  nsresult rv;
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aName == GetIDAttributeName() && !aValue.IsEmpty()) {
-      // Store id as atom. id="" means that the element has no id, not that it has
-      // an emptystring as the id.
-      nsAttrValue attrValue;
-      attrValue.ParseAtom(aValue);
-      rv = mAttrsAndChildren.SetAndTakeAttr(aName, attrValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-      rv = mAttrsAndChildren.SetAttr(aName, aValue);
-      NS_ENSURE_SUCCESS(rv, rv);
+    // XXXbz Perhaps we should push up the attribute mapping function
+    // stuff to nsGenericElement?
+    if (!IsAttributeMapped(aName) ||
+        !SetMappedAttribute(document, aName, aParsedValue, &rv)) {
+      rv = mAttrsAndChildren.SetAndTakeAttr(aName, aParsedValue);
     }
   }
   else {
@@ -4051,17 +4067,17 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                                    getter_AddRefs(ni));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAttrValue attrVal(aValue);
-    rv = mAttrsAndChildren.SetAndTakeAttr(ni, attrVal);
-    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mAttrsAndChildren.SetAndTakeAttr(ni, aParsedValue);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (document) {
     nsXBLBinding *binding = document->BindingManager()->GetBinding(this);
-    if (binding)
+    if (binding) {
       binding->AttributeChanged(aName, aNamespaceID, PR_FALSE, aNotify);
+    }
 
-    if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_ATTRMODIFIED)) {
+    if (aFireMutation) {
       nsCOMPtr<nsIDOMEventTarget> node =
         do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED, node);
@@ -4073,39 +4089,87 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       mutation.mRelatedNode = attrNode;
 
       mutation.mAttrName = aName;
-      if (!oldValue.IsEmpty()) {
-        mutation.mPrevAttrValue = do_GetAtom(oldValue);
+      nsAutoString newValue;
+      aParsedValue.ToString(newValue);
+      if (!newValue.IsEmpty()) {
+        mutation.mNewAttrValue = do_GetAtom(newValue);
       }
-
-      if (!aValue.IsEmpty()) {
-        mutation.mNewAttrValue = do_GetAtom(aValue);
+      if (!aOldValue.IsEmpty()) {
+        mutation.mPrevAttrValue = do_GetAtom(aOldValue);
       }
-
-      if (modification) {
-        mutation.mAttrChange = nsIDOMMutationEvent::MODIFICATION;
-      } else {
-        mutation.mAttrChange = nsIDOMMutationEvent::ADDITION;
-      }
-
+      mutation.mAttrChange = modType;
       nsEventStatus status = nsEventStatus_eIgnore;
       HandleDOMEvent(nsnull, &mutation, nsnull,
                      NS_EVENT_FLAG_INIT, &status);
     }
 
     if (aNotify) {
-      PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
-                                     : PRInt32(nsIDOMMutationEvent::ADDITION);
-      document->AttributeChanged(this, aNamespaceID, aName, modHint);
+      document->AttributeChanged(this, aNamespaceID, aName, modType);
     }
   }
-
-  if (aNamespaceID == kNameSpaceID_XMLEvents && aName == nsHTMLAtoms::_event && 
-      mNodeInfo->GetDocument()) {
+  
+  if (aNamespaceID == kNameSpaceID_XMLEvents && 
+      aName == nsHTMLAtoms::_event && mNodeInfo->GetDocument()) {
     mNodeInfo->GetDocument()->AddXMLEventsContent(this);
   }
 
   return NS_OK;
 }
+
+PRBool
+nsGenericElement::ParseAttribute(nsIAtom* aAttribute,
+                                 const nsAString& aValue,
+                                 nsAttrValue& aResult)
+{
+  if (aAttribute == GetIDAttributeName() && !aValue.IsEmpty()) {
+    // Store id as an atom.  id="" means that the element has no id,
+    // not that it has an emptystring as the id.
+    aResult.ParseAtom(aValue);
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
+PRBool
+nsGenericElement::SetMappedAttribute(nsIDocument* aDocument,
+                                     nsIAtom* aName,
+                                     nsAttrValue& aValue,
+                                     nsresult* aRetval)
+{
+  *aRetval = NS_OK;
+  return PR_FALSE;
+}
+
+nsresult
+nsGenericElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
+                                                 nsISupports** aTarget,
+                                                 PRBool* aDefer)
+{
+  nsresult rv = GetListenerManager(aManager);
+  if (NS_SUCCEEDED(rv)) {
+    NS_ADDREF(*aTarget = NS_STATIC_CAST(nsIContent*, this));
+  }
+  *aDefer = PR_TRUE;
+  return rv;
+}
+
+nsGenericElement::nsAttrInfo
+nsGenericElement::GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const
+{
+  NS_ASSERTION(nsnull != aName, "must have attribute name");
+  NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown,
+               "must have a real namespace ID!");
+
+  PRInt32 index = mAttrsAndChildren.IndexOfAttr(aName, aNamespaceID);
+  if (index >= 0) {
+    return nsAttrInfo(mAttrsAndChildren.GetSafeAttrNameAt(index),
+                      mAttrsAndChildren.AttrAt(index));
+  }
+
+  return nsAttrInfo(nsnull, nsnull);
+}
+  
 
 nsresult
 nsGenericElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
