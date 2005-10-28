@@ -183,14 +183,14 @@ endif
 
 # set [Hewlett Packard HP-UX] platforms
 ifeq ($(OS_ARCH), HP-UX)
-	JAVA_CLASSES = $(JAVA_HOME)/lib/classes.zip
+	JAVA_CLASSES = $(JAVA_HOME)/jre/lib/rt.jar
 
 	ifeq ($(JRE_HOME),)
 		JRE_HOME = $(JAVA_HOME)
 		JRE_CLASSES = $(JAVA_CLASSES)
 	else
 		ifeq ($(JRE_CLASSES),)
-			JRE_CLASSES = $(JRE_HOME)/lib/classes.zip
+			JRE_CLASSES = $(JRE_HOME)/lib/rt.jar
 		endif
 	endif
 
@@ -210,7 +210,11 @@ ifeq ($(OS_ARCH), HP-UX)
 	JAVA_CLIBS =
 
 	JAVA_LIBS  = -L$(JAVA_HOME)/$(JAVA_LIBDIR)/$(JDK_THREADING_MODEL) -lhpi
-	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/classic -ljvm
+	ifeq ($(JDK_VERSION), 1.4)
+		JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/server -ljvm
+	else
+		JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR)/classic -ljvm
+	endif
 	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR) -ljava
 	JAVA_LIBS += $(JAVA_CLIBS)
 
@@ -229,7 +233,7 @@ ifeq ($(OS_ARCH), Linux)
 		JRE_CLASSES = $(JAVA_CLASSES)
 	else
 		ifeq ($(JRE_CLASSES),)
-			JRE_CLASSES = $(JRE_HOME)/jre/lib/rt.jar
+			JRE_CLASSES = $(JRE_HOME)/lib/rt.jar
 		endif
 	endif
 
