@@ -684,7 +684,6 @@ public:
   static PLDHashTable sEventListenerManagersHash;
   static PLDHashTable sRangeListsHash;
 
-protected:
   /**
    * Struct that stores info on an attribute.  The name and value must
    * either both be null or both be non-null.
@@ -699,6 +698,7 @@ protected:
     const nsAttrValue* mValue;
   };
   
+protected:
   /**
    * Set attribute and (if needed) notify documentobservers and fire off
    * mutation events.
