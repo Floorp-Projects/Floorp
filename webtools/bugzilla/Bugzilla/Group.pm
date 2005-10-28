@@ -61,7 +61,10 @@ sub _init {
     my $id = $param unless (ref $param eq 'HASH');
     my $group;
 
-    if (defined $id && detaint_natural($id)) {
+    if (defined $id) {
+        detaint_natural($id)
+          || ThrowCodeError('param_must_be_numeric',
+                            {function => 'Bugzilla::Group::_init'});
 
         $group = $dbh->selectrow_hashref(qq{
             SELECT $columns FROM groups

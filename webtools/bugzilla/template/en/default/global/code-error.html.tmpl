@@ -243,6 +243,11 @@
   [% ELSIF error == "need_quipid" %]
     A valid quipid is needed.
 
+  [% ELSIF error == "param_must_be_numeric" %]
+    [% title = "Invalid Parameter" %]
+    Invalid parameter passed to [% function FILTER html %].
+    It must be numeric.
+
   [% ELSIF error == "unknown_comparison_type" %]
     Specified comparison type is not supported.
 

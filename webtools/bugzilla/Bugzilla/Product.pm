@@ -63,7 +63,10 @@ sub _init {
     my $id = $param unless (ref $param eq 'HASH');
     my $product;
 
-    if (defined $id && detaint_natural($id)) {
+    if (defined $id) {
+        detaint_natural($id)
+          || ThrowCodeError('param_must_be_numeric',
+                            {function => 'Bugzilla::Product::_init'});
 
         $product = $dbh->selectrow_hashref(qq{
             SELECT $columns FROM products
