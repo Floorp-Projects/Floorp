@@ -336,8 +336,23 @@ function JavaScriptOptions()
       throw 'JavaScriptOptions: unable to get prefService branch';
     }
 
-    this.orig.strict = this.strict = pref.getBoolPref('javascript.options.strict');
-    this.orig.werror = this.werror = pref.getBoolPref('javascript.options.werror');
+    try
+    {
+      this.orig.strict = this.strict = 
+        pref.getBoolPref('javascript.options.strict');
+    }
+    catch(e)
+    {
+    }
+
+    try
+    {
+      this.orig.werror = this.werror = 
+        pref.getBoolPref('javascript.options.werror');
+    }
+    catch(e)
+    {
+    }
   }
 }
 
