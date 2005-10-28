@@ -979,6 +979,10 @@ sub returnStatus{
 }
 
 sub PreBuild {
+  # assert that needed variables are defined as the build scripts expect
+  if (is_mac() and !defined($Settings::mac_bundle_path)) {
+    die "ERROR: mac_bundle_path unset!";
+  }
 
   # last-built.new is used to track a respin as it is currently happening and
   # later takes the place of last-built.  If it exists at this point in the
