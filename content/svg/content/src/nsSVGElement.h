@@ -76,14 +76,6 @@ public:
                               PRBool aNullParent = PR_TRUE);
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
   
@@ -124,32 +116,16 @@ public:
   virtual void ParentChainChanged(); 
   
 protected:
+  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify);
+  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
+
   // Hooks for subclasses
   virtual PRBool IsEventName(nsIAtom* aName);
-
-  /**
-   * Set attribute and (if needed) notify documentobservers and fire off
-   * mutation events.
-   *
-   * @param aNamespaceID  namespace of attribute
-   * @param aAttribute    local-name of attribute
-   * @param aPrefix       aPrefix of attribute
-   * @param aOldValue     previous value of attribute. Only needed if
-   *                      aFireMutation is true.
-   * @param aParsedValue  parsed new value of attribute
-   * @param aModification is this a attribute-modification or addition. Only
-   *                      needed if aFireMutation or aNotify is true.
-   * @param aFireMutation should mutation-events be fired?
-   * @param aNotify       should we notify document-observers?
-   */
-  nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
-                            nsIAtom* aAttribute,
-                            nsIAtom* aPrefix,
-                            const nsAString& aOldValue,
-                            nsAttrValue& aParsedValue,
-                            PRBool aModification,
-                            PRBool aFireMutation,
-                            PRBool aNotify);
 
   void UpdateContentStyleRule();
   nsISVGValue* GetMappedAttribute(PRInt32 aNamespaceID, nsIAtom* aName);

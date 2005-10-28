@@ -198,32 +198,6 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
   
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify)
-  {
-    BeforeSetAttr(aNameSpaceID, aName, &aValue, aNotify);
-
-    nsresult rv = nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName,
-                                                    aPrefix, aValue, aNotify);
-    return rv;
-  }
-
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                             PRBool aNotify)
-  {
-    BeforeSetAttr(aNameSpaceID, aAttribute, nsnull, aNotify);
-
-    nsresult rv = nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute,
-                                                      aNotify);
-    return rv;
-  }
-
   virtual void DoneCreatingElement();
 
   virtual PRInt32 IntrinsicState() const;
@@ -271,13 +245,13 @@ protected:
   /**
    * Called when an attribute is about to be changed
    */
-  void BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString* aValue, PRBool aNotify);
+  virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify);
   /**
    * Called when an attribute has just been changed
    */
-  virtual void AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                            const nsAString* aValue, PRBool aNotify);
+  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
 
   void SelectAll(nsPresContext* aPresContext);
   PRBool IsImage() const
@@ -438,126 +412,128 @@ nsHTMLInputElement::CloneNode(PRBool aDeep, nsIDOMNode **aResult)
   return nsGenericElement::CloneNode(aDeep, this, aResult);
 }
 
-void
+nsresult
 nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   const nsAString* aValue,
                                   PRBool aNotify)
 {
-  if (aNameSpaceID != kNameSpaceID_None) {
-    return;
+  if (aNameSpaceID == kNameSpaceID_None) {
+    //
+    // When name or type changes, radio should be removed from radio group.
+    // (type changes are handled in the form itself currently)
+    // If the parser is not done creating the radio, we also should not do it.
+    //
+    if ((aName == nsHTMLAtoms::name ||
+         (aName == nsHTMLAtoms::type && !mForm)) &&
+        mType == NS_FORM_INPUT_RADIO &&
+        (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
+      WillRemoveFromRadioGroup();
+    } else if (aNotify && aName == nsHTMLAtoms::src &&
+               aValue && mType == NS_FORM_INPUT_IMAGE) {
+      // Null value means the attr got unset; don't trigger on that
+      ImageURIChanged(*aValue, PR_TRUE, aNotify);
+    } else if (aNotify && aName == nsHTMLAtoms::disabled) {
+      SET_BOOLBIT(mBitField, BF_DISABLED_CHANGED, PR_TRUE);
+    }
   }
 
-  //
-  // When name or type changes, radio should be removed from radio group.
-  // (type changes are handled in the form itself currently)
-  // If the parser is not done creating the radio, we also should not do it.
-  //
-  if ((aName == nsHTMLAtoms::name || (aName == nsHTMLAtoms::type && !mForm)) &&
-      mType == NS_FORM_INPUT_RADIO &&
-      (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
-    WillRemoveFromRadioGroup();
-  } else if (aNotify && aName == nsHTMLAtoms::src &&
-             aValue && mType == NS_FORM_INPUT_IMAGE) {
-    // Null value means the attr got unset; don't trigger on that
-    ImageURIChanged(*aValue, PR_TRUE, aNotify);
-  } else if (aNotify && aName == nsHTMLAtoms::disabled) {
-    SET_BOOLBIT(mBitField, BF_DISABLED_CHANGED, PR_TRUE);
-  }
+  return nsGenericHTMLFormElement::BeforeSetAttr(aNameSpaceID, aName,
+                                                 aValue, aNotify);
 }
 
-void
+nsresult
 nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue,
                                  PRBool aNotify)
 {
-  nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName, aValue, aNotify);
-
-  if (aNameSpaceID != kNameSpaceID_None) {
-    return;
-  }
-
-  //
-  // When name or type changes, radio should be added to radio group.
-  // (type changes are handled in the form itself currently)
-  // If the parser is not done creating the radio, we also should not do it.
-  //
-  if ((aName == nsHTMLAtoms::name || (aName == nsHTMLAtoms::type && !mForm)) &&
-      mType == NS_FORM_INPUT_RADIO &&
-      (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
-    AddedToRadioGroup();
-  }
-
-  //
-  // Some elements have to change their value when the value and checked
-  // attributes change (but they only do so when ValueChanged() and
-  // CheckedChanged() are false--i.e. the value has not been changed by the
-  // user or by JS)
-  //
-  // We only really need to call reset for the value so that the text control
-  // knows the new value.  No other reason.
-  //
-  if (aName == nsHTMLAtoms::value &&
-      !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) &&
-      (mType == NS_FORM_INPUT_TEXT ||
-       mType == NS_FORM_INPUT_PASSWORD ||
-       mType == NS_FORM_INPUT_FILE)) {
-    Reset();
-  }
-  //
-  // Checked must be set no matter what type of control it is, since
-  // GetChecked() must reflect the new value
-  //
-  if (aName == nsHTMLAtoms::checked &&
-      !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
-    // Delay setting checked if the parser is creating this element (wait until
-    // everything is set)
-    if (GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
-      SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_TRUE);
-    } else {
-      PRBool defaultChecked;
-      GetDefaultChecked(&defaultChecked);
-      DoSetChecked(defaultChecked);
-      SetCheckedChanged(PR_FALSE);
+  if (aNameSpaceID == kNameSpaceID_None) {
+    //
+    // When name or type changes, radio should be added to radio group.
+    // (type changes are handled in the form itself currently)
+    // If the parser is not done creating the radio, we also should not do it.
+    //
+    if ((aName == nsHTMLAtoms::name ||
+         (aName == nsHTMLAtoms::type && !mForm)) &&
+        mType == NS_FORM_INPUT_RADIO &&
+        (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
+      AddedToRadioGroup();
     }
-  }
 
-  if (aName == nsHTMLAtoms::type) {
-    if (!aValue) {
-      // We're now a text input.  Note that we have to handle this manually,
-      // since removing an attribute (which is what happened, since aValue is
-      // null) doesn't call ParseAttribute.
-      mType = NS_FORM_INPUT_TEXT;
+    //
+    // Some elements have to change their value when the value and checked
+    // attributes change (but they only do so when ValueChanged() and
+    // CheckedChanged() are false--i.e. the value has not been changed by the
+    // user or by JS)
+    //
+    // We only really need to call reset for the value so that the text control
+    // knows the new value.  No other reason.
+    //
+    if (aName == nsHTMLAtoms::value &&
+        !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) &&
+        (mType == NS_FORM_INPUT_TEXT ||
+         mType == NS_FORM_INPUT_PASSWORD ||
+         mType == NS_FORM_INPUT_FILE)) {
+      Reset();
     }
+    //
+    // Checked must be set no matter what type of control it is, since
+    // GetChecked() must reflect the new value
+    //
+    if (aName == nsHTMLAtoms::checked &&
+        !GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED)) {
+      // Delay setting checked if the parser is creating this element
+      // (wait until everything is set)
+      if (GET_BOOLBIT(mBitField, BF_PARSER_CREATING)) {
+        SET_BOOLBIT(mBitField, BF_SHOULD_INIT_CHECKED, PR_TRUE);
+      } else {
+        PRBool defaultChecked;
+        GetDefaultChecked(&defaultChecked);
+        DoSetChecked(defaultChecked);
+        SetCheckedChanged(PR_FALSE);
+      }
+    }
+
+    if (aName == nsHTMLAtoms::type) {
+      if (!aValue) {
+        // We're now a text input.  Note that we have to handle this manually,
+        // since removing an attribute (which is what happened, since aValue is
+        // null) doesn't call ParseAttribute.
+        mType = NS_FORM_INPUT_TEXT;
+      }
     
-    // If we are changing type from File/Text/Passwd to other input types
-    // we need save the mValue into value attribute
-    if (mValue &&
-        mType != NS_FORM_INPUT_TEXT &&
-        mType != NS_FORM_INPUT_PASSWORD &&
-        mType != NS_FORM_INPUT_FILE) {
-      SetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
-              NS_ConvertUTF8toUCS2(mValue), PR_FALSE);
-      if (mValue) {
-        nsMemory::Free(mValue);
-        mValue = nsnull;
+      // If we are changing type from File/Text/Passwd to other input types
+      // we need save the mValue into value attribute
+      if (mValue &&
+          mType != NS_FORM_INPUT_TEXT &&
+          mType != NS_FORM_INPUT_PASSWORD &&
+          mType != NS_FORM_INPUT_FILE) {
+        SetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
+                NS_ConvertUTF8toUCS2(mValue), PR_FALSE);
+        if (mValue) {
+          nsMemory::Free(mValue);
+          mValue = nsnull;
+        }
       }
-    }
 
-    if (mType != NS_FORM_INPUT_IMAGE) {
-      // We're no longer an image input.  Cancel our image requests, if we have
-      // any.  Note that doing this when we already weren't an image is ok --
-      // just does nothing.
-      CancelImageRequests(aNotify);
-    } else if (aNotify) {
-      // We just got switched to be an image input; we should see
-      // whether we have an image to load;
-      nsAutoString src;
-      nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
-      if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        ImageURIChanged(src, PR_FALSE, aNotify);
+      if (mType != NS_FORM_INPUT_IMAGE) {
+        // We're no longer an image input.  Cancel our image requests, if we have
+        // any.  Note that doing this when we already weren't an image is ok --
+        // just does nothing.
+        CancelImageRequests(aNotify);
+      } else if (aNotify) {
+        // We just got switched to be an image input; we should see
+        // whether we have an image to load;
+        nsAutoString src;
+        nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
+        if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+          ImageURIChanged(src, PR_FALSE, aNotify);
+        }
       }
     }
   }
+
+  return nsGenericHTMLFormElement::AfterSetAttr(aNameSpaceID, aName,
+                                                aValue, aNotify);
 }
 
 // nsIDOMHTMLInputElement

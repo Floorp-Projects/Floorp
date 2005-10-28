@@ -478,13 +478,6 @@ public:
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
     virtual nsIAtom *GetIDAttributeName() const;
     virtual nsIAtom *GetClassAttributeName() const;
-    nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     const nsAString& aValue, PRBool aNotify)
-    {
-      return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-    }
-    virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
-                             const nsAString& aValue, PRBool aNotify);
     virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsAString& aResult) const;
     virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
@@ -548,8 +541,6 @@ public:
     { UnsetFlags(aFlags << XUL_ELEMENT_LAZY_STATE_OFFSET); }
     PRBool GetLazyState(LazyState aFlag)
     { return GetFlags() & (aFlag << XUL_ELEMENT_LAZY_STATE_OFFSET); }
-    NS_HIDDEN_(nsresult) AddScriptEventListener(nsIAtom* aName,
-                                                const nsAString& aValue);
 
     // nsIDOMNode
     NS_FORWARD_NSIDOMNODE_NO_CLONENODE(nsGenericElement::)
@@ -611,8 +602,31 @@ protected:
      */
     nsresult MakeHeavyweight();
 
+    /**
+     * Get the attr info for the given namespace ID and attribute name.
+     * The namespace ID must not be kNameSpaceID_Unknown and the name
+     * must not be null.
+     */
+    virtual nsAttrInfo GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const;
+
     const nsAttrValue* FindLocalOrProtoAttr(PRInt32 aNameSpaceID,
-                                            nsIAtom *aName) const;
+                                            nsIAtom *aName) const {
+        return nsXULElement::GetAttrInfo(aNameSpaceID, aName).mValue;
+    }
+
+    virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                   const nsAString* aValue, PRBool aNotify);
+    virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                  const nsAString* aValue, PRBool aNotify);
+
+    virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                  const nsAString& aValue,
+                                  nsAttrValue& aResult);
+
+    virtual nsresult
+      GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
+                                     nsISupports** aTarget,
+                                     PRBool* aDefer);
   
     /**
      * Return our prototype's attribute, if one exists.
@@ -628,16 +642,6 @@ protected:
 
 
     nsresult HideWindowChrome(PRBool aShouldHide);
-
-    
-    nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
-                              nsIAtom* aAttribute,
-                              nsIAtom* aPrefix,
-                              const nsAString& aOldValue,
-                              nsAttrValue& aParsedValue,
-                              PRBool aModification,
-                              PRBool aFireMutation,
-                              PRBool aNotify);
 
     const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 

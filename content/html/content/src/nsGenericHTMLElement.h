@@ -185,14 +185,6 @@ public:
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
-                           const nsAString& aValue,
-                           PRBool aNotify);
   virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsAString& aResult) const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
@@ -272,6 +264,10 @@ public:
                                 nsAttrValue& aResult);
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual PRBool SetMappedAttribute(nsIDocument* aDocument,
+                                    nsIAtom* aName,
+                                    nsAttrValue& aValue,
+                                    nsresult* aRetval);
 
   /**
    * Get the base target for any links within this piece
@@ -615,30 +611,6 @@ public:
    */
   static PRBool InNavQuirksMode(nsIDocument* aDoc);
 
-  /**
-   * Set attribute and (if needed) notify documentobservers and fire off
-   * mutation events.
-   *
-   * @param aNamespaceID  namespace of attribute
-   * @param aAttribute    local-name of attribute
-   * @param aPrefix       aPrefix of attribute
-   * @param aOldValue     previous value of attribute. Only needed if
-   *                      aFireMutation is true.
-   * @param aParsedValue  parsed new value of attribute
-   * @param aModification is this a attribute-modification or addition. Only
-   *                      needed if aFireMutation or aNotify is true.
-   * @param aFireMutation should mutation-events be fired?
-   * @param aNotify       should we notify document-observers?
-   */
-  nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
-                            nsIAtom* aAttribute,
-                            nsIAtom* aPrefix,
-                            const nsAString& aOldValue,
-                            nsAttrValue& aParsedValue,
-                            PRBool aModification,
-                            PRBool aFireMutation,
-                            PRBool aNotify);
- 
   // Helper functions for <a> and <area>
   static nsresult SetProtocolInHrefString(const nsAString &aHref,
                                           const nsAString &aProtocol,
@@ -710,6 +682,14 @@ protected:
    * @return whether the name is an event handler name
    */
   PRBool IsEventName(nsIAtom* aName);
+
+  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
+
+  virtual nsresult
+    GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
+                                   nsISupports** aTarget,
+                                   PRBool* aDefer);
 
   virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
@@ -865,15 +845,6 @@ public:
                               PRBool aCompileEventHandlers);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify);
-
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              PRBool aNotify);
 
@@ -886,18 +857,11 @@ protected:
    */
   void FindAndSetForm();
 
-  /**
-   * Called when an attribute has just been changed.
-   *
-   * Note that this function is also called if the attribute change fails.
-   *
-   * @param aNameSpaceID      The namespace ID of the attribute
-   * @param aName             The attribute name (atom)
-   * @param aValue            The new value (nsnull if it being removed)
-   * @param aNotify           Notify about changes?
-   */
-  virtual void AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                            const nsAString* aValue, PRBool aNotify);
+  virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify);
+
+  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
 
   /**
    * Returns true if the control can be disabled

@@ -87,22 +87,6 @@ public:
 
   virtual PRInt32 IntrinsicState() const;
  
-  nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                   const nsAString& aValue, PRBool aNotify)
-  {
-    return SetAttr(aNameSpaceID, aName, nsnull, aValue, aNotify);
-  }
-  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsIAtom* aPrefix, const nsAString& aValue,
-                           PRBool aNotify)
-  {
-    nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
-                                                aValue, aNotify);
-      
-    AfterSetAttr(aNameSpaceID, aName, &aValue, aNotify);
-    return rv;
-  }
- 
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify)
   {
@@ -124,8 +108,8 @@ protected:
   /**
    * Called when an attribute has just been changed
    */
-  void AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                    const nsAString* aValue, PRBool aNotify);
+  virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
 };
 
 
@@ -200,7 +184,7 @@ nsHTMLOptGroupElement::GetSelect(nsISelectElement **aSelectElement)
   }
 }
 
-void
+nsresult
 nsHTMLOptGroupElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                     const nsAString* aValue, PRBool aNotify)
 {
@@ -213,6 +197,9 @@ nsHTMLOptGroupElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                      NS_EVENT_STATE_ENABLED);
     }
   }
+
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                            aNotify); 
 }
  
 nsresult

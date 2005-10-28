@@ -546,12 +546,12 @@ public:
   //----------------------------------------
 
   /**
-   * Add a script event listener with the given attr name (like onclick)
-   * and with the value as JS
-   * @param aAttribute the event listener name
+   * Add a script event listener with the given event handler name
+   * (like onclick) and with the value as JS   
+   * @param aEventName the event listener name
    * @param aValue the JS to attach
    */
-  nsresult AddScriptEventListener(nsIAtom* aAttribute,
+  nsresult AddScriptEventListener(nsIAtom* aEventName,
                                   const nsAString& aValue);
 
   /**
@@ -685,6 +685,138 @@ public:
   static PLDHashTable sRangeListsHash;
 
 protected:
+  /**
+   * Struct that stores info on an attribute.  The name and value must
+   * either both be null or both be non-null.
+   */
+  struct nsAttrInfo {
+    nsAttrInfo(const nsAttrName* aName, const nsAttrValue* aValue) :
+      mName(aName), mValue(aValue) {}
+    nsAttrInfo(const nsAttrInfo& aOther) :
+      mName(aOther.mName), mValue(aOther.mValue) {}
+      
+    const nsAttrName* mName;
+    const nsAttrValue* mValue;
+  };
+  
+  /**
+   * Set attribute and (if needed) notify documentobservers and fire off
+   * mutation events.
+   *
+   * @param aNamespaceID  namespace of attribute
+   * @param aAttribute    local-name of attribute
+   * @param aPrefix       aPrefix of attribute
+   * @param aOldValue     previous value of attribute. Only needed if
+   *                      aFireMutation is true.
+   * @param aParsedValue  parsed new value of attribute
+   * @param aModification is this a attribute-modification or addition. Only
+   *                      needed if aFireMutation or aNotify is true.
+   * @param aFireMutation should mutation-events be fired?
+   * @param aNotify       should we notify document-observers?
+   */
+  nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
+                            nsIAtom* aName,
+                            nsIAtom* aPrefix,
+                            const nsAString& aOldValue,
+                            nsAttrValue& aParsedValue,
+                            PRBool aModification,
+                            PRBool aFireMutation,
+                            PRBool aNotify);
+
+  /**
+   * Convert an attribute string value to attribute type based on the type of
+   * attribute.  Called by SetAttr().  Note that at the moment we only do this
+   * for attributes in the null namespace (kNameSpaceID_None).
+   *
+   * @param aAttribute the attribute to convert
+   * @param aValue the string value to convert
+   * @param aResult the nsAttrValue [OUT]
+   * @return PR_TRUE if the parsing was successful, PR_FALSE otherwise
+   */
+  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+                                const nsAString& aValue,
+                                nsAttrValue& aResult);
+
+  /**
+   * Try to set the attribute as a mapped attribute, if applicable.  This will
+   * only be called for attributes that are in the null namespace and only on
+   * attributes that returned true when passed to IsAttributeMapped.  The
+   * caller will not try to set the attr in any other way if this method
+   * returns PR_TRUE (the value of aRetval does not matter for that purpose).
+   *
+   * @param aDocument the current document of this node (an optimization)
+   * @param aName the name of the attribute
+   * @param aValue the nsAttrValue to set
+   * @param [out] aRetval the nsresult status of the operation, if any.
+   * @return PR_TRUE if the setting was attempted, PR_FALSE otherwise.
+   */
+  virtual PRBool SetMappedAttribute(nsIDocument* aDocument,
+                                    nsIAtom* aName,
+                                    nsAttrValue& aValue,
+                                    nsresult* aRetval);
+
+  /**
+   * Hook that is called by nsGenericElement::SetAttr to allow subclasses to
+   * deal with attribute sets.  This will only be called after we verify that
+   * we're actually doing an attr set and will be called before ParseAttribute
+   * and hence before we've set the new value.
+   *
+   * @param aNamespaceID the namespace of the attr being set
+   * @param aName the localname of the attribute being set
+   * @param aValue the value it's being set to.  If null, the attr is being
+   *        removed.
+   * // XXXbz we don't actually call this method when we're removing attrs yet.
+   *          But we will eventually.
+   * @param aNotify Whether we plan to notify document observers.
+   */
+  // Note that this is inlined so that when subclasses call it it gets
+  // inlined.  Those calls don't go through a vtable.
+  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                 const nsAString* aValue, PRBool aNotify)
+  {
+    return NS_OK;
+  }
+
+  /**
+   * Hook that is called by nsGenericElement::SetAttr to allow subclasses to
+   * deal with attribute sets.  This will only be called after we have called
+   * SetAndTakeAttr (that is, after we have actually set the attr).
+   *
+   * @param aNamespaceID the namespace of the attr being set
+   * @param aName the localname of the attribute being set
+   * @param aValue the value it's being set to.  If null, the attr is being
+   *        removed.
+   * // XXXbz we don't actually call this method when we're removing attrs yet.
+   *          But we will eventually.
+   * @param aNotify Whether we plan to notify document observers.
+   */
+  // Note that this is inlined so that when subclasses call it it gets
+  // inlined.  Those calls don't go through a vtable.
+  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify)
+  {
+    return NS_OK;
+  }
+
+  /**
+   * Hook to allow subclasses to produce a different nsIEventListenerManager if
+   * needed for attachment of attribute-defined handlers
+   */
+  virtual nsresult
+    GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
+                                   nsISupports** aTarget,
+                                   PRBool* aDefer);
+
+  /**
+   * Get the attr info for the given namespace ID and attribute name.  The
+   * namespace ID must not be kNameSpaceID_Unknown and the name must not be
+   * null.  Note that this can only return info on attributes that actually
+   * live on this element (and is only virtual to handle XUL prototypes).  That
+   * is, this should only be called from methods that only care about attrs
+   * that effectively live in mAttrsAndChildren.
+   */
+  virtual nsAttrInfo GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const;
+
   /**
    * Duplicate children by calling importNode and append them to another
    * element.
