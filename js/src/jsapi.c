@@ -1668,6 +1668,7 @@ JS_ClearNewbornRoots(JSContext *cx)
     for (i = 0; i < GCX_NTYPES; i++)
         cx->newborn[i] = NULL;
     cx->lastAtom = NULL;
+    cx->lastInternalResult = JSVAL_NULL;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3642,6 +3643,24 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj,
                                            filename, lineno);
 }
 
+#if JS_HAS_EXCEPTIONS
+# define LAST_FRAME_EXCEPTION_CHECK(cx,result)                                \
+    JS_BEGIN_MACRO                                                            \
+        if (!(result))                                                        \
+            js_ReportUncaughtException(cx);                                   \
+    JS_END_MACRO
+#else
+# define LAST_FRAME_EXCEPTION_CHECK(cx,result)  /* nothing */
+#endif
+
+#define LAST_FRAME_CHECKS(cx,result)                                          \
+    JS_BEGIN_MACRO                                                            \
+        if (!(cx)->fp) {                                                      \
+            (cx)->lastInternalResult = JSVAL_NULL;                            \
+            LAST_FRAME_EXCEPTION_CHECK(cx, result);                           \
+        }                                                                     \
+    JS_END_MACRO
+
 JS_PUBLIC_API(JSScript *)
 JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 JSPrincipals *principals,
@@ -3658,10 +3677,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     if (!ts)
         return NULL;
     script = CompileTokenStream(cx, obj, ts, mark, NULL);
-#if JS_HAS_EXCEPTIONS
-    if (!script && !cx->fp)
-        js_ReportUncaughtException(cx);
-#endif
+    LAST_FRAME_CHECKS(cx, script);
     return script;
 }
 
@@ -3724,10 +3740,7 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
     if (!ts)
         return NULL;
     script = CompileTokenStream(cx, obj, ts, mark, NULL);
-#if JS_HAS_EXCEPTIONS
-    if (!script && !cx->fp)
-        js_ReportUncaughtException(cx);
-#endif
+    LAST_FRAME_CHECKS(cx, script);
     return script;
 }
 
@@ -3759,10 +3772,7 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
         JSPRINCIPALS_HOLD(cx, ts->principals);
     }
     script = CompileTokenStream(cx, obj, ts, mark, NULL);
-#if JS_HAS_EXCEPTIONS
-    if (!script && !cx->fp)
-        js_ReportUncaughtException(cx);
-#endif
+    LAST_FRAME_CHECKS(cx, script);
     return script;
 }
 
@@ -3914,10 +3924,7 @@ out:
     if (ts)
         js_CloseTokenStream(cx, ts);
     JS_ARENA_RELEASE(&cx->tempPool, mark);
-#if JS_HAS_EXCEPTIONS
-    if (!fun && !cx->fp)
-        js_ReportUncaughtException(cx);
-#endif
+    LAST_FRAME_CHECKS(cx, fun);
     return fun;
 }
 
@@ -3985,15 +3992,12 @@ JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
 JS_PUBLIC_API(JSBool)
 JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
 {
+    JSBool ok;
+
     CHECK_REQUEST(cx);
-    if (!js_Execute(cx, obj, script, NULL, 0, rval)) {
-#if JS_HAS_EXCEPTIONS
-        if (!cx->fp)
-            js_ReportUncaughtException(cx);
-#endif
-        return JS_FALSE;
-    }
-    return JS_TRUE;
+    ok = js_Execute(cx, obj, script, NULL, 0, rval);
+    LAST_FRAME_CHECKS(cx, ok);
+    return ok;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4096,10 +4100,7 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     if (!script)
         return JS_FALSE;
     ok = js_Execute(cx, obj, script, NULL, 0, rval);
-#if JS_HAS_EXCEPTIONS
-    if (!ok && !cx->fp)
-        js_ReportUncaughtException(cx);
-#endif
+    LAST_FRAME_CHECKS(cx, ok);
     JS_DestroyScript(cx, script);
     return ok;
 }
@@ -4108,16 +4109,13 @@ JS_PUBLIC_API(JSBool)
 JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
                 jsval *argv, jsval *rval)
 {
+    JSBool ok;
+
     CHECK_REQUEST(cx);
-    if (!js_InternalCall(cx, obj, OBJECT_TO_JSVAL(fun->object), argc, argv,
-                         rval)) {
-#if JS_HAS_EXCEPTIONS
-        if (!cx->fp)
-            js_ReportUncaughtException(cx);
-#endif
-        return JS_FALSE;
-    }
-    return JS_TRUE;
+    ok = js_InternalCall(cx, obj, OBJECT_TO_JSVAL(fun->object), argc, argv,
+                         rval);
+    LAST_FRAME_CHECKS(cx, ok);
+    return ok;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -4145,13 +4143,7 @@ JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
     if (!JS_GetProperty(cx, obj, name, &fval))
         return JS_FALSE;
     ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
-    if (!ok) {
-#if JS_HAS_EXCEPTIONS
-        if (!cx->fp)
-            js_ReportUncaughtException(cx);
-#endif
-        return JS_FALSE;
-    }
+    LAST_FRAME_CHECKS(cx, ok);
     return JS_TRUE;
 }
 
@@ -4159,15 +4151,12 @@ JS_PUBLIC_API(JSBool)
 JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
                      jsval *argv, jsval *rval)
 {
+    JSBool ok;
+
     CHECK_REQUEST(cx);
-    if (!js_InternalCall(cx, obj, fval, argc, argv, rval)) {
-#if JS_HAS_EXCEPTIONS
-        if (!cx->fp)
-            js_ReportUncaughtException(cx);
-#endif
-        return JS_FALSE;
-    }
-    return JS_TRUE;
+    ok = js_InternalCall(cx, obj, fval, argc, argv, rval);
+    LAST_FRAME_CHECKS(cx, ok);
+    return ok;
 }
 
 JS_PUBLIC_API(JSBranchCallback)

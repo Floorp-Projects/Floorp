@@ -933,6 +933,7 @@ QName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             uri = js_ValueToString(cx, nsval);
             if (!uri)
                 return JS_FALSE;
+            argv[0] = STRING_TO_JSVAL(uri);     /* local root */
 
             /* NULL here represents *undefined* in ECMA-357 13.2.2 3(c)iii. */
             prefix = IS_EMPTY(uri) ? cx->runtime->emptyString : NULL;
@@ -6100,6 +6101,7 @@ xml_namespace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         prefix = js_ValueToString(cx, argv[0]);
         if (!prefix)
             return JS_FALSE;
+        argv[0] = STRING_TO_JSVAL(prefix);      /* local root */
 
         for (i = 0; i < length; i++) {
             if (!OBJ_GET_PROPERTY(cx, arrayobj, INT_TO_JSID(i), &v))
