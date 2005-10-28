@@ -646,8 +646,8 @@ nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
     nsAutoString keyTypeValue;
     nsAutoString pqgValue;
 
-    res = selectElement->GetAttribute(NS_LITERAL_STRING("_moz-type"), keygenvalue);
-    if (NS_CONTENT_ATTR_HAS_VALUE == res && keygenvalue.EqualsLiteral("-mozilla-keygen")) {
+    selectElement->GetAttribute(NS_LITERAL_STRING("_moz-type"), keygenvalue);
+    if (keygenvalue.EqualsLiteral("-mozilla-keygen")) {
 
       res = selectElement->GetAttribute(NS_LITERAL_STRING("pqg"), pqgValue);
       res = selectElement->GetAttribute(NS_LITERAL_STRING("keytype"), keyTypeValue);

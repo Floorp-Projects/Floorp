@@ -692,13 +692,11 @@ nsXMLContentSink::ProcessBASETag(nsIContent* aContent)
   if (mDocument) {
     nsAutoString value;
   
-    if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value) ==
-        NS_CONTENT_ATTR_HAS_VALUE) {
+    if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
       mDocument->SetBaseTarget(value);
     }
 
-    if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value) ==
-        NS_CONTENT_ATTR_HAS_VALUE) {
+    if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
       nsCOMPtr<nsIURI> baseURI;
       rv = NS_NewURI(getter_AddRefs(baseURI), value);
       if (NS_SUCCEEDED(rv)) {

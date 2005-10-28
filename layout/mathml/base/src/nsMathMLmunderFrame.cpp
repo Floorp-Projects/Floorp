@@ -208,13 +208,11 @@ XXX The winner is the outermost setting in conflicting settings like these:
     mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
 
   // if we have an accentunder attribute, it overrides what the underscript said
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
-                   nsMathMLAtoms::accentunder_, value)) {
-    if (value.EqualsLiteral("true"))
-      mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
-    else if (value.EqualsLiteral("false")) 
-      mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
-  }
+  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::accentunder_, value);
+  if (value.EqualsLiteral("true"))
+    mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
+  else if (value.EqualsLiteral("false")) 
+    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
 
   // disable the stretch-all flag if we are going to act like a superscript
   if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&

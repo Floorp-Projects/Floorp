@@ -298,10 +298,10 @@ void
 nsHTMLFragmentContentSink::ProcessBaseTag(nsIContent* aContent)
 {
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
+  if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
     mBaseHREF = value;
   }
-  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
+  if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
     mBaseTarget = value;
   }
 }

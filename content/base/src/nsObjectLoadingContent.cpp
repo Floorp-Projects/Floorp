@@ -569,9 +569,8 @@ nsObjectLoadingContent::ObjectURIChanged(const nsAString& aURI,
   nsCOMPtr<nsIURI> baseURI = thisContent->GetBaseURI();
   nsCOMPtr<nsIURI> codebaseURI;
   nsAutoString codebase;
-  nsresult rv = thisContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase,
-                                     codebase);
-  if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+  thisContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codebase);
+  if (!codebase.IsEmpty()) {
     nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(codebaseURI),
                                               codebase, doc, baseURI);
   } else {
@@ -749,12 +748,15 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
   // If the class ID specifies a supported plugin, or if we have no explicit URI
   // but a type, immediately instantiate the plugin.
   PRBool isSupportedClassID = PR_FALSE;
+  PRBool hasID = PR_FALSE;
   if (GetCapabilities() & eSupportClassID) {
     nsAutoString classid;
-    rv = thisContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid);
+    thisContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid);
     nsCAutoString typeForID;
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE)
+    if (!classid.IsEmpty()) {
+      hasID = PR_TRUE;
       isSupportedClassID = NS_SUCCEEDED(TypeForClassID(classid, typeForID));
+    }
   }
   if (isSupportedClassID ||
       (!aURI && !aTypeHint.IsEmpty() &&
@@ -777,7 +779,7 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
   }
   // If we get here, and we had a class ID, then it must have been unsupported.
   // Fallback in that case.
-  if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+  if (hasID) {
     mInstantiating = PR_FALSE;
     rv = NS_ERROR_NOT_AVAILABLE;
     return NS_OK;

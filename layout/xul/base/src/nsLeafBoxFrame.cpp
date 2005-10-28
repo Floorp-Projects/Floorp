@@ -137,13 +137,11 @@ void nsLeafBoxFrame::UpdateMouseThrough()
 {
   if (mContent) {
     nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
-        if (value.EqualsLiteral("never"))
-          mMouseThrough = never;
-        else if (value.EqualsLiteral("always"))
-          mMouseThrough = always;
-      
-    }
+    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value);
+    if (value.EqualsLiteral("never"))
+      mMouseThrough = never;
+    else if (value.EqualsLiteral("always"))
+      mMouseThrough = always;
   }
 }
 

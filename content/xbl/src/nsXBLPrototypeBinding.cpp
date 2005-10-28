@@ -494,9 +494,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
             attrPresent = PR_FALSE;
         }    
         else {
-          nsresult result = aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
-          attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
-                         result == NS_CONTENT_ATTR_HAS_VALUE);
+          attrPresent = aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
         }
 
         if (attrPresent)
@@ -863,9 +861,7 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
       attrPresent = PR_FALSE;
   }
   else {
-    nsresult result = changeData->mBoundElement->GetAttr(srcNs, src, value);
-    attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
-                   result == NS_CONTENT_ATTR_HAS_VALUE);
+    attrPresent = changeData->mBoundElement->GetAttr(srcNs, src, value);
   }
 
   if (attrPresent) {

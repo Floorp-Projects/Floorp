@@ -902,17 +902,15 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
           // IE makes a difference between align and he float property
           nsIContent* content = prevFrame->GetContent();
           if (content) {
-            nsAutoString value;
-            if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
-              // we're interested only if previous frame is align=left
-              // IE messes things up when "right" (overlapping frames) 
-              if (value.LowerCaseEqualsLiteral("left")) {
-                keepFloatOnSameLine = PR_TRUE;
-                // don't advance to next line (IE quirkie behaviour)
-                // it breaks rule CSS2/9.5.1/1, but what the hell
-                // since we cannot evangelize the world
-                break;
-              }
+            // we're interested only if previous frame is align=left
+            // IE messes things up when "right" (overlapping frames) 
+            if (content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::align,
+                                     NS_LITERAL_STRING("left"), eIgnoreCase)) {
+              keepFloatOnSameLine = PR_TRUE;
+              // don't advance to next line (IE quirkie behaviour)
+              // it breaks rule CSS2/9.5.1/1, but what the hell
+              // since we cannot evangelize the world
+              break;
             }
           }
         }

@@ -1967,9 +1967,8 @@ nsHTMLSelectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Get the name (if no name, no submit)
   //
   nsAutoString name;
-  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
-  if (NS_FAILED(rv) || rv == NS_CONTENT_ATTR_NOT_THERE) {
-    return rv;
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name)) {
+    return NS_OK;
   }
 
   //
@@ -2209,14 +2208,10 @@ nsHTMLOptionCollection::NamedItem(const nsAString& aName,
     nsCOMPtr<nsIContent> content = do_QueryInterface(mElements.ObjectAt(i));
 
     if (content) {
-      nsAutoString name;
-
-      if (((content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name,
-                             name) == NS_CONTENT_ATTR_HAS_VALUE) &&
-           aName.Equals(name)) ||
-          ((content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id,
-                             name) == NS_CONTENT_ATTR_HAS_VALUE) &&
-           aName.Equals(name))) {
+      if (content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name, aName,
+                               eCaseMatters) ||
+          content->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::id, aName,
+                               eCaseMatters)) {
         rv = CallQueryInterface(content, aReturn);
 
         break;

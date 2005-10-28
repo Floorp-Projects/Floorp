@@ -747,36 +747,6 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   bailOnHeight = PR_FALSE;
 #endif
 
-#ifdef DEBUG_rodsXXX
-  // Lists out all the options
-  {
-  nsresult rv = NS_ERROR_FAILURE; 
-  nsCOMPtr<nsIDOMHTMLOptionsCollection> options =
-    getter_AddRefs(GetOptions(mContent));
-  if (options) {
-    PRUint32 numOptions;
-    options->GetLength(&numOptions);
-    printf("--- Num of Items %d ---\n", numOptions);
-    for (PRUint32 i=0;i<numOptions;i++) {
-      nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(options, i));
-      if (optionElement) {
-        nsAutoString text;
-        rv = optionElement->GetLabel(text);
-        if (NS_CONTENT_ATTR_HAS_VALUE != rv || text.IsEmpty()) {
-          if (NS_OK != optionElement->GetText(text)) {
-            text = "No Value";
-          }
-        } else {
-            text = "No Value";
-        }          
-        printf("[%d] - %s\n", i, NS_LossyConvertUCS2toASCII(text).get());
-      }
-    }
-  }
-  }
-#endif // DEBUG_rodsXXX
-
-
   // If all the content and frames are here 
   // then initialize it before reflow
     if (mIsAllContentHere && !mHasBeenInitialized) {
@@ -1839,7 +1809,9 @@ nsListControlFrame::ResetList(PRBool aAllowScrolling)
 NS_IMETHODIMP
 nsListControlFrame::GetName(nsAString* aResult)
 {
-  return nsFormControlHelper::GetName(mContent, aResult);
+  nsFormControlHelper::GetName(mContent, aResult);
+
+  return NS_OK;
 }
  
 

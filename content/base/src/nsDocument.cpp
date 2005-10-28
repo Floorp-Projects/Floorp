@@ -2995,10 +2995,9 @@ GetElementByAttribute(nsIContent* aContent, nsIAtom* aAttrName,
                       const nsAString& aAttrValue, PRBool aUniversalMatch,
                       nsIDOMElement** aResult)
 {
-  nsAutoString value;
-  nsresult rv = aContent->GetAttr(kNameSpaceID_None, aAttrName, value);
-  if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-      (aUniversalMatch || value.Equals(aAttrValue))) {
+  if (aUniversalMatch ? aContent->HasAttr(kNameSpaceID_None, aAttrName) :
+                        aContent->AttrValueIs(kNameSpaceID_None, aAttrName,
+                                              aAttrValue, eCaseMatters)) {
     return CallQueryInterface(aContent, aResult);
   }
 

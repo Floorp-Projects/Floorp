@@ -204,10 +204,9 @@ public:
 
   // helper to check if a content has an attribute. If content is nsnull or if
   // the attribute is not there, check if the attribute is on the mstyle hierarchy
-  // @return NS_CONTENT_ATTR_HAS_VALUE --if attribute has non-empty value, attr="value"
-  //         NS_CONTENT_ATTR_NO_VALUE  --if attribute has empty value, attr=""
-  //         NS_CONTENT_ATTR_NOT_THERE --if attribute is not there
-  static nsresult
+  // @return PR_TRUE  --if attribute exists
+  //         PR_FALSE --if attribute doesn't exist
+  static PRBool
   GetAttribute(nsIContent* aContent,
                nsIFrame*   aMathMLmstyleFrame,          
                nsIAtom*    aAttributeAtom,

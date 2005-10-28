@@ -573,8 +573,7 @@ NS_IMPL_STRING_ATTR(nsHTMLFormElement, Name, name)
 NS_IMETHODIMP
 nsHTMLFormElement::GetAction(nsAString& aValue)
 {
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::action, aValue);
-  NS_ENSURE_SUCCESS(rv, rv);
+  GetAttr(kNameSpaceID_None, nsHTMLAtoms::action, aValue);
   if (aValue.IsEmpty()) {
     // Avoid resolving action="" to the base uri, bug 297761.
     return NS_OK;
@@ -591,9 +590,7 @@ nsHTMLFormElement::SetAction(const nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLFormElement::GetTarget(nsAString& aValue)
 {
-  aValue.Truncate();
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue);
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
   return NS_OK;
@@ -1676,14 +1673,8 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
       if (control->GetType() == NS_FORM_INPUT_RADIO) {
         nsCOMPtr<nsIContent> controlContent(do_QueryInterface(control));
         if (controlContent) {
-          //
-          // XXX This is a particularly frivolous string copy just to determine
-          // if the string is empty or not
-          //
-          nsAutoString name;
-          if (controlContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name,
-                                      name) != NS_CONTENT_ATTR_NOT_THERE &&
-              name.IsEmpty()) {
+          if (controlContent->AttrValueIs(kNameSpaceID_None, nsHTMLAtoms::name,
+                                          EmptyString(), eCaseMatters)) {
             aVisitor->Visit(control, &stopIterating);
             if (stopIterating) {
               break;

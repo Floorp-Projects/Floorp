@@ -615,9 +615,9 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIFrame*       aFrame,
        // css rules are fixed in mathml.css and are applicable to all elements.
 
        // see if there is a scriptminsize attribute on a <mstyle> that wraps us
-       if (NS_CONTENT_ATTR_HAS_VALUE ==
-           GetAttribute(nsnull, presentationData.mstyle,
-                        nsMathMLAtoms::scriptminsize_, fontsize)) {
+       GetAttribute(nsnull, presentationData.mstyle,
+                        nsMathMLAtoms::scriptminsize_, fontsize);
+       if (!fontsize.IsEmpty()) {
          nsCSSValue cssValue;
          if (ParseNumericValue(fontsize, cssValue)) {
            nsCSSUnit unit = cssValue.GetUnit();

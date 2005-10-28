@@ -770,13 +770,13 @@ nsGenericDOMDataNode::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
   return NS_OK;
 }
 
-nsresult
+PRBool
 nsGenericDOMDataNode::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttr,
                               nsAString& aResult) const
 {
   aResult.Truncate();
 
-  return NS_CONTENT_ATTR_NOT_THERE;
+  return PR_FALSE;
 }
 
 PRBool

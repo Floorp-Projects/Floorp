@@ -245,13 +245,11 @@ void nsBoxFrame::UpdateMouseThrough()
 {
   if (mContent) {
     nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
-        if (value.EqualsLiteral("never"))
-          mMouseThrough = never;
-        else if (value.EqualsLiteral("always"))
-          mMouseThrough = always;
-      
-    }
+    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value);
+    if (value.EqualsLiteral("never"))
+      mMouseThrough = never;
+    else if (value.EqualsLiteral("always"))
+      mMouseThrough = always;
   }
 }
 
@@ -351,15 +349,13 @@ nsBoxFrame::GetInitialDebug(PRBool& aDebug)
   if (!content)
     return PR_FALSE;
 
-
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::debug, value)) {
-      if (value.EqualsLiteral("true")) {
-          aDebug = PR_TRUE;
-          return PR_TRUE;
-      } else if (value.EqualsLiteral("false")) {
-          aDebug = PR_FALSE;
-          return PR_TRUE;
-      }
+  content->GetAttr(kNameSpaceID_None, nsXULAtoms::debug, value);
+  if (value.EqualsLiteral("true")) {
+      aDebug = PR_TRUE;
+      return PR_TRUE;
+  } else if (value.EqualsLiteral("false")) {
+      aDebug = PR_FALSE;
+      return PR_TRUE;
   }
 
   return PR_FALSE;
@@ -376,25 +372,25 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   if (!content)
     return PR_FALSE;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
-    // XXXdwh Everything inside this if statement is deprecated code.
-    if (value.EqualsLiteral("left")) {
-        aHalign = nsBoxFrame::hAlign_Left;
-        return PR_TRUE;
-    } else if (value.EqualsLiteral("right")) {
-        aHalign = nsBoxFrame::hAlign_Right;
-        return PR_TRUE;
-    }
+  // XXXdwh Everything inside this if statement is deprecated code.
+  content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
+  if (value.EqualsLiteral("left")) {
+      aHalign = nsBoxFrame::hAlign_Left;
+      return PR_TRUE;
+  } else if (value.EqualsLiteral("right")) {
+      aHalign = nsBoxFrame::hAlign_Right;
+      return PR_TRUE;
   }
       
   // Now that the deprecated stuff is out of the way, we move on to check the appropriate 
   // attribute.  For horizontal boxes, we are checking the PACK attribute.  For vertical boxes
   // we are checking the ALIGN attribute.
-  nsresult res;
   if (IsHorizontal())
-    res = content->GetAttr(kNameSpaceID_None, nsXULAtoms::pack, value);
-  else res = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
-  if (res == NS_CONTENT_ATTR_HAS_VALUE) {
+    content->GetAttr(kNameSpaceID_None, nsXULAtoms::pack, value);
+  else
+    content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
+
+  if (!value.IsEmpty()) {
     if (value.EqualsLiteral("start")) {
         aHalign = nsBoxFrame::hAlign_Left;
         return PR_TRUE;
@@ -459,7 +455,7 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   if (!content)
     return PR_FALSE;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::valign, value)) {
+  if (content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::valign, value)) {
     if (value.EqualsLiteral("top")) {
         aValign = nsBoxFrame::vAlign_Top;
         return PR_TRUE;
@@ -478,11 +474,12 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   // Now that the deprecated stuff is out of the way, we move on to check the appropriate 
   // attribute.  For horizontal boxes, we are checking the ALIGN attribute.  For vertical boxes
   // we are checking the PACK attribute.
-  nsresult res;
   if (IsHorizontal())
-    res = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
-  else res = content->GetAttr(kNameSpaceID_None, nsXULAtoms::pack, value);
-  if (res == NS_CONTENT_ATTR_HAS_VALUE) {
+    content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
+  else
+    content->GetAttr(kNameSpaceID_None, nsXULAtoms::pack, value);
+
+  if (!value.IsEmpty()) {
     if (value.EqualsLiteral("start")) {
         aValign = nsBoxFrame::vAlign_Top;
         return PR_TRUE;
@@ -564,12 +561,11 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::orient, value)) {
-    if (value.EqualsLiteral("vertical"))
-      aIsHorizontal = PR_FALSE;
-    else if (value.EqualsLiteral("horizontal"))
-     aIsHorizontal = PR_TRUE;
-  }
+  content->GetAttr(kNameSpaceID_None, nsXULAtoms::orient, value);
+  if (value.EqualsLiteral("vertical"))
+    aIsHorizontal = PR_FALSE;
+  else if (value.EqualsLiteral("horizontal"))
+    aIsHorizontal = PR_TRUE;
 }
 
 void
@@ -597,7 +593,8 @@ nsBoxFrame::GetInitialDirection(PRBool& aIsNormal)
   
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::dir, value)) {
+  content->GetAttr(kNameSpaceID_None, nsXULAtoms::dir, value);
+  if (!value.IsEmpty()) {
     if (value.EqualsLiteral("reverse"))
       aIsNormal = !aIsNormal; // Invert our direction.
     else if (value.EqualsLiteral("ltr"))
@@ -621,12 +618,11 @@ nsBoxFrame::GetInitialEqualSize(PRBool& aEqualSize)
   if (!content)
      return PR_FALSE;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::equalsize, value))
-  {
-      if (value.EqualsLiteral("always")) {
-         aEqualSize = PR_TRUE;
-         return PR_TRUE;
-      }
+  
+  if (content->AttrValueIs(kNameSpaceID_None, nsXULAtoms::equalsize,
+                           nsLayoutAtoms::always, eCaseMatters)) {
+    aEqualSize = PR_TRUE;
+    return PR_TRUE;
   } 
 
   return PR_FALSE;
@@ -646,7 +642,8 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
      return PR_FALSE;
   
   // Check the align attribute.
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
+  content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
+  if (!value.IsEmpty()) {
     aStretch = value.EqualsLiteral("stretch");
     return PR_TRUE;
   }

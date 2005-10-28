@@ -233,9 +233,9 @@ protected:
   /**
    * Get the maxlength attribute
    * @param aMaxLength the value of the max length attr
-   * @throws NS_CONTENT_ATTR_NOT_THERE if attr not defined
+   * @returns PR_FALSE if attr not defined
    */
-  nsresult GetMaxLength(PRInt32* aMaxLength);
+  PRBool GetMaxLength(PRInt32* aMaxLength);
   /**
    * Find out whether an attribute exists on the content or not.
    * @param aAtt the attribute to determine the existence of

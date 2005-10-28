@@ -243,11 +243,7 @@ nsHTMLTextAreaElement::SetFocus(nsPresContext* aPresContext)
     return;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  nsAutoString disabled;
-
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLFormElement::GetAttr(kNameSpaceID_None,
-                                        nsHTMLAtoms::disabled, disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return;
   }
 
@@ -267,10 +263,7 @@ nsHTMLTextAreaElement::Select()
   nsresult rv = NS_OK;
 
   // first see if we are disabled or not. If disabled then do nothing.
-  nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLFormElement::GetAttr(kNameSpaceID_None,
-                                        nsHTMLAtoms::disabled, disabled)) {
+  if (HasAttr(kNameSpaceID_None, nsHTMLAtoms::disabled)) {
     return rv;
   }
 
@@ -793,9 +786,8 @@ nsHTMLTextAreaElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   // Get the name (if no name, no submit)
   //
   nsAutoString name;
-  rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name);
-  if (NS_FAILED(rv) || rv == NS_CONTENT_ATTR_NOT_THERE) {
-    return rv;
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, name)) {
+    return NS_OK;
   }
 
   //

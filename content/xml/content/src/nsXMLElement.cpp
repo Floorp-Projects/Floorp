@@ -66,6 +66,7 @@
 #include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
 #include "nsIBindingManager.h"
+#include "nsLayoutAtoms.h"
 
 nsresult
 NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
@@ -191,14 +192,11 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
   nsresult rv = NS_OK;
 
   if (mIsLink) {
-    NS_NAMED_LITERAL_STRING(onloadString, "onLoad");
     do {
       // actuate="onLoad" ?
       nsAutoString value;
-      rv = nsGenericElement::GetAttr(kNameSpaceID_XLink,
-                                     nsLayoutAtoms::actuate, value);
-      if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-          value.Equals(onloadString)) {
+      if (AttrValueIs(kNameSpaceID_XLink, nsLayoutAtoms::actuate,
+                      nsLayoutAtoms::onLoad, eCaseMatters)) {
 
         // Disable in Mail/News for now. We may want a pref to control
         // this at some point.
@@ -218,10 +216,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
 
         // show= ?
         nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
-        rv = nsGenericElement::GetAttr(kNameSpaceID_XLink,
-                                       nsLayoutAtoms::show, value);
-        if (NS_FAILED(rv))
-          break;
+        GetAttr(kNameSpaceID_XLink, nsLayoutAtoms::show, value);
 
         // XXX Should probably do this using atoms 
         if (value.EqualsLiteral("new")) {
@@ -252,9 +247,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
           break;
 
         // href= ?
-        rv = nsGenericElement::GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href,
-                                       value);
-        if (rv == NS_CONTENT_ATTR_HAS_VALUE && !value.IsEmpty()) {
+        if (GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, value)) {
           nsCOMPtr<nsIURI> uri;
           rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
                                                          value,
@@ -320,8 +313,7 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
             break;
           }
 
-          nsGenericElement::GetAttr(kNameSpaceID_XLink, nsLayoutAtoms::show,
-                                    show);
+          GetAttr(kNameSpaceID_XLink, nsLayoutAtoms::show, show);
 
           // XXX Should probably do this using atoms 
           if (show.EqualsLiteral("new")) {
@@ -379,8 +371,7 @@ nsXMLElement::HandleDOMEvent(nsPresContext* aPresContext,
     case NS_MOUSE_ENTER_SYNTH:
       {
         nsAutoString href;
-        nsGenericElement::GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href,
-                                  href);
+        GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, href);
         if (href.IsEmpty()) {
           *aEventStatus = nsEventStatus_eConsumeDoDefault; 
           break;

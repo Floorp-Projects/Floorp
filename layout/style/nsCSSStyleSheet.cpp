@@ -2702,14 +2702,13 @@ const nsString* RuleProcessorData::GetLang()
         // xml:lang has precedence over lang on HTML elements (see
         // XHTML1 section C.7).
         nsAutoString value;
-        nsresult attrState = content->GetAttr(kNameSpaceID_XML,
-                                              nsHTMLAtoms::lang, value);
-        if (attrState != NS_CONTENT_ATTR_HAS_VALUE &&
-            content->IsContentOfType(nsIContent::eHTML)) {
-          attrState = content->GetAttr(kNameSpaceID_None,
-                                       nsHTMLAtoms::lang, value);
+        PRBool hasAttr = content->GetAttr(kNameSpaceID_XML, nsHTMLAtoms::lang,
+                                          value);
+        if (!hasAttr && content->IsContentOfType(nsIContent::eHTML)) {
+          hasAttr = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::lang,
+                                     value);
         }
-        if (attrState == NS_CONTENT_ATTR_HAS_VALUE) {
+        if (hasAttr) {
           *mLanguage = value;
           break;
         }
@@ -3189,12 +3188,10 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             } else {
               nsAutoString value;
 #ifdef DEBUG
-              attrState =
+              PRBool hasAttr =
 #endif
                 data.mContent->GetAttr(nameSpaceID, name, value);
-              NS_ASSERTION(NS_SUCCEEDED(attrState) &&
-                           NS_CONTENT_ATTR_NOT_THERE != attrState,
-                           "GetAttrNameAt lied or GetAttr failed");
+              NS_ASSERTION(hasAttr, "GetAttrNameAt lied");
               attrSelectorMatched = AttrMatchesValue(attr, value);
             }
 
@@ -3223,12 +3220,10 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         else if (attr->mFunction != NS_ATTR_FUNC_SET) {
           nsAutoString value;
 #ifdef DEBUG
-          nsresult attrState =
+          PRBool hasAttr =
 #endif
               data.mContent->GetAttr(attr->mNameSpace, attr->mAttr, value);
-          NS_ASSERTION(NS_SUCCEEDED(attrState) &&
-                       NS_CONTENT_ATTR_NOT_THERE != attrState,
-                       "HasAttr lied or GetAttr failed");
+          NS_ASSERTION(hasAttr, "HasAttr lied");
           result = localTrue == AttrMatchesValue(attr, value);
         }
         

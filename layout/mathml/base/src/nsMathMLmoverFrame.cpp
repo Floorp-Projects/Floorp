@@ -208,13 +208,11 @@ XXX The winner is the outermost in conflicting settings like these:
     mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
 
   // if we have an accent attribute, it overrides what the overscript said
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
-                   nsMathMLAtoms::accent_, value)) {
-    if (value.EqualsLiteral("true"))
-      mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER;
-    else if (value.EqualsLiteral("false")) 
-      mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
-  }
+  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::accent_, value);
+  if (value.EqualsLiteral("true"))
+    mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER;
+  else if (value.EqualsLiteral("false")) 
+    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
 
   // disable the stretch-all flag if we are going to act like a superscript
   if ( NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&

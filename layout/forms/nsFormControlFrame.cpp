@@ -621,40 +621,6 @@ nsFormControlFrame::GetCID()
   return kButtonCID;
 }
 
-NS_IMETHODIMP
-nsFormControlFrame::GetMaxLength(PRInt32* aSize)
-{
-  *aSize = -1;
-
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
-  if (content) {
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::maxlength);
-    if (attr && attr->Type() == nsAttrValue::eInteger) {
-      *aSize = attr->GetIntegerValue();
-
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-nsresult
-nsFormControlFrame::GetSizeFromContent(PRInt32* aSize) const
-{
-  *aSize = -1;
-
-  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
-  if (content) {
-    const nsAttrValue* attr = content->GetParsedAttr(nsHTMLAtoms::size);
-    if (attr && attr->Type() == nsAttrValue::eInteger) {
-      *aSize = attr->GetIntegerValue();
-
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
 NS_IMETHODIMP_(PRInt32)
 nsFormControlFrame::GetFormControlType() const
 {
@@ -664,14 +630,18 @@ nsFormControlFrame::GetFormControlType() const
 NS_IMETHODIMP
 nsFormControlFrame::GetName(nsAString* aResult)
 {
-  return nsFormControlHelper::GetName(mContent, aResult);
+  nsFormControlHelper::GetName(mContent, aResult);
+
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsFormControlFrame::GetValue(nsAString* aResult)
 {
-  return nsFormControlHelper::GetValueAttr(mContent, aResult);
+  nsFormControlHelper::GetValueAttr(mContent, aResult);
+
+  return NS_OK;
 }
 
 
@@ -735,48 +705,13 @@ nsFormControlFrame::GetFormContent(nsIContent*& aContent) const
   return NS_OK;
 }
 
-nsresult
-nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
-{
-  nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
-  if (inputElement) {
-    res = inputElement->GetDefaultChecked(aState);
-  }
-	return res;
-}
-
-nsresult
-nsFormControlFrame::SetDefaultCheckState(PRBool aState)
-{
-	nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
-  if (inputElement) {
-    res = inputElement->SetDefaultChecked(aState);
-  }
-	return res;
-}
-
-nsresult
+void
 nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
 {
-	nsresult res = NS_OK;
   nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
   if (inputElement) {
-    res = inputElement->GetChecked(aState);
+    inputElement->GetChecked(aState);
   }
-	return res;
-}
-
-nsresult
-nsFormControlFrame::SetCurrentCheckState(PRBool aState)
-{
-	nsresult res = NS_OK;
-  nsCOMPtr<nsIDOMHTMLInputElement> inputElement = do_QueryInterface(mContent);
-  if (inputElement) {
-    inputElement->SetChecked(aState); 
-  }
-	return res;
 }
 
 NS_IMETHODIMP

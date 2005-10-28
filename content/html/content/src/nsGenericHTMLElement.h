@@ -185,8 +185,6 @@ public:
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               PRBool aCompileEventHandlers);
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsAString& aResult) const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              PRBool aNotify);
 #ifdef DEBUG

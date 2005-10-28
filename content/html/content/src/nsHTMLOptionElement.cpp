@@ -248,10 +248,9 @@ nsHTMLOptionElement::SetValue(const nsAString& aValue)
 NS_IMETHODIMP
 nsHTMLOptionElement::GetValue(nsAString& aValue)
 {
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
   // If the value attr is there, that is *exactly* what we use.  If it is
   // not, we compress whitespace .text.
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue)) {
     GetText(aValue);
   }
 

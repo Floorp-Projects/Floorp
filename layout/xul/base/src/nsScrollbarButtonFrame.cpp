@@ -165,7 +165,8 @@ nsScrollbarButtonFrame::MouseClicked()
 #endif
 
    nsString value;
-   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value))
+   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value);
+   if (!value.IsEmpty())
    {
      // if our class is DecrementButton subtract the current pos by increment amount
      // if our class is IncrementButton increment the current pos by the decrement amount

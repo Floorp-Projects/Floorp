@@ -3647,13 +3647,11 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
     parent->AppendChildTo(element, PR_FALSE);
     if (!mInsideNoXXXTag) {
       nsAutoString value;
-      if (element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href,
-                           value) == NS_CONTENT_ATTR_HAS_VALUE) {
+      if (element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
         ProcessBaseHref(value);
       }
 
-      if (element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target,
-                           value) == NS_CONTENT_ATTR_HAS_VALUE) {
+      if (element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
         ProcessBaseTarget(value);
       }
     }

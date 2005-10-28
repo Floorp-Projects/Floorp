@@ -645,10 +645,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
             // given node.
             PRUnichar attrbuf[128];
             nsFixedString attrValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
-            rv = tmplKid->GetAttr(kNameSpaceID_None, nsXULAtoms::value, attrValue);
-            if (NS_FAILED(rv)) return rv;
-
-            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (!attrValue.IsEmpty())) {
+            tmplKid->GetAttr(kNameSpaceID_None, nsXULAtoms::value, attrValue);
+            if (!attrValue.IsEmpty()) {
                 nsAutoString value;
                 rv = SubstituteText(*aMatch, attrValue, value);
                 if (NS_FAILED(rv)) return rv;
@@ -729,10 +727,8 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                     // longish.
                     PRUnichar attrbuf[128];
                     nsFixedString attribValue(attrbuf, NS_ARRAY_LENGTH(attrbuf), 0);
-                    rv = tmplKid->GetAttr(attribNameSpaceID, attribName, attribValue);
-                    if (NS_FAILED(rv)) return rv;
-
-                    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+                    tmplKid->GetAttr(attribNameSpaceID, attribName, attribValue);
+                    if (!attribValue.IsEmpty()) {
                         nsAutoString value;
                         rv = SubstituteText(*aMatch, attribValue, value);
                         if (NS_FAILED(rv)) return rv;
@@ -826,14 +822,9 @@ nsXULContentBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
 {
     nsresult rv;
 
-    nsAutoString persist;
-    rv = aTemplateNode->GetAttr(kNameSpaceID_None, nsXULAtoms::persist, persist);
-    if (NS_FAILED(rv)) return rv;
+    nsAutoString attribute, persist;
+    aTemplateNode->GetAttr(kNameSpaceID_None, nsXULAtoms::persist, persist);
 
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-        return NS_OK;
-
-    nsAutoString attribute;
     while (!persist.IsEmpty()) {
         attribute.Truncate();
 
@@ -923,9 +914,7 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             continue;
 
         nsAutoString attribValue;
-        rv = aTemplateNode->GetAttr(attribNameSpaceID,
-                                    attribName,
-                                    attribValue);
+        aTemplateNode->GetAttr(attribNameSpaceID, attribName, attribValue);
 
         if (! IsAttrImpactedByVars(aMatch, attribValue, aModifiedVars))
             continue;
@@ -1349,12 +1338,8 @@ nsXULContentBuilder::IsOpen(nsIContent* aElement)
         (tag != nsXULAtoms::button))
       return PR_TRUE;
 
-    nsAutoString value;
-    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::open, value);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get open attribute");
-
-    return (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-            value.EqualsLiteral("true"));
+    return aElement->AttrValueIs(kNameSpaceID_None, nsXULAtoms::open,
+                                 nsXULAtoms::_true, eCaseMatters);
 }
 
 

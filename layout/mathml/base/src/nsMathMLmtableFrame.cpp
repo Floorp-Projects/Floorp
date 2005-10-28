@@ -141,8 +141,8 @@ GetValueAt(nsPresContext*  aPresContext,
   if (!valueList) {
     // The property isn't there yet, so set it
     nsAutoString values;
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        aTableOrRowFrame->GetContent()->GetAttr(kNameSpaceID_None, aAttributeAtom, values)) {
+    aTableOrRowFrame->GetContent()->GetAttr(kNameSpaceID_None, aAttributeAtom, values);
+    if (!values.IsEmpty()) {
       valueList = new nsValueList(values);
       if (valueList) {
         propTable->SetProperty(aTableOrRowFrame, aAttributeAtom,
@@ -205,8 +205,7 @@ MapAttributesInto(nsPresContext* aPresContext,
 
   // see if the rowalign attribute is not already set
   atom = nsMathMLAtoms::rowalign_;
-  rv = aCellContent->GetAttr(kNameSpaceID_None, atom, value);
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+  if (!aCellContent->GetAttr(kNameSpaceID_None, atom, value)) {
     // see if the rowalign attribute was specified on the row
     attr = GetValueAt(aPresContext, rowFrame, atom, rowIndex);
     if (!attr) {
@@ -251,8 +250,7 @@ MapAttributesInto(nsPresContext* aPresContext,
 
   // see if the columnalign attribute is not already set
   atom = nsMathMLAtoms::columnalign_;
-  rv = aCellContent->GetAttr(kNameSpaceID_None, atom, value);
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+  if (!aCellContent->GetAttr(kNameSpaceID_None, atom, value)) {
     // see if the columnalign attribute was specified on the row
     attr = GetValueAt(aPresContext, rowFrame, atom, colIndex);
     if (!attr) {
@@ -395,14 +393,12 @@ nsMathMLmtableOuterFrame::InheritAutomaticData(nsIFrame* aParent)
 
   // see if the displaystyle attribute is there and let it override what we inherited
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      GetAttribute(mContent, nsnull, nsMathMLAtoms::displaystyle_, value)) {
-    if (value.EqualsLiteral("true")) {
-      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-    }
-    else if (value.EqualsLiteral("false")) {
-      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
-    }
+  GetAttribute(mContent, nsnull, nsMathMLAtoms::displaystyle_, value);
+  if (value.EqualsLiteral("true")) {
+    mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+  }
+  else if (value.EqualsLiteral("false")) {
+    mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
   }
 
   return NS_OK;
@@ -497,8 +493,8 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   // XXX should we also check <mstyle> ?
   PRInt32 rowIndex = 0;
   eAlign tableAlign = eAlign_axis;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      GetAttribute(mContent, nsnull, nsMathMLAtoms::align_, value)) {
+  GetAttribute(mContent, nsnull, nsMathMLAtoms::align_, value);
+  if (!value.IsEmpty()) {
     ParseAlignAttribute(value, tableAlign, rowIndex);
   }
 
@@ -619,8 +615,8 @@ nsMathMLmtdFrame::GetRowSpan()
 {
   PRInt32 rowspan = 1;
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None,
-                   nsMathMLAtoms::rowspan_, value)) {
+  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::rowspan_, value);
+  if (!value.IsEmpty()) {
     PRInt32 error;
     rowspan = value.ToInteger(&error);
     if (error)
@@ -634,8 +630,8 @@ nsMathMLmtdFrame::GetColSpan()
 {
   PRInt32 colspan = 1;
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None,
-                   nsMathMLAtoms::columnspan_, value)) {
+  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::columnspan_, value);
+  if (!value.IsEmpty()) {
     PRInt32 error;
     colspan = value.ToInteger(&error);
     if (error)

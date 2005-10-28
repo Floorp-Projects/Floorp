@@ -105,8 +105,9 @@ nsMathMLmsupFrame::Place(nsIRenderingContext& aRenderingContext,
   // check if the superscriptshift attribute is there
   nsAutoString value;
   nscoord supScriptShift = 0;
-  if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
-                   nsMathMLAtoms::superscriptshift_, value)) {
+  GetAttribute(mContent, mPresentationData.mstyle,
+               nsMathMLAtoms::superscriptshift_, value);
+  if (!value.IsEmpty()) {
     nsCSSValue cssValue;
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
       supScriptShift = CalcLength(GetPresContext(), mStyleContext, cssValue);

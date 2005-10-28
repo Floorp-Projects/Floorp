@@ -197,11 +197,8 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     PRUnichar buf[128];
     nsFixedString id(buf, NS_ARRAY_LENGTH(buf), 0);
 
-    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+    aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
+    if (id.IsEmpty())
         return NS_ERROR_FAILURE;
 
     // Since the element will store its ID attribute as a document-relative value,
@@ -230,10 +227,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
     nsFixedString uri(buf, NS_ARRAY_LENGTH(buf), 0);
 
     rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, uri);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
+    if (!uri.IsEmpty()) {
         // We'll use rdf_MakeAbsolute() to translate this to a URL.
         nsCOMPtr<nsIDocument> doc = aElement->GetDocument();
 
@@ -497,15 +491,14 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
         return NS_ERROR_UNEXPECTED;
 
     nsAutoString events;
-    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::events, events);
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+    aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::events, events);
+    if (events.IsEmpty())
         events.AssignLiteral("*");
 
     nsAutoString targets;
-    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::targets, targets);
+    aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::targets, targets);
 
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+    if (targets.IsEmpty())
         targets.AssignLiteral("*");
 
     nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);

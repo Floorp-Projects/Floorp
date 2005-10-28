@@ -89,21 +89,19 @@ nsMathMLmstyleFrame::InheritAutomaticData(nsIFrame* aParent)
 
   // see if the displaystyle attribute is there
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
-                   nsMathMLAtoms::displaystyle_, value)) {
-    if (value.EqualsLiteral("true")) {
-      mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
-      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-    }
-    else if (value.EqualsLiteral("false")) {
-      mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
-      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
-    }
+  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::displaystyle_, value);
+  if (value.EqualsLiteral("true")) {
+    mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
+    mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+  }
+  else if (value.EqualsLiteral("false")) {
+    mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
+    mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
   }
 
   // see if the scriptlevel attribute is there
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
-                   nsMathMLAtoms::scriptlevel_, value)) {
+  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::scriptlevel_, value);
+  if (!value.IsEmpty()) {
     PRInt32 errorCode, userValue;
     userValue = value.ToInteger(&errorCode); 
     if (!errorCode) {

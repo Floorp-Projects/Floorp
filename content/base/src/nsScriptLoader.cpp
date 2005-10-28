@@ -288,36 +288,21 @@ PRBool
 nsScriptLoader::IsScriptEventHandler(nsIScriptElement *aScriptElement)
 {
   nsCOMPtr<nsIContent> contElement = do_QueryInterface(aScriptElement);
-  if (!contElement ||
-      !contElement->HasAttr(kNameSpaceID_None, nsHTMLAtoms::_event) ||
-      !contElement->HasAttr(kNameSpaceID_None, nsHTMLAtoms::_for)) {
-      return PR_FALSE;
+  NS_ASSERTION(contElement, "nsIScriptElement isn't nsIContent");
+
+  nsAutoString forAttr, eventAttr;
+  if (!contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::_for, forAttr) ||
+      !contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::_event, eventAttr)) {
+    return PR_FALSE;
   }
 
-  nsAutoString str;
-  nsresult rv = contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::_for,
-                                     str);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  const nsAString& for_str = nsContentUtils::TrimWhitespace(str);
-
+  const nsAString& for_str = nsContentUtils::TrimWhitespace(forAttr);
   if (!for_str.LowerCaseEqualsLiteral("window")) {
     return PR_TRUE;
   }
 
   // We found for="window", now check for event="onload".
-
-  rv = contElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::_event, str);
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
-  const nsAString& event_str = nsContentUtils::TrimWhitespace(str, PR_FALSE);
-
-  if (event_str.Length() < 6) {
-    // String too short, can't be "onload".
-
-    return PR_TRUE;
-  }
-
+  const nsAString& event_str = nsContentUtils::TrimWhitespace(eventAttr, PR_FALSE);
   if (!StringBeginsWith(event_str, NS_LITERAL_STRING("onload"),
                         nsCaseInsensitiveStringComparator())) {
     // It ain't "onload.*".

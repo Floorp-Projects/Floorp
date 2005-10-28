@@ -49,11 +49,13 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIStyledContent.h"
+#include "nsLayoutAtoms.h"
 
 PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
                                                   nsXMLEventsManager * aManager,
                                                   nsIContent * aContent)
 {
+  nsresult rv;
   PRInt32 nameSpaceID;
   if (aContent->GetDocument() != aDocument)
     return PR_FALSE;
@@ -63,8 +65,8 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   else
     nameSpaceID = kNameSpaceID_XMLEvents;
   nsAutoString eventType;
-  nsresult rv = aContent->GetAttr(nameSpaceID, nsHTMLAtoms::_event, eventType);
-  if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+  aContent->GetAttr(nameSpaceID, nsHTMLAtoms::_event, eventType);
+  if (eventType.IsEmpty())
     return PR_FALSE;
   nsAutoString handlerURIStr;
   PRBool hasHandlerURI = PR_FALSE;
@@ -72,8 +74,7 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   nsAutoString observerID;
   nsAutoString targetIdref;
   
-  if (aContent->GetAttr(nameSpaceID, nsHTMLAtoms::handler, handlerURIStr) != 
-      NS_CONTENT_ATTR_NOT_THERE) {
+  if (aContent->GetAttr(nameSpaceID, nsHTMLAtoms::handler, handlerURIStr)) {
     hasHandlerURI = PR_TRUE;
     nsCAutoString handlerRef;
     nsCOMPtr<nsIURI> handlerURI;
@@ -108,23 +109,19 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
   aContent->GetAttr(nameSpaceID, nsHTMLAtoms::target, targetIdref);
 
   PRBool hasObserver = 
-    aContent->GetAttr(nameSpaceID, nsHTMLAtoms::observer, observerID) != 
-    NS_CONTENT_ATTR_NOT_THERE;
+    aContent->GetAttr(nameSpaceID, nsHTMLAtoms::observer, observerID);
 
-  nsAutoString phase;
   PRBool capture =
-    aContent->GetAttr(nameSpaceID, nsHTMLAtoms::phase, phase) !=
-    NS_CONTENT_ATTR_NOT_THERE && phase.Equals(NS_LITERAL_STRING("capture"));
+    aContent->AttrValueIs(nameSpaceID, nsHTMLAtoms::phase,
+                          nsLayoutAtoms::capture, eCaseMatters);
 
-  nsAutoString prop;
   PRBool stopPropagation = 
-    aContent->GetAttr(nameSpaceID, nsHTMLAtoms::propagate, prop) !=
-    NS_CONTENT_ATTR_NOT_THERE && prop.Equals(NS_LITERAL_STRING("stop"));
+    aContent->AttrValueIs(nameSpaceID, nsHTMLAtoms::propagate,
+                          nsLayoutAtoms::stop, eCaseMatters);
 
-  nsAutoString cancel;
   PRBool cancelDefault = 
-    aContent->GetAttr(nameSpaceID, nsHTMLAtoms::defaultAction, cancel) !=
-    NS_CONTENT_ATTR_NOT_THERE && cancel.Equals(NS_LITERAL_STRING("cancel"));
+    aContent->AttrValueIs(nameSpaceID, nsHTMLAtoms::defaultAction,
+                          nsLayoutAtoms::cancel, eCaseMatters);
 
   nsCOMPtr<nsIContent> observer;
   if (!hasObserver) {

@@ -6476,10 +6476,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
   // register tooltip support if needed
   nsAutoString value;
   if (aTag == nsXULAtoms::treechildren || // trees always need titletips
-      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext, value) !=
-        NS_CONTENT_ATTR_NOT_THERE ||
-      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltip, value) !=
-        NS_CONTENT_ATTR_NOT_THERE)
+      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext, value) ||
+      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltip, value))
   {
     nsIFrame* rootFrame = aState.mFrameManager->GetRootFrame();
     if (rootFrame)
@@ -7352,7 +7350,6 @@ nsCSSFrameConstructor::TestSVGConditions(nsIContent* aContent,
                                          PRBool&     aHasRequiredFeatures,
                                          PRBool&     aHasSystemLanguage)
 {
-  nsresult rv = NS_OK;
   nsAutoString value;
 
   // Only elements can have tests on them
@@ -7360,7 +7357,7 @@ nsCSSFrameConstructor::TestSVGConditions(nsIContent* aContent,
     aHasRequiredExtensions = PR_FALSE;
     aHasRequiredFeatures = PR_FALSE;
     aHasSystemLanguage = PR_FALSE;
-    return rv;
+    return NS_OK;
   }
 
   // Required Extensions
@@ -7369,25 +7366,17 @@ nsCSSFrameConstructor::TestSVGConditions(nsIContent* aContent,
   // extensions. Language extensions are capabilities within a user agent that
   // go beyond the feature set defined in the SVG specification.
   // Each extension is identified by a URI reference.
-  rv = aContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::requiredExtensions, value);
-  if (NS_FAILED(rv))
-    return rv;
-
-  aHasRequiredExtensions = PR_TRUE;
-  if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-    // For now, claim that mozilla's SVG implementation supports
-    // no extensions.  So, if extensions are required, we don't have
-    // them available.
-    aHasRequiredExtensions = PR_FALSE;
-  }
+  // For now, claim that mozilla's SVG implementation supports
+  // no extensions.  So, if extensions are required, we don't have
+  // them available. Empty-string should always set aHasRequiredExtensions to
+  // false.
+  aHasRequiredExtensions = !aContent->HasAttr(kNameSpaceID_None,
+                                              nsSVGAtoms::requiredExtensions);
 
   // Required Features
   aHasRequiredFeatures = PR_TRUE;
-  rv = aContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::requiredFeatures, value);
-  if (NS_FAILED(rv))
-    return rv;
-  if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
-    aHasRequiredFeatures = NS_SVG_TestFeatures(value);
+  if (aContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::requiredFeatures, value)) {
+    aHasRequiredFeatures = !value.IsEmpty() && NS_SVG_TestFeatures(value);
   }
 
   // systemLanguage
@@ -7398,8 +7387,8 @@ nsCSSFrameConstructor::TestSVGConditions(nsIContent* aContent,
   // prefix of one of the languages given in the value of this parameter such
   // that the first tag character following the prefix is "-".
   aHasSystemLanguage = PR_TRUE;
-  rv = aContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::systemLanguage, value);
-  if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
+  if (aContent->GetAttr(kNameSpaceID_None, nsSVGAtoms::systemLanguage,
+                        value)) {
     // Get our language preferences
     nsAutoString langPrefs(nsContentUtils::GetLocalizedStringPref("intl.accept_languages"));
     if (!langPrefs.IsEmpty()) {
@@ -7413,11 +7402,10 @@ nsCSSFrameConstructor::TestSVGConditions(nsIContent* aContent,
     } else {
       // For now, evaluate to true.
       NS_WARNING("no default language specified for systemLanguage conditional test");
-      aHasSystemLanguage = PR_TRUE;
+      aHasSystemLanguage = !value.IsEmpty();
     }
-    return NS_OK;
   }
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -10808,21 +10796,16 @@ void nsCSSFrameConstructor::GetAlternateTextFor(nsIContent*    aContent,
                                                 nsIAtom*       aTag,  // content object's tag
                                                 nsXPIDLString& aAltText)
 {
-  nsresult  rv;
-
   // The "alt" attribute specifies alternate text that is rendered
   // when the image can not be displayed
-  rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, aAltText);
 
   // If there's no "alt" attribute, and aContent is an input    
   // element, then use the value of the "value" attribute
-  if ((NS_CONTENT_ATTR_NOT_THERE == rv) && (nsHTMLAtoms::input == aTag)) {
-    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
-                           aAltText);
-
+  if (!aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, aAltText) &&
+      nsHTMLAtoms::input == aTag) {
     // If there's no "value" attribute either, then use the localized string 
     // for "Submit" as the alternate text.
-    if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+    if (!aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aAltText)) {
       nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                          "Submit", aAltText);      
     }

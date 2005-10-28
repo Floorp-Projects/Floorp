@@ -487,9 +487,8 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
                              getter_AddRefs(prefix));
 
       if (namespace_id == kNameSpaceID_XMLNS) {
-        nsresult rv = content->GetAttr(namespace_id, name, ns);
-
-        if (rv == NS_CONTENT_ATTR_HAS_VALUE && ns.Equals(aNamespaceURI)) {
+        if (content->AttrValueIs(namespace_id, name, aNamespaceURI,
+                                 eCaseMatters)) {
           name->ToString(aPrefix);
 
           return NS_OK;
@@ -2427,18 +2426,18 @@ nsGenericElement::GetBaseURI() const
   
   // Now check for an xml:base attr 
   nsAutoString value;
-  nsresult rv = GetAttr(kNameSpaceID_XML, nsHTMLAtoms::base, value);
-  if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
+  GetAttr(kNameSpaceID_XML, nsHTMLAtoms::base, value);
+  if (value.IsEmpty()) {
     // No xml:base, so we just use the parent's base URL
-    nsIURI *base = parentBase;
-    NS_IF_ADDREF(base);
+    nsIURI *base = nsnull;
+    parentBase.swap(base);
 
     return base;
   }
 
   nsCOMPtr<nsIURI> ourBase;
-  rv = NS_NewURI(getter_AddRefs(ourBase), value,
-                 doc->GetDocumentCharacterSet().get(), parentBase);
+  nsresult rv = NS_NewURI(getter_AddRefs(ourBase), value,
+                          doc->GetDocumentCharacterSet().get(), parentBase);
   if (NS_SUCCEEDED(rv)) {
     // do a security check, almost the same as nsDocument::SetBaseURL()
     rv = nsContentUtils::GetSecurityManager()->
@@ -4172,7 +4171,7 @@ nsGenericElement::GetAttrInfo(PRInt32 aNamespaceID, nsIAtom* aName) const
 }
   
 
-nsresult
+PRBool
 nsGenericElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                           nsAString& aResult) const
 {
@@ -4187,13 +4186,12 @@ nsGenericElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     // given us a non-empty string).
     aResult.Truncate();
     
-    return NS_CONTENT_ATTR_NOT_THERE;
+    return PR_FALSE;
   }
 
   val->ToString(aResult);
 
-  return aResult.IsEmpty() ? NS_CONTENT_ATTR_NO_VALUE :
-                             NS_CONTENT_ATTR_HAS_VALUE;
+  return PR_TRUE;
 }
 
 PRBool

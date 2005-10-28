@@ -1680,8 +1680,7 @@ nsContentUtils::LookupNamespaceURI(nsIContent* aNamespaceResolver,
   // declaration that declares aNamespacePrefix.
   for (nsIContent* content = aNamespaceResolver; content;
        content = content->GetParent()) {
-    if (content->GetAttr(kNameSpaceID_XMLNS, name, aNamespaceURI) ==
-        NS_CONTENT_ATTR_HAS_VALUE)
+    if (content->GetAttr(kNameSpaceID_XMLNS, name, aNamespaceURI))
       return NS_OK;
   }
   return NS_ERROR_FAILURE;

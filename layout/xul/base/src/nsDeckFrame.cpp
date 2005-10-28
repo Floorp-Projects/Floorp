@@ -179,7 +179,7 @@ nsDeckFrame::GetSelectedIndex()
 
   // get the index attribute
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::selectedIndex, value))
+  if (mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::selectedIndex, value))
   {
     PRInt32 error;
 

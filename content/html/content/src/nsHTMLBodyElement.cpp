@@ -315,8 +315,7 @@ nsHTMLBodyElement::Get##func_(nsAString& aColor)                    \
   aColor.Truncate();                                                \
   nsAutoString color;                                               \
   nscolor attrColor;                                                \
-  if (NS_CONTENT_ATTR_NOT_THERE ==                                  \
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::attr_, color)) {      \
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::attr_, color)) {     \
                                                                     \
     nsPresContext *presContext = GetPresContext();                  \
     if (presContext) {                                              \
@@ -351,11 +350,10 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
 
   nsAutoString attr;
   nscolor bgcolor;
-  nsresult rv = GetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, attr);
 
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
-  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+  if (!GetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, attr)) {
     nsIDocument *document = GetCurrentDoc();
     if (document) {
       // Make sure the style is up-to-date, since we need it

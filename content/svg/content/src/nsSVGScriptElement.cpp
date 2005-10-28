@@ -191,7 +191,9 @@ NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGScriptElement)
 NS_IMETHODIMP
 nsSVGScriptElement::GetType(nsAString & aType)
 {
-  return GetAttr(kNameSpaceID_None, nsSVGAtoms::type, aType);
+  GetAttr(kNameSpaceID_None, nsSVGAtoms::type, aType);
+
+  return NS_OK;
 }
 NS_IMETHODIMP
 nsSVGScriptElement::SetType(const nsAString & aType)

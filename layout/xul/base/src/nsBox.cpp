@@ -966,8 +966,8 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         nsAutoString value;
         PRInt32 error;
 
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::width, value))
-        {
+        content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::width, value);
+        if (!value.IsEmpty()) {
             value.Trim("%");
 
             aSize.width =
@@ -975,8 +975,8 @@ nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             widthSet = PR_TRUE;
         }
 
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::height, value))
-        {
+        content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::height, value);
+        if (!value.IsEmpty()) {
             value.Trim("%");
 
             aSize.height = presContext->IntScaledPixelsToTwips(value.ToInteger(&error));
@@ -1057,7 +1057,8 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         nsAutoString value;
         PRInt32 error;
 
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::minwidth, value))
+        content->GetAttr(kNameSpaceID_None, nsXULAtoms::minwidth, value);
+        if (!value.IsEmpty())
         {
             value.Trim("%");
 
@@ -1068,7 +1069,8 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             widthSet = PR_TRUE;
         }
 
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::minheight, value))
+        content->GetAttr(kNameSpaceID_None, nsXULAtoms::minheight, value);
+        if (!value.IsEmpty())
         {
             value.Trim("%");
 
@@ -1114,8 +1116,8 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
         nsAutoString value;
         PRInt32 error;
 
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::maxwidth, value))
-        {
+        content->GetAttr(kNameSpaceID_None, nsXULAtoms::maxwidth, value);
+        if (!value.IsEmpty()) {
             value.Trim("%");
 
             nscoord val =
@@ -1124,8 +1126,8 @@ nsIBox::AddCSSMaxSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             widthSet = PR_TRUE;
         }
 
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::maxheight, value))
-        {
+        content->GetAttr(kNameSpaceID_None, nsXULAtoms::maxheight, value);
+        if (!value.IsEmpty()) {
             value.Trim("%");
 
             nscoord val =
@@ -1150,8 +1152,8 @@ nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
         PRInt32 error;
         nsAutoString value;
 
-        if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::flex, value))
-        {
+        content->GetAttr(kNameSpaceID_None, nsXULAtoms::flex, value);
+        if (!value.IsEmpty()) {
             value.Trim("%");
             aFlex = value.ToInteger(&error);
             flexSet = PR_TRUE;
@@ -1189,7 +1191,8 @@ nsIBox::AddCSSOrdinal(nsBoxLayoutState& aState, nsIBox* aBox, PRUint32& aOrdinal
     PRInt32 error;
     nsAutoString value;
 
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::ordinal, value)) {
+    content->GetAttr(kNameSpaceID_None, nsXULAtoms::ordinal, value);
+    if (!value.IsEmpty()) {
       aOrdinal = value.ToInteger(&error);
       ordinalSet = PR_TRUE;
     }

@@ -597,8 +597,7 @@ nsHTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   // Our base URI may have changed; claim that our URI changed, and the
   // nsImageLoadingContent will decide whether a new image load is warranted.
   nsAutoString uri;
-  nsresult result = GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri);
-  if (result == NS_CONTENT_ATTR_HAS_VALUE) {
+  if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, uri)) {
     // Note: no need to notify here; since we're just now being bound
     // we don't have any frames or anything yet.
     ImageURIChanged(uri, PR_FALSE, PR_FALSE);

@@ -265,17 +265,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
         
         if (aWidgetType == NS_THEME_CHECKMENUITEM ||
             aWidgetType == NS_THEME_RADIOMENUITEM) {
-          if (aFrame) {
-            nsAutoString attr;
-            nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, mCheckedAtom, attr);
-            if (res == NS_CONTENT_ATTR_NO_VALUE ||
-               (res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()))
-              *aWidgetFlags = FALSE;
-            else
-              *aWidgetFlags = attr.EqualsIgnoreCase("true");
-          } else {
-            *aWidgetFlags = FALSE;
-          }
+          *aWidgetFlags = aFrame && aFrame->GetContent()->
+            AttrValueIs(kNameSpaceID_None, mCheckedAtom,
+                        NS_LITERAL_STRING("true"), eIgnoreCase);
         }
       }
     }

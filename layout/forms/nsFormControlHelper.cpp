@@ -129,20 +129,7 @@ nsresult nsFormControlHelper::GetFrameFontFM(nsIFrame* aFrame,
                   *aFontMet);
 }
 
-nsresult
-nsFormControlHelper::GetWrapProperty(nsIContent * aContent, nsString &aOutValue)
-{
-  if (aContent->IsContentOfType(nsIContent::eHTML)) {
-    return aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::wrap, aOutValue);
-  }
-
-  aOutValue.Truncate();
-
-  return NS_CONTENT_ATTR_NOT_THERE;
-}
-
-
-nsresult 
+PRBool 
 nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& aWrapProp)
 {
   // soft is the default; "physical" defaults to soft as well because all other
@@ -152,17 +139,18 @@ nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& 
   aWrapProp = eHTMLTextWrap_Soft; // the default
   
   nsAutoString wrap;
-  nsresult rv = GetWrapProperty(aContent, wrap);
-
-  if (rv != NS_CONTENT_ATTR_NOT_THERE) {
-
+  if (aContent->IsContentOfType(nsIContent::eHTML) &&
+      aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::wrap, wrap)) {
     if (wrap.EqualsIgnoreCase(kTextControl_Wrap_Hard)) {
       aWrapProp = eHTMLTextWrap_Hard;
     } else if (wrap.EqualsIgnoreCase(kTextControl_Wrap_Off)) {
       aWrapProp = eHTMLTextWrap_Off;
     }
+    
+    return PR_TRUE;
   }
-  return rv;
+  
+  return PR_FALSE;
 }
 
 //
@@ -331,14 +319,12 @@ nsFormControlHelper::PaintCheckMark(nsIRenderingContext& aRenderingContext,
   aRenderingContext.FillPolygon(checkedPolygon, checkpoints);
 }
 
-nsresult
+PRBool
 nsFormControlHelper::GetName(nsIContent* aContent, nsAString* aResult)
 {
   NS_PRECONDITION(aResult, "Null pointer bad!");
-  if (!aContent->IsContentOfType(nsIContent::eHTML))
-    return NS_ERROR_FAILURE;
-
-  return aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, *aResult);
+  return aContent->IsContentOfType(nsIContent::eHTML) &&
+         aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, *aResult);
 }
 
 PRInt32
@@ -353,14 +339,12 @@ nsFormControlHelper::GetType(nsIContent* aContent)
   return NS_FORM_INPUT_TEXT;
 }
 
-nsresult
+PRBool
 nsFormControlHelper::GetValueAttr(nsIContent* aContent, nsAString* aResult)
 {
   NS_PRECONDITION(aResult, "Null pointer bad!");
-  if (!aContent->IsContentOfType(nsIContent::eHTML))
-    return NS_ERROR_FAILURE;
-
-  return aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, *aResult);
+  return aContent->IsContentOfType(nsIContent::eHTML) &&
+         aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, *aResult);
 }
 
 //----------------------------------------------------------------------------------

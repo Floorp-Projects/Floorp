@@ -1098,9 +1098,6 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
 
   // only <embed> tags support the HIDDEN attribute
   if (mContent->Tag() == nsHTMLAtoms::embed) {
-    nsAutoString hidden;
-    nsresult result = mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
-
     // Yes, these are really the kooky ways that you could tell 4.x
     // not to hide the <embed> once you'd put the 'hidden' attribute
     // on the tag...
@@ -1108,7 +1105,8 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
     // HIDDEN w/ no attributes gets translated as we are hidden for
     // compatibility w/ 4.x and IE so we don't create a non-painting
     // widget in layout. See bug 188959.
-    if (NS_CONTENT_ATTR_NOT_THERE != result &&
+    nsAutoString hidden;
+    if (mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden) &&
        (hidden.IsEmpty() ||
         !hidden.LowerCaseEqualsLiteral("false") &&
         !hidden.LowerCaseEqualsLiteral("no") &&
@@ -1781,9 +1779,8 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 
   nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
   nsAutoString codeBase;
-  if ((NS_CONTENT_ATTR_HAS_VALUE ==
-       mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codeBase)) &&
-      !codeBase.IsEmpty()) {
+  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codeBase);
+  if (!codeBase.IsEmpty()) {
     nsCOMPtr<nsIURI> codeBaseURL;
     rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURI);
     if (NS_SUCCEEDED(rv)) {
@@ -1801,7 +1798,8 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 
   // if we have a clsid, we're either an internal widget, an ActiveX control, or an applet
   if (mContent->Tag() == nsHTMLAtoms::object &&
-      NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid)) {
+      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid) &&
+      !classid.IsEmpty()) {
     // Find a MIME type for the class ID
     nsCOMPtr<nsIObjectLoadingContent> objContent =
         do_QueryInterface(GetContent(), &rv);
@@ -2945,10 +2943,9 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // to the bottom of the array if there isn't already a "src" specified.
   PRInt16 numRealAttrs = mNumCachedAttrs;
   nsAutoString data;
-  nsIAtom *tag = content->Tag();
-  if (nsHTMLAtoms::object == tag
+  if (content->Tag() == nsHTMLAtoms::object
     && !content->HasAttr(kNameSpaceID_None, nsHTMLAtoms::src)
-    && NS_CONTENT_ATTR_NOT_THERE != content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data)) {
+    && content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data)) {
       mNumCachedAttrs++;
   }
 
@@ -2988,16 +2985,15 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
                            getter_AddRefs(atom),
                            getter_AddRefs(prefix));
     nsAutoString value;
-    if (NS_CONTENT_ATTR_NOT_THERE != content->GetAttr(nameSpaceID, atom, value)) {
-      nsAutoString name;
-      atom->ToString(name);
-      
-      mOwner->FixUpURLS(name, value);
+    content->GetAttr(nameSpaceID, atom, value);
+    nsAutoString name;
+    atom->ToString(name);
 
-      mCachedAttrParamNames [c] = ToNewUTF8String(name);
-      mCachedAttrParamValues[c] = ToNewUTF8String(value);
-      c++;
-    }
+    mOwner->FixUpURLS(name, value);
+
+    mCachedAttrParamNames [c] = ToNewUTF8String(name);
+    mCachedAttrParamValues[c] = ToNewUTF8String(value);
+    c++;
   }
 
   // if the conditions above were met, copy the "data" attribute to a "src" array entry

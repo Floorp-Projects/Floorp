@@ -185,9 +185,6 @@ public:
   //     need to change to use it.
   static  nscoord GetScrollbarWidth(float aPixToTwip);
 
-  virtual nsresult GetSizeFromContent(PRInt32* aSize) const;
-  NS_IMETHOD GetMaxLength(PRInt32* aSize);
-
   virtual void SetClickPoint(nscoord aX, nscoord aY);
 
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
@@ -268,38 +265,10 @@ protected:
     * Get the state of the checked attribute.
     * @param aState set to PR_TRUE if the checked attribute is set,
     * PR_FALSE if the checked attribute has been removed
-    * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
     */
 
-  nsresult GetCurrentCheckState(PRBool* aState);
+  void GetCurrentCheckState(PRBool* aState);
  
-   /**
-    * Set the state of the checked attribute.
-    * @param aState set to PR_TRUE to set the attribute,
-    * PR_FALSE to unset the attribute
-    * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
-    */
-
-  nsresult SetCurrentCheckState(PRBool aState);
-
-   /**
-    * Get the state of the defaultchecked attribute.
-    * @param aState set to PR_TRUE if the defaultchecked attribute is set,
-    * PR_FALSE if the checked attribute has been removed
-    * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
-    */
- 
-  nsresult GetDefaultCheckState(PRBool* aState);
-
-   /**
-    * Set the state of the checked attribute.
-    * @param aState set to PR_TRUE to set the checked attribute 
-    * PR_FALSE to unset it
-    * @returns NS_OK 
-    */
-
-  nsresult SetDefaultCheckState(PRBool aState);
-
   nsSize       mWidgetSize;
   PRBool       mDidInit;
   nsPoint      mLastClickPoint;

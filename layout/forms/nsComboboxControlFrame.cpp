@@ -804,19 +804,18 @@ nsComboboxControlFrame::ReflowItems(nsPresContext* aPresContext,
       nsCOMPtr<nsIDOMHTMLOptionElement> optionElement = getter_AddRefs(GetOption(*options, i));
       if (optionElement) {
         nsAutoString text;
-        rv = optionElement->GetLabel(text);
-        if (NS_CONTENT_ATTR_HAS_VALUE != rv || text.IsEmpty()) {
-          if (NS_OK == optionElement->GetText(text)) {
-            nscoord width;
-            aReflowState.rendContext->GetWidth(text, width);
-            if (width > maxWidth) {
-              maxStr = text;
-              maxWidth = width;
-            }
-            //maxWidth = PR_MAX(width, maxWidth);
-            //printf("[%d] - %d %s \n", i, width, NS_LossyConvertUCS2toASCII(text).get());
+        optionElement->GetLabel(text);
+        if (text.IsEmpty() &&
+            NS_SUCCEEDED(optionElement->GetText(text))) {
+          nscoord width;
+          aReflowState.rendContext->GetWidth(text, width);
+          if (width > maxWidth) {
+            maxStr = text;
+            maxWidth = width;
           }
-        }          
+          //maxWidth = PR_MAX(width, maxWidth);
+          //printf("[%d] - %d %s \n", i, width, NS_LossyConvertUCS2toASCII(text).get());
+        }
       }
     }
   }
@@ -1636,7 +1635,9 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
 NS_IMETHODIMP
 nsComboboxControlFrame::GetName(nsAString* aResult)
 {
-  return nsFormControlHelper::GetName(mContent, aResult);
+  nsFormControlHelper::GetName(mContent, aResult);
+
+  return NS_OK;
 }
 
 nsIFrame*

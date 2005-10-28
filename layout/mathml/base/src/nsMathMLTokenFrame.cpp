@@ -416,12 +416,12 @@ nsMathMLTokenFrame::SetQuotes(nsPresContext* aPresContext)
 
   nsAutoString value;
   // lquote
-  if (NS_CONTENT_ATTR_NOT_THERE != GetAttribute(mContent, mPresentationData.mstyle,
+  if (GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::lquote_, value)) {
     SetQuote(aPresContext, leftFrame, value);
   }
   // rquote
-  if (NS_CONTENT_ATTR_NOT_THERE != GetAttribute(mContent, mPresentationData.mstyle,
+  if (GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::rquote_, value)) {
     SetQuote(aPresContext, rightFrame, value);
   }

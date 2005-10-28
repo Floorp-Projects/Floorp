@@ -109,17 +109,15 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetName(nsAString& aName)
     return NS_ERROR_FAILURE;  // Node has been shut down
   }
 
-  if (NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
-                                                    nsAccessibilityAtoms::alt,
-                                                    aName)) {
+  if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::alt,
+                        aName)) {
     if (mRoleMapEntry) {
       // Use HTML label or DHTML accessibility's labelledby attribute for name
       // GetHTMLName will also try title attribute as a last resort
       return GetHTMLName(aName, PR_FALSE);
     }
-    if (NS_CONTENT_ATTR_HAS_VALUE != content->GetAttr(kNameSpaceID_None,
-                                                    nsAccessibilityAtoms::title,
-                                                    aName)) {
+    if (!content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::title,
+                          aName)) {
       aName.SetIsVoid(PR_TRUE); // No alt or title
     }
   }

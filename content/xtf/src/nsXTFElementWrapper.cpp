@@ -283,22 +283,14 @@ nsXTFElementWrapper::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
-nsresult
+PRBool
 nsXTFElementWrapper::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                              nsAString& aResult) const
 {
   if (aNameSpaceID==kNameSpaceID_None && HandledByInner(aName)) {
     // XXX we don't do namespaced attributes yet
-    if (aNameSpaceID != kNameSpaceID_None) {
-      NS_WARNING("getattr: xtf elements don't do namespaced attribs yet!");
-      return NS_CONTENT_ATTR_NOT_THERE;
-    }
     nsresult rv = mAttributeHandler->GetAttribute(aName, aResult);
-    if (NS_FAILED(rv)) return rv;
-    if (aResult.IsVoid()) return NS_CONTENT_ATTR_NOT_THERE;
-    if (aResult.IsEmpty()) return NS_CONTENT_ATTR_NO_VALUE;
-    
-    return NS_CONTENT_ATTR_HAS_VALUE;
+    return NS_SUCCEEDED(rv) && !aResult.IsVoid();
   }
   else { // try wrapper
     return nsXTFElementWrapperBase::GetAttr(aNameSpaceID, aName, aResult);
@@ -329,8 +321,7 @@ nsXTFElementWrapper::AttrValueIs(PRInt32 aNameSpaceID,
 
   if (aNameSpaceID == kNameSpaceID_None && HandledByInner(aName)) {
     nsAutoString ourVal;
-    nsresult rv = GetAttr(aNameSpaceID, aName, ourVal);
-    if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    if (!GetAttr(aNameSpaceID, aName, ourVal)) {
       return PR_FALSE;
     }
     return aCaseSensitive == eCaseMatters ?
@@ -354,8 +345,7 @@ nsXTFElementWrapper::AttrValueIs(PRInt32 aNameSpaceID,
 
   if (aNameSpaceID == kNameSpaceID_None && HandledByInner(aName)) {
     nsAutoString ourVal;
-    nsresult rv = GetAttr(aNameSpaceID, aName, ourVal);
-    if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    if (!GetAttr(aNameSpaceID, aName, ourVal)) {
       return PR_FALSE;
     }
     if (aCaseSensitive == eCaseMatters) {

@@ -61,8 +61,8 @@ class nsIURI;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x1666277a, 0xf6f1, 0x4c7e, \
- { 0xb0, 0x63, 0x95, 0x77, 0x53, 0xd2, 0xac, 0x52 } }
+{ 0xe5417db2, 0xfc59, 0x4b43, \
+ { 0x8c, 0x9a, 0xed, 0xc3, 0x17, 0x3a, 0x85, 0x40 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -331,14 +331,11 @@ public:
    * @param aNameSpaceID the namespace of the attr
    * @param aName the name of the attr
    * @param aResult the value (may legitimately be the empty string) [OUT]
-   * @throws NS_CONTENT_ATTR_NOT_THERE if the attribute is not set and has no
-   *         default value
-   * @throws NS_CONTENT_ATTR_NO_VALUE if the attribute exists but has no value
-   * @throws NS_CONTENT_ATTR_HAS_VALUE if the attribute exists and has a
-   *         non-empty value (==NS_OK)
+   * @returns PR_TRUE if the attribute was set (even when set to empty string)
+   *          PR_FALSE when not set.
    */
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                           nsAString& aResult) const = 0;
+  virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                         nsAString& aResult) const = 0;
 
   /**
    * Determine if an attribute has been set (empty string or otherwise).

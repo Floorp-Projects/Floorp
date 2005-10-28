@@ -195,13 +195,17 @@ nsHTMLButtonControlFrame::GetFormControlType() const
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetName(nsAString* aResult)
 {
-  return nsFormControlHelper::GetName(mContent, aResult);
+  nsFormControlHelper::GetName(mContent, aResult);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetValue(nsAString* aResult)
 {
-  return nsFormControlHelper::GetValueAttr(mContent, aResult);
+  nsFormControlHelper::GetValueAttr(mContent, aResult);
+
+  return NS_OK;
 }
 
 void

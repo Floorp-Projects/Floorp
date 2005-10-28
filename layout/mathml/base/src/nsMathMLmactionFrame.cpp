@@ -123,8 +123,8 @@ nsMathMLmactionFrame::Init(nsPresContext*  aPresContext,
   nsRefPtr<nsStyleContext> newStyleContext;
 
   mActionType = NS_MATHML_ACTION_TYPE_NONE;
-  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_None, 
-                   nsMathMLAtoms::actiontype_, value)) {
+  aContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::actiontype_, value);
+  if (!value.IsEmpty()) {
     if (value.EqualsLiteral("toggle"))
       mActionType = NS_MATHML_ACTION_TYPE_TOGGLE;
 
@@ -184,8 +184,8 @@ nsMathMLmactionFrame::GetSelectedFrame()
   nsAutoString value;
   PRInt32 selection; 
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
-                   nsMathMLAtoms::selection_, value)) {
+  mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::selection_, value);
+  if (!value.IsEmpty()) {
     PRInt32 errorCode;
     selection = value.ToInteger(&errorCode);
     if (NS_FAILED(errorCode)) 
@@ -389,13 +389,11 @@ nsMathMLmactionFrame::MouseOver(nsIDOMEvent* aMouseEvent)
   // see if we should display a status message
   if (NS_MATHML_ACTION_TYPE_STATUSLINE == mActionType) {
     nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
-                     nsMathMLAtoms::actiontype_, value)) {
-      // expected statusline prefix (11ch)...
-      if (11 < value.Length() && 0 == value.Find("statusline#")) {
-        value.Cut(0, 11);
-        ShowStatus(mPresContext, value);
-      }
+    mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::actiontype_, value);
+    // expected statusline prefix (11ch)...
+    if (11 < value.Length() && 0 == value.Find("statusline#")) {
+      value.Cut(0, 11);
+      ShowStatus(mPresContext, value);
     }
   }
   return NS_OK;
@@ -434,8 +432,9 @@ nsMathMLmactionFrame::MouseClick(nsIDOMEvent* aMouseEvent)
     if (!mRestyle.IsEmpty()) {
       nsCOMPtr<nsIDOMElement> node( do_QueryInterface(mContent) );
       if (node.get()) {
-        if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, 
-                         nsMathMLAtoms::actiontype_, value))
+        mContent->GetAttr(kNameSpaceID_None, nsMathMLAtoms::actiontype_,
+                          value);
+        if (!value.IsEmpty())
           node->RemoveAttribute(NS_LITERAL_STRING("actiontype"));
         else
           node->SetAttribute(NS_LITERAL_STRING("actiontype"), mRestyle);

@@ -256,6 +256,13 @@ LAYOUT_ATOM(endsInDiacritic, "EndsInDiacritic")                // PRUint32
 LAYOUT_ATOM(nextBidi, "NextBidi")                              // nsIFrame*
 LAYOUT_ATOM(charType, "charType")                              // PRUint8
 
+LAYOUT_ATOM(capture, "capture")
+LAYOUT_ATOM(stop, "stop")
+LAYOUT_ATOM(cancel, "cancel")
+LAYOUT_ATOM(onLoad, "onLoad")
+LAYOUT_ATOM(always, "always")
+LAYOUT_ATOM(collapsed, "collapsed")
+
 #ifdef MOZ_SVG
   // Alphabetical list of SVG frame types
 LAYOUT_ATOM(svgCircleFrame,"SVGCircleFrame")

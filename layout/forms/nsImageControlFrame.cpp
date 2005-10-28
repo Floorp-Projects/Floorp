@@ -299,7 +299,9 @@ nsImageControlFrame::GetFormControlType() const
 NS_IMETHODIMP
 nsImageControlFrame::GetName(nsAString* aResult)
 {
-  return nsFormControlHelper::GetName(mContent, aResult);
+  nsFormControlHelper::GetName(mContent, aResult);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
