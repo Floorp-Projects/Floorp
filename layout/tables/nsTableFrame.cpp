@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -1888,8 +1889,8 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
     case eReflowReason_Initial: 
     case eReflowReason_StyleChange: {
       if ((eReflowReason_Initial == aReflowState.reason) && HadInitialReflow()) {
-		// XXX this could be an assertion and the if removed
-        NS_NOTREACHED("intial reflow called twice");
+        // XXX this could be an assertion and the if removed
+        NS_WARNING("table initial reflow called twice");
       }
       else {
         if (!mPrevInFlow) { // only do pass1 on a first in flow
@@ -1931,8 +1932,8 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
         NS_ASSERTION(HadInitialReflow(), "intial reflow not called");
         nextReason = eReflowReason_Initial;
       }
-      NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth,
-                   "this doesn't do anything");
+      if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth)
+        NS_WARNING("this reflow doesn't do anything");
       SetNeedStrategyBalance(PR_TRUE); 
       break; 
     default:
