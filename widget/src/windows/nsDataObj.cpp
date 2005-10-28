@@ -41,9 +41,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <ole2.h>
-#ifndef __MINGW32__
-#include <urlmon.h>
-#endif
 #include <shlobj.h>
 
 #include "nsDataObj.h"

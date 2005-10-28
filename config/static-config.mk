@@ -125,7 +125,10 @@ STATIC_EXTRA_LIBS	+= $(MOZ_XPCOM_OBSOLETE_LIBS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 Urlmon version winspool)
+STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
+ifdef GNU_CC
+STATIC_EXTRA_LIBS += $(call EXPAND_LIBNAME, wsock32 gdi32)
+endif
 endif
 
 ifeq ($(OS_ARCH),AIX)

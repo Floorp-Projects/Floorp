@@ -43,9 +43,6 @@
 #include "IENUMFE.H"
 
 #include <ole2.h>
-#ifndef __MINGW32__
-#include <urlmon.h>
-#endif
 
 #if 0
 #define PRNTDEBUG(_x) printf(_x);
