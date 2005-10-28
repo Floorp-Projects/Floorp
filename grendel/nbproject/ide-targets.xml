@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir=".." name="Grendel-IDE">
+    <import file="../build.xml"/>
+    <target description="Runs Grendel after compiling." name="debug-nb" depends="build">
+        <nbjpdastart addressproperty="jpda.address" name="Grendel" transport="dt_socket"/>
+        <java classname="grendel.Main" dir="${dist}" fork="true">
+            <classpath>
+                <fileset dir="${lib}" includes="*.jar"/>
+                <path path="${dist}" />
+            </classpath>
+            <jvmarg value="-Xdebug"/>
+            <jvmarg value="-Xnoagent"/>
+            <jvmarg value="-Djava.compiler=none"/>
+            <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+        </java>
+    </target>
+    <target name="run-selected-file" description="Run Single File">
+        <fail unless="runclass">Must set property 'classname'</fail>
+        <java classname="${runclass}" fork="true" dir="${dist}">
+            <classpath>
+                <fileset dir="${lib}" includes="*.jar"/>
+                <path path="${dist}" />
+            </classpath>
+        </java>
+    </target>
+    <target name="debug-selected-files" description="Debug a Single File">
+        <fail unless="classname">Must set property 'classname'</fail>
+        <nbjpdastart name="${classname}" addressproperty="jpda.address" transport="dt_socket">
+            <classpath>
+                <fileset dir="${lib}" includes="*.jar"/>
+                <path path="${dist}" />
+            </classpath>
+            <!-- Optional - If source roots are properly declared in project, should
+            work without setting source path.
+            <sourcepath refid="debug.sourcepath"/> -->
+        </nbjpdastart>
+        <java classname="${classname}" fork="true" dir="${dist}">
+            <jvmarg value="-Xdebug"/>
+            <jvmarg value="-Xnoagent"/>
+            <jvmarg value="-Djava.compiler=none"/>
+            <jvmarg value="-Xrunjdwp:transport=dt_socket,address=${jpda.address}"/>
+            <classpath>
+                <fileset dir="${lib}" includes="*.jar"/>
+                <path path="${dist}" />
+            </classpath>
+        </java>
+    </target>
+    <target name="debug-fix">
+        <javac destdir="${dist}" source="1.5" srcdir="${src}" debug="true" >
+            <include name="${fix.file}.java"/>
+        </javac>
+        <nbjpdareload>
+            <fileset dir="${dist}">
+                <include name="${fix.file}.class"/>
+            </fileset>
+        </nbjpdareload>
+    </target>
+</project>

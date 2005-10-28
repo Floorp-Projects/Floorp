@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.ant.freeform</type>
+    <configuration>
+        <general-data xmlns="http://www.netbeans.org/ns/freeform-project/1">
+            <!--Do not use Project Properties customizer when editing this file manually.-->
+            <name>Grendel</name>
+            <properties>
+                <property name="ant.script">build.xml</property>
+            </properties>
+            <folders>
+                <source-folder>
+                    <label>Source Packages</label>
+                    <type>java</type>
+                    <location>sources</location>
+                </source-folder>
+                <source-folder>
+                    <label>Test Packages</label>
+                    <type>java</type>
+                    <location>tests/src</location>
+                </source-folder>
+            </folders>
+            <ide-actions>
+                <action name="build">
+                    <script>${ant.script}</script>
+                    <target>build</target>
+                </action>
+                <action name="clean">
+                    <script>${ant.script}</script>
+                    <target>clean</target>
+                </action>
+                <action name="javadoc">
+                    <script>${ant.script}</script>
+                    <target>javadoc</target>
+                </action>
+                <action name="run">
+                    <script>${ant.script}</script>
+                    <target>run</target>
+                </action>
+                <action name="rebuild">
+                    <script>${ant.script}</script>
+                    <target>clean</target>
+                    <target>build</target>
+                </action>
+                <action name="debug">
+                    <script>nbproject/ide-targets.xml</script>
+                    <target>debug-nb</target>
+                </action>
+                <action name="compile.single">
+                    <script>nbproject/ide-file-targets.xml</script>
+                    <target>compile-selected-files-in-sources</target>
+                    <context>
+                        <property>files</property>
+                        <folder>sources</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path</format>
+                        <arity>
+                            <separated-files>,</separated-files>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run.single">
+                    <script>nbproject/ide-targets.xml</script>
+                    <target>run-selected-file</target>
+                    <context>
+                        <property>runclass</property>
+                        <folder>sources</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.single">
+                    <script>nbproject/ide-targets.xml</script>
+                    <target>debug-selected-files</target>
+                    <context>
+                        <property>classname</property>
+                        <folder>sources</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.fix">
+                    <script>nbproject/ide-targets.xml</script>
+                    <target>debug-fix</target>
+                    <context>
+                        <property>fix.file</property>
+                        <folder>sources</folder>
+                        <pattern>\.java$</pattern>
+                        <format>relative-path-noext</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="test">
+                    <script>${ant.script}</script>
+                    <target>test</target>
+                </action>
+            </ide-actions>
+            <export>
+                <type>folder</type>
+                <location>tests/dist</location>
+                <script>${ant.script}</script>
+                <build-target>build</build-target>
+            </export>
+            <export>
+                <type>folder</type>
+                <location>dist</location>
+                <script>${ant.script}</script>
+                <build-target>build</build-target>
+            </export>
+            <view>
+                <items>
+                    <source-folder style="packages">
+                        <label>Test Packages</label>
+                        <location>tests/src</location>
+                    </source-folder>
+                    <source-folder style="packages">
+                        <label>Source Packages</label>
+                        <location>sources</location>
+                    </source-folder>
+                    <source-file>
+                        <location>${ant.script}</location>
+                    </source-file>
+                </items>
+                <context-menu>
+                    <ide-action name="build"/>
+                    <ide-action name="clean"/>
+                    <ide-action name="javadoc"/>
+                    <ide-action name="run"/>
+                    <ide-action name="rebuild"/>
+                    <ide-action name="debug"/>
+                    <ide-action name="test"/>
+                </context-menu>
+            </view>
+            <subprojects/>
+        </general-data>
+        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/2">
+            <compilation-unit>
+                <package-root>tests/src</package-root>
+                <unit-tests/>
+                <classpath mode="compile">extlib/activation.jar;extlib/directory-sdk.jar;extlib/imap.jar;extlib/mailapi.jar;extlib/OROMatcher.jar;extlib/pop3.jar;extlib/rhino.jar;extlib/smtp.jar;extlib/xulParser.jar</classpath>
+                <built-to>tests/dist</built-to>
+                <javadoc-built-to>docs</javadoc-built-to>
+                <source-level>1.5</source-level>
+            </compilation-unit>
+            <compilation-unit>
+                <package-root>sources</package-root>
+                <classpath mode="compile">extlib/activation.jar;extlib/directory-sdk.jar;extlib/imap.jar;extlib/mailapi.jar;extlib/OROMatcher.jar;extlib/pop3.jar;extlib/rhino.jar;extlib/smtp.jar;extlib/xulParser.jar</classpath>
+                <built-to>dist</built-to>
+                <source-level>1.5</source-level>
+            </compilation-unit>
+        </java-data>
+    </configuration>
+</project>

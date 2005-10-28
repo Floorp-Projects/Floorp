@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir=".." name="Grendel-IDE">
+    <property name="ant.script" value="build.xml"/>
+    <import file="../build.xml"/>
+    <target name="compile-selected-files-in-sources">
+        <fail unless="files">Must set property 'files'</fail>
+        <echo message="File- ${files}"/>
+        <mkdir dir="${dist}"/>
+        <javac destdir="${dist}" includes="${files}" source="1.5" srcdir="${src}"
+            debug="true">
+            <classpath>
+                <fileset dir="${lib}" includes="*.jar"/>
+                <path path="${dist}" />
+            </classpath>
+            <compilerarg line="-Xlint" />
+        </javac>
+    </target>
+</project>
