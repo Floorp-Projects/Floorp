@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://minimo/locale/preferences.dtd">
+  %preferencesDTD;
+]>
+
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <box id="pref-panes">  
+
+  <!-- SUMMARY OKAY CANCEL PANE -->
+
+    <hbox id="summary-pane"
+          class="panel-container"
+          flex="1" 
+          collapsed="true" 
+          >
+
+        <groupbox flex="1" class="box-floatoptions scrolling" >
+            <caption label="&summaryCaption.label;"/>
+            <label flex="1" class="okay-panel-textbox" id="textbox-okay-pane" />
+        </groupbox>
+
+    </hbox>
+
+</box>
+</overlay>

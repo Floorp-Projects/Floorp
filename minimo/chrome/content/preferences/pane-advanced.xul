@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://minimo/locale/preferences.dtd">
+  %preferencesDTD;
+]>
+
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+    <box id="pref-panes">  
+
+  <!-- ADVANCED PANE --> 
+
+    <hbox class="panel-container" flex="1" id="advanced-pane"
+          accessfocus="skey"
+          accessnextrule="privacy-pane"
+          accessprevrule="general-pane"
+          collapsed="true"  >
+          
+        <groupbox flex="1" class="box-floatoptions scrolling" >
+            <caption label="&advanced.label;" /> 
+            <hbox flex="1" >
+                <vbox flex="1" style="padding:4px ! important">
+                    <checkbox tabindex="30" id="skey"
+                              label="&useSWKeyboard.label;"
+                              preference="skey.enabled"
+                              onclick="syncPref(this)" />
+                              
+                    <checkbox tabindex="31"
+                              id="dumpJS"
+                              label="&dumpJSConsole.label;"
+                              preference="config.wince.dumpJSConsole" accessrule="advanced-pane"
+                              onclick="syncPref(this)" />
+                </vbox>
+            </hbox>
+        </groupbox> 
+    </hbox>	
+
+</box>
+</overlay>

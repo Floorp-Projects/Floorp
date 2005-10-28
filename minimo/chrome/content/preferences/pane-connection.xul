@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://minimo/locale/preferences.dtd">
+  %preferencesDTD;
+]>
+
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <box id="pref-panes">  
+
+   <!-- CONNECTION PANE --> 
+
+    <hbox id="connection-pane"
+          class="panel-container"
+          accessfocus="UseProxy"
+          accessnextrule="pref-bar"
+          accessprevrule="privacy-pane"
+          flex="1"
+          collapsed="true"  >
+          
+        <groupbox flex="1" class="box-floatoptions scrolling">
+            <caption label="&proxyCaption.label;"/>
+            <vbox class="box-prefpadding" flex="1">
+            
+                <checkbox id="UseProxy" tabindex="50"
+                          label="&useproxyCheckbox.label;"
+                          preference="network.proxy.type" 
+                          onclick="syncPref(this)" 
+                          onsyncfrompreference="readProxyPref();"
+                          onsynctopreference="writeProxyPref();"
+                          />
+
+				
+                <groupbox class='box-prefgroupitem' >
+                    <caption label="&proxyURL.label; and &proxyPortCaption.label;"/>
+                    <hbox flex="1">
+                        <textbox onchange="syncPref(this)"  tabindex="51"
+                                 flex="1" 
+                                 style="margin:3px ! important;" 
+                                 id="networkProxyHTTP"
+                                 preference="network.proxy.http"
+                                 />
+                                 
+                        <textbox onchange="syncPref(this)" 
+                                 id="networkProxyHTTP_Port"  tabindex="52"
+                                 size="5"  
+                                 style="margin:3px ! important;"  
+                                 preference="network.proxy.http_port" accessrule="connection-pane"
+                                 />              
+                                           
+                    </hbox>		
+                </groupbox>
+            </vbox>
+        </groupbox>
+    </hbox>
+
+</box>
+</overlay>

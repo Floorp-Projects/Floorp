@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://minimo/locale/preferences.dtd">
+  %preferencesDTD;
+]>
+
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+    <box id="pref-panes">  
+
+      <!-- PRIVACY PANE --> 
+
+    <hbox id="privacy-pane"
+          class="panel-container"  
+          flex="1"
+          accessfocus="privacySanitize"
+          accessnextrule="connection-pane"
+          accessprevrule="advanced-pane"
+          collapsed="true"  >
+          
+        <groupbox flex="1" class="box-floatoptions scrolling" >
+            <caption label="&privacy.label;" /> 
+            <box class="box-prefpadding">
+
+                <button id="privacySanitize" tabindex="40"
+                        class='box-prefgroupitem'
+                        label="&sanitizeButton.label;" accessrule="privacy-pane"
+                        oncommand="sanitizeAll();"/>
+
+            </box>
+        </groupbox> 
+    </hbox>
+
+</box>
+</overlay>
