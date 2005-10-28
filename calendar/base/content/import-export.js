@@ -107,20 +107,63 @@ function loadEventsFromFile()
         }
         catch(ex)
         {
-           alert(getStringBundle().GetStringFromName("unableToRead") + filePath + "\n"+ex );
+           showError(getStringBundle().GetStringFromName("unableToRead") + filePath + "\n"+ex );
         }
 
         // XXX Ask for a calendar to import into
         var destCal = getDefaultCalendar();
 
+        // Set batch for the undo/redo transaction manager
         // XXX This might not work in lighting
         startBatchTransaction();
         
-        for each (item in items) {
-            // XXX prompt when finding a duplicate.
-            destCal.addItem(item, null);
+        // And set batch mode on the calendar, to tell the views to not
+        // redraw until all items are imported
+        destCal.startBatch();
+
+        // This listener is needed to find out when the last addItem really
+        // finished. Using a counter to find the last item (which might not
+        // be the last item added)
+        var count = 0;
+        var failedCount = 0;
+        // Used to store the last error. Only the last error, because we don't
+        // wan't to bomb the user with thousands of error messages in case
+        // something went really wrong.
+        // (example of something very wrong: importing the same file twice.
+        //  quite easy to trigger, so we really should do this)
+        var lastError;
+        var listener = {
+            onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
+                count++;
+                if (!Components.isSuccessCode(aStatus)) {
+                    failedCount++;
+                    lastError = aStatus;
+                }
+                // See if it is time to end the calendar's batch.
+                if (count == items.length) {
+                    destCal.endBatch();
+                    if (failedCount)
+                        showError(failedCount+" items failed to import. The last error was: "+lastError.toString());
+                }
+            }
         }
         
+        for each (item in items) {
+            // XXX prompt when finding a duplicate.
+            try {
+                destCal.addItem(item, listener);
+            } catch(e) {
+                failedCount++;
+                lastError = e;
+                // Call the listener's operationComplete, to increase the
+                // counter and not miss failed items. Otherwise, endBatch might
+                // never be called.
+                listener.onOperationComplete(null, null, null, null, null);
+                Components.utils.reportError("Import error: "+e);
+            }
+        }
+        
+        // End transmgr batch
         // XXX This might not work in lighting
         endBatchTransaction();
     }
@@ -221,7 +264,7 @@ function saveEventsToFile(calendarEventArray)
       }
       catch(ex)
       {
-         alert(getStringBundle().GetStringFromName("unableToWrite") + filePath );
+         showError(getStringBundle().GetStringFromName("unableToWrite") + filePath );
       }
    }
 }
@@ -232,4 +275,13 @@ function getStringBundle()
         Components.classes["@mozilla.org/intl/stringbundle;1"]
                   .getService(Components.interfaces.nsIStringBundleService);
     return strBundleService.createBundle("chrome://calendar/locale/calendar.properties");
+}
+
+function showError(aMsg)
+{
+    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                  .getService(Components.interfaces.nsIPromptService);
+    promptService.alert(null,
+                        getStringBundle().GetStringFromName('errorTitle'),
+                        aMsg);
 }

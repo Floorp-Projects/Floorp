@@ -786,6 +786,15 @@ calStorageCalendar.prototype = {
         //dump ("++++ getItems took: " + (profEndTime - profStartTime) + " ms\n");
     },
 
+    startBatch: function ()
+    {
+        this.observeBatchChange(true);
+    },
+    endBatch: function ()
+    {
+        this.observeBatchChange(false);
+    },
+
     //
     // Helper functions
     //

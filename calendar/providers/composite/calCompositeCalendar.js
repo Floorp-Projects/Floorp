@@ -348,6 +348,15 @@ calCompositeCalendar.prototype = {
         }
     },
 
+    startBatch: function ()
+    {
+        this.notifyObservers("onStartBatch");
+    },
+    endBatch: function ()
+    {
+        this.notifyObservers("onEndBatch");
+    },
+
     //
     // observer helpers
     //

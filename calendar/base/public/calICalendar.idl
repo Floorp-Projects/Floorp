@@ -283,6 +283,22 @@ interface calICalendar : nsISupports
    * know the details of the changes.
    */
   void refresh();
+  
+  /**
+   * Turn on batch mode. Observers will get a notification of this.
+   * They will still get notified for every individual change, but they are
+   * free to ignore those notifications.
+   * Use this when a lot of changes are about to happen, and it would be
+   * useless to refresh the display (or the backend store) for every change.
+   * Caller must make sure to also call endBatchMode. Make sure all errors
+   * are caught!
+   */
+  void startBatch();
+  
+  /**
+   * Turn off batch mode.
+   */
+  void endBatch();
 };
 
 /** 

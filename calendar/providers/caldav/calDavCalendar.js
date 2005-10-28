@@ -720,6 +720,15 @@ calDavCalendar.prototype = {
                             aCount, aListener);
     },
 
+    startBatch: function ()
+    {
+        this.observeBatchChange(true);
+    },
+    endBatch: function ()
+    {
+        this.observeBatchChange(false);
+    },
+
     //
     // Helper functions
     //

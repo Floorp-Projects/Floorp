@@ -626,6 +626,15 @@ calICSCalendar.prototype = {
             this.writeICS();
     },
 
+    startBatch: function ()
+    {
+        this.mObserver.onStartBatch();
+    },
+    endBatch: function ()
+    {
+        this.mObserver.onEndBatch();
+    },
+
     // nsIInterfaceRequestor impl
     getInterface: function(iid, instance) {
         if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
