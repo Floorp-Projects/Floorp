@@ -302,7 +302,7 @@ sub CrossCheck {
         while (MoreSQLData()) {
             my ($value, $key) = FetchSQLData();
             if (!$exceptions{$value}) {
-                my $alert = "Bad value $value found in $refertable.$referfield";
+                my $alert = "Bad value &quot;$value&quot; found in $refertable.$referfield";
                 if ($keyname) {
                     if ($keyname eq 'bug_id') {
                         $alert .= ' (bug ' . BugLink($key) . ')';
@@ -463,7 +463,7 @@ sub DoubleCrossCheck {
         while (MoreSQLData()) {
             my ($value1, $value2, $key) = FetchSQLData();
  
-            my $alert = "Bad values $value1, $value2 found in " .
+            my $alert = "Bad values &quot;$value1&quot;, &quot;$value2&quot; found in " .
                 "$refertable.$referfield1 / $refertable.$referfield2";
             if ($keyname) {
                 if ($keyname eq 'bug_id') {
