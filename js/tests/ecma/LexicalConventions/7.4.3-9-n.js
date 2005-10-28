@@ -81,6 +81,8 @@ catch(e)
   actual = 'error';
 }
 
+jsOptions.reset();
+
 // force exception since this is a negative test
 if (actual == 'error')
 {
