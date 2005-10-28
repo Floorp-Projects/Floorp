@@ -389,6 +389,9 @@ struct JSContext {
     /* Atom root for the last-looked-up atom on this context. */
     JSAtom              *lastAtom;
 
+    /* Root for the result of the most recent js_InternalInvoke call. */
+    jsval               lastInternalResult;
+
     /* Regular expression class statics (XXX not shared globally). */
     JSRegExpStatics     regExpStatics;
 

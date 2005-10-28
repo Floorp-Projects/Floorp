@@ -1274,7 +1274,21 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     ok = js_Invoke(cx, argc, flags | JSINVOKE_INTERNAL);
     if (ok) {
         RESTORE_SP(fp);
+
+        /*
+         * Store *rval in the a scoped local root if a scope is open, else in
+         * the cx->lastInternalResult pigeon-hole GC root, solely so users of
+         * js_InternalInvoke and its direct and indirect (js_ValueToString for
+         * example) callers do not need to manage roots for local, temporary
+         * references to such results.
+         */
         *rval = POP_OPND();
+        if (cx->localRootStack) {
+            if (js_PushLocalRoot(cx, cx->localRootStack, *rval) < 0)
+                ok = JS_FALSE;;
+        } else {
+            cx->lastInternalResult = *rval;
+        }
     }
 
     js_FreeStack(cx, mark);
