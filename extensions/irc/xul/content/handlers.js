@@ -183,6 +183,14 @@ function onTabClick(e, id)
 function onTabSelect(e)
 {
     var tabs = e.target;
+
+    /* Hackaround, bug 314230. XBL likes focusing a tab before onload has fired.
+     * That means the tab we're trying to select here will be the hidden one,
+     * which doesn't have a viewKey. We catch that case.
+     */
+    if (!tabs.selectedItem.hasAttribute("viewKey"))
+        return;
+
     var key = tabs.selectedItem.getAttribute("viewKey");
     var view = client.viewsArray[key];
     dispatch("set-current-view", {view:view.source});
