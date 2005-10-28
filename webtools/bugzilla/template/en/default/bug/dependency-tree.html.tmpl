@@ -78,9 +78,6 @@
 
 [% PROCESS depthControlToolbar %]
 
-[% PROCESS global/footer.html.tmpl %]
-
-
 [%###########################################################################%]
 [%# Block to display a tree                                                 #%]
 [%###########################################################################%]
@@ -111,14 +108,10 @@
 </ul>
 [% END %]
 
-[%###########################################################################%]
-[%# Block for depth control toolbar                                         #%]
-[%###########################################################################%]
-
- <script type="text/javascript">
+<script type="text/javascript">
 if (!Node) {
     /* MSIE doesn't define Node, so provide a compatibility array */
-    var Node = { TEXT_NODE: 3, };
+    var Node = { TEXT_NODE: 3 };
 }
 
 function toggleDisplay(node)
@@ -138,6 +131,8 @@ function toggleDisplay(node)
 function listToggle(event)
 {
     var node = event.target;
+    if (!node)
+        node = event.srcElement;
     if (node.nodeType == Node.TEXT_NODE)
         node = node.parentNode;
     var toggle = node.nextSibling;
@@ -149,6 +144,13 @@ function listToggle(event)
 }
 
  </script>
+
+[% PROCESS global/footer.html.tmpl %]
+
+[%###########################################################################%]
+[%# Block for depth control toolbar                                         #%]
+[%###########################################################################%]
+
 [% BLOCK depthControlToolbar %]
  <table cellpadding="3" border="0" cellspacing="0" bgcolor="#d0d0d0">
  <tr>
