@@ -56,7 +56,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.36 $ $Date: 2005/09/21 21:06:54 $
+ * @version $Revision: 1.37 $ $Date: 2005/10/28 04:21:08 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -1308,6 +1308,7 @@ public final class CryptoManager implements TokenSupplier
     /*                                                                  */
     /* org/mozilla/jss/CryptoManager.java                               */
     /* org/mozilla/jss/CryptoManager.c                                  */
+    /* org/mozilla/jss/JSSProvider.java                                 */
     /* org/mozilla/jss/util/jssver.h                                    */
     /* lib/manifest.mn                                                  */
     /*                                                                  */

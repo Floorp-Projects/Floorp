@@ -37,8 +37,26 @@ package org.mozilla.jss;
 
 public final class JSSProvider extends java.security.Provider {
 
+    /********************************************************************/
+    /* The VERSION Strings should be updated in the following           */
+    /* files everytime a new release of JSS is generated:               */
+    /*                                                                  */
+    /* org/mozilla/jss/CryptoManager.java                               */
+    /* org/mozilla/jss/CryptoManager.c                                  */
+    /* org/mozilla/jss/JSSProvider.java                                 */
+    /* org/mozilla/jss/util/jssver.h                                    */
+    /* lib/manifest.mn                                                  */
+    /*                                                                  */
+    /********************************************************************/
+
+    private static String JSS_MAJOR_VERSION  = "4";
+    private static String JSS_MINOR_VERSION  = "1";
+    private static String JSS_PATCH_VERSION  = "1";
+    private static Double JSS_VERSION        = new Double(JSS_MAJOR_VERSION +
+                                                         "."+JSS_MINOR_VERSION);
+
     public JSSProvider() {
-        super("Mozilla-JSS", 3.3,
+        super("Mozilla-JSS", JSS_VERSION,
                 "Provides Signature, Message Digesting, and RNG");
 
         /////////////////////////////////////////////////////////////
@@ -204,5 +222,12 @@ public final class JSSProvider extends java.security.Provider {
         put("Mac.HmacSHA1",
             "org.mozilla.jss.provider.javax.crypto.JSSMacSpi$HmacSHA1");
         put("Alg.Alias.Mac.Hmac-SHA1", "HmacSHA1");
+    }
+
+    public String toString() {
+        return "Mozilla-JSS version " + 
+               JSS_MAJOR_VERSION + "." +
+               JSS_MINOR_VERSION + "." +
+               JSS_PATCH_VERSION;
     }
 }
