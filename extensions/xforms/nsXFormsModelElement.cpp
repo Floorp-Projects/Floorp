@@ -260,6 +260,7 @@ nsXFormsModelElement::nsXFormsModelElement()
     mPendingInstanceCount(0),
     mDocumentLoaded(PR_FALSE),
     mNeedsRefresh(PR_FALSE),
+    mInstancesInitialized(PR_FALSE),
     mInstanceDocuments(nsnull),
     mLazyModel(PR_FALSE)
 {
@@ -346,6 +347,36 @@ nsXFormsModelElement::DocumentChanged(nsIDOMDocument* aNewDocument)
 NS_IMETHODIMP
 nsXFormsModelElement::DoneAddingChildren()
 {
+  return InitializeInstances();
+}
+
+nsresult
+nsXFormsModelElement::InitializeInstances()
+{
+  if (mInstancesInitialized || !mElement) {
+    return NS_OK;
+  }
+
+  mInstancesInitialized = PR_TRUE;
+
+  nsCOMPtr<nsIDOMNodeList> children;
+  mElement->GetChildNodes(getter_AddRefs(children));
+
+  PRUint32 childCount = 0;
+  if (children) {
+    children->GetLength(&childCount);
+  }
+
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    nsCOMPtr<nsIDOMNode> child;
+    children->Item(i, getter_AddRefs(child));
+    if (nsXFormsUtils::IsXFormsElement(child, NS_LITERAL_STRING("instance"))) {
+      nsCOMPtr<nsIInstanceElementPrivate> instance(do_QueryInterface(child));
+      if (instance) {
+        instance->Initialize();
+      }
+    }
+  }
 
   // (XForms 4.2.1)
   // 1. load xml schemas
@@ -427,6 +458,9 @@ nsXFormsModelElement::DoneAddingChildren()
   PRUint32 instCount;
   mInstanceDocuments->GetLength(&instCount);
   if (!instCount) {
+#ifdef DEBUG
+    printf("Creating lazy instance\n");
+#endif
     nsCOMPtr<nsIDOMDocument> domDoc;
     mElement->GetOwnerDocument(getter_AddRefs(domDoc));
     nsCOMPtr<nsIDOMDocumentXBL> xblDoc(do_QueryInterface(domDoc));
@@ -437,8 +471,6 @@ nsXFormsModelElement::DoneAddingChildren()
       NS_ENSURE_SUCCESS(rv, rv);
 
       mInstanceDocuments->GetLength(&instCount);
-      NS_WARN_IF_FALSE(instCount == 1,
-                       "Installing lazy instance didn't succeed!");
 
       nsCOMPtr<nsIDOMNodeList> list;
       xblDoc->GetAnonymousNodes(mElement, getter_AddRefs(list));
@@ -454,7 +486,7 @@ nsXFormsModelElement::DoneAddingChildren()
           nsCOMPtr<nsIInstanceElementPrivate> instance =
             do_QueryInterface(item);
           if (instance) {
-            rv = instance->InitializeLazyInstance();
+            rv = instance->Initialize();
             NS_ENSURE_SUCCESS(rv, rv);
 
             mLazyModel = PR_TRUE;
@@ -463,6 +495,7 @@ nsXFormsModelElement::DoneAddingChildren()
         }
       }
     }
+    NS_WARN_IF_FALSE(mLazyModel, "Installing lazy instance didn't succeed!");
   }
 
   // (XForms 4.2.1 - cont)
@@ -892,6 +925,12 @@ nsXFormsModelElement::HandleEvent(nsIDOMEvent* aEvent)
   aEvent->GetType(type);
   if (!type.EqualsLiteral("DOMContentLoaded"))
     return NS_OK;
+
+  if (!mInstancesInitialized) {
+    // XXX This is for Bug 308106. In Gecko 1.8 DoneAddingChildren is not
+    //     called in XUL if the element doesn't have any child nodes.
+    InitializeInstances();
+  }
 
   mDocumentLoaded = PR_TRUE;
 

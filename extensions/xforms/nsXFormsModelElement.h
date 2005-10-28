@@ -178,6 +178,8 @@ private:
   /** Initializes the MIPs on all form controls */
   NS_HIDDEN_(nsresult) InitializeControls();
 
+  NS_HIDDEN_(nsresult) InitializeInstances();
+
   NS_HIDDEN_(nsresult) ProcessBindElements();
   NS_HIDDEN_(nsresult) FinishConstruction();
   NS_HIDDEN_(nsresult) ConstructDone();
@@ -252,6 +254,9 @@ private:
   // This flag indicates whether a xforms-rebuild has been called, but no
   // xforms-revalidate yet
   PRBool mNeedsRefresh;
+
+  // This flag indicates whether instance elements have been initialized
+  PRBool mInstancesInitialized;
 
   /**
    * All instance documents contained by this model, including lazy-authored

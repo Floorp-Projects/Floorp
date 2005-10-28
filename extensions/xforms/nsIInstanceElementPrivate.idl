@@ -44,7 +44,7 @@ interface nsIDOMElement;
 /**
  * Private interface implemented by the instance element.
  */
-[uuid(446dc7b6-91fc-4de5-b6de-5ac22538ee5e)]
+[uuid(debb24ef-7ba1-4e01-9f62-18106b25c993)]
 interface nsIInstanceElementPrivate : nsISupports
 {
   /**
@@ -54,5 +54,5 @@ interface nsIInstanceElementPrivate : nsISupports
   readonly attribute nsIDOMElement element;
   void backupOriginalDocument();
   void restoreOriginalDocument();
-  void initializeLazyInstance();
+  void initialize();
 };

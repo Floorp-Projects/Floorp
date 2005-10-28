@@ -63,7 +63,7 @@ NS_IMPL_ISUPPORTS_INHERITED5(nsXFormsInstanceElement,
 
 nsXFormsInstanceElement::nsXFormsInstanceElement()
   : mElement(nsnull)
-  , mAddingChildren(PR_FALSE)
+  , mInitialized(PR_FALSE)
   , mLazy(PR_FALSE)
 {
 }
@@ -87,7 +87,7 @@ NS_IMETHODIMP
 nsXFormsInstanceElement::AttributeSet(nsIAtom *aName,
                                       const nsAString &aNewValue)
 {
-  if (mAddingChildren || mLazy)
+  if (!mInitialized || mLazy)
     return NS_OK;
 
   if (aName == nsXFormsAtoms::src) {
@@ -100,7 +100,7 @@ nsXFormsInstanceElement::AttributeSet(nsIAtom *aName,
 NS_IMETHODIMP
 nsXFormsInstanceElement::AttributeRemoved(nsIAtom *aName)
 {
-  if (mAddingChildren || mLazy)
+  if (!mInitialized || mLazy)
     return NS_OK;
 
   if (aName == nsXFormsAtoms::src) {
@@ -136,50 +136,10 @@ nsXFormsInstanceElement::AttributeRemoved(nsIAtom *aName)
 }
 
 NS_IMETHODIMP
-nsXFormsInstanceElement::BeginAddingChildren()
-{
-  mAddingChildren = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::DoneAddingChildren()
-{
-  
-  mElement->HasAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_MOZ_XFORMS_LAZY),
-                           NS_LITERAL_STRING("lazy"), &mLazy);
-  if (!mLazy) {
-    nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-    NS_ENSURE_TRUE(model, NS_ERROR_FAILURE);
-    model->AddInstanceElement(this);
-
-    // By the time this is called, we should be inserted in the document and
-    // have all of our child elements, so this is our first opportunity to
-    // create the instance document.
-  
-    nsAutoString src;
-    mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
-  
-    if (src.IsEmpty()) {
-      // If we don't have a linked external instance, use our inline data.
-      CloneInlineInstance();
-    } else {
-      LoadExternalInstance(src);
-    }
-  }
-
-  mAddingChildren = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 {
   aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED |
-                                nsIXTFElement::NOTIFY_PARENT_CHANGED |
-                                nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN |
-                                nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
+                                nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED);
 
   nsCOMPtr<nsIDOMElement> node;
   aWrapper->GetElementNode(getter_AddRefs(node));
@@ -191,22 +151,6 @@ nsXFormsInstanceElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   mElement = node;
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInstanceElement::ParentChanged(nsIDOMElement *aNewParent)
-{
-  if (!aNewParent || mAddingChildren || mLazy)
-    return NS_OK;
-
-  // Once we are set up in the DOM, can find the model and make sure that this
-  // instance is on the list of instance elements that model keeps
-  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
-  if (model) {
-    model->AddInstanceElement(this);
-  }
-  
   return NS_OK;
 }
 
@@ -445,49 +389,73 @@ nsXFormsInstanceElement::GetElement(nsIDOMElement **aElement)
 }
 
 NS_IMETHODIMP
-nsXFormsInstanceElement::InitializeLazyInstance()
+nsXFormsInstanceElement::Initialize()
 {
-  NS_ENSURE_STATE(mElement);
-  if (!mLazy) {
-    mElement->HasAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_MOZ_XFORMS_LAZY),
-                             NS_LITERAL_STRING("lazy"), &mLazy);
+  if (mInitialized || !mElement) {
+    return NS_OK;
   }
 
-  NS_ENSURE_STATE(mLazy);
+  mInitialized = PR_TRUE;
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_STATE(domDoc);
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  NS_ENSURE_TRUE(model, NS_ERROR_FAILURE);
+  model->AddInstanceElement(this);
 
-  nsCOMPtr<nsIDOMDOMImplementation> domImpl;
-  nsresult rv = domDoc->GetImplementation(getter_AddRefs(domImpl));
-  NS_ENSURE_SUCCESS(rv, rv);
+  mElement->HasAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_MOZ_XFORMS_LAZY),
+                           NS_LITERAL_STRING("lazy"), &mLazy);
 
-  nsCOMPtr<nsIDOMDocument> newDoc;
-  rv = domImpl->CreateDocument(EmptyString(), EmptyString(), nsnull,
-                               getter_AddRefs(newDoc));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Lazy instance
+  if (mLazy) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    NS_ENSURE_STATE(domDoc);
+  
+    nsCOMPtr<nsIDOMDOMImplementation> domImpl;
+    nsresult rv = domDoc->GetImplementation(getter_AddRefs(domImpl));
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    nsCOMPtr<nsIDOMDocument> newDoc;
+    rv = domImpl->CreateDocument(EmptyString(), EmptyString(), nsnull,
+                                 getter_AddRefs(newDoc));
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    rv = SetDocument(newDoc);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    // Lazy authored instance documents have a root named "instanceData"
+    nsCOMPtr<nsIDOMElement> instanceDataElement;
+    nsCOMPtr<nsIDOMNode> childReturn;
+    rv = mDocument->CreateElementNS(EmptyString(), 
+                                    NS_LITERAL_STRING("instanceData"),
+                                    getter_AddRefs(instanceDataElement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDocument->AppendChild(instanceDataElement, getter_AddRefs(childReturn));
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    // I don't know if not being able to create a backup document is worth
+    // failing this function.  Since it probably won't be used often, we'll
+    // let it slide.  But it probably does mean that things are going south
+    // with the browser.
+    domImpl->CreateDocument(EmptyString(), EmptyString(), nsnull,
+                            getter_AddRefs(mOriginalDocument));
+    NS_WARN_IF_FALSE(mOriginalDocument, "Couldn't create mOriginalDocument!!");
+  } else {
+    // Normal instance
 
-  rv = SetDocument(newDoc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Lazy authored instance documents have a root named "instanceData"
-  nsCOMPtr<nsIDOMElement> instanceDataElement;
-  nsCOMPtr<nsIDOMNode> childReturn;
-  rv = mDocument->CreateElementNS(EmptyString(), 
-                                  NS_LITERAL_STRING("instanceData"),
-                                  getter_AddRefs(instanceDataElement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mDocument->AppendChild(instanceDataElement, getter_AddRefs(childReturn));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // I don't know if not being able to create a backup document is worth
-  // failing this function.  Since it probably won't be used often, we'll
-  // let it slide.  But it probably does mean that things are going south
-  // with the browser.
-  domImpl->CreateDocument(EmptyString(), EmptyString(), nsnull,
-                          getter_AddRefs(mOriginalDocument));
-  NS_WARN_IF_FALSE(mOriginalDocument, "Couldn't create mOriginalDocument!!");
+    // By the time this is called, we should be inserted in the document and
+    // have all of our child elements, so this is our first opportunity to
+    // create the instance document.
+  
+    nsAutoString src;
+    mElement->GetAttribute(NS_LITERAL_STRING("src"), src);
+  
+    if (src.IsEmpty()) {
+      // If we don't have a linked external instance, use our inline data.
+      CloneInlineInstance();
+    } else {
+      LoadExternalInstance(src);
+    }
+  }
 
   return NS_OK;
 }

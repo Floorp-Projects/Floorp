@@ -75,10 +75,7 @@ public:
   NS_IMETHOD OnDestroyed();
   NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aNewValue);
   NS_IMETHOD AttributeRemoved(nsIAtom *aName);
-  NS_IMETHOD BeginAddingChildren();
-  NS_IMETHOD DoneAddingChildren();
   NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
-  NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
 
   nsXFormsInstanceElement() NS_HIDDEN;
 
@@ -92,7 +89,7 @@ private:
   nsCOMPtr<nsIDOMDocument>    mOriginalDocument;
   nsIDOMElement              *mElement;
   nsCOMPtr<nsIStreamListener> mListener;
-  PRBool                      mAddingChildren;
+  PRBool                      mInitialized;
   PRBool                      mLazy;
   nsCOMPtr<nsIChannel>        mChannel;
 };
