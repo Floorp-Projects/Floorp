@@ -17,6 +17,7 @@
   # Rights Reserved.
   #
   # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #                 Frédéric Buclin <LpSolit@gmail.com>
   #%]
 
 [%# INTERFACE:
@@ -32,12 +33,14 @@
   # changes_saved: boolean/string. True if the CGI processed form data before 
   #                displaying anything, and can contain an optional custom
   #                message if required (which Perl still evaluates as True).
+  # dont_show_button: boolean. Prevent the display of the "Submit Changes" button.
   #%]
 
 [% filtered_login = user.login FILTER html %]
 [% PROCESS global/header.html.tmpl
    title = "User Preferences"
    h2 = filtered_login
+   style_urls = ['skins/standard/admin.css']
  %]
 
 [% tabs = [ { name => "account", label => "Account Preferences", 
@@ -77,28 +80,28 @@
 
 <h3>[% current_tab.label %]</h3>
 
-<form name="userprefsform" method="post" action="userprefs.cgi">
-  <input type="hidden" name="tab" value="[% current_tab.name %]">
+[% IF current_tab.saveable %]
+  <form name="userprefsform" method="post" action="userprefs.cgi">
+    <input type="hidden" name="tab" value="[% current_tab.name %]">
+[% END %]
 
-  [% PROCESS "account/prefs/${current_tab.name}.html.tmpl" 
-                                                 IF current_tab.name.defined %]
+[% PROCESS "account/prefs/${current_tab.name}.html.tmpl" 
+                                     IF current_tab.name.defined %]
 
-  [% IF current_tab.saveable %]
+[% IF current_tab.saveable %]
     <input type="hidden" name="dosave" value="1">
 
-    <table>
-      <tr>
-        <td width="150"></td>
-        <td>
-          <input type="submit" value="Submit Changes">
-         </td>
-      </tr>
-    </table>
-  [% END %]
-  
-</form>
+    [% UNLESS dont_show_button %]
+      <table>
+        <tr>
+          <td width="150">&nbsp;</td>
+          <td>
+            <input type="submit" value="Submit Changes">
+          </td>
+        </tr>
+      </table>
+    [% END %]
+  </form>
+[% END %]
 
 [% PROCESS global/footer.html.tmpl %]
-
-    
-    

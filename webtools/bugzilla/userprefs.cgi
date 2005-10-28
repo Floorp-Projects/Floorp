@@ -146,10 +146,21 @@ sub SaveAccount {
 
 
 sub DoSettings {
-    $vars->{'settings'} = Bugzilla->user->settings;
+    my $settings = Bugzilla->user->settings;
+    $vars->{'settings'} = $settings;
 
-    my @setting_list = keys %{Bugzilla->user->settings};
+    my @setting_list = keys %$settings;
     $vars->{'setting_names'} = \@setting_list;
+
+    $vars->{'has_settings_enabled'} = 0;
+    # Is there at least one user setting enabled?
+    foreach my $setting_name (@setting_list) {
+        if ($settings->{"$setting_name"}->{'is_enabled'}) {
+            $vars->{'has_settings_enabled'} = 1;
+            last;
+        }
+    }
+    $vars->{'dont_show_button'} = !$vars->{'has_settings_enabled'};
 }
 
 sub SaveSettings {
