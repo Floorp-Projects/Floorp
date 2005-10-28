@@ -3565,13 +3565,13 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
      * checkObjectAccess hook.  This covers precompilation-based sharing and
      * (possibly unintended) runtime sharing across trust boundaries.
      */
-    clasp = LOCKED_OBJ_GET_CLASS(obj);
+    clasp = LOCKED_OBJ_GET_CLASS(pobj);
     check = clasp->checkAccess;
     if (!check)
         check = cx->runtime->checkObjectAccess;
     if (check) {
         JS_UNLOCK_OBJ(cx, pobj);
-        ok = check(cx, obj, ID_TO_VALUE(id), mode, vp);
+        ok = check(cx, pobj, ID_TO_VALUE(id), mode, vp);
         JS_LOCK_OBJ(cx, pobj);
     } else {
         ok = JS_TRUE;
