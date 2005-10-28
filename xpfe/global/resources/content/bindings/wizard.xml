@@ -91,15 +91,17 @@
         </setter>
       </property>
 
-      <property name="pageIndex" onget="return this._pageIndex;">
+      <property name="pageIndex" onget="return this._currentPage.pageIndex;">
         <setter>
         <![CDATA[
           if (val < 0 || val >= this.pageCount)
-            return this._pageIndex;
+            return;
 
           var page = this.wizardPages[val];
           this._pageStack[this._pageStack.length-1] = page;
           this.currentPage = page;
+
+          return val;
         ]]>
         </setter>
       </property>
