@@ -613,11 +613,12 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
   }
 
   // evaluate the expression tree and return the result
-  if (NS_SUCCEEDED(err) && *aExpressionTree)
-    *pResult = (*aExpressionTree)->OfflineEvaluate(msgToMatch,
-                 defaultCharset, scope, db, headers, headerSize, Filtering);
+  *pResult = (*aExpressionTree) 
+    ?  (*aExpressionTree)->OfflineEvaluate(msgToMatch,
+                 defaultCharset, scope, db, headers, headerSize, Filtering)
+    :PR_TRUE;	// vacuously true...
 
-  return err;
+  return NS_OK;
 }
 
 
