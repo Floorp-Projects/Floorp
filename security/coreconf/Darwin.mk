@@ -59,11 +59,13 @@ ifneq (,$(MACOS_SDK_DIR))
 
     ifeq (,$(filter-out 2 3,$(GCC_VERSION_MAJOR)))
         # GCC <= 3
-        DARWIN_SDK_CFLAGS = -nostdinc -isystem $(MACOS_SDK_DIR)/usr/include/gcc/darwin/$(GCC_VERSION) -isystem $(MACOS_SDK_DIR)/usr/include -F$(MACOS_SDK_DIR)/System/Library/Frameworks
+        DARWIN_SDK_FRAMEWORKS = -F$(MACOS_SDK_DIR)/System/Library/Frameworks
         ifneq (,$(shell find $(MACOS_SDK_DIR)/Library/Frameworks -maxdepth 0))
-            DARWIN_SDK_CFLAGS += -F$(MACOS_SDK_DIR)/Library/Frameworks
+            DARWIN_SDK_FRAMEWORKS += -F$(MACOS_SDK_DIR)/Library/Frameworks
         endif
+        DARWIN_SDK_CFLAGS = -nostdinc -isystem $(MACOS_SDK_DIR)/usr/include/gcc/darwin/$(GCC_VERSION) -isystem $(MACOS_SDK_DIR)/usr/include $(DARWIN_SDK_FRAMEWORKS)
         DARWIN_SDK_LDFLAGS = -L$(MACOS_SDK_DIR)/usr/lib/gcc/darwin -L$(MACOS_SDK_DIR)/usr/lib/gcc/darwin/$(GCC_VERSION_FULL) -L$(MACOS_SDK_DIR)/usr/lib
+        DARWIN_SDK_DSOFLAGS = $(DARWIN_SDK_LDFLAGS) $(DARWIN_SDK_FRAMEWORKS)
         NEXT_ROOT = $(MACOS_SDK_DIR)
         export NEXT_ROOT
     else
@@ -78,7 +80,7 @@ ifneq (,$(MACOS_SDK_DIR))
             # gcc 4.0.0 doesn't pass -syslibroot to ld, it needs to be
             # explicit.
             DARWIN_SDK_LDFLAGS = -Wl,-syslibroot,$(MACOS_SDK_DIR)
-            DARWIN_SDK_DSOFLAGS = -Wl,-syslibroot,$(MACOS_SDK_DIR)
+            DARWIN_SDK_DSOFLAGS = $(DARWIN_SDK_LDFLAGS)
         endif
     endif
 
