@@ -105,7 +105,7 @@
         <getter>
           if (!this._uiElement) {
             this._uiElement =
-              document.getAnonymousElementByAttribute(this, "anonid", "select");
+              document.getAnonymousElementByAttribute(this, "anonid", "select");;
           }
 
           return this._uiElement;
@@ -297,7 +297,7 @@
 
           // add to the control array
           this._controlArray[this._controlArraySize] =
-            {control: aControl, option: option, type: "item"}
+            {control: aControl, option: option, type: "item", wasSelected: false}
           this._controlArraySize++;
 
           return option;
@@ -344,7 +344,7 @@
 
                 // add to the control array
                 this._controlArray[this._controlArraySize] =
-                  {control: child, option: option, type: "item"}
+                  {control: child, option: option, type: "item", wasSelected: false}
                 this._controlArraySize++;
 
                 // check if we should pre-select this option
@@ -372,7 +372,7 @@
 
           // add to the control array
           this._controlArray[this._controlArraySize] =
-            {control: aItemElement, option: option, type: "item"}
+            {control: aItemElement, option: option, type: "item", wasSelected: false}
           this._controlArraySize++;
 
           this.uiElement.appendChild(option);
@@ -389,6 +389,10 @@
           // if incremental, change instance data and send the value-changed event
           if (this.incremental) {
             this._setBoundValue();
+          } else {
+            // per the spec, if not incremental, we still need to send the
+            // deselect/select events. which _getSelectedValues() does for us
+            this._getSelectedValues();
           }
         ]]>
         </body>
@@ -406,6 +410,7 @@
         <body>
         <![CDATA[
           var selectedValues = "";
+          var newSelectedControls = new Array();
 
           // select if found, unselect if not
           var options = this._controlArray;
@@ -422,7 +427,26 @@
 
               selectedValues +=
                 options[i].control.QueryInterface(Components.interfaces.nsIXFormsSelectChild).value;
+
+              // if it wasn't selected before add to the list of newly selected items
+              if (!options[i].wasSelected) {
+                newSelectedControls.push(options[i].control);
+              }
+
+              options[i].wasSelected = true;
+            } else {
+              // it was selected before, but now unselected
+              if (options[i].wasSelected) {
+                this.dispatchSelectEvent(options[i].control, "xforms-deselect");
+              }
+
+              options[i].wasSelected = false;
             }
+          }
+
+          // we send xforms-select after all deselect events are thrown
+          for (var i = 0; i < newSelectedControls.length; i++) {
+            this.dispatchSelectEvent(newSelectedControls[i], "xforms-select");
           }
 
           return selectedValues;
@@ -508,9 +532,31 @@
             var control = this._controlArray[this._controlArraySize - 1]
             this._setItemSelection(control, true);
 
+            // tell the control it was selected
+            control.wasSelected = true;
+
             this._defaultHash[aValue].hits++;
           }
         ]]>
+        </body>
+      </method>
+
+      <method name="dispatchSelectEvent">
+        <parameter name="aElement"/>
+        <parameter name="aName"/>
+        <body>
+          var ev = document.createEvent("Events");
+          ev.initEvent(aName, true, false);
+
+          var elm = aElement;
+
+          // per http://www.w3.org/TR/2005/PER-xforms-20051006/index-all.html#evt-select
+          // we send the event to the itemset if it is a parent.
+          if (elm.parentNode.localName == "itemset")
+            elm = elm.parentNode;
+
+          elm.dispatchEvent(ev);
+          return true;
         </body>
       </method>
     </implementation>
@@ -603,7 +649,7 @@
 
           // add to the control array
           this._controlArray[this._controlArraySize] =
-            {control: aControl, checkbox: item.firstChild, type: "item"}
+            {control: aControl, checkbox: item.firstChild, type: "item", wasSelected: false}
           this._controlArraySize++;
         ]]>
         </body>
@@ -655,7 +701,7 @@
 
                 // add to the control array
                 this._controlArray[this._controlArraySize] =
-                  {control: child, checkbox: item.firstChild, type: "item"}
+                  {control: child, checkbox: item.firstChild, type: "item", wasSelected: false}
                 this._controlArraySize++;
 
                 // check if we should pre-select this option
@@ -684,7 +730,7 @@
 
           // add to the control array
           this._controlArray[this._controlArraySize] =
-            {control: aItemElement, checkbox: item.firstChild, type: "item"}
+            {control: aItemElement, checkbox: item.firstChild, type: "item", wasSelected: false}
           this._controlArraySize++;
 
           this.uiElement.appendChild(item);

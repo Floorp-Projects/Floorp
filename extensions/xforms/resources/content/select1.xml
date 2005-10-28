@@ -87,6 +87,7 @@
       <!-- This is either an nsIXFormsItemElement or null. -->
       <field name="_selected">null</field>
       <field name="_tmpSelected">null</field>
+      <field name="_lastSelectedItem">null</field>
       <field name="popupOpen">false</field>
       <field name="shouldHandleBlur">true</field>
 
@@ -183,7 +184,7 @@
                   el.scrollIntoView(false);
                 }
               }
-              
+
               if (!this.popupOpen && this.getAttribute("incremental") != "false") {
                 if (this._selected) {
                   this.updateInputField();
@@ -323,7 +324,7 @@
         <body>
           <![CDATA[
             var label = null;
-            var next = null;
+            var next = null, nextItem = null;
             var node = this.firstChild;
             while (node) {
               if (node.namespaceURI == this.XFORMS_NS &&
@@ -345,12 +346,16 @@
             next = this.findNextSelectable(node, aDown);
             if (next) {
               if (this._selected) {
+                this.dispatchSelectEvent(this._selected, "xforms-deselect");
                 this._selected.setActive(false);
                 this._selected = null;
               }
 
-              this._selected = next.QueryInterface(Components.interfaces.nsIXFormsItemElement);
-              if (this._selected) {
+              nextItem = next.QueryInterface(Components.interfaces.nsIXFormsItemElement);
+              if (nextItem) {
+                this.dispatchSelectEvent(nextItem, "xforms-select");
+                this._selected = nextItem;
+                this._lastSelectedItem = nextItem;
                 this._selected.setActive(true);
                 this.updateInputField();
               }
@@ -390,6 +395,14 @@
             this.hidePopup();
 
             if (this._selected) {
+              if (this._lastSelectedItem != this._selected) {
+                if (this._lastSelectedItem)
+                  this.dispatchSelectEvent(this._lastSelectedItem, "xforms-deselect");
+
+                this.dispatchSelectEvent(this._selected, "xforms-select");
+                this._lastSelectedItem = this._selected;
+              }
+
               this.updateInputField();
               this.delegate.value =
                 this._selected.value;
@@ -560,12 +573,14 @@
               }
               this._selected.setActive(false);
               this._selected = null;
+              this._lastSelectedItem = null;
             }
 
             this.selectItemByValue(newValue);
-            
+
             if (this._selected) {
               this.updateInputField();
+              this._lastSelectedItem = this._selected;
             } else if (this.selectionOpen) {
               this.inputField.value = newValue;
             } else {
@@ -648,6 +663,25 @@
             }
           }
           ]]>
+        </body>
+      </method>
+
+      <method name="dispatchSelectEvent">
+        <parameter name="aElement"/>
+        <parameter name="aName"/>
+        <body>
+          var ev = document.createEvent("Events");
+          ev.initEvent(aName, true, false);
+
+          var elm = aElement;
+
+          // per http://www.w3.org/TR/2005/PER-xforms-20051006/index-all.html#evt-select
+          // we send the event to the itemset if it is a parent.
+          if (elm.parentNode.localName == "itemset")
+            elm = elm.parentNode;
+
+          elm.dispatchEvent(ev);
+          return true;
         </body>
       </method>
     </implementation>
