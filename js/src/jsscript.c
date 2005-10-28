@@ -180,6 +180,7 @@ script_compile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     str = js_ValueToString(cx, argv[0]);
     if (!str)
         return JS_FALSE;
+    argv[0] = STRING_TO_JSVAL(str);
 
     /* Compile using the caller's scope chain, which js_Invoke passes to fp. */
     fp = cx->fp;
