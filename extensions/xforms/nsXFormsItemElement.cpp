@@ -350,15 +350,6 @@ nsXFormsItemElement::GetLabelText(nsAString& aValue)
 NS_IMETHODIMP
 nsXFormsItemElement::LabelRefreshed()
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  // This is an optimization. It prevents us doing some of the unnecessary
-  // refreshes.
-  if (doc && doc->GetProperty(nsXFormsAtoms::deferredBindListProperty)) {
-    return NS_OK;
-  }
-
   NS_ENSURE_STATE(mElement);
   nsCOMPtr<nsIDOMNode> parent, current;
   current = mElement;
