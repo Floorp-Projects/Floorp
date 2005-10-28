@@ -4012,6 +4012,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       if (valueMatches && aPrefix == info.mName->GetPrefix()) {
         return NS_OK;
       }
+      modification = PR_TRUE;
     }
   }
 
