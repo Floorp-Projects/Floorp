@@ -266,7 +266,6 @@ nsXFormsModelElement::nsXFormsModelElement()
 }
 
 NS_INTERFACE_MAP_BEGIN(nsXFormsModelElement)
-  NS_INTERFACE_MAP_ENTRY(nsXFormsStubElement)
   NS_INTERFACE_MAP_ENTRY(nsIXFormsModelElement)
   NS_INTERFACE_MAP_ENTRY(nsIXFormsNSModelElement)
   NS_INTERFACE_MAP_ENTRY(nsIModelElementPrivate)
@@ -274,7 +273,7 @@ NS_INTERFACE_MAP_BEGIN(nsXFormsModelElement)
   NS_INTERFACE_MAP_ENTRY(nsIWebServiceErrorHandler)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIXFormsContextControl)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsXFormsStubElement)
 
 NS_IMPL_ADDREF_INHERITED(nsXFormsModelElement, nsXFormsStubElement)
 NS_IMPL_RELEASE_INHERITED(nsXFormsModelElement, nsXFormsStubElement)
