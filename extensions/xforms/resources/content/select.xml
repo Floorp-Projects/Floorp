@@ -136,9 +136,6 @@
             this.uiElement.removeAttribute("readonly");
           }
 
-          if (!this.delegate.hasBoundNode)
-            return;
-
           this._refreshing = true;
 
           // We detect if the instance data we bind to has changed.  If it has,
@@ -175,7 +172,10 @@
           // select builds its own UI by parsing it's children.
 
           // replace new line (\n), tabs (\t) and carriage returns (\r) with "".
-          var value = this.delegate.value.replace(/\n|\t|\r/g, " ");
+          var value = "";
+
+          if (this.delegate.value)
+            value = this.delegate.value.replace(/\n|\t|\r/g, " ");
 
           // get an array of values selected in the bound node
           var selectedArray = value.split(" ");
@@ -401,7 +401,8 @@
       <method name="_setBoundValue">
         <body>
         <![CDATA[
-          this.delegate.value = this._getSelectedValues();
+          if (this.delegate.hasBoundNode)
+            this.delegate.value = this._getSelectedValues();
         ]]>
         </body>
       </method>
@@ -458,7 +459,9 @@
         <body>
         <![CDATA[
           // get an array of values selected in the bound node
-          var selectedArray = this.delegate.value.split(" ");
+          var selectedArray = new Array();
+          if (this.delegate.value)
+            selectedArray = this.delegate.value.split(" ");
 
           // store the values in a hash for quick access
           this._defaultHash = new Object();

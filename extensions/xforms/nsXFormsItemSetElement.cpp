@@ -193,6 +193,11 @@ nsXFormsItemSetElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **
 NS_IMETHODIMP
 nsXFormsItemSetElement::Bind()
 {
+  mModel = nsXFormsUtils::GetModel(mElement);
+  if (mModel) {
+    mModel->AddFormControl(this);
+  }
+
   return NS_OK;
 }
 
