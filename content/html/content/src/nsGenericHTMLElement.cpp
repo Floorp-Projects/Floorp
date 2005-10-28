@@ -3233,7 +3233,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 {
   if (aNameSpaceID == kNameSpaceID_None) {
     nsCOMPtr<nsIFormControl> thisControl =
-      do_QueryInterface(NS_STATIC_CAST(nsIContent, this));
+      do_QueryInterface(NS_STATIC_CAST(nsIContent*, this));
 
     // add the control to the hashtable as needed
 
