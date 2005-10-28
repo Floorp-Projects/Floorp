@@ -532,6 +532,10 @@ nsHostResolver::IssueLookup(nsHostRecord *rec)
             return NS_ERROR_OUT_OF_MEMORY;
         }
     }
+#if defined(PR_LOGGING)
+    else
+      LOG(("lookup waiting for thread - %s ...\n", rec->host));
+#endif
 
     return NS_OK;
 }
@@ -654,6 +658,7 @@ nsHostResolver::ThreadFunc(void *arg)
         // convert error code to nsresult.
         nsresult status = ai ? NS_OK : NS_ERROR_UNKNOWN_HOST;
         resolver->OnLookupComplete(rec, status, ai);
+        LOG(("lookup complete for %s ...\n", rec->host));
     }
     NS_RELEASE(resolver);
     LOG(("nsHostResolver::ThreadFunc exiting\n"));
