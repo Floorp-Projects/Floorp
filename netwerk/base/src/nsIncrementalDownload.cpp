@@ -742,15 +742,18 @@ nsIncrementalDownload::OnChannelRedirect(nsIChannel *oldChannel,
 
   NS_NAMED_LITERAL_CSTRING(rangeHdr, "Range");
 
+  nsresult rv = NS_OK;
+
+  // If we didn't have a Range header, then we must be doing a full download.
   nsCAutoString rangeVal;
   http->GetRequestHeader(rangeHdr, rangeVal);
-  NS_ENSURE_STATE(!rangeVal.IsEmpty());
+  if (!rangeVal.IsEmpty()) {
+    http = do_QueryInterface(newChannel);
+    NS_ENSURE_STATE(http);
 
-  http = do_QueryInterface(newChannel);
-  NS_ENSURE_STATE(http);
-
-  nsresult rv = http->SetRequestHeader(rangeHdr, rangeVal, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
+    rv = http->SetRequestHeader(rangeHdr, rangeVal, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Give the observer a chance to see this redirect notification.
   nsCOMPtr<nsIChannelEventSink> sink = do_GetInterface(mObserver);
