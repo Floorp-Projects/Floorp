@@ -67,11 +67,12 @@ nsDOMAttribute::nsDOMAttribute(nsDOMAttributeMap *aAttrMap,
 nsDOMAttribute::~nsDOMAttribute()
 {
   nsIDocument *doc = GetOwnerDoc();
-  if (doc)
+  if (doc) {
     doc->CallUserDataHandler(nsIDOMUserDataHandler::NODE_DELETED,
                              NS_STATIC_CAST(nsIDOMAttr*, this), nsnull,
                              nsnull);
     doc->PropertyTable()->DeleteAllPropertiesFor(this);
+  }
 
   NS_IF_RELEASE(mChild);
   NS_IF_RELEASE(mChildList);
