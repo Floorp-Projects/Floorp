@@ -181,7 +181,7 @@
                   onblur="this.parentNode.delegate.value = this.value; this.parentNode.dispatchDOMUIEvent('DOMFocusOut')"
                   onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
                   onclick="this.parentNode._change();"
-                  onkeyup="this.parentNode._change();"
+                  onkeyup="if (event.keyCode != event.DOM_VK_TAB) this.parentNode._change();"
                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
                   xbl:inherits="accesskey"/>
       <children/>
