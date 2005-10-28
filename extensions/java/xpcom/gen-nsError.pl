@@ -37,9 +37,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# Generates XPCOMError.java from xpcom/base/nsError.h
+# Generates IXPCOMError.java from xpcom/base/nsError.h
 #
-# usage: perl gen-nsErrors.pl < <topsrcdir>/xpcom/base/nsError.h > XPCOMError.java
+# usage: perl gen-nsErrors.pl < <topsrcdir>/xpcom/base/nsError.h > IXPCOMError.java
 
 
 print "/* ***** BEGIN LICENSE BLOCK *****\n";
@@ -83,12 +83,12 @@ print "package org.mozilla.xpcom;\n";
 print "\n\n";
 
 print "/**\n";
-print " * Mozilla error codes.\n";
-print " *\n";
+print " * Mozilla XPCOM error codes.\n";
+print " * <p>\n";
 print " * THIS FILE GENERATED FROM mozilla/xpcom/base/nsError.h.\n";
 print " * PLEASE SEE THAT FILE FOR FULL DOCUMENTATION.\n";
 print " */\n";
-print "public interface XPCOMError {\n";
+print "public interface IXPCOMError {\n";
 
 while (<STDIN>) {
   $line = $_;

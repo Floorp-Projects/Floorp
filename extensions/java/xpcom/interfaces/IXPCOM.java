@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -37,16 +37,10 @@
 
 package org.mozilla.xpcom;
 
-import java.lang.reflect.*;
 import java.io.*;
-import java.util.*;
 
 
-/**
- *  Provides access to methods for initializing XPCOM, as well as helper methods
- *  for working with XPCOM classes.
- */
-public final class XPCOM implements XPCOMError {
+public interface IXPCOM {
 
   /**
    * Initializes XPCOM. You must call this method before proceeding
@@ -71,9 +65,8 @@ public final class XPCOM implements XPCOMError {
    *      <li> Other error codes indicate a failure during initialisation. </li>
    * </ul>
    */
-  public static native
-  nsIServiceManager initXPCOM(File aMozBinDirectory,
-                              AppFileLocProvider aAppFileLocProvider);
+  public nsIServiceManager initXPCOM(File aMozBinDirectory,
+          IAppFileLocProvider aAppFileLocProvider) throws XPCOMException;
 
   /**
    * Shutdown XPCOM. You must call this method after you are finished
@@ -84,8 +77,7 @@ public final class XPCOM implements XPCOMError {
    *
    * @exception XPCOMException  if a failure occurred during termination
    */
-  public static native
-  void shutdownXPCOM(nsIServiceManager aServMgr);
+  public void shutdownXPCOM(nsIServiceManager aServMgr) throws XPCOMException;
 
   /**
    * Public Method to access to the service manager.
@@ -94,8 +86,7 @@ public final class XPCOM implements XPCOMError {
    *
    * @exception XPCOMException
    */
-  public static native
-  nsIServiceManager getServiceManager();
+  public nsIServiceManager getServiceManager() throws XPCOMException;
 
   /**
    * Public Method to access to the component manager.
@@ -104,8 +95,7 @@ public final class XPCOM implements XPCOMError {
    *
    * @exception XPCOMException
    */
-  public static native
-  nsIComponentManager getComponentManager();
+  public nsIComponentManager getComponentManager() throws XPCOMException;
 
   /**
    * Public Method to access to the component registration manager.
@@ -114,8 +104,7 @@ public final class XPCOM implements XPCOMError {
    *
    * @exception XPCOMException
    */
-  public static native
-  nsIComponentRegistrar getComponentRegistrar();
+  public nsIComponentRegistrar getComponentRegistrar() throws XPCOMException;
 
   /**
    * Public Method to create an instance of a nsILocalFile.
@@ -135,108 +124,8 @@ public final class XPCOM implements XPCOMError {
    *           or relative paths (must supply full file path) </li>
    * </ul>
    */
-  public static native
-  nsILocalFile newLocalFile(String aPath, boolean aFollowLinks);
-
-
-  /**
-   * If you create a class that implements nsISupports, you will need to provide
-   * an implementation of the <code>queryInterface</code> method.  This helper
-   * function provides a simple implementation.  Therefore, if your class does
-   * not need to do anything special with <code>queryInterface</code>, your
-   * implementation would look like:
-   * <pre>
-   *      public nsISupports queryInterface(String aIID) {
-   *        return XPCOM.queryInterface(this, aIID);
-   *      }
-   * </pre>
-   *
-   * @param aObject object to query
-   * @param aIID    requested interface IID
-   *
-   * @return        <code>aObject</code> if the given object supports that
-   *                interface;
-   *                <code>null</code> otherwise.
-   */
-  public static nsISupports queryInterface(nsISupports aObject, String aIID)
-  {
-    ArrayList classes = new ArrayList();
-    classes.add(aObject.getClass());
-
-    while (!classes.isEmpty()) {
-      Class clazz = (Class) classes.remove(0);
-
-      // Skip over any class/interface in the "java.*" and "javax.*" domains.
-      if (clazz.getName().startsWith("java")) {
-        continue;
-      }
-
-      // If given IID matches that of the current class/interface, then we
-      // know that aObject implements the interface specified by the given IID.
-      String iid = XPCOM.getInterfaceIID(clazz);
-      if (iid != null && aIID.equals(iid)) {
-        return aObject;
-      }
-
-      // clazz didn't match, so add the interfaces it implements
-      Class[] interfaces = clazz.getInterfaces();
-      for (int i = 0; i < interfaces.length; i++ ) {
-        classes.add(interfaces[i]);
-      }
-
-      // Also add its superclass
-      Class superclass = clazz.getSuperclass();
-      if (superclass != null) {
-        classes.add(superclass);
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Gets the interface IID for a particular Java interface.  This is similar
-   * to NS_GET_IID in the C++ Mozilla files.
-   *
-   * @param aInterface  interface which has defined an IID
-   *
-   * @return            IID for given interface
-   */
-  public static String getInterfaceIID(Class aInterface)
-  {
-    // Get short class name (i.e. "bar", not "org.blah.foo.bar")
-    StringBuffer iidName = new StringBuffer();
-    String fullClassName = aInterface.getName();
-    int index = fullClassName.lastIndexOf(".");
-    String className = index > 0 ? fullClassName.substring(index + 1) :
-                                    fullClassName;
-
-    // Create iid field name
-    if (className.startsWith("ns")) {
-      iidName.append("NS_");
-      iidName.append(className.substring(2).toUpperCase());
-    } else {
-      iidName.append(className.toUpperCase());
-    }
-    iidName.append("_IID");
-
-    String iid;
-    try {
-      Field iidField = aInterface.getDeclaredField(iidName.toString());
-      iid = (String) iidField.get(null);
-    } catch (NoSuchFieldException e) {
-      // Class may implement non-Mozilla interfaces, which would not have an
-      // IID method.  In that case, just null.
-      iid = null;
-    } catch (IllegalAccessException e) {
-      // Not allowed to access that field for some reason.  Write out an
-      // error message, but don't fail.
-      System.err.println("ERROR: Could not get field " + iidName.toString());
-      iid = null;
-    }
-
-    return iid;
-  }
+  public nsILocalFile newLocalFile(String aPath, boolean aFollowLinks)
+          throws XPCOMException;
 
 }
 

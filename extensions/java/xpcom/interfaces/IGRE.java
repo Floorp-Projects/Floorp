@@ -37,59 +37,44 @@
 
 package org.mozilla.xpcom;
 
+import java.io.*;
 
-/**
- * This exception is thrown whenever an internal XPCOM/Gecko error occurs.
- * You can query the error ID returned by XPCOM by checking
- * <code>errorcode</code> field.
- */
-public class XPCOMException extends RuntimeException {
+
+public interface IGRE {
 
   /**
-   * The XPCOM error value.
-   */
-  public long errorcode;
-
-  private static final long serialVersionUID = 198521829884000593L;
-
-  /**
-   * Constructs a new XPCOMException instance, with a default error
-   * (NS_ERROR_FAILURE) and message.
-   */
-  public XPCOMException() {
-    this(0x80004005L, "Unspecified internal XPCOM error");
-  }
-
-  /**
-   * Constructs a new XPCOMException instance with the given message, passing
-   * NS_ERROR_FAILURE as the error code.
+   * Initializes libXUL for embedding purposes.
+   * <p>
+   * NOTE: This function must be called from the "main" thread.
+   * <p>
+   * NOTE: At the present time, this function may only be called once in
+   *       a given process. Use <code>termEmbedding</code> to clean up and free
+   *       resources allocated by <code>initEmbedding</code>.
    *
-   * @param message   detailed message of exception
+   * @param aLibXULDirectory   The directory in which the libXUL shared library
+   *                           was found.
+   * @param aAppDirectory      The directory in which the application components
+   *                           and resources can be found. This will map to
+   *                           the "resource:app" directory service key.
+   * @param aAppDirProvider    A directory provider for the application. This
+   *                           provider will be aggregated by a libXUL provider
+   *                           which will provide the base required GRE keys.
+   *
+   * @throws XPCOMException  if a failure occurred during initialization
    */
-  public XPCOMException(String message) {
-    this(0x80004005L, message);
-  }
+  public void initEmbedding(File aLibXULDirectory, File aAppDirectory,
+          IAppFileLocProvider aAppDirProvider) throws XPCOMException;
 
   /**
-   * Constructs a new XPCOMException instance with the given code, passing
-   * a default message.
+   * Terminates libXUL embedding.
+   * <p>
+   * NOTE: Release any references to XPCOM objects that you may be holding
+   *       before calling this function.
    *
-   * @param code      internal XPCOM error ID
+   * @throws XPCOMException  if a failure occurred during initialization
    */
-  public XPCOMException(long code) {
-    this(code, "Internal XPCOM error");
-  }
-
-  /**
-   * Constructs a new XPCOMException instance with an error code and message.
-   *
-   * @param code      internal XPCOM error ID
-   * @param message   detailed message of exception
-   */
-  public XPCOMException(long code, String message) {
-    super(message + "  (0x" + Long.toHexString(code) + ")");
-    this.errorcode = code;
-  }
+  public void termEmbedding() throws XPCOMException;
 
 }
+
 

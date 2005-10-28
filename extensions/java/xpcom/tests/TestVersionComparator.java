@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,61 +35,68 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.xpcom;
+import org.mozilla.xpcom.VersionComparator;
 
+public class TestVersionComparator {
 
-/**
- * This exception is thrown whenever an internal XPCOM/Gecko error occurs.
- * You can query the error ID returned by XPCOM by checking
- * <code>errorcode</code> field.
- */
-public class XPCOMException extends RuntimeException {
+  public static void main(String[] args) {
+    String[] comparisons = {
+        "0.9",
+        "0.9.1",
+        "1.0pre1",
+        "1.0pre2",
+        "1.0",
+        "1.1pre",
+        "1.1pre1a",
+        "1.1pre1",
+        "1.1pre10a",
+        "1.1pre10",
+        "1.1",
+        "1.1.0.1",
+        "1.1.1",
+        "1.1.*",
+        "1.*",
+        "2.0",
+        "2.1",
+        "3.0.-1",
+        "3.0"
+    };
 
-  /**
-   * The XPCOM error value.
-   */
-  public long errorcode;
+    String[] equality = {
+        "1.1pre",
+        "1.1pre0",
+        "1.0+"
+    };
 
-  private static final long serialVersionUID = 198521829884000593L;
+    VersionComparator comp = new VersionComparator();
 
-  /**
-   * Constructs a new XPCOMException instance, with a default error
-   * (NS_ERROR_FAILURE) and message.
-   */
-  public XPCOMException() {
-    this(0x80004005L, "Unspecified internal XPCOM error");
+    // test comparisons in both directions
+    for (int i = 0; i < comparisons.length - 1; i++) {
+      int res = comp.compare(comparisons[i], comparisons[i + 1]);
+      _assert(res < 0);
+
+      res = comp.compare(comparisons[i + 1], comparisons[i]);
+      _assert(res > 0);
+    }
+
+    // test equality in both directions
+    for (int i = 0; i < equality.length - 1; i++) {
+      int res = comp.compare(equality[i], equality[i + 1]);
+      _assert(res == 0);
+
+      res = comp.compare(equality[i + 1], equality[i]);
+      _assert(res == 0);
+    }
+
+    System.out.println("-- passed");
   }
 
-  /**
-   * Constructs a new XPCOMException instance with the given message, passing
-   * NS_ERROR_FAILURE as the error code.
-   *
-   * @param message   detailed message of exception
-   */
-  public XPCOMException(String message) {
-    this(0x80004005L, message);
+  private static void _assert(boolean expression) {
+    if (!expression) {
+      Throwable t = new Throwable();
+      t.printStackTrace();
+      System.exit(1);
+    }
   }
-
-  /**
-   * Constructs a new XPCOMException instance with the given code, passing
-   * a default message.
-   *
-   * @param code      internal XPCOM error ID
-   */
-  public XPCOMException(long code) {
-    this(code, "Internal XPCOM error");
-  }
-
-  /**
-   * Constructs a new XPCOMException instance with an error code and message.
-   *
-   * @param code      internal XPCOM error ID
-   * @param message   detailed message of exception
-   */
-  public XPCOMException(long code, String message) {
-    super(message + "  (0x" + Long.toHexString(code) + ")");
-    this.errorcode = code;
-  }
-
 }
 
