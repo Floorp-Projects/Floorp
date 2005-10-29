@@ -986,7 +986,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 {
   NS_PRECONDITION(aURI, "Null URI passed to ResetStylesheetsToURI");
 
-  mozAutoDocUpdate(this, UPDATE_STYLE, PR_TRUE);
+  mozAutoDocUpdate upd(this, UPDATE_STYLE, PR_TRUE);
   
   // The stylesheets should forget us
   PRInt32 indx = mStyleSheets.Count();

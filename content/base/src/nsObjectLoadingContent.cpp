@@ -979,7 +979,7 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     PRInt32 changedBits = aOldState ^ newState;
 
     {
-      mozAutoDocUpdate(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+      mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
       doc->ContentStatesChanged(thisContent, nsnull, changedBits);
     }
     if (aSync) {

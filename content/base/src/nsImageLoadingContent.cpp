@@ -596,7 +596,7 @@ nsImageLoadingContent::UpdateImageState(PRBool aNotify)
       NS_ASSERTION(thisContent->IsInDoc(), "Something is confused");
       PRInt32 changedBits = oldState ^ ImageState();
       if (changedBits) {
-        mozAutoDocUpdate(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+        mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);
         doc->ContentStatesChanged(thisContent, nsnull, changedBits);
       }
     }

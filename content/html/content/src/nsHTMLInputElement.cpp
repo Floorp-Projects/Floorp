@@ -997,7 +997,7 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
   if (aNotify) {
     nsIDocument* document = GetCurrentDoc();
     if (document) {
-      mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, aNotify);
+      mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, aNotify);
       document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
     }
   }

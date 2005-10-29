@@ -3246,7 +3246,7 @@ nsGenericHTMLFormElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (aNotify && aName == nsHTMLAtoms::disabled && CanBeDisabled()) {
       nsIDocument* document = GetCurrentDoc();
       if (document) {
-        mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, PR_TRUE);
+        mozAutoDocUpdate upd(document, UPDATE_CONTENT_STATE, PR_TRUE);
         document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_DISABLED |
                                        NS_EVENT_STATE_ENABLED);
       }
