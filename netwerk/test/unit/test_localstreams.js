@@ -1,5 +1,7 @@
 // Tests bug 304414
 
+const PR_RDONLY = 0x1;  // see prio.h
+
 function getDir(key) {
   var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
                          .getService(Components.interfaces.nsIProperties);
@@ -58,7 +60,7 @@ function test_stream(stream) {
 function stream_for_file(file) {
   var str = Components.classes["@mozilla.org/network/file-input-stream;1"]
                       .createInstance(Components.interfaces.nsIFileInputStream);
-  str.init(file, 0, 0, 0);
+  str.init(file, PR_RDONLY, 0, 0);
   return str;
 }
 
