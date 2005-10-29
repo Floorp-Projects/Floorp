@@ -1424,19 +1424,22 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
       while (popup.childNodes[indexOfSeparator].localName != 'menuseparator')
         indexOfSeparator++;
 
-      item = popup.insertBefore(item, popup.childNodes[indexOfSeparator]);
-
       var formattedDisplayNameString = gMessengerBundle.getFormattedString("attachmentDisplayNameFormat",
                                        [attachmentIndex, attachment.displayName]);
 
       item.setAttribute('label', formattedDisplayNameString); 
       item.setAttribute('accesskey', attachmentIndex); 
 
+      // each attachment in the list gets its own menupopup with options for saving, deleting, detaching, etc. 
       var openpopup = document.createElement('menupopup');
       openpopup = item.appendChild(openpopup);
 
-      var menuitementry = document.createElement('menuitem');     
+      // Due to Bug #314228, we must append our menupopup to the new attachment menu item
+      // before we inserting the attachment menu into the popup. If we don't, our attachment
+      // menu items will not show up.
+      item = popup.insertBefore(item, popup.childNodes[indexOfSeparator]);
 
+      var menuitementry = document.createElement('menuitem');
       menuitementry.attachment = cloneAttachment(attachment);
       menuitementry.setAttribute('oncommand', 'openAttachment(this.attachment)'); 
 
