@@ -3617,11 +3617,15 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
         polypath[0].y = NSToCoordRound(aPoints[0].y);
         curIndex = 1;
         GetPath(aPoints,polypath,&curIndex,eOutside,c1Index);
+        if (curIndex >= MAXPOLYPATHSIZE)
+          return;
         c2Index = curIndex;
         polypath[curIndex].x = NSToCoordRound(aPoints[6].x);
         polypath[curIndex].y = NSToCoordRound(aPoints[6].y);
         curIndex++;
         GetPath(aPoints,polypath,&curIndex,eInside,junk);
+        if (curIndex >= MAXPOLYPATHSIZE)
+          return;
         polypath[curIndex].x = NSToCoordRound(aPoints[0].x);
         polypath[curIndex].y = NSToCoordRound(aPoints[0].y);
         curIndex++;
@@ -3653,10 +3657,14 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
         polypath[0].y = NSToCoordRound(aPoints[0].y);
         curIndex = 1;
         GetPath(aPoints,polypath,&curIndex,eOutside,c1Index);
+        if (curIndex >= MAXPOLYPATHSIZE)
+          return;
         polypath[curIndex].x = NSToCoordRound((aPoints[5].x + aPoints[6].x)/2.0f);
         polypath[curIndex].y = NSToCoordRound((aPoints[5].y + aPoints[6].y)/2.0f);
         curIndex++;
         GetPath(aPoints,polypath,&curIndex,eCalcRev,c1Index,.5);
+        if (curIndex >= MAXPOLYPATHSIZE)
+          return;
         polypath[curIndex].x = NSToCoordRound(aPoints[0].x);
         polypath[curIndex].y = NSToCoordRound(aPoints[0].y);
         curIndex++;
@@ -3672,9 +3680,13 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
         polypath[0].y = NSToCoordRound((aPoints[0].y + aPoints[11].y)/2.0f);
         curIndex = 1;
         GetPath(aPoints,polypath,&curIndex,eCalc,c1Index,.5);
+        if (curIndex >= MAXPOLYPATHSIZE)
+          return;
         polypath[curIndex].x = NSToCoordRound(aPoints[6].x) ;
         polypath[curIndex].y = NSToCoordRound(aPoints[6].y);
         curIndex++;
+        if (curIndex >= MAXPOLYPATHSIZE)
+          return;
         GetPath(aPoints,polypath,&curIndex,eInside,c1Index);
         polypath[curIndex].x = NSToCoordRound(aPoints[0].x);
         polypath[curIndex].y = NSToCoordRound(aPoints[0].y);
@@ -3866,6 +3878,9 @@ static void
 GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac)
 {
   QBCurve thecurve;
+  
+  if (*aCurIndex >= MAXPOLYPATHSIZE)
+    return;
 
   switch (aPathType) {
     case eOutside:
@@ -3923,8 +3938,11 @@ GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes
 void 
 QBCurve::SubDivide(nsIRenderingContext *aRenderingContext,nsPoint aPointArray[],PRInt32 *aCurIndex)
 {
-QBCurve   curve1,curve2;
-float     fx,fy,smag;
+  QBCurve   curve1,curve2;
+  float     fx,fy,smag;
+  
+  if (*aCurIndex >= MAXPOLYPATHSIZE)
+    return;
 
   // divide the curve into 2 pieces
   MidPointDivide(&curve1,&curve2);
@@ -3945,6 +3963,8 @@ float     fx,fy,smag;
       aPointArray[*aCurIndex].x = (nscoord)curve1.mAnc2.x;
       aPointArray[*aCurIndex].y = (nscoord)curve1.mAnc2.y;
       (*aCurIndex)++;
+      if (*aCurIndex >= MAXPOLYPATHSIZE)
+        return;
       aPointArray[*aCurIndex].x = (nscoord)curve2.mAnc2.x;
       aPointArray[*aCurIndex].y = (nscoord)curve2.mAnc2.y;
       (*aCurIndex)++;
