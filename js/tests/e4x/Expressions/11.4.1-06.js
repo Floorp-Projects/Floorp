@@ -47,7 +47,7 @@ printStatus (summary);
 
 try
 {
-    actual = (<x><![CDATA[ ]] ]]></x>).toString();
+    actual = XML("<x><![CDATA[ ]] ]]></x>").toString();
 }
 catch(e)
 {
