@@ -754,11 +754,18 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
   if (!caretFrame || !outRenderingView)
     return;
 
-    //#59405, on windows and unix, the coordinate for IME need to be view (nearest native window) related.
+  // XXX by Masayuki Nakano:
+  // Our this code is not good. This is adhoc approach.
+  // Our best approach is to use the event fired widget related view.
+  // But if we do so, we need large change for editor and this.
   if (coordType == eIMECoordinates)
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_WIN)
+   // #59405 and #313918, on Mac and Windows, the coordinate for IME need to be
+   // root view related.
    coordType = eTopLevelWindowCoordinates; 
 #else
+   // #59405, on unix, the coordinate for IME need to be view
+   // (nearest native window) related.
    coordType = eRenderingViewCoordinates; 
 #endif
 
