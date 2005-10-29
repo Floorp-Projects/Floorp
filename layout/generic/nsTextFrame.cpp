@@ -440,9 +440,9 @@ nsresult nsBlinkTimer::RemoveBlinkFrame(nsIFrame* aFrame)
 
 //----------------------------------------------------------------------
 
-nsTextFrame::TextStyle::TextStyle(nsPresContext* aPresContext,
-                                  nsIRenderingContext& aRenderingContext,
-                                  nsStyleContext* sc)
+nsTextStyle::nsTextStyle(nsPresContext* aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         nsStyleContext* sc)
 {
   // Get style data
   mFont = sc->GetStyleFont();
@@ -451,7 +451,7 @@ nsTextFrame::TextStyle::TextStyle(nsPresContext* aPresContext,
   // Cache the original decorations and reuse the current font
   // to query metrics, rather than creating a new font which is expensive.
   nsFont* plainFont = (nsFont *)&mFont->mFont; //XXX: Change to use a CONST_CAST macro.
-  NS_ASSERTION(plainFont, "null plainFont: font problems in TextStyle::TextStyle");
+  NS_ASSERTION(plainFont, "null plainFont: font problems in nsTextStyle::nsTextStyle");
   PRUint8 originalDecorations = plainFont->decorations;
   plainFont->decorations = NS_FONT_DECORATION_NONE;
   mAveCharWidth = 0;
@@ -503,31 +503,211 @@ nsTextFrame::TextStyle::TextStyle(nsPresContext* aPresContext,
     !mPreformatted;
 }
 
-nsTextFrame::TextStyle::~TextStyle() {
+nsTextStyle::~nsTextStyle() {
   NS_IF_RELEASE(mNormalFont);
   NS_IF_RELEASE(mSmallFont);
 }
 
-nsTextFrame::TextPaintStyle::TextPaintStyle(nsPresContext* aPresContext,
-                                            nsIRenderingContext& aRenderingContext,
-                                            nsStyleContext* sc)
-: nsTextFrame::TextStyle(aPresContext, aRenderingContext, sc)
+//----------------------------------------------------------------------
+
+inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
 {
-  mColor = sc->GetStyleColor();
-  
-  // Get colors from look&feel
-  mSelectionBGColor = NS_RGB(0, 0, 0);
-  mSelectionTextColor = NS_RGB(255, 255, 255);
-  nsILookAndFeel* look = aPresContext->LookAndFeel();
-  look->GetColor(nsILookAndFeel::eColor_TextSelectBackground,
-                 mSelectionBGColor);
-  look->GetColor(nsILookAndFeel::eColor_TextSelectForeground,
-                 mSelectionTextColor);
+  if (colorA == colorB) {
+    nscolor res;
+    res = NS_RGB(NS_GET_R(colorA) ^ 0xff,
+                 NS_GET_G(colorA) ^ 0xff,
+                 NS_GET_B(colorA) ^ 0xff);
+    return res;
+  }
+  return colorA;
 }
 
-nsTextFrame::TextPaintStyle::~TextPaintStyle() {
+//-----------------------------------------------------------------------------
+
+nsTextPaintStyle::nsTextPaintStyle(nsPresContext* aPresContext,
+                                   nsIRenderingContext& aRenderingContext,
+                                   nsStyleContext* aStyleContext,
+                                   nsIContent* aContent,
+                                   PRInt16 aSelectionStatus)
+  : nsTextStyle(aPresContext, aRenderingContext, aStyleContext),
+    mPresContext(nsnull),
+    mStyleContext(nsnull),
+    mContent(nsnull),
+    mInitCommonColors(PR_FALSE),
+    mInitSelectionColors(PR_FALSE)
+{
+  mPresContext = aPresContext;
+  mStyleContext = aStyleContext;
+  mContent = aContent;
+  mSelectionStatus = aSelectionStatus;
+  mColor = mStyleContext->GetStyleColor();
+}
+
+nsTextPaintStyle::~nsTextPaintStyle()
+{
   mColor = nsnull;
 }
+
+PRBool
+nsTextPaintStyle::EnsureSufficientContrast(nscolor *aForeColor, nscolor *aBackColor)
+{
+
+  if (!aForeColor || !aBackColor)
+    return PR_FALSE;
+
+  // If common colors are not initialized, mFrameBackgroundColor and
+  // mSufficientContrast are not initialized.
+  if (!mInitCommonColors && !InitCommonColors())
+    return PR_FALSE;
+
+  // If the combination of selection background color and frame background color
+  // is sufficient contrast, don't exchange the selection colors.
+  PRInt32 backLuminosityDifference =
+            NS_LUMINOSITY_DIFFERENCE(*aBackColor, mFrameBackgroundColor);
+  if (backLuminosityDifference >= mSufficientContrast)
+    return PR_FALSE;
+
+  // Otherwise, we should use the higher-contrast color for the selection
+  // background color.
+  PRInt32 foreLuminosityDifference =
+            NS_LUMINOSITY_DIFFERENCE(*aForeColor, mFrameBackgroundColor);
+  if (backLuminosityDifference < foreLuminosityDifference) {
+    nscolor tmpColor = *aForeColor;
+    *aForeColor = *aBackColor;
+    *aBackColor = tmpColor;
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+nscolor
+nsTextPaintStyle::GetTextColor()
+{
+  return mColor->mColor;
+}
+
+void
+nsTextPaintStyle::GetSelectionColors(nscolor* aForeColor,
+                                     nscolor* aBackColor,
+                                     PRBool*  aBackIsTransparent)
+{
+  NS_ASSERTION(aForeColor, "aForeColor is null");
+  NS_ASSERTION(aBackColor, "aBackColor is null");
+
+  if (!mInitSelectionColors && !InitSelectionColors()) {
+    NS_ERROR("Fail to initialize selection colors");
+    return;
+  }
+
+  *aForeColor = mSelectionTextColor;
+  *aBackColor = mSelectionBGColor;
+  *aBackIsTransparent = mSelectionBGIsTransparent;
+}
+
+PRBool
+nsTextPaintStyle::InitCommonColors()
+{
+  if (!mPresContext || !mStyleContext)
+    return PR_FALSE;
+
+  if (mInitCommonColors)
+    return PR_TRUE;
+
+  const nsStyleBackground* bg =
+    nsCSSRendering::FindNonTransparentBackground(mStyleContext);
+  NS_ASSERTION(bg, "Cannot find NonTransparentBackground.");
+  mFrameBackgroundColor = bg->mBackgroundColor;
+
+  nsILookAndFeel* look = mPresContext->LookAndFeel();
+  if (!look)
+    return PR_FALSE;
+
+  nscolor defaultWindowBackgroundColor, selectionTextColor, selectionBGColor;
+  look->GetColor(nsILookAndFeel::eColor_TextSelectBackground,
+                 selectionBGColor);
+  look->GetColor(nsILookAndFeel::eColor_TextSelectForeground,
+                 selectionTextColor);
+  look->GetColor(nsILookAndFeel::eColor_WindowBackground,
+                 defaultWindowBackgroundColor);
+
+  mSufficientContrast =
+    PR_MIN(PR_MIN(NS_SUFFICIENT_LUMINOSITY_DIFFERENCE,
+                  NS_LUMINOSITY_DIFFERENCE(selectionTextColor,
+                                           selectionBGColor)),
+                  NS_LUMINOSITY_DIFFERENCE(defaultWindowBackgroundColor,
+                                           selectionBGColor));
+
+  mInitCommonColors = PR_TRUE;
+  return PR_TRUE;
+}
+
+PRBool
+nsTextPaintStyle::InitSelectionColors()
+{
+  if (!mPresContext || !mStyleContext)
+    return PR_FALSE;
+  if (mInitSelectionColors)
+    return PR_TRUE;
+
+  mSelectionBGIsTransparent = PR_FALSE;
+
+  if (mContent &&
+      mSelectionStatus == nsISelectionController::SELECTION_ON) {
+    nsRefPtr<nsStyleContext> sc = nsnull;
+    sc = mPresContext->StyleSet()->
+      ProbePseudoStyleFor(mContent->GetParent(),
+                          nsCSSPseudoElements::mozSelection, mStyleContext);
+    // Use -moz-selection pseudo class.
+    if (sc) {
+      const nsStyleBackground* bg = sc->GetStyleBackground();
+      mSelectionBGIsTransparent =
+        PRBool(bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+      if (!mSelectionBGIsTransparent)
+        mSelectionBGColor = bg->mBackgroundColor;
+      mSelectionTextColor = sc->GetStyleColor()->mColor;
+      return PR_TRUE;
+    }
+  }
+
+  nsILookAndFeel* look = mPresContext->LookAndFeel();
+  if (!look)
+    return PR_FALSE;
+
+  nscolor selectionBGColor;
+  look->GetColor(nsILookAndFeel::eColor_TextSelectBackground,
+                 selectionBGColor);
+
+  if (mSelectionStatus == nsISelectionController::SELECTION_ATTENTION) {
+    look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundAttention,
+                   mSelectionBGColor);
+    mSelectionBGColor  = EnsureDifferentColors(mSelectionBGColor,
+                                               selectionBGColor);
+  } else if (mSelectionStatus != nsISelectionController::SELECTION_ON) {
+    look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundDisabled,
+                   mSelectionBGColor);
+    mSelectionBGColor  = EnsureDifferentColors(mSelectionBGColor,
+                                               selectionBGColor);
+  } else {
+    mSelectionBGColor = selectionBGColor;
+  }
+
+  look->GetColor(nsILookAndFeel::eColor_TextSelectForeground,
+                 mSelectionTextColor);
+
+  // On MacOS X, we don't exchange text color and BG color.
+  if (mSelectionTextColor == NS_DONT_CHANGE_COLOR) {
+    mSelectionTextColor = EnsureDifferentColors(mColor->mColor,
+                                                mSelectionBGColor);
+    return PR_TRUE;
+  }
+
+  EnsureSufficientContrast(&mSelectionTextColor, &mSelectionBGColor);
+
+  mInitSelectionColors = PR_TRUE;
+  return PR_TRUE;
+}
+
+//-----------------------------------------------------------------------------
 
 #ifdef ACCESSIBILITY
 NS_IMETHODIMP nsTextFrame::GetAccessible(nsIAccessible** aAccessible)
@@ -652,30 +832,14 @@ nsContinuingTextFrame::GetFirstInFlow() const
   return firstInFlow;
 }
 
-inline nscolor EnsureDifferentColors(nscolor colorA, nscolor colorB)
-{
-    if (colorA == colorB)
-    {
-      nscolor res;
-      res = NS_RGB(NS_GET_R(colorA) ^ 0xff,
-                   NS_GET_G(colorA) ^ 0xff,
-                   NS_GET_B(colorA) ^ 0xff);
-      return res;
-    }
-    return colorA;
-}
-
-
 //DRAW SELECTION ITERATOR USED FOR TEXTFRAMES ONLY
 //helper class for drawing multiply selected text
 class DrawSelectionIterator
 {
   enum {SELECTION_TYPES_WE_CARE_ABOUT=nsISelectionController::SELECTION_NONE+nsISelectionController::SELECTION_NORMAL};
 public:
-  DrawSelectionIterator(nsIContent *aContent, const SelectionDetails *aSelDetails, PRUnichar *aText,
-                        PRUint32 aTextLength, nsTextFrame::TextPaintStyle &aTextStyle,
-                        PRInt16 aSelectionStatus, nsPresContext *aPresContext,
-                        nsStyleContext *aStyleContext);
+  DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,
+                        PRUint32 aTextLength, nsTextPaintStyle &aTextStyle);
   ~DrawSelectionIterator();
   PRBool      First();
   PRBool      Next();
@@ -685,7 +849,7 @@ public:
   PRUnichar * CurrentTextUnicharPtr();
   char *      CurrentTextCStrPtr();
   PRUint32    CurrentLength();
-  nsTextFrame::TextPaintStyle & CurrentStyle();
+  nsTextPaintStyle & CurrentStyle();
   PRBool      IsBeforeOrAfter();
 
   /**
@@ -710,139 +874,73 @@ private:
   PRUint32  mLength;
   PRUint32  mCurrentIdx;
   PRUint32  mCurrentLength;
-  nsTextFrame::TextPaintStyle &mOldStyle;//base new styles on this one???
+  nsTextPaintStyle &mOldStyle; //base new styles on this one???
   const SelectionDetails *mDetails;
   PRBool    mDone;
   PRUint8 * mTypes;
   PRBool    mInit;
-  PRInt16    mSelectionStatus;//see nsIDocument.h SetDisplaySelection()
-  nscolor   mFrameBackgroundColor;
-  PRInt32   mSufficientContrast;
-  nscolor   mDisabledColor;
-  nscolor   mAttentionColor;
-
-  PRBool    mSelectionPseudoStyle;
-  nscolor   mSelectionPseudoFGcolor;
-  nscolor   mSelectionPseudoBGcolor;
-  PRBool    mSelectionPseudoBGIsTransparent;
   //private methods
   void FillCurrentData();
 };
 
-DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
-                                             const SelectionDetails *aSelDetails, 
+DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails, 
                                              PRUnichar *aText, 
                                              PRUint32 aTextLength, 
-                                             nsTextFrame::TextPaintStyle &aTextStyle, 
-                                             PRInt16 aSelectionStatus, 
-                                             nsPresContext *aPresContext,
-                                             nsStyleContext *aStyleContext)
+                                             nsTextPaintStyle &aTextStyle)
                                              :mOldStyle(aTextStyle)
 {
-    mDetails = aSelDetails;
-    mCurrentIdx = 0;
-    mUniStr = aText;
-    mLength = aTextLength;
-    mTypes = nsnull;
-    mInit = PR_FALSE;
-    mSelectionStatus = aSelectionStatus;
-    mSelectionPseudoStyle = PR_FALSE;
-    mSelectionPseudoBGIsTransparent = PR_FALSE;
+  mDetails = aSelDetails;
+  mCurrentIdx = 0;
+  mUniStr = aText;
+  mLength = aTextLength;
+  mTypes = nsnull;
+  mInit = PR_FALSE;
 
-    const nsStyleBackground* bg =
-      nsCSSRendering::FindNonTransparentBackground(aStyleContext);
-    NS_ASSERTION(bg, "Cannot find NonTransparentBackground.");
-    mFrameBackgroundColor = bg->mBackgroundColor;
+  if (!aSelDetails) {
+    mDone = PR_TRUE;
+    return;
+  }
+  mDone = (PRBool)(mCurrentIdx>=mLength);
+  if (mDone)
+    return;
 
-    if (aContent) {
-      nsRefPtr<nsStyleContext> sc;
-      sc = aPresContext->StyleSet()->
-        ProbePseudoStyleFor(aContent->GetParent(),
-                            nsCSSPseudoElements::mozSelection, aStyleContext);
-      if (sc) {
-        mSelectionPseudoStyle = PR_TRUE;
-        bg = sc->GetStyleBackground();
-        mSelectionPseudoBGIsTransparent = PRBool(bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-        if (!mSelectionPseudoBGIsTransparent )
-          mSelectionPseudoBGcolor = bg->mBackgroundColor;
-        mSelectionPseudoFGcolor = sc->GetStyleColor()->mColor;
-      }
-    }
-
-    // Get background colors for disabled selection at attention-getting selection (used with type ahead find)
-    nsILookAndFeel *look = aPresContext->LookAndFeel();
-    nscolor defaultWindowBackgroundColor;
-    look->GetColor(nsILookAndFeel::eColor_WindowBackground,
-                   defaultWindowBackgroundColor);
-    look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundAttention,
-                   mAttentionColor);
-    look->GetColor(nsILookAndFeel::eColor_TextSelectBackgroundDisabled,
-                   mDisabledColor);
-    mDisabledColor  = EnsureDifferentColors(mDisabledColor,
-                                            mOldStyle.mSelectionBGColor);
-    mAttentionColor = EnsureDifferentColors(mAttentionColor,
-                                            mOldStyle.mSelectionBGColor);
-
-    mSufficientContrast =
-      PR_MIN(PR_MIN(NS_SUFFICIENT_LUMINOSITY_DIFFERENCE,
-                    NS_LUMINOSITY_DIFFERENCE(mOldStyle.mSelectionTextColor,
-                                             mOldStyle.mSelectionBGColor)),
-                    NS_LUMINOSITY_DIFFERENCE(defaultWindowBackgroundColor,
-                                             mOldStyle.mSelectionBGColor));
-
-    if (!aSelDetails)
-    {
-      mDone = PR_TRUE;
+  //special case for 1 selection. later
+  const SelectionDetails *details = aSelDetails;
+  if (details->mNext) {
+    mTypes = new PRUint8[mLength];
+    if (!mTypes)
       return;
-    }
-    mDone = (PRBool)(mCurrentIdx>=mLength);
-    if (mDone)
-      return;
-
-    //special case for 1 selection. later
-    const SelectionDetails *details = aSelDetails;
-    if (details->mNext)
-    {
-      mTypes = new PRUint8[mLength];
-      if (!mTypes)
-        return;
-      memset(mTypes,0,mLength);//initialize to 0
-      while (details)
-      {
-        if ((details->mType & SELECTION_TYPES_WE_CARE_ABOUT ) && 
-          (details->mStart != details->mEnd))
-        {
-          mInit = PR_TRUE;//WE FOUND SOMETHING WE CARE ABOUT
-          for (int i = details->mStart; i < details->mEnd; i++)
-          {
-              if ((PRUint32)i>=mLength)
-              {
-                NS_ASSERTION(0,"Selection Details out of range?");
-                return;//eh
-              }
-              mTypes[i]|=details->mType;//add this bit
+    memset(mTypes,0,mLength); // initialize to 0
+    while (details) {
+      if ((details->mType & SELECTION_TYPES_WE_CARE_ABOUT) &&
+          (details->mStart != details->mEnd)) {
+        mInit = PR_TRUE; // WE FOUND SOMETHING WE CARE ABOUT
+        for (int i = details->mStart; i < details->mEnd; i++) {
+          if ((PRUint32)i>=mLength) {
+            NS_ASSERTION(0, "Selection Details out of range?");
+            return;
           }
+          mTypes[i] |= details->mType;
         }
-        details= details->mNext;
       }
-      if (!mInit && mTypes) //we have details but none that we care about.
-      {
-        delete [] mTypes;
-        mTypes = nsnull;
-        mDone = PR_TRUE;//we are finished
-      }
+      details= details->mNext;
     }
-    else if (details->mStart == details->mEnd)//no collapsed selections here!
-    {
-      mDone = PR_TRUE;
-      return;
+    if (!mInit && mTypes) {
+      // we have details but none that we care about.
+      delete [] mTypes;
+      mTypes = nsnull;
+      mDone = PR_TRUE; // we are finished
     }
-    else if (!(details->mType & SELECTION_TYPES_WE_CARE_ABOUT ))//if all we have is selection we DONT care about, do nothing
-    {
-        mDone = PR_TRUE;
-        return;
-    }
-    mInit = PR_TRUE;
+  } else if (details->mStart == details->mEnd) {
+    // no collapsed selections here!
+    mDone = PR_TRUE;
+    return;
+  } else if (!(details->mType & SELECTION_TYPES_WE_CARE_ABOUT )) {
+    //if all we have is selection we DONT care about, do nothing
+    mDone = PR_TRUE;
+    return;
+  }
+  mInit = PR_TRUE;
 }
 
 DrawSelectionIterator::~DrawSelectionIterator()
@@ -949,7 +1047,7 @@ DrawSelectionIterator::CurrentLength()
   return mCurrentLength;
 }
 
-nsTextFrame::TextPaintStyle & 
+nsTextPaintStyle & 
 DrawSelectionIterator::CurrentStyle()
 {
   return mOldStyle;
@@ -960,61 +1058,19 @@ DrawSelectionIterator::GetSelectionColors(nscolor *aForeColor,
                                           nscolor *aBackColor,
                                           PRBool  *aBackIsTransparent)
 {
-  *aBackIsTransparent = PR_FALSE;
   PRBool isSelection =
-    (mTypes && (mTypes[mCurrentIdx] & nsISelectionController::SELECTION_NORMAL)) ||
+    (mTypes &&
+      (mTypes[mCurrentIdx] & nsISelectionController::SELECTION_NORMAL)) ||
     (!mTypes && mCurrentIdx == (PRUint32)mDetails->mStart);
+
   if (!isSelection) {
-    *aForeColor = mOldStyle.mColor->mColor;
+    *aBackIsTransparent = PR_FALSE;
+    *aForeColor = mOldStyle.GetTextColor();
     return PR_FALSE;
   }
 
-  if (mSelectionPseudoStyle &&
-      mSelectionStatus == nsISelectionController::SELECTION_ON) {
-    *aForeColor = mSelectionPseudoFGcolor;
-    *aBackColor = mSelectionPseudoBGcolor;
-    *aBackIsTransparent = mSelectionPseudoBGIsTransparent;
-    return PR_TRUE;
-  }
-
-  PRBool dontChangeTextColor =
-           mOldStyle.mSelectionTextColor == NS_DONT_CHANGE_COLOR;
-
-  if (dontChangeTextColor)
-    *aForeColor = mOldStyle.mColor->mColor;
-  else
-    *aForeColor = mOldStyle.mSelectionTextColor;
-
-  if (mSelectionStatus == nsISelectionController::SELECTION_ATTENTION)
-    *aBackColor = mAttentionColor;
-  else if (mSelectionStatus != nsISelectionController::SELECTION_ON)
-    *aBackColor = mDisabledColor;
-  else
-    *aBackColor = mOldStyle.mSelectionBGColor;
-
-  // We don't support selection color exchanging when selection text color is
-  // NS_DONT_CHANGE_COLOR. Because the text color should not be background color.
-  if (dontChangeTextColor) {
-    *aForeColor = EnsureDifferentColors(*aForeColor, *aBackColor);
-    return PR_TRUE;
-  }
-
-  // If the combination of selection background color and frame background color
-  // is sufficient contrast, don't exchange the selection colors.
-  PRInt32 backLuminosityDifference =
-            NS_LUMINOSITY_DIFFERENCE(*aBackColor, mFrameBackgroundColor);
-  if (backLuminosityDifference >= mSufficientContrast)
-    return PR_TRUE;
-
-  // Otherwise, we should use the higher-contrast color for the selection
-  // background color.
-  PRInt32 foreLuminosityDifference =
-            NS_LUMINOSITY_DIFFERENCE(*aForeColor, mFrameBackgroundColor);
-  if (backLuminosityDifference < foreLuminosityDifference) {
-    nscolor tmpColor = *aForeColor;
-    *aForeColor = *aBackColor;
-    *aBackColor = tmpColor;
-  }
+  mOldStyle.GetSelectionColors(aForeColor, aBackColor,
+                               aBackIsTransparent);
   return PR_TRUE;
 }
 
@@ -1231,7 +1287,19 @@ nsTextFrame::Paint(nsPresContext*      aPresContext,
   nsStyleContext* sc = mStyleContext;
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && isVisible) {
-    TextPaintStyle ts(aPresContext, aRenderingContext, mStyleContext);
+    nsCOMPtr<nsIContent> content;
+    PRInt32 offset, length;
+    GetContentAndOffsetsForSelection(aPresContext,
+                                     getter_AddRefs(content),
+                                     &offset, &length);
+    PRInt16 selectionValue;
+    if (NS_FAILED(GetSelectionStatus(aPresContext, selectionValue)))
+      selectionValue = nsISelectionController::SELECTION_NORMAL;
+    nsTextPaintStyle ts(aPresContext,
+                        aRenderingContext,
+                        mStyleContext,
+                        content,
+                        selectionValue);
     if (ts.mSmallCaps || (0 != ts.mWordSpacing) || (0 != ts.mLetterSpacing)
       || ts.mJustifying) {
       PaintTextSlowly(aPresContext, aRenderingContext, sc, ts, 0, 0);
@@ -1656,7 +1724,7 @@ void
 nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                                   nsStyleContext* aStyleContext,
                                   nsPresContext* aPresContext,
-                                  TextPaintStyle& aTextStyle,
+                                  nsTextPaintStyle& aTextStyle,
                                   nscoord aX, nscoord aY, nscoord aWidth,
                                   PRUnichar *aText, /*=nsnull*/
                                   SelectionDetails *aDetails,/*= nsnull*/
@@ -2005,6 +2073,23 @@ nsresult nsTextFrame::GetTextInfoForPainting(nsPresContext*          aPresContex
   return NS_OK;
 }
 
+nsresult
+nsTextFrame::GetSelectionStatus(nsPresContext* aPresContext,
+                                PRInt16&       aSelectionValue)
+{
+  NS_ENSURE_ARG_POINTER(aPresContext);
+
+  //get the selection controller
+  nsISelectionController* selectionController;
+  nsresult rv = GetSelectionController(aPresContext, &selectionController);
+  if (NS_FAILED(rv) || !selectionController)
+    return NS_ERROR_FAILURE;
+
+  selectionController->GetDisplaySelection(&aSelectionValue);
+
+  return NS_OK;
+}
+
 PRBool
 nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
                                nsIRenderingContext& aRenderingContext)
@@ -2034,7 +2119,18 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
   if (NS_FAILED(indexBuffer.GrowTo(mContentLength + 1))) {
     return PR_FALSE;
   }
-  TextPaintStyle ts(aPresContext, aRenderingContext, mStyleContext);
+
+  nsCOMPtr<nsIContent> content;
+  PRInt32 offset, length;
+  nsresult getContent = NS_OK;
+  getContent = GetContentAndOffsetsForSelection(aPresContext,
+                                                getter_AddRefs(content),
+                                                &offset, &length);
+  nsTextPaintStyle ts(aPresContext,
+                      aRenderingContext,
+                      mStyleContext,
+                      content,
+                      selectionValue);
 
   // Transform text from content into renderable form
   // XXX If the text fragment is already Unicode and the text wasn't
@@ -2059,22 +2155,14 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
     if (selCon) {
       frameSelection = do_QueryInterface(selCon); //this MAY implement
     }
-    nsresult rv = NS_OK;
     //if that failed get it from the pres shell
     if (!frameSelection)
       frameSelection = shell->FrameSelection();
 
-    nsCOMPtr<nsIContent> content;
-    PRInt32 offset;
-    PRInt32 length;
-
-    rv = GetContentAndOffsetsForSelection(aPresContext,
-                                          getter_AddRefs(content),
-                                          &offset, &length);
-    if (NS_SUCCEEDED(rv) && content) {
-      rv = frameSelection->LookUpSelection(content, mContentOffset,
-                                           mContentLength, &details,
-                                           PR_FALSE);
+    if (NS_SUCCEEDED(getContent) && content) {
+      frameSelection->LookUpSelection(content, mContentOffset,
+                                      mContentLength, &details,
+                                      PR_FALSE);
     }
       
     //where are the selection points "really"
@@ -2086,7 +2174,10 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
     }
     //while we have substrings...
     //PRBool drawn = PR_FALSE;
-    DrawSelectionIterator iter(content, details,text,(PRUint32)textLength, ts, nsISelectionController::SELECTION_NORMAL, aPresContext, mStyleContext);
+    DrawSelectionIterator iter(details,
+                               text,
+                               (PRUint32)textLength,
+                               ts);
     if (!iter.IsDone() && iter.First()) {
       isSelected = PR_TRUE;
     }
@@ -2140,7 +2231,7 @@ void
 nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsStyleContext* aStyleContext,
-                              TextPaintStyle& aTextStyle,
+                              nsTextPaintStyle& aTextStyle,
                               nscoord dx, nscoord dy)
 {
   nsCOMPtr<nsISelectionController> selCon;
@@ -2322,7 +2413,10 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
 
       //while we have substrings...
       //PRBool drawn = PR_FALSE;
-      DrawSelectionIterator iter(content, details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext, mStyleContext);
+      DrawSelectionIterator iter(details,
+                                 text,
+                                 (PRUint32)textLength,
+                                 aTextStyle);
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
@@ -2337,7 +2431,7 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
         {
           PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
           PRUint32   currentlength= iter.CurrentLength();
-          //TextStyle &currentStyle = iter.CurrentStyle();
+          //nsTextStyle &currentStyle = iter.CurrentStyle();
           nscolor    currentFGColor, currentBKColor;
           PRBool     isCurrentBKColorTransparent;
 
@@ -2444,7 +2538,7 @@ nsTextFrame::GetPositionSlowly(nsPresContext* aPresContext,
   // initialize out param
   *aNewContent = nsnull;
 
-  TextStyle ts(aPresContext, *aRendContext, mStyleContext);
+  nsTextStyle ts(aPresContext, *aRendContext, mStyleContext);
   if (!ts.mSmallCaps && !ts.mWordSpacing && !ts.mLetterSpacing && !ts.mJustifying) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -2570,7 +2664,7 @@ void
 nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
                           nsStyleContext* aStyleContext,
                           nsPresContext* aPresContext,
-                          TextPaintStyle& aTextStyle,
+                          nsTextPaintStyle& aTextStyle,
                           PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                           nscoord aX, nscoord aY,
                           nscoord aWidth, 
@@ -2737,7 +2831,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
 
 inline void
 nsTextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
-                                  TextStyle& aTextStyle,
+                                  nsTextStyle& aTextStyle,
                                   PRUnichar* aWord,
                                   PRInt32 aWordLength,
                                   PRBool aIsEndOfFrame,
@@ -2755,7 +2849,7 @@ nsTextFrame::MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
 
 PRInt32
 nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
-                TextStyle& aStyle,
+                nsTextStyle& aStyle,
                 PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                 nsTextDimensions* aDimensionsResult,
                 PRBool aGetTextDimensions/* true=get dimensions false = return length up to aDimensionsResult.width size*/)
@@ -2841,7 +2935,7 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
 // XXX factor in logic from RenderString into here; gaps, justification, etc.
 void
 nsTextFrame::GetTextDimensions(nsIRenderingContext& aRenderingContext,
-                      TextStyle& aTextStyle,
+                      nsTextStyle& aTextStyle,
                       PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                       nsTextDimensions* aDimensionsResult)
 {
@@ -2851,7 +2945,7 @@ nsTextFrame::GetTextDimensions(nsIRenderingContext& aRenderingContext,
 
 PRInt32 
 nsTextFrame::GetLengthSlowly(nsIRenderingContext& aRenderingContext,
-                TextStyle& aStyle,
+                nsTextStyle& aStyle,
                 PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                 nscoord aWidth)
 {
@@ -2863,7 +2957,7 @@ nsTextFrame::GetLengthSlowly(nsIRenderingContext& aRenderingContext,
 
 void
 nsTextFrame::ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingContext,
-                                              TextStyle& aTextStyle,
+                                              nsTextStyle& aTextStyle,
                                               PRUnichar* aBuffer, PRInt32 aLength,
                                               PRInt32 aNumJustifiableCharacter)
 {
@@ -2905,7 +2999,7 @@ void
 nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              nsStyleContext* aStyleContext,
-                             TextPaintStyle& aTextStyle,
+                             nsTextPaintStyle& aTextStyle,
                              nscoord dx, nscoord dy)
 {
   nsCOMPtr<nsISelectionController> selCon;
@@ -3033,7 +3127,10 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
         sdptr = sdptr->mNext;
       }
 
-      DrawSelectionIterator iter(content, details,text,(PRUint32)textLength,aTextStyle, selectionValue, aPresContext, mStyleContext);
+      DrawSelectionIterator iter(details,
+                                 text,
+                                 (PRUint32)textLength,
+                                 aTextStyle);
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
@@ -3051,7 +3148,7 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
         {
           PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
           PRUint32   currentlength= iter.CurrentLength();
-          //TextStyle &currentStyle = iter.CurrentStyle();
+          //nsTextStyle &currentStyle = iter.CurrentStyle();
           nscolor    currentFGColor, currentBKColor;
           PRBool     isCurrentBKColorTransparent;
           PRBool     isSelection = iter.GetSelectionColors(&currentFGColor,
@@ -3127,7 +3224,7 @@ void
 nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             nsStyleContext* aStyleContext,
-                            TextPaintStyle& aTextStyle,
+                            nsTextPaintStyle& aTextStyle,
                             nscoord dx, nscoord dy)
 {
   NS_PRECONDITION(0 == (TEXT_HAS_MULTIBYTE & mState), "text is multi-byte");
@@ -3283,8 +3380,10 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
 
       if (!hideStandardSelection || displaySelection) {
         //ITS OK TO CAST HERE THE RESULT WE USE WILLNOT DO BAD CONVERSION
-        DrawSelectionIterator iter(content, details,(PRUnichar *)text,(PRUint32)textLength,aTextStyle,
-                                   selectionValue, aPresContext, mStyleContext);
+        DrawSelectionIterator iter(details,
+                                   (PRUnichar *)text,
+                                   (PRUint32)textLength,
+                                   aTextStyle);
 
         // See if this rendering backend supports getting cluster
         // information.
@@ -3303,7 +3402,7 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
           {
             char *currenttext  = iter.CurrentTextCStrPtr();
             PRUint32   currentlength= iter.CurrentLength();
-            //TextStyle &currentStyle = iter.CurrentStyle();
+            //nsTextStyle &currentStyle = iter.CurrentStyle();
             nscolor    currentFGColor, currentBKColor;
             PRBool     isCurrentBKColorTransparent;
 
@@ -3473,7 +3572,7 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
     nsCOMPtr<nsIRenderingContext> rendContext;      
     nsresult rv = shell->CreateRenderingContext(this, getter_AddRefs(rendContext));
     if (NS_SUCCEEDED(rv)) {
-      TextStyle ts(aPresContext, *rendContext, mStyleContext);
+      nsTextStyle ts(aPresContext, *rendContext, mStyleContext);
       if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing || ts.mJustifying) {
         nsresult result = GetPositionSlowly(aPresContext, rendContext, aPoint, aNewContent,
                                  aContentOffset);
@@ -3829,7 +3928,7 @@ nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
   }
   if (inOffset >= mContentLength)
     inOffset = mContentLength;
-  TextStyle ts(aPresContext, *inRendContext, mStyleContext);
+  nsTextStyle ts(aPresContext, *inRendContext, mStyleContext);
 
   // Make enough space to transform
   nsAutoTextBuffer paintBuffer;
@@ -4760,7 +4859,7 @@ nsReflowStatus
 nsTextFrame::MeasureText(nsPresContext*          aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsTextTransformer&       aTx,
-                         TextStyle&               aTs,
+                         nsTextStyle&               aTs,
                          TextReflowData&          aTextData)
 {
   PRBool firstThing = PR_TRUE;
@@ -5459,7 +5558,7 @@ nsTextFrame::Reflow(nsPresContext*          aPresContext,
     }
   }
   nsLineLayout& lineLayout = *aReflowState.mLineLayout;
-  TextStyle ts(aPresContext, *aReflowState.rendContext, mStyleContext);
+  nsTextStyle ts(aPresContext, *aReflowState.rendContext, mStyleContext);
 
   if ( (mContentLength > 0) && (mState & NS_FRAME_IS_BIDI) ) {
     startingOffset = mContentOffset;
@@ -6030,7 +6129,7 @@ nsTextFrame::ComputeWordFragmentDimensions(nsPresContext* aPresContext,
     nsCOMPtr<nsIFontMetrics> oldfm;
     rc.GetFontMetrics(*getter_AddRefs(oldfm));
 
-    TextStyle ts(aLineLayout.mPresContext, rc, sc);
+    nsTextStyle ts(aLineLayout.mPresContext, rc, sc);
     if (ts.mSmallCaps) {
       MeasureSmallCapsText(aReflowState, ts, bp, wordLen, PR_FALSE, &dimensions);
     }

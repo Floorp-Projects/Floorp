@@ -44,6 +44,72 @@
 struct nsAutoIndexBuffer;
 struct nsAutoPRUint8Buffer;
 
+class nsTextStyle {
+public:
+  const nsStyleFont* mFont;
+  const nsStyleText* mText;
+  nsIFontMetrics* mNormalFont;
+  nsIFontMetrics* mSmallFont;
+  nsIFontMetrics* mLastFont;
+  PRBool mSmallCaps;
+  nscoord mWordSpacing;
+  nscoord mLetterSpacing;
+  nscoord mSpaceWidth;
+  nscoord mAveCharWidth;
+  PRBool mJustifying;
+  PRBool mPreformatted;
+  PRInt32 mNumJustifiableCharacterToRender;
+  PRInt32 mNumJustifiableCharacterToMeasure;
+  nscoord mExtraSpacePerJustifiableCharacter;
+  PRInt32 mNumJustifiableCharacterReceivingExtraJot;
+
+  nsTextStyle(nsPresContext* aPresContext,
+              nsIRenderingContext& aRenderingContext,
+              nsStyleContext* sc);
+
+  ~nsTextStyle();
+};
+
+// Contains extra style data needed only for painting (not reflowing)
+class nsTextPaintStyle : public nsTextStyle {
+public:
+  const nsStyleColor* mColor;
+
+  nsTextPaintStyle(nsPresContext* aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   nsStyleContext* aStyleContext,
+                   nsIContent* aContent,
+                   PRInt16 aSelectionStatus);
+  ~nsTextPaintStyle();
+
+  nscolor GetTextColor();
+  void GetSelectionColors(nscolor* foreColor,
+                          nscolor* backColor,
+                          PRBool*  aBackIsTransparent);
+protected:
+  nsPresContext* mPresContext;
+  nsStyleContext* mStyleContext;
+  nsIContent* mContent;
+  PRInt16 mSelectionStatus; // see nsIDocument.h SetDisplaySelection()
+
+  // Common colors
+  PRBool mInitCommonColors;
+
+  PRInt32 mSufficientContrast;
+  nscolor mFrameBackgroundColor;
+
+  // Selection colors
+  PRBool mInitSelectionColors;
+
+  nscolor mSelectionTextColor;
+  nscolor mSelectionBGColor;
+  PRBool  mSelectionBGIsTransparent;
+
+  PRBool InitCommonColors();
+  PRBool InitSelectionColors();
+  PRBool EnsureSufficientContrast(nscolor *aForeColor, nscolor *aBackColor);
+};
+
 class nsTextFrame : public nsFrame {
 public:
   nsTextFrame();
@@ -165,45 +231,7 @@ public:
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth,
                                     PRBool& aLastCharIsJustifiable);
-  
-  struct TextStyle {
-    const nsStyleFont* mFont;
-    const nsStyleText* mText;
-    nsIFontMetrics* mNormalFont;
-    nsIFontMetrics* mSmallFont;
-    nsIFontMetrics* mLastFont;
-    PRBool mSmallCaps;
-    nscoord mWordSpacing;
-    nscoord mLetterSpacing;
-    nscoord mSpaceWidth;
-    nscoord mAveCharWidth;
-    PRBool mJustifying;
-    PRBool mPreformatted;
-    PRInt32 mNumJustifiableCharacterToRender;
-    PRInt32 mNumJustifiableCharacterToMeasure;
-    nscoord mExtraSpacePerJustifiableCharacter;
-    PRInt32 mNumJustifiableCharacterReceivingExtraJot;
 
-    TextStyle(nsPresContext* aPresContext,
-              nsIRenderingContext& aRenderingContext,
-              nsStyleContext* sc);
-    
-    ~TextStyle();
-  };
-  
-  // Contains extra style data needed only for painting (not reflowing)
-  struct TextPaintStyle : TextStyle {
-    const nsStyleColor* mColor;
-    nscolor mSelectionTextColor;
-    nscolor mSelectionBGColor;
-    
-    TextPaintStyle(nsPresContext* aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   nsStyleContext* sc);
-
-    ~TextPaintStyle();
-  };
-  
   struct TextReflowData {
     PRInt32             mX;                   // OUT
     PRInt32             mOffset;              // IN/OUT How far along we are in the content
@@ -253,13 +281,13 @@ public:
                           PRBool aForceArabicShaping = PR_FALSE,
                           PRIntn* aJustifiableCharCount = nsnull);
   void ComputeExtraJustificationSpacing(nsIRenderingContext& aRenderingContext,
-                                        TextStyle& aTextStyle,
+                                        nsTextStyle& aTextStyle,
                                         PRUnichar* aBuffer, PRInt32 aLength, PRInt32 aNumJustifiableCharacter);
   
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                             nsStyleContext* aStyleContext,
                             nsPresContext* aPresContext,
-                            TextPaintStyle& aStyle,
+                            nsTextPaintStyle& aStyle,
                             nscoord aX, nscoord aY, nscoord aWidth,
                             PRUnichar* aText = nsnull,
                             SelectionDetails *aDetails = nsnull,
@@ -270,7 +298,7 @@ public:
   void PaintTextSlowly(nsPresContext* aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        nsStyleContext* aStyleContext,
-                       TextPaintStyle& aStyle,
+                       nsTextPaintStyle& aStyle,
                        nscoord aX, nscoord aY);
   
   // The passed-in rendering context must have its color set to the color the
@@ -278,14 +306,14 @@ public:
   void RenderString(nsIRenderingContext& aRenderingContext,
                     nsStyleContext* aStyleContext,
                     nsPresContext* aPresContext,
-                    TextPaintStyle& aStyle,
+                    nsTextPaintStyle& aStyle,
                     PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                     nscoord aX, nscoord aY,
                     nscoord aWidth,
                     SelectionDetails *aDetails = nsnull);
   
   void MeasureSmallCapsText(const nsHTMLReflowState& aReflowState,
-                            TextStyle& aStyle,
+                            nsTextStyle& aStyle,
                             PRUnichar* aWord,
                             PRInt32 aWordLength,
                             PRBool aIsEndOfFrame,
@@ -297,11 +325,11 @@ public:
   nsReflowStatus MeasureText(nsPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState,
                              nsTextTransformer&       aTx,
-                             TextStyle&               aTs,
+                             nsTextStyle&               aTs,
                              TextReflowData&          aTextData);
   
   void GetTextDimensions(nsIRenderingContext& aRenderingContext,
-                         TextStyle& aStyle,
+                         nsTextStyle& aStyle,
                          PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                          nsTextDimensions* aDimensionsResult);
   
@@ -309,7 +337,7 @@ public:
   //also note: this is NOT added to mContentOffset since that would imply that this return is
   //meaningful to content yet. use index buffer from prepareunicodestring to find the content offset.
   PRInt32 GetLengthSlowly(nsIRenderingContext& aRenderingContext,
-                          TextStyle& aStyle,
+                          nsTextStyle& aStyle,
                           PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                           nscoord aWidth);
   
@@ -325,17 +353,20 @@ public:
                                   PRBool&                  aIsSelected,
                                   PRBool&                  aHideStandardSelection,
                                   PRInt16&                 aSelectionValue);
-  
+
+  nsresult GetSelectionStatus(nsPresContext* aPresContext,
+                              PRInt16&       aSelectionValue);
+
   void PaintUnicodeText(nsPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         nsStyleContext* aStyleContext,
-                        TextPaintStyle& aStyle,
+                        nsTextPaintStyle& aStyle,
                         nscoord dx, nscoord dy);
   
   void PaintAsciiText(nsPresContext* aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       nsStyleContext* aStyleContext,
-                      TextPaintStyle& aStyle,
+                      nsTextPaintStyle& aStyle,
                       nscoord dx, nscoord dy);
   
   nsTextDimensions ComputeTotalWordDimensions(nsPresContext* aPresContext,
@@ -374,7 +405,7 @@ protected:
   nscoord   mAscent;
   //factored out method for GetTextDimensions and getlengthslowly. if aGetTextDimensions is non-zero number then measure to the width field and return the length. else shove total dimensions into result
   PRInt32 GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
-                                    TextStyle& aStyle,
+                                    nsTextStyle& aStyle,
                                     PRUnichar* aBuffer, PRInt32 aLength, PRBool aIsEndOfFrame,
                                     nsTextDimensions* aDimensionsResult,
                                     PRBool aGetTextDimensions/* true=get dimensions false = return length up to aDimensionsResult->width size*/);
