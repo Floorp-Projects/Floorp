@@ -60,9 +60,9 @@ public:
   /**
    * Instantiate a plugin that loads the data itself.
    * @param aMimeType Type of the plugin to instantiate. May be null.
-   *                  This argument is ignored if a classid is present on the
-   *                  plugin.
    * @param aURI      URI of the plugin data. May be null.
+   * @note            Only one of aURI and aMimeType may be null.
+   *                  If aURI is null, aMimeType must not be the empty string.
    * @note XXX this method is here only temporarily, until plugins are loaded
    *       from content.
    */
