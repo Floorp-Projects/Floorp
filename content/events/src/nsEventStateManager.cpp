@@ -86,6 +86,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
 #include "nsIPrefBranch2.h"
+#include "nsIObjectFrame.h"
 
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
@@ -4256,16 +4257,32 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
   // This fixes the order of accessibility focus events, so that
   // the window focus event goes first, and then the focus event for the control
   if (aEnsureWindowHasFocus) {
-    // This raises the window that has both content and scroll bars in it
-    // instead of the child window just below it that contains only the content
-    // That way we focus the same window that gets focused by a mouse click
-    nsIViewManager* vm = presShell->GetViewManager();
-    if (vm) {
-      nsCOMPtr<nsIWidget> widget;
-      vm->GetWidget(getter_AddRefs(widget));
-      if (widget)
-        widget->SetFocus(PR_TRUE);
+    nsCOMPtr<nsIWidget> widget;
+    // Plug-ins with native widget need a special handling
+    nsIFrame* currentFocusFrame = nsnull;
+    if (mCurrentFocus)
+      currentFocusFrame = presShell->GetPrimaryFrameFor(mCurrentFocus);
+    if (!currentFocusFrame)
+      currentFocusFrame = mCurrentTarget;
+    nsCOMPtr<nsIObjectFrame> objFrame;
+    if (currentFocusFrame)
+      objFrame = do_QueryInterface(currentFocusFrame);
+    if (objFrame) {
+      nsIView* view = currentFocusFrame->GetViewExternal();
+      NS_ASSERTION(view, "Object frames must have views");
+      widget = view->GetWidget();
     }
+    if (!widget) {
+      // This raises the window that has both content and scroll bars in it
+      // instead of the child window just below it that contains only the content
+      // That way we focus the same window that gets focused by a mouse click
+      nsIViewManager* vm = presShell->GetViewManager();
+      if (vm) {
+        vm->GetWidget(getter_AddRefs(widget));
+      }
+    }
+    if (widget)
+      widget->SetFocus(PR_TRUE);
   }
 
   if (nsnull != aContent && aContent != mFirstFocusEvent) {
