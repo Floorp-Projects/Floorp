@@ -2006,7 +2006,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 				return false;
 			// close popup when clicked outside of the popup window
 			uint32 eventID = ((int32 *)info->args)[0];
-			bool rollup = false;
+			PRBool rollup = PR_FALSE;
 
 			if ((eventID == NS_MOUSE_LEFT_BUTTON_DOWN ||
 			        eventID == NS_MOUSE_RIGHT_BUTTON_DOWN ||
@@ -2015,11 +2015,12 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			{
 				BPoint p(((int32 *)info->args)[1], ((int32 *)info->args)[2]);
 				mView->ConvertToScreen(&p);
-				if (DealWithPopups(nsWindow::ONMOUSE, nsPoint(p.x, p.y)))
-					rollup = true;
+				rollup = DealWithPopups(nsWindow::ONMOUSE, nsPoint(p.x, p.y));
 				mView->UnlockLooper();
 			}
-
+			// Drop click event - bug 314330
+			if (rollup)
+				return false;
 			DispatchMouseEvent(((int32 *)info->args)[0],
 			                   nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
 			                   ((int32 *)info->args)[3],
@@ -2140,22 +2141,13 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 	case nsWindow::ONMOUSE :
 		{
-		NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
+			NS_ASSERTION(info->nArgs == 4, "Wrong number of arguments to CallMethod");
 			if (!mEnabled)
 				return false;
-			BPoint cursor(0,0);
-			uint32 buttons;
-			
-			if(mView && mView->LockLooper())
-			{
-				mView->GetMouse(&cursor, &buttons, true);
-				mView->UnlockLooper();
-			}
-
 			DispatchMouseEvent(((int32 *)info->args)[0],
-			                   nsPoint(int32(cursor.x), int32(cursor.y)),
+			                   nsPoint(((int32 *)info->args)[1], ((int32 *)info->args)[2]),
 			                   0,
-		    	               modifiers());
+		    	               ((int32 *)info->args)[3]);
 		}
 		break;
 
@@ -3129,11 +3121,10 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
 	nsToolkit	*t = t = w->GetToolkit();
 	if (t == NULL)
 		return;
-
-	uint32	args[1];
-/*	args[1] = (int32) point.x;
+	uint32	args[4];
+	args[1] = (int32) point.x;
 	args[2] = (int32) point.y;
-	args[3] = modifiers();*/
+	args[3] = modifiers();
 
 	switch (transit)
  	{
@@ -3163,7 +3154,7 @@ void nsViewBeOS::MouseMoved(BPoint point, uint32 transit, const BMessage *msg)
  	}
  	
 	MethodInfo *moveInfo = nsnull;
-	if (nsnull != (moveInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 1, args)))
+	if (nsnull != (moveInfo = new MethodInfo(w, w, nsWindow::ONMOUSE, 4, args)))
 		t->CallMethodAsync(moveInfo);
 	NS_RELEASE(t);
 }
