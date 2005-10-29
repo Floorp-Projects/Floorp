@@ -360,7 +360,9 @@ case "$target" in
             AC_MSG_ERROR([\$(CXX) test failed.  You must have MS VC++ in your path to build.]) )
         AC_LANG_RESTORE
         
-        _MSVC_VER_FILTER='s|.* \([[0-9]][[0-9]]*\.[[0-9]][[0-9]]*\.[[0-9]][[0-9]]*\).*|\1|p'
+        changequote(,)
+        _MSVC_VER_FILTER='s|.* \([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\).*|\1|p'
+        changequote([,])
         
         # Determine compiler version
         CC_VERSION=`"${CC}" -v 2>&1 | sed -ne "$_MSVC_VER_FILTER"`
@@ -986,7 +988,9 @@ OS_2)
     ;;
 QNX)
     if test "$OS_TARGET" != "NTO"; then
+        changequote(,)
         OS_RELEASE=`uname -v | sed 's/^\([0-9]\)\([0-9]*\)$/\1.\2/'`
+        changequote([,])
     fi
     OS_TEST=x86
     ;;
@@ -1012,7 +1016,9 @@ Darwin)
 esac
 
 if test "$OS_ARCH" = "NCR"; then
+    changequote(,)
     OS_RELEASE=`awk '{print $3}' /etc/.relid | sed 's/^\([0-9]\)\(.\)\(..\)\(.*\)$/\2.\3/'`
+    changequote([,])
 fi
 
 # Only set CPU_ARCH if we recognize the value of OS_TEST
@@ -6429,8 +6435,10 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c python/xpcom` -ne 0; then
     fi
     MOZ_PYTHON=$PYTHON
     dnl Ask Python what its version number is
-    MOZ_PYTHON_VER=`$PYTHON -c "import sys;print '%d%d' % sys.version_info[[0:2]]"`
-    MOZ_PYTHON_VER_DOTTED=`$PYTHON -c "import sys;print '%d.%d' % sys.version_info[[0:2]]"`
+    changequote(,)
+    MOZ_PYTHON_VER=`$PYTHON -c "import sys;print '%d%d' % sys.version_info[0:2]"`
+    MOZ_PYTHON_VER_DOTTED=`$PYTHON -c "import sys;print '%d.%d' % sys.version_info[0:2]"`
+    changequote([,])
     dnl Ask for the Python "prefix" (ie, home/source dir)
     MOZ_PYTHON_PREFIX=`$PYTHON -c "import sys; print sys.prefix"`
     dnl Setup the include and library directories.
