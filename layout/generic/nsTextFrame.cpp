@@ -2079,9 +2079,10 @@ nsTextFrame::GetSelectionStatus(nsPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
 
-  //get the selection controller
-  nsISelectionController* selectionController;
-  nsresult rv = GetSelectionController(aPresContext, &selectionController);
+  // get the selection controller
+  nsCOMPtr<nsISelectionController> selectionController;
+  nsresult rv = GetSelectionController(aPresContext,
+                                       getter_AddRefs(selectionController));
   if (NS_FAILED(rv) || !selectionController)
     return NS_ERROR_FAILURE;
 
