@@ -436,6 +436,13 @@ calICSCalendar.prototype = {
                             todo.icalComponent = subComp;
                             this.mMemoryCalendar.addItem(todo, null);
                             break;
+
+                        case "VTIMEZONE":
+                            // this should already be attached to the relevant
+                            // events in the calendar, so there's no need to
+                            // do anything with it here.
+                            break;
+
                         default:
                             this.unmappedComponents.push(subComp);
                             dump(subComp.componentType+"\n");
