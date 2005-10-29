@@ -995,6 +995,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aMax
 #endif
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32 numCols = mTableFrame->GetColCount();
+  PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
   nscoord spacingX = mTableFrame->GetCellSpacingX();
   PRInt32 colX, rowX; 
   mCellSpacingTotal = 0;
@@ -1028,43 +1029,44 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aMax
     // min, desired, and fixed cells.
     nsTableCellFrame* fixContributor = nsnull;
     nsTableCellFrame* desContributor = nsnull;
-    for (rowX = 0; rowX < numRows; rowX++) {
-      PRBool originates;
-      PRInt32 colSpan;
-      nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
-      // skip cells that don't originate at (rowX, colX); colspans are handled in the
-      // next pass, row spans don't need to be handled
-      if (!cellFrame || !originates || (colSpan > 1)) { 
-        continue;
-      }
-      // these values include borders and padding
-      minWidth = PR_MAX(minWidth, cellFrame->GetPass1MaxElementWidth());
-      nscoord cellDesWidth = cellFrame->GetMaximumWidth();
-      if (cellDesWidth > desWidth) {
-        desContributor = cellFrame;
-        desWidth = cellDesWidth;
-      }
-      // see if the cell has a style width specified
-      const nsStylePosition* cellPosition = cellFrame->GetStylePosition();
-      if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
-        nscoord coordValue = cellPosition->mWidth.GetCoordValue();
-        if (coordValue > 0) { // ignore if width == 0
-          // need to add border and padding into fixed width
-          nsSize percentBase(aReflowState.mComputedWidth, 0);
-          nsMargin borderPadding = nsTableFrame::GetBorderPadding(percentBase, pixelToTwips, cellFrame);
-          nscoord newFixWidth = coordValue + borderPadding.left + borderPadding.right;
-          // 2nd part of condition is Nav/IE Quirk like below
-          if ((newFixWidth > fixWidth) || ((newFixWidth == fixWidth) && (desContributor == cellFrame))) {
-            fixWidth = newFixWidth;
-            fixContributor = cellFrame;
+    if (colX < numEffCols) {
+      for (rowX = 0; rowX < numRows; rowX++) {
+        PRBool originates;
+        PRInt32 colSpan;
+        nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
+        // skip cells that don't originate at (rowX, colX); colspans are handled in the
+        // next pass, row spans don't need to be handled
+        if (!cellFrame || !originates || (colSpan > 1)) { 
+          continue;
+        }
+        // these values include borders and padding
+        minWidth = PR_MAX(minWidth, cellFrame->GetPass1MaxElementWidth());
+        nscoord cellDesWidth = cellFrame->GetMaximumWidth();
+        if (cellDesWidth > desWidth) {
+          desContributor = cellFrame;
+          desWidth = cellDesWidth;
+        }
+        // see if the cell has a style width specified
+        const nsStylePosition* cellPosition = cellFrame->GetStylePosition();
+        if (eStyleUnit_Coord == cellPosition->mWidth.GetUnit()) {
+          nscoord coordValue = cellPosition->mWidth.GetCoordValue();
+          if (coordValue > 0) { // ignore if width == 0
+            // need to add border and padding into fixed width
+            nsSize percentBase(aReflowState.mComputedWidth, 0);
+            nsMargin borderPadding = nsTableFrame::GetBorderPadding(percentBase, pixelToTwips, cellFrame);
+            nscoord newFixWidth = coordValue + borderPadding.left + borderPadding.right;
+            // 2nd part of condition is Nav/IE Quirk like below
+            if ((newFixWidth > fixWidth) || ((newFixWidth == fixWidth) && (desContributor == cellFrame))) {
+              fixWidth = newFixWidth;
+              fixContributor = cellFrame;
+            }
           }
         }
-      }
-      if (!hasPctCol && HasPctValue(cellFrame)) { // see if there is a pct cell
-        hasPctCol = PR_TRUE;
+        if (!hasPctCol && HasPctValue(cellFrame)) { // see if there is a pct cell
+         hasPctCol = PR_TRUE;
+        }
       }
     }
-
     // Nav/IE Quirk like above
     if (fixWidth > 0) {
       if (mIsNavQuirksMode && (desWidth > fixWidth) && (fixContributor != desContributor)) {
@@ -1135,7 +1137,6 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aMax
   }
   PRBool* pctRequest = (hasPctCol) ? nsnull : &hasPctCol;
   ComputeNonPctColspanWidths(aReflowState, PR_FALSE, pixelToTwips, pctRequest);
-  PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
   // figure the proportional widths for porportional cols
   if (rawPropTotal > 0)  {
     // find the largest combined prop size considering each prop col and
