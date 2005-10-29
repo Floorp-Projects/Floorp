@@ -451,7 +451,7 @@ nsHTMLCanvasElement::GetCanvasImageContainer(imgIContainer **aImageContainer)
 NS_IMETHODIMP
 nsHTMLCanvasElement::GetPrimaryCanvasFrame(nsIFrame **aFrame)
 {
-  *aFrame = GetPrimaryFrame(PR_TRUE);
+  *aFrame = GetPrimaryFrame(PR_FALSE);
   return NS_OK;
 }
 
