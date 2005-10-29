@@ -108,9 +108,6 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   };
 
-  //i18n helper
-  nsresult MakeAbsoluteURL(nsIURI* *aFullURI, nsString aSrc,
-                           nsIURI* aBaseURI);
   // accessibility support
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);

@@ -835,23 +835,6 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   }
 }
 
-nsresult 
-nsObjectFrame::MakeAbsoluteURL(nsIURI* *aFullURI, 
-                              nsString aSrc,
-                              nsIURI* aBaseURI)
-{
-  nsresult rv;
-  nsCOMPtr<nsIDocument> document;
-  rv = mInstanceOwner->GetDocument(getter_AddRefs(document));
-
-  // get document charset
-  nsCAutoString originCharset;
-  if (document)
-    originCharset = document->GetDocumentCharacterSet();
-
-  return NS_NewURI(aFullURI, aSrc, originCharset.get(), aBaseURI);
-}
-
 static void
 SizeAnchor(nsIContent *aAnchor, PRInt32 aWidth, PRInt32 aHeight)
 {
@@ -1588,7 +1571,7 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
 
         /*
          * Layout now has an optimized way of painting. Now we always get
-         * a new drawing surface, sized to be just what's needed. Windowsless
+         * a new drawing surface, sized to be just what's needed. Windowless
          * plugins need a transform applied to their origin so they paint
          * in the right place. Since |SetWindow| is no longer being used
          * to tell the plugin where it is, we dispatch a NPWindow through
@@ -1761,6 +1744,7 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
 nsresult
 nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 {
+  NS_ASSERTION(aMimeType || aURI, "Need a type or a URI!");
   nsresult rv = PrepareInstanceOwner();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1773,58 +1757,7 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
     return rv;
   mInstanceOwner->SetPluginHost(pluginHost);
 
-  nsCOMPtr<nsISupports> container;
-
-  nsAutoString classid;
-
-  nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
-  nsAutoString codeBase;
-  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codeBase);
-  if (!codeBase.IsEmpty()) {
-    nsCOMPtr<nsIURI> codeBaseURL;
-    rv = MakeAbsoluteURL(getter_AddRefs(codeBaseURL), codeBase, baseURI);
-    if (NS_SUCCEEDED(rv)) {
-      baseURI = codeBaseURL;
-    }
-  }
-  if (!baseURI)
-    return NS_ERROR_FAILURE;
-
-  // If we have no other URI, use the base URI of the node.
-  // XXX(biesi) I have no idea why that is the right thing, but it's what the
-  // code used to do...
-  if (!aURI)
-    aURI = baseURI; // Our baseURI nsCOMPtr will keep this alive
-
-  // if we have a clsid, we're either an internal widget, an ActiveX control, or an applet
-  if (mContent->Tag() == nsHTMLAtoms::object &&
-      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid) &&
-      !classid.IsEmpty()) {
-    // Find a MIME type for the class ID
-    nsCOMPtr<nsIObjectLoadingContent> objContent =
-        do_QueryInterface(GetContent(), &rv);
-    nsCAutoString type;
-    if (objContent)
-      rv = objContent->TypeForClassID(classid, type);
-    // XXX why baseURI??
-    if (NS_SUCCEEDED(rv))
-      rv = InstantiatePlugin(pluginHost, type.get(), baseURI);
-  }
-  else { // no clsid - the object is either an applet or a plugin
-    if (!aMimeType || !*aMimeType) {
-      // we don't have a mime type, try to figure it out
-      // from extension
-      nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
-      if (url) {
-        nsCAutoString ext;
-        rv = url->GetFileExtension(ext);
-        if (NS_SUCCEEDED(rv))
-          pluginHost->IsPluginEnabledForExtension(ext.get(), aMimeType);
-      }
-    }
-
-    rv = InstantiatePlugin(pluginHost, aMimeType, aURI);
-  }
+  rv = InstantiatePlugin(pluginHost, aMimeType, aURI);
 
   // finish up
   if (NS_SUCCEEDED(rv)) {

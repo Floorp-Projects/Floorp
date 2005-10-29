@@ -49,6 +49,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIURIContentListener.h"
+#include "nsIURL.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebNavigationInfo.h"
 
@@ -120,7 +121,7 @@ nsAsyncInstantiateEvent::HandleEvent(PLEvent* event)
                                                PL_GetEventOwner(event));
   // Make sure that we still have the right frame
   if (con->GetFrame() == ev->mFrame) {
-    nsresult rv = ev->mFrame->Instantiate(ev->mContentType.get(), ev->mURI);
+    nsresult rv = con->Instantiate(ev->mContentType, ev->mURI);
     if (NS_FAILED(rv)) {
       con->Fallback(PR_TRUE);
     }
@@ -419,41 +420,6 @@ nsObjectLoadingContent::GetDisplayedType(PRUint32* aType)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsObjectLoadingContent::TypeForClassID(const nsAString& aClassID,
-                                       nsACString& aType)
-{
-  // Need a plugin host for any class id support
-  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(kCPluginManagerCID));
-  if (!pluginHost) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (StringBeginsWith(aClassID, NS_LITERAL_STRING("java:"))) {
-    // Supported if we have a java plugin
-    aType.AssignLiteral("application/x-java-vm");
-    nsresult rv = pluginHost->IsPluginEnabledForType("application/x-java-vm");
-    return NS_SUCCEEDED(rv) ? NS_OK : NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // If it starts with "clsid:", this is ActiveX content
-  if (StringBeginsWith(aClassID, NS_LITERAL_STRING("clsid:"))) {
-    // Check if we have a plugin for that
-
-    if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/x-oleobject"))) {
-      aType.AssignLiteral("application/x-oleobject");
-      return NS_OK;
-    }
-    if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/oleobject"))) {
-      aType.AssignLiteral("application/oleobject");
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-
 
 NS_IMETHODIMP
 nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
@@ -564,23 +530,13 @@ nsObjectLoadingContent::ObjectURIChanged(const nsAString& aURI,
   NS_ASSERTION(thisContent, "must be a content");
 
   nsIDocument* doc = thisContent->GetOwnerDoc();
-
-  // For plugins, the codebase attribute is the base URI
-  nsCOMPtr<nsIURI> baseURI = thisContent->GetBaseURI();
-  nsCOMPtr<nsIURI> codebaseURI;
-  nsAutoString codebase;
-  thisContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase, codebase);
-  if (!codebase.IsEmpty()) {
-    nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(codebaseURI),
-                                              codebase, doc, baseURI);
-  } else {
-    baseURI.swap(codebaseURI);
-  }
+  nsCOMPtr<nsIURI> baseURI;
+  GetObjectBaseURI(thisContent, getter_AddRefs(baseURI));
 
   nsCOMPtr<nsIURI> uri;
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
                                             aURI, doc,
-                                            codebaseURI);
+                                            baseURI);
   // If URI creation failed, fallback immediately - this only happens for
   // malformed URIs
   if (!uri) {
@@ -723,14 +679,7 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
         rv = ImageURIChanged(aURI, aForceLoad, PR_FALSE);
         break;
       case eType_Plugin:
-        nsIObjectFrame* frame;
-        frame = GetFrame();
-        if (frame) {
-          rv = frame->Instantiate(aTypeHint.get(), aURI);
-        } else {
-          // Shouldn't fallback just because we have no frame
-          rv = NS_OK;
-        }
+        rv = Instantiate(aTypeHint, aURI);
         break;
       case eType_Document:
         rv = mFrameLoader->LoadURI(aURI);
@@ -748,11 +697,11 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
   // If the class ID specifies a supported plugin, or if we have no explicit URI
   // but a type, immediately instantiate the plugin.
   PRBool isSupportedClassID = PR_FALSE;
+  nsCAutoString typeForID; // Will be set iff isSupportedClassID == PR_TRUE
   PRBool hasID = PR_FALSE;
   if (GetCapabilities() & eSupportClassID) {
     nsAutoString classid;
     thisContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::classid, classid);
-    nsCAutoString typeForID;
     if (!classid.IsEmpty()) {
       hasID = PR_TRUE;
       isSupportedClassID = NS_SUCCEEDED(TypeForClassID(classid, typeForID));
@@ -767,13 +716,28 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
     if (aNotify)
       notifier.Notify();
 
-    nsIObjectFrame* frame = GetFrame();
-    if (frame) {
-      rv = frame->Instantiate(aTypeHint.get(), aURI);
-    } else {
-      // Shouldn't fallback just because we have no frame
-      rv = NS_OK;
+    // At this point, the stored content type
+    // must be equal to our type hint. Similar,
+    // our URI must be the requested URI.
+    // (->Equals would suffice, but == is cheaper
+    // and handles NULL)
+    NS_ASSERTION(mContentType.Equals(aTypeHint), "mContentType wrong!");
+    NS_ASSERTION(mURI == aURI, "mURI wrong!");
+
+    if (isSupportedClassID) {
+      // Use the classid's type
+      NS_ASSERTION(!typeForID.IsEmpty(), "Must have a real type!");
+      mContentType = typeForID;
+      // XXX(biesi). The plugin instantiation code used to pass the base URI
+      // here instead of the plugin URI for instantiation via class ID, so I
+      // continue to do so. Why that is, no idea...
+      GetObjectBaseURI(thisContent, getter_AddRefs(mURI));
+      if (!mURI) {
+        mURI = aURI;
+      }
     }
+
+    rv = Instantiate(mContentType, mURI);
     mInstantiating = PR_FALSE;
     return NS_OK;
   }
@@ -798,13 +762,7 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
     if (aNotify)
       notifier.Notify();
 
-    nsIObjectFrame* frame = GetFrame();
-    if (frame) {
-      rv = frame->Instantiate(aTypeHint.get(), aURI);
-    } else {
-      // Shouldn't fallback just because we have no frame
-      rv = NS_OK;
-    }
+    rv = Instantiate(aTypeHint, aURI);
     mInstantiating = PR_FALSE;
     return NS_OK;
   }
@@ -1034,6 +992,61 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
   return eType_Null;
 }
 
+nsresult
+nsObjectLoadingContent::TypeForClassID(const nsAString& aClassID,
+                                       nsACString& aType)
+{
+  // Need a plugin host for any class id support
+  nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(kCPluginManagerCID));
+  if (!pluginHost) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (StringBeginsWith(aClassID, NS_LITERAL_STRING("java:"))) {
+    // Supported if we have a java plugin
+    aType.AssignLiteral("application/x-java-vm");
+    nsresult rv = pluginHost->IsPluginEnabledForType("application/x-java-vm");
+    return NS_SUCCEEDED(rv) ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+  }
+
+  // If it starts with "clsid:", this is ActiveX content
+  if (StringBeginsWith(aClassID, NS_LITERAL_STRING("clsid:"))) {
+    // Check if we have a plugin for that
+
+    if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/x-oleobject"))) {
+      aType.AssignLiteral("application/x-oleobject");
+      return NS_OK;
+    }
+    if (NS_SUCCEEDED(pluginHost->IsPluginEnabledForType("application/oleobject"))) {
+      aType.AssignLiteral("application/oleobject");
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+void
+nsObjectLoadingContent::GetObjectBaseURI(nsIContent* thisContent, nsIURI** aURI)
+{
+  // We want to use swap(); since this is just called from this file,
+  // we can assert this (callers use comptrs)
+  NS_PRECONDITION(*aURI == nsnull, "URI must be inited to zero");
+
+  // For plugins, the codebase attribute is the base URI
+  nsCOMPtr<nsIURI> baseURI = thisContent->GetBaseURI();
+  nsAutoString codebase;
+  thisContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::codebase,
+                       codebase);
+  if (!codebase.IsEmpty()) {
+    nsContentUtils::NewURIWithDocumentCharset(aURI, codebase,
+                                              thisContent->GetOwnerDoc(),
+                                              baseURI);
+  } else {
+    baseURI.swap(*aURI);
+  }
+}
+
 nsIObjectFrame*
 nsObjectLoadingContent::GetFrame()
 {
@@ -1059,6 +1072,56 @@ nsObjectLoadingContent::GetFrame()
   nsIObjectFrame* objFrame;
   CallQueryInterface(frame, &objFrame);
   return objFrame;
+}
+
+nsresult
+nsObjectLoadingContent::Instantiate(const nsACString& aMIMEType, nsIURI* aURI)
+{
+  nsIObjectFrame* frame = GetFrame();
+  if (!frame) {
+    return NS_OK; // Not a failure to have no frame
+  }
+
+  nsCString typeToUse(aMIMEType);
+  if (typeToUse.IsEmpty() && aURI) {
+    nsCAutoString ext;
+    
+    nsCOMPtr<nsIURL> url(do_QueryInterface(aURI));
+    if (url) {
+      url->GetFileExtension(ext);
+    } else {
+      nsCString spec;
+      aURI->GetSpec(spec);
+
+      PRInt32 offset = spec.RFindChar('.');
+      if (offset != kNotFound) {
+        ext = Substring(spec, offset + 1, spec.Length());
+      }
+    }
+
+    nsCOMPtr<nsIPluginHost> host(do_GetService("@mozilla.org/plugin/host;1"));
+    const char* typeFromExt;
+    if (host &&
+        NS_SUCCEEDED(host->IsPluginEnabledForExtension(ext.get(), typeFromExt))) {
+      typeToUse = typeFromExt;
+    }
+  }
+
+  nsCOMPtr<nsIURI> baseURI;
+  if (!aURI) {
+    // We need some URI. If we have nothing else, use the base URI.
+    // XXX(biesi): The code used to do this. Not sure why this is correct...
+    nsCOMPtr<nsIContent> thisContent = 
+      do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+    NS_ASSERTION(thisContent, "must be a content");
+
+    GetObjectBaseURI(thisContent, getter_AddRefs(baseURI));
+    aURI = baseURI;
+  }
+
+  // We'll always have a type or a URI by the time we get here
+  NS_ASSERTION(aURI || !typeToUse.IsEmpty(), "Need a URI or a type");
+  return frame->Instantiate(typeToUse.get(), aURI);
 }
 
 /* static */ PRBool

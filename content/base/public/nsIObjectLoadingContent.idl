@@ -43,7 +43,7 @@ interface nsIObjectFrame;
 /**
  * This interface represents a content node that loads objects.
  */
-[scriptable, uuid(3e78c950-24d2-4fcc-b0b9-751686e89b8f)]
+[scriptable, uuid(b986a24d-3dd2-4c61-b2bc-3047f4e5e276)]
 interface nsIObjectLoadingContent : nsISupports
 {
   const unsigned long TYPE_LOADING  = 0;
@@ -63,14 +63,6 @@ interface nsIObjectLoadingContent : nsISupports
    * the constants above for the list of possible values.
    */
   readonly attribute unsigned long displayedType;
-
-  /**
-   * For a classid, returns the MIME type that can be used to instantiate
-   * a plugin for this ID.
-   *
-   * @throw NS_ERROR_NOT_AVAILABLE Unsupported class ID.
-   */
-  ACString typeForClassID(in AString aClassID);
 
 
   /**

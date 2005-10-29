@@ -247,10 +247,32 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     ObjectType GetTypeOfContent(const nsCString& aMIMEType);
 
     /**
+     * For a classid, returns the MIME type that can be used to instantiate
+     * a plugin for this ID.
+     *
+     * @return NS_ERROR_NOT_AVAILABLE Unsupported class ID.
+     */
+    nsresult TypeForClassID(const nsAString& aClassID, nsACString& aType);
+
+    /**
+     * Gets the base URI to be used for this object. This differs from
+     * nsIContent::GetBaseURI in that it takes codebase attributes into
+     * account.
+     */
+    void GetObjectBaseURI(nsIContent* thisContent, nsIURI** aURI);
+
+    /**
      * Gets the frame that's associated with this content node in
      * presentation 0.
      */
     nsIObjectFrame* GetFrame();
+
+    /**
+     * Instantiates the plugin. This differs from GetFrame()->Instantiate() in
+     * that it ensures that the URI will be non-null, and that a MIME type
+     * will be passed.
+     */
+    nsresult Instantiate(const nsACString& aMIMEType, nsIURI* aURI);
 
     /**
      * Whether to treat this content as a plugin, even though we can't handle
