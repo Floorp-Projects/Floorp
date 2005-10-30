@@ -757,7 +757,7 @@ static CertificatesWindowController* gCertificatesWindowController;
 {
   SEL action = [inMenuItem action];
   if ((action == @selector(viewSelectedCertificates:)) ||
-      (action == @selector(deleteSelectedCertificate:)))
+      (action == @selector(deleteSelectedCertificates:)))
   {
     return ([[self selectedCertificates] count] > 0);
   }
