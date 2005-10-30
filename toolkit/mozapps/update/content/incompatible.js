@@ -46,11 +46,6 @@ function init() {
     listitem.setAttribute("label", itemName);
     incompatibleItems.appendChild(listitem);
   }
-  
-  var closebuttonlabel = document.documentElement.getAttribute("closebuttonlabel");
   var cancelbutton = document.documentElement.getButton("cancel");
-  cancelbutton.label = closebuttonlabel;
   cancelbutton.focus();
-  cancelbutton.setAttribute("default", "true");
 }
-

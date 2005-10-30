@@ -51,7 +51,9 @@
 <dialog id="incompatible"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 35em;"
-        buttons="cancel" closebuttonlabel="&closebutton.label;"
+        buttons="cancel"
+        defaultButton="cancel"
+        buttonlabelcancel="&closebutton.label;"
         title="&incompatible.title;"
         onload="init();">
 
