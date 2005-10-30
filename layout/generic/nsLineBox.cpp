@@ -784,7 +784,7 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
     return NS_OK;
   }
 
-  if (line->mBounds.width == 0)
+  if (line->mBounds.width == 0 && line->mBounds.height == 0)
     return NS_ERROR_FAILURE;
 
   nsIFrame* frame = line->mFirstChild;

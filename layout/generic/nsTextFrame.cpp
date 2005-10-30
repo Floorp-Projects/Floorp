@@ -3598,11 +3598,6 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
       // no need to worry about justification, that's always on the slow path
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
 
-      if (textLength <=0) {
-        //invalid frame to get position on
-        return NS_ERROR_FAILURE;
-      }
-
 //IF STYLE SAYS TO SELECT TO END OF FRAME HERE...
       PRInt32 prefInt =
         nsContentUtils::GetIntPref("browser.drag_out_of_frame_style");
@@ -3624,7 +3619,11 @@ nsTextFrame::GetPosition(nsPresContext*  aPresContext,
         }
       }
 
-      if (!outofstylehandled) //then we need to track based on the X coord only
+      if (textLength <= 0) {
+        aContentOffset = mContentOffset;
+        aContentOffsetEnd = aContentOffset;
+      }
+      else if (!outofstylehandled) //then we need to track based on the X coord only
       {
 //END STYLE IF
         PRInt32* ip = indexBuffer.mBuffer;
