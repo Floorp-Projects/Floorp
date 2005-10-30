@@ -34,9 +34,6 @@ use Bugzilla::User;
 
 require "globals.pl";
 
-# Use global template variables.
-use vars qw($userid);
-
 my $template = Bugzilla->template;
 my $vars = {};
 
@@ -48,8 +45,10 @@ my $vars = {};
 ###############################################################################
 sub DoAccount {
     my $dbh = Bugzilla->dbh;
+    my $user = Bugzilla->user;
+
     ($vars->{'realname'}) = $dbh->selectrow_array(
-             "SELECT realname FROM profiles WHERE userid = ?", undef, $userid);
+        "SELECT realname FROM profiles WHERE userid = ?", undef, $user->id);
 
     if(Param('allowemailchange')) {
         my @token = $dbh->selectrow_array(
@@ -58,7 +57,7 @@ sub DoAccount {
                FROM tokens
               WHERE userid = ?
                 AND tokentype LIKE 'email%'
-           ORDER BY tokentype ASC " . $dbh->sql_limit(1), undef, $userid);
+           ORDER BY tokentype ASC " . $dbh->sql_limit(1), undef, $user->id);
         if (scalar(@token) > 0) {
             my ($tokentype, $change_date, $eventdata) = @token;
             $vars->{'login_change_date'} = $change_date;
@@ -74,6 +73,7 @@ sub DoAccount {
 sub SaveAccount {
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
+    my $user = Bugzilla->user;
 
     my $pwd1 = $cgi->param('new_password1');
     my $pwd2 = $cgi->param('new_password2');
@@ -83,7 +83,7 @@ sub SaveAccount {
     {
         my ($oldcryptedpwd) = $dbh->selectrow_array(
                         q{SELECT cryptpassword FROM profiles WHERE userid = ?},
-                        undef, $userid);
+                        undef, $user->id);
         $oldcryptedpwd || ThrowCodeError("unable_to_retrieve_password");
 
         if (crypt(scalar($cgi->param('Bugzilla_password')), $oldcryptedpwd) ne 
@@ -103,7 +103,7 @@ sub SaveAccount {
             $dbh->do(q{UPDATE profiles
                           SET cryptpassword = ?
                         WHERE userid = ?},
-                     undef, ($cryptedpassword, $userid));
+                     undef, ($cryptedpassword, $user->id));
 
             # Invalidate all logins except for the current one
             Bugzilla->logout(LOGOUT_KEEP_CURRENT);
@@ -120,7 +120,7 @@ sub SaveAccount {
 
             use Bugzilla::Token;
             # Block multiple email changes for the same user.
-            if (Bugzilla::Token::HasEmailChangeToken($userid)) {
+            if (Bugzilla::Token::HasEmailChangeToken($user->id)) {
                 ThrowUserError("email_change_in_progress");
             }
 
@@ -131,8 +131,8 @@ sub SaveAccount {
             is_available_username($new_login_name)
               || ThrowUserError("account_exists", {email => $new_login_name});
 
-            Bugzilla::Token::IssueEmailChangeToken($userid,$old_login_name,
-                                                 $new_login_name);
+            Bugzilla::Token::IssueEmailChangeToken($user->id, $old_login_name,
+                                                   $new_login_name);
 
             $vars->{'email_changes_saved'} = 1;
         }
@@ -141,12 +141,14 @@ sub SaveAccount {
     my $realname = trim($cgi->param('realname'));
     trick_taint($realname); # Only used in a placeholder
     $dbh->do("UPDATE profiles SET realname = ? WHERE userid = ?",
-             undef, ($realname, $userid));
+             undef, ($realname, $user->id));
 }
 
 
 sub DoSettings {
-    my $settings = Bugzilla->user->settings;
+    my $user = Bugzilla->user;
+
+    my $settings = $user->settings;
     $vars->{'settings'} = $settings;
 
     my @setting_list = keys %$settings;
@@ -165,9 +167,10 @@ sub DoSettings {
 
 sub SaveSettings {
     my $cgi = Bugzilla->cgi;
+    my $user = Bugzilla->user;
 
-    my $settings = Bugzilla->user->settings;
-    my @setting_list = keys %{Bugzilla->user->settings};
+    my $settings = $user->settings;
+    my @setting_list = keys %$settings;
 
     foreach my $name (@setting_list) {
         next if ! ($settings->{$name}->{'is_enabled'});
@@ -184,11 +187,12 @@ sub SaveSettings {
             $settings->{$name}->set($value);
         }
     }
-    $vars->{'settings'} = Bugzilla->user->settings(1);
+    $vars->{'settings'} = $user->settings(1);
 }
 
 sub DoEmail {
     my $dbh = Bugzilla->dbh;
+    my $user = Bugzilla->user;
     
     ###########################################################################
     # User watching
@@ -198,12 +202,12 @@ sub DoEmail {
             "SELECT profiles.login_name FROM watch INNER JOIN profiles" .
             " ON watch.watched = profiles.userid" .
             " WHERE watcher = ?",
-            undef, $userid);
+            undef, $user->id);
         $vars->{'watchedusers'} = join(',', @$watched_ref);
 
         my $watcher_ids = $dbh->selectcol_arrayref(
             "SELECT watcher FROM watch WHERE watched = ?",
-            undef, $userid);
+            undef, $user->id);
 
         my @watchers;
         foreach my $watcher_id (@$watcher_ids) {
@@ -218,10 +222,10 @@ sub DoEmail {
     ###########################################################################
     # Role-based preferences
     ###########################################################################
-    my $sth = Bugzilla->dbh->prepare("SELECT relationship, event " . 
-                                     "FROM email_setting " . 
-                                     "WHERE user_id = $userid");
-    $sth->execute();
+    my $sth = $dbh->prepare("SELECT relationship, event " . 
+                            "FROM email_setting " . 
+                            "WHERE user_id = ?");
+    $sth->execute($user->id);
 
     my %mail;
     while (my ($relationship, $event) = $sth->fetchrow_array()) {
@@ -234,6 +238,7 @@ sub DoEmail {
 sub SaveEmail {
     my $dbh = Bugzilla->dbh;
     my $cgi = Bugzilla->cgi;
+    my $user = Bugzilla->user;
     
     ###########################################################################
     # Role-based preferences
@@ -241,7 +246,7 @@ sub SaveEmail {
     $dbh->bz_lock_tables("email_setting WRITE");
 
     # Delete all the user's current preferences
-    $dbh->do("DELETE FROM email_setting WHERE user_id = $userid");
+    $dbh->do("DELETE FROM email_setting WHERE user_id = ?", undef, $user->id);
 
     # Repopulate the table - first, with normal events in the 
     # relationship/event matrix.
@@ -255,7 +260,8 @@ sub SaveEmail {
             {
                 $dbh->do("INSERT INTO email_setting " . 
                          "(user_id, relationship, event) " . 
-                         "VALUES ($userid, $rel, $event)");
+                         "VALUES (?, ?, ?)",
+                         undef, ($user->id, $rel, $event));
             }
         }
         
@@ -266,7 +272,8 @@ sub SaveEmail {
             {
                 $dbh->do("INSERT INTO email_setting " . 
                          "(user_id, relationship, event) " . 
-                         "VALUES ($userid, $rel, $event)");
+                         "VALUES (?, ?, ?)",
+                         undef, ($user->id, $rel, $event));
             }
         }
     }
@@ -278,7 +285,8 @@ sub SaveEmail {
         {
             $dbh->do("INSERT INTO email_setting " . 
                      "(user_id, relationship, event) " . 
-                     "VALUES ($userid, " . REL_ANY . ", $event)");
+                     "VALUES (?, ?, ?)",
+                     undef, ($user->id, REL_ANY, $event));
         }
     }
 
@@ -297,7 +305,7 @@ sub SaveEmail {
         # what the db looks like now
         my $old_watch_ids =
             $dbh->selectcol_arrayref("SELECT watched FROM watch"
-                                   . " WHERE watcher = ?", undef, $userid);
+                                   . " WHERE watcher = ?", undef, $user->id);
  
        # The new information given to us by the user.
         my @new_watch_names = split(/[,\s]+/, $cgi->param('watchedusers'));
@@ -312,14 +320,14 @@ sub SaveEmail {
         my $delete_sth = $dbh->prepare('DELETE FROM watch WHERE watched = ?'
                                      . ' AND watcher = ?');
         foreach my $remove_me (@$removed) {
-            $delete_sth->execute($remove_me, $userid);
+            $delete_sth->execute($remove_me, $user->id);
         }
 
         # Add people who were added.
         my $insert_sth = $dbh->prepare('INSERT INTO watch (watched, watcher)'
                                      . ' VALUES (?, ?)');
         foreach my $add_me (@$added) {
-            $insert_sth->execute($add_me, $userid);
+            $insert_sth->execute($add_me, $user->id);
         }
 
         $dbh->bz_unlock_tables();
@@ -329,11 +337,12 @@ sub SaveEmail {
 
 sub DoPermissions {
     my $dbh = Bugzilla->dbh;
+    my $user = Bugzilla->user;
     my (@has_bits, @set_bits);
     
     my $groups = $dbh->selectall_arrayref(
                "SELECT DISTINCT name, description FROM groups WHERE id IN (" . 
-               Bugzilla->user->groups_as_string . ") ORDER BY name");
+               $user->groups_as_string . ") ORDER BY name");
     foreach my $group (@$groups) {
         my ($nam, $desc) = @$group;
         push(@has_bits, {"desc" => $desc, "name" => $nam});
@@ -342,7 +351,7 @@ sub DoPermissions {
                 "SELECT DISTINCT name, description FROM groups ORDER BY name");
     foreach my $group (@$groups) {
         my ($nam, $desc) = @$group;
-        if (Bugzilla->user->can_bless($nam)) {
+        if ($user->can_bless($nam)) {
             push(@set_bits, {"desc" => $desc, "name" => $nam});
         }
     }
@@ -357,8 +366,9 @@ sub DoPermissions {
 sub DoSavedSearches {
     # 2004-12-13 - colin.ogilvie@gmail.com, bug 274397
     # Need to work around the possibly missing query_format=advanced
-    $vars->{'user'} = Bugzilla->user;
-    my @queries = @{Bugzilla->user->queries};
+    my $user = Bugzilla->user;
+
+    my @queries = @{$user->queries};
     my @newqueries;
     foreach my $q (@queries) {
         if ($q->{'query'} =~ /query_format=([^&]*)/) {
@@ -382,22 +392,24 @@ sub DoSavedSearches {
 sub SaveSavedSearches {
     my $cgi = Bugzilla->cgi;
     my $dbh = Bugzilla->dbh;
-    my @queries = @{Bugzilla->user->queries};
+    my $user = Bugzilla->user;
+
+    my @queries = @{$user->queries};
     my $sth = $dbh->prepare("UPDATE namedqueries SET linkinfooter = ?
                           WHERE userid = ?
                           AND name = ?");
     foreach my $q (@queries) {
         my $linkinfooter = 
             defined($cgi->param("linkinfooter_$q->{'name'}")) ? 1 : 0;
-            $sth->execute($linkinfooter, $userid, $q->{'name'});
+            $sth->execute($linkinfooter, $user->id, $q->{'name'});
     }
 
-    Bugzilla->user->flush_queries_cache;
+    $user->flush_queries_cache;
     
     my $showmybugslink = defined($cgi->param("showmybugslink")) ? 1 : 0;
-    $dbh->do("UPDATE profiles SET mybugslink = $showmybugslink " . 
-             "WHERE userid = " . Bugzilla->user->id);    
-    Bugzilla->user->{'showmybugslink'} = $showmybugslink;
+    $dbh->do("UPDATE profiles SET mybugslink = ? WHERE userid = ?",
+             undef, ($showmybugslink, $user->id));    
+    $user->{'showmybugslink'} = $showmybugslink;
 }
 
 

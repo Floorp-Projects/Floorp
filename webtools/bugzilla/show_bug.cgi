@@ -30,8 +30,6 @@ use Bugzilla::User;
 
 require "globals.pl";
 
-use vars qw($userid);
-
 use Bugzilla::Bug;
 
 my $cgi = Bugzilla->cgi;
@@ -69,7 +67,7 @@ if ($single) {
     # Its a bit silly to do the validation twice - that functionality should
     # probably move into Bug.pm at some point
     ValidateBugID($id);
-    push @bugs, new Bugzilla::Bug($id, $userid);
+    push @bugs, new Bugzilla::Bug($id, Bugzilla->user->id);
     if (defined $cgi->param('mark')) {
         foreach my $range (split ',', $cgi->param('mark')) {
             if ($range =~ /^(\d+)-(\d+)$/) {
@@ -83,7 +81,7 @@ if ($single) {
     }
 } else {
     foreach my $id ($cgi->param('id')) {
-        my $bug = new Bugzilla::Bug($id, $userid);
+        my $bug = new Bugzilla::Bug($id, Bugzilla->user->id);
         push @bugs, $bug;
     }
 }

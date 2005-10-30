@@ -44,8 +44,6 @@ my $vars = {};
 # performance.
 Bugzilla->switch_to_shadow_db();
 
-use vars qw($userid);
-
 my %seen;
 my %edgesdone;
 my %bugtitles; # html title attributes for imagemap areas

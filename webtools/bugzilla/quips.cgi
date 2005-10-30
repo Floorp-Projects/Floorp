@@ -25,15 +25,13 @@
 
 use strict;
 
-use vars qw($userid);
-
 use lib qw(.);
 
 require "globals.pl";
 
 use Bugzilla::Constants;
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 my $dbh = Bugzilla->dbh;
@@ -82,7 +80,7 @@ if ($action eq "add") {
     trick_taint($comment); # Used in a placeholder below
 
     $dbh->do("INSERT INTO quips (userid, quip, approved) VALUES (?, ?, ?)",
-             undef, ($userid, $comment, $approved));
+             undef, ($user->id, $comment, $approved));
 
     $vars->{'added_quip'} = $comment;
 }

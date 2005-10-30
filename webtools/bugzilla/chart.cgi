@@ -86,7 +86,7 @@ if ($action eq "search") {
     exit;
 }
 
-Bugzilla->login(LOGIN_REQUIRED);
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 UserInGroup(Param("chartgroup"))
   || ThrowUserError("auth_failure", {group  => Param("chartgroup"),
@@ -103,7 +103,7 @@ if ($action =~ /^(assemble|add|remove|sum|subscribe|unsubscribe)$/) {
     if ($action =~ /^subscribe|unsubscribe$/) {
         detaint_natural($series_id) || ThrowCodeError("invalid_series_id");
         my $series = new Bugzilla::Series($series_id);
-        $series->$action($::userid);
+        $series->$action($user->id);
     }
 
     my $chart = new Bugzilla::Chart($cgi);
@@ -203,14 +203,15 @@ sub getSelectedLines {
 # Check if the user is the owner of series_id or is an admin. 
 sub assertCanEdit {
     my ($series_id) = @_;
-    
-    return if UserInGroup("admin");
+    my $user = Bugzilla->user;
+
+    return if $user->in_group('admin');
 
     my $dbh = Bugzilla->dbh;
     my $iscreator = $dbh->selectrow_array("SELECT CASE WHEN creator = ? " .
                                           "THEN 1 ELSE 0 END FROM series " .
                                           "WHERE series_id = ?", undef,
-                                          $::userid, $series_id);
+                                          $user->id, $series_id);
     $iscreator || ThrowUserError("illegal_series_edit");
 }
 

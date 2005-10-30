@@ -3427,10 +3427,6 @@ if (!$series_exists) {
     my $all_name = "-All-";
     my $open_name = "All Open";
         
-    # We can't give the Series we create a meaningful owner; that's not a big 
-    # problem. But we do need to set this global, otherwise Series.pm objects.
-    $::userid = 0;
-    
     my $products = $dbh->selectall_arrayref("SELECT name FROM products");
      
     foreach my $product ((map { $_->[0] } @$products), "-All-") {
@@ -3448,9 +3444,10 @@ if (!$series_exists) {
         $queries{$_} = ($query_prod . "resolution=$_") foreach (@resolutions);
         
         foreach my $field (@fields) {            
-            # Create a Series for each field in this product
+            # Create a Series for each field in this product.
+            # user ID = 0 is used.
             my $series = new Bugzilla::Series(undef, $product, $all_name,
-                                              $field, $::userid, 1,
+                                              $field, 0, 1,
                                               $queries{$field}, 1);
             $series->writeToDatabase();
             $seriesids{$field} = $series->{'series_id'};
@@ -3461,7 +3458,7 @@ if (!$series_exists) {
         my @openedstatuses = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED");
         my $query = join("&", map { "bug_status=$_" } @openedstatuses);
         my $series = new Bugzilla::Series(undef, $product, $all_name,
-                                          $open_name, $::userid, 1, 
+                                          $open_name, 0, 1, 
                                           $query_prod . $query, 1);
         $series->writeToDatabase();
         $seriesids{$open_name} = $series->{'series_id'};

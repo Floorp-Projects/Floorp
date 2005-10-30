@@ -204,7 +204,7 @@ if ($action eq 'new') {
     foreach my $sdata (@series) {
         my $series = new Bugzilla::Series(undef, $product->name,
                                           $comp_name, $sdata->[0],
-                                          $::userid, 1, $sdata->[1], 1);
+                                          $whoid, 1, $sdata->[1], 1);
         $series->writeToDatabase();
     }
 

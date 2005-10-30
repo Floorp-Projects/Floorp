@@ -75,11 +75,7 @@ sub login {
         if (Param('sslbase') ne '' and Param('ssl') ne 'never') {
             Bugzilla->cgi->require_https(Param('sslbase'));
         }
-
         $user->set_flags('can_logout' => $class->can_logout);
-
-        # Compat stuff
-        $::userid = $userid;
     } else {
         Bugzilla->logout_request();
     }

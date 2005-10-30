@@ -145,7 +145,6 @@ sub sudo_request {
 
     $_user = $new_user;
     $_sudoer = $new_sudoer;
-    $::userid = $new_user->id;
 
     # NOTE: If you want to log the start of an sudo session, do it here.
 
@@ -177,7 +176,6 @@ sub login {
     {
         $_user = $sudo_target;
         $_sudoer = $authenticated_user;
-        $::userid = $sudo_target->id;
 
         # NOTE: If you want to do any special logging, do it here.
     }
@@ -216,8 +214,6 @@ sub logout_user_by_id {
 sub logout_request {
     undef $_user;
     undef $_sudoer;
-    # XXX clean this up eventually
-    $::userid = 0;
     # We can't delete from $cgi->cookie, so logincookie data will remain
     # there. Don't rely on it: use Bugzilla->user->login instead!
 }

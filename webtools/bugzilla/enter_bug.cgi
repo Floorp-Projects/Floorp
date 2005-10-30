@@ -50,7 +50,6 @@ use vars qw(
   @legal_priority
   @legal_severity
   @legal_keywords
-  $userid
   %versions
   %target_milestone
   $proddesc
@@ -323,7 +322,7 @@ $cloned_bug_id = $cgi->param('cloned_bug_id');
 
 if ($cloned_bug_id) {
     ValidateBugID($cloned_bug_id);
-    $cloned_bug = new Bugzilla::Bug($cloned_bug_id, $userid);
+    $cloned_bug = new Bugzilla::Bug($cloned_bug_id, Bugzilla->user->id);
 }
 
 # We need to check and make sure

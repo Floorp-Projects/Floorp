@@ -304,7 +304,7 @@ if ($action eq 'new') {
         foreach my $sdata (@series) {
             my $series = new Bugzilla::Series(undef, $product->name, 
                             scalar $cgi->param('subcategory'),
-                            $sdata->[0], $::userid, 1,
+                            $sdata->[0], $whoid, 1,
                             $sdata->[1] . "&product=" .
                             url_quote($product->name), 1);
             $series->writeToDatabase();
@@ -652,7 +652,7 @@ if ($action eq 'updategroupcontrols') {
                 $dbh->selectrow_array($sth_Select2, undef, $groupid);
 
             LogActivityEntry($bugid, "bug_group", $removed, "",
-                             $::userid, $timestamp);
+                             $whoid, $timestamp);
 
             if ($mailiscurrent) {
                 $sth_Update2->execute($timestamp, $timestamp, $bugid);
@@ -695,7 +695,7 @@ if ($action eq 'updategroupcontrols') {
                 $dbh->selectrow_array($sth_Select2, undef, $groupid);
 
             LogActivityEntry($bugid, "bug_group", "", $added,
-                             $::userid, $timestamp);
+                             $whoid, $timestamp);
 
             if ($mailiscurrent) {
                 $sth_Update2->execute($timestamp, $timestamp, $bugid);

@@ -41,9 +41,6 @@ my $vars = {};
 # performance.
 Bugzilla->switch_to_shadow_db();
 
-# More warning suppression silliness.
-$::userid = $::userid;
-
 ################################################################################
 # Data/Security Validation                                                     #
 ################################################################################

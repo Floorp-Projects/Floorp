@@ -68,7 +68,7 @@ else {
 
 Bugzilla->switch_to_shadow_db();
 
-use vars qw ($userid @legal_product);
+use vars qw (@legal_product);
 
 my %dbmcount;
 my %count;

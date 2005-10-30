@@ -32,7 +32,7 @@ use strict;
 use lib ".";
 require "globals.pl";
 
-# Check whether or not the user is logged in and, if so, set the $::userid 
+# Check whether or not the user is logged in
 use Bugzilla::Constants;
 Bugzilla->login(LOGIN_OPTIONAL);
 

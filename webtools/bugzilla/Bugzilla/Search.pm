@@ -30,10 +30,6 @@
 
 use strict;
 
-# The caller MUST require globals.pl before using this module.
-
-use vars qw($userid);
-
 package Bugzilla::Search;
 use base qw(Exporter);
 @Bugzilla::Search::EXPORT = qw(IsValidQueryType);

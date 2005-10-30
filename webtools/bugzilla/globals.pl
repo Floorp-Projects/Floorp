@@ -44,7 +44,6 @@ use Bugzilla::Error;
 
 sub globals_pl_sillyness {
     my $zz;
-    $zz = @main::default_column_list;
     $zz = @main::enterable_products;
     $zz = %main::keywordsbyname;
     $zz = @main::legal_bug_status;
@@ -60,7 +59,6 @@ sub globals_pl_sillyness {
     $zz = @main::milestoneurl;
     $zz = %main::proddesc;
     $zz = @main::prodmaxvotes;
-    $zz = $main::userid;
 }
 
 #

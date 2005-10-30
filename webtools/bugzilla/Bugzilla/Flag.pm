@@ -492,6 +492,7 @@ sub process {
 sub update_activity {
     my ($bug_id, $attach_id, $timestamp, $old_summaries, $new_summaries) = @_;
     my $dbh = Bugzilla->dbh;
+    my $user_id = Bugzilla->user->id;
 
     $attach_id ||= 'NULL';
     $old_summaries = join(", ", @$old_summaries);
@@ -503,7 +504,7 @@ sub update_activity {
         my $field_id = get_field_id('flagtypes.name');
         $dbh->do("INSERT INTO bugs_activity
                   (bug_id, attach_id, who, bug_when, fieldid, removed, added)
-                  VALUES ($bug_id, $attach_id, $::userid, $timestamp,
+                  VALUES ($bug_id, $attach_id, $user_id, $timestamp,
                   $field_id, $sql_removed, $sql_added)");
 
         $dbh->do("UPDATE bugs SET delta_ts = $timestamp WHERE bug_id = ?",
@@ -603,6 +604,7 @@ attachment.cgi midairs. See bug 223878 for details.
 
 sub modify {
     my ($cgi, $timestamp) = @_;
+    my $setter = Bugzilla->user;
 
     # Use the date/time we were given if possible (allowing calling code
     # to synchronize the comment's timestamp with those of other records).
@@ -621,7 +623,6 @@ sub modify {
 
         my $status = $cgi->param("flag-$id");
 
-        
         # If the user entered more than one name into the requestee field
         # (i.e. they want more than one person to set the flag) we can reuse
         # the existing flag for the first person (who may well be the existing
@@ -639,7 +640,7 @@ sub modify {
             foreach my $login (@requestees) {
                 create({ type      => $flag->{type} ,
                          target    => $flag->{target} , 
-                         setter    => new Bugzilla::User($::userid), 
+                         setter    => $setter, 
                          status    => "?",
                          requestee => new Bugzilla::User(login_to_id($login)) },
                        $timestamp);
@@ -678,7 +679,7 @@ sub modify {
         
         if ($status eq '+' || $status eq '-') {
             &::SendSQL("UPDATE flags 
-                        SET    setter_id = $::userid , 
+                        SET    setter_id = " . $setter->id . ", 
                                requestee_id = NULL , 
                                status = '$status' , 
                                modification_date = $sql_timestamp ,
@@ -703,7 +704,7 @@ sub modify {
 
             # Update the database with the changes.
             &::SendSQL("UPDATE flags 
-                        SET    setter_id = $::userid , 
+                        SET    setter_id = " . $setter->id . ", 
                                requestee_id = $requestee_id , 
                                status = '$status' , 
                                modification_date = $sql_timestamp ,
@@ -778,17 +779,14 @@ array of flag objects. This array is then passed to Flag::create().
 
 sub FormToNewFlags {
     my ($target, $cgi) = @_;
-
     my $dbh = Bugzilla->dbh;
+    my $setter = Bugzilla->user;
     
     # Extract a list of flag type IDs from field names.
     my @type_ids = map(/^flag_type-(\d+)$/ ? $1 : (), $cgi->param());
     @type_ids = grep($cgi->param("flag_type-$_") ne 'X', @type_ids);
 
     return () unless scalar(@type_ids);
-
-    # Get information about the setter to add to each flag.
-    my $setter = new Bugzilla::User($::userid);
 
     # Get a list of active flag types available for this target.
     my $flag_types = Bugzilla::FlagType::match(

@@ -298,7 +298,7 @@ $comment = trim($comment);
 # OK except for the fact that it causes e-mail to be suppressed.
 $comment = $comment ? $comment : " ";
 
-$sql .= "$::userid, $sql_timestamp, ";
+$sql .= $user->id . ", $sql_timestamp, ";
 
 # Time Tracking
 if (UserInGroup(Param("timetrackinggroup")) &&
@@ -443,10 +443,10 @@ $dbh->do("UPDATE bugs SET creation_ts = ? WHERE bug_id = ?",
 $dbh->bz_unlock_tables();
 
 # Email everyone the details of the new bug 
-$vars->{'mailrecipients'} = {'changer' => Bugzilla->user->login};
+$vars->{'mailrecipients'} = {'changer' => $user->login};
 
 $vars->{'id'} = $id;
-my $bug = new Bugzilla::Bug($id, $::userid);
+my $bug = new Bugzilla::Bug($id, $user->id);
 $vars->{'bug'} = $bug;
 
 ThrowCodeError("bug_error", { bug => $bug }) if $bug->error;

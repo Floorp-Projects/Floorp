@@ -44,8 +44,7 @@ use Bugzilla::Bug;
 # Include the Bugzilla CGI and general utility library.
 require "globals.pl";
 
-use vars qw($db_name
-            @components
+use vars qw(@components
             @legal_keywords
             @legal_platform
             @legal_priority
@@ -53,7 +52,6 @@ use vars qw($db_name
             @legal_severity
             @settable_resolution
             @target_milestone
-            $userid
             @versions);
 
 my $cgi = Bugzilla->cgi;
@@ -204,7 +202,7 @@ sub DiffDate {
 
 sub LookupNamedQuery {
     my ($name) = @_;
-    Bugzilla->login(LOGIN_REQUIRED);
+    my $user = Bugzilla->login(LOGIN_REQUIRED);
     my $dbh = Bugzilla->dbh;
     # $name is safe -- we only use it below in a SELECT placeholder and then 
     # in error messages (which are always HTML-filtered).
@@ -212,7 +210,7 @@ sub LookupNamedQuery {
     trick_taint($name);
     my $result = $dbh->selectrow_array("SELECT query FROM namedqueries" 
                           . " WHERE userid = ? AND name = ?"
-                          , undef, (Bugzilla->user->id, $name));
+                          , undef, ($user->id, $name));
     
     defined($result) || ThrowUserError("missing_query", {'queryname' => $name});
     $result
@@ -316,11 +314,12 @@ sub GetQuip {
 
 sub GetGroups {
     my $dbh = Bugzilla->dbh;
+    my $user = Bugzilla->user;
 
     # Create an array where each item is a hash. The hash contains 
     # as keys the name of the columns, which point to the value of 
     # the columns for that row.
-    my $grouplist = Bugzilla->user->groups_as_string;
+    my $grouplist = $user->groups_as_string;
     my $groups = $dbh->selectall_arrayref(
                 "SELECT  id, name, description, isactive
                    FROM  groups
@@ -387,7 +386,7 @@ if ($cgi->param('cmdtype') eq "dorem") {
         $order = $params->param('order') || $order;
     }
     elsif ($cgi->param('remaction') eq "forget") {
-        Bugzilla->login(LOGIN_REQUIRED);
+        my $user = Bugzilla->login(LOGIN_REQUIRED);
         # Copy the name into a variable, so that we can trick_taint it for
         # the DB. We know it's safe, because we're using placeholders in 
         # the SQL, and the SQL is only a DELETE.
@@ -405,7 +404,7 @@ if ($cgi->param('cmdtype') eq "dorem") {
                                                       = ?
                                                   AND whine_queries.query_name
                                                       = ?
-                                      ', undef, Bugzilla->user->id, $qname);
+                                      ', undef, $user->id, $qname);
         if (scalar(@$whines_in_use)) {
             ThrowUserError('saved_search_used_by_whines', 
                            { subjects    => join(',', @$whines_in_use),
@@ -416,10 +415,10 @@ if ($cgi->param('cmdtype') eq "dorem") {
         # If we are here, then we can safely remove the saved search
         $dbh->do("DELETE FROM namedqueries"
             . " WHERE userid = ? AND name = ?"
-            , undef, ($userid, $qname));
+            , undef, ($user->id, $qname));
 
         # Now reset the cached queries
-        Bugzilla->user->flush_queries_cache();
+        $user->flush_queries_cache();
 
         print $cgi->header();
         # Generate and return the UI (HTML page) from the appropriate template.
@@ -433,13 +432,12 @@ if ($cgi->param('cmdtype') eq "dorem") {
 }
 elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
     if ($cgi->param('remtype') eq "asdefault") {
-        Bugzilla->login(LOGIN_REQUIRED);
-        InsertNamedQuery(Bugzilla->user->id, DEFAULT_QUERY_NAME, $buffer);
+        my $user = Bugzilla->login(LOGIN_REQUIRED);
+        InsertNamedQuery($user->id, DEFAULT_QUERY_NAME, $buffer);
         $vars->{'message'} = "buglist_new_default_query";
     }
     elsif ($cgi->param('remtype') eq "asnamed") {
-        Bugzilla->login(LOGIN_REQUIRED);
-        my $userid = Bugzilla->user->id;
+        my $user = Bugzilla->login(LOGIN_REQUIRED);
         my $query_name = $cgi->param('newqueryname');
         my $new_query = $cgi->param('newquery');
         my $query_type = QUERY_LIST;
@@ -468,7 +466,7 @@ elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
             $query_type = LIST_OF_BUGS;
         }
         my $tofooter = 1;
-        my $existed_before = InsertNamedQuery($userid, $query_name, $new_query,
+        my $existed_before = InsertNamedQuery($user->id, $query_name, $new_query,
                                               $tofooter, $query_type);
         if ($existed_before) {
             $vars->{'message'} = "buglist_updated_named_query";
@@ -479,7 +477,7 @@ elsif (($cgi->param('cmdtype') eq "doit") && defined $cgi->param('remtype')) {
 
         # Make sure to invalidate any cached query data, so that the footer is
         # correctly displayed
-        Bugzilla->user->flush_queries_cache();
+        $user->flush_queries_cache();
 
         $vars->{'queryname'} = $query_name;
         
