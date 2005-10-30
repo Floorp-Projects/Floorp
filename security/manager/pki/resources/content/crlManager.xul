@@ -89,15 +89,20 @@
   <hbox>
     <button id="deleteCrl" disabled="true"
             label="&validation.deletecrl.label;"
+            accesskey="&validation.deletecrl.accesskey;"
             oncommand="DeleteCrlSelected();"/>
     <button id="editPrefs" class="push" disabled="true"
             label="&validation.advanced.label;"
+            accesskey="&validation.advanced.accesskey;"
             oncommand="EditAutoUpdatePrefs();"/>
     <button id="updateCRL" class="push" disabled="true"
             label="&validation.updatecrl.label;"
+            accesskey="&validation.updatecrl.accesskey;"
             oncommand="UpdateCRL();"/>
-
-    <button id="importCRL" class="push" label="&certmgr.restore.label;" oncommand="ImportCRL();"/>
+    <button id="importCRL" class="push"
+            label="&certmgr.restore.label;"
+            accesskey="&certmgr.restore.accesskey;"
+            oncommand="ImportCRL();"/>
     <spacer flex="2" />
     <button dlgtype="help"/>
   </hbox>
