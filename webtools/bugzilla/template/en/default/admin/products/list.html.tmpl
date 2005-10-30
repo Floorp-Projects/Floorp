@@ -20,6 +20,7 @@
   # classification: Bugzilla::Classification object; If classifications
   #                         are enabled, then this is 
   #                         the currently selected classification
+  # showbugcounts: boolean; true if bug counts should be included in the table
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
@@ -78,19 +79,26 @@
        name => "votestoconfirm"
        heading => "Votes To Confirm"
        align => 'right'
-     },
-     { 
+     } ]
+%]
+
+[% IF showbugcounts %]
+
+  [% columns.push({
        name => "bug_count"
        heading => "$terms.Bug Count"
        align => 'right'
        contentlink => bug_count_contentlink
-     },
-     {
+     })
+  %]
+
+[% END %]
+
+[% columns.push({
        heading => "Action"
        content => "Delete"
        contentlink => delete_contentlink
-     },
-   ]
+     })
 %]
 
 [% overrides.disallow_new = [ {
@@ -113,6 +121,13 @@
 %]
 
 <p>
+
+[% IF !showbugcounts %]
+
+  <p><a href="editproducts.cgi?showbugcounts=1[% classification_url_part %]">
+      Redisplay table with [% terms.bug %] counts (slower)</a></p>
+
+[% END %]
 
 [% PROCESS admin/products/footer.html.tmpl
     no_edit_other_products_link = 1

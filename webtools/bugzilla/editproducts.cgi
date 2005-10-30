@@ -53,6 +53,7 @@ use vars qw(@legal_bug_status @legal_resolution);
 my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $whoid = $user->id;
 
+my $dbh = Bugzilla->dbh;
 my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $vars = {};
@@ -70,7 +71,7 @@ $user->in_group('editcomponents')
 my $classification_name = trim($cgi->param('classification') || '');
 my $product_name = trim($cgi->param('product') || '');
 my $action  = trim($cgi->param('action')  || '');
-my $dbh = Bugzilla->dbh;
+my $showbugcounts = (defined $cgi->param('showbugcounts'));
 
 #
 # product = '' -> Show nice list of classifications (if
@@ -112,12 +113,11 @@ if (!$action && !$product_name) {
         @products = Bugzilla::Product::get_all_products;
     }
 
-    $vars->{'products'} = \@products; 
+    $vars->{'products'} = \@products;
+    $vars->{'showbugcounts'} = $showbugcounts;
 
-    $template->process("admin/products/list.html.tmpl",
-                       $vars)
+    $template->process("admin/products/list.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
-
     exit;
 }
 
