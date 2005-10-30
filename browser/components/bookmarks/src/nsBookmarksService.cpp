@@ -4374,7 +4374,8 @@ nsBookmarksService::ArchiveBookmarksFile(PRBool forceArchive)
     nsCOMPtr<nsIFile> backupFile;
     if (forceArchive == PR_FALSE) {
         nsCOMPtr<nsISimpleEnumerator> existingBackups;
-        bookmarksBackupDir->GetDirectoryEntries(getter_AddRefs(existingBackups));
+        rv = bookmarksBackupDir->GetDirectoryEntries(getter_AddRefs(existingBackups));
+        NS_ENSURE_SUCCESS(rv, rv);
 
         nsStringArray backupFileNames;
 
