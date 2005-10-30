@@ -32,7 +32,7 @@ use strict;
 
 package Bugzilla::BugMail;
 
-use Bugzilla::DB qw(:deprecated);
+use Bugzilla::DB;
 use Bugzilla::User;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
@@ -120,32 +120,33 @@ sub ProcessOneBug {
     my ($id, $forced) = (@_);
 
     my @headerlist;
-    my %values;
     my %defmailhead;
     my %fielddescription;
 
     my $msg = "";
 
     my $dbh = Bugzilla->dbh;
-     
-    SendSQL("SELECT name, description, mailhead FROM fielddefs " .
-            "ORDER BY sortkey");
-    while (MoreSQLData()) {
-        my ($field, $description, $mailhead) = (FetchSQLData());
+    
+    my $fields = $dbh->selectall_arrayref('SELECT name, description, mailhead 
+                                           FROM fielddefs ORDER BY sortkey');
+
+    foreach my $fielddef (@$fields) {
+        my ($field, $description, $mailhead) = @$fielddef;
         push(@headerlist, $field);
         $defmailhead{$field} = $mailhead;
         $fielddescription{$field} = $description;
     }
-    SendSQL("SELECT " . join(',', @::log_columns) . ", lastdiffed, now() " .
-            "FROM bugs WHERE bug_id = $id");
-    my @row = FetchSQLData();
-    foreach my $i (@::log_columns) {
-        $values{$i} = shift(@row);
-    }
+
+    my %values = %{$dbh->selectrow_hashref(
+        'SELECT ' . join(',', @::log_columns) . ',
+                lastdiffed AS start, NOW() AS end
+           FROM bugs WHERE bug_id = ?',
+        undef, $id)};
+    
     $values{product} = &::get_product_name($values{product_id});
     $values{component} = &::get_component_name($values{component_id});
 
-    my ($start, $end) = (@row);
+    my ($start, $end) = ($values{start}, $values{end});
 
     # User IDs of people in various roles. More than one person can 'have' a 
     # role, if the person in that role has changed, or people are watching.
@@ -199,47 +200,47 @@ sub ProcessOneBug {
         $values{'deadline'} = time2str("%Y-%m-%d", str2time($values{'deadline'}));
     }
 
-    my @dependslist;
-    SendSQL("SELECT dependson FROM dependencies WHERE 
-             blocked = $id ORDER BY dependson");
-    while (MoreSQLData()) {
-        push(@dependslist, FetchOneColumn());
-    }
-    $values{'dependson'} = join(",", @dependslist);
+    my $dependslist = $dbh->selectcol_arrayref(
+        'SELECT dependson FROM dependencies
+         WHERE blocked = ? ORDER BY dependson',
+        undef, ($id));
 
-    my @blockedlist;
-    SendSQL("SELECT blocked FROM dependencies WHERE 
-             dependson = $id ORDER BY blocked");
-    while (MoreSQLData()) {
-        push(@blockedlist, FetchOneColumn());
-    }
-    $values{'blocked'} = join(",", @blockedlist);
+    $values{'dependson'} = join(",", @$dependslist);
 
-    my @diffs;
+    my $blockedlist = $dbh->selectcol_arrayref(
+        'SELECT blocked FROM dependencies
+         WHERE dependson = ? ORDER BY blocked',
+        undef, ($id));
+
+    $values{'blocked'} = join(",", @$blockedlist);
+
+    my @args = ($id);
 
     # If lastdiffed is NULL, then we don't limit the search on time.
-    my $when_restriction = $start ? 
-        " AND bug_when > '$start' AND bug_when <= '$end'" : '';
-    SendSQL("SELECT profiles.login_name, fielddefs.description, " .
-            "       bug_when, removed, added, attach_id, fielddefs.name " .
-            "FROM bugs_activity, fielddefs, profiles " .
-            "WHERE bug_id = $id " .
-            "  AND fielddefs.fieldid = bugs_activity.fieldid " .
-            "  AND profiles.userid = who " .
-            $when_restriction .
-            "ORDER BY bug_when"
-            );
-
-    while (MoreSQLData()) {
-        my @row = FetchSQLData();
-        push(@diffs, \@row);
+    my $when_restriction = '';
+    if ($start) {
+        $when_restriction = ' AND bug_when > ? AND bug_when <= ?';
+        push @args, ($start, $end);
     }
+    
+    my $diffs = $dbh->selectall_arrayref(
+           "SELECT profiles.login_name, fielddefs.description, 
+                   bugs_activity.bug_when, bugs_activity.removed, 
+                   bugs_activity.added, bugs_activity.attach_id, fielddefs.name
+              FROM bugs_activity
+        INNER JOIN fielddefs
+                ON fielddefs.fieldid = bugs_activity.fieldid
+        INNER JOIN profiles
+                ON profiles.userid = bugs_activity.who
+             WHERE bugs_activity.bug_id = ?
+                   $when_restriction
+          ORDER BY bugs_activity.bug_when", undef, @args);
 
     my $difftext = "";
     my $diffheader = "";
     my @diffparts;
     my $lastwho = "";
-    foreach my $ref (@diffs) {
+    foreach my $ref (@$diffs) {
         my ($who, $what, $when, $old, $new, $attachid, $fieldname) = (@$ref);
         my $diffpart = {};
         if ($who ne $lastwho) {
@@ -255,9 +256,9 @@ sub ProcessOneBug {
             $new = format_time_decimal($new);
         }
         if ($attachid) {
-            SendSQL("SELECT isprivate FROM attachments 
-                     WHERE attach_id = $attachid");
-            $diffpart->{'isprivate'} = FetchOneColumn();
+            ($diffpart->{'isprivate'}) = $dbh->selectrow_array(
+                'SELECT isprivate FROM attachments WHERE attach_id = ?',
+                undef, ($attachid));
         }
         $difftext = FormatTriple($what, $old, $new);
         $diffpart->{'header'} = $diffheader;
@@ -268,26 +269,29 @@ sub ProcessOneBug {
 
     my $deptext = "";
 
-    SendSQL("SELECT bugs_activity.bug_id, bugs.short_desc, fielddefs.name, " .
-            "       removed, added " .
-            "FROM bugs_activity, bugs, dependencies, fielddefs ".
-            "WHERE bugs_activity.bug_id = dependencies.dependson " .
-            "  AND bugs.bug_id = bugs_activity.bug_id ".
-            "  AND dependencies.blocked = $id " .
-            "  AND fielddefs.fieldid = bugs_activity.fieldid" .
-            "  AND (fielddefs.name = 'bug_status' " .
-            "    OR fielddefs.name = 'resolution') " .
-            $when_restriction .
-            "ORDER BY bug_when, bug_id");
-    
+    my $dependency_diffs = $dbh->selectall_arrayref(
+           "SELECT bugs_activity.bug_id, bugs.short_desc, fielddefs.name, 
+                   bugs_activity.removed, bugs_activity.added
+              FROM bugs_activity
+        INNER JOIN bugs
+                ON bugs.bug_id = bugs_activity.bug_id
+        INNER JOIN dependencies
+                ON bugs_activity.bug_id = dependencies.dependson
+        INNER JOIN fielddefs
+                ON fielddefs.fieldid = bugs_activity.fieldid
+             WHERE dependencies.blocked = ?
+               AND (fielddefs.name = 'bug_status'
+                    OR fielddefs.name = 'resolution')
+                   $when_restriction
+          ORDER BY bugs_activity.bug_when, bugs.bug_id", undef, @args);
+
     my $thisdiff = "";
     my $lastbug = "";
     my $interestingchange = 0;
-    my $depbug = 0;
     my @depbugs;
-    while (MoreSQLData()) {
-        my ($summary, $what, $old, $new);
-        ($depbug, $summary, $what, $old, $new) = (FetchSQLData());
+    foreach my $dependency_diff (@$dependency_diffs) {
+        my ($depbug, $summary, $what, $old, $new) = @$dependency_diff;
+
         if ($depbug ne $lastbug) {
             if ($interestingchange) {
                 $deptext .= $thisdiff;
@@ -337,8 +341,8 @@ sub ProcessOneBug {
     # array of role constants.
     
     # Voters
-    my $voters = 
-          $dbh->selectcol_arrayref("SELECT who FROM votes WHERE bug_id = $id");
+    my $voters = $dbh->selectcol_arrayref(
+        "SELECT who FROM votes WHERE bug_id = ?", undef, ($id));
         
     push(@{$recipients{$_}}, REL_VOTER) foreach (@$voters);
 
@@ -361,7 +365,7 @@ sub ProcessOneBug {
 
     # The last relevant set of people are those who are being removed from 
     # their roles in this change. We get their names out of the diffs.
-    foreach my $ref (@diffs) {
+    foreach my $ref (@$diffs) {
         my ($who, $what, $when, $old, $new) = (@$ref);
         if ($old) {
             # You can't stop being the reporter, and mail isn't sent if you
@@ -419,7 +423,7 @@ sub ProcessOneBug {
             foreach my $relationship (@{$recipients{$user_id}}) {
                 if ($user->wants_bug_mail($id,
                                           $relationship, 
-                                          \@diffs, 
+                                          $diffs, 
                                           $newcomments, 
                                           $changer))
                 {
@@ -480,7 +484,8 @@ sub ProcessOneBug {
         } 
     }
     
-    $dbh->do("UPDATE bugs SET lastdiffed = '$end' WHERE bug_id = $id");
+    $dbh->do('UPDATE bugs SET lastdiffed = ? WHERE bug_id = ?',
+             undef, ($end, $id));
 
     return {'sent' => \@sent, 'excluded' => \@excluded};
 }
@@ -766,7 +771,8 @@ sub get_comments_by_bug {
                         longdescs.thetext, longdescs.isprivate,
                         longdescs.already_wrapped
                    FROM longdescs
-             INNER JOIN profiles ON profiles.userid = longdescs.who
+             INNER JOIN profiles
+                     ON profiles.userid = longdescs.who
                   WHERE longdescs.bug_id = ? ';
 
     my @args = ($id);
