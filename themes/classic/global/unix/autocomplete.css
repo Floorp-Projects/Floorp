@@ -61,6 +61,11 @@ textbox {
   -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
 }
 
+.plain > .autocomplete-textbox-container {
+  -moz-appearance: none;
+  border: none;
+}
+
 .textbox-input-box {
   margin: 0 3px;
   -moz-box-align: center;
