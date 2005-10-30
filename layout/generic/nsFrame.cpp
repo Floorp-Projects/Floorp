@@ -3292,18 +3292,14 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         if (!resultFrame->HasView())
         {
           rect = resultFrame->GetRect();
-          if (!rect.width || !rect.height)
-            result = NS_ERROR_FAILURE;
-          else {
-            nsIView* view;
-            nsPoint offset;
-            resultFrame->GetOffsetFromView(offset, &view);
-            result = resultFrame->GetContentAndOffsetsFromPoint(context,point - offset,
-                                          getter_AddRefs(aPos->mResultContent),
-                                          aPos->mContentOffset,
-                                          aPos->mContentOffsetEnd,
-                                          aPos->mPreferLeft);
-          }
+          nsIView* view;
+          nsPoint offset;
+          resultFrame->GetOffsetFromView(offset, &view);
+          result = resultFrame->GetContentAndOffsetsFromPoint(context,point - offset,
+                                        getter_AddRefs(aPos->mResultContent),
+                                        aPos->mContentOffset,
+                                        aPos->mContentOffsetEnd,
+                                        aPos->mPreferLeft);
           if (NS_SUCCEEDED(result))
           {
             PRBool selectable;
