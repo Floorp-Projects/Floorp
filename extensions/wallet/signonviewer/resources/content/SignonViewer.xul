@@ -92,13 +92,17 @@
           <separator class="thin"/>
           <hbox>
             <button id="removeSignon" disabled="true"
-                          label="&remove.label;" oncommand="DeleteSignon();"/>
+                    label="&remove.label;"
+                    accesskey="&remove.accesskey;"
+                    oncommand="DeleteSignon();"/>
             <button id="removeAllSignons"
-                          label="&removeall.label;"
-                          oncommand="DeleteAllSignons();"/>
+                    label="&removeall.label;"
+                    accesskey="&removeall.accesskey;"
+                    oncommand="DeleteAllSignons();"/>
             <spacer flex="1"/>
             <button id="togglePasswords"
-                          oncommand="TogglePasswordVisible();"/>
+                    accesskey="&togglePasswords.accesskey;"
+                    oncommand="TogglePasswordVisible();"/>
           </hbox>
       </vbox>
       <!-- rejected signon sites -->
@@ -117,10 +121,13 @@
           <separator class="thin"/>
           <hbox>
             <button id="removeReject" disabled="true"
-                          label="&remove.label;" oncommand="DeleteReject();"/>
+                    label="&remove.label;"
+                    accesskey="&remove.accesskey;"
+                    oncommand="DeleteReject();"/>
             <button id="removeAllRejects"
-                          label="&removeall.label;"
-                          oncommand="DeleteAllRejects();"/>
+                    label="&removeall.label;"
+                    accesskey="&removeall.accesskey;"
+                    oncommand="DeleteAllRejects();"/>
           </hbox>
       </vbox>
       <!-- do not preview panel -->
@@ -140,10 +147,13 @@
           <separator class="thin"/>
           <hbox>
             <button id="removeNopreview" disabled="true"
-                          label="&remove.label;" oncommand="DeleteNopreview();"/>
+                    label="&remove.label;"
+                    accesskey="&remove.accesskey;"
+                    oncommand="DeleteNopreview();"/>
             <button id="removeAllNopreviews"
-                          label="&removeall.label;"
-                          oncommand="DeleteAllNopreviews();"/>
+                    label="&removeall.label;"
+                    accesskey="&removeall.accesskey;"
+                    oncommand="DeleteAllNopreviews();"/>
           </hbox>
       </vbox>
       <!-- do not capture panel -->
@@ -163,10 +173,13 @@
           <separator class="thin"/>
           <hbox>
             <button id="removeNocapture" disabled="true"
-                          label="&remove.label;" oncommand="DeleteNocapture();"/>
+                    label="&remove.label;"
+                    accesskey="&remove.accesskey;"
+                    oncommand="DeleteNocapture();"/>
             <button id="removeAllNocaptures"
-                          label="&removeall.label;"
-                          oncommand="DeleteAllNocaptures();"/>
+                    label="&removeall.label;"
+                    accesskey="&removeall.accesskey;"
+                    oncommand="DeleteAllNocaptures();"/>
           </hbox>
       </vbox>
     </tabpanels>

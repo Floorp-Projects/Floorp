@@ -14,4 +14,7 @@
 <!ENTITY      treehead.username.label         "Username">
 <!ENTITY      treehead.password.label         "Password">
 <!ENTITY      remove.label                    "Remove">
+<!ENTITY      remove.accesskey                "R">
 <!ENTITY      removeall.label                 "Remove All">
+<!ENTITY      removeall.accesskey             "A">
+<!ENTITY      togglePasswords.accesskey       "P">
