@@ -365,9 +365,9 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   // that should have initialized gDBView, now re-root the thread pane
   RerootThreadPane();
 
-  UpdateLocationBar(newFolder);
+  UpdateLocationBar(gMsgFolderSelected);
 
-  UpdateStatusMessageCounts(newFolder);
+  UpdateStatusMessageCounts(gMsgFolderSelected);
   
   UpdateMailToolbar("reroot folder in 3 pane");
   // hook for extra toolbar items
@@ -840,13 +840,13 @@ function FolderPaneSelectionChange()
 
         folderSelection.getRangeAt(0, startIndex, endIndex);
         var folderResource = GetFolderResource(folderTree, startIndex.value);
-        UpdateLocationBar(folderResource);
         var uriToLoad = folderResource.Value;
         var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
         if (msgFolder == gMsgFolderSelected)
            return;
         gPrevSelectedFolder = gMsgFolderSelected;
         gMsgFolderSelected = msgFolder;
+        UpdateLocationBar(gMsgFolderSelected);
         var folderFlags = msgFolder.flags;
         // if this is same folder, and we're not showing a virtual folder
         // then do nothing.
