@@ -57,13 +57,14 @@
 
   <description>&loaddevice.info;</description>
   <hbox align="center">
-    <label value="&loaddevice.modname;"/>
+    <label value="&loaddevice.modname;" accesskey="&loaddevice.modname.accesskey;"/>
     <textbox id="device_name" flex="1" value="&loaddevice.modname.default;"/>
   </hbox>
   <hbox align="center">
-    <label value="&loaddevice.filename;"/>
+    <label value="&loaddevice.filename;" accesskey="&loaddevice.filename.accesskey;"/>
     <textbox id="device_path" flex="1"/>
-    <button label="&loaddevice.browse;" flex="1" oncommand="doBrowseFiles();"/>
+    <button label="&loaddevice.browse;" flex="1" 
+            accesskey="&loaddevice.browse.accesskey;" oncommand="doBrowseFiles();"/>
   </hbox>
 
 </dialog>

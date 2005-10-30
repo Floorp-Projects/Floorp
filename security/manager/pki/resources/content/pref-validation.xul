@@ -47,7 +47,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="onLoad();"
-      headertitle="&validation.title;">
+      headertitle="&pref.validation.title;">
 
   <!-- List elements to manage for prefs -->
   <script type="application/x-javascript">
@@ -59,7 +59,7 @@
   <script type="application/x-javascript" src="chrome://pippki/content/pref-validation.js"/>
 
   <groupbox>
-    <caption label="&validation.crl.label;"/>
+    <caption label="&validation.crl.caption;"/>
     <description>&validation.crl.description;</description>
     <hbox align="center">
       <button label="&validation.managecrls.button;"
@@ -71,14 +71,17 @@
   </groupbox>
 
   <groupbox align="start">
-    <caption label="&validation.ocsp.label;"/>
+    <caption label="&validation.ocsp.caption;"/>
     <description>&validation.ocsp.description;</description>
     <!-- Prefs -->
     <radiogroup id="securityOCSPEnabled"
                 prefstring="security.OCSP.enabled">
-        <radio value="0" label="&disableOCSP.label;" oncommand="doEnabling();"/>
-        <radio value="1" label="&certOCSP.label;" oncommand="doEnabling();"/>
-        <radio value="2" label="&proxyOCSP.label;" oncommand="doEnabling();"/>
+        <radio value="0" label="&disableOCSP.label;"
+               accesskey="&disableOCSP.accesskey;" oncommand="doEnabling();"/>
+        <radio value="1" label="&certOCSP.label;"
+               accesskey="&certOCSP.accesskey;" oncommand="doEnabling();"/>
+        <radio value="2" label="&proxyOCSP.label;"
+               accesskey="&proxyOCSP.accesskey;" oncommand="doEnabling();"/>
 
         <grid class="indent" flex="1">
           <columns>
@@ -88,14 +91,16 @@
           
           <rows>
             <row align="center">
-              <label value="&signingCA.label;" accesskey="&signingCA.accesskey;" control="signingCA"/>
+              <label value="&signingCA.label;"
+                     accesskey="&signingCA.accesskey;" control="signingCA"/>
               <menulist id="signingCA" preftype="string" prefstring="security.OCSP.signingCA"
                         flex="1" oncommand="changeURL()">
                 <menupopup/>
               </menulist>
             </row>
             <row align="center">
-              <label value="&serviceURL.label;" accesskey="&serviceURL.accesskey;" control="serviceURL"/>
+              <label value="&serviceURL.label;"
+                     accesskey="&serviceURL.accesskey;" control="serviceURL"/>
               <textbox id="serviceURL" prefstring="security.OCSP.URL"/>
             </row>
          </rows>

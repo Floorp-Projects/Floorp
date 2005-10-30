@@ -91,21 +91,27 @@
       <vbox> <!-- Buttons for manipulating devices -->
         <button id="login_button" 
                 label="&devmgr.button.login.label;"
+                accesskey="&devmgr.button.login.accesskey;"
                 oncommand="doLogin();" disabled="true"/> 
         <button id="logout_button" 
                 label="&devmgr.button.logout.label;"
+                accesskey="&devmgr.button.logout.accesskey;"
                 oncommand="doLogout();" disabled="true"/> 
         <button id="change_pw_button" 
                 label="&devmgr.button.changepw.label;"
+                accesskey="&devmgr.button.changepw.accesskey;"
                 oncommand="changePassword();" disabled="true"/> 
         <button id="load_button" 
                 label="&devmgr.button.load.label;"
+                accesskey="&devmgr.button.load.accesskey;"
                 oncommand="doLoad();"/> 
         <button id="unload_button" 
                 label="&devmgr.button.unload.label;"
+                accesskey="&devmgr.button.unload.accesskey;"
                 oncommand="doUnload();" disabled="true"/> 
         <button id="fipsbutton" 
                 label=""
+                accesskey="&devmgr.button.fips.accesskey;"
                 oncommand="toggleFIPS();"/>
       </vbox> <!-- / Buttons for manipulating devices -->
     </row>

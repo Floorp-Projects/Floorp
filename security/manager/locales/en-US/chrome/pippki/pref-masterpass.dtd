@@ -36,20 +36,26 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY  lheader    "Master Passwords">
-<!ENTITY  managepassword.label    "Master Password Timeout">
-<!ENTITY  managepassword.text     "&brandShortName; will ask for your master password:">
-<!ENTITY  managepassword.askfirsttime "The first time it is needed">
-<!ENTITY  managepassword.askeverytime "Every time it is needed">
-<!ENTITY  managepassword.asktimeout   "If it has not been used for ">
-<!ENTITY  managepassword.timeout.unit   "minutes or longer">
+<!ENTITY  pref.masterpass.title                  "Master Passwords">
+<!ENTITY  managepassword.caption                 "Master Password Timeout">
+<!ENTITY  managepassword.text                    "&brandShortName; will ask for your master password:">
+<!ENTITY  managepassword.askfirsttime            "The first time it is needed">
+<!ENTITY  managepassword.askfirsttime.accesskey  "T">
+<!ENTITY  managepassword.askeverytime            "Every time it is needed">
+<!ENTITY  managepassword.askeverytime.accesskey  "E">
+<!ENTITY  managepassword.asktimeout              "If it has not been used for ">
+<!ENTITY  managepassword.asktimeout.accesskey    "n">
+<!ENTITY  managepassword.timeout.unit            "minutes or longer">
 
-<!ENTITY  changepassword.label    "Change Master Password">
-<!ENTITY  changepassword.text     "Your master password protects sensitive information such as web passwords and certificates.">
-<!ENTITY  changepassword.button   "Change Password...">
-<!ENTITY  changepassword.accesskey  "C">
+<!ENTITY  changepassword.caption                 "Change Master Password">
+<!ENTITY  changepassword.text                    "Your master password protects sensitive information such as web passwords and certificates.">
+<!ENTITY  changepassword.button                  "Change Password...">
+<!ENTITY  changepassword.accesskey               "C">
 
-<!ENTITY  resetpassword.label    "Reset Master Password">
-<!ENTITY  resetpassword.text     "If you reset your master password, all of your stored Web and e-mail passwords, form data, personal certificates, and private keys will be lost.">
-<!ENTITY  resetpassword.button   "Reset Password">
-<!ENTITY  resetpassword.accesskey   "R">
+<!ENTITY  resetpassword.caption                  "Reset Master Password">
+<!ENTITY  resetpassword.text                     "If you reset your master password, all of your stored Web and e-mail passwords, form data, personal certificates, and private keys will be lost.">
+<!ENTITY  resetpassword.button                   "Reset Password">
+<!ENTITY  resetpassword.accesskey                "R">
+<!ENTITY  encryptExpire.label                    "Expire master password after each use.">
+<!ENTITY  encryptExpire.accesskey                "E">
+

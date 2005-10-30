@@ -50,7 +50,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://pippki/content/pref-certs.xul');"
-      headertitle="&certs.label;">
+      headertitle="&pref.certs.title;">
 
   <!-- List elements to manage for prefs -->
   <script type="application/x-javascript" src="chrome://pippki/content/pref-security.js"/>
@@ -61,19 +61,19 @@
   </script>
 
   <groupbox align="start">
-    <caption label="&SSLClientAuthMethod;"/>
+    <caption label="&SSLClientAuthMethod.caption;"/>
     <description> &certselect.description; </description>
     <!-- Prefs -->
     <radiogroup id="certSelection" orient="horizontal" preftype="string" 
 	        prefstring="security.default_personal_cert">
-    <radio label="&certselect.auto;" value="Select Automatically"/>
-    <radio label="&certselect.ask;" value="Ask Every Time"/>
+    <radio label="&certselect.auto;" accesskey="&certselect.auto.accesskey;" value="Select Automatically"/>
+    <radio label="&certselect.ask;" accesskey="&certselect.ask.accesskey;" value="Ask Every Time"/>
     </radiogroup>
   </groupbox>
 
   <!-- Certificate manager -->
   <groupbox>
-    <caption label="&managecerts.label;"/>
+    <caption label="&managecerts.caption;"/>
     <description>&managecerts.text;</description>
     <hbox align="center">
       <button label="&managecerts.button;"
@@ -86,7 +86,7 @@
 
   <!-- Device manager -->
   <groupbox>
-    <caption label="&managedevices.label;"/>
+    <caption label="&managedevices.caption;"/>
     <description>&managedevices.text;</description>
     <hbox align="center">
       <button label="&managedevices.button;"

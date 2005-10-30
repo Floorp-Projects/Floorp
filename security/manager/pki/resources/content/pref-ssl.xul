@@ -48,7 +48,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://pippki/content/pref-ssl.xul');"
-      headertitle="&prefheader.title;">
+      headertitle="&pref.ssl.title;">
 
   <!-- List elements to manage for prefs -->
   <script type="application/x-javascript">
@@ -61,15 +61,18 @@
   </script>
             
   <groupbox orient="horizontal">
-    <caption label="&SSLProtocolVersions;"/>
+    <caption label="&SSLProtocolVersions.caption;"/>
 
     <!-- Prefs -->
     <vbox flex="1" align="start">
       <checkbox id="enableSSL2" label="&enable.ssl2;"
+                accesskey="&enable.ssl2.accesskey;"
                 prefstring="security.enable_ssl2"/>
       <checkbox id="enableSSL3" label="&enable.ssl3;"
+                accesskey="&enable.ssl3.accesskey;"
                 prefstring="security.enable_ssl3"/>
       <checkbox id="enableTLS" label="&enable.tls;"
+                accesskey="&enable.tls.accesskey;"
                 prefstring="security.enable_tls"/>
     </vbox>
 
@@ -85,18 +88,23 @@
   </groupbox>
 
   <groupbox align="start">
-    <caption label="&SSLWarnings;"/>
+    <caption label="&SSLWarnings.caption;"/>
     <description>&warn.description;</description>
     <!-- Prefs -->
     <checkbox id="warnEnteringSecure" label="&warn.enteringsecure;"
+              accesskey="&warn.enteringsecure.accesskey;"
               prefstring="security.warn_entering_secure"/>
     <checkbox id="warnEnteringWeak" label="&warn.enteringweak;"
+              accesskey="&warn.enteringweak.accesskey;"
               prefstring="security.warn_entering_weak"/>
     <checkbox id="warnLeavingSecure" label="&warn.leavingsecure;"
+              accesskey="&warn.leavingsecure.accesskey;"
               prefstring="security.warn_leaving_secure"/>
     <checkbox id="warnInsecurePost" label="&warn.insecurepost;"
+              accesskey="&warn.insecurepost.accesskey;"
               prefstring="security.warn_submit_insecure"/>
     <checkbox id="warnViewMixed" label="&warn.viewmixed;"
+              accesskey="&warn.viewmixed.accesskey;"
               prefstring="security.warn_viewing_mixed"
               checked="true"/>
   </groupbox>

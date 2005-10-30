@@ -35,25 +35,35 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY devmgr.title "Device Manager">
+<!ENTITY devmgr.title                           "Device Manager">
 
-<!ENTITY devmgr.devlist.label "Security Modules and Devices">
-<!ENTITY devmgr.details.title "Details">
-<!ENTITY devmgr.details.title2 "Value">
-<!ENTITY devmgr.status.label "Status">
-<!ENTITY devmgr.version.label "Version">
+<!ENTITY devmgr.devlist.label                   "Security Modules and Devices">
+<!ENTITY devmgr.details.title                   "Details">
+<!ENTITY devmgr.details.title2                  "Value">
+<!ENTITY devmgr.status.label                    "Status">
+<!ENTITY devmgr.version.label                   "Version">
 
-<!ENTITY devmgr.button.changeslotname.label "Change Slot Name">
-<!ENTITY devmgr.button.login.label "Log In">
-<!ENTITY devmgr.button.logout.label "Log Out">
-<!ENTITY devmgr.button.changepw.label "Change Password">
-<!ENTITY devmgr.button.load.label "Load">
-<!ENTITY devmgr.button.unload.label "Unload">
+<!ENTITY devmgr.button.changeslotname.label     "Change Slot Name">
+<!ENTITY devmgr.button.changeslotname.accesskey "C">
+<!ENTITY devmgr.button.login.label              "Log In">
+<!ENTITY devmgr.button.login.accesskey          "n">
+<!ENTITY devmgr.button.logout.label             "Log Out">
+<!ENTITY devmgr.button.logout.accesskey         "O">
+<!ENTITY devmgr.button.changepw.label           "Change Password">
+<!ENTITY devmgr.button.changepw.accesskey       "P">
+<!ENTITY devmgr.button.load.label               "Load">
+<!ENTITY devmgr.button.load.accesskey           "L">
+<!ENTITY devmgr.button.unload.label             "Unload">
+<!ENTITY devmgr.button.unload.accesskey         "U">
+<!ENTITY devmgr.button.fips.accesskey           "F">
 
-<!ENTITY loaddevice.info "Enter the information for the module you want to add.">
-<!ENTITY loaddevice.modname "Module Name:">
-<!ENTITY loaddevice.modname.default "New PKCS#11 Module">
-<!ENTITY loaddevice.filename "Module filename:">
-<!ENTITY loaddevice.browse "Browse...">
+<!ENTITY loaddevice.info                        "Enter the information for the module you want to add.">
+<!ENTITY loaddevice.modname                     "Module Name:">
+<!ENTITY loaddevice.modname.accesskey           "M">
+<!ENTITY loaddevice.modname.default             "New PKCS#11 Module">
+<!ENTITY loaddevice.filename                    "Module filename:">
+<!ENTITY loaddevice.filename.accesskey          "f">
+<!ENTITY loaddevice.browse                      "Browse...">
+<!ENTITY loaddevice.browse.accesskey            "B">
 
-<!ENTITY loaddevice.title "Load PKCS#11 Device">
+<!ENTITY loaddevice.title                       "Load PKCS#11 Device">

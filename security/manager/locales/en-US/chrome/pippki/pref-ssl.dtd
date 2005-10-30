@@ -36,86 +36,96 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY  SSLProtocolVersions          "SSL Protocol Versions">
-<!ENTITY  SSLWarnings                  "SSL Warnings">
-<!ENTITY  SSLClientAuthMethod          "Client Certificate Selection">
+<!ENTITY  SSLProtocolVersions.caption       "SSL Protocol Versions">
+<!ENTITY  SSLWarnings.caption               "SSL Warnings">
+<!ENTITY  SSLClientAuthMethod.caption       "Client Certificate Selection">
 
-<!ENTITY prefheader.title "Secure Sockets Layer (SSL)">
-<!ENTITY enable.ssl2 "Enable SSL version 2">
-<!ENTITY enable.ssl3 "Enable SSL version 3">
-<!ENTITY enable.tls "Enable TLS">
+<!ENTITY pref.ssl.title                     "Secure Sockets Layer (SSL)">
+<!ENTITY enable.ssl2                        "Enable SSL version 2">
+<!ENTITY enable.ssl2.accesskey              "2">
+<!ENTITY enable.ssl3                        "Enable SSL version 3">
+<!ENTITY enable.ssl3.accesskey              "3">
+<!ENTITY enable.tls                         "Enable TLS">
+<!ENTITY enable.tls.accesskey               "T">
 
-<!ENTITY edit.sslciphers "Edit Ciphers...">
-<!ENTITY edit.sslciphers.accesskey "E">
+<!ENTITY edit.sslciphers                    "Edit Ciphers...">
+<!ENTITY edit.sslciphers.accesskey          "E">
 
-<!ENTITY warn.description "&brandShortName; can alert you to the security status of the web page you are viewing. Set &brandShortName; to show a warning and ask permission before:">
-<!ENTITY warn.enteringsecure "Loading a page that supports encryption">
-<!ENTITY warn.enteringweak "Loading a page that uses low-grade encryption">
-<!ENTITY warn.insecurepost "Sending form data from an unencrypted page to an unencrypted page">
-<!ENTITY warn.leavingsecure "Leaving a page that supports encryption">
-<!ENTITY warn.secureredirect "Redirecting from one encrypted page to another">
-<!ENTITY warn.secureredirecttoinsecure "Redirecting from an encrypted page to an unencrypted page">
-<!ENTITY warn.viewmixed "Viewing a page with an encrypted/unencrypted mix">
+<!ENTITY warn.description                   "&brandShortName; can alert you to the security status of the web page you are viewing. Set &brandShortName; to show a warning and ask permission before:">
+<!ENTITY warn.enteringsecure                "Loading a page that supports encryption">
+<!ENTITY warn.enteringsecure.accesskey      "L">
+<!ENTITY warn.enteringweak                  "Loading a page that uses low-grade encryption">
+<!ENTITY warn.enteringweak.accesskey        "o">
+<!ENTITY warn.insecurepost                  "Sending form data from an unencrypted page to an unencrypted page">
+<!ENTITY warn.insecurepost.accesskey        "S">
+<!ENTITY warn.leavingsecure                 "Leaving a page that supports encryption">
+<!ENTITY warn.leavingsecure.accesskey       "a">
+<!ENTITY warn.secureredirect                "Redirecting from one encrypted page to another">
+<!ENTITY warn.secureredirecttoinsecure      "Redirecting from an encrypted page to an unencrypted page">
+<!ENTITY warn.viewmixed                     "Viewing a page with an encrypted/unencrypted mix">
+<!ENTITY warn.viewmixed.accesskey           "V">
 
-<!ENTITY certselect.description "Decide how &brandShortName; selects a security certificate to present to web sites that require one:">
-<!ENTITY certselect.auto "Select Automatically">
-<!ENTITY certselect.ask "Ask Every Time">
+<!ENTITY certselect.description             "Decide how &brandShortName; selects a security certificate to present to web sites that require one:">
+<!ENTITY certselect.auto                    "Select Automatically">
+<!ENTITY certselect.auto.accesskey          "A">
+<!ENTITY certselect.ask                     "Ask Every Time">
+<!ENTITY certselect.ask.accesskey           "E">
 
 <!-- Cipher pref window -->
-<!ENTITY cipher.title "SSL: Edit Ciphers">
-<!ENTITY cipher.ssl2.label "SSL2 Cipher Suites">
-<!ENTITY cipher.ssl3.label "SSL3/TLS Cipher Suites">
-<!ENTITY cipher.ssl3_extra.label "Extra SSL3/TLS Cipher Suites">
-<!ENTITY cipher.tab.ssl2 "SSL2">
-<!ENTITY cipher.tab.ssl3tls "SSL3/TLS">
-<!ENTITY cipher.tab.ssl3tls_extra "Extra SSL3/TLS">
+<!ENTITY cipher.title                       "SSL: Edit Ciphers">
+<!ENTITY cipher.ssl2.label                  "SSL2 Cipher Suites">
+<!ENTITY cipher.ssl3.label                  "SSL3/TLS Cipher Suites">
+<!ENTITY cipher.ssl3_extra.label            "Extra SSL3/TLS Cipher Suites">
+<!ENTITY cipher.tab.ssl2                    "SSL2">
+<!ENTITY cipher.tab.ssl3tls                 "SSL3/TLS">
+<!ENTITY cipher.tab.ssl3tls_extra           "Extra SSL3/TLS">
 
 <!-- SSL2 Ciphers -->
 
-<!ENTITY cipher.ssl2.rc4_128 "128-bit RC4 encryption with RSA and an MD5 MAC">
-<!ENTITY cipher.ssl2.rc2_128 "128-bit RC2 encryption with RSA and an MD5 MAC">
-<!ENTITY cipher.ssl2.des_ede3_192 "168-bit Triple DES encryption with RSA and MD5 MAC ">
-<!ENTITY cipher.ssl2.des_64 "56-bit DES encryption with RSA and an MD5 MAC">
-<!ENTITY cipher.ssl2.rc4_40 "40-bit RC4 encryption with RSA and an MD5 MAC (export)">
-<!ENTITY cipher.ssl2.rc2_40 "40-bit RC2 encryption with RSA and an MD5 MAC (export)">
+<!ENTITY cipher.ssl2.rc4_128                "128-bit RC4 encryption with RSA and an MD5 MAC">
+<!ENTITY cipher.ssl2.rc2_128                "128-bit RC2 encryption with RSA and an MD5 MAC">
+<!ENTITY cipher.ssl2.des_ede3_192           "168-bit Triple DES encryption with RSA and MD5 MAC ">
+<!ENTITY cipher.ssl2.des_64                 "56-bit DES encryption with RSA and an MD5 MAC">
+<!ENTITY cipher.ssl2.rc4_40                 "40-bit RC4 encryption with RSA and an MD5 MAC (export)">
+<!ENTITY cipher.ssl2.rc2_40                 "40-bit RC2 encryption with RSA and an MD5 MAC (export)">
 
 <!-- SSL3/TLS ciphers -->
-<!ENTITY cipher.ssl3.rsa_rc4_128_md5 "128-bit RC4 encryption with RSA and an MD5 MAC">
-<!ENTITY cipher.ssl3.rsa_rc4_128_sha "128-bit RC4 encryption with RSA and a SHA1 MAC">
-<!ENTITY cipher.ssl3.rsa_fips_des_ede3_sha "168-bit Triple DES with RSA and a SHA1 MAC (FIPS)">
-<!ENTITY cipher.ssl3.rsa_des_ede3_sha "168-bit Triple DES with RSA and a SHA1 MAC">
-<!ENTITY cipher.ssl3.rsa_fips_des_sha "56-bit DES encryption with RSA and a SHA1 MAC (FIPS)">
-<!ENTITY cipher.ssl3.rsa_des_sha "56-bit DES encryption with RSA and a SHA1 MAC">
-<!ENTITY cipher.ssl3.rsa_1024_rc4_56_sha "56-bit RC4 encryption with RSA and a SHA1 MAC (export)">
-<!ENTITY cipher.ssl3.rsa_1024_des_cbc_sha "56-bit DES encryption with RSA and a SHA1 MAC (export)">
-<!ENTITY cipher.ssl3.rsa_rc4_40_md5 "40-bit RC4 encryption with RSA and an MD5 MAC (export)">
-<!ENTITY cipher.ssl3.rsa_rc2_40_md5 "40-bit RC2 encryption with RSA and an MD5 MAC (export)">
+<!ENTITY cipher.ssl3.rsa_rc4_128_md5        "128-bit RC4 encryption with RSA and an MD5 MAC">
+<!ENTITY cipher.ssl3.rsa_rc4_128_sha        "128-bit RC4 encryption with RSA and a SHA1 MAC">
+<!ENTITY cipher.ssl3.rsa_fips_des_ede3_sha  "168-bit Triple DES with RSA and a SHA1 MAC (FIPS)">
+<!ENTITY cipher.ssl3.rsa_des_ede3_sha       "168-bit Triple DES with RSA and a SHA1 MAC">
+<!ENTITY cipher.ssl3.rsa_fips_des_sha       "56-bit DES encryption with RSA and a SHA1 MAC (FIPS)">
+<!ENTITY cipher.ssl3.rsa_des_sha            "56-bit DES encryption with RSA and a SHA1 MAC">
+<!ENTITY cipher.ssl3.rsa_1024_rc4_56_sha    "56-bit RC4 encryption with RSA and a SHA1 MAC (export)">
+<!ENTITY cipher.ssl3.rsa_1024_des_cbc_sha   "56-bit DES encryption with RSA and a SHA1 MAC (export)">
+<!ENTITY cipher.ssl3.rsa_rc4_40_md5         "40-bit RC4 encryption with RSA and an MD5 MAC (export)">
+<!ENTITY cipher.ssl3.rsa_rc2_40_md5         "40-bit RC2 encryption with RSA and an MD5 MAC (export)">
 
 <!-- Extra SSL3/TLS ciphers -->
-<!ENTITY cipher.ssl3.dhe_rsa_aes_256_sha "256-bit AES encryption with RSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_dss_aes_256_sha "256-bit AES encryption with DSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.rsa_aes_256_sha "256-bit AES encryption with RSA and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_rsa_aes_128_sha "128-bit AES encryption with RSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_dss_aes_128_sha "128-bit AES encryption with DSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.rsa_aes_128_sha "128-bit AES encryption with RSA and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_rsa_des_ede3_sha "168-bit Triple DES with RSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_dss_des_ede3_sha "168-bit Triple DES with DSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_rsa_des_sha "56-bit DES encryption with RSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_dss_des_sha "56-bit DES encryption with DSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.rsa_null_sha "No encryption with RSA authentication and a SHA1 MAC">
-<!ENTITY cipher.ssl3.rsa_null_md5 "No encryption with RSA authentication and an MD5 MAC">
+<!ENTITY cipher.ssl3.dhe_rsa_aes_256_sha    "256-bit AES encryption with RSA, DHE, and a SHA1 MAC">
+<!ENTITY cipher.ssl3.dhe_dss_aes_256_sha    "256-bit AES encryption with DSA, DHE, and a SHA1 MAC">
+<!ENTITY cipher.ssl3.rsa_aes_256_sha        "256-bit AES encryption with RSA and a SHA1 MAC">
+<!ENTITY cipher.ssl3.dhe_rsa_aes_128_sha    "128-bit AES encryption with RSA, DHE, and a SHA1 MAC">
+<!ENTITY cipher.ssl3.dhe_dss_aes_128_sha    "128-bit AES encryption with DSA, DHE, and a SHA1 MAC">
+<!ENTITY cipher.ssl3.rsa_aes_128_sha        "128-bit AES encryption with RSA and a SHA1 MAC">
+<!ENTITY cipher.ssl3.dhe_rsa_des_ede3_sha   "168-bit Triple DES with RSA, DHE, and a SHA1 MAC">
+<!ENTITY cipher.ssl3.dhe_dss_des_ede3_sha   "168-bit Triple DES with DSA, DHE, and a SHA1 MAC">
+<!ENTITY cipher.ssl3.dhe_rsa_des_sha        "56-bit DES encryption with RSA, DHE, and a SHA1 MAC">
+<!ENTITY cipher.ssl3.dhe_dss_des_sha        "56-bit DES encryption with DSA, DHE, and a SHA1 MAC">
+<!ENTITY cipher.ssl3.rsa_null_sha           "No encryption with RSA authentication and a SHA1 MAC">
+<!ENTITY cipher.ssl3.rsa_null_md5           "No encryption with RSA authentication and an MD5 MAC">
 
 <!-- Labels for cipher attributes -->
-<!ENTITY cipher.name "Cipher">
-<!ENTITY cipher.encryption "Encryption Algorithm:">
-<!ENTITY cipher.authAlg "Authentication Algorithm:">
-<!ENTITY cipher.keyAlg "Key Algorithm:">
-<!ENTITY cipher.keySize "Effective Key Size:">
-<!ENTITY cipher.macAlg "MAC Algorithm:">
-<!ENTITY cipher.other "Other Attributes:">
-<!ENTITY cipher.fips "FIPS">
-<!ENTITY cipher.exportable "IsExportable">
+<!ENTITY cipher.name                        "Cipher">
+<!ENTITY cipher.encryption                  "Encryption Algorithm:">
+<!ENTITY cipher.authAlg                     "Authentication Algorithm:">
+<!ENTITY cipher.keyAlg                      "Key Algorithm:">
+<!ENTITY cipher.keySize                     "Effective Key Size:">
+<!ENTITY cipher.macAlg                      "MAC Algorithm:">
+<!ENTITY cipher.other                       "Other Attributes:">
+<!ENTITY cipher.fips                        "FIPS">
+<!ENTITY cipher.exportable                  "IsExportable">
 
-<!ENTITY cipher.details "Details...">
+<!ENTITY cipher.details                     "Details...">
 
-<!ENTITY cipherinfo.title "Cipher Details">
+<!ENTITY cipherinfo.title                   "Cipher Details">

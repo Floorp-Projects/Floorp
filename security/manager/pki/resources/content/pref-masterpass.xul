@@ -47,7 +47,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://pippki/content/pref-masterpass.xul'); onMasterPasswordLoad();"
-      headertitle="&lheader;">
+      headertitle="&pref.masterpass.title;">
 
   <script type="application/x-javascript" src="chrome://pippki/content/pref-masterpass.js"/>
 
@@ -64,7 +64,7 @@
             
   <!-- Change Password -->
   <groupbox>
-    <caption label="&changepassword.label;"/>
+    <caption label="&changepassword.caption;"/>
     <description>&changepassword.text;</description>
     <hbox align="center">
       <button label="&changepassword.button;"
@@ -82,7 +82,7 @@
               prefstring="signon.expireMasterPassword"
               hidden="true"/>
 
-    <caption label="&managepassword.label;"/>
+    <caption label="&managepassword.caption;"/>
     <description>&managepassword.text;</description>
     <hbox align="center">
       <radiogroup id="passwordAskTimes"
@@ -91,11 +91,14 @@
         <!-- note that these values are different than what NSS uses, which
              are (0, -1, 1) respectively -->
         <radio value="0" label="&managepassword.askfirsttime;" id="askFirstTime"
+               accesskey="&managepassword.askfirsttime.accesskey;"
                style="margin: 0px;" oncommand="changePasswordSettings(false);"/>
         <radio value="1" label="&managepassword.askeverytime;" id="askEveryTime"
+               accesskey="&managepassword.askeverytime.accesskey;"
                style="margin: 0px;" oncommand="changePasswordSettings(false);"/>
         <hbox align="center">
           <radio value="2" label="&managepassword.asktimeout;" id="askTimeout"
+                 accesskey="&managepassword.asktimeout.accesskey;"
                  style="margin: 0px;" oncommand="changePasswordSettings(true);"/>
           <textbox id="passwordTimeout" size="4"
                    preftype="int"
@@ -109,7 +112,7 @@
 
   <!-- Reset Password -->
   <groupbox>
-    <caption label="&resetpassword.label;"/>
+    <caption label="&resetpassword.caption;"/>
     <description>&resetpassword.text;</description>
     <hbox align="center">
       <button label="&resetpassword.button;"

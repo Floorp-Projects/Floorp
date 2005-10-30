@@ -67,15 +67,19 @@
     <hbox>
       <button id="websites_viewButton"
               label="&certmgr.view.label;"
+              accesskey="&certmgr.view.accesskey;"
               disabled="true" oncommand="viewCerts();"/>
       <button id="websites_editButton"
               label="&certmgr.edit.label;"
+              accesskey="&certmgr.edit.accesskey;"
               disabled="true" oncommand="editCerts();"/>
       <button id="websites_addButton"
               label="&certmgr.restore.label;"
+              accesskey="&certmgr.restore.accesskey;"
               oncommand="addWebSiteCert();"/>
       <button id="websites_deleteButton"
               label="&certmgr.delete.label;"
+              accesskey="&certmgr.delete.accesskey;"
               disabled="true" oncommand="deleteCerts();"/>
     </hbox>
   </vbox>
