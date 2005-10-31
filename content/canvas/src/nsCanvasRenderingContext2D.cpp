@@ -81,6 +81,10 @@
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 
+/* Maximum depth of save() which has style information saved */
+#define STYLE_STACK_DEPTH 50
+#define STYLE_CURRENT_STACK ((mSaveCount<STYLE_STACK_DEPTH)?mSaveCount:STYLE_STACK_DEPTH-1)
+
 /**
  ** nsCanvasGradient
  **/
@@ -255,9 +259,9 @@ protected:
     // style handling
     PRInt32 mLastStyle;
     PRPackedBool mDirtyStyle[STYLE_MAX];
-    nscolor mColorStyles[STYLE_MAX];
-    nsCOMPtr<nsCanvasGradient> mGradientStyles[STYLE_MAX];
-    nsCOMPtr<nsCanvasPattern> mPatternStyles[STYLE_MAX];
+    nscolor mColorStyles[STYLE_STACK_DEPTH][STYLE_MAX];
+    nsCOMPtr<nsCanvasGradient> mGradientStyles[STYLE_STACK_DEPTH][STYLE_MAX];
+    nsCOMPtr<nsCanvasPattern> mPatternStyles[STYLE_STACK_DEPTH][STYLE_MAX];
 
     // stolen from nsJSUtils
     static PRBool ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,
@@ -308,11 +312,11 @@ nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
     : mCanvasElement(nsnull),
       mDirty(PR_TRUE), mSaveCount(0), mCairo(nsnull), mSurface(nsnull), mSurfaceData(nsnull)
 {
-    mColorStyles[STYLE_STROKE] = NS_RGB(0,0,0);
-    mColorStyles[STYLE_FILL] = NS_RGB(0,0,0);
-    mColorStyles[STYLE_SHADOW] = NS_RGBA(0,0,0,0);
+    mColorStyles[0][STYLE_STROKE] = NS_RGB(0,0,0);
+    mColorStyles[0][STYLE_FILL] = NS_RGB(0,0,0);
+    mColorStyles[0][STYLE_SHADOW] = NS_RGBA(0,0,0,0);
 
-    mLastStyle = (PRInt32) -1;
+    mLastStyle = -1;
     mGlobalAlpha = 1.0f;
 
     DirtyAllStyles();
@@ -374,9 +378,9 @@ nsCanvasRenderingContext2D::StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhi
         if (NS_FAILED(rv))
             return PR_FALSE;
 
-        mColorStyles[aWhichStyle] = color;
-        mPatternStyles[aWhichStyle] = nsnull;
-        mGradientStyles[aWhichStyle] = nsnull;
+        mColorStyles[STYLE_CURRENT_STACK][aWhichStyle] = color;
+        mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
+        mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
 
         mDirtyStyle[aWhichStyle] = PR_TRUE;
 
@@ -391,9 +395,9 @@ nsCanvasRenderingContext2D::StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhi
         if (NS_FAILED(rv))
             return PR_FALSE;
 
-        mColorStyles[aWhichStyle] = color;
-        mPatternStyles[aWhichStyle] = nsnull;
-        mGradientStyles[aWhichStyle] = nsnull;
+        mColorStyles[STYLE_CURRENT_STACK][aWhichStyle] = color;
+        mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
+        mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
 
         mDirtyStyle[aWhichStyle] = PR_TRUE;
         return PR_TRUE;
@@ -406,11 +410,11 @@ nsCanvasRenderingContext2D::StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhi
 
         nsCOMPtr<nsIDOMCanvasGradient> grad (do_QueryInterface(iface));
         if (grad) {
-            mPatternStyles[aWhichStyle] = nsnull;
-            mGradientStyles[aWhichStyle] = do_QueryInterface(iface);
+            mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
+            mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle] = do_QueryInterface(iface);
             mDirtyStyle[aWhichStyle] = PR_TRUE;
 
-            if (!mGradientStyles[aWhichStyle])
+            if (!mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle])
                 return PR_FALSE;
 
             return PR_TRUE;
@@ -418,11 +422,11 @@ nsCanvasRenderingContext2D::StyleVariantToColor(nsIVariant* aStyle, PRInt32 aWhi
 
         nsCOMPtr<nsIDOMCanvasPattern> pattern (do_QueryInterface(iface));
         if (pattern) {
-            mPatternStyles[aWhichStyle] = do_QueryInterface(iface);
-            mGradientStyles[aWhichStyle] = nsnull;
+            mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle] = do_QueryInterface(iface);
+            mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle] = nsnull;
             mDirtyStyle[aWhichStyle] = PR_TRUE;
 
-            if (!mPatternStyles[aWhichStyle])
+            if (!mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle])
                 return PR_FALSE;
 
             return PR_TRUE;
@@ -472,17 +476,17 @@ nsCanvasRenderingContext2D::ApplyStyle(PRInt32 aWhichStyle)
     mDirtyStyle[aWhichStyle] = PR_FALSE;
     mLastStyle = aWhichStyle;
 
-    if (mPatternStyles[aWhichStyle]) {
-        mPatternStyles[aWhichStyle]->Apply(mCairo);
+    if (mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle]) {
+        mPatternStyles[STYLE_CURRENT_STACK][aWhichStyle]->Apply(mCairo);
         return;
     }
 
-    if (mGradientStyles[aWhichStyle]) {
-        mGradientStyles[aWhichStyle]->Apply(mCairo);
+    if (mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle]) {
+        mGradientStyles[STYLE_CURRENT_STACK][aWhichStyle]->Apply(mCairo);
         return;
     }
 
-    SetCairoColor(mColorStyles[aWhichStyle]);
+    SetCairoColor(mColorStyles[STYLE_CURRENT_STACK][aWhichStyle]);
 }
 
 nsresult
@@ -709,6 +713,15 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Save()
 {
     mSaveCount++;
+
+    if (mSaveCount < STYLE_STACK_DEPTH) {
+        for (PRInt32 i = 0; i < STYLE_MAX; i++) {
+            mColorStyles[mSaveCount][i] = mColorStyles[mSaveCount-1][i];
+            mGradientStyles[mSaveCount][i] = mGradientStyles[mSaveCount-1][i];
+            mPatternStyles[mSaveCount][i] = mPatternStyles[mSaveCount-1][i];
+        }
+    }
+
     cairo_save (mCairo);
     return NS_OK;
 }
@@ -716,6 +729,18 @@ nsCanvasRenderingContext2D::Save()
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::Restore()
 {
+    if (mSaveCount < STYLE_STACK_DEPTH && mSaveCount > 0) {
+        for (PRInt32 i = 0; i < STYLE_MAX; i++) {
+            mColorStyles[mSaveCount-1][i] = mColorStyles[mSaveCount][i];
+            mGradientStyles[mSaveCount-1][i] = mGradientStyles[mSaveCount][i];
+            mPatternStyles[mSaveCount-1][i] = mPatternStyles[mSaveCount][i];
+
+            mGradientStyles[mSaveCount][i] = nsnull;
+            mPatternStyles[mSaveCount][i] = nsnull;
+        }
+        mLastStyle = -1;
+    }
+
     if (mSaveCount > 0) {
         mSaveCount--;
         cairo_restore (mCairo);
@@ -786,15 +811,15 @@ nsCanvasRenderingContext2D::GetStrokeStyle(nsIVariant** aStyle)
     rv = var->SetWritable(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mPatternStyles[STYLE_STROKE]) {
-        rv = var->SetAsISupports(mPatternStyles[STYLE_STROKE]);
+    if (mPatternStyles[STYLE_CURRENT_STACK][STYLE_STROKE]) {
+        rv = var->SetAsISupports(mPatternStyles[STYLE_CURRENT_STACK][STYLE_STROKE]);
         NS_ENSURE_SUCCESS(rv, rv);
-    } else if (mGradientStyles[STYLE_STROKE]) {
-        rv = var->SetAsISupports(mGradientStyles[STYLE_STROKE]);
+    } else if (mGradientStyles[STYLE_CURRENT_STACK][STYLE_STROKE]) {
+        rv = var->SetAsISupports(mGradientStyles[STYLE_CURRENT_STACK][STYLE_STROKE]);
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
         nsString styleStr;
-        StyleColorToString(mColorStyles[STYLE_STROKE], styleStr);
+        StyleColorToString(mColorStyles[STYLE_CURRENT_STACK][STYLE_STROKE], styleStr);
 
         rv = var->SetAsDOMString(styleStr);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -824,15 +849,15 @@ nsCanvasRenderingContext2D::GetFillStyle(nsIVariant** aStyle)
     rv = var->SetWritable(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (mPatternStyles[STYLE_FILL]) {
-        rv = var->SetAsISupports(mPatternStyles[STYLE_FILL]);
+    if (mPatternStyles[STYLE_CURRENT_STACK][STYLE_FILL]) {
+        rv = var->SetAsISupports(mPatternStyles[STYLE_CURRENT_STACK][STYLE_FILL]);
         NS_ENSURE_SUCCESS(rv, rv);
-    } else if (mGradientStyles[STYLE_FILL]) {
-        rv = var->SetAsISupports(mGradientStyles[STYLE_FILL]);
+    } else if (mGradientStyles[STYLE_CURRENT_STACK][STYLE_FILL]) {
+        rv = var->SetAsISupports(mGradientStyles[STYLE_CURRENT_STACK][STYLE_FILL]);
         NS_ENSURE_SUCCESS(rv, rv);
     } else {
         nsString styleStr;
-        StyleColorToString(mColorStyles[STYLE_FILL], styleStr);
+        StyleColorToString(mColorStyles[STYLE_CURRENT_STACK][STYLE_FILL], styleStr);
 
         rv = var->SetAsDOMString(styleStr);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -974,7 +999,7 @@ nsCanvasRenderingContext2D::SetShadowColor(const nsAString& color)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::GetShadowColor(nsAString& color)
 {
-    StyleColorToString(mColorStyles[STYLE_SHADOW], color);
+    StyleColorToString(mColorStyles[STYLE_CURRENT_STACK][STYLE_SHADOW], color);
     return NS_OK;
 }
 
