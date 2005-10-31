@@ -201,7 +201,7 @@ function init()
     dispatch("networks");
     dispatch("commands");
 
-    processStartupURLs();
+    setTimeout(processStartupURLs, 0);
 }
 
 function initStatic()
