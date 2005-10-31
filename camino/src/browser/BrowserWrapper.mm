@@ -830,7 +830,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
       // A popup is being opened while the page is currently loading.  Offer to block the
       // popup.
       nsAlertController* controller = CHBrowserService::GetAlertController();
-      BOOL confirm = [controller confirm: [self window] title: @"Unrequested Popup Detected"
+      BOOL confirm = [controller confirm: [self window] title: NSLocalizedString(@"PopupBlockTitle",@"")
                                 text: [NSString stringWithFormat: NSLocalizedString(@"PopupBlockMsg", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)]];
 
       // This is a one-time dialog.
