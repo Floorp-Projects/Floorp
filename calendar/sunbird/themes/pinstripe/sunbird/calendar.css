@@ -46,6 +46,7 @@
 # ***** END LICENSE BLOCK *****
 */
 
+@import url("chrome://calendar/skin/calendar-views.css");
 
 /*--------------------------------------------------------------------
  *   Top bar, with name, image and buttons
@@ -799,6 +800,4 @@ description.tooltipBody
 toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }
-
-@import url("chrome://calendar/skin/calendar-views.css");
 
