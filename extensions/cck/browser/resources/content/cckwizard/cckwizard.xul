@@ -50,84 +50,106 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://cckwizard/content/cckwizard.js"/>
 
-  <wizardpage onpageshow="ShowMain();">
+  <wizardpage>
     <description>&cckWizard.description;</description>
     <groupbox>
       <caption label="&beforeYouBegin.label;"/>
       <description>&beforeYouBegin.description;</description>
     </groupbox>
-    <groupbox>
-      <caption label="&selectConfig.label;"/>
-      <description>&selectConfig.description;</description>
-      <hbox>
-      <menulist style="min-width: 50px;" flex="1" id="byb-configs" sizetopopup="false" oncommand="setcurrentconfig(this.selectedItem.value);">
-        <menupopup>
-        </menupopup>
-      </menulist>
-      <button label="&showConfig.label;" oncommand="ShowConfigInfo()"/>
-      <button label="&newConfig.label;" oncommand="CreateConfig();"/>
-      <button label="&copyConfig.label;" disabled="true" oncommand="CopyConfig();"/>/>
-      <button label="&deleteConfig.label;" id="deleteconfig" oncommand="DeleteConfig();"/>
-      </hbox>
-    </groupbox>
-  </wizardpage>
-  
-  <wizardpage label="&customizeExt.label;" description="&customizeExt.description;" onpageshow="initimage('iconURL','icon');" onpageadvanced="return ValidateFile('iconURL')">
-    <hbox align="center">
-      <spacer flex="1"/>
-      <label>&id.label;</label>
-      <textbox id="id" style="width: 350px;" tooltiptext="Format: cck-companyname@extensions.domainname.tld"/>
-    </hbox>
-    <hbox align="center">
-      <spacer flex="1"/>
-      <label>&name.label;</label>
-    <textbox id="name" style="width: 350px;"/>
-    </hbox>
-    <hbox align="center">
-      <spacer flex="1"/>
-      <label>&version.label;</label>
-      <textbox id="version" style="width: 350px;"/>
-    </hbox>
-    <hbox align="center">
-      <spacer flex="1"/>
-      <label>&description.label;</label>
-      <textbox id="description" style="width: 350px;"/>
-    </hbox>
-    <hbox align="center">
-      <spacer flex="1"/>
-      <label>&creator.label;</label>
-      <textbox id="creator" style="width: 350px;"/>
-    </hbox>
-    <hbox align="center">
-      <spacer flex="1"/>
-      <label>&homepageURL.label;</label>
-      <textbox id="homepageURL" style="width: 350px;"/>
-    </hbox>
-    <hbox align="center">
-      <spacer flex="1"/>
-      <label>&updateURL.label;</label>
-      <textbox id="updateURL" style="width: 350px;"/>
-    </hbox>
-    <hbox align="center">
-      <spacer flex="1"/>
-      <label>&icon.label;</label>
-      <hbox>
-      <textbox style="min-width: 226px;" flex="1" id="iconURL"/>
-      </hbox>
-      <hbox>
-      <image id="icon" src='' width='32' height='32'/>
-      </hbox>
-      <hbox>
-        <button label="&chooseFile.label;" oncommand="chooseimage('iconURL','icon');"/>
-      </hbox>
-    </hbox>
-    <hbox align="center">
-      <spacer flex="1"/>
-      <label>&filename.label;</label>
-      <textbox id="filename" style="width: 335px;"/>
-      <label>.xpi</label>      
-    </hbox>
-  </wizardpage>
+ </wizardpage>    
+
+ <wizardpage label="&configurePage.label;" onpageshow="ShowMain();">
+   <groupbox>
+     <caption label="&selectConfig.label;"/>
+     <description>&selectConfig.description;</description>
+     <hbox>
+       <menulist flex="1" id="byb-configs" oncommand="setcurrentconfig(this.selectedItem.value);">
+         <menupopup>
+         </menupopup>
+       </menulist>
+       <button label="&showConfig.label;" oncommand="ShowConfigInfo()"/>
+     </hbox>
+     <hbox>
+       <button label="&newConfig.label;" id="newconfig" oncommand="CreateConfig();"/>
+       <button label="&copyConfig.label;" id="copyconfig" disabled="true" oncommand="CopyConfig();"/>/>
+       <button label="&deleteConfig.label;" id="deleteconfig" oncommand="DeleteConfig();"/>
+     </hbox>
+   </groupbox>
+ </wizardpage>
+
+ <wizardpage label="&customizeExt.label;" description="&customizeExt.description;"
+             onpageshow="initimage('iconURL','icon');"
+             onpageadvanced="return ValidateFile('iconURL')">
+   <grid>
+     <columns>
+       <column/>
+       <column flex="1"/>
+     </columns>
+     <rows>
+       <row align="center" flex="1">
+         <vbox align="right">
+           <label pack="end">&id.label;</label>
+         </vbox>
+         <textbox id="id" tooltiptext="Format: cck-companyname@extensions.domainname.tld"/>
+       </row>
+       <row align="center">
+         <vbox align="right">
+           <label>&name.label;</label>
+         </vbox>
+         <textbox id="name"/>
+       </row>
+       <row align="center">
+         <vbox align="right">
+           <label>&version.label;</label>
+         </vbox>
+         <textbox id="version"/>
+       </row>
+       <row align="center">
+         <vbox align="right">
+           <label>&description.label;</label>
+         </vbox>
+         <textbox id="description"/>
+       </row>
+       <row align="center">
+         <vbox align="right">
+           <label>&creator.label;</label>
+         </vbox>
+         <textbox id="creator"/>
+       </row>
+       <row align="center">
+         <vbox align="right">
+           <label>&homepageURL.label;</label>
+         </vbox>
+         <textbox id="homepageURL"/>
+       </row>
+       <row align="center">
+         <vbox align="right">
+           <label>&updateURL.label;</label>
+         </vbox>
+         <textbox id="updateURL"/>
+       </row>
+       <row align="center">
+         <vbox align="right">
+           <label>&icon.label;</label>
+         </vbox>
+         <hbox>
+           <textbox flex="1" id="iconURL"/>
+           <image id="icon" src='' width='32' height='32'/>
+           <button label="&chooseFile.label;" oncommand="chooseimage('iconURL','icon');"/>
+         </hbox>
+       </row>
+       <row align="center">
+         <vbox align="right">
+           <label>&filename.label;</label>
+         </vbox>
+         <hbox>
+           <textbox flex="1" id="filename"/>
+           <label>.xpi</label>
+         </hbox>
+       </row>
+     </rows>
+   </grid>
+ </wizardpage>
 
   <wizardpage label="&customizePartOne.label;" onpageadvanced="return Validate('OrganizationName','&orgName.error;')">
     <groupbox>
@@ -242,72 +264,66 @@
 
   <wizardpage label="&customizeSearchPlugins.label;" onpageadvanced="return ValidateFile('SearchPlugin1','SearchPluginIcon1','SearchPlugin2','SearchPluginIcon2','SearchPlugin3','SearchPluginIcon3','SearchPlugin4','SearchPluginIcon4','SearchPlugin5','SearchPluginIcon5');">
     <description>&searchPlugins.description;</description>
-    <html:hr/>
+    <separator class="groove"/>
     <hbox align="center">
       <spacer flex="1"/>
       <label>&file.label;</label>
-      <textbox id="SearchPlugin1" style="min-width: 375px;" flex="1" />
+      <textbox id="SearchPlugin1" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin1');"/>
     </hbox>
-      <hbox style="width: 350px;">
-      <spacer flex="1"/>
+      <hbox>
       <label>&icon.label;</label>
-      <textbox id="SearchPluginIcon1" style="min-width: 380px;" flex="1" />
+      <textbox id="SearchPluginIcon1" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon1');"/>
     </hbox>
-    <html:hr/>
+    <separator class="groove"/>
     <hbox align="center">
       <spacer flex="1"/>
       <label>&file.label;</label>
-      <textbox id="SearchPlugin2" style="min-width: 375px;" flex="1" />
+      <textbox id="SearchPlugin2" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin2');"/>
     </hbox>
-      <hbox style="width: 350px;">
-      <spacer flex="1"/>
+      <hbox>
       <label>&icon.label;</label>
-      <textbox id="SearchPluginIcon2" style="min-width: 380px;" flex="1" />
+      <textbox id="SearchPluginIcon2" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon2');"/>
     </hbox>
-    <html:hr/>
+    <separator class="groove"/>
     <hbox align="center">
       <spacer flex="1"/>
       <label>&file.label;</label>
-      <textbox id="SearchPlugin3" style="min-width: 375px;" flex="1" />
+      <textbox id="SearchPlugin3" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin3');"/>
     </hbox>
-      <hbox style="width: 350px;">
-      <spacer flex="1"/>
+      <hbox>
       <label>&icon.label;</label>
-      <textbox id="SearchPluginIcon3" style="min-width: 380px;" flex="1" />
+      <textbox id="SearchPluginIcon3" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon3');"/>
     </hbox>
-    <html:hr/>
+    <separator class="groove"/>
     <hbox align="center">
       <spacer flex="1"/>
       <label>&file.label;</label>
-      <textbox id="SearchPlugin4" style="min-width: 375px;" flex="1" />
+      <textbox id="SearchPlugin4" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin4');"/>
     </hbox>
-      <hbox style="width: 350px;">
-      <spacer flex="1"/>
+      <hbox>
       <label>&icon.label;</label>
-      <textbox id="SearchPluginIcon4" style="min-width: 380px;" flex="1" />
+      <textbox id="SearchPluginIcon4" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon4');"/>
     </hbox>
-    <html:hr/>
+    <separator class="groove"/>
     <hbox align="center">
       <spacer flex="1"/>
       <label>&file.label;</label>
-      <textbox id="SearchPlugin5" style="min-width: 375px;" flex="1" />
+      <textbox id="SearchPlugin5" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin5');"/>
     </hbox>
-      <hbox style="width: 350px;">
-      <spacer flex="1"/>
+      <hbox>
       <label>&icon.label;</label>
-      <textbox id="SearchPluginIcon5" style="min-width: 380px;" flex="1" />
+      <textbox id="SearchPluginIcon5" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon5');"/>
     </hbox>
-    <html:hr/>
   </wizardpage>
 
   <wizardpage label="&customizeToolbarOne.label;">
@@ -471,63 +487,63 @@
       <caption label="&prefs.label;"/>
       <description>&prefs.description;</description>
       <hbox>
-        <label>&prefName.label;1:</label>
+        <label control="PreferenceName1">&prefName.label;1:</label>
         <textbox id="PreferenceName1"/>
-        <label>&prefValue.label;</label>
+        <label control="PreferenceValue1">&prefValue.label;</label>
         <textbox id="PreferenceValue1"/>
       </hbox>
       <hbox>
-        <label>&prefName.label;2:</label>
+        <label control="PreferenceName2">&prefName.label;2:</label>
         <textbox id="PreferenceName2"/>
-        <label>&prefValue.label;</label>
+        <label control="PreferenceValue2">&prefValue.label;</label>
         <textbox id="PreferenceValue2"/>
       </hbox>
       <hbox>
-        <label>&prefName.label;3:</label>
+        <label control="PreferenceName3">&prefName.label;3:</label>
         <textbox id="PreferenceName3"/>
-        <label>&prefValue.label;</label>
+        <label control="PreferenceValue3">&prefValue.label;</label>
         <textbox id="PreferenceValue3"/>
       </hbox>
       <hbox>
-        <label>&prefName.label;4:</label>
+        <label control="PreferenceName4">&prefName.label;4:</label>
         <textbox id="PreferenceName4"/>
-        <label>&prefValue.label;</label>
+        <label control="PreferenceValue4">&prefValue.label;</label>
         <textbox id="PreferenceValue4"/>
       </hbox>
       <hbox>
-        <label>&prefName.label;5:</label>
+        <label control="PreferenceName5">&prefName.label;5:</label>
         <textbox id="PreferenceName5"/>
-        <label>&prefValue.label;</label>
+        <label control="PreferenceValue5">&prefValue.label;</label>
         <textbox id="PreferenceValue5"/>
       </hbox>
       <hbox>
-        <label>&prefName.label;6:</label>
+        <label control="PreferenceName6">&prefName.label;6:</label>
         <textbox id="PreferenceName6"/>
-        <label>&prefValue.label;</label>
+        <label control="PreferenceValue6">&prefValue.label;</label>
         <textbox id="PreferenceValue6"/>
       </hbox>
       <hbox>
-        <label>&prefName.label;7:</label>
+        <label control="PreferenceName7">&prefName.label;7:</label>
         <textbox id="PreferenceName7"/>
-        <label>&prefValue.label;</label>
+        <label control="PreferenceValue7">&prefValue.label;</label>
         <textbox id="PreferenceValue7"/>
       </hbox>
       <hbox>
-        <label>&prefName.label;8:</label>
+        <label control="PreferenceName8">&prefName.label;8:</label>
         <textbox id="PreferenceName8"/>
-        <label>&prefValue.label;</label>
+        <label control="PreferenceValue8">&prefValue.label;</label>
         <textbox id="PreferenceValue8"/>
       </hbox>
       <hbox>
-        <label>&prefName.label;9:</label>
+        <label control="PreferenceName9">&prefName.label;9:</label>
         <textbox id="PreferenceName9"/>
-        <label>&prefValue.label;</label>
+        <label control="PreferenceValue9">&prefValue.label;</label>
         <textbox id="PreferenceValue9"/>
       </hbox>
       <hbox>
-        <label>&prefName.label;10:</label>
+        <label control="PreferenceName10">&prefName.label;10:</label>
         <textbox id="PreferenceName10"/>
-        <label>&prefValue.label;</label>
+        <label control="PreferenceValue10">&prefValue.label;</label>
         <textbox id="PreferenceValue10"/>
       </hbox>
     </groupbox>

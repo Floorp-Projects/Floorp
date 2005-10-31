@@ -5,9 +5,11 @@
 <!ENTITY  beforeYouBegin.description    "Decide which customizations you want to make and create/collect the customized files, such as:
                                          <html:ul>
                                          <html:li>Custom animation files for browser's animated logo</html:li>
-                                         <html:li>Search pluginsfdsafdsafs</html:li>
+                                         <html:li>Search plugins</html:li>
                                          <html:li>Browser plug-ins</html:li>
                                          </html:ul>">
+                                         
+<!ENTITY  configurePage.label           "Extension Configurations">
 <!ENTITY  selectConfig.label            "Select an Existing Configuration or Create a New One">
 <!ENTITY  selectConfig.description      "Select an existing configuration, or click 'New' to create a new configuration and workspace in which to store your custom files. To edit an existing configuration without overwriting the original configuration, select it from the list and click 'Copy'.">
 <!ENTITY  showConfig.label              "Show Config Info">

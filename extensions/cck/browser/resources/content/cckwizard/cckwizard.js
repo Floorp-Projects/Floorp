@@ -175,7 +175,9 @@ function updateconfiglist()
       menulist.selectedItem = menulistitem;
       selecteditem = true;
       document.getElementById('example-window').canAdvance = true;
+      document.getElementById('byb-configs').disabled = false;
       document.getElementById('deleteconfig').disabled = false;
+      document.getElementById('showconfig').disabled = false;
     }
   }
   if ((!selecteditem) && (list.length > 0)) {
@@ -184,7 +186,10 @@ function updateconfiglist()
   }
   if (list.length == 0) {
     document.getElementById('example-window').canAdvance = false;
-  document.getElementById('deleteconfig').disabled = true;
+    document.getElementById('byb-configs').disabled = true;
+    document.getElementById('deleteconfig').disabled = true;
+    document.getElementById('showconfig').disabled = true;
+    
   }
 }
 
@@ -1113,8 +1118,11 @@ function CCKReadConfigFile(srcdir)
   var file = srcdir.clone();
   file.append("cck.config");
   
-  if (!file.exists())
+  if (!file.exists()) {
+    DoEnabling();
+    toggleProxySettings();
     return;
+  }
 
   var stream = Components.classes["@mozilla.org/network/file-input-stream;1"]
                          .createInstance(Components.interfaces.nsIFileInputStream);
@@ -1131,16 +1139,11 @@ function CCKReadConfigFile(srcdir)
       firstpart = str.substring(0,equals);
       secondpart = str.substring(equals+1);
       document.getElementById(firstpart).value = secondpart;
-      if (firstpart == "ProxyType") {
-        DoEnabling();
-      }
-      if (firstpart == "shareAllProxies") {
-        toggleProxySettings();
-      }
     }
   } while (more);
   
-  
+  DoEnabling();
+  toggleProxySettings();
   
   stream.close();
 }
@@ -1236,6 +1239,8 @@ function DoEnabling()
 
   // radio buttons
   var radiogroup = document.getElementById("ProxyType");
+  if (radiogroup.value == "")
+    radiogroup.value = "0";
 
   switch ( radiogroup.value ) {
     case "0":
