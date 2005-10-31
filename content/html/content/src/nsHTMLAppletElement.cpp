@@ -121,8 +121,8 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Applet)
 
 
 nsHTMLAppletElement::nsHTMLAppletElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
-  : nsGenericHTMLElement(aNodeInfo), nsObjectLoadingContent(eType_Plugin),
-    mReflectedApplet(PR_FALSE), mIsDoneAddingChildren(!aFromParser)
+  : nsGenericHTMLElement(aNodeInfo), mReflectedApplet(PR_FALSE),
+    mIsDoneAddingChildren(!aFromParser)
 {
 }
 

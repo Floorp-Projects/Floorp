@@ -91,11 +91,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eType_Null     = TYPE_NULL      ///< Type can't be handled
     };
 
-    /**
-     * @param aInitialType The type this object starts as; should correspond
-     *        to the frame that gets initially constructed for it.
-     */
-    nsObjectLoadingContent(ObjectType aInitialType = eType_Loading);
+    nsObjectLoadingContent();
     virtual ~nsObjectLoadingContent();
 
     NS_DECL_NSIREQUESTOBSERVER

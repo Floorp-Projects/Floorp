@@ -55,6 +55,7 @@
 
 // Util headers
 #include "plevent.h"
+#include "prlog.h"
 
 #include "nsAutoPtr.h"
 #include "nsContentPolicyUtils.h"
@@ -71,6 +72,13 @@
 #include "nsObjectLoadingContent.h"
 
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gObjectLog = PR_NewLogModule("objlc");
+#endif
+
+#define LOG(args) PR_LOG(gObjectLog, PR_LOG_DEBUG, args)
+#define LOG_ENABLED() PR_LOG_TEST(gObjectLog, PR_LOG_DEBUG)
 
 PR_BEGIN_EXTERN_C
 /* Note that these typedefs declare functions, not pointer to
@@ -121,6 +129,15 @@ nsAsyncInstantiateEvent::HandleEvent(PLEvent* event)
                                                PL_GetEventOwner(event));
   // Make sure that we still have the right frame
   if (con->GetFrame() == ev->mFrame) {
+    if (LOG_ENABLED()) {
+      nsCAutoString spec;
+      if (ev->mURI) {
+        ev->mURI->GetSpec(spec);
+      }
+      LOG(("OBJLC [%p]: Handling Instantiate event: Type=<%s> URI=%p<%s>\n",
+           con, ev->mContentType.get(), ev->mURI, spec.get()));
+    }
+
     nsresult rv = con->Instantiate(ev->mContentType, ev->mURI);
     if (NS_FAILED(rv)) {
       con->Fallback(PR_TRUE);
@@ -178,7 +195,12 @@ class AutoFallback {
   public:
     AutoFallback(nsObjectLoadingContent* aContent, const nsresult* rv)
       : mContent(aContent), mResult(rv) {}
-    ~AutoFallback() { if (NS_FAILED(*mResult)) mContent->Fallback(PR_FALSE); }
+    ~AutoFallback() {
+      if (NS_FAILED(*mResult)) {
+        LOG(("OBJLC [%p]: rv=%08x, falling back\n", mContent, *mResult));
+        mContent->Fallback(PR_FALSE);
+      }
+    }
   private:
     nsObjectLoadingContent* mContent;
     const nsresult* mResult;
@@ -210,9 +232,9 @@ IsSupportedPlugin(const nsCString& aMIMEType)
   return NS_SUCCEEDED(rv);
 }
 
-nsObjectLoadingContent::nsObjectLoadingContent(ObjectType aInitialType)
+nsObjectLoadingContent::nsObjectLoadingContent()
   : mChannel(nsnull)
-  , mType(aInitialType)
+  , mType(eType_Loading)
   , mInstantiating(PR_FALSE)
   , mUserDisabled(PR_FALSE)
   , mSuppressed(PR_FALSE)
@@ -239,6 +261,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
   AutoNotifier notifier(this, PR_TRUE);
 
   if (!IsSuccessfulRequest(aRequest)) {
+    LOG(("OBJLC [%p]: OnStartRequest: Request failed\n", this));
     Fallback(PR_FALSE);
     return NS_BINDING_ABORTED;
   }
@@ -258,6 +281,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
   // UnloadContent will set our type to null; need to be sure to only set it to
   // the real value on success
   ObjectType newType = GetTypeOfContent(mContentType);
+  LOG(("OBJLC [%p]: OnStartRequest: Old type=%u New Type=%u\n", this, mType, newType));
   if (mType != newType) {
     UnloadContent();
   }
@@ -350,11 +374,14 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
     mType = newType;
     rv = mFinalListener->OnStartRequest(aRequest, aContext);
     if (NS_FAILED(rv)) {
+      LOG(("OBJLC [%p]: mFinalListener->OnStartRequest failed (%08x), falling back\n",
+           this, rv));
       Fallback(PR_FALSE);
     }
     return rv;
   }
 
+  LOG(("OBJLC [%p]: Found no listener, falling back\n", this));
   Fallback(PR_FALSE);
   return NS_BINDING_ABORTED;
 }
@@ -424,6 +451,8 @@ nsObjectLoadingContent::GetDisplayedType(PRUint32* aType)
 NS_IMETHODIMP
 nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
 {
+  LOG(("OBJLC [%p]: Got frame %p (mInstantiating=%i)\n", this, aFrame,
+       mInstantiating));
   if (!mInstantiating && aFrame && mType == eType_Plugin) {
     // Asynchronously call Instantiate
     // This can go away once plugin loading moves to content
@@ -450,6 +479,7 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    LOG(("                 posting event\n"));
     nsresult rv = eventQ->PostEvent(ev);
     if (NS_FAILED(rv)) {
       PL_DestroyEvent(ev);
@@ -524,6 +554,9 @@ nsObjectLoadingContent::ObjectURIChanged(const nsAString& aURI,
                                          PRBool aForceType,
                                          PRBool aForceLoad)
 {
+  LOG(("OBJLC [%p]: Loading object: URI string=<%s> notify=%i type=<%s> forcetype=%i forceload=%i\n",
+       this, NS_ConvertUTF16toUTF8(aURI).get(), aNotify, aTypeHint.get(), aForceType, aForceLoad));
+
   // Avoid StringToURI in order to use the codebase attribute as base URI
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
@@ -554,6 +587,9 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
                                          PRBool aForceType,
                                          PRBool aForceLoad)
 {
+  LOG(("OBJLC [%p]: Loading object: URI=<%p> notify=%i type=<%s> forcetype=%i forceload=%i\n",
+       this, aURI, aNotify, aTypeHint.get(), aForceType, aForceLoad));
+
   if (mURI && aURI && !aForceLoad) {
     PRBool equal;
     nsresult rv = mURI->Equals(aURI, &equal);
@@ -582,6 +618,7 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
   // From here on, we will always change the content. This means that a
   // possibly-loading channel should be aborted.
   if (mChannel) {
+    LOG(("OBJLC [%p]: Cancelling existing load\n", this));
     // These three statements are carefully ordered:
     // - onStopRequest should get a channel whose status is the same as the
     //   status argument
@@ -645,6 +682,8 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
   if (aForceType && !aTypeHint.IsEmpty()) {
     ObjectType newType = GetTypeOfContent(aTypeHint);
     if (newType != mType) {
+      LOG(("OBJLC [%p]: (aForceType) Changing type from %u to %u\n", this, mType, newType));
+
       mInstantiating = PR_TRUE;
       UnloadContent();
 
@@ -712,6 +751,7 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
        GetTypeOfContent(aTypeHint) == eType_Plugin)) {
     // No URI, but we have a type. The plugin will handle the load.
     // Or: supported class id, plugin will handle the load.
+    LOG(("OBJLC [%p]: (classid) Changing type from %u to eType_Plugin\n", this, mType));
     mType = eType_Plugin;
     if (aNotify)
       notifier.Notify();
@@ -744,6 +784,7 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
   // If we get here, and we had a class ID, then it must have been unsupported.
   // Fallback in that case.
   if (hasID) {
+    LOG(("OBJLC [%p]: invalid classid\n", this));
     mInstantiating = PR_FALSE;
     rv = NS_ERROR_NOT_AVAILABLE;
     return NS_OK;
@@ -751,12 +792,14 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
 
   if (!aURI) {
     // No URI and no type... nothing we can do.
+    LOG(("OBJLC [%p]: no URI\n", this));
     mInstantiating = PR_FALSE;
     rv = NS_ERROR_NOT_AVAILABLE;
     return NS_OK;
   }
 
   if (!CanHandleURI(aURI)) {
+    LOG(("OBJLC [%p]: can't handle URI\n", this));
     // E.g. mms://
     mType = eType_Plugin;
     if (aNotify)
@@ -789,6 +832,7 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
   // Show fallback content in that case.
   rv = chan->AsyncOpen(this, nsnull);
   if (NS_SUCCEEDED(rv)) {
+    LOG(("OBJLC [%p]: Channel opened.\n", this));
     mChannel = chan;
     mType = eType_Loading;
   }
@@ -810,6 +854,8 @@ nsObjectLoadingContent::GetCapabilities() const
 void
 nsObjectLoadingContent::Fallback(PRBool aNotify)
 {
+  LOG(("OBJLC [%p]: Falling back (Notify=%i)\n", this, aNotify));
+
   AutoNotifier notifier(this, aNotify);
 
   UnloadContent();
@@ -818,6 +864,7 @@ nsObjectLoadingContent::Fallback(PRBool aNotify)
 void
 nsObjectLoadingContent::RemovedFromDocument()
 {
+  LOG(("OBJLC [%p]: Removed from doc\n", this));
   if (mFrameLoader) {
     // XXX This is very temporary and must go away
     mFrameLoader->Destroy();
@@ -920,6 +967,9 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
                                           PRInt32 aOldState,
                                           PRBool aSync)
 {
+  LOG(("OBJLC [%p]: Notifying about state change: (%u, %x) -> (%u, %x) (sync=%i)\n",
+       this, aOldType, aOldState, mType, ObjectState(), aSync));
+
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
   NS_ASSERTION(thisContent, "must be a content");
@@ -1079,6 +1129,7 @@ nsObjectLoadingContent::Instantiate(const nsACString& aMIMEType, nsIURI* aURI)
 {
   nsIObjectFrame* frame = GetFrame();
   if (!frame) {
+    LOG(("OBJLC [%p]: Attempted to instantiate, but have no frame\n", this));
     return NS_OK; // Not a failure to have no frame
   }
 
@@ -1121,6 +1172,8 @@ nsObjectLoadingContent::Instantiate(const nsACString& aMIMEType, nsIURI* aURI)
 
   // We'll always have a type or a URI by the time we get here
   NS_ASSERTION(aURI || !typeToUse.IsEmpty(), "Need a URI or a type");
+  LOG(("OBJLC [%p]: Calling [%p]->Instantiate(<%s>, %p)\n", this, frame,
+       typeToUse.get(), aURI));
   return frame->Instantiate(typeToUse.get(), aURI);
 }
 

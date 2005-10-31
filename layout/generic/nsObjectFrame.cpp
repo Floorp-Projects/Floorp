@@ -584,72 +584,9 @@ nsObjectFrame::Destroy(nsPresContext* aPresContext)
 {
   NS_ASSERTION(!mInstantiating, "about to crash due to bug 136927");
 
-  // Note: we don't want to unset the broken property here, since that would
-  // cause frame construction to just try constructing an object frame again...
-
   // we need to finish with the plugin before native window is destroyed
   // doing this in the destructor is too late.
-  if (mInstanceOwner != nsnull) {
-    nsCOMPtr<nsIPluginInstance> inst;
-    mInstanceOwner->GetInstance(*getter_AddRefs(inst));
-    if (inst) {
-      nsPluginWindow *win;
-      mInstanceOwner->GetWindow(win);
-      nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
-      nsCOMPtr<nsIPluginInstance> nullinst;
-
-      PRBool doCache = PR_TRUE;
-      PRBool doCallSetWindowAfterDestroy = PR_FALSE;
-
-      // first, determine if the plugin wants to be cached
-      inst->GetValue(nsPluginInstanceVariable_DoCacheBool, 
-                     (void *) &doCache);
-      if (!doCache) {
-        // then determine if the plugin wants Destroy to be called after
-        // Set Window.  This is for bug 50547.
-        inst->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool, 
-                       (void *) &doCallSetWindowAfterDestroy);
-        if (doCallSetWindowAfterDestroy) {
-          inst->Stop();
-          inst->Destroy();
-          
-          if (window) 
-            window->CallSetWindow(nullinst);
-          else 
-            inst->SetWindow(nsnull);
-        }
-        else {
-          if (window) 
-            window->CallSetWindow(nullinst);
-          else 
-            inst->SetWindow(nsnull);
-
-          inst->Stop();
-          inst->Destroy();
-        }
-      }
-      else {
-        if (window) 
-          window->CallSetWindow(nullinst);
-        else 
-          inst->SetWindow(nsnull);
-
-        inst->Stop();
-      }
-
-      nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kCPluginManagerCID);
-      if (pluginHost)
-        pluginHost->StopPluginInstance(inst);
-
-      // the frame is going away along with its widget
-      // so tell the window to forget its widget too
-      if (window)
-        window->SetPluginWidget(nsnull);
-    }
-
-    mInstanceOwner->Destroy();
-    NS_RELEASE(mInstanceOwner);
-  }
+  StopPlugin();
   
   return nsObjectFrameSuper::Destroy(aPresContext);
 }
@@ -1703,16 +1640,17 @@ nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 nsresult
 nsObjectFrame::PrepareInstanceOwner()
 {
-  if (!mInstanceOwner) {
-    mInstanceOwner = new nsPluginInstanceOwner();
-    if (!mInstanceOwner)
-      return NS_ERROR_OUT_OF_MEMORY;
+  // First, have to stop any possibly running plugins.
+  StopPlugin();
 
-    NS_ADDREF(mInstanceOwner);
-    mInstanceOwner->Init(GetPresContext(), this);
-  } else {
-    mInstanceOwner->SetInstance(nsnull);
-  }
+  NS_ASSERTION(!mInstanceOwner, "Must not have an instance owner here");
+
+  mInstanceOwner = new nsPluginInstanceOwner();
+  if (!mInstanceOwner)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(mInstanceOwner);
+  mInstanceOwner->Init(GetPresContext(), this);
   return NS_OK;
 }
 
@@ -1765,6 +1703,72 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
   }
 
   return rv;
+}
+
+void
+nsObjectFrame::StopPlugin()
+{
+  if (mInstanceOwner != nsnull) {
+    nsCOMPtr<nsIPluginInstance> inst;
+    mInstanceOwner->GetInstance(*getter_AddRefs(inst));
+    if (inst) {
+      nsPluginWindow *win;
+      mInstanceOwner->GetWindow(win);
+      nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
+      nsCOMPtr<nsIPluginInstance> nullinst;
+
+      PRBool doCache = PR_TRUE;
+      PRBool doCallSetWindowAfterDestroy = PR_FALSE;
+
+      // first, determine if the plugin wants to be cached
+      inst->GetValue(nsPluginInstanceVariable_DoCacheBool, 
+                     (void *) &doCache);
+      if (!doCache) {
+        // then determine if the plugin wants Destroy to be called after
+        // Set Window.  This is for bug 50547.
+        inst->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool, 
+                       (void *) &doCallSetWindowAfterDestroy);
+        if (doCallSetWindowAfterDestroy) {
+          inst->Stop();
+          inst->Destroy();
+          
+          if (window) 
+            window->CallSetWindow(nullinst);
+          else 
+            inst->SetWindow(nsnull);
+        }
+        else {
+          if (window) 
+            window->CallSetWindow(nullinst);
+          else 
+            inst->SetWindow(nsnull);
+
+          inst->Stop();
+          inst->Destroy();
+        }
+      }
+      else {
+        if (window) 
+          window->CallSetWindow(nullinst);
+        else 
+          inst->SetWindow(nsnull);
+
+        inst->Stop();
+      }
+
+      nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kCPluginManagerCID);
+      if (pluginHost)
+        pluginHost->StopPluginInstance(inst);
+
+      // the frame is going away along with its widget
+      // so tell the window to forget its widget too
+      if (window)
+        window->SetPluginWidget(nsnull);
+    }
+
+    mInstanceOwner->Destroy();
+    NS_RELEASE(mInstanceOwner);
+  }
 }
 
 void
