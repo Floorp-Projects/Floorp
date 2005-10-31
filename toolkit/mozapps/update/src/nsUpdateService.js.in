@@ -2798,7 +2798,7 @@ function showPromptIfNoIncompatibilities(update) {
     onAddonUpdateStarted: function(addon) {
     },
     onAddonUpdateEnded: function(addon, status) {
-      if (status == nsIAddonUpdateCheckListener.STATUS_UPDATE &&
+      if (status == Components.interfaces.nsIAddonUpdateCheckListener.STATUS_UPDATE &&
           addonIsCompatible(addon, update.extensionVersion)) {
         for (var i = 0; i < this._addons.length; ++i) {
           if (this._addons[i] == addon) {
