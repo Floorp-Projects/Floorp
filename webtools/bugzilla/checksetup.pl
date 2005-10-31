@@ -3890,6 +3890,26 @@ if ($dbh->bz_column_info("profiles", "emailflags")) {
     $dbh->bz_drop_column("profiles", "emailflags");    
 }
 
+# Check for any "new" email settings that wouldn't have been ported over
+# during the block above.  Since these settings would have otherwise
+# fallen under EVT_OTHER, we'll just clone those settings.  That way if
+# folks have already disabled all of that mail, there won't be any change.
+{
+    my %events = ("Dependency Tree Changes" => EVT_DEPEND_BLOCK); 
+
+    foreach my $desc (keys %events) {
+        my $event = $events{$desc};
+        $sth = $dbh->prepare("SELECT count(*) FROM email_setting WHERE event = $event");
+        $sth->execute();
+        if (!($sth->fetchrow_arrayref()->[0])) {
+            # No settings in the table yet, so we assume that this is the
+            # first time it's being set.
+            print "Initializing \"$desc\" email_setting ...\n" unless $silent;
+            CloneEmailEvent(EVT_OTHER, $event);
+        }
+    }
+}
+
 sub CloneEmailEvent {
     my ($source, $target) = @_;
 

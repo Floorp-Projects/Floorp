@@ -78,7 +78,7 @@ use base qw(Exporter);
     
     POS_EVENTS
     EVT_OTHER EVT_ADDED_REMOVED EVT_COMMENT EVT_ATTACHMENT EVT_ATTACHMENT_DATA
-    EVT_PROJ_MANAGEMENT EVT_OPENED_CLOSED EVT_KEYWORD EVT_CC 
+    EVT_PROJ_MANAGEMENT EVT_OPENED_CLOSED EVT_KEYWORD EVT_CC EVT_DEPEND_BLOCK
     
     NEG_EVENTS
     EVT_UNCONFIRMED EVT_CHANGED_BY_ME 
@@ -214,11 +214,12 @@ use constant EVT_PROJ_MANAGEMENT    => 5;
 use constant EVT_OPENED_CLOSED      => 6;
 use constant EVT_KEYWORD            => 7;
 use constant EVT_CC                 => 8;
+use constant EVT_DEPEND_BLOCK       => 9;
 
 use constant POS_EVENTS => EVT_OTHER, EVT_ADDED_REMOVED, EVT_COMMENT, 
                            EVT_ATTACHMENT, EVT_ATTACHMENT_DATA, 
                            EVT_PROJ_MANAGEMENT, EVT_OPENED_CLOSED, EVT_KEYWORD,
-                           EVT_CC;
+                           EVT_CC, EVT_DEPEND_BLOCK;
 
 use constant EVT_UNCONFIRMED        => 50;
 use constant EVT_CHANGED_BY_ME      => 51;

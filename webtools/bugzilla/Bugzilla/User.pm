@@ -1085,7 +1085,9 @@ our %names_to_events = (
     'Target Milestone'       => EVT_PROJ_MANAGEMENT,
     'Attachment description' => EVT_ATTACHMENT_DATA,
     'Attachment mime type'   => EVT_ATTACHMENT_DATA,
-    'Attachment is patch'    => EVT_ATTACHMENT_DATA);
+    'Attachment is patch'    => EVT_ATTACHMENT_DATA,
+    'BugsThisDependsOn'      => EVT_DEPEND_BLOCK,
+    'OtherBugsDependingOnThis' => EVT_DEPEND_BLOCK);
 
 # Returns true if the user wants mail for a given bug change.
 # Note: the "+" signs before the constants suppress bareword quoting.
