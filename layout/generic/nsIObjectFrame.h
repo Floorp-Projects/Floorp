@@ -41,9 +41,9 @@
 
 class nsIPluginInstance;
 
-// {6D10B07D-E75B-11d4-9885-00C04FA0CF4B}
+// {F455B51F-7A1F-4bbe-B55D-679F033AD3FE}
 #define NS_IOBJECTFRAME_IID \
-{ 0x6d10b07d, 0xe75b, 0x11d4, { 0x98, 0x85, 0x0, 0xc0, 0x4f, 0xa0, 0xcf, 0x4b } }
+{ 0xf455b51f, 0x7a1f, 0x4bbe, { 0xb5, 0x5d, 0x67, 0x9f, 0x3, 0x3a, 0xd3, 0xfe } };
 
 class nsIObjectFrame : public nsISupports {
 public:
@@ -67,6 +67,13 @@ public:
    *       from content.
    */
   virtual nsresult Instantiate(const char* aMimeType, nsIURI* aURI) = 0;
+
+  /**
+   * Stops and unloads the plugin. Makes the frame ready to receive another
+   * Instantiate() call. It is safe to call this method even when no plugin
+   * is currently active in this frame.
+   */
+  virtual void StopPlugin() = 0;
 };
 
 

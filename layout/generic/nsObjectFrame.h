@@ -100,6 +100,7 @@ public:
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance);
   virtual nsresult Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener);
   virtual nsresult Instantiate(const char* aMimeType, nsIURI* aURI);
+  virtual void StopPlugin();
 
 
   /* fail on any requests to get a cursor from us because plugins set their own! see bug 118877 */

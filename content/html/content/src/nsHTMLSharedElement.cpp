@@ -157,9 +157,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Shared)
 
 
 nsHTMLSharedElement::nsHTMLSharedElement(nsINodeInfo *aNodeInfo)
-  : nsGenericHTMLElement(aNodeInfo),
-    nsObjectLoadingContent(aNodeInfo->Equals(nsHTMLAtoms::embed) ? eType_Plugin
-                                                                 : eType_Null)
+  : nsGenericHTMLElement(aNodeInfo)
 {
 }
 
