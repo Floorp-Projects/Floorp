@@ -81,30 +81,22 @@
         </getter>
         <setter>
           this.setAttribute("scrolldelay", val);
-
-          // since we changed the scrolldelay, restart the marquee
-          this._doMove(false);
         </setter>
       </property>
 
       <field name="defaultDirection">"left"</field>
       <property name="direction">
         <getter>
-          return this.directionField;
+          return this.getAttribute("direction");
         </getter>
         <setter>
           // if val is false, don't change anything
           if (val) {
-            // in case direction is swapped between horizontal/vertical, use
-            // setAttribute to make the xbl bindings change.
             this.setAttribute("direction", val);
 
             // since we changed the direction, set startNewDirection to true
             this.startNewDirection = true;
             this.directionField = val.toLowerCase();
-
-            // pass in aSkipSettingNewPosition as true
-            this._doMove(true);
           }
         </setter>
       </property>
@@ -118,6 +110,7 @@
         </getter>
         <setter>
           this.behaviorField = val ? val.toLowerCase() : this.defaultBehavior;
+          this.setAttribute("behavior", val);
         </setter>
       </property>
 
@@ -156,7 +149,8 @@
       <method name="start">
         <body>
         <![CDATA[
-          this._doMove(false);
+          if (this.runId == 0)
+            this._doMove(false);
         ]]>
         </body>
       </method>
@@ -173,60 +167,66 @@
       </method>
 
       <method name="_doMove">
-        <parameter name="aSkipSettingNewPosition"/>
+        <parameter name="aResetPosition"/>
         <body>
         <![CDATA[
-
-          this.stop();
 
           //startNewDirection is true at first load and whenever the direction is changed
           if (this.startNewDirection) {
             this.startNewDirection = false; //we only want this to run once every scroll direction change
 
-            if ((this.directionField == "up") || (this.directionField == "down"))
-            {
-              var height = document.defaultView.getComputedStyle(this, "").height;
-              this.outerDiv.style.height = height;
-              this.innerDiv.style.padding = height + " 0";
-            }
+            var corrvalue = 0;
 
             switch (this.directionField)
             {
               case "up":
+                var height = document.defaultView.getComputedStyle(this, "").height;
+                this.outerDiv.style.height = height;
+                if (this.originalHeight > this.outerDiv.offsetHeight)
+                    corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
+                this.innerDiv.style.padding = height + " 0";
                 this.dirsign = 1;
-                this.startAt = (this.behaviorField == 'alternate') ? this.originalHeight : 0;
-                this.stopAt  = this.originalHeight + parseInt(height)
-                               - ((this.behaviorField == 'alternate') ? this.originalHeight : 0);               
+                this.startAt = (this.behaviorField == 'alternate') ? (this.originalHeight - corrvalue) : 0;
+                this.stopAt  = (this.behaviorField == 'alternate') ? 
+                                (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
               break;
 
               case "down":
+                var height = document.defaultView.getComputedStyle(this, "").height;
+                this.outerDiv.style.height = height;
+                if (this.originalHeight > this.outerDiv.offsetHeight)
+                    corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
+                this.innerDiv.style.padding = height + " 0";
                 this.dirsign = -1;
-                this.startAt = this.originalHeight + parseInt(height)
-                               - ((this.behaviorField == 'alternate') ? this.originalHeight : 0);
-                this.stopAt  = (this.behaviorField == 'alternate') ? this.originalHeight : 0;
+                this.startAt  = (this.behaviorField == 'alternate') ?
+                                (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
+                this.stopAt = (this.behaviorField == 'alternate') ? (this.originalHeight - corrvalue) : 0;
               break;
 
               case "right":
+                if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth)
+                    corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
                 this.dirsign = -1;
-                this.stopAt  = (this.behaviorField != 'alternate') ? 0 : this.innerDiv.offsetWidth;
-                this.startAt = this.outerDiv.offsetWidth 
-                               + ((this.behaviorField != 'alternate') ? (this.innerDiv.offsetWidth + this.stopAt) : 0);   
+                this.stopAt  = (this.behaviorField != 'alternate') ? 0 : (this.innerDiv.offsetWidth - corrvalue);
+                this.startAt = this.outerDiv.offsetWidth + ((this.behaviorField != 'alternate') ? 
+                               (this.innerDiv.offsetWidth + this.stopAt) : corrvalue);   
               break;
 
               case "left":
               default:
+                if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth)
+                    corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
                 this.dirsign = 1;
-                this.startAt = (this.behaviorField != 'alternate') ? 0 : this.innerDiv.offsetWidth;
-                this.stopAt  = this.outerDiv.offsetWidth
-                               + ((this.behaviorField != 'alternate') ? (this.innerDiv.offsetWidth + this.startAt) : 0);
+                this.startAt = (this.behaviorField != 'alternate') ? 0 : (this.innerDiv.offsetWidth - corrvalue);
+                this.stopAt  = this.outerDiv.offsetWidth + ((this.behaviorField != 'alternate') ? 
+                               (this.innerDiv.offsetWidth + this.startAt) : corrvalue);
             }
 
-            // if the direction attribute is changed, don't reset the starting position
-            if (!aSkipSettingNewPosition)
+            if (aResetPosition)
               this.newPosition = this.startAt;
           } //end if
 
-          this.newPosition = parseInt(this.newPosition) + (this.dirsign * this.scrollAmount);
+          this.newPosition = this.newPosition + (this.dirsign * this.scrollAmount);
 
           if ((this.dirsign == 1 && this.newPosition > this.stopAt) ||
               (this.dirsign == -1 && this.newPosition < this.stopAt))
@@ -239,6 +239,7 @@
               // swap direction
               const swap = {left: "right", down: "up", up: "down", right: "left"};
               this.directionField = swap[this.directionField];
+              this.newPosition = this.stopAt + (this.dirsign * this.scrollAmount);
             }
             else
             {
@@ -254,8 +255,7 @@
           }
 
           var myThis = this;
-
-          var lambda = function myTimeOutFunction(){myThis.start();}
+          var lambda = function myTimeOutFunction(){myThis._doMove(false);}
           this.runId = window.setTimeout(lambda, this.scrollDelay);
         ]]>
         </body>
@@ -264,14 +264,12 @@
       <method name="init">
         <body>
         <![CDATA[
-          // Some sites access the element via the evil IE way of elementID.foo()
-          if (this.hasAttribute('id'))
-            window[this.getAttribute('id')] = this;
-
+          this.stop();
+          this.startNewDirection = true;
           // store the original height before we add padding
+          this.innerDiv.style.padding = 0;
           this.originalHeight = this.innerDiv.offsetHeight;
-
-          this._doMove(false);
+          this._doMove(true);
         ]]>
         </body>
       </method>
@@ -307,9 +305,10 @@
           if (attrName == "direction") {
             this.startNewDirection = true;
             this.directionField = newValue;
-            this._doMove(true);
           } else if (attrName == "behavior") {
             this.behaviorField = newValue;
+            if (newValue == 'alternate')
+              this.init();
           }
         }
         ]]>
