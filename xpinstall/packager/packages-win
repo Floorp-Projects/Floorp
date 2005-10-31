@@ -75,6 +75,7 @@ bin\xpicleanup.exe
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appcomps.dll
+bin\components\xpautoc.dll
 bin\components\srchsvc.dll
 bin\components\autocomplete.xpt
 bin\components\bookmarks.xpt

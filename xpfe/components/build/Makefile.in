@@ -113,10 +113,6 @@ endif
 
 ifndef MOZ_PHOENIX
 ifndef MOZ_XULRUNNER
-SHARED_LIBRARY_LIBS += \
-	$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
-	$(NULL)
-
 ifneq ($(MOZ_BUILD_APP),macbrowser)
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
@@ -152,7 +148,6 @@ LOCAL_INCLUDES	= \
 ifndef MOZ_PHOENIX
 ifndef MOZ_XULRUNNER
 LOCAL_INCLUDES += \
-  -I$(srcdir)/../autocomplete/src  \
   -I$(srcdir)/../bookmarks/src     \
   -I$(srcdir)/../download-manager/src \
   -I$(srcdir)/../history/src       \

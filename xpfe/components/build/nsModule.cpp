@@ -45,10 +45,6 @@
 #include "nsWindowDataSource.h"
 #include "nsRDFCID.h"
 
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
-#include "nsAutoComplete.h"
-#endif
-
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 #include "nsBookmarksService.h"
 #include "nsRelatedLinksHandlerImpl.h"
@@ -59,10 +55,6 @@
 #include "nsAppStartup.h"
 #include "nsCommandLineService.h"
 #include "nsUserInfo.h"
-
-#if defined(MOZ_LDAP_XPCOM)
-#include "nsLDAPAutoCompleteSession.h"
-#endif // defined(MOZ_LDAP_XPCOM)
 
 #endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 
@@ -99,11 +91,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
 #endif
 
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
-#endif
-
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
@@ -113,9 +100,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartup)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
-#if defined(MOZ_LDAP_XPCOM)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
-#endif // defined(MOZ_LDAP_XPCOM)
 #endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
 
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
@@ -192,13 +176,6 @@ static const nsModuleComponentInfo components[] = {
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
       nsHTTPIndexConstructor },
 
-#if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER)
-    { "AutoComplete Search Results", NS_AUTOCOMPLETERESULTS_CID, NS_AUTOCOMPLETERESULTS_CONTRACTID,
-      nsAutoCompleteResultsConstructor},
-    { "AutoComplete Search Item", NS_AUTOCOMPLETEITEM_CID, NS_AUTOCOMPLETEITEM_CONTRACTID,
-      nsAutoCompleteItemConstructor},
-#endif
-
 #if !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_SERVICE_CONTRACTID,
       nsBookmarksServiceConstructor },
@@ -232,11 +209,6 @@ static const nsModuleComponentInfo components[] = {
       NS_USERINFO_CONTRACTID,
       nsUserInfoConstructor
     },
-#if defined(MOZ_LDAP_XPCOM)
-    { "LDAP Autocomplete Session", NS_LDAPAUTOCOMPLETESESSION_CID,
-	  "@mozilla.org/autocompleteSession;1?type=ldap",
-	  nsLDAPAutoCompleteSessionConstructor },
-#endif // defined(MOZ_LDAP_XPCOM)
     { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
        RelatedLinksHandlerImplConstructor},
 #endif // !defined(MOZ_PHOENIX) && !defined(MOZ_XULRUNNER) && !defined(MOZ_MACBROWSER)

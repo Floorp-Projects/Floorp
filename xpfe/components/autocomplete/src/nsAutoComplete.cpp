@@ -40,6 +40,11 @@
 #include "prtypes.h"
 #include "nsAutoComplete.h"
 #include "nsReadableUtils.h"
+#include "nsIGenericFactory.h"
+
+#if defined(MOZ_LDAP_XPCOM)
+#include "nsLDAPAutoCompleteSession.h"
+#endif
 
 /******************************************************************************
  * nsAutoCompleteItem
@@ -175,3 +180,35 @@ NS_IMETHODIMP nsAutoCompleteResults::SetDefaultItemIndex(PRInt32 aDefaultItemInd
     mDefaultItemIndex = aDefaultItemIndex;
     return NS_OK;
 }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteItem)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
+
+#if defined(MOZ_LDAP_XPCOM)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
+#endif
+
+static const nsModuleComponentInfo components[] = {
+#if defined(MOZ_LDAP_XPCOM)
+    {
+        "LDAP Autocomplete Session",
+        NS_LDAPAUTOCOMPLETESESSION_CID,
+        "@mozilla.org/autocompleteSession;1?type=ldap",
+        nsLDAPAutoCompleteSessionConstructor
+    },
+#endif
+    {
+        "AutoComplete Search Results",
+        NS_AUTOCOMPLETERESULTS_CID,
+        NS_AUTOCOMPLETERESULTS_CONTRACTID,
+        nsAutoCompleteResultsConstructor
+    },
+    {
+        "AutoComplete Search Item",
+        NS_AUTOCOMPLETEITEM_CID,
+        NS_AUTOCOMPLETEITEM_CONTRACTID,
+        nsAutoCompleteItemConstructor
+    }
+};
+
+NS_IMPL_NSGETMODULE(xpAutoComplete, components)
