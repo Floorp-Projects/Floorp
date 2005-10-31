@@ -1079,6 +1079,9 @@ js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller
     JSExtendedClass *xclasp;
     JSObject *inner;
 
+    if (!scopeobj)
+        goto bad;
+
     OBJ_TO_INNER_OBJECT(cx, scopeobj);
     if (!scopeobj)
         return NULL;
@@ -1092,9 +1095,7 @@ js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller
             xclasp = (JSExtendedClass*)clasp;
             if (xclasp->innerObject &&
                 xclasp->innerObject(cx, scopeobj) != scopeobj) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_INDIRECT_CALL, caller);
-                return NULL;
+                goto bad;
             }
         }
 
@@ -1102,6 +1103,11 @@ js_CheckScopeChainValidity(JSContext *cx, JSObject *scopeobj, const char *caller
     }
 
     return inner;
+
+bad:
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                         JSMSG_BAD_INDIRECT_CALL, caller);
+    return NULL;
 }
 
 static JSBool
