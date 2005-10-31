@@ -212,7 +212,8 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
       nsCOMPtr <nsIMsgHeaderSink> headerSink;
        // need to tell the header sink to capture some headers to create a fake db header
        // so we can do reply to a .eml file or a rfc822 msg attachment.
-      aMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+      if (aMsgWindow)
+        aMsgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
       if (headerSink)
       {
         nsCOMPtr <nsIMsgDBHdr> dummyHeader;
