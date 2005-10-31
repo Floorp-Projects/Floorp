@@ -231,9 +231,17 @@ function PrefOkay() {
 		var prefSETValue=null;
 		if(transValidator!="") {
 			prefSETValue=eval(transValidator);
-
-
 		} else {
+
+  			// Checkbox is always true so far. XUL spec says it should flip value property based on checkbox state. 
+			// The following conditional chunk may be considered workaround code - bug 314538
+			if(elRef.nodeName=="checkbox") {
+	            if(elRef.checked) {
+	                elRef.value=true;
+	            } else {
+	                elRef.value=false;
+	            } 
+			}
 			prefSETValue=elRef.value;
 		}
 		if (gPref.getPrefType(prefName) == gPref.PREF_STRING){
