@@ -39,7 +39,7 @@
  * Encoding Rules).  The routines are found in and used extensively by the
  * security library, but exported for other use.
  *
- * $Id: secasn1.h,v 1.13 2005/04/09 05:06:34 julien.pierre.bugs%sun.com Exp $
+ * $Id: secasn1.h,v 1.14 2005/10/31 18:52:20 julien.pierre.bugs%sun.com Exp $
  */
 
 #ifndef _SECASN1_H_
@@ -91,6 +91,13 @@ extern void SEC_ASN1DecoderClearNotifyProc(SEC_ASN1DecoderContext *cx);
 extern SECStatus SEC_ASN1Decode(PRArenaPool *pool, void *dest,
 				const SEC_ASN1Template *t,
 				const char *buf, long len);
+
+/* Both classic ASN.1 and QuickDER have a feature that removes leading zeroes
+   out of SEC_ASN1_INTEGER if the caller sets siUnsignedInteger in the type
+   field of the target SECItem prior to calling the decoder. Otherwise, the
+   type field is ignored and untouched. For SECItem that are dynamically
+   allocated (from POINTER, SET OF, SEQUENCE OF) the decoder sets the type
+   field to siBuffer. */
 
 extern SECStatus SEC_ASN1DecodeItem(PRArenaPool *pool, void *dest,
 				    const SEC_ASN1Template *t,
