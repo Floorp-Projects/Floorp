@@ -1,0 +1,28 @@
+Index: cairo/src/cairo-win32-font.c
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo-win32-font.c,v
+retrieving revision 1.4
+diff -u -8 -p -r1.4 cairo-win32-font.c
+--- cairo/src/cairo-win32-font.c	6 Oct 2005 04:02:06 -0000	1.4
++++ cairo/src/cairo-win32-font.c	31 Oct 2005 19:19:51 -0000
+@@ -1324,16 +1324,20 @@ _cairo_win32_scaled_font_init_glyph_path
+ 	    ptr += sizeof(TTPOLYCURVE) + sizeof (POINTFX) * (curve->cpfx - 1);
+ 	}
+ 	_cairo_path_fixed_close_path (path);
+     }
+     free(buffer);
+ 
+ CLEANUP_FONT:
+ 
++    _cairo_scaled_glyph_set_path (scaled_glyph,
++				  &scaled_font->base,
++				  path);
++
+     cairo_win32_scaled_font_done_font (&scaled_font->base);
+ 
+  CLEANUP_PATH:
+ 
+     if (status != CAIRO_STATUS_SUCCESS)
+ 	_cairo_path_fixed_destroy (path);
+ 
+     return status;
