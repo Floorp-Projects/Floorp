@@ -62,7 +62,7 @@
   windowtype="Browser:page-preferences-mini"
   title="Minimo Preferences" 
   onload="prefStartup()"
-  onunload="" >
+  onunload="prefShutdown()"  >
 
   <script type="application/x-javascript" src="chrome://minimo/content/preferences/preferences.js"/>
   <script type="application/x-javascript" src="chrome://minimo/content/common.js"/>

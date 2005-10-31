@@ -78,6 +78,8 @@ function sanitizeAll()
  * ===================================================================================
  */
 
+var gPrefQueue=new Array();
+var gCancelSync=false;
 var gPaneSelected=null;
 var gToolbarButtonSelected=null;
 var gPrefArray=null;
@@ -109,6 +111,16 @@ function prefStartup() {
 
     syncUIZoom(); // from common.js 
 
+}
+
+/*
+ * This is called with onclose onunload event
+ * This may be canceled if user clicks cancel 
+ */
+function prefShutdown() {
+      if(!gCancelSync) {
+		syncPrefSaveDOM();
+	}
 }
 
 /* General Access keyboard handler */ 
@@ -154,7 +166,7 @@ function eventHandlerMenu(e) {
   var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
 
   if(!outnavTarget && (e.keyCode==40||e.keyCode==38)) {
-e.preventDefault();
+    e.preventDefault();
 	if(e.keyCode==38) { 
 		document.commandDispatcher.rewindFocus();
 	}
@@ -207,8 +219,6 @@ function findRuleById(outnavTarget,ruleattribute) {
  * and sync with pref service. 
  */
 
-var gPrefQueue=new Array();
-
 function syncPref(refElement) {
 	var refElementPref=refElement.getAttribute("preference");
 	if(refElementPref!="") {
@@ -219,10 +229,24 @@ function syncPref(refElement) {
 
 
 /*
- * OKAY Sync with prefService 
+ * Okay, just close the window with sync mode. 
  */
 
 function PrefOkay() {
+	window.close();
+}
+
+/* 
+ * Cancel, close window but do not sync. 
+ */
+
+function PrefCancel() {
+    gCancelSync=true;
+	window.close();
+}
+
+
+function syncPrefSaveDOM() {
 
 	for(var strCurKey in gPrefQueue) {
 		var elRef=gPrefQueue[strCurKey];
@@ -231,16 +255,14 @@ function PrefOkay() {
 		var prefSETValue=null;
 		if(transValidator!="") {
 			prefSETValue=eval(transValidator);
-		} else {
 
-  			// Checkbox is always true so far. XUL spec says it should flip value property based on checkbox state. 
-			// The following conditional chunk may be considered workaround code - bug 314538
+		} else {
 			if(elRef.nodeName=="checkbox") {
-	            if(elRef.checked) {
-	                elRef.value=true;
-	            } else {
-	                elRef.value=false;
-	            } 
+		            if(elRef.checked) {
+		                elRef.value=true;
+		            } else {
+		                elRef.value=false;
+		            } 
 			}
 			prefSETValue=elRef.value;
 		}
@@ -256,18 +278,7 @@ function PrefOkay() {
 			gPref.setBoolPref(prefName, prefSETValue);
 		}
 	}
-
-	window.close();
 }
-
-/* 
- * Cancel - nothing to do, close window 
- */
-
-function PrefCancel() {
-	window.close();
-}
-
 
 function syncPrefLoadDOM(elementList) {
 	for(var strCurKey in elementList) {
