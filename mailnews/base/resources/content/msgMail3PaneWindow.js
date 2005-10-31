@@ -1315,7 +1315,7 @@ function FolderPaneDoubleClick(folderIndex, event)
         server.performExpand(msgWindow);
       }
     }
-    else 
+    else if (!pref.getBoolPref("mailnews.reuse_thread_window2"))
     {
       // Open a new msg window only if we are double clicking on 
       // folders or newsgroups.
