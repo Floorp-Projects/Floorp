@@ -79,6 +79,8 @@ toolbar {
  * OKAY / CANCEL buttons look 
  */ 
 .dialog-button {
+   font-weight:bold;
+   font-size:105%;
    border:1px outset #cccccc;
    background-color: #cccccc;
    padding:2px ! important;
