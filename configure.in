@@ -3848,7 +3848,7 @@ fi
 
 if test "$MOZ_ENABLE_GTK2"
 then
-    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= 1.3.7)
+    PKG_CHECK_MODULES(MOZ_GTK2, gtk+-2.0 >= 1.3.7 gdk-x11-2.0 glib-2.0 gobject-2.0)
 fi
 
 if test "$MOZ_ENABLE_XLIB"
@@ -6168,7 +6168,7 @@ then
     fi
 
     if test "$MOZ_ENABLE_GTK2"; then
-        PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0,_LIBIDL_FOUND=1,_LIBIDL_FOUND=)
+        PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0 glib-2.0 gobject-2.0, _LIBIDL_FOUND=1,_LIBIDL_FOUND=)
     fi
     if test "$MOZ_ENABLE_GTK"; then
         AM_PATH_LIBIDL($LIBIDL_VERSION,_LIBIDL_FOUND=1)
@@ -6253,7 +6253,7 @@ fi
 if test -z "$SKIP_PATH_CHECKS"; then
 if test -z "${GLIB_CFLAGS}" || test -z "${GLIB_LIBS}" ; then
     if test "$MOZ_ENABLE_GTK2"; then
-        PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7)
+        PKG_CHECK_MODULES(GLIB, glib-2.0 >= 1.3.7 gobject-2.0)
     else
         AM_PATH_GLIB(${GLIB_VERSION})
     fi
