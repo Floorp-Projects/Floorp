@@ -102,6 +102,11 @@
   -moz-border-bottom-colors: #5D616E #BEC3D3;
 }
 
+/* XXX bug 313731 buttons are taller than menulists */
+#msgLocationToolbar > #searchBox[collapsed="true"] {
+  visibility: hidden;
+}
+
 #locationIcon {
   list-style-image: none;
 }

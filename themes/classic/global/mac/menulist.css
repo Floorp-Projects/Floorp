@@ -74,6 +74,10 @@ menulist {
   margin-left: 1ex !important;
 }
 
+.menulist-dropmarker {
+  display: none;
+}
+
 /* ..... disabled state ..... */
 
 menulist[disabled="true"] {
@@ -88,10 +92,6 @@ menulist[disabled="true"] > .menulist-label-box {
 }
 
 /* ::::: editable menulists ::::: */
-
-menulist[editable="true"] {
-  -moz-user-focus: normal;
-}
 
 .menulist-editable-box {
   margin-right: 4px;
