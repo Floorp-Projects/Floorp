@@ -40,7 +40,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAutoCompleteController.h"
+#include "nsAutoCompleteMdbResult.h"
 
+#include "nsToolkitCompsCID.h"
 #include "nsIAutoCompleteResultTypes.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMElement.h"
@@ -48,6 +50,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsITreeColumns.h"
+#include "nsIGenericFactory.h"
 
 static const char *kAutoCompleteSearchCID = "@mozilla.org/autocomplete/search;1?name=";
 
@@ -1265,3 +1268,21 @@ nsAutoCompleteController::RowIndexToSearch(PRInt32 aRowIndex, PRInt32 *aSearchIn
 
   return NS_OK;
 }
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteController)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteMdbResult)
+
+static const nsModuleComponentInfo components[] =
+{
+  { "AutoComplete Controller",
+    NS_AUTOCOMPLETECONTROLLER_CID, 
+    NS_AUTOCOMPLETECONTROLLER_CONTRACTID,
+    nsAutoCompleteControllerConstructor },
+
+  { "AutoComplete Mdb Result",
+    NS_AUTOCOMPLETEMDBRESULT_CID, 
+    NS_AUTOCOMPLETEMDBRESULT_CONTRACTID,
+    nsAutoCompleteMdbResultConstructor },
+};
+
+NS_IMPL_NSGETMODULE(tkAutoCompleteModule, components)

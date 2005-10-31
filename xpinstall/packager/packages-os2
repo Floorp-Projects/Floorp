@@ -88,6 +88,7 @@ bin/components/accessibility.xpt
 bin/components/appshell.xpt
 bin/components/appshell.dll
 bin/components/appcomps.dll
+bin/components/xpautoc.dll
 bin/components/srchsvc.dll
 bin/components/appstartup.xpt
 bin/components/autocomplete.xpt

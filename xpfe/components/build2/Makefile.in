@@ -82,7 +82,6 @@ endif
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)windowds_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
 	$(NULL)
 
@@ -90,7 +89,6 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../windowds          \
 	-I$(srcdir)/../../browser/src      \
     	-I$(srcdir)/../download-manager/src \
-    	-I$(srcdir)/../autocomplete/src  \
 	$(NULL)
 
 
