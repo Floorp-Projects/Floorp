@@ -113,12 +113,9 @@ static SECStatus GetItem(SECItem* src, SECItem* dest, PRBool includeTag)
         /* reaching the end of the buffer is not an error */
         dest->data = NULL;
         dest->len = 0;
-        dest->type = siBuffer;
-
         return SECSuccess;
     }
 
-    dest->type = siBuffer;
     dest->data = definite_length_decoder(src->data,  src->len, &dest->len,
         includeTag);
     if (dest->data == NULL)
@@ -862,7 +859,12 @@ static SECStatus DecodeItem(void* dest,
         SECItem* destItem = (SECItem*) ((char*)dest + templateEntry->offset);
         if (destItem)
         {
-            *(destItem) = temp;
+            /* we leave the type alone in the destination SECItem.
+               If part of the destination was allocated by the decoder, in
+               cases of POINTER, SET OF and SEQUENCE OF, then type is set to
+               siBuffer due to the use of PORT_ArenaZAlloc*/
+            destItem->data = temp.data;
+            destItem->len = temp.len;
         }
         else
         {
