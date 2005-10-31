@@ -114,6 +114,10 @@
 <!ENTITY newevent.enddate.warning    "La date de début est après la date de fin.">
 <!ENTITY newevent.repeatdate.tooltip    "Choisissez une date pour la fin" >
 <!ENTITY newevent.recurend.warning    "Votre temps de répétition s'achève avant l'heure de fin.">
+<!ENTITY newevent.recurnumberoftimes.warning    "Vous devez spécifier le nombre de répétitions.">
+<!ENTITY newevent.readonly.item.warning    "Cet élément est un agenda en lecture seule. Vous ne pouvez pas le modifier.">
+<!ENTITY newevent.readonly.cal.warning    "Cet agenda est en lecture seule.">
+<!ENTITY newevent.recurinterval.warning    "Vous devez spécifier la fréquence de répétition.">
 <!ENTITY newevent.endtime.tooltip    "Choisissez une heure de fin pour cet événement" >
 <!ENTITY newevent.starttimeerror.alertmessage "Votre événement ne peut pas se terminer avant d'avoir commencé. Veuillez régler l'heure de début ou l'heure de fin." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "La répétition ne peut pas se faire avant la fin de l'événement. Veuillez régler la répétition, ou la désactiver." >
@@ -181,7 +185,6 @@
 <!ENTITY event.title.alarm         "Alarme" >
 <!ENTITY event.title.new         "Nouvel événement" >
 <!ENTITY event.title.edit        "Modifier l'événement" >
-<!ENTITY event.title.heading        "Alarme de Calendar" >
 
 <!ENTITY onthe-text            "Le ">
 <!ENTITY last-text             "dernier ">
@@ -413,7 +416,7 @@
 <!ENTITY progress.level.75.accesskey  "7">
 <!ENTITY progress.level.100            "100&percnt;">
 <!ENTITY progress.level.100.accesskey  "1">
-                                                                 
+
 <!-- Server Context Menu -->
 <!ENTITY calendar.context.newserver.label              "Nouvel agenda">
 <!ENTITY calendar.context.newserver.accesskey          "N">
@@ -440,6 +443,7 @@
 <!ENTITY calendar.alarm.editevent.label             "Modifier l'événement" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Accepter toutes les alarmes" >
 <!ENTITY calendar.alarm.snooze.label                "Report d'alarme" >
+<!ENTITY calendar.alarm.title.label                 "Alarme d'agenda" >
 
 
 <!-- Calendar Server Dialog -->
@@ -509,9 +513,18 @@
 <!ENTITY calendar.print.window.title "Imprimer un agenda">
 <!ENTITY calendar.print.selectoptions.label "Sélectionnez vos options ci-dessous et cliquez sur OK pour imprimer">
 <!ENTITY calendar.print.selectviews.label "Sélectionnez la vue à imprimer">
+<!ENTITY calendar.print.currentview.label "Lister tous les événements dans la vue courante">
 <!ENTITY calendar.print.listselected.label "Lister les événements sélectionnés">
+<!ENTITY calendar.print.custom.label "Lister les événements entre :">
 <!ENTITY calendar.print.onlyitemsstatus.label "N'imprimer que les entrées avec cet état :">
 <!ENTITY calendar.print.onlyitemscategory.label "N'imprimer que les entrées de cette catégorie :">
+
+<!-- Error reporting -->
+<!ENTITY calendar.error.detail "Détails…">
+<!ENTITY calendar.error.number "Numéro d'erreur :">
+<!ENTITY calendar.error.description "Description :">
+<!ENTITY calendar.error.title "Une erreur est survenue">
+
 
 <!-- LOCALIZATION NOTE (mainWindow.title): DONT_TRANSLATE -->
 <!ENTITY mainWindow.title "&brandFullName;">
