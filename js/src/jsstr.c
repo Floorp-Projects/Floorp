@@ -4360,6 +4360,12 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
     static const char HexDigits[] = "0123456789ABCDEF"; /* NB: uppercase */
     JSString *R;
 
+    length = JSSTRING_LENGTH(str);
+    if (length == 0) {
+        *rval = STRING_TO_JSVAL(cx->runtime->emptyString);
+        return JS_TRUE;
+    }
+
     R = js_NewString(cx, NULL, 0, 0);
     if (!R)
         return JS_FALSE;
@@ -4367,7 +4373,6 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
     hexBuf[0] = '%';
     hexBuf[3] = 0;
     chars = JSSTRING_CHARS(str);
-    length = JSSTRING_LENGTH(str);
     for (k = 0; k < length; k++) {
         C = chars[k];
         if (js_strchr(unescapedSet, C) ||
@@ -4430,12 +4435,17 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
     JSString *R;
     intN j, n;
 
+    length = JSSTRING_LENGTH(str);
+    if (length == 0) {
+        *rval = STRING_TO_JSVAL(cx->runtime->emptyString);
+        return JS_TRUE;
+    }
+
     R = js_NewString(cx, NULL, 0, 0);
     if (!R)
         return JS_FALSE;
 
     chars = JSSTRING_CHARS(str);
-    length = JSSTRING_LENGTH(str);
     for (k = 0; k < length; k++) {
         C = chars[k];
         if (C == '%') {
