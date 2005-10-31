@@ -17,3 +17,7 @@ VERSIONS:
 
 VC6 cannot build pixman from cairo.  Therefore, VC6 builds are not supported
 if cairo is enabled.  Please upgrade to VC7.1/8.
+
+
+win32-glyph-path.diff - upstream merged patch, fixes glyph->path conversion.
+
