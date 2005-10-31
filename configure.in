@@ -2030,8 +2030,10 @@ dnl the qsort routine under solaris is faulty
         CC_VERSION=`$CC -V 2>&1 | grep '^cc:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
         CXX_VERSION=`$CXX -V 2>&1 | grep '^CC:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
        AC_MSG_CHECKING([for Forte compiler version >= WS6U2])
+       AC_LANG_SAVE
+       AC_LANG_CPLUSPLUS
        AC_TRY_COMPILE([],
-           [#if (__SUNPRO_C < 0x530)
+           [#if (__SUNPRO_CC < 0x530)
            #error "Denied"
            #endif],
            _BAD_COMPILER=,_BAD_COMPILER=1)
@@ -2042,6 +2044,7 @@ dnl the qsort routine under solaris is faulty
             _res="yes"
         fi
         AC_MSG_RESULT([$_res])
+        AC_LANG_RESTORE
     else
        ASFLAGS="$ASFLAGS -fPIC"
        DSO_LDOPTS='-G -h $@'
