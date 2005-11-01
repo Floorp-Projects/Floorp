@@ -5128,6 +5128,7 @@ nsDocShell::BeginRestore(nsIContentViewer *aContentViewer, PRBool aTop)
     if (doc) {
         nsIChannel *channel = doc->GetChannel();
         if (channel) {
+            mEODForCurrentDocument = PR_FALSE;
             mIsRestoringDocument = PR_TRUE;
             mLoadGroup->AddRequest(channel, nsnull);
             mIsRestoringDocument = PR_FALSE;
