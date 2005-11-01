@@ -1,13 +1,14 @@
     <toolbar id="FindToolbar" hidden="true" align="center" fullscreentoolbar="true">
       <toolbarbutton id="find-closebutton" tooltiptext="&findCloseButton.tooltip;"
-                     oncommand="closeFindBar();"/>
+                     oncommand="gFindBar.closeFindBar();"/>
 
       <label control="find-field" value="&find.label;"/>
       <hbox id="find-field-container">
-        <textbox id="find-field" oninput="find(this.value);"
-                onkeypress="onFindBarKeyPress(event);" onblur="onFindBarBlur();"
-                oncompositionstart="onFindBarCompositionStart(event);"
-                oncompositionend="onFindBarCompositionEnd(event);"/>
+        <textbox id="find-field" oninput="gFindBar.find(this.value);"
+                onkeypress="gFindBar.onFindBarKeyPress(event);"
+                onblur="gFindBar.onFindBarBlur();"
+                oncompositionstart="gFindBar.onFindBarCompositionStart(event);"
+                oncompositionend="gFindBar.onFindBarCompositionEnd(event);"/>
       </hbox>
       <toolbarbutton id="find-next" label="&findNext.label;" tooltiptext="&findNext.tooltip;"
                      command="cmd_findAgain" disabled="true" accesskey="&findNext.accesskey;"/>
@@ -20,11 +21,13 @@
 #else
                      tooltiptext="&highlight.tooltip;"
 #endif
-                     oncommand="toggleHighlight(!this.checked);
-                                if (gFindMode != FIND_NORMAL) setFindCloseTimeout();"
+                     oncommand="gFindBar.toggleHighlight(!this.checked);
+                                if (gFindBar.mFindMode != FIND_NORMAL)
+                                  gFindBar.setFindCloseTimeout();"
                      type="checkbox" disabled="true"
                      accesskey="&highlight.accesskey;"/>
-      <checkbox id="find-case-sensitive" oncommand="toggleCaseSensitivity(this.checked);"
+      <checkbox id="find-case-sensitive"
+                oncommand="gFindBar.toggleCaseSensitivity(this.checked);"
                 label="&caseSensitiveCheckbox.label;" accesskey="&caseSensitiveCheckbox.accesskey;"/>
       <image id="find-status-icon"/>
       <label id="find-status"/>
