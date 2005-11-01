@@ -69,7 +69,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIScreenManager.h"
 #include "nsRect.h"
-#include "nsColor.h"
 #include "nsTransform2D.h"
 #include "nsIEventQueue.h"
 #include "imgIContainer.h"
@@ -262,7 +261,7 @@ static void MapHardwareButtons(HWND window)
   if (!mb)
     return;
 
-	SendMessage(mb, SHCMBM_OVERRIDEKEY, VK_TBACK,
+  SendMessage(mb, SHCMBM_OVERRIDEKEY, VK_TBACK,
               MAKELPARAM(SHMBOF_NODEFAULT | SHMBOF_NOTIFY,
                          SHMBOF_NODEFAULT | SHMBOF_NOTIFY));
   
@@ -8329,7 +8328,7 @@ nsresult nsWindow::UpdateTranslucentWindow()
 
   HDC hMemoryDC;
   HBITMAP hAlphaBitmap;
-  PRBool needConversion = (depth != 32);
+  PRBool needConversion = (depth == 24);
 
   if (needConversion)
   {
@@ -8355,8 +8354,7 @@ nsresult nsWindow::UpdateTranslucentWindow()
 
         PRUint8* pPixel32 = pBits32;
         PRUint8* pAlpha = mAlphaMask;
-        PRUint32 rasWidth = RASWIDTH(mBounds.width, depth);
-        PRInt32 bytesPerPixel = depth / 8;
+        PRUint32 rasWidth = RASWIDTH(mBounds.width, 24);
 
         for (PRInt32 y = 0 ; y < mBounds.height ; y++)
         {
@@ -8364,15 +8362,10 @@ nsresult nsWindow::UpdateTranslucentWindow()
 
           for (PRInt32 x = 0 ; x < mBounds.width ; x++)
           {
-            // Each of the RGB components should be premultiplied with alpha and divided by 255
-            FAST_DIVIDE_BY_255(pPixel32 [0], *pAlpha * pPixel [0]);
-            FAST_DIVIDE_BY_255(pPixel32 [1], *pAlpha * pPixel [1]);
-            FAST_DIVIDE_BY_255(pPixel32 [2], *pAlpha * pPixel [2]);
-            pPixel32 [3] = *pAlpha;
-
-            pPixel += bytesPerPixel;
-            pPixel32 += 4;
-            pAlpha++;
+            *pPixel32++ = *pPixel++;
+            *pPixel32++ = *pPixel++;
+            *pPixel32++ = *pPixel++;
+            *pPixel32++ = *pAlpha++;
           }
         }
 
@@ -8385,20 +8378,14 @@ nsresult nsWindow::UpdateTranslucentWindow()
 
     if (hMemoryDC)
     {
-      PRUint8* pPixel = w2k.mMemoryBits;
+      PRUint8* pPixel = w2k.mMemoryBits + 3;    // Point to alpha component of pixel
       PRUint8* pAlpha = mAlphaMask;
       PRInt32 pixels = mBounds.width * mBounds.height;
 
       for (PRInt32 cnt = 0 ; cnt < pixels ; cnt++)
       {
-        // Each of the RGB components should be premultiplied with alpha and divided by 255
-        FAST_DIVIDE_BY_255(pPixel [0], *pAlpha * pPixel [0]);
-        FAST_DIVIDE_BY_255(pPixel [1], *pAlpha * pPixel [1]);
-        FAST_DIVIDE_BY_255(pPixel [2], *pAlpha * pPixel [2]);
-        pPixel [3] = *pAlpha;
-
+        *pPixel = *pAlpha++;
         pPixel += 4;
-        pAlpha++;
       }
 
       rv = NS_OK;
