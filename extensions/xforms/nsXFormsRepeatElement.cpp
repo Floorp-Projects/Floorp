@@ -720,7 +720,7 @@ nsXFormsRepeatElement::Refresh()
 
   if (NS_FAILED(rv) | !result | !model)
     return rv;
-                                         
+
   /// @todo The spec says: "This node-set must consist of contiguous child
   /// element nodes, with the same local name and namespace name of a common
   /// parent node. The behavior of element repeat with respect to
@@ -728,14 +728,14 @@ nsXFormsRepeatElement::Refresh()
   /// @see http://www.w3.org/TR/xforms/slice9.html#ui-repeat
   ///
   /// Can/should we check this somehow? (XXX)
-  
+
   PRUint32 contextSize;
   rv = result->GetSnapshotLength(&contextSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!contextSize)
     return NS_OK;
-  
+
   // Get model ID
   nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(model);
   NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
@@ -755,11 +755,11 @@ nsXFormsRepeatElement::Refresh()
                                  NS_LITERAL_STRING("contextcontainer"),
                                  getter_AddRefs(riElement));
     NS_ENSURE_SUCCESS(rv, rv);
-      
+
     // Set model as attribute
     if (!modelID.IsEmpty()) {
       riElement->SetAttribute(NS_LITERAL_STRING("model"), modelID);
-    }  
+    }
 
     // Get context node
     nsCOMPtr<nsIXFormsContextControl> riContext = do_QueryInterface(riElement);
@@ -768,12 +768,9 @@ nsXFormsRepeatElement::Refresh()
     nsCOMPtr<nsIDOMNode> contextNode;
     rv = result->SnapshotItem(i - 1, getter_AddRefs(contextNode));
     NS_ENSURE_SUCCESS(rv, rv);
-        
-    nsCOMPtr<nsIDOMElement> contextElement = do_QueryInterface(contextNode);
-    NS_ENSURE_TRUE(contextElement, NS_ERROR_FAILURE);
 
     // Set context node, position, and size
-    rv = riContext->SetContext(contextElement, i, contextSize);
+    rv = riContext->SetContext(contextNode, i, contextSize);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Iterate over template children, clone them, and append them to <contextcontainer>
@@ -784,11 +781,11 @@ nsXFormsRepeatElement::Refresh()
       nsCOMPtr<nsIDOMNode> childClone;
       rv = CloneNode(child, getter_AddRefs(childClone));
       NS_ENSURE_SUCCESS(rv, rv);
-        
+
       nsCOMPtr<nsIDOMNode> newNode;
       rv = riElement->AppendChild(childClone, getter_AddRefs(newNode));
       NS_ENSURE_SUCCESS(rv, rv);
-        
+
       rv = child->GetNextSibling(getter_AddRefs(newNode));
       NS_ENSURE_SUCCESS(rv, rv);
       child = newNode;

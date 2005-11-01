@@ -292,8 +292,7 @@ nsXFormsItemSetElement::Refresh()
 
     nsCOMPtr<nsIXFormsContextControl> ctx(do_QueryInterface(contextContainer));
     if (ctx) {
-      ctx->SetContext(nsCOMPtr<nsIDOMElement>(do_QueryInterface(node)),
-                      i + 1, nodeCount);
+      ctx->SetContext(node, i + 1, nodeCount);
     }
     // Clone the template content under the item
     for (PRUint32 j = 0; j < templateNodeCount; ++j) {
