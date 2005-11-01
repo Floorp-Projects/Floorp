@@ -681,6 +681,7 @@ class nsIWidget : public nsISupports {
      * value for all pixels is 1, i.e., opaque.
      * If the window is resized then the alpha channel values for
      * all pixels are reset to 1.
+     * Pixel RGB color values are already premultiplied with alpha channel values.
      * @param aTranslucent true if the window may have translucent
      *   or transparent pixels
      */
@@ -698,6 +699,7 @@ class nsIWidget : public nsISupports {
      * Update the alpha channel for some pixels of the top-level window
      * that contains this widget.
      * The window must have been made translucent using SetWindowTranslucency.
+     * Pixel RGB color values are already premultiplied with alpha channel values.
      * @param aRect the rect to update
      * @param aAlphas the alpha values, in w x h array, row-major order,
      * in units of 1/255. nsBlender::GetAlphas is a good way to compute this array.
