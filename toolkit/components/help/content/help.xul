@@ -70,7 +70,7 @@
         persist="width height screenX screenY"
 #endif
         onload="init();"
-        onunload="uninitFindBar(); window.XULBrowserWindow.destroy();">
+        onunload="gFindBar.uninitFindBar(); window.XULBrowserWindow.destroy();">
 
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
@@ -102,9 +102,9 @@
     <command id="cmd_closeWindow" oncommand="close();"/>
     <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
-    <command id="cmd_find" oncommand="onFindCmd();"/>
-    <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
-    <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>
+    <command id="cmd_find" oncommand="gFindBar.onFindCmd();"/>
+    <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd();"/>
+    <command id="cmd_findPrevious" oncommand="gFindBar.onFindPreviousCmd();"/>
     <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')" disabled="true"/>
     <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
   </commandset>

@@ -76,7 +76,7 @@ function onLoadViewPartialSource()
     document.getElementById("menu_highlightSyntax").setAttribute("hidden", "true");
   }
   
-  initFindBar();
+  gFindBar.initFindBar();
 
   if (window.arguments[3] == 'selection')
     viewPartialSourceForSelection(window.arguments[2]);
@@ -88,7 +88,7 @@ function onLoadViewPartialSource()
 
 function onUnloadViewPartialSource()
 {
-  uninitFindBar();
+  gFindBar.uninitFindBar();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

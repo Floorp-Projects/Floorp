@@ -89,9 +89,9 @@
   <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="cmd_close" oncommand="window.close();"/>
   <commandset id="editMenuCommands"/>
-  <command id="cmd_find" oncommand="onFindCmd();"/>
-  <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
-  <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>    
+  <command id="cmd_find" oncommand="gFindBar.onFindCmd();"/>
+  <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd();"/>
+  <command id="cmd_findPrevious" oncommand="gFindBar.onFindPreviousCmd();"/>    
   <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
   <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
   <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>

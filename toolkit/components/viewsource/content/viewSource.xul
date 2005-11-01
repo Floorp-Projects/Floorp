@@ -105,9 +105,9 @@
   <command id="cmd_close" oncommand="window.close();"/>
   <commandset id="editMenuCommands"/>
 #ifdef USE_FIND_TOOLBAR
-  <command id="cmd_find" oncommand="onFindCmd();"/>
-  <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
-  <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>    
+  <command id="cmd_find" oncommand="gFindBar.onFindCmd();"/>
+  <command id="cmd_findAgain" oncommand="gFindBar.onFindAgainCmd();"/>
+  <command id="cmd_findPrevious" oncommand="gFindBar.onFindPreviousCmd();"/>    
 #else
   <command id="cmd_find" oncommand="getBrowser().find();"/>
   <command id="cmd_findAgain" oncommand="getBrowser().findAgain()"/>
