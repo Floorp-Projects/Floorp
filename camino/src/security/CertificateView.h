@@ -52,6 +52,10 @@
   NSButton*                 mTrustForEmailCheckbox;
   NSButton*                 mTrustForObjSigningCheckbox;
   
+  BOOL                      mTrustedForWebSites;
+  BOOL                      mTrustedForEmail;
+  BOOL                      mTrustedForObjectSigning;
+  
   id                        mDelegate;        // not retained
   CertificateItem*          mCertItem;        // retained
   unsigned int              mCertTrustType;

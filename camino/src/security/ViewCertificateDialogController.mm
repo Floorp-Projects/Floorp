@@ -123,6 +123,8 @@
   
   if (!mRunningModally)
     [self autorelease];
+
+  [mCertView setCertificateItem:nil];
 }
 
 - (int)runModally

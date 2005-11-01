@@ -462,6 +462,12 @@ static CertificatesWindowController* gCertificatesWindowController;
   [self autorelease];
 }
 
+- (void)autosaveWindowFrame
+{
+  // MainController expects "main" windows to respond to this method.
+  // Nothing to do here.
+}
+
 #pragma mark -
 
 - (IBAction)viewSelectedCertificates:(id)sender

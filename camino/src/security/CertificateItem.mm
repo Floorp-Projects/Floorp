@@ -618,13 +618,13 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
 
   // sigh, why can't we get these all in one go?
   PRBool trusted;
-  if (NS_SUCCEEDED(certDB->IsCertTrusted(mCert, inType, nsIX509CertDB::TRUSTED_SSL, &trusted)))
+  if (NS_SUCCEEDED(certDB->IsCertTrusted(mCert, inType, nsIX509CertDB::TRUSTED_SSL, &trusted)) && trusted)
     trustMask |= nsIX509CertDB::TRUSTED_SSL;
 
-  if (NS_SUCCEEDED(certDB->IsCertTrusted(mCert, inType, nsIX509CertDB::TRUSTED_EMAIL, &trusted)))
+  if (NS_SUCCEEDED(certDB->IsCertTrusted(mCert, inType, nsIX509CertDB::TRUSTED_EMAIL, &trusted)) && trusted)
     trustMask |= nsIX509CertDB::TRUSTED_EMAIL;
 
-  if (NS_SUCCEEDED(certDB->IsCertTrusted(mCert, inType, nsIX509CertDB::TRUSTED_OBJSIGN, &trusted)))
+  if (NS_SUCCEEDED(certDB->IsCertTrusted(mCert, inType, nsIX509CertDB::TRUSTED_OBJSIGN, &trusted)) && trusted)
     trustMask |= nsIX509CertDB::TRUSTED_OBJSIGN;
 
   return trustMask;
@@ -778,7 +778,7 @@ NSString* const CertificateChangedNotificationName = @"CertificateChangedNotific
     mGotVerification = NO;
     PRUint32 oldValidity = mVerification;
     if (oldValidity != [self generalValidity])
-    { 
+    {
       // this is risky to post a notification from a notification callback
       [self performSelector:@selector(postChangedNotification) withObject:nil afterDelay:0];
     }

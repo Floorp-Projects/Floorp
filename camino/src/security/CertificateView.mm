@@ -118,6 +118,8 @@ const float kGapUnderLine       = 5.0f;
 - (float)rebuildTrustSettings:(float)inOffset;
 - (BOOL)showTrustSettings;
 
+- (IBAction)trustCheckboxClicked:(id)inSender;
+
 - (void)certificateChanged:(NSNotification*)inNotification;
 
 @end
@@ -164,6 +166,10 @@ const float kGapUnderLine       = 5.0f;
   [mCertItem autorelease];
   mCertItem = [inCertItem retain];
 
+  mTrustedForWebSites       = [mCertItem trustedForSSLAsType:mCertTrustType];
+  mTrustedForEmail          = [mCertItem trustedForEmailAsType:mCertTrustType];
+  mTrustedForObjectSigning  = [mCertItem trustedForObjectSigningAsType:mCertTrustType];
+
   [self refreshView];
 }
 
@@ -199,6 +205,18 @@ const float kGapUnderLine       = 5.0f;
           mCertTrustType == nsIX509Cert::EMAIL_CERT);
 }
 
+- (IBAction)trustCheckboxClicked:(id)inSender
+{
+  if (inSender == mTrustForWebSitesCheckbox)
+    mTrustedForWebSites = ([inSender state] == NSOnState);
+
+  if (inSender == mTrustForEmailCheckbox)
+    mTrustedForEmail = ([inSender state] == NSOnState);
+
+  if (inSender == mTrustForObjSigningCheckbox)
+    mTrustedForObjectSigning = ([inSender state] == NSOnState);
+}
+
 - (IBAction)toggleDetails:(id)sender
 {
   mDetailsExpanded = !mDetailsExpanded;
@@ -221,19 +239,16 @@ const float kGapUnderLine       = 5.0f;
 {
   unsigned int certTrustMask = 0;
 
-  BOOL canGetTrust = ([mCertItem isValid] || [mCertItem isUntrustedRootCACert]) &&
-                         (mTrustForWebSitesCheckbox != nil) &&
-                         (mTrustForEmailCheckbox != nil) &&
-                         (mTrustForObjSigningCheckbox != nil);
+  BOOL canGetTrust = ([mCertItem isValid] || [mCertItem isUntrustedRootCACert]);
   if (canGetTrust)
   {
-    if ([mTrustForWebSitesCheckbox state] == NSOnState)
+    if (mTrustedForWebSites)
       certTrustMask |= nsIX509CertDB::TRUSTED_SSL;
 
-    if ([mTrustForEmailCheckbox state] == NSOnState)
+    if (mTrustedForEmail)
       certTrustMask |= nsIX509CertDB::TRUSTED_EMAIL;
 
-    if ([mTrustForObjSigningCheckbox state] == NSOnState)
+    if (mTrustedForObjectSigning)
       certTrustMask |= nsIX509CertDB::TRUSTED_OBJSIGN;
   }
   else
@@ -294,7 +309,7 @@ const float kGapUnderLine       = 5.0f;
   [theTextField setFont:fieldFont];
   [theTextField setDrawsBackground:NO];
   [theTextField setBezeled:NO];
-  [theTextField setStringValue:inString];
+  [theTextField setStringValue:inString ? inString : @""];
   [[theTextField cell] setWraps:NO];
   
   NSSize theCellSize = [[theTextField cell] cellSizeForBounds:inFrame];
@@ -394,7 +409,8 @@ const float kGapUnderLine       = 5.0f;
   [dataScrollView setAutoresizingMask:NSViewWidthSizable | NSViewMaxYMargin];
   [[dataScrollView verticalScroller] setControlSize:NSSmallControlSize];
 
-  [[[scrolledTextView textStorage] mutableString] setString:[inData stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
+  if (inData)
+    [[[scrolledTextView textStorage] mutableString] setString:[inData stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]];
   [scrolledTextView setFont:[NSFont fontWithName:@"Monaco" size:10.0f]];
   [scrolledTextView setEditable:NO];
   [dataScrollView setAutoresizingMask:NSViewWidthSizable];
@@ -569,16 +585,25 @@ const float kGapUnderLine       = 5.0f;
   // XXX only show relevant checkboxes? (see nsNSSCertificateDB::SetCertTrust)
   // XXX only show checkboxes for allowed usages?
   [self addLineWithLabelKey:@"TrustSettingsLabel" data:@"" atOffset:&curOffset ignoreBlankLines:NO];
-  mTrustForWebSitesCheckbox = [self addCheckboxLineWithLabelKey:@"" buttonLabelKey:@"TrustWebSitesCheckboxLabel" action:nil atOffset:&curOffset];
-  [mTrustForWebSitesCheckbox setState:[mCertItem trustedForSSLAsType:mCertTrustType]];
+  mTrustForWebSitesCheckbox = [self addCheckboxLineWithLabelKey:@""
+                                                 buttonLabelKey:@"TrustWebSitesCheckboxLabel"
+                                                         action:@selector(trustCheckboxClicked:)
+                                                       atOffset:&curOffset];
+  [mTrustForWebSitesCheckbox setState:mTrustedForWebSites];
   [mTrustForWebSitesCheckbox setEnabled:enableCheckboxes];
   
-  mTrustForEmailCheckbox = [self addCheckboxLineWithLabelKey:@"" buttonLabelKey:@"TrustEmailUsersCheckboxLabel" action:nil     atOffset:&curOffset];
-  [mTrustForEmailCheckbox setState:[mCertItem trustedForEmailAsType:mCertTrustType]];
+  mTrustForEmailCheckbox = [self addCheckboxLineWithLabelKey:@""
+                                              buttonLabelKey:@"TrustEmailUsersCheckboxLabel"
+                                                      action:@selector(trustCheckboxClicked:)
+                                                    atOffset:&curOffset];
+  [mTrustForEmailCheckbox setState:mTrustedForEmail];
   [mTrustForEmailCheckbox setEnabled:enableCheckboxes];
 
-  mTrustForObjSigningCheckbox = [self addCheckboxLineWithLabelKey:@"" buttonLabelKey:@"TrustObjectSignersCheckboxLabel" action:nil  atOffset:&curOffset];
-  [mTrustForObjSigningCheckbox setState:[mCertItem trustedForObjectSigningAsType:mCertTrustType]];
+  mTrustForObjSigningCheckbox = [self addCheckboxLineWithLabelKey:@""
+                                                   buttonLabelKey:@"TrustObjectSignersCheckboxLabel"
+                                                           action:@selector(trustCheckboxClicked:)
+                                                         atOffset:&curOffset];
+  [mTrustForObjSigningCheckbox setState:mTrustedForObjectSigning];
   [mTrustForObjSigningCheckbox setEnabled:enableCheckboxes];
 
   curOffset += kGapUnderGroup;
@@ -702,7 +727,7 @@ const float kGapUnderLine       = 5.0f;
   CertificateItem* changedCert = [inNotification object];
   if ([mCertItem isEqualTo:changedCert])
   {
-   [self refreshView];
+    [self refreshView];
   }
 }
 
