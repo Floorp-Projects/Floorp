@@ -1060,7 +1060,7 @@ array_shift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsuint length, i;
     jsid id, id2;
-    jsval v, junk;
+    jsval junk;
 
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
@@ -1081,9 +1081,9 @@ array_shift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                     return JS_FALSE;
                 if (!IndexToId(cx, i - 1, &id2))
                     return JS_FALSE;
-                if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+                if (!OBJ_GET_PROPERTY(cx, obj, id, &argv[0]))
                     return JS_FALSE;
-                if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
+                if (!OBJ_SET_PROPERTY(cx, obj, id2, &argv[0]))
                     return JS_FALSE;
             }
         }
@@ -1102,7 +1102,7 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     jsuint length, last;
     uintN i;
     jsid id, id2;
-    jsval v;
+    jsval *vp, junk;
 
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
@@ -1110,18 +1110,19 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         /* Slide up the array to make room for argc at the bottom. */
         if (length > 0) {
             last = length;
+            vp = argv + argc;
             while (last--) {
                 if (!IndexToExistingId(cx, obj, last, &id))
                     return JS_FALSE;
                 if (id == JSID_HOLE) {
-                    OBJ_DELETE_PROPERTY(cx, obj, id2, &v); /* v is junk. */
+                    OBJ_DELETE_PROPERTY(cx, obj, id2, &junk);
                     continue;
                 }
-                if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+                if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
                     return JS_FALSE;
                 if (!IndexToId(cx, last + argc, &id2))
                     return JS_FALSE;
-                if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
+                if (!OBJ_SET_PROPERTY(cx, obj, id2, vp))
                     return JS_FALSE;
             }
         }
@@ -1145,16 +1146,20 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSBool
 array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    jsval *vp, junk;
     jsuint length, begin, end, count, delta, last;
-    uintN i;
     jsdouble d;
     jsid id, id2;
-    jsval v;
     JSObject *obj2;
+    uintN i;
 
-    /* Nothing to do if no args.  Otherwise lock and load length. */
+    /*
+     * Nothing to do if no args.  Otherwise point vp at our one explicit local
+     * root and get length.
+     */
     if (argc == 0)
         return JS_TRUE;
+    vp = argv + argc;
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
@@ -1228,11 +1233,11 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                         return JS_FALSE;
                     if (id == JSID_HOLE)
                         continue;       /* don't fill holes in the new array */
-                    if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+                    if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
                         return JS_FALSE;
                     if (!IndexToId(cx, last - begin, &id2))
                         return JS_FALSE;
-                    if (!OBJ_SET_PROPERTY(cx, obj2, id2, &v))
+                    if (!OBJ_SET_PROPERTY(cx, obj2, id2, vp))
                         return JS_FALSE;
                 }
 
@@ -1253,12 +1258,12 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (!IndexToId(cx, last + delta, &id2))
                 return JS_FALSE;
             if (id != JSID_HOLE) {
-                if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+                if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
                     return JS_FALSE;
-                if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
+                if (!OBJ_SET_PROPERTY(cx, obj, id2, vp))
                     return JS_FALSE;
             } else {
-                if (!OBJ_DELETE_PROPERTY(cx, obj, id2, &v))
+                if (!OBJ_DELETE_PROPERTY(cx, obj, id2, &junk))
                     return JS_FALSE;
             }
         }
@@ -1271,12 +1276,12 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             if (!IndexToId(cx, last - delta, &id2))
                 return JS_FALSE;
             if (id != JSID_HOLE) {
-                if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+                if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
                     return JS_FALSE;
-                if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
+                if (!OBJ_SET_PROPERTY(cx, obj, id2, vp))
                     return JS_FALSE;
             } else {
-                if (!OBJ_DELETE_PROPERTY(cx, obj, id2, &v))
+                if (!OBJ_DELETE_PROPERTY(cx, obj, id2, &junk))
                     return JS_FALSE;
             }
         }
@@ -1303,11 +1308,14 @@ array_splice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    jsval *vp, v;
     JSObject *nobj, *aobj;
     jsuint length, alength, slot;
     uintN i;
-    jsval v;
     jsid id, id2;
+
+    /* Hoist the explicit local root address computation. */
+    vp = argv + argc;
 
     /* Treat obj as the first argument; see ECMA 15.4.4.4. */
     --argv;
@@ -1329,10 +1337,10 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                 if (!OBJ_GET_PROPERTY(cx, aobj,
                                       ATOM_TO_JSID(cx->runtime->atomState
                                                    .lengthAtom),
-                                      &v)) {
+                                      vp)) {
                     return JS_FALSE;
                 }
-                if (!ValueIsLength(cx, v, &alength))
+                if (!ValueIsLength(cx, *vp, &alength))
                     return JS_FALSE;
                 for (slot = 0; slot < alength; slot++) {
                     if (!IndexToExistingId(cx, aobj, slot, &id))
@@ -1344,11 +1352,11 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                          */
                         continue;
                     }
-                    if (!OBJ_GET_PROPERTY(cx, aobj, id, &v))
+                    if (!OBJ_GET_PROPERTY(cx, aobj, id, vp))
                         return JS_FALSE;
                     if (!IndexToId(cx, length + slot, &id2))
                         return JS_FALSE;
-                    if (!OBJ_SET_PROPERTY(cx, nobj, id2, &v))
+                    if (!OBJ_SET_PROPERTY(cx, nobj, id2, vp))
                         return JS_FALSE;
                 }
                 length += alength;
@@ -1356,9 +1364,10 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             }
         }
 
+        *vp = v;
         if (!IndexToId(cx, length, &id))
             return JS_FALSE;
-        if (!OBJ_SET_PROPERTY(cx, nobj, id, &v))
+        if (!OBJ_SET_PROPERTY(cx, nobj, id, vp))
             return JS_FALSE;
         length++;
     }
@@ -1369,11 +1378,14 @@ array_concat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    jsval *vp;
     JSObject *nobj;
     jsuint length, begin, end, slot;
     jsdouble d;
     jsid id, id2;
-    jsval v;
+
+    /* Hoist the explicit local root address computation. */
+    vp = argv + argc;
 
     /* Create a new Array object and store it in the rval local root. */
     nobj = js_NewArrayObject(cx, 0, NULL);
@@ -1422,11 +1434,11 @@ array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return JS_FALSE;
         if (id == JSID_HOLE)
             continue;
-        if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+        if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
             return JS_FALSE;
         if (!IndexToId(cx, slot - begin, &id2))
             return JS_FALSE;
-        if (!OBJ_SET_PROPERTY(cx, nobj, id2, &v))
+        if (!OBJ_SET_PROPERTY(cx, nobj, id2, vp))
             return JS_FALSE;
     }
     return js_SetLengthProperty(cx, nobj, end - begin);
@@ -1523,12 +1535,15 @@ static JSBool
 array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
             ArrayExtraMode mode)
 {
+    jsval *vp, *sp, *origsp, *oldsp;
     jsuint length, newlen, i;
     JSObject *callable, *thisp, *newarr;
-    jsval *sp, *origsp, *oldsp;
     void *mark;
     JSStackFrame *fp;
     JSBool ok, b;
+
+    /* Hoist the explicit local root address computation. */
+    vp = argv + argc;
 
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
@@ -1545,6 +1560,11 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
      * Set our initial return condition, used for zero-length array cases
      * (and pre-size our map return to match our known length, for all cases).
      */
+#ifdef __GNUC__ /* quell GCC overwarning */
+    newlen = 0;
+    newarr = NULL;
+    ok = JS_TRUE;
+#endif
     switch (mode) {
       case MAP:
       case FILTER:
@@ -1589,14 +1609,14 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
 
     for (i = 0; i < length; i++) {
         jsid id;
-        jsval v, rval2;
+        jsval rval2;
 
         ok = IndexToExistingId(cx, obj, i, &id);
         if (!ok)
             break;
         if (id == JSID_HOLE)
             continue;
-        ok = OBJ_GET_PROPERTY(cx, obj, id, &v);
+        ok = OBJ_GET_PROPERTY(cx, obj, id, vp);
         if (!ok)
             break;
 
@@ -1604,7 +1624,7 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
         sp = origsp;
         *sp++ = OBJECT_TO_JSVAL(callable);
         *sp++ = OBJECT_TO_JSVAL(thisp);
-        *sp++ = v;
+        *sp++ = *vp;
         *sp++ = INT_TO_JSVAL(i);
         *sp++ = OBJECT_TO_JSVAL(obj);
 
@@ -1639,11 +1659,11 @@ array_extra(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval,
           case FILTER:
             if (!b)
                 break;
-            /* Filter passed v, push as result. */
+            /* Filter passed *vp, push as result. */
             ok = IndexToId(cx, newlen++, &id);
             if (!ok)
                 goto out;
-            ok = OBJ_SET_PROPERTY(cx, newarr, id, &v);
+            ok = OBJ_SET_PROPERTY(cx, newarr, id, vp);
             if (!ok)
                 goto out;
             break;
@@ -1721,25 +1741,25 @@ static JSFunctionSpec array_methods[] = {
 #if JS_HAS_MORE_PERL_FUN
     {"push",                array_push,             1,JSFUN_GENERIC_NATIVE,0},
     {"pop",                 array_pop,              0,JSFUN_GENERIC_NATIVE,0},
-    {"shift",               array_shift,            0,JSFUN_GENERIC_NATIVE,0},
-    {"unshift",             array_unshift,          1,JSFUN_GENERIC_NATIVE,0},
-    {"splice",              array_splice,           2,JSFUN_GENERIC_NATIVE,0},
+    {"shift",               array_shift,            0,JSFUN_GENERIC_NATIVE,1},
+    {"unshift",             array_unshift,          1,JSFUN_GENERIC_NATIVE,1},
+    {"splice",              array_splice,           2,JSFUN_GENERIC_NATIVE,1},
 #endif
 
     /* Python-esque sequence methods. */
 #if JS_HAS_SEQUENCE_OPS
-    {"concat",              array_concat,           1,JSFUN_GENERIC_NATIVE,0},
-    {"slice",               array_slice,            2,JSFUN_GENERIC_NATIVE,0},
+    {"concat",              array_concat,           1,JSFUN_GENERIC_NATIVE,1},
+    {"slice",               array_slice,            2,JSFUN_GENERIC_NATIVE,1},
 #endif
 
 #if JS_HAS_ARRAY_EXTRAS
     {"indexOf",             array_indexOf,          1,JSFUN_GENERIC_NATIVE,0},
     {"lastIndexOf",         array_lastIndexOf,      1,JSFUN_GENERIC_NATIVE,0},
-    {"forEach",             array_forEach,          1,JSFUN_GENERIC_NATIVE,0},
-    {"map",                 array_map,              1,JSFUN_GENERIC_NATIVE,0},
-    {"filter",              array_filter,           1,JSFUN_GENERIC_NATIVE,0},
-    {"some",                array_some,             1,JSFUN_GENERIC_NATIVE,0},
-    {"every",               array_every,            1,JSFUN_GENERIC_NATIVE,0},
+    {"forEach",             array_forEach,          1,JSFUN_GENERIC_NATIVE,1},
+    {"map",                 array_map,              1,JSFUN_GENERIC_NATIVE,1},
+    {"filter",              array_filter,           1,JSFUN_GENERIC_NATIVE,1},
+    {"some",                array_some,             1,JSFUN_GENERIC_NATIVE,1},
+    {"every",               array_every,            1,JSFUN_GENERIC_NATIVE,1},
 #endif
 
     {0,0,0,0,0}
