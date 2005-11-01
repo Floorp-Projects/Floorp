@@ -3617,9 +3617,9 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
         polypath[0].y = NSToCoordRound(aPoints[0].y);
         curIndex = 1;
         GetPath(aPoints,polypath,&curIndex,eOutside,c1Index);
+        c2Index = curIndex;
         if (curIndex >= MAXPOLYPATHSIZE)
           return;
-        c2Index = curIndex;
         polypath[curIndex].x = NSToCoordRound(aPoints[6].x);
         polypath[curIndex].y = NSToCoordRound(aPoints[6].y);
         curIndex++;
@@ -3685,9 +3685,9 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
         polypath[curIndex].x = NSToCoordRound(aPoints[6].x) ;
         polypath[curIndex].y = NSToCoordRound(aPoints[6].y);
         curIndex++;
+        GetPath(aPoints,polypath,&curIndex,eInside,c1Index);
         if (curIndex >= MAXPOLYPATHSIZE)
           return;
-        GetPath(aPoints,polypath,&curIndex,eInside,c1Index);
         polypath[curIndex].x = NSToCoordRound(aPoints[0].x);
         polypath[curIndex].y = NSToCoordRound(aPoints[0].y);
         curIndex++;
@@ -3887,18 +3887,26 @@ GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes
       thecurve.SetPoints(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
       aC1Index = *aCurIndex;
+      if (*aCurIndex >= MAXPOLYPATHSIZE)
+        return;
       aPolyPath[*aCurIndex].x = (nscoord)aPoints[3].x;
       aPolyPath[*aCurIndex].y = (nscoord)aPoints[3].y;
       (*aCurIndex)++;
+      if (*aCurIndex >= MAXPOLYPATHSIZE)
+        return;
       thecurve.SetPoints(aPoints[3].x,aPoints[3].y,aPoints[4].x,aPoints[4].y,aPoints[5].x,aPoints[5].y);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
       break;
     case eInside:
       thecurve.SetPoints(aPoints[6].x,aPoints[6].y,aPoints[7].x,aPoints[7].y,aPoints[8].x,aPoints[8].y);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+      if (*aCurIndex >= MAXPOLYPATHSIZE)
+        return;
       aPolyPath[*aCurIndex].x = (nscoord)aPoints[9].x;
       aPolyPath[*aCurIndex].y = (nscoord)aPoints[9].y;
       (*aCurIndex)++;
+      if (*aCurIndex >= MAXPOLYPATHSIZE)
+        return;
       thecurve.SetPoints(aPoints[9].x,aPoints[9].y,aPoints[10].x,aPoints[10].y,aPoints[11].x,aPoints[11].y);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
      break;
@@ -3907,9 +3915,13 @@ GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes
                           (aPoints[1].x+aPoints[10].x)/2.0f,(aPoints[1].y+aPoints[10].y)/2.0f,
                           (aPoints[2].x+aPoints[9].x)/2.0f,(aPoints[2].y+aPoints[9].y)/2.0f);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
+      if (*aCurIndex >= MAXPOLYPATHSIZE)
+        return;
       aPolyPath[*aCurIndex].x = (nscoord)((aPoints[3].x+aPoints[8].x)/2.0f);
       aPolyPath[*aCurIndex].y = (nscoord)((aPoints[3].y+aPoints[8].y)/2.0f);
       (*aCurIndex)++;
+      if (*aCurIndex >= MAXPOLYPATHSIZE)
+        return;
       thecurve.SetPoints( (aPoints[3].x+aPoints[8].x)/2.0f,(aPoints[3].y+aPoints[8].y)/2.0f,
                           (aPoints[4].x+aPoints[7].x)/2.0f,(aPoints[4].y+aPoints[7].y)/2.0f,
                           (aPoints[5].x+aPoints[6].x)/2.0f,(aPoints[5].y+aPoints[6].y)/2.0f);
@@ -3923,6 +3935,8 @@ GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes
       aPolyPath[*aCurIndex].x = (nscoord)((aPoints[2].x+aPoints[9].x)/2.0f);
       aPolyPath[*aCurIndex].y = (nscoord)((aPoints[2].y+aPoints[9].y)/2.0f);
       (*aCurIndex)++;
+      if (*aCurIndex >= MAXPOLYPATHSIZE)
+        return;
       thecurve.SetPoints( (aPoints[2].x+aPoints[9].x)/2.0f,(aPoints[2].y+aPoints[9].y)/2.0f,
                           (aPoints[1].x+aPoints[10].x)/2.0f,(aPoints[1].y+aPoints[10].y)/2.0f,
                           (aPoints[0].x+aPoints[11].x)/2.0f,(aPoints[0].y+aPoints[11].y)/2.0f);
@@ -3939,11 +3953,14 @@ void
 QBCurve::SubDivide(nsIRenderingContext *aRenderingContext,nsPoint aPointArray[],PRInt32 *aCurIndex)
 {
   QBCurve   curve1,curve2;
-  float     fx,fy,smag;
+  float     fx,fy,smag, oldfx, oldfy, oldsmag;
   
   if (*aCurIndex >= MAXPOLYPATHSIZE)
     return;
-
+  
+  oldfx = (this->mAnc1.x + this->mAnc2.x)/2.0f - this->mCon.x;
+  oldfy = (this->mAnc1.y + this->mAnc2.y)/2.0f - this->mCon.y;
+  oldsmag = oldfx * oldfx + oldfy * oldfy;
   // divide the curve into 2 pieces
   MidPointDivide(&curve1,&curve2);
 
@@ -3954,6 +3971,8 @@ QBCurve::SubDivide(nsIRenderingContext *aRenderingContext,nsPoint aPointArray[],
   smag = fx*fx + fy*fy;
  
   if (smag>1){
+    if (smag + 0.2 > oldsmag)
+      return; // we did not get closer
     // split the curve again
     curve1.SubDivide(aRenderingContext,aPointArray,aCurIndex);
     curve2.SubDivide(aRenderingContext,aPointArray,aCurIndex);
