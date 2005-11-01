@@ -353,7 +353,8 @@
   <rdf:Description about="#menu-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="menu-help-help-contents" nc:name="Help Contents" nc:link="menu_reference.xhtml#help_contents"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-help-help-contents" nc:name="Help Contents" nc:link="menu_reference.xhtml#help_contents" nc:platform="win unix os2"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-help-help-contents-mac" nc:name="&brandShortName; Help" nc:link="menu_reference.xhtml#help_contents" nc:platform="mac"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-for-ie-users" nc:name="For Internet Explorer Users" nc:link="menu_reference.xhtml#for_ie_users" nc:platform="win"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-relnotes" nc:name="Release Notes" nc:link="menu_reference.xhtml#relnotes"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-report-broken-web-site" nc:name="Report Broken Web Site..." nc:link="menu_reference.xhtml#reporter"/> </rdf:li>
