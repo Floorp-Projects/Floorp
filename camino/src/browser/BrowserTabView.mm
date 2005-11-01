@@ -398,7 +398,7 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
         if ([aBookmark isKindOfClass:[Bookmark class]])
           return [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:[aBookmark url]];
         else if ([aBookmark isKindOfClass:[BookmarkFolder class]]) {
-          [[[self window] windowController] openURLArray:[aBookmark childURLs] tabOpenPolicy:eReplaceTabs allowPopups:NO];
+          [[[self window] windowController] openURLArray:[aBookmark childURLs] tabOpenPolicy:(overTabViewItem ? eReplaceTabs : eAppendTabs) allowPopups:NO];
           return YES;
         }
       } else if ([draggedItems count] > 1) {
@@ -410,7 +410,7 @@ NSString* const kTabBarBackgroundDoubleClickedNotification = @"kTabBarBackground
           else if ([aBookmark isKindOfClass:[BookmarkFolder class]])
             [urlArray addObjectsFromArray:[aBookmark childURLs]];
         }
-        [[[self window] windowController] openURLArray:urlArray tabOpenPolicy:eReplaceTabs allowPopups:NO];
+        [[[self window] windowController] openURLArray:urlArray tabOpenPolicy:(overTabViewItem ? eReplaceTabs : eAppendTabs) allowPopups:NO];
         return YES;
       }
     }
