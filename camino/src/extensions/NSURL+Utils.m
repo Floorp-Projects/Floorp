@@ -80,18 +80,16 @@
 {
   NSURL *ret = nil;
   
-  // Is this really an IE .url file? (Is this too strict?)
+  // Is this really an IE .url file?
   if (inFile) {
-    NSArray *contents = [[NSString stringWithContentsOfFile:inFile] componentsSeparatedByString:@"\r\n"];
-    unsigned idx = [contents indexOfObject:@"[InternetShortcut]"];
+    NSCharacterSet *newlines = [NSCharacterSet characterSetWithCharactersInString:@"\r\n"];
+    NSScanner *scanner = [NSScanner scannerWithString:[NSString stringWithContentsOfFile:inFile]];
+    NSString *urlString;
     
-    if (idx != NSNotFound) {
-      NSString *urlline = [contents objectAtIndex:idx + 1];
-      
-      if ([urlline hasPrefix:@"URL="]) {
-        ret = [NSURL URLWithString:[urlline substringFromIndex:4]];
-      }
-    }
+    if ([scanner scanString:@"[InternetShortcut]" intoString:nil] &&
+          [scanner scanString:@"URL=" intoString:nil] &&
+          [scanner scanUpToCharactersFromSet:newlines intoString:&urlString])
+      ret = [NSURL URLWithString:urlString];
   }
   
   return ret;
