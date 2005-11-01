@@ -4264,9 +4264,9 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
       currentFocusFrame = presShell->GetPrimaryFrameFor(mCurrentFocus);
     if (!currentFocusFrame)
       currentFocusFrame = mCurrentTarget;
-    nsCOMPtr<nsIObjectFrame> objFrame;
+    nsIObjectFrame* objFrame = nsnull;
     if (currentFocusFrame)
-      objFrame = do_QueryInterface(currentFocusFrame);
+      CallQueryInterface(currentFocusFrame, &objFrame);
     if (objFrame) {
       nsIView* view = currentFocusFrame->GetViewExternal();
       NS_ASSERTION(view, "Object frames must have views");
