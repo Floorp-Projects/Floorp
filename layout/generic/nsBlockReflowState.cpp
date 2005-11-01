@@ -984,6 +984,20 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   }
 
   nsRect region(floatX, floatY, floatSize.width, floatSize.height);
+  
+  // Don't send rectangles with negative margin-box width or height to
+  // the space manager; it can't deal with them.
+  if (region.width < 0) {
+    // Preserve the right margin-edge for left floats and the left
+    // margin-edge for right floats
+    if (isLeftFloat) {
+      region.x = region.XMost();
+    }
+    region.width = 0;
+  }
+  if (region.height < 0) {
+    region.height = 0;
+  }
 #ifdef DEBUG
   nsresult rv =
 #endif
@@ -1023,8 +1037,8 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   // Set the origin of the float frame, in frame coordinates. These
   // coordinates are <b>not</b> relative to the spacemanager
   // translation, therefore we have to factor in our border/padding.
-  nscoord x = borderPadding.left + aFloatCache->mMargins.left + region.x;
-  nscoord y = borderPadding.top + aFloatCache->mMargins.top + region.y;
+  nscoord x = borderPadding.left + aFloatCache->mMargins.left + floatX;
+  nscoord y = borderPadding.top + aFloatCache->mMargins.top + floatY;
 
   // If float is relatively positioned, factor that in as well
   // XXXldb Should this be done after handling the combined area
