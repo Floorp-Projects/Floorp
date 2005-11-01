@@ -167,6 +167,7 @@ nsBlockBandData::ComputeAvailSpaceRect()
   }
 
   nsBandTrapezoid* trapezoid = mTrapezoids;
+  // The trapezoid to the left of the first right-floated trapezoid.
   nsBandTrapezoid* rightTrapezoid = nsnull;
 
   PRInt32 leftFloats = 0;
@@ -226,6 +227,9 @@ nsBlockBandData::ComputeAvailSpaceRect()
   mLeftFloats = leftFloats;
   mRightFloats = rightFloats;
 
+  // We look for available space in the last trapezoid before the
+  // first right float, or in the last trapezoid if there is no right
+  // float or no trapezoid before the first right float.
   if (nsnull != rightTrapezoid) {
     trapezoid = rightTrapezoid;
   }
