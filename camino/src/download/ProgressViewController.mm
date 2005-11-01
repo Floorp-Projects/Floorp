@@ -23,7 +23,7 @@
  *   Calum Robinson <calumr@mac.com>
  *   Simon Fraser <sfraser@netscape.com>
  *   Josh Aas <josha@mac.com>
- *   Nick Kreeger <nick.kreeger@gmail.com>
+ *   Nick Kreeger <nick.kreeger@park.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -277,6 +277,7 @@ enum {
   if (!mUserCancelled && !mDownloadDone && mDownloader) 
   {
     mDownloader->PauseDownload();
+    mRefreshIcon = YES;
     [self refreshDownloadInfo];
     [[self view] setSelected:YES]; // likes to unselect its self when switching progress views
   }
@@ -286,6 +287,7 @@ enum {
 {
   if (!mUserCancelled && !mDownloadDone && mDownloader) 
   {
+    mRefreshIcon = YES;
     mDownloader->ResumeDownload();
     [self refreshDownloadInfo];
   }
