@@ -132,6 +132,7 @@ public interface SymmetricKey {
         public int getVal() { return val; }
 
         // these enums must match the JSS_symkeyUsage list in Algorithm.c
+        // and the opFlagForUsage list in PK11KeyGenerator.java
         public static final Usage ENCRYPT = new Usage(0);
         public static final Usage DECRYPT = new Usage(1);
         public static final Usage WRAP = new Usage(2);

@@ -56,6 +56,27 @@ public interface KeyGenerator {
     public void initialize(AlgorithmParameterSpec parameters)
         throws InvalidAlgorithmParameterException;
 
+    /**
+     * @param usages The operations the key will be used for after it is
+     *   generated. You have to specify these so that the key can be properly
+     *   marked with the operations it supports. Some PKCS #11 tokens require
+     *   that a key be marked for an operation before it can perform that
+     *   operation.  The default is SymmetricKey.Usage.SIGN and
+     *   SymmetricKey.Usage.ENCRYPT.
+     */
+    public void setKeyUsages(SymmetricKey.Usage[] usages);
+
+    /**
+     * Tells the generator to generate temporary or permanent keys.
+     * Temporary keys are not written permanently to the token.  They
+     * are destroyed by the garbage collector.  If this method is not
+     * called, the default is temporary keys.
+     */
+    public void temporaryKeys(boolean temp);
+
+    /**
+     * Generates a symmetric key.
+     */
     public SymmetricKey generate()
         throws IllegalStateException, TokenException, CharConversionException;
 

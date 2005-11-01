@@ -72,11 +72,13 @@ PBE_DestroyContext(PBEBitGenContext *context);
  */
 JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generateNormal
-    (JNIEnv *env, jclass clazz, jobject token, jobject alg, jint strength)
+    (JNIEnv *env, jclass clazz, jobject token, jobject alg, jint strength,
+    jint opFlags, jboolean temporary)
 {
     PK11SlotInfo *slot=NULL;
     PK11SymKey *skey=NULL;
     CK_MECHANISM_TYPE mech;
+    PK11AttrFlags attrFlags=0;
     jobject keyObj=NULL;
 
     PR_ASSERT( env!=NULL && clazz!=NULL && token!=NULL && alg!=NULL );
@@ -90,9 +92,14 @@ Java_org_mozilla_jss_pkcs11_PK11KeyGenerator_generateNormal
     mech = JSS_getPK11MechFromAlg(env, alg);
     PR_ASSERT(mech != CKM_INVALID_MECHANISM);
 
+    if(!temporary) {
+        attrFlags |= (PK11_ATTR_TOKEN | PK11_ATTR_PRIVATE);
+    }
+
     /* generate the key */
-    skey = PK11_KeyGen(slot, mech, NULL /*param*/,
-                    strength/8 /*in bytes*/, NULL /*wincx*/ );
+    skey = PK11_TokenKeyGenWithFlags(slot, mech, NULL /*param*/,
+                    strength/8 /*in bytes*/, NULL /*keyid*/,
+                    opFlags, attrFlags, NULL /*wincx*/ );
 
     if(skey==NULL) {
         JSS_throwMsgPrErr(env, TOKEN_EXCEPTION, "KeyGen failed on token");
