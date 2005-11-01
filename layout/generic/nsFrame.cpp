@@ -445,7 +445,7 @@ void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
 nsIFrame*
 NS_NewEmptyFrame(nsIPresShell* aPresShell)
 {
-  new (aPresShell) nsFrame;
+  return new (aPresShell) nsFrame;
 }
 
 MOZ_DECL_CTOR_COUNTER(nsFrame)
