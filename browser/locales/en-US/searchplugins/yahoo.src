@@ -37,8 +37,8 @@
 
 <browser
     alsomatch="http://search.yahoo.com/bin/search"
-    update="http://www.mozilla.org/products/firefox/plugins/yahoo.src"
-    updateIcon="http://www.mozilla.org/products/firefox/plugins/yahoo.gif"
+    update="https://addons.mozilla.org/searchplugins/updates/yahoo.src"
+    updateIcon="https://addons.mozilla.org/searchplugins/updates/yahoo.gif"
     updateCheckDays="3"
 >
 

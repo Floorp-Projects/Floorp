@@ -30,8 +30,8 @@
 	resultItemEnd="</p>"
 >
 <browser
-	update="http://www.mozilla.org/products/firefox/plugins/creativecommons.src"
-	updateIcon="http://www.mozilla.org/products/firefox/plugins/creativecommons.png"
+	update="https://addons.mozilla.org/searchplugins/updates/creativecommons.src"
+	updateIcon="https://addons.mozilla.org/searchplugins/updates/creativecommons.png"
 	updateCheckDays="3"
 >
 </search>

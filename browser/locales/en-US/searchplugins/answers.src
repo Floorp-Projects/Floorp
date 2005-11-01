@@ -12,6 +12,6 @@
   <input name="gwp" value="13">
 </search>
 
-<BROWSER update="http://www.mozilla.org/products/firefox/plugins/answers.src" 
-         updateIcon="http://www.mozilla.org/products/firefox/plugins/answers.png" 
+<BROWSER update="https://addons.mozilla.org/searchplugins/updates/answers.src" 
+         updateIcon="https://addons.mozilla.org/searchplugins/updates/answers.png" 
          updateCheckDays="3">
