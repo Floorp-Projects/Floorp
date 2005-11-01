@@ -44,15 +44,10 @@
 #include "nsHTMLCanvasFrame.h"
 #include "nsICanvasElement.h"
 
-nsresult
-NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell)
 {
-  nsHTMLCanvasFrame* it = new (aPresShell) nsHTMLCanvasFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsHTMLCanvasFrame;
 }
 
 nsHTMLCanvasFrame::nsHTMLCanvasFrame()

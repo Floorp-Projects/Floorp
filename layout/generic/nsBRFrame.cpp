@@ -80,19 +80,10 @@ protected:
   virtual ~BRFrame();
 };
 
-nsresult
-NS_NewBRFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewBRFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsIFrame* frame = new (aPresShell) BRFrame;
-  if (nsnull == frame) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = frame;
-  return NS_OK;
+  return new (aPresShell) BRFrame;
 }
 
 BRFrame::~BRFrame()

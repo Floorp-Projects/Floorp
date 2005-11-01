@@ -163,8 +163,8 @@ NS_NewXTFSVGDisplayFrame(nsIPresShell*, nsIContent*, nsIFrame**);
 #endif
 #endif
 
-nsresult
-NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsIFrame*
+NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell);
 
 #ifdef MOZ_SVG
 #include "nsSVGAtoms.h"
@@ -2092,10 +2092,9 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
     content->SetNativeAnonymous(PR_TRUE);
   
     // Create an image frame and initialize it
-    nsIFrame* imageFrame = nsnull;
-    rv = NS_NewImageFrame(mPresShell, &imageFrame);
-    if (!imageFrame) {
-      return rv;
+    nsIFrame* imageFrame = NS_NewImageFrame(mPresShell);
+    if (NS_UNLIKELY(!imageFrame)) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
 
     rv = imageFrame->Init(presContext, content, aParentFrame, aStyleContext,
@@ -2437,7 +2436,11 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
 
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_PASSWORD:
-      return NS_NewTextControlFrame(mPresShell, aFrame);
+    {
+      *aFrame = NS_NewTextControlFrame(mPresShell);
+      
+      return NS_UNLIKELY(!*aFrame) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
 
     default:
       NS_ASSERTION(0, "Unknown input type!");
@@ -2453,7 +2456,9 @@ nsCSSFrameConstructor::CreateHTMLImageFrame(nsIContent* aContent,
 {
   // Make sure to keep IsSpecialContent in synch with this code
   if (nsImageFrame::ShouldCreateImageFrameFor(aContent, aStyleContext)) {
-    return (*aFunc)(mPresShell, aFrame);
+    *aFrame = (*aFunc)(mPresShell);
+    
+    return NS_UNLIKELY(!*aFrame) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
   }
   
   *aFrame = nsnull;
@@ -5489,6 +5494,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
   PRBool    isFloatContainer = PR_FALSE;
   PRBool    addedToFrameList = PR_FALSE;
   nsresult  rv = NS_OK;
+  
+  PRBool triedFrame = PR_FALSE;
 
   // See if the element is absolute or fixed positioned
   const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
@@ -5509,7 +5516,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
-    rv = NS_NewBRFrame(mPresShell, &newFrame);
+    newFrame = NS_NewBRFrame(mPresShell);
+    triedFrame = PR_TRUE;
+
     isReplaced = PR_TRUE;
     // BR frames don't go in the content->frame hash table: typically
     // there are many BR content objects and this would increase the size
@@ -5520,7 +5529,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
-    rv = NS_NewWBRFrame(mPresShell, &newFrame);
+    newFrame = NS_NewWBRFrame(mPresShell);
+    triedFrame = PR_TRUE;
   }
   else if (nsHTMLAtoms::input == aTag) {
     // Make sure to keep IsSpecialContent in synch with this code
@@ -5537,7 +5547,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       ProcessPseudoFrames(aState, aFrameItems); 
     }
     isReplaced = PR_TRUE;
-    rv = NS_NewTextControlFrame(mPresShell, &newFrame);
+    newFrame = NS_NewTextControlFrame(mPresShell);
+    triedFrame = PR_TRUE;
   }
   else if (nsHTMLAtoms::select == aTag) {
     if (!gUseXBLForms) {
@@ -5579,25 +5590,21 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       objContent->GetDisplayedType(&type);
       if (type == nsIObjectLoadingContent::TYPE_LOADING) {
         // Ideally, this should show the standby attribute
-        rv = NS_NewEmptyFrame(mPresShell, &newFrame);
+        newFrame = NS_NewEmptyFrame(mPresShell);
       }
       else if (type == nsIObjectLoadingContent::TYPE_PLUGIN)
-        rv = NS_NewObjectFrame(mPresShell, &newFrame);
+        newFrame = NS_NewObjectFrame(mPresShell);
       else if (type == nsIObjectLoadingContent::TYPE_IMAGE)
-        rv = NS_NewImageFrame(mPresShell, &newFrame);
-      else if (type == nsIObjectLoadingContent::TYPE_DOCUMENT) {
+        newFrame = NS_NewImageFrame(mPresShell);
+      else if (type == nsIObjectLoadingContent::TYPE_DOCUMENT)
         newFrame = NS_NewSubDocumentFrame(mPresShell);
-
-        // xxx marc
-        if (!newFrame) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
 #ifdef DEBUG
       else
         NS_ERROR("Shouldn't get here if we're not broken and not "
                  "suppressed and not blocked");
 #endif
+
+      triedFrame = PR_TRUE;
     }
   }
   else if (nsHTMLAtoms::fieldset == aTag) {
@@ -5619,7 +5626,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
-    rv = NS_NewLegendFrame(mPresShell, &newFrame);
+    newFrame = NS_NewLegendFrame(mPresShell);
+    triedFrame = PR_TRUE;
+
     isFloatContainer = PR_TRUE;
   }
   else if (nsHTMLAtoms::frameset == aTag) {
@@ -5630,7 +5639,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       ProcessPseudoFrames(aState, aFrameItems); 
     }
    
-    rv = NS_NewHTMLFramesetFrame(mPresShell, &newFrame);
+    newFrame = NS_NewHTMLFramesetFrame(mPresShell);
+    triedFrame = PR_TRUE;
   }
   else if (nsHTMLAtoms::iframe == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -5639,12 +5649,8 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     
     isReplaced = PR_TRUE;
     newFrame = NS_NewSubDocumentFrame(mPresShell);
-    
-    // xxx marc
-    if (!newFrame) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    
+    triedFrame = PR_TRUE;
+
     if (newFrame) {
       // the nsSubDocumentFrame needs to know about its content parent during ::Init.
       // there is no reasonable way to get the value there.
@@ -5661,13 +5667,16 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
-    rv = NS_NewSpacerFrame(mPresShell, &newFrame);
+    newFrame = NS_NewSpacerFrame(mPresShell);
+    triedFrame = PR_TRUE;
   }
   else if (nsHTMLAtoms::button == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
-    rv = NS_NewHTMLButtonControlFrame(mPresShell, &newFrame);
+    newFrame = NS_NewHTMLButtonControlFrame(mPresShell);
+    triedFrame = PR_TRUE;
+
     // the html4 button needs to act just like a 
     // regular button except contain html content
     // so it must be replaced or html outside it will
@@ -5680,18 +5689,24 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
       ProcessPseudoFrames(aState, aFrameItems);
     }
     isReplaced = PR_TRUE;
-    rv = NS_NewIsIndexFrame(mPresShell, &newFrame);
+    newFrame = NS_NewIsIndexFrame(mPresShell);
+    triedFrame = PR_TRUE;
   }
   else if (nsHTMLAtoms::canvas == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
       ProcessPseudoFrames(aState, aFrameItems); 
     }
     isReplaced = PR_TRUE;
-    rv = NS_NewHTMLCanvasFrame(mPresShell, &newFrame);
+    newFrame = NS_NewHTMLCanvasFrame(mPresShell);
+    triedFrame = PR_TRUE;
   }
 
-  if (NS_FAILED(rv) || !newFrame)
+  if (NS_UNLIKELY(triedFrame && !newFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  else if (NS_FAILED(rv) || !newFrame) {
     return rv;
+  }
 
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
@@ -11101,8 +11116,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     }
 
   } else if (nsLayoutAtoms::imageFrame == frameType) {
-    rv = NS_NewImageFrame(shell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewImageFrame(shell);
+    if (NS_LIKELY(newFrame != nsnull)) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
     }
   } else if (nsLayoutAtoms::placeholderFrame == frameType) {

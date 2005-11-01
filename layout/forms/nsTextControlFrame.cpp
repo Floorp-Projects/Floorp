@@ -1223,19 +1223,10 @@ NS_IMETHODIMP nsTextInputSelectionImpl::GetFrameFromLevel(nsPresContext *aPresCo
 
 
 
-nsresult
-NS_NewTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewTextControlFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTextControlFrame* it = new (aPresShell) nsTextControlFrame(aPresShell);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsTextControlFrame(aPresShell);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsTextControlFrame, nsBoxFrame)

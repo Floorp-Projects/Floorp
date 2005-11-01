@@ -1208,8 +1208,8 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
     
     nsHTMLContainerFrame::CreateViewForFrame(anchorFrame, this, PR_FALSE);
 
-    rv = NS_NewImageFrame(shell, &imgFrame);
-    if (NS_FAILED(rv))
+    imgFrame = NS_NewImageFrame(shell);
+    if (NS_UNLIKELY(!imgFrame))
       return;
 
     rv = imgFrame->Init(aPresContext, img, anchorFrame, imgStyleContext, PR_FALSE);
@@ -1850,19 +1850,10 @@ nsObjectFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
   return nsnull;
 }
 
-nsresult
-NS_NewObjectFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewObjectFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsObjectFrame* it = new (aPresShell) nsObjectFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsObjectFrame;
 }
 
 

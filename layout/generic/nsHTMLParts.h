@@ -138,8 +138,8 @@ NS_NewRelativeItemWrapperFrame(nsIPresShell* aPresShell) {
   return NS_NewAreaFrame(aPresShell, 0);
 }
 
-nsresult
-NS_NewBRFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsIFrame*
+NS_NewBRFrame(nsIPresShell* aPresShell);
 
 nsresult
 NS_NewCommentFrame(nsIPresShell* aPresShell, nsIFrame** aFrameResult);
@@ -148,32 +148,32 @@ NS_NewCommentFrame(nsIPresShell* aPresShell, nsIFrame** aFrameResult);
 nsIFrame*
 NS_NewSubDocumentFrame(nsIPresShell* aPresShell);
 // <frameset>
-nsresult
-NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsIFrame*
+NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell);
 
 nsresult
 NS_NewViewportFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 nsresult
 NS_NewCanvasFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-nsresult
-NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aFrameResult);
+nsIFrame*
+NS_NewImageFrame(nsIPresShell* aPresShell);
 nsresult
 NS_NewInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 nsresult
 NS_NewPositionedInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-nsresult
-NS_NewObjectFrame(nsIPresShell* aPresShell, nsIFrame** aFrameResult);
-nsresult
-NS_NewSpacerFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+nsIFrame*
+NS_NewObjectFrame(nsIPresShell* aPresShell);
+nsIFrame*
+NS_NewSpacerFrame(nsIPresShell* aPresShell);
 nsresult
 NS_NewTextFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 nsresult
 NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-nsresult
-NS_NewEmptyFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-inline nsresult
-NS_NewWBRFrame(nsIPresShell* aPresShell, nsIFrame** aResult) {
-  return NS_NewEmptyFrame(aPresShell, aResult);
+nsIFrame*
+NS_NewEmptyFrame(nsIPresShell* aPresShell);
+inline nsIFrame*
+NS_NewWBRFrame(nsIPresShell* aPresShell) {
+  return NS_NewEmptyFrame(aPresShell);
 }
 
 nsresult
@@ -197,10 +197,10 @@ nsresult
 NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 nsresult
 NS_NewNativeButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-nsresult
-NS_NewImageControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-nsresult
-NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+nsIFrame*
+NS_NewImageControlFrame(nsIPresShell* aPresShell);
+nsIFrame*
+NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell);
 nsresult
 NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 nsresult
@@ -209,12 +209,12 @@ nsresult
 NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags);
 nsresult
 NS_NewFileControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-nsresult
-NS_NewLegendFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+nsIFrame*
+NS_NewLegendFrame(nsIPresShell* aPresShell);
 nsresult
 NS_NewNativeTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
-nsresult
-NS_NewTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsIFrame*
+NS_NewTextControlFrame(nsIPresShell* aPresShell);
 nsresult
 NS_NewGfxAutoTextControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 nsresult
@@ -227,8 +227,8 @@ nsresult
 NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
 nsresult
 NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags);
-nsresult
-NS_NewIsIndexFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+nsIFrame*
+NS_NewIsIndexFrame(nsIPresShell* aPresShell);
 
 // Table frame factories
 nsresult

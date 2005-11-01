@@ -442,19 +442,10 @@ void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
   aRC->SetFont(font->mFont, visibility->mLangGroup);
 }
 
-nsresult
-NS_NewEmptyFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewEmptyFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsFrame* it = new (aPresShell) nsFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  new (aPresShell) nsFrame;
 }
 
 MOZ_DECL_CTOR_COUNTER(nsFrame)

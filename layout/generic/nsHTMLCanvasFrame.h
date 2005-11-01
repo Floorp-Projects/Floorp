@@ -46,7 +46,7 @@
 #include "gfxIImageFrame.h"
 #include "imgIContainer.h"
 
-nsresult NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsIFrame* NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell);
 
 class nsHTMLCanvasFrame : public nsSplittableFrame
 {
