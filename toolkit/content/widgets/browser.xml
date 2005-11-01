@@ -243,18 +243,26 @@
         </getter>
       </property>
 
+      <method name="getTabBrowser">
+        <body>
+          <![CDATA[
+            var tabBrowser = this.parentNode;
+            while (tabBrowser && tabBrowser.localName != "tabbrowser")
+              tabBrowser = tabBrowser.parentNode;
+            return tabBrowser;
+          ]]>
+        </body>
+      </method>
+
       <field name="_fastFind">null</field>
       <property name="fastFind"
                 readonly="true">
         <getter>
         <![CDATA[
           if (!this._fastFind) {
-            var n = this.parentNode;
-            while (n && n.localName != "tabbrowser")
-              n = n.parentNode;
-
-            if (n && n.mCurrentBrowser == this)
-              return this._fastFind = n.fastFind
+            var tabBrowser = this.getTabBrowser();
+            if (tabBrowser && tabBrowser.mCurrentBrowser == this)
+              return this._fastFind = tabBrowser.fastFind;
 
             this._fastFind = Components.classes["@mozilla.org/typeaheadfind;1"]
                                        .createInstance(Components.interfaces.nsITypeAheadFind);                                
@@ -442,6 +450,9 @@
               this.pageReport = null;
               this.updatePageReport();
             }
+            var tabBrowser = this.getTabBrowser();
+            if (!tabBrowser || tabBrowser.mCurrentBrowser == this)
+              this.fastFind.setDocShell(this.docShell);
          ]]>
         </body>
       </method>
