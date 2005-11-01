@@ -25,7 +25,7 @@
 </search>
 
 <browser
-    update="http://www.mozilla.org/products/firefox/plugins/google.src"
-    updateIcon="http://www.mozilla.org/products/firefox/plugins/google.gif"
+    update="https://addons.mozilla.org/searchplugins/updates/google.src"
+    updateIcon="https://addons.mozilla.org/searchplugins/updates/google.gif"
     updateCheckDays="1"
 >

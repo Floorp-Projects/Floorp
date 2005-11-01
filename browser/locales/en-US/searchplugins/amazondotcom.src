@@ -19,8 +19,8 @@
 </search>
 
 <BROWSER
-        update="http://www.mozilla.org/products/firefox/plugins/amazondotcom.src"
-        updateIcon="http://www.mozilla.org/products/firefox/plugins/amazondotcom.png"
+        update="https://addons.mozilla.org/searchplugins/updates/amazondotcom.src"
+        updateIcon="https://addons.mozilla.org/searchplugins/updates/amazondotcom.png"
         updateCheckDays="3"
 	>
 
