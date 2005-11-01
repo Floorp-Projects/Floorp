@@ -81,6 +81,7 @@ nsDOMPopupBlockedEvent::InitPopupBlockedEvent(const nsAString & aTypeArg,
                             PRBool aCanBubbleArg, PRBool aCancelableArg,
                             nsIURI *aRequestingWindowURI,
                             nsIURI *aPopupWindowURI,
+                            const nsAString & aPopupWindowName,
                             const nsAString & aPopupWindowFeatures)
 {
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
@@ -96,6 +97,7 @@ nsDOMPopupBlockedEvent::InitPopupBlockedEvent(const nsAString & aTypeArg,
        NS_IF_ADDREF(event->mRequestingWindowURI);
        NS_IF_ADDREF(event->mPopupWindowURI);
        event->mPopupWindowFeatures = aPopupWindowFeatures;
+       event->mPopupWindowName = aPopupWindowName;
        break;
     }
     default:
@@ -142,6 +144,18 @@ nsDOMPopupBlockedEvent::GetPopupWindowFeatures(nsAString &aPopupWindowFeatures)
     return NS_OK;
   }
   aPopupWindowFeatures.Truncate();
+  return NS_OK;  // Don't throw an exception
+}
+
+NS_IMETHODIMP
+nsDOMPopupBlockedEvent::GetPopupWindowName(nsAString &aPopupWindowName)
+{
+  if (mEvent->eventStructType == NS_POPUPBLOCKED_EVENT) {
+    nsPopupBlockedEvent* event = NS_STATIC_CAST(nsPopupBlockedEvent*, mEvent);
+    aPopupWindowName = event->mPopupWindowName;
+    return NS_OK;
+  }
+  aPopupWindowName.Truncate();
   return NS_OK;  // Don't throw an exception
 }
 

@@ -3971,6 +3971,7 @@ PRBool IsPopupBlocked(nsIDOMDocument* aDoc)
 static
 void FirePopupBlockedEvent(nsIDOMDocument* aDoc,
                            nsIURI *aRequestingURI, nsIURI *aPopupURI,
+                           const nsAString &aPopupWindowName,
                            const nsAString &aPopupWindowFeatures)
 {
   if (aDoc) {
@@ -3981,7 +3982,7 @@ void FirePopupBlockedEvent(nsIDOMDocument* aDoc,
     if (event) {
       nsCOMPtr<nsIDOMPopupBlockedEvent> pbev(do_QueryInterface(event));
       pbev->InitPopupBlockedEvent(NS_LITERAL_STRING("DOMPopupBlocked"),
-              PR_TRUE, PR_TRUE, aRequestingURI, aPopupURI, aPopupWindowFeatures);
+              PR_TRUE, PR_TRUE, aRequestingURI, aPopupURI, aPopupWindowName, aPopupWindowFeatures);
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
       privateEvent->SetTrusted(PR_TRUE);
 
@@ -4102,6 +4103,7 @@ nsGlobalWindow::GetOpenAllow(const nsAString &aName)
 void
 nsGlobalWindow::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
                                 const nsAString &aPopupURL,
+                                const nsAString &aPopupWindowName,
                                 const nsAString &aPopupWindowFeatures)
 {
   // fetch the URI of the window requesting the opened window
@@ -4156,7 +4158,7 @@ nsGlobalWindow::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
 
   // fire an event chock full of informative URIs
   if (aBlocked)
-    FirePopupBlockedEvent(topDoc, requestingURI, popupURI, aPopupWindowFeatures);
+    FirePopupBlockedEvent(topDoc, requestingURI, popupURI, aPopupWindowName, aPopupWindowFeatures);
   if (aWindow)
     FirePopupWindowEvent(topDoc);
 }
@@ -4170,7 +4172,7 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
   PopupControlState abuseLevel = CheckForAbusePoint();
   OpenAllowValue allowReason = CheckOpenAllow(abuseLevel, aName);
   if (allowReason == allowNot) {
-    FireAbuseEvents(PR_TRUE, PR_FALSE, aUrl, aOptions);
+    FireAbuseEvents(PR_TRUE, PR_FALSE, aUrl, aName, aOptions);
     return NS_ERROR_FAILURE; // unlike the public Open method, return an error
   }
 
@@ -4185,7 +4187,7 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
       }
     }
     if (abuseLevel >= openAbused)
-      FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl, aOptions);
+      FireAbuseEvents(PR_FALSE, PR_TRUE, aUrl, aName, aOptions);
   }
   return rv;
 }
@@ -4232,7 +4234,7 @@ nsGlobalWindow::Open(nsIDOMWindow **_retval)
   PopupControlState abuseLevel = CheckForAbusePoint();
   OpenAllowValue allowReason = CheckOpenAllow(abuseLevel, name);
   if (allowReason == allowNot) {
-    FireAbuseEvents(PR_TRUE, PR_FALSE, url, options);
+    FireAbuseEvents(PR_TRUE, PR_FALSE, url, name, options);
     return NS_OK; // don't open the window, but also don't throw a JS exception
   }
 
@@ -4270,7 +4272,7 @@ nsGlobalWindow::Open(nsIDOMWindow **_retval)
       }
     }
     if (abuseLevel >= openAbused)
-      FireAbuseEvents(PR_FALSE, PR_TRUE, url, options);
+      FireAbuseEvents(PR_FALSE, PR_TRUE, url, name, options);
   }
 
   return rv;

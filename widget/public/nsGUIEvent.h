@@ -892,6 +892,7 @@ public:
   nsIURI* mRequestingWindowURI; // owning reference
   nsIURI* mPopupWindowURI;      // owning reference
   nsString mPopupWindowFeatures;
+  nsString mPopupWindowName;
 };
 
 /**
