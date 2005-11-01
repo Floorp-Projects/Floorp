@@ -24,6 +24,7 @@
  * Contributor(s):
  *   Ethan Hugg
  *   Milen Nankov
+ *   Seno Aiko
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -92,5 +93,119 @@ correct =
 
 delete x..@*;
 TEST(4, correct, x);
+
+x = 
+<BODY>
+    <HR id="i1"/>
+    <HR id="i2"/>
+    <HR id="i3"/>
+    <HR id="i4"/>
+</BODY>;
+	
+correct = 
+<BODY></BODY>;
+
+delete x..HR;
+TEST(5, correct, x);
+
+x = 
+<BODY>
+    ECMA-357
+    <HR id="i1"/>
+    <HR id="i2"/>
+    <HR id="i3"/>
+    <HR id="i4"/>
+</BODY>;
+	
+correct = 
+<BODY>
+    ECMA-357
+</BODY>;
+
+delete x..HR;
+TEST(6, correct, x);
+
+x = 
+<BODY>
+    ECMA-357
+    <HR id="i1"/>
+    <HR id="i2"/>
+    <HR id="i3"/>
+    <HR id="i4"/>
+</BODY>;
+	
+correct = 
+<BODY>ECMA-357</BODY>;
+
+delete x.HR;
+TEST(7, correct, x);
+
+x = 
+<BODY>
+    ECMA-357
+    <HR id="i1"/>
+    <HR id="i2"/>
+    <HR id="i3"/>
+    <HR id="i4"/>
+</BODY>;
+	
+correct = 
+<BODY></BODY>;
+
+delete x..*;
+TEST(8, correct, x);
+
+x = 
+<BODY>
+    ECMA-357
+    <HR id="i1"/>
+    <HR id="i2"/>
+    <HR id="i3"/>
+    <HR id="i4"/>
+</BODY>;
+	
+correct = 
+<BODY></BODY>;
+
+delete x.*;
+TEST(9, correct, x);
+
+x = 
+<BODY>
+    <UL>
+      <LI id="i1"/>
+      <LI id="i2"/>
+      <LI id="i3"/>
+    </UL>
+</BODY>;
+      
+correct = 
+<BODY>
+    <UL>
+      <LI id="i1"/>
+      <LI id="i2"/>
+      <LI id="i3"/>
+    </UL>
+</BODY>;
+
+delete x.LI;
+TEST(10, correct, x);
+
+x = 
+<BODY>
+    <UL>
+      <LI id="i1"/>
+      <LI id="i2"/>
+      <LI id="i3"/>
+    </UL>
+</BODY>;
+      
+correct = 
+<BODY>
+    <UL></UL>
+</BODY>;
+
+delete x..LI;
+TEST(11, correct, x);
 
 END();
