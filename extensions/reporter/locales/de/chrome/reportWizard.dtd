@@ -3,9 +3,9 @@
 
 <!ENTITY privacyNotice.label                        "Datenschutzrichtlinien">
 <!ENTITY reportWizardPrivacy.description            "Dieses Werkzeug erlaubt Ihnen, dem &quot;Evangelismus-Team&quot; Websites zu melden, die in &brandShortName; nicht richtig funktionieren oder &brandShortName; ausschließen. Dies ist ein Weg, um uns zu helfen, ein bestmögliches Erlebnis für &brandShortName;-Benutzer zu sichern. Bitte nehmen Sie sich einen Moment Zeit, um den folgenden Text zu lesen, um zu erfahren, wie wir die Informationen verwenden, falls Sie beschließen, teilzunehmen.">
-<!ENTITY reportWizardMustAgree.description          "Um fortzusetzen, müssen Sie den obenstehenden Datenschutzrichtlinien zustimmen.">
+<!ENTITY reportWizardMustAgree.description          "Um fortzufahren, müssen Sie den obenstehenden Datenschutzrichtlinien zustimmen.">
 
-<!ENTITY dontShowPrivacyStatement.label             "Ich habe die oben abgegebenen Datenschutzrichtlinien gelesen und akzeptiert.">
+<!ENTITY dontShowPrivacyStatement.label             "Ich habe die oben angegebenen Datenschutzrichtlinien gelesen und akzeptiert.">
 <!ENTITY dontShowPrivacyStatement.accesskey         "I">
 
 <!ENTITY reportForm.label                           "Bericht ausfüllen">
