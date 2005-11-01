@@ -4090,7 +4090,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
 
       mutation.mAttrName = aName;
       nsAutoString newValue;
-      aParsedValue.ToString(newValue);
+      GetAttr(aNamespaceID, aName, newValue);
       if (!newValue.IsEmpty()) {
         mutation.mNewAttrValue = do_GetAtom(newValue);
       }
