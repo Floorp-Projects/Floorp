@@ -601,6 +601,7 @@ pref("network.IDN.whitelist.vn", true);
 // non-ccTLDs
 pref("network.IDN.whitelist.info", true);
 pref("network.IDN.whitelist.museum", true);
+pref("network.IDN.whitelist.org", true);
 
 // If a domain includes any of the following characters, it may be a spoof 
 // attempt and so we always display the domain name as punycode. This would 
