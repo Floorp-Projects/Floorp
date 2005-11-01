@@ -654,7 +654,7 @@ private:
                             nsStyleContext*  aStyleContext);
 
   // A function that can be invoked to create some sort of image frame.
-  typedef nsresult (* ImageFrameCreatorFunc)(nsIPresShell*, nsIFrame**);
+  typedef nsIFrame* (* ImageFrameCreatorFunc)(nsIPresShell*);
 
   /**
    * CreateHTMLImageFrame will do some tests on aContent, and if it determines

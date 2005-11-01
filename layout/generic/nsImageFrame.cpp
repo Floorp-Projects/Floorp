@@ -167,19 +167,10 @@ inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
           : HaveFixedSize(aReflowState.mStylePosition); 
 }
 
-nsresult
-NS_NewImageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewImageFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsImageFrame* it = new (aPresShell) nsImageFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsImageFrame;
 }
 
 

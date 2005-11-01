@@ -55,19 +55,10 @@
 
 static NS_DEFINE_IID(kLegendFrameCID, NS_LEGEND_FRAME_CID);
  
-nsresult
-NS_NewLegendFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewLegendFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsLegendFrame* it = new (aPresShell) nsLegendFrame;
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsLegendFrame;
 }
 
 nsIAtom*

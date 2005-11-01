@@ -408,9 +408,9 @@ nsHTMLFramesetFrame::Init(nsPresContext*  aPresContext,
 
       kidSC = shell->StyleSet()->ResolveStyleFor(child, mStyleContext);
       if (tag == nsHTMLAtoms::frameset) {
-        result = NS_NewHTMLFramesetFrame(shell, &frame);
-        if (NS_FAILED(result))
-          return result;
+        frame = NS_NewHTMLFramesetFrame(shell);
+        if (NS_UNLIKELY(!frame))
+          return NS_ERROR_OUT_OF_MEMORY;
 
         mChildTypes[mChildCount] = FRAMESET;
         nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
@@ -1571,19 +1571,10 @@ nsHTMLFramesetFrame::EndMouseDrag(nsPresContext* aPresContext)
   gDragInProgress = PR_FALSE;
 }  
 
-nsresult
-NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsHTMLFramesetFrame* it = new (aPresShell) nsHTMLFramesetFrame;
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsHTMLFramesetFrame;
 }
 
 /*******************************************************************************

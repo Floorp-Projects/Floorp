@@ -71,19 +71,10 @@
 #include "nsIAccessibilityService.h"
 #endif
 
-nsresult
-NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsHTMLButtonControlFrame* it = new (aPresShell) nsHTMLButtonControlFrame;
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsHTMLButtonControlFrame;
 }
 
 nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
