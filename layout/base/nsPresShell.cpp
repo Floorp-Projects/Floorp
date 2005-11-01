@@ -155,7 +155,7 @@
 #include "nsIFocusController.h"
 #include "nsIPluginInstance.h"
 #include "nsIObjectFrame.h"
-#include "nsIPluginHost.h"
+#include "nsNetUtil.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -6196,30 +6196,7 @@ StopPluginInstance(PresShell *aShell, nsIContent *aContent)
   // we're about to make said instance go away
   frame->SetProperty(nsLayoutAtoms::objectFrame, NS_INT32_TO_PTR(1));
 
-  // Check whether the plugin wants SetWindow to be called before or after
-  // Stop/Destroy.  This is similar to nsObjectFrame::Destroy(), but we
-  // don't want to destroy the frame just yet.
-
-  PRBool callSetWindowLast = PR_FALSE;
-  instance->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool,
-                     (void *) &callSetWindowLast);
-  if (callSetWindowLast) {
-    instance->Stop();
-    instance->Destroy();
-    instance->SetWindow(nsnull);
-  } else {
-    instance->Stop();
-    instance->SetWindow(nsnull);
-    instance->Destroy();
-  }
-
-  // XXXbz have to use the plugin manager contract because the plugin host
-  // registers for two different contracts with two difference CIDs!  We want
-  // the plugin manager CID, since that's the one nsObjectFrame gets.
-  nsCOMPtr<nsIPluginHost> pluginHost =
-    do_GetService("@mozilla.org/plugin/manager;1");
-  if (pluginHost)
-    pluginHost->StopPluginInstance(instance);
+  objectFrame->StopPlugin();
 }
 
 PR_STATIC_CALLBACK(PRBool)
