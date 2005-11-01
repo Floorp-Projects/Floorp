@@ -127,21 +127,28 @@ nsAsyncInstantiateEvent::HandleEvent(PLEvent* event)
                                                event);
   nsObjectLoadingContent* con = NS_STATIC_CAST(nsObjectLoadingContent*,
                                                PL_GetEventOwner(event));
-  // Make sure that we still have the right frame
-  if (con->GetFrame() == ev->mFrame) {
+  // Make sure that we still have the right frame (NOTE: we don't need to check
+  // the type here - GetFrame() only returns object frames, and that means we're
+  // a plugin)
+  // Also make sure that we still refer to the same data.
+  if (con->GetFrame() == ev->mFrame &&
+      con->mURI == ev->mURI &&
+      con->mContentType.Equals(ev->mContentType)) {
     if (LOG_ENABLED()) {
       nsCAutoString spec;
       if (ev->mURI) {
         ev->mURI->GetSpec(spec);
       }
       LOG(("OBJLC [%p]: Handling Instantiate event: Type=<%s> URI=%p<%s>\n",
-           con, ev->mContentType.get(), ev->mURI, spec.get()));
+           con, ev->mContentType.get(), ev->mURI.get(), spec.get()));
     }
 
     nsresult rv = con->Instantiate(ev->mContentType, ev->mURI);
     if (NS_FAILED(rv)) {
       con->Fallback(PR_TRUE);
     }
+  } else {
+    LOG(("OBJLC [%p]: Discarding event, data changed\n", con));
   }
   return nsnull;
 }
@@ -596,6 +603,16 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
     if (NS_SUCCEEDED(rv) && equal) {
       // URI didn't change, do nothing
       return NS_OK;
+    }
+  }
+
+  // Need to revoke any potentially pending instantiate events
+  if (mType == eType_Plugin) {
+    nsCOMPtr<nsIEventQueue> eventQ;
+    NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+    if (eventQ) {
+      LOG(("OBJLC [%p]: Revoking events\n", this));
+      eventQ->RevokeEvents(this);
     }
   }
 
