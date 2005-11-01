@@ -354,6 +354,7 @@ protected:
                                 const nsAString &aName);
   void     FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
                            const nsAString &aPopupURL,
+                           const nsAString &aPopupWindowName,
                            const nsAString &aPopupWindowFeatures);
 
   void FlushPendingNotifications(mozFlushType aType);
