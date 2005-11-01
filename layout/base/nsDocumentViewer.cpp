@@ -1241,6 +1241,17 @@ DocumentViewerImpl::Open(nsISupports *aState)
 
   SyncParentSubDocMap();
 
+  if (mFocusListener) {
+    // get the DOM event receiver
+    nsCOMPtr<nsIDOMEventReceiver> erP(do_QueryInterface(mDocument));
+    NS_WARN_IF_FALSE(erP, "No event receiver in document!");
+
+    if (erP) {
+      erP->AddEventListenerByIID(mFocusListener,
+                                 NS_GET_IID(nsIDOMFocusListener));
+    }
+  }
+
   // XXX re-enable image animations once that works correctly
 
   PrepareToStartLoad();
