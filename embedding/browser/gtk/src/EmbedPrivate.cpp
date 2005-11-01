@@ -76,7 +76,6 @@
 // app component registration
 #include <nsIGenericFactory.h>
 #include <nsIComponentRegistrar.h>
-#include "nsStaticComponents.h"
 
 // all of our local includes
 #include "EmbedPrivate.h"
@@ -95,11 +94,6 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
 #include "nsIDOMDocument.h"
-#endif
-
-#ifndef _BUILD_STATIC_BIN
-nsStaticModuleInfo const *const kPStaticModules = nsnull;
-PRUint32 const kStaticModuleCount = 0;
 #endif
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
@@ -488,7 +482,7 @@ EmbedPrivate::PushStartup(void)
 	return;
     }
 
-    rv = NS_InitEmbedding(binDir, sAppFileLocProvider, kPStaticModules, kStaticModuleCount);
+    rv = NS_InitEmbedding(binDir, sAppFileLocProvider);
     if (NS_FAILED(rv))
       return;
 
