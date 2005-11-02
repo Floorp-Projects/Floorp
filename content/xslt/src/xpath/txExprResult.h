@@ -23,7 +23,7 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- changed constant short result types to enum
  *
- * $Id: txExprResult.h,v 1.9 2005/11/02 07:33:51 peterv%netscape.com Exp $
+ * $Id: txExprResult.h,v 1.10 2005/11/02 07:33:52 nisheeth%netscape.com Exp $
  */
 
 #ifndef TRANSFRMX_EXPRRESULT_H
@@ -131,6 +131,7 @@ public:
     StringResult(String& str);
     StringResult(const String& str);
     StringResult(const StringResult& strResult);
+    StringResult(const char* str);
 
     String& getValue();
 
