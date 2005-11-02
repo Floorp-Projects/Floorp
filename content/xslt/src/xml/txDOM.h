@@ -381,7 +381,7 @@ public:
     }
     Element* mElement;
 };
-DECL_DHASH_WRAPPER(txIDMap, txIDEntry, const nsAString&)
+DECL_DHASH_WRAPPER(txIDMap, txIDEntry, nsAString&)
 
 class Document : public NodeDefinition
 {

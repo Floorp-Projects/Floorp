@@ -119,7 +119,7 @@ ProcessingInstruction*
 //
 //Return an Element by ID, introduced by DOM2
 //
-DHASH_WRAPPER(txIDMap, txIDEntry, const nsAString&)
+DHASH_WRAPPER(txIDMap, txIDEntry, nsAString&)
 
 Element* Document::getElementById(const nsAString& aID)
 {
