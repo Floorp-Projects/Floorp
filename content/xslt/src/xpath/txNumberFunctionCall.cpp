@@ -123,7 +123,7 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
 	}
 	else {
 	  String resultStr;
-	  String temp;
+	  DOMString temp;
 	  XMLDOMUtils::getNodeValue(context, &temp);
 	  if ( cs->isStripSpaceAllowed(context) ) {
 	    XMLUtils::stripSpace(temp, resultStr);
