@@ -64,6 +64,12 @@ public:
         NS_ASSERTION(mPosition < size(), "Out of bounds.");
         mPosition++;
     }
+    void setPosition(PRUint32 aPosition)
+    {
+        NS_ASSERTION(aPosition > 0 &&
+                     aPosition <= size(), "Out of bounds.");
+        mPosition = aPosition;
+    }
 
     TX_DECL_EVAL_CONTEXT;
 
