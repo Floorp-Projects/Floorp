@@ -153,7 +153,9 @@ NumberFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_ERROR_UNEXPECTED;
 }
 
-nsresult NumberFunctionCall::getNameAtom(nsIAtom** aAtom)
+#ifdef TX_TO_STRING
+nsresult
+NumberFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     switch (mType) {
         case NUMBER:
@@ -190,3 +192,4 @@ nsresult NumberFunctionCall::getNameAtom(nsIAtom** aAtom)
     NS_ADDREF(*aAtom);
     return NS_OK;
 }
+#endif

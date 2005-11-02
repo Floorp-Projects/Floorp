@@ -100,15 +100,10 @@ AttributeValueTemplate::evaluate(txIEvalContext* aContext,
     return NS_OK;
 } //-- evaluate
 
-/**
-* Returns the String representation of this Expr.
-* @param dest the String to use when creating the String
-* representation. The String representation will be appended to
-* any data in the destination String, to allow cascading calls to
-* other #toString() methods for Expressions.
-* @return the String representation of this Expr.
-**/
-void AttributeValueTemplate::toString(nsAString& str) {
+#ifdef TX_TO_STRING
+void
+AttributeValueTemplate::toString(nsAString& str)
+{
     txListIterator iter(&expressions);
     while (iter.hasNext()) {
         str.Append(PRUnichar('{'));
@@ -116,5 +111,5 @@ void AttributeValueTemplate::toString(nsAString& str) {
         expr->toString(str);
         str.Append(PRUnichar('}'));
     }
-} //-- toString
-
+}
+#endif

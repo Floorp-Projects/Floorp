@@ -46,8 +46,14 @@
 /**
  * Check equality between a string and an atom containing ASCII.
  */
-PRBool
-TX_StringEqualsAtom(const nsASingleFragmentString& aString, nsIAtom* aAtom);
+inline PRBool
+TX_StringEqualsAtom(const nsASingleFragmentString& aString, nsIAtom* aAtom)
+{
+    const char* ASCIIAtom;
+    aAtom->GetUTF8String(&ASCIIAtom);
+
+    return aString.EqualsASCII(ASCIIAtom);
+}
 
 #ifndef TX_EXE
 

@@ -59,6 +59,7 @@ txLiteralExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 }
 
+#ifdef TX_TO_STRING
 void
 txLiteralExpr::toString(nsAString& aStr)
 {
@@ -84,3 +85,4 @@ txLiteralExpr::toString(nsAString& aStr)
         }
     }
 }
+#endif

@@ -69,18 +69,13 @@ UnaryExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 #endif
 }
 
-/*
- * Returns the String representation of this Expr.
- * @param dest the String to use when creating the String
- * representation. The String representation will be appended to
- * any data in the destination String, to allow cascading calls to
- * other #toString() methods for Expressions.
- * @return the String representation of this Expr.
- */
-void UnaryExpr::toString(nsAString& str)
+#ifdef TX_TO_STRING
+void
+UnaryExpr::toString(nsAString& str)
 {
     if (!expr)
         return;
     str.Append(PRUnichar('-'));
     expr->toString(str);
 }
+#endif

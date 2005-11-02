@@ -142,7 +142,9 @@ BooleanFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_ERROR_UNEXPECTED;
 }
 
-nsresult BooleanFunctionCall::getNameAtom(nsIAtom** aAtom)
+#ifdef TX_TO_STRING
+nsresult
+BooleanFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     switch (mType) {
         case TX_BOOLEAN:
@@ -179,3 +181,4 @@ nsresult BooleanFunctionCall::getNameAtom(nsIAtom** aAtom)
     NS_ADDREF(*aAtom);
     return NS_OK;
 }
+#endif

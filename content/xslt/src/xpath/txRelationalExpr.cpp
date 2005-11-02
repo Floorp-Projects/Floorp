@@ -205,6 +205,7 @@ RelationalExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 }
 
+#ifdef TX_TO_STRING
 void
 RelationalExpr::toString(nsAString& str)
 {
@@ -233,3 +234,4 @@ RelationalExpr::toString(nsAString& str)
 
     mRightExpr->toString(str);
 }
+#endif

@@ -128,9 +128,12 @@ FunctionAvailableFunctionCall::evaluate(txIEvalContext* aContext,
 
 }
 
-nsresult FunctionAvailableFunctionCall::getNameAtom(nsIAtom** aAtom)
+#ifdef TX_TO_STRING
+nsresult
+FunctionAvailableFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::functionAvailable;
     NS_ADDREF(*aAtom);
     return NS_OK;
 }
+#endif

@@ -115,16 +115,10 @@ MultiplicativeExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return aContext->recycler()->getNumberResult(result, aResult);
 } //-- evaluate
 
-/**
- * Returns the String representation of this Expr.
- * @param dest the String to use when creating the String
- * representation. The String representation will be appended to
- * any data in the destination String, to allow cascading calls to
- * other #toString() methods for Expressions.
- * @return the String representation of this Expr.
-**/
-void MultiplicativeExpr::toString(nsAString& str) {
-
+#ifdef TX_TO_STRING
+void
+MultiplicativeExpr::toString(nsAString& str)
+{
     if ( leftExpr ) leftExpr->toString(str);
     else str.Append(NS_LITERAL_STRING("null"));
 
@@ -142,5 +136,5 @@ void MultiplicativeExpr::toString(nsAString& str) {
     if ( rightExpr ) rightExpr->toString(str);
     else str.Append(NS_LITERAL_STRING("null"));
 
-} //-- toString
-
+}
+#endif
