@@ -712,7 +712,7 @@ txMozillaXSLTProcessor::notifyError()
         return;
     }
 
-    rootContent->SetDocument(document, PR_FALSE, PR_TRUE);
+    rootContent->BindToTree(document, nsnull, nsnull, PR_TRUE);
     document->SetRootContent(rootContent);
 
     nsCOMPtr<nsIDOMText> text;
