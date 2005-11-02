@@ -38,7 +38,7 @@
 
 #include "nsCOMArray.h"
 
-static PRBool ReleaseObjects(void* aElement, void*);
+PR_STATIC_CALLBACK(PRBool) ReleaseObjects(void* aElement, void*);
 
 // implementations of non-trivial methods in nsCOMArray_base
 
