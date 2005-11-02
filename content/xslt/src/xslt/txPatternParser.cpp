@@ -233,7 +233,6 @@ nsresult txPatternParser::createLocPathPattern(ExprLexer& aLexer,
 nsresult txPatternParser::createIdPattern(ExprLexer& aLexer,
                                           txPattern*& aPattern)
 {
-    nsresult rv = NS_OK;
     // check for '(' Literal ')'
     if (aLexer.nextToken()->type != Token::L_PAREN && 
         aLexer.peek()->type != Token::LITERAL)
