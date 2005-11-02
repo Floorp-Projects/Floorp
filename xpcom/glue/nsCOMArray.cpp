@@ -52,6 +52,15 @@ nsCOMArray_base::nsCOMArray_base(const nsCOMArray_base& aOther)
     AppendObjects(aOther);
 }
 
+nsCOMArray_base::~nsCOMArray_base()
+{
+    PRInt32 count = Count(), i;
+    for (i = 0; i < count; ++i) {
+        nsISupports* obj = ObjectAt(i);
+        NS_IF_RELEASE(obj);
+    }                        
+}
+
 PRBool
 nsCOMArray_base::InsertObjectAt(nsISupports* aObject, PRInt32 aIndex) {
     PRBool result = mArray.InsertElementAt(aObject, aIndex);
