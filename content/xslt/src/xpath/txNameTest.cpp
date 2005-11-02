@@ -50,6 +50,10 @@ txNameTest::txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
     if (aPrefix == txXMLAtoms::_empty)
         mPrefix = 0;
     NS_ASSERTION(aLocalName, "txNameTest without a local name?");
+    NS_ASSERTION(aNodeType == txXPathNodeType::DOCUMENT_NODE ||
+                 aNodeType == txXPathNodeType::ELEMENT_NODE ||
+                 aNodeType == txXPathNodeType::ATTRIBUTE_NODE,
+                 "Go fix txNameTest::matches");
 }
 
 txNameTest::~txNameTest()
@@ -58,8 +62,14 @@ txNameTest::~txNameTest()
 
 PRBool txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 {
-    if (txXPathNodeUtils::getNodeType(aNode) != mNodeType)
-        return MB_FALSE;
+    if ((mNodeType == txXPathNodeType::ELEMENT_NODE &&
+         !txXPathNodeUtils::isElement(aNode)) ||
+        (mNodeType == txXPathNodeType::ATTRIBUTE_NODE &&
+         !txXPathNodeUtils::isAttribute(aNode)) ||
+        (mNodeType == txXPathNodeType::DOCUMENT_NODE &&
+         !txXPathNodeUtils::isRoot(aNode))) {
+        return PR_FALSE;
+    }
 
     // Totally wild?
     if (mLocalName == txXPathAtoms::_asterix && !mPrefix)
@@ -74,8 +84,7 @@ PRBool txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext)
         return MB_TRUE;
 
     // Compare local-names
-    nsCOMPtr<nsIAtom> localName = txXPathNodeUtils::getLocalName(aNode);
-    return localName == mLocalName;
+    return txXPathNodeUtils::localNameEquals(aNode, mLocalName);
 }
 
 /*
