@@ -886,61 +886,25 @@ txXPathNativeNode::createXPathNode(nsIDOMNode* aNode)
 
     if (nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
         nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aNode);
-        if (attr) {
-            nsIContent *parent = attr->GetContent();
-            nsINodeInfo *nodeInfo = attr->NodeInfo();
+        NS_ASSERTION(attr, "doesn't implement nsIAttribute");
 
-            nsCOMPtr<nsIAtom> attName, attPrefix;
-            PRInt32 attNS;
-    
-            PRUint32 i, total = parent->GetAttrCount();
-            for (i = 0; i < total; ++i) {
-                parent->GetAttrNameAt(i, &attNS, getter_AddRefs(attName),
-                                      getter_AddRefs(attPrefix));
-                if (nodeInfo->Equals(attName, attNS)) {
-                    return new txXPathNode(parent, i);
-                }
-            }
-        }
-        else {
-            // XUL attributes don't implement nsIAttribute, so this sucks.
-            nsCOMPtr<nsIDOMAttr> attrNode = do_QueryInterface(aNode);
-            NS_ENSURE_TRUE(attrNode, nsnull);
-
-            nsCOMPtr<nsIDOMElement> element;
-            attrNode->GetOwnerElement(getter_AddRefs(element));
-            nsCOMPtr<nsIContent> parent = do_QueryInterface(element);
-            NS_ENSURE_TRUE(parent, nsnull);
-
-            nsAutoString name, namespaceURI;
-
-            nsresult rv = aNode->GetLocalName(name);
-            NS_ENSURE_SUCCESS(rv, nsnull);
-
-            nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(name);
-            NS_ENSURE_TRUE(nameAtom, nsnull);
-
-            rv = aNode->GetNamespaceURI(namespaceURI);
-            NS_ENSURE_SUCCESS(rv, nsnull);
-
-            PRInt32 namespaceID;
-            rv = gTxNameSpaceManager->GetNameSpaceID(namespaceURI,
-                                                     &namespaceID);
-            NS_ENSURE_SUCCESS(rv, nsnull);
-
-            nsCOMPtr<nsIAtom> attName, attPrefix;
-            PRInt32 attNS;
-
-            PRUint32 i, total = parent->GetAttrCount();
-            for (i = 0; i < total; ++i) {
-                parent->GetAttrNameAt(i, &attNS, getter_AddRefs(attName),
-                                      getter_AddRefs(attPrefix));
-                if (attName == nameAtom && attNS == namespaceID) {
-                    return new txXPathNode(parent, i);
-                }
-            }
+        nsINodeInfo *nodeInfo = attr->NodeInfo();
+        nsIContent *parent = attr->GetContent();
+        if (!parent) {
+            return nsnull;
         }
 
+        nsCOMPtr<nsIAtom> attName, attPrefix;
+        PRInt32 attNS;
+
+        PRUint32 i, total = parent->GetAttrCount();
+        for (i = 0; i < total; ++i) {
+            parent->GetAttrNameAt(i, &attNS, getter_AddRefs(attName),
+                                  getter_AddRefs(attPrefix));
+            if (nodeInfo->Equals(attName, attNS)) {
+                return new txXPathNode(parent, i);
+            }
+        }
 
         NS_ERROR("Couldn't find the attribute in its parent!");
 
