@@ -68,8 +68,7 @@ txNodeSorter::~txNodeSorter()
     delete mDefaultExpr;
 }
 
-MBool txNodeSorter::addSortElement(Element* aSortElement,
-                                   Node* aContext)
+MBool txNodeSorter::addSortElement(Element* aSortElement)
 {
     SortKey* key = new SortKey;
     if (!key) {
@@ -99,7 +98,7 @@ MBool txNodeSorter::addSortElement(Element* aSortElement,
 
     // Order
     MBool ascending;
-    MBool hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::order, aContext, attrValue);
+    MBool hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::order, attrValue);
     if (!hasAttr || attrValue.isEqual(ASCENDING_VALUE)) {
         ascending = MB_TRUE;
     }
@@ -115,18 +114,18 @@ MBool txNodeSorter::addSortElement(Element* aSortElement,
 
     // Create comparator depending on datatype
     String dataType;
-    hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::dataType, aContext, dataType);
+    hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::dataType, dataType);
     if (!hasAttr || dataType.isEqual(TEXT_VALUE)) {
         // Text comparator
         
         // Language
         String lang;
-        if (!getAttrAsAVT(aSortElement, txXSLTAtoms::lang, aContext, lang))
+        if (!getAttrAsAVT(aSortElement, txXSLTAtoms::lang, lang))
             lang.append(DEFAULT_LANG);
 
         // Case-order 
         MBool upperFirst;
-        hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::caseOrder, aContext, attrValue);
+        hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::caseOrder, attrValue);
         if (!hasAttr || attrValue.isEqual(UPPER_FIRST_VALUE)) {
             upperFirst = MB_TRUE;
         }
@@ -266,7 +265,6 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
 
 MBool txNodeSorter::getAttrAsAVT(Element* aSortElement,
                                  txAtom* aAttrName,
-                                 Node* aContext,
                                  String& aResult)
 {
     aResult.clear();
