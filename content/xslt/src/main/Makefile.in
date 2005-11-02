@@ -32,7 +32,6 @@ OBJS =../base/ArrayList.o \
   ../base/CommandLineUtils.o \
   ../base/DefaultStringComparator.o \
   ../base/Double.o \
-  ../base/HashTable.o \
   ../base/Integer.o \
   ../base/List.o \
   ../base/MITREObjectWrapper.o \
