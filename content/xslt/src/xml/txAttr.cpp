@@ -26,7 +26,7 @@
 //
 
 #include "dom.h"
-#include "txAtom.h"
+#include "txAtoms.h"
 
 //
 //Construct an Attribute object using the specified name and document owner
@@ -39,7 +39,7 @@ Attr::Attr(const String& name, Document* owner):
   int idx = nodeName.indexOf(':');
   if (idx == NOT_FOUND) {
     mLocalName = TX_GET_ATOM(nodeName);
-    if (mLocalName == txXMLAtoms::XMLNSPrefix)
+    if (mLocalName == txXMLAtoms::xmlns)
       mNamespaceID = kNameSpaceID_XMLNS;
     else
       mNamespaceID = kNameSpaceID_None;
@@ -54,13 +54,13 @@ Attr::Attr(const String& name, Document* owner):
     String prefix;
     nodeName.subString(0, idx, prefix);
     txAtom* prefixAtom = TX_GET_ATOM(prefix);
-    if (prefixAtom == txXMLAtoms::XMLNSPrefix)
+    if (prefixAtom == txXMLAtoms::xmlns)
       mNamespaceID = kNameSpaceID_XMLNS;
-    else if (prefixAtom == txXMLAtoms::XMLPrefix)
+    else if (prefixAtom == txXMLAtoms::xml)
       mNamespaceID = kNameSpaceID_XML;
     else
       mNamespaceID = kNameSpaceID_Unknown;
-    TX_RELEASE_IF_ATOM(prefixAtom);
+    TX_IF_RELEASE_ATOM(prefixAtom);
   }
 }
 
@@ -69,7 +69,7 @@ Attr::Attr(const String& name, Document* owner):
 //
 Attr::~Attr()
 {
-  TX_RELEASE_IF_ATOM(mLocalName);
+  TX_IF_RELEASE_ATOM(mLocalName);
 }
 
 //
@@ -198,7 +198,7 @@ PRInt32 Attr::getNamespaceID()
   nodeName.subString(0, idx, prefix);
   txAtom* prefixAtom = TX_GET_ATOM(prefix);
   mNamespaceID = lookupNamespaceID(prefixAtom);
-  TX_RELEASE_IF_ATOM(prefixAtom);
+  TX_IF_RELEASE_ATOM(prefixAtom);
   return mNamespaceID;
 }
 
