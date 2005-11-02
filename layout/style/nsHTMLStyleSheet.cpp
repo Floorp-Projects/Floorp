@@ -399,9 +399,9 @@ static nsresult GetBodyColor(nsPresContext* aPresContext, nscolor* aColor)
 NS_IMETHODIMP
 nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 {
-  nsIStyledContent *styledContent = aData->mStyledContent;
+  nsIContent *content = aData->mContent;
 
-  if (styledContent) {
+  if (content) {
     nsRuleWalker *ruleWalker = aData->mRuleWalker;
     if (aData->mIsHTMLContent) {
       nsIAtom* tag = aData->mContentTag;
@@ -467,7 +467,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
     } // end html element
 
     // just get the style rules from the content
-    styledContent->WalkContentStyleRules(ruleWalker);
+    content->WalkContentStyleRules(ruleWalker);
   }
 
   return NS_OK;
@@ -478,7 +478,7 @@ NS_IMETHODIMP
 nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData,
                                          nsReStyleHint* aResult)
 {
-  if (aData->mStyledContent &&
+  if (aData->mContent &&
       aData->mIsHTMLContent &&
       aData->mIsHTMLLink &&
       aData->mContentTag == nsHTMLAtoms::a &&
@@ -498,11 +498,11 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                              nsReStyleHint* aResult)
 {
   // Result is true for |href| changes on HTML links if we have link rules.
-  nsIStyledContent *styledContent = aData->mStyledContent;
+  nsIContent *content = aData->mContent;
   if (aData->mAttribute == nsHTMLAtoms::href &&
       (mLinkRule || mVisitedRule || mActiveRule) &&
-      styledContent &&
-      styledContent->IsContentOfType(nsIContent::eHTML) &&
+      content &&
+      content->IsContentOfType(nsIContent::eHTML) &&
       aData->mContentTag == nsHTMLAtoms::a) {
     *aResult = eReStyle_Self;
     return NS_OK;
@@ -512,7 +512,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
   // to descendants of body, when we're already reresolving.
 
   // Handle the content style rules.
-  if (styledContent && styledContent->IsAttributeMapped(aData->mAttribute)) {
+  if (content && content->IsAttributeMapped(aData->mAttribute)) {
     *aResult = eReStyle_Self;
     return NS_OK;
   }

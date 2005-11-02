@@ -44,14 +44,13 @@
 #include "nsString.h"
 
 class nsIContent;
-class nsIStyledContent;
 class nsICSSLoader;
 class nsICSSParser;
 
 class nsDOMCSSAttributeDeclaration : public nsDOMCSSDeclaration
 {
 public:
-  nsDOMCSSAttributeDeclaration(nsIStyledContent *aContent);
+  nsDOMCSSAttributeDeclaration(nsIContent *aContent);
   ~nsDOMCSSAttributeDeclaration();
 
   // impl AddRef/Release; QI is implemented by our parent class
@@ -75,7 +74,7 @@ protected:
   nsAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 
-  nsIStyledContent *mContent;
+  nsIContent *mContent;
 };
 
 #endif /* nsDOMCSSAttributeDeclaration_h___ */

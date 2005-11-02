@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  string \
 		  dom \
 		  content \
+		  layout \
 		  widget \
 		  necko \
 		  js \

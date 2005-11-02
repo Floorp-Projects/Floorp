@@ -54,7 +54,7 @@
 #include "nsISVGContent.h"
 #include "nsICSSStyleRule.h"
 
-class nsSVGElement : public nsGenericElement,    // :nsIXMLContent:nsIStyledContent:nsIContent
+class nsSVGElement : public nsGenericElement,    // :nsIXMLContent:nsIContent
                      public nsISVGValueObserver, 
                      public nsSupportsWeakReference, // :nsISupportsWeakReference
                      public nsISVGContent

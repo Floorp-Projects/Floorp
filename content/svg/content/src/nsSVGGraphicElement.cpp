@@ -123,14 +123,13 @@ NS_IMETHODIMP nsSVGGraphicElement::GetBBox(nsIDOMSVGRect **_retval)
   NS_ASSERTION(presShell, "no presShell");
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsIFrame* frame =
-    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
   NS_ASSERTION(frame, "can't get bounding box for element without frame");
 
   if (frame) {
     nsISVGChildFrame* svgframe;
-    frame->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&svgframe);
+    CallQueryInterface(frame, &svgframe);
     NS_ASSERTION(svgframe, "wrong frame type");
     if (svgframe) {
       svgframe->SetMatrixPropagation(PR_FALSE);
@@ -277,7 +276,7 @@ NS_IMETHODIMP nsSVGGraphicElement::GetTransform(nsIDOMSVGAnimatedTransformList *
 
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const

@@ -68,7 +68,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGPolygonElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPolygonElementBase::)
 
-  // nsIStyledContent interface
+  // nsIContent interface
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
   
 protected:
@@ -152,7 +152,7 @@ NS_IMETHODIMP nsSVGPolygonElement::GetAnimatedPoints(nsIDOMSVGPointList * *aAnim
 }
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGPolygonElement::IsAttributeMapped(const nsIAtom* name) const

@@ -72,7 +72,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGTextPathElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTextPathElementBase::)
 
-  // nsIStyledContent interface
+  // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
@@ -315,7 +315,7 @@ NS_IMETHODIMP nsSVGTextPathElement::SelectSubString(PRUint32 charnum, PRUint32 n
 }
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGTextPathElement::IsAttributeMapped(const nsIAtom* name) const

@@ -65,7 +65,6 @@
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIScriptObjectOwner.h"
-#include "nsIStyledContent.h"
 #include "nsIBindingManager.h"
 #include "nsIURI.h"
 #include "nsIXMLContent.h"
@@ -517,13 +516,11 @@ public:
     virtual PRBool IsContentOfType(PRUint32 aFlags) const;
     virtual nsresult GetListenerManager(nsIEventListenerManager** aResult);
     virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+    virtual nsIAtom* GetID() const;
+    virtual const nsAttrValue* GetClasses() const;
 
     // nsIXMLContent
     NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
-
-    // nsIStyledContent
-    virtual nsIAtom* GetID() const;
-    virtual const nsAttrValue* GetClasses() const;
 
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
     virtual nsICSSStyleRule* GetInlineStyleRule();

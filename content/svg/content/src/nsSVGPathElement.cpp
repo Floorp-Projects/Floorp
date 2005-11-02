@@ -73,7 +73,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGPathElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPathElementBase::)
 
-  // nsIStyledContent interface
+  // nsIContent interface
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
   
 protected:
@@ -348,7 +348,7 @@ NS_IMETHODIMP nsSVGPathElement::GetAnimatedNormalizedPathSegList(nsIDOMSVGPathSe
 }
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGPathElement::IsAttributeMapped(const nsIAtom* name) const
@@ -379,9 +379,7 @@ nsSVGPathElement::GetPathFlatten()
     return nsnull;
   }
 
-  nsIFrame* frame;
-  frame = presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*,
-                                                       this));
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
   if (!frame) {
     NS_ERROR("no frame");
@@ -389,7 +387,7 @@ nsSVGPathElement::GetPathFlatten()
   }
   
   nsISVGPathFlatten* flattener;
-  frame->QueryInterface(NS_GET_IID(nsISVGPathFlatten),(void**)&flattener);
+  CallQueryInterface(frame, &flattener);
   NS_ASSERTION(flattener, "wrong frame type");
   return flattener;
 }

@@ -72,7 +72,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGTSpanElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTSpanElementBase::)
 
-  // nsIStyledContent interface
+  // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   // nsISVGContent specializations:
@@ -328,7 +328,7 @@ NS_IMETHODIMP nsSVGTSpanElement::SelectSubString(PRUint32 charnum, PRUint32 ncha
 }
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGTSpanElement::IsAttributeMapped(const nsIAtom* name) const

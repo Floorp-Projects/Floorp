@@ -72,7 +72,7 @@ public:
   // nsISVGContent specializations:
   virtual void ParentChainChanged();
 
-  // nsIStyledContent interface
+  // nsIContent interface
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
 
 protected:
@@ -275,7 +275,7 @@ void nsSVGLineElement::ParentChainChanged()
 }  
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGLineElement::IsAttributeMapped(const nsIAtom* name) const

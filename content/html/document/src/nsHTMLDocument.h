@@ -126,7 +126,7 @@ public:
   virtual void ContentRemoved(nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer);
-  virtual void AttributeChanged(nsIStyledContent* aChild,
+  virtual void AttributeChanged(nsIContent* aChild,
                                 PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 PRInt32 aModType);

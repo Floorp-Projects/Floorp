@@ -46,6 +46,7 @@
 #include "nsPropertyTable.h"
 #include "nsCaseTreatment.h"
 #include "nsINodeInfo.h"
+#include "nsChangeHint.h"
 
 // Forward declarations
 class nsIAtom;
@@ -58,11 +59,14 @@ class nsISupportsArray;
 class nsIDOMRange;
 class nsIEventListenerManager;
 class nsIURI;
+class nsICSSStyleRule;
+class nsRuleWalker;
+class nsAttrValue;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0xe5417db2, 0xfc59, 0x4b43, \
- { 0x8c, 0x9a, 0xed, 0xc3, 0x17, 0x3a, 0x85, 0x40 } }
+{ 0x08b87f67, 0x2f64, 0x437b, \
+ { 0x93, 0x35, 0x02, 0x60, 0x17, 0x5c, 0x0e, 0xc2 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -762,6 +766,64 @@ public:
   virtual nsresult CloneContent(nsNodeInfoManager *aNodeInfoManager,
                                 PRBool aDeep, nsIContent **aResult) const = 0;
 
+  /**
+   * Get the ID of this content node (the atom corresponding to the
+   * value of the null-namespace attribute whose name is given by
+   * GetIDAttributeName().  This may be null if there is no ID.
+   */
+  virtual nsIAtom* GetID() const = 0;
+
+  /**
+   * Get the class list of this content node (this corresponds to the
+   * value of the null-namespace attribute whose name is given by
+   * GetClassAttributeName().  This may be null if there are no
+   * classes, but that's not guaranteed.
+   */
+  virtual const nsAttrValue* GetClasses() const = 0;
+
+  /**
+   * Walk aRuleWalker over the content style rules (presentational
+   * hint rules) for this content node.
+   */
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) = 0;
+
+  /**
+   * Get the inline style rule, if any, for this content node
+   */
+  virtual nsICSSStyleRule* GetInlineStyleRule() = 0;
+
+  /**
+   * Set the inline style rule for this node.  This will send an
+   * appropriate AttributeChanged notification if aNotify is true.
+   */
+  NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify) = 0;
+
+  /**
+   * Is the attribute named stored in the mapped attributes?
+   *
+   * // XXXbz we use this method in HasAttributeDependentStyle, so svg
+   *    returns true here even though it stores nothing in the mapped
+   *    attributes.
+   */
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const = 0;
+
+  /**
+   * Get a hint that tells the style system what to do when 
+   * an attribute on this node changes, if something needs to happen
+   * in response to the change *other* than the result of what is
+   * mapped into style data via any type of style rule.
+   */
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const = 0;
+
+  /**
+   * Returns an atom holding the name of the "class" attribute on this
+   * content node (if applicable).  Returns null if there is no
+   * "class" attribute for this type of content node.
+   */
+  virtual nsIAtom *GetClassAttributeName() const = 0;
+
+  
 #ifdef DEBUG
   /**
    * List the content (and anything it contains) out to the given

@@ -39,7 +39,6 @@
 #include "nsCSSDeclaration.h"
 #include "nsIDocument.h"
 #include "nsHTMLAtoms.h"
-#include "nsIStyledContent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSLoader.h"
@@ -48,15 +47,18 @@
 #include "nsINameSpaceManager.h"
 #include "nsStyleConsts.h"
 #include "nsContentUtils.h"
+#include "nsIContent.h"
 
 MOZ_DECL_CTOR_COUNTER(nsDOMCSSAttributeDeclaration)
 
-nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIStyledContent *aContent)
+nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIContent *aContent)
 {
   MOZ_COUNT_CTOR(nsDOMCSSAttributeDeclaration);
 
   // This reference is not reference-counted. The content
   // object tells us when its about to go away.
+  NS_ASSERTION(aContent && aContent->IsContentOfType(nsIContent::eELEMENT),
+               "Inline style for non-element content?");
   mContent = aContent;
 }
 

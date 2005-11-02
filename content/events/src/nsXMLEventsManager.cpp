@@ -42,13 +42,11 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIStyledContent.h"
 #include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsIDOMEventListener.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
-#include "nsIStyledContent.h"
 #include "nsLayoutAtoms.h"
 
 PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
@@ -231,7 +229,7 @@ nsXMLEventsListener::HandleEvent(nsIDOMEvent* aEvent)
     targetMatched = PR_FALSE;
     nsCOMPtr<nsIDOMEventTarget> target;
     aEvent->GetTarget(getter_AddRefs(target));
-    nsCOMPtr<nsIStyledContent> targetEl(do_QueryInterface(target));
+    nsCOMPtr<nsIContent> targetEl(do_QueryInterface(target));
     if (targetEl && targetEl->GetID() == mTarget) 
         targetMatched = PR_TRUE;
   }
@@ -357,7 +355,7 @@ nsXMLEventsManager::CharacterDataChanged(nsIDocument* aDocument,
                                          PRBool aAppend) {}
 void
 nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
-                                     nsIStyledContent* aContent,
+                                     nsIContent* aContent,
                                      PRInt32 aNameSpaceID,
                                      nsIAtom* aAttribute,
                                      PRInt32 aModType)

@@ -488,7 +488,7 @@ public:
   virtual void AttributeWillChange(nsIContent* aChild,
                                    PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute);
-  virtual void AttributeChanged(nsIStyledContent* aChild,
+  virtual void AttributeChanged(nsIContent* aChild,
                                 PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 PRInt32 aModType);

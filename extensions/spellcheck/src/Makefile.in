@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  string \
 		  editor \
 		  content \
+		  layout \
 		  dom \
 		  necko \
 		  widget \
@@ -73,13 +74,13 @@ CPPSRCS		= \
 		mozEnglishWordUtils.cpp		\
 		mozGenericWordUtils.cpp		\
 		mozSpellI18NManager.cpp		\
- 		mozInlineSpellChecker.cpp	\
+		mozInlineSpellChecker.cpp	\
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(MOZ_COMPONENT_LIBS) \
- 		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

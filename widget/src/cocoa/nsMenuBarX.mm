@@ -43,7 +43,6 @@
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
 #include "nsIContent.h"
-#include "nsIStyledContent.h"
 
 #include "nsMenuBarX.h"
 #include "nsMenuX.h"
@@ -696,8 +695,7 @@ nsMenuBarX::DocumentWillBeDestroyed(nsIDocument * aDocument)
 
 
 void
-nsMenuBarX::AttributeChanged(nsIDocument * aDocument,
-                             nsIStyledContent * aContent,
+nsMenuBarX::AttributeChanged(nsIDocument * aDocument, nsIContent * aContent,
                              PRInt32 aNameSpaceID, nsIAtom * aAttribute,
                              PRInt32 aModType)
 {

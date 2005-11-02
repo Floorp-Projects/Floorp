@@ -48,7 +48,6 @@
 class nsIStyleSheet;
 class nsPresContext;
 class nsIContent;
-class nsIStyledContent;
 class nsIAtom;
 class nsICSSPseudoComparator;
 class nsRuleWalker;
@@ -84,7 +83,6 @@ struct RuleProcessorData {
   
   nsIAtom*          mContentTag;    // if content, then content->GetTag()
   nsIAtom*          mContentID;     // if styled content, then weak reference to styledcontent->GetID()
-  nsIStyledContent* mStyledContent; // if content, content->QI(nsIStyledContent)
   PRPackedBool      mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
   PRPackedBool      mIsHTMLLink;    // if content, calls nsStyleUtil::IsHTMLLink
   PRPackedBool      mIsSimpleXLink; // if content, calls nsStyleUtil::IsSimpleXLink

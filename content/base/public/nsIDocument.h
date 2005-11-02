@@ -57,7 +57,6 @@
 #include "nsIAtom.h"
 
 class nsIContent;
-class nsIStyledContent;
 class nsPresContext;
 class nsIPresShell;
 
@@ -511,7 +510,7 @@ public:
   virtual void AttributeWillChange(nsIContent* aChild,
                                    PRInt32 aNameSpaceID,
                                    nsIAtom* aAttribute) = 0;
-  virtual void AttributeChanged(nsIStyledContent* aChild,
+  virtual void AttributeChanged(nsIContent* aChild,
                                 PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 PRInt32 aModType) = 0;

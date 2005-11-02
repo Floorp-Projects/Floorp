@@ -3709,7 +3709,6 @@ nsGenericElement::RemoveChild(nsIDOMNode *aOldChild, nsIDOMNode **aReturn)
 
 NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY(nsIContent)
-  NS_INTERFACE_MAP_ENTRY(nsIStyledContent)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMEventReceiver,
                                  nsDOMEventRTTearoff::Create(this))

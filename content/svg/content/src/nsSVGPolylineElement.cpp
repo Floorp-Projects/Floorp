@@ -68,7 +68,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGPolylineElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGPolylineElementBase::)
 
-  // nsIStyledContent interface
+  // nsIContent interface
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
   
 protected:
@@ -152,7 +152,7 @@ NS_IMETHODIMP nsSVGPolylineElement::GetAnimatedPoints(nsIDOMSVGPointList * *aAni
 }
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGPolylineElement::IsAttributeMapped(const nsIAtom* name) const

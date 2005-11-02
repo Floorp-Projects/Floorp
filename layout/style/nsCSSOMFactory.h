@@ -51,7 +51,7 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD CreateDOMCSSAttributeDeclaration(nsIStyledContent *aContent,
+    NS_IMETHOD CreateDOMCSSAttributeDeclaration(nsIContent *aContent,
                                                 nsDOMCSSDeclaration **aResult);
 
 };

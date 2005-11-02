@@ -237,8 +237,19 @@ public:
    * This calls Clone to do the actual cloning so that we end up with the
    * right class for the clone.
    */
-  nsresult CloneContent(nsNodeInfoManager *aNodeInfoManager, PRBool aDeep,
-                        nsIContent **aResult) const;
+  virtual nsresult CloneContent(nsNodeInfoManager *aNodeInfoManager,
+                                PRBool aDeep, nsIContent **aResult) const;
+
+  virtual nsIAtom* GetID() const;
+  virtual const nsAttrValue* GetClasses() const;
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
+  virtual nsICSSStyleRule* GetInlineStyleRule();
+  NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                              PRInt32 aModType) const;
+  virtual nsIAtom *GetClassAttributeName() const;
+
 
   // nsITextContent
   virtual const nsTextFragment *Text();

@@ -58,6 +58,7 @@ REQUIRES = 	\
 		intl \
 		dom \
 		content \
+		layout \
 		widget \
 		autocomplete \
 		pipnss \
