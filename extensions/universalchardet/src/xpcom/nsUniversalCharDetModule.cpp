@@ -45,7 +45,7 @@
 #include "pratom.h"
 #include "nsUniversalCharDetDll.h"
 #include "nsISupports.h"
-#include "nsIRegistry.h"
+#include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
@@ -68,28 +68,16 @@ static NS_METHOD nsUniversalCharDetectorRegistrationProc(nsIComponentManager *aC
                                           const char *componentType,
                                           const nsModuleComponentInfo *info)
 {
-  nsRegistryKey key;
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIRegistry> registry = do_GetService(NS_REGISTRY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // open the registry
-  rv = registry->OpenWellKnownRegistry(
-    nsIRegistry::ApplicationComponentRegistry);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = registry -> AddSubtree(nsIRegistry::Common, 
-                              NS_CHARSET_DETECTOR_REG_BASE "universal_charset_detector" ,&key);
-  if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "universal_charset_detector");
-    rv = registry-> SetStringUTF8(key, "defaultEnglishText", "UniversalDetector");
-  }
-
-  return rv;
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> 
+    categoryManager(do_GetService("@mozilla.org/categorymanager;1", &rv));
+  if (NS_FAILED(rv)) return rv;
+  
+  return categoryManager->AddCategoryEntry(NS_CHARSET_DETECTOR_CATEGORY,
+                                           "universal_charset_detector",
+                                           info->mContractID, 
+                                           PR_TRUE, PR_TRUE,
+                                           nsnull);
 }
 
 // Component Table
