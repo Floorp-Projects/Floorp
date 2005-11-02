@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ifdef MOZ_XSL
 MODULE = transformiix
-REQUIRES = string xpcom dom layout widget caps
+REQUIRES = string xpcom dom layout widget caps js
 endif
 
 CPPSRCS = AdditiveExpr.cpp \
