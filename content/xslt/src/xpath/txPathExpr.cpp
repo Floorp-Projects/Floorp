@@ -29,10 +29,11 @@
  *       - foo//bar would not match properly if there was more than
  *         one node in the NodeSet (nodes) on the final iteration
  *
- * $Id: txPathExpr.cpp,v 1.5 2005/11/02 07:33:41 axel%pike.org Exp $
+ * $Id: txPathExpr.cpp,v 1.6 2005/11/02 07:33:42 axel%pike.org Exp $
  */
 
 #include "Expr.h"
+#include "XMLUtils.h"
 
   //------------/
  //- PathExpr -/
@@ -124,33 +125,37 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs) {
 
     ListIterator* iter = expressions.iterator();
 
-    MBool ancestorMode = MB_FALSE;
     while ( iter->hasNext() ) {
 
         PathExprItem* pxi = (PathExprItem*)iter->next();
-        ancestorMode = (ancestorMode || (pxi->ancestryOp == ANCESTOR_OP));
         NodeSet* tmpNodes = 0;
         cs->getNodeSetStack()->push(nodes);
         for (int i = 0; i < nodes->size(); i++) {
             Node* node = nodes->get(i);
-#if 0
-            NodeSet* xNodes = (NodeSet*) pxi->pExpr->evaluate(node, cs);
-#else
-           ExprResult *res = pxi->pExpr->evaluate(node, cs);
-           if (!res || res->getResultType() != ExprResult::NODESET)
-               continue;
-            NodeSet* xNodes = (NodeSet *) res;
-#endif
-            if ( tmpNodes ) {
-                xNodes->copyInto(*tmpNodes);
+            
+            NodeSet* resNodes;
+            if ( pxi->ancestryOp == ANCESTOR_OP) {
+                resNodes = new NodeSet;
+                evalDescendants(pxi->pExpr, node, cs, resNodes);
             }
             else {
-                tmpNodes = xNodes;
-                xNodes = 0;
+                ExprResult *res = pxi->pExpr->evaluate(node, cs);
+                if (!res || res->getResultType() != ExprResult::NODESET) {
+                    //XXX ErrorReport: report nonnodeset error
+                    delete res;
+                    res = new NodeSet;
+                }
+
+                resNodes = (NodeSet*)res;
             }
-            delete xNodes;
-            //-- handle ancestorMode
-            if ( ancestorMode ) fromDescendants(pxi->pExpr, node, cs, tmpNodes);
+
+            if ( tmpNodes ) {
+                resNodes->copyInto(*tmpNodes);
+                delete resNodes;
+            }
+            else
+                tmpNodes = resNodes;
+
         }
         delete (NodeSet*) cs->getNodeSetStack()->pop();
         nodes = tmpNodes;
@@ -166,22 +171,27 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs) {
  * all nodes that match the PatternExpr
  * -- this will be moving to a Utility class
 **/
-void PathExpr::fromDescendants
-    (PatternExpr* pExpr, Node* context, ContextState* cs, NodeSet* nodes)
+void PathExpr::evalDescendants
+    (PatternExpr* pExpr, Node* context, ContextState* cs, NodeSet* resNodes)
 {
-
-    if (( !context ) || (! pExpr )) return;
-
-    NodeList* nl = context->getChildNodes();
-    for (UInt32 i = 0; i < nl->getLength(); i++) {
-        Node* child = nl->item(i);
-        if (pExpr->matches(child, context, cs))
-            nodes->add(child);
-        //-- check childs descendants
-        if (child->hasChildNodes())
-            fromDescendants(pExpr, child, cs, nodes);
+    ExprResult *res = pExpr->evaluate(context, cs);
+    if (!res || res->getResultType() != ExprResult::NODESET) {
+        //XXX ErrorReport: report nonnodeset error
     }
-} //-- fromDescendants
+    else
+        ((NodeSet*)res)->copyInto(*resNodes);
+    delete res;
+
+    MBool filterWS = cs->isStripSpaceAllowed(context);
+    
+    Node* child = context->getFirstChild();
+    while(child) {
+        if(!(filterWS && child->getNodeType() == Node::TEXT_NODE &&
+             XMLUtils::shouldStripTextnode(child->getNodeValue())))
+            evalDescendants(pExpr, child, cs, resNodes);
+        child = child->getNextSibling();
+    }
+} //-- evalDescendants
 
 /**
  * Returns the default priority of this Pattern based on the given Node,
