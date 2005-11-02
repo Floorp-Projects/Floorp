@@ -1,4 +1,23 @@
-//CharDistribution.h
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ */
+
 #ifndef CharDistribution_h__
 #define CharDistribution_h__
 
@@ -10,46 +29,83 @@ class CharDistributionAnalysis
 {
 public:
   CharDistributionAnalysis() {Reset();};
+
+  //feed a block of data and do distribution analysis
   void HandleData(const char* aBuf, PRUint32 aLen) {};
+  
+  //Feed a character with known length
   void HandleOneChar(const char* aStr, PRUint32 aCharLen)
   {
     PRInt32 order;
 
+    //we only care about 2-bytes character in our distribution analysis
     order = (aCharLen == 2) ? GetOrder(aStr) : -1;
+
     if (order >= 0 && (PRUint32)order < mTableSize)
     {
+      //order is valid
       mTotalChars++;
       if (512 > mCharToFreqOrder[order])
         mFreqChars++;
     }
   };
 
+  //return confidence base on existing data
   float GetConfidence();
+
+  //Reset analyser, clear any state 
   void      Reset(void) 
   {
     mDone = PR_FALSE;
     mTotalChars = 0;
     mFreqChars = 0;
   };
+
+  //This function is for future extension. Caller can use this function to control
+  //analyser's behavior
   void      SetOpion(){};
+
+  //It is not necessary to receive all data to draw conclusion. For charset detection,
+  // certain amount of data is enough
   PRBool GotEnoughData() {return mTotalChars > ENOUGH_DATA_THRESHOLD;};
 
 protected:
+  //we do not handle character base on its original encoding string, but 
+  //convert this encoding string to a number, here called order.
+  //This allow multiple encoding of a language to share one frequency table 
   virtual PRInt32 GetOrder(const char* str) {return -1;};
   
+  //If this flag is set to PR_TRUE, detection is done and conclusion has been made
   PRBool   mDone;
+
+  //The number of characters whose frequency order is less than 512
   PRUint32 mFreqChars;
+
+  //Total character encounted.
   PRUint32 mTotalChars;
+
+  //Mapping table to get frequency order from char order (get from GetOrder())
   PRInt16  *mCharToFreqOrder;
+
+  //Size of above table
   PRUint32 mTableSize;
+
+  //This is a constant value varies from language to language, it is used in 
+  //calculating confidence. See my paper for further detail.
   float    mTypicalDistributionRatio;
 };
+
 
 class EUCTWDistributionAnalysis: public CharDistributionAnalysis
 {
 public:
   EUCTWDistributionAnalysis();
 protected:
+
+  //for euc-TW encoding, we are interested 
+  //  first  byte range: 0xc4 -- 0xfe
+  //  second byte range: 0xa1 -- 0xfe
+  //no validation needed here. State machine has done that
   PRInt32 GetOrder(const char* str) 
   { if ((unsigned char)*str >= (unsigned char)0xc4)  
       return 94*((unsigned char)str[0]-(unsigned char)0xc4) + (unsigned char)str[1] - (unsigned char)0xa1;
@@ -64,6 +120,10 @@ class EUCKRDistributionAnalysis : public CharDistributionAnalysis
 public:
   EUCKRDistributionAnalysis();
 protected:
+  //for euc-KR encoding, we are interested 
+  //  first  byte range: 0xb0 -- 0xfe
+  //  second byte range: 0xa1 -- 0xfe
+  //no validation needed here. State machine has done that
   PRInt32 GetOrder(const char* str) 
   { if ((unsigned char)*str >= (unsigned char)0xb0)  
       return 94*((unsigned char)str[0]-(unsigned char)0xb0) + (unsigned char)str[1] - (unsigned char)0xa1;
@@ -77,8 +137,12 @@ class GB2312DistributionAnalysis : public CharDistributionAnalysis
 public:
   GB2312DistributionAnalysis();
 protected:
+  //for GB2312 encoding, we are interested 
+  //  first  byte range: 0xb0 -- 0xfe
+  //  second byte range: 0xa1 -- 0xfe
+  //no validation needed here. State machine has done that
   PRInt32 GetOrder(const char* str) 
-  { if ((unsigned char)*str >= (unsigned char)0xb0)  
+  { if ((unsigned char)*str >= (unsigned char)0xb0 && (unsigned char)str[1] >= (unsigned char)0xa1)  
       return 94*((unsigned char)str[0]-(unsigned char)0xb0) + (unsigned char)str[1] - (unsigned char)0xa1;
     else
       return -1;
@@ -91,6 +155,10 @@ class Big5DistributionAnalysis : public CharDistributionAnalysis
 public:
   Big5DistributionAnalysis();
 protected:
+  //for big5 encoding, we are interested 
+  //  first  byte range: 0xa4 -- 0xfe
+  //  second byte range: 0x40 -- 0x7e , 0xa1 -- 0xfe
+  //no validation needed here. State machine has done that
   PRInt32 GetOrder(const char* str) 
   { if ((unsigned char)*str >= (unsigned char)0xa4)  
       if ((unsigned char)str[1] >= (unsigned char)0xa1)
@@ -107,6 +175,10 @@ class SJISDistributionAnalysis : public CharDistributionAnalysis
 public:
   SJISDistributionAnalysis();
 protected:
+  //for sjis encoding, we are interested 
+  //  first  byte range: 0x81 -- 0x9f , 0xe0 -- 0xfe
+  //  second byte range: 0x40 -- 0x7e,  0x81 -- oxfe
+  //no validation needed here. State machine has done that
   PRInt32 GetOrder(const char* str) 
   { 
     PRInt32 order;
@@ -128,6 +200,10 @@ class EUCJPDistributionAnalysis : public CharDistributionAnalysis
 public:
   EUCJPDistributionAnalysis();
 protected:
+  //for euc-JP encoding, we are interested 
+  //  first  byte range: 0xa0 -- 0xfe
+  //  second byte range: 0xa1 -- 0xfe
+  //no validation needed here. State machine has done that
   PRInt32 GetOrder(const char* str) 
   { if ((unsigned char)*str >= (unsigned char)0xa0)  
       return 94*((unsigned char)str[0]-(unsigned char)0xa1) + (unsigned char)str[1] - (unsigned char)0xa1;
