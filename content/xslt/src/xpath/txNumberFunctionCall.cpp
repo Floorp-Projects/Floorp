@@ -25,7 +25,7 @@
  * Nisheeth Ranjan, nisheeth@netscape.com
  *   -- implemented rint function, which was not available on Windows.
  *
- * $Id: txNumberFunctionCall.cpp,v 1.8 2005/11/02 07:33:43 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txNumberFunctionCall.cpp,v 1.9 2005/11/02 07:33:44 axel%pike.org Exp $
  */
 
 /*
@@ -141,20 +141,19 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
             }
             else {
                 String resultStr;
-                String temp;
-                XMLDOMUtils::getNodeValue(context, &temp);
-                if ( cs->isStripSpaceAllowed(context) ) {
-                    XMLUtils::stripSpace(temp, resultStr);
+                XMLDOMUtils::getNodeValue(context, &resultStr);
+                if ( cs->isStripSpaceAllowed(context) &&
+                     XMLUtils::shouldStripTextnode(resultStr)) {
+                    result->setValue(Double::NaN);
                 }
                 else {
-                    resultStr.append(temp);
+                    Double dbl(resultStr);
+                    result->setValue(dbl.doubleValue());
                 }
-                Double dbl(resultStr);
-                result->setValue(dbl.doubleValue());
             }
         }
         else {
-            result = new NumberResult(0.0);
+            result->setValue(Double::NaN);
         }
         break;
     }

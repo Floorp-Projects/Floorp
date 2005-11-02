@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: txXMLUtils.h,v 1.3 2005/11/02 07:33:34 nisheeth%netscape.com Exp $
+ * $Id: txXMLUtils.h,v 1.4 2005/11/02 07:33:35 axel%pike.org Exp $
  */
 
 /**
@@ -66,33 +66,11 @@ public:
     static void normalizePIValue(String& attValue);
 
     /**
-     * Strips whitespace from the given String.
-     * Newlines (#xD), tabs (#x9), and consecutive spaces (#x20) are
-     * converted to a single space (#x20).
-     * @param data the String to strip whitespace from
-     * @param dest the destination String to append the result to
+     * Is this a whitespace string to be stripped?
+     * Newlines (#xD), tabs (#x9), spaces (#x20), CRs (#xA) only?
+     * @param data the String to test for whitespace
     **/
-    static void stripSpace (const String& data, String& dest);
-
-    /**
-     * Strips whitespace from the given String.
-     * Newlines (#xD), tabs (#x9), and consecutive spaces (#x20) are
-     * converted to a single space (#x20).
-     * @param data the String to strip whitespace from
-     * @param dest the destination String to append the result to
-     * @param stripAllLeadSpace, a boolean indicating whether or not to
-     * strip all leading space. If true all whitespace from the start of the
-     * given String will be stripped. If false, all whitespace from the start
-     * of the given String will be converted to a single space.
-     * @param stripAllTrailSpace, a boolean indicating whether or not to
-     * strip all trailing space. If true all whitespace at the end of the
-     * given String will be stripped. If false, all whitespace at the end
-     * of the given String will be converted to a single space.
-    **/
-    static void stripSpace (const String& data,
-                            String& dest,
-                            MBool stripAllLeadSpace,
-                            MBool stripAllTrailSpace);
+    static MBool shouldStripTextnode (const String& data);
 
 private:
 
