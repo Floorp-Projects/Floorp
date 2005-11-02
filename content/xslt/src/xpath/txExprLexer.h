@@ -25,7 +25,7 @@
  *    -- changed constant short declarations in Token and ExprLexer to
  *       enumerations, commented with //--LF
  * 
- * $Id: txExprLexer.h,v 1.7 2005/11/02 07:33:55 peterv%netscape.com Exp $
+ * $Id: txExprLexer.h,v 1.8 2005/11/02 07:33:56 peterv%netscape.com Exp $
  */
 
 
@@ -41,7 +41,7 @@
  * This class was ported from XSL:P, an open source Java based 
  * XSLT processor, written by yours truly.
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:55 $
+ * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:56 $
 **/
 class Token {
 
@@ -243,22 +243,22 @@ private:
     /**
      * Returns true if the given character represents an Alpha letter
     **/
-    static MBool isAlphaChar(Int32 ch);
+    static MBool isAlphaChar(PRInt32 ch);
 
     /**
      * Returns true if the given character represents a numeric letter (digit)
     **/
-    static MBool isDigit(Int32 ch);
+    static MBool isDigit(PRInt32 ch);
 
     /**
      * Returns true if the given character is an allowable QName character
     **/
-    static MBool isQNameChar(Int32 ch);
+    static MBool isQNameChar(PRInt32 ch);
 
     /**
      * Returns true if the given character is an allowable NCName character
     **/
-    static MBool isNCNameChar(Int32 ch);
+    static MBool isNCNameChar(PRInt32 ch);
 
     /**
      * Returns true if the given String is a valid XML QName

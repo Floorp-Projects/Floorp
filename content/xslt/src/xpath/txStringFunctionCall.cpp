@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txStringFunctionCall.cpp,v 1.9 2005/11/02 07:33:44 peterv%netscape.com Exp $
+ * $Id: txStringFunctionCall.cpp,v 1.10 2005/11/02 07:33:45 peterv%netscape.com Exp $
  */
 
 /**
  * StringFunctionCall
  * A representation of the XPath String funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.9 $ $Date: 2005/11/02 07:33:44 $
+ * @version $Revision: 1.10 $ $Date: 2005/11/02 07:33:45 $
 **/
 
 #include "FunctionLib.h"
@@ -89,7 +89,7 @@ StringFunctionCall::StringFunctionCall(short type) : FunctionCall() {
 **/
 ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
     ListIterator* iter = params.iterator();
-    Int32 argc = params.getLength();
+    PRInt32 argc = params.getLength();
     String err;
     ExprResult* result = 0;
     switch ( type ) {
@@ -123,10 +123,10 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 // Leading & Trailing Whitespace
                 resultStr.trim();
                 MBool hasSpace = MB_FALSE;
-                Int32 lastchar=-1, dest=0;
+                PRInt32 lastchar=-1, dest=0;
                 String normed(resultStr.length());
                 UNICODE_CHAR current;
-                for (Int32 src=0; src<resultStr.length(); src++) {
+                for (PRInt32 src=0; src<resultStr.length(); src++) {
                     current=resultStr.charAt(src);
                     if (current==' ' || current=='\n' ||
                             current=='\t' || current=='\r') {
@@ -181,8 +181,8 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 //-- check for -Infinity
                 MBool startsNegInf = (dbl==Double::NEGATIVE_INFINITY);
 
-                Int32 startIdx = startsNegInf?0:(Int32)floor(dbl+.5);
-                Int32 endIdx = src.length()+1;
+                PRInt32 startIdx = startsNegInf?0:(PRInt32)floor(dbl+.5);
+                PRInt32 endIdx = src.length()+1;
                 if ( argc == 3) {
                     dbl = evaluateToNumber((Expr*)iter->next(),context, cs);
                     if (startsNegInf) {
@@ -194,7 +194,7 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                               dbl == Double::NEGATIVE_INFINITY ||
                               dbl < 0 )
                         endIdx = 0;
-                    else endIdx = startIdx+(Int32)floor(dbl+.5);
+                    else endIdx = startIdx+(PRInt32)floor(dbl+.5);
                 }
                 String resultStr;
                 //-- strings are indexed starting at 1 for XSL
@@ -217,9 +217,9 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 String arg1, arg2;
                 evaluateToString((Expr*)iter->next(),context, cs, arg1);
                 evaluateToString((Expr*)iter->next(),context, cs, arg2);
-                Int32 idx = arg1.indexOf(arg2);
+                PRInt32 idx = arg1.indexOf(arg2);
                 if ((idx >= 0)&&(idx<arg1.length())) {
-                    Int32 len = arg2.length();
+                    PRInt32 len = arg2.length();
                     arg2.clear();
                     arg1.subString(idx+len,arg2);
                     result  = new StringResult(arg2);
@@ -233,7 +233,7 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 String arg1, arg2;
                 evaluateToString((Expr*)iter->next(),context, cs, arg1);
                 evaluateToString((Expr*)iter->next(),context, cs, arg2);
-                Int32 idx = arg1.indexOf(arg2);
+                PRInt32 idx = arg1.indexOf(arg2);
                 if ((idx >= 0)&&(idx<arg1.length())) {
                     arg2.clear();
                     arg1.subString(0,idx,arg2);
@@ -249,13 +249,13 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 evaluateToString((Expr*)iter->next(),context, cs, src);
                 evaluateToString((Expr*)iter->next(),context, cs, oldChars);
                 evaluateToString((Expr*)iter->next(),context, cs, newChars);
-                Int32 size = src.length();
+                PRInt32 size = src.length();
                 UNICODE_CHAR* chars = src.toUnicode(new UNICODE_CHAR[size]);
                 src.clear();
-                Int32 newIdx = 0;
-                Int32 i;
+                PRInt32 newIdx = 0;
+                PRInt32 i;
                 for (i = 0; i < size; i++) {
-                    Int32 idx = oldChars.indexOf(chars[i]);
+                    PRInt32 idx = oldChars.indexOf(chars[i]);
                     if (idx >= 0) {
                         if (idx<newChars.length())
                             src.append(newChars.charAt(idx));

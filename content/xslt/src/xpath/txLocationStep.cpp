@@ -21,12 +21,12 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txLocationStep.cpp,v 1.7 2005/11/02 07:33:47 margaret.chan%sun.com Exp $
+ * $Id: txLocationStep.cpp,v 1.8 2005/11/02 07:33:48 peterv%netscape.com Exp $
  */
 
 /*
   Implementation of an XPath LocationStep
-  @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:47 $
+  @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:48 $
 */
 
 #include "Expr.h"
@@ -123,7 +123,7 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
         {
             NamedNodeMap* atts = context->getAttributes();
             if ( atts ) {
-                for ( UInt32 i = 0; i < atts->getLength(); i++ ) {
+                for ( PRUint32 i = 0; i < atts->getLength(); i++ ) {
                     Node* attr = atts->item(i);
                     if ( nodeExpr->matches(attr, context, cs) ) nodes->add(attr);
                 }

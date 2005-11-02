@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: txList.h,v 1.7 2005/11/02 07:33:48 peterv%netscape.com Exp $
+ * $Id: txList.h,v 1.8 2005/11/02 07:33:49 peterv%netscape.com Exp $
  */
 
 #ifndef TRANSFRMX_LIST_H
@@ -58,7 +58,7 @@ public:
     /**
      * Returns the number of items in this List
     **/
-    Int32 getLength();
+    PRInt32 getLength();
 
     /**
      * Returns a ListIterator for this List
@@ -101,7 +101,7 @@ private:
 
       ListItem* firstItem;
       ListItem* lastItem;
-      Int32 itemCount;
+      PRInt32 itemCount;
 
       void insertAfter(void* objPtr, ListItem* sItem);
       void insertBefore(void* objPtr, ListItem* sItem);

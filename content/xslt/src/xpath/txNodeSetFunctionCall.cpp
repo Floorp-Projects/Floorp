@@ -24,14 +24,14 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- changed some behavoir to be more compliant with spec
  *    
- * $Id: txNodeSetFunctionCall.cpp,v 1.6 2005/11/02 07:33:49 axel%pike.org Exp $
+ * $Id: txNodeSetFunctionCall.cpp,v 1.7 2005/11/02 07:33:50 peterv%netscape.com Exp $
  */
 
 /**
  * NodeSetFunctionCall
  * A representation of the XPath NodeSet funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.6 $ $Date: 2005/11/02 07:33:49 $
+ * @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:50 $
 **/
 
 #include "FunctionLib.h"
@@ -87,7 +87,7 @@ NodeSetFunctionCall::NodeSetFunctionCall(short type) : FunctionCall() {
 ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
     NodeSet* nodeSet = (NodeSet*)cs->getNodeSetStack()->peek();
     ListIterator* iter = params.iterator();
-    Int32 argc = params.getLength();
+    PRInt32 argc = params.getLength();
     ExprResult* result = 0;
     Expr* param = 0;
     switch ( type ) {
@@ -129,7 +129,7 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
                     exprResult->stringValue(lIDList);
                 };
                 lIDList.trim();
-                Int32 start=0,end;
+                PRInt32 start=0,end;
                 MBool hasSpace = MB_FALSE, isSpace;
                 UNICODE_CHAR cc;
                 String thisID;
