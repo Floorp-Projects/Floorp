@@ -73,6 +73,7 @@ nsVoidArray::nsVoidArray(PRInt32 aCount)
     char* bytes = new char[sizeof(Impl) + sizeof(void*) * (aCount - 1)];
     mImpl = NS_REINTERPRET_CAST(Impl*, bytes);
     if (mImpl) {
+      mImpl->mBits = 0;
       SetArraySize(aCount);
       mImpl->mCount = aCount;
       nsCRT::memset(mImpl->mArray, 0, mImpl->mCount * sizeof(void*));
@@ -91,6 +92,7 @@ nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
     char* bytes = new char[sizeof(Impl) + sizeof(void*) * (otherCount - 1)];
     mImpl = NS_REINTERPRET_CAST(Impl*, bytes);
     if (mImpl) {
+      mImpl->mBits = 0;
       SetArraySize(otherCount);
       mImpl->mCount = otherCount;
       SetArrayOwner(PR_TRUE);
@@ -172,6 +174,7 @@ PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
         delete[] NS_REINTERPRET_CAST(char*, mImpl);
 
       mImpl = newImpl;
+      mImpl->mBits = 0;
       SetArraySize(newCount);
       mImpl->mCount = oldCount;
       SetArrayOwner(PR_TRUE);
@@ -214,6 +217,7 @@ PRBool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
          delete[] NS_REINTERPRET_CAST(char*, mImpl);
       
       mImpl = newImpl;
+      mImpl->mBits = 0;
       SetArraySize(newCount);
       mImpl->mCount = oldCount;
       SetArrayOwner(PR_TRUE);
@@ -283,6 +287,7 @@ void nsVoidArray::Compact()
           nsCRT::memcpy(newImpl->mArray, mImpl->mArray, count * sizeof(void*));
 
         mImpl = newImpl;
+        mImpl->mBits = 0;
         SetArraySize(count);
         mImpl->mCount = count;
         SetArrayOwner(PR_TRUE);
@@ -329,10 +334,11 @@ nsAutoVoidArray::nsAutoVoidArray()
   : nsVoidArray()
 {
   mImpl = NS_REINTERPRET_CAST(Impl*, mAutoBuf);
-  mImpl->mCount = 0;
-  ::memset(mImpl->mArray, 0, mImpl->mCount * sizeof(void*));
+  mImpl->mBits = 0;
   SetArraySize(kAutoBufSize);
+  mImpl->mCount = 0;
   SetArrayOwner(PR_FALSE);
+  ::memset(mImpl->mArray, 0, mImpl->mCount * sizeof(void*));
 }
 
 //----------------------------------------------------------------
