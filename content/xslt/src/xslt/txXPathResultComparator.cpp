@@ -88,7 +88,7 @@ nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
 
     nsCOMPtr<nsILocale> locale;
     if (!aLanguage.IsEmpty()) {
-        rv = localeService->NewLocale(aLanguage.get(),
+        rv = localeService->NewLocale(aLanguage,
                                       getter_AddRefs(locale));
     }
     else {
