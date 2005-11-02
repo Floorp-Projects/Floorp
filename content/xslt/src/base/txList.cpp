@@ -20,9 +20,13 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
+ *
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
+ * Jonas Sicking, sicking@bigfoot.com
+ *    -- Cleanup/bugfix/features in Iterator
+ *       Added tx prefix to classnames
  */
 
 #include "List.h"
@@ -30,50 +34,51 @@
 #include <iostream.h>
 #endif
 
-  //--------------------------/
- //- Implementation of List -/
-//--------------------------/
+  //----------------------------/
+ //- Implementation of txList -/
+//----------------------------/
 
 /**
- * Default constructor for a List;
+ * Default constructor for a txList;
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.10 $ $Date: 2005/11/02 07:33:51 $
+ * @version $Revision: 1.11 $ $Date: 2005/11/02 07:33:52 $
 **/
 
-List::List() {
+txList::txList() {
    firstItem  = 0;
    lastItem   = 0;
    itemCount  = 0;
-} //-- List;
+} //-- txList;
 
 /**
- * List destructor, cleans up List Items, but will not delete the Object
+ * txList destructor, cleans up ListItems, but will not delete the Object
  * references
 */
-List::~List() {
+txList::~txList() {
   ListItem* item = firstItem;
   while (item) {
     ListItem* tItem = item;
     item = item->nextItem;
     delete tItem;
   }
-} //-- ~List
+} //-- ~txList
 
-void List::insert(int index, void* objPtr) {
+void txList::insert(int index, void* objPtr) {
 
-    if ( index >= itemCount ) {
+    if (index >= itemCount) {
         insertBefore(objPtr, 0);
     }
     else {
         //-- add to middle of list
         ListItem* nextItem = firstItem;
-        for ( int i = 0; i < index; i++ ) nextItem = nextItem->nextItem;
+        for (int i = 0; i < index; i++)
+            nextItem = nextItem->nextItem;
         insertBefore(objPtr, nextItem);
     }
 } //-- insert
 
-void List::add(void* objPtr) {
-    insert(itemCount, objPtr);
+void txList::add(void* objPtr) {
+    insertBefore(objPtr, 0);
 } //-- add
 
 /**
@@ -85,9 +90,10 @@ void List::add(void* objPtr) {
  * members) as it will need traverse the links each time
  * @return the object located at the given index
 **/
-void* List::get(int index) {
+void* txList::get(int index) {
 
-    if ((index < 0) || (index >= itemCount)) return 0;
+    if (index < 0 || index >= itemCount)
+        return 0;
 
     int c = 0;
     ListItem* item = firstItem;
@@ -101,16 +107,16 @@ void* List::get(int index) {
     return 0;
 } //-- get(int)
 
-List::ListItem* List::getFirstItem() {
+txList::ListItem* txList::getFirstItem() {
     return firstItem;
 } //-- getFirstItem
 
-List::ListItem* List::getLastItem() {
+txList::ListItem* txList::getLastItem() {
     return lastItem;
 } //-- getLastItem
 
 /**
- * Returns the number of items in this List
+ * Returns the number of items in this txList
 **/
 PRInt32 List::getLength() {
    return itemCount;
@@ -120,24 +126,26 @@ PRInt32 List::getLength() {
 /**
  * Inserts the given Object pointer as the item just after refItem.
  * If refItem is a null pointer the Object will be inserted at the
- * beginning of the List (ie, insert after nothing).
+ * beginning of the txList (ie, insert after nothing).
  * This method assumes refItem is a member of this list, and since this
  * is a private method, I feel that's a valid assumption
 **/
-void List::insertAfter(void* objPtr, ListItem* refItem) {
+void txList::insertAfter(void* objPtr, ListItem* refItem) {
     //-- if refItem == null insert at front
-    if (!refItem) insertBefore(objPtr, firstItem);
-    else insertBefore(objPtr, refItem->nextItem);
+    if (!refItem)
+        insertBefore(objPtr, firstItem);
+    else
+        insertBefore(objPtr, refItem->nextItem);
 } //-- insertAfter
 
 /**
  * Inserts the given Object pointer as the item just before refItem.
  * If refItem is a null pointer the Object will be inserted at the
- * end of the List (ie, insert before nothing).
+ * end of the txList (ie, insert before nothing).
  * This method assumes refItem is a member of this list, and since this
  * is a private method, I feel that's a valid assumption
 **/
-void List::insertBefore(void* objPtr, ListItem* refItem) {
+void txList::insertBefore(void* objPtr, ListItem* refItem) {
 
     ListItem* item = new ListItem;
     if (!item)
@@ -150,12 +158,13 @@ void List::insertBefore(void* objPtr, ListItem* refItem) {
     //-- if refItem == null insert at end
     if (!refItem) {
         //-- add to back of list
-        if ( lastItem ) {
+        if (lastItem) {
             lastItem->nextItem = item;
             item->prevItem = lastItem;
         }
         lastItem = item;
-        if ( !firstItem ) firstItem = item;
+        if (!firstItem)
+            firstItem = item;
     }
     else {
         //-- insert before given item
@@ -163,8 +172,10 @@ void List::insertBefore(void* objPtr, ListItem* refItem) {
         item->prevItem = refItem->prevItem;
         refItem->prevItem = item;
 
-        if (refItem == firstItem) firstItem = item;
-        if (itemCount == 0) lastItem = item;  // <-should we ever see this?
+        if (item->prevItem)
+            item->prevItem->nextItem = item;
+        else
+            firstItem = item;
     }
 
     // increase the item count
@@ -172,13 +183,13 @@ void List::insertBefore(void* objPtr, ListItem* refItem) {
 } //-- insertBefore
 
 /**
- * Returns a ListIterator for this List
+ * Returns a txListIterator for this txList
 **/
-ListIterator* List::iterator() {
-   return new ListIterator(this);
+txListIterator* txList::iterator() {
+   return new txListIterator(this);
 }
 
-void* List::remove(void* objPtr) {
+void* txList::remove(void* objPtr) {
    ListItem* item = firstItem;
    while (item) {
       if (item->objPtr == objPtr) {
@@ -192,79 +203,92 @@ void* List::remove(void* objPtr) {
    return 0;
 } //-- remove
 
-List::ListItem* List::remove(ListItem* item) {
+txList::ListItem* txList::remove(ListItem* item) {
 
-    if ( !item ) return item;
+    if (!item)
+        return item;
 
     //-- adjust the previous item's next pointer
     if (item->prevItem) {
         item->prevItem->nextItem = item->nextItem;
     }
     //-- adjust the next item's previous pointer
-    if ( item->nextItem ) {
+    if (item->nextItem) {
         item->nextItem->prevItem = item->prevItem;
     }
 
     //-- adjust first and last items
-    if (item == firstItem) firstItem = item->nextItem;
-    if (item == lastItem) lastItem = item->prevItem;
+    if (item == firstItem)
+        firstItem = item->nextItem;
+    if (item == lastItem)
+        lastItem = item->prevItem;
 
     //-- decrease Item count
     --itemCount;
     return item;
 } //-- remove
 
-  //----------------------------------/
- //- Implementation of ListIterator -/
-//----------------------------------/
+  //------------------------------------/
+ //- Implementation of txListIterator -/
+//------------------------------------/
 
 
 /**
- * Creates a new ListIterator for the given List
- * @param list, the List to create an Iterator for
+ * Creates a new txListIterator for the given txList
+ * @param list, the txList to create an Iterator for
 **/
-ListIterator::ListIterator(List* list) {
+txListIterator::txListIterator(txList* list) {
    this->list   = list;
    currentItem  = 0;
-   allowRemove  = MB_FALSE;
-   moveForward  = MB_TRUE;
-   done         = MB_FALSE;
-   count = 0;
-} //-- ListIterator
+   atEndOfList  = MB_FALSE;
+} //-- txListIterator
 
-ListIterator::~ListIterator() {
+txListIterator::~txListIterator() {
   //-- overrides default destructor to do nothing
-} //-- ~ListIterator
+} //-- ~txListIterator
 
 /**
- * Adds the Object pointer to the List pointed to by this ListIterator.
- * The Object pointer is inserted as the next item in the List
- * based on the current position within the List
+ * Adds the Object pointer to the txList pointed to by this txListIterator.
+ * The Object pointer is inserted as the next item in the txList
+ * based on the current position within the txList
  * @param objPtr the Object pointer to add to the list
 **/
-void ListIterator::add(void* objPtr) {
+void txListIterator::addAfter(void* objPtr) {
 
-   list->insertAfter(objPtr,currentItem);
-   allowRemove = MB_FALSE;
+    if (currentItem || !atEndOfList)
+        list->insertAfter(objPtr, currentItem);
+    else
+        list->insertBefore(objPtr, 0);
 
-} //-- add
+} //-- addAfter
+
+/**
+ * Adds the Object pointer to the txList pointed to by this txListIterator.
+ * The Object pointer is inserted as the previous item in the txList
+ * based on the current position within the txList
+ * @param objPtr the Object pointer to add to the list
+**/
+void txListIterator::addBefore(void* objPtr) {
+
+    if (currentItem || atEndOfList)
+        list->insertBefore(objPtr, currentItem);
+    else
+        list->insertAfter(objPtr, 0);
+
+} //-- addBefore
 
 /**
  * Returns true if a sucessful call to the next() method can be made
  * @return MB_TRUE if a sucessful call to the next() method can be made,
  * otherwise MB_FALSE
 **/
-MBool ListIterator::hasNext() {
+MBool txListIterator::hasNext() {
     MBool hasNext = MB_FALSE;
-    if ( done ) return hasNext;
-    else if ( currentItem ) {
-        if (moveForward) hasNext = (MBool) currentItem->nextItem;
-        else hasNext = (MBool)currentItem->prevItem;
-    }
-    else {
-        if (moveForward) hasNext = (MBool) list->firstItem;
-        else hasNext = (MBool) list->lastItem;
-    }
+    if (currentItem)
+        hasNext = (MBool) currentItem->nextItem;
+    else if (!atEndOfList)
+        hasNext = (MBool) list->firstItem;
+
     return hasNext;
 } //-- hasNext
 
@@ -273,37 +297,31 @@ MBool ListIterator::hasNext() {
  * @return MB_TRUE if a sucessful call to the previous() method can be made,
  * otherwise MB_FALSE
 **/
-MBool ListIterator::hasPrevious() {
-   MBool hasPrevious = MB_FALSE;
-   if (currentItem) {
-        if (moveForward) hasPrevious = (MBool)(currentItem->prevItem);
-        else hasPrevious = (MBool) (currentItem->nextItem);
-   }
-   return hasPrevious;
+MBool txListIterator::hasPrevious() {
+    MBool hasPrevious = MB_FALSE;
+    if (currentItem)
+        hasPrevious = (MBool) currentItem->prevItem;
+    else if (atEndOfList)
+        hasPrevious = (MBool) list->lastItem;
+
+    return hasPrevious;
 } //-- hasPrevious
 
 /**
  * Returns the next Object pointer in the list
 **/
-void* ListIterator::next() {
+void* txListIterator::next() {
 
     void* obj = 0;
-    if ( done ) return obj;
+    if (currentItem)
+        currentItem = currentItem->nextItem;
+    else if (!atEndOfList)
+        currentItem = list->firstItem;
 
-    if (currentItem) {
-        if ( moveForward ) currentItem = currentItem->nextItem;
-        else currentItem = currentItem->prevItem;
-    }
-    else {
-        if ( moveForward ) currentItem = list->firstItem;
-        else currentItem = list->lastItem;
-    }
-
-    if ( currentItem ) {
+    if (currentItem)
         obj = currentItem->objPtr;
-        allowRemove = MB_TRUE;
-    }
-    else done = MB_TRUE;
+    else
+        atEndOfList = MB_TRUE;
 
     return obj;
 } //-- next
@@ -311,31 +329,70 @@ void* ListIterator::next() {
 /**
  * Returns the previous Object in the list
 **/
-void* ListIterator::previous() {
+void* txListIterator::previous() {
 
     void* obj = 0;
 
-    if (currentItem) {
-        if ( moveForward ) currentItem = currentItem->prevItem;
-        else currentItem = currentItem->nextItem;
-        if ( currentItem ) obj = currentItem->objPtr;
-    }
+    if (currentItem)
+        currentItem = currentItem->prevItem;
+    else if (atEndOfList)
+        currentItem = list->lastItem;
+    
+    if (currentItem)
+        obj = currentItem->objPtr;
+
+    atEndOfList = MB_FALSE;
+
     return obj;
 } //-- previous
+
+/**
+ * Returns the current Object
+**/
+void* txListIterator::current() {
+
+    if (currentItem)
+        return currentItem->objPtr;
+
+    return 0;
+} //-- current
+
+/**
+ * Moves the specified number of steps
+**/
+void* txListIterator::advance(int i) {
+
+    void* obj = 0;
+
+    if (i > 0) {
+        for (; currentItem && i > 0; i--)
+            currentItem = currentItem->nextItem;
+        
+        atEndOfList = currentItem == 0;
+    }
+    else {
+        for (; currentItem && i < 0; i++)
+            currentItem = currentItem->prevItem;
+
+        atEndOfList = MB_FALSE;
+    }
+
+    if (currentItem)
+        obj = currentItem->objPtr;
+
+    return obj;
+} //-- advance
 
 /**
  * Removes the Object last returned by the next() or previous() methods;
  * @return the removed Object pointer
 **/
-void* ListIterator::remove() {
-
-    if (!allowRemove) return 0;
-    allowRemove = MB_FALSE;
+void* txListIterator::remove() {
 
     void* obj = 0;
     if (currentItem) {
         obj = currentItem->objPtr;
-        List::ListItem* item = currentItem;
+        txList::ListItem* item = currentItem;
         previous(); //-- make previous item the current item
         list->remove(item);
         delete item;
@@ -344,17 +401,17 @@ void* ListIterator::remove() {
 } //-- remove
 
 /**
- * Resets the current location within the List to the beginning of the List
+ * Resets the current location within the txList to the beginning of the txList
 **/
-void ListIterator::reset() {
-   done = MB_FALSE;
+void txListIterator::reset() {
+   atEndOfList = MB_FALSE;
    currentItem = 0;
 } //-- reset
 
 /**
- * sets this iterator to operate in the reverse direction
+ * Move the iterator to right after the last element
 **/
-void ListIterator::reverse() {
-    moveForward = (MBool)(!moveForward);
-} //-- reverse
-
+void txListIterator::resetToEnd() {
+   atEndOfList = MB_TRUE;
+   currentItem = 0;
+} //-- moveToEnd

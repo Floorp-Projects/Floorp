@@ -21,7 +21,11 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: txList.h,v 1.8 2005/11/02 07:33:49 peterv%netscape.com Exp $
+ * Jonas Sicking, sicking@bigfoot.com
+ *    -- Cleanup/bugfix/features in Iterator
+ *       Added tx prefix to classnames
+ *
+ * $Id: txList.h,v 1.9 2005/11/02 07:33:50 sicking%bigfoot.com Exp $
  */
 
 #ifndef TRANSFRMX_LIST_H
@@ -32,21 +36,21 @@
 /**
  * Represents an ordered list of Object pointers. Modeled after a Java 2 List.
 **/
-class List {
+class txList {
 
-friend class ListIterator;
+friend class txListIterator;
 
 public:
 
     /**
-    * Creates an empty List
+    * Creates an empty txList
     **/
-    List();
+    txList();
 
     /**
-     * List destructor, object references will not be deleted.
+     * txList destructor, object references will not be deleted.
     **/
-    virtual ~List();
+    virtual ~txList();
 
     /**
      * Returns the object located at the given index. This may
@@ -56,14 +60,14 @@ public:
     void* get(int index);
 
     /**
-     * Returns the number of items in this List
+     * Returns the number of items in this txList
     **/
     PRInt32 getLength();
 
     /**
-     * Returns a ListIterator for this List
+     * Returns a txListIterator for this txList
     **/
-    ListIterator* iterator();
+    txListIterator* iterator();
 
     /**
      * Adds the given Object to the specified position in the list
@@ -111,33 +115,42 @@ private:
 
 
 /**
- * An Iterator for the List Class
+ * An Iterator for the txList Class
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
-class ListIterator {
+class txListIterator {
 
 public:
 
 
     /**
-     * Creates a new ListIterator for the given List
-     * @param list, the List to create an Iterator for
+     * Creates a new txListIterator for the given txList
+     * @param list, the txList to create an Iterator for
     **/
-    ListIterator(List* list);
+    txListIterator(txList* list);
 
     /**
-     * Destructor, destroys a given instance of a ListIterator
+     * Destructor, destroys a given instance of a txListIterator
     **/
-    virtual ~ListIterator();
+    virtual ~txListIterator();
 
     /**
-     * Adds the Object pointer to the List pointed to by this ListIterator.
-     * The Object pointer is inserted as the next item in the List
-     * based on the current position within the List
+     * Adds the Object pointer to the txList pointed to by this txListIterator.
+     * The Object pointer is inserted as the next item in the txList
+     * based on the current position within the txList
      * @param objPtr the Object pointer to add to the list
     **/
 
-    virtual void add(void* objPtr);
+    virtual void addAfter(void* objPtr);
+
+    /**
+     * Adds the Object pointer to the txList pointed to by this txListIterator.
+     * The Object pointer is inserted as the previous item in the txList
+     * based on the current position within the txList
+     * @param objPtr the Object pointer to add to the list
+    **/
+
+    virtual void addBefore(void* objPtr);
 
     /**
      * Returns true if a sucessful call to the next() method can be made
@@ -162,6 +175,16 @@ public:
      * Returns the previous Object pointer from the list
     **/
     virtual void* previous();
+    
+    /**
+     * Returns the current Object
+    **/
+    virtual void* current();
+    
+    /**
+     * Moves the specified number of steps
+    **/
+    virtual void* advance(int i);
 
     /**
      * Removes the Object last returned by the next() or previous() methods;
@@ -170,30 +193,28 @@ public:
     virtual void* remove();
 
     /**
-     * Resets the current location within the List to the beginning of the List
+     * Resets the current location within the txList to the beginning of the txList
     **/
     virtual void reset();
 
     /**
-     * sets this iterator to operate in the reverse direction
+     * Resets the current location within the txList to the end of the txList
     **/
-    void reverse();
+    virtual void resetToEnd();
 
 private:
 
-   int count;
    //-- points to the current list item
-   List::ListItem* currentItem;
+   txList::ListItem* currentItem;
 
    //-- points to the list to iterator over
-   List* list;
+   txList* list;
 
-   //-- determins if we can remove the current item from the list
-   MBool allowRemove;
-
-   MBool done;
-
-   MBool moveForward;
+   //-- we've moved off the end of the list
+   MBool atEndOfList;
 };
+
+typedef txList List;
+typedef txListIterator ListIterator;
 
 #endif
