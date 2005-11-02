@@ -20,10 +20,11 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: txGenerateIdFunctionCall.cpp,v 1.3 2005/11/02 07:34:00 nisheeth%netscape.com Exp $
+ * $Id: txGenerateIdFunctionCall.cpp,v 1.4 2005/11/02 07:34:01 peterv%netscape.com Exp $
  */
 
 #include "XSLTFunctions.h"
+#include "Names.h"
 
 /*
   Implementation of XSLT 1.0 extension function: generate-id

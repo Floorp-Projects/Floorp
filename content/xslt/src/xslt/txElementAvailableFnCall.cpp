@@ -25,6 +25,7 @@
 
 #include "XSLTFunctions.h"
 #include "XMLUtils.h"
+#include "Names.h"
 
 /*
   Implementation of XSLT 1.0 extension function: element-available

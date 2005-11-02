@@ -21,13 +21,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: txList.h,v 1.6 2005/11/02 07:33:47 kvisco%ziplink.net Exp $
+ * $Id: txList.h,v 1.7 2005/11/02 07:33:48 peterv%netscape.com Exp $
  */
-
-#include "baseutils.h"
 
 #ifndef TRANSFRMX_LIST_H
 #define TRANSFRMX_LIST_H
+
+#include "baseutils.h"
 
 /**
  * Represents an ordered list of Object pointers. Modeled after a Java 2 List.

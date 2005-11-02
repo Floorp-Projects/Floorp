@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txMultiplicativeExpr.cpp,v 1.1 2005/11/02 07:33:50 kvisco%ziplink.net Exp $
+ * $Id: txMultiplicativeExpr.cpp,v 1.2 2005/11/02 07:33:51 peterv%netscape.com Exp $
  */
 
 /**
@@ -31,10 +31,11 @@
  * mod  : modulus
  * div  : divide
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2005/11/02 07:33:50 $
+ * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:51 $
 **/
 
 #include "Expr.h"
+#include <math.h>
 
 /**
  * Creates a new MultiplicativeExpr using the default operator (MULTIPLY)

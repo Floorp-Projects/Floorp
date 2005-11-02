@@ -40,6 +40,7 @@
 #include "XMLParser.h"
 #include "XMLDOMUtils.h"
 #include "URIUtils.h"
+#include "Names.h"
 
 /**
  * Creates a new DocumentFunctionCall.
