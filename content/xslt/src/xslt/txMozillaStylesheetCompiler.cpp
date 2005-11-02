@@ -43,7 +43,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIExpatSink.h"
-#include "nsIHttpEventSink.h"
+#include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"
 #include "nsINameSpaceManager.h"
@@ -91,7 +91,7 @@ getSpec(nsIChannel* aChannel, nsAString& aSpec)
 class txStylesheetSink : public nsIXMLContentSink,
                          public nsIExpatSink,
                          public nsIStreamListener,
-                         public nsIHttpEventSink,
+                         public nsIChannelEventSink,
                          public nsIInterfaceRequestor
 {
 public:
@@ -102,7 +102,7 @@ public:
     NS_DECL_NSIEXPATSINK
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSIHTTPEVENTSINK
+    NS_DECL_NSICHANNELEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
 
     // nsIContentSink
@@ -143,7 +143,7 @@ NS_IMPL_ISUPPORTS7(txStylesheetSink,
                    nsIExpatSink,
                    nsIStreamListener,
                    nsIRequestObserver,
-                   nsIHttpEventSink,
+                   nsIChannelEventSink,
                    nsIInterfaceRequestor)
 
 NS_IMETHODIMP
@@ -369,10 +369,11 @@ txStylesheetSink::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
 }
 
 NS_IMETHODIMP
-txStylesheetSink::OnRedirect(nsIHttpChannel *aHttpChannel,
-                             nsIChannel *aNewChannel)
+txStylesheetSink::OnChannelRedirect(nsIChannel *aOldChannel,
+                                    nsIChannel *aNewChannel,
+                                    PRUint32    aFlags)
 {
-    NS_ENSURE_ARG_POINTER(aNewChannel);
+    NS_PRECONDITION(aNewChannel, "Redirect without a channel?");
 
     nsresult rv;
     nsCOMPtr<nsIScriptSecurityManager> secMan =
@@ -380,7 +381,7 @@ txStylesheetSink::OnRedirect(nsIHttpChannel *aHttpChannel,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> oldURI;
-    rv = aHttpChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
+    rv = aOldChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> newURI;
