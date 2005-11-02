@@ -58,6 +58,11 @@ StringResult::StringResult(const char* str) {
  * Virtual Methods from ExprResult
 */
 
+ExprResult* StringResult::clone()
+{
+    return new StringResult(value);
+}
+
 short StringResult::getResultType() {
     return ExprResult::STRING;
 } //-- getResultType

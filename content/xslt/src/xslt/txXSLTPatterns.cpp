@@ -318,8 +318,7 @@ void txRootPattern::toString(String& aDest)
  * This looks like the id() function, but may only have LITERALs as
  * argument.
  */
-
-txIdPattern::txIdPattern(const String aString)
+txIdPattern::txIdPattern(const String& aString)
 {
 #ifdef TX_EXE
     mIds = aString;

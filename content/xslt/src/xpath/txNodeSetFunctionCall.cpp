@@ -33,40 +33,17 @@
  */
 
 #include "FunctionLib.h"
-#include "XMLDOMUtils.h"
-#include "Tokenizer.h"
-#include "txAtom.h"
+#include "txAtoms.h"
 #include "txIXPathContext.h"
+#include "Tokenizer.h"
+#include "XMLDOMUtils.h"
 
 /*
  * Creates a NodeSetFunctionCall of the given type
  */
 NodeSetFunctionCall::NodeSetFunctionCall(NodeSetFunctions aType)
+    : mType(aType)
 {
-    mType = aType;
-    switch (aType) {
-        case COUNT:
-            name = XPathNames::COUNT_FN;
-            break;
-        case ID:
-            name = XPathNames::ID_FN;
-            break;
-        case LAST:
-            name = XPathNames::LAST_FN;
-            break;
-        case LOCAL_NAME:
-            name = XPathNames::LOCAL_NAME_FN;
-            break;
-        case NAME:
-            name = XPathNames::NAME_FN;
-            break;
-        case NAMESPACE_URI:
-            name = XPathNames::NAMESPACE_URI_FN;
-            break;
-        case POSITION:
-            name = XPathNames::POSITION_FN;
-            break;
-    }
 }
 
 /*
@@ -228,4 +205,52 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
     String err("Internal error");
     aContext->receiveError(err, NS_ERROR_UNEXPECTED);
     return new StringResult("error");
+}
+
+nsresult NodeSetFunctionCall::getNameAtom(txAtom** aAtom)
+{
+    switch (mType) {
+        case COUNT:
+        {
+            *aAtom = txXPathAtoms::count;
+            break;
+        }
+        case ID:
+        {
+            *aAtom = txXPathAtoms::id;
+            break;
+        }
+        case LAST:
+        {
+            *aAtom = txXPathAtoms::last;
+            break;
+        }
+        case LOCAL_NAME:
+        {
+            *aAtom = txXPathAtoms::localName;
+            break;
+        }
+        case NAME:
+        {
+            *aAtom = txXPathAtoms::name;
+            break;
+        }
+        case NAMESPACE_URI:
+        {
+            *aAtom = txXPathAtoms::namespaceUri;
+            break;
+        }
+        case POSITION:
+        {
+            *aAtom = txXPathAtoms::position;
+            break;
+        }
+        default:
+        {
+            *aAtom = 0;
+            return NS_ERROR_FAILURE;
+        }
+    }
+    TX_ADDREF_ATOM(*aAtom);
+    return NS_OK;
 }

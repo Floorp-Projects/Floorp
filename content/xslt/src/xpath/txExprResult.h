@@ -55,6 +55,12 @@ public:
 
     virtual ~ExprResult() {};
 
+    /*
+     * Clones this ExprResult
+     * @return clone of this ExprResult
+     */
+    virtual ExprResult* clone()      = 0;
+
     /**
      * Returns the type of ExprResult represented
      * @return the type of ExprResult represented
@@ -88,6 +94,7 @@ public:
     BooleanResult();
     BooleanResult(MBool boolean);
 
+    virtual ExprResult* clone();
     virtual short  getResultType();
     virtual void   stringValue(String& str);
     virtual MBool  booleanValue();
@@ -104,9 +111,7 @@ public:
     NumberResult();
     NumberResult(double dbl);
 
-    double getValue() const;
-    MBool isNaN() const;
-
+    virtual ExprResult* clone();
     virtual short  getResultType();
     virtual void   stringValue(String& str);
     virtual MBool  booleanValue();
@@ -126,6 +131,7 @@ public:
     StringResult(const String& str);
     StringResult(const char* str);
 
+    virtual ExprResult* clone();
     virtual short  getResultType();
     virtual void   stringValue(String& str);
     virtual MBool  booleanValue();

@@ -67,41 +67,10 @@ ExprResult* VariableRefExpr::evaluate(txIEvalContext* aContext)
     nsresult rv = aContext->getVariable(mNamespace, mLocalName, exprResult);
     if (NS_FAILED(rv)) {
       // XXX report error, undefined variable
-      return 0;
+      return new StringResult("error");
     }
-    //-- make copy to prevent deletetion
-    //-- I know, I should add a #copy method to ExprResult, I will
-    ExprResult* copyOfResult = 0;
-
-    if ( exprResult ) {
-        switch ( exprResult->getResultType() ) {
-            //-- BooleanResult
-            case ExprResult::BOOLEAN :
-                copyOfResult = new BooleanResult(exprResult->booleanValue());
-                break;
-            //-- NodeSet
-            case ExprResult::NODESET :
-            {
-                copyOfResult = new NodeSet(*(NodeSet*)exprResult);
-                break;
-            }
-            //-- NumberResult
-            case ExprResult::NUMBER :
-                copyOfResult = new NumberResult(exprResult->numberValue());
-                break;
-            //-- StringResult
-            default:
-                String tmp;
-                exprResult->stringValue(tmp);
-                StringResult* strResult = new StringResult(tmp);
-                copyOfResult = strResult;
-                break;
-        }
-    }
-    else copyOfResult = new StringResult();
-
-    return copyOfResult;
-} //-- evaluate
+    return exprResult->clone();
+}
 
 /**
  * Returns the String representation of this Expr.

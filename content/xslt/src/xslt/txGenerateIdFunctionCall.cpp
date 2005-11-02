@@ -22,9 +22,9 @@
  *
  */
 
-#include "XSLTFunctions.h"
-#include "Names.h"
+#include "txAtoms.h"
 #include "txIXPathContext.h"
+#include "XSLTFunctions.h"
 #ifdef TX_EXE
 #include <stdio.h>
 #else
@@ -45,8 +45,8 @@ const char GenerateIdFunctionCall::printfFmt[] = "id0x%016p";
  * Creates a new generate-id function call
 **/
 GenerateIdFunctionCall::GenerateIdFunctionCall()
-    : FunctionCall(GENERATE_ID_FN)
-{}
+{
+}
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -100,4 +100,11 @@ ExprResult* GenerateIdFunctionCall::evaluate(txIEvalContext* aContext)
     PR_snprintf(buf, 21, printfFmt, node);
 #endif
     return new StringResult(buf);
+}
+
+nsresult GenerateIdFunctionCall::getNameAtom(txAtom** aAtom)
+{
+    *aAtom = txXSLTAtoms::generateId;
+    TX_ADDREF_ATOM(*aAtom);
+    return NS_OK;
 }

@@ -99,6 +99,9 @@ public:
     TX_DECL_EVALUATE; \
     void toString(String& aDest)
 
+#define TX_DECL_FUNCTION \
+    TX_DECL_EVALUATE; \
+    nsresult getNameAtom(txAtom** aAtom)
 
 /**
  * This class represents a FunctionCall as defined by the XPath 1.0
@@ -117,7 +120,7 @@ public:
      * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(txIEvalContext* aContext) = 0;
-    virtual void toString(String& dest);
+    void toString(String& aDest);
 
     /**
      * Adds the given parameter to this FunctionCall's parameter list
@@ -138,7 +141,6 @@ protected:
     List params;
 
     FunctionCall();
-    FunctionCall(const String& name);
 
     /*
      * Evaluates the given Expression and converts its result to a String.
@@ -163,7 +165,10 @@ protected:
      */
     NodeSet* evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext);
 
-    String name;
+    /*
+     * Returns the name of the function as an atom.
+     */
+    virtual nsresult getNameAtom(txAtom** aAtom) = 0;
 }; //-- FunctionCall
 
 

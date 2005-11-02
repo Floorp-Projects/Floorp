@@ -42,25 +42,26 @@ TX_ATOM(applyTemplates, "apply-templates");
 TX_ATOM(attribute, "attribute");
 TX_ATOM(attributeSet, "attribute-set");
 TX_ATOM(callTemplate, "call-template");
-TX_ATOM(caseOrder, "case-order");
 TX_ATOM(choose, "choose");
 TX_ATOM(comment, "comment");
 TX_ATOM(copy, "copy");
 TX_ATOM(copyOf, "copy-of");
 TX_ATOM(decimalFormat, "decimal-format");
 TX_ATOM(element, "element");
+TX_ATOM(fallback, "fallback");
 TX_ATOM(forEach, "for-each");
 TX_ATOM(_if, "if");
 TX_ATOM(import, "import");
 TX_ATOM(include, "include");
 TX_ATOM(key, "key");
 TX_ATOM(message, "message");
+TX_ATOM(namespaceAlias, "namespace-alias");
 TX_ATOM(number, "number");
 TX_ATOM(otherwise, "otherwise");
 TX_ATOM(output, "output");
 TX_ATOM(param, "param");
-TX_ATOM(processingInstruction, "processing-instruction");
 TX_ATOM(preserveSpace, "preserve-space");
+TX_ATOM(processingInstruction, "processing-instruction");
 TX_ATOM(sort, "sort");
 TX_ATOM(stripSpace, "strip-space");
 TX_ATOM(stylesheet, "stylesheet");
@@ -73,7 +74,7 @@ TX_ATOM(when, "when");
 TX_ATOM(withParam, "with-param");
 
 // XSLT attributes
-TX_ATOM(case_order, "case-order");
+TX_ATOM(caseOrder, "case-order");
 TX_ATOM(cdataSectionElements, "cdata-section-elements");
 TX_ATOM(count, "count");
 TX_ATOM(dataType, "data-type");
@@ -124,3 +125,7 @@ TX_ATOM(functionAvailable, "function-available");
 TX_ATOM(generateId, "generate-id");
 TX_ATOM(unparsedEntityUri, "unparsed-entity-uri");
 TX_ATOM(systemProperty, "system-property");
+
+// XSLT properties
+TX_ATOM(vendor, "vendor");
+TX_ATOM(vendorUrl, "vendor-url");

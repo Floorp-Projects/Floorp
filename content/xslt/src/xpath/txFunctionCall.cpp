@@ -36,25 +36,9 @@ const String FunctionCall::INVALID_PARAM_COUNT(
 const String FunctionCall::INVALID_PARAM_VALUE(
         "invalid parameter value for function: ");
 
-//- Constructors -/
-
-/**
- * Creates a new FunctionCall
-**/
-FunctionCall::FunctionCall() : name("void")
+FunctionCall::FunctionCall()
 {
-} //-- FunctionCall
-
-/**
- * Creates a new FunctionCall with the given function
- * Note: The object references in parameters will be deleted when this
- * FunctionCall gets destroyed.
-**/
-FunctionCall::FunctionCall(const String& name)
-{
-    //-- copy name
-    this->name = name;
-} //-- FunctionCall
+}
 
 /**
  * Destructor
@@ -189,20 +173,29 @@ MBool FunctionCall::requireParams(int paramCountMin, txIEvalContext* aContext)
  * other #toString() methods for Expressions.
  * @return the String representation of this NodeExpr.
 **/
-void FunctionCall::toString(String& dest)
+void FunctionCall::toString(String& aDest)
 {
-    dest.append(this->name);
-    dest.append('(');
-    //-- add parameters
-    txListIterator iter(&params);
-    int argc = 0;
-    while (iter.hasNext()) {
-        if (argc > 0)
-            dest.append(',');
-        Expr* expr = (Expr*)iter.next();
-        expr->toString(dest);
-        ++argc;
+    txAtom* functionNameAtom = 0;
+    String functionName;
+    if (!NS_SUCCEEDED(getNameAtom(&functionNameAtom)) ||
+        !TX_GET_ATOM_STRING(functionNameAtom, functionName)) {
+        NS_ASSERTION(0, "Can't get function name.");
+        TX_IF_RELEASE_ATOM(functionNameAtom);
+        return;
     }
-    dest.append(')');
-} //-- toString
+    TX_RELEASE_ATOM(functionNameAtom);
 
+    aDest.append(functionName);
+    aDest.append('(');
+    txListIterator iter(&params);
+    MBool addComma = MB_FALSE;
+    while (iter.hasNext()) {
+        if (addComma) {
+            aDest.append(',');
+        }
+        addComma = MB_TRUE;
+        Expr* expr = (Expr*)iter.next();
+        expr->toString(aDest);
+    }
+    aDest.append(')');
+}
