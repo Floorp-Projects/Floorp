@@ -133,10 +133,10 @@ protected:
 
   struct Impl {
     /**
-     * Packed bits. The low 31 bits are the array's size.
-     * The highest bit is a flag that indicates 
-     * whether or not we "own" mArray, and must free() it when
-     * destroyed.
+     * Packed bits. The low 30 bits are the array's size.
+     * The two highest bits indicate whether or not we "own" mImpl and
+     * must free() it when destroyed, and whether we have a preallocated
+     * nsAutoVoidArray buffer.
      */
     PRUint32 mBits;
 
@@ -211,7 +211,7 @@ class NS_COM nsStringArray: private nsVoidArray
 public:
   nsStringArray(void);
   nsStringArray(PRInt32 aCount);  // Storage for aCount elements will be pre-allocated
-  virtual ~nsStringArray(void);
+  ~nsStringArray(void);
 
   nsStringArray& operator=(const nsStringArray& other);
 
@@ -260,7 +260,7 @@ typedef int (* PR_CALLBACK nsCStringArrayComparatorFunc)
 
 typedef PRBool (*nsCStringArrayEnumFunc)(nsCString& aElement, void *aData);
 
-class NS_COM nsCStringArray: protected nsVoidArray
+class NS_COM nsCStringArray: private nsVoidArray
 {
 public:
   nsCStringArray(void);
