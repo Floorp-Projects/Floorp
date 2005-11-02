@@ -44,12 +44,15 @@ endif
 
 CPPSRCS	= Double.cpp \
 	List.cpp \
-	SimpleErrorObserver.cpp \
 	txAtoms.cpp \
 	txExpandedNameMap.cpp \
 	txNamespaceMap.cpp \
 	txURIUtils.cpp \
 	txStringUtils.cpp
+
+ifdef TX_EXE
+CPPSRCS += SimpleErrorObserver.cpp
+endif
 
 include $(topsrcdir)/config/rules.mk
 
