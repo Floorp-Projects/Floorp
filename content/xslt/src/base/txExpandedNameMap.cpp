@@ -42,22 +42,16 @@
 const int kTxExpandedNameMapAllocSize = 16;
 
 txExpandedNameMap::txExpandedNameMap(MBool aOwnsValues) :
-    mItems(0), mItemCount(0), mOwnsValues(aOwnsValues)
+    mItems(0), mItemCount(0), mBufferCount(0), mOwnsValues(aOwnsValues)
 {
 }
 
 txExpandedNameMap::~txExpandedNameMap()
 {
-    int i;
-    for (i = 0; i < mItemCount; ++i) {
-        TX_IF_RELEASE_ATOM(mItems[i].mLocalName);
-        if (mOwnsValues)
-            delete mItems[i].mValue;
-    }
-    delete [] mItems;
+    clear();
 }
 
-/*
+/**
  * Adds an item, if an item with this key already exists an error is
  * returned
  * @param  aKey   key for item to add
@@ -70,17 +64,20 @@ nsresult txExpandedNameMap::add(const txExpandedName& aKey, TxObject* aValue)
     // Check if there already is an item with this key
     for (i = 0; i < mItemCount; ++i) {
         if (mItems[i].mLocalName == aKey.mLocalName &&
-            mItems[i].mNamespaceID == aKey.mNamespaceID)
+            mItems[i].mNamespaceID == aKey.mNamespaceID) {
             return NS_ERROR_FAILURE;
+        }
     }
     
     // Allocate a new array if needed
-    if (mItemCount % kTxExpandedNameMapAllocSize == 0) {
+    if (mBufferCount == mItemCount) {
         MapItem* newItems = new MapItem[mItemCount +
                                         kTxExpandedNameMapAllocSize];
-        if (!newItems)
+        if (!newItems) {
             return NS_ERROR_OUT_OF_MEMORY;
+        }
 
+        mBufferCount += kTxExpandedNameMapAllocSize;
         memcpy(newItems, mItems, mItemCount * sizeof(MapItem));
         delete [] mItems;
         mItems = newItems;
@@ -95,7 +92,7 @@ nsresult txExpandedNameMap::add(const txExpandedName& aKey, TxObject* aValue)
     return NS_OK;
 }
 
-/*
+/**
  * Sets an item, if an item with this key already exists it is overwritten
  * with the new value
  * @param  aKey   key for item to set
@@ -109,20 +106,23 @@ nsresult txExpandedNameMap::set(const txExpandedName& aKey, TxObject* aValue)
     for (i = 0; i < mItemCount; ++i) {
         if (mItems[i].mLocalName == aKey.mLocalName &&
             mItems[i].mNamespaceID == aKey.mNamespaceID) {
-            if (mOwnsValues)
+            if (mOwnsValues) {
                 delete mItems[i].mValue;
+            }
             mItems[i].mValue = aValue;
             return NS_OK;
         }
     }
     
     // Allocate a new array if needed
-    if (mItemCount % kTxExpandedNameMapAllocSize == 0) {
+    if (mBufferCount == mItemCount) {
         MapItem* newItems = new MapItem[mItemCount +
                                         kTxExpandedNameMapAllocSize];
-        if (!newItems)
+        if (!newItems) {
             return NS_ERROR_OUT_OF_MEMORY;
+        }
 
+        mBufferCount += kTxExpandedNameMapAllocSize;
         memcpy(newItems, mItems, mItemCount * sizeof(MapItem));
         delete [] mItems;
         mItems = newItems;
@@ -137,7 +137,7 @@ nsresult txExpandedNameMap::set(const txExpandedName& aKey, TxObject* aValue)
     return NS_OK;
 }
 
-/*
+/**
  * Gets an item
  * @param  aKey  key for item to get
  * @return item with specified key, or null if no such item exists
@@ -147,8 +147,55 @@ TxObject* txExpandedNameMap::get(const txExpandedName& aKey)
     int i;
     for (i = 0; i < mItemCount; ++i) {
         if (mItems[i].mLocalName == aKey.mLocalName &&
-            mItems[i].mNamespaceID == aKey.mNamespaceID)
+            mItems[i].mNamespaceID == aKey.mNamespaceID) {
             return mItems[i].mValue;
+        }
     }
     return 0;
+}
+
+/**
+ * Removes an item, deleting it if the map owns the values
+ * @param  aKey  key for item to remove
+ * @return item with specified key, or null if it has been deleted
+ *         or no such item exists
+ */
+TxObject* txExpandedNameMap::remove(const txExpandedName& aKey)
+{
+    TxObject* value = 0;
+    int i;
+    for (i = 0; i < mItemCount; ++i) {
+        if (mItems[i].mLocalName == aKey.mLocalName &&
+            mItems[i].mNamespaceID == aKey.mNamespaceID) {
+            TX_IF_RELEASE_ATOM(mItems[i].mLocalName);
+            if (mOwnsValues) {
+                delete mItems[i].mValue;
+            }
+            else {
+                value = mItems[i].mValue;
+            }
+            --mItemCount;
+            if (i != mItemCount) {
+                memcpy(&mItems[i], &mItems[mItemCount], sizeof(MapItem));
+            }
+        }
+    }
+    return value;
+}
+
+/**
+ * Clears the items
+ */
+void txExpandedNameMap::clear()
+{
+    int i;
+    for (i = 0; i < mItemCount; ++i) {
+        TX_IF_RELEASE_ATOM(mItems[i].mLocalName);
+        if (mOwnsValues) {
+            delete mItems[i].mValue;
+        }
+    }
+    delete [] mItems;
+    mItemCount = 0;
+    mBufferCount = 0;
 }
