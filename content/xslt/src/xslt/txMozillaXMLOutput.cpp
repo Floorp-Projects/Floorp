@@ -488,14 +488,36 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
             NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create wrapper element");
 
             nsCOMPtr<nsIDOMNode> child, resultNode;
-            PRUint32 i, childCount = document->GetChildCount();
-            for (i = 0; i < childCount; ++i) {
-                nsCOMPtr<nsIContent> childContent = document->GetChildAt(0);
+            PRUint32 i, j, childCount = document->GetChildCount();
+            for (i = 0, j = 0; i < childCount; ++i) {
+                nsCOMPtr<nsIContent> childContent = document->GetChildAt(j);
                 if (childContent == mRootContent) {
                     document->SetRootContent(nsnull);
                 }
                 child = do_QueryInterface(childContent);
-                wrapper->AppendChild(child, getter_AddRefs(resultNode));
+                PRUint16 nodeType;
+                child->GetNodeType(&nodeType);
+                switch (nodeType) {
+                    case nsIDOMNode::ELEMENT_NODE:
+                    case nsIDOMNode::TEXT_NODE:
+                    case nsIDOMNode::CDATA_SECTION_NODE:
+                    case nsIDOMNode::ENTITY_REFERENCE_NODE:
+                    case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+                    case nsIDOMNode::COMMENT_NODE:
+                    case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+                    {
+                        rv = wrapper->AppendChild(child,
+                                                  getter_AddRefs(resultNode));
+                        if (NS_FAILED(rv)) {
+                            // XXX Need to notify about this!
+                            ++j;
+                        }
+                    }
+                    default:
+                    {
+                        ++j;
+                    }
+                }
             }
 
             mParentNode = wrapper;
