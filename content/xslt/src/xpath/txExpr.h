@@ -24,8 +24,11 @@
  *   -- 19990806
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
+ * Jonas Sicking, sicking@bigfoot.com
+ *   -- removal of Patterns and some restructuring
+ *      in the class set
  *
- * $Id: txExpr.h,v 1.13 2005/11/02 07:33:38 nisheeth%netscape.com Exp $
+ * $Id: txExpr.h,v 1.14 2005/11/02 07:33:39 sicking%bigfoot.com Exp $
  */
 
 
@@ -46,11 +49,15 @@
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.13 $ $Date: 2005/11/02 07:33:38 $
+  @version $Revision: 1.14 $ $Date: 2005/11/02 07:33:39 $
 */
 
 //necessary prototypes
 class FunctionCall;
+
+typedef class Expr Pattern;
+typedef class Expr PatternExpr;
+
 
 /**
  * The expression context and state class used when evaluating XPath Expressions.
@@ -59,7 +66,6 @@ class ContextState : public NamespaceResolver, public ErrorObserver {
 
 public:
 
-     
      /**
       * Returns the value of a given variable binding within the current scope
       * @param the name to which the desired variable value has been bound
@@ -82,9 +88,7 @@ public:
     **/
     virtual Node* getParentNode(Node* node) = 0;
 
-
     virtual MBool isStripSpaceAllowed(Node* node) = 0;
-
 
     /**
      * Returns a call to the function that has the given name.
@@ -101,7 +105,6 @@ public:
     **/
     virtual void sortByDocumentOrder(NodeSet* nodes) = 0;
 
-
 }; //-- ContextState
 
 
@@ -115,7 +118,7 @@ public:
     /**
      * Virtual destructor, important for subclasses
     **/
-    virtual ~Expr() {};
+    virtual ~Expr();
 
     /**
      * Evaluates this Expr based on the given context node and processor state
@@ -125,6 +128,18 @@ public:
      * @return the result of the evaluation
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs) = 0;
+
+    /**
+     * Determines whether this Expr matches the given node within
+     * the given context
+    **/
+    virtual MBool matches(Node* node, Node* context, ContextState* cs);
+
+    /**
+     * Returns the default priority of this Expr based on the given Node,
+     * context Node, and ContextState.
+    **/
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
 
     /**
      * Returns the String representation of this Expr.
@@ -138,7 +153,6 @@ public:
 
 }; //-- Expr
 
-
 /**
  * This class represents a FunctionCall as defined by the XPath 1.0
  * Recommendation.
@@ -149,23 +163,21 @@ public:
 
     static const String INVALID_PARAM_COUNT;
 
-
     virtual ~FunctionCall();
+
+    /**
+     * Virtual methods from Expr 
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs) = 0;
+    virtual MBool matches(Node* node, Node* context, ContextState* cs);
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
+    virtual void toString(String& dest);
 
     /**
      * Adds the given parameter to this FunctionCall's parameter list
      * @param expr the Expr to add to this FunctionCall's parameter list
     **/
     void addParam(Expr* expr);
-
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-    **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs) = 0;
 
     /**
      * Returns the name of this FunctionCall
@@ -184,15 +196,6 @@ public:
      * @param name the name of this Function
     **/
     void setName(const String& name);
-    /**
-     * Returns the String representation of this Pattern.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Pattern.
-    **/
-    virtual void toString(String& dest);
 
 
 protected:
@@ -202,7 +205,6 @@ protected:
     FunctionCall();
     FunctionCall(const String& name);
     FunctionCall(const String& name, List* parameters);
-
 
     /**
      * Evaluates the given Expression and converts it's result to a String.
@@ -221,95 +223,6 @@ private:
     String name;
 }; //-- FunctionCall
 
-/**
- * A base Pattern class
-**/
-class Pattern {
-
-public:
-
-    /**
-     * Virtual destructor, important for subclasses
-    **/
-    virtual ~Pattern() {};
-
-    /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs) = 0;
-
-    /**
-     * Determines whether this Pattern matches the given node within
-     * the given context
-    **/
-    virtual MBool matches(Node* node, Node* context, ContextState* cs) = 0;
-
-
-    /**
-     * Returns the String representation of this Pattern.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Pattern.
-    **/
-    virtual void toString(String& dest) = 0;
-
-}; //-- Pattern
-
-
-/**
- * A Base class for all Expressions and Patterns
-**/
-class PatternExpr :
-    public Expr,
-    public Pattern
-{
-
-public:
-
-    /**
-     * Virtual destructor, important for subclasses
-    **/
-    virtual ~PatternExpr() {};
-
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-    **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs) = 0;
-
-    /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs) = 0;
-
-    /**
-     * Determines whether this PatternExpr matches the given node within
-     * the given context
-    **/
-    virtual MBool matches(Node* node, Node* context, ContextState* cs) = 0;
-
-    /**
-     * Returns the String representation of this PatternExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this PatternExpr.
-    **/
-    virtual void toString(String& dest) = 0;
-
-}; //-- PatternExpr
 
 /**
  * Represents an AttributeValueTemplate
@@ -328,22 +241,9 @@ public:
     void addExpr(Expr* expr);
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this Expr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Expr.
-    **/
     virtual void toString(String& str);
 
 private:
@@ -355,7 +255,7 @@ private:
  * This class represents a NodeTestExpr as defined by the XSL
  * Working Draft
 **/
-class NodeExpr : public PatternExpr {
+class NodeExpr : public Expr {
 
 public:
 
@@ -379,33 +279,16 @@ public:
     //------------------/
 
     /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs) = 0;
-
-    /**
      * Returns the type of this NodeExpr
      * @return the type of this NodeExpr
     **/
     virtual short getType() = 0;
 
     /**
-     * Determines whether this NodeExpr matches the given node within
-     * the given context
+     * Virtual methods from Expr 
     **/
     virtual MBool matches(Node* node, Node* context, ContextState* cs) = 0;
-
-    /**
-     * Returns the String representation of this Pattern.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Pattern.
-    **/
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs) = 0;
     virtual void toString(String& dest) = 0;
 
 }; //-- NodeExpr
@@ -440,47 +323,13 @@ public:
     **/
     void setName(const String& name);
 
-    //-----------------------------------/
-   //- Method signatures from NodeExpr -/
-  //-----------------------------------/
-
     /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from NodeExpr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the type of this NodeExpr
-     * @return the type of this NodeExpr
-    **/
     short getType();
-
-    /**
-     * Determines whether this NodeExpr matches the given node within
-     * the given context
-    **/
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this NodeExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this NodeExpr.
-    **/
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
 
 private:
@@ -491,7 +340,6 @@ private:
     String name;
     MBool  isNameWild;
     MBool  isNamespaceWild;
-
 
 }; //-- AttributeExpr
 
@@ -521,52 +369,25 @@ public:
      * Destroys this BasicNodeExpr
     **/
     virtual ~BasicNodeExpr();
-
-    //-----------------------------------/
-   //- Method signatures from NodeExpr -/
-  //-----------------------------------/
-
+    
     /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
+     * Sets the name of the node to match. Only availible for pi nodes
     **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
+    void setNodeName(const String& name);
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from NodeExpr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the type of this NodeExpr
-     * @return the type of this NodeExpr
-    **/
     short getType();
-
-    /**
-     * Determines whether this NodeExpr matches the given node within
-     * the given context
-    **/
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this NodeExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this NodeExpr.
-    **/
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
 
 private:
     NodeExprType type;
+    String nodeName;
+    MBool nodeNameSet;
 }; //-- BasicNodeExpr
 
 /**
@@ -597,47 +418,13 @@ public:
     **/
     void setName(const String& name);
 
-    //-----------------------------------/
-   //- Method signatures from NodeExpr -/
-  //-----------------------------------/
-
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from NodeExpr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the type of this NodeExpr
-     * @return the type of this NodeExpr
-    **/
     short getType();
-
-    /**
-     * Determines whether this NodeExpr matches the given node within
-     * the given context
-    **/
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this NodeExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this NodeExpr.
-    **/
     virtual void toString(String& dest);
 
 private:
@@ -655,73 +442,6 @@ private:
 }; //-- ElementExpr
 
 /**
- * This class represents a IdentityExpr, which only matches a node
- * if it is equal to the context node
-**/
-class IdentityExpr : public Expr {
-
-public:
-
-      //------------------/
-     //- Public Methods -/
-    //------------------/
-
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-    **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this NodeExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this NodeExpr.
-    **/
-    virtual void toString(String& dest);
-
-}; //-- IdentityExpr
-
-/**
- * This class represents a ParentExpr, which only selects a node
- * if it is equal to the context node's parent
-**/
-class ParentExpr : public Expr {
-
-public:
-
-      //------------------/
-     //- Public Methods -/
-    //------------------/
-
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-    **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-
-    /**
-     * Returns the String representation of this NodeExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this NodeExpr.
-    **/
-    virtual void toString(String& dest);
-
-}; //-- ParentExpr
-
-/**
  * This class represents a TextExpr, which only matches any text node
 **/
 class TextExpr : public NodeExpr {
@@ -733,43 +453,12 @@ public:
     //------------------/
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from NodeExpr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the type of this NodeExpr
-     * @return the type of this NodeExpr
-    **/
     virtual short getType();
-
-    /**
-     * Determines whether this NodeExpr matches the given node within
-     * the given context
-    **/
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
-
-
-    /**
-     * Returns the String representation of this NodeExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this NodeExpr.
-    **/
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
 
 }; //-- TextExpr
@@ -827,7 +516,7 @@ private:
     List predicates;
 }; //-- PredicateList
 
-class LocationStep : public PredicateList, public PatternExpr {
+class LocationStep : public PredicateList, public Expr {
 
 public:
 
@@ -848,7 +537,6 @@ public:
         PRECEDING_SIBLING_AXIS,
         SELF_AXIS
     };
-
 
     /**
      * Creates a new LocationStep using the default Axis Identifier and no
@@ -887,47 +575,18 @@ public:
     **/
     void setNodeExpr(NodeExpr* nodeExpr);
 
-      //------------------------------------/
-     //- Virtual methods from PatternExpr -/
-    //------------------------------------/
-
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Determines whether this PatternExpr matches the given node within
-     * the given context
-    **/
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this PatternExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this PatternExpr.
-    **/
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
 
 private:
 
-  NodeExpr* nodeExpr;
-  short     axisIdentifier;
+    NodeExpr* nodeExpr;
+    short     axisIdentifier;
 
     void fromDescendants(Node* context, ContextState* cs, NodeSet* nodes);
     void fromDescendantsRev(Node* context, ContextState* cs, NodeSet* nodes);
@@ -935,7 +594,7 @@ private:
 }; //-- LocationStep
 
 
-class FilterExpr : public PredicateList, public PatternExpr {
+class FilterExpr : public PredicateList, public Expr {
 
 public:
 
@@ -962,46 +621,17 @@ public:
     **/
     void setExpr(Expr* expr);
 
-      //------------------------------------/
-     //- Virtual methods from PatternExpr -/
-    //------------------------------------/
-
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Determines whether this PatternExpr matches the given node within
-     * the given context
-    **/
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this PatternExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this PatternExpr.
-    **/
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
 
 private:
 
-  Expr*     expr;
+    Expr* expr;
 
 }; //-- FilterExpr
 
@@ -1015,22 +645,9 @@ public:
     ~NumberExpr();
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this Expr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Expr.
-    **/
     virtual void toString(String& str);
 
 private:
@@ -1052,22 +669,9 @@ public:
     ~StringExpr();
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this Expr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Expr.
-    **/
     virtual void toString(String& str);
 
 private:
@@ -1106,31 +710,42 @@ public:
 
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this Expr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Expr.
-    **/
     virtual void toString(String& str);
-
-
 
 private:
     short op;
     Expr* leftExpr;
     Expr* rightExpr;
 }; //-- AdditiveExpr
+
+/**
+ * Represents an UnaryExpr. Returns the negative value of it's expr.
+**/
+class UnaryExpr : public Expr {
+
+public:
+
+     UnaryExpr();
+     UnaryExpr(Expr* expr);
+     ~UnaryExpr();
+
+    /**
+     * Sets the expression to negate
+    **/
+    void setExpr(Expr* expr);
+
+    /**
+     * Virtual methods from Expr 
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+    virtual void toString(String& str);
+
+private:
+    Expr* expr;
+}; //-- UnaryExpr
 
 /**
  * Represents a BooleanExpr, a binary expression that
@@ -1148,36 +763,21 @@ public:
      ~BooleanExpr();
 
     /**
-     * Sets the left side of this AdditiveExpr
+     * Sets the left side of this BooleanExpr
     **/
     void setLeftExpr(Expr* leftExpr);
 
     /**
-     * Sets the right side of this AdditiveExpr
+     * Sets the right side of this BooleanExpr
     **/
     void setRightExpr(Expr* rightExpr);
 
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this Expr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Expr.
-    **/
     virtual void toString(String& str);
-
-
 
 private:
     short op;
@@ -1215,27 +815,11 @@ public:
     **/
     void setRightExpr(Expr* rightExpr);
 
-
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this Expr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Expr.
-    **/
     virtual void toString(String& str);
-
-
 
 private:
     short op;
@@ -1273,25 +857,10 @@ public:
      ~RelationalExpr();
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this Expr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Expr.
-    **/
     virtual void toString(String& str);
-
-
 
 private:
     short op;
@@ -1320,22 +889,9 @@ public:
     void setName(const String& name);
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this Expr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this Expr.
-    **/
     virtual void toString(String& str);
 
 private:
@@ -1346,7 +902,7 @@ private:
 /**
  *  Represents a PathExpr
 **/
-class PathExpr : public PatternExpr {
+class PathExpr : public Expr {
 
 public:
 
@@ -1361,66 +917,37 @@ public:
     PathExpr();
 
     /**
-     * Destructor, will delete all Pattern Expressions
+     * Destructor, will delete all Expressions
     **/
     virtual ~PathExpr();
 
     /**
-     * Adds the PatternExpr to this PathExpr
+     * Adds the Expr to this PathExpr
      * @param expr the Expr to add to this PathExpr
      * @param index the index at which to add the given Expr
     **/
-    void addPatternExpr(int index, PatternExpr* expr, short ancestryOp);
+    void addExpr(int index, Expr* expr, short ancestryOp);
 
     /**
-     * Adds the PatternExpr to this PathExpr
+     * Adds the Expr to this PathExpr
      * @param expr the Expr to add to this PathExpr
     **/
-    void addPatternExpr(PatternExpr* expr, short ancestryOp);
+    void addExpr(Expr* expr, short ancestryOp);
 
     virtual MBool isAbsolute();
 
-      //------------------------------------/
-     //- Virtual methods from PatternExpr -/
-    //------------------------------------/
-
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Determines whether this PatternExpr matches the given node within
-     * the given context
-    **/
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this PatternExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this PatternExpr.
-    **/
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
 
 private:
 
     struct PathExprItem {
-        PatternExpr* pExpr;
+        Expr* expr;
         short ancestryOp;
     };
 
@@ -1428,13 +955,13 @@ private:
 
    /**
     * Selects from the descendants of the context node
-    * all nodes that match the PatternExpr
+    * all nodes that match the Expr
     * -- this will be moving to a Utility class
    **/
-   void evalDescendants(PatternExpr* pExpr,
+   void evalDescendants(Expr* expr,
                         Node* context,
                         ContextState* cs,
-                        NodeSet* nodes);
+                        NodeSet* resNodes);
 
 }; //-- PathExpr
 
@@ -1450,39 +977,14 @@ public:
     //------------------/
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
+    virtual MBool matches(Node* node, Node* context, ContextState* cs);
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
+    virtual void toString(String& dest);
 
     virtual MBool isAbsolute();
-
-    /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Determines whether this NodeExpr matches the given node within
-     * the given context
-    **/
-    virtual MBool matches(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this PatternExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this PatternExpr.
-    **/
-    virtual void toString(String& dest);
 
 
 }; //-- RootExpr
@@ -1490,7 +992,7 @@ public:
 /**
  *  Represents a UnionExpr
 **/
-class UnionExpr : public PatternExpr {
+class UnionExpr : public Expr {
 
 public:
 
@@ -1508,49 +1010,20 @@ public:
      * Adds the PathExpr to this UnionExpr
      * @param expr the Expr to add to this UnionExpr
     **/
-    void addPathExpr(PathExpr* expr);
+    void addExpr(Expr* expr);
 
     /**
      * Adds the PathExpr to this UnionExpr at the specified index
      * @param expr the Expr to add to this UnionExpr
     **/
-    void addPathExpr(int index, PathExpr* expr);
-
-      //------------------------------------/
-     //- Virtual methods from PatternExpr -/
-    //------------------------------------/
+    void addExpr(int index, Expr* expr);
 
     /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
+     * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Determines whether this PatternExpr matches the given node within
-     * the given context
-    **/
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the String representation of this PatternExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this PatternExpr.
-    **/
+    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
 
 private:

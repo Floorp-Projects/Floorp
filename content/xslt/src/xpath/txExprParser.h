@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txExprParser.h,v 1.4 2005/11/02 07:33:54 peterv%netscape.com Exp $
+ * $Id: txExprParser.h,v 1.5 2005/11/02 07:33:55 sicking%bigfoot.com Exp $
  */
 
 /**
  * ExprParser
  * This class is used to parse XSL Expressions
  * @author <A href="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:54 $
+ * @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:55 $
  * @see ExprLexer
 **/
 
@@ -44,9 +44,6 @@ class ExprParser {
 
 public:
 
-    static const String R_CURLY_BRACE;
-    static const String L_CURLY_BRACE;
-
     /**
      * Creates a new ExprParser
     **/
@@ -58,7 +55,7 @@ public:
     ~ExprParser();
 
     Expr*          createExpr        (const String& pattern);
-    PatternExpr*   createPatternExpr (const String& pattern);
+    Expr*          createPatternExpr (const String& pattern);
     LocationStep*  createLocationStep(const String& path);
 
     /**
@@ -72,13 +69,12 @@ private:
 
     Expr*          createBinaryExpr   (Expr* left, Expr* right, Token* op);
     Expr*          createExpr         (ExprLexer& lexer);
-    FilterExpr*    createFilterExpr   (ExprLexer& lexer);
+    Expr*          createFilterExpr   (ExprLexer& lexer);
     FunctionCall*  createFunctionCall (ExprLexer& lexer);
     LocationStep*  createLocationStep (ExprLexer& lexer);
     NodeExpr*      createNodeExpr     (ExprLexer& lexer);
-    PathExpr*      createPathExpr     (ExprLexer& lexer);
-    PatternExpr*   createPatternExpr  (ExprLexer& lexer);
-    UnionExpr*     createUnionExpr    (ExprLexer& lexer);
+    Expr*          createPathExpr     (ExprLexer& lexer);
+    Expr*          createUnionExpr    (ExprLexer& lexer);
 
     MBool          isFilterExprToken   (Token* tok);
     MBool          isLocationStepToken (Token* tok);
@@ -94,8 +90,8 @@ private:
      * @param lexer the ExprLexer to use for parsing tokens
      * @return 0 if successful, or a String pointer to the error message
     **/
-    String* parsePredicates(PredicateList* predicateList, ExprLexer& lexer);
-    String* parseParameters(List* list, ExprLexer& lexer);
+    MBool parsePredicates(PredicateList* predicateList, ExprLexer& lexer);
+    MBool parseParameters(FunctionCall* fnCall, ExprLexer& lexer);
 
 
 }; //-- ExprParser

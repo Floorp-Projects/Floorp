@@ -40,12 +40,13 @@ CPPSRCS = AdditiveExpr.cpp \
         BooleanResult.cpp \
         ElementExpr.cpp \
         ErrorFunctionCall.cpp \
+        Expr.cpp \
         ExprLexer.cpp \
+        ExprLexerChars.cpp \
         ExprParser.cpp \
         ExtensionFunctionCall.cpp \
         FilterExpr.cpp \
         FunctionCall.cpp \
-        IdentityExpr.cpp \
         LocationStep.cpp \
         MultiplicativeExpr.cpp \
         NodeSet.cpp \
@@ -53,7 +54,6 @@ CPPSRCS = AdditiveExpr.cpp \
         NumberExpr.cpp \
         NumberFunctionCall.cpp \
         NumberResult.cpp \
-        ParentExpr.cpp \
         PathExpr.cpp \
         PredicateList.cpp \
         RelationalExpr.cpp \
@@ -63,6 +63,7 @@ CPPSRCS = AdditiveExpr.cpp \
         StringResult.cpp \
         TextExpr.cpp \
         UnionExpr.cpp \
+        UnaryExpr.cpp \
         VariableRefExpr.cpp \
         XPathNames.cpp
 ifndef TX_EXE

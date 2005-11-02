@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txUnionExpr.cpp,v 1.1 2005/11/02 07:33:50 kvisco%ziplink.net Exp $
+ * $Id: txUnionExpr.cpp,v 1.2 2005/11/02 07:33:51 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -43,31 +43,33 @@ UnionExpr::UnionExpr() {
 **/
 UnionExpr::~UnionExpr() {
     ListIterator* iter = expressions.iterator();
-    while ( iter->hasNext() ) {
+    while (iter->hasNext()) {
          iter->next();
-         delete  (PathExpr*)iter->remove();
+         delete  (Expr*)iter->remove();
     }
     delete iter;
 } //-- ~UnionExpr
 
 /**
- * Adds the PathExpr to this UnionExpr
- * @param pathExpr the PathExpr to add to this UnionExpr
+ * Adds the Expr to this UnionExpr
+ * @param expr the Expr to add to this UnionExpr
 **/
-void UnionExpr::addPathExpr(PathExpr* pathExpr) {
-    if (pathExpr) expressions.add(pathExpr);
-} //-- addPathExpr
+void UnionExpr::addExpr(Expr* expr) {
+    if (expr)
+      expressions.add(expr);
+} //-- addExpr
 
 /**
- * Adds the PathExpr to this UnionExpr
- * @param pathExpr the PathExpr to add to this UnionExpr
+ * Adds the Expr to this UnionExpr
+ * @param expr the Expr to add to this UnionExpr
 **/
-void UnionExpr::addPathExpr(int index, PathExpr* pathExpr) {
-    if (pathExpr) expressions.insert(index, pathExpr);
-} //-- addPathExpr
+void UnionExpr::addExpr(int index, Expr* expr) {
+    if (expr)
+      expressions.insert(index, expr);
+} //-- addExpr
 
     //------------------------------------/
-  //- Virtual methods from PatternExpr -/
+  //- Virtual methods from Expr -/
 //------------------------------------/
 
 /**
@@ -79,21 +81,19 @@ void UnionExpr::addPathExpr(int index, PathExpr* pathExpr) {
 **/
 ExprResult* UnionExpr::evaluate(Node* context, ContextState* cs) {
 
-    if ( (!context)  || (expressions.getLength() == 0))
+    if (!context || (expressions.getLength() == 0))
             return new NodeSet(0);
 
     NodeSet* nodes = new NodeSet();
 
     ListIterator* iter = expressions.iterator();
 
-    while ( iter->hasNext() ) {
-
-        PathExpr* pExpr = (PathExpr*)iter->next();
-        NodeSet* tmpNodes = (NodeSet*)pExpr->evaluate(context, cs);
-        for (int j = 0; j < tmpNodes->size(); j++) {
-            nodes->add(tmpNodes->get(j));
+    while (iter->hasNext()) {
+        Expr* expr = (Expr*)iter->next();
+        ExprResult* exprResult = expr->evaluate(context, cs);
+        if (exprResult->getResultType() == ExprResult::NODESET) {
+            ((NodeSet*)exprResult)->copyInto(*nodes);
         }
-        delete tmpNodes;
     }
 
     delete iter;
@@ -106,21 +106,20 @@ ExprResult* UnionExpr::evaluate(Node* context, ContextState* cs) {
  * If this pattern does not match the given Node under the current context Node and
  * ContextState then Negative Infinity is returned.
 **/
-double UnionExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
-
+double UnionExpr::getDefaultPriority(Node* node, Node* context,
+				     ContextState* cs) {
     //-- find highest priority
     double priority = Double::NEGATIVE_INFINITY;
     ListIterator* iter = expressions.iterator();
-    while ( iter->hasNext() ) {
-        PathExpr* pExpr = (PathExpr*)iter->next();
-        if ( pExpr->matches(node, context, cs) ) {
-            double tmpPriority = pExpr->getDefaultPriority(node, context, cs);
+    while (iter->hasNext()) {
+        Expr* expr = (Expr*)iter->next();
+        if (expr->matches(node, context, cs)) {
+            double tmpPriority = expr->getDefaultPriority(node, context, cs);
             priority = (tmpPriority > priority) ? tmpPriority : priority;
         }
     }
     delete iter;
     return priority;
-
 } //-- getDefaultPriority
 
 /**
@@ -131,9 +130,9 @@ MBool UnionExpr::matches(Node* node, Node* context, ContextState* cs) {
 
     ListIterator* iter = expressions.iterator();
 
-    while ( iter->hasNext() ) {
-        PathExpr* pExpr = (PathExpr*)iter->next();
-        if ( pExpr->matches(node, context, cs) ) {
+    while (iter->hasNext()) {
+        Expr* expr = (Expr*)iter->next();
+        if (expr->matches(node, context, cs)) {
              delete iter;
              return MB_TRUE;
         }
@@ -144,21 +143,22 @@ MBool UnionExpr::matches(Node* node, Node* context, ContextState* cs) {
 
 
 /**
- * Returns the String representation of this PatternExpr.
+ * Returns the String representation of this Expr.
  * @param dest the String to use when creating the String
  * representation. The String representation will be appended to
  *  any data in the destination String, to allow cascading calls to
  * other #toString() methods for Expressions.
- * @return the String representation of this PatternExpr.
+ * @return the String representation of this Expr.
 **/
 void UnionExpr::toString(String& dest) {
     ListIterator* iter = expressions.iterator();
 
     short count = 0;
-    while ( iter->hasNext() ) {
+    while (iter->hasNext()) {
         //-- set operator
-        if (count > 0) dest.append(" | ");
-        ((PathExpr*)iter->next())->toString(dest);
+        if (count > 0)
+	  dest.append(" | ");
+        ((Expr*)iter->next())->toString(dest);
         ++count;
     }
     delete iter;
