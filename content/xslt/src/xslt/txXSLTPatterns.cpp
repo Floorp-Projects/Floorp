@@ -45,7 +45,6 @@
 #include "XSLTFunctions.h"
 #ifndef TX_EXE
 #include "nsIContent.h"
-#include "nsINodeInfo.h"
 #endif
 
 /*

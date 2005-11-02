@@ -54,6 +54,7 @@ class nsIDOMDocumentFragment;
 class nsIDOMElement;
 class nsIStyleSheet;
 class nsIDOMNode;
+class nsITransformObserver;
 
 class txTransformNotifier : public nsIScriptLoaderObserver,
                             public nsICSSLoaderObserver
