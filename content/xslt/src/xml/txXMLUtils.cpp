@@ -23,7 +23,7 @@
  * Lidong, lidong520@263.net
  *    -- unicode bug fix
  *
- * $Id: txXMLUtils.cpp,v 1.3 2005/11/02 07:33:36 kvisco%ziplink.net Exp $
+ * $Id: txXMLUtils.cpp,v 1.4 2005/11/02 07:33:37 axel%pike.org Exp $
  */
 /**
  * An XML utility class
@@ -207,73 +207,24 @@ void XMLUtils::normalizePIValue(String& piValue) {
 } //-- noramlizePIValue
 
 /**
- * Strips whitespace from the given String.
- * Newlines (#xD), tabs (#x9), and consecutive spaces (#x20) are
- * converted to a single space (#x20).
- * @param data the String to strip whitespace from
- * @param dest the destination String to append the result to
+ * Is this a whitespace string to be stripped?
+ * Newlines (#xD), tabs (#x9), spaces (#x20), CRs (#xA) only?
+ * @param data the String to test for whitespace
 **/
-void XMLUtils::stripSpace (const String& data, String& dest) {
-    stripSpace(data,dest,MB_FALSE,MB_FALSE);
-} //-- stripSpace
-
-/**
- * Strips whitespace from the given String.
- * Newlines (#xD), tabs (#x9), and consecutive spaces (#x20) are
- * converted to a single space (#x20).
- * @param data the String to strip whitespace from
- * @param dest the destination String to append the result to
- * @param stripAllLeadSpace, a boolean indicating whether or not to
- * strip all leading space. If true all whitespace from the start of the
- * given String will be stripped. If false, all whitespace from the start
- * of the given String will be converted to a single space.
- * @param stripAllTrailSpace, a boolean indicating whether or not to
- * strip all trailing space. If true all whitespace at the end of the
- * given String will be stripped. If false, all whitespace at the end
- * of the given String will be converted to a single space.
-**/
-void XMLUtils::stripSpace
-    (   const String& data,
-        String& dest,
-        MBool stripAllLeadSpace,
-        MBool stripAllTrailSpace    )
-{
-
-    UNICODE_CHAR lastToken, token;
-
-    lastToken = 0x0000;
-    Int32 len   = data.length();
-    Int32 oldLen = dest.length();
-
-    // indicates we have seen at least one
-    // non whitespace charater
-    MBool validChar = MB_FALSE;
-
-
-    for (Int32 i = 0; i < len; i++) {
-        token = data.charAt(i);
-        switch(token) {
-            case 0x0020: // space
-            case 0x0009: // tab
-            case 0x000A: // LF
-            case 0x000D: // CR
-                token = 0x0020;
-                if (stripAllLeadSpace && (!validChar)) break;
-                if (lastToken != token) dest.append(token);
-                break;
-            default:
-                dest.append(token);
-                validChar = MB_TRUE;
-                break;
+MBool XMLUtils::shouldStripTextnode (const String& data){
+    MBool toStrip = MB_TRUE;
+    for (Int32 i=0;toStrip && i<data.length();i++){
+        switch(data.charAt(i)) {
+    	    case 0x0020: // space
+    	    case 0x0009: // tab
+    	    case 0x000A: // LF
+    	    case 0x000D: // CR
+    		break;
+    	    default:
+    		toStrip = MB_FALSE;
+    		break;
         }
-        lastToken = token;
     }
-
-    //-- remove last trailing space if necessary
-    if (stripAllTrailSpace) {
-        len = dest.length();
-        if ( (len > oldLen)  && (dest.charAt(len-1) == 0x0020) ) dest.setLength(len-1);
-    }
-
-} //-- stripSpace
+    return toStrip;
+} //-- shouldStripTextnode
 
