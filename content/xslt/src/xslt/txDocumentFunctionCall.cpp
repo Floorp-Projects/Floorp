@@ -37,8 +37,8 @@
 
 
 #include "XSLTFunctions.h"
-#include "URIUtils.h"
 #include "XMLParser.h"
+#include "XMLDOMUtils.h"
 
 /**
  * Creates a new DocumentFunctionCall.
@@ -142,20 +142,12 @@ void DocumentFunctionCall::retrieveDocument(String& uri, String& baseUri, NodeSe
 
     // open URI
     String errMsg("error: ");
-    istream* xmlInput = URIUtils::getInputStream(uri, baseUri, errMsg);
-    if (!xmlInput) {
-        String err("in document() function: failed to open URI: ");
-        err.append(uri);
-        cs->recieveError(err);
-        return;
-    }
-
-    // parse document
     XMLParser xmlParser;
-    Document* xmlDoc = xmlParser.parse(*xmlInput);
+    // XXX (pvdb) Warning, where does this document get destroyed?
+    Document* xmlDoc = xmlParser.getDocumentFromURI(uri, baseUri, errMsg);
     if (!xmlDoc) {
         String err("in document() function: ");
-        err.append(xmlParser.getErrorString());
+        err.append(errMsg);
         cs->recieveError(err);
         return;
     }
