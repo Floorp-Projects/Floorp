@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.11 2005/11/02 07:33:35 peterv%netscape.com Exp $
+ * $Id: txExprParser.cpp,v 1.12 2005/11/02 07:33:36 margaret.chan%sun.com Exp $
  */
 
 /**
@@ -38,7 +38,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.11 $ $Date: 2005/11/02 07:33:35 $
+ * @version $Revision: 1.12 $ $Date: 2005/11/02 07:33:36 $
 **/
 
 #include "ExprParser.h"
@@ -615,10 +615,11 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
  *
 **/
 NodeExpr* ExprParser::createNodeExpr(ExprLexer& lexer) {
-
-    //cout << "creating NodeExpr: "<<endl;
-    if (!lexer.hasMoreTokens() )  cout << "Lexer has no Tokens"<<endl;
-
+#if 0
+    // XXX DEBUG OUTPUT
+    cout << "creating NodeExpr: "<<endl;
+    if (!lexer.hasMoreTokens() ) cout << "Lexer has no Tokens"<<endl;
+#endif
     if (!lexer.hasMoreTokens() )  return 0;
 
     NodeExpr* nodeExpr = 0;
@@ -734,7 +735,10 @@ PatternExpr* ExprParser::createPatternExpr(ExprLexer& lexer) {
         pExpr = createFilterExpr(lexer);
     }
     else {
+#if 0
+        // XXX DEBUG OUTPUT
         cout << "invalid token: " << tok->value << endl;
+#endif
         //-- eat token for now
         lexer.nextToken();
     }

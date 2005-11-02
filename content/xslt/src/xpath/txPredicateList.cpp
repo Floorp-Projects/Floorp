@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txPredicateList.cpp,v 1.2 2005/11/02 07:33:51 peterv%netscape.com Exp $
+ * $Id: txPredicateList.cpp,v 1.3 2005/11/02 07:33:52 margaret.chan%sun.com Exp $
  */
 
 #include "Expr.h"
@@ -30,7 +30,7 @@
  * Represents an ordered list of Predicates,
  * for use with Step and Filter Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:51 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:52 $
 **/
 //-- PredicateList Implementation --/
 
@@ -82,7 +82,10 @@ void PredicateList::evaluatePredicates(NodeSet* nodes, ContextState* cs) {
             //-- then we can keep it, otherwise add to remove list
             ExprResult* exprResult = expr->evaluate(node,cs);
             if ( !exprResult ) {
+#if 0
+                // XXX DEBUG OUTPUT
                 cout << "ExprResult == null" << endl;
+#endif
             }
             else {
                 switch(exprResult->getResultType()) {
