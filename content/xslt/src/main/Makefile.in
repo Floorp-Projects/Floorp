@@ -32,7 +32,6 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../base/CommandLineUtils.$(OBJ_SUFFIX) \
   ../base/Double.$(OBJ_SUFFIX) \
   ../base/List.$(OBJ_SUFFIX) \
-  ../base/TxObjectWrapper.$(OBJ_SUFFIX) \
   ../base/Map.$(OBJ_SUFFIX) \
   ../base/NamedMap.$(OBJ_SUFFIX) \
   ../base/SimpleErrorObserver.$(OBJ_SUFFIX) \
@@ -42,7 +41,7 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../base/txAtoms.$(OBJ_SUFFIX) \
   ../base/txExpandedNameMap.$(OBJ_SUFFIX) \
   ../base/TxString.$(OBJ_SUFFIX) \
-  ../net/URIUtils.$(OBJ_SUFFIX) \
+  ../base/txURIUtils.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/Attr.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/CDATASection.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/DocumentType.$(OBJ_SUFFIX) \

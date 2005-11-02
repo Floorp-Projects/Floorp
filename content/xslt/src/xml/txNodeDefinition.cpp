@@ -31,7 +31,7 @@
 
 #include "dom.h"
 #include "ArrayList.h"
-#include "URIUtils.h"
+#include "txURIUtils.h"
 #include "txAtoms.h"
 #include <string.h>
 

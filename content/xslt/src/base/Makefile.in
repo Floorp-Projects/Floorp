@@ -41,14 +41,14 @@ CPPSRCS	= ArrayList.cpp             \
 	Double.cpp \
 	List.cpp \
 	Map.cpp \
-	TxObjectWrapper.cpp          \
 	NamedMap.cpp \
 	SimpleErrorObserver.cpp \
 	Stack.cpp \
 	StringList.cpp \
 	Tokenizer.cpp \
 	txAtoms.cpp \
-	txExpandedNameMap.cpp
+	txExpandedNameMap.cpp \
+	txURIUtils.cpp
 
 ifdef TX_EXE
 	CPPSRCS	+= CommandLineUtils.cpp	\
