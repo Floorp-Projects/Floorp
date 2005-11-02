@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -301,10 +301,11 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     es.init(sourceNode, &mVariables);
 
     // Process root of XML source document
-    txXSLTProcessor::execute(es);
+    rv = txXSLTProcessor::execute(es);
+    // XXX setup exception context, bug 204658
     es.end();
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -360,11 +361,14 @@ txMozillaXSLTProcessor::DoTransform()
     es.init(sourceNode, &mVariables);
 
     // Process root of XML source document
-    txXSLTProcessor::execute(es);
+    nsresult rv = txXSLTProcessor::execute(es);
+    if (NS_FAILED(rv) && mObserver) {
+        // XXX set up context information, bug 204655
+        reportError(rv, nsnull, nsnull);
+    }
     es.end();
 
-
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -380,7 +384,9 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
                    type == nsIDOMNode::DOCUMENT_NODE,
                    NS_ERROR_INVALID_ARG);
 
-    return TX_CompileStylesheet(aStyle, getter_AddRefs(mStylesheet));
+    nsresult rv = TX_CompileStylesheet(aStyle, getter_AddRefs(mStylesheet));
+    // XXX set up exception context, bug 204658
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -417,14 +423,17 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
     es.init(sourceNode, &mVariables);
 
     // Process root of XML source document
-    txXSLTProcessor::execute(es);
+    nsresult rv = txXSLTProcessor::execute(es);
+    // XXX setup exception context, bug 204658
     es.end();
 
-    txAOutputXMLEventHandler* handler =
-        NS_STATIC_CAST(txAOutputXMLEventHandler*, es.mOutputHandler);
-    handler->getOutputDocument(aResult);
+    if (NS_SUCCEEDED(rv)) {
+        txAOutputXMLEventHandler* handler =
+            NS_STATIC_CAST(txAOutputXMLEventHandler*, es.mOutputHandler);
+        handler->getOutputDocument(aResult);
+    }
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -465,10 +474,11 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
     es.init(sourceNode, &mVariables);
 
     // Process root of XML source document
-    txXSLTProcessor::execute(es);
+    rv = txXSLTProcessor::execute(es);
+    // XXX setup exception context, bug 204658
     es.end();
 
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -594,7 +604,19 @@ NS_IMETHODIMP
 txMozillaXSLTProcessor::LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
                                        nsIURI* aReferrerUri)
 {
-    return TX_LoadSheet(aUri, this, aLoadGroup, aReferrerUri);
+    nsresult rv = TX_LoadSheet(aUri, this, aLoadGroup, aReferrerUri);
+    if (NS_FAILED(rv) && mObserver) {
+        // This is most likely a network or security error, just
+        // use the uri as context.
+        nsCAutoString spec;
+        if (aUri) {
+            aUri->GetSpec(spec);
+            // XXX use CopyUTF8toUCS2 once it's there
+            mSourceText = NS_ConvertUTF8toUCS2(spec);
+        }
+        reportError(rv, nsnull, nsnull);
+    }
+    return rv;
 }
 
 nsresult
@@ -635,9 +657,16 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
 
             if (bundle) {
                 const PRUnichar* error[] = { errorText.get() };
-                bundle->FormatStringFromName(NS_LITERAL_STRING("LoadingError").get(),
-                                             error, 1,
-                                             getter_Copies(errorMessage));
+                if (mStylesheet) {
+                    bundle->FormatStringFromName(NS_LITERAL_STRING("TransformError").get(),
+                                                 error, 1,
+                                                 getter_Copies(errorMessage));
+                }
+                else {
+                    bundle->FormatStringFromName(NS_LITERAL_STRING("LoadingError").get(),
+                                                 error, 1,
+                                                 getter_Copies(errorMessage));
+                }
             }
             mErrorText.Assign(errorMessage);
         }
