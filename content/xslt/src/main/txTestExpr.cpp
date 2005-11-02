@@ -87,7 +87,7 @@ static void doTest(const nsASingleFragmentString& aExpr)
     nsresult rv = txExprParser::createExpr(aExpr, &ct,
                                            getter_Transfers(expression));
 
-    cout << "createExpr returned " << hex << rv  << dec;
+    cout << "createExpr returned " << ios::hex << rv  << ios::dec;
     cout << " at " << ct.mOff << endl;
     if (NS_FAILED(rv)) {
         NS_LossyConvertUTF16toASCII cstring(aExpr);

@@ -40,6 +40,7 @@ REQUIRES +=	  dom \
 		  unicharutil \
 		  layout \
 		  necko \
+		  htmlparser \
 		  $(NULL)
 endif
 

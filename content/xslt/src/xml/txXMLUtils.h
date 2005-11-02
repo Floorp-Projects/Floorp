@@ -36,6 +36,10 @@
 #include "txError.h"
 #include "txXPathNode.h"
 
+#ifndef TX_EXE
+#include "nsIParserService.h"
+#endif
+
 class txNamespaceMap;
 
 class txExpandedName {
@@ -97,19 +101,21 @@ public:
     nsCOMPtr<nsIAtom> mLocalName;
 };
 
+#ifdef TX_EXE
+extern "C" int MOZ_XMLIsValidQName(const char* ptr, const char* end,
+                                   int ns_aware, const char** colon);
+extern "C" int MOZ_XMLIsLetter(const char* ptr);
+extern "C" int MOZ_XMLIsNCNameChar(const char* ptr);
+#else
+extern nsIParserService *gTxParserService;
+#endif
+
 class XMLUtils {
 
 public:
     static nsresult splitXMLName(const nsAString& aName, nsIAtom** aPrefix,
                                  nsIAtom** aLocalName);
-    static void getPrefix(const nsAString& src, nsIAtom** dest);
     static const nsDependentSubstring getLocalPart(const nsAString& src);
-    static void getLocalPart(const nsAString& src, nsIAtom** dest);
-
-    /**
-     * Returns true if the given string is a valid XML QName
-     */
-    static MBool isValidQName(const nsAString& aName);
 
     /*
      * Returns true if the given character is whitespace.
@@ -131,20 +137,52 @@ public:
     **/
     static void normalizePIValue(nsAString& attValue);
 
-    /*
-     * Returns true if the given character represents a numeric letter (digit).
+    static PRBool isValidQName(const nsAFlatString& aQName,
+                               const PRUnichar** aColon)
+    /**
+     * Returns true if the given string is a valid XML QName
      */
-    static MBool isDigit(PRUnichar ch);
+    {
+#ifdef TX_EXE
+        const PRUnichar* end;
+        aQName.EndReading(end);
 
-    /*
+        const char *colonPtr;
+        PRBool valid = MOZ_XMLIsValidQName(NS_REINTERPRET_CAST(const char*,
+                                                               aQName.get()),
+                                           NS_REINTERPRET_CAST(const char*,
+                                                               end),
+                                           PR_TRUE, &colonPtr);
+        *aColon = NS_REINTERPRET_CAST(const PRUnichar*, colonPtr);
+        return valid;
+#else
+        return gTxParserService->IsValidQName(aQName, PR_TRUE, aColon);
+#endif
+    }
+
+    /**
      * Returns true if the given character represents an Alpha letter
      */
-    static MBool isLetter(PRUnichar ch);
+    static PRBool isLetter(PRUnichar aChar)
+    {
+#ifdef TX_EXE
+        return MOZ_XMLIsLetter(NS_REINTERPRET_CAST(const char*, &aChar));
+#else
+        return gTxParserService->IsXMLLetter(aChar);
+#endif
+    }
 
-    /*
+    /**
      * Returns true if the given character is an allowable NCName character
      */
-    static MBool isNCNameChar(PRUnichar ch);
+    static PRBool isNCNameChar(PRUnichar aChar)
+    {
+#ifdef TX_EXE
+        return MOZ_XMLIsNCNameChar(NS_REINTERPRET_CAST(const char*, &aChar));
+#else
+        return gTxParserService->IsXMLNCNameChar(aChar);
+#endif
+    }
 
     /*
      * Walks up the document tree and returns true if the closest xml:space

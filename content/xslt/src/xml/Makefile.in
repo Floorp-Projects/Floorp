@@ -36,6 +36,7 @@ REQUIRES += 	  dom \
 		  widget \
 		  unicharutil \
 		  necko \
+		  htmlparser \
 		  $(NULL)
 endif
 

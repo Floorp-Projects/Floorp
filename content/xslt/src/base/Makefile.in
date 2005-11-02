@@ -39,6 +39,7 @@ REQUIRES	+= unicharutil \
 		  caps \
 		  xpconnect \
 		  js \
+		  htmlparser \
 		  $(NULL)
 endif
 

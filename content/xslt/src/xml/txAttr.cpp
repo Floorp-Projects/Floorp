@@ -69,7 +69,7 @@ Attr::Attr(const nsAString& aNamespaceURI,
   else
     mNamespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
 
-  XMLUtils::getLocalPart(nodeName, getter_AddRefs(mLocalName));
+  mLocalName = do_GetAtom(XMLUtils::getLocalPart(nodeName));
 }
 
 //
