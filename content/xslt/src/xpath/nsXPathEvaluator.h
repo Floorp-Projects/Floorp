@@ -66,7 +66,4 @@ private:
 #define TRANSFORMIIX_XPATH_EVALUATOR_CID   \
 { 0xd0a75e02, 0xb5e7, 0x11d5, { 0xa7, 0xf2, 0xdf, 0x10, 0x9f, 0xb8, 0xa1, 0xfc } }
 
-#define TRANSFORMIIX_XPATH_EVALUATOR_CONTRACTID \
-"@mozilla.org/transformiix/xpath-evaluator;1"
-
 #endif
