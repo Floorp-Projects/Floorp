@@ -29,13 +29,13 @@
  *   -- Fixed bug in parse method so that we make sure we check for
  *      axis identifier wild cards, such as ancestor::*
  *
- * $Id: txExprLexer.cpp,v 1.11 2005/11/02 07:33:50 kvisco%ziplink.net Exp $
+ * $Id: txExprLexer.cpp,v 1.12 2005/11/02 07:33:51 peterv%netscape.com Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.11 $ $Date: 2005/11/02 07:33:50 $
+ * @version $Revision: 1.12 $ $Date: 2005/11/02 07:33:51 $
 **/
 
 #include "ExprLexer.h"
@@ -265,15 +265,15 @@ MBool ExprLexer::isDigit(Int32 ch) {
 } //-- isDigit
 
 /**
- * Returns true if the given character is an allowable QName character
+ * Returns true if the given character is an allowable NCName character
 **/
 MBool ExprLexer::isNCNameChar(Int32 ch) {
     if (isDigit(ch) || isAlphaChar(ch)) return MB_TRUE;
-    return (MBool) ((ch == '.') ||(ch == '_') || (ch == '-'));
+    return (MBool) ((ch == '.') || (ch == '_') || (ch == '-'));
 } //-- isNCNameChar
 
 /**
- * Returns true if the given character is an allowable NCName character
+ * Returns true if the given character is an allowable QName character
 **/
 MBool ExprLexer::isQNameChar(Int32 ch) {
     return (MBool) (( ch == ':') || isNCNameChar(ch));
@@ -375,7 +375,7 @@ MBool ExprLexer::matchDelimiter(UNICODE_CHAR ch) {
             addChar = MB_FALSE;
             break;
         default:
-            return MB_FALSE;;
+            return MB_FALSE;
     }
     Token* token = 0;
     if ( addChar ) token = new Token(ch, tokenType);
