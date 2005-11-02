@@ -95,7 +95,7 @@ public:
     txExecutionState(txStylesheet* aStylesheet);
     ~txExecutionState();
     nsresult init(const txXPathNode& aNode, txExpandedNameMap* aGlobalParams);
-    nsresult end();
+    nsresult end(nsresult aResult);
 
     TX_DECL_MATCH_CONTEXT;
 

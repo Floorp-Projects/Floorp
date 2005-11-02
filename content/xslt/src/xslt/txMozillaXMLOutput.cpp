@@ -70,6 +70,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDocumentTransformer.h"
+#include "nsICSSLoader.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
 
@@ -195,7 +196,7 @@ void txMozillaXMLOutput::comment(const nsAString& aData)
     NS_ASSERTION(NS_SUCCEEDED(rv), "Can't append comment");
 }
 
-void txMozillaXMLOutput::endDocument()
+void txMozillaXMLOutput::endDocument(nsresult aResult)
 {
     closePrevious(eCloseElement | eFlushText);
     // This should really be handled by nsIDocument::Reset
@@ -220,7 +221,7 @@ void txMozillaXMLOutput::endDocument()
     }
 
     if (mNotifier) {
-        mNotifier->OnTransformEnd();
+        mNotifier->OnTransformEnd(aResult);
     }
 }
 
@@ -836,8 +837,8 @@ txTransformNotifier::ScriptAvailable(nsresult aResult,
                                      PRInt32 aLineNo,
                                      const nsAString& aScript)
 {
-    if (NS_FAILED(aResult)) {
-        mScriptElements.RemoveObject(aElement);
+    if (NS_FAILED(aResult) &&
+        mScriptElements.RemoveObject(aElement)) {
         SignalTransformEnd();
     }
 
@@ -850,8 +851,10 @@ txTransformNotifier::ScriptEvaluated(nsresult aResult,
                                      PRBool aIsInline,
                                      PRBool aWasPending)
 {
-    mScriptElements.RemoveObject(aElement);
-    SignalTransformEnd();
+    if (mScriptElements.RemoveObject(aElement)) {
+        SignalTransformEnd();
+    }
+
     return NS_OK;
 }
 
@@ -889,10 +892,10 @@ txTransformNotifier::AddStyleSheet(nsIStyleSheet* aStyleSheet)
 }
 
 void
-txTransformNotifier::OnTransformEnd()
+txTransformNotifier::OnTransformEnd(nsresult aResult)
 {
     mInTransform = PR_FALSE;
-    SignalTransformEnd();
+    SignalTransformEnd(aResult);
 }
 
 void
@@ -911,29 +914,37 @@ txTransformNotifier::SetOutputDocument(nsIDOMDocument* aDocument)
 }
 
 void
-txTransformNotifier::SignalTransformEnd()
+txTransformNotifier::SignalTransformEnd(nsresult aResult)
 {
-    if (mInTransform || mScriptElements.Count() > 0 ||
-        mStylesheets.Count() > 0) {
+    if (mInTransform || (NS_SUCCEEDED(aResult) &&
+        mScriptElements.Count() > 0 || mStylesheets.Count() > 0)) {
         return;
     }
+
+    mStylesheets.Clear();
+    mScriptElements.Clear();
 
     // Make sure that we don't get deleted while this function is executed and
     // we remove ourselfs from the scriptloader
     nsCOMPtr<nsIScriptLoaderObserver> kungFuDeathGrip(this);
 
-    // XXX Need a better way to determine transform success/failure
-    if (mDocument) {
-        nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-        nsIScriptLoader *loader = doc->GetScriptLoader();
-        if (loader) {
-            loader->RemoveObserver(this);
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+    if (doc) {
+        nsIScriptLoader *scriptLoader = doc->GetScriptLoader();
+        if (scriptLoader) {
+            scriptLoader->RemoveObserver(this);
+            // XXX Maybe we want to cancel script loads if NS_FAILED(rv)?
         }
 
-        mObserver->OnTransformDone(NS_OK, mDocument);
+        if (NS_FAILED(aResult)) {
+            nsICSSLoader *cssLoader = doc->GetCSSLoader();
+            if (cssLoader) {
+                cssLoader->Stop();
+            }
+        }
     }
-    else {
-        // XXX Need better error message and code.
-        mObserver->OnTransformDone(NS_ERROR_FAILURE, nsnull);
+
+    if (NS_SUCCEEDED(aResult)) {
+        mObserver->OnTransformDone(aResult, mDocument);
     }
 }

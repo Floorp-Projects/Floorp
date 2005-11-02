@@ -110,7 +110,7 @@ txRtfHandler::getAsRTF(txAExprResult** aResult)
     return NS_OK;
 }
 
-void txRtfHandler::endDocument()
+void txRtfHandler::endDocument(nsresult aResult)
 {
 }
 

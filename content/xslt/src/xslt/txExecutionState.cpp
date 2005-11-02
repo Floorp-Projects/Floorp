@@ -199,10 +199,10 @@ txExecutionState::init(const txXPathNode& aNode,
 }
 
 nsresult
-txExecutionState::end()
+txExecutionState::end(nsresult aResult)
 {
     popTemplateRule();
-    mOutputHandler->endDocument();
+    mOutputHandler->endDocument(aResult);
     
     return NS_OK;
 }
