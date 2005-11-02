@@ -816,25 +816,23 @@ NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(txMozillaXSLTProcessor)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(txMozillaXSLTProcessor)
 NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(txMozillaXSLTProcessor)
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::BeginUpdate(nsIDocument* aDocument,
                                     nsUpdateType aUpdateType)
 {
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::EndUpdate(nsIDocument* aDocument,
                                   nsUpdateType aUpdateType)
 {
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::DocumentWillBeDestroyed(nsIDocument* aDocument)
 {
     if (NS_FAILED(mCompileResult)) {
-        return NS_OK;
+        return;
     }
 
     mCompileResult = ensureStylesheet();
@@ -845,20 +843,17 @@ txMozillaXSLTProcessor::DocumentWillBeDestroyed(nsIDocument* aDocument)
     // causing a notification as the document goes away we don't want to
     // invalidate the stylesheet.
     aDocument->RemoveObserver(this);
-    
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::ContentChanged(nsIDocument* aDocument,
                                        nsIContent *aContent,
                                        nsISupports *aSubContent)
 {
     mStylesheet = nsnull;
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
                                          nsIContent* aContent,
                                          PRInt32 aNameSpaceID,
@@ -866,29 +861,26 @@ txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
                                          PRInt32 aModType)
 {
     mStylesheet = nsnull;
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::ContentAppended(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         PRInt32 aNewIndexInContainer)
 {
     mStylesheet = nsnull;
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::ContentInserted(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aChild,
                                         PRInt32 aIndexInContainer)
 {
     mStylesheet = nsnull;
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::ContentReplaced(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aOldChild,
@@ -896,17 +888,15 @@ txMozillaXSLTProcessor::ContentReplaced(nsIDocument* aDocument,
                                         PRInt32 aIndexInContainer)
 {
     mStylesheet = nsnull;
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
                                        nsIContent* aContainer,
                                        nsIContent* aChild,
                                        PRInt32 aIndexInContainer)
 {
     mStylesheet = nsnull;
-    return NS_OK;
 }
 
 /* static*/
