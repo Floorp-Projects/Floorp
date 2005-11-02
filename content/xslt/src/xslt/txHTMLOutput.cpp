@@ -41,7 +41,8 @@
 #include "txOutputFormat.h"
 #include "XMLUtils.h"
 
-txHTMLOutput::txHTMLOutput()
+txHTMLOutput::txHTMLOutput(txOutputFormat* aFormat, ostream* aOut)
+    : txXMLOutput(aFormat, aOut)
 {
     mUseEmptyElementShorthand = MB_FALSE;
 
