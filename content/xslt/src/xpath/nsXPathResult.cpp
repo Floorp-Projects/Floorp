@@ -238,16 +238,6 @@ nsXPathResult::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-nsXPathResult::ContentReplaced(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aOldChild,
-                               nsIContent* aNewChild,
-                               PRInt32 aIndexInContainer)
-{
-    Invalidate();
-}
-
-void
 nsXPathResult::ContentRemoved(nsIDocument* aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
