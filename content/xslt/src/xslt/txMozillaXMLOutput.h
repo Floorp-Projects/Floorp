@@ -50,9 +50,11 @@
 #include "nsWeakPtr.h"
 #include "txOutputFormat.h"
 #include "nsCOMArray.h"
+#include "nsICSSLoaderObserver.h"
 
 class txMozillaXMLOutput : public txIOutputXMLEventHandler,
-                           public nsIScriptLoaderObserver
+                           public nsIScriptLoaderObserver,
+                           public nsICSSLoaderObserver
 {
 public:
     txMozillaXMLOutput(const String& aRootName,
@@ -67,6 +69,9 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTLOADEROBSERVER
+    
+    // nsICSSLoaderObserver
+    NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify);
 
     /**
      * Signals to receive the start of an attribute.
@@ -154,14 +159,6 @@ public:
                       const PRInt32 aNsID);
 
     /**
-     * Removes a script element from the array of elements that are
-     * still loading.
-     *
-     * @param aReturn the script element to remove
-     */
-    void removeScriptElement(nsIDOMHTMLScriptElement *aElement);
-
-    /**
      * Gets the Mozilla output document
      *
      * @param aDocument the Mozilla output document
@@ -192,6 +189,7 @@ private:
     nsCString mRefreshString;
 
     nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
+    nsCOMArray<nsIStyleSheet> mStylesheets;
 
     nsAutoString mText;
 
