@@ -67,7 +67,9 @@ public:
     NS_DECL_NSISCRIPTLOADEROBSERVER
     
     // nsICSSLoaderObserver
-    NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify);
+    NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+                                PRBool aWasAlternate,
+                                nsresult aStatus);
 
     void Init(nsITransformObserver* aObserver);
     void AddScriptElement(nsIScriptElement* aElement);
