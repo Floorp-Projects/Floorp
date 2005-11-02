@@ -100,6 +100,10 @@ public:
         return NS_STATIC_CAST(nsISupports*, mArray.ElementAt(aIndex));
     }
     
+    nsISupports* SafeObjectAt(PRInt32 aIndex) const {
+        return NS_STATIC_CAST(nsISupports*, mArray.SafeElementAt(aIndex));
+    }
+
     nsISupports* operator[](PRInt32 aIndex) const {
         return ObjectAt(aIndex);
     }
@@ -147,6 +151,11 @@ class nsCOMArray : public nsCOMArray_base
     // these do NOT refcount on the way out, for speed
     T* ObjectAt(PRInt32 aIndex) const {
         return NS_STATIC_CAST(T*,nsCOMArray_base::ObjectAt(aIndex));
+    }
+
+    // these do NOT refcount on the way out, for speed
+    T* SafeObjectAt(PRInt32 aIndex) const {
+        return NS_STATIC_CAST(T*,nsCOMArray_base::SafeObjectAt(aIndex));
     }
 
     // indexing operator for syntactic sugar
