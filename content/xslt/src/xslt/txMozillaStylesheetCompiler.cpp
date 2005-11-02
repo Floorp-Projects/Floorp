@@ -84,7 +84,7 @@ getSpec(nsIChannel* aChannel, nsAString& aSpec)
 
     nsCAutoString spec;
     uri->GetSpec(spec);
-    aSpec.Append(NS_ConvertUTF8toUCS2(spec));
+    AppendUTF8toUTF16(spec, aSpec);
 }
 
 class txStylesheetSink : public nsIXMLContentSink,
