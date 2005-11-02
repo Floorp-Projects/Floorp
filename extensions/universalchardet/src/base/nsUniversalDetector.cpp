@@ -52,6 +52,7 @@
 #include "nsMBCSGroupProber.h"
 #include "nsSBCSGroupProber.h"
 #include "nsEscCharsetProber.h"
+#include "nsLatin1Prober.h"
 
 static NS_DEFINE_CID(kUniversalDetectorCID, NS_UNIVERSAL_DETECTOR_CID);
 static NS_DEFINE_CID(kUniversalStringDetectorCID, NS_UNIVERSAL_STRING_DETECTOR_CID);
@@ -156,7 +157,10 @@ void nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
         if (nsnull == mCharSetProbers[0])
           mCharSetProbers[0] = new nsMBCSGroupProber;
         if (nsnull == mCharSetProbers[1])
-          mCharSetProbers[1] = new nsSBCSGroupProber;      }
+          mCharSetProbers[1] = new nsSBCSGroupProber;
+        if (nsnull == mCharSetProbers[2])
+          mCharSetProbers[2] = new nsLatin1Prober; 
+      }
     }
     else
     {
