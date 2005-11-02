@@ -136,7 +136,7 @@ int main(int argc, char** argv)
     if (!options.GetEntry(NS_LITERAL_CSTRING("q"))) {
         NS_NAMED_LITERAL_CSTRING(copyright, "(C) 1999 The MITRE Corporation, Keith Visco, and contributors");
         cerr << "TransforMiiX ";
-        cerr << "1.3a pre" << endl;
+        cerr << MOZILLA_VERSION << endl;
         cerr << copyright.get() << endl;
         //-- print banner line
         PRUint32 fillSize = copyright.Length() + 1;
