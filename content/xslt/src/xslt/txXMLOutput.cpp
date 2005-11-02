@@ -254,7 +254,7 @@ void txXMLOutput::startElement(const String& aName,
 void txXMLOutput::getOutputStream(ostream** aOutputStream)
 {
     if (aOutputStream)
-        aOutputStream = mOut;
+        *aOutputStream = mOut;
 }
 
 void txXMLOutput::setOutputStream(ostream* aOutputStream)
