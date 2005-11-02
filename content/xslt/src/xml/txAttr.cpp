@@ -87,36 +87,19 @@ Attr::~Attr()
 }
 
 //
-//Retrieve the value of the attribute.  This is a comma-deliminated string
-//representation of the Attribute's children.
+//Retrieve the value of the attribute.
 //
 const String& Attr::getValue()
 {
-  nodeValue = NULL_STRING;
-
-  Node* child = getFirstChild();
-  while (child) {
-    if (child->getNodeType() != Node::ENTITY_REFERENCE_NODE) {
-        nodeValue.Append(child->getNodeValue());
-        child = child->getNextSibling();
-        if (child)
-          nodeValue.Append(PRUnichar(','));
-    } else {
-      child = child->getNextSibling();
-    }
-  }
   return nodeValue;
 }
 
 //
-//Create a new Text node and add it to the Attribute's list of children.  Also
-//set the Specified flag to true.
+//Set the nodevalue to the given value.
 //
 void Attr::setValue(const String& newValue)
 {
-  NodeDefinition::DeleteChildren();
-
-  appendChild(getOwnerDocument()->createTextNode(newValue));
+  nodeValue = newValue;
 }
 
 
@@ -138,31 +121,15 @@ void Attr::setNodeValue(const String& nodeValue)
 //
 const String& Attr::getNodeValue()
 {
-  return getValue();
+  return nodeValue;
 }
 
 //
-//First check to see if the new node is an allowable child for an Attr.  If it
-//is, call NodeDefinition's implementation of AppendChild.  If not, return
-//null as an error.
+//Not implemented anymore, return null as an error.
 //
 Node* Attr::appendChild(Node* newChild)
 {
-  switch (newChild->getNodeType())
-    {
-      case Node::TEXT_NODE :
-        {
-          // Remove the "newChild" if it is already a child of this node
-          NodeDefinition* pNewChild = (NodeDefinition*)newChild;
-          if (pNewChild->getParentNode() == this)
-            pNewChild = implRemoveChild(pNewChild);
-
-          return implAppendChild(pNewChild);
-        }
-      default:
-        break;
-    }
-
+  NS_ASSERTION(0, "not implemented");
   return nsnull;
 }
 
