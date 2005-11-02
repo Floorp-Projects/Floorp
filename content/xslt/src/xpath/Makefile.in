@@ -45,7 +45,6 @@ CPPSRCS = AdditiveExpr.cpp \
         MultiplicativeExpr.cpp \
         NodeSet.cpp \
         NodeSetFunctionCall.cpp \
-        nsNodeSet.cpp \
         NumberExpr.cpp \
         NumberFunctionCall.cpp \
         NumberResult.cpp \
@@ -63,7 +62,8 @@ CPPSRCS = AdditiveExpr.cpp \
         WildCardExpr.cpp \
         XPathNames.cpp
 ifdef MOZ_XSL
-CPPSRCS += XPathProcessor.cpp
+CPPSRCS += XPathProcessor.cpp \
+           nsNodeSet.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk
