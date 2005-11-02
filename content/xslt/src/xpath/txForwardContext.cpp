@@ -56,7 +56,7 @@ PRUint32 txForwardContext::position()
     return (PRUint32)(pos+1);
 }
 
-nsresult txForwardContext::getVariable(PRInt32 aNamespace, txAtom* aLName,
+nsresult txForwardContext::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
                                  ExprResult*& aResult)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");

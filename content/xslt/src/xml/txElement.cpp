@@ -99,7 +99,7 @@ Node* Element::appendChild(Node* newChild)
 //
 //Return the elements local (unprefixed) name.
 //
-MBool Element::getLocalName(txAtom** aLocalName)
+MBool Element::getLocalName(nsIAtom** aLocalName)
 {
   if (!aLocalName)
     return MB_FALSE;
@@ -182,7 +182,7 @@ void Element::setAttributeNS(const nsAString& aNamespaceURI,
   AttrMap::ListItem* item = mAttributes.firstItem;
   while (item) {
     foundNode = (Attr*)item->node;
-    txAtom* attrName;
+    nsIAtom* attrName;
     if (foundNode->getLocalName(&attrName) &&
         namespaceID == foundNode->getNamespaceID() &&
         localName == attrName) {
@@ -219,14 +219,14 @@ Attr* Element::getAttributeNode(const nsAString& name)
 // exists, and sets aValue to the value of the attribute.
 // Return false, if the attribute does not exist.
 //
-MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
+MBool Element::getAttr(nsIAtom* aLocalName, PRInt32 aNSID,
                        nsAString& aValue)
 {
   aValue.Truncate();
   AttrMap::ListItem* item = mAttributes.firstItem;
   while (item) {
     Attr* attrNode = (Attr*)item->node;
-    txAtom* localName;
+    nsIAtom* localName;
     if (attrNode->getLocalName(&localName) &&
         aNSID == attrNode->getNamespaceID() &&
         aLocalName == localName) {
@@ -244,12 +244,12 @@ MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
 // Return true if the attribute specified by localname and nsID
 // exists. Return false otherwise.
 //
-MBool Element::hasAttr(txAtom* aLocalName, PRInt32 aNSID)
+MBool Element::hasAttr(nsIAtom* aLocalName, PRInt32 aNSID)
 {
   AttrMap::ListItem* item = mAttributes.firstItem;
   while (item) {
     Attr* attrNode = (Attr*)item->node;
-    txAtom* localName;
+    nsIAtom* localName;
     if (attrNode->getLocalName(&localName) &&
         aNSID == attrNode->getNamespaceID() &&
         aLocalName == localName) {

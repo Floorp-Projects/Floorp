@@ -129,7 +129,7 @@ nsXPathEvaluator::Evaluate(const nsAString & aExpression,
  */
 
 nsresult nsXPathEvaluator::ParseContextImpl::resolveNamespacePrefix
-    (txAtom* aPrefix, PRInt32& aID)
+    (nsIAtom* aPrefix, PRInt32& aID)
 {
     nsAutoString prefix;
     if (aPrefix) {
@@ -155,7 +155,7 @@ nsresult nsXPathEvaluator::ParseContextImpl::resolveNamespacePrefix
     return gTxNameSpaceManager->RegisterNameSpace(ns, aID);
 }
 
-nsresult nsXPathEvaluator::ParseContextImpl::resolveFunctionCall(txAtom* aName,
+nsresult nsXPathEvaluator::ParseContextImpl::resolveFunctionCall(nsIAtom* aName,
                                                                  PRInt32 aID,
                                                                  FunctionCall*& aFn)
 {

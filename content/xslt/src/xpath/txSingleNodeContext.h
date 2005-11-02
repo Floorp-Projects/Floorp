@@ -53,7 +53,7 @@ public:
     ~txSingleNodeContext()
     {}
 
-    nsresult getVariable(PRInt32 aNamespace, txAtom* aLName,
+    nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName,
                          ExprResult*& aResult)
     {
         NS_ASSERTION(mInner, "mInner is null!!!");

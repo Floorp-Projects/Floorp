@@ -166,7 +166,7 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
  */
 
 nsresult nsXPathExpression::EvalContextImpl::getVariable(PRInt32 aNamespace, 
-                                                         txAtom* aLName,
+                                                         nsIAtom* aLName,
                                                          ExprResult*& aResult)
 {
     aResult = 0;

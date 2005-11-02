@@ -43,8 +43,8 @@ public:
     }
 
     txExpandedName(PRInt32 aNsID,
-                   txAtom* aLocalName) : mNamespaceID(aNsID),
-                                         mLocalName(aLocalName)
+                   nsIAtom* aLocalName) : mNamespaceID(aNsID),
+                                          mLocalName(aLocalName)
     {
     }
 
@@ -87,9 +87,9 @@ class XMLUtils {
 
 public:
 
-    static void getPrefix(const nsAString& src, txAtom** dest);
+    static void getPrefix(const nsAString& src, nsIAtom** dest);
     static const nsDependentSubstring getLocalPart(const nsAString& src);
-    static void getLocalPart(const nsAString& src, txAtom** dest);
+    static void getLocalPart(const nsAString& src, nsIAtom** dest);
 
     /**
      * Returns true if the given string is a valid XML QName

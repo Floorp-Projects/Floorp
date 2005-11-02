@@ -57,7 +57,7 @@ ProcessingInstruction::~ProcessingInstruction()
 //from all child manipulation functions.
 //
 
-MBool ProcessingInstruction::getLocalName(txAtom** aLocalName)
+MBool ProcessingInstruction::getLocalName(nsIAtom** aLocalName)
 {
   if (!aLocalName)
     return MB_FALSE;

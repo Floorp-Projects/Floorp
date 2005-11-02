@@ -150,7 +150,7 @@ nsresult txXSLTNumber::getValueList(Element* aNumberElement,
         switch (currNode->getNodeType()) {
             case Node::ELEMENT_NODE:
             {
-                txAtom* localName = 0;
+                nsIAtom* localName = 0;
                 currNode->getLocalName(&localName);
                 nodeTest = new txNameTest(0, localName,
                                           currNode->getNamespaceID(),
@@ -218,7 +218,7 @@ nsresult txXSLTNumber::getValueList(Element* aNumberElement,
     // Generate list of values depending on the value of the level-attribute
 
     nsAutoString levelStr;
-    txAtom* level = 0;
+    nsIAtom* level = 0;
     if (aNumberElement->getAttr(txXSLTAtoms::level, kNameSpaceID_None, levelStr)) {
         level = TX_GET_ATOM(levelStr);
     }
