@@ -98,8 +98,7 @@ GetPopupSetFrame(nsPresContext* aPresContext)
   if (!rootBox)
     return nsnull;
 
-  nsIFrame* popupSetFrame;
-  rootBox->GetPopupSetFrame(&popupSetFrame);
+  nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
   if (!popupSetFrame)
     return nsnull;
 

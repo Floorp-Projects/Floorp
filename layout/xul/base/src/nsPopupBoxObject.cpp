@@ -116,8 +116,7 @@ nsPopupBoxObject::HidePopup()
   if (!rootBox)
     return NS_OK;
 
-  nsIFrame* popupSetFrame;
-  rootBox->GetPopupSetFrame(&popupSetFrame);
+  nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
   if (!popupSetFrame)
     return NS_OK;
 
@@ -150,8 +149,7 @@ nsPopupBoxObject::ShowPopup(nsIDOMElement* aSrcContent,
   if (!rootBox)
     return NS_OK;
 
-  nsIFrame* popupSetFrame;
-  rootBox->GetPopupSetFrame(&popupSetFrame);
+  nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
   if (!popupSetFrame)
     return NS_OK;
 
