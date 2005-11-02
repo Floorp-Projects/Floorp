@@ -264,10 +264,9 @@ void txXMLOutput::closeStartTag(MBool aUseEmptyElementShorthand)
         txOutAttr* att;
         while ((att = (txOutAttr*)iter.next())) {
             *mOut << SPACE;
-            nsCAutoString attrVal;
-            att->mName.mLocalName->ToUTF8String(attrVal);
-            // XXX consult the XML spec what we really wanna do here
-            *mOut << attrVal.get();
+            const char* attrVal;
+            att->mName.mLocalName->GetUTF8String(&attrVal);
+            *mOut << attrVal;
             if (!att->mShorthand) {
                 *mOut << EQUALS << DOUBLE_QUOTE;
                 printWithXMLEntities(att->mValue, MB_TRUE);
