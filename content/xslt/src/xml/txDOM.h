@@ -160,7 +160,7 @@ class NodeListDefinition : public NodeList
   friend NamedNodeMap; //-- LF
   public:
     NodeListDefinition();
-    ~NodeListDefinition();
+    virtual ~NodeListDefinition();
 
     void append(Node& newNode);
     void append(Node* newNode);
@@ -189,7 +189,7 @@ class NamedNodeMap : public NodeListDefinition
 {
   public:
     NamedNodeMap();
-    ~NamedNodeMap();
+    virtual ~NamedNodeMap();
 
     Node* getNamedItem(const String& name);
     virtual Node* setNamedItem(Node* arg);
@@ -211,6 +211,7 @@ class AttrMap : public NamedNodeMap
 
   public:
     AttrMap();
+    virtual ~AttrMap();
 
     Node* setNamedItem(Node* arg);
     Node* removeNamedItem(const String& name);
