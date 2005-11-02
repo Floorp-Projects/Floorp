@@ -18,10 +18,15 @@
  * (C) 1999 Keith Visco. All Rights Reserved.
  *
  * Contributor(s):
+ *
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: transformiix.cpp,v 1.4 2005/11/02 07:33:35 kvisco%ziplink.net Exp $
+ * Nathan Pride, npride@wavo.com
+ *    -- fixed document base when stylesheet is specified,
+ *       it was defaulting to the XML document.
+ *
+ * $Id: transformiix.cpp,v 1.5 2005/11/02 07:33:36 kvisco%ziplink.net Exp $
  */
 
 
@@ -95,9 +100,7 @@ int main(int argc, char** argv) {
     ifstream xmlInput(xmlFilename->toCharArray(chars), ios::in);
     delete chars;
 
-    //-- create document base
     String documentBase;
-    URIUtils::getDocumentBase(*xmlFilename, documentBase);
 
     //-- handle output stream
     ostream* resultOutput = &cout;
@@ -114,6 +117,8 @@ int main(int argc, char** argv) {
     }
     //-- process
     if ( !xsltFilename ) {
+        //-- use xml document to obtain a document base
+        URIUtils::getDocumentBase(*xmlFilename, documentBase);
         xsltProcessor.process(xmlInput, *resultOutput, documentBase);
     }
     else {
@@ -121,6 +126,8 @@ int main(int argc, char** argv) {
         chars = new char[xsltFilename->length()+1];
         ifstream xsltInput(xsltFilename->toCharArray(chars), ios::in);
         delete chars;
+        // obtain document base from XSLT stylesheet
+        URIUtils::getDocumentBase(*xmlFilename, documentBase);
         xsltProcessor.process(xmlInput, xsltInput, *resultOutput, documentBase);
     }
     resultFileStream.close();
@@ -138,7 +145,7 @@ void printHelp() {
 }
 void printUsage() {
     cout << endl;
-    cout << "usage:";
+    cout << "usage: ";
     cout << "transfrmx -i xml-file [-s xslt-file] [-o output-file]"<<endl;
     cout << endl;
     cout << "for more infomation use the -h flag"<<endl;
