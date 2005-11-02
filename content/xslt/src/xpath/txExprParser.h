@@ -51,8 +51,8 @@ public:
     **/
     ~ExprParser();
 
-    Expr*          createExpr        (const String& pattern);
-    Expr*          createPatternExpr (const String& pattern);
+    Expr* createExpr(const String& aExpression);
+    Pattern* createPattern(const String& aPattern);
 
     /**
      * Creates an Attribute Value Template using the given value

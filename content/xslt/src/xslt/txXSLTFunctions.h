@@ -48,7 +48,7 @@ public:
     /**
      * Creates a new document() function call
     **/
-    DocumentFunctionCall(ProcessorState* aPs);
+    DocumentFunctionCall(ProcessorState* aPs, Node* aDefResolveNode);
 
     /**
      * Evaluates this Expr based on the given context node and processor state
@@ -62,6 +62,7 @@ public:
 
 private:
     ProcessorState* mProcessorState;
+    Node* mDefResolveNode;
 };
 
 /*
@@ -115,12 +116,11 @@ public:
     /*
      * Adds a match/use pair. Returns MB_FALSE if matchString or useString
      * can't be parsed.
-     * @param aMatchString String to be parsed as match-pattern
-     * @param aUseString   String to be parsed as use-expression
-     * @return MB_FALSE if matchString or useString can't be parsed
-     *         MB_TRUE otherwise
+     * @param aMatch  match-pattern
+     * @param aUse    use-expression
+     * @return MB_FALSE if an error occured, MB_TRUE otherwise
      */
-    MBool addKey(const String& aMatchString, const String& aUseString);
+    MBool addKey(Pattern* aMatch, Expr* aUse);
     
 private:
     /*

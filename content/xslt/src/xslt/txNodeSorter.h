@@ -92,6 +92,7 @@ private:
     txList mSortKeys;
     ProcessorState* mPs;
     int mNKeys;
+    Expr* mDefaultExpr;
 };
 
 #endif

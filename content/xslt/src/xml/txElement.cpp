@@ -223,6 +223,28 @@ MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
       TX_IF_RELEASE_ATOM(localName);
       return MB_TRUE;
     }
+    TX_RELEASE_IF_ATOM(localName);
+    item = item->next;
+  }
+  return MB_FALSE;
+}
+
+//
+// Return true if the attribute specified by localname and nsID
+// exists. Return false otherwise.
+//
+MBool Element::hasAttr(txAtom* aLocalName, PRInt32 aNSID)
+{
+  AttrMap::ListItem* item = mAttributes.firstItem;
+  while (item) {
+    Attr* attrNode = (Attr*)item->node;
+    txAtom* localName;
+    if (attrNode->getLocalName(&localName) &&
+        aNSID == attrNode->getNamespaceID() &&
+        aLocalName == localName) {
+      TX_IF_RELEASE_ATOM(localName);
+      return MB_TRUE;
+    }
     TX_IF_RELEASE_ATOM(localName);
     item = item->next;
   }
