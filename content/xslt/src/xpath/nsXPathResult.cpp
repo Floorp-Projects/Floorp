@@ -170,7 +170,8 @@ nsXPathResult::IterateNext(nsIDOMNode **aResult)
 
     txNodeSet *nodeSet = NS_STATIC_CAST(txNodeSet*, mResult.get());
     if (mCurrentPos < (PRUint32)nodeSet->size()) {
-        return txXPathNativeNode::getNode(nodeSet->get(mCurrentPos), aResult);
+        return txXPathNativeNode::getNode(nodeSet->get(mCurrentPos++),
+                                          aResult);
     }
 
     *aResult = nsnull;
