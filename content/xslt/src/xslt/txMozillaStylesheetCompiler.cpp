@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -573,21 +573,19 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
         {
             nsCOMPtr<nsIContent> element = do_QueryInterface(aNode);
 
-            nsCOMPtr<nsINodeInfo> ni;
-            element->GetNodeInfo(getter_AddRefs(ni));
+            nsINodeInfo *ni = element->GetNodeInfo();
 
             PRInt32 namespaceID = ni->GetNamespaceID();
             nsCOMPtr<nsIAtom> localname = ni->GetNameAtom();
             nsCOMPtr<nsIAtom> prefix = ni->GetPrefixAtom();
 
-            PRInt32 attsCount;
-            element->GetAttrCount(attsCount);
+            PRUint32 attsCount = element->GetAttrCount();
             nsAutoArrayPtr<txStylesheetAttr> atts;
             if (attsCount > 0) {
                 atts = new txStylesheetAttr[attsCount];
                 NS_ENSURE_TRUE(atts, NS_ERROR_OUT_OF_MEMORY);
 
-                PRInt32 counter;
+                PRUint32 counter;
                 for (counter = 0; counter < attsCount; ++counter) {
                     txStylesheetAttr& att = atts[counter];
                     element->GetAttrNameAt(counter, &att.mNamespaceID,
@@ -604,12 +602,11 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
             // explicitly destroy the attrs here since we no longer need it
             atts = nsnull;
 
-            PRInt32 childCount;
-            element->ChildCount(childCount);
+            PRUint32 childCount = element->GetChildCount();
             if (childCount > 0) {
-                PRInt32 counter = 0;
-                nsCOMPtr<nsIContent> child;
-                while (NS_SUCCEEDED(element->ChildAt(counter++, getter_AddRefs(child))) && child) {
+                PRUint32 counter = 0;
+                nsIContent *child;
+                while ((child = element->GetChildAt(counter++))) {
                     nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(child);
                     rv = handleNode(childNode, aCompiler);
                     NS_ENSURE_SUCCESS(rv, rv);
@@ -634,16 +631,13 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
         case nsIDOMNode::DOCUMENT_NODE:
         {
             nsCOMPtr<nsIDocument> document = do_QueryInterface(aNode);
-            PRInt32 childCount;
-            document->GetChildCount(childCount);
-            if (childCount > 0) {
-                PRInt32 counter = 0;
-                nsCOMPtr<nsIContent> child;
-                while (NS_SUCCEEDED(document->ChildAt(counter++, getter_AddRefs(child))) && child) {
-                    nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(child);
-                    rv = handleNode(childNode, aCompiler);
-                    NS_ENSURE_SUCCESS(rv, rv);
-                }
+
+            PRInt32 counter = 0;
+            nsIContent *child;
+            while ((child = document->GetChildAt(counter++))) {
+                nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(child);
+                rv = handleNode(childNode, aCompiler);
+                NS_ENSURE_SUCCESS(rv, rv);
             }
             break;
         }

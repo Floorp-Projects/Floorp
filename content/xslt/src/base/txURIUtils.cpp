@@ -270,7 +270,7 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
         if (!domDoc) {
             nsCOMPtr<nsINodeInfo> ni;
             if (content) {
-                content->GetNodeInfo(getter_AddRefs(ni));
+                ni = content->GetNodeInfo();
             }
             else {
                 attr->GetNodeInfo(getter_AddRefs(ni));
