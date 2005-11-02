@@ -38,7 +38,6 @@
 #include "nsQuickSort.h"
 #include "prmem.h"
 #include "nsCRT.h"
-#include "nsISizeOfHandler.h"
 #include "nsString.h"
 #include "prbit.h"
 
@@ -361,17 +360,6 @@ nsVoidArray::~nsVoidArray()
   if (mImpl && IsArrayOwner())
     PR_Free(NS_REINTERPRET_CAST(char*, mImpl));
 }
-
-#ifdef DEBUG
-void
-nsVoidArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (aResult)
-  {
-    *aResult = sizeof(*this) + (mImpl ? SIZEOF_IMPL(GetArraySize()) : 0);
-  }
-}
-#endif
 
 PRInt32 nsVoidArray::IndexOf(void* aPossibleElement) const
 {
@@ -759,23 +747,6 @@ nsStringArray::operator=(const nsStringArray& other)
   return *this;
 }
 
-#ifdef DEBUG
-void  
-nsStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  PRUint32 sum = 0;
-  nsVoidArray::SizeOf(aHandler, &sum);
-  PRInt32 index = Count();
-  while (0 <= --index)
-  {
-    nsString* string = NS_STATIC_CAST(nsString*, ElementAt(index));
-    PRUint32 size;
-    string->SizeOf(aHandler, &size);
-    sum += size;
-  }
-}
-#endif
-
 void 
 nsStringArray::StringAt(PRInt32 aIndex, nsAString& aString) const
 {
@@ -980,23 +951,6 @@ nsCStringArray::operator=(const nsCStringArray& other)
 
   return *this;
 }
-
-#ifdef DEBUG
-void  
-nsCStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  PRUint32 sum = 0;
-  nsVoidArray::SizeOf(aHandler, &sum);
-  PRInt32 index = Count();
-  while (0 <= --index)
-  {
-    nsCString* string = NS_STATIC_CAST(nsCString*, mImpl->mArray[index]);
-    PRUint32 size;
-    string->SizeOf(aHandler, &size);
-    sum += size;
-  }
-}
-#endif
 
 void 
 nsCStringArray::CStringAt(PRInt32 aIndex, nsCString& aCString) const
@@ -1244,23 +1198,6 @@ nsSmallVoidArray::operator=(nsSmallVoidArray& other)
   }
   return *this;
 }
-
-#ifdef DEBUG
-void  
-nsSmallVoidArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (aResult)
-  {
-    PRUint32 size = 0;
-    if (HasVector())
-    {
-      nsVoidArray* ourArray = GetChildVector();
-      ourArray->SizeOf(aHandler,&size);
-    }
-    *aResult = sizeof(*this) + size;
-  }
-}
-#endif
 
 PRInt32
 nsSmallVoidArray::GetArraySize() const
