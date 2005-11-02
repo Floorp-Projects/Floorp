@@ -148,7 +148,7 @@ public:
 
 private:
     txStack* mStack;
-    PRUint32 mPosition;
+    PRInt32 mPosition;
 };
 
 #endif /* txStack_h___ */
