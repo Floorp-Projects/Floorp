@@ -101,7 +101,6 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     else {
         nsAutoString val;
         exprResult->stringValue(val);
-        const NodeSet* nodes = 0;
         rv = es->getKeyNodes(keyName, contextDoc, val, PR_TRUE,
                              getter_AddRefs(res));
         NS_ENSURE_SUCCESS(rv, rv);
