@@ -80,7 +80,7 @@ MBool txNodeSorter::addSortElement(Element* aSortElement,
     String attrValue;
 
     // Select
-    if (aSortElement->getAttributeNode(SELECT_ATTR))
+    if (aSortElement->hasAttr(txXSLTAtoms::select, kNameSpaceID_None))
         key->mExpr = mPs->getExpr(aSortElement, ProcessorState::SelectAttr);
     else {
         if (!mDefaultExpr) {
