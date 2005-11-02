@@ -29,13 +29,13 @@
  *   -- Fixed bug in parse method so that we make sure we check for
  *      axis identifier wild cards, such as ancestor::*
  *
- * $Id: txExprLexer.cpp,v 1.3 2005/11/02 07:33:42 nisheeth%netscape.com Exp $
+ * $Id: txExprLexer.cpp,v 1.4 2005/11/02 07:33:43 kvisco%ziplink.net Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:42 $
+ * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:43 $
 **/
 
 #include <iostream.h>
@@ -591,6 +591,11 @@ void ExprLexer::parse(const String& pattern) {
                     if ( prevToken->type == Token::PARENT_OP ) {
                         prevToken->type = Token::ANCESTOR_OP;
                         prevToken->value.append(ch);
+                    }
+                    //-- handle possible error in using /
+                    else if ( prevToken->type == Token::NUMBER ) {
+                        prevToken->type = Token::ERROR;
+                        prevToken->value = "Error in expression, misuse of '/', try 'div' instead.";
                     }
                     else matchDelimiter(ch);
                     break;
