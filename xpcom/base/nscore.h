@@ -105,7 +105,7 @@
 #define NS_VISIBILITY_HIDDEN
 #endif
 
-#if defined(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE) && defined(HAVE_VISIBILITY_PRAGMA)
+#if defined(HAVE_VISIBILITY_ATTRIBUTE)
 #define NS_VISIBILITY_DEFAULT __attribute__ ((visibility ("default")))
 #else
 #define NS_VISIBILITY_DEFAULT

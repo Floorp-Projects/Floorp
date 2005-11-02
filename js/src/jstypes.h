@@ -109,7 +109,7 @@
 
 #else /* Unix */
 
-#ifdef HAVE_VISIBILITY_PRAGMA
+#ifdef HAVE_VISIBILITY_ATTRIBUTE
 #define JS_EXTERNAL_VIS __attribute__((visibility ("default")))
 #else
 #define JS_EXTERNAL_VIS

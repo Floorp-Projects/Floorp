@@ -41,7 +41,7 @@
 #undef ZLIB_DLL
 #endif
 
-#ifdef HAVE_VISIBILITY_PRAGMA
+#ifdef HAVE_VISIBILITY_ATTRIBUTE
 #define ZEXTERN __attribute__((visibility ("default"))) extern
 #endif
 

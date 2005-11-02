@@ -1056,9 +1056,9 @@ dnl ========================================================
 dnl GNU specific defaults
 dnl ========================================================
 if test "$GNU_CC"; then
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    DSO_LDOPTS='-shared -Wl,-h -Wl,$@'
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
+    DSO_LDOPTS='-shared'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
@@ -1083,9 +1083,9 @@ if test "$GNU_CC"; then
     _DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
 else
-    MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
-    DSO_LDOPTS='-shared -h $@'
+    MKSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
+    MKCSHLIB='$(LD) $(DSO_LDOPTS) -h $@ -o $@'
+    DSO_LDOPTS='-shared'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-KPIC'
     _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
@@ -1312,9 +1312,9 @@ case "$target" in
 
 *-beos*)
     no_x=yes
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -Wl,-h,$@ -o $@'
     _PLATFORM_DEFAULT_TOOLKIT="beos"
-    DSO_LDOPTS='-nostart -Wl,-h -Wl,$@'
+    DSO_LDOPTS='-nostart'
     TK_LIBS='-lbe -lroot'
     LIBS="$LIBS -lbe"
     if test "$COMPILE_ENVIRONMENT"; then
@@ -1402,16 +1402,16 @@ case "$target" in
 *-hpux*)
     DLL_SUFFIX=".sl"
     if test ! "$GNU_CC"; then
-    	DSO_LDOPTS='-b -Wl,+s -L$(DIST)/bin'
+    	DSO_LDOPTS='-b -Wl,+s'
     	DSO_CFLAGS=""
     	DSO_PIC_CFLAGS="+Z"
-    	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+    	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -L$(DIST)/bin -o $@'
     	MKCSHLIB='$(LD) -b +s -L$(DIST)/bin -o $@'
         CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
     else
-    	DSO_LDOPTS='-b -E +s -L$(DIST)/bin -L$(DIST)/lib'
-    	MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
-    	MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+        DSO_LDOPTS='-b -E +s'
+        MKSHLIB='$(LD) $(DSO_LDOPTS) -L$(DIST)/bin -L$(DIST)/lib -o $@'
+        MKCSHLIB='$(LD) $(DSO_LDOPTS) -L$(DIST)/bin -L$(DIST)/lib -o $@'
     fi
     MOZ_POST_PROGRAM_COMMAND='chatr +s enable'
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
@@ -1420,11 +1420,16 @@ case "$target" in
 *-irix5*)
     AC_DEFINE(IRIX)
     DSO_LDOPTS='-elf -shared'
+
     if test "$GNU_CC"; then
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
        MKSHLIB_FORCE_ALL='-Wl,-all'
        MKSHLIB_UNFORCE_ALL='-Wl,-none'
        CXXFLAGS="$CXXFLAGS -D_LANGUAGE_C_PLUS_PLUS"
     else
+       MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
        MKSHLIB_FORCE_ALL='-all'
        MKSHLIB_UNFORCE_ALL='-none'
     fi
@@ -1778,7 +1783,7 @@ case "$target" in
     if $CC -E - -dM </dev/null | grep __ELF__ >/dev/null; then
         DLL_SUFFIX=".so"
         DSO_PIC_CFLAGS='-fPIC -DPIC'
-        DSO_LDOPTS='-shared -Wl,-soname,lib$(LIBRARY_NAME)$(DLL_SUFFIX)'
+        DSO_LDOPTS='-shared'
 	BIN_FLAGS='-Wl,--export-dynamic'
     else
     	DSO_PIC_CFLAGS='-fPIC -DPIC'
@@ -1791,6 +1796,8 @@ case "$target" in
     if test "$LIBRUNPATH"; then
 	DSO_LDOPTS="-Wl,-R$LIBRUNPATH $DSO_LDOPTS"
     fi
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,lib$(LIBRARY_NAME)$(DLL_SUFFIX) -o $@'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,lib$(LIBRARY_NAME)$(DLL_SUFFIX) -o $@'
     ;;
 
 *-nto*) 
@@ -1954,17 +1961,19 @@ case "$target" in
 
 alpha*-*-osf*)
     if test "$GNU_CC"; then
-	DSO_LDOPTS='-shared -Wl,-soname -Wl,$@'
+      MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$@ -o $@'
+      MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$@ -o $@'
+
     else
 	MOZ_DEBUG_FLAGS='-g'
 	ASFLAGS='-I$(topsrcdir)/xpcom/reflect/xptcall/public -g'
 	CFLAGS="$CFLAGS -ieee"
 	CXXFLAGS="$CXXFLAGS "'-noexceptions -ieee  -ptr $(DIST)/cxx_repository'
-	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $@ -update_registry $(DIST)/so_locations'
+	DSO_LDOPTS='-shared -msym -expect_unresolved \* -update_registry $(DIST)/so_locations'
 	DSO_CFLAGS=
 	DSO_PIC_CFLAGS=
-	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -soname $@ -o $@'
+	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -soname $@ -o $@'
 	MKSHLIB_FORCE_ALL='-all'
 	MKSHLIB_UNFORCE_ALL='-none'
 	dnl Might fix the libxpcom.so breakage on this platform as well....
@@ -1996,7 +2005,7 @@ alpha*-*-osf*)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     CXXFLAGS="$CXXFLAGS -I/usr/include/CC"
     if test ! "$GNU_CC"; then
-       DSO_LDOPTS='-G -h $@'
+       DSO_LDOPTS='-G'
     fi
     ;;
 
@@ -2014,11 +2023,11 @@ dnl the qsort routine under solaris is faulty
        # libraries one level up (e.g. libnspr4.so)
        LDFLAGS="-xildoff -zlazyload -zcombreloc $LDFLAGS -R '\$\$ORIGIN:\$\$ORIGIN/..'"
        MOZ_OPTIMIZE_FLAGS="-xO4"
-       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -o $@'
-       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) -G -Wl,-z -Wl,muldefs -o $@'
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) -G -Wl,-z -Wl,muldefs -h $@ -o $@'
        MKSHLIB_FORCE_ALL='-Qoption ld -z,allextract'
        MKSHLIB_UNFORCE_ALL=''
-       DSO_LDOPTS='-G -Qoption ld -z,muldefs -h $@'
+       DSO_LDOPTS='-G -Qoption ld -z,muldefs'
        AR_LIST="$AR t"
        AR_EXTRACT="$AR x"
        AR_DELETE="$AR d"
@@ -2047,7 +2056,7 @@ dnl the qsort routine under solaris is faulty
         AC_LANG_RESTORE
     else
        ASFLAGS="$ASFLAGS -fPIC"
-       DSO_LDOPTS='-G -h $@'
+       DSO_LDOPTS='-G'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
        if test "$OS_RELEASE" = "5.3"; then
@@ -2406,8 +2415,25 @@ EOF
                   fi
                   rm -f conftest.[cs]
                  ])
-   if test "$ac_cv_visibility_hidden" = "yes"; then
-      AC_DEFINE(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE)
+  if test "$ac_cv_visibility_hidden" = "yes"; then
+    AC_DEFINE(HAVE_VISIBILITY_HIDDEN_ATTRIBUTE)
+
+    AC_CACHE_CHECK(for visibility(default) attribute,
+                   ac_cv_visibility_default,
+                   [cat > conftest.c <<EOF
+                    int foo __attribute__ ((visibility ("default"))) = 1;
+EOF
+                    ac_cv_visibility_default=no
+                    if ${CC-cc} -fvisibility=hidden -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
+                      if ! grep '\.hidden.*foo' conftest.s >/dev/null; then
+                        ac_cv_visibility_default=yes
+                      fi
+                    fi
+                    rm -f conftest.[cs]
+                   ])
+    if test "$ac_cv_visibility_default" = "yes"; then
+      AC_DEFINE(HAVE_VISIBILITY_ATTRIBUTE)
+
       AC_CACHE_CHECK(for visibility pragma support,
                      ac_cv_visibility_pragma,
                      [cat > conftest.c <<EOF
@@ -2427,12 +2453,35 @@ EOF
                       rm -f conftest.[cs]
                     ])
       if test "$ac_cv_visibility_pragma" = "yes"; then
-        AC_DEFINE(HAVE_VISIBILITY_PRAGMA)
-        VISIBILITY_FLAGS='-I$(DIST)/include/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
-        WRAP_SYSTEM_INCLUDES=1
-      fi
-   fi
-fi     # GNU_CC
+        AC_CACHE_CHECK(For x86_64 gcc visibility bug with builtins (GCC bug 20297),
+                       ac_cv_have_visibility_builtin_bug,
+                       [cat > conftest.c <<EOF
+#pragma GCC visibility push(hidden)
+#pragma GCC visibility push(default)
+#include <string.h>
+#pragma GCC visibility pop
+
+__attribute__ ((visibility ("default"))) void Func() {
+  char c[[100]];
+  memset(c, 0, sizeof(c));
+}
+EOF
+                       ac_cv_have_visibility_builtin_bug=no
+                       if ! ${CC-cc} ${DSO_PIC_CFLAGS} ${DSO_LDOPTS} -O2 -o conftest.so conftest.c >/dev/null 2>&1; then
+                         ac_cv_have_visibility_builtin_bug=yes
+                       fi
+                       rm -f conftest.{c,so}
+                       ])
+        if test "$ac_cv_have_visibility_builtin_bug" = "no"; then
+          VISIBILITY_FLAGS='-I$(DIST)/include/system_wrappers -include $(topsrcdir)/config/gcc_hidden.h'
+          WRAP_SYSTEM_INCLUDES=1
+        else
+          VISIBILITY_FLAGS='-fvisibility=hidden'
+        fi # have visibility pragma bug
+      fi   # have visibility pragma
+    fi     # have visibility(default) attribute
+  fi       # have visibility(hidden) attribute
+fi         # GNU_CC
 
 AC_SUBST(WRAP_SYSTEM_INCLUDES)
 AC_SUBST(VISIBILITY_FLAGS)
