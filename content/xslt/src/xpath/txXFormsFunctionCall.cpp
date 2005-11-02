@@ -151,7 +151,26 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       if (!requireParams(1, 1, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
    
-      return NS_ERROR_NOT_IMPLEMENTED;
+      nsAutoString date;
+      evaluateToString((Expr*)iter.next(), aContext, date);
+   
+      nsCOMPtr<nsIXFormsUtilityService>xformsService = 
+            do_GetService("@mozilla.org/xforms-utility-service;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRInt32 result = 0;
+      double res = Double::NaN;
+      nsresult rv = xformsService->GetDaysFromDateTime(date, &result);
+      if (NS_SUCCEEDED(rv)) {
+        res = result;
+      } 
+      else if (rv != NS_ERROR_ILLEGAL_VALUE) {
+        // if we failed for a reason other than the parameter value, pass that 
+        // up the chain
+        return rv;
+      }
+
+      return aContext->recycler()->getNumberResult(res, aResult);
     }
     case IF:
     {
@@ -377,7 +396,26 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
       if (!requireParams(1, 1, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
    
-      return NS_ERROR_NOT_IMPLEMENTED;
+      nsAutoString duration;
+      evaluateToString((Expr*)iter.next(), aContext, duration);
+   
+      nsCOMPtr<nsIXFormsUtilityService>xformsService = 
+            do_GetService("@mozilla.org/xforms-utility-service;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRInt32 result = 0;
+      double res = Double::NaN;
+      nsresult rv = xformsService->GetMonths(duration, &result);
+      if (NS_SUCCEEDED(rv)) {
+        res = result;
+      } 
+      else if (rv != NS_ERROR_ILLEGAL_VALUE) {
+        // if we failed for a reason other than the parameter value, pass that 
+        // up the chain
+        return rv;
+      }
+
+      return aContext->recycler()->getNumberResult(res, aResult);
     }
     case NOW:
     {
@@ -424,19 +462,53 @@ XFormsFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     }
     case SECONDS:
     {
-      double dbl=0;
       if (!requireParams(1, 1, aContext))
           return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
    
-      return NS_ERROR_NOT_IMPLEMENTED;
+      nsAutoString duration;
+      evaluateToString((Expr*)iter.next(), aContext, duration);
    
+      nsCOMPtr<nsIXFormsUtilityService>xformsService = 
+            do_GetService("@mozilla.org/xforms-utility-service;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      double res;
+      nsresult rv = xformsService->GetSeconds(duration, &res);
+      if (NS_FAILED(rv)) {
+        if (rv != NS_ERROR_ILLEGAL_VALUE) {
+          // if we failed for a reason other than the parameter value, pass that 
+          // up the chain
+          return rv;
+        }
+        res = Double::NaN;
+      }
+
+      return aContext->recycler()->getNumberResult(res, aResult);
     }
     case SECONDSFROMDATETIME:
     {
       if (!requireParams(1, 1, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
    
-      return NS_ERROR_NOT_IMPLEMENTED;
+      nsAutoString dateTime;
+      evaluateToString((Expr*)iter.next(), aContext, dateTime);
+   
+      nsCOMPtr<nsIXFormsUtilityService>xformsService = 
+            do_GetService("@mozilla.org/xforms-utility-service;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      double res;
+      nsresult rv = xformsService->GetSecondsFromDateTime(dateTime, &res);
+      if (NS_FAILED(rv)) {
+        if (rv != NS_ERROR_ILLEGAL_VALUE) {
+          // if we failed for a reason other than the parameter value, pass that 
+          // up the chain
+          return rv;
+        }
+        res = Double::NaN;
+      }
+
+      return aContext->recycler()->getNumberResult(res, aResult);
     }
   } /* switch() */
 
