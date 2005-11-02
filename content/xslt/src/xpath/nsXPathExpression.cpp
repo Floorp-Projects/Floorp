@@ -139,7 +139,7 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
             case ExprResult::NODESET:
                 resultType = nsIDOMXPathResult::UNORDERED_NODE_ITERATOR_TYPE;
                 break;
-            case ExprResult::TREE_FRAGMENT:
+            case ExprResult::RESULT_TREE_FRAGMENT:
                 NS_ERROR("Can't return a tree fragment!");
                 delete exprResult;
                 return NS_ERROR_FAILURE;
