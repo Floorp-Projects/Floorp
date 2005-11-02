@@ -41,12 +41,10 @@ UnionExpr::UnionExpr() {
  * Destructor, will delete all Path Expressions
 **/
 UnionExpr::~UnionExpr() {
-    ListIterator* iter = expressions.iterator();
-    while (iter->hasNext()) {
-         iter->next();
-         delete  (Expr*)iter->remove();
+    txListIterator iter(&expressions);
+    while (iter.hasNext()) {
+         delete (Expr*)iter.next();
     }
-    delete iter;
 } //-- ~UnionExpr
 
 /**
@@ -103,16 +101,15 @@ ExprResult* UnionExpr::evaluate(txIEvalContext* aContext)
  * @return the String representation of this Expr.
 **/
 void UnionExpr::toString(String& dest) {
-    ListIterator* iter = expressions.iterator();
+    txListIterator iter(&expressions);
 
     short count = 0;
-    while (iter->hasNext()) {
+    while (iter.hasNext()) {
         //-- set operator
         if (count > 0)
             dest.append(" | ");
-        ((Expr*)iter->next())->toString(dest);
+        ((Expr*)iter.next())->toString(dest);
         ++count;
     }
-    delete iter;
 } //-- toString
 

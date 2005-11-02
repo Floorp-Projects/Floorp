@@ -69,7 +69,7 @@ ExprResult* ElementAvailableFunctionCall::evaluate(txIEvalContext* aContext)
     ExprResult* result = NULL;
 
     if (requireParams(1, 1, aContext)) {
-        ListIterator iter(&params);
+        txListIterator iter(&params);
         Expr* param = (Expr*) iter.next();
         ExprResult* exprResult = param->evaluate(aContext);
         if (exprResult &&
