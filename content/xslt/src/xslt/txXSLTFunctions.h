@@ -23,7 +23,7 @@
  * Olivier Gerardin,
  *    -- added document() function definition
  *
- * $Id: txXSLTFunctions.h,v 1.3 2005/11/02 07:33:56 axel%pike.org Exp $
+ * $Id: txXSLTFunctions.h,v 1.4 2005/11/02 07:33:57 axel%pike.org Exp $
  */
 
 #include "dom.h"
@@ -32,6 +32,7 @@
 #include "Names.h"
 #include "DOMHelper.h"
 #include "TxString.h"
+#include "ProcessorState.h"
 
 #ifndef TRANSFRMX_XSLT_FUNCTIONS_H
 #define TRANSFRMX_XSLT_FUNCTIONS_H
@@ -123,7 +124,7 @@ public:
     /**
      * Creates a new current() function call
     **/
-    CurrentFunctionCall();
+    CurrentFunctionCall(ProcessorState* ps);
 
     /**
      * Evaluates this Expr based on the given context node and processor state
@@ -136,6 +137,7 @@ public:
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
 
 private:
+   ProcessorState* processorState;
 };
 
 /**
