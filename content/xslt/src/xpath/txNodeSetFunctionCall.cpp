@@ -47,9 +47,6 @@
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txTokenizer.h"
-#ifndef TX_EXE
-#include "nsIDOMNode.h"
-#endif
 
 /*
  * Creates a NodeSetFunctionCall of the given type

@@ -40,7 +40,6 @@
 #define txXPathTreeWalker_h__
 
 #include "baseutils.h"
-#include "TxObject.h"
 #include "txXPathNode.h"
 
 class nsAString;

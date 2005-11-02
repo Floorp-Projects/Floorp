@@ -117,4 +117,39 @@ private:
 #endif
 };
 
+class txNamespaceManager
+{
+public:
+    static PRInt32 getNamespaceID(const nsAString& aNamespaceURI);
+    static nsresult getNamespaceURI(const PRInt32 aID, nsAString& aResult);
+};
+
+/* static */
+inline PRInt32
+txNamespaceManager::getNamespaceID(const nsAString& aNamespaceURI)
+{
+#ifdef TX_EXE
+    return txStandaloneNamespaceManager::getNamespaceID(aNamespaceURI);
+#else
+    NS_ASSERTION(gTxNameSpaceManager, "No namespace manager");
+
+    PRInt32 namespaceID = kNameSpaceID_Unknown;
+    gTxNameSpaceManager->RegisterNameSpace(aNamespaceURI, namespaceID);
+    return namespaceID;
+#endif
+}
+
+/* static */
+inline nsresult
+txNamespaceManager::getNamespaceURI(const PRInt32 aID, nsAString& aResult)
+{
+#ifdef TX_EXE
+    return txStandaloneNamespaceManager::getNamespaceURI(aID, aResult);
+#else
+    NS_ASSERTION(gTxNameSpaceManager, "No namespace manager");
+
+    return gTxNameSpaceManager->GetNameSpaceURI(aID, aResult);
+#endif
+}
+
 #endif /* txXPathNode_h__ */

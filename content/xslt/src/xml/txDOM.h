@@ -433,9 +433,6 @@ class Document : public NodeDefinition
     //Override to return documentBaseURI
     nsresult getBaseURI(nsAString& aURI);
 
-    PRInt32 namespaceURIToID(const nsAString& aNamespaceURI);
-    void namespaceIDToURI(PRInt32 aNamespaceID, nsAString& aNamespaceURI);
-
   private:
     PRBool setElementID(const nsAString& aID, Element* aElement);
 
@@ -551,7 +548,7 @@ class ProcessingInstruction : public NodeDefinition
     nsCOMPtr<nsIAtom> mLocalName;
 };
 
-class txNamespaceManager
+class txStandaloneNamespaceManager
 {
 public:
     static PRInt32 getNamespaceID(const nsAString& aURI)
@@ -625,6 +622,6 @@ private:
 };
 
 #define TX_IMPL_DOM_STATICS \
-    nsStringArray* txNamespaceManager::mNamespaces = 0
+    nsStringArray* txStandaloneNamespaceManager::mNamespaces = 0
 
 #endif

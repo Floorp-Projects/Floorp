@@ -47,10 +47,6 @@
 #include "txURIUtils.h"
 #include "txXMLParser.h"
 
-#ifndef TX_EXE
-#include "nsIDOMDocument.h"
-#endif
-
 const PRInt32 txExecutionState::kMaxRecursionDepth = 20000;
 
 nsresult txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
