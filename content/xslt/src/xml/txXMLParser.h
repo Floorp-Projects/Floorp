@@ -25,11 +25,14 @@
 #ifndef MITRE_XMLPARSER_H
 #define MITRE_XMLPARSER_H
 
-#include "dom.h"
+#include "baseutils.h"
 
 #ifdef TX_EXE
 #include <iostream.h>
 #endif
+
+class nsAString;
+class txXPathNode;
 
 /**
  * API to load XML files into DOM datastructures.
@@ -42,8 +45,8 @@
  */
 extern "C" nsresult
 txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
-                       Document* aLoader, nsAString& aErrMsg,
-                       Document** aResult);
+                       const txXPathNode& aLoader, nsAString& aErrMsg,
+                       txXPathNode** aResult);
 
 #ifdef TX_EXE
 /**
@@ -51,6 +54,6 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
  */
 extern "C" nsresult
 txParseFromStream(istream& aInputStream, const nsAString& aUri,
-                  nsAString& aErrorString, Document** aResult);
+                  nsAString& aErrorString, txXPathNode** aResult);
 #endif
 #endif

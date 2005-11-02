@@ -82,7 +82,7 @@ public:
     {
         if (!mXML || !mStylesheet || !mOut)
             return 1;
-        nsresult rv = transform(mXML, mStylesheet, *mOut, mObserver);
+        nsresult rv = transform(*mXML, mStylesheet, *mOut, mObserver);
         return NS_FAILED(rv);
     }
     int closeOutput ()
@@ -110,7 +110,7 @@ public:
         delete mOut;
     }
 private:
-    Document *mXML;
+    txXPathNode *mXML;
     nsRefPtr<txStylesheet> mStylesheet;
     SimpleErrorObserver mObserver;
     ofstream* mOut;

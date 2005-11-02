@@ -109,14 +109,14 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         txNodeSetContext eContext(nodes, aContext);
         while (eContext.hasNext()) {
             eContext.next();
-            Node* node = eContext.getContextNode();
-            
+
             nsRefPtr<txNodeSet> resNodes;
             if (pxi->pathOp == DESCENDANT_OP) {
                 rv = aContext->recycler()->getNodeSet(getter_AddRefs(resNodes));
                 NS_ENSURE_SUCCESS(rv, rv);
 
-                rv = evalDescendants(pxi->expr, node, &eContext, resNodes);
+                rv = evalDescendants(pxi->expr, eContext.getContextNode(),
+                                     &eContext, resNodes);
                 NS_ENSURE_SUCCESS(rv, rv);
             }
             else {
@@ -141,7 +141,12 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                         getNonSharedNodeSet(oldSet, getter_AddRefs(tmpNodes));
                     NS_ENSURE_SUCCESS(rv, rv);
 
-                    tmpNodes->add(resNodes);
+                    oldSet.swap(resNodes);
+                    rv = aContext->recycler()->
+                        getNonSharedNodeSet(oldSet, getter_AddRefs(resNodes));
+                    NS_ENSURE_SUCCESS(rv, rv);
+
+                    tmpNodes->addAndTransfer(resNodes);
                 }
             }
             else {
@@ -165,8 +170,8 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
  * all nodes that match the Expr
 **/
 nsresult
-PathExpr::evalDescendants(Expr* aStep, Node* aNode, txIMatchContext* aContext,
-                          txNodeSet* resNodes)
+PathExpr::evalDescendants(Expr* aStep, const txXPathNode& aNode,
+                          txIMatchContext* aContext, txNodeSet* resNodes)
 {
     txSingleNodeContext eContext(aNode, aContext);
     nsRefPtr<txAExprResult> res;
@@ -177,23 +182,34 @@ PathExpr::evalDescendants(Expr* aStep, Node* aNode, txIMatchContext* aContext,
         //XXX ErrorReport: report nonnodeset error
         return NS_ERROR_XSLT_NODESET_EXPECTED;
     }
-    resNodes->add(NS_STATIC_CAST(txNodeSet*, NS_STATIC_CAST(txAExprResult*,
-                                                            res)));
+
+    txNodeSet* oldSet = NS_STATIC_CAST(txNodeSet*,
+                                       NS_STATIC_CAST(txAExprResult*, res));
+    nsRefPtr<txNodeSet> newSet;
+    rv = aContext->recycler()->getNonSharedNodeSet(oldSet,
+                                                   getter_AddRefs(newSet));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    resNodes->addAndTransfer(newSet);
 
     MBool filterWS = aContext->isStripSpaceAllowed(aNode);
 
-    Node* child = aNode->getFirstChild();
-    while (child) {
+    txXPathTreeWalker walker(aNode);
+    if (!walker.moveToFirstChild()) {
+        return NS_OK;
+    }
+
+    do {
         if (!(filterWS &&
-              (child->getNodeType() == Node::TEXT_NODE ||
-               child->getNodeType() == Node::CDATA_SECTION_NODE) &&
-              XMLUtils::isWhitespace(child))) {
-            rv = evalDescendants(aStep, child, aContext, resNodes);
+              (walker.getNodeType() == txXPathNodeType::TEXT_NODE ||
+               walker.getNodeType() == txXPathNodeType::CDATA_SECTION_NODE) &&
+              txXPathNodeUtils::isWhitespace(walker.getCurrentPosition()))) {
+            rv = evalDescendants(aStep, walker.getCurrentPosition(), aContext,
+                                 resNodes);
             NS_ENSURE_SUCCESS(rv, rv);
         }
-        child = child->getNextSibling();
-    }
-    
+    } while (walker.moveToNextSibling());
+
     return NS_OK;
 } //-- evalDescendants
 

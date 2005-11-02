@@ -39,7 +39,7 @@
 #include "txForwardContext.h"
 #include "txNodeSet.h"
 
-Node* txForwardContext::getContextNode()
+const txXPathNode& txForwardContext::getContextNode()
 {
     return mContextNode;
 }
@@ -63,7 +63,7 @@ nsresult txForwardContext::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
     return mInner->getVariable(aNamespace, aLName, aResult);
 }
 
-MBool txForwardContext::isStripSpaceAllowed(Node* aNode)
+MBool txForwardContext::isStripSpaceAllowed(const txXPathNode& aNode)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
     return mInner->isStripSpaceAllowed(aNode);

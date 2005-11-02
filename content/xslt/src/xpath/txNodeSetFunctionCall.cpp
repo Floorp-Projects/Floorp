@@ -33,11 +33,11 @@
  */
 
 #include "FunctionLib.h"
+#include "nsAutoPtr.h"
 #include "txNodeSet.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txTokenizer.h"
-#include "XMLDOMUtils.h"
 #ifndef TX_EXE
 #include "nsIDOMNode.h"
 #endif
@@ -92,12 +92,7 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            Document* contextDoc = 0;
-            Node* contextNode = aContext->getContextNode();
-            if (contextNode->getNodeType() == Node::DOCUMENT_NODE)
-                contextDoc = (Document*)contextNode;
-            else
-                contextDoc = contextNode->getOwnerDocument();
+            txXPathTreeWalker walker(aContext->getContextNode());
             
             if (exprResult->getResultType() == txAExprResult::NODESET) {
                 txNodeSet* nodes = NS_STATIC_CAST(txNodeSet*,
@@ -106,13 +101,12 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 PRInt32 i;
                 for (i = 0; i < nodes->size(); ++i) {
                     nsAutoString idList;
-                    XMLDOMUtils::getNodeValue(nodes->get(i), idList);
+                    txXPathNodeUtils::appendNodeValue(nodes->get(i), idList);
                     txTokenizer tokenizer(idList);
                     while (tokenizer.hasMoreTokens()) {
-                        Node* idNode =
-                            contextDoc->getElementById(tokenizer.nextToken());
-                        if (idNode)
-                            resultSet->add(idNode);
+                        if (walker.moveToElementById(tokenizer.nextToken())) {
+                            resultSet->add(walker.getCurrentPosition());
+                        }
                     }
                 }
             }
@@ -121,10 +115,9 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 exprResult->stringValue(idList);
                 txTokenizer tokenizer(idList);
                 while (tokenizer.hasMoreTokens()) {
-                    Node* idNode =
-                        contextDoc->getElementById(tokenizer.nextToken());
-                    if (idNode)
-                        resultSet->add(idNode);
+                    if (walker.moveToElementById(tokenizer.nextToken())) {
+                        resultSet->add(walker.getCurrentPosition());
+                    }
                 }
             }
 
@@ -149,10 +142,9 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
             }
 
-            Node* node = 0;
             // Check for optional arg
+            nsRefPtr<txNodeSet> nodes;
             if (iter.hasNext()) {
-                nsRefPtr<txNodeSet> nodes;
                 rv = evaluateToNodeSet((Expr*)iter.next(), aContext,
                                        getter_AddRefs(nodes));
                 NS_ENSURE_SUCCESS(rv, rv);
@@ -162,12 +154,10 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
                     return NS_OK;
                 }
-                node = nodes->get(0);
-            }
-            else {
-                node = aContext->getContextNode();
             }
 
+            const txXPathNode& node = nodes ? nodes->get(0) :
+                                              aContext->getContextNode();
             switch (mType) {
                 case LOCAL_NAME:
                 {
@@ -176,23 +166,8 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                     NS_ENSURE_SUCCESS(rv, rv);
 
                     *aResult = strRes;
-#ifdef TX_EXE
-                    nsCOMPtr<nsIAtom> localNameAtom;
-                    node->getLocalName(getter_AddRefs(localNameAtom));
-                    if (localNameAtom) {
-                        // Node has a localName
-                        localNameAtom->ToString(strRes->mValue);
-                    }
-#else
-                    // The mozilla HTML-elements returns different casing for
-                    // the localName-atom and .localName. Once we have a
-                    // treeWalker it should have a getLocalName(nsAString&)
-                    // function.
-                    nsCOMPtr<nsIDOMNode> mozNode =
-                        do_QueryInterface(node->getNSObj());
-                    NS_ASSERTION(mozNode, "wrapper doesn't wrap a nsIDOMNode");
-                    mozNode->GetLocalName(strRes->mValue);
-#endif
+                    txXPathNodeUtils::getLocalName(node, strRes->mValue);
+
                     return NS_OK;
                 }
                 case NAMESPACE_URI:
@@ -202,16 +177,16 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                     NS_ENSURE_SUCCESS(rv, rv);
 
                     *aResult = strRes;
-                    node->getNamespaceURI(strRes->mValue);
+                    txXPathNodeUtils::getNamespaceURI(node, strRes->mValue);
 
                     return NS_OK;
                 }
                 case NAME:
                 {
-                    switch (node->getNodeType()) {
-                        case Node::ATTRIBUTE_NODE:
-                        case Node::ELEMENT_NODE:
-                        case Node::PROCESSING_INSTRUCTION_NODE:
+                    switch (txXPathNodeUtils::getNodeType(node)) {
+                        case txXPathNodeType::ATTRIBUTE_NODE:
+                        case txXPathNodeType::ELEMENT_NODE:
+                        case txXPathNodeType::PROCESSING_INSTRUCTION_NODE:
                         // XXX Namespace: namespaces have a name
                         {
                             StringResult* strRes = nsnull;
@@ -219,7 +194,7 @@ NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                             NS_ENSURE_SUCCESS(rv, rv);
 
                             *aResult = strRes;
-                            node->getNodeName(strRes->mValue);
+                            txXPathNodeUtils::getNodeName(node, strRes->mValue);
 
                             return NS_OK;
                         }

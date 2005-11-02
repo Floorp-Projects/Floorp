@@ -39,7 +39,7 @@
 #include "txNodeSetContext.h"
 #include "txNodeSet.h"
 
-Node* txNodeSetContext::getContextNode()
+const txXPathNode& txNodeSetContext::getContextNode()
 {
     return mContextSet->get(mPosition - 1);
 }
@@ -62,7 +62,7 @@ nsresult txNodeSetContext::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
     return mInner->getVariable(aNamespace, aLName, aResult);
 }
 
-MBool txNodeSetContext::isStripSpaceAllowed(Node* aNode)
+MBool txNodeSetContext::isStripSpaceAllowed(const txXPathNode& aNode)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
     return mInner->isStripSpaceAllowed(aNode);

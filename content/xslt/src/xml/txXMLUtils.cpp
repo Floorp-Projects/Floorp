@@ -35,6 +35,7 @@
 #include "txAtoms.h"
 #include "txStringUtils.h"
 #include "txNamespaceMap.h"
+#include "txXPathTreeWalker.h"
 
 /**
  * Helper class for checking and partioning of QNames
@@ -234,16 +235,6 @@ PRBool XMLUtils::isWhitespace(const nsAFlatString& aText)
 }
 
 /**
- * Returns true if the given node's value has only whitespace characters
- */
-PRBool XMLUtils::isWhitespace(Node* aNode)
-{
-    nsAutoString text;
-    aNode->getNodeValue(text);
-    return isWhitespace(text);
-}
-
-/**
  * Normalizes the value of a XML processing instruction
 **/
 void XMLUtils::normalizePIValue(nsAString& piValue)
@@ -275,31 +266,21 @@ void XMLUtils::normalizePIValue(nsAString& piValue)
     }
 }
 
-/*
- * Walks up the document tree and returns true if the closest xml:space
- * attribute is "preserve"
- */
 //static
-MBool XMLUtils::getXMLSpacePreserve(Node* aNode)
+MBool XMLUtils::getXMLSpacePreserve(const txXPathNode& aNode)
 {
-    NS_ASSERTION(aNode, "Calling preserveXMLSpace with NULL node!");
-
     nsAutoString value;
-    Node* parent = aNode;
-    while (parent) {
-        if (parent->getNodeType() == Node::ELEMENT_NODE) {
-            Element* elem = (Element*)parent;
-            if (elem->getAttr(txXMLAtoms::space, kNameSpaceID_XML, value)) {
-                if (TX_StringEqualsAtom(value, txXMLAtoms::preserve)) {
-                    return MB_TRUE;
-                }
-                if (TX_StringEqualsAtom(value, txXMLAtoms::_default)) {
-                    return MB_FALSE;
-                }
+    txXPathTreeWalker walker(aNode);
+    do {
+        if (walker.getAttr(txXMLAtoms::space, kNameSpaceID_XML, value)) {
+            if (TX_StringEqualsAtom(value, txXMLAtoms::preserve)) {
+                return PR_TRUE;
+            }
+            if (TX_StringEqualsAtom(value, txXMLAtoms::_default)) {
+                return PR_FALSE;
             }
         }
-        parent = parent->getParentNode();
-    }
+    } while (walker.moveToParent());
 
     return PR_FALSE;
 }

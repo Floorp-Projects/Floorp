@@ -25,10 +25,11 @@
 
 #include "Expr.h"
 #include "txAtoms.h"
+#include "txXPathTreeWalker.h"
 #include "txIXPathContext.h"
 
 txNameTest::txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
-                       Node::NodeType aNodeType)
+                       PRUint16 aNodeType)
     :mPrefix(aPrefix), mLocalName(aLocalName), mNamespace(aNSID),
      mNodeType(aNodeType)
 {
@@ -41,12 +42,9 @@ txNameTest::~txNameTest()
 {
 }
 
-/*
- * Determines whether this txNodeTest matches the given node
- */
-MBool txNameTest::matches(Node* aNode, txIMatchContext* aContext)
+PRBool txNameTest::matches(const txXPathNode& aNode, txIMatchContext* aContext)
 {
-    if (!aNode || aNode->getNodeType() != mNodeType)
+    if (txXPathNodeUtils::getNodeType(aNode) != mNodeType)
         return MB_FALSE;
 
     // Totally wild?
@@ -54,7 +52,7 @@ MBool txNameTest::matches(Node* aNode, txIMatchContext* aContext)
         return MB_TRUE;
 
     // Compare namespaces
-    if (aNode->getNamespaceID() != mNamespace)
+    if (txXPathNodeUtils::getNamespaceID(aNode) != mNamespace)
         return MB_FALSE;
 
     // Name wild?
@@ -62,8 +60,7 @@ MBool txNameTest::matches(Node* aNode, txIMatchContext* aContext)
         return MB_TRUE;
 
     // Compare local-names
-    nsCOMPtr<nsIAtom> localName;
-    aNode->getLocalName(getter_AddRefs(localName));
+    nsCOMPtr<nsIAtom> localName = txXPathNodeUtils::getLocalName(aNode);
     return localName == mLocalName;
 }
 

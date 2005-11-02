@@ -31,95 +31,133 @@
  */
 
 #include "txNodeSet.h"
-#include "dom.h"
-#include "XMLDOMUtils.h"
-#include <string.h>
+#include "TxLog.h"
+#include "nsMemory.h"
 
-static const int kTxNodeSetMinSize = 4;
-static const int kTxNodeSetGrowFactor = 2;
-
-/*
- * Implementation of an XPath NodeSet
+/**
+ * Implementation of an XPath nodeset
  */
 
-/*
- * Creates a new empty NodeSet
- */
+static const PRInt32 kTxNodeSetMinSize = 4;
+static const PRInt32 kTxNodeSetGrowFactor = 2;
+
+#define kForward   1
+#define kReversed -1
+
 txNodeSet::txNodeSet(txResultRecycler* aRecycler)
     : txAExprResult(aRecycler),
-      mElements(0),
-      mBufferSize(0),
-      mElementCount(0)
+      mStart(nsnull),
+      mEnd(nsnull),
+      mStartBuffer(nsnull),
+      mEndBuffer(nsnull),
+      mDirection(kForward),
+      mMarks(nsnull)
 {
 }
 
-/*
- * Creates a new NodeSet containing the supplied Node
- */
-txNodeSet::txNodeSet(Node* aNode, txResultRecycler* aRecycler)
+txNodeSet::txNodeSet(const txXPathNode& aNode, txResultRecycler* aRecycler)
     : txAExprResult(aRecycler),
-      mElements(new Node*[1]),
-      mBufferSize(1),
-      mElementCount(1)
+      mStart(nsnull),
+      mEnd(nsnull),
+      mStartBuffer(nsnull),
+      mEndBuffer(nsnull),
+      mDirection(kForward),
+      mMarks(nsnull)
 {
-    NS_ASSERTION(aNode, "missing node to txNodeSet::txNodeSet");
-    if (!mElements) {
-        NS_ASSERTION(0, "out of memory");
-        mBufferSize = 0;
-        mElementCount = 0;
+    if (!ensureGrowSize(1)) {
+        return;
     }
-    else {
-        mElements[0] = aNode;
-    }
+
+    new(mStart) txXPathNode(aNode);
+    ++mEnd;
 }
 
-/*
- * Creates a new NodeSet, copying the Node references from the source
- * NodeSet
- */
 txNodeSet::txNodeSet(const txNodeSet& aSource, txResultRecycler* aRecycler)
     : txAExprResult(aRecycler),
-      mElements(0),
-      mBufferSize(0),
-      mElementCount(0)
+      mStart(nsnull),
+      mEnd(nsnull),
+      mStartBuffer(nsnull),
+      mEndBuffer(nsnull),
+      mDirection(kForward),
+      mMarks(nsnull)
 {
-    append(&aSource);
+    append(aSource);
 }
 
-/*
- * Adds the specified Node to this NodeSet if it is not already in this
- * NodeSet. The node is inserted according to document order.
- * @param  aNode the Node to add to the NodeSet
- * @return errorcode.
- */
-nsresult txNodeSet::add(Node* aNode)
+txNodeSet::~txNodeSet()
 {
-    NS_ASSERTION(aNode, "missing node to txNodeSet::add");
-    if (!aNode)
-        return NS_ERROR_NULL_POINTER;
+    delete [] mMarks;
 
-    MBool nonDup;
-    int pos = findPosition(aNode, 0, mElementCount - 1, nonDup);
-    if (nonDup) {
-        if (!ensureSize(mElementCount + 1))
-            return NS_ERROR_OUT_OF_MEMORY;
-        memmove(mElements + pos + 1,
-                mElements + pos,
-                (mElementCount - pos) * sizeof(Node*));
-        mElements[pos] = aNode;
-        ++mElementCount;
+    if (mStartBuffer) {
+        while (mStart < mEnd) {
+            mStart->~txXPathNode();
+            ++mStart;
+        }
+
+        nsMemory::Free(mStartBuffer);
     }
+}
+
+nsresult txNodeSet::add(const txXPathNode& aNode)
+{
+    NS_ASSERTION(mDirection == kForward,
+                 "only append(aNode) is supported on reversed nodesets");
+
+    if (isEmpty()) {
+        return append(aNode);
+    }
+
+    PRBool dupe;
+    txXPathNode* pos = findPosition(aNode, mStart, mEnd, dupe);
+
+    if (dupe) {
+        return NS_OK;
+    }
+
+    // save pos, ensureGrowSize messes with the pointers
+    PRInt32 moveSize = mEnd - pos;
+    PRInt32 offset = pos - mStart;
+    if (!ensureGrowSize(1)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    // set pos to where it was
+    pos = mStart + offset;
+
+    if (moveSize > 0) {
+        memmove(pos + 1, pos, moveSize * sizeof(txXPathNode));
+    }
+
+    new(pos) txXPathNode(aNode);
+    ++mEnd;
+
     return NS_OK;
 }
 
-/*
- * Adds the nodes in specified NodeSet to this NodeSet. The resulting NodeSet
- * is sorted in document order and does not contain any duplicate nodes.
- * @param  aNodes the NodeSet to add, must be in document order.
- * @return true on success. false on failure.
- */
+nsresult txNodeSet::add(const txNodeSet& aNodes)
+{
+    return add(aNodes, copyElements);
+}
 
-/*
+nsresult txNodeSet::addAndTransfer(txNodeSet* aNodes)
+{
+    // failure is out-of-memory, transfer didn't happen
+    nsresult rv = add(*aNodes, transferElements);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+#ifdef TX_DONT_RECYCLE_BUFFER
+    if (aNodes->mStartBuffer) {
+        nsMemory::Free(aNodes->mStartBuffer);
+        aNodes->mStartBuffer = aNodes->mEndBuffer = nsnull;
+    }
+#endif
+    aNodes->mStart = aNodes->mEnd = aNodes->mStartBuffer;
+
+    return NS_OK;
+}
+
+/**
+ * add(aNodeSet, aTransferOp)
+ *
  * The code is optimized to make a minimum number of calls to
  * Node::compareDocumentPosition. The idea is this:
  * We have the two nodesets (number indicate "document position")
@@ -129,267 +167,320 @@ nsresult txNodeSet::add(Node* aNode)
  * _ _ _ _ _ _ _ _   <- result
  * 
  * 
- * We select the last node in the smallest nodeset and find where in the other
- * nodeset it would be inserted. In this case we would take the 7 from the
- * first nodeset and find the position between the 6 and 8 in the second.
- * We then take the nodes after the insert-position and move it to the end of
- * the resulting nodeset, and then do the same for the node from the smaller
- * nodeset. Which in this case means that we'd first move the 8 and 9 nodes,
- * and then the 7 node, giving us the following:
+ * When merging these nodesets into the result, the nodes are transfered
+ * in chunks to the end of the buffer so that each chunk does not contain
+ * a node from the other nodeset, in document order.
+ *
+ * We select the last non-transfered node in the first nodeset and find
+ * where in the other nodeset it would be inserted. In this case we would
+ * take the 7 from the first nodeset and find the position between the
+ * 6 and 8 in the second. We then take the nodes after the insert-position
+ * and transfer them to the end of the resulting nodeset. Which in this case
+ * means that we first transfered the 8 and 9 nodes, giving us the following:
  * 
- * 1 3               <- source 1
+ * 1 3 7             <- source 1
  * 2 3 6             <- source 2
- * _ _ _ _ _ 7 8 9   <- result
+ * _ _ _ _ _ _ 8 9   <- result
+ *
+ * The corresponding procedure is done for the second nodeset, that is
+ * the insertion position of the 6 in the first nodeset is found, which
+ * is between the 3 and the 7. The 7 is memmoved (as it stays within
+ * the same nodeset) to the result buffer.
+ *
+ * As the result buffer is filled from the end, it is safe to share the
+ * buffer between this nodeset and the result.
  * 
- * Repeat until one of the nodesets are empty. If we find a duplicate node
- * when searching for where insertposition we skip the step where we move the
- * node from the smaller nodeset to the resulting nodeset. So in this next
- * step in the example we would only move the 3 and 6 nodes from the second
- * nodeset and then just remove the 3 node from the first nodeset. Giving:
- * 
- * 1                 <- source 1
- * 2                 <- source 2
- * _ _ _ 3 6 7 8 9   <- result
- * 
- * We might therefor end up with some blanks in the bigining of the resulting
- * nodeset, which we simply fix by moving all the nodes one step down.
+ * This is repeated until both of the nodesets are empty.
+ *
+ * If we find a duplicate node when searching for where insertposition we
+ * check for sequences of duplicate nodes, which can be optimized.
+ *
  */
-nsresult txNodeSet::add(const txNodeSet* aNodes)
+nsresult txNodeSet::add(const txNodeSet& aNodes, transferOp aTransfer)
 {
-    NS_ASSERTION(aNodes, "missing nodeset to txNodeSet::add");
-    if (!aNodes)
-        return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION(mDirection == kForward,
+                 "only append(aNode) is supported on reversed nodesets");
 
-    if (aNodes->mElementCount == 0)
+    if (aNodes.isEmpty()) {
         return NS_OK;
+    }
 
-    // This is probably a rather common case, so lets try to shortcut
-    if (mElementCount == 0 ||
-        mElements[mElementCount-1]->compareDocumentPosition(aNodes->mElements[0]) < 0)
-        return append(aNodes);
-
-    if (!ensureSize(mElementCount + aNodes->mElementCount))
+    if (!ensureGrowSize(aNodes.size())) {
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    // Index of last node in this nodeset
-    int thisPos = mElementCount - 1;
-    // Index of last node in other nodeset
-    int otherPos = aNodes->mElementCount - 1;
-    // Index in result where last insert was done.
-    int lastInsertPos = mElementCount + aNodes->mElementCount;
-    
-    while (thisPos >= 0 && otherPos >= 0) {
-        if (thisPos > otherPos) {
-            int pos;
-            MBool nonDup;
-            // Find where in the remaining nodes in this nodeset a node from
-            // the other nodeset should be inserted
-            pos = findPosition(aNodes->mElements[otherPos], 0, thisPos,
-                               nonDup);
+    // This is probably a rather common case, so lets try to shortcut.
+    if (mStart == mEnd ||
+        txXPathNodeUtils::comparePosition(mEnd[-1], *aNodes.mStart) < 0) {
+        aTransfer(mEnd, aNodes.mStart, aNodes.mEnd);
+        mEnd += aNodes.size();
 
-            // Move nodes in this nodeset
-            lastInsertPos -= thisPos - pos + 1;
-            memmove(mElements + lastInsertPos,
-                    mElements + pos,
-                    (thisPos - pos + 1) * sizeof(Node*));
+        return NS_OK;
+    }
 
-            // Copy node from the other nodeset unless it's a dup
-            if (nonDup)
-                mElements[--lastInsertPos] = aNodes->mElements[otherPos];
-            
-            // Adjust positions in both nodesets
-            thisPos = pos - 1;
-            --otherPos;
+    // Last element in this nodeset
+    txXPathNode* thisPos = mEnd;
+
+    // Last element of the other nodeset
+    txXPathNode* otherPos = aNodes.mEnd;
+
+    // Pointer to the insertion point in this nodeset
+    txXPathNode* insertPos = mEndBuffer;
+
+    PRBool dupe;
+    txXPathNode* pos;
+    PRInt32 count;
+    while (thisPos > mStart || otherPos > aNodes.mStart) {
+        // Find where the last remaining node of this nodeset would
+        // be inserted in the other nodeset.
+        if (thisPos > mStart) {
+            pos = findPosition(thisPos[-1], aNodes.mStart, otherPos, dupe);
+
+            if (dupe) {
+                --thisPos; // this is already added
+                // check dupe sequence
+                while (thisPos > mStart && pos > aNodes.mStart &&
+                       thisPos[-1] == pos[-1]) {
+                    --thisPos;
+                    --pos;
+                }
+            }
         }
         else {
-            int pos;
-            MBool nonDup;
-            // Find where in the remaining nodes in the other nodeset a node
-            // from this nodeset should be inserted
-            pos = aNodes->findPosition(mElements[thisPos], 0, otherPos,
-                                       nonDup);
+            pos = aNodes.mStart;
+        }
 
-            // Copy nodes from other nodeset to this
-            lastInsertPos -= otherPos - pos + 1;
-            memcpy(mElements + lastInsertPos,
-                   aNodes->mElements + pos,
-                   (otherPos - pos + 1) * sizeof(Node*));
+        // Transfer the otherNodes after the insertion point to the result
+        count = otherPos - pos;
+        if (count > 0) {
+            insertPos -= count;
+            aTransfer(insertPos, pos, otherPos);
+            otherPos -= count;
+        }
 
-            // Move node in this nodeset unless it's a dup
-            if (nonDup)
-                mElements[--lastInsertPos] = mElements[thisPos];
-            
-            // Adjust positions in both nodesets
-            otherPos = pos - 1;
-            --thisPos;
+        // Find where the last remaining node of the otherNodeset would
+        // be inserted in this nodeset.
+        if (otherPos > aNodes.mStart) {
+            pos = findPosition(otherPos[-1], mStart, thisPos, dupe);
+
+            if (dupe) {
+                --otherPos; // this is already added
+                // check dupe sequence
+                while (otherPos > aNodes.mStart && pos > mStart &&
+                       otherPos[-1] == pos[-1]) {
+                    --otherPos;
+                    --pos;
+                }
+            }
+        }
+        else {
+            pos = mStart;
+        }
+
+        // Move the nodes from this nodeset after the insertion point
+        // to the result
+        count = thisPos - pos;
+        if (count > 0) {
+            insertPos -= count;
+            memmove(insertPos, pos, count * sizeof(txXPathNode));
+            thisPos -= count;
         }
     }
+    mStart = insertPos;
+    mEnd = mEndBuffer;
     
-    if (thisPos >= 0) {
-        // There were some elements still left in this nodeset that need to
-        // be moved
-        lastInsertPos -= thisPos + 1;
-        memmove(mElements + lastInsertPos,
-                mElements,
-                (thisPos + 1) * sizeof(Node*));
-    }
-    else if (otherPos >= 0) {
-        // There were some elements still left in the other nodeset that need
-        // to be copied
-        lastInsertPos -= otherPos + 1;
-        memcpy(mElements + lastInsertPos,
-               aNodes->mElements,
-               (otherPos + 1) * sizeof(Node*));
-    }
-    
-    // if lastInsertPos != 0 then we have found some duplicates causing the
-    // first element to not be placed at mElements[0]
-    mElementCount += aNodes->mElementCount - lastInsertPos;
-    if (lastInsertPos) {
-        memmove(mElements,
-                mElements + lastInsertPos,
-                mElementCount * sizeof(Node*));
-    }
-
     return NS_OK;
 }
 
-/*
+/**
  * Append API
  * These functions should be used with care.
  * They are intended to be used when the caller assures that the resulting
- * NodeSet remains in document order.
+ * nodeset remains in document order.
  * Abuse will break document order, and cause errors in the result.
  * These functions are significantly faster than the add API, as no
- * Node::OrderInfo structs will be generated.
+ * order info operations will be performed.
  */
 
-/*
- * Appends the specified Node to the end of this NodeSet
- * @param  aNode the Node to append to the NodeSet
- * @return true on success. false on failure.
- */
-nsresult txNodeSet::append(Node* aNode)
+nsresult
+txNodeSet::append(const txXPathNode& aNode)
 {
-    NS_ASSERTION(aNode, "missing node to txNodeSet::append");
-    if (!aNode)
-        return NS_ERROR_NULL_POINTER;
-
-    if (!ensureSize(mElementCount + 1))
+    if (!ensureGrowSize(1)) {
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    mElements[mElementCount++] = aNode;
+    if (mDirection == kForward) {
+        new(mEnd) txXPathNode(aNode);
+        ++mEnd;
+
+        return NS_OK;
+    }
+
+    new(--mStart) txXPathNode(aNode);
 
     return NS_OK;
 }
 
-/*
- * Appends the nodes in the specified NodeSet to the end of this NodeSet
- * @param  aNodes the NodeSet to append to the NodeSet
- * @return true on success. false on failure.
- */
-nsresult txNodeSet::append(const txNodeSet* aNodes)
+nsresult
+txNodeSet::append(const txNodeSet& aNodes)
 {
-    NS_ASSERTION(aNodes, "missing nodeset to txNodeSet::append");
-    if (!aNodes)
-        return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION(mDirection == kForward,
+                 "only append(aNode) is supported on reversed nodesets");
 
-    if (!ensureSize(mElementCount + aNodes->mElementCount))
+    if (aNodes.isEmpty()) {
+        return NS_OK;
+    }
+
+    PRInt32 appended = aNodes.size();
+    if (!ensureGrowSize(appended)) {
         return NS_ERROR_OUT_OF_MEMORY;
+    }
 
-    memcpy(mElements + mElementCount,
-           aNodes->mElements,
-           aNodes->mElementCount * sizeof(Node*));
-    mElementCount += aNodes->mElementCount;
+    copyElements(mEnd, aNodes.mStart, aNodes.mEnd);
+    mEnd += appended;
 
     return NS_OK;
 }
 
-/*
- * Reverse the order of the nodes.
- */
-void txNodeSet::reverse()
+nsresult
+txNodeSet::mark(PRInt32 aIndex)
 {
-    int i;
-    for (i = 0; i < mElementCount / 2; ++i) {
-        Node* tmp;
-        tmp = mElements[i];
-        mElements[i] = mElements[mElementCount - 1 - i];
-        mElements[mElementCount - 1 - i] = tmp;
+    NS_ASSERTION(aIndex >= 0 && mStart && mEnd - mStart > aIndex,
+                 "index out of bounds");
+    if (!mMarks) {
+        PRInt32 length = size();
+        mMarks = new PRPackedBool[length];
+        NS_ENSURE_TRUE(mMarks, NS_ERROR_OUT_OF_MEMORY);
+        memset(mMarks, 0, length * sizeof(PRPackedBool));
     }
+    if (mDirection == kForward) {
+        mMarks[aIndex] = PR_TRUE;
+    }
+    else {
+        mMarks[size() - aIndex - 1] = PR_TRUE;
+    }
+
+    return NS_OK;
 }
 
-/*
- * Returns the index of the specified Node,
- * or -1 if the Node is not contained in the NodeSet
- * @param  aNode the Node to get the index for
- * @return index of specified node or -1 if the node does not exist
- */
-int txNodeSet::indexOf(Node* aNode) const
+nsresult
+txNodeSet::sweep()
 {
-    // XXX this doesn't fully work since attribute-nodes are broken
-    // and can't be pointer-compared. However it's the best we can
-    // do for now.
-    int i;
-    for (i = 0; i < mElementCount; ++i) {
-        if (mElements[i] == aNode)
-            return i;
+    if (!mMarks) {
+        // sweep everything
+        clear();
     }
+
+    PRInt32 chunk, pos = 0;
+    PRInt32 length = size();
+    txXPathNode* insertion = mStartBuffer;
+
+    while (pos < length) {
+        while (pos < length && !mMarks[pos]) {
+            // delete unmarked
+            mStart[pos].~txXPathNode();
+            ++pos;
+        }
+        // find chunk to move
+        chunk = 0;
+        while (pos < length && mMarks[pos]) {
+            ++pos;
+            ++chunk;
+        }
+        // move chunk
+        if (chunk > 0) {
+            memmove(insertion, mStart + pos - chunk,
+                    chunk * sizeof(txXPathNode));
+            insertion += chunk;
+        }
+    }
+    mStart = mStartBuffer;
+    mEnd = insertion;
+    delete [] mMarks;
+    mMarks = nsnull;
+
+    return NS_OK;
+}
+
+void
+txNodeSet::clear()
+{
+    while (mStart < mEnd) {
+        mStart->~txXPathNode();
+        ++mStart;
+    }
+#ifdef TX_DONT_RECYCLE_BUFFER
+    if (mStartBuffer) {
+        nsMemory::Free(mStartBuffer);
+        mStartBuffer = mEndBuffer = nsnull;
+    }
+#endif
+    mStart = mEnd = mStartBuffer;
+    delete [] mMarks;
+    mMarks = nsnull;
+    mDirection = kForward;
+}
+
+PRInt32
+txNodeSet::indexOf(const txXPathNode& aNode) const
+{
+    NS_ASSERTION(mDirection == kForward,
+                 "only append(aNode) is supported on reversed nodesets");
+
+    if (!mStart || mStart == mEnd) {
+        return -1;
+    }
+
+    PRInt32 counter = 0;
+    txXPathNode* pos = mStart;
+    for (; pos < mEnd; ++counter, ++pos) {
+        if (*pos == aNode) {
+            return counter;
+        }
+    }
+
     return -1;
 }
 
-/*
- * Returns the Node at the specified position in this NodeSet.
- * @param  aIndex the position of the Node to return
- * @return Node at specified position
- */
-Node* txNodeSet::get(int aIndex) const
+const txXPathNode&
+txNodeSet::get(PRInt32 aIndex) const
 {
-    NS_ASSERTION(aIndex >= 0 && aIndex < mElementCount,
-                 "invalid index in txNodeSet::get");
-    if (aIndex < 0 || aIndex >= mElementCount)
-        return 0;
+    if (mDirection == kForward) {
+        return mStart[aIndex];
+    }
 
-    return mElements[aIndex];
+    return mEnd[-aIndex - 1];
 }
 
-/*
- * Returns the type of ExprResult represented
- * @return the type of ExprResult represented
- */
-short txNodeSet::getResultType()
+short
+txNodeSet::getResultType()
 {
     return txAExprResult::NODESET;
 }
 
-/*
- * Converts this ExprResult to a Boolean (MBool) value
- * @return the Boolean value
- */
-MBool txNodeSet::booleanValue()
+PRBool
+txNodeSet::booleanValue()
 {
-    return mElementCount > 0;
+    return !isEmpty();
 }
-
-/*
- * Converts this ExprResult to a Number (double) value
- * @return the Number value
- */
-double txNodeSet::numberValue()
+double
+txNodeSet::numberValue()
 {
     nsAutoString str;
     stringValue(str);
+
     return Double::toDouble(str);
 }
 
-/*
- * Creates a String representation of this ExprResult
- * @param aStr the destination string to append the String representation to.
- */
-void txNodeSet::stringValue(nsAString& aStr)
+void
+txNodeSet::stringValue(nsAString& aStr)
 {
-    if (mElementCount > 0)
-        XMLDOMUtils::getNodeValue(get(0), aStr);
+    NS_ASSERTION(mDirection == kForward,
+                 "only append(aNode) is supported on reversed nodesets");
+    if (isEmpty()) {
+        return;
+    }
+    txXPathNodeUtils::appendNodeValue(get(0), aStr);
 }
 
 nsAString*
@@ -398,89 +489,132 @@ txNodeSet::stringValuePointer()
     return nsnull;
 }
 
-/*
- * Makes sure that the mElements buffer contains at least aSize elements.
- * If a new allocation is required the elements are copied over to the new
- * buffer
- * @param  aSize requested number of elements
- * @return true if allocation succeded, false on out of memory
- */
-MBool txNodeSet::ensureSize(int aSize)
+PRBool txNodeSet::ensureGrowSize(PRInt32 aSize)
 {
-    if (aSize <= mBufferSize)
-        return MB_TRUE;
+    // check if there is enough place in the buffer as is
+    if (mDirection == kForward && aSize <= mEndBuffer - mEnd) {
+        return PR_TRUE;
+    }
+
+    if (mDirection == kReversed && aSize <= mStart - mStartBuffer) {
+        return PR_TRUE;
+    }
+
+    // check if we just have to align mStart to have enough space
+    PRInt32 oldSize = mEnd - mStart;
+    PRInt32 oldLength = mEndBuffer - mStartBuffer;
+    PRInt32 ensureSize = oldSize + aSize;
+    if (ensureSize <= oldLength) {
+        // just move the buffer
+        txXPathNode* dest = mStartBuffer;
+        if (mDirection == kReversed) {
+            dest = mEndBuffer - oldSize;
+        }
+        memmove(dest, mStart, oldSize * sizeof(txXPathNode));
+        mStart = dest;
+        mEnd = dest + oldSize;
+            
+        return PR_TRUE;
+    }
 
     // This isn't 100% safe. But until someone manages to make a 1gig nodeset
     // it should be ok.
-    int newSize = mBufferSize > kTxNodeSetMinSize ? mBufferSize :
-                                                    kTxNodeSetMinSize;
-    while (newSize < aSize)
-        newSize *= kTxNodeSetGrowFactor;
+    PRInt32 newLength = PR_MAX(oldLength, kTxNodeSetMinSize);
 
-    Node** newArr = new Node*[newSize];
-    if (!newArr)
-        return MB_FALSE;
-    
-    if (mElementCount)
-        memcpy(newArr, mElements, mElementCount * sizeof(Node*));
+    while (newLength < ensureSize) {
+        newLength *= kTxNodeSetGrowFactor;
+    }
 
-    delete [] mElements;
-    mElements = newArr;
-    mBufferSize = newSize;
-    
-    return MB_TRUE;
+    txXPathNode* newArr = NS_STATIC_CAST(txXPathNode*,
+                                         nsMemory::Alloc(newLength *
+                                                         sizeof(txXPathNode)));
+    if (!newArr) {
+        return PR_FALSE;
+    }
+
+    txXPathNode* dest = newArr;
+    if (mDirection == kReversed) {
+        dest += newLength - oldSize;
+    }
+
+    if (oldSize > 0) {
+        memcpy(dest, mStart, oldSize * sizeof(txXPathNode));
+    }
+
+    if (mStartBuffer) {
+#ifdef DEBUG
+        memset(mStartBuffer, 0,
+               (mEndBuffer - mStartBuffer) * sizeof(txXPathNode));
+#endif
+        nsMemory::Free(mStartBuffer);
+    }
+
+    mStartBuffer = newArr;
+    mEndBuffer = mStartBuffer + newLength;
+    mStart = dest;
+    mEnd = dest + oldSize;
+
+    return PR_TRUE;
 }
 
-/*
- * Finds position in the mElements buffer where a node should be inserted
- * to keep the nodeset in document order. Searches the positions
- * aFirst-aLast, including both aFirst and aLast.
- * @param  aNode   Node to find insert position for
- * @param  aFirst  First index to search, this index will be searched
- * @param  aLast   Last index to search, this index will be searched
- * @param  aNonDup Out-param. Set to true if the node should be inserted,
- *                 false if it already exists in the NodeSet.
- * @return         The index where to insert the node. The node should be
- *                 inserted before the node at this index. This value is
- *                 always >= aFirst and <= aLast + 1. This value is always
- *                 set, even if aNode already exists in the NodeSet
- */
-int txNodeSet::findPosition(Node* aNode, int aFirst,
-                          int aLast, MBool& aNonDup) const
+txXPathNode*
+txNodeSet::findPosition(const txXPathNode& aNode, txXPathNode* aFirst,
+                        txXPathNode* aLast, PRBool& aDupe) const
 {
-    NS_ASSERTION(aNode, "missing node in txNodeSet::findPosition");
-    NS_ASSERTION(aFirst <= aLast+1 && aLast < mElementCount,
-                 "bad position in txNodeSet::findPosition");
-
-    if (aLast - aFirst <= 1) {
+    aDupe = PR_FALSE;
+    if (aLast - aFirst <= 2) {
         // If we search 2 nodes or less there is no point in further divides
-        int pos;
-        for (pos = aFirst; pos <= aLast; ++pos) {
-            int cmp = aNode->compareDocumentPosition(mElements[pos]);
+        txXPathNode* pos = aFirst;
+        for (; pos < aLast; ++pos) {
+            PRIntn cmp = txXPathNodeUtils::comparePosition(aNode, *pos);
             if (cmp < 0) {
-                aNonDup = MB_TRUE;
                 return pos;
             }
 
             if (cmp == 0) {
-                aNonDup = MB_FALSE;
+                aDupe = PR_TRUE;
+
                 return pos;
             }
         }
-
-        aNonDup = MB_TRUE;
         return pos;
     }
-    
-    int midpos = (aFirst + aLast) / 2;
-    int cmp = aNode->compareDocumentPosition(mElements[midpos]);
+
+    // (cannot add two pointers)
+    txXPathNode* midpos = aFirst + (aLast - aFirst) / 2;
+    PRIntn cmp = txXPathNodeUtils::comparePosition(aNode, *midpos);
     if (cmp == 0) {
-        aNonDup = MB_FALSE;
+        aDupe = PR_TRUE;
+
         return midpos;
     }
 
-    if (cmp > 0)
-        return findPosition(aNode, midpos + 1, aLast, aNonDup);
+    if (cmp > 0) {
+        return findPosition(aNode, midpos + 1, aLast, aDupe);
+    }
 
-    return findPosition(aNode, aFirst, midpos - 1, aNonDup);
+    // midpos excluded as end of range
+
+    return findPosition(aNode, aFirst, midpos, aDupe);
+}
+
+/* static */
+void
+txNodeSet::copyElements(txXPathNode* aDest,
+                        const txXPathNode* aStart, const txXPathNode* aEnd)
+{
+    const txXPathNode* pos = aStart;
+    while (pos < aEnd) {
+        new(aDest) txXPathNode(*pos);
+        ++aDest;
+        ++pos;
+    }
+}
+
+/* static */
+void
+txNodeSet::transferElements(txXPathNode* aDest,
+                            const txXPathNode* aStart, const txXPathNode* aEnd)
+{
+    memcpy(aDest, aStart, (aEnd - aStart) * sizeof(txXPathNode));
 }

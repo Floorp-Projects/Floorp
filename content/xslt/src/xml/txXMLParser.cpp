@@ -24,6 +24,8 @@
 
 #include "txXMLParser.h"
 #include "txURIUtils.h"
+#include "txXPathTreeWalker.h"
+
 #ifndef TX_EXE
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -42,7 +44,7 @@ class txXMLParser
 {
   public:
     nsresult parse(istream& aInputStream, const nsAString& aUri,
-                   Document** aResultDoc);
+                   txXPathNode** aResultDoc);
     const nsAString& getErrorString();
 
     /**
@@ -68,8 +70,8 @@ class txXMLParser
 
 nsresult
 txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
-                       Document* aLoader, nsAString& aErrMsg,
-                       Document** aResult)
+                       const txXPathNode& aLoader, nsAString& aErrMsg,
+                       txXPathNode** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult = nsnull;
@@ -78,9 +80,8 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
     nsresult rv = NS_NewURI(getter_AddRefs(documentURI), aHref);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOMDocument> theDocument;
-    nsCOMPtr<nsIDocument> loaderDocument =
-        do_QueryInterface(aLoader->getNSObj());
+    nsIDocument* loaderDocument = txXPathNativeNode::getDocument(aLoader);
+
     nsCOMPtr<nsILoadGroup> loadGroup = loaderDocument->GetDocumentLoadGroup();
     nsIURI *loaderUri = loaderDocument->GetDocumentURL();
     NS_ENSURE_TRUE(loaderUri, NS_ERROR_FAILURE);
@@ -97,7 +98,7 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
         if (refUri) {
             http->SetReferrer(refUri);
         }
-        http->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),	     
+        http->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),     
                                NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
                                PR_FALSE);
 
@@ -108,15 +109,19 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
       do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = loader->LoadDocumentAsXML(channel, loaderUri, getter_AddRefs(theDocument));
+    // Raw pointer, we want the resulting txXPathNode to hold a reference to
+    // the document.
+    nsIDOMDocument* theDocument = nsnull;
+    rv = loader->LoadDocumentAsXML(channel, loaderUri, &theDocument);
     if (NS_FAILED(rv) || !theDocument) {
         aErrMsg.Append(NS_LITERAL_STRING("Document load of ") + 
                        aHref + NS_LITERAL_STRING(" failed."));
         return rv;
     }
 
-    *aResult = new Document(theDocument);
+    *aResult = txXPathNativeNode::createXPathNode(theDocument);
     if (!*aResult) {
+        NS_RELEASE(theDocument);
         return NS_ERROR_FAILURE;
     }
 
@@ -133,7 +138,7 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
 #ifdef TX_EXE
 nsresult
 txParseFromStream(istream& aInputStream, const nsAString& aUri,
-                  nsAString& aErrorString, Document** aResult)
+                  nsAString& aErrorString, txXPathNode** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     txXMLParser parser;
@@ -211,7 +216,7 @@ externalEntityRefHandler(XML_Parser aParser,
  */
 nsresult
 txXMLParser::parse(istream& aInputStream, const nsAString& aUri,
-                   Document** aResultDoc)
+                   txXPathNode** aResultDoc)
 {
     mErrorString.Truncate();
     *aResultDoc = nsnull;
@@ -263,9 +268,9 @@ txXMLParser::parse(istream& aInputStream, const nsAString& aUri,
     // clean up
     XML_ParserFree(mExpatParser);
     // ownership to the caller
-    *aResultDoc = mDocument;
+    *aResultDoc = txXPathNativeNode::createXPathNode(mDocument);
     mDocument = nsnull;
-    return NS_OK;
+    return *aResultDoc ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 const nsAString&

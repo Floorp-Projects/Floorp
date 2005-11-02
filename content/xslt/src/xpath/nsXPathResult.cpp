@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXPathResult.h"
-#include "dom.h"
 #include "ExprResult.h"
 #include "txNodeSet.h"
 #include "nsDOMError.h"
@@ -292,9 +291,9 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
 
         if (mResultType == FIRST_ORDERED_NODE_TYPE ||
             mResultType == ANY_UNORDERED_NODE_TYPE) {
-            Node* node = nodeSet->get(0);
-            if (node)
-                rv = CallQueryInterface(node->getNSObj(), &mNode);
+            if (nodeSet->size() > 0) {
+                txXPathNativeNode::getNode(nodeSet->get(0), &mNode);
+            }
         }
         else {
             if (mResultType == UNORDERED_NODE_ITERATOR_TYPE ||
@@ -312,7 +311,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
             nsCOMPtr<nsIDOMNode> node;
             PRInt32 i;
             for (i = 0; i < count; ++i) {
-                node = do_QueryInterface(nodeSet->get(i)->getNSObj());
+                txXPathNativeNode::getNode(nodeSet->get(i), getter_AddRefs(node));
                 NS_ASSERTION(node, "node isn't an nsIDOMNode");
                 mElements->AppendObject(node);
             }

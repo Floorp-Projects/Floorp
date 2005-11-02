@@ -26,6 +26,7 @@
 #include "Expr.h"
 #include "nsIAtom.h"
 #include "txIXPathContext.h"
+#include "txXPathTreeWalker.h"
 
 /*
  * Creates a new txNodeTypeTest of the given type
@@ -44,34 +45,29 @@ void txNodeTypeTest::setNodeName(const nsAString& aName)
     mNodeName = do_GetAtom(aName);
 }
 
-/*
- * Determines whether this txNodeTest matches the given node
- */
-MBool txNodeTypeTest::matches(Node* aNode, txIMatchContext* aContext)
+PRBool txNodeTypeTest::matches(const txXPathNode& aNode,
+                               txIMatchContext* aContext)
 {
-    if (!aNode)
-        return MB_FALSE;
-
-    Node::NodeType type = (Node::NodeType)aNode->getNodeType();
+    PRUint16 type = txXPathNodeUtils::getNodeType(aNode);
 
     switch (mNodeType) {
         case COMMENT_TYPE:
-            return type == Node::COMMENT_NODE;
+            return type == txXPathNodeType::COMMENT_NODE;
         case TEXT_TYPE:
-            return (type == Node::TEXT_NODE ||
-                    type == Node::CDATA_SECTION_NODE) &&
+            return (type == txXPathNodeType::TEXT_NODE ||
+                    type == txXPathNodeType::CDATA_SECTION_NODE) &&
                    !aContext->isStripSpaceAllowed(aNode);
         case PI_TYPE:
-            if (type == Node::PROCESSING_INSTRUCTION_NODE) {
+            if (type == txXPathNodeType::PROCESSING_INSTRUCTION_NODE) {
                 nsCOMPtr<nsIAtom> localName;
                 return !mNodeName ||
-                        (aNode->getLocalName(getter_AddRefs(localName)) &&
+                        ((localName = txXPathNodeUtils::getLocalName(aNode)) &&
                          localName == mNodeName);
             }
             return MB_FALSE;
         case NODE_TYPE:
-            return ((type != Node::TEXT_NODE &&
-                     type != Node::CDATA_SECTION_NODE) ||
+            return ((type != txXPathNodeType::TEXT_NODE &&
+                     type != txXPathNodeType::CDATA_SECTION_NODE) ||
                     !aContext->isStripSpaceAllowed(aNode));
     }
     return MB_TRUE;
