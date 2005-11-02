@@ -26,6 +26,7 @@
 #include "txIXPathContext.h"
 #include "XSLTFunctions.h"
 #include "prprf.h"
+#include "NodeSet.h"
 
 /*
   Implementation of XSLT 1.0 extension function: generate-id

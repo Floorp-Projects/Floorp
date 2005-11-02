@@ -105,6 +105,7 @@ protected:
     ListItem* remove(ListItem* sItem);
 
 private:
+      txList(const txList& aOther); // not implemented
 
       ListItem* firstItem;
       ListItem* lastItem;

@@ -42,12 +42,12 @@
 #include "txBufferingHandler.h"
 #include "txOutputFormat.h"
 
-class ProcessorState;
+class txExecutionState;
 
 class txUnknownHandler : public txBufferingHandler
 {
 public:
-    txUnknownHandler(ProcessorState* aPs);
+    txUnknownHandler(txExecutionState* aEs);
     virtual ~txUnknownHandler();
 
     void attribute(const nsAString& aName, const PRInt32 aNsID,
@@ -61,11 +61,11 @@ private:
                                    const PRInt32 aNsID);
 
     /*
-     * XXX we shouldn't hold to the ProcessorState, as we're supposed
+     * XXX we shouldn't hold to the txExecutionState, as we're supposed
      * to live without it. But as a standalone handler, we don't.
      * The right fix may need a txOutputFormat here.
      */
-    ProcessorState* mPs;
+    txExecutionState* mEs;
 };
 
 #endif /* txUnknownHandler_h___ */

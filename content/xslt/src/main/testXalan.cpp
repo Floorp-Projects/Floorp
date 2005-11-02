@@ -259,7 +259,7 @@ void runCategory(nsIFile* aConfCat, nsIFile* aGoldCat, nsIFile* aRefTmp,
                         aRefTmp->GetFileSize(&resultSize);
                         reference->GetFileSize(&refSize);
                         result.seekg(0);
-                        int read, toread = (int)resultSize;
+                        int toread = (int)resultSize;
                         nsCString resContent, refContent;
                         resContent.SetCapacity(toread);
                         readToString(result, resContent);
@@ -344,7 +344,7 @@ int main(int argc, char** argv)
         }
     }
 
-    if (!txXSLTProcessor::txInit()) {
+    if (!txXSLTProcessor::init()) {
         PRBool exists;
         if (NS_SUCCEEDED(resFile->Exists(&exists)) && exists)
             resFile->Remove(PR_FALSE);
@@ -408,7 +408,7 @@ int main(int argc, char** argv)
     if (NS_SUCCEEDED(resFile->Exists(&exists)) && exists)
         resFile->Remove(PR_FALSE);
     resultFileStream.close();
-    txXSLTProcessor::txShutdown();
+    txXSLTProcessor::shutdown();
     rv = NS_ShutdownXPCOM(nsnull);
 #ifdef NS_TRACE_MALLOC
     NS_TraceMallocShutdown();

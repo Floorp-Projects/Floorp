@@ -115,6 +115,11 @@ public:
      */
     virtual MBool isStripSpaceAllowed(Node* aNode) = 0;
 
+    /**
+     * Returns a pointer to the private context
+     */
+    virtual void* getPrivateContext() = 0;
+
     /*
      * Callback to be used by the expression/pattern if errors are detected.
      */
@@ -125,6 +130,7 @@ public:
     nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName, \
                          ExprResult*& aResult); \
     MBool isStripSpaceAllowed(Node* aNode); \
+    void* getPrivateContext(); \
     void receiveError(const nsAString& aMsg, nsresult aRes)
 
 class txIEvalContext : public txIMatchContext

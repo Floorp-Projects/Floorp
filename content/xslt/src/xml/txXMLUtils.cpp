@@ -34,6 +34,7 @@
 #include "nsReadableUtils.h"
 #include "txAtoms.h"
 #include "txStringUtils.h"
+#include "txNamespaceMap.h"
 
 /**
  * Helper class for checking and partioning of QNames
@@ -113,11 +114,10 @@ txQNameParser::parse(const nsAString::const_iterator& aStart,
     return eBrokenName;
 }
 
-nsresult txExpandedName::init(const nsAString& aQName,
-                              Node* aResolver,
-                              MBool aUseDefault)
+nsresult
+txExpandedName::init(const nsAString& aQName, txNamespaceMap* aResolver,
+                     MBool aUseDefault)
 {
-    NS_ASSERTION(aResolver, "missing resolve node");
     nsAString::const_iterator start, end;
     aQName.BeginReading(start);
     aQName.EndReading(end);
@@ -131,7 +131,7 @@ nsresult txExpandedName::init(const nsAString& aQName,
     if (qr == txQNameParser::eTwoNames) {
         nsCOMPtr<nsIAtom> prefix =
             do_GetAtom(Substring(start, p.mColon));
-        PRInt32 namespaceID = aResolver->lookupNamespaceID(prefix);
+        PRInt32 namespaceID = aResolver->lookupNamespace(prefix);
         if (namespaceID == kNameSpaceID_Unknown)
             return NS_ERROR_FAILURE;
         mNamespaceID = namespaceID;
@@ -141,7 +141,7 @@ nsresult txExpandedName::init(const nsAString& aQName,
     else {
         mLocalName = do_GetAtom(aQName);
         if (aUseDefault)
-            mNamespaceID = aResolver->lookupNamespaceID(0);
+            mNamespaceID = aResolver->lookupNamespace(0);
         else
             mNamespaceID = kNameSpaceID_None;
     }
@@ -151,6 +151,30 @@ nsresult txExpandedName::init(const nsAString& aQName,
   //------------------------------/
  //- Implementation of XMLUtils -/
 //------------------------------/
+
+nsresult
+XMLUtils::splitXMLName(const nsAString& aName, nsIAtom** aPrefix,
+                       nsIAtom** aLocalName)
+{
+    nsAString::const_iterator start, end;
+    aName.BeginReading(start);
+    aName.EndReading(end);
+    txQNameParser p;
+    txQNameParser::QResult qr = p.parse(start, end);
+
+    if (qr == txQNameParser::eBrokenName) {
+        return NS_ERROR_FAILURE;
+    }
+    if (qr == txQNameParser::eTwoNames) {
+        *aPrefix = NS_NewAtom(Substring(start, p.mColon));
+        *aLocalName = NS_NewAtom(Substring(++p.mColon, end));
+    }
+    else {
+        *aPrefix = nsnull;
+        *aLocalName = NS_NewAtom(aName);
+    }
+    return NS_OK;
+}
 
 void XMLUtils::getPrefix(const nsAString& src, nsIAtom** dest)
 {

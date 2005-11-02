@@ -178,6 +178,12 @@ MBool nsXPathExpression::EvalContextImpl::isStripSpaceAllowed(Node* aNode)
     return MB_FALSE;
 }
 
+void* nsXPathExpression::EvalContextImpl::getPrivateContext()
+{
+    // we don't have a private context here.
+    return nsnull;
+}
+
 void nsXPathExpression::EvalContextImpl::receiveError(const nsAString& aMsg,
                                                       nsresult aRes)
 {

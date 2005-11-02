@@ -37,11 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "XSLTFunctions.h"
-#include "ProcessorState.h"
 #include "primitives.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
+#include "txStylesheet.h"
 #include <math.h>
+#include "ExprResult.h"
 
 #include "prdtoa.h"
 
@@ -55,10 +56,10 @@ const PRUnichar txFormatNumberFunctionCall::FORMAT_QUOTE = '\'';
 /*
  * Creates a new format-number function call
  */
-txFormatNumberFunctionCall::txFormatNumberFunctionCall(ProcessorState* aPs,
-                                                       Node* aQNameResolveNode)
-    : mPs(aPs),
-      mQNameResolveNode(aQNameResolveNode)
+txFormatNumberFunctionCall::txFormatNumberFunctionCall(txStylesheet* aStylesheet,
+                                                       txNamespaceMap* aMappings)
+    : mStylesheet(aStylesheet),
+      mMappings(aMappings)
 {
 }
 
@@ -87,12 +88,12 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     if (iter.hasNext()) {
         nsAutoString formatQName;
         evaluateToString((Expr*)iter.next(), aContext, formatQName);
-        rv = formatName.init(formatQName, mQNameResolveNode, MB_FALSE);
+        rv = formatName.init(formatQName, mMappings, MB_FALSE);
         if (NS_FAILED(rv))
             formatName.mNamespaceID = kNameSpaceID_Unknown;
     }
 
-    txDecimalFormat* format = mPs->getDecimalFormat(formatName);
+    txDecimalFormat* format = mStylesheet->getDecimalFormat(formatName);
     if (!format) {
         nsAutoString err(NS_LITERAL_STRING("unknown decimal format for: "));
         toString(err);

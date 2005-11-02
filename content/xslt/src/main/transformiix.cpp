@@ -124,7 +124,7 @@ int main(int argc, char** argv)
     rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!txXSLTProcessor::txInit())
+    if (!txXSLTProcessor::init())
         return 1;
 
     txOptions options;
@@ -189,7 +189,7 @@ int main(int argc, char** argv)
     }
 
     resultFileStream.close();
-    txXSLTProcessor::txShutdown();
+    txXSLTProcessor::shutdown();
     rv = NS_ShutdownXPCOM(nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
     return 0;

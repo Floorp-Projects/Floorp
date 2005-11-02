@@ -37,11 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txUnknownHandler.h"
-#include "ProcessorState.h"
+#include "txExecutionState.h"
 #include "txStringUtils.h"
+#include "txStylesheet.h"
 
-txUnknownHandler::txUnknownHandler(ProcessorState* aPs)
-    : mPs(aPs)
+txUnknownHandler::txUnknownHandler(txExecutionState* aEs)
+    : mEs(aEs)
 {
 }
 
@@ -69,7 +70,7 @@ void txUnknownHandler::endDocument()
     if (NS_FAILED(rv))
         return;
 
-    mPs->mResultHandler->endDocument();
+    mEs->mResultHandler->endDocument();
 
     delete this;
 }
@@ -78,7 +79,7 @@ void txUnknownHandler::startElement(const nsAString& aName,
                                     const PRInt32 aNsID)
 {
     nsresult rv = NS_OK;
-    txOutputFormat* format = mPs->getOutputFormat();
+    txOutputFormat* format = mEs->mStylesheet->getOutputFormat();
     if (format->mMethod != eMethodNotSet) {
         rv = createHandlerAndFlush(format->mMethod, aName, aNsID);
     }
@@ -93,7 +94,7 @@ void txUnknownHandler::startElement(const nsAString& aName,
     if (NS_FAILED(rv))
         return;
 
-    mPs->mResultHandler->startElement(aName, aNsID);
+    mEs->mResultHandler->startElement(aName, aNsID);
 
     delete this;
 }
@@ -104,17 +105,18 @@ nsresult txUnknownHandler::createHandlerAndFlush(txOutputMethod aMethod,
 {
     NS_ENSURE_TRUE(mBuffer, NS_ERROR_NOT_INITIALIZED);
 
-    txOutputFormat* format = mPs->getOutputFormat();
-    format->mMethod = aMethod;
+    txOutputFormat format;
+    format.merge(*mEs->mStylesheet->getOutputFormat());
+    format.mMethod = aMethod;
 
     txAXMLEventHandler* handler = 0;
-    nsresult rv = mPs->mOutputHandlerFactory->createHandlerWith(format, aName,
+    nsresult rv = mEs->mOutputHandlerFactory->createHandlerWith(&format, aName,
                                                                 aNsID,
                                                                 &handler);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mPs->mOutputHandler = handler;
-    mPs->mResultHandler = handler;
+    mEs->mOutputHandler = handler;
+    mEs->mResultHandler = handler;
 
     return mBuffer->flushToHandler(handler);
 }

@@ -66,6 +66,12 @@ public:
         return mInner->isStripSpaceAllowed(aNode);
     }
 
+    void* getPrivateContext()
+    {
+        NS_ASSERTION(mInner, "mInner is null!!!");
+        return mInner->getPrivateContext();
+    }
+
     void receiveError(const nsAString& aMsg, nsresult aRes)
     {
         NS_ASSERTION(mInner, "mInner is null!!!");

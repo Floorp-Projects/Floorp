@@ -44,10 +44,10 @@ endif
 
 CPPSRCS	= Double.cpp \
 	List.cpp \
-	Map.cpp \
 	SimpleErrorObserver.cpp \
 	txAtoms.cpp \
 	txExpandedNameMap.cpp \
+	txNamespaceMap.cpp \
 	txURIUtils.cpp
 
 ifdef TX_EXE
