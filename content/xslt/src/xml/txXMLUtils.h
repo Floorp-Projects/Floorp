@@ -106,7 +106,7 @@ public:
     /*
      * Returns true if the given character is whitespace.
      */
-    static MBool isWhitespace(const UNICODE_CHAR& aChar)
+    static MBool isWhitespace(const PRUnichar& aChar)
     {
         return (aChar <= ' ' &&
                 (aChar == ' ' || aChar == '\r' ||
@@ -126,17 +126,17 @@ public:
     /*
      * Returns true if the given character represents a numeric letter (digit).
      */
-    static MBool isDigit(UNICODE_CHAR ch);
+    static MBool isDigit(PRUnichar ch);
 
     /*
      * Returns true if the given character represents an Alpha letter
      */
-    static MBool isLetter(UNICODE_CHAR ch);
+    static MBool isLetter(PRUnichar ch);
 
     /*
      * Returns true if the given character is an allowable NCName character
      */
-    static MBool isNCNameChar(UNICODE_CHAR ch);
+    static MBool isNCNameChar(PRUnichar ch);
 
     /*
      * Walks up the document tree and returns true if the closest xml:space

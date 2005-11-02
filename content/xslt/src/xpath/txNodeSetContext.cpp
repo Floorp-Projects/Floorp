@@ -72,8 +72,8 @@ void txNodeSetContext::receiveError(const String& aMsg, nsresult aRes)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
 #ifdef DEBUG
-    String error("forwarded error: ");
-    error.append(aMsg);
+    String error(NS_LITERAL_STRING("forwarded error: "));
+    error.Append(aMsg);
     mInner->receiveError(error, aRes);
 #else
     mInner->receiveError(aMsg, aRes);

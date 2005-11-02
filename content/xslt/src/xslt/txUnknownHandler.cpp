@@ -180,7 +180,7 @@ void txUnknownHandler::startElement(const String& aName,
         rv = createHandlerAndFlush(format->mMethod, aName, aNsID);
     }
     else if (aNsID == kNameSpaceID_None &&
-             aName.isEqualIgnoreCase(String("html"))) {
+             aName.isEqualIgnoreCase(String(NS_LITERAL_STRING("html")))) {
         rv = createHandlerAndFlush(eHTMLOutput, aName, aNsID);
     }
     else {

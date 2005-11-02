@@ -77,7 +77,7 @@ ExprResult* DocumentFunctionCall::evaluate(txIEvalContext* aContext)
             Expr* param2 = (Expr*)iter.next();
             ExprResult* exprResult2 = param2->evaluate(aContext);
             if (exprResult2->getResultType() != ExprResult::NODESET) {
-                String err("node-set expected as second argument to document(): ");
+                String err(NS_LITERAL_STRING("node-set expected as second argument to document(): "));
                 toString(err);
                 aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
                 delete exprResult1;

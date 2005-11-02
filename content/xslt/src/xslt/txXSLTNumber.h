@@ -60,7 +60,7 @@ private:
     
     static Node* getPrevInDocumentOrder(Node* aNode);
     
-    static MBool isAlphaNumeric(UNICODE_CHAR ch);
+    static MBool isAlphaNumeric(PRUnichar ch);
 };
 
 class txFormattedCounter {

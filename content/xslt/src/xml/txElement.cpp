@@ -57,7 +57,7 @@ Element::Element(const String& aNamespaceURI,
          NodeDefinition(Node::ELEMENT_NODE, aTagName, NULL_STRING, aOwner)
 {
   Element(aTagName, aOwner);
-  if (aNamespaceURI.isEmpty())
+  if (aNamespaceURI.IsEmpty())
     mNamespaceID = kNameSpaceID_None;
   else
     mNamespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
@@ -100,7 +100,7 @@ PRInt32 Element::getNamespaceID()
       if (((Element*)node)->getAttr(txXMLAtoms::xmlns, kNameSpaceID_XMLNS,
                                     nsURI)) {
         // xmlns = "" sets the default namespace ID to kNameSpaceID_None;
-        if (!nsURI.isEmpty()) {
+        if (!nsURI.IsEmpty()) {
           mNamespaceID = txNamespaceManager::getNamespaceID(nsURI);
         }
         else {
@@ -263,7 +263,7 @@ Attr* Element::getAttributeNode(const String& name)
 MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
                        String& aValue)
 {
-  aValue.clear();
+  aValue.Truncate();
   AttrMap::ListItem* item = mAttributes.firstItem;
   while (item) {
     Attr* attrNode = (Attr*)item->node;
@@ -271,7 +271,7 @@ MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
     if (attrNode->getLocalName(&localName) &&
         aNSID == attrNode->getNamespaceID() &&
         aLocalName == localName) {
-      aValue.append(attrNode->getValue());
+      aValue.Append(attrNode->getValue());
       TX_IF_RELEASE_ATOM(localName);
       return MB_TRUE;
     }

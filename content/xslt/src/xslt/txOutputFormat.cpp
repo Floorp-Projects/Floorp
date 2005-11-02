@@ -56,17 +56,17 @@ txOutputFormat::~txOutputFormat()
 void txOutputFormat::reset()
 {
     mMethod = eMethodNotSet;
-    mVersion.clear();
-    if (mEncoding.isEmpty())
+    mVersion.Truncate();
+    if (mEncoding.IsEmpty())
         mOmitXMLDeclaration = eNotSet;
     mStandalone = eNotSet;
-    mPublicId.clear();
-    mSystemId.clear();
+    mPublicId.Truncate();
+    mSystemId.Truncate();
     txListIterator iter(&mCDATASectionElements);
     while (iter.hasNext())
         delete (txExpandedName*)iter.next();
     mIndent = eNotSet;
-    mMediaType.clear();
+    mMediaType.Truncate();
 }
 
 void txOutputFormat::merge(txOutputFormat& aOutputFormat)
@@ -74,10 +74,10 @@ void txOutputFormat::merge(txOutputFormat& aOutputFormat)
     if (mMethod == eMethodNotSet)
         mMethod = aOutputFormat.mMethod;
 
-    if (mVersion.isEmpty())
+    if (mVersion.IsEmpty())
         mVersion = aOutputFormat.mVersion;
 
-    if (mEncoding.isEmpty())
+    if (mEncoding.IsEmpty())
         mEncoding = aOutputFormat.mEncoding;
 
     if (mOmitXMLDeclaration == eNotSet)
@@ -86,10 +86,10 @@ void txOutputFormat::merge(txOutputFormat& aOutputFormat)
     if (mStandalone == eNotSet)
         mStandalone = aOutputFormat.mStandalone;
 
-    if (mPublicId.isEmpty())
+    if (mPublicId.IsEmpty())
         mPublicId = aOutputFormat.mPublicId;
 
-    if (mSystemId.isEmpty())
+    if (mSystemId.IsEmpty())
         mSystemId = aOutputFormat.mSystemId;
 
     txListIterator iter(&aOutputFormat.mCDATASectionElements);
@@ -103,7 +103,7 @@ void txOutputFormat::merge(txOutputFormat& aOutputFormat)
     if (mIndent == eNotSet)
         mIndent = aOutputFormat.mIndent;
 
-    if (mMediaType.isEmpty())
+    if (mMediaType.IsEmpty())
         mMediaType = aOutputFormat.mMediaType;
 }
 
@@ -117,11 +117,11 @@ void txOutputFormat::setFromDefaults()
         }
         case eXMLOutput:
         {
-            if (mVersion.isEmpty())
-                mVersion.append("1.0");
+            if (mVersion.IsEmpty())
+                mVersion.Append(NS_LITERAL_STRING("1.0"));
 
-            if (mEncoding.isEmpty())
-                mEncoding.append("UTF-8");
+            if (mEncoding.IsEmpty())
+                mEncoding.Append(NS_LITERAL_STRING("UTF-8"));
 
             if (mOmitXMLDeclaration == eNotSet)
                 mOmitXMLDeclaration = eFalse;
@@ -129,34 +129,34 @@ void txOutputFormat::setFromDefaults()
             if (mIndent == eNotSet)
                 mIndent = eFalse;
 
-            if (mMediaType.isEmpty())
-                mMediaType.append("text/xml");
+            if (mMediaType.IsEmpty())
+                mMediaType.Append(NS_LITERAL_STRING("text/xml"));
 
             break;
         }
         case eHTMLOutput:
         {
-            if (mVersion.isEmpty())
-                mVersion.append("4.0");
+            if (mVersion.IsEmpty())
+                mVersion.Append(NS_LITERAL_STRING("4.0"));
 
-            if (mEncoding.isEmpty())
-                mEncoding.append("UTF-8");
+            if (mEncoding.IsEmpty())
+                mEncoding.Append(NS_LITERAL_STRING("UTF-8"));
 
             if (mIndent == eNotSet)
                 mIndent = eTrue;
 
-            if (mMediaType.isEmpty())
-                mMediaType.append("text/html");
+            if (mMediaType.IsEmpty())
+                mMediaType.Append(NS_LITERAL_STRING("text/html"));
 
             break;
         }
         case eTextOutput:
         {
-            if (mEncoding.isEmpty())
-                mEncoding.append("UTF-8");
+            if (mEncoding.IsEmpty())
+                mEncoding.Append(NS_LITERAL_STRING("UTF-8"));
 
-            if (mMediaType.isEmpty())
-                mMediaType.append("text/plain");
+            if (mMediaType.IsEmpty())
+                mMediaType.Append(NS_LITERAL_STRING("text/plain"));
 
             break;
         }

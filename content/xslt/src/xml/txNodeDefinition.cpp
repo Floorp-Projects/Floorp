@@ -389,17 +389,17 @@ PRInt32 NodeDefinition::lookupNamespaceID(txAtom* aPrefix)
   if (node->getNodeType() != Node::ELEMENT_NODE)
     node = node->getXPathParent();
 
-  String name("xmlns:");
+  String name(NS_LITERAL_STRING("xmlns:"));
   if (aPrefix && (aPrefix != txXMLAtoms::_empty)) {
       //  We have a prefix, search for xmlns:prefix attributes.
       String prefixString;
       TX_GET_ATOM_STRING(aPrefix, prefixString);
-      name.append(prefixString);
+      name.Append(prefixString);
   }
   else {
       // No prefix, look up the default namespace by searching for xmlns
       // attributes. Remove the trailing :, set length to 5 (xmlns).
-      name.truncate(5);
+      name.Truncate(5);
   }
   Attr* xmlns;
   while (node && node->getNodeType() == Node::ELEMENT_NODE) {

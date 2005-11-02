@@ -99,7 +99,7 @@ void txXMLOutput::characters(const String& aData)
     if (mInCDATASection) {
         PRUint32 i = 0;
         PRUint32 j = 0;
-        PRUint32 length = aData.length();
+        PRUint32 length = aData.Length();
 
         *mOut << CDATA_START;
 
@@ -107,12 +107,12 @@ void txXMLOutput::characters(const String& aData)
             printUTF8Chars(aData);
         }
         else {
-            mBuffer[j++] = aData.charAt(i++);
-            mBuffer[j++] = aData.charAt(i++);
-            mBuffer[j++] = aData.charAt(i++);
+            mBuffer[j++] = aData.CharAt(i++);
+            mBuffer[j++] = aData.CharAt(i++);
+            mBuffer[j++] = aData.CharAt(i++);
 
             while (i < length) {
-                mBuffer[j++] = aData.charAt(i++);
+                mBuffer[j++] = aData.CharAt(i++);
                 if (mBuffer[(j - 1) % 4] == ']' &&
                     mBuffer[j % 4] == ']' &&
                     mBuffer[(j + 1) % 4] == '>') {
@@ -282,9 +282,9 @@ void txXMLOutput::closeStartTag(MBool aUseEmptyElementShorthand)
     }
 }
 
-void txXMLOutput::printUTF8Char(DOM_CHAR& ch)
+void txXMLOutput::printUTF8Char(PRUnichar& ch)
 {
-    // DOM_CHAR is 16-bits so we only need to cover up to 0xFFFF
+    // PRUnichar is 16-bits so we only need to cover up to 0xFFFF
 
     // 0x0000-0x007F
     if (ch < 128) {
@@ -305,11 +305,11 @@ void txXMLOutput::printUTF8Char(DOM_CHAR& ch)
 
 void txXMLOutput::printUTF8Chars(const String& aData)
 {
-    DOM_CHAR currChar;
+    PRUnichar currChar;
     PRUint32 i = 0;
 
-    while (i < aData.length()) {
-        currChar = aData.charAt(i++);
+    while (i < aData.Length()) {
+        currChar = aData.CharAt(i++);
         printUTF8Char(currChar);
     }
 }
@@ -317,14 +317,14 @@ void txXMLOutput::printUTF8Chars(const String& aData)
 void txXMLOutput::printWithXMLEntities(const String& aData,
                                        MBool aAttribute)
 {
-    DOM_CHAR currChar;
+    PRUnichar currChar;
     PRUint32 i;
 
     if (&aData == &NULL_STRING)
         return;
 
-    for (i = 0; i < aData.length(); i++) {
-        currChar = aData.charAt(i);
+    for (i = 0; i < aData.Length(); i++) {
+        currChar = aData.CharAt(i);
         switch (currChar) {
             case AMPERSAND:
                 *mOut << AMP_ENTITY;

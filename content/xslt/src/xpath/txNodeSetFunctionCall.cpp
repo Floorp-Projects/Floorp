@@ -60,12 +60,12 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
         case COUNT:
         {
             if (!requireParams(1, 1, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             NodeSet* nodes;
             nodes = evaluateToNodeSet((Expr*)iter.next(), aContext);
             if (!nodes)
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             double count = nodes->size();
             delete nodes;
@@ -74,12 +74,12 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
         case ID:
         {
             if (!requireParams(1, 1, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             ExprResult* exprResult;
             exprResult = ((Expr*)iter.next())->evaluate(aContext);
             if (!exprResult)
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             NodeSet* resultSet = new NodeSet();
             if (!resultSet) {
@@ -127,7 +127,7 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
         case LAST:
         {
             if (!requireParams(0, 0, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             return new NumberResult(aContext->size());
         }
@@ -136,7 +136,7 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
         case NAMESPACE_URI:
         {
             if (!requireParams(0, 1, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             Node* node = 0;
             // Check for optional arg
@@ -144,7 +144,7 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                 NodeSet* nodes;
                 nodes = evaluateToNodeSet((Expr*)iter.next(), aContext);
                 if (!nodes)
-                    return new StringResult("error");
+                    return new StringResult(NS_LITERAL_STRING("error"));
 
                 if (nodes->isEmpty()) {
                     delete nodes;
@@ -197,15 +197,15 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
         case POSITION:
         {
             if (!requireParams(0, 0, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             return new NumberResult(aContext->position());
         }
     }
 
-    String err("Internal error");
+    String err(NS_LITERAL_STRING("Internal error"));
     aContext->receiveError(err, NS_ERROR_UNEXPECTED);
-    return new StringResult("error");
+    return new StringResult(NS_LITERAL_STRING("error"));
 }
 
 nsresult NodeSetFunctionCall::getNameAtom(txAtom** aAtom)
