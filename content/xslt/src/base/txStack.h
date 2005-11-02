@@ -51,12 +51,10 @@ public:
      *
      * @return a pointer to the object that is the top of this stack.
      */
-    void* peek()
+    inline void* peek()
     {
-        PRInt32 count = Count() - 1;
-        NS_ENSURE_TRUE(count >= 0, nsnull);
-
-        return ElementAt(count);
+        NS_ASSERTION(!isEmpty(), "peeking at empty stack");
+        return ElementAt(Count() - 1);
     }
 
     /**
@@ -65,9 +63,10 @@ public:
      * @param obj a pointer to the object that is to be added to the
      * top of this stack.
      */
-    nsresult push(void* aObject)
+    inline nsresult push(void* aObject)
     {
-        return AppendElement(aObject);
+        return InsertElementAt(aObject, Count()) ? NS_OK :
+                                                   NS_ERROR_OUT_OF_MEMORY;
     }
 
     /**
@@ -76,13 +75,12 @@ public:
      *
      * @return a pointer to the object that was the top of this stack.
      */
-    void* pop()
+    inline void* pop()
     {
-        PRInt32 count = Count() - 1;
-        NS_ENSURE_TRUE(count >= 0, nsnull);
-
+        NS_ASSERTION(!isEmpty(), "popping from empty stack");
+        const PRInt32 count = Count() - 1;
         void* object = ElementAt(count);
-        RemoveElementAt(count);
+        RemoveElementsAt(count, 1);
         return object;
     }
 
@@ -91,7 +89,7 @@ public:
      *
      * @return true if there are no objects in the stack.
      */
-    PRBool isEmpty()
+    inline PRBool isEmpty()
     {
         return (Count() <= 0);
     }
@@ -101,7 +99,7 @@ public:
      *
      * @return the number of elements in the Stack.
      */
-    PRInt32 size()
+    inline PRInt32 size()
     {
         return Count();
     }
@@ -118,6 +116,7 @@ public:
      *
      * @param aStack the stack to create an iterator for.
      */
+    inline
     txStackIterator(txStack* aStack) : mStack(aStack),
                                        mPosition(0)
     {
@@ -128,7 +127,7 @@ public:
      *
      * @return .
      */
-    PRBool hasNext()
+    inline PRBool hasNext()
     {
         return (mPosition < mStack->Count());
     }
@@ -138,7 +137,7 @@ public:
      *
      * @return .
      */
-    void* next()
+    inline void* next()
     {
         if (mPosition == mStack->Count()) {
             return nsnull;
