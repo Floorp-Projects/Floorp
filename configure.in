@@ -1863,6 +1863,8 @@ case "$target" in
 
 
 *-os2*)
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     AC_DEFINE(XP_OS2)
     USE_SHORT_LIBNAME=1
     DLL_PREFIX=
