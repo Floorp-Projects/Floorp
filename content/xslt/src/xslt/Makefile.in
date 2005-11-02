@@ -35,9 +35,9 @@ REQUIRES	= string \
 		  dom \
 		  layout \
 		  content \
+		  content_xsl \
 		  widget \
 		  necko \
-		  xsl_doc \
 		  $(NULL)
 endif
 
