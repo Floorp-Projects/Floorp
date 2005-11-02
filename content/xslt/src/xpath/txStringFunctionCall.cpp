@@ -219,10 +219,11 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             evaluateToString((Expr*)iter.next(), aContext, oldChars);
             evaluateToString((Expr*)iter.next(), aContext, newChars);
             PRUint32 i;
+            PRInt32 newCharsLength = (PRInt32)newChars.length();
             for (i = 0; i < src.length(); i++) {
                 PRInt32 idx = oldChars.indexOf(src.charAt(i));
                 if (idx != kNotFound) {
-                    if (idx < newChars.length())
+                    if (idx < newCharsLength)
                         dest.append(newChars.charAt((PRUint32)idx));
                 }
                 else {

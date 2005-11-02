@@ -337,7 +337,7 @@ void ExprLexer::parse(const String& pattern)
       case D_QUOTE :
         start=iter;
         iter = pattern.indexOf(ch, (PRInt32)start + 1);
-        if (iter == kNotFound) {
+        if ((PRInt32)iter == kNotFound) {
           // XXX Error reporting "unclosed literal"
           errorPos = start;
           errorCode = ERROR_UNCLOSED_LITERAL;
