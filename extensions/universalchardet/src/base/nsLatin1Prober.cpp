@@ -190,8 +190,13 @@ float nsLatin1Prober::GetConfidence(void)
   for (PRInt32 i = 0; i < FREQ_CAT_NUM; i++)
     total += mFreqCounter[i];
 
-  confidence = mFreqCounter[3]*1.0f / total;
-  confidence -= mFreqCounter[1]*20.0f/total;
+  if(!total)
+    confidence = 0.0f;
+  else
+  {
+    confidence = mFreqCounter[3]*1.0f / total;
+    confidence -= mFreqCounter[1]*20.0f/total;
+  }
 
   if (confidence < 0.0f)
     confidence = 0.0f;
