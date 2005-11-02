@@ -513,8 +513,8 @@ PRBool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
       // For example, if mCount is 2, and we do a ReplaceElementAt for
       // element[5], then we need to set three entries ([2], [3], and [4])
       // to 0.
-      nsCRT::memset(&mImpl->mArray[mImpl->mCount], 0,
-                    (aIndex - mImpl->mCount) * sizeof(mImpl->mArray[0]));
+      memset(&mImpl->mArray[mImpl->mCount], 0,
+             (aIndex - mImpl->mCount) * sizeof(mImpl->mArray[0]));
     }
     
      mImpl->mCount = aIndex + 1;
