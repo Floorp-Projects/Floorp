@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.10 2005/11/02 07:33:34 peterv%netscape.com Exp $
+ * $Id: txExprParser.cpp,v 1.11 2005/11/02 07:33:35 peterv%netscape.com Exp $
  */
 
 /**
@@ -38,7 +38,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.10 $ $Date: 2005/11/02 07:33:34 $
+ * @version $Revision: 1.11 $ $Date: 2005/11/02 07:33:35 $
 **/
 
 #include "ExprParser.h"
@@ -642,7 +642,7 @@ NodeExpr* ExprParser::createNodeExpr(ExprLexer& lexer) {
             //-- ignore errMsg for now
             delete errMsg;
             break;
-        case Token::PI :
+        case Token::PROC_INST :
             nodeExpr = new BasicNodeExpr(NodeExpr::PI_EXPR);
             errMsg = parseParameters(&params, lexer);
             //-- ignore errMsg for now
@@ -800,7 +800,7 @@ MBool ExprParser::isNodeTypeToken(Token* token) {
         case Token::CNAME:
         case Token::COMMENT:
         case Token::NODE :
-        case Token::PI :
+        case Token::PROC_INST :
         case Token::TEXT :
             return MB_TRUE;
         default:
