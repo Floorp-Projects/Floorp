@@ -575,12 +575,7 @@ txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
             return NS_OK;
         }
 
-        if (rv == NS_ERROR_XPATH_UNKNOWN_FUNCTION && aContext->fcp()) {
-            // Don't throw parse error, just error on evaluation
-            fnCall = new txErrorFunctionCall(lName, namespaceID);
-            NS_ENSURE_TRUE(fnCall, NS_ERROR_OUT_OF_MEMORY);
-        }
-        else if (NS_FAILED(rv)) {
+        if (NS_FAILED(rv)) {
             NS_ERROR("Creation of FunctionCall failed");
             return rv;
         }

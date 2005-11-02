@@ -263,11 +263,6 @@ PRBool nsXFormsXPathEvaluator::XFormsParseContextImpl::caseInsensitiveNameTests(
   return PR_FALSE;
 }
 
-PRBool nsXFormsXPathEvaluator::XFormsParseContextImpl::fcp()
-{
-    return PR_FALSE;
-}
-
 void
 nsXFormsXPathEvaluator::XFormsParseContextImpl::SetErrorOffset(PRUint32 aOffset)
 {

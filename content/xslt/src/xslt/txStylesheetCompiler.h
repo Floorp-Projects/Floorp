@@ -142,7 +142,15 @@ public:
     nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                  FunctionCall*& aFunction);
     PRBool caseInsensitiveNameTests();
-    PRBool fcp();
+
+    /**
+     * Should the stylesheet be parsed in forwards compatible parsing mode.
+     */
+    PRBool fcp()
+    {
+        return mElementContext->mForwardsCompatibleParsing;
+    }
+
     void SetErrorOffset(PRUint32 aOffset);
 
 
