@@ -70,10 +70,8 @@ nsresult txXSLTNumber::createNumber(Expr* aValueExpr, txPattern* aCountPattern,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!valueString.IsEmpty()) {
-        // XXX Xalan and XSLT2 says this, but XSLT1 says otherwise
-        aResult = head;
-        aResult.Append(valueString);
-        aResult.Append(tail);
+        aResult = valueString;
+
         return NS_OK;
     }
 
