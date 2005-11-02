@@ -246,10 +246,10 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
         if (!domDoc) {
             nsCOMPtr<nsINodeInfo> ni;
             if (content) {
-                content->GetNodeInfo(*getter_AddRefs(ni));
+                content->GetNodeInfo(getter_AddRefs(ni));
             }
             else {
-                attr->GetNodeInfo(*getter_AddRefs(ni));
+                attr->GetNodeInfo(getter_AddRefs(ni));
             }
 
             if (!ni) {
