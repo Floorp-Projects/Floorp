@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txTextOutput.h"
+#include "nsString.h"
 
 txTextOutput::txTextOutput(ostream* aOut)
     : mOut(aOut)
@@ -53,14 +54,9 @@ void txTextOutput::attribute(const nsAString& aName,
 {
 }
 
-void txTextOutput::characters(const nsAString& aData)
+void txTextOutput::characters(const nsAString& aData, PRBool aDOE)
 {
     *mOut << NS_ConvertUCS2toUTF8(aData).get();
-}
-
-void txTextOutput::charactersNoOutputEscaping(const nsAString& aData)
-{
-    characters(aData);
 }
 
 void txTextOutput::comment(const nsAString& aData)

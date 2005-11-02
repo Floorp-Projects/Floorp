@@ -91,9 +91,15 @@ void txXMLOutput::attribute(const nsAString& aName,
     }
 }
 
-void txXMLOutput::characters(const nsAString& aData)
+void txXMLOutput::characters(const nsAString& aData, PRBool aDOE)
 {
     closeStartTag(MB_FALSE);
+
+    if (aDOE) {
+        printUTF8Chars(aData);
+
+        return;
+    }
 
     if (mInCDATASection) {
         PRUint32 length = aData.Length();
@@ -138,13 +144,6 @@ void txXMLOutput::characters(const nsAString& aData)
     else {
         printWithXMLEntities(aData);
     }
-}
-
-void txXMLOutput::charactersNoOutputEscaping(const nsAString& aData)
-{
-    closeStartTag(MB_FALSE);
-
-    printUTF8Chars(aData);
 }
 
 void txXMLOutput::comment(const nsAString& aData)
