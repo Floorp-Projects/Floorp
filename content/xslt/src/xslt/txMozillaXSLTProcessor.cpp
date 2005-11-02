@@ -1014,7 +1014,7 @@ txMozillaXSLTProcessor::CharacterDataChanged(nsIDocument* aDocument,
 
 void
 txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
-                                         nsIStyledContent* aContent,
+                                         nsIContent* aContent,
                                          PRInt32 aNameSpaceID,
                                          nsIAtom* aAttribute,
                                          PRInt32 aModType)
