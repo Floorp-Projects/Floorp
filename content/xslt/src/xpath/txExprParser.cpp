@@ -26,7 +26,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.2 2005/11/02 07:33:26 kvisco%ziplink.net Exp $
+ * $Id: txExprParser.cpp,v 1.3 2005/11/02 07:33:27 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
@@ -34,7 +34,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:26 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:27 $
 **/
 
 #include "ExprParser.h"
@@ -397,7 +397,7 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
     //-- * we should hash these names for speed
 
     if ( XPathNames::BOOLEAN_FN.isEqual(tok->value) ) {
-        fnCall = new BooleanFunctionCall(BooleanFunctionCall::BOOLEAN);
+        fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_BOOLEAN);
     }
     else if ( XPathNames::CONCAT_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::CONCAT);
@@ -424,7 +424,7 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAMESPACE_URI);
     }
     else if ( XPathNames::NOT_FN.isEqual(tok->value) ) {
-        fnCall = new BooleanFunctionCall(BooleanFunctionCall::NOT);
+        fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_NOT);
     }
     else if ( XPathNames::POSITION_FN.isEqual(tok->value) ) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::POSITION);
@@ -451,7 +451,7 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
         fnCall = new StringFunctionCall(StringFunctionCall::TRANSLATE);
     }
     else if ( XPathNames::TRUE_FN.isEqual(tok->value) ) {
-        fnCall = new BooleanFunctionCall(BooleanFunctionCall::TRUE);
+        fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_TRUE);
     }
     // OG+
     else if ( XPathNames::NUMBER_FN.isEqual(tok->value) ) {

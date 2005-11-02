@@ -24,7 +24,7 @@
  * Olivier Gerardin, ogerardin@vo.lu
  *   -- added number functions
  *    
- * $Id: txFunctionLib.h,v 1.3 2005/11/02 07:33:45 nisheeth%netscape.com Exp $
+ * $Id: txFunctionLib.h,v 1.4 2005/11/02 07:33:46 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -187,7 +187,7 @@ class BooleanFunctionCall : public FunctionCall {
 
 public:
 
-    enum _BooleanFunctions { BOOLEAN = 1, FALSE, NOT, TRUE };
+    enum BooleanFunctions { TX_BOOLEAN = 1, TX_FALSE, TX_NOT, TX_TRUE };
 
     /**
      * Creates a default BooleanFunctionCall, which always evaluates to False
