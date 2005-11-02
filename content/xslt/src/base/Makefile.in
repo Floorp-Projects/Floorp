@@ -45,7 +45,6 @@ endif
 CPPSRCS	= Double.cpp \
 	List.cpp \
 	Map.cpp \
-	NamedMap.cpp \
 	SimpleErrorObserver.cpp \
 	txAtoms.cpp \
 	txExpandedNameMap.cpp \
