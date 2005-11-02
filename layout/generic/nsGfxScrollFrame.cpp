@@ -684,10 +684,10 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
   // set the origin of childRect to (0,0) even though we might have borders or
   // a left-hand-side scrollbar. We've accounted for that by positioning the
   // anonymous mScrollableView.
-  nsRect childOverflow = mInner.mScrolledFrame->GetOverflowRect();
+  nsSize childSize = mInner.mScrolledFrame->GetSize();
   nsRect childRect = nsRect(0, 0,
-                            PR_MAX(childOverflow.XMost(), aState.mScrollPortRect.width),
-                            PR_MAX(childOverflow.YMost(), aState.mScrollPortRect.height));
+                            PR_MAX(childSize.width, aState.mScrollPortRect.width),
+                            PR_MAX(childSize.height, aState.mScrollPortRect.height));
   mInner.mScrolledFrame->SetRect(childRect);
 
   nsContainerFrame::SyncFrameViewAfterReflow(mInner.mScrolledFrame->GetPresContext(),
