@@ -62,8 +62,17 @@ NS_IMETHODIMP
 nsXPathNSResolver::LookupNamespaceURI(const nsAString & aPrefix,
                                       nsAString & aResult)
 {
-    if (mNode)
-        return mNode->LookupNamespaceURI(aPrefix, aResult);
-    SetDOMStringToNull(aResult);
-    return NS_OK;
+    if (aPrefix.Equals(NS_LITERAL_STRING("xml"))) {
+        aResult = NS_LITERAL_STRING("http://www.w3.org/XML/1998/namespace");
+
+        return NS_OK;
+    }
+
+    if (!mNode) {
+        SetDOMStringToNull(aResult);
+
+        return NS_OK;
+    }
+
+    return mNode->LookupNamespaceURI(aPrefix, aResult);
 }
