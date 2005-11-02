@@ -171,7 +171,7 @@ nsresult nsXPathEvaluator::ParseContextImpl::resolveFunctionCall(nsIAtom* aName,
                                                                  PRInt32 aID,
                                                                  FunctionCall*& aFn)
 {
-    return NS_ERROR_XPATH_PARSE_FAILED;
+    return NS_ERROR_XPATH_PARSE_FAILURE;
 }
 
 PRBool nsXPathEvaluator::ParseContextImpl::caseInsensitiveNameTests()

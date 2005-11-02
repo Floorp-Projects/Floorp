@@ -75,7 +75,7 @@ ExprResult* FilterExpr::evaluate(txIEvalContext* aContext)
         // We can't filter a non-nodeset
         nsAutoString err(NS_LITERAL_STRING("Expecting nodeset as result of: "));
         expr->toString(err);
-        aContext->receiveError(err, NS_ERROR_XPATH_EVAL_FAILED);
+        aContext->receiveError(err, NS_ERROR_XSLT_NODESET_EXPECTED);
         delete exprResult;
         return new NodeSet;
     }
