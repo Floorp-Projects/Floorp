@@ -61,6 +61,26 @@ nsCOMArray_base::~nsCOMArray_base()
     }                        
 }
 
+PRInt32
+nsCOMArray_base::IndexOfObject(nsISupports* aObject) const {
+    NS_ENSURE_TRUE(aObject, -1);
+    nsCOMPtr<nsISupports> supports = do_QueryInterface(aObject);
+    NS_ENSURE_TRUE(supports, -1);
+
+    PRInt32 i, count;
+    PRInt32 retval = -1;
+    count = mArray.Count();
+    for (i = 0; i < count; ++i) {
+        nsCOMPtr<nsISupports> arrayItem =
+            do_QueryInterface(NS_REINTERPRET_CAST(nsISupports*,mArray.ElementAt(i)));
+        if (arrayItem == supports) {
+            retval = i;
+            break;
+        }
+    }
+    return retval;
+}
+
 PRBool
 nsCOMArray_base::InsertObjectAt(nsISupports* aObject, PRInt32 aIndex) {
     PRBool result = mArray.InsertElementAt(aObject, aIndex);

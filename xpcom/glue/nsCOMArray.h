@@ -60,6 +60,8 @@ protected:
         return mArray.IndexOf(aObject);
     }
 
+    PRInt32 IndexOfObject(nsISupports* aObject) const;
+
     PRBool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData) {
         return mArray.EnumerateForwards(aFunc, aData);
     }
@@ -150,8 +152,19 @@ class nsCOMArray : public nsCOMArray_base
     }
 
     // index of the element in question.. does NOT refcount
+    // note: this does not check COM object identity. Use
+    // IndexOfObject() for that purpose
     PRInt32 IndexOf(T* aObject) const {
         return nsCOMArray_base::IndexOf(NS_STATIC_CAST(nsISupports*, aObject));
+    }
+
+    // index of the element in question.. be careful!
+    // this is much slower than IndexOf() because it uses
+    // QueryInterface to determine actual COM identity of the object
+    // if you need to do this frequently then consider enforcing
+    // COM object identity before adding/comparing elements
+    PRInt32 IndexOfObject(T* aObject) const {
+        return nsCOMArray_base::IndexOfObject(NS_STATIC_CAST(nsISupports*, aObject));
     }
 
     // inserts aObject at aIndex, shifting the objects at aIndex and
