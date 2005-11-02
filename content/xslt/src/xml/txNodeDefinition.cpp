@@ -32,8 +32,10 @@
 #include "dom.h"
 #include "ArrayList.h"
 #include "URIUtils.h"
+#include "txAtom.h"
 
 const String XMLBASE_ATTR = "xml:base";
+const String XMLNS_ATTR = "xmlns";
 
 NodeDefinition::NodeDefinition(NodeType type, const String& name,
                                const String& value, Document* owner)
@@ -56,17 +58,10 @@ NodeDefinition::NodeDefinition(NodeType type, const String& name,
 
 //
 // This node is being destroyed, so loop through and destroy all the children.
-// Also, destroy all attributes stored in the attributes NamedNodeMap.
 //
 NodeDefinition::~NodeDefinition()
 {
-  PRInt32 numAttributes = attributes.getLength();
-  PRInt32 killAttrLoop;
-
   DeleteChildren();
-
-  for (killAttrLoop=0;killAttrLoop<numAttributes;killAttrLoop++)
-    delete attributes.removeNamedItem(attributes.item(0)->getNodeName());
 }
 
 //
@@ -141,7 +136,7 @@ Node* NodeDefinition::getNextSibling() const
 
 NamedNodeMap* NodeDefinition::getAttributes()
 {
-  return &attributes;
+  return 0;
 }
 
 Document* NodeDefinition::getOwnerDocument() const
@@ -360,17 +355,76 @@ MBool NodeDefinition::hasChildNodes() const
     return MB_FALSE;
 }
 
+MBool NodeDefinition::getLocalName(txAtom** aLocalName)
+{
+  if (!aLocalName)
+    return MB_FALSE;
+  *aLocalName = 0;
+  return MB_TRUE;
+}
+
+const String& NodeDefinition::getNamespaceURI()
+{
+  return txNamespaceManager::getNamespaceURI(getNamespaceID());
+}
+
+PRInt32 NodeDefinition::getNamespaceID()
+{
+  return kNameSpaceID_None;
+}
+
+//
+// Looks up the Namespace associated with a certain prefix in the context of
+// this node.
+//
+// @return namespace associated with prefix
+//
+PRInt32 NodeDefinition::lookupNamespaceID(txAtom* prefix)
+{
+  // this is http://www.w3.org/2000/xmlns/,
+  // ID = kNameSpaceID_XMLNS, see txNamespaceManager::Init
+  if (prefix == txXMLAtoms::XMLNSPrefix)
+    return kNameSpaceID_XMLNS; 
+  // this is http://www.w3.org/XML/1998/namespace,
+  // ID = kNameSpaceID_XML, see txNamespaceManager::Init
+  if (prefix == txXMLAtoms::XMLPrefix)
+    return kNameSpaceID_XML; 
+
+  Node* node = this;
+  if (node->getNodeType() != Node::ELEMENT_NODE)
+    node = node->getXPathParent();
+
+  String name("xmlns:");
+  String prefixString;
+  TX_GET_ATOM_STRING(prefix,prefixString);
+  name.append(prefixString);
+  Attr* xmlns;
+  while (node && node->getNodeType() == Node::ELEMENT_NODE) {
+    String nsURI;
+    if ((xmlns = ((Element*)node)->getAttributeNode(name))) {
+      /*
+       * xmlns:foo = "" makes "" a valid URI, so get that.
+       * xmlns = "" resolves to 0 (null Namespace) (caught above)
+       * in Element::getNamespaceID()
+       */
+      return txNamespaceManager::getNamespaceID(xmlns->getValue());
+    }
+    node = node->getXPathParent();
+  }
+  return kNameSpaceID_Unknown;
+}
+
 Node* NodeDefinition::getXPathParent()
 {
   return parentNode;
 }
 
-/*
- * Returns the base URI of the node. Acccounts for xml:base
- * attributes.
- *
- * @return base URI for the node
- */
+//
+// Returns the base URI of the node. Acccounts for xml:base
+// attributes.
+//
+// @return base URI for the node
+//
 String NodeDefinition::getBaseURI()
 {
   Node* node = this;

@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -37,8 +38,10 @@
 #include <stdlib.h>
 #endif
 
+#include "List.h"
 #include "TxString.h"
 #include "baseutils.h"
+
 #ifndef NULL
 typedef 0 NULL;
 #endif
@@ -56,6 +59,23 @@ class CDATASection;
 class ProcessingInstruction;
 class EntityReference;
 class DocumentType;
+
+class txAtom;
+
+/*
+ * NULL string for use by Element::getAttribute() for when the attribute
+ * specified by "name" does not exist, and therefore shoud be "NULL".
+ * Used in txNamespaceManager as well.
+ */
+const String NULL_STRING;
+
+#define kNameSpaceID_Unknown -1
+#define kNameSpaceID_None     0
+// not really a namespace, but it needs to play the game
+#define kNameSpaceID_XMLNS    1 
+#define kNameSpaceID_XML      2
+// kNameSpaceID_XSLT is 6 for module, see nsINameSpaceManager.h
+#define kNameSpaceID_XSLT     3
 
 //
 //Definition and Implementation the DOMImplementation class
@@ -128,7 +148,13 @@ class Node : public TxObject
     //From DOM3 26-Jan-2001 WD
     virtual String getBaseURI() = 0;
 
+    //Introduced in DOM2
+    virtual const String& getNamespaceURI() = 0;
+
     //txXPathNode functions
+    virtual MBool getLocalName(txAtom** aLocalName) = 0;
+    virtual PRInt32 getNamespaceID() = 0;
+    virtual PRInt32 lookupNamespaceID(txAtom* prefix) = 0;
     virtual Node* getXPathParent() = 0;
 };
 
@@ -157,7 +183,7 @@ class NodeList
 //
 class NodeListDefinition : public NodeList
 {
-  friend NamedNodeMap; //-- LF
+  friend class NamedNodeMap; //-- LF
   public:
     NodeListDefinition();
     virtual ~NodeListDefinition();
@@ -207,7 +233,7 @@ class NamedNodeMap : public NodeListDefinition
 class AttrMap : public NamedNodeMap
 {
     // Elenent needs to be friend to be able to set the AttrMaps ownerElement
-    friend Element;
+    friend class Element;
 
   public:
     AttrMap();
@@ -215,6 +241,7 @@ class AttrMap : public NamedNodeMap
 
     Node* setNamedItem(Node* arg);
     Node* removeNamedItem(const String& name);
+    void clear();
 
   private:
     Element* ownerElement;
@@ -244,7 +271,7 @@ class NodeDefinition : public Node, public NodeList
     Node* getLastChild() const;
     Node* getPreviousSibling() const;
     Node* getNextSibling() const;
-    NamedNodeMap* getAttributes();
+    virtual NamedNodeMap* getAttributes();
     Document* getOwnerDocument() const;
 
     //Write functions
@@ -258,11 +285,17 @@ class NodeDefinition : public Node, public NodeList
     Node* cloneNode(MBool deep, Node* dest);
 
     MBool hasChildNodes() const;
-
+    
     //From DOM3 26-Jan-2001 WD
     virtual String getBaseURI();
 
+    //Introduced in DOM2
+    const String& getNamespaceURI();
+
     //txXPathNode functions
+    virtual MBool getLocalName(txAtom** aLocalName);
+    virtual PRInt32 getNamespaceID();
+    virtual PRInt32 lookupNamespaceID(txAtom*);
     virtual Node* getXPathParent();
 
     //Inherited from NodeList
@@ -275,7 +308,6 @@ class NodeDefinition : public Node, public NodeList
     //than the generic node does.
     String nodeName;
     String nodeValue;
-    AttrMap attributes;
 
     void DeleteChildren();
 
@@ -365,12 +397,14 @@ class Element : public NodeDefinition
 {
   public:
     Element(const String& tagName, Document* owner);
+    virtual ~Element();
 
     //Override insertBefore to limit Elements to having only certain nodes as
     //children
     Node* insertBefore(Node* newChild, Node* refChild);
 
     const String& getTagName();
+    NamedNodeMap* getAttributes();
     const String& getAttribute(const String& name);
     void setAttribute(const String& name, const String& value);
     void removeAttribute(const String& name);
@@ -379,6 +413,16 @@ class Element : public NodeDefinition
     Attr* removeAttributeNode(Attr* oldAttr);
     NodeList* getElementsByTagName(const String& name);
     void normalize();
+
+    //txXPathNode functions override
+    MBool getLocalName(txAtom** aLocalName);
+    PRInt32 getNamespaceID();
+    MBool getAttr(txAtom* aLocalName, PRInt32 aNSID, String& aValue);
+
+  private:
+    AttrMap mAttributes;
+    txAtom* mLocalName;
+    PRInt32 mNamespaceID;
 };
 
 //
@@ -389,9 +433,10 @@ class Element : public NodeDefinition
 class Attr : public NodeDefinition
 {
     // AttrMap needs to be friend to be able to update the ownerElement
-    friend AttrMap;
+    friend class AttrMap;
   public:
     Attr(const String& name, Document* owner);
+    virtual ~Attr();
 
     const String& getName() const;
     MBool getSpecified() const;
@@ -408,11 +453,16 @@ class Attr : public NodeDefinition
     Node* insertBefore(Node* newChild, Node* refChild);
 
     //txXPathNode functions override
+    MBool getLocalName(txAtom** aLocalName);
+    PRInt32 getNamespaceID();
     Node* getXPathParent();
 
   private:
     Element* ownerElement;
+
     MBool specified;
+    txAtom* mLocalName;
+    PRInt32 mNamespaceID;
 };
 
 //
@@ -508,6 +558,7 @@ class ProcessingInstruction : public NodeDefinition
   public:
     ProcessingInstruction(const String& theTarget, const String& theData,
                           Document* owner);
+    ~ProcessingInstruction();
 
     const String& getTarget() const;
     const String& getData() const;
@@ -520,11 +571,17 @@ class ProcessingInstruction : public NodeDefinition
     Node* replaceChild(Node* newChild, Node* oldChild);
     Node* removeChild(Node* oldChild);
     Node* appendChild(Node* newChild);
+
+    //txXPathNode functions override
+    MBool getLocalName(txAtom** aLocalName);
+
+  private:
+    txAtom* mLocalName;
 };
 
 //
-//Definition and Implementation of a Notation.  Most functionality is inherrited
-//from NodeDefinition.
+//Definition and Implementation of a Notation.  Most functionality
+//is inherrited from NodeDefinition.
 //
 class Notation : public NodeDefinition
 {
@@ -608,8 +665,110 @@ class DocumentType : public NodeDefinition
     NamedNodeMap* notations;
 };
 
-//NULL string for use by Element::getAttribute() for when the attribute
-//spcified by "name" does not exist, and therefore shoud be "NULL".
-const String NULL_STRING;
+class txNamespaceManager
+{
+public:
+    static PRInt32 getNamespaceID(const String& aURI)
+    {
+        if (!mNamespaces && !Init())
+            return kNameSpaceID_Unknown;
+        txListIterator nameIter(mNamespaces);
+        PRInt32 id=0;
+        String* uri;
+        while (nameIter.hasNext()) {
+            uri = (String*)nameIter.next();
+            id++;
+            if (uri->isEqual(aURI))
+                return id;
+        }
+        uri = new String(aURI);
+        NS_ASSERTION(uri, "Out of memory, namespaces are getting lost");
+        if (!uri)
+            return kNameSpaceID_Unknown;
+        mNamespaces->add(uri);
+        id++;
+        return id;
+    }
+
+    static const String& getNamespaceURI(const PRInt32 aID)
+    {
+        // empty namespace, and errors
+        if (aID <= 0)
+            return NULL_STRING;
+        if (!mNamespaces && !Init())
+            return NULL_STRING;
+        txListIterator nameIter(mNamespaces);
+        String* aURI = (String*)nameIter.advance(aID);
+        if (aURI)
+            return *aURI;
+        return NULL_STRING;
+    }
+
+    static MBool Init()
+    {
+        NS_ASSERTION(!mNamespaces,
+                     "called without matching Shutdown()");
+        if (mNamespaces)
+            return MB_TRUE;
+        mNamespaces = new txList();
+        if (!mNamespaces)
+            return MB_FALSE;
+        /*
+         * Hardwiring some Namespace IDs.
+         * no Namespace is 0
+         * xmlns prefix is 1, mapped to http://www.w3.org/2000/xmlns/
+         * xml prefix is 2, mapped to http://www.w3.org/XML/1998/namespace
+         */
+        String* XMLNSUri = new String("http://www.w3.org/2000/xmlns/");
+        if (!XMLNSUri) {
+            delete mNamespaces;
+            mNamespaces = 0;
+            return MB_FALSE;
+        }
+        mNamespaces->add(XMLNSUri);
+        String* XMLUri = new String("http://www.w3.org/XML/1998/namespace");
+        if (!XMLUri) {
+            delete mNamespaces;
+            mNamespaces = 0;
+            return MB_FALSE;
+        }
+        mNamespaces->add(XMLUri);
+        String* XSLTUri = new String("http://www.w3.org/1999/XSL/Transform");
+        if (!XSLTUri) {
+            delete mNamespaces;
+            mNamespaces = 0;
+            return MB_FALSE;
+        }
+        mNamespaces->add(XSLTUri);
+        return MB_TRUE;
+    }
+
+    static void Shutdown()
+    {
+        NS_ASSERTION(mNamespaces, "called without matching Init()");
+        if (!mNamespaces)
+            return;
+        delete mNamespaces;
+        mNamespaces = NULL;
+    }
+
+private:
+    static txList* mNamespaces;
+};
+
+//
+// Definition of txXMLAtoms
+//
+class txXMLAtoms
+{
+public:
+    static txAtom* XMLPrefix;
+    static txAtom* XMLNSPrefix;
+};
+
+#define TX_IMPL_DOM_STATICS \
+  txAtom* txXMLAtoms::XMLPrefix = 0;  \
+  txAtom* txXMLAtoms::XMLNSPrefix = 0;  \
+  txList* txNamespaceManager::mNamespaces = 0
 
 #endif

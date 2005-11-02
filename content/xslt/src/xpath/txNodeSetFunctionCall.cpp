@@ -189,7 +189,7 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
                         }
                         break;
                     case NAMESPACE_URI :
-                        XMLUtils::getNameSpace(node->getNodeName(),name);
+                        name = node->getNamespaceURI();
                         break;
                     default:
                         switch (node->getNodeType()) {
