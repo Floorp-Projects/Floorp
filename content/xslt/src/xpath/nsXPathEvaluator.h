@@ -92,6 +92,7 @@ private:
         nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                      FunctionCall*& aFunction);
         PRBool caseInsensitiveNameTests();
+        PRBool fcp();
         void SetErrorOffset(PRUint32 aOffset);
 
     private:
