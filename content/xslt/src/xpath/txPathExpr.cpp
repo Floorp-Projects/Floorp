@@ -20,10 +20,16 @@
  * Contributor(s):
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
+ *
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: txPathExpr.cpp,v 1.1 2005/11/02 07:33:37 kvisco%ziplink.net Exp $
+ * Marina Mechtcheriakova, mmarina@mindspring.com
+ *    -- fixed bug in PathExpr::matches
+ *       - foo//bar would not match properly if there was more than
+ *         one node in the NodeSet (nodes) on the final iteration
+ *
+ * $Id: txPathExpr.cpp,v 1.2 2005/11/02 07:33:38 kvisco%ziplink.net Exp $
  */
 
 #include "Expr.h"
@@ -209,18 +215,19 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
     if ( (!node)  || (expressions.getLength() == 0))
        return MB_FALSE;
 
-    NodeSet nodes;
+    NodeSet nodes(3);
+    NodeSet tmpNodes(3);
+
     nodes.add(node);
 
 
     ListIterator* iter = expressions.iterator();
     iter->reverse();
 
-    NodeSet tmpNodes;
-    MBool result = MB_FALSE;
     while ( iter->hasNext() ) {
 
         PathExprItem* pxi = (PathExprItem*)iter->next();
+
         for (int i = 0; i < nodes.size(); i++) {
 
             Node* tnode = nodes.get(i);
@@ -247,18 +254,35 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
                 }
                 default:
                     if ( !iter->hasNext() ) {
-                        result = pxi->pExpr->matches(tnode, context, cs);
+
+                        /*
+                          // PREVIOUS // result = pxi->pExpr->matches(tnode, context, cs);
+                          // result was being overwritten if there was more than one
+                          // node in nodes during the final iteration  (Marina)
+
+                          result = result || pxi->pExpr->matches(tnode, context, cs)
+                        */
+
+                        //-- Just return true if we match here
+                        if (pxi->pExpr->matches(tnode, context, cs)) {
+                            delete iter;
+                            return MB_TRUE;
+                        }
                     }
                     else {
-                        //-- error in expression
-                        tmpNodes.clear();
-                        nodes.clear();
+                        //-- error in expression, will we ever see this?
                         delete iter;
                         return MB_FALSE;
                     }
                     break;
             }
         } //-- for
+
+        if (tmpNodes.size() == 0) {
+            delete iter;
+            return MB_FALSE;
+        }
+
         nodes.clear();
         tmpNodes.copyInto(nodes);
         tmpNodes.clear();
@@ -267,11 +291,15 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
     delete iter;
 
     if ( this->isAbsolute()) {
-        Node* doc = node->getOwnerDocument();
+        Node* doc = 0;
+        if (node->getNodeType() == Node::DOCUMENT_NODE)
+            doc = node;
+        else
+            doc = node->getOwnerDocument();
         return (MBool) nodes.contains(doc);
     }
 
-    return (MBool) (result || (nodes.size() > 0));
+    return (MBool) (nodes.size() > 0);
 
 } //-- matches
 
