@@ -205,28 +205,18 @@ nsXPathResult::SnapshotItem(PRUint32 aIndex, nsIDOMNode **aResult)
     return NS_OK;
 }
 
+NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsXPathResult)
 NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsXPathResult)
 NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsXPathResult)
 NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXPathResult)
 NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXPathResult)
 
 NS_IMETHODIMP
-nsXPathResult::BeginUpdate(nsIDocument* aDocument)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathResult::EndUpdate(nsIDocument* aDocument)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPathResult::ContentChanged(nsIDocument* aDocument,
                               nsIContent *aContent,
                               nsISupports *aSubContent)
 {
+    Invalidate();
     return NS_OK;
 }
 
@@ -277,13 +267,6 @@ nsXPathResult::ContentRemoved(nsIDocument* aDocument,
                               nsIContent* aContainer,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer)
-{
-    Invalidate();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathResult::DocumentWillBeDestroyed(nsIDocument* aDocument)
 {
     Invalidate();
     return NS_OK;
