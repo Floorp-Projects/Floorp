@@ -161,6 +161,8 @@ public:
 private:
     void closePrevious(PRInt8 aAction);
     void startHTMLElement(nsIDOMElement* aElement);
+    void endHTMLElement(nsIDOMElement* aElement, PRBool aXHTML);
+    void processHTTPEquiv(nsIAtom* aHeader, nsAReadableString& aValue);
     void wrapChildren(nsIDOMNode* aCurrentNode, nsIDOMElement* aWrapper);
 
     nsCOMPtr<nsIDOMDocument> mDocument;
@@ -168,9 +170,11 @@ private:
     nsCOMPtr<nsIDOMNode> mParentNode;
     nsCOMPtr<nsIContent> mRootContent;
 
-    nsCOMPtr<nsIDOMNode> mScriptParent;
-    nsCOMPtr<nsIDOMElement> mTitleElement;
-    nsCOMPtr<nsIStyleSheetLinkingElement> mStyleElement;
+    nsCOMPtr<nsIDOMNode> mNonAddedParent;
+    nsCOMPtr<nsIDOMNode> mNonAddedNode;
+
+    PRInt32 mStyleSheetCount;
+    nsAutoString mRefreshString;
 
     nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
 
@@ -180,8 +184,11 @@ private:
 
     txOutputFormat mOutputFormat;
 
-    PRPackedBool mHaveTitle;
     PRPackedBool mDisableStylesheetLoad;
+    PRPackedBool mDontAddCurrent;
+
+    PRPackedBool mHaveTitleElement;
+    PRPackedBool mHaveBaseElement;
 
     enum txAction { eCloseElement = 1, eFlushText = 2 };
 };
