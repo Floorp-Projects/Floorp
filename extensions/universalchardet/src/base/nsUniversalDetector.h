@@ -67,7 +67,7 @@ class nsUniversalDetector {
 public:
    nsUniversalDetector();
    virtual ~nsUniversalDetector();
-   virtual void HandleData(const char* aBuf, PRUint32 aLen);
+   virtual nsresult HandleData(const char* aBuf, PRUint32 aLen);
    virtual void DataEnd(void);
 
 protected:
