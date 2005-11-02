@@ -38,10 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef TxLog_h__
-#define Txog_h__
-
-#define PRINTF(fu,bar)
-#define FLUSH()
-#define NS_IMPL_LOG(log)
+#define TxLog_h__
 
 #endif
