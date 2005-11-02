@@ -20,8 +20,7 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: txUnionExpr.cpp,v 1.3 2005/11/02 07:33:52 sicking%bigfoot.com Exp $
+ * 
  */
 
 #include "Expr.h"

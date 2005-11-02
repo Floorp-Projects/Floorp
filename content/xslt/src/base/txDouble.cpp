@@ -27,7 +27,6 @@
  * Eric Du, duxy@leyou.com.cn
  *   -- added fix for FreeBSD
  *
- * $Id: txDouble.cpp,v 1.6 2005/11/02 07:33:39 peterv%netscape.com Exp $
  */
 
 #include "primitives.h"
@@ -46,8 +45,6 @@
 /**
  * A wrapper for the primitive double type, and provides some simple
  * floating point related routines
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @author <a href="mailto:lef@opentext.com">Larry Fitzpatrick</a>
 **/
 
 //A trick to handle IEEE floating point exceptions on FreeBSD - E.D.

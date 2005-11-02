@@ -31,7 +31,6 @@
  *    -- read XML from stdin when -i is omitted
  *    -- accept '-' to specify stdin/stdout on command line
  *
- * $Id: transformiix.cpp,v 1.10 2005/11/02 07:33:41 peterv%netscape.com Exp $
  */
 
 
@@ -54,7 +53,6 @@ void printUsage();
 
 /**
  * The TransforMiiX command line interface
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
 int main(int argc, char** argv) {
 

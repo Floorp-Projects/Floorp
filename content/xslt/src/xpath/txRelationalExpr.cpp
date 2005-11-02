@@ -21,7 +21,6 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txRelationalExpr.cpp,v 1.6 2005/11/02 07:33:49 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"

@@ -23,15 +23,12 @@
  *
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- changed some behavoir to be more compliant with spec
- *    
- * $Id: txNodeSetFunctionCall.cpp,v 1.8 2005/11/02 07:33:51 sicking%bigfoot.com Exp $
+ * 
  */
 
 /**
  * NodeSetFunctionCall
  * A representation of the XPath NodeSet funtions
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:51 $
 **/
 
 #include "FunctionLib.h"

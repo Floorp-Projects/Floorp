@@ -32,13 +32,10 @@
  * Axel Hecht <axel@pike.org>
  *   -- big beating, general overhaul
  *
- * $Id: txExprLexer.cpp,v 1.15 2005/11/02 07:33:54 sicking%bigfoot.com Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.15 $ $Date: 2005/11/02 07:33:54 $
 **/
 
 #include "ExprLexer.h"

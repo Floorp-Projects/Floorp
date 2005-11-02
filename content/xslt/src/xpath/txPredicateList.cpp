@@ -20,8 +20,7 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: txPredicateList.cpp,v 1.4 2005/11/02 07:33:53 sicking%bigfoot.com Exp $
+ * 
  */
 
 #include "Expr.h"
@@ -29,8 +28,6 @@
 /**
  * Represents an ordered list of Predicates,
  * for use with Step and Filter Expressions
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:53 $
 **/
 //-- PredicateList Implementation --/
 

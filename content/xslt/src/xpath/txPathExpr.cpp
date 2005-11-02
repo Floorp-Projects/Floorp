@@ -29,7 +29,6 @@
  *       - foo//bar would not match properly if there was more than
  *         one node in the NodeSet (nodes) on the final iteration
  *
- * $Id: txPathExpr.cpp,v 1.10 2005/11/02 07:33:46 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"

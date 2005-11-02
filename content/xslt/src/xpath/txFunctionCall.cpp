@@ -20,16 +20,13 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: txFunctionCall.cpp,v 1.4 2005/11/02 07:33:41 sicking%bigfoot.com Exp $
+ * 
  */
 
 #include "Expr.h"
 
 /**
  * This class represents a FunctionCall as defined by the XSL Working Draft
- * @author <A HREF="mailto:kvisco@ziplink">Keith Visco</A>
- * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:41 $
 **/
 
 const String FunctionCall::INVALID_PARAM_COUNT =

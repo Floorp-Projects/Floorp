@@ -21,14 +21,11 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txStringFunctionCall.cpp,v 1.12 2005/11/02 07:33:47 sicking%bigfoot.com Exp $
  */
 
 /**
  * StringFunctionCall
  * A representation of the XPath String funtions
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.12 $ $Date: 2005/11/02 07:33:47 $
 **/
 
 #include "FunctionLib.h"

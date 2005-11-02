@@ -24,7 +24,6 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- added lang() implementation
  *
- * $Id: txBooleanFunctionCall.cpp,v 1.9 2005/11/02 07:33:42 sicking%bigfoot.com Exp $
  */
 
 #include "FunctionLib.h"
@@ -32,8 +31,6 @@
 
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.9 $ $Date: 2005/11/02 07:33:42 $
 **/
 BooleanFunctionCall::BooleanFunctionCall(short type) : FunctionCall()
 {

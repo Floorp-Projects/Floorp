@@ -22,19 +22,12 @@
  *   -- original author.
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
- *    
- * $Id: txFilterExpr.cpp,v 1.3 2005/11/02 07:33:52 sicking%bigfoot.com Exp $
+ * 
  */
 
 #include "Expr.h"
 
-
-/**
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:52 $
-**/
 //-- Implementation of FilterExpr --/
-
 
 /**
  * Creates a new FilterExpr using the given Expr

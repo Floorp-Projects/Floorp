@@ -25,7 +25,6 @@
  * Nisheeth Ranjan, nisheeth@netscape.com
  *   -- implemented rint function, which was not available on Windows.
  *
- * $Id: txNumberFunctionCall.cpp,v 1.14 2005/11/02 07:33:49 sicking%bigfoot.com Exp $
  */
 
 /*

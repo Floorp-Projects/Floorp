@@ -23,7 +23,6 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- changed constant short result types to enum
  *
- * $Id: txExprResult.h,v 1.11 2005/11/02 07:33:53 sicking%bigfoot.com Exp $
  */
 
 #ifndef TRANSFRMX_EXPRRESULT_H
@@ -34,11 +33,11 @@
 
 /*
  * ExprResult
- * <BR />
+ *
  * Classes Represented:
  * BooleanResult, ExprResult, NumberResult, StringResult
- * <BR/>
- * Note: for NodeSet, see NodeSet.h <BR />
+ *
+ * Note: for NodeSet, see NodeSet.h
 */
 
 class ExprResult : public TxObject {
@@ -104,6 +103,9 @@ public:
 
     NumberResult();
     NumberResult(double dbl);
+
+    double getValue() const;
+    MBool isNaN() const;
 
     virtual short  getResultType();
     virtual void   stringValue(String& str);

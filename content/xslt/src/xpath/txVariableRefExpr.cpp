@@ -20,8 +20,7 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: txVariableRefExpr.cpp,v 1.2 2005/11/02 07:33:56 sicking%bigfoot.com Exp $
+ * 
  */
 
 #include "Expr.h"

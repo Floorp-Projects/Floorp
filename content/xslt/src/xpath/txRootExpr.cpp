@@ -20,8 +20,7 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: txRootExpr.cpp,v 1.2 2005/11/02 07:33:57 sicking%bigfoot.com Exp $
+ * 
  */
 
 #include "Expr.h"
