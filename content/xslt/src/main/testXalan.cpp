@@ -53,6 +53,9 @@
 #ifdef NS_TRACE_MALLOC
 #include "nsTraceMalloc.h"
 #endif
+#ifdef MOZ_JPROF
+#include "jprof.h"
+#endif
 
 /**
  * Prints the command line help screen to the console
@@ -285,6 +288,9 @@ int main(int argc, char** argv)
 {
 #ifdef NS_TRACE_MALLOC
     NS_TraceMallocStartupArgs(argc, argv);
+#endif
+#ifdef MOZ_JPROF
+    setupProfilingStuff();
 #endif
     char* xalan = PR_GetEnv("XALAN_DIR");
     if (!xalan) {

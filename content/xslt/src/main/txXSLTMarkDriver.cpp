@@ -47,6 +47,9 @@
 #include "txStandaloneXSLTProcessor.h"
 #include "nsXPCOM.h"
 #include "xmExternalDriver.hpp"
+#ifdef MOZ_JPROF
+#include "jprof.h"
+#endif
 
 class txDriverProcessor : public txStandaloneXSLTProcessor,
                           public xmExternalDriver
@@ -116,6 +119,9 @@ private:
 int main (int argc, char ** argv)
 {
     txDriverProcessor driver;
+#ifdef MOZ_JPROF
+    setupProfilingStuff();
+#endif
     NS_InitXPCOM2(nsnull, nsnull, nsnull);
     if (!txDriverProcessor::init())
         return 1;
