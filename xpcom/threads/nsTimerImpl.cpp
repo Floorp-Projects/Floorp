@@ -245,6 +245,8 @@ NS_IMETHODIMP nsTimerImpl::InitWithFuncCallback(nsTimerCallbackFunc aFunc,
                                                 PRUint32 aDelay,
                                                 PRUint32 aType)
 {
+  NS_ENSURE_ARG_POINTER(aFunc);
+  
   ReleaseCallback();
   mCallbackType = CALLBACK_TYPE_FUNC;
   mCallback.c = aFunc;
@@ -257,6 +259,8 @@ NS_IMETHODIMP nsTimerImpl::InitWithCallback(nsITimerCallback *aCallback,
                                             PRUint32 aDelay,
                                             PRUint32 aType)
 {
+  NS_ENSURE_ARG_POINTER(aCallback);
+
   ReleaseCallback();
   mCallbackType = CALLBACK_TYPE_INTERFACE;
   mCallback.i = aCallback;
@@ -269,6 +273,8 @@ NS_IMETHODIMP nsTimerImpl::Init(nsIObserver *aObserver,
                                 PRUint32 aDelay,
                                 PRUint32 aType)
 {
+  NS_ENSURE_ARG_POINTER(aObserver);
+
   ReleaseCallback();
   mCallbackType = CALLBACK_TYPE_OBSERVER;
   mCallback.o = aObserver;
