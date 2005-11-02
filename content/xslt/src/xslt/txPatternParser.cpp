@@ -264,8 +264,8 @@ nsresult txPatternParser::createKeyPattern(ExprLexer& aLexer,
         return NS_ERROR_XPATH_PARSE_FAILED;
     nsCOMPtr<nsIAtom> prefix, localName;
     PRInt32 namespaceID;
-    nsresult rv = resolveQName(key, *getter_AddRefs(prefix), aContext,
-                               *getter_AddRefs(localName), namespaceID);
+    nsresult rv = resolveQName(key, getter_AddRefs(prefix), aContext,
+                               getter_AddRefs(localName), namespaceID);
     if (NS_FAILED(rv))
         return rv;
 
@@ -303,8 +303,8 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
         // resolve QName
         nsCOMPtr<nsIAtom> prefix, lName;
         PRInt32 nspace;
-        rv = resolveQName(tok->value, *getter_AddRefs(prefix), aContext,
-                          *getter_AddRefs(lName), nspace);
+        rv = resolveQName(tok->value, getter_AddRefs(prefix), aContext,
+                          getter_AddRefs(lName), nspace);
         if (NS_FAILED(rv)) {
             // XXX error report namespace resolve failed
             return rv;
