@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txNumberResult.cpp,v 1.2 2005/11/02 07:33:57 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txNumberResult.cpp,v 1.3 2005/11/02 07:33:58 kvisco%ziplink.net Exp $
  */
 
 /**
  * NumberResult
  * Represents the a number as the result of evaluating an Expr
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:57 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:58 $
 **/
 
 #include "ExprResult.h"
@@ -90,7 +90,7 @@ short NumberResult::getResultType() {
     return ExprResult::NUMBER;
 } //-- getResultType
 
-void NumberResult::stringValue(DOMString& str)  {
+void NumberResult::stringValue(String& str)  {
     int intVal = (int)value;
     if (intVal == value) { //-- no fraction
         Integer::toString(intVal, str);
