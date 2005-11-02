@@ -65,22 +65,6 @@ public:
     **/
     static const char HREF_PATH_SEP;
 
-    /**
-     * The Device separator for an URI
-    **/
-    static const char DEVICE_SEP;
-
-    /**
-     * The Port separator for an URI
-    **/
-    static const char PORT_SEP;
-
-    /**
-     * The Protocal separator for an URI
-    **/
-    static const char PROTOCOL_SEP;
-
-
     static istream* getInputStream
         (const nsAString& href, nsAString& errMsg);
 
@@ -106,30 +90,6 @@ public:
     **/
     static void resolveHref(const nsAString& href, const nsAString& base,
                             nsAString& dest);
-
-private:
-
-#ifdef TX_EXE
-    enum ParseMode {
-        PROTOCOL_MODE,
-        HOST_MODE,
-        PORT_MODE,
-        PATH_MODE
-    };
-
-    struct ParsedURI {
-        MBool  isMalformed;
-        nsString fragmentIdentifier;
-        nsString host;
-        nsString protocol;
-        nsString port;
-        nsString path;
-    };
-
-    static istream* openStream(ParsedURI* uri);
-    static ParsedURI* parseURI(const nsAString& aUri);
-#endif
-
 }; //-- URIUtils
 
 /* */
