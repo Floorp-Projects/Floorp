@@ -63,6 +63,12 @@ void NumberResult::stringValue(nsAString& str)  {
     Double::toString(value, str);
 } //-- stringValue
 
+nsAString*
+NumberResult::stringValuePointer()
+{
+    return nsnull;
+}
+
 MBool NumberResult::booleanValue() {
   // OG+
   // As per the XPath spec, the boolean value of a number is true if and only if

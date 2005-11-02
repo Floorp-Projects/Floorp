@@ -31,217 +31,160 @@
 #include "NodeSet.h"
 #include "XMLDOMUtils.h"
 
-  //------------------/
- //- RelationalExpr -/
-//------------------/
-
-RelationalExpr::RelationalExpr(Expr* leftExpr, Expr* rightExpr, short op) {
-    this->op = op;
-    this->leftExpr = leftExpr;
-    this->rightExpr = rightExpr;
-} //-- RelationalExpr
-
-RelationalExpr::~RelationalExpr() {
-    delete leftExpr;
-    delete rightExpr;
-} //-- ~RelationalExpr
+RelationalExpr::RelationalExpr(Expr* aLeftExpr, Expr* aRightExpr,
+                               RelationalExprType aOp)
+    : mLeftExpr(aLeftExpr), mRightExpr(aRightExpr), mOp(aOp)
+{
+}
 
 /**
  *  Compares the two ExprResults based on XPath 1.0 Recommendation (section 3.4)
-**/
-MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
+ */
+PRBool
+RelationalExpr::compareResults(ExprResult* aLeft, ExprResult* aRight)
+{
+    short ltype = aLeft->getResultType();
+    short rtype = aRight->getResultType();
 
-
-    short ltype = left->getResultType();
-    short rtype = right->getResultType();
-
-    MBool result = MB_FALSE;
-
-    //-- handle case for just Left NodeSet or Both NodeSets
+    // Handle case for just Left NodeSet or Both NodeSets
     if (ltype == ExprResult::NODESET) {
         if (rtype == ExprResult::BOOLEAN) {
-            BooleanResult leftBool(left->booleanValue());
-            return compareResults(&leftBool, right);
+            BooleanResult leftBool(aLeft->booleanValue());
+            return compareResults(&leftBool, aRight);
         }
 
-        NodeSet* nodeSet = (NodeSet*)left;
-        for ( int i = 0; i < nodeSet->size(); i++) {
-                nsAutoString str;
-                Node* node = nodeSet->get(i);
-                XMLDOMUtils::getNodeValue(node, str);
-                StringResult strResult(str);
-                result = compareResults(&strResult, right);
-                if ( result ) break;
+        NodeSet* nodeSet = NS_STATIC_CAST(NodeSet*, aLeft);
+        StringResult strResult;
+        int i;
+        for (i = 0; i < nodeSet->size(); ++i) {
+            Node* node = nodeSet->get(i);
+            strResult.mValue.Truncate();
+            XMLDOMUtils::getNodeValue(node, strResult.mValue);
+            if (compareResults(&strResult, aRight)) {
+                return PR_TRUE;
+            }
         }
+
+        return PR_FALSE;
     }
-    //-- handle case for Just Right NodeSet
-    else if ( rtype == ExprResult::NODESET) {
+
+    // Handle case for Just Right NodeSet
+    if (rtype == ExprResult::NODESET) {
         if (ltype == ExprResult::BOOLEAN) {
-            BooleanResult rightBool(right->booleanValue());
-            return compareResults(left, &rightBool);
+            BooleanResult rightBool(aRight->booleanValue());
+            return compareResults(aLeft, &rightBool);
         }
 
-        NodeSet* nodeSet = (NodeSet*)right;
-        for ( int i = 0; i < nodeSet->size(); i++) {
-                nsAutoString str;
-                Node* node = nodeSet->get(i);
-                XMLDOMUtils::getNodeValue(node, str);
-                StringResult strResult(str);
-                result = compareResults(left, &strResult);
-                if ( result ) break;
+        NodeSet* nodeSet = NS_STATIC_CAST(NodeSet*, aRight);
+        StringResult strResult;
+        int i;
+        for (i = 0; i < nodeSet->size(); ++i) {
+            Node* node = nodeSet->get(i);
+            strResult.mValue.Truncate();
+            XMLDOMUtils::getNodeValue(node, strResult.mValue);
+            if (compareResults(aLeft, &strResult)) {
+                return PR_TRUE;
+            }
         }
+
+        return PR_FALSE;
     }
-    //-- neither NodeSet
-    else {
-        if ( op == NOT_EQUAL) {
 
-            if ((ltype == ExprResult::BOOLEAN)
-                    || (rtype == ExprResult::BOOLEAN)) {
-                result = (left->booleanValue() != right->booleanValue());
-            }
-            else if ((ltype == ExprResult::NUMBER) ||
-                            (rtype == ExprResult::NUMBER)) {
-                double lval = left->numberValue();
-                double rval = right->numberValue();
+    // Neither is a NodeSet
+    if (mOp == EQUAL || mOp == NOT_EQUAL) {
+        PRBool result;
+        nsAString *lString, *rString;
+
+        // If either is a bool, compare as bools.
+        if (ltype == ExprResult::BOOLEAN || rtype == ExprResult::BOOLEAN) {
+            result = aLeft->booleanValue() == aRight->booleanValue();
+        }
+
+        // If either is a number, compare as numbers.
+        else if (ltype == ExprResult::NUMBER || rtype == ExprResult::NUMBER) {
+            double lval = aLeft->numberValue();
+            double rval = aRight->numberValue();
 #if defined(XP_WIN) || defined(XP_OS2)
-                if (Double::isNaN(lval) || Double::isNaN(rval))
-                    result = MB_TRUE;
-                else
-                    result = (lval != rval);
+            if (Double::isNaN(lval) || Double::isNaN(rval))
+                result = PR_FALSE;
+            else
+                result = lval == rval;
 #else
-                result = (lval != rval);
+            result = lval == rval;
 #endif
+        }
+
+        // Otherwise compare as strings. Try to use the stringobject in
+        // StringResult if possible since that is a common case.
+        else if ((lString = aLeft->stringValuePointer())) {
+            if ((rString = aRight->stringValuePointer())) {
+                result = lString->Equals(*rString);
             }
             else {
-                nsAutoString lStr;
-                left->stringValue(lStr);
                 nsAutoString rStr;
-                right->stringValue(rStr);
-                result = !lStr.Equals(rStr);
+                aRight->stringValue(rStr);
+                result = rStr.Equals(*lString);
             }
         }
-        else if ( op == EQUAL) {
-
-            if ((ltype == ExprResult::BOOLEAN)
-                    || (rtype == ExprResult::BOOLEAN)) {
-                result = (left->booleanValue() == right->booleanValue());
-            }
-            else if ((ltype == ExprResult::NUMBER) ||
-                            (rtype == ExprResult::NUMBER)) {
-                double lval = left->numberValue();
-                double rval = right->numberValue();
-#if defined(XP_WIN) || defined(XP_OS2)
-                if (Double::isNaN(lval) || Double::isNaN(rval))
-                    result = MB_FALSE;
-                else
-                    result = (lval == rval);
-#else
-                result = (lval == rval);
-#endif
-            }
-            else {
-                nsAutoString lStr;
-                left->stringValue(lStr);
-                nsAutoString rStr;
-                right->stringValue(rStr);
-                result = lStr.Equals(rStr);
-            }
-
+        else if ((rString = aRight->stringValuePointer())) {
+            nsAutoString lStr;
+            aLeft->stringValue(lStr);
+            result = rString->Equals(lStr);
         }
         else {
-            double leftDbl = left->numberValue();
-            double rightDbl = right->numberValue();
-            switch( op ) {
-                case LESS_THAN:
-#if defined(XP_WIN) || defined(XP_OS2)
-                    if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
-                        result = MB_FALSE;
-                    else
-                        result = (leftDbl < rightDbl);
-#else
-                    result = (leftDbl < rightDbl);
-#endif
-                    break;
-                case LESS_OR_EQUAL:
-#if defined(XP_WIN) || defined(XP_OS2)
-                    if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
-                        result = MB_FALSE;
-                    else
-                        result = (leftDbl <= rightDbl);
-#else
-                    result = (leftDbl <= rightDbl);
-#endif
-                    break;
-                case GREATER_THAN :
-#if defined(XP_WIN) || defined(XP_OS2)
-                    if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
-                        result = MB_FALSE;
-                    else
-                        result = (leftDbl > rightDbl);
-#else
-                    result = (leftDbl > rightDbl);
-#endif
-                    break;
-                case GREATER_OR_EQUAL:
-#if defined(XP_WIN) || defined(XP_OS2)
-                    if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
-                        result = MB_FALSE;
-                    else
-                        result = (leftDbl >= rightDbl);
-#else
-                    result = (leftDbl >= rightDbl);
-#endif
-                    break;
-            }
+            nsAutoString lStr, rStr;
+            aLeft->stringValue(lStr);
+            aRight->stringValue(rStr);
+            result = lStr.Equals(rStr);
         }
-    }
-    return result;
-} //-- compareResult
 
-/**
- * Evaluates this Expr based on the given context node and processor state
- * @param context the context node for evaluation of this Expr
- * @param ps the ContextState containing the stack information needed
- * for evaluation
- * @return the result of the evaluation
-**/
-ExprResult* RelationalExpr::evaluate(txIEvalContext* aContext)
+        return mOp == EQUAL ? result : !result;
+    }
+
+    double leftDbl = aLeft->numberValue();
+    double rightDbl = aRight->numberValue();
+#if defined(XP_WIN) || defined(XP_OS2)
+    if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
+        return PR_FALSE;
+#endif
+
+    switch (mOp) {
+        case LESS_THAN:
+            return leftDbl < rightDbl;
+
+        case LESS_OR_EQUAL:
+            return leftDbl <= rightDbl;
+
+        case GREATER_THAN :
+            return leftDbl > rightDbl;
+
+        case GREATER_OR_EQUAL:
+            return leftDbl >= rightDbl;
+    }
+
+    NS_NOTREACHED("We should have cought all cases");
+
+    return PR_FALSE;
+}
+
+ExprResult*
+RelationalExpr::evaluate(txIEvalContext* aContext)
 {
-    //-- get result of left expression
-    ExprResult* lResult = 0;
-    if (leftExpr)
-        lResult = leftExpr->evaluate(aContext);
-    else
-        return new BooleanResult();
+    nsAutoPtr<ExprResult> lResult(mLeftExpr->evaluate(aContext));
+    NS_ENSURE_TRUE(lResult, nsnull);
 
-    //-- get result of right expr
-    ExprResult* rResult = 0;
-    if (rightExpr)
-        rResult = rightExpr->evaluate(aContext);
-    else {
-        delete lResult;
-        return new BooleanResult();
-    }
-    BooleanResult* boolResult = new BooleanResult(compareResults(lResult, rResult));
-    delete lResult;
-    delete rResult;
-    return boolResult;
-} //-- evaluate
+    nsAutoPtr<ExprResult> rResult(mRightExpr->evaluate(aContext));
+    NS_ENSURE_TRUE(rResult, nsnull);
 
-/**
- * Returns the String representation of this Expr.
- * @param dest the String to use when creating the String
- * representation. The String representation will be appended to
- * any data in the destination String, to allow cascading calls to
- * other #toString() methods for Expressions.
- * @return the String representation of this Expr.
-**/
-void RelationalExpr::toString(nsAString& str) {
+    return new BooleanResult(compareResults(lResult, rResult));
+}
 
-    if ( leftExpr ) leftExpr->toString(str);
-    else str.Append(NS_LITERAL_STRING("null"));
+void
+RelationalExpr::toString(nsAString& str)
+{
+    mLeftExpr->toString(str);
 
-    switch ( op ) {
+    switch (mOp) {
         case NOT_EQUAL:
             str.Append(NS_LITERAL_STRING("!="));
             break;
@@ -262,8 +205,5 @@ void RelationalExpr::toString(nsAString& str) {
             break;
     }
 
-    if ( rightExpr ) rightExpr->toString(str);
-    else str.Append(NS_LITERAL_STRING("null"));
-
-} //-- toString
-
+    mRightExpr->toString(str);
+}

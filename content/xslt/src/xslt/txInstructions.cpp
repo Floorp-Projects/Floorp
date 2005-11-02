@@ -575,14 +575,18 @@ txLREAttribute::execute(txExecutionState& aEs)
         mLocalName->ToString(nodeName);
     }
 
-    ExprResult* exprRes = mValue->evaluate(aEs.getEvalContext());
+    nsAutoPtr<ExprResult> exprRes = mValue->evaluate(aEs.getEvalContext());
     NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
 
-    nsAutoString value;
-    exprRes->stringValue(value);
-    delete exprRes;
-
-    aEs.mResultHandler->attribute(nodeName, mNamespaceID, value);
+    nsAString* value = exprRes->stringValuePointer();
+    if (value) {
+        aEs.mResultHandler->attribute(nodeName, mNamespaceID, *value);
+    }
+    else {
+        nsAutoString valueStr;
+        exprRes->stringValue(valueStr);
+        aEs.mResultHandler->attribute(nodeName, mNamespaceID, valueStr);
+    }
 
     return NS_OK;
 }
@@ -1040,15 +1044,23 @@ txValueOf::txValueOf(nsAutoPtr<Expr> aExpr, PRBool aDOE)
 nsresult
 txValueOf::execute(txExecutionState& aEs)
 {
-    ExprResult* exprRes = mExpr->evaluate(aEs.getEvalContext());
+    nsAutoPtr<ExprResult> exprRes = mExpr->evaluate(aEs.getEvalContext());
     NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
 
-    nsAutoString value;
-    exprRes->stringValue(value);
-    delete exprRes;
-
-    if (!value.IsEmpty()) {
-        aEs.mResultHandler->characters(value, mDOE);
+    nsAString* value = exprRes->stringValuePointer();
+    if (value) {
+        if (!value->IsEmpty()) {
+            aEs.mResultHandler->characters(*value, mDOE);
+        }
     }
+    else {
+        nsAutoString valueStr;
+        exprRes->stringValue(valueStr);
+        if (!valueStr.IsEmpty()) {
+            aEs.mResultHandler->characters(valueStr, mDOE);
+        }
+    }
+
+
     return NS_OK;
 }

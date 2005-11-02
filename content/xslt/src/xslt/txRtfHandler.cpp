@@ -67,6 +67,11 @@ void txResultTreeFragment::stringValue(nsAString& aResult)
     aResult.Append(mBuffer->mStringValue);
 }
 
+nsAString* txResultTreeFragment::stringValuePointer()
+{
+    return mBuffer ? &mBuffer->mStringValue : nsnull;
+}
+
 PRBool txResultTreeFragment::booleanValue()
 {
     return PR_TRUE;
