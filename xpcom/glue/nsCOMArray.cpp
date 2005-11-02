@@ -76,7 +76,7 @@ nsCOMArray_base::InsertObjectsAt(const nsCOMArray_base& aObjects, PRInt32 aIndex
         // need to addref all these
         PRInt32 count = aObjects.Count();
         for (PRInt32 i = 0; i < count; ++i) {
-            NS_IF_ADDREF(aObjects.ObjectAt(i));
+            NS_IF_ADDREF(NS_STATIC_CAST(nsISupports*, aObjects.mArray[i]));
         }
     }
     return result;
