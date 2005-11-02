@@ -37,7 +37,7 @@ REQUIRES	= string \
 		  $(NULL)
 endif
 
-DIRS            = dom parser util
+DIRS            = dom parser
 ifdef TX_EXE
 DIRS +=		printer
 endif

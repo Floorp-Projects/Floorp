@@ -97,7 +97,6 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xpath/XPathNames.$(OBJ_SUFFIX) \
   ../xml/XMLUtils.$(OBJ_SUFFIX) \
   ../xml/XMLDOMUtils.$(OBJ_SUFFIX) \
-  ../xml/util/DOMHelper.$(OBJ_SUFFIX) \
   ../xml/parser/XMLParser.$(OBJ_SUFFIX) \
   ../xml/parser/hashtable.$(OBJ_SUFFIX) \
   ../xml/parser/xmlrole.$(OBJ_SUFFIX) \
@@ -128,7 +127,7 @@ CPP_PROG_LINK		= 1
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../xslt -I$(srcdir)/../base -I$(srcdir)/../net \
-  -I$(srcdir)/../xml -I$(srcdir)/../xml/dom -I$(srcdir)/../xml/util \
+  -I$(srcdir)/../xml -I$(srcdir)/../xml/dom \
   -I$(srcdir)/../xml/parser -I$(srcdir)/../xml/parser/xmlparse \
   -I$(srcdir)/../xml/printer -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
   -I$(srcdir)/../xslt/functions
