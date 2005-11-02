@@ -66,11 +66,11 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(Node* context, ContextState*
     ExprResult* result = NULL;
 
     if ( requireParams(1,1,cs) ) {
-        ListIterator* iter = params.iterator();
-        Expr* param = (Expr*) iter->next();
-        delete iter;
+        ListIterator iter(&params);
+        Expr* param = (Expr*)iter.next();
         ExprResult* exprResult = param->evaluate(context, cs);
-        if (exprResult->getResultType() == ExprResult::STRING) {
+        if (exprResult &&
+            exprResult->getResultType() == ExprResult::STRING) {
             String property;
             exprResult->stringValue(property);
             if (XMLUtils::isValidQName(property)) {
@@ -122,6 +122,7 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(Node* context, ContextState*
             delete result;
             result = new StringResult(err);
         }
+        delete exprResult;
     }
 
     if (!result) {
