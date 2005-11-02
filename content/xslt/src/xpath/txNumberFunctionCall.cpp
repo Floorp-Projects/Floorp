@@ -25,7 +25,7 @@
  * Nisheeth Ranjan, nisheeth@netscape.com
  *   -- implemented rint function, which was not available on Windows.
  *
- * $Id: txNumberFunctionCall.cpp,v 1.10 2005/11/02 07:33:45 axel%pike.org Exp $
+ * $Id: txNumberFunctionCall.cpp,v 1.11 2005/11/02 07:33:46 kvisco%ziplink.net Exp $
  */
 
 /*
@@ -89,7 +89,7 @@ static double rint(double r)
  * @return the result of the evaluation
 **/
 ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
-    NumberResult* result = new NumberResult();
+    NumberResult* result = 0;
     ListIterator* iter = params.iterator();
     int argc = params.getLength();
     Expr* param = 0;
@@ -99,20 +99,20 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
     case CEILING :
         if ( requireParams(1, 1, cs) ) {
             double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
-            result->setValue(ceil(dbl));
+            result = new NumberResult(ceil(dbl));
         }
         else {
-            result->setValue(0.0);
-          }
-          break;
-      
+            result = new NumberResult(0.0);
+        }
+        break;
+
     case FLOOR :
         if ( requireParams(1, 1, cs) ) {
             double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
-            result->setValue(floor(dbl));
+            result = new NumberResult(floor(dbl));
         }
         else {
-            result->setValue(0.0);
+            result = new NumberResult(0.0);
         }
         break;
       
@@ -123,15 +123,14 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
             if ((dbl>0.0) && (res == dbl-0.5)) {
                 // fix for native round function from math library (rint()) which does not
                 // match the XPath spec for positive half values
-                result->setValue(res+1.0);
+                result = new NumberResult(res+1.0);
             }
-            else {
-                result->setValue(res);
-            }
+            else
+                result = new NumberResult(res);
             break;
         }
-        else result->setValue(0.0);
-            break;
+        else result = new NumberResult(0.0);
+        break;
       
     case SUM :
         double numResult;
@@ -159,7 +158,7 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
             if (iter->hasNext()) {
                 param = (Expr*) iter->next();
                 ExprResult* exprResult = param->evaluate(context, cs);
-                result->setValue(exprResult->numberValue());
+                result = new NumberResult(exprResult->numberValue());
                 delete exprResult;
             }
             else {
@@ -167,16 +166,16 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
                 XMLDOMUtils::getNodeValue(context, &resultStr);
                 if ( cs->isStripSpaceAllowed(context) &&
                      XMLUtils::shouldStripTextnode(resultStr)) {
-                    result->setValue(Double::NaN);
+                    result = new NumberResult(Double::NaN);
                 }
                 else {
                     Double dbl(resultStr);
-                    result->setValue(dbl.doubleValue());
+                    result = new NumberResult(dbl.doubleValue());
                 }
             }
         }
         else {
-            result->setValue(Double::NaN);
+            result = new NumberResult(Double::NaN);
         }
         break;
     }

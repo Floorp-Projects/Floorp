@@ -23,15 +23,15 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- changed constant short result types to enum
  *
- * $Id: txExprResult.h,v 1.7 2005/11/02 07:33:49 axel%pike.org Exp $
+ * $Id: txExprResult.h,v 1.8 2005/11/02 07:33:50 kvisco%ziplink.net Exp $
  */
 
-#include "MITREObject.h"
+#include "TxObject.h"
 #include "dom.h"
 #include "primitives.h"
 
-#ifndef MITREXSL_EXPRRESULT_H
-#define MITREXSL_EXPRRESULT_H
+#ifndef TRANSFRMX_EXPRRESULT_H
+#define TRANSFRMX_EXPRRESULT_H
 
 
 /*
@@ -41,11 +41,9 @@
  * BooleanResult, ExprResult, NumberResult, StringResult
  * <BR/>
  * Note: for NodeSet, see NodeSet.h <BR />
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:49 $
 */
 
-class ExprResult : public MITREObject {
+class ExprResult : public TxObject {
 
 public:
 
@@ -96,10 +94,6 @@ public:
 
     MBool getValue() const;
 
-    void setValue(MBool boolean);
-
-    void setValue(const BooleanResult& boolResult);
-
     virtual short  getResultType();
     virtual void   stringValue(String& str);
     virtual MBool  booleanValue();
@@ -118,11 +112,6 @@ public:
     NumberResult(const NumberResult& nbrResult);
 
     double getValue() const;
-
-    void setValue(double dbl);
-
-    void setValue(const NumberResult& nbrResult);
-
     MBool isNaN() const;
 
     virtual short  getResultType();
@@ -146,7 +135,6 @@ public:
     StringResult(const StringResult& strResult);
 
     String& getValue();
-    void setValue(const String& str);
 
     virtual short  getResultType();
     virtual void   stringValue(String& str);

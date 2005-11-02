@@ -25,7 +25,7 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: txExpr.h,v 1.8 2005/11/02 07:33:33 kvisco%ziplink.net Exp $
+ * $Id: txExpr.h,v 1.9 2005/11/02 07:33:34 kvisco%ziplink.net Exp $
  */
 
 
@@ -41,11 +41,12 @@
 #include "MITREObject.h"
 #include "primitives.h"
 #include "NamespaceResolver.h"
+#include "XMLDOMUtils.h"
 
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:33 $
+  @version $Revision: 1.9 $ $Date: 2005/11/02 07:33:34 $
 */
 
 #ifndef TRANSFRMX_EXPR_H
@@ -489,8 +490,13 @@ public:
 
 private:
 
+    static const String WILD_CARD;
+
+    String prefix;
     String name;
-    MBool  isWild;
+    MBool  isNameWild;
+    MBool  isNamespaceWild;
+
 
 }; //-- AttributeExpr
 
@@ -774,61 +780,6 @@ public:
 }; //-- TextExpr
 
 /**
- * This class represents a WildCardExpr as defined by the XSL
- * Working Draft
-**/
-class WildCardExpr : public NodeExpr {
-
-public:
-
-      //------------------/
-     //- Public Methods -/
-    //------------------/
-
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
-     * for evaluation
-     * @return the result of the evaluation
-    **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
-
-    /**
-     * Returns the default priority of this Pattern based on the given Node,
-     * context Node, and ContextState.
-     * If this pattern does not match the given Node under the current context Node and
-     * ContextState then Negative Infinity is returned.
-    **/
-    virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
-
-    /**
-     * Returns the type of this NodeExpr
-     * @return the type of this NodeExpr
-    **/
-    virtual short getType();
-
-    /**
-     * Determines whether this NodeExpr matches the given node within
-     * the given context
-    **/
-    virtual MBool matches(Node* node, Node* context, ContextState* cs);
-
-
-    /**
-     * Returns the String representation of this NodeExpr.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Expressions.
-     * @return the String representation of this NodeExpr.
-    **/
-    virtual void toString(String& dest);
-
-}; //-- WildCardExpr
-
-
-/**
  * Represents an ordered list of Predicates,
  * for use with Step and Filter Expressions
 **/
@@ -1088,7 +1039,7 @@ public:
 
 private:
 
-    NumberResult numberResult;
+    double _value;
 };
 
 /**
