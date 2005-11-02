@@ -23,6 +23,8 @@
 #ifndef nsVoidArray_h___
 #define nsVoidArray_h___
 
+//#define DEBUG_VOIDARRAY 1
+
 #include "nscore.h"
 #include "nsAWritableString.h"
 #include "nsQuickSort.h"
@@ -45,10 +47,14 @@ public:
 
   nsVoidArray& operator=(const nsVoidArray& other);
 
-  void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+  virtual void  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 
-  PRInt32 Count() const {
+  inline PRInt32 Count() const {
     return mImpl ? mImpl->mCount : 0;
+  }
+  // returns the max number that can be held without allocating
+  inline PRInt32 GetArraySize() const {
+    return mImpl ? PRInt32(mImpl->mBits & kArraySizeMask) : 0;
   }
 
   void* ElementAt(PRInt32 aIndex) const;
@@ -57,18 +63,27 @@ public:
   PRInt32 IndexOf(void* aPossibleElement) const;
 
   PRBool InsertElementAt(void* aElement, PRInt32 aIndex);
+  PRBool InsertElementsAt(const nsVoidArray &other, PRInt32 aIndex);
 
   PRBool ReplaceElementAt(void* aElement, PRInt32 aIndex);
+
+  // useful for doing LRU arrays, sorting, etc
+  PRBool MoveElement(PRInt32 aFrom, PRInt32 aTo);
 
   PRBool AppendElement(void* aElement) {
     return InsertElementAt(aElement, Count());
   }
 
   PRBool RemoveElement(void* aElement);
-  PRBool RemoveElementAt(PRInt32 aIndex);
-  void   Clear();
+  PRBool RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount);
+  PRBool RemoveElementAt(PRInt32 aIndex) { return RemoveElementsAt(aIndex,1); }
 
-  void Compact();
+  virtual void   Clear();
+
+  virtual PRBool SizeTo(PRInt32 aMin);
+  // Subtly different - Compact() tries to be smart about whether we
+  // should reallocate the array; SizeTo() just does it.
+  virtual void Compact();
 
   void Sort(nsVoidArrayComparatorFunc aFunc, void* aData);
 
@@ -76,10 +91,12 @@ public:
   PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
 
 protected:
+  virtual PRBool GrowArrayBy(PRInt32 aGrowBy);
+
   struct Impl {
     /**
-     * Packed bits. The highest 31 bits are the array's size, which must
-     * always be 0 mod 2. The lowest bit is a flag that indicates
+     * Packed bits. The low 31 bits are the array's size.
+     * The highest bit is a flag that indicates 
      * whether or not we "own" mArray, and must free() it when
      * destroyed.
      */
@@ -97,6 +114,11 @@ protected:
   };
 
   Impl* mImpl;
+#if DEBUG_VOIDARRAY
+  PRInt32 mMaxCount;
+  PRInt32 mMaxSize;
+  PRBool  mIsAuto;
+#endif
 
   enum {
     kArrayOwnerMask = 1 << 31,
@@ -105,10 +127,10 @@ protected:
 
 
   // bit twiddlers
-  PRInt32 GetArraySize() const;
-  void SetArraySize(PRInt32 aSize);
-  PRBool IsArrayOwner() const;
-  void SetArrayOwner(PRBool aOwner);
+  void SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount, PRBool owner);
+  inline PRBool IsArrayOwner() const {
+    return mImpl ? PRBool(mImpl->mBits & kArrayOwnerMask) : PR_FALSE;
+  }
 
 private:
   /// Copy constructors are not allowed
@@ -120,10 +142,13 @@ private:
 class NS_COM nsAutoVoidArray : public nsVoidArray {
 public:
   nsAutoVoidArray();
+  void Clear();
 
+  virtual PRBool SizeTo(PRInt32 aMin);
+  virtual void Compact();
+  
 protected:
-  // The internal storage. Note that this value must be divisible by
-  // two because we use the LSB of mInfo to indicate array ownership.
+  // The internal storage
   enum { kAutoBufSize = 8 };
   char mAutoBuf[sizeof(Impl) + (kAutoBufSize - 1) * sizeof(void*)];
 };
@@ -140,6 +165,7 @@ class NS_COM nsStringArray: protected nsVoidArray
 {
 public:
   nsStringArray(void);
+  nsStringArray(PRInt32 aCount);  // Storage for aCount elements will be pre-allocated
   virtual ~nsStringArray(void);
 
   nsStringArray& operator=(const nsStringArray& other);
@@ -198,6 +224,7 @@ class NS_COM nsCStringArray: protected nsVoidArray
 {
 public:
   nsCStringArray(void);
+  nsCStringArray(PRInt32 aCount); // Storage for aCount elements will be pre-allocated
   virtual ~nsCStringArray(void);
 
   nsCStringArray& operator=(const nsCStringArray& other);
