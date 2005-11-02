@@ -40,6 +40,8 @@
 #include "baseutils.h"
 #ifdef TX_EXE
 #include <fstream.h>
+#else
+#include "nsIDOMNode.h"
 #endif
 
 
@@ -86,7 +88,15 @@ public:
      * The document base will be appended to the given dest String
     **/
     static void getDocumentBase(const String& href, String& dest);
-#endif
+
+#else /* TX_EXE */
+
+    /*
+     * Checks if a caller is allowed to access a given node
+     */
+    static MBool CanCallerAccess(nsIDOMNode *aNode);
+
+#endif /* TX_EXE */
 
     /**
      * Resolves the given href argument, using the given documentBase
