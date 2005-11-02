@@ -33,6 +33,8 @@
 #include "baseutils.h"
 #include "TxObject.h"
 
+class txListIterator;
+
 /**
  * Represents an ordered list of Object pointers. Modeled after a Java 2 List.
 **/
