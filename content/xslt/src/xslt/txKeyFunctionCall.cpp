@@ -66,7 +66,6 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
     evaluateToString((Expr*)iter.next(), aContext, keyQName);
 
     txExpandedName keyName;
-    txXSLKey* key = 0;
     nsresult rv = keyName.init(keyQName, mQNameResolveNode, PR_FALSE);
     if (NS_FAILED(rv)) {
         delete res;
