@@ -632,7 +632,7 @@ function DoBrowserRSS() {
 
 function DoPanelPreferences() {
   window.openDialog("chrome://minimo/content/preferences/preferences.xul","preferences","modal,centerscreeen,chrome,resizable=no");
-  BrowserReload(); 
+  // BrowserReload(); 
   syncUIZoom();
 }
 
