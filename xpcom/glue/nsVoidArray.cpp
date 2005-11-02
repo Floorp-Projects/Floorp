@@ -24,154 +24,171 @@
 #include "nsISizeOfHandler.h"
 #include "nsString.h"
 
-static const PRInt32 kGrowArrayBy = 8;
-
-const PRInt32 nsVoidArray::kArrayOwnerMask = 1 << 31;
-const PRInt32 nsVoidArray::kArraySizeMask = ~nsVoidArray::kArrayOwnerMask;
+static const PRInt32 kGrowArrayBy = 4;
+static const PRInt32 kLinearThreshold = 16;
+static const PRInt32 kGrowthFactor = 1;
 
 inline PRInt32
 nsVoidArray::GetArraySize() const
 {
-  return mInfo & kArraySizeMask;
+  return mImpl ? PRInt32(mImpl->mBits & kArraySizeMask) : 0;
 }
 
 inline void
 nsVoidArray::SetArraySize(PRInt32 aSize)
 {
-  mInfo &= kArrayOwnerMask; // preserve ownership bit
-  mInfo |= (aSize & kArraySizeMask);
+  NS_PRECONDITION(mImpl, "can't set size");
+  mImpl->mBits &= ~kArraySizeMask;
+  mImpl->mBits |= PRUint32(aSize & kArraySizeMask);
 }
 
 inline PRBool
 nsVoidArray::IsArrayOwner() const
 {
-  return (mInfo & kArrayOwnerMask) != 0;
+  return mImpl ? PRBool(mImpl->mBits & kArrayOwnerMask) : PR_FALSE;
 }
 
 
 inline void
 nsVoidArray::SetArrayOwner(PRBool aOwner)
 {
-  mInfo &= kArraySizeMask; // preserve array size
-  mInfo |= (aOwner ? kArrayOwnerMask : 0);
+  NS_PRECONDITION(mImpl, "can't set owner");
+  if (aOwner)
+    mImpl->mBits |= kArrayOwnerMask;
+  else
+    mImpl->mBits &= ~kArrayOwnerMask;
 }
 
 nsVoidArray::nsVoidArray()
-  : mArray(nsnull),
-    mInfo(0),
-    mCount(0)
+  : mImpl(nsnull)
 {
   MOZ_COUNT_CTOR(nsVoidArray);
-  SetArrayOwner(PR_TRUE);
 }
 
 nsVoidArray::nsVoidArray(PRInt32 aCount)
-  : mArray(nsnull),
-    mInfo(0),
-    mCount(0)
+  : mImpl(nsnull)
 {
   MOZ_COUNT_CTOR(nsVoidArray);
-  if ( aCount )
-    {
+  if (aCount) {
+    char* bytes = new char[sizeof(Impl) + sizeof(void*) * (aCount - 1)];
+    mImpl = NS_REINTERPRET_CAST(Impl*, bytes);
+    if (mImpl) {
       SetArraySize(aCount);
-      mCount = aCount;
-      mArray = new void*[GetArraySize()];
-      nsCRT::memset(mArray, 0, mCount * sizeof(void*));
+      mImpl->mCount = aCount;
+      nsCRT::memset(mImpl->mArray, 0, mImpl->mCount * sizeof(void*));
+      SetArrayOwner(PR_TRUE);
     }
-  SetArrayOwner(PR_TRUE);
+  }
 }
 
 nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
 {
-  if (IsArrayOwner()) {
-    delete [] mArray;
+  if (mImpl && IsArrayOwner())
+    delete[] NS_REINTERPRET_CAST(char*, mImpl);
+
+  PRInt32 otherCount = other.Count();
+  if (otherCount) {
+    char* bytes = new char[sizeof(Impl) + sizeof(void*) * (otherCount - 1)];
+    mImpl = NS_REINTERPRET_CAST(Impl*, bytes);
+    if (mImpl) {
+      SetArraySize(otherCount);
+      mImpl->mCount = otherCount;
+      SetArrayOwner(PR_TRUE);
+    }
   }
-  PRInt32 otherCount = other.mCount;
-  SetArraySize(otherCount);
-  mCount = otherCount;
-  if (otherCount != 0) {
-    mArray = new void*[GetArraySize()];
-    nsCRT::memcpy(mArray, other.mArray, otherCount * sizeof(void*));
-    SetArrayOwner(PR_TRUE);
-  } else {
-    mArray = nsnull;
+  else {
+    mImpl = nsnull;
   }
+
   return *this;
 }
 
 nsVoidArray::~nsVoidArray()
 {
   MOZ_COUNT_DTOR(nsVoidArray);
-  if (IsArrayOwner()) {
-    delete [] mArray;
-  }
+  if (mImpl && IsArrayOwner())
+    delete[] NS_REINTERPRET_CAST(char*, mImpl);
 }
 
 void
 nsVoidArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
   if (aResult) {
-    *aResult = sizeof(*this) + sizeof(void*) * GetArraySize();
+    *aResult = sizeof(*this) + (mImpl ? sizeof(Impl) + (sizeof(void*) * (GetArraySize() - 1)) : 0);
   }
 }
 
 void* nsVoidArray::ElementAt(PRInt32 aIndex) const
 {
-  if (PRUint32(aIndex) >= PRUint32(mCount)) {
+  if (aIndex < 0 || aIndex >= Count()) {
     return nsnull;
   }
-  return mArray[aIndex];
+  return mImpl->mArray[aIndex];
 }
 
 PRInt32 nsVoidArray::IndexOf(void* aPossibleElement) const
 {
-  void** ap = mArray;
-  void** end = ap + mCount;
-  while (ap < end) {
-    if (*ap == aPossibleElement) {
-      return ap - mArray;
+  if (mImpl) {
+    void** ap = mImpl->mArray;
+    void** end = ap + mImpl->mCount;
+    while (ap < end) {
+      if (*ap == aPossibleElement) {
+        return ap - mImpl->mArray;
+      }
+      ap++;
     }
-    ap++;
   }
   return -1;
 }
 
 PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
 {
-  PRInt32 oldCount = mCount;
+  PRInt32 oldCount = Count();
   if (PRUint32(aIndex) > PRUint32(oldCount)) {
     // An invalid index causes the insertion to fail
     return PR_FALSE;
   }
 
   if (oldCount >= GetArraySize()) {
-    // We have to grow the array
-    PRInt32 newCount = oldCount + kGrowArrayBy;
-    SetArraySize(newCount);
-    void** newArray = new void*[GetArraySize()];
-    if (mArray != nsnull && aIndex != 0)
-      nsCRT::memcpy(newArray, mArray, aIndex * sizeof(void*));
-    PRInt32 slide = oldCount - aIndex;
-    if (0 != slide) {
-      // Slide data over to make room for the insertion
-      nsCRT::memcpy(newArray + aIndex + 1, mArray + aIndex,
-                    slide * sizeof(void*));
+    // We have to grow the array. Grow by 4 slots if we're smaller
+    // than 16 elements, or a power of two if we're larger.
+    PRInt32 newCount = oldCount + ((oldCount >= kLinearThreshold) ? (oldCount / kGrowthFactor) : kGrowArrayBy);
+
+    char* bytes = new char[sizeof(Impl) + sizeof(void*) * (newCount - 1)];
+    Impl* newImpl = NS_REINTERPRET_CAST(Impl*, bytes);
+
+    if (newImpl) {
+      if (aIndex != 0)
+        nsCRT::memcpy(newImpl->mArray, mImpl->mArray, aIndex * sizeof(void*));
+
+      PRInt32 slide = oldCount - aIndex;
+      if (0 != slide) {
+        // Slide data over to make room for the insertion
+        nsCRT::memcpy(newImpl->mArray + aIndex + 1, mImpl->mArray + aIndex,
+                      slide * sizeof(void*));
+      }
+
+      if (IsArrayOwner())
+        delete[] NS_REINTERPRET_CAST(char*, mImpl);
+
+      mImpl = newImpl;
+      SetArraySize(newCount);
+      mImpl->mCount = oldCount;
+      SetArrayOwner(PR_TRUE);
     }
-    if (IsArrayOwner())
-      delete [] mArray;
-    mArray = newArray;
-    SetArrayOwner(PR_TRUE);
-  } else {
+  }
+  else {
     // The array is already large enough
     PRInt32 slide = oldCount - aIndex;
     if (0 != slide) {
       // Slide data over to make room for the insertion
-      nsCRT::memmove(mArray + aIndex + 1, mArray + aIndex,
+      nsCRT::memmove(mImpl->mArray + aIndex + 1, mImpl->mArray + aIndex,
                      slide * sizeof(void*));
     }
   }
-  mArray[aIndex] = aElement;
-  mCount++;
+
+  mImpl->mArray[aIndex] = aElement;
+  mImpl->mCount++;
 
   return PR_TRUE;
 }
@@ -179,32 +196,40 @@ PRBool nsVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
 PRBool nsVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 {
   if (PRUint32(aIndex) >= PRUint32(GetArraySize())) {
-
+    PRInt32 oldCount = Count();
     PRInt32 requestedCount = aIndex + 1;
-    PRInt32 growDelta = requestedCount - mCount;
-    PRInt32 newCount = mCount + (growDelta > kGrowArrayBy ? growDelta : kGrowArrayBy);
-    SetArraySize(newCount);
-    void** newArray = new void*[GetArraySize()];
-    if (newArray==nsnull)
-       return PR_FALSE;
-    nsCRT::memset(newArray, 0, newCount * sizeof(void*));
-    if (mArray != nsnull && aIndex != 0) {
-      nsCRT::memcpy(newArray, mArray, mCount * sizeof(void*));
+    PRInt32 growDelta = requestedCount - oldCount;
+    PRInt32 newCount = oldCount + (growDelta > kGrowArrayBy ? growDelta : kGrowArrayBy);
+
+    char* bytes = new char[sizeof(Impl) + sizeof(void*) * (newCount - 1)];
+    Impl* newImpl = NS_REINTERPRET_CAST(Impl*, bytes);
+
+    if (newImpl) {
+      nsCRT::memset(newImpl->mArray, 0, newCount * sizeof(void*));
+
+      if (mImpl != nsnull && aIndex != 0)
+        nsCRT::memcpy(newImpl->mArray, mImpl->mArray, mImpl->mCount * sizeof(void*));
+
       if (IsArrayOwner())
-         delete [] mArray;
+         delete[] NS_REINTERPRET_CAST(char*, mImpl);
+      
+      mImpl = newImpl;
+      SetArraySize(newCount);
+      mImpl->mCount = oldCount;
+      SetArrayOwner(PR_TRUE);
     }
-    mArray = newArray;
-    SetArrayOwner(PR_TRUE);
   }
-  mArray[aIndex] = aElement;
-  if (aIndex >= mCount)
-     mCount = aIndex+1;
+
+  mImpl->mArray[aIndex] = aElement;
+  if (aIndex >= mImpl->mCount)
+     mImpl->mCount = aIndex + 1;
+
   return PR_TRUE;
 }
 
 PRBool nsVoidArray::RemoveElementAt(PRInt32 aIndex)
 {
-  PRInt32 oldCount = mCount;
+  PRInt32 oldCount = Count();
   if (PRUint32(aIndex) >= PRUint32(oldCount)) {
     // An invalid index causes the replace to fail
     return PR_FALSE;
@@ -213,23 +238,25 @@ PRBool nsVoidArray::RemoveElementAt(PRInt32 aIndex)
   // We don't need to move any elements if we're removing the
   // last element in the array
   if (aIndex < (oldCount - 1)) {
-    nsCRT::memmove(mArray + aIndex, mArray + aIndex + 1,
+    nsCRT::memmove(mImpl->mArray + aIndex, mImpl->mArray + aIndex + 1,
                    (oldCount - 1 - aIndex) * sizeof(void*));
   }
 
-  mCount--;
+  mImpl->mCount--;
   return PR_TRUE;
 }
 
 PRBool nsVoidArray::RemoveElement(void* aElement)
 {
-  void** ep = mArray;
-  void** end = ep + mCount;
-  while (ep < end) {
-    void* e = *ep++;
-    if (e == aElement) {
-      ep--;
-      return RemoveElementAt(PRInt32(ep - mArray));
+  if (mImpl) {
+    void** ep = mImpl->mArray;
+    void** end = ep + mImpl->mCount;
+    while (ep < end) {
+      void* e = *ep++;
+      if (e == aElement) {
+        ep--;
+        return RemoveElementAt(PRInt32(ep - mImpl->mArray));
+      }
     }
   }
   return PR_FALSE;
@@ -237,19 +264,33 @@ PRBool nsVoidArray::RemoveElement(void* aElement)
 
 void nsVoidArray::Clear()
 {
-  mCount = 0;
+  if (mImpl) {
+    mImpl->mCount = 0;
+  }
 }
 
 void nsVoidArray::Compact()
 {
-  PRInt32 count = mCount;
-  if (IsArrayOwner() && (GetArraySize() > count)) {
-    SetArraySize(count);
-    void** newArray = new void*[GetArraySize()];
-    if (nsnull != newArray) {
-      nsCRT::memcpy(newArray, mArray, count * sizeof(void*));
-      delete [] mArray;
-      mArray = newArray;
+  if (mImpl) {
+    PRInt32 count = mImpl->mCount;
+    if (IsArrayOwner() && GetArraySize() > count) {
+      Impl* doomedImpl = mImpl;
+
+      if (count > 0) {
+        char* bytes = new char[sizeof(Impl) + sizeof(void*) * (count - 1)];
+        Impl* newImpl = NS_REINTERPRET_CAST(Impl*, bytes);
+        if (newImpl)
+          nsCRT::memcpy(newImpl->mArray, mImpl->mArray, count * sizeof(void*));
+
+        mImpl = newImpl;
+        SetArraySize(count);
+        mImpl->mCount = count;
+      }
+      else {
+        mImpl = nsnull;
+      }
+
+      delete[] NS_REINTERPRET_CAST(char*, doomedImpl);
     }
   }
 }
@@ -259,19 +300,23 @@ PRBool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
   PRInt32 index = -1;
   PRBool  running = PR_TRUE;
 
-  while (running && (++index < mCount)) {
-    running = (*aFunc)(mArray[index], aData);
+  if (mImpl) {
+    while (running && (++index < mImpl->mCount)) {
+      running = (*aFunc)(mImpl->mArray[index], aData);
+    }
   }
   return running;
 }
 
 PRBool nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
-  PRInt32 index = mCount;
   PRBool  running = PR_TRUE;
 
-  while (running && (0 <= --index)) {
-    running = (*aFunc)(mArray[index], aData);
+  if (mImpl) {
+    PRInt32 index = Count();
+    while (running && (0 <= --index)) {
+      running = (*aFunc)(mImpl->mArray[index], aData);
+    }
   }
   return running;
 }
@@ -282,8 +327,10 @@ PRBool nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
 nsAutoVoidArray::nsAutoVoidArray()
   : nsVoidArray()
 {
-  mArray = mElements;
-  SetArraySize(sizeof(mElements) / sizeof(*mElements));
+  mImpl = NS_REINTERPRET_CAST(Impl*, mAutoBuf);
+  mImpl->mCount = 0;
+  ::memset(mImpl->mArray, 0, mImpl->mCount * sizeof(void*));
+  SetArraySize(kAutoBufSize);
   SetArrayOwner(PR_FALSE);
 }
 
@@ -303,22 +350,15 @@ nsStringArray::~nsStringArray(void)
 nsStringArray& 
 nsStringArray::operator=(const nsStringArray& other)
 {
-  if (IsArrayOwner()) {
-    delete mArray;
+  // Copy the pointers
+  nsVoidArray::operator=(other);
+
+  // Now copy the strings
+  for (PRInt32 i = Count() - 1; i >= 0; --i) {
+    nsString* oldString = NS_STATIC_CAST(nsString*, ElementAt(i));
+    mImpl->mArray[i] = new nsString(*oldString);
   }
-  PRInt32 otherCount = other.mCount;
-  SetArraySize(otherCount);
-  mCount = otherCount;
-  if (0 < otherCount) {
-    mArray = new void*[GetArraySize()];
-    while (0 <= --otherCount) {
-      nsString* otherString = (nsString*)(other.mArray[otherCount]);
-      mArray[otherCount] = new nsString(*otherString);
-    }
-    SetArrayOwner(PR_TRUE);
-  } else {
-    mArray = nsnull;
-  }
+
   return *this;
 }
 
@@ -327,9 +367,9 @@ nsStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
   PRUint32 sum = 0;
   nsVoidArray::SizeOf(aHandler, &sum);
-  PRInt32 index = mCount;
+  PRInt32 index = Count();
   while (0 <= --index) {
-    nsString* string = (nsString*)mArray[index];
+    nsString* string = NS_STATIC_CAST(nsString*, ElementAt(index));
     PRUint32 size;
     string->SizeOf(aHandler, &size);
     sum += size;
@@ -339,7 +379,7 @@ nsStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 void 
 nsStringArray::StringAt(PRInt32 aIndex, nsString& aString) const
 {
-  nsString* string = (nsString*)nsVoidArray::ElementAt(aIndex);
+  nsString* string = NS_STATIC_CAST(nsString*, nsVoidArray::ElementAt(aIndex));
   if (nsnull != string) {
     aString = *string;
   }
@@ -351,20 +391,22 @@ nsStringArray::StringAt(PRInt32 aIndex, nsString& aString) const
 nsString*
 nsStringArray::StringAt(PRInt32 aIndex) const
 {
-  return (nsString*)nsVoidArray::ElementAt(aIndex);
+  return NS_STATIC_CAST(nsString*, nsVoidArray::ElementAt(aIndex));
 }
 
 PRInt32 
 nsStringArray::IndexOf(const nsString& aPossibleString) const
 {
-  void** ap = mArray;
-  void** end = ap + mCount;
-  while (ap < end) {
-    nsString* string = (nsString*)*ap;
-    if (string->Equals(aPossibleString)) {
-      return ap - mArray;
+  if (mImpl) {
+    void** ap = mImpl->mArray;
+    void** end = ap + mImpl->mCount;
+    while (ap < end) {
+      nsString* string = NS_STATIC_CAST(nsString*, *ap);
+      if (string->Equals(aPossibleString)) {
+        return ap - mImpl->mArray;
+      }
+      ap++;
     }
-    ap++;
   }
   return -1;
 }
@@ -372,14 +414,16 @@ nsStringArray::IndexOf(const nsString& aPossibleString) const
 PRInt32 
 nsStringArray::IndexOfIgnoreCase(const nsString& aPossibleString) const
 {
-  void** ap = mArray;
-  void** end = ap + mCount;
-  while (ap < end) {
-    nsString* string = (nsString*)*ap;
-    if (string->EqualsIgnoreCase(aPossibleString)) {
-      return ap - mArray;
+  if (mImpl) {
+    void** ap = mImpl->mArray;
+    void** end = ap + mImpl->mCount;
+    while (ap < end) {
+      nsString* string = NS_STATIC_CAST(nsString*, *ap);
+      if (string->EqualsIgnoreCase(aPossibleString)) {
+        return ap - mImpl->mArray;
+      }
+      ap++;
     }
-    ap++;
   }
   return -1;
 }
@@ -398,7 +442,7 @@ nsStringArray::InsertStringAt(const nsString& aString, PRInt32 aIndex)
 PRBool
 nsStringArray::ReplaceStringAt(const nsString& aString, PRInt32 aIndex)
 {
-  nsString* string = (nsString*)nsVoidArray::ElementAt(aIndex);
+  nsString* string = NS_STATIC_CAST(nsString*, nsVoidArray::ElementAt(aIndex));
   if (nsnull != string) {
     *string = aString;
     return PR_TRUE;
@@ -440,9 +484,9 @@ PRBool nsStringArray::RemoveStringAt(PRInt32 aIndex)
 void 
 nsStringArray::Clear(void)
 {
-  PRInt32 index = mCount;
+  PRInt32 index = Count();
   while (0 <= --index) {
-    nsString* string = (nsString*)mArray[index];
+    nsString* string = NS_STATIC_CAST(nsString*, mImpl->mArray[index]);
     delete string;
   }
   nsVoidArray::Clear();
@@ -456,8 +500,10 @@ nsStringArray::EnumerateForwards(nsStringArrayEnumFunc aFunc, void* aData)
   PRInt32 index = -1;
   PRBool  running = PR_TRUE;
 
-  while (running && (++index < mCount)) {
-    running = (*aFunc)(*((nsString*)mArray[index]), aData);
+  if (mImpl) {
+    while (running && (++index < mImpl->mCount)) {
+      running = (*aFunc)(*NS_STATIC_CAST(nsString*, mImpl->mArray[index]), aData);
+    }
   }
   return running;
 }
@@ -465,11 +511,13 @@ nsStringArray::EnumerateForwards(nsStringArrayEnumFunc aFunc, void* aData)
 PRBool 
 nsStringArray::EnumerateBackwards(nsStringArrayEnumFunc aFunc, void* aData)
 {
-  PRInt32 index = mCount;
+  PRInt32 index = Count();
   PRBool  running = PR_TRUE;
 
-  while (running && (0 <= --index)) {
-    running = (*aFunc)(*((nsString*)mArray[index]), aData);
+  if (mImpl) {
+    while (running && (0 <= --index)) {
+      running = (*aFunc)(*NS_STATIC_CAST(nsString*, mImpl->mArray[index]), aData);
+    }
   }
   return running;
 }
@@ -492,22 +540,15 @@ nsCStringArray::~nsCStringArray(void)
 nsCStringArray& 
 nsCStringArray::operator=(const nsCStringArray& other)
 {
-  if (IsArrayOwner()) {
-    delete mArray;
+  // Copy the pointers
+  nsVoidArray::operator=(other);
+
+  // Now copy the strings
+  for (PRInt32 i = Count() - 1; i >= 0; --i) {
+    nsCString* oldString = NS_STATIC_CAST(nsCString*, ElementAt(i));
+    mImpl->mArray[i] = new nsCString(*oldString);
   }
-  PRInt32 otherCount = other.mCount;
-  SetArraySize(otherCount);
-  mCount = otherCount;
-  if (0 < otherCount) {
-    mArray = new void*[GetArraySize()];
-    while (0 <= --otherCount) {
-      nsCString* otherString = (nsCString*)(other.mArray[otherCount]);
-      mArray[otherCount] = new nsCString(*otherString);
-    }
-    SetArrayOwner(PR_TRUE);
-  } else {
-    mArray = nsnull;
-  }
+
   return *this;
 }
 
@@ -516,9 +557,9 @@ nsCStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
   PRUint32 sum = 0;
   nsVoidArray::SizeOf(aHandler, &sum);
-  PRInt32 index = mCount;
+  PRInt32 index = Count();
   while (0 <= --index) {
-    nsCString* string = (nsCString*)mArray[index];
+    nsCString* string = NS_STATIC_CAST(nsCString*, mImpl->mArray[index]);
     PRUint32 size;
     string->SizeOf(aHandler, &size);
     sum += size;
@@ -528,7 +569,7 @@ nsCStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 void 
 nsCStringArray::CStringAt(PRInt32 aIndex, nsCString& aCString) const
 {
-  nsCString* string = (nsCString*)nsVoidArray::ElementAt(aIndex);
+  nsCString* string = NS_STATIC_CAST(nsCString*, nsVoidArray::ElementAt(aIndex));
   if (nsnull != string) {
     aCString = *string;
   }
@@ -540,20 +581,22 @@ nsCStringArray::CStringAt(PRInt32 aIndex, nsCString& aCString) const
 nsCString*
 nsCStringArray::CStringAt(PRInt32 aIndex) const
 {
-  return (nsCString*)nsVoidArray::ElementAt(aIndex);
+  return NS_STATIC_CAST(nsCString*, nsVoidArray::ElementAt(aIndex));
 }
 
 PRInt32 
 nsCStringArray::IndexOf(const nsCString& aPossibleString) const
 {
-  void** ap = mArray;
-  void** end = ap + mCount;
-  while (ap < end) {
-    nsCString* string = (nsCString*)*ap;
-    if (string->Equals(aPossibleString)) {
-      return ap - mArray;
+  if (mImpl) {
+    void** ap = mImpl->mArray;
+    void** end = ap + mImpl->mCount;
+    while (ap < end) {
+      nsCString* string = NS_STATIC_CAST(nsCString*, *ap);
+      if (string->Equals(aPossibleString)) {
+        return ap - mImpl->mArray;
+      }
+      ap++;
     }
-    ap++;
   }
   return -1;
 }
@@ -561,14 +604,16 @@ nsCStringArray::IndexOf(const nsCString& aPossibleString) const
 PRInt32 
 nsCStringArray::IndexOfIgnoreCase(const nsCString& aPossibleString) const
 {
-  void** ap = mArray;
-  void** end = ap + mCount;
-  while (ap < end) {
-    nsCString* string = (nsCString*)*ap;
-    if (string->EqualsIgnoreCase(aPossibleString)) {
-      return ap - mArray;
+  if (mImpl) {
+    void** ap = mImpl->mArray;
+    void** end = ap + mImpl->mCount;
+    while (ap < end) {
+      nsCString* string = NS_STATIC_CAST(nsCString*, *ap);
+      if (string->EqualsIgnoreCase(aPossibleString)) {
+        return ap - mImpl->mArray;
+      }
+      ap++;
     }
-    ap++;
   }
   return -1;
 }
@@ -587,7 +632,7 @@ nsCStringArray::InsertCStringAt(const nsCString& aCString, PRInt32 aIndex)
 PRBool
 nsCStringArray::ReplaceCStringAt(const nsCString& aCString, PRInt32 aIndex)
 {
-  nsCString* string = (nsCString*)nsVoidArray::ElementAt(aIndex);
+  nsCString* string = NS_STATIC_CAST(nsCString*, nsVoidArray::ElementAt(aIndex));
   if (nsnull != string) {
     *string = aCString;
     return PR_TRUE;
@@ -629,9 +674,9 @@ PRBool nsCStringArray::RemoveCStringAt(PRInt32 aIndex)
 void 
 nsCStringArray::Clear(void)
 {
-  PRInt32 index = mCount;
+  PRInt32 index = Count();
   while (0 <= --index) {
-    nsCString* string = (nsCString*)mArray[index];
+    nsCString* string = NS_STATIC_CAST(nsCString*, mImpl->mArray[index]);
     delete string;
   }
   nsVoidArray::Clear();
@@ -642,11 +687,13 @@ nsCStringArray::Clear(void)
 PRBool 
 nsCStringArray::EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData)
 {
-  PRInt32 index = -1;
   PRBool  running = PR_TRUE;
 
-  while (running && (++index < mCount)) {
-    running = (*aFunc)(*((nsCString*)mArray[index]), aData);
+  if (mImpl) {
+    PRInt32 index = -1;
+    while (running && (++index < mImpl->mCount)) {
+      running = (*aFunc)(*NS_STATIC_CAST(nsCString*, mImpl->mArray[index]), aData);
+    }
   }
   return running;
 }
@@ -654,11 +701,13 @@ nsCStringArray::EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData)
 PRBool 
 nsCStringArray::EnumerateBackwards(nsCStringArrayEnumFunc aFunc, void* aData)
 {
-  PRInt32 index = mCount;
   PRBool  running = PR_TRUE;
 
-  while (running && (0 <= --index)) {
-    running = (*aFunc)(*((nsCString*)mArray[index]), aData);
+  if (mImpl) {
+    PRInt32 index = Count();
+    while (running && (0 <= --index)) {
+      running = (*aFunc)(*NS_STATIC_CAST(nsCString*, mImpl->mArray[index]), aData);
+    }
   }
   return running;
 }
