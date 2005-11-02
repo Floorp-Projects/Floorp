@@ -25,13 +25,17 @@
  * Bob Miller, Oblix Inc., kbob@oblix.com
  *   -- fixed bug with single quotes inside double quotes
  *
- * $Id: txExprLexer.cpp,v 1.1 2005/11/02 07:33:40 kvisco%ziplink.net Exp $
+ * Marina Mechtcheriakova, mmarina@mindspring.com
+ *   -- Fixed bug in parse method so that we make sure we check for
+ *      axis identifier wild cards, such as ancestor::*
+ *
+ * $Id: txExprLexer.cpp,v 1.2 2005/11/02 07:33:41 kvisco%ziplink.net Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2005/11/02 07:33:40 $
+ * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:41 $
 **/
 
 #include <iostream.h>
@@ -640,6 +644,10 @@ void ExprLexer::parse(const String& pattern) {
                 case ASTERIX:
                     matchToken(tokenBuffer, ch);
                     switch ( prevToken->type ) {
+                        //-- Fix: make sure check for axis identifier wild cards, such as
+                        //-- ancestor::* - Marina M.
+                        case Token::AXIS_IDENTIFIER :
+                        //-- End Fix
                         case Token::PARENT_OP :
                         case Token::ANCESTOR_OP:
                         case Token::AT_SIGN :
