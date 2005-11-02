@@ -41,11 +41,13 @@
 #include "txExecutionState.h"
 #include "txXPathResultComparator.h"
 #include "txAtoms.h"
-#include "txForwardContext.h"
+#include "txNodeSetContext.h"
 #include "ExprResult.h"
 #include "Expr.h"
 #include "txStringUtils.h"
 #include "NodeSet.h"
+#include "prmem.h"
+#include "nsQuickSort.h"
 
 /*
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
@@ -165,123 +167,142 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
     return NS_OK;
 }
 
-nsresult txNodeSorter::sortNodeSet(NodeSet* aNodes, txExecutionState* aEs)
+nsresult
+txNodeSorter::sortNodeSet(NodeSet* aNodes, txExecutionState* aEs,
+                          NodeSet** aResult)
 {
-    if (mNKeys == 0)
+    if (mNKeys == 0 || aNodes->isEmpty()) {
+        NS_ADDREF(*aResult = aNodes);
+
         return NS_OK;
-
-    txList sortedNodes;
-    txListIterator iter(&sortedNodes);
-
-    int len = aNodes->size();
-
-    // Step through each node in NodeSet...
-    int i;
-    for (i = len - 1; i >= 0; i--) {
-        SortableNode* currNode = new SortableNode(aNodes->get(i), mNKeys);
-        if (!currNode) {
-            // XXX ErrorReport: out of memory
-            iter.reset();
-            while (iter.hasNext()) {
-                SortableNode* sNode = (SortableNode*)iter.next();
-                sNode->clear(mNKeys);
-                delete sNode;
-            }
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        iter.reset();
-        SortableNode* compNode = (SortableNode*)iter.next();
-        while (compNode && (compareNodes(currNode, compNode, aNodes, aEs) > 0)) {
-            compNode = (SortableNode*)iter.next();
-        }
-        // ... and insert in sorted list
-        iter.addBefore(currNode);
     }
-    
-    // Clean up and set nodes in NodeSet
-    // Note that the nodeset shouldn't be changed until the sort is done
-    // since it's the current-nodeset used during xpath evaluation
-    aNodes->clear();
-    iter.reset();
-    while (iter.hasNext()) {
-        SortableNode* sNode = (SortableNode*)iter.next();
-        aNodes->append(sNode->mNode);
-        sNode->clear(mNKeys);
-        delete sNode;
+
+    *aResult = nsnull;
+
+    nsRefPtr<NodeSet> sortedNodes;
+    nsresult rv = aEs->recycler()->getNodeSet(getter_AddRefs(sortedNodes));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    txNodeSetContext* evalContext = new txNodeSetContext(aNodes, aEs);
+    NS_ENSURE_TRUE(evalContext, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = aEs->pushEvalContext(evalContext);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Create and set up memoryblock for sort-values and indexarray
+    PRUint32 len = NS_STATIC_CAST(PRUint32, aNodes->size());
+    void* mem = PR_Malloc(len * (sizeof(PRUint32) + mNKeys * sizeof(TxObject*)));
+    NS_ENSURE_TRUE(mem, NS_ERROR_OUT_OF_MEMORY);
+
+    PRUint32* indexes = NS_STATIC_CAST(PRUint32*, mem);
+    TxObject** sortValues = NS_REINTERPRET_CAST(TxObject**, indexes + len);
+
+    PRUint32 i;
+    for (i = 0; i < len; ++i) {
+        indexes[i] = i;
     }
-    
+    memset(sortValues, 0, len * mNKeys * sizeof(TxObject*));
+
+    // Sort the indexarray
+    SortData sortData;
+    sortData.mNodeSorter = this;
+    sortData.mContext = evalContext;
+    sortData.mSortValues = sortValues;
+    sortData.mRv = NS_OK;
+    NS_QuickSort(indexes, len, sizeof(PRUint32), compareNodes, &sortData);
+
+    // Delete these here so we don't have to deal with them at every possible
+    // failurepoint
+    PRUint32 numSortValues = len * mNKeys;
+    for (i = 0; i < numSortValues; ++i) {
+        delete sortValues[i];
+    }
+
+    if (NS_FAILED(sortData.mRv)) {
+        PR_Free(mem);
+        // The txExecutionState owns the evalcontext so no need to handle it
+        return sortData.mRv;
+    }
+
+    // Insert nodes in sorted order in new nodeset
+    for (i = 0; i < len; ++i) {
+        rv = sortedNodes->append(aNodes->get(indexes[i]));
+        if (NS_FAILED(rv)) {
+            PR_Free(mem);
+            // The txExecutionState owns the evalcontext so no need to handle it
+            return rv;
+        }
+    }
+
+    PR_Free(mem);
+    delete aEs->popEvalContext();
+
+    NS_ADDREF(*aResult = sortedNodes);
+
     return NS_OK;
 }
 
-int txNodeSorter::compareNodes(SortableNode* aSNode1,
-                               SortableNode* aSNode2,
-                               NodeSet* aNodes,
-                               txExecutionState* aEs)
+// static
+int
+txNodeSorter::compareNodes(const void* aIndexA, const void* aIndexB,
+                           void* aSortData)
 {
-    txListIterator iter(&mSortKeys);
-    nsresult rv = NS_OK;
-    int i;
+    SortData* sortData = NS_STATIC_CAST(SortData*, aSortData);
+    NS_ENSURE_SUCCESS(sortData->mRv, -1);
 
+    nsresult rv = NS_OK;
+    txListIterator iter(&sortData->mNodeSorter->mSortKeys);
+    PRUint32 indexA = *NS_STATIC_CAST(const PRUint32*, aIndexA);
+    PRUint32 indexB = *NS_STATIC_CAST(const PRUint32*, aIndexB);
+    TxObject** sortValuesA = sortData->mSortValues +
+                             indexA * sortData->mNodeSorter->mNKeys;
+    TxObject** sortValuesB = sortData->mSortValues +
+                             indexB * sortData->mNodeSorter->mNKeys;
+
+    int i;
     // Step through each key until a difference is found
-    for (i = 0; i < mNKeys; i++) {
+    for (i = 0; i < sortData->mNodeSorter->mNKeys; ++i) {
         SortKey* key = (SortKey*)iter.next();
         // Lazy create sort values
-        if (!aSNode1->mSortValues[i]) {
-            txForwardContext evalContext(aEs->getEvalContext(), aSNode1->mNode, aNodes);
-            aEs->pushEvalContext(&evalContext);
-            nsRefPtr<txAExprResult> res;
-            rv = key->mExpr->evaluate(&evalContext, getter_AddRefs(res));
-            NS_ENSURE_SUCCESS(rv, -1);
-
-            aEs->popEvalContext();
-            aSNode1->mSortValues[i] = key->mComparator->createSortableValue(res);
-            if (!aSNode1->mSortValues[i]) {
-                // XXX ErrorReport
-                return -1;
-            }
+        if (!sortValuesA[i] &&
+            !calcSortValue(sortValuesA[i], key, sortData, indexA)) {
+            return -1;
         }
-        if (!aSNode2->mSortValues[i]) {
-            txForwardContext evalContext(aEs->getEvalContext(), aSNode2->mNode, aNodes);
-            aEs->pushEvalContext(&evalContext);
-            nsRefPtr<txAExprResult> res;
-            rv = key->mExpr->evaluate(&evalContext, getter_AddRefs(res));
-            NS_ENSURE_SUCCESS(rv, -1);
-
-            aEs->popEvalContext();
-            aSNode2->mSortValues[i] = key->mComparator->createSortableValue(res);
-            if (!aSNode2->mSortValues[i]) {
-                // XXX ErrorReport
-                return -1;
-            }
+        if (!sortValuesB[i] &&
+            !calcSortValue(sortValuesB[i], key, sortData, indexB)) {
+            return -1;
         }
 
         // Compare node values
-        int compRes = key->mComparator->compareValues(aSNode1->mSortValues[i],
-                                                      aSNode2->mSortValues[i]);
+        int compRes = key->mComparator->compareValues(sortValuesA[i],
+                                                      sortValuesB[i]);
         if (compRes != 0)
             return compRes;
     }
     // All keys have the same value for these nodes
-    return 0;
+
+    return indexA - indexB;
 }
 
-txNodeSorter::SortableNode::SortableNode(Node* aNode, int aNValues)
+//static
+PRBool
+txNodeSorter::calcSortValue(TxObject*& aSortValue, SortKey* aKey,
+                            SortData* aSortData, PRUint32 aNodeIndex)
 {
-    mNode = aNode;
-    mSortValues = new TxObject*[aNValues];
-    if (!mSortValues) {
-        // XXX ErrorReport: out of memory
-        return;
-    }
-    memset(mSortValues, 0, aNValues * sizeof(void *));
-}
-
-void txNodeSorter::SortableNode::clear(int aNValues)
-{
-    int i;
-    for (i = 0; i < aNValues; i++) {
-        delete mSortValues[i];
+    aSortData->mContext->setPosition(aNodeIndex + 1); // position is 1-based
+    nsRefPtr<txAExprResult> res;
+    nsresult rv = aKey->mExpr->evaluate(aSortData->mContext,
+                                        getter_AddRefs(res));
+    if (NS_FAILED(rv)) {
+        aSortData->mRv = rv;
+        return PR_FALSE;
     }
 
-    delete [] mSortValues;
+    aSortValue = aKey->mComparator->createSortableValue(res);
+    if (!aSortValue) {
+        aSortData->mRv = NS_ERROR_OUT_OF_MEMORY;
+        return PR_FALSE;
+    }
+    
+    return PR_TRUE;
 }
