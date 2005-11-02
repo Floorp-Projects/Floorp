@@ -433,6 +433,7 @@ txStylesheetCompiler::getStylesheet()
 
 nsresult
 txStylesheetCompiler::loadURI(const nsAString& aUri,
+                              const nsAString& aReferrerUri,
                               txStylesheetCompiler* aCompiler)
 {
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
@@ -442,7 +443,8 @@ txStylesheetCompiler::loadURI(const nsAString& aUri,
     if (mURI.Equals(aUri)) {
         return NS_ERROR_XSLT_LOAD_RECURSION;
     }
-    return mObserver ? mObserver->loadURI(aUri, aCompiler) : NS_ERROR_FAILURE;
+    return mObserver ? mObserver->loadURI(aUri, aReferrerUri, aCompiler) :
+                       NS_ERROR_FAILURE;
 }
 
 void
@@ -784,13 +786,12 @@ txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    rv = mObserver->loadURI(aURI, compiler);
+    rv = mObserver->loadURI(aURI, mURI, compiler);
     if (NS_FAILED(rv)) {
         mChildCompilerList.RemoveElement(compiler);
-        return rv;
     }
 
-    return NS_OK;
+    return rv;
 }
 
 nsresult
@@ -818,13 +819,12 @@ txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsresult rv = mObserver->loadURI(aURI, compiler);
+    nsresult rv = mObserver->loadURI(aURI, mURI, compiler);
     if (NS_FAILED(rv)) {
         mChildCompilerList.RemoveElement(compiler);
-        return rv;
     }
 
-    return NS_OK;  
+    return rv;  
 }
 
 nsresult

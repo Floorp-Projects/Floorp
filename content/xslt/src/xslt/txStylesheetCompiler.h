@@ -76,6 +76,7 @@ public:
     virtual nsrefcnt Release() = 0;
 
     virtual nsresult loadURI(const nsAString& aUri,
+                             const nsAString& aReferrerUri,
                              txStylesheetCompiler* aCompiler) = 0;
     virtual void onDoneCompiling(txStylesheetCompiler* aCompiler,
                                  nsresult aResult,
@@ -86,7 +87,8 @@ public:
 #define TX_DECL_ACOMPILEOBSERVER \
   nsrefcnt AddRef(); \
   nsrefcnt Release(); \
-  nsresult loadURI(const nsAString& aUri, txStylesheetCompiler* aCompiler); \
+  nsresult loadURI(const nsAString& aUri, const nsAString& aReferrerUri, \
+                   txStylesheetCompiler* aCompiler); \
   void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult, \
                        const PRUnichar *aErrorText = nsnull, \
                        const PRUnichar *aParam = nsnull)
@@ -217,7 +219,8 @@ public:
     txStylesheet* getStylesheet();
 
     // txACompileObserver
-    nsresult loadURI(const nsAString& aUri, txStylesheetCompiler* aCompiler);
+    nsresult loadURI(const nsAString& aUri, const nsAString& aReferrerUri,
+                     txStylesheetCompiler* aCompiler);
     void onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult,
                          const PRUnichar *aErrorText = nsnull,
                          const PRUnichar *aParam = nsnull);
