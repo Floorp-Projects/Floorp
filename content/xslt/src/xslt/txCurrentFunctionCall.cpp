@@ -22,10 +22,8 @@ CurrentFunctionCall::CurrentFunctionCall(ProcessorState* ps) :
  * @return the result of the evaluation
  * @see FunctionCall.h
 **/
-ExprResult* CurrentFunctionCall::evaluate(Node* context, ContextState* cs) {
-
-    NodeSet* result = new NodeSet(1);
-    result->add(processorState->getCurrentNode());
-    return result;
-} //-- evaluate
+ExprResult* CurrentFunctionCall::evaluate(Node* context, ContextState* cs)
+{
+    return new NodeSet(processorState->getCurrentNode());
+}
 

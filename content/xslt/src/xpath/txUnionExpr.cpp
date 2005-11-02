@@ -69,22 +69,24 @@ void UnionExpr::addExpr(Expr* expr) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* UnionExpr::evaluate(Node* context, ContextState* cs) {
-
-    if (!context || (expressions.getLength() == 0))
-            return new NodeSet(0);
-
+ExprResult* UnionExpr::evaluate(Node* context, ContextState* cs)
+{
     NodeSet* nodes = new NodeSet();
+
+    if (!context || expressions.getLength() == 0 || !nodes)
+        return nodes;
 
     txListIterator iter(&expressions);
 
     while (iter.hasNext()) {
         Expr* expr = (Expr*)iter.next();
         ExprResult* exprResult = expr->evaluate(context, cs);
-        if (exprResult && 
-            exprResult->getResultType() == ExprResult::NODESET) {
-            ((NodeSet*)exprResult)->copyInto(*nodes);
+        if (!exprResult ||
+            exprResult->getResultType() != ExprResult::NODESET) {
+            delete exprResult;
+            return new StringResult("error");
         }
+        nodes->add((NodeSet*)exprResult);
         delete exprResult;
     }
 

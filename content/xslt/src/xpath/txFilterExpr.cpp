@@ -67,7 +67,6 @@ ExprResult* FilterExpr::evaluate(Node* context, ContextState* cs) {
     
     if (exprResult->getResultType() == ExprResult::NODESET) {
         // Result is a nodeset, filter it.
-        cs->sortByDocumentOrder((NodeSet*)exprResult);
         evaluatePredicates((NodeSet*)exprResult, cs);
     }
     else if(!isEmpty()) {

@@ -64,13 +64,6 @@ void PredicateList::evaluatePredicates(NodeSet* nodes, ContextState* cs)
 
     cs->getNodeSetStack()->push(nodes);
     NodeSet newNodes;
-    // optimize; set DuplicateChecking to MB_FALSE,
-    // restore original state later
-    // we only work with |Node|s already in the NodeSet, so they
-    // have been checked already, no need to check again in here.
-    MBool ndsCheckDupl = nodes->getDuplicateChecking();
-    nodes->setDuplicateChecking(MB_FALSE);
-    newNodes.setDuplicateChecking(MB_FALSE);
     txListIterator iter(&predicates);
     while (iter.hasNext()) {
         Expr* expr = (Expr*)iter.next();
@@ -90,23 +83,21 @@ void PredicateList::evaluatePredicates(NodeSet* nodes, ContextState* cs)
                 case ExprResult::NUMBER :
                     // handle default, [position() == numberValue()]
                     if ((double)(nIdx+1) == exprResult->numberValue())
-                        newNodes.add(node);
+                        newNodes.append(node);
                     break;
                 default:
                     if (exprResult->booleanValue())
-                        newNodes.add(node);
+                        newNodes.append(node);
                     break;
             }
             delete exprResult;
         }
         // Move new NodeSet to the current one
         nodes->clear();
-        newNodes.copyInto(*nodes);
+        nodes->append(&newNodes);
     }
     cs->getNodeSetStack()->pop();
-    // restore DuplicateChecking of NodeSet
-    nodes->setDuplicateChecking(ndsCheckDupl);
-} // evaluatePredicates
+}
 
 /*
  * returns true if this predicate list is empty

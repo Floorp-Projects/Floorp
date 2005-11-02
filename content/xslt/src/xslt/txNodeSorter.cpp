@@ -199,15 +199,13 @@ MBool txNodeSorter::sortNodeSet(NodeSet* aNodes)
     // Note that the nodeset shouldn't be changed until the sort is done
     // since it's the current-nodeset used during xpath evaluation
     aNodes->clear();
-    aNodes->setDuplicateChecking(MB_FALSE);
     iter.reset();
     while (iter.hasNext()) {
         SortableNode* sNode = (SortableNode*)iter.next();
-        aNodes->add(sNode->mNode);
+        aNodes->append(sNode->mNode);
         sNode->clear(mNKeys);
         delete sNode;
     }
-    aNodes->setDuplicateChecking(MB_TRUE);
     
     return MB_TRUE;
 }

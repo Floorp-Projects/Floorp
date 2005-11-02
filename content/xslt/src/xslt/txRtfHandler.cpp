@@ -54,7 +54,7 @@ txRtfHandler::txRtfHandler(Document* aDocument,
     DocumentFragment* fragment = mDocument->createDocumentFragment();
     NS_ASSERTION(fragment, "Out of memory creating a document fragmen");
     // XXX ErrorReport: Out of memory
-    mResultTreeFragment->add(fragment);
+    mResultTreeFragment->append(fragment);
     mCurrentNode = fragment;
 }
 
