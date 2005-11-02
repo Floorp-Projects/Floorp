@@ -66,7 +66,11 @@ class nsIXFormsModelElement; /* forward declaration */
   NS_IMETHOD IsNodeAssocWithModel(nsIDOMNode *aNode, nsIDOMNode *aModel, PRBool *_retval); \
   NS_IMETHOD GetInstanceDocumentRoot(const nsAString & aID, nsIDOMNode *aModelNode, nsIDOMNode **_retval); \
   NS_IMETHOD ValidateString(const nsAString & aValue, const nsAString & aType, const nsAString & aNamespace, PRBool *_retval); \
-  NS_IMETHOD GetRepeatIndex(nsIDOMNode *aRepeat, PRUint32 *aIndex);
+  NS_IMETHOD GetRepeatIndex(nsIDOMNode *aRepeat, PRUint32 *aIndex); \
+  NS_IMETHOD GetMonths(const nsAString & aValue, PRInt32 *aMonths); \
+  NS_IMETHOD GetSeconds(const nsAString & aValue, double *aSeconds); \
+  NS_IMETHOD GetSecondsFromDateTime(const nsAString & aValue, double *aSeconds); \
+  NS_IMETHOD GetDaysFromDateTime(const nsAString & aValue, PRInt32 *aDays);
 
 /**
  * Private interface implemented by the nsXFormsUtilityService in XForms extension.
@@ -123,6 +127,35 @@ class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
   /* unsigned long getRepeatIndex (in nsIDOMNode aRepeat); */
   NS_IMETHOD GetRepeatIndex(nsIDOMNode *aRepeat, PRUint32 *aIndex) = 0;
 
+  /**
+   * Function to retrieve the number of months represented by the 
+   * xsd:duration provided in aValue
+   */
+  /* long getMonths (in DOMString aValue); */
+  NS_IMETHOD GetMonths(const nsAString & aValue, PRInt32 *aMonths) = 0;
+
+  /**
+   * Function to retrieve the number of seconds represented by the 
+   * xsd:duration provided in aValue
+   */
+  /* AString getSeconds (in DOMString aValue); */
+  NS_IMETHOD GetSeconds(const nsAString & aValue, double *aSeconds) = 0;
+
+  /**
+   * Function to retrieve the number of seconds represented by the 
+   * xsd:dateTime provided in aValue
+   */
+  /* AString getSecondsFromDateTime (in DOMString aValue); */
+  NS_IMETHOD GetSecondsFromDateTime(const nsAString & aValue, 
+                                    double *aSeconds) = 0;
+
+  /**
+   * Function to retrieve the number of days represented by the 
+   * xsd:dateTime provided in aValue
+   */
+  /* AString getDaysFromDateTime (in DOMString aValue); */
+  NS_IMETHOD GetDaysFromDateTime(const nsAString & aValue, 
+                                 PRInt32         * aDays) = 0;
 };
 
 #define NS_ERROR_XFORMS_CALCUATION_EXCEPTION \
