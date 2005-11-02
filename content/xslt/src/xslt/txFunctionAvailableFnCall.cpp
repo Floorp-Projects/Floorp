@@ -135,6 +135,6 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(txIEvalContext* aContext)
 nsresult FunctionAvailableFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::functionAvailable;
-    TX_ADDREF_ATOM(*aAtom);
+    NS_ADDREF(*aAtom);
     return NS_OK;
 }

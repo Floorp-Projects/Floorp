@@ -24,25 +24,24 @@
  */
 
 #include "Expr.h"
-#include "txAtom.h"
+#include "nsIAtom.h"
 #include "txIXPathContext.h"
 
 /*
  * Creates a new txNodeTypeTest of the given type
  */
 txNodeTypeTest::txNodeTypeTest(NodeType aNodeType)
-    : mNodeType(aNodeType), mNodeName(0)
+    : mNodeType(aNodeType)
 {
 }
 
 txNodeTypeTest::~txNodeTypeTest()
 {
-    TX_IF_RELEASE_ATOM(mNodeName);
 }
 
 void txNodeTypeTest::setNodeName(const nsAString& aName)
 {
-    mNodeName = TX_GET_ATOM(aName);
+    mNodeName = do_GetAtom(aName);
 }
 
 /*
@@ -64,13 +63,10 @@ MBool txNodeTypeTest::matches(Node* aNode, txIMatchContext* aContext)
                    !aContext->isStripSpaceAllowed(aNode);
         case PI_TYPE:
             if (type == Node::PROCESSING_INSTRUCTION_NODE) {
-                nsIAtom* localName = 0;
-                MBool result;
-                result = !mNodeName ||
-                         (aNode->getLocalName(&localName) &&
-                          localName == mNodeName);
-                TX_IF_RELEASE_ATOM(localName);
-                return result;
+                nsCOMPtr<nsIAtom> localName;
+                return !mNodeName ||
+                        (aNode->getLocalName(getter_AddRefs(localName)) &&
+                         localName == mNodeName);
             }
             return MB_FALSE;
         case NODE_TYPE:
@@ -107,7 +103,7 @@ void txNodeTypeTest::toString(nsAString& aDest)
             aDest.Append(NS_LITERAL_STRING("processing-instruction("));
             if (mNodeName) {
                 nsAutoString str;
-                TX_GET_ATOM_STRING(mNodeName, str);
+                mNodeName->ToString(str);
                 aDest.Append(PRUnichar('\''));
                 aDest.Append(str);
                 aDest.Append(PRUnichar('\''));

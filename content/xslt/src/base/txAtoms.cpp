@@ -100,7 +100,7 @@ MBool txHTMLAtoms::init()
 #undef TX_ATOM
 
 #define TX_ATOM(_name, _value) \
-TX_IF_RELEASE_ATOM(_name)
+NS_IF_RELEASE(_name)
 
 void txXMLAtoms::shutdown()
 {

@@ -42,11 +42,11 @@ Element::Element(const nsAString& tagName, Document* owner) :
 
   int idx = tagName.FindChar(':');
   if (idx == kNotFound) {
-    mLocalName = TX_GET_ATOM(tagName);
+    mLocalName = do_GetAtom(tagName);
   }
   else {
-    mLocalName = TX_GET_ATOM(Substring(tagName, idx + 1,
-                                       tagName.Length() - (idx + 1)));
+    mLocalName = do_GetAtom(Substring(tagName, idx + 1,
+                                      tagName.Length() - (idx + 1)));
   }
 }
 
@@ -69,7 +69,6 @@ Element::Element(const nsAString& aNamespaceURI,
 Element::~Element()
 {
   mAttributes.clear();
-  TX_IF_RELEASE_ATOM(mLocalName);
 }
 
 Node* Element::appendChild(Node* newChild)
@@ -104,7 +103,7 @@ MBool Element::getLocalName(nsIAtom** aLocalName)
   if (!aLocalName)
     return MB_FALSE;
   *aLocalName = mLocalName;
-  TX_ADDREF_ATOM(*aLocalName);
+  NS_ADDREF(*aLocalName);
   return MB_TRUE;
 }
 
@@ -182,14 +181,12 @@ void Element::setAttributeNS(const nsAString& aNamespaceURI,
   AttrMap::ListItem* item = mAttributes.firstItem;
   while (item) {
     foundNode = (Attr*)item->node;
-    nsIAtom* attrName;
-    if (foundNode->getLocalName(&attrName) &&
+    nsCOMPtr<nsIAtom> attrName;
+    if (foundNode->getLocalName(getter_AddRefs(attrName)) &&
         namespaceID == foundNode->getNamespaceID() &&
         localName == attrName) {
-      TX_IF_RELEASE_ATOM(attrName);
       break;
     }
-    TX_IF_RELEASE_ATOM(attrName);
     foundNode = 0;
     item = item->next;
   }
@@ -226,15 +223,13 @@ MBool Element::getAttr(nsIAtom* aLocalName, PRInt32 aNSID,
   AttrMap::ListItem* item = mAttributes.firstItem;
   while (item) {
     Attr* attrNode = (Attr*)item->node;
-    nsIAtom* localName;
-    if (attrNode->getLocalName(&localName) &&
+    nsCOMPtr<nsIAtom> localName;
+    if (attrNode->getLocalName(getter_AddRefs(localName)) &&
         aNSID == attrNode->getNamespaceID() &&
         aLocalName == localName) {
       attrNode->getNodeValue(aValue);
-      TX_IF_RELEASE_ATOM(localName);
       return MB_TRUE;
     }
-    TX_IF_RELEASE_ATOM(localName);
     item = item->next;
   }
   return MB_FALSE;
@@ -249,14 +244,12 @@ MBool Element::hasAttr(nsIAtom* aLocalName, PRInt32 aNSID)
   AttrMap::ListItem* item = mAttributes.firstItem;
   while (item) {
     Attr* attrNode = (Attr*)item->node;
-    nsIAtom* localName;
-    if (attrNode->getLocalName(&localName) &&
+    nsCOMPtr<nsIAtom> localName;
+    if (attrNode->getLocalName(getter_AddRefs(localName)) &&
         aNSID == attrNode->getNamespaceID() &&
         aLocalName == localName) {
-      TX_IF_RELEASE_ATOM(localName);
       return MB_TRUE;
     }
-    TX_IF_RELEASE_ATOM(localName);
     item = item->next;
   }
   return MB_FALSE;

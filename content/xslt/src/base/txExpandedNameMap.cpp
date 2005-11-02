@@ -85,7 +85,7 @@ nsresult txExpandedNameMap::add(const txExpandedName& aKey, TxObject* aValue)
     
     mItems[mItemCount].mNamespaceID = aKey.mNamespaceID;
     mItems[mItemCount].mLocalName = aKey.mLocalName;
-    TX_IF_ADDREF_ATOM(mItems[mItemCount].mLocalName);
+    NS_IF_ADDREF(mItems[mItemCount].mLocalName);
     mItems[mItemCount].mValue = aValue;
     ++mItemCount;
     
@@ -130,7 +130,7 @@ nsresult txExpandedNameMap::set(const txExpandedName& aKey, TxObject* aValue)
     
     mItems[mItemCount].mNamespaceID = aKey.mNamespaceID;
     mItems[mItemCount].mLocalName = aKey.mLocalName;
-    TX_IF_ADDREF_ATOM(mItems[mItemCount].mLocalName);
+    NS_IF_ADDREF(mItems[mItemCount].mLocalName);
     mItems[mItemCount].mValue = aValue;
     ++mItemCount;
     
@@ -167,7 +167,7 @@ TxObject* txExpandedNameMap::remove(const txExpandedName& aKey)
     for (i = 0; i < mItemCount; ++i) {
         if (mItems[i].mLocalName == aKey.mLocalName &&
             mItems[i].mNamespaceID == aKey.mNamespaceID) {
-            TX_IF_RELEASE_ATOM(mItems[i].mLocalName);
+            NS_IF_RELEASE(mItems[i].mLocalName);
             if (mOwnsValues) {
                 delete mItems[i].mValue;
             }
@@ -190,7 +190,7 @@ void txExpandedNameMap::clear()
 {
     int i;
     for (i = 0; i < mItemCount; ++i) {
-        TX_IF_RELEASE_ATOM(mItems[i].mLocalName);
+        NS_IF_RELEASE(mItems[i].mLocalName);
         if (mOwnsValues) {
             delete mItems[i].mValue;
         }

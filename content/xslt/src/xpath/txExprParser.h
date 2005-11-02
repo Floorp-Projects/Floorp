@@ -33,7 +33,7 @@
 #define MITREXSL_EXPRPARSER_H
 
 #include "baseutils.h"
-#include "txAtom.h"
+#include "nsIAtom.h"
 #include "txError.h"
 
 class AttributeValueTemplate;

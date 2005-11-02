@@ -42,8 +42,6 @@ VariableRefExpr::VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName,
     NS_ASSERTION(mLocalName, "VariableRefExpr without local name?");
     if (mPrefix == txXMLAtoms::_empty)
         mPrefix = 0;
-    TX_IF_ADDREF_ATOM(mPrefix);
-    TX_IF_ADDREF_ATOM(mLocalName);
 }
 
 /*
@@ -51,8 +49,6 @@ VariableRefExpr::VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName,
  */
 VariableRefExpr::~VariableRefExpr()
 {
-    TX_IF_RELEASE_ATOM(mPrefix);
-    TX_IF_RELEASE_ATOM(mLocalName);
 }
 
 /**
@@ -86,11 +82,11 @@ void VariableRefExpr::toString(nsAString& aDest)
     aDest.Append(PRUnichar('$'));
     if (mPrefix) {
         nsAutoString prefix;
-        TX_GET_ATOM_STRING(mPrefix, prefix);
+        mPrefix->ToString(prefix);
         aDest.Append(prefix);
         aDest.Append(PRUnichar(':'));
     }
     nsAutoString lname;
-    TX_GET_ATOM_STRING(mLocalName, lname);
+    mLocalName->ToString(lname);
     aDest.Append(lname);
 } //-- toString

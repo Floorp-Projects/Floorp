@@ -35,14 +35,10 @@ txNameTest::txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
     if (aPrefix == txXMLAtoms::_empty)
         mPrefix = 0;
     NS_ASSERTION(aLocalName, "txNameTest without a local name?");
-    TX_IF_ADDREF_ATOM(mPrefix);
-    TX_IF_ADDREF_ATOM(mLocalName);
 }
 
 txNameTest::~txNameTest()
 {
-    TX_IF_RELEASE_ATOM(mPrefix);
-    TX_IF_RELEASE_ATOM(mLocalName);
 }
 
 /*
@@ -66,12 +62,9 @@ MBool txNameTest::matches(Node* aNode, txIMatchContext* aContext)
         return MB_TRUE;
 
     // Compare local-names
-    nsIAtom* localName;
-    aNode->getLocalName(&localName);
-    MBool result = localName == mLocalName;
-    TX_IF_RELEASE_ATOM(localName);
-
-    return result;
+    nsCOMPtr<nsIAtom> localName;
+    aNode->getLocalName(getter_AddRefs(localName));
+    return localName == mLocalName;
 }
 
 /*

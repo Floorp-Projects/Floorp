@@ -30,7 +30,7 @@
 //
 
 #include "dom.h"
-#include "txAtom.h"
+#include "nsIAtom.h"
 
 //
 //Construct a text object with the specified document owner and data
@@ -41,7 +41,7 @@ ProcessingInstruction::ProcessingInstruction(const nsAString& theTarget,
                        NodeDefinition(Node::PROCESSING_INSTRUCTION_NODE,
                                       theTarget, theData, owner)
 {
-  mLocalName = TX_GET_ATOM(nodeName);
+  mLocalName = do_GetAtom(nodeName);
 }
 
 //
@@ -49,7 +49,6 @@ ProcessingInstruction::ProcessingInstruction(const nsAString& theTarget,
 //
 ProcessingInstruction::~ProcessingInstruction()
 {
-  TX_IF_RELEASE_ATOM(mLocalName);
 }
 
 //
@@ -62,6 +61,6 @@ MBool ProcessingInstruction::getLocalName(nsIAtom** aLocalName)
   if (!aLocalName)
     return MB_FALSE;
   *aLocalName = mLocalName;
-  TX_ADDREF_ATOM(*aLocalName);
+  NS_ADDREF(*aLocalName);
   return MB_TRUE;
 }
