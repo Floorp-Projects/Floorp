@@ -323,7 +323,7 @@ nsresult txXSLKey::indexDocument(const txXPathNode& aDocument,
 {
     txKeyValueHashKey key(mName,
                           txXPathNodeUtils::getUniqueIdentifier(aDocument),
-                          NS_LITERAL_STRING(""));
+                          EmptyString());
     return indexTree(aDocument, key, aKeyValueHash, aEs);
 }
 

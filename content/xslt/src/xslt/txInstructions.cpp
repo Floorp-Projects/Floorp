@@ -376,10 +376,12 @@ txCopy::execute(txExecutionState& aEs)
     switch (txXPathNodeUtils::getNodeType(node)) {
         case txXPathNodeType::DOCUMENT_NODE:
         {
-            // "close" current element to ensure that no attributes are added
-            aEs.mResultHandler->characters(NS_LITERAL_STRING(""), PR_FALSE);
+            const nsAFlatString& empty = EmptyString();
 
-            rv = aEs.pushString(NS_LITERAL_STRING(""));
+            // "close" current element to ensure that no attributes are added
+            aEs.mResultHandler->characters(empty, PR_FALSE);
+
+            rv = aEs.pushString(empty);
             NS_ENSURE_SUCCESS(rv, rv);
 
             rv = aEs.pushInt(kNameSpaceID_None);
@@ -408,7 +410,7 @@ txCopy::execute(txExecutionState& aEs)
         {
             rv = copyNode(node, aEs);
             NS_ENSURE_SUCCESS(rv, rv);
-            
+
             aEs.gotoInstruction(mBailTarget);
         }
     }

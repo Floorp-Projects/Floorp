@@ -1133,7 +1133,7 @@ txFnEndTopVariable(txStylesheetCompilerState& aState)
         // No children were found.
         NS_ASSERTION(!var->mValue,
                      "There shouldn't be a select-expression here");
-        var->mValue = new txLiteralExpr(NS_LITERAL_STRING(""));
+        var->mValue = new txLiteralExpr(EmptyString());
         NS_ENSURE_TRUE(var->mValue, NS_ERROR_OUT_OF_MEMORY);
     }
     else if (!var->mValue) {
@@ -2128,7 +2128,7 @@ txFnEndParam(txStylesheetCompilerState& aState)
         // No children were found.
         NS_ASSERTION(!var->mValue,
                      "There shouldn't be a select-expression here");
-        var->mValue = new txLiteralExpr(NS_LITERAL_STRING(""));
+        var->mValue = new txLiteralExpr(EmptyString());
         NS_ENSURE_TRUE(var->mValue, NS_ERROR_OUT_OF_MEMORY);
     }
 
@@ -2406,7 +2406,7 @@ txFnEndVariable(txStylesheetCompilerState& aState)
         // No children were found.
         NS_ASSERTION(!var->mValue,
                      "There shouldn't be a select-expression here");
-        var->mValue = new txLiteralExpr(NS_LITERAL_STRING(""));
+        var->mValue = new txLiteralExpr(EmptyString());
         NS_ENSURE_TRUE(var->mValue, NS_ERROR_OUT_OF_MEMORY);
     }
 
@@ -2569,7 +2569,7 @@ txFnEndWithParam(txStylesheetCompilerState& aState)
         // No children were found.
         NS_ASSERTION(!var->mValue,
                      "There shouldn't be a select-expression here");
-        var->mValue = new txLiteralExpr(NS_LITERAL_STRING(""));
+        var->mValue = new txLiteralExpr(EmptyString());
         NS_ENSURE_TRUE(var->mValue, NS_ERROR_OUT_OF_MEMORY);
     }
 
