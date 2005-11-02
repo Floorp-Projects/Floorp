@@ -86,10 +86,6 @@ else
 CPPSRCS += txStandaloneXPathTreeWalker.cpp
 endif
 
-ifdef BUILD_SHARED_LIBS
-FORCE_USE_PIC=1
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir) -I$(srcdir)/../base \
