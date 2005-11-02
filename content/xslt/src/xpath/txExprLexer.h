@@ -25,7 +25,7 @@
  *    -- changed constant short declarations in Token and ExprLexer to
  *       enumerations, commented with //--LF
  * 
- * $Id: txExprLexer.h,v 1.2 2005/11/02 07:33:50 nisheeth%netscape.com Exp $
+ * $Id: txExprLexer.h,v 1.3 2005/11/02 07:33:51 nisheeth%netscape.com Exp $
  */
 
 
@@ -42,7 +42,7 @@
  * This class was ported from XSL:P, an open source Java based 
  * XSLT processor, written by yours truly.
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:50 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:51 $
 **/
 class Token {
 
@@ -163,9 +163,9 @@ public:
         COLON          = ':',
         //-- whitespace tokens
         SPACE          = ' ',
-        TAB            = '\t',
-        CR             = '\n',
-        LF             = '\r'
+        TX_TAB            = '\t',
+        TX_CR             = '\n',
+        TX_LF             = '\r'
     };
 
 

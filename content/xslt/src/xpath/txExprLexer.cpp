@@ -29,13 +29,13 @@
  *   -- Fixed bug in parse method so that we make sure we check for
  *      axis identifier wild cards, such as ancestor::*
  *
- * $Id: txExprLexer.cpp,v 1.2 2005/11/02 07:33:41 kvisco%ziplink.net Exp $
+ * $Id: txExprLexer.cpp,v 1.3 2005/11/02 07:33:42 nisheeth%netscape.com Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:41 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:42 $
 **/
 
 #include <iostream.h>
@@ -559,9 +559,9 @@ void ExprLexer::parse(const String& pattern) {
             switch (ch) {
                 //-- ignore whitespace
                 case SPACE:
-                case TAB:
-                case CR:
-                case LF:
+                case TX_TAB:
+                case TX_CR:
+                case TX_LF:
                     break;
                 case S_QUOTE :
 	        case D_QUOTE :
@@ -679,9 +679,9 @@ void ExprLexer::parse(const String& pattern) {
                 default:
                     switch (prevCh) {
                         case SPACE :
-                        case TAB :
-                        case CR :
-                        case LF :
+                        case TX_TAB :
+                        case TX_CR :
+                        case TX_LF :
                             matchToken(tokenBuffer, ch);
                             tokenBuffer.append(ch);
                             break;
