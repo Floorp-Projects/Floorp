@@ -51,7 +51,7 @@
 //type.
 //
 Element::Element(const nsAString& tagName, Document* owner) :
-         NodeDefinition(Node::ELEMENT_NODE, tagName, nsString(), owner)
+         NodeDefinition(Node::ELEMENT_NODE, tagName, EmptyString(), owner)
 {
   mAttributes.ownerElement = this;
   mNamespaceID = kNameSpaceID_Unknown;
@@ -69,7 +69,7 @@ Element::Element(const nsAString& tagName, Document* owner) :
 Element::Element(const nsAString& aNamespaceURI,
                  const nsAString& aTagName,
                  Document* aOwner) :
-         NodeDefinition(Node::ELEMENT_NODE, aTagName, nsString(), aOwner)
+         NodeDefinition(Node::ELEMENT_NODE, aTagName, EmptyString(), aOwner)
 {
   Element(aTagName, aOwner);
   if (aNamespaceURI.IsEmpty())
