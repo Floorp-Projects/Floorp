@@ -48,7 +48,6 @@
 #include "txPatternParser.h"
 #include "txStringUtils.h"
 #include "XSLTFunctions.h"
-#include "TxLog.h"
 
 txStylesheetCompiler::txStylesheetCompiler(const nsAString& aBaseURI,
                                            txACompileObserver* aObserver)
@@ -389,6 +388,8 @@ txStylesheetCompiler::characters(const nsAString& aStr)
 nsresult
 txStylesheetCompiler::doneLoading()
 {
+    PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
+           ("Compiler::doneLoading: %s\n", mURI.get()));
     if (NS_FAILED(mStatus)) {
         return mStatus;
     }
@@ -401,6 +402,10 @@ txStylesheetCompiler::doneLoading()
 void
 txStylesheetCompiler::cancel(nsresult aError)
 {
+    PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
+           ("Compiler::cancel: %s, module: %d, code %d\n",
+            mURI.get(), NS_ERROR_GET_MODULE(aError),
+            NS_ERROR_GET_CODE(aError)));
     if (NS_SUCCEEDED(mStatus)) {
         mStatus = aError;
     }
@@ -423,6 +428,9 @@ nsresult
 txStylesheetCompiler::loadURI(const nsAString& aUri,
                               txStylesheetCompiler* aCompiler)
 {
+    PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
+           ("Compiler::loadURI forwards %s thru %s\n",
+            NS_LossyConvertUCS2toASCII(aUri).get(), mURI.get()));
     return mObserver ? mObserver->loadURI(aUri, aCompiler) : NS_ERROR_FAILURE;
 }
 
@@ -535,6 +543,9 @@ txStylesheetCompilerState::init(const nsAString& aBaseURI,
 {
     NS_ASSERTION(!aStylesheet || aInsertPosition,
                  "must provide insertposition if loading subsheet");
+#ifdef PR_LOGGING
+    mURI.AssignWithConversion(aBaseURI);
+#endif
     nsresult rv = NS_OK;
     if (aStylesheet) {
         mStylesheet = aStylesheet;
@@ -710,6 +721,9 @@ txStylesheetCompilerState::addInstruction(nsAutoPtr<txInstruction> aInstruction)
 nsresult
 txStylesheetCompilerState::loadIncludedStylesheet(const nsAString& aURI)
 {
+    PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
+           ("CompilerState::loadIncludedStylesheet: %s\n",
+            NS_LossyConvertUCS2toASCII(aURI).get()));
     NS_ENSURE_TRUE(mObserver, NS_ERROR_NOT_IMPLEMENTED);
 
     nsAutoPtr<txToplevelItem> item(new txDummyItem);
@@ -750,6 +764,9 @@ nsresult
 txStylesheetCompilerState::loadImportedStylesheet(const nsAString& aURI,
                                                   txStylesheet::ImportFrame* aFrame)
 {
+    PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
+           ("CompilerState::loadImportedStylesheet: %s\n",
+            NS_LossyConvertUCS2toASCII(aURI).get()));
     NS_ENSURE_TRUE(mObserver, NS_ERROR_NOT_IMPLEMENTED);
 
     txListIterator iter(&aFrame->mToplevelItems);

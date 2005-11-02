@@ -325,6 +325,7 @@ TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
 {
     nsCAutoString uri;
     aUri->GetSpec(uri);
+    PR_LOG(txLog::xslt, PR_LOG_ALWAYS, ("TX_LoadSheet: %s\n", uri.get()));
 
     nsRefPtr<txCompileObserver> observer =
         new txCompileObserver(aProcessor, aLoadGroup);
