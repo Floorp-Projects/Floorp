@@ -869,7 +869,9 @@ txTransformNotifier::ScriptEvaluated(nsresult aResult,
 }
 
 NS_IMETHODIMP 
-txTransformNotifier::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
+txTransformNotifier::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+                                      PRBool aWasAlternate,
+                                      nsresult aStatus)
 {
     // Check that the stylesheet was in the mStylesheets array, if not it is an
     // alternate and we don't want to call SignalTransformEnd since we don't
