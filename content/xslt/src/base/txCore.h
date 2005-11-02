@@ -50,7 +50,7 @@ class txObject
 public:
     /**
      * Deletes this txObject
-    **/
+     */
     virtual ~txObject()
     {
     };
@@ -70,8 +70,8 @@ public:
     static const double NEGATIVE_INFINITY;
 
     /**
-     * Determines whether the given double represents positive or negative.
-     * inifinity
+     * Determines whether the given double represents positive or negative
+     * inifinity.
      */
     static PRBool isInfinite(double aDbl);
 
@@ -93,7 +93,7 @@ public:
 
     /**
      * Converts the given String to a double, if the string value does not
-     * represent a double, NaN will be returned
+     * represent a double, NaN will be returned.
      */
     static double toDouble(const nsAString& aStr);
 };
