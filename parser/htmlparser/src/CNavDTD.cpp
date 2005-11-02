@@ -2775,6 +2775,10 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
       break;
 
     case eHTMLTag_frameset:
+      // Make sure that the head is closed before we try to open this frameset.
+      CloseContainer(eHTMLTag_head);
+
+      // Now that the head is closed, continue on with opening this frameset.
       mFlags |= NS_DTD_FLAG_HAD_FRAMESET;
       done = PR_FALSE;
       break;
