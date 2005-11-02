@@ -2409,6 +2409,21 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
 
     JS_SetGlobalObject(sandcx, sandbox);
 
+    XPCPerThreadData *data = XPCPerThreadData::GetData();
+    XPCJSContextStack *stack;
+    PRBool popContext = PR_FALSE;
+    if (data && (stack = data->GetJSContextStack())) {
+        if (NS_FAILED(stack->Push(sandcx))) {
+            JS_ReportError(cx,
+                    "Unable to initialize XPConnect with the sandbox context");
+            JSPRINCIPALS_DROP(cx, jsPrincipals);
+            JS_DestroyContextNoGC(sandcx);
+            return NS_ERROR_FAILURE;
+        }
+
+        popContext = PR_TRUE;
+    }
+
     // Capture uncaught exceptions reported as errors on sandcx and
     // re-throw them on cx.
     JS_SetContextPrivate(sandcx, cx);
@@ -2452,6 +2467,10 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         }
     } else {
         cc->SetReturnValueWasSet(PR_TRUE);
+    }
+
+    if (popContext) {
+        stack->Pop(nsnull);
     }
 
     JS_DestroyContextNoGC(sandcx);
