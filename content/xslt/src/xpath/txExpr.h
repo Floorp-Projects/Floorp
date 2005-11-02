@@ -25,7 +25,7 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: txExpr.h,v 1.6 2005/11/02 07:33:31 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txExpr.h,v 1.7 2005/11/02 07:33:32 kvisco%ziplink.net Exp $
  */
 
 
@@ -44,7 +44,7 @@
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.6 $ $Date: 2005/11/02 07:33:31 $
+  @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:32 $
 */
 
 #ifndef TRANSFRMX_EXPR_H
@@ -53,6 +53,7 @@
 
 //necessary prototypes
 class FunctionCall;
+class NodeSet;
 
 /**
  * The expression context and state class used when evaluating XPath Expressions.
@@ -104,21 +105,6 @@ public:
     virtual void sortByDocumentOrder(NodeSet* nodes) = 0;
 
 }; //-- ContextState
-
-
-/**
- * A class that returns the relevant namespace URI for a node.
-**/
-class NamespaceResolver {
-
-public:
-
-    /**
-     * Returns the namespace URI for the given name
-    **/ 
-    virtual void getNameSpaceURI(String& name, String& nameSpaceURI) = 0;
-
-}; //-- NamespaceResolver
 
 
 /**
