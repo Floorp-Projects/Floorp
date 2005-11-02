@@ -133,7 +133,7 @@ private:
 //
 // This array will accept null as an argument for any object, and will
 // store null in the array, just like nsVoidArray. But that also means
-// that methods like ObjectAt() may return null when refering to an
+// that methods like ObjectAt() may return null when referring to an
 // existing, but null entry in the array.
 template <class T>
 class nsCOMArray : public nsCOMArray_base
