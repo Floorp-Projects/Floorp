@@ -74,6 +74,6 @@ void TX_ToLowerCase(const nsAString& aSource, nsAString& aDest);
 inline PRBool TX_StringEqualsAtom(const nsAString& aString, nsIAtom* aAtom)
 {
   return aAtom->Equals(aString);
-};
+}
 
 #endif // txStringUtils_h__
