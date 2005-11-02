@@ -83,16 +83,6 @@ nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex)
     return result;
 }
 
-
-PRBool
-nsCOMArray_base::AppendObject(nsISupports *aObject)
-{
-    PRBool result = InsertObjectAt(aObject, Count());
-    if (result)
-        NS_IF_ADDREF(aObject);
-    return result;
-}
-
 PRBool
 nsCOMArray_base::RemoveObject(nsISupports *aObject)
 {
