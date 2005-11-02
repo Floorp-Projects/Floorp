@@ -51,6 +51,7 @@
 #include "txOutputFormat.h"
 #include "nsCOMArray.h"
 #include "nsICSSLoaderObserver.h"
+#include "nsIDocumentTransformer.h"
 
 class txMozillaXMLOutput : public txIOutputXMLEventHandler,
                            public nsIScriptLoaderObserver,
@@ -180,7 +181,7 @@ private:
     nsCOMPtr<nsIDOMNode> mCurrentNode;
     nsCOMPtr<nsIDOMNode> mParentNode;
     nsCOMPtr<nsIContent> mRootContent;
-    nsWeakPtr mObserver;
+    nsCOMPtr<nsITransformObserver> mObserver;
 
     nsCOMPtr<nsIDOMNode> mNonAddedParent;
     nsCOMPtr<nsIDOMNode> mNonAddedNode;
