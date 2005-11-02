@@ -98,6 +98,7 @@ public:
             mOut->close();
         delete mOut;
         mOut = 0;
+        mStylesheet = 0;
         return 0;
     }
     ~txDriverProcessor()
