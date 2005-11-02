@@ -80,33 +80,33 @@ public:
     static const String FLOOR_FN;
 };
 
-const String XPathNames::BOOLEAN_FN("boolean");
-const String XPathNames::CONCAT_FN("concat");
-const String XPathNames::CONTAINS_FN("contains");
-const String XPathNames::COUNT_FN("count");
-const String XPathNames::FALSE_FN("false");
-const String XPathNames::ID_FN("id");
-const String XPathNames::LAST_FN("last");
-const String XPathNames::LOCAL_NAME_FN("local-name");
-const String XPathNames::NAME_FN("name");
-const String XPathNames::NAMESPACE_URI_FN("namespace-uri");
-const String XPathNames::NORMALIZE_SPACE_FN("normalize-space");
-const String XPathNames::NOT_FN("not");
-const String XPathNames::POSITION_FN("position");
-const String XPathNames::STARTS_WITH_FN("starts-with");
-const String XPathNames::STRING_FN("string");
-const String XPathNames::STRING_LENGTH_FN("string-length");
-const String XPathNames::SUBSTRING_FN("substring");
-const String XPathNames::SUBSTRING_AFTER_FN("substring-after");
-const String XPathNames::SUBSTRING_BEFORE_FN("substring-before");
-const String XPathNames::SUM_FN("sum");
-const String XPathNames::TRANSLATE_FN("translate");
-const String XPathNames::TRUE_FN("true");
-const String XPathNames::NUMBER_FN("number");
-const String XPathNames::ROUND_FN("round");
-const String XPathNames::CEILING_FN("ceiling");
-const String XPathNames::FLOOR_FN("floor");
-const String XPathNames::LANG_FN("lang");
+const String XPathNames::BOOLEAN_FN(NS_LITERAL_STRING("boolean"));
+const String XPathNames::CONCAT_FN(NS_LITERAL_STRING("concat"));
+const String XPathNames::CONTAINS_FN(NS_LITERAL_STRING("contains"));
+const String XPathNames::COUNT_FN(NS_LITERAL_STRING("count"));
+const String XPathNames::FALSE_FN(NS_LITERAL_STRING("false"));
+const String XPathNames::ID_FN(NS_LITERAL_STRING("id"));
+const String XPathNames::LAST_FN(NS_LITERAL_STRING("last"));
+const String XPathNames::LOCAL_NAME_FN(NS_LITERAL_STRING("local-name"));
+const String XPathNames::NAME_FN(NS_LITERAL_STRING("name"));
+const String XPathNames::NAMESPACE_URI_FN(NS_LITERAL_STRING("namespace-uri"));
+const String XPathNames::NORMALIZE_SPACE_FN(NS_LITERAL_STRING("normalize-space"));
+const String XPathNames::NOT_FN(NS_LITERAL_STRING("not"));
+const String XPathNames::POSITION_FN(NS_LITERAL_STRING("position"));
+const String XPathNames::STARTS_WITH_FN(NS_LITERAL_STRING("starts-with"));
+const String XPathNames::STRING_FN(NS_LITERAL_STRING("string"));
+const String XPathNames::STRING_LENGTH_FN(NS_LITERAL_STRING("string-length"));
+const String XPathNames::SUBSTRING_FN(NS_LITERAL_STRING("substring"));
+const String XPathNames::SUBSTRING_AFTER_FN(NS_LITERAL_STRING("substring-after"));
+const String XPathNames::SUBSTRING_BEFORE_FN(NS_LITERAL_STRING("substring-before"));
+const String XPathNames::SUM_FN(NS_LITERAL_STRING("sum"));
+const String XPathNames::TRANSLATE_FN(NS_LITERAL_STRING("translate"));
+const String XPathNames::TRUE_FN(NS_LITERAL_STRING("true"));
+const String XPathNames::NUMBER_FN(NS_LITERAL_STRING("number"));
+const String XPathNames::ROUND_FN(NS_LITERAL_STRING("round"));
+const String XPathNames::CEILING_FN(NS_LITERAL_STRING("ceiling"));
+const String XPathNames::FLOOR_FN(NS_LITERAL_STRING("floor"));
+const String XPathNames::LANG_FN(NS_LITERAL_STRING("lang"));
 
 
 /**
@@ -122,32 +122,32 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
         return 0;
     }
 
-    if (attValue.isEmpty())
+    if (attValue.IsEmpty())
         return avt;
 
-    PRUint32 size = attValue.length();
+    PRUint32 size = attValue.Length();
     PRUint32 cc = 0;
-    UNICODE_CHAR nextCh;
-    UNICODE_CHAR ch;
+    PRUnichar nextCh;
+    PRUnichar ch;
     String buffer;
     MBool inExpr    = MB_FALSE;
     MBool inLiteral = MB_FALSE;
-    UNICODE_CHAR endLiteral = 0;
+    PRUnichar endLiteral = 0;
 
-    nextCh = attValue.charAt(cc);
+    nextCh = attValue.CharAt(cc);
     while (cc++ < size) {
         ch = nextCh;
-        nextCh = cc != size ? attValue.charAt(cc) : 0;
+        nextCh = cc != size ? attValue.CharAt(cc) : 0;
         
         // if in literal just add ch to buffer
         if (inLiteral && (ch != endLiteral)) {
-                buffer.append(ch);
+                buffer.Append(ch);
                 continue;
         }
         switch ( ch ) {
             case '\'' :
             case '"' :
-                buffer.append(ch);
+                buffer.Append(ch);
                 if (inLiteral)
                     inLiteral = MB_FALSE;
                 else if (inExpr) {
@@ -159,12 +159,12 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
                 if (!inExpr) {
                     // Ignore case where we find two {
                     if (nextCh == ch) {
-                        buffer.append(ch); //-- append '{'
+                        buffer.Append(ch); //-- append '{'
                         cc++;
-                        nextCh = cc != size ? attValue.charAt(cc) : 0;
+                        nextCh = cc != size ? attValue.CharAt(cc) : 0;
                     }
                     else {
-                        if (!buffer.isEmpty()) {
+                        if (!buffer.IsEmpty()) {
                             Expr* strExpr = new StringExpr(buffer);
                             if (!strExpr) {
                                 // XXX ErrorReport: out of memory
@@ -173,12 +173,12 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
                             }
                             avt->addExpr(strExpr);
                         }
-                        buffer.clear();
+                        buffer.Truncate();
                         inExpr = MB_TRUE;
                     }
                 }
                 else
-                    buffer.append(ch); //-- simply append '{'
+                    buffer.Append(ch); //-- simply append '{'
                 break;
             case '}':
                 if (inExpr) {
@@ -190,12 +190,12 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
                         return 0;
                     }
                     avt->addExpr(expr);
-                    buffer.clear();
+                    buffer.Truncate();
                 }
                 else if (nextCh == ch) {
-                    buffer.append(ch);
+                    buffer.Append(ch);
                     cc++;
-                    nextCh = cc != size ? attValue.charAt(cc) : 0;
+                    nextCh = cc != size ? attValue.CharAt(cc) : 0;
                 }
                 else {
                     //XXX ErrorReport: unmatched '}' found
@@ -204,7 +204,7 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
                 }
                 break;
             default:
-                buffer.append(ch);
+                buffer.Append(ch);
                 break;
         }
     }
@@ -215,7 +215,7 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
         return 0;
     }
 
-    if (!buffer.isEmpty()) {
+    if (!buffer.IsEmpty()) {
         Expr* strExpr = new StringExpr(buffer);
         if (!strExpr) {
             // XXX ErrorReport: out of memory
@@ -470,85 +470,85 @@ Expr* ExprParser::createFunctionCall(ExprLexer& lexer,
 
     nsresult rv = NS_OK;
 
-    if (XPathNames::BOOLEAN_FN.isEqual(tok->value)) {
+    if (XPathNames::BOOLEAN_FN.Equals(tok->value)) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_BOOLEAN);
     }
-    else if (XPathNames::CONCAT_FN.isEqual(tok->value)) {
+    else if (XPathNames::CONCAT_FN.Equals(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::CONCAT);
     }
-    else if (XPathNames::CONTAINS_FN.isEqual(tok->value)) {
+    else if (XPathNames::CONTAINS_FN.Equals(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::CONTAINS);
     }
-    else if (XPathNames::COUNT_FN.isEqual(tok->value)) {
+    else if (XPathNames::COUNT_FN.Equals(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::COUNT);
     }
-    else if (XPathNames::FALSE_FN.isEqual(tok->value)) {
+    else if (XPathNames::FALSE_FN.Equals(tok->value)) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_FALSE);
     }
-    else if (XPathNames::ID_FN.isEqual(tok->value)) {
+    else if (XPathNames::ID_FN.Equals(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::ID);
     }
-    else if (XPathNames::LANG_FN.isEqual(tok->value)) {
+    else if (XPathNames::LANG_FN.Equals(tok->value)) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_LANG);
     }
-    else if (XPathNames::LAST_FN.isEqual(tok->value)) {
+    else if (XPathNames::LAST_FN.Equals(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::LAST);
     }
-    else if (XPathNames::LOCAL_NAME_FN.isEqual(tok->value)) {
+    else if (XPathNames::LOCAL_NAME_FN.Equals(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::LOCAL_NAME);
     }
-    else if (XPathNames::NAME_FN.isEqual(tok->value)) {
+    else if (XPathNames::NAME_FN.Equals(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAME);
     }
-    else if (XPathNames::NAMESPACE_URI_FN.isEqual(tok->value)) {
+    else if (XPathNames::NAMESPACE_URI_FN.Equals(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAMESPACE_URI);
     }
-    else if (XPathNames::NORMALIZE_SPACE_FN.isEqual(tok->value)) {
+    else if (XPathNames::NORMALIZE_SPACE_FN.Equals(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::NORMALIZE_SPACE);
     }
-    else if (XPathNames::NOT_FN.isEqual(tok->value)) {
+    else if (XPathNames::NOT_FN.Equals(tok->value)) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_NOT);
     }
-    else if (XPathNames::POSITION_FN.isEqual(tok->value)) {
+    else if (XPathNames::POSITION_FN.Equals(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::POSITION);
     }
-    else if (XPathNames::STARTS_WITH_FN.isEqual(tok->value)) {
+    else if (XPathNames::STARTS_WITH_FN.Equals(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::STARTS_WITH);
     }
-    else if (XPathNames::STRING_FN.isEqual(tok->value)) {
+    else if (XPathNames::STRING_FN.Equals(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::STRING);
     }
-    else if (XPathNames::STRING_LENGTH_FN.isEqual(tok->value)) {
+    else if (XPathNames::STRING_LENGTH_FN.Equals(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::STRING_LENGTH);
     }
-    else if (XPathNames::SUBSTRING_FN.isEqual(tok->value)) {
+    else if (XPathNames::SUBSTRING_FN.Equals(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING);
     }
-    else if (XPathNames::SUBSTRING_AFTER_FN.isEqual(tok->value)) {
+    else if (XPathNames::SUBSTRING_AFTER_FN.Equals(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING_AFTER);
     }
-    else if (XPathNames::SUBSTRING_BEFORE_FN.isEqual(tok->value)) {
+    else if (XPathNames::SUBSTRING_BEFORE_FN.Equals(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING_BEFORE);
     }
-    else if (XPathNames::SUM_FN.isEqual(tok->value)) {
+    else if (XPathNames::SUM_FN.Equals(tok->value)) {
         fnCall = new NumberFunctionCall(NumberFunctionCall::SUM);
     }
-    else if (XPathNames::TRANSLATE_FN.isEqual(tok->value)) {
+    else if (XPathNames::TRANSLATE_FN.Equals(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::TRANSLATE);
     }
-    else if (XPathNames::TRUE_FN.isEqual(tok->value)) {
+    else if (XPathNames::TRUE_FN.Equals(tok->value)) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_TRUE);
     }
-    else if (XPathNames::NUMBER_FN.isEqual(tok->value)) {
+    else if (XPathNames::NUMBER_FN.Equals(tok->value)) {
         fnCall = new NumberFunctionCall(NumberFunctionCall::NUMBER);
     }
-    else if (XPathNames::ROUND_FN.isEqual(tok->value)) {
+    else if (XPathNames::ROUND_FN.Equals(tok->value)) {
         fnCall = new NumberFunctionCall(NumberFunctionCall::ROUND);
     }
-    else if (XPathNames::CEILING_FN.isEqual(tok->value)) {
+    else if (XPathNames::CEILING_FN.Equals(tok->value)) {
         fnCall = new NumberFunctionCall(NumberFunctionCall::CEILING);
     }
-    else if (XPathNames::FLOOR_FN.isEqual(tok->value)) {
+    else if (XPathNames::FLOOR_FN.Equals(tok->value)) {
         fnCall = new NumberFunctionCall(NumberFunctionCall::FLOOR);
     }
     else {
@@ -573,7 +573,7 @@ Expr* ExprParser::createFunctionCall(ExprLexer& lexer,
                 return 0;
             }
             String err(tok->value);
-            err.append(" not implemented.");
+            err.Append(NS_LITERAL_STRING(" not implemented."));
             return new StringExpr(err);
         }
 
@@ -612,43 +612,43 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer,
             //-- eat token
             lexer.nextToken();
             //-- should switch to a hash here for speed if necessary
-            if (ANCESTOR_AXIS.isEqual(tok->value)) {
+            if (ANCESTOR_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::ANCESTOR_AXIS;
             }
-            else if (ANCESTOR_OR_SELF_AXIS.isEqual(tok->value)) {
+            else if (ANCESTOR_OR_SELF_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::ANCESTOR_OR_SELF_AXIS;
             }
-            else if (ATTRIBUTE_AXIS.isEqual(tok->value)) {
+            else if (ATTRIBUTE_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::ATTRIBUTE_AXIS;
             }
-            else if (CHILD_AXIS.isEqual(tok->value)) {
+            else if (CHILD_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::CHILD_AXIS;
             }
-            else if (DESCENDANT_AXIS.isEqual(tok->value)) {
+            else if (DESCENDANT_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::DESCENDANT_AXIS;
             }
-            else if (DESCENDANT_OR_SELF_AXIS.isEqual(tok->value)) {
+            else if (DESCENDANT_OR_SELF_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::DESCENDANT_OR_SELF_AXIS;
             }
-            else if (FOLLOWING_AXIS.isEqual(tok->value)) {
+            else if (FOLLOWING_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::FOLLOWING_AXIS;
             }
-            else if (FOLLOWING_SIBLING_AXIS.isEqual(tok->value)) {
+            else if (FOLLOWING_SIBLING_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::FOLLOWING_SIBLING_AXIS;
             }
-            else if (NAMESPACE_AXIS.isEqual(tok->value)) {
+            else if (NAMESPACE_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::NAMESPACE_AXIS;
             }
-            else if (PARENT_AXIS.isEqual(tok->value)) {
+            else if (PARENT_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::PARENT_AXIS;
             }
-            else if (PRECEDING_AXIS.isEqual(tok->value)) {
+            else if (PRECEDING_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::PRECEDING_AXIS;
             }
-            else if (PRECEDING_SIBLING_AXIS.isEqual(tok->value)) {
+            else if (PRECEDING_SIBLING_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::PRECEDING_SIBLING_AXIS;
             }
-            else if (SELF_AXIS.isEqual(tok->value)) {
+            else if (SELF_AXIS.Equals(tok->value)) {
                 axisIdentifier = LocationStep::SELF_AXIS;
             }
             else {

@@ -61,11 +61,11 @@ ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
 
     if (mType == NUMBER) {
         if (!requireParams(0, 1, aContext))
-            return new StringResult("error");
+            return new StringResult(NS_LITERAL_STRING("error"));
     }
     else {
         if (!requireParams(1, 1, aContext))
-            return new StringResult("error");
+            return new StringResult(NS_LITERAL_STRING("error"));
     }
 
     switch (mType) {
@@ -107,7 +107,7 @@ ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
             nodes = evaluateToNodeSet((Expr*)iter.next(), aContext);
 
             if (!nodes)
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             double res = 0;
             int i;
@@ -133,9 +133,9 @@ ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
         }
     }
 
-    String err("Internal error");
+    String err(NS_LITERAL_STRING("Internal error"));
     aContext->receiveError(err, NS_ERROR_UNEXPECTED);
-    return new StringResult("error");
+    return new StringResult(NS_LITERAL_STRING("error"));
 }
 
 nsresult NumberFunctionCall::getNameAtom(txAtom** aAtom)

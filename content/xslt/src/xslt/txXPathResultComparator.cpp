@@ -144,14 +144,14 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
     StringValue* strval1 = (StringValue*)aVal1;
     StringValue* strval2 = (StringValue*)aVal2;
 #ifdef TX_EXE
-    PRUint32 len1 = strval1->mStr.length();
-    PRUint32 len2 = strval2->mStr.length();
+    PRUint32 len1 = strval1->mStr.Length();
+    PRUint32 len2 = strval2->mStr.Length();
     PRUint32 minLength = (len1 < len2) ? len1 : len2;
 
     PRUint32 c = 0;
     while (c < minLength) {
-        UNICODE_CHAR ch1 = strval1->mStr.charAt(c);
-        UNICODE_CHAR ch2 = strval2->mStr.charAt(c);
+        PRUnichar ch1 = strval1->mStr.CharAt(c);
+        PRUnichar ch2 = strval2->mStr.CharAt(c);
         if (ch1 < ch2)
             return ((mSorting & kAscending) ? 1 : -1) * -1;
         if (ch2 < ch1)

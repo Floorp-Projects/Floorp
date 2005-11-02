@@ -65,5 +65,5 @@ ExprResult* RootExpr::evaluate(txIEvalContext* aContext)
 **/
 void RootExpr::toString(String& dest) {
     if (mSerialize)
-        dest.append('/');
+        dest.Append(PRUnichar('/'));
 } //-- toString

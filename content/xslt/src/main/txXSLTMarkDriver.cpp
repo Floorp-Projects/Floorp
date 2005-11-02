@@ -58,13 +58,13 @@ public:
     int loadStylesheet (char * filename)
     {
         delete mXSL;
-        mXSL = parsePath(String(filename), mObserver);
+        mXSL = parsePath(String(NS_ConvertASCIItoUCS2(filename)), mObserver);
         return mXSL ? 0 : 1;
     }
     int setInputDocument (char * filename)
     {
         delete mXML;
-        mXML = parsePath(String(filename), mObserver);
+        mXML = parsePath(String(NS_ConvertASCIItoUCS2(filename)), mObserver);
         return mXML ? 0 : 1;
     }
     int openOutput (char * outputFilename)

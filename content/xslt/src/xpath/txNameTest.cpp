@@ -97,10 +97,10 @@ void txNameTest::toString(String& aDest)
     if (mPrefix) {
         String prefix;
         TX_GET_ATOM_STRING(mPrefix, prefix);
-        aDest.append(prefix);
-        aDest.append(':');
+        aDest.Append(prefix);
+        aDest.Append(PRUnichar(':'));
     }
     String localName;
     TX_GET_ATOM_STRING(mLocalName, localName);
-    aDest.append(localName);
+    aDest.Append(localName);
 }

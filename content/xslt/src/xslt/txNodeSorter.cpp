@@ -49,7 +49,7 @@
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
  */
 
-#define DEFAULT_LANG "en"
+#define DEFAULT_LANG NS_LITERAL_STRING("en")
 
 txNodeSorter::txNodeSorter(ProcessorState* aPs) : mPs(aPs),
                                                   mNKeys(0),
@@ -99,10 +99,10 @@ MBool txNodeSorter::addSortElement(Element* aSortElement)
     // Order
     MBool ascending;
     MBool hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::order, attrValue);
-    if (!hasAttr || attrValue.isEqual(ASCENDING_VALUE)) {
+    if (!hasAttr || attrValue.Equals(ASCENDING_VALUE)) {
         ascending = MB_TRUE;
     }
-    else if (attrValue.isEqual(DESCENDING_VALUE)) {
+    else if (attrValue.Equals(DESCENDING_VALUE)) {
         ascending = MB_FALSE;
     }
     else {
@@ -115,21 +115,21 @@ MBool txNodeSorter::addSortElement(Element* aSortElement)
     // Create comparator depending on datatype
     String dataType;
     hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::dataType, dataType);
-    if (!hasAttr || dataType.isEqual(TEXT_VALUE)) {
+    if (!hasAttr || dataType.Equals(TEXT_VALUE)) {
         // Text comparator
         
         // Language
         String lang;
         if (!getAttrAsAVT(aSortElement, txXSLTAtoms::lang, lang))
-            lang.append(DEFAULT_LANG);
+            lang.Append(DEFAULT_LANG);
 
         // Case-order 
         MBool upperFirst;
         hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::caseOrder, attrValue);
-        if (!hasAttr || attrValue.isEqual(UPPER_FIRST_VALUE)) {
+        if (!hasAttr || attrValue.Equals(UPPER_FIRST_VALUE)) {
             upperFirst = MB_TRUE;
         }
-        else if (attrValue.isEqual(LOWER_FIRST_VALUE)) {
+        else if (attrValue.Equals(LOWER_FIRST_VALUE)) {
             upperFirst = MB_FALSE;
         }
         else {
@@ -142,7 +142,7 @@ MBool txNodeSorter::addSortElement(Element* aSortElement)
                                                         upperFirst,
                                                         lang);
     }
-    else if (dataType.isEqual(NUMBER_VALUE)) {
+    else if (dataType.Equals(NUMBER_VALUE)) {
         // Number comparator
         key->mComparator = new txResultNumberComparator(ascending);
     }
@@ -267,7 +267,7 @@ MBool txNodeSorter::getAttrAsAVT(Element* aSortElement,
                                  txAtom* aAttrName,
                                  String& aResult)
 {
-    aResult.clear();
+    aResult.Truncate();
 
     String attValue;
     if (!aSortElement->getAttr(aAttrName, kNameSpaceID_None, attValue))

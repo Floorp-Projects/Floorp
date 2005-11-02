@@ -119,7 +119,7 @@ public:
     Token();
     Token(short type);
     Token(const String& value, short type);
-    Token(UNICODE_CHAR uniChar, short type);
+    Token(PRUnichar uniChar, short type);
     /**
      * Copy Constructor
     **/
@@ -254,7 +254,7 @@ private:
      * Returns true if the given character represents a numeric letter (digit)
      * Implemented in ExprLexerChars.cpp
     **/
-    static MBool isXPathDigit(UNICODE_CHAR ch)
+    static MBool isXPathDigit(PRUnichar ch)
     {
         return (ch >= '0' && ch <= '9');
     }

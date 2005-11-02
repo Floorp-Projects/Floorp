@@ -98,24 +98,24 @@ void txNodeTypeTest::toString(String& aDest)
 {
     switch (mNodeType) {
         case COMMENT_TYPE:
-            aDest.append("comment()");
+            aDest.Append(NS_LITERAL_STRING("comment()"));
             break;
         case TEXT_TYPE:
-            aDest.append("text()");
+            aDest.Append(NS_LITERAL_STRING("text()"));
             break;
         case PI_TYPE:
-            aDest.append("processing-instruction(");
+            aDest.Append(NS_LITERAL_STRING("processing-instruction("));
             if (mNodeName) {
                 String str;
                 TX_GET_ATOM_STRING(mNodeName, str);
-                aDest.append('\'');
-                aDest.append(str);
-                aDest.append('\'');
+                aDest.Append(PRUnichar('\''));
+                aDest.Append(str);
+                aDest.Append(PRUnichar('\''));
             }
-            aDest.append(')');
+            aDest.Append(PRUnichar(')'));
             break;
         case NODE_TYPE:
-            aDest.append("node()");
+            aDest.Append(NS_LITERAL_STRING("node()"));
             break;
     }
 }

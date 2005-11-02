@@ -49,7 +49,7 @@
 #include <stdio.h>
 #endif
 
-const UNICODE_CHAR txFormatNumberFunctionCall::FORMAT_QUOTE = '\'';
+const PRUnichar txFormatNumberFunctionCall::FORMAT_QUOTE = '\'';
 
 /*
  * FormatNumberFunctionCall
@@ -98,7 +98,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
 
     txDecimalFormat* format = mPs->getDecimalFormat(formatName);
     if (!format) {
-        String err("unknown decimal format for: ");
+        String err(NS_LITERAL_STRING("unknown decimal format for: "));
         toString(err);
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
         return new StringResult(err);
@@ -113,8 +113,8 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
 
     if (value == Double::NEGATIVE_INFINITY) {
         String res;
-        res.append(format->mMinusSign);
-        res.append(format->mInfinity);
+        res.Append(format->mMinusSign);
+        res.Append(format->mInfinity);
         return new StringResult(res);
     }
     
@@ -128,7 +128,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     int groupSize=-1;
 
     PRUint32 pos = 0;
-    PRUint32 formatLen = formatStr.length();
+    PRUint32 formatLen = formatStr.Length();
     MBool inQuote;
 
     // Get right subexpression
@@ -136,15 +136,15 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     if (Double::isNeg(value)) {
         while (pos < formatLen &&
                (inQuote ||
-                formatStr.charAt(pos) != format->mPatternSeparator)) {
-            if (formatStr.charAt(pos) == FORMAT_QUOTE)
+                formatStr.CharAt(pos) != format->mPatternSeparator)) {
+            if (formatStr.CharAt(pos) == FORMAT_QUOTE)
                 inQuote = !inQuote;
             pos++;
         }
 
         if (pos == formatLen) {
             pos = 0;
-            prefix.append(format->mMinusSign);
+            prefix.Append(format->mMinusSign);
         }
         else
             pos++;
@@ -154,9 +154,9 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     FormatParseState pState = Prefix;
     inQuote = MB_FALSE;
 
-    UNICODE_CHAR c = 0;
+    PRUnichar c = 0;
     while (pos < formatLen && pState != Finished) {
-        c=formatStr.charAt(pos++);
+        c=formatStr.CharAt(pos++);
 
         switch (pState) {
 
@@ -199,9 +199,9 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
             if (c == FORMAT_QUOTE)
                 inQuote = !inQuote;
             else if (pState == Prefix)
-                prefix.append(c);
+                prefix.Append(c);
             else
-                suffix.append(c);
+                suffix.Append(c);
             break;
 
         case IntDigit:
@@ -321,9 +321,9 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     int i;
     for (i = 0; i < intDigits; ++i) {
         if ((intDigits-i)%groupSize == 0 && i != 0)
-            res.append(format->mGroupingSeparator);
+            res.Append(format->mGroupingSeparator);
 
-        res.append((UNICODE_CHAR)(buf[i] - '0' + format->mZeroDigit));
+        res.Append((PRUnichar)(buf[i] - '0' + format->mZeroDigit));
     }
 
     // Fractions
@@ -339,22 +339,22 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         }
         else {
             if (printDeci) {
-                res.append(format->mDecimalSeparator);
+                res.Append(format->mDecimalSeparator);
                 printDeci = MB_FALSE;
             }
             while (extraZeros) {
-                res.append(format->mZeroDigit);
+                res.Append(format->mZeroDigit);
                 extraZeros--;
             }
 
-            res.append((UNICODE_CHAR)(buf[i] - '0' + format->mZeroDigit));
+            res.Append((PRUnichar)(buf[i] - '0' + format->mZeroDigit));
         }
     }
 
     if (!intDigits && printDeci) {
         // If we havn't added any characters we add a '0'
         // This can only happen for formats like '##.##'
-        res.append(format->mZeroDigit);
+        res.Append(format->mZeroDigit);
     }
     
     delete [] buf;
@@ -386,7 +386,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         groupSize = intDigits + 10; //to simplify grouping
 
     // XXX We shouldn't use SetLength.
-    res.getNSString().SetLength(res.length() +
+    res.getNSString().SetLength(res.Length() +
                                 intDigits +               // integer digits
                                 1 +                       // decimal separator
                                 maxFractionSize +         // fractions
@@ -396,7 +396,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     MBool carry = (i+1 < buflen) && (buf[i+1] >= '5');
     MBool hasFraction = MB_FALSE;
 
-    PRUint32 resPos = res.length()-1;
+    PRUint32 resPos = res.Length()-1;
 
     // Fractions
     for (; i >= bufIntDigits; --i) {
@@ -416,10 +416,10 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         if (hasFraction || digit != 0 || i < bufIntDigits+minFractionSize) {
             hasFraction = MB_TRUE;
             res.replace(resPos--,
-                        (UNICODE_CHAR)(digit + format->mZeroDigit));
+                        (PRUnichar)(digit + format->mZeroDigit));
         }
         else {
-            res.truncate(resPos--);
+            res.Truncate(resPos--);
         }
     }
 
@@ -428,7 +428,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         res.replace(resPos--, format->mDecimalSeparator);
     }
     else {
-        res.truncate(resPos--);
+        res.Truncate(resPos--);
     }
 
     // Integer digits
@@ -450,20 +450,20 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
             res.replace(resPos--, format->mGroupingSeparator);
         }
 
-        res.replace(resPos--, (UNICODE_CHAR)(digit + format->mZeroDigit));
+        res.replace(resPos--, (PRUnichar)(digit + format->mZeroDigit));
     }
 
     if (carry) {
         if (i%groupSize == 0) {
             res.insert(resPos + 1, format->mGroupingSeparator);
         }
-        res.insert(resPos + 1, (UNICODE_CHAR)(1 + format->mZeroDigit));
+        res.insert(resPos + 1, (PRUnichar)(1 + format->mZeroDigit));
     }
     
     if (!hasFraction && !intDigits && !carry) {
         // If we havn't added any characters we add a '0'
         // This can only happen for formats like '##.##'
-        res.append(format->mZeroDigit);
+        res.Append(format->mZeroDigit);
     }
 
     delete [] buf;
@@ -471,7 +471,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
 #endif // TX_EXE
 
     // Build suffix
-    res.append(suffix);
+    res.Append(suffix);
 
     return new StringResult(res);
 } //-- evaluate
@@ -488,8 +488,8 @@ nsresult txFormatNumberFunctionCall::getNameAtom(txAtom** aAtom)
  * A representation of the XSLT element <xsl:decimal-format>
  */
 
-txDecimalFormat::txDecimalFormat() : mInfinity("Infinity"),
-                                     mNaN("NaN")
+txDecimalFormat::txDecimalFormat() : mInfinity(NS_LITERAL_STRING("Infinity")),
+                                     mNaN(NS_LITERAL_STRING("NaN"))
 {
     mDecimalSeparator = '.';
     mGroupingSeparator = ',';
@@ -505,9 +505,9 @@ MBool txDecimalFormat::isEqual(txDecimalFormat* other)
 {
     return mDecimalSeparator == other->mDecimalSeparator &&
            mGroupingSeparator == other->mGroupingSeparator &&
-           mInfinity.isEqual(other->mInfinity) &&
+           mInfinity.Equals(other->mInfinity) &&
            mMinusSign == other->mMinusSign &&
-           mNaN.isEqual(other->mNaN) &&
+           mNaN.Equals(other->mNaN) &&
            mPercent == other->mPercent &&
            mPerMille == other->mPerMille &&
            mZeroDigit == other->mZeroDigit &&

@@ -33,10 +33,10 @@
 **/
 
 const String FunctionCall::INVALID_PARAM_COUNT(
-        "invalid number of parameters for function: ");
+        NS_LITERAL_STRING("invalid number of parameters for function: "));
 
 const String FunctionCall::INVALID_PARAM_VALUE(
-        "invalid parameter value for function: ");
+        NS_LITERAL_STRING("invalid parameter value for function: "));
 
 FunctionCall::FunctionCall()
 {
@@ -126,7 +126,7 @@ NodeSet* FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext)
         return 0;
 
     if (exprResult->getResultType() != ExprResult::NODESET) {
-        String err("NodeSet expected as argument");
+        String err(NS_LITERAL_STRING("NodeSet expected as argument"));
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
         delete exprResult;
         return 0;
@@ -187,17 +187,17 @@ void FunctionCall::toString(String& aDest)
     }
     TX_RELEASE_ATOM(functionNameAtom);
 
-    aDest.append(functionName);
-    aDest.append('(');
+    aDest.Append(functionName);
+    aDest.Append(PRUnichar('('));
     txListIterator iter(&params);
     MBool addComma = MB_FALSE;
     while (iter.hasNext()) {
         if (addComma) {
-            aDest.append(',');
+            aDest.Append(PRUnichar(','));
         }
         addComma = MB_TRUE;
         Expr* expr = (Expr*)iter.next();
         expr->toString(aDest);
     }
-    aDest.append(')');
+    aDest.Append(PRUnichar(')'));
 }

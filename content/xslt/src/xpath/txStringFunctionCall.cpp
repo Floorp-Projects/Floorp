@@ -58,7 +58,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         case CONCAT:
         {
             if (!requireParams(2, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
                 
             String resultStr;
             while (iter.hasNext()) {
@@ -69,7 +69,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         case CONTAINS:
         {
             if (!requireParams(2, 2, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             String arg1, arg2;
             evaluateToString((Expr*)iter.next(), aContext, arg1);
@@ -79,7 +79,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         case NORMALIZE_SPACE:
         {
             if (!requireParams(0, 1, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             String resultStr;
             if (iter.hasNext())
@@ -90,19 +90,20 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
 
             MBool addSpace = MB_FALSE;
             MBool first = MB_TRUE;
-            String normed(resultStr.length());
-            UNICODE_CHAR c;
+            String normed;
+            normed.getNSString().SetCapacity(resultStr.Length());
+            PRUnichar c;
             PRUint32 src;
-            for (src = 0; src < resultStr.length(); src++) {
-                c = resultStr.charAt(src);
+            for (src = 0; src < resultStr.Length(); src++) {
+                c = resultStr.CharAt(src);
                 if (XMLUtils::isWhitespace(c)) {
                     addSpace = MB_TRUE;
                 }
                 else {
                     if (addSpace && !first)
-                        normed.append(' ');
+                        normed.Append(PRUnichar(' '));
 
-                    normed.append(c);
+                    normed.Append(c);
                     addSpace = MB_FALSE;
                     first = MB_FALSE;
                 }
@@ -112,7 +113,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         case STARTS_WITH:
         {
             if (!requireParams(2, 2, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             String arg1, arg2;
             evaluateToString((Expr*)iter.next(), aContext, arg1);
@@ -122,7 +123,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         case STRING_LENGTH:
         {
             if (!requireParams(0, 1, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             String resultStr;
             if (iter.hasNext())
@@ -130,12 +131,12 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             else
                 XMLDOMUtils::getNodeValue(aContext->getContextNode(),
                                           resultStr);
-            return new NumberResult(resultStr.length());
+            return new NumberResult(resultStr.Length());
         }
         case SUBSTRING:
         {
             if (!requireParams(2, 3, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             String src;
             double start, end;
@@ -145,7 +146,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             // check for NaN or +/-Inf
             if (Double::isNaN(start) ||
                 Double::isInfinite(start) ||
-                start >= src.length() + 0.5)
+                start >= src.Length() + 0.5)
                 return new StringResult();
 
             start = floor(start + 0.5) - 1;
@@ -155,13 +156,13 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
                 if (Double::isNaN(end) || end < 0)
                     return new StringResult();
                 
-                if (end > src.length())
-                    end = src.length();
+                if (end > src.Length())
+                    end = src.Length();
                 else
                     end = floor(end + 0.5);
             }
             else {
-                end = src.length();
+                end = src.Length();
             }
 
             if (start < 0)
@@ -177,14 +178,14 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         case SUBSTRING_AFTER:
         {
             if (!requireParams(2, 2, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             String arg1, arg2;
             evaluateToString((Expr*)iter.next(), aContext, arg1);
             evaluateToString((Expr*)iter.next(), aContext, arg2);
             PRInt32 idx = arg1.indexOf(arg2);
             if (idx != kNotFound) {
-                PRUint32 len = arg2.length();
+                PRUint32 len = arg2.Length();
                 arg1.subString(idx + len, arg2);
                 return new StringResult(arg2);
             }
@@ -193,14 +194,14 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         case SUBSTRING_BEFORE:
         {
             if (!requireParams(2, 2, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             String arg1, arg2;
             evaluateToString((Expr*)iter.next(), aContext, arg1);
             evaluateToString((Expr*)iter.next(), aContext, arg2);
             PRInt32 idx = arg1.indexOf(arg2);
             if (idx != kNotFound) {
-                arg2.clear();
+                arg2.Truncate();
                 arg1.subString(0, idx, arg2);
                 return new StringResult(arg2);
             }
@@ -209,26 +210,26 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         case TRANSLATE:
         {
             if (!requireParams(3, 3, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             String src;
             evaluateToString((Expr*)iter.next(), aContext, src);
-            if (src.isEmpty())
+            if (src.IsEmpty())
                 return new StringResult();
             
             String oldChars, newChars, dest;
             evaluateToString((Expr*)iter.next(), aContext, oldChars);
             evaluateToString((Expr*)iter.next(), aContext, newChars);
             PRUint32 i;
-            PRInt32 newCharsLength = (PRInt32)newChars.length();
-            for (i = 0; i < src.length(); i++) {
-                PRInt32 idx = oldChars.indexOf(src.charAt(i));
+            PRInt32 newCharsLength = (PRInt32)newChars.Length();
+            for (i = 0; i < src.Length(); i++) {
+                PRInt32 idx = oldChars.indexOf(src.CharAt(i));
                 if (idx != kNotFound) {
                     if (idx < newCharsLength)
-                        dest.append(newChars.charAt((PRUint32)idx));
+                        dest.Append(newChars.CharAt((PRUint32)idx));
                 }
                 else {
-                    dest.append(src.charAt(i));
+                    dest.Append(src.CharAt(i));
                 }
             }
             return new StringResult(dest);
@@ -236,7 +237,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         case STRING:
         {
             if (!requireParams(0, 1, aContext))
-                return new StringResult("error");
+                return new StringResult(NS_LITERAL_STRING("error"));
 
             String resultStr;
             if (iter.hasNext())
@@ -248,9 +249,9 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
         }
     }
 
-    String err("Internal error");
+    String err(NS_LITERAL_STRING("Internal error"));
     aContext->receiveError(err, NS_ERROR_UNEXPECTED);
-    return new StringResult("error");
+    return new StringResult(NS_LITERAL_STRING("error"));
 }
 
 nsresult StringFunctionCall::getNameAtom(txAtom** aAtom)

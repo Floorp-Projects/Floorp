@@ -42,9 +42,9 @@
 //------------/
 
 const String PathExpr::RTF_INVALID_OP(
-    "Result tree fragments don't allow location steps");
+    NS_LITERAL_STRING("Result tree fragments don't allow location steps"));
 const String PathExpr::NODESET_EXPECTED(
-    "Filter expression must evaluate to a NodeSet");
+    NS_LITERAL_STRING("Filter expression must evaluate to a NodeSet"));
 
 /**
  * Creates a new PathExpr
@@ -103,7 +103,7 @@ ExprResult* PathExpr::evaluate(txIEvalContext* aContext)
 {
     if (!aContext || (expressions.getLength() == 0)) {
         NS_ASSERTION(0, "internal error");
-        return new StringResult("error");
+        return new StringResult(NS_LITERAL_STRING("error"));
     }
 
     NodeSet* nodes = new NodeSet(aContext->getContextNode());
@@ -206,10 +206,10 @@ void PathExpr::toString(String& dest)
     while ((pxi = (PathExprItem*)iter.next())) {
         switch (pxi->pathOp) {
             case DESCENDANT_OP:
-                dest.append("//");
+                dest.Append(NS_LITERAL_STRING("//"));
                 break;
             case RELATIVE_OP:
-                dest.append('/');
+                dest.Append(PRUnichar('/'));
                 break;
         }
         pxi->expr->toString(dest);
