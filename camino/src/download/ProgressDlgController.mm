@@ -22,7 +22,7 @@
  * Contributor(s):
  *   Calum Robinson <calumr@mac.com>
  *   Josh Aas <josha@mac.com>
- *   Nick Kreeger <nick.kreeger@gmail.com>
+ *   Nick Kreeger <nick.kreeger@park.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -182,6 +182,7 @@ static id gSharedProgressController = nil;
     }
   }
   
+  [self rebuildViews];
   [self saveProgressViewControllers];
 }
 
@@ -220,6 +221,7 @@ static id gSharedProgressController = nil;
   }
   mSelectionPivotIndex = -1;
   
+  [self rebuildViews];
   [self saveProgressViewControllers];
 }
 
@@ -235,6 +237,7 @@ static id gSharedProgressController = nil;
   }
   mSelectionPivotIndex = -1;
   
+  [self rebuildViews];
   [self saveProgressViewControllers];
 }
 
@@ -505,7 +508,6 @@ static id gSharedProgressController = nil;
     // Stop doing stuff if there aren't any downloads going on
     [self killDownloadTimer];
   }
-  [self rebuildViews];
 }
 
 -(void)rebuildViews
