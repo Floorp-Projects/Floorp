@@ -72,7 +72,7 @@ public:
     return mImpl ? PRInt32(mImpl->mBits & kArraySizeMask) : 0;
   }
 
-  void* nsVoidArray::ElementAt(PRInt32 aIndex) const
+  void* ElementAt(PRInt32 aIndex) const
   {
     NS_ASSERTION(aIndex >= 0,"nsVoidArray::ElementAt(negative index) - note on bug 96108");
     NS_ASSERTION(aIndex < Count(),"nsVoidArray::ElementAt(index past end array) - note on bug 96108");
@@ -87,7 +87,7 @@ public:
   }
 
   // bounds-checked version
-  void* nsVoidArray::SafeElementAt(PRInt32 aIndex) const
+  void* SafeElementAt(PRInt32 aIndex) const
   {
     if (aIndex < 0 || aIndex >= Count())
     {
