@@ -2322,9 +2322,19 @@ nsParser::DetectMetaTag(const char* aBytes,
     if (!FindCharInReadable('<', currPos, end)) 
       break; // no tag found in this buffer
 
-    if (GetNextChar(currPos, end) == '!' && 
-        GetNextChar(currPos, end) == '-' &&
-        GetNextChar(currPos, end) == '-') {
+    if (GetNextChar(currPos, end) == '!') {
+      if (GetNextChar(currPos, end) != '-' ||
+          GetNextChar(currPos, end) != '-') {
+        // If we only see a <! not followed by --, just skip to the next >.
+        if (!FindCharInReadable('>', currPos, end)) {
+          return PR_FALSE; // No more tags to follow.
+        }
+        
+        // Continue searching for a meta tag following this "comment".
+        ++currPos;
+        continue;
+      }
+
       // Found MDO ( <!-- ). Now search for MDC ( --[*s]> )
       PRBool foundMDC = PR_FALSE;
       PRBool foundMatch = PR_FALSE; 
@@ -2353,14 +2363,16 @@ nsParser::DetectMetaTag(const char* aBytes,
     if ( (*currPos != 'm' && *currPos != 'M') ||
          (*(++currPos) != 'e' && *currPos != 'E') ||
          (*(++currPos) != 't' && *currPos != 'T') ||
-         (*(++currPos) != 'a' && *currPos != 'A') ) {
+         (*(++currPos) != 'a' && *currPos != 'A') ||
+         !nsCRT::IsAsciiSpace(*(++currPos))) {
       currPos = tagEnd;
       continue;
     }
 
     // If could not find "charset" in this tag, skip this tag and try next
     tokEnd = tagEnd;
-    if (!CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("CHARSET"), currPos, tokEnd)) {
+    if (!CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("CHARSET"),
+                                       currPos, tokEnd)) {
       currPos = tagEnd;
       continue;
     }
