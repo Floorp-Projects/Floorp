@@ -25,7 +25,13 @@
 
 #include "nscore.h"
 #include "nsAWritableString.h"
+#include "nsQuickSort.h"
+
 class nsISizeOfHandler;
+
+// Comparator callback function for sorting array values.
+typedef int (* PR_CALLBACK nsVoidArrayComparatorFunc)
+            (const void* aElement1, const void* aElement2, void* aData);
 
 // Enumerator callback function. Return PR_FALSE to stop
 typedef PRBool (* PR_CALLBACK nsVoidArrayEnumFunc)(void* aElement, void *aData);
@@ -63,6 +69,8 @@ public:
   void   Clear();
 
   void Compact();
+
+  void Sort(nsVoidArrayComparatorFunc aFunc, void* aData);
 
   PRBool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData);
   PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
@@ -123,6 +131,9 @@ protected:
 
 class nsString;
 
+typedef int (* PR_CALLBACK nsStringArrayComparatorFunc)
+            (const nsString* aElement1, const nsString* aElement2, void* aData);
+
 typedef PRBool (*nsStringArrayEnumFunc)(nsString& aElement, void *aData);
 
 class NS_COM nsStringArray: protected nsVoidArray
@@ -163,6 +174,10 @@ public:
     nsVoidArray::Compact();
   }
 
+  void Sort(void);
+  void SortIgnoreCase(void);
+  void Sort(nsStringArrayComparatorFunc aFunc, void* aData);
+
   PRBool EnumerateForwards(nsStringArrayEnumFunc aFunc, void* aData);
   PRBool EnumerateBackwards(nsStringArrayEnumFunc aFunc, void* aData);
 
@@ -173,6 +188,9 @@ private:
 
 
 class nsCString;
+
+typedef int (* PR_CALLBACK nsCStringArrayComparatorFunc)
+            (const nsCString* aElement1, const nsCString* aElement2, void* aData);
 
 typedef PRBool (*nsCStringArrayEnumFunc)(nsCString& aElement, void *aData);
 
@@ -213,6 +231,10 @@ public:
   void Compact(void) {
     nsVoidArray::Compact();
   }
+
+  void Sort(void);
+  void SortIgnoreCase(void);
+  void Sort(nsCStringArrayComparatorFunc aFunc, void* aData);
 
   PRBool EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData);
   PRBool EnumerateBackwards(nsCStringArrayEnumFunc aFunc, void* aData);
