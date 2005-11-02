@@ -34,9 +34,9 @@
 
 #include "FunctionLib.h"
 #include "NodeSet.h"
-#include "Tokenizer.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
+#include "txTokenizer.h"
 #include "XMLDOMUtils.h"
 
 /*
@@ -98,24 +98,24 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                 NodeSet* nodes = (NodeSet*)exprResult;
                 int i;
                 for (i = 0; i < nodes->size(); i++) {
-                    nsAutoString idList, id;
+                    nsAutoString idList;
                     XMLDOMUtils::getNodeValue(nodes->get(i), idList);
                     txTokenizer tokenizer(idList);
                     while (tokenizer.hasMoreTokens()) {
-                        tokenizer.nextToken(id);
-                        Node* idNode = contextDoc->getElementById(id);
+                        Node* idNode =
+                            contextDoc->getElementById(tokenizer.nextToken());
                         if (idNode)
                             resultSet->add(idNode);
                     }
                 }
             }
             else {
-                nsAutoString idList, id;
+                nsAutoString idList;
                 exprResult->stringValue(idList);
                 txTokenizer tokenizer(idList);
                 while (tokenizer.hasMoreTokens()) {
-                    tokenizer.nextToken(id);
-                    Node* idNode = contextDoc->getElementById(id);
+                    Node* idNode =
+                        contextDoc->getElementById(tokenizer.nextToken());
                     if (idNode)
                         resultSet->add(idNode);
                 }
