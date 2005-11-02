@@ -973,7 +973,7 @@ nsCStringArray::CStringAt(PRInt32 aIndex) const
 }
 
 PRInt32 
-nsCStringArray::IndexOf(const nsCString& aPossibleString) const
+nsCStringArray::IndexOf(const nsACString& aPossibleString) const
 {
   if (mImpl)
   {
@@ -993,7 +993,7 @@ nsCStringArray::IndexOf(const nsCString& aPossibleString) const
 }
 
 PRInt32 
-nsCStringArray::IndexOfIgnoreCase(const nsCString& aPossibleString) const
+nsCStringArray::IndexOfIgnoreCase(const nsACString& aPossibleString) const
 {
   if (mImpl)
   {
@@ -1002,7 +1002,7 @@ nsCStringArray::IndexOfIgnoreCase(const nsCString& aPossibleString) const
     while (ap < end)
     {
       nsCString* string = NS_STATIC_CAST(nsCString*, *ap);
-      if (nsCRT::strcasecmp((*string).get(),aPossibleString.get())==0)
+      if (string->Equals(aPossibleString, nsCaseInsensitiveCStringComparator()))
       {
         return ap - mImpl->mArray;
       }
@@ -1013,7 +1013,7 @@ nsCStringArray::IndexOfIgnoreCase(const nsCString& aPossibleString) const
 }
 
 PRBool 
-nsCStringArray::InsertCStringAt(const nsCString& aCString, PRInt32 aIndex)
+nsCStringArray::InsertCStringAt(const nsACString& aCString, PRInt32 aIndex)
 {
   nsCString* string = new nsCString(aCString);
   if (nsVoidArray::InsertElementAt(string, aIndex))
@@ -1025,7 +1025,7 @@ nsCStringArray::InsertCStringAt(const nsCString& aCString, PRInt32 aIndex)
 }
 
 PRBool
-nsCStringArray::ReplaceCStringAt(const nsCString& aCString, PRInt32 aIndex)
+nsCStringArray::ReplaceCStringAt(const nsACString& aCString, PRInt32 aIndex)
 {
   nsCString* string = NS_STATIC_CAST(nsCString*, nsVoidArray::ElementAt(aIndex));
   if (nsnull != string)
@@ -1037,7 +1037,7 @@ nsCStringArray::ReplaceCStringAt(const nsCString& aCString, PRInt32 aIndex)
 }
 
 PRBool 
-nsCStringArray::RemoveCString(const nsCString& aCString)
+nsCStringArray::RemoveCString(const nsACString& aCString)
 {
   PRInt32 index = IndexOf(aCString);
   if (-1 < index)
@@ -1048,7 +1048,7 @@ nsCStringArray::RemoveCString(const nsCString& aCString)
 }
 
 PRBool 
-nsCStringArray::RemoveCStringIgnoreCase(const nsCString& aCString)
+nsCStringArray::RemoveCStringIgnoreCase(const nsACString& aCString)
 {
   PRInt32 index = IndexOfIgnoreCase(aCString);
   if (-1 < index)
