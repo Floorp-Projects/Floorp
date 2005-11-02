@@ -286,9 +286,7 @@ MBool txHTMLOutput::isShorthandAttribute(const String& aLocalName)
             if (mHTMLEmptyAttributes[k].mElementList.IndexOf(currentElement->mLocalName) > -1) {
                 return MB_TRUE;
             }
-            else {
-                return MB_FALSE;
-            }
+            return MB_FALSE;
         }
     }
     return MB_FALSE;
