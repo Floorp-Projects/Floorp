@@ -89,7 +89,6 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xpath/UnionExpr.$(OBJ_SUFFIX) \
   ../xpath/UnaryExpr.$(OBJ_SUFFIX) \
   ../xpath/VariableRefExpr.$(OBJ_SUFFIX) \
-  ../xpath/XPathNames.$(OBJ_SUFFIX) \
   ../xml/XMLUtils.$(OBJ_SUFFIX) \
   ../xml/XMLDOMUtils.$(OBJ_SUFFIX) \
   ../xml/parser/XMLParser.$(OBJ_SUFFIX) \
@@ -109,7 +108,6 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xslt/txXMLOutput.$(OBJ_SUFFIX) \
   ../xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
   ../xslt/txPatternParser.$(OBJ_SUFFIX) \
-  ../xslt/VariableBinding.$(OBJ_SUFFIX) \
   ../xslt/XSLTProcessor.$(OBJ_SUFFIX) \
   ../xslt/functions/CurrentFunctionCall.$(OBJ_SUFFIX) \
   ../xslt/functions/DocumentFunctionCall.$(OBJ_SUFFIX) \

@@ -159,7 +159,7 @@ private:
 class txIdPattern : public txPattern
 {
 public:
-    txIdPattern(const String aString);
+    txIdPattern(const String& aString);
 
     ~txIdPattern();
 

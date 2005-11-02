@@ -37,24 +37,7 @@
 BooleanFunctionCall::BooleanFunctionCall(BooleanFunctions aType)
     : mType(aType)
 {
-    switch (aType) {
-        case TX_BOOLEAN :
-            name = XPathNames::BOOLEAN_FN;
-            break;
-        case TX_LANG:
-            name = XPathNames::LANG_FN;
-            break;
-        case TX_NOT :
-            name = XPathNames::NOT_FN;
-            break;
-        case TX_TRUE :
-            name = XPathNames::TRUE_FN;
-            break;
-        default:
-            name = XPathNames::FALSE_FN;
-            break;
-    }
-} //-- BooleanFunctionCall
+}
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -135,3 +118,40 @@ ExprResult* BooleanFunctionCall::evaluate(txIEvalContext* aContext)
     return new StringResult("error");
 }
 
+nsresult BooleanFunctionCall::getNameAtom(txAtom** aAtom)
+{
+    switch (mType) {
+        case TX_BOOLEAN:
+        {
+            *aAtom = txXPathAtoms::boolean;
+            break;
+        }
+        case TX_LANG:
+        {
+            *aAtom = txXPathAtoms::lang;
+            break;
+        }
+        case TX_NOT:
+        {
+            *aAtom = txXPathAtoms::_not;
+            break;
+        }
+        case TX_TRUE:
+        {
+            *aAtom = txXPathAtoms::_true;
+            break;
+        }
+        case TX_FALSE:
+        {
+            *aAtom = txXPathAtoms::_false;
+            break;
+        }
+        default:
+        {
+            *aAtom = 0;
+            return NS_ERROR_FAILURE;
+        }
+    }
+    TX_ADDREF_ATOM(*aAtom);
+    return NS_OK;
+}

@@ -36,21 +36,20 @@
  * A representation of the XSLT additional function: document()
  */
 
-#include "XSLTFunctions.h"
 #include "ProcessorState.h"
-#include "XMLDOMUtils.h"
-#include "Names.h"
+#include "txAtoms.h"
 #include "txIXPathContext.h"
+#include "XMLDOMUtils.h"
+#include "XSLTFunctions.h"
 
 /*
  * Creates a new DocumentFunctionCall.
  */
 DocumentFunctionCall::DocumentFunctionCall(ProcessorState* aPs,
                                            Node* aDefResolveNode)
-                                           : FunctionCall(DOCUMENT_FN)
+    : mProcessorState(aPs),
+      mDefResolveNode(aDefResolveNode)
 {
-    mProcessorState = aPs;
-    mDefResolveNode = aDefResolveNode;
 }
 
 /*
@@ -132,4 +131,11 @@ ExprResult* DocumentFunctionCall::evaluate(txIEvalContext* aContext)
     }
 
     return nodeSet;
+}
+
+nsresult DocumentFunctionCall::getNameAtom(txAtom** aAtom)
+{
+    *aAtom = txXSLTAtoms::document;
+    TX_ADDREF_ATOM(*aAtom);
+    return NS_OK;
 }

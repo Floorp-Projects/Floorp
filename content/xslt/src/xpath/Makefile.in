@@ -69,8 +69,7 @@ CPPSRCS = AdditiveExpr.cpp \
         txNodeSetContext.cpp \
         UnionExpr.cpp \
         UnaryExpr.cpp \
-        VariableRefExpr.cpp \
-        XPathNames.cpp
+        VariableRefExpr.cpp
 ifndef TX_EXE
 CPPSRCS += nsXPathEvaluator.cpp \
            nsXPathException.cpp \

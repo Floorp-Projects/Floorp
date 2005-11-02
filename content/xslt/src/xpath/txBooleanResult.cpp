@@ -48,6 +48,11 @@ BooleanResult::BooleanResult(MBool boolean) {
  * Virtual Methods from ExprResult
 */
 
+ExprResult* BooleanResult::clone()
+{
+    return new BooleanResult(value);
+}
+
 short BooleanResult::getResultType() {
     return ExprResult::BOOLEAN;
 } //-- getResultType

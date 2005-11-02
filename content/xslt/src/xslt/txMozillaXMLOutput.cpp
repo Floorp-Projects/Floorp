@@ -88,16 +88,15 @@ void txMozillaXMLOutput::attribute(const String& aName,
 
     if ((mOutputFormat.mMethod == eHTMLOutput) && (aNsID == kNameSpaceID_None)) {
         // Outputting HTML as XHTML, lowercase attribute names
-        nsAutoString lowerName(aName.getConstNSString());
+        nsAutoString lowerName(aName);
         ToLowerCase(lowerName);
         element->SetAttributeNS(NS_LITERAL_STRING(""), lowerName,
-                                aValue.getConstNSString());
+                                aValue);
     }
     else {
         nsAutoString nsURI;
         mNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
-        element->SetAttributeNS(nsURI, aName.getConstNSString(),
-                                aValue.getConstNSString());
+        element->SetAttributeNS(nsURI, aName, aValue);
     }
 }
 
@@ -105,7 +104,7 @@ void txMozillaXMLOutput::characters(const String& aData)
 {
     closePrevious(eCloseElement);
 
-    mText.Append(aData.getConstNSString());
+    mText.Append(aData);
 }
 
 void txMozillaXMLOutput::comment(const String& aData)
@@ -115,7 +114,7 @@ void txMozillaXMLOutput::comment(const String& aData)
     TX_ENSURE_CURRENTNODE;
 
     nsCOMPtr<nsIDOMComment> comment;
-    nsresult rv = mDocument->CreateComment(aData.getConstNSString(),
+    nsresult rv = mDocument->CreateComment(aData,
                                            getter_AddRefs(comment));
     NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create comment");
 
@@ -162,7 +161,7 @@ void txMozillaXMLOutput::endElement(const String& aName, const PRInt32 aNsID)
 #ifdef DEBUG
     nsAutoString nodeName;
     mCurrentNode->GetNodeName(nodeName);
-    NS_ASSERTION(nodeName.Equals(aName.getConstNSString(), nsCaseInsensitiveStringComparator()),
+    NS_ASSERTION(nodeName.Equals(aName, nsCaseInsensitiveStringComparator()),
                  "Unbalanced startElement and endElement calls!");
 #endif
 
@@ -231,8 +230,7 @@ void txMozillaXMLOutput::processingInstruction(const String& aTarget, const Stri
     TX_ENSURE_CURRENTNODE;
 
     nsCOMPtr<nsIDOMProcessingInstruction> pi;
-    nsresult rv = mDocument->CreateProcessingInstruction(aTarget.getConstNSString(),
-                                                         aData.getConstNSString(),
+    nsresult rv = mDocument->CreateProcessingInstruction(aTarget, aData,
                                                          getter_AddRefs(pi));
     NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create entity reference");
 
@@ -316,10 +314,10 @@ void txMozillaXMLOutput::startElement(const String& aName,
             if (mOutputFormat.mMethod == eHTMLOutput)
                 qName.Assign(NS_LITERAL_STRING("html"));
             else
-                qName.Assign(aName.getConstNSString());
+                qName.Assign(aName);
             rv = implementation->CreateDocumentType(qName,
-                                                    mOutputFormat.mPublicId.getConstNSString(),
-                                                    mOutputFormat.mSystemId.getConstNSString(),
+                                                    mOutputFormat.mPublicId,
+                                                    mOutputFormat.mSystemId,
                                                     getter_AddRefs(documentType));
             NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create doctype");
 
@@ -334,7 +332,7 @@ void txMozillaXMLOutput::startElement(const String& aName,
 
     if ((mOutputFormat.mMethod == eHTMLOutput) && (aNsID == kNameSpaceID_None)) {
         // Outputting HTML as XHTML, lowercase element names
-        nsAutoString lowerName(aName.getConstNSString());
+        nsAutoString lowerName(aName);
         ToLowerCase(lowerName);
         rv = mDocument->CreateElementNS(NS_LITERAL_STRING(kXHTMLNameSpaceURI), lowerName,
                                         getter_AddRefs(element));
@@ -345,8 +343,7 @@ void txMozillaXMLOutput::startElement(const String& aName,
     else {
         nsAutoString nsURI;
         mNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
-        rv = mDocument->CreateElementNS(nsURI, aName.getConstNSString(),
-                                        getter_AddRefs(element));
+        rv = mDocument->CreateElementNS(nsURI, aName, getter_AddRefs(element));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create element");
 
         if (aNsID == kNameSpaceID_XHTML)
