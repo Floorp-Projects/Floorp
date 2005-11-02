@@ -684,6 +684,17 @@ txMozillaXMLOutput::createResultDocument(const String& aName, PRInt32 aNsID,
     doc->SetBaseURL(baseURL);
     // XXX We might want to call SetDefaultStylesheets here
 
+    // Set the mime-type
+    if (!mOutputFormat.mMediaType.IsEmpty()) {
+        doc->SetContentType(mOutputFormat.mMediaType);
+    }
+    else if (mOutputFormat.mMethod == eHTMLOutput) {
+        doc->SetContentType(NS_LITERAL_STRING("text/html"));
+    }
+    else {
+        doc->SetContentType(NS_LITERAL_STRING("text/xml"));
+    }
+
     // Set up script loader of the result document.
     nsCOMPtr<nsIScriptLoader> loader;
     doc->GetScriptLoader(getter_AddRefs(loader));
