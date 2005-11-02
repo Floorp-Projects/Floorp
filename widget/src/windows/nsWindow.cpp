@@ -198,6 +198,7 @@ static inline PRBool IsAlphaTranslucencySupported() { return pUpdateLayeredWindo
 
 
 #ifdef WINCE
+static PRBool gSoftKeyMenuBar = PR_FALSE;
 static PRBool gUseOkayButton  = PR_FALSE;
 static PRBool gOverrideHWKeys = PR_TRUE;
 
@@ -292,6 +293,11 @@ static void UnmapHardwareButtons()
 
 void CreateSoftKeyMenuBar(HWND wnd)
 {
+  if (gSoftKeyMenuBar)
+    return;
+
+  gSoftKeyMenuBar = PR_TRUE;
+
   SHMENUBARINFO mbi;
   ZeroMemory(&mbi, sizeof(SHMENUBARINFO));
   mbi.cbSize = sizeof(SHMENUBARINFO);
@@ -301,8 +307,9 @@ void CreateSoftKeyMenuBar(HWND wnd)
   
   SHCreateMenuBar(&mbi);
 
-// Hide this so that no one has to see it!
-  SetWindowPos(SHFindMenuBar(wnd), HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE);
+  HWND mb = SHFindMenuBar(wnd);
+  if (mb)
+    SetWindowPos(mb, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE);
 }
 
 #endif
@@ -4492,17 +4499,20 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       //RelayMouseEvent(msg,wParam, lParam);
     {
 #ifdef WINCE
-      SHRGINFO  shrg;
-      shrg.cbSize = sizeof(shrg);
-      shrg.hwndClient = mWnd;
-      shrg.ptDown.x = LOWORD(lParam);
-      shrg.ptDown.y = HIWORD(lParam);
-      shrg.dwFlags = SHRG_RETURNCMD | SHRG_NOANIMATION;
-      if (SHRecognizeGesture(&shrg)  == GN_CONTEXTMENU)
+      if (!gRollupListener && !gRollupWidget) 
       {
-        result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN, wParam);
-        result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP, wParam);
-        break;
+        SHRGINFO  shrg;
+        shrg.cbSize = sizeof(shrg);
+        shrg.hwndClient = mWnd;
+        shrg.ptDown.x = LOWORD(lParam);
+        shrg.ptDown.y = HIWORD(lParam);
+        shrg.dwFlags = SHRG_RETURNCMD;
+        if (SHRecognizeGesture(&shrg)  == GN_CONTEXTMENU)
+        {
+          result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_DOWN, wParam);
+          result = DispatchMouseEvent(NS_MOUSE_RIGHT_BUTTON_UP, wParam);
+          break;
+        }
       }
 #endif
       // check whether IME window do mouse operation
@@ -4675,6 +4685,32 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       if (nsWindow::gIsAccessibilityOn) {
         // Create it for the first time so that it can start firing events
         GetRootAccessible();
+      }
+#endif
+
+#ifdef WINCE
+      // On Windows CE, we have a window that overlaps
+      // the ISP button.  In this case, we should always
+      // try to hide it when we are activated
+      if (mWindowType == eWindowType_dialog || mWindowType == eWindowType_toplevel) {
+        
+        // This should work on all platforms, but it doesn't...
+        SHFullScreen(mWnd, SHFS_HIDESIPBUTTON);
+        
+        // So do it the hard way....
+        HWND hWndSIP = FindWindow( _T( "SipWndClass" ), NULL );
+        if (hWndSIP)
+        {
+          ShowWindow( hWndSIP, SW_HIDE );
+          SetWindowPos(hWndSIP, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+        }
+        
+        hWndSIP = FindWindow( _T( "MS_SIPBUTTON" ), NULL );
+        if (hWndSIP) 
+        {
+          ShowWindow( hWndSIP, SW_HIDE );
+          SetWindowPos(hWndSIP, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+        }
       }
 #endif
       break;
