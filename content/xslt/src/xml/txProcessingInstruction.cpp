@@ -49,7 +49,7 @@ ProcessingInstruction::ProcessingInstruction(const String& theTarget,
 //
 ProcessingInstruction::~ProcessingInstruction()
 {
-  TX_RELEASE_IF_ATOM(mLocalName);
+  TX_IF_RELEASE_ATOM(mLocalName);
 }
 
 //
