@@ -275,7 +275,8 @@ txStylesheet::getKeyMap()
 PRBool
 txStylesheet::isStripSpaceAllowed(Node* aNode, txIMatchContext* aContext)
 {
-    if (!aNode) {
+    PRInt32 frameCount = mStripSpaceTests.Count();
+    if (!aNode || frameCount == 0) {
         return MB_FALSE;
     }
 
@@ -283,7 +284,7 @@ txStylesheet::isStripSpaceAllowed(Node* aNode, txIMatchContext* aContext)
         case Node::ELEMENT_NODE:
         {
             // check Whitespace stipping handling list against given Node
-            PRInt32 i, frameCount = mStripSpaceTests.Count();
+            PRInt32 i;
             for (i = 0; i < frameCount; ++i) {
                 txStripSpaceTest* sst =
                     NS_STATIC_CAST(txStripSpaceTest*, mStripSpaceTests[i]);
@@ -303,10 +304,6 @@ txStylesheet::isStripSpaceAllowed(Node* aNode, txIMatchContext* aContext)
             if (!XMLUtils::isWhitespace(aNode))
                 return MB_FALSE;
             return isStripSpaceAllowed(aNode->getParentNode(), aContext);
-        }
-        case Node::DOCUMENT_NODE:
-        {
-            return MB_TRUE;
         }
     }
     return MB_FALSE;
