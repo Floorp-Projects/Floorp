@@ -174,7 +174,7 @@ private:
 
     nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
 
-    nsSupportsArray mScriptElements;
+    nsCOMPtr<nsISupportsArray> mScriptElements;
 
     nsAutoString mText;
 
