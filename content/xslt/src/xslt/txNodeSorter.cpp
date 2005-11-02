@@ -51,8 +51,6 @@
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
  */
 
-#define DEFAULT_LANG NS_LITERAL_STRING("en")
-
 txNodeSorter::txNodeSorter() : mNKeys(0)
 {
 }
@@ -121,14 +119,9 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
             exprRes->stringValue(lang);
             delete exprRes;
         }
-        else {
-            lang.Append(DEFAULT_LANG);
-        }
 
         // Case-order 
-
-
-        MBool upperFirst = MB_TRUE;
+        MBool upperFirst = PR_FALSE;
         if (aCaseOrderExpr) {
             ExprResult* exprRes = aCaseOrderExpr->evaluate(aContext);
             NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
@@ -137,11 +130,11 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
             exprRes->stringValue(attrValue);
             delete exprRes;
 
-            if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::lowerFirst)) {
-                upperFirst = MB_FALSE;
+            if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::upperFirst)) {
+                upperFirst = PR_TRUE;
             }
             else if (!TX_StringEqualsAtom(attrValue,
-                                          txXSLTAtoms::upperFirst)) {
+                                          txXSLTAtoms::lowerFirst)) {
                 delete key;
                 // XXX ErrorReport: unknown value for case-order attribute
                 return NS_ERROR_XSLT_BAD_VALUE;
