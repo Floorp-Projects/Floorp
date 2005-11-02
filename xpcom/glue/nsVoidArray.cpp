@@ -362,7 +362,7 @@ nsStringArray::operator=(const nsStringArray& other)
 
   // Now copy the strings
   for (PRInt32 i = Count() - 1; i >= 0; --i) {
-    nsString* oldString = NS_STATIC_CAST(nsString*, ElementAt(i));
+    nsString* oldString = NS_STATIC_CAST(nsString*, other.ElementAt(i));
     mImpl->mArray[i] = new nsString(*oldString);
   }
 
@@ -552,7 +552,7 @@ nsCStringArray::operator=(const nsCStringArray& other)
 
   // Now copy the strings
   for (PRInt32 i = Count() - 1; i >= 0; --i) {
-    nsCString* oldString = NS_STATIC_CAST(nsCString*, ElementAt(i));
+    nsCString* oldString = NS_STATIC_CAST(nsCString*, other.ElementAt(i));
     mImpl->mArray[i] = new nsCString(*oldString);
   }
 
