@@ -79,7 +79,7 @@ StringFunctionCall::StringFunctionCall(StringFunctions aType) : mType(aType)
 **/
 ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
 {
-    ListIterator iter(&params);
+    txListIterator iter(&params);
     switch (mType) {
         case CONCAT:
         {

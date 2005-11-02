@@ -65,16 +65,16 @@ ExprResult* DocumentFunctionCall::evaluate(txIEvalContext* aContext)
 
     // document(object, node-set?)
     if (requireParams(1, 2, aContext)) {
-        ListIterator* iter = params.iterator();
-        Expr* param1 = (Expr*) iter->next();
+        txListIterator iter(&params);
+        Expr* param1 = (Expr*)iter.next();
         ExprResult* exprResult1 = param1->evaluate(aContext);
         String baseURI;
         MBool baseURISet = MB_FALSE;
 
-        if (iter->hasNext()) {
+        if (iter.hasNext()) {
             // We have 2 arguments, get baseURI from the first node
             // in the resulting nodeset
-            Expr* param2 = (Expr*) iter->next();
+            Expr* param2 = (Expr*)iter.next();
             ExprResult* exprResult2 = param2->evaluate(aContext);
             if (exprResult2->getResultType() != ExprResult::NODESET) {
                 String err("node-set expected as second argument to document(): ");
@@ -128,7 +128,6 @@ ExprResult* DocumentFunctionCall::evaluate(txIEvalContext* aContext)
             }
         }
         delete exprResult1;
-        delete iter;
     }
 
     return nodeSet;

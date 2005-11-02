@@ -31,9 +31,6 @@
  */
 
 #include "List.h"
-#ifdef TX_EXE
-#include <iostream.h>
-#endif
 
   //----------------------------/
  //- Implementation of txList -/
@@ -180,13 +177,6 @@ void txList::insertBefore(void* objPtr, ListItem* refItem) {
     // increase the item count
     ++itemCount;
 } //-- insertBefore
-
-/**
- * Returns a txListIterator for this txList
-**/
-txListIterator* txList::iterator() {
-   return new txListIterator(this);
-}
 
 void* txList::remove(void* objPtr) {
    ListItem* item = firstItem;

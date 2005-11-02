@@ -71,7 +71,7 @@ NumberFunctionCall::NumberFunctionCall(NumberFunctions aType) {
  */
 ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
 {
-    ListIterator iter(&params);
+    txListIterator iter(&params);
 
     if (mType == NUMBER) {
         if (!requireParams(0, 1, aContext))

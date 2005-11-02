@@ -61,13 +61,10 @@ FunctionCall::FunctionCall(const String& name)
 **/
 FunctionCall::~FunctionCall()
 {
-    ListIterator* iter = params.iterator();
-    while (iter->hasNext()) {
-        iter->next();
-        Expr* expr = (Expr*) iter->remove();
-        delete expr;
+    txListIterator iter(&params);
+    while (iter.hasNext()) {
+        delete (Expr*)iter.next();
     }
-    delete iter;
 } //-- ~FunctionCall
 
   //------------------/
@@ -197,16 +194,15 @@ void FunctionCall::toString(String& dest)
     dest.append(this->name);
     dest.append('(');
     //-- add parameters
-    ListIterator* iterator = params.iterator();
+    txListIterator iter(&params);
     int argc = 0;
-    while (iterator->hasNext()) {
+    while (iter.hasNext()) {
         if (argc > 0)
             dest.append(',');
-        Expr* expr = (Expr*)iterator->next();
+        Expr* expr = (Expr*)iter.next();
         expr->toString(dest);
         ++argc;
     }
-    delete iterator;
     dest.append(')');
 } //-- toString
 
