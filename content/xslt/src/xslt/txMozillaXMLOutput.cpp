@@ -40,6 +40,8 @@
 
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
+#include "nsIScriptLoader.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMDOMImplementation.h"
@@ -65,6 +67,8 @@
 #include "nsICSSStyleSheet.h"
 #include "txStringUtils.h"
 #include "nsIHTMLDocument.h"
+#include "nsIStyleSheetLinkingElement.h"
+#include "nsIDocumentTransformer.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
 

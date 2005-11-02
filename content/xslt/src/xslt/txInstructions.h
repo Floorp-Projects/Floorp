@@ -42,15 +42,13 @@
 #include "txError.h"
 #include "nsCOMPtr.h"
 #include "TxObject.h"
-#include "nsIAtom.h"
 #include "nsString.h"
 #include "XMLUtils.h"
 #include "txNamespaceMap.h"
 #include "nsAutoPtr.h"
-#include "Expr.h"
 #include "txXSLTNumber.h"
-#include "txXSLTPatterns.h"
 
+class nsIAtom;
 class txExecutionState;
 
 class txInstruction : public TxObject
