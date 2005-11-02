@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txStringFunctionCall.cpp,v 1.10 2005/11/02 07:33:45 peterv%netscape.com Exp $
+ * $Id: txStringFunctionCall.cpp,v 1.11 2005/11/02 07:33:46 peterv%netscape.com Exp $
  */
 
 /**
  * StringFunctionCall
  * A representation of the XPath String funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.10 $ $Date: 2005/11/02 07:33:45 $
+ * @version $Revision: 1.11 $ $Date: 2005/11/02 07:33:46 $
 **/
 
 #include "FunctionLib.h"
@@ -123,7 +123,7 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 // Leading & Trailing Whitespace
                 resultStr.trim();
                 MBool hasSpace = MB_FALSE;
-                PRInt32 lastchar=-1, dest=0;
+                PRInt32 dest=0;
                 String normed(resultStr.length());
                 UNICODE_CHAR current;
                 for (PRInt32 src=0; src<resultStr.length(); src++) {
@@ -252,7 +252,6 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 PRInt32 size = src.length();
                 UNICODE_CHAR* chars = src.toUnicode(new UNICODE_CHAR[size]);
                 src.clear();
-                PRInt32 newIdx = 0;
                 PRInt32 i;
                 for (i = 0; i < size; i++) {
                     PRInt32 idx = oldChars.indexOf(chars[i]);

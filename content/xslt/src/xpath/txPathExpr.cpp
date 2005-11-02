@@ -29,7 +29,7 @@
  *       - foo//bar would not match properly if there was more than
  *         one node in the NodeSet (nodes) on the final iteration
  *
- * $Id: txPathExpr.cpp,v 1.7 2005/11/02 07:33:43 sicking%bigfoot.com Exp $
+ * $Id: txPathExpr.cpp,v 1.8 2005/11/02 07:33:44 peterv%netscape.com Exp $
  */
 
 #include "Expr.h"
@@ -242,7 +242,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
             case ANCESTOR_OP:
             {
                 Node* ancestor = node;
-                while (ancestor = cs->getParentNode(ancestor))  {
+                while ((ancestor = cs->getParentNode(ancestor)))  {
                     if (pxi->expr->matches(node, ancestor, cs))
                         return MB_TRUE;
                 }
@@ -286,7 +286,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
                 case ANCESTOR_OP:
                 {
                     Node* parent = tnode;
-                    while (parent = cs->getParentNode(parent))  {
+                    while ((parent = cs->getParentNode(parent)))  {
                         if (pxi->expr->matches(tnode, parent, cs))
                             tmpNodes.add(parent);
                     }

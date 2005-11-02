@@ -25,7 +25,7 @@
  * Nisheeth Ranjan, nisheeth@netscape.com
  *   -- implemented rint function, which was not available on Windows.
  *
- * $Id: txNumberFunctionCall.cpp,v 1.12 2005/11/02 07:33:47 peterv%netscape.com Exp $
+ * $Id: txNumberFunctionCall.cpp,v 1.13 2005/11/02 07:33:48 peterv%netscape.com Exp $
  */
 
 /*
@@ -94,7 +94,6 @@ static double rint(double r)
 ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
     NumberResult* result = 0;
     ListIterator* iter = params.iterator();
-    int argc = params.getLength();
     Expr* param = 0;
     String err;
 
