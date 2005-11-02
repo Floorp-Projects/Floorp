@@ -630,10 +630,22 @@ sub MessageToMTA {
     my ($msg) = (@_);
     return if (Param('mail_delivery_method') eq "none");
 
+    my ($header, $body) = $msg =~ /(.*?\n)\n(.*)/s ? ($1, $2) : ('', $msg);
+    my $headers;
+
+    if (Param('utf8') and (!is_7bit_clean($header) or !is_7bit_clean($body))) {
+        ($headers, $body) = encode_message($header, $body);
+    } else {
+        my @header_lines = split(/\n/, $header);
+        $headers = new Mail::Header \@header_lines, Modify => 0;
+    }
+
     if (Param("mail_delivery_method") eq "sendmail" && $^O =~ /MSWin32/i) {
         open(SENDMAIL, '|' . SENDMAIL_EXE . ' -t -i') ||
             die "Failed to execute " . SENDMAIL_EXE . ": $!\n";
-        print SENDMAIL $msg;
+        print SENDMAIL $headers->as_string;
+        print SENDMAIL "\n";
+        print SENDMAIL $body;
         close SENDMAIL;
         return;
     }
@@ -650,16 +662,6 @@ sub MessageToMTA {
         $Mail::Mailer::testfile::config{outfile} = "$datadir/mailer.testfile";
     }
     
-    my ($header, $body) = $msg =~ /(.*?\n)\n(.*)/s ? ($1, $2) : ('', $msg);
-    my $headers;
-
-    if (Param('utf8') and (!is_7bit_clean($header) or !is_7bit_clean($body))) {
-        ($headers, $body) = encode_message($header, $body);
-    } else {
-        my @header_lines = split(/\n/, $header);
-        $headers = new Mail::Header \@header_lines, Modify => 0;
-    }
-
     $mailer->open($headers->header_hashref);
     print $mailer $body;
     $mailer->close;
