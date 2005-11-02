@@ -36,451 +36,363 @@
 
 /**
  * Lexical analyzer for XPath expressions
-**/
+ */
 
 #include "ExprLexer.h"
 #include "txAtoms.h"
-#include "txStringUtils.h"
+#include "nsString.h"
 #include "XMLUtils.h"
 
-  //---------------------------/
- //- Implementation of Token -/
-//---------------------------/
-
+/**
+ * Creates a new ExprLexer
+ */
+txExprLexer::txExprLexer()
+  : mCurrentItem(nsnull),
+    mFirstItem(nsnull),
+    mLastItem(nsnull),
+    mTokenCount(0)
+{
+}
 
 /**
- * Default constructor for Token
-**/
-Token::Token()
-{
-  this->type =0;
-} //-- Token;
-
-/**
- * Constructor for Token
- * @param type, the type of Token being represented
-**/
-Token::Token(short type)
-{
-  this->type = type;
-} //-- Token;
-
-/**
- *  Constructor for Token
- * @param value the value of this Token
- * @param type, the type of Token being represented
-**/
-Token::Token(const nsAString& value, short type)
-{
-  this->type = type;
-  //-- make copy of value String
-  this->value = value;
-} //-- Token
-
-Token::Token(PRUnichar uniChar, short type)
-{
-  this->type = type;
-  this->value.Append(uniChar);
-} //-- Token
-
-/**
- * Copy Constructor
-**/
-Token::Token(const Token& token)
-{
-  this->type = token.type;
-  this->value = token.value;
-} //-- Token
-
-/**
- * Destructor for Token
-**/
-Token::~Token()
-{
-  //-- currently nothing is needed
-} //-- ~Token
-
-
-  //--------------------------------/
- //- Implementation of ExprLexer -/
-//-------------------------------/
-
-  //---------------/
- //- Contructors -/
-//---------------/
-
-/**
- * Creates a new ExprLexer using the given string
-**/
-ExprLexer::ExprLexer(const nsAFlatString& pattern)
-{
-  firstItem    = 0;
-  lastItem     = 0;
-  tokenCount   = 0;
-  prevToken    = 0;
-  endToken.type = Token::END;
-  parse(pattern);
-  currentItem = firstItem;
-} //-- ExprLexer
-
-/**
- * Destroys this instance of an ExprLexer
-**/
-ExprLexer::~ExprLexer()
+ * Destroys this instance of an txExprLexer
+ */
+txExprLexer::~txExprLexer()
 {
   //-- delete tokens
-  currentItem = firstItem;
-  while (currentItem) {
-    TokenListItem* temp = currentItem->next;
-    delete currentItem->token;
-    delete currentItem;
-    currentItem = temp;
+  Token* tok = mFirstItem;
+  while (tok) {
+    Token* temp = tok->mNext;
+    delete tok;
+    tok = temp;
   }
-} //-- ~ExprLexer
+  mCurrentItem = nsnull;
+}
 
-
-MBool ExprLexer::hasMoreTokens()
+Token*
+txExprLexer::nextToken()
 {
-  return (currentItem != 0);
-} //-- hasMoreTokens
+  NS_ASSERTION(mCurrentItem, "nextToken called beyoned the end");
+  Token* token = mCurrentItem;
+  mCurrentItem = mCurrentItem->mNext;
+  return token;
+}
 
-Token* ExprLexer::nextToken()
+void
+txExprLexer::pushBack()
 {
-  if (currentItem) {
-    Token* token = currentItem->token;
-    currentItem = currentItem->next;
-    return token;
+  mCurrentItem = mCurrentItem ? mCurrentItem->mPrevious : mLastItem;
+}
+
+void
+txExprLexer::addToken(Token* aToken)
+{
+  if (mLastItem) {
+    aToken->mPrevious = mLastItem;
+    mLastItem->mNext = aToken;
   }
-  return &endToken;
-} //-- nextToken
-
-void ExprLexer::pushBack()
-{
-  if (!currentItem)
-    currentItem = lastItem;
-  else 
-    currentItem = currentItem->previous;
-} //-- pushBack
-
-Token* ExprLexer::peek()
-{
-  if (currentItem)
-    return currentItem->token;
-  return &endToken;
-} //-- peek
-
-void ExprLexer::addToken(Token* token)
-{
-  TokenListItem* tlItem = new TokenListItem;
-  tlItem->token = token;
-  tlItem->next  = 0;
-  if (lastItem) {
-    tlItem->previous = lastItem;
-    lastItem->next = tlItem;
+  if (!mFirstItem) {
+    mFirstItem = aToken;
+    mCurrentItem = aToken;
   }
-  if (!firstItem)
-    firstItem = tlItem;
-  lastItem = tlItem;
-  prevToken = token;
-  ++tokenCount;
-} //-- addToken
+  mLastItem = aToken;
+  ++mTokenCount;
+}
 
 /**
  * Returns true if the following Token should be an operator.
  * This is a helper for the first bullet of [XPath 3.7]
  *  Lexical Structure
-**/
-MBool ExprLexer::nextIsOperatorToken(Token* token)
+ */
+PRBool
+txExprLexer::nextIsOperatorToken(Token* aToken)
 {
-  if (!token || token->type == Token::NULL_TOKEN)
-    return MB_FALSE;
+  if (!aToken || aToken->mType == Token::NULL_TOKEN) {
+    return PR_FALSE;
+  }
   /* This relies on the tokens having the right order in ExprLexer.h */
-  if (token->type >= Token::COMMA && 
-      token->type <= Token::UNION_OP)
-    return MB_FALSE;
-  return MB_TRUE;
-} //-- nextIsOperatorToken
+  return aToken->mType < Token::COMMA ||
+    aToken->mType > Token::UNION_OP;
+
+}
 
 /**
- *  Parses the given string into the set of Tokens
-**/
-void ExprLexer::parse(const nsAFlatString& pattern)
+ * Parses the given string into a sequence of Tokens
+ */
+nsresult
+txExprLexer::parse(const nsASingleFragmentString& aPattern)
 {
-  if (pattern.IsEmpty())
-    return;
-
-  nsAutoString tokenBuffer;
-  PRUint32 iter = 0, start;
-  PRUint32 size = pattern.Length();
-  short defType;
-  PRUnichar ch;
+  iterator start, end;
+  start = aPattern.BeginReading(mPosition);
+  aPattern.EndReading(end);
+  if (start == end) {
+    return NS_OK;
+  }
 
   //-- initialize previous token, this will automatically get
   //-- deleted when it goes out of scope
-  Token nullToken('\0', Token::NULL_TOKEN);
+  Token nullToken(nsnull, nsnull, Token::NULL_TOKEN);
 
-  prevToken = &nullToken;
+  Token::Type defType;
+  Token* newToken = nsnull;
+  Token* prevToken = &nullToken;
+  PRBool isToken;
 
-  while (iter < size) {
+  while (mPosition < end) {
 
-    ch = pattern.CharAt(iter);
     defType = Token::CNAME;
+    isToken = PR_TRUE;
 
-    if (ch==DOLLAR_SIGN) {
-      if (++iter == size || !XMLUtils::isLetter(ch=pattern.CharAt(iter))) {
-        // Error, VariableReference expected
-        errorPos = iter;
-        errorCode = ERROR_UNRESOLVED_VAR_REFERENCE;
-        if (firstItem)
-          firstItem->token->type=Token::ERROR;
-        else
-          addToken(new Token('\0',Token::ERROR));
-        iter=size; // bail
+    if (*mPosition == DOLLAR_SIGN) {
+      if (++mPosition == end || !XMLUtils::isLetter(*mPosition)) {
+        return NS_ERROR_XPATH_INVALID_VAR_NAME;
       }
-      else
-        defType = Token::VAR_REFERENCE;
+      defType = Token::VAR_REFERENCE;
     } 
     // just reuse the QName parsing, which will use defType 
     // the token to construct
 
-    if (XMLUtils::isLetter(ch)) {
+    if (XMLUtils::isLetter(*mPosition)) {
       // NCName, can get QName or OperatorName;
       //  FunctionName, NodeName, and AxisSpecifier may want whitespace,
       //  and are dealt with below
-      start = iter;
-      while (++iter < size && 
-             XMLUtils::isNCNameChar(pattern.CharAt(iter))) /* just go */ ;
-      if (iter < size && pattern.CharAt(iter)==COLON) {
-        // try QName or wildcard, might need to step back for axis
-        if (++iter < size)
-          if (XMLUtils::isLetter(pattern.CharAt(iter)))
-            while (++iter < size && 
-                   XMLUtils::isNCNameChar(pattern.CharAt(iter))) /* just go */ ;
-          else if (pattern.CharAt(iter)=='*' 
-                   && defType != Token::VAR_REFERENCE)
-            ++iter; /* eat wildcard for NameTest, bail for var ref at COLON */
-          else 
-            iter--; // step back
+      start = mPosition;
+      while (++mPosition < end && XMLUtils::isNCNameChar(*mPosition)) {
+        /* just go */
       }
-      if (nextIsOperatorToken(prevToken)) {
-        if (TX_StringEqualsAtom(Substring(pattern, start, iter - start),
-                                txXPathAtoms::_and))
-          defType = Token::AND_OP;
-        else if (TX_StringEqualsAtom(Substring(pattern, start, iter - start),
-                                     txXPathAtoms::_or))
-          defType = Token::OR_OP;
-        else if (TX_StringEqualsAtom(Substring(pattern, start, iter - start),
-                                     txXPathAtoms::mod))
-          defType = Token::MODULUS_OP;
-        else if (TX_StringEqualsAtom(Substring(pattern, start, iter - start),
-                                     txXPathAtoms::div))
-          defType = Token::DIVIDE_OP;
+      if (mPosition < end && *mPosition == COLON) {
+        // try QName or wildcard, might need to step back for axis
+        if (++mPosition == end) {
+          return NS_ERROR_XPATH_UNEXPECTED_END;
+        }
+        if (XMLUtils::isLetter(*mPosition)) {
+          while (++mPosition < end && XMLUtils::isNCNameChar(*mPosition)) {
+            /* just go */
+          }
+        }
+        else if (*mPosition == '*' && defType != Token::VAR_REFERENCE) {
+          // eat wildcard for NameTest, bail for var ref at COLON
+          ++mPosition;
+        }
         else {
-          // Error "operator expected"
-          // XXX QUESTION: spec is not too precise
-          // badops is sure an error, but is bad:ops, too? We say yes!
-          errorPos = iter;
-          errorCode = ERROR_OP_EXPECTED;
-          if (firstItem)
-            firstItem->token->type=Token::ERROR;
-          else
-            addToken(new Token('\0',Token::ERROR));
-          iter=size; // bail
+          --mPosition; // step back
         }
       }
-      addToken(new Token(Substring(pattern, start, iter - start), defType));
+      if (nextIsOperatorToken(prevToken)) {
+        NS_ConvertUTF16toUTF8 opUTF8(Substring(start, mPosition));
+        if (txXPathAtoms::_and->EqualsUTF8(opUTF8)) {
+          defType = Token::AND_OP;
+        }
+        else if (txXPathAtoms::_or->EqualsUTF8(opUTF8)) {
+          defType = Token::OR_OP;
+        }
+        else if (txXPathAtoms::mod->EqualsUTF8(opUTF8)) {
+          defType = Token::MODULUS_OP;
+        }
+        else if (txXPathAtoms::div->EqualsUTF8(opUTF8)) {
+          defType = Token::DIVIDE_OP;
+        }
+        else {
+          // XXX QUESTION: spec is not too precise
+          // badops is sure an error, but is bad:ops, too? We say yes!
+          return NS_ERROR_XPATH_OPERATOR_EXPECTED;
+        }
+      }
+      newToken = new Token(start, mPosition, defType);
     }
-    else if (isXPathDigit(ch)) {
-      start = iter;
-      while (++iter < size && 
-             isXPathDigit(pattern.CharAt(iter))) /* just go */;
-      if (iter < size && pattern.CharAt(iter) == '.')
-        while (++iter < size && 
-               isXPathDigit(pattern.CharAt(iter))) /* just go */;
-      addToken(new Token(Substring(pattern, start, iter - start),
-                         Token::NUMBER));
+    else if (isXPathDigit(*mPosition)) {
+      start = mPosition;
+      while (++mPosition < end && isXPathDigit(*mPosition)) {
+        /* just go */
+      }
+      if (mPosition < end && *mPosition == '.') {
+        while (++mPosition < end && isXPathDigit(*mPosition)) {
+          /* just go */
+        }
+      }
+      newToken = new Token(start, mPosition, Token::NUMBER);
     }
     else {
-      switch (ch) {
+      switch (*mPosition) {
         //-- ignore whitespace
       case SPACE:
       case TX_TAB:
       case TX_CR:
       case TX_LF:
-        ++iter;
+        ++mPosition;
+        isToken = PR_FALSE;
         break;
       case S_QUOTE :
       case D_QUOTE :
-        start=iter;
-        iter = pattern.FindChar(ch, start + 1);
-        if ((PRInt32)iter == kNotFound) {
-          // XXX Error reporting "unclosed literal"
-          errorPos = start;
-          errorCode = ERROR_UNCLOSED_LITERAL;
-          if (firstItem)
-            firstItem->token->type=Token::ERROR;
-          else
-            addToken(new Token('\0',Token::ERROR));
-          iter=size; // bail
+        start = mPosition;
+        while (++mPosition < end && *mPosition != *start) {
+          // eat literal
         }
-        else {
-          addToken(new Token(Substring(pattern, start + 1, iter - (start + 1)),
-                             Token::LITERAL));
-          ++iter;
+        if (mPosition == end) {
+          mPosition = start;
+          return NS_ERROR_XPATH_UNCLOSED_LITERAL;
         }
+        newToken = new Token(start + 1, mPosition, Token::LITERAL);
+        ++mPosition;
         break;
       case PERIOD:
         // period can be .., .(DIGITS)+ or ., check next
-        if (++iter < size) {
-          ch=pattern.CharAt(iter);
-          if (isXPathDigit(ch)) {
-            start=iter-1;
-            while (++iter < size && 
-                   isXPathDigit(pattern.CharAt(iter))) /* just go */;
-            addToken(new Token(Substring(pattern, start, iter - start),
-                               Token::NUMBER));
-          }
-          else if (ch==PERIOD) {
-            addToken(new Token(Substring(pattern, ++iter - 2, 2),
-                               Token::PARENT_NODE));
-          }
-          else
-            addToken(new Token(PERIOD, Token::SELF_NODE));
+        if (++mPosition == end) {
+          newToken = new Token(mPosition - 1, Token::SELF_NODE);
         }
-        else
-          addToken(new Token(ch, Token::SELF_NODE));
-        // iter++ is already in the number test
-        
+        else if (isXPathDigit(*mPosition)) {
+          start = mPosition - 1;
+          while (++mPosition < end && isXPathDigit(*mPosition)) {
+            /* just go */
+          }
+          newToken = new Token(start, mPosition, Token::NUMBER);
+        }
+        else if (*mPosition == PERIOD) {
+          ++mPosition;
+          newToken = new Token(mPosition - 2, mPosition, Token::PARENT_NODE);
+        }
+        else {
+          newToken = new Token(mPosition - 1, Token::SELF_NODE);
+        }
         break;
       case COLON: // QNames are dealt above, must be axis ident
-        if (++iter < size && pattern.CharAt(iter) == COLON &&
-            prevToken->type == Token::CNAME) {
-          prevToken->type = Token::AXIS_IDENTIFIER;
-          ++iter;
+        if (++mPosition >= end || *mPosition != COLON ||
+            prevToken->mType != Token::CNAME) {
+          return NS_ERROR_XPATH_BAD_COLON;
         }
-        else {
-          // XXX Error report "colon is neither QName nor axis"
-          errorPos = iter;
-          errorCode = ERROR_COLON;
-          if (firstItem)
-            firstItem->token->type=Token::ERROR;
-          else
-            addToken(new Token('\0',Token::ERROR));
-          iter=size; // bail
-        }
+        prevToken->mType = Token::AXIS_IDENTIFIER;
+        ++mPosition;
+        isToken = PR_FALSE;
         break;
       case FORWARD_SLASH :
-        if (++iter < size && pattern.CharAt(iter) == ch) {
-          addToken(new Token(Substring(pattern, ++iter - 2, 2),
-                             Token::ANCESTOR_OP));
+        if (++mPosition < end && *mPosition == FORWARD_SLASH) {
+          ++mPosition;
+          newToken = new Token(mPosition - 2, mPosition, Token::ANCESTOR_OP);
         }
         else {
-          addToken(new Token(ch, Token::PARENT_OP));
+          newToken = new Token(mPosition - 1, Token::PARENT_OP);
         }
         break;
       case BANG : // can only be !=
-        if (++iter < size && pattern.CharAt(iter) == EQUAL) {
-          addToken(new Token(Substring(pattern, ++iter - 2, 2),
-                             Token::NOT_EQUAL_OP));
+        if (++mPosition < end && *mPosition == EQUAL) {
+          ++mPosition;
+          newToken = new Token(mPosition - 2, mPosition, Token::NOT_EQUAL_OP);
+          break;
         }
-        else {
-          // Error ! is not not()
-          errorPos = iter;
-          errorCode = ERROR_BANG;
-          if (firstItem)
-            firstItem->token->type=Token::ERROR;
-          else
-            addToken(new Token('\0',Token::ERROR));
-          iter=size; // bail
-        }
-        break;
+        // Error ! is not not()
+        return NS_ERROR_XPATH_BAD_BANG;
       case EQUAL:
-        addToken(new Token(ch,Token::EQUAL_OP));
-        ++iter;
+        newToken = new Token(mPosition, Token::EQUAL_OP);
+        ++mPosition;
         break;
       case L_ANGLE:
-        if (++iter < size && pattern.CharAt(iter) == EQUAL) {
-          addToken(new Token(Substring(pattern, ++iter - 2, 2),
-                             Token::LESS_OR_EQUAL_OP));
+        if (++mPosition == end) {
+          return NS_ERROR_XPATH_UNEXPECTED_END;
         }
-        else
-          addToken(new Token(ch,Token::LESS_THAN_OP));
+        if (*mPosition == EQUAL) {
+          ++mPosition;
+          newToken = new Token(mPosition - 2, mPosition,
+                               Token::LESS_OR_EQUAL_OP);
+        }
+        else {
+          newToken = new Token(mPosition - 1, Token::LESS_THAN_OP);
+        }
         break;
       case R_ANGLE:
-        if (++iter < size && pattern.CharAt(iter) == EQUAL) {
-          addToken(new Token(Substring(pattern, ++iter - 2, 2),
-                             Token::GREATER_OR_EQUAL_OP));
+        if (++mPosition == end) {
+          return NS_ERROR_XPATH_UNEXPECTED_END;
         }
-        else
-          addToken(new Token(ch,Token::GREATER_THAN_OP));
+        if (*mPosition == EQUAL) {
+          ++mPosition;
+          newToken = new Token(mPosition - 2, mPosition,
+                               Token::GREATER_OR_EQUAL_OP);
+        }
+        else {
+          newToken = new Token(mPosition - 1, Token::GREATER_THAN_OP);
+        }
         break;
       case HYPHEN :
-        addToken(new Token(ch,Token::SUBTRACTION_OP));
-        ++iter;
+        newToken = new Token(mPosition, Token::SUBTRACTION_OP);
+        ++mPosition;
         break;
       case ASTERIX:
-        if (nextIsOperatorToken(prevToken))
-          addToken(new Token(ch,Token::MULTIPLY_OP));
-        else
-          addToken(new Token(ch,Token::CNAME));
-        ++iter;
+        if (nextIsOperatorToken(prevToken)) {
+          newToken = new Token(mPosition, Token::MULTIPLY_OP);
+        }
+        else {
+          newToken = new Token(mPosition, Token::CNAME);
+        }
+        ++mPosition;
         break;
       case L_PAREN:
-        if (prevToken->type == Token::CNAME) {
-          if (TX_StringEqualsAtom(prevToken->value, txXPathAtoms::comment))
-            prevToken->type = Token::COMMENT;
-          else if (TX_StringEqualsAtom(prevToken->value, txXPathAtoms::node))
-            prevToken->type = Token::NODE;
-          else if (TX_StringEqualsAtom(prevToken->value,
-                                       txXPathAtoms::processingInstruction))
-            prevToken->type = Token::PROC_INST;
-          else if (TX_StringEqualsAtom(prevToken->value, txXPathAtoms::text))
-            prevToken->type = Token::TEXT;
-          else
-            prevToken->type = Token::FUNCTION_NAME;
+        if (prevToken->mType == Token::CNAME) {
+          NS_ConvertUTF16toUTF8 utf8Value(prevToken->Value());
+          if (txXPathAtoms::comment->EqualsUTF8(utf8Value)) {
+            prevToken->mType = Token::COMMENT;
+          }
+          else if (txXPathAtoms::node->EqualsUTF8(utf8Value)) {
+            prevToken->mType = Token::NODE;
+          }
+          else if (txXPathAtoms::processingInstruction->EqualsUTF8(utf8Value)) {
+            prevToken->mType = Token::PROC_INST;
+          }
+          else if (txXPathAtoms::text->EqualsUTF8(utf8Value)) {
+            prevToken->mType = Token::TEXT;
+          }
+          else {
+            prevToken->mType = Token::FUNCTION_NAME;
+          }
         }
-        ++iter;
-        addToken(new Token(ch,Token::L_PAREN));
+        newToken = new Token(mPosition, Token::L_PAREN);
+        ++mPosition;
         break;
       case R_PAREN:
-        ++iter;
-        addToken(new Token(ch,Token::R_PAREN));
+        newToken = new Token(mPosition, Token::R_PAREN);
+        ++mPosition;
         break;
       case L_BRACKET:
-        ++iter;
-        addToken(new Token(ch,Token::L_BRACKET));
+        newToken = new Token(mPosition, Token::L_BRACKET);
+        ++mPosition;
         break;
       case R_BRACKET:
-        ++iter;
-        addToken(new Token(ch,Token::R_BRACKET));
+        newToken = new Token(mPosition, Token::R_BRACKET);
+        ++mPosition;
         break;
       case COMMA:
-        ++iter;
-        addToken(new Token(ch,Token::COMMA));
+        newToken = new Token(mPosition, Token::COMMA);
+        ++mPosition;
         break;
       case AT_SIGN :
-        ++iter;
-        addToken(new Token(ch,Token::AT_SIGN));
+        newToken = new Token(mPosition, Token::AT_SIGN);
+        ++mPosition;
         break;
       case PLUS:
-        ++iter;
-        addToken(new Token(ch,Token::ADDITION_OP));
+        newToken = new Token(mPosition, Token::ADDITION_OP);
+        ++mPosition;
         break;
       case VERT_BAR:
-        ++iter;
-        addToken(new Token(ch,Token::UNION_OP));
+        newToken = new Token(mPosition, Token::UNION_OP);
+        ++mPosition;
         break;
       default:
         // Error, don't grok character :-(
-        errorPos = iter;
-        errorCode = ERROR_UNKNOWN_CHAR;
-        if (firstItem)
-          firstItem->token->type=Token::ERROR;
-        else
-          addToken(new Token('\0',Token::ERROR));
-        iter=size; // bail       
+        return NS_ERROR_XPATH_ILLEGAL_CHAR;
       }
     }
-  }    
-} //-- parse
+    if (isToken) {
+      NS_ENSURE_TRUE(newToken, NS_ERROR_OUT_OF_MEMORY);
+      NS_ENSURE_TRUE(newToken != mLastItem, NS_ERROR_FAILURE);
+      prevToken = newToken;
+      addToken(newToken);
+    }
+  }
 
+  // add a endToken to the list
+  newToken = new Token(end, end, Token::END);
+  if (!newToken) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  addToken(newToken);
+
+  return NS_OK;
+}

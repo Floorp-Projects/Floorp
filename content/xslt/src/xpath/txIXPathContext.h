@@ -84,7 +84,7 @@ public:
     /*
      * Callback to be used by the Parser if errors are detected.
      */
-    virtual void receiveError(const nsAString& aMsg, nsresult aRes) = 0;
+    virtual void SetErrorOffset(PRUint32 aOffset) = 0;
 };
 
 /*

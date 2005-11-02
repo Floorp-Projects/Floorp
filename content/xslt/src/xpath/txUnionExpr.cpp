@@ -53,9 +53,14 @@ UnionExpr::~UnionExpr() {
  * Adds the Expr to this UnionExpr
  * @param expr the Expr to add to this UnionExpr
 **/
-void UnionExpr::addExpr(Expr* expr) {
-    if (expr)
-      expressions.add(expr);
+nsresult
+UnionExpr::addExpr(Expr* aExpr)
+{
+    nsresult rv = expressions.add(aExpr);
+    if (NS_FAILED(rv)) {
+        delete aExpr;
+    }
+    return rv;
 } //-- addExpr
 
     //-----------------------------/

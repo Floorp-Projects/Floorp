@@ -42,24 +42,24 @@
 #include "txXSLTPatterns.h"
 #include "ExprParser.h"
 
-class txPatternParser : public ExprParser
+class txPatternParser : public txExprParser
 {
 public:
     static txPattern* createPattern(const nsAFlatString& aPattern,
                                     txIParseContext* aContext);
 protected:
-    static nsresult createUnionPattern(ExprLexer& aLexer,
+    static nsresult createUnionPattern(txExprLexer& aLexer,
                                        txIParseContext* aContext,
                                        txPattern*& aPattern);
-    static nsresult createLocPathPattern(ExprLexer& aLexer,
+    static nsresult createLocPathPattern(txExprLexer& aLexer,
                                          txIParseContext* aContext,
                                          txPattern*& aPattern);
-    static nsresult createIdPattern(ExprLexer& aLexer,
+    static nsresult createIdPattern(txExprLexer& aLexer,
                                     txPattern*& aPattern);
-    static nsresult createKeyPattern(ExprLexer& aLexer,
+    static nsresult createKeyPattern(txExprLexer& aLexer,
                                      txIParseContext* aContext,
                                      txPattern*& aPattern);
-    static nsresult createStepPattern(ExprLexer& aLexer,
+    static nsresult createStepPattern(txExprLexer& aLexer,
                                       txIParseContext* aContext,
                                       txPattern*& aPattern);
 };
