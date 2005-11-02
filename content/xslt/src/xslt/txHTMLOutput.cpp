@@ -321,7 +321,8 @@ void txHTMLOutput::startElement(const nsAString& aName,
 
 void txHTMLOutput::closeStartTag(MBool aUseEmptyElementShorthand)
 {
-    txExpandedName* currentElement = (txExpandedName*)mCurrentElements.peek();
+    txExpandedName* currentElement = mCurrentElements.isEmpty() ?
+        nsnull : (txExpandedName*)mCurrentElements.peek();
     if (mStartTagOpen && currentElement &&
         (currentElement->mNamespaceID == kNameSpaceID_None) &&
         (currentElement->mLocalName == txHTMLAtoms::head)) {
