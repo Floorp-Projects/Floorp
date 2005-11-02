@@ -132,6 +132,7 @@ PRBool nsSBCSGroupProber::FilterWithoutEnglishLetters(const char* aBuf, PRUint32
   return PR_TRUE;
 }
 
+#ifdef  NO_ENGLISH_CONTAMINATION 
 //This filter apply to all scripts that does use latin letters (english letter)
 PRBool nsSBCSGroupProber::FilterWithEnglishLetters(const char* aBuf, PRUint32 aLen, char** newBuf, PRUint32& newLen)
 {
@@ -170,30 +171,25 @@ PRBool nsSBCSGroupProber::FilterWithEnglishLetters(const char* aBuf, PRUint32 aL
 
   return PR_TRUE;
 }
+#endif //NO_ENGLISH_CONTAMINATION
 
 nsProbingState nsSBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
 {
   nsProbingState st;
   PRUint32 i;
-  char *newBuf1, *newBuf2;
-  PRUint32 newLen1, newLen2;
+  char *newBuf1;
+  PRUint32 newLen1;
 
   //apply filter to original buffer, and we got new buffer back
   //depend on what script it is, we will feed them the new buffer 
   //we got after applying proper filter
   FilterWithoutEnglishLetters(aBuf, aLen, &newBuf1, newLen1);
-  FilterWithEnglishLetters(aBuf, aLen, &newBuf2, newLen2);
 
   for (i = 0; i < NUM_OF_SBCS_PROBERS; i++)
   {
      if (!mIsActive[i])
        continue;
-     if (mProbers[i]->KeepEnglishLetters())
-       //for scripts that use english letters, feed them with buffer got from FilterWithEnglishLetters
-       st = mProbers[i]->HandleData(newBuf2, newLen2);
-     else 
-       //for scripts that does not use english letters, feed them with buffer got from FilterWithoutEnglishLetters
-       st = mProbers[i]->HandleData(newBuf1, newLen1);
+     st = mProbers[i]->HandleData(newBuf1, newLen1);
      if (st == eFoundIt)
      {
        mBestGuess = i;
@@ -216,7 +212,6 @@ nsProbingState nsSBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
   }
 
   PR_FREEIF(newBuf1);
-  PR_FREEIF(newBuf2);
 
   return mState;
 }
