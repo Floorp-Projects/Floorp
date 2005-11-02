@@ -77,7 +77,7 @@ class DOMImplementation
 // Abstract Class defining the interface for a Node.  See NodeDefinition below
 // for the actual implementation of the WC3 node.
 //
-class Node
+class Node : public MITREObject
 {
   public:
     //Node type constants
@@ -124,6 +124,9 @@ class Node
     virtual Node* cloneNode(MBool deep, Node* dest) = 0;
 
     virtual MBool hasChildNodes() const = 0;
+    
+    //From DOM3 26-Jan-2001 WD
+    virtual String getBaseURI() = 0;
 };
 
 //
@@ -231,6 +234,8 @@ class NodeDefinition : public Node, public NodeList
     Node* cloneNode(MBool deep, Node* dest);
 
     MBool hasChildNodes() const;
+    
+    virtual String getBaseURI();
 
     //Inherrited from NodeList
     Node* item(UInt32 index);
@@ -312,10 +317,17 @@ class Document : public NodeDefinition
     // Introduced in DOM Level 2
     Element* getElementById(const String aID);
 
+    //Override to return documentBaseURI
+    String getBaseURI();
+
   private:
     Element* documentElement;
     DocumentType* doctype;
     DOMImplementation implementation;
+
+    // This class is friend to be able to set the documentBaseURI
+    friend class XMLParser;
+    String documentBaseURI;
 };
 
 //

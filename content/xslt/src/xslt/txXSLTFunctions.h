@@ -23,7 +23,7 @@
  * Olivier Gerardin,
  *    -- added document() function definition
  *
- * $Id: txXSLTFunctions.h,v 1.4 2005/11/02 07:33:57 axel%pike.org Exp $
+ * $Id: txXSLTFunctions.h,v 1.5 2005/11/02 07:33:58 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "dom.h"
@@ -47,7 +47,7 @@ public:
     /**
      * Creates a new document() function call
     **/
-    DocumentFunctionCall(Document* xslDocument);
+    DocumentFunctionCall(ProcessorState* ps, Document* xslDocument);
 
     /**
      * Evaluates this Expr based on the given context node and processor state
@@ -60,8 +60,9 @@ public:
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
 
 private:
-    void retrieveDocument(String& uri,String& baseUri, NodeSet &resultNodeSet, ContextState* cs);
+    void retrieveDocument(const String& uri,const String& baseUri, NodeSet &resultNodeSet, ContextState* cs);
     Document* xslDocument;
+    ProcessorState* processorState;
 };
 
 /**
