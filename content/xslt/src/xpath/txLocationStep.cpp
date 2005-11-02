@@ -21,12 +21,12 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txLocationStep.cpp,v 1.4 2005/11/02 07:33:44 kvisco%ziplink.net Exp $
+ * $Id: txLocationStep.cpp,v 1.5 2005/11/02 07:33:45 axel%pike.org Exp $
  */
 
 /*
   Implementation of an XPath LocationStep
-  @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:44 $
+  @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:45 $
 */
 
 #include "Expr.h"
@@ -109,14 +109,14 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
     Node* node = context;
     switch (axisIdentifier) {
         case ANCESTOR_AXIS :
-            if (node) node = context->getParentNode();
+            node = cs->getParentNode(context);
             //-- do not break here
         case ANCESTOR_OR_SELF_AXIS :
             while (node) {
                 if (nodeExpr->matches(node, context, cs)) {
                     nodes->add(node);
                 }
-                node = node->getParentNode();
+                node = cs->getParentNode(node);
             }
             break;
         case ATTRIBUTE_AXIS :
@@ -124,7 +124,7 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
             NamedNodeMap* atts = context->getAttributes();
             if ( atts ) {
                 for ( UInt32 i = 0; i < atts->getLength(); i++ ) {
-                    Attr* attr = (Attr*)atts->item(i);
+                    Node* attr = atts->item(i);
                     if ( nodeExpr->matches(attr, context, cs) ) nodes->add(attr);
                 }
             }
@@ -139,21 +139,25 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
             break;
         case FOLLOWING_AXIS :
         {
-            node = context->getNextSibling();
+            if ( node->getNodeType() == Node::ATTRIBUTE_NODE) {
+                node = cs->getParentNode(node);
+                fromDescendants(node, cs, nodes);
+            }
+            while (node && !node->getNextSibling()) {
+                node = cs->getParentNode(node);
+            }
             while (node) {
+                node = node->getNextSibling();
+
                 if (nodeExpr->matches(node, context, cs))
                     nodes->add(node);
 
                 if (node->hasChildNodes())
                     fromDescendants(node, cs, nodes);
 
-                Node* tmpNode = node->getNextSibling();
-                if (!tmpNode) {
+                while (node && !node->getNextSibling()) {
                     node = node->getParentNode();
-                    if ((node) && (node->getNodeType() != Node::DOCUMENT_NODE))
-                        node = node->getNextSibling();
                 }
-                else node = tmpNode;
             }
             break;
         }
@@ -170,21 +174,27 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
             break;
         case PARENT_AXIS :
         {
-            Node* parent = context->getParentNode();
+            Node* parent = cs->getParentNode(context);
             if ( nodeExpr->matches(parent, context, cs) )
                     nodes->add(parent);
             break;
         }
         case PRECEDING_AXIS :
-            node = context->getPreviousSibling();
-            if ( !node ) node = context->getParentNode();
+            while (node && !node->getPreviousSibling()) {
+                node = cs->getParentNode(node);
+            }
             while (node) {
+                node = node->getPreviousSibling();
+
+                if (node->hasChildNodes())
+                    fromDescendantsRev(node, cs, nodes);
+
                 if (nodeExpr->matches(node, context, cs))
                     nodes->add(node);
 
-                Node* temp = node->getPreviousSibling();
-                if (!temp) node = node->getParentNode();
-                else node = temp;
+                while (node && !node->getPreviousSibling()) {
+                    node = node->getParentNode();
+                }
             }
             break;
         case PRECEDING_SIBLING_AXIS:
@@ -237,18 +247,38 @@ double LocationStep::getDefaultPriority(Node* node, Node* context, ContextState*
 
 void LocationStep::fromDescendants(Node* context, ContextState* cs, NodeSet* nodes) {
 
-    if (( !context ) || (! nodeExpr )) return;
+    if ( !context || !nodeExpr ) return;
 
-    NodeList* nl = context->getChildNodes();
-    for (UInt32 i = 0; i < nl->getLength(); i++) {
-        Node* child = nl->item(i);
+    Node* child = context->getFirstChild();
+    while (child) {
         if (nodeExpr->matches(child, context, cs))
             nodes->add(child);
         //-- check childs descendants
-        if (child->hasChildNodes()) fromDescendants(child, cs, nodes);
+        if (child->hasChildNodes())
+            fromDescendants(child, cs, nodes);
+
+        child = child->getNextSibling();
     }
 
 } //-- fromDescendants
+
+void LocationStep::fromDescendantsRev(Node* context, ContextState* cs, NodeSet* nodes) {
+
+    if ( !context || !nodeExpr ) return;
+
+    Node* child = context->getLastChild();
+    while (child) {
+        //-- check childs descendants
+        if (child->hasChildNodes())
+            fromDescendantsRev(child, cs, nodes);
+
+        if (nodeExpr->matches(child, context, cs))
+            nodes->add(child);
+
+        child = child->getPreviousSibling();
+    }
+
+} //-- fromDescendantsRev
 
 /**
  * Determines whether this PatternExpr matches the given node within
@@ -260,11 +290,18 @@ MBool LocationStep::matches(Node* node, Node* context, ContextState* cs) {
 
     if ( !nodeExpr->matches(node, context, cs) ) return MB_FALSE;
 
-    NodeSet nodes;
-    nodes.add(node);
-    evaluatePredicates(&nodes, cs);
+    MBool result = MB_TRUE;
+    if ( !isEmpty() ) {
+        NodeSet* nodes = (NodeSet*)evaluate(cs->getParentNode(node),cs);
+        result = nodes->contains(node);
+        delete nodes;
+    }
+    else if (axisIdentifier == CHILD_AXIS ) {
+        if (!node->getParentNode())
+            result = MB_FALSE;
+    }
 
-    return (MBool)(nodes.size() > 0);
+    return result;
 
 } //-- matches
 
