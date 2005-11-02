@@ -122,7 +122,7 @@ MBool txNodeSorter::addSortElement(Element* aSortElement,
         // Language
         String lang;
         if (!getAttrAsAVT(aSortElement, txXSLTAtoms::lang, aContext, lang))
-            lang = DEFAULT_LANG;
+            lang.append(DEFAULT_LANG);
 
         // Case-order 
         MBool upperFirst;

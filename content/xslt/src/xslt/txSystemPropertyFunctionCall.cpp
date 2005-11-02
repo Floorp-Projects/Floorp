@@ -3,9 +3,9 @@
 #include "Names.h"
 #include "txIXPathContext.h"
 
-const String XSL_VERSION_PROPERTY    = "version";
-const String XSL_VENDOR_PROPERTY     = "vendor";
-const String XSL_VENDOR_URL_PROPERTY = "vendor-url";
+const String XSL_VERSION_PROPERTY("version");
+const String XSL_VENDOR_PROPERTY("vendor");
+const String XSL_VENDOR_URL_PROPERTY("vendor-url");
 
 /*
   Implementation of XSLT 1.0 extension function: system-property

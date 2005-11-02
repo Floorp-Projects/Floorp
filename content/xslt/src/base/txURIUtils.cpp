@@ -186,7 +186,7 @@ void URIUtils::resolveHref(const String& href, const String& base,
 void URIUtils::getFragmentIdentifier(const String& href, String& frag) {
     PRInt32 pos;
     pos = href.lastIndexOf('#');
-    if(pos != NOT_FOUND)
+    if(pos != kNotFound)
         href.subString(pos+1, frag);
     else
         frag.clear();
@@ -195,7 +195,7 @@ void URIUtils::getFragmentIdentifier(const String& href, String& frag) {
 void URIUtils::getDocumentURI(const String& href, String& docUri) {
     PRInt32 pos;
     pos = href.lastIndexOf('#');
-    if(pos != NOT_FOUND)
+    if(pos != kNotFound)
         href.subString(0,pos,docUri);
     else
         docUri = href;

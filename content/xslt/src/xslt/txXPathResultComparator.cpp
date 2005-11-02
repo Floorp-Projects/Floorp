@@ -143,11 +143,11 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
     StringValue* strval1 = (StringValue*)aVal1;
     StringValue* strval2 = (StringValue*)aVal2;
 #ifdef TX_EXE
-    PRInt32 len1 = strval1->mStr.length();
-    PRInt32 len2 = strval2->mStr.length();
-    PRInt32 minLength = (len1 < len2) ? len1 : len2;
+    PRUint32 len1 = strval1->mStr.length();
+    PRUint32 len2 = strval2->mStr.length();
+    PRUint32 minLength = (len1 < len2) ? len1 : len2;
 
-    PRInt32 c = 0;
+    PRUint32 c = 0;
     while (c < minLength) {
         UNICODE_CHAR ch1 = strval1->mStr.charAt(c);
         UNICODE_CHAR ch2 = strval2->mStr.charAt(c);

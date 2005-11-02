@@ -510,13 +510,13 @@ class CharacterData : public NodeDefinition
   public:
     const String& getData() const;
     void setData(const String& source);
-    PRInt32 getLength() const;
+    PRUint32 getLength() const;
 
-    String& substringData(PRInt32 offset, PRInt32 count, String& dest);
+    String& substringData(PRUint32 offset, PRUint32 count, String& dest);
     void appendData(const String& arg);
-    void insertData(PRInt32 offset, const String& arg);
-    void deleteData(PRInt32 offset, PRInt32 count);
-    void replaceData(PRInt32 offset, PRInt32 count, const String& arg);
+    void insertData(PRUint32 offset, const String& arg);
+    void deleteData(PRUint32 offset, PRUint32 count);
+    void replaceData(PRUint32 offset, PRUint32 count, const String& arg);
 
   protected:
     CharacterData(NodeType type, const String& name,
@@ -532,7 +532,7 @@ class Text : public CharacterData
   public:
     Text(const String& theData, Document* owner);
 
-    Text* splitText(PRInt32 offset);
+    Text* splitText(PRUint32 offset);
 
     //Override "child manipulation" function since Text Nodes can not have
     //any children.

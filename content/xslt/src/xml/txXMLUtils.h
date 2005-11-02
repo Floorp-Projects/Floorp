@@ -103,22 +103,25 @@ public:
      */
     static MBool isValidQName(const String& aName);
 
+    /*
+     * Returns true if the given character is whitespace.
+     */
+    static MBool isWhitespace(const UNICODE_CHAR& aChar)
+    {
+        return (aChar <= ' ' &&
+                (aChar == ' ' || aChar == '\r' ||
+                 aChar == '\n'|| aChar == '\t'));
+    }
+
     /**
      * Returns true if the given string has only whitespace characters
     **/
-    static MBool isWhitespace(const String& text);
+    static MBool isWhitespace(const String& aText);
 
     /**
      * Normalizes the value of a XML processingInstruction
     **/
     static void normalizePIValue(String& attValue);
-
-    /**
-     * Is this a whitespace string to be stripped?
-     * Newlines (#xD), tabs (#x9), spaces (#x20), CRs (#xA) only?
-     * @param data the String to test for whitespace
-    **/
-    static MBool shouldStripTextnode (const String& data);
 
     /*
      * Returns true if the given character represents a numeric letter (digit).

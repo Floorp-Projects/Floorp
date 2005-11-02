@@ -51,7 +51,7 @@ StringResult::StringResult(const String& str) {
 **/
 StringResult::StringResult(const char* str) {
     //-- copy str
-    this->value = str;
+    this->value.append(str);
 } //-- StringResult
 
 /*

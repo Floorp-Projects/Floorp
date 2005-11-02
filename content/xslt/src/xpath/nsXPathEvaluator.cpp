@@ -70,7 +70,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
                                    nsIDOMXPathExpression **aResult)
 {
-    String expressionString(PromiseFlatString(aExpression).get());
+    String expressionString(aExpression);
     ParseContextImpl pContext(aResolver);
     Expr* expression = ExprParser::createExpr(expressionString, &pContext);
     if (!expression)

@@ -107,30 +107,30 @@ Token::~Token()
  * Complex Tokens
 */
 //-- Nodetype tokens
-const String ExprLexer::COMMENT   = "comment";
-const String ExprLexer::NODE      = "node";
-const String ExprLexer::PROC_INST = "processing-instruction";
-const String ExprLexer::TEXT      = "text";
+const String ExprLexer::COMMENT("comment");
+const String ExprLexer::NODE("node");
+const String ExprLexer::PROC_INST("processing-instruction");
+const String ExprLexer::TEXT("text");
 
 //-- boolean
-const String ExprLexer::AND     = "and";
-const String ExprLexer::OR      = "or";
+const String ExprLexer::AND("and");
+const String ExprLexer::OR("or");
 
 //-- multiplicative operators
-const String ExprLexer::MODULUS = "mod";
-const String ExprLexer::DIVIDE  = "div";
+const String ExprLexer::MODULUS("mod");
+const String ExprLexer::DIVIDE("div");
 
 /**
  * The set of Lexer error messages
  **/
 const String ExprLexer::error_message[] =
 {
-  "VariableReference expected",
-  "Operator expected",
-  "Literal is not closed",
-  ": not expected",
-  "! not expected, use != or not()",
-  "found a unkown character"
+  String("VariableReference expected"),
+  String("Operator expected"),
+  String("Literal is not closed"),
+  String(": not expected"),
+  String("! not expected, use != or not()"),
+  String("found a unkown character")
 };
 
   //---------------/
@@ -238,8 +238,8 @@ void ExprLexer::parse(const String& pattern)
     return;
 
   String tokenBuffer;
-  PRInt32 iter = 0, start;
-  PRInt32 size = pattern.length();
+  PRUint32 iter = 0, start;
+  PRUint32 size = pattern.length();
   short defType;
   UNICODE_CHAR ch;
 
@@ -278,8 +278,8 @@ void ExprLexer::parse(const String& pattern)
       start = iter;
       while (++iter < size && 
              XMLUtils::isNCNameChar(pattern.charAt(iter))) /* just go */ ;
-      PRInt32 end = iter;
-      if (pattern.charAt(iter)==COLON) {
+      PRUint32 end = iter;
+      if (iter < size && pattern.charAt(iter)==COLON) {
         // try QName or wildcard, might need to step back for axis
         if (++iter < size)
           if (XMLUtils::isLetter(pattern.charAt(iter)))
@@ -319,7 +319,7 @@ void ExprLexer::parse(const String& pattern)
       start = iter;
       while (++iter < size && 
              isXPathDigit(pattern.charAt(iter))) /* just go */;
-      if (pattern.charAt(iter)=='.')
+      if (iter < size && pattern.charAt(iter) == '.')
         while (++iter < size && 
                isXPathDigit(pattern.charAt(iter))) /* just go */;
       addToken(new Token(pattern.subString(start,iter,subStr),Token::NUMBER));
@@ -336,8 +336,8 @@ void ExprLexer::parse(const String& pattern)
       case S_QUOTE :
       case D_QUOTE :
         start=iter;
-        iter = pattern.indexOf(ch,start+1);
-        if (iter==NOT_FOUND) {
+        iter = pattern.indexOf(ch, (PRInt32)start + 1);
+        if (iter == kNotFound) {
           // XXX Error reporting "unclosed literal"
           errorPos = start;
           errorCode = ERROR_UNCLOSED_LITERAL;

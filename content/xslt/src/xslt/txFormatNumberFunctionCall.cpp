@@ -119,8 +119,8 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     int multiplier=1;
     int groupSize=-1;
 
-    int pos=0;
-    int formatLen = formatStr.length();
+    PRUint32 pos = 0;
+    PRUint32 formatLen = formatStr.length();
     MBool inQuote;
 
     // Get right subexpression
@@ -366,17 +366,18 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     if (groupSize < 0)
         groupSize = intDigits * 2; //to simplify grouping
 
-    res.setLength(res.length() +
-                  intDigits +               // integer digits
-                  1 +                       // decimal separator
-                  maxFractionSize +         // fractions
-                  (intDigits-1)/groupSize); // group separators
+    // XXX We shouldn't use SetLength.
+    res.getNSString().SetLength(res.length() +
+                                intDigits +               // integer digits
+                                1 +                       // decimal separator
+                                maxFractionSize +         // fractions
+                                (intDigits-1)/groupSize); // group separators
 
     PRInt32 i = bufIntDigits + maxFractionSize - 1;
     MBool carry = (i+1 < buflen) && (buf[i+1] >= '5');
     MBool hasFraction = MB_FALSE;
 
-    PRInt32 resPos = res.length()-1;
+    PRUint32 resPos = res.length()-1;
 
     // Fractions
     for (; i >= bufIntDigits; --i) {
@@ -391,22 +392,23 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         else {
             digit = buf[i] - '0';
         }
-
         if (hasFraction || digit != 0 || i < bufIntDigits+minFractionSize) {
             hasFraction = MB_TRUE;
             res.replace(resPos--,
                         (UNICODE_CHAR)(digit + format->mZeroDigit));
         }
         else {
-            res.setLength(resPos--);
+            res.truncate(resPos--);
         }
     }
 
     // Decimal separator
-    if (hasFraction)
+    if (hasFraction) {
         res.replace(resPos--, format->mDecimalSeparator);
-    else
-        res.setLength(resPos--);
+    }
+    else {
+        res.truncate(resPos--);
+    }
 
     // Integer digits
     for (i = 0; i < intDigits; ++i) {
@@ -423,15 +425,17 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
             carry = digit == 0;
         }
 
-        if (i != 0 && i%groupSize == 0)
+        if (i != 0 && i%groupSize == 0) {
             res.replace(resPos--, format->mGroupingSeparator);
+        }
 
         res.replace(resPos--, (UNICODE_CHAR)(digit + format->mZeroDigit));
     }
 
     if (carry) {
-        if (i%groupSize == 0)
+        if (i%groupSize == 0) {
             res.insert(resPos + 1, format->mGroupingSeparator);
+        }
         res.insert(resPos + 1, (UNICODE_CHAR)(1 + format->mZeroDigit));
     }
 
@@ -451,13 +455,12 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
  * A representation of the XSLT element <xsl:decimal-format>
  */
 
-txDecimalFormat::txDecimalFormat()
+txDecimalFormat::txDecimalFormat() : mInfinity("Infinity"),
+                                     mNaN("NaN")
 {
     mDecimalSeparator = '.';
     mGroupingSeparator = ',';
-    mInfinity = "Infinity";
     mMinusSign = '-';
-    mNaN = "NaN";
     mPercent = '%';
     mPerMille = 0x2030;
     mZeroDigit = '0';
