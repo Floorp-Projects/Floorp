@@ -445,7 +445,7 @@ CheckLoadURI(nsIURI *aUri, nsIURI *aReferrerUri,
     PRInt16 decision = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
                                    aUri, aReferrerUri, aContext,
-                                   NS_LITERAL_CSTRING("text/xml"), nsnull,
+                                   NS_LITERAL_CSTRING("application/xml"), nsnull,
                                    &decision);
     NS_ENSURE_SUCCESS(rv, rv);
 

@@ -235,10 +235,10 @@ txStandaloneXSLTProcessor::transform(txXPathNode& aSource,
 
 /**
  * Parses the XML Stylesheet PIs associated with the
- * given XML document. If a stylesheet PIs is found with type="text/xsl"
- * or type="text/xml" the href pseudo attribute value will be appended to
- * the given href argument. If multiple text/xsl stylesheet PIs
- * are found, the first one is used.
+ * given XML document. If a stylesheet PIs is found with type="text/xsl",
+ * type="text/xml" or type="application/xml" the href pseudo attribute
+ * value will be appended to the given href argument. If multiple XSLT
+ * stylesheet PIs are found, the first one is used.
  */
 void txStandaloneXSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument,
                                                         nsAString& href)
@@ -257,7 +257,8 @@ void txStandaloneXSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument,
                 tmpHref.Truncate();
                 parseStylesheetPI(data, type, tmpHref);
                 if (type.EqualsLiteral("text/xsl") ||
-                    type.EqualsLiteral("text/xml")) {
+                    type.EqualsLiteral("text/xml") ||
+                    type.EqualsLiteral("application/xml")) {
                     href = tmpHref;
                     return;
                 }
