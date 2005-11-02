@@ -38,16 +38,13 @@
 /**
  * Creates a new AdditiveExpr using the given operator
 **/
-AdditiveExpr::AdditiveExpr(Expr* leftExpr, Expr* rightExpr, short op) {
-    this->op = op;
-    this->leftExpr = leftExpr;
-    this->rightExpr = rightExpr;
-} //-- AdditiveExpr
-
-AdditiveExpr::~AdditiveExpr() {
-    delete leftExpr;
-    delete rightExpr;
-} //-- ~AdditiveExpr
+AdditiveExpr::AdditiveExpr(nsAutoPtr<Expr> aLeftExpr,
+                           nsAutoPtr<Expr> aRightExpr, short aOp)
+    : op(aOp),
+      leftExpr(aLeftExpr),
+      rightExpr(aRightExpr)
+{
+}
 
 /**
  * Evaluates this Expr based on the given context node and processor state
