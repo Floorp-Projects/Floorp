@@ -167,7 +167,7 @@ int main(int argc, char** argv)
     txOptionEntry* option = options.GetEntry(NS_LITERAL_CSTRING("o"));
     if (option &&
         option->mValues.Count() > 0 &&
-        !option->mValues[0]->Equals(NS_LITERAL_CSTRING("-"))) {
+        !option->mValues[0]->EqualsLiteral("-")) {
         resultFileStream.open(option->mValues[0]->get(), ios::out);
         if (!resultFileStream) {
             cerr << "error opening output file: ";
