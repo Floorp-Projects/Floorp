@@ -49,7 +49,7 @@ public:
     /**
      * Creates a new document() function call
     **/
-    DocumentFunctionCall(ProcessorState* ps, Document* xslDocument);
+    DocumentFunctionCall(ProcessorState* aPs);
 
     /**
      * Evaluates this Expr based on the given context node and processor state
@@ -63,8 +63,7 @@ public:
 
 private:
     void retrieveDocument(const String& uri,const String& baseUri, NodeSet &resultNodeSet, ContextState* cs);
-    Document* xslDocument;
-    ProcessorState* processorState;
+    ProcessorState* mProcessorState;
 };
 
 /*
