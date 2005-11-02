@@ -93,7 +93,7 @@ public:
     NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
-                                    nsIAtom* aChangedPseudoClass);
+                                    PRInt32 aStateMask);
     NS_IMETHOD AttributeChanged(nsIDocument* aDocument,
                                 nsIContent* aContent,
                                 PRInt32 aNameSpaceID,
