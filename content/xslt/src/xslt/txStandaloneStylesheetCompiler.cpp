@@ -236,6 +236,9 @@ txDriver::StartElement(const XML_Char *aName, const XML_Char **aAtts)
                                 NS_STATIC_CAST(const PRUnichar**, aAtts),
                                 attcount/2, idOffset);
     if (NS_FAILED(rv)) {
+        PR_LOG(txLog::xslt, PR_LOG_ALWAYS, 
+               ("compile failed at %i with %x\n",
+                XML_GetCurrentLineNumber(mExpatParser), rv));
         mCompiler->cancel(rv);
     }
 }
