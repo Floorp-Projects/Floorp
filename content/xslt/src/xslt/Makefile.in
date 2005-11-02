@@ -35,7 +35,6 @@ REQUIRES	= string \
 		  dom \
 		  layout \
 		  content \
-		  content_xsl \
 		  widget \
 		  necko \
 		  unicharutil \
