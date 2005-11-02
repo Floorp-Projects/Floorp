@@ -868,7 +868,7 @@ txTransformNotifier::SetOutputDocument(nsIDOMDocument* aDocument)
     }
 }
 
-NS_IMETHODIMP_(void)
+void
 txTransformNotifier::SignalTransformEnd()
 {
     if (mInTransform || !mObserver || mScriptElements.Count() > 0 ||
