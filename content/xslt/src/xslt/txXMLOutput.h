@@ -56,11 +56,11 @@
 #define LT              '<'
 #define QUOTE           '"'
 
-#define AMP_ENTITY      "&amp"
-#define APOS_ENTITY     "&apos"
+#define AMP_ENTITY      "&amp;"
+#define APOS_ENTITY     "&apos;"
 #define GT_ENTITY       "&gt;"
 #define LT_ENTITY       "&lt;"
-#define QUOT_ENTITY     "&quot"
+#define QUOT_ENTITY     "&quot;"
 #define HEX_ENTITY      "&#"
 
 #define CDATA_END       "]]>"
@@ -195,7 +195,6 @@ protected:
     void printUTF8Char(DOM_CHAR& ch);
     void printUTF8Chars(const String& aData);
     void printWithXMLEntities(const String& aData, MBool aAttribute = MB_FALSE);
-    void write(const String& aData);
 
     ostream* mOut;
     txOutputFormat mOutputFormat;
