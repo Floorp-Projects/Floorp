@@ -28,6 +28,7 @@
 */
 
 #include "Expr.h"
+#include "NodeSet.h"
 #include "txIXPathContext.h"
 
 /**
