@@ -38,14 +38,54 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= universalchardet
-DIRS		= base xpcom
+MODULE		= universalchardet_s
+LIBRARY_NAME	= universalchardet_s
+MOZILLA_INTERNAL_API = 1
+
+REQUIRES	= xpcom \
+		  $(NULL)
+
+CPPSRCS = \
+		CharDistribution.cpp \
+		JpCntx.cpp \
+		LangBulgarianModel.cpp \
+		LangCyrillicModel.cpp \
+		LangGreekModel.cpp \
+		LangHungarianModel.cpp \
+		LangHebrewModel.cpp \
+		nsHebrewProber.cpp \
+		nsCharSetProber.cpp \
+		nsBig5Prober.cpp \
+		nsEUCJPProber.cpp \
+		nsEUCKRProber.cpp \
+		nsEUCTWProber.cpp \
+		nsEscCharsetProber.cpp \
+		nsEscSM.cpp \
+		nsGB2312Prober.cpp \
+		nsMBCSGroupProber.cpp \
+		nsMBCSSM.cpp \
+		nsSBCSGroupProber.cpp \
+		nsSBCharSetProber.cpp \
+		nsSJISProber.cpp \
+		nsUTF8Prober.cpp \
+		nsLatin1Prober.cpp \
+		nsUniversalDetector.cpp \
+               $(NULL)
+
+# Not built on win32. Not sure why not
+ifneq ($(OS_ARCH),WINNT)
+CPPSRCS	+= LangThaiModel.cpp
+endif
+
+FORCE_STATIC_LIB = 1
+# This library is used by other shared libs in a static build
+FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
