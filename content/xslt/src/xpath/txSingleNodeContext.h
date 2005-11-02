@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the TransforMiiX XSLT processor.
+ * The Original Code is TransforMiiX XSLT Processor.
  *
  * The Initial Developer of the Original Code is
- * Jonas Sicking.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Axel Hecht.
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <sicking@bigfoot.com>
- *   Peter Van der Beken <peterv@netscape.com>
+ *  Axel Hecht <axel@pike.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,64 +36,66 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef TRANSFRMX_NODESORTER_H
-#define TRANSFRMX_NODESORTER_H
+#ifndef __TX_XPATH_SINGLENODE_CONTEXT
+#define __TX_XPATH_SINGLENODE_CONTEXT
 
-#include "baseutils.h"
-#include "List.h"
-#include "txAtom.h"
+#include "txIXPathContext.h"
 
-class Element;
-class Expr;
-class Node;
-class NodeSet;
-class ProcessorState;
-class String;
-class TxObject;
-class txXPathResultComparator;
-
-/*
- * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
- */
-
-class txNodeSorter
+class txSingleNodeContext : public txIEvalContext
 {
 public:
-    txNodeSorter(ProcessorState* aPs);
-    ~txNodeSorter();
+    txSingleNodeContext(Node* aContextNode, txIMatchContext* aContext)
+        : mNode(aContextNode), mInner(aContext)
+    {
+        NS_ASSERTION(aContextNode, "context node must be given");
+        NS_ASSERTION(aContext, "txIMatchContext must be given");
+    }
+    ~txSingleNodeContext()
+    {}
 
-    MBool addSortElement(Element* aSortElement,
-                         Node* aContext);
-    MBool sortNodeSet(NodeSet* aNodes);
+    nsresult getVariable(PRInt32 aNamespace, txAtom* aLName,
+                         ExprResult*& aResult)
+    {
+        NS_ASSERTION(mInner, "mInner is null!!!");
+        return mInner->getVariable(aNamespace, aLName, aResult);
+    }
+
+    MBool isStripSpaceAllowed(Node* aNode)
+    {
+        NS_ASSERTION(mInner, "mInner is null!!!");
+        return mInner->isStripSpaceAllowed(aNode);
+    }
+
+    void receiveError(const String& aMsg, nsresult aRes)
+    {
+        NS_ASSERTION(mInner, "mInner is null!!!");
+#ifdef DEBUG
+        String error("forwarded error: ");
+        error.append(aMsg);
+        mInner->receiveError(error, aRes);
+#else
+        mInner->receiveError(aMsg, aRes);
+#endif
+    }
+
+    Node* getContextNode()
+    {
+        return mNode;
+    }
+
+    PRUint32 size()
+    {
+        return 1;
+    }
+
+    PRUint32 position()
+    {
+        return 1;
+    }
 
 private:
-    class SortableNode
-    {
-    public:
-        SortableNode(Node* aNode, int aNValues);
-        void clear(int aNValues);
-        TxObject** mSortValues;
-        Node* mNode;
-    };
-    struct SortKey
-    {
-        Expr* mExpr;
-        txXPathResultComparator* mComparator;
-    };
-    
-    int compareNodes(SortableNode* sNode1,
-                     SortableNode* sNode2,
-                     NodeSet* aNodes);
-
-    MBool getAttrAsAVT(Element* aSortElement,
-                       txAtom* aAttrName,
-                       Node* aContext,
-                       String& aResult);
-
-    txList mSortKeys;
-    ProcessorState* mPs;
-    int mNKeys;
-    Expr* mDefaultExpr;
+    Node* mNode;
+    txIMatchContext* mInner;
 };
 
-#endif
+#endif // __TX_XPATH_SINGLENODE_CONTEXT

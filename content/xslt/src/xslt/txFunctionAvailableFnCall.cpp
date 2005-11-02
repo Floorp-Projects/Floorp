@@ -41,6 +41,7 @@
 #include "FunctionLib.h"
 #include "XMLUtils.h"
 #include "Names.h"
+#include "txIXPathContext.h"
 
 /*
   Implementation of XSLT 1.0 extension function: function-available
@@ -62,13 +63,14 @@ FunctionAvailableFunctionCall::FunctionAvailableFunctionCall() :
  * @return the result of the evaluation
  * @see FunctionCall.h
 **/
-ExprResult* FunctionAvailableFunctionCall::evaluate(Node* context, ContextState* cs) {
+ExprResult* FunctionAvailableFunctionCall::evaluate(txIEvalContext* aContext)
+{
     ExprResult* result = NULL;
 
-    if ( requireParams(1,1,cs) ) {
+    if (requireParams(1, 1, aContext)) {
         ListIterator iter(&params);
         Expr* param = (Expr*)iter.next();
-        ExprResult* exprResult = param->evaluate(context, cs);
+        ExprResult* exprResult = param->evaluate(aContext);
         if (exprResult &&
             exprResult->getResultType() == ExprResult::STRING) {
             String property;
@@ -119,7 +121,7 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(Node* context, ContextState*
         }
         else {
             String err("Invalid argument passed to function-available, expecting String");
-            delete result;
+            aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
             result = new StringResult(err);
         }
         delete exprResult;

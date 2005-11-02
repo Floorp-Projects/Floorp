@@ -40,6 +40,7 @@
 #include "XSLTFunctions.h"
 #include "XMLUtils.h"
 #include "Names.h"
+#include "txIXPathContext.h"
 
 /*
   Implementation of XSLT 1.0 extension function: element-available
@@ -47,9 +48,11 @@
 
 /**
  * Creates a new element-available function call
+ * aNode is the Element in the stylesheet containing the 
+ * Expr and is used for namespaceID resolution
 **/
-ElementAvailableFunctionCall::ElementAvailableFunctionCall() :
-        FunctionCall(ELEMENT_AVAILABLE_FN)
+ElementAvailableFunctionCall::ElementAvailableFunctionCall(Element* aNode) :
+    mStylesheetNode(aNode), FunctionCall(ELEMENT_AVAILABLE_FN)
 {
 }
 
@@ -61,24 +64,28 @@ ElementAvailableFunctionCall::ElementAvailableFunctionCall() :
  * @return the result of the evaluation
  * @see FunctionCall.h
 **/
-ExprResult* ElementAvailableFunctionCall::evaluate(Node* context, ContextState* cs) {
+ExprResult* ElementAvailableFunctionCall::evaluate(txIEvalContext* aContext)
+{
     ExprResult* result = NULL;
 
-    if ( requireParams(1,1,cs) ) {
+    if (requireParams(1, 1, aContext)) {
         ListIterator iter(&params);
         Expr* param = (Expr*) iter.next();
-        ExprResult* exprResult = param->evaluate(context, cs);
+        ExprResult* exprResult = param->evaluate(aContext);
         if (exprResult &&
             exprResult->getResultType() == ExprResult::STRING) {
             String property;
             exprResult->stringValue(property);
             if (XMLUtils::isValidQName(property)) {
-                String prefix, propertyNsURI;
+                String prefix;
+                PRInt32 aNSID = kNameSpaceID_None;
                 XMLUtils::getPrefix(property, prefix);
                 if (!prefix.isEmpty()) {
-                    cs->getNameSpaceURIFromPrefix(property, propertyNsURI);
+                    txAtom* prefixAtom = TX_GET_ATOM(prefix);
+                    aNSID = mStylesheetNode->lookupNamespaceID(prefixAtom);
+                    TX_IF_RELEASE_ATOM(prefixAtom);
                 }
-                if (propertyNsURI.isEqual(XSLT_NS)) {
+                if (aNSID == kNameSpaceID_XSLT) {
                     String localName;
                     XMLUtils::getLocalPart(property, localName);
                     if ( localName.isEqual(APPLY_IMPORTS) ||
@@ -119,7 +126,7 @@ ExprResult* ElementAvailableFunctionCall::evaluate(Node* context, ContextState* 
         }
         else {
             String err("Invalid argument passed to element-available(), expecting String");
-            delete result;
+            aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
             result = new StringResult(err);
         }
         delete exprResult;

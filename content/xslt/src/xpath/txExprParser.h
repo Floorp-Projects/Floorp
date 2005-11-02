@@ -36,59 +36,61 @@
 #include "ExprLexer.h"
 #include "Expr.h"
 #include "List.h"
+class txIParseContext;
 
-class ExprParser {
-
+class ExprParser
+{
 public:
 
-    /**
-     * Creates a new ExprParser
-    **/
-    ExprParser();
-
-    /**
-     * destroys the ExprParser
-    **/
-    ~ExprParser();
-
-    Expr* createExpr(const String& aExpression);
-    Pattern* createPattern(const String& aPattern);
+    static Expr* createExpr(const String& aExpression,
+                            txIParseContext* aContext);
 
     /**
      * Creates an Attribute Value Template using the given value
     **/
-    AttributeValueTemplate* createAttributeValueTemplate(const String& attValue);
+    static AttributeValueTemplate* createAttributeValueTemplate
+        (const String& attValue, txIParseContext* aContext);
 
 
-private:
-
-
-    Expr*          createBinaryExpr   (Expr* left, Expr* right, Token* op);
-    Expr*          createExpr         (ExprLexer& lexer);
-    Expr*          createFilterExpr   (ExprLexer& lexer);
-    FunctionCall*  createFunctionCall (ExprLexer& lexer);
-    LocationStep*  createLocationStep (ExprLexer& lexer);
-    NodeExpr*      createNodeExpr     (ExprLexer& lexer);
-    Expr*          createPathExpr     (ExprLexer& lexer);
-    Expr*          createUnionExpr    (ExprLexer& lexer);
-
-    MBool          isFilterExprToken   (Token* tok);
-    MBool          isLocationStepToken (Token* tok);
-    MBool          isNodeTypeToken     (Token* tok);
-
-    static short   precedenceLevel     (short tokenType);
+protected:
+    static Expr* createBinaryExpr(Expr* left, Expr* right, Token* op);
+    static Expr* createExpr(ExprLexer& lexer, txIParseContext* aContext);
+    static Expr* createFilterExpr(ExprLexer& lexer, txIParseContext* aContext);
+    static Expr* createFunctionCall(ExprLexer& lexer,
+                                    txIParseContext* aContext);
+    static LocationStep* createLocationStep(ExprLexer& lexer,
+                                            txIParseContext* aContext);
+    static txNodeTypeTest* createNodeTypeTest(ExprLexer& lexer);
+    static Expr* createPathExpr(ExprLexer& lexer, txIParseContext* aContext);
+    static Expr* createUnionExpr(ExprLexer& lexer, txIParseContext* aContext);
+                  
+    static MBool isFilterExprToken  (Token* tok);
+    static MBool isLocationStepToken(Token* tok);
+    static MBool isNodeTypeToken    (Token* tok);
+                  
+    static short precedenceLevel    (short tokenType);
 
     /**
-     * Using the given lexer, parses the tokens if they represent a predicate list
-     * If an error occurs a non-zero String pointer will be returned containing the
-     * error message.
+     * Resolve a QName, given the mContext parse context.
+     * Returns prefix and localName as well as namespace ID
+    **/
+    static nsresult resolveQName(const String& aQName, txAtom*& aPrefix,
+                                 txIParseContext* aContext,
+                                 txAtom*& aLocalName, PRInt32& aNamespace);
+
+    /**
+     * Using the given lexer, parses the tokens if they represent a
+     * predicate list
+     * If an error occurs a non-zero String pointer will be returned
+     * containing the error message.
      * @param predicateList, the PredicateList to add predicate expressions to
      * @param lexer the ExprLexer to use for parsing tokens
      * @return 0 if successful, or a String pointer to the error message
     **/
-    MBool parsePredicates(PredicateList* predicateList, ExprLexer& lexer);
-    MBool parseParameters(FunctionCall* fnCall, ExprLexer& lexer);
-
+    static MBool parsePredicates(PredicateList* predicateList,
+                                 ExprLexer& lexer, txIParseContext* aContext);
+    static MBool parseParameters(FunctionCall* fnCall,
+                                 ExprLexer& lexer, txIParseContext* aContext);
 
 }; //-- ExprParser
 

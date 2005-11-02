@@ -69,21 +69,22 @@ void UnionExpr::addExpr(Expr* expr) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* UnionExpr::evaluate(Node* context, ContextState* cs)
+ExprResult* UnionExpr::evaluate(txIEvalContext* aContext)
 {
     NodeSet* nodes = new NodeSet();
 
-    if (!context || expressions.getLength() == 0 || !nodes)
+    if (!aContext || (expressions.getLength() == 0) || !nodes)
         return nodes;
 
     txListIterator iter(&expressions);
 
     while (iter.hasNext()) {
         Expr* expr = (Expr*)iter.next();
-        ExprResult* exprResult = expr->evaluate(context, cs);
+        ExprResult* exprResult = expr->evaluate(aContext);
         if (!exprResult ||
             exprResult->getResultType() != ExprResult::NODESET) {
             delete exprResult;
+            delete nodes;
             return new StringResult("error");
         }
         nodes->add((NodeSet*)exprResult);
@@ -92,45 +93,6 @@ ExprResult* UnionExpr::evaluate(Node* context, ContextState* cs)
 
     return nodes;
 } //-- evaluate
-
-/**
- * Returns the default priority of this Pattern based on the given Node,
- * context Node, and ContextState.
-**/
-double UnionExpr::getDefaultPriority(Node* node, Node* context,
-                                     ContextState* cs)
-{
-    //-- find highest priority
-    double priority = Double::NEGATIVE_INFINITY;
-    ListIterator iter(&expressions);
-    while (iter.hasNext()) {
-        Expr* expr = (Expr*)iter.next();
-        double tmpPriority = expr->getDefaultPriority(node, context, cs);
-        if (tmpPriority > priority && expr->matches(node, context, cs))
-            priority = tmpPriority;
-    }
-    return priority;
-} //-- getDefaultPriority
-
-/**
- * Determines whether this UnionExpr matches the given node within
- * the given context
-**/
-MBool UnionExpr::matches(Node* node, Node* context, ContextState* cs) {
-
-    ListIterator* iter = expressions.iterator();
-
-    while (iter->hasNext()) {
-        Expr* expr = (Expr*)iter->next();
-        if (expr->matches(node, context, cs)) {
-             delete iter;
-             return MB_TRUE;
-        }
-    }
-    delete iter;
-    return MB_FALSE;
-} //-- matches
-
 
 /**
  * Returns the String representation of this Expr.

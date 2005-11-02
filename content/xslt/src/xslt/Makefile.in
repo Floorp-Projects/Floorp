@@ -54,6 +54,8 @@ CPPSRCS = Names.cpp \
         txRtfHandler.cpp \
         txTextHandler.cpp \
         VariableBinding.cpp \
+        txXSLTPatterns.cpp \
+        txPatternParser.cpp \
         XSLTProcessor.cpp
 
 ifdef TX_EXE

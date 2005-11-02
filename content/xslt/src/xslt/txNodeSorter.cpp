@@ -43,6 +43,7 @@
 #include "ProcessorState.h"
 #include "txXPathResultComparator.h"
 #include "txAtoms.h"
+#include "txForwardContext.h"
 
 /*
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
@@ -84,9 +85,8 @@ MBool txNodeSorter::addSortElement(Element* aSortElement,
         key->mExpr = mPs->getExpr(aSortElement, ProcessorState::SelectAttr);
     else {
         if (!mDefaultExpr) {
-            String expr(".");
-            ExprParser parser;
-            mDefaultExpr = parser.createExpr(expr);
+            txNodeTest* test = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
+            mDefaultExpr = new LocationStep(test, LocationStep::SELF_AXIS);
         }
         key->mExpr = mDefaultExpr;
     }
@@ -188,7 +188,7 @@ MBool txNodeSorter::sortNodeSet(NodeSet* aNodes)
         }
         iter.reset();
         SortableNode* compNode = (SortableNode*)iter.next();
-        while (compNode && (compareNodes(currNode, compNode) > 0)) {
+        while (compNode && (compareNodes(currNode, compNode, aNodes) > 0)) {
             compNode = (SortableNode*)iter.next();
         }
         // ... and insert in sorted list
@@ -211,7 +211,8 @@ MBool txNodeSorter::sortNodeSet(NodeSet* aNodes)
 }
 
 int txNodeSorter::compareNodes(SortableNode* aSNode1,
-                               SortableNode* aSNode2)
+                               SortableNode* aSNode2,
+                               NodeSet* aNodes)
 {
     txListIterator iter(&mSortKeys);
     int i;
@@ -221,9 +222,10 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
         SortKey* key = (SortKey*)iter.next();
         // Lazy create sort values
         if (!aSNode1->mSortValues[i]) {
-            mPs->pushCurrentNode(aSNode1->mNode);
-            ExprResult* res = key->mExpr->evaluate(aSNode1->mNode, mPs);
-            mPs->popCurrentNode();
+            txForwardContext evalContext(mPs, aSNode1->mNode, aNodes);
+            txIEvalContext* priorEC = mPs->setEvalContext(&evalContext);
+            ExprResult* res = key->mExpr->evaluate(&evalContext);
+            mPs->setEvalContext(priorEC);
             if (!res) {
                 // XXX ErrorReport
                 return -1;
@@ -236,9 +238,10 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
             delete res;
         }
         if (!aSNode2->mSortValues[i]) {
-            mPs->pushCurrentNode(aSNode2->mNode);
-            ExprResult* res = key->mExpr->evaluate(aSNode2->mNode, mPs);
-            mPs->popCurrentNode();
+            txForwardContext evalContext(mPs, aSNode2->mNode, aNodes);
+            txIEvalContext* priorEC = mPs->setEvalContext(&evalContext);
+            ExprResult* res = key->mExpr->evaluate(&evalContext);
+            mPs->setEvalContext(priorEC);
             if (!res) {
                 // XXX ErrorReport
                 return -1;
@@ -272,7 +275,7 @@ MBool txNodeSorter::getAttrAsAVT(Element* aSortElement,
     if (!aSortElement->getAttr(aAttrName, kNameSpaceID_None, attValue))
         return MB_FALSE;
 
-    mPs->processAttrValueTemplate(attValue, aContext, aResult);
+    mPs->processAttrValueTemplate(attValue, aSortElement, aResult);
     return MB_TRUE;
 }
 
