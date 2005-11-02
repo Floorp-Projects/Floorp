@@ -40,6 +40,7 @@
 #include "txNodeSetContext.h"
 #include "txForwardContext.h"
 #include "XSLTFunctions.h"
+#include "ProcessorState.h"
 #ifndef TX_EXE
 #include "nsReadableUtils.h"
 #include "nsIContent.h"
@@ -459,7 +460,14 @@ void txKeyPattern::toString(String& aDest)
     aDest.append("txKeyPattern{");
 #endif
     aDest.append("key('");
-    aDest.append(mName);
+    String tmp;
+    if (mPrefix) {
+        TX_GET_ATOM_STRING(mPrefix, tmp);
+        aDest.append(tmp);
+        aDest.append(':');
+    }
+    TX_GET_ATOM_STRING(mName.mLocalName, tmp);
+    aDest.append(tmp);
     aDest.append(", ");
     aDest.append(mValue);
     aDest.append("')");

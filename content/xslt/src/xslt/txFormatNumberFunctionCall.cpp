@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "XSLTFunctions.h"
+#include "ProcessorState.h"
 #include "primitives.h"
 #include "Names.h"
 #include "txIXPathContext.h"
@@ -58,10 +59,12 @@ const UNICODE_CHAR txFormatNumberFunctionCall::FORMAT_QUOTE = '\'';
 /*
  * Creates a new format-number function call
  */
-txFormatNumberFunctionCall::txFormatNumberFunctionCall(ProcessorState* aPs) :
-        FunctionCall(FORMAT_NUMBER_FN)
+txFormatNumberFunctionCall::txFormatNumberFunctionCall(ProcessorState* aPs,
+                                                       Node* aQNameResolveNode)
+    : FunctionCall(FORMAT_NUMBER_FN),
+      mPs(aPs),
+      mQNameResolveNode(aQNameResolveNode)
 {
-    mPs = aPs;
 }
 
 /*
@@ -73,6 +76,7 @@ txFormatNumberFunctionCall::txFormatNumberFunctionCall(ProcessorState* aPs) :
  */
 ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
 {
+    nsresult rv = NS_OK;
     if (!requireParams(2, 3, aContext))
         return new StringResult();
 
@@ -81,12 +85,17 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
 
     double value;
     String formatStr;
-    String formatName;
+    txExpandedName formatName;
 
     value = evaluateToNumber((Expr*)iter.next(), aContext);
     evaluateToString((Expr*)iter.next(), aContext, formatStr);
-    if (iter.hasNext())
-        evaluateToString((Expr*)iter.next(), aContext, formatName);
+    if (iter.hasNext()) {
+        String formatQName;
+        evaluateToString((Expr*)iter.next(), aContext, formatQName);
+        rv = formatName.init(formatQName, mQNameResolveNode, MB_FALSE);
+        if (NS_FAILED(rv))
+            formatName.mNamespaceID = kNameSpaceID_Unknown;
+    }
 
     txDecimalFormat* format = mPs->getDecimalFormat(formatName);
     if (!format) {

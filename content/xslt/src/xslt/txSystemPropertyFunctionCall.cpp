@@ -1,4 +1,5 @@
 #include "XSLTFunctions.h"
+#include "ProcessorState.h"
 #include "XMLUtils.h"
 #include "Names.h"
 #include "txIXPathContext.h"
