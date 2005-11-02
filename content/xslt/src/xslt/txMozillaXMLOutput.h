@@ -41,17 +41,18 @@
 
 #include "txXMLEventHandler.h"
 #include "nsAutoPtr.h"
-#include "nsIContent.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMHTMLTextAreaElement.h"
-#include "nsIScriptLoader.h"
 #include "nsIScriptLoaderObserver.h"
-#include "nsIStyleSheetLinkingElement.h"
-#include "nsWeakPtr.h"
 #include "txOutputFormat.h"
 #include "nsCOMArray.h"
 #include "nsICSSLoaderObserver.h"
-#include "nsIDocumentTransformer.h"
+
+class nsIContent;
+class nsIDOMDocument;
+class nsIAtom;
+class nsIDOMDocumentFragment;
+class nsIDOMElement;
+class nsIStyleSheet;
+class nsIDOMNode;
 
 class txTransformNotifier : public nsIScriptLoaderObserver,
                             public nsICSSLoaderObserver

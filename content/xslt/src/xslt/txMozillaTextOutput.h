@@ -40,14 +40,13 @@
 #define TRANSFRMX_MOZILLA_TEXT_OUTPUT_H
 
 #include "txXMLEventHandler.h"
-#include "nsIContent.h"
-#include "nsIDOMCharacterData.h"
 #include "nsCOMPtr.h"
 #include "nsWeakPtr.h"
 #include "txOutputFormat.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMDocumentFragment.h"
 
+class nsIDOMCharacterData;
+class nsIDOMDocument;
+class nsIDOMDocumentFragment;
 class nsITransformObserver;
 
 class txMozillaTextOutput : public txAOutputXMLEventHandler

@@ -42,7 +42,6 @@
 #include "txError.h"
 #include "baseutils.h"
 #include "txXMLEventHandler.h"
-#include "nsCOMPtr.h"
 #include "txStack.h"
 #include "XMLUtils.h"
 #include "nsVoidArray.h"
@@ -51,7 +50,6 @@
 #include "nsDoubleHashtable.h"
 #include "txKey.h"
 #include "txStylesheet.h"
-#include "ExprResult.h"
 
 class txInstruction;
 class txIOutputHandlerFactory;
