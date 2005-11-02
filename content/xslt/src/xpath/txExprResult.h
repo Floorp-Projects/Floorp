@@ -23,7 +23,7 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- changed constant short result types to enum
  *
- * $Id: txExprResult.h,v 1.3 2005/11/02 07:33:45 kvisco%ziplink.net Exp $
+ * $Id: txExprResult.h,v 1.4 2005/11/02 07:33:46 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "MITREObject.h"
@@ -42,7 +42,7 @@
  * <BR/>
  * Note: for NodeSet, see NodeSet.h <BR />
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:45 $
+ * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:46 $
 */
 
 class ExprResult : public MITREObject {
@@ -100,7 +100,7 @@ public:
     void setValue(const BooleanResult& boolResult);
 
     virtual short  getResultType();
-    virtual void   stringValue(String& str);
+    virtual void   stringValue(DOMString& str);
     virtual MBool  booleanValue();
     virtual double numberValue();
 
@@ -125,7 +125,7 @@ public:
     MBool isNaN() const;
 
     virtual short  getResultType();
-    virtual void   stringValue(String& str);
+    virtual void   stringValue(DOMString& str);
     virtual MBool  booleanValue();
     virtual double numberValue();
 
@@ -148,7 +148,7 @@ public:
     void setValue(const String& str);
 
     virtual short  getResultType();
-    virtual void   stringValue(String& str);
+    virtual void   stringValue(DOMString& str);
     virtual MBool  booleanValue();
     virtual double numberValue();
 
