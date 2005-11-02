@@ -41,8 +41,7 @@
 
 #include "txIXPathContext.h"
 #include "nsAutoPtr.h"
-
-class NodeSet;
+#include "NodeSet.h"
 
 class txForwardContext : public txIEvalContext
 {
