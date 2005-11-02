@@ -25,14 +25,14 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: txExpr.h,v 1.1 2005/11/02 07:33:26 kvisco%ziplink.net Exp $
+ * $Id: txExpr.h,v 1.2 2005/11/02 07:33:27 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * XSL expression class definitions.
  * Much of this code was ported from XSL:P. <BR />
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.1 $ $Date: 2005/11/02 07:33:26 $
+ * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:27 $
 **/
 
 #ifndef TRANSFRMX_EXPR_H
@@ -414,7 +414,7 @@ public:
     /**
      * Creates a new BasicNodeExpr of the given type
     **/
-    BasicNodeExpr::BasicNodeExpr(NodeExpr::NodeExprType nodeExprType);
+    BasicNodeExpr(NodeExprType nodeExprType);
 
     /**
      * Destroys this BasicNodeExpr
@@ -465,7 +465,7 @@ public:
     virtual void toString(String& dest);
 
 private:
-    NodeExpr::NodeExprType type;
+    NodeExprType type;
 }; //-- BasicNodeExpr
 
 /**
@@ -1314,7 +1314,7 @@ public:
      * @param expr the Expr to add to this PathExpr
      * @param index the index at which to add the given Expr
     **/
-    void PathExpr::addPatternExpr(int index, PatternExpr* expr, short ancestryOp);
+    void addPatternExpr(int index, PatternExpr* expr, short ancestryOp);
 
     /**
      * Adds the PatternExpr to this PathExpr
