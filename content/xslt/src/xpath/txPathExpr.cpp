@@ -218,7 +218,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
             case ANCESTOR_OP:
             {
                 Node* ancestor = node;
-                while ((ancestor = cs->getParentNode(ancestor)))  {
+                while ((ancestor = ancestor->getXPathParent()))  {
                     if (pxi->expr->matches(node, ancestor, cs))
                         return MB_TRUE;
                 }
@@ -226,7 +226,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
             }
             case PARENT_OP:
             {
-                Node* parent = cs->getParentNode(node);
+                Node* parent = node->getXPathParent();
                 if (parent) {
                     //-- make sure node is Document node
                     if (parent->getNodeType() == Node::DOCUMENT_NODE)
@@ -262,7 +262,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
                 case ANCESTOR_OP:
                 {
                     Node* parent = tnode;
-                    while ((parent = cs->getParentNode(parent)))  {
+                    while ((parent = parent->getXPathParent()))  {
                         if (pxi->expr->matches(tnode, parent, cs))
                             tmpNodes.add(parent);
                     }
@@ -270,7 +270,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
                 }
                 case PARENT_OP:
                 {
-                    Node* parent = cs->getParentNode(tnode);
+                    Node* parent = tnode->getXPathParent();
                     if (parent) {
                         //-- make sure we have a document node if necessary
                         if (!iter->hasPrevious())
