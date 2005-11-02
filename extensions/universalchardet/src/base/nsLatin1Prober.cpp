@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Universal charset detector code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *          Shy Shalom <shooshX@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,6 +38,7 @@
 
 #include "nsLatin1Prober.h"
 #include "prmem.h"
+#include <stdio.h>
 
 #define UDF    0        // undefined
 #define OTH    1        //other
@@ -111,49 +113,11 @@ void  nsLatin1Prober::Reset(void)
     mFreqCounter[i] = 0;
 }
 
-PRBool nsLatin1Prober::FilterWithEnglishLetters(const char* aBuf, PRUint32 aLen, char** newBuf, PRUint32& newLen)
-{
-  //do filtering to reduce load to probers
-  char *newptr;
-  char *prevPtr, *curPtr;
-  PRBool isInTag = PR_FALSE;
-
-  newptr = *newBuf = (char*)PR_MALLOC(aLen);
-  if (!newptr)
-    return PR_FALSE;
-
-  for (curPtr = prevPtr = (char*)aBuf; curPtr < aBuf+aLen; curPtr++)
-  {
-    if (*curPtr == '>')
-      isInTag = PR_FALSE;
-    else if (*curPtr == '<')
-      isInTag = PR_TRUE;
-
-    if (!(*curPtr & 0x80) &&
-        (*curPtr < 'A' || (*curPtr > 'Z' && *curPtr < 'a') || *curPtr > 'z') )
-    {
-      if (curPtr > prevPtr && !isInTag) //current segment contains more than just a symbol 
-                                        // and it is not inside a tag, keep it
-      {
-        while (prevPtr < curPtr) *newptr++ = *prevPtr++;  
-        prevPtr++;
-        *newptr++ = ' ';
-      }
-      else
-        prevPtr = curPtr+1;
-    }
-  }
-
-  newLen = newptr - *newBuf;
-
-  return PR_TRUE;
-}
-
 
 nsProbingState nsLatin1Prober::HandleData(const char* aBuf, PRUint32 aLen)
 {
-  char *newBuf1;
-  PRUint32 newLen1;
+  char *newBuf1 = 0;
+  PRUint32 newLen1 = 0;
 
   if (!FilterWithEnglishLetters(aBuf, aLen, &newBuf1, newLen1)) {
     newBuf1 = (char*)aBuf;
@@ -207,4 +171,12 @@ float nsLatin1Prober::GetConfidence(void)
 
   return confidence;
 }
+
+#ifdef DEBUG_chardet
+void  nsLatin1Prober::DumpStatus()
+{
+  printf(" Latin1Prober: %1.3f [%s]\r\n", GetConfidence(), GetCharSetName());
+}
+#endif
+
 
