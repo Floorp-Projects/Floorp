@@ -285,6 +285,7 @@ void nsVoidArray::Compact()
         mImpl = newImpl;
         SetArraySize(count);
         mImpl->mCount = count;
+        SetArrayOwner(PR_TRUE);
       }
       else {
         mImpl = nsnull;
