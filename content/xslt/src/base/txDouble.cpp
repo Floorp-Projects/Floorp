@@ -81,7 +81,7 @@ fp_except_t oldmask = fpsetmask(~allmask);
  */
 
 typedef union txdpun {
-    PRFloat64 value;
+    PRFloat64 d;
     struct {
 #if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
         PRUint32 lo, hi;
