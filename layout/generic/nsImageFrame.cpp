@@ -428,17 +428,19 @@ nsImageFrame::SourceRectToDest(const nsRect& aRect)
   return r;
 }
 
-static PRBool
-ImageOK(PRInt32 aContentState)
-{
-  // Note that we treat NS_EVENT_STATE_SUPPRESSED images as "OK".  This means
-  // that we'll construct image frames for them as needed if their display is
-  // toggled from "none" (though we won't paint them, unless their visibility
-  // is changed too).
-  return !(aContentState &
-           (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
-            NS_EVENT_STATE_LOADING));
-}
+// Note that we treat NS_EVENT_STATE_SUPPRESSED images as "OK".  This means
+// that we'll construct image frames for them as needed if their display is
+// toggled from "none" (though we won't paint them, unless their visibility
+// is changed too).
+#define BAD_STATES (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED | \
+                    NS_EVENT_STATE_LOADING)
+
+// This is a macro so that we don't evaluate the boolean last arg
+// unless we have to; it can be expensive
+#define IMAGE_OK(_state, _loadingOK)                        \
+   (((_state) & BAD_STATES) == 0 ||                         \
+    (((_state) & BAD_STATES) == NS_EVENT_STATE_LOADING &&   \
+     (_loadingOK)))
 
 /* static */
 PRBool
@@ -446,16 +448,12 @@ nsImageFrame::ShouldCreateImageFrameFor(nsIContent* aContent,
                                         nsStyleContext* aStyleContext)
 {
   PRInt32 state = aContent->IntrinsicState();
-  if (ImageOK(state)) {
+  if (IMAGE_OK(state,
+               HaveFixedSize(aStyleContext->GetStylePosition()))) {
     // Image is fine; do the image frame thing
     return PR_TRUE;
   }
 
-  if ((state & NS_EVENT_STATE_LOADING) &&
-      HaveFixedSize(aStyleContext->GetStylePosition())) {
-    return PR_TRUE;
-  }
-  
   // Check if we want to use a placeholder box with an icon or just
   // let the the presShell make us into inline text.  Decide as follows:
   //
@@ -1270,8 +1268,9 @@ nsImageFrame::Paint(nsPresContext*      aPresContext,
         imageLoader->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                                 getter_AddRefs(currentRequest));
       }
-      
-      PRBool imageOK = ImageOK(mContent->IntrinsicState());
+
+      PRInt32 contentState = mContent->IntrinsicState();
+      PRBool imageOK = IMAGE_OK(contentState, PR_TRUE);
 
       nsCOMPtr<imgIContainer> imgCon;
       if (currentRequest) {
