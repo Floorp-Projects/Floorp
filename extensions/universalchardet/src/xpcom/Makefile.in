@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -46,6 +46,36 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= universalchardet
-DIRS		= base xpcom
+LIBRARY_NAME	= universalchardet
+EXPORT_LIBRARY	= 1
+IS_COMPONENT	= 1
+MODULE_NAME	= nsUniversalCharDetModule
+ifneq ($(OS_ARCH),WINNT)
+SHORT_LIBNAME	= ucdet
+endif
+MOZILLA_INTERNAL_API = 1
+
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  chardet \
+		  $(NULL)
+
+PACKAGE_FILE = universalchardet.pkg
+
+CPPSRCS = \
+		nsUniversalCharDetModule.cpp \
+		nsUdetXPCOMWrapper.cpp \
+               $(NULL)
+
+LOCAL_INCLUDES = -I$(srcdir)/../base
+
+SHARED_LIBRARY_LIBS = \
+		$(DIST)/lib/$(LIB_PREFIX)universalchardet_s.$(LIB_SUFFIX) \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS += \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
