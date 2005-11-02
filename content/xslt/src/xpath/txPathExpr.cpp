@@ -29,7 +29,7 @@
  *       - foo//bar would not match properly if there was more than
  *         one node in the NodeSet (nodes) on the final iteration
  *
- * $Id: txPathExpr.cpp,v 1.3 2005/11/02 07:33:39 kvisco%ziplink.net Exp $
+ * $Id: txPathExpr.cpp,v 1.4 2005/11/02 07:33:40 kvisco%ziplink.net Exp $
  */
 
 #include "Expr.h"
@@ -239,7 +239,11 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
             case PARENT_OP:
             {
                 Node* parent = cs->getParentNode(node);
-                if (parent) return pxi->pExpr->matches(node, parent, cs);
+                if (parent) {
+                    //-- make sure node is Document node
+                    if (parent->getNodeType() == Node::DOCUMENT_NODE)
+                        return pxi->pExpr->matches(node, parent, cs);
+                }
                 break;
             }
             default:
@@ -285,6 +289,11 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
                 {
                     Node* parent = cs->getParentNode(tnode);
                     if (parent) {
+
+                        //-- make sure we have a document node if necessary
+                        if ( !iter->hasNext() )
+                            if (parent->getNodeType() != Node::DOCUMENT_NODE) break;
+
                         if (pxi->pExpr->matches(tnode, parent, cs))
                             tmpNodes.add(parent);
                     }
