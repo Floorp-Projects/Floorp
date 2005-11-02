@@ -25,7 +25,7 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: txExpr.h,v 1.11 2005/11/02 07:33:36 axel%pike.org Exp $
+ * $Id: txExpr.h,v 1.12 2005/11/02 07:33:37 axel%pike.org Exp $
  */
 
 
@@ -46,7 +46,7 @@
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.11 $ $Date: 2005/11/02 07:33:36 $
+  @version $Revision: 1.12 $ $Date: 2005/11/02 07:33:37 $
 */
 
 //necessary prototypes
@@ -1430,7 +1430,7 @@ private:
     * all nodes that match the PatternExpr
     * -- this will be moving to a Utility class
    **/
-   void fromDescendants(PatternExpr* pExpr,
+   void evalDescendants(PatternExpr* pExpr,
                         Node* context,
                         ContextState* cs,
                         NodeSet* nodes);
