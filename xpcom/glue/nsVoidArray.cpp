@@ -1224,6 +1224,7 @@ nsSmallVoidArray::operator=(nsSmallVoidArray& other)
   return *this;
 }
 
+#ifdef DEBUG
 void  
 nsSmallVoidArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -1238,6 +1239,7 @@ nsSmallVoidArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
     *aResult = sizeof(*this) + size;
   }
 }
+#endif
 
 PRInt32
 nsSmallVoidArray::GetArraySize() const
