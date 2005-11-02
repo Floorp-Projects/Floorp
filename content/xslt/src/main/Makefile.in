@@ -95,7 +95,6 @@ OBJS =../base/ArrayList.o \
   ../xpath/TextExpr.o \
   ../xpath/UnionExpr.o \
   ../xpath/VariableRefExpr.o \
-  ../xpath/WildCardExpr.o \
   ../xpath/XPathNames.o \
   ../xml/XMLUtils.o \
   ../xml/XMLDOMUtils.o \
