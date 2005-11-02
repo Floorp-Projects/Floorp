@@ -126,12 +126,15 @@ txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 }
 
-nsresult txKeyFunctionCall::getNameAtom(nsIAtom** aAtom)
+#ifdef TX_TO_STRING
+nsresult
+txKeyFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::key;
     NS_ADDREF(*aAtom);
     return NS_OK;
 }
+#endif
 
 /**
  * Hash functions

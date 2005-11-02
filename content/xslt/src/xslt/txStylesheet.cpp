@@ -197,7 +197,9 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
     txXPathNodeUtils::getNodeName(aNode, nodeName);
     if (matchTemplate) {
         nsAutoString matchAttr;
+#ifdef TX_TO_STRING
         match->toString(matchAttr);
+#endif
         PR_LOG(txLog::xslt, PR_LOG_DEBUG,
                ("MatchTemplate, Pattern %s, Mode %s, Node %s\n",
                 NS_LossyConvertUCS2toASCII(matchAttr).get(),

@@ -105,9 +105,12 @@ GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
     return NS_OK;
 }
 
-nsresult GenerateIdFunctionCall::getNameAtom(nsIAtom** aAtom)
+#ifdef TX_TO_STRING
+nsresult
+GenerateIdFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::generateId;
     NS_ADDREF(*aAtom);
     return NS_OK;
 }
+#endif

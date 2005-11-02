@@ -276,12 +276,10 @@ void LocationStep::fromDescendantsRev(const txXPathNode& aNode,
     } while (walker.moveToPreviousSibling());
 }
 
-/**
- * Creates a String representation of this Expr
- * @param str the destination String to append to
- * @see Expr
-**/
-void LocationStep::toString(nsAString& str) {
+#ifdef TX_TO_STRING
+void
+LocationStep::toString(nsAString& str)
+{
     switch (mAxisIdentifier) {
         case ANCESTOR_AXIS :
             str.Append(NS_LITERAL_STRING("ancestor::"));
@@ -326,5 +324,5 @@ void LocationStep::toString(nsAString& str) {
     mNodeTest->toString(str);
 
     PredicateList::toString(str);
-} // toString
-
+}
+#endif

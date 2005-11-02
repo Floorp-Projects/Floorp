@@ -86,14 +86,13 @@ FilterExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 } //-- evaluate
 
-/**
- * Creates a String representation of this Expr
- * @param str the destination String to append to
- * @see Expr
-**/
-void FilterExpr::toString(nsAString& str) {
+#ifdef TX_TO_STRING
+void
+FilterExpr::toString(nsAString& str)
+{
     if ( expr ) expr->toString(str);
     else str.Append(NS_LITERAL_STRING("null"));
     PredicateList::toString(str);
-} //-- toString
+}
+#endif
 

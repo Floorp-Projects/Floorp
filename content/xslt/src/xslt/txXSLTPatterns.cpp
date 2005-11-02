@@ -130,12 +130,9 @@ nsresult txUnionPattern::getSimplePatterns(txList& aList)
     return NS_OK;
 }
 
-/*
- * The String representation will be appended to any data in the
- * destination String, to allow cascading calls to other
- * toString() methods for mLocPathPatterns.
- */
-void txUnionPattern::toString(nsAString& aDest)
+#ifdef TX_TO_STRING
+void
+txUnionPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
     aDest.Append(NS_LITERAL_STRING("txUnionPattern{"));
@@ -150,7 +147,8 @@ void txUnionPattern::toString(nsAString& aDest)
 #ifdef DEBUG
     aDest.Append(PRUnichar('}'));
 #endif
-} // toString
+}
+#endif
 
 
 /*
@@ -257,7 +255,9 @@ double txLocPathPattern::getDefaultPriority()
     return ((Step*)mSteps.get(0))->pattern->getDefaultPriority();
 }
 
-void txLocPathPattern::toString(nsAString& aDest)
+#ifdef TX_TO_STRING
+void
+txLocPathPattern::toString(nsAString& aDest)
 {
     txListIterator iter(&mSteps);
 #ifdef DEBUG
@@ -278,7 +278,8 @@ void txLocPathPattern::toString(nsAString& aDest)
 #ifdef DEBUG
     aDest.Append(PRUnichar('}'));
 #endif
-} // txLocPathPattern::toString
+}
+#endif
 
 /*
  * txRootPattern
@@ -300,7 +301,9 @@ double txRootPattern::getDefaultPriority()
     return 0.5;
 }
 
-void txRootPattern::toString(nsAString& aDest)
+#ifdef TX_TO_STRING
+void
+txRootPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
     aDest.Append(NS_LITERAL_STRING("txRootPattern{"));
@@ -311,6 +314,7 @@ void txRootPattern::toString(nsAString& aDest)
     aDest.Append(PRUnichar('}'));
 #endif
 }
+#endif
 
 /*
  * txIdPattern
@@ -380,7 +384,9 @@ double txIdPattern::getDefaultPriority()
     return 0.5;
 }
 
-void txIdPattern::toString(nsAString& aDest)
+#ifdef TX_TO_STRING
+void
+txIdPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
     aDest.Append(NS_LITERAL_STRING("txIdPattern{"));
@@ -397,6 +403,7 @@ void txIdPattern::toString(nsAString& aDest)
     aDest.Append(PRUnichar('}'));
 #endif
 }
+#endif
 
 /*
  * txKeyPattern
@@ -430,7 +437,9 @@ double txKeyPattern::getDefaultPriority()
     return 0.5;
 }
 
-void txKeyPattern::toString(nsAString& aDest)
+#ifdef TX_TO_STRING
+void
+txKeyPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
     aDest.Append(NS_LITERAL_STRING("txKeyPattern{"));
@@ -451,6 +460,7 @@ void txKeyPattern::toString(nsAString& aDest)
     aDest.Append(PRUnichar('}'));
 #endif
 }
+#endif
 
 /*
  * txStepPattern
@@ -576,7 +586,9 @@ double txStepPattern::getDefaultPriority()
     return 0.5;
 }
 
-void txStepPattern::toString(nsAString& aDest)
+#ifdef TX_TO_STRING
+void
+txStepPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
     aDest.Append(NS_LITERAL_STRING("txStepPattern{"));
@@ -591,3 +603,4 @@ void txStepPattern::toString(nsAString& aDest)
     aDest.Append(PRUnichar('}'));
 #endif
 }
+#endif

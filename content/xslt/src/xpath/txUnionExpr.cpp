@@ -125,15 +125,10 @@ UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 } //-- evaluate
 
-/**
- * Returns the String representation of this Expr.
- * @param dest the String to use when creating the String
- * representation. The String representation will be appended to
- *  any data in the destination String, to allow cascading calls to
- * other #toString() methods for Expressions.
- * @return the String representation of this Expr.
-**/
-void UnionExpr::toString(nsAString& dest) {
+#ifdef TX_TO_STRING
+void
+UnionExpr::toString(nsAString& dest)
+{
     txListIterator iter(&expressions);
 
     short count = 0;
@@ -144,5 +139,5 @@ void UnionExpr::toString(nsAString& dest) {
         ((Expr*)iter.next())->toString(dest);
         ++count;
     }
-} //-- toString
-
+}
+#endif

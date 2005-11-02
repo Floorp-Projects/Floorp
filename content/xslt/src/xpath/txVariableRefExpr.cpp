@@ -82,15 +82,9 @@ VariableRefExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     return NS_OK;
 }
 
-/**
- * Returns the String representation of this Expr.
- * @param dest the String to use when creating the String
- * representation. The String representation will be appended to
- * any data in the destination String, to allow cascading calls to
- * other #toString() methods for Expressions.
- * @return the String representation of this Expr.
-**/
-void VariableRefExpr::toString(nsAString& aDest)
+#ifdef TX_TO_STRING
+void
+VariableRefExpr::toString(nsAString& aDest)
 {
     aDest.Append(PRUnichar('$'));
     if (mPrefix) {
@@ -102,4 +96,5 @@ void VariableRefExpr::toString(nsAString& aDest)
     nsAutoString lname;
     mLocalName->ToString(lname);
     aDest.Append(lname);
-} //-- toString
+}
+#endif

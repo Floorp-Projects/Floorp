@@ -65,16 +65,6 @@ public:
     virtual double getDefaultPriority() = 0;
 
     /*
-     * Returns the String representation of this Pattern.
-     * @param dest the String to use when creating the String
-     * representation. The String representation will be appended to
-     * any data in the destination String, to allow cascading calls to
-     * other #toString() methods for Patterns.
-     * @return the String representation of this Pattern.
-     */
-    virtual void toString(nsAString& aDest) = 0;
-
-    /*
      * Adds the simple Patterns to the List.
      * For union patterns, add all sub patterns,
      * all other (simple) patterns just add themselves.
@@ -83,12 +73,32 @@ public:
      * to this function.
      */
     virtual nsresult getSimplePatterns(txList &aList);
+
+#ifdef TX_TO_STRING
+    /*
+     * Returns the String representation of this Pattern.
+     * @param dest the String to use when creating the String
+     * representation. The String representation will be appended to
+     * any data in the destination String, to allow cascading calls to
+     * other #toString() methods for Patterns.
+     * @return the String representation of this Pattern.
+     */
+    virtual void toString(nsAString& aDest) = 0;
+#endif
 };
 
-#define TX_DECL_PATTERN \
+#define TX_DECL_PATTERN_BASE \
     MBool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
-    double getDefaultPriority(); \
+    double getDefaultPriority()
+
+#ifndef TX_TO_STRING
+#define TX_DECL_PATTERN TX_DECL_PATTERN_BASE
+#else
+#define TX_DECL_PATTERN \
+    TX_DECL_PATTERN_BASE; \
     void toString(nsAString& aDest)
+#endif
+
 #define TX_DECL_PATTERN2 \
     TX_DECL_PATTERN; \
     nsresult getSimplePatterns(txList &aList)
@@ -147,16 +157,28 @@ private:
 class txRootPattern : public txPattern
 {
 public:
-    txRootPattern(MBool aSerialize) : mSerialize(aSerialize)
+    txRootPattern()
+#ifdef TX_TO_STRING
+        : mSerialize(PR_TRUE)
+#endif
     {
     }
 
     ~txRootPattern();
 
     TX_DECL_PATTERN;
+
+#ifdef TX_TO_STRING
+public:
+    void setSerialize(PRBool aSerialize)
+    {
+        mSerialize = aSerialize;
+    }
+
 private:
     // Don't serialize txRootPattern if it's used in a txLocPathPattern
-    MBool mSerialize;
+    PRBool mSerialize;
+#endif
 };
 
 class txIdPattern : public txPattern
