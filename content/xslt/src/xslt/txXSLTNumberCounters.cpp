@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txXSLTNumber.h"
+#include "nsReadableUtils.h"
 #include "primitives.h"
 
 class txDecimalCounter : public txFormattedCounter {
@@ -235,14 +236,11 @@ void txRomanCounter::appendNumber(PRInt32 aNumber, nsAString& aDest)
     // Hundreds
     posValue = aNumber / 100;
     aNumber %= 100;
-    aDest.Append(NS_ConvertASCIItoUCS2(kTxRomanNumbers[posValue +
-                                                       mTableOffset]));
+    AppendASCIItoUTF16(kTxRomanNumbers[posValue + mTableOffset], aDest);
     // Tens
     posValue = aNumber / 10;
     aNumber %= 10;
-    aDest.Append(NS_ConvertASCIItoUCS2(kTxRomanNumbers[10 + posValue +
-                                                       mTableOffset]));
+    AppendASCIItoUTF16(kTxRomanNumbers[10 + posValue + mTableOffset], aDest);
     // Ones
-    aDest.Append(NS_ConvertASCIItoUCS2(kTxRomanNumbers[20 + aNumber +
-                                                       mTableOffset]));
+    AppendASCIItoUTF16(kTxRomanNumbers[20 + aNumber + mTableOffset], aDest);
 }
