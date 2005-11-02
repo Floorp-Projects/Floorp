@@ -54,7 +54,7 @@ typedef struct
   nsPkgInt classTable;
   PRUint32 classFactor;
   nsPkgInt stateTable;
-  PRUint32* charLenTable;
+  const PRUint32* charLenTable;
   const char* name;
 } SMModel;
 
