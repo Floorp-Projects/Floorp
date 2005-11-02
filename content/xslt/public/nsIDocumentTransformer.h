@@ -44,6 +44,7 @@ class nsIDOMDocument;
 class nsIDOMNode;
 class nsILoadGroup;
 class nsIURI;
+class nsIPrincipal;
 
 #define NS_ITRANSFORMOBSERVER_IID \
   {0xcce88481, 0x6eb3, 0x11d6, \
@@ -74,7 +75,7 @@ public:
 
   NS_IMETHOD SetTransformObserver(nsITransformObserver* aObserver) = 0;
   NS_IMETHOD LoadStyleSheet(nsIURI* aUri, nsILoadGroup* aLoadGroup,
-                            nsIURI* aReferrerUri) = 0;
+                            nsIPrincipal* aCallerPrincipal) = 0;
   NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource) = 0;
   NS_IMETHOD CancelLoads() = 0;
 };
