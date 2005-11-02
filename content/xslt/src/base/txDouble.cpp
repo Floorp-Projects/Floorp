@@ -46,8 +46,8 @@
 #ifndef TX_EXE
 #include "prdtoa.h"
 #else
-#include "stdlib.h"
-#include "stdio.h"
+#include <stdlib.h>
+#include <stdio.h>
 #endif
 
 /*
