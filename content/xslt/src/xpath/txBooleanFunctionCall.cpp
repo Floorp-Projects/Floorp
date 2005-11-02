@@ -3,25 +3,28 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is TransforMiiX XSLT processor.
- * 
+ *
  * The Initial Developer of the Original Code is The MITRE Corporation.
  * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
  * Portions created by Keith Visco as a Non MITRE employee,
  * (C) 1999 Keith Visco. All Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: txBooleanFunctionCall.cpp,v 1.3 2005/11/02 07:33:36 kvisco%ziplink.net Exp $
+ *
+ * Marina Mechtcheriakova, mmarina@mindspring.com
+ *   -- added lang() implementation
+ *
+ * $Id: txBooleanFunctionCall.cpp,v 1.4 2005/11/02 07:33:37 kvisco%ziplink.net Exp $
  */
 
 #include "FunctionLib.h"
@@ -29,7 +32,7 @@
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:36 $
+ * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:37 $
 **/
 BooleanFunctionCall::BooleanFunctionCall() : FunctionCall(XPathNames::FALSE_FN) {
     this->type = TX_FALSE;
@@ -44,6 +47,9 @@ BooleanFunctionCall::BooleanFunctionCall(short type) : FunctionCall()
         case TX_BOOLEAN :
             FunctionCall::setName(XPathNames::BOOLEAN_FN);
             break;
+        case TX_LANG:
+			FunctionCall::setName(XPathNames::LANG_FN);
+			break;
         case TX_NOT :
             FunctionCall::setName(XPathNames::NOT_FN);
             break;
@@ -82,6 +88,16 @@ ExprResult* BooleanFunctionCall::evaluate(Node* context, ContextState* cs) {
                 delete exprResult;
             }
             break;
+        case TX_LANG:
+            if ( requireParams(1,1,cs) ) {
+                String arg1, lang;
+                evaluateToString((Expr*)iter->next(),context, cs, arg1);
+                lang = ((Element*)context)->getAttribute(LANG_ATTR);
+				arg1.toUpperCase(); // case-insensitive comparison
+				lang.toUpperCase();
+                result->setValue((MBool)(lang.indexOf(arg1) == 0));
+			}
+			break;
         case TX_NOT :
             if ( requireParams(1,1,cs) ) {
                 param = (Expr*)iter->next();
