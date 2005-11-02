@@ -43,7 +43,6 @@
 #include "nsIURL.h"
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
-#include "nsIStyledContent.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
@@ -10643,7 +10642,7 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
 }
 
 nsresult
-nsCSSFrameConstructor::AttributeChanged(nsIStyledContent* aContent,
+nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
                                         PRInt32 aNameSpaceID,
                                         nsIAtom* aAttribute,
                                         PRInt32 aModType)

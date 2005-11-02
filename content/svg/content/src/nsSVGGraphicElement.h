@@ -59,7 +59,7 @@ public:
   NS_DECL_NSIDOMSVGLOCATABLE
   NS_DECL_NSIDOMSVGTRANSFORMABLE
 
-  // nsIStyledContent interface
+  // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:

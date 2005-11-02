@@ -84,7 +84,7 @@ nsSVGStylableElement::Init()
 }
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 const nsAttrValue*
 nsSVGStylableElement::GetClasses() const

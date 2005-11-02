@@ -112,7 +112,7 @@ public:
   NS_IMETHOD_(float) GetPreviousTranslate_y();
   NS_IMETHOD_(float) GetPreviousScale();
 
-  // nsIStyledContent interface
+  // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
   // nsISVGValueObserver
@@ -538,8 +538,7 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
   NS_ASSERTION(presShell, "need presShell to suspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsIFrame* frame = 
-    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 #ifdef DEBUG
   // XXX We sometimes hit this assertion when the svg:svg element is
   // in a binding and svg children are inserted underneath it using
@@ -590,8 +589,7 @@ nsSVGSVGElement::UnsuspendRedrawAll()
   NS_ASSERTION(presShell, "need presShell to unsuspend redraw");
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsIFrame* frame =
-    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 #ifdef DEBUG
   NS_ASSERTION(frame, "unsuspending redraw w/o frame");
 #endif
@@ -984,8 +982,7 @@ nsSVGSVGElement::GetBBox(nsIDOMSVGRect **_retval)
   NS_ASSERTION(presShell, "no presShell");
   if (!presShell) return NS_ERROR_FAILURE;
 
-  nsIFrame* frame =
-    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
   NS_ASSERTION(frame, "can't get bounding box for element without frame");
 
@@ -1428,7 +1425,7 @@ nsSVGSVGElement::GetPreviousScale()
 }
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
@@ -1519,8 +1516,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable,
   // invalidate viewbox -> viewport xform & inform frames
   mViewBoxToViewportTransform = nsnull;
 
-  nsIFrame* frame =
-    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
   if (frame) {
     nsISVGSVGFrame* svgframe;
     CallQueryInterface(frame, &svgframe);

@@ -156,7 +156,7 @@ class nsXTFStyledElementWrapper : public nsXTFElementWrapper
 public:
   nsXTFStyledElementWrapper(nsINodeInfo* aNodeInfo);
 
-  // for nsIStyledContent
+  // for nsIContent
   virtual nsIAtom *GetClassAttributeName() const;
   virtual const nsAttrValue* GetClasses() const;
   

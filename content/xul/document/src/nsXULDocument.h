@@ -124,8 +124,7 @@ public:
                                 nsIContent* aChild,
                                 PRInt32 aIndexInContainer);
 
-    virtual void AttributeChanged(nsIStyledContent* aElement,
-                                  PRInt32 aNameSpaceID,
+    virtual void AttributeChanged(nsIContent* aElement, PRInt32 aNameSpaceID,
                                   nsIAtom* aAttribute, PRInt32 aModType);
 
     // nsIXULDocument interface

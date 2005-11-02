@@ -54,6 +54,7 @@ ifndef TX_EXE
 REQUIRES += necko \
         dom \
         content \
+        layout \
         widget \
         js \
         xpconnect \

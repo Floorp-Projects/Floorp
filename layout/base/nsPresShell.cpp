@@ -57,7 +57,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
-#include "nsIStyledContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsStubDocumentObserver.h"
@@ -1216,8 +1215,7 @@ public:
                                     nsIContent* aContent1,
                                     nsIContent* aContent2,
                                     PRInt32 aStateMask);
-  virtual void AttributeChanged(nsIDocument* aDocument,
-                                nsIStyledContent* aContent,
+  virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                 PRInt32 aModType);
   virtual void ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
@@ -5090,11 +5088,11 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
 
 
 void
-PresShell::AttributeChanged(nsIDocument*       aDocument,
-                            nsIStyledContent*  aContent,
-                            PRInt32            aNameSpaceID,
-                            nsIAtom*           aAttribute,
-                            PRInt32            aModType)
+PresShell::AttributeChanged(nsIDocument* aDocument,
+                            nsIContent*  aContent,
+                            PRInt32      aNameSpaceID,
+                            nsIAtom*     aAttribute,
+                            PRInt32      aModType)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected AttributeChanged");
   NS_PRECONDITION(aDocument == mDocument, "Unexpected aDocument");

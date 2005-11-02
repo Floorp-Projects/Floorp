@@ -49,7 +49,6 @@
 #include "nsIEventQueue.h"
 
 class nsIDocument;
-class nsIStyledContent;
 struct nsFrameItems;
 struct nsAbsoluteItems;
 struct nsTableCreator;
@@ -125,10 +124,10 @@ public:
   // WillDestroyFrameTree hasn't been called yet.
   void NotifyDestroyingFrame(nsIFrame* aFrame);
 
-  nsresult AttributeChanged(nsIStyledContent* aContent,
-                            PRInt32           aNameSpaceID,
-                            nsIAtom*          aAttribute,
-                            PRInt32           aModType);
+  nsresult AttributeChanged(nsIContent* aContent,
+                            PRInt32     aNameSpaceID,
+                            nsIAtom*    aAttribute,
+                            PRInt32     aModType);
 
   void BeginUpdate() { ++mUpdateCount; }
   void EndUpdate();

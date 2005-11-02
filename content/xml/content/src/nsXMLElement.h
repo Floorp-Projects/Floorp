@@ -44,7 +44,6 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIXMLContent.h"
 #include "nsGenericElement.h"
-#include "nsIStyledContent.h"
 
 class nsIEventListenerManager;
 class nsIURI;

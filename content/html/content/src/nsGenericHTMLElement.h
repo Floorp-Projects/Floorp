@@ -237,7 +237,6 @@ public:
   }
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
 
-  // Implementation for nsIStyledContent
   virtual const nsAttrValue* GetClasses() const;
   virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;

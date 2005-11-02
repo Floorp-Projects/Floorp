@@ -53,6 +53,7 @@ REQUIRES	= string \
 ifndef TX_EXE
 REQUIRES +=	  dom \
 		  content \
+		  layout \
 		  widget \
 		  locale \
 		  unicharutil \

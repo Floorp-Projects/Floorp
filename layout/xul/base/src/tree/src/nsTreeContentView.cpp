@@ -47,7 +47,6 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIEventStateManager.h"
 #include "nsINodeInfo.h"
-#include "nsIStyledContent.h"
 
 // A content model view implementation for the tree.
 
@@ -733,7 +732,7 @@ nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
 
 void
 nsTreeContentView::AttributeChanged(nsIDocument *aDocument,
-                                    nsIStyledContent*  aContent,
+                                    nsIContent*  aContent,
                                     PRInt32      aNameSpaceID,
                                     nsIAtom*     aAttribute,
                                     PRInt32      aModType)

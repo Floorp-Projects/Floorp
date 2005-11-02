@@ -40,24 +40,25 @@
 #define nsIXMLContent_h___
 
 #include "nsISupports.h"
-#include "nsIStyledContent.h"
+#include "nsIContent.h"
 
 class nsIDocShell;
 
-// 37eff125-80a9-49ce-a0f7-1617a21ce745
+// 226f10b8-2954-405a-b5e7-446a4fce4bf8
 #define NS_IXMLCONTENT_IID \
- { 0x37eff125, 0x80a9, 0x49ce, \
- { 0xa0, 0xf7, 0x16, 0x17, 0xa2, 0x1c, 0xe7, 0x45 } }
+ { 0x226f10b8, 0x2954, 0x405a, \
+ { 0xb5, 0xe7, 0x44, 0x6a, 0x4f, 0xce, 0x4b, 0xf8 } }
 
 /**
  * XML content extensions to nsIContent
+ * // XXXbz this interface should die, really.
  */
-class nsIXMLContent : public nsIStyledContent {
+class nsIXMLContent : public nsIContent {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXMLCONTENT_IID)
   
   nsIXMLContent(nsINodeInfo *aNodeInfo)
-    : nsIStyledContent(aNodeInfo)
+    : nsIContent(aNodeInfo)
   {
   }
 

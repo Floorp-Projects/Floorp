@@ -42,12 +42,12 @@
 
 #include "nsISupports.h"
 class nsDOMCSSDeclaration;
-class nsIStyledContent;
+class nsIContent;
 
-// bfdd87bd-79c8-4041-ae14-91fa8536ce61
+// f2fb43bf-81a1-4b0d-907a-893fe6727dbb
 #define NS_ICSSOMFACTORY_IID \
-  { 0xbfdd87bd, 0x79c8, 0x4041, \
-    {0xae, 0x14, 0x91, 0xfa, 0x85, 0x36, 0xce, 0x61 } }
+  { 0xf2fb43bf, 0x81a1, 0x4b0d, \
+    { 0x90, 0x7a, 0x89, 0x3f, 0xe6, 0x72, 0x7d, 0xbb } }
 
 // 5fcaa2c1-7ca4-4f73-a357-93e79d709376
 #define NS_CSSOMFACTORY_CID \
@@ -58,7 +58,7 @@ class nsICSSOMFactory : public nsISupports {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSSOMFACTORY_IID)
 
-    NS_IMETHOD CreateDOMCSSAttributeDeclaration(nsIStyledContent *aContent,
+    NS_IMETHOD CreateDOMCSSAttributeDeclaration(nsIContent *aContent,
                                                 nsDOMCSSDeclaration **aResult) = 0;
 };
 

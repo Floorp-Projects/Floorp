@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  widget \
 		  content \
+		  layout \
 		  pref \
 		  docshell \
 		  $(NULL)

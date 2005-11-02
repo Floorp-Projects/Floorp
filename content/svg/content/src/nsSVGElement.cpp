@@ -93,7 +93,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
   NS_INTERFACE_MAP_ENTRY(nsISVGContent)
 // provided by nsGenericElement:
-//  NS_INTERFACE_MAP_ENTRY(nsIStyledContent)
 //  NS_INTERFACE_MAP_ENTRY(nsIContent)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
 
@@ -238,9 +237,6 @@ nsSVGElement::IsContentOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eELEMENT | eSVG));
 }
-
-//----------------------------------------------------------------------
-// nsIStyledContent methods
 
 NS_IMETHODIMP
 nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)

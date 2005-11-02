@@ -41,7 +41,6 @@
 
 class nsIAtom;
 class nsIContent;
-class nsIStyledContent;
 class nsIPresShell;
 class nsIStyleSheet;
 class nsIStyleRule;
@@ -161,11 +160,11 @@ public:
    * @param aModType Whether or not the attribute was added, changed, or removed.
    *   The constants are defined in nsIDOMMutationEvent.h.
    */
-  virtual void AttributeChanged(nsIDocument*      aDocument,
-                                nsIStyledContent* aContent,
-                                PRInt32           aNameSpaceID,
-                                nsIAtom*          aAttribute,
-                                PRInt32           aModType) = 0;
+  virtual void AttributeChanged(nsIDocument* aDocument,
+                                nsIContent*  aContent,
+                                PRInt32      aNameSpaceID,
+                                nsIAtom*     aAttribute,
+                                PRInt32      aModType) = 0;
 
   /**
    * Notifcation that the content model has had data appended to the
@@ -350,7 +349,7 @@ public:
                                       nsIContent* aContent2,                 \
                                       PRInt32 aStateMask);                   \
     virtual void AttributeChanged(nsIDocument* aDocument,                    \
-                                  nsIStyledContent* aContent,                \
+                                  nsIContent* aContent,                      \
                                   PRInt32 aNameSpaceID,                      \
                                   nsIAtom* aAttribute,                       \
                                   PRInt32 aModType);                         \
@@ -441,7 +440,7 @@ _class::CharacterDataChanged(nsIDocument* aDocument,                      \
 }                                                                         \
 void                                                                      \
 _class::AttributeChanged(nsIDocument* aDocument,                          \
-                         nsIStyledContent* aContent,                      \
+                         nsIContent* aContent,                            \
                          PRInt32 aNameSpaceID,                            \
                          nsIAtom* aAttribute,                             \
                          PRInt32 aModType)                                \

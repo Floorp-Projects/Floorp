@@ -72,8 +72,7 @@ class nsTreeContentView : public nsITreeView,
                                       nsIContent* aContent1,
                                       nsIContent* aContent2,
                                       PRInt32 aStateMask);
-    virtual void AttributeChanged(nsIDocument *aDocument,
-                                  nsIStyledContent* aContent,
+    virtual void AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType);
     virtual void ContentAppended(nsIDocument *aDocument,

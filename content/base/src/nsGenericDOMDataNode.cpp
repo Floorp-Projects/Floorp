@@ -55,6 +55,7 @@
 #include "nsDOMString.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDOMUserDataHandler.h"
+#include "nsChangeHint.h"
 
 #include "pldhash.h"
 #include "prprf.h"
@@ -1401,4 +1402,56 @@ nsGenericDOMDataNode::CloneContent(nsNodeInfoManager *aNodeInfoManager,
   NS_ADDREF(*aResult);
 
   return NS_OK;
+}
+
+nsIAtom*
+nsGenericDOMDataNode::GetID() const
+{
+  return nsnull;
+}
+
+const nsAttrValue*
+nsGenericDOMDataNode::GetClasses() const
+{
+  return nsnull;
+}
+
+NS_IMETHODIMP
+nsGenericDOMDataNode::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
+{
+  return NS_OK;
+}
+
+nsICSSStyleRule*
+nsGenericDOMDataNode::GetInlineStyleRule()
+{
+  return nsnull;
+}
+
+NS_IMETHODIMP
+nsGenericDOMDataNode::SetInlineStyleRule(nsICSSStyleRule* aStyleRule,
+                                         PRBool aNotify)
+{
+  NS_NOTREACHED("How come we're setting inline style on a non-element?");
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP_(PRBool)
+nsGenericDOMDataNode::IsAttributeMapped(const nsIAtom* aAttribute) const
+{
+  return PR_FALSE;
+}
+
+nsChangeHint
+nsGenericDOMDataNode::GetAttributeChangeHint(const nsIAtom* aAttribute,
+                                             PRInt32 aModType) const
+{
+  NS_NOTREACHED("Shouldn't be calling this!");
+  return nsChangeHint(0);
+}
+
+nsIAtom*
+nsGenericDOMDataNode::GetClassAttributeName() const
+{
+  return nsnull;
 }

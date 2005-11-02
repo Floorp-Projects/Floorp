@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  widget \
 		  content \
+		  layout \
 		  js \
 		  htmlparser \
 		  necko \

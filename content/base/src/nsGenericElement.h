@@ -447,7 +447,6 @@ public:
   virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
 #endif
 
-  // nsIStyledContent interface methods
   virtual nsIAtom* GetID() const;
   virtual const nsAttrValue* GetClasses() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);

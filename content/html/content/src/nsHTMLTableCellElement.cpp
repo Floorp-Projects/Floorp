@@ -201,9 +201,9 @@ nsHTMLTableCellElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   // contract.  However, things are OK (except for the incorrect
   // dependence on display type rather than tag) since tables and cells
   // match different, less specific, rules.
-  nsCOMPtr<nsIStyledContent> styledTable = do_QueryInterface(GetTable());
-  if (styledTable) {
-    rv = styledTable->WalkContentStyleRules(aRuleWalker);
+  nsIContent* table = GetTable();
+  if (table) {
+    rv = table->WalkContentStyleRules(aRuleWalker);
   }
 
   return rv;

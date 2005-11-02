@@ -62,7 +62,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGDefsElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGDefsElementBase::)
 
-  // nsIStyledContent
+  // nsIContent
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 protected:
 };
@@ -109,7 +109,7 @@ NS_IMPL_DOM_CLONENODE_WITH_INIT(nsSVGDefsElement)
 
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGDefsElement::IsAttributeMapped(const nsIAtom* name) const

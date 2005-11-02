@@ -114,7 +114,6 @@
 #include "nsIServiceManager.h"
 #include "nsICSSStyleRule.h"
 #include "nsIStyleSheet.h"
-#include "nsIStyledContent.h"
 #include "nsIURL.h"
 #include "nsIViewManager.h"
 #include "nsIWidget.h"
@@ -1055,7 +1054,7 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
     if (HasMutationListeners(this, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED, oldKid);
       mutation.mRelatedNode =
-          do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
+          do_QueryInterface(NS_STATIC_CAST(nsIContent*, this));
 
       nsEventStatus status = nsEventStatus_eIgnore;
       oldKid->HandleDOMEvent(nsnull, &mutation, nsnull, NS_EVENT_FLAG_INIT, &status);
@@ -2133,8 +2132,7 @@ nsXULElement::WillAddOrRemoveChild(nsIContent* aKid,
   return aRemove ? NS_OK : EnsureContentsGenerated();
 }
 
-// nsIStyledContent Implementation
-/// XXX GetID must be defined here because nsXUL element does not inherit from nsGenericElement.
+/// XXX GetID must be defined here because we have proto attrs.
 nsIAtom*
 nsXULElement::GetID() const
 {

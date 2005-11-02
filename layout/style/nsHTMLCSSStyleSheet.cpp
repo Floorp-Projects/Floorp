@@ -41,7 +41,6 @@
 #include "nsIAtom.h"
 #include "nsIURL.h"
 #include "nsCSSPseudoElements.h"
-#include "nsIStyledContent.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"
 #include "nsICSSStyleRule.h"
@@ -414,11 +413,11 @@ NS_IMPL_ISUPPORTS3(HTMLCSSStyleSheetImpl,
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData)
 {
-  nsIStyledContent* styledContent = aData->mStyledContent;
+  nsIContent* content = aData->mContent;
   
-  if (styledContent) {
+  if (content) {
     // just get the one and only style rule from the content's STYLE attribute
-    nsICSSStyleRule* rule = styledContent->GetInlineStyleRule();
+    nsICSSStyleRule* rule = content->GetInlineStyleRule();
     if (rule)
       aData->mRuleWalker->Forward(rule);
   }

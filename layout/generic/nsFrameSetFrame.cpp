@@ -289,9 +289,7 @@ nsHTMLFramesetFrame::FrameResizePrefCallback(const char* aPref, void* aClosure)
 
   frame->RecalculateBorderResize();
   if (doc) {
-    nsCOMPtr<nsIStyledContent> content(do_QueryInterface(frame->GetContent()));
-    NS_ASSERTION(content, "Expected an element here!");
-    doc->AttributeChanged(content,
+    doc->AttributeChanged(frame->GetContent(),
                           kNameSpaceID_None,
                           nsHTMLAtoms::frameborder,
                           nsIDOMMutationEvent::MODIFICATION);

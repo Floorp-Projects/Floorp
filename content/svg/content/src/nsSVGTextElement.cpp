@@ -76,7 +76,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGTextElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTextElementBase::)
 
-  // nsIStyledContent interface
+  // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   
   // nsISVGContent specializations:
@@ -337,7 +337,7 @@ NS_IMETHODIMP nsSVGTextElement::SelectSubString(PRUint32 charnum, PRUint32 nchar
 }
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGTextElement::IsAttributeMapped(const nsIAtom* name) const
@@ -427,8 +427,7 @@ nsSVGTextElement::GetTextContentMetrics()
     return nsnull;
   }
 
-  nsIFrame* frame =
-    presShell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this));
+  nsIFrame* frame = presShell->GetPrimaryFrameFor(this);
 
   if (!frame) {
     NS_ERROR("no frame");
@@ -436,7 +435,7 @@ nsSVGTextElement::GetTextContentMetrics()
   }
   
   nsISVGTextContentMetrics* metrics;
-  frame->QueryInterface(NS_GET_IID(nsISVGTextContentMetrics),(void**)&metrics);
+  CallQueryInterface(frame, &metrics);
   NS_ASSERTION(metrics, "wrong frame type");
   return metrics;
 }

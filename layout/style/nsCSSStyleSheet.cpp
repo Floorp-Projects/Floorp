@@ -56,7 +56,6 @@
 #include "nsICSSGroupRule.h"
 #include "nsICSSImportRule.h"
 #include "nsIMediaList.h"
-#include "nsIStyledContent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIEventStateManager.h"
@@ -2601,7 +2600,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
 
   mContentTag = nsnull;
   mContentID = nsnull;
-  mStyledContent = nsnull;
+  mHasAttributes = PR_FALSE;
   mIsHTMLContent = PR_FALSE;
   mIsHTMLLink = PR_FALSE;
   mIsSimpleXLink = PR_FALSE;
@@ -2632,15 +2631,9 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     // get the event state
     mPresContext->EventStateManager()->GetContentState(aContent, mEventState);
 
-    // get the styledcontent interface and the ID
-    if (aContent->IsContentOfType(nsIContent::eELEMENT)) {
-      mStyledContent = NS_STATIC_CAST(nsIStyledContent*, aContent);
-      mContentID = mStyledContent->GetID();
-      mClasses = mStyledContent->GetClasses();
-    }
-
-    NS_ASSERTION(nsCOMPtr<nsIStyledContent>(do_QueryInterface(aContent)) == mStyledContent,
-                 "nsIStyledContent must agree with IsContentOfType(eELEMENT)");
+    // get the ID and classes for the content
+    mContentID = aContent->GetID();
+    mClasses = aContent->GetClasses();
 
     // see if there are attributes for the content
     mHasAttributes = aContent->GetAttrCount() > 0;
@@ -3000,7 +2993,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                                     nsDependentString(pseudoClass->mString), 
                                     nsCaseInsensitiveStringComparator());
         }
-        else {
+        else if (data.mContent) {
           nsIDocument* doc = data.mContent->GetDocument();
           if (doc) {
             // Try to get the language from the HTTP header or if this
@@ -3149,6 +3142,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       // if no attributes on the content, no match
       result = localFalse;
     } else {
+      NS_ASSERTION(data.mContent,
+                   "Must have content if either data.mHasAttributes or "
+                   "aAttribute is set!");
       result = localTrue;
       nsAttrSelector* attr = aSelector->mAttrList;
       do {
@@ -3234,7 +3230,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   if (result && (aSelector->mIDList || aSelector->mClassList)) {
     // test for ID & class match
     result = localFalse;
-    if (data.mStyledContent) {
+    // No attributes means no match on class or id
+    if (data.mHasAttributes) {
       // case sensitivity: bug 93371
       PRBool isCaseSensitive = data.mCompatMode != eCompatibility_NavQuirks;
       nsAtomList* IDList = aSelector->mIDList;
@@ -3270,7 +3267,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       }
       
       if (result &&
-          (!aAttribute || aAttribute != data.mStyledContent->GetClassAttributeName())) {
+          (!aAttribute || aAttribute != data.mContent->GetClassAttributeName())) {
         nsAtomList* classList = aSelector->mClassList;
         const nsAttrValue *elementClasses = data.mClasses;
         while (nsnull != classList) {
@@ -3574,8 +3571,6 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
 {
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
-  NS_ASSERTION(aData->mStyledContent,
-               "elements must implement nsIStyledContent");
 
   AttributeEnumData data(aData);
 
@@ -3602,7 +3597,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
       cascade->mIDSelectors.EnumerateForwards(AttributeEnumFunc, &data);
     }
     
-    if (aData->mAttribute == aData->mStyledContent->GetClassAttributeName()) {
+    if (aData->mAttribute == aData->mContent->GetClassAttributeName()) {
       cascade->mClassSelectors.EnumerateForwards(AttributeEnumFunc, &data);
     }
 

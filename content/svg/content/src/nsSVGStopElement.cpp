@@ -69,7 +69,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGStopElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGStopElementBase::)
 
-  // nsIStyledContent interface
+  // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
@@ -144,7 +144,7 @@ NS_IMETHODIMP nsSVGStopElement::GetOffset(nsIDOMSVGAnimatedNumber * *aOffset)
 }
 
 //----------------------------------------------------------------------
-// nsIStyledContent methods
+// nsIContent methods
 
 NS_IMETHODIMP_(PRBool)
 nsSVGStopElement::IsAttributeMapped(const nsIAtom* name) const

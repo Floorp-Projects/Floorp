@@ -60,7 +60,6 @@ nsINameSpaceManager.h \
 nsINodeInfo.h \
 nsIRangeUtils.h \
 nsIScriptElement.h \
-nsIStyledContent.h \
 nsIStyleSheetLinkingElement.h \
 nsITextContent.h \
 nsIPrivateDOMImplementation.h \
