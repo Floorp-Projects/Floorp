@@ -20,7 +20,10 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: txXSLTFunctions.h,v 1.1 2005/11/02 07:33:54 kvisco%ziplink.net Exp $
+ * Olivier Gerardin,
+ *    -- added document() function definition
+ *
+ * $Id: txXSLTFunctions.h,v 1.2 2005/11/02 07:33:55 kvisco%ziplink.net Exp $
  */
 
 #include "dom.h"
@@ -33,6 +36,9 @@
 #ifndef TRANSFRMX_XSLT_FUNCTIONS_H
 #define TRANSFRMX_XSLT_FUNCTIONS_H
 
+/**
+ * The definition for the XSLT generate-id() function
+**/
 class GenerateIdFunctionCall : public FunctionCall {
 
 public:
@@ -56,4 +62,31 @@ private:
     DOMHelper* domHelper;
 };
 
- #endif
+/**
+ * The definition for the XSLT document() function
+**/
+class DocumentFunctionCall : public FunctionCall {
+
+public:
+
+    /**
+     * Creates a new document() function call
+    **/
+    DocumentFunctionCall(Document* xslDocument);
+
+    /**
+     * Evaluates this Expr based on the given context node and processor state
+     * @param context the context node for evaluation of this Expr
+     * @param ps the ContextState containing the stack information needed
+     * for evaluation
+     * @return the result of the evaluation
+     * @see FunctionCall.h
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+
+private:
+    void retrieveDocument(String& uri,String& baseUri, NodeSet &resultNodeSet, ContextState* cs);
+    Document* xslDocument;
+};
+
+#endif
