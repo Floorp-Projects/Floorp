@@ -135,8 +135,7 @@ PRBool FunctionCall::requireParams(PRInt32 aParamCountMin,
     PRInt32 argc = params.getLength();
     if (argc < aParamCountMin ||
         (aParamCountMax > -1 && argc > aParamCountMax)) {
-        nsAutoString err(NS_LITERAL_STRING("invalid number of parameters "
-                                           "for function: "));
+        nsAutoString err(NS_LITERAL_STRING("invalid number of parameters for function: "));
         toString(err);
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
 
