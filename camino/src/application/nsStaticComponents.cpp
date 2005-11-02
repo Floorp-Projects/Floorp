@@ -81,7 +81,6 @@
     MODULE(nsXMLExtrasModule) \
     MODULE(nsUniversalCharDetModule) \
     MODULE(nsTypeAheadFind) \
-    MODULE(TransformiixModule) \
     MODULE(nsPermissionsModule) \
     MODULE(nsComposerModule) \
     MODULE(BOOT) \

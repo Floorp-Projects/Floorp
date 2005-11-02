@@ -1329,7 +1329,6 @@
 			dstSubfolderSpec = 6;
 			files = (
 				82180ACB07368BF2002EFA6D,
-				82AC0D64065A601500776B02,
 				3F44ACD005BDFB9F00CB4B08,
 				3F44ACD605BDFB9F00CB4B08,
 				3F44ACD805BDFB9F00CB4B08,
@@ -1433,7 +1432,6 @@
 		0FA8EFA20423B36300A80166 = {
 			children = (
 				82180AC907368BDF002EFA6D,
-				82AC0D60065A5FD600776B02,
 				F5F181C90208006F0124611D,
 				F507A82C030BFB7901026D5D,
 				F6BD63A601B3131201A962F7,
@@ -9998,7 +9996,6 @@
 				3F44AFC205BDFBA000CB4B08,
 				3F44AFC305BDFBA000CB4B08,
 				3FECC8E705D1FE800068E7ED,
-				82C39664065B156600A82035,
 				3FE5BA0C068A1A140001CECD,
 				82CE286E0736605800B4DE07,
 				34884A37074F7C5D000EA76B,
@@ -12566,20 +12563,6 @@
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
-		82AC0D60065A5FD600776B02 = {
-			isa = PBXFileReference;
-			lastKnownFileType = "compiled.mach-o.bundle";
-			name = libtransformiix.dylib;
-			path = ../dist/bin/components/libtransformiix.dylib;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		82AC0D64065A601500776B02 = {
-			fileRef = 82AC0D60065A5FD600776B02;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		82AC0D65065A602200776B02 = {
 			fileRef = 82AC0D5E065A5F5100776B02;
 			isa = PBXBuildFile;
@@ -12588,20 +12571,6 @@
 		};
 		82AC0D66065A602200776B02 = {
 			fileRef = 82AC0D5D065A5F2300776B02;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		82C39663065B156600A82035 = {
-			isa = PBXFileReference;
-			lastKnownFileType = archive.ar;
-			name = libtransformiix.a;
-			path = ../dist/lib/components/libtransformiix.a;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		82C39664065B156600A82035 = {
-			fileRef = 82C39663065B156600A82035;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -15437,7 +15406,6 @@
 			children = (
 				82CE286D0736605800B4DE07,
 				3FE5BA0B068A1A140001CECD,
-				82C39663065B156600A82035,
 				0FA8EFCA0423EAAD00A80166,
 				F56F242602AC706801A967F3,
 				F56F242702AC706801A967F3,
