@@ -24,6 +24,7 @@
  */
 
 #include "Expr.h"
+#include "ExprResult.h"
 
 UnaryExpr::UnaryExpr(Expr* expr)
 {

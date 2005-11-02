@@ -39,8 +39,14 @@
 #ifndef __TX_I_XPATH_CONTEXT
 #define __TX_I_XPATH_CONTEXT
 
-#include "Expr.h"
+#include "baseutils.h"
+#include "txAtom.h"
 #include "txError.h"
+
+class ExprResult;
+class FunctionCall;
+class Node;
+class String;
 
 /*
  * txIParseContext
