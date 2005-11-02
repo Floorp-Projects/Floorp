@@ -240,7 +240,7 @@ nsresult txPatternParser::createIdPattern(txExprLexer& aLexer,
     if (aLexer.nextToken()->mType != Token::L_PAREN && 
         aLexer.peek()->mType != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILURE;
-    const nsDependentSingleFragmentSubstring& value =
+    const nsDependentSubstring& value =
         aLexer.nextToken()->Value();
     if (aLexer.nextToken()->mType != Token::R_PAREN)
         return NS_ERROR_XPATH_PARSE_FAILURE;
@@ -256,12 +256,12 @@ nsresult txPatternParser::createKeyPattern(txExprLexer& aLexer,
     if (aLexer.nextToken()->mType != Token::L_PAREN && 
         aLexer.peek()->mType != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILURE;
-    const nsDependentSingleFragmentSubstring& key =
+    const nsDependentSubstring& key =
         aLexer.nextToken()->Value();
     if (aLexer.nextToken()->mType != Token::COMMA && 
         aLexer.peek()->mType != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILURE;
-    const nsDependentSingleFragmentSubstring& value =
+    const nsDependentSubstring& value =
         aLexer.nextToken()->Value();
     if (aLexer.nextToken()->mType != Token::R_PAREN)
         return NS_ERROR_XPATH_PARSE_FAILURE;
