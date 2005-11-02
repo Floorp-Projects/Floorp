@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsString.h"
-#include "primitives.h"
+#include "txCore.h"
 #include "XMLUtils.h"
 #include <math.h>
 #include <stdlib.h>

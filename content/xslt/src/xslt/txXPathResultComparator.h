@@ -40,7 +40,7 @@
 #ifndef TRANSFRMX_XPATHRESULTCOMPARATOR_H
 #define TRANSFRMX_XPATHRESULTCOMPARATOR_H
 
-#include "TxObject.h"
+#include "txCore.h"
 #ifndef TX_EXE
 #include "nsCOMPtr.h"
 #include "nsICollation.h"

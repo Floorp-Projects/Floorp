@@ -43,16 +43,16 @@
 #ifndef MITRE_XMLUTILS_H
 #define MITRE_XMLUTILS_H
 
-#include "baseutils.h"
+#include "txCore.h"
+#include "nsCOMPtr.h"
 #include "nsDependentSubstring.h"
-#include "nsIAtom.h"
-#include "txError.h"
 #include "txXPathNode.h"
 
 #ifndef TX_EXE
 #include "nsIParserService.h"
 #endif
 
+class nsIAtom;
 class txNamespaceMap;
 
 class txExpandedName {

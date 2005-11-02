@@ -39,6 +39,7 @@
 #include "txPatternParser.h"
 #include "ExprLexer.h"
 #include "txAtoms.h"
+#include "txError.h"
 #include "txStringUtils.h"
 #include "txXSLTPatterns.h"
 #include "txIXPathContext.h"

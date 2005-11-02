@@ -40,11 +40,10 @@
 #ifndef TRANSFRMX_EXPRRESULT_H
 #define TRANSFRMX_EXPRRESULT_H
 
-#include "primitives.h"
-#include "TxObject.h"
 #include "nsString.h"
-#include "txResultRecycler.h"
 #include "nsAutoPtr.h"
+#include "txCore.h"
+#include "txResultRecycler.h"
 
 /*
  * ExprResult

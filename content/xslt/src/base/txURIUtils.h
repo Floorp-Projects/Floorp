@@ -38,15 +38,14 @@
 #ifndef TRANSFRMX_URIUTILS_H
 #define TRANSFRMX_URIUTILS_H
 
-#include "baseutils.h"
+#include "txCore.h"
 #ifdef TX_EXE
 #include <fstream.h>
 #include <iostream.h>
 #include "nsString.h"
 #else
-#include "nsIDOMNode.h"
-
 class nsIDocument;
+class nsIDOMNode;
 class nsIScriptSecurityManager;
 extern nsIScriptSecurityManager *gTxSecurityManager;
 

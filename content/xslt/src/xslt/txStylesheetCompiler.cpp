@@ -45,6 +45,7 @@
 #include "txInstructions.h"
 #include "txToplevelItems.h"
 #include "ExprParser.h"
+#include "TxLog.h"
 #include "txPatternParser.h"
 #include "txStringUtils.h"
 #include "XSLTFunctions.h"

@@ -62,6 +62,7 @@
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
 #include "txAtoms.h"
+#include "TxLog.h"
 #include "txMozillaXSLTProcessor.h"
 #include "txStylesheetCompiler.h"
 #include "XMLUtils.h"
