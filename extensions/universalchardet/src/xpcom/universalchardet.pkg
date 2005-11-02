@@ -1,0 +1,14 @@
+# This is not part of embedding, but it is part of the GRE.
+# Make that make sense.
+
+[gre]
+#if SHARED_LIBRARY
+dist/bin/components/@SHARED_LIBRARY@
+#else
+!staticcomp @LIBRARY@ @MODULE_NAME@
+#endif
+
+#if ENABLE_TESTS
+[gecko-tests]
+dist/bin/UniversalChardetTest@BINS@
+#endif
