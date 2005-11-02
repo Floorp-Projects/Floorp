@@ -25,7 +25,7 @@
  * Nisheeth Ranjan, nisheeth@netscape.com
  *   -- implemented rint function, which was not available on Windows.
  *
- * $Id: txNumberFunctionCall.cpp,v 1.11 2005/11/02 07:33:46 kvisco%ziplink.net Exp $
+ * $Id: txNumberFunctionCall.cpp,v 1.12 2005/11/02 07:33:47 peterv%netscape.com Exp $
  */
 
 /*
@@ -34,6 +34,9 @@
 */
 
 #include "FunctionLib.h"
+#include "XMLUtils.h"
+#include "XMLDOMUtils.h"
+#include <math.h>
 
 /**
  * Creates a default NumberFunctionCall. The number() function

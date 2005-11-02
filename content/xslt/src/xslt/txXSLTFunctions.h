@@ -23,19 +23,17 @@
  * Olivier Gerardin,
  *    -- added document() function definition
  *
- * $Id: txXSLTFunctions.h,v 1.5 2005/11/02 07:33:58 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txXSLTFunctions.h,v 1.6 2005/11/02 07:33:59 peterv%netscape.com Exp $
  */
-
-#include "dom.h"
-#include "Expr.h"
-#include "ExprResult.h"
-#include "Names.h"
-#include "DOMHelper.h"
-#include "TxString.h"
-#include "ProcessorState.h"
 
 #ifndef TRANSFRMX_XSLT_FUNCTIONS_H
 #define TRANSFRMX_XSLT_FUNCTIONS_H
+
+#include "Expr.h"
+#include "ExprResult.h"
+#include "DOMHelper.h"
+#include "TxString.h"
+#include "ProcessorState.h"
 
 /**
  * The definition for the XSLT document() function

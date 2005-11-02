@@ -23,16 +23,14 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- changed constant short result types to enum
  *
- * $Id: txExprResult.h,v 1.8 2005/11/02 07:33:50 kvisco%ziplink.net Exp $
+ * $Id: txExprResult.h,v 1.9 2005/11/02 07:33:51 peterv%netscape.com Exp $
  */
-
-#include "TxObject.h"
-#include "dom.h"
-#include "primitives.h"
 
 #ifndef TRANSFRMX_EXPRRESULT_H
 #define TRANSFRMX_EXPRRESULT_H
 
+#include "TxObject.h"
+#include "primitives.h"
 
 /*
  * ExprResult

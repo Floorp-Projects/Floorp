@@ -32,7 +32,7 @@ CPPSRCS	= ArrayList.cpp             \
 	Integer.cpp \
 	List.cpp \
 	Map.cpp \
-	MITREObjectWrapper.cpp \
+	TxObjectWrapper.cpp          \
 	NamedMap.cpp \
 	SimpleErrorObserver.cpp \
 	Stack.cpp \

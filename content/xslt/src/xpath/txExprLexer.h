@@ -25,7 +25,7 @@
  *    -- changed constant short declarations in Token and ExprLexer to
  *       enumerations, commented with //--LF
  * 
- * $Id: txExprLexer.h,v 1.5 2005/11/02 07:33:53 kvisco%ziplink.net Exp $
+ * $Id: txExprLexer.h,v 1.6 2005/11/02 07:33:54 peterv%netscape.com Exp $
  */
 
 
@@ -34,9 +34,6 @@
 
 #include "TxString.h"
 #include "baseutils.h"
-#ifndef MOZ_XSL
-#include <iostream.h>
-#endif
 
 /**
  * A Token class for the ExprLexer.
@@ -44,7 +41,7 @@
  * This class was ported from XSL:P, an open source Java based 
  * XSLT processor, written by yours truly.
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:53 $
+ * @version $Revision: 1.6 $ $Date: 2005/11/02 07:33:54 $
 **/
 class Token {
 

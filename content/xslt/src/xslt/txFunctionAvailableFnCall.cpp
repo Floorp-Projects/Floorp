@@ -26,6 +26,7 @@
 #include "XSLTFunctions.h"
 #include "FunctionLib.h"
 #include "XMLUtils.h"
+#include "Names.h"
 
 /*
   Implementation of XSLT 1.0 extension function: function-available

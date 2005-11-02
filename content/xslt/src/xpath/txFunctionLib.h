@@ -27,25 +27,18 @@
  * Marina Mechtcheriakova
  *   -- added support for lang function
  *
- * $Id: txFunctionLib.h,v 1.9 2005/11/02 07:33:51 axel%pike.org Exp $
+ * $Id: txFunctionLib.h,v 1.10 2005/11/02 07:33:52 peterv%netscape.com Exp $
  */
-
-#include "TxString.h"
-#include "primitives.h"
-#include "NodeSet.h"
-#include "List.h"
-#include "dom.h"
-#include "ExprResult.h"
-#include "baseutils.h"
-#include "Expr.h"
-#include "XMLDOMUtils.h"
-#include "Names.h"
-#include "XMLUtils.h"
-#include <math.h>
-
 
 #ifndef TRANSFRMX_FUNCTIONLIB_H
 #define TRANSFRMX_FUNCTIONLIB_H
+
+
+#include "TxString.h"
+#include "primitives.h"
+#include "ExprResult.h"
+#include "baseutils.h"
+#include "Expr.h"
 
 
 class XPathNames {

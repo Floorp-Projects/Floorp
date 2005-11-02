@@ -25,37 +25,32 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: txExpr.h,v 1.9 2005/11/02 07:33:34 kvisco%ziplink.net Exp $
+ * $Id: txExpr.h,v 1.10 2005/11/02 07:33:35 peterv%netscape.com Exp $
  */
 
-
-#include <math.h>
-#include "TxString.h"
-#include "ErrorObserver.h"
-#include "NodeSet.h"
-#include "List.h"
-#include "Stack.h"
-#include "dom.h"
-#include "ExprResult.h"
-#include "baseutils.h"
-#include "MITREObject.h"
-#include "primitives.h"
-#include "NamespaceResolver.h"
-#include "XMLDOMUtils.h"
-
-/*
-  XPath class definitions.
-  Much of this code was ported from XSL:P.
-  @version $Revision: 1.9 $ $Date: 2005/11/02 07:33:34 $
-*/
 
 #ifndef TRANSFRMX_EXPR_H
 #define TRANSFRMX_EXPR_H
 
 
+#include "TxString.h"
+#include "ErrorObserver.h"
+#include "NodeSet.h"
+#include "Stack.h"
+#include "ExprResult.h"
+#include "baseutils.h"
+#include "TxObject.h"
+#include "primitives.h"
+#include "NamespaceResolver.h"
+
+/*
+  XPath class definitions.
+  Much of this code was ported from XSL:P.
+  @version $Revision: 1.10 $ $Date: 2005/11/02 07:33:35 $
+*/
+
 //necessary prototypes
 class FunctionCall;
-class NodeSet;
 
 /**
  * The expression context and state class used when evaluating XPath Expressions.
@@ -113,7 +108,7 @@ public:
 /**
  * A Base Class for all XSL Expressions
 **/
-class Expr : public MITREObject {
+class Expr : public TxObject {
 
 public:
 

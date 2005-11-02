@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: txXMLUtils.h,v 1.4 2005/11/02 07:33:35 axel%pike.org Exp $
+ * $Id: txXMLUtils.h,v 1.5 2005/11/02 07:33:36 peterv%netscape.com Exp $
  */
 
 /**
@@ -29,11 +29,11 @@
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
 
-#include "TxString.h"
-#include "baseutils.h"
-
 #ifndef MITRE_XMLUTILS_H
 #define MITRE_XMLUTILS_H
+
+#include "TxString.h"
+#include "baseutils.h"
 
 class XMLUtils {
 

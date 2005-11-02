@@ -21,17 +21,20 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txStringFunctionCall.cpp,v 1.8 2005/11/02 07:33:43 peterv%netscape.com Exp $
+ * $Id: txStringFunctionCall.cpp,v 1.9 2005/11/02 07:33:44 peterv%netscape.com Exp $
  */
 
 /**
  * StringFunctionCall
  * A representation of the XPath String funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:43 $
+ * @version $Revision: 1.9 $ $Date: 2005/11/02 07:33:44 $
 **/
 
 #include "FunctionLib.h"
+#include "XMLUtils.h"
+#include "XMLDOMUtils.h"
+#include <math.h>
 
 /**
  * Creates a default StringFunctionCall. The string() function
