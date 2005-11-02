@@ -42,6 +42,7 @@
 
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMNode.h"
+#include "nsIDOM3Node.h"
 #include "nsCOMPtr.h"
 
 /**
