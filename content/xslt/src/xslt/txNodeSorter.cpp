@@ -45,7 +45,7 @@
 #include "ExprResult.h"
 #include "Expr.h"
 #include "txStringUtils.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 #include "prmem.h"
 #include "nsQuickSort.h"
 
@@ -168,8 +168,8 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
 }
 
 nsresult
-txNodeSorter::sortNodeSet(NodeSet* aNodes, txExecutionState* aEs,
-                          NodeSet** aResult)
+txNodeSorter::sortNodeSet(txNodeSet* aNodes, txExecutionState* aEs,
+                          txNodeSet** aResult)
 {
     if (mNKeys == 0 || aNodes->isEmpty()) {
         NS_ADDREF(*aResult = aNodes);
@@ -179,7 +179,7 @@ txNodeSorter::sortNodeSet(NodeSet* aNodes, txExecutionState* aEs,
 
     *aResult = nsnull;
 
-    nsRefPtr<NodeSet> sortedNodes;
+    nsRefPtr<txNodeSet> sortedNodes;
     nsresult rv = aEs->recycler()->getNodeSet(getter_AddRefs(sortedNodes));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -250,7 +250,6 @@ txNodeSorter::compareNodes(const void* aIndexA, const void* aIndexB,
     SortData* sortData = NS_STATIC_CAST(SortData*, aSortData);
     NS_ENSURE_SUCCESS(sortData->mRv, -1);
 
-    nsresult rv = NS_OK;
     txListIterator iter(&sortData->mNodeSorter->mSortKeys);
     PRUint32 indexA = *NS_STATIC_CAST(const PRUint32*, aIndexA);
     PRUint32 indexB = *NS_STATIC_CAST(const PRUint32*, aIndexB);

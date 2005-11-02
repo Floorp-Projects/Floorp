@@ -395,7 +395,8 @@ nsresult txXSLKey::testNode(Node* aNode,
                 txNodeSet* res = NS_STATIC_CAST(txNodeSet*,
                                                 NS_STATIC_CAST(txAExprResult*,
                                                                exprResult));
-                for (int i=0; i<res->size(); i++) {
+                PRInt32 i;
+                for (i = 0; i < res->size(); ++i) {
                     val.Truncate();
                     XMLDOMUtils::getNodeValue(res->get(i), val);
 
