@@ -1,0 +1,127 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Transformiix XSLT Processor.
+# 
+# The Initial Developer of the Original Code is Axel Hecht.
+# Portions created by Axel Hecht are  Copyright (C) Axel Hecht.
+# All Rights Reserved.
+# 
+# Contributor(s):
+#	Axel Hecht <axel@pike.org>
+# 
+
+DEPTH           = ../../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+PROGRAM = ../transformiix
+
+OBJS =../base/ArrayList.o \
+  ../base/CommandLineUtils.o \
+  ../base/DefaultStringComparator.o \
+  ../base/Double.o \
+  ../base/HashTable.o \
+  ../base/Integer.o \
+  ../base/List.o \
+  ../base/MITREObjectWrapper.o \
+  ../base/Map.o \
+  ../base/NamedMap.o \
+  ../base/SimpleErrorObserver.o \
+  ../base/Stack.o \
+  ../base/StringComparator.o \
+  ../base/StringList.o \
+  ../base/Tokenizer.o \
+  ../base/TxString.o \
+  ../net/URIUtils.o \
+  ../xml/dom/standalone/Attr.o \
+  ../xml/dom/standalone/CDATASection.o \
+  ../xml/dom/standalone/DocumentType.o \
+  ../xml/dom/standalone/EntityReference.o \
+  ../xml/dom/standalone/CharacterData.o \
+  ../xml/dom/standalone/Comment.o \
+  ../xml/dom/standalone/DocumentFragment.o \
+  ../xml/dom/standalone/DOMImplementation.o \
+  ../xml/dom/standalone/NodeListDefinition.o \
+  ../xml/dom/standalone/NodeDefinition.o \
+  ../xml/dom/standalone/Element.o \
+  ../xml/dom/standalone/NamedNodeMap.o \
+  ../xml/dom/standalone/Document.o \
+  ../xml/dom/standalone/Entity.o \
+  ../xml/dom/standalone/Notation.o \
+  ../xml/dom/standalone/ProcessingInstruction.o \
+  ../xml/dom/standalone/Text.o \
+  ../xpath/AdditiveExpr.o \
+  ../xpath/AttributeExpr.o \
+  ../xpath/AttributeValueTemplate.o \
+  ../xpath/BasicNodeExpr.o \
+  ../xpath/BooleanExpr.o \
+  ../xpath/BooleanFunctionCall.o \
+  ../xpath/BooleanResult.o \
+  ../xpath/ElementExpr.o \
+  ../xpath/ErrorFunctionCall.o \
+  ../xpath/ExprLexer.o \
+  ../xpath/ExprParser.o \
+  ../xpath/ExtensionFunctionCall.o \
+  ../xpath/FilterExpr.o \
+  ../xpath/FunctionCall.o \
+  ../xpath/IdentityExpr.o \
+  ../xpath/LocationStep.o \
+  ../xpath/MultiplicativeExpr.o \
+  ../xpath/NodeSet.o \
+  ../xpath/NodeSetFunctionCall.o \
+  ../xpath/NumberExpr.o \
+  ../xpath/NumberFunctionCall.o \
+  ../xpath/NumberResult.o \
+  ../xpath/ParentExpr.o \
+  ../xpath/PathExpr.o \
+  ../xpath/PredicateList.o \
+  ../xpath/RelationalExpr.o \
+  ../xpath/RootExpr.o \
+  ../xpath/StringExpr.o \
+  ../xpath/StringFunctionCall.o \
+  ../xpath/StringResult.o \
+  ../xpath/TextExpr.o \
+  ../xpath/UnionExpr.o \
+  ../xpath/VariableRefExpr.o \
+  ../xpath/WildCardExpr.o \
+  ../xpath/XPathNames.o \
+  ../xml/XMLUtils.o \
+  ../xml/XMLDOMUtils.o \
+  ../xml/util/DOMHelper.o \
+  ../xml/parser/XMLParser.o \
+  ../xml/parser/hashtable.o \
+  ../xml/parser/xmlrole.o \
+  ../xml/parser/xmlparse.o \
+  ../xml/parser/xmltok.o \
+  ../xml/printer/XMLPrinter.o \
+  ../xml/printer/HTMLPrinter.o \
+  ../xslt/OutputFormat.o \
+  ../xslt/Names.o \
+  ../xslt/Numbering.o \
+  ../xslt/ProcessorState.o \
+  ../xslt/VariableBinding.o \
+  ../xslt/XSLTProcessor.o \
+  ../xslt/functions/GenerateIdFunctionCall.o \
+  ../xslt/util/NodeSorter.o \
+  ../xslt/util/NodeStack.o \
+  transformiix.o
+CPP_PROG_LINK		= 1
+include $(topsrcdir)/config/rules.mk
+
+INCLUDES += -I$(srcdir)/../xslt -I$(srcdir)/../base -I$(srcdir)/../net \
+  -I$(srcdir)/../xml -I$(srcdir)/../xml/dom -I$(srcdir)/../xml/util \
+  -I$(srcdir)/../xml/parser -I$(srcdir)/../xml/parser/xmlparse \
+  -I$(srcdir)/../xml/printer -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
+  -I$(srcdir)/../xslt/functions
