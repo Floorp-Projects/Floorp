@@ -40,7 +40,7 @@
 #define nsSBCSGroupProber_h__
 
 
-#define NUM_OF_SBCS_PROBERS    12
+#define NUM_OF_SBCS_PROBERS    10
 
 class nsSingleByteCharSetProber;
 class nsSBCSGroupProber: public nsCharSetProber {
