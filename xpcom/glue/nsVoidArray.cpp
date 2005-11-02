@@ -934,6 +934,27 @@ nsCStringArray::nsCStringArray(void)
 {
 }
 
+// Parses a given string using the delimiter passed in and appends items
+// parsed to the array.
+void
+nsCStringArray::ParseString(const char* string, const char* delimiter)
+{
+  if (string && *string && delimiter && *delimiter) {
+    char *newStr;
+    char *rest = nsCRT::strdup(string);
+    char *token = nsCRT::strtok(rest, delimiter, &newStr);
+
+    while (token) {
+      if (*token) {
+        /* calling AppendElement(void*) to avoid extra nsCString copy */
+        AppendElement(new nsCString(token));
+      }
+      token = nsCRT::strtok(newStr, delimiter, &newStr);
+    }
+    PR_FREEIF(rest);
+  }
+}
+
 nsCStringArray::nsCStringArray(PRInt32 aCount)
   : nsVoidArray(aCount)
 {
