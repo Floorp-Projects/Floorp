@@ -153,45 +153,46 @@ txParseFromStream(istream& aInputStream, const nsAString& aUri,
 
 // shortcut macro for redirection into txXMLParser method calls
 #define TX_XMLPARSER(_userData) NS_STATIC_CAST(txXMLParser*, _userData)
+#define TX_ENSURE_DATA(_userData)                       \
+  PR_BEGIN_MACRO                                        \
+    if (!aUserData) {                                   \
+        NS_WARNING("no userData in comment handler");   \
+        return;                                         \
+    }                                                   \
+  PR_END_MACRO
 
 PR_STATIC_CALLBACK(void)
 startElement(void *aUserData, const XML_Char *aName, const XML_Char **aAtts)
 {
-    NS_ENSURE_TRUE(aUserData, XML_ERROR_NONE);
+    TX_ENSURE_DATA(aUserData);
     TX_XMLPARSER(aUserData)->StartElement(aName, aAtts);
 }
 
 PR_STATIC_CALLBACK(void)
 endElement(void *aUserData, const XML_Char* aName)
 {
-    NS_ENSURE_TRUE(aUserData, XML_ERROR_NONE);
+    TX_ENSURE_DATA(aUserData);
     TX_XMLPARSER(aUserData)->EndElement(aName);
 }
 
 PR_STATIC_CALLBACK(void)
 charData(void* aUserData, const XML_Char* aChars, int aLength)
 {
-    if (!aUserData) {
-        NS_WARNING("no userData in charData handler");
-        return;
-    }
+    TX_ENSURE_DATA(aUserData);
     TX_XMLPARSER(aUserData)->CharacterData(aChars, aLength);
 }
 
 PR_STATIC_CALLBACK(void)
 commentHandler(void* aUserData, const XML_Char* aChars)
 {
-    if (!aUserData) {
-        NS_WARNING("no userData in comment handler");
-        return;
-    }
+    TX_ENSURE_DATA(aUserData);
     TX_XMLPARSER(aUserData)->Comment(aChars);
 }
 
 PR_STATIC_CALLBACK(void)
 piHandler(void *aUserData, const XML_Char *aTarget, const XML_Char *aData)
 {
-    NS_ENSURE_TRUE(aUserData, XML_ERROR_NONE);
+    TX_ENSURE_DATA(aUserData);
     TX_XMLPARSER(aUserData)->ProcessingInstruction(aTarget, aData);
 }
 
