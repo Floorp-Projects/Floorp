@@ -196,6 +196,7 @@ void txExpandedNameMap::clear()
         }
     }
     delete [] mItems;
+    mItems = nsnull;
     mItemCount = 0;
     mBufferCount = 0;
 }
