@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *          Shy Shalom <shooshX@gmail.com>
+ *			Proofpoint, Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,12 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include <stdio.h>
-#include "prmem.h"
 
 #include "nsMBCSGroupProber.h"
 
-#ifdef DEBUG_chardet
-char *ProberName[] = 
+#if defined(DEBUG_chardet) || defined(DEBUG_jgmyers)
+const char *ProberName[] = 
 {
   "UTF8",
   "SJIS",
@@ -101,62 +101,79 @@ void  nsMBCSGroupProber::Reset(void)
   }
   mBestGuess = -1;
   mState = eDetecting;
+  mKeepNext = 0;
 }
 
 nsProbingState nsMBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
 {
   nsProbingState st;
-  PRUint32 i;
+  PRUint32 start = 0;
+  PRUint32 keepNext = mKeepNext;
 
   //do filtering to reduce load to probers
-  char *highbyteBuf;
-  char *hptr;
-  PRBool keepNext = PR_TRUE;   //assume previous is not ascii, it will do no harm except add some noise
-  hptr = highbyteBuf = (char*)PR_Malloc(aLen);
-  if (!hptr)
-      return mState;
-  for (i = 0; i < aLen; i++)
+  for (PRUint32 pos = 0; pos < aLen; ++pos)
   {
-    if (aBuf[i] & 0x80)
+    if (aBuf[pos] & 0x80)
     {
-      *hptr++ = aBuf[i];
-      keepNext = PR_TRUE;
+      if (!keepNext)
+        start = pos;
+      keepNext = 2;
     }
-    else
+    else if (keepNext)
     {
-      //if previous is highbyte, keep this even it is a ASCII
-      if (keepNext)
+      if (--keepNext == 0)
       {
-          *hptr++ = aBuf[i];
-          keepNext = PR_FALSE;
+        for (PRUint32 i = 0; i < NUM_OF_PROBERS; i++)
+        {
+          if (!mIsActive[i])
+            continue;
+          st = mProbers[i]->HandleData(aBuf + start, pos + 1 - start);
+          if (st == eFoundIt)
+          {
+            mBestGuess = i;
+            mState = eFoundIt;
+            return mState;
+          }
+          else if (st == eNotMe)
+          {
+            mIsActive[i] = PR_FALSE;
+            mActiveNum--;
+            if (mActiveNum <= 0)
+              {
+                mState = eNotMe;
+                return mState;
+              }
+          }
+        }
       }
     }
   }
 
-  for (i = 0; i < NUM_OF_PROBERS; i++)
-  {
-     if (!mIsActive[i])
-       continue;
-     st = mProbers[i]->HandleData(highbyteBuf, hptr - highbyteBuf);
-     if (st == eFoundIt)
-     {
-       mBestGuess = i;
-       mState = eFoundIt;
-       break;
-     }
-     else if (st == eNotMe)
-     {
-       mIsActive[i] = PR_FALSE;
-       mActiveNum--;
-       if (mActiveNum <= 0)
-       {
-         mState = eNotMe;
-         break;
-       }
-     }
+  if (keepNext) {
+    for (PRUint32 i = 0; i < NUM_OF_PROBERS; i++)
+    {
+      if (!mIsActive[i])
+        continue;
+      st = mProbers[i]->HandleData(aBuf + start, aLen + 1 - start);
+      if (st == eFoundIt)
+      {
+        mBestGuess = i;
+        mState = eFoundIt;
+        return mState;
+      }
+      else if (st == eNotMe)
+      {
+        mIsActive[i] = PR_FALSE;
+        mActiveNum--;
+        if (mActiveNum <= 0)
+        {
+          mState = eNotMe;
+          return mState;
+        }
+      }
+    }
   }
-
-  PR_FREEIF(highbyteBuf);
+  mKeepNext = keepNext;
 
   return mState;
 }
@@ -207,3 +224,15 @@ void nsMBCSGroupProber::DumpStatus()
   }
 }
 #endif
+
+#ifdef DEBUG_jgmyers
+void nsMBCSGroupProber::GetDetectorState(nsUniversalDetector::DetectorState (&states)[nsUniversalDetector::NumDetectors], PRUint32 &offset)
+{
+  for (PRUint32 i = 0; i < NUM_OF_PROBERS; ++i) {
+    states[offset].name = ProberName[i];
+    states[offset].isActive = mIsActive[i];
+    states[offset].confidence = mIsActive[i] ? mProbers[i]->GetConfidence() : 0.0;
+    ++offset;
+  }
+}
+#endif /* DEBUG_jgmyers */
