@@ -327,12 +327,12 @@ txMozillaXSLTProcessor::SetTransformObserver(nsITransformObserver* aObserver)
 nsresult
 txMozillaXSLTProcessor::SetSourceContentModel(nsIDOMNode* aSourceDOM)
 {
+    mSource = aSourceDOM;
+
     if (NS_FAILED(mTransformResult)) {
         notifyError();
         return NS_OK;
     }
-
-    mSource = aSourceDOM;
 
     if (mStylesheet) {
         return DoTransform();
@@ -736,35 +736,12 @@ txMozillaXSLTProcessor::notifyError()
         return;
     }
 
-    nsCOMPtr<nsIDOMDocument> sourceDOMDocument;
-    mSource->GetOwnerDocument(getter_AddRefs(sourceDOMDocument));
-    if (!sourceDOMDocument) {
-        sourceDOMDocument = do_QueryInterface(mSource);
-    }
-    nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(sourceDOMDocument);
-
     // Set up the document
     nsCOMPtr<nsIDocument> document = do_QueryInterface(errorDocument);
     if (!document) {
         return;
     }
-
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    nsCOMPtr<nsIChannel> channel;
-    sourceDoc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-    nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
-    if (serv) {
-        // Create a temporary channel to get nsIDocument->Reset to
-        // do the right thing. We want the output document to get
-        // much of the input document's characteristics.
-        nsCOMPtr<nsIURI> docURL;
-        sourceDoc->GetDocumentURL(getter_AddRefs(docURL));
-        serv->NewChannelFromURI(docURL, getter_AddRefs(channel));
-    }
-    document->Reset(channel, loadGroup);
-    nsCOMPtr<nsIURI> baseURL;
-    sourceDoc->GetBaseURL(getter_AddRefs(baseURL));
-    document->SetBaseURL(baseURL);
+    URIUtils::ResetWithSource(document, mSource);
 
     NS_NAMED_LITERAL_STRING(ns, "http://www.mozilla.org/newlayout/xml/parsererror.xml");
 
