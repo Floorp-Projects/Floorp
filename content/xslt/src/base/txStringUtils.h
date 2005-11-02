@@ -44,8 +44,6 @@
 #include "nsAString.h"
 #include "nsIAtom.h"
 
-class nsASingleFragmentString;
-
 /**
  * Check equality between a string and an atom containing ASCII.
  */

@@ -70,7 +70,7 @@ public:
     /**
      * Returns the next token.
      */
-    const nsDependentSingleFragmentSubstring nextToken()
+    const nsDependentSubstring nextToken()
     {
         nsAFlatString::const_char_iterator begin = mIter;
         while (mIter != mEnd && !XMLUtils::isWhitespace(*mIter)) {
