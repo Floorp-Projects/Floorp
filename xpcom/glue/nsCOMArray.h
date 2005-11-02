@@ -48,6 +48,7 @@
 // work of this class in the XPCOM dll
 class NS_COM nsCOMArray_base
 {
+    friend class nsArray;
 protected:
     nsCOMArray_base() {}
     nsCOMArray_base(PRInt32 aCount) : mArray(aCount) {}
@@ -59,6 +60,10 @@ protected:
 
     PRBool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData) {
         return mArray.EnumerateForwards(aFunc, aData);
+    }
+    
+    PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData) {
+        return mArray.EnumerateBackwards(aFunc, aData);
     }
     
     // any method which is not a direct forward to mArray should
@@ -120,7 +125,9 @@ class nsCOMArray : public nsCOMArray_base
     nsCOMArray() {}
     nsCOMArray(PRInt32 aCount) : nsCOMArray_base(aCount) {}
     
-    nsCOMArray(const nsCOMArray_base& aOther) : nsCOMArray_base(aOther) { }
+    // only to be used by trusted classes who are going to pass us the
+    // right type!
+    nsCOMArray(const nsCOMArray<T>& aOther) : nsCOMArray_base(aOther) { }
 
     ~nsCOMArray() {}
 
@@ -176,6 +183,11 @@ class nsCOMArray : public nsCOMArray_base
                                                   aData);
     }
 
+    PRBool EnumerateBackwards(nsCOMArrayEnumFunc aFunc, void* aData) {
+        return nsCOMArray_base::EnumerateBackwards(nsVoidArrayEnumFunc(aFunc),
+                                                  aData);
+    }
+
     // append an object, growing the array as necessary
     PRBool AppendObject(T *aObject) {
         return nsCOMArray_base::AppendObject(aObject);
@@ -194,10 +206,9 @@ class nsCOMArray : public nsCOMArray_base
         return nsCOMArray_base::RemoveObjectAt(aIndex);
     }
 
- private:
+private:
 
     // don't implement these!
-    nsCOMArray(const nsCOMArray& other);
     nsCOMArray& operator=(const nsCOMArray& other);
 };
 
