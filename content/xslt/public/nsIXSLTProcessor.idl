@@ -128,4 +128,9 @@ interface nsIXSLTProcessor : nsISupports
      * Removes all set parameters from this nsIXSLTProcessor
      */
     void clearParameters();
+
+    /**
+     * Remove all parameters and stylesheets from this nsIXSLTProcessor
+     */
+    void reset();
 };
