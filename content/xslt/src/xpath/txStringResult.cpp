@@ -20,15 +20,12 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: txStringResult.cpp,v 1.8 2005/11/02 07:33:59 sicking%bigfoot.com Exp $
+ * 
  */
 
 /**
  * StringResult
  * Represents a String as a Result of evaluating an Expr
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:59 $
 **/
 #include "ExprResult.h"
 

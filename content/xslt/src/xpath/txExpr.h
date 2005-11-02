@@ -28,7 +28,6 @@
  *   -- removal of Patterns and some restructuring
  *      in the class set
  *
- * $Id: txExpr.h,v 1.15 2005/11/02 07:33:40 sicking%bigfoot.com Exp $
  */
 
 
@@ -49,7 +48,6 @@
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.15 $ $Date: 2005/11/02 07:33:40 $
 */
 
 //necessary prototypes
@@ -100,8 +98,8 @@ public:
     /**
      * Sorts the given NodeSet by DocumentOrder. 
      * @param nodes the NodeSet to sort
-     * <BR />
-     * <B>Note:</B> I will be moving this functionality elsewhere soon
+     *
+     * Note: I will be moving this functionality elsewhere soon
     **/
     virtual void sortByDocumentOrder(NodeSet* nodes) = 0;
 
@@ -560,7 +558,7 @@ private:
 
 /**
  * Represents an AdditiveExpr, a binary expression that
- * performs an additive operation between it's lvalue and rvalue:<BR/>
+ * performs an additive operation between it's lvalue and rvalue:
  *  +   : add
  *  -   : subtract
 **/
@@ -609,7 +607,7 @@ private:
 
 /**
  * Represents a BooleanExpr, a binary expression that
- * performs a boolean operation between it's lvalue and rvalue:<BR/>
+ * performs a boolean operation between it's lvalue and rvalue.
 **/
 class BooleanExpr : public Expr {
 
@@ -635,7 +633,7 @@ private:
 
 /**
  * Represents a MultiplicativeExpr, a binary expression that
- * performs a multiplicative operation between it's lvalue and rvalue:<BR/>
+ * performs a multiplicative operation between it's lvalue and rvalue:
  *  *   : multiply
  * mod  : modulus
  * div  : divide
@@ -666,7 +664,7 @@ private:
 
 /**
  * Represents a RelationalExpr, an expression that compares it's lvalue
- * to it's rvalue using:<BR/>
+ * to it's rvalue using:
  * =  : equal to
  * <  : less than
  * >  : greater than
@@ -707,7 +705,7 @@ private:
 }; //-- RelationalExpr
 
 /**
- * VariableRefExpr<BR>
+ * VariableRefExpr
  * Represents a variable reference ($refname)
 **/
 class VariableRefExpr : public Expr {

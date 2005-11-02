@@ -20,15 +20,12 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: txNumberResult.cpp,v 1.7 2005/11/02 07:34:02 sicking%bigfoot.com Exp $
+ * 
  */
 
 /**
  * NumberResult
  * Represents the a number as the result of evaluating an Expr
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.7 $ $Date: 2005/11/02 07:34:02 $
 **/
 
 #include "ExprResult.h"

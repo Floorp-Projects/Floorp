@@ -20,17 +20,14 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: txAdditiveExpr.cpp,v 1.2 2005/11/02 07:33:59 sicking%bigfoot.com Exp $
+ * 
  */
 
 /**
  * Represents a AdditiveExpr, an binary expression that
- * performs an additive operation between it's lvalue and rvalue:<BR/>
+ * performs an additive operation between it's lvalue and rvalue:
  *  +   : addition
  *  -   : subtraction
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:59 $
 **/
 
 #include "Expr.h"

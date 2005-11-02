@@ -25,7 +25,6 @@
  *    -- Cleanup/bugfix/features in Iterator
  *       Added tx prefix to classnames
  *
- * $Id: txList.h,v 1.9 2005/11/02 07:33:50 sicking%bigfoot.com Exp $
  */
 
 #ifndef TRANSFRMX_LIST_H
@@ -116,7 +115,6 @@ private:
 
 /**
  * An Iterator for the txList Class
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
 **/
 class txListIterator {
 

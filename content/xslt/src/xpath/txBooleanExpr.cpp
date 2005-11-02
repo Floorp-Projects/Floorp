@@ -26,15 +26,12 @@
  *      - If the left hand was false, the right hand expression
  *        was not getting checked.
  *
- * $Id: txBooleanExpr.cpp,v 1.3 2005/11/02 07:33:48 sicking%bigfoot.com Exp $
  */
 
 
 /**
  * Represents a BooleanExpr, a binary expression that
- * performs a boolean operation between it's lvalue and rvalue:<BR/>
- * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:48 $
+ * performs a boolean operation between it's lvalue and rvalue.
 **/
 
 #include "Expr.h"

@@ -23,11 +23,10 @@
  * Lidong, lidong520@263.net
  *    -- unicode bug fix
  *
- * $Id: txXMLUtils.cpp,v 1.5 2005/11/02 07:33:38 peterv%netscape.com Exp $
  */
+
 /**
  * An XML utility class
- * @author <a href="mailto:kvisco@mitre.org">Keith Visco</a>
 **/
 
 #include "XMLUtils.h"

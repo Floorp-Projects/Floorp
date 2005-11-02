@@ -20,18 +20,15 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: txMultiplicativeExpr.cpp,v 1.3 2005/11/02 07:33:52 sicking%bigfoot.com Exp $
+ * 
  */
 
 /**
  * Represents a MultiplicativeExpr, an binary expression that
- * performs a multiplicative operation between it's lvalue and rvalue:<BR/>
+ * performs a multiplicative operation between it's lvalue and rvalue:
  *  *   : multiply
  * mod  : modulus
  * div  : divide
- * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:52 $
 **/
 
 #include "Expr.h"
