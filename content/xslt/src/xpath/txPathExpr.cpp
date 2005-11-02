@@ -42,6 +42,14 @@
 //------------/
 
 /**
+ * Creates a new PathExpr
+**/
+PathExpr::PathExpr()
+{
+    //-- do nothing
+}
+
+/**
  * Destructor, will delete all Expressions
 **/
 PathExpr::~PathExpr()
@@ -49,6 +57,7 @@ PathExpr::~PathExpr()
     txListIterator iter(&expressions);
     while (iter.hasNext()) {
          PathExprItem* pxi = (PathExprItem*)iter.next();
+         delete pxi->expr;
          delete pxi;
     }
 } //-- ~PathExpr
@@ -57,20 +66,21 @@ PathExpr::~PathExpr()
  * Adds the Expr to this PathExpr
  * @param expr the Expr to add to this PathExpr
 **/
-nsresult
-PathExpr::addExpr(nsAutoPtr<Expr> aExpr, PathOperator aPathOp)
+void PathExpr::addExpr(Expr* expr, PathOperator pathOp)
 {
-    NS_ASSERTION(expressions.getLength() > 0 || aPathOp == RELATIVE_OP,
+    NS_ASSERTION(expressions.getLength() > 0 || pathOp == RELATIVE_OP,
                  "First step has to be relative in PathExpr");
-    nsAutoPtr<PathExprItem> pxi(new PathExprItem);
-    NS_ENSURE_TRUE(pxi, NS_ERROR_OUT_OF_MEMORY);
-
-    pxi->expr = aExpr;
-    pxi->pathOp = aPathOp;
-    nsresult rv = expressions.add(pxi);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    return NS_OK;
+    if (expr) {
+        PathExprItem* pxi = new PathExprItem;
+        if (!pxi) {
+            // XXX ErrorReport: out of memory
+            NS_ASSERTION(0, "out of memory");
+            return;
+        }
+        pxi->expr = expr;
+        pxi->pathOp = pathOp;
+        expressions.add(pxi);
+    }
 } //-- addPattenExpr
 
     //-----------------------------/

@@ -32,6 +32,11 @@
 #include "txIXPathContext.h"
 
 /**
+ * Create a new AttributeValueTemplate
+**/
+AttributeValueTemplate::AttributeValueTemplate() {};
+
+/**
  * Default destructor
 **/
 AttributeValueTemplate::~AttributeValueTemplate() {
@@ -44,15 +49,8 @@ AttributeValueTemplate::~AttributeValueTemplate() {
 /**
  * Adds the given Expr to this AttributeValueTemplate
 **/
-nsresult
-AttributeValueTemplate::addExpr(nsAutoPtr<Expr> aExpr)
-{
-    nsresult rv = expressions.add(aExpr);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    aExpr.forget();
-
-    return NS_OK;
+void AttributeValueTemplate::addExpr(Expr* expr) {
+    if (expr) expressions.add(expr);
 } //-- addExpr
 
 /**

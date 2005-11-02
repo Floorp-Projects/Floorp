@@ -44,6 +44,13 @@ VariableRefExpr::VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName,
         mPrefix = 0;
 }
 
+/*
+ * Release the local name atom
+ */
+VariableRefExpr::~VariableRefExpr()
+{
+}
+
 /**
  * Evaluates this Expr based on the given context node and processor state
  * @param context the context node for evaluation of this Expr
