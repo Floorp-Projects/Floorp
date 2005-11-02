@@ -283,9 +283,9 @@ void txListIterator::addBefore(void* objPtr) {
 MBool txListIterator::hasNext() {
     MBool hasNext = MB_FALSE;
     if (currentItem)
-        hasNext = (MBool) currentItem->nextItem;
+        hasNext = (currentItem->nextItem != 0);
     else if (!atEndOfList)
-        hasNext = (MBool) list->firstItem;
+        hasNext = (list->firstItem != 0);
 
     return hasNext;
 } //-- hasNext
@@ -298,9 +298,9 @@ MBool txListIterator::hasNext() {
 MBool txListIterator::hasPrevious() {
     MBool hasPrevious = MB_FALSE;
     if (currentItem)
-        hasPrevious = (MBool) currentItem->prevItem;
+        hasPrevious = (currentItem->prevItem != 0);
     else if (atEndOfList)
-        hasPrevious = (MBool) list->lastItem;
+        hasPrevious = (list->lastItem != 0);
 
     return hasPrevious;
 } //-- hasPrevious
