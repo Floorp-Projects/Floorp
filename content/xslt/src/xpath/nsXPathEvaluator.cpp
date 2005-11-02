@@ -50,7 +50,7 @@
 #include "nsDOMError.h"
 #include "txURIUtils.h"
 
-extern nsINameSpaceManager* gNameSpaceManager;
+extern nsINameSpaceManager* gTxNameSpaceManager;
 
 NS_IMPL_ADDREF(nsXPathEvaluator)
 NS_IMPL_RELEASE(nsXPathEvaluator)
@@ -153,7 +153,7 @@ nsresult nsXPathEvaluator::ParseContextImpl::resolveNamespacePrefix
     }
 
     // get the namespaceID for the URI
-    return gNameSpaceManager->RegisterNameSpace(ns, aID);
+    return gTxNameSpaceManager->RegisterNameSpace(ns, aID);
 }
 
 nsresult nsXPathEvaluator::ParseContextImpl::resolveFunctionCall(txAtom* aName,

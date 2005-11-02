@@ -601,7 +601,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
     }
 
     PRInt32 nsId = kNameSpaceID_Unknown;
-    nsresult rv = gNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
+    nsresult rv = gTxNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
@@ -624,7 +624,7 @@ txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
                                      nsIVariant **aResult)
 {
     PRInt32 nsId = kNameSpaceID_Unknown;
-    nsresult rv = gNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
+    nsresult rv = gTxNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
@@ -641,7 +641,7 @@ txMozillaXSLTProcessor::RemoveParameter(const nsAString& aNamespaceURI,
                                         const nsAString& aLocalName)
 {
     PRInt32 nsId = kNameSpaceID_Unknown;
-    nsresult rv = gNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
+    nsresult rv = gTxNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
