@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -363,12 +364,20 @@ void* txListIterator::advance(int i) {
     void* obj = 0;
 
     if (i > 0) {
+        if (!currentItem && !atEndOfList) {
+            currentItem = list->firstItem;
+            --i;
+        }
         for (; currentItem && i > 0; i--)
             currentItem = currentItem->nextItem;
         
         atEndOfList = currentItem == 0;
     }
-    else {
+    else if (i < 0) {
+        if (!currentItem && atEndOfList) {
+            currentItem = list->lastItem;
+            ++i;
+        }
         for (; currentItem && i < 0; i++)
             currentItem = currentItem->prevItem;
 

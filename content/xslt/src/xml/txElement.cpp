@@ -26,6 +26,9 @@
 //
 
 #include "dom.h"
+#include "txAtom.h"
+
+const String XMLNS_ATTR = "xmlns";
 
 //
 //Construct a new element with the specified tagName and Document owner.
@@ -35,7 +38,77 @@
 Element::Element(const String& tagName, Document* owner) :
          NodeDefinition(Node::ELEMENT_NODE, tagName, NULL_STRING, owner)
 {
-  attributes.ownerElement = this;
+  mAttributes.ownerElement = this;
+  mNamespaceID = kNameSpaceID_Unknown;
+
+  int idx = nodeName.indexOf(':');
+  if (idx == NOT_FOUND) {
+    mLocalName = TX_GET_ATOM(nodeName);
+  }
+  else {
+    String tmp;
+    nodeName.subString(idx+1, tmp);
+    mLocalName = TX_GET_ATOM(tmp);
+  }
+}
+
+//
+// This element is being destroyed, so destroy all attributes stored
+// in the mAttributes NamedNodeMap.
+//
+Element::~Element()
+{
+  mAttributes.clear();
+  TX_RELEASE_IF_ATOM(mLocalName);
+}
+
+//
+//Return the elements local (unprefixed) name.
+//
+MBool Element::getLocalName(txAtom** aLocalName)
+{
+  if (!aLocalName)
+    return MB_FALSE;
+  *aLocalName = mLocalName;
+  TX_ADDREF_ATOM(*aLocalName);
+  return MB_TRUE;
+}
+
+//
+//Return the namespace the elements belongs to.
+//
+PRInt32 Element::getNamespaceID()
+{
+  if (mNamespaceID>=0)
+    return mNamespaceID;
+  int idx = nodeName.indexOf(':');
+  if (idx == NOT_FOUND) {
+    Node* node = this;
+    while (node && node->getNodeType() == Node::ELEMENT_NODE) {
+      String nsURI;
+      if (((Element*)node)->getAttr(txXMLAtoms::XMLNSPrefix,
+                                    kNameSpaceID_XMLNS, nsURI)) {
+        // xmlns = "" sets the default namespace ID to kNameSpaceID_None;
+        if (!nsURI.isEmpty()) {
+          mNamespaceID = txNamespaceManager::getNamespaceID(nsURI);
+        }
+        else {
+          mNamespaceID = kNameSpaceID_None;
+        }
+        return mNamespaceID;
+      }
+      node = node->getParentNode();
+    }
+    mNamespaceID = kNameSpaceID_None;
+  }
+  else {
+    String prefix;
+    nodeName.subString(0, idx, prefix);
+    txAtom* prefixAtom = TX_GET_ATOM(prefix);
+    mNamespaceID = lookupNamespaceID(prefixAtom);
+    TX_RELEASE_IF_ATOM(prefixAtom);
+  }
+  return mNamespaceID;
 }
 
 //
@@ -73,16 +146,21 @@ const String& Element::getTagName()
   return nodeName;
 }
 
+NamedNodeMap* Element::getAttributes()
+{
+  return &mAttributes;
+}
+
 //
 //Retreive an attribute's value by name.  If the attribute does not exist,
 //return a reference to the pre-created, constatnt "NULL STRING".
 //
 const String& Element::getAttribute(const String& name)
 {
-  Node* tempNode = attributes.getNamedItem(name);
+  Node* tempNode = mAttributes.getNamedItem(name);
 
   if (tempNode)
-    return attributes.getNamedItem(name)->getNodeValue();
+    return mAttributes.getNamedItem(name)->getNodeValue();
   else
     return NULL_STRING;
 }
@@ -91,7 +169,7 @@ const String& Element::getAttribute(const String& name)
 //
 //Add an attribute to this Element.  Create a new Attr object using the
 //name and value specified.  Then add the Attr to the the Element's
-//attributes NamedNodeMap.
+//mAttributes NamedNodeMap.
 //
 void Element::setAttribute(const String& name, const String& value)
 {
@@ -106,17 +184,17 @@ void Element::setAttribute(const String& name, const String& value)
     {
       tempAttribute = getOwnerDocument()->createAttribute(name);
       tempAttribute->setNodeValue(value);
-      attributes.setNamedItem(tempAttribute);
+      mAttributes.setNamedItem(tempAttribute);
     }
 }
 
 //
-//Remove an attribute from the attributes NamedNodeMap, and free its memory.
+//Remove an attribute from the mAttributes NamedNodeMap, and free its memory.
 //   NOTE:  How do default values enter into this picture
 //
 void Element::removeAttribute(const String& name)
 {
-  delete attributes.removeNamedItem(name);
+  delete mAttributes.removeNamedItem(name);
 }
 
 //
@@ -124,7 +202,33 @@ void Element::removeAttribute(const String& name)
 //
 Attr* Element::getAttributeNode(const String& name)
 {
-  return (Attr*)attributes.getNamedItem(name);
+  return (Attr*)mAttributes.getNamedItem(name);
+}
+
+//
+// Return true if the attribute specified by localname and nsID
+// exists, and sets aValue to the value of the attribute.
+// Return false, if the attribute does not exist.
+//
+MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
+                       String& aValue)
+{
+  aValue.clear();
+  AttrMap::ListItem* item = mAttributes.firstItem;
+  while (item) {
+    Attr* attrNode = (Attr*)item->node;
+    txAtom* localName;
+    if (attrNode->getLocalName(&localName) &&
+        aNSID == attrNode->getNamespaceID() &&
+        aLocalName == localName) {
+      aValue.append(attrNode->getValue());
+      TX_RELEASE_IF_ATOM(localName);
+      return MB_TRUE;
+    }
+    TX_RELEASE_IF_ATOM(localName);
+    item = item->next;
+  }
+  return MB_FALSE;
 }
 
 //
@@ -134,9 +238,9 @@ Attr* Element::getAttributeNode(const String& name)
 //
 Attr* Element::setAttributeNode(Attr* newAttr)
 {
-  Attr* pOldAttr = (Attr*)attributes.removeNamedItem(newAttr->getNodeName());
+  Attr* pOldAttr = (Attr*)mAttributes.removeNamedItem(newAttr->getNodeName());
 
-  attributes.setNamedItem(newAttr);
+  mAttributes.setNamedItem(newAttr);
   return pOldAttr;
 }
 
@@ -146,7 +250,7 @@ Attr* Element::setAttributeNode(Attr* newAttr)
 //
 Attr* Element::removeAttributeNode(Attr* oldAttr)
 {
-  return (Attr*)attributes.removeNamedItem(oldAttr->getNodeName());
+  return (Attr*)mAttributes.removeNamedItem(oldAttr->getNodeName());
 }
 
 NodeList* Element::getElementsByTagName(const String& name)

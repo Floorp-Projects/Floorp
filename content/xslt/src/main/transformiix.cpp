@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -56,6 +57,8 @@ void printUsage();
 **/
 int main(int argc, char** argv) {
 
+    if (!txInit())
+        return 1;
     XSLTProcessor xsltProcessor;
 
     //-- add ErrorObserver
@@ -135,6 +138,7 @@ int main(int argc, char** argv) {
         xsltProcessor.process(*xmlInput, *xmlFilename, xsltInput, *xsltFilename, *resultOutput);
     }
     resultFileStream.close();
+    txShutdown();
     return 0;
 } //-- main
 

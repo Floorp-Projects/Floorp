@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -29,6 +30,7 @@
 //
 
 #include "dom.h"
+#include "txAtom.h"
 
 //
 //Construct a text object with the specified document owner and data
@@ -39,6 +41,15 @@ ProcessingInstruction::ProcessingInstruction(const String& theTarget,
                        NodeDefinition(Node::PROCESSING_INSTRUCTION_NODE,
                                       theTarget, theData, owner)
 {
+  mLocalName = TX_GET_ATOM(nodeName);
+}
+
+//
+//Release the mLocalName
+//
+ProcessingInstruction::~ProcessingInstruction()
+{
+  TX_RELEASE_IF_ATOM(mLocalName);
 }
 
 //
@@ -90,4 +101,13 @@ Node* ProcessingInstruction::removeChild(Node* oldChild)
 Node* ProcessingInstruction::appendChild(Node* newChild)
 {
   return NULL;
+}
+
+MBool ProcessingInstruction::getLocalName(txAtom** aLocalName)
+{
+  if (!aLocalName)
+    return MB_FALSE;
+  *aLocalName = mLocalName;
+  TX_ADDREF_ATOM(*aLocalName);
+  return MB_TRUE;
 }
