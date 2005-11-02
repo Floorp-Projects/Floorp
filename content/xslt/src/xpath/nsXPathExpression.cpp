@@ -53,6 +53,7 @@ NS_IMPL_ADDREF(nsXPathExpression)
 NS_IMPL_RELEASE(nsXPathExpression)
 NS_INTERFACE_MAP_BEGIN(nsXPathExpression)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXPathExpression)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSXPathExpression)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathExpression)
   NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathExpression)
 NS_INTERFACE_MAP_END
@@ -74,7 +75,21 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
                             nsISupports *aInResult,
                             nsISupports **aResult)
 {
+    return EvaluateWithContext(aContextNode, 1, 1, aType, aInResult, aResult);
+}
+
+NS_IMETHODIMP
+nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
+                                       PRUint32 aContextPosition,
+                                       PRUint32 aContextSize,
+                                       PRUint16 aType,
+                                       nsISupports *aInResult,
+                                       nsISupports **aResult)
+{
     NS_ENSURE_ARG(aContextNode);
+
+    if (aContextPosition > aContextSize)
+        return NS_ERROR_FAILURE;
 
     if (!URIUtils::CanCallerAccess(aContextNode))
         return NS_ERROR_DOM_SECURITY_ERR;
@@ -116,7 +131,8 @@ nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    EvalContextImpl eContext(*contextNode, mRecycler);
+    EvalContextImpl eContext(*contextNode, aContextPosition, aContextSize,
+                             mRecycler);
     nsRefPtr<txAExprResult> exprResult;
     rv = mExpression->evaluate(&eContext, getter_AddRefs(exprResult));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -200,10 +216,10 @@ const txXPathNode& nsXPathExpression::EvalContextImpl::getContextNode()
 
 PRUint32 nsXPathExpression::EvalContextImpl::size()
 {
-    return 1;
+    return mContextSize;
 }
 
 PRUint32 nsXPathExpression::EvalContextImpl::position()
 {
-    return 1;
+    return mContextPosition;
 }

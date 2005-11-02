@@ -40,6 +40,7 @@
 #define nsXPathExpression_h__
 
 #include "nsIDOMXPathExpression.h"
+#include "nsIDOMNSXPathExpression.h"
 #include "txIXPathContext.h"
 #include "txResultRecycler.h"
 #include "nsAutoPtr.h"
@@ -50,7 +51,8 @@ class txXPathNode;
 /**
  * A class for evaluating an XPath expression string
  */
-class nsXPathExpression : public nsIDOMXPathExpression
+class nsXPathExpression : public nsIDOMXPathExpression,
+                          public nsIDOMNSXPathExpression
 {
 public:
     nsXPathExpression(nsAutoPtr<Expr>& aExpression,
@@ -63,6 +65,9 @@ public:
     // nsIDOMXPathExpression interface
     NS_DECL_NSIDOMXPATHEXPRESSION
 
+    // nsIDOMNSXPathExpression interface
+    NS_DECL_NSIDOMNSXPATHEXPRESSION
+
 private:
     nsAutoPtr<Expr> mExpression;
     nsRefPtr<txResultRecycler> mRecycler;
@@ -70,8 +75,12 @@ private:
     class EvalContextImpl : public txIEvalContext
     {
     public:
-        EvalContextImpl(const txXPathNode& aContextNode, txResultRecycler* aRecycler)
+        EvalContextImpl(const txXPathNode& aContextNode,
+                        PRUint32 aContextPosition, PRUint32 aContextSize,
+                        txResultRecycler* aRecycler)
             : mContextNode(aContextNode),
+              mContextPosition(aContextPosition),
+              mContextSize(aContextSize),
               mLastError(NS_OK),
               mRecycler(aRecycler)
         {
@@ -90,6 +99,8 @@ private:
 
     private:
         const txXPathNode& mContextNode;
+        PRUint32 mContextPosition;
+        PRUint32 mContextSize;
         nsresult mLastError;
         nsRefPtr<txResultRecycler> mRecycler;
     };
