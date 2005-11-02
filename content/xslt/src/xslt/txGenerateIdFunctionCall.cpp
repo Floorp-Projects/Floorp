@@ -26,7 +26,7 @@
 #include "txIXPathContext.h"
 #include "XSLTFunctions.h"
 #include "prprf.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 
 /*
   Implementation of XSLT 1.0 extension function: generate-id
@@ -78,9 +78,9 @@ GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
             return NS_ERROR_XSLT_NODESET_EXPECTED;
         }
 
-        NodeSet* nodes = NS_STATIC_CAST(NodeSet*,
-                                        NS_STATIC_CAST(txAExprResult*,
-                                                       exprResult));
+        txNodeSet* nodes = NS_STATIC_CAST(txNodeSet*,
+                                          NS_STATIC_CAST(txAExprResult*,
+                                                         exprResult));
         if (nodes->isEmpty()) {
             aContext->recycler()->getEmptyStringResult(aResult);
 
