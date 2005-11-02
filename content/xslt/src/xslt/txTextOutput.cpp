@@ -93,7 +93,7 @@ void txTextOutput::startElement(const String& aName,
 void txTextOutput::getOutputStream(ostream** aOutputStream)
 {
     if (aOutputStream)
-        aOutputStream = mOut;
+        *aOutputStream = mOut;
 }
 
 void txTextOutput::setOutputStream(ostream* aOutputStream)
