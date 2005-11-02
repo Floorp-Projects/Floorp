@@ -451,7 +451,7 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
             nsCOMPtr<nsIDOMNode> child, resultNode;
             PRUint32 i, childCount = document->GetChildCount();
             for (i = 0; i < childCount; ++i) {
-                nsIContent *childContent = document->GetChildAt(0);
+                nsCOMPtr<nsIContent> childContent = document->GetChildAt(0);
                 if (childContent == mRootContent) {
                     document->SetRootContent(nsnull);
                 }
