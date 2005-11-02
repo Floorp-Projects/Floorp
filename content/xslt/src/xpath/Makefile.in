@@ -27,6 +27,7 @@ VPATH           = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = transformiix
+LIBRARY_NAME = txxpath_s
 REQUIRES	= string \
 		  xpcom \
 		  $(NULL)
@@ -86,10 +87,12 @@ else
 CPPSRCS += txStandaloneXPathTreeWalker.cpp
 endif
 
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+FORCE_STATIC_LIB = 1
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir) -I$(srcdir)/../base \
         -I$(srcdir)/../xml -I$(srcdir)/../xml/dom \
         -I$(srcdir)/../xslt
-
-libs:: $(OBJS)
