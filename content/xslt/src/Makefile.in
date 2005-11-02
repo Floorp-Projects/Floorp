@@ -30,6 +30,8 @@ DIRS            = base net xml xpath xslt
 
 ifndef MOZ_XSL
 DIRS += main
+else
+DIRS += examples
 endif
 
 include $(topsrcdir)/config/rules.mk

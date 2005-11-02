@@ -38,11 +38,15 @@ CPPSRCS	= ArrayList.cpp             \
 	NamedMap.cpp \
 	SimpleErrorObserver.cpp \
 	Stack.cpp \
-	TxString.cpp \
 	StringComparator.cpp \
 	StringList.cpp \
 	Tokenizer.cpp
 
+ifdef MOZ_XSL
+	CPPSRCS	+= MozillaString.cpp
+else
+	CPPSRCS	+= TxString.cpp 
+endif
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_XSL
