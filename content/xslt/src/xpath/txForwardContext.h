@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the TransforMiiX XSLT processor.
+ * The Original Code is TransforMiiX XSLT Processor.
  *
  * The Initial Developer of the Original Code is
- * Jonas Sicking.
+ * Axel Hecht.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <sicking@bigfoot.com>
- *   Peter Van der Beken <peterv@netscape.com>
+ *  Axel Hecht <axel@pike.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,64 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef TRANSFRMX_NODESORTER_H
-#define TRANSFRMX_NODESORTER_H
+#ifndef __TX_XPATH_CONTEXT
+#define __TX_XPATH_CONTEXT
 
-#include "baseutils.h"
-#include "List.h"
-#include "txAtom.h"
+#include "txIXPathContext.h"
 
-class Element;
-class Expr;
-class Node;
-class NodeSet;
-class ProcessorState;
-class String;
-class TxObject;
-class txXPathResultComparator;
-
-/*
- * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
- */
-
-class txNodeSorter
+class txForwardContext : public txIEvalContext
 {
 public:
-    txNodeSorter(ProcessorState* aPs);
-    ~txNodeSorter();
+    txForwardContext(txIMatchContext* aContext, Node* aContextNode,
+                     NodeSet* aContextNodeSet) : mContext(aContextNode),
+                                                 mContextSet(aContextNodeSet),
+                                                 mInner(aContext)
+    {}
+    ~txForwardContext()
+    {}
 
-    MBool addSortElement(Element* aSortElement,
-                         Node* aContext);
-    MBool sortNodeSet(NodeSet* aNodes);
+    TX_DECL_EVAL_CONTEXT;
 
 private:
-    class SortableNode
-    {
-    public:
-        SortableNode(Node* aNode, int aNValues);
-        void clear(int aNValues);
-        TxObject** mSortValues;
-        Node* mNode;
-    };
-    struct SortKey
-    {
-        Expr* mExpr;
-        txXPathResultComparator* mComparator;
-    };
-    
-    int compareNodes(SortableNode* sNode1,
-                     SortableNode* sNode2,
-                     NodeSet* aNodes);
-
-    MBool getAttrAsAVT(Element* aSortElement,
-                       txAtom* aAttrName,
-                       Node* aContext,
-                       String& aResult);
-
-    txList mSortKeys;
-    ProcessorState* mPs;
-    int mNKeys;
-    Expr* mDefaultExpr;
+    Node* mContext;
+    NodeSet* mContextSet;
+    txIMatchContext* mInner;
 };
 
-#endif
+#endif // __TX_XPATH_CONTEXT

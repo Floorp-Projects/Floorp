@@ -29,6 +29,7 @@
 
 #include "FunctionLib.h"
 #include "txAtoms.h"
+#include "txIXPathContext.h"
 
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
@@ -62,27 +63,26 @@ BooleanFunctionCall::BooleanFunctionCall(BooleanFunctions aType)
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* BooleanFunctionCall::evaluate(Node* aContext, ContextState* aCs)
+ExprResult* BooleanFunctionCall::evaluate(txIEvalContext* aContext)
 {
     ListIterator iter(&params);
 
     switch (mType) {
         case TX_BOOLEAN:
         {
-            if (!requireParams(1, 1, aCs))
+            if (!requireParams(1, 1, aContext))
                 return new StringResult("error");
 
             return new BooleanResult(evaluateToBoolean((Expr*)iter.next(),
-                                                       aContext,
-                                                       aCs));
+                                                       aContext));
         }
         case TX_LANG:
         {
-            if (!requireParams(1, 1, aCs))
+            if (!requireParams(1, 1, aContext))
                 return new StringResult("error");
 
             String lang;
-            Node* node = aContext;
+            Node* node = aContext->getContextNode();
             while (node) {
                 if (node->getNodeType() == Node::ELEMENT_NODE) {
                     Element* elem = (Element*)node;
@@ -96,7 +96,7 @@ ExprResult* BooleanFunctionCall::evaluate(Node* aContext, ContextState* aCs)
             MBool result = MB_FALSE;
             if (node) {
                 String arg;
-                evaluateToString((Expr*)iter.next(),aContext, aCs, arg);
+                evaluateToString((Expr*)iter.next(), aContext, arg);
                 arg.toUpperCase(); // case-insensitive comparison
                 lang.toUpperCase();
                 result = lang.indexOf(arg) == 0 &&
@@ -108,23 +108,22 @@ ExprResult* BooleanFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         }
         case TX_NOT:
         {
-            if (!requireParams(1, 1, aCs))
+            if (!requireParams(1, 1, aContext))
                 return new StringResult("error");
 
             return new BooleanResult(!evaluateToBoolean((Expr*)iter.next(),
-                                                        aContext,
-                                                        aCs));
+                                                        aContext));
         }
         case TX_TRUE:
         {
-            if (!requireParams(0, 0, aCs))
+            if (!requireParams(0, 0, aContext))
                 return new StringResult("error");
 
             return new BooleanResult(MB_TRUE);
         }
         case TX_FALSE:
         {
-            if (!requireParams(0, 0, aCs))
+            if (!requireParams(0, 0, aContext))
                 return new StringResult("error");
 
             return new BooleanResult(MB_FALSE);
@@ -132,7 +131,7 @@ ExprResult* BooleanFunctionCall::evaluate(Node* aContext, ContextState* aCs)
     }
 
     String err("Internal error");
-    aCs->recieveError(err);
+    aContext->receiveError(err, NS_ERROR_UNEXPECTED);
     return new StringResult("error");
 }
 

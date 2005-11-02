@@ -46,38 +46,20 @@ SimpleErrorObserver::SimpleErrorObserver(ostream& errStream) {
 } //-- SimpleErrorObserver
 
 /**
- *  Notifies this Error observer of a new error, with default
- *  level of NORMAL
-**/
-void SimpleErrorObserver::recieveError(String& errorMessage) {
-#ifdef TX_EXE
-    *errStream << "error: " << errorMessage << endl;
-    errStream->flush();
-#endif
-} //-- recieveError
-
-/**
  *  Notifies this Error observer of a new error using the given error level
 **/
-void SimpleErrorObserver::recieveError(String& errorMessage, ErrorLevel level) {
+void SimpleErrorObserver::receiveError(const String& errorMessage,
+                                       nsresult aRes)
+{
 #ifdef TX_EXE
-    switch ( level ) {
-        case ErrorObserver::FATAL :
-            *errStream << "fatal error: ";
-            break;
-        case ErrorObserver::WARNING :
-            if ( hideWarnings ) return;
-            *errStream << "warning: ";
-            break;
-        default:
-            *errStream << "error: ";
-            break;
+    if (NS_FAILED(aRes)) {
+        *errStream << "error: ";
     }
 
     *errStream << errorMessage << endl;
     errStream->flush();
 #endif
-} //-- recieveError
+}
 
 void SimpleErrorObserver::supressWarnings(MBool supress) {
     this->hideWarnings = supress;

@@ -57,13 +57,12 @@ BooleanExpr::~BooleanExpr() {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* BooleanExpr::evaluate(Node* context, ContextState* cs) {
-
-
+ExprResult* BooleanExpr::evaluate(txIEvalContext* aContext)
+{
     MBool lval = MB_FALSE;
     ExprResult* exprRes = 0;
     if ( leftExpr ) {
-        exprRes = leftExpr->evaluate(context, cs);
+        exprRes = leftExpr->evaluate(aContext);
         if ( exprRes ) lval = exprRes->booleanValue();
         delete exprRes;
     }
@@ -75,7 +74,7 @@ ExprResult* BooleanExpr::evaluate(Node* context, ContextState* cs) {
 
     MBool rval = MB_FALSE;
     if ( rightExpr ) {
-        exprRes = rightExpr->evaluate(context, cs);
+        exprRes = rightExpr->evaluate(aContext);
         if ( exprRes ) rval = exprRes->booleanValue();
         delete exprRes;
     }
