@@ -47,22 +47,24 @@
 #define NS_NO_VTABLE
 #endif
 class nsIDOMNode; /* forward declaration */
-class nsIDOMXPathExpression; /* forward declaration */
+class nsIDOMNSXPathExpression; /* forward declaration */
 
 /* starting interface:    nsIXFormsXPathEvaluator */
 #define NS_XFORMS_XPATH_EVALUATOR_CONTRACTID "@mozilla.org/dom/xforms-xpath-evaluator;1"
-/* a7e127c6-31ff-40b4-8780-15d6938b33d3 */
+/* 4cdd884f-f949-4d82-bb78-b8edd9f1420c */
 #define TRANSFORMIIX_XFORMS_XPATH_EVALUATOR_CID   \
-{ 0xa7e127c6, 0x31ff, 0x40b4, { 0x87, 0x80, 0x15, 0xd6, 0x93, 0x8b, 0x33, 0xd3 } }
+{ 0x4cdd884f, 0xf949, 0x4d82, \
+  {0xbb, 0x78, 0xb8, 0xed, 0xd9, 0xf1, 0x42, 0x0c} }
 
-/* 60050a4a-4c99-4bad-8c47-3b9b96caf2b4 */
+/* 61e5a446-73f7-432e-a2d6-d94d4a51aed8 */
 #define TRANSFORMIIX_XFORMS_XPATH_EVALUATOR_IID   \
-{ 0x60050a4a, 0x4c99, 0x4bad, { 0x8c, 0x47, 0x3b, 0x9b, 0x96, 0xca, 0xf2, 0xb4 } }
+{ 0x61e5a446, 0x73f7, 0x432e, \
+  {0xa2, 0xd6, 0xd9, 0x4d, 0x4a, 0x51, 0xae, 0xd8} }
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIXFORMXPATHEVALUATOR \
-  NS_IMETHOD CreateExpression(const nsAString & aExpression, nsIDOMNode *aResolverNode,nsIDOMXPathExpression **aResult); \
-  NS_IMETHOD Evaluate(const nsAString & aExpression, nsIDOMNode *aContextNode, nsIDOMNode *aResolverNode, PRUint16 aType, nsISupports *aInResult, nsISupports **aResult); 
+  NS_IMETHOD CreateExpression(const nsAString & aExpression, nsIDOMNode *aResolverNode, nsIDOMNSXPathExpression **aResult); \
+  NS_IMETHOD Evaluate(const nsAString & aExpression, nsIDOMNode *aContextNode, PRUint32 aContextPosition, PRUint32 aContextSize, nsIDOMNode *aResolverNode, PRUint16 aType, nsISupports *aInResult, nsISupports **aResult); 
 
 /**
  * Private interface implemented by the nsXFormsXPathEvaluator in Transformiix
@@ -79,18 +81,18 @@ class NS_NO_VTABLE nsIXFormsXPathEvaluator : public nsISupports {
   NS_DEFINE_STATIC_IID_ACCESSOR(TRANSFORMIIX_XFORMS_XPATH_EVALUATOR_IID)
 
   /**
-   * Function to create a nsIDOMXPathExpression from the provided expression
+   * Function to create a nsIDOMNSXPathExpression from the provided expression
    * string.  aResolverNode is the xforms node that the expression is
    * associated with.
    */
-  NS_IMETHOD CreateExpression(const nsAString & aExpression, nsIDOMNode *aResolverNode, nsIDOMXPathExpression **aResult) = 0;
+  NS_IMETHOD CreateExpression(const nsAString & aExpression, nsIDOMNode *aResolverNode, nsIDOMNSXPathExpression **aResult) = 0;
 
   /**
    * Function to evaluate the given expression.  aResolverNode is the xforms
    * node that the expression is associated with.  The other parameters are as
    * required by DOM's XPathEvaluator.
    */
-  NS_IMETHOD Evaluate(const nsAString & aExpression, nsIDOMNode *aContextNode, nsIDOMNode *aResolverNode, PRUint16 aType, nsISupports *aInResult, nsISupports **aResult) = 0;
+  NS_IMETHOD Evaluate(const nsAString & aExpression, nsIDOMNode *aContextNode, PRUint32 aContextPosition, PRUint32 aContextSize, nsIDOMNode *aResolverNode, PRUint16 aType, nsISupports *aInResult, nsISupports **aResult) = 0;
 
 };
 

@@ -78,7 +78,7 @@ nsXFormsXPathEvaluator::~nsXFormsXPathEvaluator()
 NS_IMETHODIMP
 nsXFormsXPathEvaluator::CreateExpression(const nsAString & aExpression, 
                                          nsIDOMNode *aResolverNode,
-                                         nsIDOMXPathExpression **aResult)
+                                         nsIDOMNSXPathExpression **aResult)
 {
   nsresult rv = NS_OK;
   if (!mRecycler) {
@@ -116,6 +116,8 @@ nsXFormsXPathEvaluator::CreateExpression(const nsAString & aExpression,
 NS_IMETHODIMP
 nsXFormsXPathEvaluator::Evaluate(const nsAString & aExpression,
                                  nsIDOMNode *aContextNode,
+                                 PRUint32 aPosition,
+                                 PRUint32 aSize,
                                  nsIDOMNode *aResolverNode,
                                  PRUint16 aType,
                                  nsISupports *aInResult,
@@ -124,12 +126,13 @@ nsXFormsXPathEvaluator::Evaluate(const nsAString & aExpression,
   // XXX Need to check document of aContextNode if created by
   //   QI'ing a document.
 
-  nsCOMPtr<nsIDOMXPathExpression> expression;
+  nsCOMPtr<nsIDOMNSXPathExpression> expression;
   nsresult rv = CreateExpression(aExpression, aResolverNode,
                                  getter_AddRefs(expression));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return expression->Evaluate(aContextNode, aType, aInResult, aResult);
+  return expression->EvaluateWithContext(aContextNode, aPosition, aSize,
+                                         aType, aInResult, aResult);
 }
 
 
