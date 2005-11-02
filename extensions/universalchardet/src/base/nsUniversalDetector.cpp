@@ -89,7 +89,6 @@ nsUniversalDetector::Reset()
   mDone = PR_FALSE;
   mBestGuess = -1;   //illegal value as signal
   mInTag = PR_FALSE;
-  mEscCharSetProber = nsnull;
 
   mStart = PR_TRUE;
   mDetectedCharset = nsnull;
@@ -148,8 +147,10 @@ void nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
         mInputState = eHighbyte;
 
         //kill mEscCharSetProber if it is active
-        if (mEscCharSetProber)
+        if (mEscCharSetProber) {
           delete mEscCharSetProber;
+          mEscCharSetProber = nsnull;
+        }
 
         //start multibyte and singlebyte charset prober
         if (nsnull == mCharSetProbers[0])

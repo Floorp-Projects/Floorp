@@ -50,6 +50,7 @@ typedef enum {
 
 class nsCharSetProber {
 public:
+  virtual ~nsCharSetProber() {};
   virtual const char* GetCharSetName() = 0;
   virtual nsProbingState HandleData(const char* aBuf, PRUint32 aLen) = 0;
   virtual nsProbingState GetState(void) = 0;
