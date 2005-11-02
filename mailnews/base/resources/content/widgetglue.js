@@ -280,9 +280,8 @@ function FolderProperties(name, oldName, uri)
 
 function MsgToggleMessagePane()
 {
-  //OnClickThreadAndMessagePaneSplitter is based on the value before the splitter is toggled.
-  OnClickThreadAndMessagePaneSplitterGrippy();
   MsgToggleSplitter("threadpane-splitter");
+  OnClickThreadAndMessagePaneSplitter();
 }
 
 function MsgToggleSplitter(id)

@@ -784,7 +784,8 @@ function ChangeMessagePaneVisibility(now_hidden)
     // so we take it as it is
     gDBView.suppressMsgDisplay = now_hidden;
     // set the subject, uncollapsing won't automatically do this
-    gDBView.reloadMessage();
+    gDBView.loadMessageByUrl("about:blank");
+    gDBView.selectionChanged();
   }
   var event = document.createEvent('Events');
   if (now_hidden) {
@@ -796,18 +797,9 @@ function ChangeMessagePaneVisibility(now_hidden)
   document.getElementById("messengerWindow").dispatchEvent(event);
 }
 
-function OnMouseUpThreadAndMessagePaneSplitter()
+function OnClickThreadAndMessagePaneSplitter()
 {
-  // the collapsed state is the state after we released the mouse 
-  // so we take it as it is
   ChangeMessagePaneVisibility(IsMessagePaneCollapsed());
-}
-
-function OnClickThreadAndMessagePaneSplitterGrippy()
-{
-  // the collapsed state is the state when we clicked on the grippy
-  // not when afterwards, so we need to reverse this value
-  ChangeMessagePaneVisibility(!IsMessagePaneCollapsed());
 }
 
 function FolderPaneSelectionChange()
