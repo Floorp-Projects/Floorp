@@ -168,23 +168,19 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
     }
 
     // Reset and set up document
-    nsCOMPtr<nsILoadGroup> loadGroup;
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIDocument> sourceDoc = do_QueryInterface(aSourceDocument);
-    sourceDoc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    nsCOMPtr<nsILoadGroup> loadGroup = sourceDoc->GetDocumentLoadGroup();
     nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (serv) {
         // Create a temporary channel to get nsIDocument->Reset to
         // do the right thing. We want the output document to get
         // much of the input document's characteristics.
-        nsCOMPtr<nsIURI> docURL;
-        sourceDoc->GetDocumentURL(getter_AddRefs(docURL));
-        serv->NewChannelFromURI(docURL, getter_AddRefs(channel));
+        serv->NewChannelFromURI(sourceDoc->GetDocumentURL(),
+                                getter_AddRefs(channel));
     }
     doc->Reset(channel, loadGroup);
-    nsCOMPtr<nsIURI> baseURL;
-    sourceDoc->GetBaseURL(getter_AddRefs(baseURL));
-    doc->SetBaseURL(baseURL);
+    doc->SetBaseURL(sourceDoc->GetBaseURL());
 
     // Notify the contentsink that the document is created
     nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
@@ -236,11 +232,7 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
             return;
         }
 
-        rv = doc->SetRootContent(rootContent);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to set the root content");
-        if (NS_FAILED(rv)) {
-            return;
-        }
+        doc->SetRootContent(rootContent);
 
         mDocument->CreateElementNS(XHTML_NSURI,
                                    NS_LITERAL_STRING("head"),

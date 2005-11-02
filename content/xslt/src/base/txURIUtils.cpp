@@ -298,7 +298,7 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
     }
 
     if (!principal) {
-        doc->GetPrincipal(getter_AddRefs(principal));
+        principal = doc->GetPrincipal();
     }
 
     if (!principal) {
@@ -336,22 +336,18 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
         return;
     }
 
-    nsCOMPtr<nsILoadGroup> loadGroup;
     nsCOMPtr<nsIChannel> channel;
-    sourceDoc->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    nsCOMPtr<nsILoadGroup> loadGroup = sourceDoc->GetDocumentLoadGroup();
     nsCOMPtr<nsIIOService> serv = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (serv) {
         // Create a temporary channel to get nsIDocument->Reset to
         // do the right thing. We want the output document to get
         // much of the input document's characteristics.
-        nsCOMPtr<nsIURI> docURL;
-        sourceDoc->GetDocumentURL(getter_AddRefs(docURL));
-        serv->NewChannelFromURI(docURL, getter_AddRefs(channel));
+        serv->NewChannelFromURI(sourceDoc->GetDocumentURL(),
+                                getter_AddRefs(channel));
     }
     aNewDoc->Reset(channel, loadGroup);
-    nsCOMPtr<nsIURI> baseURL;
-    sourceDoc->GetBaseURL(getter_AddRefs(baseURL));
-    aNewDoc->SetBaseURL(baseURL);
+    aNewDoc->SetBaseURL(sourceDoc->GetBaseURL());
 
 }
 

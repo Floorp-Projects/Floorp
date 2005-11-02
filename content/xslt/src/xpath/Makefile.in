@@ -34,6 +34,7 @@ REQUIRES	= string \
 ifndef TX_EXE
 REQUIRES +=	  dom \
 		  content \
+		  necko \
 		  widget \
 		  xpconnect \
 		  js \
