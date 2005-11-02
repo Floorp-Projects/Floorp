@@ -1349,6 +1349,9 @@ case "$target" in
     ;;
 
 *-darwin*) 
+    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
+
     _PEDANTIC=
     CFLAGS="$CFLAGS -fpascal-strings -no-cpp-precomp -fno-common"
     CXXFLAGS="$CXXFLAGS -fpascal-strings -no-cpp-precomp -fno-common"
