@@ -67,6 +67,19 @@ nsCOMArray_base::InsertObjectAt(nsISupports* aObject, PRInt32 aIndex) {
 }
 
 PRBool
+nsCOMArray_base::InsertObjectsAt(const nsCOMArray_base& aObjects, PRInt32 aIndex) {
+    PRBool result = mArray.InsertElementsAt(aObjects.mArray, aIndex);
+    if (result) {
+        // need to addref all these
+        PRInt32 count = aObjects.Count();
+        for (PRInt32 i = 0; i < count; ++i) {
+            NS_IF_ADDREF(aObjects.ObjectAt(i));
+        }
+    }
+    return result;
+}
+
+PRBool
 nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex)
 {
     // its ok if oldObject is null here
