@@ -24,14 +24,14 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- changed some behavoir to be more compliant with spec
  *    
- * $Id: txNodeSetFunctionCall.cpp,v 1.3 2005/11/02 07:33:46 axel%pike.org Exp $
+ * $Id: txNodeSetFunctionCall.cpp,v 1.4 2005/11/02 07:33:47 axel%pike.org Exp $
  */
 
 /**
  * NodeSetFunctionCall
  * A representation of the XPath NodeSet funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:46 $
+ * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:47 $
 **/
 
 #include "FunctionLib.h"
@@ -126,11 +126,11 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
                     exprResult->stringValue(lIDList);
                 };
                 lIDList.trim();
-                Int32 start=0;
+                Int32 start=0,end;
                 MBool hasSpace = MB_FALSE, isSpace;
                 UNICODE_CHAR cc;
                 String thisID;
-                for (Int32 end=0; end<lIDList.length(); end++){
+                for (end=0; end<lIDList.length(); end++){
                     cc = lIDList.charAt(end);
                     isSpace = (cc==' ' || cc=='\n' || cc=='\t'|| cc=='\r');
                     if (isSpace && !hasSpace){
@@ -142,6 +142,8 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
                         hasSpace = MB_FALSE;
                     };
                 };
+                lIDList.subString(start, end, thisID);
+                resultSet->add(context->getOwnerDocument()->getElementById(thisID));
                 result = resultSet;
             };
             break;
