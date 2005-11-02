@@ -923,6 +923,8 @@ public:
 
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
 
+  NS_HIDDEN_(void) Truncate() { SetLength(0); }
+
   NS_HIDDEN_(PRBool) Equals( const self_type &other ) const {
     const char_type *cself;
     const char_type *cother;
@@ -1039,6 +1041,8 @@ public:
   NS_HIDDEN_(void) Insert( const self_type& readable, index_type pos )                                { Replace(pos, 0, readable); }
 
   NS_HIDDEN_(void) Cut( index_type cutStart, size_type cutLength )                                    { Replace(cutStart, cutLength, nsnull, 0); }
+
+  NS_HIDDEN_(void) Truncate() { SetLength(0); }
 
   NS_HIDDEN_(PRBool) Equals( const self_type &other ) const {
     const char_type *cself;

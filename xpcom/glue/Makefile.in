@@ -43,6 +43,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/objs.mk
 
+EXTRA_DEPS += $(srcdir)/objs.mk
+
 DIRS            = standalone
 
 MODULE		= xpcom
@@ -68,13 +70,18 @@ CPPSRCS		= \
 EXPORTS		= \
 		pldhash.h \
 		nsBaseHashtable.h \
+		nsCOMArray.h \
+		nsCRTGlue.h \
 		nsClassHashtable.h \
 		nsDataHashtable.h \
 		nsHashKeys.h \
 		nsINIParser.h \
 		nsInterfaceHashtable.h \
+		nsQuickSort.h \
+		nsStringGlue.h \
 		nsRefPtrHashtable.h \
 		nsTHashtable.h \
+		nsVoidArray.h \
 		$(NULL)
 
 SDK_HEADERS     = \

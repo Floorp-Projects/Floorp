@@ -1,4 +1,3 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +11,22 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Application Update.
+ * This file is based on code originally located at
+ * mozilla/toolkit/mozapps/update/src/updater/updater.cpp
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Benjamin Smedberg <benjamin@smedbergs.us>
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,35 +38,50 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsCRTGlue.h"
 
-/* We need this because Solaris' version of qsort is broken and
- * causes array bounds reads.
- */
+const char*
+NS_strspnp(const char *delims, const char *str)
+{
+  const char *d;
+  do {
+    for (d = delims; *d != '\0'; ++d) {
+      if (*str == *d) {
+        ++str;
+        break;
+      }
+    }
+  } while (*d);
 
-#ifndef nsQuickSort_h___
-#define nsQuickSort_h___
+  return str;
+}
 
-#include "prtypes.h"
-#include "nscore.h"
+char*
+NS_strtok(const char *delims, char **str)
+{
+  if (!*str)
+    return NULL;
 
-PR_BEGIN_EXTERN_C
+  char *ret = (char*) NS_strspnp(delims, *str);
 
-/**
- * Parameters:
- *  1. the array to sort
- *  2. the number of elements in the array
- *  3. the size of each array element
- *  4. comparison function taking two elements and parameter #5 and
- *     returning an integer:
- *      + less than zero if the first element should be before the second
- *      + 0 if the order of the elements does not matter
- *      + greater than zero if the second element should be before the first
- *  5. extra data to pass to comparison function
- */
-void NS_COM_GLUE NS_QuickSort(void *, unsigned int, unsigned int,
-                              int (*)(const void *, const void *, void *), 
-                              void *);
+  if (!*ret) {
+    *str = ret;
+    return NULL;
+  }
 
-PR_END_EXTERN_C
+  char *i = ret;
+  do {
+    for (const char *d = delims; *d != '\0'; ++d) {
+      if (*i == *d) {
+        *i = '\0';
+        *str = ++i;
+        return ret;
+      }
+    }
+    ++i;
+  } while (*i);
 
-#endif /* nsQuickSort_h___ */
+  *str = NULL;
+  return ret;
+}
+

@@ -69,7 +69,6 @@ CPPSRCS		= \
 		nsObserverService.cpp \
 		nsProperties.cpp \
 		nsPersistentProperties.cpp \
-		nsQuickSort.cpp \
 		nsRecyclingAllocator.cpp \
 		nsStaticNameTable.cpp \
 		nsStringEnumerator.cpp \
@@ -78,11 +77,9 @@ CPPSRCS		= \
 		nsSupportsPrimitives.cpp \
 		nsUnicharBuffer.cpp \
 		nsVariant.cpp \
-		nsVoidArray.cpp \
 		nsTextFormatter.cpp \
 		nsTimelineService.cpp \
 		nsValueArray.cpp \
-		nsCOMArray.cpp \
 		nsArray.cpp \
 		nsArrayEnumerator.cpp \
 		nsHashPropertyBag.cpp \
@@ -103,7 +100,6 @@ EXPORTS		= \
 		nsIUnicharBuffer.h \
 		nsInt64.h \
 		nsObserverService.h \
-		nsQuickSort.h \
 		nsRecyclingAllocator.h \
 		nsStaticNameTable.h \
 		nsStaticAtom.h \
@@ -112,12 +108,10 @@ EXPORTS		= \
 		nsTime.h \
 		nsUnitConversion.h \
 		nsVariant.h \
-		nsVoidArray.h \
 		nsTextFormatter.h \
 		nsValueArray.h \
 		nsArray.h \
 		nsArrayEnumerator.h \
-		nsCOMArray.h \
 		nsStringEnumerator.h \
 		nsAutoBuffer.h \
 		nsHashPropertyBag.h \

@@ -34,12 +34,14 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include <stdlib.h>
+
 #include "nsVoidArray.h"
 #include "nsQuickSort.h"
-#include "prmem.h"
-#include "nsCRT.h"
-#include "nsString.h"
 #include "prbit.h"
+#include "nsISupportsImpl.h" // for nsTraceRefcnt
+#include "nsCRTGlue.h"
 
 /**
  * Grow the array by at least this many elements at a time.
@@ -168,7 +170,7 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
     {
       if (isOwner)
       {
-        PR_Free(NS_REINTERPRET_CAST(char *, mImpl));
+        free(NS_REINTERPRET_CAST(char *, mImpl));
         if (hasAuto) {
           NS_STATIC_CAST(nsAutoVoidArray*, this)->ResetToAutoBuffer();
         }
@@ -193,7 +195,7 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
       return PR_TRUE;  // can't make it that small, ignore request
     }
 
-    char* bytes = (char *) PR_Realloc(mImpl,SIZEOF_IMPL(aSize));
+    char* bytes = (char *) realloc(mImpl,SIZEOF_IMPL(aSize));
     Impl* newImpl = NS_REINTERPRET_CAST(Impl*, bytes);
     if (!newImpl)
       return PR_FALSE;
@@ -226,7 +228,7 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
 
   // just allocate an array
   // allocate the exact size requested
-  char* bytes = (char *) PR_Malloc(SIZEOF_IMPL(aSize));
+  char* bytes = (char *) malloc(SIZEOF_IMPL(aSize));
   Impl* newImpl = NS_REINTERPRET_CAST(Impl*, bytes);
   if (!newImpl)
     return PR_FALSE;
@@ -371,7 +373,7 @@ nsVoidArray::~nsVoidArray()
 {
   MOZ_COUNT_DTOR(nsVoidArray);
   if (mImpl && IsArrayOwner())
-    PR_Free(NS_REINTERPRET_CAST(char*, mImpl));
+    free(NS_REINTERPRET_CAST(char*, mImpl));
 }
 
 PRInt32 nsVoidArray::IndexOf(void* aPossibleElement) const
@@ -629,7 +631,7 @@ void nsVoidArray::Compact()
       NS_STATIC_CAST(nsAutoVoidArray*, this)->ResetToAutoBuffer();
       memcpy(mImpl->mArray, oldImpl->mArray,
              count * sizeof(mImpl->mArray[0]));
-      PR_Free(NS_REINTERPRET_CAST(char *, oldImpl));
+      free(NS_REINTERPRET_CAST(char *, oldImpl));
     }
     else if (GetArraySize() > count)
     {
@@ -846,7 +848,25 @@ nsStringArray::Clear(void)
 PR_STATIC_CALLBACK(int)
 CompareString(const nsString* aString1, const nsString* aString2, void*)
 {
+#ifdef MOZILLA_INTERNAL_API
   return Compare(*aString1, *aString2);
+#else
+  const PRUnichar* s1;
+  const PRUnichar* s2;
+  PRUint32 len1 = NS_StringGetData(*aString1, &s1);
+  PRUint32 len2 = NS_StringGetData(*aString2, &s2);
+  int r = memcmp(s1, s2, sizeof(PRUnichar) * PR_MIN(len1, len2));
+  if (r)
+    return r;
+
+  if (len1 < len2)
+    return -1;
+
+  if (len1 > len2)
+    return 1;
+
+  return 0;
+#endif
 }
 
 void nsStringArray::Sort(void)
@@ -907,18 +927,18 @@ void
 nsCStringArray::ParseString(const char* string, const char* delimiter)
 {
   if (string && *string && delimiter && *delimiter) {
-    char *newStr;
-    char *rest = nsCRT::strdup(string);
-    char *token = nsCRT::strtok(rest, delimiter, &newStr);
+    char *rest = strdup(string);
+    char *newStr = rest;
+    char *token = NS_strtok(delimiter, &newStr);
 
     while (token) {
       if (*token) {
         /* calling AppendElement(void*) to avoid extra nsCString copy */
         AppendElement(new nsCString(token));
       }
-      token = nsCRT::strtok(newStr, delimiter, &newStr);
+      token = NS_strtok(delimiter, &newStr);
     }
-    PR_FREEIF(rest);
+    free(rest);
   }
 }
 
@@ -988,6 +1008,7 @@ nsCStringArray::IndexOf(const nsACString& aPossibleString) const
   return -1;
 }
 
+#ifdef MOZILLA_INTERNAL_API
 PRInt32 
 nsCStringArray::IndexOfIgnoreCase(const nsACString& aPossibleString) const
 {
@@ -1007,6 +1028,7 @@ nsCStringArray::IndexOfIgnoreCase(const nsACString& aPossibleString) const
   }
   return -1;
 }
+#endif
 
 PRBool 
 nsCStringArray::InsertCStringAt(const nsACString& aCString, PRInt32 aIndex)
@@ -1043,6 +1065,7 @@ nsCStringArray::RemoveCString(const nsACString& aCString)
   return PR_FALSE;
 }
 
+#ifdef MOZILLA_INTERNAL_API
 PRBool 
 nsCStringArray::RemoveCStringIgnoreCase(const nsACString& aCString)
 {
@@ -1053,6 +1076,7 @@ nsCStringArray::RemoveCStringIgnoreCase(const nsACString& aCString)
   }
   return PR_FALSE;
 }
+#endif
 
 PRBool nsCStringArray::RemoveCStringAt(PRInt32 aIndex)
 {
@@ -1081,24 +1105,46 @@ nsCStringArray::Clear(void)
 PR_STATIC_CALLBACK(int)
 CompareCString(const nsCString* aCString1, const nsCString* aCString2, void*)
 {
+#ifdef MOZILLA_INTERNAL_API
   return Compare(*aCString1, *aCString2);
+#else
+  const char* s1;
+  const char* s2;
+  PRUint32 len1 = NS_CStringGetData(*aCString1, &s1);
+  PRUint32 len2 = NS_CStringGetData(*aCString2, &s2);
+  int r = memcmp(s1, s2, PR_MIN(len1, len2));
+  if (r)
+    return r;
+
+  if (len1 < len2)
+    return -1;
+
+  if (len1 > len2)
+    return 1;
+
+  return 0;
+#endif
 }
 
+#ifdef MOZILLA_INTERNAL_API
 PR_STATIC_CALLBACK(int)
 CompareCStringIgnoreCase(const nsCString* aCString1, const nsCString* aCString2, void*)
 {
   return Compare(*aCString1, *aCString2, nsCaseInsensitiveCStringComparator());
 }
+#endif
 
 void nsCStringArray::Sort(void)
 {
   Sort(CompareCString, nsnull);
 }
 
+#ifdef MOZILLA_INTERNAL_API
 void nsCStringArray::SortIgnoreCase(void)
 {
   Sort(CompareCStringIgnoreCase, nsnull);
 }
+#endif
 
 void nsCStringArray::Sort(nsCStringArrayComparatorFunc aFunc, void* aData)
 {
