@@ -202,9 +202,9 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXPathResult)
 NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXPathResult)
 
 void
-nsXPathResult::ContentChanged(nsIDocument* aDocument,
-                              nsIContent *aContent,
-                              nsISupports *aSubContent)
+nsXPathResult::CharacterDataChanged(nsIDocument* aDocument,
+                                    nsIContent *aContent,
+                                    PRBool aAppend)
 {
     Invalidate();
 }
