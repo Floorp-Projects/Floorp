@@ -128,6 +128,21 @@
 #include "nsTextControlFrame.h"
 #include "nsStyleSheetService.h"
 
+// Transformiix stuff
+#include "nsIDOMXPathExpression.h"
+#include "nsIDOMNSXPathExpression.h"
+#include "nsIDOMXPathNSResolver.h"
+#include "nsIDOMXPathResult.h"
+#include "nsXPathEvaluator.h"
+#include "nsXPathException.h"
+#include "txAtoms.h"
+#include "txMozillaXSLTProcessor.h"
+#include "txLog.h"
+#include "txURIUtils.h"
+#include "txXSLTProcessor.h"
+#include "nsXPath1Scheme.h"
+#include "nsXFormsXPathEvaluator.h"
+
 // view stuff
 #include "nsViewsCID.h"
 #include "nsViewManager.h"
@@ -221,6 +236,143 @@ void NS_FreeSVGRendererGDIPlusGlobals();
 #endif
 #endif
 
+// Transformiix
+/* 1c1a3c01-14f6-11d6-a7f2-ea502af815dc */
+#define TRANSFORMIIX_DOMCI_EXTENSION_CID   \
+{ 0x1c1a3c01, 0x14f6, 0x11d6, {0xa7, 0xf2, 0xea, 0x50, 0x2a, 0xf8, 0x15, 0xdc} }
+
+/* {0C351177-0159-4500-86B0-A219DFDE4258} */
+#define TRANSFORMIIX_XPATH1_SCHEME_CID \
+{ 0xc351177, 0x159, 0x4500, { 0x86, 0xb0, 0xa2, 0x19, 0xdf, 0xde, 0x42, 0x58 } }
+
+#define TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID \
+"@mozilla.org/transformiix-domci-extender;1"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPath1SchemeProcessor)
+
+NS_DOMCI_EXTENSION(Transformiix)
+    static NS_DEFINE_CID(kXSLTProcessorCID, TRANSFORMIIX_XSLT_PROCESSOR_CID);
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XSLTProcessor)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIXSLTProcessor)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIXSLTProcessorObsolete) // XXX DEPRECATED
+    NS_DOMCI_EXTENSION_ENTRY_END(XSLTProcessor, nsIXSLTProcessor, PR_TRUE,
+                                 &kXSLTProcessorCID)
+
+    static NS_DEFINE_CID(kXPathEvaluatorCID, TRANSFORMIIX_XPATH_EVALUATOR_CID);
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XPathEvaluator)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMXPathEvaluator)
+    NS_DOMCI_EXTENSION_ENTRY_END(XPathEvaluator, nsIDOMXPathEvaluator, PR_TRUE,
+                                 &kXPathEvaluatorCID)
+
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XPathException)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMXPathException)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIException)
+    NS_DOMCI_EXTENSION_ENTRY_END(XPathException, nsIDOMXPathException, PR_TRUE,
+                                 nsnull)
+
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XPathExpression)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMXPathExpression)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMNSXPathExpression)
+    NS_DOMCI_EXTENSION_ENTRY_END(XPathExpression, nsIDOMXPathExpression,
+                                 PR_TRUE, nsnull)
+
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XPathNSResolver)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMXPathNSResolver)
+    NS_DOMCI_EXTENSION_ENTRY_END(XPathNSResolver, nsIDOMXPathNSResolver,
+                                 PR_TRUE, nsnull)
+
+    NS_DOMCI_EXTENSION_ENTRY_BEGIN(XPathResult)
+        NS_DOMCI_EXTENSION_ENTRY_INTERFACE(nsIDOMXPathResult)
+    NS_DOMCI_EXTENSION_ENTRY_END(XPathResult, nsIDOMXPathResult, PR_TRUE,
+                                 nsnull)
+NS_DOMCI_EXTENSION_END
+
+// Factory Constructor
+NS_GENERIC_FACTORY_CONSTRUCTOR(txMozillaXSLTProcessor)
+      NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsXPathEvaluator, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXFormsXPathEvaluator)
+
+NS_DECL_DOM_CLASSINFO(XSLTProcessor)
+NS_DECL_DOM_CLASSINFO(XPathEvaluator)
+NS_DECL_DOM_CLASSINFO(XPathException)
+NS_DECL_DOM_CLASSINFO(XPathExpression)
+NS_DECL_DOM_CLASSINFO(XPathNSResolver)
+NS_DECL_DOM_CLASSINFO(XPathResult)
+
+static NS_METHOD
+RegisterTransformiix(nsIComponentManager *aCompMgr,
+                     nsIFile *aPath,
+                     const char *registryLocation,
+                     const char *componentType,
+                     const nsModuleComponentInfo *info)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsXPIDLCString previous;
+    rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
+                                  "XSLTProcessor",
+                                  TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
+                                  "XPathEvaluator",
+                                  TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
+                                  "XPathException",
+                                  TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
+                                  "XPathExpression",
+                                  TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
+                                  "XPathNSResolver",
+                                  TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_CLASS,
+                                  "XPathResult",
+                                  TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    char* iidString = NS_GET_IID(nsIXSLTProcessorObsolete).ToString();
+    if (!iidString)
+      return NS_ERROR_OUT_OF_MEMORY;
+    rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
+                                  "nsIXSLTProcessorObsolete",
+                                  iidString,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+    NS_Free(iidString);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    iidString = NS_GET_IID(nsIXSLTProcessor).ToString();
+    if (!iidString)
+      return NS_ERROR_OUT_OF_MEMORY;
+    rv = catman->AddCategoryEntry(JAVASCRIPT_DOM_INTERFACE,
+                                  "nsIXSLTProcessor",
+                                  iidString,
+                                  PR_TRUE, PR_TRUE, getter_Copies(previous));
+    NS_Free(iidString);
+
+    return rv;
+}
+
 //-----------------------------------------------------------------------------
 
 // Per bug 209804, it is necessary to observe the "xpcom-shutdown" event and
@@ -251,6 +403,7 @@ LayoutShutdownObserver::Observe(nsISupports *aSubject,
 //-----------------------------------------------------------------------------
 
 static PRBool gInitialized = PR_FALSE;
+static nsIExceptionProvider *gXPathExceptionProvider;
 
 // Perform our one-time intialization for this module
 
@@ -336,6 +489,18 @@ Initialize(nsIModule* aSelf)
   }
   nsDOMAttribute::Initialize();
 
+  gXPathExceptionProvider = new nsXPathExceptionProvider();
+  NS_IF_ADDREF(gXPathExceptionProvider);
+  if (!gXPathExceptionProvider || !txXSLTProcessor::init()) {
+    Shutdown();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsCOMPtr<nsIExceptionService> xs =
+      do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
+  if (xs)
+    xs->RegisterExceptionProvider(gXPathExceptionProvider,
+                                  NS_ERROR_MODULE_DOM_XPATH);
+
   // Add our shutdown observer.
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService("@mozilla.org/observer-service;1");
@@ -370,6 +535,22 @@ Shutdown()
 
   gInitialized = PR_FALSE;
 
+  nsCOMPtr<nsIExceptionService> xs =
+    do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
+  if (xs && gXPathExceptionProvider) {
+    xs->UnregisterExceptionProvider(gXPathExceptionProvider,
+                                    NS_ERROR_MODULE_DOM_XPATH);
+  }
+  NS_IF_RELEASE(gXPathExceptionProvider);
+
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XSLTProcessor));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XPathEvaluator));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XPathException));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XPathExpression));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XPathNSResolver));
+  NS_IF_RELEASE(NS_CLASSINFO_NAME(XPathResult));
+
+  txXSLTProcessor::shutdown();
   nsDOMAttribute::Shutdown();
   nsRange::Shutdown();
   nsGenericElement::Shutdown();
@@ -1330,7 +1511,35 @@ static const nsModuleComponentInfo gComponents[] = {
   { "Style sheet service",
     NS_STYLESHEETSERVICE_CID,
     NS_STYLESHEETSERVICE_CONTRACTID,
-    nsStyleSheetServiceConstructor }
+    nsStyleSheetServiceConstructor },
+
+  // transformiix
+
+  { "XSLTProcessor",
+    TRANSFORMIIX_XSLT_PROCESSOR_CID,
+    TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID,
+    txMozillaXSLTProcessorConstructor,
+    RegisterTransformiix },
+
+  { "XPathEvaluator",
+    TRANSFORMIIX_XPATH_EVALUATOR_CID,
+    NS_XPATH_EVALUATOR_CONTRACTID,
+    nsXPathEvaluatorConstructor },
+
+  { "XFormsXPathEvaluator",
+    TRANSFORMIIX_XFORMS_XPATH_EVALUATOR_CID,
+    NS_XFORMS_XPATH_EVALUATOR_CONTRACTID,
+    nsXFormsXPathEvaluatorConstructor },
+
+  { "Transformiix DOMCI Extender",
+    TRANSFORMIIX_DOMCI_EXTENSION_CID,
+    TRANSFORMIIX_DOMCI_EXTENSION_CONTRACTID,
+    NS_DOMCI_EXTENSION_CONSTRUCTOR(Transformiix) },
+
+  { "XPath1 XPointer Scheme Processor",
+    TRANSFORMIIX_XPATH1_SCHEME_CID,
+    NS_XPOINTER_SCHEME_PROCESSOR_BASE "xpath1",
+    nsXPath1SchemeProcessorConstructor }
 };
 
 NS_IMPL_NSGETMODULE_WITH_CTOR(nsLayoutModule, gComponents, Initialize)
