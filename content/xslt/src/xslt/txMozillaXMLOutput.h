@@ -190,6 +190,7 @@ private:
     nsCOMPtr<nsIDOMNode> mNonAddedNode;
 
     PRInt32 mStyleSheetCount;
+    PRUint32 mBadChildLevel;
     nsCString mRefreshString;
 
     nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
