@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txPredicateList.cpp,v 1.1 2005/11/02 07:33:50 kvisco%ziplink.net Exp $
+ * $Id: txPredicateList.cpp,v 1.2 2005/11/02 07:33:51 peterv%netscape.com Exp $
  */
 
 #include "Expr.h"
@@ -30,7 +30,7 @@
  * Represents an ordered list of Predicates,
  * for use with Step and Filter Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.1 $ $Date: 2005/11/02 07:33:50 $
+ * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:51 $
 **/
 //-- PredicateList Implementation --/
 
@@ -100,6 +100,7 @@ void PredicateList::evaluatePredicates(NodeSet* nodes, ContextState* cs) {
                         if (! exprResult->booleanValue() ) remNodes.add(node);
                         break;
                 }
+                delete exprResult;
             }
         }
         //-- remove unmatched nodes
