@@ -48,7 +48,7 @@ nsEscCharSetProber::nsEscCharSetProber(void)
   mActiveSM = NUM_OF_ESC_CHARSETS;
   mState = eDetecting;
   mDetectedCharset = nsnull;
-};
+}
 
 nsEscCharSetProber::~nsEscCharSetProber(void)
 {
