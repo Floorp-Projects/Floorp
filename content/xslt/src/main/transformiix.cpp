@@ -35,6 +35,7 @@
 
 #include "txStandaloneXSLTProcessor.h"
 #include "CommandLineUtils.h"
+#include "nsXPCOM.h"
 #include <fstream.h>
 
   //--------------/
@@ -55,6 +56,10 @@ void printUsage();
  * The TransforMiiX command line interface
 **/
 int main(int argc, char** argv) {
+
+    nsresult rv;
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!txXSLTProcessor::txInit())
         return 1;
@@ -107,7 +112,6 @@ int main(int argc, char** argv) {
 
     SimpleErrorObserver obs;
     txStandaloneXSLTProcessor proc;
-    nsresult rv = NS_OK;
     //-- process
     if (!xsltFilename) {
         if (!xmlFilename) {
@@ -123,7 +127,9 @@ int main(int argc, char** argv) {
     }
     resultFileStream.close();
     txXSLTProcessor::txShutdown();
-    return NS_SUCCEEDED(rv);
+    rv = NS_ShutdownXPCOM(nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return 0;
 } //-- main
 
 void printHelp() {

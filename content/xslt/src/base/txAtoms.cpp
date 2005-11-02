@@ -57,16 +57,9 @@ static PRUint32 gXPathRefCnt = 0;
 static PRUint32 gXSLTRefCnt = 0;
 static PRUint32 gHTMLRefCnt = 0;
 
-#ifdef TX_EXE
-#define TX_ATOM(_name, _value)           \
-    _name = TX_GET_ATOM(String(_value)); \
-    if (!_name)                          \
-        return MB_FALSE
-#else
 #define TX_ATOM(_name, _value)      \
     _name = NS_NewAtom(_value);     \
     NS_ENSURE_TRUE(_name, MB_FALSE)
-#endif
 
 MBool txXMLAtoms::init()
 {
