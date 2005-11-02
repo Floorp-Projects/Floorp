@@ -35,7 +35,6 @@ endif
 
 CPPSRCS	= ArrayList.cpp             \
 	Double.cpp \
-	Integer.cpp \
 	List.cpp \
 	Map.cpp \
 	TxObjectWrapper.cpp          \
