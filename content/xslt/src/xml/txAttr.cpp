@@ -35,7 +35,7 @@
 //
 //Construct an Attribute object using the specified name and document owner
 //
-Attr::Attr(const DOMString& name, Document* owner):
+Attr::Attr(const String& name, Document* owner):
       NodeDefinition(Node::ATTRIBUTE_NODE, name, NULL_STRING, owner)
 {
   specified = MB_FALSE;
@@ -44,7 +44,7 @@ Attr::Attr(const DOMString& name, Document* owner):
 //
 //Retrieve the name of the attribute from the nodeName data member
 //
-const DOMString& Attr::getName() const
+const String& Attr::getName() const
 {
   return nodeName;
 }
@@ -61,7 +61,7 @@ MBool Attr::getSpecified() const
 //Retrieve the value of the attribute.  This is a comma-deliminated string
 //representation of the Attribute's children.
 //
-const DOMString& Attr::getValue()
+const String& Attr::getValue()
 {
   Int32 valueLoop;
   nodeValue = NULL_STRING;
@@ -85,7 +85,7 @@ const DOMString& Attr::getValue()
 //Create a new Text node and add it to the Attribute's list of children.  Also
 //set the Specified flag to true.
 //
-void Attr::setValue(const DOMString& newValue)
+void Attr::setValue(const String& newValue)
 {
   NodeDefinition::DeleteChildren();
 
@@ -97,21 +97,21 @@ void Attr::setValue(const DOMString& newValue)
 
 //
 //Override the set node value member function to create a new TEXT node with
-//the DOMString and to add it as the Attribute's child.
+//the String and to add it as the Attribute's child.
 //    NOTE:  Not currently impemented, just execute the default setNodeValue
 //
-void Attr::setNodeValue(const DOMString& nodeValue)
+void Attr::setNodeValue(const String& nodeValue)
 {
   setValue(nodeValue);
 }
 
 //
-//Return a DOMString represening the value of this node.  If the value is an
+//Return a String represening the value of this node.  If the value is an
 //Entity Reference then return the value of the reference.  Otherwise, it is a
 //simple conversion of the text value.
 //    NOTE: Not currently implemented, just execute the default getNodeValue
 //
-const DOMString& Attr::getNodeValue()
+const String& Attr::getNodeValue()
 {
   return getValue();
 }

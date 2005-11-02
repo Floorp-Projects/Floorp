@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txStringFunctionCall.cpp,v 1.3 2005/11/02 07:33:38 kvisco%ziplink.net Exp $
+ * $Id: txStringFunctionCall.cpp,v 1.4 2005/11/02 07:33:39 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * StringFunctionCall
  * A representation of the XPath String funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:38 $
+ * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:39 $
 **/
 
 #include "FunctionLib.h"
@@ -121,7 +121,7 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
             break;
         case STRING_LENGTH:
             if ( requireParams(0, 1, cs) ) {
-                DOMString resultStr;
+                String resultStr;
                 if ( argc == 1) {
                     evaluateToString((Expr*)iter->next(),context, cs, resultStr);
                 }
@@ -226,7 +226,7 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                     evaluateToString((Expr*)iter->next(),context, cs, resultStr);
                 }
                 else {
-                    DOMString temp;
+                    String temp;
                     XMLDOMUtils::getNodeValue(context, &temp);
                     if ( cs->isStripSpaceAllowed(context) ) {
                         XMLUtils::stripSpace(temp, resultStr);

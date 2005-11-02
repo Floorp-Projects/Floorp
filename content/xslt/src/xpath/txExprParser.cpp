@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.5 2005/11/02 07:33:29 kvisco%ziplink.net Exp $
+ * $Id: txExprParser.cpp,v 1.6 2005/11/02 07:33:30 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
@@ -38,7 +38,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:29 $
+ * @version $Revision: 1.6 $ $Date: 2005/11/02 07:33:30 $
 **/
 
 #include "ExprParser.h"
@@ -676,11 +676,11 @@ PathExpr* ExprParser::createPathExpr(ExprLexer& lexer) {
             case Token::R_PAREN:
             case Token::R_BRACKET:
             case Token::UNION_OP:
-				//Marina, addition start
-				// When parsing a list of parameters for a function comma should signal a spot
-				// without it further processing pathExpr was causing "invalid token" error
-			case Token::COMMA:
-				// Marina, addition ends
+                //Marina, addition start
+                // When parsing a list of parameters for a function comma should signal a spot
+                // without it further processing pathExpr was causing "invalid token" error
+            case Token::COMMA:
+                // Marina, addition ends
                 lexer.pushBack();
                 return pathExpr;
             case Token::ANCESTOR_OP :

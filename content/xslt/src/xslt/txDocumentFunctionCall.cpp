@@ -45,7 +45,7 @@
 **/
 DocumentFunctionCall::DocumentFunctionCall(Document* xslDocument) : FunctionCall(DOCUMENT_FN)
 {
-  this->xslDocument = xslDocument;
+    this->xslDocument = xslDocument;
 } //-- DocumentFunctionCall
 
 
@@ -63,58 +63,58 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
 
     //-- document( object, node-set? )
     if ( requireParams(1, 2, cs) ) {
-      ListIterator* iter = params.iterator();
-      Expr* param1 = (Expr*) iter->next();
-      ExprResult* exprResult1 = param1->evaluate(context, cs);
-      NodeSet*    nodeSet2 = 0;
+        ListIterator* iter = params.iterator();
+        Expr* param1 = (Expr*) iter->next();
+        ExprResult* exprResult1 = param1->evaluate(context, cs);
+        NodeSet*    nodeSet2 = 0;
 
-      if (iter->hasNext()) {
-	// we have 2 arguments, make sure the second is a NodeSet
-	Expr* param2 = (Expr*) iter->next();
-	ExprResult* exprResult2 = param2->evaluate(context, cs);
-	if ( exprResult2->getResultType() != ExprResult::NODESET ) {
-	  String err("node-set expected as second argument to document()");
-	  cs->recieveError(err);
-	  delete exprResult2;
-	}
-	else {
-	  nodeSet2 = (NodeSet*) exprResult2;
-	}
-      }
+        if (iter->hasNext()) {
+            // we have 2 arguments, make sure the second is a NodeSet
+            Expr* param2 = (Expr*) iter->next();
+            ExprResult* exprResult2 = param2->evaluate(context, cs);
+            if ( exprResult2->getResultType() != ExprResult::NODESET ) {
+                String err("node-set expected as second argument to document()");
+                cs->recieveError(err);
+                delete exprResult2;
+            }
+            else {
+                nodeSet2 = (NodeSet*) exprResult2;
+            }
+        }
 
-      if ( exprResult1->getResultType() == ExprResult::NODESET ) {
-	// The first argument is a NodeSet, iterate on its nodes
-	NodeSet* nodeSet1 = (NodeSet*) exprResult1;
-	for (int i=0; i<nodeSet1->size(); i++) {
-	  Node* node = nodeSet1->get(i);
-	  DOMString uriStr;
-	  XMLDOMUtils::getNodeValue(node, &uriStr);
-	  if (nodeSet2) {
-	    // if the second argument was specified, use it
-	    String baseUriStr;
-	    // TODO: retrieve the base URI of the first node of nodeSet2 in document order
-	    retrieveDocument(uriStr, baseUriStr, *nodeSet, cs);
-	  }
-	  else {
-	    // otherwise, use the base URI of the node itself
-	    String baseUriStr;
-	    // TODO: retrieve the base URI of node
-	    retrieveDocument(uriStr, baseUriStr, *nodeSet, cs);
-	  }
-	}
-      }
+        if ( exprResult1->getResultType() == ExprResult::NODESET ) {
+            // The first argument is a NodeSet, iterate on its nodes
+            NodeSet* nodeSet1 = (NodeSet*) exprResult1;
+            for (int i=0; i<nodeSet1->size(); i++) {
+                Node* node = nodeSet1->get(i);
+                String uriStr;
+                XMLDOMUtils::getNodeValue(node, &uriStr);
+                if (nodeSet2) {
+                    // if the second argument was specified, use it
+                    String baseUriStr;
+                    // TODO: retrieve the base URI of the first node of nodeSet2 in document order
+                    retrieveDocument(uriStr, baseUriStr, *nodeSet, cs);
+                }
+                else {
+                    // otherwise, use the base URI of the node itself
+                    String baseUriStr;
+                    // TODO: retrieve the base URI of node
+                    retrieveDocument(uriStr, baseUriStr, *nodeSet, cs);
+                }
+            }
+        }
 
-      else {
-	// The first argument is not a NodeSet
-	String uriStr;
-	evaluateToString(param1, context, cs, uriStr);
-	String baseUriStr;
-	// TODO: retrieve the base URI of the first node of nodeSet2 in document order
-	retrieveDocument(uriStr, baseUriStr, *nodeSet, cs);
-      }
-      delete exprResult1;
-      delete nodeSet2;
-      delete iter;
+        else {
+            // The first argument is not a NodeSet
+            String uriStr;
+            evaluateToString(param1, context, cs, uriStr);
+            String baseUriStr;
+            // TODO: retrieve the base URI of the first node of nodeSet2 in document order
+            retrieveDocument(uriStr, baseUriStr, *nodeSet, cs);
+        }
+        delete exprResult1;
+        delete nodeSet2;
+        delete iter;
     }
 
     return nodeSet;
@@ -134,34 +134,34 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
  */
 void DocumentFunctionCall::retrieveDocument(String& uri, String& baseUri, NodeSet& resultNodeSet, ContextState* cs)
 {
-  if (uri.length() == 0) {
-    // if uri is the empty String, the document is the stylesheet itself
-    resultNodeSet.add(xslDocument);
-    return;
-  }
+    if (uri.length() == 0) {
+        // if uri is the empty String, the document is the stylesheet itself
+        resultNodeSet.add(xslDocument);
+        return;
+    }
 
-  // open URI
-  String errMsg("error: ");
-  istream* xmlInput = URIUtils::getInputStream(uri, baseUri, errMsg);
-  if (!xmlInput) {
-    String err("in document() function: failed to open URI: ");
-    err.append(uri);
-    cs->recieveError(err);
-    return;
-  }
+    // open URI
+    String errMsg("error: ");
+    istream* xmlInput = URIUtils::getInputStream(uri, baseUri, errMsg);
+    if (!xmlInput) {
+        String err("in document() function: failed to open URI: ");
+        err.append(uri);
+        cs->recieveError(err);
+        return;
+    }
 
-  // parse document
-  XMLParser xmlParser;
-  Document* xmlDoc = xmlParser.parse(*xmlInput);
-  if (!xmlDoc) {
-    String err("in document() function: ");
-    err.append(xmlParser.getErrorString());
-    cs->recieveError(err);
-    return;
-  }
+    // parse document
+    XMLParser xmlParser;
+    Document* xmlDoc = xmlParser.parse(*xmlInput);
+    if (!xmlDoc) {
+        String err("in document() function: ");
+        err.append(xmlParser.getErrorString());
+        cs->recieveError(err);
+        return;
+    }
 
-  // append the to resultNodeSet
-  resultNodeSet.add(xmlDoc);
+    // append the to resultNodeSet
+    resultNodeSet.add(xmlDoc);
 }
 
 

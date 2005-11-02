@@ -27,7 +27,7 @@
  * Marina Mechtcheriakova
  *   -- added support for lang function
  *
- * $Id: txFunctionLib.h,v 1.6 2005/11/02 07:33:48 kvisco%ziplink.net Exp $
+ * $Id: txFunctionLib.h,v 1.7 2005/11/02 07:33:49 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "TxString.h"
@@ -345,9 +345,9 @@ public:
 
     enum numberFunctions {
         NUMBER = 1,            //-- number()
-	    ROUND,                 //-- round()
-	    FLOOR,                 //-- floor()
-	    CEILING                //-- ceiling()
+        ROUND,                 //-- round()
+        FLOOR,                 //-- floor()
+        CEILING                //-- ceiling()
     };
 
     /**
