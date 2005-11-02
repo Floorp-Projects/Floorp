@@ -45,8 +45,7 @@
 #include "nsIWeakReference.h"
 #include "nsAutoPtr.h"
 #include "txResultRecycler.h"
-
-class nsIDOMDocument;
+#include "nsAgg.h"
 
 /**
  * A class for evaluating an XPath expression string
@@ -55,11 +54,15 @@ class nsXPathEvaluator : public nsIDOMXPathEvaluator,
                          public nsIXPathEvaluatorInternal
 {
 public:
-    nsXPathEvaluator();
-    virtual ~nsXPathEvaluator();
+    nsXPathEvaluator(nsISupports *aOuter);
+    virtual ~nsXPathEvaluator()
+    {
+    }
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
+    nsresult Init();
+
+    // nsISupports interface (support aggregation)
+    NS_DECL_AGGREGATED
 
     // nsIDOMXPathEvaluator interface
     NS_DECL_NSIDOMXPATHEVALUATOR
