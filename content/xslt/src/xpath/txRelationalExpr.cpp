@@ -28,7 +28,7 @@
  */
 
 #include "Expr.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 #include "XMLDOMUtils.h"
 #include "txIXPathContext.h"
 
@@ -50,16 +50,15 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
             return compareResults(aContext, &leftBool, aRight);
         }
 
-        NodeSet* nodeSet = NS_STATIC_CAST(NodeSet*, aLeft);
+        txNodeSet* nodeSet = NS_STATIC_CAST(txNodeSet*, aLeft);
         nsRefPtr<StringResult> strResult;
         rv = aContext->recycler()->getStringResult(getter_AddRefs(strResult));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        int i;
+        PRInt32 i;
         for (i = 0; i < nodeSet->size(); ++i) {
-            Node* node = nodeSet->get(i);
             strResult->mValue.Truncate();
-            XMLDOMUtils::getNodeValue(node, strResult->mValue);
+            XMLDOMUtils::getNodeValue(nodeSet->get(i), strResult->mValue);
             if (compareResults(aContext, strResult, aRight)) {
                 return PR_TRUE;
             }
@@ -75,16 +74,15 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
             return compareResults(aContext, aLeft, &rightBool);
         }
 
-        NodeSet* nodeSet = NS_STATIC_CAST(NodeSet*, aRight);
+        txNodeSet* nodeSet = NS_STATIC_CAST(txNodeSet*, aRight);
         nsRefPtr<StringResult> strResult;
         rv = aContext->recycler()->getStringResult(getter_AddRefs(strResult));
         NS_ENSURE_SUCCESS(rv, rv);
 
-        int i;
+        PRInt32 i;
         for (i = 0; i < nodeSet->size(); ++i) {
-            Node* node = nodeSet->get(i);
             strResult->mValue.Truncate();
-            XMLDOMUtils::getNodeValue(node, strResult->mValue);
+            XMLDOMUtils::getNodeValue(nodeSet->get(i), strResult->mValue);
             if (compareResults(aContext, aLeft, strResult)) {
                 return PR_TRUE;
             }
@@ -167,7 +165,7 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
             return leftDbl >= rightDbl;
     }
 
-    NS_NOTREACHED("We should have cought all cases");
+    NS_NOTREACHED("We should have caught all cases");
 
     return PR_FALSE;
 }

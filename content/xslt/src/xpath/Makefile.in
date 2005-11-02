@@ -34,12 +34,12 @@ REQUIRES	= string \
 ifndef TX_EXE
 REQUIRES +=	  dom \
 		  content \
-		  necko \
 		  widget \
 		  xpconnect \
 		  js \
 		  unicharutil \
 		  layout \
+		  necko \
 		  $(NULL)
 endif
 
@@ -54,7 +54,6 @@ CPPSRCS = AdditiveExpr.cpp \
         FunctionCall.cpp \
         LocationStep.cpp \
         MultiplicativeExpr.cpp \
-        NodeSet.cpp \
         NodeSetFunctionCall.cpp \
         NumberFunctionCall.cpp \
         NumberResult.cpp \
@@ -66,6 +65,7 @@ CPPSRCS = AdditiveExpr.cpp \
         StringResult.cpp \
         txLiteralExpr.cpp \
         txNameTest.cpp \
+        txNodeSet.cpp \
         txNodeTypeTest.cpp \
         txForwardContext.cpp \
         txNodeSetContext.cpp \

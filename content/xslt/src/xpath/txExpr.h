@@ -49,10 +49,10 @@
   Much of this code was ported from XSL:P.
 */
 
-class NodeSet;
 class txIParseContext;
 class txIMatchContext;
 class txIEvalContext;
+class txNodeSet;
 
 /**
  * A Base Class for all XSL Expressions
@@ -167,7 +167,7 @@ protected:
      * If the result is not a NodeSet an error is returned.
      */
     nsresult evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
-                               NodeSet** aResult);
+                               txNodeSet** aResult);
 
     /*
      * Returns the name of the function as an atom.
@@ -305,7 +305,7 @@ public:
      */
     nsresult add(Expr* aExpr);
 
-    nsresult evaluatePredicates(NodeSet* aNodes, txIMatchContext* aContext);
+    nsresult evaluatePredicates(txNodeSet* aNodes, txIMatchContext* aContext);
 
     /**
      * returns true if this predicate list is empty
@@ -327,12 +327,10 @@ protected:
     List predicates;
 }; //-- PredicateList
 
-class LocationStep : public PredicateList, public Expr {
-
+class LocationStep : public PredicateList,
+                     public Expr
+{
 public:
-
-    // Axis Identifier Types
-    //-- LF changed from static const short to enum
     enum LocationStepType {
         ANCESTOR_AXIS = 0,
         ANCESTOR_OR_SELF_AXIS,
@@ -364,17 +362,14 @@ public:
     TX_DECL_EXPR;
 
 private:
+    void fromDescendants(Node* node, txIMatchContext* aContext,
+                         txNodeSet* nodes);
+    void fromDescendantsRev(Node* node, txIMatchContext* aContext,
+                            txNodeSet* nodes);
 
     nsAutoPtr<txNodeTest> mNodeTest;
     LocationStepType mAxisIdentifier;
-
-    void fromDescendants(Node* node, txIMatchContext* aContext,
-                         NodeSet* nodes);
-    void fromDescendantsRev(Node* node, txIMatchContext* aContext,
-                            NodeSet* nodes);
-
-}; //-- LocationStep
-
+};
 
 class FilterExpr : public PredicateList, public Expr {
 
@@ -626,9 +621,8 @@ private:
      */
     nsresult evalDescendants(Expr* aStep, Node* aNode,
                              txIMatchContext* aContext,
-                             NodeSet* resNodes);
-
-}; //-- PathExpr
+                             txNodeSet* resNodes);
+};
 
 /**
  * This class represents a RootExpr, which only matches the Document node

@@ -28,8 +28,8 @@
 */
 
 #include "Expr.h"
-#include "NodeSet.h"
 #include "txIXPathContext.h"
+#include "txNodeSet.h"
 
   //-----------------------------/
  //- Virtual methods from Expr -/
@@ -49,7 +49,7 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     NS_ASSERTION(aContext, "internal error");
     *aResult = nsnull;
 
-    nsRefPtr<NodeSet> nodes;
+    nsRefPtr<txNodeSet> nodes;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -187,14 +187,14 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     if (reverse)
         nodes->reverse();
 
-    *aResult = nodes;
-    NS_ADDREF(*aResult);
+    NS_ADDREF(*aResult = nodes);
 
     return NS_OK;
 }
 
-void LocationStep::fromDescendants(Node* node, txIMatchContext* cs,
-                                   NodeSet* nodes)
+void LocationStep::fromDescendants(Node* node,
+                                   txIMatchContext* cs,
+                                   txNodeSet* nodes)
 {
     if (!node)
         return;
@@ -209,11 +209,11 @@ void LocationStep::fromDescendants(Node* node, txIMatchContext* cs,
 
         child = child->getNextSibling();
     }
+}
 
-} //-- fromDescendants
-
-void LocationStep::fromDescendantsRev(Node* node, txIMatchContext* cs,
-                                      NodeSet* nodes)
+void LocationStep::fromDescendantsRev(Node* node,
+                                      txIMatchContext* cs,
+                                      txNodeSet* nodes)
 {
     if (!node)
         return;
@@ -229,8 +229,7 @@ void LocationStep::fromDescendantsRev(Node* node, txIMatchContext* cs,
 
         child = child->getPreviousSibling();
     }
-
-} //-- fromDescendantsRev
+}
 
 /**
  * Creates a String representation of this Expr

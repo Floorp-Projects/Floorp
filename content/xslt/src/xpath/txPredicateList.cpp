@@ -24,7 +24,7 @@
  */
 
 #include "Expr.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 #include "txNodeSetContext.h"
 
 /*
@@ -63,11 +63,11 @@ PredicateList::add(Expr* aExpr)
 } // add
 
 nsresult
-PredicateList::evaluatePredicates(NodeSet* nodes,
+PredicateList::evaluatePredicates(txNodeSet* nodes,
                                   txIMatchContext* aContext)
 {
     NS_ASSERTION(nodes, "called evaluatePredicates with NULL NodeSet");
-    nsRefPtr<NodeSet> newNodes;
+    nsRefPtr<txNodeSet> newNodes;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(newNodes));
     NS_ENSURE_SUCCESS(rv, rv);
     

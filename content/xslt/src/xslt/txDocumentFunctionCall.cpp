@@ -65,7 +65,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
     txExecutionState* es =
         NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
 
-    nsRefPtr<NodeSet> nodeSet;
+    nsRefPtr<txNodeSet> nodeSet;
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodeSet));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -86,7 +86,7 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
     if (iter.hasNext()) {
         // We have 2 arguments, get baseURI from the first node
         // in the resulting nodeset
-        nsRefPtr<NodeSet> nodeSet2;
+        nsRefPtr<txNodeSet> nodeSet2;
         rv = evaluateToNodeSet(NS_STATIC_CAST(Expr*, iter.next()),
                                aContext, getter_AddRefs(nodeSet2));
         NS_ENSURE_SUCCESS(rv, rv);
@@ -103,11 +103,11 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
 
     if (exprResult1->getResultType() == txAExprResult::NODESET) {
         // The first argument is a NodeSet, iterate on its nodes
-        NodeSet* nodeSet1 = NS_STATIC_CAST(NodeSet*,
-                                           NS_STATIC_CAST(txAExprResult*,
-                                                          exprResult1));
-        int i;
-        for (i = 0; i < nodeSet1->size(); i++) {
+        txNodeSet* nodeSet1 = NS_STATIC_CAST(txNodeSet*,
+                                             NS_STATIC_CAST(txAExprResult*,
+                                                            exprResult1));
+        PRInt32 i;
+        for (i = 0; i < nodeSet1->size(); ++i) {
             Node* node = nodeSet1->get(i);
             nsAutoString uriStr;
             XMLDOMUtils::getNodeValue(node, uriStr);
@@ -121,20 +121,22 @@ DocumentFunctionCall::evaluate(txIEvalContext* aContext,
                 nodeSet->add(loadNode);
             }
         }
-    }
-    else {
-        // The first argument is not a NodeSet
-        nsAutoString uriStr;
-        exprResult1->stringValue(uriStr);
-        nsAString* base = baseURISet ? &baseURI : &mBaseURI;
-        Node* loadNode = es->retrieveDocument(uriStr, *base);
-        if (loadNode) {
-            nodeSet->add(loadNode);
-        }
+        
+        NS_ADDREF(*aResult = nodeSet);
+        
+        return NS_OK;
     }
 
-    *aResult = nodeSet;
-    NS_ADDREF(*aResult);
+    // The first argument is not a NodeSet
+    nsAutoString uriStr;
+    exprResult1->stringValue(uriStr);
+    nsAString* base = baseURISet ? &baseURI : &mBaseURI;
+    Node* loadNode = es->retrieveDocument(uriStr, *base);
+    if (loadNode) {
+        nodeSet->add(loadNode);
+    }
+
+    NS_ADDREF(*aResult = nodeSet);
 
     return NS_OK;
 }

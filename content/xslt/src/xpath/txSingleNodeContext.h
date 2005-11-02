@@ -45,7 +45,8 @@ class txSingleNodeContext : public txIEvalContext
 {
 public:
     txSingleNodeContext(Node* aContextNode, txIMatchContext* aContext)
-        : mNode(aContextNode), mInner(aContext)
+        : mNode(aContextNode),
+          mInner(aContext)
     {
         NS_ASSERTION(aContextNode, "context node must be given");
         NS_ASSERTION(aContext, "txIMatchContext must be given");

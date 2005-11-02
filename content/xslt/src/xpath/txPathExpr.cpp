@@ -32,7 +32,7 @@
  */
 
 #include "Expr.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 #include "txNodeSetContext.h"
 #include "txSingleNodeContext.h"
 #include "XMLUtils.h"
@@ -97,7 +97,7 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     *aResult = nsnull;
 
-    nsRefPtr<NodeSet> nodes;
+    nsRefPtr<txNodeSet> nodes;
     nsresult rv = aContext->recycler()->getNodeSet(aContext->getContextNode(),
                                                    getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -105,13 +105,13 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     txListIterator iter(&expressions);
     PathExprItem* pxi;
     while ((pxi = (PathExprItem*)iter.next())) {
-        nsRefPtr<NodeSet> tmpNodes;
+        nsRefPtr<txNodeSet> tmpNodes;
         txNodeSetContext eContext(nodes, aContext);
         while (eContext.hasNext()) {
             eContext.next();
             Node* node = eContext.getContextNode();
             
-            nsRefPtr<NodeSet> resNodes;
+            nsRefPtr<txNodeSet> resNodes;
             if (pxi->pathOp == DESCENDANT_OP) {
                 rv = aContext->recycler()->getNodeSet(getter_AddRefs(resNodes));
                 NS_ENSURE_SUCCESS(rv, rv);
@@ -128,14 +128,14 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                     //XXX ErrorReport: report nonnodeset error
                     return NS_ERROR_XSLT_NODESET_EXPECTED;
                 }
-                resNodes = NS_STATIC_CAST(NodeSet*,
+                resNodes = NS_STATIC_CAST(txNodeSet*,
                                           NS_STATIC_CAST(txAExprResult*,
                                                          res));
             }
 
             if (tmpNodes) {
                 if (!resNodes->isEmpty()) {
-                    nsRefPtr<NodeSet> oldSet;
+                    nsRefPtr<txNodeSet> oldSet;
                     oldSet.swap(tmpNodes);
                     rv = aContext->recycler()->
                         getNonSharedNodeSet(oldSet, getter_AddRefs(tmpNodes));
@@ -166,7 +166,7 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 **/
 nsresult
 PathExpr::evalDescendants(Expr* aStep, Node* aNode, txIMatchContext* aContext,
-                          NodeSet* resNodes)
+                          txNodeSet* resNodes)
 {
     txSingleNodeContext eContext(aNode, aContext);
     nsRefPtr<txAExprResult> res;
@@ -177,8 +177,8 @@ PathExpr::evalDescendants(Expr* aStep, Node* aNode, txIMatchContext* aContext,
         //XXX ErrorReport: report nonnodeset error
         return NS_ERROR_XSLT_NODESET_EXPECTED;
     }
-    resNodes->add(NS_STATIC_CAST(NodeSet*, NS_STATIC_CAST(txAExprResult*,
-                                                          res)));
+    resNodes->add(NS_STATIC_CAST(txNodeSet*, NS_STATIC_CAST(txAExprResult*,
+                                                            res)));
 
     MBool filterWS = aContext->isStripSpaceAllowed(aNode);
 
