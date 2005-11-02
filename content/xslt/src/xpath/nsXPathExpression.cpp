@@ -73,8 +73,8 @@ nsXPathExpression::~nsXPathExpression()
 NS_IMETHODIMP
 nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
                             PRUint16 aType,
-                            nsIDOMXPathResult *aInResult,
-                            nsIDOMXPathResult **aResult)
+                            nsISupports *aInResult,
+                            nsISupports **aResult)
 {
     NS_ENSURE_ARG(aContextNode);
 
