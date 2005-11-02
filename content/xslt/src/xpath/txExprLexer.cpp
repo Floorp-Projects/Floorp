@@ -168,7 +168,7 @@ ExprLexer::~ExprLexer()
 
 MBool ExprLexer::hasMoreTokens()
 {
-  return (MBool)currentItem;
+  return (currentItem != 0);
 } //-- hasMoreTokens
 
 Token* ExprLexer::nextToken()
