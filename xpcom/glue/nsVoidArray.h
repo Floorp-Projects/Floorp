@@ -24,6 +24,7 @@
 #define nsVoidArray_h___
 
 #include "nscore.h"
+#include "nsAWritableString.h"
 class nsISizeOfHandler;
 
 // Enumerator callback function. Return PR_FALSE to stop
@@ -138,23 +139,23 @@ public:
     return nsVoidArray::Count();
   }
 
-  void StringAt(PRInt32 aIndex, nsString& aString) const;
+  void StringAt(PRInt32 aIndex, nsAWritableString& aString) const;
   nsString* StringAt(PRInt32 aIndex) const;
   nsString* operator[](PRInt32 aIndex) const { return StringAt(aIndex); }
 
-  PRInt32 IndexOf(const nsString& aPossibleString) const;
-  PRInt32 IndexOfIgnoreCase(const nsString& aPossibleString) const;
+  PRInt32 IndexOf(const nsAReadableString& aPossibleString) const;
+  PRInt32 IndexOfIgnoreCase(const nsAReadableString& aPossibleString) const;
 
-  PRBool InsertStringAt(const nsString& aString, PRInt32 aIndex);
+  PRBool InsertStringAt(const nsAReadableString& aString, PRInt32 aIndex);
 
-  PRBool ReplaceStringAt(const nsString& aString, PRInt32 aIndex);
+  PRBool ReplaceStringAt(const nsAReadableString& aString, PRInt32 aIndex);
 
-  PRBool AppendString(const nsString& aString) {
+  PRBool AppendString(const nsAReadableString& aString) {
     return InsertStringAt(aString, Count());
   }
 
-  PRBool RemoveString(const nsString& aString);
-  PRBool RemoveStringIgnoreCase(const nsString& aString);
+  PRBool RemoveString(const nsAReadableString& aString);
+  PRBool RemoveStringIgnoreCase(const nsAReadableString& aString);
   PRBool RemoveStringAt(PRInt32 aIndex);
   void   Clear(void);
 

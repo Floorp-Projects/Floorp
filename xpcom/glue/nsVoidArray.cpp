@@ -384,11 +384,11 @@ nsStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 }
 
 void 
-nsStringArray::StringAt(PRInt32 aIndex, nsString& aString) const
+nsStringArray::StringAt(PRInt32 aIndex, nsAWritableString& aString) const
 {
   nsString* string = NS_STATIC_CAST(nsString*, nsVoidArray::ElementAt(aIndex));
   if (nsnull != string) {
-    aString = *string;
+    aString.Assign(*string);
   }
   else {
     aString.Truncate();
@@ -402,7 +402,7 @@ nsStringArray::StringAt(PRInt32 aIndex) const
 }
 
 PRInt32 
-nsStringArray::IndexOf(const nsString& aPossibleString) const
+nsStringArray::IndexOf(const nsAReadableString& aPossibleString) const
 {
   if (mImpl) {
     void** ap = mImpl->mArray;
@@ -419,14 +419,19 @@ nsStringArray::IndexOf(const nsString& aPossibleString) const
 }
 
 PRInt32 
-nsStringArray::IndexOfIgnoreCase(const nsString& aPossibleString) const
+nsStringArray::IndexOfIgnoreCase(const nsAReadableString& aPossibleString) const
 {
+  // XXX
+  // nsString::EqualsIgnoreCase() doesn't take a nsAReadableString& so we
+  // construct a stack based string here and do a copy...
+  nsAutoString possible_string(aPossibleString);
+
   if (mImpl) {
     void** ap = mImpl->mArray;
     void** end = ap + mImpl->mCount;
     while (ap < end) {
       nsString* string = NS_STATIC_CAST(nsString*, *ap);
-      if (string->EqualsIgnoreCase(aPossibleString)) {
+      if (string->EqualsIgnoreCase(possible_string)) {
         return ap - mImpl->mArray;
       }
       ap++;
@@ -436,7 +441,7 @@ nsStringArray::IndexOfIgnoreCase(const nsString& aPossibleString) const
 }
 
 PRBool 
-nsStringArray::InsertStringAt(const nsString& aString, PRInt32 aIndex)
+nsStringArray::InsertStringAt(const nsAReadableString& aString, PRInt32 aIndex)
 {
   nsString* string = new nsString(aString);
   if (nsVoidArray::InsertElementAt(string, aIndex)) {
@@ -447,7 +452,8 @@ nsStringArray::InsertStringAt(const nsString& aString, PRInt32 aIndex)
 }
 
 PRBool
-nsStringArray::ReplaceStringAt(const nsString& aString, PRInt32 aIndex)
+nsStringArray::ReplaceStringAt(const nsAReadableString& aString,
+                               PRInt32 aIndex)
 {
   nsString* string = NS_STATIC_CAST(nsString*, nsVoidArray::ElementAt(aIndex));
   if (nsnull != string) {
@@ -458,7 +464,7 @@ nsStringArray::ReplaceStringAt(const nsString& aString, PRInt32 aIndex)
 }
 
 PRBool 
-nsStringArray::RemoveString(const nsString& aString)
+nsStringArray::RemoveString(const nsAReadableString& aString)
 {
   PRInt32 index = IndexOf(aString);
   if (-1 < index) {
@@ -468,7 +474,7 @@ nsStringArray::RemoveString(const nsString& aString)
 }
 
 PRBool 
-nsStringArray::RemoveStringIgnoreCase(const nsString& aString)
+nsStringArray::RemoveStringIgnoreCase(const nsAReadableString& aString)
 {
   PRInt32 index = IndexOfIgnoreCase(aString);
   if (-1 < index) {
