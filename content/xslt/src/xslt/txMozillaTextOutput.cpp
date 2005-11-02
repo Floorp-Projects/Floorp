@@ -101,11 +101,13 @@ void txMozillaTextOutput::comment(const nsAString& aData)
 {
 }
 
-void txMozillaTextOutput::endDocument()
+void txMozillaTextOutput::endDocument(nsresult aResult)
 {
-    nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
-    if (observer) {
-        observer->OnTransformDone(NS_OK, mDocument);
+    if (NS_SUCCEEDED(aResult)) {
+        nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);
+        if (observer) {
+            observer->OnTransformDone(aResult, mDocument);
+        }
     }
 }
 

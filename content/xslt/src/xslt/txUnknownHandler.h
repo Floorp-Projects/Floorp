@@ -52,7 +52,7 @@ public:
 
     void attribute(const nsAString& aName, const PRInt32 aNsID,
                    const nsAString& aValue);
-    void endDocument();
+    void endDocument(nsresult aResult);
     void startElement(const nsAString& aName, const PRInt32 aNsID);
 
 private:

@@ -64,7 +64,7 @@ void txTextHandler::comment(const nsAString& aData)
 {
 }
 
-void txTextHandler::endDocument()
+void txTextHandler::endDocument(nsresult aResult)
 {
 }
 
