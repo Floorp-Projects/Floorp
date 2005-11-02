@@ -31,17 +31,37 @@
 
 #include "XMLUtils.h"
 
-txExpandedName::txExpandedName(PRInt32 aNsID,
-                               txAtom* aLocalName) : mNamespaceID(aNsID),
-                                                     mLocalName(aLocalName)
+nsresult txExpandedName::init(const String& aQName,
+                              Node* aResolver,
+                              MBool aUseDefault)
 {
-    if (mLocalName)
-        TX_ADDREF_ATOM(mLocalName);
-}
+    NS_ASSERTION(aResolver, "missing resolve node");
+    if (!XMLUtils::isValidQName(aQName))
+        return NS_ERROR_FAILURE;
 
-txExpandedName::~txExpandedName()
-{
-    TX_IF_RELEASE_ATOM(mLocalName);
+    int idx = aQName.indexOf(':');
+    if (idx >= 0) {
+        String localName, prefixStr;
+        aQName.subString(0, idx, prefixStr);
+        txAtom* prefix = TX_GET_ATOM(prefixStr);
+        PRInt32 namespaceID = aResolver->lookupNamespaceID(prefix);
+        if (namespaceID == kNameSpaceID_Unknown)
+            return NS_ERROR_FAILURE;
+        mNamespaceID = namespaceID;
+
+        aQName.subString(idx+1, localName);
+        TX_IF_RELEASE_ATOM(mLocalName);
+        mLocalName = TX_GET_ATOM(localName);
+    }
+    else {
+        TX_IF_RELEASE_ATOM(mLocalName);
+        mLocalName = TX_GET_ATOM(aQName);
+        if (aUseDefault)
+            mNamespaceID = aResolver->lookupNamespaceID(0);
+        else
+            mNamespaceID = kNameSpaceID_None;
+    }
+    return NS_OK;
 }
 
   //------------------------------/
@@ -111,7 +131,7 @@ MBool XMLUtils::isQNameChar(PRInt32 ch) {
 /**
  * Returns true if the given String is a valid XML QName
 **/
-MBool XMLUtils::isValidQName(String& name) {
+MBool XMLUtils::isValidQName(const String& name) {
 
     if (name.isEmpty())
         return MB_FALSE;

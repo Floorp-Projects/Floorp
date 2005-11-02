@@ -32,26 +32,58 @@
 
 #include "baseutils.h"
 #include "txAtom.h"
+#include "dom.h"
+#include "txError.h"
 
 class String;
 
 class txExpandedName {
 public:
-    txExpandedName(PRInt32 aNsID, txAtom* aLocalName);
-    ~txExpandedName();
-
-    MBool
-    operator == (const txExpandedName& rhs)
+    txExpandedName() : mNamespaceID(kNameSpaceID_None),
+                       mLocalName(0)
     {
-        return ((mNamespaceID == rhs.mNamespaceID) &&
-                (mLocalName == rhs.mLocalName));
     }
 
-    MBool
-    operator != (const txExpandedName& rhs)
+    txExpandedName(PRInt32 aNsID,
+                   txAtom* aLocalName) : mNamespaceID(aNsID),
+                                         mLocalName(aLocalName)
     {
-        return ((mNamespaceID != rhs.mNamespaceID) ||
-                (mLocalName != rhs.mLocalName));
+        TX_IF_ADDREF_ATOM(mLocalName);
+    }
+
+    txExpandedName(const txExpandedName& aOther) :
+        mNamespaceID(aOther.mNamespaceID),
+        mLocalName(aOther.mLocalName)
+    {
+        TX_IF_ADDREF_ATOM(mLocalName);
+    }
+
+    ~txExpandedName()
+    {
+        TX_IF_RELEASE_ATOM(mLocalName);
+    }
+    
+    nsresult init(const String& aQName, Node* aResolver, MBool aUseDefault);
+
+    txExpandedName& operator = (const txExpandedName& rhs)
+    {
+        mNamespaceID = rhs.mNamespaceID;
+        TX_IF_RELEASE_ATOM(mLocalName);
+        mLocalName = rhs.mLocalName;
+        TX_IF_ADDREF_ATOM(mLocalName);
+        return *this;
+    }
+
+    MBool operator == (const txExpandedName& rhs) const
+    {
+        return ((mLocalName == rhs.mLocalName) &&
+                (mNamespaceID == rhs.mNamespaceID));
+    }
+
+    MBool operator != (const txExpandedName& rhs) const
+    {
+        return ((mLocalName != rhs.mLocalName) ||
+                (mNamespaceID != rhs.mNamespaceID));
     }
 
     PRInt32 mNamespaceID;
@@ -69,7 +101,7 @@ public:
     /**
      * Returns true if the given String is a valid XML QName
     **/
-    static MBool isValidQName(String& name);
+    static MBool isValidQName(const String& name);
 
     /**
      * Returns true if the given string has only whitespace characters
