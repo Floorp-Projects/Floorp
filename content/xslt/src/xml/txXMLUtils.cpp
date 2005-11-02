@@ -23,7 +23,7 @@
  * Lidong, lidong520@263.net
  *    -- unicode bug fix
  *
- * $Id: txXMLUtils.cpp,v 1.4 2005/11/02 07:33:37 axel%pike.org Exp $
+ * $Id: txXMLUtils.cpp,v 1.5 2005/11/02 07:33:38 peterv%netscape.com Exp $
  */
 /**
  * An XML utility class
@@ -69,7 +69,7 @@ void XMLUtils::getLocalPart(const String& src, String& dest) {
 /**
  * Returns true if the given character represents an Alpha letter
 **/
-MBool XMLUtils::isAlphaChar(Int32 ch) {
+MBool XMLUtils::isAlphaChar(PRInt32 ch) {
     if ((ch >= 'a' ) && (ch <= 'z' )) return MB_TRUE;
     if ((ch >= 'A' ) && (ch <= 'Z' )) return MB_TRUE;
     return MB_FALSE;
@@ -78,7 +78,7 @@ MBool XMLUtils::isAlphaChar(Int32 ch) {
 /**
  * Returns true if the given character represents a numeric letter (digit)
 **/
-MBool XMLUtils::isDigit(Int32 ch) {
+MBool XMLUtils::isDigit(PRInt32 ch) {
     if ((ch >= '0') && (ch <= '9'))   return MB_TRUE;
     return MB_FALSE;
 } //-- isDigit
@@ -86,7 +86,7 @@ MBool XMLUtils::isDigit(Int32 ch) {
 /**
  * Returns true if the given character is an allowable QName character
 **/
-MBool XMLUtils::isNCNameChar(Int32 ch) {
+MBool XMLUtils::isNCNameChar(PRInt32 ch) {
     if (isDigit(ch) || isAlphaChar(ch)) return MB_TRUE;
     return (MBool) ((ch == '.') ||(ch == '_') || (ch == '-'));
 } //-- isNCNameChar
@@ -94,7 +94,7 @@ MBool XMLUtils::isNCNameChar(Int32 ch) {
 /**
  * Returns true if the given character is an allowable NCName character
 **/
-MBool XMLUtils::isQNameChar(Int32 ch) {
+MBool XMLUtils::isQNameChar(PRInt32 ch) {
     return (MBool) (( ch == ':') || isNCNameChar(ch));
 } //-- isQNameChar
 
@@ -119,7 +119,7 @@ MBool XMLUtils::isValidQName(String& name) {
 **/
 MBool XMLUtils::isWhitespace(const String& text) {
     for ( int i = 0; i < text.length(); i++ ) {
-        Int32 ch = text.charAt(i);
+        PRInt32 ch = text.charAt(i);
         switch ( ch ) {
             case ' '  :
             case '\n' :
@@ -137,14 +137,14 @@ MBool XMLUtils::isWhitespace(const String& text) {
  * Normalizes the value of an XML attribute
 **/
 void XMLUtils::normalizeAttributeValue(String& attValue) {
-    Int32 size = attValue.length();
+    PRInt32 size = attValue.length();
     //-- make copy of chars
     UNICODE_CHAR* chars = new UNICODE_CHAR[size];
     attValue.toUnicode(chars);
     //-- clear attValue
     attValue.clear();
 
-    Int32 cc = 0;
+    PRInt32 cc = 0;
     MBool addSpace = MB_FALSE;
     while ( cc < size) {
         UNICODE_CHAR ch = chars[cc++];
@@ -179,14 +179,14 @@ void XMLUtils::normalizeAttributeValue(String& attValue) {
  * Normalizes the value of a XML processing instruction
 **/
 void XMLUtils::normalizePIValue(String& piValue) {
-    Int32 size = piValue.length();
+    PRInt32 size = piValue.length();
     //-- make copy of chars
     UNICODE_CHAR* chars = new UNICODE_CHAR[size];
     piValue.toUnicode(chars);
     //-- clear attValue
     piValue.clear();
 
-    Int32 cc = 0;
+    PRInt32 cc = 0;
     UNICODE_CHAR prevCh = 0x0000;
     while ( cc < size) {
         UNICODE_CHAR ch = chars[cc++];
@@ -213,7 +213,7 @@ void XMLUtils::normalizePIValue(String& piValue) {
 **/
 MBool XMLUtils::shouldStripTextnode (const String& data){
     MBool toStrip = MB_TRUE;
-    for (Int32 i=0;toStrip && i<data.length();i++){
+    for (PRInt32 i=0;toStrip && i<data.length();i++){
         switch(data.charAt(i)) {
     	    case 0x0020: // space
     	    case 0x0009: // tab

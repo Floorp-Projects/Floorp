@@ -31,7 +31,7 @@
  *    -- read XML from stdin when -i is omitted
  *    -- accept '-' to specify stdin/stdout on command line
  *
- * $Id: transformiix.cpp,v 1.9 2005/11/02 07:33:40 peterv%netscape.com Exp $
+ * $Id: transformiix.cpp,v 1.10 2005/11/02 07:33:41 peterv%netscape.com Exp $
  */
 
 
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     cerr << copyright <<endl;
 
     //-- print banner line
-    Int32 fillSize = 1;
+    PRInt32 fillSize = 1;
     fillSize += copyright.length();
     String fill;
     fill.setLength(fillSize, '-');

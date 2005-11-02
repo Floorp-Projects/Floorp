@@ -27,7 +27,7 @@
  * Eric Du, duxy@leyou.com.cn
  *   -- added fix for FreeBSD
  *
- * $Id: txDouble.cpp,v 1.4 2005/11/02 07:33:37 peterv%netscape.com Exp $
+ * $Id: txDouble.cpp,v 1.5 2005/11/02 07:33:38 peterv%netscape.com Exp $
  */
 
 #include "primitives.h"
@@ -149,7 +149,7 @@ double Double::toDouble(const String& src) {
     double dbl = 0.0;
     double fraction   = 1.0;
     double multiplier = 10.0;
-    Int32 idx = 0;
+    PRInt32 idx = 0;
 
     double sign = 1.0;
 
@@ -159,7 +159,7 @@ double Double::toDouble(const String& src) {
 
     //-- check first character for sign
     if ( idx < src.length() ) {
-        Int32 ch = src.charAt(idx);
+        PRInt32 ch = src.charAt(idx);
         if ( ch == '-' ) {
             sign = -1.0;
             ++idx;
@@ -172,7 +172,7 @@ double Double::toDouble(const String& src) {
     //-- convert remaining to number
     for ( ; idx < src.length(); idx++ ) {
 
-        Int32 ch = src.charAt(idx);
+        PRInt32 ch = src.charAt(idx);
 
         if (( ch >= '0') && (ch <= '9')) {
              if ( multiplier > 1.0 ) {

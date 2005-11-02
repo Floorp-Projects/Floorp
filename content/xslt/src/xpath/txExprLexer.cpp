@@ -29,13 +29,13 @@
  *   -- Fixed bug in parse method so that we make sure we check for
  *      axis identifier wild cards, such as ancestor::*
  *
- * $Id: txExprLexer.cpp,v 1.13 2005/11/02 07:33:52 peterv%netscape.com Exp $
+ * $Id: txExprLexer.cpp,v 1.14 2005/11/02 07:33:53 peterv%netscape.com Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.13 $ $Date: 2005/11/02 07:33:52 $
+ * @version $Revision: 1.14 $ $Date: 2005/11/02 07:33:53 $
 **/
 
 #include "ExprLexer.h"
@@ -250,7 +250,7 @@ void ExprLexer::addToken(Token* token) {
 /**
  * Returns true if the given character represents an Alpha letter
 **/
-MBool ExprLexer::isAlphaChar(Int32 ch) {
+MBool ExprLexer::isAlphaChar(PRInt32 ch) {
     if ((ch >= 'a' ) && (ch <= 'z' )) return MB_TRUE;
     if ((ch >= 'A' ) && (ch <= 'Z' )) return MB_TRUE;
     return MB_FALSE;
@@ -259,7 +259,7 @@ MBool ExprLexer::isAlphaChar(Int32 ch) {
 /**
  * Returns true if the given character represents a numeric letter (digit)
 **/
-MBool ExprLexer::isDigit(Int32 ch) {
+MBool ExprLexer::isDigit(PRInt32 ch) {
     if ((ch >= '0') && (ch <= '9'))   return MB_TRUE;
     return MB_FALSE;
 } //-- isDigit
@@ -267,7 +267,7 @@ MBool ExprLexer::isDigit(Int32 ch) {
 /**
  * Returns true if the given character is an allowable NCName character
 **/
-MBool ExprLexer::isNCNameChar(Int32 ch) {
+MBool ExprLexer::isNCNameChar(PRInt32 ch) {
     if (isDigit(ch) || isAlphaChar(ch)) return MB_TRUE;
     return (MBool) ((ch == '.') || (ch == '_') || (ch == '-'));
 } //-- isNCNameChar
@@ -275,7 +275,7 @@ MBool ExprLexer::isNCNameChar(Int32 ch) {
 /**
  * Returns true if the given character is an allowable QName character
 **/
-MBool ExprLexer::isQNameChar(Int32 ch) {
+MBool ExprLexer::isQNameChar(PRInt32 ch) {
     return (MBool) (( ch == ':') || isNCNameChar(ch));
 } //-- isQNameChar
 
@@ -503,7 +503,7 @@ void ExprLexer::parse(const String& pattern) {
     UNICODE_CHAR inLiteral = '\0';
     MBool inNumber  = MB_FALSE;
 
-    Int32 currentPos = 0;
+    PRInt32 currentPos = 0;
 
     UNICODE_CHAR ch = '\0';
     UNICODE_CHAR prevCh = ch;
@@ -577,7 +577,7 @@ void ExprLexer::parse(const String& pattern) {
                     break;
                 case COLON:
                     if ( prevCh == ch) {
-                        Int32 bufSize = tokenBuffer.length();
+                        PRInt32 bufSize = tokenBuffer.length();
                         tokenBuffer.setLength(bufSize-1);
                         addToken(new Token(tokenBuffer, Token::AXIS_IDENTIFIER));
                         tokenBuffer.clear();

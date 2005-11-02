@@ -37,7 +37,7 @@
 /**
  * Default constructor for a List;
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.9 $ $Date: 2005/11/02 07:33:50 $
+ * @version $Revision: 1.10 $ $Date: 2005/11/02 07:33:51 $
 **/
 
 List::List() {
@@ -112,7 +112,7 @@ List::ListItem* List::getLastItem() {
 /**
  * Returns the number of items in this List
 **/
-Int32 List::getLength() {
+PRInt32 List::getLength() {
    return itemCount;
 } //-- getLength
 

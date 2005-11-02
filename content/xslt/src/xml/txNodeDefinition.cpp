@@ -59,8 +59,8 @@ NodeDefinition::NodeDefinition(NodeType type, const String& name,
 //
 NodeDefinition::~NodeDefinition()
 {
-  Int32 numAttributes = attributes.getLength();
-  Int32 killAttrLoop;
+  PRInt32 numAttributes = attributes.getLength();
+  PRInt32 killAttrLoop;
 
   DeleteChildren();
 
@@ -148,9 +148,9 @@ Document* NodeDefinition::getOwnerDocument() const
   return ownerDocument;
 }
 
-Node* NodeDefinition::item(UInt32 index)
+Node* NodeDefinition::item(PRUint32 index)
 {
-  UInt32 selectLoop;
+  PRUint32 selectLoop;
   NodeDefinition* pSelectNode = firstChild;
 
   if (index < length)
@@ -164,7 +164,7 @@ Node* NodeDefinition::item(UInt32 index)
   return NULL;
 }
 
-UInt32 NodeDefinition::getLength()
+PRUint32 NodeDefinition::getLength()
 {
   return length;
 }
