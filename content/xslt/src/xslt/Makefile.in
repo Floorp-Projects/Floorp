@@ -46,6 +46,8 @@ DIRS            = functions util
 
 MODULE = transformiix
 LIBRARY_NAME = txxslt_s
+MOZILLA_INTERNAL_API = 1
+
 REQUIRES	= string \
 		  xpcom \
 		  $(NULL)
