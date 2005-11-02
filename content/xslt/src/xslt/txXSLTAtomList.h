@@ -88,6 +88,7 @@ TX_ATOM(encoding, "encoding");
 TX_ATOM(format, "format");
 TX_ATOM(from, "from");
 TX_ATOM(groupingSeparator, "grouping-separator");
+TX_ATOM(groupingSize, "grouping-size");
 TX_ATOM(href, "href");
 TX_ATOM(indent, "indent");
 TX_ATOM(infinity, "infinity");
@@ -129,3 +130,8 @@ TX_ATOM(systemProperty, "system-property");
 // XSLT properties
 TX_ATOM(vendor, "vendor");
 TX_ATOM(vendorUrl, "vendor-url");
+
+// XSLT attribute values
+TX_ATOM(any, "any");
+TX_ATOM(multiple, "multiple");
+TX_ATOM(single, "single");

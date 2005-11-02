@@ -51,30 +51,24 @@ txList::txList() {
  * references
 */
 txList::~txList() {
-  ListItem* item = firstItem;
-  while (item) {
-    ListItem* tItem = item;
-    item = item->nextItem;
-    delete tItem;
-  }
+    clear();
 } //-- ~txList
 
-void txList::insert(int index, void* objPtr) {
-
+nsresult txList::insert(int index, void* objPtr)
+{
     if (index >= itemCount) {
-        insertBefore(objPtr, 0);
+        return insertBefore(objPtr, 0);
     }
-    else {
-        //-- add to middle of list
-        ListItem* nextItem = firstItem;
-        for (int i = 0; i < index; i++)
-            nextItem = nextItem->nextItem;
-        insertBefore(objPtr, nextItem);
-    }
+    // add inside the list
+    ListItem* nextItem = firstItem;
+    for (int i = 0; i < index; i++)
+        nextItem = nextItem->nextItem;
+    return insertBefore(objPtr, nextItem);
 } //-- insert
 
-void txList::add(void* objPtr) {
-    insertBefore(objPtr, 0);
+nsresult txList::add(void* objPtr)
+{
+    return insertBefore(objPtr, 0);
 } //-- add
 
 /**
@@ -126,12 +120,12 @@ PRInt32 List::getLength() {
  * This method assumes refItem is a member of this list, and since this
  * is a private method, I feel that's a valid assumption
 **/
-void txList::insertAfter(void* objPtr, ListItem* refItem) {
+nsresult txList::insertAfter(void* objPtr, ListItem* refItem)
+{
     //-- if refItem == null insert at front
     if (!refItem)
-        insertBefore(objPtr, firstItem);
-    else
-        insertBefore(objPtr, refItem->nextItem);
+        return insertBefore(objPtr, firstItem);
+    return insertBefore(objPtr, refItem->nextItem);
 } //-- insertAfter
 
 /**
@@ -141,11 +135,10 @@ void txList::insertAfter(void* objPtr, ListItem* refItem) {
  * This method assumes refItem is a member of this list, and since this
  * is a private method, I feel that's a valid assumption
 **/
-void txList::insertBefore(void* objPtr, ListItem* refItem) {
-
+nsresult txList::insertBefore(void* objPtr, ListItem* refItem)
+{
     ListItem* item = new ListItem;
-    if (!item)
-        return;
+    NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
 
     item->objPtr = objPtr;
     item->nextItem = 0;
@@ -176,6 +169,8 @@ void txList::insertBefore(void* objPtr, ListItem* refItem) {
 
     // increase the item count
     ++itemCount;
+    
+    return NS_OK;
 } //-- insertBefore
 
 void* txList::remove(void* objPtr) {
@@ -217,6 +212,19 @@ txList::ListItem* txList::remove(ListItem* item) {
     return item;
 } //-- remove
 
+void txList::clear()
+{
+    ListItem* item = firstItem;
+    while (item) {
+        ListItem* tItem = item;
+        item = item->nextItem;
+        delete tItem;
+    }
+    firstItem  = 0;
+    lastItem   = 0;
+    itemCount  = 0;
+}
+
   //------------------------------------/
  //- Implementation of txListIterator -/
 //------------------------------------/
@@ -242,12 +250,11 @@ txListIterator::~txListIterator() {
  * based on the current position within the txList
  * @param objPtr the Object pointer to add to the list
 **/
-void txListIterator::addAfter(void* objPtr) {
-
+nsresult txListIterator::addAfter(void* objPtr)
+{
     if (currentItem || !atEndOfList)
-        list->insertAfter(objPtr, currentItem);
-    else
-        list->insertBefore(objPtr, 0);
+        return list->insertAfter(objPtr, currentItem);
+    return list->insertBefore(objPtr, 0);
 
 } //-- addAfter
 
@@ -257,12 +264,11 @@ void txListIterator::addAfter(void* objPtr) {
  * based on the current position within the txList
  * @param objPtr the Object pointer to add to the list
 **/
-void txListIterator::addBefore(void* objPtr) {
-
+nsresult txListIterator::addBefore(void* objPtr)
+{
     if (currentItem || atEndOfList)
-        list->insertBefore(objPtr, currentItem);
-    else
-        list->insertAfter(objPtr, 0);
+        return list->insertBefore(objPtr, currentItem);
+    return list->insertAfter(objPtr, 0);
 
 } //-- addBefore
 
