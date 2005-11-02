@@ -45,11 +45,15 @@
 #define POSITIVE_SHORTCUT_THRESHOLD  (float)0.95
 #define NEGATIVE_SHORTCUT_THRESHOLD  (float)0.05
 #define SYMBOL_CAT_ORDER  250
+#define NUMBER_OF_SEQ_CAT 4
+#define POSITIVE_CAT   (NUMBER_OF_SEQ_CAT-1)
+#define NEGATIVE_CAT   0
 
 typedef struct
 {
   unsigned char *charToOrderMap;     //[256] table use to find a char's order
   char *precedenceMatrix;           //[SAMPLE_SIZE][SAMPLE_SIZE]; table to find a 2-char sequence's frequency
+  float  mTypicalPositiveRatio;     // = freqSeqs / totalSeqs 
   PRBool keepEnglishLetter;         //it says if this script contains latin letters
   const char* charsetName;
 } SequenceModel;
@@ -66,6 +70,10 @@ public:
   void      SetOpion() {};
   PRBool KeepEnglishLetters() {return mModel->keepEnglishLetter;};
 
+#ifdef DEBUG_chardet
+  void  DumpStatus();
+#endif
+
 protected:
   nsProbingState mState;
   SequenceModel *mModel;
@@ -74,7 +82,7 @@ protected:
   unsigned char mLastOrder;
 
   PRUint32 mTotalSeqs;
-  PRUint32 mNegativeSeqs;
+  PRUint32 mSeqCounters[NUMBER_OF_SEQ_CAT];
 
   PRUint32 mTotalChar;
   //characters that fall in our sampling range
