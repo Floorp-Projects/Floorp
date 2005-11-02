@@ -127,6 +127,9 @@ class Node : public TxObject
     
     //From DOM3 26-Jan-2001 WD
     virtual String getBaseURI() = 0;
+
+    //txXPathNode functions
+    virtual Node* getXPathParent() = 0;
 };
 
 //
@@ -189,11 +192,31 @@ class NamedNodeMap : public NodeListDefinition
     ~NamedNodeMap();
 
     Node* getNamedItem(const String& name);
+    virtual Node* setNamedItem(Node* arg);
+    virtual Node* removeNamedItem(const String& name);
+
+  private:
+    NodeListDefinition::ListItem* findListItemByName(const String& name);
+};
+
+//
+// Subclass of NamedNodeMap that contains a list of attributes.
+// Whenever an attribute is added to or removed from the map, the attributes
+// ownerElement is updated.
+//
+class AttrMap : public NamedNodeMap
+{
+    // Elenent needs to be friend to be able to set the AttrMaps ownerElement
+    friend Element;
+
+  public:
+    AttrMap();
+
     Node* setNamedItem(Node* arg);
     Node* removeNamedItem(const String& name);
 
   private:
-    NodeListDefinition::ListItem* findListItemByName(const String& name);
+    Element* ownerElement;
 };
 
 //
@@ -234,10 +257,14 @@ class NodeDefinition : public Node, public NodeList
     Node* cloneNode(MBool deep, Node* dest);
 
     MBool hasChildNodes() const;
-    
+
+    //From DOM3 26-Jan-2001 WD
     virtual String getBaseURI();
 
-    //Inherrited from NodeList
+    //txXPathNode functions
+    virtual Node* getXPathParent();
+
+    //Inherited from NodeList
     Node* item(PRUint32 index);
     PRUint32 getLength();
 
@@ -247,7 +274,7 @@ class NodeDefinition : public Node, public NodeList
     //than the generic node does.
     String nodeName;
     String nodeValue;
-    NamedNodeMap attributes;
+    AttrMap attributes;
 
     void DeleteChildren();
 
@@ -360,6 +387,8 @@ class Element : public NodeDefinition
 //
 class Attr : public NodeDefinition
 {
+    // AttrMap needs to be friend to be able to update the ownerElement
+    friend AttrMap;
   public:
     Attr(const String& name, Document* owner);
 
@@ -377,7 +406,11 @@ class Attr : public NodeDefinition
     //children
     Node* insertBefore(Node* newChild, Node* refChild);
 
+    //txXPathNode functions override
+    Node* getXPathParent();
+
   private:
+    Element* ownerElement;
     MBool specified;
 };
 
