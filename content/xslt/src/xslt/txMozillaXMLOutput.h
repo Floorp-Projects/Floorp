@@ -43,7 +43,6 @@
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-#include "nsINameSpaceManager.h"
 #include "nsIScriptLoader.h"
 #include "nsIScriptLoaderObserver.h"
 #include "nsIStyleSheetLinkingElement.h"
@@ -192,8 +191,6 @@ private:
     PRInt32 mStyleSheetCount;
     PRUint32 mBadChildLevel;
     nsCString mRefreshString;
-
-    nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
 
     nsCOMPtr<nsISupportsArray> mScriptElements;
 
