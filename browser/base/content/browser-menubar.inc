@@ -395,23 +395,16 @@
 #ifdef HAVE_SHELL_SERVICE
               <menuseparator/>
               <menuitem label="&mailButton.readMail.label;" 
-                               accesskey="&mailButton.readMail.accesskey;"
-                               command="Browser:ReadMail"/>
+                        accesskey="&mailButton.readMail.accesskey;"
+                        command="Browser:ReadMail"/>
               <menuitem label="&mailButton.newMessage.label;" 
-                               accesskey="&mailButton.newMessage.accesskey;"
-                               key="key_newMessage" command="Browser:NewMessage"/>
+                        accesskey="&mailButton.newMessage.accesskey;"
+                        key="key_newMessage" command="Browser:NewMessage"/>
 
 #endif
               <menuseparator/>
               <menuitem label="&downloads.label;" accesskey="&downloads.accesskey;"
-# all platforms except Unix, because Ctrl+J is used for web search there
-#ifndef XP_UNIX
-                        key="key_openDownloads"
-#endif
-#ifdef XP_MACOSX
-                        key="key_openDownloads"
-#endif
-                        command="Tools:Downloads"/>
+                        key="key_openDownloads" command="Tools:Downloads"/>
               <menuitem label="&extensions.label;" accesskey="&extensions.accesskey;" 
                         command="Tools:Extensions"/>
               <menuitem label="&themes.label;" accesskey="&themes.accesskey;" 
