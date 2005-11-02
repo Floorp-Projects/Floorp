@@ -237,7 +237,7 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
 #endif
     // We must be growing an nsAutoVoidArray - copy since we didn't
     // realloc.
-    nsCRT::memcpy(newImpl->mArray, mImpl->mArray,
+    memcpy(newImpl->mArray, mImpl->mArray,
                   mImpl->mCount * sizeof(mImpl->mArray[0]));
   }
     
@@ -320,13 +320,13 @@ nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
       if (!GrowArrayBy(otherCount-maxCount))
         return *this;      // XXX The allocation failed - don't do anything
 
-      nsCRT::memcpy(mImpl->mArray, other.mImpl->mArray, otherCount * sizeof(mImpl->mArray[0]));
+      memcpy(mImpl->mArray, other.mImpl->mArray, otherCount * sizeof(mImpl->mArray[0]));
       mImpl->mCount = otherCount;
     }
     else
     {
       // the old array can hold the new array
-      nsCRT::memcpy(mImpl->mArray, other.mImpl->mArray, otherCount * sizeof(mImpl->mArray[0]));
+      memcpy(mImpl->mArray, other.mImpl->mArray, otherCount * sizeof(mImpl->mArray[0]));
       mImpl->mCount = otherCount;
       // if it shrank a lot, compact it anyways
       if ((otherCount*2) < maxCount && maxCount > 100)
