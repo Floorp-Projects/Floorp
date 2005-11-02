@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txForwardContext.h"
-#include "Nodeset.h"
+#include "NodeSet.h"
 
 Node* txForwardContext::getContextNode()
 {

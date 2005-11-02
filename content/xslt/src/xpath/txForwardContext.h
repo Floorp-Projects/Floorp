@@ -41,6 +41,8 @@
 
 #include "txIXPathContext.h"
 
+class NodeSet;
+
 class txForwardContext : public txIEvalContext
 {
 public:

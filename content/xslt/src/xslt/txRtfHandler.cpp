@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txRtfHandler.h"
+#include "dom.h"
 
 txRtfHandler::txRtfHandler(Document* aDocument,
                            txResultTreeFragment* aResultTreeFragment) :
