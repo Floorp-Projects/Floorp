@@ -642,6 +642,7 @@ txMozillaXSLTProcessor::RemoveParameter(const nsAString& aNamespaceURI,
 {
     PRInt32 nsId = kNameSpaceID_Unknown;
     nsresult rv = gNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
+    NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
 
