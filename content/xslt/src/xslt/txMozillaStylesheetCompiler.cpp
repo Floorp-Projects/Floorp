@@ -148,13 +148,13 @@ NS_IMETHODIMP
 txStylesheetSink::HandleStartElement(const PRUnichar *aName,
                                      const PRUnichar **aAtts,
                                      PRUint32 aAttsCount,
-                                     PRUint32 aIndex,
+                                     PRInt32 aIndex,
                                      PRUint32 aLineNumber)
 {
-    // XXX aIndex should be a signed int, that's a bug in the 
-    // Mozilla content sink api.
+    NS_PRECONDITION(aAttsCount % 2 == 0, "incorrect aAttsCount");
+
     nsresult rv =
-        mCompiler->startElement(aName, aAtts, aAttsCount, (PRInt32)aIndex);
+        mCompiler->startElement(aName, aAtts, aAttsCount / 2, aIndex);
     if (NS_FAILED(rv)) {
         mCompiler->cancel(rv);
 
