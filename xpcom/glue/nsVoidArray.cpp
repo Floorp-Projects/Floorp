@@ -340,7 +340,6 @@ nsAutoVoidArray::nsAutoVoidArray()
   SetArraySize(kAutoBufSize);
   mImpl->mCount = 0;
   SetArrayOwner(PR_FALSE);
-  ::memset(mImpl->mArray, 0, mImpl->mCount * sizeof(void*));
 }
 
 //----------------------------------------------------------------
