@@ -59,6 +59,7 @@ REQUIRES	= \
 		  gfx \
                   widget \
 		  pref \
+		  layout \
 		  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
