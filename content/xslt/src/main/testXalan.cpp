@@ -99,7 +99,7 @@ public:
     void feed(const nsACString& aTest, PRBool aSuccess)
     {
         *mOut << "  <RDF:Description about=\"urn:x-buster:" <<
-            nsPromiseFlatCString(aTest).get() <<
+            PromiseFlatCString(aTest).get() <<
             "\"\n                   NC:orig_succ=\"";
         if (aSuccess) {
             *mOut << "yes";
