@@ -55,8 +55,8 @@ class txInstruction;
 class txIOutputHandlerFactory;
 class txExpandedNameMap;
 
-
-class txLoadedDocumentEntry : public PLDHashStringEntry {
+class txLoadedDocumentEntry : public PLDHashStringEntry
+{
 public:
     txLoadedDocumentEntry(const void* aKey) : PLDHashStringEntry(aKey)
     {
@@ -126,7 +126,7 @@ public:
     Node* retrieveDocument(const nsAString& uri, const nsAString& baseUri);
     nsresult getKeyNodes(const txExpandedName& aKeyName, Document* aDocument,
                          const nsAString& aKeyValue, PRBool aIndexIfNotFound,
-                         NodeSet** aResult);
+                         txNodeSet** aResult);
     TemplateRule* getCurrentTemplateRule();
 
     // state-modification functions

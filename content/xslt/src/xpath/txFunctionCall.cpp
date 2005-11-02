@@ -27,7 +27,7 @@
 #include "ExprResult.h"
 #include "nsIAtom.h"
 #include "txIXPathContext.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 
 /**
  * This class represents a FunctionCall as defined by the XSL Working Draft
@@ -117,7 +117,7 @@ MBool FunctionCall::evaluateToBoolean(Expr* aExpr, txIEvalContext* aContext)
  */
 nsresult
 FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
-                                NodeSet** aResult)
+                                txNodeSet** aResult)
 {
     NS_ASSERTION(aExpr, "Missing expression to evaluate");
     *aResult = nsnull;
@@ -132,7 +132,7 @@ FunctionCall::evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
     }
 
     *aResult =
-        NS_STATIC_CAST(NodeSet*, NS_STATIC_CAST(txAExprResult*, exprRes));
+        NS_STATIC_CAST(txNodeSet*, NS_STATIC_CAST(txAExprResult*, exprRes));
     NS_ADDREF(*aResult);
 
     return NS_OK;

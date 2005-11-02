@@ -521,15 +521,16 @@ txExecutionState::retrieveDocument(const nsAString& uri,
         if (NS_FAILED(rv) || !xmlDoc) {
             receiveError(NS_LITERAL_STRING("Couldn't load document '") +
                          docUrl + NS_LITERAL_STRING("': ") + errMsg, rv);
-            return NULL;
+            return nsnull;
         }
         // add to list of documents
         mLoadedDocuments.Add(xmlDoc);
     }
 
     // return element with supplied id if supplied
-    if (!frag.IsEmpty())
+    if (!frag.IsEmpty()) {
         return xmlDoc->getElementById(frag);
+    }
 
     return xmlDoc;
 }
@@ -539,7 +540,7 @@ txExecutionState::getKeyNodes(const txExpandedName& aKeyName,
                               Document* aDocument,
                               const nsAString& aKeyValue,
                               PRBool aIndexIfNotFound,
-                              NodeSet** aResult)
+                              txNodeSet** aResult)
 {
     return mKeyHash.getKeyNodes(aKeyName, aDocument, aKeyValue,
                                 aIndexIfNotFound, *this, aResult);

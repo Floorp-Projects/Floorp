@@ -434,13 +434,12 @@ txCopyOf::execute(txExecutionState& aEs)
     switch (exprRes->getResultType()) {
         case txAExprResult::NODESET:
         {
-            NodeSet* nodes = NS_STATIC_CAST(NodeSet*,
-                                            NS_STATIC_CAST(txAExprResult*,
-                                                           exprRes));
-            int i;
+            txNodeSet* nodes = NS_STATIC_CAST(txNodeSet*,
+                                              NS_STATIC_CAST(txAExprResult*,
+                                                             exprRes));
+            PRInt32 i;
             for (i = 0; i < nodes->size(); ++i) {
-                Node* node = nodes->get(i);
-                rv = copyNode(node, aEs);
+                rv = copyNode(nodes->get(i), aEs);
                 NS_ENSURE_SUCCESS(rv, rv);
             }
             break;
@@ -702,8 +701,9 @@ txPushNewContext::execute(txExecutionState& aEs)
         return NS_ERROR_XSLT_NODESET_EXPECTED;
     }
     
-    NodeSet* nodes =
-        NS_STATIC_CAST(NodeSet*, NS_STATIC_CAST(txAExprResult*, exprRes));
+    txNodeSet* nodes = NS_STATIC_CAST(txNodeSet*,
+                                      NS_STATIC_CAST(txAExprResult*,
+                                                     exprRes));
     
     if (nodes->isEmpty()) {
         aEs.gotoInstruction(mBailTarget);
@@ -721,7 +721,7 @@ txPushNewContext::execute(txExecutionState& aEs)
                                    aEs.getEvalContext());
         NS_ENSURE_SUCCESS(rv, rv);
     }
-    nsRefPtr<NodeSet> sortedNodes;
+    nsRefPtr<txNodeSet> sortedNodes;
     rv = sorter.sortNodeSet(nodes, &aEs, getter_AddRefs(sortedNodes));
     NS_ENSURE_SUCCESS(rv, rv);
     

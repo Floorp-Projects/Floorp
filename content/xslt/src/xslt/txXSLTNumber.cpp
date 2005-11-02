@@ -272,6 +272,7 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
         Node* node = currNode;
         PRInt32 value = 0;
         MBool matchedFrom = MB_FALSE;
+
         while (node) {
             if (aFromPattern && node != currNode &&
                 aFromPattern->matches(node, aContext)) {
@@ -314,7 +315,7 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
 {
     aHead.Truncate();
     aTail.Truncate();
-    
+
     nsresult rv = NS_OK;
 
     nsAutoString groupSeparator;
@@ -323,7 +324,7 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
         nsRefPtr<txAExprResult> exprRes;
         rv = aGroupSize->evaluate(aContext, getter_AddRefs(exprRes));
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         nsAutoString sizeStr;
         exprRes->stringValue(sizeStr);
 
@@ -332,7 +333,7 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
         if ((double)groupSize != size) {
             groupSize = 0;
         }
-        
+
         rv = aGroupSeparator->evaluate(aContext, getter_AddRefs(exprRes));
         NS_ENSURE_SUCCESS(rv, rv);
         
@@ -344,27 +345,27 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
         nsRefPtr<txAExprResult> formatRes;
         rv = aFormat->evaluate(aContext, getter_AddRefs(formatRes));
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         formatRes->stringValue(format);
     }
     PRUint32 formatLen = format.Length();
     PRUint32 formatPos = 0;
     PRUnichar ch = 0;
-    
+
     // start with header
     while (formatPos < formatLen &&
            !isAlphaNumeric(ch = format.CharAt(formatPos))) {
         aHead.Append(ch);
         ++formatPos;
     }
-    
+
     // If there are no formatting tokens we need to create a default one.
     if (formatPos == formatLen) {
         txFormattedCounter* defaultCounter;
         rv = txFormattedCounter::getCounterFor(NS_LITERAL_STRING("1"), groupSize,
                                                groupSeparator, defaultCounter);
         NS_ENSURE_SUCCESS(rv, rv);
-        
+
         defaultCounter->mSeparator = NS_LITERAL_STRING(".");
         rv = aCounters.add(defaultCounter);
         if (NS_FAILED(rv)) {
@@ -453,7 +454,6 @@ txXSLTNumber::getSiblingCount(Node* aNode, txPattern* aCountPattern,
     return value;
 }
 
-
 Node*
 txXSLTNumber::getPrevInDocumentOrder(Node* aNode)
 {
@@ -468,7 +468,6 @@ txXSLTNumber::getPrevInDocumentOrder(Node* aNode)
     }
     return aNode->getXPathParent();
 }
-
 
 #define TX_CHAR_RANGE(ch, a, b) if (ch < a) return MB_FALSE; \
     if (ch <= b) return MB_TRUE
