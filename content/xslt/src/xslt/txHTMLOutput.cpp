@@ -188,7 +188,7 @@ void txHTMLOutput::attribute(const String& aName,
                  }
             }
             if (!setAtt) {
-                setAtt = new txAttribute(aNsID, localName, "");
+                setAtt = new txAttribute(aNsID, localName, String());
                 setAtt->mShorthand = MB_TRUE;
                 mAttributes.add(setAtt);
             }

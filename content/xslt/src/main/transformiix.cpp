@@ -77,42 +77,43 @@ int main(int argc, char** argv) {
     options.setObjectDeletion(MB_TRUE);
     CommandLineUtils::getOptions(options, argc, argv, flags);
 
-    if (!options.get("q")) {
+    if (!options.get(String("q"))) {
         String copyright("(C) 1999 The MITRE Corporation, Keith Visco, and contributors");
         cerr << xsltProcessor.getAppName() << " ";
         cerr << xsltProcessor.getAppVersion() << endl;
         cerr << copyright << endl;
         //-- print banner line
-        PRInt32 fillSize = copyright.length() + 1;
-        String fill;
-        fill.setLength(fillSize, '-');
-        cerr << fill << endl << endl;
+        PRUint32 fillSize = copyright.length() + 1;
+        PRUint32 counter;
+        for (counter = 0; counter < fillSize; ++counter)
+            cerr << '-';
+        cerr << endl << endl;
     }
 
-    if (options.get("h")) {
+    if (options.get(String("h"))) {
         printHelp();
         return 0;
     }
-    String* xmlFilename = (String*)options.get("i");
-    String* xsltFilename = (String*)options.get("s");
-    String* outFilename = (String*)options.get("o");
+    String* xmlFilename = (String*)options.get(String("i"));
+    String* xsltFilename = (String*)options.get(String("s"));
+    String* outFilename = (String*)options.get(String("o"));
 
 
     //-- open XML file
     istream* xmlInput = &cin;
     if (xmlFilename && ! xmlFilename->isEqual("-")) {
-      char* chars = new char[xmlFilename->length()+1];
-      xmlInput = new ifstream(xmlFilename->toCharArray(chars), ios::in);
-      delete chars;
+      char* chars = xmlFilename->toCharArray();
+      xmlInput = new ifstream(chars, ios::in);
+      delete [] chars;
     }
 
     //-- handle output stream
     ostream* resultOutput = &cout;
     ofstream resultFileStream;
     if ( outFilename && ! outFilename->isEqual("-")) {
-        char* chars = new char[outFilename->length()+1];
-        resultFileStream.open(outFilename->toCharArray(chars), ios::out);
-        delete chars;
+        char* chars = outFilename->toCharArray();
+        resultFileStream.open(chars, ios::out);
+        delete [] chars;
         if ( !resultFileStream ) {
             cerr << "error opening output file: " << *xmlFilename << endl;
             return -1;
@@ -132,9 +133,9 @@ int main(int argc, char** argv) {
     }
     else {
         //-- open XSLT file
-        char* chars = new char[xsltFilename->length()+1];
-        ifstream xsltInput(xsltFilename->toCharArray(chars), ios::in);
-        delete chars;
+        char* chars = xsltFilename->toCharArray();
+        ifstream xsltInput(chars, ios::in);
+        delete [] chars;
         xsltProcessor.process(*xmlInput, *xmlFilename, xsltInput, *xsltFilename, *resultOutput);
     }
     resultFileStream.close();

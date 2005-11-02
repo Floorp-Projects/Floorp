@@ -31,6 +31,7 @@
 
 #include "FunctionLib.h"
 #include "XMLDOMUtils.h"
+#include "XMLUtils.h"
 #include "txIXPathContext.h"
 #include <math.h>
 
@@ -118,11 +119,10 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             MBool first = MB_TRUE;
             String normed(resultStr.length());
             UNICODE_CHAR c;
-            PRInt32 src;
+            PRUint32 src;
             for (src = 0; src < resultStr.length(); src++) {
                 c = resultStr.charAt(src);
-                if (c == ' ' || c == '\n' ||
-                    c == '\t' || c == '\r') {
+                if (XMLUtils::isWhitespace(c)) {
                     addSpace = MB_TRUE;
                 }
                 else {
@@ -198,7 +198,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
                 return new StringResult();
             
             String resultStr;
-            src.subString((PRInt32)start, (PRInt32)end, resultStr);
+            src.subString((PRUint32)start, (PRUint32)end, resultStr);
             return new StringResult(resultStr);
         }
         case SUBSTRING_AFTER:
@@ -210,8 +210,8 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             evaluateToString((Expr*)iter.next(), aContext, arg1);
             evaluateToString((Expr*)iter.next(), aContext, arg2);
             PRInt32 idx = arg1.indexOf(arg2);
-            if (idx >= 0) {
-                PRInt32 len = arg2.length();
+            if (idx != kNotFound) {
+                PRUint32 len = arg2.length();
                 arg1.subString(idx + len, arg2);
                 return new StringResult(arg2);
             }
@@ -226,7 +226,7 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             evaluateToString((Expr*)iter.next(), aContext, arg1);
             evaluateToString((Expr*)iter.next(), aContext, arg2);
             PRInt32 idx = arg1.indexOf(arg2);
-            if (idx >= 0) {
+            if (idx != kNotFound) {
                 arg2.clear();
                 arg1.subString(0, idx, arg2);
                 return new StringResult(arg2);
@@ -246,12 +246,12 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             String oldChars, newChars, dest;
             evaluateToString((Expr*)iter.next(), aContext, oldChars);
             evaluateToString((Expr*)iter.next(), aContext, newChars);
-            PRInt32 i;
+            PRUint32 i;
             for (i = 0; i < src.length(); i++) {
                 PRInt32 idx = oldChars.indexOf(src.charAt(i));
-                if (idx >= 0) {
+                if (idx != kNotFound) {
                     if (idx < newChars.length())
-                        dest.append(newChars.charAt(idx));
+                        dest.append(newChars.charAt((PRUint32)idx));
                 }
                 else {
                     dest.append(src.charAt(i));

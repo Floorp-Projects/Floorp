@@ -54,8 +54,6 @@ CPPSRCS	= ArrayList.cpp             \
 ifdef TX_EXE
 	CPPSRCS	+= CommandLineUtils.cpp	\
 		TxString.cpp
-else
-	CPPSRCS	+= MozillaString.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk

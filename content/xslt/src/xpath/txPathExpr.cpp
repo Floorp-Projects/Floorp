@@ -40,10 +40,10 @@
  //- PathExpr -/
 //------------/
 
-const String PathExpr::RTF_INVALID_OP = 
-    "Result tree fragments don't allow location steps";
-const String PathExpr::NODESET_EXPECTED = 
-    "Filter expression must evaluate to a NodeSet";
+const String PathExpr::RTF_INVALID_OP(
+    "Result tree fragments don't allow location steps");
+const String PathExpr::NODESET_EXPECTED(
+    "Filter expression must evaluate to a NodeSet");
 
 /**
  * Creates a new PathExpr
@@ -177,7 +177,7 @@ void PathExpr::evalDescendants (Expr* aStep, Node* aNode,
         if (!(filterWS &&
               (child->getNodeType() == Node::TEXT_NODE ||
                child->getNodeType() == Node::CDATA_SECTION_NODE) &&
-              XMLUtils::shouldStripTextnode(child->getNodeValue())))
+              XMLUtils::isWhitespace(child->getNodeValue())))
             evalDescendants(aStep, child, aContext, resNodes);
         child = child->getNextSibling();
     }

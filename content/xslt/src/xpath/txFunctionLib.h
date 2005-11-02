@@ -72,13 +72,6 @@ static const String NUMBER_FN;
 static const String ROUND_FN;
 static const String CEILING_FN;
 static const String FLOOR_FN;
-// OG-
-
-
-//-- internal XSL processor functions
-static const String ERROR_FN;
-
-
 }; //-- XPathNames
 
 

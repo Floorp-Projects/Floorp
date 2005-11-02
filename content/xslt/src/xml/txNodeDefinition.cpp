@@ -399,7 +399,7 @@ PRInt32 NodeDefinition::lookupNamespaceID(txAtom* aPrefix)
   else {
       // No prefix, look up the default namespace by searching for xmlns
       // attributes. Remove the trailing :, set length to 5 (xmlns).
-      name.setLength(5);
+      name.truncate(5);
   }
   Attr* xmlns;
   while (node && node->getNodeType() == Node::ELEMENT_NODE) {

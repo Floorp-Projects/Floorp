@@ -182,7 +182,7 @@ public:
         ERROR_UNKNOWN_CHAR
     };
     static const String error_message[];
-    PRInt32 errorPos;
+    PRUint32 errorPos;
     short errorCode;
 
     /*
