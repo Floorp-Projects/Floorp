@@ -43,6 +43,7 @@
 #include "nsDOMError.h"
 #include "nsIContent.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIDOMNode.h"
 #include "nsSupportsArray.h"
 #include "nsXPathException.h"
 
