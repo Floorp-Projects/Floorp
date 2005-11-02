@@ -92,7 +92,8 @@ ExprResult* LocationStep::evaluate(txIEvalContext* aContext)
             if (atts) {
                 for (PRUint32 i = 0; i < atts->getLength(); i++) {
                     Node* attr = atts->item(i);
-                    if (mNodeTest->matches(attr, aContext))
+                    if (attr->getNamespaceID() != kNameSpaceID_XMLNS &&
+                        mNodeTest->matches(attr, aContext))
                         nodes->append(attr);
                 }
             }
