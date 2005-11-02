@@ -2747,8 +2747,7 @@ doInsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
     }
   }
 
-    // XXX this screws up ranges in XUL, no?  Need to figure out...
-  if (aParent && !aParent->IsContentOfType(nsIContent::eXUL)) {
+  if (aParent) {
     nsRange::OwnerChildInserted(aParent, aIndex);
   }
   

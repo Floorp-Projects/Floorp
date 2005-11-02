@@ -161,6 +161,7 @@
 #include "nsIFrame.h"
 #include "nsNodeInfoManager.h"
 #include "nsXBLBinding.h"
+#include "nsRange.h"
 
 /**
  * Three bits are used for XUL Element's lazy state.
@@ -1120,8 +1121,8 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
       }
     }
 
+    nsRange::OwnerChildRemoved(this, aIndex, oldKid);
     mAttrsAndChildren.RemoveChildAt(aIndex);
-    //nsRange::OwnerChildRemoved(this, aIndex, oldKid);
     if (aNotify && doc) {
         doc->ContentRemoved(this, oldKid, aIndex);
     }
