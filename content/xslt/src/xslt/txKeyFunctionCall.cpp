@@ -39,7 +39,7 @@
 #include "txExecutionState.h"
 #include "txAtoms.h"
 #include "txSingleNodeContext.h"
-#include "XSLTFunctions.h"
+#include "txXSLTFunctions.h"
 #include "nsReadableUtils.h"
 #include "txKey.h"
 #include "txXSLTPatterns.h"

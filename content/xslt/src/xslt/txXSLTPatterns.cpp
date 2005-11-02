@@ -41,8 +41,8 @@
 #include "txXSLTPatterns.h"
 #include "txNodeSetContext.h"
 #include "txForwardContext.h"
-#include "XMLUtils.h"
-#include "XSLTFunctions.h"
+#include "txXMLUtils.h"
+#include "txXSLTFunctions.h"
 #ifndef TX_EXE
 #include "nsIContent.h"
 #endif

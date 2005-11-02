@@ -50,7 +50,7 @@ REQUIRES	= string \
 		  xpcom \
 		  $(NULL)
 
-ifndef TX_EXE
+ifndef MOZ_XSLT_STANDALONE
 REQUIRES +=	  dom \
 		  content \
 		  widget \
@@ -60,29 +60,30 @@ REQUIRES +=	  dom \
 		  layout \
 		  necko \
 		  htmlparser \
+		  pref \
 		  $(NULL)
 endif
 
-CPPSRCS = AdditiveExpr.cpp \
-        AttributeValueTemplate.cpp \
-        BooleanExpr.cpp \
-        BooleanFunctionCall.cpp \
-        BooleanResult.cpp \
-        ExprLexer.cpp \
-        ExprParser.cpp \
-        FilterExpr.cpp \
-        FunctionCall.cpp \
-        LocationStep.cpp \
-        MultiplicativeExpr.cpp \
-        NodeSetFunctionCall.cpp \
-        NumberFunctionCall.cpp \
-        NumberResult.cpp \
-        PathExpr.cpp \
-        PredicateList.cpp \
-        RelationalExpr.cpp \
-        RootExpr.cpp \
-        StringFunctionCall.cpp \
-        StringResult.cpp \
+CPPSRCS = txAdditiveExpr.cpp \
+        txAttributeValueTemplate.cpp \
+        txBooleanExpr.cpp \
+        txBooleanFunctionCall.cpp \
+        txBooleanResult.cpp \
+        txExprLexer.cpp \
+        txExprParser.cpp \
+        txFilterExpr.cpp \
+        txFunctionCall.cpp \
+        txLocationStep.cpp \
+        txMultiplicativeExpr.cpp \
+        txNodeSetFunctionCall.cpp \
+        txNumberFunctionCall.cpp \
+        txNumberResult.cpp \
+        txPathExpr.cpp \
+        txPredicateList.cpp \
+        txRelationalExpr.cpp \
+        txRootExpr.cpp \
+        txStringFunctionCall.cpp \
+        txStringResult.cpp \
         txErrorExpr.cpp \
         txLiteralExpr.cpp \
         txNameTest.cpp \
@@ -91,10 +92,10 @@ CPPSRCS = AdditiveExpr.cpp \
         txForwardContext.cpp \
         txNodeSetContext.cpp \
         txResultRecycler.cpp \
-        UnionExpr.cpp \
-        UnaryExpr.cpp \
-        VariableRefExpr.cpp
-ifndef TX_EXE
+        txUnionExpr.cpp \
+        txUnaryExpr.cpp \
+        txVariableRefExpr.cpp
+ifndef MOZ_XSLT_STANDALONE
 CPPSRCS += nsXPathEvaluator.cpp \
            nsXPathException.cpp \
            nsXPathExpression.cpp \
@@ -106,13 +107,13 @@ else
 CPPSRCS += txStandaloneXPathTreeWalker.cpp
 endif
 
-ifndef TX_EXE
-ifndef DISABLE_XFORMS_HOOKS
+ifndef DISABLE_XFORMS_HOOKS # Dummy var, nobody sets it!
+ifndef MOZ_XSLT_STANDALONE
 EXPORTS = nsIXFormsUtilityService.h \
           nsIXFormsXPathEvaluator.h
 
 CPPSRCS += nsXFormsXPathEvaluator.cpp \
-           XFormsFunctionCall.cpp
+           txXFormsFunctionCall.cpp
 endif
 endif
 
@@ -122,6 +123,9 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(srcdir) -I$(srcdir)/../base \
-        -I$(srcdir)/../xml -I$(srcdir)/../xml/dom \
-        -I$(srcdir)/../xslt
+INCLUDES += \
+	-I$(srcdir)/../base \
+	-I$(srcdir)/../xml \
+	-I$(srcdir) \
+	-I$(srcdir)/../xslt \
+	$(NULL)

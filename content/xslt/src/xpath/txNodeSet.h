@@ -43,7 +43,7 @@
 #ifndef txNodeSet_h__
 #define txNodeSet_h__
 
-#include "ExprResult.h"
+#include "txExprResult.h"
 #include "nsVoidArray.h"
 #include "txError.h"
 #include "txXPathTreeWalker.h"

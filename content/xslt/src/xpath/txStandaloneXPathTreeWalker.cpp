@@ -41,7 +41,7 @@
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
 txXPathTreeWalker::txXPathTreeWalker(const txXPathTreeWalker& aOther)
     : mPosition(aOther.mPosition)

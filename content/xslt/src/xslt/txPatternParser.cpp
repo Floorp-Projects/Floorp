@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txPatternParser.h"
-#include "ExprLexer.h"
+#include "txExprLexer.h"
 #include "txAtoms.h"
 #include "txError.h"
 #include "txStringUtils.h"

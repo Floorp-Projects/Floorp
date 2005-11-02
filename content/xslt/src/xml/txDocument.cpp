@@ -48,7 +48,7 @@
 // LF   08/06/1999  fixed typo: defalut to default
 //
 
-#include "dom.h"
+#include "txDOM.h"
 #include "txAtoms.h"
 
 //

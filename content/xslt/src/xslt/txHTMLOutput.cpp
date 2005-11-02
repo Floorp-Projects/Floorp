@@ -42,7 +42,7 @@
 #include "txAtoms.h"
 #include "txOutputFormat.h"
 #include "txStringUtils.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
 #define EMPTY_ELEMENTS_COUNT 13
 const char* const kHTMLEmptyTags[] =

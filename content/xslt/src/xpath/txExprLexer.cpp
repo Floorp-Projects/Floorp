@@ -40,11 +40,11 @@
  * Lexical analyzer for XPath expressions
  */
 
-#include "ExprLexer.h"
+#include "txExprLexer.h"
 #include "txAtoms.h"
 #include "nsString.h"
 #include "txError.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
 /**
  * Creates a new ExprLexer
@@ -113,7 +113,7 @@ txExprLexer::nextIsOperatorToken(Token* aToken)
   if (!aToken || aToken->mType == Token::NULL_TOKEN) {
     return PR_FALSE;
   }
-  /* This relies on the tokens having the right order in ExprLexer.h */
+  /* This relies on the tokens having the right order in txExprLexer.h */
   return aToken->mType < Token::COMMA ||
     aToken->mType > Token::UNION_OP;
 

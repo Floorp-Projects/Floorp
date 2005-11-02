@@ -40,8 +40,8 @@
 #include "txAtoms.h"
 #include "txCore.h"
 #include <math.h>
-#include "Expr.h"
-#include "ExprResult.h"
+#include "txExpr.h"
+#include "txExprResult.h"
 #include "txXSLTPatterns.h"
 #include "txIXPathContext.h"
 #include "txXPathTreeWalker.h"

@@ -41,13 +41,13 @@
  * A representation of the XPath NodeSet funtions
  */
 
-#include "FunctionLib.h"
+#include "txFunctionLib.h"
 #include "nsAutoPtr.h"
 #include "txNodeSet.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txTokenizer.h"
-#include "XFormsFunctions.h"
+#include "txXFormsFunctions.h"
 #include <math.h>
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentEvent.h"

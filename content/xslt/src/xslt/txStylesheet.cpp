@@ -37,12 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txStylesheet.h"
-#include "Expr.h"
+#include "txExpr.h"
 #include "txXSLTPatterns.h"
 #include "txToplevelItems.h"
 #include "txInstructions.h"
-#include "XSLTFunctions.h"
-#include "TxLog.h"
+#include "txXSLTFunctions.h"
+#include "txLog.h"
 #include "txKey.h"
 
 txStylesheet::txStylesheet()

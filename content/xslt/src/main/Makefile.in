@@ -57,14 +57,18 @@ REQUIRES = string \
 
 CPP_PROG_LINK          = 1
 
-EXTRA_DEPS = \
-             $(DIST)/lib/$(LIB_PREFIX)tx.$(LIB_SUFFIX) \
-             $(NULL)
+TX_LIBS = \
+	txxslt_s \
+	txxpath_s \
+	txxml_s \
+	txbase_s \
+	expat_s \
+	$(NULL)
 
-EXTRA_LIBS = \
-             $(DIST)/lib/$(LIB_PREFIX)tx.$(LIB_SUFFIX) \
-             $(MOZ_COMPONENT_LIBS) \
-             $(NULL)
+LIBS = \
+	$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(addsuffix .$(LIB_SUFFIX),$(TX_LIBS))) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
 
 ifdef MOZ_JPROF
 LIBS         += -ljprof
@@ -72,8 +76,10 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(srcdir)/../xslt -I$(srcdir)/../base -I$(srcdir)/../net \
-  -I$(srcdir)/../xml -I$(srcdir)/../xml/dom \
-  -I$(srcdir)/../xml/parser \
-  -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
-  -I$(srcdir)/../xslt/functions $(MARK_INC)
+INCLUDES += \
+	-I$(srcdir)/../base \
+	-I$(srcdir)/../xml \
+  -I$(srcdir)/../xpath \
+	-I$(srcdir)/../xslt \
+	$(MARK_INC) \
+	$(NULL)

@@ -40,15 +40,14 @@
 #define txXPathNode_h__
 
 #ifdef TX_EXE
-#include "dom.h"
+#include "txDOM.h"
 #else
 #include "nsAutoPtr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMNode.h"
 #include "nsINameSpaceManager.h"
-
-extern nsINameSpaceManager* gTxNameSpaceManager;
+#include "nsContentUtils.h"
 #endif
 
 #ifdef TX_EXE
@@ -131,10 +130,9 @@ txNamespaceManager::getNamespaceID(const nsAString& aNamespaceURI)
 #ifdef TX_EXE
     return txStandaloneNamespaceManager::getNamespaceID(aNamespaceURI);
 #else
-    NS_ASSERTION(gTxNameSpaceManager, "No namespace manager");
-
     PRInt32 namespaceID = kNameSpaceID_Unknown;
-    gTxNameSpaceManager->RegisterNameSpace(aNamespaceURI, namespaceID);
+    nsContentUtils::NameSpaceManager()->
+        RegisterNameSpace(aNamespaceURI, namespaceID);
     return namespaceID;
 #endif
 }
@@ -146,9 +144,8 @@ txNamespaceManager::getNamespaceURI(const PRInt32 aID, nsAString& aResult)
 #ifdef TX_EXE
     return txStandaloneNamespaceManager::getNamespaceURI(aID, aResult);
 #else
-    NS_ASSERTION(gTxNameSpaceManager, "No namespace manager");
-
-    return gTxNameSpaceManager->GetNameSpaceURI(aID, aResult);
+    return nsContentUtils::NameSpaceManager()->
+        GetNameSpaceURI(aID, aResult);
 #endif
 }
 

@@ -41,9 +41,9 @@
 //    Implementation of the Element class
 //
 
-#include "dom.h"
+#include "txDOM.h"
 #include "txAtoms.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
 Element::Element(nsIAtom *aPrefix, nsIAtom *aLocalName, PRInt32 aNamespaceID,
                  Document* aOwner) :

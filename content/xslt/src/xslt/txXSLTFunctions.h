@@ -38,8 +38,8 @@
 #ifndef TRANSFRMX_XSLT_FUNCTIONS_H
 #define TRANSFRMX_XSLT_FUNCTIONS_H
 
-#include "Expr.h"
-#include "XMLUtils.h"
+#include "txExpr.h"
+#include "txXMLUtils.h"
 #include "nsAutoPtr.h"
 
 class txPattern;

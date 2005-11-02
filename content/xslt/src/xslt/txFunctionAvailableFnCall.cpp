@@ -37,11 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txIXPathContext.h"
-#include "ExprResult.h"
+#include "txExprResult.h"
 #include "txAtoms.h"
 #include "txError.h"
-#include "XMLUtils.h"
-#include "XSLTFunctions.h"
+#include "txXMLUtils.h"
+#include "txXSLTFunctions.h"
 #include "txNamespaceMap.h"
 
 /*

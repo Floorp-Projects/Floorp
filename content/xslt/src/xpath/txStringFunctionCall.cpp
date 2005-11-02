@@ -41,12 +41,12 @@
  * A representation of the XPath String funtions
 **/
 
-#include "ExprResult.h"
-#include "FunctionLib.h"
+#include "txExprResult.h"
+#include "txFunctionLib.h"
 #include "txAtoms.h"
 #include "txError.h"
 #include "txIXPathContext.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 #include "txXPathTreeWalker.h"
 #include <math.h>
 #include "nsReadableUtils.h"

@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txOutputFormat.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
 txOutputFormat::txOutputFormat() : mMethod(eMethodNotSet),
                                    mOmitXMLDeclaration(eNotSet),

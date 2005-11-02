@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ErrorObserver.h"
+#include "txErrorObserver.h"
 #include "nsString.h"
 
 /**

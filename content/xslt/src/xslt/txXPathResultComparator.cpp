@@ -38,8 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txXPathResultComparator.h"
-#include "Expr.h"
-#include "ExprResult.h"
+#include "txExpr.h"
+#include "txExprResult.h"
 #include "txCore.h"
 #ifndef TX_EXE
 #include "nsCollationCID.h"

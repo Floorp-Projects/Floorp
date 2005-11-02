@@ -39,7 +39,7 @@
 #ifndef nsXPathResult_h__
 #define nsXPathResult_h__
 
-#include "ExprResult.h"
+#include "txExprResult.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"

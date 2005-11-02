@@ -48,7 +48,7 @@
 #include "txPatternParser.h"
 #include "txNamespaceMap.h"
 #include "txURIUtils.h"
-#include "XSLTFunctions.h"
+#include "txXSLTFunctions.h"
 
 txHandlerTable* gTxIgnoreHandler = 0;
 txHandlerTable* gTxRootHandler = 0;

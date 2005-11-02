@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txResultRecycler.h"
-#include "ExprResult.h"
+#include "txExprResult.h"
 #include "txNodeSet.h"
 
 txResultRecycler::txResultRecycler()

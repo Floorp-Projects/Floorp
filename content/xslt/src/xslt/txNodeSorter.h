@@ -41,7 +41,7 @@
 #define TRANSFRMX_NODESORTER_H
 
 #include "txCore.h"
-#include "List.h"
+#include "txList.h"
 
 class Expr;
 class txExecutionState;

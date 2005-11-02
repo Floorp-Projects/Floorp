@@ -41,7 +41,7 @@
 #ifndef TRANSFRMX_EXPR_H
 #define TRANSFRMX_EXPR_H
 
-#include "List.h"
+#include "txList.h"
 #include "nsAutoPtr.h"
 #include "txCore.h"
 #include "nsString.h"

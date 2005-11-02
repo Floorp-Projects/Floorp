@@ -37,8 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXPathExpression.h"
-#include "Expr.h"
-#include "ExprResult.h"
+#include "txExpr.h"
+#include "txExprResult.h"
 #include "nsDOMError.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMClassInfo.h"
@@ -91,7 +91,7 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
     if (aContextPosition > aContextSize)
         return NS_ERROR_FAILURE;
 
-    if (!URIUtils::CanCallerAccess(aContextNode))
+    if (!nsContentUtils::CanCallerAccess(aContextNode))
         return NS_ERROR_DOM_SECURITY_ERR;
 
     nsresult rv;

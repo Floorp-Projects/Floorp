@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXPathResult.h"
-#include "ExprResult.h"
+#include "txExprResult.h"
 #include "txNodeSet.h"
 #include "nsDOMError.h"
 #include "nsIContent.h"

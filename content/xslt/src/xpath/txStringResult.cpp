@@ -40,7 +40,7 @@
  * StringResult
  * Represents a String as a Result of evaluating an Expr
 **/
-#include "ExprResult.h"
+#include "txExprResult.h"
 
 /**
  * Default Constructor

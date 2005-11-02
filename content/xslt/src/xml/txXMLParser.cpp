@@ -48,7 +48,7 @@
 #else
 #include "expat_config.h"
 #include "expat.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 #endif
 
 #ifdef TX_EXE

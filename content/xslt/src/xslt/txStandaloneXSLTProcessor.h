@@ -42,7 +42,7 @@
 
 #include "txStylesheet.h"
 #include "txXSLTProcessor.h"
-#include "ErrorObserver.h"
+#include "txErrorObserver.h"
 
 #ifndef __BORLANDC__
 #include <iostream.h>

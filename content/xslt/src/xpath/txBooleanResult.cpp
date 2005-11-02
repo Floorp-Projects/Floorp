@@ -40,7 +40,7 @@
  * Boolean Expression result
 */
 
-#include "ExprResult.h"
+#include "txExprResult.h"
 
 /**
  * Creates a new BooleanResult with the value of the given MBool parameter

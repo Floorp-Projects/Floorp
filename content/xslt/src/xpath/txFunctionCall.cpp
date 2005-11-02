@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "FunctionLib.h"
-#include "ExprResult.h"
+#include "txFunctionLib.h"
+#include "txExprResult.h"
 #include "nsIAtom.h"
 #include "txIXPathContext.h"
 #include "txNodeSet.h"

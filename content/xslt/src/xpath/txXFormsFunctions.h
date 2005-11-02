@@ -39,7 +39,7 @@
 #ifndef TRANSFRMX_XFORMS_FUNCTIONS_H
 #define TRANSFRMX_XFORMS_FUNCTIONS_H
 
-#include "Expr.h"
+#include "txExpr.h"
 #include "nsIDOMNode.h"
 
 #define NS_NAMESPACE_XFORMS              "http://www.w3.org/2002/xforms"

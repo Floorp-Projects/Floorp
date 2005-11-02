@@ -51,8 +51,8 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsTextFragment.h"
-#include "XMLUtils.h"
-#include "TxLog.h"
+#include "txXMLUtils.h"
+#include "txLog.h"
 #include "nsUnicharUtils.h"
 
 const PRUint32 kUnknownIndex = PRUint32(-1);
@@ -529,7 +529,7 @@ txXPathNodeUtils::getNamespaceID(const txXPathNode& aNode)
 void
 txXPathNodeUtils::getNamespaceURI(const txXPathNode& aNode, nsAString& aURI)
 {
-    gTxNameSpaceManager->GetNameSpaceURI(getNamespaceID(aNode), aURI);
+    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(getNamespaceID(aNode), aURI);
 }
 
 /* static */
@@ -938,7 +938,7 @@ txXPathNativeNode::getNode(const txXPathNode& aNode, nsIDOMNode** aResult)
                                   getter_AddRefs(prefix));
 
     nsAutoString namespaceURI, localname;
-    gTxNameSpaceManager->GetNameSpaceURI(namespaceID, namespaceURI);
+    nsContentUtils::NameSpaceManager()->GetNameSpaceURI(namespaceID, namespaceURI);
     name->ToString(localname);
 
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode.mContent);

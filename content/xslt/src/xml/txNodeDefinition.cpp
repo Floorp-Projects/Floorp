@@ -45,7 +45,7 @@
 // TK   03/29/99  Created
 //
 
-#include "dom.h"
+#include "txDOM.h"
 #include "nsVoidArray.h"
 #include "txURIUtils.h"
 #include "txAtoms.h"

@@ -40,7 +40,7 @@
 #define txTokenizer_h___
 
 #include "nsDependentSubstring.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
 class txTokenizer
 {

@@ -40,7 +40,7 @@
 #define TRANSFRMX_EXPANDEDNAMEMAP_H
 
 #include "txError.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
 class TxObject;
 

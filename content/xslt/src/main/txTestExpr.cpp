@@ -39,7 +39,7 @@
 #include "nsXPCOM.h"
 #include "txStandaloneXSLTProcessor.h"
 #include "nsString.h"
-#include "ExprParser.h"
+#include "txExprParser.h"
 #include "txIXPathContext.h"
 
 /**

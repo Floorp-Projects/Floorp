@@ -39,7 +39,7 @@
 #ifndef TRANSFRMX_TXMOZILLAXSLTPROCESSOR_H
 #define TRANSFRMX_TXMOZILLAXSLTPROCESSOR_H
 
-#include "ExprResult.h"
+#include "txExprResult.h"
 #include "nsIDocumentTransformer.h"
 #include "nsIVariant.h"
 #include "nsIXSLTProcessor.h"

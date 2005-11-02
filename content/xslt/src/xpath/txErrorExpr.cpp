@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txError.h"
-#include "Expr.h"
+#include "txExpr.h"
 #include "nsString.h"
 #include "txIXPathContext.h"
 

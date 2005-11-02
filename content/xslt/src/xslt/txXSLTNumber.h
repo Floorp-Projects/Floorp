@@ -40,7 +40,7 @@
 #define TRANSFRMX_TXXSLTNUMBER_H
 
 #include "txError.h"
-#include "List.h"
+#include "txList.h"
 #include "nsString.h"
 
 class Expr;

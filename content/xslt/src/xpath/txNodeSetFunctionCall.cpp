@@ -41,7 +41,7 @@
  * A representation of the XPath NodeSet funtions
  */
 
-#include "FunctionLib.h"
+#include "txFunctionLib.h"
 #include "nsAutoPtr.h"
 #include "txNodeSet.h"
 #include "txAtoms.h"

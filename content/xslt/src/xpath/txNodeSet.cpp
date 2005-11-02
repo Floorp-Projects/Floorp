@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txNodeSet.h"
-#include "TxLog.h"
+#include "txLog.h"
 #include "nsMemory.h"
 
 /**

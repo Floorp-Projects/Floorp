@@ -40,7 +40,7 @@
   Implementation of an XPath LocationStep
 */
 
-#include "Expr.h"
+#include "txExpr.h"
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
 

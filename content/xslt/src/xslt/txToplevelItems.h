@@ -41,7 +41,7 @@
 
 #include "txError.h"
 #include "txOutputFormat.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 #include "txStylesheet.h"
 #include "txInstructions.h"
 

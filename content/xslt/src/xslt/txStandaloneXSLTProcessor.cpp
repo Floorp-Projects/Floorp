@@ -63,9 +63,9 @@ public:
 
     virtual ~txStandaloneHandlerFactory()
     {
-    };
+    }
 
-    TX_DECL_TXAOUTPUTHANDLERFACTORY;
+    TX_DECL_TXAOUTPUTHANDLERFACTORY
 
 private:
     txExecutionState* mEs;

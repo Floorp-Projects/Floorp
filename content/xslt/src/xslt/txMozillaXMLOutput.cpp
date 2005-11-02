@@ -60,7 +60,7 @@
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
 #include "txAtoms.h"
-#include "TxLog.h"
+#include "txLog.h"
 #include "nsIConsoleService.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsINameSpaceManager.h"
@@ -73,8 +73,7 @@
 #include "nsICSSLoader.h"
 #include "nsICharsetAlias.h"
 #include "nsIHTMLContentSink.h"
-
-extern nsINameSpaceManager* gTxNameSpaceManager;
+#include "nsContentUtils.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_CID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
@@ -164,7 +163,7 @@ void txMozillaXMLOutput::attribute(const nsAString& aName,
     }
     else {
         nsAutoString nsURI;
-        gTxNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
+        nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNsID, nsURI);
         element->SetAttributeNS(nsURI, aName, aValue);
     }
 }
@@ -438,7 +437,7 @@ void txMozillaXMLOutput::startElement(const nsAString& aName,
     }
     else {
         nsAutoString nsURI;
-        gTxNameSpaceManager->GetNameSpaceURI(aNsID, nsURI);
+        nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNsID, nsURI);
         rv = mDocument->CreateElementNS(nsURI, aName,
                                         getter_AddRefs(element));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create element");

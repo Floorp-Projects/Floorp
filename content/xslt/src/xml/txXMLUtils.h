@@ -51,6 +51,7 @@
 
 #ifndef TX_EXE
 #include "nsIParserService.h"
+#include "nsContentUtils.h"
 #endif
 
 #define kExpatSeparatorChar 0xFFFF
@@ -122,8 +123,6 @@ extern "C" int MOZ_XMLCheckQName(const char* ptr, const char* end,
                                  int ns_aware, const char** colon);
 extern "C" int MOZ_XMLIsLetter(const char* ptr);
 extern "C" int MOZ_XMLIsNCNameChar(const char* ptr);
-#else
-extern nsIParserService *gTxParserService;
 #endif
 
 class XMLUtils {
@@ -175,7 +174,8 @@ public:
         *aColon = NS_REINTERPRET_CAST(const PRUnichar*, colonPtr);
         return result == 0;
 #else
-        return NS_SUCCEEDED(gTxParserService->CheckQName(aQName, PR_TRUE, aColon));
+        nsIParserService* ps = nsContentUtils::GetParserService();
+        return ps && NS_SUCCEEDED(ps->CheckQName(aQName, PR_TRUE, aColon));
 #endif
     }
 
@@ -187,7 +187,8 @@ public:
 #ifdef TX_EXE
         return MOZ_XMLIsLetter(NS_REINTERPRET_CAST(const char*, &aChar));
 #else
-        return gTxParserService->IsXMLLetter(aChar);
+        nsIParserService* ps = nsContentUtils::GetParserService();
+        return ps && ps->IsXMLLetter(aChar);
 #endif
     }
 
@@ -199,7 +200,8 @@ public:
 #ifdef TX_EXE
         return MOZ_XMLIsNCNameChar(NS_REINTERPRET_CAST(const char*, &aChar));
 #else
-        return gTxParserService->IsXMLNCNameChar(aChar);
+        nsIParserService* ps = nsContentUtils::GetParserService();
+        return ps && ps->IsXMLNCNameChar(aChar);
 #endif
     }
 

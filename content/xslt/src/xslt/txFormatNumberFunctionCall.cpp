@@ -36,12 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "XSLTFunctions.h"
+#include "txXSLTFunctions.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txStylesheet.h"
 #include <math.h>
-#include "ExprResult.h"
+#include "txExprResult.h"
 #include "txNamespaceMap.h"
 
 #include "prdtoa.h"

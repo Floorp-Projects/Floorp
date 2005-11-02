@@ -43,8 +43,8 @@
  *  -   : subtraction
 **/
 
-#include "Expr.h"
-#include "ExprResult.h"
+#include "txExpr.h"
+#include "txExprResult.h"
 #include "txIXPathContext.h"
 
 /**

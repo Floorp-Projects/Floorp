@@ -39,8 +39,8 @@
 #ifndef TX_XSLT_PATTERNS_H
 #define TX_XSLT_PATTERNS_H
 
-#include "Expr.h"
-#include "XMLUtils.h"
+#include "txExpr.h"
+#include "txXMLUtils.h"
 #include "nsVoidArray.h"
 
 class ProcessorState;

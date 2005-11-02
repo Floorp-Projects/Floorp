@@ -196,7 +196,7 @@ MOZ_SVG_RENDERER_CAIRO = @MOZ_SVG_RENDERER_CAIRO@
 MOZ_LIBART_CFLAGS = @MOZ_LIBART_CFLAGS@
 MOZ_ENABLE_CANVAS = @MOZ_ENABLE_CANVAS@
 MOZ_CAIRO_CFLAGS = @MOZ_CAIRO_CFLAGS@
-TX_EXE = @TX_EXE@
+MOZ_XSLT_STANDALONE = @MOZ_XSLT_STANDALONE@
 
 # Mac's don't like / in a #include, so we include the libart
 # headers locally if we're using the external library

@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "Expr.h"
+#include "txExpr.h"
 #include "nsIAtom.h"
 #include "txNodeSet.h"
 #include "txAtoms.h"
