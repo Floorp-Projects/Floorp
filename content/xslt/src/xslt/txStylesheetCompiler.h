@@ -197,6 +197,7 @@ class txStylesheetCompiler : private txStylesheetCompilerState,
                              public txACompileObserver
 {
 public:
+    friend class txStylesheetCompilerState;
     txStylesheetCompiler(const nsAString& aBaseURI,
                          txACompileObserver* aObserver);
     txStylesheetCompiler(const nsAString& aBaseURI,
