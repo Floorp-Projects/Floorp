@@ -80,7 +80,7 @@ void PredicateList::evaluatePredicates(NodeSet* nodes, ContextState* cs)
          * position
          */
         newNodes.clear();
-        PRUint32 nIdx;
+        int nIdx;
         for (nIdx = 0; nIdx < nodes->size(); nIdx++) {
             Node* node = nodes->get(nIdx);
             ExprResult* exprResult = expr->evaluate(node, cs);
