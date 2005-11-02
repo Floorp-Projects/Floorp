@@ -61,29 +61,29 @@ void txNodeTypeTest::setNodeName(const nsAString& aName)
 PRBool txNodeTypeTest::matches(const txXPathNode& aNode,
                                txIMatchContext* aContext)
 {
-    PRUint16 type = txXPathNodeUtils::getNodeType(aNode);
-
     switch (mNodeType) {
         case COMMENT_TYPE:
-            return type == txXPathNodeType::COMMENT_NODE;
+        {
+            return txXPathNodeUtils::isComment(aNode);
+        }
         case TEXT_TYPE:
-            return (type == txXPathNodeType::TEXT_NODE ||
-                    type == txXPathNodeType::CDATA_SECTION_NODE) &&
+        {
+            return txXPathNodeUtils::isText(aNode) &&
                    !aContext->isStripSpaceAllowed(aNode);
+        }
         case PI_TYPE:
-            if (type == txXPathNodeType::PROCESSING_INSTRUCTION_NODE) {
-                nsCOMPtr<nsIAtom> localName;
-                return !mNodeName ||
-                        ((localName = txXPathNodeUtils::getLocalName(aNode)) &&
-                         localName == mNodeName);
-            }
-            return MB_FALSE;
+        {
+            return txXPathNodeUtils::isProcessingInstruction(aNode) &&
+                   (!mNodeName ||
+                    txXPathNodeUtils::localNameEquals(aNode, mNodeName));
+        }
         case NODE_TYPE:
-            return ((type != txXPathNodeType::TEXT_NODE &&
-                     type != txXPathNodeType::CDATA_SECTION_NODE) ||
-                    !aContext->isStripSpaceAllowed(aNode));
+        {
+            return !txXPathNodeUtils::isText(aNode) ||
+                   !aContext->isStripSpaceAllowed(aNode);
+        }
     }
-    return MB_TRUE;
+    return PR_TRUE;
 }
 
 /*
