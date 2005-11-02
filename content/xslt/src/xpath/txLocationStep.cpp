@@ -48,9 +48,9 @@ LocationStep::~LocationStep() {
     delete nodeExpr;
 } //-- ~LocationStep
 
-  //------------------------------------/
- //- Virtual methods from PatternExpr -/
-//------------------------------------/
+  //-----------------------------/
+ //- Virtual methods from Expr -/
+//-----------------------------/
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -58,7 +58,7 @@ LocationStep::~LocationStep() {
  * @param ps the ProcessorState containing the stack information needed
  * for evaluation
  * @return the result of the evaluation
- * @see PatternExpr
+ * @see Expr
 **/
 ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
 
@@ -192,19 +192,11 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
 /**
  * Returns the default priority of this Pattern based on the given Node,
  * context Node, and ContextState.
- * If this pattern does not match the given Node under the current context Node and
- * ContextState then Negative Infinity is returned.
 **/
 double LocationStep::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
-
-    if ( !nodeExpr ) {
-        return Double::NEGATIVE_INFINITY;
-    }
-    if (!this->isEmpty()) {
-        return 0.5;
-    }
-    return nodeExpr->getDefaultPriority(node, context, cs);
-
+    if (isEmpty())
+        return nodeExpr->getDefaultPriority(node, context, cs);
+    return 0.5;
 } //-- getDefaultPriority
 
 
@@ -244,7 +236,7 @@ void LocationStep::fromDescendantsRev(Node* context, ContextState* cs, NodeSet* 
 } //-- fromDescendantsRev
 
 /**
- * Determines whether this PatternExpr matches the given node within
+ * Determines whether this Expr matches the given node within
  * the given context
 **/
 MBool LocationStep::matches(Node* node, Node* context, ContextState* cs) {
