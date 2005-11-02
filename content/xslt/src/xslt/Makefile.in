@@ -56,4 +56,4 @@ INCLUDES += -I$(srcdir) -I$(srcdir)/../base -I$(srcdir)/../net \
   -I$(srcdir)/../xml/printer -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
   -I$(srcdir)/../xslt/functions
 
-install:: $(OBJS)
+libs:: $(OBJS)
