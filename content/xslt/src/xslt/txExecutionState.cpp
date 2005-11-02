@@ -49,8 +49,6 @@
 
 #ifndef TX_EXE
 #include "nsIDOMDocument.h"
-#include "nsContentCID.h"
-static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 #endif
 
 const PRInt32 txExecutionState::kMaxRecursionDepth = 20000;
