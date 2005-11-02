@@ -953,7 +953,7 @@ nsCStringArray::operator=(const nsCStringArray& other)
 }
 
 void 
-nsCStringArray::CStringAt(PRInt32 aIndex, nsCString& aCString) const
+nsCStringArray::CStringAt(PRInt32 aIndex, nsACString& aCString) const
 {
   nsCString* string = NS_STATIC_CAST(nsCString*, nsVoidArray::ElementAt(aIndex));
   if (nsnull != string)
