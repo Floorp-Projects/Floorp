@@ -154,15 +154,16 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
 
 } //-- createAttributeValueTemplate
 
-Expr* ExprParser::createExpr(const String& pattern) {
-    ExprLexer lexer(pattern);
+Expr* ExprParser::createExpr(const String& aExpression)
+{
+    ExprLexer lexer(aExpression);
     return createExpr(lexer);
 } //-- createExpr
 
-Expr* ExprParser::createPatternExpr(const String& pattern) {
-    ExprLexer lexer(pattern);
-    Expr* expr = createUnionExpr(lexer);
-    return expr;
+Pattern* ExprParser::createPattern(const String& aPattern)
+{
+    ExprLexer lexer(aPattern);
+    return createUnionExpr(lexer);
 } //-- createPatternExpr
 
   //--------------------/

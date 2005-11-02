@@ -50,7 +50,8 @@
 #define DEFAULT_LANG "en"
 
 txNodeSorter::txNodeSorter(ProcessorState* aPs) : mPs(aPs),
-                                                  mNKeys(0)
+                                                  mNKeys(0),
+                                                  mDefaultExpr(0)
 {
 }
 
@@ -62,6 +63,7 @@ txNodeSorter::~txNodeSorter()
         delete key->mComparator;
         delete key;
     }
+    delete mDefaultExpr;
 }
 
 MBool txNodeSorter::addSortElement(Element* aSortElement,
@@ -77,13 +79,17 @@ MBool txNodeSorter::addSortElement(Element* aSortElement,
     String attrValue;
 
     // Select
-    Attr* attr = aSortElement->getAttributeNode(SELECT_ATTR);
-    if (attr)
-        attrValue = attr->getValue();
-    else
-        attrValue = ".";
-
-    key->mExpr = mPs->getExpr(attrValue);
+    if (aSortElement->getAttributeNode(SELECT_ATTR))
+        key->mExpr = mPs->getExpr(aSortElement, ProcessorState::SelectAttr);
+    else {
+        if (!mDefaultExpr) {
+            String expr(".");
+            ExprParser parser;
+            mDefaultExpr = parser.createExpr(expr);
+        }
+        key->mExpr = mDefaultExpr;
+    }
+    
     if (!key->mExpr) {
         // XXX ErrorReport: Out of memory
         delete key;
