@@ -42,122 +42,83 @@
 #include "XMLUtils.h"
 
 txHTMLOutput::txHTMLOutput(txOutputFormat* aFormat, ostream* aOut)
-    : txXMLOutput(aFormat, aOut)
+    : txXMLOutput(aFormat, aOut), mHTMLEmptyTags(EMPTY_ELEMENTS_COUNT)
 {
     mUseEmptyElementShorthand = MB_FALSE;
 
-    mHTMLEmptyTags.setOwnership(Map::eOwnsNone);
-    mHTMLEmptyTags.put(txHTMLAtoms::area, txHTMLAtoms::area);
-    mHTMLEmptyTags.put(txHTMLAtoms::base, txHTMLAtoms::base);
-    mHTMLEmptyTags.put(txHTMLAtoms::basefont, txHTMLAtoms::basefont);
-    mHTMLEmptyTags.put(txHTMLAtoms::br, txHTMLAtoms::br);
-    mHTMLEmptyTags.put(txHTMLAtoms::col, txHTMLAtoms::col);
-    mHTMLEmptyTags.put(txHTMLAtoms::frame, txHTMLAtoms::frame);
-    mHTMLEmptyTags.put(txHTMLAtoms::hr, txHTMLAtoms::hr);    
-    mHTMLEmptyTags.put(txHTMLAtoms::img, txHTMLAtoms::img);
-    mHTMLEmptyTags.put(txHTMLAtoms::input, txHTMLAtoms::input);
-    mHTMLEmptyTags.put(txHTMLAtoms::isindex, txHTMLAtoms::isindex);
-    mHTMLEmptyTags.put(txHTMLAtoms::link, txHTMLAtoms::link);
-    mHTMLEmptyTags.put(txHTMLAtoms::meta, txHTMLAtoms::meta);
-    mHTMLEmptyTags.put(txHTMLAtoms::param, txHTMLAtoms::param);
-
-    mHTMLEmptyAttributes.setOwnership(Map::eOwnsItems);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::area);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::base);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::basefont);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::br);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::col);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::frame);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::hr);    
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::img);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::input);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::isindex);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::link);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::meta);
+    mHTMLEmptyTags.AppendObject(txHTMLAtoms::param);
 
     // checked
-    txList* elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::input);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::checked, elementList);
+    mHTMLEmptyAttributes[0].mAttrName = txHTMLAtoms::checked;
+    mHTMLEmptyAttributes[0].mElementList.AppendObject(txHTMLAtoms::input);
 
     // compact
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::dir);
-    elementList->add(txHTMLAtoms::dl);
-    elementList->add(txHTMLAtoms::menu);
-    elementList->add(txHTMLAtoms::ol);
-    elementList->add(txHTMLAtoms::ul);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::compact, elementList);
+    mHTMLEmptyAttributes[1].mAttrName = txHTMLAtoms::compact;
+    mHTMLEmptyAttributes[1].mElementList.AppendObject(txHTMLAtoms::dir);
+    mHTMLEmptyAttributes[1].mElementList.AppendObject(txHTMLAtoms::dl);
+    mHTMLEmptyAttributes[1].mElementList.AppendObject(txHTMLAtoms::menu);
+    mHTMLEmptyAttributes[1].mElementList.AppendObject(txHTMLAtoms::ol);
+    mHTMLEmptyAttributes[1].mElementList.AppendObject(txHTMLAtoms::ul);
 
     // declare
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::object);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::declare, elementList);
+    mHTMLEmptyAttributes[2].mAttrName = txHTMLAtoms::declare;
+    mHTMLEmptyAttributes[2].mElementList.AppendObject(txHTMLAtoms::object);
 
     // defer
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::script);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::defer, elementList);
+    mHTMLEmptyAttributes[3].mAttrName = txHTMLAtoms::defer;
+    mHTMLEmptyAttributes[3].mElementList.AppendObject(txHTMLAtoms::script);
 
     // disabled
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::button);
-    elementList->add(txHTMLAtoms::input);
-    elementList->add(txHTMLAtoms::optgroup);
-    elementList->add(txHTMLAtoms::option);
-    elementList->add(txHTMLAtoms::select);
-    elementList->add(txHTMLAtoms::textarea);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::disabled, elementList);
+    mHTMLEmptyAttributes[4].mAttrName = txHTMLAtoms::disabled;
+    mHTMLEmptyAttributes[4].mElementList.AppendObject(txHTMLAtoms::button);
+    mHTMLEmptyAttributes[4].mElementList.AppendObject(txHTMLAtoms::input);
+    mHTMLEmptyAttributes[4].mElementList.AppendObject(txHTMLAtoms::optgroup);
+    mHTMLEmptyAttributes[4].mElementList.AppendObject(txHTMLAtoms::option);
+    mHTMLEmptyAttributes[4].mElementList.AppendObject(txHTMLAtoms::select);
+    mHTMLEmptyAttributes[4].mElementList.AppendObject(txHTMLAtoms::textarea);
 
     // ismap
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::img);
-    elementList->add(txHTMLAtoms::input);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::ismap, elementList);
+    mHTMLEmptyAttributes[5].mAttrName = txHTMLAtoms::ismap;
+    mHTMLEmptyAttributes[5].mElementList.AppendObject(txHTMLAtoms::img);
+    mHTMLEmptyAttributes[5].mElementList.AppendObject(txHTMLAtoms::input);
 
     // multiple
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::select);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::multiple, elementList);
+    mHTMLEmptyAttributes[6].mAttrName = txHTMLAtoms::multiple;
+    mHTMLEmptyAttributes[6].mElementList.AppendObject(txHTMLAtoms::select);
 
     // noresize
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::frame);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::noresize, elementList);
+    mHTMLEmptyAttributes[7].mAttrName = txHTMLAtoms::noresize;
+    mHTMLEmptyAttributes[7].mElementList.AppendObject(txHTMLAtoms::frame);
 
     // noshade
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::hr);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::noshade, elementList);
+    mHTMLEmptyAttributes[8].mAttrName = txHTMLAtoms::noshade;
+    mHTMLEmptyAttributes[8].mElementList.AppendObject(txHTMLAtoms::hr);
 
     // nowrap
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::td);
-    elementList->add(txHTMLAtoms::th);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::nowrap, elementList);
+    mHTMLEmptyAttributes[9].mAttrName = txHTMLAtoms::nowrap;
+    mHTMLEmptyAttributes[9].mElementList.AppendObject(txHTMLAtoms::td);
+    mHTMLEmptyAttributes[9].mElementList.AppendObject(txHTMLAtoms::th);
 
     // readonly
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::input);
-    elementList->add(txHTMLAtoms::textarea);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::readonly, elementList);
+    mHTMLEmptyAttributes[10].mAttrName = txHTMLAtoms::readonly;
+    mHTMLEmptyAttributes[10].mElementList.AppendObject(txHTMLAtoms::input);
+    mHTMLEmptyAttributes[10].mElementList.AppendObject(txHTMLAtoms::textarea);
 
     // selected
-    elementList = new List;
-    if (!elementList)
-        return;
-    elementList->add(txHTMLAtoms::option);
-    mHTMLEmptyAttributes.put(txHTMLAtoms::selected, elementList);
+    mHTMLEmptyAttributes[11].mAttrName = txHTMLAtoms::selected;
+    mHTMLEmptyAttributes[11].mElementList.AppendObject(txHTMLAtoms::option);
 }
 
 txHTMLOutput::~txHTMLOutput()
@@ -305,9 +266,10 @@ MBool txHTMLOutput::isShorthandElement(const String& aName)
     String localName;
     XMLUtils::getLocalPart(aName, localName);
     localName.toLowerCase();
-    txAtom* localAtom = TX_GET_ATOM(localName);
-    if (localAtom && mHTMLEmptyTags.get(localAtom))
+    nsCOMPtr<nsIAtom> localAtom = do_GetAtom(localName);
+    if (localAtom && mHTMLEmptyTags.IndexOf(localAtom) > -1) {
         return MB_TRUE;
+    }
     return MB_FALSE;
 }
 
@@ -315,14 +277,18 @@ MBool txHTMLOutput::isShorthandAttribute(const String& aLocalName)
 {
     String localName(aLocalName);
     localName.toLowerCase();
-    txAtom* localAtom = TX_GET_ATOM(localName);
-    txList* elements = (txList*)mHTMLEmptyAttributes.get(localAtom);
-    if (localAtom && (elements)) {
-        txExpandedName* currentElement = (txExpandedName*)mCurrentElements.peek();
-        txListIterator iter(elements);
-        while (iter.hasNext()) {
-             if ((txAtom*)iter.next() == currentElement->mLocalName)
-                 return MB_TRUE;
+    nsCOMPtr<nsIAtom> localAtom = do_GetAtom(localName);
+    PRUint8 k = 0;
+    for ( ; k < SHORTHAND_ATTR_COUNT; ++k) {
+        if (mHTMLEmptyAttributes[k].mAttrName == localAtom) {
+            txExpandedName* currentElement =
+                (txExpandedName*)mCurrentElements.peek();
+            if (mHTMLEmptyAttributes[k].mElementList.IndexOf(currentElement->mLocalName) > -1) {
+                return MB_TRUE;
+            }
+            else {
+                return MB_FALSE;
+            }
         }
     }
     return MB_FALSE;
