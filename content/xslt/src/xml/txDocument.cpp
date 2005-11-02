@@ -207,12 +207,24 @@ Element* Document::createElement(const String& tagName)
   return new Element(tagName, this);
 }
 
+Element* Document::createElementNS(const String& aNamespaceURI,
+                                   const String& aTagName)
+{
+  return new Element(aNamespaceURI, aTagName, this);
+}
+
 //
 //Construct an attribute with the specified name
 //
 Attr* Document::createAttribute(const String& name)
 {
   return new Attr(name, this);
+}
+
+Attr* Document::createAttributeNS(const String& aNamespaceURI,
+                                  const String& aName)
+{
+  return new Attr(aNamespaceURI, aName, this);
 }
 
 //
@@ -271,5 +283,16 @@ Element* Document::getElementById(const String aID)
 
 String Document::getBaseURI()
 {
-    return documentBaseURI;
+  return documentBaseURI;
+}
+
+PRInt32 Document::namespaceURIToID(const String& aNamespaceURI)
+{
+  return txNamespaceManager::getNamespaceID(aNamespaceURI);
+}
+
+void Document::namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI)
+{
+  aNamespaceURI = txNamespaceManager::getNamespaceURI(aNamespaceID);
+  return;
 }

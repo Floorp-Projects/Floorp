@@ -12,9 +12,9 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is TransforMiiX XSLT processor.
+ * The Original Code is the TransforMiiX XSLT processor.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
@@ -36,52 +36,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-TX_ATOM(area, "area");
-TX_ATOM(base, "base");
-TX_ATOM(basefont, "basefont");
-TX_ATOM(br, "br");
-TX_ATOM(button, "button");
-TX_ATOM(checked, "checked");
-TX_ATOM(col, "col");
-TX_ATOM(compact, "compact");
-TX_ATOM(declare, "declare");
-TX_ATOM(defer, "defer");
-TX_ATOM(dir, "dir");
-TX_ATOM(disabled, "disabled");
-TX_ATOM(dl, "dl");
-TX_ATOM(frame, "frame");
-TX_ATOM(headerDefaultStyle, "default-style");
-TX_ATOM(head, "head");
-TX_ATOM(hr, "hr");
-TX_ATOM(img, "img");
-TX_ATOM(input, "input");
-TX_ATOM(isindex, "isindex");
-TX_ATOM(ismap, "ismap");
-TX_ATOM(li, "li");
-TX_ATOM(link, "link");
-TX_ATOM(media, "media");
-TX_ATOM(menu, "menu");
-TX_ATOM(meta, "meta");
-TX_ATOM(multiple, "multiple");
-TX_ATOM(noresize, "noresize");
-TX_ATOM(noshade, "noshade");
-TX_ATOM(nowrap, "nowrap");
-TX_ATOM(object, "object");
-TX_ATOM(ol, "ol");
-TX_ATOM(optgroup, "optgroup");
-TX_ATOM(option, "option");
-TX_ATOM(p, "p");
-TX_ATOM(param, "param");
-TX_ATOM(readonly, "readonly");
-TX_ATOM(script, "script");
-TX_ATOM(select, "select");
-TX_ATOM(selected, "selected");
-TX_ATOM(src, "src");
-TX_ATOM(style, "style");
-TX_ATOM(table, "table");
-TX_ATOM(td, "td");
-TX_ATOM(textarea, "textarea");
-TX_ATOM(th, "th");
-TX_ATOM(title, "title");
-TX_ATOM(type, "type");
-TX_ATOM(ul, "ul");
+#include "txTextHandler.h"
+#include "TxString.h"
+
+txTextHandler::txTextHandler(String& aValue, MBool aOnlyText) : mLevel(0),
+                                                                mValue(aValue),
+                                                                mOnlyText(aOnlyText)
+{
+}
+
+txTextHandler::~txTextHandler()
+{
+}
+
+void txTextHandler::attribute(const String& aName,
+                              const PRInt32 aNsID,
+                              const String& aValue)
+{
+}
+
+void txTextHandler::characters(const String& aData)
+{
+    if (mLevel == 0)
+        mValue.append(aData);
+}
+
+void txTextHandler::comment(const String& aData)
+{
+}
+
+void txTextHandler::endDocument()
+{
+}
+
+void txTextHandler::endElement(const String& aName,
+                               const PRInt32 aNsID)
+{
+    if (mOnlyText)
+        --mLevel;
+}
+
+void txTextHandler::processingInstruction(const String& aTarget,
+                                          const String& aData)
+{
+}
+
+void txTextHandler::startDocument()
+{
+}
+
+void txTextHandler::startElement(const String& aName,
+                                 const PRInt32 aNsID)
+{
+    if (mOnlyText)
+        ++mLevel;
+}

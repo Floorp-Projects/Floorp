@@ -42,6 +42,7 @@
 #include "Names.h"
 #include "ProcessorState.h"
 #include "txXPathResultComparator.h"
+#include "txAtoms.h"
 
 /*
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
@@ -98,7 +99,7 @@ MBool txNodeSorter::addSortElement(Element* aSortElement,
 
     // Order
     MBool ascending;
-    MBool hasAttr = getAttrAsAVT(aSortElement, ORDER_ATTR, aContext, attrValue);
+    MBool hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::order, aContext, attrValue);
     if (!hasAttr || attrValue.isEqual(ASCENDING_VALUE)) {
         ascending = MB_TRUE;
     }
@@ -114,18 +115,18 @@ MBool txNodeSorter::addSortElement(Element* aSortElement,
 
     // Create comparator depending on datatype
     String dataType;
-    hasAttr = getAttrAsAVT(aSortElement, DATA_TYPE_ATTR, aContext, dataType);
+    hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::dataType, aContext, dataType);
     if (!hasAttr || dataType.isEqual(TEXT_VALUE)) {
         // Text comparator
         
         // Language
         String lang;
-        if (!getAttrAsAVT(aSortElement, LANG_ATTR, aContext, lang))
+        if (!getAttrAsAVT(aSortElement, txXSLTAtoms::lang, aContext, lang))
             lang = DEFAULT_LANG;
 
         // Case-order 
         MBool upperFirst;
-        hasAttr = getAttrAsAVT(aSortElement, CASE_ORDER_ATTR, aContext, attrValue);
+        hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::caseOrder, aContext, attrValue);
         if (!hasAttr || attrValue.isEqual(UPPER_FIRST_VALUE)) {
             upperFirst = MB_TRUE;
         }
@@ -263,17 +264,16 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
 }
 
 MBool txNodeSorter::getAttrAsAVT(Element* aSortElement,
-                                 const String& aAttrName,
+                                 txAtom* aAttrName,
                                  Node* aContext,
                                  String& aResult)
 {
     aResult.clear();
-    Node* tempNode = aSortElement->getAttributeNode(aAttrName);
 
-    if (!tempNode)
+    String attValue;
+    if (!aSortElement->getAttr(aAttrName, kNameSpaceID_None, attValue))
         return MB_FALSE;
 
-    const String& attValue = tempNode->getNodeValue();
     mPs->processAttrValueTemplate(attValue, aContext, aResult);
     return MB_TRUE;
 }

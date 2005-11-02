@@ -82,7 +82,7 @@ ExprResult* txKeyFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         NodeSet* nodeSet = (NodeSet*) exprResult;
         for (int i=0; i<nodeSet->size(); i++) {
             String val;
-            XMLDOMUtils::getNodeValue(nodeSet->get(i), &val);
+            XMLDOMUtils::getNodeValue(nodeSet->get(i), val);
             key->getNodes(val,contextDoc)->copyInto(*res);
         }
     }
@@ -238,7 +238,7 @@ void txXSLKey::testNode(Node* aNode, NamedMap* aMap)
                 NodeSet* res = (NodeSet*)exprResult;
                 for (int i=0; i<res->size(); i++) {
                     val.clear();
-                    XMLDOMUtils::getNodeValue(res->get(i), &val);
+                    XMLDOMUtils::getNodeValue(res->get(i), val);
 
                     nodeSet = (NodeSet*)aMap->get(val);
                     if (!nodeSet) {
