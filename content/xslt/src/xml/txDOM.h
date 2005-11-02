@@ -29,10 +29,6 @@
 // LF   08/06/1999  Changed static const short NodeType to enum
 //                  Added "friend NamedNodeMap"; to NodeListDefinition
 //
-// XXX HACK (Pvdb) This should be removed once the dom directories have been reorganized
-#ifdef MOZILLA
-#include "mozilladom.h"
-#else
 
 #ifndef MITRE_DOM
 #define MITRE_DOM
@@ -568,5 +564,3 @@ class DocumentType : public NodeDefinition
 const String NULL_STRING;
 
 #endif
-
-#endif //MOZILLA
