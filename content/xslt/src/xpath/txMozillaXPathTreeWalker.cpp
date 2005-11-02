@@ -891,11 +891,8 @@ txXPathNativeNode::createXPathNode(nsIDOMNode* aNode)
     if (nodeType == nsIDOMNode::ATTRIBUTE_NODE) {
         nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aNode);
         if (attr) {
-            nsCOMPtr<nsIContent> parent;
-            attr->GetContent(getter_AddRefs(parent));
-
-            nsCOMPtr<nsINodeInfo> nodeInfo;
-            attr->GetNodeInfo(getter_AddRefs(nodeInfo));
+            nsIContent *parent = attr->GetContent();
+            nsINodeInfo *nodeInfo = attr->NodeInfo();
 
             nsCOMPtr<nsIAtom> attName, attPrefix;
             PRInt32 attNS;
