@@ -54,8 +54,8 @@ class txDriver : public txACompileObserver
     /**
      * Expat handlers
      */
-    int StartElement(const XML_Char *aName, const XML_Char **aAtts);
-    int EndElement(const XML_Char* aName);
+    void StartElement(const XML_Char *aName, const XML_Char **aAtts);
+    void EndElement(const XML_Char* aName);
     void CharacterData(const XML_Char* aChars, int aLength);
     int ExternalEntityRef(const XML_Char *aContext, const XML_Char *aBase,
                           const XML_Char *aSystemId,
@@ -116,18 +116,18 @@ TX_CompileStylesheetPath(const txParsedURL& aURL, txStylesheet** aResult)
 // shortcut macro for redirection into txDriver method calls
 #define TX_DRIVER(_userData) NS_STATIC_CAST(txDriver*, _userData)
 
-PR_STATIC_CALLBACK(int)
+PR_STATIC_CALLBACK(void)
 startElement(void *aUserData, const XML_Char *aName, const XML_Char **aAtts)
 {
     NS_ENSURE_TRUE(aUserData, XML_ERROR_NONE);
-    return TX_DRIVER(aUserData)->StartElement(aName, aAtts);
+    TX_DRIVER(aUserData)->StartElement(aName, aAtts);
 }
 
-PR_STATIC_CALLBACK(int)
+PR_STATIC_CALLBACK(void)
 endElement(void *aUserData, const XML_Char* aName)
 {
     NS_ENSURE_TRUE(aUserData, XML_ERROR_NONE);
-    return TX_DRIVER(aUserData)->EndElement(aName);
+    TX_DRIVER(aUserData)->EndElement(aName);
 }
 
 PR_STATIC_CALLBACK(void)
