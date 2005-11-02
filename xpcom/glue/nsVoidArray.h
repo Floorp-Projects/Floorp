@@ -69,7 +69,7 @@ public:
   }
   // returns the max number that can be held without allocating
   inline PRInt32 GetArraySize() const {
-    return mImpl ? PRInt32(mImpl->mBits & kArraySizeMask) : 0;
+    return mImpl ? (PRInt32(mImpl->mBits) & kArraySizeMask) : 0;
   }
 
   void* ElementAt(PRInt32 aIndex) const
@@ -171,7 +171,7 @@ protected:
   // bit twiddlers
   void SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount, PRBool owner);
   inline PRBool IsArrayOwner() const {
-    return mImpl ? PRBool(mImpl->mBits & kArrayOwnerMask) : PR_FALSE;
+    return mImpl ? (PRBool(mImpl->mBits) & kArrayOwnerMask) : PR_FALSE;
   }
 
 private:
