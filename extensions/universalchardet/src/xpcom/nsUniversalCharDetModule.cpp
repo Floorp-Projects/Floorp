@@ -83,7 +83,7 @@ static nsModuleComponentInfo components[] =
     NS_CHARSET_DETECTOR_CONTRACTID_BASE "universal_charset_detector", nsUniversalXPCOMDetectorConstructor, 
     nsUniversalCharDetectorRegistrationProc, NULL},
    { "Universal String Charset Detector", NS_UNIVERSAL_STRING_DETECTOR_CID, 
-    NS_STRCDETECTOR_CONTRACTID_BASE "universal_string_charset_detector", nsUniversalXPCOMStringDetectorConstructor, 
+    NS_STRCDETECTOR_CONTRACTID_BASE "universal_charset_detector", nsUniversalXPCOMStringDetectorConstructor, 
     NULL, NULL}
 };
 

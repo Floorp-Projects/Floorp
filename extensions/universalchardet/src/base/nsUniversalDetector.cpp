@@ -41,9 +41,8 @@ static NS_DEFINE_CID(kUniversalStringDetectorCID, NS_UNIVERSAL_STRING_DETECTOR_C
 nsUniversalDetector::nsUniversalDetector()
 {
   mDone = PR_FALSE;
-	mBestGuess = -1;   //illegal value as signal
-	mAvailable = PR_FALSE;
-	mInTag = PR_FALSE;
+  mBestGuess = -1;   //illegal value as signal
+  mInTag = PR_FALSE;
   mEscCharSetProber = nsnull;
 
   mStart = PR_TRUE;
@@ -71,7 +70,6 @@ nsUniversalDetector::Reset()
 {
   mDone = PR_FALSE;
   mBestGuess = -1;   //illegal value as signal
-  mAvailable = PR_FALSE;
   mInTag = PR_FALSE;
   mEscCharSetProber = nsnull;
 
