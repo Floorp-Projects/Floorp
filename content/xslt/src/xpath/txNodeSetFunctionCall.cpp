@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -26,29 +27,30 @@
  * 
  */
 
-/**
+/*
  * NodeSetFunctionCall
  * A representation of the XPath NodeSet funtions
-**/
+ */
 
 #include "FunctionLib.h"
-#include "XMLUtils.h"
 #include "XMLDOMUtils.h"
-#include <math.h>
+#include "Tokenizer.h"
+#include "txAtom.h"
 
-/**
+/*
  * Creates a NodeSetFunctionCall of the given type
-**/
-NodeSetFunctionCall::NodeSetFunctionCall(short type) : FunctionCall() {
-    this->type = type;
-    switch ( type ) {
-        case COUNT :
+ */
+NodeSetFunctionCall::NodeSetFunctionCall(NodeSetFunctions aType)
+{
+    mType = aType;
+    switch (aType) {
+        case COUNT:
             name = XPathNames::COUNT_FN;
             break;
-        case ID :
+        case ID:
             name = XPathNames::ID_FN;
             break;
-        case LAST :
+        case LAST:
             name = XPathNames::LAST_FN;
             break;
         case LOCAL_NAME:
@@ -60,169 +62,174 @@ NodeSetFunctionCall::NodeSetFunctionCall(short type) : FunctionCall() {
         case NAMESPACE_URI:
             name = XPathNames::NAMESPACE_URI_FN;
             break;
-        default:
+        case POSITION:
             name = XPathNames::POSITION_FN;
             break;
     }
-} //-- NodeSetFunctionCall
+}
 
-/**
+/*
  * Evaluates this Expr based on the given context node and processor state
  * @param context the context node for evaluation of this Expr
  * @param ps the ContextState containing the stack information needed
  * for evaluation
  * @return the result of the evaluation
-**/
-ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
-    NodeSet* nodeSet = (NodeSet*)cs->getNodeSetStack()->peek();
-    ListIterator* iter = params.iterator();
-    PRInt32 argc = params.getLength();
-    ExprResult* result = 0;
-    Expr* param = 0;
-    switch ( type ) {
-        case COUNT :
-            if ( argc == 1 ) {
-                double count = 0.0;
-                param = (Expr*)iter->next();
-                ExprResult* exprResult = param->evaluate(context, cs);
-                if ( exprResult->getResultType() != ExprResult::NODESET ) {
-                    String err("NodeSet expected as argument to count()");
-                    cs->recieveError(err);
+ */
+ExprResult* NodeSetFunctionCall::evaluate(Node* aContext, ContextState* aCs) {
+    ListIterator iter(&params);
+    switch (mType) {
+        case COUNT:
+        {
+            if (!requireParams(1, 1, aCs))
+                return new StringResult("error");
+
+            NodeSet* nodes;
+            nodes = evaluateToNodeSet((Expr*)iter.next(), aContext, aCs);
+            if (!nodes)
+                return new StringResult("error");
+
+            double count = nodes->size();
+            delete nodes;
+            return new NumberResult(count);
+        }
+        case ID:
+        {
+            if (!requireParams(1, 1, aCs))
+                return new StringResult("error");
+
+            ExprResult* exprResult;
+            exprResult = ((Expr*)iter.next())->evaluate(aContext, aCs);
+            if (!exprResult)
+                return new StringResult("error");
+
+            NodeSet* resultSet = new NodeSet();
+            if (!resultSet) {
+                // XXX ErrorReport: out of memory
+                return 0;
+            }
+
+            Document* contextDoc;
+            if (aContext->getNodeType() == Node::DOCUMENT_NODE)
+                contextDoc = (Document*)aContext;
+            else
+                contextDoc = aContext->getOwnerDocument();
+            
+            if (exprResult->getResultType() == ExprResult::NODESET) {
+                NodeSet* nodes = (NodeSet*)exprResult;
+                int i;
+                for (i = 0; i < nodes->size(); i++) {
+                    String idList, id;
+                    XMLDOMUtils::getNodeValue(nodes->get(i), &idList);
+                    txTokenizer tokenizer(idList);
+                    while (tokenizer.hasMoreTokens()) {
+                        tokenizer.nextToken(id);
+                        resultSet->add(contextDoc->getElementById(id));
+                    }
                 }
-                else count = (double) ((NodeSet*)exprResult)->size();
-                delete exprResult;
-                result = new NumberResult(count);
             }
             else {
-                String err(INVALID_PARAM_COUNT);
-                this->toString(err);
-                cs->recieveError(err);
-                result = new NumberResult(0.0);
+                String idList, id;
+                exprResult->stringValue(idList);
+                txTokenizer tokenizer(idList);
+                while (tokenizer.hasMoreTokens()) {
+                    tokenizer.nextToken(id);
+                    resultSet->add(contextDoc->getElementById(id));
+                }
             }
-            break;
-        case ID :
-            if ( requireParams(1, 1, cs) ) {
-                NodeSet* resultSet = new NodeSet();
-                param = (Expr*)iter->next();
-                ExprResult* exprResult = param->evaluate(context, cs);
-                String lIDList;
-                if ( exprResult->getResultType() == ExprResult::NODESET ) {
-                    NodeSet *lNList = (NodeSet *)exprResult;
-                    NodeSet tmp;
-                    for (int i=0; i<lNList->size(); i++){
-                        tmp.add(0,lNList->get(i));
-                        tmp.stringValue(lIDList);
-                        lIDList.append(' ');
-                    };
-                } else {
-                    exprResult->stringValue(lIDList);
-                };
-                lIDList.trim();
-                PRInt32 start=0,end;
-                MBool hasSpace = MB_FALSE, isSpace;
-                UNICODE_CHAR cc;
-                String thisID;
-                for (end=0; end<lIDList.length(); end++){
-                    cc = lIDList.charAt(end);
-                    isSpace = (cc==' ' || cc=='\n' || cc=='\t'|| cc=='\r');
-                    if (isSpace && !hasSpace){
-                        hasSpace = MB_TRUE;
-                        lIDList.subString(start, end, thisID);
-                        resultSet->add(context->getOwnerDocument()->getElementById(thisID));
-                    } else if (!isSpace && hasSpace){
-                        start = end;
-                        hasSpace = MB_FALSE;
-                    };
-                };
-                lIDList.subString(start, end, thisID);
-                resultSet->add(context->getOwnerDocument()->getElementById(thisID));
-                result = resultSet;
-            };
-            break;
-        case LAST :
-            if ( nodeSet ) result = new NumberResult((double)nodeSet->size());
-            else result = new NumberResult(0.0);
-            break;
+            delete exprResult;
+
+            return resultSet;
+        }
+        case LAST:
+        {
+            if (!requireParams(0, 0, aCs))
+                return new StringResult("error");
+
+            NodeSet* contextNodeSet = (NodeSet*)aCs->getNodeSetStack()->peek();
+            if (!contextNodeSet) {
+                String err("Internal error");
+                aCs->recieveError(err);
+                return new StringResult("error");
+            }
+
+            return new NumberResult(contextNodeSet->size());
+        }
         case LOCAL_NAME:
         case NAME:
-        case NAMESPACE_URI :
+        case NAMESPACE_URI:
         {
-            String name;
+            if (!requireParams(0, 1, aCs))
+                return new StringResult("error");
+
             Node* node = 0;
-            if ( argc < 2 ) {
+            // Check for optional arg
+            if (iter.hasNext()) {
+                NodeSet* nodes;
+                nodes = evaluateToNodeSet((Expr*)iter.next(), aContext, aCs);
+                if (!nodes)
+                    return new StringResult("error");
 
-                //-- check for optional arg
-                if ( argc == 1) {
-                    param = (Expr*)iter->next();
-                    ExprResult* exprResult = param->evaluate(context, cs);
-                    if ( exprResult->getResultType() != ExprResult::NODESET ) {
-                        String err("NodeSet expected as argument to ");
-                        this->toString(err);
-                        cs->recieveError(err);
-                    }
-                    else {
-                        NodeSet* nodes = (NodeSet*)exprResult;
-                        if (nodes->size() > 0) node = nodes->get(0);
-                    }
-                    delete exprResult;
+                if (nodes->isEmpty()) {
+                    delete nodes;
+                    return new StringResult();
                 }
-                //if ( !node ) node = context;  ///Marina
-                else node = context;
-
-                //-- if no node was found just return an empty string (Marina)
-                if ( !node ) {
-                    result = new StringResult("");
-                    break;
-                }
-
-                switch ( type ) {
-                    case LOCAL_NAME :
-                        switch (node->getNodeType()) {
-                            case Node::ATTRIBUTE_NODE :
-                            case Node::ELEMENT_NODE :
-                            case Node::PROCESSING_INSTRUCTION_NODE :
-                            // XXX Namespace: namespaces have a local name
-                                XMLUtils::getLocalPart(node->getNodeName(),name);
-                                break;
-                            default:
-                                break;
-                        }
-                        break;
-                    case NAMESPACE_URI :
-                        name = node->getNamespaceURI();
-                        break;
-                    default:
-                        switch (node->getNodeType()) {
-                            case Node::ATTRIBUTE_NODE :
-                            case Node::ELEMENT_NODE :
-                            case Node::PROCESSING_INSTRUCTION_NODE :
-                            // XXX Namespace: namespaces have a name
-                                name = node->getNodeName();
-                                break;
-                            default:
-                                break;
-                        }
-                        break;
-                }
-                result = new StringResult(name);
+                node = nodes->get(0);
+                delete nodes;
             }
             else {
-                String err(INVALID_PARAM_COUNT);
-                this->toString(err);
-                cs->recieveError(err);
-                result = new StringResult("");
+                node = aContext;
             }
-            break;
+
+            switch (mType) {
+                case LOCAL_NAME:
+                {
+                    String localName;
+                    txAtom* localNameAtom;
+                    node->getLocalName(&localNameAtom);
+                    if (localNameAtom) {
+                        // Node has a localName
+                        TX_GET_ATOM_STRING(localNameAtom, localName);
+                        TX_RELEASE_ATOM(localNameAtom);
+                    }
+                    
+                    return new StringResult(localName);
+                }
+                case NAMESPACE_URI:
+                {
+                    return new StringResult(node->getNamespaceURI());
+                }
+                case NAME:
+                {
+                    switch (node->getNodeType()) {
+                        case Node::ATTRIBUTE_NODE:
+                        case Node::ELEMENT_NODE:
+                        case Node::PROCESSING_INSTRUCTION_NODE:
+                        // XXX Namespace: namespaces have a name
+                            return new StringResult(node->getNodeName());
+                        default:
+                            break;
+                    }
+                    return new StringResult();
+                }
+            }
         }
-        default : //-- position
-            if ( nodeSet )
-                result = new NumberResult((double)nodeSet->indexOf(context)+1);
-            else
-                result = new NumberResult(0.0);
-            break;
+        case POSITION:
+        {
+            if (!requireParams(0, 0, aCs))
+                return new StringResult("error");
+
+            NodeSet* contextNodeSet = (NodeSet*)aCs->getNodeSetStack()->peek();
+            if (!contextNodeSet) {
+                String err("Internal error");
+                aCs->recieveError(err);
+                return new StringResult("error");
+            }
+
+            return new NumberResult(contextNodeSet->indexOf(aContext) + 1);
+        }
     }
-    delete iter;
-    return result;
-} //-- evaluate
 
-
+    String err("Internal error");
+    aCs->recieveError(err);
+    return new StringResult("error");
+}
