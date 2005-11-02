@@ -200,8 +200,6 @@ protected:
 private:
   nsPluginInstanceOwner *mInstanceOwner;
   nsCOMPtr<nsIURI>      mFullURL;
-  nsIFrame              *mFirstChild;
-  nsCOMPtr<nsIWidget>   mWidget;
   nsRect                mWindowlessRect;
 
 #ifdef DEBUG

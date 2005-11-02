@@ -376,7 +376,6 @@ public:
 #if defined(XP_MAC) || defined(XP_MACOSX)
   nsPluginPort* FixUpPluginWindow(PRInt32 inPaintState);
   void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent);
-  void Composite();
 #endif
 
 private:
@@ -1316,12 +1315,6 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
   window->CallSetWindow(pi);
 
   mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
-
-  if (mWidget) {
-    PRInt32 x = origin.x;
-    PRInt32 y = origin.y;
-    mWidget->Move(x, y);
-  }
 
   return rv;
 }
@@ -3982,15 +3975,6 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   }
 
   return pluginPort;
-}
-
-void nsPluginInstanceOwner::Composite()
-{
-  //no reference count on view
-  nsIView* view = mOwner->GetView();
-  if (view) {
-    view->GetViewManager()->UpdateView(view, NS_VMREFRESH_IMMEDIATE);
-  }
 }
 
 #endif // XP_MAC || XP_MACOSX
