@@ -195,7 +195,6 @@ public:
   nsString* operator[](PRInt32 aIndex) const { return StringAt(aIndex); }
 
   PRInt32 IndexOf(const nsAReadableString& aPossibleString) const;
-  PRInt32 IndexOfIgnoreCase(const nsAReadableString& aPossibleString) const;
 
   PRBool InsertStringAt(const nsAReadableString& aString, PRInt32 aIndex);
 
@@ -206,7 +205,6 @@ public:
   }
 
   PRBool RemoveString(const nsAReadableString& aString);
-  PRBool RemoveStringIgnoreCase(const nsAReadableString& aString);
   PRBool RemoveStringAt(PRInt32 aIndex);
   void   Clear(void);
 
@@ -215,7 +213,6 @@ public:
   }
 
   void Sort(void);
-  void SortIgnoreCase(void);
   void Sort(nsStringArrayComparatorFunc aFunc, void* aData);
 
   PRBool EnumerateForwards(nsStringArrayEnumFunc aFunc, void* aData);
