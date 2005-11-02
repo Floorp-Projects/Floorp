@@ -135,7 +135,10 @@ function InitializeGlobalVariables()
     try {
       gLDAPPrefsService = gLDAPPrefsService
           .getService(Components.interfaces.nsILDAPPrefsService);
-    } catch (ex) {dump ("ERROR: Cannot get the LDAP prefs service\n" + ex + "\n");}
+    } catch (ex) {Components.utils.reportError("ERROR: Cannot get the LDAP prefs service\n" + ex + "\n");}
+    if (gLDAPPrefsService) {
+      gLDAPPrefsService.migratePrefsIfNeeded();
+    }
   }
 
   gMsgCompose = null;

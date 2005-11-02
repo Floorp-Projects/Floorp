@@ -180,10 +180,15 @@ function OnLoadAddressBook()
   UpgradeAddressBookResultsPaneUI("mailnews.ui.addressbook_results.version");
 
   //This migrates the LDAPServer Preferences from 4.x to mozilla format.
+  var ldapPrefs = null;
   try {
-    Components.classes["@mozilla.org/ldapprefs-service;1"]
-              .getService(Components.interfaces.nsILDAPPrefsService);
-  } catch (ex) {dump ("ERROR: Cannot get the LDAP service\n" + ex + "\n");}
+    ldapPrefs = Components.classes["@mozilla.org/ldapprefs-service;1"]
+                          .getService(Components.interfaces.nsILDAPPrefsService);
+  } catch (ex) {Components.utils.reportError("ERROR: Cannot get the LDAP service\n" + ex + "\n");}
+
+  if (ldapPrefs) {
+    ldapPrefs.migratePrefsIfNeeded();
+  }
 
   GetCurrentPrefs();
 

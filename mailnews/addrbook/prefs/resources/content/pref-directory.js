@@ -17,7 +17,11 @@ function initLDAPPrefsService()
 
   const LDAP_PREF_CONTRACT="@mozilla.org/ldapprefs-service;1";
   if (LDAP_PREF_CONTRACT in Components.classes)
+  {
     gLDAPPrefsService = Components.classes[LDAP_PREF_CONTRACT].getService(Components.interfaces.nsILDAPPrefsService);
+    // Also ensure that 4.x prefences have been migrated
+    gLDAPPrefsService.migratePrefsIfNeeded();
+  }
 }
 
 function onEditDirectories()

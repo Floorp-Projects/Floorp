@@ -733,6 +733,9 @@ nsMessengerMigrator::UpgradePrefs()
     // this will migrate the ldap prefs
 #if defined(MOZ_LDAP_XPCOM)
     nsCOMPtr <nsILDAPPrefsService> ldapPrefsService = do_GetService("@mozilla.org/ldapprefs-service;1", &rv);
+
+    rv = ldapPrefsService->MigratePrefsIfNeeded();
+    NS_ENSURE_SUCCESS(rv, rv);
 #endif    
     rv = MigrateAddressBookPrefs();
     NS_ENSURE_SUCCESS(rv,rv);

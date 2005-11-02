@@ -46,7 +46,7 @@
  * this service implements migrating ldap prefs from 4.x format
  * to mozilla format.
  */
-[scriptable, uuid(5a4911e0-44cd-11d5-9074-0010a4b26cda)]
+[scriptable, uuid(37418e42-b5fc-442c-a599-4c8b3131205e)]
 interface nsILDAPPrefsService: nsISupports {
    
    /**
@@ -56,7 +56,7 @@ interface nsILDAPPrefsService: nsISupports {
      * (ldap_2.servers.<server-name>.autocomplete.enabled)
      * to mozilla format (ldap_2.servers.directoryServer)
      */
-    void migrate();
+    void migratePrefsIfNeeded();
 
     /**
       * This will create an array with entries 
