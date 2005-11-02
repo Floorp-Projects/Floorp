@@ -210,7 +210,7 @@ void txAlphaCounter::appendNumber(PRInt32 aNumber, nsAString& aDest)
 }
 
 
-const char* kTxRomanNumbers[] =
+const char* const kTxRomanNumbers[] =
     {"", "c", "cc", "ccc", "cd", "d", "dc", "dcc", "dccc", "cm",
      "", "x", "xx", "xxx", "xl", "l", "lx", "lxx", "lxxx", "xc",
      "", "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix",
