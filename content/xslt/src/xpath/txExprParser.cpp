@@ -72,7 +72,7 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
     String buffer;
     MBool inExpr    = MB_FALSE;
     MBool inLiteral = MB_FALSE;
-    UNICODE_CHAR endLiteral;
+    UNICODE_CHAR endLiteral = 0;
 
     nextCh = attValue.charAt(cc);
     while (cc++ < size) {
