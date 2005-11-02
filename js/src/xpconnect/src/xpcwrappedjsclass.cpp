@@ -243,6 +243,9 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     if(!OBJ_GET_PROPERTY(cx, jsobj, funid, &fun) || JSVAL_IS_PRIMITIVE(fun))
         return nsnull;
 
+    // protect fun so that we're sure it's alive when we call it
+    AUTO_MARK_JSVAL(ccx, fun);
+
     // Ensure that we are asking for a scriptable interface.
     // We so often ask for nsISupports that we can short-circuit the test...
     if(!aIID.Equals(NS_GET_IID(nsISupports)))
@@ -588,6 +591,9 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
                                                    aIID);
     if(jsobj)
     {
+        // protect jsobj until it is actually attached
+        AUTO_MARK_JSVAL(ccx, OBJECT_TO_JSVAL(jsobj));
+
         // We can't use XPConvert::JSObject2NativeInterface() here
         // since that can find a XPCWrappedNative directly on the
         // proto chain, and we don't want that here. We need to find
