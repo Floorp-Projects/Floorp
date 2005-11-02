@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txNodeSetContext.h"
+#include "NodeSet.h"
 
 Node* txNodeSetContext::getContextNode()
 {
