@@ -152,9 +152,10 @@ txStylesheetCompiler::startElement(const PRUnichar *aName,
     PRBool hasOwnNamespaceMap = PR_FALSE;
     PRInt32 i;
     for (i = 0; i < aAttrCount; ++i) {
-        rv = XMLUtils::splitXMLName(nsDependentString(aAttrs[i * 2]),
-                                    getter_AddRefs(atts[i].mPrefix),
-                                    getter_AddRefs(atts[i].mLocalName));
+        rv = XMLUtils::splitExpatName(aAttrs[i * 2],
+                                      getter_AddRefs(atts[i].mPrefix),
+                                      getter_AddRefs(atts[i].mLocalName),
+                                      &atts[i].mNamespaceID);
         NS_ENSURE_SUCCESS(rv, rv);
         atts[i].mValue.Append(aAttrs[i * 2 + 1]);
 
@@ -162,7 +163,7 @@ txStylesheetCompiler::startElement(const PRUnichar *aName,
         if (atts[i].mPrefix == txXMLAtoms::xmlns) {
             prefixToBind = atts[i].mLocalName;
         }
-        else if (!atts[i].mPrefix && atts[i].mLocalName == txXMLAtoms::xmlns) {
+        else if (atts[i].mNamespaceID == kNameSpaceID_XMLNS) {
             prefixToBind = txXMLAtoms::_empty;
         }
 
@@ -184,32 +185,11 @@ txStylesheetCompiler::startElement(const PRUnichar *aName,
         }
     }
 
-    for (i = 0; i < aAttrCount; ++i) {
-        if (atts[i].mPrefix && atts[i].mPrefix != txXMLAtoms::xmlns) {
-            atts[i].mNamespaceID =
-                mElementContext->mMappings->lookupNamespace(atts[i].mPrefix);
-            NS_ENSURE_TRUE(atts[i].mNamespaceID != kNameSpaceID_Unknown,
-                           NS_ERROR_FAILURE);
-        }
-        else if (atts[i].mPrefix == txXMLAtoms::xmlns || 
-                 (!atts[i].mPrefix && 
-                  atts[i].mLocalName == txXMLAtoms::xmlns)) {
-            atts[i].mNamespaceID = kNameSpaceID_XMLNS;
-        }
-        else {
-            atts[i].mNamespaceID = kNameSpaceID_None;
-        }
-    }
-
     nsCOMPtr<nsIAtom> prefix, localname;
-    rv = XMLUtils::splitXMLName(nsDependentString(aName),
-                                getter_AddRefs(prefix),
-                                getter_AddRefs(localname));
+    PRInt32 namespaceID;
+    rv = XMLUtils::splitExpatName(aName, getter_AddRefs(prefix),
+                                  getter_AddRefs(localname), &namespaceID);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    PRInt32 namespaceID = mElementContext->mMappings->lookupNamespace(prefix);
-
-    NS_ENSURE_TRUE(namespaceID != kNameSpaceID_Unknown, NS_ERROR_FAILURE);
 
     PRInt32 idOffset = aIDOffset;
     if (idOffset > 0) {
