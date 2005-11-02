@@ -39,18 +39,13 @@
 
 #include "txRtfHandler.h"
 
-txResultTreeFragment::txResultTreeFragment(txResultBuffer* aBuffer)
-    : mBuffer(aBuffer)
+txResultTreeFragment::txResultTreeFragment(nsAutoPtr<txResultBuffer>& aBuffer)
+    : txAExprResult(nsnull), mBuffer(aBuffer)
 {
 }
 
 txResultTreeFragment::~txResultTreeFragment()
 {
-}
-
-ExprResult* txResultTreeFragment::clone()
-{
-    return new txResultTreeFragment(mBuffer);
 }
 
 short txResultTreeFragment::getResultType()
@@ -103,9 +98,15 @@ txRtfHandler::~txRtfHandler()
 {
 }
 
-txResultTreeFragment* txRtfHandler::createRTF()
+nsresult
+txRtfHandler::getAsRTF(txAExprResult** aResult)
 {
-    return new txResultTreeFragment(mBuffer);
+    *aResult = new txResultTreeFragment(mBuffer);
+    NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
 }
 
 void txRtfHandler::endDocument()

@@ -43,10 +43,10 @@
 #include "txBufferingHandler.h"
 #include "ExprResult.h"
 
-class txResultTreeFragment : public ExprResult
+class txResultTreeFragment : public txAExprResult
 {
 public:
-    txResultTreeFragment(txResultBuffer* aBuffer);
+    txResultTreeFragment(nsAutoPtr<txResultBuffer>& aBuffer);
     ~txResultTreeFragment();
 
     TX_DECL_EXPRRESULT
@@ -54,7 +54,7 @@ public:
     nsresult flushToHandler(txAXMLEventHandler* aHandler);
 
 private:
-    nsRefPtr<txResultBuffer> mBuffer;
+    nsAutoPtr<txResultBuffer> mBuffer;
 };
 
 class txRtfHandler : public txBufferingHandler
@@ -63,7 +63,7 @@ public:
     txRtfHandler();
     virtual ~txRtfHandler();
 
-    txResultTreeFragment* createRTF();
+    nsresult getAsRTF(txAExprResult** aResult);
 
     void endDocument();
     void startDocument();

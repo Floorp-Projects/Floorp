@@ -55,59 +55,67 @@ NumberFunctionCall::NumberFunctionCall(NumberFunctions aType)
  *                for evaluation
  * @return the result of the evaluation
  */
-ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
+nsresult
+NumberFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    txListIterator iter(&params);
+    *aResult = nsnull;
 
+    txListIterator iter(&params);
     if (mType == NUMBER) {
         if (!requireParams(0, 1, aContext))
-            return new StringResult(NS_LITERAL_STRING("error"));
+            return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
     }
     else {
         if (!requireParams(1, 1, aContext))
-            return new StringResult(NS_LITERAL_STRING("error"));
+            return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
     }
 
     switch (mType) {
         case CEILING:
         {
             double dbl = evaluateToNumber((Expr*)iter.next(), aContext);
-            if (Double::isNaN(dbl) || Double::isInfinite(dbl))
-                return new NumberResult(dbl);
+            if (!Double::isNaN(dbl) && !Double::isInfinite(dbl)) {
+                if (Double::isNeg(dbl) && dbl > -1) {
+                    dbl *= 0;
+                }
+                else {
+                    dbl = ceil(dbl);
+                }
+            }
 
-            if (Double::isNeg(dbl) && dbl > -1)
-                return new NumberResult(0 * dbl);
-
-            return new NumberResult(ceil(dbl));
+            return aContext->recycler()->getNumberResult(dbl, aResult);
         }
         case FLOOR:
         {
             double dbl = evaluateToNumber((Expr*)iter.next(), aContext);
-            if (Double::isNaN(dbl) ||
-                Double::isInfinite(dbl) ||
-                (dbl == 0 && Double::isNeg(dbl)))
-                return new NumberResult(dbl);
+            if (!Double::isNaN(dbl) &&
+                !Double::isInfinite(dbl) &&
+                !(dbl == 0 && Double::isNeg(dbl))) {
+                dbl = floor(dbl);
+            }
 
-            return new NumberResult(floor(dbl));
+            return aContext->recycler()->getNumberResult(dbl, aResult);
         }
         case ROUND:
         {
             double dbl = evaluateToNumber((Expr*)iter.next(), aContext);
-            if (Double::isNaN(dbl) || Double::isInfinite(dbl))
-                return new NumberResult(dbl);
+            if (!Double::isNaN(dbl) && !Double::isInfinite(dbl)) {
+                if (Double::isNeg(dbl) && dbl >= -0.5) {
+                    dbl *= 0;
+                }
+                else {
+                    dbl = floor(dbl + 0.5);
+                }
+            }
 
-            if (Double::isNeg(dbl) && dbl >= -0.5)
-                return new NumberResult(0 * dbl);
-
-            return new NumberResult(floor(dbl + 0.5));
+            return aContext->recycler()->getNumberResult(dbl, aResult);
         }
         case SUM:
         {
-            NodeSet* nodes;
-            nodes = evaluateToNodeSet((Expr*)iter.next(), aContext);
-
-            if (!nodes)
-                return new StringResult(NS_LITERAL_STRING("error"));
+            nsRefPtr<NodeSet> nodes;
+            nsresult rv = evaluateToNodeSet((Expr*)iter.next(), aContext,
+                                            getter_AddRefs(nodes));
+            NS_ENSURE_SUCCESS(rv, rv);
 
             double res = 0;
             int i;
@@ -116,26 +124,27 @@ ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
                 XMLDOMUtils::getNodeValue(nodes->get(i), resultStr);
                 res += Double::toDouble(resultStr);
             }
-            delete nodes;
-
-            return new NumberResult(res);
+            return aContext->recycler()->getNumberResult(res, aResult);
         }
         case NUMBER:
         {
+            double res;
             if (iter.hasNext()) {
-                return new NumberResult(
-                    evaluateToNumber((Expr*)iter.next(), aContext));
+                res = evaluateToNumber((Expr*)iter.next(), aContext);
             }
-
-            nsAutoString resultStr;
-            XMLDOMUtils::getNodeValue(aContext->getContextNode(), resultStr);
-            return new NumberResult(Double::toDouble(resultStr));
+            else {
+                nsAutoString resultStr;
+                XMLDOMUtils::getNodeValue(aContext->getContextNode(),
+                                          resultStr);
+                res = Double::toDouble(resultStr);
+            }
+            return aContext->recycler()->getNumberResult(res, aResult);
         }
     }
 
     aContext->receiveError(NS_LITERAL_STRING("Internal error"),
                            NS_ERROR_UNEXPECTED);
-    return new StringResult(NS_LITERAL_STRING("error"));
+    return NS_ERROR_UNEXPECTED;
 }
 
 nsresult NumberFunctionCall::getNameAtom(nsIAtom** aAtom)

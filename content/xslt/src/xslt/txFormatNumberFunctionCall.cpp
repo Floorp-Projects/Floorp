@@ -74,11 +74,14 @@ txFormatNumberFunctionCall::txFormatNumberFunctionCall(txStylesheet* aStylesheet
  * for evaluation
  * @return the result of the evaluation
  */
-ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
+nsresult
+txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
+                                     txAExprResult** aResult)
 {
     nsresult rv = NS_OK;
+    *aResult = nsnull;
     if (!requireParams(2, 3, aContext))
-        return new StringResult();
+        return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
     // Get number and format
     txListIterator iter(&params);
@@ -93,8 +96,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         nsAutoString formatQName;
         evaluateToString((Expr*)iter.next(), aContext, formatQName);
         rv = formatName.init(formatQName, mMappings, MB_FALSE);
-        if (NS_FAILED(rv))
-            formatName.mNamespaceID = kNameSpaceID_Unknown;
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     txDecimalFormat* format = mStylesheet->getDecimalFormat(formatName);
@@ -102,21 +104,24 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         nsAutoString err(NS_LITERAL_STRING("unknown decimal format for: "));
         toString(err);
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
-        return new StringResult(err);
+        return NS_ERROR_XPATH_INVALID_ARG;
     }
 
     // Special cases
-    if (Double::isNaN(value))
-        return new StringResult(format->mNaN);
+    if (Double::isNaN(value)) {
+        return aContext->recycler()->getStringResult(format->mNaN, aResult);
+    }
 
-    if (value == Double::POSITIVE_INFINITY)
-        return new StringResult(format->mInfinity);
+    if (value == Double::POSITIVE_INFINITY) {
+        return aContext->recycler()->getStringResult(format->mInfinity,
+                                                     aResult);
+    }
 
     if (value == Double::NEGATIVE_INFINITY) {
         nsAutoString res;
         res.Append(format->mMinusSign);
         res.Append(format->mInfinity);
-        return new StringResult(res);
+        return aContext->recycler()->getStringResult(res, aResult);
     }
     
     // Value is a normal finite number
@@ -172,7 +177,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
                         toString(err);
                         aContext->receiveError(err,
                                                NS_ERROR_XPATH_INVALID_ARG);
-                        return new StringResult(err);
+                        return NS_ERROR_XPATH_INVALID_ARG;
                     }
                 }
                 else if (c == format->mPerMille) {
@@ -183,7 +188,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
                         toString(err);
                         aContext->receiveError(err,
                                                NS_ERROR_XPATH_INVALID_ARG);
-                        return new StringResult(err);
+                        return NS_ERROR_XPATH_INVALID_ARG;
                     }
                 }
                 else if (c == format->mDecimalSeparator ||
@@ -266,9 +271,8 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         groupSize == 0) {
         nsAutoString err(INVALID_PARAM_VALUE);
         toString(err);
-        aContext->receiveError(err,
-                               NS_ERROR_XPATH_INVALID_ARG);
-        return new StringResult(err);
+        aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
+        return NS_ERROR_XPATH_INVALID_ARG;
     }
 
 
@@ -289,10 +293,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
         bufsize = 1 + 30;
 
     char* buf = new char[bufsize];
-    if (!buf) {
-        //XXX ErrorReport: out of memory
-        return new StringResult;
-    }
+    NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
 
     PRIntn bufIntDigits, sign;
     char* endp;
@@ -391,7 +392,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext)
     // Build suffix
     res.Append(suffix);
 
-    return new StringResult(res);
+    return aContext->recycler()->getStringResult(res, aResult);
 } //-- evaluate
 
 nsresult txFormatNumberFunctionCall::getNameAtom(nsIAtom** aAtom)

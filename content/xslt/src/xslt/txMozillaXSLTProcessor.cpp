@@ -938,7 +938,7 @@ txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
 
 /* static*/
 nsresult
-txVariable::Convert(nsIVariant *aValue, ExprResult** aResult)
+txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
 {
     *aResult = nsnull;
 
@@ -961,8 +961,10 @@ txVariable::Convert(nsIVariant *aValue, ExprResult** aResult)
             nsresult rv = aValue->GetAsDouble(&value);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            *aResult = new NumberResult(value);
-            NS_ENSURE_TRUE(aResult, NS_ERROR_OUT_OF_MEMORY);
+            *aResult = new NumberResult(value, nsnull);
+            NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
+            NS_ADDREF(*aResult);
 
             return NS_OK;
         }
@@ -975,7 +977,9 @@ txVariable::Convert(nsIVariant *aValue, ExprResult** aResult)
             NS_ENSURE_SUCCESS(rv, rv);
 
             *aResult = new BooleanResult(value);
-            NS_ENSURE_TRUE(aResult, NS_ERROR_OUT_OF_MEMORY);
+            NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
+            NS_ADDREF(*aResult);
 
             return NS_OK;
         }
@@ -996,8 +1000,10 @@ txVariable::Convert(nsIVariant *aValue, ExprResult** aResult)
             nsresult rv = aValue->GetAsAString(value);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            *aResult = new StringResult(value);
-            NS_ENSURE_TRUE(aResult, NS_ERROR_OUT_OF_MEMORY);
+            *aResult = new StringResult(value, nsnull);
+            NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
+            NS_ADDREF(*aResult);
 
             return NS_OK;
         }

@@ -31,6 +31,8 @@
 #include "primitives.h"
 #include "TxObject.h"
 #include "nsString.h"
+#include "txResultRecycler.h"
+#include "nsAutoPtr.h"
 
 /*
  * ExprResult
@@ -41,11 +43,10 @@
  * Note: for NodeSet, see NodeSet.h
 */
 
-class ExprResult : public TxObject {
-
+class txAExprResult : public TxObject
+{
 public:
-
-    //-- ResultTypes
+    friend class txResultRecycler;
     enum ResultType {
         NODESET,
         BOOLEAN,
@@ -54,13 +55,24 @@ public:
         RESULT_TREE_FRAGMENT
     };
 
-    virtual ~ExprResult() {};
+    txAExprResult(txResultRecycler* aRecycler) : mRecycler(aRecycler) {}
+    virtual ~txAExprResult() {};
 
-    /*
-     * Clones this ExprResult
-     * @return clone of this ExprResult
-     */
-    virtual ExprResult* clone()      = 0;
+    void AddRef()
+    {
+        ++mRefCnt;
+    }
+    void Release()
+    {
+        if (--mRefCnt == 0) {
+            if (mRecycler) {
+                mRecycler->recycle(this);
+            }
+            else {
+                delete this;
+            }
+        }
+    }
 
     /**
      * Returns the type of ExprResult represented
@@ -92,10 +104,12 @@ public:
     **/
     virtual double numberValue()          = 0;
 
+private:
+    nsAutoRefCnt mRefCnt;
+    nsRefPtr<txResultRecycler> mRecycler;
 };
 
 #define TX_DECL_EXPRRESULT                                        \
-    virtual ExprResult* clone();                                  \
     virtual short getResultType();                                \
     virtual void stringValue(nsAString& str);                     \
     virtual nsAString* stringValuePointer();                      \
@@ -103,12 +117,10 @@ public:
     virtual double numberValue();                                 \
 
 
-class BooleanResult : public ExprResult {
+class BooleanResult : public txAExprResult {
 
 public:
-
-    BooleanResult();
-    BooleanResult(MBool boolean);
+    BooleanResult(MBool aValue);
 
     TX_DECL_EXPRRESULT
 
@@ -116,25 +128,22 @@ private:
     MBool value;
 };
 
-class NumberResult : public ExprResult {
+class NumberResult : public txAExprResult {
 
 public:
-
-    NumberResult();
-    NumberResult(double dbl);
+    NumberResult(double aValue, txResultRecycler* aRecycler);
 
     TX_DECL_EXPRRESULT
 
-private:
     double value;
 
 };
 
 
-class StringResult : public ExprResult {
+class StringResult : public txAExprResult {
 public:
-    StringResult();
-    StringResult(const nsAString& str);
+    StringResult(txResultRecycler* aRecycler);
+    StringResult(const nsAString& aValue, txResultRecycler* aRecycler);
 
     TX_DECL_EXPRRESULT
 

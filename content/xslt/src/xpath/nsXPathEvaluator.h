@@ -44,6 +44,8 @@
 #include "txIXPathContext.h"
 #include "nsIXPathEvaluatorInternal.h"
 #include "nsIWeakReference.h"
+#include "nsAutoPtr.h"
+#include "txResultRecycler.h"
 
 class nsIDOMDocument;
 
@@ -100,6 +102,7 @@ private:
     };
 
     nsWeakPtr mDocument;
+    nsRefPtr<txResultRecycler> mRecycler;
 };
 
 /* d0a75e02-b5e7-11d5-a7f2-df109fb8a1fc */

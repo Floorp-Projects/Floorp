@@ -43,9 +43,10 @@
 #include "nsIAtom.h"
 #include "txError.h"
 
-class ExprResult;
+class txAExprResult;
 class FunctionCall;
 class Node;
+class txResultRecycler;
 
 /*
  * txIParseContext
@@ -107,7 +108,7 @@ public:
      * given namespace and local name.
      */
     virtual nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName,
-                                 ExprResult*& aResult) = 0;
+                                 txAExprResult*& aResult) = 0;
 
     /*
      * Is whitespace stripping allowed for the given node?
@@ -120,6 +121,8 @@ public:
      */
     virtual void* getPrivateContext() = 0;
 
+    virtual txResultRecycler* recycler() = 0;
+
     /*
      * Callback to be used by the expression/pattern if errors are detected.
      */
@@ -128,9 +131,10 @@ public:
 
 #define TX_DECL_MATCH_CONTEXT \
     nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName, \
-                         ExprResult*& aResult); \
+                         txAExprResult*& aResult); \
     MBool isStripSpaceAllowed(Node* aNode); \
     void* getPrivateContext(); \
+    txResultRecycler* recycler(); \
     void receiveError(const nsAString& aMsg, nsresult aRes)
 
 class txIEvalContext : public txIMatchContext

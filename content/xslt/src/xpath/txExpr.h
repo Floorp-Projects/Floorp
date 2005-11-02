@@ -42,13 +42,13 @@
 #include "nsIAtom.h"
 #include "TxObject.h"
 #include "nsAutoPtr.h"
+#include "ExprResult.h"
 
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
 */
 
-class ExprResult;
 class NodeSet;
 class txIParseContext;
 class txIMatchContext;
@@ -75,7 +75,8 @@ public:
      * for evaluation
      * @return the result of the evaluation
     **/
-    virtual ExprResult* evaluate(txIEvalContext* aContext) = 0;
+    virtual nsresult evaluate(txIEvalContext* aContext,
+                              txAExprResult** aResult) = 0;
 
     /**
      * Returns the String representation of this Expr.
@@ -90,7 +91,7 @@ public:
 }; //-- Expr
 
 #define TX_DECL_EVALUATE \
-    ExprResult* evaluate(txIEvalContext* aContext)
+    nsresult evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
 #define TX_DECL_EXPR \
     TX_DECL_EVALUATE; \
@@ -112,7 +113,6 @@ public:
     /**
      * Virtual methods from Expr 
     **/
-    virtual ExprResult* evaluate(txIEvalContext* aContext) = 0;
     void toString(nsAString& aDest);
 
     /**
@@ -161,9 +161,10 @@ protected:
 
     /*
      * Evaluates the given Expression and converts its result to a NodeSet.
-     * If the result is not a NodeSet NULL is returned.
+     * If the result is not a NodeSet an error is returned.
      */
-    NodeSet* evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext);
+    nsresult evaluateToNodeSet(Expr* aExpr, txIEvalContext* aContext,
+                               NodeSet** aResult);
 
     /*
      * Returns the name of the function as an atom.
@@ -298,7 +299,7 @@ public:
     **/
     void add(Expr* expr);
 
-    void evaluatePredicates(NodeSet* aNodes, txIMatchContext* aContext);
+    nsresult evaluatePredicates(NodeSet* aNodes, txIMatchContext* aContext);
 
     /**
      * returns true if this predicate list is empty
@@ -387,35 +388,16 @@ private:
 }; //-- FilterExpr
 
 
-class NumberExpr : public Expr {
-
+class txLiteralExpr : public Expr {
 public:
-
-    NumberExpr(double dbl);
+    txLiteralExpr(double aDbl);
+    txLiteralExpr(const nsAString& aStr);
 
     TX_DECL_EXPR;
 
 private:
-
-    double _value;
+    nsRefPtr<txAExprResult> mValue;
 };
-
-/**
- * Represents a String expression
-**/
-class StringExpr : public Expr {
-
-public:
-
-    StringExpr(const nsAString& value);
-
-    TX_DECL_EXPR;
-
-private:
-
-    nsString value;
-}; //-- StringExpr
-
 
 /**
  * Represents an AdditiveExpr, a binary expression that
@@ -534,7 +516,8 @@ public:
     TX_DECL_EXPR;
 
 private:
-    PRBool compareResults(ExprResult* aLeft, ExprResult* aRight);
+    PRBool compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
+                          txAExprResult* aRight);
 
     nsAutoPtr<Expr> mLeftExpr;
     nsAutoPtr<Expr> mRightExpr;
@@ -602,9 +585,9 @@ private:
      * Selects from the descendants of the context node
      * all nodes that match the Expr
      */
-    void evalDescendants(Expr* aStep, Node* aNode,
-                         txIMatchContext* aContext,
-                         NodeSet* resNodes);
+    nsresult evalDescendants(Expr* aStep, Node* aNode,
+                             txIMatchContext* aContext,
+                             NodeSet* resNodes);
 
 }; //-- PathExpr
 

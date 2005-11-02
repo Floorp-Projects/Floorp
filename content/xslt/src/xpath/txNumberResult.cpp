@@ -34,29 +34,22 @@
 /**
  * Default Constructor
 **/
-NumberResult::NumberResult() {
-    value = 0.0;
-} //-- NumberResult
 
 /**
  * Creates a new NumberResult with the value of the given double parameter
  * @param dbl the double to use for initialization of this NumberResult's value
 **/
-NumberResult::NumberResult(double dbl) {
-    this->value = dbl;
+NumberResult::NumberResult(double aValue, txResultRecycler* aRecycler)
+    : txAExprResult(aRecycler), value(aValue)
+{
 } //-- NumberResult
 
 /*
  * Virtual Methods from ExprResult
 */
 
-ExprResult* NumberResult::clone()
-{
-    return new NumberResult(value);
-}
-
 short NumberResult::getResultType() {
-    return ExprResult::NUMBER;
+    return txAExprResult::NUMBER;
 } //-- getResultType
 
 void NumberResult::stringValue(nsAString& str)  {

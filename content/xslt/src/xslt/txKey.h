@@ -69,7 +69,8 @@ public:
 struct txKeyValueHashEntry : public PLDHashEntryHdr
 {
     txKeyValueHashEntry(const void* aKey)
-        : mKey(*NS_STATIC_CAST(const txKeyValueHashKey*, aKey))
+        : mKey(*NS_STATIC_CAST(const txKeyValueHashKey*, aKey)),
+          mNodeSet(new NodeSet(nsnull))
     {
     }
 
@@ -79,7 +80,7 @@ struct txKeyValueHashEntry : public PLDHashEntryHdr
     static PLDHashNumber HashKey(const void* aKey);
     
     txKeyValueHashKey mKey;
-    NodeSet mNodeSet;
+    nsRefPtr<NodeSet> mNodeSet;
 };
 
 DECL_DHASH_WRAPPER(txKeyValueHash, txKeyValueHashEntry, txKeyValueHashKey&);
@@ -206,7 +207,7 @@ public:
                          const nsAString& aKeyValue,
                          PRBool aIndexIfNotFound,
                          txExecutionState& aEs,
-                         const NodeSet** aResult);
+                         NodeSet** aResult);
 
 private:
     // Hash of all indexed key-values
@@ -217,6 +218,9 @@ private:
     
     // Map of txXSLKeys
     const txExpandedNameMap& mKeys;
+    
+    // Empty nodeset returned if no key is found
+    nsRefPtr<NodeSet> mEmptyNodeSet;
 };
 
 

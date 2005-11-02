@@ -56,7 +56,7 @@ PRUint32 txNodeSetContext::position()
 }
 
 nsresult txNodeSetContext::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
-                                       ExprResult*& aResult)
+                                       txAExprResult*& aResult)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
     return mInner->getVariable(aNamespace, aLName, aResult);
@@ -72,6 +72,12 @@ void* txNodeSetContext::getPrivateContext()
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
     return mInner->getPrivateContext();
+}
+
+txResultRecycler* txNodeSetContext::recycler()
+{
+    NS_ASSERTION(mInner, "mInner is null!!!");
+    return mInner->recycler();
 }
 
 void txNodeSetContext::receiveError(const nsAString& aMsg, nsresult aRes)

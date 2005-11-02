@@ -418,12 +418,12 @@ MBool txKeyPattern::matches(Node* aNode, txIMatchContext* aContext)
         contextDoc = (Document*)aNode;
     else
         contextDoc = aNode->getOwnerDocument();
-    const NodeSet* nodes = 0;
-    nsresult rv = es->getKeyNodes(mName, contextDoc, mValue, PR_TRUE, &nodes);
-    if (NS_FAILED(rv) || !nodes)
-        return MB_FALSE;
-    MBool isTrue = nodes->contains(aNode);
-    return isTrue;
+    nsRefPtr<NodeSet> nodes;
+    nsresult rv = es->getKeyNodes(mName, contextDoc, mValue, PR_TRUE,
+                                  getter_AddRefs(nodes));
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+    return nodes->contains(aNode);
 }
 
 double txKeyPattern::getDefaultPriority()
@@ -498,7 +498,10 @@ MBool txStepPattern::matches(Node* aNode, txIMatchContext* aContext)
      */
 
     // Create the context node set for evaluating the predicates
-    NodeSet nodes;
+    nsRefPtr<NodeSet> nodes;
+    nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     Node* parent = aNode->getXPathParent();
     if (mIsAttr) {
         NamedNodeMap* atts = parent->getAttributes();
@@ -507,7 +510,7 @@ MBool txStepPattern::matches(Node* aNode, txIMatchContext* aContext)
             for (i = 0; i < atts->getLength(); i++) {
                 Node* attr = atts->item(i);
                 if (mNodeTest->matches(attr, aContext))
-                    nodes.append(attr);
+                    nodes->append(attr);
             }
         }
     }
@@ -515,33 +518,36 @@ MBool txStepPattern::matches(Node* aNode, txIMatchContext* aContext)
         Node* tmpNode = parent->getFirstChild();
         while (tmpNode) {
             if (mNodeTest->matches(tmpNode, aContext))
-                nodes.append(tmpNode);
+                nodes->append(tmpNode);
             tmpNode = tmpNode->getNextSibling();
         }
     }
 
     txListIterator iter(&predicates);
     Expr* predicate = (Expr*)iter.next();
-    NodeSet newNodes;
+    nsRefPtr<NodeSet> newNodes;
+    rv = aContext->recycler()->getNodeSet(getter_AddRefs(newNodes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     while (iter.hasNext()) {
-        newNodes.clear();
+        newNodes->clear();
         MBool contextIsInPredicate = MB_FALSE;
-        txNodeSetContext predContext(&nodes, aContext);
+        txNodeSetContext predContext(nodes, aContext);
         while (predContext.hasNext()) {
             predContext.next();
-            ExprResult* exprResult = predicate->evaluate(&predContext);
-            if (!exprResult)
-                break;
+            nsRefPtr<txAExprResult> exprResult;
+            rv = predicate->evaluate(&predContext, getter_AddRefs(exprResult));
+            NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
             switch(exprResult->getResultType()) {
-                case ExprResult::NUMBER :
+                case txAExprResult::NUMBER:
                     // handle default, [position() == numberValue()]
                     if ((double)predContext.position() ==
                         exprResult->numberValue()) {
                         Node* tmp = predContext.getContextNode();
                         if (tmp == aNode)
                             contextIsInPredicate = MB_TRUE;
-                        newNodes.append(tmp);
+                        newNodes->append(tmp);
                     }
                     break;
                 default:
@@ -549,25 +555,25 @@ MBool txStepPattern::matches(Node* aNode, txIMatchContext* aContext)
                         Node* tmp = predContext.getContextNode();
                         if (tmp == aNode)
                             contextIsInPredicate = MB_TRUE;
-                        newNodes.append(tmp);
+                        newNodes->append(tmp);
                     }
                     break;
             }
-            delete exprResult;
         }
         // Move new NodeSet to the current one
-        nodes.clear();
-        nodes.append(&newNodes);
+        nodes->clear();
+        nodes->append(newNodes);
         if (!contextIsInPredicate) {
             return MB_FALSE;
         }
         predicate = (Expr*)iter.next();
     }
-    txForwardContext evalContext(aContext, aNode, &nodes);
-    ExprResult* exprResult = predicate->evaluate(&evalContext);
-    if (!exprResult)
-        return MB_FALSE;
-    if (exprResult->getResultType() == ExprResult::NUMBER)
+    txForwardContext evalContext(aContext, aNode, nodes);
+    nsRefPtr<txAExprResult> exprResult;
+    rv = predicate->evaluate(&evalContext, getter_AddRefs(exprResult));
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+    if (exprResult->getResultType() == txAExprResult::NUMBER)
         // handle default, [position() == numberValue()]
         return ((double)evalContext.position() == exprResult->numberValue());
 

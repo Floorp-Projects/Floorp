@@ -72,6 +72,7 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
 {
     SortKey* key = new SortKey;
     NS_ENSURE_TRUE(key, NS_ERROR_OUT_OF_MEMORY);
+    nsresult rv = NS_OK;
 
     // Select
     key->mExpr = aSelectExpr;
@@ -79,12 +80,12 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
     // Order
     MBool ascending = MB_TRUE;
     if (aOrderExpr) {
-        ExprResult* exprRes = aOrderExpr->evaluate(aContext);
-        NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+        nsRefPtr<txAExprResult> exprRes;
+        rv = aOrderExpr->evaluate(aContext, getter_AddRefs(exprRes));
+        NS_ENSURE_SUCCESS(rv, rv);
 
         nsAutoString attrValue;
         exprRes->stringValue(attrValue);
-        delete exprRes;
         
         if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::descending)) {
             ascending = MB_FALSE;
@@ -100,11 +101,11 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
     // Create comparator depending on datatype
     nsAutoString dataType;
     if (aDataTypeExpr) {
-        ExprResult* exprRes = aDataTypeExpr->evaluate(aContext);
-        NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+        nsRefPtr<txAExprResult> exprRes;
+        rv = aDataTypeExpr->evaluate(aContext, getter_AddRefs(exprRes));
+        NS_ENSURE_SUCCESS(rv, rv);
 
         exprRes->stringValue(dataType);
-        delete exprRes;
     }
 
     if (!aDataTypeExpr || TX_StringEqualsAtom(dataType, txXSLTAtoms::text)) {
@@ -113,22 +114,22 @@ txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
         // Language
         nsAutoString lang;
         if (aLangExpr) {
-            ExprResult* exprRes = aLangExpr->evaluate(aContext);
-            NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+            nsRefPtr<txAExprResult> exprRes;
+            rv = aLangExpr->evaluate(aContext, getter_AddRefs(exprRes));
+            NS_ENSURE_SUCCESS(rv, rv);
 
             exprRes->stringValue(lang);
-            delete exprRes;
         }
 
         // Case-order 
         MBool upperFirst = PR_FALSE;
         if (aCaseOrderExpr) {
-            ExprResult* exprRes = aCaseOrderExpr->evaluate(aContext);
-            NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+            nsRefPtr<txAExprResult> exprRes;
+            rv = aCaseOrderExpr->evaluate(aContext, getter_AddRefs(exprRes));
+            NS_ENSURE_SUCCESS(rv, rv);
 
             nsAutoString attrValue;
             exprRes->stringValue(attrValue);
-            delete exprRes;
 
             if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::upperFirst)) {
                 upperFirst = PR_TRUE;
@@ -218,6 +219,7 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
                                txExecutionState* aEs)
 {
     txListIterator iter(&mSortKeys);
+    nsresult rv = NS_OK;
     int i;
 
     // Step through each key until a difference is found
@@ -227,34 +229,30 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
         if (!aSNode1->mSortValues[i]) {
             txForwardContext evalContext(aEs->getEvalContext(), aSNode1->mNode, aNodes);
             aEs->pushEvalContext(&evalContext);
-            ExprResult* res = key->mExpr->evaluate(&evalContext);
+            nsRefPtr<txAExprResult> res;
+            rv = key->mExpr->evaluate(&evalContext, getter_AddRefs(res));
+            NS_ENSURE_SUCCESS(rv, -1);
+
             aEs->popEvalContext();
-            if (!res) {
-                // XXX ErrorReport
-                return -1;
-            }
             aSNode1->mSortValues[i] = key->mComparator->createSortableValue(res);
             if (!aSNode1->mSortValues[i]) {
                 // XXX ErrorReport
                 return -1;
             }
-            delete res;
         }
         if (!aSNode2->mSortValues[i]) {
             txForwardContext evalContext(aEs->getEvalContext(), aSNode2->mNode, aNodes);
             aEs->pushEvalContext(&evalContext);
-            ExprResult* res = key->mExpr->evaluate(&evalContext);
+            nsRefPtr<txAExprResult> res;
+            rv = key->mExpr->evaluate(&evalContext, getter_AddRefs(res));
+            NS_ENSURE_SUCCESS(rv, -1);
+
             aEs->popEvalContext();
-            if (!res) {
-                // XXX ErrorReport
-                return -1;
-            }
             aSNode2->mSortValues[i] = key->mComparator->createSortableValue(res);
             if (!aSNode2->mSortValues[i]) {
                 // XXX ErrorReport
                 return -1;
             }
-            delete res;
         }
 
         // Compare node values
