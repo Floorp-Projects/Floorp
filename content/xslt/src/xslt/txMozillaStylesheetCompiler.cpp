@@ -774,7 +774,7 @@ TX_CompileStylesheet(nsIDOMNode* aNode, txStylesheet** aStylesheet)
         new txStylesheetCompiler(base, obs);
     NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
-    nsresult rv = handleNode(document, compiler);
+    nsresult rv = handleNode(aNode, compiler);
     if (NS_FAILED(rv)) {
         compiler->cancel(rv);
         return rv;
