@@ -41,7 +41,6 @@
 
 #include "nsVoidArray.h"
 #include "nsISupports.h"
-#include "nsCOMPtr.h"
 
 // See below for the definition of nsCOMArray<T>
 
@@ -97,11 +96,11 @@ public:
         return mArray.Count();
     }
 
-    nsDerivedSafe<nsISupports>* ObjectAt(PRInt32 aIndex) const {
-        return NS_REINTERPRET_CAST(nsDerivedSafe<nsISupports>*, mArray.ElementAt(aIndex));
+    nsISupports* ObjectAt(PRInt32 aIndex) const {
+        return NS_STATIC_CAST(nsISupports*, mArray.ElementAt(aIndex));
     }
     
-    nsDerivedSafe<nsISupports>* operator[](PRInt32 aIndex) const {
+    nsISupports* operator[](PRInt32 aIndex) const {
         return ObjectAt(aIndex);
     }
 
@@ -146,12 +145,12 @@ class nsCOMArray : public nsCOMArray_base
     ~nsCOMArray() {}
 
     // these do NOT refcount on the way out, for speed
-    nsDerivedSafe<T>* ObjectAt(PRInt32 aIndex) const {
-        return NS_REINTERPRET_CAST(nsDerivedSafe<T>*,nsCOMArray_base::ObjectAt(aIndex));
+    T* ObjectAt(PRInt32 aIndex) const {
+        return NS_STATIC_CAST(T*,nsCOMArray_base::ObjectAt(aIndex));
     }
 
     // indexing operator for syntactic sugar
-    nsDerivedSafe<T>* operator[](PRInt32 aIndex) const {
+    T* operator[](PRInt32 aIndex) const {
         return ObjectAt(aIndex);
     }
 
