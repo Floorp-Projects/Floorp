@@ -39,6 +39,7 @@
 
 #include "nsXPathNSResolver.h"
 #include "nsIDOMClassInfo.h"
+#include "nsDOMString.h"
 
 NS_IMPL_ADDREF(nsXPathNSResolver)
 NS_IMPL_RELEASE(nsXPathNSResolver)
