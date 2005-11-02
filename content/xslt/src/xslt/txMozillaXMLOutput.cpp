@@ -759,7 +759,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
         doc->SetContentType(NS_LITERAL_STRING("text/html"));
     }
     else {
-        doc->SetContentType(NS_LITERAL_STRING("text/xml"));
+        doc->SetContentType(NS_LITERAL_STRING("application/xml"));
     }
 
     // Set up script loader of the result document.
