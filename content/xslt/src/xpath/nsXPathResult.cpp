@@ -266,7 +266,7 @@ nsXPathResult::AttributeChanged(nsIDocument* aDocument,
                                 PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 PRInt32 aModType,
-                                PRInt32 aHint)
+                                nsChangeHint aHint)
 {
     Invalidate();
     return NS_OK;
@@ -338,7 +338,7 @@ NS_IMETHODIMP
 nsXPathResult::StyleRuleChanged(nsIDocument* aDocument,
                                 nsIStyleSheet* aStyleSheet,
                                 nsIStyleRule* aStyleRule,
-                                PRInt32 aHint)
+                                nsChangeHint aHint)
 {
     return NS_OK;
 }
