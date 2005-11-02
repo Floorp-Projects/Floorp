@@ -64,9 +64,8 @@ txStylesheet::init()
     
     // Create default templates
     // element/root template
-    txInstruction** instrp = mContainerTemplate.StartAssignment();
-    *instrp = new txPushParams;
-    NS_ENSURE_TRUE(*instrp, NS_ERROR_OUT_OF_MEMORY);
+    mContainerTemplate = new txPushParams;
+    NS_ENSURE_TRUE(mContainerTemplate, NS_ERROR_OUT_OF_MEMORY);
 
     nsAutoPtr<txNodeTest> nt(new txNodeTypeTest(txNodeTypeTest::NODE_TYPE));
     NS_ENSURE_TRUE(nt, NS_ERROR_OUT_OF_MEMORY);
@@ -74,28 +73,25 @@ txStylesheet::init()
     nsAutoPtr<Expr> nodeExpr(new LocationStep(nt, LocationStep::CHILD_AXIS));
     NS_ENSURE_TRUE(nodeExpr, NS_ERROR_OUT_OF_MEMORY);
 
-    instrp = &(*instrp)->mNext;
     txPushNewContext* pushContext = new txPushNewContext(nodeExpr);
-    *instrp = pushContext;
-    NS_ENSURE_TRUE(*instrp, NS_ERROR_OUT_OF_MEMORY);
+    mContainerTemplate->mNext = pushContext;
+    NS_ENSURE_TRUE(pushContext, NS_ERROR_OUT_OF_MEMORY);
 
-    instrp = &(*instrp)->mNext;
     txApplyDefaultElementTemplate* applyTemplates =
         new txApplyDefaultElementTemplate;
-    *instrp = applyTemplates;
-    NS_ENSURE_TRUE(*instrp, NS_ERROR_OUT_OF_MEMORY);
+    pushContext->mNext = applyTemplates;
+    NS_ENSURE_TRUE(applyTemplates, NS_ERROR_OUT_OF_MEMORY);
 
-    instrp = &(*instrp)->mNext;
-    *instrp = new txLoopNodeSet(applyTemplates);
-    NS_ENSURE_TRUE(*instrp, NS_ERROR_OUT_OF_MEMORY);
+    txLoopNodeSet* loopNodeSet = new txLoopNodeSet(applyTemplates);
+    applyTemplates->mNext = loopNodeSet;
+    NS_ENSURE_TRUE(loopNodeSet, NS_ERROR_OUT_OF_MEMORY);
 
-    instrp = &(*instrp)->mNext;
-    pushContext->mBailTarget = *instrp = new txPopParams;
-    NS_ENSURE_TRUE(*instrp, NS_ERROR_OUT_OF_MEMORY);
+    txPopParams* popParams = new txPopParams;
+    pushContext->mBailTarget = loopNodeSet->mNext = popParams;
+    NS_ENSURE_TRUE(popParams, NS_ERROR_OUT_OF_MEMORY);
 
-    instrp = &(*instrp)->mNext;
-    *instrp = new txReturn();
-    NS_ENSURE_TRUE(*instrp, NS_ERROR_OUT_OF_MEMORY);
+    popParams->mNext = new txReturn();
+    NS_ENSURE_TRUE(popParams->mNext, NS_ERROR_OUT_OF_MEMORY);
 
     // attribute/textnode template
     nt = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
@@ -105,10 +101,10 @@ txStylesheet::init()
     NS_ENSURE_TRUE(nodeExpr, NS_ERROR_OUT_OF_MEMORY);
 
     mCharactersTemplate = new txValueOf(nodeExpr, PR_FALSE);
-    NS_ENSURE_TRUE(mContainerTemplate, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(mCharactersTemplate, NS_ERROR_OUT_OF_MEMORY);
 
     mCharactersTemplate->mNext = new txReturn();
-    NS_ENSURE_TRUE(mContainerTemplate->mNext, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(mCharactersTemplate->mNext, NS_ERROR_OUT_OF_MEMORY);
 
     // pi/comment/namespace template
     mEmptyTemplate = new txReturn();
