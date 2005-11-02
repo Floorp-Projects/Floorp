@@ -109,6 +109,8 @@ private:
     nsresult createResultDocument(const nsAString& aName, PRInt32 aNsID,
                                   nsIDOMDocument* aSourceDocument,
                                   nsIDOMDocument* aResultDocument);
+    nsresult createHTMLElement(const nsAString& aName,
+                               nsIDOMElement** aResult);
 
     nsCOMPtr<nsIDOMDocument> mDocument;
     nsCOMPtr<nsIDOMNode> mCurrentNode;
