@@ -35,6 +35,7 @@
 **/
 
 #include "Expr.h"
+#include "ExprResult.h"
 
 /**
  * Creates a new BooleanExpr using the given operator

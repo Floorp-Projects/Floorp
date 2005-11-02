@@ -27,9 +27,10 @@
 #define MITRE_ERROROBSERVER_H
 
 #include "baseutils.h"
-#include "TxString.h"
 #include "txError.h"
 #include <iostream.h>
+
+class String;
 
 /**
  * A simple interface for observing errors

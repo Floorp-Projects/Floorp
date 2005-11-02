@@ -35,24 +35,20 @@
 #ifndef TRANSFRMX_EXPR_H
 #define TRANSFRMX_EXPR_H
 
-#include "txError.h"
-#include "TxString.h"
-#include "ErrorObserver.h"
-#include "NodeSet.h"
-#include "Stack.h"
-#include "ExprResult.h"
 #include "baseutils.h"
+#include "dom.h"
+#include "List.h"
+#include "txAtom.h"
 #include "TxObject.h"
-#include "primitives.h"
+#include "TxString.h"
 
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
 */
 
-/*
- * necessary prototypes
- */
+class ExprResult;
+class NodeSet;
 class txIParseContext;
 class txIMatchContext;
 class txIEvalContext;
@@ -138,7 +134,7 @@ public:
 
 protected:
 
-    List params;
+    txList params;
 
     FunctionCall();
 

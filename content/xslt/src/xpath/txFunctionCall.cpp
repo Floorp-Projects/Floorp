@@ -24,6 +24,7 @@
  */
 
 #include "Expr.h"
+#include "ExprResult.h"
 #include "txAtom.h"
 #include "txIXPathContext.h"
 

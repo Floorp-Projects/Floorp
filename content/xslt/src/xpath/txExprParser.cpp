@@ -39,8 +39,10 @@
 **/
 
 #include "ExprParser.h"
+#include "ExprLexer.h"
 #include "FunctionLib.h"
 #include "Names.h"
+#include "Stack.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 

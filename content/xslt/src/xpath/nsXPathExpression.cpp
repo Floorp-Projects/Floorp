@@ -39,6 +39,7 @@
 
 #include "nsXPathExpression.h"
 #include "Expr.h"
+#include "ExprResult.h"
 #include "nsDOMError.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMClassInfo.h"
