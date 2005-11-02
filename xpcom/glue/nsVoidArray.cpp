@@ -1342,16 +1342,21 @@ nsSmallVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
       SetSingleChild(aElement);
       return PR_TRUE;
     }
-    return PR_FALSE;
   }
-  else
-  {
-    nsVoidArray* vector = GetChildVector();
-    if (vector)
-      return vector->ReplaceElementAt(aElement, aIndex);
 
-    return PR_FALSE;
+  nsVoidArray* vector = GetChildVector();
+  if (!vector)
+  {
+    if (aIndex == 0)
+    {
+      SetSingleChild(aElement);
+      return PR_TRUE;
+    }
+    vector = SwitchToVector();
+    if (!vector)
+      return PR_FALSE;
   }
+  return vector->ReplaceElementAt(aElement, aIndex);
 }
 
 PRBool
