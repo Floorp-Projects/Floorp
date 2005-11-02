@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txExprParser.h,v 1.2 2005/11/02 07:33:52 nisheeth%netscape.com Exp $
+ * $Id: txExprParser.h,v 1.3 2005/11/02 07:33:53 axel%pike.org Exp $
  */
 
 /**
  * ExprParser
  * This class is used to parse XSL Expressions
  * @author <A href="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:52 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:53 $
  * @see ExprLexer
 **/
 
@@ -41,7 +41,9 @@
 #include "FunctionLib.h"
 #include "List.h"
 #include "Stack.h"
+#ifndef MOZ_XSL
 #include <iostream.h>
+#endif
 
 class ExprParser {
 

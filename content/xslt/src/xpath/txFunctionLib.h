@@ -27,7 +27,7 @@
  * Marina Mechtcheriakova
  *   -- added support for lang function
  *
- * $Id: txFunctionLib.h,v 1.8 2005/11/02 07:33:50 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txFunctionLib.h,v 1.9 2005/11/02 07:33:51 axel%pike.org Exp $
  */
 
 #include "TxString.h"
@@ -57,11 +57,13 @@ static const String CONCAT_FN;
 static const String CONTAINS_FN;
 static const String COUNT_FN ;
 static const String FALSE_FN;
+static const String ID_FN;
 static const String LANG_FN;
 static const String LAST_FN;
 static const String LOCAL_NAME_FN;
 static const String NAME_FN;
 static const String NAMESPACE_URI_FN;
+static const String NORMALIZE_SPACE_FN;
 static const String NOT_FN;
 static const String POSITION_FN;
 static const String STARTS_WITH_FN;
@@ -70,6 +72,7 @@ static const String STRING_LENGTH_FN;
 static const String SUBSTRING_FN;
 static const String SUBSTRING_AFTER_FN;
 static const String SUBSTRING_BEFORE_FN;
+static const String SUM_FN;
 static const String TRANSLATE_FN;
 static const String TRUE_FN;
 // OG+
@@ -261,6 +264,7 @@ public:
 
     enum nodeSetFunctions {
         COUNT = 1,      //-- count()
+        ID,             //-- id()
         LAST,           //-- last()
         LOCAL_NAME,     //-- local-name()
         NAMESPACE_URI,  //-- namespace-uri()
@@ -302,7 +306,7 @@ public:
     enum stringFunctions {
         CONCAT = 1,            //-- concat()
         CONTAINS,              //-- contains()
-        NORMALIZE,             //-- normalize()
+        NORMALIZE_SPACE,       //-- normalize-space()
         STARTS_WITH,           //-- starts-with()
         STRING,                //-- string()
         STRING_LENGTH,         //-- string-length()
@@ -348,7 +352,8 @@ public:
         NUMBER = 1,            //-- number()
         ROUND,                 //-- round()
         FLOOR,                 //-- floor()
-        CEILING                //-- ceiling()
+        CEILING,               //-- ceiling()
+        SUM                    //-- sum()
     };
 
     /**

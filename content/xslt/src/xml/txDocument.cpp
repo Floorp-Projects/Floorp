@@ -256,3 +256,15 @@ EntityReference* Document::createEntityReference(const String& name)
 {
   return new EntityReference(name, this);
 }
+
+//
+//Return an Element by ID, introduced by DOM2
+//
+Element* Document::getElementById(const String aID)
+{
+  /* This would need knowledge of the DTD, and we don't have it.
+   * If we knew that we deal with HTML4 or XHTML1 we could check
+   * for the "id" attribute, but we don't, so return NULL 
+   */
+  return NULL;
+}

@@ -114,8 +114,10 @@ OBJS =../base/ArrayList.o \
   ../xslt/ProcessorState.o \
   ../xslt/VariableBinding.o \
   ../xslt/XSLTProcessor.o \
+  ../xslt/functions/CurrentFunctionCall.o \
   ../xslt/functions/DocumentFunctionCall.o \
   ../xslt/functions/GenerateIdFunctionCall.o \
+  ../xslt/functions/SystemPropertyFunctionCall.o \
   ../xslt/util/NodeSorter.o \
   ../xslt/util/NodeStack.o \
   transformiix.o

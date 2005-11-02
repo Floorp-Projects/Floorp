@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txStringFunctionCall.cpp,v 1.5 2005/11/02 07:33:40 axel%pike.org Exp $
+ * $Id: txStringFunctionCall.cpp,v 1.6 2005/11/02 07:33:41 axel%pike.org Exp $
  */
 
 /**
  * StringFunctionCall
  * A representation of the XPath String funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:40 $
+ * @version $Revision: 1.6 $ $Date: 2005/11/02 07:33:41 $
 **/
 
 #include "FunctionLib.h"
@@ -110,6 +110,39 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
             else result = new BooleanResult(MB_FALSE);
             break;
 
+        case NORMALIZE_SPACE:
+            if ( requireParams(0, 1, cs) ) {
+                String resultStr;
+                if ( argc == 1)
+                    evaluateToString((Expr*)iter->next(),context, cs, resultStr);
+                else
+                    XMLDOMUtils::getNodeValue(context, &resultStr);
+                // Leading & Trailing Whitespace
+                resultStr.trim();
+                MBool hasSpace = MB_FALSE;
+                Int32 lastchar=-1, dest=0;
+                String normed(resultStr.length());
+                UNICODE_CHAR current;
+                for (Int32 src=0; src<resultStr.length(); src++) {
+                    current=resultStr.charAt(src);
+                    if (current==' ' || current=='\n' ||
+                            current=='\t' || current=='\r') {
+                        if (!hasSpace) {
+                            normed.replace(dest,' ');
+                            dest++;
+                            hasSpace=MB_TRUE;
+                        }
+                    }
+                    else {
+                        normed.replace(dest,current);
+                        dest++;
+                        hasSpace=MB_FALSE;
+                    }
+                }
+                result  = new StringResult(normed);
+            }
+            else result = new StringResult("");
+            break;
         case STARTS_WITH :
             if ( requireParams(2, 2, cs) ) {
                 String arg1, arg2;
@@ -142,20 +175,33 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                     break;
                 }
 
-                Int32 startIdx = (Int32)ceil(dbl);
-                Int32 endIdx = src.length();
+                //-- check for -Infinity
+                MBool startsNegInf = (dbl==Double::NEGATIVE_INFINITY);
+
+                Int32 startIdx = startsNegInf?0:(Int32)floor(dbl+.5);
+                Int32 endIdx = src.length()+1;
                 if ( argc == 3) {
-                    dbl += evaluateToNumber((Expr*)iter->next(),context, cs);
-                    if (dbl == Double::POSITIVE_INFINITY) ++endIdx;
-                    else if ( dbl == Double::NEGATIVE_INFINITY ) endIdx = 0;
-                    else endIdx = (Int32)floor(dbl);
+                    dbl = evaluateToNumber((Expr*)iter->next(),context, cs);
+                    if (startsNegInf) {
+                        result = new StringResult("");
+                        break;
+                    }
+                    if (dbl == Double::POSITIVE_INFINITY) ; //already complete
+                    else if ( Double::isNaN(dbl) || 
+                              dbl == Double::NEGATIVE_INFINITY ||
+                              dbl < 0 )
+                        endIdx = 0;
+                    else endIdx = startIdx+(Int32)floor(dbl+.5);
                 }
                 String resultStr;
                 //-- strings are indexed starting at 1 for XSL
                 //-- adjust to a 0-based index
-                if (startIdx > 0) --startIdx;
-                else if (startIdx == 0 ) --endIdx;
-                else startIdx=0;
+                endIdx--;
+                if (startIdx<1){
+                    startIdx = 0;
+                } else {
+                    startIdx--;
+                }
 
                 src.subString(startIdx,endIdx,resultStr);
                 result  = new StringResult(resultStr);
@@ -208,7 +254,7 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 for (i = 0; i < size; i++) {
                     Int32 idx = oldChars.indexOf(chars[i]);
                     if (idx >= 0) {
-                        char nchar = newChars.charAt(idx);
+                        UNICODE_CHAR nchar = newChars.charAt(idx);
                         if (nchar != -1) src.append(nchar);
                     }
                     else src.append(chars[i]);

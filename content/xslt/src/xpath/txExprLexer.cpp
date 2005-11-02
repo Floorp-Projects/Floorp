@@ -29,16 +29,15 @@
  *   -- Fixed bug in parse method so that we make sure we check for
  *      axis identifier wild cards, such as ancestor::*
  *
- * $Id: txExprLexer.cpp,v 1.9 2005/11/02 07:33:48 axel%pike.org Exp $
+ * $Id: txExprLexer.cpp,v 1.10 2005/11/02 07:33:49 axel%pike.org Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.9 $ $Date: 2005/11/02 07:33:48 $
+ * @version $Revision: 1.10 $ $Date: 2005/11/02 07:33:49 $
 **/
 
-#include <iostream.h>
 #include "ExprLexer.h"
 
   //---------------------------/
