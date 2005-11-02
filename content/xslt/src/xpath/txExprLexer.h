@@ -59,8 +59,7 @@ public:
      */
     enum Type {
         //-- Trivial Tokens
-        ERROR = 0,
-        NULL_TOKEN,
+        NULL_TOKEN = 1,
         LITERAL,
         NUMBER,
         CNAME,
