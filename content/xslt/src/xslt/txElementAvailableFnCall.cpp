@@ -52,7 +52,7 @@
  * Expr and is used for namespaceID resolution
 **/
 ElementAvailableFunctionCall::ElementAvailableFunctionCall(Element* aNode) :
-    mStylesheetNode(aNode), FunctionCall(ELEMENT_AVAILABLE_FN)
+    FunctionCall(ELEMENT_AVAILABLE_FN), mStylesheetNode(aNode)
 {
 }
 

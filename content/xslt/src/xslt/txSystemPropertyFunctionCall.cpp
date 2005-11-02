@@ -17,7 +17,7 @@ const String XSL_VENDOR_URL_PROPERTY("vendor-url");
  * Expr and is used for namespaceID resolution
 **/
 SystemPropertyFunctionCall::SystemPropertyFunctionCall(Element* aNode) :
-    mStylesheetNode(aNode), FunctionCall(SYSTEM_PROPERTY_FN)
+    FunctionCall(SYSTEM_PROPERTY_FN), mStylesheetNode(aNode)
 {
 }
 
