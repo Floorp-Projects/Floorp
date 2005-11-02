@@ -134,13 +134,13 @@ void
 txUnionPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
-    aDest.Append(NS_LITERAL_STRING("txUnionPattern{"));
+    aDest.AppendLiteral("txUnionPattern{");
 #endif
     txListIterator iter(&mLocPathPatterns);
     if (iter.hasNext())
         ((txPattern*)iter.next())->toString(aDest);
     while (iter.hasNext()) {
-        aDest.Append(NS_LITERAL_STRING(" | "));
+        aDest.AppendLiteral(" | ");
         ((txPattern*)iter.next())->toString(aDest);
     }
 #ifdef DEBUG
@@ -260,7 +260,7 @@ txLocPathPattern::toString(nsAString& aDest)
 {
     txListIterator iter(&mSteps);
 #ifdef DEBUG
-    aDest.Append(NS_LITERAL_STRING("txLocPathPattern{"));
+    aDest.AppendLiteral("txLocPathPattern{");
 #endif
     Step* step;
     step = (Step*)iter.next();
@@ -271,7 +271,7 @@ txLocPathPattern::toString(nsAString& aDest)
         if (step->isChild)
             aDest.Append(PRUnichar('/'));
         else
-            aDest.Append(NS_LITERAL_STRING("//"));
+            aDest.AppendLiteral("//");
         step->pattern->toString(aDest);
     }
 #ifdef DEBUG
@@ -305,7 +305,7 @@ void
 txRootPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
-    aDest.Append(NS_LITERAL_STRING("txRootPattern{"));
+    aDest.AppendLiteral("txRootPattern{");
 #endif
     if (mSerialize)
         aDest.Append(PRUnichar('/'));
@@ -388,9 +388,9 @@ void
 txIdPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
-    aDest.Append(NS_LITERAL_STRING("txIdPattern{"));
+    aDest.AppendLiteral("txIdPattern{");
 #endif
-    aDest.Append(NS_LITERAL_STRING("id('"));
+    aDest.AppendLiteral("id('");
     PRUint32 k, count = mIds.Count() - 1;
     for (k = 0; k < count; ++k) {
         aDest.Append(*mIds[k]);
@@ -441,9 +441,9 @@ void
 txKeyPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
-    aDest.Append(NS_LITERAL_STRING("txKeyPattern{"));
+    aDest.AppendLiteral("txKeyPattern{");
 #endif
-    aDest.Append(NS_LITERAL_STRING("key('"));
+    aDest.AppendLiteral("key('");
     nsAutoString tmp;
     if (mPrefix) {
         mPrefix->ToString(tmp);
@@ -452,7 +452,7 @@ txKeyPattern::toString(nsAString& aDest)
     }
     mName.mLocalName->ToString(tmp);
     aDest.Append(tmp);
-    aDest.Append(NS_LITERAL_STRING(", "));
+    aDest.AppendLiteral(", ");
     aDest.Append(mValue);
     aDest.Append(NS_LITERAL_STRING("')"));
 #ifdef DEBUG
@@ -590,7 +590,7 @@ void
 txStepPattern::toString(nsAString& aDest)
 {
 #ifdef DEBUG
-    aDest.Append(NS_LITERAL_STRING("txStepPattern{"));
+    aDest.AppendLiteral("txStepPattern{");
 #endif
     if (mIsAttr)
         aDest.Append(PRUnichar('@'));

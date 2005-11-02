@@ -236,7 +236,7 @@ txXMLParser::parse(istream& aInputStream, const nsAString& aUri,
     mErrorString.Truncate();
     *aResultDoc = nsnull;
     if (!aInputStream) {
-        mErrorString.Append(NS_LITERAL_STRING("unable to parse xml: invalid or unopen stream encountered."));
+        mErrorString.AppendLiteral("unable to parse xml: invalid or unopen stream encountered.");
         return NS_ERROR_FAILURE;
     }
     mExpatParser = XML_ParserCreate(nsnull);
@@ -427,9 +427,9 @@ txXMLParser::createErrorString()
 {
     XML_Error errCode = XML_GetErrorCode(mExpatParser);
     mErrorString.AppendWithConversion(XML_ErrorString(errCode));
-    mErrorString.Append(NS_LITERAL_STRING(" at line "));
+    mErrorString.AppendLiteral(" at line ");
     mErrorString.AppendInt(XML_GetCurrentLineNumber(mExpatParser));
-    mErrorString.Append(NS_LITERAL_STRING(" in "));
+    mErrorString.AppendLiteral(" in ");
     mErrorString.Append((const PRUnichar*)XML_GetBase(mExpatParser));
 }
 #endif

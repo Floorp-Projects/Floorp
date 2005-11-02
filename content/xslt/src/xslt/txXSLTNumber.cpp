@@ -361,7 +361,7 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
                                                groupSeparator, defaultCounter);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        defaultCounter->mSeparator = NS_LITERAL_STRING(".");
+        defaultCounter->mSeparator.AssignLiteral(".");
         rv = aCounters.add(defaultCounter);
         if (NS_FAILED(rv)) {
             // XXX ErrorReport: out of memory
@@ -380,7 +380,7 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
             // there is only one formatting token and we're formatting a
             // value-list longer then one we use the default separator. This
             // won't be used when formatting the first value anyway.
-            sepToken = NS_LITERAL_STRING(".");
+            sepToken.AssignLiteral(".");
         }
         else {
             while (formatPos < formatLen &&

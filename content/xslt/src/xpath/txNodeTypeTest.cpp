@@ -106,7 +106,7 @@ txNodeTypeTest::toString(nsAString& aDest)
             aDest.Append(NS_LITERAL_STRING("text()"));
             break;
         case PI_TYPE:
-            aDest.Append(NS_LITERAL_STRING("processing-instruction("));
+            aDest.AppendLiteral("processing-instruction(");
             if (mNodeName) {
                 nsAutoString str;
                 mNodeName->ToString(str);
