@@ -20,7 +20,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: txGenerateIdFunctionCall.cpp,v 1.1 2005/11/02 07:33:58 kvisco%ziplink.net Exp $
+ * $Id: txGenerateIdFunctionCall.cpp,v 1.2 2005/11/02 07:33:59 kvisco%ziplink.net Exp $
  */
 
 #include "XSLTFunctions.h"
@@ -49,13 +49,35 @@ ExprResult* GenerateIdFunctionCall::evaluate(Node* context, ContextState* cs) {
 
     Node* node = context;
 
-    String id;
-
     int argc = params.getLength();
 
+    StringResult* stringResult = 0;
 
+    if (argc > 0) {
+        ListIterator* iter = params.iterator();
+        Expr* param = iter->next();
+        delete iter;
+        ExprResult* exprResult = param->evaluate(context, cs);
+        if (!exprResult) return new StringResult("");
+        if (exprResult->getResultType() == ExprResult::NODESET) {
+            NodeSet* nodes = (NodeSet*) exprResult;
+            if (nodes->size() == 0)
+                stringResult = new StringResult("");
+            else
+                node = nodes->get(0);
+        }
+        else {
+            String err("Invalid argument passed to generate-id(), expecting NodeSet");
+            stringResult = new StringResult(err);
+        }
+        delete exprResult;
+    }
+
+    if (stringResult) return stringResult;
+
+    //-- generate id for selected node
+    String id;
     domHelper->generateId(node, id);
-
     return new StringResult(id);
 
 } //-- evaluate
