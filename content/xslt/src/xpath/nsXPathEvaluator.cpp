@@ -154,7 +154,7 @@ nsresult nsXPathEvaluator::ParseContextImpl::resolveNamespacePrefix
     }
 
     if (!mNSMan) {
-        mNSMan = do_CreateInstance(kNameSpaceManagerCID);
+        mNSMan = do_GetService(kNameSpaceManagerCID);
         if (!mNSMan) {
             return NS_ERROR_FAILURE;
         }
