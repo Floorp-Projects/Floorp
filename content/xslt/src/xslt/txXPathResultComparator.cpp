@@ -188,7 +188,7 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
     if (result != 0)
         return ((mSorting & kAscending) ? 1 : -1) * result;
 
-    if (strval1->mCaseLength < 0) {
+    if ((strval1->mCaseLength == 0) && (strval1->mLength != 0)) {
         String* caseString = (String *)strval1->mCaseKey;
         rv = createRawSortKey(kCollationCaseSensitive,
                               caseString->getConstNSString(),
@@ -196,11 +196,13 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
                               &strval1->mCaseLength);
         if (NS_FAILED(rv)) {
             // XXX ErrorReport
+            strval1->mCaseKey = caseString;
+            strval1->mCaseLength = 0;
             return -1;
         }
         delete caseString;
     }
-    if (strval2->mCaseLength < 0) {
+    if ((strval2->mCaseLength == 0) && (strval2->mLength != 0)) {
         String* caseString = (String *)strval2->mCaseKey;
         rv = createRawSortKey(kCollationCaseSensitive,
                               caseString->getConstNSString(),
@@ -208,6 +210,8 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
                               &strval2->mCaseLength);
         if (NS_FAILED(rv)) {
             // XXX ErrorReport
+            strval2->mCaseKey = caseString;
+            strval2->mCaseLength = 0;
             return -1;
         }
         delete caseString;
@@ -241,16 +245,16 @@ nsresult txResultStringComparator::createRawSortKey(const nsCollationStrength aS
 }
 
 txResultStringComparator::StringValue::StringValue() : mKey(0),
-                                                       mLength(0),
                                                        mCaseKey(0),
-                                                       mCaseLength(-1)
+                                                       mLength(0),
+                                                       mCaseLength(0)
 {
 }
 
 txResultStringComparator::StringValue::~StringValue()
 {
     PR_Free(mKey);
-    if (mCaseLength >= 0)
+    if (mCaseLength > 0)
         PR_Free((PRUint8*)mCaseKey);
     else
         delete (String*)mCaseKey;
@@ -260,6 +264,10 @@ txResultStringComparator::StringValue::~StringValue()
 txResultNumberComparator::txResultNumberComparator(MBool aAscending)
 {
     mAscending = aAscending ? 1 : -1;
+}
+
+txResultNumberComparator::~txResultNumberComparator()
+{
 }
 
 TxObject* txResultNumberComparator::createSortableValue(ExprResult* aExprRes)

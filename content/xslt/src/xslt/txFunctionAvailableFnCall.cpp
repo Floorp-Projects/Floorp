@@ -76,7 +76,7 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(Node* context, ContextState*
             if (XMLUtils::isValidQName(property)) {
                 String prefix;
                 XMLUtils::getNameSpace(property, prefix);
-                if ((prefix.length() == 0) &&
+                if (prefix.isEmpty() &&
                     (property.isEqual(XPathNames::BOOLEAN_FN) ||
                      property.isEqual(XPathNames::CONCAT_FN) ||
                      property.isEqual(XPathNames::CONTAINS_FN) ||

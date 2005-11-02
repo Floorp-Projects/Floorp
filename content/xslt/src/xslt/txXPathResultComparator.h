@@ -75,7 +75,7 @@ class txResultStringComparator : public txXPathResultComparator
 public:
     txResultStringComparator(MBool aAscending, MBool aUpperFirst,
                              const String& aLanguage);
-    ~txResultStringComparator();
+    virtual ~txResultStringComparator();
 
     int compareValues(TxObject* aVal1, TxObject* aVal2);
     TxObject* createSortableValue(ExprResult* aExprRes);
@@ -113,6 +113,7 @@ class txResultNumberComparator : public txXPathResultComparator
 {
 public:
     txResultNumberComparator(MBool aAscending);
+    virtual ~txResultNumberComparator();
 
     int compareValues(TxObject* aVal1, TxObject* aVal2);
     TxObject* createSortableValue(ExprResult* aExprRes);
