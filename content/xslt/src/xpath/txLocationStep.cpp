@@ -21,12 +21,12 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txLocationStep.cpp,v 1.3 2005/11/02 07:33:43 axel%pike.org Exp $
+ * $Id: txLocationStep.cpp,v 1.4 2005/11/02 07:33:44 kvisco%ziplink.net Exp $
  */
 
 /*
   Implementation of an XPath LocationStep
-  @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:43 $
+  @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:44 $
 */
 
 #include "Expr.h"
@@ -280,6 +280,9 @@ void LocationStep::toString(String& str) {
             break;
         case ANCESTOR_OR_SELF_AXIS :
             str.append("ancestor-or-self::");
+            break;
+        case ATTRIBUTE_AXIS:
+            str.append("attribute::");
             break;
         case DESCENDANT_AXIS:
             str.append("descendant::");

@@ -21,14 +21,12 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txBooleanResult.cpp,v 1.5 2005/11/02 07:33:50 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txBooleanResult.cpp,v 1.6 2005/11/02 07:33:51 kvisco%ziplink.net Exp $
  */
 
-/**
+/*
  * Boolean Expression result
- * @author <A href="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:50 $
-**/
+*/
 
 #include "ExprResult.h"
 
@@ -58,22 +56,6 @@ BooleanResult::BooleanResult(MBool boolean) {
 MBool BooleanResult::getValue() const {
     return this->value;
 } //-- getValue
-
-/**
- * Sets the value of this BooleanResult
- * @param boolean the MBool to use for this BooleanResult's value
-**/
-void BooleanResult::setValue(MBool boolean) {
-    this->value = boolean;
-} //-- setValue
-
-/**
- * Sets the value of this BooleanResult
- * @param boolResult the BooleanResult to use for setting this BooleanResult's value
-**/
-void BooleanResult::setValue(const BooleanResult& boolResult) {
-    this->value = boolResult.getValue();
-} //-- setValue
 
 /*
  * Virtual Methods from ExprResult

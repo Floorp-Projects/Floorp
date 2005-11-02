@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.7 2005/11/02 07:33:31 axel%pike.org Exp $
+ * $Id: txExprParser.cpp,v 1.8 2005/11/02 07:33:32 kvisco%ziplink.net Exp $
  */
 
 /**
@@ -38,7 +38,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:31 $
+ * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:32 $
 **/
 
 #include "ExprParser.h"
@@ -516,65 +516,84 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
 
     //-- get Axis Identifier, if present
     Token* tok = lexer.peek();
-    MBool setDefaultAxis = MB_TRUE;
-    if ( tok->type == Token::AXIS_IDENTIFIER ) {
-        //-- eat token
-        lexer.nextToken();
-        setDefaultAxis = MB_FALSE;
-
-        //-- should switch to a hash here for speed if necessary
-        if ( ANCESTOR_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::ANCESTOR_AXIS;
-        else if ( ANCESTOR_OR_SELF_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::ANCESTOR_OR_SELF_AXIS;
-        else if ( ATTRIBUTE_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::ATTRIBUTE_AXIS;
-        else if ( CHILD_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::CHILD_AXIS;
-        else if ( DESCENDANT_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::DESCENDANT_AXIS;
-        else if ( DESCENDANT_OR_SELF_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::DESCENDANT_OR_SELF_AXIS;
-        else if ( FOLLOWING_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::FOLLOWING_AXIS;
-        else if ( FOLLOWING_SIBLING_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::FOLLOWING_SIBLING_AXIS;
-        else if ( NAMESPACE_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::NAMESPACE_AXIS;
-        else if ( PARENT_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::PARENT_AXIS;
-        else if ( PRECEDING_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::PRECEDING_AXIS;
-        else if ( PRECEDING_SIBLING_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::PRECEDING_SIBLING_AXIS;
-        else if ( SELF_AXIS.isEqual(tok->value) )
-            axisIdentifier = LocationStep::SELF_AXIS;
-        //-- child axis is default
-        else {
-            //-- handle error gracefully, simply ignore invalid axis and
-            //-- use default. Add error message when message observer
-            //-- is implemented
-            setDefaultAxis = MB_TRUE;
+    switch (tok->type) {
+        case Token::AXIS_IDENTIFIER:
+        {
+            //-- eat token
+            lexer.nextToken();
+            //-- should switch to a hash here for speed if necessary
+            if ( ANCESTOR_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::ANCESTOR_AXIS;
+            else if ( ANCESTOR_OR_SELF_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::ANCESTOR_OR_SELF_AXIS;
+            else if ( ATTRIBUTE_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::ATTRIBUTE_AXIS;
+            else if ( CHILD_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::CHILD_AXIS;
+            else if ( DESCENDANT_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::DESCENDANT_AXIS;
+            else if ( DESCENDANT_OR_SELF_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::DESCENDANT_OR_SELF_AXIS;
+            else if ( FOLLOWING_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::FOLLOWING_AXIS;
+            else if ( FOLLOWING_SIBLING_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::FOLLOWING_SIBLING_AXIS;
+            else if ( NAMESPACE_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::NAMESPACE_AXIS;
+            else if ( PARENT_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::PARENT_AXIS;
+            else if ( PRECEDING_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::PRECEDING_AXIS;
+            else if ( PRECEDING_SIBLING_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::PRECEDING_SIBLING_AXIS;
+            else if ( SELF_AXIS.isEqual(tok->value) )
+                axisIdentifier = LocationStep::SELF_AXIS;
+            //-- child axis is default
+            else if (!CHILD_AXIS.isEqual(tok->value)) {
+                //-- handle error gracefully, simply ignore invalid axis and
+                //-- use default. Add error message when message observer
+                //-- is implemented
+            }
+            break;
         }
-
+        case Token::AT_SIGN:
+            //-- eat token
+            lexer.nextToken();
+            axisIdentifier = LocationStep::ATTRIBUTE_AXIS;
+            break;
+        default:
+            break;
     }
 
-    //-- parse NodeExpr
-    NodeExpr* nodeExpr = createNodeExpr(lexer);
+    lstep->setAxisIdentifier(axisIdentifier);
+
+
+    NodeExpr* nodeExpr = 0;
+
+    tok = lexer.peek();
+    if (!tok) {
+        ///XXXXX We need to create an ErrorExpr or something to
+        ///XXXXX handle errors
+    }
+    // NameTest
+    else if (tok->type == Token::CNAME) {
+        //-- handle NameTest
+        //-- eat token
+        lexer.nextToken();
+        if (axisIdentifier ==  LocationStep::ATTRIBUTE_AXIS)
+            nodeExpr = new AttributeExpr(tok->value);
+        else
+            nodeExpr = new ElementExpr(tok->value);
+
+    }
+    // NodeType
+    else {
+       NodeExpr* nodeExpr = createNodeExpr(lexer);
+    }
+
     lstep->setNodeExpr(nodeExpr);
 
 
-    //-- set default axis identifiers
-    if ((setDefaultAxis) && (nodeExpr)) {
-        switch ( nodeExpr->getType() ) {
-            case NodeExpr::ATTRIBUTE_EXPR:
-                axisIdentifier = LocationStep::ATTRIBUTE_AXIS;
-                break;
-            default:
-                axisIdentifier = LocationStep::CHILD_AXIS;
-        }
-    }
-    lstep->setAxisIdentifier(axisIdentifier);
 
     //-- handle predicates
 
@@ -589,6 +608,10 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
     return lstep;
 } //-- createLocationPath
 
+/**
+ * This method only handles comment(), text(), processing-instructing() and node()
+ *
+**/
 NodeExpr* ExprParser::createNodeExpr(ExprLexer& lexer) {
 
     //cout << "creating NodeExpr: "<<endl;
@@ -605,12 +628,6 @@ NodeExpr* ExprParser::createNodeExpr(ExprLexer& lexer) {
     String* errMsg = 0;
 
     switch ( tok->type ) {
-        case Token::CNAME :
-            nodeExpr = new ElementExpr(tok->value);
-            break;
-        case Token::WILD_CARD:
-            nodeExpr = new WildCardExpr();
-            break;
         case Token::COMMENT:
             nodeExpr = new BasicNodeExpr(NodeExpr::COMMENT_EXPR);
             errMsg = parseParameters(&params, lexer);
@@ -635,24 +652,8 @@ NodeExpr* ExprParser::createNodeExpr(ExprLexer& lexer) {
             //-- ignore errMsg for now
             delete errMsg;
             break;
-        case Token::AT_SIGN:
-            tok = lexer.nextToken();
-            if ( !tok ) {
-                //-- handle error
-            }
-            else if (tok->type == Token::CNAME) {
-                nodeExpr = new AttributeExpr(tok->value);
-            }
-            else if ( tok->type == Token::WILD_CARD ) {
-                AttributeExpr* attExpr = new AttributeExpr();
-                attExpr->setWild(MB_TRUE);
-                nodeExpr = attExpr;
-            }
-            else {
-                //-- handle error
-            }
-            break;
         default:
+            //XXXX ignore error for now
             break;
     }
     return nodeExpr;
@@ -795,7 +796,6 @@ MBool ExprParser::isNodeTypeToken(Token* token) {
     switch ( token->type ) {
         case Token::AT_SIGN:
         case Token::CNAME:
-        case Token::WILD_CARD:
         case Token::COMMENT:
         case Token::NODE :
         case Token::PI :

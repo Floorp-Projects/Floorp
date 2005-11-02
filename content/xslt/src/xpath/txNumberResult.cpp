@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txNumberResult.cpp,v 1.5 2005/11/02 07:34:00 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txNumberResult.cpp,v 1.6 2005/11/02 07:34:01 kvisco%ziplink.net Exp $
  */
 
 /**
  * NumberResult
  * Represents the a number as the result of evaluating an Expr
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.5 $ $Date: 2005/11/02 07:34:00 $
+ * @version $Revision: 1.6 $ $Date: 2005/11/02 07:34:01 $
 **/
 
 #include "ExprResult.h"
@@ -66,21 +66,6 @@ double NumberResult::getValue() const {
 MBool NumberResult::isNaN() const {
     return Double::isNaN(value);
 } //-- isNaN
-/**
- * Sets the value of this NumberResult
- * @param dbl the double to use for this NumberResult's value
-**/
-void NumberResult::setValue(double dbl) {
-    this->value = dbl;
-} //-- setValue
-
-/**
- * Sets the value of this NumberResult
- * @param nbrResult the NumberResult to use for setting this NumberResult's value
-**/
-void NumberResult::setValue(const NumberResult& nbrResult) {
-    this->value = nbrResult.getValue();
-} //-- setValue
 
 /*
  * Virtual Methods from ExprResult
