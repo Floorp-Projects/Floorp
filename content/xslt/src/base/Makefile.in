@@ -26,11 +26,13 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = transformiix
+LIBRARY_NAME = txbase_s
 REQUIRES	= string \
 		  xpcom \
 		  $(NULL)
+
 ifndef TX_EXE
-MODULE = transformiix
 REQUIRES	+= unicharutil \
 		  dom \
 		  content \
@@ -55,9 +57,11 @@ ifdef TX_EXE
 CPPSRCS += SimpleErrorObserver.cpp
 endif
 
+# we don't want the shared lib, but we want to force the creation of a
+# static lib.
+FORCE_STATIC_LIB = 1
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../xpath -I$(srcdir)/../xslt -I$(srcdir)/../xml   \
   -I$(srcdir)/../xml/dom -I$(srcdir)
-
-libs:: $(OBJS)
