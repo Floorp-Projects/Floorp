@@ -1,16 +1,21 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/*
- * CONFIDENTIAL AND PROPRIETARY SOURCE CODE
- * OF NETSCAPE COMMUNICATIONS CORPORATION
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Copyright (c) 2000 Netscape Communications Corporation.
- * All Rights Reserved.
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
  *
- * Use of this Source Code is subject to the terms of the applicable
- * license agreement from Netscape Communications Corporation.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The copyright notice(s) in this Source Code does not indicate actual
- * or intended publication of this Source Code.
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  */
 
 #include "nscore.h"
@@ -46,15 +51,43 @@ nsUniversalDetector::nsUniversalDetector()
   mGotData = PR_FALSE;
   mInputState = ePureAscii;
   mLastChar = '\0';
+
+  PRUint32 i;
+  for (i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
+    mCharSetProbers[i] = nsnull;
 }
 
 nsUniversalDetector::~nsUniversalDetector() 
 {
-  if (eHighbyte == mInputState)
-     for (PRInt32 i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
+  for (PRInt32 i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
+    if (mCharSetProbers[i])      
       delete mCharSetProbers[i];
   if (mEscCharSetProber)
     delete mEscCharSetProber;
+}
+
+void 
+nsUniversalDetector::Reset()
+{
+  mDone = PR_FALSE;
+  mBestGuess = -1;   //illegal value as signal
+  mAvailable = PR_FALSE;
+  mInTag = PR_FALSE;
+  mEscCharSetProber = nsnull;
+
+  mStart = PR_TRUE;
+  mDetectedCharset = nsnull;
+  mGotData = PR_FALSE;
+  mInputState = ePureAscii;
+  mLastChar = '\0';
+
+  if (mEscCharSetProber)
+    mEscCharSetProber->Reset();
+
+  PRUint32 i;
+  for (i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
+    if (mCharSetProbers[i])
+      mCharSetProbers[i]->Reset();
 }
 
 //---------------------------------------------------------------------
@@ -89,20 +122,28 @@ void nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
   PRUint32 i;
   for (i = 0; i < aLen; i++)
   {
+    //other than 0xa0, if every othe character is ascii, the page is ascii
     if (aBuf[i] & 0x80 && aBuf[i] != (char)0xA0)  //Since many Ascii only page contains NBSP 
     {
+      //we got a non-ascii byte (high-byte)
       if (mInputState != eHighbyte)
       {
+        //adjust state
         mInputState = eHighbyte;
+
+        //kill mEscCharSetProber if it is active
         if (mEscCharSetProber)
           delete mEscCharSetProber;
 
-        mCharSetProbers[0] = new nsMBCSGroupProber;
-        mCharSetProbers[1] = new nsSBCSGroupProber;
-      }
+        //start multibyte and singlebyte charset prober
+        if (nsnull == mCharSetProbers[0])
+          mCharSetProbers[0] = new nsMBCSGroupProber;
+        if (nsnull == mCharSetProbers[1])
+          mCharSetProbers[1] = new nsSBCSGroupProber;      }
     }
     else
     {
+      //ok, just pure ascii so far
       if ( ePureAscii == mInputState &&
         (aBuf[i] == '\033' || (aBuf[i] == '{' && mLastChar == '~')) )
       {
@@ -300,6 +341,7 @@ NS_IMETHODIMP nsUniversalXPCOMStringDetector::DoIt(const char* aBuf, PRUint32 aL
                      const char** oCharset, nsDetectionConfident &oConf)
 {
    mResult = nsnull;
+   this->Reset();
    this->HandleData(aBuf, aLen); 
    this->DataEnd();
    if (mResult)
