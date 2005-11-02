@@ -33,7 +33,6 @@
 #include "txURIUtils.h"
 
 #ifndef TX_EXE
-//#include "nsDOMAttribute.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDocument.h"
@@ -345,31 +344,19 @@ PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
     // fails we QI to nsIDocument. If both those QI's fail we won't let
     // the caller access this unknown node.
     nsCOMPtr<nsIPrincipal> principal;
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-
-    if (!content) {
-//        nsCOMPtr<nsIDOMAttributePrivate> attr = do_QueryInterface(aNode);
-//        if (attr) {
-//            nsCOMPtr<nsIDOMDocument> domDoc;
-//            aNode->GetOwnerDocument(getter_AddRefs(domDoc));
-//            if (!domDoc) {
-//            }
-//        }
-    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
     if (!content) {
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(aNode);
 
         if (!doc) {
-            // aNode is neither a nsIContent nor an nsIDOMAttributePrivate nor
-            // an nsIDocument, something weird is going on...
+            // aNode is neither a nsIContent nor an nsIDocument, something
+            // weird is going on...
 
-            NS_ERROR("aNode is neither an nsIContent nor an "
-                     "nsIDOMAttributePrivate nor an nsIDocument!");
+            NS_ERROR("aNode is neither an nsIContent nor an nsIDocument!");
 
             return PR_FALSE;
         }
-
         doc->GetPrincipal(getter_AddRefs(principal));
     }
     else {
