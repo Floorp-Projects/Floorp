@@ -40,7 +40,7 @@
 #define TRANSFRMX_HTML_OUTPUT_H
 
 #include "txXMLOutput.h"
-#include "Stack.h"
+#include "txStack.h"
 
 class txHTMLOutput : public txXMLOutput
 {
@@ -109,7 +109,7 @@ private:
     MBool isShorthandElement(const nsAString& aName);
     MBool isShorthandAttribute(const nsAString& aLocalName);
 
-    Stack mCurrentElements;
+    txStack mCurrentElements;
 };
 
 #endif
