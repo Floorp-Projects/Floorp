@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Proofpoint, Inc.
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,12 +47,13 @@ MODULE		= universalchardet
 MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= xpcom \
-		  chardet \
 		  $(NULL)
 
 CPPSRCS		= \
 		UniversalChardetTest.cpp \
 		$(NULL)
+
+LOCAL_INCLUDES = -I$(srcdir)/../src/base
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
@@ -59,7 +61,7 @@ include $(topsrcdir)/config/config.mk
 
 LIBS		+= \
 		$(LIBS_DIR) \
-		$(XPCOM_LIBS) \
+		$(DIST)/lib/$(LIB_PREFIX)universalchardet_s.$(LIB_SUFFIX) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
