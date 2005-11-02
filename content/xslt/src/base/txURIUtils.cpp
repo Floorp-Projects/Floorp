@@ -54,6 +54,72 @@
 const char   URIUtils::HREF_PATH_SEP  = '/';
 
 /**
+ * Implementation of utility functions for parsing URLs.
+ * Just file paths for now.
+ */
+void
+txParsedURL::init(const nsAFlatString& aSpec)
+{
+    mPath.Truncate();
+    mName.Truncate();
+    mRef.Truncate();
+    PRUint32 specLength = aSpec.Length();
+    if (!specLength) {
+        return;
+    }
+    const PRUnichar* start = aSpec.get();
+    const PRUnichar* end = start + specLength;
+    const PRUnichar* c = end - 1;
+
+    // check for #ref
+    for (; c >= start; --c) {
+        if (*c == '#') {
+            // we could eventually unescape this, too.
+            mRef = Substring(c + 1, end);
+            end = c;
+            --c;
+            if (c == start) {
+                // we're done,
+                return;
+            }
+            break;
+        }
+    }
+    for (c = end - 1; c >= start; --c) {
+        if (*c == '/') {
+            mName = Substring(c + 1, end);
+            mPath = Substring(start, c + 1);
+            return;
+        }
+    }
+    mName = Substring(start, end);
+}
+
+void
+txParsedURL::resolve(const txParsedURL& aRef, txParsedURL& aDest)
+{
+    /*
+     * No handling of absolute URLs now.
+     * These aren't really URLs yet, anyway, but paths with refs
+     */
+    aDest.mPath = mPath + aRef.mPath;
+
+    if (aRef.mName.IsEmpty() && aRef.mPath.IsEmpty()) {
+        // the relative URL is just a fragment identifier
+        aDest.mName = mName;
+        if (aRef.mRef.IsEmpty()) {
+            // and not even that, keep the base ref
+            aDest.mRef = mRef;
+            return;
+        }
+        aDest.mRef = aRef.mRef;
+        return;
+    }
+    aDest.mName = aRef.mName;
+    aDest.mRef = aRef.mRef;
+}
+
+/**
  * Returns an InputStream for the file represented by the href
  * argument
  * @param href the href of the file to get the input stream for.

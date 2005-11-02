@@ -54,9 +54,21 @@ extern nsIScriptSecurityManager *gTxSecurityManager;
  * Not yet finished, only handles file URI at this point
 **/
 
+#ifdef TX_EXE
+class txParsedURL
+{
+public:
+    void init(const nsAFlatString& aSpec);
+    void resolve(const txParsedURL& aRef, txParsedURL& aDest);
+    const nsDependentConcatenation getFile() const
+    {
+        return mPath + mName;
+    }
+    nsString mPath, mName, mRef;
+};
+#endif
+
 class URIUtils {
-
-
 public:
 
 #ifdef TX_EXE

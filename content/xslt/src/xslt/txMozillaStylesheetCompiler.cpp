@@ -103,7 +103,10 @@ txStylesheetSink::HandleStartElement(const PRUnichar *aName,
                                      PRUint32 aIndex,
                                      PRUint32 aLineNumber)
 {
-    nsresult rv = mCompiler->startElement(aName, aAtts, aAttsCount);
+    // XXX aIndex should be a signed int, that's a bug in the 
+    // Mozilla content sink api.
+    nsresult rv =
+        mCompiler->startElement(aName, aAtts, aAttsCount, (PRInt32)aIndex);
     if (NS_FAILED(rv)) {
         mCompiler->cancel(rv);
         return rv;

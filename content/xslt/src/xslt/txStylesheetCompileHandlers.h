@@ -89,5 +89,6 @@ private:
 };
 
 extern txHandlerTable* gTxRootHandler;
+extern txHandlerTable* gTxEmbedHandler;
 
 #endif //TRANSFRMX_TXSTYLESHEETCOMPILEHANDLERS_H
