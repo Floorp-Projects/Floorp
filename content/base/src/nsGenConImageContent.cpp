@@ -101,5 +101,6 @@ nsGenConImageContent::IntrinsicState() const
     imageState |= NS_EVENT_STATE_SUPPRESSED;
     imageState &= ~NS_EVENT_STATE_BROKEN;
   }
+  imageState &= ~NS_EVENT_STATE_LOADING;
   return state | imageState;
 }
