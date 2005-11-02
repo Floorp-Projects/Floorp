@@ -52,7 +52,7 @@ txStripSpaceItem::~txStripSpaceItem()
 {
     PRInt32 i, count = mStripSpaceTests.Count();
     for (i = 0; i < count; ++i) {
-        delete NS_STATIC_CAST(txStripSpaceTest*, mStripSpaceTests[0]);
+        delete NS_STATIC_CAST(txStripSpaceTest*, mStripSpaceTests[i]);
     }
 }
 
