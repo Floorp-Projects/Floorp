@@ -46,6 +46,7 @@ LIBRARY_NAME = accessibility_toolkit_s
 LIBXUL_LIBRARY = 1
 
 REQUIRES	= content \
+		  layout \
 		  docshell \
 		  dom \
 		  editor \
