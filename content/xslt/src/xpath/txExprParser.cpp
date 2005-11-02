@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.13 2005/11/02 07:33:37 peterv%netscape.com Exp $
+ * $Id: txExprParser.cpp,v 1.14 2005/11/02 07:33:38 sicking%bigfoot.com Exp $
  */
 
 /**
@@ -38,15 +38,12 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.13 $ $Date: 2005/11/02 07:33:37 $
+ * @version $Revision: 1.14 $ $Date: 2005/11/02 07:33:38 $
 **/
 
 #include "ExprParser.h"
 #include "FunctionLib.h"
 #include "Names.h"
-
-const String ExprParser::L_CURLY_BRACE = "{";
-const String ExprParser::R_CURLY_BRACE = "}";
 
 /**
  * Creates a new ExprParser
@@ -60,86 +57,102 @@ ExprParser::~ExprParser() {};
 
 /**
  * Creates an Attribute Value Template using the given value
+ * This should move to XSLProcessor class
 **/
 AttributeValueTemplate* ExprParser::createAttributeValueTemplate
     (const String& attValue)
 {
 
     AttributeValueTemplate* avt = new AttributeValueTemplate();
+
     PRInt32 size = attValue.length();
+    if (size == 0)
+        return avt; //XXX should return 0, but that causes crash in lre12
+
     int cc = 0;
+    UNICODE_CHAR nextCh;
+    UNICODE_CHAR ch;
     String buffer;
     MBool inExpr    = MB_FALSE;
     MBool inLiteral = MB_FALSE;
-    UNICODE_CHAR endLiteral = '"';
-    UNICODE_CHAR prevCh = '\0';
+    UNICODE_CHAR endLiteral;
 
-    while ( cc < size) {
-        UNICODE_CHAR ch = attValue.charAt(cc++);
+    nextCh = attValue.charAt(cc);
+    while (cc++ < size) {
+        ch = nextCh;
+        nextCh = cc != size ? attValue.charAt(cc) : 0;
+        
         // if in literal just add ch to buffer
-        if ( inLiteral && (ch != endLiteral) ) {
+        if (inLiteral && (ch != endLiteral)) {
                 buffer.append(ch);
-                prevCh = ch;
                 continue;
         }
         switch ( ch ) {
             case '\'' :
             case '"' :
                 buffer.append(ch);
-                if (inLiteral) inLiteral = MB_FALSE;
-                else {
+                if (inLiteral)
+                    inLiteral = MB_FALSE;
+                else if (inExpr) {
                     inLiteral = MB_TRUE;
                     endLiteral = ch;
                 }
                 break;
             case  '{' :
-                // Ignore case where we find two { without a }
                 if (!inExpr) {
-                    //-- clear buffer
-                    if ( buffer.length() > 0) {
-                        avt->addExpr(new StringExpr(buffer));
-                        buffer.clear();
+                    // Ignore case where we find two {
+                    if (nextCh == ch) {
+                        buffer.append(ch); //-- append '{'
+                        cc++;
+                        nextCh = cc != size ? attValue.charAt(cc) : 0;
                     }
-                    inExpr = MB_TRUE;
+                    else {
+                        if (buffer.length() > 0)
+                            avt->addExpr(new StringExpr(buffer));
+                        buffer.clear();
+                        inExpr = MB_TRUE;
+                    }
                 }
-                else if (prevCh == ch) {
-                    inExpr = MB_FALSE;
-                    buffer.append(ch);
-                }
-                else {
+                else
                     buffer.append(ch); //-- simply append '{'
-                    ch = '\0';
-                }
                 break;
             case '}':
                 if (inExpr) {
                     inExpr = MB_FALSE;
-                    avt->addExpr(createExpr(buffer));
+                    Expr* expr = createExpr(buffer);
+                    if (!expr) {
+                        delete avt;
+                        return 0;
+                    }
+                    avt->addExpr(expr);
                     buffer.clear();
-                    //-- change in case another '}' follows
-                    ch = '\0';
                 }
-                else if (prevCh != ch) {
-                    if ( buffer.length() > 0) buffer.append('}');
-                    else avt->addExpr(new StringExpr(R_CURLY_BRACE));
+                else if (nextCh == ch) {
+                    buffer.append(ch);
+                    cc++;
+                    nextCh = cc != size ? attValue.charAt(cc) : 0;
+                }
+                else {
+                    //XXX ErrorReport: unmatched '}' found
+                    delete avt;
+                    return 0;
                 }
                 break;
             default:
                 buffer.append(ch);
                 break;
         }
-        prevCh = ch;
     }
-    if ( buffer.length() > 0) {
-        if ( inExpr ) {
-            //-- error
-            String errMsg("#error evaluating AttributeValueTemplate. ");
-            errMsg.append("Missing '}' after: ");
-            errMsg.append(buffer);
-            avt->addExpr(new StringExpr(errMsg));
-        }
-        else avt->addExpr(new StringExpr(buffer));
+
+    if (inExpr) {
+        //XXX ErrorReport: ending '}' missing
+        delete avt;
+        return 0;
     }
+
+    if (buffer.length() > 0)
+        avt->addExpr(new StringExpr(buffer));
+
     return avt;
 
 } //-- createAttributeValueTemplate
@@ -149,9 +162,10 @@ Expr* ExprParser::createExpr(const String& pattern) {
     return createExpr(lexer);
 } //-- createExpr
 
-PatternExpr* ExprParser::createPatternExpr(const String& pattern) {
+Expr* ExprParser::createPatternExpr(const String& pattern) {
     ExprLexer lexer(pattern);
-    return createUnionExpr(lexer);
+    Expr* expr = createUnionExpr(lexer);
+    return expr;
 } //-- createPatternExpr
 
 LocationStep* ExprParser::createLocationStep(const String& path) {
@@ -168,10 +182,9 @@ LocationStep* ExprParser::createLocationStep(const String& path) {
  * Creates a binary Expr for the given operator
 **/
 Expr* ExprParser::createBinaryExpr   (Expr* left, Expr* right, Token* op) {
-    if ( !op ) return 0;
-    switch(op->type) {
-
-
+    if (!op)
+        return 0;
+    switch (op->type) {
         //-- additive ops
         case Token::ADDITION_OP :
             return new AdditiveExpr(left, right, AdditiveExpr::ADDITION);
@@ -216,7 +229,7 @@ Expr* ExprParser::createBinaryExpr   (Expr* left, Expr* right, Token* op) {
 } //-- createBinaryExpr
 
 
-Expr*  ExprParser::createExpr(ExprLexer& lexer) {
+Expr* ExprParser::createExpr(ExprLexer& lexer) {
 
     MBool done = MB_FALSE;
 
@@ -224,68 +237,24 @@ Expr*  ExprParser::createExpr(ExprLexer& lexer) {
 
     Stack exprs;
     Stack ops;
+    
+    while (!done) {
 
-    while ( lexer.hasMoreTokens() && (!done)) {
+        MBool unary = MB_FALSE;
+        while (lexer.peek()->type == Token::SUBTRACTION_OP) {
+            unary = !unary;
+            lexer.nextToken();
+        }
+
+        expr = createUnionExpr(lexer);
+        if (!expr)
+            break;
+
+        if (unary)
+            expr = new UnaryExpr(expr);
 
         Token* tok = lexer.nextToken();
-        switch ( tok->type ) {
-            case Token::L_BRACKET: // Predicate starts here
-            case Token::R_BRACKET:
-            case Token::R_PAREN:
-            case Token::COMMA :
-                lexer.pushBack();
-                done = MB_TRUE;
-                break;
-            case Token::L_PAREN: //-- Grouping Expression
-                expr = createExpr(lexer);
-                //-- look for end ')'
-                if ( lexer.hasMoreTokens() &&
-                        ( lexer.nextToken()->type == Token::R_PAREN ) ) break;
-                else {
-                    //-- error
-                    delete expr;
-                    expr = new StringExpr("missing ')' in expression");
-                }
-                break;
-            case Token::ANCESTOR_OP:
-            case Token::PARENT_OP:
-                lexer.pushBack();
-                if ( !expr ) expr = createPathExpr(lexer);
-                else {
-                    PathExpr* pathExpr = createPathExpr(lexer);
-                    pathExpr->addPatternExpr(0, (PatternExpr*)expr,
-                                                 PathExpr::RELATIVE_OP);
-                    expr = pathExpr;
-                }
-                //done = MB_TRUE;
-                break;
-            case Token::UNION_OP :
-            {
-                UnionExpr* unionExpr = createUnionExpr(lexer);
-                unionExpr->addPathExpr(0, (PathExpr*)expr );
-                expr = unionExpr;
-                done = MB_TRUE;
-                break;
-            }
-            case Token::LITERAL :
-                expr = new StringExpr(tok->value);
-                break;
-            case Token::NUMBER:
-            {
-                StringResult str(tok->value);
-                expr = new NumberExpr(str.numberValue());
-                break;
-            }
-            case Token::FUNCTION_NAME:
-            {
-                lexer.pushBack();
-                expr = createFunctionCall(lexer);
-                break;
-            }
-            case Token::VAR_REFERENCE:
-                expr = new VariableRefExpr(tok->value);
-                break;
-            //-- additive ops
+        switch (tok->type) {
             case Token::ADDITION_OP:
             case Token::DIVIDE_OP:
             //-- boolean ops
@@ -304,30 +273,33 @@ Expr*  ExprParser::createExpr(ExprLexer& lexer) {
             case Token::MULTIPLY_OP:
             case Token::SUBTRACTION_OP:
             {
-                if ( !exprs.empty() ) {
-                    short ttype = ((Token*)ops.peek())->type;
-                    if (precedenceLevel(tok->type) < precedenceLevel(ttype)) {
-                        expr = createBinaryExpr((Expr*)exprs.pop(), expr,
-                            (Token*)ops.pop());
-                    }
+                while (!exprs.empty() &&
+                        precedenceLevel(tok->type) 
+                       <= precedenceLevel(((Token*)ops.peek())->type)) {
+                    expr = createBinaryExpr((Expr*)exprs.pop(),
+                                             expr,
+                                             (Token*)ops.pop());
                 }
                 exprs.push(expr);
                 ops.push(tok);
-                expr = 0; // OG, prevent reuse of expr
                 break;
             }
             default:
                 lexer.pushBack();
-                expr = createPatternExpr(lexer);
+                done = MB_TRUE;
                 break;
         }
     }
 
-    // make sure expr != 0, will this happen?
-    if (( expr == 0 ) && (!exprs.empty()))
-        expr = (Expr*) exprs.pop();
+    // make sure expr != 0
+    if (!expr) {
+        while (!exprs.empty()) {
+            delete (Expr*)exprs.pop();
+        }
+        return 0;
+    }
 
-    while (!exprs.empty() ) {
+    while (!exprs.empty()) {
         expr = createBinaryExpr((Expr*)exprs.pop(), expr, (Token*)ops.pop());
     }
 
@@ -335,67 +307,75 @@ Expr*  ExprParser::createExpr(ExprLexer& lexer) {
 
 } //-- createExpr
 
-FilterExpr*  ExprParser::createFilterExpr(ExprLexer& lexer) {
+Expr* ExprParser::createFilterExpr(ExprLexer& lexer) {
 
-    FilterExpr* filterExpr = new FilterExpr();
     Token* tok = lexer.nextToken();
-    if ( !tok ) return filterExpr;
 
     Expr* expr = 0;
-    switch ( tok->type ) {
+    switch (tok->type) {
         case Token::FUNCTION_NAME :
+            lexer.pushBack();
             expr = createFunctionCall(lexer);
-            filterExpr->setExpr(expr);
             break;
         case Token::VAR_REFERENCE :
             expr = new VariableRefExpr(tok->value);
-            filterExpr->setExpr(expr);
             break;
         case Token::L_PAREN:
-            //-- primary group expr:
             expr = createExpr(lexer);
-            tok = lexer.nextToken();
-            if ( (!tok) || (tok->type != Token::R_PAREN ) ) {
-                String errMsg("error: ");
-                expr->toString(errMsg);
-                errMsg.append(" - missing ')'");
-                delete expr; //-- free up current expr
-                expr = new ErrorFunctionCall(errMsg);
+            if (!expr)
+                return 0;
+
+            if (lexer.nextToken()->type != Token::R_PAREN) {
+                lexer.pushBack();
+                //XXX ErrorReport: right parenthesis expected
+                delete expr;
+                return 0;
             }
-            filterExpr->setExpr(expr);
             break;
-        case Token::PARENT_NODE :
-            expr = new ParentExpr();
-            filterExpr->setExpr(expr);
+        case Token::LITERAL :
+            expr = new StringExpr(tok->value);
             break;
-        case Token::SELF_NODE :
-            expr = new IdentityExpr();
-            filterExpr->setExpr(expr);
+        case Token::NUMBER:
+        {
+            StringResult str(tok->value);
+            expr = new NumberExpr(str.numberValue());
             break;
+        }
         default:
+            // this should never ever happen.
+            lexer.pushBack();
+            //XXX ErrorReport: error in parser, please report on bugzilla.mozilla.org
+            return 0;
             break;
     }
+    if (!expr)
+        return 0;
 
-    //-- handle predicates
-    parsePredicates(filterExpr, lexer);
+    if (lexer.peek()->type == Token::L_BRACKET) {
 
-    return filterExpr;
+        FilterExpr* filterExpr = new FilterExpr();
+        filterExpr->setExpr(expr);
+
+        //-- handle predicates
+        if (!parsePredicates(filterExpr, lexer)) {
+            delete filterExpr;
+            return 0;
+        }
+        expr = filterExpr;
+    }
+
+    return expr;
 
 } //-- createFilterExpr
 
 FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
 
-    if ( !lexer.hasMoreTokens() ) {
-        //-- should never see this, I hope
-        return new ErrorFunctionCall("no tokens, invalid function call");
-    }
-
     FunctionCall* fnCall = 0;
 
     Token* tok = lexer.nextToken();
-
-    if ( tok->type != Token::FUNCTION_NAME ) {
-        return new ErrorFunctionCall("invalid function call");
+    if (tok->type != Token::FUNCTION_NAME) {
+        //XXX ErrorReport: error in parser, please report on bugzilla.mozilla.org
+        return 0;
     }
 
     String fnName = tok->value;
@@ -403,110 +383,97 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
     //-- compare function names
     //-- * we should hash these names for speed
 
-    if ( XPathNames::BOOLEAN_FN.isEqual(tok->value) ) {
+    if (XPathNames::BOOLEAN_FN.isEqual(tok->value)) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_BOOLEAN);
     }
-    else if ( XPathNames::CONCAT_FN.isEqual(tok->value) ) {
+    else if (XPathNames::CONCAT_FN.isEqual(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::CONCAT);
     }
-    else if ( XPathNames::CONTAINS_FN.isEqual(tok->value) ) {
+    else if (XPathNames::CONTAINS_FN.isEqual(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::CONTAINS);
     }
-    else if ( XPathNames::COUNT_FN.isEqual(tok->value) ) {
+    else if (XPathNames::COUNT_FN.isEqual(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::COUNT);
     }
-    else if ( XPathNames::FALSE_FN.isEqual(tok->value) ) {
+    else if (XPathNames::FALSE_FN.isEqual(tok->value)) {
         fnCall = new BooleanFunctionCall();
     }
-    else if ( XPathNames::ID_FN.isEqual(tok->value) ) {
+    else if (XPathNames::ID_FN.isEqual(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::ID);
     }
-    else if ( XPathNames::LANG_FN.isEqual(tok->value) ) {
+    else if (XPathNames::LANG_FN.isEqual(tok->value)) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_LANG);
     }
-    else if ( XPathNames::LAST_FN.isEqual(tok->value) ) {
+    else if (XPathNames::LAST_FN.isEqual(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::LAST);
     }
-    else if ( XPathNames::LOCAL_NAME_FN.isEqual(tok->value) ) {
+    else if (XPathNames::LOCAL_NAME_FN.isEqual(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::LOCAL_NAME);
     }
-    else if ( XPathNames::NAME_FN.isEqual(tok->value) ) {
+    else if (XPathNames::NAME_FN.isEqual(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAME);
     }
-    else if ( XPathNames::NAMESPACE_URI_FN.isEqual(tok->value) ) {
+    else if (XPathNames::NAMESPACE_URI_FN.isEqual(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAMESPACE_URI);
     }
-    else if ( XPathNames::NORMALIZE_SPACE_FN.isEqual(tok->value) ) {
+    else if (XPathNames::NORMALIZE_SPACE_FN.isEqual(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::NORMALIZE_SPACE);
     }
-    else if ( XPathNames::NOT_FN.isEqual(tok->value) ) {
+    else if (XPathNames::NOT_FN.isEqual(tok->value)) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_NOT);
     }
-    else if ( XPathNames::POSITION_FN.isEqual(tok->value) ) {
+    else if (XPathNames::POSITION_FN.isEqual(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::POSITION);
     }
-    else if ( XPathNames::STARTS_WITH_FN.isEqual(tok->value) ) {
+    else if (XPathNames::STARTS_WITH_FN.isEqual(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::STARTS_WITH);
     }
-    else if ( XPathNames::STRING_FN.isEqual(tok->value) ) {
+    else if (XPathNames::STRING_FN.isEqual(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::STRING);
     }
-    else if ( XPathNames::STRING_LENGTH_FN.isEqual(tok->value) ) {
+    else if (XPathNames::STRING_LENGTH_FN.isEqual(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::STRING_LENGTH);
     }
-    else if ( XPathNames::SUBSTRING_FN.isEqual(tok->value) ) {
+    else if (XPathNames::SUBSTRING_FN.isEqual(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING);
     }
-    else if ( XPathNames::SUBSTRING_AFTER_FN.isEqual(tok->value) ) {
+    else if (XPathNames::SUBSTRING_AFTER_FN.isEqual(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING_AFTER);
     }
-    else if ( XPathNames::SUBSTRING_BEFORE_FN.isEqual(tok->value) ) {
+    else if (XPathNames::SUBSTRING_BEFORE_FN.isEqual(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING_BEFORE);
     }
-    else if ( XPathNames::SUM_FN.isEqual(tok->value) ) {
+    else if (XPathNames::SUM_FN.isEqual(tok->value)) {
         fnCall = new NumberFunctionCall(NumberFunctionCall::SUM);
     }
-    else if ( XPathNames::TRANSLATE_FN.isEqual(tok->value) ) {
+    else if (XPathNames::TRANSLATE_FN.isEqual(tok->value)) {
         fnCall = new StringFunctionCall(StringFunctionCall::TRANSLATE);
     }
-    else if ( XPathNames::TRUE_FN.isEqual(tok->value) ) {
+    else if (XPathNames::TRUE_FN.isEqual(tok->value)) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_TRUE);
     }
-    // OG+
-    else if ( XPathNames::NUMBER_FN.isEqual(tok->value) ) {
+    else if (XPathNames::NUMBER_FN.isEqual(tok->value)) {
         fnCall = new NumberFunctionCall(NumberFunctionCall::NUMBER);
     }
-    else if ( XPathNames::ROUND_FN.isEqual(tok->value) ) {
+    else if (XPathNames::ROUND_FN.isEqual(tok->value)) {
         fnCall = new NumberFunctionCall(NumberFunctionCall::ROUND);
     }
-    else if ( XPathNames::CEILING_FN.isEqual(tok->value) ) {
+    else if (XPathNames::CEILING_FN.isEqual(tok->value)) {
         fnCall = new NumberFunctionCall(NumberFunctionCall::CEILING);
     }
-    else if ( XPathNames::FLOOR_FN.isEqual(tok->value) ) {
+    else if (XPathNames::FLOOR_FN.isEqual(tok->value)) {
         fnCall = new NumberFunctionCall(NumberFunctionCall::FLOOR);
     }
-    // OG-
     else {
         //-- Most likely an Extension Function, or error, but it's
         //-- not our job to report an invalid function call here
         fnCall = new ExtensionFunctionCall(fnName);
     }
+    
     //-- handle parametes
-    List params;
-    String* errMsg = parseParameters(&params, lexer);
-    if (errMsg) {
-        String err("error with function call, \"");
-        err.append(fnName);
-        err.append("\" : ");
-        err.append(*errMsg);
-        fnCall = new ErrorFunctionCall(err);
-        delete errMsg;
-    }
-    // copy params
-    else if (params.getLength() > 0) {
-        ListIterator* iter = params.iterator();
-        while ( iter->hasNext() ) fnCall->addParam( (Expr*)iter->next() );
-        delete iter;
+    if (!parseParameters(fnCall, lexer)) {
+        delete fnCall;
+        return 0;
     }
     return fnCall;
 } //-- createFunctionCall
@@ -514,9 +481,12 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
 LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
 
     LocationStep* lstep = new LocationStep();
-    short axisIdentifier = LocationStep::CHILD_AXIS;
 
-    //-- get Axis Identifier, if present
+    //-- child axis is default
+    short axisIdentifier = LocationStep::CHILD_AXIS;
+    NodeExpr* nodeExpr = 0;
+
+    //-- get Axis Identifier or AbbreviatedStep, if present
     Token* tok = lexer.peek();
     switch (tok->type) {
         case Token::AXIS_IDENTIFIER:
@@ -524,37 +494,49 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
             //-- eat token
             lexer.nextToken();
             //-- should switch to a hash here for speed if necessary
-            if ( ANCESTOR_AXIS.isEqual(tok->value) )
+            if (ANCESTOR_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::ANCESTOR_AXIS;
-            else if ( ANCESTOR_OR_SELF_AXIS.isEqual(tok->value) )
+            }
+            else if (ANCESTOR_OR_SELF_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::ANCESTOR_OR_SELF_AXIS;
-            else if ( ATTRIBUTE_AXIS.isEqual(tok->value) )
+            }
+            else if (ATTRIBUTE_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::ATTRIBUTE_AXIS;
-            else if ( CHILD_AXIS.isEqual(tok->value) )
+            }
+            else if (CHILD_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::CHILD_AXIS;
-            else if ( DESCENDANT_AXIS.isEqual(tok->value) )
+            }
+            else if (DESCENDANT_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::DESCENDANT_AXIS;
-            else if ( DESCENDANT_OR_SELF_AXIS.isEqual(tok->value) )
+            }
+            else if (DESCENDANT_OR_SELF_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::DESCENDANT_OR_SELF_AXIS;
-            else if ( FOLLOWING_AXIS.isEqual(tok->value) )
+            }
+            else if (FOLLOWING_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::FOLLOWING_AXIS;
-            else if ( FOLLOWING_SIBLING_AXIS.isEqual(tok->value) )
+            }
+            else if (FOLLOWING_SIBLING_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::FOLLOWING_SIBLING_AXIS;
-            else if ( NAMESPACE_AXIS.isEqual(tok->value) )
+            }
+            else if (NAMESPACE_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::NAMESPACE_AXIS;
-            else if ( PARENT_AXIS.isEqual(tok->value) )
+            }
+            else if (PARENT_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::PARENT_AXIS;
-            else if ( PRECEDING_AXIS.isEqual(tok->value) )
+            }
+            else if (PRECEDING_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::PRECEDING_AXIS;
-            else if ( PRECEDING_SIBLING_AXIS.isEqual(tok->value) )
+            }
+            else if (PRECEDING_SIBLING_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::PRECEDING_SIBLING_AXIS;
-            else if ( SELF_AXIS.isEqual(tok->value) )
+            }
+            else if (SELF_AXIS.isEqual(tok->value)) {
                 axisIdentifier = LocationStep::SELF_AXIS;
-            //-- child axis is default
-            else if (!CHILD_AXIS.isEqual(tok->value)) {
-                //-- handle error gracefully, simply ignore invalid axis and
-                //-- use default. Add error message when message observer
-                //-- is implemented
+            }
+            else {
+                delete lstep;
+                //XXX ErrorReport: unknow axis
+                return 0;
             }
             break;
         }
@@ -563,49 +545,53 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
             lexer.nextToken();
             axisIdentifier = LocationStep::ATTRIBUTE_AXIS;
             break;
+        case Token::PARENT_NODE :
+            //-- eat token
+            lexer.nextToken();
+            axisIdentifier = LocationStep::PARENT_AXIS;
+            nodeExpr = new BasicNodeExpr();
+            break;
+        case Token::SELF_NODE :
+            //-- eat token
+            lexer.nextToken();
+            axisIdentifier = LocationStep::SELF_AXIS;
+            nodeExpr = new BasicNodeExpr();
+            break;
         default:
             break;
     }
 
+    //-- get NodeTest unless AbbreviatedStep was found
+    if (!nodeExpr) {
+        tok = lexer.nextToken();
+
+        switch (tok->type) {
+            case Token::CNAME :
+                // NameTest
+                // XXX Namespace: handle namespaces here
+                if (axisIdentifier ==  LocationStep::ATTRIBUTE_AXIS)
+                    nodeExpr = new AttributeExpr(tok->value);
+                else
+                    nodeExpr = new ElementExpr(tok->value);
+                break;
+            default:
+                lexer.pushBack();
+                nodeExpr = createNodeExpr(lexer);
+                if (!nodeExpr) {
+                    delete lstep;
+                    return 0;
+                }
+        }
+    }
+    
     lstep->setAxisIdentifier(axisIdentifier);
-
-
-    NodeExpr* nodeExpr = 0;
-
-    tok = lexer.peek();
-    if (!tok) {
-        ///XXXXX We need to create an ErrorExpr or something to
-        ///XXXXX handle errors
-    }
-    // NameTest
-    else if (tok->type == Token::CNAME) {
-        //-- handle NameTest
-        //-- eat token
-        lexer.nextToken();
-        if (axisIdentifier ==  LocationStep::ATTRIBUTE_AXIS)
-            nodeExpr = new AttributeExpr(tok->value);
-        else
-            nodeExpr = new ElementExpr(tok->value);
-
-    }
-    // NodeType
-    else {
-       nodeExpr = createNodeExpr(lexer);
-    }
-
     lstep->setNodeExpr(nodeExpr);
 
-
-
     //-- handle predicates
-
-    parsePredicates(lstep, lexer);
-
-    //<debug>
-    //String tmp;
-    //lstep->toString(tmp);
-    //cout << "returning LocationStep: "<< tmp <<endl;
-    //</debug>
+    if (!parsePredicates(lstep, lexer)) {
+        delete lstep;
+        return 0;
+    }
 
     return lstep;
 } //-- createLocationPath
@@ -615,50 +601,49 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
  *
 **/
 NodeExpr* ExprParser::createNodeExpr(ExprLexer& lexer) {
-#if 0
-    // XXX DEBUG OUTPUT
-    cout << "creating NodeExpr: "<<endl;
-    if (!lexer.hasMoreTokens() ) cout << "Lexer has no Tokens"<<endl;
-#endif
-    if (!lexer.hasMoreTokens() )  return 0;
 
     NodeExpr* nodeExpr = 0;
 
-    Token* tok = lexer.nextToken();
-    //cout << "Token #" << tok->type <<endl;
-    List params;
+    Token* nodeTok = lexer.nextToken();
 
-    String* errMsg = 0;
-
-    switch ( tok->type ) {
+    switch (nodeTok->type) {
         case Token::COMMENT:
             nodeExpr = new BasicNodeExpr(NodeExpr::COMMENT_EXPR);
-            errMsg = parseParameters(&params, lexer);
-            //-- ignore errMsg for now
-            delete errMsg;
             break;
         case Token::NODE :
             nodeExpr = new BasicNodeExpr();
-            errMsg = parseParameters(&params, lexer);
-            //-- ignore errMsg for now
-            delete errMsg;
             break;
         case Token::PROC_INST :
             nodeExpr = new BasicNodeExpr(NodeExpr::PI_EXPR);
-            errMsg = parseParameters(&params, lexer);
-            //-- ignore errMsg for now
-            delete errMsg;
             break;
         case Token::TEXT :
             nodeExpr = new TextExpr();
-            errMsg = parseParameters(&params, lexer);
-            //-- ignore errMsg for now
-            delete errMsg;
             break;
         default:
-            //XXXX ignore error for now
+            lexer.pushBack();
+            // XXX ErrorReport: unexpected token
+            return 0;
             break;
     }
+
+    if (lexer.nextToken()->type != Token::L_PAREN) {
+        lexer.pushBack();
+        //XXX ErrorReport: left parenthesis expected
+        delete nodeExpr;
+        return 0;
+    }
+    if (nodeTok->type == Token::PROC_INST &&
+        lexer.peek()->type == Token::LITERAL) {
+        Token* tok = lexer.nextToken();
+        ((BasicNodeExpr*)nodeExpr)->setNodeName(tok->value);
+    }
+    if (lexer.nextToken()->type != Token::R_PAREN) {
+        lexer.pushBack();
+        //XXX ErrorReport: right parenthesis expected (or literal for pi)
+        delete nodeExpr;
+        return 0;
+    }
+
     return nodeExpr;
 } //-- createNodeExpr
 
@@ -666,37 +651,50 @@ NodeExpr* ExprParser::createNodeExpr(ExprLexer& lexer) {
  * Creates a PathExpr using the given ExprLexer
  * @param lexer the ExprLexer for retrieving Tokens
 **/
-PathExpr* ExprParser::createPathExpr(ExprLexer& lexer) {
+Expr* ExprParser::createPathExpr(ExprLexer& lexer) {
 
+    Expr* expr = 0;
 
-    //-- check for RootExpr
-    if ( lexer.countRemainingTokens() == 1 ) {
-        if ( lexer.peek()->type == Token::PARENT_OP ) {
-            lexer.nextToken(); //-- eat token
-            return new RootExpr();
-        }
+    Token* tok = lexer.peek();
+
+    // is this a root expression?
+    if (tok->type == Token::PARENT_OP) {
+        lexer.nextToken();
+        if (!isLocationStepToken(lexer.peek()))
+            return new RootExpr;
+
+        lexer.pushBack();
     }
 
-    PathExpr* pathExpr = new PathExpr();
-    short ancestryOp = PathExpr::RELATIVE_OP;
-
-    while ( lexer.hasMoreTokens() ) {
-        Token* tok = lexer.nextToken();
-        if ( lexer.isOperatorToken(tok) ) {
-            lexer.pushBack();
-            return pathExpr;
+    // parse first step (possibly a FilterExpr)
+    if (tok->type != Token::PARENT_OP &&
+        tok->type != Token::ANCESTOR_OP) {
+        if (isFilterExprToken(tok)) {
+            expr = createFilterExpr(lexer);
         }
-        switch ( tok->type ) {
-            case Token::R_PAREN:
-            case Token::R_BRACKET:
-            case Token::UNION_OP:
-                //Marina, addition start
-                // When parsing a list of parameters for a function comma should signal a spot
-                // without it further processing pathExpr was causing "invalid token" error
-            case Token::COMMA:
-                // Marina, addition ends
-                lexer.pushBack();
-                return pathExpr;
+        else
+            expr = createLocationStep(lexer);
+
+        if (!expr) 
+            return 0;
+
+        // is this a singlestep path expression?
+        tok = lexer.peek();
+        if (tok->type != Token::PARENT_OP &&
+            tok->type != Token::ANCESTOR_OP)
+            return expr;
+    }
+    
+    //we have a pathexpression containing several steps
+    PathExpr* pathExpr = new PathExpr();
+    if (expr)
+        pathExpr->addExpr(expr, PathExpr::RELATIVE_OP);
+
+    // this is ugly
+    while (1) {
+        short ancestryOp;
+        tok = lexer.nextToken();
+        switch (tok->type) {
             case Token::ANCESTOR_OP :
                 ancestryOp = PathExpr::ANCESTOR_OP;
                 break;
@@ -705,86 +703,59 @@ PathExpr* ExprParser::createPathExpr(ExprLexer& lexer) {
                 break;
             default:
                 lexer.pushBack();
-                pathExpr->addPatternExpr(createPatternExpr(lexer), ancestryOp);
-                ancestryOp = PathExpr::RELATIVE_OP;
-                break;
+                return pathExpr;
         }
+        
+        expr = createLocationStep(lexer);
+        if (!expr) {
+            delete pathExpr;
+            return 0;
+        }
+        
+        pathExpr->addExpr(expr, ancestryOp);
     }
-
-    /* <debug> *
-    String tmp;
-    pathExpr->toString(tmp);
-    cout << "creating pathExpr: " << tmp << endl;
-    /* </debug> */
 
     return pathExpr;
 } //-- createPathExpr
 
 /**
- * Creates a PatternExpr using the given ExprLexer
- * @param lexer the ExprLexer for retrieving Tokens
-**/
-PatternExpr* ExprParser::createPatternExpr(ExprLexer& lexer) {
-
-    PatternExpr* pExpr = 0;
-    Token* tok = lexer.peek();
-    if ( isLocationStepToken(tok) ) {
-        pExpr = createLocationStep(lexer);
-    }
-    else if ( isFilterExprToken(tok) ) {
-        pExpr = createFilterExpr(lexer);
-    }
-    else {
-#if 0
-        // XXX DEBUG OUTPUT
-        cout << "invalid token: " << tok->value << endl;
-#endif
-        //-- eat token for now
-        lexer.nextToken();
-    }
-    return pExpr;
-} //-- createPatternExpr
-
-/**
  * Creates a PathExpr using the given ExprLexer
+ * XXX temporary use as top of XSLT Pattern
  * @param lexer the ExprLexer for retrieving Tokens
 **/
-UnionExpr* ExprParser::createUnionExpr(ExprLexer& lexer) {
+Expr* ExprParser::createUnionExpr(ExprLexer& lexer) {
+
+    Expr* expr = createPathExpr(lexer);
+    if (!expr)
+        return 0;
+    
+    if (lexer.peek()->type != Token::UNION_OP)
+        return expr;
+
     UnionExpr* unionExpr = new UnionExpr();
+    unionExpr->addExpr(expr);
 
-    while ( lexer.hasMoreTokens() ) {
-        Token* tok = lexer.nextToken();
-        switch ( tok->type ) {
+    while (lexer.peek()->type == Token::UNION_OP) {
+        lexer.nextToken(); //-- eat token
 
-            case Token::R_PAREN:
-            case Token::R_BRACKET:
-                lexer.pushBack();
-                return unionExpr;
-            case Token::UNION_OP :
-                //-- eat token
-                break;
-            default:
-                lexer.pushBack();
-                unionExpr->addPathExpr(createPathExpr(lexer));
-                break;
+        expr = createPathExpr(lexer);
+        if (!expr) {
+            delete unionExpr;
+            return 0;
         }
+        unionExpr->addExpr(expr);
     }
-    //String tmp;
-    //unionExpr->toString(tmp);
-    //cout << "creating UnionExpr: " << tmp << endl;
+
     return unionExpr;
 } //-- createUnionExpr
 
 MBool ExprParser::isFilterExprToken(Token* token) {
-    if ( !token ) return MB_FALSE;
     switch (token->type) {
         case Token::LITERAL:
         case Token::NUMBER:
         case Token::FUNCTION_NAME:
         case Token::VAR_REFERENCE:
         case Token::L_PAREN:            // grouping expr
-        case Token::PARENT_NODE:
-        case Token::SELF_NODE :
             return MB_TRUE;
         default:
             return MB_FALSE;
@@ -792,15 +763,19 @@ MBool ExprParser::isFilterExprToken(Token* token) {
 } //-- isFilterExprToken
 
 MBool ExprParser::isLocationStepToken(Token* token) {
-    if (!token) return MB_FALSE;
-    return ((token->type == Token::AXIS_IDENTIFIER) || isNodeTypeToken(token));
+    switch (token->type) {
+        case Token::AXIS_IDENTIFIER :
+        case Token::AT_SIGN :
+        case Token::PARENT_NODE :
+        case Token::SELF_NODE :
+            return MB_TRUE;
+        default:
+            return isNodeTypeToken(token);
+    }
 } //-- isLocationStepToken
 
 MBool ExprParser::isNodeTypeToken(Token* token) {
-    if (!token) return MB_FALSE;
-
-    switch ( token->type ) {
-        case Token::AT_SIGN:
+    switch (token->type) {
         case Token::CNAME:
         case Token::COMMENT:
         case Token::NODE :
@@ -810,7 +785,7 @@ MBool ExprParser::isNodeTypeToken(Token* token) {
         default:
             return MB_FALSE;
     }
-} //-- isLocationStepToken
+} //-- isNodeTypeToken
 
 /**
  * Using the given lexer, parses the tokens if they represent a predicate list
@@ -820,43 +795,27 @@ MBool ExprParser::isNodeTypeToken(Token* token) {
  * @param lexer the ExprLexer to use for parsing tokens
  * @return 0 if successful, or a String pointer to the error message
 **/
-String* ExprParser::parsePredicates(PredicateList* predicateList, ExprLexer& lexer) {
+MBool ExprParser::parsePredicates(PredicateList* predicateList, ExprLexer& lexer) {
 
     String* errorMsg = 0;
 
-    Token* tok = lexer.peek();
-
-    if ( !tok ) return 0; //-- no predicates
-    if ( tok->type != Token::L_BRACKET ) return 0; //-- not start of predicate list
-
-    lexer.nextToken();
-
-    while ( lexer.hasMoreTokens() ) {
-        tok = lexer.peek();
-        if(!tok) {
-            //-- error missing ']'
-            errorMsg = new String("missing close of predicate expression ']'");
-            break;
-        }
-        if ( tok->type == Token::R_BRACKET) {
-            lexer.nextToken(); //-- eat ']'
-
-
-            //-- Fix: look ahead at next token for mulitple predicates - Marina M.
-            tok = lexer.peek();
-            if ((!tok) || ( tok->type != Token::L_BRACKET )) break;
-            //-- /Fix
-        }
-
-        //-- Fix: handle multiple predicates - Marina M.
-        if (tok->type == Token::L_BRACKET)
-            lexer.nextToken(); //-- swallow '['
-        //-- /Fix
+    while (lexer.peek()->type == Token::L_BRACKET) {
+        //-- eat Token
+        lexer.nextToken();
 
         Expr* expr = createExpr(lexer);
+        if (!expr)
+            return MB_FALSE;
+
         predicateList->add(expr);
+
+        if (lexer.nextToken()->type != Token::R_BRACKET) {
+            lexer.pushBack();
+            //XXX ErrorReport: right bracket expected
+            return MB_FALSE;
+        }
     }
-    return errorMsg;
+    return MB_TRUE;
 
 } //-- parsePredicates
 
@@ -867,53 +826,46 @@ String* ExprParser::parsePredicates(PredicateList* predicateList, ExprLexer& lex
  * error message.
  * @param list, the List to add parameter expressions to
  * @param lexer the ExprLexer to use for parsing tokens
- * @return 0 if successful, or a String pointer to the error message
+ * @return MB_TRUE if successful, or a MB_FALSE otherwise
 **/
-String* ExprParser::parseParameters(List* list, ExprLexer& lexer) {
+MBool ExprParser::parseParameters(FunctionCall* fnCall, ExprLexer& lexer) {
 
-    String* errorMsg = 0;
+    if (lexer.nextToken()->type != Token::L_PAREN) {
+        lexer.pushBack();
+        //XXX ErrorReport: left parenthesis expected
+        return MB_FALSE;
+    }
 
-    Token* tok = lexer.peek();
+    if (lexer.peek()->type == Token::R_PAREN) {
+        lexer.nextToken();
+        return MB_TRUE;
+    }
 
-    if ( !tok ) return 0; //-- no params
-    if ( tok->type != Token::L_PAREN ) return 0; //-- not start of param list
+    while (1) {
+        Expr* expr = createExpr(lexer);
+        if (!expr)
+            return MB_FALSE;
 
-    lexer.nextToken(); //-- eat L_PAREN
-
-    MBool done     = MB_FALSE;
-    MBool foundSep = MB_FALSE;
-
-    while ( lexer.hasMoreTokens() && !done) {
-        tok = lexer.peek();
-        switch ( tok->type ) {
+        fnCall->addParam(expr);
+            
+        switch (lexer.nextToken()->type) {
             case Token::R_PAREN :
-                if (foundSep) errorMsg = new String("missing expression after ','");
-                lexer.nextToken(); //-- eat R_PAREN
-                done = MB_TRUE;
-                break;
+                return MB_TRUE;
             case Token::COMMA: //-- param separator
-                //-- eat COMMA
-                lexer.nextToken();
-                foundSep = MB_TRUE;
                 break;
             default:
-                if ((list->getLength() > 0) && (!foundSep)) {
-                    errorMsg = new String("missing ',' or ')'");
-                    done = MB_TRUE;
-                    break;
-                }
-                foundSep = MB_FALSE;
-                Expr* expr = createExpr(lexer);
-                list->add(expr);
-                break;
+                lexer.pushBack();
+                //XXX ErrorReport: right parenthesis or comma expected
+                return MB_FALSE;
         }
     }
-    return errorMsg;
+
+    return MB_FALSE;
 
 } //-- parseParameters
 
 short ExprParser::precedenceLevel(short tokenType) {
-    switch(tokenType) {
+    switch (tokenType) {
         case Token::OR_OP:
             return 1;
         case Token::AND_OP:

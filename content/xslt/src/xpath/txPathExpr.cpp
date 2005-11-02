@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -29,7 +29,7 @@
  *       - foo//bar would not match properly if there was more than
  *         one node in the NodeSet (nodes) on the final iteration
  *
- * $Id: txPathExpr.cpp,v 1.6 2005/11/02 07:33:42 axel%pike.org Exp $
+ * $Id: txPathExpr.cpp,v 1.7 2005/11/02 07:33:43 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -43,53 +43,58 @@
 /**
  * Creates a new PathExpr
 **/
-PathExpr::PathExpr() {
+PathExpr::PathExpr()
+{
     //-- do nothing
 }
 
 /**
- * Destructor, will delete all Pattern Expressions
+ * Destructor, will delete all Expressions
 **/
-PathExpr::~PathExpr() {
+PathExpr::~PathExpr()
+{
     ListIterator* iter = expressions.iterator();
-    while ( iter->hasNext() ) {
+    while (iter->hasNext()) {
          iter->next();
          PathExprItem* pxi = (PathExprItem*)iter->remove();
-         delete pxi->pExpr;
+         delete pxi->expr;
          delete pxi;
     }
     delete iter;
 } //-- ~PathExpr
 
 /**
- * Adds the PatternExpr to this PathExpr
+ * Adds the Expr to this PathExpr
  * @param expr the Expr to add to this PathExpr
  * @param index the index at which to add the given Expr
 **/
-void PathExpr::addPatternExpr(int index, PatternExpr* expr, short ancestryOp) {
+void PathExpr::addExpr(int index, Expr* expr, short ancestryOp)
+{
     if (expr) {
         PathExprItem* pxi = new PathExprItem;
-        pxi->pExpr = expr;
+        pxi->expr = expr;
         pxi->ancestryOp = ancestryOp;
         expressions.insert(index, pxi);
     }
 } //-- addPattenExpr
 
 /**
- * Adds the PatternExpr to this PathExpr
+ * Adds the Expr to this PathExpr
  * @param expr the Expr to add to this PathExpr
 **/
-void PathExpr::addPatternExpr(PatternExpr* expr, short ancestryOp) {
+void PathExpr::addExpr(Expr* expr, short ancestryOp)
+{
     if (expr) {
         PathExprItem* pxi = new PathExprItem;
-        pxi->pExpr = expr;
+        pxi->expr = expr;
         pxi->ancestryOp = ancestryOp;
         expressions.add(pxi);
     }
 } //-- addPattenExpr
 
-MBool PathExpr::isAbsolute() {
-    if ( expressions.getLength() > 0 ) {
+MBool PathExpr::isAbsolute()
+{
+    if (expressions.getLength() > 0) {
         ListIterator* iter = expressions.iterator();
         PathExprItem* pxi = (PathExprItem*)iter->next();
         delete iter;
@@ -98,9 +103,9 @@ MBool PathExpr::isAbsolute() {
     return MB_FALSE;
 } //-- isAbsolute
 
-    //------------------------------------/
-  //- Virtual methods from PatternExpr -/
-//------------------------------------/
+    //-----------------------------/
+  //- Virtual methods from Expr -/
+//-----------------------------/
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -109,24 +114,23 @@ MBool PathExpr::isAbsolute() {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* PathExpr::evaluate(Node* context, ContextState* cs) {
+ExprResult* PathExpr::evaluate(Node* context, ContextState* cs)
+{
     //-- add selectExpr functionality here
 
-    if ( (!context)  || (expressions.getLength() == 0))
+    if (!context || (expressions.getLength() == 0))
             return new NodeSet(0);
 
     NodeSet* nodes = new NodeSet();
 
-    if ((isAbsolute()) && (context->getNodeType() != Node::DOCUMENT_NODE))
+    if (isAbsolute() && (context->getNodeType() != Node::DOCUMENT_NODE))
         nodes->add(context->getOwnerDocument());
     else
         nodes->add(context);
 
-
     ListIterator* iter = expressions.iterator();
 
-    while ( iter->hasNext() ) {
-
+    while (iter->hasNext()) {
         PathExprItem* pxi = (PathExprItem*)iter->next();
         NodeSet* tmpNodes = 0;
         cs->getNodeSetStack()->push(nodes);
@@ -134,22 +138,21 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs) {
             Node* node = nodes->get(i);
             
             NodeSet* resNodes;
-            if ( pxi->ancestryOp == ANCESTOR_OP) {
+            if (pxi->ancestryOp == ANCESTOR_OP) {
                 resNodes = new NodeSet;
-                evalDescendants(pxi->pExpr, node, cs, resNodes);
+                evalDescendants(pxi->expr, node, cs, resNodes);
             }
             else {
-                ExprResult *res = pxi->pExpr->evaluate(node, cs);
-                if (!res || res->getResultType() != ExprResult::NODESET) {
+                ExprResult *res = pxi->expr->evaluate(node, cs);
+                if (!res || (res->getResultType() != ExprResult::NODESET)) {
                     //XXX ErrorReport: report nonnodeset error
                     delete res;
                     res = new NodeSet;
                 }
-
                 resNodes = (NodeSet*)res;
             }
 
-            if ( tmpNodes ) {
+            if (tmpNodes) {
                 resNodes->copyInto(*tmpNodes);
                 delete resNodes;
             }
@@ -159,7 +162,7 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs) {
         }
         delete (NodeSet*) cs->getNodeSetStack()->pop();
         nodes = tmpNodes;
-        if ( !nodes || nodes->size() == 0 ) break;
+        if (!nodes || (nodes->size() == 0)) break;
     }
     delete iter;
 
@@ -168,14 +171,14 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs) {
 
 /**
  * Selects from the descendants of the context node
- * all nodes that match the PatternExpr
+ * all nodes that match the Expr
  * -- this will be moving to a Utility class
 **/
-void PathExpr::evalDescendants
-    (PatternExpr* pExpr, Node* context, ContextState* cs, NodeSet* resNodes)
+void PathExpr::evalDescendants (Expr* expr, Node* context,
+                                ContextState* cs, NodeSet* resNodes)
 {
-    ExprResult *res = pExpr->evaluate(context, cs);
-    if (!res || res->getResultType() != ExprResult::NODESET) {
+    ExprResult *res = expr->evaluate(context, cs);
+    if (!res || (res->getResultType() != ExprResult::NODESET)) {
         //XXX ErrorReport: report nonnodeset error
     }
     else
@@ -185,10 +188,10 @@ void PathExpr::evalDescendants
     MBool filterWS = cs->isStripSpaceAllowed(context);
     
     Node* child = context->getFirstChild();
-    while(child) {
-        if(!(filterWS && child->getNodeType() == Node::TEXT_NODE &&
+    while (child) {
+        if (!(filterWS && (child->getNodeType() == Node::TEXT_NODE) &&
              XMLUtils::shouldStripTextnode(child->getNodeValue())))
-            evalDescendants(pExpr, child, cs, resNodes);
+            evalDescendants(expr, child, cs, resNodes);
         child = child->getNextSibling();
     }
 } //-- evalDescendants
@@ -199,31 +202,30 @@ void PathExpr::evalDescendants
  * If this pattern does not match the given Node under the current context Node and
  * ContextState then Negative Infinity is returned.
 **/
-double PathExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
-
-    if ( matches(node, context, cs) ) {
+double PathExpr::getDefaultPriority(Node* node, Node* context,
+                                    ContextState* cs)
+{
+    if (matches(node, context, cs)) {
         int size = expressions.getLength();
-        if ( size == 1) {
+        if (size == 1) {
             ListIterator* iter = expressions.iterator();
             PathExprItem* pxi = (PathExprItem*)iter->next();
             delete iter;
-            return pxi->pExpr->getDefaultPriority(node, context, cs);
+            return pxi->expr->getDefaultPriority(node, context, cs);
         }
-        else if ( size > 1 ) {
+        else if (size > 1) 
             return 0.5;
-        }
     }
     return Double::NEGATIVE_INFINITY;
 } //-- getDefaultPriority
 
 /**
- * Determines whether this PatternExpr matches the given node within
+ * Determines whether this Expr matches the given node within
  * the given context
 **/
-MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
-
-
-    if ( (!node)  || (expressions.getLength() == 0))
+MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
+{
+    if (!node || (expressions.getLength() == 0))
        return MB_FALSE;
 
     //-- for performance reasons, I've duplicated some code
@@ -241,7 +243,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
             {
                 Node* ancestor = node;
                 while (ancestor = cs->getParentNode(ancestor))  {
-                    if (pxi->pExpr->matches(node, ancestor, cs))
+                    if (pxi->expr->matches(node, ancestor, cs))
                         return MB_TRUE;
                 }
                 break;
@@ -252,45 +254,40 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
                 if (parent) {
                     //-- make sure node is Document node
                     if (parent->getNodeType() == Node::DOCUMENT_NODE)
-                        return pxi->pExpr->matches(node, parent, cs);
+                        return pxi->expr->matches(node, parent, cs);
                 }
                 break;
             }
             default:
-                return pxi->pExpr->matches(node, context, cs);
-
+                return pxi->expr->matches(node, context, cs);
         }
 
         return MB_FALSE;
     }
 
-
     //-- if we reach here we have subpaths...
-
     NodeSet nodes(3);
     NodeSet tmpNodes(3);
 
     nodes.add(node);
 
-
     ListIterator* iter = expressions.iterator();
     iter->reverse();
 
-    while ( iter->hasNext() ) {
+    while (iter->hasNext()) {
 
         PathExprItem* pxi = (PathExprItem*)iter->next();
 
         for (int i = 0; i < nodes.size(); i++) {
-
             Node* tnode = nodes.get(i);
 
-                //-- select node's parent or ancestors
+            //-- select node's parent or ancestors
             switch (pxi->ancestryOp) {
                 case ANCESTOR_OP:
                 {
                     Node* parent = tnode;
                     while (parent = cs->getParentNode(parent))  {
-                        if (pxi->pExpr->matches(tnode, parent, cs))
+                        if (pxi->expr->matches(tnode, parent, cs))
                             tmpNodes.add(parent);
                     }
                     break;
@@ -299,29 +296,27 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
                 {
                     Node* parent = cs->getParentNode(tnode);
                     if (parent) {
-
                         //-- make sure we have a document node if necessary
-                        if ( !iter->hasNext() )
-                            if (parent->getNodeType() != Node::DOCUMENT_NODE) break;
-
-                        if (pxi->pExpr->matches(tnode, parent, cs))
+                        if (!iter->hasNext())
+                            if (parent->getNodeType() != Node::DOCUMENT_NODE)
+                                break;
+                        if (pxi->expr->matches(tnode, parent, cs))
                             tmpNodes.add(parent);
                     }
                     break;
                 }
                 default:
-                    if ( !iter->hasNext() ) {
-
+                    if (!iter->hasNext()) {
                         /*
-                          // PREVIOUS // result = pxi->pExpr->matches(tnode, context, cs);
+                          // PREVIOUS // result = pxi->expr->matches(tnode, context, cs);
                           // result was being overwritten if there was more than one
                           // node in nodes during the final iteration  (Marina)
 
-                          result = result || pxi->pExpr->matches(tnode, context, cs)
+                          result = result || pxi->expr->matches(tnode, context, cs)
                         */
 
                         //-- Just return true if we match here
-                        if (pxi->pExpr->matches(tnode, context, cs)) {
+                        if (pxi->expr->matches(tnode, context, cs)) {
                             delete iter;
                             return MB_TRUE;
                         }
@@ -353,28 +348,29 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
             doc = node;
         else
             doc = node->getOwnerDocument();
-        return (MBool) nodes.contains(doc);
+        return (MBool)nodes.contains(doc);
     }
 
-    return (MBool) (nodes.size() > 0);
+    return (MBool)(nodes.size() > 0);
 
 } //-- matches
 
 
 /**
- * Returns the String representation of this PatternExpr.
+ * Returns the String representation of this Expr.
  * @param dest the String to use when creating the String
  * representation. The String representation will be appended to
  *  any data in the destination String, to allow cascading calls to
  * other #toString() methods for Expressions.
- * @return the String representation of this PatternExpr.
+ * @return the String representation of this Expr.
 **/
-void PathExpr::toString(String& dest) {
+void PathExpr::toString(String& dest)
+{
     ListIterator* iter = expressions.iterator();
-    while ( iter->hasNext() ) {
+    while (iter->hasNext()) {
         //-- set operator
         PathExprItem* pxi = (PathExprItem*)iter->next();
-        switch ( pxi->ancestryOp ) {
+        switch (pxi->ancestryOp) {
             case ANCESTOR_OP:
                 dest.append("//");
                 break;
@@ -384,7 +380,7 @@ void PathExpr::toString(String& dest) {
             default:
                 break;
         }
-        pxi->pExpr->toString(dest);
+        pxi->expr->toString(dest);
     }
     delete iter;
 } //-- toString

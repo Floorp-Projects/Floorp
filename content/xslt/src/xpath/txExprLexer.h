@@ -1,4 +1,4 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -24,8 +24,7 @@
  * Larry Fitzpatrick
  *    -- changed constant short declarations in Token and ExprLexer to
  *       enumerations, commented with //--LF
- * 
- * $Id: txExprLexer.h,v 1.8 2005/11/02 07:33:56 peterv%netscape.com Exp $
+ *
  */
 
 
@@ -41,7 +40,6 @@
  * This class was ported from XSL:P, an open source Java based 
  * XSLT processor, written by yours truly.
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:56 $
 **/
 class Token {
 
@@ -60,48 +58,59 @@ public:
         LITERAL,
         NUMBER,
         CNAME,
-        L_PAREN,
-        R_PAREN,
-        L_BRACKET,
-        R_BRACKET,
-        COMMA,
         FUNCTION_NAME,
-        AT_SIGN,
         VAR_REFERENCE,
         PARENT_NODE,
         SELF_NODE,
+        R_PAREN,
+        R_BRACKET, // 10
+        /**
+         * start of tokens for 3.7, bullet 1
+         * ExprLexer::nextIsOperatorToken bails if the tokens aren't
+         * consecutive.
+         **/
+        COMMA,
+        AT_SIGN,
+        L_PAREN,
+        L_BRACKET,
         AXIS_IDENTIFIER,
           //-------------/
          //- operators -/
         //-------------/
 
         //-- boolean ops
-        AND_OP,
+        AND_OP, // 16
         OR_OP,
 
         //-- relational
-        EQUAL_OP,
+        EQUAL_OP, // 18
         NOT_EQUAL_OP,
         LESS_THAN_OP,
         GREATER_THAN_OP,
         LESS_OR_EQUAL_OP,
         GREATER_OR_EQUAL_OP,
         //-- additive operators
-        ADDITION_OP,
+        ADDITION_OP, // 24
         SUBTRACTION_OP,
         //-- multiplicative
-        DIVIDE_OP ,
+        DIVIDE_OP , // 26
         MULTIPLY_OP,
         MODULUS_OP,
         //-- path operators
-        PARENT_OP,
+        PARENT_OP, // 29
         ANCESTOR_OP,
         UNION_OP,
+        /**
+         * end of tokens for 3.7, bullet 1 -/
+         **/
         //-- node type tokens
-        COMMENT,
+        COMMENT, // 32
         NODE,
         PROC_INST,
-        TEXT
+        TEXT,
+        
+        //-- Special endtoken
+        END // 36
     };
 
 
@@ -166,6 +175,17 @@ public:
         TX_LF             = '\r'
     };
 
+    enum _error_consts {
+        ERROR_UNRESOLVED_VAR_REFERENCE = 0,
+        ERROR_OP_EXPECTED,
+        ERROR_UNCLOSED_LITERAL,
+        ERROR_COLON,
+        ERROR_BANG,
+        ERROR_UNKNOWN_CHAR
+    };
+    static const String error_message[];
+    PRInt32 errorPos;
+    short errorCode;
 
     /*
      * Complex Tokens
@@ -198,29 +218,13 @@ public:
     ~ExprLexer();
 
     /**
-     * Counts the total number of tokens in this Lexer, even if the token
-     * has already been seen
-     * @return the total number of tokens in this Lexer
-    **/
-    int countAllTokens();
-
-    /**
-     * Counts the remaining number of tokens in this Lexer
-     * @return the number of remaining tokens in this Lexer
-    **/
-    int countRemainingTokens();
-
-    /**
-     * Returns the type of token that was last return by a call to nextToken
+     * Functions for iterating over the TokenList
     **/
 
-    Token* lookAhead(int offset);
     Token* nextToken();
     Token* peek();
     void   pushBack();
     MBool  hasMoreTokens();
-
-    MBool isOperatorToken(Token* token);
 
 private:
 
@@ -237,50 +241,36 @@ private:
     int tokenCount;
 
     Token* prevToken;
+    Token endToken;
 
     void addToken(Token* token);
 
     /**
+     * Returns true if the following Token should be an operator.
+     * This is a helper for the first bullet of [XPath 3.7]
+     *  Lexical Structure
+     **/
+    MBool nextIsOperatorToken(Token* token);
+
+    /**
      * Returns true if the given character represents an Alpha letter
+     * Implemented in ExprLexerChars.cpp
     **/
-    static MBool isAlphaChar(PRInt32 ch);
+    static MBool isLetter(UNICODE_CHAR ch);
 
     /**
      * Returns true if the given character represents a numeric letter (digit)
+     * Implemented in ExprLexerChars.cpp
     **/
-    static MBool isDigit(PRInt32 ch);
-
-    /**
-     * Returns true if the given character is an allowable QName character
-    **/
-    static MBool isQNameChar(PRInt32 ch);
+    static MBool isDigit(UNICODE_CHAR ch);
 
     /**
      * Returns true if the given character is an allowable NCName character
+     * Implemented in ExprLexerChars.cpp
     **/
-    static MBool isNCNameChar(PRInt32 ch);
+    static MBool isNCNameChar(UNICODE_CHAR ch);
 
-    /**
-     * Returns true if the given String is a valid XML QName
-    **/
-    static MBool isValidQName(String& name);
-
-    MBool matchDelimiter(UNICODE_CHAR ch);
-
-    /**
-     * Returns true if the value of the given String matches
-     * an OperatorName
-    **/
-    MBool matchesOperator(String& buffer);
-
-    /**
-     * Matches the given String to the appropriate Token
-     * @param buffer the current StringBuffer representing the value of the Token
-     * @param ch, the current delimiter token
-    **/
-    void matchToken(String& buffer, UNICODE_CHAR ch);
-
-
+    String subStr;
     void parse(const String& pattern);
 
 }; //-- ExprLexer
