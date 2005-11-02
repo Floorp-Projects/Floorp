@@ -44,7 +44,7 @@
 #include "txNodeSetContext.h"
 #include "txTextHandler.h"
 #include "nsIConsoleService.h"
-#include "nsIServiceManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "txStringUtils.h"
 #include "txAtoms.h"
 #include "txRtfHandler.h"
