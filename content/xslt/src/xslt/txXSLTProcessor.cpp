@@ -42,6 +42,7 @@
 #include "TxLog.h"
 #include "txStylesheetCompileHandlers.h"
 #include "txExecutionState.h"
+#include "ExprResult.h"
 #ifdef TX_EXE
 #include "txHTMLOutput.h"
 #endif

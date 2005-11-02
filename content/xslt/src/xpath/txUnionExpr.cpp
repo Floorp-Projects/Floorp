@@ -25,6 +25,7 @@
 
 #include "Expr.h"
 #include "NodeSet.h"
+#include "txIXPathContext.h"
 
   //-------------/
  //- UnionExpr -/
@@ -68,29 +69,34 @@ void UnionExpr::addExpr(Expr* expr) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* UnionExpr::evaluate(txIEvalContext* aContext)
+nsresult
+UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    NodeSet* nodes = new NodeSet();
-
-    if (!aContext || (expressions.getLength() == 0) || !nodes)
-        return nodes;
+    *aResult = nsnull;
+    nsRefPtr<NodeSet> nodes;
+    nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     txListIterator iter(&expressions);
-
     while (iter.hasNext()) {
         Expr* expr = (Expr*)iter.next();
-        ExprResult* exprResult = expr->evaluate(aContext);
-        if (!exprResult ||
-            exprResult->getResultType() != ExprResult::NODESET) {
-            delete exprResult;
-            delete nodes;
-            return new StringResult(NS_LITERAL_STRING("error"));
+        nsRefPtr<txAExprResult> exprResult;
+        rv = expr->evaluate(aContext, getter_AddRefs(exprResult));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (exprResult->getResultType() != txAExprResult::NODESET) {
+            //XXX ErrorReport: report nonnodeset error
+            return NS_ERROR_XSLT_NODESET_EXPECTED;
         }
-        nodes->add((NodeSet*)exprResult);
-        delete exprResult;
+        rv = nodes->add(NS_STATIC_CAST(NodeSet*, NS_STATIC_CAST(txAExprResult*,
+                                                                exprResult)));
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    return nodes;
+    *aResult = nodes;
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
 } //-- evaluate
 
 /**

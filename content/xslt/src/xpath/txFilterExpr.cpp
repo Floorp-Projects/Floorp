@@ -58,29 +58,34 @@ FilterExpr::~FilterExpr() {
  * @return the result of the evaluation
  * @see Expr
 **/
-ExprResult* FilterExpr::evaluate(txIEvalContext* aContext)
+nsresult
+FilterExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    if (!aContext || !expr)
-        return new NodeSet;
+    *aResult = nsnull;
 
-    ExprResult* exprResult = expr->evaluate(aContext);
-    if (!exprResult)
-        return 0;
-    
-    if (exprResult->getResultType() == ExprResult::NODESET) {
-        // Result is a nodeset, filter it.
-        evaluatePredicates((NodeSet*)exprResult, aContext);
-    }
-    else if(!isEmpty()) {
-        // We can't filter a non-nodeset
-        nsAutoString err(NS_LITERAL_STRING("Expecting nodeset as result of: "));
-        expr->toString(err);
-        aContext->receiveError(err, NS_ERROR_XSLT_NODESET_EXPECTED);
-        delete exprResult;
-        return new NodeSet;
-    }
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = expr->evaluate(aContext, getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    return exprResult;
+    NS_ENSURE_TRUE(exprRes->getResultType() == txAExprResult::NODESET,
+                   NS_ERROR_XSLT_NODESET_EXPECTED);
+
+    nsRefPtr<NodeSet> nodes =
+        NS_STATIC_CAST(NodeSet*, NS_STATIC_CAST(txAExprResult*, exprRes));
+    // null out exprRes so that we can test for shared-ness
+    exprRes = nsnull;
+    nsRefPtr<NodeSet> nonShared;
+    rv = aContext->recycler()->getNonSharedNodeSet(nodes,
+                                                   getter_AddRefs(nonShared));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = evaluatePredicates(nonShared, aContext);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    *aResult = nonShared;
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
 } //-- evaluate
 
 /**

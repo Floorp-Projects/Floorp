@@ -42,17 +42,15 @@ RootExpr::RootExpr(MBool aSerialize) {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* RootExpr::evaluate(txIEvalContext* aContext)
+nsresult
+RootExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    Node* context;
-    if (!aContext || !(context = aContext->getContextNode())) {
-        NS_ASSERTION(0, "internal error");
-        return 0;
+    Node* context = aContext->getContextNode();
+    if (context->getNodeType() != Node::DOCUMENT_NODE) {
+        context = context->getOwnerDocument();
     }
 
-    if (context->getNodeType() != Node::DOCUMENT_NODE)
-        return new NodeSet(context->getOwnerDocument());
-    return new NodeSet(context);
+    return aContext->recycler()->getNodeSet(context, aResult);
 } //-- evaluate
 
 /**

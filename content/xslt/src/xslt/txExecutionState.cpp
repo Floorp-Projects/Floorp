@@ -103,8 +103,7 @@ Document* txLoadedDocumentsHash::Get(const nsAString& aURI)
 }
 
 txExecutionState::txExecutionState(txStylesheet* aStylesheet)
-    : mTemplateParams(nsnull),
-      mStylesheet(aStylesheet),
+    : mStylesheet(aStylesheet),
       mNextInstruction(nsnull),
       mLocalVariables(nsnull),
       mRecursionDepth(0),
@@ -125,7 +124,6 @@ txExecutionState::~txExecutionState()
     delete mLocalVariables;
     delete mEvalContext;
     delete mRTFDocument;
-    delete mTemplateParams;
 
     PRInt32 i;
     for (i = 0; i < mTemplateRuleCount; ++i) {
@@ -205,9 +203,15 @@ txExecutionState::init(Node* aNode,
     rv = mKeyHash.init();
     NS_ENSURE_SUCCESS(rv, rv);
     
+    mRecycler = new txResultRecycler;
+    NS_ENSURE_TRUE(mRecycler, NS_ERROR_OUT_OF_MEMORY);
+    
+    rv = mRecycler->init();
+    NS_ENSURE_SUCCESS(rv, rv);
+    
     // The actual value here doesn't really matter since noone should use this
     // value. But lets put something errorlike in just in case
-    mGlobalVarPlaceholderValue = new StringResult(NS_LITERAL_STRING("Error"));
+    mGlobalVarPlaceholderValue = new StringResult(NS_LITERAL_STRING("Error"), nsnull);
     NS_ENSURE_TRUE(mGlobalVarPlaceholderValue, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_OK;
@@ -226,25 +230,25 @@ txExecutionState::end()
 
 nsresult
 txExecutionState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
-                              ExprResult*& aResult)
+                              txAExprResult*& aResult)
 {
     nsresult rv = NS_OK;
     txExpandedName name(aNamespace, aLName);
 
     // look for a local variable
     if (mLocalVariables) {
-        aResult = mLocalVariables->getVariable(name);
+        mLocalVariables->getVariable(name, &aResult);
         if (aResult) {
             return NS_OK;
         }
     }
 
     // look for an evaluated global variable
-    aResult = mGlobalVariableValues.getVariable(name);
+    mGlobalVariableValues.getVariable(name, &aResult);
     if (aResult) {
         if (aResult == mGlobalVarPlaceholderValue) {
             // XXX ErrorReport: cyclic variable-value
-            aResult = nsnull;
+            NS_RELEASE(aResult);
             return NS_ERROR_XSLT_BAD_RECURSION;
         }
         return NS_OK;
@@ -269,9 +273,9 @@ txExecutionState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
             rv = param->getValue(&aResult);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            rv = mGlobalVariableValues.bindVariable(name, aResult, PR_FALSE);
+            rv = mGlobalVariableValues.bindVariable(name, aResult);
             if (NS_FAILED(rv)) {
-                aResult = nsnull;
+                NS_RELEASE(aResult);
                 return rv;
             }
             
@@ -280,8 +284,7 @@ txExecutionState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
     }
 
     // Insert a placeholdervalue to protect against recursion
-    rv = mGlobalVariableValues.bindVariable(name, mGlobalVarPlaceholderValue,
-                                            PR_FALSE);
+    rv = mGlobalVariableValues.bindVariable(name, mGlobalVarPlaceholderValue);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // evaluate the global variable
@@ -289,8 +292,8 @@ txExecutionState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
     if (var->mExpr) {
         txVariableMap* oldVars = mLocalVariables;
         mLocalVariables = nsnull;
-        aResult = var->mExpr->evaluate(getEvalContext());
-        NS_ENSURE_TRUE(aResult, NS_ERROR_FAILURE);
+        rv = var->mExpr->evaluate(getEvalContext(), &aResult);
+        NS_ENSURE_SUCCESS(rv, rv);
 
         mLocalVariables = oldVars;
     }
@@ -319,17 +322,17 @@ txExecutionState::getVariable(PRInt32 aNamespace, nsIAtom* aLName,
 
         mNextInstruction = prevInstr;
         rtfHandler = (txRtfHandler*)popResultHandler();
-        aResult = rtfHandler->createRTF();
-        NS_ENSURE_TRUE(aResult, NS_ERROR_OUT_OF_MEMORY);
+        rv = rtfHandler->getAsRTF(&aResult);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     popEvalContext();
 
     // Remove the placeholder and insert the calculated value
     mGlobalVariableValues.removeVariable(name);
-    rv = mGlobalVariableValues.bindVariable(name, aResult, PR_TRUE);
+    rv = mGlobalVariableValues.bindVariable(name, aResult);
     if (NS_FAILED(rv)) {
-        delete aResult;
-        aResult = nsnull;
+        NS_RELEASE(aResult);
+
         return rv;
     }
 
@@ -346,6 +349,12 @@ void*
 txExecutionState::getPrivateContext()
 {
     return this;
+}
+
+txResultRecycler*
+txExecutionState::recycler()
+{
+    return mRecycler;
 }
 
 void
@@ -428,7 +437,7 @@ txExecutionState::popResultHandler()
 nsresult
 txExecutionState::pushTemplateRule(txStylesheet::ImportFrame* aFrame,
                                    const txExpandedName& aMode,
-                                   txExpandedNameMap* aParams)
+                                   txVariableMap* aParams)
 {
     if (mTemplateRuleCount == mTemplateRulesBufferSize) {
         PRInt32 newSize =
@@ -465,12 +474,6 @@ txIEvalContext*
 txExecutionState::getEvalContext()
 {
     return mEvalContext;
-}
-
-txExpandedNameMap*
-txExecutionState::getParamMap()
-{
-    return mTemplateParams;
 }
 
 Node*
@@ -538,7 +541,7 @@ txExecutionState::getKeyNodes(const txExpandedName& aKeyName,
                               Document* aDocument,
                               const nsAString& aKeyValue,
                               PRBool aIndexIfNotFound,
-                              const NodeSet** aResult)
+                              NodeSet** aResult)
 {
     return mKeyHash.getKeyNodes(aKeyName, aDocument, aKeyValue,
                                 aIndexIfNotFound, *this, aResult);
@@ -598,13 +601,13 @@ txExecutionState::returnFromTemplate()
 
 nsresult
 txExecutionState::bindVariable(const txExpandedName& aName,
-                               ExprResult* aValue, MBool aOwned)
+                               txAExprResult* aValue)
 {
     if (!mLocalVariables) {
         mLocalVariables = new txVariableMap;
         NS_ENSURE_TRUE(mLocalVariables, NS_ERROR_OUT_OF_MEMORY);
     }
-    return mLocalVariables->bindVariable(aName, aValue, aOwned);
+    return mLocalVariables->bindVariable(aName, aValue);
 }
 
 void
@@ -614,21 +617,22 @@ txExecutionState::removeVariable(const txExpandedName& aName)
 }
 
 nsresult
-txExecutionState::pushParamMap(txExpandedNameMap* aParams)
+txExecutionState::pushParamMap(txVariableMap* aParams)
 {
     nsresult rv = mParamStack.push(mTemplateParams);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    mTemplateParams.forget();
     mTemplateParams = aParams;
     
     return NS_OK;
 }
 
-txExpandedNameMap*
+txVariableMap*
 txExecutionState::popParamMap()
 {
-    txExpandedNameMap* oldParams = mTemplateParams;
-    mTemplateParams = (txExpandedNameMap*)mParamStack.pop();
+    txVariableMap* oldParams = mTemplateParams.forget();
+    mTemplateParams = (txVariableMap*)mParamStack.pop();
 
     return oldParams;
 }

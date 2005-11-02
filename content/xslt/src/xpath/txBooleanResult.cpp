@@ -30,17 +30,12 @@
 #include "ExprResult.h"
 
 /**
- * Default Constructor
-**/
-BooleanResult::BooleanResult() {
-    value = MB_FALSE;
-} //-- BooleanResult
-
-/**
  * Creates a new BooleanResult with the value of the given MBool parameter
  * @param boolean the MBool to use for initialization of this BooleanResult's value
 **/
-BooleanResult::BooleanResult(MBool boolean) {
+BooleanResult::BooleanResult(PRBool boolean)
+    : txAExprResult(nsnull)
+{
     this->value = boolean;
 } //-- BooleanResult
 
@@ -48,13 +43,8 @@ BooleanResult::BooleanResult(MBool boolean) {
  * Virtual Methods from ExprResult
 */
 
-ExprResult* BooleanResult::clone()
-{
-    return new BooleanResult(value);
-}
-
 short BooleanResult::getResultType() {
-    return ExprResult::BOOLEAN;
+    return txAExprResult::BOOLEAN;
 } //-- getResultType
 
 void BooleanResult::stringValue(nsAString& str)  {

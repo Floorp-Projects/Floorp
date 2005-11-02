@@ -36,6 +36,7 @@
 #include "XMLDOMUtils.h"
 #include "XMLUtils.h"
 #include <math.h>
+#include "nsReadableUtils.h"
 
 /**
  * Creates a StringFunctionCall of the given type
@@ -51,39 +52,54 @@ StringFunctionCall::StringFunctionCall(StringFunctions aType) : mType(aType)
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
+nsresult
+StringFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
+    *aResult = nsnull;
+
+    nsresult rv = NS_OK;
     txListIterator iter(&params);
     switch (mType) {
         case CONCAT:
         {
             if (!requireParams(2, -1, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
                 
-            nsAutoString resultStr;
+            nsRefPtr<StringResult> strRes;
+            rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
+            NS_ENSURE_SUCCESS(rv, rv);
+
             while (iter.hasNext()) {
-                evaluateToString((Expr*)iter.next(), aContext, resultStr);
+                evaluateToString((Expr*)iter.next(), aContext, strRes->mValue);
             }
-            return new StringResult(resultStr);
+            *aResult = strRes;
+            NS_ADDREF(*aResult);
+
+            return NS_OK;
         }
         case CONTAINS:
         {
             if (!requireParams(2, 2, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
             nsAutoString arg1, arg2;
             Expr* arg1Expr = (Expr*)iter.next();
             evaluateToString((Expr*)iter.next(), aContext, arg2);
-            if (arg2.IsEmpty())
-                return new BooleanResult(PR_TRUE);
+            if (arg2.IsEmpty()) {
+                aContext->recycler()->getBoolResult(PR_TRUE, aResult);
+            }
+            else {
+                evaluateToString(arg1Expr, aContext, arg1);
+                aContext->recycler()->getBoolResult(arg1.Find(arg2) >= 0,
+                                                    aResult);
+            }
 
-            evaluateToString(arg1Expr, aContext, arg1);
-            return new BooleanResult(arg1.Find(arg2) >= 0);
+            return NS_OK;
         }
         case NORMALIZE_SPACE:
         {
             if (!requireParams(0, 1, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
             nsAutoString resultStr;
             if (iter.hasNext())
@@ -92,10 +108,13 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
                 XMLDOMUtils::getNodeValue(aContext->getContextNode(),
                                           resultStr);
 
+            nsRefPtr<StringResult> strRes;
+            rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
+            NS_ENSURE_SUCCESS(rv, rv);
+
             MBool addSpace = MB_FALSE;
             MBool first = MB_TRUE;
-            nsAutoString normed;
-            normed.SetCapacity(resultStr.Length());
+            strRes->mValue.SetCapacity(resultStr.Length());
             PRUnichar c;
             PRUint32 src;
             for (src = 0; src < resultStr.Length(); src++) {
@@ -105,33 +124,41 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
                 }
                 else {
                     if (addSpace && !first)
-                        normed.Append(PRUnichar(' '));
+                        strRes->mValue.Append(PRUnichar(' '));
 
-                    normed.Append(c);
+                    strRes->mValue.Append(c);
                     addSpace = MB_FALSE;
                     first = MB_FALSE;
                 }
             }
-            return new StringResult(normed);
+            *aResult = strRes;
+            NS_ADDREF(*aResult);
+
+            return NS_OK;
         }
         case STARTS_WITH:
         {
             if (!requireParams(2, 2, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
             nsAutoString arg1, arg2;
             Expr* arg1Expr = (Expr*)iter.next();
             evaluateToString((Expr*)iter.next(), aContext, arg2);
-            if (arg2.IsEmpty())
-                return new BooleanResult(PR_TRUE);
+            if (arg2.IsEmpty()) {
+                aContext->recycler()->getBoolResult(PR_TRUE, aResult);
+            }
+            else {
+                evaluateToString(arg1Expr, aContext, arg1);
+                aContext->recycler()->getBoolResult(
+                      StringBeginsWith(arg1, arg2), aResult);
+            }
 
-            evaluateToString(arg1Expr, aContext, arg1);
-            return new BooleanResult(arg1.Find(arg2) == 0);
+            return NS_OK;
         }
         case STRING_LENGTH:
         {
             if (!requireParams(0, 1, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
             nsAutoString resultStr;
             if (iter.hasNext())
@@ -139,12 +166,16 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             else
                 XMLDOMUtils::getNodeValue(aContext->getContextNode(),
                                           resultStr);
-            return new NumberResult(resultStr.Length());
+            rv = aContext->recycler()->getNumberResult(resultStr.Length(),
+                                                       aResult);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            return NS_OK;
         }
         case SUBSTRING:
         {
             if (!requireParams(2, 3, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
             nsAutoString src;
             double start, end;
@@ -154,15 +185,21 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             // check for NaN or +/-Inf
             if (Double::isNaN(start) ||
                 Double::isInfinite(start) ||
-                start >= src.Length() + 0.5)
-                return new StringResult();
+                start >= src.Length() + 0.5) {
+                aContext->recycler()->getEmptyStringResult(aResult);
+
+                return NS_OK;
+            }
 
             start = floor(start + 0.5) - 1;
             if (iter.hasNext()) {
                 end = start + evaluateToNumber((Expr*)iter.next(),
                                                aContext);
-                if (Double::isNaN(end) || end < 0)
-                    return new StringResult();
+                if (Double::isNaN(end) || end < 0) {
+                    aContext->recycler()->getEmptyStringResult(aResult);
+
+                    return NS_OK;
+                }
                 
                 if (end > src.Length())
                     end = src.Length();
@@ -176,61 +213,79 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
             if (start < 0)
                 start = 0;
  
-            if (start > end)
-                return new StringResult();
-            
-            return new StringResult(Substring(src, (PRUint32)start,
-                                              (PRUint32)end - (PRUint32)start));
+            if (start > end) {
+                aContext->recycler()->getEmptyStringResult(aResult);
+                
+                return NS_OK;
+            }
+
+            return aContext->recycler()->getStringResult(
+                  Substring(src, (PRUint32)start, (PRUint32)(end - start)),
+                  aResult);
         }
         case SUBSTRING_AFTER:
         {
             if (!requireParams(2, 2, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
             nsAutoString arg1, arg2;
             evaluateToString((Expr*)iter.next(), aContext, arg1);
             evaluateToString((Expr*)iter.next(), aContext, arg2);
-            if (arg2.IsEmpty())
-                return new StringResult(arg1);
+            if (arg2.IsEmpty()) {
+                return aContext->recycler()->getStringResult(arg1, aResult);
+            }
 
             PRInt32 idx = arg1.Find(arg2);
-            if (idx != kNotFound) {
-                PRUint32 len = arg2.Length();
-                return new StringResult(Substring(arg1, idx + len,
-                                                  arg1.Length() - (idx + len)));
+            if (idx == kNotFound) {
+                aContext->recycler()->getEmptyStringResult(aResult);
+                
+                return NS_OK;
             }
-            return new StringResult();
+
+            PRUint32 len = arg2.Length();
+            return aContext->recycler()->getStringResult(
+                  Substring(arg1, idx + len, arg1.Length() - (idx + len)),
+                  aResult);
         }
         case SUBSTRING_BEFORE:
         {
             if (!requireParams(2, 2, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
             nsAutoString arg1, arg2;
             Expr* arg1Expr = (Expr*)iter.next();
             evaluateToString((Expr*)iter.next(), aContext, arg2);
-            if (arg2.IsEmpty())
-                return new StringResult();
+            if (arg2.IsEmpty()) {
+                aContext->recycler()->getEmptyStringResult(aResult);
+
+                return NS_OK;
+            }
 
             evaluateToString(arg1Expr, aContext, arg1);
 
             PRInt32 idx = arg1.Find(arg2);
-            if (idx != kNotFound) {
-                return new StringResult(Substring(arg1, 0, idx));
+            if (idx == kNotFound) {
+                aContext->recycler()->getEmptyStringResult(aResult);
+                
+                return NS_OK;
             }
-            return new StringResult();
+
+            return aContext->recycler()->
+                getStringResult(Substring(arg1, 0, idx), aResult);
         }
         case TRANSLATE:
         {
             if (!requireParams(3, 3, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
+
+            nsRefPtr<StringResult> strRes;
+            rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
+            NS_ENSURE_SUCCESS(rv, rv);
 
             nsAutoString src;
             evaluateToString((Expr*)iter.next(), aContext, src);
-            if (src.IsEmpty())
-                return new StringResult();
-            
-            nsAutoString oldChars, newChars, dest;
+            strRes->mValue.SetCapacity(src.Length());
+            nsAutoString oldChars, newChars;
             evaluateToString((Expr*)iter.next(), aContext, oldChars);
             evaluateToString((Expr*)iter.next(), aContext, newChars);
             PRUint32 i;
@@ -239,32 +294,41 @@ ExprResult* StringFunctionCall::evaluate(txIEvalContext* aContext)
                 PRInt32 idx = oldChars.FindChar(src.CharAt(i));
                 if (idx != kNotFound) {
                     if (idx < newCharsLength)
-                        dest.Append(newChars.CharAt((PRUint32)idx));
+                        strRes->mValue.Append(newChars.CharAt((PRUint32)idx));
                 }
                 else {
-                    dest.Append(src.CharAt(i));
+                    strRes->mValue.Append(src.CharAt(i));
                 }
             }
-            return new StringResult(dest);
+            *aResult = strRes;
+            NS_ADDREF(*aResult);
+
+            return NS_OK;
         }
         case STRING:
         {
             if (!requireParams(0, 1, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            nsAutoString resultStr;
+            nsRefPtr<StringResult> strRes;
+            rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
+            NS_ENSURE_SUCCESS(rv, rv);
+
             if (iter.hasNext())
-                evaluateToString((Expr*)iter.next(), aContext, resultStr);
+                evaluateToString((Expr*)iter.next(), aContext, strRes->mValue);
             else
                 XMLDOMUtils::getNodeValue(aContext->getContextNode(),
-                                          resultStr);
-            return new StringResult(resultStr);
+                                          strRes->mValue);
+            *aResult = strRes;
+            NS_ADDREF(*aResult);
+
+            return NS_OK;
         }
     }
 
     aContext->receiveError(NS_LITERAL_STRING("Internal error"),
                            NS_ERROR_UNEXPECTED);
-    return new StringResult(NS_LITERAL_STRING("error"));
+    return NS_ERROR_UNEXPECTED;
 }
 
 nsresult StringFunctionCall::getNameAtom(nsIAtom** aAtom)

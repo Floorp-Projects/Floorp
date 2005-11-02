@@ -57,38 +57,40 @@ NodeSetFunctionCall::NodeSetFunctionCall(NodeSetFunctions aType)
  * for evaluation
  * @return the result of the evaluation
  */
-ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
+nsresult
+NodeSetFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
+{
+    *aResult = nsnull;
+    nsresult rv = NS_OK;
     txListIterator iter(&params);
+    
     switch (mType) {
         case COUNT:
         {
             if (!requireParams(1, 1, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            NodeSet* nodes;
-            nodes = evaluateToNodeSet((Expr*)iter.next(), aContext);
-            if (!nodes)
-                return new StringResult(NS_LITERAL_STRING("error"));
+            nsRefPtr<NodeSet> nodes;
+            rv = evaluateToNodeSet((Expr*)iter.next(), aContext,
+                                   getter_AddRefs(nodes));
+            NS_ENSURE_SUCCESS(rv, rv);
 
-            double count = nodes->size();
-            delete nodes;
-            return new NumberResult(count);
+            return aContext->recycler()->getNumberResult(nodes->size(),
+                                                         aResult);
         }
         case ID:
         {
             if (!requireParams(1, 1, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            ExprResult* exprResult;
-            exprResult = ((Expr*)iter.next())->evaluate(aContext);
-            if (!exprResult)
-                return new StringResult(NS_LITERAL_STRING("error"));
+            nsRefPtr<txAExprResult> exprResult;
+            rv = ((Expr*)iter.next())->evaluate(aContext,
+                                                getter_AddRefs(exprResult));
+            NS_ENSURE_SUCCESS(rv, rv);
 
-            NodeSet* resultSet = new NodeSet();
-            if (!resultSet) {
-                // XXX ErrorReport: out of memory
-                return 0;
-            }
+            nsRefPtr<NodeSet> resultSet;
+            rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
+            NS_ENSURE_SUCCESS(rv, rv);
 
             Document* contextDoc = 0;
             Node* contextNode = aContext->getContextNode();
@@ -97,8 +99,10 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
             else
                 contextDoc = contextNode->getOwnerDocument();
             
-            if (exprResult->getResultType() == ExprResult::NODESET) {
-                NodeSet* nodes = (NodeSet*)exprResult;
+            if (exprResult->getResultType() == txAExprResult::NODESET) {
+                NodeSet* nodes = NS_STATIC_CAST(NodeSet*,
+                                                NS_STATIC_CAST(txAExprResult*,
+                                                               exprResult));
                 int i;
                 for (i = 0; i < nodes->size(); i++) {
                     nsAutoString idList;
@@ -123,38 +127,41 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                         resultSet->add(idNode);
                 }
             }
-            delete exprResult;
 
-            return resultSet;
+            *aResult = resultSet;
+            NS_ADDREF(*aResult);
+
+            return NS_OK;
         }
         case LAST:
         {
             if (!requireParams(0, 0, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            return new NumberResult(aContext->size());
+            return aContext->recycler()->getNumberResult(aContext->size(),
+                                                         aResult);
         }
         case LOCAL_NAME:
         case NAME:
         case NAMESPACE_URI:
         {
             if (!requireParams(0, 1, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
             Node* node = 0;
             // Check for optional arg
             if (iter.hasNext()) {
-                NodeSet* nodes;
-                nodes = evaluateToNodeSet((Expr*)iter.next(), aContext);
-                if (!nodes)
-                    return new StringResult(NS_LITERAL_STRING("error"));
+                nsRefPtr<NodeSet> nodes;
+                rv = evaluateToNodeSet((Expr*)iter.next(), aContext,
+                                       getter_AddRefs(nodes));
+                NS_ENSURE_SUCCESS(rv, rv);
 
                 if (nodes->isEmpty()) {
-                    delete nodes;
-                    return new StringResult();
+                    aContext->recycler()->getEmptyStringResult(aResult);
+
+                    return NS_OK;
                 }
                 node = nodes->get(0);
-                delete nodes;
             }
             else {
                 node = aContext->getContextNode();
@@ -163,13 +170,17 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
             switch (mType) {
                 case LOCAL_NAME:
                 {
-                    nsAutoString localName;
+                    StringResult* strRes = nsnull;
+                    rv = aContext->recycler()->getStringResult(&strRes);
+                    NS_ENSURE_SUCCESS(rv, rv);
+
+                    *aResult = strRes;
 #ifdef TX_EXE
                     nsCOMPtr<nsIAtom> localNameAtom;
                     node->getLocalName(getter_AddRefs(localNameAtom));
                     if (localNameAtom) {
                         // Node has a localName
-                        localNameAtom->ToString(localName);
+                        localNameAtom->ToString(strRes->mValue);
                     }
 #else
                     // The mozilla HTML-elements returns different casing for
@@ -179,18 +190,20 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                     nsCOMPtr<nsIDOMNode> mozNode =
                         do_QueryInterface(node->getNSObj());
                     NS_ASSERTION(mozNode, "wrapper doesn't wrap a nsIDOMNode");
-                    mozNode->GetLocalName(localName);
+                    mozNode->GetLocalName(strRes->mValue);
 #endif
-                    
-                    return new StringResult(localName);
+                    return NS_OK;
                 }
                 case NAMESPACE_URI:
                 {
-                    StringResult* result = new StringResult();
-                    if (result) {
-                        node->getNamespaceURI(result->mValue);
-                    }
-                    return result;
+                    StringResult* strRes = nsnull;
+                    rv = aContext->recycler()->getStringResult(&strRes);
+                    NS_ENSURE_SUCCESS(rv, rv);
+
+                    *aResult = strRes;
+                    node->getNamespaceURI(strRes->mValue);
+
+                    return NS_OK;
                 }
                 case NAME:
                 {
@@ -198,20 +211,24 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                         case Node::ATTRIBUTE_NODE:
                         case Node::ELEMENT_NODE:
                         case Node::PROCESSING_INSTRUCTION_NODE:
-                        {
                         // XXX Namespace: namespaces have a name
-                            StringResult* result = new StringResult();
-                            if (result) {
-                                node->getNodeName(result->mValue);
-                            }
-                            return result;
+                        {
+                            StringResult* strRes = nsnull;
+                            rv = aContext->recycler()->getStringResult(&strRes);
+                            NS_ENSURE_SUCCESS(rv, rv);
+
+                            *aResult = strRes;
+                            node->getNodeName(strRes->mValue);
+
+                            return NS_OK;
                         }
                         default:
                         {
-                            break;
+                            aContext->recycler()->getEmptyStringResult(aResult);
+
+                            return NS_OK;
                         }
                     }
-                    return new StringResult();
                 }
                 default:
                 {
@@ -222,15 +239,16 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
         case POSITION:
         {
             if (!requireParams(0, 0, aContext))
-                return new StringResult(NS_LITERAL_STRING("error"));
+                return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
-            return new NumberResult(aContext->position());
+            return aContext->recycler()->getNumberResult(aContext->position(),
+                                                         aResult);
         }
     }
 
     aContext->receiveError(NS_LITERAL_STRING("Internal error"),
                            NS_ERROR_UNEXPECTED);
-    return new StringResult(NS_LITERAL_STRING("error"));
+    return NS_ERROR_UNEXPECTED;
 }
 
 nsresult NodeSetFunctionCall::getNameAtom(nsIAtom** aAtom)

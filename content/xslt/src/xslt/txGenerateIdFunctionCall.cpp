@@ -53,10 +53,13 @@ GenerateIdFunctionCall::GenerateIdFunctionCall()
  * @return the result of the evaluation
  * @see FunctionCall.h
 **/
-ExprResult* GenerateIdFunctionCall::evaluate(txIEvalContext* aContext)
+nsresult
+GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
+                                 txAExprResult** aResult)
 {
+    *aResult = nsnull;
     if (!requireParams(0, 1, aContext))
-        return new StringResult();
+        return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
     Node* node = 0;
 
@@ -65,24 +68,26 @@ ExprResult* GenerateIdFunctionCall::evaluate(txIEvalContext* aContext)
         txListIterator iter(&params);
         Expr* param = (Expr*)iter.next();
 
-        ExprResult* exprResult = param->evaluate(aContext);
-        if (!exprResult)
-            return 0;
+        nsRefPtr<txAExprResult> exprResult;
+        nsresult rv = param->evaluate(aContext, getter_AddRefs(exprResult));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        if (exprResult->getResultType() != ExprResult::NODESET) {
+        if (exprResult->getResultType() != txAExprResult::NODESET) {
             NS_NAMED_LITERAL_STRING(err, "Invalid argument passed to generate-id(), expecting NodeSet");
-            aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
-            delete exprResult;
-            return new StringResult(err);
+            aContext->receiveError(err, NS_ERROR_XSLT_NODESET_EXPECTED);
+            return NS_ERROR_XSLT_NODESET_EXPECTED;
         }
 
-        NodeSet* nodes = (NodeSet*) exprResult;
-        if (nodes->isEmpty())
-            return new StringResult();
+        NodeSet* nodes = NS_STATIC_CAST(NodeSet*,
+                                        NS_STATIC_CAST(txAExprResult*,
+                                                       exprResult));
+        if (nodes->isEmpty()) {
+            aContext->recycler()->getEmptyStringResult(aResult);
+
+            return NS_OK;
+        }
 
         node = nodes->get(0);
-
-        delete exprResult;
     }
     else {
         node = aContext->getContextNode();
@@ -91,7 +96,8 @@ ExprResult* GenerateIdFunctionCall::evaluate(txIEvalContext* aContext)
     // generate id for selected node
     char buf[22];
     PR_snprintf(buf, 21, printfFmt, node);
-    return new StringResult(NS_ConvertASCIItoUCS2(buf));
+    return aContext->recycler()->getStringResult(NS_ConvertASCIItoUCS2(buf),
+                                                 aResult);
 }
 
 nsresult GenerateIdFunctionCall::getNameAtom(nsIAtom** aAtom)

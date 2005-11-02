@@ -47,59 +47,60 @@
 class txVariableMap {
 public:
     txVariableMap();
+    ~txVariableMap();
     
-    nsresult bindVariable(const txExpandedName& aName,
-                          ExprResult* aValue, MBool aOwned);
+    nsresult bindVariable(const txExpandedName& aName, txAExprResult* aValue);
 
-    ExprResult* getVariable(const txExpandedName& aName);
+    void getVariable(const txExpandedName& aName, txAExprResult** aResult);
     
     void removeVariable(const txExpandedName& aName);
 
 private:
-    // Map with owned variables
-    txExpandedNameMap mOwnedVariables;
-
-    // Map with non-owned variables
-    txExpandedNameMap mNonOwnedVariables;
+    txExpandedNameMap mMap;
 };
 
 
-inline txVariableMap::txVariableMap()
-    : mOwnedVariables(MB_TRUE),
-      mNonOwnedVariables(MB_FALSE)
+inline
+txVariableMap::txVariableMap()
+    : mMap(MB_FALSE)
 {
 }
 
-inline nsresult txVariableMap::bindVariable(const txExpandedName& aName,
-                                            ExprResult* aValue, MBool aOwned)
+inline
+txVariableMap::~txVariableMap()
 {
-    nsresult rv = NS_ERROR_FAILURE;
-    if (aOwned) {
-        if (!mNonOwnedVariables.get(aName)) {
-            rv = mOwnedVariables.add(aName, aValue);
-        }
+    txExpandedNameMap::iterator iter(mMap);
+    while (iter.next()) {
+        txAExprResult* res = NS_STATIC_CAST(txAExprResult*, iter.value());
+        NS_RELEASE(res);
     }
-    else {
-        if (!mOwnedVariables.get(aName)) {
-            rv = mNonOwnedVariables.add(aName, aValue);
-        }
+}
+
+inline nsresult
+txVariableMap::bindVariable(const txExpandedName& aName, txAExprResult* aValue)
+{
+    NS_ASSERTION(aValue, "can't add null-variables to a txVariableMap");
+    nsresult rv = mMap.add(aName, aValue);
+    if (NS_SUCCEEDED(rv)) {
+        NS_ADDREF(aValue);
     }
     return rv;
 }
 
-inline ExprResult* txVariableMap::getVariable(const txExpandedName& aName)
+inline void
+txVariableMap::getVariable(const txExpandedName& aName, txAExprResult** aResult)
 {
-    ExprResult* var = (ExprResult*)mOwnedVariables.get(aName);
-    if (!var) {
-        var = (ExprResult*)mNonOwnedVariables.get(aName);
+    *aResult = NS_STATIC_CAST(txAExprResult*, mMap.get(aName));
+    if (*aResult) {
+        NS_ADDREF(*aResult);
     }
-    return var;
 }
 
-inline void txVariableMap::removeVariable(const txExpandedName& aName)
+inline void
+txVariableMap::removeVariable(const txExpandedName& aName)
 {
-    mOwnedVariables.remove(aName);
-    mNonOwnedVariables.remove(aName);
+    txAExprResult* var = NS_STATIC_CAST(txAExprResult*, mMap.remove(aName));
+    NS_IF_RELEASE(var);
 }
 
 #endif //TRANSFRMX_VARIABLEMAP_H

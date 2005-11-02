@@ -107,7 +107,7 @@ nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
 }
 #endif
 
-TxObject* txResultStringComparator::createSortableValue(ExprResult* aExprRes)
+TxObject* txResultStringComparator::createSortableValue(txAExprResult* aExprRes)
 {
     StringValue* val = new StringValue;
 
@@ -279,7 +279,7 @@ txResultNumberComparator::~txResultNumberComparator()
 {
 }
 
-TxObject* txResultNumberComparator::createSortableValue(ExprResult* aExprRes)
+TxObject* txResultNumberComparator::createSortableValue(txAExprResult* aExprRes)
 {
     NumberValue* numval = new NumberValue;
     if (numval)

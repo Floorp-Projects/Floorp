@@ -55,20 +55,20 @@ CPPSRCS = AdditiveExpr.cpp \
         MultiplicativeExpr.cpp \
         NodeSet.cpp \
         NodeSetFunctionCall.cpp \
-        NumberExpr.cpp \
         NumberFunctionCall.cpp \
         NumberResult.cpp \
         PathExpr.cpp \
         PredicateList.cpp \
         RelationalExpr.cpp \
         RootExpr.cpp \
-        StringExpr.cpp \
         StringFunctionCall.cpp \
         StringResult.cpp \
+        txLiteralExpr.cpp \
         txNameTest.cpp \
         txNodeTypeTest.cpp \
         txForwardContext.cpp \
         txNodeSetContext.cpp \
+        txResultRecycler.cpp \
         UnionExpr.cpp \
         UnaryExpr.cpp \
         VariableRefExpr.cpp

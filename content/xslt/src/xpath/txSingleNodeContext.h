@@ -54,7 +54,7 @@ public:
     {}
 
     nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName,
-                         ExprResult*& aResult)
+                         txAExprResult*& aResult)
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
         return mInner->getVariable(aNamespace, aLName, aResult);
@@ -70,6 +70,12 @@ public:
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
         return mInner->getPrivateContext();
+    }
+
+    txResultRecycler* recycler()
+    {
+        NS_ASSERTION(mInner, "mInner is null!!!");
+        return mInner->recycler();
     }
 
     void receiveError(const nsAString& aMsg, nsresult aRes)

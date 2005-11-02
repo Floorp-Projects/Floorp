@@ -39,6 +39,7 @@
 #include "ExprResult.h"
 #include <math.h>
 #include "primitives.h"
+#include "txIXPathContext.h"
 
 /**
  * Creates a new MultiplicativeExpr using the given operator
@@ -61,24 +62,21 @@ MultiplicativeExpr::~MultiplicativeExpr() {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* MultiplicativeExpr::evaluate(txIEvalContext* aContext)
+nsresult
+MultiplicativeExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    double rightDbl = Double::NaN;
-    ExprResult* exprRes = 0;
+    *aResult = nsnull;
 
-    if ( rightExpr ) {
-        exprRes = rightExpr->evaluate(aContext);
-        if ( exprRes ) rightDbl = exprRes->numberValue();
-        delete exprRes;
-    }
+    nsRefPtr<txAExprResult> exprRes;
+    nsresult rv = rightExpr->evaluate(aContext, getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    double leftDbl = Double::NaN;
-    if ( leftExpr ) {
-        exprRes = leftExpr->evaluate(aContext);
-        if ( exprRes ) leftDbl = exprRes->numberValue();
-        delete exprRes;
-    }
+    double rightDbl = exprRes->numberValue();
 
+    rv = leftExpr->evaluate(aContext, getter_AddRefs(exprRes));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    double leftDbl = exprRes->numberValue();
     double result = 0;
 
     switch ( op ) {
@@ -118,7 +116,8 @@ ExprResult* MultiplicativeExpr::evaluate(txIEvalContext* aContext)
             result = leftDbl * rightDbl;
             break;
     }
-   return new NumberResult(result);
+
+    return aContext->recycler()->getNumberResult(result, aResult);
 } //-- evaluate
 
 /**

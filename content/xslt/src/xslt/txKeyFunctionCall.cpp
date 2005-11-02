@@ -49,19 +49,14 @@ txKeyFunctionCall::txKeyFunctionCall(txNamespaceMap* aMappings)
  *                 for evaluation
  * @return the result of the evaluation
  */
-ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
+nsresult
+txKeyFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     if (!aContext || !requireParams(2, 2, aContext))
-        return new StringResult(NS_LITERAL_STRING("error"));
+        return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
     txExecutionState* es =
         NS_STATIC_CAST(txExecutionState*, aContext->getPrivateContext());
-
-    NodeSet* res = new NodeSet;
-    if (!res) {
-        // ErrorReport: out of memory
-        return 0;
-    }
 
     txListIterator iter(&params);
     nsAutoString keyQName;
@@ -69,14 +64,11 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
 
     txExpandedName keyName;
     nsresult rv = keyName.init(keyQName, mMappings, PR_FALSE);
-    if (NS_FAILED(rv)) {
-        delete res;
-        return new StringResult(NS_LITERAL_STRING("error"));
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    ExprResult* exprResult = ((Expr*)iter.next())->evaluate(aContext);
-    if (!exprResult)
-        return res;
+    nsRefPtr<txAExprResult> exprResult;
+    rv = ((Expr*)iter.next())->evaluate(aContext, getter_AddRefs(exprResult));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     Document* contextDoc;
     Node* contextNode = aContext->getContextNode();
@@ -85,40 +77,40 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
     else
         contextDoc = contextNode->getOwnerDocument();
 
-    if (exprResult->getResultType() == ExprResult::NODESET) {
-        NodeSet* nodeSet = (NodeSet*) exprResult;
+    nsRefPtr<NodeSet> res;
+    NodeSet* nodeSet;
+    if (exprResult->getResultType() == txAExprResult::NODESET &&
+        (nodeSet = NS_STATIC_CAST(NodeSet*,
+                                  NS_STATIC_CAST(txAExprResult*,
+                                                 exprResult)))->size() > 1) {
+        rv = aContext->recycler()->getNodeSet(getter_AddRefs(res));
+        NS_ENSURE_SUCCESS(rv, rv);
+
         int i;
         for (i = 0; i < nodeSet->size(); ++i) {
             nsAutoString val;
             XMLDOMUtils::getNodeValue(nodeSet->get(i), val);
-            const NodeSet* nodes = 0;
-            rv = es->getKeyNodes(keyName, contextDoc, val, i == 0, &nodes);
-            if (NS_FAILED(rv)) {
-                delete res;
-                delete exprResult;
-                return new StringResult(NS_LITERAL_STRING("error"));
-            }
-            if (nodes) {
-                res->add(nodes);
-            }
+            nsRefPtr<NodeSet> nodes;
+            rv = es->getKeyNodes(keyName, contextDoc, val, i == 0,
+                                 getter_AddRefs(nodes));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            res->add(nodes);
         }
     }
     else {
         nsAutoString val;
         exprResult->stringValue(val);
         const NodeSet* nodes = 0;
-        rv = es->getKeyNodes(keyName, contextDoc, val, PR_TRUE, &nodes);
-        if (NS_FAILED(rv)) {
-            delete res;
-            delete exprResult;
-            return new StringResult(NS_LITERAL_STRING("error"));
-        }
-        if (nodes) {
-            res->append(nodes);
-        }
+        rv = es->getKeyNodes(keyName, contextDoc, val, PR_TRUE,
+                             getter_AddRefs(res));
+        NS_ENSURE_SUCCESS(rv, rv);
     }
-    delete exprResult;
-    return res;
+
+    *aResult = res;
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
 }
 
 nsresult txKeyFunctionCall::getNameAtom(nsIAtom** aAtom)
@@ -201,7 +193,7 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
                        const nsAString& aKeyValue,
                        PRBool aIndexIfNotFound,
                        txExecutionState& aEs,
-                       const NodeSet** aResult)
+                       NodeSet** aResult)
 {
     NS_ENSURE_TRUE(mKeyValues.mHashTable.ops && mIndexedKeys.mHashTable.ops,
                    NS_ERROR_OUT_OF_MEMORY);
@@ -210,7 +202,8 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
     txKeyValueHashKey valueKey(aKeyName, aDocument, aKeyValue);
     txKeyValueHashEntry* valueEntry = mKeyValues.GetEntry(valueKey);
     if (valueEntry) {
-        *aResult = &valueEntry->mNodeSet;
+        *aResult = valueEntry->mNodeSet;
+        NS_ADDREF(*aResult);
         return NS_OK;
     }
 
@@ -221,6 +214,8 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
     if (!aIndexIfNotFound) {
         // If aIndexIfNotFound is set then the caller knows this key is
         // indexed, so don't bother investigating.
+        *aResult = mEmptyNodeSet;
+        NS_ADDREF(*aResult);
         return NS_OK;
     }
 
@@ -230,8 +225,9 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
 
     if (indexEntry->mIndexed) {
         // The key was indexed and apparently didn't contain this value so
-        // return null.
-
+        // return the empty nodeset.
+        *aResult = mEmptyNodeSet;
+        NS_ADDREF(*aResult);
         return NS_OK;
     }
 
@@ -250,7 +246,12 @@ txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
     // Now that the key is indexed we can get its value.
     valueEntry = mKeyValues.GetEntry(valueKey);
     if (valueEntry) {
-        *aResult = &valueEntry->mNodeSet;
+        *aResult = valueEntry->mNodeSet;
+        NS_ADDREF(*aResult);
+    }
+    else {
+        *aResult = mEmptyNodeSet;
+        NS_ADDREF(*aResult);
     }
 
     return NS_OK;
@@ -262,7 +263,13 @@ txKeyHash::init()
     nsresult rv = mKeyValues.Init(8);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return mIndexedKeys.Init(1);
+    rv = mIndexedKeys.Init(1);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    mEmptyNodeSet = new NodeSet(nsnull);
+    NS_ENSURE_TRUE(mEmptyNodeSet, NS_ERROR_OUT_OF_MEMORY);
+    
+    return NS_OK;
 }
 
 /**
@@ -374,23 +381,30 @@ nsresult txXSLKey::testNode(Node* aNode, txKeyValueHashKey& aKey,
             rv = aEs.pushEvalContext(&evalContext);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            ExprResult* exprResult = key->useExpr->evaluate(&evalContext);
+            nsRefPtr<txAExprResult> exprResult;
+            rv = key->useExpr->evaluate(&evalContext,
+                                        getter_AddRefs(exprResult));
+            NS_ENSURE_SUCCESS(rv, rv);
+
             aEs.popEvalContext();
 
-            if (exprResult->getResultType() == ExprResult::NODESET) {
-                NodeSet* res = (NodeSet*)exprResult;
+            if (exprResult->getResultType() == txAExprResult::NODESET) {
+                NodeSet* res = NS_STATIC_CAST(NodeSet*,
+                                              NS_STATIC_CAST(txAExprResult*,
+                                                             exprResult));
                 for (int i=0; i<res->size(); i++) {
                     val.Truncate();
                     XMLDOMUtils::getNodeValue(res->get(i), val);
 
                     aKey.mKeyValue.Assign(val);
                     txKeyValueHashEntry* entry = aKeyValueHash.AddEntry(aKey);
-                    NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+                    NS_ENSURE_TRUE(entry && entry->mNodeSet,
+                                   NS_ERROR_OUT_OF_MEMORY);
 
-                    if (entry->mNodeSet.isEmpty() ||
-                        entry->mNodeSet.get(entry->mNodeSet.size() - 1) !=
+                    if (entry->mNodeSet->isEmpty() ||
+                        entry->mNodeSet->get(entry->mNodeSet->size() - 1) !=
                         aNode) {
-                        entry->mNodeSet.append(aNode);
+                        entry->mNodeSet->append(aNode);
                     }
                 }
             }
@@ -399,15 +413,15 @@ nsresult txXSLKey::testNode(Node* aNode, txKeyValueHashKey& aKey,
 
                 aKey.mKeyValue.Assign(val);
                 txKeyValueHashEntry* entry = aKeyValueHash.AddEntry(aKey);
-                NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+                NS_ENSURE_TRUE(entry && entry->mNodeSet,
+                               NS_ERROR_OUT_OF_MEMORY);
 
-                if (entry->mNodeSet.isEmpty() ||
-                    entry->mNodeSet.get(entry->mNodeSet.size()-1) !=
+                if (entry->mNodeSet->isEmpty() ||
+                    entry->mNodeSet->get(entry->mNodeSet->size() - 1) !=
                     aNode) {
-                    entry->mNodeSet.append(aNode);
+                    entry->mNodeSet->append(aNode);
                 }
             }
-            delete exprResult;
         }
     }
     

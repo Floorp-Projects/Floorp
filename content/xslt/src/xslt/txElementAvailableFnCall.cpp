@@ -66,73 +66,70 @@ ElementAvailableFunctionCall::ElementAvailableFunctionCall(txNamespaceMap* aMapp
  * @return the result of the evaluation
  * @see FunctionCall.h
 **/
-ExprResult* ElementAvailableFunctionCall::evaluate(txIEvalContext* aContext)
+nsresult
+ElementAvailableFunctionCall::evaluate(txIEvalContext* aContext,
+                                       txAExprResult** aResult)
 {
-    ExprResult* result = nsnull;
-
-    if (requireParams(1, 1, aContext)) {
-        txListIterator iter(&params);
-        Expr* param = (Expr*) iter.next();
-        ExprResult* exprResult = param->evaluate(aContext);
-        if (exprResult &&
-            exprResult->getResultType() == ExprResult::STRING) {
-            nsAutoString property;
-            exprResult->stringValue(property);
-            txExpandedName qname;
-            nsresult rv = qname.init(property, mMappings, MB_TRUE);
-            if (NS_SUCCEEDED(rv) &&
-                qname.mNamespaceID == kNameSpaceID_XSLT &&
-                (qname.mLocalName == txXSLTAtoms::applyImports ||
-                 qname.mLocalName == txXSLTAtoms::applyTemplates ||
-                 qname.mLocalName == txXSLTAtoms::attribute ||
-                 qname.mLocalName == txXSLTAtoms::attributeSet ||
-                 qname.mLocalName == txXSLTAtoms::callTemplate ||
-                 qname.mLocalName == txXSLTAtoms::choose ||
-                 qname.mLocalName == txXSLTAtoms::comment ||
-                 qname.mLocalName == txXSLTAtoms::copy ||
-                 qname.mLocalName == txXSLTAtoms::copyOf ||
-                 qname.mLocalName == txXSLTAtoms::decimalFormat ||
-                 qname.mLocalName == txXSLTAtoms::element ||
-//                 qname.mLocalName == txXSLTAtoms::fallback ||
-                 qname.mLocalName == txXSLTAtoms::forEach ||
-                 qname.mLocalName == txXSLTAtoms::_if ||
-                 qname.mLocalName == txXSLTAtoms::import ||
-                 qname.mLocalName == txXSLTAtoms::include ||
-                 qname.mLocalName == txXSLTAtoms::key ||
-                 qname.mLocalName == txXSLTAtoms::message ||
-//                 qname.mLocalName == txXSLTAtoms::namespaceAlias ||
-                 qname.mLocalName == txXSLTAtoms::number ||
-                 qname.mLocalName == txXSLTAtoms::otherwise ||
-                 qname.mLocalName == txXSLTAtoms::output ||
-                 qname.mLocalName == txXSLTAtoms::param ||
-                 qname.mLocalName == txXSLTAtoms::preserveSpace ||
-                 qname.mLocalName == txXSLTAtoms::processingInstruction ||
-                 qname.mLocalName == txXSLTAtoms::sort ||
-                 qname.mLocalName == txXSLTAtoms::stripSpace ||
-                 qname.mLocalName == txXSLTAtoms::stylesheet ||
-                 qname.mLocalName == txXSLTAtoms::_template ||
-                 qname.mLocalName == txXSLTAtoms::text ||
-                 qname.mLocalName == txXSLTAtoms::transform ||
-                 qname.mLocalName == txXSLTAtoms::valueOf ||
-                 qname.mLocalName == txXSLTAtoms::variable ||
-                 qname.mLocalName == txXSLTAtoms::when ||
-                 qname.mLocalName == txXSLTAtoms::withParam)) {
-                result = new BooleanResult(MB_TRUE);
-            }
-        }
-        else {
-            NS_NAMED_LITERAL_STRING(err, "Invalid argument passed to element-available(), expecting String");
-            aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
-            result = new StringResult(err);
-        }
-        delete exprResult;
+    *aResult = nsnull;
+    if (!requireParams(1, 1, aContext)) {
+        return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
     }
 
-    if (!result) {
-        result = new BooleanResult(MB_FALSE);
-    }
 
-    return result;
+
+    txListIterator iter(&params);
+    Expr* param = (Expr*) iter.next();
+
+    nsRefPtr<txAExprResult> exprResult;
+    nsresult rv = param->evaluate(aContext, getter_AddRefs(exprResult));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString property;
+    exprResult->stringValue(property);
+    txExpandedName qname;
+    rv = qname.init(property, mMappings, MB_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool val = qname.mNamespaceID == kNameSpaceID_XSLT &&
+                 (qname.mLocalName == txXSLTAtoms::applyImports ||
+                  qname.mLocalName == txXSLTAtoms::applyTemplates ||
+                  qname.mLocalName == txXSLTAtoms::attribute ||
+                  qname.mLocalName == txXSLTAtoms::attributeSet ||
+                  qname.mLocalName == txXSLTAtoms::callTemplate ||
+                  qname.mLocalName == txXSLTAtoms::choose ||
+                  qname.mLocalName == txXSLTAtoms::comment ||
+                  qname.mLocalName == txXSLTAtoms::copy ||
+                  qname.mLocalName == txXSLTAtoms::copyOf ||
+                  qname.mLocalName == txXSLTAtoms::decimalFormat ||
+                  qname.mLocalName == txXSLTAtoms::element ||
+                  //qname.mLocalName == txXSLTAtoms::fallback ||
+                  qname.mLocalName == txXSLTAtoms::forEach ||
+                  qname.mLocalName == txXSLTAtoms::_if ||
+                  qname.mLocalName == txXSLTAtoms::import ||
+                  qname.mLocalName == txXSLTAtoms::include ||
+                  qname.mLocalName == txXSLTAtoms::key ||
+                  qname.mLocalName == txXSLTAtoms::message ||
+                  //qname.mLocalName == txXSLTAtoms::namespaceAlias ||
+                  qname.mLocalName == txXSLTAtoms::number ||
+                  qname.mLocalName == txXSLTAtoms::otherwise ||
+                  qname.mLocalName == txXSLTAtoms::output ||
+                  qname.mLocalName == txXSLTAtoms::param ||
+                  qname.mLocalName == txXSLTAtoms::preserveSpace ||
+                  qname.mLocalName == txXSLTAtoms::processingInstruction ||
+                  qname.mLocalName == txXSLTAtoms::sort ||
+                  qname.mLocalName == txXSLTAtoms::stripSpace ||
+                  qname.mLocalName == txXSLTAtoms::stylesheet ||
+                  qname.mLocalName == txXSLTAtoms::_template ||
+                  qname.mLocalName == txXSLTAtoms::text ||
+                  qname.mLocalName == txXSLTAtoms::transform ||
+                  qname.mLocalName == txXSLTAtoms::valueOf ||
+                  qname.mLocalName == txXSLTAtoms::variable ||
+                  qname.mLocalName == txXSLTAtoms::when ||
+                  qname.mLocalName == txXSLTAtoms::withParam);
+
+    aContext->recycler()->getBoolResult(val, aResult);
+
+    return NS_OK;
 }
 
 nsresult ElementAvailableFunctionCall::getNameAtom(nsIAtom** aAtom)
