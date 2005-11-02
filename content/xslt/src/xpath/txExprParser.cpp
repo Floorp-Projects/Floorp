@@ -41,7 +41,7 @@
 #include "ExprParser.h"
 #include "ExprLexer.h"
 #include "FunctionLib.h"
-#include "Stack.h"
+#include "txStack.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txStringUtils.h"
@@ -235,8 +235,8 @@ Expr* ExprParser::createExpr(ExprLexer& lexer, txIParseContext* aContext)
 
     Expr* expr = 0;
 
-    Stack exprs;
-    Stack ops;
+    txStack exprs;
+    txStack ops;
     
     while (!done) {
 
@@ -280,7 +280,7 @@ Expr* ExprParser::createExpr(ExprLexer& lexer, txIParseContext* aContext)
             case Token::MULTIPLY_OP:
             case Token::SUBTRACTION_OP:
             {
-                while (!exprs.empty() &&
+                while (!exprs.isEmpty() &&
                         precedenceLevel(tok->type) 
                        <= precedenceLevel(((Token*)ops.peek())->type)) {
                     expr = createBinaryExpr((Expr*)exprs.pop(),
@@ -300,13 +300,13 @@ Expr* ExprParser::createExpr(ExprLexer& lexer, txIParseContext* aContext)
 
     // make sure expr != 0
     if (!expr) {
-        while (!exprs.empty()) {
+        while (!exprs.isEmpty()) {
             delete (Expr*)exprs.pop();
         }
         return 0;
     }
 
-    while (!exprs.empty()) {
+    while (!exprs.isEmpty()) {
         expr = createBinaryExpr((Expr*)exprs.pop(), expr, (Token*)ops.pop());
     }
 
