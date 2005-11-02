@@ -124,6 +124,13 @@ public:
 class txStreamXMLEventHandler : public txOutputXMLEventHandler
 {
 public:
+    /**
+     * Get the output stream.
+     *
+     * @param aOutputStream the current output stream
+     */
+    void getOutputStream(ostream** aOutputStream);
+
     /*
      * Sets the output stream.
      *
