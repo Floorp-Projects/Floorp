@@ -38,6 +38,7 @@
 
 #include "nsXPathEvaluator.h"
 #include "nsCOMPtr.h"
+#include "nsIAtom.h"
 #include "nsIDOMClassInfo.h"
 #include "nsXPathException.h"
 #include "nsXPathExpression.h"
@@ -51,6 +52,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsDOMString.h"
+#include "nsINameSpaceManager.h"
 #include "txError.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
