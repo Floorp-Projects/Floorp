@@ -29,13 +29,13 @@
  *   -- Fixed bug in parse method so that we make sure we check for
  *      axis identifier wild cards, such as ancestor::*
  *
- * $Id: txExprLexer.cpp,v 1.5 2005/11/02 07:33:44 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txExprLexer.cpp,v 1.6 2005/11/02 07:33:45 kvisco%ziplink.net Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:44 $
+ * @version $Revision: 1.6 $ $Date: 2005/11/02 07:33:45 $
 **/
 
 #include <iostream.h>
@@ -449,12 +449,14 @@ void ExprLexer::matchToken(String& buffer, UNICODE_CHAR ch) {
                 case Token::PI :
                 case Token::TEXT :
                     // make sure next delimiter is '('
-                    if ( ch == L_PAREN) {
-                        //-- copy buffer
-                        match->value = buffer;
-                        //-- copy type
-                        match->type = tok.type;
+                    if ( ch != L_PAREN) {
+                        foundMatch = MB_FALSE;
+                        break;
                     }
+                    //-- copy buffer
+                    match->value = buffer;
+                    //-- copy type
+                    match->type = tok.type;
                     break;
                case Token::MULTIPLY_OP :
                case Token::DIVIDE_OP:
@@ -564,7 +566,7 @@ void ExprLexer::parse(const String& pattern) {
                 case TX_LF:
                     break;
                 case S_QUOTE :
-            case D_QUOTE :
+                case D_QUOTE :
                     matchToken(tokenBuffer, ch);
                     inLiteral = ch;
                     break;
@@ -680,6 +682,9 @@ void ExprLexer::parse(const String& pattern) {
                 case VERT_BAR:
                     matchToken(tokenBuffer, ch);
                     matchDelimiter(ch);
+                    //-- Reset previous token to Null, since this is the "Union Operator"
+                    //-- and the next set of tokens should start as a fresh expression
+                    prevToken = &nullToken;
                     break;
                 default:
                     switch (prevCh) {
