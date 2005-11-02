@@ -10614,8 +10614,10 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
     // call will handle things.
     nsIFrame* primaryFrame = mPresShell->GetPrimaryFrameFor(aContent);
     if (primaryFrame) {
-      if (aStateMask & (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
-                        NS_EVENT_STATE_SUPPRESSED | NS_EVENT_STATE_LOADING)) {
+      // If it's generated content, ignore LOADING/etc state changes on it.
+      if (!primaryFrame->IsGeneratedContentFrame() &&
+          (aStateMask & (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
+                         NS_EVENT_STATE_SUPPRESSED | NS_EVENT_STATE_LOADING))) {
         hint = nsChangeHint_ReconstructFrame;
       } else {          
         PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
