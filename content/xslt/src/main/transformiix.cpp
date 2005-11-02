@@ -31,7 +31,7 @@
  *    -- read XML from stdin when -i is omitted
  *    -- accept '-' to specify stdin/stdout on command line
  *
- * $Id: transformiix.cpp,v 1.6 2005/11/02 07:33:37 kvisco%ziplink.net Exp $
+ * $Id: transformiix.cpp,v 1.7 2005/11/02 07:33:38 axel%pike.org Exp $
  */
 
 
