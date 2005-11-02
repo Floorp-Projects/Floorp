@@ -881,16 +881,6 @@ txMozillaXSLTProcessor::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-txMozillaXSLTProcessor::ContentReplaced(nsIDocument* aDocument,
-                                        nsIContent* aContainer,
-                                        nsIContent* aOldChild,
-                                        nsIContent* aNewChild,
-                                        PRInt32 aIndexInContainer)
-{
-    mStylesheet = nsnull;
-}
-
-void
 txMozillaXSLTProcessor::ContentRemoved(nsIDocument* aDocument,
                                        nsIContent* aContainer,
                                        nsIContent* aChild,
