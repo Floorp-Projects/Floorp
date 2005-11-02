@@ -563,10 +563,6 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
   if (!aTarget)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDOMElement> targetEl(do_QueryInterface(aTarget));
-  if (!targetEl)
-    return NS_ERROR_FAILURE; // could be a text node or something
-
   // before we go on, make sure that target node still has a window
   nsCOMPtr<nsIDocument> document = aTarget->GetDocument();
   if (!document) {
@@ -582,54 +578,50 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
       if (!domWindow)
         return NS_ERROR_FAILURE;
       else {
-        PRBool needTooltip;
-        targetEl->HasAttribute(NS_LITERAL_STRING("tooltiptext"), &needTooltip);
-        if (needTooltip) {
+        nsAutoString tooltipText;
+        aTarget->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext, tooltipText);
+        if (!tooltipText.IsEmpty()) {
           // specifying tooltiptext means we will always use the default tooltip
-           mRootBox->GetDefaultTooltip(aTooltip);
-           NS_IF_ADDREF(*aTooltip);
-           return NS_OK;
-        } else {
-          nsAutoString tooltipId;
-          targetEl->GetAttribute(NS_LITERAL_STRING("tooltip"), tooltipId);
+          *aTooltip = mRootBox->GetDefaultTooltip();
+          if (*aTooltip) {
+            NS_ADDREF(*aTooltip);
+            (*aTooltip)->SetAttr(kNameSpaceID_None, nsXULAtoms::label, tooltipText, PR_TRUE);
+          }
+          return NS_OK;
+        }
+        nsAutoString tooltipId;
+        aTarget->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltip, tooltipId);
 
-          // if tooltip == _child, look for first <tooltip> child
-          if (tooltipId.EqualsLiteral("_child")) {
-            GetImmediateChild(aTarget, nsXULAtoms::tooltip, aTooltip);
-            return NS_OK;
-          } else {
-            if (!tooltipId.IsEmpty()) {
-              // tooltip must be an id, use getElementById to find it
-              nsCOMPtr<nsIDOMDocument> domDocument =
-                do_QueryInterface(document);
-              if (!domDocument) {
-                return NS_ERROR_FAILURE;
-              }
+        // if tooltip == _child, look for first <tooltip> child
+        if (tooltipId.EqualsLiteral("_child")) {
+          GetImmediateChild(aTarget, nsXULAtoms::tooltip, aTooltip);
+          return NS_OK;
+        }
+        if (!tooltipId.IsEmpty()) {
+          // tooltip must be an id, use getElementById to find it
+          nsCOMPtr<nsIDOMDocument> domDocument =
+            do_QueryInterface(document);
+          if (!domDocument) {
+            return NS_ERROR_FAILURE;
+          }
 
-              nsCOMPtr<nsIDOMElement> tooltipEl;
-              domDocument->GetElementById(tooltipId,
-                                          getter_AddRefs(tooltipEl));
+          nsCOMPtr<nsIDOMElement> tooltipEl;
+          domDocument->GetElementById(tooltipId,
+                                      getter_AddRefs(tooltipEl));
 
-              if (tooltipEl) {
+          if (tooltipEl) {
 #ifdef MOZ_XUL
-                mNeedTitletip = PR_FALSE;
+            mNeedTitletip = PR_FALSE;
 #endif
-
-                nsCOMPtr<nsIContent> tooltipContent(do_QueryInterface(tooltipEl));
-                *aTooltip = tooltipContent;
-                NS_IF_ADDREF(*aTooltip);
-
-                return NS_OK;
-              }
-            }
+            CallQueryInterface(tooltipEl, aTooltip);
+            return NS_OK;
           }
         }
 
 #ifdef MOZ_XUL
         // titletips should just use the default tooltip
         if (mIsSourceTree && mNeedTitletip) {
-          mRootBox->GetDefaultTooltip(aTooltip);
-          NS_IF_ADDREF(*aTooltip);
+          NS_IF_ADDREF(*aTooltip = mRootBox->GetDefaultTooltip());
           return NS_OK;
         }
 #endif

@@ -98,8 +98,6 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
   nsresult Init(nsIContent* aSourceNode, nsIRootBox* aRootBox);
-  nsresult SetDefaultTooltip(nsIContent* aDefaultTooltip);
-  nsresult GetDefaultTooltip(nsIContent** aDefaultTooltip);
   nsresult AddTooltipSupport(nsIContent* aNode);
   nsresult RemoveTooltipSupport(nsIContent* aNode);
 

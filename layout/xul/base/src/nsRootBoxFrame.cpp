@@ -74,12 +74,12 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetPopupSetFrame(nsIFrame** aResult);
-  NS_IMETHOD SetPopupSetFrame(nsIFrame* aPopupSet);
-  NS_IMETHOD GetDefaultTooltip(nsIContent** aResult);
-  NS_IMETHOD SetDefaultTooltip(nsIContent* aTooltip);
-  NS_IMETHOD AddTooltipSupport(nsIContent* aNode);
-  NS_IMETHOD RemoveTooltipSupport(nsIContent* aNode);
+  virtual nsIFrame* GetPopupSetFrame();
+  virtual void SetPopupSetFrame(nsIFrame* aPopupSet);
+  virtual nsIContent* GetDefaultTooltip();
+  virtual void SetDefaultTooltip(nsIContent* aTooltip);
+  virtual nsresult AddTooltipSupport(nsIContent* aNode);
+  virtual nsresult RemoveTooltipSupport(nsIContent* aNode);
 
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
@@ -107,7 +107,7 @@ public:
   virtual nsIAtom* GetType() const;
   
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   nsIFrame* mPopupSetFrame;
@@ -258,14 +258,13 @@ nsRootBoxFrame::GetType() const
   return nsLayoutAtoms::rootFrame;
 }
 
-NS_IMETHODIMP
-nsRootBoxFrame::GetPopupSetFrame(nsIFrame** aResult)
+nsIFrame*
+nsRootBoxFrame::GetPopupSetFrame()
 {
-  *aResult = mPopupSetFrame;
-  return NS_OK;
+  return mPopupSetFrame;
 }
 
-NS_IMETHODIMP
+void
 nsRootBoxFrame::SetPopupSetFrame(nsIFrame* aPopupSet)
 {
   // Under normal conditions this should only be called once.  However,
@@ -281,24 +280,21 @@ nsRootBoxFrame::SetPopupSetFrame(nsIFrame* aPopupSet)
   } else {
     NS_NOTREACHED("Popup set is already defined! Only 1 allowed.");
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsRootBoxFrame::GetDefaultTooltip(nsIContent** aTooltip)
+nsIContent*
+nsRootBoxFrame::GetDefaultTooltip()
 {
-  *aTooltip = mDefaultTooltip;
-  return NS_OK;
+  return mDefaultTooltip;
 }
 
-NS_IMETHODIMP
+void
 nsRootBoxFrame::SetDefaultTooltip(nsIContent* aTooltip)
 {
   mDefaultTooltip = aTooltip;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
 {
   // listener will be refcounted by dom event targets that
@@ -312,7 +308,7 @@ nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsRootBoxFrame::RemoveTooltipSupport(nsIContent* aNode)
 {
   // XXjh yuck, I'll have to implement a way to get at
@@ -340,7 +336,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsRootBoxFrame::GetFrameName(nsString& aResult) const
+nsRootBoxFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("RootBox"), aResult);
 }

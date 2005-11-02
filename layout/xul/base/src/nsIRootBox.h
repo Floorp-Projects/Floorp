@@ -53,14 +53,14 @@ class nsIRootBox : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IROOTBOX_IID)
 
-  NS_IMETHOD GetPopupSetFrame(nsIFrame** aResult)=0;
-  NS_IMETHOD SetPopupSetFrame(nsIFrame* aPopupSet)=0;
+  virtual nsIFrame* GetPopupSetFrame() = 0;
+  virtual void SetPopupSetFrame(nsIFrame* aPopupSet)=0;
 
-  NS_IMETHOD GetDefaultTooltip(nsIContent** aResult)=0;
-  NS_IMETHOD SetDefaultTooltip(nsIContent* aTooltip)=0;
+  virtual nsIContent* GetDefaultTooltip() = 0;
+  virtual void SetDefaultTooltip(nsIContent* aTooltip) = 0;
 
-  NS_IMETHOD AddTooltipSupport(nsIContent* aNode)=0;
-  NS_IMETHOD RemoveTooltipSupport(nsIContent* aNode)=0;
+  virtual nsresult AddTooltipSupport(nsIContent* aNode) = 0;
+  virtual nsresult RemoveTooltipSupport(nsIContent* aNode) = 0;
 };
 
 #endif

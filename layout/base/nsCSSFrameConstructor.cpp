@@ -6439,8 +6439,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
       NS_ASSERTION(rootBox, "unexpected null pointer");
       if (rootBox) {
-        nsIFrame* popupSetFrame;
-        rootBox->GetPopupSetFrame(&popupSetFrame);
+        nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
         NS_ASSERTION(popupSetFrame, "unexpected null pointer");
         if (popupSetFrame) {
           nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
@@ -9807,8 +9806,7 @@ DeletingFrameSubtree(nsPresContext*  aPresContext,
         nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
         NS_ASSERTION(rootBox, "unexpected null pointer");
         if (rootBox) {
-          nsIFrame* popupSetFrame;
-          rootBox->GetPopupSetFrame(&popupSetFrame);
+          nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
           NS_ASSERTION(popupSetFrame, "unexpected null pointer");
           if (popupSetFrame) {
             nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
@@ -10022,8 +10020,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
 #ifdef MOZ_XUL
         nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
         if (rootBox) {
-          nsIFrame* popupSetFrame;
-          rootBox->GetPopupSetFrame(&popupSetFrame);
+          nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
           if (popupSetFrame) {
             nsCOMPtr<nsIPopupSetFrame> popupSet(do_QueryInterface(popupSetFrame));
             if (popupSet)

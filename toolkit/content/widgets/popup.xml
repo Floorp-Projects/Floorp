@@ -224,29 +224,6 @@
         }        
       ]]></handler>
 
-      <handler event="popupshowing">
-      <![CDATA[
-        // fill in the label automatically for the default tooltip
-        if (this.getAttribute("default") == "true") {
-          var label = "";
-          var ttNode = document.tooltipNode;
-          if (ttNode && ttNode.hasAttribute("tooltiptext"))
-            this.label = ttNode.getAttribute("tooltiptext");
-        }
-
-        // This is a special consideration for tree titletips. There is a
-        // case where the user moves the mouse from over the treebody to
-        // completely outside of the window, while passing over a cell that
-        // displays a titletip.  This causes the titletip to show, even though
-        // the mouse is not over the corresponding cell, so we need to check
-        // if the titletip was entered by the mouse, and if not, hide it.
-        // XXX commenting this out for now because it doesn't work on Mac 
-        //     become mouseover isn't fired when the tooltip appears with the mouse over it
-        //if (this.hasAttribute("titletip"))
-        //  window.setTimeout(function(me) { if (!me._isMouseOver) me.hidePopup(); }, 100, this);
-      ]]>
-      </handler>
-
       <handler event="popuphiding"><![CDATA[
         this._isMouseOver = false;
         this._mouseOutCount = 0;
