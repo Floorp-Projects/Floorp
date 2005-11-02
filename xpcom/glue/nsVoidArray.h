@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 #ifndef nsVoidArray_h___
 #define nsVoidArray_h___
@@ -26,7 +27,7 @@
 class nsISizeOfHandler;
 
 // Enumerator callback function. Return PR_FALSE to stop
-typedef PRBool (*nsVoidArrayEnumFunc)(void* aElement, void *aData);
+typedef PRBool (* PR_CALLBACK nsVoidArrayEnumFunc)(void* aElement, void *aData);
 
 /// A basic zero-based array of void*'s that manages its own memory
 class NS_COM nsVoidArray {
