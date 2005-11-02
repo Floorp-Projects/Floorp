@@ -47,8 +47,7 @@
 #include "nsIDOMDocument.h"
 #include "nsDOMString.h"
 
-nsXPathResult::nsXPathResult() : mNumberValue(0),
-                                 mDocument(0),
+nsXPathResult::nsXPathResult() : mDocument(nsnull),
                                  mCurrentPos(0),
                                  mResultType(ANY_TYPE),
                                  mInvalidIteratorState(PR_TRUE)
@@ -57,7 +56,9 @@ nsXPathResult::nsXPathResult() : mNumberValue(0),
 
 nsXPathResult::~nsXPathResult()
 {
-    Reset();
+    if (mDocument) {
+        mDocument->RemoveObserver(this);
+    }
 }
 
 NS_IMPL_ADDREF(nsXPathResult)
@@ -73,125 +74,124 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 nsXPathResult::GetResultType(PRUint16 *aResultType)
 {
-    NS_ENSURE_ARG(aResultType);
     *aResultType = mResultType;
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPathResult::GetNumberValue(double *aNumberValue)
 {
-    if (mResultType != NUMBER_TYPE)
+    if (mResultType != NUMBER_TYPE) {
         return NS_ERROR_DOM_TYPE_ERR;
+    }
 
-    NS_ENSURE_ARG(aNumberValue);
-    *aNumberValue = mNumberValue;
+    *aNumberValue = mResult.get()->numberValue();
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPathResult::GetStringValue(nsAString &aStringValue)
 {
-    if (mResultType != STRING_TYPE)
+    if (mResultType != STRING_TYPE) {
         return NS_ERROR_DOM_TYPE_ERR;
+    }
 
-    if (mStringValue)
-        aStringValue.Assign(*mStringValue);
-    else
-        SetDOMStringToNull(aStringValue);
+    mResult.get()->stringValue(aStringValue);
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPathResult::GetBooleanValue(PRBool *aBooleanValue)
 {
-    if (mResultType != BOOLEAN_TYPE)
+    if (mResultType != BOOLEAN_TYPE) {
         return NS_ERROR_DOM_TYPE_ERR;
+    }
 
-    NS_ENSURE_ARG(aBooleanValue);
-    *aBooleanValue = mBooleanValue;
+    *aBooleanValue = mResult.get()->booleanValue();
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPathResult::GetSingleNodeValue(nsIDOMNode **aSingleNodeValue)
 {
-    if (mResultType != FIRST_ORDERED_NODE_TYPE &&
-        mResultType != ANY_UNORDERED_NODE_TYPE)
+    if (!isNode()) {
         return NS_ERROR_DOM_TYPE_ERR;
+    }
 
-    NS_ENSURE_ARG(aSingleNodeValue);
-    *aSingleNodeValue = mNode;
-    NS_IF_ADDREF(*aSingleNodeValue);
+    txNodeSet *nodeSet = NS_STATIC_CAST(txNodeSet*, mResult.get());
+    if (nodeSet->size() > 0) {
+        return txXPathNativeNode::getNode(nodeSet->get(0), aSingleNodeValue);
+    }
+
+    *aSingleNodeValue = nsnull;
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPathResult::GetInvalidIteratorState(PRBool *aInvalidIteratorState)
 {
-    NS_ENSURE_ARG(aInvalidIteratorState);
+    *aInvalidIteratorState = isIterator() && mInvalidIteratorState;
 
-    if (mResultType != UNORDERED_NODE_ITERATOR_TYPE &&
-        mResultType != ORDERED_NODE_ITERATOR_TYPE) {
-        *aInvalidIteratorState = PR_FALSE;
-        return NS_OK;
-    }
-
-    *aInvalidIteratorState = mInvalidIteratorState;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPathResult::GetSnapshotLength(PRUint32 *aSnapshotLength)
 {
-    if (mResultType != UNORDERED_NODE_SNAPSHOT_TYPE &&
-        mResultType != ORDERED_NODE_SNAPSHOT_TYPE)
+    if (!isSnapshot()) {
         return NS_ERROR_DOM_TYPE_ERR;
+    }
 
-    NS_ENSURE_ARG(aSnapshotLength);
-    *aSnapshotLength = 0;
-    if (mElements)
-        *aSnapshotLength = mElements->Count();
+    txNodeSet *nodeSet = NS_STATIC_CAST(txNodeSet*, mResult.get());
+    *aSnapshotLength = (PRUint32)nodeSet->size();
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPathResult::IterateNext(nsIDOMNode **aResult)
 {
-    if (mResultType != UNORDERED_NODE_ITERATOR_TYPE &&
-        mResultType != ORDERED_NODE_ITERATOR_TYPE)
+    if (!isIterator()) {
         return NS_ERROR_DOM_TYPE_ERR;
-
-    if (mDocument)
-        mDocument->FlushPendingNotifications(Flush_Content);
-
-    if (mInvalidIteratorState)
-        return NS_ERROR_DOM_INVALID_STATE_ERR;
-
-    NS_ENSURE_ARG(aResult);
-    if (mElements && mCurrentPos < (PRUint32)mElements->Count()) {
-        *aResult = mElements->ObjectAt(mCurrentPos++);
-        NS_ADDREF(*aResult);
-        return NS_OK;
     }
+
+    if (mDocument) {
+        mDocument->FlushPendingNotifications(Flush_Content);
+    }
+
+    if (mInvalidIteratorState) {
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+
+    txNodeSet *nodeSet = NS_STATIC_CAST(txNodeSet*, mResult.get());
+    if (mCurrentPos < (PRUint32)nodeSet->size()) {
+        return txXPathNativeNode::getNode(nodeSet->get(mCurrentPos), aResult);
+    }
+
     *aResult = nsnull;
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXPathResult::SnapshotItem(PRUint32 aIndex, nsIDOMNode **aResult)
 {
-    if (mResultType != UNORDERED_NODE_SNAPSHOT_TYPE &&
-        mResultType != ORDERED_NODE_SNAPSHOT_TYPE)
+    if (!isSnapshot()) {
         return NS_ERROR_DOM_TYPE_ERR;
-
-    NS_ENSURE_ARG(aResult);
-    if (mElements && aIndex < (PRUint32)mElements->Count()) {
-        *aResult = mElements->ObjectAt(aIndex);
-        NS_ADDREF(*aResult);
-        return NS_OK;
     }
+
+    txNodeSet *nodeSet = NS_STATIC_CAST(txNodeSet*, mResult.get());
+    if (aIndex < (PRUint32)nodeSet->size()) {
+        return txXPathNativeNode::getNode(nodeSet->get(aIndex), aResult);
+    }
+
     *aResult = nsnull;
+
     return NS_OK;
 }
 
@@ -245,81 +245,48 @@ nsXPathResult::ContentRemoved(nsIDocument* aDocument,
     Invalidate();
 }
 
-NS_IMETHODIMP
+nsresult
 nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
 {
-    Reset();
+    if (mDocument) {
+        mDocument->RemoveObserver(this);
+        mDocument = nsnull;
+    }
  
     mResultType = aResultType;
+    mResult.set(aExprResult);
 
-    if (mResultType == NUMBER_TYPE) {
-        mNumberValue = aExprResult->numberValue();
+    if (!isIterator()) {
         return NS_OK;
     }
 
-    if (mResultType == STRING_TYPE) {
-        mStringValue = new nsString;
-        NS_ENSURE_TRUE(mStringValue, NS_ERROR_OUT_OF_MEMORY);
-        aExprResult->stringValue(*mStringValue);
-        return NS_OK;
-    }
+    mInvalidIteratorState = PR_FALSE;
 
-    if (mResultType == BOOLEAN_TYPE) {
-        mBooleanValue = aExprResult->booleanValue();
-        return NS_OK;
-    }
+    txNodeSet* nodeSet = NS_STATIC_CAST(txNodeSet*, aExprResult);
+    nsCOMPtr<nsIDOMNode> node;
+    if (nodeSet->size() > 0) {
+        nsresult rv = txXPathNativeNode::getNode(nodeSet->get(0),
+                                                 getter_AddRefs(node));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-    if (aExprResult->getResultType() == txAExprResult::NODESET) {
-        nsresult rv = NS_OK;
-        txNodeSet* nodeSet = NS_STATIC_CAST(txNodeSet*, aExprResult);
-
-        if (mResultType == FIRST_ORDERED_NODE_TYPE ||
-            mResultType == ANY_UNORDERED_NODE_TYPE) {
-            if (nodeSet->size() > 0) {
-                txXPathNativeNode::getNode(nodeSet->get(0), &mNode);
-            }
+        // If we support the document() function in DOM-XPath we need to
+        // observe all documents that we have resultnodes in.
+        nsCOMPtr<nsIDOMDocument> document;
+        node->GetOwnerDocument(getter_AddRefs(document));
+        if (document) {
+            mDocument = do_QueryInterface(document);
         }
         else {
-            if (mResultType == UNORDERED_NODE_ITERATOR_TYPE ||
-                mResultType == ORDERED_NODE_ITERATOR_TYPE) {
-                mInvalidIteratorState = PR_FALSE;
-            }
-
-            PRInt32 count = nodeSet->size();
-            if (count == 0)
-                return NS_OK;
-
-            mElements = new nsCOMArray<nsIDOMNode>;
-            NS_ENSURE_TRUE(mElements, NS_ERROR_OUT_OF_MEMORY);
-
-            nsCOMPtr<nsIDOMNode> node;
-            PRInt32 i;
-            for (i = 0; i < count; ++i) {
-                txXPathNativeNode::getNode(nodeSet->get(i), getter_AddRefs(node));
-                NS_ASSERTION(node, "node isn't an nsIDOMNode");
-                mElements->AppendObject(node);
-            }
-
-            // If we support the document() function in DOM-XPath we need to
-            // observe all documents that we have resultnodes in.
-            if (mResultType == UNORDERED_NODE_ITERATOR_TYPE ||
-                mResultType == ORDERED_NODE_ITERATOR_TYPE) {
-                nsCOMPtr<nsIDOMDocument> document;
-                node->GetOwnerDocument(getter_AddRefs(document));
-                if (document)
-                    mDocument = do_QueryInterface(document);
-                else
-                    mDocument = do_QueryInterface(node);
-
-                NS_ASSERTION(mDocument, "We need a document!");
-                if (mDocument)
-                    mDocument->AddObserver(this);
-            }
+            mDocument = do_QueryInterface(node);
         }
-        return rv;
+
+        NS_ASSERTION(mDocument, "We need a document!");
+        if (mDocument) {
+            mDocument->AddObserver(this);
+        }
     }
 
-    return NS_ERROR_DOM_TYPE_ERR;
+    return NS_OK;
 }
 
 void
@@ -327,32 +294,79 @@ nsXPathResult::Invalidate()
 {
     if (mDocument) {
         mDocument->RemoveObserver(this);
-        mDocument = 0;
+        mDocument = nsnull;
     }
     mInvalidIteratorState = PR_TRUE;
 }
 
-void
-nsXPathResult::Reset()
+nsresult
+nsXPathResult::GetExprResult(txAExprResult** aExprResult)
 {
-    Invalidate();
-
-    if (mResultType == STRING_TYPE) {
-        delete mStringValue;
-        mStringValue = 0;
-    }
-    else if (mResultType == UNORDERED_NODE_ITERATOR_TYPE ||
-             mResultType == ORDERED_NODE_ITERATOR_TYPE ||
-             mResultType == UNORDERED_NODE_SNAPSHOT_TYPE ||
-             mResultType == ORDERED_NODE_SNAPSHOT_TYPE) {
-        delete mElements;
-        mCurrentPos = 0;
-    }
-    else if (mResultType == FIRST_ORDERED_NODE_TYPE ||
-             mResultType == ANY_UNORDERED_NODE_TYPE) {
-        NS_IF_RELEASE(mNode);
+    if (isIterator() && mInvalidIteratorState) {
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
 
-    mResultType = ANY_TYPE;
-    return;
+    *aExprResult = mResult.get();
+    if (!*aExprResult) {
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+
+    NS_ADDREF(*aExprResult);
+
+    return NS_OK;
+}
+
+nsresult
+nsXPathResult::Clone(nsIXPathResult **aResult)
+{
+    *aResult = nsnull;
+
+    if (isIterator() && mInvalidIteratorState) {
+        return NS_ERROR_DOM_INVALID_STATE_ERR;
+    }
+
+    nsCOMPtr<nsIXPathResult> result = new nsXPathResult();
+    if (!result) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    nsresult rv = result->SetExprResult(mResult.get(), mResultType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    result.swap(*aResult);
+
+    return NS_OK;
+}
+
+void
+txResultHolder::set(txAExprResult *aResult)
+{
+    releaseNodeSet();
+
+    // XXX This will keep the recycler alive, should we clear it?
+    mResult = aResult;
+
+    if (mResult && mResult->getResultType() == txAExprResult::NODESET) {
+        txNodeSet *nodeSet =
+            NS_STATIC_CAST(txNodeSet*,
+                           NS_STATIC_CAST(txAExprResult*, mResult));
+        PRInt32 i, count = nodeSet->size();
+        for (i = 0; i < count; ++i) {
+            txXPathNativeNode::addRef(nodeSet->get(i));
+        }
+    }
+}
+
+void
+txResultHolder::releaseNodeSet()
+{
+    if (mResult && mResult->getResultType() == txAExprResult::NODESET) {
+        txNodeSet *nodeSet =
+            NS_STATIC_CAST(txNodeSet*,
+                           NS_STATIC_CAST(txAExprResult*, mResult));
+        PRInt32 i, count = nodeSet->size();
+        for (i = 0; i < count; ++i) {
+            txXPathNativeNode::release(nodeSet->get(i));
+        }
+    }
 }

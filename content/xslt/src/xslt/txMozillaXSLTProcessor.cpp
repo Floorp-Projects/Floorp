@@ -47,12 +47,14 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
+#include "nsIDOMNodeList.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "nsIScriptLoader.h"
 #include "nsIStringBundle.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsXPathResult.h"
 #include "txExecutionState.h"
 #include "txMozillaTextOutput.h"
 #include "txMozillaXMLOutput.h"
@@ -61,6 +63,7 @@
 #include "txUnknownHandler.h"
 #include "txXSLTProcessor.h"
 #include "nsIPrincipal.h"
+#include "jsapi.h"
 
 static NS_DEFINE_CID(kXMLDocumentCID, NS_XMLDOCUMENT_CID);
 
@@ -482,8 +485,11 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
                                      nsIVariant *aValue)
 {
     NS_ENSURE_ARG(aValue);
+
+    nsCOMPtr<nsIVariant> value = aValue;
+
     PRUint16 dataType;
-    aValue->GetDataType(&dataType);
+    value->GetDataType(&dataType);
     switch (dataType) {
         // Number
         case nsIDataType::VTYPE_INT8:
@@ -511,14 +517,145 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
         case nsIDataType::VTYPE_UTF8STRING:
         case nsIDataType::VTYPE_CSTRING:
         case nsIDataType::VTYPE_ASTRING:
+        {
+            break;
+        }
 
         // Nodeset
         case nsIDataType::VTYPE_INTERFACE:
         case nsIDataType::VTYPE_INTERFACE_IS:
+        {
+            nsCOMPtr<nsISupports> supports;
+            nsresult rv = value->GetAsISupports(getter_AddRefs(supports));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsIDOMNode> node = do_QueryInterface(supports);
+            if (node) {
+                if (!URIUtils::CanCallerAccess(node)) {
+                    return NS_ERROR_DOM_SECURITY_ERR;
+                }
+
+                break;
+            }
+
+            nsCOMPtr<nsIXPathResult> xpathResult = do_QueryInterface(supports);
+            if (xpathResult) {
+                nsRefPtr<txAExprResult> result;
+                nsresult rv = xpathResult->GetExprResult(getter_AddRefs(result));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                if (result->getResultType() == txAExprResult::NODESET) {
+                    txNodeSet *nodeSet =
+                        NS_STATIC_CAST(txNodeSet*,
+                                       NS_STATIC_CAST(txAExprResult*, result));
+
+                    nsCOMPtr<nsIDOMNode> node;
+                    PRInt32 i, count = nodeSet->size();
+                    for (i = 0; i < count; ++i) {
+                        rv = txXPathNativeNode::getNode(nodeSet->get(i),
+                                                        getter_AddRefs(node));
+                        NS_ENSURE_SUCCESS(rv, rv);
+
+                        if (!URIUtils::CanCallerAccess(node)) {
+                            return NS_ERROR_DOM_SECURITY_ERR;
+                        }
+                    }
+                }
+
+                // Clone the nsXPathResult so that mutations don't affect this
+                // variable.
+                nsCOMPtr<nsIXPathResult> clone;
+                rv = xpathResult->Clone(getter_AddRefs(clone));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                nsCOMPtr<nsIWritableVariant> variant =
+                    do_CreateInstance("@mozilla.org/variant;1", &rv);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                rv = variant->SetAsISupports(clone);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                value = variant;
+
+                break;
+            }
+
+            nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(supports);
+            if (nodeList) {
+                PRUint32 length;
+                nodeList->GetLength(&length);
+
+                nsCOMPtr<nsIDOMNode> node;
+                PRUint32 i;
+                for (i = 0; i < length; ++i) {
+                    nodeList->Item(i, getter_AddRefs(node));
+
+                    if (!URIUtils::CanCallerAccess(node)) {
+                        return NS_ERROR_DOM_SECURITY_ERR;
+                    }
+                }
+
+                break;
+            }
+
+            // Random JS Objects will be converted to a string.
+            nsCOMPtr<nsIXPConnectJSObjectHolder> holder =
+                do_QueryInterface(supports);
+            if (holder) {
+                break;
+            }
+
+            // We don't know how to handle this type of param.
+            return NS_ERROR_ILLEGAL_VALUE;
+        }
+
         case nsIDataType::VTYPE_ARRAY:
         {
-            // This might still be an error, but we'll only
-            // find out later since we lazily evaluate.
+            PRUint16 type;
+            nsIID iid;
+            PRUint32 count;
+            void* array;
+            nsresult rv = value->GetAsArray(&type, &iid, &count, &array);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            if (type != nsIDataType::VTYPE_INTERFACE &&
+                type != nsIDataType::VTYPE_INTERFACE_IS) {
+                nsMemory::Free(array);
+
+                // We only support arrays of DOM nodes.
+                return NS_ERROR_ILLEGAL_VALUE;
+            }
+
+            nsISupports** values = NS_STATIC_CAST(nsISupports**, array);
+
+            PRUint32 i;
+            for (i = 0; i < count; ++i) {
+                nsISupports *supports = values[i];
+                nsCOMPtr<nsIDOMNode> node = do_QueryInterface(supports);
+
+                if (node) {
+                    rv = URIUtils::CanCallerAccess(node) ? NS_OK :
+                         NS_ERROR_DOM_SECURITY_ERR;
+                }
+                else {
+                    // We only support arrays of DOM nodes.
+                    rv = NS_ERROR_ILLEGAL_VALUE;
+                }
+
+                if (NS_FAILED(rv)) {
+                    while (i < count) {
+                        NS_RELEASE(values[i++]);
+                    }
+                    nsMemory::Free(array);
+
+                    return rv;
+                }
+
+                NS_RELEASE(supports);
+            }
+
+            nsMemory::Free(array);
+
             break;
         }
 
@@ -536,11 +673,11 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
 
     txVariable* var = (txVariable*)mVariables.get(varName);
     if (var) {
-        var->setValue(aValue);
+        var->setValue(value);
         return NS_OK;
     }
 
-    var = new txVariable(aValue);
+    var = new txVariable(value);
     NS_ENSURE_TRUE(var, NS_ERROR_OUT_OF_MEMORY);
 
     return mVariables.add(varName, var);
@@ -927,25 +1064,153 @@ txVariable::Convert(nsIVariant *aValue, txAExprResult** aResult)
         case nsIDataType::VTYPE_INTERFACE:
         case nsIDataType::VTYPE_INTERFACE_IS:
         {
-            nsID *iid;
             nsCOMPtr<nsISupports> supports;
-            nsresult rv = aValue->GetAsInterface(&iid, getter_AddRefs(supports));
+            nsresult rv = aValue->GetAsISupports(getter_AddRefs(supports));
             NS_ENSURE_SUCCESS(rv, rv);
-            if (iid) {
-                // XXX Figure out what the user added and if we can do
-                //     anything with it.
-                //     nsIDOMNode, nsIDOMNodeList, nsIDOMXPathResult
-                nsMemory::Free(iid);
+
+            nsCOMPtr<nsIDOMNode> node = do_QueryInterface(supports);
+            if (node) {
+                nsAutoPtr<txXPathNode> xpathNode(txXPathNativeNode::createXPathNode(node));
+                if (!xpathNode) {
+                    return NS_ERROR_FAILURE;
+                }
+
+                *aResult = new txNodeSet(*xpathNode, nsnull);
+                if (!*aResult) {
+                    return NS_ERROR_OUT_OF_MEMORY;
+                }
+
+                NS_ADDREF(*aResult);
+
+                return NS_OK;
             }
+
+            nsCOMPtr<nsIXPathResult> xpathResult = do_QueryInterface(supports);
+            if (xpathResult) {
+                return xpathResult->GetExprResult(aResult);
+            }
+
+            nsCOMPtr<nsIDOMNodeList> nodeList = do_QueryInterface(supports);
+            if (nodeList) {
+                nsRefPtr<txNodeSet> nodeSet = new txNodeSet(nsnull);
+                if (!nodeSet) {
+                    return NS_ERROR_OUT_OF_MEMORY;
+                }
+
+                PRUint32 length;
+                nodeList->GetLength(&length);
+
+                nsCOMPtr<nsIDOMNode> node;
+                PRUint32 i;
+                for (i = 0; i < length; ++i) {
+                    nodeList->Item(i, getter_AddRefs(node));
+
+                    txXPathNode *xpathNode =
+                        txXPathNativeNode::createXPathNode(node);
+                    if (!xpathNode) {
+                        return NS_ERROR_FAILURE;
+                    }
+
+                    nodeSet->add(*xpathNode);
+                }
+
+                NS_ADDREF(*aResult = nodeSet);
+
+                return NS_OK;
+            }
+
+            // Convert random JS Objects to a string.
+            nsCOMPtr<nsIXPConnectJSObjectHolder> holder =
+                do_QueryInterface(supports);
+            if (holder) {
+                nsCOMPtr<nsIXPConnect> xpc =
+                    do_GetService(nsIXPConnect::GetCID(), &rv);
+                NS_ENSURE_SUCCESS(rv, rv);
+                
+                nsCOMPtr<nsIXPCNativeCallContext> cc;
+                rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                JSContext* cx;
+                rv = cc->GetJSContext(&cx);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                JSObject *jsobj;
+                rv = holder->GetJSObject(&jsobj);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                JSString *str = JS_ValueToString(cx, OBJECT_TO_JSVAL(jsobj));
+                NS_ENSURE_TRUE(str, NS_ERROR_FAILURE);
+
+                const PRUnichar *strChars =
+                    NS_REINTERPRET_CAST(const PRUnichar*,
+                                        ::JS_GetStringChars(str));
+                nsDependentString value(strChars, ::JS_GetStringLength(str));
+
+                *aResult = new StringResult(value, nsnull);
+                if (!*aResult) {
+                    return NS_ERROR_OUT_OF_MEMORY;
+                }
+
+                NS_ADDREF(*aResult);
+
+                return NS_OK;
+            }
+
             break;
         }
 
         case nsIDataType::VTYPE_ARRAY:
         {
-            // XXX Figure out what the user added and if we can do
-            //     anything with it. Array of Nodes. 
-            break;
+            PRUint16 type;
+            nsIID iid;
+            PRUint32 count;
+            void* array;
+            nsresult rv = aValue->GetAsArray(&type, &iid, &count, &array);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            NS_ASSERTION(type == nsIDataType::VTYPE_INTERFACE ||
+                         type == nsIDataType::VTYPE_INTERFACE_IS,
+                         "Huh, we checked this in SetParameter?");
+
+            nsISupports** values = NS_STATIC_CAST(nsISupports**, array);
+
+            nsRefPtr<txNodeSet> nodeSet = new txNodeSet(nsnull);
+            if (!nodeSet) {
+                NS_FREE_XPCOM_ISUPPORTS_POINTER_ARRAY(count, values);
+
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+
+            PRUint32 i;
+            for (i = 0; i < count; ++i) {
+                nsISupports *supports = values[i];
+                nsCOMPtr<nsIDOMNode> node = do_QueryInterface(supports);
+                NS_ASSERTION(node, "Huh, we checked this in SetParameter?");
+
+                txXPathNode *xpathNode =
+                    txXPathNativeNode::createXPathNode(node);
+                if (!xpathNode) {
+                    while (i < count) {
+                        NS_RELEASE(values[i++]);
+                    }
+                    nsMemory::Free(array);
+
+                    return NS_ERROR_FAILURE;
+                }
+
+                nodeSet->add(*xpathNode);
+
+                NS_RELEASE(supports);
+            }
+
+            nsMemory::Free(array);
+
+            NS_ADDREF(*aResult = nodeSet);
+
+            return NS_OK;
         }
     }
+
     return NS_ERROR_ILLEGAL_VALUE;
 }

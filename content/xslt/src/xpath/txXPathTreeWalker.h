@@ -162,6 +162,17 @@ public:
     static nsresult getNode(const txXPathNode& aNode, nsIDOMNode** aResult);
     static nsIContent* getContent(const txXPathNode& aNode);
     static nsIDocument* getDocument(const txXPathNode& aNode);
+    static void addRef(const txXPathNode& aNode)
+    {
+        // Hopefully it's ok to access mContent through mDocument.
+        NS_ADDREF(aNode.mDocument);
+    }
+    static void release(const txXPathNode& aNode)
+    {
+        // Hopefully it's ok to access mContent through mDocument.
+        nsISupports *node = aNode.mDocument;
+        NS_RELEASE(node);
+    }
 };
 
 #endif
