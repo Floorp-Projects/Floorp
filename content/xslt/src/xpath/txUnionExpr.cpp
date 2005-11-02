@@ -135,7 +135,7 @@ UnionExpr::toString(nsAString& dest)
     while (iter.hasNext()) {
         //-- set operator
         if (count > 0)
-            dest.Append(NS_LITERAL_STRING(" | "));
+            dest.AppendLiteral(" | ");
         ((Expr*)iter.next())->toString(dest);
         ++count;
     }

@@ -160,7 +160,7 @@ PRBool FunctionCall::requireParams(PRInt32 aParamCountMin,
         (aParamCountMax > -1 && argc > aParamCountMax)) {
         nsAutoString err(NS_LITERAL_STRING("invalid number of parameters for function"));
 #ifdef TX_TO_STRING
-        err.Append(NS_LITERAL_STRING(": "));
+        err.AppendLiteral(": ");
         toString(err);
 #endif
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);

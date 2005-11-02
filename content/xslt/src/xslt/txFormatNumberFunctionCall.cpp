@@ -102,7 +102,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
     if (!format) {
         nsAutoString err(NS_LITERAL_STRING("unknown decimal format"));
 #ifdef TX_TO_STRING
-        err.Append(NS_LITERAL_STRING(" for: "));
+        err.AppendLiteral(" for: ");
         toString(err);
 #endif
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);
@@ -177,7 +177,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
                     else {
                         nsAutoString err(INVALID_PARAM_VALUE);
 #ifdef TX_TO_STRING
-                        err.Append(NS_LITERAL_STRING(": "));
+                        err.AppendLiteral(": ");
                         toString(err);
 #endif
                         aContext->receiveError(err,
@@ -191,7 +191,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
                     else {
                         nsAutoString err(INVALID_PARAM_VALUE);
 #ifdef TX_TO_STRING
-                        err.Append(NS_LITERAL_STRING(": "));
+                        err.AppendLiteral(": ");
                         toString(err);
 #endif
                         aContext->receiveError(err,
@@ -279,7 +279,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
         groupSize == 0) {
         nsAutoString err(INVALID_PARAM_VALUE);
 #ifdef TX_TO_STRING
-        err.Append(NS_LITERAL_STRING(": "));
+        err.AppendLiteral(": ");
         toString(err);
 #endif
         aContext->receiveError(err, NS_ERROR_XPATH_INVALID_ARG);

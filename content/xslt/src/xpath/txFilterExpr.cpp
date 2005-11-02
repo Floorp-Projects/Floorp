@@ -91,7 +91,7 @@ void
 FilterExpr::toString(nsAString& str)
 {
     if ( expr ) expr->toString(str);
-    else str.Append(NS_LITERAL_STRING("null"));
+    else str.AppendLiteral("null");
     PredicateList::toString(str);
 }
 #endif

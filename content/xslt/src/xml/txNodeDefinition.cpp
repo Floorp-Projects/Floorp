@@ -65,27 +65,27 @@ NodeDefinition::NodeDefinition(NodeType aType, const nsAString& aValue,
   {
     case CDATA_SECTION_NODE:
     {
-      nodeName = NS_LITERAL_STRING("#cdata-section");
+      nodeName.AssignLiteral("#cdata-section");
       break;
     }
     case COMMENT_NODE:
     {
-      nodeName = NS_LITERAL_STRING("#comment");
+      nodeName.AssignLiteral("#comment");
       break;
     }
     case DOCUMENT_NODE:
     {
-      nodeName = NS_LITERAL_STRING("#document");
+      nodeName.AssignLiteral("#document");
       break;
     }
     case DOCUMENT_FRAGMENT_NODE:
     {
-      nodeName = NS_LITERAL_STRING("#document-fragment");
+      nodeName.AssignLiteral("#document-fragment");
       break;
     }
     case TEXT_NODE:
     {
-      nodeName = NS_LITERAL_STRING("#text");
+      nodeName.AssignLiteral("#text");
       break;
     }
     default:

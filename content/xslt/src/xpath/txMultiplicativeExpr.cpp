@@ -119,21 +119,21 @@ void
 MultiplicativeExpr::toString(nsAString& str)
 {
     if ( leftExpr ) leftExpr->toString(str);
-    else str.Append(NS_LITERAL_STRING("null"));
+    else str.AppendLiteral("null");
 
     switch ( op ) {
         case DIVIDE:
-            str.Append(NS_LITERAL_STRING(" div "));
+            str.AppendLiteral(" div ");
             break;
         case MODULUS:
-            str.Append(NS_LITERAL_STRING(" mod "));
+            str.AppendLiteral(" mod ");
             break;
         default:
-            str.Append(NS_LITERAL_STRING(" * "));
+            str.AppendLiteral(" * ");
             break;
     }
     if ( rightExpr ) rightExpr->toString(str);
-    else str.Append(NS_LITERAL_STRING("null"));
+    else str.AppendLiteral("null");
 
 }
 #endif

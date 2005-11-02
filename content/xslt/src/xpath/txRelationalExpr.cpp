@@ -213,19 +213,19 @@ RelationalExpr::toString(nsAString& str)
 
     switch (mOp) {
         case NOT_EQUAL:
-            str.Append(NS_LITERAL_STRING("!="));
+            str.AppendLiteral("!=");
             break;
         case LESS_THAN:
             str.Append(PRUnichar('<'));
             break;
         case LESS_OR_EQUAL:
-            str.Append(NS_LITERAL_STRING("<="));
+            str.AppendLiteral("<=");
             break;
         case GREATER_THAN :
             str.Append(PRUnichar('>'));
             break;
         case GREATER_OR_EQUAL:
-            str.Append(NS_LITERAL_STRING(">="));
+            str.AppendLiteral(">=");
             break;
         default:
             str.Append(PRUnichar('='));
