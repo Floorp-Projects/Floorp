@@ -67,6 +67,6 @@ ExprResult* SystemPropertyFunctionCall::evaluate(txIEvalContext* aContext)
 nsresult SystemPropertyFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::systemProperty;
-    TX_ADDREF_ATOM(*aAtom);
+    NS_ADDREF(*aAtom);
     return NS_OK;
 }

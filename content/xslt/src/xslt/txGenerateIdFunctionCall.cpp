@@ -96,6 +96,6 @@ ExprResult* GenerateIdFunctionCall::evaluate(txIEvalContext* aContext)
 nsresult GenerateIdFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::generateId;
-    TX_ADDREF_ATOM(*aAtom);
+    NS_ADDREF(*aAtom);
     return NS_OK;
 }

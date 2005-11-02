@@ -216,7 +216,7 @@ void txHTMLOutput::attribute(const nsAString& aName,
             localPart.Equals(aValue, txCaseInsensitiveStringComparator())) {
             txListIterator iter(&mAttributes);
             txAttribute* setAtt = 0;
-            nsIAtom* localName = TX_GET_ATOM(localPart);
+            nsCOMPtr<nsIAtom> localName = do_GetAtom(localPart);
             txExpandedName att(aNsID, localName);
             while ((setAtt = (txAttribute*)iter.next())) {
                  if (setAtt->mName == att) {
@@ -229,7 +229,6 @@ void txHTMLOutput::attribute(const nsAString& aName,
                 setAtt->mShorthand = MB_TRUE;
                 mAttributes.add(setAtt);
             }
-            TX_IF_RELEASE_ATOM(localName);
         }
     }
     if (!shortHand)
@@ -304,18 +303,17 @@ void txHTMLOutput::startElement(const nsAString& aName,
 {
     txXMLOutput::startElement(aName, aNsID);
 
-    nsIAtom* localAtom;
+    nsCOMPtr<nsIAtom> localAtom;
     if (aNsID == kNameSpaceID_None) {
         nsAutoString localName;
         TX_ToLowerCase(aName, localName);
-        localAtom = TX_GET_ATOM(localName);
+        localAtom = do_GetAtom(localName);
     }
     else {
-        localAtom = TX_GET_ATOM(aName);
+        localAtom = do_GetAtom(aName);
     }
     NS_ASSERTION(localAtom, "Can't get atom");
     txExpandedName* currentElement = new txExpandedName(aNsID, localAtom);
-    TX_IF_RELEASE_ATOM(localAtom);
     NS_ASSERTION(currentElement, "Can't create currentElement");
     if (currentElement)
         mCurrentElements.push(currentElement);

@@ -33,7 +33,7 @@
 #include "baseutils.h"
 #include "dom.h"
 #include "nsDependentSubstring.h"
-#include "txAtom.h"
+#include "nsIAtom.h"
 #include "txError.h"
 
 class txExpandedName {

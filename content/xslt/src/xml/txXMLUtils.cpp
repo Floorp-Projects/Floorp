@@ -32,6 +32,7 @@
 #include "XMLUtils.h"
 #include "nsString.h"
 #include "txAtoms.h"
+#include "txStringUtils.h"
 
 nsresult txExpandedName::init(const nsAString& aQName,
                               Node* aResolver,
@@ -210,13 +211,10 @@ MBool XMLUtils::getXMLSpacePreserve(Node* aNode)
         if (parent->getNodeType() == Node::ELEMENT_NODE) {
             Element* elem = (Element*)parent;
             if (elem->getAttr(txXMLAtoms::space, kNameSpaceID_XML, value)) {
-                nsIAtom* val = TX_GET_ATOM(value);
-                if (val == txXMLAtoms::preserve) {
-                    TX_IF_RELEASE_ATOM(val);
+                if (TX_StringEqualsAtom(value, txXMLAtoms::preserve)) {
                     return MB_TRUE;
                 }
-                if (val == txXMLAtoms::_default) {
-                    TX_IF_RELEASE_ATOM(val);
+                if (TX_StringEqualsAtom(value, txXMLAtoms::_default)) {
                     return MB_FALSE;
                 }
             }

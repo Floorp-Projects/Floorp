@@ -161,12 +161,11 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                 case LOCAL_NAME:
                 {
                     nsAutoString localName;
-                    nsIAtom* localNameAtom;
-                    node->getLocalName(&localNameAtom);
+                    nsCOMPtr<nsIAtom> localNameAtom;
+                    node->getLocalName(getter_AddRefs(localNameAtom));
                     if (localNameAtom) {
                         // Node has a localName
-                        TX_GET_ATOM_STRING(localNameAtom, localName);
-                        TX_RELEASE_ATOM(localNameAtom);
+                        localNameAtom->ToString(localName);
                     }
                     
                     return new StringResult(localName);
@@ -264,6 +263,6 @@ nsresult NodeSetFunctionCall::getNameAtom(nsIAtom** aAtom)
             return NS_ERROR_FAILURE;
         }
     }
-    TX_ADDREF_ATOM(*aAtom);
+    NS_ADDREF(*aAtom);
     return NS_OK;
 }

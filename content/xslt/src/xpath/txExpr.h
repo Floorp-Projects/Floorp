@@ -39,7 +39,7 @@
 #include "dom.h"
 #include "List.h"
 #include "nsString.h"
-#include "txAtom.h"
+#include "nsIAtom.h"
 #include "TxObject.h"
 
 /*
@@ -232,8 +232,8 @@ public:
     TX_DECL_NODE_TEST;
 
 private:
-    nsIAtom* mPrefix;
-    nsIAtom* mLocalName;
+    nsCOMPtr<nsIAtom> mPrefix;
+    nsCOMPtr<nsIAtom> mLocalName;
     PRInt32 mNamespace;
     Node::NodeType mNodeType;
 };
@@ -267,7 +267,7 @@ public:
 
 private:
     NodeType mNodeType;
-    nsIAtom* mNodeName;
+    nsCOMPtr<nsIAtom> mNodeName;
 };
 
 /**
@@ -560,8 +560,8 @@ public:
     TX_DECL_EXPR;
 
 private:
-    nsIAtom* mPrefix;
-    nsIAtom* mLocalName;
+    nsCOMPtr<nsIAtom> mPrefix;
+    nsCOMPtr<nsIAtom> mLocalName;
     PRInt32 mNamespace;
 };
 

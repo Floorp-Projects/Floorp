@@ -37,26 +37,25 @@ Attr::Attr(const nsAString& name, Document* owner):
 {
   int idx = nodeName.FindChar(':');
   if (idx == kNotFound) {
-    mLocalName = TX_GET_ATOM(nodeName);
+    mLocalName = do_GetAtom(nodeName);
     if (mLocalName == txXMLAtoms::xmlns)
       mNamespaceID = kNameSpaceID_XMLNS;
     else
       mNamespaceID = kNameSpaceID_None;
   }
   else {
-    mLocalName = TX_GET_ATOM(Substring(nodeName, idx + 1,
-                                       nodeName.Length() - (idx + 1)));
+    mLocalName = do_GetAtom(Substring(nodeName, idx + 1,
+                                      nodeName.Length() - (idx + 1)));
     // namespace handling has to be handled late, the attribute must
     // be added to the tree to resolve the prefix, unless it's
     // xmlns or xml, try to do that here
-    nsIAtom* prefixAtom = TX_GET_ATOM(Substring(nodeName, 0, idx));
+    nsCOMPtr<nsIAtom> prefixAtom = do_GetAtom(Substring(nodeName, 0, idx));
     if (prefixAtom == txXMLAtoms::xmlns)
       mNamespaceID = kNameSpaceID_XMLNS;
     else if (prefixAtom == txXMLAtoms::xml)
       mNamespaceID = kNameSpaceID_XML;
     else
       mNamespaceID = kNameSpaceID_Unknown;
-    TX_IF_RELEASE_ATOM(prefixAtom);
   }
 }
 
@@ -70,7 +69,7 @@ Attr::Attr(const nsAString& aNamespaceURI,
   else
     mNamespaceID = txNamespaceManager::getNamespaceID(aNamespaceURI);
 
-  XMLUtils::getLocalPart(nodeName, &mLocalName);
+  XMLUtils::getLocalPart(nodeName, getter_AddRefs(mLocalName));
 }
 
 //
@@ -78,7 +77,6 @@ Attr::Attr(const nsAString& aNamespaceURI,
 //
 Attr::~Attr()
 {
-  TX_IF_RELEASE_ATOM(mLocalName);
 }
 
 void Attr::setNodeValue(const nsAString& aValue)
@@ -109,7 +107,7 @@ MBool Attr::getLocalName(nsIAtom** aLocalName)
   if (!aLocalName)
     return MB_FALSE;
   *aLocalName = mLocalName;
-  TX_ADDREF_ATOM(*aLocalName);
+  NS_ADDREF(*aLocalName);
   return MB_TRUE;
 }
 
@@ -126,7 +124,7 @@ PRInt32 Attr::getNamespaceID()
   mNamespaceID = kNameSpaceID_None;
   PRInt32 idx = nodeName.FindChar(':');
   if (idx != kNotFound) {
-    nsCOMPtr<nsIAtom> prefixAtom = TX_GET_ATOM(Substring(nodeName, 0, idx));
+    nsCOMPtr<nsIAtom> prefixAtom = do_GetAtom(Substring(nodeName, 0, idx));
     mNamespaceID = lookupNamespaceID(prefixAtom);
   }
   return mNamespaceID;

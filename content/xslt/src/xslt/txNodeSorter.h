@@ -42,7 +42,7 @@
 
 #include "baseutils.h"
 #include "List.h"
-#include "txAtom.h"
+#include "nsIAtom.h"
 
 class Element;
 class Expr;

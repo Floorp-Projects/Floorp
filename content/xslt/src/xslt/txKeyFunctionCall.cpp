@@ -109,7 +109,7 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
 nsresult txKeyFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::key;
-    TX_ADDREF_ATOM(*aAtom);
+    NS_ADDREF(*aAtom);
     return NS_OK;
 }
 

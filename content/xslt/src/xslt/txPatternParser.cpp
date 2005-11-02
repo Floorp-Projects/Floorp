@@ -262,15 +262,14 @@ nsresult txPatternParser::createKeyPattern(ExprLexer& aLexer,
 
     if (!XMLUtils::isValidQName(key))
         return NS_ERROR_XPATH_PARSE_FAILED;
-    nsIAtom *prefix = 0, *localName = 0;
+    nsCOMPtr<nsIAtom> prefix, localName;
     PRInt32 namespaceID;
-    nsresult rv = resolveQName(key, prefix, aContext, localName, namespaceID);
+    nsresult rv = resolveQName(key, *getter_AddRefs(prefix), aContext,
+                               *getter_AddRefs(localName), namespaceID);
     if (NS_FAILED(rv))
         return rv;
 
     aPattern  = new txKeyPattern(aPs, prefix, localName, namespaceID, value);
-    TX_IF_RELEASE_ATOM(prefix);
-    TX_RELEASE_ATOM(localName);
 
     return aPattern ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -302,9 +301,10 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
     txNodeTest* nodeTest = 0;
     if (tok->type == Token::CNAME) {
         // resolve QName
-        nsIAtom *prefix, *lName;
+        nsCOMPtr<nsIAtom> prefix, lName;
         PRInt32 nspace;
-        rv = resolveQName(tok->value, prefix, aContext, lName, nspace);
+        rv = resolveQName(tok->value, *getter_AddRefs(prefix), aContext,
+                          *getter_AddRefs(lName), nspace);
         if (NS_FAILED(rv)) {
             // XXX error report namespace resolve failed
             return rv;
@@ -317,8 +317,6 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
             nodeTest = new txNameTest(prefix, lName, nspace,
                                       Node::ELEMENT_NODE);
         }
-        TX_IF_RELEASE_ATOM(prefix);
-        TX_IF_RELEASE_ATOM(lName);
         if (!nodeTest) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
