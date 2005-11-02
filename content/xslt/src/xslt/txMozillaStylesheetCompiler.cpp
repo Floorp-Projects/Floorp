@@ -52,6 +52,7 @@
 #include "nsIParser.h"
 #include "nsIRequestObserver.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsContentPolicyUtils.h"
 #include "nsIStreamConverterService.h"
 #include "nsISyncLoadDOMService.h"
 #include "nsIURI.h"
@@ -499,6 +500,7 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
     nsCOMPtr<nsIURI> referrerURI;
     
     if (aCallerPrincipal) {
+        // First do a security check
         nsCOMPtr<nsIScriptSecurityManager> securityManager = 
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -513,6 +515,22 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
         
         rv = securityManager->CheckSameOriginURI(referrerURI, aUri);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        // Then do a content policy check
+        PRInt16 decision = nsIContentPolicy::ACCEPT;
+        rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+                                       aUri,
+                                       referrerURI,
+                                       // Pass source document as the context
+                                       mProcessor->GetSourceContentModel(),
+                                       NS_LITERAL_CSTRING("text/xml"),
+                                       nsnull,
+                                       &decision);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (NS_CP_REJECTED(decision)) {
+            return NS_ERROR_NOT_AVAILABLE;
+        }
     }
 
     nsCOMPtr<nsIChannel> channel;
