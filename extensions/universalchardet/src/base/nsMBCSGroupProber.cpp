@@ -46,7 +46,7 @@ char *ProberName[] =
   "UTF8",
   "SJIS",
   "EUCJP",
-  "GB2312",
+  "GB18030",
   "EUCKR",
   "Big5",
   "EUCTW",
@@ -59,7 +59,7 @@ nsMBCSGroupProber::nsMBCSGroupProber()
   mProbers[0] = new nsUTF8Prober();
   mProbers[1] = new nsSJISProber();
   mProbers[2] = new nsEUCJPProber();
-  mProbers[3] = new nsGB2312Prober();
+  mProbers[3] = new nsGB18030Prober();
   mProbers[4] = new nsEUCKRProber();
   mProbers[5] = new nsBig5Prober();
   mProbers[6] = new nsEUCTWProber();
