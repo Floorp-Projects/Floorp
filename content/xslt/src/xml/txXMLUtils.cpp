@@ -102,13 +102,16 @@ MBool XMLUtils::isQNameChar(PRInt32 ch) {
 **/
 MBool XMLUtils::isValidQName(String& name) {
 
+    if (name.isEmpty())
+        return MB_FALSE;
+
+    if (!isAlphaChar(name.charAt(0)))
+        return MB_FALSE;
+
     int size = name.length();
-    if ( size == 0 ) return MB_FALSE;
-    else if ( !isAlphaChar(name.charAt(0))) return MB_FALSE;
-    else {
-        for ( int i = 1; i < size; i++) {
-            if ( ! isQNameChar(name.charAt(i))) return MB_FALSE;
-        }
+    for (int i = 1; i < size; i++) {
+        if (!isQNameChar(name.charAt(i)))
+            return MB_FALSE;
     }
     return MB_TRUE;
 } //-- isValidQName
@@ -149,7 +152,8 @@ void XMLUtils::normalizeAttributeValue(String& attValue) {
         UNICODE_CHAR ch = chars[cc++];
         switch (ch) {
             case ' ':
-                if ( attValue.length() > 0) addSpace = MB_TRUE;
+                if (!attValue.isEmpty())
+                    addSpace = MB_TRUE;
                 break;
             case '\r':
                 break;
@@ -214,14 +218,14 @@ MBool XMLUtils::shouldStripTextnode (const String& data){
     MBool toStrip = MB_TRUE;
     for (PRInt32 i=0;toStrip && i<data.length();i++){
         switch(data.charAt(i)) {
-    	    case 0x0020: // space
-    	    case 0x0009: // tab
-    	    case 0x000A: // LF
-    	    case 0x000D: // CR
-    		break;
-    	    default:
-    		toStrip = MB_FALSE;
-    		break;
+            case 0x0020: // space
+            case 0x0009: // tab
+            case 0x000A: // LF
+            case 0x000D: // CR
+                break;
+            default:
+                toStrip = MB_FALSE;
+                break;
         }
     }
     return toStrip;

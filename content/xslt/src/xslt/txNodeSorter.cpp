@@ -49,8 +49,8 @@
 
 #define DEFAULT_LANG "en"
 
-txNodeSorter::txNodeSorter(ProcessorState* aPs) : mNKeys(0),
-                                                  mPs(aPs)
+txNodeSorter::txNodeSorter(ProcessorState* aPs) : mPs(aPs),
+                                                  mNKeys(0)
 {
 }
 
