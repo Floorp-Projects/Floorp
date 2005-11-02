@@ -35,7 +35,6 @@
 
 #include "primitives.h"
 #include "Expr.h"
-#include "TxString.h"
 
 /**
  * The following are definitions for the XPath functions
@@ -93,15 +92,15 @@ class ErrorFunctionCall : public FunctionCall {
 public:
 
     ErrorFunctionCall();
-    ErrorFunctionCall(const String& errorMsg);
+    ErrorFunctionCall(const nsAString& errorMsg);
 
     TX_DECL_FUNCTION;
 
-    void setErrorMessage(String& errorMsg);
+    void setErrorMessage(nsAString& errorMsg);
 
 private:
 
-    String errorMessage;
+    nsString errorMessage;
 
 }; //-- ErrorFunctionCall
 

@@ -46,7 +46,6 @@
 class ExprResult;
 class FunctionCall;
 class Node;
-class String;
 
 /*
  * txIParseContext
@@ -79,7 +78,7 @@ public:
     /*
      * Callback to be used by the Parser if errors are detected.
      */
-    virtual void receiveError(const String& aMsg, nsresult aRes) = 0;
+    virtual void receiveError(const nsAString& aMsg, nsresult aRes) = 0;
 };
 
 /*
@@ -114,14 +113,14 @@ public:
     /*
      * Callback to be used by the expression/pattern if errors are detected.
      */
-    virtual void receiveError(const String& aMsg, nsresult aRes) = 0;
+    virtual void receiveError(const nsAString& aMsg, nsresult aRes) = 0;
 };
 
 #define TX_DECL_MATCH_CONTEXT \
     nsresult getVariable(PRInt32 aNamespace, txAtom* aLName, \
                          ExprResult*& aResult); \
     MBool isStripSpaceAllowed(Node* aNode); \
-    void receiveError(const String& aMsg, nsresult aRes)
+    void receiveError(const nsAString& aMsg, nsresult aRes)
 
 class txIEvalContext : public txIMatchContext
 {

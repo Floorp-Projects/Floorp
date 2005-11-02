@@ -46,14 +46,14 @@ class txXSLTNumber {
 
 public:
     static nsresult createNumber(Element* aNumberElement, ProcessorState* aPs,
-                                 String& aResult);
+                                 nsAString& aResult);
 private:
     static nsresult getValueList(Element* aNumberElement, ProcessorState* aPs,
-                                 txList& aValues, String& aValueString);
+                                 txList& aValues, nsAString& aValueString);
 
     static nsresult getCounters(Element* aNumberElement, ProcessorState* aPs,
                                 txList& aCounters,
-                                String& aHead, String& aTail);
+                                nsAString& aHead, nsAString& aTail);
 
     static PRInt32 getSiblingCount(Node* aNode, txPattern* aCountPattern,
                                    txIMatchContext* aContext);
@@ -69,13 +69,13 @@ public:
     {
     }
     
-    virtual void appendNumber(PRInt32 aNumber, String& aDest) = 0;
+    virtual void appendNumber(PRInt32 aNumber, nsAString& aDest) = 0;
 
-    static nsresult getCounterFor(const String& aToken, int aGroupSize,
-                                  const String& aGroupSeparator,
+    static nsresult getCounterFor(const nsAFlatString& aToken, int aGroupSize,
+                                  const nsAString& aGroupSeparator,
                                   txFormattedCounter*& aCounter);
     
-    String mSeparator;
+    nsString mSeparator;
 };
 
 #endif //TRANSFRMX_TXXSLTNUMBER_H

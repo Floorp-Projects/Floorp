@@ -68,7 +68,7 @@ ExprResult* UnaryExpr::evaluate(txIEvalContext* aContext)
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
  */
-void UnaryExpr::toString(String& str)
+void UnaryExpr::toString(nsAString& str)
 {
     if (!expr)
         return;

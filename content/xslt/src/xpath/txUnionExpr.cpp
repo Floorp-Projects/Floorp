@@ -101,7 +101,7 @@ ExprResult* UnionExpr::evaluate(txIEvalContext* aContext)
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
-void UnionExpr::toString(String& dest) {
+void UnionExpr::toString(nsAString& dest) {
     txListIterator iter(&expressions);
 
     short count = 0;

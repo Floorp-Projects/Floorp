@@ -34,6 +34,7 @@
  *
  */
 
+#include "nsString.h"
 #include "primitives.h"
 #include "XMLUtils.h"
 #include <math.h>
@@ -226,12 +227,11 @@ private:
     } mSign;
 };
 
-double Double::toDouble(const String& aSrc)
+double Double::toDouble(const nsAString& aSrc)
 {
     txStringToDouble sink;
     nsAString::const_iterator fromBegin, fromEnd;
-    const nsAString& str = aSrc.getConstNSString();
-    copy_string(str.BeginReading(fromBegin), str.EndReading(fromEnd), sink);
+    copy_string(aSrc.BeginReading(fromBegin), aSrc.EndReading(fromEnd), sink);
     return sink.getDouble();
 }
 
@@ -240,20 +240,20 @@ double Double::toDouble(const String& aSrc)
  * The result into the destination String.
  * @return the given dest string
  */
-String& Double::toString(double aValue, String& aDest)
+void Double::toString(double aValue, nsAString& aDest)
 {
 
     // check for special cases
 
     if (isNaN(aValue)) {
         aDest.Append(NS_LITERAL_STRING("NaN"));
-        return aDest;
+        return;
     }
     if (isInfinite(aValue)) {
         if (aValue < 0)
             aDest.Append(PRUnichar('-'));
         aDest.Append(NS_LITERAL_STRING("Infinity"));
-        return aDest;
+        return;
     }
 
     int bufsize;
@@ -265,7 +265,7 @@ String& Double::toString(double aValue, String& aDest)
     char* buf = new char[bufsize];
     if (!buf) {
         NS_ASSERTION(0, "out of memory");
-        return aDest;
+        return;
     }
 
 #ifndef TX_EXE
@@ -319,6 +319,4 @@ String& Double::toString(double aValue, String& aDest)
 #endif
     
     delete [] buf;
-    
-    return aDest;
 }

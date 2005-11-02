@@ -31,8 +31,8 @@
 #ifndef MITREXSL_EXPRLEXER_H
 #define MITREXSL_EXPRLEXER_H
 
-#include "TxString.h"
 #include "baseutils.h"
+#include "nsString.h"
 
 /**
  * A Token class for the ExprLexer.
@@ -118,7 +118,7 @@ public:
     **/
     Token();
     Token(short type);
-    Token(const String& value, short type);
+    Token(const nsAString& value, short type);
     Token(PRUnichar uniChar, short type);
     /**
      * Copy Constructor
@@ -126,7 +126,7 @@ public:
     Token(const Token& token);
 
     ~Token();
-    String value;
+    nsString value;
     short type;
 }; //--Token
 
@@ -181,26 +181,8 @@ public:
         ERROR_BANG,
         ERROR_UNKNOWN_CHAR
     };
-    static const String error_message[];
     PRUint32 errorPos;
     short errorCode;
-
-    /*
-     * Complex Tokens
-    */
-    //-- Nodetype tokens
-    static const String COMMENT;
-    static const String NODE;
-    static const String PROC_INST;
-    static const String TEXT;
-
-    //-- boolean
-    static const String AND;
-    static const String OR;
-
-    //-- Multiplicative
-    static const String MODULUS;
-    static const String DIVIDE;
 
     /*
      * Default Token Set
@@ -211,7 +193,7 @@ public:
     /**
      * Constructor for ExprLexer
     **/
-    ExprLexer(const String& pattern);
+    ExprLexer(const nsAFlatString& pattern);
 
     ~ExprLexer();
 
@@ -259,8 +241,7 @@ private:
         return (ch >= '0' && ch <= '9');
     }
 
-    String subStr;
-    void parse(const String& pattern);
+    void parse(const nsAFlatString& pattern);
 
 }; //-- ExprLexer
 

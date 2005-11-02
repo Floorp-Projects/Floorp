@@ -37,9 +37,9 @@
 //Construct a Document.  Currently no parameters are required, but the the
 //node constructor is called to identify the node type.
 //
-Document::Document() : NodeDefinition(Node::DOCUMENT_NODE, NULL_STRING, NULL)
+Document::Document() : NodeDefinition(Node::DOCUMENT_NODE, nsString(), NULL)
 {
-  documentElement = NULL;
+  documentElement = nsnull;
 }
 
 //
@@ -64,13 +64,13 @@ Node* Document::createDocumentFragment()
 //Construct an element with the specified tag name.
 //    NOTE:  The caller is responsible for cleaning up the element's menory
 //
-Element* Document::createElement(const String& tagName)
+Element* Document::createElement(const nsAString& tagName)
 {
   return new Element(tagName, this);
 }
 
-Element* Document::createElementNS(const String& aNamespaceURI,
-                                   const String& aTagName)
+Element* Document::createElementNS(const nsAString& aNamespaceURI,
+                                   const nsAString& aTagName)
 {
   return new Element(aNamespaceURI, aTagName, this);
 }
@@ -78,13 +78,13 @@ Element* Document::createElementNS(const String& aNamespaceURI,
 //
 //Construct an attribute with the specified name
 //
-Attr* Document::createAttribute(const String& name)
+Attr* Document::createAttribute(const nsAString& name)
 {
   return new Attr(name, this);
 }
 
-Attr* Document::createAttributeNS(const String& aNamespaceURI,
-                                  const String& aName)
+Attr* Document::createAttributeNS(const nsAString& aNamespaceURI,
+                                  const nsAString& aName)
 {
   return new Attr(aNamespaceURI, aName, this);
 }
@@ -92,7 +92,7 @@ Attr* Document::createAttributeNS(const String& aNamespaceURI,
 //
 //Construct a text node with the given data
 //
-Node* Document::createTextNode(const String& theData)
+Node* Document::createTextNode(const nsAString& theData)
 {
   return new NodeDefinition(Node::TEXT_NODE, theData, this);
 }
@@ -100,7 +100,7 @@ Node* Document::createTextNode(const String& theData)
 //
 //Construct a comment node with the given data
 //
-Node* Document::createComment(const String& theData)
+Node* Document::createComment(const nsAString& theData)
 {
   return new NodeDefinition(Node::COMMENT_NODE, theData, this);
 }
@@ -109,8 +109,8 @@ Node* Document::createComment(const String& theData)
 //Construct a ProcessingInstruction node with the given targe and data.
 //
 ProcessingInstruction*
-  Document::createProcessingInstruction(const String& target,
-                                        const String& data)
+  Document::createProcessingInstruction(const nsAString& target,
+                                        const nsAString& data)
 {
   return new ProcessingInstruction(target, data, this);
 }
@@ -118,13 +118,13 @@ ProcessingInstruction*
 //
 //Return an Element by ID, introduced by DOM2
 //
-Element* Document::getElementById(const String aID)
+Element* Document::getElementById(const nsAString& aID)
 {
   /* This would need knowledge of the DTD, and we don't have it.
    * If we knew that we deal with HTML4 or XHTML1 we could check
    * for the "id" attribute, but we don't, so return NULL 
    */
-  return NULL;
+  return nsnull;
 }
 
 Node* Document::appendChild(Node* newChild)
@@ -163,18 +163,18 @@ Node* Document::appendChild(Node* newChild)
   return nsnull;
 }
 
-String Document::getBaseURI()
+nsresult Document::getBaseURI(nsAString& aURI)
 {
-  return documentBaseURI;
+  aURI = documentBaseURI;
+  return NS_OK;
 }
 
-PRInt32 Document::namespaceURIToID(const String& aNamespaceURI)
+PRInt32 Document::namespaceURIToID(const nsAString& aNamespaceURI)
 {
   return txNamespaceManager::getNamespaceID(aNamespaceURI);
 }
 
-void Document::namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI)
+void Document::namespaceIDToURI(PRInt32 aNamespaceID, nsAString& aNamespaceURI)
 {
-  aNamespaceURI = txNamespaceManager::getNamespaceURI(aNamespaceID);
-  return;
+  txNamespaceManager::getNamespaceURI(aNamespaceID, aNamespaceURI);
 }

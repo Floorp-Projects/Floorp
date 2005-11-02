@@ -107,7 +107,7 @@ MBool PredicateList::isEmpty()
     return (MBool)(predicates.getLength() == 0);
 } // isEmpty
 
-void PredicateList::toString(String& dest)
+void PredicateList::toString(nsAString& dest)
 {
     txListIterator iter(&predicates);
     while (iter.hasNext()) {

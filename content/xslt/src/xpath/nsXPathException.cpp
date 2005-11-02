@@ -41,7 +41,6 @@
 #include "nsCRT.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIBaseDOMException.h"
-#include "nsString.h"
 #include "prprf.h"
 
 static const char* kInvalidExpressionErrName = "NS_ERROR_DOM_INVALID_EXPRESSION_ERR";

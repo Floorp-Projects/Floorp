@@ -31,6 +31,8 @@
 #include "FunctionLib.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
+#include "nsReadableUtils.h"
+#include "txStringUtils.h"
 
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
@@ -65,7 +67,7 @@ ExprResult* BooleanFunctionCall::evaluate(txIEvalContext* aContext)
             if (!requireParams(1, 1, aContext))
                 return new StringResult(NS_LITERAL_STRING("error"));
 
-            String lang;
+            nsAutoString lang;
             Node* node = aContext->getContextNode();
             while (node) {
                 if (node->getNodeType() == Node::ELEMENT_NODE) {
@@ -79,11 +81,10 @@ ExprResult* BooleanFunctionCall::evaluate(txIEvalContext* aContext)
 
             MBool result = MB_FALSE;
             if (node) {
-                String arg;
+                nsAutoString arg;
                 evaluateToString((Expr*)iter.next(), aContext, arg);
-                arg.toUpperCase(); // case-insensitive comparison
-                lang.toUpperCase();
-                result = lang.indexOf(arg) == 0 &&
+                result = arg.Equals(Substring(lang, 0, arg.Length()),
+                                    txCaseInsensitiveStringComparator()) &&
                          (lang.Length() == arg.Length() ||
                           lang.CharAt(arg.Length()) == '-');
             }
@@ -114,8 +115,8 @@ ExprResult* BooleanFunctionCall::evaluate(txIEvalContext* aContext)
         }
     }
 
-    String err(NS_LITERAL_STRING("Internal error"));
-    aContext->receiveError(err, NS_ERROR_UNEXPECTED);
+    aContext->receiveError(NS_LITERAL_STRING("Internal error"),
+                           NS_ERROR_UNEXPECTED);
     return new StringResult(NS_LITERAL_STRING("error"));
 }
 

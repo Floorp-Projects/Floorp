@@ -68,11 +68,11 @@ MBool txNodeSetContext::isStripSpaceAllowed(Node* aNode)
     return mInner->isStripSpaceAllowed(aNode);
 }
 
-void txNodeSetContext::receiveError(const String& aMsg, nsresult aRes)
+void txNodeSetContext::receiveError(const nsAString& aMsg, nsresult aRes)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
 #ifdef DEBUG
-    String error(NS_LITERAL_STRING("forwarded error: "));
+    nsAutoString error(NS_LITERAL_STRING("forwarded error: "));
     error.Append(aMsg);
     mInner->receiveError(error, aRes);
 #else

@@ -42,22 +42,20 @@ REQUIRES	+= unicharutil \
 		  $(NULL)
 endif
 
-CPPSRCS	= ArrayList.cpp             \
-	Double.cpp \
+CPPSRCS	= Double.cpp \
 	List.cpp \
 	Map.cpp \
 	NamedMap.cpp \
 	SimpleErrorObserver.cpp \
 	Stack.cpp \
-	StringList.cpp \
 	Tokenizer.cpp \
 	txAtoms.cpp \
 	txExpandedNameMap.cpp \
+	txStringUtils.cpp \
 	txURIUtils.cpp
 
 ifdef TX_EXE
-	CPPSRCS	+= CommandLineUtils.cpp	\
-		TxString.cpp
+	CPPSRCS	+= txStringUtils.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk

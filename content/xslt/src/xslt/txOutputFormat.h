@@ -41,7 +41,7 @@
 
 #include "baseutils.h"
 #include "List.h"
-#include "TxString.h"
+#include "nsString.h"
 
 enum txOutputMethod {
     eMethodNotSet,
@@ -76,11 +76,11 @@ public:
 
     // The xml version number that should be used when serializing
     // xml documents
-    String mVersion;
+    nsString mVersion;
 
     // The XML character encoding that should be used when serializing
     // xml documents
-    String mEncoding;
+    nsString mEncoding;
 
     // Signals if we should output an XML declaration
     txThreeState mOmitXMLDeclaration;
@@ -89,10 +89,10 @@ public:
     txThreeState mStandalone;
 
     // The public Id for creating a DOCTYPE
-    String mPublicId;
+    nsString mPublicId;
 
     // The System Id for creating a DOCTYPE
-    String mSystemId;
+    nsString mSystemId;
 
     // The elements whose text node children should be output as CDATA
     txList mCDATASectionElements;
@@ -101,7 +101,7 @@ public:
     txThreeState mIndent;
 
     // The media type of the output
-    String mMediaType;
+    nsString mMediaType;
 };
 
 #endif

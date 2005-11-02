@@ -276,7 +276,7 @@ nsXPathResult::SetExprResult(ExprResult* aExprResult, PRUint16 aResultType)
     }
 
     if (mResultType == STRING_TYPE) {
-        mStringValue = new String;
+        mStringValue = new nsString;
         NS_ENSURE_TRUE(mStringValue, NS_ERROR_OUT_OF_MEMORY);
         aExprResult->stringValue(*mStringValue);
         return NS_OK;

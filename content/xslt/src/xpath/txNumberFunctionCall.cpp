@@ -112,7 +112,7 @@ ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
             double res = 0;
             int i;
             for (i = 0; i < nodes->size(); i++) {
-                String resultStr;
+                nsAutoString resultStr;
                 XMLDOMUtils::getNodeValue(nodes->get(i), resultStr);
                 res += Double::toDouble(resultStr);
             }
@@ -127,14 +127,14 @@ ExprResult* NumberFunctionCall::evaluate(txIEvalContext* aContext)
                     evaluateToNumber((Expr*)iter.next(), aContext));
             }
 
-            String resultStr;
+            nsAutoString resultStr;
             XMLDOMUtils::getNodeValue(aContext->getContextNode(), resultStr);
             return new NumberResult(Double::toDouble(resultStr));
         }
     }
 
-    String err(NS_LITERAL_STRING("Internal error"));
-    aContext->receiveError(err, NS_ERROR_UNEXPECTED);
+    aContext->receiveError(NS_LITERAL_STRING("Internal error"),
+                           NS_ERROR_UNEXPECTED);
     return new StringResult(NS_LITERAL_STRING("error"));
 }
 

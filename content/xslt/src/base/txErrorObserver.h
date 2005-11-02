@@ -29,8 +29,7 @@
 #include "baseutils.h"
 #include "txError.h"
 #include <iostream.h>
-
-class String;
+class nsAString;
 
 /**
  * A simple interface for observing errors
@@ -47,13 +46,13 @@ public:
     /**
      *  Notifies this Error observer of a new error aRes
     **/
-    virtual void receiveError(const String& errorMessage, nsresult aRes) = 0;
+    virtual void receiveError(const nsAString& errorMessage, nsresult aRes) = 0;
 
     /**
      *  Notifies this Error observer of a new error, with default
      *  error code NS_ERROR_FAILURE
     **/
-    void receiveError(String& errorMessage)
+    void receiveError(const nsAString& errorMessage)
     {
         receiveError(errorMessage, NS_ERROR_FAILURE);
     }
@@ -86,7 +85,7 @@ public:
     /**
      *  Notifies this Error observer of a new error aRes
     **/
-    void receiveError(const String& errorMessage, nsresult aRes);
+    void receiveError(const nsAString& errorMessage, nsresult aRes);
 
     virtual void supressWarnings(MBool supress);
 

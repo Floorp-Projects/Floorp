@@ -92,15 +92,15 @@ double txNameTest::getDefaultPriority()
  * @param aDest the String to use when creating the string representation.
  *              The string representation will be appended to the string.
  */
-void txNameTest::toString(String& aDest)
+void txNameTest::toString(nsAString& aDest)
 {
     if (mPrefix) {
-        String prefix;
-        TX_GET_ATOM_STRING(mPrefix, prefix);
-        aDest.Append(prefix);
+        const PRUnichar* prefix;
+        mPrefix->GetUnicode(&prefix);
+        aDest.Append(nsDependentString(prefix));
         aDest.Append(PRUnichar(':'));
     }
-    String localName;
-    TX_GET_ATOM_STRING(mLocalName, localName);
-    aDest.Append(localName);
+    const PRUnichar* localName;
+    mLocalName->GetUnicode(&localName);
+    aDest.Append(nsDependentString(localName));
 }

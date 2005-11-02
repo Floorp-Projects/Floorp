@@ -41,11 +41,6 @@
  //- PathExpr -/
 //------------/
 
-const String PathExpr::RTF_INVALID_OP(
-    NS_LITERAL_STRING("Result tree fragments don't allow location steps"));
-const String PathExpr::NODESET_EXPECTED(
-    NS_LITERAL_STRING("Filter expression must evaluate to a NodeSet"));
-
 /**
  * Creates a new PathExpr
 **/
@@ -172,13 +167,13 @@ void PathExpr::evalDescendants (Expr* aStep, Node* aNode,
     delete res;
 
     MBool filterWS = aContext->isStripSpaceAllowed(aNode);
-    
+
     Node* child = aNode->getFirstChild();
     while (child) {
         if (!(filterWS &&
               (child->getNodeType() == Node::TEXT_NODE ||
                child->getNodeType() == Node::CDATA_SECTION_NODE) &&
-              XMLUtils::isWhitespace(child->getNodeValue())))
+              XMLUtils::isWhitespace(child)))
             evalDescendants(aStep, child, aContext, resNodes);
         child = child->getNextSibling();
     }
@@ -192,7 +187,7 @@ void PathExpr::evalDescendants (Expr* aStep, Node* aNode,
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
-void PathExpr::toString(String& dest)
+void PathExpr::toString(nsAString& dest)
 {
     txListIterator iter(&expressions);
     

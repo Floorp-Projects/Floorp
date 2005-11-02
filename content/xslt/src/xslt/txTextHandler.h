@@ -44,7 +44,7 @@
 class txTextHandler : public txXMLEventHandler
 {
 public:
-    txTextHandler(String& aValue, MBool aOnlyText);
+    txTextHandler(nsAString& aValue, MBool aOnlyText);
     virtual ~txTextHandler();
 
     /**
@@ -54,23 +54,23 @@ public:
      * @param aNsID the namespace ID of the attribute
      * @param aValue the value of the attribute
      */
-    void attribute(const String& aName,
+    void attribute(const nsAString& aName,
                    const PRInt32 aNsID,
-                   const String& aValue);
+                   const nsAString& aValue);
 
     /**
      * Signals to receive characters.
      *
      * @param aData the characters to receive
      */
-    void characters(const String& aData);
+    void characters(const nsAString& aData);
 
     /**
      * Signals to receive data that should be treated as a comment.
      *
      * @param data the comment data to receive
      */
-    void comment(const String& aData);
+    void comment(const nsAString& aData);
 
     /**
      * Signals the end of a document. It is an error to call
@@ -84,7 +84,7 @@ public:
      * @param aName the name of the element
      * @param aNsID the namespace ID of the element
      */
-    void endElement(const String& aName,
+    void endElement(const nsAString& aName,
                     const PRInt32 aNsID);
 
     /**
@@ -93,8 +93,8 @@ public:
      * @param aTarget the target of the processing instruction
      * @param aData the data of the processing instruction
      */
-    void processingInstruction(const String& aTarget,
-                               const String& aData);
+    void processingInstruction(const nsAString& aTarget,
+                               const nsAString& aData);
 
     /**
      * Signals the start of a document.
@@ -107,12 +107,12 @@ public:
      * @param aName the name of the element
      * @param aNsID the namespace ID of the element
      */
-    void startElement(const String& aName,
+    void startElement(const nsAString& aName,
                       const PRInt32 aNsID);
 
 private:
     PRUint32 mLevel;
-    String& mValue;
+    nsAString& mValue;
     MBool mOnlyText;
 };
 

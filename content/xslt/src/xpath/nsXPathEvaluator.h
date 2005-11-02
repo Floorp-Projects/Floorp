@@ -80,7 +80,7 @@ private:
         nsresult resolveNamespacePrefix(txAtom* aPrefix, PRInt32& aID);
         nsresult resolveFunctionCall(txAtom* aName, PRInt32 aID,
                                      FunctionCall*& aFunction);
-        void receiveError(const String& aMsg, nsresult aRes);
+        void receiveError(const nsAString& aMsg, nsresult aRes);
 
     private:
         nsIDOMXPathNSResolver* mResolver;

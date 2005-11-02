@@ -41,10 +41,11 @@
 #define TRANSFRMX_XPATHRESULTCOMPARATOR_H
 
 #include "TxObject.h"
-#include "TxString.h"
 #ifndef TX_EXE
 #include "nsCOMPtr.h"
 #include "nsICollation.h"
+#else
+#include "nsString.h"
 #endif
 
 class ExprResult;
@@ -55,6 +56,10 @@ class ExprResult;
 class txXPathResultComparator
 {
 public:
+    virtual ~txXPathResultComparator()
+    {
+    }
+
     /*
      * Compares two XPath results. Returns -1 if val1 < val2,
      * 1 if val1 > val2 and 0 if val1 == val2.
@@ -74,7 +79,7 @@ class txResultStringComparator : public txXPathResultComparator
 {
 public:
     txResultStringComparator(MBool aAscending, MBool aUpperFirst,
-                             const String& aLanguage);
+                             const nsAFlatString& aLanguage);
     virtual ~txResultStringComparator();
 
     int compareValues(TxObject* aVal1, TxObject* aVal2);
@@ -82,7 +87,7 @@ public:
 private:
 #ifndef TX_EXE
     nsCOMPtr<nsICollation> mCollation;
-    nsresult init(const String& aLanguage);
+    nsresult init(const nsAFlatString& aLanguage);
     nsresult createRawSortKey(const nsCollationStrength aStrength,
                               const nsString& aString,
                               PRUint8** aKey,
@@ -94,7 +99,7 @@ private:
     {
     public:
 #ifdef TX_EXE
-        String mStr;
+        nsString mStr;
 #else
         StringValue();
         ~StringValue();
