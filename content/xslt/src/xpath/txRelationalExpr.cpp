@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txRelationalExpr.cpp,v 1.1 2005/11/02 07:33:44 kvisco%ziplink.net Exp $
+ * $Id: txRelationalExpr.cpp,v 1.2 2005/11/02 07:33:45 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "Expr.h"
@@ -62,7 +62,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
     if (ltype == ExprResult::NODESET) {
         NodeSet* nodeSet = (NodeSet*)left;
         for ( int i = 0; i < nodeSet->size(); i++) {
-                String str;
+                DOMString str;
                 Node* node = nodeSet->get(i);
                 XMLDOMUtils::getNodeValue(node, &str);
                 StringResult strResult(str);
@@ -74,7 +74,7 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
     else if ( rtype == ExprResult::NODESET) {
         NodeSet* nodeSet = (NodeSet*)right;
         for ( int i = 0; i < nodeSet->size(); i++) {
-                String str;
+                DOMString str;
                 Node* node = nodeSet->get(i);
                 XMLDOMUtils::getNodeValue(node, &str);
                 StringResult strResult(str);
