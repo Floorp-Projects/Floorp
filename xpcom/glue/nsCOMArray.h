@@ -113,7 +113,7 @@ protected:
 // that methods like ObjectAt() may return null when refering to an
 // existing, but null entry in the array.
 template <class T>
-class nsCOMArray : protected nsCOMArray_base
+class nsCOMArray : public nsCOMArray_base
 {
  public:
     nsCOMArray() {}

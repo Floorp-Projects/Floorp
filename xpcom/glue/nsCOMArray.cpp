@@ -38,9 +38,7 @@
 
 #include "nsCOMArray.h"
 
-static PRBool AddRefObjects(void* aElement, void*);
 static PRBool ReleaseObjects(void* aElement, void*);
-
 
 // implementations of non-trivial methods in nsCOMArray_base
 
@@ -55,6 +53,7 @@ nsCOMArray_base::nsCOMArray_base(const nsCOMArray_base& aOther)
     
     PRInt32 i;
     for (i=0; i<count; i++) {
+        // ReplaceObjectAt will handle existing null entries for us
         ReplaceObjectAt(aOther[i], i);
     }
 }
@@ -70,19 +69,18 @@ nsCOMArray_base::InsertObjectAt(nsISupports* aObject, PRInt32 aIndex) {
 PRBool
 nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex)
 {
+    // its ok if oldObject is null here
     nsISupports *oldObject = ObjectAt(aIndex);
-    if (oldObject) {
-        PRBool result = mArray.ReplaceElementAt(aObject, aIndex);
 
-        // ReplaceElementAt could fail, such as if the array grows
-        // so only release the existing object if the replacement succeeded
-        if (result) {
-            NS_IF_RELEASE(oldObject);
-            NS_IF_ADDREF(aObject);
-        }
-        return result;
+    PRBool result = mArray.ReplaceElementAt(aObject, aIndex);
+
+    // ReplaceElementAt could fail, such as if the array grows
+    // so only release the existing object if the replacement succeeded
+    if (result) {
+        NS_IF_RELEASE(oldObject);
+        NS_IF_ADDREF(aObject);
     }
-    return PR_FALSE;
+    return result;
 }
 
 
@@ -115,16 +113,6 @@ nsCOMArray_base::RemoveObjectAt(PRInt32 aIndex)
         return result;
     }
     return PR_FALSE;
-}
-
-
-// useful for copy constructors
-PRBool
-AddRefObjects(void* aElement, void*)
-{
-    nsISupports* element = NS_STATIC_CAST(nsISupports*,aElement);
-    NS_IF_ADDREF(element);
-    return PR_TRUE;
 }
 
 // useful for destructors
