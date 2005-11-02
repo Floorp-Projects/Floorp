@@ -24,7 +24,7 @@
  * Olivier Gerardin, ogerardin@vo.lu
  *   -- added number functions
  *    
- * $Id: txFunctionLib.h,v 1.2 2005/11/02 07:33:44 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txFunctionLib.h,v 1.3 2005/11/02 07:33:45 nisheeth%netscape.com Exp $
  */
 
 
@@ -32,7 +32,7 @@
 #ifndef MITREXSL_FUNCTIONLIB_H
 #define MITREXSL_FUNCTIONLIB_H
 
-#include "String.h"
+#include "TxString.h"
 #include "primitives.h"
 #include "NodeSet.h"
 #include "List.h"
