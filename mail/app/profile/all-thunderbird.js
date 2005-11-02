@@ -74,6 +74,8 @@ pref("app.update.silent", false);
 
 // Update service URL:
 pref("app.update.url", "https://aus2.mozilla.org/update/1/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/update.xml");
+pref("app.update.vendorName.override", "Mozilla");
+
 // URL user can browse to manually if for some reason all update installation
 // attempts fail.  TODO: Change this URL
 pref("app.update.url.manual", "http://www.mozilla.org/products/thunderbird/");
