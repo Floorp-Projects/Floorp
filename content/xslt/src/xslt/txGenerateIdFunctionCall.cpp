@@ -24,18 +24,28 @@
 
 #include "XSLTFunctions.h"
 #include "Names.h"
+#ifdef TX_EXE
+#include "stdio.h"
+#else
+#include "prprf.h"
+#endif
 
 /*
   Implementation of XSLT 1.0 extension function: generate-id
 */
 
+#ifndef HAVE_64BIT_OS
+char* GenerateIdFunctionCall::printfFmt = "id0x%08p";
+#else
+char* GenerateIdFunctionCall::printfFmt = "id0x%016p";
+#endif
+
 /**
  * Creates a new generate-id function call
 **/
-GenerateIdFunctionCall::GenerateIdFunctionCall(DOMHelper* domHelper) : FunctionCall(GENERATE_ID_FN)
-{
-    this->domHelper = domHelper;
-} //-- GenerateIdFunctionCall
+GenerateIdFunctionCall::GenerateIdFunctionCall()
+    : FunctionCall(GENERATE_ID_FN)
+{}
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -45,40 +55,53 @@ GenerateIdFunctionCall::GenerateIdFunctionCall(DOMHelper* domHelper) : FunctionC
  * @return the result of the evaluation
  * @see FunctionCall.h
 **/
-ExprResult* GenerateIdFunctionCall::evaluate(Node* context, ContextState* cs) {
+ExprResult* GenerateIdFunctionCall::evaluate(Node* aContext,
+                                             ContextState* aCs) {
 
-    Node* node = context;
+    if (!requireParams(0, 1, aCs))
+        return new StringResult();
 
-    int argc = params.getLength();
+    Node* node = 0;
 
-    StringResult* stringResult = 0;
+    // get node to generate id for
+    if (params.getLength() == 1) {
+        txListIterator iter(&params);
+        Expr* param = (Expr*)iter.next();
 
-    if (argc > 0) {
-        ListIterator* iter = params.iterator();
-        Expr* param = (Expr*) iter->next();
-        delete iter;
-        ExprResult* exprResult = param->evaluate(context, cs);
-        if (!exprResult) return new StringResult("");
-        if (exprResult->getResultType() == ExprResult::NODESET) {
-            NodeSet* nodes = (NodeSet*) exprResult;
-            if (nodes->size() == 0)
-                stringResult = new StringResult("");
-            else
-                node = nodes->get(0);
+        ExprResult* exprResult = param->evaluate(aContext, aCs);
+        if (!exprResult)
+            return 0;
+
+        if (exprResult->getResultType() != ExprResult::NODESET) {
+            String err("Invalid argument passed to generate-id(), "
+                       "expecting NodeSet");
+            aCs->recieveError(err);
+            delete exprResult;
+            return new StringResult(err);
         }
-        else {
-            String err("Invalid argument passed to generate-id(), expecting NodeSet");
-            stringResult = new StringResult(err);
+
+        NodeSet* nodes = (NodeSet*) exprResult;
+        if (nodes->size() > 0) {
+            aCs->sortByDocumentOrder(nodes);
+            node = nodes->get(0);
         }
         delete exprResult;
     }
+    else {
+        node = aContext;
+    }
 
-    if (stringResult) return stringResult;
-
-    //-- generate id for selected node
-    String id;
-    domHelper->generateId(node, id);
-    return new StringResult(id);
-
-} //-- evaluate
-
+    // generate id for selected node
+    char buf[22];
+    if (node) {
+#ifdef TX_EXE
+        sprintf(buf, printfFmt, node);
+#else
+        PR_snprintf(buf, 21, printfFmt, node);
+#endif
+    }
+    else {
+        buf[0] = 0;
+    }
+    return new StringResult(buf);
+}
