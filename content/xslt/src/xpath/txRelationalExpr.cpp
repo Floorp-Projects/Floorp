@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txRelationalExpr.cpp,v 1.5 2005/11/02 07:33:48 peterv%netscape.com Exp $
+ * $Id: txRelationalExpr.cpp,v 1.6 2005/11/02 07:33:49 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -30,12 +30,6 @@
   //------------------/
  //- RelationalExpr -/
 //------------------/
-
-RelationalExpr::RelationalExpr() {
-    this->op = EQUAL;
-    this->leftExpr  = 0;
-    this->rightExpr = 0;
-} //-- RelationalExpr
 
 RelationalExpr::RelationalExpr(Expr* leftExpr, Expr* rightExpr, short op) {
     this->op = op;

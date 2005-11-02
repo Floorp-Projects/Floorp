@@ -24,14 +24,14 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- changed some behavoir to be more compliant with spec
  *    
- * $Id: txNodeSetFunctionCall.cpp,v 1.7 2005/11/02 07:33:50 peterv%netscape.com Exp $
+ * $Id: txNodeSetFunctionCall.cpp,v 1.8 2005/11/02 07:33:51 sicking%bigfoot.com Exp $
  */
 
 /**
  * NodeSetFunctionCall
  * A representation of the XPath NodeSet funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:50 $
+ * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:51 $
 **/
 
 #include "FunctionLib.h"
@@ -40,39 +40,31 @@
 #include <math.h>
 
 /**
- * Creates a default NodeSetFunctionCall. The Position function
- * is the default
-**/
-NodeSetFunctionCall::NodeSetFunctionCall() : FunctionCall(XPathNames::POSITION_FN) {
-    type = POSITION;
-} //-- NodeSetFunctionCall
-
-/**
  * Creates a NodeSetFunctionCall of the given type
 **/
 NodeSetFunctionCall::NodeSetFunctionCall(short type) : FunctionCall() {
     this->type = type;
     switch ( type ) {
         case COUNT :
-            FunctionCall::setName(XPathNames::COUNT_FN);
+            name = XPathNames::COUNT_FN;
             break;
         case ID :
-            FunctionCall::setName(XPathNames::ID_FN);
+            name = XPathNames::ID_FN;
             break;
         case LAST :
-            FunctionCall::setName(XPathNames::LAST_FN);
+            name = XPathNames::LAST_FN;
             break;
         case LOCAL_NAME:
-            FunctionCall::setName(XPathNames::LOCAL_NAME_FN);
+            name = XPathNames::LOCAL_NAME_FN;
             break;
         case NAME:
-            FunctionCall::setName(XPathNames::NAME_FN);
+            name = XPathNames::NAME_FN;
             break;
         case NAMESPACE_URI:
-            FunctionCall::setName(XPathNames::NAMESPACE_URI_FN);
+            name = XPathNames::NAMESPACE_URI_FN;
             break;
         default:
-            FunctionCall::setName(XPathNames::POSITION_FN);
+            name = XPathNames::POSITION_FN;
             break;
     }
 } //-- NodeSetFunctionCall

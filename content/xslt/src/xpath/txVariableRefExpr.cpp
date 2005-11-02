@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txVariableRefExpr.cpp,v 1.1 2005/11/02 07:33:55 kvisco%ziplink.net Exp $
+ * $Id: txVariableRefExpr.cpp,v 1.2 2005/11/02 07:33:56 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -31,30 +31,11 @@
 //-------------------/
 
 /**
- * Default constructor
-**/
-VariableRefExpr::VariableRefExpr() {
-} //-- VariableRefExpr
-
-/**
  * Creates a VariableRefExpr with the given variable name
 **/
 VariableRefExpr::VariableRefExpr(const String& name) {
     this->name = name;
 } //-- VariableRefExpr
-
-/**
- * Creates a VariableRefExpr with the given variable name
-**/
-VariableRefExpr::VariableRefExpr(String& name) {
-    this->name = name;
-} //-- VariableRefExpr
-
-/**
- * Default destructor
-**/
-VariableRefExpr::~VariableRefExpr() {
-} //-- ~VariableRefExpr
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -92,8 +73,9 @@ ExprResult* VariableRefExpr::evaluate(Node* context, ContextState* cs) {
                 break;
             //-- StringResult
             default:
-                StringResult* strResult = new StringResult();
-                exprResult->stringValue(strResult->getValue());
+                String tmp;
+                exprResult->stringValue(tmp);
+                StringResult* strResult = new StringResult(tmp);
                 copyOfResult = strResult;
                 break;
         }

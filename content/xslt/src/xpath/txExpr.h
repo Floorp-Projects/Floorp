@@ -28,7 +28,7 @@
  *   -- removal of Patterns and some restructuring
  *      in the class set
  *
- * $Id: txExpr.h,v 1.14 2005/11/02 07:33:39 sicking%bigfoot.com Exp $
+ * $Id: txExpr.h,v 1.15 2005/11/02 07:33:40 sicking%bigfoot.com Exp $
  */
 
 
@@ -49,7 +49,7 @@
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.14 $ $Date: 2005/11/02 07:33:39 $
+  @version $Revision: 1.15 $ $Date: 2005/11/02 07:33:40 $
 */
 
 //necessary prototypes
@@ -179,24 +179,11 @@ public:
     **/
     void addParam(Expr* expr);
 
-    /**
-     * Returns the name of this FunctionCall
-     * @return the name of this FunctionCall
-    **/
-    const String& getName();
-
     virtual MBool requireParams(int paramCountMin, ContextState* cs);
 
     virtual MBool requireParams(int paramCountMin,
                                 int paramCountMax,
                                 ContextState* cs);
-
-    /**
-     * Sets the function name of this FunctionCall
-     * @param name the name of this Function
-    **/
-    void setName(const String& name);
-
 
 protected:
 
@@ -204,7 +191,6 @@ protected:
 
     FunctionCall();
     FunctionCall(const String& name);
-    FunctionCall(const String& name, List* parameters);
 
     /**
      * Evaluates the given Expression and converts it's result to a String.
@@ -217,8 +203,6 @@ protected:
      * Evaluates the given Expression and converts it's result to a number.
     **/
     double evaluateToNumber(Expr* expr, Node* context, ContextState* cs);
-
-private:
 
     String name;
 }; //-- FunctionCall
@@ -267,9 +251,7 @@ public:
         TEXT_EXPR,
         COMMENT_EXPR,
         PI_EXPR,
-        NODE_EXPR,
-        WILD_CARD,
-        ROOT_EXPR
+        NODE_EXPR
     };
 
     virtual ~NodeExpr() {};
@@ -277,12 +259,6 @@ public:
       //------------------/
      //- Public Methods -/
     //------------------/
-
-    /**
-     * Returns the type of this NodeExpr
-     * @return the type of this NodeExpr
-    **/
-    virtual short getType() = 0;
 
     /**
      * Virtual methods from Expr 
@@ -305,29 +281,12 @@ public:
      //- Public Methods -/
     //------------------/
 
-    AttributeExpr();
     AttributeExpr(String& name);
-    virtual ~AttributeExpr();
-
-    void setWild(MBool isWild);
-
-    /**
-     * Returns the name of this AttributeExpr
-     * @return the name of this AttributeExpr
-    **/
-    const String& getName();
-
-    /**
-     * Sets the name of this AttributeExpr
-     * @param name the name of the element that this AttributeExpr matches
-    **/
-    void setName(const String& name);
 
     /**
      * Virtual methods from NodeExpr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-    short getType();
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
     virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
@@ -355,21 +314,10 @@ public:
     //------------------/
 
     /**
-     * Creates a new BasicNodeExpr of type NodeExpr::NODE_EXPR, which matches
-     * any node
-    **/
-    BasicNodeExpr();
-
-    /**
      * Creates a new BasicNodeExpr of the given type
     **/
     BasicNodeExpr(NodeExprType nodeExprType);
 
-    /**
-     * Destroys this BasicNodeExpr
-    **/
-    virtual ~BasicNodeExpr();
-    
     /**
      * Sets the name of the node to match. Only availible for pi nodes
     **/
@@ -379,7 +327,6 @@ public:
      * Virtual methods from NodeExpr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-    short getType();
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
     virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
@@ -402,27 +349,12 @@ public:
      //- Public Methods -/
     //------------------/
 
-    ElementExpr();
     ElementExpr(String& name);
-    virtual ~ElementExpr();
-
-    /**
-     * Returns the name of this ElementExpr
-     * @return the name of this ElementExpr
-    **/
-    const String& getName();
-
-    /**
-     * Sets the name of this ElementExpr
-     * @param name the name of the element that this ElementExpr matches
-    **/
-    void setName(const String& name);
 
     /**
      * Virtual methods from NodeExpr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-    short getType();
     virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
@@ -432,11 +364,8 @@ private:
     static const String WILD_CARD;
 
     String name;
-
     MBool isNamespaceWild;
-
     MBool isNameWild;
-
     String prefix;
 
 }; //-- ElementExpr
@@ -456,7 +385,6 @@ public:
      * Virtual methods from NodeExpr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
-    virtual short getType();
     virtual MBool matches(Node* node, Node* context, ContextState* cs);
     virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
@@ -496,12 +424,6 @@ public:
     MBool isEmpty();
 
     /**
-     * Removes the given Expr from the list
-     * @param expr the Expr to remove from the list
-    **/
-    Expr* remove(Expr* expr);
-
-    /**
      * Returns the String representation of this PredicateList.
      * @param dest the String to use when creating the String
      * representation. The String representation will be appended to
@@ -539,19 +461,6 @@ public:
     };
 
     /**
-     * Creates a new LocationStep using the default Axis Identifier and no
-     * NodeExpr (which matches nothing)
-    **/
-    LocationStep();
-
-    /**
-     * Creates a new LocationStep using the default Axis Identifier and
-     * the given NodeExpr
-     * @param nodeExpr the NodeExpr to use when matching Nodes
-    **/
-    LocationStep(NodeExpr* nodeExpr);
-
-    /**
      * Creates a new LocationStep using the given NodeExpr and Axis Identifier
      * @param nodeExpr the NodeExpr to use when matching Nodes
      * @param axisIdentifier the Axis Identifier in which to search for nodes
@@ -562,18 +471,6 @@ public:
      * Destructor, will delete all predicates and the given NodeExpr
     **/
     virtual ~LocationStep();
-
-    /**
-     * Sets the Axis Identifier for this LocationStep
-     * @param axisIdentifier the Axis in which to search for nodes
-    **/
-    void setAxisIdentifier(short axisIdentifier);
-
-    /**
-     * Sets the NodeExpr of this LocationStep for use when matching nodes
-     * @param nodeExpr the NodeExpr to use when matching nodes
-    **/
-    void setNodeExpr(NodeExpr* nodeExpr);
 
     /**
      * Virtual methods from Expr 
@@ -599,12 +496,6 @@ class FilterExpr : public PredicateList, public Expr {
 public:
 
     /**
-     * Creates a new FilterExpr using the default no default Expr
-     * (which evaluates to nothing)
-    **/
-    FilterExpr();
-
-    /**
      * Creates a new FilterExpr using the given Expr
      * @param expr the Expr to use for evaluation
     **/
@@ -616,12 +507,6 @@ public:
     virtual ~FilterExpr();
 
     /**
-     * Sets the Expr of this FilterExpr for evaluation
-     * @param expr the Expr to use for evaluation
-    **/
-    void setExpr(Expr* expr);
-
-    /**
      * Virtual methods from Expr 
     **/
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
@@ -630,7 +515,6 @@ public:
     virtual void toString(String& dest);
 
 private:
-
     Expr* expr;
 
 }; //-- FilterExpr
@@ -640,9 +524,7 @@ class NumberExpr : public Expr {
 
 public:
 
-    NumberExpr();
     NumberExpr(double dbl);
-    ~NumberExpr();
 
     /**
      * Virtual methods from Expr 
@@ -662,11 +544,7 @@ class StringExpr : public Expr {
 
 public:
 
-    StringExpr();
-    StringExpr(String& value);
     StringExpr(const String& value);
-    StringExpr(const char* value);
-    ~StringExpr();
 
     /**
      * Virtual methods from Expr 
@@ -694,20 +572,8 @@ public:
     //-- LF, changed from static const short to enum
     enum _AdditiveExprType { ADDITION = 1, SUBTRACTION };
 
-     AdditiveExpr();
      AdditiveExpr(Expr* leftExpr, Expr* rightExpr, short op);
      ~AdditiveExpr();
-
-    /**
-     * Sets the left side of this AdditiveExpr
-    **/
-    void setLeftExpr(Expr* leftExpr);
-
-    /**
-     * Sets the right side of this AdditiveExpr
-    **/
-    void setRightExpr(Expr* rightExpr);
-
 
     /**
      * Virtual methods from Expr 
@@ -728,14 +594,8 @@ class UnaryExpr : public Expr {
 
 public:
 
-     UnaryExpr();
      UnaryExpr(Expr* expr);
      ~UnaryExpr();
-
-    /**
-     * Sets the expression to negate
-    **/
-    void setExpr(Expr* expr);
 
     /**
      * Virtual methods from Expr 
@@ -758,20 +618,8 @@ public:
     //-- BooleanExpr Types
     enum _BooleanExprType { AND = 1, OR };
 
-     BooleanExpr();
      BooleanExpr(Expr* leftExpr, Expr* rightExpr, short op);
      ~BooleanExpr();
-
-    /**
-     * Sets the left side of this BooleanExpr
-    **/
-    void setLeftExpr(Expr* leftExpr);
-
-    /**
-     * Sets the right side of this BooleanExpr
-    **/
-    void setRightExpr(Expr* rightExpr);
-
 
     /**
      * Virtual methods from Expr 
@@ -801,19 +649,8 @@ public:
     //-- LF, changed from static const short to enum
     enum _MultiplicativeExprType { DIVIDE = 1, MULTIPLY, MODULUS };
 
-     MultiplicativeExpr();
      MultiplicativeExpr(Expr* leftExpr, Expr* rightExpr, short op);
      ~MultiplicativeExpr();
-
-    /**
-     * Sets the left side of this MultiplicativeExpr
-    **/
-    void setLeftExpr(Expr* leftExpr);
-
-    /**
-     * Sets the right side of this MultiplicativeExpr
-    **/
-    void setRightExpr(Expr* rightExpr);
 
     /**
      * Virtual methods from Expr 
@@ -852,7 +689,6 @@ public:
         GREATER_OR_EQUAL
     };
 
-     RelationalExpr();
      RelationalExpr(Expr* leftExpr, Expr* rightExpr, short op);
      ~RelationalExpr();
 
@@ -878,15 +714,7 @@ class VariableRefExpr : public Expr {
 
 public:
 
-    VariableRefExpr();
     VariableRefExpr(const String& name);
-    VariableRefExpr(String& name);
-    ~VariableRefExpr();
-
-    /**
-     * Sets the name of the variable of reference
-    **/
-    void setName(const String& name);
 
     /**
      * Virtual methods from Expr 
@@ -924,17 +752,8 @@ public:
     /**
      * Adds the Expr to this PathExpr
      * @param expr the Expr to add to this PathExpr
-     * @param index the index at which to add the given Expr
-    **/
-    void addExpr(int index, Expr* expr, short ancestryOp);
-
-    /**
-     * Adds the Expr to this PathExpr
-     * @param expr the Expr to add to this PathExpr
     **/
     void addExpr(Expr* expr, short ancestryOp);
-
-    virtual MBool isAbsolute();
 
     /**
      * Virtual methods from Expr 
@@ -945,6 +764,8 @@ public:
     virtual void toString(String& dest);
 
 private:
+
+    virtual MBool isAbsolute();
 
     struct PathExprItem {
         Expr* expr;
@@ -984,9 +805,6 @@ public:
     virtual double getDefaultPriority(Node* node, Node* context, ContextState* cs);
     virtual void toString(String& dest);
 
-    virtual MBool isAbsolute();
-
-
 }; //-- RootExpr
 
 /**
@@ -1011,12 +829,6 @@ public:
      * @param expr the Expr to add to this UnionExpr
     **/
     void addExpr(Expr* expr);
-
-    /**
-     * Adds the PathExpr to this UnionExpr at the specified index
-     * @param expr the Expr to add to this UnionExpr
-    **/
-    void addExpr(int index, Expr* expr);
 
     /**
      * Virtual methods from Expr 

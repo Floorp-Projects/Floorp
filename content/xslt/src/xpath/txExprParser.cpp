@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.15 2005/11/02 07:33:39 peterv%netscape.com Exp $
+ * $Id: txExprParser.cpp,v 1.16 2005/11/02 07:33:40 sicking%bigfoot.com Exp $
  */
 
 /**
@@ -38,7 +38,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.15 $ $Date: 2005/11/02 07:33:39 $
+ * @version $Revision: 1.16 $ $Date: 2005/11/02 07:33:40 $
 **/
 
 #include "ExprParser.h"
@@ -167,12 +167,6 @@ Expr* ExprParser::createPatternExpr(const String& pattern) {
     Expr* expr = createUnionExpr(lexer);
     return expr;
 } //-- createPatternExpr
-
-LocationStep* ExprParser::createLocationStep(const String& path) {
-    ExprLexer lexer(path);
-    LocationStep* lstep = createLocationStep(lexer);
-    return lstep;
-} //-- createLocationPath
 
   //--------------------/
  //- Private Methods -/
@@ -353,8 +347,7 @@ Expr* ExprParser::createFilterExpr(ExprLexer& lexer) {
 
     if (lexer.peek()->type == Token::L_BRACKET) {
 
-        FilterExpr* filterExpr = new FilterExpr();
-        filterExpr->setExpr(expr);
+        FilterExpr* filterExpr = new FilterExpr(expr);
 
         //-- handle predicates
         if (!parsePredicates(filterExpr, lexer)) {
@@ -396,7 +389,7 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::COUNT);
     }
     else if (XPathNames::FALSE_FN.isEqual(tok->value)) {
-        fnCall = new BooleanFunctionCall();
+        fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_FALSE);
     }
     else if (XPathNames::ID_FN.isEqual(tok->value)) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::ID);
@@ -480,8 +473,6 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
 
 LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
 
-    LocationStep* lstep = new LocationStep();
-
     //-- child axis is default
     short axisIdentifier = LocationStep::CHILD_AXIS;
     NodeExpr* nodeExpr = 0;
@@ -534,7 +525,6 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
                 axisIdentifier = LocationStep::SELF_AXIS;
             }
             else {
-                delete lstep;
                 //XXX ErrorReport: unknow axis
                 return 0;
             }
@@ -549,13 +539,13 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
             //-- eat token
             lexer.nextToken();
             axisIdentifier = LocationStep::PARENT_AXIS;
-            nodeExpr = new BasicNodeExpr();
+            nodeExpr = new BasicNodeExpr(NodeExpr::NODE_EXPR);
             break;
         case Token::SELF_NODE :
             //-- eat token
             lexer.nextToken();
             axisIdentifier = LocationStep::SELF_AXIS;
-            nodeExpr = new BasicNodeExpr();
+            nodeExpr = new BasicNodeExpr(NodeExpr::NODE_EXPR);
             break;
         default:
             break;
@@ -578,14 +568,12 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer) {
                 lexer.pushBack();
                 nodeExpr = createNodeExpr(lexer);
                 if (!nodeExpr) {
-                    delete lstep;
                     return 0;
                 }
         }
     }
     
-    lstep->setAxisIdentifier(axisIdentifier);
-    lstep->setNodeExpr(nodeExpr);
+    LocationStep* lstep = new LocationStep(nodeExpr, axisIdentifier);
 
     //-- handle predicates
     if (!parsePredicates(lstep, lexer)) {
@@ -611,7 +599,7 @@ NodeExpr* ExprParser::createNodeExpr(ExprLexer& lexer) {
             nodeExpr = new BasicNodeExpr(NodeExpr::COMMENT_EXPR);
             break;
         case Token::NODE :
-            nodeExpr = new BasicNodeExpr();
+            nodeExpr = new BasicNodeExpr(NodeExpr::NODE_EXPR);
             break;
         case Token::PROC_INST :
             nodeExpr = new BasicNodeExpr(NodeExpr::PI_EXPR);

@@ -27,7 +27,7 @@
  * Marina Mechtcheriakova
  *   -- added support for lang function
  *
- * $Id: txFunctionLib.h,v 1.10 2005/11/02 07:33:52 peterv%netscape.com Exp $
+ * $Id: txFunctionLib.h,v 1.11 2005/11/02 07:33:53 sicking%bigfoot.com Exp $
  */
 
 #ifndef TRANSFRMX_FUNCTIONLIB_H
@@ -114,11 +114,6 @@ class BooleanFunctionCall : public FunctionCall {
 public:
 
     enum booleanFunctions { TX_BOOLEAN = 1, TX_FALSE, TX_LANG, TX_NOT, TX_TRUE };
-
-    /**
-     * Creates a default BooleanFunctionCall, which always evaluates to False
-    **/
-    BooleanFunctionCall();
 
     /**
      * Creates a BooleanFunctionCall of the given type
@@ -266,11 +261,6 @@ public:
     };
 
     /**
-     * Creates a default NodeSetFunction call. Position function is the default.
-    **/
-    NodeSetFunctionCall();
-
-    /**
      * Creates a NodeSetFunctionCall of the given type
     **/
     NodeSetFunctionCall(short type);
@@ -310,11 +300,6 @@ public:
     };
 
     /**
-     * Creates a default String function. String() function is the default.
-    **/
-    StringFunctionCall();
-
-    /**
      * Creates a String function of the given type
     **/
     StringFunctionCall(short type);
@@ -348,11 +333,6 @@ public:
         CEILING,               //-- ceiling()
         SUM                    //-- sum()
     };
-
-    /**
-     * Creates a default Number function. number() function is the default.
-    **/
-    NumberFunctionCall();
 
     /**
      * Creates a Number function of the given type

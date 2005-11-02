@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txFunctionCall.cpp,v 1.3 2005/11/02 07:33:40 sicking%bigfoot.com Exp $
+ * $Id: txFunctionCall.cpp,v 1.4 2005/11/02 07:33:41 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -29,7 +29,7 @@
 /**
  * This class represents a FunctionCall as defined by the XSL Working Draft
  * @author <A HREF="mailto:kvisco@ziplink">Keith Visco</A>
- * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:40 $
+ * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:41 $
 **/
 
 const String FunctionCall::INVALID_PARAM_COUNT =
@@ -54,27 +54,6 @@ FunctionCall::FunctionCall(const String& name)
     //-- copy name
     this->name = name;
 } //-- FunctionCall
-
-/**
- * Creates a new FunctionCall with the given function name and parameter list
- * Note: The object references in parameters will be deleted when this
- * FunctionCall gets destroyed.
-**/
-FunctionCall::FunctionCall(const String& name, List* parameters)
-{
-    //-- copy name
-    this->name = name;
-
-    if (parameters) {
-       ListIterator* pIter = parameters->iterator();
-       while (pIter->hasNext()) {
-           params.add(pIter->next());
-       }
-       delete pIter;
-    }
-
-} //-- FunctionCall
-
 
 /**
  * Destructor
@@ -161,15 +140,6 @@ double FunctionCall::evaluateToNumber(Expr* expr, Node* context,
 } //-- evaluateToNumber
 
 /**
- * Returns the name of this FunctionCall
- * @return the name of this FunctionCall
-**/
-const String& FunctionCall::getName()
-{
-    return (const String&)this->name;
-} //-- getName
-
-/**
  * Called to check number of parameters
 **/
 MBool FunctionCall::requireParams (int paramCountMin,
@@ -200,16 +170,6 @@ MBool FunctionCall::requireParams(int paramCountMin, ContextState* cs)
     }
     return MB_TRUE;
 } //-- requireParams
-
-/**
- * Sets the function name of this FunctionCall
- * @param name the name of this Function
-**/
-void FunctionCall::setName(const String& name)
-{
-    this->name.clear();
-    this->name.append(name);
-} //-- setName
 
 /**
  * Returns the String representation of this NodeExpr.

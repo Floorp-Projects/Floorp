@@ -21,31 +21,21 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txStringResult.cpp,v 1.7 2005/11/02 07:33:58 nisheeth%netscape.com Exp $
+ * $Id: txStringResult.cpp,v 1.8 2005/11/02 07:33:59 sicking%bigfoot.com Exp $
  */
 
 /**
  * StringResult
  * Represents a String as a Result of evaluating an Expr
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:58 $
+ * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:59 $
 **/
 #include "ExprResult.h"
-
 
 /**
  * Default Constructor
 **/
 StringResult::StringResult() {
-} //-- StringResult
-
-/**
- * Creates a new StringResult with the value of the given String parameter
- * @param str the String to use for initialization of this StringResult's value
-**/
-StringResult::StringResult(String& str) {
-    //-- copy str
-    this->value = str;
 } //-- StringResult
 
 /**
@@ -65,13 +55,6 @@ StringResult::StringResult(const char* str) {
     //-- copy str
     this->value = str;
 } //-- StringResult
-
-/**
- * Returns the value of this StringResult
-**/
-String& StringResult::getValue() {
-    return this->value;
-} //-- getValue
 
 /*
  * Virtual Methods from ExprResult
