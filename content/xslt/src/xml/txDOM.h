@@ -372,7 +372,7 @@ class DocumentFragment : public NodeDefinition
   private:
     friend class Document;
     DocumentFragment(Document* aOwner) :
-      NodeDefinition(Node::DOCUMENT_FRAGMENT_NODE, EmptyString(), aOwner)
+      NodeDefinition(Node::DOCUMENT_FRAGMENT_NODE, nsString(), aOwner)
     {
     };
 };
