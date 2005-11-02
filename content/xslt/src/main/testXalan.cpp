@@ -46,6 +46,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "prenv.h"
+#include "prsystem.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 
@@ -241,6 +242,11 @@ void runCategory(nsIFile* aConfCat, nsIFile* aGoldCat, nsIFile* aRefTmp,
                     test->GetNativePath(style);
                     source->GetNativePath(src);
                     reference->GetNativePath(refPath);
+                    if (PR_GetDirectorySeparator() =='\\') {
+                        src.ReplaceChar('\\','/');
+                        style.ReplaceChar('\\','/');
+                        refPath.ReplaceChar('\\','/');
+                    }
                     SimpleErrorObserver obs;
                     txStandaloneXSLTProcessor proc;
                     fstream result(refTmp.get(),
