@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: txList.h,v 1.2 1999/11/15 07:12:40 nisheeth%netscape.com Exp $
+ * $Id: txList.h,v 1.3 2005/11/02 07:33:44 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "baseutils.h"
@@ -32,7 +32,7 @@
 /**
  * Represents an ordered list of Object pointers. Modeled after a Java 2 List.
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 1999/11/15 07:12:40 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:44 $
 **/
 class List {
 
@@ -178,7 +178,7 @@ private:
 
    int count;
    //-- points to the current list item
-   List::ListItem* currentItem;
+   ListItem* currentItem;
 
    //-- points to the list to iterator over
    List* list;
