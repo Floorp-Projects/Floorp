@@ -48,6 +48,10 @@ typedef 0 NULL;
 
 typedef UNICODE_CHAR DOM_CHAR;
 
+#define kTxNsNodeIndexOffset 0x00000000;
+#define kTxAttrIndexOffset 0x40000000;
+#define kTxChildIndexOffset 0x80000000;
+
 class NodeList;
 class NamedNodeMap;
 class Document;
@@ -156,6 +160,7 @@ class Node : public TxObject
     virtual PRInt32 getNamespaceID() = 0;
     virtual PRInt32 lookupNamespaceID(txAtom* aPrefix) = 0;
     virtual Node* getXPathParent() = 0;
+    virtual PRInt32 compareDocumentPosition(Node* aOther) = 0;
 };
 
 //
@@ -297,6 +302,7 @@ class NodeDefinition : public Node, public NodeList
     virtual PRInt32 getNamespaceID();
     virtual PRInt32 lookupNamespaceID(txAtom*);
     virtual Node* getXPathParent();
+    virtual PRInt32 compareDocumentPosition(Node* aOther);
 
     //Inherited from NodeList
     Node* item(PRUint32 index);
@@ -328,6 +334,19 @@ class NodeDefinition : public Node, public NodeList
     NodeDefinition* firstChild;
     NodeDefinition* lastChild;
 
+    // Struct to hold document order information
+    struct OrderInfo {
+        ~OrderInfo();
+        PRUint32* mOrder;
+        PRInt32 mSize;
+        Node* mRoot;
+    };
+
+    // OrderInfo object for comparing document order
+    OrderInfo* mOrderInfo;
+
+    // Helperfunction for compareDocumentOrder
+    OrderInfo* getOrderInfo();
 };
 
 //
