@@ -635,7 +635,7 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
                 }
             }
 
-            nsINodeInfo *ni = element->GetNodeInfo();
+            nsINodeInfo *ni = element->NodeInfo();
 
             rv = aCompiler->startElement(ni->NamespaceID(),
                                          ni->NameAtom(),
