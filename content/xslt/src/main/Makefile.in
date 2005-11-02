@@ -107,6 +107,7 @@ OBJS =../base/ArrayList.o \
   ../xml/parser/xmltok.o \
   ../xml/printer/XMLPrinter.o \
   ../xml/printer/HTMLPrinter.o \
+  ../xml/printer/TEXTPrinter.o \
   ../xslt/OutputFormat.o \
   ../xslt/Names.o \
   ../xslt/Numbering.o \
