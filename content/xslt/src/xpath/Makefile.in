@@ -34,6 +34,8 @@ REQUIRES	= string \
 		  layout \
 		  content \
 		  widget \
+		  xpconnect \
+		  js \
 		  $(NULL)
 endif
 
