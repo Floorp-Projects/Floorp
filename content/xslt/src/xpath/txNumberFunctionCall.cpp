@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -28,151 +29,129 @@
  */
 
 /*
-  NumberFunctionCall
-  A representation of the XPath Number funtions
-*/
+ * NumberFunctionCall
+ * A representation of the XPath Number funtions
+ */
 
 #include "FunctionLib.h"
-#include "XMLUtils.h"
 #include "XMLDOMUtils.h"
 #include <math.h>
 
-/**
+/*
  * Creates a NumberFunctionCall of the given type
-**/
-NumberFunctionCall::NumberFunctionCall(short type) : FunctionCall() {
-    this->type = type;
-    switch ( type ) {
-    case ROUND :
+ */
+NumberFunctionCall::NumberFunctionCall(NumberFunctions aType) {
+    mType = aType;
+    switch (mType) {
+    case ROUND:
         name = XPathNames::ROUND_FN;
         break;
-    case CEILING :
+    case CEILING:
         name = XPathNames::CEILING_FN;
         break;
-    case FLOOR :
+    case FLOOR:
         name = XPathNames::FLOOR_FN;
         break;
-    case SUM :
+    case SUM:
         name = XPathNames::SUM_FN;
         break;
-    case NUMBER :
-    default :
+    case NUMBER:
         name = XPathNames::NUMBER_FN;
         break;
     }
-} //-- NumberFunctionCall
-
-#if !defined(HAVE_RINT)
-static double rint(double r)
-{
-  double integerPart = 0;
-  double fraction = 0;
-  fraction = modf(r, &integerPart);
-  if (fraction >= 0.5)
-      integerPart++;
-
-  return integerPart;
 }
-#endif
 
-/**
+/*
  * Evaluates this Expr based on the given context node and processor state
- * @param context the context node for evaluation of this Expr
- * @param ps the ContextState containing the stack information needed
- * for evaluation
+ * @param context the context Node for evaluation of this Expr
+ * @param ps      the ContextState containing the stack information needed
+ *                for evaluation
  * @return the result of the evaluation
-**/
+ */
 ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
-    NumberResult* result = 0;
-    ListIterator* iter = params.iterator();
-    Expr* param = 0;
-    String err;
+    ListIterator iter(&params);
 
-    switch ( type ) {
-    case CEILING :
-        if ( requireParams(1, 1, cs) ) {
-            double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
-            result = new NumberResult(ceil(dbl));
-        }
-        else {
-            result = new NumberResult(0.0);
-        }
-        break;
-
-    case FLOOR :
-        if ( requireParams(1, 1, cs) ) {
-            double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
-            result = new NumberResult(floor(dbl));
-        }
-        else {
-            result = new NumberResult(0.0);
-        }
-        break;
-      
-    case ROUND :
-        if ( requireParams(1, 1, cs) ) {
-            double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
-            double res = rint(dbl);
-            if ((dbl>0.0) && (res == dbl-0.5)) {
-                // fix for native round function from math library (rint()) which does not
-                // match the XPath spec for positive half values
-                result = new NumberResult(res+1.0);
-            }
-            else
-                result = new NumberResult(res);
-            break;
-        }
-        else result = new NumberResult(0.0);
-        break;
-      
-    case SUM :
-        double numResult;
-        numResult = 0 ;
-        if ( requireParams(1, 1, cs) ) {
-            param = (Expr*)iter->next();
-            ExprResult* exprResult = param->evaluate(context, cs);
-            if ( exprResult->getResultType() == ExprResult::NODESET ) {
-                NodeSet *lNList = (NodeSet *)exprResult;
-                NodeSet tmp;
-                for (int i=0; i<lNList->size(); i++){
-                    tmp.add(0,lNList->get(i));
-                    numResult += tmp.numberValue();
-                };
-            };
-            delete exprResult;
-            exprResult=0;
-        };
-        result = new NumberResult(numResult);
-        break;
-      
-    case NUMBER :
-    default : //-- number( object? )
-        if ( requireParams(0, 1, cs) ) {
-            if (iter->hasNext()) {
-                param = (Expr*) iter->next();
-                ExprResult* exprResult = param->evaluate(context, cs);
-                result = new NumberResult(exprResult->numberValue());
-                delete exprResult;
-            }
-            else {
-                String resultStr;
-                XMLDOMUtils::getNodeValue(context, &resultStr);
-                if ( cs->isStripSpaceAllowed(context) &&
-                     XMLUtils::shouldStripTextnode(resultStr)) {
-                    result = new NumberResult(Double::NaN);
-                }
-                else {
-                    Double dbl(resultStr);
-                    result = new NumberResult(dbl.doubleValue());
-                }
-            }
-        }
-        else {
-            result = new NumberResult(Double::NaN);
-        }
-        break;
+    if (mType == NUMBER) {
+        if (!requireParams(0, 1, cs))
+            return new NumberResult(Double::NaN);
     }
-    delete iter;
-    return result;
-} //-- evaluate
+    else {
+        if (!requireParams(1, 1, cs))
+            return new NumberResult(Double::NaN);
+    }
 
+    switch (mType) {
+        case CEILING:
+        {
+            double dbl = evaluateToNumber((Expr*)iter.next(), context, cs);
+            if (Double::isNaN(dbl) || Double::isInfinite(dbl))
+                return new NumberResult(dbl);
+
+            if (Double::isNeg(dbl) && dbl > -1)
+                return new NumberResult(0 * dbl);
+
+            return new NumberResult(ceil(dbl));
+        }
+        case FLOOR:
+        {
+            double dbl = evaluateToNumber((Expr*)iter.next(), context, cs);
+            if (Double::isNaN(dbl) ||
+                Double::isInfinite(dbl) ||
+                (dbl == 0 && Double::isNeg(dbl)))
+                return new NumberResult(dbl);
+
+            return new NumberResult(floor(dbl));
+        }
+        case ROUND:
+        {
+            double dbl = evaluateToNumber((Expr*)iter.next(), context, cs);
+            if (Double::isNaN(dbl) || Double::isInfinite(dbl))
+                return new NumberResult(dbl);
+
+            if (Double::isNeg(dbl) && dbl >= -0.5)
+                return new NumberResult(0 * dbl);
+
+            return new NumberResult(floor(dbl + 0.5));
+        }
+        case SUM:
+        {
+            ExprResult* exprResult =
+                ((Expr*)iter.next())->evaluate(context, cs);
+
+            if (!exprResult)
+                return 0;
+
+            if (exprResult->getResultType() != ExprResult::NODESET) {
+                String err("NodeSet expected in call to sum(): ");
+                toString(err);
+                cs->recieveError(err);
+                return new NumberResult(Double::NaN);
+            }
+
+            double res = 0;
+            NodeSet* nodes = (NodeSet*)exprResult;
+            int i;
+            for (i = 0; i < nodes->size(); i++) {
+                String resultStr;
+                XMLDOMUtils::getNodeValue(nodes->get(i), &resultStr);
+                Double dbl(resultStr);
+                res += dbl.doubleValue();
+            }
+            delete exprResult;
+
+            return new NumberResult(res);
+        }
+        case NUMBER:
+        {
+            if (iter.hasNext())
+                return new NumberResult(
+                    evaluateToNumber((Expr*)iter.next(), context, cs));
+
+            String resultStr;
+            XMLDOMUtils::getNodeValue(context, &resultStr);
+            Double dbl(resultStr);
+            return new NumberResult(dbl.doubleValue());
+        }
+    }
+    return new NumberResult(Double::NaN);
+}
