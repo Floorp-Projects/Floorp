@@ -60,7 +60,7 @@
 //Char to FreqOrder table , 
 #define JIS_TABLE_SIZE  4368
 
-static PRInt16 JISCharToFreqOrder[] =
+static const PRInt16 JISCharToFreqOrder[] =
 {
   40,   1,   6, 182, 152, 180, 295,2127, 285, 381,3295,4304,3068,4606,3165,3510, //   16
 3511,1822,2785,4607,1193,2226,5070,4608, 171,2996,1247,  18, 179,5071, 856,1661, //   32

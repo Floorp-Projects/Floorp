@@ -88,7 +88,7 @@ PCK4BITS(eError,eError,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eError),//08-0f
 PCK4BITS(eError,eStart,eStart,eStart,eStart,eStart,eStart,eStart) //10-17 
 };
 
-static PRUint32 Big5CharLenTable[] = {0, 1, 1, 2, 0};
+static const PRUint32 Big5CharLenTable[] = {0, 1, 1, 2, 0};
 
 SMModel Big5SMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, BIG5_cls },
@@ -143,7 +143,7 @@ PCK4BITS(eError,eError,eStart,eError,eError,eError,     3,eError),//18-1f
 PCK4BITS(     3,eError,eError,eError,eStart,eStart,eStart,eStart) //20-27 
 };
 
-static PRUint32 EUCJPCharLenTable[] = {2, 2, 2, 3, 1, 0};
+static const PRUint32 EUCJPCharLenTable[] = {2, 2, 2, 3, 1, 0};
 
 SMModel EUCJPSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCJP_cls },
@@ -195,7 +195,7 @@ PCK4BITS(eError,eStart,     3,eError,eError,eError,eError,eError),//00-07
 PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eError,eError,eStart,eStart) //08-0f 
 };
 
-static PRUint32 EUCKRCharLenTable[] = {0, 1, 2, 0};
+static const PRUint32 EUCKRCharLenTable[] = {0, 1, 2, 0};
 
 SMModel EUCKRSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCKR_cls },
@@ -251,7 +251,7 @@ PCK4BITS(     5,eError,eError,eError,eStart,eError,eStart,eStart),//20-27
 PCK4BITS(eStart,eError,eStart,eStart,eStart,eStart,eStart,eStart) //28-2f 
 };
 
-static PRUint32 EUCTWCharLenTable[] = {0, 0, 1, 2, 2, 2, 3};
+static const PRUint32 EUCTWCharLenTable[] = {0, 0, 1, 2, 2, 2, 3};
 
 SMModel EUCTWSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, EUCTW_cls },
@@ -304,7 +304,7 @@ PCK4BITS(eError,eStart,     3,eError,eError,eError,eError,eError),//00-07
 PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eError,eError,eStart,eStart) //08-0f 
 };
 
-static PRUint32 GB2312CharLenTable[] = {0, 1, 2, 0};
+static const PRUint32 GB2312CharLenTable[] = {0, 1, 2, 0};
 
 SMModel GB2312SMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, GB2312_cls },
@@ -367,7 +367,7 @@ PCK4BITS(eError,eError,eStart,eStart,eStart,eStart,eStart,eStart) //28-2f
 // it is used for frequency analysis only, and we are validing 
 // each code range there as well. So it is safe to set it to be 
 // 2 here. 
-static PRUint32 GB18030CharLenTable[] = {0, 1, 1, 1, 1, 1, 2};
+static const PRUint32 GB18030CharLenTable[] = {0, 1, 1, 1, 1, 1, 2};
 
 SMModel GB18030SMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, GB18030_cls },
@@ -424,7 +424,7 @@ PCK4BITS(eError,eError,eError,eError,eItsMe,eItsMe,eItsMe,eItsMe),//08-0f
 PCK4BITS(eItsMe,eItsMe,eError,eError,eStart,eStart,eStart,eStart) //10-17 
 };
 
-static PRUint32 SJISCharLenTable[] = {0, 1, 1, 2, 0, 0};
+static const PRUint32 SJISCharLenTable[] = {0, 1, 1, 2, 0, 0};
 
 SMModel SJISSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, SJIS_cls },
@@ -481,7 +481,7 @@ PCK4BITS(     5,     8,     6,     6,eError,     6,     6,     6),//28-2f
 PCK4BITS(     6,     6,     6,     6,eError,eError,eStart,eStart) //30-37 
 };
 
-static PRUint32 UCS2BECharLenTable[] = {2, 2, 2, 0, 2, 2};
+static const PRUint32 UCS2BECharLenTable[] = {2, 2, 2, 0, 2, 2};
 
 SMModel UCS2BESMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, UCS2BE_cls },
@@ -537,7 +537,7 @@ PCK4BITS(     5,     5,     5,eError,eError,eError,     5,     5),//28-2f
 PCK4BITS(     5,     5,     5,eError,     5,eError,eStart,eStart) //30-37 
 };
 
-static PRUint32 UCS2LECharLenTable[] = {2, 2, 2, 2, 2, 2};
+static const PRUint32 UCS2LECharLenTable[] = {2, 2, 2, 2, 2, 2};
 
 SMModel UCS2LESMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, UCS2LE_cls },
@@ -614,7 +614,7 @@ PCK4BITS(eError,eError,eStart,eStart,eStart,eStart,eError,eError),//c0-c7
 PCK4BITS(eError,eError,eError,eError,eError,eError,eError,eError) //c8-cf 
 };
 
-static PRUint32 UTF8CharLenTable[] = {0, 1, 0, 0, 0, 0, 2, 3, 
+static const PRUint32 UTF8CharLenTable[] = {0, 1, 0, 0, 0, 0, 2, 3, 
                             3, 3, 4, 4, 5, 5, 6, 6 };
 
 SMModel UTF8SMModel = {
