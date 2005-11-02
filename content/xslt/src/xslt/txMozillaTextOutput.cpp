@@ -66,7 +66,7 @@ txMozillaTextOutput::txMozillaTextOutput(nsIDOMDocumentFragment* aDest)
     aDest->GetOwnerDocument(getter_AddRefs(doc));
     NS_ASSERTION(doc, "unable to get ownerdocument");
     nsCOMPtr<nsIDOMText> textNode;
-    nsresult rv = doc->CreateTextNode(EmptyString(),
+    nsresult rv = doc->CreateTextNode(nsString(),
                                       getter_AddRefs(textNode));
     if (NS_FAILED(rv)) {
         return;
@@ -165,7 +165,7 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
 
     nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(mDocument);
     if (nsDoc) {
-        nsDoc->SetTitle(EmptyString());
+        nsDoc->SetTitle(nsString());
     }
 
     // Reset and set up document
@@ -293,7 +293,7 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
     }
 
     nsCOMPtr<nsIDOMText> textNode;
-    mDocument->CreateTextNode(EmptyString(),
+    mDocument->CreateTextNode(nsString(),
                               getter_AddRefs(textNode));
     NS_ASSERTION(textNode, "Failed to create the text node");
     if (!textNode) {

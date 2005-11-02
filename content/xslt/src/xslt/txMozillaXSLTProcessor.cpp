@@ -688,7 +688,7 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
             do_GetService(NS_STRINGBUNDLE_CONTRACTID);
         if (sbs) {
             nsXPIDLString errorText;
-            sbs->FormatStatusMessage(aResult, EmptyString().get(),
+            sbs->FormatStatusMessage(aResult, nsString().get(),
                                      getter_Copies(errorText));
 
             nsXPIDLString errorMessage;
