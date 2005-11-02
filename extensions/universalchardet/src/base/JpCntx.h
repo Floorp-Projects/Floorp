@@ -115,8 +115,7 @@ protected:
           (unsigned char)*(str+1) >= (unsigned char)0x9f && 
           (unsigned char)*(str+1) <= (unsigned char)0xf1)
       return (unsigned char)*(str+1) - (unsigned char)0x9f;
-    else 
-      return -1;
+    return -1;
   };
 };
 
@@ -126,7 +125,13 @@ protected:
   PRInt32 GetOrder(const char* str, PRUint32 *charLen);
   PRInt32 GetOrder(const char* str)
     //We only interested in Hiragana, so first byte is '\244'
-    {return *str == '\244' ? ((unsigned char)*(str+1) - (unsigned char)0xa1):-1;};
+  {
+    if (*str == '\244' &&
+          (unsigned char)*(str+1) >= (unsigned char)0xa1 &&
+          (unsigned char)*(str+1) <= (unsigned char)0xf3)
+      return (unsigned char)*(str+1) - (unsigned char)0xa1;
+    return -1;
+  };
 };
 
 #endif /* __JPCNTX_H__ */
