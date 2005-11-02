@@ -43,5 +43,8 @@ INCLUDES += -I$(srcdir) -I$(srcdir)/../base -I$(srcdir)/../net \
   -I$(srcdir)/../xml/printer -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
   -I$(srcdir)/../xslt/functions
 COMPILE_CXXFLAGS += -D__cplusplus
+ifdef MOZ_XSL
+DEFINES += -DMOZILLA
+endif
 
 install:: $(OBJS)
