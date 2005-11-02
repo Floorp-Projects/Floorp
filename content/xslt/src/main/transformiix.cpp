@@ -26,7 +26,12 @@
  *    -- fixed document base when stylesheet is specified,
  *       it was defaulting to the XML document.
  *
- * $Id: transformiix.cpp,v 1.5 2005/11/02 07:33:36 kvisco%ziplink.net Exp $
+ * Olivier Gerardin, ogerardin@vo.lu
+ *    -- redirect non-data output (banner, errors) to stderr
+ *    -- read XML from stdin when -i is omitted
+ *    -- accept '-' to specify stdin/stdout on command line
+ *
+ * $Id: transformiix.cpp,v 1.6 2005/11/02 07:33:37 kvisco%ziplink.net Exp $
  */
 
 
@@ -55,16 +60,16 @@ int main(int argc, char** argv) {
     XSLTProcessor xsltProcessor;
 
     String copyright("(C) 1999 The MITRE Corporation, Keith Visco, and contributors");
-    cout << xsltProcessor.getAppName() << " ";
-    cout << xsltProcessor.getAppVersion() << endl;
-    cout << copyright <<endl;
+    cerr << xsltProcessor.getAppName() << " ";
+    cerr << xsltProcessor.getAppVersion() << endl;
+    cerr << copyright <<endl;
 
     //-- print banner line
     Int32 fillSize = 1;
     fillSize += copyright.length();
     String fill;
     fill.setLength(fillSize, '-');
-    cout << fill <<endl<<endl;
+    cerr << fill <<endl<<endl;
 
     //-- add ErrorObserver
     SimpleErrorObserver seo;
@@ -75,6 +80,7 @@ int main(int argc, char** argv) {
     flags.add(new String("i"));          // XML input
     flags.add(new String("s"));          // XSL input
     flags.add(new String("o"));          // Output filename
+    flags.add(new String("h"));		// help
 
     NamedMap options;
     options.setObjectDeletion(MB_TRUE);
@@ -88,66 +94,71 @@ int main(int argc, char** argv) {
     String* xsltFilename = (String*)options.get("s");
     String* outFilename = (String*)options.get("o");
 
-    if ( !xmlFilename ) {
-        cout << "error: missing XML filename."<<endl <<endl;
-        printUsage();
-        return -1;
-    }
-    char* chars = 0;
 
     //-- open XML file
-    chars = new char[xmlFilename->length()+1];
-    ifstream xmlInput(xmlFilename->toCharArray(chars), ios::in);
-    delete chars;
-
-    String documentBase;
+    istream* xmlInput = &cin;
+    if (xmlFilename && ! xmlFilename->isEqual("-")) {
+      char* chars = new char[xmlFilename->length()+1];
+      xmlInput = new ifstream(xmlFilename->toCharArray(chars), ios::in);
+      delete chars;
+    }
 
     //-- handle output stream
     ostream* resultOutput = &cout;
     ofstream resultFileStream;
-    if ( outFilename ) {
-        chars = new char[outFilename->length()+1];
+    if ( outFilename && ! outFilename->isEqual("-")) {
+        char* chars = new char[outFilename->length()+1];
         resultFileStream.open(outFilename->toCharArray(chars), ios::out);
         delete chars;
         if ( !resultFileStream ) {
-            cout << "error opening output file: " << *xmlFilename << endl;
+            cerr << "error opening output file: " << *xmlFilename << endl;
             return -1;
         }
         resultOutput = &resultFileStream;
     }
+
     //-- process
+    String documentBase;
     if ( !xsltFilename ) {
-        //-- use xml document to obtain a document base
-        URIUtils::getDocumentBase(*xmlFilename, documentBase);
-        xsltProcessor.process(xmlInput, *resultOutput, documentBase);
+      if (!xmlFilename) {
+	cerr << "you must specify XSLT file with -s option if XML is read from standard input" << endl;
+	printUsage();
+	return -1;
+      }
+      //-- use xml document to obtain a document base
+      URIUtils::getDocumentBase(*xmlFilename, documentBase);
+      xsltProcessor.process(*xmlInput, *resultOutput, documentBase);
     }
     else {
         //-- open XSLT file
-        chars = new char[xsltFilename->length()+1];
+        char* chars = new char[xsltFilename->length()+1];
         ifstream xsltInput(xsltFilename->toCharArray(chars), ios::in);
         delete chars;
         // obtain document base from XSLT stylesheet
-        URIUtils::getDocumentBase(*xmlFilename, documentBase);
-        xsltProcessor.process(xmlInput, xsltInput, *resultOutput, documentBase);
+        URIUtils::getDocumentBase(*xsltFilename, documentBase);
+        xsltProcessor.process(*xmlInput, xsltInput, *resultOutput, documentBase);
     }
     resultFileStream.close();
     return 0;
 } //-- main
 
 void printHelp() {
-    cout << "The following flags are available for use with Transformiix -";
-    cout<<endl<<endl;
-    cout << "-i  filename  : The XML file to process" << endl;
-    cout << "-o  filename  : The Output file to create" << endl;
-    cout << "-s  filename  : The XSLT file to use for processing  (Optional)" << endl;
-    cout << "-h            : This help screen                     (Optional)" << endl;
-    cout << endl;
+  cerr << "transfrmx [-h] [-i xml-file] [-s xslt-file] [-o output-file]" << endl << endl;
+  cerr << "Options:";
+  cerr << endl << endl;
+  cerr << "\t-i  specify XML file to process (default: read from stdin)" << endl;
+  cerr << "\t-s  specify XSLT file to use for processing (default: use stylesheet" << endl
+       << "\t\tspecified in XML file)" << endl;
+  cerr << "\t-o  specify output file (default: write to stdout)" << endl;
+  cerr << "\t-h  this help screen" << endl;
+  cerr << endl;
+  cerr << "You may use '-' in place of xml-file or output-file to explicitly specify" << endl;
+  cerr << "respectively the standard input and standard output." << endl;
+  cerr << "If the XML is read from stdin, then the -s option is mandatory." << endl;
+  cerr << endl;
 }
 void printUsage() {
-    cout << endl;
-    cout << "usage: ";
-    cout << "transfrmx -i xml-file [-s xslt-file] [-o output-file]"<<endl;
-    cout << endl;
-    cout << "for more infomation use the -h flag"<<endl;
+  cerr << "transfrmx [-h] [-i xml-file] [-s xslt-file] [-o output-file]" << endl << endl;
+  cerr << "For more infomation use the -h flag"<<endl;
 } //-- printUsage
 
