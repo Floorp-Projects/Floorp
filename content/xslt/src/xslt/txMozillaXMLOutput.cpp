@@ -64,6 +64,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsICSSStyleSheet.h"
 #include "txStringUtils.h"
+#include "nsIHTMLDocument.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
 
@@ -354,8 +355,17 @@ void txMozillaXMLOutput::startElement(const nsAString& aName,
     mDontAddCurrent = PR_FALSE;
 
     if ((mOutputFormat.mMethod == eHTMLOutput) && (aNsID == kNameSpaceID_None)) {
-        rv = mDocument->CreateElement(aName,
-                                      getter_AddRefs(element));
+        if (mDocumentIsHTML) {
+            rv = mDocument->CreateElement(aName,
+                                          getter_AddRefs(element));
+        }
+        else {
+            nsAutoString lcname;
+            ToLowerCase(aName, lcname);
+            rv = mDocument->CreateElementNS(NS_LITERAL_STRING(kXHTMLNameSpaceURI),
+                                            lcname,
+                                            getter_AddRefs(element));
+        }
         if (NS_FAILED(rv)) {
             return;
         }
@@ -539,9 +549,15 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
             // If no section, wrap table's children in a tbody.
             nsCOMPtr<nsIDOMElement> wrapper;
 
-            rv = mDocument->CreateElementNS(NS_LITERAL_STRING(kXHTMLNameSpaceURI),
-                                            NS_LITERAL_STRING("tbody"),
-                                            getter_AddRefs(wrapper));
+            if (mDocumentIsHTML) {
+                rv = mDocument->CreateElement(NS_LITERAL_STRING("tbody"),
+                                              getter_AddRefs(wrapper));
+            }
+            else {
+                rv = mDocument->CreateElementNS(NS_LITERAL_STRING(kXHTMLNameSpaceURI),
+                                                NS_LITERAL_STRING("tbody"),
+                                                getter_AddRefs(wrapper));
+            }
             NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create tbody element");
 
             if (wrapper) {
@@ -671,18 +687,25 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
         if (mOutputFormat.mMethod == eHTMLOutput) {
             doc = do_CreateInstance(kHTMLDocumentCID, &rv);
             NS_ENSURE_SUCCESS(rv, rv);
+
+            mDocumentIsHTML = PR_TRUE;
         }
         else {
             // We should check the root name/namespace here and create the
             // appropriate document
             doc = do_CreateInstance(kXMLDocumentCID, &rv);
             NS_ENSURE_SUCCESS(rv, rv);
+
+            mDocumentIsHTML = PR_FALSE;
         }
         mDocument = do_QueryInterface(doc);
     }
     else {
         mDocument = aResultDocument;
         doc = do_QueryInterface(aResultDocument);
+        
+        nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aResultDocument);
+        mDocumentIsHTML = !!htmlDoc;
     }
     mCurrentNode = mDocument;
 
