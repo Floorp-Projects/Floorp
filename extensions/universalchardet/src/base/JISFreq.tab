@@ -51,7 +51,7 @@
  * Idea Distribution Ratio = 0.92635 / (1-0.92635) = 12.58
  * Random Distribution Ration = 512 / (2965+62+83+86-512) = 0.191
  * 
- * Typical Distribution Ratio  
+ * Typical Distribution Ratio, 25% of IDR 
  *****************************************************************************/
 
 #define JIS_TYPICAL_DISTRIBUTION_RATIO (float) 3.0

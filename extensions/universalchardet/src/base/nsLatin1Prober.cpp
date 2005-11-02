@@ -199,7 +199,7 @@ float nsLatin1Prober::GetConfidence(void)
   
   // lower the confidence of latin1 so that other more accurate detector 
   // can take priority.
-  confidence *= 0.60f;
+  confidence *= 0.50f;
 
   return confidence;
 }
