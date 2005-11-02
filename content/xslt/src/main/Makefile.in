@@ -117,6 +117,7 @@ OBJS =../base/ArrayList.o \
   ../xslt/functions/ElementAvailableFnCall.o \
   ../xslt/functions/FunctionAvailableFnCall.o \
   ../xslt/functions/GenerateIdFunctionCall.o \
+  ../xslt/functions/txKeyFunctionCall.o \
   ../xslt/functions/SystemPropertyFunctionCall.o \
   ../xslt/util/NodeSorter.o \
   ../xslt/util/NodeStack.o \

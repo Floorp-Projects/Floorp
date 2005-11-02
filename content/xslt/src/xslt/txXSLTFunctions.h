@@ -23,7 +23,10 @@
  * Olivier Gerardin,
  *    -- added document() function definition
  *
- * $Id: txXSLTFunctions.h,v 1.6 2005/11/02 07:33:59 peterv%netscape.com Exp $
+ * Jonas Sicking,
+ *    -- added txXSLKey class
+ *
+ * $Id: txXSLTFunctions.h,v 1.7 2005/11/02 07:34:00 sicking%bigfoot.com Exp $
  */
 
 #ifndef TRANSFRMX_XSLT_FUNCTIONS_H
@@ -34,6 +37,8 @@
 #include "DOMHelper.h"
 #include "TxString.h"
 #include "ProcessorState.h"
+#include "Map.h"
+#include "List.h"
 
 /**
  * The definition for the XSLT document() function
@@ -63,29 +68,118 @@ private:
     ProcessorState* processorState;
 };
 
-/**
+/*
  * The definition for the XSLT key() function
-**/
-class KeyFunctionCall : public FunctionCall {
+ */
+class txKeyFunctionCall : public FunctionCall {
 
 public:
 
-    /**
+    /*
      * Creates a new key() function call
-    **/
-    KeyFunctionCall();
+     */
+    txKeyFunctionCall(ProcessorState* aPs);
 
-    /**
-     * Evaluates this Expr based on the given context node and processor state
-     * @param context the context node for evaluation of this Expr
-     * @param cs the ContextState containing the stack information needed
-     * for evaluation
+    /*
+     * Evaluates a key() xslt-functioncall. First argument is name of key
+     * to use, second argument is value to look up.
+     * @param aContext the context node for evaluation of this Expr
+     * @param aCs      the ContextState containing the stack information needed
+     *                 for evaluation
      * @return the result of the evaluation
-     * @see FunctionCall.h
-    **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+     */
+    virtual ExprResult* evaluate(Node* aContext, ContextState* aCs);
 
 private:
+    ProcessorState* mProcessorState;
+};
+
+/*
+ * Class representing an <xsl:key>. Or in the case where several <xsl:key>s
+ * have the same name one object represents all <xsl:key>s with that name
+ */
+class txXSLKey : public TxObject {
+    
+public:
+    txXSLKey(ProcessorState* aPs);
+    ~txXSLKey();
+    
+    /*
+     * Returns a NodeSet containing all nodes within the specified document
+     * that have the value keyValue. The document is indexed in case it
+     * hasn't been searched previously. The returned nodeset is owned by
+     * the txXSLKey object
+     * @param aKeyValue Value to search for
+     * @param aDoc      Document to search in
+     * @return a NodeSet* containing all nodes in doc matching with value
+     *         keyValue
+     */
+    const NodeSet* getNodes(String& aKeyValue, Document* aDoc);
+    
+    /*
+     * Adds a match/use pair. Returns MB_FALSE if matchString or useString
+     * can't be parsed.
+     * @param aMatchString String to be parsed as match-pattern
+     * @param aUseString   String to be parsed as use-expression
+     * @return MB_FALSE if matchString or useString can't be parsed
+     *         MB_TRUE otherwise
+     */
+    MBool addKey(const String& aMatchString, const String& aUseString);
+    
+private:
+    /*
+     * Indexes a document and adds it to the set of indexed documents
+     * @param aDoc Document to index and add
+     * @returns a NamedMap* containing the index
+     */
+    NamedMap* addDocument(Document* aDoc);
+
+    /*
+     * Recursively searches a node, its attributes and its subtree for
+     * nodes matching any of the keys match-patterns.
+     * @param aNode node to search
+     * @param aMap index to add search result in
+     */
+    void indexTree(Node* aNode, NamedMap* aMap);
+
+    /*
+     * Tests one node if it matches any of the keys match-patterns. If
+     * the node matches its values are added to the index.
+     * @param aNode node to test
+     * @param aMap index to add values to
+     */
+    void testNode(Node* aNode, NamedMap* aMap);
+
+    /*
+     * represents one match/use pair
+     */
+    struct Key {
+        Pattern* matchPattern;
+        Expr* useExpr;
+    };
+
+    /*
+     * List of all match/use pairs
+     */
+    List mKeys;
+
+    /*
+     * Map containing all indexes (keyed on document). Every index is a
+     * NamedMap. Every NamedMap contains NodeLists with the nodes for
+     * a certain value
+     */
+    Map mMaps;
+    
+    /*
+     * ProcessorState used to parse the match-patterns and
+     * use-expressions
+     */
+    ProcessorState* mProcessorState;
+    
+    /*
+     * Used to return empty nodeset
+     */
+    NodeSet mEmptyNodeset;
 };
 
 /**
