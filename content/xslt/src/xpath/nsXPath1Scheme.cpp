@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,6 +39,8 @@
 /**
  * This file implements the xpath1 XPointer scheme, and the xmlns scheme
  * as well but only for xpath1.
+ *
+ * http://www.simonstl.com/ietf/draft-stlaurent-xpath-frag-00.html
  */
 
 #include "nsXPath1Scheme.h"
