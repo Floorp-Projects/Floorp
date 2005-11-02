@@ -53,17 +53,17 @@ class txKeyValueHashKey
 {
 public:
     txKeyValueHashKey(const txExpandedName& aKeyName,
-                      Document* aDocument,
+                      PRInt32 aDocumentIdentifier,
                       const nsAString& aKeyValue)
         : mKeyName(aKeyName),
           mKeyValue(aKeyValue),
-          mDocument(aDocument)
+          mDocumentIdentifier(aDocumentIdentifier)
     {
     }
 
     txExpandedName mKeyName;
     nsString mKeyValue;
-    Document* mDocument;
+    PRInt32 mDocumentIdentifier;
 };
 
 struct txKeyValueHashEntry : public PLDHashEntryHdr
@@ -89,14 +89,14 @@ class txIndexedKeyHashKey
 {
 public:
     txIndexedKeyHashKey(txExpandedName aKeyName,
-                        Document* aDocument)
+                        PRInt32 aDocumentIdentifier)
         : mKeyName(aKeyName),
-          mDocument(aDocument)
+          mDocumentIdentifier(aDocumentIdentifier)
     {
     }
 
     txExpandedName mKeyName;
-    Document* mDocument;
+    PRInt32 mDocumentIdentifier;
 };
 
 struct txIndexedKeyHashEntry : public PLDHashEntryHdr
@@ -145,7 +145,7 @@ public:
      * @param aKeyValueHash Hash to add values to
      * @param aEs           txExecutionState to use for XPath evaluation
      */
-    nsresult indexDocument(Document* aDocument,
+    nsresult indexDocument(const txXPathNode& aDocument,
                            txKeyValueHash& aKeyValueHash,
                            txExecutionState& aEs);
 
@@ -158,7 +158,7 @@ private:
      * @param aKeyValueHash Hash to add values to
      * @param aEs           txExecutionState to use for XPath evaluation
      */
-    nsresult indexTree(Node* aNode, txKeyValueHashKey& aKey,
+    nsresult indexTree(const txXPathNode& aNode, txKeyValueHashKey& aKey,
                        txKeyValueHash& aKeyValueHash, txExecutionState& aEs);
 
     /**
@@ -169,7 +169,7 @@ private:
      * @param aKeyValueHash Hash to add values to
      * @param aEs           txExecutionState to use for XPath evaluation
      */
-    nsresult testNode(Node* aNode, txKeyValueHashKey& aKey,
+    nsresult testNode(const txXPathNode& aNode, txKeyValueHashKey& aKey,
                       txKeyValueHash& aKeyValueHash, txExecutionState& aEs);
 
     /**
@@ -203,7 +203,7 @@ public:
     nsresult init();
 
     nsresult getKeyNodes(const txExpandedName& aKeyName,
-                         Document* aDocument,
+                         const txXPathNode& aDocument,
                          const nsAString& aKeyValue,
                          PRBool aIndexIfNotFound,
                          txExecutionState& aEs,

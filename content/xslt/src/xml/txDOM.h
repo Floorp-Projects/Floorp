@@ -149,6 +149,7 @@ class NodeList
 class NodeListDefinition : public NodeList
 {
   friend class NamedNodeMap; //-- LF
+  friend class txXPathTreeWalker;
   public:
     NodeListDefinition();
     virtual ~NodeListDefinition();
@@ -188,6 +189,8 @@ class NamedNodeMap : public NodeListDefinition
 
   private:
     NodeListDefinition::ListItem* findListItemByName(const nsAString& name);
+    // txXPathTreeWalker is friend to speed up attr iterations
+    friend class txXPathTreeWalker;
 };
 
 //
@@ -268,6 +271,8 @@ class NodeDefinition : public Node, public NodeList
 
   protected:
     friend class Document;
+    friend class txXPathTreeWalker;
+    friend class txXPathNodeUtils;
     NodeDefinition(NodeType type, const nsAString& name,
                    const nsAString& value, Document* owner);
     NodeDefinition(NodeType aType, const nsAString& aValue,

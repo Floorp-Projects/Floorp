@@ -630,7 +630,7 @@ handleNode(nsIDOMNode* aNode, txStylesheetCompiler* aCompiler)
         {
             nsCOMPtr<nsIDocument> document = do_QueryInterface(aNode);
 
-            PRInt32 counter = 0;
+            PRUint32 counter = 0;
             nsIContent *child;
             while ((child = document->GetChildAt(counter++))) {
                 nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(child);

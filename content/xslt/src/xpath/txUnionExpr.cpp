@@ -24,8 +24,8 @@
  */
 
 #include "Expr.h"
-#include "txNodeSet.h"
 #include "txIXPathContext.h"
+#include "txNodeSet.h"
 
   //-------------/
  //- UnionExpr -/
@@ -93,8 +93,16 @@ UnionExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             //XXX ErrorReport: report nonnodeset error
             return NS_ERROR_XSLT_NODESET_EXPECTED;
         }
-        rv = nodes->add(NS_STATIC_CAST(txNodeSet*, NS_STATIC_CAST(txAExprResult*,
-                                                                  exprResult)));
+
+        nsRefPtr<txNodeSet> resultSet, ownedSet;
+        resultSet = NS_STATIC_CAST(txNodeSet*,
+                                   NS_STATIC_CAST(txAExprResult*, exprResult));
+        exprResult = nsnull;
+        rv = aContext->recycler()->
+            getNonSharedNodeSet(resultSet, getter_AddRefs(ownedSet));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = nodes->addAndTransfer(ownedSet);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 

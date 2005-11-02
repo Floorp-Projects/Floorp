@@ -46,6 +46,7 @@
 #include "nsAutoPtr.h"
 
 class Expr;
+class txXPathNode;
 
 /**
  * A class for evaluating an XPath expression string
@@ -70,7 +71,7 @@ private:
     class EvalContextImpl : public txIEvalContext
     {
     public:
-        EvalContextImpl(Node* aContextNode, txResultRecycler* aRecycler)
+        EvalContextImpl(const txXPathNode& aContextNode, txResultRecycler* aRecycler)
             : mContextNode(aContextNode),
               mLastError(NS_OK),
               mRecycler(aRecycler)
@@ -89,7 +90,7 @@ private:
         TX_DECL_EVAL_CONTEXT;
 
     private:
-        Node* mContextNode;
+        const txXPathNode& mContextNode;
         nsresult mLastError;
         nsRefPtr<txResultRecycler> mRecycler;
     };

@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txExpandedNameMap.h"
+#include "TxObject.h"
 #include <string.h>
 
 const int kTxExpandedNameMapAllocSize = 16;

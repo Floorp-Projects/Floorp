@@ -44,6 +44,7 @@
 #include "ExprResult.h"
 #include "txXSLTPatterns.h"
 #include "txIXPathContext.h"
+#include "txXPathTreeWalker.h"
 
 nsresult txXSLTNumber::createNumber(Expr* aValueExpr, txPattern* aCountPattern,
                                     txPattern* aFromPattern, LevelType aLevel,
@@ -139,54 +140,54 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
 
     txPattern* countPattern = aCountPattern;
     MBool ownsCountPattern = MB_FALSE;
-    Node* currNode = aContext->getContextNode();
+    const txXPathNode& currNode = aContext->getContextNode();
 
     // Parse count- and from-attributes
 
     if (!aCountPattern) {
         ownsCountPattern = MB_TRUE;
         txNodeTest* nodeTest = 0;
-        switch (currNode->getNodeType()) {
-            case Node::ELEMENT_NODE:
+        switch (txXPathNodeUtils::getNodeType(currNode)) {
+            case txXPathNodeType::ELEMENT_NODE:
             {
-                nsCOMPtr<nsIAtom> localName;
-                currNode->getLocalName(getter_AddRefs(localName));
-                nodeTest = new txNameTest(0, localName,
-                                          currNode->getNamespaceID(),
-                                          Node::ELEMENT_NODE);
+                nsCOMPtr<nsIAtom> localName =
+                    txXPathNodeUtils::getLocalName(currNode);
+                PRInt32 namespaceID = txXPathNodeUtils::getNamespaceID(currNode);
+                nodeTest = new txNameTest(0, localName, namespaceID,
+                                          txXPathNodeType::ELEMENT_NODE);
                 break;
             }
-            case Node::TEXT_NODE:
-            case Node::CDATA_SECTION_NODE:
+            case txXPathNodeType::TEXT_NODE:
+            case txXPathNodeType::CDATA_SECTION_NODE:
             {
                 nodeTest = new txNodeTypeTest(txNodeTypeTest::TEXT_TYPE);
                 break;
             }
-            case Node::PROCESSING_INSTRUCTION_NODE:
+            case txXPathNodeType::PROCESSING_INSTRUCTION_NODE:
             {
                 txNodeTypeTest* typeTest;
                 typeTest = new txNodeTypeTest(txNodeTypeTest::PI_TYPE);
                 if (typeTest) {
                     nsAutoString nodeName;
-                    currNode->getNodeName(nodeName);
+                    txXPathNodeUtils::getNodeName(currNode, nodeName);
                     typeTest->setNodeName(nodeName);
                 }
                 nodeTest = typeTest;
                 break;
             }
-            case Node::COMMENT_NODE:
+            case txXPathNodeType::COMMENT_NODE:
             {
                 nodeTest = new txNodeTypeTest(txNodeTypeTest::COMMENT_TYPE);
                 break;
             }
-            case Node::DOCUMENT_NODE:
-            case Node::ATTRIBUTE_NODE:
+            case txXPathNodeType::DOCUMENT_NODE:
+            case txXPathNodeType::ATTRIBUTE_NODE:
             default:
             {
                 // this won't match anything as we walk up the tree
                 // but it's what the spec says to do
                 nodeTest = new txNameTest(0, txXPathAtoms::_asterix, 0,
-                                          (Node::NodeType)currNode->getNodeType());
+                                          txXPathNodeUtils::getNodeType(currNode));
                 break;
             }
         }
@@ -205,36 +206,33 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
 
     // level = "single"
     if (aLevel == eLevelSingle) {
-        Node* node = currNode;
-        while (node) {
-            if (aFromPattern && node != currNode &&
-                aFromPattern->matches(node, aContext)) {
+        txXPathTreeWalker walker(currNode);
+        do {
+            if (aFromPattern && !walker.isOnNode(currNode) &&
+                aFromPattern->matches(walker.getCurrentPosition(), aContext)) {
                 break;
             }
 
-            if (countPattern->matches(node, aContext)) {
-                aValues.add(NS_INT32_TO_PTR(getSiblingCount(node, countPattern,
+            if (countPattern->matches(walker.getCurrentPosition(), aContext)) {
+                aValues.add(NS_INT32_TO_PTR(getSiblingCount(walker, countPattern,
                                                             aContext)));
                 break;
             }
 
-            node = node->getXPathParent();
-        }
+        } while (walker.moveToParent());
 
         // Spec says to only match ancestors that are decendants of the
         // ancestor that matches the from-pattern, so keep going to make
         // sure that there is an ancestor that does.
         if (aFromPattern && aValues.getLength()) {
-            node = node->getXPathParent();
-            while (node) {
-                if (aFromPattern->matches(node, aContext)) {
+            PRBool hasParent;
+            while ((hasParent = walker.moveToParent())) {
+                if (aFromPattern->matches(walker.getCurrentPosition(), aContext)) {
                     break;
                 }
-
-                node = node->getXPathParent();
             }
 
-            if (!node) {
+            if (!hasParent) {
                 aValues.clear();
             }
         }
@@ -242,23 +240,21 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
     // level = "multiple"
     else if (aLevel == eLevelMultiple) {
         // find all ancestor-or-selfs that matches count until...
-        Node* node = currNode;
+        txXPathTreeWalker walker(currNode);
         MBool matchedFrom = MB_FALSE;
-        while (node) {
-            if (aFromPattern && node != currNode &&
-                aFromPattern->matches(node, aContext)) {
+        do {
+            if (aFromPattern && !walker.isOnNode(currNode) &&
+                aFromPattern->matches(walker.getCurrentPosition(), aContext)) {
                 //... we find one that matches from
                 matchedFrom = MB_TRUE;
                 break;
             }
 
-            if (countPattern->matches(node, aContext)) {
-                aValues.add(NS_INT32_TO_PTR(getSiblingCount(node, countPattern,
+            if (countPattern->matches(walker.getCurrentPosition(), aContext)) {
+                aValues.add(NS_INT32_TO_PTR(getSiblingCount(walker, countPattern,
                                                             aContext)));
             }
-
-            node = node->getXPathParent();
-        }
+        } while (walker.moveToParent());
 
         // Spec says to only match ancestors that are decendants of the
         // ancestor that matches the from-pattern, so if none did then
@@ -269,23 +265,22 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
     }
     // level = "any"
     else if (aLevel == eLevelAny) {
-        Node* node = currNode;
         PRInt32 value = 0;
         MBool matchedFrom = MB_FALSE;
 
-        while (node) {
-            if (aFromPattern && node != currNode &&
-                aFromPattern->matches(node, aContext)) {
+        txXPathTreeWalker walker(currNode);
+        do {
+            if (aFromPattern && !walker.isOnNode(currNode) &&
+                aFromPattern->matches(walker.getCurrentPosition(), aContext)) {
                 matchedFrom = MB_TRUE;
                 break;
             }
 
-            if (countPattern->matches(node, aContext)) {
+            if (countPattern->matches(walker.getCurrentPosition(), aContext)) {
                 ++value;
             }
 
-            node = getPrevInDocumentOrder(node);
-        }
+        } while (getPrevInDocumentOrder(walker));
 
         // Spec says to only count nodes that follows the first node that
         // matches the from pattern. So so if none did then we shouldn't
@@ -439,34 +434,29 @@ txXSLTNumber::getCounters(Expr* aGroupSize, Expr* aGroupSeparator,
 }
 
 PRInt32
-txXSLTNumber::getSiblingCount(Node* aNode, txPattern* aCountPattern,
+txXSLTNumber::getSiblingCount(txXPathTreeWalker& aWalker,
+                              txPattern* aCountPattern,
                               txIMatchContext* aContext)
 {
     PRInt32 value = 1;
-    Node* node = aNode->getPreviousSibling();
-    
-    while (node) {
-        if (aCountPattern->matches(node, aContext)) {
+    while (aWalker.moveToPreviousSibling()) {
+        if (aCountPattern->matches(aWalker.getCurrentPosition(), aContext)) {
             ++value;
         }
-        node = node->getPreviousSibling();
     }
     return value;
 }
 
-Node*
-txXSLTNumber::getPrevInDocumentOrder(Node* aNode)
+PRBool
+txXSLTNumber::getPrevInDocumentOrder(txXPathTreeWalker& aWalker)
 {
-    Node* prev = aNode->getPreviousSibling();
-    if (prev) {
-        Node* lastChild = prev->getLastChild();
-        while (lastChild) {
-            prev = lastChild;
-            lastChild = prev->getLastChild();
+    if (aWalker.moveToPreviousSibling()) {
+        while (aWalker.moveToLastChild()) {
+            // do nothing
         }
-        return prev;
+        return PR_TRUE;
     }
-    return aNode->getXPathParent();
+    return aWalker.moveToParent();
 }
 
 #define TX_CHAR_RANGE(ch, a, b) if (ch < a) return MB_FALSE; \

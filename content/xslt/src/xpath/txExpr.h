@@ -36,7 +36,6 @@
 #define TRANSFRMX_EXPR_H
 
 #include "baseutils.h"
-#include "dom.h"
 #include "List.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -53,6 +52,7 @@ class txIParseContext;
 class txIMatchContext;
 class txIEvalContext;
 class txNodeSet;
+class txXPathNode;
 
 /**
  * A Base Class for all XSL Expressions
@@ -212,13 +212,14 @@ public:
      * standalone. The NodeTest node() is different to the
      * Pattern "node()" (document node isn't matched)
      */
-    virtual MBool matches(Node* aNode, txIMatchContext* aContext) = 0;
+    virtual PRBool matches(const txXPathNode& aNode,
+                           txIMatchContext* aContext) = 0;
     virtual double getDefaultPriority() = 0;
     virtual void toString(nsAString& aDest) = 0;
 };
 
 #define TX_DECL_NODE_TEST \
-    MBool matches(Node* aNode, txIMatchContext* aContext); \
+    PRBool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
     double getDefaultPriority(); \
     void toString(nsAString& aDest)
 
@@ -233,7 +234,7 @@ public:
      * principal node type
      */
     txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
-               Node::NodeType aNodeType);
+               PRUint16 aNodeType);
 
     ~txNameTest();
 
@@ -243,7 +244,7 @@ private:
     nsCOMPtr<nsIAtom> mPrefix;
     nsCOMPtr<nsIAtom> mLocalName;
     PRInt32 mNamespace;
-    Node::NodeType mNodeType;
+    PRUint16 mNodeType;
 };
 
 /*
@@ -362,10 +363,10 @@ public:
     TX_DECL_EXPR;
 
 private:
-    void fromDescendants(Node* node, txIMatchContext* aContext,
-                         txNodeSet* nodes);
-    void fromDescendantsRev(Node* node, txIMatchContext* aContext,
-                            txNodeSet* nodes);
+    void fromDescendants(const txXPathNode& aNode, txIMatchContext* aCs,
+                         txNodeSet* aNodes);
+    void fromDescendantsRev(const txXPathNode& aNode, txIMatchContext* aCs,
+                            txNodeSet* aNodes);
 
     nsAutoPtr<txNodeTest> mNodeTest;
     LocationStepType mAxisIdentifier;
@@ -619,7 +620,7 @@ private:
      * Selects from the descendants of the context node
      * all nodes that match the Expr
      */
-    nsresult evalDescendants(Expr* aStep, Node* aNode,
+    nsresult evalDescendants(Expr* aStep, const txXPathNode& aNode,
                              txIMatchContext* aContext,
                              txNodeSet* resNodes);
 };

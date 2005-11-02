@@ -154,7 +154,7 @@ public:
 class txCopyBase : public txInstruction
 {
 protected:
-    nsresult copyNode(Node* aNode, txExecutionState& aEs);
+    nsresult copyNode(const txXPathNode& aNode, txExecutionState& aEs);
 };
 
 class txCopy : public txCopyBase

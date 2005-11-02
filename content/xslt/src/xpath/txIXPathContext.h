@@ -43,10 +43,12 @@
 #include "nsIAtom.h"
 #include "txError.h"
 
-class txAExprResult;
 class FunctionCall;
-class Node;
+class nsAString;
+class nsIAtom;
+class txAExprResult;
 class txResultRecycler;
+class txXPathNode;
 
 /*
  * txIParseContext
@@ -114,7 +116,7 @@ public:
      * Is whitespace stripping allowed for the given node?
      * See http://www.w3.org/TR/xslt#strip
      */
-    virtual MBool isStripSpaceAllowed(Node* aNode) = 0;
+    virtual MBool isStripSpaceAllowed(const txXPathNode& aNode) = 0;
 
     /**
      * Returns a pointer to the private context
@@ -132,7 +134,7 @@ public:
 #define TX_DECL_MATCH_CONTEXT \
     nsresult getVariable(PRInt32 aNamespace, nsIAtom* aLName, \
                          txAExprResult*& aResult); \
-    MBool isStripSpaceAllowed(Node* aNode); \
+    MBool isStripSpaceAllowed(const txXPathNode& aNode); \
     void* getPrivateContext(); \
     txResultRecycler* recycler(); \
     void receiveError(const nsAString& aMsg, nsresult aRes)
@@ -147,7 +149,7 @@ public:
     /*
      * Get the context node.
      */
-    virtual Node* getContextNode() = 0;
+    virtual const txXPathNode& getContextNode() = 0;
 
     /*
      * Get the size of the context node set.
@@ -163,7 +165,7 @@ public:
 
 #define TX_DECL_EVAL_CONTEXT \
     TX_DECL_MATCH_CONTEXT; \
-    Node* getContextNode(); \
+    const txXPathNode& getContextNode(); \
     PRUint32 size(); \
     PRUint32 position()
 
