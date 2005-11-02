@@ -183,7 +183,6 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
     nsCOMPtr<nsIURI> baseURL;
     sourceDoc->GetBaseURL(*getter_AddRefs(baseURL));
     doc->SetBaseURL(baseURL);
-    // XXX We might want to call SetDefaultStylesheets here
 
     // Notify the contentsink that the document is created
     nsCOMPtr<nsITransformObserver> observer = do_QueryReferent(mObserver);

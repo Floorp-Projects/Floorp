@@ -460,7 +460,7 @@ txFnStartElementContinueTopLevel(PRInt32 aNamespaceID,
 {
     aState.mHandlerTable = gTxTopHandler;
 
-    return NS_ERROR_XSLT_GET_NEW_HANDLER;
+    return NS_XSLT_GET_NEW_HANDLER;
 }
 
 nsresult
@@ -1158,7 +1158,7 @@ txFnStartElementStartTopVar(PRInt32 aNamespaceID,
 {
     aState.mHandlerTable = gTxTemplateHandler;
 
-    return NS_ERROR_XSLT_GET_NEW_HANDLER;
+    return NS_XSLT_GET_NEW_HANDLER;
 }
 
 nsresult
@@ -1168,7 +1168,7 @@ txFnTextStartTopVar(const nsAString& aStr, txStylesheetCompilerState& aState)
 
     aState.mHandlerTable = gTxTemplateHandler;
 
-    return NS_ERROR_XSLT_GET_NEW_HANDLER;
+    return NS_XSLT_GET_NEW_HANDLER;
 }
 
 /**
@@ -1844,7 +1844,7 @@ txFnStartElementContinueTemplate(PRInt32 aNamespaceID,
 {
     aState.mHandlerTable = gTxTemplateHandler;
 
-    return NS_ERROR_XSLT_GET_NEW_HANDLER;
+    return NS_XSLT_GET_NEW_HANDLER;
 }
 
 nsresult
@@ -1855,7 +1855,7 @@ txFnTextContinueTemplate(const nsAString& aStr,
 
     aState.mHandlerTable = gTxTemplateHandler;
 
-    return NS_ERROR_XSLT_GET_NEW_HANDLER;
+    return NS_XSLT_GET_NEW_HANDLER;
 }
 
 /*
@@ -2434,7 +2434,7 @@ txFnStartElementStartRTF(PRInt32 aNamespaceID,
 
     aState.mHandlerTable = gTxTemplateHandler;
 
-    return NS_ERROR_XSLT_GET_NEW_HANDLER;
+    return NS_XSLT_GET_NEW_HANDLER;
 }
 
 nsresult
@@ -2450,7 +2450,7 @@ txFnTextStartRTF(const nsAString& aStr, txStylesheetCompilerState& aState)
 
     aState.mHandlerTable = gTxTemplateHandler;
 
-    return NS_ERROR_XSLT_GET_NEW_HANDLER;
+    return NS_XSLT_GET_NEW_HANDLER;
 }
 
 /*

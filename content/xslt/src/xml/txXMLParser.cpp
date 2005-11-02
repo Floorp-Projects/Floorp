@@ -107,7 +107,7 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
     nsCOMPtr<nsISyncLoadDOMService> loader =
       do_GetService("@mozilla.org/content/syncload-dom-service;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = loader->LoadDocument(channel, loaderUri, getter_AddRefs(theDocument));
+    rv = loader->LoadDocumentAsXML(channel, loaderUri, getter_AddRefs(theDocument));
     if (NS_FAILED(rv) || !theDocument) {
         aErrMsg.Append(NS_LITERAL_STRING("Document load of ") + 
                        aHref + NS_LITERAL_STRING(" failed."));

@@ -38,17 +38,25 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMArray.h"
+#include "nsIAuthPrompt.h"
 #include "nsICharsetAlias.h"
 #include "nsIDocument.h"
 #include "nsIExpatSink.h"
+#include "nsIHttpEventSink.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIParser.h"
+#include "nsIRequestObserver.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIStreamConverterService.h"
 #include "nsISyncLoadDOMService.h"
 #include "nsIURI.h"
+#include "nsIWindowWatcher.h"
 #include "nsIXMLContentSink.h"
+#include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
 #include "txAtoms.h"
@@ -57,16 +65,42 @@
 #include "XMLUtils.h"
 
 static const char kLoadAsData[] = "loadAsData";
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
+
+static void
+getSpec(nsIChannel* aChannel, nsAString& aSpec)
+{
+    if (!aChannel) {
+        return;
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    aChannel->GetOriginalURI(getter_AddRefs(uri));
+    if (!uri) {
+        return;
+    }
+
+    nsCAutoString spec;
+    uri->GetSpec(spec);
+    aSpec.Append(NS_ConvertUTF8toUCS2(spec));
+}
 
 class txStylesheetSink : public nsIXMLContentSink,
-                         public nsIExpatSink
+                         public nsIExpatSink,
+                         public nsIStreamListener,
+                         public nsIHttpEventSink,
+                         public nsIInterfaceRequestor
 {
 public:
-    txStylesheetSink(txStylesheetCompiler* aCompiler);
+    txStylesheetSink(txStylesheetCompiler* aCompiler, nsIParser* aParser);
     virtual ~txStylesheetSink();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIEXPATSINK
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSIHTTPEVENTSINK
+    NS_DECL_NSIINTERFACEREQUESTOR
 
     // nsIContentSink
     NS_IMETHOD WillBuildModel(void) { return NS_OK; }
@@ -79,22 +113,34 @@ public:
 
 private:
     nsRefPtr<txStylesheetCompiler> mCompiler;
+    nsCOMPtr<nsIStreamListener> mListener;
+    PRPackedBool mCheckedForXML;
 
 protected:
     // This exists soly to supress a warning from nsDerivedSafe
     txStylesheetSink();
 };
 
-txStylesheetSink::txStylesheetSink(txStylesheetCompiler* aCompiler)
-    : mCompiler(aCompiler)
+txStylesheetSink::txStylesheetSink(txStylesheetCompiler* aCompiler,
+                                   nsIParser* aParser)
+    : mCompiler(aCompiler),
+      mCheckedForXML(PR_FALSE)
 {
+    mListener = do_QueryInterface(aParser);
 }
 
 txStylesheetSink::~txStylesheetSink()
 {
 }
 
-NS_IMPL_ISUPPORTS2(txStylesheetSink, nsIXMLContentSink, nsIExpatSink)
+NS_IMPL_ISUPPORTS7(txStylesheetSink,
+                   nsIXMLContentSink,
+                   nsIContentSink,
+                   nsIExpatSink,
+                   nsIStreamListener,
+                   nsIRequestObserver,
+                   nsIHttpEventSink,
+                   nsIInterfaceRequestor)
 
 NS_IMETHODIMP
 txStylesheetSink::HandleStartElement(const PRUnichar *aName,
@@ -109,6 +155,7 @@ txStylesheetSink::HandleStartElement(const PRUnichar *aName,
         mCompiler->startElement(aName, aAtts, aAttsCount, (PRInt32)aIndex);
     if (NS_FAILED(rv)) {
         mCompiler->cancel(rv);
+
         return rv;
     }
     
@@ -121,6 +168,7 @@ txStylesheetSink::HandleEndElement(const PRUnichar *aName)
     nsresult rv = mCompiler->endElement();
     if (NS_FAILED(rv)) {
         mCompiler->cancel(rv);
+
         return rv;
     }
 
@@ -181,7 +229,8 @@ NS_IMETHODIMP
 txStylesheetSink::ReportError(const PRUnichar *aErrorText,
                               const PRUnichar *aSourceText)
 {
-    mCompiler->cancel(NS_ERROR_FAILURE);
+    mCompiler->cancel(NS_ERROR_FAILURE, aErrorText, aSourceText);
+
     return NS_OK;
 }
 
@@ -189,6 +238,176 @@ NS_IMETHODIMP
 txStylesheetSink::DidBuildModel(PRInt32 aQualityLevel)
 {  
     return mCompiler->doneLoading();
+}
+
+NS_IMETHODIMP
+txStylesheetSink::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+                                  nsIInputStream *aInputStream,
+                                  PRUint32 aOffset, PRUint32 aCount)
+{
+    if (!mCheckedForXML) {
+        nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);
+        nsCOMPtr<nsIDTD> dtd;
+        parser->GetDTD(getter_AddRefs(dtd));
+        if (dtd) {
+            mCheckedForXML = PR_TRUE;
+            if (!(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
+                nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+                nsAutoString spec;
+                getSpec(channel, spec);
+                mCompiler->cancel(NS_ERROR_XSLT_WRONG_MIME_TYPE, nsnull,
+                                  spec.get());
+
+                return NS_ERROR_XSLT_WRONG_MIME_TYPE;
+            }
+        }
+    }
+
+    return mListener->OnDataAvailable(aRequest, aContext, aInputStream,
+                                      aOffset, aCount);
+}
+
+NS_IMETHODIMP
+txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
+{
+    nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
+    PRInt32 charsetSource = kCharsetFromDocTypeDefault;
+
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+
+    // check channel's charset...
+    nsCAutoString charsetVal;
+    nsresult rv = channel->GetContentCharset(charsetVal);
+    if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsICharsetAlias> calias =
+            do_GetService(NS_CHARSETALIAS_CONTRACTID);
+
+        if (calias) {
+            nsAutoString preferred;
+            rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetVal),
+                                      preferred);
+            if (NS_SUCCEEDED(rv)) {            
+                charset = preferred;
+                charsetSource = kCharsetFromChannel;
+             }
+        }
+    }
+
+    nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);
+    parser->SetDocumentCharset(charset, charsetSource);
+
+    nsCAutoString contentType;
+    channel->GetContentType(contentType);
+
+    // Time to sniff! Note: this should go away once file channels do
+    // sniffing themselves.
+    nsCOMPtr<nsIURI> uri;
+    channel->GetURI(getter_AddRefs(uri));
+    PRBool sniff;
+    if (NS_SUCCEEDED(uri->SchemeIs("file", &sniff)) && sniff &&
+        contentType.Equals(UNKNOWN_CONTENT_TYPE)) {
+        nsCOMPtr<nsIStreamConverterService> serv =
+            do_GetService("@mozilla.org/streamConverters;1", &rv);
+        if (NS_SUCCEEDED(rv)) {
+            NS_ConvertASCIItoUCS2 from(UNKNOWN_CONTENT_TYPE);
+            nsCOMPtr<nsIStreamListener> converter;
+            rv = serv->AsyncConvertData(from.get(),
+                                        NS_LITERAL_STRING("*/*").get(),
+                                        mListener,
+                                        aContext,
+                                        getter_AddRefs(converter));
+            if (NS_SUCCEEDED(rv)) {
+                mListener = converter;
+            }
+        }
+    }
+
+    return mListener->OnStartRequest(aRequest, aContext);
+}
+
+NS_IMETHODIMP
+txStylesheetSink::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
+                                nsresult aStatusCode)
+{
+    PRBool success = PR_TRUE;
+
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
+    if (httpChannel) {
+        httpChannel->GetRequestSucceeded(&success);
+    }
+
+    nsresult result = aStatusCode;
+    if (!success) {
+        // XXX We sometimes want to use aStatusCode here, but the parser resets
+        //     it to NS_ERROR_NOINTERFACE because we don't implement
+        //     nsIHTMLContentSink.
+        result = NS_ERROR_XSLT_NETWORK_ERROR;
+    }
+    else if (!mCheckedForXML) {
+        nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);
+        nsCOMPtr<nsIDTD> dtd;
+        parser->GetDTD(getter_AddRefs(dtd));
+        if (dtd && !(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
+            result = NS_ERROR_XSLT_WRONG_MIME_TYPE;
+        }
+    }
+
+    if (NS_FAILED(result)) {
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+        nsAutoString spec;
+        getSpec(channel, spec);
+        mCompiler->cancel(result, nsnull, spec.get());
+    }
+
+    return mListener->OnStopRequest(aRequest, aContext, aStatusCode);
+}
+
+NS_IMETHODIMP
+txStylesheetSink::OnRedirect(nsIHttpChannel *aHttpChannel,
+                             nsIChannel *aNewChannel)
+{
+    NS_ENSURE_ARG_POINTER(aNewChannel);
+
+    nsresult rv;
+    nsCOMPtr<nsIScriptSecurityManager> secMan =
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> oldURI;
+    rv = aHttpChannel->GetURI(getter_AddRefs(oldURI)); // The original URI
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIURI> newURI;
+    rv = aNewChannel->GetURI(getter_AddRefs(newURI)); // The new URI
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return secMan->CheckSameOriginURI(oldURI, newURI);
+}
+
+NS_IMETHODIMP
+txStylesheetSink::GetInterface(const nsIID& aIID, void** aResult)
+{
+    if (aIID.Equals(NS_GET_IID(nsIAuthPrompt))) {
+        NS_ENSURE_ARG(aResult);
+        *aResult = nsnull;
+
+        nsresult rv;
+        nsCOMPtr<nsIWindowWatcher> wwatcher =
+            do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIAuthPrompt> prompt;
+        rv = wwatcher->GetNewAuthPrompter(nsnull, getter_AddRefs(prompt));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsIAuthPrompt* rawPtr = nsnull;
+        prompt.swap(rawPtr);
+        *aResult = rawPtr;
+
+        return NS_OK;
+    }
+
+    return QueryInterface(aIID, aResult);
 }
 
 class txCompileObserver : public txACompileObserver
@@ -200,7 +419,7 @@ public:
 
     TX_DECL_ACOMPILEOBSERVER;
 
-    nsresult startLoad(nsIURI* aUri, txStylesheetSink* aSink,
+    nsresult startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
                        nsIURI* aReferrerUri);
 
 protected:
@@ -251,25 +470,43 @@ txCompileObserver::loadURI(const nsAString& aUri,
     nsresult rv = NS_NewURI(getter_AddRefs(uri), aUri);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsRefPtr<txStylesheetSink> sink = new txStylesheetSink(aCompiler);
-    NS_ENSURE_TRUE(sink, NS_ERROR_OUT_OF_MEMORY);
-
-    return startLoad(uri, sink, nsnull);
+    return startLoad(uri, aCompiler, nsnull);
 }
 
 void
 txCompileObserver::onDoneCompiling(txStylesheetCompiler* aCompiler,
-                                   nsresult aResult)
+                                   nsresult aResult,
+                                   const PRUnichar *aErrorText,
+                                   const PRUnichar *aParam)
 {
-    mProcessor->setStylesheet(aCompiler->getStylesheet());
+    if (NS_SUCCEEDED(aResult)) {
+        mProcessor->setStylesheet(aCompiler->getStylesheet());
+    }
+    else {
+        mProcessor->reportError(aResult, aErrorText, aParam);
+    }
 }
 
 nsresult
-txCompileObserver::startLoad(nsIURI* aUri, txStylesheetSink* aSink,
+txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
                              nsIURI* aReferrerUri)
 {
+    nsresult rv;
+    if (aReferrerUri) {
+        nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = securityManager->CheckLoadURI(aReferrerUri, aUri,
+                                           nsIScriptSecurityManager::STANDARD);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = securityManager->CheckSameOriginURI(aReferrerUri, aUri);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     nsCOMPtr<nsIChannel> channel;
-    nsresult rv = NS_NewChannel(getter_AddRefs(channel), aUri);
+    rv = NS_NewChannel(getter_AddRefs(channel), aUri);
     NS_ENSURE_SUCCESS(rv, rv);
 
     channel->SetLoadGroup(mLoadGroup);
@@ -285,41 +522,19 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetSink* aSink,
         }
     }
 
-    nsAutoString charset(NS_LITERAL_STRING("UTF-8"));
-    PRInt32 charsetSource = kCharsetFromDocTypeDefault;
-
-    // check channel's charset...
-    nsCAutoString charsetVal;
-    rv = channel->GetContentCharset(charsetVal);
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsICharsetAlias> calias =
-            do_GetService(NS_CHARSETALIAS_CONTRACTID);
-
-        if (calias) {
-            nsAutoString preferred;
-            rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetVal),
-                                      preferred);
-            if (NS_SUCCEEDED(rv)) {            
-                charset = preferred;
-                charsetSource = kCharsetFromChannel;
-             }
-        }
-    }
-
-    static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
     nsCOMPtr<nsIParser> parser = do_CreateInstance(kCParserCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Set the parser as the stream listener for the document loader...
-    nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser, &rv);
-    NS_ENSURE_TRUE(listener, rv);
+    nsRefPtr<txStylesheetSink> sink = new txStylesheetSink(aCompiler, parser);
+    NS_ENSURE_TRUE(sink, NS_ERROR_OUT_OF_MEMORY);
 
-    parser->SetDocumentCharset(charset, charsetSource);
+    channel->SetNotificationCallbacks(sink);
+
     parser->SetCommand(kLoadAsData);
-    parser->SetContentSink(aSink);
+    parser->SetContentSink(sink);
     parser->Parse(aUri);
 
-    return channel->AsyncOpen(listener, nsnull);
+    return channel->AsyncOpen(sink, parser);
 }
 
 nsresult
@@ -338,10 +553,7 @@ TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
         new txStylesheetCompiler(NS_ConvertUTF8toUCS2(uri), observer);
     NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
-    nsRefPtr<txStylesheetSink> sink = new txStylesheetSink(compiler);
-    NS_ENSURE_TRUE(sink, NS_ERROR_OUT_OF_MEMORY);
-
-    return observer->startLoad(aUri, sink, aReferrerUri);
+    return observer->startLoad(aUri, compiler, aReferrerUri);
 }
 
 /**
@@ -494,13 +706,16 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
             do_GetService("@mozilla.org/content/syncload-dom-service;1");
         NS_ENSURE_TRUE(mLoadService, NS_ERROR_OUT_OF_MEMORY);
     }
+
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri), aUri);
     NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIChannel> channel;
     rv = NS_NewChannel(getter_AddRefs(channel), uri);
     NS_ENSURE_SUCCESS(rv, rv);
-    // This is probably called by js, a loadGroup for the channeldoesn't
+
+    // This is probably called by js, a loadGroup for the channel doesn't
     // make sense.
 
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
@@ -513,13 +728,16 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
             httpChannel->SetReferrer(mReferrer);
         }
     }
+
     nsCOMPtr<nsIDOMDocument> document;
     rv = mLoadService->LoadDocument(channel, mReferrer,
                                     getter_AddRefs(document));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = handleNode(document, aCompiler);
     if (NS_FAILED(rv)) {
-        aCompiler->cancel(rv);
+        nsCAutoString spec;
+        uri->GetSpec(spec);
+        aCompiler->cancel(rv, nsnull, NS_ConvertUTF8toUCS2(spec).get());
         return rv;
     }
 
@@ -528,7 +746,9 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
 }
 
 void txSyncCompileObserver::onDoneCompiling(txStylesheetCompiler* aCompiler,
-                                            nsresult aResult)
+                                            nsresult aResult,
+                                            const PRUnichar *aErrorText,
+                                            const PRUnichar *aParam)
 {
 }
 

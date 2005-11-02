@@ -336,7 +336,8 @@ txDriver::Release()
 }
 
 void
-txDriver::onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult)
+txDriver::onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult,
+                          const PRUnichar *aErrorText, const PRUnichar *aParam)
 {
 }
 
