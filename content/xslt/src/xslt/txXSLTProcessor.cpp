@@ -93,8 +93,6 @@ txXSLTProcessor::shutdown()
     txXSLTAtoms::shutdown();
 
     txHandlerTable::shutdown();
-
-    TX_LG_DELETE;
 }
 
 
