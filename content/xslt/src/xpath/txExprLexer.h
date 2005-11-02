@@ -39,18 +39,15 @@
  *
  * This class was ported from XSL:P, an open source Java based 
  * XSLT processor, written by yours truly.
-**/
-class Token {
-
+ */
+class Token
+{
 public:
 
-    //---------------/
-    //- Token Types -/
-    //---------------/
-
-    //-- LF - changed from static const short declarations to enum
-    //-- token types
-    enum TokenType {
+    /**
+     * Token types
+     */
+    enum Type {
         //-- Trivial Tokens
         ERROR = 0,
         NULL_TOKEN,
@@ -67,16 +64,16 @@ public:
          * start of tokens for 3.7, bullet 1
          * ExprLexer::nextIsOperatorToken bails if the tokens aren't
          * consecutive.
-         **/
+         */
         COMMA,
         AT_SIGN,
         L_PAREN,
         L_BRACKET,
         AXIS_IDENTIFIER,
-          //-------------/
-         //- operators -/
-        //-------------/
 
+        /**
+         * operators
+         */
         //-- boolean ops
         AND_OP, // 16
         OR_OP,
@@ -101,7 +98,7 @@ public:
         UNION_OP,
         /**
          * end of tokens for 3.7, bullet 1 -/
-         **/
+         */
         //-- node type tokens
         COMMENT, // 32
         NODE,
@@ -114,36 +111,83 @@ public:
 
 
     /**
-     * Default Constructor
-    **/
-    Token();
-    Token(short type);
-    Token(const nsAString& value, short type);
-    Token(PRUnichar uniChar, short type);
-    /**
-     * Copy Constructor
-    **/
-    Token(const Token& token);
+     * Constructors
+     */
+    typedef nsASingleFragmentString::const_char_iterator iterator;
 
-    ~Token();
-    nsString value;
-    short type;
-}; //--Token
+    Token(iterator aStart, iterator aEnd, Type aType)
+        : mStart(aStart),
+          mEnd(aEnd),
+          mType(aType),
+          mNext(nsnull),
+          mPrevious(nsnull)
+    {
+    }
+    Token(iterator aChar, Type aType)
+        : mStart(aChar),
+          mEnd(aChar + 1),
+          mType(aType),
+          mNext(nsnull),
+          mPrevious(nsnull)
+    {
+    }
+
+    const nsDependentSingleFragmentSubstring Value()
+    {
+        return Substring(mStart, mEnd);
+    }
+
+    iterator mStart, mEnd;
+    Type mType;
+    Token* mNext;
+    // XXX mPrevious needed for pushBack(), do we pushBack more than once?
+    Token* mPrevious;
+};
 
 /**
  * A class for splitting an "Expr" String into tokens and
  * performing  basic Lexical Analysis.
  *
  * This class was ported from XSL:P, an open source Java based XSL processor
-**/
-class ExprLexer {
+ */
 
-
+class txExprLexer
+{
 public:
 
-    /*
+    txExprLexer();
+    ~txExprLexer();
+
+    /**
+     * Parse the given string.
+     * returns an error result if lexing failed.
+     * The given string must outlive the use of the lexer, as the
+     * generated Tokens point to Substrings of it.
+     * mPosition points to the offending location in case of an error.
+     */
+    nsresult parse(const nsASingleFragmentString& aPattern);
+
+    typedef nsASingleFragmentString::const_char_iterator iterator;
+    iterator mPosition;
+
+    /**
+     * Functions for iterating over the TokenList
+     */
+
+    Token* nextToken();
+    Token* peek()
+    {
+        return mCurrentItem;
+    }
+    void pushBack();
+    PRBool hasMoreTokens()
+    {
+        return (mCurrentItem->mType != Token::END);
+    }
+
+    /**
      * Trivial Tokens
-    */
+     */
     //-- LF, changed to enum
     enum _TrivialTokens {
         D_QUOTE        = '\"',
@@ -173,77 +217,32 @@ public:
         TX_LF             = '\r'
     };
 
-    enum _error_consts {
-        ERROR_UNRESOLVED_VAR_REFERENCE = 0,
-        ERROR_OP_EXPECTED,
-        ERROR_UNCLOSED_LITERAL,
-        ERROR_COLON,
-        ERROR_BANG,
-        ERROR_UNKNOWN_CHAR
-    };
-    PRUint32 errorPos;
-    short errorCode;
-
-    /*
-     * Default Token Set
-    */
-    static const Token TOKENS[];
-    static const short NUMBER_OF_TOKENS;
-
-    /**
-     * Constructor for ExprLexer
-    **/
-    ExprLexer(const nsAFlatString& pattern);
-
-    ~ExprLexer();
-
-    /**
-     * Functions for iterating over the TokenList
-    **/
-
-    Token* nextToken();
-    Token* peek();
-    void   pushBack();
-    MBool  hasMoreTokens();
-
 private:
 
-    struct TokenListItem {
-        Token* token;
-        TokenListItem* next;
-        TokenListItem* previous;
-    };
+    Token* mCurrentItem;
+    Token* mFirstItem;
+    Token* mLastItem;
 
-    TokenListItem* currentItem;
-    TokenListItem* firstItem;
-    TokenListItem* lastItem;
+    int mTokenCount;
 
-    int tokenCount;
-
-    Token* prevToken;
-    Token endToken;
-
-    void addToken(Token* token);
+    void addToken(Token* aToken);
 
     /**
      * Returns true if the following Token should be an operator.
      * This is a helper for the first bullet of [XPath 3.7]
      *  Lexical Structure
-     **/
-    MBool nextIsOperatorToken(Token* token);
+     */
+    PRBool nextIsOperatorToken(Token* aToken);
 
     /**
      * Returns true if the given character represents a numeric letter (digit)
      * Implemented in ExprLexerChars.cpp
-    **/
-    static MBool isXPathDigit(PRUnichar ch)
+     */
+    static PRBool isXPathDigit(PRUnichar ch)
     {
         return (ch >= '0' && ch <= '9');
     }
-
-    void parse(const nsAFlatString& pattern);
-
-}; //-- ExprLexer
+};
 
 #endif
 

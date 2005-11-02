@@ -23,7 +23,7 @@
  * 
  */
 
-#include "Expr.h"
+#include "FunctionLib.h"
 #include "ExprResult.h"
 #include "nsIAtom.h"
 #include "txIXPathContext.h"
@@ -55,12 +55,16 @@ FunctionCall::~FunctionCall()
 /**
  * Adds the given parameter to this FunctionCall's parameter list
  * @param expr the Expr to add to this FunctionCall's parameter list
-**/
-nsresult FunctionCall::addParam(Expr* aExpr)
+ */
+nsresult
+FunctionCall::addParam(Expr* aExpr)
 {
-    if (aExpr)
-        params.add(aExpr);
-    return NS_OK;
+    NS_ASSERTION(aExpr, "missing expression");
+    nsresult rv = params.add(aExpr);
+    if (NS_FAILED(rv)) {
+        delete aExpr;
+    }
+    return rv;
 } //-- addParam
 
 /*
@@ -182,4 +186,28 @@ void FunctionCall::toString(nsAString& aDest)
         expr->toString(aDest);
     }
     aDest.Append(PRUnichar(')'));
+}
+
+/**
+ * Implementation of txErrorFunctionCall
+ *
+ * Used for fcp and unknown extension functions.
+ */
+
+nsresult
+txErrorFunctionCall::evaluate(txIEvalContext* aContext,
+                              txAExprResult** aResult)
+{
+    *aResult = nsnull;
+
+    return NS_ERROR_XPATH_BAD_EXTENSION_FUNCTION;
+}
+
+nsresult
+txErrorFunctionCall::getNameAtom(nsIAtom** aAtom)
+{
+    *aAtom = mLName;
+    NS_IF_ADDREF(*aAtom);
+
+    return NS_OK;
 }

@@ -36,20 +36,6 @@
 #include "txIXPathContext.h"
 
 /**
- * Creates a new AdditiveExpr using the given operator
-**/
-AdditiveExpr::AdditiveExpr(Expr* leftExpr, Expr* rightExpr, short op) {
-    this->op = op;
-    this->leftExpr = leftExpr;
-    this->rightExpr = rightExpr;
-} //-- AdditiveExpr
-
-AdditiveExpr::~AdditiveExpr() {
-    delete leftExpr;
-    delete rightExpr;
-} //-- ~AdditiveExpr
-
-/**
  * Evaluates this Expr based on the given context node and processor state
  * @param context the context node for evaluation of this Expr
  * @param ps the ContextState containing the stack information needed

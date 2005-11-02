@@ -189,13 +189,14 @@ getExprAttr(txStylesheetAttr* aAttributes,
         return rv;
     }
 
-    aExpr = ExprParser::createExpr(attr->mValue, &aState);
-    if (!aExpr && (aRequired || !aState.fcp())) {
-        // XXX ErrorReport: XPath parse failure
-        return NS_ERROR_XPATH_PARSE_FAILURE;
+    rv = txExprParser::createExpr(attr->mValue, &aState,
+                                  getter_Transfers(aExpr));
+    if (NS_SUCCEEDED(rv) && !aExpr && (aRequired || !aState.fcp())) {
+        // XXX ErrorReport: empty required attr
+        return NS_ERROR_XSLT_PARSE_FAILURE;
     }
 
-    return NS_OK;
+    return rv;
 }
 
 nsresult
@@ -214,7 +215,7 @@ getAVTAttr(txStylesheetAttr* aAttributes,
         return rv;
     }
 
-    aAVT = ExprParser::createAttributeValueTemplate(attr->mValue, &aState);
+    aAVT = txExprParser::createAttributeValueTemplate(attr->mValue, &aState);
     if (!aAVT && (aRequired || !aState.fcp())) {
         // XXX ErrorReport: XPath parse failure
         return NS_ERROR_XPATH_PARSE_FAILURE;
@@ -1214,7 +1215,7 @@ txFnStartLRE(PRInt32 aNamespaceID,
         }
         
         nsAutoPtr<Expr> avt(
-              ExprParser::createAttributeValueTemplate(attr->mValue, &aState));
+              txExprParser::createAttributeValueTemplate(attr->mValue, &aState));
         NS_ENSURE_TRUE(avt, NS_ERROR_XPATH_PARSE_FAILURE);
 
         instr = new txLREAttribute(attr->mNamespaceID, attr->mLocalName,
