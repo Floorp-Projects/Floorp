@@ -18,10 +18,12 @@
  * (C) 1999 Keith Visco. All Rights Reserved.
  * 
  * Contributor(s): 
- * Keith Visco 
+ * Keith Visco, kvisco@ziplink.net
  *    -- original author.
+ * Lidong, lidong520@263.net
+ *    -- unicode bug fix
  *
- * $Id: txXMLUtils.cpp,v 1.2 1999/11/15 07:12:49 nisheeth%netscape.com Exp $
+ * $Id: txXMLUtils.cpp,v 1.3 2005/11/02 07:33:36 kvisco%ziplink.net Exp $
  */
 /**
  * An XML utility class
@@ -137,15 +139,15 @@ MBool XMLUtils::isWhitespace(const String& text) {
 void XMLUtils::normalizeAttributeValue(String& attValue) {
     Int32 size = attValue.length();
     //-- make copy of chars
-    char* chars = new char[size+1];
-    attValue.toChar(chars);
+    UNICODE_CHAR* chars = new UNICODE_CHAR[size];
+    attValue.toUnicode(chars);
     //-- clear attValue
     attValue.clear();
 
     Int32 cc = 0;
     MBool addSpace = MB_FALSE;
     while ( cc < size) {
-        char ch = chars[cc++];
+        UNICODE_CHAR ch = chars[cc++];
         switch (ch) {
             case ' ':
                 if ( attValue.length() > 0) addSpace = MB_TRUE;
@@ -154,6 +156,12 @@ void XMLUtils::normalizeAttributeValue(String& attValue) {
                 break;
             case '\n':
                 attValue.append("&#xA;");
+                break;
+            case '\'':
+                attValue.append("&apos;");
+                break;
+            case '\"':
+                attValue.append("&quot;");
                 break;
             default:
                 if ( addSpace) {
@@ -173,15 +181,15 @@ void XMLUtils::normalizeAttributeValue(String& attValue) {
 void XMLUtils::normalizePIValue(String& piValue) {
     Int32 size = piValue.length();
     //-- make copy of chars
-    char* chars = new char[size+1];
-    piValue.toChar(chars);
+    UNICODE_CHAR* chars = new UNICODE_CHAR[size];
+    piValue.toUnicode(chars);
     //-- clear attValue
     piValue.clear();
 
     Int32 cc = 0;
-    char prevCh = '\0';
+    UNICODE_CHAR prevCh = 0x0000;
     while ( cc < size) {
-        char ch = chars[cc++];
+        UNICODE_CHAR ch = chars[cc++];
         switch (ch) {
             case '>':
                 if ( prevCh == '?' ) {
@@ -231,31 +239,30 @@ void XMLUtils::stripSpace
         MBool stripAllTrailSpace    )
 {
 
-    char lastToken, token;
-    Int32 oldSize = data.length();
-    char* chars = new char[oldSize+1];
-    data.toChar(chars);
+    UNICODE_CHAR lastToken, token;
 
-    lastToken = '\0';
-    Int32 total = 0;
+    lastToken = 0x0000;
+    Int32 len   = data.length();
+    Int32 oldLen = dest.length();
 
     // indicates we have seen at least one
     // non whitespace charater
     MBool validChar = MB_FALSE;
 
-    for (int i = 0; i < oldSize; i++) {
-        token = chars[i];
+
+    for (Int32 i = 0; i < len; i++) {
+        token = data.charAt(i);
         switch(token) {
-            case ' ':
-            case '\t':
-            case '\n':
-            case '\r':
-                token = ' ';
+            case 0x0020: // space
+            case 0x0009: // tab
+            case 0x000A: // LF
+            case 0x000D: // CR
+                token = 0x0020;
                 if (stripAllLeadSpace && (!validChar)) break;
-                if (lastToken != token) chars[total++] = token;
+                if (lastToken != token) dest.append(token);
                 break;
             default:
-                chars[total++] = token;
+                dest.append(token);
                 validChar = MB_TRUE;
                 break;
         }
@@ -263,13 +270,10 @@ void XMLUtils::stripSpace
     }
 
     //-- remove last trailing space if necessary
-    if (stripAllTrailSpace)
-        if ((total > 0) && (chars[total-1] == ' ')) --total;
-
-    if (validChar) {
-        chars[total] = '\0'; //-- add Null terminator
-        dest.append(chars);
+    if (stripAllTrailSpace) {
+        len = dest.length();
+        if ( (len > oldLen)  && (dest.charAt(len-1) == 0x0020) ) dest.setLength(len-1);
     }
-    delete chars;
+
 } //-- stripSpace
 
