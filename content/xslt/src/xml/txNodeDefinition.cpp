@@ -369,7 +369,7 @@ nsresult NodeDefinition::getBaseURI(nsAString& aURI)
       default:
         break;
     }
-    node = node->getParentNode();
+    node = node->getXPathParent();
   }
 
   PRInt32 count = baseUrls.Count();
