@@ -511,9 +511,8 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
 void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML)
 {
     nsresult rv = NS_OK;
-    nsCOMPtr<nsIAtom> atom;
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-    content->GetTag(getter_AddRefs(atom));
+    nsIAtom *atom = content->Tag();
 
     mDontAddCurrent = (atom == txHTMLAtoms::script);
 
@@ -587,8 +586,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement)
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
     NS_ASSERTION(content, "Can't QI to nsIContent");
 
-    nsCOMPtr<nsIAtom> atom;
-    content->GetTag(getter_AddRefs(atom));
+    nsIAtom *atom = content->Tag();
 
     if (mTableState == ADDED_TBODY) {
         NS_ASSERTION(atom == txHTMLAtoms::tbody,

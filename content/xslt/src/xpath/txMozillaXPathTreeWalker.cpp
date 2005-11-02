@@ -367,8 +367,8 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
 
     if (aNode.isContent()) {
         if (aNode.mContent->IsContentOfType(nsIContent::eELEMENT)) {
-            nsIAtom* localName;
-            aNode.mContent->GetTag(&localName);
+            nsIAtom* localName = aNode.mContent->Tag();
+            NS_ADDREF(localName);
 
             return localName;
         }
