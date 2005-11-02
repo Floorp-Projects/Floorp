@@ -29,7 +29,7 @@
  *       - foo//bar would not match properly if there was more than
  *         one node in the NodeSet (nodes) on the final iteration
  *
- * $Id: txPathExpr.cpp,v 1.2 2005/11/02 07:33:38 kvisco%ziplink.net Exp $
+ * $Id: txPathExpr.cpp,v 1.3 2005/11/02 07:33:39 kvisco%ziplink.net Exp $
  */
 
 #include "Expr.h"
@@ -212,8 +212,46 @@ double PathExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs)
 **/
 MBool PathExpr::matches(Node* node, Node* context, ContextState* cs) {
 
+
     if ( (!node)  || (expressions.getLength() == 0))
        return MB_FALSE;
+
+    //-- for performance reasons, I've duplicated some code
+    //-- here. If we only have one expression, there is no
+    //-- reason to create NodeSets and go through the
+    //-- while loop below. This resulted in a decent
+    //-- performance gain in XSL:P, so I'm doing it here also,
+    //-- even though I have no real code in place to test the
+    //-- performance of transformiix.
+
+    if (expressions.getLength() == 1) {
+        PathExprItem* pxi = (PathExprItem*)expressions.get(0);
+        switch(pxi->ancestryOp) {
+            case ANCESTOR_OP:
+            {
+                Node* ancestor = node;
+                while (ancestor = cs->getParentNode(ancestor))  {
+                    if (pxi->pExpr->matches(node, ancestor, cs))
+                        return MB_TRUE;
+                }
+                break;
+            }
+            case PARENT_OP:
+            {
+                Node* parent = cs->getParentNode(node);
+                if (parent) return pxi->pExpr->matches(node, parent, cs);
+                break;
+            }
+            default:
+                return pxi->pExpr->matches(node, context, cs);
+
+        }
+
+        return MB_FALSE;
+    }
+
+
+    //-- if we reach here we have subpaths...
 
     NodeSet nodes(3);
     NodeSet tmpNodes(3);
