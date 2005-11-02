@@ -25,7 +25,7 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: txExpr.h,v 1.7 2005/11/02 07:33:32 kvisco%ziplink.net Exp $
+ * $Id: txExpr.h,v 1.8 2005/11/02 07:33:33 kvisco%ziplink.net Exp $
  */
 
 
@@ -40,11 +40,12 @@
 #include "baseutils.h"
 #include "MITREObject.h"
 #include "primitives.h"
+#include "NamespaceResolver.h"
 
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:32 $
+  @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:33 $
 */
 
 #ifndef TRANSFRMX_EXPR_H
@@ -58,7 +59,7 @@ class NodeSet;
 /**
  * The expression context and state class used when evaluating XPath Expressions.
 **/
-class ContextState : public ErrorObserver {
+class ContextState : public NamespaceResolver, public ErrorObserver {
 
 public:
 
@@ -103,6 +104,7 @@ public:
      * <B>Note:</B> I will be moving this functionality elsewhere soon
     **/
     virtual void sortByDocumentOrder(NodeSet* nodes) = 0;
+
 
 }; //-- ContextState
 
@@ -639,7 +641,15 @@ public:
 
 private:
 
+    static const String WILD_CARD;
+
     String name;
+
+    MBool isNamespaceWild;
+
+    MBool isNameWild;
+
+    String prefix;
 
 }; //-- ElementExpr
 
