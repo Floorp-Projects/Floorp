@@ -32,11 +32,20 @@
 #ifndef MITREXSL_EXPRPARSER_H
 #define MITREXSL_EXPRPARSER_H
 
-#include "TxString.h"
-#include "ExprLexer.h"
-#include "Expr.h"
-#include "List.h"
+#include "baseutils.h"
+#include "txAtom.h"
+#include "txError.h"
+
+class AttributeValueTemplate;
+class Expr;
+class ExprLexer;
+class FunctionCall;
+class LocationStep;
+class PredicateList;
+class String;
+class Token;
 class txIParseContext;
+class txNodeTypeTest;
 
 class ExprParser
 {

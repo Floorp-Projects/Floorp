@@ -31,6 +31,8 @@
 **/
 
 #include "Expr.h"
+#include "ExprResult.h"
+#include "primitives.h"
 
 /**
  * Creates a new AdditiveExpr using the given operator

@@ -32,7 +32,7 @@
  */
 
 #include "Expr.h"
-#include "Nodeset.h"
+#include "NodeSet.h"
 #include "txNodeSetContext.h"
 #include "txSingleNodeContext.h"
 #include "XMLUtils.h"

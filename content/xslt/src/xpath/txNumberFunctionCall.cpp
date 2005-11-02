@@ -35,6 +35,7 @@
 
 #include "FunctionLib.h"
 #include <math.h>
+#include "NodeSet.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "XMLDOMUtils.h"
