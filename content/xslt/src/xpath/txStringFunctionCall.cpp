@@ -169,7 +169,7 @@ ExprResult* StringFunctionCall::evaluate(Node* aContext, ContextState* aCs)
             // check for NaN or +/-Inf
             if (Double::isNaN(start) ||
                 Double::isInfinite(start) ||
-                start + 0.5 >= src.length())
+                start >= src.length() + 0.5)
                 return new StringResult();
 
             start = floor(start + 0.5) - 1;
