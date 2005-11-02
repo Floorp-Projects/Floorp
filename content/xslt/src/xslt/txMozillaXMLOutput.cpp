@@ -63,6 +63,7 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsINameSpaceManager.h"
 #include "nsICSSStyleSheet.h"
+#include "txStringUtils.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
 
@@ -76,7 +77,7 @@ static NS_DEFINE_CID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
     if (!mCurrentNode)                                  \
         return
 
-txMozillaXMLOutput::txMozillaXMLOutput(const String& aRootName,
+txMozillaXMLOutput::txMozillaXMLOutput(const nsAString& aRootName,
                                        PRInt32 aRootNsID,
                                        txOutputFormat* aFormat,
                                        nsIDOMDocument* aSourceDocument,
@@ -123,9 +124,9 @@ NS_IMPL_ISUPPORTS3(txMozillaXMLOutput,
                    nsIScriptLoaderObserver,
                    nsICSSLoaderObserver);
 
-void txMozillaXMLOutput::attribute(const String& aName,
+void txMozillaXMLOutput::attribute(const nsAString& aName,
                                    const PRInt32 aNsID,
-                                   const String& aValue)
+                                   const nsAString& aValue)
 {
     if (!mParentNode)
         // XXX Signal this? (can't add attributes after element closed)
@@ -143,9 +144,9 @@ void txMozillaXMLOutput::attribute(const String& aName,
 
     if ((mOutputFormat.mMethod == eHTMLOutput) && (aNsID == kNameSpaceID_None)) {
         // Outputting HTML as XHTML, lowercase attribute names
-        nsAutoString lowerName(aName);
-        ToLowerCase(lowerName);
-        element->SetAttributeNS(NS_LITERAL_STRING(""), lowerName,
+        nsAutoString lowerName;
+        TX_ToLowerCase(aName, lowerName);
+        element->SetAttributeNS(nsString(), lowerName,
                                 aValue);
     }
     else {
@@ -155,7 +156,7 @@ void txMozillaXMLOutput::attribute(const String& aName,
     }
 }
 
-void txMozillaXMLOutput::characters(const String& aData)
+void txMozillaXMLOutput::characters(const nsAString& aData)
 {
     closePrevious(eCloseElement);
 
@@ -166,7 +167,7 @@ void txMozillaXMLOutput::characters(const String& aData)
     mText.Append(aData);
 }
 
-void txMozillaXMLOutput::comment(const String& aData)
+void txMozillaXMLOutput::comment(const nsAString& aData)
 {
     closePrevious(eCloseElement | eFlushText);
 
@@ -192,7 +193,7 @@ void txMozillaXMLOutput::endDocument()
     if (mCreatingNewDocument && !mHaveTitleElement) {
         nsCOMPtr<nsIDOMNSDocument> domDoc = do_QueryInterface(mDocument);
         if (domDoc) {
-            domDoc->SetTitle(NS_LITERAL_STRING(""));
+            domDoc->SetTitle(nsString());
         }
     }
 
@@ -216,7 +217,7 @@ void txMozillaXMLOutput::endDocument()
     SignalTransformEnd();
 }
 
-void txMozillaXMLOutput::endElement(const String& aName, const PRInt32 aNsID)
+void txMozillaXMLOutput::endElement(const nsAString& aName, const PRInt32 aNsID)
 {
     TX_ENSURE_CURRENTNODE;
 
@@ -278,7 +279,7 @@ void txMozillaXMLOutput::getOutputDocument(nsIDOMDocument** aDocument)
     NS_IF_ADDREF(*aDocument);
 }
 
-void txMozillaXMLOutput::processingInstruction(const String& aTarget, const String& aData)
+void txMozillaXMLOutput::processingInstruction(const nsAString& aTarget, const nsAString& aData)
 {
     if (mOutputFormat.mMethod == eHTMLOutput)
         return;
@@ -325,7 +326,7 @@ void txMozillaXMLOutput::startDocument()
     mInTransform = PR_TRUE;
 }
 
-void txMozillaXMLOutput::startElement(const String& aName,
+void txMozillaXMLOutput::startElement(const nsAString& aName,
                                       const PRInt32 aNsID)
 {
     TX_ENSURE_CURRENTNODE;
@@ -585,7 +586,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
         if (value.IsEmpty())
             return;
         
-        ToLowerCase(httpEquiv);
+        TX_ToLowerCase(httpEquiv);
         nsCOMPtr<nsIAtom> header = dont_AddRef(NS_NewAtom(httpEquiv));
         processHTTPEquiv(header, value);
     }
@@ -636,7 +637,7 @@ void txMozillaXMLOutput::wrapChildren(nsIDOMNode* aCurrentNode,
 }
 
 nsresult
-txMozillaXMLOutput::createResultDocument(const String& aName, PRInt32 aNsID,
+txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
                                          nsIDOMDocument* aSourceDocument,
                                          nsIDOMDocument* aResultDocument)
 {
@@ -722,7 +723,7 @@ txMozillaXMLOutput::createResultDocument(const String& aName, PRInt32 aNsID,
             qName.Assign(NS_LITERAL_STRING("html"));
         }
         else {
-            qName.Assign(aName.getConstNSString());
+            qName.Assign(aName);
         }
         nsCOMPtr<nsIDOMDocumentType> documentType;
         rv = implementation->CreateDocumentType(qName,
