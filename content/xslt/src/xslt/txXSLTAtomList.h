@@ -133,5 +133,10 @@ TX_ATOM(vendorUrl, "vendor-url");
 
 // XSLT attribute values
 TX_ATOM(any, "any");
+TX_ATOM(ascending, "ascending");
+TX_ATOM(descending, "descending");
+TX_ATOM(lowerFirst, "lower-first");
 TX_ATOM(multiple, "multiple");
 TX_ATOM(single, "single");
+TX_ATOM(upperFirst, "upper-first");
+TX_ATOM(yes, "yes");

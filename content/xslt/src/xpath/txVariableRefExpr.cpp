@@ -81,16 +81,16 @@ ExprResult* VariableRefExpr::evaluate(txIEvalContext* aContext)
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
-void VariableRefExpr::toString(String& aDest)
+void VariableRefExpr::toString(nsAString& aDest)
 {
     aDest.Append(PRUnichar('$'));
     if (mPrefix) {
-        String prefix;
+        nsAutoString prefix;
         TX_GET_ATOM_STRING(mPrefix, prefix);
         aDest.Append(prefix);
         aDest.Append(PRUnichar(':'));
     }
-    String lname;
+    nsAutoString lname;
     TX_GET_ATOM_STRING(mLocalName, lname);
     aDest.Append(lname);
 } //-- toString

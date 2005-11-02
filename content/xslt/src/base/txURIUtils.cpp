@@ -50,16 +50,10 @@
 #ifdef TX_EXE
 //- Constants -/
 
-const String URIUtils::HTTP_PROTOCOL(NS_LITERAL_STRING("http"));
-const String URIUtils::FILE_PROTOCOL(NS_LITERAL_STRING("file"));
 const char   URIUtils::HREF_PATH_SEP  = '/';
 const char   URIUtils::DEVICE_SEP     = '|';
 const char   URIUtils::PORT_SEP       = ':';
 const char   URIUtils::PROTOCOL_SEP   = ':';
-const short  URIUtils::PROTOCOL_MODE  = 1;
-const short  URIUtils::HOST_MODE      = 2;
-const short  URIUtils::PORT_MODE      = 3;
-const short  URIUtils::PATH_MODE      = 4;
 
 
 /**
@@ -70,8 +64,7 @@ const short  URIUtils::PATH_MODE      = 4;
  * @exception java.io.FileNotFoundException when the file could not be
  * found
 **/
-istream* URIUtils::getInputStream
-    (const String& href, String& errMsg)
+istream* URIUtils::getInputStream(const nsAString& href, nsAString& errMsg)
 {
 
     istream* inStream = 0;
@@ -95,31 +88,22 @@ istream* URIUtils::getInputStream
     * Returns the document base of the href argument
     * @return the document base of the given href
 **/
-void URIUtils::getDocumentBase(const String& href, String& dest) {
-    //-- use temp str so the subString method doesn't destroy dest
-    String docBase;
-
-    if (!href.IsEmpty()) {
-
-        int idx = -1;
-        //-- check for URL
-        ParsedURI* uri = parseURI(href);
-        if ( !uri->isMalformed ) {
-            idx = href.RFindChar(HREF_PATH_SEP);
-        }
-        else {
-            //-- The following contains a fix from Shane Hathaway
-            //-- to handle the case when both "\" and "/" appear in filename
-            int idx2 = href.RFindChar(HREF_PATH_SEP);
-            //idx = href.RFindChar(File.separator);
-            idx = -1; //-- hack change later
-            if (idx2 > idx) idx = idx2;
-        }
-        if (idx >= 0) href.subString(0,idx, docBase);
-        delete uri;
+void URIUtils::getDocumentBase(const nsAFlatString& href, nsAString& dest)
+{
+    if (href.IsEmpty()) {
+        return;
     }
-    dest.Append(docBase);
-} //-- getDocumentBase
+
+    nsAFlatString::const_char_iterator temp;
+    href.BeginReading(temp);
+    PRUint32 iter = href.Length();
+    while (iter > 0) {
+        if (temp[--iter] == HREF_PATH_SEP) {
+            dest.Append(Substring(href, 0, iter));
+            break;
+        }
+    }
+}
 #endif
 
 /**
@@ -127,8 +111,8 @@ void URIUtils::getDocumentBase(const String& href, String& dest) {
  * if necessary.
  * The new resolved href will be appended to the given dest String
 **/
-void URIUtils::resolveHref(const String& href, const String& base,
-                           String& dest) {
+void URIUtils::resolveHref(const nsAString& href, const nsAString& base,
+                           nsAString& dest) {
     if (base.IsEmpty()) {
         dest.Append(href);
         return;
@@ -140,15 +124,15 @@ void URIUtils::resolveHref(const String& href, const String& base,
 
 #ifndef TX_EXE
     nsCOMPtr<nsIURI> pURL;
-    String resultHref;
+    nsAutoString resultHref;
     nsresult result = NS_NewURI(getter_AddRefs(pURL), base);
     if (NS_SUCCEEDED(result)) {
         NS_MakeAbsoluteURI(resultHref, href, pURL);
         dest.Append(resultHref);
     }
 #else
-    String documentBase;
-    getDocumentBase(base, documentBase);
+    nsAutoString documentBase;
+    getDocumentBase(PromiseFlatString(base), documentBase);
 
     //-- check for URL
     ParsedURI* uri = parseURI(href);
@@ -160,7 +144,7 @@ void URIUtils::resolveHref(const String& href, const String& base,
 
 
     //-- join document base + href
-    String xHref;
+    nsAutoString xHref;
     if (!documentBase.IsEmpty()) {
         xHref.Append(documentBase);
         if (documentBase.CharAt(documentBase.Length()-1) != HREF_PATH_SEP)
@@ -183,27 +167,8 @@ void URIUtils::resolveHref(const String& href, const String& base,
     }
     delete uri;
     delete newUri;
-    //cout << "\n---\nhref='" << href << "', base='" << base << "'\ndocumentBase='" << documentBase << "', dest='" << dest << "'\n---\n";
 #endif
 } //-- resolveHref
-
-void URIUtils::getFragmentIdentifier(const String& href, String& frag) {
-    PRInt32 pos;
-    pos = href.RFindChar('#');
-    if(pos != kNotFound)
-        href.subString(pos+1, frag);
-    else
-        frag.Truncate();
-} //-- getFragmentIdentifier
-
-void URIUtils::getDocumentURI(const String& href, String& docUri) {
-    PRInt32 pos;
-    pos = href.RFindChar('#');
-    if(pos != kNotFound)
-        href.subString(0,pos,docUri);
-    else
-        docUri = href;
-} //-- getDocumentURI
 
 #ifdef TX_EXE
 istream* URIUtils::openStream(ParsedURI* uri) {
@@ -211,7 +176,7 @@ istream* URIUtils::openStream(ParsedURI* uri) {
     // check protocol
 
     istream* inStream = 0;
-    if ( FILE_PROTOCOL.Equals(uri->protocol) ) {
+    if (uri->protocol.Equals(NS_LITERAL_STRING("file"))) {
         ifstream* inFile =
             new ifstream(NS_LossyConvertUCS2toASCII(uri->path).get(),
                          ios::in);
@@ -221,22 +186,21 @@ istream* URIUtils::openStream(ParsedURI* uri) {
     return inStream;
 } //-- openStream
 
-URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
-
+URIUtils::ParsedURI* URIUtils::parseURI(const nsAString& aUri) {
+    const nsAFlatString& uri = PromiseFlatString(aUri);
     ParsedURI* uriTokens = new ParsedURI;
     if (!uriTokens)
-        return NULL;
+        return nsnull;
     uriTokens->isMalformed = MB_FALSE;
 
-    short mode = PROTOCOL_MODE;
+    ParseMode mode = PROTOCOL_MODE;
 
     // look for protocol
     int totalCount = uri.Length();
     int charCount = 0;
     PRUnichar prevCh = '\0';
     int fslash = 0;
-    String buffer;
-    buffer.getNSString().SetCapacity(uri.Length());
+    nsAutoString buffer;
     while ( charCount < totalCount ) {
         PRUnichar ch = uri.CharAt(charCount++);
         switch(ch) {

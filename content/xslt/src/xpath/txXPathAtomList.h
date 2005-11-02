@@ -36,24 +36,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+TX_ATOM(_and, "and");
 TX_ATOM(_asterix, "*");
 TX_ATOM(boolean, "boolean");
 TX_ATOM(ceiling, "ceiling");
+TX_ATOM(comment, "comment");
 TX_ATOM(concat, "concat");
 TX_ATOM(contains, "contains");
 TX_ATOM(count, "count");
+TX_ATOM(div, "div");
 TX_ATOM(_false, "false");
 TX_ATOM(floor, "floor");
 TX_ATOM(id, "id");
 TX_ATOM(lang, "lang");
 TX_ATOM(last, "last");
 TX_ATOM(localName, "local-name");
+TX_ATOM(mod, "mod");
 TX_ATOM(name, "name");
 TX_ATOM(namespaceUri, "namespace-uri");
+TX_ATOM(node, "node");
 TX_ATOM(normalizeSpace, "normalize-space");
 TX_ATOM(_not, "not");
 TX_ATOM(number, "number");
+TX_ATOM(_or, "or");
 TX_ATOM(position, "position");
+TX_ATOM(processingInstruction, "processing-instruction");
 TX_ATOM(round, "round");
 TX_ATOM(startsWith, "starts-with");
 TX_ATOM(string, "string");
@@ -62,6 +69,7 @@ TX_ATOM(substring, "substring");
 TX_ATOM(substringAfter, "substring-after");
 TX_ATOM(substringBefore, "substring-before");
 TX_ATOM(sum, "sum");
+TX_ATOM(text, "text");
 TX_ATOM(translate, "translate");
 TX_ATOM(_true, "true");
 

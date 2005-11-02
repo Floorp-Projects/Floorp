@@ -38,12 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txNodeSorter.h"
-#include <string.h>
-#include "Names.h"
 #include "ProcessorState.h"
 #include "txXPathResultComparator.h"
 #include "txAtoms.h"
 #include "txForwardContext.h"
+#include "txStringUtils.h"
 
 /*
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
@@ -77,7 +76,7 @@ MBool txNodeSorter::addSortElement(Element* aSortElement)
     }
 
     // Get common attributes
-    String attrValue;
+    nsAutoString attrValue;
 
     // Select
     if (aSortElement->hasAttr(txXSLTAtoms::select, kNameSpaceID_None))
@@ -99,10 +98,10 @@ MBool txNodeSorter::addSortElement(Element* aSortElement)
     // Order
     MBool ascending;
     MBool hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::order, attrValue);
-    if (!hasAttr || attrValue.Equals(ASCENDING_VALUE)) {
+    if (!hasAttr || TX_StringEqualsAtom(attrValue, txXSLTAtoms::ascending)) {
         ascending = MB_TRUE;
     }
-    else if (attrValue.Equals(DESCENDING_VALUE)) {
+    else if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::descending)) {
         ascending = MB_FALSE;
     }
     else {
@@ -113,23 +112,24 @@ MBool txNodeSorter::addSortElement(Element* aSortElement)
 
 
     // Create comparator depending on datatype
-    String dataType;
+    nsAutoString dataType;
     hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::dataType, dataType);
-    if (!hasAttr || dataType.Equals(TEXT_VALUE)) {
+    if (!hasAttr || TX_StringEqualsAtom(dataType, txXSLTAtoms::text)) {
         // Text comparator
         
         // Language
-        String lang;
+        nsAutoString lang;
         if (!getAttrAsAVT(aSortElement, txXSLTAtoms::lang, lang))
             lang.Append(DEFAULT_LANG);
 
         // Case-order 
         MBool upperFirst;
         hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::caseOrder, attrValue);
-        if (!hasAttr || attrValue.Equals(UPPER_FIRST_VALUE)) {
+        if (!hasAttr || TX_StringEqualsAtom(attrValue,
+                                            txXSLTAtoms::upperFirst)) {
             upperFirst = MB_TRUE;
         }
-        else if (attrValue.Equals(LOWER_FIRST_VALUE)) {
+        else if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::lowerFirst)) {
             upperFirst = MB_FALSE;
         }
         else {
@@ -142,7 +142,7 @@ MBool txNodeSorter::addSortElement(Element* aSortElement)
                                                         upperFirst,
                                                         lang);
     }
-    else if (dataType.Equals(NUMBER_VALUE)) {
+    else if (TX_StringEqualsAtom(dataType, txXSLTAtoms::number)) {
         // Number comparator
         key->mComparator = new txResultNumberComparator(ascending);
     }
@@ -265,11 +265,11 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
 
 MBool txNodeSorter::getAttrAsAVT(Element* aSortElement,
                                  txAtom* aAttrName,
-                                 String& aResult)
+                                 nsAString& aResult)
 {
     aResult.Truncate();
 
-    String attValue;
+    nsAutoString attValue;
     if (!aSortElement->getAttr(aAttrName, kNameSpaceID_None, attValue))
         return MB_FALSE;
 

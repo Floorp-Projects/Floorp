@@ -50,6 +50,8 @@
 #include "prmem.h"
 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
+#else
+#include "txStringUtils.h"
 #endif
 
 #define kAscending (1<<0)
@@ -57,7 +59,7 @@ static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
 txResultStringComparator::txResultStringComparator(MBool aAscending,
                                                    MBool aUpperFirst,
-                                                   const String& aLanguage)
+                                                   const nsAFlatString& aLanguage)
 {
     mSorting = 0;
     if (aAscending)
@@ -76,7 +78,7 @@ txResultStringComparator::~txResultStringComparator()
 }
 
 #ifndef TX_EXE
-nsresult txResultStringComparator::init(const String& aLanguage)
+nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
 {
     nsresult rv;
 
@@ -85,7 +87,7 @@ nsresult txResultStringComparator::init(const String& aLanguage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsILocale> locale;
-    rv = localeService->NewLocale(aLanguage.getConstNSString().get(),
+    rv = localeService->NewLocale(aLanguage.get(),
                                   getter_AddRefs(locale));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -110,19 +112,19 @@ TxObject* txResultStringComparator::createSortableValue(ExprResult* aExprRes)
 #ifdef TX_EXE
     aExprRes->stringValue(val->mStr);
     // We don't support case-order on standalone
-    val->mStr.toLowerCase();
+    TX_ToLowerCase(val->mStr);
 #else
     if (!mCollation)
         return 0;
 
-    val->mCaseKey = new String;
+    val->mCaseKey = new nsString;
     if (!val->mCaseKey) {
         delete val;
         return 0;
     }
 
-    aExprRes->stringValue(*(String *)val->mCaseKey);
-    const nsString& nsCaseKey = ((String *)val->mCaseKey)->getConstNSString();
+    nsString& nsCaseKey = *(nsString *)val->mCaseKey;
+    aExprRes->stringValue(nsCaseKey);
     if (nsCaseKey.IsEmpty()) {
         return val;        
     }
@@ -190,9 +192,9 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
         return ((mSorting & kAscending) ? 1 : -1) * result;
 
     if ((strval1->mCaseLength == 0) && (strval1->mLength != 0)) {
-        String* caseString = (String *)strval1->mCaseKey;
+        nsString* caseString = (nsString *)strval1->mCaseKey;
         rv = createRawSortKey(kCollationCaseSensitive,
-                              caseString->getConstNSString(),
+                              *caseString,
                               (PRUint8**)&strval1->mCaseKey, 
                               &strval1->mCaseLength);
         if (NS_FAILED(rv)) {
@@ -204,9 +206,9 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
         delete caseString;
     }
     if ((strval2->mCaseLength == 0) && (strval2->mLength != 0)) {
-        String* caseString = (String *)strval2->mCaseKey;
+        nsString* caseString = (nsString *)strval2->mCaseKey;
         rv = createRawSortKey(kCollationCaseSensitive,
-                              caseString->getConstNSString(),
+                              *caseString,
                               (PRUint8**)&strval2->mCaseKey, 
                               &strval2->mCaseLength);
         if (NS_FAILED(rv)) {
@@ -225,7 +227,8 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
         return -1;
     }
 
-    return ((mSorting & kAscending) ? 1 : -1) * ((mSorting & kUpperFirst) ? 1 : -1) * result;
+    return ((mSorting & kAscending) ? 1 : -1) *
+           ((mSorting & kUpperFirst) ? 1 : -1) * result;
 #endif
 }
 
@@ -258,7 +261,7 @@ txResultStringComparator::StringValue::~StringValue()
     if (mCaseLength > 0)
         PR_Free((PRUint8*)mCaseKey);
     else
-        delete (String*)mCaseKey;
+        delete (nsString*)mCaseKey;
 }
 #endif
 

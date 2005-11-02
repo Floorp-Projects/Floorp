@@ -57,7 +57,7 @@ short BooleanResult::getResultType() {
     return ExprResult::BOOLEAN;
 } //-- getResultType
 
-void BooleanResult::stringValue(String& str)  {
+void BooleanResult::stringValue(nsAString& str)  {
     if ( value ) str.Append(NS_LITERAL_STRING("true"));
     else str.Append(NS_LITERAL_STRING("false"));
 } //-- toString

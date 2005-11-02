@@ -30,46 +30,46 @@
 //
 
 #include "dom.h"
-#include "ArrayList.h"
+#include "nsVoidArray.h"
 #include "txURIUtils.h"
 #include "txAtoms.h"
 #include <string.h>
 
-NodeDefinition::NodeDefinition(NodeType type, const String& name,
-                               const String& value, Document* owner)
+NodeDefinition::NodeDefinition(NodeType type, const nsAString& name,
+                               const nsAString& value, Document* owner)
 {
   nodeName = name;
   Init(type, value, owner);
 }
 
-NodeDefinition::NodeDefinition(NodeType aType, const String& aValue,
+NodeDefinition::NodeDefinition(NodeType aType, const nsAString& aValue,
                                Document* aOwner)
 {
   switch (aType)
   {
     case CDATA_SECTION_NODE:
     {
-      nodeName.Append(NS_LITERAL_STRING("#cdata-section"));
+      nodeName = NS_LITERAL_STRING("#cdata-section");
       break;
     }
     case COMMENT_NODE:
     {
-      nodeName.Append(NS_LITERAL_STRING("#comment"));
+      nodeName = NS_LITERAL_STRING("#comment");
       break;
     }
     case DOCUMENT_NODE:
     {
-      nodeName.Append(NS_LITERAL_STRING("#document"));
+      nodeName = NS_LITERAL_STRING("#document");
       break;
     }
     case DOCUMENT_FRAGMENT_NODE:
     {
-      nodeName.Append(NS_LITERAL_STRING("#document-fragment"));
+      nodeName = NS_LITERAL_STRING("#document-fragment");
       break;
     }
     case TEXT_NODE:
     {
-      nodeName.Append(NS_LITERAL_STRING("#text"));
+      nodeName = NS_LITERAL_STRING("#text");
       break;
     }
     default:
@@ -90,18 +90,18 @@ NodeDefinition::~NodeDefinition()
 }
 
 void
-NodeDefinition::Init(NodeType aType, const String& aValue,
+NodeDefinition::Init(NodeType aType, const nsAString& aValue,
                      Document* aOwner)
 {
   nodeType = aType;
   nodeValue = aValue;
   ownerDocument = aOwner;
 
-  parentNode = NULL;
-  previousSibling = NULL;
-  nextSibling = NULL;;
-  firstChild = NULL;
-  lastChild = NULL;
+  parentNode = nsnull;
+  previousSibling = nsnull;
+  nextSibling = nsnull;;
+  firstChild = nsnull;
+  lastChild = nsnull;
 
   length = 0;
 
@@ -124,18 +124,20 @@ void NodeDefinition::DeleteChildren()
     }
 
   length = 0;
-  firstChild = NULL;
-  lastChild = NULL;
+  firstChild = nsnull;
+  lastChild = nsnull;
 }
 
-const String& NodeDefinition::getNodeName() const
+nsresult NodeDefinition::getNodeName(nsAString& aName) const
 {
-  return nodeName;
+  aName = nodeName;
+  return NS_OK;
 }
 
-const String& NodeDefinition::getNodeValue()
+nsresult NodeDefinition::getNodeValue(nsAString& aValue)
 {
-  return nodeValue;
+  aValue = nodeValue;
+  return NS_OK;
 }
 
 unsigned short NodeDefinition::getNodeType() const
@@ -191,7 +193,7 @@ Node* NodeDefinition::item(PRUint32 index)
       return pSelectNode;
     }
 
-  return NULL;
+  return nsnull;
 }
 
 PRUint32 NodeDefinition::getLength()
@@ -199,7 +201,7 @@ PRUint32 NodeDefinition::getLength()
   return length;
 }
 
-void NodeDefinition::setNodeValue(const String& newNodeValue)
+void NodeDefinition::setNodeValue(const nsAString& newNodeValue)
 {
   nodeValue = newNodeValue;
 }
@@ -258,7 +260,7 @@ NodeDefinition* NodeDefinition::implRemoveChild(NodeDefinition* oldChild)
 
 MBool NodeDefinition::hasChildNodes() const
 {
-  if (firstChild != NULL)
+  if (firstChild)
     return MB_TRUE;
   else
     return MB_FALSE;
@@ -272,9 +274,9 @@ MBool NodeDefinition::getLocalName(txAtom** aLocalName)
   return MB_TRUE;
 }
 
-const String& NodeDefinition::getNamespaceURI()
+nsresult NodeDefinition::getNamespaceURI(nsAString& aNSURI)
 {
-  return txNamespaceManager::getNamespaceURI(getNamespaceID());
+  return txNamespaceManager::getNamespaceURI(getNamespaceID(), aNSURI);
 }
 
 PRInt32 NodeDefinition::getNamespaceID()
@@ -303,10 +305,10 @@ PRInt32 NodeDefinition::lookupNamespaceID(txAtom* aPrefix)
   if (node->getNodeType() != Node::ELEMENT_NODE)
     node = node->getXPathParent();
 
-  String name(NS_LITERAL_STRING("xmlns:"));
+  nsAutoString name(NS_LITERAL_STRING("xmlns:"));
   if (aPrefix && (aPrefix != txXMLAtoms::_empty)) {
       //  We have a prefix, search for xmlns:prefix attributes.
-      String prefixString;
+      nsAutoString prefixString;
       TX_GET_ATOM_STRING(aPrefix, prefixString);
       name.Append(prefixString);
   }
@@ -317,14 +319,15 @@ PRInt32 NodeDefinition::lookupNamespaceID(txAtom* aPrefix)
   }
   Attr* xmlns;
   while (node && node->getNodeType() == Node::ELEMENT_NODE) {
-    String nsURI;
     if ((xmlns = ((Element*)node)->getAttributeNode(name))) {
       /*
        * xmlns:foo = "" makes "" a valid URI, so get that.
        * xmlns = "" resolves to 0 (null Namespace) (caught above)
        * in Element::getNamespaceID()
        */
-      return txNamespaceManager::getNamespaceID(xmlns->getValue());
+      nsAutoString nsURI;
+      xmlns->getNodeValue(nsURI);
+      return txNamespaceManager::getNamespaceID(nsURI);
     }
     node = node->getXPathParent();
   }
@@ -344,23 +347,23 @@ Node* NodeDefinition::getXPathParent()
 //
 // @return base URI for the node
 //
-String NodeDefinition::getBaseURI()
+nsresult NodeDefinition::getBaseURI(nsAString& aURI)
 {
   Node* node = this;
-  ArrayList baseUrls;
-  String url;
-  String attValue;
+  nsStringArray baseUrls;
+  nsAutoString url;
 
   while (node) {
     switch (node->getNodeType()) {
       case Node::ELEMENT_NODE :
         if (((Element*)node)->getAttr(txXMLAtoms::base, kNameSpaceID_XML,
-                                      attValue))
-          baseUrls.add(new String(attValue));
+                                      url))
+          baseUrls.AppendString(url);
         break;
 
       case Node::DOCUMENT_NODE :
-        baseUrls.add(new String(((Document*)node)->getBaseURI()));
+        node->getBaseURI(url);
+        baseUrls.AppendString(url);
         break;
     
       default:
@@ -369,19 +372,18 @@ String NodeDefinition::getBaseURI()
     node = node->getParentNode();
   }
 
-  if (baseUrls.size()) {
-    url = *((String*)baseUrls.get(baseUrls.size()-1));
+  PRInt32 count = baseUrls.Count();
+  if (count) {
+    baseUrls.StringAt(--count, aURI);
 
-    for (int i=baseUrls.size()-2;i>=0;i--) {
-      String dest;
-      URIUtils::resolveHref(*(String*)baseUrls.get(i), url, dest);
-      url = dest;
+    while (count > 0) {
+      nsAutoString dest;
+      URIUtils::resolveHref(*baseUrls[--count], aURI, dest);
+      aURI = dest;
     }
   }
-
-  baseUrls.clear(MB_TRUE);
   
-  return url;
+  return NS_OK;
 } // getBaseURI
 
 /*

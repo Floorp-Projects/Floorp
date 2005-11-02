@@ -63,7 +63,7 @@ ExprResult* RootExpr::evaluate(txIEvalContext* aContext)
  * other #toString() methods for Expressions.
  * @return the String representation of this Expr.
 **/
-void RootExpr::toString(String& dest) {
+void RootExpr::toString(nsAString& dest) {
     if (mSerialize)
         dest.Append(PRUnichar('/'));
 } //-- toString

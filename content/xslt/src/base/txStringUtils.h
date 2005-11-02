@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,16 +12,17 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the TransforMiiX XSLT processor.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Jonas Sicking.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <sicking@bigfoot.com>
+ *   Axel Hecht <axel@pike.org>
  *   Peter Van der Beken <peterv@netscape.com>
+ *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,61 +38,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef TRANSFRMX_NODESORTER_H
-#define TRANSFRMX_NODESORTER_H
+#ifndef txStringUtils_h__
+#define txStringUtils_h__
 
-#include "baseutils.h"
-#include "List.h"
-#include "txAtom.h"
+#include "nsAString.h"
+#include "nsIAtom.h"
 
-class Element;
-class Expr;
-class Node;
-class NodeSet;
-class ProcessorState;
-class TxObject;
-class txXPathResultComparator;
+#ifndef TX_EXE
 
-/*
- * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
- */
+#include "nsUnicharUtils.h"
+typedef nsCaseInsensitiveStringComparator txCaseInsensitiveStringComparator;
 
-class txNodeSorter
+#define TX_ToLowerCase ToLowerCase
+
+#else
+
+// These only work for ASCII ranges!
+
+class txCaseInsensitiveStringComparator
+: public nsStringComparator
 {
 public:
-    txNodeSorter(ProcessorState* aPs);
-    ~txNodeSorter();
-
-    MBool addSortElement(Element* aSortElement);
-    MBool sortNodeSet(NodeSet* aNodes);
-
-private:
-    class SortableNode
-    {
-    public:
-        SortableNode(Node* aNode, int aNValues);
-        void clear(int aNValues);
-        TxObject** mSortValues;
-        Node* mNode;
-    };
-    struct SortKey
-    {
-        Expr* mExpr;
-        txXPathResultComparator* mComparator;
-    };
-    
-    int compareNodes(SortableNode* sNode1,
-                     SortableNode* sNode2,
-                     NodeSet* aNodes);
-
-    MBool getAttrAsAVT(Element* aSortElement,
-                       txAtom* aAttrName,
-                       nsAString& aResult);
-
-    txList mSortKeys;
-    ProcessorState* mPs;
-    int mNKeys;
-    Expr* mDefaultExpr;
+  virtual int operator()(const char_type*, const char_type*, PRUint32 aLength) const;
+  virtual int operator()(char_type, char_type) const;
 };
 
+void TX_ToLowerCase(nsAString& aString);
+void TX_ToLowerCase(const nsAString& aSource, nsAString& aDest);
+
 #endif
+
+/**
+ * Check equality between a string and an atom.
+ */
+static PRBool TX_StringEqualsAtom(const nsAString& aString, nsIAtom* aAtom)
+{
+  const PRUnichar* atom;
+  aAtom->GetUnicode(&atom);
+  return aString.Equals(atom);
+};
+
+#endif // txStringUtils_h__

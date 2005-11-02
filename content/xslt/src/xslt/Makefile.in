@@ -47,8 +47,7 @@ REQUIRES +=	  dom \
 		  $(NULL)
 endif
 
-CPPSRCS = Names.cpp \
-        txOutputFormat.cpp \
+CPPSRCS = txOutputFormat.cpp \
         ProcessorState.cpp \
         txRtfHandler.cpp \
         txTextHandler.cpp \

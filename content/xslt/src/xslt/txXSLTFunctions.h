@@ -97,7 +97,7 @@ public:
      * @return a NodeSet* containing all nodes in doc matching with value
      *         keyValue
      */
-    const NodeSet* getNodes(String& aKeyValue, Document* aDoc);
+    const NodeSet* getNodes(const nsAString& aKeyValue, Document* aDoc);
     
     /*
      * Adds a match/use pair. Returns MB_FALSE if matchString or useString
@@ -211,9 +211,9 @@ public:
     
     PRUnichar       mDecimalSeparator;
     PRUnichar       mGroupingSeparator;
-    String          mInfinity;
+    nsString        mInfinity;
     PRUnichar       mMinusSign;
-    String          mNaN;
+    nsString        mNaN;
     PRUnichar       mPercent;
     PRUnichar       mPerMille;
     PRUnichar       mZeroDigit;

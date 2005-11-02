@@ -37,11 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txTextHandler.h"
-#include "TxString.h"
+#include "nsAString.h"
 
-txTextHandler::txTextHandler(String& aValue, MBool aOnlyText) : mLevel(0),
-                                                                mValue(aValue),
-                                                                mOnlyText(aOnlyText)
+txTextHandler::txTextHandler(nsAString& aValue, MBool aOnlyText) : mLevel(0),
+                                                                   mValue(aValue),
+                                                                   mOnlyText(aOnlyText)
 {
 }
 
@@ -49,19 +49,19 @@ txTextHandler::~txTextHandler()
 {
 }
 
-void txTextHandler::attribute(const String& aName,
+void txTextHandler::attribute(const nsAString& aName,
                               const PRInt32 aNsID,
-                              const String& aValue)
+                              const nsAString& aValue)
 {
 }
 
-void txTextHandler::characters(const String& aData)
+void txTextHandler::characters(const nsAString& aData)
 {
     if (mLevel == 0)
         mValue.Append(aData);
 }
 
-void txTextHandler::comment(const String& aData)
+void txTextHandler::comment(const nsAString& aData)
 {
 }
 
@@ -69,15 +69,15 @@ void txTextHandler::endDocument()
 {
 }
 
-void txTextHandler::endElement(const String& aName,
+void txTextHandler::endElement(const nsAString& aName,
                                const PRInt32 aNsID)
 {
     if (mOnlyText)
         --mLevel;
 }
 
-void txTextHandler::processingInstruction(const String& aTarget,
-                                          const String& aData)
+void txTextHandler::processingInstruction(const nsAString& aTarget,
+                                          const nsAString& aData)
 {
 }
 
@@ -85,7 +85,7 @@ void txTextHandler::startDocument()
 {
 }
 
-void txTextHandler::startElement(const String& aName,
+void txTextHandler::startElement(const nsAString& aName,
                                  const PRInt32 aNsID)
 {
     if (mOnlyText)

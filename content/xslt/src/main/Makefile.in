@@ -40,19 +40,16 @@ REQUIRES = string \
 	   expat \
            $(NULL)
 
-OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
-  ../base/CommandLineUtils.$(OBJ_SUFFIX) \
-  ../base/Double.$(OBJ_SUFFIX) \
+OBJS = ../base/Double.$(OBJ_SUFFIX) \
   ../base/List.$(OBJ_SUFFIX) \
   ../base/Map.$(OBJ_SUFFIX) \
   ../base/NamedMap.$(OBJ_SUFFIX) \
   ../base/SimpleErrorObserver.$(OBJ_SUFFIX) \
   ../base/Stack.$(OBJ_SUFFIX) \
-  ../base/StringList.$(OBJ_SUFFIX) \
   ../base/Tokenizer.$(OBJ_SUFFIX) \
   ../base/txAtoms.$(OBJ_SUFFIX) \
   ../base/txExpandedNameMap.$(OBJ_SUFFIX) \
-  ../base/TxString.$(OBJ_SUFFIX) \
+  ../base/txStringUtils.$(OBJ_SUFFIX) \
   ../base/txURIUtils.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/Attr.$(OBJ_SUFFIX) \
   ../xml/dom/standalone/NodeListDefinition.$(OBJ_SUFFIX) \
@@ -95,7 +92,6 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xml/XMLDOMUtils.$(OBJ_SUFFIX) \
   ../xml/parser/XMLParser.$(OBJ_SUFFIX) \
   ../xslt/txOutputFormat.$(OBJ_SUFFIX) \
-  ../xslt/Names.$(OBJ_SUFFIX) \
   ../xslt/ProcessorState.$(OBJ_SUFFIX) \
   ../xslt/txHTMLOutput.$(OBJ_SUFFIX) \
   ../xslt/txRtfHandler.$(OBJ_SUFFIX) \

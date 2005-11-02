@@ -40,10 +40,9 @@ StringResult::StringResult() {
  * Creates a new StringResult with the value of the given String parameter
  * @param str the String to use for initialization of this StringResult's value
 **/
-StringResult::StringResult(const nsAString& str) {
-    //-- copy str
-    this->value.Append(str);
-} //-- StringResult
+StringResult::StringResult(const nsAString& str) : mValue(str)
+{
+}
 
 /*
  * Virtual Methods from ExprResult
@@ -51,22 +50,22 @@ StringResult::StringResult(const nsAString& str) {
 
 ExprResult* StringResult::clone()
 {
-    return new StringResult(value);
+    return new StringResult(mValue);
 }
 
 short StringResult::getResultType() {
     return ExprResult::STRING;
 } //-- getResultType
 
-void StringResult::stringValue(String& str)  {
-    str.Append(this->value);
+void StringResult::stringValue(nsAString& str)  {
+    str.Append(mValue);
 } //-- stringValue
 
 MBool StringResult::booleanValue() {
-   return !value.IsEmpty();
+   return !mValue.IsEmpty();
 } //-- booleanValue
 
 double StringResult::numberValue() {
-    return Double::toDouble(value);
+    return Double::toDouble(mValue);
 } //-- numberValue
 

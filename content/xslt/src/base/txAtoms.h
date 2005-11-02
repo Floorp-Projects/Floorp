@@ -40,6 +40,7 @@
 #define TRANSFRMX_ATOMS_H
 
 #include "txAtom.h"
+#include "baseutils.h"
 
 /*
  * Declare all atoms

@@ -38,7 +38,6 @@
 
 #include "txXSLTNumber.h"
 #include "primitives.h"
-#include "Names.h"
 
 class txDecimalCounter : public txFormattedCounter {
 public:
@@ -47,14 +46,14 @@ public:
     }
     
     txDecimalCounter(PRInt32 aMinLength, PRInt32 aGroupSize,
-                     const String& mGroupSeparator);
+                     const nsAString& mGroupSeparator);
     
-    virtual void appendNumber(PRInt32 aNumber, String& aDest);
+    virtual void appendNumber(PRInt32 aNumber, nsAString& aDest);
 
 private:
     PRInt32 mMinLength;
     PRInt32 mGroupSize;
-    String mGroupSeparator;
+    nsString mGroupSeparator;
 };
 
 class txAlphaCounter : public txFormattedCounter {
@@ -63,7 +62,7 @@ public:
     {
     }
 
-    virtual void appendNumber(PRInt32 aNumber, String& aDest);
+    virtual void appendNumber(PRInt32 aNumber, nsAString& aDest);
     
 private:
     PRUnichar mOffset;
@@ -75,7 +74,7 @@ public:
     {
     }
 
-    void appendNumber(PRInt32 aNumber, String& aDest);
+    void appendNumber(PRInt32 aNumber, nsAString& aDest);
 
 private:
     PRInt32 mTableOffset;
@@ -83,8 +82,9 @@ private:
 
 
 nsresult
-txFormattedCounter::getCounterFor(const String& aToken, PRInt32 aGroupSize,
-                                  const String& aGroupSeparator,
+txFormattedCounter::getCounterFor(const nsAFlatString& aToken,
+                                  PRInt32 aGroupSize,
+                                  const nsAString& aGroupSeparator,
                                   txFormattedCounter*& aCounter)
 {
     PRInt32 length = aToken.Length();
@@ -108,7 +108,8 @@ txFormattedCounter::getCounterFor(const String& aToken, PRInt32 aGroupSize,
             case '1':
             default:
                 // if we don't recognize the token then use "1"
-                aCounter = new txDecimalCounter(1, aGroupSize, aGroupSeparator);
+                aCounter = new txDecimalCounter(1, aGroupSize,
+                                                aGroupSeparator);
                 break;
         }
         return aCounter ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -133,7 +134,7 @@ txFormattedCounter::getCounterFor(const String& aToken, PRInt32 aGroupSize,
 
 
 txDecimalCounter::txDecimalCounter(PRInt32 aMinLength, PRInt32 aGroupSize,
-                                   const String& aGroupSeparator)
+                                   const nsAString& aGroupSeparator)
     : mMinLength(aMinLength), mGroupSize(aGroupSize),
       mGroupSeparator(aGroupSeparator)
 {
@@ -142,7 +143,7 @@ txDecimalCounter::txDecimalCounter(PRInt32 aMinLength, PRInt32 aGroupSize,
     }
 }
 
-void txDecimalCounter::appendNumber(PRInt32 aNumber, String& aDest)
+void txDecimalCounter::appendNumber(PRInt32 aNumber, nsAString& aDest)
 {
     const PRInt32 bufsize = 10; //must be able to fit an PRInt32
     PRUnichar buf[bufsize];
@@ -192,7 +193,7 @@ void txDecimalCounter::appendNumber(PRInt32 aNumber, String& aDest)
 }
 
 
-void txAlphaCounter::appendNumber(PRInt32 aNumber, String& aDest)
+void txAlphaCounter::appendNumber(PRInt32 aNumber, nsAString& aDest)
 {
     PRUnichar buf[11];
     buf[11] = 0;
@@ -216,7 +217,7 @@ const char* kTxRomanNumbers[] =
      "", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC",
      "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};
 
-void txRomanCounter::appendNumber(PRInt32 aNumber, String& aDest)
+void txRomanCounter::appendNumber(PRInt32 aNumber, nsAString& aDest)
 {
     // Numbers bigger then 3999 can't be done in roman
     if (aNumber >= 4000) {

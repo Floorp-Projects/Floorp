@@ -63,9 +63,9 @@ txRtfHandler::~txRtfHandler()
 {
 }
 
-void txRtfHandler::attribute(const String& aName,
+void txRtfHandler::attribute(const nsAString& aName,
                              const PRInt32 aNsID,
-                             const String& aValue)
+                             const nsAString& aValue)
 {
     Element* element = (Element*)mCurrentNode;
     NS_ASSERTION(element, "We need an element");
@@ -77,12 +77,12 @@ void txRtfHandler::attribute(const String& aName,
         // XXX ErrorReport: Can't add attributes after adding children
         return;
 
-    String nsURI;
+    nsAutoString nsURI;
     mDocument->namespaceIDToURI(aNsID, nsURI);
     element->setAttributeNS(nsURI, aName, aValue);
 }
 
-void txRtfHandler::characters(const String& aData)
+void txRtfHandler::characters(const nsAString& aData)
 {
     NS_ASSERTION(mCurrentNode, "We need a node");
     if (!mCurrentNode)
@@ -92,7 +92,7 @@ void txRtfHandler::characters(const String& aData)
     mCurrentNode->appendChild(text);
 }
 
-void txRtfHandler::comment(const String& aData)
+void txRtfHandler::comment(const nsAString& aData)
 {
     NS_ASSERTION(mCurrentNode, "We need a node");
     if (!mCurrentNode)
@@ -106,7 +106,7 @@ void txRtfHandler::endDocument()
 {
 }
 
-void txRtfHandler::endElement(const String& aName,
+void txRtfHandler::endElement(const nsAString& aName,
                               const PRInt32 aNsID)
 {
     NS_ASSERTION(mCurrentNode, "We need a node");
@@ -116,8 +116,8 @@ void txRtfHandler::endElement(const String& aName,
     mCurrentNode = mCurrentNode->getParentNode();
 }
 
-void txRtfHandler::processingInstruction(const String& aTarget,
-                                         const String& aData)
+void txRtfHandler::processingInstruction(const nsAString& aTarget,
+                                         const nsAString& aData)
 {
     NS_ASSERTION(mCurrentNode, "We need a node");
     if (!mCurrentNode)
@@ -132,14 +132,14 @@ void txRtfHandler::startDocument()
 {
 }
 
-void txRtfHandler::startElement(const String& aName,
+void txRtfHandler::startElement(const nsAString& aName,
                                 const PRInt32 aNsID)
 {
     NS_ASSERTION(mCurrentNode, "We need a node");
     if (!mCurrentNode)
         return;
 
-    String nsURI;
+    nsAutoString nsURI;
     mDocument->namespaceIDToURI(aNsID, nsURI);
     Element* element = mDocument->createElementNS(nsURI, aName);
     mCurrentNode->appendChild(element);

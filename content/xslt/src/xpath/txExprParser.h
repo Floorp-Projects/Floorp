@@ -42,7 +42,6 @@ class ExprLexer;
 class FunctionCall;
 class LocationStep;
 class PredicateList;
-class String;
 class Token;
 class txIParseContext;
 class txNodeTypeTest;
@@ -51,14 +50,14 @@ class ExprParser
 {
 public:
 
-    static Expr* createExpr(const String& aExpression,
+    static Expr* createExpr(const nsAFlatString& aExpression,
                             txIParseContext* aContext);
 
     /**
      * Creates an Attribute Value Template using the given value
     **/
     static AttributeValueTemplate* createAttributeValueTemplate
-        (const String& attValue, txIParseContext* aContext);
+        (const nsAFlatString& attValue, txIParseContext* aContext);
 
 
 protected:
@@ -83,7 +82,7 @@ protected:
      * Resolve a QName, given the mContext parse context.
      * Returns prefix and localName as well as namespace ID
     **/
-    static nsresult resolveQName(const String& aQName, txAtom*& aPrefix,
+    static nsresult resolveQName(const nsAString& aQName, txAtom*& aPrefix,
                                  txIParseContext* aContext,
                                  txAtom*& aLocalName, PRInt32& aNamespace);
 

@@ -115,7 +115,8 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 
         case eHTMLOutput:
         {
-            *aHandler = new txMozillaXMLOutput(String(), kNameSpaceID_None,
+            *aHandler = new txMozillaXMLOutput(nsString(),
+                                               kNameSpaceID_None,
                                                aFormat, mSourceDocument,
                                                mResultDocument, mObserver);
             break;
@@ -135,7 +136,7 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 
 nsresult
 txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
-                                         const String& aName,
+                                         const nsAString& aName,
                                          PRInt32 aNsID,
                                          txIOutputXMLEventHandler** aHandler)
 {
@@ -209,7 +210,7 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
 
 nsresult
 txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
-                                              const String& aName,
+                                              const nsAString& aName,
                                               PRInt32 aNsID,
                                               txIOutputXMLEventHandler** aHandler)
 {
@@ -722,7 +723,7 @@ txVariable::Convert(nsIVariant *aValue, ExprResult** aResult)
         case nsIDataType::VTYPE_CSTRING:
         case nsIDataType::VTYPE_ASTRING:
         {
-            String value;
+            nsAutoString value;
             nsresult rv = aValue->GetAsAString(value);
             NS_ENSURE_SUCCESS(rv, rv);
 
