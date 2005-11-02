@@ -25,7 +25,7 @@
 #include "XSLTFunctions.h"
 #include "Names.h"
 #ifdef TX_EXE
-#include "stdio.h"
+#include <stdio.h>
 #else
 #include "prprf.h"
 #endif
