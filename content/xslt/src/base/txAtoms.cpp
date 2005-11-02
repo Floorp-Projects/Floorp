@@ -38,104 +38,66 @@
 
 
 #include "txAtoms.h"
+#include "nsStaticAtom.h"
+#include "nsMemory.h"
 
-#define TX_ATOM(_name, _value) nsIAtom* txXMLAtoms::_name = 0
-XML_ATOMS;
+// define storage for all atoms
+#define TX_ATOM(_name, _value) nsIAtom* txXMLAtoms::_name;
+XML_ATOMS
 #undef TX_ATOM
-#define TX_ATOM(_name, _value) nsIAtom* txXPathAtoms::_name = 0
+
+#define TX_ATOM(_name, _value) nsIAtom* txXPathAtoms::_name;
 #include "txXPathAtomList.h"
 #undef TX_ATOM
-#define TX_ATOM(_name, _value) nsIAtom* txXSLTAtoms::_name = 0
+
+#define TX_ATOM(_name, _value) nsIAtom* txXSLTAtoms::_name;
 #include "txXSLTAtomList.h"
 #undef TX_ATOM
-#define TX_ATOM(_name, _value) nsIAtom* txHTMLAtoms::_name = 0
+
+#define TX_ATOM(_name, _value) nsIAtom* txHTMLAtoms::_name;
 #include "txHTMLAtomList.h"
 #undef TX_ATOM
 
-static PRUint32 gXMLRefCnt = 0;
-static PRUint32 gXPathRefCnt = 0;
-static PRUint32 gXSLTRefCnt = 0;
-static PRUint32 gHTMLRefCnt = 0;
-
-#define TX_ATOM(_name, _value)      \
-    _name = NS_NewAtom(_value);     \
-    NS_ENSURE_TRUE(_name, MB_FALSE)
-
-MBool txXMLAtoms::init()
-{
-    if (0 == gXMLRefCnt++) {
-        // create atoms
-XML_ATOMS;
-    }
-    return MB_TRUE;
-}
-
-MBool txXPathAtoms::init()
-{
-    if (0 == gXPathRefCnt++) {
-        // create atoms
-#include "txXPathAtomList.h"
-    }
-    return MB_TRUE;
-}
-
-MBool txXSLTAtoms::init()
-{
-    if (0 == gXSLTRefCnt++) {
-        // create atoms
-#include "txXSLTAtomList.h"
-    }
-    return MB_TRUE;
-}
-
-MBool txHTMLAtoms::init()
-{
-    if (0 == gHTMLRefCnt++) {
-        // create atoms
-#include "txHTMLAtomList.h"
-    }
-    return MB_TRUE;
-}
-
+static const nsStaticAtom XMLAtoms_info[] = {
+#define TX_ATOM(name_, value_) { value_, &txXMLAtoms::name_ },
+XML_ATOMS
 #undef TX_ATOM
+};
 
-#define TX_ATOM(_name, _value) \
-NS_IF_RELEASE(_name)
-
-void txXMLAtoms::shutdown()
-{
-    NS_ASSERTION(gXMLRefCnt != 0, "bad release atoms");
-    if (--gXMLRefCnt == 0) {
-        // release atoms
-XML_ATOMS;
-    }
-}
-
-void txXPathAtoms::shutdown()
-{
-    NS_ASSERTION(gXPathRefCnt != 0, "bad release atoms");
-    if (--gXPathRefCnt == 0) {
-        // release atoms
+static const nsStaticAtom XPathAtoms_info[] = {
+#define TX_ATOM(name_, value_) { value_, &txXPathAtoms::name_ },
 #include "txXPathAtomList.h"
-    }
-}
-
-void txXSLTAtoms::shutdown()
-{
-    NS_ASSERTION(gXSLTRefCnt != 0, "bad release atoms");
-    if (--gXSLTRefCnt == 0) {
-        // release atoms
-#include "txXSLTAtomList.h"
-    }
-}
-
-void txHTMLAtoms::shutdown()
-{
-    NS_ASSERTION(gHTMLRefCnt != 0, "bad release atoms");
-    if (--gHTMLRefCnt == 0) {
-        // release atoms
-#include "txHTMLAtomList.h"
-    }
-}
-
 #undef TX_ATOM
+};
+
+static const nsStaticAtom XSLTAtoms_info[] = {
+#define TX_ATOM(name_, value_) { value_, &txXSLTAtoms::name_ },
+#include "txXSLTAtomList.h"
+#undef TX_ATOM
+};
+
+static const nsStaticAtom HTMLAtoms_info[] = {
+#define TX_ATOM(name_, value_) { value_, &txHTMLAtoms::name_ },
+#include "txHTMLAtomList.h"
+#undef TX_ATOM
+};
+
+void txXMLAtoms::init()
+{
+    NS_RegisterStaticAtoms(XMLAtoms_info, NS_ARRAY_LENGTH(XMLAtoms_info));
+}
+
+void txXPathAtoms::init()
+{
+    NS_RegisterStaticAtoms(XPathAtoms_info, NS_ARRAY_LENGTH(XPathAtoms_info));
+}
+
+void txXSLTAtoms::init()
+{
+    NS_RegisterStaticAtoms(XSLTAtoms_info, NS_ARRAY_LENGTH(XSLTAtoms_info));
+}
+
+void txHTMLAtoms::init()
+{
+    NS_RegisterStaticAtoms(HTMLAtoms_info, NS_ARRAY_LENGTH(HTMLAtoms_info));
+}
