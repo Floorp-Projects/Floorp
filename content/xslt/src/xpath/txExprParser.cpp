@@ -179,9 +179,6 @@ txExprParser::createExpr(const nsASingleFragmentString& aExpression,
 {
     NS_ENSURE_ARG_POINTER(aExpr);
     *aExpr = nsnull;
-    if (aExpression.IsEmpty()) {
-        return NS_OK;
-    }
     txExprLexer lexer;
     nsresult rv = lexer.parse(aExpression);
     if (NS_FAILED(rv)) {
@@ -192,6 +189,8 @@ txExprParser::createExpr(const nsASingleFragmentString& aExpression,
     }
     rv = createExpr(lexer, aContext, aExpr);
     if (NS_SUCCEEDED(rv) && lexer.peek()->mType != Token::END) {
+        delete *aExpr;
+        *aExpr = nsnull;
         rv = NS_ERROR_XPATH_BINARY_EXPECTED;
     }
     if (NS_FAILED(rv)) {
