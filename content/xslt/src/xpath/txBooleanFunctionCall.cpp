@@ -24,7 +24,7 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- added lang() implementation
  *
- * $Id: txBooleanFunctionCall.cpp,v 1.7 2005/11/02 07:33:40 peterv%netscape.com Exp $
+ * $Id: txBooleanFunctionCall.cpp,v 1.8 2005/11/02 07:33:41 peterv%netscape.com Exp $
  */
 
 #include "FunctionLib.h"
@@ -33,7 +33,7 @@
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:40 $
+ * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:41 $
 **/
 BooleanFunctionCall::BooleanFunctionCall() : FunctionCall(XPathNames::FALSE_FN) {
     this->type = TX_FALSE;
@@ -75,7 +75,6 @@ ExprResult* BooleanFunctionCall::evaluate(Node* context, ContextState* cs) {
 
     MBool result = MB_FALSE;
     ListIterator* iter = params.iterator();
-    int argc = params.getLength();
     Expr* param = 0;
     String err;
 

@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.14 2005/11/02 07:33:38 sicking%bigfoot.com Exp $
+ * $Id: txExprParser.cpp,v 1.15 2005/11/02 07:33:39 peterv%netscape.com Exp $
  */
 
 /**
@@ -38,7 +38,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.14 $ $Date: 2005/11/02 07:33:38 $
+ * @version $Revision: 1.15 $ $Date: 2005/11/02 07:33:39 $
 **/
 
 #include "ExprParser.h"
@@ -796,8 +796,6 @@ MBool ExprParser::isNodeTypeToken(Token* token) {
  * @return 0 if successful, or a String pointer to the error message
 **/
 MBool ExprParser::parsePredicates(PredicateList* predicateList, ExprLexer& lexer) {
-
-    String* errorMsg = 0;
 
     while (lexer.peek()->type == Token::L_BRACKET) {
         //-- eat Token
