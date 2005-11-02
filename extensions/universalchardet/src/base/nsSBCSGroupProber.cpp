@@ -113,7 +113,9 @@ PRBool nsSBCSGroupProber::FilterWithoutEnglishLetters(const char* aBuf, PRUint32
   for (curPtr = prevPtr = (char*)aBuf; curPtr < aBuf+aLen; curPtr++)
   {
     if (*curPtr & 0x80)
+    {
       meetMSB = PR_TRUE;
+    }
     else if (*curPtr < 'A' || (*curPtr > 'Z' && *curPtr < 'a') || *curPtr > 'z') 
     {
       //current char is a symbol, most likely a punctuation. we treat it as segment delimiter
@@ -129,6 +131,8 @@ PRBool nsSBCSGroupProber::FilterWithoutEnglishLetters(const char* aBuf, PRUint32
         prevPtr = curPtr+1;
     }
   }
+  if (meetMSB && curPtr > prevPtr) 
+    while (prevPtr < curPtr) *newptr++ = *prevPtr++;  
 
   newLen = newptr - *newBuf;
 
@@ -169,6 +173,12 @@ PRBool nsSBCSGroupProber::FilterWithEnglishLetters(const char* aBuf, PRUint32 aL
         prevPtr = curPtr+1;
     }
   }
+
+  // If the current segment contains more than just a symbol 
+  // and it is not inside a tag then keep it.
+  if (curPtr > prevPtr && !isInTag)
+    while (prevPtr < curPtr)
+      *newptr++ = *prevPtr++;  
 
   newLen = newptr - *newBuf;
 
