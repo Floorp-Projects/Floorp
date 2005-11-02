@@ -129,7 +129,7 @@ public:
      *
      * @param aOutputStream the current output stream
      */
-    void getOutputStream(ostream** aOutputStream) = 0;
+    virtual void getOutputStream(ostream** aOutputStream) = 0;
 
     /*
      * Sets the output stream.
