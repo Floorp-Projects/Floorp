@@ -821,13 +821,15 @@ NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(txMozillaXSLTProcessor)
 NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(txMozillaXSLTProcessor)
 
 NS_IMETHODIMP
-txMozillaXSLTProcessor::BeginUpdate(nsIDocument* aDocument)
+txMozillaXSLTProcessor::BeginUpdate(nsIDocument* aDocument,
+                                    nsUpdateType aUpdateType)
 {
     return NS_OK;
 }
 
 NS_IMETHODIMP
-txMozillaXSLTProcessor::EndUpdate(nsIDocument* aDocument)
+txMozillaXSLTProcessor::EndUpdate(nsIDocument* aDocument,
+                                  nsUpdateType aUpdateType)
 {
     return NS_OK;
 }
