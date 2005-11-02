@@ -65,7 +65,7 @@ void txUnknownHandler::endDocument()
     // didn't create a document element. Switching to XML output mode
     // anyway.
 
-    nsresult rv = createHandlerAndFlush(eXMLOutput, nsString(),
+    nsresult rv = createHandlerAndFlush(eXMLOutput, EmptyString(),
                                         kNameSpaceID_None);
     if (NS_FAILED(rv))
         return;

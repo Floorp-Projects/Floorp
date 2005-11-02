@@ -54,7 +54,7 @@
 //Construct a Document.  Currently no parameters are required, but the the
 //node constructor is called to identify the node type.
 //
-Document::Document() : NodeDefinition(Node::DOCUMENT_NODE, nsString(), NULL)
+Document::Document() : NodeDefinition(Node::DOCUMENT_NODE, EmptyString(), NULL)
 {
   mIDMap.Init(0);
   documentElement = nsnull;
