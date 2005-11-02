@@ -58,6 +58,9 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
 
     //-- handle case for just Left NodeSet or Both NodeSets
     if (ltype == ExprResult::NODESET) {
+        if (rtype == ExprResult::BOOLEAN)
+            return compareResults(&BooleanResult(left->booleanValue()), right);
+
         NodeSet* nodeSet = (NodeSet*)left;
         for ( int i = 0; i < nodeSet->size(); i++) {
                 String str;
@@ -70,6 +73,9 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
     }
     //-- handle case for Just Right NodeSet
     else if ( rtype == ExprResult::NODESET) {
+        if (ltype == ExprResult::BOOLEAN)
+            return compareResults(left, &BooleanResult(right->booleanValue()));
+
         NodeSet* nodeSet = (NodeSet*)right;
         for ( int i = 0; i < nodeSet->size(); i++) {
                 String str;
