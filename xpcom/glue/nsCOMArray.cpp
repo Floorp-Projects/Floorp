@@ -38,7 +38,26 @@
 
 #include "nsCOMArray.h"
 
+static PRBool AddRefObjects(void* aElement, void*);
+static PRBool ReleaseObjects(void* aElement, void*);
+
+
 // implementations of non-trivial methods in nsCOMArray_base
+
+// copy constructor - we can't just memcpy here, because
+// we have to make sure we own our own array buffer, and that each
+// object gets another AddRef()
+nsCOMArray_base::nsCOMArray_base(const nsCOMArray_base& aOther)
+{
+    PRInt32 count = aOther.Count();
+    // make sure we do only one allocation
+    mArray.SizeTo(count);
+    
+    PRInt32 i;
+    for (i=0; i<count; i++) {
+        ReplaceObjectAt(aOther[i], i);
+    }
+}
 
 PRBool
 nsCOMArray_base::InsertObjectAt(nsISupports* aObject, PRInt32 aIndex) {
@@ -98,8 +117,19 @@ nsCOMArray_base::RemoveObjectAt(PRInt32 aIndex)
     return PR_FALSE;
 }
 
-static PRBool
-ClearObjectsCallback(void* aElement, void*)
+
+// useful for copy constructors
+PRBool
+AddRefObjects(void* aElement, void*)
+{
+    nsISupports* element = NS_STATIC_CAST(nsISupports*,aElement);
+    NS_IF_ADDREF(element);
+    return PR_TRUE;
+}
+
+// useful for destructors
+PRBool
+ReleaseObjects(void* aElement, void*)
 {
     nsISupports* element = NS_STATIC_CAST(nsISupports*, aElement);
     NS_IF_RELEASE(element);
@@ -109,6 +139,7 @@ ClearObjectsCallback(void* aElement, void*)
 void
 nsCOMArray_base::Clear()
 {
-    mArray.EnumerateForwards(ClearObjectsCallback, nsnull);
+    mArray.EnumerateForwards(ReleaseObjects, nsnull);
     mArray.Clear();
 }
+
