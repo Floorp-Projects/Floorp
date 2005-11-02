@@ -54,6 +54,7 @@ ifndef TX_EXE
 REQUIRES	+= unicharutil \
 		  dom \
 		  content \
+		  layout \
 		  widget \
 		  necko \
 		  caps \
