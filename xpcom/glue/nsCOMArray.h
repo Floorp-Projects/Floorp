@@ -97,7 +97,7 @@ public:
     }
 
     nsISupports* ObjectAt(PRInt32 aIndex) const {
-        return NS_STATIC_CAST(nsISupports*, mArray.ElementAt(aIndex));
+        return NS_STATIC_CAST(nsISupports*, mArray.FastElementAt(aIndex));
     }
     
     nsISupports* SafeObjectAt(PRInt32 aIndex) const {
