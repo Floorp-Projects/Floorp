@@ -548,6 +548,8 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
 
     channel->SetLoadGroup(mLoadGroup);
 
+    channel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
+
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     if (httpChannel) {
         httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
@@ -755,6 +757,8 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
 
     // This is probably called by js, a loadGroup for the channel doesn't
     // make sense.
+
+    channel->SetContentType(NS_LITERAL_CSTRING("text/xml"));
 
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     if (httpChannel) {
