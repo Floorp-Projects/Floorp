@@ -53,6 +53,7 @@ protected:
     nsCOMArray_base() {}
     nsCOMArray_base(PRInt32 aCount) : mArray(aCount) {}
     nsCOMArray_base(const nsCOMArray_base& other);
+    ~nsCOMArray_base();
 
     PRInt32 IndexOf(nsISupports* aObject) const {
         return mArray.IndexOf(aObject);
