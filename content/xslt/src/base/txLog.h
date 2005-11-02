@@ -40,38 +40,6 @@
 #ifndef TxLog_h__
 #define TxLog_h__
 
-#ifdef TX_EXE
-
-#ifdef PR_LOGGING
-#include <stdio.h>
-
-#define PRLogModuleInfo void
-#define PR_NewLogModule(_name)
-#define PR_FREE_IF(_name)
-
-typedef enum PRLogModuleLevel {
-    PR_LOG_NONE = 0,                /* nothing */
-    PR_LOG_ALWAYS = 1,              /* always printed */
-    PR_LOG_ERROR = 2,               /* error messages */
-    PR_LOG_WARNING = 3,             /* warning messages */
-    PR_LOG_DEBUG = 4,               /* debug messages */
-
-    PR_LOG_NOTICE = PR_LOG_DEBUG,   /* notice messages */
-    PR_LOG_WARN = PR_LOG_WARNING,   /* warning messages */
-    PR_LOG_MIN = PR_LOG_DEBUG,      /* minimal debugging messages */
-    PR_LOG_MAX = PR_LOG_DEBUG       /* maximal debugging messages */
-} PRLogModuleLevel;
-
-
-#define PR_LOG(_name, _level, _message)  printf##_message
-
-#else
-
-#define PR_LOG(_name, _level, _message) 
-
-#endif
-
-#else
 #include "prlog.h"
 #include "prmem.h"
 #endif
@@ -101,7 +69,5 @@ public:
 #define TX_LG_IMPL
 #define TX_LG_CREATE
 #define TX_LG_DELETE
-
-#endif
 
 #endif

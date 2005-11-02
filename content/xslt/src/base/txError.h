@@ -44,42 +44,7 @@
  * See nsError.h for details.
  */
 
-#ifdef TX_EXE
-
-#include "baseutils.h"
-
-typedef PRUint32 nsresult;
-
-#define NS_FAILED(_nsresult) ((_nsresult) & 0x80000000)
-#define NS_SUCCEEDED(_nsresult) (!((_nsresult) & 0x80000000))
-#define NS_OK                              0
-#define NS_ERROR_INVALID_POINTER           ((nsresult) 0x80004003L)
-#define NS_ERROR_NULL_POINTER              NS_ERROR_INVALID_POINTER
-#define NS_ERROR_UNEXPECTED                ((nsresult) 0x8000ffffL)
-#define NS_ERROR_NOT_IMPLEMENTED           ((nsresult) 0x80004001L)
-#define NS_ERROR_FAILURE                   ((nsresult) 0x80004005L)
-#define NS_ERROR_OUT_OF_MEMORY             ((nsresult) 0x8007000eL)
-#define NS_ERROR_ILLEGAL_VALUE             ((nsresult) 0x80070057L)
-#define NS_ERROR_INVALID_ARG               NS_ERROR_ILLEGAL_VALUE
-
-#define NS_ENSURE_TRUE(value, result) \
-    do {                              \
-        if (!(value)) {               \
-            return (result);          \
-        }                             \
-    } while(0)
-
-#define NS_ENSURE_FALSE(value, result) \
-    NS_ENSURE_TRUE(!(value), result)
-
-#define NS_ENSURE_SUCCESS(value, result) \
-    NS_ENSURE_TRUE(NS_SUCCEEDED(value), result)
-
-#else // TX_EXE
-
 #include "nsError.h"
-
-#endif // TX_EXE
 
 #define NS_ERROR_XPATH_EVAL_FAILED         NS_ERROR_FAILURE
 #define NS_ERROR_XPATH_PARSE_FAILED        NS_ERROR_FAILURE

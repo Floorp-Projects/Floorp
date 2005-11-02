@@ -39,7 +39,7 @@
 #endif
 
 #include "List.h"
-#include "TxString.h"
+#include "txAtom.h"
 #include "baseutils.h"
 
 #ifndef NULL
@@ -63,8 +63,6 @@ class CDATASection;
 class ProcessingInstruction;
 class EntityReference;
 class DocumentType;
-
-class txAtom;
 
 /*
  * NULL string for use by Element::getAttribute() for when the attribute
