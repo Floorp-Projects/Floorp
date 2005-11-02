@@ -23,11 +23,10 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: txList.cpp,v 1.8 2005/11/02 07:33:49 axel%pike.org Exp $
  */
 
 #include "List.h"
-#ifndef MOZ_XSL
+#ifdef TX_EXE
 #include <iostream.h>
 #endif
 
@@ -38,7 +37,7 @@
 /**
  * Default constructor for a List;
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:49 $
+ * @version $Revision: 1.9 $ $Date: 2005/11/02 07:33:50 $
 **/
 
 List::List() {
