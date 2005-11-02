@@ -71,8 +71,10 @@ private:
     class ParseContextImpl : public txIParseContext
     {
     public:
-        ParseContextImpl(nsIDOMXPathNSResolver* aResolver, PRBool aIsHTML)
-            : mResolver(aResolver), mLastError(NS_OK), mIsHTML(aIsHTML)
+        ParseContextImpl(nsIDOMXPathNSResolver* aResolver,
+                         PRBool aIsCaseSensitive)
+            : mResolver(aResolver), mLastError(NS_OK),
+              mIsCaseSensitive(aIsCaseSensitive)
         {
         }
 
@@ -94,7 +96,7 @@ private:
     private:
         nsIDOMXPathNSResolver* mResolver;
         nsresult mLastError;
-        PRBool mIsHTML;
+        PRBool mIsCaseSensitive;
     };
 
     nsWeakPtr mDocument;
