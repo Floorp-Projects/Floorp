@@ -60,7 +60,6 @@ NS_INTERFACE_MAP_END
 
 nsXPathExpression::nsXPathExpression(Expr* aExpression) : mExpression(aExpression)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPathExpression::~nsXPathExpression()

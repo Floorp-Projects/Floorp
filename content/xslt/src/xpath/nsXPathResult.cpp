@@ -64,7 +64,6 @@ nsXPathResult::nsXPathResult() : mNumberValue(0),
                                  mResultType(ANY_TYPE),
                                  mInvalidIteratorState(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPathResult::~nsXPathResult()

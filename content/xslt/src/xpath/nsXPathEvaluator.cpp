@@ -62,7 +62,6 @@ NS_INTERFACE_MAP_END
 
 nsXPathEvaluator::nsXPathEvaluator()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPathEvaluator::~nsXPathEvaluator()

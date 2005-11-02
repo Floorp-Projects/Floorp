@@ -50,10 +50,6 @@ txUnknownHandler::txUnknownHandler(ProcessorState* aPs)
     : mTotal(0), mMax(kReasonableTransactions), 
       mPs(aPs)
 {
-#ifndef TX_EXE
-    NS_INIT_ISUPPORTS();
-#endif
-
     mArray = new txOutputTransaction*[kReasonableTransactions];
 }
 
