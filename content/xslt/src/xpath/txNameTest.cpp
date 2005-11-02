@@ -37,6 +37,10 @@ txNameTest::txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
     NS_ASSERTION(aLocalName, "txNameTest without a local name?");
 }
 
+txNameTest::~txNameTest()
+{
+}
+
 /*
  * Determines whether this txNodeTest matches the given node
  */

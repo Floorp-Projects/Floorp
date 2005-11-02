@@ -41,12 +41,15 @@
 /**
  * Creates a new BooleanExpr using the given operator
 **/
-BooleanExpr::BooleanExpr(nsAutoPtr<Expr> aLeftExpr,
-                         nsAutoPtr<Expr> aRightExpr, short aOp)
-    : op(aOp),
-      leftExpr(aLeftExpr),
-      rightExpr(aRightExpr)
-{
+BooleanExpr::BooleanExpr(Expr* leftExpr, Expr* rightExpr, short op) {
+    this->op = op;
+    this->leftExpr = leftExpr;
+    this->rightExpr = rightExpr;
+} //-- BooleanExpr
+
+BooleanExpr::~BooleanExpr() {
+    delete leftExpr;
+    delete rightExpr;
 } //-- ~BooleanExpr
 
 /**

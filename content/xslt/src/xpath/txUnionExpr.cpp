@@ -33,6 +33,13 @@
 
 
 /**
+ * Creates a new UnionExpr
+**/
+UnionExpr::UnionExpr() {
+    //-- do nothing
+}
+
+/**
  * Destructor, will delete all Path Expressions
 **/
 UnionExpr::~UnionExpr() {
@@ -46,15 +53,9 @@ UnionExpr::~UnionExpr() {
  * Adds the Expr to this UnionExpr
  * @param expr the Expr to add to this UnionExpr
 **/
-nsresult
-UnionExpr::addExpr(nsAutoPtr<Expr> aExpr)
-{
-    nsresult rv = expressions.add(aExpr);
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    aExpr.forget();
-    
-    return NS_OK;
+void UnionExpr::addExpr(Expr* expr) {
+    if (expr)
+      expressions.add(expr);
 } //-- addExpr
 
     //-----------------------------/
