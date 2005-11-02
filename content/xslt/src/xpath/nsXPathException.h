@@ -66,28 +66,4 @@ public:
     NS_DECL_NSIEXCEPTIONPROVIDER
 };
 
-/**
- * A class for evaluating an XPath expression string
- */
-class nsXPathException : public nsIException,
-                         public nsIDOMXPathException
-{
-public:
-    nsXPathException(nsresult aNSResult, nsIException* aInner);
-    virtual ~nsXPathException();
-
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsIException interface
-    NS_DECL_NSIEXCEPTION
-
-    // nsIDOMXPathException interface
-    NS_DECL_NSIDOMXPATHEXCEPTION
-
-private:
-    nsresult mResult;
-    nsCOMPtr<nsIException> mInner;
-};
-
 #endif
