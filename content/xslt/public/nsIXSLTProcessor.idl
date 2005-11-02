@@ -47,11 +47,6 @@ interface nsIXSLTProcessor : nsISupports
     /**
      * Import the stylesheet into this XSLTProcessor for transformations.
      *
-     * Note: Changing the DOM of the stylesheet document after it has been
-     *       imported does not affect the processor. It will apply the
-     *       stylesheet as it looked at the time of the call to
-     *       importStylesheet
-     *
      * @param style The root-node of a XSLT stylesheet. This can be either
      *              a document node or an element node. If a document node
      *              then the document can contain either a XSLT stylesheet
@@ -70,8 +65,7 @@ interface nsIXSLTProcessor : nsISupports
      * owns the returned document fragment.
      *
      * @param source The node to be transformed
-     * @param output The owner document of this node is used to generate
-     *               the output
+     * @param output This document is used to generate the output
      * @return DocumentFragment The result of the transformation
      *
      * @exception nsIXSLTException
@@ -84,16 +78,16 @@ interface nsIXSLTProcessor : nsISupports
      * importStylesheet() function.
      *
      * @param source The node to be transformed
-     * @param output The owner document of this node is used to generate
-     *               the output
-     * @return DocumentFragment The result of the transformation
+     * @return Document The result of the transformation
      *
      * @exception nsIXSLTException
      */
     nsIDOMDocument transformToDocument(in nsIDOMNode source);
 
     /**
-     * Sets a parameter to be used in the following calls to transformNode.
+     * Sets a parameter to be used in subsequent transformations with this
+     * nsIXSLTProcessor. If the parameter doesn't exist in the stylesheet the
+     * parameter will be ignored.
      *
      * @param namespaceURI The namespaceURI of the XSLT parameter
      * @param localName    The local name of the XSLT parameter
@@ -107,7 +101,8 @@ interface nsIXSLTProcessor : nsISupports
                       in nsIVariant value);
 
     /**
-     * Gets a parameter, if set and return null otherwise.
+     * Gets a parameter if previously set by setParameter. Returns null
+     * otherwise.
      *
      * @param namespaceURI The namespaceURI of the XSLT parameter
      * @param localName    The local name of the XSLT parameter
@@ -116,7 +111,8 @@ interface nsIXSLTProcessor : nsISupports
     nsIVariant getParameter(in DOMString namespaceURI,
                             in DOMString localName);
     /**
-     * Removes a parameter, if set.
+     * Removes a parameter, if set. This will make the processor use the
+     * default-value for the parameter as specified in the stylesheet.
      *
      * @param namespaceURI The namespaceURI of the XSLT parameter
      * @param localName    The local name of the XSLT parameter
@@ -125,12 +121,14 @@ interface nsIXSLTProcessor : nsISupports
                          in DOMString localName);
 
     /**
-     * Removes all set parameters from this nsIXSLTProcessor
+     * Removes all set parameters from this nsIXSLTProcessor. This will make
+     * the processor use the default-value for all parameters as specified in
+     * the stylesheet.
      */
     void clearParameters();
 
     /**
-     * Remove all parameters and stylesheets from this nsIXSLTProcessor
+     * Remove all parameters and stylesheets from this nsIXSLTProcessor.
      */
     void reset();
 };
