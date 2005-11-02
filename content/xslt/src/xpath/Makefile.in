@@ -77,7 +77,8 @@ CPPSRCS += nsXPathEvaluator.cpp \
            nsXPathException.cpp \
            nsXPathExpression.cpp \
            nsXPathNSResolver.cpp \
-           nsXPathResult.cpp
+           nsXPathResult.cpp \
+           nsXPath1Scheme.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk
