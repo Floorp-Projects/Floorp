@@ -316,7 +316,7 @@ public:
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
 
 private:
-    static char* printfFmt;
+    static const char printfFmt[];
 };
 
 /**
