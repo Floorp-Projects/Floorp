@@ -31,7 +31,6 @@ PROGRAM = ../transformiix
 OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../base/CommandLineUtils.$(OBJ_SUFFIX) \
   ../base/Double.$(OBJ_SUFFIX) \
-  ../base/Integer.$(OBJ_SUFFIX) \
   ../base/List.$(OBJ_SUFFIX) \
   ../base/TxObjectWrapper.$(OBJ_SUFFIX) \
   ../base/Map.$(OBJ_SUFFIX) \
