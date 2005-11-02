@@ -51,7 +51,6 @@
 #include "nsIDOMNode.h"
 #include "txXMLEventHandler.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentFragment.h"
 #include "nsIXSLTProcessorObsolete.h"
 
 /* bacd8ad0-552f-11d3-a9f7-000064657374 */

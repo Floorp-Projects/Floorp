@@ -73,6 +73,30 @@ Element::~Element()
   TX_IF_RELEASE_ATOM(mLocalName);
 }
 
+Node* Element::appendChild(Node* newChild)
+{
+  switch (newChild->getNodeType())
+    {
+      case Node::ELEMENT_NODE :
+      case Node::TEXT_NODE :
+      case Node::COMMENT_NODE :
+      case Node::PROCESSING_INSTRUCTION_NODE :
+        {
+          // Remove the "newChild" if it is already a child of this node
+          NodeDefinition* pNewChild = (NodeDefinition*)newChild;
+          if (pNewChild->getParentNode() == this)
+            pNewChild = implRemoveChild(pNewChild);
+
+          return implAppendChild(pNewChild);
+        }
+
+      default:
+        break;
+    }
+
+  return nsnull;
+}
+
 //
 //Return the elements local (unprefixed) name.
 //
@@ -122,60 +146,10 @@ PRInt32 Element::getNamespaceID()
   return mNamespaceID;
 }
 
-//
-//First check to see if the new node is an allowable child for an Element.  If
-//it is, call NodeDefinition's implementation of Insert Before.  If not, return
-//null as an error
-//
-Node* Element::insertBefore(Node* newChild, Node* refChild)
-{
-  Node* returnVal = NULL;
-
-  switch (newChild->getNodeType())
-    {
-      case Node::ELEMENT_NODE :
-      case Node::TEXT_NODE :
-      case Node::COMMENT_NODE :
-      case Node::PROCESSING_INSTRUCTION_NODE :
-      case Node::CDATA_SECTION_NODE :
-      case Node::DOCUMENT_FRAGMENT_NODE : //-- added 19990813 (kvisco)
-      case Node::ENTITY_REFERENCE_NODE:
-        returnVal = NodeDefinition::insertBefore(newChild, refChild);
-        break;
-      default:
-        returnVal = NULL;
-    }
-
-  return returnVal;
-}
-
-//
-//Return the tagName for this element.  This is simply the nodeName.
-//
-const String& Element::getTagName()
-{
-  return nodeName;
-}
-
 NamedNodeMap* Element::getAttributes()
 {
   return &mAttributes;
 }
-
-//
-//Retreive an attribute's value by name.  If the attribute does not exist,
-//return a reference to the pre-created, constatnt "NULL STRING".
-//
-const String& Element::getAttribute(const String& name)
-{
-  Node* tempNode = mAttributes.getNamedItem(name);
-
-  if (tempNode)
-    return mAttributes.getNamedItem(name)->getNodeValue();
-  else
-    return NULL_STRING;
-}
-
 
 //
 //Add an attribute to this Element.  Create a new Attr object using the
@@ -239,15 +213,6 @@ void Element::setAttributeNS(const String& aNamespaceURI,
 }
 
 //
-//Remove an attribute from the mAttributes NamedNodeMap, and free its memory.
-//   NOTE:  How do default values enter into this picture
-//
-void Element::removeAttribute(const String& name)
-{
-  delete mAttributes.removeNamedItem(name);
-}
-
-//
 //Return the attribute specified by name
 //
 Attr* Element::getAttributeNode(const String& name)
@@ -301,35 +266,4 @@ MBool Element::hasAttr(txAtom* aLocalName, PRInt32 aNSID)
     item = item->next;
   }
   return MB_FALSE;
-}
-
-//
-//Set a new attribute specifed by the newAttr node.  If an attribute with that
-//name already exists, the existing Attr is removed from the list and return to
-//the caller, else NULL is returned.
-//
-Attr* Element::setAttributeNode(Attr* newAttr)
-{
-  Attr* pOldAttr = (Attr*)mAttributes.removeNamedItem(newAttr->getNodeName());
-
-  mAttributes.setNamedItem(newAttr);
-  return pOldAttr;
-}
-
-//
-//Remove the Attribute from the attributes list and return to the caller.  If
-//the node is not found, return NULL.
-//
-Attr* Element::removeAttributeNode(Attr* oldAttr)
-{
-  return (Attr*)mAttributes.removeNamedItem(oldAttr->getNodeName());
-}
-
-NodeList* Element::getElementsByTagName(const String& name)
-{
-    return 0;
-}
-
-void Element::normalize()
-{
 }
