@@ -26,12 +26,18 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = dom parser printer util
+DIRS            = dom parser util
+ifndef MOZ_XSL
+DIRS +=		printer
+endif
 
 CPPSRCS	= XMLDOMUtils.cpp XMLUtils.cpp
 
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../base -I$(srcdir)/dom
+ifdef MOZ_XSL
+DEFINES += -DMOZILLA
+endif
 
 install:: $(OBJS)
