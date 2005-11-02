@@ -58,8 +58,10 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
 
     //-- handle case for just Left NodeSet or Both NodeSets
     if (ltype == ExprResult::NODESET) {
-        if (rtype == ExprResult::BOOLEAN)
-            return compareResults(&BooleanResult(left->booleanValue()), right);
+        if (rtype == ExprResult::BOOLEAN) {
+            BooleanResult leftBool(left->booleanValue());
+            return compareResults(&leftBool, right);
+        }
 
         NodeSet* nodeSet = (NodeSet*)left;
         for ( int i = 0; i < nodeSet->size(); i++) {
@@ -73,8 +75,10 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
     }
     //-- handle case for Just Right NodeSet
     else if ( rtype == ExprResult::NODESET) {
-        if (ltype == ExprResult::BOOLEAN)
-            return compareResults(left, &BooleanResult(right->booleanValue()));
+        if (ltype == ExprResult::BOOLEAN) {
+            BooleanResult rightBool(right->booleanValue());
+            return compareResults(left, &rightBool);
+        }
 
         NodeSet* nodeSet = (NodeSet*)right;
         for ( int i = 0; i < nodeSet->size(); i++) {
