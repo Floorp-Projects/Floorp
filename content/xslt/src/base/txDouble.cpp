@@ -3,28 +3,31 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is TransforMiiX XSLT processor.
- * 
+ *
  * The Initial Developer of the Original Code is The MITRE Corporation.
  * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
  * Portions created by Keith Visco as a Non MITRE employee,
  * (C) 1999 Keith Visco. All Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
- * 
+ *
  * Larry Fitzpatrick, lef@opentext.com
  *
- * $Id: txDouble.cpp,v 1.2 1999/11/15 07:12:39 nisheeth%netscape.com Exp $
+ * Eric Du, duxy@leyou.com.cn
+ *   -- added fix for FreeBSD
+ *
+ * $Id: txDouble.cpp,v 1.3 2005/11/02 07:33:36 kvisco%ziplink.net Exp $
  */
 
 #include "primitives.h"
@@ -39,6 +42,13 @@
  * @author <a href="mailto:lef@opentext.com">Larry Fitzpatrick</a>
 **/
 
+//A trick to handle IEEE floating point exceptions on FreeBSD - E.D.
+#ifdef __FreeBSD__
+fp_except_t allmask = FP_X_INV|FP_X_OFL|FP_X_UFL|FP_X_DZ|FP_X_IMP|FP_X_DNML;
+fp_except_t oldmask = fpsetmask(~allmask);
+#endif
+
+//-- Initialize Double related constants
 double d0 = 0.0;
 
 const double Double::NaN = (d0/d0);
