@@ -643,7 +643,8 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer,
                     nsresult rv = resolveQName(tok->value,
                                                getter_AddRefs(prefix),
                                                aContext,
-                                               getter_AddRefs(lName), nspace);
+                                               getter_AddRefs(lName), nspace,
+                                               PR_TRUE);
                     if (NS_FAILED(rv)) {
                         // XXX error report namespace resolve failed
                         return 0;
@@ -1012,7 +1013,8 @@ short ExprParser::precedenceLevel(short tokenType) {
 
 nsresult ExprParser::resolveQName(const nsAString& aQName,
                                   nsIAtom** aPrefix, txIParseContext* aContext,
-                                  nsIAtom** aLocalName, PRInt32& aNamespace)
+                                  nsIAtom** aLocalName, PRInt32& aNamespace,
+                                  PRBool aIsNameTest)
 {
     aNamespace = kNameSpaceID_None;
     PRInt32 idx = aQName.FindChar(':');
@@ -1031,7 +1033,14 @@ nsresult ExprParser::resolveQName(const nsAString& aQName,
     }
     // the lexer dealt with idx == 0
     *aPrefix = 0;
-    *aLocalName = NS_NewAtom(aQName);
+    if (aIsNameTest && aContext->caseInsensitiveNameTests()) {
+        nsAutoString lcname;
+        TX_ToLowerCase(aQName, lcname);
+        *aLocalName = NS_NewAtom(lcname);
+    }
+    else {
+        *aLocalName = NS_NewAtom(aQName);
+    }
     if (!*aLocalName) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -42,11 +42,14 @@
 
 #include "nsIDOMXPathEvaluator.h"
 #include "txIXPathContext.h"
+#include "nsIXPathEvaluatorInternal.h"
+#include "nsIDOMDocument.h"
 
 /**
  * A class for evaluating an XPath expression string
  */
-class nsXPathEvaluator : public nsIDOMXPathEvaluator
+class nsXPathEvaluator : public nsIDOMXPathEvaluator,
+                         public nsIXPathEvaluatorInternal
 {
 public:
     nsXPathEvaluator();
@@ -58,13 +61,16 @@ public:
     // nsIDOMXPathEvaluator interface
     NS_DECL_NSIDOMXPATHEVALUATOR
 
+    // nsIXPathEvaluatorInternal interface
+    NS_IMETHOD SetDocument(nsIDOMDocument* aDocument);
+
 private:
     // txIParseContext implementation
     class ParseContextImpl : public txIParseContext
     {
     public:
-        ParseContextImpl(nsIDOMXPathNSResolver* aResolver)
-            : mResolver(aResolver), mLastError(NS_OK)
+        ParseContextImpl(nsIDOMXPathNSResolver* aResolver, PRBool aIsHTML)
+            : mResolver(aResolver), mLastError(NS_OK), mIsHTML(aIsHTML)
         {
         }
 
@@ -80,12 +86,16 @@ private:
         nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
         nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                      FunctionCall*& aFunction);
+        PRBool caseInsensitiveNameTests();
         void receiveError(const nsAString& aMsg, nsresult aRes);
 
     private:
         nsIDOMXPathNSResolver* mResolver;
         nsresult mLastError;
+        PRBool mIsHTML;
     };
+
+    nsCOMPtr<nsIDOMDocument> mDocument;
 };
 
 /* d0a75e02-b5e7-11d5-a7f2-df109fb8a1fc */

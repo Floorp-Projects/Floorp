@@ -38,6 +38,9 @@
 #include "txIXPathContext.h"
 #include "txTokenizer.h"
 #include "XMLDOMUtils.h"
+#ifndef TX_EXE
+#include "nsIDOMNode.h"
+#endif
 
 /*
  * Creates a NodeSetFunctionCall of the given type
@@ -161,12 +164,23 @@ ExprResult* NodeSetFunctionCall::evaluate(txIEvalContext* aContext) {
                 case LOCAL_NAME:
                 {
                     nsAutoString localName;
+#ifdef TX_EXE
                     nsCOMPtr<nsIAtom> localNameAtom;
                     node->getLocalName(getter_AddRefs(localNameAtom));
                     if (localNameAtom) {
                         // Node has a localName
                         localNameAtom->ToString(localName);
                     }
+#else
+                    // The mozilla HTML-elements returns different casing for
+                    // the localName-atom and .localName. Once we have a
+                    // treeWalker it should have a getLocalName(nsAString&)
+                    // function.
+                    nsCOMPtr<nsIDOMNode> mozNode =
+                        do_QueryInterface(node->getNSObj());
+                    NS_ASSERTION(mozNode, "wrapper doesn't wrap a nsIDOMNode");
+                    mozNode->GetLocalName(localName);
+#endif
                     
                     return new StringResult(localName);
                 }
