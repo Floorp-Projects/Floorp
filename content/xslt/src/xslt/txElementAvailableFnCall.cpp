@@ -90,6 +90,7 @@ ExprResult* ElementAvailableFunctionCall::evaluate(Node* context, ContextState* 
                          localName.isEqual(COMMENT) ||
                          localName.isEqual(COPY) ||
                          localName.isEqual(COPY_OF) ||
+                         localName.isEqual(DECIMAL_FORMAT) ||
                          localName.isEqual(ELEMENT) ||
                          localName.isEqual(FOR_EACH) ||
                          localName.isEqual(IF) ||

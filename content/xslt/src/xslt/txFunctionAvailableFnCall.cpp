@@ -106,7 +106,7 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(Node* context, ContextState*
                      property.isEqual(XPathNames::FLOOR_FN) ||
                      property.isEqual(DOCUMENT_FN) ||
                      property.isEqual(KEY_FN) ||
-                     // property.isEqual(FORMAT_NUMBER_FN) ||
+                     property.isEqual(FORMAT_NUMBER_FN) ||
                      property.isEqual(CURRENT_FN) ||
                      // property.isEqual(UNPARSED_ENTITY_URI_FN) ||
                      property.isEqual(GENERATE_ID_FN) ||
