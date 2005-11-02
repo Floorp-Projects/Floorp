@@ -519,8 +519,7 @@ txExecutionState::retrieveDocument(const nsAString& uri,
 
         if (NS_FAILED(rv) || !xmlDoc) {
             receiveError(NS_LITERAL_STRING("Couldn't load document '") +
-                         docUrl + NS_LITERAL_STRING("': ") + errMsg,
-                         NS_ERROR_XSLT_INVALID_URL);
+                         docUrl + NS_LITERAL_STRING("': ") + errMsg, rv);
             return NULL;
         }
         // add to list of documents
