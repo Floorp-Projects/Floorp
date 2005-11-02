@@ -30,7 +30,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.6 2005/11/02 07:33:30 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txExprParser.cpp,v 1.7 2005/11/02 07:33:31 axel%pike.org Exp $
  */
 
 /**
@@ -38,7 +38,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.6 $ $Date: 2005/11/02 07:33:30 $
+ * @version $Revision: 1.7 $ $Date: 2005/11/02 07:33:31 $
 **/
 
 #include "ExprParser.h"
@@ -69,8 +69,8 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
     String buffer;
     MBool inExpr    = MB_FALSE;
     MBool inLiteral = MB_FALSE;
-    char endLiteral = '"';
-    char prevCh = '\0';
+    UNICODE_CHAR endLiteral = '"';
+    UNICODE_CHAR prevCh = '\0';
 
     while ( cc < size) {
         UNICODE_CHAR ch = attValue.charAt(cc++);
@@ -227,6 +227,7 @@ Expr*  ExprParser::createExpr(ExprLexer& lexer) {
 
         Token* tok = lexer.nextToken();
         switch ( tok->type ) {
+            case Token::L_BRACKET: // Predicate starts here
             case Token::R_BRACKET:
             case Token::R_PAREN:
             case Token::COMMA :
@@ -415,6 +416,9 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
     else if ( XPathNames::FALSE_FN.isEqual(tok->value) ) {
         fnCall = new BooleanFunctionCall();
     }
+    else if ( XPathNames::ID_FN.isEqual(tok->value) ) {
+        fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::ID);
+    }
     else if ( XPathNames::LANG_FN.isEqual(tok->value) ) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_LANG);
     }
@@ -429,6 +433,9 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
     }
     else if ( XPathNames::NAMESPACE_URI_FN.isEqual(tok->value) ) {
         fnCall = new NodeSetFunctionCall(NodeSetFunctionCall::NAMESPACE_URI);
+    }
+    else if ( XPathNames::NORMALIZE_SPACE_FN.isEqual(tok->value) ) {
+        fnCall = new StringFunctionCall(StringFunctionCall::NORMALIZE_SPACE);
     }
     else if ( XPathNames::NOT_FN.isEqual(tok->value) ) {
         fnCall = new BooleanFunctionCall(BooleanFunctionCall::TX_NOT);
@@ -453,6 +460,9 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
     }
     else if ( XPathNames::SUBSTRING_BEFORE_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::SUBSTRING_BEFORE);
+    }
+    else if ( XPathNames::SUM_FN.isEqual(tok->value) ) {
+        fnCall = new NumberFunctionCall(NumberFunctionCall::SUM);
     }
     else if ( XPathNames::TRANSLATE_FN.isEqual(tok->value) ) {
         fnCall = new StringFunctionCall(StringFunctionCall::TRANSLATE);

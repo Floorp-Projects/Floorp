@@ -25,7 +25,7 @@
  * Nisheeth Ranjan, nisheeth@netscape.com
  *   -- implemented rint function, which was not available on Windows.
  *
- * $Id: txNumberFunctionCall.cpp,v 1.9 2005/11/02 07:33:44 axel%pike.org Exp $
+ * $Id: txNumberFunctionCall.cpp,v 1.10 2005/11/02 07:33:45 axel%pike.org Exp $
  */
 
 /*
@@ -57,6 +57,9 @@ NumberFunctionCall::NumberFunctionCall(short type) : FunctionCall() {
         break;
     case FLOOR :
         FunctionCall::setName(XPathNames::FLOOR_FN);
+        break;
+    case SUM :
+        FunctionCall::setName(XPathNames::SUM_FN);
         break;
     case NUMBER :
     default :
@@ -129,6 +132,26 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
         }
         else result->setValue(0.0);
             break;
+      
+    case SUM :
+        double numResult;
+        numResult = 0 ;
+        if ( requireParams(1, 1, cs) ) {
+            param = (Expr*)iter->next();
+            ExprResult* exprResult = param->evaluate(context, cs);
+            if ( exprResult->getResultType() == ExprResult::NODESET ) {
+                NodeSet *lNList = (NodeSet *)exprResult;
+                NodeSet tmp;
+                for (int i=0; i<lNList->size(); i++){
+                    tmp.add(0,lNList->get(i));
+                    numResult += tmp.numberValue();
+                };
+            };
+            delete exprResult;
+            exprResult=0;
+        };
+        result = new NumberResult(numResult);
+        break;
       
     case NUMBER :
     default : //-- number( object? )

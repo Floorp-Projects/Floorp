@@ -29,7 +29,7 @@
  *       - foo//bar would not match properly if there was more than
  *         one node in the NodeSet (nodes) on the final iteration
  *
- * $Id: txPathExpr.cpp,v 1.4 2005/11/02 07:33:40 kvisco%ziplink.net Exp $
+ * $Id: txPathExpr.cpp,v 1.5 2005/11/02 07:33:41 axel%pike.org Exp $
  */
 
 #include "Expr.h"
@@ -154,7 +154,7 @@ ExprResult* PathExpr::evaluate(Node* context, ContextState* cs) {
         }
         delete (NodeSet*) cs->getNodeSetStack()->pop();
         nodes = tmpNodes;
-        if ( nodes->size() == 0 ) break;
+        if ( !nodes || nodes->size() == 0 ) break;
     }
     delete iter;
 
@@ -173,7 +173,7 @@ void PathExpr::fromDescendants
     if (( !context ) || (! pExpr )) return;
 
     NodeList* nl = context->getChildNodes();
-    for (int i = 0; i < nl->getLength(); i++) {
+    for (UInt32 i = 0; i < nl->getLength(); i++) {
         Node* child = nl->item(i);
         if (pExpr->matches(child, context, cs))
             nodes->add(child);

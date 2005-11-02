@@ -24,14 +24,14 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- changed some behavoir to be more compliant with spec
  *    
- * $Id: txNodeSetFunctionCall.cpp,v 1.2 2005/11/02 07:33:45 kvisco%ziplink.net Exp $
+ * $Id: txNodeSetFunctionCall.cpp,v 1.3 2005/11/02 07:33:46 axel%pike.org Exp $
  */
 
 /**
  * NodeSetFunctionCall
  * A representation of the XPath NodeSet funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:45 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:46 $
 **/
 
 #include "FunctionLib.h"
@@ -52,6 +52,9 @@ NodeSetFunctionCall::NodeSetFunctionCall(short type) : FunctionCall() {
     switch ( type ) {
         case COUNT :
             FunctionCall::setName(XPathNames::COUNT_FN);
+            break;
+        case ID :
+            FunctionCall::setName(XPathNames::ID_FN);
             break;
         case LAST :
             FunctionCall::setName(XPathNames::LAST_FN);
@@ -104,6 +107,43 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
                 cs->recieveError(err);
                 result = new NumberResult(0.0);
             }
+            break;
+        case ID :
+            if ( requireParams(1, 1, cs) ) {
+                NodeSet* resultSet = new NodeSet();
+                param = (Expr*)iter->next();
+                ExprResult* exprResult = param->evaluate(context, cs);
+                String lIDList;
+                if ( exprResult->getResultType() == ExprResult::NODESET ) {
+                    NodeSet *lNList = (NodeSet *)exprResult;
+                    NodeSet tmp;
+                    for (int i=0; i<lNList->size(); i++){
+                        tmp.add(0,lNList->get(i));
+                        tmp.stringValue(lIDList);
+                        lIDList.append(' ');
+                    };
+                } else {
+                    exprResult->stringValue(lIDList);
+                };
+                lIDList.trim();
+                Int32 start=0;
+                MBool hasSpace = MB_FALSE, isSpace;
+                UNICODE_CHAR cc;
+                String thisID;
+                for (Int32 end=0; end<lIDList.length(); end++){
+                    cc = lIDList.charAt(end);
+                    isSpace = (cc==' ' || cc=='\n' || cc=='\t'|| cc=='\r');
+                    if (isSpace && !hasSpace){
+                        hasSpace = MB_TRUE;
+                        lIDList.subString(start, end, thisID);
+                        resultSet->add(context->getOwnerDocument()->getElementById(thisID));
+                    } else if (!isSpace && hasSpace){
+                        start = end;
+                        hasSpace = MB_FALSE;
+                    };
+                };
+                result = resultSet;
+            };
             break;
         case LAST :
             if ( nodeSet ) result = new NumberResult((double)nodeSet->size());

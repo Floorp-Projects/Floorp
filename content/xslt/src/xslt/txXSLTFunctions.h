@@ -23,7 +23,7 @@
  * Olivier Gerardin,
  *    -- added document() function definition
  *
- * $Id: txXSLTFunctions.h,v 1.2 2005/11/02 07:33:55 kvisco%ziplink.net Exp $
+ * $Id: txXSLTFunctions.h,v 1.3 2005/11/02 07:33:56 axel%pike.org Exp $
  */
 
 #include "dom.h"
@@ -37,6 +37,133 @@
 #define TRANSFRMX_XSLT_FUNCTIONS_H
 
 /**
+ * The definition for the XSLT document() function
+**/
+class DocumentFunctionCall : public FunctionCall {
+
+public:
+
+    /**
+     * Creates a new document() function call
+    **/
+    DocumentFunctionCall(Document* xslDocument);
+
+    /**
+     * Evaluates this Expr based on the given context node and processor state
+     * @param context the context node for evaluation of this Expr
+     * @param cs the ContextState containing the stack information needed
+     * for evaluation
+     * @return the result of the evaluation
+     * @see FunctionCall.h
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+
+private:
+    void retrieveDocument(String& uri,String& baseUri, NodeSet &resultNodeSet, ContextState* cs);
+    Document* xslDocument;
+};
+
+/**
+ * The definition for the XSLT key() function
+**/
+class KeyFunctionCall : public FunctionCall {
+
+public:
+
+    /**
+     * Creates a new key() function call
+    **/
+    KeyFunctionCall();
+
+    /**
+     * Evaluates this Expr based on the given context node and processor state
+     * @param context the context node for evaluation of this Expr
+     * @param cs the ContextState containing the stack information needed
+     * for evaluation
+     * @return the result of the evaluation
+     * @see FunctionCall.h
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+
+private:
+};
+
+/**
+ * The definition for the XSLT format-number() function
+**/
+class FormatNumberFunctionCall : public FunctionCall {
+
+public:
+
+    /**
+     * Creates a new format-number() function call
+    **/
+    FormatNumberFunctionCall();
+
+    /**
+     * Evaluates this Expr based on the given context node and processor state
+     * @param context the context node for evaluation of this Expr
+     * @param cs the ContextState containing the stack information needed
+     * for evaluation
+     * @return the result of the evaluation
+     * @see FunctionCall.h
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+
+private:
+};
+
+/**
+ * The definition for the XSLT current() function
+**/
+class CurrentFunctionCall : public FunctionCall {
+
+public:
+
+    /**
+     * Creates a new current() function call
+    **/
+    CurrentFunctionCall();
+
+    /**
+     * Evaluates this Expr based on the given context node and processor state
+     * @param context the context node for evaluation of this Expr
+     * @param cs the ContextState containing the stack information needed
+     * for evaluation
+     * @return the result of the evaluation
+     * @see FunctionCall.h
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+
+private:
+};
+
+/**
+ * The definition for the XSLT unparsed-entity-uri() function
+**/
+class UnparsedEntityUriFunctionCall : public FunctionCall {
+
+public:
+
+    /**
+     * Creates a new unparsed-entity-uri() function call
+    **/
+    UnparsedEntityUriFunctionCall();
+
+    /**
+     * Evaluates this Expr based on the given context node and processor state
+     * @param context the context node for evaluation of this Expr
+     * @param cs the ContextState containing the stack information needed
+     * for evaluation
+     * @return the result of the evaluation
+     * @see FunctionCall.h
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+
+private:
+};
+
+/**
  * The definition for the XSLT generate-id() function
 **/
 class GenerateIdFunctionCall : public FunctionCall {
@@ -44,7 +171,7 @@ class GenerateIdFunctionCall : public FunctionCall {
 public:
 
     /**
-     * Creates a new generate-id function call
+     * Creates a new generate-id() function call
     **/
     GenerateIdFunctionCall(DOMHelper* domHelper);
 
@@ -63,21 +190,21 @@ private:
 };
 
 /**
- * The definition for the XSLT document() function
+ * The definition for the XSLT system-property() function
 **/
-class DocumentFunctionCall : public FunctionCall {
+class SystemPropertyFunctionCall : public FunctionCall {
 
 public:
 
     /**
-     * Creates a new document() function call
+     * Creates a new system-property() function call
     **/
-    DocumentFunctionCall(Document* xslDocument);
+    SystemPropertyFunctionCall();
 
     /**
      * Evaluates this Expr based on the given context node and processor state
      * @param context the context node for evaluation of this Expr
-     * @param ps the ContextState containing the stack information needed
+     * @param cs the ContextState containing the stack information needed
      * for evaluation
      * @return the result of the evaluation
      * @see FunctionCall.h
@@ -85,8 +212,56 @@ public:
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
 
 private:
-    void retrieveDocument(String& uri,String& baseUri, NodeSet &resultNodeSet, ContextState* cs);
-    Document* xslDocument;
+};
+
+/**
+ * The definition for the XSLT element-available() function
+**/
+class ElementAvailableFunctionCall : public FunctionCall {
+
+public:
+
+    /**
+     * Creates a new element-available() function call
+    **/
+    ElementAvailableFunctionCall();
+
+    /**
+     * Evaluates this Expr based on the given context node and processor state
+     * @param context the context node for evaluation of this Expr
+     * @param cs the ContextState containing the stack information needed
+     * for evaluation
+     * @return the result of the evaluation
+     * @see FunctionCall.h
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+
+private:
+};
+
+/**
+ * The definition for the XSLT function-available() function
+**/
+class FunctionAvailableFunctionCall : public FunctionCall {
+
+public:
+
+    /**
+     * Creates a new function-available() function call
+    **/
+    FunctionAvailableFunctionCall();
+
+    /**
+     * Evaluates this Expr based on the given context node and processor state
+     * @param context the context node for evaluation of this Expr
+     * @param cs the ContextState containing the stack information needed
+     * for evaluation
+     * @return the result of the evaluation
+     * @see FunctionCall.h
+    **/
+    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+
+private:
 };
 
 #endif
