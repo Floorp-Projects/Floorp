@@ -119,7 +119,6 @@ ExprResult* txFormatNumberFunctionCall::evaluate(Node* aContext,
     int multiplier=1;
     int groupSize=-1;
 
-    UNICODE_CHAR c;
     int pos=0;
     int formatLen = formatStr.length();
     MBool inQuote;
@@ -148,6 +147,7 @@ ExprResult* txFormatNumberFunctionCall::evaluate(Node* aContext,
     FormatParseState pState = Prefix;
     inQuote = MB_FALSE;
 
+    UNICODE_CHAR c = 0;
     while (pos < formatLen && pState != Finished) {
         c=formatStr.charAt(pos++);
 
