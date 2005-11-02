@@ -111,7 +111,7 @@ public:
     NS_IMETHOD WillResume(void) { return NS_OK; }
     NS_IMETHOD SetParser(nsIParser* aParser) { return NS_OK; }
     NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
-    NS_IMETHOD SetDocumentCharset(nsAString& aCharset) { return NS_OK; }
+    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
 
 private:
     nsRefPtr<txStylesheetCompiler> mCompiler;
@@ -296,7 +296,7 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     }
 
     nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);
-    parser->SetDocumentCharset(NS_ConvertASCIItoUCS2(charset), charsetSource);
+    parser->SetDocumentCharset(charset, charsetSource);
 
     nsCAutoString contentType;
     channel->GetContentType(contentType);
