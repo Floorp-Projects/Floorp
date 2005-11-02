@@ -81,10 +81,8 @@ txParseDocumentFromURI(const nsAString& aHref, const nsAString& aReferrer,
     nsCOMPtr<nsIDOMDocument> theDocument;
     nsCOMPtr<nsIDocument> loaderDocument =
         do_QueryInterface(aLoader->getNSObj());
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    nsCOMPtr<nsIURI> loaderUri;
-    loaderDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-    loaderDocument->GetDocumentURL(getter_AddRefs(loaderUri));
+    nsCOMPtr<nsILoadGroup> loadGroup = loaderDocument->GetDocumentLoadGroup();
+    nsIURI *loaderUri = loaderDocument->GetDocumentURL();
     NS_ENSURE_TRUE(loaderUri, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIChannel> channel;

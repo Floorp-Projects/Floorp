@@ -208,16 +208,14 @@ void txMozillaXMLOutput::endDocument()
 
     if (!mRefreshString.IsEmpty()) {
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-        nsCOMPtr<nsIScriptGlobalObject> sgo;
-        doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+        nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
         if (sgo) {
             nsCOMPtr<nsIDocShell> docShell;
             sgo->GetDocShell(getter_AddRefs(docShell));
             nsCOMPtr<nsIRefreshURI> refURI = do_QueryInterface(docShell);
             if (refURI) {
-                nsCOMPtr<nsIURI> baseURI;
-                doc->GetBaseURL(getter_AddRefs(baseURI));
-                refURI->SetupRefreshURIFromHeader(baseURI, mRefreshString);
+                refURI->SetupRefreshURIFromHeader(doc->GetBaseURL(),
+                                                  mRefreshString);
             }
         }
     }
@@ -739,8 +737,7 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
     }
 
     // Set up script loader of the result document.
-    nsCOMPtr<nsIScriptLoader> loader;
-    doc->GetScriptLoader(getter_AddRefs(loader));
+    nsIScriptLoader *loader = doc->GetScriptLoader();
     if (loader) {
         if (mNotifier) {
             loader->AddObserver(mNotifier);
@@ -904,9 +901,8 @@ txTransformNotifier::SignalTransformEnd()
 
     // XXX Need a better way to determine transform success/failure
     if (mDocument) {
-        nsCOMPtr<nsIScriptLoader> loader;
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-        doc->GetScriptLoader(getter_AddRefs(loader));
+        nsIScriptLoader *loader = doc->GetScriptLoader();
         if (loader) {
             loader->RemoveObserver(this);
         }
