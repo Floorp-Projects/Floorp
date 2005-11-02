@@ -98,7 +98,6 @@ NS_IMPL_ISUPPORTS1(nsXPathExceptionProvider, nsIExceptionProvider)
 
 nsXPathExceptionProvider::nsXPathExceptionProvider()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPathExceptionProvider::~nsXPathExceptionProvider()

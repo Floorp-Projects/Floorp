@@ -50,7 +50,6 @@ NS_INTERFACE_MAP_END
 
 nsXPathNSResolver::nsXPathNSResolver(nsIDOMNode* aNode)
 {
-    NS_INIT_ISUPPORTS();
     mNode = do_QueryInterface(aNode);
     NS_ASSERTION(mNode, "Need a node to resolve namespaces.");
 }
