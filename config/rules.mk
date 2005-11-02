@@ -547,14 +547,6 @@ ifeq ($(OS_TARGET), WINCE)
 OUTOPTION = -Fo# eol
 endif
 
-ifdef GRE_MODULE
-ifndef DISABLE_DIST_GRE
-ifdef GRE_DIRS_ONLY
-_SKIP_OLD_GRE_INSTALL=1
-endif
-endif
-endif
-
 ################################################################################
 
 # The root makefile doesn't want to do a plain export/libs, because
@@ -662,54 +654,25 @@ ifdef MAPS
 endif
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
-ifdef GRE_MODULE
-ifndef DISABLE_DIST_GRE
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(GRE_DIST)/components
-	$(ELF_DYNSTR_GC) $(GRE_DIST)/components/$(SHARED_LIBRARY)
-ifdef BEOS_ADDON_WORKAROUND
-	( cd $(GRE_DIST)/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
-endif
-endif
-endif # GRE_MODULE
-ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)/components
 	$(ELF_DYNSTR_GC) $(FINAL_TARGET)/components/$(SHARED_LIBRARY)
 ifdef BEOS_ADDON_WORKAROUND
 	( cd $(FINAL_TARGET)/components && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
-endif # ! _SKIP_OLD_GRE_INSTALL
 else # ! IS_COMPONENT
-ifdef GRE_MODULE
-ifndef DISABLE_DIST_GRE
-	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(GRE_DIST)
-ifdef BEOS_ADDON_WORKAROUND
-	( cd $(GRE_DIST) && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
-endif
-endif
-endif # GRE_MODULE
-
 ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
 else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
 endif
-ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(FINAL_TARGET)
 ifdef BEOS_ADDON_WORKAROUND
 	( cd $(FINAL_TARGET) && $(CC) -nostart -o $(SHARED_LIBRARY).stub $(SHARED_LIBRARY) )
 endif
-endif # ! _SKIP_OLD_GRE_INSTALL
 endif # IS_COMPONENT
 endif # SHARED_LIBRARY
 ifdef PROGRAM
-ifdef GRE_MODULE
-ifndef DISABLE_DIST_GRE
-	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(GRE_DIST)
-endif
-endif
-ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) $(IFLAGS2) $(PROGRAM) $(FINAL_TARGET)
-endif
 endif
 ifdef SIMPLE_PROGRAMS
 	$(INSTALL) $(IFLAGS2) $(SIMPLE_PROGRAMS) $(FINAL_TARGET)
@@ -1260,10 +1223,8 @@ endif
 
 ifneq ($(PREF_JS_EXPORTS),)
 ifdef GRE_MODULE
-PREF_DIST_DIR    = $(GRE_DIST)
 PREF_DIR = greprefs
 else
-PREF_DIST_DIR    = $(FINAL_TARGET)
 ifdef XPI_NAME
 PREF_DIR = defaults/preferences
 else
@@ -1271,7 +1232,7 @@ PREF_DIR = defaults/pref
 endif
 endif
 
-$(FINAL_TARGET)/$(PREF_DIR) $(GRE_DIST)/$(PREF_DIR) $(DESTDIR)$(mozappdir)/$(PREF_DIR):
+$(FINAL_TARGET)/$(PREF_DIR) $(DESTDIR)$(mozappdir)/$(PREF_DIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
 # on win32, pref files need CRLF line endings... see bug 206029
@@ -1280,21 +1241,11 @@ PREF_PPFLAGS = --line-endings=crlf
 endif
 
 ifndef NO_DIST_INSTALL
-libs:: $(PREF_JS_EXPORTS) $(PREF_DIST_DIR)/$(PREF_DIR)
-	$(EXIT_ON_ERROR)  \
-	for i in $(PREF_JS_EXPORTS); \
-	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $$i > $(PREF_DIST_DIR)/$(PREF_DIR)/`basename $$i`; \
-	done
-
-ifdef GRE_MODULE
-ifndef _SKIP_OLD_GRE_INSTALL
 libs:: $(PREF_JS_EXPORTS) $(FINAL_TARGET)/$(PREF_DIR)
 	$(EXIT_ON_ERROR)  \
 	for i in $(PREF_JS_EXPORTS); \
 	do $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $$i > $(FINAL_TARGET)/$(PREF_DIR)/`basename $$i`; \
 	done
-endif
-endif
 endif
 
 ifndef NO_INSTALL
@@ -1375,14 +1326,7 @@ endif # XPIDL_MODULE.xpt != XPIDLSRCS
 
 libs:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 ifndef NO_DIST_INSTALL
-ifdef GRE_MODULE
-ifndef DISABLE_DIST_GRE
-	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(GRE_DIST)/components
-endif
-endif
-ifndef _SKIP_OLD_GRE_INSTALL
 	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(FINAL_TARGET)/components
-endif
 endif
 
 install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
