@@ -251,22 +251,13 @@ private:
     MBool nextIsOperatorToken(Token* token);
 
     /**
-     * Returns true if the given character represents an Alpha letter
-     * Implemented in ExprLexerChars.cpp
-    **/
-    static MBool isLetter(UNICODE_CHAR ch);
-
-    /**
      * Returns true if the given character represents a numeric letter (digit)
      * Implemented in ExprLexerChars.cpp
     **/
-    static MBool isDigit(UNICODE_CHAR ch);
-
-    /**
-     * Returns true if the given character is an allowable NCName character
-     * Implemented in ExprLexerChars.cpp
-    **/
-    static MBool isNCNameChar(UNICODE_CHAR ch);
+    static MBool isXPathDigit(UNICODE_CHAR ch)
+    {
+        return (ch >= '0' && ch <= '9');
+    }
 
     String subStr;
     void parse(const String& pattern);

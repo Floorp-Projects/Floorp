@@ -100,8 +100,8 @@ public:
 
     /**
      * Returns true if the given String is a valid XML QName
-    **/
-    static MBool isValidQName(const String& name);
+     */
+    static MBool isValidQName(const String& aName);
 
     /**
      * Returns true if the given string has only whitespace characters
@@ -120,28 +120,21 @@ public:
     **/
     static MBool shouldStripTextnode (const String& data);
 
-private:
+    /*
+     * Returns true if the given character represents a numeric letter (digit).
+     */
+    static MBool isDigit(UNICODE_CHAR ch);
 
-    /**
+    /*
      * Returns true if the given character represents an Alpha letter
-    **/
-    static MBool isAlphaChar(PRInt32 ch);
+     */
+    static MBool isLetter(UNICODE_CHAR ch);
 
-    /**
-     * Returns true if the given character represents a numeric letter (digit)
-    **/
-    static MBool isDigit(PRInt32 ch);
-
-    /**
-     * Returns true if the given character is an allowable QName character
-    **/
-    static MBool isQNameChar(PRInt32 ch);
-
-    /**
+    /*
      * Returns true if the given character is an allowable NCName character
-    **/
-    static MBool isNCNameChar(PRInt32 ch);
+     */
+    static MBool isNCNameChar(UNICODE_CHAR ch);
+};
 
-}; //-- XMLUtils
 #endif
 
