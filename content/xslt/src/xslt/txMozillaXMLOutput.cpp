@@ -233,7 +233,7 @@ void txMozillaXMLOutput::processingInstruction(const String& aTarget, const Stri
     nsCOMPtr<nsIDOMProcessingInstruction> pi;
     nsresult rv = mDocument->CreateProcessingInstruction(aTarget, aData,
                                                          getter_AddRefs(pi));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create entity reference");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create processing instruction");
 
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(pi);
     if (ssle) {
@@ -243,7 +243,7 @@ void txMozillaXMLOutput::processingInstruction(const String& aTarget, const Stri
 
     nsCOMPtr<nsIDOMNode> resultNode;
     mCurrentNode->AppendChild(pi, getter_AddRefs(resultNode));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't append entity reference");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't append processing instruction");
     if (NS_FAILED(rv))
         return;
 

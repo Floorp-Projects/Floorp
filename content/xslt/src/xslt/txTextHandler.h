@@ -47,7 +47,7 @@ public:
     txTextHandler(String& aValue, MBool aOnlyText);
     virtual ~txTextHandler();
 
-    /*
+    /**
      * Signals to receive the start of an attribute.
      *
      * @param aName the name of the attribute
@@ -58,27 +58,27 @@ public:
                    const PRInt32 aNsID,
                    const String& aValue);
 
-    /*
+    /**
      * Signals to receive characters.
      *
      * @param aData the characters to receive
      */
     void characters(const String& aData);
 
-    /*
+    /**
      * Signals to receive data that should be treated as a comment.
      *
      * @param data the comment data to receive
      */
     void comment(const String& aData);
 
-    /*
+    /**
      * Signals the end of a document. It is an error to call
      * this method more than once.
      */
     void endDocument();
 
-    /*
+    /**
      * Signals to receive the end of an element.
      *
      * @param aName the name of the element
@@ -87,7 +87,7 @@ public:
     void endElement(const String& aName,
                     const PRInt32 aNsID);
 
-    /*
+    /**
      * Signals to receive a processing instruction.
      *
      * @param aTarget the target of the processing instruction
@@ -96,12 +96,12 @@ public:
     void processingInstruction(const String& aTarget,
                                const String& aData);
 
-    /*
+    /**
      * Signals the start of a document.
      */
     void startDocument();
 
-    /*
+    /**
      * Signals to receive the start of an element.
      *
      * @param aName the name of the element
