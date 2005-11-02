@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txUnknownHandler.h"
+#include <string.h>
 
 PRUint32 txUnknownHandler::kReasonableTransactions = 8;
 
