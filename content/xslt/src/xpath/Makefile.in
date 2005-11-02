@@ -45,7 +45,6 @@ CPPSRCS = AdditiveExpr.cpp \
         BooleanFunctionCall.cpp \
         BooleanResult.cpp \
         ExprLexer.cpp \
-        ExprLexerChars.cpp \
         ExprParser.cpp \
         FilterExpr.cpp \
         FunctionCall.cpp \
