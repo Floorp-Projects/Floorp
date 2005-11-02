@@ -25,7 +25,7 @@
  * Nisheeth Ranjan, nisheeth@netscape.com
  *   -- implemented rint function, which was not available on Windows.
  *
- * $Id: txNumberFunctionCall.cpp,v 1.13 2005/11/02 07:33:48 peterv%netscape.com Exp $
+ * $Id: txNumberFunctionCall.cpp,v 1.14 2005/11/02 07:33:49 sicking%bigfoot.com Exp $
  */
 
 /*
@@ -39,34 +39,26 @@
 #include <math.h>
 
 /**
- * Creates a default NumberFunctionCall. The number() function
- * is the default
-**/
-NumberFunctionCall::NumberFunctionCall() : FunctionCall(XPathNames::NUMBER_FN) {
-    type = NUMBER;
-} //-- NumberFunctionCall
-
-/**
  * Creates a NumberFunctionCall of the given type
 **/
 NumberFunctionCall::NumberFunctionCall(short type) : FunctionCall() {
     this->type = type;
     switch ( type ) {
     case ROUND :
-        FunctionCall::setName(XPathNames::ROUND_FN);
+        name = XPathNames::ROUND_FN;
         break;
     case CEILING :
-        FunctionCall::setName(XPathNames::CEILING_FN);
+        name = XPathNames::CEILING_FN;
         break;
     case FLOOR :
-        FunctionCall::setName(XPathNames::FLOOR_FN);
+        name = XPathNames::FLOOR_FN;
         break;
     case SUM :
-        FunctionCall::setName(XPathNames::SUM_FN);
+        name = XPathNames::SUM_FN;
         break;
     case NUMBER :
     default :
-        FunctionCall::setName(XPathNames::NUMBER_FN);
+        name = XPathNames::NUMBER_FN;
         break;
     }
 } //-- NumberFunctionCall

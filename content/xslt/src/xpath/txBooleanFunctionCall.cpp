@@ -24,7 +24,7 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- added lang() implementation
  *
- * $Id: txBooleanFunctionCall.cpp,v 1.8 2005/11/02 07:33:41 peterv%netscape.com Exp $
+ * $Id: txBooleanFunctionCall.cpp,v 1.9 2005/11/02 07:33:42 sicking%bigfoot.com Exp $
  */
 
 #include "FunctionLib.h"
@@ -33,32 +33,25 @@
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:41 $
-**/
-BooleanFunctionCall::BooleanFunctionCall() : FunctionCall(XPathNames::FALSE_FN) {
-    this->type = TX_FALSE;
-} //-- BooleanFunctionCall
-
-/**
- * Creates a BooleanFunctionCall of the given type
+ * @version $Revision: 1.9 $ $Date: 2005/11/02 07:33:42 $
 **/
 BooleanFunctionCall::BooleanFunctionCall(short type) : FunctionCall()
 {
     switch ( type ) {
         case TX_BOOLEAN :
-            FunctionCall::setName(XPathNames::BOOLEAN_FN);
+            name = XPathNames::BOOLEAN_FN;
             break;
         case TX_LANG:
-            FunctionCall::setName(XPathNames::LANG_FN);
+            name = XPathNames::LANG_FN;
             break;
         case TX_NOT :
-            FunctionCall::setName(XPathNames::NOT_FN);
+            name = XPathNames::NOT_FN;
             break;
         case TX_TRUE :
-            FunctionCall::setName(XPathNames::TRUE_FN);
+            name = XPathNames::TRUE_FN;
             break;
         default:
-            FunctionCall::setName(XPathNames::FALSE_FN);
+            name = XPathNames::FALSE_FN;
             break;
     }
     this->type = type;

@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txAdditiveExpr.cpp,v 1.1 2005/11/02 07:33:58 kvisco%ziplink.net Exp $
+ * $Id: txAdditiveExpr.cpp,v 1.2 2005/11/02 07:33:59 sicking%bigfoot.com Exp $
  */
 
 /**
@@ -30,19 +30,10 @@
  *  +   : addition
  *  -   : subtraction
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.1 $ $Date: 2005/11/02 07:33:58 $
+ * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:59 $
 **/
 
 #include "Expr.h"
-
-/**
- * Creates a new AdditiveExpr using the default operator (ADDITION)
-**/
-AdditiveExpr::AdditiveExpr() {
-    this->op = ADDITION;
-    this->leftExpr  = 0;
-    this->rightExpr = 0;
-} //-- AdditiveExpr
 
 /**
  * Creates a new AdditiveExpr using the given operator
@@ -57,20 +48,6 @@ AdditiveExpr::~AdditiveExpr() {
     delete leftExpr;
     delete rightExpr;
 } //-- ~AdditiveExpr
-
-/**
- * Sets the left side of this AdditiveExpr
-**/
-void AdditiveExpr::setLeftExpr(Expr* leftExpr) {
-    this->leftExpr = leftExpr;
-} //-- setLeftExpr
-
-/**
- * Sets the right side of this AdditiveExpr
-**/
-void AdditiveExpr::setRightExpr(Expr* rightExpr) {
-    this->rightExpr = rightExpr;
-} //-- setRightExpr
 
 /**
  * Evaluates this Expr based on the given context node and processor state

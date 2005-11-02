@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txNumberResult.cpp,v 1.6 2005/11/02 07:34:01 kvisco%ziplink.net Exp $
+ * $Id: txNumberResult.cpp,v 1.7 2005/11/02 07:34:02 sicking%bigfoot.com Exp $
  */
 
 /**
  * NumberResult
  * Represents the a number as the result of evaluating an Expr
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.6 $ $Date: 2005/11/02 07:34:01 $
+ * @version $Revision: 1.7 $ $Date: 2005/11/02 07:34:02 $
 **/
 
 #include "ExprResult.h"
@@ -40,10 +40,6 @@ NumberResult::NumberResult() {
     value = 0.0;
 } //-- NumberResult
 
-NumberResult::NumberResult(const NumberResult& nbrResult) {
-    this->value = nbrResult.getValue();
-} //-- NumberResult
-
 /**
  * Creates a new NumberResult with the value of the given double parameter
  * @param dbl the double to use for initialization of this NumberResult's value
@@ -51,21 +47,6 @@ NumberResult::NumberResult(const NumberResult& nbrResult) {
 NumberResult::NumberResult(double dbl) {
     this->value = dbl;
 } //-- NumberResult
-
-/**
- * Returns the value of this NumberResult
- * @return the value of this NumberResult
-**/
-double NumberResult::getValue() const {
-    return this->value;
-} //-- getValue
-
-/**
- *
-**/
-MBool NumberResult::isNaN() const {
-    return Double::isNaN(value);
-} //-- isNaN
 
 /*
  * Virtual Methods from ExprResult
@@ -87,7 +68,7 @@ MBool NumberResult::booleanValue() {
   // OG+
   // As per the XPath spec, the boolean value of a number is true if and only if
   // it is neither positive 0 nor negative 0 nor NaN
-  return (MBool)(this->value != 0.0 && this->value != -0.0 && ! isNaN());
+  return (MBool)(value != 0.0 && !Double::isNaN(value));
   // OG-
 } //-- booleanValue
 

@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txStringFunctionCall.cpp,v 1.11 2005/11/02 07:33:46 peterv%netscape.com Exp $
+ * $Id: txStringFunctionCall.cpp,v 1.12 2005/11/02 07:33:47 sicking%bigfoot.com Exp $
  */
 
 /**
  * StringFunctionCall
  * A representation of the XPath String funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.11 $ $Date: 2005/11/02 07:33:46 $
+ * @version $Revision: 1.12 $ $Date: 2005/11/02 07:33:47 $
 **/
 
 #include "FunctionLib.h"
@@ -37,45 +37,37 @@
 #include <math.h>
 
 /**
- * Creates a default StringFunctionCall. The string() function
- * is the default
-**/
-StringFunctionCall::StringFunctionCall() : FunctionCall(XPathNames::STRING_FN) {
-    type = STRING;
-} //-- StringFunctionCall
-
-/**
  * Creates a StringFunctionCall of the given type
 **/
 StringFunctionCall::StringFunctionCall(short type) : FunctionCall() {
     this->type = type;
     switch ( type ) {
         case CONCAT:
-            FunctionCall::setName(XPathNames::CONCAT_FN);
+            name = XPathNames::CONCAT_FN;
             break;
         case CONTAINS:
-            FunctionCall::setName(XPathNames::CONTAINS_FN);
+            name = XPathNames::CONTAINS_FN;
             break;
         case STARTS_WITH:
-            FunctionCall::setName(XPathNames::STARTS_WITH_FN);
+            name = XPathNames::STARTS_WITH_FN;
             break;
         case STRING_LENGTH:
-            FunctionCall::setName(XPathNames::STRING_LENGTH_FN);
+            name = XPathNames::STRING_LENGTH_FN;
             break;
         case SUBSTRING:
-            FunctionCall::setName(XPathNames::SUBSTRING_FN);
+            name = XPathNames::SUBSTRING_FN;
             break;
         case SUBSTRING_AFTER:
-            FunctionCall::setName(XPathNames::SUBSTRING_AFTER_FN);
+            name = XPathNames::SUBSTRING_AFTER_FN;
             break;
         case SUBSTRING_BEFORE:
-            FunctionCall::setName(XPathNames::SUBSTRING_BEFORE_FN);
+            name = XPathNames::SUBSTRING_BEFORE_FN;
             break;
         case TRANSLATE:
-            FunctionCall::setName(XPathNames::TRANSLATE_FN);
+            name = XPathNames::TRANSLATE_FN;
             break;
         default:
-            FunctionCall::setName(XPathNames::STRING_FN);
+            name = XPathNames::STRING_FN;
             break;
     }
 } //-- StringFunctionCall

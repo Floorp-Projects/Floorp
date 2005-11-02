@@ -23,7 +23,7 @@
  * Larry Fitzpatrick, OpenText, lef@opentext.com
  *   -- changed constant short result types to enum
  *
- * $Id: txExprResult.h,v 1.10 2005/11/02 07:33:52 nisheeth%netscape.com Exp $
+ * $Id: txExprResult.h,v 1.11 2005/11/02 07:33:53 sicking%bigfoot.com Exp $
  */
 
 #ifndef TRANSFRMX_EXPRRESULT_H
@@ -88,9 +88,6 @@ public:
 
     BooleanResult();
     BooleanResult(MBool boolean);
-    BooleanResult(const BooleanResult& boolResult);
-
-    MBool getValue() const;
 
     virtual short  getResultType();
     virtual void   stringValue(String& str);
@@ -107,10 +104,6 @@ public:
 
     NumberResult();
     NumberResult(double dbl);
-    NumberResult(const NumberResult& nbrResult);
-
-    double getValue() const;
-    MBool isNaN() const;
 
     virtual short  getResultType();
     virtual void   stringValue(String& str);
@@ -128,12 +121,8 @@ class StringResult : public ExprResult {
 public:
 
     StringResult();
-    StringResult(String& str);
     StringResult(const String& str);
-    StringResult(const StringResult& strResult);
     StringResult(const char* str);
-
-    String& getValue();
 
     virtual short  getResultType();
     virtual void   stringValue(String& str);

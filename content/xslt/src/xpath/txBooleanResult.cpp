@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txBooleanResult.cpp,v 1.6 2005/11/02 07:33:51 kvisco%ziplink.net Exp $
+ * $Id: txBooleanResult.cpp,v 1.7 2005/11/02 07:33:52 sicking%bigfoot.com Exp $
  */
 
 /*
@@ -37,10 +37,6 @@ BooleanResult::BooleanResult() {
     value = MB_FALSE;
 } //-- BooleanResult
 
-BooleanResult::BooleanResult(const BooleanResult& boolResult) {
-    this->value = boolResult.getValue();
-} //-- BooleanResult
-
 /**
  * Creates a new BooleanResult with the value of the given MBool parameter
  * @param boolean the MBool to use for initialization of this BooleanResult's value
@@ -48,14 +44,6 @@ BooleanResult::BooleanResult(const BooleanResult& boolResult) {
 BooleanResult::BooleanResult(MBool boolean) {
     this->value = boolean;
 } //-- BooleanResult
-
-/**
- * Returns the value of this BooleanResult
- * @return the value of this BooleanResult
-**/
-MBool BooleanResult::getValue() const {
-    return this->value;
-} //-- getValue
 
 /*
  * Virtual Methods from ExprResult

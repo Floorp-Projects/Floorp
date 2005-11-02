@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txMultiplicativeExpr.cpp,v 1.2 2005/11/02 07:33:51 peterv%netscape.com Exp $
+ * $Id: txMultiplicativeExpr.cpp,v 1.3 2005/11/02 07:33:52 sicking%bigfoot.com Exp $
  */
 
 /**
@@ -31,20 +31,11 @@
  * mod  : modulus
  * div  : divide
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:51 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:52 $
 **/
 
 #include "Expr.h"
 #include <math.h>
-
-/**
- * Creates a new MultiplicativeExpr using the default operator (MULTIPLY)
-**/
-MultiplicativeExpr::MultiplicativeExpr() {
-    this->op = MULTIPLY;
-    this->leftExpr  = 0;
-    this->rightExpr = 0;
-} //-- RelationalExpr
 
 /**
  * Creates a new MultiplicativeExpr using the given operator
@@ -59,20 +50,6 @@ MultiplicativeExpr::~MultiplicativeExpr() {
     delete leftExpr;
     delete rightExpr;
 } //-- ~MultiplicativeExpr
-
-/**
- * Sets the left side of this MultiplicativeExpr
-**/
-void MultiplicativeExpr::setLeftExpr(Expr* leftExpr) {
-    this->leftExpr = leftExpr;
-} //-- setLeftExpr
-
-/**
- * Sets the right side of this MultiplicativeExpr
-**/
-void MultiplicativeExpr::setRightExpr(Expr* rightExpr) {
-    this->rightExpr = rightExpr;
-} //-- setRightExpr
 
 /**
  * Evaluates this Expr based on the given context node and processor state

@@ -21,34 +21,15 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txLocationStep.cpp,v 1.8 2005/11/02 07:33:48 peterv%netscape.com Exp $
+ * $Id: txLocationStep.cpp,v 1.9 2005/11/02 07:33:49 sicking%bigfoot.com Exp $
  */
 
 /*
   Implementation of an XPath LocationStep
-  @version $Revision: 1.8 $ $Date: 2005/11/02 07:33:48 $
+  @version $Revision: 1.9 $ $Date: 2005/11/02 07:33:49 $
 */
 
 #include "Expr.h"
-
-/**
- * Creates a new LocationStep using the default Axis Identifier and no
- * NodeExpr (which matches nothing)
-**/
-LocationStep::LocationStep() : PredicateList() {
-    nodeExpr = 0;
-    this->axisIdentifier = CHILD_AXIS;
-} //-- LocationStep
-
-/**
- * Creates a new LocationStep using the default Axis Identifier and
- * the given NodeExpr
- * @param nodeExpr the NodeExpr to use when matching Nodes
-**/
-LocationStep::LocationStep(NodeExpr* nodeExpr) : PredicateList() {
-    this->nodeExpr = nodeExpr;
-    this->axisIdentifier = CHILD_AXIS;
-} //-- LocationStep
 
 /**
  * Creates a new LocationStep using the given NodeExpr and Axis Identifier
@@ -68,26 +49,6 @@ LocationStep::LocationStep(NodeExpr* nodeExpr, short axisIdentifier) : Predicate
 LocationStep::~LocationStep() {
     delete nodeExpr;
 } //-- ~LocationStep
-
-/**
- * Sets the Axis Identifier for this LocationStep
- * @param axisIdentifier the Axis in which to search for nodes
-**/
-void LocationStep::setAxisIdentifier(short axisIdentifier) {
-    this->axisIdentifier = axisIdentifier;
-} //-- setAxisIdentifier
-
-
-/**
- * Sets the NodeExpr of this LocationStep for use when matching nodes
- * @param nodeExpr the NodeExpr to use when matching nodes
-**/
-void LocationStep::setNodeExpr(NodeExpr* nodeExpr) {
-    // delete current NodeExpr
-    if (this->nodeExpr) delete this->nodeExpr;
-    this->nodeExpr = nodeExpr;
-} //-- setNodeExpr
-
 
   //------------------------------------/
  //- Virtual methods from PatternExpr -/
