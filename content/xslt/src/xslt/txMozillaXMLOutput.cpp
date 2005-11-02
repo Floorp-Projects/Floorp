@@ -210,9 +210,8 @@ void txMozillaXMLOutput::endDocument()
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
         nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
         if (sgo) {
-            nsCOMPtr<nsIDocShell> docShell;
-            sgo->GetDocShell(getter_AddRefs(docShell));
-            nsCOMPtr<nsIRefreshURI> refURI = do_QueryInterface(docShell);
+            nsCOMPtr<nsIRefreshURI> refURI =
+                do_QueryInterface(sgo->GetDocShell());
             if (refURI) {
                 refURI->SetupRefreshURIFromHeader(doc->GetBaseURI(),
                                                   mRefreshString);
