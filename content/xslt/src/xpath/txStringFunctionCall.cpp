@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txStringFunctionCall.cpp,v 1.2 2005/11/02 07:33:37 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txStringFunctionCall.cpp,v 1.3 2005/11/02 07:33:38 kvisco%ziplink.net Exp $
  */
 
 /**
  * StringFunctionCall
  * A representation of the XPath String funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:37 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:38 $
 **/
 
 #include "FunctionLib.h"
@@ -146,16 +146,17 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 Int32 endIdx = src.length();
                 if ( argc == 3) {
                     dbl += evaluateToNumber((Expr*)iter->next(),context, cs);
-                    if (dbl == Double::POSITIVE_INFINITY) endIdx++;
+                    if (dbl == Double::POSITIVE_INFINITY) ++endIdx;
                     else if ( dbl == Double::NEGATIVE_INFINITY ) endIdx = 0;
                     else endIdx = (Int32)floor(dbl);
                 }
                 String resultStr;
                 //-- strings are indexed starting at 1 for XSL
                 //-- adjust to a 0-based index
-                if (startIdx > 0) startIdx--;
-                else if (startIdx == 0 ) endIdx--;
+                if (startIdx > 0) --startIdx;
+                else if (startIdx == 0 ) --endIdx;
                 else startIdx=0;
+
                 src.subString(startIdx,endIdx,resultStr);
                 result  = new StringResult(resultStr);
             }
