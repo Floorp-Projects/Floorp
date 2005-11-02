@@ -272,7 +272,7 @@ SequenceModel Win1251Model =
   win1251_CharToOrderMap,
   RussianLangModel,
   PR_FALSE,
-  "Windows-1251"
+  "windows-1251"
 };
 
 SequenceModel Latin5Model = 
