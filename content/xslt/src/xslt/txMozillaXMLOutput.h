@@ -47,9 +47,9 @@
 #include "nsIScriptLoaderObserver.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsString.h"
-#include "nsSupportsArray.h"
 #include "nsWeakPtr.h"
 #include "txOutputFormat.h"
+#include "nsCOMArray.h"
 
 class txMozillaXMLOutput : public txIOutputXMLEventHandler,
                            public nsIScriptLoaderObserver
@@ -191,7 +191,7 @@ private:
     PRUint32 mBadChildLevel;
     nsCString mRefreshString;
 
-    nsCOMPtr<nsISupportsArray> mScriptElements;
+    nsCOMArray<nsIDOMHTMLScriptElement> mScriptElements;
 
     nsAutoString mText;
 

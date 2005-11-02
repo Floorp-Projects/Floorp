@@ -44,10 +44,10 @@
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 
 class ExprResult;
 class String;
-class nsISupportsArray;
 
 // {15b9b301-2012-11d6-a7f2-e6d0a678995c}
 #define NS_IXPATHRESULT_IID \
@@ -93,7 +93,7 @@ private:
         String* mStringValue;
         PRBool mBooleanValue;
         nsIDOMNode* mNode;
-        nsISupportsArray* mElements;
+        nsCOMArray<nsIDOMNode>* mElements;
     };
     nsCOMPtr<nsIDocument> mDocument;
     PRUint32 mCurrentPos;
