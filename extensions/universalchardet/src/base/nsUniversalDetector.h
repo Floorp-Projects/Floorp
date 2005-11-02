@@ -57,7 +57,6 @@ protected:
    virtual void Report(const char* aCharset) = 0;
    virtual void Reset();
    nsInputState  mInputState;
-   PRBool  mAvailable;		//the model is not available for this instance
    PRBool  mDone;
    PRBool  mInTag;
    PRBool  mStart;
