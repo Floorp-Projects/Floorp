@@ -50,11 +50,6 @@ static const char kTypeErrMessage[] = NS_ERROR_DOM_TYPE_MSG;
 static void
 TXResultToNameAndMessage(nsresult aNSResult,
                          const char** aName,
-                         const char** aMessage);
-
-void
-TXResultToNameAndMessage(nsresult aNSResult,
-                         const char** aName,
                          const char** aMessage)
 {
     if (aNSResult == NS_ERROR_DOM_INVALID_EXPRESSION_ERR) {
