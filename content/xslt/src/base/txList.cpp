@@ -23,7 +23,7 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: txList.cpp,v 1.5 2005/11/02 07:33:46 axel%pike.org Exp $
+ * $Id: txList.cpp,v 1.6 2005/11/02 07:33:47 peterv%netscape.com Exp $
  */
 
 #include "List.h"
@@ -38,7 +38,7 @@
 /**
  * Default constructor for a List;
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:46 $
+ * @version $Revision: 1.6 $ $Date: 2005/11/02 07:33:47 $
 **/
 
 List::List() {
@@ -92,12 +92,14 @@ void* List::get(int index) {
 
     int c = 0;
     ListItem* item = firstItem;
-    while (c != index) {
+    while ((c != index) && item) {
         item = item->nextItem;
         ++c;
     }
 
-    return item->objPtr;
+    if (item)
+        return item->objPtr;
+    return 0;
 } //-- get(int)
 
 List::ListItem* List::getFirstItem() {
@@ -139,6 +141,9 @@ void List::insertAfter(void* objPtr, ListItem* refItem) {
 void List::insertBefore(void* objPtr, ListItem* refItem) {
 
     ListItem* item = new ListItem;
+    if (!item)
+        return;
+
     item->objPtr = objPtr;
     item->nextItem = 0;
     item->prevItem = 0;
