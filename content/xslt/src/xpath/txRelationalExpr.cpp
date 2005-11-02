@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txRelationalExpr.cpp,v 1.4 2005/11/02 07:33:47 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txRelationalExpr.cpp,v 1.5 2005/11/02 07:33:48 peterv%netscape.com Exp $
  */
 
 #include "Expr.h"
@@ -165,7 +165,10 @@ ExprResult* RelationalExpr::evaluate(Node* context, ContextState* cs) {
         delete lResult;
         return new BooleanResult();
     }
-    return new BooleanResult(compareResults(lResult, rResult));
+    BooleanResult* boolResult = new BooleanResult(compareResults(lResult, rResult));
+    delete lResult;
+    delete rResult;
+    return boolResult;
 } //-- evaluate
 
 /**
