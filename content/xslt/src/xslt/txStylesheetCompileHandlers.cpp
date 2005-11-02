@@ -960,8 +960,8 @@ txFnStartStripSpace(PRInt32 aNamespaceID,
         const nsASingleFragmentString& name = tokenizer.nextToken();
         PRInt32 ns = kNameSpaceID_None;
         nsCOMPtr<nsIAtom> prefix, localName;
-        rv = XMLUtils::splitXMLName(name, getter_AddRefs(prefix),
-                                    getter_AddRefs(localName));
+        rv = XMLUtils::splitQName(name, getter_AddRefs(prefix),
+                                  getter_AddRefs(localName));
         if (NS_FAILED(rv)) {
             // check for "*" or "prefix:*"
             PRUint32 length = name.Length();
@@ -978,9 +978,9 @@ txFnStartStripSpace(PRInt32 aNamespaceID,
                 if (c[length-2] != ':') {
                     return NS_ERROR_XSLT_PARSE_FAILURE;
                 }
-                rv = XMLUtils::splitXMLName(Substring(name, 0, length-2), 
-                                            getter_AddRefs(prefix),
-                                            getter_AddRefs(localName));
+                rv = XMLUtils::splitQName(Substring(name, 0, length-2), 
+                                          getter_AddRefs(prefix),
+                                          getter_AddRefs(localName));
                 if (NS_FAILED(rv) || prefix) {
                     // bad chars or two ':'
                     return NS_ERROR_XSLT_PARSE_FAILURE;
