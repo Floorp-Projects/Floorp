@@ -43,7 +43,9 @@
 #include "nsIDOMXPathEvaluator.h"
 #include "txIXPathContext.h"
 #include "nsIXPathEvaluatorInternal.h"
-#include "nsIDOMDocument.h"
+#include "nsIWeakReference.h"
+
+class nsIDOMDocument;
 
 /**
  * A class for evaluating an XPath expression string
@@ -95,7 +97,7 @@ private:
         PRBool mIsHTML;
     };
 
-    nsCOMPtr<nsIDOMDocument> mDocument;
+    nsWeakPtr mDocument;
 };
 
 /* d0a75e02-b5e7-11d5-a7f2-df109fb8a1fc */
