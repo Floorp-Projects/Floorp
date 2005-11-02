@@ -94,6 +94,7 @@ public:
   /* Make this DrawingSurface active */
   inline PhDrawContext_t* Select( )
 		{
+		PgSetGC( NULL );
 		PhDCSetCurrent( mDrawContext );
 		PgSetGCCx( mDrawContext, mGC );
 		return mDrawContext;

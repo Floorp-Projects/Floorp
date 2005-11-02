@@ -498,6 +498,7 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect( nscoord aX, nscoord aY, nscoord 
 	
 	mTranMatrix->TransformCoord( &x, &y, &w, &h );
 
+	PgSetGC( NULL );
 /* ATENTIE */ PhDCSetCurrent( mSurfaceDC );
 	
 	UpdateGC();
