@@ -29,7 +29,7 @@
  *       - foo//bar would not match properly if there was more than
  *         one node in the NodeSet (nodes) on the final iteration
  *
- * $Id: txPathExpr.cpp,v 1.9 2005/11/02 07:33:45 sicking%bigfoot.com Exp $
+ * $Id: txPathExpr.cpp,v 1.10 2005/11/02 07:33:46 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -257,11 +257,11 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
     nodes.add(node);
 
     ListIterator* iter = expressions.iterator();
-    iter->reverse();
+    iter->resetToEnd();
 
-    while (iter->hasNext()) {
+    while (iter->hasPrevious()) {
 
-        PathExprItem* pxi = (PathExprItem*)iter->next();
+        PathExprItem* pxi = (PathExprItem*)iter->previous();
 
         for (int i = 0; i < nodes.size(); i++) {
             Node* tnode = nodes.get(i);
@@ -282,7 +282,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
                     Node* parent = cs->getParentNode(tnode);
                     if (parent) {
                         //-- make sure we have a document node if necessary
-                        if (!iter->hasNext())
+                        if (!iter->hasPrevious())
                             if (parent->getNodeType() != Node::DOCUMENT_NODE)
                                 break;
                         if (pxi->expr->matches(tnode, parent, cs))
@@ -291,7 +291,7 @@ MBool PathExpr::matches(Node* node, Node* context, ContextState* cs)
                     break;
                 }
                 default:
-                    if (!iter->hasNext()) {
+                    if (!iter->hasPrevious()) {
                         /*
                           // PREVIOUS // result = pxi->expr->matches(tnode, context, cs);
                           // result was being overwritten if there was more than one
