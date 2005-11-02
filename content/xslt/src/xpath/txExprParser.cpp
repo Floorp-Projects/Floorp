@@ -21,10 +21,12 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  * Olivier Gerardin, ogerardin@vo.lu
- *   -- fixed a bug in CreateExpr (@xxx=/yyy was parsed as
- *      @xxx=@xxx/yyy)
+ *   -- fixed a bug in CreateExpr (@xxx=/yyy was parsed as @xxx=@xxx/yyy)
+ * Marina Mechtcheriakova
+ *   -- fixed bug in ::parsePredicates,
+ *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.1 2005/11/02 07:33:25 kvisco%ziplink.net Exp $
+ * $Id: txExprParser.cpp,v 1.2 2005/11/02 07:33:26 kvisco%ziplink.net Exp $
  */
 
 /**
@@ -32,7 +34,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.1 $ $Date: 2005/11/02 07:33:25 $
+ * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:26 $
 **/
 
 #include "ExprParser.h"
@@ -811,8 +813,19 @@ String* ExprParser::parsePredicates(PredicateList* predicateList, ExprLexer& lex
         }
         if ( tok->type == Token::R_BRACKET) {
             lexer.nextToken(); //-- eat ']'
-            break;
+
+
+            //-- Fix: look ahead at next token for mulitple predicates - Marina M.
+            tok = lexer.peek();
+            if ((!tok) || ( tok->type != Token::L_BRACKET )) break;
+            //-- /Fix
         }
+
+        //-- Fix: handle multiple predicates - Marina M.
+        if (tok->type == Token::L_BRACKET)
+            lexer.nextToken(); //-- swallow '['
+        //-- /Fix
+
         Expr* expr = createExpr(lexer);
         predicateList->add(expr);
     }
