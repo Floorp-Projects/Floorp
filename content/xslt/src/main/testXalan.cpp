@@ -318,14 +318,14 @@ int main(int argc, char** argv)
     // skip -- gnu style options
     while (argn < argc) {
         nsDependentCString opt(argv[argn]);
-        if (!Substring(opt, 0, 2).Equals(NS_LITERAL_CSTRING("--"))) {
+        if (!Substring(opt, 0, 2).EqualsLiteral("--")) {
             break;
         }
         ++argn;
     }
     if (argn < argc) {
         nsDependentCString opt(argv[argn]);
-        if (Substring(opt, 0, 2).Equals(NS_LITERAL_CSTRING("-o"))) {
+        if (Substring(opt, 0, 2).EqualsLiteral("-o")) {
             if (opt.Length() > 2) {
                 const nsAFlatCString& fname = 
                     PromiseFlatCString(Substring(opt, 2, opt.Length()-2));
@@ -396,7 +396,7 @@ int main(int argc, char** argv)
             if (NS_SUCCEEDED(rv) && isDir) {
                 rv = cat->GetNativeLeafName(leaf);
                 if (NS_SUCCEEDED(rv) && 
-                    !leaf.Equals(NS_LITERAL_CSTRING("CVS"))) {
+                    !leaf.EqualsLiteral("CVS")) {
                     rv = gold->AppendNative(leaf);
                     if (NS_SUCCEEDED(rv)) {
                         runCategory(cat, gold, resFile, rdfOut);
