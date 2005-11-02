@@ -40,6 +40,7 @@
 #define TRANSFRMX_FUNCTIONLIB_H
 
 #include "Expr.h"
+#include "nsIAtom.h"
 
 /**
  * The following are definitions for the XPath functions
