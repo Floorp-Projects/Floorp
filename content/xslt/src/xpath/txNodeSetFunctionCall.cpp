@@ -24,14 +24,14 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- changed some behavoir to be more compliant with spec
  *    
- * $Id: txNodeSetFunctionCall.cpp,v 1.5 2005/11/02 07:33:48 peterv%netscape.com Exp $
+ * $Id: txNodeSetFunctionCall.cpp,v 1.6 2005/11/02 07:33:49 axel%pike.org Exp $
  */
 
 /**
  * NodeSetFunctionCall
  * A representation of the XPath NodeSet funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:48 $
+ * @version $Revision: 1.6 $ $Date: 2005/11/02 07:33:49 $
 **/
 
 #include "FunctionLib.h"
@@ -188,13 +188,31 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
 
                 switch ( type ) {
                     case LOCAL_NAME :
-                        XMLUtils::getLocalPart(node->getNodeName(),name);
+                        switch (node->getNodeType()) {
+                            case Node::ATTRIBUTE_NODE :
+                            case Node::ELEMENT_NODE :
+                            case Node::PROCESSING_INSTRUCTION_NODE :
+                            // XXX Namespace: namespaces have a local name
+                                XMLUtils::getLocalPart(node->getNodeName(),name);
+                                break;
+                            default:
+                                break;
+                        }
                         break;
                     case NAMESPACE_URI :
                         XMLUtils::getNameSpace(node->getNodeName(),name);
                         break;
                     default:
-                        name = node->getNodeName();
+                        switch (node->getNodeType()) {
+                            case Node::ATTRIBUTE_NODE :
+                            case Node::ELEMENT_NODE :
+                            case Node::PROCESSING_INSTRUCTION_NODE :
+                            // XXX Namespace: namespaces have a name
+                                name = node->getNodeName();
+                                break;
+                            default:
+                                break;
+                        }
                         break;
                 }
                 result = new StringResult(name);
