@@ -67,6 +67,8 @@ class txDriver : public txACompileObserver
   protected:
     void createErrorString();
     nsString  mErrorString;
+    // keep track of the nsresult returned by the handlers, expat forgets them
+    nsresult mRV;
     XML_Parser mExpatParser;
     nsAutoRefCnt mRefCnt;
 };
@@ -185,11 +187,13 @@ txDriver::parse(istream& aInputStream, const nsAString& aUri)
     char buf[bufferSize];
     PRBool done;
     int success;
+    mRV = NS_OK;
     do {
         aInputStream.read(buf, bufferSize);
         done = aInputStream.eof();
         success = XML_Parse(mExpatParser, buf, aInputStream.gcount(), done);
-        if (!success) {
+        // mRV is set in onDoneCompiling in case of an error
+        if (!success || NS_FAILED(mRV)) {
             createErrorString();
             done = MB_TRUE;
         }
@@ -202,7 +206,7 @@ txDriver::parse(istream& aInputStream, const nsAString& aUri)
     if (!success) {
         return NS_ERROR_FAILURE;
     }
-    return NS_OK;
+    return mRV;
 }
 
 const nsAString&
@@ -227,7 +231,6 @@ txDriver::StartElement(const XML_Char *aName, const XML_Char **aAtts)
                                 attcount/2, idOffset);
     if (NS_FAILED(rv)) {
         mCompiler->cancel(rv);
-        return XML_ERROR_SYNTAX;
     }
     return XML_ERROR_NONE;
 }
@@ -339,6 +342,8 @@ void
 txDriver::onDoneCompiling(txStylesheetCompiler* aCompiler, nsresult aResult,
                           const PRUnichar *aErrorText, const PRUnichar *aParam)
 {
+    // store the nsresult as expat forgets about it
+    mRV = aResult;
 }
 
 nsresult

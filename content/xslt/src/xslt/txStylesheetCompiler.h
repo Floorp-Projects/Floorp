@@ -171,9 +171,7 @@ protected:
         eInEmbed,
         eHasEmbed
     } mEmbedStatus;
-#ifdef PR_LOGGING
-    nsCString mURI;
-#endif
+    nsString mURI;
     PRPackedBool mIsTopCompiler;
     PRPackedBool mDoneWithThisStylesheet;
 
