@@ -42,6 +42,7 @@
 #include "txURIUtils.h"
 #include "expat_config.h"
 #include "expat.h"
+#include "txXMLParser.h"
 
 /**
  *  Implementation of an In-Memory DOM based XML parser.  The actual XML
@@ -175,11 +176,19 @@ txDriver::parse(istream& aInputStream, const nsAString& aUri)
         mErrorString.AppendLiteral("unable to parse xml: invalid or unopen stream encountered.");
         return NS_ERROR_FAILURE;
     }
-    mExpatParser = XML_ParserCreate(nsnull);
+
+    static const XML_Memory_Handling_Suite memsuite = {
+        (void *(*)(size_t))PR_Malloc,
+        (void *(*)(void *, size_t))PR_Realloc,
+        PR_Free
+    };
+    static const PRUnichar expatSeparator = kExpatSeparatorChar;
+    mExpatParser = XML_ParserCreate_MM(nsnull, &memsuite, &expatSeparator);
     if (!mExpatParser) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    XML_SetReturnNSTriplet(mExpatParser, XML_TRUE);
     XML_SetUserData(mExpatParser, this);
     XML_SetElementHandler(mExpatParser, startElement, endElement);
     XML_SetCharacterDataHandler(mExpatParser, charData);

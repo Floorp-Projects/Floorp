@@ -48,6 +48,7 @@
 #else
 #include "expat_config.h"
 #include "expat.h"
+#include "XMLUtils.h"
 #endif
 
 #ifdef TX_EXE
@@ -240,7 +241,14 @@ txXMLParser::parse(istream& aInputStream, const nsAString& aUri,
         mErrorString.AppendLiteral("unable to parse xml: invalid or unopen stream encountered.");
         return NS_ERROR_FAILURE;
     }
-    mExpatParser = XML_ParserCreate(nsnull);
+
+    static const XML_Memory_Handling_Suite memsuite = {
+        (void *(*)(size_t))PR_Malloc,
+        (void *(*)(void *, size_t))PR_Realloc,
+        PR_Free
+    };
+    static const PRUnichar expatSeparator = kExpatSeparatorChar;
+    mExpatParser = XML_ParserCreate_MM(nsnull, &memsuite, &expatSeparator);
     if (!mExpatParser) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -252,6 +260,7 @@ txXMLParser::parse(istream& aInputStream, const nsAString& aUri,
     mDocument->documentBaseURI = aUri;
     mCurrentNode = mDocument;
 
+    XML_SetReturnNSTriplet(mExpatParser, XML_TRUE);
     XML_SetUserData(mExpatParser, this);
     XML_SetElementHandler(mExpatParser, startElement, endElement);
     XML_SetCharacterDataHandler(mExpatParser, charData);
@@ -299,18 +308,25 @@ txXMLParser::getErrorString()
 int
 txXMLParser::StartElement(const XML_Char *aName, const XML_Char **aAtts)
 {
-    const XML_Char** theAtts = aAtts;
-
-    Element* newElement =
-        mDocument->createElement(nsDependentString((const PRUnichar*)aName));
+    nsCOMPtr<nsIAtom> prefix, localName;
+    PRInt32 nsID;
+    XMLUtils::splitExpatName(aName, getter_AddRefs(prefix),
+                             getter_AddRefs(localName), &nsID);
+    Element* newElement = mDocument->createElementNS(prefix, localName, nsID);
     if (!newElement) {
         return XML_ERROR_NO_MEMORY;
     }
 
+    const XML_Char** theAtts = aAtts;
     while (*theAtts) {
-        nsDependentString attName((const PRUnichar*)*theAtts++);
-        nsDependentString attValue((const PRUnichar*)*theAtts++);
-        newElement->setAttribute(attName, attValue);
+        XMLUtils::splitExpatName(*theAtts++, getter_AddRefs(prefix),
+                                 getter_AddRefs(localName), &nsID);
+        nsDependentString attValue(*theAtts++);
+        nsresult rv = newElement->appendAttributeNS(prefix, localName, nsID,
+                                                    attValue);
+        if (NS_FAILED(rv)) {
+            return XML_ERROR_NO_MEMORY;
+        }
     }
 
     int idx;
@@ -365,7 +381,7 @@ int
 txXMLParser::ProcessingInstruction(const XML_Char *aTarget,
                                    const XML_Char *aData)
 {
-    nsDependentString target((const PRUnichar*)aTarget);
+    nsCOMPtr<nsIAtom> target = do_GetAtom(aTarget);
     nsDependentString data((const PRUnichar*)aData);
     Node* node = mDocument->createProcessingInstruction(target, data);
     mCurrentNode->appendChild(node);

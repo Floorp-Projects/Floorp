@@ -49,15 +49,18 @@
 //
 
 #include "dom.h"
+#include "txAtoms.h"
 
 //
 //Construct a Document.  Currently no parameters are required, but the the
 //node constructor is called to identify the node type.
 //
-Document::Document() : NodeDefinition(Node::DOCUMENT_NODE, EmptyString(), NULL)
+Document::Document() :
+  NodeDefinition(Node::DOCUMENT_NODE, txXMLAtoms::document, EmptyString(),
+                 nsnull),
+  documentElement(nsnull)
 {
   mIDMap.Init(0);
-  documentElement = nsnull;
 }
 
 //
@@ -68,43 +71,11 @@ Element* Document::getDocumentElement()
   return documentElement;
 }
 
-//
-//Construct an empty document fragment.
-//    NOTE:  The caller is responsible for cleaning up this fragment's memory
-//           when it is no longer needed.
-//
-Node* Document::createDocumentFragment()
+Element*
+Document::createElementNS(nsIAtom *aPrefix, nsIAtom *aLocalName,
+                          PRInt32 aNamespaceID)
 {
-  return new DocumentFragment(this);
-}
-
-//
-//Construct an element with the specified tag name.
-//    NOTE:  The caller is responsible for cleaning up the element's menory
-//
-Element* Document::createElement(const nsAString& tagName)
-{
-  return new Element(tagName, this);
-}
-
-Element* Document::createElementNS(const nsAString& aNamespaceURI,
-                                   const nsAString& aTagName)
-{
-  return new Element(aNamespaceURI, aTagName, this);
-}
-
-//
-//Construct an attribute with the specified name
-//
-Attr* Document::createAttribute(const nsAString& name)
-{
-  return new Attr(name, this);
-}
-
-Attr* Document::createAttributeNS(const nsAString& aNamespaceURI,
-                                  const nsAString& aName)
-{
-  return new Attr(aNamespaceURI, aName, this);
+  return new Element(aPrefix, aLocalName, aNamespaceID, this);
 }
 
 //
@@ -112,7 +83,7 @@ Attr* Document::createAttributeNS(const nsAString& aNamespaceURI,
 //
 Node* Document::createTextNode(const nsAString& theData)
 {
-  return new NodeDefinition(Node::TEXT_NODE, theData, this);
+  return new NodeDefinition(Node::TEXT_NODE, txXMLAtoms::text, theData, this);
 }
 
 //
@@ -120,17 +91,18 @@ Node* Document::createTextNode(const nsAString& theData)
 //
 Node* Document::createComment(const nsAString& theData)
 {
-  return new NodeDefinition(Node::COMMENT_NODE, theData, this);
+  return new NodeDefinition(Node::COMMENT_NODE, txXMLAtoms::comment, theData,
+                            this);
 }
 
 //
 //Construct a ProcessingInstruction node with the given targe and data.
 //
 ProcessingInstruction*
-  Document::createProcessingInstruction(const nsAString& target,
+  Document::createProcessingInstruction(nsIAtom *aTarget,
                                         const nsAString& data)
 {
-  return new ProcessingInstruction(target, data, this);
+  return new ProcessingInstruction(aTarget, data, this);
 }
 
 //

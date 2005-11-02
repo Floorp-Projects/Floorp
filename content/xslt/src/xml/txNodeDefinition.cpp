@@ -51,83 +51,26 @@
 #include "txAtoms.h"
 #include <string.h>
 
-NodeDefinition::NodeDefinition(NodeType type, const nsAString& name,
-                               const nsAString& value, Document* owner)
+NodeDefinition::NodeDefinition(NodeType type, nsIAtom *aLocalName,
+                               const nsAString& value, Document* owner) :
+    mLocalName(aLocalName),
+    nodeValue(value),
+    nodeType(type),
+    parentNode(nsnull),
+    previousSibling(nsnull),
+    nextSibling(nsnull),
+    ownerDocument(owner),
+    length(0),
+    firstChild(nsnull),
+    lastChild(nsnull),
+    mOrderInfo(nsnull)
 {
-  nodeName = name;
-  Init(type, value, owner);
-}
-
-NodeDefinition::NodeDefinition(NodeType aType, const nsAString& aValue,
-                               Document* aOwner)
-{
-  switch (aType)
-  {
-    case CDATA_SECTION_NODE:
-    {
-      nodeName.AssignLiteral("#cdata-section");
-      break;
-    }
-    case COMMENT_NODE:
-    {
-      nodeName.AssignLiteral("#comment");
-      break;
-    }
-    case DOCUMENT_NODE:
-    {
-      nodeName.AssignLiteral("#document");
-      break;
-    }
-    case DOCUMENT_FRAGMENT_NODE:
-    {
-      nodeName.AssignLiteral("#document-fragment");
-      break;
-    }
-    case TEXT_NODE:
-    {
-      nodeName.AssignLiteral("#text");
-      break;
-    }
-    default:
-    {
-      break;
-    }
-  }
-  Init(aType, aValue, aOwner);
 }
 
 //
 // This node is being destroyed, so loop through and destroy all the children.
 //
 NodeDefinition::~NodeDefinition()
-{
-  DeleteChildren();
-  delete mOrderInfo;
-}
-
-void
-NodeDefinition::Init(NodeType aType, const nsAString& aValue,
-                     Document* aOwner)
-{
-  nodeType = aType;
-  nodeValue = aValue;
-  ownerDocument = aOwner;
-
-  parentNode = nsnull;
-  previousSibling = nsnull;
-  nextSibling = nsnull;;
-  firstChild = nsnull;
-  lastChild = nsnull;
-
-  length = 0;
-
-  mOrderInfo = 0;
-}
-
-//
-//Remove and delete all children of this node
-//
-void NodeDefinition::DeleteChildren()
 {
   NodeDefinition* pCurrent = firstChild;
   NodeDefinition* pDestroyer;
@@ -139,14 +82,12 @@ void NodeDefinition::DeleteChildren()
       delete pDestroyer;
     }
 
-  length = 0;
-  firstChild = nsnull;
-  lastChild = nsnull;
+  delete mOrderInfo;
 }
 
 nsresult NodeDefinition::getNodeName(nsAString& aName) const
 {
-  aName = nodeName;
+  mLocalName->ToString(aName);
   return NS_OK;
 }
 
@@ -186,40 +127,9 @@ Node* NodeDefinition::getNextSibling() const
   return nextSibling;
 }
 
-NamedNodeMap* NodeDefinition::getAttributes()
-{
-  return 0;
-}
-
 Document* NodeDefinition::getOwnerDocument() const
 {
   return ownerDocument;
-}
-
-Node* NodeDefinition::item(PRUint32 index)
-{
-  PRUint32 selectLoop;
-  NodeDefinition* pSelectNode = firstChild;
-
-  if (index < length)
-    {
-      for (selectLoop=0;selectLoop<index;selectLoop++)
-        pSelectNode = pSelectNode->nextSibling;
-
-      return pSelectNode;
-    }
-
-  return nsnull;
-}
-
-PRUint32 NodeDefinition::getLength()
-{
-  return length;
-}
-
-void NodeDefinition::setNodeValue(const nsAString& newNodeValue)
-{
-  nodeValue = newNodeValue;
 }
 
 Node* NodeDefinition::appendChild(Node* newChild)
@@ -299,58 +209,6 @@ nsresult NodeDefinition::getNamespaceURI(nsAString& aNSURI)
 PRInt32 NodeDefinition::getNamespaceID()
 {
   return kNameSpaceID_None;
-}
-
-//
-// Looks up the Namespace associated with a certain prefix in the context of
-// this node.
-//
-// @return namespace associated with prefix
-//
-PRInt32 NodeDefinition::lookupNamespaceID(nsIAtom* aPrefix)
-{
-  // this is http://www.w3.org/2000/xmlns/,
-  // ID = kNameSpaceID_XMLNS, see txStandaloneNamespaceManager::Init
-  if (aPrefix == txXMLAtoms::xmlns)
-    return kNameSpaceID_XMLNS; 
-  // this is http://www.w3.org/XML/1998/namespace,
-  // ID = kNameSpaceID_XML, see txStandaloneNamespaceManager::Init
-  if (aPrefix == txXMLAtoms::xml)
-    return kNameSpaceID_XML; 
-
-  Node* node = this;
-  if (node->getNodeType() != Node::ELEMENT_NODE)
-    node = node->getXPathParent();
-
-  nsAutoString name(NS_LITERAL_STRING("xmlns:"));
-  if (aPrefix && (aPrefix != txXMLAtoms::_empty)) {
-      //  We have a prefix, search for xmlns:prefix attributes.
-      nsAutoString prefixString;
-      aPrefix->ToString(prefixString);
-      name.Append(prefixString);
-  }
-  else {
-      // No prefix, look up the default namespace by searching for xmlns
-      // attributes. Remove the trailing :, set length to 5 (xmlns).
-      name.Truncate(5);
-  }
-  Attr* xmlns;
-  while (node && node->getNodeType() == Node::ELEMENT_NODE) {
-    if ((xmlns = ((Element*)node)->getAttributeNode(name))) {
-      /*
-       * xmlns:foo = "" makes "" a valid URI, so get that.
-       * xmlns = "" resolves to 0 (null Namespace) (caught above)
-       * in Element::getNamespaceID()
-       */
-      nsAutoString nsURI;
-      xmlns->getNodeValue(nsURI);
-      return txStandaloneNamespaceManager::getNamespaceID(nsURI);
-    }
-    node = node->getXPathParent();
-  }
-  if (!aPrefix || (aPrefix == txXMLAtoms::_empty))
-      return kNameSpaceID_None;
-  return kNameSpaceID_Unknown;
 }
 
 Node* NodeDefinition::getXPathParent()
@@ -477,13 +335,15 @@ NodeDefinition::OrderInfo* NodeDefinition::getOrderInfo()
                    "parent to attribute is not an element");
 
       Element* elem = (Element*)parent;
-      PRUint32 i;
-      NamedNodeMap* attrs = elem->getAttributes();
-      for (i = 0; i < attrs->getLength(); ++i) {
-        if (attrs->item(i) == this) {
+      Attr *attribute = elem->getFirstAttribute();
+      PRUint32 i = 0;
+      while (attribute) {
+        if (attribute == this) {
           mOrderInfo->mOrder[lastElem] = i + kTxAttrIndexOffset;
           return mOrderInfo;
         }
+        attribute = attribute->getNextAttribute();
+        ++i;
       }
       break;
     }
