@@ -216,7 +216,7 @@ void txXMLOutput::startDocument()
     }
     *mOut << PI_START << XML_DECL << DOUBLE_QUOTE;
     *mOut << XML_VERSION;
-    *mOut << DOUBLE_QUOTE << PI_END << endl;
+    *mOut << DOUBLE_QUOTE << " encoding=\"UTF-8\"" << PI_END << endl;
 }
 
 void txXMLOutput::startElement(const nsAString& aName,
