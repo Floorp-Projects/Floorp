@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txBooleanFunctionCall.cpp,v 1.1 2005/11/02 07:33:34 kvisco%ziplink.net Exp $
+ * $Id: txBooleanFunctionCall.cpp,v 1.2 2005/11/02 07:33:35 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "FunctionLib.h"
@@ -29,7 +29,7 @@
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.1 $ $Date: 2005/11/02 07:33:34 $
+ * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:35 $
 **/
 BooleanFunctionCall::BooleanFunctionCall() : FunctionCall(XPathNames::FALSE_FN) {
     this->type = FALSE;
@@ -41,13 +41,13 @@ BooleanFunctionCall::BooleanFunctionCall() : FunctionCall(XPathNames::FALSE_FN) 
 BooleanFunctionCall::BooleanFunctionCall(short type) : FunctionCall()
 {
     switch ( type ) {
-        case BOOLEAN :
+        case TX_BOOLEAN :
             FunctionCall::setName(XPathNames::BOOLEAN_FN);
             break;
-        case NOT :
+        case TX_NOT :
             FunctionCall::setName(XPathNames::NOT_FN);
             break;
-        case TRUE :
+        case TX_TRUE :
             FunctionCall::setName(XPathNames::TRUE_FN);
             break;
         default:
@@ -74,7 +74,7 @@ ExprResult* BooleanFunctionCall::evaluate(Node* context, ContextState* cs) {
 
 
     switch ( type ) {
-        case BOOLEAN :
+        case TX_BOOLEAN :
             if ( requireParams(1,1,cs) ) {
                 param = (Expr*)iter->next();
                 ExprResult* exprResult = param->evaluate(context, cs);
@@ -82,7 +82,7 @@ ExprResult* BooleanFunctionCall::evaluate(Node* context, ContextState* cs) {
                 delete exprResult;
             }
             break;
-        case NOT :
+        case TX_NOT :
             if ( requireParams(1,1,cs) ) {
                 param = (Expr*)iter->next();
                 ExprResult* exprResult = param->evaluate(context, cs);
@@ -90,7 +90,7 @@ ExprResult* BooleanFunctionCall::evaluate(Node* context, ContextState* cs) {
                 delete exprResult;
             }
             break;
-        case TRUE :
+        case TX_TRUE :
             result->setValue(MB_TRUE);
             break;
         default:
