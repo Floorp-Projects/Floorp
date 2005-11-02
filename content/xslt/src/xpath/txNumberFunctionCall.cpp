@@ -60,6 +60,7 @@ NumberFunctionCall::NumberFunctionCall(short type) : FunctionCall() {
     }
 } //-- NumberFunctionCall
 
+#ifdef WINDOWS
 static double rint(double r)
 {
   double integerPart = 0;
@@ -70,6 +71,7 @@ static double rint(double r)
 
   return integerPart;
 }
+#endif
 
 /**
  * Evaluates this Expr based on the given context node and processor state
