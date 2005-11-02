@@ -34,7 +34,7 @@
 /**
  * Create a new AttributeValueTemplate
 **/
-AttributeValueTemplate::AttributeValueTemplate() {};
+AttributeValueTemplate::AttributeValueTemplate() {}
 
 /**
  * Default destructor

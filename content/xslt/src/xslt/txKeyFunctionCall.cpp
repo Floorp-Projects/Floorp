@@ -124,8 +124,8 @@ nsresult txKeyFunctionCall::getNameAtom(nsIAtom** aAtom)
  * Hash functions
  */
 
-DHASH_WRAPPER(txKeyValueHash, txKeyValueHashEntry, txKeyValueHashKey&);
-DHASH_WRAPPER(txIndexedKeyHash, txIndexedKeyHashEntry, txIndexedKeyHashKey&);
+DHASH_WRAPPER(txKeyValueHash, txKeyValueHashEntry, txKeyValueHashKey&)
+DHASH_WRAPPER(txIndexedKeyHash, txIndexedKeyHashEntry, txIndexedKeyHashKey&)
 
 const void*
 txKeyValueHashEntry::GetKey()
