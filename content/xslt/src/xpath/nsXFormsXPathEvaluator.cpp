@@ -211,7 +211,9 @@ nsXFormsXPathEvaluator::XFormsParseContextImpl::resolveFunctionCall(
       aFnCall = new XFormsFunctionCall(XFormsFunctionCall::IF);
     }
     else if (aName == txXPathAtoms::index) {
-      aFnCall = new XFormsFunctionCall(XFormsFunctionCall::INDEX); 
+      NS_ENSURE_TRUE(mResolverNode, NS_ERROR_FAILURE);
+      aFnCall = new XFormsFunctionCall(XFormsFunctionCall::INDEX,
+                                       mResolverNode); 
     }
     else if (aName == txXPathAtoms::instance) {
       NS_ENSURE_TRUE(mResolverNode, NS_ERROR_FAILURE);
