@@ -38,6 +38,9 @@
 #include <fstream.h>
 #include "nsDoubleHashtable.h"
 #include "nsVoidArray.h"
+#ifdef MOZ_JPROF
+#include "jprof.h"
+#endif
 
 /**
  * Prints the command line help screen to the console
@@ -122,6 +125,9 @@ int main(int argc, char** argv)
 {
     using namespace std;
     nsresult rv;
+#ifdef MOZ_JPROF
+    setupProfilingStuff();
+#endif
     rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
