@@ -39,13 +39,15 @@
 #include "XSLTFunctions.h"
 #include "XMLParser.h"
 #include "XMLDOMUtils.h"
+#include "URIUtils.h"
 
 /**
  * Creates a new DocumentFunctionCall.
 **/
-DocumentFunctionCall::DocumentFunctionCall(Document* xslDocument) : FunctionCall(DOCUMENT_FN)
+DocumentFunctionCall::DocumentFunctionCall(ProcessorState* ps, Document* xslDocument) : FunctionCall(DOCUMENT_FN)
 {
-    this->xslDocument = xslDocument;
+    this->processorState = ps;
+    this->xslDocument = xslDocument; //this is just untill we can get the actuall xsl tag
 } //-- DocumentFunctionCall
 
 
@@ -66,20 +68,33 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
         ListIterator* iter = params.iterator();
         Expr* param1 = (Expr*) iter->next();
         ExprResult* exprResult1 = param1->evaluate(context, cs);
-        NodeSet*    nodeSet2 = 0;
+        String baseURI;
+        MBool baseURISet = MB_FALSE;
 
         if (iter->hasNext()) {
-            // we have 2 arguments, make sure the second is a NodeSet
+            // we have 2 arguments, get baseURI from the first node
+            // in the resulting nodeset
             Expr* param2 = (Expr*) iter->next();
             ExprResult* exprResult2 = param2->evaluate(context, cs);
             if ( exprResult2->getResultType() != ExprResult::NODESET ) {
-                String err("node-set expected as second argument to document()");
+                String err("node-set expected as second argument to document(): ");
+                toString(err);
                 cs->recieveError(err);
                 delete exprResult2;
+                return nodeSet;
             }
-            else {
-                nodeSet2 = (NodeSet*) exprResult2;
+
+            // Make this true, even if nodeSet2 is empty. For relative URLs,
+            // we'll fail to load the document with an empty base URI, and for
+            // absolute URLs, the base URI doesn't matter.
+            baseURISet = MB_TRUE;
+
+            NodeSet* nodeSet2 = (NodeSet*) exprResult2;
+            if (!nodeSet2->isEmpty()) {
+                processorState->sortByDocumentOrder(nodeSet2);
+                baseURI = nodeSet2->get(0)->getBaseURI();
             }
+            delete exprResult2;
         }
 
         if ( exprResult1->getResultType() == ExprResult::NODESET ) {
@@ -89,18 +104,13 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
                 Node* node = nodeSet1->get(i);
                 String uriStr;
                 XMLDOMUtils::getNodeValue(node, &uriStr);
-                if (nodeSet2) {
-                    // if the second argument was specified, use it
-                    String baseUriStr;
-                    // TODO: retrieve the base URI of the first node of nodeSet2 in document order
-                    retrieveDocument(uriStr, baseUriStr, *nodeSet, cs);
+                if (!baseURISet) {
+                    // if the second argument wasn't specified, use
+                    // the baseUri of node itself
+                    retrieveDocument(uriStr, node->getBaseURI(), *nodeSet, cs);
                 }
-                else {
-                    // otherwise, use the base URI of the node itself
-                    String baseUriStr;
-                    // TODO: retrieve the base URI of node
-                    retrieveDocument(uriStr, baseUriStr, *nodeSet, cs);
-                }
+                else
+                    retrieveDocument(uriStr, baseURI, *nodeSet, cs);
             }
         }
 
@@ -108,12 +118,15 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
             // The first argument is not a NodeSet
             String uriStr;
             evaluateToString(param1, context, cs, uriStr);
-            String baseUriStr;
-            // TODO: retrieve the base URI of the first node of nodeSet2 in document order
-            retrieveDocument(uriStr, baseUriStr, *nodeSet, cs);
+            if (!baseURISet) {
+                // XXX TODO: find the current xsl tag and get its base URI
+                // until then we use the xslDocument
+                retrieveDocument(uriStr, xslDocument->getBaseURI(), *nodeSet, cs);
+            }
+            else
+                retrieveDocument(uriStr, baseURI, *nodeSet, cs);
         }
         delete exprResult1;
-        delete nodeSet2;
         delete iter;
     }
 
@@ -125,35 +138,45 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs) {
  * Retrieve the document designated by the URI uri, using baseUri as base URI if
  * necessary, parses it as an XML document, and append the resulting document node
  * to resultNodeSet.
- * NOTES: fragment identifiers in the URI are not supported
  *
  * @param uri the URI of the document to retrieve
  * @param baseUri the base URI used to resolve the URI if uri is relative
  * @param resultNodeSet the NodeSet to append the document to
  * @param cs the ContextState, used for reporting errors
  */
-void DocumentFunctionCall::retrieveDocument(String& uri, String& baseUri, NodeSet& resultNodeSet, ContextState* cs)
+void DocumentFunctionCall::retrieveDocument(const String& uri, const String& baseUri, NodeSet& resultNodeSet, ContextState* cs)
 {
-    if (uri.length() == 0) {
-        // if uri is the empty String, the document is the stylesheet itself
-        resultNodeSet.add(xslDocument);
-        return;
+    String absUrl, frag;
+    URIUtils::resolveHref(uri, baseUri, absUrl);
+    URIUtils::getFragmentIdentifier(absUrl, frag);
+    
+    // try to get already loaded document
+    Document* xmlDoc = processorState->getLoadedDocument(absUrl);
+    
+    if(!xmlDoc) {
+        // open URI
+        String errMsg;
+        XMLParser xmlParser;
+        xmlDoc = xmlParser.getDocumentFromURI(uri, baseUri, errMsg);
+        if (!xmlDoc) {
+            String err("error in document() function: ");
+            err.append(errMsg);
+            cs->recieveError(err);
+            return;
+        }
+        // add to ProcessorState list of documents
+        processorState->addLoadedDocument(xmlDoc, absUrl);
     }
 
-    // open URI
-    String errMsg("error: ");
-    XMLParser xmlParser;
-    // XXX (pvdb) Warning, where does this document get destroyed?
-    Document* xmlDoc = xmlParser.getDocumentFromURI(uri, baseUri, errMsg);
-    if (!xmlDoc) {
-        String err("in document() function: ");
-        err.append(errMsg);
-        cs->recieveError(err);
-        return;
-    }
 
     // append the to resultNodeSet
-    resultNodeSet.add(xmlDoc);
+    if(frag.length()) {
+        Node* node = xmlDoc->getElementById(frag);
+        if(node)
+            resultNodeSet.add(node);
+    }
+    else
+        resultNodeSet.add(xmlDoc);
 }
 
 
