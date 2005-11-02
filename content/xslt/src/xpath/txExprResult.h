@@ -55,6 +55,7 @@ public:
         RESULT_TREE_FRAGMENT
     };
 
+    txAExprResult();  // Not to be implemented
     txAExprResult(txResultRecycler* aRecycler) : mRecycler(aRecycler) {}
     virtual ~txAExprResult() {};
 
