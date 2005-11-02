@@ -46,11 +46,6 @@
 void  nsEUCJPProber::Reset(void)
 {
   mCodingSM->Reset(); 
-  mNumOfRoman = 0;
-  mNumOfHankaku = 0;
-  mNumOfKana = 0;
-  mNumOfKanji = 0;
-  mNumOfMisc = 0;
   mState = eDetecting;
   mContextAnalyser.Reset();
   mDistributionAnalyser.Reset();
@@ -80,12 +75,10 @@ nsProbingState nsEUCJPProber::HandleData(const char* aBuf, PRUint32 aLen)
       if (i == 0)
       {
         mLastChar[1] = aBuf[0];
-        GetDistribution(charLen, mLastChar);
         mContextAnalyser.HandleOneChar(mLastChar, charLen);
         mDistributionAnalyser.HandleOneChar(mLastChar, charLen);
       }
       else
-        GetDistribution(charLen, aBuf+i-1);
         mContextAnalyser.HandleOneChar(aBuf+i-1, charLen);
         mDistributionAnalyser.HandleOneChar(aBuf+i-1, charLen);
     }
@@ -98,28 +91,6 @@ nsProbingState nsEUCJPProber::HandleData(const char* aBuf, PRUint32 aLen)
       mState = eFoundIt;
 
   return mState;
-}
-
-void nsEUCJPProber::GetDistribution(PRUint32 aCharLen, const char* aStr)
-{
-  if (aCharLen == 2)
-  {
-    if ((unsigned char)*aStr == (unsigned char)0xa4 || 
-        (unsigned char)*(aStr+1) == (unsigned char)0xa5)
-      mNumOfKana++;
-    else if ((unsigned char)*aStr >= (unsigned char)0xa6)
-      mNumOfKanji++;
-    else if ((unsigned char)*aStr == (unsigned char)0x8e)
-      mNumOfHankaku++;
-    else
-      mNumOfMisc++;
-  }
-  else if (aCharLen > 2)
-    mNumOfKanji++;
-  else
-  {
-    mNumOfRoman++;
-  }
 }
 
 float nsEUCJPProber::GetConfidence(void)
