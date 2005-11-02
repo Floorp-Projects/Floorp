@@ -68,14 +68,14 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
     Node* node = context;
     switch (axisIdentifier) {
         case ANCESTOR_AXIS :
-            node = cs->getParentNode(context);
+            node = context->getXPathParent();
             //-- do not break here
         case ANCESTOR_OR_SELF_AXIS :
             while (node) {
                 if (nodeExpr->matches(node, context, cs)) {
                     nodes->add(node);
                 }
-                node = cs->getParentNode(node);
+                node = node->getXPathParent();
             }
             break;
         case ATTRIBUTE_AXIS :
@@ -99,11 +99,11 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
         case FOLLOWING_AXIS :
         {
             if ( node->getNodeType() == Node::ATTRIBUTE_NODE) {
-                node = cs->getParentNode(node);
+                node = node->getXPathParent();
                 fromDescendants(node, cs, nodes);
             }
             while (node && !node->getNextSibling()) {
-                node = cs->getParentNode(node);
+                node = node->getXPathParent();
             }
             while (node) {
                 node = node->getNextSibling();
@@ -136,14 +136,14 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
             break;
         case PARENT_AXIS :
         {
-            Node* parent = cs->getParentNode(context);
+            Node* parent = context->getXPathParent();
             if ( nodeExpr->matches(parent, context, cs) )
                     nodes->add(parent);
             break;
         }
         case PRECEDING_AXIS :
             while (node && !node->getPreviousSibling()) {
-                node = cs->getParentNode(node);
+                node = node->getXPathParent();
             }
             while (node) {
                 node = node->getPreviousSibling();
@@ -241,13 +241,15 @@ void LocationStep::fromDescendantsRev(Node* context, ContextState* cs, NodeSet* 
 **/
 MBool LocationStep::matches(Node* node, Node* context, ContextState* cs) {
 
-    if ( !nodeExpr ) return MB_FALSE;
+    if (!nodeExpr || !node)
+        return MB_FALSE;
 
-    if ( !nodeExpr->matches(node, context, cs) ) return MB_FALSE;
+    if (!nodeExpr->matches(node, context, cs))
+        return MB_FALSE;
 
     MBool result = MB_TRUE;
-    if ( !isEmpty() ) {
-        NodeSet* nodes = (NodeSet*)evaluate(cs->getParentNode(node),cs);
+    if (!isEmpty()) {
+        NodeSet* nodes = (NodeSet*)evaluate(node->getXPathParent(),cs);
         result = nodes->contains(node);
         delete nodes;
     }
