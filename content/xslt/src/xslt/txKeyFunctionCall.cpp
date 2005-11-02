@@ -46,15 +46,15 @@ txKeyFunctionCall::txKeyFunctionCall(ProcessorState* aPs) :
  */
 ExprResult* txKeyFunctionCall::evaluate(Node* aContext, ContextState* aCs)
 {
+    if (!aContext || !requireParams(2, 2, aCs))
+        return new StringResult("error");
+
     NodeSet* res = new NodeSet;
     if (!res) {
         // ErrorReport: out of memory
-        return NULL;
+        return 0;
     }
 
-    if (!requireParams(2, 2, aCs))
-        return res;
-    
     ListIterator iter(&params);
     String keyName;
     evaluateToString((Expr*)iter.next(), aContext, aCs, keyName);
@@ -83,13 +83,13 @@ ExprResult* txKeyFunctionCall::evaluate(Node* aContext, ContextState* aCs)
         for (int i=0; i<nodeSet->size(); i++) {
             String val;
             XMLDOMUtils::getNodeValue(nodeSet->get(i), val);
-            key->getNodes(val,contextDoc)->copyInto(*res);
+            res->add(key->getNodes(val, contextDoc));
         }
     }
     else {
         String val;
         exprResult->stringValue(val);
-        key->getNodes(val,contextDoc)->copyInto(*res);
+        res->append(key->getNodes(val, contextDoc));
     }
     delete exprResult;
     return res;
@@ -227,8 +227,7 @@ void txXSLKey::testNode(Node* aNode, NamedMap* aMap)
     {
         Key* key=(Key*)iter.next();
         if (key->matchPattern->matches(aNode, 0, mProcessorState)) {
-            NodeSet contextNodeSet;
-            contextNodeSet.add(aNode);
+            NodeSet contextNodeSet(aNode);
             mProcessorState->getNodeSetStack()->push(&contextNodeSet);
             mProcessorState->pushCurrentNode(aNode);
             ExprResult* exprResult = key->useExpr->evaluate(aNode, mProcessorState);
@@ -247,7 +246,7 @@ void txXSLKey::testNode(Node* aNode, NamedMap* aMap)
                             return;
                         aMap->put(val, nodeSet);
                     }
-                    nodeSet->add(aNode);
+                    nodeSet->append(aNode);
                 }
             }
             else {
@@ -259,7 +258,7 @@ void txXSLKey::testNode(Node* aNode, NamedMap* aMap)
                         return;
                     aMap->put(val, nodeSet);
                 }
-                nodeSet->add(aNode);
+                nodeSet->append(aNode);
             }
             delete exprResult;
         }

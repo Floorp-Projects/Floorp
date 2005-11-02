@@ -182,10 +182,7 @@ NodeSet* FunctionCall::evaluateToNodeSet(Expr* aExpr,
         return 0;
     }
 
-    NodeSet* nodes = (NodeSet*)exprResult;
-    aCs->sortByDocumentOrder(nodes);
-
-    return nodes;
+    return (NodeSet*)exprResult;
 }
 
 /**

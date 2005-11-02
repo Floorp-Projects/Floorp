@@ -88,14 +88,6 @@ public:
     virtual FunctionCall* resolveFunctionCall(const String& name) = 0;
 
     /**
-     * Sorts the given NodeSet by DocumentOrder. 
-     * @param nodes the NodeSet to sort
-     *
-     * Note: I will be moving this functionality elsewhere soon
-    **/
-    virtual void sortByDocumentOrder(NodeSet* nodes) = 0;
-
-    /**
      * Returns the namespace URI for the given namespace prefix, this method should
      * only be called for determining a namespace declared within the context
      * (ie. the stylesheet)
