@@ -191,9 +191,6 @@ void nsUniversalDetector::HandleData(const char* aBuf, PRUint32 aLen)
       {
         mDone = PR_TRUE;
         mDetectedCharset = mCharSetProbers[i]->GetCharSetName();
-    #ifdef DEBUG_chardet
-           printf(" %d Prober found charset %s in HandleData. \r\n", i, mCharSetProbers[i]->GetCharSetName());
-    #endif
         return;
       } 
     }
@@ -220,9 +217,6 @@ void nsUniversalDetector::DataEnd()
   {
     mDone = PR_TRUE;
     Report(mDetectedCharset);
-#ifdef DEBUG_chardet
-   printf("New Charset Prober found charset %s in HandleData. \r\n", mDetectedCharset);
-#endif
     return;
   }
   
@@ -237,9 +231,9 @@ void nsUniversalDetector::DataEnd()
       for (PRInt32 i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
       {
         proberConfidence = mCharSetProbers[i]->GetConfidence();
-    #ifdef DEBUG_chardet
-           printf("%d Prober has confidence %f in charset %s in DataEnd. \r\n", i, proberConfidence, mCharSetProbers[i]->GetCharSetName());
-    #endif
+#ifdef DEBUG_chardet
+        mCharSetProbers[i]->DumpStatus();
+#endif
 
         if (proberConfidence > maxProberConfidence)
         {
@@ -324,7 +318,9 @@ void nsUniversalXPCOMDetector::Report(const char* aCharset)
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
 #ifdef DEBUG_chardet
-       printf("New Charset Prober report charset %s . \r\n", aCharset);
+  printf("Universal Charset Detector report charset %s . \r\n", aCharset);
+  for (PRInt32 i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
+    mCharSetProbers[i]->DumpStatus();
 #endif
   mObserver->Notify(aCharset, eBestAnswer);
 }

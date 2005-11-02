@@ -163,6 +163,11 @@ unsigned char IBM866_CharToOrderMap[] =
 };
 
 //Model Table: 
+//total sequences: 100%
+//first 512 sequences: 97.6601%
+//first 1024 sequences: 2.3389%
+//rest  sequences:      0.1237%
+//negative sequences:   0.0009% 
 char RussianLangModel[] = 
 {
 0,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,1,1,3,3,3,3,1,3,3,3,2,3,2,3,3,
@@ -300,6 +305,7 @@ SequenceModel Koi8rModel =
 {
   KOI8R_CharToOrderMap,
   RussianLangModel,
+  (float)0.976601,
   PR_FALSE,
   "KOI8-R"
 };
@@ -308,6 +314,7 @@ SequenceModel Win1251Model =
 {
   win1251_CharToOrderMap,
   RussianLangModel,
+  (float)0.976601,
   PR_FALSE,
   "windows-1251"
 };
@@ -316,6 +323,7 @@ SequenceModel Latin5Model =
 {
   latin5_CharToOrderMap,
   RussianLangModel,
+  (float)0.976601,
   PR_FALSE,
   "ISO-8859-5"
 };
@@ -324,6 +332,7 @@ SequenceModel MacCyrillicModel =
 {
   macCyrillic_CharToOrderMap,
   RussianLangModel,
+  (float)0.976601,
   PR_FALSE,
   "x-mac-cyrillic"
 };
@@ -332,6 +341,7 @@ SequenceModel Ibm866Model =
 {
   IBM866_CharToOrderMap,
   RussianLangModel,
+  (float)0.976601,
   PR_FALSE,
   "IBM866"
 };
@@ -340,6 +350,7 @@ SequenceModel Ibm855Model =
 {
   IBM855_CharToOrderMap,
   RussianLangModel,
+  (float)0.976601,
   PR_FALSE,
   "IBM855"
 };

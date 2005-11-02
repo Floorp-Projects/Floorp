@@ -134,9 +134,6 @@ nsProbingState nsMBCSGroupProber::HandleData(const char* aBuf, PRUint32 aLen)
      {
        mBestGuess = i;
        mState = eFoundIt;
-#ifdef DEBUG_chardet
-       printf("MBCS Prober found charset %d in HandleData. \r\n", i);
-#endif
        break;
      }
      else if (st == eNotMe)
@@ -180,19 +177,26 @@ float nsMBCSGroupProber::GetConfidence(void)
       }
     }
   }
-#ifdef DEBUG_chardet
-       printf("MBCS Prober confidence is %f in charset %d . \r\n", bestConf, mBestGuess);
-       for (i = 0; i < NUM_OF_PROBERS; i++)
-       {
-          if (!mIsActive[i])
-            printf("[%s] is inactive\r\n", ProberName[i], i);
-          else
-          {
-            cf = mProbers[i]->GetConfidence();
-            printf("[%s] detector has confidence %f\r\n", ProberName[i], cf);
-          }
-       }
-#endif
   return bestConf;
 }
 
+#ifdef DEBUG_chardet
+void 
+nsMBCSGroupProber::DumpStatus()
+{
+  PRUint32 i;
+  float cf;
+  
+  GetConfidence();
+  for (i = 0; i < NUM_OF_PROBERS; i++)
+  {
+    if (!mIsActive[i])
+      printf("[%s] is inactive(ie. cofidence is too low).\r\n", ProberName[i]);
+    else
+    {
+      cf = mProbers[i]->GetConfidence();
+      printf("[%s] prober has confidence %f\r\n", ProberName[i], cf);
+    }
+  }
+}
+#endif
