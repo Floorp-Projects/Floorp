@@ -57,21 +57,24 @@
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
 
-NS_IMPL_ADDREF(nsXPathEvaluator)
-NS_IMPL_RELEASE(nsXPathEvaluator)
-NS_INTERFACE_MAP_BEGIN(nsXPathEvaluator)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMXPathEvaluator)
-  NS_INTERFACE_MAP_ENTRY(nsIXPathEvaluatorInternal)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathEvaluator)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathEvaluator)
+NS_IMPL_AGGREGATED(nsXPathEvaluator)
+NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsXPathEvaluator)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMXPathEvaluator)
+    NS_INTERFACE_MAP_ENTRY(nsIXPathEvaluatorInternal)
+    NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathEvaluator)
 NS_INTERFACE_MAP_END
 
-nsXPathEvaluator::nsXPathEvaluator()
+nsXPathEvaluator::nsXPathEvaluator(nsISupports *aOuter)
 {
+    NS_INIT_AGGREGATED(aOuter);
 }
 
-nsXPathEvaluator::~nsXPathEvaluator()
+nsresult
+nsXPathEvaluator::Init()
 {
+    nsCOMPtr<nsIDOMDocument> document = do_QueryInterface(fOuter);
+
+    return document ? SetDocument(document) : NS_OK;
 }
 
 NS_IMETHODIMP
