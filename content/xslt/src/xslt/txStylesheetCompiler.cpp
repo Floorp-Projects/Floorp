@@ -89,7 +89,9 @@ txStylesheetCompiler::startElement(PRInt32 aNamespaceID, nsIAtom* aLocalName,
                                    PRInt32 aAttrCount)
 {
     if (NS_FAILED(mStatus)) {
-        return mStatus;
+        // ignore content after failure
+        // XXX reevaluate once expat stops on failure
+        return NS_OK;
     }
 
     nsresult rv = flushCharacters();
@@ -132,7 +134,9 @@ txStylesheetCompiler::startElement(const PRUnichar *aName,
                                    PRInt32 aAttrCount, PRInt32 aIDOffset)
 {
     if (NS_FAILED(mStatus)) {
-        return mStatus;
+        // ignore content after failure
+        // XXX reevaluate once expat stops on failure
+        return NS_OK;
     }
 
     nsresult rv = flushCharacters();
@@ -352,7 +356,9 @@ nsresult
 txStylesheetCompiler::endElement()
 {
     if (NS_FAILED(mStatus)) {
-        return mStatus;
+        // ignore content after failure
+        // XXX reevaluate once expat stops on failure
+        return NS_OK;
     }
 
     nsresult rv = flushCharacters();
@@ -392,7 +398,9 @@ nsresult
 txStylesheetCompiler::characters(const nsAString& aStr)
 {
     if (NS_FAILED(mStatus)) {
-        return mStatus;
+        // ignore content after failure
+        // XXX reevaluate once expat stops on failure
+        return NS_OK;
     }
 
     mCharacters.Append(aStr);
@@ -695,7 +703,9 @@ txStylesheetCompilerState::popObject()
 nsresult
 txStylesheetCompilerState::pushPtr(void* aPtr)
 {
+#ifdef TX_DEBUG_STACK
     PR_LOG(txLog::xslt, PR_LOG_DEBUG, ("pushPtr: %d\n", aPtr));
+#endif
     return mOtherStack.push(aPtr);
 }
 
@@ -703,7 +713,9 @@ void*
 txStylesheetCompilerState::popPtr()
 {
     void* value = mOtherStack.pop();
+#ifdef TX_DEBUG_STACK
     PR_LOG(txLog::xslt, PR_LOG_DEBUG, ("popPtr: %d\n", value));
+#endif
     return value;
 }
 
