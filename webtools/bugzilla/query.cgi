@@ -391,7 +391,7 @@ $default{'charts'} = \@charts;
 if ($userid) {
      $vars->{'namedqueries'} = $dbh->selectcol_arrayref(
            "SELECT name FROM namedqueries " .
-            "WHERE userid = ? AND name != ?" .
+            "WHERE userid = ? AND name != ? " .
          "ORDER BY name",
          undef, ($userid, DEFAULT_QUERY_NAME));
 }
