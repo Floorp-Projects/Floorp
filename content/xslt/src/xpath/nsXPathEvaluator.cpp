@@ -77,7 +77,7 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathExpression **aResult)
 {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-    ParseContextImpl pContext(aResolver, doc && doc->IsCaseSensitive());
+    ParseContextImpl pContext(aResolver, !doc || doc->IsCaseSensitive());
     Expr* expression = ExprParser::createExpr(PromiseFlatString(aExpression),
                                               &pContext);
     if (!expression)
