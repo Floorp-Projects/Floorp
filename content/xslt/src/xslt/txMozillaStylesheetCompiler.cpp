@@ -361,7 +361,9 @@ txStylesheetSink::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
         mCompiler->cancel(result, nsnull, spec.get());
     }
 
-    return mListener->OnStopRequest(aRequest, aContext, aStatusCode);
+    nsresult rv = mListener->OnStopRequest(aRequest, aContext, aStatusCode);
+    mListener = nsnull;
+    return rv;
 }
 
 NS_IMETHODIMP
