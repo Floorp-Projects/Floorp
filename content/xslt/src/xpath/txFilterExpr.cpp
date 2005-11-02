@@ -23,7 +23,7 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *    
- * $Id: txFilterExpr.cpp,v 1.2 2005/11/02 07:33:51 sicking%bigfoot.com Exp $
+ * $Id: txFilterExpr.cpp,v 1.3 2005/11/02 07:33:52 sicking%bigfoot.com Exp $
  */
 
 #include "Expr.h"
@@ -31,7 +31,7 @@
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:51 $
+ * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:52 $
 **/
 //-- Implementation of FilterExpr --/
 
@@ -51,9 +51,9 @@ FilterExpr::~FilterExpr() {
     delete expr;
 } //-- ~FilterExpr
 
-  //------------------------------------/
- //- Virtual methods from PatternExpr -/
-//------------------------------------/
+  //-----------------------------/
+ //- Virtual methods from Expr -/
+//-----------------------------/
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -61,38 +61,32 @@ FilterExpr::~FilterExpr() {
  * @param ps the ProcessorState containing the stack information needed
  * for evaluation
  * @return the result of the evaluation
- * @see PatternExpr
+ * @see Expr
 **/
 ExprResult* FilterExpr::evaluate(Node* context, ContextState* cs) {
 
-   if (( !context ) || (! expr )) return new NodeSet;
+    if (!context || !expr)
+        return new NodeSet;
 
     ExprResult* exprResult = expr->evaluate(context, cs);
-    NodeSet* nodeSet = 0;
-
-    switch (exprResult->getResultType()) {
-        case ExprResult::NODESET:
-            nodeSet = (NodeSet*)exprResult;
-            break;
-        /*
-        case ExprResult.TREE_FRAGMENT:
-            nodeSet = new NodeSet(1);
-            nodeSet.add(((TreeFragmentResult)exprResult).getValue());
-            break;
-        */
-        default:
-            break;
-            /*
-            throw new InvalidExprException
-                ("expecting NodeSet or TreeFragment as the result of the "+
-                    "expression: " + primaryExpr);
-            */
+    if (!exprResult)
+        return 0;
+    
+    if (exprResult->getResultType() == ExprResult::NODESET) {
+        // Result is a nodeset, filter it.
+        cs->sortByDocumentOrder((NodeSet*)exprResult);
+        evaluatePredicates((NodeSet*)exprResult, cs);
+    }
+    else if(!isEmpty()) {
+        // We can't filter a non-nodeset
+        String err("Expecting nodeset as result of: ");
+        expr->toString(err);
+        cs->recieveError(err);
+        delete exprResult;
+        return new NodeSet;
     }
 
-    //-- filter nodes (apply predicates)
-    evaluatePredicates(nodeSet, cs);
-
-    return nodeSet;
+    return exprResult;
 } //-- evaluate
 
 /**
@@ -108,15 +102,23 @@ double FilterExpr::getDefaultPriority(Node* node, Node* context, ContextState* c
 } //-- getDefaultPriority
 
 /**
- * Determines whether this PatternExpr matches the given node within
+ * Determines whether this Expr matches the given node within
  * the given context
 **/
 MBool FilterExpr::matches(Node* node, Node* context, ContextState* cs) {
 
-    if ( !expr ) return MB_FALSE;
-    NodeSet* nodes = (NodeSet*)evaluate(node, cs);
-    MBool result = (nodes->contains(node));
-    delete nodes;
+    if (!expr)
+        return MB_FALSE;
+        
+    ExprResult* exprResult = evaluate(node, cs);
+    if (!exprResult)
+        return MB_FALSE;
+
+    MBool result = MB_FALSE;
+    if(exprResult->getResultType() == ExprResult::NODESET)
+        result = ((NodeSet*)exprResult)->contains(node);
+
+    delete exprResult;
     return result;
 
 } //-- matches
