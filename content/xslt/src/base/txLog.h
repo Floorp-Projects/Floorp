@@ -54,7 +54,7 @@ public:
 
 #define TX_LG_IMPL \
     PRLogModuleInfo * txLog::xpath = 0; \
-    PRLogModuleInfo * txLog::xslt = 0
+    PRLogModuleInfo * txLog::xslt = 0;
 
 #define TX_LG_CREATE \
     txLog::xpath = PR_NewLogModule("xpath"); \
