@@ -133,10 +133,10 @@ TxObject* txResultStringComparator::createSortableValue(txAExprResult* aExprRes)
     if (nsCaseKey.IsEmpty()) {
         return val;        
     }
-    nsresult rv = createRawSortKey(kCollationCaseInSensitive,
-                                   nsCaseKey,
-                                   &val->mKey, 
-                                   &val->mLength);
+    nsresult rv = mCollation->AllocateRawSortKey(kCollationCaseInSensitive,
+                                                 nsCaseKey,
+                                                 &val->mKey, 
+                                                 &val->mLength);
     if (NS_FAILED(rv)) {
         NS_ERROR("Failed to create raw sort key");
         delete val;
@@ -198,10 +198,10 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
 
     if ((strval1->mCaseLength == 0) && (strval1->mLength != 0)) {
         nsString* caseString = (nsString *)strval1->mCaseKey;
-        rv = createRawSortKey(kCollationCaseSensitive,
-                              *caseString,
-                              (PRUint8**)&strval1->mCaseKey, 
-                              &strval1->mCaseLength);
+        rv = mCollation->AllocateRawSortKey(kCollationCaseSensitive,
+                                            *caseString,
+                                            (PRUint8**)&strval1->mCaseKey, 
+                                            &strval1->mCaseLength);
         if (NS_FAILED(rv)) {
             // XXX ErrorReport
             strval1->mCaseKey = caseString;
@@ -212,10 +212,10 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
     }
     if ((strval2->mCaseLength == 0) && (strval2->mLength != 0)) {
         nsString* caseString = (nsString *)strval2->mCaseKey;
-        rv = createRawSortKey(kCollationCaseSensitive,
-                              *caseString,
-                              (PRUint8**)&strval2->mCaseKey, 
-                              &strval2->mCaseLength);
+        rv = mCollation->AllocateRawSortKey(kCollationCaseSensitive,
+                                            *caseString,
+                                            (PRUint8**)&strval2->mCaseKey, 
+                                            &strval2->mCaseLength);
         if (NS_FAILED(rv)) {
             // XXX ErrorReport
             strval2->mCaseKey = caseString;
@@ -238,21 +238,6 @@ int txResultStringComparator::compareValues(TxObject* aVal1, TxObject* aVal2)
 }
 
 #ifndef TX_EXE
-nsresult txResultStringComparator::createRawSortKey(const nsCollationStrength aStrength,
-                                                    const nsString& aString,
-                                                    PRUint8** aKey,
-                                                    PRUint32* aLength)
-{
-    nsresult rv = mCollation->GetSortKeyLen(aStrength, aString, aLength);
-    *aKey = (PRUint8*)PR_MALLOC(*aLength);
-
-    if (!*aKey)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = mCollation->CreateRawSortKey(aStrength, aString, *aKey, aLength);
-    return rv;
-}
-
 txResultStringComparator::StringValue::StringValue() : mKey(0),
                                                        mCaseKey(0),
                                                        mLength(0),
