@@ -4041,12 +4041,13 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_CALENDAR=
 MOZ_DBGRINFO_MODULES=
 MOZ_ENABLE_LIBXUL=
-MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs auth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
+MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc xmlextras help p3p pref venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs auth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation reporter"
 MOZ_IMG_DECODERS_DEFAULT="png gif jpeg bmp xbm"
 MOZ_IMG_ENCODERS_DEFAULT="png"
 MOZ_IPCD=
 MOZ_JSDEBUGGER=1
 MOZ_JSLOADER=1
+MOZ_LDAP_XPCOM=
 MOZ_LIBART_CFLAGS=
 MOZ_LIBART_LIBS=
 MOZ_MAIL_NEWS=
@@ -4078,6 +4079,7 @@ MOZ_V1_STRING_ABI=1
 MOZ_VIEW_SOURCE=1
 MOZ_XPFE_COMPONENTS=1
 MOZ_XPINSTALL=1
+MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
 NS_PRINTING=1
@@ -4107,6 +4109,7 @@ MOZ_ARG_ENABLE_STRING(application,
                             calendar
                             xulrunner
                             macbrowser (Camino)
+                            content/xslt (Standalone Transformiix XSLT)
                             standalone (use this for standalone
                               xpcom/xpconnect or to manually drive a build)],
 [ MOZ_BUILD_APP=$enableval ] )
@@ -4121,7 +4124,7 @@ suite)
   MOZ_SUITE=1
   MOZ_PROFILESHARING=
   MOZ_APP_VERSION=$SEAMONKEY_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs auth sroaming permissions reporter"
+  MOZ_EXTENSIONS_DEFAULT=" cookie wallet content-packs xml-rpc xmlextras help p3p pref venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs auth sroaming permissions reporter"
   AC_DEFINE(MOZ_SUITE)
   ;;
 
@@ -4132,7 +4135,7 @@ browser)
   MOZ_UPDATER=1
   MOZ_PHOENIX=1
   MOZ_APP_VERSION=$FIREFOX_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc xmlextras pref transformiix universalchardet webservices inspector gnomevfs auth permissions reporter"
+  MOZ_EXTENSIONS_DEFAULT=" cookie xml-rpc xmlextras pref universalchardet webservices inspector gnomevfs auth permissions reporter"
   AC_DEFINE(MOZ_PHOENIX)
   ;;
 
@@ -4147,7 +4150,7 @@ minimo)
   MOZ_APP_VERSION=`cat $topsrcdir/minimo/config/version.txt`
   MOZ_COMPOSER=
   MOZ_ENABLE_POSTSCRIPT=
-  MOZ_EXTENSIONS_DEFAULT="xml-rpc xmlextras transformiix webservices spatialnavigation"
+  MOZ_EXTENSIONS_DEFAULT="xml-rpc xmlextras webservices spatialnavigation"
   MOZ_IMG_DECODERS_DEFAULT="png gif jpeg"
   MOZ_IMG_ENCODERS_DEFAULT=
   MOZ_IMG_ENCODERS=
@@ -4220,7 +4223,7 @@ calendar)
   MOZ_SUNBIRD=1
   MOZ_CALENDAR=1
   MOZ_APP_VERSION=`cat $topsrcdir/calendar/sunbird/config/version.txt`
-  MOZ_EXTENSIONS_DEFAULT=" pref xmlextras transformiix"
+  MOZ_EXTENSIONS_DEFAULT=" pref xmlextras"
   AC_DEFINE(MOZ_SUNBIRD)
   ;;
 
@@ -4232,7 +4235,7 @@ xulrunner)
   MOZ_XULRUNNER=1
   MOZ_ENABLE_LIBXUL=1
   MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" xml-rpc xmlextras pref transformiix universalchardet webservices gnomevfs auth"
+  MOZ_EXTENSIONS_DEFAULT=" xml-rpc xmlextras pref universalchardet webservices gnomevfs auth"
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
 
@@ -4240,8 +4243,16 @@ macbrowser)
   MOZ_APP_NAME=mozilla
   MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_APP_VERSION=$MOZILLA_VERSION
-  MOZ_EXTENSIONS_DEFAULT=" cookie xmlextras universalchardet typeaheadfind transformiix permissions"
+  MOZ_EXTENSIONS_DEFAULT=" cookie xmlextras universalchardet typeaheadfind permissions"
   AC_DEFINE(MOZ_MACBROWSER)
+  ;;
+
+content/xslt)
+  MOZ_APP_NAME=mozilla
+  MOZ_EXTENSIONS_DEFAULT=""
+  AC_DEFINE(TX_EXE)
+  MOZ_XSLT_STANDALONE=1
+  MOZ_APP_VERSION=$MOZILLA_VERSION
   ;;
 
 standalone) 
@@ -5108,15 +5119,6 @@ dnl    MOZ_SVG_FOREIGNOBJECT= )
 dnl if test -n "$MOZ_SVG_FOREIGNOBJECT"; then
 dnl   AC_DEFINE(MOZ_SVG_FOREIGNOBJECT)
 dnl fi
-
-dnl ========================================================
-dnl Transformiix
-dnl ========================================================
-
-dnl To build transformiix standalone, set TX_EXE while configuring
-if test "$TX_EXE"; then
-  AC_DEFINE(TX_EXE)
-fi
 
 dnl ========================================================
 dnl Installer
@@ -6718,7 +6720,7 @@ AC_SUBST(MOZ_SVG_FOREIGNOBJECT)
 AC_SUBST(MOZ_SVG_RENDERER_GDIPLUS)
 AC_SUBST(MOZ_SVG_RENDERER_LIBART)
 AC_SUBST(MOZ_SVG_RENDERER_CAIRO)
-AC_SUBST(TX_EXE)
+AC_SUBST(MOZ_XSLT_STANDALONE)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_PSM)
 AC_SUBST(BUILD_MODULES)

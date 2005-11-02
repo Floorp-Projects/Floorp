@@ -35,11 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ExprResult.h"
+#include "txExprResult.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txNodeSet.h"
-#include "XSLTFunctions.h"
+#include "txXSLTFunctions.h"
 
 /*
   Implementation of XSLT 1.0 extension function: generate-id

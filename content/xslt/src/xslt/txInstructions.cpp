@@ -38,8 +38,8 @@
 
 #include "txInstructions.h"
 #include "txError.h"
-#include "Expr.h"
-#include "ExprResult.h"
+#include "txExpr.h"
+#include "txExprResult.h"
 #include "txStylesheet.h"
 #include "txNodeSetContext.h"
 #include "txTextHandler.h"

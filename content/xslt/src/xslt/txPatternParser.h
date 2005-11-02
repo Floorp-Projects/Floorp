@@ -40,7 +40,7 @@
 #define TX_PATTERNPARSER_H
 
 #include "txXSLTPatterns.h"
-#include "ExprParser.h"
+#include "txExprParser.h"
 
 class txPatternParser : public txExprParser
 {

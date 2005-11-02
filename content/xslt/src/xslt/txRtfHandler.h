@@ -41,7 +41,7 @@
 #define txRtfHandler_h___
 
 #include "txBufferingHandler.h"
-#include "ExprResult.h"
+#include "txExprResult.h"
 
 class txResultTreeFragment : public txAExprResult
 {

@@ -91,7 +91,8 @@ TX_ATOM(preceding, "preceding")
 TX_ATOM(precedingSibling, "preceding-sibling")
 TX_ATOM(self, "self")
 
-#ifndef DISABLE_XFORMS_HOOKS
+
+#ifndef DISABLE_XFORMS_HOOKS // Dummy variable, nobody sets me!
 // XForms XPath Extensions
 TX_ATOM(avg, "avg")
 TX_ATOM(booleanFromString, "boolean-from-string")

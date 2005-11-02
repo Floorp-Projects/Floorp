@@ -53,7 +53,7 @@
 #include <stdlib.h>
 #endif
 
-#include "List.h"
+#include "txList.h"
 #include "nsIAtom.h"
 #include "nsDoubleHashtable.h"
 #include "nsString.h"

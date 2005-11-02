@@ -36,11 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "Expr.h"
+#include "txExpr.h"
 #include "txNodeSet.h"
 #include "txNodeSetContext.h"
 #include "txSingleNodeContext.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
   //------------/
  //- PathExpr -/

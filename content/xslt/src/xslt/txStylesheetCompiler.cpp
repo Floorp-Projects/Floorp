@@ -44,11 +44,11 @@
 #include "txStylesheet.h"
 #include "txInstructions.h"
 #include "txToplevelItems.h"
-#include "ExprParser.h"
-#include "TxLog.h"
+#include "txExprParser.h"
+#include "txLog.h"
 #include "txPatternParser.h"
 #include "txStringUtils.h"
-#include "XSLTFunctions.h"
+#include "txXSLTFunctions.h"
 
 txStylesheetCompiler::txStylesheetCompiler(const nsAString& aBaseURI,
                                            txACompileObserver* aObserver)

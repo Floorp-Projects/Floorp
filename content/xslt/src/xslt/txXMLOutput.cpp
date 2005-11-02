@@ -186,7 +186,7 @@ void txXMLOutput::endElement(const nsAString& aName,
     if (mOutputFormat.mIndent == eTrue)
         *mOut << endl;
     mAfterEndTag = MB_TRUE;
-    mInCDATASection = (MBool)mCDATASections.pop();
+    mInCDATASection = mCDATASections.pop() != 0;
 }
 
 void txXMLOutput::processingInstruction(const nsAString& aTarget,

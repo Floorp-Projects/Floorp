@@ -1,5 +1,5 @@
 #include "txAtoms.h"
-#include "XSLTFunctions.h"
+#include "txXSLTFunctions.h"
 #include "txExecutionState.h"
 
 /*

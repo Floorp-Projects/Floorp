@@ -45,8 +45,8 @@
 #include "nsXPathNSResolver.h"
 #include "nsXPathResult.h"
 #include "nsContentCID.h"
-#include "Expr.h"
-#include "ExprParser.h"
+#include "txExpr.h"
+#include "txExprParser.h"
 #include "nsDOMError.h"
 #include "txURIUtils.h"
 #include "nsIDocument.h"
@@ -54,8 +54,7 @@
 #include "nsDOMString.h"
 #include "nsINameSpaceManager.h"
 #include "txError.h"
-
-extern nsINameSpaceManager* gTxNameSpaceManager;
+#include "nsContentUtils.h"
 
 NS_IMPL_AGGREGATED(nsXPathEvaluator)
 NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsXPathEvaluator)
@@ -120,7 +119,7 @@ nsXPathEvaluator::CreateNSResolver(nsIDOMNode *aNodeResolver,
                                    nsIDOMXPathNSResolver **aResult)
 {
     NS_ENSURE_ARG(aNodeResolver);
-    if (!URIUtils::CanCallerAccess(aNodeResolver))
+    if (!nsContentUtils::CanCallerAccess(aNodeResolver))
         return NS_ERROR_DOM_SECURITY_ERR;
 
     *aResult = new nsXPathNSResolver(aNodeResolver);
@@ -191,7 +190,7 @@ nsresult nsXPathEvaluator::ParseContextImpl::resolveNamespacePrefix
     }
 
     // get the namespaceID for the URI
-    return gTxNameSpaceManager->RegisterNameSpace(ns, aID);
+    return nsContentUtils::NameSpaceManager()->RegisterNameSpace(ns, aID);
 }
 
 nsresult

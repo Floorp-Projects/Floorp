@@ -45,8 +45,8 @@
 #include "nsXPathNSResolver.h"
 #include "nsXPathResult.h"
 #include "nsContentCID.h"
-#include "Expr.h"
-#include "ExprParser.h"
+#include "txExpr.h"
+#include "txExprParser.h"
 #include "nsDOMError.h"
 #include "txURIUtils.h"
 #include "nsIDocument.h"
@@ -55,10 +55,9 @@
 #include "nsINameSpaceManager.h"
 #include "txError.h"
 #include "txAtoms.h"
-#include "XFormsFunctions.h"
+#include "txXFormsFunctions.h"
 #include "nsIDOM3Node.h"
-
-extern nsINameSpaceManager* gTxNameSpaceManager;
+#include "nsContentUtils.h"
 
 NS_IMPL_ADDREF(nsXFormsXPathEvaluator)
 NS_IMPL_RELEASE(nsXFormsXPathEvaluator)
@@ -186,7 +185,7 @@ nsresult nsXFormsXPathEvaluator::XFormsParseContextImpl::resolveNamespacePrefix
   }
 
   // get the namespaceID for the URI
-  return gTxNameSpaceManager->RegisterNameSpace(ns, aID);
+  return nsContentUtils::NameSpaceManager()->RegisterNameSpace(ns, aID);
 }
 
 nsresult

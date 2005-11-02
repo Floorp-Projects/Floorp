@@ -43,7 +43,7 @@
 #include "txVariableMap.h"
 #include "txRtfHandler.h"
 #include "txXSLTProcessor.h"
-#include "TxLog.h"
+#include "txLog.h"
 #include "txURIUtils.h"
 #include "txXMLParser.h"
 

@@ -39,7 +39,7 @@
 #ifndef TRANSFRMX_FUNCTIONLIB_H
 #define TRANSFRMX_FUNCTIONLIB_H
 
-#include "Expr.h"
+#include "txExpr.h"
 #include "nsIAtom.h"
 
 /**

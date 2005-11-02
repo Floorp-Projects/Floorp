@@ -39,7 +39,7 @@
 #ifndef TRANSFRMX_OUTPUTFORMAT_H
 #define TRANSFRMX_OUTPUTFORMAT_H
 
-#include "List.h"
+#include "txList.h"
 #include "nsString.h"
 
 enum txOutputMethod {

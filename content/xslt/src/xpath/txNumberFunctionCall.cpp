@@ -40,7 +40,7 @@
  * A representation of the XPath Number funtions
  */
 
-#include "FunctionLib.h"
+#include "txFunctionLib.h"
 #include <math.h>
 #include "txNodeSet.h"
 #include "txAtoms.h"

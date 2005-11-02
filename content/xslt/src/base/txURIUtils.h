@@ -46,8 +46,6 @@
 #else
 class nsIDocument;
 class nsIDOMNode;
-class nsIScriptSecurityManager;
-extern nsIScriptSecurityManager *gTxSecurityManager;
 
 #endif
 
@@ -89,11 +87,6 @@ public:
     static void getDocumentBase(const nsAFlatString& href, nsAString& dest);
 
 #else /* TX_EXE */
-
-    /*
-     * Checks if a caller is allowed to access a given node
-     */
-    static PRBool CanCallerAccess(nsIDOMNode *aNode);
 
     /**
      * Reset the given document with the document of the source node

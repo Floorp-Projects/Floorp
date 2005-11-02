@@ -44,8 +44,8 @@
  * div  : divide
 **/
 
-#include "Expr.h"
-#include "ExprResult.h"
+#include "txExpr.h"
+#include "txExprResult.h"
 #include <math.h>
 #include "txIXPathContext.h"
 

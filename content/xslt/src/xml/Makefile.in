@@ -46,24 +46,42 @@ MODULE = transformiix
 LIBRARY_NAME = txxml_s
 MOZILLA_INTERNAL_API = 1
 
-REQUIRES	= string \
+REQUIRES	= \
+		  string \
 		  xpcom \
 		  $(NULL)
 
-ifndef TX_EXE
-REQUIRES += 	  dom \
+ifndef MOZ_XSLT_STANDALONE
+REQUIRES += \
+		  js \
+		  xpconnect \
+		  dom \
 		  content \
 		  layout \
+		  pref \
 		  widget \
 		  unicharutil \
 		  necko \
 		  htmlparser \
 		  $(NULL)
+else
+REQUIRES += expat
 endif
 
-DIRS            = dom parser
+CPPSRCS	= \
+	txXMLUtils.cpp \
+	txXMLParser.cpp \
+	$(NULL)
 
-CPPSRCS	= XMLUtils.cpp
+ifdef MOZ_XSLT_STANDALONE
+CPPSRCS += \
+	txAttr.cpp \
+	txDocument.cpp \
+	txElement.cpp \
+	txNodeDefinition.cpp \
+	txProcessingInstruction.cpp \
+	$(NULL)
+endif
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.
@@ -71,5 +89,9 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(srcdir)/../base -I$(srcdir)/dom -I$(srcdir)/../xpath \
-            -I$(srcdir)/../xslt
+INCLUDES += \
+	-I$(srcdir)/../base \
+	-I$(srcdir) \
+	-I$(srcdir)/../xpath \
+	-I$(srcdir)/../xslt \
+	$(NULL)

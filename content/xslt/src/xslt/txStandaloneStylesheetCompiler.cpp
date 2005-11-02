@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txStandaloneStylesheetCompiler.h"
-#include "TxLog.h"
+#include "txLog.h"
 #include "txStylesheetCompiler.h"
 #include "txURIUtils.h"
 #include "expat_config.h"

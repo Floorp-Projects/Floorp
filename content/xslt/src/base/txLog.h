@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef TxLog_h__
-#define TxLog_h__
+#ifndef txLog_h__
+#define txLog_h__
 
 #include "prlog.h"
 #include "prmem.h"

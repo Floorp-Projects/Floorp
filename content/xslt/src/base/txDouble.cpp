@@ -37,7 +37,7 @@
 
 #include "nsString.h"
 #include "txCore.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 #include <math.h>
 #include <stdlib.h>
 #ifdef WIN32

@@ -59,7 +59,7 @@
 #include "txMozillaTextOutput.h"
 #include "txMozillaXMLOutput.h"
 #include "txURIUtils.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 #include "txUnknownHandler.h"
 #include "txXSLTProcessor.h"
 #include "nsIPrincipal.h"
@@ -279,9 +279,9 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     NS_ENSURE_ARG(aOutputDoc);
     NS_ENSURE_FALSE(aObserver, NS_ERROR_NOT_IMPLEMENTED);
 
-    if (!URIUtils::CanCallerAccess(aSourceDOM) ||
-        !URIUtils::CanCallerAccess(aStyleDOM) ||
-        !URIUtils::CanCallerAccess(aOutputDoc)) {
+    if (!nsContentUtils::CanCallerAccess(aSourceDOM) ||
+        !nsContentUtils::CanCallerAccess(aStyleDOM) ||
+        !nsContentUtils::CanCallerAccess(aOutputDoc)) {
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
@@ -401,7 +401,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
     NS_ENSURE_TRUE(!mStylesheetDocument && !mStylesheet,
                    NS_ERROR_NOT_IMPLEMENTED);
 
-    if (!URIUtils::CanCallerAccess(aStyle)) {
+    if (!nsContentUtils::CanCallerAccess(aStyle)) {
         return NS_ERROR_DOM_SECURITY_ERR;
     }
     
@@ -442,7 +442,7 @@ txMozillaXSLTProcessor::TransformToDocument(nsIDOMNode *aSource,
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_SUCCESS(mCompileResult, mCompileResult);
 
-    if (!URIUtils::CanCallerAccess(aSource)) {
+    if (!nsContentUtils::CanCallerAccess(aSource)) {
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
@@ -507,8 +507,8 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_SUCCESS(mCompileResult, mCompileResult);
 
-    if (!URIUtils::CanCallerAccess(aSource) ||
-        !URIUtils::CanCallerAccess(aOutput)) {
+    if (!nsContentUtils::CanCallerAccess(aSource) ||
+        !nsContentUtils::CanCallerAccess(aOutput)) {
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
@@ -591,7 +591,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
 
             nsCOMPtr<nsIDOMNode> node = do_QueryInterface(supports);
             if (node) {
-                if (!URIUtils::CanCallerAccess(node)) {
+                if (!nsContentUtils::CanCallerAccess(node)) {
                     return NS_ERROR_DOM_SECURITY_ERR;
                 }
 
@@ -616,7 +616,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
                                                         getter_AddRefs(node));
                         NS_ENSURE_SUCCESS(rv, rv);
 
-                        if (!URIUtils::CanCallerAccess(node)) {
+                        if (!nsContentUtils::CanCallerAccess(node)) {
                             return NS_ERROR_DOM_SECURITY_ERR;
                         }
                     }
@@ -650,7 +650,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
                 for (i = 0; i < length; ++i) {
                     nodeList->Item(i, getter_AddRefs(node));
 
-                    if (!URIUtils::CanCallerAccess(node)) {
+                    if (!nsContentUtils::CanCallerAccess(node)) {
                         return NS_ERROR_DOM_SECURITY_ERR;
                     }
                 }
@@ -694,7 +694,7 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
                 nsCOMPtr<nsIDOMNode> node = do_QueryInterface(supports);
 
                 if (node) {
-                    rv = URIUtils::CanCallerAccess(node) ? NS_OK :
+                    rv = nsContentUtils::CanCallerAccess(node) ? NS_OK :
                          NS_ERROR_DOM_SECURITY_ERR;
                 }
                 else {
@@ -726,7 +726,8 @@ txMozillaXSLTProcessor::SetParameter(const nsAString & aNamespaceURI,
     }
 
     PRInt32 nsId = kNameSpaceID_Unknown;
-    nsresult rv = gTxNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
+    nsresult rv = nsContentUtils::NameSpaceManager()->
+        RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
@@ -749,7 +750,8 @@ txMozillaXSLTProcessor::GetParameter(const nsAString& aNamespaceURI,
                                      nsIVariant **aResult)
 {
     PRInt32 nsId = kNameSpaceID_Unknown;
-    nsresult rv = gTxNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
+    nsresult rv = nsContentUtils::NameSpaceManager()->
+        RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);
@@ -766,7 +768,8 @@ txMozillaXSLTProcessor::RemoveParameter(const nsAString& aNamespaceURI,
                                         const nsAString& aLocalName)
 {
     PRInt32 nsId = kNameSpaceID_Unknown;
-    nsresult rv = gTxNameSpaceManager->RegisterNameSpace(aNamespaceURI, nsId);
+    nsresult rv = nsContentUtils::NameSpaceManager()->
+        RegisterNameSpace(aNamespaceURI, nsId);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIAtom> localName = do_GetAtom(aLocalName);
     txExpandedName varName(nsId, localName);

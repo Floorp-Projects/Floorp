@@ -42,8 +42,8 @@
  * performs a boolean operation between it's lvalue and rvalue.
 **/
 
-#include "Expr.h"
-#include "ExprResult.h"
+#include "txExpr.h"
+#include "txExprResult.h"
 #include "txIXPathContext.h"
 
 /**

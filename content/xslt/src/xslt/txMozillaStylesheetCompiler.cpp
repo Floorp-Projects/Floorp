@@ -62,10 +62,10 @@
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
 #include "txAtoms.h"
-#include "TxLog.h"
+#include "txLog.h"
 #include "txMozillaXSLTProcessor.h"
 #include "txStylesheetCompiler.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
 static const char kLoadAsData[] = "loadAsData";
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);

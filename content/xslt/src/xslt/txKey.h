@@ -41,9 +41,9 @@
 
 #include "nsDoubleHashtable.h"
 #include "txNodeSet.h"
-#include "List.h"
+#include "txList.h"
 #include "txXSLTPatterns.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
 class txPattern;
 class Expr;

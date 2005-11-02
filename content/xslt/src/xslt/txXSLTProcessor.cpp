@@ -39,10 +39,10 @@
 #include "txXSLTProcessor.h"
 #include "txInstructions.h"
 #include "txAtoms.h"
-#include "TxLog.h"
+#include "txLog.h"
 #include "txStylesheetCompileHandlers.h"
 #include "txExecutionState.h"
-#include "ExprResult.h"
+#include "txExprResult.h"
 #ifdef TX_EXE
 #include "txHTMLOutput.h"
 #endif

@@ -41,9 +41,9 @@
 //    Implementation of the Attr class
 //
 
-#include "dom.h"
+#include "txDOM.h"
 #include "txAtoms.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 
 Attr::Attr(nsIAtom *aPrefix, nsIAtom *aLocalName, PRInt32 aNamespaceID,
            Element *aOwnerElement, const nsAString &aValue) :

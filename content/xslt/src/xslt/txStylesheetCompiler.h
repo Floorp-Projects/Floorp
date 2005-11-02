@@ -41,7 +41,7 @@
 
 #include "txStack.h"
 #include "txXSLTPatterns.h"
-#include "Expr.h"
+#include "txExpr.h"
 #include "txIXPathContext.h"
 #include "nsAutoPtr.h"
 #include "txStylesheet.h"

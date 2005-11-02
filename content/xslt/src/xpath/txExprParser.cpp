@@ -42,9 +42,9 @@
  * @see ExprLexer
 **/
 
-#include "ExprParser.h"
-#include "ExprLexer.h"
-#include "FunctionLib.h"
+#include "txExprParser.h"
+#include "txExprLexer.h"
+#include "txFunctionLib.h"
 #include "txStack.h"
 #include "txAtoms.h"
 #include "txError.h"

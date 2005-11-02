@@ -42,7 +42,7 @@
 #include "nsCOMPtr.h"
 #include "txCore.h"
 #include "nsString.h"
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 #include "txNamespaceMap.h"
 #include "nsAutoPtr.h"
 #include "txXSLTNumber.h"

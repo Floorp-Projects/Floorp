@@ -43,7 +43,7 @@
 
 #include "txAtoms.h"
 #include "txIXPathContext.h"
-#include "XSLTFunctions.h"
+#include "txXSLTFunctions.h"
 #include "txExecutionState.h"
 #include "txURIUtils.h"
 

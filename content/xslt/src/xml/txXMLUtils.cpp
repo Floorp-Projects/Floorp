@@ -41,7 +41,7 @@
  * XML utility classes
  */
 
-#include "XMLUtils.h"
+#include "txXMLUtils.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "txAtoms.h"

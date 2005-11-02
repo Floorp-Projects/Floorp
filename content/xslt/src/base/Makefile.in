@@ -50,11 +50,12 @@ REQUIRES	= string \
 		  xpcom \
 		  $(NULL)
 
-ifndef TX_EXE
+ifndef MOZ_XSLT_STANDALONE
 REQUIRES	+= unicharutil \
 		  dom \
 		  content \
 		  layout \
+		  pref \
 		  widget \
 		  necko \
 		  caps \
@@ -64,15 +65,15 @@ REQUIRES	+= unicharutil \
 		  $(NULL)
 endif
 
-CPPSRCS	= Double.cpp \
-	List.cpp \
+CPPSRCS	= txDouble.cpp \
+	txList.cpp \
 	txAtoms.cpp \
 	txExpandedNameMap.cpp \
 	txNamespaceMap.cpp \
 	txURIUtils.cpp
 
-ifdef TX_EXE
-CPPSRCS += SimpleErrorObserver.cpp \
+ifdef MOZ_XSLT_STANDALONE
+CPPSRCS += txSimpleErrorObserver.cpp \
 	txStringUtils.cpp
 endif
 
@@ -82,5 +83,9 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES += -I$(srcdir)/../xpath -I$(srcdir)/../xslt -I$(srcdir)/../xml   \
-  -I$(srcdir)/../xml/dom -I$(srcdir)
+INCLUDES += \
+	-I$(srcdir) \
+	-I$(srcdir)/../xml \
+	-I$(srcdir)/../xpath \
+	-I$(srcdir)/../xslt \
+	$(NULL)

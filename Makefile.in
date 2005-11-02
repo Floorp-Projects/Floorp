@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/build/unix/modules.mk
 
-ifeq ($(BUILD_MODULES),all)
+ifeq (,$(filter-out all,$(BUILD_MODULES))$(MOZ_XSLT_STANDALONE))
 #
 # And now for something completely different...
 # Divide the default build into tiers. 
@@ -420,10 +420,20 @@ tier_99_dirs += \
 	$(NULL)
 endif
 
-else
+else # BUILD_MODULES
 
 # Standalone build
 
+ifdef MOZ_XSLT_STANDALONE
+DIRS = \
+	xpcom/typelib \
+	xpcom \
+	parser/expat \
+	content/xslt/src \
+	$(NULL)
+
+SUBMAKEFILES = xpcom/typelib/Makefile
+else
 DIRS		= $(BUILD_MODULE_DIRS)
 
 # Hack to generate xpidl Makefile
@@ -433,12 +443,13 @@ DIRS		:= xpcom/typelib $(DIRS)
 SUBMAKEFILES	:= xpcom/typelib/Makefile
 endif
 endif
+endif
 
 default:: $(SUBMAKEFILES)
 	$(MAKE) export
 	$(MAKE) libs
 
-endif # BUILD_MODULES == all
+endif # BUILD_MODULES == all or MOZ_XSLT_STANDALONE
 
 STATIC_MAKEFILES := nsprpub directory/c-sdk security/nss
 

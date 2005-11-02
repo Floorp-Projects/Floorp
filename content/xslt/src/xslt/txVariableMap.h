@@ -40,8 +40,8 @@
 #define TRANSFRMX_VARIABLEMAP_H
 
 #include "txError.h"
-#include "XMLUtils.h"
-#include "ExprResult.h"
+#include "txXMLUtils.h"
+#include "txExprResult.h"
 #include "txExpandedNameMap.h"
 
 class txVariableMap {
