@@ -1,4 +1,3 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +11,20 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla XPCOM Glue.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Mozilla Foundation <http://www.mozilla.org/>.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Benjamin Smedberg <benjamin@smedbergs.us>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,35 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-/* We need this because Solaris' version of qsort is broken and
- * causes array bounds reads.
- */
-
-#ifndef nsQuickSort_h___
-#define nsQuickSort_h___
-
-#include "prtypes.h"
-#include "nscore.h"
-
-PR_BEGIN_EXTERN_C
-
 /**
- * Parameters:
- *  1. the array to sort
- *  2. the number of elements in the array
- *  3. the size of each array element
- *  4. comparison function taking two elements and parameter #5 and
- *     returning an integer:
- *      + less than zero if the first element should be before the second
- *      + 0 if the order of the elements does not matter
- *      + greater than zero if the second element should be before the first
- *  5. extra data to pass to comparison function
+ * @file nsStringGlue.h
+ * This header exists solely to #include the proper internal/frozen string
+ * headers, depending on whether MOZILLA_INTERNAL_API is defined.
  */
-void NS_COM_GLUE NS_QuickSort(void *, unsigned int, unsigned int,
-                              int (*)(const void *, const void *, void *), 
-                              void *);
 
-PR_END_EXTERN_C
+#ifndef nsStringGlue_h__
+#define nsStringGlue_h__
 
-#endif /* nsQuickSort_h___ */
+#ifdef MOZILLA_INTERNAL_API
+#include "nsString.h"
+#else
+#include "nsStringAPI.h"
+#endif
+
+#endif // nsStringGlue_h__

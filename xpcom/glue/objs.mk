@@ -42,6 +42,8 @@ XPCOM_GLUE_SRC_CSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LC
 
 XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsCOMPtr.cpp                   \
+  nsCOMArray.cpp                 \
+  nsCRTGlue.cpp                  \
   nsComponentManagerUtils.cpp    \
   nsDebug.cpp                    \
   nsID.cpp                       \
@@ -53,6 +55,8 @@ XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsGREGlue.cpp                  \
   nsVersionComparator.cpp        \
   nsTHashtable.cpp               \
+  nsQuickSort.cpp                \
+  nsVoidArray.cpp                \
   $(NULL)
 
 XPCOM_GLUE_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCPPSRCS))

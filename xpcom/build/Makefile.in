@@ -44,6 +44,8 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/../glue/objs.mk
 
+EXTRA_DEPS += $(srcdir)/../glue/objs.mk
+
 MODULE		= xpcom
 LIBRARY_NAME	= xpcom_core
 

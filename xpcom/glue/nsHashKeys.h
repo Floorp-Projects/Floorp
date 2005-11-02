@@ -44,12 +44,7 @@
 #include "pldhash.h"
 #include NEW_H
 
-#ifdef MOZILLA_INTERNAL_API
-#include "nsAString.h"
-#include "nsString.h"
-#else
-#include "nsStringAPI.h"
-#endif
+#include "nsStringGlue.h"
 
 #include <stdlib.h>
 #include <string.h>

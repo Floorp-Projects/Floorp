@@ -40,7 +40,7 @@
 //#define DEBUG_VOIDARRAY 1
 
 #include "nscore.h"
-#include "nsAString.h"
+#include "nsStringGlue.h"
 
 // Comparator callback function for sorting array values.
 typedef int (* PR_CALLBACK nsVoidArrayComparatorFunc)
@@ -50,7 +50,7 @@ typedef int (* PR_CALLBACK nsVoidArrayComparatorFunc)
 typedef PRBool (* PR_CALLBACK nsVoidArrayEnumFunc)(void* aElement, void *aData);
 
 /// A basic zero-based array of void*'s that manages its own memory
-class NS_COM nsVoidArray {
+class NS_COM_GLUE nsVoidArray {
 public:
   nsVoidArray();
   nsVoidArray(PRInt32 aCount);  // initial count of aCount elements set to nsnull
@@ -183,7 +183,7 @@ private:
 
 
 // A zero-based array with a bit of automatic internal storage
-class NS_COM nsAutoVoidArray : public nsVoidArray {
+class NS_COM_GLUE nsAutoVoidArray : public nsVoidArray {
 public:
   nsAutoVoidArray();
 
@@ -206,7 +206,7 @@ typedef int (* PR_CALLBACK nsStringArrayComparatorFunc)
 
 typedef PRBool (*nsStringArrayEnumFunc)(nsString& aElement, void *aData);
 
-class NS_COM nsStringArray: private nsVoidArray
+class NS_COM_GLUE nsStringArray: private nsVoidArray
 {
 public:
   nsStringArray(void);
@@ -260,7 +260,7 @@ typedef int (* PR_CALLBACK nsCStringArrayComparatorFunc)
 
 typedef PRBool (*nsCStringArrayEnumFunc)(nsCString& aElement, void *aData);
 
-class NS_COM nsCStringArray: private nsVoidArray
+class NS_COM_GLUE nsCStringArray: private nsVoidArray
 {
 public:
   nsCStringArray(void);
@@ -285,7 +285,10 @@ public:
   nsCString* operator[](PRInt32 aIndex) const { return CStringAt(aIndex); }
 
   PRInt32 IndexOf(const nsACString& aPossibleString) const;
+
+#ifdef MOZILLA_INTERNAL_API
   PRInt32 IndexOfIgnoreCase(const nsACString& aPossibleString) const;
+#endif
 
   PRBool InsertCStringAt(const nsACString& aCString, PRInt32 aIndex);
 
@@ -296,7 +299,11 @@ public:
   }
 
   PRBool RemoveCString(const nsACString& aCString);
+
+#ifdef MOZILLA_INTERNAL_API
   PRBool RemoveCStringIgnoreCase(const nsACString& aCString);
+#endif
+
   PRBool RemoveCStringAt(PRInt32 aIndex);
   void   Clear(void);
 
@@ -305,7 +312,11 @@ public:
   }
 
   void Sort(void);
+
+#ifdef MOZILLA_INTERNAL_API
   void SortIgnoreCase(void);
+#endif
+
   void Sort(nsCStringArrayComparatorFunc aFunc, void* aData);
 
   PRBool EnumerateForwards(nsCStringArrayEnumFunc aFunc, void* aData);
@@ -341,7 +352,7 @@ private:
 // today, there should not be any virtualness to it to avoid the vtable
 // ptr overhead.
 
-class NS_COM nsSmallVoidArray : private nsVoidArray
+class NS_COM_GLUE nsSmallVoidArray : private nsVoidArray
 {
 public:
   ~nsSmallVoidArray();
