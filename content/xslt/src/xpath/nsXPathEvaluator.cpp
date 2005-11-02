@@ -49,7 +49,7 @@
 #include "ExprParser.h"
 #include "nsDOMError.h"
 #include "txURIUtils.h"
-#include "nsIHTMLDocument.h"
+#include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
@@ -76,8 +76,8 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
                                    nsIDOMXPathNSResolver *aResolver,
                                    nsIDOMXPathExpression **aResult)
 {
-    nsCOMPtr<nsIHTMLDocument> html = do_QueryReferent(mDocument);
-    ParseContextImpl pContext(aResolver, !!html);
+    nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+    ParseContextImpl pContext(aResolver, doc->IsCaseSensitive());
     Expr* expression = ExprParser::createExpr(PromiseFlatString(aExpression),
                                               &pContext);
     if (!expression)
@@ -176,7 +176,7 @@ nsresult nsXPathEvaluator::ParseContextImpl::resolveFunctionCall(nsIAtom* aName,
 
 PRBool nsXPathEvaluator::ParseContextImpl::caseInsensitiveNameTests()
 {
-    return mIsHTML;
+    return !mIsCaseSensitive;
 }
 
 void nsXPathEvaluator::ParseContextImpl::receiveError(const nsAString& aMsg,
