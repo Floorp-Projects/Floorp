@@ -38,6 +38,8 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIContent.h"
+#include "nsIPrincipal.h"
+#include "nsINodeInfo.h"
 #endif
 
 /**
@@ -323,44 +325,76 @@ nsIScriptSecurityManager *gTxSecurityManager = 0;
 // static
 PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
 {
+    if (!gTxSecurityManager) {
+        // No security manager available, let any calls go through...
+
+        return PR_TRUE;
+    }
+
+    nsCOMPtr<nsIPrincipal> subjectPrincipal;
+    gTxSecurityManager->GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
+
+    if (!subjectPrincipal) {
+        // we're running as system, grant access to the node.
+
+        return PR_TRUE;
+    }
+
     // Make sure that this is a real node. We do this by first QI'ing to
     // nsIContent (which is important performance wise) and if that QI
     // fails we QI to nsIDocument. If both those QI's fail we won't let
     // the caller access this unknown node.
-
-    nsCOMPtr<nsIDocument> doc;
-
+    nsCOMPtr<nsIPrincipal> principal;
     nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
+
     if (!content) {
-        doc = do_QueryInterface(aNode);
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(aNode);
 
         if (!doc) {
             // aNode is neither a nsIContent nor an nsIDocument, something
             // weird is going on...
+
+            NS_ERROR("aNode is neither an nsIContent nor an nsIDocument!");
+
             return PR_FALSE;
         }
+        doc->GetPrincipal(getter_AddRefs(principal));
     }
-
-    if (!doc) {
+    else {
         nsCOMPtr<nsIDOMDocument> domDoc;
         aNode->GetOwnerDocument(getter_AddRefs(domDoc));
         if (!domDoc) {
-            // aNode is not part of a document, let any caller access it.
-            return PR_TRUE;
+            nsCOMPtr<nsINodeInfo> ni;
+            content->GetNodeInfo(*getter_AddRefs(ni));
+            if (!ni) {
+                // aNode is not part of a document, let any caller access it.
+
+                return PR_TRUE;
+            }
+
+            ni->GetDocumentPrincipal(getter_AddRefs(principal));
         }
-        doc = do_QueryInterface(domDoc);
-        NS_ASSERTION(doc, "QI to nsIDocument failed");
+        else {
+            nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+            NS_ASSERTION(doc, "QI to nsIDocument failed");
+            doc->GetPrincipal(getter_AddRefs(principal));
+        }
     }
 
-    if (!gTxSecurityManager) {
-        // No security manager available, let any calls go through...
+    if (!principal) {
+      // We can't get hold of the principal for this node. This should happen
+      // very rarely, like for textnodes out of the tree and <option>s created
+      // using 'new Option'.
+      // If we didn't allow access to nodes like this you wouldn't be able to
+      // insert these nodes into a document.
+
         return PR_TRUE;
     }
 
-    nsCOMPtr<nsIURI> uri;
-    doc->GetDocumentURL(getter_AddRefs(uri));
+    nsresult rv = gTxSecurityManager->CheckSameOriginPrincipal(subjectPrincipal,
+                                                               principal);
 
-    return NS_SUCCEEDED(gTxSecurityManager->CheckSameOrigin(nsnull, uri));
+    return NS_SUCCEEDED(rv);
 }
 
 
