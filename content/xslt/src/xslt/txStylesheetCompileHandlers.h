@@ -57,34 +57,29 @@ typedef nsresult (*HandleTextFn)  (const nsAString& aStr,
                                    txStylesheetCompilerState& aState);
 
 struct txElementHandler {
-    PRInt32 mNamespaceID;
-    char* mLocalName;
-    HandleStartFn mStartFunction;
-    HandleEndFn mEndFunction;
-};
-
-struct txHandlerTableData {
-    txElementHandler mHandlers[20]; // XXX find a better solution for this
-    txElementHandler mOtherHandler;
-    txElementHandler mLREHandler;
-    HandleTextFn mTextHandler;
+    const PRInt32 mNamespaceID;
+    const char* const mLocalName;
+    const HandleStartFn mStartFunction;
+    const HandleEndFn mEndFunction;
 };
 
 class txHandlerTable
 {
 public:
-    txHandlerTable();
-    nsresult init(txHandlerTableData* aTableData);
-    txElementHandler* find(PRInt32 aNamespaceID, nsIAtom* aLocalName);
+    txHandlerTable(const HandleTextFn aTextHandler,
+                   const txElementHandler* aLREHandler,
+                   const txElementHandler* aOtherHandler);
+    nsresult init(const txElementHandler* aHandlers, PRUint32 aCount);
+    const txElementHandler* find(PRInt32 aNamespaceID, nsIAtom* aLocalName);
     
-    HandleTextFn mTextHandler;
-    txElementHandler* mLREHandler;
+    const HandleTextFn mTextHandler;
+    const txElementHandler* const mLREHandler;
 
     static MBool init();
     static void shutdown();
 
 private:
-    txElementHandler* mOtherHandler;
+    const txElementHandler* const mOtherHandler;
     txExpandedNameMap mHandlers;
 };
 
