@@ -49,6 +49,7 @@
 #include "txNamespaceMap.h"
 #include "nsAutoPtr.h"
 #include "txStylesheet.h"
+#include "TxLog.h"
 
 class txHandlerTable;
 class txElementContext;
@@ -147,6 +148,9 @@ protected:
     nsRefPtr<txACompileObserver> mObserver;
     nsVoidArray mInScopeVariables;
     nsVoidArray mChildCompilerList;
+#ifdef PR_LOGGING
+    nsCString mURI;
+#endif
     PRPackedBool mIsTopCompiler;
     PRPackedBool mDoneWithThisStylesheet;
     
