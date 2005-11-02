@@ -70,6 +70,10 @@ protected:
         return mArray.EnumerateBackwards(aFunc, aData);
     }
     
+    void Sort(nsVoidArrayComparatorFunc aFunc, void* aData) {
+        mArray.Sort(aFunc, aData);
+    }
+    
     // any method which is not a direct forward to mArray should
     // avoid inline bodies, so that the compiler doesn't inline them
     // all over the place
@@ -213,6 +217,13 @@ class nsCOMArray : public nsCOMArray_base
     PRBool EnumerateBackwards(nsCOMArrayEnumFunc aFunc, void* aData) {
         return nsCOMArray_base::EnumerateBackwards(nsVoidArrayEnumFunc(aFunc),
                                                   aData);
+    }
+    
+    typedef int (* PR_CALLBACK nsCOMArrayComparatorFunc)
+        (const T* aElement1, const T* aElement2, void* aData);
+        
+    void Sort(nsCOMArrayComparatorFunc aFunc, void* aData) {
+        nsCOMArray_base::Sort(nsVoidArrayComparatorFunc(aFunc), aData);
     }
 
     // append an object, growing the array as necessary
