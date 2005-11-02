@@ -191,9 +191,10 @@ getExprAttr(txStylesheetAttr* aAttributes,
 
     rv = txExprParser::createExpr(attr->mValue, &aState,
                                   getter_Transfers(aExpr));
-    if (NS_SUCCEEDED(rv) && !aExpr && (aRequired || !aState.fcp())) {
-        // XXX ErrorReport: empty required attr
-        return NS_ERROR_XSLT_PARSE_FAILURE;
+    if (NS_FAILED(rv) && !aRequired && aState.fcp()) {
+        // use default value in fcp for not required exprs
+        aExpr = nsnull:
+        return NS_OK;
     }
 
     return rv;
