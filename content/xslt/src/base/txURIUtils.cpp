@@ -343,11 +343,11 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
         // Create a temporary channel to get nsIDocument->Reset to
         // do the right thing. We want the output document to get
         // much of the input document's characteristics.
-        serv->NewChannelFromURI(sourceDoc->GetDocumentURL(),
+        serv->NewChannelFromURI(sourceDoc->GetDocumentURI(),
                                 getter_AddRefs(channel));
     }
     aNewDoc->Reset(channel, loadGroup);
-    aNewDoc->SetBaseURL(sourceDoc->GetBaseURL());
+    aNewDoc->SetBaseURI(sourceDoc->GetBaseURI());
 
     // Copy charset
     aNewDoc->SetDocumentCharacterSet(sourceDoc->GetDocumentCharacterSet());

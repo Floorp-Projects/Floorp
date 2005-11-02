@@ -754,7 +754,7 @@ TX_CompileStylesheet(nsIDOMNode* aNode, txStylesheet** aStylesheet)
     }
 
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(document);
-    nsIURI *uri = doc->GetBaseURL();
+    nsIURI *uri = doc->GetBaseURI();
     nsCAutoString baseURI;
     uri->GetSpec(baseURI);
 

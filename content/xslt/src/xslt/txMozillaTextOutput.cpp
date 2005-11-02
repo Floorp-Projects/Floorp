@@ -177,11 +177,11 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
         // Create a temporary channel to get nsIDocument->Reset to
         // do the right thing. We want the output document to get
         // much of the input document's characteristics.
-        serv->NewChannelFromURI(sourceDoc->GetDocumentURL(),
+        serv->NewChannelFromURI(sourceDoc->GetDocumentURI(),
                                 getter_AddRefs(channel));
     }
     doc->Reset(channel, loadGroup);
-    doc->SetBaseURL(sourceDoc->GetBaseURL());
+    doc->SetBaseURI(sourceDoc->GetBaseURI());
 
     // Set the charset
     if (!mOutputFormat.mEncoding.IsEmpty()) {
@@ -239,11 +239,7 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
             return;
         }
 
-        rv = rootContent->SetDocument(doc, PR_FALSE, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to set the document");
-        if (NS_FAILED(rv)) {
-            return;
-        }
+        rootContent->SetDocument(doc, PR_FALSE, PR_TRUE);
 
         doc->SetRootContent(rootContent);
 
