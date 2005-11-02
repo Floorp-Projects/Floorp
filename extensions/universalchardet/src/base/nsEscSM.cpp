@@ -159,8 +159,8 @@ PCK4BITS(0,0,0,0,7,0,0,0),  // 20 - 27
 PCK4BITS(3,0,0,0,0,0,0,0),  // 28 - 2f 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 30 - 37 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 38 - 3f 
-PCK4BITS(6,0,4,0,0,0,0,0),  // 40 - 47 
-PCK4BITS(0,0,5,0,0,0,0,0),  // 48 - 4f 
+PCK4BITS(6,0,4,0,8,0,0,0),  // 40 - 47 
+PCK4BITS(0,9,5,0,0,0,0,0),  // 48 - 4f 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 50 - 57 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 58 - 5f 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 60 - 67 
@@ -186,20 +186,23 @@ PCK4BITS(2,2,2,2,2,2,2,2)   // f8 - ff
 };
 
 
-static PRUint32 ISO2022JP_st [ 6] = {
+static PRUint32 ISO2022JP_st [ 9] = {
 PCK4BITS(eStart,     3,eError,eStart,eStart,eStart,eStart,eStart),//00-07 
-PCK4BITS(eError,eError,eError,eError,eError,eError,eError,eError),//08-0f 
-PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe),//10-17 
-PCK4BITS(eError,eError,eError,     5,eError,eError,eError,     4),//18-1f 
-PCK4BITS(eError,eError,eError,eError,eItsMe,eError,eItsMe,eError),//20-27 
-PCK4BITS(eError,eError,eError,eError,eItsMe,eItsMe,eError,eError) //28-2f 
+PCK4BITS(eStart,eStart,eError,eError,eError,eError,eError,eError),//08-0f 
+PCK4BITS(eError,eError,eError,eError,eItsMe,eItsMe,eItsMe,eItsMe),//10-17 
+PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eError,eError),//18-1f 
+PCK4BITS(eError,     5,eError,eError,eError,     4,eError,eError),//20-27 
+PCK4BITS(eError,eError,eError,     6,eItsMe,eError,eItsMe,eError),//28-2f 
+PCK4BITS(eError,eError,eError,eError,eError,eError,eItsMe,eItsMe),//30-37 
+PCK4BITS(eError,eError,eError,eItsMe,eError,eError,eError,eError),//38-3f 
+PCK4BITS(eError,eError,eError,eError,eItsMe,eError,eStart,eStart) //40-47 
 };
 
 static const PRUint32 ISO2022JPCharLenTable[] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 SMModel ISO2022JPSMModel = {
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022JP_cls },
-  8,
+  10,
   {eIdxSft4bits, eSftMsk4bits, eBitSft4bits, eUnitMsk4bits, ISO2022JP_st },
   ISO2022JPCharLenTable,
   "ISO-2022-JP",
