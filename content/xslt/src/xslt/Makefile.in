@@ -45,6 +45,10 @@ REQUIRES +=	  dom \
 		  docshell \
 		  layout \
 		  uconv \
+		  caps \
+		  windowwatcher \
+		  mimetype \
+		  intl \
 		  $(NULL)
 else
 REQUIRES +=	  expat \

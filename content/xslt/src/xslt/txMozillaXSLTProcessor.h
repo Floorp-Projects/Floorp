@@ -66,6 +66,8 @@ class nsIXMLContentSink;
 #define TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID \
 "@mozilla.org/document-transformer;1?type=xslt"
 
+#define XSLT_MSGS_URL  "chrome://communicator/locale/layout/xslt.properties"
+
 class txVariable : public txIGlobalParameter
 {
 public:
@@ -146,12 +148,17 @@ public:
     NS_IMETHOD CancelLoads() {return NS_OK;};
 
     nsresult setStylesheet(txStylesheet* aStylesheet);
+    void reportError(nsresult aResult, const PRUnichar *aErrorText,
+                     const PRUnichar *aSourceText);
 
 private:
     nsresult DoTransform();
+    void notifyError();
 
     nsRefPtr<txStylesheet> mStylesheet;
     nsCOMPtr<nsIDOMNode> mSource;
+    nsresult mTransformResult;
+    nsString mErrorText, mSourceText;
     nsCOMPtr<nsITransformObserver> mObserver;
     txExpandedNameMap mVariables;
 };
