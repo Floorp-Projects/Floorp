@@ -115,9 +115,9 @@ class Node : public TxObject
     virtual nsresult getNamespaceURI(nsAString& aNSURI) = 0;
 
     //txXPathNode functions
-    virtual MBool getLocalName(txAtom** aLocalName) = 0;
+    virtual MBool getLocalName(nsIAtom** aLocalName) = 0;
     virtual PRInt32 getNamespaceID() = 0;
-    virtual PRInt32 lookupNamespaceID(txAtom* aPrefix) = 0;
+    virtual PRInt32 lookupNamespaceID(nsIAtom* aPrefix) = 0;
     virtual Node* getXPathParent() = 0;
     virtual PRInt32 compareDocumentPosition(Node* aOther) = 0;
 };
@@ -249,9 +249,9 @@ class NodeDefinition : public Node, public NodeList
     nsresult getNamespaceURI(nsAString& aNSURI);
 
     //txXPathNode functions
-    virtual MBool getLocalName(txAtom** aLocalName);
+    virtual MBool getLocalName(nsIAtom** aLocalName);
     virtual PRInt32 getNamespaceID();
-    virtual PRInt32 lookupNamespaceID(txAtom*);
+    virtual PRInt32 lookupNamespaceID(nsIAtom*);
     virtual Node* getXPathParent();
     virtual PRInt32 compareDocumentPosition(Node* aOther);
 
@@ -419,10 +419,10 @@ class Element : public NodeDefinition
     Node* appendChild(Node* newChild);
 
     //txXPathNode functions override
-    MBool getLocalName(txAtom** aLocalName);
+    MBool getLocalName(nsIAtom** aLocalName);
     PRInt32 getNamespaceID();
-    MBool getAttr(txAtom* aLocalName, PRInt32 aNSID, nsAString& aValue);
-    MBool hasAttr(txAtom* aLocalName, PRInt32 aNSID);
+    MBool getAttr(nsIAtom* aLocalName, PRInt32 aNSID, nsAString& aValue);
+    MBool hasAttr(nsIAtom* aLocalName, PRInt32 aNSID);
 
   private:
     friend class Document;
@@ -431,7 +431,7 @@ class Element : public NodeDefinition
             Document* aOwner);
 
     AttrMap mAttributes;
-    txAtom* mLocalName;
+    nsIAtom* mLocalName;
     PRInt32 mNamespaceID;
 };
 
@@ -454,7 +454,7 @@ class Attr : public NodeDefinition
     Node* appendChild(Node* newChild);
 
     //txXPathNode functions override
-    MBool getLocalName(txAtom** aLocalName);
+    MBool getLocalName(nsIAtom** aLocalName);
     PRInt32 getNamespaceID();
     Node* getXPathParent();
 
@@ -470,7 +470,7 @@ class Attr : public NodeDefinition
 
     Element* ownerElement;
 
-    txAtom* mLocalName;
+    nsIAtom* mLocalName;
     PRInt32 mNamespaceID;
 };
 
@@ -488,14 +488,14 @@ class ProcessingInstruction : public NodeDefinition
     ~ProcessingInstruction();
 
     //txXPathNode functions override
-    MBool getLocalName(txAtom** aLocalName);
+    MBool getLocalName(nsIAtom** aLocalName);
 
   private:
     friend class Document;
     ProcessingInstruction(const nsAString& theTarget, const nsAString& theData,
                           Document* owner);
 
-    txAtom* mLocalName;
+    nsIAtom* mLocalName;
 };
 
 class txNamespaceManager

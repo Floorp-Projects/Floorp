@@ -85,7 +85,7 @@
 
 class txAttribute {
 public:
-    txAttribute(PRInt32 aNsID, txAtom* aLocalName, const nsAString& aValue);
+    txAttribute(PRInt32 aNsID, nsIAtom* aLocalName, const nsAString& aValue);
     txExpandedName mName;
     nsString mValue;
     MBool mShorthand;

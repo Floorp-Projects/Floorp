@@ -85,7 +85,7 @@ private:
                      NodeSet* aNodes);
 
     MBool getAttrAsAVT(Element* aSortElement,
-                       txAtom* aAttrName,
+                       nsIAtom* aAttrName,
                        nsAString& aResult);
 
     txList mSortKeys;

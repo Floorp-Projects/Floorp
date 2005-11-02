@@ -39,16 +39,16 @@
 
 #include "txAtoms.h"
 
-#define TX_ATOM(_name, _value) txAtom* txXMLAtoms::_name = 0
+#define TX_ATOM(_name, _value) nsIAtom* txXMLAtoms::_name = 0
 XML_ATOMS;
 #undef TX_ATOM
-#define TX_ATOM(_name, _value) txAtom* txXPathAtoms::_name = 0
+#define TX_ATOM(_name, _value) nsIAtom* txXPathAtoms::_name = 0
 #include "txXPathAtomList.h"
 #undef TX_ATOM
-#define TX_ATOM(_name, _value) txAtom* txXSLTAtoms::_name = 0
+#define TX_ATOM(_name, _value) nsIAtom* txXSLTAtoms::_name = 0
 #include "txXSLTAtomList.h"
 #undef TX_ATOM
-#define TX_ATOM(_name, _value) txAtom* txHTMLAtoms::_name = 0
+#define TX_ATOM(_name, _value) nsIAtom* txHTMLAtoms::_name = 0
 #include "txHTMLAtomList.h"
 #undef TX_ATOM
 

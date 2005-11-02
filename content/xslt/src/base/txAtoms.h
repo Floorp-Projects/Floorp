@@ -61,7 +61,7 @@ TX_ATOM(space, "space"); \
 TX_ATOM(xml, "xml");     \
 TX_ATOM(xmlns, "xmlns")
 
-#define TX_ATOM(_name, _value) static txAtom* _name
+#define TX_ATOM(_name, _value) static nsIAtom* _name
 
 class txXMLAtoms
 {

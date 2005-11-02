@@ -40,7 +40,7 @@
 
 const int txXMLOutput::DEFAULT_INDENT = 2;
 
-txAttribute::txAttribute(PRInt32 aNsID, txAtom* aLocalName,
+txAttribute::txAttribute(PRInt32 aNsID, nsIAtom* aLocalName,
                          const nsAString& aValue) :
     mName(aNsID, aLocalName),
     mValue(aValue),
@@ -246,7 +246,7 @@ void txXMLOutput::startElement(const nsAString& aName,
     mCDATASections.push((void*)mInCDATASection);
     mInCDATASection = MB_FALSE;
 
-    txAtom* localName = TX_GET_ATOM(aName);
+    nsIAtom* localName = TX_GET_ATOM(aName);
     txExpandedName currentElement(aNsID, localName);
     TX_IF_RELEASE_ATOM(localName);
     txListIterator iter(&(mOutputFormat.mCDATASectionElements));

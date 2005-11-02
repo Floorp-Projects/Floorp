@@ -120,7 +120,7 @@ ExprResult* BooleanFunctionCall::evaluate(txIEvalContext* aContext)
     return new StringResult(NS_LITERAL_STRING("error"));
 }
 
-nsresult BooleanFunctionCall::getNameAtom(txAtom** aAtom)
+nsresult BooleanFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     switch (mType) {
         case TX_BOOLEAN:

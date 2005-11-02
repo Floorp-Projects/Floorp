@@ -176,7 +176,7 @@ MBool FunctionCall::requireParams(int paramCountMin, txIEvalContext* aContext)
 **/
 void FunctionCall::toString(nsAString& aDest)
 {
-    txAtom* functionNameAtom = 0;
+    nsIAtom* functionNameAtom = 0;
     nsAutoString functionName;
     if (!NS_SUCCEEDED(getNameAtom(&functionNameAtom)) ||
         !TX_GET_ATOM_STRING(functionNameAtom, functionName)) {

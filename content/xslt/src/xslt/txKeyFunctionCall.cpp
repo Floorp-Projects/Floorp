@@ -106,7 +106,7 @@ ExprResult* txKeyFunctionCall::evaluate(txIEvalContext* aContext)
 
 } // evaluate
 
-nsresult txKeyFunctionCall::getNameAtom(txAtom** aAtom)
+nsresult txKeyFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::key;
     TX_ADDREF_ATOM(*aAtom);

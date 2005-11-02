@@ -132,7 +132,7 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(txIEvalContext* aContext)
     return result;
 }
 
-nsresult FunctionAvailableFunctionCall::getNameAtom(txAtom** aAtom)
+nsresult FunctionAvailableFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::functionAvailable;
     TX_ADDREF_ATOM(*aAtom);

@@ -172,7 +172,7 @@ private:
 class txKeyPattern : public txPattern
 {
 public:
-    txKeyPattern(ProcessorState* aPs, txAtom* aPrefix, txAtom* aLocalName,
+    txKeyPattern(ProcessorState* aPs, nsIAtom* aPrefix, nsIAtom* aLocalName,
                  PRInt32 aNSID, const nsAString& aValue)
         : mProcessorState(aPs), mName(aNSID, aLocalName), mPrefix(aPrefix),
           mValue(aValue)
@@ -186,7 +186,7 @@ public:
 private:
     ProcessorState* mProcessorState;
     txExpandedName mName;
-    txAtom* mPrefix;
+    nsIAtom* mPrefix;
     nsString mValue;
 };
 

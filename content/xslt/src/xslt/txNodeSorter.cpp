@@ -264,7 +264,7 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
 }
 
 MBool txNodeSorter::getAttrAsAVT(Element* aSortElement,
-                                 txAtom* aAttrName,
+                                 nsIAtom* aAttrName,
                                  nsAString& aResult)
 {
     aResult.Truncate();

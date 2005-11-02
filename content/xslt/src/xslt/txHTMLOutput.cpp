@@ -216,7 +216,7 @@ void txHTMLOutput::attribute(const nsAString& aName,
             localPart.Equals(aValue, txCaseInsensitiveStringComparator())) {
             txListIterator iter(&mAttributes);
             txAttribute* setAtt = 0;
-            txAtom* localName = TX_GET_ATOM(localPart);
+            nsIAtom* localName = TX_GET_ATOM(localPart);
             txExpandedName att(aNsID, localName);
             while ((setAtt = (txAttribute*)iter.next())) {
                  if (setAtt->mName == att) {
@@ -304,7 +304,7 @@ void txHTMLOutput::startElement(const nsAString& aName,
 {
     txXMLOutput::startElement(aName, aNsID);
 
-    txAtom* localAtom;
+    nsIAtom* localAtom;
     if (aNsID == kNameSpaceID_None) {
         nsAutoString localName;
         TX_ToLowerCase(aName, localName);

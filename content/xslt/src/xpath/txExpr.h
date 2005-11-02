@@ -97,7 +97,7 @@ public:
 
 #define TX_DECL_FUNCTION \
     TX_DECL_EVALUATE; \
-    nsresult getNameAtom(txAtom** aAtom)
+    nsresult getNameAtom(nsIAtom** aAtom)
 
 /**
  * This class represents a FunctionCall as defined by the XPath 1.0
@@ -164,7 +164,7 @@ protected:
     /*
      * Returns the name of the function as an atom.
      */
-    virtual nsresult getNameAtom(txAtom** aAtom) = 0;
+    virtual nsresult getNameAtom(nsIAtom** aAtom) = 0;
 }; //-- FunctionCall
 
 
@@ -224,7 +224,7 @@ public:
      * Creates a new txNameTest with the given type and the given
      * principal node type
      */
-    txNameTest(txAtom* aPrefix, txAtom* aLocalName, PRInt32 aNSID,
+    txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
                Node::NodeType aNodeType);
 
     ~txNameTest();
@@ -232,8 +232,8 @@ public:
     TX_DECL_NODE_TEST;
 
 private:
-    txAtom* mPrefix;
-    txAtom* mLocalName;
+    nsIAtom* mPrefix;
+    nsIAtom* mLocalName;
     PRInt32 mNamespace;
     Node::NodeType mNodeType;
 };
@@ -267,7 +267,7 @@ public:
 
 private:
     NodeType mNodeType;
-    txAtom* mNodeName;
+    nsIAtom* mNodeName;
 };
 
 /**
@@ -554,14 +554,14 @@ class VariableRefExpr : public Expr {
 
 public:
 
-    VariableRefExpr(txAtom* aPrefix, txAtom* aLocalName, PRInt32 aNSID);
+    VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID);
     ~VariableRefExpr();
 
     TX_DECL_EXPR;
 
 private:
-    txAtom* mPrefix;
-    txAtom* mLocalName;
+    nsIAtom* mPrefix;
+    nsIAtom* mLocalName;
     PRInt32 mNamespace;
 };
 

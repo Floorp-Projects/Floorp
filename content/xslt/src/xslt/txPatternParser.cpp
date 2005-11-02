@@ -262,7 +262,7 @@ nsresult txPatternParser::createKeyPattern(ExprLexer& aLexer,
 
     if (!XMLUtils::isValidQName(key))
         return NS_ERROR_XPATH_PARSE_FAILED;
-    txAtom *prefix = 0, *localName = 0;
+    nsIAtom *prefix = 0, *localName = 0;
     PRInt32 namespaceID;
     nsresult rv = resolveQName(key, prefix, aContext, localName, namespaceID);
     if (NS_FAILED(rv))
@@ -302,7 +302,7 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
     txNodeTest* nodeTest = 0;
     if (tok->type == Token::CNAME) {
         // resolve QName
-        txAtom *prefix, *lName;
+        nsIAtom *prefix, *lName;
         PRInt32 nspace;
         rv = resolveQName(tok->value, prefix, aContext, lName, nspace);
         if (NS_FAILED(rv)) {

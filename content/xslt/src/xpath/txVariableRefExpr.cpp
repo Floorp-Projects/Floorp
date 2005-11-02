@@ -35,7 +35,7 @@
 /**
  * Creates a VariableRefExpr with the given variable name
 **/
-VariableRefExpr::VariableRefExpr(txAtom* aPrefix, txAtom* aLocalName,
+VariableRefExpr::VariableRefExpr(nsIAtom* aPrefix, nsIAtom* aLocalName,
                                  PRInt32 aNSID)
     : mPrefix(aPrefix), mLocalName(aLocalName), mNamespace(aNSID)
 {
