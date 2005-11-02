@@ -21,10 +21,11 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: txRelationalExpr.cpp,v 1.3 2005/11/02 07:33:46 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txRelationalExpr.cpp,v 1.4 2005/11/02 07:33:47 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "Expr.h"
+#include "XMLDOMUtils.h"
 
   //------------------/
  //- RelationalExpr -/
