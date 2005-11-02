@@ -188,6 +188,10 @@ int main(int argc, char** argv)
                             *resultOutput, obs);
     }
 
+    if (NS_FAILED(rv)) {
+        cerr << "transformation failed with " << hex << rv;
+    }
+
     resultFileStream.close();
     txXSLTProcessor::shutdown();
     rv = NS_ShutdownXPCOM(nsnull);
