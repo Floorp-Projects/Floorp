@@ -21,6 +21,10 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  * 
+ * NaN/Infinity code copied from the JS-library with permission from
+ * Netscape Communications Corporation: http://www.mozilla.org/js
+ * http://lxr.mozilla.org/seamonkey/source/js/src/jsinterp.c
+ *
  */
 
 /**
@@ -78,10 +82,36 @@ ExprResult* MultiplicativeExpr::evaluate(Node* context, ContextState* cs) {
 
     switch ( op ) {
         case DIVIDE:
-            result = (leftDbl / rightDbl);
+            if (rightDbl == 0) {
+#ifdef XP_PC
+                /* XXX MSVC miscompiles such that (NaN == 0) */
+                if (Double::isNaN(rightDbl))
+                    result = Double::NaN;
+                else
+#endif
+                if (leftDbl == 0 || Double::isNaN(leftDbl))
+                    result = Double::NaN;
+                else if (Double::isNeg(leftDbl) ^ Double::isNeg(rightDbl))
+                    result = Double::NEGATIVE_INFINITY;
+                else
+                    result = Double::POSITIVE_INFINITY;
+            }
+            else
+                result = leftDbl / rightDbl;
             break;
         case MODULUS:
-            result = fmod(leftDbl, rightDbl);
+            if (rightDbl == 0) {
+                result = Double::NaN;
+            }
+            else {
+#ifdef XP_PC
+                /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
+                if (!Double::isInfinite(leftDbl) && Double::isInfinite(rightDbl))
+                    result = leftDbl;
+                else
+#endif
+                result = fmod(leftDbl, rightDbl);
+            }
             break;
         default:
             result = leftDbl * rightDbl;

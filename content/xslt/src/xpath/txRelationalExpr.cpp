@@ -21,6 +21,10 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
+ * NaN/Infinity code copied from the JS-library with permission from
+ * Netscape Communications Corporation: http://www.mozilla.org/js
+ * http://lxr.mozilla.org/seamonkey/source/js/src/jsinterp.c
+ *
  */
 
 #include "Expr.h"
@@ -86,7 +90,16 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
             }
             else if ((ltype == ExprResult::NUMBER) ||
                             (rtype == ExprResult::NUMBER)) {
-                result = (left->numberValue() != right->numberValue());
+                double lval = left->numberValue();
+                double rval = right->numberValue();
+#ifdef XP_PC
+                if (Double::isNaN(lval) || Double::isNaN(rval))
+                    result = MB_TRUE;
+                else
+                    result = (lval != rval);
+#else
+                result = (lval != rval);
+#endif
             }
             else {
                 String lStr;
@@ -104,7 +117,16 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
             }
             else if ((ltype == ExprResult::NUMBER) ||
                             (rtype == ExprResult::NUMBER)) {
-                result = (left->numberValue() == right->numberValue());
+                double lval = left->numberValue();
+                double rval = right->numberValue();
+#ifdef XP_PC
+                if (Double::isNaN(lval) || Double::isNaN(rval))
+                    result = MB_FALSE;
+                else
+                    result = (lval == rval);
+#else
+                result = (lval == rval);
+#endif
             }
             else {
                 String lStr;
@@ -120,16 +142,44 @@ MBool RelationalExpr::compareResults(ExprResult* left, ExprResult* right) {
             double rightDbl = right->numberValue();
             switch( op ) {
                 case LESS_THAN:
-                    result = (MBool) (leftDbl < rightDbl);
+#ifdef XP_PC
+                    if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
+                        result = MB_FALSE;
+                    else
+                        result = (leftDbl < rightDbl);
+#else
+                    result = (leftDbl < rightDbl);
+#endif
                     break;
                 case LESS_OR_EQUAL:
-                    result = (MBool) (leftDbl <= rightDbl);
+#ifdef XP_PC
+                    if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
+                        result = MB_FALSE;
+                    else
+                        result = (leftDbl <= rightDbl);
+#else
+                    result = (leftDbl <= rightDbl);
+#endif
                     break;
                 case GREATER_THAN :
-                    result = (MBool) (leftDbl > rightDbl);
+#ifdef XP_PC
+                    if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
+                        result = MB_FALSE;
+                    else
+                        result = (leftDbl > rightDbl);
+#else
+                    result = (leftDbl > rightDbl);
+#endif
                     break;
                 case GREATER_OR_EQUAL:
-                    result = (MBool) (leftDbl >= rightDbl);
+#ifdef XP_PC
+                    if (Double::isNaN(leftDbl) || Double::isNaN(rightDbl))
+                        result = MB_FALSE;
+                    else
+                        result = (leftDbl >= rightDbl);
+#else
+                    result = (leftDbl >= rightDbl);
+#endif
                     break;
             }
         }

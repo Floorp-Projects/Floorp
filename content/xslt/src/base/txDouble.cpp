@@ -27,6 +27,10 @@
  * Eric Du, duxy@leyou.com.cn
  *   -- added fix for FreeBSD
  *
+ * NaN/Infinity code copied from the JS-library with permission from
+ * Netscape Communications Corporation: http://www.mozilla.org/js
+ * http://lxr.mozilla.org/seamonkey/source/js/src/jsnum.h
+ *
  */
 
 #include "primitives.h"
@@ -53,26 +57,38 @@ fp_except_t allmask = FP_X_INV|FP_X_OFL|FP_X_UFL|FP_X_DZ|FP_X_IMP|FP_X_DNML;
 fp_except_t oldmask = fpsetmask(~allmask);
 #endif
 
+/**
+ * Macros to workaround math-bugs bugs in various platforms
+**/
+
+#ifdef IS_BIG_ENDIAN
+#define TX_DOUBLE_HI32(x)        (((PRUint32 *)&(x))[0])
+#define TX_DOUBLE_LO32(x)        (((PRUint32 *)&(x))[1])
+#else
+#define TX_DOUBLE_HI32(x)        (((PRUint32 *)&(x))[1])
+#define TX_DOUBLE_LO32(x)        (((PRUint32 *)&(x))[0])
+#endif
+
+#define TX_DOUBLE_HI32_SIGNBIT   0x80000000
+#define TX_DOUBLE_HI32_EXPMASK   0x7ff00000
+#define TX_DOUBLE_HI32_MANTMASK  0x000fffff
+
 //-- Initialize Double related constants
-double d0 = 0.0;
+#ifdef IS_BIG_ENDIAN
+const PRUint32 nanMask[2] =    {TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_MANTMASK,
+                                0xffffffff};
+const PRUint32 infMask[2] =    {TX_DOUBLE_HI32_EXPMASK, 0};
+const PRUint32 negInfMask[2] = {TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_SIGNBIT, 0};
+#else
+const PRUint32 nanMask[2] =    {0xffffffff,
+                                TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_MANTMASK};
+const PRUint32 infMask[2] =    {0, TX_DOUBLE_HI32_EXPMASK};
+const PRUint32 negInfMask[2] = {0, TX_DOUBLE_HI32_EXPMASK | TX_DOUBLE_HI32_SIGNBIT};
+#endif
 
-const double Double::NaN = (d0/d0);
-const double Double::NEGATIVE_INFINITY = (-1.0/d0);
-const double Double::POSITIVE_INFINITY = (1.0/d0);
-
-/**
- * Creates a new Double with it's value initialized to 0;
-**/
-Double::Double() {
-    value = 0;
-} //-- Double
-
-/**
- * Creates a new Double with it's value initialized to the given double
-**/
-Double::Double(double dbl) {
-    this->value = dbl;
-} //-- Double
+const double Double::NaN = *((double*)nanMask);
+const double Double::POSITIVE_INFINITY = *((double*)infMask);
+const double Double::NEGATIVE_INFINITY = *((double*)negInfMask);
 
 /**
  * Creates a new Double with it's value initialized from the given String.
@@ -100,42 +116,28 @@ int Double::intValue() {
 } //-- intValue
 
 /**
- * Determins whether the given double represents positive or negative
+ * Determines whether the given double represents positive or negative
  * inifinity
 **/
 MBool Double::isInfinite(double dbl) {
-    return  (MBool)((dbl == POSITIVE_INFINITY ) || (dbl == NEGATIVE_INFINITY));
+    return ((TX_DOUBLE_HI32(dbl) & ~TX_DOUBLE_HI32_SIGNBIT) == TX_DOUBLE_HI32_EXPMASK &&
+            !TX_DOUBLE_LO32(dbl));
 } //-- isInfinite
 
 /**
- * Determins whether this Double's value represents positive or
- * negative inifinty
-**/
-MBool Double::isInfinite() {
-    return  (MBool)(( value == POSITIVE_INFINITY ) || (value == NEGATIVE_INFINITY));
-} //-- isInfinite
-
-/**
- * Determins whether the given double is NaN
+ * Determines whether the given double is NaN
 **/
 MBool Double::isNaN(double dbl) {
-#ifdef WIN32
-    return _isnan(dbl);
-#else
-    return (MBool) isnan(dbl);
-#endif
+    return ((TX_DOUBLE_HI32(dbl) & TX_DOUBLE_HI32_EXPMASK) == TX_DOUBLE_HI32_EXPMASK &&
+            (TX_DOUBLE_LO32(dbl) || (TX_DOUBLE_HI32(dbl) & TX_DOUBLE_HI32_MANTMASK)));
 } //-- isNaN
 
 /**
- * Determins whether this Double's value is NaN
+ * Determines whether the given double is negative
 **/
-MBool Double::isNaN() {
-#ifdef WIN32
-    return _isnan(value);
-#else
-    return (MBool) isnan(value);
-#endif
-} //-- isNaN
+MBool Double::isNeg(double dbl) {
+    return (TX_DOUBLE_HI32(dbl) & TX_DOUBLE_HI32_SIGNBIT) != 0;
+} //-- isNeg
 
 /**
  * Converts the given String to a double, if the String value does not
@@ -190,15 +192,6 @@ double Double::toDouble(const String& src) {
     return dbl;
 } //-- toDouble
 
-
-/**
- * Converts the value of this Double to a String, and places
- * The result into the destination String.
- * @return the given dest string
-**/
-String& Double::toString(String& dest) {
-    return toString(value, dest);
-} //-- toString
 
 /**
  * Converts the value of the given double to a String, and places
