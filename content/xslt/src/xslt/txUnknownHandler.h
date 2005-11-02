@@ -53,10 +53,7 @@ public:
     void attribute(const nsAString& aName, const PRInt32 aNsID,
                    const nsAString& aValue);
     void endDocument();
-    void endElement(const nsAString& aName, const PRInt32 aNsID);
     void startElement(const nsAString& aName, const PRInt32 aNsID);
-
-    TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
 private:
     nsresult createHandlerAndFlush(txOutputMethod aMethod,

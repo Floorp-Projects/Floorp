@@ -58,7 +58,7 @@ public:
     nsresult flushToHandler(txAXMLEventHandler* aHandler);
 
 private:
-    txResultBuffer* mBuffer;
+    nsRefPtr<txResultBuffer> mBuffer;
 };
 
 class txRtfHandler : public txBufferingHandler
@@ -67,13 +67,10 @@ public:
     txRtfHandler();
     virtual ~txRtfHandler();
 
-    txResultTreeFragment* getRTF();
+    txResultTreeFragment* createRTF();
 
     void endDocument();
     void startDocument();
-
-private:
-    txResultTreeFragment* mRTF;
 };
 
 #endif /* txRtfHandler_h___ */
