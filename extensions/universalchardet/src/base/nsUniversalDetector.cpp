@@ -259,7 +259,7 @@ void nsUniversalDetector::DataEnd()
 nsUniversalXPCOMDetector:: nsUniversalXPCOMDetector()
 	     : nsUniversalDetector()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mObserver = nsnull;
 }
 //---------------------------------------------------------------------
@@ -331,7 +331,7 @@ void nsUniversalXPCOMDetector::Report(const char* aCharset)
 nsUniversalXPCOMStringDetector:: nsUniversalXPCOMStringDetector()
 	     : nsUniversalDetector()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 //---------------------------------------------------------------------
 nsUniversalXPCOMStringDetector::~nsUniversalXPCOMStringDetector() 
