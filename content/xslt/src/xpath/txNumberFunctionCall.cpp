@@ -25,7 +25,7 @@
  * Nisheeth Ranjan, nisheeth@netscape.com
  *   -- implemented rint function, which was not available on Windows.
  *
- * $Id: txNumberFunctionCall.cpp,v 1.5 2005/11/02 07:33:40 kvisco%ziplink.net Exp $
+ * $Id: txNumberFunctionCall.cpp,v 1.6 2005/11/02 07:33:41 Peter.VanderBeken%pandora.be Exp $
  */
 
 /*
@@ -50,18 +50,18 @@ NumberFunctionCall::NumberFunctionCall(short type) : FunctionCall() {
     this->type = type;
     switch ( type ) {
     case ROUND :
-      FunctionCall::setName(XPathNames::ROUND_FN);
-      break;
+        FunctionCall::setName(XPathNames::ROUND_FN);
+        break;
     case CEILING :
-      FunctionCall::setName(XPathNames::CEILING_FN);
-      break;
+        FunctionCall::setName(XPathNames::CEILING_FN);
+        break;
     case FLOOR :
-      FunctionCall::setName(XPathNames::FLOOR_FN);
-      break;
+        FunctionCall::setName(XPathNames::FLOOR_FN);
+        break;
     case NUMBER :
     default :
-      FunctionCall::setName(XPathNames::NUMBER_FN);
-      break;
+        FunctionCall::setName(XPathNames::NUMBER_FN);
+        break;
     }
 } //-- NumberFunctionCall
 
@@ -72,7 +72,7 @@ static double rint(double r)
   double fraction = 0;
   fraction = modf(r, &integerPart);
   if (fraction >= 0.5)
-    integerPart++;
+      integerPart++;
 
   return integerPart;
 }
@@ -94,69 +94,69 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
 
     switch ( type ) {
     case CEILING :
-      if ( requireParams(1, 1, cs) ) {
-	double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
-	result->setValue(ceil(dbl));
-      }
-      else {
-	result->setValue(0.0);
-      }
-      break;
+        if ( requireParams(1, 1, cs) ) {
+            double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
+            result->setValue(ceil(dbl));
+        }
+        else {
+            result->setValue(0.0);
+          }
+          break;
       
     case FLOOR :
-      if ( requireParams(1, 1, cs) ) {
-	double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
-	result->setValue(floor(dbl));
-      }
-      else {
-	result->setValue(0.0);
-      }
-      break;
+        if ( requireParams(1, 1, cs) ) {
+            double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
+            result->setValue(floor(dbl));
+        }
+        else {
+            result->setValue(0.0);
+        }
+        break;
       
     case ROUND :
-      if ( requireParams(1, 1, cs) ) {
-	double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
-	double res = rint(dbl);
-	if ((dbl>0.0) && (res == dbl-0.5)) {
-	  // fix for native round function from math library (rint()) which does not
-	  // match the XPath spec for positive half values
-	  result->setValue(res+1.0);
-	}
-	else {
-	  result->setValue(res);
-	}
-	break;
-      }
-      else result->setValue(0.0);
-      break;
+        if ( requireParams(1, 1, cs) ) {
+            double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
+            double res = rint(dbl);
+            if ((dbl>0.0) && (res == dbl-0.5)) {
+                // fix for native round function from math library (rint()) which does not
+                // match the XPath spec for positive half values
+                result->setValue(res+1.0);
+            }
+            else {
+                result->setValue(res);
+            }
+            break;
+        }
+        else result->setValue(0.0);
+            break;
       
     case NUMBER :
     default : //-- number( object? )
-      if ( requireParams(0, 1, cs) ) {
-	if (iter->hasNext()) {
-	  param = (Expr*) iter->next();
-	  ExprResult* exprResult = param->evaluate(context, cs);
-	  result->setValue(exprResult->numberValue());
-	  delete exprResult;
-	}
-	else {
-	  String resultStr;
-	  DOMString temp;
-	  XMLDOMUtils::getNodeValue(context, &temp);
-	  if ( cs->isStripSpaceAllowed(context) ) {
-	    XMLUtils::stripSpace(temp, resultStr);
-	  }
-	  else {
-	    resultStr.append(temp);
-	  }
-	  Double dbl(resultStr);
-	  result->setValue(dbl.doubleValue());
-	}
-      }
-      else {
-	result = new NumberResult(0.0);
-      }
-      break;
+        if ( requireParams(0, 1, cs) ) {
+            if (iter->hasNext()) {
+                param = (Expr*) iter->next();
+                ExprResult* exprResult = param->evaluate(context, cs);
+                result->setValue(exprResult->numberValue());
+                delete exprResult;
+            }
+            else {
+                String resultStr;
+                String temp;
+                XMLDOMUtils::getNodeValue(context, &temp);
+                if ( cs->isStripSpaceAllowed(context) ) {
+                    XMLUtils::stripSpace(temp, resultStr);
+                }
+                else {
+                    resultStr.append(temp);
+                }
+                Double dbl(resultStr);
+                result->setValue(dbl.doubleValue());
+            }
+        }
+        else {
+            result = new NumberResult(0.0);
+        }
+        break;
     }
     delete iter;
     return result;

@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: txStringResult.cpp,v 1.4 2005/11/02 07:33:55 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txStringResult.cpp,v 1.5 2005/11/02 07:33:56 Peter.VanderBeken%pandora.be Exp $
  */
 
 /**
  * StringResult
  * Represents a String as a Result of evaluating an Expr
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:55 $
+ * @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:56 $
 **/
 #include "ExprResult.h"
 
@@ -81,7 +81,7 @@ short StringResult::getResultType() {
     return ExprResult::STRING;
 } //-- getResultType
 
-void StringResult::stringValue(DOMString& str)  {
+void StringResult::stringValue(String& str)  {
     str.append(this->value);
 } //-- stringValue
 

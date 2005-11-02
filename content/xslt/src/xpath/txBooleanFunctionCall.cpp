@@ -24,7 +24,7 @@
  * Marina Mechtcheriakova, mmarina@mindspring.com
  *   -- added lang() implementation
  *
- * $Id: txBooleanFunctionCall.cpp,v 1.4 2005/11/02 07:33:37 kvisco%ziplink.net Exp $
+ * $Id: txBooleanFunctionCall.cpp,v 1.5 2005/11/02 07:33:38 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "FunctionLib.h"
@@ -32,7 +32,7 @@
 /**
  * Creates a default BooleanFunctionCall, which always evaluates to False
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:37 $
+ * @version $Revision: 1.5 $ $Date: 2005/11/02 07:33:38 $
 **/
 BooleanFunctionCall::BooleanFunctionCall() : FunctionCall(XPathNames::FALSE_FN) {
     this->type = TX_FALSE;
@@ -48,8 +48,8 @@ BooleanFunctionCall::BooleanFunctionCall(short type) : FunctionCall()
             FunctionCall::setName(XPathNames::BOOLEAN_FN);
             break;
         case TX_LANG:
-			FunctionCall::setName(XPathNames::LANG_FN);
-			break;
+            FunctionCall::setName(XPathNames::LANG_FN);
+            break;
         case TX_NOT :
             FunctionCall::setName(XPathNames::NOT_FN);
             break;
@@ -93,11 +93,11 @@ ExprResult* BooleanFunctionCall::evaluate(Node* context, ContextState* cs) {
                 String arg1, lang;
                 evaluateToString((Expr*)iter->next(),context, cs, arg1);
                 lang = ((Element*)context)->getAttribute(LANG_ATTR);
-				arg1.toUpperCase(); // case-insensitive comparison
-				lang.toUpperCase();
+                arg1.toUpperCase(); // case-insensitive comparison
+                lang.toUpperCase();
                 result->setValue((MBool)(lang.indexOf(arg1) == 0));
-			}
-			break;
+            }
+            break;
         case TX_NOT :
             if ( requireParams(1,1,cs) ) {
                 param = (Expr*)iter->next();

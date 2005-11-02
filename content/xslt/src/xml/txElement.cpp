@@ -36,7 +36,7 @@
 //Simply call the constructor for NodeDefinition, and specify the proper node
 //type.
 //
-Element::Element(const DOMString& tagName, Document* owner) :
+Element::Element(const String& tagName, Document* owner) :
          NodeDefinition(Node::ELEMENT_NODE, tagName, NULL_STRING, owner)
 {
 }
@@ -71,7 +71,7 @@ Node* Element::insertBefore(Node* newChild, Node* refChild)
 //
 //Return the tagName for this element.  This is simply the nodeName.
 //
-const DOMString& Element::getTagName()
+const String& Element::getTagName()
 {
   return nodeName;
 }
@@ -80,7 +80,7 @@ const DOMString& Element::getTagName()
 //Retreive an attribute's value by name.  If the attribute does not exist,
 //return a reference to the pre-created, constatnt "NULL STRING".
 //
-const DOMString& Element::getAttribute(const DOMString& name)
+const String& Element::getAttribute(const String& name)
 {
   Node* tempNode = attributes.getNamedItem(name);
 
@@ -96,7 +96,7 @@ const DOMString& Element::getAttribute(const DOMString& name)
 //name and value specified.  Then add the Attr to the the Element's
 //attributes NamedNodeMap.
 //
-void Element::setAttribute(const DOMString& name, const DOMString& value)
+void Element::setAttribute(const String& name, const String& value)
 {
   Attr* tempAttribute;
 
@@ -117,7 +117,7 @@ void Element::setAttribute(const DOMString& name, const DOMString& value)
 //Remove an attribute from the attributes NamedNodeMap, and free its memory.
 //   NOTE:  How do default values enter into this picture
 //
-void Element::removeAttribute(const DOMString& name)
+void Element::removeAttribute(const String& name)
 {
   delete attributes.removeNamedItem(name);
 }
@@ -125,7 +125,7 @@ void Element::removeAttribute(const DOMString& name)
 //
 //Return the attribute specified by name
 //
-Attr* Element::getAttributeNode(const DOMString& name)
+Attr* Element::getAttributeNode(const String& name)
 {
   return (Attr*)attributes.getNamedItem(name);
 }
@@ -152,9 +152,9 @@ Attr* Element::removeAttributeNode(Attr* oldAttr)
   return (Attr*)attributes.removeNamedItem(oldAttr->getNodeName());
 }
 
-NodeList* Element::getElementsByTagName(const DOMString& name)
+NodeList* Element::getElementsByTagName(const String& name)
 {
-	return 0;
+    return 0;
 }
 
 void Element::normalize()
