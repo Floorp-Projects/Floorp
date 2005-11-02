@@ -245,17 +245,17 @@ void txHTMLOutput::characters(const nsAString& aData, PRBool aDOE)
     }
 
     // Special-case script and style
-    if (!mCurrentElements.isEmpty()) {
-        txExpandedName* currentElement = (txExpandedName*)mCurrentElements.peek();
-        if (currentElement->mNamespaceID == kNameSpaceID_None &&
-            (currentElement->mLocalName == txHTMLAtoms::script ||
-             currentElement->mLocalName == txHTMLAtoms::style)) {
-            closeStartTag(MB_FALSE);
-            printUTF8Chars(aData);
-            return;
-        }
+    txExpandedName* currentElement = (txExpandedName*)mCurrentElements.peek();
+    if (currentElement &&
+        (currentElement->mNamespaceID == kNameSpaceID_None) &&
+        ((currentElement->mLocalName == txHTMLAtoms::script) ||
+         (currentElement->mLocalName == txHTMLAtoms::style))) {
+        closeStartTag(MB_FALSE);
+        printUTF8Chars(aData);
     }
-    txXMLOutput::characters(aData, aDOE);
+    else {
+        txXMLOutput::characters(aData, aDOE);
+    }
 }
 
 void txHTMLOutput::endElement(const nsAString& aName,
