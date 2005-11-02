@@ -56,7 +56,7 @@ public:
      * @param  aValue value of item to add
      * @return errorcode
      */
-    nsresult add(txExpandedName& aKey, TxObject* aValue);
+    nsresult add(const txExpandedName& aKey, TxObject* aValue);
 
     /*
      * Sets an item, if an item with this key already exists it is overwritten
@@ -65,14 +65,14 @@ public:
      * @param  aValue value of item to set
      * @return errorcode
      */
-    nsresult set(txExpandedName& aKey, TxObject* aValue);
+    nsresult set(const txExpandedName& aKey, TxObject* aValue);
 
     /*
      * Gets an item
      * @param  aKey  key for item to get
      * @return item with specified key, or null if no such item exists
      */
-    TxObject* get(txExpandedName& aKey);
+    TxObject* get(const txExpandedName& aKey);
 
     class iterator {
     public:

@@ -250,7 +250,6 @@ nsresult txPatternParser::createKeyPattern(ExprLexer& aLexer,
                                            ProcessorState* aPs,
                                            txPattern*& aPattern)
 {
-    nsresult rv = NS_OK;
     // check for '(' Literal, Literal ')'
     if (aLexer.nextToken()->type != Token::L_PAREN && 
         aLexer.peek()->type != Token::LITERAL)
@@ -262,7 +261,19 @@ nsresult txPatternParser::createKeyPattern(ExprLexer& aLexer,
     const String& value = aLexer.nextToken()->value;
     if (aLexer.nextToken()->type != Token::R_PAREN)
         return NS_ERROR_XPATH_PARSE_FAILED;
-    aPattern  = new txKeyPattern(aPs, key, value);
+
+    if (!XMLUtils::isValidQName(key))
+        return NS_ERROR_XPATH_PARSE_FAILED;
+    txAtom *prefix = 0, *localName = 0;
+    PRInt32 namespaceID;
+    nsresult rv = resolveQName(key, prefix, aContext, localName, namespaceID);
+    if (NS_FAILED(rv))
+        return rv;
+
+    aPattern  = new txKeyPattern(aPs, prefix, localName, namespaceID, value);
+    TX_IF_RELEASE_ATOM(prefix);
+    TX_RELEASE_ATOM(localName);
+
     return aPattern ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
