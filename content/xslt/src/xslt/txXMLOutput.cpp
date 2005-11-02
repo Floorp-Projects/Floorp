@@ -47,13 +47,17 @@ txAttribute::txAttribute(PRInt32 aNsID, txAtom* aLocalName, const String& aValue
 {
 }
 
-txXMLOutput::txXMLOutput() : mUseEmptyElementShorthand(MB_TRUE),
-                             mHaveDocumentElement(MB_FALSE),
-                             mStartTagOpen(MB_FALSE),
-                             mAfterEndTag(MB_FALSE),
-                             mInCDATASection(MB_FALSE),
-                             mIndentLevel(0)
+txXMLOutput::txXMLOutput(txOutputFormat* aFormat, ostream* aOut)
+    : mOut(aOut),
+      mUseEmptyElementShorthand(MB_TRUE),
+      mHaveDocumentElement(MB_FALSE),
+      mStartTagOpen(MB_FALSE),
+      mAfterEndTag(MB_FALSE),
+      mInCDATASection(MB_FALSE),
+      mIndentLevel(0)
 {
+    mOutputFormat.merge(*aFormat);
+    mOutputFormat.setFromDefaults();
 }
 
 txXMLOutput::~txXMLOutput()
@@ -249,24 +253,6 @@ void txXMLOutput::startElement(const String& aName,
             break;
         }
     }
-}
-
-void txXMLOutput::getOutputStream(ostream** aOutputStream)
-{
-    if (aOutputStream)
-        *aOutputStream = mOut;
-}
-
-void txXMLOutput::setOutputStream(ostream* aOutputStream)
-{
-    mOut = aOutputStream;
-}
-
-void txXMLOutput::setOutputFormat(txOutputFormat* aOutputFormat)
-{
-    mOutputFormat.reset();
-    mOutputFormat.merge(*aOutputFormat);
-    mOutputFormat.setFromDefaults();
 }
 
 void txXMLOutput::closeStartTag(MBool aUseEmptyElementShorthand)

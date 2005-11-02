@@ -26,7 +26,14 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PROGRAM = ../transformiix$(BIN_SUFFIX)
+LIBRARY_NAME = tx
+FORCE_STATIC_LIB = 1
+
+SIMPLE_PROGRAMS = transformiix$(BIN_SUFFIX)
+ifdef MARK_INC
+SIMPLE_PROGRAMS += txXSLTMarkDriver$(BIN_SUFFIX)
+endif
+EXTRA_DEPS = $(LIBRARY)
 
 REQUIRES = expat \
            $(NULL)
@@ -109,6 +116,7 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
   ../xslt/txPatternParser.$(OBJ_SUFFIX) \
   ../xslt/XSLTProcessor.$(OBJ_SUFFIX) \
+  ../xslt/txStandaloneXSLTProcessor.$(OBJ_SUFFIX) \
   ../xslt/functions/CurrentFunctionCall.$(OBJ_SUFFIX) \
   ../xslt/functions/DocumentFunctionCall.$(OBJ_SUFFIX) \
   ../xslt/functions/ElementAvailableFnCall.$(OBJ_SUFFIX) \
@@ -118,11 +126,13 @@ OBJS =../base/ArrayList.$(OBJ_SUFFIX) \
   ../xslt/functions/txFormatNumberFunctionCall.$(OBJ_SUFFIX) \
   ../xslt/functions/txKeyFunctionCall.$(OBJ_SUFFIX) \
   ../xslt/util/txNodeSorter.$(OBJ_SUFFIX) \
-  ../xslt/util/txXPathResultComparator.$(OBJ_SUFFIX) \
-  transformiix.$(OBJ_SUFFIX)
+  ../xslt/util/txXPathResultComparator.$(OBJ_SUFFIX)
 CPP_PROG_LINK		= 1
 
 EXTRA_LIBS = \
+             $(LIB_PREFIX)tx.$(LIB_SUFFIX) \
+             $(NULL)
+SHARED_LIBRARY_LIBS = \
              $(DIST)/lib/$(LIB_PREFIX)expat_s.$(LIB_SUFFIX) \
              $(DIST)/lib/$(LIB_PREFIX)xmltok_s.$(LIB_SUFFIX) \
              $(NULL)
@@ -133,4 +143,4 @@ INCLUDES += -I$(srcdir)/../xslt -I$(srcdir)/../base -I$(srcdir)/../net \
   -I$(srcdir)/../xml -I$(srcdir)/../xml/dom \
   -I$(srcdir)/../xml/parser \
   -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
-  -I$(srcdir)/../xslt/functions
+  -I$(srcdir)/../xslt/functions $(MARK_INC)

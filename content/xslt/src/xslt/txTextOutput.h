@@ -42,10 +42,10 @@
 #include "txXMLEventHandler.h"
 #include "txOutputFormat.h"
 
-class txTextOutput : public txStreamXMLEventHandler
+class txTextOutput : public txIOutputXMLEventHandler
 {
 public:
-    txTextOutput();
+    txTextOutput(ostream* aOut);
     ~txTextOutput();
 
     /*
@@ -95,6 +95,18 @@ public:
     void endElement(const String& aName,
                     const PRInt32 aNsID);
 
+    /**
+     * Returns whether the output handler supports
+     * disable-output-escaping.
+     *
+     * @return MB_TRUE if this handler supports
+     *                 disable-output-escaping
+     */
+    MBool hasDisableOutputEscaping()
+    {
+        return MB_TRUE;
+    }
+
     /*
      * Signals to receive a processing instruction.
      *
@@ -118,30 +130,8 @@ public:
     void startElement(const String& aName,
                       const PRInt32 aNsID);
 
-    /*
-     * Sets the output format.
-     *
-     * @param aOutputFormat the output format
-     */
-    void setOutputFormat(txOutputFormat* aOutputFormat);
-
-    /**
-     * Get the output stream.
-     *
-     * @param aOutputStream the current output stream
-     */
-    void getOutputStream(ostream** aOutputStream);
-
-    /**
-     * Sets the output stream.
-     *
-     * @param aDocument the Mozilla output document
-     */
-    void setOutputStream(ostream* aOutputStream);
-
 private:
     ostream* mOut;
-    txOutputFormat mOutputFormat;
 };
 
 #endif

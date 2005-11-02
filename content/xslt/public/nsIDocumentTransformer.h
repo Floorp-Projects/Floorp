@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the TransforMiiX XSLT processor.
+ * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Peter Van der Beken <peterv@netscape.com>
+ *   Jonas Sicking <sicking@bigfoot.com> (Original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,58 +34,45 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+#ifndef nsIDocumentTransformer_h__
+#define nsIDocumentTransformer_h__
 
-#include "txTextOutput.h"
-#include "TxString.h"
+#include "nsISupports.h"
 
-txTextOutput::txTextOutput(ostream* aOut)
-    : mOut(aOut)
+class nsIDOMDocument;
+class nsIDOMNode;
+
+#define NS_ITRANSFORMOBSERVER_IID \
+  {0xcce88481, 0x6eb3, 0x11d6, \
+    { 0xa7, 0xf2, 0x8d, 0x82, 0xcd, 0x2a, 0xf3, 0x7c }}
+
+class nsITransformObserver : public nsISupports
 {
-}
+public: 
 
-txTextOutput::~txTextOutput()
-{
-}
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITRANSFORMOBSERVER_IID)
 
-void txTextOutput::attribute(const String& aName,
-                             const PRInt32 aNsID,
-                             const String& aValue)
-{
-}
+  NS_IMETHOD OnDocumentCreated(nsIDOMDocument *aResultDocument) = 0;
 
-void txTextOutput::characters(const String& aData)
-{
-    *mOut << aData;
-}
+  NS_IMETHOD OnTransformDone(nsresult aResult, nsIDOMDocument *aResultDocument) = 0;
 
-void txTextOutput::charactersNoOutputEscaping(const String& aData)
-{
-    characters(aData);
-}
+};
 
-void txTextOutput::comment(const String& aData)
-{
-}
+#define NS_IDOCUMENTTRANSFORMER_IID \
+  {0x43e5a6c6, 0xa53c, 0x4f97, \
+    { 0x91, 0x79, 0x47, 0xf2, 0x46, 0xec, 0xd9, 0xd6 }}
 
-void txTextOutput::endDocument()
+class nsIDocumentTransformer : public nsISupports
 {
-}
+public: 
 
-void txTextOutput::endElement(const String& aName,
-                              const PRInt32 aNsID)
-{
-}
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTTRANSFORMER_IID)
 
-void txTextOutput::processingInstruction(const String& aTarget,
-                                         const String& aData)
-{
-}
+  NS_IMETHOD TransformDocument(nsIDOMNode *aSourceDOM,
+                               nsIDOMNode *aStyleDOM,
+                               nsITransformObserver *aObserver,
+                               nsIDOMDocument **_retval) = 0;
+};
 
-void txTextOutput::startDocument()
-{
-}
-
-void txTextOutput::startElement(const String& aName,
-                                const PRInt32 aNsID)
-{
-}
+#endif //nsIDocumentTransformer_h__

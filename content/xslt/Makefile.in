@@ -21,7 +21,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = document
+DIRS = public document
 
 include $(topsrcdir)/config/config.mk
 
