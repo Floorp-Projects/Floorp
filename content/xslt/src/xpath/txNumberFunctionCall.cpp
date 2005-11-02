@@ -68,22 +68,23 @@ NumberFunctionCall::NumberFunctionCall(NumberFunctions aType) {
  *                for evaluation
  * @return the result of the evaluation
  */
-ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
+ExprResult* NumberFunctionCall::evaluate(Node* aContext, ContextState* aCs)
+{
     ListIterator iter(&params);
 
     if (mType == NUMBER) {
-        if (!requireParams(0, 1, cs))
+        if (!requireParams(0, 1, aCs))
             return new StringResult("error");
     }
     else {
-        if (!requireParams(1, 1, cs))
+        if (!requireParams(1, 1, aCs))
             return new StringResult("error");
     }
 
     switch (mType) {
         case CEILING:
         {
-            double dbl = evaluateToNumber((Expr*)iter.next(), context, cs);
+            double dbl = evaluateToNumber((Expr*)iter.next(), aContext, aCs);
             if (Double::isNaN(dbl) || Double::isInfinite(dbl))
                 return new NumberResult(dbl);
 
@@ -94,7 +95,7 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
         }
         case FLOOR:
         {
-            double dbl = evaluateToNumber((Expr*)iter.next(), context, cs);
+            double dbl = evaluateToNumber((Expr*)iter.next(), aContext, aCs);
             if (Double::isNaN(dbl) ||
                 Double::isInfinite(dbl) ||
                 (dbl == 0 && Double::isNeg(dbl)))
@@ -104,7 +105,7 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
         }
         case ROUND:
         {
-            double dbl = evaluateToNumber((Expr*)iter.next(), context, cs);
+            double dbl = evaluateToNumber((Expr*)iter.next(), aContext, aCs);
             if (Double::isNaN(dbl) || Double::isInfinite(dbl))
                 return new NumberResult(dbl);
 
@@ -116,7 +117,7 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
         case SUM:
         {
             NodeSet* nodes;
-            nodes = evaluateToNodeSet((Expr*)iter.next(), context, cs);
+            nodes = evaluateToNodeSet((Expr*)iter.next(), aContext, aCs);
 
             if (!nodes)
                 return new StringResult("error");
@@ -134,14 +135,18 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
         }
         case NUMBER:
         {
-            if (iter.hasNext())
+            if (iter.hasNext()) {
                 return new NumberResult(
-                    evaluateToNumber((Expr*)iter.next(), context, cs));
+                    evaluateToNumber((Expr*)iter.next(), aContext, aCs));
+            }
 
             String resultStr;
-            XMLDOMUtils::getNodeValue(context, resultStr);
+            XMLDOMUtils::getNodeValue(aContext, resultStr);
             return new NumberResult(Double::toDouble(resultStr));
         }
     }
+
+    String err("Internal error");
+    aCs->recieveError(err);
     return new StringResult("error");
 }

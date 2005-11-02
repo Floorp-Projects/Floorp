@@ -112,12 +112,18 @@ class BooleanFunctionCall : public FunctionCall {
 
 public:
 
-    enum booleanFunctions { TX_BOOLEAN = 1, TX_FALSE, TX_LANG, TX_NOT, TX_TRUE };
+    enum BooleanFunctions {
+        TX_BOOLEAN,  // boolean()
+        TX_FALSE,    // false()
+        TX_LANG,     // lang()
+        TX_NOT,      // not()
+        TX_TRUE      // true()
+    };
 
     /**
      * Creates a BooleanFunctionCall of the given type
     **/
-    BooleanFunctionCall(short type);
+    BooleanFunctionCall(BooleanFunctions aType);
 
     /**
      * Evaluates this Expr based on the given context node and processor state
@@ -126,10 +132,10 @@ public:
      * for evaluation
      * @return the result of the evaluation
     **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+    ExprResult* evaluate(Node* aContext, ContextState* aCs);
 
 private:
-    short type;
+    BooleanFunctions mType;
 }; //-- BooleanFunctionCall
 
 /**
@@ -271,7 +277,7 @@ public:
      * for evaluation
      * @return the result of the evaluation
      */
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+    ExprResult* evaluate(Node* aContext, ContextState* aCs);
 
 private:
     NodeSetFunctions mType;
@@ -285,23 +291,23 @@ class StringFunctionCall : public FunctionCall {
 
 public:
 
-    enum stringFunctions {
-        CONCAT = 1,            //-- concat()
-        CONTAINS,              //-- contains()
-        NORMALIZE_SPACE,       //-- normalize-space()
-        STARTS_WITH,           //-- starts-with()
-        STRING,                //-- string()
-        STRING_LENGTH,         //-- string-length()
-        SUBSTRING,             //-- substring()
-        SUBSTRING_AFTER,       //-- substring-after()
-        SUBSTRING_BEFORE,      //-- substring-before()
-        TRANSLATE              //-- translate()
+    enum StringFunctions {
+        CONCAT,            // concat()
+        CONTAINS,          // contains()
+        NORMALIZE_SPACE,   // normalize-space()
+        STARTS_WITH,       // starts-with()
+        STRING,            // string()
+        STRING_LENGTH,     // string-length()
+        SUBSTRING,         // substring()
+        SUBSTRING_AFTER,   // substring-after()
+        SUBSTRING_BEFORE,  // substring-before()
+        TRANSLATE          // translate()
     };
 
     /**
      * Creates a String function of the given type
     **/
-    StringFunctionCall(short type);
+    StringFunctionCall(StringFunctions aType);
 
     /**
      * Evaluates this Expr based on the given context node and processor state
@@ -310,10 +316,10 @@ public:
      * for evaluation
      * @return the result of the evaluation
     **/
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+    ExprResult* evaluate(Node* aContext, ContextState* aCs);
 
 private:
-    short type;
+    StringFunctions mType;
 }; //-- StringFunctionCall
 
 
@@ -335,7 +341,7 @@ public:
     /*
      * Creates a Number function of the given type
      */
-    NumberFunctionCall(NumberFunctions type);
+    NumberFunctionCall(NumberFunctions aType);
 
     /*
      * Evaluates this Expr based on the given context node and processor state
@@ -344,7 +350,7 @@ public:
      * for evaluation
      * @return the result of the evaluation
      */
-    virtual ExprResult* evaluate(Node* context, ContextState* cs);
+    ExprResult* evaluate(Node* aContext, ContextState* aCs);
 
 private:
     NumberFunctions mType;

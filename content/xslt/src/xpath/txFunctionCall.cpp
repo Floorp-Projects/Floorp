@@ -110,34 +110,57 @@ MBool FunctionCall::matches(Node* node, Node* context, ContextState* cs)
     return result;
 } //-- matches
 
-/**
- * Evaluates the given Expression and converts it's result to a String.
+/*
+ * Evaluates the given Expression and converts its result to a String.
  * The value is appended to the given destination String
-**/
-void FunctionCall::evaluateToString(Expr* expr, Node* context, 
-                                    ContextState* cs, String& dest)
+ */
+void FunctionCall::evaluateToString(Expr* aExpr,
+                                    Node* aContext, 
+                                    ContextState* aCs,
+                                    String& aDest)
 {
-    if (!expr)
+    NS_ASSERTION(aExpr, "missing expression");
+    ExprResult* exprResult = aExpr->evaluate(aContext, aCs);
+    if (!exprResult)
         return;
-    ExprResult* exprResult = expr->evaluate(context, cs);
-    exprResult->stringValue(dest);
-    delete exprResult;
-} //-- evaluateToString
 
-/**
- * Evaluates the given Expression and converts it's result to a number.
-**/
-double FunctionCall::evaluateToNumber(Expr* expr, Node* context,
-                                      ContextState* cs)
+    exprResult->stringValue(aDest);
+    delete exprResult;
+}
+
+/*
+ * Evaluates the given Expression and converts its result to a number.
+ */
+double FunctionCall::evaluateToNumber(Expr* aExpr,
+                                      Node* aContext,
+                                      ContextState* aCs)
 {
-    double result = Double::NaN;
-    if (!expr)
-      return result;
-    ExprResult* exprResult = expr->evaluate(context, cs);
-    result =  exprResult->numberValue();
+    NS_ASSERTION(aExpr, "missing expression");
+    ExprResult* exprResult = aExpr->evaluate(aContext, aCs);
+    if (!exprResult)
+        return Double::NaN;
+
+    double result = exprResult->numberValue();
     delete exprResult;
     return result;
-} //-- evaluateToNumber
+}
+
+/*
+ * Evaluates the given Expression and converts its result to a boolean.
+ */
+MBool FunctionCall::evaluateToBoolean(Expr* aExpr,
+                                      Node* aContext,
+                                      ContextState* aCs)
+{
+    NS_ASSERTION(aExpr, "missing expression");
+    ExprResult* exprResult = aExpr->evaluate(aContext, aCs);
+    if (!exprResult)
+        return MB_FALSE;
+
+    MBool result = exprResult->booleanValue();
+    delete exprResult;
+    return result;
+}
 
 /*
  * Evaluates the given Expression and converts its result to a NodeSet.
@@ -148,7 +171,6 @@ NodeSet* FunctionCall::evaluateToNodeSet(Expr* aExpr,
                                          ContextState* aCs)
 {
     NS_ASSERTION(aExpr, "Missing expression to evaluate");
-
     ExprResult* exprResult = aExpr->evaluate(aContext, aCs);
     if (!exprResult)
         return 0;
