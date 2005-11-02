@@ -41,6 +41,7 @@
 #include "txAtoms.h"
 #include "XMLUtils.h"
 #include "XSLTFunctions.h"
+#include "ExprResult.h"
 
 /*
   Implementation of XSLT 1.0 extension function: function-available
@@ -49,8 +50,8 @@
 /**
  * Creates a new function-available function call
 **/
-FunctionAvailableFunctionCall::FunctionAvailableFunctionCall(Node* aQNameResolveNode)
-    : mQNameResolveNode(aQNameResolveNode)
+FunctionAvailableFunctionCall::FunctionAvailableFunctionCall(txNamespaceMap* aMappings)
+    : mMappings(aMappings)
 {
 }
 
@@ -75,7 +76,7 @@ ExprResult* FunctionAvailableFunctionCall::evaluate(txIEvalContext* aContext)
             nsAutoString property;
             exprResult->stringValue(property);
             txExpandedName qname;
-            nsresult rv = qname.init(property, mQNameResolveNode, MB_FALSE);
+            nsresult rv = qname.init(property, mMappings, MB_FALSE);
             if (NS_SUCCEEDED(rv) &&
                 qname.mNamespaceID == kNameSpaceID_None &&
                 (qname.mLocalName == txXPathAtoms::boolean ||

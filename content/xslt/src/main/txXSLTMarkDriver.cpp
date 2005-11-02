@@ -43,6 +43,7 @@
  * See http://www.datapower.com/XSLTMark/
  */
 
+#include "txStandaloneStylesheetCompiler.h"
 #include "txStandaloneXSLTProcessor.h"
 #include "nsXPCOM.h"
 #include "xmExternalDriver.hpp"
@@ -51,15 +52,16 @@ class txDriverProcessor : public txStandaloneXSLTProcessor,
                           public xmExternalDriver
 {
 public:
-    txDriverProcessor() : mXSL(0), mXML(0), mOut(0)
+    txDriverProcessor() : mXML(0), mOut(0)
     {
     }
 
     int loadStylesheet (char * filename)
     {
-        delete mXSL;
-        mXSL = parsePath(nsDependentCString(filename), mObserver);
-        return mXSL ? 0 : 1;
+        NS_ConvertASCIItoUCS2 path(filename);
+        nsresult rv =
+            TX_CompileStylesheetPath(path, getter_AddRefs(mStylesheet));
+        return NS_SUCCEEDED(rv) ? 0 : 1;
     }
     int setInputDocument (char * filename)
     {
@@ -74,7 +76,9 @@ public:
     }
     int runTransform ()
     {
-        nsresult rv = transform(mXML, mXSL, *mOut, mObserver);
+        if (!mXML || !mStylesheet || !mOut)
+            return 1;
+        nsresult rv = transform(mXML, mStylesheet, *mOut, mObserver);
         return NS_FAILED(rv);
     }
     int closeOutput ()
@@ -87,8 +91,6 @@ public:
     }
     int terminate()
     {
-        delete mXSL;
-        mXSL = 0;
         delete mXML;
         mXML = 0;
         if (mOut && mOut->is_open())
@@ -99,12 +101,12 @@ public:
     }
     ~txDriverProcessor()
     {
-        delete mXSL;
         delete mXML;
         delete mOut;
     }
 private:
-    Document *mXSL, *mXML;
+    Document *mXML;
+    nsRefPtr<txStylesheet> mStylesheet;
     SimpleErrorObserver mObserver;
     ofstream* mOut;
 };
@@ -113,10 +115,10 @@ int main (int argc, char ** argv)
 {
     txDriverProcessor driver;
     NS_InitXPCOM2(nsnull, nsnull, nsnull);
-    if (!txDriverProcessor::txInit())
+    if (!txDriverProcessor::init())
         return 1;
     driver.main (argc, argv);
-    txDriverProcessor::txShutdown();
+    txDriverProcessor::shutdown();
     NS_ShutdownXPCOM(nsnull);
     return 0;
 }

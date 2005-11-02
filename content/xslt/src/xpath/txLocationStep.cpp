@@ -36,20 +36,11 @@
  * @param nodeExpr the NodeExpr to use when matching Nodes
  * @param axisIdentifier the Axis Identifier in which to search for nodes
 **/
-LocationStep::LocationStep(txNodeTest* aNodeTest,
+LocationStep::LocationStep(nsAutoPtr<txNodeTest> aNodeTest,
                            LocationStepType aAxisIdentifier)
     : mNodeTest(aNodeTest), mAxisIdentifier(aAxisIdentifier)
 {
 } //-- LocationStep
-
-/**
- * Destroys this LocationStep
- * All predicates will be deleted
- * The NodeExpr will be deleted
-**/
-LocationStep::~LocationStep() {
-    delete mNodeTest;
-} //-- ~LocationStep
 
   //-----------------------------/
  //- Virtual methods from Expr -/

@@ -2,6 +2,7 @@
 #include "txAtoms.h"
 #include "XMLUtils.h"
 #include "XSLTFunctions.h"
+#include "ExprResult.h"
 
 /*
   Implementation of XSLT 1.0 extension function: system-property
@@ -12,8 +13,8 @@
  * aNode is the Element in the stylesheet containing the 
  * Expr and is used for namespaceID resolution
 **/
-SystemPropertyFunctionCall::SystemPropertyFunctionCall(Node* aQNameResolveNode)
-    : mQNameResolveNode(aQNameResolveNode)      
+SystemPropertyFunctionCall::SystemPropertyFunctionCall(txNamespaceMap* aMappings)
+    : mMappings(aMappings)      
 {
 }
 
@@ -37,7 +38,7 @@ ExprResult* SystemPropertyFunctionCall::evaluate(txIEvalContext* aContext)
             nsAutoString property;
             exprResult->stringValue(property);
             txExpandedName qname;
-            nsresult rv = qname.init(property, mQNameResolveNode, MB_TRUE);
+            nsresult rv = qname.init(property, mMappings, MB_TRUE);
             if (NS_SUCCEEDED(rv) &&
                 qname.mNamespaceID == kNameSpaceID_XSLT) {
                 if (qname.mLocalName == txXSLTAtoms::version) {

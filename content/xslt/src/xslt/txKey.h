@@ -41,6 +41,13 @@
 
 #include "nsDoubleHashtable.h"
 #include "XMLUtils.h"
+#include "NodeSet.h"
+#include "List.h"
+#include "txXSLTPatterns.h"
+
+class txPattern;
+class Expr;
+class txExecutionState;
 
 class txKeyValueHashKey
 {
@@ -129,17 +136,17 @@ public:
      * @param aUse    use-expression
      * @return PR_FALSE if an error occured, PR_TRUE otherwise
      */
-    PRBool addKey(txPattern* aMatch, Expr* aUse);
+    PRBool addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse);
 
     /**
      * Indexes a document and adds it to the hash of key values
      * @param aDocument     Document to index and add
      * @param aKeyValueHash Hash to add values to
-     * @param aPs           ProcessorState to use for XPath evaluation
+     * @param aEs           txExecutionState to use for XPath evaluation
      */
     nsresult indexDocument(Document* aDocument,
                            txKeyValueHash& aKeyValueHash,
-                           ProcessorState* aPs);
+                           txExecutionState& aEs);
 
 private:
     /**
@@ -148,10 +155,10 @@ private:
      * @param aNode         Node to search
      * @param aKey          Key to use when adding into the hash
      * @param aKeyValueHash Hash to add values to
-     * @param aPs           ProcessorState to use for XPath evaluation
+     * @param aEs           txExecutionState to use for XPath evaluation
      */
     nsresult indexTree(Node* aNode, txKeyValueHashKey& aKey,
-                       txKeyValueHash& aKeyValueHash, ProcessorState* aPs);
+                       txKeyValueHash& aKeyValueHash, txExecutionState& aEs);
 
     /**
      * Tests one node if it matches any of the keys match-patterns. If
@@ -159,17 +166,17 @@ private:
      * @param aNode         Node to test
      * @param aKey          Key to use when adding into the hash
      * @param aKeyValueHash Hash to add values to
-     * @param aPs           ProcessorState to use for XPath evaluation
+     * @param aEs           txExecutionState to use for XPath evaluation
      */
     nsresult testNode(Node* aNode, txKeyValueHashKey& aKey,
-                      txKeyValueHash& aKeyValueHash, ProcessorState* aPs);
+                      txKeyValueHash& aKeyValueHash, txExecutionState& aEs);
 
     /**
      * represents one match/use pair
      */
     struct Key {
-        txPattern* matchPattern;
-        Expr* useExpr;
+        nsAutoPtr<txPattern> matchPattern;
+        nsAutoPtr<Expr> useExpr;
     };
 
     /**
@@ -187,7 +194,7 @@ private:
 class txKeyHash
 {
 public:
-    txKeyHash(txExpandedNameMap& aKeys)
+    txKeyHash(const txExpandedNameMap& aKeys)
         : mKeys(aKeys)
     {
     }
@@ -198,7 +205,7 @@ public:
                          Document* aDocument,
                          const nsAString& aKeyValue,
                          PRBool aIndexIfNotFound,
-                         ProcessorState* aPs,
+                         txExecutionState& aEs,
                          const NodeSet** aResult);
 
 private:
@@ -209,7 +216,7 @@ private:
     txIndexedKeyHash mIndexedKeys;
     
     // Map of txXSLKeys
-    txExpandedNameMap& mKeys;
+    const txExpandedNameMap& mKeys;
 };
 
 

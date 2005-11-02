@@ -499,11 +499,10 @@ Expr* ExprParser::createFunctionCall(ExprLexer& lexer,
         }
         rv = aContext->resolveFunctionCall(lName, namespaceID, fnCall);
 
-        // XXX this should be removed once we don't return
-        // NS_ERROR_NOT_IMPLEMENTED for unparsed-entity-uri(). As should the
-        // code in parseParameters that deals with fnCall = 0.
-        // Bug 65981
-        if (rv == NS_ERROR_NOT_IMPLEMENTED) {
+        // XXX We should have an errorfunction that always fails
+        // and use that here
+        if (rv == NS_ERROR_NOT_IMPLEMENTED ||
+            rv == NS_ERROR_XPATH_UNKNOWN_FUNCTION) {
             NS_ASSERTION(!fnCall, "Now is it implemented or not?");
             if (!parseParameters(0, lexer, aContext)) {
                 return 0;
@@ -537,7 +536,7 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer,
 {
     //-- child axis is default
     LocationStep::LocationStepType axisIdentifier = LocationStep::CHILD_AXIS;
-    txNodeTest* nodeTest = 0;
+    nsAutoPtr<txNodeTest> nodeTest;
 
     //-- get Axis Identifier or AbbreviatedStep, if present
     Token* tok = lexer.peek();
@@ -677,7 +676,6 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer,
     LocationStep* lstep = new LocationStep(nodeTest, axisIdentifier);
     if (!lstep) {
         //XXX out of memory
-        delete nodeTest;
         return 0;
     }
 

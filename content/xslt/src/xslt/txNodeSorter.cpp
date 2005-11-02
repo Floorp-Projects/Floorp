@@ -38,11 +38,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txNodeSorter.h"
-#include "ProcessorState.h"
+#include "txExecutionState.h"
 #include "txXPathResultComparator.h"
 #include "txAtoms.h"
 #include "txForwardContext.h"
+#include "ExprResult.h"
+#include "Expr.h"
 #include "txStringUtils.h"
+#include "NodeSet.h"
 
 /*
  * Sorts Nodes as specified by the W3C XSLT 1.0 Recommendation
@@ -50,9 +53,7 @@
 
 #define DEFAULT_LANG NS_LITERAL_STRING("en")
 
-txNodeSorter::txNodeSorter(ProcessorState* aPs) : mPs(aPs),
-                                                  mNKeys(0),
-                                                  mDefaultExpr(0)
+txNodeSorter::txNodeSorter() : mNKeys(0)
 {
 }
 
@@ -64,107 +65,116 @@ txNodeSorter::~txNodeSorter()
         delete key->mComparator;
         delete key;
     }
-    delete mDefaultExpr;
 }
 
-MBool txNodeSorter::addSortElement(Element* aSortElement)
+nsresult
+txNodeSorter::addSortElement(Expr* aSelectExpr, Expr* aLangExpr,
+                             Expr* aDataTypeExpr, Expr* aOrderExpr,
+                             Expr* aCaseOrderExpr, txIEvalContext* aContext)
 {
     SortKey* key = new SortKey;
-    if (!key) {
-        // XXX ErrorReport: out of memory
-        return MB_FALSE;
-    }
-
-    // Get common attributes
-    nsAutoString attrValue;
+    NS_ENSURE_TRUE(key, NS_ERROR_OUT_OF_MEMORY);
 
     // Select
-    if (aSortElement->hasAttr(txXSLTAtoms::select, kNameSpaceID_None))
-        key->mExpr = mPs->getExpr(aSortElement, ProcessorState::SelectAttr);
-    else {
-        if (!mDefaultExpr) {
-            txNodeTest* test = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
-            mDefaultExpr = new LocationStep(test, LocationStep::SELF_AXIS);
-        }
-        key->mExpr = mDefaultExpr;
-    }
-    
-    if (!key->mExpr) {
-        // XXX ErrorReport: Out of memory
-        delete key;
-        return MB_FALSE;
-    }
+    key->mExpr = aSelectExpr;
 
     // Order
-    MBool ascending;
-    MBool hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::order, attrValue);
-    if (!hasAttr || TX_StringEqualsAtom(attrValue, txXSLTAtoms::ascending)) {
-        ascending = MB_TRUE;
-    }
-    else if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::descending)) {
-        ascending = MB_FALSE;
-    }
-    else {
-        delete key;
-        // XXX ErrorReport: unknown value for order attribute
-        return MB_FALSE;
+    MBool ascending = MB_TRUE;
+    if (aOrderExpr) {
+        ExprResult* exprRes = aOrderExpr->evaluate(aContext);
+        NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+
+        nsAutoString attrValue;
+        exprRes->stringValue(attrValue);
+        delete exprRes;
+        
+        if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::descending)) {
+            ascending = MB_FALSE;
+        }
+        else if (!TX_StringEqualsAtom(attrValue, txXSLTAtoms::ascending)) {
+            delete key;
+            // XXX ErrorReport: unknown value for order attribute
+            return NS_ERROR_XSLT_BAD_VALUE;
+        }
     }
 
 
     // Create comparator depending on datatype
     nsAutoString dataType;
-    hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::dataType, dataType);
-    if (!hasAttr || TX_StringEqualsAtom(dataType, txXSLTAtoms::text)) {
+    if (aDataTypeExpr) {
+        ExprResult* exprRes = aDataTypeExpr->evaluate(aContext);
+        NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+
+        exprRes->stringValue(dataType);
+        delete exprRes;
+    }
+
+    if (!aDataTypeExpr || TX_StringEqualsAtom(dataType, txXSLTAtoms::text)) {
         // Text comparator
         
         // Language
         nsAutoString lang;
-        if (!getAttrAsAVT(aSortElement, txXSLTAtoms::lang, lang))
-            lang.Append(DEFAULT_LANG);
+        if (aLangExpr) {
+            ExprResult* exprRes = aLangExpr->evaluate(aContext);
+            NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
 
-        // Case-order 
-        MBool upperFirst;
-        hasAttr = getAttrAsAVT(aSortElement, txXSLTAtoms::caseOrder, attrValue);
-        if (!hasAttr || TX_StringEqualsAtom(attrValue,
-                                            txXSLTAtoms::upperFirst)) {
-            upperFirst = MB_TRUE;
-        }
-        else if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::lowerFirst)) {
-            upperFirst = MB_FALSE;
+            exprRes->stringValue(lang);
+            delete exprRes;
         }
         else {
-            // XXX ErrorReport: unknown value for case-order attribute
-            delete key;
-            return MB_FALSE;
+            lang.Append(DEFAULT_LANG);
+        }
+
+        // Case-order 
+
+
+        MBool upperFirst = MB_TRUE;
+        if (aCaseOrderExpr) {
+            ExprResult* exprRes = aCaseOrderExpr->evaluate(aContext);
+            NS_ENSURE_TRUE(exprRes, NS_ERROR_FAILURE);
+
+            nsAutoString attrValue;
+            exprRes->stringValue(attrValue);
+            delete exprRes;
+
+            if (TX_StringEqualsAtom(attrValue, txXSLTAtoms::lowerFirst)) {
+                upperFirst = MB_FALSE;
+            }
+            else if (!TX_StringEqualsAtom(attrValue,
+                                          txXSLTAtoms::upperFirst)) {
+                delete key;
+                // XXX ErrorReport: unknown value for case-order attribute
+                return NS_ERROR_XSLT_BAD_VALUE;
+            }
         }
 
         key->mComparator = new txResultStringComparator(ascending,
                                                         upperFirst,
                                                         lang);
+        NS_ENSURE_TRUE(key->mComparator, NS_ERROR_OUT_OF_MEMORY);
     }
     else if (TX_StringEqualsAtom(dataType, txXSLTAtoms::number)) {
         // Number comparator
         key->mComparator = new txResultNumberComparator(ascending);
+        NS_ENSURE_TRUE(key->mComparator, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
         // XXX ErrorReport: unknown data-type
-        return MB_FALSE;
-    }
+        delete key;
 
-    if (!key->mComparator) {
-        // XXX ErrorReport: out of memory
-        return MB_FALSE;
+        return NS_ERROR_XSLT_BAD_VALUE;
     }
 
     mSortKeys.add(key);
     mNKeys++;
-    return MB_TRUE;
+
+    return NS_OK;
 }
 
-MBool txNodeSorter::sortNodeSet(NodeSet* aNodes)
+nsresult txNodeSorter::sortNodeSet(NodeSet* aNodes, txExecutionState* aEs)
 {
     if (mNKeys == 0)
-        return MB_TRUE;
+        return NS_OK;
 
     txList sortedNodes;
     txListIterator iter(&sortedNodes);
@@ -183,11 +193,11 @@ MBool txNodeSorter::sortNodeSet(NodeSet* aNodes)
                 sNode->clear(mNKeys);
                 delete sNode;
             }
-            return MB_FALSE;
+            return NS_ERROR_OUT_OF_MEMORY;
         }
         iter.reset();
         SortableNode* compNode = (SortableNode*)iter.next();
-        while (compNode && (compareNodes(currNode, compNode, aNodes) > 0)) {
+        while (compNode && (compareNodes(currNode, compNode, aNodes, aEs) > 0)) {
             compNode = (SortableNode*)iter.next();
         }
         // ... and insert in sorted list
@@ -206,12 +216,13 @@ MBool txNodeSorter::sortNodeSet(NodeSet* aNodes)
         delete sNode;
     }
     
-    return MB_TRUE;
+    return NS_OK;
 }
 
 int txNodeSorter::compareNodes(SortableNode* aSNode1,
                                SortableNode* aSNode2,
-                               NodeSet* aNodes)
+                               NodeSet* aNodes,
+                               txExecutionState* aEs)
 {
     txListIterator iter(&mSortKeys);
     int i;
@@ -221,10 +232,10 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
         SortKey* key = (SortKey*)iter.next();
         // Lazy create sort values
         if (!aSNode1->mSortValues[i]) {
-            txForwardContext evalContext(mPs, aSNode1->mNode, aNodes);
-            txIEvalContext* priorEC = mPs->setEvalContext(&evalContext);
+            txForwardContext evalContext(aEs->getEvalContext(), aSNode1->mNode, aNodes);
+            aEs->pushEvalContext(&evalContext);
             ExprResult* res = key->mExpr->evaluate(&evalContext);
-            mPs->setEvalContext(priorEC);
+            aEs->popEvalContext();
             if (!res) {
                 // XXX ErrorReport
                 return -1;
@@ -237,10 +248,10 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
             delete res;
         }
         if (!aSNode2->mSortValues[i]) {
-            txForwardContext evalContext(mPs, aSNode2->mNode, aNodes);
-            txIEvalContext* priorEC = mPs->setEvalContext(&evalContext);
+            txForwardContext evalContext(aEs->getEvalContext(), aSNode2->mNode, aNodes);
+            aEs->pushEvalContext(&evalContext);
             ExprResult* res = key->mExpr->evaluate(&evalContext);
-            mPs->setEvalContext(priorEC);
+            aEs->popEvalContext();
             if (!res) {
                 // XXX ErrorReport
                 return -1;
@@ -261,20 +272,6 @@ int txNodeSorter::compareNodes(SortableNode* aSNode1,
     }
     // All keys have the same value for these nodes
     return 0;
-}
-
-MBool txNodeSorter::getAttrAsAVT(Element* aSortElement,
-                                 nsIAtom* aAttrName,
-                                 nsAString& aResult)
-{
-    aResult.Truncate();
-
-    nsAutoString attValue;
-    if (!aSortElement->getAttr(aAttrName, kNameSpaceID_None, attValue))
-        return MB_FALSE;
-
-    mPs->processAttrValueTemplate(attValue, aSortElement, aResult);
-    return MB_TRUE;
 }
 
 txNodeSorter::SortableNode::SortableNode(Node* aNode, int aNValues)

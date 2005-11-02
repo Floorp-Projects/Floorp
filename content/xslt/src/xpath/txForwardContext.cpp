@@ -69,6 +69,12 @@ MBool txForwardContext::isStripSpaceAllowed(Node* aNode)
     return mInner->isStripSpaceAllowed(aNode);
 }
 
+void* txForwardContext::getPrivateContext()
+{
+    NS_ASSERTION(mInner, "mInner is null!!!");
+    return mInner->getPrivateContext();
+}
+
 void txForwardContext::receiveError(const nsAString& aMsg, nsresult aRes)
 {
     NS_ASSERTION(mInner, "mInner is null!!!");
