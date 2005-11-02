@@ -167,8 +167,10 @@ void PathExpr::evalDescendants (Expr* expr, Node* context,
     
     Node* child = context->getFirstChild();
     while (child) {
-        if (!(filterWS && (child->getNodeType() == Node::TEXT_NODE) &&
-             XMLUtils::shouldStripTextnode(child->getNodeValue())))
+        if (!(filterWS &&
+              (child->getNodeType() == Node::TEXT_NODE ||
+               child->getNodeType() == Node::CDATA_SECTION_NODE) &&
+              XMLUtils::shouldStripTextnode(child->getNodeValue())))
             evalDescendants(expr, child, cs, resNodes);
         child = child->getNextSibling();
     }
