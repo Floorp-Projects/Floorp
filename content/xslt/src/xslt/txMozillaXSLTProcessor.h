@@ -55,6 +55,7 @@
 #include "nsVoidArray.h"
 #include "txStylesheet.h"
 #include "nsAutoPtr.h"
+#include "nsIDocumentObserver.h"
 
 class nsIURI;
 class nsIXMLContentSink;
@@ -118,7 +119,8 @@ private:
  */
 class txMozillaXSLTProcessor : public nsIXSLTProcessor,
                                public nsIXSLTProcessorObsolete,
-                               public nsIDocumentTransformer
+                               public nsIDocumentTransformer,
+                               public nsIDocumentObserver
 {
 public:
     /**
@@ -147,6 +149,9 @@ public:
     NS_IMETHOD SetSourceContentModel(nsIDOMNode* aSource);
     NS_IMETHOD CancelLoads() {return NS_OK;};
 
+    // nsIDocumentObserver interface
+    NS_DECL_NSIDOCUMENTOBSERVER
+
     nsresult setStylesheet(txStylesheet* aStylesheet);
     void reportError(nsresult aResult, const PRUnichar *aErrorText,
                      const PRUnichar *aSourceText);
@@ -154,10 +159,15 @@ public:
 private:
     nsresult DoTransform();
     void notifyError();
+    nsresult ensureStylesheet();
 
     nsRefPtr<txStylesheet> mStylesheet;
+    nsIDocument* mStylesheetDocument; // weak
+    nsCOMPtr<nsIContent> mEmbeddedStylesheetRoot;
+
     nsCOMPtr<nsIDOMNode> mSource;
     nsresult mTransformResult;
+    nsresult mCompileResult;
     nsString mErrorText, mSourceText;
     nsCOMPtr<nsITransformObserver> mObserver;
     txExpandedNameMap mVariables;
