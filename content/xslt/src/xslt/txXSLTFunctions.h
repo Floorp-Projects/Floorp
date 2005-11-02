@@ -265,7 +265,7 @@ public:
     /**
      * Creates a new generate-id() function call
     **/
-    GenerateIdFunctionCall(DOMHelper* domHelper);
+    GenerateIdFunctionCall();
 
     /**
      * Evaluates this Expr based on the given context node and processor state
@@ -278,7 +278,7 @@ public:
     virtual ExprResult* evaluate(Node* context, ContextState* cs);
 
 private:
-    DOMHelper* domHelper;
+    static char* printfFmt;
 };
 
 /**
