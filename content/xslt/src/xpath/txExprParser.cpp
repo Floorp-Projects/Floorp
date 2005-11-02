@@ -646,7 +646,7 @@ Expr* ExprParser::createPathExpr(ExprLexer& lexer) {
     if (tok->type == Token::PARENT_OP) {
         lexer.nextToken();
         if (!isLocationStepToken(lexer.peek()))
-            return new RootExpr;
+            return new RootExpr(MB_TRUE);
 
         lexer.pushBack();
     }
@@ -669,22 +669,33 @@ Expr* ExprParser::createPathExpr(ExprLexer& lexer) {
             tok->type != Token::ANCESTOR_OP)
             return expr;
     }
+    else {
+        expr = new RootExpr(MB_FALSE);
+        if (!expr) {
+            // XXX ErrorReport: out of memory
+            return 0;
+        }
+    }
     
-    //we have a pathexpression containing several steps
+    // We have a PathExpr containing several steps
     PathExpr* pathExpr = new PathExpr();
-    if (expr)
-        pathExpr->addExpr(expr, PathExpr::RELATIVE_OP);
+    if (!pathExpr) {
+        // XXX ErrorReport: out of memory
+        delete expr;
+        return 0;
+    }
+    pathExpr->addExpr(expr, PathExpr::RELATIVE_OP);
 
     // this is ugly
     while (1) {
-        short ancestryOp;
+        PathExpr::PathOperator pathOp;
         tok = lexer.nextToken();
         switch (tok->type) {
             case Token::ANCESTOR_OP :
-                ancestryOp = PathExpr::ANCESTOR_OP;
+                pathOp = PathExpr::DESCENDANT_OP;
                 break;
             case Token::PARENT_OP :
-                ancestryOp = PathExpr::PARENT_OP;
+                pathOp = PathExpr::RELATIVE_OP;
                 break;
             default:
                 lexer.pushBack();
@@ -697,7 +708,7 @@ Expr* ExprParser::createPathExpr(ExprLexer& lexer) {
             return 0;
         }
         
-        pathExpr->addExpr(expr, ancestryOp);
+        pathExpr->addExpr(expr, pathOp);
     }
 
     return pathExpr;
