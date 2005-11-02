@@ -42,6 +42,7 @@
 #include "nsIDOMComment.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMDOMImplementation.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMText.h"
 #include "nsIDOMHTMLTableSectionElem.h"
@@ -386,7 +387,19 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
                                             getter_AddRefs(wrapper));
             NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create wrapper element");
 
-            wrapChildren(mParentNode, wrapper);
+            nsCOMPtr<nsIContent> childContent;
+            nsCOMPtr<nsIDOMNode> child, resultNode;
+            PRInt32 childCount, i;
+            document->GetChildCount(childCount);
+            for (i = 0; i < childCount; ++i) {
+                document->ChildAt(0, *getter_AddRefs(childContent));
+                if (childContent == mRootContent) {
+                    document->SetRootContent(nsnull);
+                }
+                child = do_QueryInterface(childContent);
+                wrapper->AppendChild(child, getter_AddRefs(resultNode));
+            }
+
             mParentNode = wrapper;
             mRootContent = do_QueryInterface(wrapper);
             mRootContent->SetDocument(document, PR_FALSE, PR_TRUE);
@@ -398,7 +411,7 @@ void txMozillaXMLOutput::closePrevious(PRInt8 aAction)
             mNonAddedNode = mCurrentNode;
         }
         else {
-            if (document && !mRootContent) {
+            if (document && currentElement && !mRootContent) {
                 mRootContent = do_QueryInterface(mCurrentNode);
                 mRootContent->SetDocument(document, PR_FALSE, PR_TRUE);
                 document->SetRootContent(mRootContent);
@@ -573,26 +586,20 @@ void txMozillaXMLOutput::processHTTPEquiv(nsIAtom* aHeader, const nsAString& aVa
 void txMozillaXMLOutput::wrapChildren(nsIDOMNode* aCurrentNode,
                                       nsIDOMElement* aWrapper)
 {
-    nsresult rv;
-    nsCOMPtr<nsIContent> currentContent;
-
-    currentContent = do_QueryInterface(mCurrentNode, &rv);
-
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Can't QI to nsIContent");
-    if (!currentContent)
+    nsCOMPtr<nsIDOMNodeList> children;
+    nsresult rv = aCurrentNode->GetChildNodes(getter_AddRefs(children));
+    if (NS_FAILED(rv)) {
+        NS_ASSERTION(0, "Can't get children!");
         return;
+    }
 
-    PRInt32 count, i = 0;
     nsCOMPtr<nsIDOMNode> child, resultNode;
-    nsCOMPtr<nsIContent> childContent;
-
-    currentContent->ChildCount(count);
-    for (i = 0; i < count; i++) {
-        rv = currentContent->ChildAt(0, *getter_AddRefs(childContent));
+    PRUint32 count, i;
+    children->GetLength(&count);
+    for (i = 0; i < count; ++i) {
+        rv = children->Item(0, getter_AddRefs(child));
         if (NS_SUCCEEDED(rv)) {
-            child = do_QueryInterface(childContent);
-            aCurrentNode->RemoveChild(child, getter_AddRefs(resultNode));
-            aWrapper->AppendChild(resultNode, getter_AddRefs(child));
+            aWrapper->AppendChild(child, getter_AddRefs(resultNode));
         }
     }
 }
