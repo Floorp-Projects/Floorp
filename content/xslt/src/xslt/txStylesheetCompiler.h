@@ -100,6 +100,16 @@ public:
     nsresult init(const nsAString& aBaseURI, txStylesheet* aStylesheet,
                   txListIterator* aInsertPosition);
 
+    // Embedded stylesheets state
+    PRBool handleEmbeddedSheet()
+    {
+        return mEmbedStatus == eInEmbed;
+    }
+    void doneEmbedding()
+    {
+        mEmbedStatus = eHasEmbed;
+    }
+
     // Stack functions
     nsresult pushHandlerTable(txHandlerTable* aTable);
     void popHandlerTable();
@@ -148,12 +158,21 @@ protected:
     nsRefPtr<txACompileObserver> mObserver;
     nsVoidArray mInScopeVariables;
     nsVoidArray mChildCompilerList;
+    // embed info, target information is the ID
+    nsString mTarget;
+    enum 
+    {
+        eNoEmbed,
+        eNeedEmbed,
+        eInEmbed,
+        eHasEmbed
+    } mEmbedStatus;
 #ifdef PR_LOGGING
     nsCString mURI;
 #endif
     PRPackedBool mIsTopCompiler;
     PRPackedBool mDoneWithThisStylesheet;
-    
+
 private:
     txStack mObjectStack;
     txStack mOtherStack;
@@ -188,7 +207,7 @@ public:
                           PRInt32 aAttrCount);
     nsresult startElement(const PRUnichar *aName,
                           const PRUnichar **aAtts,
-                          PRInt32 aAttrCount);
+                          PRInt32 aAttrCount, PRInt32 aIDOffset);
     nsresult endElement();
     nsresult characters(const nsAString& aStr);
     nsresult doneLoading();
@@ -205,7 +224,8 @@ private:
     nsresult startElementInternal(PRInt32 aNamespaceID, nsIAtom* aLocalName,
                                   nsIAtom* aPrefix,
                                   txStylesheetAttr* aAttributes,
-                                  PRInt32 aAttrCount);
+                                  PRInt32 aAttrCount,
+                                  PRInt32 aIDOffset = -1);
 
     nsresult flushCharacters();
     nsresult ensureNewElementContext();

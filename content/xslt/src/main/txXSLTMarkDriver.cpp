@@ -58,9 +58,10 @@ public:
 
     int loadStylesheet (char * filename)
     {
-        NS_ConvertASCIItoUCS2 path(filename);
+        txParsedURL url;
+        url.init(NS_ConvertASCIItoUCS2(filename));
         nsresult rv =
-            TX_CompileStylesheetPath(path, getter_AddRefs(mStylesheet));
+            TX_CompileStylesheetPath(url, getter_AddRefs(mStylesheet));
         return NS_SUCCEEDED(rv) ? 0 : 1;
     }
     int setInputDocument (char * filename)
