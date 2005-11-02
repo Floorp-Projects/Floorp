@@ -191,9 +191,19 @@ getExprAttr(txStylesheetAttr* aAttributes,
 
     rv = txExprParser::createExpr(attr->mValue, &aState,
                                   getter_Transfers(aExpr));
-    if (NS_FAILED(rv) && !aRequired && aState.fcp()) {
+    if (NS_FAILED(rv) && aState.fcp()) {
         // use default value in fcp for not required exprs
-        aExpr = nsnull;
+        if (aRequired) {
+            aExpr = new txErrorExpr(
+#ifdef TX_TO_STRING
+                                    attr->mValue
+#endif
+                                    );
+            NS_ENSURE_TRUE(aExpr, NS_ERROR_OUT_OF_MEMORY);
+        }
+        else {
+            aExpr = nsnull;
+        }
         return NS_OK;
     }
 
@@ -217,9 +227,20 @@ getAVTAttr(txStylesheetAttr* aAttributes,
     }
 
     aAVT = txExprParser::createAttributeValueTemplate(attr->mValue, &aState);
-    if (!aAVT && (aRequired || !aState.fcp())) {
-        // XXX ErrorReport: XPath parse failure
-        return NS_ERROR_XPATH_PARSE_FAILURE;
+    if (!aAVT) {
+        if (!aState.fcp()) {
+            // XXX ErrorReport: XPath parse failure
+            return NS_ERROR_XPATH_PARSE_FAILURE;
+        }
+
+        if (aRequired) {
+            aAVT = new txErrorExpr(
+#ifdef TX_TO_STRING
+                                   attr->mValue
+#endif
+                                   );
+            NS_ENSURE_TRUE(aAVT, NS_ERROR_OUT_OF_MEMORY);
+        }
     }
 
     return NS_OK;
