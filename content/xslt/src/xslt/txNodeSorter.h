@@ -42,6 +42,7 @@
 
 #include "baseutils.h"
 #include "List.h"
+#include "txAtom.h"
 
 class Element;
 class Expr;
@@ -85,7 +86,7 @@ private:
                      SortableNode* sNode2);
 
     MBool getAttrAsAVT(Element* aSortElement,
-                       const String& aAttrName,
+                       txAtom* aAttrName,
                        Node* aContext,
                        String& aResult);
 

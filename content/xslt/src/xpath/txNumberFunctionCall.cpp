@@ -125,7 +125,7 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
             int i;
             for (i = 0; i < nodes->size(); i++) {
                 String resultStr;
-                XMLDOMUtils::getNodeValue(nodes->get(i), &resultStr);
+                XMLDOMUtils::getNodeValue(nodes->get(i), resultStr);
                 res += Double::toDouble(resultStr);
             }
             delete nodes;
@@ -139,7 +139,7 @@ ExprResult* NumberFunctionCall::evaluate(Node* context, ContextState* cs) {
                     evaluateToNumber((Expr*)iter.next(), context, cs));
 
             String resultStr;
-            XMLDOMUtils::getNodeValue(context, &resultStr);
+            XMLDOMUtils::getNodeValue(context, resultStr);
             return new NumberResult(Double::toDouble(resultStr));
         }
     }

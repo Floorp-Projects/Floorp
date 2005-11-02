@@ -105,7 +105,7 @@ ExprResult* DocumentFunctionCall::evaluate(Node* context, ContextState* cs)
             for (i = 0; i < nodeSet1->size(); i++) {
                 Node* node = nodeSet1->get(i);
                 String uriStr;
-                XMLDOMUtils::getNodeValue(node, &uriStr);
+                XMLDOMUtils::getNodeValue(node, uriStr);
                 if (!baseURISet) {
                     // if the second argument wasn't specified, use
                     // the baseUri of node itself

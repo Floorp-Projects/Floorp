@@ -108,7 +108,7 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 if ( argc == 1)
                     evaluateToString((Expr*)iter->next(),context, cs, resultStr);
                 else
-                    XMLDOMUtils::getNodeValue(context, &resultStr);
+                    XMLDOMUtils::getNodeValue(context, resultStr);
                 // Leading & Trailing Whitespace
                 resultStr.trim();
                 MBool hasSpace = MB_FALSE;
@@ -150,7 +150,7 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 if ( argc == 1) {
                     evaluateToString((Expr*)iter->next(),context, cs, resultStr);
                 }
-                else XMLDOMUtils::getNodeValue(context, &resultStr);
+                else XMLDOMUtils::getNodeValue(context, resultStr);
                 result  = new NumberResult( (double) resultStr.length());
             }
             else result = new NumberResult(0.0);
@@ -273,7 +273,7 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                     evaluateToString((Expr*)iter->next(),context, cs, resultStr);
                 }
                 else {
-                    XMLDOMUtils::getNodeValue(context, &resultStr);
+                    XMLDOMUtils::getNodeValue(context, resultStr);
                     if ( cs->isStripSpaceAllowed(context) &&
                          XMLUtils::shouldStripTextnode(resultStr))
                         resultStr = "";

@@ -125,7 +125,6 @@ class Node : public TxObject
 
     //Read functions
     virtual const String& getNodeName() const = 0;
-    virtual const String& getNodeValue() const = 0;
     virtual const String& getNodeValue() = 0;
     virtual unsigned short getNodeType() const = 0;
     virtual Node* getParentNode() const = 0;
@@ -267,7 +266,6 @@ class NodeDefinition : public Node, public NodeList
 
     //Read functions
     const String& getNodeName() const;
-    virtual const String& getNodeValue() const;
     virtual const String& getNodeValue();
     unsigned short getNodeType() const;
     Node* getParentNode() const;
@@ -394,10 +392,19 @@ class Document : public NodeDefinition
     Node* removeChild(Node* oldChild);
 
     // Introduced in DOM Level 2
+    Element* createElementNS(const String& aNamespaceURI,
+                             const String& aTagName);
+
+    Attr* createAttributeNS(const String& aNamespaceURI,
+                            const String& aName);
+
     Element* getElementById(const String aID);
 
     //Override to return documentBaseURI
     String getBaseURI();
+
+    PRInt32 namespaceURIToID(const String& aNamespaceURI);
+    void namespaceIDToURI(PRInt32 aNamespaceID, String& aNamespaceURI);
 
   private:
     Element* documentElement;
@@ -416,6 +423,8 @@ class Element : public NodeDefinition
 {
   public:
     Element(const String& tagName, Document* owner);
+    Element(const String& aNamespaceURI, const String& aTagName,
+            Document* aOwner);
     virtual ~Element();
 
     //Override insertBefore to limit Elements to having only certain nodes as
@@ -426,6 +435,9 @@ class Element : public NodeDefinition
     NamedNodeMap* getAttributes();
     const String& getAttribute(const String& name);
     void setAttribute(const String& name, const String& value);
+    void setAttributeNS(const String& aNamespaceURI,
+                        const String& aName,
+                        const String& aValue);
     void removeAttribute(const String& name);
     Attr* getAttributeNode(const String& name);
     Attr* setAttributeNode(Attr* newAttr);
@@ -452,10 +464,13 @@ class Element : public NodeDefinition
 //
 class Attr : public NodeDefinition
 {
-    // AttrMap needs to be friend to be able to update the ownerElement
+    // These need to be friend to be able to update the ownerElement
     friend class AttrMap;
+    friend class Element;
   public:
     Attr(const String& name, Document* owner);
+    Attr(const String& aNamespaceURI, const String& aName,
+         Document* aOwner);
     virtual ~Attr();
 
     const String& getName() const;

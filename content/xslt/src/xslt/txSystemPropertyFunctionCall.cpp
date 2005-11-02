@@ -38,8 +38,9 @@ ExprResult* SystemPropertyFunctionCall::evaluate(Node* context, ContextState* cs
             String property;
             exprResult->stringValue(property);
             if (XMLUtils::isValidQName(property)) {
-                String propertyNsURI;
-                cs->getNameSpaceURI(property, propertyNsURI);
+                String propertyNsURI, prefix;
+                XMLUtils::getLocalPart(property, prefix);
+                cs->getNameSpaceURIFromPrefix(prefix, propertyNsURI);
                 if (propertyNsURI.isEqual(XSLT_NS)) {
                     String localName;
                     XMLUtils::getLocalPart(property, localName);

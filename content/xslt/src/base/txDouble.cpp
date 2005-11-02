@@ -130,8 +130,6 @@ double Double::toDouble(const String& aSrc)
     PRInt32 len = aSrc.length();
     MBool digitFound = MB_FALSE;
 
-    double sign = 1.0;
-
     // leading whitespace
     while (idx < len &&
            (aSrc.charAt(idx) == ' ' ||

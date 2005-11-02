@@ -25,19 +25,30 @@
  *
  */
 
-/**
- * An XML utility class
-**/
+/*
+ * XML utility classes
+ */
 
 #include "XMLUtils.h"
+
+txExpandedName::txExpandedName(PRInt32 aNsID,
+                               txAtom* aLocalName) : mNamespaceID(aNsID),
+                                                     mLocalName(aLocalName)
+{
+    if (mLocalName)
+        TX_ADDREF_ATOM(mLocalName);
+}
+
+txExpandedName::~txExpandedName()
+{
+    TX_IF_RELEASE_ATOM(mLocalName);
+}
 
   //------------------------------/
  //- Implementation of XMLUtils -/
 //------------------------------/
 
-const String XMLUtils::XMLNS = "xmlns";
-
-void XMLUtils::getNameSpace(const String& src, String& dest) {
+void XMLUtils::getPrefix(const String& src, String& dest) {
 
     //-- anything preceding ':' is the namespace part of the name
     int idx = src.indexOf(':');
@@ -50,7 +61,7 @@ void XMLUtils::getNameSpace(const String& src, String& dest) {
     }
     else dest.append("");
 
-} //-- getNameSpace
+}
 
 void XMLUtils::getLocalPart(const String& src, String& dest) {
 
@@ -136,49 +147,6 @@ MBool XMLUtils::isWhitespace(const String& text) {
 } //-- isWhitespace
 
 /**
- * Normalizes the value of an XML attribute
-**/
-void XMLUtils::normalizeAttributeValue(String& attValue) {
-    PRInt32 size = attValue.length();
-    //-- make copy of chars
-    UNICODE_CHAR* chars = new UNICODE_CHAR[size];
-    attValue.toUnicode(chars);
-    //-- clear attValue
-    attValue.clear();
-
-    PRInt32 cc = 0;
-    MBool addSpace = MB_FALSE;
-    while ( cc < size) {
-        UNICODE_CHAR ch = chars[cc++];
-        switch (ch) {
-            case ' ':
-                if (!attValue.isEmpty())
-                    addSpace = MB_TRUE;
-                break;
-            case '\r':
-                break;
-            case '\n':
-                attValue.append("&#xA;");
-                break;
-            case '\'':
-                attValue.append("&apos;");
-                break;
-            case '\"':
-                attValue.append("&quot;");
-                break;
-            default:
-                if ( addSpace) {
-                    attValue.append(' ');
-                    addSpace = MB_FALSE;
-                }
-                attValue.append(ch);
-                break;
-        }
-    }
-    delete chars;
-} //-- normalizeAttributeValue
-
-/**
  * Normalizes the value of a XML processing instruction
 **/
 void XMLUtils::normalizePIValue(String& piValue) {
@@ -230,4 +198,3 @@ MBool XMLUtils::shouldStripTextnode (const String& data){
     }
     return toStrip;
 } //-- shouldStripTextnode
-

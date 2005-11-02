@@ -30,16 +30,39 @@
 #ifndef MITRE_XMLUTILS_H
 #define MITRE_XMLUTILS_H
 
-#include "TxString.h"
 #include "baseutils.h"
+#include "txAtom.h"
+
+class String;
+
+class txExpandedName {
+public:
+    txExpandedName(PRInt32 aNsID, txAtom* aLocalName);
+    ~txExpandedName();
+
+    MBool
+    operator == (const txExpandedName& rhs)
+    {
+        return ((mNamespaceID == rhs.mNamespaceID) &&
+                (mLocalName == rhs.mLocalName));
+    }
+
+    MBool
+    operator != (const txExpandedName& rhs)
+    {
+        return ((mNamespaceID != rhs.mNamespaceID) ||
+                (mLocalName != rhs.mLocalName));
+    }
+
+    PRInt32 mNamespaceID;
+    txAtom* mLocalName;
+};
 
 class XMLUtils {
 
 public:
 
-    static const String XMLNS;
-
-    static void getNameSpace(const String& src, String& dest);
+    static void getPrefix(const String& src, String& dest);
     static void getLocalPart(const String& src, String& dest);
 
 
@@ -52,11 +75,6 @@ public:
      * Returns true if the given string has only whitespace characters
     **/
     static MBool isWhitespace(const String& text);
-
-    /**
-     * Normalizes the value of an XML attribute
-    **/
-    static void normalizeAttributeValue(String& attValue);
 
     /**
      * Normalizes the value of a XML processingInstruction

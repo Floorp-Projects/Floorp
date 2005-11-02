@@ -119,7 +119,7 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* aContext, ContextState* aCs) {
                 int i;
                 for (i = 0; i < nodes->size(); i++) {
                     String idList, id;
-                    XMLDOMUtils::getNodeValue(nodes->get(i), &idList);
+                    XMLDOMUtils::getNodeValue(nodes->get(i), idList);
                     txTokenizer tokenizer(idList);
                     while (tokenizer.hasMoreTokens()) {
                         tokenizer.nextToken(id);
@@ -210,6 +210,10 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* aContext, ContextState* aCs) {
                             break;
                     }
                     return new StringResult();
+                }
+                default:
+                {
+                    break;
                 }
             }
         }

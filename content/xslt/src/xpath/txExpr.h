@@ -43,7 +43,6 @@
 #include "baseutils.h"
 #include "TxObject.h"
 #include "primitives.h"
-#include "NamespaceResolver.h"
 
 /*
   XPath class definitions.
@@ -60,7 +59,7 @@ typedef class Expr PatternExpr;
 /**
  * The expression context and state class used when evaluating XPath Expressions.
 **/
-class ContextState : public NamespaceResolver, public ErrorObserver {
+class ContextState : public ErrorObserver {
 
 public:
 
@@ -95,6 +94,12 @@ public:
     **/
     virtual void sortByDocumentOrder(NodeSet* nodes) = 0;
 
+    /**
+     * Returns the namespace URI for the given namespace prefix, this method should
+     * only be called for determining a namespace declared within the context
+     * (ie. the stylesheet)
+    **/
+    virtual void getNameSpaceURIFromPrefix(const String& aPrefix, String& aNamespaceURI) = 0;
 }; //-- ContextState
 
 
