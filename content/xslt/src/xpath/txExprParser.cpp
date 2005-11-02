@@ -26,7 +26,7 @@
  *   -- fixed bug in ::parsePredicates,
  *      made sure we continue looking for more predicates.
  *
- * $Id: txExprParser.cpp,v 1.3 2005/11/02 07:33:27 Peter.VanderBeken%pandora.be Exp $
+ * $Id: txExprParser.cpp,v 1.4 2005/11/02 07:33:28 kvisco%ziplink.net Exp $
  */
 
 /**
@@ -34,7 +34,7 @@
  * This class is used to parse XSL Expressions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
  * @see ExprLexer
- * @version $Revision: 1.3 $ $Date: 2005/11/02 07:33:27 $
+ * @version $Revision: 1.4 $ $Date: 2005/11/02 07:33:28 $
 **/
 
 #include "ExprParser.h"
@@ -468,10 +468,9 @@ FunctionCall* ExprParser::createFunctionCall(ExprLexer& lexer) {
     }
     // OG-
     else {
-        //-- create error function() for now, should be ext function
-        String err = "not a valid function: ";
-        err.append(tok->value);
-        fnCall = new ErrorFunctionCall(err);
+        //-- Most likely an Extension Function, or error, but it's
+        //-- not our job to report an invalid function call here
+        fnCall = new ExtensionFunctionCall(fnName);
     }
     //-- handle parametes
     List params;
