@@ -152,6 +152,7 @@ class FunctionCall : public Expr {
 public:
 
     static const String INVALID_PARAM_COUNT;
+    static const String INVALID_PARAM_VALUE;
 
     virtual ~FunctionCall();
 
