@@ -250,7 +250,7 @@ void txMozillaXMLOutput::processingInstruction(const String& aTarget, const Stri
 
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      rv = ssle->UpdateStyleSheet(PR_TRUE, nsnull, mStyleSheetCount);
+      rv = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
       if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK))
         mStyleSheetCount++;
     }
@@ -558,7 +558,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
             do_QueryInterface(aElement);
         if (ssle) {
             ssle->SetEnableUpdates(PR_TRUE);
-            rv = ssle->UpdateStyleSheet(PR_TRUE, nsnull, mStyleSheetCount);
+            rv = ssle->UpdateStyleSheet(nsnull, mStyleSheetCount);
             if (NS_SUCCEEDED(rv) || (rv == NS_ERROR_HTMLPARSER_BLOCK))
               mStyleSheetCount++;
         }
