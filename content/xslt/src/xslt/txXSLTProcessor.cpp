@@ -64,14 +64,10 @@ txXSLTProcessor::init()
     }
 #endif
 
-    if (!txHTMLAtoms::init())
-        return MB_FALSE;
-    if (!txXMLAtoms::init())
-        return MB_FALSE;
-    if (!txXPathAtoms::init())
-        return MB_FALSE;
-    if (!txXSLTAtoms::init())
-        return MB_FALSE;
+    txXMLAtoms::init();
+    txXPathAtoms::init();
+    txXSLTAtoms::init();
+    txHTMLAtoms::init();
     
     if (!txHandlerTable::init())
         return MB_FALSE;
@@ -87,11 +83,6 @@ txXSLTProcessor::shutdown()
     txNamespaceManager::shutdown();
     txHTMLOutput::shutdown();
 #endif
-
-    txHTMLAtoms::shutdown();
-    txXMLAtoms::shutdown();
-    txXPathAtoms::shutdown();
-    txXSLTAtoms::shutdown();
 
     txHandlerTable::shutdown();
 }

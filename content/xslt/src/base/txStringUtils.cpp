@@ -39,7 +39,34 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txStringUtils.h"
+#include "nsDependentString.h"
 
+PRBool
+TX_StringEqualsAtom(const nsASingleFragmentString& aString, nsIAtom* aAtom)
+{
+    const char* ASCIIAtom;
+    aAtom->GetUTF8String(&ASCIIAtom);
+
+    PRUint32 UTF16Length = aString.Length();
+    if (strlen(ASCIIAtom) != UTF16Length) {
+        return PR_FALSE;
+    }
+
+    const PRUnichar* UTF16Iter;
+    aString.BeginReading(UTF16Iter);
+
+    while (ASCIIAtom) {
+        if (PRUnichar(*ASCIIAtom) != *UTF16Iter) {
+            return PR_FALSE;
+        }
+        ++ASCIIAtom;
+        ++UTF16Iter;
+    }
+
+    return PR_TRUE;
+}
+
+#ifdef TX_EXE
 int
 txCaseInsensitiveStringComparator::operator()(const char_type* lhs,
                                               const char_type* rhs,
@@ -151,3 +178,5 @@ void TX_ToLowerCase(const nsAString& aSource, nsAString& aDest)
   copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd),
               converter);
 }
+
+#endif

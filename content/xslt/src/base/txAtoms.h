@@ -39,8 +39,7 @@
 #ifndef TRANSFRMX_ATOMS_H
 #define TRANSFRMX_ATOMS_H
 
-#include "nsIAtom.h"
-#include "baseutils.h"
+class nsIAtom;
 
 /*
  * Declare all atoms
@@ -51,47 +50,43 @@
  * be auto-generated.
  */
 
-#define XML_ATOMS        \
-TX_ATOM(_empty, "");     \
-TX_ATOM(base, "base");   \
-TX_ATOM(_default, "default");   \
-TX_ATOM(lang, "lang");   \
-TX_ATOM(preserve, "preserve");   \
-TX_ATOM(space, "space"); \
-TX_ATOM(xml, "xml");     \
+#define XML_ATOMS             \
+TX_ATOM(_empty, "")           \
+TX_ATOM(base, "base")         \
+TX_ATOM(_default, "default")  \
+TX_ATOM(lang, "lang")         \
+TX_ATOM(preserve, "preserve") \
+TX_ATOM(space, "space")       \
+TX_ATOM(xml, "xml")           \
 TX_ATOM(xmlns, "xmlns")
 
-#define TX_ATOM(_name, _value) static nsIAtom* _name
+#define TX_ATOM(_name, _value) static nsIAtom* _name;
 
 class txXMLAtoms
 {
 public:
-    static MBool init();
-    static void shutdown();
-XML_ATOMS;
+    static void init();
+XML_ATOMS
 };
 
 class txXPathAtoms
 {
 public:
-    static MBool init();
-    static void shutdown();
+    static void init();
 #include "txXPathAtomList.h"
 };
 
 class txXSLTAtoms
 {
 public:
-    static MBool init();
-    static void shutdown();
+    static void init();
 #include "txXSLTAtomList.h"
 };
 
 class txHTMLAtoms
 {
 public:
-    static MBool init();
-    static void shutdown();
+    static void init();
 #include "txHTMLAtomList.h"
 };
 
