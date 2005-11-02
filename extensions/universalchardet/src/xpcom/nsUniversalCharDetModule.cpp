@@ -95,7 +95,7 @@ static NS_METHOD nsUniversalCharDetectorRegistrationProc(nsIComponentManager *aC
 }
 
 // Component Table
-static nsModuleComponentInfo components[] = 
+static const nsModuleComponentInfo components[] = 
 {
    { "Universal Charset Detector", NS_UNIVERSAL_DETECTOR_CID, 
     NS_CHARSET_DETECTOR_CONTRACTID_BASE "universal_charset_detector", nsUniversalXPCOMDetectorConstructor, 
