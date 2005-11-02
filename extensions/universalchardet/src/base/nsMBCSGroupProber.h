@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *			Proofpoint, Inc.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -62,6 +63,9 @@ public:
 #ifdef DEBUG_chardet
   void  DumpStatus();
 #endif
+#ifdef DEBUG_jgmyers
+  void GetDetectorState(nsUniversalDetector::DetectorState (&states)[nsUniversalDetector::NumDetectors], PRUint32 &offset);
+#endif
 
 protected:
   nsProbingState mState;
@@ -69,6 +73,7 @@ protected:
   PRBool          mIsActive[NUM_OF_PROBERS];
   PRInt32 mBestGuess;
   PRUint32 mActiveNum;
+  PRUint32 mKeepNext;
 };
 
 #endif /* nsMBCSGroupProber_h__ */
