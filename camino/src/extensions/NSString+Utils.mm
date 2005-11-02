@@ -138,7 +138,7 @@
       return;
   }
 
-  [self getCharacters: buffer];   // does not null terminate
+  [self getCharacters:buffer];   // does not null terminate
   ioString.Assign(buffer, len);
   
   if (buffer != stackBuffer)
@@ -232,6 +232,7 @@
   [dirtyStringMutant replaceOccurrencesOfString:@"&lt;"withString:@"<" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
   [dirtyStringMutant replaceOccurrencesOfString:@"&gt;"withString:@">" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
   [dirtyStringMutant replaceOccurrencesOfString:@"&mdash;"withString:@"-" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
+  [dirtyStringMutant replaceOccurrencesOfString:@"&apos;"withString:@"'" options:NSLiteralSearch range:NSMakeRange(0,[dirtyStringMutant length])];
   return [dirtyStringMutant stringByRemovingCharactersInSet:[NSCharacterSet controlCharacterSet]];
 }
 
