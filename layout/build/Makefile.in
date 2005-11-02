@@ -128,6 +128,10 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)gkconhtmldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)txbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)txxml_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)txxpath_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)txxslt_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxbl_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxulcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxuldoc_s.$(LIB_SUFFIX) \
@@ -240,14 +244,18 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(srcdir)/../style \
 		   -I$(srcdir)/../xul/content/src \
 		   -I$(srcdir)/../xul/base/src \
-		   -I$(srcdir)/../../content/base/src \
-		   -I$(srcdir)/../../content/html/content/src \
-		   -I$(srcdir)/../../content/html/document/src \
-		   -I$(srcdir)/../../content/html/style/src \
-		   -I$(srcdir)/../../content/xul/content/src \
-		   -I$(srcdir)/../../content/xul/templates/src \
-		   -I$(srcdir)/../../content/events/src \
-		   -I$(srcdir)/../../content/xbl/src \
+		   -I$(topsrcdir)/content/base/src \
+		   -I$(topsrcdir)/content/html/content/src \
+		   -I$(topsrcdir)/content/html/document/src \
+		   -I$(topsrcdir)/content/html/style/src \
+		   -I$(topsrcdir)/content/xslt/src/base \
+		   -I$(topsrcdir)/content/xslt/src/xml \
+		   -I$(topsrcdir)/content/xslt/src/xpath \
+		   -I$(topsrcdir)/content/xslt/src/xslt \
+		   -I$(topsrcdir)/content/xul/content/src \
+		   -I$(topsrcdir)/content/xul/templates/src \
+		   -I$(topsrcdir)/content/events/src \
+		   -I$(topsrcdir)/content/xbl/src \
 		   -I$(topsrcdir)/view/src \
 		   -I$(topsrcdir)/dom/src/base \
 		   -I$(topsrcdir)/dom/src/jsurl \
@@ -259,7 +267,7 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../mathml/content/src
 endif
 
 ifdef MOZ_SVG
-LOCAL_INCLUDES	+= -I$(srcdir)/../../content/svg/content/src
+LOCAL_INCLUDES	+= -I$(topsrcdir)/content/svg/content/src
 endif
 
 DEFINES += -D_IMPL_NS_LAYOUT
