@@ -325,8 +325,6 @@ nsUniversalXPCOMStringDetector::~nsUniversalXPCOMStringDetector()
 {
 }
 //---------------------------------------------------------------------
-//MY_NS_IMPL_ISUPPORTS(nsUniversalXPCOMStringDetector, 
-//  NS_GET_IID(nsIStringCharsetDetector), nsIStringCharsetDetector)
 NS_IMPL_ISUPPORTS1(nsUniversalXPCOMStringDetector, nsIStringCharsetDetector)
 //---------------------------------------------------------------------
 void nsUniversalXPCOMStringDetector::Report(const char *aCharset) 
