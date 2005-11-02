@@ -296,8 +296,12 @@ ExprResult* txFormatNumberFunctionCall::evaluate(Node* aContext,
         return new StringResult;
     }
 
+    int totalSize = minIntegerSize + maxFractionSize;
+    if (maxFractionSize > 0)
+        totalSize++; //to account for decimal point
+
     char formatBuf[30];
-    sprintf(formatBuf, "%%0%d.%df", minIntegerSize, maxFractionSize);
+    sprintf(formatBuf, "%%0%d.%df", totalSize, maxFractionSize);
 
     sprintf(buf, formatBuf, value);
     

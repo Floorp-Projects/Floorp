@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -188,20 +189,25 @@ protected:
     FunctionCall();
     FunctionCall(const String& name);
 
-    /**
-     * Evaluates the given Expression and converts it's result to a String.
+    /*
+     * Evaluates the given Expression and converts its result to a String.
      * The value is appended to the given destination String
-    **/
-    void evaluateToString
-        (Expr* expr, Node* context, ContextState* cs, String& dest);
-
-    /**
-     * Evaluates the given Expression and converts it's result to a number.
-    **/
-    double evaluateToNumber(Expr* expr, Node* context, ContextState* cs);
+     */
+    void evaluateToString(Expr* aExpr, Node* aContext,
+                          ContextState* aCs, String& aDest);
 
     /*
-     * Evaluates the given Expression and converts it's result to a NodeSet.
+     * Evaluates the given Expression and converts its result to a number.
+     */
+    double evaluateToNumber(Expr* aExpr, Node* aContext, ContextState* aCs);
+
+    /*
+     * Evaluates the given Expression and converts its result to a boolean.
+     */
+    MBool evaluateToBoolean(Expr* aExpr, Node* aContext, ContextState* aCs);
+
+    /*
+     * Evaluates the given Expression and converts its result to a NodeSet.
      * If the result is not a NodeSet NULL is returned.
      */
     NodeSet* evaluateToNodeSet(Expr* aExpr, Node* aContext, ContextState* aCs);

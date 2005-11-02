@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -29,16 +30,15 @@
 **/
 
 #include "FunctionLib.h"
-#include "XMLUtils.h"
 #include "XMLDOMUtils.h"
 #include <math.h>
 
 /**
  * Creates a StringFunctionCall of the given type
 **/
-StringFunctionCall::StringFunctionCall(short type) : FunctionCall() {
-    this->type = type;
-    switch ( type ) {
+StringFunctionCall::StringFunctionCall(StringFunctions aType) : mType(aType)
+{
+    switch (aType) {
         case CONCAT:
             name = XPathNames::CONCAT_FN;
             break;
@@ -67,7 +67,7 @@ StringFunctionCall::StringFunctionCall(short type) : FunctionCall() {
             name = XPathNames::STRING_FN;
             break;
     }
-} //-- StringFunctionCall
+}
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -76,214 +76,202 @@ StringFunctionCall::StringFunctionCall(short type) : FunctionCall() {
  * for evaluation
  * @return the result of the evaluation
 **/
-ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
-    ListIterator* iter = params.iterator();
-    PRInt32 argc = params.getLength();
-    String err;
-    ExprResult* result = 0;
-    switch ( type ) {
-        case CONCAT :
-            if ( requireParams(2, cs) ) {
-                String resultStr;
-                while(iter->hasNext()) {
-                    evaluateToString((Expr*)iter->next(),context, cs, resultStr);
-                }
-                result  = new StringResult(resultStr);
+ExprResult* StringFunctionCall::evaluate(Node* aContext, ContextState* aCs)
+{
+    ListIterator iter(&params);
+    switch (mType) {
+        case CONCAT:
+        {
+            if (!requireParams(2, aCs))
+                return new StringResult("error");
+                
+            String resultStr;
+            while (iter.hasNext()) {
+                evaluateToString((Expr*)iter.next(), aContext, aCs, resultStr);
             }
-            else result = new StringResult("");
-            break;
-        case CONTAINS :
-            if ( requireParams(2, 2, cs) ) {
-                String arg1, arg2;
-                evaluateToString((Expr*)iter->next(),context, cs, arg1);
-                evaluateToString((Expr*)iter->next(),context, cs, arg2);
-                result  = new BooleanResult((MBool)(arg1.indexOf(arg2) >= 0));
-            }
-            else result = new BooleanResult(MB_FALSE);
-            break;
+            return new StringResult(resultStr);
+        }
+        case CONTAINS:
+        {
+            if (!requireParams(2, 2, aCs))
+                return new StringResult("error");
 
+            String arg1, arg2;
+            evaluateToString((Expr*)iter.next(), aContext, aCs, arg1);
+            evaluateToString((Expr*)iter.next(), aContext, aCs, arg2);
+            return new BooleanResult(arg1.indexOf(arg2) >= 0);
+        }
         case NORMALIZE_SPACE:
-            if ( requireParams(0, 1, cs) ) {
-                String resultStr;
-                if ( argc == 1)
-                    evaluateToString((Expr*)iter->next(),context, cs, resultStr);
-                else
-                    XMLDOMUtils::getNodeValue(context, resultStr);
-                // Leading & Trailing Whitespace
-                resultStr.trim();
-                MBool hasSpace = MB_FALSE;
-                PRInt32 dest=0;
-                String normed(resultStr.length());
-                UNICODE_CHAR current;
-                for (PRInt32 src=0; src<resultStr.length(); src++) {
-                    current=resultStr.charAt(src);
-                    if (current==' ' || current=='\n' ||
-                            current=='\t' || current=='\r') {
-                        if (!hasSpace) {
-                            normed.replace(dest,' ');
-                            dest++;
-                            hasSpace=MB_TRUE;
-                        }
-                    }
-                    else {
-                        normed.replace(dest,current);
-                        dest++;
-                        hasSpace=MB_FALSE;
-                    }
-                }
-                result  = new StringResult(normed);
-            }
-            else result = new StringResult("");
-            break;
-        case STARTS_WITH :
-            if ( requireParams(2, 2, cs) ) {
-                String arg1, arg2;
-                evaluateToString((Expr*)iter->next(),context, cs, arg1);
-                evaluateToString((Expr*)iter->next(),context, cs, arg2);
-                result  = new BooleanResult((MBool)(arg1.indexOf(arg2) == 0));
-            }
-            else result = new BooleanResult(MB_FALSE);
-            break;
-        case STRING_LENGTH:
-            if ( requireParams(0, 1, cs) ) {
-                String resultStr;
-                if ( argc == 1) {
-                    evaluateToString((Expr*)iter->next(),context, cs, resultStr);
-                }
-                else XMLDOMUtils::getNodeValue(context, resultStr);
-                result  = new NumberResult( (double) resultStr.length());
-            }
-            else result = new NumberResult(0.0);
-            break;
-        case SUBSTRING:
-            if ( requireParams(2, 3, cs) ) {
-                String src;
-                evaluateToString((Expr*)iter->next(),context, cs, src);
-                double dbl = evaluateToNumber((Expr*)iter->next(), context, cs);
+        {
+            if (!requireParams(0, 1, aCs))
+                return new StringResult("error");
 
-                //-- check for NaN
-                if ( Double::isNaN(dbl)) {
-                    result = new StringResult("");
-                    break;
-                }
-
-                //-- check for -Infinity
-                MBool startsNegInf = (dbl==Double::NEGATIVE_INFINITY);
-
-                PRInt32 startIdx = startsNegInf?0:(PRInt32)floor(dbl+.5);
-                PRInt32 endIdx = src.length()+1;
-                if ( argc == 3) {
-                    dbl = evaluateToNumber((Expr*)iter->next(),context, cs);
-                    if (startsNegInf) {
-                        result = new StringResult("");
-                        break;
-                    }
-                    if (dbl == Double::POSITIVE_INFINITY) ; //already complete
-                    else if ( Double::isNaN(dbl) || 
-                              dbl == Double::NEGATIVE_INFINITY ||
-                              dbl < 0 )
-                        endIdx = 0;
-                    else endIdx = startIdx+(PRInt32)floor(dbl+.5);
-                }
-                String resultStr;
-                //-- strings are indexed starting at 1 for XSL
-                //-- adjust to a 0-based index
-                endIdx--;
-                if (startIdx<1){
-                    startIdx = 0;
-                } else {
-                    startIdx--;
-                }
-
-                src.subString(startIdx,endIdx,resultStr);
-                result  = new StringResult(resultStr);
-            }
-            else result = new StringResult("");
-            break;
-
-        case SUBSTRING_AFTER:
-            if ( requireParams(2, 2, cs) ) {
-                String arg1, arg2;
-                evaluateToString((Expr*)iter->next(),context, cs, arg1);
-                evaluateToString((Expr*)iter->next(),context, cs, arg2);
-                PRInt32 idx = arg1.indexOf(arg2);
-                if ((idx >= 0)&&(idx<arg1.length())) {
-                    PRInt32 len = arg2.length();
-                    arg2.clear();
-                    arg1.subString(idx+len,arg2);
-                    result  = new StringResult(arg2);
-                    break;
-                }
-            }
-            result = new StringResult("");
-            break;
-        case SUBSTRING_BEFORE:
-            if ( requireParams(2, 2, cs) ) {
-                String arg1, arg2;
-                evaluateToString((Expr*)iter->next(),context, cs, arg1);
-                evaluateToString((Expr*)iter->next(),context, cs, arg2);
-                PRInt32 idx = arg1.indexOf(arg2);
-                if ((idx >= 0)&&(idx<arg1.length())) {
-                    arg2.clear();
-                    arg1.subString(0,idx,arg2);
-                    result  = new StringResult(arg2);
-                    break;
-                }
-            }
-            result = new StringResult("");
-            break;
-        case TRANSLATE:
-            if ( requireParams(3, 3, cs) ) {
-                String src;
-                evaluateToString((Expr*)iter->next(),context, cs, src);
-
-                if (src.isEmpty()) { 
-                    result = new StringResult("");
-                    break;
-                }
-
-                String oldChars, newChars;
-                evaluateToString((Expr*)iter->next(),context, cs, oldChars);
-                evaluateToString((Expr*)iter->next(),context, cs, newChars);
-                PRInt32 size = src.length();
-                UNICODE_CHAR* chars = src.toUnicode(new UNICODE_CHAR[size]);
-                src.clear();
-                PRInt32 i;
-                for (i = 0; i < size; i++) {
-                    PRInt32 idx = oldChars.indexOf(chars[i]);
-                    if (idx >= 0) {
-                        if (idx < newChars.length())
-                            src.append(newChars.charAt(idx));
-                    }
-                    else {
-                        src.append(chars[i]);
-                    }
-                }
-                delete chars;
-                result = new StringResult(src);
-            }
+            String resultStr;
+            if (iter.hasNext())
+                evaluateToString((Expr*)iter.next(), aContext, aCs, resultStr);
             else
-                result = new StringResult("");
-            break;
+                XMLDOMUtils::getNodeValue(aContext, resultStr);
 
-        default : //-- string( object? )
-            if ( requireParams(0, 1, cs) ) {
-                String resultStr;
-                if (iter->hasNext()) {
-                    evaluateToString((Expr*)iter->next(),context, cs, resultStr);
+            MBool addSpace = MB_FALSE;
+            MBool first = MB_TRUE;
+            String normed(resultStr.length());
+            UNICODE_CHAR c;
+            PRInt32 src;
+            for (src = 0; src < resultStr.length(); src++) {
+                c = resultStr.charAt(src);
+                if (c == ' ' || c == '\n' ||
+                    c == '\t' || c == '\r') {
+                    addSpace = MB_TRUE;
                 }
                 else {
-                    XMLDOMUtils::getNodeValue(context, resultStr);
-                    if ( cs->isStripSpaceAllowed(context) &&
-                         XMLUtils::shouldStripTextnode(resultStr))
-                        resultStr = "";
-                }
-                result = new StringResult(resultStr);
-            }
-            else result = new StringResult("");
-            break;
-    }
-    delete iter;
-    return result;
-} //-- evaluate
+                    if (addSpace && !first)
+                        normed.append(' ');
 
+                    normed.append(c);
+                    addSpace = MB_FALSE;
+                    first = MB_FALSE;
+                }
+            }
+            return new StringResult(normed);
+        }
+        case STARTS_WITH:
+        {
+            if (!requireParams(2, 2, aCs))
+                return new StringResult("error");
+
+            String arg1, arg2;
+            evaluateToString((Expr*)iter.next(), aContext, aCs, arg1);
+            evaluateToString((Expr*)iter.next(), aContext, aCs, arg2);
+            return new BooleanResult(arg1.indexOf(arg2) == 0);
+        }
+        case STRING_LENGTH:
+        {
+            if (!requireParams(0, 1, aCs))
+                return new StringResult("error");
+
+            String resultStr;
+            if (iter.hasNext())
+                evaluateToString((Expr*)iter.next(), aContext, aCs, resultStr);
+            else
+                XMLDOMUtils::getNodeValue(aContext, resultStr);
+            return new NumberResult(resultStr.length());
+        }
+        case SUBSTRING:
+        {
+            if (!requireParams(2, 3, aCs))
+                return new StringResult("error");
+
+            String src;
+            double start, end;
+            evaluateToString((Expr*)iter.next(), aContext, aCs, src);
+            start = evaluateToNumber((Expr*)iter.next(), aContext, aCs);
+
+            // check for NaN or +/-Inf
+            if (Double::isNaN(start) ||
+                Double::isInfinite(start) ||
+                start + 0.5 >= src.length())
+                return new StringResult();
+
+            start = floor(start + 0.5) - 1;
+            if (iter.hasNext()) {
+                end = start + evaluateToNumber((Expr*)iter.next(),
+                                               aContext,
+                                               aCs);
+                if (Double::isNaN(end) || end < 0)
+                    return new StringResult();
+                
+                if (end > src.length())
+                    end = src.length();
+                else
+                    end = floor(end + 0.5);
+            }
+            else {
+                end = src.length();
+            }
+
+            if (start < 0)
+                start = 0;
+ 
+            if (start > end)
+                return new StringResult();
+            
+            String resultStr;
+            src.subString((PRInt32)start, (PRInt32)end, resultStr);
+            return new StringResult(resultStr);
+        }
+        case SUBSTRING_AFTER:
+        {
+            if (!requireParams(2, 2, aCs))
+                return new StringResult("error");
+
+            String arg1, arg2;
+            evaluateToString((Expr*)iter.next(), aContext, aCs, arg1);
+            evaluateToString((Expr*)iter.next(), aContext, aCs, arg2);
+            PRInt32 idx = arg1.indexOf(arg2);
+            if (idx >= 0) {
+                PRInt32 len = arg2.length();
+                arg1.subString(idx + len, arg2);
+                return new StringResult(arg2);
+            }
+            return new StringResult();
+        }
+        case SUBSTRING_BEFORE:
+        {
+            if (!requireParams(2, 2, aCs))
+                return new StringResult("error");
+
+            String arg1, arg2;
+            evaluateToString((Expr*)iter.next(), aContext, aCs, arg1);
+            evaluateToString((Expr*)iter.next(), aContext, aCs, arg2);
+            PRInt32 idx = arg1.indexOf(arg2);
+            if (idx >= 0) {
+                arg2.clear();
+                arg1.subString(0, idx, arg2);
+                return new StringResult(arg2);
+            }
+            return new StringResult();
+        }
+        case TRANSLATE:
+        {
+            if (!requireParams(3, 3, aCs))
+                return new StringResult("error");
+
+            String src;
+            evaluateToString((Expr*)iter.next(), aContext, aCs, src);
+            if (src.isEmpty())
+                return new StringResult();
+            
+            String oldChars, newChars, dest;
+            evaluateToString((Expr*)iter.next(), aContext, aCs, oldChars);
+            evaluateToString((Expr*)iter.next(), aContext, aCs, newChars);
+            PRInt32 i;
+            for (i = 0; i < src.length(); i++) {
+                PRInt32 idx = oldChars.indexOf(src.charAt(i));
+                if (idx >= 0) {
+                    if (idx < newChars.length())
+                        dest.append(newChars.charAt(idx));
+                }
+                else {
+                    dest.append(src.charAt(i));
+                }
+            }
+            return new StringResult(dest);
+        }
+        case STRING:
+        {
+            if (!requireParams(0, 1, aCs))
+                return new StringResult("error");
+
+            String resultStr;
+            if (iter.hasNext())
+                evaluateToString((Expr*)iter.next(), aContext, aCs, resultStr);
+            else
+                XMLDOMUtils::getNodeValue(aContext, resultStr);
+            return new StringResult(resultStr);
+        }
+    }
+
+    String err("Internal error");
+    aCs->recieveError(err);
+    return new StringResult("error");
+}
