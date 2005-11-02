@@ -63,6 +63,7 @@
 #include "nsIConsoleService.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsINameSpaceManager.h"
+#include "nsICSSStyleSheet.h"
 
 extern nsINameSpaceManager* gTxNameSpaceManager;
 
@@ -120,9 +121,10 @@ txMozillaXMLOutput::~txMozillaXMLOutput()
 {
 }
 
-NS_IMPL_ISUPPORTS2(txMozillaXMLOutput,
+NS_IMPL_ISUPPORTS3(txMozillaXMLOutput,
                    txIOutputXMLEventHandler,
-                   nsIScriptLoaderObserver);
+                   nsIScriptLoaderObserver,
+                   nsICSSLoaderObserver);
 
 void txMozillaXMLOutput::attribute(const String& aName,
                                    const PRInt32 aNsID,
@@ -312,13 +314,13 @@ void txMozillaXMLOutput::processingInstruction(const String& aTarget, const Stri
 
     if (ssle) {
         ssle->SetEnableUpdates(PR_TRUE);
-        ssle->UpdateStyleSheet(nsnull);
+        rv = ssle->UpdateStyleSheet(nsnull, this);
+        if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
+            nsCOMPtr<nsIStyleSheet> stylesheet;
+            ssle->GetStyleSheet(*getter_AddRefs(stylesheet));
+            mStylesheets.AppendObject(stylesheet);
+        }
     }
-}
-
-void txMozillaXMLOutput::removeScriptElement(nsIDOMHTMLScriptElement *aElement)
-{
-    mScriptElements.RemoveObject(aElement);
 }
 
 void txMozillaXMLOutput::startDocument()
@@ -602,7 +604,12 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
             do_QueryInterface(aElement);
         if (ssle) {
             ssle->SetEnableUpdates(PR_TRUE);
-            ssle->UpdateStyleSheet(nsnull);
+            ssle->UpdateStyleSheet(nsnull, this);
+            if (rv == NS_ERROR_HTMLPARSER_BLOCK) {
+                nsCOMPtr<nsIStyleSheet> stylesheet;
+                ssle->GetStyleSheet(*getter_AddRefs(stylesheet));
+                mStylesheets.AppendObject(stylesheet);
+            }
         }
     }
 }
@@ -738,7 +745,7 @@ txMozillaXMLOutput::ScriptAvailable(nsresult aResult,
                                     const nsAString& aScript)
 {
     if (NS_FAILED(aResult)) {
-        removeScriptElement(aElement);
+        mScriptElements.RemoveObject(aElement);
         SignalTransformEnd();
     }
 
@@ -751,7 +758,16 @@ txMozillaXMLOutput::ScriptEvaluated(nsresult aResult,
                                     PRBool aIsInline,
                                     PRBool aWasPending)
 {
-    removeScriptElement(aElement);
+    mScriptElements.RemoveObject(aElement);
+    SignalTransformEnd();
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+txMozillaXMLOutput::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
+{
+    // aSheet might not be in our list if the load was done synchronously
+    mStylesheets.RemoveObject(aSheet);
     SignalTransformEnd();
     return NS_OK;
 }
@@ -768,7 +784,7 @@ txMozillaXMLOutput::SignalTransformEnd()
         return;
     }
 
-    if (mScriptElements.Count() > 0) {
+    if (mScriptElements.Count() > 0 || mStylesheets.Count() > 0) {
         return;
     }
 
