@@ -33,7 +33,6 @@ MODULE = transformiix
 REQUIRES	= string \
 		  xpcom \
 		  dom \
-		  layout \
 		  content \
 		  widget \
 		  necko \
