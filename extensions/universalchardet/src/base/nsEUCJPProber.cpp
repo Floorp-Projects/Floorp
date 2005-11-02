@@ -78,8 +78,10 @@ nsProbingState nsEUCJPProber::HandleData(const char* aBuf, PRUint32 aLen)
         mDistributionAnalyser.HandleOneChar(mLastChar, charLen);
       }
       else
+      {
         mContextAnalyser.HandleOneChar(aBuf+i-1, charLen);
         mDistributionAnalyser.HandleOneChar(aBuf+i-1, charLen);
+      }
     }
   }
 
