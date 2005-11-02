@@ -352,8 +352,7 @@ txXPathNodeUtils::getAttr(const txXPathNode& aNode, nsIAtom* aLocalName,
         return PR_FALSE;
     }
 
-    nsresult rv = aNode.mContent->GetAttr(aNSID, aLocalName, aValue);
-    return NS_SUCCEEDED(rv) && rv != NS_CONTENT_ATTR_NOT_THERE;
+    return aNode.mContent->GetAttr(aNSID, aLocalName, aValue);
 }
 
 /* static */
