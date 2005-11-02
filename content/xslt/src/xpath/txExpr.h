@@ -107,10 +107,6 @@ public:
 class FunctionCall : public Expr {
 
 public:
-
-    static const nsString INVALID_PARAM_COUNT;
-    static const nsString INVALID_PARAM_VALUE;
-
     virtual ~FunctionCall();
 
     /**
@@ -125,13 +121,20 @@ public:
     **/
     nsresult addParam(Expr* aExpr);
 
-    /*
+    /**
+     * Check if the number of parameters falls within a range.
+     *
+     * @param aParamCountMin minimum number of required parameters.
+     * @param aParamCountMax maximum number of parameters. If aParamCountMax
+     *                       is negative the maximum number is not checked.
+     * @return boolean representing whether the number of parameters falls
+     *         within the expected range or not.
+     *
      * XXX txIEvalContext should be txIParseContest, bug 143291
      */
-    virtual MBool requireParams(int aParamCountMin, txIEvalContext* aContext);
-    virtual MBool requireParams(int aParamCountMin,
-                                int aParamCountMax,
-                                txIEvalContext* aContext);
+    virtual PRBool requireParams(PRInt32 aParamCountMin,
+                                 PRInt32 aParamCountMax,
+                                 txIEvalContext* aContext);
 
 protected:
 

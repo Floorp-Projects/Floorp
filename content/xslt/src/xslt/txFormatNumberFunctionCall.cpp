@@ -46,6 +46,9 @@
 
 #include "prdtoa.h"
 
+#define INVALID_PARAM_VALUE \
+    NS_LITERAL_STRING("invalid parameter value for function: ")
+
 const PRUnichar txFormatNumberFunctionCall::FORMAT_QUOTE = '\'';
 
 /*
