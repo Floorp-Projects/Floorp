@@ -20,15 +20,18 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
+ *
+ * Marina Mechtcheriakova, mmarina@mindspring.com
+ *   -- changed some behavoir to be more compliant with spec
  *    
- * $Id: txNodeSetFunctionCall.cpp,v 1.1 2005/11/02 07:33:44 kvisco%ziplink.net Exp $
+ * $Id: txNodeSetFunctionCall.cpp,v 1.2 2005/11/02 07:33:45 kvisco%ziplink.net Exp $
  */
 
 /**
  * NodeSetFunctionCall
  * A representation of the XPath NodeSet funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2005/11/02 07:33:44 $
+ * @version $Revision: 1.2 $ $Date: 2005/11/02 07:33:45 $
 **/
 
 #include "FunctionLib.h"
@@ -129,7 +132,14 @@ ExprResult* NodeSetFunctionCall::evaluate(Node* context, ContextState* cs) {
                     }
                     delete exprResult;
                 }
-                if ( !node ) node = context;
+                //if ( !node ) node = context;  ///Marina
+                else node = context;
+
+                //-- if no node was found just return an empty string (Marina)
+                if ( !node ) {
+                    result = new StringResult("");
+                    break;
+                }
 
                 switch ( type ) {
                     case LOCAL_NAME :
