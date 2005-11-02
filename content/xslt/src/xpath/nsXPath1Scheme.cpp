@@ -122,6 +122,8 @@ nsXPath1SchemeNSResolver::LookupNamespaceURI(const nsAString &aPrefix,
     }
   }
 
+  SetDOMStringToNull(aURI);
+
   return NS_OK;
 }
 
