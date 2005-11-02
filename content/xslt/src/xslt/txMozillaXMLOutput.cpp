@@ -90,11 +90,11 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsAString& aRootName,
                                        nsIDOMDocument* aResultDocument,
                                        nsITransformObserver* aObserver)
     : mBadChildLevel(0),
+      mTableState(NORMAL),
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
-      mCreatingNewDocument(PR_TRUE),
-      mTableState(NORMAL)
+      mCreatingNewDocument(PR_TRUE)
 {
     if (aObserver) {
         mNotifier = new txTransformNotifier();
@@ -112,11 +112,11 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsAString& aRootName,
 txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
                                        nsIDOMDocumentFragment* aFragment)
     : mBadChildLevel(0),
+      mTableState(NORMAL),
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
       mHaveBaseElement(PR_FALSE),
-      mCreatingNewDocument(PR_FALSE),
-      mTableState(NORMAL)
+      mCreatingNewDocument(PR_FALSE)
 {
     mOutputFormat.merge(*aFormat);
     mOutputFormat.setFromDefaults();
@@ -535,15 +535,8 @@ void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML
     else if (atom == txHTMLAtoms::tr && !aXHTML &&
              NS_PTR_TO_INT32(mTableStateStack.peek()) == TABLE) {
         nsCOMPtr<nsIDOMElement> elem;
-        if (mDocumentIsHTML) {
-            rv = mDocument->CreateElement(NS_LITERAL_STRING("tbody"),
-                                          getter_AddRefs(elem));
-        }
-        else {
-            rv = mDocument->CreateElementNS(NS_LITERAL_STRING(kXHTMLNameSpaceURI),
-                                            NS_LITERAL_STRING("tbody"),
-                                            getter_AddRefs(elem));
-        }
+        rv = createHTMLElement(NS_LITERAL_STRING("tbody"),
+                               getter_AddRefs(elem));
         if (NS_FAILED(rv)) {
             return;
         }
@@ -552,7 +545,7 @@ void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML
         if (NS_FAILED(rv)) {
             return;
         }
-        nsresult rv = mTableStateStack.push(NS_INT32_TO_PTR(ADDED_TBODY));
+        rv = mTableStateStack.push(NS_INT32_TO_PTR(ADDED_TBODY));
         if (NS_FAILED(rv)) {
             return;
         }
@@ -562,12 +555,12 @@ void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML
              mOutputFormat.mMethod == eHTMLOutput) {
         // Insert META tag, according to spec, 16.2, like
         // <META http-equiv="Content-Type" content="text/html; charset=EUC-JP">
-        nsresult rv;
-        nsCOMPtr<nsIDOMNode> foo;
         nsCOMPtr<nsIDOMElement> meta;
-        rv = mDocument->CreateElement(NS_LITERAL_STRING("meta"),
-                                      getter_AddRefs(meta));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create meta element");
+        rv = createHTMLElement(NS_LITERAL_STRING("meta"),
+                               getter_AddRefs(meta));
+        if (NS_FAILED(rv)) {
+            return;
+        }
         rv = meta->SetAttribute(NS_LITERAL_STRING("http-equiv"),
                                 NS_LITERAL_STRING("Content-Type"));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't set http-equiv on meta");
@@ -578,7 +571,8 @@ void txMozillaXMLOutput::startHTMLElement(nsIDOMElement* aElement, PRBool aXHTML
         rv = meta->SetAttribute(NS_LITERAL_STRING("content"),
                                 metacontent);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't set content on meta");
-        rv = aElement->AppendChild(meta, getter_AddRefs(foo));
+        nsCOMPtr<nsIDOMNode> dummy;
+        rv = aElement->AppendChild(meta, getter_AddRefs(dummy));
         NS_ASSERTION(NS_SUCCEEDED(rv), "Can't append meta");
     }
     else if (mCreatingNewDocument) {
@@ -793,6 +787,18 @@ txMozillaXMLOutput::createResultDocument(const nsAString& aName, PRInt32 aNsID,
     }
 
     return NS_OK;
+}
+
+nsresult
+txMozillaXMLOutput::createHTMLElement(const nsAString& aName,
+                                      nsIDOMElement** aResult)
+{
+    if (mDocumentIsHTML) {
+        return mDocument->CreateElement(aName, aResult);
+    }
+
+    return mDocument->CreateElementNS(NS_LITERAL_STRING(kXHTMLNameSpaceURI),
+                                      aName, aResult);
 }
 
 txTransformNotifier::txTransformNotifier()
