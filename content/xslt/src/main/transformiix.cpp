@@ -120,6 +120,7 @@ void parseCommandLine(int argc, char** argv, txOptions& aOptions)
  */
 int main(int argc, char** argv)
 {
+    using namespace std;
     nsresult rv;
     rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -189,7 +190,7 @@ int main(int argc, char** argv)
     }
 
     if (NS_FAILED(rv)) {
-        cerr << "transformation failed with " << hex << rv;
+        cerr << "transformation failed with " << hex << rv << endl;
     }
 
     resultFileStream.close();
