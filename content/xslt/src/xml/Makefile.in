@@ -26,13 +26,13 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef TX_EXE
+ifdef MOZ_XSL
 MODULE = transformiix
 REQUIRES = string xpcom dom layout widget
 endif
 
 DIRS            = dom parser util
-ifdef TX_EXE
+ifndef MOZ_XSL
 DIRS +=		printer
 endif
 
