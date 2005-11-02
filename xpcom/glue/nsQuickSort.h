@@ -44,8 +44,7 @@
 #define nsQuickSort_h___
 
 #include "prtypes.h"
-#include "nsComObsolete.h"
-NS_BEGIN_EXTERN_C
+PR_BEGIN_EXTERN_C
 
 /**
  * Parameters:
@@ -63,6 +62,6 @@ PR_EXTERN(void) NS_QuickSort(void *, unsigned int, unsigned int,
                              int (*)(const void *, const void *, void *), 
                              void *);
 
-NS_END_EXTERN_C
+PR_END_EXTERN_C
 
 #endif /* nsQuickSort_h___ */

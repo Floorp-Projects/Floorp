@@ -39,10 +39,9 @@
 
 #include <stdlib.h>
 #include "prtypes.h"
-#include "nsComObsolete.h"
 #include "nsQuickSort.h"
 
-NS_BEGIN_EXTERN_C
+PR_BEGIN_EXTERN_C
 
 #if !defined(DEBUG) && (defined(__cplusplus) || defined(__gcc))
 # ifndef INLINE
@@ -184,4 +183,4 @@ loop:	SWAPINIT(a, es);
 /*		NS_QuickSort(pn - r, r / es, es, cmp, data);*/
 }
 
-NS_END_EXTERN_C
+PR_END_EXTERN_C
