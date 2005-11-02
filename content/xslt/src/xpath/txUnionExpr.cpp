@@ -58,9 +58,9 @@ void UnionExpr::addExpr(Expr* expr) {
       expressions.add(expr);
 } //-- addExpr
 
-    //------------------------------------/
+    //-----------------------------/
   //- Virtual methods from Expr -/
-//------------------------------------/
+//-----------------------------/
 
 /**
  * Evaluates this Expr based on the given context node and processor state
@@ -93,22 +93,18 @@ ExprResult* UnionExpr::evaluate(Node* context, ContextState* cs) {
 /**
  * Returns the default priority of this Pattern based on the given Node,
  * context Node, and ContextState.
- * If this pattern does not match the given Node under the current context Node and
- * ContextState then Negative Infinity is returned.
 **/
 double UnionExpr::getDefaultPriority(Node* node, Node* context,
 				     ContextState* cs) {
     //-- find highest priority
     double priority = Double::NEGATIVE_INFINITY;
-    ListIterator* iter = expressions.iterator();
-    while (iter->hasNext()) {
-        Expr* expr = (Expr*)iter->next();
-        if (expr->matches(node, context, cs)) {
-            double tmpPriority = expr->getDefaultPriority(node, context, cs);
-            priority = (tmpPriority > priority) ? tmpPriority : priority;
-        }
+    ListIterator iter(&expressions);
+    while (iter.hasNext()) {
+        Expr* expr = (Expr*)iter.next();
+        double tmpPriority = expr->getDefaultPriority(node, context, cs);
+        if (tmpPriority > priority && expr->matches(node, context, cs))
+            priority = tmpPriority;
     }
-    delete iter;
     return priority;
 } //-- getDefaultPriority
 
@@ -147,7 +143,7 @@ void UnionExpr::toString(String& dest) {
     while (iter->hasNext()) {
         //-- set operator
         if (count > 0)
-	  dest.append(" | ");
+            dest.append(" | ");
         ((Expr*)iter->next())->toString(dest);
         ++count;
     }
