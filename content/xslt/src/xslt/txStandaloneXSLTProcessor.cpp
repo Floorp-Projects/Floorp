@@ -258,10 +258,10 @@ void txStandaloneXSLTProcessor::getHrefFromStylesheetPI(Document& xmlDocument,
     String tmpHref;
     while (node) {
         if (node->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE) {
-            String target = ((ProcessingInstruction*)node)->getTarget();
+            String target = node->getNodeName();
             if (STYLESHEET_PI.Equals(target) ||
                 STYLESHEET_PI_OLD.Equals(target)) {
-                String data = ((ProcessingInstruction*)node)->getData();
+                String data = node->getNodeValue();
                 type.Truncate();
                 tmpHref.Truncate();
                 parseStylesheetPI(data, type, tmpHref);
