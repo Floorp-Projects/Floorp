@@ -253,7 +253,7 @@ void txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
         if (NS_FAILED(rv)) {
             NS_ERROR("Failed to bind root to tree");
             rootContent->UnbindFromTree();
-            return rv;
+            return;
         }
 
         doc->SetRootContent(rootContent);
