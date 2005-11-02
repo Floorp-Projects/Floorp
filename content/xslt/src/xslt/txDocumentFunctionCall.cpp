@@ -23,6 +23,11 @@
  * Contributor(s):
  * Olivier Gerardin, ogerardin@vo.lu
  *   -- original author.
+ *
+ * Keith Visco, kvisco@ziplink.net
+ *   -- patched compilation error on due to improper usage of the
+ *      3rd argument (error message) for URIUtils::getInputStream,
+ *      in method DocumentFunctionCall::retrieveDocument
  */
 
 /**
@@ -136,7 +141,8 @@ void DocumentFunctionCall::retrieveDocument(String& uri, String& baseUri, NodeSe
   }
 
   // open URI
-  istream* xmlInput = URIUtils::getInputStream(uri, baseUri, "error");
+  String errMsg("error: ");
+  istream* xmlInput = URIUtils::getInputStream(uri, baseUri, errMsg);
   if (!xmlInput) {
     String err("in document() function: failed to open URI: ");
     err.append(uri);
