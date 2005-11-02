@@ -46,6 +46,7 @@
  */
 static const PRInt32 kMinGrowArrayBy = 8;
 static const PRInt32 kMaxGrowArrayBy = 1024;
+static const PRInt32 kAutoClearCompactSizeFactor = 4;
 
 /**
  * This is the threshold (in bytes) of the mImpl struct, past which
@@ -136,14 +137,16 @@ VoidStats gVoidStats;
 #endif
 
 inline void
-nsVoidArray::SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount, PRBool owner)
+nsVoidArray::SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount,
+                      PRBool aOwner, PRBool aHasAuto)
 {
   // old mImpl has been realloced and so we don't free/delete it
   NS_PRECONDITION(newImpl, "can't set size");
   mImpl = newImpl;
   mImpl->mCount = aCount;
-  mImpl->mBits = PRUint32(aSize & kArraySizeMask) |
-                 (owner ? kArrayOwnerMask : 0);
+  mImpl->mBits = NS_STATIC_CAST(PRUint32, aSize & kArraySizeMask) |
+                 (aOwner ? kArrayOwnerMask : 0) |
+                 (aHasAuto ? kArrayHasAutoBufferMask : 0);
 }
 
 // This does all allocation/reallocation of the array.
@@ -152,6 +155,8 @@ nsVoidArray::SetArray(Impl *newImpl, PRInt32 aSize, PRInt32 aCount, PRBool owner
 PRBool nsVoidArray::SizeTo(PRInt32 aSize)
 {
   PRUint32 oldsize = GetArraySize();
+  PRBool isOwner = IsArrayOwner();
+  PRBool hasAuto = HasAutoBuffer();
 
   if (aSize == (PRInt32) oldsize)
     return PR_TRUE; // no change
@@ -161,10 +166,15 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
     // free the array if allocated
     if (mImpl)
     {
-      if (IsArrayOwner())
+      if (isOwner)
       {
         PR_Free(NS_REINTERPRET_CAST(char *, mImpl));
-        mImpl = nsnull;
+        if (hasAuto) {
+          NS_STATIC_CAST(nsAutoVoidArray*, this)->ResetToAutoBuffer();
+        }
+        else {
+          mImpl = nsnull;
+        }
       }
       else
       {
@@ -174,7 +184,7 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
     return PR_TRUE;
   }
 
-  if (mImpl && IsArrayOwner())
+  if (mImpl && isOwner)
   {
     // We currently own an array impl. Resize it appropriately.
     if (aSize < mImpl->mCount)
@@ -205,7 +215,12 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
       }
     }
 #endif
-    SetArray(newImpl,aSize,newImpl->mCount,PR_TRUE);
+    SetArray(newImpl, aSize, newImpl->mCount, PR_TRUE, hasAuto);
+    return PR_TRUE;
+  }
+
+  if (aSize < oldsize) {
+    // No point in allocating if it won't free the current Impl anyway.
     return PR_TRUE;
   }
 
@@ -239,8 +254,8 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
     memcpy(newImpl->mArray, mImpl->mArray,
                   mImpl->mCount * sizeof(mImpl->mArray[0]));
   }
-    
-  SetArray(newImpl,aSize,mImpl ? mImpl->mCount : 0,PR_TRUE);
+
+  SetArray(newImpl, aSize, mImpl ? mImpl->mCount : 0, PR_TRUE, hasAuto);
   // no memset; handled later in ReplaceElementAt if needed
   return PR_TRUE;
 }
@@ -345,10 +360,8 @@ nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
   }
   else
   {
-    if (mImpl && IsArrayOwner())
-      PR_Free(NS_REINTERPRET_CAST(char*, mImpl));
-
-    mImpl = nsnull;
+    // Why do we drop the buffer here when we don't in Clear()?
+    SizeTo(0);
   }
 
   return *this;
@@ -594,6 +607,12 @@ void nsVoidArray::Clear()
   if (mImpl)
   {
     mImpl->mCount = 0;
+    // We don't have to free on Clear, but if we have a built-in buffer,
+    // it's worth considering.
+    if (HasAutoBuffer() && IsArrayOwner() &&
+        GetArraySize() > kAutoClearCompactSizeFactor * kAutoBufSize) {
+      SizeTo(0);
+    }
   }
 }
 
@@ -603,7 +622,16 @@ void nsVoidArray::Compact()
   {
     // XXX NOTE: this is quite inefficient in many cases if we're only
     // compacting by a little, but some callers care more about memory use.
-    if (GetArraySize() > Count())
+    PRInt32 count = Count();
+    if (HasAutoBuffer() && count <= kAutoBufSize)
+    {
+      Impl* oldImpl = mImpl;
+      NS_STATIC_CAST(nsAutoVoidArray*, this)->ResetToAutoBuffer();
+      memcpy(mImpl->mArray, oldImpl->mArray,
+             count * sizeof(mImpl->mArray[0]));
+      PR_Free(NS_REINTERPRET_CAST(char *, oldImpl));
+    }
+    else if (GetArraySize() > count)
     {
       SizeTo(Count());
     }
@@ -678,39 +706,7 @@ nsAutoVoidArray::nsAutoVoidArray()
   mIsAuto = PR_TRUE;
   ADD_TO_STATS(MaxAuto,0);
 #endif
-  SetArray(NS_REINTERPRET_CAST(Impl*, mAutoBuf),kAutoBufSize,0,PR_FALSE);
-}
-
-void nsAutoVoidArray::Clear()
-{
-  // We don't have to free on Clear, but since we have a built-in buffer,
-  // it's worth considering.
-  nsVoidArray::Clear();
-  if (IsArrayOwner() && GetArraySize() > 4*kAutoBufSize)
-    SizeTo(0);     // we override CompactTo - delete and repoint at auto array
-}
-
-PRBool nsAutoVoidArray::SizeTo(PRInt32 aSize)
-{
-  if (!nsVoidArray::SizeTo(aSize))
-    return PR_FALSE;
-
-  if (!mImpl)
-  {
-    // reset the array to point to our autobuf
-    SetArray(NS_REINTERPRET_CAST(Impl*, mAutoBuf),kAutoBufSize,0,PR_FALSE);
-  }
-  return PR_TRUE;
-}
-
-void nsAutoVoidArray::Compact()
-{
-  nsVoidArray::Compact();
-  if (!mImpl)
-  {
-    // reset the array to point to our autobuf
-    SetArray(NS_REINTERPRET_CAST(Impl*, mAutoBuf),kAutoBufSize,0,PR_FALSE);
-  }
+  ResetToAutoBuffer();
 }
 
 //----------------------------------------------------------------
@@ -1146,420 +1142,295 @@ nsCStringArray::EnumerateBackwards(nsCStringArrayEnumFunc aFunc, void* aData)
 // NOTE: nsSmallVoidArray elements MUST all have the low bit as 0.
 // This means that normally it's only used for pointers, and in particular
 // structures or objects.
-nsSmallVoidArray::nsSmallVoidArray()
-{
-  mChildren = nsnull;
-}
-
 nsSmallVoidArray::~nsSmallVoidArray()
 {
-  if (HasVector())
+  if (HasSingle())
   {
-    nsVoidArray* vector = GetChildVector();
-    delete vector;
+    // Have to null out mImpl before the nsVoidArray dtor runs.
+    mImpl = nsnull;
   }
 }
 
 nsSmallVoidArray& 
 nsSmallVoidArray::operator=(nsSmallVoidArray& other)
 {
-  nsVoidArray* ourArray = GetChildVector();
-  nsVoidArray* otherArray = other.GetChildVector();
-
-  if (HasVector())
-  {
-    if (other.HasVector())
-    {
-      // if both are real arrays, just use array= */
-      *ourArray = *otherArray;
-    }
-    else
-    {
-      // we have an array, but the other doesn't.
-      otherArray = other.SwitchToVector();
-      if (otherArray)
-        *ourArray = *otherArray;
-    }
+  PRInt32 count = other.Count();
+  switch (count) {
+    case 0:
+      Clear();
+      break;
+    case 1:
+      Clear();
+      AppendElement(other.ElementAt(0));
+      break;
+    default:
+      if (GetArraySize() >= count || SizeTo(count)) {
+        *AsArray() = *other.AsArray();
+      }
   }
-  else
-  {
-    if (other.HasVector())
-    {
-      // we have no array, but other does
-      ourArray = SwitchToVector();
-      if (ourArray)
-        *ourArray = *otherArray;
-    }
-    else
-    {
-      // neither has an array (either may have 0 or 1 items)
-      SetSingleChild(other.GetSingleChild());
-    }
-  }
+    
   return *this;
 }
 
 PRInt32
 nsSmallVoidArray::GetArraySize() const
 {
-  nsVoidArray* vector = GetChildVector();
-  if (vector)
-    return vector->GetArraySize();
+  if (HasSingle()) {
+    return 1;
+  }
 
-  return 1;
+  return AsArray()->GetArraySize();
 }
 
 PRInt32
 nsSmallVoidArray::Count() const
 {
-  if (HasSingleChild())
-  {
+  if (HasSingle()) {
     return 1;
   }
-  else {
-    nsVoidArray* vector = GetChildVector();
-    if (vector)
-      return vector->Count();
-  }
 
-  return 0;
+  return AsArray()->Count();
 }
 
 void*
-nsSmallVoidArray::ElementAt(PRInt32 aIndex) const
+nsSmallVoidArray::FastElementAt(PRInt32 aIndex) const
 {
-  if (HasSingleChild())
-  {
-    if (0 == aIndex)
-      return (void*)GetSingleChild();
-  }
-  else
-  {
-    nsVoidArray* vector = GetChildVector();
-    if (vector)
-      return vector->ElementAt(aIndex);
+  NS_ASSERTION(0 <= aIndex && aIndex < Count(), "index out of range");
+
+  if (HasSingle()) {
+    return GetSingle();
   }
 
-  return nsnull;
+  return AsArray()->FastElementAt(aIndex);
 }
 
 PRInt32
 nsSmallVoidArray::IndexOf(void* aPossibleElement) const
 {
-  if (HasSingleChild())
-  {
-    if (aPossibleElement == (void*)GetSingleChild())
-      return 0;
-  }
-  else
-  {
-    nsVoidArray* vector = GetChildVector();
-    if (vector)
-      return vector->IndexOf(aPossibleElement);
+  if (HasSingle()) {
+    return aPossibleElement == GetSingle() ? 0 : -1;
   }
 
-  return -1;
+  return AsArray()->IndexOf(aPossibleElement);
 }
 
 PRBool
 nsSmallVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
 {
-  nsVoidArray* vector;
-  NS_ASSERTION(!(PtrBits(aElement) & 0x1),"Attempt to add element with 0x1 bit set to nsSmallVoidArray");
-  NS_ASSERTION(aElement != nsnull,"Attempt to add a NULL element to an nsSmallVoidArray");
+  NS_ASSERTION(!(NS_PTR_TO_INT32(aElement) & 0x1),
+               "Attempt to add element with 0x1 bit set to nsSmallVoidArray");
 
-  if (HasSingleChild())
-  {
-    vector = SwitchToVector();
-  }
-  else
-  {
-    vector = GetChildVector();
-    if (!vector)
-    {
-      if (0 == aIndex)
-      {
-        SetSingleChild(aElement);
-        return PR_TRUE;
-      }
-      return PR_FALSE;
-    }
+  if (aIndex == 0 && IsEmpty()) {
+    SetSingle(aElement);
+
+    return PR_TRUE;
   }
 
-  return vector->InsertElementAt(aElement, aIndex);
+  if (!EnsureArray()) {
+    return PR_FALSE;
+  }
+
+  return AsArray()->InsertElementAt(aElement, aIndex);
 }
 
-PRBool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &other, PRInt32 aIndex)
+PRBool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &aOther, PRInt32 aIndex)
 {
-  nsVoidArray* vector;
-  PRInt32 count = other.Count();
-  if (count == 0)
-    return PR_TRUE;
-
 #ifdef DEBUG  
-  for (int i = 0; i < count; i++)
-  {
-    NS_ASSERTION(!(PtrBits(other.ElementAt(i)) & 0x1),"Attempt to add element with 0x1 bit set to nsSmallVoidArray");
-    NS_ASSERTION(other.ElementAt(i) != nsnull,"Attempt to add a NULL element to an nsSmallVoidArray");
+  for (int i = 0; i < aOther.Count(); i++) {
+    NS_ASSERTION(!(NS_PTR_TO_INT32(aOther.ElementAt(i)) & 0x1),
+                 "Attempt to add element with 0x1 bit set to nsSmallVoidArray");
   }
 #endif
 
-  if (!HasVector())
-  {
-    if (HasSingleChild() || count > 1 || aIndex > 0)
-    {
-      vector = SwitchToVector();
-    }
-    else
-    {
-      // count == 1, aIndex == 0, no elements already
-      SetSingleChild(other[0]);
-      return PR_TRUE;
-    }
-  }
-  else
-  {
-    vector = GetChildVector();
+  if (aIndex == 0 && IsEmpty() && aOther.Count() == 1) {
+    SetSingle(aOther.FastElementAt(0));
+    
+    return PR_TRUE;
   }
 
-  if (vector)
-  {
-    return vector->InsertElementsAt(other,aIndex);
+  if (!EnsureArray()) {
+    return PR_FALSE;
   }
-  return PR_TRUE;
+
+  return AsArray()->InsertElementsAt(aOther, aIndex);
 }
 
 PRBool
 nsSmallVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 {
-  NS_ASSERTION(!(PtrBits(aElement) & 0x1),"Attempt to add element with 0x1 bit set to nsSmallVoidArray");
-  NS_ASSERTION(aElement != nsnull,"Attempt to add a NULL element to an nsSmallVoidArray");
+  NS_ASSERTION(!(NS_PTR_TO_INT32(aElement) & 0x1),
+               "Attempt to add element with 0x1 bit set to nsSmallVoidArray");
 
-  if (HasSingleChild())
-  {
-    if (aIndex == 0)
-    {
-      SetSingleChild(aElement);
-      return PR_TRUE;
-    }
+  if (aIndex == 0 && (IsEmpty() || HasSingle())) {
+    SetSingle(aElement);
+    
+    return PR_TRUE;
   }
 
-  nsVoidArray* vector = GetChildVector();
-  if (!vector)
-  {
-    if (aIndex == 0)
-    {
-      SetSingleChild(aElement);
-      return PR_TRUE;
-    }
-    vector = SwitchToVector();
-    if (!vector)
-      return PR_FALSE;
+  if (!EnsureArray()) {
+    return PR_FALSE;
   }
-  return vector->ReplaceElementAt(aElement, aIndex);
+
+  return AsArray()->ReplaceElementAt(aElement, aIndex);
 }
 
 PRBool
 nsSmallVoidArray::AppendElement(void* aElement)
 {
-  NS_ASSERTION(!(PtrBits(aElement) & 0x1),"Attempt to add element with 0x1 bit set to nsSmallVoidArray");
-  NS_ASSERTION(aElement != nsnull,"Attempt to add a NULL element to an nsSmallVoidArray");
+  NS_ASSERTION(!(NS_PTR_TO_INT32(aElement) & 0x1),
+               "Attempt to add element with 0x1 bit set to nsSmallVoidArray");
 
-  nsVoidArray* vector;
-  if (HasSingleChild())
-  {
-    vector = SwitchToVector();
-  }
-  else
-  {
-    vector = GetChildVector();
-    if (!vector)
-    {
-      SetSingleChild(aElement);
-      return PR_TRUE;
-    }
+  if (IsEmpty()) {
+    SetSingle(aElement);
+    
+    return PR_TRUE;
   }
 
-  return vector->AppendElement(aElement);
+  if (!EnsureArray()) {
+    return PR_FALSE;
+  }
+
+  return AsArray()->AppendElement(aElement);
 }
 
 PRBool
 nsSmallVoidArray::RemoveElement(void* aElement)
 {
-  if (HasSingleChild())
-  {
-    if (aElement == GetSingleChild())
-    {
-      SetSingleChild(nsnull);
+  if (HasSingle()) {
+    if (aElement == GetSingle()) {
+      mImpl = nsnull;
       return PR_TRUE;
     }
-  }
-  else
-  {
-    nsVoidArray* vector = GetChildVector();
-    if (vector)
-      return vector->RemoveElement(aElement);
+    
+    return PR_FALSE;
   }
 
-  return PR_FALSE;
+  return AsArray()->RemoveElement(aElement);
 }
 
 PRBool
 nsSmallVoidArray::RemoveElementAt(PRInt32 aIndex)
 {
-  if (HasSingleChild())
-  {
-    if (0 == aIndex)
-    {
-      SetSingleChild(nsnull);
+  if (HasSingle()) {
+    if (aIndex == 0) {
+      mImpl = nsnull;
+
       return PR_TRUE;
     }
-  }
-  else
-  {
-    nsVoidArray* vector = GetChildVector();
-    if (vector)
-    {
-      return vector->RemoveElementAt(aIndex);
-    }
+    
+    return PR_FALSE;
   }
 
-  return PR_FALSE;
+  return AsArray()->RemoveElementAt(aIndex);
 }
 
 PRBool
 nsSmallVoidArray::RemoveElementsAt(PRInt32 aIndex, PRInt32 aCount)
 {
-  nsVoidArray* vector = GetChildVector();
+  if (HasSingle()) {
+    if (aIndex == 0) {
+      if (aCount > 0) {
+        mImpl = nsnull;
+      }
 
-  if (aCount == 0)
-    return PR_TRUE;
+      return PR_TRUE;
+    }
 
-  if (HasSingleChild())
-  {
-    if (aIndex == 0)
-      SetSingleChild(nsnull);
-    return PR_TRUE;
+    return PR_FALSE;
   }
 
-  if (!vector)
-    return PR_TRUE;
-
-  // complex case; remove entries from an array
-  return vector->RemoveElementsAt(aIndex,aCount);
+  return AsArray()->RemoveElementsAt(aIndex, aCount);
 }
 
 void
 nsSmallVoidArray::Clear()
 {
-  if (HasVector())
-  {
-    nsVoidArray* vector = GetChildVector();
-    vector->Clear();
+  if (HasSingle()) {
+    mImpl = nsnull;
   }
-  else
-  {
-    SetSingleChild(nsnull);
+  else {
+    AsArray()->Clear();
   }
 }
 
 PRBool
 nsSmallVoidArray::SizeTo(PRInt32 aMin)
 {
-  nsVoidArray* vector;
-  if (!HasVector())
-  {
-    if (aMin <= 1)
-      return PR_TRUE;
-    vector = SwitchToVector();
+  if (!HasSingle()) {
+    return AsArray()->SizeTo(aMin);
   }
-  else
-  {
-    vector = GetChildVector();
-    if (aMin <= 1)
-    {
-      void *prev = nsnull;
-      if (vector->Count() == 1)
-      {
-        prev = vector->ElementAt(0);
-      }
-      delete vector;
-      SetSingleChild(prev);
-      return PR_TRUE;
-    }
+
+  if (aMin <= 0) {
+    mImpl = nsnull;
+
+    return PR_TRUE;
   }
-  return vector->SizeTo(aMin);
+
+  if (aMin == 1) {
+    return PR_TRUE;
+  }
+
+  void* single = GetSingle();
+  mImpl = nsnull;
+  if (!AsArray()->SizeTo(aMin)) {
+    SetSingle(single);
+
+    return PR_FALSE;
+  }
+
+  AsArray()->AppendElement(single);
+
+  return PR_TRUE;
 }
 
 void
 nsSmallVoidArray::Compact()
 {
-  if (!HasSingleChild())
-  {
-    nsVoidArray* vector = GetChildVector();
-    if (vector)
-      vector->Compact();
+  if (!HasSingle()) {
+    AsArray()->Compact();
   }
 }
 
 void
 nsSmallVoidArray::Sort(nsVoidArrayComparatorFunc aFunc, void* aData)
 {
-  if (HasVector())
-  {
-    nsVoidArray* vector = GetChildVector();
-    vector->Sort(aFunc,aData);
+  if (!HasSingle()) {
+    AsArray()->Sort(aFunc,aData);
   }
 }
 
 PRBool
 nsSmallVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
-  if (HasVector())
-  {
-    nsVoidArray* vector = GetChildVector();
-    return vector->EnumerateForwards(aFunc,aData);
+  if (HasSingle()) {
+    return (*aFunc)(GetSingle(), aData);
   }
-  if (HasSingleChild())
-  {
-    return (*aFunc)(GetSingleChild(), aData);
-  }
-  return PR_TRUE;
+  return AsArray()->EnumerateForwards(aFunc,aData);
 }
 
 PRBool
 nsSmallVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
-  if (HasVector())
-  {
-    nsVoidArray* vector = GetChildVector();
-    return vector->EnumerateBackwards(aFunc,aData);
+  if (HasSingle()) {
+    return (*aFunc)(GetSingle(), aData);
   }
-  if (HasSingleChild())
-  {
-    return (*aFunc)(GetSingleChild(), aData);
+  return AsArray()->EnumerateBackwards(aFunc,aData);
+}
+
+PRBool
+nsSmallVoidArray::EnsureArray()
+{
+  if (!HasSingle()) {
+    return PR_TRUE;
   }
+
+  void* single = GetSingle();
+  mImpl = nsnull;
+  if (!AsArray()->AppendElement(single)) {
+    SetSingle(single);
+
+    return PR_FALSE;
+  }
+
   return PR_TRUE;
-}
-
-void
-nsSmallVoidArray::SetSingleChild(void* aChild)
-{
-  if (aChild)
-    mChildren = (void*)(PtrBits(aChild) | 0x1);
-  else
-    mChildren = nsnull;
-}
-
-nsVoidArray*
-nsSmallVoidArray::SwitchToVector()
-{
-  void* child = GetSingleChild();
-
-  mChildren = (void*)new nsAutoVoidArray();
-  nsVoidArray* vector = GetChildVector();
-  if (vector && child)
-    vector->AppendElement(child);
-
-  return vector;
 }
