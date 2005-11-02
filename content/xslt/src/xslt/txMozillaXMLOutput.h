@@ -174,7 +174,7 @@ private:
     nsCOMPtr<nsIDOMNode> mNonAddedNode;
 
     PRInt32 mStyleSheetCount;
-    nsAutoString mRefreshString;
+    nsCString mRefreshString;
 
     nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
 
