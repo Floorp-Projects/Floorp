@@ -565,7 +565,7 @@ void txMozillaXMLOutput::endHTMLElement(nsIDOMElement* aElement,
     }
 }
 
-void txMozillaXMLOutput::processHTTPEquiv(nsIAtom* aHeader, nsAReadableString& aValue)
+void txMozillaXMLOutput::processHTTPEquiv(nsIAtom* aHeader, const nsAString& aValue)
 {
     // For now we only handle "refresh". There's a longer list in
     // HTMLContentSink::ProcessHeaderData
