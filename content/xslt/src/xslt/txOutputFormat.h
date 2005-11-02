@@ -39,7 +39,6 @@
 #ifndef TRANSFRMX_OUTPUTFORMAT_H
 #define TRANSFRMX_OUTPUTFORMAT_H
 
-#include "baseutils.h"
 #include "List.h"
 #include "nsString.h"
 

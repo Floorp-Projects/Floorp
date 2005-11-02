@@ -38,6 +38,7 @@
 
 #include "txIXPathContext.h"
 #include "txAtoms.h"
+#include "txError.h"
 #include "XMLUtils.h"
 #include "XSLTFunctions.h"
 #include "ExprResult.h"

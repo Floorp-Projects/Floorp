@@ -39,12 +39,9 @@
 #ifndef __TX_I_XPATH_CONTEXT
 #define __TX_I_XPATH_CONTEXT
 
-#include "baseutils.h"
-#include "nsIAtom.h"
-#include "txError.h"
+#include "txCore.h"
 
 class FunctionCall;
-class nsAString;
 class nsIAtom;
 class txAExprResult;
 class txResultRecycler;

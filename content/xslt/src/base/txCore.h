@@ -15,12 +15,12 @@
  * The Original Code is TransforMiiX XSLT processor code.
  *
  * The Initial Developer of the Original Code is
- * Jonas Sicking.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The MITRE Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1999
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jonas Sicking <sicking@bigfoot.com>
+ *   Keith Visco <kvisco@ziplink.net> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,41 +36,75 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef TRANSFRMX_TXNAMESPACEMAP_H
-#define TRANSFRMX_TXNAMESPACEMAP_H
+#ifndef __txCore_h__
+#define __txCore_h__
 
-#include "nsIAtom.h"
-#include "nsCOMArray.h"
+#include "nscore.h"
+#include "nsDebug.h"
+#include "prtypes.h"
 
-class txNamespaceMap
+class nsAString;
+
+class txObject
 {
 public:
-    txNamespaceMap();
-    txNamespaceMap(const txNamespaceMap& aOther);
-
-    nsrefcnt AddRef()
+    /**
+     * Deletes this txObject
+    **/
+    virtual ~txObject()
     {
-        return ++mRefCnt;
-    }
-    nsrefcnt Release()
-    {
-        if (--mRefCnt == 0) {
-            mRefCnt = 1; //stabilize
-            delete this;
-            return 0;
-        }
-        return mRefCnt;
-    }
-
-    nsresult addNamespace(nsIAtom* aPrefix, const nsAString& aNamespaceURI);
-    PRInt32 lookupNamespace(nsIAtom* aPrefix);
-    PRInt32 lookupNamespace(const nsAString& aPrefix);
-    PRInt32 lookupNamespaceWithDefault(const nsAString& aPrefix);
-
-private:
-    nsAutoRefCnt mRefCnt;
-    nsCOMArray<nsIAtom> mPrefixes;
-    nsVoidArray mNamespaces;
+    };
 };
 
-#endif //TRANSFRMX_TXNAMESPACEMAP_H
+/**
+ * Utility class for doubles
+ */
+class txDouble
+{
+public:
+    /**
+     * Useful constants
+     */
+    static const double NaN;
+    static const double POSITIVE_INFINITY;
+    static const double NEGATIVE_INFINITY;
+
+    /**
+     * Determines whether the given double represents positive or negative.
+     * inifinity
+     */
+    static PRBool isInfinite(double aDbl);
+
+    /**
+     * Determines whether the given double is NaN.
+     */
+    static PRBool isNaN(double aDbl);
+
+    /**
+     * Determines whether the given double is negative.
+     */
+    static PRBool isNeg(double aDbl);
+
+    /**
+     * Converts the value of the given double to a string, and appends
+     * the result to the destination string.
+     */
+    static void toString(double aValue, nsAString& aDest);
+
+    /**
+     * Converts the given String to a double, if the string value does not
+     * represent a double, NaN will be returned
+     */
+    static double toDouble(const nsAString& aStr);
+};
+
+// XXX These should go away eventually.
+#define TxObject txObject
+typedef txDouble Double;
+typedef PRBool MBool;
+
+#define MB_TRUE  PR_TRUE
+#define MB_FALSE PR_FALSE
+// XXX
+
+#endif

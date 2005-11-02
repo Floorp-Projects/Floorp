@@ -45,7 +45,6 @@
 
 #include "Expr.h"
 #include "ExprResult.h"
-#include "primitives.h"
 #include "txIXPathContext.h"
 
 /**

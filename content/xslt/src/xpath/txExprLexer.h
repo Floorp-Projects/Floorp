@@ -41,7 +41,7 @@
 #ifndef MITREXSL_EXPRLEXER_H
 #define MITREXSL_EXPRLEXER_H
 
-#include "baseutils.h"
+#include "txCore.h"
 #include "nsString.h"
 
 /**

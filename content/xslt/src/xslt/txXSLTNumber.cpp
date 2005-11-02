@@ -38,7 +38,7 @@
 
 #include "txXSLTNumber.h"
 #include "txAtoms.h"
-#include "primitives.h"
+#include "txCore.h"
 #include <math.h>
 #include "Expr.h"
 #include "ExprResult.h"

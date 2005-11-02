@@ -39,13 +39,12 @@
 #ifndef MITRE_XMLPARSER_H
 #define MITRE_XMLPARSER_H
 
-#include "baseutils.h"
+#include "txCore.h"
 
 #ifdef TX_EXE
 #include <iostream.h>
 #endif
 
-class nsAString;
 class txXPathNode;
 
 /**

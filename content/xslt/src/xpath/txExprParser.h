@@ -45,19 +45,20 @@
 #ifndef MITREXSL_EXPRPARSER_H
 #define MITREXSL_EXPRPARSER_H
 
-#include "baseutils.h"
-#include "nsIAtom.h"
-#include "txError.h"
-#include "Expr.h"
+#include "txCore.h"
+#include "nsAutoPtr.h"
+#include "nsString.h"
 
 class AttributeValueTemplate;
 class Expr;
 class txExprLexer;
 class FunctionCall;
 class LocationStep;
+class nsIAtom;
 class PredicateList;
 class Token;
 class txIParseContext;
+class txNodeTest;
 class txNodeTypeTest;
 
 class txExprParser

@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "XSLTFunctions.h"
-#include "primitives.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txStylesheet.h"

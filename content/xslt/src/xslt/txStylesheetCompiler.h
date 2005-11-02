@@ -39,16 +39,12 @@
 #ifndef TRANSFRMX_TXSTYLESHEETCOMPILER_H
 #define TRANSFRMX_TXSTYLESHEETCOMPILER_H
 
-#include "baseutils.h"
-#include "txError.h"
 #include "txStack.h"
 #include "txXSLTPatterns.h"
 #include "Expr.h"
-#include "XMLUtils.h"
 #include "txIXPathContext.h"
 #include "nsAutoPtr.h"
 #include "txStylesheet.h"
-#include "TxLog.h"
 
 class txHandlerTable;
 class txElementContext;
