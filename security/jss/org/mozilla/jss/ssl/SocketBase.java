@@ -88,6 +88,9 @@ class SocketBase {
      * Enums. These must match the enums table in common.c. This is
      * safer than copying the values of the C constants, which are subject
      * to change, into Java code.
+     * Note to developer these constants are not all related! i.e. you cannot
+     * pass in PR_SHUTDOWN_RCV to setSSLOption etc! Check their usage 
+     * in NSS and NSPR before using.
      */
     static final int SSL_ENABLE_SSL2 = 0;
     static final int SSL_ENABLE_SSL3 = 1;
@@ -102,6 +105,11 @@ class SocketBase {
     static final int SSL_POLICY_DOMESTIC = 10;
     static final int SSL_POLICY_EXPORT = 11;
     static final int SSL_POLICY_FRANCE = 12;
+    static final int SSL_BYPASS_PKCS11 = 13;      
+    static final int SSL_ROLLBACK_DETECTION = 14; 
+    static final int SSL_NO_STEP_DOWN = 15;
+    static final int SSL_ENABLE_FDX = 16;
+    static final int SSL_V2_COMPATIBLE_HELLO = 17;
 
     void close() throws IOException {
         socketClose();
@@ -141,6 +149,26 @@ class SocketBase {
         setSSLOption(SSL_ENABLE_TLS, enable);
     }
 
+    void bypassPKCS11(boolean enable) throws SocketException {
+        setSSLOption(SSL_BYPASS_PKCS11, enable);
+    }
+
+    void enableRollbackDetection(boolean enable) throws SocketException {
+        setSSLOption(SSL_ROLLBACK_DETECTION, enable);
+    }
+
+    void enableStepDown(boolean enable) throws SocketException {
+        setSSLOption(SSL_NO_STEP_DOWN, enable);
+    }
+
+    void enableFDX(boolean enable) throws SocketException {
+        setSSLOption(SSL_ENABLE_FDX, enable);
+    }
+
+    void enableV2CompatibleHello(boolean enable) throws SocketException {
+        setSSLOption(SSL_V2_COMPATIBLE_HELLO, enable);
+    }
+    
     void setSSLOption(int option, boolean on)
         throws SocketException
     {
@@ -149,6 +177,68 @@ class SocketBase {
 
     native void setSSLOption(int option, int on)
         throws SocketException;
+
+    /* return 0 for option disabled 1 for option enabled. */
+    native int getSSLOption(int option)
+        throws SocketException;
+    
+    public String getSSLOptions() {
+        StringBuffer buf = new StringBuffer();
+        try {
+            buf.append("SSL Options configured for this SSLSocket:");
+            buf.append("\nSSL_ENABLE_SSL2" + 
+                ((getSSLOption(SocketBase.SSL_ENABLE_SSL2) != 0)
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_ENABLE_SSL3"  + 
+                ((getSSLOption(SocketBase.SSL_ENABLE_SSL3) != 0) 
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_ENABLE_TLS"  + 
+                ((getSSLOption(SocketBase.SSL_ENABLE_TLS) != 0) 
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_REQUIRE_CERTIFICATE"); 
+            switch (getSSLOption(SocketBase.SSL_REQUIRE_CERTIFICATE)) {
+                case 0:
+                    buf.append("=Never");
+                    break;
+                case 1:
+                    buf.append("=Always");
+                    break;
+                case 2:
+                    buf.append("=First Handshake");
+                    break;
+                case 3:
+                    buf.append("=No Error");
+                    break;
+                default:
+                    buf.append("=Report JSS Bug this option has a status.");
+                    break;
+            } //end switch
+            buf.append("\nSSL_REQUEST_CERTIFICATE"  + 
+                ((getSSLOption(SocketBase.SSL_REQUEST_CERTIFICATE) != 0) 
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_NO_CACHE"  + 
+                ((getSSLOption(SocketBase.SSL_NO_CACHE) != 0)
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_BYPASS_PKCS11"  + 
+                ((getSSLOption(SocketBase.SSL_BYPASS_PKCS11) != 0) 
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_ROLLBACK_DETECTION"  + 
+                ((getSSLOption(SocketBase.SSL_ROLLBACK_DETECTION) != 0)
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_NO_STEP_DOWN"  + 
+                ((getSSLOption(SocketBase.SSL_NO_STEP_DOWN) != 0)
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_ENABLE_FDX"  + 
+                ((getSSLOption(SocketBase.SSL_ENABLE_FDX) != 0)
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_V2_COMPATIBLE_HELLO"  + 
+                ((getSSLOption(SocketBase.SSL_V2_COMPATIBLE_HELLO) != 0) 
+                ? "=on" :  "=off"));
+        } catch (SocketException e) {
+            buf.append("\ngetSSLOptions exception " + e.getMessage());
+        }
+        return buf.toString();
+    }
 
     /**
      * Converts a host-ordered 4-byte internet address into an InetAddress.

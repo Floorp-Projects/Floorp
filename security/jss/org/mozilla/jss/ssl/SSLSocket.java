@@ -504,7 +504,7 @@ public class SSLSocket extends java.net.Socket {
 
     /**
      * Enables SSL v3 on this socket. It is enabled by default, unless the
-     *  default has been changed with <code>enableSSL3Default</code>.
+     * default has been changed with <code>enableSSL3Default</code>.
      */
     public void enableSSL3(boolean enable) throws SocketException {
         base.enableSSL3(enable);
@@ -532,6 +532,204 @@ public class SSLSocket extends java.net.Socket {
         setSSLDefaultOption(SocketBase.SSL_ENABLE_TLS, enable);
     }
 
+    /**
+     * Enables bypass of PKCS11 on this socket.  
+     * It is disabled by default, unless the default has been changed 
+     * with <code>bypassPKCS11Default</code>.
+     */
+    public void bypassPKCS11(boolean enable) throws SocketException {
+        base.bypassPKCS11(enable);
+    }
+
+    /**
+     * Sets the default to bypass PKCS11 layer (except for public keys)
+     * for all new sockets.
+     */
+    static public void bypassPKCS11Default(boolean enable) 
+        throws SocketException{
+        setSSLDefaultOption(SocketBase.SSL_BYPASS_PKCS11, enable);
+    }
+
+    /**
+     * Enable rollback detection for this socket.
+     * It is enabled by default, unless the default has been changed 
+     * with <code>enableRollbackDetectionDefault</code>.
+     */
+    public void enableRollbackDetection(boolean enable) 
+        throws SocketException 
+    {
+        base.enableRollbackDetection(enable);
+    }
+    
+    /**
+     * Sets the default rollback detection for all new sockets.
+     */
+    static void enableRollbackDetectionDefault(boolean enable) 
+        throws SocketException 
+    {
+        setSSLDefaultOption(SocketBase.SSL_ROLLBACK_DETECTION, enable);
+    }
+    
+    /**
+     * This option, enableStepDown, is concerned with the generation 
+     * of step-down keys which are used with export suites.
+     * If the server cert's public key is 512 bits or less
+     * this option is ignored because step-down keys don't
+     * need to be generated.
+     * If the server cert's public key is more than 512 bits,
+     * this option has the following effect:
+     * enable=true:  generate step-down keys
+     * enable=false: don't generate step-down keys; disable
+     * export cipher suites
+     *
+     * This option is enabled by default; unless the default has  
+     * been changed with <code>SSLSocket.enableStepDownDefault</code>.
+     */
+    public void enableStepDown(boolean enable) throws SocketException {
+        base.enableStepDown(enable);
+    }
+    /**
+     * This option, enableStepDownDefault, is concerned with the  
+     * generation of step-down keys which are used with export suites. 
+     * This options will set the default for all sockets.
+     * If the server cert's public key is 512 bits of less,
+     * this option is ignored because step-down keys don't
+     * need to be generated.
+     * If the server cert's public key is more than 512 bits,
+     * this option has the following effect:
+     * enable=true:  generate step-down keys
+     * enable=false: don't generate step-down keys; disable
+     *			export cipher suites
+     *
+     * This option is enabled by default for all sockets.
+     */
+    static void enableStepDownDefault(boolean enable) 
+    throws SocketException 
+    {
+        setSSLDefaultOption(SocketBase.SSL_NO_STEP_DOWN, enable);
+    }
+
+    /**
+     * Enable simultaneous read/write by separate read and write threads 
+     * (full duplex) for this socket.
+     * It is disabled by default, unless the default has been changed 
+     * with <code>enableFDXDefault</code>.
+     */
+    public void enableFDX(boolean enable) 
+    throws SocketException 
+    {
+        base.enableFDX(enable);
+    }
+    
+    /**
+     * Sets the default to permit simultaneous read/write 
+     * by separate read and write threads (full duplex)
+     * for all new sockets.
+     */
+    static void enableFDXDefault(boolean enable) 
+    throws SocketException 
+    {
+        setSSLDefaultOption(SocketBase.SSL_ENABLE_FDX, enable);
+    }
+
+    /**
+     * Enable sending v3 client hello in v2 format for this socket.
+     * It is enabled by default, unless the default has been changed 
+     * with <code>enableV2CompatibleHelloDefault</code>.
+     */
+    public void enableV2CompatibleHello(boolean enable) 
+    throws SocketException 
+    {
+        base.enableV2CompatibleHello(enable);
+    }
+    
+    /**    
+     * Sets the default to send v3 client hello in v2 format
+     * for all new sockets.
+     */
+    static void enableV2CompatibleHelloDefault(boolean enable) 
+    throws SocketException 
+    {
+        setSSLDefaultOption(SocketBase.SSL_V2_COMPATIBLE_HELLO, enable);
+    }
+    
+    /**
+     * @return a String listing the current SSLOptions for this SSLSocket.
+     */
+    public String getSSLOptions() {
+        return base.getSSLOptions();
+    }
+    
+    /**
+     * 
+     * @param option 
+     * @return 0 for option disabled 1 for option enabled. 
+     */
+    static private native int getSSLDefaultOption(int option)
+        throws SocketException;
+
+    /**
+     * 
+     * @return a String listing  the Default SSLOptions for all SSLSockets.
+     */
+    static public String getSSLDefaultOptions() {
+        StringBuffer buf = new StringBuffer();
+        try {
+            buf.append("Default Options configured for all SSLSockets: ");
+            buf.append("\nSSL_ENABLE_SSL2" + 
+                ((getSSLDefaultOption(SocketBase.SSL_ENABLE_SSL2) != 0)
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_ENABLE_SSL3"  + 
+                ((getSSLDefaultOption(SocketBase.SSL_ENABLE_SSL3) != 0) 
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_ENABLE_TLS"  + 
+                ((getSSLDefaultOption(SocketBase.SSL_ENABLE_TLS) != 0) 
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_REQUIRE_CERTIFICATE"); 
+            switch (getSSLDefaultOption(SocketBase.SSL_REQUIRE_CERTIFICATE)) {
+                case 0:
+                    buf.append("=Never");
+                    break;
+                case 1:
+                    buf.append("=Always");
+                    break;
+               case 2:
+                    buf.append("=First Handshake");
+                    break;
+               case 3:
+                   buf.append("=No Error");
+                   break;
+              default:
+                   buf.append("=Report JSS Bug this option has a status.");
+                   break;
+            } //end switch
+            buf.append("\nSSL_REQUEST_CERTIFICATE"  + 
+                ((getSSLDefaultOption(SocketBase.SSL_REQUEST_CERTIFICATE) != 0) 
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_NO_CACHE"  + 
+                ((getSSLDefaultOption(SocketBase.SSL_NO_CACHE) != 0)
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_BYPASS_PKCS11"  + 
+                ((getSSLDefaultOption(SocketBase.SSL_BYPASS_PKCS11) != 0) 
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_ROLLBACK_DETECTION"  + 
+                ((getSSLDefaultOption(SocketBase.SSL_ROLLBACK_DETECTION) != 0)
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_NO_STEP_DOWN"  + 
+                ((getSSLDefaultOption(SocketBase.SSL_NO_STEP_DOWN) != 0)
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_ENABLE_FDX"  + 
+                ((getSSLDefaultOption(SocketBase.SSL_ENABLE_FDX) != 0)
+                ? "=on" :  "=off"));
+            buf.append("\nSSL_V2_COMPATIBLE_HELLO"  + 
+                ((getSSLDefaultOption(SocketBase.SSL_V2_COMPATIBLE_HELLO) != 0) 
+                ? "=on" :  "=off"));
+        } catch (SocketException e) {
+            buf.append("\ngetSSLDefaultOptions exception " + e.getMessage());
+        }
+        return buf.toString();
+    }
+    
     /**
      * Sets whether the socket requires client authentication from the remote
      *  peer. If requestClientAuth() has not already been called, this

@@ -291,3 +291,10 @@ Java_org_mozilla_jss_ssl_SSLServerSocket_abortAccept;
 ;+    local:
 ;+       *;
 ;+};
+;+JSS_4.1.1 {       # JSS 4.1.1 release
+;+    global:
+Java_org_mozilla_jss_ssl_SocketBase_getSSLOption;
+Java_org_mozilla_jss_ssl_SSLSocket_getSSLDefaultOption;
+;+    local:
+;+       *;
+;+};

@@ -72,6 +72,23 @@ finish:
     return;
 }
 
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_ssl_SSLSocket_getSSLDefaultOption(JNIEnv *env,
+                                            jobject self, jint joption)
+{
+    SECStatus status;
+    PRBool bOption;
+
+    /* get the Default option */
+    status = SSL_OptionGetDefault(JSSL_enums[joption], &bOption);
+    if( status != SECSuccess ) {
+        JSSL_throwSSLSocketException(env, "SSL_OptionGetDefault failed");
+    }
+
+    return bOption;
+}
+
 #if 0
 #define EXCEPTION_CHECK(env, sock) \
     if( sock != NULL && sock->jsockPriv!=NULL) { \

@@ -368,21 +368,29 @@ JSSL_DestroySocketData(JNIEnv *env, JSSL_SocketData *sd)
 
 /*
  * These must match up with the constants defined in SocketBase.java.
+ * Note to developer these constants are not all related! i.e. you cannot
+ * pass in PR_SHUTDOWN_RCV to setSSLOption etc! Check their usage 
+ * in NSS and NSPR before using.
  */
 PRInt32 JSSL_enums[] = {
-    SSL_ENABLE_SSL2,            /* 0 */
-    SSL_ENABLE_SSL3,            /* 1 */
-    SSL_ENABLE_TLS,             /* 2 */
-    PR_SockOpt_NoDelay,         /* 3 */
-    PR_SockOpt_Keepalive,       /* 4 */
-    PR_SHUTDOWN_RCV,            /* 5 */
-    PR_SHUTDOWN_SEND,           /* 6 */
-    SSL_REQUIRE_CERTIFICATE,    /* 7 */
-    SSL_REQUEST_CERTIFICATE,    /* 8 */
-    SSL_NO_CACHE,               /* 9 */
-    SSL_POLICY_DOMESTIC,        /* 10 */
-    SSL_POLICY_EXPORT,          /* 11 */
-    SSL_POLICY_FRANCE,          /* 12 */
+    SSL_ENABLE_SSL2,            /* 0 */         /* ssl.h */
+    SSL_ENABLE_SSL3,            /* 1 */         /* ssl.h */
+    SSL_ENABLE_TLS,             /* 2 */         /* ssl.h */
+    PR_SockOpt_NoDelay,         /* 3 */         /* prio.h */
+    PR_SockOpt_Keepalive,       /* 4 */         /* prio.h */
+    PR_SHUTDOWN_RCV,            /* 5 */         /* prio.h */
+    PR_SHUTDOWN_SEND,           /* 6 */         /* prio.h */
+    SSL_REQUIRE_CERTIFICATE,    /* 7 */         /* ssl.h */
+    SSL_REQUEST_CERTIFICATE,    /* 8 */         /* ssl.h */
+    SSL_NO_CACHE,               /* 9 */         /* ssl.h */
+    SSL_POLICY_DOMESTIC,        /* 10 */        /* ssl.h */
+    SSL_POLICY_EXPORT,          /* 11 */        /* ssl.h */
+    SSL_POLICY_FRANCE,          /* 12 */        /* ssl.h */
+    SSL_BYPASS_PKCS11,          /* 13 */        /* ssl.h */
+    SSL_ROLLBACK_DETECTION,     /* 14 */        /* ssl.h */
+    SSL_NO_STEP_DOWN,           /* 15 */        /* ssl.h */
+    SSL_ENABLE_FDX,             /* 16 */        /* ssl.h */
+    SSL_V2_COMPATIBLE_HELLO,    /* 17 */        /* ssl.h */
 
     0
 };
@@ -514,6 +522,32 @@ Java_org_mozilla_jss_ssl_SocketBase_setSSLOption
 finish:
     EXCEPTION_CHECK(env, sock)
     return;
+}
+
+JNIEXPORT jint JNICALL
+Java_org_mozilla_jss_ssl_SocketBase_getSSLOption(JNIEnv *env,
+                                        jobject self, jint option)
+{
+    PRSocketOptionData sockOptions;
+    JSSL_SocketData *sock = NULL;
+    SECStatus status = SECSuccess;
+    PRBool bOption = PR_FALSE;
+
+    if( JSSL_getSockData(env, self, &sock) != SECSuccess ) {
+        goto finish;
+    }
+
+    /* get the option */
+    status = SSL_OptionGet(sock->fd, JSSL_enums[option], &bOption);
+    if( status != SECSuccess ) {
+        JSSL_throwSSLSocketException(env, "SSL_OptionGet failed");
+        goto finish;
+    }
+
+    
+finish:
+    EXCEPTION_CHECK(env, sock)
+    return bOption;
 }
 
 PRStatus

@@ -372,7 +372,7 @@ public class SSLServerSocket extends java.net.ServerSocket {
 
     /**
      * Enables SSL v3 on this socket. It is enabled by default, unless the
-     *  default has been changed with <code>SSLSocket.enableSSL3Default</code>.
+     * default has been changed with <code>SSLSocket.enableSSL3Default</code>.
      */
     public void enableSSL3(boolean enable) throws SocketException {
         base.enableSSL3(enable);
@@ -380,12 +380,75 @@ public class SSLServerSocket extends java.net.ServerSocket {
 
     /**
      * Enables TLS on this socket. It is enabled by default, unless the
-     *  default has been changed with <code>SSLSocket.enableTLSDefault</code>.
+     * default has been changed with <code>SSLSocket.enableTLSDefault</code>.
      */
     public void enableTLS(boolean enable) throws SocketException {
         base.enableTLS(enable);
     }
 
+    /**
+     * Enables the bypass of PKCS11 for performance on this socket. 
+     * It is disabled by default, unless the default has been changed 
+     * with <code>SSLSocket.bypassPKCS11Default</code>.
+     */
+    public void bypassPKCS11(boolean enable) throws SocketException {
+        base.bypassPKCS11(enable);
+    }
+
+    /**
+     * Enable rollback detection for this socket.
+     * It is enabled by default, unless the default has been changed 
+     * with <code>SSLSocket.enableRollbackDetectionDefault</code>.
+     */
+    public void enableRollbackDetection(boolean enable) throws SocketException {
+        base.enableRollbackDetection(enable);
+    }
+    
+    /**
+     * This option, enableStepDown, is concerned with the generation 
+     * of step-down keys which are used with export suites.
+     * If the server cert's public key is 512 bits or less,
+     * this option is ignored because step-down keys don't
+     * need to be generated.
+     * If the server cert's public key is more than 512 bits,
+     * this option has the following effect:
+     * enable=true:  generate step-down keys
+     * enable=false: don't generate step-down keys; disable
+     * export cipher suites
+     *
+     * This option is enabled by default; unless the default has  
+     * been changed with <code>SSLSocket.enableStepDownDefault</code>.
+     */
+    public void enableStepDown(boolean enable) throws SocketException {
+        base.enableStepDown(enable);
+    }
+
+    /**
+     * Enable simultaneous read/write by separate read and write threads 
+     * (full duplex) for this socket.
+     * It is disabled by default, unless the default has been changed 
+     * with <code>SSLSocket.enableFDXDefault</code>.
+     */
+    public void enableFDX(boolean enable) throws SocketException {
+        base.enableFDX(enable);
+    }
+
+    /**
+     * Enable sending v3 client hello in v2 format for this socket.
+     * It is enabled by default, unless the default has been changed 
+     * with <code>SSLSocket.enableV2CompatibleHelloDefault</code>.
+     */
+    public void enableV2CompatibleHello(boolean enable) throws SocketException {
+        base.enableV2CompatibleHello(enable);
+    }
+
+    /**
+     * @return a String listing  the current SSLOptions for this socket.
+     */
+    public String getSSLOptions() {
+        return base.getSSLOptions();
+    }
+        
     /**
      * @return the local address of this server socket.
      */
