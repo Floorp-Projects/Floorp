@@ -2498,10 +2498,6 @@ function my_dccchat(e)
 CIRCDCCChat.prototype.onInit =
 function my_dccinit(e)
 {
-    /* FIXME: we're currently 'borrowing' the client views' prefs until we have
-     * our own pref manager.
-     */
-    this.prefs = client.prefs;
 }
 
 CIRCDCCChat.prototype._getParams =
@@ -2513,7 +2509,7 @@ function my_dccgetparams()
 CIRCDCCChat.prototype.onPrivmsg =
 function my_dccprivmsg(e)
 {
-    this.displayHere(e.line, "PRIVMSG", e.user, "ME!");
+    this.displayHere(toUnicode(e.line, this), "PRIVMSG", e.user, "ME!");
 }
 
 CIRCDCCChat.prototype.onCTCPAction =

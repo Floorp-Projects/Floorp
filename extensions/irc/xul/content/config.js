@@ -53,6 +53,10 @@ function CIRCNetwork() {}
 function CIRCServer() {}
 function CIRCChannel() {}
 function CIRCChanUser() {}
+function CIRCUser() {}
+function CIRCDCCUser() {}
+function CIRCDCCChat() {}
+function CIRCDCCFileTransfer() {}
 
 function getObjectDetails(obj)
 {

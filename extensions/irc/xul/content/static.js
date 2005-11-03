@@ -1689,6 +1689,26 @@ function getObjectDetails (obj, rv)
             rv.viewType = MSG_TAB;
             break;
 
+        case "IRCDCCUser":
+            //rv.viewType = MSG_USER;
+            rv.user = obj;
+            rv.userName = obj.unicodeName;
+            break;
+
+        case "IRCDCCChat":
+            //rv.viewType = MSG_USER;
+            rv.chat = obj;
+            rv.user = obj.user;
+            rv.userName = obj.unicodeName;
+            break;
+
+        case "IRCDCCFileTransfer":
+            //rv.viewType = MSG_USER;
+            rv.file = obj;
+            rv.user = obj.user;
+            rv.fileName = obj.unicodeName;
+            break;
+
         default:
             /* no setup for unknown object */
             break;
@@ -3272,6 +3292,54 @@ function usr_getprefmgr()
     }
 
     return this._prefManager;
+}
+
+CIRCDCCUser.prototype.__defineGetter__("prefs", dccusr_getprefs);
+function dccusr_getprefs()
+{
+    if (!("_prefs" in this))
+    {
+        this._prefManager = getDCCUserPrefManager(this);
+        this._prefs = this._prefManager.prefs;
+    }
+
+    return this._prefs;
+}
+
+CIRCDCCUser.prototype.__defineGetter__("prefManager", dccusr_getprefmgr);
+function dccusr_getprefmgr()
+{
+    if (!("_prefManager" in this))
+    {
+        this._prefManager = getDCCUserPrefManager(this);
+        this._prefs = this._prefManager.prefs;
+    }
+
+    return this._prefManager;
+}
+
+CIRCDCCChat.prototype.__defineGetter__("prefs", dccchat_getprefs);
+function dccchat_getprefs()
+{
+    return this.user.prefs;
+}
+
+CIRCDCCChat.prototype.__defineGetter__("prefManager", dccchat_getprefmgr);
+function dccchat_getprefmgr()
+{
+    return this.user.prefManager;
+}
+
+CIRCDCCFileTransfer.prototype.__defineGetter__("prefs", dccfile_getprefs);
+function dccfile_getprefs()
+{
+    return this.user.prefs;
+}
+
+CIRCDCCFileTransfer.prototype.__defineGetter__("prefManager", dccfile_getprefmgr);
+function dccfile_getprefmgr()
+{
+    return this.user.prefManager;
 }
 
 CIRCNetwork.prototype.display =

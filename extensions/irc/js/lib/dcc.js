@@ -870,6 +870,9 @@ function serv_ctcp(e)
         return false;
     }
 
+    e.CTCPCode = toUnicode(e.CTCPCode, e.replyTo);
+    e.CTCPData = toUnicode(e.CTCPData, e.replyTo);
+
     e.type = "ctcp-" + e.CTCPCode;
     e.destMethod = "onCTCP" + ary[1][0].toUpperCase() +
                    ary[1].substr(1, ary[1].length).toLowerCase();
@@ -896,13 +899,14 @@ function dchat_ctcp(code, msg)
 {
     msg = msg || "";
 
-    this.connection.sendData("\x01" + code + " " + msg + "\x01\n");
+    this.connection.sendData("\x01" + fromUnicode(code, this) + " " +
+                             fromUnicode(msg, this) + "\x01\n");
 }
 
 CIRCDCCChat.prototype.say =
 function dchat_say (msg)
 {
-    this.connection.sendData(msg + "\n");
+    this.connection.sendData(fromUnicode(msg, this) + "\n");
 }
 
 CIRCDCCChat.prototype.act =

@@ -130,6 +130,9 @@ function initPrefs()
          ["conference.limit",   150,      "appearance.misc"],
          ["connectTries",       -1,       ".connect"],
          ["copyMessages",       true,     "global"],
+         ["dccUserHeader",      true,     "global.header"],
+         ["dccUserLog",         false,    "global.log"],
+         ["dccUserMaxLines",    500,      "global.maxLines"],
          ["dcc.enabled",        true,     "dcc"],
          ["dcc.listenPorts",    [],       "dcc.ports"],
          ["dcc.useServerIP",    true,     "dcc"],
@@ -153,6 +156,7 @@ function initPrefs()
          ["logFile.channel",    "$(network)/channels/$(channel).$y-$m-$d.log",
                                                                         ".log"],
          ["logFile.user",       "$(network)/users/$(user).$y-$m-$d.log",".log"],
+         ["logFile.dccuser",    "dcc/$(user)/$(user).$y-$m-$d.log",     ".log"],
          ["logFolder",          getURLSpecFromFile(logPath.path), ".log"],
          ["messages.click",     gotos[0],   "global.links"],
          ["messages.ctrlClick", gotos[1],   "global.links"],
@@ -238,6 +242,9 @@ function initPrefs()
     CIRCNetwork.prototype.MAX_MESSAGES  = client.prefs["networkMaxLines"];
     CIRCChannel.prototype.MAX_MESSAGES  = client.prefs["channelMaxLines"];
     CIRCChanUser.prototype.MAX_MESSAGES = client.prefs["userMaxLines"];
+    var dccUserMaxLines = client.prefs["dccUserMaxLines"];
+    CIRCDCCChat.prototype.MAX_MESSAGES  = dccUserMaxLines;
+    CIRCDCCFileTransfer.prototype.MAX_MESSAGES = dccUserMaxLines;
     client.MAX_MESSAGES                 = client.prefs["clientMaxLines"];
     client.charset                      = client.prefs["charset"];
 
@@ -554,12 +561,58 @@ function getUserPrefManager(user)
     return prefManager;
 }
 
+function getDCCUserPrefManager(user)
+{
+    function defer(prefName)
+    {
+        return client.prefs[prefName];
+    };
+
+    function makeLogNameUser()
+    {
+        return makeLogName(user, "dccuser");
+    };
+
+    function onPrefChanged(prefName, newValue, oldValue)
+    {
+        onDCCUserPrefChanged(user, prefName, newValue, oldValue);
+    };
+
+    var prefs =
+        [
+         ["charset",          defer, ".connect"],
+         ["collapseMsgs",     defer, "appearance.misc"],
+         ["displayHeader",    client.prefs["dccUserHeader"], "appearance.misc"],
+         ["font.family",      defer, "appearance.misc"],
+         ["font.size",        defer, "appearance.misc"],
+         ["hasPrefs",         false, "hidden"],
+         ["motif.current",    defer, "appearance.motif"],
+         ["outputWindowURL",  defer, "appearance.misc"],
+         ["log",              client.prefs["dccUserLog"], ".log"],
+         ["logFileName",      makeLogNameUser,            ".log"],
+         ["timestamps",       defer, "appearance.timestamps"],
+         ["timestampFormat",  defer, "appearance.timestamps"]
+        ];
+
+    var branch = "extensions.irc.dcc.users." +
+                 pref_mungeName(user.canonicalName) + ".";
+    var prefManager = new PrefManager(branch, client.defaultBundle);
+    prefManager.addPrefs(prefs);
+    prefManager.addObserver({ onPrefChanged: onPrefChanged });
+    client.prefManager.addObserver(prefManager);
+
+    client.prefManagers.push(prefManager);
+
+    return prefManager;
+}
+
 function destroyPrefs()
 {
     if ("prefManagers" in client)
     {
         for (var i = 0; i < client.prefManagers.length; ++i)
             client.prefManagers[i].destroy();
+        client.prefManagers = [];
     }
 }
 
@@ -581,6 +634,11 @@ function onPrefChanged(prefName, newValue, oldValue)
 
         case "connectTries":
             CIRCNetwork.prototype.MAX_CONNECT_ATTEMPTS = newValue;
+            break;
+
+        case "dccUserMaxLines":
+            CIRCDCCFileTransfer.prototype.MAX_MESSAGES  = newValue;
+            CIRCDCCChat.prototype.MAX_MESSAGES  = newValue;
             break;
 
         case "font.family":
@@ -839,6 +897,56 @@ function onUserPrefChanged(user, prefName, newValue, oldValue)
         case "log":
             user.dispatch("sync-log");
             break;
+    }
+}
+
+function onDCCUserPrefChanged(user, prefName, newValue, oldValue)
+{
+    if (client.dcc.users[user.key] != user)
+    {
+        /* this is a stale observer, remove it */
+        user.prefManager.destroy();
+        return;
+    }
+
+    // DCC Users are a pain, they can have multiple views!
+    function updateDCCView(view)
+    {
+        switch (prefName)
+        {
+            case "font.family":
+            case "font.size":
+                view.dispatch("sync-font");
+                break;
+
+            case "motif.current":
+                view.dispatch("sync-motif");
+                break;
+
+            case "outputWindowURL":
+                view.dispatch("sync-window");
+                break;
+
+            case "displayHeader":
+                view.dispatch("sync-header");
+                break;
+
+            case "timestamps":
+            case "timestampFormat":
+                view.dispatch("sync-timestamp");
+                break;
+
+            case "log":
+                view.dispatch("sync-log");
+                break;
+        }
+    };
+
+    for (var i = 0; client.dcc.chats.length; i++)
+    {
+        var chat = client.dcc.chats[i];
+        if (chat.user == user)
+            updateDCCView(chat);
     }
 }
 
