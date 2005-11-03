@@ -86,6 +86,7 @@
 #include "nsIPrefService.h"
 #include "nsIMsgComposeService.h"
 #include "nsIMsgCopyService.h"
+#include "nsICryptoHash.h"
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -1162,7 +1163,6 @@ int nsParseMailMessageState::FinalizeHeaders()
   struct message_header *mdn_dnt;
   struct message_header md5_header;
   struct message_header *content_type;
-  unsigned char md5_bin [16];
   char md5_data [50];
   
   const char *s;
@@ -1336,13 +1336,17 @@ int nsParseMailMessageState::FinalizeHeaders()
         if (! id)
         {
           // what to do about this? we used to do a hash of all the headers...
-#ifdef SIMPLE_MD5
-          HASH_HashBuf(HASH_AlgMD5, md5_bin, (unsigned char *)m_headers,
-            (int) m_headers_fp);
-#else
-          // ### TODO: is it worth doing something different?
-          memcpy(md5_bin, "dummy message id", sizeof(md5_bin));						
-#endif
+          nsCAutoString hash;
+          const char *md5_bin = "dummy message id";
+          nsresult rv;
+          nsCOMPtr<nsICryptoHash> hasher = do_CreateInstance("@mozilla.org/security/hash;1", &rv);
+          if (NS_SUCCEEDED(rv))
+          {
+            if (NS_SUCCEEDED(hasher->Init(nsICryptoHash::MD5)) && 
+              NS_SUCCEEDED(hasher->Update((const PRUint8*) m_headers.GetBuffer(), m_headers.GetSize())) &&
+              NS_SUCCEEDED(hasher->Finish(PR_FALSE, hash)))
+                  md5_bin = hash.get();
+          }
           PR_snprintf (md5_data, sizeof(md5_data),
             "<md5:"
             "%02X%02X%02X%02X%02X%02X%02X%02X"
