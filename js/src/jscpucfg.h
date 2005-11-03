@@ -50,7 +50,7 @@
 
 #if defined(_WIN64)
 
-#if defined(_AMD64_)
+#if defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)
 #define IS_LITTLE_ENDIAN 1
 #undef  IS_BIG_ENDIAN
 
@@ -94,9 +94,9 @@
 #define JS_BYTES_PER_WORD_LOG2   3L
 #define JS_BYTES_PER_DWORD_LOG2  3L
 #define PR_WORDS_PER_DWORD_LOG2  0L
-#else  /* !defined(_AMD64_) */
+#else  /* !(defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)) */
 #error "CPU type is unknown"
-#endif /* !defined(_AMD64_) */
+#endif /* !(defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)) */
 
 #elif defined(_WIN32) || defined(XP_OS2) || defined(WINCE)
 
