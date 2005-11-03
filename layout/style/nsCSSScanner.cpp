@@ -312,7 +312,7 @@ void nsCSSScanner::OutputError()
       do_CreateInstance(gScriptErrorFactory, &rv);
     if (NS_SUCCEEDED(rv)) {
       rv = errorObject->Init(mError.get(),
-                             NS_ConvertASCIItoUCS2(mFileName.get()).get(),
+                             NS_ConvertUTF8toUTF16(mFileName).get(),
                              EmptyString().get(),
                              mErrorLineNumber,
                              mErrorColNumber,
