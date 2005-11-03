@@ -67,7 +67,7 @@ public class SSLClientAuth implements Runnable {
     {
         AlgorithmIdentifier sigAlgID = new AlgorithmIdentifier( sigAlg.toOID());
 
-        Name issuer = new Name();
+        Name issuer = new Name();                                           
         issuer.addCommonName(issuerName);
         issuer.addCountryName("US");
         issuer.addOrganizationName("Mozilla"+rand);
@@ -110,9 +110,10 @@ public class SSLClientAuth implements Runnable {
 
     public void doIt(String[] args) throws Exception {
 
-        if ( args.length != 2 ) {
-	    System.out.println("Usage: java org.mozilla.jss.tests." +
-			       "SSLClientAuth <dbdir> <passwordFile>");
+        if ( args.length < 2 ) {
+            System.out.println("Usage: java org.mozilla.jss.tests." +
+                      "SSLClientAuth <dbdir> <passwordFile> [port]" +
+                       " [bypass]");
             System.exit(1);
         }
 
@@ -124,10 +125,19 @@ public class SSLClientAuth implements Runnable {
         PasswordCallback cb = new FilePasswordCallback(args[1]);
         tok.login(cb);
 
+        if (args.length == 3) {
+            port = new Integer(args[2]).intValue();
+            System.out.println("using port:" + port);
+        }
+        
+        if (args.length == 4 && (args[3].equalsIgnoreCase("bypass") == true)) {
+           org.mozilla.jss.ssl.SSLSocket.bypassPKCS11Default(true);                
+           System.out.println("enabled bypassPKCS11 mode for all sockets");
+           System.out.println(SSLSocket.getSSLDefaultOptions());
+        }
         SecureRandom rng= SecureRandom.getInstance("pkcs11prng",
             "Mozilla-JSS");
         int rand = nextRandInt(rng);
-
 
         // generate CA cert
         // 512-bit RSA Key with default exponent
@@ -254,7 +264,7 @@ public class SSLClientAuth implements Runnable {
 
     private boolean success = true;
 
-    public static int port = 29752;
+    public int port = 29752;
 
     public boolean serverReady = false;
 

@@ -88,17 +88,17 @@ public class JSS_SSLServer  {
     private String        serverHost      = "localhost";
     private boolean       TestInetAddress = false;
     private boolean       success         = true;
-    public  static int    port            = 29750;
+    public  int           port            = 29750;
     public  static String usage           = "USAGE: java JSS_SSLServer " +
-            "<cert db path> passwords server_name " +
-            "servercertnick [ true | false ]";
+            "<cert db path> <passwords> <server_name> " +
+            "<servercertnick> [ true | false ] [ portNumber ] [ bypass ]";
     
     public void doIt(String[] args) throws Exception {
         
-        if ( args.length < 1 ) {
+        if ( args.length < 4 ) {
             System.out.println(usage);
-            System.exit(0);
-        }
+            System.exit(1);
+        }               
         
         CryptoManager.initialize(args[0]);
         CryptoManager    cm = CryptoManager.getInstance();
@@ -108,8 +108,19 @@ public class JSS_SSLServer  {
         serverHost          = args[2]; // localhost
         serverCertNick      = args[3]; // servercertnick
         
-        if (args[4].equalsIgnoreCase("true") == true) {
+        if ((args.length >= 5) && args[4].equalsIgnoreCase("true") == true) {
             TestInetAddress = true;
+            System.out.println("testing Inet Address");
+        }
+        
+        if ((args.length >= 6)) {
+            port = new Integer(args[5]).intValue();
+            System.out.println("using port: " + port);
+        }       
+        
+        if ((args.length == 7) && args[6].equalsIgnoreCase("bypass")== true) {
+            org.mozilla.jss.ssl.SSLSocket.bypassPKCS11Default(true);                
+            System.out.println("enabled bypassPKCS11 mode for all sockets");
         }
         
         // We have to configure the server session ID cache before

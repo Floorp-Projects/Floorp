@@ -57,6 +57,7 @@ public class JSS_SSLClient {
     private String  clientCertNick      = null;
     private String  serverHost          = null;
     private boolean TestCertCallBack    = false;
+    private boolean testBypass          = false;
     private boolean success             = true;
     private int     fCipher             = -1;
     private int     port                = 29753;
@@ -132,6 +133,14 @@ public class JSS_SSLClient {
         return fCertDbPath;
     }
     
+    /**
+     * Enable/disable Test Cert Callback.
+     * @param boolean
+     */
+    public void setBypass(boolean bypass) {
+        testBypass = bypass;
+    }
+
     /**
      * Enable/disable Test Cert Callback.
      * @param boolean
@@ -222,6 +231,10 @@ public class JSS_SSLClient {
                     port);
         }
         
+        if (testBypass) {
+            //enable bypass for this socket. 
+            sock.bypassPKCS11(true); 
+        }
         if ( Constants.debug_level >= 3 )
             System.out.println("clientCertNick=" + clientCertNick);
         sock.setClientCertNickname(clientCertNick);
@@ -312,16 +325,18 @@ public class JSS_SSLClient {
         int     testport   = 29753;
         String  certDbPath = null;
         String  passwdFile = "passwords";
+        boolean bypass = false;
         
         String  usage      = "USAGE:\n" +
                 "java org.mozilla.jss.tests.JSS_SSLClient" +
                 " <cert db path> <password file>\n" +
-                " <test cipher> <server host> <server port>";
+                " [server port] [bypass] [test cipher] [server host] ";
         
         try {
-            if ( ((String)args[0]).toLowerCase().equals("-h") ) {
+            if ( ((String)args[0]).toLowerCase().equals("-h") || 
+                    args.length < 2) {
                 System.out.println(usage);
-                System.exit(0);
+                System.exit(1);
             }
             
             if ( args.length >= 2 ) {
@@ -332,14 +347,25 @@ public class JSS_SSLClient {
             if ( certDbPath != null)
                 setCertDbPath(certDbPath);
             
-            if ( args.length >= 3 ) {
-                testCipher = new Integer(args[2]).intValue();
+            if ( args.length >= 3) {
+                testport   = new Integer(args[2]).intValue();
+                System.out.println("using port: " + testport);
             }
             
-            if ( args.length >= 5 ) {
-                testhost   = (String)args[3];
-                testport   = new Integer(args[4]).intValue();
+            if ((args.length >= 4) && 
+                args[3].equalsIgnoreCase("bypass")== true) {
+                bypass = true;
             }
+
+            if ( args.length >= 5 ) {
+                testCipher = new Integer(args[4]).intValue();
+                System.out.println("testCipher " + testCipher);
+            }
+            if ( args.length == 6 ) {
+                testhost   = (String)args[5];
+                System.out.println("testhost" + testhost);
+            }
+            
             Thread.sleep(5000);
         } catch (Exception e) {
             System.out.println("Exception caught " + e.toString());
@@ -354,6 +380,7 @@ public class JSS_SSLClient {
             if ( testport != 29753 )
                 jssTest.setPort(testport);
             
+            jssTest.setBypass(bypass);
             jssTest.setTestCertCallback(true);
             jssTest.setClientCertNick(certnick);
             

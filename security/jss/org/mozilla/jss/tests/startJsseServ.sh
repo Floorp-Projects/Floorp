@@ -42,7 +42,8 @@
 # 
 JSS_CLASSPATH=$1
 TESTDIR=$2
-shift 2
+Port=$3
+shift 3
 JAVA_BIN_AND_OPT=$@
 
 if [ -z "$JAVA_BIN_AND_OPT" ] ;
@@ -50,5 +51,5 @@ then
   JAVA_BIN_AND_OPT=${JAVA_HOME}/bin/java
 fi
 
-${JAVA_BIN_AND_OPT} -classpath ${JSS_CLASSPATH} org.mozilla.jss.tests.JSSE_SSLServer 29753 SSLv3 false ${TESTDIR} &
+${JAVA_BIN_AND_OPT} -classpath ${JSS_CLASSPATH} org.mozilla.jss.tests.JSSE_SSLServer ${Port} SSLv3 false ${TESTDIR} &
 

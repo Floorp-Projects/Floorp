@@ -49,7 +49,7 @@ public class JSSE_SSLServer extends ClassServer {
     private static int port              = DefaultServerPort;
     private static String type           = "SSLv3";
     private static String keystoreLoc    = "keystore.pfx";
-    
+    private static boolean bClientAuth   = false;
     /**
      * Constructs a JSSE_SSLServer.
      * @param path the path where the server locates files
@@ -90,23 +90,36 @@ public class JSSE_SSLServer extends ClassServer {
         String keystoreLoc = "keystore.pfx";
         if ( args.length <= 1 ) {
             System.out.println(
-                    "USAGE: java JSSE_SSLServer port [TLS | SSLv3 [true]]");
-            System.out.println("<keystore location>");
+                    "USAGE: java JSSE_SSLServer [port] [TLS | SSLv3 [true]]");
+            System.out.println("[keystore location]");
             System.out.println(
                     "\nIf the second argument is TLS, it will start as a\n" +
                     "TLS server, otherwise, it will be started in SSLv3 mode." +
                     "\nIf the third argument is true,it will require\n" +
                     "client authentication as well.");
-            System.exit(0);
+            System.exit(1);
         }
         
-        if (args.length >= 2) {
+        if (args.length >= 1) {
             port = Integer.parseInt(args[0]);
-            type = args[1];
-            keystoreLoc = args[3];
-	    if ( keystoreLoc != null )
-                setKeystoreLoc(keystoreLoc);
         }
+        if (args.length >= 2) {
+            type = args[1];
+        }
+        if (args.length >= 3 && args[2].equals("true")) {
+            bClientAuth = true;
+        }
+        if (args.length >= 4) {
+            keystoreLoc = args[3];
+            if ( keystoreLoc != null ) {
+                setKeystoreLoc(keystoreLoc);
+            }
+        }
+
+        System.out.println("using port: " + port);
+        System.out.println ("mode type " + type + 
+                           (bClientAuth ? "true" : "false"));
+        System.out.println("keystoreLoc" + keystoreLoc);
         
         try {
             SSLServerSocketFactory ssf =
@@ -123,10 +136,7 @@ public class JSSE_SSLServer extends ClassServer {
                 System.out.println("*** Using J2SE 1.5.x ***");
                 ss.setEnabledCipherSuites(Constants.sslciphersarray_jdk150);
             }
-            
-            if (args.length >= 3 && args[2].equals("true")) {
-                ((SSLServerSocket)ss).setNeedClientAuth(true);
-            }
+               ((SSLServerSocket)ss).setNeedClientAuth(bClientAuth);
             new JSSE_SSLServer(ss);
         } catch (IOException e) {
             System.out.println("Unable to start ClassServer: " +

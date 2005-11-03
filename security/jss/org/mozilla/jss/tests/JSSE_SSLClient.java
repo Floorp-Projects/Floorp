@@ -302,7 +302,8 @@ public class JSSE_SSLClient {
             try {
                 ks.load(new FileInputStream(getKeystoreLoc()), passphrase);
             } catch (Exception keyEx) {
-                System.out.println("DEBUG 306: Exception : " + keyEx.getMessage());
+                System.out.println(keyEx.getMessage());
+                System.exit(1);
             }
             kmf.init(ks, passphrase);
             
@@ -656,19 +657,26 @@ public class JSSE_SSLClient {
         int    testPort         = 29750;
         String usage            = "java org.mozilla.jss.tests.JSSE_SSLClient" +
                 "\n<keystore location> " +
-                "<test cipher> <test host> <test port>";
+                "<test port> <test cipher> <test host> ";
         
         try {
-            if ( args[0].toLowerCase().equals("-h") ) {
+            if ( args[0].toLowerCase().equals("-h") || args.length < 1) {
                 System.out.println(usage);
-                System.exit(0);
+                System.exit(1);
             }
             
             if ( args.length >= 1 ) {
                 keystoreLocation = (String)args[0];
-                testCipher       = (String)args[1];
-                testHost         = (String)args[2];
-                testPort         = new Integer(args[3]).intValue();
+            }
+            if ( args.length >= 2) {
+                testPort         = new Integer(args[1]).intValue();
+                System.out.println("using port: " + testPort);
+            }
+            if ( args.length >= 3) {
+                testCipher       = (String)args[2];
+            }
+            if ( args.length == 4) {
+                testHost         = (String)args[3];
             }
         } catch (Exception e) { }
         
@@ -685,5 +693,6 @@ public class JSSE_SSLClient {
             Thread.currentThread().sleep(1000);
         } catch (Exception e) { }
         sslSock.testSslClient(testCipher, testHost, testPort, keystoreLocation);
+        System.exit(0);
     }
 }

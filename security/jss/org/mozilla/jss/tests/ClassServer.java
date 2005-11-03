@@ -109,12 +109,21 @@ public abstract class ClassServer implements Runnable {
                            "communication test :");
         System.out.println("-------------------------------------------" +
                            "-------------");
-        for ( int i=0; i<supportedCiphers.size(); i++ ) {
-            for ( int j=0; j<Constants.jssCipherSuites.length; j++ ) {
-               if ( new Integer(
-                        (String)supportedCiphers.elementAt(i)).intValue() == 
-                                        Constants.jssCipherSuites[j] ) {
-                    System.out.println("["+i+"]\t" + 
+        System.out.println("supportedCiphers.size " + supportedCiphers.size());
+        System.out.println("Constants.jssCiphersSuites "+  
+                            Constants.jssCipherSuites.length);
+        System.out.println("Constants.jssCiphersNames " + 
+                            Constants.jssCipherNames.length);
+        
+        for ( int i=0; i<(supportedCiphers.size()-1); i++ ) {
+            System.out.print(i + " SC " +
+            new Integer((String)supportedCiphers.elementAt(i)).intValue()); 
+            
+            for ( int j=0; j<(Constants.jssCipherSuites.length-1); j++ ) {
+               if (new Integer((String)supportedCiphers.elementAt(i)).intValue() 
+                   == Constants.jssCipherSuites[j] ) {
+                    System.out.print(" JSSC "  + Constants.jssCipherSuites[j] );
+                    System.out.println(" ["+ i +"]\t" + 
                                        Constants.jssCipherNames[j]);
                     System.out.flush();
                 }
