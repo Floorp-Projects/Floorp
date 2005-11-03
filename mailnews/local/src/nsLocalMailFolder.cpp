@@ -1688,8 +1688,11 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 
   (void) WarnIfLocalFileTooBig(msgWindow, &mailboxTooLarge);
   if (mailboxTooLarge)
+  {
+    if (isMove)
+      srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgFailedAtom);
     return OnCopyCompleted(srcSupport, PR_FALSE);
-
+  }
   nsXPIDLCString uri;
   rv = srcFolder->GetURI(getter_Copies(uri));
   nsCAutoString protocolType(uri);
@@ -1725,7 +1728,11 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   
   rv = InitCopyState(srcSupport, messages, isMove, listener, msgWindow, isFolder, allowUndo);
   if (NS_FAILED(rv))
-    return OnCopyCompleted(srcSupport, PR_FALSE);
+  {
+    ThrowAlertMsg("operationFailedFolderBusy", msgWindow);
+    (void) OnCopyCompleted(srcSupport, PR_FALSE);
+    return rv;
+  }
 
   if (!protocolType.LowerCaseEqualsLiteral("mailbox"))
   {
