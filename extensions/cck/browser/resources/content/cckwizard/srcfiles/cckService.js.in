@@ -111,6 +111,57 @@ CCKService.prototype={
       return;
     }
     
+    if ("@mozilla.org/windows-registry-key;1" in Components.classes) {
+      const nsIWindowsRegKey = Components.interfaces.nsIWindowsRegKey;
+    
+      for (var i=1; i<=5; i++) {
+        try {
+          RootKey = bundle.GetStringFromName("Root Key" + i);
+          Key = bundle.GetStringFromName("Key" + i);
+          Name = bundle.GetStringFromName("Name" + i);
+          NameValue = bundle.GetStringFromName("Name Value" + i);
+          Type = bundle.GetStringFromName("Type" + i);
+        } catch (ex) {
+          RootKey = "";
+        }
+        if (RootKey && RootKey.length) {
+          var key = Components.classes["@mozilla.org/windows-registry-key;1"]
+                              .createInstance(nsIWindowsRegKey);
+          var rootKey;
+          switch (RootKey) {
+            case "HKEY_CLASSES_ROOT":
+              rootKey = nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT;
+              break;
+            case "HKEY_CURRENT_USER":
+              rootKey = nsIWindowsRegKey.ROOT_KEY_CURRENT_USER;
+              break;
+            default:
+              rootKey = nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE;
+              break;
+          }
+   
+          key.create(rootKey, Key, nsIWindowsRegKey.ACCESS_WRITE);
+          
+          switch (Type) {
+            case "REG_DWORD":
+              key.writeIntValue(Name, NameValue);
+              break;
+            case "REG_QWORD":
+              key.writeInt64Value(Name, NameValue);
+              break;
+            case "REG_BINARY":
+              key.writeBinaryValue(Name, NameValue);
+              break;
+            case "REG_SZ":
+            default:
+              key.writeStringValue(Name, NameValue);
+              break;
+          }
+          key.close();
+        }
+      }
+    } 
+
     const nsIX509CertDB2 = Components.interfaces.nsIX509CertDB2;
     const nsX509CertDBContractID = "@mozilla.org/security/x509certdb;1";
     var certDB = Components.classes[nsX509CertDBContractID].getService(nsIX509CertDB2);
