@@ -45,6 +45,35 @@ function initMessages()
     client.messageManager.loadBrands();
     client.defaultBundle = client.messageManager.addBundle(path);
 
+    // Check we have a compatible locale version!
+    var localeVer = getMsg("locale.version");
+    // We only care if the required version is newer than the selected (== -1).
+    if (compareVersions(__cz_locale, localeVer) < 0)
+    {
+        var selectedLocale = MSG_UNKNOWN;
+        try
+        {
+            var chromeReg = getService("@mozilla.org/chrome/chrome-registry;1",
+                                       "nsIXULChromeRegistry");
+            selectedLocale = chromeReg.getSelectedLocale("chatzilla");
+        }
+        catch (ex) {}
+        var msg = getMsg("locale.error", [__cz_version, __cz_locale,
+                                          selectedLocale, localeVer]);
+        if (msg == "locale.error")
+        {
+            // Yes, this is not localized - but that's only for when we don't
+            // *have* the localized string!
+            msg = "ChatZilla " + __cz_version + " locale mismatch!\n\n" +
+                  "Expected locale version " + __cz_locale +
+                  ", but currently selected locale (" + selectedLocale +
+                  ") is version " + localeVer + ".";
+        }
+        if (typeof MSG_ALERT == "undefined")
+            MSG_ALERT = "Alert";
+        alert(msg);
+    }
+
     client.viewName = client.unicodeName = MSG_CLIENT_NAME;
     client.responseCodeMap =
         {

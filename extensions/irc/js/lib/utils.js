@@ -1166,3 +1166,25 @@ function getSISpeed(speed)
     return getMsg(MSG_SI_SPEED, [data[1], getMsg("msg.si.speed." + data[0])]);
 }
 
+// Returns -1 if version 1 is newer, +1 if version 2 is newer, and 0 for same.
+function compareVersions(ver1, ver2)
+{
+    var ver1parts = ver1.split(".");
+    var ver2parts = ver2.split(".");
+
+    while ((ver1parts.length > 0) && (ver2parts.length > 0))
+    {
+        if (ver1parts[0] < ver2parts[0])
+            return 1;
+        if (ver1parts[0] > ver2parts[0])
+            return -1;
+        ver1parts.shift();
+        ver2parts.shift();
+    }
+    if (ver1parts.length > 0)
+        return -1;
+    if (ver2parts.length > 0)
+        return 1;
+    return 0;
+}
+
