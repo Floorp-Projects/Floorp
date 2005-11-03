@@ -13668,7 +13668,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = "compiled.mach-o.bundle";
 			name = libuniversalchardet.dylib;
-			path = ../extensions/universalchardet/src/libuniversalchardet.dylib;
+			path = ../extensions/universalchardet/src/xpcom/libuniversalchardet.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -16561,7 +16561,7 @@
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
 			name = libuniversalchardet.a;
-			path = ../extensions/universalchardet/src/libuniversalchardet.a;
+			path = ../extensions/universalchardet/src/xpcom/libuniversalchardet.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
