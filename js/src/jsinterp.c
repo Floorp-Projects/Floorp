@@ -1283,11 +1283,13 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
          * references to such results.
          */
         *rval = POP_OPND();
-        if (cx->localRootStack) {
-            if (js_PushLocalRoot(cx, cx->localRootStack, *rval) < 0)
-                ok = JS_FALSE;;
-        } else {
-            cx->lastInternalResult = *rval;
+        if (JSVAL_IS_GCTHING(*rval)) {
+            if (cx->localRootStack) {
+                if (js_PushLocalRoot(cx, cx->localRootStack, *rval) < 0)
+                    ok = JS_FALSE;
+            } else {
+                cx->lastInternalResult = *rval;
+            }
         }
     }
 
