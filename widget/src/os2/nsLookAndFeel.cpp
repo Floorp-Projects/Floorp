@@ -221,9 +221,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_buttondefault:
       idx = SYSCLR_BUTTONDEFAULT;
       break;
+    case eColor__moz_menubarhovertext: {
+      idx = SYSCLR_MENUTEXT;
+      break;
     default:
-        idx = SYSCLR_WINDOW;
-        break;
+      idx = SYSCLR_WINDOW;
+      break;
     }
 
   long lColor = WinQuerySysColor( HWND_DESKTOP, idx, 0);
