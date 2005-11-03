@@ -42,9 +42,7 @@
 
 #include "jsosdep.h"
 
-#ifdef __WATCOMC__
-#define HAVE_VA_LIST_AS_ARRAY
-#endif
+#if defined(XP_WIN) || defined(XP_OS2) || defined(WINCE)
 
 #if defined(_WIN64)
 
@@ -98,6 +96,10 @@
 
 #elif defined(_WIN32) || defined(XP_OS2) || defined(WINCE)
 
+#ifdef __WATCOMC__
+#define HAVE_VA_LIST_AS_ARRAY
+#endif
+
 #define IS_LITTLE_ENDIAN 1
 #undef  IS_BIG_ENDIAN
 
@@ -143,7 +145,7 @@
 #define PR_WORDS_PER_DWORD_LOG2  1L
 #endif /* _WIN32 || XP_OS2 || WINCE*/
 
-#elif defined(_WINDOWS) && !defined(_WIN32) /* WIN16 */
+#if defined(_WINDOWS) && !defined(_WIN32) /* WIN16 */
 
 #define IS_LITTLE_ENDIAN 1
 #undef  IS_BIG_ENDIAN
