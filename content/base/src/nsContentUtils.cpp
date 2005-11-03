@@ -923,6 +923,26 @@ nsContentUtils::GetDocumentFromCaller()
   return doc;
 }
 
+nsIDOMDocument *
+nsContentUtils::GetDocumentFromContext()
+{
+  JSContext *cx = nsnull;
+  sThreadJSContextStack->Peek(&cx);
+
+  if (cx) {
+    nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(cx);
+
+    if (sgo) {
+      nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(sgo);
+      if (pwin) {
+        return pwin->GetExtantDocument();
+      }
+    }
+  }
+
+  return nsnull;
+}
+
 PRBool
 nsContentUtils::IsCallerChrome()
 {
