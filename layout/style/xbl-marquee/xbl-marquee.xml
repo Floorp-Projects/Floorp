@@ -51,36 +51,65 @@
     </resources>
     <implementation>
 
-      <field name="defaultScrollAmount">6</field>
+      <field name="_scrollAmount">6</field>
       <property name="scrollAmount">
         <getter>
-          if (this.hasAttribute("scrollamount"))
-            return this.getAttribute("scrollamount");
-          return this.defaultScrollAmount; //default value is 6 pixels
-        </getter>
-        <setter>
-          this.setAttribute("scrollamount", val);
-        </setter>
-      </property>
-
-      <field name="defaultScrollDelay">85</field>
-      <property name="scrollDelay">
-        <getter>
           <![CDATA[
-          var rv = this.defaultScrollDelay; //default value is 85 ms
+          var val = this.getAttribute("scrollamount");
 
-          if (this.hasAttribute("scrolldelay")) {
-            rv = this.getAttribute("scrolldelay");
+          if (val <= 0 || isNaN(val) || val == null)
+            return this._scrollAmount;
 
-            //marquee doesn't allow anything shorter than 40 ms
-            if (rv < 40)
-              rv = 40;
-          }
-          return rv;
+          return val;
           ]]>
         </getter>
         <setter>
+          <![CDATA[
+          this._set_scrollAmount(val, true);
+          this.setAttribute("scrollamount", val);
+          ]]>
+        </setter>
+      </property>
+
+      <field name="_scrollDelay">85</field>
+      <property name="scrollDelay">
+        <getter>
+          <![CDATA[
+          var val = this.getAttribute("scrolldelay");
+
+          if (val <= 0 || isNaN(val) || val == null)
+            return this._scrollDelay;
+
+          return val;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          this._set_scrollDelay(val, true);
           this.setAttribute("scrolldelay", val);
+          ]]>
+        </setter>
+      </property>
+
+      <property name="trueSpeed">
+        <getter>
+          <![CDATA[
+          if (!this.hasAttribute("trueSpeed"))
+            return false;
+
+          return true;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+          if (val == false)
+            this.removeAttribute('truespeed');
+          else
+            this.setAttribute("truespeed", "truespeed");
+
+          //needed to update this._scrollDelay
+          this._set_scrollDelay(this.getAttribute('scrolldelay'), false);
+          ]]>
         </setter>
       </property>
 
@@ -145,6 +174,46 @@
 
       <!-- For sniffing purposes -->
       <field name="nsMarqueeVersion">"0.9.7"</field>
+
+      <method name="_set_scrollDelay">
+        <parameter name="val"/>
+        <parameter name="aCanGenerateError"/>
+        <body>
+        <![CDATA[
+          if (val <= 0 || isNaN(val) || val == null) {
+            if (aCanGenerateError)
+              throw new Error("Invalid argument for Marquee::scrollDelay");
+            return;
+          }
+
+          if (val < 60) {
+            if (this.trueSpeed == true)
+              this._scrollDelay = val;
+            else
+              this._scrollDelay = 60;
+          }
+          else {
+            this._scrollDelay = val;
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="_set_scrollAmount">
+        <parameter name="val"/>
+        <parameter name="aCanGenerateError"/>
+        <body>
+        <![CDATA[
+          if ((val < 0) || isNaN(val) || val == null) {
+            if (aCanGenerateError)
+              throw new Error("Invalid argument for Marquee::scrollAmount");
+            return;
+          }
+
+          this._scrollAmount = val;
+        ]]>
+        </body>
+      </method>
 
       <method name="start">
         <body>
@@ -226,7 +295,7 @@
               this.newPosition = this.startAt;
           } //end if
 
-          this.newPosition = this.newPosition + (this.dirsign * this.scrollAmount);
+          this.newPosition = this.newPosition + (this.dirsign * this._scrollAmount);
 
           if ((this.dirsign == 1 && this.newPosition > this.stopAt) ||
               (this.dirsign == -1 && this.newPosition < this.stopAt))
@@ -239,7 +308,7 @@
               // swap direction
               const swap = {left: "right", down: "up", up: "down", right: "left"};
               this.directionField = swap[this.directionField];
-              this.newPosition = this.stopAt + (this.dirsign * this.scrollAmount);
+              this.newPosition = this.stopAt + (this.dirsign * this._scrollAmount);
             }
             else
             {
@@ -256,7 +325,7 @@
 
           var myThis = this;
           var lambda = function myTimeOutFunction(){myThis._doMove(false);}
-          this.runId = window.setTimeout(lambda, this.scrollDelay);
+          this.runId = window.setTimeout(lambda, this._scrollDelay);
         ]]>
         </body>
       </method>
@@ -269,6 +338,10 @@
           // store the original height before we add padding
           this.innerDiv.style.padding = 0;
           this.originalHeight = this.innerDiv.offsetHeight;
+                    
+          this._set_scrollDelay(this.getAttribute('scrolldelay'), false);
+          this._set_scrollAmount(this.getAttribute('scrollamount'), false);
+
           this._doMove(true);
         ]]>
         </body>
