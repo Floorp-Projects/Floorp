@@ -65,15 +65,20 @@ static const PRUnichar kAttributeTerminalChars[] = {
 };
 
 static void AppendNCR(nsSubstring& aString, PRInt32 aNCRValue);
-/*
- *  @param   aScanner -- controller of underlying input source
- *  @param   aFlag -- If NS_IPARSER_FLAG_VIEW_SOURCE do not reduce entities...
- *  @return  error result
+/**
+ * Consumes an entity from aScanner and expands it into aString.
  *
+ * @param   aString The target string to append the entity to.
+ * @param   aScanner Controller of underlying input source
+ * @param   aIECompatible Controls whether we respect entities with values >
+ *                        255 and no terminating semicolon.
+ * @param   aFlag If NS_IPARSER_FLAG_VIEW_SOURCE do not reduce entities...
+ * @return  error result
  */
 static
 nsresult ConsumeEntity(nsScannerSharedSubstring& aString,
                        nsScanner& aScanner,
+                       PRBool aIECompatible,
                        PRInt32 aFlag) 
 {
   nsresult result=NS_OK;
@@ -97,7 +102,8 @@ nsresult ConsumeEntity(nsScannerSharedSubstring& aString,
         // Resembling IE!!
 
         nsSubstring &writable = aString.writable();
-        if(theNCRValue < 0 || (theNCRValue > 255 && theTermChar != ';')) {
+        if(theNCRValue < 0 ||
+           (aIECompatible && theNCRValue > 255 && theTermChar != ';')) {
           // Looks like we're not dealing with an entity
           writable.Append(kAmpersand);
           writable.Append(entity);
@@ -146,6 +152,10 @@ nsresult ConsumeEntity(nsScannerSharedSubstring& aString,
  *  @param   aAllowNewlines -- whether to allow newlines in the value.
  *                             XXX it would be nice to roll this info into
  *                             aTerminalChars somehow....
+ *  @param   aIECompatEntities IE treats entities with values > 255 as
+ *                             entities only if they're terminated with a
+ *                             semicolon. This is true to follow that behavior
+ *                             and false to treat all values as entities.
  *  @param   aFlag - contains information such as |dtd mode|view mode|doctype|etc...
  *  @return  error result
  */
@@ -155,6 +165,7 @@ nsresult ConsumeUntil(nsScannerSharedSubstring& aString,
                       nsScanner& aScanner,
                       const nsReadEndCondition& aEndCondition,
                       PRBool aAllowNewlines,
+                      PRBool aIECompatEntities,
                       PRInt32 aFlag)
 {
   nsresult result = NS_OK;
@@ -166,7 +177,7 @@ nsresult ConsumeUntil(nsScannerSharedSubstring& aString,
       PRUnichar ch;
       aScanner.Peek(ch);
       if(ch == kAmpersand) {
-        result = ConsumeEntity(aString,aScanner,aFlag);
+        result = ConsumeEntity(aString, aScanner, aIECompatEntities, aFlag);
       }
       else if(ch == kCR && aAllowNewlines) {
         aScanner.GetChar(ch);
@@ -846,7 +857,7 @@ nsresult CTextToken::ConsumeParsedCharacterData(PRBool aDiscardFirstNewline,
   // will fail, and we'll do the right thing.
   do {
     result = ConsumeUntil(theContent, mNewlineCount, aScanner, 
-                          theEndCondition, PR_TRUE, aFlag);
+                          theEndCondition, PR_TRUE, PR_FALSE, aFlag);
 
     if (aDiscardFirstNewline && 
         (NS_SUCCEEDED(result) || !aScanner.IsIncremental()) &&
@@ -1834,8 +1845,8 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
   nsScannerIterator theOffset;
   aScanner.CurrentPosition(theOffset);
 
-  result=ConsumeUntil(aString,aNewlineCount,aScanner,
-                      *terminateCondition,PR_TRUE,aFlag);
+  result=ConsumeUntil(aString, aNewlineCount, aScanner,
+                      *terminateCondition, PR_TRUE, PR_TRUE, aFlag);
 
   if(NS_SUCCEEDED(result)) {
     result = aScanner.GetChar(aChar); // aChar should be " or '
@@ -1850,8 +1861,8 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
       theAttributeTerminator(kAttributeTerminalChars);
     aString.writable().Truncate(origLen);
     aScanner.SetPosition(theOffset, PR_FALSE, PR_TRUE);
-    result=ConsumeUntil(aString,aNewlineCount,aScanner,
-                        theAttributeTerminator,PR_FALSE,aFlag);
+    result = ConsumeUntil(aString, aNewlineCount, aScanner,
+                          theAttributeTerminator, PR_FALSE, PR_TRUE, aFlag);
     if (NS_SUCCEEDED(result) && (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
       // Remember that this string literal was unterminated.
       result = NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL;
@@ -2000,6 +2011,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                                         aScanner,
                                         theAttributeTerminator,
                                         PR_FALSE,
+                                        PR_TRUE,
                                         aFlag);
                   } 
                 }//if
