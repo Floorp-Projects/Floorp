@@ -193,9 +193,9 @@ var gVersionInfoPage = {
     else {
       // VersionInfo compatibility updates resolved all compatibility problems,
       // close this window and continue starting the application...
-      // We need to click the cancel button to wake up the ui due to the way the
-      // EM is using xmlHttpRequest when checking for updates.
-      document.documentElement.getButton("cancel").click();
+      //XXX Bug 314754 - We need to use setTimeout to close the window due to
+      // the EM using xmlHttpRequest when checking for updates.
+      setTimeout(close, 0);
     }
   },
   
