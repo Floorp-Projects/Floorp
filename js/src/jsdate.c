@@ -337,8 +337,8 @@ MakeDay(jsdouble year, jsdouble month, jsdouble date)
 
 #define MakeDate(day, time) ((day) * msPerDay + (time))
 
-/* 
- * Years and leap years on which Jan 1 is a Sunday, Monday, etc. 
+/*
+ * Years and leap years on which Jan 1 is a Sunday, Monday, etc.
  *
  * yearStartingWith[0][i] is an example non-leap year where
  * Jan 1 appears on Sunday (i == 0), Monday (i == 1), etc.
@@ -778,7 +778,7 @@ date_parseString(JSString *str, jsdouble *result)
     /*
       Case 1. The input string contains an English month name.
               The form of the string can be month f l, or f month l, or
-              f l month which each evaluate to the same date. 
+              f l month which each evaluate to the same date.
               If f and l are both greater than or equal to 70, or
               both less than 70, the date is invalid.
               The year is taken to be the greater of the values f, l.
@@ -786,7 +786,7 @@ date_parseString(JSString *str, jsdouble *result)
               it is considered to be the number of years after 1900.
       Case 2. The input string is of the form "f/m/l" where f, m and l are
               integers, e.g. 7/16/45.
-              Adjust the mon, mday and year values to achieve 100% MSIE 
+              Adjust the mon, mday and year values to achieve 100% MSIE
               compatibility.
               a. If 0 <= f < 70, f/m/l is interpreted as month/day/year.
                  i.  If year < 100, it is the number of years after 1900
@@ -818,7 +818,7 @@ date_parseString(JSString *str, jsdouble *result)
             year += 1900;
         }
     } else if (mon < 100) { /* (b) year/month/day */
-        if (mday < 70) { 
+        if (mday < 70) {
             temp = year;
             year = mon + 1900;
             mon = mday;
@@ -1768,7 +1768,7 @@ date_toLocaleHelper(JSContext *cx, JSObject *obj, uintN argc,
             return date_format(cx, *date, FORMATSPEC_FULL, rval);
 
         /* Hacked check against undesired 2-digit year 00/00/00 form. */
-        if (strcmp(format, "%x") == 0 && result_len >= 6 && 
+        if (strcmp(format, "%x") == 0 && result_len >= 6 &&
             /* Format %x means use OS settings, which may have 2-digit yr, so
                hack end of 3/11/22 or 11.03.22 or 11Mar22 to use 4-digit yr...*/
             !isdigit(buf[result_len - 3]) &&
@@ -2066,7 +2066,7 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         if (!JSVAL_IS_STRING(argv[0])) {
             /* the argument is a millisecond number */
             if (!js_ValueToNumber(cx, argv[0], &d))
-                    return JS_FALSE;
+                return JS_FALSE;
             date = date_constructor(cx, obj);
             if (!date)
                 return JS_FALSE;
