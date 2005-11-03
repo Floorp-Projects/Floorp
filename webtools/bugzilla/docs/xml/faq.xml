@@ -1021,7 +1021,7 @@ password=mypassword
             Double-check that you have not turned off email in your user
             preferences. Confirm that Bugzilla is able to send email by
             visiting the <quote>Log In</quote> link of your Bugzilla
-            installation and clicking the <quote>Email me a password</quote>
+            installation and clicking the <quote>Submit Request</quote>
             button after entering your email address.
           </para>
           <para>
