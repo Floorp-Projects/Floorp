@@ -83,6 +83,7 @@
     MODULE(nsTypeAheadFind) \
     MODULE(nsPermissionsModule) \
     MODULE(nsComposerModule) \
+    MODULE(xpAutoComplete) \
     MODULE(BOOT) \
     MODULE(NSS) \
     /* end of list */

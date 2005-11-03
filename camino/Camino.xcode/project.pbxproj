@@ -1331,6 +1331,7 @@
 				82180ACB07368BF2002EFA6D,
 				3F44ACD005BDFB9F00CB4B08,
 				3F44ACD605BDFB9F00CB4B08,
+				3F44ACD605BDFB9F00CB4B09,
 				3F44ACD805BDFB9F00CB4B08,
 				3F44ACE705BDFB9F00CB4B08,
 				3F44ACE805BDFB9F00CB4B08,
@@ -1433,6 +1434,7 @@
 			children = (
 				82180AC907368BDF002EFA6D,
 				F5F181C90208006F0124611D,
+				F5F181C90208006F0124611E,
 				F507A82C030BFB7901026D5D,
 				F6BD63A601B3131201A962F7,
 				F6BD63A701B3131201A962F7,
@@ -5207,6 +5209,12 @@
 		};
 		3F44ACD605BDFB9F00CB4B08 = {
 			fileRef = F5F181C90208006F0124611D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F44ACD605BDFB9F00CB4B09 = {
+			fileRef = F5F181C90208006F0124611E;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -9958,6 +9966,7 @@
 				3F44AFAA05BDFBA000CB4B08,
 				3F44AFAB05BDFBA000CB4B08,
 				3F44AFAC05BDFBA000CB4B08,
+				3F44AFAD05BDFBA000CB4B09,
 				3F44AFAD05BDFBA000CB4B08,
 				3F44AFAE05BDFBA000CB4B08,
 				3F44AFAF05BDFBA000CB4B08,
@@ -10138,6 +10147,12 @@
 		};
 		3F44AFAD05BDFBA000CB4B08 = {
 			fileRef = F56F248B02AC729901A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F44AFAD05BDFBA000CB4B09 = {
+			fileRef = F56F248B02AC729901A967F4;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -15428,6 +15443,7 @@
 				F56F247302AC723001A967F3,
 				F56F247402AC723001A967F3,
 				F56F248B02AC729901A967F3,
+				F56F248B02AC729901A967F4,
 				F56F248C02AC729901A967F3,
 				F56F248F02AC729901A967F3,
 				F56F249002AC729901A967F3,
@@ -15617,6 +15633,14 @@
 			lastKnownFileType = archive.ar;
 			name = libappcomps.a;
 			path = ../xpfe/components/build/libappcomps.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		F56F248B02AC729901A967F4 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libxpautocomplete.a;
+			path = ../dist/lib/components/libxpautocomplete.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -16594,6 +16618,14 @@
 			lastKnownFileType = "compiled.mach-o.bundle";
 			name = libappcomps.dylib;
 			path = ../xpfe/components/build/libappcomps.dylib;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		F5F181C90208006F0124611E = {
+			isa = PBXFileReference;
+			lastKnownFileType = "compiled.mach-o.bundle";
+			name = libxpautocomplete.dylib;
+			path = ../dist/bin/components/libxpautocomplete.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
