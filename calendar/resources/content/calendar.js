@@ -181,7 +181,18 @@ function update_date()
 
    refreshEventTree();
 
-   setTimeout( "update_date()", milliSecsTillTomorrow ); 
+   // Is an nsITimer/callback extreme overkill here? Yes, but it's necessary to
+   // workaround bug 291386.  If we don't, we stand a decent chance of getting
+   // stuck in an infinite loop.
+   var udCallback = {
+       notify: function(timer) {
+           update_date();
+       }
+   };
+
+   var timer = Components.classes["@mozilla.org/timer;1"]
+                         .createInstance(Components.interfaces.nsITimer);
+   timer.initWithCallback(udCallback, milliSecsTillTomorrow, timer.TYPE_ONE_SHOT);
 }
 
 /** 
