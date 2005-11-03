@@ -2672,6 +2672,12 @@ FindElementBackground(nsPresContext* aPresContext,
   if (document->IsCaseSensitive()) // XHTML, not HTML
     return PR_TRUE;
   
+  nsCOMPtr<nsIDOMHTMLElement> body;
+  htmlDoc->GetBody(getter_AddRefs(body));
+  nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
+  if (bodyContent != content)
+    return PR_TRUE; // this wasn't the background that was propagated
+
   const nsStyleBackground* htmlBG = parentFrame->GetStyleBackground();
   return !htmlBG->IsTransparent();
 }
