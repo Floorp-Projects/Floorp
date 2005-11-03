@@ -32,7 +32,6 @@ use strict;
 
 package Bugzilla::BugMail;
 
-use Bugzilla::DB;
 use Bugzilla::User;
 use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
