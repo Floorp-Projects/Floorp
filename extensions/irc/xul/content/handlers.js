@@ -360,6 +360,11 @@ function onInputKeyPress (e)
             onInputCompleteLine (e);
             break;
 
+        case 37: /* left */
+             if (e.altKey && e.metaKey)
+                 cycleView(-1);
+             break;
+
         case 38: /* up */
             if (e.ctrlKey || e.metaKey)
             {
@@ -382,6 +387,11 @@ function onInputKeyPress (e)
             }
             e.preventDefault();
             break;
+
+        case 39: /* right */
+             if (e.altKey && e.metaKey)
+                 cycleView(+1);
+             break;
 
         case 40: /* down */
             if (client.lastHistoryReferenced > 0)
