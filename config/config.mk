@@ -67,8 +67,6 @@ ifneq ($(DIRS)$(TOOL_DIRS),)
 SUBMAKEFILES		:= $(addsuffix /Makefile, $(TOOL_DIRS) $(filter-out $(STATIC_MAKEFILES), $(DIRS)))
 endif
 
-GRE_DIST	= $(DIST)/gre
-
 # FINAL_TARGET specifies the location into which we copy end-user-shipped
 # build products (typelibs, components, chrome).
 #
