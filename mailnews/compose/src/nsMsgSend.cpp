@@ -3281,6 +3281,15 @@ nsMsgComposeAndSend::Init(
     rv = pPrefBranch->GetIntPref(PREF_MAIL_MESSAGE_WARNING_SIZE, (PRInt32 *) &mMessageWarningSize);
   }
 
+  if (!strictly_mime)
+  {
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIMsgComposeSecure> secureCompose;
+    secureCompose = do_CreateInstance(NS_MSGCOMPOSESECURE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && secureCompose)
+      secureCompose->RequiresCryptoEncapsulation(aUserIdentity, fields, &strictly_mime);
+  }
+
   nsMsgMIMESetConformToStandard(strictly_mime);
   mime_use_quoted_printable_p = strictly_mime;
 
