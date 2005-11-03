@@ -1833,8 +1833,11 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
   nsresult rv = NS_OK;
 
+  // Note: We want to use GetDocumentFromContext here because this document
+  // should inherit the security information of the document that's opening us,
+  // (since if it's secure, then it's presumeably trusted).
   nsCOMPtr<nsIDocument> callerDoc =
-    do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
+    do_QueryInterface(nsContentUtils::GetDocumentFromContext());
 
   // Grab a reference to the calling documents security info (if any)
   // and principal as it may be lost in the call to Reset().

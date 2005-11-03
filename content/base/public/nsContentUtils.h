@@ -274,12 +274,37 @@ public:
   static nsIDocShell *GetDocShellFromCaller();
 
   /**
+   * The two GetDocumentFrom* functions below allow a caller to get at a
+   * document that is relevant to the currently executing script.
+   *
+   * GetDocumentFromCaller gets its document by looking at the last called
+   * function and finding the document that the function itself relates to.
+   * For example, consider two windows A and B in the same origin. B has a
+   * function which does something that ends up needing the current document.
+   * If a script in window A were to call B's function, GetDocumentFromCaller
+   * would find that function (in B) and return B's document.
+   *
+   * GetDocumentFromContext gets its document by looking at the currently
+   * executing context's global object and returning its document. Thus,
+   * given the example above, GetDocumentFromCaller would see that the
+   * currently executing script was in window A, and return A's document.
+   */
+  /**
+   * Get the document from the currently executing function. This will return
+   * the document that the currently executing function is in/from.
+   *
+   * @return The document or null if no JS Context.
+   */
+  static nsIDOMDocument *GetDocumentFromCaller();
+
+  /**
    * Get the document through the JS context that's currently on the stack.
    * If there's no JS context currently on the stack it will return null.
+   * This will return the document of the calling script.
    *
    * @return The document or null if no JS context
    */
-  static nsIDOMDocument *GetDocumentFromCaller();
+  static nsIDOMDocument *GetDocumentFromContext();
 
   // Check if a node is in the document prolog, i.e. before the document
   // element.
