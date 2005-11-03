@@ -362,7 +362,11 @@ typedef ptrdiff_t JSPtrdiff;
 **  A type for pointer difference. Variables of this type are suitable
 **      for storing a pointer or pointer sutraction.
 ************************************************************************/
+#if JS_BYTES_PER_WORD == 8 && JS_BYTES_PER_LONG != 8
+typedef JSUint64 JSUptrdiff;
+#else
 typedef unsigned long JSUptrdiff;
+#endif
 
 /************************************************************************
 ** TYPES:       JSBool
@@ -387,8 +391,13 @@ typedef JSUint8 JSPackedBool;
 /*
 ** A JSWord is an integer that is the same size as a void*
 */
+#if JS_BYTES_PER_WORD == 8 && JS_BYTES_PER_LONG != 8
+typedef JSInt64 JSWord;
+typedef JSUint64 JSUword;
+#else
 typedef long JSWord;
 typedef unsigned long JSUword;
+#endif
 
 #include "jsotypes.h"
 
