@@ -2824,6 +2824,10 @@ js_CompareStrings(JSString *str1, JSString *str2)
     const jschar *s1, *s2;
     intN cmp;
 
+    /* Fast case: pointer equality could be a quick win. */
+    if (str1 == str2)
+        return 0;
+
     l1 = JSSTRING_LENGTH(str1), l2 = JSSTRING_LENGTH(str2);
     s1 = JSSTRING_CHARS(str1),  s2 = JSSTRING_CHARS(str2);
     n = JS_MIN(l1, l2);
