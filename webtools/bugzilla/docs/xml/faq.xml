@@ -1356,7 +1356,7 @@ password=mypassword
             have your choice of patches: 
             <simplelist>
               <member>
-                <ulink url="http://bugzilla.mozilla.org/show_bug?id=35195">Bug 35195</ulink>
+                <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=35195">Bug 35195</ulink>
                 seeks to add an <quote>...and accept the bug</quote> checkbox
                 to the UI. It has two patches attached to it: 
                 <ulink url="http://bugzilla.mozilla.org/showattachment.cgi?attach_id=8029">attachment 8029</ulink>
@@ -1365,7 +1365,7 @@ password=mypassword
                 is an updated version for Bugzilla 2.16
               </member>
               <member>
-                <ulink url="http://bugzilla.mozilla.org/show_bug?id=37613">Bug
+                <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=37613">Bug
                 37613</ulink> also provides two patches (against Bugzilla
                 2.12): one to add a 'Take Bug' option, and the other to
                 automatically reassign the bug on 'Accept'. 
