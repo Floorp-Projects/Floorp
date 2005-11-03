@@ -42,8 +42,6 @@
 
 #include "jsosdep.h"
 
-#if defined(XP_WIN) || defined(XP_OS2) || defined(WINCE)
-
 #ifdef __WATCOMC__
 #define HAVE_VA_LIST_AS_ARRAY
 #endif
