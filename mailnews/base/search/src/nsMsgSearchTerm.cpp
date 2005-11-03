@@ -820,9 +820,9 @@ nsresult nsMsgSearchTerm::MatchBody (nsIMsgSearchScopeTerm *scope, PRUint32 offs
   // since we don't have a MIME parser handy, and we want to err on the
   // side of too many hits rather than not enough, we'll assume in that
   // general direction. Blech. ### FIX ME 
-  // bug fix #88935: for stateful csids like JIS, we don't want to decode
-  // quoted printable since it contains '='.
-  PRBool isQuotedPrintable =  /*!(mail_csid & STATEFUL) && */
+  // bug fix #314637: for stateful charsets like ISO-2022-JP, we don't
+  // want to decode quoted printable since it contains '='.
+  PRBool isQuotedPrintable = !nsMsgI18Nstateful_charset(folderCharset) &&
     (PL_strchr (m_value.string, '=') == nsnull);
   
   while (!endOfFile && result == boolContinueLoop)
