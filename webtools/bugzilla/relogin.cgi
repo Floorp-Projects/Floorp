@@ -23,11 +23,12 @@
 #                 A. Karl Kornel <karl@kornel.name>
 
 use strict;
-
 use lib qw(.);
+
+require "globals.pl";
+
 use Bugzilla;
-use Bugzilla::Auth::Login::WWW;
-use Bugzilla::CGI;
+use Bugzilla::BugMail;
 use Bugzilla::Constants;
 use Bugzilla::Error;
 use Bugzilla::User;
@@ -70,7 +71,7 @@ if ($action eq 'sudo') {
     }
 
     # Show the sudo page
-    $vars->{'will_logout'} = 1 if Bugzilla::Auth::Login::WWW->can_logout;
+    $vars->{'will_logout'} = $user->get_flag('can_logout');
     $target = 'admin/sudo.html.tmpl';
 }
 # transition-sudo: Validate target, logout user, and redirect for session start
@@ -113,11 +114,16 @@ elsif ($action eq 'sudo-transition') {
         ThrowUserError('sudo_protected', { login => $target_user->login });
     }
     
-    # Log out and Redirect user to the new page
+    # If we have a reason passed in, keep it under 200 characters
+    my $reason = $cgi->param('reason') || '';
+    $reason = substr($reason, $[, 200);
+    my $reason_string = '&reason=' . url_quote($reason);
+    
+    # Log out and redirect user to the new page
     Bugzilla->logout();
     $target = 'relogin.cgi';
     print $cgi->redirect($target . '?action=begin-sudo&target_login=' .
-                         url_quote($target_user->login));
+                         url_quote($target_user->login) . $reason_string);
     exit;
 }
 # begin-sudo: Confirm login and start sudo session
@@ -161,6 +167,10 @@ elsif ($action eq 'begin-sudo') {
         ThrowUserError('sudo_protected', { login => $target_user->login });
     }
     
+    # If we have a reason passed in, keep it under 200 characters
+    my $reason = $cgi->param('reason') || '';
+    $reason = substr($reason, $[, 200);
+    
     # Calculate the session expiry time (T + 6 hours)
     my $time_string = time2str('%a, %d-%b-%Y %T %Z', time+(6*60*60), 'GMT');
 
@@ -174,7 +184,14 @@ elsif ($action eq 'begin-sudo') {
     Bugzilla->sudo_request($target_user, Bugzilla->user);
     
     # NOTE: If you want to log the start of an sudo session, do it here.
-    
+
+    # Go ahead and send out the message now
+    my $message;
+    $template->process('email/sudo.txt.tmpl', 
+                       { reason => $reason },
+                       \$message);
+    Bugzilla::BugMail::MessageToMTA($message);
+        
     $vars->{'message'} = 'sudo_started';
     $vars->{'target'} = $target_user->login;
     $target = 'global/message.html.tmpl';

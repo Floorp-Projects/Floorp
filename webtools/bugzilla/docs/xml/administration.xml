@@ -538,12 +538,15 @@
         </note>
         
         <para>
-        If you have access to use this feature, you should notice a link
-        next to your login name (in the footer) titled "sudo".  Click on the 
-        link.  This will take you to a page where you will see a description of 
-        the feature and instructions on how to use it.  After reading the text, 
-        simply enter the login of the user you would like to impersonate and 
-        press the button.</para>
+        If you have access to this feature, you may start a session by
+        going to the Edit Users page, Searching for a user and clicking on 
+        their login.  You should see a link below their login name titled 
+        "Impersonate this user".  Click on the link.  This will take you 
+        to a page where you will see a description of the feature and 
+        instructions for using it.  After reading the text, simply 
+        enter the login of the user you would like to impersonate, provide 
+        a short message explaining why you are doing this, and press the 
+        button.</para>
         
         <para>
         As long as you are using this feature, everything you do will be done 

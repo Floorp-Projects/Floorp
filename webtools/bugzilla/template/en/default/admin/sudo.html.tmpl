@@ -65,7 +65,18 @@
   [% END %]
   
   <p>
-    Next, click the button to begin the session:
+    Next, please take a moment to explain why you are doing this:<br>
+    <input type="text" name="reason" size="80" maxlength="200">
+  </p>
+  
+  <p>
+    The message you enter here will be sent to the impersonated user by email.
+    You may leave this empty if you wish, but they will still know that you 
+    are impersonating them.
+  </p>
+  
+  <p>
+    Finally, click the button to begin the session:
     <input type="submit" value="Begin Session">
     <input type="hidden" name="action" value="sudo-transition">
   </p>
