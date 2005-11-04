@@ -543,7 +543,7 @@ if ($format->{'extension'} eq 'html') {
     DefineColumn("qa_contact_realname" , "map_qa_contact.realname"  , "QA Contact"       );
 }
 DefineColumn("bug_status"        , "bugs.bug_status"            , "Status"           );
-DefineColumn("resolution"        , "bugs.resolution"            , "Result"           );
+DefineColumn("resolution"        , "bugs.resolution"            , "Resolution"       );
 DefineColumn("short_short_desc"  , "bugs.short_desc"            , "Summary"          );
 DefineColumn("short_desc"        , "bugs.short_desc"            , "Summary"          );
 DefineColumn("status_whiteboard" , "bugs.status_whiteboard"     , "Whiteboard"       );
