@@ -290,8 +290,6 @@ public:
 
   NS_IMETHOD SetCardValue(nsIAbCard *card, const char *name, const PRUnichar *value, PRBool notify);
   NS_IMETHOD GetCardValue(nsIAbCard *card, const char *name, PRUnichar **value);
-  NS_IMETHOD AddRowValue(nsIMdbRow *aRow, const nsACString & aLDIFAttributeName, const nsAString & aColValue);
-
 	// nsAddrDatabase methods:
 
 	nsAddrDatabase();

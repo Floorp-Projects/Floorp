@@ -288,20 +288,6 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
   void getDeletedCardList(out unsigned long aCount, out nsISupportsArray aDeletedList); 
   void getDeletedCardCount(out unsigned long count); 
 
-  /**
-   * used for adding a string attributes to a row.
-   * used during LDIF and addressbook import.
-   *
-   * @param aRow
-   *        The row we're adding the column to
-   * @param aLDIFAttributeName
-   *        The column name  (examples: mozillaCategory, 
-   *                                    mozilla_AimScreenName)
-   * @param aColValue
-   *        The column value (example: jabroni316)
-   */
-  [noscript] void addRowValue(in nsIMdbRow aRow, in ACString aLDIFAttributeName, in AString aColValue);
-
   void AddListCardColumnsToRow(in nsIAbCard aPCard,
                                in nsIMdbRow aPListRow,
                                in unsigned long aPos,

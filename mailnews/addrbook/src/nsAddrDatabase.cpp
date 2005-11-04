@@ -3532,23 +3532,6 @@ NS_IMETHODIMP nsAddrDatabase::GetCardFromAttribute(nsIAbDirectory *aDirectory, c
   return rv;
 }
 
-NS_IMETHODIMP nsAddrDatabase::AddRowValue(nsIMdbRow *aRow, const nsACString & aLDIFAttributeName, const nsAString & aColValue)
-{
-  PRInt32 i;
-  for (i = 0; i < EXPORT_ATTRIBUTES_TABLE_COUNT; i++) {
-    // need strcasecmp, LDIF is case insensitive
-    if (nsCRT::strcasecmp(EXPORT_ATTRIBUTES_TABLE[i].ldapPropertyName, PromiseFlatCString(aLDIFAttributeName).get()) == 0) {
-      mdb_token token;
-      GetStore()->StringToToken(GetEnv(), EXPORT_ATTRIBUTES_TABLE[i].abColName, &token);
-      nsresult rv = AddStringColumn(aRow, token, aColValue);
-      NS_ENSURE_SUCCESS(rv,rv);
-      return NS_OK;
-    }
-  }
-  NS_ASSERTION(0, "failed to map LDIF attribute to column");
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP nsAddrDatabase::GetDirectoryName(PRUnichar **name)
 {
     if (m_dbDirectory && name)

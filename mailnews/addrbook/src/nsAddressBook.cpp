@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -87,23 +87,10 @@
 #include "nsAutoPtr.h"
 #include "nsIMsgVCardService.h"
 #include "nsCRT.h"
+#include "nsIAbLDAPAttributeMap.h"
 
 #ifdef MOZ_XUL_APP
 #include "nsICommandLine.h"
-#endif
-
-// according to RFC 2849
-// SEP = (CR LF / LF)
-// so we LF for unix and beos (since that is the natural line ending for
-// those platforms, see nsCRT.h)
-//
-// otherwise we use CR LF (windows linebreak)
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#define LDIF_LINEBREAK          "\012"
-#define LDIF_LINEBREAK_LEN     1
-#else
-#define LDIF_LINEBREAK          "\015\012"
-#define LDIF_LINEBREAK_LEN     2
 #endif
 
 // our schema is not fixed yet, but we still want some sort of objectclass
@@ -112,59 +99,59 @@
 #define MOZ_AB_OBJECTCLASS "mozillaAbPersonAlpha"
 
 const ExportAttributesTableStruct EXPORT_ATTRIBUTES_TABLE[EXPORT_ATTRIBUTES_TABLE_COUNT] = { 
-  {kFirstNameColumn, "givenName", PR_TRUE},
-  {kLastNameColumn, "sn", PR_TRUE},
-  {kDisplayNameColumn, "cn", PR_TRUE},
-  {kNicknameColumn, MOZ_AB_LDIF_PREFIX "Nickname", PR_TRUE},
-  {kPriEmailColumn, "mail", PR_TRUE},
-  {k2ndEmailColumn, MOZ_AB_LDIF_PREFIX "SecondEmail", PR_TRUE},
-  {kDefaultEmailColumn, MOZ_AB_LDIF_PREFIX "DefaultEmail", PR_FALSE},
-  {kCardTypeColumn, MOZ_AB_LDIF_PREFIX "CardType", PR_FALSE},
-  {kAimScreenNameColumn, "nsAIMid", PR_FALSE},
-  {kPreferMailFormatColumn, MOZ_AB_LDIF_PREFIX "UseHtmlMail", PR_FALSE},
-  {kLastModifiedDateColumn, "modifytimestamp", PR_FALSE},
-  {kWorkPhoneColumn, "telephoneNumber", PR_TRUE}, 
-  {kWorkPhoneTypeColumn, MOZ_AB_LDIF_PREFIX "WorkPhoneType", PR_FALSE},
-  {kHomePhoneColumn, "homePhone", PR_TRUE},
-  {kHomePhoneTypeColumn, MOZ_AB_LDIF_PREFIX "HomePhoneType", PR_FALSE},
-  {kFaxColumn, "fax", PR_TRUE},
-  {kFaxTypeColumn, MOZ_AB_LDIF_PREFIX "FaxNumberType", PR_FALSE},
-  {kPagerColumn, "pager", PR_TRUE},
-  {kPagerTypeColumn, MOZ_AB_LDIF_PREFIX "PagerNumberType", PR_FALSE},
-  {kCellularColumn, "mobile", PR_TRUE},
-  {kCellularTypeColumn, MOZ_AB_LDIF_PREFIX "CellularNumberType", PR_FALSE},
-  {kHomeAddressColumn, "homeStreet", PR_TRUE},
-  {kHomeAddress2Column, MOZ_AB_LDIF_PREFIX "HomeStreet2", PR_TRUE},
-  {kHomeCityColumn, MOZ_AB_LDIF_PREFIX "HomeLocalityName", PR_TRUE},
-  {kHomeStateColumn, MOZ_AB_LDIF_PREFIX "HomeState", PR_TRUE},
-  {kHomeZipCodeColumn, MOZ_AB_LDIF_PREFIX "HomePostalCode", PR_TRUE},
-  {kHomeCountryColumn, MOZ_AB_LDIF_PREFIX "HomeCountryName", PR_TRUE},
-  {kWorkAddressColumn, "street", PR_TRUE},
-  {kWorkAddress2Column, MOZ_AB_LDIF_PREFIX "WorkStreet2", PR_TRUE}, 
-  {kWorkCityColumn, "l", PR_TRUE}, 
-  {kWorkStateColumn, "st", PR_TRUE}, 
-  {kWorkZipCodeColumn, "postalCode", PR_TRUE}, 
-  {kWorkCountryColumn, "c", PR_TRUE}, 
-  {kJobTitleColumn, "title", PR_TRUE},
-  {kDepartmentColumn, "department", PR_TRUE},
-  {kCompanyColumn, "company", PR_TRUE},
-  {kWebPage1Column, MOZ_AB_LDIF_PREFIX "WorkUrl", PR_TRUE},
-  {kWebPage2Column, MOZ_AB_LDIF_PREFIX "HomeUrl", PR_TRUE},
-  {kBirthYearColumn, nsnull, PR_TRUE}, // unused for now
-  {kBirthMonthColumn, nsnull, PR_TRUE}, // unused for now
-  {kBirthDayColumn, nsnull, PR_TRUE}, // unused for now
-  {kCustom1Column, MOZ_AB_LDIF_PREFIX "Custom1", PR_TRUE},
-  {kCustom2Column, MOZ_AB_LDIF_PREFIX "Custom2", PR_TRUE},
-  {kCustom3Column, MOZ_AB_LDIF_PREFIX "Custom3", PR_TRUE},
-  {kCustom4Column, MOZ_AB_LDIF_PREFIX "Custom4", PR_TRUE},
-  {kNotesColumn, "description", PR_TRUE},
-  {kAnniversaryYearColumn, MOZ_AB_LDIF_PREFIX "AnniversaryYear", PR_FALSE}, 
-  {kAnniversaryMonthColumn, MOZ_AB_LDIF_PREFIX "AnniversaryMonth", PR_FALSE}, 
-  {kAnniversaryDayColumn, MOZ_AB_LDIF_PREFIX "AnniversaryDay", PR_FALSE}, 
-  {kSpouseNameColumn, MOZ_AB_LDIF_PREFIX "SpouseName", PR_FALSE}, 
-  {kFamilyNameColumn, MOZ_AB_LDIF_PREFIX "FamilyName", PR_FALSE}, 
-  {kDefaultAddressColumn, MOZ_AB_LDIF_PREFIX "DefaultAddress", PR_FALSE}, 
-  {kCategoryColumn, MOZ_AB_LDIF_PREFIX "Category", PR_FALSE}, 
+  {kFirstNameColumn, PR_TRUE},
+  {kLastNameColumn, PR_TRUE},
+  {kDisplayNameColumn, PR_TRUE},
+  {kNicknameColumn, PR_TRUE},
+  {kPriEmailColumn, PR_TRUE},
+  {k2ndEmailColumn, PR_TRUE},
+  {kDefaultEmailColumn, PR_FALSE},
+  {kCardTypeColumn, PR_FALSE},
+  {kAimScreenNameColumn, PR_FALSE},
+  {kPreferMailFormatColumn, PR_FALSE},
+  {kLastModifiedDateColumn, PR_FALSE},
+  {kWorkPhoneColumn, PR_TRUE}, 
+  {kWorkPhoneTypeColumn, PR_FALSE},
+  {kHomePhoneColumn, PR_TRUE},
+  {kHomePhoneTypeColumn, PR_FALSE},
+  {kFaxColumn, PR_TRUE},
+  {kFaxTypeColumn, PR_FALSE},
+  {kPagerColumn, PR_TRUE},
+  {kPagerTypeColumn, PR_FALSE},
+  {kCellularColumn, PR_TRUE},
+  {kCellularTypeColumn, PR_FALSE},
+  {kHomeAddressColumn, PR_TRUE},
+  {kHomeAddress2Column, PR_TRUE},
+  {kHomeCityColumn, PR_TRUE},
+  {kHomeStateColumn, PR_TRUE},
+  {kHomeZipCodeColumn, PR_TRUE},
+  {kHomeCountryColumn, PR_TRUE},
+  {kWorkAddressColumn, PR_TRUE},
+  {kWorkAddress2Column, PR_TRUE}, 
+  {kWorkCityColumn, PR_TRUE}, 
+  {kWorkStateColumn, PR_TRUE}, 
+  {kWorkZipCodeColumn, PR_TRUE}, 
+  {kWorkCountryColumn, PR_TRUE}, 
+  {kJobTitleColumn, PR_TRUE},
+  {kDepartmentColumn, PR_TRUE},
+  {kCompanyColumn, PR_TRUE},
+  {kWebPage1Column, PR_TRUE},
+  {kWebPage2Column, PR_TRUE},
+  {kBirthYearColumn, PR_TRUE}, // unused for now
+  {kBirthMonthColumn, PR_TRUE}, // unused for now
+  {kBirthDayColumn, PR_TRUE}, // unused for now
+  {kCustom1Column, PR_TRUE},
+  {kCustom2Column, PR_TRUE},
+  {kCustom3Column, PR_TRUE},
+  {kCustom4Column, PR_TRUE},
+  {kNotesColumn, PR_TRUE},
+  {kAnniversaryYearColumn, PR_FALSE}, 
+  {kAnniversaryMonthColumn, PR_FALSE}, 
+  {kAnniversaryDayColumn, PR_FALSE}, 
+  {kSpouseNameColumn, PR_FALSE}, 
+  {kFamilyNameColumn, PR_FALSE}, 
+  {kDefaultAddressColumn, PR_FALSE}, 
+  {kCategoryColumn, PR_FALSE}, 
 };
 
 //
@@ -387,8 +374,6 @@ NS_IMETHODIMP nsAddressBook::MailListNameExists(const PRUnichar *name, PRBool *e
 #define CSV_DELIM_LEN 1
 #define TAB_DELIM "\t"
 #define TAB_DELIM_LEN 1
-#define LDIF_DELIM (nsnull)
-#define LDIF_DELIM_LEN 0
 
 #define CSV_FILE_EXTENSION ".csv"
 #define TAB_FILE_EXTENSION ".tab"
@@ -566,9 +551,9 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
       }
     }
   }
-  rv = outputStream->Write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &writeCount);
+  rv = outputStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeCount);
   NS_ENSURE_SUCCESS(rv,rv);
-  if (MSG_LINEBREAK_LEN != writeCount)
+  if (NS_LINEBREAK_LEN != writeCount)
     return NS_ERROR_FAILURE;
 #endif
 
@@ -670,9 +655,9 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
           }
 
           // write out the linebreak that separates the cards
-          rv = outputStream->Write(MSG_LINEBREAK, MSG_LINEBREAK_LEN, &writeCount);
+          rv = outputStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeCount);
           NS_ENSURE_SUCCESS(rv,rv);
-          if (MSG_LINEBREAK_LEN != writeCount)
+          if (NS_LINEBREAK_LEN != writeCount)
             return NS_ERROR_FAILURE;
         }
       }
@@ -705,6 +690,18 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
   if (NS_FAILED(rv))
     return rv;
 
+  // Get the default attribute map for ldap. We use the default attribute
+  // map rather than one for a specific server because if people want an
+  // ldif export using a servers specific schema, then they can use ldapsearch
+  nsCOMPtr<nsIAbLDAPAttributeMapService> mapSrv = 
+    do_GetService("@mozilla.org/addressbook/ldap-attribute-map-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIAbLDAPAttributeMap> attrMap;
+  rv = mapSrv->GetMapForPrefBranch(NS_LITERAL_CSTRING("ldap_2.servers.default.attrmap"),
+                                   getter_AddRefs(attrMap));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   PRUint32 i;
   PRUint32 writeCount;
   PRUint32 length;
@@ -726,7 +723,7 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
         if (isMailList) {
           nsCString mailListCStr;
 
-          rv = AppendLDIFForMailList(card, mailListCStr);
+          rv = AppendLDIFForMailList(card, attrMap, mailListCStr);
           NS_ENSURE_SUCCESS(rv,rv);
 
           length = mailListCStr.Length();
@@ -739,7 +736,7 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
           nsXPIDLString value;          
           nsCString valueCStr;
     
-          rv = AppendBasicLDIFForCard(card, valueCStr);
+          rv = AppendBasicLDIFForCard(card, attrMap, valueCStr);
           NS_ENSURE_SUCCESS(rv,rv);
           
           length = valueCStr.Length();
@@ -750,8 +747,13 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
           
           valueCStr.Truncate();
 
+          nsCAutoString ldapAttribute;
+
           for (i = 0; i < EXPORT_ATTRIBUTES_TABLE_COUNT; i++) {
-            if (EXPORT_ATTRIBUTES_TABLE[i].ldapPropertyName) {
+            if (NS_SUCCEEDED(attrMap->GetFirstAttribute(nsDependentCString(EXPORT_ATTRIBUTES_TABLE[i].abColName),
+                                                        ldapAttribute) &&
+                !ldapAttribute.IsEmpty())) {
+
               rv = card->GetCardValue(EXPORT_ATTRIBUTES_TABLE[i].abColName, getter_Copies(value));
               NS_ENSURE_SUCCESS(rv,rv);
  
@@ -765,10 +767,10 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
               }
 
               if (!value.IsEmpty()) {
-                rv = AppendProperty(EXPORT_ATTRIBUTES_TABLE[i].ldapPropertyName, value.get(), valueCStr);
+                rv = AppendProperty(ldapAttribute.get(), value.get(), valueCStr);
                 NS_ENSURE_SUCCESS(rv,rv);
                 
-                valueCStr += LDIF_LINEBREAK;
+                valueCStr += NS_LINEBREAK;
               }
               else
                 valueCStr.Truncate();
@@ -789,9 +791,9 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
           }
         
           // write out the linebreak that separates the cards
-          rv = outputStream->Write(LDIF_LINEBREAK, LDIF_LINEBREAK_LEN, &writeCount);
+          rv = outputStream->Write(NS_LINEBREAK, NS_LINEBREAK_LEN, &writeCount);
           NS_ENSURE_SUCCESS(rv,rv);
-          if (LDIF_LINEBREAK_LEN != writeCount)
+          if (NS_LINEBREAK_LEN != writeCount)
             return NS_ERROR_FAILURE;
         }
       }
@@ -806,41 +808,55 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
   return NS_OK;
 }
 
-nsresult nsAddressBook::AppendLDIFForMailList(nsIAbCard *aCard, nsACString &aResult)
+nsresult nsAddressBook::AppendLDIFForMailList(nsIAbCard *aCard, nsIAbLDAPAttributeMap *aAttrMap, nsACString &aResult)
 {
   nsresult rv;
   nsXPIDLString attrValue;
   
+  rv = AppendDNForCard("dn", aCard, aAttrMap, aResult);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  aResult += NS_LINEBREAK \
+             "objectclass: top" NS_LINEBREAK \
+             "objectclass: groupOfNames" NS_LINEBREAK;
+
   rv = aCard->GetCardValue(kDisplayNameColumn, getter_Copies(attrValue));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = AppendDNForCard("dn", aCard, aResult);
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsCAutoString ldapAttributeName;
 
-  aResult += LDIF_LINEBREAK \
-             "objectclass: top" LDIF_LINEBREAK \
-             "objectclass: groupOfNames" LDIF_LINEBREAK;
+  rv = aAttrMap->GetFirstAttribute(NS_LITERAL_CSTRING(kDisplayNameColumn),
+                                  ldapAttributeName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AppendProperty("cn", attrValue.get(), aResult);
+  rv = AppendProperty(ldapAttributeName.get(), attrValue.get(), aResult);
   NS_ENSURE_SUCCESS(rv,rv);
-  aResult += LDIF_LINEBREAK;
+  aResult += NS_LINEBREAK;
+
+  rv = aAttrMap->GetFirstAttribute(NS_LITERAL_CSTRING(kNicknameColumn),
+                                  ldapAttributeName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aCard->GetCardValue(kNicknameColumn, getter_Copies(attrValue));
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (!attrValue.IsEmpty()) {
-    rv = AppendProperty("mozillaNickname", attrValue.get(), aResult);
+    rv = AppendProperty(ldapAttributeName.get(), attrValue.get(), aResult);
     NS_ENSURE_SUCCESS(rv,rv);
-    aResult += LDIF_LINEBREAK;
+    aResult += NS_LINEBREAK;
   }
+
+  rv = aAttrMap->GetFirstAttribute(NS_LITERAL_CSTRING(kNotesColumn),
+                                  ldapAttributeName);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = aCard->GetCardValue(kNotesColumn, getter_Copies(attrValue));
   NS_ENSURE_SUCCESS(rv,rv);
 
   if (!attrValue.IsEmpty()) {
-    rv = AppendProperty("description", attrValue.get(), aResult);
+    rv = AppendProperty(ldapAttributeName.get(), attrValue.get(), aResult);
     NS_ENSURE_SUCCESS(rv,rv);
-    aResult += LDIF_LINEBREAK;
+    aResult += NS_LINEBREAK;
   }
 
   nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
@@ -868,22 +884,23 @@ nsresult nsAddressBook::AppendLDIFForMailList(nsIAbCard *aCard, nsACString &aRes
         nsCOMPtr <nsIAbCard> listCard = do_QueryElementAt(addresses, i, &rv);
         NS_ENSURE_SUCCESS(rv,rv);
 
-        rv = AppendDNForCard("member", listCard, aResult);
+        rv = AppendDNForCard("member", listCard, aAttrMap, aResult);
         NS_ENSURE_SUCCESS(rv,rv);
 
-        aResult += LDIF_LINEBREAK;
+        aResult += NS_LINEBREAK;
       }
     }
   }
   
-  aResult += LDIF_LINEBREAK;
+  aResult += NS_LINEBREAK;
   return NS_OK;
 }
 
-nsresult nsAddressBook::AppendDNForCard(const char *aProperty, nsIAbCard *aCard, nsACString &aResult)
+nsresult nsAddressBook::AppendDNForCard(const char *aProperty, nsIAbCard *aCard, nsIAbLDAPAttributeMap *aAttrMap, nsACString &aResult)
 {
   nsXPIDLString email;
   nsXPIDLString displayName;
+  nsCAutoString ldapAttributeName;
 
   nsresult rv = aCard->GetCardValue(kPriEmailColumn, getter_Copies(email));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -893,15 +910,25 @@ nsresult nsAddressBook::AppendDNForCard(const char *aProperty, nsIAbCard *aCard,
 
   nsString cnStr;
 
+  rv = aAttrMap->GetFirstAttribute(NS_LITERAL_CSTRING(kDisplayNameColumn),
+                                   ldapAttributeName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (!displayName.IsEmpty()) {
-    cnStr += NS_LITERAL_STRING("cn=") + displayName;
+    cnStr += NS_ConvertUTF8toUTF16(ldapAttributeName).get();
+    cnStr += NS_LITERAL_STRING("=") + displayName;
     if (!email.IsEmpty()) {
       cnStr.AppendLiteral(",");
     }
   }
 
+  rv = aAttrMap->GetFirstAttribute(NS_LITERAL_CSTRING(kPriEmailColumn),
+                                   ldapAttributeName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (!email.IsEmpty()) {
-    cnStr += NS_LITERAL_STRING("mail=") + email;
+    cnStr += NS_ConvertUTF8toUTF16(ldapAttributeName).get();
+    cnStr += NS_LITERAL_STRING("=") + email;
   }
 
   rv = AppendProperty(aProperty, cnStr.get(), aResult);
@@ -909,16 +936,16 @@ nsresult nsAddressBook::AppendDNForCard(const char *aProperty, nsIAbCard *aCard,
   return rv;
 }
 
-nsresult nsAddressBook::AppendBasicLDIFForCard(nsIAbCard *aCard, nsACString &aResult)
+nsresult nsAddressBook::AppendBasicLDIFForCard(nsIAbCard *aCard, nsIAbLDAPAttributeMap *aAttrMap, nsACString &aResult)
 {
-  nsresult rv = AppendDNForCard("dn", aCard, aResult);
+  nsresult rv = AppendDNForCard("dn", aCard, aAttrMap, aResult);
   NS_ENSURE_SUCCESS(rv,rv);
-  aResult += LDIF_LINEBREAK \
-    "objectclass: top" LDIF_LINEBREAK \
-    "objectclass: person" LDIF_LINEBREAK \
-    "objectclass: organizationalPerson" LDIF_LINEBREAK \
-    "objectclass: inetOrgPerson" LDIF_LINEBREAK \
-    "objectclass: " MOZ_AB_OBJECTCLASS LDIF_LINEBREAK;  
+  aResult += NS_LINEBREAK \
+    "objectclass: top" NS_LINEBREAK \
+    "objectclass: person" NS_LINEBREAK \
+    "objectclass: organizationalPerson" NS_LINEBREAK \
+    "objectclass: inetOrgPerson" NS_LINEBREAK \
+    "objectclass: " MOZ_AB_OBJECTCLASS NS_LINEBREAK;  
 
 
   return rv;
