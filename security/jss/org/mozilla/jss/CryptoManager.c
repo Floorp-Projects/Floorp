@@ -71,9 +71,15 @@
 /*                                                                  */
 /********************************************************************/
 
+/* JSS_VERSION from  mozilla/security/jss/org/mozilla/jss/util/jssver.h */
 static const char* DLL_JSS_VERSION     = "JSS_VERSION = " JSS_VERSION;
+/* NSS_VERSION from mozilla/security/nss/lib/nss/nss.h */
 static const char* DLL_NSS_VERSION     = "NSS_VERSION = " NSS_VERSION;
+/* NSPR_version from mozilla/nsprpub/pr/include/prinit.h */
 static const char* DLL_NSPR_VERSION    = "NSPR_VERSION = " PR_VERSION;
+
+
+
 
 static jobject
 makePWCBInfo(JNIEnv *env, PK11SlotInfo *slot);

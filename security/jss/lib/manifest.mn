@@ -54,4 +54,6 @@ MODULE = jss
 NS_USE_JDK = 1
 
 LIBRARY_NAME = jss
+#/* LIBRARY_VERSION=JSS_VMAJOR so you only update when */
+#/* you update the JSS_VMAJOR                          */ 
 LIBRARY_VERSION = 4
