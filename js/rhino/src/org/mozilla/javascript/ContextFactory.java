@@ -446,5 +446,37 @@ public class ContextFactory
     {
         return Context.call(this, action);
     }
+    
+    /**
+     * Same as {@link Context#enter()} with the difference that if a new context
+     * needs to be created, then this context factory is used to create it 
+     * instead of the global context factory.
+     * @return a Context associated with the current thread
+     */
+    public final Context enter()
+    {
+        return enter(null);
+    }
+    
+    /**
+     * Same as {@link Context#enter(Context)} with the difference that if a new 
+     * context needs to be created, then this context factory is used to create 
+     * it instead of the global context factory.
+     * @return a Context associated with the current thread
+     */
+    public final Context enter(Context cx)
+    {
+        return Context.enter(cx, this);
+    }
+
+    /**
+     * Same as {@link Context#exit()}, although if you used {@link #enter()} or
+     * {@link #enter(Context)} methods on this object, you should use this exit
+     * method instead of the static one in {@link Context}. 
+     */
+    public final void exit()
+    {
+        Context.exit(this);
+    }
 }
 

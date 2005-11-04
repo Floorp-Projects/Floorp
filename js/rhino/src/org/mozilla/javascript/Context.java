@@ -358,6 +358,11 @@ public class Context
      */
     public static Context enter(Context cx)
     {
+        return enter(cx, ContextFactory.getGlobal());
+    }
+    
+    static final Context enter(Context cx, ContextFactory factory)
+    {
         Object helper = VMBridge.instance.getThreadContextHelper();
         Context old = VMBridge.instance.getContext(helper);
         if (old != null) {
@@ -376,7 +381,7 @@ public class Context
             cx = old;
         } else {
             if (cx == null) {
-                cx = ContextFactory.getGlobal().makeContext();
+                cx = factory.makeContext();
             } else {
                 if (cx.sealed) onSealedMutation();
             }
@@ -386,7 +391,7 @@ public class Context
 
             if (!cx.creationEventWasSent) {
                 cx.creationEventWasSent = true;
-                ContextFactory.getGlobal().onContextCreated(cx);
+                factory.onContextCreated(cx);
             }
         }
 
@@ -415,6 +420,11 @@ public class Context
      */
     public static void exit()
     {
+        exit(ContextFactory.getGlobal());
+    }
+    
+    static void exit(ContextFactory factory)
+    {
         Object helper = VMBridge.instance.getThreadContextHelper();
         Context cx = VMBridge.instance.getContext(helper);
         if (cx == null) {
@@ -431,10 +441,11 @@ public class Context
         --cx.enterCount;
         if (cx.enterCount == 0) {
             VMBridge.instance.setContext(helper, null);
-            ContextFactory.getGlobal().onContextReleased(cx);
+            factory.onContextReleased(cx);
         }
     }
 
+    
     /**
      * Call {@link ContextAction#run(Context cx)}
      * using the Context instance associated with the current thread.
