@@ -45,6 +45,8 @@
 #include "nsIDocument.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIJSContextStack.h"
+#include "nsIXPConnect.h"
+#include "nsIDOMElement.h"
 #include "prmem.h"
 
 // Hash of JSObject wrappers that wraps JSObjects as NPObjects. There
@@ -1370,6 +1372,69 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
   if (sNPObjWrappers.ops) {
     PL_DHashTableEnumerate(&sNPObjWrappers,
                            NPObjWrapperPluginDestroyedCallback, npp);
+  }
+
+  // If this plugin was scripted from a webpage, the plugin's
+  // scriptable object will be on the DOM element's prototype
+  // chain. Now that the plugin is being destroyed we need to pull the
+  // plugin's scriptable object out of that prototype chain.
+  JSContext *cx = GetJSContext(npp);
+  if (!cx || !npp) {
+    return;
+  }
+
+  // Find the plugin instance so that we can (eventually) get to the
+  // DOM element
+  ns4xPluginInstance *inst = (ns4xPluginInstance *)npp->ndata;
+  if (!inst) {
+    return;
+  }
+
+  nsCOMPtr<nsIPluginInstancePeer> pip;
+  inst->GetPeer(getter_AddRefs(pip));
+  nsCOMPtr<nsIPluginTagInfo2> pti2(do_QueryInterface(pip));
+  if (!pti2) {
+    return;
+  }
+
+  nsCOMPtr<nsIDOMElement> element;
+  pti2->GetDOMElement(getter_AddRefs(element));
+  if (!element) {
+    return;
+  }
+
+  // Get the DOM element's JS object.
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
+  if (!xpc) {
+    return;
+  }
+
+  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+  xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), element,
+                  NS_GET_IID(nsIDOMElement),
+                  getter_AddRefs(holder));
+  if (!holder) {
+    return;
+  }
+
+  JSObject *obj, *proto;
+  holder->GetJSObject(&obj);
+
+  // Loop over the DOM element's JS object prototype chain and remove
+  // all JS objects of the class sNPObjectJSWrapperClass (there should
+  // be only one, but remove all instances found in case the page put
+  // more than one of the plugin's scriptable objects on the prototype
+  // chain).
+  while (obj && (proto = ::JS_GetPrototype(cx, obj))) {
+    if (JS_GET_CLASS(cx, proto) == &sNPObjectJSWrapperClass) {
+      // We found an NPObject on the proto chain, get its prototype...
+      proto = ::JS_GetPrototype(cx, proto);
+
+      // ... and pull it out of the chain.
+      ::JS_SetPrototype(cx, obj, proto);
+    }
+
+    obj = proto;
   }
 }
 
