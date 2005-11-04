@@ -35,7 +35,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
 #ifndef nsUTF8Utils_h_
 #define nsUTF8Utils_h_
 
@@ -59,6 +58,349 @@ class UTF8traits
 #else
 #define NS_ALWAYS_INLINE
 #endif
+
+/**
+ * Extract the next UCS-4 character from the buffer and return it.  The
+ * pointer passed in is advanced to the start of the next character in the
+ * buffer.  If non-null, the parameters err and overlong are filled in to
+ * indicate that the character was represented by an overlong sequence, or
+ * that an error occurred.
+ */
+
+class UTF8CharEnumerator
+{
+public:
+  static PRUint32 NextChar(const char **buffer, const char *end,
+                           PRBool *err = nsnull, PRBool* overlong = nsnull)
+  {
+    NS_ASSERTION(buffer && *buffer, "null buffer!");
+
+    const char *p = *buffer;
+
+    if (p >= end)
+      {
+        if (err)
+          *err = PR_TRUE;
+
+        return 0;
+      }
+
+    char c = *p++;
+
+    if ( UTF8traits::isASCII(c) )
+      {
+        if (err)
+          *err = PR_FALSE;
+        if (overlong)
+          *overlong = PR_FALSE;
+        *buffer = p;
+        return c;
+      }
+
+    PRUint32 ucs4;
+    PRUint32 minUcs4;
+    PRInt32 state = 0;
+
+    if (!CalcState(c, ucs4, minUcs4, state)) {
+        NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
+        if (err)
+          *err = PR_TRUE;
+        return 0;
+    }
+
+    while ( state-- )
+      {
+        if (p == end)
+          {
+            if (err)
+              *err = PR_TRUE;
+
+            return 0;
+          }
+
+        c = *p++;
+
+        if (!AddByte(c, state, ucs4))
+          {
+            NS_ERROR("not a UTF8 string");
+            if (err)
+              *err = PR_TRUE;
+            return 0;
+          }
+      }
+
+    if (err)
+      *err = PR_FALSE;
+    if (overlong)
+      *overlong = ucs4 < minUcs4;
+    *buffer = p;
+    return ucs4;
+  }
+
+  static PRUint32 NextChar(nsACString::const_iterator& iter,
+                           const nsACString::const_iterator& end,
+                           PRBool *err = nsnull, PRBool *overlong = nsnull)
+  {
+    if ( iter == end )
+      {
+        NS_ERROR("No input to work with");
+        if (err)
+          *err = PR_TRUE;
+
+        return 0;
+      }
+
+    char c = *iter++;
+
+    if ( UTF8traits::isASCII(c) )
+      {
+        if (err)
+          *err = PR_FALSE;
+        if (overlong)
+          *overlong = PR_FALSE;
+        return c;
+      }
+
+    PRUint32 ucs4;
+    PRUint32 minUcs4;
+    PRInt32 state = 0;
+
+    if (!CalcState(c, ucs4, minUcs4, state)) {
+        NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
+        if (err)
+          *err = PR_TRUE;
+        return 0;
+    }
+
+    while ( state-- )
+      {
+        if (iter == end)
+          {
+            NS_ERROR("Buffer ended in the middle of a multibyte sequence");
+            if (err)
+              *err = PR_TRUE;
+
+            return 0;
+          }
+
+        c = *iter++;
+
+        if (!AddByte(c, state, ucs4))
+          {
+            NS_ERROR("not a UTF8 string");
+            if (err)
+              *err = PR_TRUE;
+            return 0;
+          }
+      }
+
+    if (err)
+      *err = PR_FALSE;
+    if (overlong)
+      *overlong = ucs4 < minUcs4;
+    return ucs4;
+  }
+
+private:
+  static PRBool CalcState(char c, PRUint32& ucs4, PRUint32& minUcs4,
+                          PRInt32& state)
+  {
+    if ( UTF8traits::is2byte(c) )
+      {
+        ucs4 = (PRUint32(c) << 6) & 0x000007C0L;
+        state = 1;
+        minUcs4 = 0x00000080;
+      }
+    else if ( UTF8traits::is3byte(c) )
+      {
+        ucs4 = (PRUint32(c) << 12) & 0x0000F000L;
+        state = 2;
+        minUcs4 = 0x00000800;
+      }
+    else if ( UTF8traits::is4byte(c) )
+      {
+        ucs4 = (PRUint32(c) << 18) & 0x001F0000L;
+        state = 3;
+        minUcs4 = 0x00010000;
+      }
+    else if ( UTF8traits::is5byte(c) )
+      {
+        ucs4 = (PRUint32(c) << 24) & 0x03000000L;
+        state = 4;
+        minUcs4 = 0x00200000;
+      }
+    else if ( UTF8traits::is6byte(c) )
+      {
+        ucs4 = (PRUint32(c) << 30) & 0x40000000L;
+        state = 5;
+        minUcs4 = 0x04000000;
+      }
+    else
+      {
+        return PR_FALSE;
+      }
+
+    return PR_TRUE;
+  }
+
+  static PRBool AddByte(char c, PRInt32 state, PRUint32& ucs4)
+  {
+    if ( UTF8traits::isInSeq(c) )
+      {
+        PRInt32 shift = state * 6;
+        ucs4 |= (PRUint32(c) & 0x3F) << shift;
+        return PR_TRUE;
+      }
+
+    return PR_FALSE;
+  }
+};
+
+
+/**
+ * Extract the next UCS-4 character from the buffer and return it.  The
+ * pointer passed in is advanced to the start of the next character in the
+ * buffer.  If non-null, the err parameter is filled in if an error occurs.
+ */
+
+
+class UTF16CharEnumerator
+{
+public:
+  static PRUint32 NextChar(const PRUnichar **buffer, const PRUnichar *end,
+                           PRBool *err = nsnull)
+  {
+    NS_ASSERTION(buffer && *buffer, "null buffer!");
+
+    const PRUnichar *p = *buffer;
+
+    if (p >= end)
+      {
+        NS_ERROR("No input to work with");
+        if (err)
+          *err = PR_TRUE;
+
+        return 0;
+      }
+
+    PRUnichar c = *p++;
+
+    if (0xD800 != (0xF800 & c)) // U+0000 - U+D7FF,U+E000 - U+FFFF
+      {
+        if (err)
+          *err = PR_FALSE;
+        *buffer = p;
+        return c;
+      }
+    else if (0xD800 == (0xFC00 & c)) // U+D800 - U+DBFF
+      {
+        if (*buffer == end)
+          {
+            NS_ERROR("Unexpected end of buffer after high surrogate");
+            if (err)
+              *err = PR_TRUE;
+
+            return 0;
+          }
+
+        // D800- DBFF - High Surrogate
+        // N = (H- D800) *400 + 10000 + ...
+        PRUint32 ucs4 = 0x10000 + ((0x03FF & c) << 10);
+
+        c = *p++;
+
+        if (0xDC00 == (0xFC00 & c))
+          {
+            // DC00- DFFF - Low Surrogate
+            // N += ( L - DC00 )
+            ucs4 |= (0x03FF & c);
+            if (err)
+              *err = PR_FALSE;
+            *buffer = p;
+            return ucs4;
+          }
+        else
+          {
+            NS_ERROR("got a High Surrogate but no low surrogate");
+            // output nothing.
+          }
+      }
+    else // U+DC00 - U+DFFF
+      {
+        // DC00- DFFF - Low Surrogate
+        NS_ERROR("got a low Surrogate but no high surrogate");
+        // output nothing.
+      }
+
+    if (err)
+      *err = PR_TRUE;
+    return 0;
+  }
+
+  static PRUint32 NextChar(nsAString::const_iterator& iter,
+                           const nsAString::const_iterator& end,
+                           PRBool *err = nsnull)
+  {
+    if (iter == end)
+      {
+        if (err)
+          *err = PR_TRUE;
+
+        return 0;
+      }
+
+    PRUnichar c = *iter++;
+
+    if (0xD800 != (0xF800 & c)) // U+0000 - U+D7FF,U+E000 - U+FFFF
+      {
+        if (err)
+          *err = PR_FALSE;
+        return c;
+      }
+    else if (0xD800 == (0xFC00 & c)) // U+D800 - U+DBFF
+      {
+        if (iter == end)
+          {
+            if (err)
+              *err = PR_TRUE;
+
+            return 0;
+          }
+
+        // D800- DBFF - High Surrogate
+        // N = (H- D800) *400 + 10000 + ...
+        PRUint32 ucs4 = 0x10000 + ((0x03FF & c) << 10);
+
+        c = *iter++;
+
+        if (0xDC00 == (0xFC00 & c))
+          {
+            // DC00- DFFF - Low Surrogate
+            // N += ( L - DC00 )
+            ucs4 |= (0x03FF & c);
+            if (err)
+              *err = PR_FALSE;
+            return ucs4;
+          }
+        else
+          {
+            NS_ERROR("got a High Surrogate but no low surrogate");
+            // output nothing.
+          }
+      }
+    else // U+DC00 - U+DFFF
+      {
+        // DC00- DFFF - Low Surrogate
+        NS_ERROR("got a low Surrogate but no high surrogate");
+        // output nothing.
+      }
+
+    if (err)
+      *err = PR_TRUE;
+    return 0;
+  }
+};
+
 
 /**
  * A character sink (see |copy_string| in nsAlgorithm.h) for converting
@@ -87,75 +429,18 @@ class ConvertUTF8toUTF16
         buffer_type* out = mBuffer;
         for ( ; p != end /* && *p */; )
           {
-            char c = *p++;
+            PRBool overlong, err;
+            PRUint32 ucs4 = UTF8CharEnumerator::NextChar(&p, end, &err,
+                                                         &overlong);
 
-            if ( UTF8traits::isASCII(c) )
+            if ( err )
               {
-                *out++ = buffer_type(c);
-                continue;
-              }
-
-            PRUint32 ucs4;
-            PRUint32 minUcs4;
-            PRInt32 state = 0;
-
-            if ( UTF8traits::is2byte(c) )
-              {
-                ucs4 = (PRUint32(c) << 6) & 0x000007C0L;
-                state = 1;
-                minUcs4 = 0x00000080;
-              }
-            else if ( UTF8traits::is3byte(c) )
-              {
-                ucs4 = (PRUint32(c) << 12) & 0x0000F000L;
-                state = 2;
-                minUcs4 = 0x00000800;
-              }
-            else if ( UTF8traits::is4byte(c) )
-              {
-                ucs4 = (PRUint32(c) << 18) & 0x001F0000L;
-                state = 3;
-                minUcs4 = 0x00010000;
-              }
-            else if ( UTF8traits::is5byte(c) )
-              {
-                ucs4 = (PRUint32(c) << 24) & 0x03000000L;
-                state = 4;
-                minUcs4 = 0x00200000;
-              }
-            else if ( UTF8traits::is6byte(c) )
-              {
-                ucs4 = (PRUint32(c) << 30) & 0x40000000L;
-                state = 5;
-                minUcs4 = 0x04000000;
-              }
-            else
-              {
-                NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
                 mErrorEncountered = PR_TRUE;
                 mBuffer = out;
                 return N;
               }
 
-            while ( state-- )
-              {
-                c = *p++;
-
-                if ( UTF8traits::isInSeq(c) )
-                  {
-                    PRInt32 shift = state * 6;
-                    ucs4 |= (PRUint32(c) & 0x3F) << shift;
-                  }
-                else
-                  {
-                    NS_ERROR("not a UTF8 string");
-                    mErrorEncountered = PR_TRUE;
-                    mBuffer = out;
-                    return N;
-                  }
-              }
-
-            if ( ucs4 < minUcs4 )
+            if ( overlong )
               {
                 // Overlong sequence
                 *out++ = UCS2_REPLACEMENT_CHAR;

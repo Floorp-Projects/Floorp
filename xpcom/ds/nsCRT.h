@@ -228,6 +228,12 @@ public:
   static PRUint32 HashCode(const PRUnichar* str,
                            PRUint32* resultingStrLen = nsnull);
 
+  // Computes a hashcode for a ucs2 string that returns the same thing
+  // as the HashCode method taking a |char*| would if the string were
+  // converted to UTF8.  Returns the string length as an added bonus.
+  static PRUint32 HashCodeAsUTF8(const PRUnichar* str,
+                                 PRUint32* resultingStrLen = nsnull);
+
   // Computes the hashcode for a buffer with a specified length.
   static PRUint32 BufferHashCode(const PRUnichar* str, PRUint32 strLen);
 
