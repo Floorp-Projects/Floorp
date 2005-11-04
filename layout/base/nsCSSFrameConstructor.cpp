@@ -8925,17 +8925,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     // Perform special check for diddling around with the frames in
     // a special inline frame.
 
-    // XXX Bug 18366
-    // Although select frame are inline we do not want to call
-    // WipeContainingBlock because it will throw away the entire selct frame and 
-    // start over which is something we do not want to do
-    //
-    nsCOMPtr<nsIDOMHTMLSelectElement> selectContent(do_QueryInterface(aContainer));
-    if (!selectContent) {
-      if (WipeContainingBlock(state, containingBlock, parentFrame,
-                              frameItems.childList)) {
-        return NS_OK;
-      }
+    if (WipeContainingBlock(state, containingBlock, parentFrame,
+                            frameItems.childList)) {
+      return NS_OK;
     }
 
     // Append the flowed frames to the principal child list, tables need special treatment
@@ -9466,19 +9458,11 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   if (!state.mPseudoFrames.IsEmpty())
     ProcessPseudoFrames(state, frameItems);
 
-  // XXX Bug 19949
-  // Although select frame are inline we do not want to call
-  // WipeContainingBlock because it will throw away the entire select frame and 
-  // start over which is something we do not want to do
-  //
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectContent = do_QueryInterface(aContainer);
-  if (!selectContent) {
-    // Perform special check for diddling around with the frames in
-    // a special inline frame.
-    if (WipeContainingBlock(state, containingBlock, parentFrame,
-                            frameItems.childList))
-      return NS_OK;
-  }
+  // Perform special check for diddling around with the frames in
+  // a special inline frame.
+  if (WipeContainingBlock(state, containingBlock, parentFrame,
+                          frameItems.childList))
+    return NS_OK;
 
   if (haveFirstLineStyle) {
     // It's possible that the new frame goes into a first-line
@@ -13059,11 +13043,15 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
   // frames. This is a no-no and the frame construction logic knows
   // how to fix this.
 
-  // If we don't have a block within an inline, just return false.
-  // XXX We should be more careful about |aFrame| being something
-  // constructed by tag name (see the SELECT check all callers currenly
-  // do).
-  if (NS_STYLE_DISPLAY_INLINE != aFrame->GetStyleDisplay()->mDisplay ||
+  // If we don't have a block within an inline, just return false.  Here
+  // "an inline" is an actual inline frame (positioned or not) or a lineframe
+  // (corresponding to :first-line), since the latter should stop at the first
+  // block it runs into and we might be inserting one in the middle of it.
+  // Whether we have "a block" is tested for by AreAllKidsInline.
+  nsIAtom* frameType = aFrame->GetType();
+  if ((frameType != nsLayoutAtoms::inlineFrame &&
+       frameType != nsLayoutAtoms::positionedInlineFrame &&
+       frameType != nsLayoutAtoms::lineFrame) ||
       AreAllKidsInline(aFrameList))
     return PR_FALSE;
 
