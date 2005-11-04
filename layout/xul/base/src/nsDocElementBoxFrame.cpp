@@ -73,7 +73,7 @@
 class nsDocElementBoxFrame : public nsBoxFrame, public nsIAnonymousContentCreator {
 public:
 
-  friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell);
 
   nsDocElementBoxFrame(nsIPresShell* aShell);
 
@@ -93,21 +93,10 @@ public:
 
 //----------------------------------------------------------------------
 
-nsresult
-NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewDocElementBoxFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsDocElementBoxFrame* it = new (aPresShell) nsDocElementBoxFrame (aPresShell);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsDocElementBoxFrame (aPresShell);
 }
 
 nsDocElementBoxFrame::nsDocElementBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell, PR_TRUE)

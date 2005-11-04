@@ -94,17 +94,10 @@ extern PRLogModuleInfo * kLayoutPrintingLogMod;
 // XXX Part of Temporary fix for Bug 127263
 PRBool nsPageFrame::mDoCreateWidget = PR_TRUE;
 
-nsresult
-NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewPageFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-
-  nsPageFrame* it = new (aPresShell) nsPageFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsPageFrame;
 }
 
 nsPageFrame::nsPageFrame() :
@@ -691,21 +684,16 @@ nsPageFrame::SetSharedPageData(nsSharedPageData* aPD)
 
 }
 
-nsresult
-NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewPageBreakFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aPresShell && aNewFrame, "null PresShell or OUT ptr");
+  NS_PRECONDITION(aPresShell, "null PresShell");
 #ifdef DEBUG
   //check that we are only creating page break frames when printing
   NS_ASSERTION(aPresShell->GetPresContext()->IsPaginated(), "created a page break frame while not printing");
 #endif
 
-  nsPageBreakFrame* it = new (aPresShell) nsPageBreakFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsPageBreakFrame;
 }
 
 nsPageBreakFrame::nsPageBreakFrame()

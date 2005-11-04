@@ -40,7 +40,7 @@
 #include "nsSplittableFrame.h"
 #include "nsLayoutAtoms.h"
 
-nsresult NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame**  aInstancePtrResult);
+nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell);
 
 /**
  * Implementation of a frame that's used as a placeholder for a frame that
@@ -51,7 +51,7 @@ public:
   /**
    * Create a new placeholder frame
    */
-  friend nsresult NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame**  aInstancePtrResult);
+  friend nsIFrame* NS_NewPlaceholderFrame(nsIPresShell* aPresShell);
   nsPlaceholderFrame();
   virtual ~nsPlaceholderFrame();
 

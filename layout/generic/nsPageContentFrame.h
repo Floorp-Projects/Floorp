@@ -45,7 +45,7 @@ class nsSharedPageData;
 class nsPageContentFrame : public ViewportFrame {
 
 public:
-  friend nsresult NS_NewPageContentFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+  friend nsIFrame* NS_NewPageContentFrame(nsIPresShell* aPresShell);
   friend class nsPageFrame;
 
   // nsIFrame

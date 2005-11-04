@@ -54,7 +54,7 @@ class nsTableCaptionFrame : public nsBlockFrame
 public:
   // nsISupports
   virtual nsIAtom* GetType() const;
-  friend nsresult NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewTableCaptionFrame(nsIPresShell* aPresShell);
 
 protected:
   nsTableCaptionFrame();
@@ -78,13 +78,12 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  /** instantiate a new instance of nsTableOuterFrame.
-    * @param aPresShell the presentation shell
-    * @param aResult    the new object is returned in this out-param
+  /** instantiate a new instance of nsTableRowFrame.
+    * @param aPresShell the pres shell for this frame
     *
-    * @return  NS_OK if the frame was properly allocated, otherwise an error code
+    * @return           the frame that was created
     */
-  friend nsresult NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+  friend nsIFrame* NS_NewTableOuterFrame(nsIPresShell* aPresShell);
   
   // nsIFrame overrides - see there for a description
 

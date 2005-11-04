@@ -1751,19 +1751,10 @@ nsTableRowGroupFrame::GetType() const
 
 /* ----- global methods ----- */
 
-nsresult 
-NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewTableRowGroupFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTableRowGroupFrame* it = new (aPresShell) nsTableRowGroupFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsTableRowGroupFrame;
 }
 
 NS_IMETHODIMP

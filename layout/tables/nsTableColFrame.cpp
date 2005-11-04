@@ -261,19 +261,10 @@ void nsTableColFrame::Dump(PRInt32 aIndent)
 #endif
 /* ----- global methods ----- */
 
-nsresult 
-NS_NewTableColFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame* 
+NS_NewTableColFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTableColFrame* it = new (aPresShell) nsTableColFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsTableColFrame;
 }
 
 NS_IMETHODIMP

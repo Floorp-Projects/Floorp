@@ -53,17 +53,10 @@
 #endif
 
 
-nsresult
-NS_NewPageContentFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewPageContentFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-
-  nsPageContentFrame* it = new (aPresShell) nsPageContentFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsPageContentFrame;
 }
 
 nsPageContentFrame::nsPageContentFrame() :

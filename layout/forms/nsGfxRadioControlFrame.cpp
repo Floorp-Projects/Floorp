@@ -53,19 +53,10 @@
 #include "nsIDOMNode.h"
 #include "nsITheme.h"
 
-nsresult
-NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewGfxRadioControlFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsGfxRadioControlFrame* it = new (aPresShell) nsGfxRadioControlFrame;
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsGfxRadioControlFrame;
 }
 
 nsGfxRadioControlFrame::nsGfxRadioControlFrame()

@@ -47,7 +47,7 @@ class nsSharedPageData;
 class nsPageFrame : public nsContainerFrame {
 
 public:
-  friend nsresult NS_NewPageFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+  friend nsIFrame* NS_NewPageFrame(nsIPresShell* aPresShell);
 
   // nsIFrame
   NS_IMETHOD  SetInitialChildList(nsPresContext* aPresContext,
@@ -172,7 +172,7 @@ protected:
                               nsHTMLReflowMetrics&     aDesiredSize);
     PRBool mHaveReflowed;
 
-    friend nsresult NS_NewPageBreakFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+    friend nsIFrame* NS_NewPageBreakFrame(nsIPresShell* aPresShell);
 };
 
 #endif /* nsPageFrame_h___ */

@@ -87,15 +87,12 @@ public:
   nsTableColType GetColType() const;
   void SetColType(nsTableColType aType);
 
-  /** instantiate a new instance of nsTableColFrame.
-    * @param aResult    the new object is returned in this out-param
-    * @param aContent   the table object to map
-    * @param aParent    the parent of the new frame
+  /** instantiate a new instance of nsTableRowFrame.
+    * @param aPresShell the pres shell for this frame
     *
-    * @return  NS_OK if the frame was properly allocated, otherwise an error code
+    * @return           the frame that was created
     */
-  friend nsresult 
-  NS_NewTableColFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+  friend nsIFrame* NS_NewTableColFrame(nsIPresShell* aPresShell);
 
   nsStyleCoord GetStyleWidth() const;
 

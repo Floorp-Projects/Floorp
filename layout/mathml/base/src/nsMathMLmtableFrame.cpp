@@ -359,19 +359,10 @@ NS_IMPL_ADDREF_INHERITED(nsMathMLmtableOuterFrame, nsMathMLFrame)
 NS_IMPL_RELEASE_INHERITED(nsMathMLmtableOuterFrame, nsMathMLFrame)
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmtableOuterFrame, nsTableOuterFrame, nsMathMLFrame)
 
-nsresult
-NS_NewMathMLmtableOuterFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmtableOuterFrame (nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmtableOuterFrame* it = new (aPresShell) nsMathMLmtableOuterFrame;
-  if (!it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmtableOuterFrame;
 }
 
 nsMathMLmtableOuterFrame::nsMathMLmtableOuterFrame()
@@ -587,19 +578,10 @@ NS_IMPL_ADDREF_INHERITED(nsMathMLmtdFrame, nsTableCellFrame)
 NS_IMPL_RELEASE_INHERITED(nsMathMLmtdFrame, nsTableCellFrame)
 NS_IMPL_QUERY_INTERFACE_INHERITED0(nsMathMLmtdFrame, nsTableCellFrame)
 
-nsresult
-NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmtdFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmtdFrame* it = new (aPresShell) nsMathMLmtdFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmtdFrame;
 }
 
 nsMathMLmtdFrame::nsMathMLmtdFrame()
@@ -647,19 +629,10 @@ NS_IMPL_ADDREF_INHERITED(nsMathMLmtdInnerFrame, nsMathMLFrame)
 NS_IMPL_RELEASE_INHERITED(nsMathMLmtdInnerFrame, nsMathMLFrame)
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmtdInnerFrame, nsBlockFrame, nsMathMLFrame)
 
-nsresult
-NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmtdInnerFrame* it = new (aPresShell) nsMathMLmtdInnerFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmtdInnerFrame;
 }
 
 nsMathMLmtdInnerFrame::nsMathMLmtdInnerFrame()

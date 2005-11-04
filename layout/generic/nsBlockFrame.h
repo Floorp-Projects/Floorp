@@ -131,7 +131,7 @@ public:
   const_reverse_line_iterator rbegin_lines() const { return mLines.rbegin(); }
   const_reverse_line_iterator rend_lines() const { return mLines.rend(); }
 
-  friend nsresult NS_NewBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags);
+  friend nsIFrame* NS_NewBlockFrame(nsIPresShell* aPresShell, PRUint32 aFlags);
 
   // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);

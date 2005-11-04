@@ -84,14 +84,11 @@ public:
                          nsIFrame*       aOldFrame);
 
   /** instantiate a new instance of nsTableRowFrame.
-    * @param aResult    the new object is returned in this out-param
-    * @param aContent   the table object to map
-    * @param aParent    the parent of the new frame
+    * @param aPresShell the pres shell for this frame
     *
-    * @return  NS_OK if the frame was properly allocated, otherwise an error code
+    * @return           the frame that was created
     */
-  friend nsresult 
-  NS_NewTableRowFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+  friend nsIFrame* NS_NewTableRowFrame(nsIPresShell* aPresShell);
 
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsPresContext*      aPresContext,

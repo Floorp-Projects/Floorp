@@ -195,21 +195,17 @@ NS_IMPL_ISUPPORTS1(nsComboButtonListener, nsIDOMMouseListener)
 // static class data member for Bug 32920
 nsComboboxControlFrame * nsComboboxControlFrame::mFocused = nsnull;
 
-nsresult
-NS_NewComboboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aStateFlags)
+nsIFrame*
+NS_NewComboboxControlFrame(nsIPresShell* aPresShell, PRUint32 aStateFlags)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
   nsComboboxControlFrame* it = new (aPresShell) nsComboboxControlFrame;
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (it) {
+    // set the state flags (if any are provided)
+    it->AddStateBits(aStateFlags);
   }
-  // set the state flags (if any are provided)
-  it->AddStateBits(aStateFlags);
-  *aNewFrame = it;
-  return NS_OK;
+
+  return it;
 }
 
 //-----------------------------------------------------------
@@ -2027,9 +2023,10 @@ nsComboboxControlFrame::CreateDisplayFrame(nsPresContext* aPresContext)
   nsIPresShell *shell = aPresContext->PresShell();
   nsStyleSet *styleSet = shell->StyleSet();
 
-  nsresult rv = NS_NewBlockFrame(shell, (nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!mDisplayFrame) { return NS_ERROR_NULL_POINTER; }
+  mDisplayFrame = NS_NewBlockFrame(shell, NS_BLOCK_SPACE_MGR);
+  if (NS_UNLIKELY(!mDisplayFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   // create the style context for the anonymous frame
   nsRefPtr<nsStyleContext> styleContext;
@@ -2037,11 +2034,13 @@ nsComboboxControlFrame::CreateDisplayFrame(nsPresContext* aPresContext)
                                                  nsCSSAnonBoxes::mozDisplayComboboxControlFrame,
                                                  mStyleContext);
   if (!styleContext) { return NS_ERROR_NULL_POINTER; }
-
+  
   // create a text frame and put it inside the block frame
-  rv = NS_NewTextFrame(shell, &mTextFrame);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!mTextFrame) { return NS_ERROR_NULL_POINTER; }
+  mTextFrame = NS_NewTextFrame(shell);
+  if (NS_UNLIKELY(!mTextFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   nsRefPtr<nsStyleContext> textStyleContext;
   textStyleContext = styleSet->ResolveStyleForNonElement(styleContext);
   if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
@@ -2051,7 +2050,7 @@ nsComboboxControlFrame::CreateDisplayFrame(nsPresContext* aPresContext)
 
   aPresContext->FrameManager()->SetPrimaryFrameFor(content, mTextFrame);
 
-  rv = mDisplayFrame->Init(aPresContext, mContent, this, styleContext, nsnull);
+  nsresult rv = mDisplayFrame->Init(aPresContext, mContent, this, styleContext, nsnull);
   if (NS_FAILED(rv)) { return rv; }
 
   mDisplayFrame->SetInitialChildList(aPresContext, nsnull, mTextFrame);
@@ -2153,9 +2152,10 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     nsStyleSet *styleSet = shell->StyleSet();
 
     // Start by by creating a containing frame
-    nsresult rv = NS_NewBlockFrame(shell, (nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
-    if (NS_FAILED(rv))  { return rv; }
-    if (!mDisplayFrame) { return NS_ERROR_NULL_POINTER; }
+    mDisplayFrame = NS_NewBlockFrame(shell, NS_BLOCK_SPACE_MGR);
+    if (NS_UNLIKELY(!mDisplayFrame)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     // create the style context for the anonymous block frame
     nsRefPtr<nsStyleContext> styleContext;
@@ -2165,9 +2165,11 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     if (!styleContext) { return NS_ERROR_NULL_POINTER; }
 
     // Create a text frame and put it inside the block frame
-    rv = NS_NewTextFrame(shell, &mTextFrame);
-    if (NS_FAILED(rv)) { return rv; }
-    if (!mTextFrame)   { return NS_ERROR_NULL_POINTER; }
+    mTextFrame = NS_NewTextFrame(shell);
+    if (NS_UNLIKELY(!mTextFrame)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     nsRefPtr<nsStyleContext> textStyleContext;
     textStyleContext = styleSet->ResolveStyleForNonElement(styleContext);
     if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
@@ -2183,7 +2185,7 @@ nsComboboxControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     frameManager->SetPrimaryFrameFor(content, mTextFrame);
     */
 
-    rv = mDisplayFrame->Init(aPresContext, mContent, this, styleContext, nsnull);
+    nsresult rv = mDisplayFrame->Init(aPresContext, mContent, this, styleContext, nsnull);
     if (NS_FAILED(rv)) { return rv; }
 
     mDisplayFrame->SetInitialChildList(aPresContext, nsnull, mTextFrame);

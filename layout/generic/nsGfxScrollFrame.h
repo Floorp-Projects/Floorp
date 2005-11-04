@@ -182,8 +182,7 @@ class nsHTMLScrollFrame : public nsHTMLContainerFrame,
                           public nsIAnonymousContentCreator,
                           public nsIStatefulFrame {
 public:
-  friend nsresult NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
-                                        PRBool aIsRoot);
+  friend nsIFrame* NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, PRBool aIsRoot);
 
   NS_DECL_ISUPPORTS
 
@@ -333,8 +332,7 @@ class nsXULScrollFrame : public nsBoxFrame,
                          public nsIAnonymousContentCreator,
                          public nsIStatefulFrame {
 public:
-  friend nsresult NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
-                                       PRBool aIsRoot);
+  friend nsIFrame* NS_NewXULScrollFrame(nsIPresShell* aPresShell, PRBool aIsRoot);
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.

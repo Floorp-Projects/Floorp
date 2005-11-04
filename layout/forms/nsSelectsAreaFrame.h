@@ -49,7 +49,7 @@ class nsIContent;
 class nsSelectsAreaFrame : public nsAreaFrame
 {
 public:
-  friend nsresult NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsIFrame** aResult, PRUint32 aFlags);
+  friend nsIFrame* NS_NewSelectsAreaFrame(nsIPresShell* aShell, PRUint32 aFlags);
 
   // nsISupports
   //NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

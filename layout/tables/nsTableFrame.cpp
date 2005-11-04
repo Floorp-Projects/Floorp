@@ -815,9 +815,8 @@ nsTableFrame::CreateAnonymousColGroupFrame(nsTableColGroupType aColGroupType)
                                                            nsCSSAnonBoxes::tableColGroup,
                                                            mStyleContext);
   // Create a col group frame
-  nsIFrame* newFrame;
-  nsresult result = NS_NewTableColGroupFrame(shell, &newFrame);
-  if (NS_SUCCEEDED(result) && newFrame) {
+  nsIFrame* newFrame = NS_NewTableColGroupFrame(shell);
+  if (newFrame) {
     ((nsTableColGroupFrame *)newFrame)->SetColType(aColGroupType);
     newFrame->Init(presContext, colGroupContent, this, colGroupStyle, nsnull);
   }
@@ -929,8 +928,7 @@ nsTableFrame::CreateAnonymousColFrames(nsTableColGroupFrame* aColGroupFrame,
     NS_ASSERTION(iContent, "null content in CreateAnonymousColFrames");
 
     // create the new col frame
-    nsIFrame* colFrame;
-    NS_NewTableColFrame(shell, &colFrame);
+    nsIFrame* colFrame = NS_NewTableColFrame(shell);
     ((nsTableColFrame *) colFrame)->SetColType(aColType);
     colFrame->Init(presContext, iContent, aColGroupFrame,
                    styleContext, nsnull);
@@ -4059,19 +4057,10 @@ nscoord nsTableFrame::GetAscent()
 }
 /* ----- global methods ----- */
 
-nsresult 
-NS_NewTableFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewTableFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTableFrame* it = new (aPresShell) nsTableFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsTableFrame;
 }
 
 NS_METHOD 

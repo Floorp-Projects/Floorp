@@ -68,7 +68,7 @@
 class nsRootBoxFrame : public nsBoxFrame, public nsIRootBox {
 public:
 
-  friend nsresult NS_NewBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell);
 
   nsRootBoxFrame(nsIPresShell* aShell);
 
@@ -118,21 +118,10 @@ protected:
 
 //----------------------------------------------------------------------
 
-nsresult
-NS_NewRootBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewRootBoxFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsRootBoxFrame* it = new (aPresShell) nsRootBoxFrame (aPresShell);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsRootBoxFrame (aPresShell);
 }
 
 nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell, PR_TRUE)
