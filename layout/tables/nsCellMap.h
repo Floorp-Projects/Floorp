@@ -160,8 +160,8 @@ public:
   void AddColsAtEnd(PRUint32 aNumCols);
   void RemoveColsAtEnd();
 
-  PRBool RowIsSpannedInto(PRInt32 aRowIndex);
-  PRBool RowHasSpanningCells(PRInt32 aRowIndex);
+  PRBool RowIsSpannedInto(PRInt32 aRowIndex, PRInt32 aNumEffCols);
+  PRBool RowHasSpanningCells(PRInt32 aRowIndex, PRInt32 aNumEffCols);
   PRBool ColIsSpannedInto(PRInt32 aColIndex);
   PRBool ColHasSpanningCells(PRInt32 aColIndex);
 
@@ -312,10 +312,12 @@ public:
                                   PRInt32*        aColSpan = nsnull);
 
   PRBool RowIsSpannedInto(nsTableCellMap& aMap,
-                          PRInt32 aRowIndex);
+                          PRInt32         aRowIndex,
+                          PRInt32         aNumEffCols);
 
   PRBool RowHasSpanningCells(nsTableCellMap& aMap,
-                             PRInt32         aRowIndex);
+                             PRInt32         aRowIndex,
+                             PRInt32         aNumEffCols);
 
   PRBool ColHasSpanningCells(nsTableCellMap& aMap,
                              PRInt32         aColIndex);

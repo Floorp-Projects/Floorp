@@ -698,12 +698,14 @@ public:
                       nsTableRowGroupFrame** aFoot      = nsnull) const;
 
   // Returns PR_TRUE if there are any cells above the row at
-  // aRowIndex and spanning into the row at aRowIndex     
-  PRBool RowIsSpannedInto(PRInt32 aRowIndex);
+  // aRowIndex and spanning into the row at aRowIndex, the number of
+  // effective columns limits the search up to that column
+  PRBool RowIsSpannedInto(PRInt32 aRowIndex, PRInt32 aNumEffCols);
 
   // Returns PR_TRUE if there is a cell originating in aRowIndex
-  // which spans into the next row
-  PRBool RowHasSpanningCells(PRInt32 aRowIndex);
+  // which spans into the next row,  the number of effective
+  // columns limits the search up to that column
+  PRBool RowHasSpanningCells(PRInt32 aRowIndex, PRInt32 aNumEffCols);
 
   // Returns PR_TRUE if there are any cells to the left of the column at
   // aColIndex and spanning into the column at aColIndex     

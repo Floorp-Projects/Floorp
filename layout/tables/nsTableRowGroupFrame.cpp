@@ -523,6 +523,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
   float p2t;
   p2t = aPresContext->PixelsToTwips();
+  PRInt32 numEffCols = tableFrame->GetEffectiveColCount();
 
   // find the nearest row index at or before aStartRowFrameIn that isn't spanned into. 
   // If we have a computed height, then we can't compute the heights
@@ -535,7 +536,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
   }
   else {
     while (startRowIndex > rgStart) {
-      if (!tableFrame->RowIsSpannedInto(startRowIndex)) 
+      if (!tableFrame->RowIsSpannedInto(startRowIndex, numEffCols))
         break;
       startRowIndex--;
     }
@@ -607,7 +608,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
     }
     // See if a cell spans into the row. If so we'll have to do the next step
     if (!hasRowSpanningCell) {
-      if (tableFrame->RowIsSpannedInto(rowIndex + startRowIndex)) {
+      if (tableFrame->RowIsSpannedInto(rowIndex + startRowIndex, numEffCols)) {
         hasRowSpanningCell = PR_TRUE;
       }
     }
@@ -620,7 +621,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
       // See if the row has an originating cell with rowspan > 1. We cannot determine this for a row in a 
       // continued row group by calling RowHasSpanningCells, because the row's fif may not have any originating
       // cells yet the row may have a continued cell which originates in it.
-      if (mPrevInFlow || tableFrame->RowHasSpanningCells(startRowIndex + rowIndex)) {
+      if (mPrevInFlow || tableFrame->RowHasSpanningCells(startRowIndex + rowIndex, numEffCols)) {
         nsTableCellFrame* cellFrame = rowFrame->GetFirstCell();
         // iteratate the row's cell frames 
         while (cellFrame) {
@@ -1349,7 +1350,8 @@ nsTableRowGroupFrame::AppendFrames(nsIAtom*        aListName,
       // Reflow the new frames. They're already marked dirty, so generate a reflow
       // command that tells us to reflow our dirty child frames
       nsTableFrame::AppendDirtyReflowCommand(this);
-      if (tableFrame->RowIsSpannedInto(rowIndex)) {
+
+      if (tableFrame->RowIsSpannedInto(rowIndex, tableFrame->GetEffectiveColCount())) {
         tableFrame->SetNeedStrategyInit(PR_TRUE);
       }
       else if (!tableFrame->IsAutoHeight()) {
@@ -1406,8 +1408,9 @@ nsTableRowGroupFrame::InsertFrames(nsIAtom*        aListName,
     // Reflow the new frames. They're already marked dirty, so generate a reflow
     // command that tells us to reflow our dirty child frames
     nsTableFrame::AppendDirtyReflowCommand(this);
-    if (tableFrame->RowIsSpannedInto(rowIndex) || 
-        tableFrame->RowHasSpanningCells(rowIndex + numRows - 1)) {
+    PRInt32 numEffCols = tableFrame->GetEffectiveColCount();
+    if (tableFrame->RowIsSpannedInto(rowIndex, numEffCols) ||
+        tableFrame->RowHasSpanningCells(rowIndex + numRows - 1, numEffCols)) {
       tableFrame->SetNeedStrategyInit(PR_TRUE);
     }
     else if (!tableFrame->IsAutoHeight()) {
@@ -1580,8 +1583,9 @@ nsTableRowGroupFrame::IsSimpleRowFrame(nsTableFrame* aTableFrame,
     
     // It's a simple row frame if there are no cells that span into or
     // across the row
-    if (!aTableFrame->RowIsSpannedInto(rowIndex) &&
-        !aTableFrame->RowHasSpanningCells(rowIndex)) {
+    PRInt32 numEffCols = aTableFrame->GetEffectiveColCount();
+    if (!aTableFrame->RowIsSpannedInto(rowIndex, numEffCols) &&
+        !aTableFrame->RowHasSpanningCells(rowIndex, numEffCols)) {
       return PR_TRUE;
     }
   }
