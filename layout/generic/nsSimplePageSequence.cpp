@@ -106,19 +106,10 @@ nsSharedPageData::~nsSharedPageData()
   if (mDocURL) nsMemory::Free(mDocURL);
 }
 
-nsresult
-NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSimplePageSequenceFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsSimplePageSequenceFrame*  it = new (aPresShell) nsSimplePageSequenceFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsSimplePageSequenceFrame;
 }
 
 nsSimplePageSequenceFrame::nsSimplePageSequenceFrame() :

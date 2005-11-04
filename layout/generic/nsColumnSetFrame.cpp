@@ -138,21 +138,16 @@ protected:
  *
  * XXX should we support CSS columns applied to table elements?
  */
-nsresult
-NS_NewColumnSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aStateFlags)
+nsIFrame*
+NS_NewColumnSetFrame(nsIPresShell* aPresShell, PRUint32 aStateFlags)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-
   nsColumnSetFrame* it = new (aPresShell) nsColumnSetFrame;
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (it) {
+    // set the state flags (if any are provided)
+    it->AddStateBits(aStateFlags);
   }
 
-  // set the state flags (if any are provided)
-  it->AddStateBits(aStateFlags);
-  
-  *aNewFrame = it;
-  return NS_OK;
+  return it;
 }
 
 nsColumnSetFrame::nsColumnSetFrame()

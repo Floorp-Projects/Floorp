@@ -77,19 +77,10 @@
 #define SYNC_BUTTON 0x2
 #define SYNC_BOTH 0x3
 
-nsresult
-NS_NewFileControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewFileControlFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsFileControlFrame* it = new (aPresShell) nsFileControlFrame();
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsFileControlFrame();
 }
 
 nsFileControlFrame::nsFileControlFrame():

@@ -49,7 +49,7 @@ class nsMathMLmtableOuterFrame : public nsTableOuterFrame,
                                  public nsMathMLFrame
 {
 public:
-  friend nsresult NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -109,7 +109,7 @@ protected:
 class nsMathMLmtdFrame : public nsTableCellFrame
 {
 public:
-  friend nsresult NS_NewMathMLmtdFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmtdFrame(nsIPresShell* aPresShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -127,7 +127,7 @@ protected:
 class nsMathMLmtdInnerFrame : public nsBlockFrame,
                               public nsMathMLFrame {
 public:
-  friend nsresult NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 

@@ -61,10 +61,10 @@ static const PRUnichar ALEF              = 0x05D0;
 #define CHAR_IS_HEBREW(c) ((0x0590 <= (c)) && ((c)<= 0x05FF))
 // Note: The above code are moved from gfx/src/windows/nsRenderingContextWin.cpp
 
-nsresult
-NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
-nsresult
-NS_NewDirectionalFrame(nsIFrame** aNewFrame, PRUnichar aChar);
+nsIFrame*
+NS_NewContinuingTextFrame(nsIPresShell* aPresShell);
+nsIFrame*
+NS_NewDirectionalFrame(nsIPresShell* aPresShell, PRUnichar aChar);
 
 nsBidiPresUtils::nsBidiPresUtils() : mArraySize(8),
                                      mIndexMap(nsnull),
@@ -113,7 +113,7 @@ CreateBidiContinuation(nsPresContext* aPresContext,
 
   NS_ASSERTION(presShell, "PresShell must be set on PresContext before calling nsBidiPresUtils::CreateBidiContinuation");
 
-  NS_NewContinuingTextFrame(presShell, aNewFrame);
+  *aNewFrame = NS_NewContinuingTextFrame(presShell);
   if (!(*aNewFrame) ) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -175,6 +175,8 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
   aForceReflow = PR_FALSE;
   mLogicalFrames.Clear();
   mContentToFrameIndex.Clear();
+  
+  nsIPresShell* shell = aPresContext->PresShell();
 
   // handle bidi-override being set on the block itself before calling
   // InitLogicalArray.
@@ -182,23 +184,24 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
   const nsStyleTextReset* text = aBlockFrame->GetStyleTextReset();
 
   if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
-    nsresult rv = NS_OK;
     nsIFrame *directionalFrame = nsnull;
+
     if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-      rv = NS_NewDirectionalFrame(&directionalFrame, kRLO);
+      directionalFrame = NS_NewDirectionalFrame(shell, kRLO);
     }
     else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-      rv = NS_NewDirectionalFrame(&directionalFrame, kLRO);
+      directionalFrame = NS_NewDirectionalFrame(shell, kLRO);
     }
-    if (directionalFrame && NS_SUCCEEDED(rv)) {
+
+    if (directionalFrame) {
       mLogicalFrames.AppendElement(directionalFrame);
     }
   }
   mSuccess = InitLogicalArray(aPresContext, aFirstChild, nsnull, PR_TRUE);
+
   if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
-    nsIFrame *directionalFrame = nsnull;
-    nsresult rv = NS_NewDirectionalFrame(&directionalFrame, kPDF);
-    if (directionalFrame && NS_SUCCEEDED(rv)) {
+    nsIFrame* directionalFrame = NS_NewDirectionalFrame(shell, kPDF);
+    if (directionalFrame) {
       mLogicalFrames.AppendElement(directionalFrame);
     }
   }
@@ -365,13 +368,14 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
 {
   nsIFrame*             frame;
   nsIFrame*             directionalFrame;
-  nsresult              rv;
   nsresult              res = NS_OK;
+  
+  nsIPresShell* shell = aPresContext->PresShell();
 
   for (frame = aCurrentFrame;
        frame && frame != aNextInFlow;
        frame = frame->GetNextSibling()) {
-    rv = NS_ERROR_FAILURE;
+    directionalFrame = nsnull;
     const nsStyleDisplay* display = frame->GetStyleDisplay();
     
     if (aAddMarkers && !display->IsBlockLevel() ) {
@@ -382,22 +386,23 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
           break;
         case NS_STYLE_UNICODE_BIDI_EMBED:
           if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-            rv = NS_NewDirectionalFrame(&directionalFrame, kRLE);
+            directionalFrame = NS_NewDirectionalFrame(shell, kRLE);
           }
           else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-            rv = NS_NewDirectionalFrame(&directionalFrame, kLRE);
+            directionalFrame = NS_NewDirectionalFrame(shell, kLRE);
           }
           break;
         case NS_STYLE_UNICODE_BIDI_OVERRIDE:
           if (NS_STYLE_DIRECTION_RTL == vis->mDirection) {
-            rv = NS_NewDirectionalFrame(&directionalFrame, kRLO);
+            directionalFrame = NS_NewDirectionalFrame(shell, kRLO);
           }
           else if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
-            rv = NS_NewDirectionalFrame(&directionalFrame, kLRO);
+            directionalFrame = NS_NewDirectionalFrame(shell, kLRO);
           }
           break;
       }
-      if (NS_SUCCEEDED(rv) ) {
+
+      if (directionalFrame) {
         mLogicalFrames.AppendElement(directionalFrame);
       }
     }
@@ -426,9 +431,10 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
     }
 
     // If the element is attributed by dir, indicate direction pop (add PDF frame)
-    if (NS_SUCCEEDED(rv) ) {
-      rv = NS_NewDirectionalFrame(&directionalFrame, kPDF);
-      if (NS_SUCCEEDED(rv) ) {
+    if (directionalFrame) {
+      directionalFrame = NS_NewDirectionalFrame(shell, kPDF);
+   
+      if (directionalFrame) {
         mLogicalFrames.AppendElement(directionalFrame);
       }
     }

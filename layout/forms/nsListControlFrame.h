@@ -79,7 +79,7 @@ class nsListControlFrame : public nsHTMLScrollFrame,
                            public nsISelectControlFrame
 {
 public:
-  friend nsresult NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewListControlFrame(nsIPresShell* aPresShell);
 
    // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

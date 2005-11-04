@@ -115,13 +115,12 @@ public:
 
   virtual PRBool NeedsToObserve(const nsHTMLReflowState& aReflowState);
 
-  /** instantiate a new instance of nsTableCellFrame.
-    * @param aResult    the new object is returned in this out-param
+  /** instantiate a new instance of nsTableRowFrame.
+    * @param aPresShell the pres shell for this frame
     *
-    * @return  NS_OK if the frame was properly allocated, otherwise an error code
+    * @return           the frame that was created
     */
-  friend nsresult 
-  NS_NewTableCellFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+  friend nsIFrame* NS_NewTableCellFrame(nsIPresShell* aPresShell);
 
   NS_IMETHOD Paint(nsPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,

@@ -126,23 +126,17 @@ protected:
   nscoord   mLegendSpace;
 };
 
-nsresult
-NS_NewFieldSetFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aStateFlags)
+nsIFrame*
+NS_NewFieldSetFrame(nsIPresShell* aPresShell, PRUint32 aStateFlags)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
   nsFieldSetFrame* it = new (aPresShell) nsFieldSetFrame;
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (it) {
+    // set the state flags (if any are provided)
+    it->AddStateBits(aStateFlags);
   }
 
-  // set the state flags (if any are provided)
-  it->AddStateBits(aStateFlags);
-  
-  *aNewFrame = it;
-  return NS_OK;
+  return it;
 }
 
 nsFieldSetFrame::nsFieldSetFrame()

@@ -1138,22 +1138,14 @@ nsTableCellFrame::GetNextCellInColumn(nsITableCellLayout **aCellLayout)
   return CallQueryInterface(cellFrame, aCellLayout);
 }
 
-nsresult 
+nsIFrame*
 NS_NewTableCellFrame(nsIPresShell* aPresShell, 
-                     PRBool        aIsBorderCollapse,
-                     nsIFrame**    aNewFrame)
+                     PRBool        aIsBorderCollapse)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTableCellFrame* it = (aIsBorderCollapse) ? new (aPresShell) nsBCTableCellFrame 
-                                             : new (aPresShell) nsTableCellFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  if (aIsBorderCollapse)
+    return new (aPresShell) nsBCTableCellFrame;
+  else
+    return new (aPresShell) nsTableCellFrame;
 }
 
 nsMargin* 

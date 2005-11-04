@@ -57,8 +57,6 @@ protected:
 public:
   nsDirectionalFrame(PRUnichar aChar);
 
-  void* operator new(size_t aSize) CPP_THROW_NEW;
-
   static const nsIID& GetIID();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);

@@ -1194,9 +1194,11 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
   nsIFrame *textFrame = nsnull;
 
   do {
-    rv = NS_NewBlockFrame(shell, &anchorFrame);
-    if (NS_FAILED(rv))
+    anchorFrame = NS_NewBlockFrame(shell);
+    if (NS_UNLIKELY(!anchorFrame)) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
       break;
+    }
 
     rv = anchorFrame->Init(aPresContext, anchor, this, anchorStyleContext, PR_FALSE);
     if (NS_FAILED(rv))
@@ -1218,9 +1220,11 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
     nsHTMLContainerFrame::CreateViewForFrame(imgFrame, anchorFrame, PR_FALSE);
     anchorFrame->AppendFrames(nsnull, imgFrame);
 
-    rv = NS_NewTextFrame(shell, &textFrame);
-    if (NS_FAILED(rv))
+    textFrame = NS_NewTextFrame(shell);
+    if (NS_UNLIKELY(!textFrame)) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
       break;
+    }
 
     rv = textFrame->Init(aPresContext, text, anchorFrame, textStyleContext,
                          PR_FALSE);

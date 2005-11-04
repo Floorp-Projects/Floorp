@@ -153,25 +153,17 @@ private:
 };
 
 //---------------------------------------------------------
-nsresult
-NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewListControlFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
   nsListControlFrame* it =
     new (aPresShell) nsListControlFrame(aPresShell, aPresShell->GetDocument());
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (it) {
+    it->AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
   }
-  it->AddStateBits(NS_FRAME_INDEPENDENT_SELECTION);
-#if 0
-  // set the state flags (if any are provided)
-  it->AddStateBits(NS_BLOCK_SPACE_MGR);
-#endif
-  *aNewFrame = it;
-  return NS_OK;
+
+  return it;
 }
 
 //-----------------------------------------------------------

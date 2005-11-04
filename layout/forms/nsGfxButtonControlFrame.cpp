@@ -66,19 +66,10 @@ nsGfxButtonControlFrame::nsGfxButtonControlFrame()
   mSuggestedHeight = kSuggestedNotSet;
 }
 
-nsresult
-NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsGfxButtonControlFrame* it = new (aPresShell) nsGfxButtonControlFrame;
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsGfxButtonControlFrame;
 }
       
 nsIAtom*
@@ -221,9 +212,11 @@ nsGfxButtonControlFrame::CreateFrameFor(nsPresContext*   aPresContext,
     nsIFrame * parentFrame = mFrames.FirstChild();
     nsStyleContext* styleContext = parentFrame->GetStyleContext();
 
-    rv = NS_NewTextFrame(aPresContext->PresShell(), &newFrame);
-    if (NS_FAILED(rv)) { return rv; }
-    if (!newFrame)   { return NS_ERROR_NULL_POINTER; }
+    newFrame = NS_NewTextFrame(aPresContext->PresShell());
+    if (NS_UNLIKELY(!newFrame)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     nsRefPtr<nsStyleContext> textStyleContext;
     textStyleContext = aPresContext->StyleSet()->
       ResolveStyleForNonElement(styleContext);

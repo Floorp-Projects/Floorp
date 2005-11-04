@@ -1132,34 +1132,16 @@ VerifyNotDirty(state)
 #define DEBUG_VERIFY_NOT_DIRTY(state)
 #endif
 
-nsresult
-NS_NewTextFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewTextFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTextFrame* it = new (aPresShell) nsTextFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsTextFrame;
 }
 
-nsresult
-NS_NewContinuingTextFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewContinuingTextFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsContinuingTextFrame* it = new (aPresShell) nsContinuingTextFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsContinuingTextFrame;
 }
 
 nsTextFrame::nsTextFrame()

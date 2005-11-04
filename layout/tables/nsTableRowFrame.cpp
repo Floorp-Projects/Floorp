@@ -1611,19 +1611,10 @@ void nsTableRowFrame::SetContinuousBCBorderWidth(PRUint8     aForSide,
 
 /* ----- global methods ----- */
 
-nsresult 
-NS_NewTableRowFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame* 
+NS_NewTableRowFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTableRowFrame* it = new (aPresShell) nsTableRowFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsTableRowFrame;
 }
 
 #ifdef DEBUG

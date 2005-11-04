@@ -290,14 +290,14 @@ static FrameCtorDebugFlags gFlags[] = {
 nsIFrame*
 NS_NewAutoRepeatBoxFrame (nsIPresShell* aPresShell);
 
-nsresult
-NS_NewRootBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsIFrame*
+NS_NewRootBoxFrame (nsIPresShell* aPresShell);
 
-nsresult
-NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+nsIFrame*
+NS_NewDocElementBoxFrame(nsIPresShell* aPresShell);
 
-nsresult
-NS_NewThumbFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+nsIFrame*
+NS_NewThumbFrame (nsIPresShell* aPresShell);
 
 nsIFrame*
 NS_NewDeckFrame (nsIPresShell* aPresShell, nsIBoxLayout* aLayoutManager = nsnull);
@@ -370,11 +370,11 @@ NS_NewResizerFrame (nsIPresShell* aPresShell);
 
 #endif
 
-nsresult
-NS_NewHTMLScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot);
+nsIFrame*
+NS_NewHTMLScrollFrame (nsIPresShell* aPresShell, PRBool aIsRoot);
 
-nsresult
-NS_NewXULScrollFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot);
+nsIFrame*
+NS_NewXULScrollFrame (nsIPresShell* aPresShell, PRBool aIsRoot);
 
 nsIFrame*
 NS_NewSliderFrame (nsIPresShell* aPresShell);
@@ -1712,15 +1712,15 @@ MoveChildrenTo(nsFrameManager*          aFrameManager,
 
 // Structure used when creating table frames.
 struct nsTableCreator {
-  virtual nsresult CreateTableOuterFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableCaptionFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableRowGroupFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableColFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableColGroupFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableCellFrame(nsIFrame* aParentFrame, nsIFrame** aNewFrame);
-  virtual nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
+  virtual nsIFrame* CreateTableOuterFrame();
+  virtual nsIFrame* CreateTableFrame();
+  virtual nsIFrame* CreateTableCaptionFrame();
+  virtual nsIFrame* CreateTableRowGroupFrame();
+  virtual nsIFrame* CreateTableColFrame();
+  virtual nsIFrame* CreateTableColGroupFrame();
+  virtual nsIFrame* CreateTableRowFrame();
+  virtual nsIFrame* CreateTableCellFrame(nsIFrame* aParentFrame);
+  virtual nsIFrame* CreateTableCellInnerFrame();
 
   nsTableCreator(nsIPresShell* aPresShell)
   {
@@ -1732,50 +1732,49 @@ struct nsTableCreator {
   nsIPresShell* mPresShell;
 };
 
-nsresult
-nsTableCreator::CreateTableOuterFrame(nsIFrame** aNewFrame) {
-  return NS_NewTableOuterFrame(mPresShell, aNewFrame);
+nsIFrame*
+nsTableCreator::CreateTableOuterFrame() {
+  return NS_NewTableOuterFrame(mPresShell);
 }
 
-nsresult
-nsTableCreator::CreateTableFrame(nsIFrame** aNewFrame) {
-  return NS_NewTableFrame(mPresShell, aNewFrame);
+nsIFrame*
+nsTableCreator::CreateTableFrame() {
+  return NS_NewTableFrame(mPresShell);
 }
 
-nsresult
-nsTableCreator::CreateTableCaptionFrame(nsIFrame** aNewFrame) {
-  return NS_NewTableCaptionFrame(mPresShell, aNewFrame);
+nsIFrame*
+nsTableCreator::CreateTableCaptionFrame() {
+  return NS_NewTableCaptionFrame(mPresShell);
 }
 
-nsresult
-nsTableCreator::CreateTableRowGroupFrame(nsIFrame** aNewFrame) {
-  return NS_NewTableRowGroupFrame(mPresShell, aNewFrame);
+nsIFrame*
+nsTableCreator::CreateTableRowGroupFrame() {
+  return NS_NewTableRowGroupFrame(mPresShell);
 }
 
-nsresult
-nsTableCreator::CreateTableColFrame(nsIFrame** aNewFrame) {
-  return NS_NewTableColFrame(mPresShell, aNewFrame);
+nsIFrame*
+nsTableCreator::CreateTableColFrame() {
+  return NS_NewTableColFrame(mPresShell);
 }
 
-nsresult
-nsTableCreator::CreateTableColGroupFrame(nsIFrame** aNewFrame) {
-  return NS_NewTableColGroupFrame(mPresShell, aNewFrame);
+nsIFrame*
+nsTableCreator::CreateTableColGroupFrame() {
+  return NS_NewTableColGroupFrame(mPresShell);
 }
 
-nsresult
-nsTableCreator::CreateTableRowFrame(nsIFrame** aNewFrame) {
-  return NS_NewTableRowFrame(mPresShell, aNewFrame);
+nsIFrame*
+nsTableCreator::CreateTableRowFrame() {
+  return NS_NewTableRowFrame(mPresShell);
 }
 
-nsresult
-nsTableCreator::CreateTableCellFrame(nsIFrame*  aParentFrame,
-                                     nsIFrame** aNewFrame) {
-  return NS_NewTableCellFrame(mPresShell, IsBorderCollapse(aParentFrame), aNewFrame);
+nsIFrame*
+nsTableCreator::CreateTableCellFrame(nsIFrame*  aParentFrame) {
+  return NS_NewTableCellFrame(mPresShell, IsBorderCollapse(aParentFrame));
 }
 
-nsresult
-nsTableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
-  return NS_NewTableCellInnerFrame(mPresShell, aNewFrame);
+nsIFrame*
+nsTableCreator::CreateTableCellInnerFrame() {
+  return NS_NewTableCellInnerFrame(mPresShell);
 }
 
 //MathML Mod - RBS
@@ -1783,47 +1782,46 @@ nsTableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame) {
 
 // Structure used when creating MathML mtable frames
 struct nsMathMLmtableCreator: public nsTableCreator {
-  virtual nsresult CreateTableOuterFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableCellFrame(nsIFrame* aParentFrame, nsIFrame** aNewFrame);
-  virtual nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
+  virtual nsIFrame* CreateTableOuterFrame();
+  virtual nsIFrame* CreateTableFrame();
+  virtual nsIFrame* CreateTableRowFrame();
+  virtual nsIFrame* CreateTableCellFrame(nsIFrame* aParentFrame);
+  virtual nsIFrame* CreateTableCellInnerFrame();
 
   nsMathMLmtableCreator(nsIPresShell* aPresShell)
     :nsTableCreator(aPresShell) {};
 };
 
-nsresult
-nsMathMLmtableCreator::CreateTableOuterFrame(nsIFrame** aNewFrame)
+nsIFrame*
+nsMathMLmtableCreator::CreateTableOuterFrame()
 {
-  return NS_NewMathMLmtableOuterFrame(mPresShell, aNewFrame);
+  return NS_NewMathMLmtableOuterFrame(mPresShell);
 }
 
-nsresult
-nsMathMLmtableCreator::CreateTableFrame(nsIFrame** aNewFrame)
+nsIFrame*
+nsMathMLmtableCreator::CreateTableFrame()
 {
-  return NS_NewMathMLmtableFrame(mPresShell, aNewFrame);
+  return NS_NewMathMLmtableFrame(mPresShell);
 }
 
-nsresult
-nsMathMLmtableCreator::CreateTableRowFrame(nsIFrame** aNewFrame)
+nsIFrame*
+nsMathMLmtableCreator::CreateTableRowFrame()
 {
-  return NS_NewMathMLmtrFrame(mPresShell, aNewFrame);
+  return NS_NewMathMLmtrFrame(mPresShell);
 }
 
-nsresult
-nsMathMLmtableCreator::CreateTableCellFrame(nsIFrame*  aParentFrame,
-                                            nsIFrame** aNewFrame)
+nsIFrame*
+nsMathMLmtableCreator::CreateTableCellFrame(nsIFrame*  aParentFrame)
 {
   NS_ASSERTION(!IsBorderCollapse(aParentFrame), "not implemented");
-  return NS_NewMathMLmtdFrame(mPresShell, aNewFrame);
+  return NS_NewMathMLmtdFrame(mPresShell);
 }
 
-nsresult
-nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
+nsIFrame*
+nsMathMLmtableCreator::CreateTableCellInnerFrame()
 {
   // only works if aNewFrame can take care of the lineLayout logic
-  return NS_NewMathMLmtdInnerFrame(mPresShell, aNewFrame);
+  return NS_NewMathMLmtdInnerFrame(mPresShell);
 }
 #endif // MOZ_MATHML
 
@@ -2021,8 +2019,7 @@ nsCSSFrameConstructor::CreateAttributeContent(nsIContent* aParentContent,
   content->SetNativeAnonymous(PR_TRUE);
 
   // Create a text frame and initialize it
-  nsIFrame* textFrame = nsnull;
-  NS_NewTextFrame(mPresShell, &textFrame);
+  nsIFrame* textFrame = NS_NewTextFrame(mPresShell);
   rv = textFrame->Init(mPresShell->GetPresContext(), content, aParentFrame,
                        aStyleContext, nsnull);
   if (NS_FAILED(rv)) {
@@ -2263,7 +2260,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIFrame*             aParentFram
         textContent->SetNativeAnonymous(PR_TRUE);
 
         // Create a text frame and initialize it
-        NS_NewTextFrame(mPresShell, &textFrame);
+        textFrame = NS_NewTextFrame(mPresShell);
         if (!textFrame) {
           // XXX The quotes/counters code doesn't like the text pointer
           // being null in case of dynamic changes!
@@ -2337,9 +2334,9 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsFrameConstructorState& aSta
 
     if (NS_STYLE_DISPLAY_BLOCK ==
         pseudoStyleContext->GetStyleDisplay()->mDisplay) {
-      NS_NewBlockFrame(mPresShell, &containerFrame);
+      containerFrame = NS_NewBlockFrame(mPresShell);
     } else {
-      NS_NewInlineFrame(mPresShell, &containerFrame);
+      containerFrame = NS_NewInlineFrame(mPresShell);
     }        
     InitAndRestoreFrame(aState, aContent, aFrame, pseudoStyleContext, nsnull,
                         containerFrame);
@@ -2401,9 +2398,13 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
     case NS_FORM_INPUT_SUBMIT:
     case NS_FORM_INPUT_RESET:
     case NS_FORM_INPUT_BUTTON:
+    {
       if (gUseXBLForms)
         return NS_OK; // upddate IsSpecialContent if this becomes functional
-      return NS_NewGfxButtonControlFrame(mPresShell, aFrame);
+
+      *aFrame = NS_NewGfxButtonControlFrame(mPresShell);
+      return NS_UNLIKELY(!*aFrame) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    }
 
     case NS_FORM_INPUT_CHECKBOX:
       if (gUseXBLForms)
@@ -2417,12 +2418,16 @@ nsCSSFrameConstructor::CreateInputFrame(nsIContent      *aContent,
 
     case NS_FORM_INPUT_FILE:
     {
-      nsresult rv = NS_NewFileControlFrame(mPresShell, aFrame);
-      if (NS_SUCCEEDED(rv)) {
+      *aFrame = NS_NewFileControlFrame(mPresShell);
+
+      if (*aFrame) {
         // The (block-like) file control frame should have a space manager
         (*aFrame)->AddStateBits(NS_BLOCK_SPACE_MGR);
+        return NS_OK;
       }
-      return rv;
+      else {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     }
 
     case NS_FORM_INPUT_HIDDEN:
@@ -3552,7 +3557,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
   nsresult rv = NS_OK;
 
   // Create the outer table frame which holds the caption and inner table frame
-  aTableCreator.CreateTableOuterFrame(&aNewOuterFrame);
+  aNewOuterFrame = aTableCreator.CreateTableOuterFrame();
 
   nsIFrame* parentFrame = aContentParent;
   nsFrameItems* frameItems = &aChildItems;
@@ -3592,7 +3597,7 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
                                            PR_FALSE);
 
   // Create the inner table frame
-  aTableCreator.CreateTableFrame(&aNewInnerFrame);
+  aNewInnerFrame = aTableCreator.CreateTableFrame();
 
   InitAndRestoreFrame(aState, aContent, aNewOuterFrame, aStyleContext, nsnull,
                       aNewInnerFrame);
@@ -3658,8 +3663,10 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsFrameConstructorState& aStat
     ProcessPseudoFrames(aState, aChildItems);
   }
 
-  rv = aTableCreator.CreateTableCaptionFrame(&aNewFrame);
-  if (NS_FAILED(rv)) return rv;
+  aNewFrame = aTableCreator.CreateTableCaptionFrame();
+  if (NS_UNLIKELY(!aNewFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   InitAndRestoreFrame(aState, aContent, parentFrame, aStyleContext, nsnull,
                       aNewFrame);
   // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -3719,7 +3726,7 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aSta
 
   const nsStyleDisplay* styleDisplay = aStyleContext->GetStyleDisplay();
 
-  rv = aTableCreator.CreateTableRowGroupFrame(&aNewFrame);
+  aNewFrame = aTableCreator.CreateTableRowGroupFrame();
 
   nsIFrame* scrollFrame = nsnull;
   if (styleDisplay->IsScrollableOverflow()) {
@@ -3729,7 +3736,9 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsFrameConstructorState& aSta
 
   } 
   else {
-    if (NS_FAILED(rv)) return rv;
+    if (NS_UNLIKELY(!aNewFrame)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     InitAndRestoreFrame(aState, aContent, parentFrame, aStyleContext, nsnull,
                         aNewFrame);
     // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -3791,8 +3800,10 @@ nsCSSFrameConstructor::ConstructTableColGroupFrame(nsFrameConstructorState& aSta
     }
   }
 
-  rv = aTableCreator.CreateTableColGroupFrame(&aNewFrame);
-  if (NS_FAILED(rv)) return rv;
+  aNewFrame = aTableCreator.CreateTableColGroupFrame();
+  if (NS_UNLIKELY(!aNewFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   InitAndRestoreFrame(aState, aContent, parentFrame, aStyleContext, nsnull,
                       aNewFrame);
 
@@ -3841,8 +3852,10 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsFrameConstructorState& aState,
     }
   }
 
-  rv = aTableCreator.CreateTableRowFrame(&aNewFrame);
-  if (NS_FAILED(rv)) return rv;
+  aNewFrame = aTableCreator.CreateTableRowFrame();
+  if (NS_UNLIKELY(!aNewFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   InitAndRestoreFrame(aState, aContent, parentFrame, aStyleContext, nsnull,
                       aNewFrame);
   // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -3893,8 +3906,10 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsFrameConstructorState& aState,
     }
   }
 
-  rv = aTableCreator.CreateTableColFrame(&aNewFrame);
-  if (NS_FAILED(rv)) return rv;
+  aNewFrame = aTableCreator.CreateTableColFrame();
+  if (NS_UNLIKELY(!aNewFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   InitAndRestoreFrame(aState, aContent, parentFrame, aStyleContext, nsnull,
                       aNewFrame);
   // if the parent frame was anonymous then reparent the style context
@@ -3914,9 +3929,10 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsFrameConstructorState& aState,
       // The same content node should always resolve to the same style context.
       if (1 == spanX)
         styleContext = aNewFrame->GetStyleContext();
-      nsIFrame* newCol;
-      rv = aTableCreator.CreateTableColFrame(&newCol);
-      if (NS_FAILED(rv)) return rv;
+      nsIFrame* newCol = aTableCreator.CreateTableColFrame();
+      if (NS_UNLIKELY(!newCol)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
       InitAndRestoreFrame(aState, aContent, parentFrame, styleContext, nsnull,
                           newCol);
       ((nsTableColFrame*)newCol)->SetColType(eColAnonymousCol);
@@ -3963,8 +3979,10 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
     }
   }
 
-  rv = aTableCreator.CreateTableCellFrame(parentFrame, &aNewCellOuterFrame);
-  if (NS_FAILED(rv)) return rv;
+  aNewCellOuterFrame = aTableCreator.CreateTableCellFrame(parentFrame);
+  if (NS_UNLIKELY(!aNewCellOuterFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
  
   // Initialize the table cell frame
   InitAndRestoreFrame(aState, aContent, parentFrame, aStyleContext, nsnull,
@@ -3973,12 +3991,12 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
   nsHTMLContainerFrame::CreateViewForFrame(aNewCellOuterFrame, nsnull, PR_FALSE);
 
   // Create a block frame that will format the cell's content
-  rv = aTableCreator.CreateTableCellInnerFrame(&aNewCellInnerFrame);
+  aNewCellInnerFrame = aTableCreator.CreateTableCellInnerFrame();
 
-  if (NS_FAILED(rv)) {
+  if (NS_UNLIKELY(!aNewCellInnerFrame)) {
     aNewCellOuterFrame->Destroy(aState.mPresContext);
     aNewCellOuterFrame = nsnull;
-    return rv;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   
   // Resolve pseudo style and initialize the body cell frame
@@ -4578,9 +4596,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
     // otherwise build a box or a block
 #ifdef MOZ_XUL
     if (aDocElement->IsContentOfType(nsIContent::eXUL)) {
-      rv = NS_NewDocElementBoxFrame(mPresShell, &contentFrame);
-      if (NS_FAILED(rv)) {
-        return rv;
+      contentFrame = NS_NewDocElementBoxFrame(mPresShell);
+      if (NS_UNLIKELY(!contentFrame)) {
+        return NS_ERROR_OUT_OF_MEMORY;
       }
     }
     else
@@ -4711,7 +4729,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
                                                         nsCSSAnonBoxes::viewport,
                                                         nsnull);
 
-  NS_NewViewportFrame(mPresShell, &viewportFrame);
+  viewportFrame = NS_NewViewportFrame(mPresShell);
 
   nsPresContext* presContext = mPresShell->GetPresContext();
 
@@ -4756,18 +4774,18 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIContent*     aDocElement,
 #ifdef MOZ_XUL
         if (aDocElement->IsContentOfType(nsIContent::eXUL)) 
         {
-          NS_NewRootBoxFrame(mPresShell, &rootFrame);
+          rootFrame = NS_NewRootBoxFrame(mPresShell);
         } else 
 #endif
         {
-          NS_NewCanvasFrame(mPresShell, &rootFrame);
+          rootFrame = NS_NewCanvasFrame(mPresShell);
         }
 
         rootPseudo = nsCSSAnonBoxes::canvas;
         mDocElementContainingBlock = rootFrame;
     } else {
         // Create a page sequence frame
-        NS_NewSimplePageSequenceFrame(mPresShell, &rootFrame);
+        rootFrame = NS_NewSimplePageSequenceFrame(mPresShell);
         mPageSequenceFrame = rootFrame;
         rootPseudo = nsCSSAnonBoxes::pageSequence;
     }
@@ -4919,10 +4937,9 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*   aPresShell,
                                           nsIFrame*&      aPageFrame,
                                           nsIFrame*&      aPageContentFrame)
 {
-  nsresult rv = NS_OK;
-  rv = NS_NewPageFrame(aPresShell, &aPageFrame);
-  if (NS_FAILED(rv))
-    return rv;
+  aPageFrame = NS_NewPageFrame(aPresShell);
+  if (NS_UNLIKELY(!aPageFrame))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsStyleContext* parentStyleContext = aParentFrame->GetStyleContext();
   nsStyleSet *styleSet = aPresShell->StyleSet();
@@ -4936,11 +4953,11 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*   aPresShell,
   // the pages easier and faster.
   aPageFrame->Init(aPresContext, nsnull, aParentFrame, pagePseudoStyle, aPrevPageFrame);
   // XXXbz should we be passing in a non-null aContentParentFrame?
-  rv = nsHTMLContainerFrame::CreateViewForFrame(aPageFrame, nsnull, PR_TRUE);
+  nsresult rv = nsHTMLContainerFrame::CreateViewForFrame(aPageFrame, nsnull, PR_TRUE);
   if (NS_FAILED(rv))
     return NS_ERROR_NULL_POINTER;
 
-  NS_NewPageContentFrame(aPresShell, &aPageContentFrame);
+  aPageContentFrame = NS_NewPageContentFrame(aPresShell);
 
   nsRefPtr<nsStyleContext> pageContentPseudoStyle;
   pageContentPseudoStyle = styleSet->ResolvePseudoStyleFor(nsnull,
@@ -4974,10 +4991,9 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
                                                  nsIFrame*        aParentFrame,
                                                  nsIFrame**       aPlaceholderFrame)
 {
-  nsPlaceholderFrame* placeholderFrame;
-  nsresult            rv = NS_NewPlaceholderFrame(aPresShell, (nsIFrame**)&placeholderFrame);
+  nsPlaceholderFrame* placeholderFrame = (nsPlaceholderFrame*)NS_NewPlaceholderFrame(aPresShell);
 
-  if (NS_SUCCEEDED(rv)) {
+  if (placeholderFrame) {
     // The placeholder frame gets a pseudo style context
     nsRefPtr<nsStyleContext> placeholderStyle;
     nsStyleContext* parentContext = aStyleContext->GetParent();
@@ -4995,9 +5011,12 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
     aFrameManager->RegisterPlaceholderFrame(placeholderFrame);
 
     *aPlaceholderFrame = NS_STATIC_CAST(nsIFrame*, placeholderFrame);
+    
+    return NS_OK;
   }
-
-  return rv;
+  else {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 }
 
 nsresult
@@ -5005,10 +5024,9 @@ nsCSSFrameConstructor::ConstructRadioControlFrame(nsIFrame**      aNewFrame,
                                                   nsIContent*     aContent,
                                                   nsStyleContext* aStyleContext)
 {
-  nsresult rv = NS_NewGfxRadioControlFrame(mPresShell, aNewFrame);
-  if (NS_FAILED(rv)) {
-    *aNewFrame = nsnull;
-    return rv;
+  *aNewFrame = NS_NewGfxRadioControlFrame(mPresShell);
+  if (NS_UNLIKELY(!*aNewFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   nsRefPtr<nsStyleContext> radioStyle;
@@ -5019,7 +5037,7 @@ nsCSSFrameConstructor::ConstructRadioControlFrame(nsIFrame**      aNewFrame,
   if (*aNewFrame && NS_SUCCEEDED(CallQueryInterface(*aNewFrame, &radio))) {
     radio->SetRadioButtonFaceStyleContext(radioStyle);
   }
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -5027,10 +5045,9 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIFrame**      aNewFrame,
                                                      nsIContent*     aContent,
                                                      nsStyleContext* aStyleContext)
 {
-  nsresult rv = NS_NewGfxCheckboxControlFrame(mPresShell, aNewFrame);
-  if (NS_FAILED(rv)) {
-    *aNewFrame = nsnull;
-    return rv;
+  *aNewFrame = NS_NewGfxCheckboxControlFrame(mPresShell);
+  if (NS_UNLIKELY(!*aNewFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   nsRefPtr<nsStyleContext> checkboxStyle;
@@ -5041,7 +5058,7 @@ nsCSSFrameConstructor::ConstructCheckboxControlFrame(nsIFrame**      aNewFrame,
   if (*aNewFrame && NS_SUCCEEDED(CallQueryInterface(*aNewFrame, &checkbox))) {
     checkbox->SetCheckboxFaceStyleContext(checkboxStyle);
   }
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -5073,8 +5090,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
         // The drop-down list's frame is created explicitly. The combobox frame shares it's content
         // with the drop-down list.
       PRUint32 flags = NS_BLOCK_SHRINK_WRAP | NS_BLOCK_SPACE_MGR;
-      nsIFrame * comboboxFrame;
-      rv = NS_NewComboboxControlFrame(mPresShell, &comboboxFrame, flags);
+      nsIFrame* comboboxFrame = NS_NewComboboxControlFrame(mPresShell, flags);
 
       // Save the history state so we don't restore during construction
       // since the complete tree is required before we restore.
@@ -5102,8 +5118,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
                              "doesn't implement nsIComboboxControlFrame");
 
         // Create a listbox
-      nsIFrame * listFrame;
-      rv = NS_NewListControlFrame(mPresShell, &listFrame);
+      nsIFrame* listFrame = NS_NewListControlFrame(mPresShell);
 
         // Notify the listbox that it is being used as a dropdown list.
       nsIListControlFrame * listControlFrame;
@@ -5127,9 +5142,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       
       // Initialize the scroll frame positioned. Note that it is NOT
       // initialized as absolutely positioned.
-      nsIFrame* newFrame = nsnull;
-      nsIFrame* scrolledFrame = nsnull;
-      NS_NewSelectsAreaFrame(mPresShell, &scrolledFrame, flags);
+      nsIFrame* scrolledFrame = NS_NewSelectsAreaFrame(mPresShell, flags);
 
       // make sure any existing anonymous content is cleared out. Gfx scroll frame construction
       // should reset it to just be the anonymous scrollbars, but we don't want to depend
@@ -5139,7 +5152,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       InitializeSelectFrame(aState, listFrame,
                             scrolledFrame, aContent, comboboxFrame,
                             listStyle, PR_TRUE, aFrameItems);
-      newFrame = listFrame;
 
         // Set flag so the events go to the listFrame not child frames.
         // XXX: We should replace this with a real widget manager similar
@@ -5178,12 +5190,17 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       ///////////////////////////////////////////////////////////////////
       // ListBox - Old Native Implementation
       ///////////////////////////////////////////////////////////////////
-      nsIFrame * listFrame;
-      rv = NS_NewListControlFrame(mPresShell, &listFrame);
+      nsIFrame* listFrame = NS_NewListControlFrame(mPresShell);
+      if (listFrame) {
+        rv = NS_OK;
+      }
+      else {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+      }
 
       PRUint32 flags = NS_BLOCK_SHRINK_WRAP | NS_BLOCK_SPACE_MGR;
       nsIFrame* scrolledFrame = nsnull;
-      NS_NewSelectsAreaFrame(mPresShell, &scrolledFrame, flags);
+      scrolledFrame = NS_NewSelectsAreaFrame(mPresShell, flags);
 
       // ******* this code stolen from Initialze ScrollFrame ********
       // please adjust this code to use BuildScrollFrame.
@@ -5318,10 +5335,9 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
                                               const nsStyleDisplay*    aStyleDisplay,
                                               PRBool&                  aFrameHasBeenInitialized)
 {
-  nsIFrame * newFrame;
-  nsresult rv = NS_NewFieldSetFrame(mPresShell, &newFrame, NS_BLOCK_SPACE_MGR);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsIFrame* newFrame = NS_NewFieldSetFrame(mPresShell, NS_BLOCK_SPACE_MGR);
+  if (NS_UNLIKELY(!newFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Initialize it
@@ -5344,8 +5360,8 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsFrameConstructorState& aState,
   InitAndRestoreFrame(aState, aContent, newFrame, styleContext, nsnull,
                       areaFrame);
 
-  rv = aState.AddChild(newFrame, aFrameItems, aStyleDisplay, aContent,
-                       aStyleContext, aParentFrame);
+  nsresult rv = aState.AddChild(newFrame, aFrameItems, aStyleDisplay, aContent,
+                                aStyleContext, aParentFrame);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -5431,24 +5447,27 @@ nsCSSFrameConstructor::ConstructTextFrame(nsFrameConstructorState& aState,
   nsIFrame* newFrame = nsnull;
 
 #ifdef MOZ_SVG
-  nsresult rv;
   nsCOMPtr<nsISVGTextContainerFrame> svg_parent = do_QueryInterface(aParentFrame);
   if (svg_parent)
-    rv = NS_NewSVGGlyphFrame(mPresShell, aContent, aParentFrame, &newFrame);
-  else
-    rv = NS_NewTextFrame(mPresShell, &newFrame);
+  {
+    NS_NewSVGGlyphFrame(mPresShell, aContent, aParentFrame, &newFrame);
+  }
+  else {
+    newFrame = NS_NewTextFrame(mPresShell);
+  }
 #else
-  nsresult rv = NS_NewTextFrame(mPresShell, &newFrame);
+  newFrame = NS_NewTextFrame(mPresShell);
 #endif
-  if (NS_FAILED(rv) || !newFrame)
-    return rv;
+
+  if (NS_UNLIKELY(!newFrame))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   // Set the frame state bit for text frames to mark them as replaced.
   // XXX kipp: temporary
   newFrame->AddStateBits(NS_FRAME_REPLACED_ELEMENT);
 
-  rv = InitAndRestoreFrame(aState, aContent, aParentFrame, aStyleContext,
-                           nsnull, newFrame);
+  nsresult rv = InitAndRestoreFrame(aState, aContent, aParentFrame, aStyleContext,
+                                    nsnull, newFrame);
 
   if (NS_FAILED(rv)) {
     newFrame->Destroy(aState.mPresContext);
@@ -6559,9 +6578,9 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
     // Build a XULScrollFrame when the child is a box, otherwise an
     // HTMLScrollFrame
     if (IsXULDisplayType(aContentStyle->GetStyleDisplay())) {
-      NS_NewXULScrollFrame(mPresShell, &gfxScrollFrame, aIsRoot);
+      gfxScrollFrame = NS_NewXULScrollFrame(mPresShell, aIsRoot);
     } else {
-      NS_NewHTMLScrollFrame(mPresShell, &gfxScrollFrame, aIsRoot);
+      gfxScrollFrame = NS_NewHTMLScrollFrame(mPresShell, aIsRoot);
     }
 
     InitAndRestoreFrame(aState, aContent, aParentFrame, contentStyle, nsnull,
@@ -6811,7 +6830,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
       addedToFrameList = PR_TRUE;
     } else {
       // Create a positioned inline frame
-      NS_NewPositionedInlineFrame(mPresShell, &newFrame);
+      newFrame = NS_NewPositionedInlineFrame(mPresShell);
       // Note that we want to insert the inline after processing kids, since
       // processing of kids may split the inline.
       ConstructInline(aState, aDisplay, aContent,
@@ -6828,13 +6847,16 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
       ProcessPseudoFrames(aState, aFrameItems); 
     }
     // Create the block frame
-    rv = NS_NewBlockFrame(mPresShell, &newFrame);
-    if (NS_SUCCEEDED(rv)) { // That worked so construct the block and its children
+    newFrame = NS_NewBlockFrame(mPresShell);
+    if (newFrame) { // That worked so construct the block and its children
       // XXXbz should we be passing in a non-null aContentParentFrame?
       rv = ConstructBlock(aState, aDisplay, aContent,
                           aParentFrame, nsnull, aStyleContext, &newFrame,
                           aFrameItems, PR_FALSE);
       addedToFrameList = PR_TRUE;
+    }
+    else {
+      rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
   // See if it's an inline frame of some sort
@@ -6844,12 +6866,15 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
       ProcessPseudoFrames(aState, aFrameItems); 
     }
     // Create the inline frame
-    rv = NS_NewInlineFrame(mPresShell, &newFrame);
-    if (NS_SUCCEEDED(rv)) { // That worked so construct the inline and its children
+    newFrame = NS_NewInlineFrame(mPresShell);
+    if (newFrame) { // That worked so construct the inline and its children
       // Note that we want to insert the inline after processing kids, since
       // processing of kids may split the inline.
       rv = ConstructInline(aState, aDisplay, aContent,
                            aParentFrame, aStyleContext, PR_FALSE, newFrame);
+    }
+    else {
+      rv = NS_ERROR_OUT_OF_MEMORY;
     }
 
     // To keep the hash table small don't add inline frames (they're
@@ -7151,9 +7176,10 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
                         newFrame);
 
     // then, create a block frame that will wrap the table frame
-    nsIFrame* blockFrame;
-    rv = NS_NewBlockFrame(mPresShell, &blockFrame);
-    if (NS_FAILED(rv)) return rv;
+    nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell);
+    if (NS_UNLIKELY(!newFrame)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     nsRefPtr<nsStyleContext> blockContext;
     blockContext = styleSet->ResolvePseudoStyleFor(aContent,
                                                    nsCSSAnonBoxes::mozAnonymousBlock,
@@ -7742,14 +7768,17 @@ nsCSSFrameConstructor::ConstructPageBreakFrame(nsFrameConstructorState& aState,
   pseudoStyle = mPresShell->StyleSet()->ResolvePseudoStyleFor(nsnull,
                                                               nsCSSAnonBoxes::pageBreak,
                                                               aStyleContext);
-  nsIFrame* pageBreakFrame;
-  nsresult rv = NS_NewPageBreakFrame(mPresShell, &pageBreakFrame); 
-  if (NS_SUCCEEDED(rv)) {
+  nsIFrame* pageBreakFrame = NS_NewPageBreakFrame(mPresShell); 
+  if (pageBreakFrame) {
     InitAndRestoreFrame(aState, aContent, aParentFrame, pseudoStyle, nsnull,
                         pageBreakFrame);
     aFrameItems.AddChild(pageBreakFrame);
+
+    return NS_OK;
   }
-  return rv;
+  else {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 }
 
 nsresult
@@ -10834,11 +10863,9 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell*    aPresShe
                                                        nsStyleContext*  aStyleContext,
                                                        nsIFrame**       aContinuingFrame)
 {
-  nsIFrame* newFrame;
-  nsresult  rv;
+  nsIFrame* newFrame = NS_NewTableOuterFrame(aPresShell);
 
-  rv = NS_NewTableOuterFrame(aPresShell, &newFrame);
-  if (NS_SUCCEEDED(rv)) {
+  if (newFrame) {
     newFrame->Init(aPresContext, aContent, aParentFrame, aStyleContext, aFrame);
     // XXXbz should we be passing in a non-null aContentParentFrame?
     nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
@@ -10870,9 +10897,8 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell*    aPresShe
         // XXX We have to do it this way instead of calling ConstructFrameByDisplayType(),
         // because of a bug in the way ConstructTableFrame() handles the initial child
         // list...
-        nsIFrame*               captionFrame;
-        nsFrameItems            childItems;
-        NS_NewTableCaptionFrame(aPresShell, &captionFrame);
+        nsIFrame*    captionFrame = NS_NewTableCaptionFrame(aPresShell);
+        nsFrameItems childItems;
         nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                       GetAbsoluteContainingBlock(newFrame),
                                       captionFrame);
@@ -10887,10 +10913,14 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresShell*    aPresShe
 
     // Set the outer table's initial child list
     newFrame->SetInitialChildList(aPresContext, nsnull, newChildFrames.childList);
+    
+    *aContinuingFrame = newFrame;
+    return NS_OK;
   }
-
-  *aContinuingFrame = newFrame;
-  return rv;
+  else {
+    *aContinuingFrame = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 }
 
 nsresult
@@ -10902,11 +10932,9 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
                                                   nsStyleContext*  aStyleContext,
                                                   nsIFrame**       aContinuingFrame)
 {
-  nsIFrame* newFrame;
-  nsresult  rv;
-    
-  rv = NS_NewTableFrame(aPresShell, &newFrame);
-  if (NS_SUCCEEDED(rv)) {
+  nsIFrame* newFrame = NS_NewTableFrame(aPresShell);
+
+  if (newFrame) {
     newFrame->Init(aPresContext, aContent, aParentFrame, aStyleContext, aFrame);
     // XXXbz should we be passing in a non-null aContentParentFrame?
     nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
@@ -10934,7 +10962,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
                                         GetAbsoluteContainingBlock(newFrame),
                                         nsnull);
 
-          NS_NewTableRowGroupFrame(aPresShell, &headerFooterFrame);
+          headerFooterFrame = NS_NewTableRowGroupFrame(aPresShell);
           nsIContent* headerFooter = rowGroupFrame->GetContent();
           headerFooterFrame->Init(aPresContext, headerFooter, newFrame,
                                   rowGroupStyle, nsnull);
@@ -10960,10 +10988,14 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
     
     // Set the table frame's initial child list
     newFrame->SetInitialChildList(aPresContext, nsnull, childFrames.childList);
+    
+    *aContinuingFrame = newFrame;
+    return NS_OK;
   }
-
-  *aContinuingFrame = newFrame;
-  return rv;
+  else {
+    *aContinuingFrame = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 }
 
 nsresult
@@ -10983,24 +11015,27 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
   nsIContent* content = aFrame->GetContent();
 
   if (nsLayoutAtoms::textFrame == frameType) {
-    rv = NS_NewContinuingTextFrame(shell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewContinuingTextFrame(shell);
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
     
   } else if (nsLayoutAtoms::inlineFrame == frameType) {
-    rv = NS_NewInlineFrame(shell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewInlineFrame(shell);
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
   
   } else if (nsLayoutAtoms::blockFrame == frameType) {
-    rv = NS_NewBlockFrame(shell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewBlockFrame(shell);
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
@@ -11008,11 +11043,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
   
   } else if (nsLayoutAtoms::areaFrame == frameType) {
     newFrame = NS_NewAreaFrame(shell, 0);
-    if (NS_UNLIKELY(!newFrame)) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-    
-    if (NS_SUCCEEDED(rv)) {
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext,
                      aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -11020,8 +11052,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     }
   
   } else if (nsLayoutAtoms::columnSetFrame == frameType) {
-    rv = NS_NewColumnSetFrame(shell, &newFrame, 0);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewColumnSetFrame(shell, 0);
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext,
                      aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
@@ -11029,8 +11062,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     }
   
   } else if (nsLayoutAtoms::positionedInlineFrame == frameType) {
-    rv = NS_NewPositionedInlineFrame(shell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewPositionedInlineFrame(shell);
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
@@ -11049,16 +11083,18 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
                                     content, styleContext, &newFrame);
 
   } else if (nsLayoutAtoms::tableRowGroupFrame == frameType) {
-    rv = NS_NewTableRowGroupFrame(shell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewTableRowGroupFrame(shell);
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
 
   } else if (nsLayoutAtoms::tableRowFrame == frameType) {
-    rv = NS_NewTableRowFrame(shell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewTableRowFrame(shell);
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
@@ -11082,8 +11118,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     }
 
   } else if (IS_TABLE_CELL(frameType)) {
-    rv = NS_NewTableCellFrame(shell, IsBorderCollapse(aParentFrame), &newFrame);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewTableCellFrame(shell, IsBorderCollapse(aParentFrame));
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
@@ -11098,16 +11135,18 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     }
   
   } else if (nsLayoutAtoms::lineFrame == frameType) {
-    rv = NS_NewFirstLineFrame(shell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewFirstLineFrame(shell);
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
   
   } else if (nsLayoutAtoms::letterFrame == frameType) {
-    rv = NS_NewFirstLetterFrame(shell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewFirstLetterFrame(shell);
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
@@ -11115,7 +11154,8 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
 
   } else if (nsLayoutAtoms::imageFrame == frameType) {
     newFrame = NS_NewImageFrame(shell);
-    if (NS_LIKELY(newFrame != nsnull)) {
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
     }
   } else if (nsLayoutAtoms::placeholderFrame == frameType) {
@@ -11133,9 +11173,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       return NS_ERROR_NULL_POINTER;
     newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
   } else if (nsLayoutAtoms::fieldSetFrame == frameType) {
-    rv = NS_NewFieldSetFrame(aPresContext->PresShell(), &newFrame,
-                             NS_BLOCK_SPACE_MGR);
-    if (NS_SUCCEEDED(rv)) {
+    newFrame = NS_NewFieldSetFrame(aPresContext->PresShell(), NS_BLOCK_SPACE_MGR);
+
+    if (newFrame) {
       newFrame->Init(aPresContext, content, aParentFrame, styleContext,
                      aFrame);
 
@@ -11153,13 +11193,13 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
     }
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected frame type");
-    rv = NS_ERROR_UNEXPECTED;
+    return NS_ERROR_UNEXPECTED;
   }
 
   *aContinuingFrame = newFrame;
 
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (!newFrame) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Now deal with fixed-pos things....  They should appear on all pages, and
@@ -11864,9 +11904,8 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
   nsStyleContext* parentStyle = aFrame->GetStyleContext();
   nsRefPtr<nsStyleContext> firstLineStyle = GetFirstLineStyle(aContent,
                                                               parentStyle);
-  nsIFrame* lineFrame;
-  rv = NS_NewFirstLineFrame(mPresShell, &lineFrame);
-  if (NS_SUCCEEDED(rv)) {
+  nsIFrame* lineFrame = NS_NewFirstLineFrame(mPresShell);
+  if (lineFrame) {
     // Initialize the line frame
     rv = InitAndRestoreFrame(aState, aContent, aFrame, firstLineStyle, nsnull,
                              lineFrame);    
@@ -11897,6 +11936,9 @@ nsCSSFrameConstructor::WrapFramesInFirstLineFrame(
     }
     lineFrame->SetInitialChildList(aState.mPresContext, nsnull,
                                    firstInlineFrame);
+  }
+  else {
+    rv = NS_ERROR_OUT_OF_MEMORY;
   }
 
   return rv;
@@ -12027,8 +12069,11 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
       // We do not have a first-line frame
       if (isInline) {
         // We now need a first-line frame to contain the inline frame.
-        nsIFrame* lineFrame;
-        rv = NS_NewFirstLineFrame(&lineFrame);
+        nsIFrame* lineFrame = NS_NewFirstLineFrame();
+        if (!lineFrame) {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+
         if (NS_SUCCEEDED(rv)) {
           // Lookup first-line style context
           nsStyleContext* parentStyle = aBlockFrame->GetStyleContext();
@@ -12212,7 +12257,7 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   nsIFrame* letterFrame;
   nsStyleSet *styleSet = mPresShell->StyleSet();
 
-  NS_NewFirstLetterFrame(mPresShell, &letterFrame);  
+  letterFrame = NS_NewFirstLetterFrame(mPresShell);  
   InitAndRestoreFrame(aState, aTextContent, aParentFrame, aStyleContext,
                       nsnull, letterFrame);
 
@@ -12290,8 +12335,7 @@ nsCSSFrameConstructor::CreateLetterFrame(nsFrameConstructorState& aState,
                                                       parentStyleContext);
     if (sc) {
       // Create a new text frame (the original one will be discarded)
-      nsIFrame* textFrame;
-      NS_NewTextFrame(mPresShell, &textFrame);
+      nsIFrame* textFrame = NS_NewTextFrame(mPresShell);
 
       // Create the right type of first-letter frame
       const nsStyleDisplay* display = sc->GetStyleDisplay();
@@ -12303,9 +12347,9 @@ nsCSSFrameConstructor::CreateLetterFrame(nsFrameConstructorState& aState,
       }
       else {
         // Make an inflow first-letter frame
-        nsIFrame* letterFrame;
-        nsresult rv = NS_NewFirstLetterFrame(mPresShell, &letterFrame);
-        if (NS_SUCCEEDED(rv)) {
+        nsIFrame* letterFrame = NS_NewFirstLetterFrame(mPresShell);
+
+        if (letterFrame) {
           // Initialize the first-letter-frame.
           letterFrame->Init(aState.mPresContext, aTextContent, aParentFrame,
                             sc, nsnull);
@@ -12512,10 +12556,9 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   if (!newSC) {
     return NS_OK;
   }
-  nsIFrame* newTextFrame;
-  nsresult rv = NS_NewTextFrame(aPresShell, &newTextFrame);
-  if (NS_FAILED(rv)) {
-    return rv;
+  nsIFrame* newTextFrame = NS_NewTextFrame(aPresShell);
+  if (NS_UNLIKELY(!newTextFrame)) {
+    return NS_ERROR_OUT_OF_MEMORY;;
   }
   newTextFrame->Init(aPresContext, textContent, parentFrame, newSC, nsnull);
 
@@ -12599,7 +12642,7 @@ nsCSSFrameConstructor::RemoveFirstLetterFrames(nsPresContext* aPresContext,
       if (!newSC) {
         break;
       }
-      NS_NewTextFrame(aPresShell, &textFrame);
+      textFrame = NS_NewTextFrame(aPresShell);
       textFrame->Init(aPresContext, textContent, aFrame, newSC, nsnull);
 
       // Next rip out the kid and replace it with the text frame
@@ -12764,7 +12807,7 @@ nsCSSFrameConstructor::ConstructBlock(nsFrameConstructorState& aState,
   if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO
       || columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
     nsIFrame* columnSetFrame = nsnull;
-    NS_NewColumnSetFrame(mPresShell, &columnSetFrame, 0);
+    columnSetFrame = NS_NewColumnSetFrame(mPresShell, 0);
     if (!columnSetFrame) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -12944,7 +12987,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
     blockStyle = nsCSSAnonBoxes::mozAnonymousPositionedBlock;
   }
   else {
-    NS_NewBlockFrame(mPresShell, &blockFrame);
+    blockFrame = NS_NewBlockFrame(mPresShell);
     blockStyle = nsCSSAnonBoxes::mozAnonymousBlock;
   }
 
@@ -12983,10 +13026,10 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
 
   if (list3) {
     if (aIsPositioned) {
-      NS_NewPositionedInlineFrame(mPresShell, &inlineFrame);
+      inlineFrame = NS_NewPositionedInlineFrame(mPresShell);
     }
     else {
-      NS_NewInlineFrame(mPresShell, &inlineFrame);
+      inlineFrame = NS_NewInlineFrame(mPresShell);
     }
 
     InitAndRestoreFrame(aState, aContent, aParentFrame, aStyleContext, nsnull,

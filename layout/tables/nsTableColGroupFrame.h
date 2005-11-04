@@ -62,13 +62,12 @@ public:
 
   // default constructor supplied by the compiler
 
-  /** instantiate a new instance of nsTableColGroupFrame.
-    * @param aResult    the new object is returned in this out-param
+  /** instantiate a new instance of nsTableRowFrame.
+    * @param aPresShell the pres shell for this frame
     *
-    * @return  NS_OK if the frame was properly allocated, otherwise an error code
+    * @return           the frame that was created
     */
-  friend nsresult 
-  NS_NewTableColGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+  friend nsIFrame* NS_NewTableColGroupFrame(nsIPresShell* aPresShell);
 
   /** sets defaults for the colgroup.
     * @see nsIFrame::Init

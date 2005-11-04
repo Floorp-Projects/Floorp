@@ -260,20 +260,14 @@ RecordReflowStatus(PRBool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
 
 const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
 
-nsresult
-NS_NewBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
+nsIFrame*
+NS_NewBlockFrame(nsIPresShell* aPresShell, PRUint32 aFlags)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
   nsBlockFrame* it = new (aPresShell) nsBlockFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (it) {
+    it->SetFlags(aFlags);
   }
-  it->SetFlags(aFlags);
-  *aNewFrame = it;
-  return NS_OK;
+  return it;
 }
 
 nsBlockFrame::nsBlockFrame() 

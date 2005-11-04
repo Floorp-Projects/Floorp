@@ -41,22 +41,18 @@
 #include "nsIContent.h"
 #include "nsListControlFrame.h"
 
-nsresult
-NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsIFrame** aNewFrame, PRUint32 aFlags)
+nsIFrame*
+NS_NewSelectsAreaFrame(nsIPresShell* aShell, PRUint32 aFlags)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
   nsSelectsAreaFrame* it = new (aShell) nsSelectsAreaFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (it) {
+    // We need NS_BLOCK_SPACE_MGR to ensure that the options inside the select
+    // aren't expanded by right floats outside the select.
+    it->SetFlags(aFlags | NS_BLOCK_SPACE_MGR);
   }
-  // We need NS_BLOCK_SPACE_MGR to ensure that the options inside the select
-  // aren't expanded by right floats outside the select.
-  it->SetFlags(aFlags | NS_BLOCK_SPACE_MGR);
-  *aNewFrame = it;
-  return NS_OK;
+
+  return it;
 }
 
 /*NS_IMETHODIMP

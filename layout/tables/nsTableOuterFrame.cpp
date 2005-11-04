@@ -87,20 +87,10 @@ nsTableCaptionFrame::GetType() const
   return nsLayoutAtoms::tableCaptionFrame;
 }
 
-nsresult 
-NS_NewTableCaptionFrame(nsIPresShell* aPresShell, 
-                        nsIFrame**    aNewFrame)
+nsIFrame* 
+NS_NewTableCaptionFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTableCaptionFrame* it = new (aPresShell) nsTableCaptionFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsTableCaptionFrame;
 }
 
 /* ----------- nsTableOuterFrame ---------- */
@@ -2176,19 +2166,10 @@ NS_IMETHODIMP nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColC
 /*---------------- end of nsITableLayout implementation ------------------*/
 
 
-nsresult 
-NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewTableOuterFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsTableOuterFrame* it = new (aPresShell) nsTableOuterFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsTableOuterFrame;
 }
 
 #ifdef DEBUG

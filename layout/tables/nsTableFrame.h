@@ -181,15 +181,12 @@ public:
   /** nsTableOuterFrame has intimate knowledge of the inner table frame */
   friend class nsTableOuterFrame;
 
-  /** instantiate a new instance of nsTableFrame.
-    * @param aResult    the new object is returned in this out-param
-    * @param aContent   the table object to map
-    * @param aParent    the parent of the new frame
+  /** instantiate a new instance of nsTableRowFrame.
+    * @param aPresShell the pres shell for this frame
     *
-    * @return  NS_OK if the frame was properly allocated, otherwise an error code
+    * @return           the frame that was created
     */
-  friend nsresult 
-  NS_NewTableFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+  friend nsIFrame* NS_NewTableFrame(nsIPresShell* aPresShell);
 
   /** sets defaults for table-specific style.
     * @see nsIFrame::Init 

@@ -87,19 +87,10 @@ static const char kEventQueueServiceCID[] = NS_EVENTQUEUESERVICE_CONTRACTID;
 
 //----------nsHTMLScrollFrame-------------------------------------------
 
-nsresult
-NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot)
+nsIFrame*
+NS_NewHTMLScrollFrame(nsIPresShell* aPresShell, PRBool aIsRoot)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsHTMLScrollFrame* it = new (aPresShell) nsHTMLScrollFrame(aPresShell, aIsRoot);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsHTMLScrollFrame(aPresShell, aIsRoot);
 }
 
 nsHTMLScrollFrame::nsHTMLScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
@@ -940,19 +931,10 @@ NS_INTERFACE_MAP_END_INHERITING(nsHTMLContainerFrame)
 
 //----------nsXULScrollFrame-------------------------------------------
 
-nsresult
-NS_NewXULScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot)
+nsIFrame*
+NS_NewXULScrollFrame(nsIPresShell* aPresShell, PRBool aIsRoot)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsXULScrollFrame* it = new (aPresShell) nsXULScrollFrame(aPresShell, aIsRoot);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsXULScrollFrame(aPresShell, aIsRoot);
 }
 
 nsXULScrollFrame::nsXULScrollFrame(nsIPresShell* aShell, PRBool aIsRoot)
