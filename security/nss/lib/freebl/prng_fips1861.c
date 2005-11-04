@@ -35,7 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: prng_fips1861.c,v 1.21 2005/09/30 22:01:46 wtchang%redhat.com Exp $ */
+/* $Id: prng_fips1861.c,v 1.22 2005/11/04 01:07:30 wtchang%redhat.com Exp $ */
 
 #include "prerr.h"
 #include "secerr.h"
@@ -193,6 +193,10 @@ alg_fips186_2_cn_1(RNGContext *rng, const unsigned char *XSEEDj)
 {
     /* SHA1 context for G(t, XVAL) function */
     SHA1Context sha1cx;
+    /* XKEY for iteration 1 */
+    PRUint8 XKEY_1[BSIZE];
+    const PRUint8 *XKEY_old;
+    PRUint8 *XKEY_new;
     /* input to hash function */
     PRUint8 XVAL[BSIZE];
     /* store a copy of the output to compare with the previous output */
@@ -203,6 +207,8 @@ alg_fips186_2_cn_1(RNGContext *rng, const unsigned char *XSEEDj)
     PRUint8 w_i[BSIZE];
     int i;
     unsigned int len;
+    SECStatus rv = SECSuccess;
+
     if (!rng->isValid) {
 	/* RNG has alread entered an invalid state. */
 	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
@@ -218,16 +224,32 @@ alg_fips186_2_cn_1(RNGContext *rng, const unsigned char *XSEEDj)
      * <Step 3.1> XSEEDj is optional user input
      */ 
     for (i = 0; i < 2; i++) {
+	/* only update rng->XKEY when both iterations have been completed */
+	if (i == 0) {
+	    /* for iteration 0 */
+	    XKEY_old = rng->XKEY;
+	    XKEY_new = XKEY_1;
+	} else {
+	    /* for iteration 1 */
+	    XKEY_old = XKEY_1;
+	    XKEY_new = rng->XKEY;
+	}
 	/* 
 	 * <Step 3.2a> XVAL = (XKEY + XSEEDj) mod 2^b
 	 *     :always reduced mod 2^b, since storing as b-bit value
 	 */
 	if (XSEEDj) {
 	    /* XSEEDj > 0 */
-	    ADD_B_BIT_2(XVAL, rng->XKEY, XSEEDj);
+	    if (memcmp(XKEY_old, XSEEDj, BSIZE) == 0) {
+		/* Should we add the error code SEC_ERROR_BAD_RNG_SEED? */
+		PORT_SetError(SEC_ERROR_INVALID_ARGS);
+		rv = SECFailure;
+		goto done;
+	    }
+	    ADD_B_BIT_2(XVAL, XKEY_old, XSEEDj);
 	} else {
 	    /* XSEEDj == 0 */
-	    memcpy(XVAL, rng->XKEY, BSIZE);
+	    memcpy(XVAL, XKEY_old, BSIZE);
 	}
 	/* 
 	 * <Step 3.2b> Wi = G(t, XVAL)
@@ -242,7 +264,7 @@ alg_fips186_2_cn_1(RNGContext *rng, const unsigned char *XSEEDj)
 	 * <Step 3.2c> XKEY = (1 + XKEY + Wi) mod 2^b
 	 *     :always reduced mod 2^b, since storing as 160-bit value 
 	 */
-	ADD_B_BIT_PLUS_CARRY(rng->XKEY, rng->XKEY, w_i, 1);
+	ADD_B_BIT_PLUS_CARRY(XKEY_new, XKEY_old, w_i, 1);
 	/*
 	 * <Step 3.3> Xj = (W0 || W1)
 	 */
@@ -253,17 +275,21 @@ alg_fips186_2_cn_1(RNGContext *rng, const unsigned char *XSEEDj)
 	/* failed FIPS 140-2 continuous RNG test.  RNG now invalid. */
 	rng->isValid = PR_FALSE;
 	PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-	return SECFailure;
+	rv = SECFailure;
+	goto done;
     }
     /* Xj is the output */
     memcpy(rng->Xj, x_j, 2*GSIZE);
     /* Always have a full buffer after executing alg_cn_1() */
     rng->avail = 2*GSIZE;
+
+done:
     /* housekeeping */
     memset(&w_i[BSIZE - GSIZE], 0, GSIZE);
     memset(x_j, 0, 2*GSIZE);
     memset(XVAL, 0, BSIZE);
-    return SECSuccess;
+    memset(XKEY_1, 0, BSIZE);
+    return rv;
 }
 
 /* Use NSPR to prevent RNG_RNGInit from being called from separate
@@ -380,7 +406,8 @@ prng_RandomUpdate(RNGContext *rng, const void *data, size_t bytes)
 	rv = alg_fips186_2_cn_1(rng, inputhash);
     }
     /* If got this far, have added bytes of seed data. */
-    rng->seedCount += bytes;
+    if (rv == SECSuccess)
+	rng->seedCount += bytes;
     PZ_Unlock(rng->lock);
     /* --- UNLOCKED --- */
     /* housekeeping */
