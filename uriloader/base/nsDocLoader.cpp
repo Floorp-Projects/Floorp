@@ -731,6 +731,10 @@ void nsDocLoader::DocLoaderIsEmpty()
       // 
       mLoadGroup->SetDefaultLoadRequest(nsnull); 
 
+      // Take a ref to our parent now so that we can call DocLoaderIsEmpty() on
+      // it even if our onload handler removes us from the docloader tree.
+      nsRefPtr<nsDocLoader> parent = mParent;
+      
       //
       // Do nothing after firing the OnEndDocumentLoad(...). The document
       // loader may be loading a *new* document - if LoadDocument()
@@ -738,8 +742,8 @@ void nsDocLoader::DocLoaderIsEmpty()
       //
       doStopDocumentLoad(docRequest, loadGroupStatus);
 
-      if (mParent) {
-        mParent->DocLoaderIsEmpty();
+      if (parent) {
+        parent->DocLoaderIsEmpty();
       }
     }
   }
