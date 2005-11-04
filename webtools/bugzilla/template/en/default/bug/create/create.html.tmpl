@@ -27,7 +27,6 @@
 [% product_name = product FILTER html %]
 [% PROCESS global/header.html.tmpl
   title = "Enter $terms.Bug: $product_name"
-  h2 = "This page lets you enter a new $terms.bug into ${terms.Bugzilla}."
   onload="set_assign_to();"
 %]
 [% USE Bugzilla %]
