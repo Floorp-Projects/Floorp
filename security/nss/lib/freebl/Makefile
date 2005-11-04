@@ -165,6 +165,7 @@ endif # AIX
 ifeq ($(OS_TARGET), HP-UX)
 ifneq ($(OS_TEST), ia64)
 # PA-RISC
+ASFILES += ret_cr16.s
 ifndef USE_64
     FREEBL_BUILD_SINGLE_SHLIB = 
     HAVE_ABI32_INT32 = 1
