@@ -301,8 +301,6 @@ nsListControlFrame::nsListControlFrame(nsIPresShell* aShell,
   mOverrideReflowOpt           = PR_FALSE;
   mPassId                      = 0;
 
-  mDummyFrame                  = nsnull;
-
   mControlSelectMode           = PR_FALSE;
   REFLOW_COUNTER_INIT()
 }
@@ -486,20 +484,25 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
       childframe = presShell->GetPrimaryFrameFor(focusedContent);
     }
     if (!childframe) {
-      // The only way we can get right here is that there are no options
-      // and we need to get the dummy frame so it has the focus ring
+      // Failing all else, try the first thing we have.
       childframe = containerFrame->GetFirstChild(nsnull);
       result = NS_OK;
     }
   }
 
-  if (!childframe) return;
+  nsRect fRect;
+  if (childframe) {
+    // get the child rect
+    fRect = childframe->GetRect();
 
-  // get the child rect
-  nsRect fRect = childframe->GetRect();
+    // get it into the coordinates of containerFrame
+    fRect.MoveBy(childframe->GetParent()->GetOffsetTo(containerFrame));
+  } else {
+    fRect.x = fRect.y = 0;
+    fRect.width = mRect.width;
+    fRect.height = CalcFallbackRowHeight(0);
+  }
   
-  // get it into the coordinates of containerFrame
-  fRect.MoveBy(childframe->GetParent()->GetOffsetTo(containerFrame));
   PRBool lastItemIsSelected = PR_FALSE;
   if (focusedIndex != kNothingSelected) {
     nsCOMPtr<nsIDOMNode> node;
@@ -898,30 +901,8 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   PRInt32 length = 0;
   GetNumberOfOptions(&length);
 
-  // If there is only one option and that option's content is empty
-  // then heightOfARow is zero, so we need to go measure 
-  // the height of the option as if it had some text.
-  if (heightOfARow == 0 && length > 0) {
-    nsCOMPtr<nsIContent> option = GetOptionContent(0);
-    if (option) {
-      nsIFrame * optFrame = GetPresContext()->PresShell()->
-        GetPrimaryFrameFor(option);
-      if (optFrame) {
-        nsStyleContext* optStyle = optFrame->GetStyleContext();
-        if (optStyle) {
-          const nsStyleFont* styleFont = optStyle->GetStyleFont();
-          nsCOMPtr<nsIFontMetrics> fontMet;
-          nsresult result = aPresContext->DeviceContext()->
-            GetMetricsFor(styleFont->mFont, *getter_AddRefs(fontMet));
-          if (NS_SUCCEEDED(result) && fontMet) {
-            if (fontMet) {
-              fontMet->GetHeight(heightOfARow);
-              mMaxHeight = heightOfARow;
-            }
-          }
-        }
-      }
-    }
+  if (heightOfARow == 0) {
+    heightOfARow = CalcFallbackRowHeight(length);
   }
   mMaxHeight = heightOfARow;
 
@@ -2167,22 +2148,6 @@ nsListControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
   return NS_OK;
 }
 
-//---------------------------------------------------------
-// Used by layout to determine if we have a fake option
-NS_IMETHODIMP
-nsListControlFrame::GetDummyFrame(nsIFrame** aFrame)
-{
-  (*aFrame) = mDummyFrame;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsListControlFrame::SetDummyFrame(nsIFrame* aFrame)
-{
-  mDummyFrame = aFrame;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsListControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
@@ -2395,6 +2360,44 @@ nsListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
     }
   }
   return PR_FALSE;
+}
+
+nscoord
+nsListControlFrame::CalcFallbackRowHeight(PRInt32 aNumOptions)
+{
+  const nsStyleFont* styleFont = nsnull;
+    
+  if (aNumOptions > 0) {
+    // Try the first option
+    nsCOMPtr<nsIContent> option = GetOptionContent(0);
+    if (option) {
+      nsIFrame * optFrame = GetPresContext()->PresShell()->
+        GetPrimaryFrameFor(option);
+      if (optFrame) {
+        styleFont = optFrame->GetStyleFont();
+      }
+    }
+  }
+
+  if (!styleFont) {
+    // Fall back to our own font
+    styleFont = GetStyleFont();
+  }
+
+  NS_ASSERTION(styleFont, "Must have font style by now!");
+
+  nscoord rowHeight = 0;
+  
+  nsCOMPtr<nsIFontMetrics> fontMet;
+  nsresult result = GetPresContext()->DeviceContext()->
+    GetMetricsFor(styleFont->mFont, *getter_AddRefs(fontMet));
+  if (NS_SUCCEEDED(result) && fontMet) {
+    if (fontMet) {
+      fontMet->GetHeight(rowHeight);
+    }
+  }
+
+  return rowHeight;
 }
 
 //----------------------------------------------------------------------

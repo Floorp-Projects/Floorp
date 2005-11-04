@@ -5308,16 +5308,6 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
   ProcessChildren(aState, aContent, scrolledFrame, PR_FALSE,
                   childItems, PR_TRUE);
 
-  // if a select is being created with zero options we need to create
-  // a special pseudo frame so it can be sized as best it can
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(aContent));
-  if (selectElement) {
-    AddDummyFrameToSelect(aState, scrollFrame, scrolledFrame, &childItems,
-                          aContent, selectElement);
-  }
-  //////////////////////////////////////////////////
-  //////////////////////////////////////////////////
-
   // Set the scrolled frame's initial child lists
   scrolledFrame->SetInitialChildList(aState.mPresContext, nsnull,
                                      childItems.childList);
@@ -8972,17 +8962,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     }
   }
 
-  // Here we have been notified that content has been appended so if
-  // the select now has a single item we need to go in and removed
-  // the dummy frame.
-  nsCOMPtr<nsIDOMHTMLSelectElement> sel(do_QueryInterface(aContainer));
-  if (sel) {
-    nsIContent *childContent = aContainer->GetChildAt(aNewIndexInContainer);
-    if (childContent) {
-      RemoveDummyFrameFromSelect(aContainer, childContent, sel);
-    }
-  } 
-
 #ifdef DEBUG
   if (gReallyNoisyContentUpdates) {
     nsIFrameDebug* fdbg = nsnull;
@@ -8997,93 +8976,12 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   return NS_OK;
 }
 
-
-nsresult
-nsCSSFrameConstructor::AddDummyFrameToSelect(nsFrameConstructorState& aState,
-                                             nsIFrame*        aListFrame,
-                                             nsIFrame*        aParentFrame,
-                                             nsFrameItems*    aChildItems,
-                                             nsIContent*      aContainer,
-                                             nsIDOMHTMLSelectElement* aSelectElement)
-{
-  PRUint32 numOptions = 0;
-  nsresult rv = aSelectElement->GetLength(&numOptions);
-  if (NS_SUCCEEDED(rv) && 0 == numOptions) {
-    nsISelectControlFrame* listFrame = nsnull;
-    CallQueryInterface(aListFrame, &listFrame);
-    if (listFrame) {
-      nsIFrame* dummyFrame;
-      listFrame->GetDummyFrame(&dummyFrame);
-
-      if (!dummyFrame) {
-        nsStyleContext* styleContext = aParentFrame->GetStyleContext();
-        nsIFrame*         generatedFrame = nsnull;
-        if (CreateGeneratedContentFrame(aState, aParentFrame, aContainer,
-                                        styleContext,
-                                        nsCSSAnonBoxes::dummyOption,
-                                        &generatedFrame)) {
-          // Add the generated frame to the child list
-          if (aChildItems) {
-            aChildItems->AddChild(generatedFrame);
-          } else {
-            aState.mFrameManager->AppendFrames(aParentFrame, nsnull,
-                                               generatedFrame);
-          }
-
-          listFrame->SetDummyFrame(generatedFrame);
-          return NS_OK;
-        }
-      }
-    }
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
 // defined below
 static nsresult
 DeletingFrameSubtree(nsPresContext*  aPresContext,
                      nsIPresShell*    aPresShell,
                      nsFrameManager*  aFrameManager,
                      nsIFrame*        aFrame);
-
-nsresult
-nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIContent*     aContainer,
-                                                  nsIContent*     aChild,
-                                                  nsIDOMHTMLSelectElement * aSelectElement)
-{
-  // Check to see if this is the first thing we have added to this frame.
-  
-  PRUint32 numOptions = 0;
-  nsresult rv = aSelectElement->GetLength(&numOptions);
-  if (NS_SUCCEEDED(rv) && numOptions > 0) {
-    nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContainer);
-    if (frame) {
-      nsISelectControlFrame* listFrame = nsnull;
-      CallQueryInterface(frame, &listFrame);
-
-      if (listFrame) {
-        nsIFrame* dummyFrame;
-        listFrame->GetDummyFrame(&dummyFrame);
-
-        if (dummyFrame) {
-          listFrame->SetDummyFrame(nsnull);
-
-          // get the child's parent frame (which ought to be the list frame)
-          nsIFrame* parentFrame = dummyFrame->GetParent();
-
-          nsFrameManager *frameManager = mPresShell->FrameManager();
-          DeletingFrameSubtree(mPresShell->GetPresContext(), mPresShell,
-                               frameManager, dummyFrame);
-          frameManager->RemoveFrame(parentFrame, nsnull, dummyFrame);
-          return NS_OK;
-        }
-      }
-    }
-  }
-
-  return NS_ERROR_FAILURE;
-}
 
 // Return TRUE if the insertion of aChild into aParent1,2 should force a reframe. aParent1 is 
 // the special inline container which contains a block. aParentFrame is approximately aParent1's
@@ -9646,12 +9544,6 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       }
     }
   }
-  // Here we have been notified that content has been insert
-  // so if the select now has a single item 
-  // we need to go in and removed the dummy frame
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(aContainer);
-  if (selectElement)
-    RemoveDummyFrameFromSelect(aContainer, aChild, selectElement);
 
 #ifdef DEBUG
   if (gReallyNoisyContentUpdates && parentFrame) {
@@ -9906,26 +9798,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
 
   if (! childFrame) {
     frameManager->ClearUndisplayedContentIn(aChild, aContainer);
-  }
-
-  // When the last item is removed from a select, 
-  // we need to add a pseudo frame so select gets sized as the best it can
-  // so here we see if it is a select and then we get the number of options
-  if (aContainer && childFrame) {
-    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = do_QueryInterface(aContainer);
-    if (selectElement) {
-      // XXX temp needed only native controls
-      nsIFrame* selectFrame = mPresShell->GetPrimaryFrameFor(aContainer);
-
-      // For "select" add the pseudo frame after the last item is deleted
-      nsIFrame* parentFrame = childFrame->GetParent();
-      if (parentFrame && parentFrame != selectFrame) {
-        nsFrameConstructorState state(mPresShell,
-                                      nsnull, nsnull, nsnull);
-        AddDummyFrameToSelect(state, selectFrame, parentFrame, nsnull,
-                              aContainer, selectElement);
-      }
-    } 
   }
 
 #ifdef MOZ_XUL
