@@ -122,7 +122,7 @@ if ($action eq 'search') {
                 $query .= $expr . ' = ?';
                 $matchstr = '.' unless $matchstr;
             } else { # substr or unknown
-                $query .= $expr . ' like ?';
+                $query .= $dbh->sql_istrcmp($expr, '?', 'LIKE');
                 $matchstr = "%$matchstr%";
             }
             $nextCondition = 'AND';
