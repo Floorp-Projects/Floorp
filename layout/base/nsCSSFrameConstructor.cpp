@@ -806,6 +806,9 @@ nsAbsoluteItems::nsAbsoluteItems(nsIFrame* aContainingBlock)
 void
 nsAbsoluteItems::AddChild(nsIFrame* aChild)
 {
+  NS_ASSERTION(aChild->GetPresContext()->FrameManager()->
+               GetPlaceholderFrameFor(aChild),
+               "Child without placeholder being added to nsAbsoluteItems?");
   aChild->AddStateBits(NS_FRAME_OUT_OF_FLOW);
   nsFrameItems::AddChild(aChild);
 }
@@ -1850,10 +1853,8 @@ nsAutoEnqueueBinding::~nsAutoEnqueueBinding()
 
 // Helper function that determines the child list name that aChildFrame
 // is contained in
-static void
-GetChildListNameFor(nsIFrame*       aParentFrame,
-                    nsIFrame*       aChildFrame,
-                    nsIAtom**       aListName)
+static nsIAtom*
+GetChildListNameFor(nsIFrame*       aChildFrame)
 {
   nsIAtom*      listName;
   
@@ -1877,11 +1878,10 @@ GetChildListNameFor(nsIFrame*       aParentFrame,
   }
 
   // Verify that the frame is actually in that child list
-  NS_ASSERTION(nsFrameList(aParentFrame->GetFirstChild(listName))
+  NS_ASSERTION(nsFrameList(aChildFrame->GetParent()->GetFirstChild(listName))
                .ContainsFrame(aChildFrame), "not in child list");
 
-  NS_IF_ADDREF(listName);
-  *aListName = listName;
+  return listName;
 }
 
 //----------------------------------------------------------------------
@@ -8285,9 +8285,7 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
 
       // If the frame is out-of-flow, GPFF() will have returned the
       // out-of-flow frame; we want the placeholder.
-      const nsStyleDisplay* display = prevSibling->GetStyleDisplay();
-
-      if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
+      if (prevSibling->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
         nsIFrame *placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
@@ -8357,9 +8355,7 @@ FindNextAnonymousSibling(nsIPresShell* aPresShell,
 
       // If the frame is out-of-flow, GPFF() will have returned the
       // out-of-flow frame; we want the placeholder.
-      const nsStyleDisplay* display = nextSibling->GetStyleDisplay();
-
-      if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
+      if (nextSibling->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
         nsIFrame* placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(nextSibling, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
@@ -8467,9 +8463,8 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIContent*       aContainer,
       // The frame may have a continuation. Get the last-in-flow
       prevSibling = prevSibling->GetLastInFlow();
 
-      // If the frame is out-of-flow, GPFF() will have returned the
-      // out-of-flow frame; we want the placeholder.
-      // XXXldb Why not check NS_FRAME_OUT_OF_FLOW state bit?
+      // XXXbz should the IsValidSibling check be after we get the
+      // placeholder for out-of-flows?
       const nsStyleDisplay* display = prevSibling->GetStyleDisplay();
   
       if (aChild && !IsValidSibling(aContainerFrame, *prevSibling, 
@@ -8477,14 +8472,9 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIContent*       aContainer,
                                     childDisplay))
         continue;
 
-      if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
-        nsIFrame* placeholderFrame;
-        mPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
-        // XXXldb Was this supposed to be a null-check of placeholderFrame?
-        if (prevSibling)
-          prevSibling = placeholderFrame;
-      }
-      else if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
+      // If the frame is out-of-flow, GPFF() will have returned the
+      // out-of-flow frame; we want the placeholder.
+      if (prevSibling->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
         nsIFrame* placeholderFrame;
         mPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
@@ -8534,8 +8524,8 @@ nsCSSFrameConstructor::FindNextSibling(nsIContent*       aContainer,
       NS_ASSERTION(!nextSibling->GetPrevInFlow(),
                    "primary frame is a continuation!?");
 
-      // If the frame is out-of-flow, GPFF() will have returned the
-      // out-of-flow frame; we want the placeholder.
+      // XXXbz should the IsValidSibling check be after we get the
+      // placeholder for out-of-flows?
       const nsStyleDisplay* display = nextSibling->GetStyleDisplay();
 
       if (aChild && !IsValidSibling(aContainerFrame, *nextSibling, 
@@ -8543,7 +8533,9 @@ nsCSSFrameConstructor::FindNextSibling(nsIContent*       aContainer,
                                     childDisplay))
         continue;
 
-      if (display->IsFloating() || display->IsAbsolutelyPositioned()) {
+      // If the frame is out-of-flow, GPFF() will have returned the
+      // out-of-flow frame; we want the placeholder.
+      if (nextSibling->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
         // Nope. Get the place-holder instead
         nsIFrame* placeholderFrame;
         mPresShell->GetPlaceholderFrameFor(nextSibling, &placeholderFrame);
@@ -9723,17 +9715,11 @@ DeletingFrameSubtree(nsPresContext*  aPresContext,
       } else
 #endif
       {
-        // Get the out-of-flow frame's parent
-        nsIFrame* parentFrame = outOfFlowFrame->GetParent();
-  
-        // Get the child list name for the out-of-flow frame
-        nsCOMPtr<nsIAtom> listName;
-        GetChildListNameFor(parentFrame, outOfFlowFrame,
-                            getter_AddRefs(listName));
-  
-        // Ask the parent to delete the out-of-flow frame
-        aFrameManager->RemoveFrame(parentFrame,
-                                   listName, outOfFlowFrame);
+        // Ask the out-of-flow's parent to delete the out-of-flow
+        // frame from the right list
+        aFrameManager->RemoveFrame(outOfFlowFrame->GetParent(),
+                                   GetChildListNameFor(outOfFlowFrame),
+                                   outOfFlowFrame);
       }
     }
   }
@@ -9886,23 +9872,27 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
     // remove the mapping from content objects to frames
     DeletingFrameSubtree(presContext, mPresShell, frameManager, childFrame);
 
-    // See if the child frame is a floating frame
-    //   (positioned frames are handled below in the "else" clause)
-    const nsStyleDisplay* display = childFrame->GetStyleDisplay();
-    nsPlaceholderFrame* placeholderFrame = nsnull;
-    if (display->mDisplay == NS_STYLE_DISPLAY_POPUP)
-      // Get the placeholder frame
-      placeholderFrame = frameManager->GetPlaceholderFrameFor(childFrame);
-      if (placeholderFrame) {
-        // Remove the mapping from the frame to its placeholder
-        frameManager->UnregisterPlaceholderFrame(placeholderFrame);
+    // See if the child frame is an out-of-flow
+    if (childFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+      nsPlaceholderFrame* placeholderFrame =
+        frameManager->GetPlaceholderFrameFor(childFrame);
+      NS_ASSERTION(placeholderFrame, "No placeholder for out-of-flow?");
+      
+      // Remove the mapping from the frame to its placeholder
+      frameManager->UnregisterPlaceholderFrame(placeholderFrame);
+
+      // Now we remove the out-of-flow frame
+#ifdef MOZ_XUL
+      // Handle XUL popups specially -- they need to be removed from
+      // the root frame
+      const nsStyleDisplay* display = childFrame->GetStyleDisplay();
+      if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
     
         // Locate the root popup set and remove ourselves from the popup set's list
         // of popup frames.
         nsIFrame* rootFrame = frameManager->GetRootFrame();
         if (rootFrame)
           rootFrame = rootFrame->GetFirstChild(nsnull);
-#ifdef MOZ_XUL
         nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
         if (rootBox) {
           nsIFrame* popupSetFrame = rootBox->GetPopupSetFrame();
@@ -9912,117 +9902,61 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
               popupSet->RemovePopupFrame(childFrame);
           }
         }
+      } else {
 #endif
-
-        // Remove the placeholder frame first (XXX second for now) (so
-        // that it doesn't retain a dangling pointer to memory)
-        if (placeholderFrame) {
-          parentFrame = placeholderFrame->GetParent();
-          DeletingFrameSubtree(presContext, mPresShell, frameManager,
-                               placeholderFrame);
-          frameManager->RemoveFrame(parentFrame, nsnull, placeholderFrame);
-          return NS_OK;
-        }
-      }
-      else if (display->IsFloating()) {
-#ifdef NOISY_FIRST_LETTER
-        printf("  ==> child display is still floating!\n");
-#endif
-        // Get the placeholder frame
-        nsPlaceholderFrame* placeholderFrame =
-          frameManager->GetPlaceholderFrameFor(childFrame);
-
-        // Remove the mapping from the frame to its placeholder
-        if (placeholderFrame)
-          frameManager->UnregisterPlaceholderFrame(placeholderFrame);
-
-        // Now we remove the floating frame
-
-        // XXX has to be done first for now: the blocks line list
+        // XXX has to be done first for now: for floats, the block's line list
         // contains an array of pointers to the placeholder - we have to
         // remove the float first (which gets rid of the lines
         // reference to the placeholder and float) and then remove the
         // placeholder
         rv = frameManager->RemoveFrame(parentFrame,
-                                       nsLayoutAtoms::floatList, childFrame);
-        if (NS_FAILED(rv)) {
-          // We might have made it normal content instead. Try removing it from
-          // the normal child list.
-          rv = frameManager->RemoveFrame(parentFrame, nsnull, childFrame);
-        }
-
-        // Remove the placeholder frame first (XXX second for now) (so
-        // that it doesn't retain a dangling pointer to memory)
-        if (placeholderFrame) {
-          parentFrame = placeholderFrame->GetParent();
-          DeletingFrameSubtree(presContext, mPresShell, frameManager,
-                               placeholderFrame);
-          rv = frameManager->RemoveFrame(parentFrame,
-                                         nsnull, placeholderFrame);
-        }
+                                       GetChildListNameFor(childFrame),
+                                       childFrame);
+#ifdef MOZ_XUL
       }
-      // See if it's absolutely or fixed positioned
-      else if (display->IsAbsolutelyPositioned()) {
-        // Get the placeholder frame
-        nsPlaceholderFrame* placeholderFrame =
-          frameManager->GetPlaceholderFrameFor(childFrame);
+#endif
 
-        // Remove the mapping from the frame to its placeholder
-        if (placeholderFrame)
-          frameManager->UnregisterPlaceholderFrame(placeholderFrame);
-
-        // Generate two notifications. First for the absolutely positioned
-        // frame
-        rv = frameManager->RemoveFrame(parentFrame,
-           (NS_STYLE_POSITION_FIXED == display->mPosition) ?
-           nsLayoutAtoms::fixedList : nsLayoutAtoms::absoluteList, childFrame);
-        if (NS_FAILED(rv)) {
-          // We might have made it normal content instead. Try removing it from
-          // the normal child list.
-          rv = frameManager->RemoveFrame(parentFrame, nsnull, childFrame);
-        }
-
-        // Now the placeholder frame
-        if (placeholderFrame) {
-          parentFrame = placeholderFrame->GetParent();
-          rv = frameManager->RemoveFrame(parentFrame, nsnull,
-                                         placeholderFrame);
-        }
-
-      } else {
-        // Notify the parent frame that it should delete the frame
-        // check for a table caption which goes on an additional child list with a different parent
-        nsIFrame* outerTableFrame; 
-        if (GetCaptionAdjustedParent(parentFrame, childFrame, &outerTableFrame)) {
-          rv = frameManager->RemoveFrame(outerTableFrame,
-                                         nsLayoutAtoms::captionList,
-                                         childFrame);
-        }
-        else {
-          rv = frameManager->RemoveFrame(parentFrame, nsnull, childFrame);
-        }
+      // Remove the placeholder frame first (XXX second for now) (so
+      // that it doesn't retain a dangling pointer to memory)
+      parentFrame = placeholderFrame->GetParent();
+      DeletingFrameSubtree(presContext, mPresShell, frameManager,
+                           placeholderFrame);
+      rv |= frameManager->RemoveFrame(parentFrame,
+                                      nsnull, placeholderFrame);
+    } else {
+      // Notify the parent frame that it should delete the frame
+      // check for a table caption which goes on an additional child list with a different parent
+      nsIFrame* outerTableFrame; 
+      if (GetCaptionAdjustedParent(parentFrame, childFrame, &outerTableFrame)) {
+        rv = frameManager->RemoveFrame(outerTableFrame,
+                                       nsLayoutAtoms::captionList,
+                                       childFrame);
       }
-
-      if (mInitialContainingBlock == childFrame) {
-        mInitialContainingBlock = nsnull;
+      else {
+        rv = frameManager->RemoveFrame(parentFrame, nsnull, childFrame);
       }
+    }
 
-      if (haveFLS && mInitialContainingBlock) {
-        nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
-                                      GetAbsoluteContainingBlock(parentFrame),
-                                      GetFloatContainingBlock(parentFrame));
-        RecoverLetterFrames(state, containingBlock);
-      }
+    if (mInitialContainingBlock == childFrame) {
+      mInitialContainingBlock = nsnull;
+    }
+
+    if (haveFLS && mInitialContainingBlock) {
+      nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
+                                    GetAbsoluteContainingBlock(parentFrame),
+                                    GetFloatContainingBlock(parentFrame));
+      RecoverLetterFrames(state, containingBlock);
+    }
 
 #ifdef DEBUG
-      if (gReallyNoisyContentUpdates && parentFrame) {
-        nsIFrameDebug* fdbg = nsnull;
-        CallQueryInterface(parentFrame, &fdbg);
-        if (fdbg) {
-          printf("nsCSSFrameConstructor::ContentRemoved: resulting frame model:\n");
-          fdbg->List(stdout, 0);
-        }
+    if (gReallyNoisyContentUpdates && parentFrame) {
+      nsIFrameDebug* fdbg = nsnull;
+      CallQueryInterface(parentFrame, &fdbg);
+      if (fdbg) {
+        printf("nsCSSFrameConstructor::ContentRemoved: resulting frame model:\n");
+        fdbg->List(stdout, 0);
       }
+    }
 #endif
   }
 
@@ -12129,14 +12063,6 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
   // And then give the text frame to the letter frame
   letterFrame->SetInitialChildList(aState.mPresContext, nsnull, aTextFrame);
 
-  // Now make the placeholder
-  nsIFrame* placeholderFrame;
-  CreatePlaceholderFrameFor(mPresShell,
-                            aState.mPresContext, aState.mFrameManager,
-                            aTextContent, letterFrame,
-                            aStyleContext, aParentFrame,
-                            &placeholderFrame);
-
   // See if we will need to continue the text frame (does it contain
   // more than just the first-letter text or not?) If it does, then we
   // create (in advance) a continuation frame for it.
@@ -12157,12 +12083,20 @@ nsCSSFrameConstructor::CreateFloatingLetterFrame(
     }
   }
 
-  // Update the child lists for the frame containing the floating first
-  // letter frame.
-  aState.mFloatedItems.AddChild(letterFrame);
-  aResult.childList = aResult.lastChild = placeholderFrame;
+  NS_ASSERTION(aResult.childList == nsnull,
+               "aResult should be an empty nsFrameItems!");
+
+  nsresult rv = aState.AddChild(letterFrame, aResult,
+                                letterFrame->GetStyleDisplay(),
+                                aTextContent, aStyleContext, aParentFrame,
+                                PR_FALSE, PR_TRUE);
+
   if (nextTextFrame) {
-    aResult.AddChild(nextTextFrame);
+    if (NS_FAILED(rv)) {
+      nextTextFrame->Destroy(aState.mPresContext);
+    } else {
+      aResult.AddChild(nextTextFrame);
+    }
   }
 }
 
