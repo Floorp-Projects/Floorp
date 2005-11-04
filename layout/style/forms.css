@@ -185,9 +185,8 @@ select > input[type="button"]:active {
   background-image: url("arrowd.gif") !important;
 }
 
-select::-moz-dummy-option { 
-  visibility: hidden; 
-  content: "XX"; /* demo 8, edge case test 1 */
+select:empty {
+  width: 2.5em;
 }
 
 *|*::-moz-display-comboboxcontrol-frame {

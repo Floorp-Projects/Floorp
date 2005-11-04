@@ -67,7 +67,6 @@ CSS_ANON_BOX(framesetBlank, ":-moz-frameset-blank")
 CSS_ANON_BOX(radio, ":-moz-radio")
 CSS_ANON_BOX(check, ":-moz-checkbox")
 CSS_ANON_BOX(mozDisplayComboboxControlFrame, ":-moz-display-comboboxcontrol-frame")
-CSS_ANON_BOX(dummyOption, ":-moz-dummy-option")
 
 CSS_ANON_BOX(table, ":-moz-table")
 CSS_ANON_BOX(tableCell, ":-moz-table-cell")

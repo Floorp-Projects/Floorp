@@ -666,17 +666,6 @@ private:
                                 ImageFrameCreatorFunc aFunc,
                                 nsIFrame**            aFrame);
 
-  nsresult AddDummyFrameToSelect(nsFrameConstructorState& aState,
-                                 nsIFrame*                aListFrame,
-                                 nsIFrame*                aParentFrame,
-                                 nsFrameItems*            aChildItems,
-                                 nsIContent*              aContainer,
-                                 nsIDOMHTMLSelectElement* aSelectElement);
-
-  nsresult RemoveDummyFrameFromSelect(nsIContent*               aContainer,
-                                      nsIContent*               aChild,
-                                      nsIDOMHTMLSelectElement*  aSelectElement);
-
   nsIFrame* GetFrameFor(nsIContent* aContent);
 
   nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);

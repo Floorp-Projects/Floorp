@@ -182,8 +182,6 @@ public:
   NS_IMETHOD OnOptionSelected(nsPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected);
-  NS_IMETHOD GetDummyFrame(nsIFrame** aFrame);
-  NS_IMETHOD SetDummyFrame(nsIFrame* aFrame);
   NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex);
 
   // mouse event listeners
@@ -241,6 +239,10 @@ protected:
   PRInt32  GetIndexFromContent(nsIContent *aContent);
   PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);
 
+  // aNumOptions is the number of options we have; if we have none,
+  // we'll just guess at a row height based on our own style.
+  nscoord  CalcFallbackRowHeight(PRInt32 aNumOptions);
+
   // Dropped down stuff
   void     SetComboboxItem(PRInt32 aIndex);
   PRBool   IsInDropDownMode() const;
@@ -292,8 +294,6 @@ protected:
   nscoord mCachedDesiredMEW;
 
   nsRefPtr<nsListEventListener> mEventListener;
-
-  nsIFrame* mDummyFrame;
 
   //Resize Reflow OpitmizationSize;
   nsSize       mCacheSize;

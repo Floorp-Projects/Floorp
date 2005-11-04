@@ -184,8 +184,6 @@ public:
   NS_IMETHOD OnOptionSelected(nsPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected);
-  NS_IMETHOD GetDummyFrame(nsIFrame** aFrame);
-  NS_IMETHOD SetDummyFrame(nsIFrame* aFrame);
   NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex);
 
   //nsIRollupListener

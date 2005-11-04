@@ -1917,32 +1917,6 @@ nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
   return listFrame->GetOptionSelected(aIndex, aValue);
 }
 
-//---------------------------------------------------------
-// Used by layout to determine if we have a fake option
-NS_IMETHODIMP
-nsComboboxControlFrame::GetDummyFrame(nsIFrame** aFrame)
-{
-  nsISelectControlFrame* listFrame = nsnull;
-  NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
-
-  CallQueryInterface(mDropdownFrame, &listFrame);
-  NS_ASSERTION(listFrame, "No list frame!");
-
-  return listFrame->GetDummyFrame(aFrame);
-}
-
-NS_IMETHODIMP
-nsComboboxControlFrame::SetDummyFrame(nsIFrame* aFrame)
-{
-  nsISelectControlFrame* listFrame = nsnull;
-  NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
-
-  CallQueryInterface(mDropdownFrame, &listFrame);
-  NS_ASSERTION(listFrame, "No list frame!");
-
-  return listFrame->SetDummyFrame(aFrame);
-}
-
 NS_IMETHODIMP
 nsComboboxControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
