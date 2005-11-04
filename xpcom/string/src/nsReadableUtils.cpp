@@ -1081,16 +1081,88 @@ StringEndsWith( const nsACString& aSource, const nsACString& aSubstring,
 
 static const PRUnichar empty_buffer[1] = { '\0' };
 
-NS_COM const nsAFlatString& EmptyString()
+NS_COM
+const nsAFlatString&
+EmptyString()
   {
     static const nsDependentString sEmpty(empty_buffer);
 
     return sEmpty;
   }
 
-NS_COM const nsAFlatCString& EmptyCString()
+NS_COM
+const nsAFlatCString&
+EmptyCString()
   {
     static const nsDependentCString sEmpty((const char *)empty_buffer);
 
     return sEmpty;
+  }
+
+NS_COM PRInt32
+CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
+                   const nsASingleFragmentString& aUTF16String)
+  {
+    static const PRUint32 NOT_ASCII = PRUint32(~0x7F);
+
+    const char *u8, *u8end;
+    aUTF8String.BeginReading(u8);
+    aUTF8String.EndReading(u8end);
+
+    const PRUnichar *u16, *u16end;
+    aUTF16String.BeginReading(u16);
+    aUTF16String.EndReading(u16end);
+
+    while (u8 != u8end && u16 != u16end)
+      {
+        // Cast away the signedness of *u8 to prevent signextension when
+        // converting to PRUint32
+        PRUint32 c8_32 = (PRUint8)*u8;
+
+        if (c8_32 & NOT_ASCII)
+          {
+            PRBool err;
+            c8_32 = UTF8CharEnumerator::NextChar(&u8, u8end, &err);
+            if (err)
+              return PR_INT32_MIN;
+
+            PRUint32 c16_32 = UTF16CharEnumerator::NextChar(&u16, u16end,
+                                                            &err);
+            if (err)
+              return PR_INT32_MIN;
+
+            if (c8_32 != c16_32)
+              return c8_32 < c16_32 ? -1 : 1;
+          }
+        else
+          {
+            if (c8_32 != *u16)
+              return c8_32 > *u16 ? 1 : -1;
+
+            ++u8;
+            ++u16;
+          }
+      }
+
+    if (u8 != u8end)
+      {
+        // We get to the end of the UTF16 string, but no to the end of
+        // the UTF8 string. The UTF8 string is longer than the UTF16
+        // string
+
+        return 1;
+      }
+
+    if (u16 != u16end)
+      {
+        // We get to the end of the UTF8 string, but no to the end of
+        // the UTF16 string. The UTF16 string is longer than the UTF8
+        // string
+
+        return -1;
+      }
+
+    // The two strings match.
+
+    return 0;
   }
