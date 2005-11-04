@@ -1,5 +1,6 @@
 <!ENTITY  colorsDialog.title              "Colors">
-<!ENTITY window.width                     "38em">
+<!ENTITY  window.width                    "38em">
+<!ENTITY  window.macWidth                 "41em">
 
 <!ENTITY  allowPagesToUse.label           "Allow pages to choose their own colors, instead of my selections above">
 <!ENTITY  allowPagesToUse.accesskey       "A">

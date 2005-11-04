@@ -46,7 +46,11 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             title="&colorsDialog.title;"
             dlgbuttons="accept,cancel,help"
+#ifdef XP_MACOSX
+            style="width: &window.macWidth; !important;">
+#else
             style="width: &window.width; !important;">
+#endif
 
   <prefpane id="ColorsDialogPane"
             helpTopic="prefs-fonts-and-colors" helpURI="chrome://browser/locale/help/help.rdf">
