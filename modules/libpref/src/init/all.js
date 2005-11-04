@@ -1692,6 +1692,10 @@ pref("mail.compose.max_recycled_windows", 0);
 // Use IBM943 compatible map for JIS X 0208
 pref("intl.jis0208.map", "IBM943");
 
+// Disable IPv6 name lookups by default.
+// This is because OS/2 doesn't support IPv6
+pref("network.dns.disableIPv6", true);
+
 # OS2
 #endif
 
