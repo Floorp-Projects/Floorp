@@ -494,42 +494,44 @@ ifdef MOZ_LDAP_XPCOM
 endif
 
 # Map mozilla targets to standard automake target
+
+export_tier_%: $(addsuffix /Makefile,$(filter-out $(STATIC_MAKEFILES),$(tier_$*_dirs)))
+	@echo "$@"
+	@$(EXIT_ON_ERROR) \
+	for d in $(tier_$*_dirs); do \
+	  $(UPDATE_TITLE) \
+	  $(MAKE) -C $$d export; \
+	done
+
+libs_tier_%: $(addsuffix /Makefile,$(filter-out $(STATIC_MAKEFILES),$(tier_$*_dirs)))
+	@echo "$@"
+	@$(EXIT_ON_ERROR) \
+	for d in $(tier_$*_dirs); do \
+	  $(UPDATE_TITLE) \
+	  $(MAKE) -C $$d libs; \
+	done
+
+tools_tier_%: $(addsuffix /Makefile,$(filter-out $(STATIC_MAKEFILES),$(tier_$*_dirs)))
+	@echo "$@"
+	@$(EXIT_ON_ERROR) \
+	for d in $(tier_$*_dirs); do \
+	  $(UPDATE_TITLE) \
+	  $(MAKE) -C $$d tools; \
+	done
+
 ifdef MOZ_ENABLE_LIBXUL
 tier_50: $(addsuffix /Makefile, $(filter-out $(STATIC_MAKEFILES), $($@_dirs)))
-	@echo "tier_50: $(tier_50_dirs)"
-	@$(EXIT_ON_ERROR) \
-	for d in $(tier_50_dirs); do \
-	    $(UPDATE_TITLE) \
-	    if test ! -f $$d/Makefile; then \
-	      $(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $(CYGWIN_TOPSRCDIR) $$d/Makefile; \
-	    fi; \
-	    $(MAKE) -C $$d export; \
-	done ; \
-	for d in $(tier_50_dirs); do \
-	    $(UPDATE_TITLE) \
-	    $(MAKE) -C $$d libs; \
-	done
-	@echo "Building tools from tier 2/9/50"
-	@$(EXIT_ON_ERROR) \
-	for d in $(tier_2_dirs) $(tier_9_dirs) $(tier_50_dirs); do \
-	    $(UPDATE_TITLE) \
-	    $(MAKE) -C $$d tools; \
-	done;
+	$(MAKE) export_tier_50
+	$(MAKE) libs_tier_50
+	$(MAKE) tools_tier_2
+	$(MAKE) tools_tier_9
+	$(MAKE) tools_tier_50
 endif
 
 tier_%:
 	@echo "$@: $($@_dirs)"
-	@$(EXIT_ON_ERROR) \
-	  for d in $($@_dirs); do \
-	    $(UPDATE_TITLE) \
-	    if test ! -f $$d/Makefile; then \
-	      $(PERL) $(AUTOCONF_TOOLS)/make-makefile -t $(topsrcdir) -d $(DEPTH) $(CYGWIN_TOPSRCDIR) $$d/Makefile; \
-	    fi; \
-	    $(MAKE) -C $$d export; \
-	  done ; \
-	  for d in $($@_dirs); do $(UPDATE_TITLE) \
-	    $(MAKE) -C $$d libs; \
-	  done
+	$(MAKE) export_$@
+	$(MAKE) libs_$@
 
 #
 # Individual modules
