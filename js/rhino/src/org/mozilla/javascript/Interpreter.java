@@ -3787,6 +3787,10 @@ switch (op) {
         frame.parentFrame = parentFrame;
         frame.frameIndex = (parentFrame == null)
                            ? 0 : parentFrame.frameIndex + 1;
+        if(frame.frameIndex > cx.getMaximumInterpreterStackDepth())
+        {
+            throw Context.reportRuntimeError("Exceeded maximum stack depth");
+        }
         frame.frozen = false;
 
         frame.fnOrScript = fnOrScript;
