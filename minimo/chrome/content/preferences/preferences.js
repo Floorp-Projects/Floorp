@@ -247,37 +247,44 @@ function PrefCancel() {
 
 
 function syncPrefSaveDOM() {
+	try {
+		var psvc = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefService);
 
-	for(var strCurKey in gPrefQueue) {
-		var elRef=gPrefQueue[strCurKey];
-		var prefName=elRef.getAttribute("preference");
-		var transValidator=elRef.getAttribute("onsynctopreference");
-		var prefSETValue=null;
-		if(transValidator!="") {
-			prefSETValue=eval(transValidator);
-
-		} else {
-			if(elRef.nodeName=="checkbox") {
-		            if(elRef.checked) {
-		                elRef.value=true;
-		            } else {
-		                elRef.value=false;
-		            } 
+		for(var strCurKey in gPrefQueue) {
+			var elRef=gPrefQueue[strCurKey];
+			var prefName=elRef.getAttribute("preference");
+			var transValidator=elRef.getAttribute("onsynctopreference");
+			var prefSETValue=null;
+			if(transValidator!="") {
+				prefSETValue=eval(transValidator);
+	
+			} else {
+				if(elRef.nodeName=="checkbox") {
+			            if(elRef.checked) {
+			                elRef.value=true;
+			            } else {
+			                elRef.value=false;
+			            } 
+				}
+				prefSETValue=elRef.value;
 			}
-			prefSETValue=elRef.value;
+			if (gPref.getPrefType(prefName) == gPref.PREF_STRING){
+				gPref.setCharPref(prefName, prefSETValue);
+			} 
+	
+			if (gPref.getPrefType(prefName) == gPref.PREF_INT) {
+				gPref.setIntPref(prefName, prefSETValue);
+	 	 	}
+	
+			if (gPref.getPrefType(prefName) == gPref.PREF_BOOL) {
+				gPref.setBoolPref(prefName, prefSETValue);
+			}
 		}
-		if (gPref.getPrefType(prefName) == gPref.PREF_STRING){
-			gPref.setCharPref(prefName, prefSETValue);
-		} 
 
-		if (gPref.getPrefType(prefName) == gPref.PREF_INT) {
-			gPref.setIntPref(prefName, prefSETValue);
- 	 	}
+		psvc.savePrefFile(null);
+	} catch (e) { alert(e) }
 
-		if (gPref.getPrefType(prefName) == gPref.PREF_BOOL) {
-			gPref.setBoolPref(prefName, prefSETValue);
-		}
-	}
 }
 
 function syncPrefLoadDOM(elementList) {
