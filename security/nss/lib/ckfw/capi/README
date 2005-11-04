@@ -1,0 +1,6 @@
+This Cryptoki module provides acces to certs and keys stored in
+Microsofts CAPI certificate store.
+
+Currently this module is read only.
+It does not export CA Root trust from the CAPI.
+It does not export CRLs from the CAPI.
