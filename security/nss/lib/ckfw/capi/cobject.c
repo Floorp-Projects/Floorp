@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cobject.c,v $ $Revision: 1.1 $ $Date: 2005/11/04 02:05:04 $";
+static const char CVS_ID[] = "@(#) $RCSfile: cobject.c,v $ $Revision: 1.2 $ $Date: 2005/11/04 23:44:19 $";
 #endif /* DEBUG */
 
 #include "ckcapi.h"
@@ -692,7 +692,10 @@ ckcapi_FetchPrivKeyAttribute(ckcapiInternalObject *io,
 }
 
 const NSSItem *
-nss_ckcapi_FetchAttribute(ckcapiInternalObject *io, CK_ATTRIBUTE_TYPE type)
+nss_ckcapi_FetchAttribute(
+  ckcapiInternalObject *io, 
+  CK_ATTRIBUTE_TYPE type
+)
 {
   CK_ULONG i;
 

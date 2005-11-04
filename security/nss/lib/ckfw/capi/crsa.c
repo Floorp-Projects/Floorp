@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: crsa.c,v $ $Revision: 1.1 $ $Date: 2005/11/04 02:05:04 $";
+static const char CVS_ID[] = "@(#) $RCSfile: crsa.c,v $ $Revision: 1.2 $ $Date: 2005/11/04 23:44:19 $";
 #endif /* DEBUG */
 
 #include "ckcapi.h"
@@ -245,7 +245,7 @@ ckcapi_GetRawHash
 }
 
 /*
- * So everyone else in the works stores their bignum data MSB first, but not
+ * So everyone else in the worlds stores their bignum data MSB first, but not
  * Microsoft, we need to byte swap everything coming into and out of CAPI.
  */
 void
