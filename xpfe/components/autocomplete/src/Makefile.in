@@ -61,6 +61,7 @@ CPPSRCS		= nsAutoComplete.cpp
 ifdef MOZ_LDAP_XPCOM
 REQUIRES	+= mozldap necko
 CPPSRCS		+= nsLDAPAutoCompleteSession.cpp
+DEFINES		+= -DMOZ_LDAP_XPCOM
 endif
 
 EXTRA_DSO_LDOPTS += \
