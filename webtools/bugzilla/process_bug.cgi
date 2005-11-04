@@ -120,6 +120,9 @@ scalar(@idlist) || ThrowUserError("no_bugs_chosen");
 # Make sure form param 'dontchange' is defined so it can be compared to easily.
 $cgi->param('dontchange','') unless defined $cgi->param('dontchange');
 
+# Make sure the 'knob' param is defined; else set it to 'none'.
+$cgi->param('knob', 'none') unless defined $cgi->param('knob');
+
 # Validate all timetracking fields
 foreach my $field ("estimated_time", "work_time", "remaining_time") {
     if (defined $cgi->param($field)) {
@@ -1025,7 +1028,6 @@ if (defined $cgi->param('qa_contact')
     }
 }
 
-check_form_field_defined($cgi, 'knob');
 SWITCH: for ($cgi->param('knob')) {
     /^none$/ && do {
         last SWITCH;
