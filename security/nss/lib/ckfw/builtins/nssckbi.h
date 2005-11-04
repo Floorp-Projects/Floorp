@@ -48,7 +48,7 @@
  * to the PKCS #11 spec versions.
  */
 #define NSS_BUILTINS_CRYPTOKI_VERSION_MAJOR 2
-#define NSS_BUILTINS_CRYPTOKI_VERSION_MINOR 1
+#define NSS_BUILTINS_CRYPTOKI_VERSION_MINOR 20
 
 /* These version numbers detail the changes 
  * to the list of trusted certificates.
@@ -64,6 +64,7 @@
  *   - NSS 3.8 branch:  30-39
  *   - NSS 3.9 branch:  40-49
  *   - NSS 3.10 branch: 50-59
+ *   - NSS 3.11 branch: 60-69
  *     ...
  *   - NSS 3.14 branch: 90-99
  *     ...
@@ -74,8 +75,8 @@
  * of the comment in the CK_VERSION type definition.
  */
 #define NSS_BUILTINS_LIBRARY_VERSION_MAJOR 1
-#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 53
-#define NSS_BUILTINS_LIBRARY_VERSION "1.53"
+#define NSS_BUILTINS_LIBRARY_VERSION_MINOR 60
+#define NSS_BUILTINS_LIBRARY_VERSION "1.60"
 
 /* These version numbers detail the semantic changes to the ckfw engine. */
 #define NSS_BUILTINS_HARDWARE_VERSION_MAJOR 1
