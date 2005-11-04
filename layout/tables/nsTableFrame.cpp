@@ -7537,24 +7537,24 @@ void nsTableFrame::DebugReflowDone(nsIFrame* aFrame)
 #endif //DEBUG_TABLE_REFLOW_TIMING
 
 
-PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex)
+PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex, PRInt32 aNumEffCols)
 {
   PRBool result = PR_FALSE;
   nsTableCellMap* cellMap = GetCellMap();
   NS_PRECONDITION (cellMap, "bad call, cellMap not yet allocated.");
   if (cellMap) {
-    result = cellMap->RowHasSpanningCells(aRowIndex);
+    result = cellMap->RowHasSpanningCells(aRowIndex, aNumEffCols);
   }
   return result;
 }
 
-PRBool nsTableFrame::RowIsSpannedInto(PRInt32 aRowIndex)
+PRBool nsTableFrame::RowIsSpannedInto(PRInt32 aRowIndex, PRInt32 aNumEffCols)
 {
   PRBool result = PR_FALSE;
   nsTableCellMap* cellMap = GetCellMap();
   NS_PRECONDITION (cellMap, "bad call, cellMap not yet allocated.");
   if (cellMap) {
-    result = cellMap->RowIsSpannedInto(aRowIndex);
+    result = cellMap->RowIsSpannedInto(aRowIndex, aNumEffCols);
   }
   return result;
 }

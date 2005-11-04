@@ -768,13 +768,13 @@ nsTableCellMap::GetCellInfoAt(PRInt32  aRowIndex,
 }
   
 
-PRBool nsTableCellMap::RowIsSpannedInto(PRInt32 aRowIndex)
+PRBool nsTableCellMap::RowIsSpannedInto(PRInt32 aRowIndex, PRInt32 aNumEffCols)
 {
   PRInt32 rowIndex = aRowIndex;
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     if (cellMap->GetRowCount() > rowIndex) {
-      return cellMap->RowIsSpannedInto(*this, rowIndex);
+      return cellMap->RowIsSpannedInto(*this, rowIndex, aNumEffCols);
     }
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
@@ -782,13 +782,14 @@ PRBool nsTableCellMap::RowIsSpannedInto(PRInt32 aRowIndex)
   return PR_FALSE;
 }
 
-PRBool nsTableCellMap::RowHasSpanningCells(PRInt32 aRowIndex)
+PRBool nsTableCellMap::RowHasSpanningCells(PRInt32 aRowIndex,
+                                           PRInt32 aNumEffCols)
 {
   PRInt32 rowIndex = aRowIndex;
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     if (cellMap->GetRowCount() > rowIndex) {
-      return cellMap->RowHasSpanningCells(*this, rowIndex);
+      return cellMap->RowHasSpanningCells(*this, rowIndex, aNumEffCols);
     }
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
@@ -2413,13 +2414,13 @@ nsCellMap::GetCellInfoAt(nsTableCellMap& aMap,
   
 
 PRBool nsCellMap::RowIsSpannedInto(nsTableCellMap& aMap,
-                                   PRInt32         aRowIndex)
+                                   PRInt32         aRowIndex,
+                                   PRInt32         aNumEffCols)
 {
-  PRInt32 numColsInTable = aMap.GetColCount();
   if ((0 > aRowIndex) || (aRowIndex >= mRowCount)) {
     return PR_FALSE;
   }
-  for (PRInt32 colIndex = 0; colIndex < numColsInTable; colIndex++) {
+  for (PRInt32 colIndex = 0; colIndex < aNumEffCols; colIndex++) {
     CellData* cd = GetDataAt(aMap, aRowIndex, colIndex, PR_TRUE);
     if (cd) { // there's really a cell at (aRowIndex, colIndex)
       if (cd->IsSpan()) { // the cell at (aRowIndex, colIndex) is the result of a span
@@ -2433,15 +2434,15 @@ PRBool nsCellMap::RowIsSpannedInto(nsTableCellMap& aMap,
 }
 
 PRBool nsCellMap::RowHasSpanningCells(nsTableCellMap& aMap,
-                                      PRInt32         aRowIndex)
+                                      PRInt32         aRowIndex,
+                                      PRInt32         aNumEffCols)
 {
-  PRInt32 numColsInTable = aMap.GetColCount();
   if ((0 > aRowIndex) || (aRowIndex >= mRowCount)) {
     return PR_FALSE;
   }
   if (aRowIndex != mRowCount - 1) {
     // aRowIndex is not the last row, so we check the next row after aRowIndex for spanners
-    for (PRInt32 colIndex = 0; colIndex < numColsInTable; colIndex++) {
+    for (PRInt32 colIndex = 0; colIndex < aNumEffCols; colIndex++) {
       CellData* cd = GetDataAt(aMap, aRowIndex, colIndex, PR_TRUE);
       if (cd && (cd->IsOrig())) { // cell originates 
         CellData* cd2 = GetDataAt(aMap, aRowIndex + 1, colIndex, PR_TRUE);
