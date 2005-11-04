@@ -259,6 +259,12 @@ NS_IMETHODIMP
 nsSVGCairoPathBuilder::ClosePath(float *newX, float *newY)
 {
   cairo_close_path(mCR);
+
+  double x, y;
+  cairo_get_current_point(mCR, &x, &y);
+  *newX = x;
+  *newY = y;
+
   return NS_OK;
 }
 
