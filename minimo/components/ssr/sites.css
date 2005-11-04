@@ -1,12 +1,6 @@
-
  @-moz-document domain(maps.google.com)
  {
- div#rhs { display: none ! important;}
-  
- div#map { height: 80%; 
-           width: 100%;
-           overflow: hidden;
-           position: inherit;
-         }
+ div#map           { margin-left: 0 ! important;}
+ div#panel         { display: none  ! important;}
+ table#headertitle { display: none  ! important;}
  }
-
