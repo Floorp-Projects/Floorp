@@ -12,14 +12,6 @@ config.mk
 make.client
 make.server
 
-The following makefiles are used only when building in the NSS distribution.
-These files are part of the distribution.
-
-Makefile.NSS
-nmakefile95.nss
-nmakefilent.nss
-
-
 The following source files are common to both build environments and are
 part of the distribution.
 
