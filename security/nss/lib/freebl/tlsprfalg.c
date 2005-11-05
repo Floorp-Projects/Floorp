@@ -35,13 +35,13 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: tlsprfalg.c,v 1.4 2005/09/14 04:12:49 nelsonb%netscape.com Exp $ */
+/* $Id: tlsprfalg.c,v 1.5 2005/11/05 01:00:14 wtchang%redhat.com Exp $ */
 
 #include "sechash.h"
 #include "alghmac.h"
 #include "blapi.h"
 
-#define PHASH_STATE_MAX_LEN 20
+#define PHASH_STATE_MAX_LEN SHA1_LENGTH
 
 /* TLS P_hash function */
 static SECStatus
@@ -76,7 +76,7 @@ sftk_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label,
     HMAC_Begin(cx);
     HMAC_Update(cx, (unsigned char *)label, label_len);
     HMAC_Update(cx, seed->data, seed->len);
-    status = HMAC_Finish(cx, state, &state_len, PHASH_STATE_MAX_LEN);
+    status = HMAC_Finish(cx, state, &state_len, sizeof(state));
     if (status != SECSuccess)
 	goto loser;
 
@@ -88,14 +88,14 @@ sftk_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label,
 	if (label_len)
 	    HMAC_Update(cx, (unsigned char *)label, label_len);
 	HMAC_Update(cx, seed->data, seed->len);
-	status = HMAC_Finish(cx, outbuf, &outbuf_len, PHASH_STATE_MAX_LEN);
+	status = HMAC_Finish(cx, outbuf, &outbuf_len, sizeof(outbuf));
 	if (status != SECSuccess)
 	    goto loser;
 
         /* Update the state = A(i) = HMAC_hash(secret, A(i-1)) */
 	HMAC_Begin(cx); 
 	HMAC_Update(cx, state, state_len); 
-	status = HMAC_Finish(cx, state, &state_len, PHASH_STATE_MAX_LEN);
+	status = HMAC_Finish(cx, state, &state_len, sizeof(state));
 	if (status != SECSuccess)
 	    goto loser;
 
