@@ -836,7 +836,8 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
     historyEnumerator->GetNext(getter_AddRefs(thisEntry));
 
     nsCOMPtr<nsIHistoryItem> thisItem = do_QueryInterface(thisEntry);
-    if (thisItem)
+    PRBool hidden;
+    if (thisItem && NS_SUCCEEDED(thisItem->GetHidden(&hidden)) && !hidden)
     {
       HistorySiteItem* item = [[HistorySiteItem alloc] initWithDataSource:self historyItem:thisItem];
       [mHistoryItems addObject:item];
