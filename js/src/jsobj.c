@@ -568,7 +568,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
         len = JS_snprintf(buf, sizeof buf, "#%u%c",
                           sharpid >> SHARP_ID_SHIFT,
                           (sharpid & SHARP_BIT) ? '#' : '=');
-        *sp = js_InflateString(cx, buf, len);
+        *sp = js_InflateString(cx, buf, &len);
         if (!*sp) {
             if (ida)
                 JS_DestroyIdArray(cx, ida);

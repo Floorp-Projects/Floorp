@@ -940,7 +940,7 @@ JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
     jschar *chars;
     JSBool ok;
 
-    chars = js_InflateString(cx, bytes, length);
+    chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return JS_FALSE;
     ok = JS_EvaluateUCInStackFrame(cx, fp, chars, length, filename, lineno,

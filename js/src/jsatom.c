@@ -719,12 +719,15 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
      */
 #define ATOMIZE_BUF_MAX 32
     jschar inflated[ATOMIZE_BUF_MAX];
+    size_t inflatedLength = ATOMIZE_BUF_MAX - 1;
 
     if (length < ATOMIZE_BUF_MAX) {
-        js_InflateStringToBuffer(inflated, bytes, length);
+        js_InflateStringToBuffer(cx, bytes, length, inflated, &inflatedLength);
+        inflated[inflatedLength] = 0;
         chars = inflated;
     } else {
-        chars = js_InflateString(cx, bytes, length);
+        inflatedLength = length;
+        chars = js_InflateString(cx, bytes, &inflatedLength);
         if (!chars)
             return NULL;
         flags |= ATOM_NOCOPY;
@@ -733,7 +736,7 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
     str = ALIGN(buf, JSString);
 
     str->chars = chars;
-    str->length = length;
+    str->length = inflatedLength;
     atom = js_AtomizeString(cx, str, ATOM_TMPSTR | flags);
     if (chars != inflated && (!atom || ATOM_TO_STRING(atom)->chars != chars))
         JS_free(cx, chars);

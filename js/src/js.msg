@@ -281,3 +281,7 @@ MSG_DEF(JSMSG_DUPLICATE_XML_ATTR,     198, 1, JSEXN_TYPEERR, "duplicate XML attr
 MSG_DEF(JSMSG_TOO_MANY_FUN_VARS,      199, 0, JSEXN_SYNTAXERR, "too many local variables")
 MSG_DEF(JSMSG_ARRAY_INIT_TOO_BIG,     200, 0, JSEXN_INTERNALERR, "array initialiser too large")
 MSG_DEF(JSMSG_REGEXP_TOO_COMPLEX,     201, 0, JSEXN_INTERNALERR, "regular expression too complex")
+MSG_DEF(JSMSG_BUFFER_TOO_SMALL,       202, 0, JSEXN_INTERNALERR, "buffer too small")
+MSG_DEF(JSMSG_BAD_SURROGATE_CHAR,     203, 1, JSEXN_TYPEERR, "bad surrogate character {0}")
+MSG_DEF(JSMSG_UTF8_CHAR_TOO_LARGE,    204, 1, JSEXN_TYPEERR, "UTF-8 character {0} too large")
+MSG_DEF(JSMSG_MALFORMED_UTF8_CHAR,    205, 1, JSEXN_TYPEERR, "malformed UTF-8 character sequence at offset {0}")

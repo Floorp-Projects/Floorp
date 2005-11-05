@@ -843,8 +843,9 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                 for (i = 0; i < argCount; i++) {
                     if (charArgs) {
                         char *charArg = va_arg(ap, char *);
+                        size_t charArgLength = strlen(charArg);
                         reportp->messageArgs[i]
-                            = js_InflateString(cx, charArg, strlen(charArg));
+                            = js_InflateString(cx, charArg, &charArgLength);
                         if (!reportp->messageArgs[i])
                             goto error;
                     }
@@ -862,12 +863,16 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
              */
             if (argCount > 0) {
                 if (efs->format) {
-                    const char *fmt;
+                    jschar *buffer, *fmt, *out;
                     const jschar *arg;
-                    jschar *out;
                     int expandedArgs = 0;
-                    size_t expandedLength
-                        = strlen(efs->format)
+                    size_t expandedLength;
+                    size_t len = strlen (efs->format);
+                    buffer = fmt = js_InflateString (cx, efs->format, &len);
+                    if (!buffer)
+                        goto error;
+                    expandedLength
+                        = len
                             - (3 * argCount) /* exclude the {n} */
                             + totalArgsLength;
                     /*
@@ -876,9 +881,10 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                      */
                     reportp->ucmessage = out = (jschar *)
                         JS_malloc(cx, (expandedLength + 1) * sizeof(jschar));
-                    if (!out)
+                    if (!out) {
+                        JS_free (cx, buffer);
                         goto error;
-                    fmt = efs->format;
+                    }
                     while (*fmt) {
                         if (*fmt == '{') {
                             if (isdigit(fmt[1])) {
@@ -892,13 +898,11 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                                 continue;
                             }
                         }
-                        /*
-                         * is this kosher?
-                         */
-                        *out++ = (unsigned char)(*fmt++);
+                         *out++ = *fmt++;
                     }
                     JS_ASSERT(expandedArgs == argCount);
                     *out = 0;
+                    JS_free (cx, buffer);
                     *messagep =
                         js_DeflateString(cx, reportp->ucmessage,
                                          (size_t)(out - reportp->ucmessage));
@@ -911,11 +915,13 @@ js_ExpandErrorArguments(JSContext *cx, JSErrorCallback callback,
                  * entire message.
                  */
                 if (efs->format) {
+                    size_t len;
                     *messagep = JS_strdup(cx, efs->format);
                     if (!*messagep)
                         goto error;
+                    len = strlen(*messagep);
                     reportp->ucmessage
-                        = js_InflateString(cx, *messagep, strlen(*messagep));
+                        = js_InflateString(cx, *messagep, &len);
                     if (!reportp->ucmessage)
                         goto error;
                 }

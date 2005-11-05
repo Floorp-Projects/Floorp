@@ -422,8 +422,15 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
         /* Use js_EscapeMap, \u, or \x only if necessary. */
         if ((u = js_strchr(js_EscapeMap, c)) != NULL)
             ok = Sprint(sp, "\\%c", (char)u[1]) >= 0;
-        else
+        else {
+#ifdef JS_STRINGS_ARE_UTF8
+            /* print as UTF-8 string */
+            ok = Sprint(sp, "%hc", c) >= 0;
+#else
+            /* Use \uxxxx or \xXX  if the string cannot be displayed as UTF-8 */
             ok = Sprint(sp, (c >> 8) ? "\\u%04X" : "\\x%02X", c) >= 0;
+#endif
+        }
         if (!ok)
             return NULL;
     }

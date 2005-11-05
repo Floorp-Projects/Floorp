@@ -1336,9 +1336,11 @@ retry:
             kw = ATOM_KEYWORD(atom);
             if (kw->tokentype == TOK_RESERVED) {
                 char buf[MAX_KEYWORD_LENGTH + 1];
-
-                js_DeflateStringToBuffer(buf, TOKENBUF_BASE(),
-                                              TOKENBUF_LENGTH());
+                size_t buflen = sizeof(buf) - 1;
+                if (!js_DeflateStringToBuffer(cx, TOKENBUF_BASE(), TOKENBUF_LENGTH(),
+                                                  buf, &buflen))
+                    goto error;
+                buf [buflen] = 0;
                 if (!js_ReportCompileErrorNumber(cx, ts,
                                                  JSREPORT_TS |
                                                  JSREPORT_WARNING |
