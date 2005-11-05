@@ -4059,6 +4059,11 @@ $dbh->bz_add_column('attachments', 'isurl',
 $dbh->bz_add_column('namedqueries', 'query_type',
                     {TYPE => 'BOOLEAN', NOTNULL => 1, DEFAULT => 0});
 
+# 2005-11-04 LpSolit@gmail.com - Bug 305927
+$dbh->bz_alter_column('groups', 'userregexp', 
+                      {TYPE => 'TINYTEXT', NOTNULL => 1, DEFAULT => "''"});
+
+
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
 #
