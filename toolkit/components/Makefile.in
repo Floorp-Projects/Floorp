@@ -56,10 +56,16 @@ DIRS += \
 	alerts \
 	console \
 	filepicker \
-	printing \
-	viewsource \
 	viewconfig \
 	$(NULL)
+
+ifdef NS_PRINTING
+DIRS +=	printing
+endif
+
+ifdef MOZ_VIEW_SOURCE
+DIRS +=	viewsource
+endif
 
 ifndef MOZ_THUNDERBIRD
 DIRS +=	\
