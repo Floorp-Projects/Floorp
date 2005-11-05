@@ -64,7 +64,7 @@
 
 <p>
   Your comment was:<br>
-  <blockquote><pre>[% cgi.param("comment") FILTER html %]</pre></blockquote>
+  <blockquote><pre>[% cgi.param("comment") FILTER wrap_comment FILTER html %]</pre></blockquote>
 </p>
 
 <p>
