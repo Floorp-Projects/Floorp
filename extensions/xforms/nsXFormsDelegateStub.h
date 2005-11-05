@@ -40,12 +40,14 @@
 #ifndef __NSXFORMSDELEGATESTUB_H__
 #define __NSXFORMSDELEGATESTUB_H__
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
-#include "nsIXFormsDelegate.h"
+#include "nsIDelegateInternal.h"
 #include "nsXFormsControlStub.h"
 #include "nsIXFormsUIWidget.h"
+#include "nsXFormsAccessors.h"
 
 class nsIAtom;
 
@@ -65,11 +67,12 @@ enum nsRepeatState {
  * Stub implementation of the nsIXFormsDelegate interface.
  */
 class nsXFormsDelegateStub : public nsXFormsBindableControlStub,
-                             public nsIXFormsDelegate
+                             public nsIDelegateInternal
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXFORMSDELEGATE
+  NS_DECL_NSIDELEGATEINTERNAL
 
   NS_IMETHOD OnCreated(nsIXTFBindableElementWrapper *aWrapper);
   NS_IMETHOD OnDestroyed();
@@ -96,9 +99,6 @@ public:
     : mControlType(aType), mRepeatState(eType_Unknown) {}
 
 protected:
-  // Checks the status of the model item properties.
-  nsresult GetState(PRInt32 aState, PRBool *aStateVal);
-  
   // This is called when XBL widget is attached to the XForms control.
   // It checks the ancestors of the element and returns an nsRepeatState
   // depending on the elements place in the document.
@@ -110,6 +110,9 @@ protected:
 
   nsString      mControlType;
   nsRepeatState mRepeatState;
+
+  /** The accessors object for this delegate */
+  nsRefPtr<nsXFormsAccessors> mAccessor;
 };
 
 #endif

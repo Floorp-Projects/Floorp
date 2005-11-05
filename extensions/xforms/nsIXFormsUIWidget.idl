@@ -41,6 +41,10 @@
 
 /**
  * Interface implemented by XForms UI widgets.
+ *
+ * For more information on this interface please see
+ * http://developer.mozilla.org/en/docs/XForms:Custom_Controls
+ *
  */
 [scriptable, uuid(b88a1c27-47a2-4c25-be7c-170501a93643)]
 interface nsIXFormsUIWidget : nsIDOMElement

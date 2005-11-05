@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *  Allan Beaufour <abeaufour@novell.com>
- *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,28 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-
-interface nsIXFormsAccessors;
+#include "nsIXFormsDelegate.idl"
 
 /**
- * Interface implemented by XForms controls that delegates the UI to an
- * external entity.
- *
- * For more information on this interface please see
- * http://developer.mozilla.org/en/docs/XForms:Custom_Controls
- *
+ * Internal interface implemented by XForms controls that delegates the UI to
+ * an external entity.
  */
-[scriptable, uuid(5e75904d-73e8-4cee-b02c-4348a071a0e1)]
-interface nsIXFormsDelegate : nsISupports
+[uuid(aec21659-67e6-4808-b877-670ff756636a)]
+interface nsIDelegateInternal : nsIXFormsDelegate
 {
   /**
-   * Get the IXFormsAccessors object for this control.
+   * The value bound to the XForms control.
    */
-  nsIXFormsAccessors getXFormsAccessors();
+  attribute DOMString value;
 
   /**
-   * This should be called by XBL widgets, when they are created.
+   * Is the delegate bound to a node?
    */
-  void widgetAttached();
+  readonly attribute boolean hasBoundNode;
 };

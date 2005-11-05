@@ -54,11 +54,10 @@
 #include "nsXFormsUtils.h"
 #include "nsIServiceManager.h"
 #include "nsXFormsModelElement.h"
-#include "nsIContent.h"
-#include "nsIEventStateManager.h"
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsDelegateStub,
+NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsDelegateStub,
                              nsXFormsBindableControlStub,
+                             nsIDelegateInternal,
                              nsIXFormsDelegate)
 
 
@@ -91,6 +90,9 @@ NS_IMETHODIMP
 nsXFormsDelegateStub::OnDestroyed()
 {
   nsXFormsModelElement::CancelPostRefresh(this);
+  if (mAccessor) {
+    mAccessor->Destroy();
+  }
   return nsXFormsBindableControlStub::OnDestroyed();
 }
 
@@ -169,47 +171,10 @@ nsXFormsDelegateStub::SetValue(const nsAString& aValue)
   return NS_OK;
 }
 
-nsresult
-nsXFormsDelegateStub::GetState(PRInt32 aState, PRBool *aStateVal)
-{
-  NS_ENSURE_ARG_POINTER(aStateVal);
-  *aStateVal = PR_FALSE;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
-  if (content && (content->IntrinsicState() & aState)) {
-    *aStateVal = PR_TRUE;
-  }  
-  return NS_OK;
-}
-
-// XXXbeaufour search for "enabled", "disabled", HasAttribute() and SetAttribute()
-
-NS_IMETHODIMP
-nsXFormsDelegateStub::GetIsReadonly(PRBool *aStateVal)
-{
-  return GetState(NS_EVENT_STATE_MOZ_READONLY, aStateVal);
-}
-
-NS_IMETHODIMP
-nsXFormsDelegateStub::GetIsEnabled(PRBool *aStateVal)
-{
-  return GetState(NS_EVENT_STATE_ENABLED, aStateVal);
-}
-
-NS_IMETHODIMP
-nsXFormsDelegateStub::GetIsRequired(PRBool *aStateVal)
-{
-  return GetState(NS_EVENT_STATE_REQUIRED, aStateVal);
-}
-
-NS_IMETHODIMP
-nsXFormsDelegateStub::GetIsValid(PRBool *aStateVal)
-{
-  return GetState(NS_EVENT_STATE_VALID, aStateVal);
-}
-
 NS_IMETHODIMP
 nsXFormsDelegateStub::GetHasBoundNode(PRBool *aHasBoundNode)
 {
+  NS_ENSURE_ARG_POINTER(aHasBoundNode);
   *aHasBoundNode = mBoundNode ? PR_TRUE : PR_FALSE;
   return NS_OK;
 }
@@ -222,6 +187,8 @@ nsXFormsDelegateStub::WidgetAttached()
 
   return NS_OK;
 }
+
+// nsXFormsDelegateStub
 
 nsRepeatState
 nsXFormsDelegateStub::UpdateRepeatState()
@@ -264,4 +231,17 @@ nsXFormsDelegateStub::SetMozTypeAttribute()
   } else {
     mElement->RemoveAttributeNS(mozTypeNs, mozType);
   }
+}
+
+NS_IMETHODIMP
+nsXFormsDelegateStub::GetXFormsAccessors(nsIXFormsAccessors **aAccessor)
+{
+  if (!mAccessor) {
+    mAccessor = new nsXFormsAccessors(this, mElement);
+    if (!mAccessor) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  NS_ADDREF(*aAccessor = mAccessor);
+  return NS_OK;
 }

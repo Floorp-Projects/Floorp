@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *  Allan Beaufour <abeaufour@novell.com>
- *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,28 +36,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIClassInfo.h"
+#include "nsIXFormsAccessors.h"
+#include "nsIDelegateInternal.h"
 
-interface nsIXFormsAccessors;
+class nsIDOMElement;
 
 /**
- * Interface implemented by XForms controls that delegates the UI to an
- * external entity.
- *
- * For more information on this interface please see
- * http://developer.mozilla.org/en/docs/XForms:Custom_Controls
- *
+ * Implementation of the nsIXFormsAccessors object. It is always owned by a
+ * nsIXFormsDelegate.
  */
-[scriptable, uuid(5e75904d-73e8-4cee-b02c-4348a071a0e1)]
-interface nsIXFormsDelegate : nsISupports
+class nsXFormsAccessors : public nsIXFormsAccessors,
+                          public nsIClassInfo
 {
-  /**
-   * Get the IXFormsAccessors object for this control.
-   */
-  nsIXFormsAccessors getXFormsAccessors();
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICLASSINFO
+  NS_DECL_NSIXFORMSACCESSORS
 
+  /** Constructor */
+  nsXFormsAccessors(nsIDelegateInternal* aDelegate, nsIDOMElement* aElement)
+    : mDelegate(aDelegate), mElement(aElement) 
+  {
+  }
+
+  /** Called by the owning delegate when it itself is destroyed */
+  void Destroy();
+
+protected:
   /**
-   * This should be called by XBL widgets, when they are created.
+   * Checks the status of the model item properties
+   *
+   * @param aState       The state to check
+   * @para  aStateVal    The returned state
    */
-  void widgetAttached();
+  nsresult GetState(PRInt32 aState, PRBool *aStateVal);
+
+private:
+  /** The delegate owning us */
+  nsIDelegateInternal*   mDelegate;
+
+  /** The control DOM element */
+  nsIDOMElement*         mElement;
 };

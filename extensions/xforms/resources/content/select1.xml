@@ -154,7 +154,7 @@
           <![CDATA[
           if (this.selectionOpen && !this._selected) {
             if (this.getAttribute("incremental") != "false") {
-              this.delegate.value = this.inputField.value;
+              this.accessors.setValue(this.inputField.value);
             }
           } else {
             this.togglePopup();
@@ -173,7 +173,7 @@
               this.togglePopup();
               if (open && this._selected) {
                 this.updateInputField();
-                this.delegate.value = this._selected.value;
+                this.accessors.setValue(this._selected.value);
               }
             } else if (key == aEvent.DOM_VK_UP ||
                        key == aEvent.DOM_VK_DOWN) {
@@ -188,9 +188,9 @@
               if (!this.popupOpen && this.getAttribute("incremental") != "false") {
                 if (this._selected) {
                   this.updateInputField();
-                  this.delegate.value = this._selected.value;
+                  this.accessors.setValue(this._selected.value);
                 } else if (this.selectionOpen) {
-                  this.delegate.value = this.inputField.value;
+                  this.accessors.setValue(this.inputField.value);
                 }
               }
             } else if (key == aEvent.DOM_VK_TAB) {
@@ -232,7 +232,7 @@
                 this._selected = null;
               }
               if (this.getAttribute("incremental") != "false") {
-                this.delegate.value = this.inputField.value;
+                this.accessors.setValue(this.inputField.value);
               }
             }
 
@@ -404,8 +404,7 @@
               }
 
               this.updateInputField();
-              this.delegate.value =
-                this._selected.value;
+              this.accessors.setValue(this._selected.value);
             }
             this.inputField.focus();
           ]]>
@@ -474,7 +473,7 @@
       <method name="togglePopup">
         <body>
           <![CDATA[
-          if (!this.popupOpen && !this.delegate.isReadonly) {
+          if (!this.popupOpen && !this.accessors.isReadonly()) {
             // Calculating the size and position of the popup.
             var style = "";
             var containerBox = document.getBoxObjectFor(this.container);
@@ -560,7 +559,7 @@
           try {
             var newValue = this.stringValue;
 
-            if (!this.selectionOpen || this.delegate.isReadonly) {
+            if (!this.selectionOpen || this.accessors.isReadonly()) {
               this.inputField.setAttribute("readonly", "readonly");
             } else {
               this.inputField.removeAttribute("readonly");
@@ -656,10 +655,10 @@
             }
 
             if (this.selectionOpen && !this._selected) {
-              this.delegate.value = this.inputField.value;
+              this.accessors.setValue(this.inputField.value);
             } else if (this._selected) {
               this.updateInputField();
-              this.delegate.value = this._selected.value;
+              this.accessors.setValue(this._selected.value);
             }
           }
           ]]>

@@ -77,7 +77,7 @@
 #include "nsIStringBundle.h"
 #include "nsIDOMSerializer.h"
 #include "nsIServiceManager.h"
-#include "nsIXFormsDelegate.h"
+#include "nsIDelegateInternal.h"
 
 #define EPHEMERAL_STYLE \
   "position:absolute;z-index:2147483647; \
@@ -293,7 +293,7 @@ nsXFormsMessageElement::CloneNode(nsIDOMNode* aSrc, nsIDOMNode** aTarget)
   // to support <output> here.
   if (ns.EqualsLiteral(NS_NAMESPACE_XFORMS) &&
       localName.EqualsLiteral("output")) {
-    nsCOMPtr<nsIXFormsDelegate> outEl(do_QueryInterface(aSrc));
+    nsCOMPtr<nsIDelegateInternal> outEl(do_QueryInterface(aSrc));
     if (outEl) {
       nsCOMPtr<nsIDOMDocument> doc;
       aSrc->GetOwnerDocument(getter_AddRefs(doc));

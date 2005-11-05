@@ -124,10 +124,12 @@ XPIDLSRCS	= \
 		nsIXFormsSubmissionElement.idl \
 		nsIXFormsControlBase.idl \
 		nsIXFormsDelegate.idl \
+		nsIDelegateInternal.idl \
 		nsIXFormsUIWidget.idl \
 		nsIXFormsItemElement.idl \
 		nsIXFormsLabelElement.idl \
 		nsIXFormsItemSetUIElement.idl \
+		nsIXFormsAccessors.idl \
 		nsIXFormsUploadElement.idl \
 		nsIXFormsUploadUIElement.idl \
 		$(NULL)
@@ -185,6 +187,7 @@ CPPSRCS		= \
 		nsXFormsControlStub.cpp \
 		nsXFormsUtilityService.cpp \
 		nsXFormsDelegateStub.cpp \
+		nsXFormsAccessors.cpp \
 		$(NULL)
 
 # Standard Mozilla make rules

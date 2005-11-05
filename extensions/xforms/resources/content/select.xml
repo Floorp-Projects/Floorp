@@ -118,7 +118,7 @@
         </setter>
       </property>
 
-      <field name="_delegateValueCache">null</field>
+      <field name="_accessorValueCache">null</field>
 
       <!-- Make sure we don't refresh while we are refreshing (race condition).
            This happens when we are inside a repeat for example. We use the
@@ -130,7 +130,7 @@
           if (this._refreshing)
             return;
 
-          if (this.delegate.isReadonly) {
+          if (this.accessors.isReadonly()) {
             this.uiElement.setAttribute("readonly", "readonly");
           } else {
             this.uiElement.removeAttribute("readonly");
@@ -142,8 +142,8 @@
           // changed, we simply update the selection.  If it hasn't, that means
           // we rebuild the select UI.  We also rebuild if the delegate cache is
           // null (first load).
-          if (this._delegateValueCache == null ||
-              this._delegateValueCache == this.delegate.value) {
+          if (this._accessorValueCache == null ||
+              this._accessorValueCache == this.accessors.getValue()) {
             // refresh was not called due to instance data changing, so build the
             // UI.
             this._buildSelect();
@@ -153,7 +153,7 @@
           }
 
           // store the delegate value
-          this._delegateValueCache = this.delegate.value;
+          this._accessorValueCache = this.accessors.getValue();
 
           this._refreshing = false;
 
@@ -174,8 +174,8 @@
           // replace new line (\n), tabs (\t) and carriage returns (\r) with "".
           var value = "";
 
-          if (this.delegate.value)
-            value = this.delegate.value.replace(/\n|\t|\r/g, " ");
+          if (this.accessors.getValue())
+            value = this.accessors.getValue().replace(/\n|\t|\r/g, " ");
 
           // get an array of values selected in the bound node
           var selectedArray = value.split(" ");
@@ -401,8 +401,8 @@
       <method name="_setBoundValue">
         <body>
         <![CDATA[
-          if (this.delegate.hasBoundNode)
-            this.delegate.value = this._getSelectedValues();
+          if (this.accessors.hasBoundNode)
+            this.accessors.setValue(this._getSelectedValues());
         ]]>
         </body>
       </method>
@@ -460,8 +460,8 @@
         <![CDATA[
           // get an array of values selected in the bound node
           var selectedArray = new Array();
-          if (this.delegate.value)
-            selectedArray = this.delegate.value.split(" ");
+          if (this.accessors.getValue())
+            selectedArray = this.accessors.getValue().split(" ");
 
           // store the values in a hash for quick access
           this._defaultHash = new Object();

@@ -21,7 +21,6 @@
  *
  * Contributor(s):
  *  Allan Beaufour <abeaufour@novell.com>
- *  Olli Pettay <Olli.Pettay@helsinki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,26 +38,47 @@
 
 #include "nsISupports.idl"
 
-interface nsIXFormsAccessors;
-
 /**
- * Interface implemented by XForms controls that delegates the UI to an
- * external entity.
+ * Interface exposing the states of an XForms control.
  *
  * For more information on this interface please see
  * http://developer.mozilla.org/en/docs/XForms:Custom_Controls
- *
  */
-[scriptable, uuid(5e75904d-73e8-4cee-b02c-4348a071a0e1)]
-interface nsIXFormsDelegate : nsISupports
+[scriptable, uuid(8e8c5022-a61d-42cf-9551-74215dc611ad)]
+interface nsIXFormsAccessors : nsISupports
 {
   /**
-   * Get the IXFormsAccessors object for this control.
+   * Get the value bound to the XForms control.
    */
-  nsIXFormsAccessors getXFormsAccessors();
+  DOMString getValue();
 
   /**
-   * This should be called by XBL widgets, when they are created.
+   * Set the value bound to the XForms control.
    */
-  void widgetAttached();
+  void setValue(in DOMString value);
+
+  /**
+   * @see http://www.w3.org/TR/xforms/slice6.html#model-prop-readOnly
+   */
+  boolean isReadonly();
+
+  /**
+   * @see http://www.w3.org/TR/xforms/slice6.html#model-prop-relevant
+   */
+  boolean isRelevant();
+
+  /**
+   * @see http://www.w3.org/TR/xforms/slice6.html#model-prop-required
+   */
+  boolean isRequired();
+
+  /**
+   * @see http://www.w3.org/TR/xforms/slice6.html#model-prop-validate
+   */
+  boolean isValid();
+
+  /**
+   * true, if XForms control is bound to a node in a data model.
+   */
+  boolean hasBoundNode();
 };
