@@ -116,7 +116,7 @@ public:
                                  void* aClassObject)=0;
 
 protected:
-  friend struct nsAutoGCRoot;
+  friend class nsAutoGCRoot;
   
   nsXBLProtoImplMember* mNext;  // The members of an implementation are chained.
   PRUnichar* mName;               // The name of the field, method, or property.
