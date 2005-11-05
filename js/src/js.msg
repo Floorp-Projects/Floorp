@@ -241,7 +241,7 @@ MSG_DEF(JSMSG_DEPRECATED_USAGE,       158, 1, JSEXN_REFERENCEERR, "deprecated {0
 MSG_DEF(JSMSG_BAD_URI,                159, 0, JSEXN_URIERR, "malformed URI sequence")
 MSG_DEF(JSMSG_GETTER_ONLY,            160, 0, JSEXN_TYPEERR, "setting a property that has only a getter")
 MSG_DEF(JSMSG_TRAILING_COMMA,         161, 0, JSEXN_SYNTAXERR, "trailing comma is not legal in ECMA-262 object initializers")
-MSG_DEF(JSMSG_UNDEFINED_PROP,         162, 1, JSEXN_TYPEERR, "reference to undefined property {0}")
+MSG_DEF(JSMSG_UNDEFINED_PROP,         162, 1, JSEXN_REFERENCEERR, "reference to undefined property {0}")
 MSG_DEF(JSMSG_USELESS_EXPR,           163, 0, JSEXN_TYPEERR, "useless expression")
 MSG_DEF(JSMSG_REDECLARED_PARAM,       164, 1, JSEXN_TYPEERR, "redeclaration of formal parameter {0}")
 MSG_DEF(JSMSG_NEWREGEXP_FLAGGED,      165, 0, JSEXN_TYPEERR, "can't supply flags when constructing one RegExp from another")
