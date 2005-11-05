@@ -100,7 +100,8 @@ sub _retrieve {
     my $records = Bugzilla->dbh->selectall_arrayref("SELECT $columns
                                                      FROM attachments
                                                      WHERE attach_id IN (" .
-                                                     join(",", @$ids) . ")",
+                                                     join(",", @$ids) . ")
+                                                     ORDER BY attach_id",
                                                     { Slice => {} });
     return $records;
 }
@@ -394,8 +395,7 @@ sub get_attachments_by_bug {
     my ($class, $bug_id) = @_;
     my $attach_ids = Bugzilla->dbh->selectcol_arrayref("SELECT attach_id
                                                         FROM attachments
-                                                        WHERE bug_id = ?
-                                                        ORDER BY attach_id",
+                                                        WHERE bug_id = ?",
                                                        undef, $bug_id);
     my $attachments = Bugzilla::Attachment->get_list($attach_ids);
     return $attachments;
