@@ -362,6 +362,7 @@ public:
   AppendFrames(nsIAtom*        aListName,
                nsIFrame*       aFrameList)
   {
+    NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsBlockFrame::AppendFrames(aListName, aFrameList);
     nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
@@ -372,8 +373,8 @@ public:
                nsIFrame*       aPrevFrame,
                nsIFrame*       aFrameList)
   {
-    nsresult rv = nsBlockFrame::InsertFrames(aListName, aPrevFrame,
-                                             aFrameList);
+    NS_ASSERTION(!aListName, "internal error");
+    nsresult rv = nsBlockFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
     nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
@@ -383,6 +384,7 @@ public:
                nsIFrame*       aOldFrame,
                nsIFrame*       aNewFrame)
   {
+    NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsBlockFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
     nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
@@ -392,6 +394,7 @@ public:
   RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame)
   {
+    NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsBlockFrame::RemoveFrame(aListName, aOldFrame);
     nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
@@ -446,6 +449,7 @@ public:
   AppendFrames(nsIAtom*        aListName,
                nsIFrame*       aFrameList)
   {
+    NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsInlineFrame::AppendFrames(aListName, aFrameList);
     nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
@@ -456,8 +460,8 @@ public:
                nsIFrame*       aPrevFrame,
                nsIFrame*       aFrameList)
   {
-    nsresult rv = nsInlineFrame::InsertFrames(aListName, aPrevFrame,
-                                              aFrameList);
+    NS_ASSERTION(!aListName, "internal error");
+    nsresult rv = nsInlineFrame::InsertFrames(aListName, aPrevFrame, aFrameList);
     nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
   }
@@ -467,6 +471,7 @@ public:
                nsIFrame*       aOldFrame,
                nsIFrame*       aNewFrame)
   {
+    NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsInlineFrame::ReplaceFrame(aListName, aOldFrame, aNewFrame);
     nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
@@ -476,6 +481,7 @@ public:
   RemoveFrame(nsIAtom*        aListName,
               nsIFrame*       aOldFrame)
   {
+    NS_ASSERTION(!aListName, "internal error");
     nsresult rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
     nsMathMLContainerFrame::ReLayoutChildren(this);
     return rv;
