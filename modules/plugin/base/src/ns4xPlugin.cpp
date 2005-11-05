@@ -487,7 +487,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary,
 ns4xPlugin::~ns4xPlugin(void)
 {
   //reset the callbacks list
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(__POWERPC__)
   // release all wrapped plugin entry points.
   if (fCallbacks.newp)
     free((void *)fCallbacks.newp);
@@ -845,7 +845,7 @@ ns4xPlugin::Shutdown(void)
   NPP_PLUGIN_LOG(PLUGIN_LOG_BASIC,
                  ("NPP Shutdown to be called: this=%p\n", this));
 
-  if (nsnull != fShutdownEntry) {
+  if (fShutdownEntry != nsnull) {
 #if defined(XP_MACOSX)
     CallNPP_ShutdownProc(fShutdownEntry);
     ::CloseResFile(fPluginRefNum);
@@ -853,7 +853,7 @@ ns4xPlugin::Shutdown(void)
     NS_TRY_SAFE_CALL_VOID(fShutdownEntry(), fLibrary, nsnull);
 #endif
 
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(__POWERPC__)
     // release the wrapped plugin function.
     free((void *)fShutdownEntry);
 #endif
