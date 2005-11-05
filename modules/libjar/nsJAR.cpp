@@ -294,7 +294,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
     outFile->Remove(PR_FALSE);
   else
   {
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
     if (item->flags & ZIFLAG_SYMLINK) 
     {
       nsCAutoString path;

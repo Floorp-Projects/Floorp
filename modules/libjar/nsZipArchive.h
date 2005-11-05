@@ -273,7 +273,7 @@ public:
 
   PRInt32 FindFree(nsZipFind *aFind);
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
   /**
    * ResolveSymLinks
    * @param path      where the file is located
