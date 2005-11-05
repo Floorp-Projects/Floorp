@@ -111,6 +111,8 @@ char * strdup(const char *src)
     #include <unistd.h>
 #elif defined(XP_WIN) || defined(XP_OS2)
     #include <io.h>
+#elif defined(XP_BEOS)
+    #include <unistd.h>
 #endif
 
 #ifndef XP_UNIX /* we need to have some constant defined in limits.h and unistd.h */
@@ -683,7 +685,7 @@ PRInt32 nsZipArchive::ExtractFile(const char* zipEntry, const char* aOutname,
   {
     PR_Delete(aOutname);
   }
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
   else
   {
     if (ZIFLAG_SYMLINK & item->flags)
@@ -830,7 +832,7 @@ PRInt32 nsZipArchive::FindFree(nsZipFind* aFind)
   return ZIP_OK;
 }
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 //---------------------------------------------
 // nsZipArchive::ResolveSymlink
 //---------------------------------------------
