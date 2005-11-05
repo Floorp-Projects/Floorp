@@ -447,6 +447,11 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctx
   // Drop notification callbacks to prevent cycles.
   mCallbacks = 0;
   mProgressEventSink = 0;
+  // Call CloseSocket(), in case we got here because the server dropped the 
+  // connection while reading, and we never get a chance to get back into 
+  // the protocol state machine via OnDataAvailable. 
+  if (m_socketIsOpen)
+    CloseSocket();
 
   return rv;
 }
