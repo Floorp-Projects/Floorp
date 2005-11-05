@@ -1343,6 +1343,10 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
 		aRect.y = nscoord(r.top);
 		aRect.width  = r.IntegerWidth()+1;
 		aRect.height = r.IntegerHeight()+1;
+		// Set flag to inform BWindow::FrameResized() that
+		// we are ready to get next resize message, Bug 314687
+		if (mIsTopWidgetWindow)
+			((nsWindowBeOS *)mView->Window())->fJustGotBounds = true;
 		mView->UnlockLooper();
 	} 
 	else 
@@ -2889,7 +2893,7 @@ nsWindowBeOS::nsWindowBeOS( nsIWidget *aWidgetWindow, BRect aFrame, const char *
 		: BWindow( aFrame, aName, aLook, aFeel, aFlags, aWorkspace ),
 		nsIWidgetStore( aWidgetWindow )
 {
-	//placeholder for initialization
+	fJustGotBounds = true;
 }
 
 nsWindowBeOS::~nsWindowBeOS()
@@ -2997,13 +3001,21 @@ void  nsWindowBeOS::WorkspacesChanged(uint32 oldworkspace, uint32 newworkspace)
 
 void  nsWindowBeOS::FrameResized(float width, float height)
 {
+	// We have send message already, and Mozilla still didn't get it
+	// so don't poke it endlessly with no reason
+	if (!fJustGotBounds)
+		return;
 	nsWindow        *w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if (w && (t = w->GetToolkit()) != 0)
 	{
 		MethodInfo *info = nsnull;
 		if (nsnull != (info = new MethodInfo(w, w, nsWindow::ONRESIZE)))
+		{
 			t->CallMethodAsync(info);
+			//Memorize fact of sending message
+			fJustGotBounds = false;
+		}
 		NS_RELEASE(t);
 	}	
 }
@@ -3017,6 +3029,7 @@ nsViewBeOS::nsViewBeOS(nsIWidget *aWidgetWindow, BRect aFrame, const char *aName
 		buttons(0), restoreMouseMask(false)
 {
 	paintregion.MakeEmpty();
+	fJustValidated = true;	
 }
 
 void nsViewBeOS::AttachedToWindow()
@@ -3036,6 +3049,11 @@ void nsViewBeOS::DoDraw(BRect updateRect)
 	//Collecting update rects here in paintregion
 	paintregion.Include(updateRect);
 
+	// We have send message already, and Mozilla still didn't get it
+	// so don't poke it endlessly with no reason. Also don't send message
+	// if update region is empty.
+	if (paintregion.CountRects() == 0 || !paintregion.Frame().IsValid() || !fJustValidated)
+		return;
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if (w && (t = w->GetToolkit()) != 0)
@@ -3043,7 +3061,11 @@ void nsViewBeOS::DoDraw(BRect updateRect)
 		MethodInfo *info = nsnull;
 		info = new MethodInfo(w, w, nsWindow::ONPAINT);
 		if (info)
+		{
 			t->CallMethodAsync(info);
+			//Memorize fact of sending message
+			fJustValidated = false;
+		}
 		NS_RELEASE(t);
 	}
 }
@@ -3060,6 +3082,9 @@ bool nsViewBeOS::GetPaintRegion(BRegion *r)
 void nsViewBeOS::Validate(BRect r)
 {
 	paintregion.Exclude(r);
+	// Mozilla got previous ONPAINT message,
+	// ready for next event.
+	fJustValidated = true;
 }
 
 void nsViewBeOS::MouseDown(BPoint point)
