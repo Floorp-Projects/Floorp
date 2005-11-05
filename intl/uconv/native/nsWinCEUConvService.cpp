@@ -34,8 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <windows.h>
-
 #include "nsNativeUConvService.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
@@ -48,226 +46,32 @@
 #include "nsUTF8ToUnicode.h"
 #include "nsUnicodeToUTF8.h"
 
-class WinCEUConvAdapter : public nsIUnicodeDecoder,
-                        public nsIUnicodeEncoder,
-                        public nsICharRepresentable
-{
-public:
-
-    WinCEUConvAdapter();
-    virtual ~WinCEUConvAdapter();
-
-    nsresult Init(const char* from, const char* to);
-
-    NS_DECL_ISUPPORTS;
-    
-    // Decoder methods:
-    
-    NS_IMETHOD Convert(const char * aSrc, 
-                       PRInt32 * aSrcLength, 
-                       PRUnichar * aDest, 
-                       PRInt32 * aDestLength);
-    
-    NS_IMETHOD GetMaxLength(const char * aSrc, 
-                            PRInt32 aSrcLength, 
-                            PRInt32 * aDestLength);
-    NS_IMETHOD Reset();
-    
-    // Encoder methods:
-    
-    NS_IMETHOD Convert(const PRUnichar * aSrc, 
-                       PRInt32 * aSrcLength, 
-                       char * aDest, 
-                       PRInt32 * aDestLength);
-    
-    
-    NS_IMETHOD Finish(char * aDest, PRInt32 * aDestLength);
-    
-    NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, 
-                            PRInt32 aSrcLength, 
-                            PRInt32 * aDestLength);
-    
-    // defined by the Decoder:  NS_IMETHOD Reset();
-    
-    NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
-                                      nsIUnicharEncoder * aEncoder, 
-                                      PRUnichar aChar);
-    
-    NS_IMETHOD FillInfo(PRUint32* aInfo);
-
-    nsCString mFrom;
-    nsCString mTo;
-    
-};
-
-NS_IMPL_ISUPPORTS3(WinCEUConvAdapter,
-                   nsIUnicodeDecoder,
-                   nsIUnicodeEncoder,
-                   nsICharRepresentable)
-
-WinCEUConvAdapter::WinCEUConvAdapter()
-{
-}
-
-WinCEUConvAdapter::~WinCEUConvAdapter()
-{
-}
-
-nsresult
-WinCEUConvAdapter::Init(const char* from, const char* to)
-{
-    mFrom = from;
-    mTo   = to;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-WinCEUConvAdapter::Convert(const char * aSrc, 
-                         PRInt32 * aSrcLength, 
-                         PRUnichar * aDest, 
-                         PRInt32 * aDestLength)
-{
-    UINT codepage = CP_ACP;
-    int count = MultiByteToWideChar(codepage,
-                                    0,
-                                    aSrc,
-                                    *aSrcLength,
-                                    aDest,
-                                    *aDestLength);
-    *aDestLength = count;
-    *aSrcLength  = count;
-    return NS_OK;
-}
-    
-NS_IMETHODIMP
-WinCEUConvAdapter::GetMaxLength(const char * aSrc, 
-                              PRInt32 aSrcLength, 
-                              PRInt32 * aDestLength)
-{
-    UINT codepage = CP_ACP;
-    int count = MultiByteToWideChar(codepage,
-                                    0,
-                                    aSrc,
-                                    aSrcLength,
-                                    NULL,
-                                    NULL);
-    
-    *aDestLength = count;
-    return NS_OK;
-
-}
-NS_IMETHODIMP
-WinCEUConvAdapter::Reset()
-{
-    return NS_OK;
-}
-    
-// Encoder methods:
-    
-NS_IMETHODIMP
-WinCEUConvAdapter::Convert(const PRUnichar * aSrc, 
-                         PRInt32 * aSrcLength, 
-                         char * aDest, 
-                         PRInt32 * aDestLength)
-{
-
-    char * defaultChar = "?";
-    UINT codepage = CP_ACP;
-    int count = WideCharToMultiByte(codepage,
-                                    WC_COMPOSITECHECK | WC_SEPCHARS | WC_DEFAULTCHAR,
-                                    aSrc,
-                                    *aSrcLength,
-                                    aDest,
-                                    *aDestLength,
-                                    defaultChar,
-                                    NULL);
-
-    *aSrcLength = count;
-    *aDestLength = count;
-
-    return NS_OK;
-}
-    
-    
-NS_IMETHODIMP
-WinCEUConvAdapter::Finish(char * aDest, PRInt32 * aDestLength)
-{
-    return NS_OK;
-}
-    
-NS_IMETHODIMP
-WinCEUConvAdapter::GetMaxLength(const PRUnichar * aSrc, 
-                            PRInt32 aSrcLength, 
-                            PRInt32 * aDestLength)
-{
-    UINT codepage = CP_ACP;
-    int count = WideCharToMultiByte(codepage,
-                                    0,
-                                    aSrc,
-                                    aSrcLength,
-                                    NULL,
-                                    NULL,
-                                    NULL,
-                                    NULL);
-
-    *aDestLength = count;
-    return NS_OK;
-}
-    
-// defined by the Decoder:  NS_IMETHOD Reset();
-    
-NS_IMETHODIMP
-WinCEUConvAdapter::SetOutputErrorBehavior(PRInt32 aBehavior, 
-                                      nsIUnicharEncoder * aEncoder, 
-                                      PRUnichar aChar)
-{
-    return NS_OK;
-}
-    
-NS_IMETHODIMP
-WinCEUConvAdapter::FillInfo(PRUint32* aInfo)
-{
-    return NS_OK;
-}
-    
 // NativeUConvService
 
-NS_IMPL_ISUPPORTS1(NativeUConvService, 
-                   nsINativeUConvService);
+NS_IMPL_ISUPPORTS1(NativeUConvService, nsINativeUConvService);
 
 NS_IMETHODIMP 
 NativeUConvService::GetNativeConverter(const char* from,
                                        const char* to,
                                        nsISupports** aResult) 
 {
-    *aResult = nsnull;
-
-    if (!strcmp(from, "UCS-2") && !strcmp(to, "UTF-8"))
-    {
-      nsUnicodeToUTF8 * inst = new nsUnicodeToUTF8();
-      inst->AddRef();
-      *aResult = inst;
-      return NS_OK;
-    }
-
-    if (!strcmp(from, "UTF-8") && !strcmp(to, "UCS-2"))
-    {
-      nsUTF8ToUnicode * inst = new nsUTF8ToUnicode();
-      inst->AddRef();
-      *aResult = (nsIUnicodeDecoder*) inst;
-      return NS_OK;
-    }
-
-    WinCEUConvAdapter* ucl = new WinCEUConvAdapter();
-    if (!ucl)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = ucl->Init(from, to);
-
-    if (NS_SUCCEEDED(rv)) {
-        NS_ADDREF(*aResult = (nsISupports*)(nsIUnicharEncoder*)ucl);
-    }
-
-    return rv;
+  *aResult = nsnull;
+  
+  if (!strcmp(from, "UCS-2"))
+  {
+    nsUnicodeToUTF8 * inst = new nsUnicodeToUTF8();
+    inst->AddRef();
+    *aResult = inst;
+    return NS_OK;
+  }
+  
+  if (!strcmp(to, "UCS-2"))
+  {
+    nsUTF8ToUnicode * inst = new nsUTF8ToUnicode();
+    inst->AddRef();
+    *aResult = (nsIUnicodeDecoder*) inst;
+    return NS_OK;
+  }
+  
+  return NS_ERROR_NOT_AVAILABLE;
 }
