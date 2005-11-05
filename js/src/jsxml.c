@@ -1885,7 +1885,7 @@ ParseXMLSource(JSContext *cx, JSString *src)
 {
     jsval nsval;
     JSXMLNamespace *ns;
-    size_t urilen, srclen, length, offset;
+    size_t urilen, srclen, length, offset, dstlen;
     jschar *chars;
     const jschar *srcp, *endp;
     void *mark;
@@ -1917,16 +1917,20 @@ ParseXMLSource(JSContext *cx, JSString *src)
     if (!chars)
         return NULL;
 
-    js_InflateStringToBuffer(chars, prefix, constrlen(prefix));
-    offset = constrlen(prefix);
+    dstlen = length;
+    js_InflateStringToBuffer(cx, prefix, constrlen(prefix), chars, &dstlen);
+    offset = dstlen;
     js_strncpy(chars + offset, JSSTRING_CHARS(ns->uri), urilen);
     offset += urilen;
-    js_InflateStringToBuffer(chars + offset, middle, constrlen(middle));
-    offset += constrlen(middle);
+    dstlen = length - offset + 1;
+    js_InflateStringToBuffer(cx, middle, constrlen(middle), chars + offset, &dstlen);
+    offset += dstlen;
     srcp = JSSTRING_CHARS(src);
     js_strncpy(chars + offset, srcp, srclen);
     offset += srclen;
-    js_InflateStringToBuffer(chars + offset, suffix, constrlen(suffix));
+    dstlen = length - offset + 1;
+    js_InflateStringToBuffer(cx, suffix, constrlen(suffix), chars + offset, &dstlen);
+    chars [offset + dstlen] = 0;
 
     mark = JS_ARENA_MARK(&cx->tempPool);
     ts = js_NewBufferTokenStream(cx, chars, length);

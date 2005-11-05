@@ -424,27 +424,33 @@ js_SkipWhiteSpace(const jschar *s);
 /*
  * Inflate bytes to JS chars and vice versa.  Report out of memory via cx
  * and return null on error, otherwise return the jschar or byte vector that
- * was JS_malloc'ed.
+ * was JS_malloc'ed. length is updated with the length of the new string in jschars.
  */
 extern jschar *
-js_InflateString(JSContext *cx, const char *bytes, size_t length);
+js_InflateString(JSContext *cx, const char *bytes, size_t *length);
 
 extern char *
 js_DeflateString(JSContext *cx, const jschar *chars, size_t length);
 
 /*
  * Inflate bytes to JS chars into a buffer.
- * 'chars' must be large enough for 'length'+1 jschars.
+ * 'chars' must be large enough for 'length' jschars.
+ * The buffer is NOT null-terminated.
+ * cx may be NULL, which means no errors are thrown.
+ * The destination length needs to be initialized with the buffer size, takes the number of chars moved.
  */
-extern void
-js_InflateStringToBuffer(jschar *chars, const char *bytes, size_t length);
+extern JSBool
+js_InflateStringToBuffer(JSContext* cx, const char *bytes, size_t length, jschar *chars, size_t* charsLength);
 
 /*
  * Deflate JS chars to bytes into a buffer.
- * 'bytes' must be large enough for 'length'+1 chars.
+ * 'bytes' must be large enough for 'length chars.
+ * The buffer is NOT null-terminated.
+ * cx may be NULL, which means no errors are thrown.
+ * The destination length needs to be initialized with the buffer size, takes the number of bytes moved.
  */
-extern void
-js_DeflateStringToBuffer(char *bytes, const jschar *chars, size_t length);
+extern JSBool
+js_DeflateStringToBuffer(JSContext* cx, const jschar *chars, size_t charsLength, char *bytes, size_t* length);
 
 /*
  * Associate bytes with str in the deflated string cache, returning true on
@@ -463,6 +469,13 @@ js_GetStringBytes(JSString *str);
 JSBool
 js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval);
+
+/*
+ * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
+ * least 6 bytes long.  Return the number of UTF-8 bytes of data written.
+ */
+extern int
+js_OneUcs4ToUtf8Char(uint8 *utf8Buffer, uint32 ucs4Char);
 
 JS_END_EXTERN_C
 

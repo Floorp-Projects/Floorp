@@ -1564,6 +1564,48 @@ ToInt32(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_NewNumberValue(cx, i, rval);
 }
 
+static JSBool
+StringsAreUtf8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    *rval = JS_StringsAreUTF8 () ? JSVAL_TRUE : JSVAL_FALSE;
+    return JS_TRUE;
+}
+
+static const char* badUtf8 = "...\xC0...";
+static const char* bigUtf8 = "...\xFB\xBF\xBF\xBF\xBF...";
+static const jschar badSurrogate[] = { 'A', 'B', 'C', 0xDEEE, 'D', 'E', 0 };
+
+static JSBool
+TestUtf8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    intN mode = 1;
+    jschar chars[20];
+    size_t charsLength = 5;
+     char bytes[20];
+    size_t bytesLength = 20;
+    if (argc)
+        JS_ValueToInt32 (cx, *argv, &mode);
+    switch (mode) {
+        // mode 1: malformed UTF-8 string (throws error if compiled with UTF-8)
+        case 1: 
+            JS_NewStringCopyZ (cx, badUtf8); 
+            break;
+        // mode 2: big UTF-8 character (throws error if compiled with UTF-8)
+        case 2: 
+            JS_NewStringCopyZ (cx, bigUtf8); 
+            break;
+        // mode 3: bad Unicode surrogate character (throws error if compiled with UTF-8)
+        case 3: 
+            JS_EncodeCharacters (cx, badSurrogate, 6, bytes, &bytesLength); 
+            break;
+        // mode 4: use a too small buffer
+        case 4: 
+            JS_DecodeBytes(cx, "1234567890", 10, chars, &charsLength); 
+            break;
+    }
+    return !JS_IsExceptionPending (cx);
+}
+
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1577,6 +1619,8 @@ static JSFunctionSpec shell_functions[] = {
     {"untrap",          Untrap,         2},
     {"line2pc",         LineToPC,       0},
     {"pc2line",         PCToLine,       0},
+    {"stringsAreUtf8",  StringsAreUtf8, 0},
+    {"testUtf8",        TestUtf8,       1},
 #ifdef DEBUG
     {"dis",             Disassemble,    1},
     {"dissrc",          DisassWithSrc,  1},
@@ -1616,6 +1660,8 @@ static char *shell_help_messages[] = {
     "untrap(fun[, pc])      Remove a trap",
     "line2pc([fun,] line)   Map line number to PC",
     "pc2line(fun[, pc])     Map PC to line number",
+    "stringsAreUTF8()       Check if strings are UTF-8 encoded",
+    "testUTF8(mode)         Perform UTF-8 tests (modes are 1 to 4)",
 #ifdef DEBUG
     "dis([fun])             Disassemble functions into bytecodes",
     "dissrc([fun])          Disassemble functions with source lines",
@@ -1643,14 +1689,14 @@ static char *shell_help_messages[] = {
 static void
 ShowHelpHeader(void)
 {
-    fprintf(gOutFile, "%-9s %-22s %s\n", "Command", "Usage", "Description");
-    fprintf(gOutFile, "%-9s %-22s %s\n", "=======", "=====", "===========");
+    fprintf(gOutFile, "%-14s %-22s %s\n", "Command", "Usage", "Description");
+    fprintf(gOutFile, "%-14s %-22s %s\n", "=======", "=====", "===========");
 }
 
 static void
 ShowHelpForCommand(uintN n)
 {
-    fprintf(gOutFile, "%-9.9s %s\n", shell_functions[n].name, shell_help_messages[n]);
+    fprintf(gOutFile, "%-14.14s %s\n", shell_functions[n].name, shell_help_messages[n]);
 }
 
 static JSBool
