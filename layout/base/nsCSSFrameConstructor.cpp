@@ -13250,6 +13250,10 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   }
 
   delete [] restylesToProcess;
+
+#ifdef DEBUG
+  mPresShell->VerifyStyleTree();
+#endif
 }
 
 void

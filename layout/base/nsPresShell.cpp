@@ -1260,6 +1260,7 @@ public:
                                  PRInt32 aIndent = 0);
 
   virtual void ListStyleSheets(FILE *out, PRInt32 aIndent = 0);
+  virtual void VerifyStyleTree();
 #endif
 
 #ifdef PR_LOGGING
@@ -1342,7 +1343,6 @@ protected:
   PRPackedBool mIsDestroying;
   PRPackedBool mIsReleasingAnonymousContent;
 
-  PRPackedBool mDidInitialReflow;
   PRPackedBool mIgnoreFrameDestruction;
   PRPackedBool mHaveShutDown;
 
@@ -1447,7 +1447,7 @@ VerifyStyleTree(nsPresContext* aPresContext, nsFrameManager* aFrameManager)
     aFrameManager->DebugVerifyStyleTree(rootFrame);
   }
 }
-#define VERIFY_STYLE_TREE VerifyStyleTree(mPresContext, FrameManager())
+#define VERIFY_STYLE_TREE ::VerifyStyleTree(mPresContext, FrameManager())
 #else
 #define VERIFY_STYLE_TREE
 #endif
@@ -5208,20 +5208,18 @@ nsIPresShell::ReconstructStyleDataInternal()
 {
   mStylesHaveChanged = PR_FALSE;
 
-  nsIFrame* rootFrame = FrameManager()->GetRootFrame();
-  if (!rootFrame)
+  if (!mDidInitialReflow) {
+    // Nothing to do here, since we have no frames yet
     return;
+  }
 
-  nsStyleChangeList changeList;
-  FrameManager()->ComputeStyleChangeFor(rootFrame, &changeList,
-                                       NS_STYLE_HINT_NONE);
-
-  NS_ASSERTION(mViewManager, "Should have view manager");
-  mViewManager->BeginUpdateViewBatch();
-  mFrameConstructor->ProcessRestyledFrames(changeList);
-  mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-
-  VERIFY_STYLE_TREE;
+  nsIContent* root = mDocument->GetRootContent();
+  if (!root) {
+    // No content to restyle
+    return;
+  }
+  
+  mFrameConstructor->PostRestyleEvent(root, eReStyle_Self, NS_STYLE_HINT_NONE);
 
 #ifdef ACCESSIBILITY
   InvalidateAccessibleSubtree(nsnull);
@@ -7272,6 +7270,11 @@ PresShell::ListStyleSheets(FILE *out, PRInt32 aIndent)
   }
 }
 
+void
+PresShell::VerifyStyleTree()
+{
+  VERIFY_STYLE_TREE;
+}
 #endif
 
 // PresShellViewEventListener
