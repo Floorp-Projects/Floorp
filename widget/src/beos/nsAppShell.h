@@ -39,7 +39,6 @@
 #define nsAppShell_h__
 
 #include "nsCOMPtr.h"
-#include "nsObject.h"
 #include "nsIAppShell.h"
 #include "nsIEventQueue.h"
 #include "nsSwitchToUIThread.h"
