@@ -5426,7 +5426,7 @@ nsDocShell::RestoreFromHistory()
     mLSHE->SetWindowState(nsnull);
 
     // Reattach to the window object.
-    rv = mContentViewer->Open(windowState);
+    rv = mContentViewer->Open(windowState, mLSHE);
 
     // Now remove it from the cached presentation.
     mLSHE->SetContentViewer(nsnull);

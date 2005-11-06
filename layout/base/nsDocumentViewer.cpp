@@ -1215,8 +1215,46 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
                                 NS_EVENT_FLAG_INIT, &status);
 }
 
+static void
+AttachContainerRecurse(nsIDocShell* aShell)
+{
+  nsCOMPtr<nsIContentViewer> viewer;
+  aShell->GetContentViewer(getter_AddRefs(viewer));
+  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(viewer);
+  if (docViewer) {
+    nsCOMPtr<nsIDocument> doc;
+    docViewer->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      doc->SetContainer(aShell);
+    }
+    nsCOMPtr<nsPresContext> pc;
+    docViewer->GetPresContext(getter_AddRefs(pc));
+    if (pc) {
+      pc->SetContainer(aShell);
+      pc->SetLinkHandler(nsCOMPtr<nsILinkHandler>(do_QueryInterface(aShell)));
+    }
+    nsCOMPtr<nsIPresShell> presShell;
+    docViewer->GetPresShell(getter_AddRefs(presShell));
+    if (presShell) {
+      presShell->SetForwardingContainer(nsnull);
+    }
+  }
+
+  // Now recurse through the children
+  nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(aShell);
+  NS_ASSERTION(node, "docshells must implement nsIDocShellTreeNode");
+
+  PRInt32 childCount;
+  node->GetChildCount(&childCount);
+  for (PRInt32 i = 0; i < childCount; ++i) {
+    nsCOMPtr<nsIDocShellTreeItem> childItem;
+    node->GetChildAt(i, getter_AddRefs(childItem));
+    AttachContainerRecurse(nsCOMPtr<nsIDocShell>(do_QueryInterface(childItem)));
+  }
+}
+
 NS_IMETHODIMP
-DocumentViewerImpl::Open(nsISupports *aState)
+DocumentViewerImpl::Open(nsISupports *aState, nsISHEntry *aSHEntry)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
 
@@ -1239,6 +1277,16 @@ DocumentViewerImpl::Open(nsISupports *aState)
   if (mPresShell)
     mPresShell->SetForwardingContainer(nsnull);
 
+  // Rehook the child presentations.  The child shells are still in
+  // session history, so get them from there.
+
+  nsCOMPtr<nsIDocShellTreeItem> item;
+  PRInt32 itemIndex = 0;
+  while (NS_SUCCEEDED(aSHEntry->ChildShellAt(itemIndex++,
+                                             getter_AddRefs(item))) && item) {
+    AttachContainerRecurse(nsCOMPtr<nsIDocShell>(do_QueryInterface(item)));
+  }
+  
   SyncParentSubDocMap();
 
   if (mFocusListener) {
@@ -1315,6 +1363,45 @@ DocumentViewerImpl::Close(nsISHEntry *aSHEntry)
   }
 
   return NS_OK;
+}
+
+static void
+DetachContainerRecurse(nsIDocShell *aShell)
+{
+  // Unhook this docshell's presentation
+  nsCOMPtr<nsIContentViewer> viewer;
+  aShell->GetContentViewer(getter_AddRefs(viewer));
+  nsCOMPtr<nsIDocumentViewer> docViewer = do_QueryInterface(viewer);
+  if (docViewer) {
+    nsCOMPtr<nsIDocument> doc;
+    docViewer->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      doc->SetContainer(nsnull);
+    }
+    nsCOMPtr<nsPresContext> pc;
+    docViewer->GetPresContext(getter_AddRefs(pc));
+    if (pc) {
+      pc->SetContainer(nsnull);
+      pc->SetLinkHandler(nsnull);
+    }
+    nsCOMPtr<nsIPresShell> presShell;
+    docViewer->GetPresShell(getter_AddRefs(presShell));
+    if (presShell) {
+      presShell->SetForwardingContainer(nsWeakPtr(do_GetWeakReference(aShell)));
+    }
+  }
+
+  // Now recurse through the children
+  nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(aShell);
+  NS_ASSERTION(node, "docshells must implement nsIDocShellTreeNode");
+
+  PRInt32 childCount;
+  node->GetChildCount(&childCount);
+  for (PRInt32 i = 0; i < childCount; ++i) {
+    nsCOMPtr<nsIDocShellTreeItem> childItem;
+    node->GetChildAt(i, getter_AddRefs(childItem));
+    DetachContainerRecurse(nsCOMPtr<nsIDocShell>(do_QueryInterface(childItem)));
+  }
 }
 
 NS_IMETHODIMP
@@ -1396,6 +1483,7 @@ DocumentViewerImpl::Destroy()
     else {
       mSHEntry->SyncPresentationState();
     }
+    nsCOMPtr<nsISHEntry> shEntry = mSHEntry; // we'll need this below
     mSHEntry = nsnull;
 
     // Break the link from the document/presentation to the docshell, so that
@@ -1411,6 +1499,15 @@ DocumentViewerImpl::Destroy()
     }
     if (mPresShell)
       mPresShell->SetForwardingContainer(mContainer);
+
+    // Do the same for our children.  Note that we need to get the child
+    // docshells from the SHEntry now; the docshell will have cleared them.
+    nsCOMPtr<nsIDocShellTreeItem> item;
+    PRInt32 itemIndex = 0;
+    while (NS_SUCCEEDED(shEntry->ChildShellAt(itemIndex++,
+                                              getter_AddRefs(item))) && item) {
+      DetachContainerRecurse(nsCOMPtr<nsIDocShell>(do_QueryInterface(item)));
+    }
 
     return NS_OK;
   }
