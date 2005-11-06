@@ -534,19 +534,19 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 		}
 	}
 
-	BView *parent;
+	nsViewBeOS *parent;
 	if (nsnull != aParent) // has a nsIWidget parent
 	{
-		parent = ((aParent) ? (BView *)aParent->GetNativeData(NS_NATIVE_WIDGET) : nsnull);
+		parent = ((aParent) ? (nsViewBeOS *)aParent->GetNativeData(NS_NATIVE_WIDGET) : nsnull);
 	}
 	else // has a nsNative parent
 	{
-		parent = (BView *)aNativeParent;
+		parent = (nsViewBeOS *)aNativeParent;
 	}
 
 	// Only popups have mBorderlessParents
 	mParent = aParent;
-	mView = CreateBeOSView();
+	mView = new nsViewBeOS(this, BRect(0,0,0,0), "", 0, 0);
 	if (mView)
 	{
 #ifdef MOZ_DEBUG_WINDOW_CREATE
@@ -706,6 +706,9 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 				w->Show();
 			}
 		} // if eWindowType_Child
+		
+		// There is BeOS API/app_server issue creating little/0-sized windows. See comment above
+		// Checking here real size. Probably should be done only for toplevel objects.
 		nsRect r(aRect);
 		if (mView && mView->LockLooper())
 		{
@@ -762,11 +765,6 @@ NS_METHOD nsWindow::Create(nsNativeWidget aParent,
 	return(StandardWindowCreate(nsnull, aRect, aHandleEventFunction,
 	                            aContext, aAppShell, aToolkit, aInitData,
 	                            aParent));
-}
-
-BView *nsWindow::CreateBeOSView()
-{
-	return new nsViewBeOS(this, BRect(0,0,0,0), "", 0, 0);
 }
 
 //-------------------------------------------------------------------------
@@ -1709,6 +1707,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
 			return (void *)(mView->Window());
 		case NS_NATIVE_WIDGET:
 		case NS_NATIVE_PLUGIN_PORT:
+			return (void *)((nsViewBeOS *)mView);
 		case NS_NATIVE_GRAPHIC:
 			return (void *)((BView *)mView);
 		case NS_NATIVE_COLORMAP:
@@ -2031,8 +2030,7 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			BRegion reg;
 			nsRegion nreg;
 			reg.MakeEmpty();
-			nsViewBeOS *bv = dynamic_cast<nsViewBeOS *>(mView);
-			bool nonempty = bv->GetPaintRegion(&reg);
+			bool nonempty = mView->GetPaintRegion(&reg);
 			BRect br = reg.Frame();
 			if (nonempty && br.IsValid())
 			{
@@ -2618,8 +2616,7 @@ nsresult nsWindow::OnPaint(nsRect &r, const nsIRegion *nsr)
 	if (mView->LockLooper())
 	{
 		BRect br(r.x, r.y, r.x + r.width - 1, r.y + r.height -1);
-		nsViewBeOS *bv = dynamic_cast<nsViewBeOS *>(mView);
-		bv->Validate(br);
+		mView->Validate(br);
 		mView->UnlockLooper();
 	}
 	

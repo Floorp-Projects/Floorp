@@ -210,11 +210,10 @@ protected:
 	PRBool                  DispatchStandardEvent(PRUint32 aMsg);
 
 	PRBool                  DispatchWindowEvent(nsGUIEvent* event);
-	BView*                  CreateBeOSView();
 	void                    HideKids(PRBool state);
 
 
-	BView           *mView;
+	nsViewBeOS*      mView;
 	PRBool           mIsTopWidgetWindow;
 	nsCOMPtr<nsIWidget> mParent;
 	nsCOMPtr<nsIRegion> mUpdateArea;
