@@ -147,10 +147,8 @@ public:
 	NS_IMETHOD              Enable(PRBool aState);
 	NS_IMETHOD              IsEnabled(PRBool *aState);
 	NS_IMETHOD              SetFocus(PRBool aRaise);
-	NS_IMETHOD              GetBounds(nsRect &aRect);
 	NS_IMETHOD              GetScreenBounds(nsRect &aRect);
 	NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
-	NS_IMETHOD              SetForegroundColor(const nscolor &aColor);
 	virtual nsIFontMetrics* GetFont(void);
 	NS_IMETHOD              SetFont(const nsFont &aFont);
 	NS_IMETHOD              SetCursor(nsCursor aCursor);
@@ -172,7 +170,6 @@ public:
 	NS_IMETHOD              GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
 	NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
 	NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
-	NS_IMETHOD              EnableFileDrop(PRBool aEnable);
 
 	virtual void             ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 
@@ -185,61 +182,50 @@ public:
 	                                           PRUint32 mod);
 
 
-	virtual PRBool         AutoErase();
 	void                   InitEvent(nsGUIEvent& event, nsPoint* aPoint = nsnull);
 
 protected:
 
 	static PRBool           EventIsInsideWindow(nsWindow* aWindow, nsPoint pos) ;
 	static PRBool           DealWithPopups(uint32 methodID, nsPoint pos);
-
-	// Allow Derived classes to modify the height that is passed
-	// when the window is created or resized.
-	virtual PRInt32         GetHeight(PRInt32 aProposedHeight);
-	virtual void            OnDestroy();
-	virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
-	virtual PRBool          OnPaint(nsRect &r, const nsIRegion *nsreg = nsnull);
-	virtual PRBool          OnResize(nsRect &aWindowRect);
-	virtual PRBool          OnKeyDown(PRUint32 aEventType, 
+    // Following methods need to be virtual if we will subclassing
+	void                    OnDestroy();
+	PRBool                  OnMove(PRInt32 aX, PRInt32 aY);
+	nsresult                OnPaint(nsRect &r, const nsIRegion *nsreg = nsnull);
+	PRBool                  OnResize(nsRect &aWindowRect);
+	PRBool                  OnKeyDown(PRUint32 aEventType, 
 	                                  const char *bytes, 
 	                                  int32 numBytes, 
 	                                  PRUint32 mod, 
 	                                  PRUint32 bekeycode, 
 	                                  int32 rawcode);
-	virtual PRBool          OnKeyUp(PRUint32 aEventType, 
+	PRBool                  OnKeyUp(PRUint32 aEventType, 
 	                                const char *bytes, 
 	                                int32 numBytes, 
 	                                PRUint32 mod, 
 	                                PRUint32 bekeycode, 
 	                                int32 rawcode);
-	virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode,
+	PRBool                  DispatchKeyEvent(PRUint32 aEventType, PRUint32 aCharCode,
                                            PRUint32 aKeyCode, PRUint32 aFlags = 0);
-	virtual PRBool          DispatchFocus(PRUint32 aEventType);
-	virtual PRBool          OnScroll();
+	PRBool                  DispatchFocus(PRUint32 aEventType);
 	static PRBool           ConvertStatus(nsEventStatus aStatus);
 	PRBool                  DispatchStandardEvent(PRUint32 aMsg);
 
-	virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
-	virtual BView          *CreateBeOSView();
+	PRBool                  DispatchWindowEvent(nsGUIEvent* event);
+	BView*                  CreateBeOSView();
 	void                    HideKids(PRBool state);
 
 
 	BView           *mView;
 	PRBool           mIsTopWidgetWindow;
-	BView           *mBorderlessParent;
 	nsCOMPtr<nsIWidget> mParent;
 	nsCOMPtr<nsIRegion> mUpdateArea;
-	// I would imagine this would be in nsBaseWidget, but alas, it is not
 	PRBool           mIsMetaDown;
-
 	PRBool           mOnDestroyCalled;
 	PRBool           mIsVisible;
-	// XXX Temporary, should not be caching the font
-	nsFont          *mFont;
-
+	nsIFontMetrics*  mFontMetrics;
 	PRInt32          mPreferredWidth;
 	PRInt32          mPreferredHeight;
-
 	PRBool           mEnabled;
 	PRBool           mJustGotActivate;
 	PRBool           mJustGotDeactivate;	
@@ -248,7 +234,8 @@ public:	// public on BeOS to allow BViews to access it
 	// Enumeration of the methods which are accessable on the "main GUI thread"
 	// via the CallMethod(...) mechanism...
 	// see nsSwitchToUIThread
-	enum {
+	enum
+	{
 	    CREATE       = 0x0101,
 	    CREATE_NATIVE,
 	    DESTROY,
@@ -256,15 +243,12 @@ public:	// public on BeOS to allow BViews to access it
 	    GOT_FOCUS,
 	    KILL_FOCUS,
 	    SET_CURSOR,
-	    CREATE_HACK,
 	    ONMOUSE,
 	    ONDROP,
 	    ONWHEEL,
 	    ONPAINT,
-	    ONSCROLL,
 	    ONRESIZE,
 	    CLOSEWINDOW,
-	    MENU,
 	    ONKEY,
 	    BTNCLICK,
 	    ONACTIVATE,
@@ -281,7 +265,8 @@ public:	// public on BeOS to allow BViews to access it
 //
 // Each class need to subclass this as part of the subclass
 //
-class nsIWidgetStore {
+class nsIWidgetStore
+{
 public:
 	                        nsIWidgetStore(nsIWidget *aWindow);
 	virtual                ~nsIWidgetStore();
@@ -295,7 +280,8 @@ private:
 //
 // A BWindow subclass
 //
-class nsWindowBeOS : public BWindow, public nsIWidgetStore {
+class nsWindowBeOS : public BWindow, public nsIWidgetStore
+{
 public:
 	                        nsWindowBeOS(nsIWidget *aWidgetWindow,  
 	                                     BRect aFrame, 
@@ -321,10 +307,8 @@ private:
 //
 // A BView subclass
 //
-class nsViewBeOS : public BView, public nsIWidgetStore {
-	BRegion          paintregion;
-	uint32           buttons;
-
+class nsViewBeOS : public BView, public nsIWidgetStore
+{
 public:
 	                        nsViewBeOS(nsIWidget *aWidgetWindow, 
 	                                   BRect aFrame, 
@@ -332,35 +316,36 @@ public:
 	                                   uint32 aResizingMode, 
 	                                   uint32 aFlags);
 
-	virtual void            AttachedToWindow();
 	virtual void            Draw(BRect updateRect);
 	virtual void            MouseDown(BPoint point);
 	virtual void            MouseMoved(BPoint point, 
 	                                   uint32 transit, 
 	                                   const BMessage *message);
 	virtual void            MouseUp(BPoint point);
-	bool                  GetPaintRegion(BRegion *breg);
-	void                  Validate(BRect r);
-	void                  KeyDown(const char *bytes, int32 numBytes);
-	void                  KeyUp(const char *bytes, int32 numBytes);
+	bool                    GetPaintRegion(BRegion *breg);
+	void                    Validate(BRect r);
+	void                    KeyDown(const char *bytes, int32 numBytes);
+	void                    KeyUp(const char *bytes, int32 numBytes);
 	virtual void            MakeFocus(bool focused);
 	virtual void            MessageReceived(BMessage *msg);
+	BRegion                 paintregion;
+	uint32                  buttons;
 
 private:
-	void                 DoDraw(BRect updateRect);
 #if defined(BeIME)
  	void                 DoIME(BMessage *msg);
 #endif
 	BPoint               mousePos;
 	uint32               mouseMask;
-	bool                 restoreMouseMask;	
+	bool                 fRestoreMouseMask;	
 	bool                 fJustValidated;
 };
 
 //
 // A child window is a window with different style
 //
-class ChildWindow : public nsWindow {
+class ChildWindow : public nsWindow 
+{
 public:
 	                        ChildWindow() {};
 	virtual PRBool          IsChild() { return(PR_TRUE); };
