@@ -90,10 +90,20 @@ nsDirectionalFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return rv;
 }
 
+void*
+nsDirectionalFrame::operator new(size_t aSize) CPP_THROW_NEW
+{
+  void* frame = ::operator new(aSize);
+  if (frame) {
+    memset(frame, 0, aSize);
+  }
+  return frame;
+}
+
 nsIFrame*
 NS_NewDirectionalFrame(nsIPresShell* aPresShell, PRUnichar aChar)
 {
-  return new (aPresShell) nsDirectionalFrame(aChar);
+  return new nsDirectionalFrame(aChar);
 }
 
 #endif /* IBMBIDI */
