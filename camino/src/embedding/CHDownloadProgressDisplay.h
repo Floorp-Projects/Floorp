@@ -110,13 +110,16 @@ class CHDownloader;
 @protocol CHDownloadProgressDisplay
 
 - (void)onStartDownload:(BOOL)isFileSave;
-- (void)onEndDownload:(BOOL)completedOK;
+- (void)onEndDownload:(BOOL)completedOK statusCode:(nsresult)aStatus;
 
 - (void)setProgressTo:(long long)aCurProgress ofMax:(long long)aMaxProgress;
 
 - (void)setDownloadListener:(CHDownloader*)aDownloader;
 - (void)setSourceURL:(NSString*)aSourceURL;
+- (NSString*)sourceURL;
+
 - (void)setDestinationPath:(NSString*)aDestPath;
+- (NSString*)destinationPath;
 
 @end
 

@@ -41,6 +41,7 @@
 #import <Appkit/Appkit.h>
 
 #include "nsString.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIURI.h"
@@ -50,7 +51,9 @@
 
 
 // Implementation of a header sniffer class that is used when saving Web pages and images.
-class nsHeaderSniffer : public nsIWebProgressListener
+// NB. GetInterface() for nsIProgressEventSink is called on this class, if we wanted to implement it.
+class nsHeaderSniffer : public nsIInterfaceRequestor,
+                        public nsIWebProgressListener
 {
 public:
     nsHeaderSniffer(nsIWebBrowserPersist* aPersist, nsIFile* aFile, nsIURI* aURL,
@@ -60,6 +63,7 @@ public:
     virtual ~nsHeaderSniffer();
 
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIWEBPROGRESSLISTENER
   
 protected:

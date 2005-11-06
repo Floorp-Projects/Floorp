@@ -38,6 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsNetError.h"
+
+#import "NSString+Utils.h"
 #import "NSView+Utils.h"
 
 #import "ProgressDlgController.h"
@@ -49,6 +52,7 @@ static NSString* const kProgressWindowFrameSaveName = @"ProgressWindow";
 
 @interface ProgressDlgController(PrivateProgressDlgController)
 
+-(void)showErrorSheetForDownload:(id <CHDownloadProgressDisplay>)progressDisplay withStatus:(nsresult)inStatus;
 -(void)rebuildViews;
 -(NSMutableArray*)getSelectedProgressViewControllers;
 -(void)deselectDLInstancesInArray:(NSArray*)instances;
@@ -480,7 +484,7 @@ static id gSharedProgressController = nil;
   [self makeDLInstanceVisibleIfItsNotAlready:progressDisplay];
 }
 
--(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay withSuccess:(BOOL)completedOK
+-(void)didEndDownload:(id <CHDownloadProgressDisplay>)progressDisplay withSuccess:(BOOL)completedOK statusCode:(nsresult)status
 {
   [self rebuildViews]; // to swap in the completed view
   [[[self window] toolbar] validateVisibleItems]; // force update which doesn't always happen
@@ -496,8 +500,66 @@ static id gSharedProgressController = nil;
                       // for the option key and try to close all windows
     }
   }
+  else if (NS_FAILED(status) && status != NS_BINDING_ABORTED)  // if it's an error, and not just canceled, show sheet
+  {
+    [self showErrorSheetForDownload:progressDisplay withStatus:status];
+  }
   
   [self saveProgressViewControllers];
+}
+
+-(void)showErrorSheetForDownload:(id <CHDownloadProgressDisplay>)progressDisplay withStatus:(nsresult)inStatus
+{
+  NSString* errorMsgFmt = NSLocalizedString(@"DownloadErrorMsgFmt", @"");
+  NSString* errorExplString = nil;
+  
+  NSString* destFilePath = [progressDisplay destinationPath];
+  NSString* fileName = [destFilePath displayNameOfLastPathComponent];
+  
+  NSString* errorMsg = [NSString stringWithFormat:errorMsgFmt, fileName];
+
+  switch (inStatus)
+  {
+    case NS_ERROR_FILE_DISK_FULL:
+    case NS_ERROR_FILE_NO_DEVICE_SPACE:
+      {
+        NSString* fmtString = NSLocalizedString(@"DownloadErrorNoDiskSpaceOnVolumeFmt", @"");
+        errorExplString = [NSString stringWithFormat:fmtString, [destFilePath volumeNamePathComponent]];
+      }
+      break;
+      
+    case NS_ERROR_FILE_ACCESS_DENIED:
+      {
+        NSString* fmtString = NSLocalizedString(@"DownloadErrorDestinationWriteProtectedFmt", @"");
+        NSString* destDirPath = [destFilePath stringByDeletingLastPathComponent];
+        errorExplString = [NSString stringWithFormat:fmtString, [destDirPath displayNameOfLastPathComponent]];
+      }
+      break;
+
+    case NS_ERROR_FILE_TOO_BIG:
+    case NS_ERROR_FILE_READ_ONLY:
+    default:
+      {
+        errorExplString = NSLocalizedString(@"DownloadErrorOther", @"");
+        NSLog(@"Download failure code: %X", inStatus);
+      }
+      break;
+  }
+  
+  NSBeginAlertSheet(errorMsg,
+                    nil,    // default button ("OK")
+                    nil,    // alt button (none)
+                    nil,    // other button (nil)
+                    [self window],
+                    self,
+                    @selector(downloadErrorSheetDidEnd:returnCode:contextInfo:),
+                    nil,    // didDismissSelector
+                    NULL,   // context info
+                    errorExplString);
+}
+
+-(void)downloadErrorSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
+{
 }
 
 -(void)removeDownload:(id <CHDownloadProgressDisplay>)progressDisplay

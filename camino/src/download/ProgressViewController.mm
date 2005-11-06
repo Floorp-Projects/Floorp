@@ -548,12 +548,12 @@ enum {
   [mProgressBar startAnimation:self];
 }
 
--(void)onEndDownload:(BOOL)completedOK
+- (void)onEndDownload:(BOOL)completedOK statusCode:(nsresult)aStatus
 {
   mDownloadingError = !completedOK;
-  
+
   [self downloadDidEnd];
-  [mProgressWindowController didEndDownload:self withSuccess:completedOK];
+  [mProgressWindowController didEndDownload:self withSuccess:completedOK statusCode:aStatus];
 }
 
 -(void)setProgressTo:(long long)aCurProgress ofMax:(long long)aMaxProgress
@@ -629,11 +629,21 @@ enum {
   //[self tryToSetFinderComments];
 }
 
+- (NSString*)sourceURL
+{
+  return mSourceURL;
+}
+
 -(void)setDestinationPath:(NSString*)aDestPath
 {
   [mDestPath autorelease];
   mDestPath = [aDestPath copy];
   //[self tryToSetFinderComments];
+}
+
+- (NSString*)destinationPath
+{
+  return mDestPath;
 }
 
 @end

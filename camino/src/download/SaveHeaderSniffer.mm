@@ -79,7 +79,14 @@ nsHeaderSniffer::~nsHeaderSniffer()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsHeaderSniffer, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS2(nsHeaderSniffer, nsIInterfaceRequestor, nsIWebProgressListener)
+
+// Implementation of nsIInterfaceRequestor
+NS_IMETHODIMP 
+nsHeaderSniffer::GetInterface(const nsIID &aIID, void** aInstancePtr)
+{
+  return QueryInterface(aIID, aInstancePtr);
+}
 
 #pragma mark -
 

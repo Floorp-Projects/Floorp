@@ -62,9 +62,18 @@ nsDownloadListener::~nsDownloadListener()
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED4(nsDownloadListener, CHDownloader, nsIDownload,
+NS_IMPL_ISUPPORTS_INHERITED5(nsDownloadListener, CHDownloader, 
+                             nsIInterfaceRequestor,
+                             nsIDownload,
                              nsITransfer, nsIWebProgressListener,
                              nsIWebProgressListener2)
+
+// Implementation of nsIInterfaceRequestor
+NS_IMETHODIMP 
+nsDownloadListener::GetInterface(const nsIID &aIID, void** aInstancePtr)
+{
+  return QueryInterface(aIID, aInstancePtr);
+}
 
 #pragma mark -
 
@@ -238,7 +247,7 @@ nsDownloadListener::OnStatusChange(nsIWebProgress *aWebProgress,
   // aMessage contains an error string, but it's so crappy that we don't want to use it.
   if (NS_FAILED(aStatus))
     DownloadDone(aStatus);
-  
+
   return NS_OK;
 }
 
@@ -359,14 +368,15 @@ nsDownloadListener::DownloadDone(nsresult aStatus)
   if (NS_FAILED(aStatus))
   {
     // delete the file we created in CHBrowserService::Show
-    mDestinationFile->Remove(PR_FALSE);
-    mDestinationFile = nsnull;
+    if (mDestinationFile)
+    {
+      mDestinationFile->Remove(PR_FALSE);
+      mDestinationFile = nsnull;
+    }
     mDestination = nsnull;
   }
   
-  // XXX propagate the error, so that the UI can show strings for
-  // disk full etc.
-  [mDownloadDisplay onEndDownload:(NS_SUCCEEDED(aStatus) && !mUserCanceled)];
+  [mDownloadDisplay onEndDownload:(NS_SUCCEEDED(aStatus) && !mUserCanceled) statusCode:aStatus];
 }
 
 //

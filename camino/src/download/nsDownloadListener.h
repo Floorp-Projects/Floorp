@@ -45,6 +45,7 @@
 #import "CHDownloadProgressDisplay.h"
 
 #include "nsString.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIDownload.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIURI.h"
@@ -55,8 +56,9 @@
 
 
 // maybe this should replace nsHeaderSniffer too?
-
+// NB. GetInterface() for nsIProgressEventSink is called on this class, if we wanted to implement it.
 class nsDownloadListener :  public CHDownloader,
+                            public nsIInterfaceRequestor,
                             public nsIDownload
 {
 public:
@@ -64,6 +66,7 @@ public:
     virtual ~nsDownloadListener();
 
     NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIDOWNLOAD
     NS_DECL_NSITRANSFER
     NS_DECL_NSIWEBPROGRESSLISTENER
