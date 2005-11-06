@@ -186,7 +186,7 @@ select > input[type="button"]:active {
 }
 
 select:empty {
-  width: 2.5em;
+  min-width: 2.5em;
 }
 
 *|*::-moz-display-comboboxcontrol-frame {
