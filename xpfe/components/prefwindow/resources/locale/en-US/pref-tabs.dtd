@@ -2,7 +2,7 @@
 <!ENTITY tabDisplay.label "Tab Display">
 <!ENTITY autoHide.label "Hide the tab bar when only one tab is open">
 <!ENTITY autoHide.accesskey "d">
-<!ENTITY background.label "Select new tabs opened from links">
+<!ENTITY background.label "Switch to new tabs opened from links">
 <!ENTITY background.accesskey "S">
 <!ENTITY loadGroup.label "When opening a bookmark group">
 <!ENTITY loadGroupAppend.label "Add tabs">
