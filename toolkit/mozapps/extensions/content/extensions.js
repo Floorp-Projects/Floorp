@@ -1002,7 +1002,7 @@ var gExtensionsViewController = {
     {
       if (!aSelectedItem) return;
       var homepageURL = aSelectedItem.getAttribute("homepageURL");
-      if (homepageURL != "")
+      if (/^https?:/.test(homepageURL))
         openURL(homepageURL);
     },
     
