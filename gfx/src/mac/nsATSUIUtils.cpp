@@ -251,6 +251,7 @@ nsATSUIToolkit::nsATSUIToolkit()
 //------------------------------------------------------------------------
 
 #define FloatToFixed(a)		((Fixed)((float)(a) * fixed1))
+#define ATTR_CNT 5
 
 //------------------------------------------------------------------------
 ATSUTextLayout nsATSUIToolkit::GetTextLayout(short aFontNum, short aSize, PRBool aBold, PRBool aItalic, nscolor aColor)
@@ -277,16 +278,18 @@ ATSUTextLayout nsATSUIToolkit::GetTextLayout(short aFontNum, short aSize, PRBool
     return nsnull;
 	}
 
-	ATSUAttributeTag 		theTag[3];
-	ByteCount				theValueSize[3];
-	ATSUAttributeValuePtr 	theValue[3];
+	ATSUAttributeTag 		theTag[ATTR_CNT];
+	ByteCount				theValueSize[ATTR_CNT];
+	ATSUAttributeValuePtr 	theValue[ATTR_CNT];
 
 	//--- Font ID & Face -----		
 	ATSUFontID atsuFontID;
 	
-	err = ::ATSUFONDtoFontID(aFontNum, (StyleField)((aBold ? bold : normal) | (aItalic ? italic : normal)), &atsuFontID);
-	if(noErr != err) {
-		NS_WARNING("ATSUFONDtoFontID failed");
+	// The use of ATSUFONDtoFontID is not recommended, see
+	// http://developer.apple.com/documentation/Carbon/Reference/ATSUI_Reference/atsu_reference_Reference/chapter_1.2_section_19.html
+	FMFontStyle fbStyle;
+	if (::FMGetFontFromFontFamilyInstance(aFontNum, 0, &atsuFontID, &fbStyle) == kFMInvalidFontErr) {
+		NS_WARNING("FMGetFontFromFontFamilyInstance failed");
     // goto errorDoneDestroyStyle;
   	err = ::ATSUDisposeStyle(theStyle);
   	err = ::ATSUDisposeTextLayout(txLayout);
@@ -326,7 +329,21 @@ ATSUTextLayout nsATSUIToolkit::GetTextLayout(short aFontNum, short aSize, PRBool
 	theValue[2] = (ATSUAttributeValuePtr) &color;
 	//--- Color -----		
 
-	err =  ::ATSUSetAttributes(theStyle, 3, theTag, theValueSize, theValue);
+	//--- Bold -----
+	Boolean isBold = aBold ? true : false;
+	theTag[3] = kATSUQDBoldfaceTag;
+	theValueSize[3] = (ByteCount) sizeof(Boolean);
+	theValue[3] = (ATSUAttributeValuePtr) &isBold;
+	//--- Bold -----
+
+	//--- Italic -----
+	Boolean isItalic = aItalic ? true : false;
+	theTag[4] = kATSUQDItalicTag;
+	theValueSize[4] = (ByteCount) sizeof(Boolean);
+	theValue[4] = (ATSUAttributeValuePtr) &isItalic;
+	//--- Italic -----
+
+	err =  ::ATSUSetAttributes(theStyle, ATTR_CNT, theTag, theValueSize, theValue);
 	if(noErr != err) {
 		NS_WARNING("ATSUSetAttributes failed");
     // goto errorDoneDestroyStyle;

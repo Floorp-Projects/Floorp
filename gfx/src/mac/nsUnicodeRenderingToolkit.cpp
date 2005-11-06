@@ -281,8 +281,9 @@ PRBool nsUnicodeRenderingToolkit::TECFallbackGetBoundingMetrics(
             ::TextFont(scriptFallbackFonts[fallbackScript]);
             GetScriptTextBoundingMetrics(buf, outLen, fallbackScript, oBoundingMetrics);
             ::TextFont(fontNum);
+            return PR_TRUE;
         }
-        return PR_TRUE;
+        return PR_FALSE;
     }
     
     for(fallbackScript = 0; fallbackScript < 32; fallbackScript++)
@@ -349,8 +350,8 @@ PRBool nsUnicodeRenderingToolkit :: TECFallbackDrawChar(
         ::TextFont(scriptFallbackFonts[fallbackScript]);
         DrawScriptText(buf, outLen, x, y, oWidth);
         ::TextFont(origFontNum);
+        return PR_TRUE;
     }
-    return PR_TRUE;
   }
   return PR_FALSE;
 }
