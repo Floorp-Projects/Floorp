@@ -358,3 +358,32 @@
 }
 
 @end
+
+@implementation NSString (ChimeraFilePathStringUtils)
+
+- (NSString*)volumeNamePathComponent
+{
+  // if the file doesn't exist, then componentsToDisplayForPath will return nil,
+  // so back up to the nearest existing dir
+  NSString* curPath = self;
+  while (![[NSFileManager defaultManager] fileExistsAtPath:curPath])
+  {
+    NSString* parentDirPath = [curPath stringByDeletingLastPathComponent];
+    if ([parentDirPath isEqualToString:curPath])
+      break;  // avoid endless loop
+    curPath = parentDirPath;
+  }
+  
+  NSArray* displayComponents = [[NSFileManager defaultManager] componentsToDisplayForPath:curPath];
+  if ([displayComponents count] > 0)
+    return [displayComponents objectAtIndex:0];
+  
+  return self;
+}
+
+- (NSString*)displayNameOfLastPathComponent
+{
+  return [[NSFileManager defaultManager] displayNameAtPath:self];
+}
+
+@end

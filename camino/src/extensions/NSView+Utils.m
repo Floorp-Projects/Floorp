@@ -188,6 +188,7 @@ static void RedistributeSpace(int resizeMask, float newWidth, /* in out */ float
   // clone the array to avoid issues with the array changing during the enumeration
   NSArray* subviewsArray = [[self subviews] copy];
   [subviewsArray makeObjectsPerformSelector:@selector(removeFromSuperview)];
+  [subviewsArray release];
 }
 
 @end

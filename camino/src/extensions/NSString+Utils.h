@@ -87,3 +87,10 @@ typedef enum
 - (void)truncateToWidth:(float)maxWidth at:(ETruncationType)truncationType withAttributes:(NSDictionary *)attributes;
 
 @end
+
+@interface NSString (ChimeraFilePathStringUtils)
+
+- (NSString*)volumeNamePathComponent;
+- (NSString*)displayNameOfLastPathComponent;
+
+@end
