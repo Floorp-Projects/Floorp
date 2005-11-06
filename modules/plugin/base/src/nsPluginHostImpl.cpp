@@ -87,6 +87,7 @@
 #include "nsObsoleteModuleLoading.h"
 #include "nsIComponentRegistrar.h"
 #include "nsPluginLogging.h"
+#include "nsIPrefBranch2.h"
 
 // Friggin' X11 has to "#define None". Lame!
 #ifdef None
@@ -270,6 +271,7 @@ PRBool gSkipPluginSafeCalls = PR_FALSE;
 #endif
 
 nsIFile *nsPluginHostImpl::sPluginTempDir;
+nsPluginHostImpl *nsPluginHostImpl::sInst;
 
 ////////////////////////////////////////////////////////////////////////
 // flat file reg funcs
@@ -736,27 +738,6 @@ nsActivePlugin * nsActivePluginList::findOldestStopped()
 }
 
 ////////////////////////////////////////////////////////////////////////
-nsPluginTag::nsPluginTag()
-{
-  mPluginHost = nsnull;
-  mNext = nsnull;
-  mName = nsnull;
-  mDescription = nsnull;
-  mVariants = 0;
-  mMimeTypeArray = nsnull;
-  mMimeDescriptionArray = nsnull;
-  mExtensionsArray = nsnull;
-  mLibrary = nsnull;
-  mCanUnloadLibrary = PR_TRUE;
-  mEntryPoint = nsnull;
-  mFlags = NS_PLUGIN_FLAG_ENABLED;
-  mXPConnected = PR_FALSE;
-  mFileName = nsnull;
-  mFullPath = nsnull;
-}
-
-
-////////////////////////////////////////////////////////////////////////
 inline char* new_str(const char* str)
 {
   if(str == nsnull)
@@ -903,10 +884,10 @@ nsPluginTag::nsPluginTag(const char* aName,
     mExtensionsArray(nsnull),
     mLibrary(nsnull),
     mEntryPoint(nsnull),
-    mFlags(0),
     mCanUnloadLibrary(aCanUnload),
     mXPConnected(PR_FALSE),
-    mLastModifiedTime(aLastModifiedTime)
+    mLastModifiedTime(aLastModifiedTime),
+    mFlags(0) // Caller will read in our flags from cache
 {
   mPluginHost = nsnull;
   mName            = new_str(aName);
@@ -931,7 +912,7 @@ nsPluginTag::~nsPluginTag()
 {
   TryUnloadPlugin(PR_TRUE);
 
-  // Remove mime types added to the catagory manager
+  // Remove mime types added to the category manager
   // only if we were made 'active' by setting the host
   if (mPluginHost) {
     RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
@@ -2528,6 +2509,7 @@ nsPluginHostImpl::nsPluginHostImpl()
   mAllowAlienStarHandler = PR_FALSE;
   mUnusedLibraries.Clear();
   mDefaultPluginDisabled = PR_FALSE;
+  mJavaEnabled = PR_TRUE;
 
   gActivePluginList = &mActivePluginList;
 
@@ -2536,18 +2518,30 @@ nsPluginHostImpl::nsPluginHostImpl()
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (mPrefService) {
     PRBool tmp;
-    mPrefService->GetBoolPref("plugin.override_internal_types", &tmp);
-    mOverrideInternalTypes = tmp;
+    nsresult rv = mPrefService->GetBoolPref("plugin.override_internal_types",
+                                            &tmp);
+    if (NS_SUCCEEDED(rv)) {
+      mOverrideInternalTypes = tmp;
+    }
 
-    mPrefService->GetBoolPref("plugin.allow_alien_star_handler", &tmp);
-    mAllowAlienStarHandler = tmp;
+    rv = mPrefService->GetBoolPref("plugin.allow_alien_star_handler", &tmp);
+    if (NS_SUCCEEDED(rv)) {
+      mAllowAlienStarHandler = tmp;
+    }
 
-    mPrefService->GetBoolPref("plugin.default_plugin_disabled", &tmp);
-    mDefaultPluginDisabled = tmp;
+    rv = mPrefService->GetBoolPref("plugin.default_plugin_disabled", &tmp);
+    if (NS_SUCCEEDED(rv)) {
+      mDefaultPluginDisabled = tmp;
+    }
 
 #ifdef WINCE
     mDefaultPluginDisabled = PR_TRUE;
 #endif
+
+    rv = mPrefService->GetBoolPref("security.enable_java", &tmp);
+    if (NS_SUCCEEDED(rv)) {
+      mJavaEnabled = tmp;
+    }
   }
 
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
@@ -2581,34 +2575,39 @@ nsPluginHostImpl::~nsPluginHostImpl()
   printf("nsPluginHostImpl dtor\n");
 #endif
   Destroy();
+  sInst = nsnull;
 }
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS7(nsPluginHostImpl,
+NS_IMPL_ISUPPORTS8(nsPluginHostImpl,
                    nsIPluginManager,
                    nsIPluginManager2,
                    nsIPluginHost,
                    nsIFileUtilities,
                    nsICookieStorage,
                    nsIObserver,
-                   nsPIPluginHost)
+                   nsPIPluginHost,
+                   nsISupportsWeakReference)
 ////////////////////////////////////////////////////////////////////////
-NS_METHOD
-nsPluginHostImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
+nsPluginHostImpl*
+nsPluginHostImpl::GetInst()
 {
-  NS_PRECONDITION(aOuter == nsnull, "no aggregation");
-  if (aOuter)
-    return NS_ERROR_NO_AGGREGATION;
+  if (!sInst) {
+    sInst = new nsPluginHostImpl();
+    if (!sInst) {
+      return nsnull;
+    }
+    NS_ADDREF(sInst);
 
-  nsPluginHostImpl* host = new nsPluginHostImpl();
-  if (! host)
-    return NS_ERROR_OUT_OF_MEMORY;
+    // Must call this after the refcount is already 1!
+    if (NS_FAILED(sInst->AddPrefObserver())) {
+      NS_RELEASE(sInst);
+      return nsnull;
+    }
+  }
 
-  nsresult rv;
-  NS_ADDREF(host);
-  rv = host->QueryInterface(aIID, aResult);
-  NS_RELEASE(host);
-  return rv;
+  NS_ADDREF(sInst);
+  return sInst;
 }
 
 
@@ -2719,7 +2718,7 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
     // if plugins are reloaded. This also fixes a crash on UNIX where the call
     // to shutdown would break the ProxyJNI connection to the JRE after a reload.
     // see bug 86591
-    if(!IsRunningPlugin(p) && (!p->mEntryPoint || (p->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL))) {
+    if(!IsRunningPlugin(p) && (!p->mEntryPoint || p->HasFlag(NS_PLUGIN_FLAG_OLDSCHOOL))) {
       if(p == mPlugins)
         mPlugins = next;
       else
@@ -3257,6 +3256,10 @@ NS_IMETHODIMP nsPluginHostImpl::Destroy(void)
     mPrivateDirServiceProvider = nsnull;
   }
 
+  nsCOMPtr<nsIPrefBranch2> prefBranch(do_QueryInterface(mPrefService));
+  if (prefBranch) {
+    prefBranch->RemoveObserver("security.enable_java", this);
+  }
   mPrefService = nsnull; // release prefs service to avoid leaks!
 
   return NS_OK;
@@ -3345,8 +3348,6 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
   nsIPluginInstance *instance = nsnull;
   nsCOMPtr<nsIPluginTagInfo2> pti2;
   nsPluginTagType tagType;
-  PRBool isJavaEnabled = PR_TRUE;
-  PRBool isJava = PR_FALSE;
 
   rv = aOwner->QueryInterface(kIPluginTagInfo2IID, getter_AddRefs(pti2));
 
@@ -3398,35 +3399,22 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
       return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
   }
 
-
-
-  if (tagType == nsPluginTagType_Applet ||
-      PL_strncasecmp(aMimeType, "application/x-java-vm", 21) == 0 ||
-      PL_strncasecmp(aMimeType, "application/x-java-applet", 25) == 0) {
-#ifdef OJI
-    isJava = PR_TRUE;
-    // see if java is enabled
-    if (mPrefService) {
-      rv = mPrefService->GetBoolPref("security.enable_java", &isJavaEnabled);
-      if (NS_SUCCEEDED(rv)) {
-        // if not, don't show this plugin
-        if (!isJavaEnabled) {
-          return NS_ERROR_FAILURE;
-        }
-      }
-      else {
-        // if we were unable to get the pref, assume java is enabled
-        // and rely on the "find the plugin or not" logic.
-
-        // make sure the value wasn't modified in GetBoolPref
-        isJavaEnabled = PR_TRUE;
-      }
+  // Look for even disabled plugins, because if the plugin for this type is
+  // disabled, we don't want to go on and end up in SetUpDefaultPluginInstance.
+  nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_FALSE);
+  if (pluginTag) {
+    if (!pluginTag->HasFlag(NS_PLUGIN_FLAG_ENABLED)) {
+      return NS_ERROR_NOT_AVAILABLE;
     }
-#else
-    isJavaEnabled = PR_FALSE;
-    return NS_ERROR_FAILURE;
-#endif
+  } else if (!mJavaEnabled && IsJavaMIMEType(aMimeType)) {
+    // Even if we had no Java plugin, if mJavaEnabled is false we should throw
+    // here for Java types.  Note that we only need to do this for the case
+    // when pluginTag is null; if we had a pluginTag, it would have its
+    // NS_PLUGIN_FLAG_ENABLED set the right way.
+    return NS_ERROR_NOT_AVAILABLE;
   }
+    
+  PRBool isJava = pluginTag && IsJavaPluginTag(pluginTag);
 
   // Determine if the scheme of this URL is one we can handle internaly because we should
   // only open the initial stream if it's one that we can handle internally. Otherwise
@@ -3448,7 +3436,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
     ("nsPluginHostImpl::InstatiateEmbeddedPlugin FoundStopped mime=%s\n", aMimeType));
 
     aOwner->GetInstance(instance);
-    if((!aMimeType || !isJava) && bCanHandleInternally)
+    if(!isJava && bCanHandleInternally)
       rv = NewEmbeddedPluginStream(aURL, aOwner, instance);
 
     // notify Java DOM component
@@ -3589,7 +3577,8 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 
     nsIPluginInstance* instance;
     aOwner->GetInstance(instance);
-    if(!aMimeType || PL_strncasecmp(aMimeType, "application/x-java-vm", 21))
+    nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
+    if(!pluginTag || !IsJavaPluginTag(pluginTag))
       NewFullPagePluginStream(aStreamListener, instance);
     NS_IF_RELEASE(instance);
     return NS_OK;
@@ -3849,7 +3838,8 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
 
   // if don't have a mimetype or no plugin can handle this mimetype
   // check by file extension
-  if(!aMimeType || NS_FAILED(IsPluginEnabledForType(aMimeType))) {
+  nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
+  if (!pluginTag) {
     nsCOMPtr<nsIURL> url = do_QueryInterface(aURL);
     if (!url) return NS_ERROR_FAILURE;
 
@@ -3859,8 +3849,8 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
     // if we don't have an extension or no plugin for this extension,
     // return failure as there is nothing more we can do
     if (fileExtension.IsEmpty() ||
-        NS_FAILED(IsPluginEnabledForExtension(fileExtension.get(),
-                                              mimetype))) {
+        !(pluginTag = FindPluginEnabledForExtension(fileExtension.get(),
+                                                    mimetype))) {
 
       if (mDefaultPluginDisabled) {
         aOwner->PluginNotAvailable(aMimeType ? aMimeType : mimetype);
@@ -3872,13 +3862,8 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   else
     mimetype = aMimeType;
 
-  PRBool isJavaPlugin = PR_FALSE;
-  if (aMimeType &&
-      (PL_strncasecmp(aMimeType, "application/x-java-vm", 21) == 0 ||
-         PL_strncasecmp(aMimeType, "application/x-java-applet", 25) == 0))
-  {
-    isJavaPlugin = PR_TRUE;
-  }
+  NS_ASSERTION(pluginTag, "Must have plugin tag here!");
+  PRBool isJavaPlugin = IsJavaPluginTag(pluginTag);
 
 #if defined(OJI) && ((defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_OS2))
   // This is a work-around on Unix for a LiveConnect problem (bug 83698).
@@ -4088,33 +4073,8 @@ nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType,
 NS_IMETHODIMP
 nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
 {
-  nsPluginTag *plugins = nsnull;
-  PRInt32     variants, cnt;
-
-  LoadPlugins();
-
-  // if we have a mimetype passed in, search the mPlugins linked
-  // list for a match
-  if (nsnull != aMimeType)
-  {
-    plugins = mPlugins;
-
-    while (nsnull != plugins)
-    {
-      variants = plugins->mVariants;
-
-      for (cnt = 0; cnt < variants; cnt++)
-        if (plugins->mMimeTypeArray[cnt] && (0 == PL_strcasecmp(plugins->mMimeTypeArray[cnt], aMimeType)))
-          return NS_OK;
-
-      if (cnt < variants)
-        break;
-
-      plugins = plugins->mNext;
-    }
-  }
-
-  return NS_ERROR_FAILURE;
+  nsPluginTag *plugin = FindPluginForType(aMimeType, PR_TRUE);
+  return plugin ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
@@ -4152,43 +4112,8 @@ NS_IMETHODIMP
 nsPluginHostImpl::IsPluginEnabledForExtension(const char* aExtension,
                                               const char* &aMimeType)
 {
-  nsPluginTag *plugins = nsnull;
-  PRInt32     variants, cnt;
-
-  LoadPlugins();
-
-  // if we have a mimetype passed in, search the mPlugins linked
-  // list for a match
-  if (nsnull != aExtension)
-  {
-    plugins = mPlugins;
-
-    while (nsnull != plugins)
-    {
-      variants = plugins->mVariants;
-
-      if (plugins->mExtensionsArray)
-      {
-        for (cnt = 0; cnt < variants; cnt++)
-        {
-          // mExtensionsArray[cnt] is a list of extensions separated
-          // by commas
-          if (0 == CompareExtensions(plugins->mExtensionsArray[cnt], aExtension))
-          {
-            aMimeType = plugins->mMimeTypeArray[cnt];
-            return NS_OK;
-          }
-        }
-
-        if (cnt < variants)
-          break;
-      }
-
-      plugins = plugins->mNext;
-    }
-  }
-
-  return NS_ERROR_FAILURE;
+  nsPluginTag *plugin = FindPluginEnabledForExtension(aExtension, aMimeType);
+  return plugin ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
@@ -4431,14 +4356,12 @@ nsPluginHostImpl::GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray)
 
 
 ////////////////////////////////////////////////////////////////////////
-nsresult
-nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType,
-                                           nsPluginTag* &aPlugin)
+nsPluginTag*
+nsPluginHostImpl::FindPluginForType(const char* aMimeType,
+                                    PRBool aCheckEnabled)
 {
   nsPluginTag *plugins = nsnull;
   PRInt32     variants, cnt;
-
-  aPlugin = nsnull;
 
   LoadPlugins();
 
@@ -4451,20 +4374,59 @@ nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType,
       variants = plugins->mVariants;
 
       for (cnt = 0; cnt < variants; cnt++) {
-        if (plugins->mMimeTypeArray[cnt] && (0 == PL_strcasecmp(plugins->mMimeTypeArray[cnt], aMimeType))) {
-          aPlugin = plugins;
-          return NS_OK;
+        if ((!aCheckEnabled || plugins->HasFlag(NS_PLUGIN_FLAG_ENABLED)) &&
+            plugins->mMimeTypeArray[cnt] &&
+            (0 == PL_strcasecmp(plugins->mMimeTypeArray[cnt], aMimeType))) {
+          return plugins;
         }
       }
-
-      if (cnt < variants)
-        break;
 
       plugins = plugins->mNext;
     }
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
+}
+
+nsPluginTag*
+nsPluginHostImpl::FindPluginEnabledForExtension(const char* aExtension,
+                                                const char*& aMimeType)
+{
+  nsPluginTag *plugins = nsnull;
+  PRInt32     variants, cnt;
+
+  LoadPlugins();
+
+  // if we have a mimetype passed in, search the mPlugins linked
+  // list for a match
+  if (nsnull != aExtension)
+  {
+    plugins = mPlugins;
+
+    while (nsnull != plugins)
+    {
+      variants = plugins->mVariants;
+
+      if (plugins->mExtensionsArray)
+      {
+        for (cnt = 0; cnt < variants; cnt++)
+        {
+          // mExtensionsArray[cnt] is a list of extensions separated
+          // by commas
+          if (plugins->HasFlag(NS_PLUGIN_FLAG_ENABLED) &&
+              0 == CompareExtensions(plugins->mExtensionsArray[cnt], aExtension))
+          {
+            aMimeType = plugins->mMimeTypeArray[cnt];
+            return plugins;
+          }
+        }
+      }
+
+      plugins = plugins->mNext;
+    }
+  }
+
+  return nsnull;
 }
 
 #if defined(XP_MACOSX)
@@ -4562,9 +4524,10 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
   // If plugins haven't been scanned yet, do so now
   LoadPlugins();
 
-  nsPluginTag* pluginTag;
-  if((rv = FindPluginEnabledForType(aMimeType, pluginTag)) == NS_OK)
+  nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
+  if(pluginTag)
   {
+    rv = NS_OK;
     PLUGIN_LOG(PLUGIN_LOG_BASIC,
     ("nsPluginHostImpl::GetPluginFactory Begin mime=%s, plugin=%s\n",
     aMimeType, pluginTag->mFileName));
@@ -4672,7 +4635,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
                                        &pluginTag->mEntryPoint);
 
         plugin = pluginTag->mEntryPoint;
-        pluginTag->mFlags |= NS_PLUGIN_FLAG_OLDSCHOOL;
+        pluginTag->Mark(NS_PLUGIN_FLAG_OLDSCHOOL);
         // no need to initialize, already done by CreatePlugin()
       }
     }
@@ -4736,17 +4699,35 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
 }
 
 ////////////////////////////////////////////////////////////////////////
-// XXX quick helper function to check for java plugin
-static PRBool isUnwantedJavaPlugin(nsPluginTag * tag) {
+PRBool nsPluginHostImpl::IsUnwantedJavaPlugin(nsPluginTag * tag)
+{
+  PRBool javaUnwanted = !mJavaEnabled;
 #ifndef OJI
-  for (PRInt32 i = 0; i < tag->mVariants; ++i) {
-    if ((0 == PL_strncasecmp(tag->mMimeTypeArray[i], "application/x-java-vm", 21)) ||
-        (0 == PL_strncasecmp(tag->mMimeTypeArray[i], "application/x-java-applet", 25)) ||
-        (0 == PL_strncasecmp(tag->mMimeTypeArray[i], "application/x-java-bean", 23)))
-      return PR_TRUE;
-  }
+  javaUnwanted = PR_TRUE;
 #endif /* OJI */
+  return javaUnwanted && IsJavaPluginTag(tag);
+}
+
+PRBool nsPluginHostImpl::IsJavaPluginTag(nsPluginTag * tag)
+{
+  for (PRInt32 i = 0; i < tag->mVariants; ++i) {
+    if (IsJavaMIMEType(tag->mMimeTypeArray[i])) {
+      return PR_TRUE;
+    }
+  }
+
   return PR_FALSE;
+}
+
+PRBool nsPluginHostImpl::IsJavaMIMEType(const char* aType)
+{
+  return aType &&
+    ((0 == PL_strncasecmp(aType, "application/x-java-vm",
+                          sizeof("application/x-java-vm") - 1)) ||
+     (0 == PL_strncasecmp(aType, "application/x-java-applet",
+                          sizeof("application/x-java-applet") - 1)) ||
+     (0 == PL_strncasecmp(aType, "application/x-java-bean",
+                          sizeof("application/x-java-bean") - 1)));
 }
 
 nsPluginTag * nsPluginHostImpl::HaveSamePlugin(nsPluginTag * aPluginTag)
@@ -4939,10 +4920,20 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       else {
         // if it is unwanted plugin we are checking for, get it back to the cache info list
         // if this is a duplicate plugin, too place it back in the cache info list marking unwantedness
-        if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) || IsDuplicatePlugin(pluginTag) || isUnwantedJavaPlugin(pluginTag)) {
+        if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) ||
+           IsDuplicatePlugin(pluginTag) ||
+           IsUnwantedJavaPlugin(pluginTag)) {
+          if (!pluginTag->HasFlag(NS_PLUGIN_FLAG_UNWANTED)) {
+            // Plugin switched from wanted to unwanted
+            *aPluginsChanged = PR_TRUE;
+          }
           pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
           pluginTag->mNext = mCachedPlugins;
           mCachedPlugins = pluginTag;
+        } else if (pluginTag->HasFlag(NS_PLUGIN_FLAG_UNWANTED)) {
+          pluginTag->UnMark(NS_PLUGIN_FLAG_UNWANTED);
+          // Plugin switched from unwanted to wanted
+          *aPluginsChanged = PR_TRUE;
         }
       }
     }
@@ -5001,7 +4992,11 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       // if this is unwanted plugin we are checkin for, or this is a duplicate plugin,
       // add it to our cache info list so we can cache the unwantedness of this plugin
       // when we sync cached plugins to registry
-      if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) || IsDuplicatePlugin(pluginTag) || isUnwantedJavaPlugin(pluginTag)) {
+      NS_ASSERTION(!pluginTag->HasFlag(NS_PLUGIN_FLAG_UNWANTED),
+                   "Brand-new tags should not be unwanted");
+      if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) ||
+         IsDuplicatePlugin(pluginTag) ||
+         IsUnwantedJavaPlugin(pluginTag)) {
         pluginTag->Mark(NS_PLUGIN_FLAG_UNWANTED);
         pluginTag->mNext = mCachedPlugins;
         mCachedPlugins = pluginTag;
@@ -5014,7 +5009,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
     // check if this is a specific plugin we don't want
     if((checkForUnwantedPlugins && isUnwantedPlugin(pluginTag)) ||
-       isUnwantedJavaPlugin(pluginTag))
+       IsUnwantedJavaPlugin(pluginTag))
       bAddIt = PR_FALSE;
 
     // check if we already have this plugin in the list which
@@ -5037,7 +5032,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
       pluginTag->RegisterWithCategoryManager(mOverrideInternalTypes);
     }
-    else if (!(pluginTag->mFlags & NS_PLUGIN_FLAG_UNWANTED)) {
+    else if (!pluginTag->HasFlag(NS_PLUGIN_FLAG_UNWANTED)) {
       // we don't need it, delete it;
       // but don't delete unwanted plugins since they are cached
       // in the cache info list and will be deleted later
@@ -5247,7 +5242,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
     // while counting, we should ignore unwanted plugins which are also present in cache
     PRUint32 cachecount = 0;
     for (nsPluginTag * cachetag = mCachedPlugins; cachetag; cachetag = cachetag->mNext) {
-      if (!(cachetag->mFlags & NS_PLUGIN_FLAG_UNWANTED))
+      if (!cachetag->HasFlag(NS_PLUGIN_FLAG_UNWANTED))
         cachecount++;
     }
     // if there is something left in cache, some plugins got removed from the directory
@@ -5373,7 +5368,7 @@ nsPluginHostImpl::WritePluginInfo()
   for (int i=0; i<(int)(sizeof(taglist)/sizeof(nsPluginTag *)); i++) {
     for (nsPluginTag *tag = taglist[i]; tag; tag=tag->mNext) {
       // from mCachedPlugins list write down only unwanted plugins
-      if ((taglist[i] == mCachedPlugins) && !(tag->mFlags & NS_PLUGIN_FLAG_UNWANTED))
+      if ((taglist[i] == mCachedPlugins) && !tag->HasFlag(NS_PLUGIN_FLAG_UNWANTED))
         continue;
       // store each plugin info into the registry
       // filename & fullpath are on separate line
@@ -5392,7 +5387,7 @@ nsPluginHostImpl::WritePluginInfo()
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         tag->mCanUnloadLibrary,
         PLUGIN_REGISTRY_FIELD_DELIMITER,
-        tag->mFlags,
+        tag->Flags(),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         PLUGIN_REGISTRY_END_OF_LINE_MARKER);
 
@@ -6182,6 +6177,40 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
   {
     Destroy();
     UnloadUnusedLibraries();
+    sInst->Release();
+  }
+  if (!nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic)) {
+    NS_ASSERTION(someData &&
+                 nsDependentString(someData).EqualsLiteral("security.enable_java"),
+                 "Unexpected pref");
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(aSubject);
+    NS_ASSERTION(branch, "Not a pref branch?");
+    PRBool enabled;
+    if (NS_FAILED(branch->GetBoolPref("security.enable_java", &enabled))) {
+      enabled = PR_TRUE;
+    }
+
+    if (enabled != mJavaEnabled) {
+      mJavaEnabled = enabled;
+      // Unfortunately, we might not be able to remove the java PluginTag from
+      // mPlugins if we ever started a Java applet, because it's a new-school
+      // plugin and it'll have a mEntryPoint pointer.  So just manually mark it
+      // as disabled so at least FindPluginForType/Extension doesn't return
+      // anything.
+      for (nsPluginTag* cur = mPlugins; cur; cur = cur->mNext) {
+        if (IsJavaPluginTag(cur)) {
+          if (mJavaEnabled) {
+            cur->Mark(NS_PLUGIN_FLAG_ENABLED);
+          } else {
+            cur->UnMark(NS_PLUGIN_FLAG_ENABLED);
+          }
+        }
+      }            
+      
+      // Pass PR_TRUE for reloadPages because otherwise if there is a java
+      // plugin running somewhere it won't get turned off
+      return ReloadPlugins(PR_TRUE);
+    }
   }
   return NS_OK;
 }
@@ -6626,6 +6655,8 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
   if (info.fMimeTypeArray) {
     nsPluginTag *pluginTag = new nsPluginTag(&info);
     if (pluginTag) {
+      NS_ASSERTION(!IsUnwantedJavaPlugin(pluginTag),
+                   "RealPlayer plugin is unwanted Java plugin?");
       pluginTag->SetHost(this);
       pluginTag->mNext = mPlugins;
       mPlugins = pluginTag;
@@ -6649,6 +6680,14 @@ nsresult nsPluginHostImpl::AddUnusedLibrary(PRLibrary * aLibrary)
     mUnusedLibraries.AppendElement(aLibrary);
 
   return NS_OK;
+}
+
+nsresult nsPluginHostImpl::AddPrefObserver()
+{
+  nsCOMPtr<nsIPrefBranch2> prefBranch(do_QueryInterface(mPrefService));
+  NS_ENSURE_TRUE(prefBranch, NS_ERROR_UNEXPECTED);
+  
+  return prefBranch->AddObserver("security.enable_java", this, PR_TRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
