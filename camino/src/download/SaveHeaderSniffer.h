@@ -73,7 +73,7 @@ protected:
 
 private:
 
-    nsIWebBrowserPersist*     mPersist; // Weak. It owns us as a listener.
+    nsIWebBrowserPersist*     mSniffingPersist; // Weak. It owns us as a listener. Only lives until we get the start state.
     nsCOMPtr<nsIFile>         mTmpFile;
     nsCOMPtr<nsIURI>          mURL;
     nsCOMPtr<nsIDOMDocument>  mDocument;

@@ -64,7 +64,7 @@ nsHeaderSniffer::nsHeaderSniffer(nsIWebBrowserPersist* aPersist, nsIFile* aFile,
                 nsIDOMDocument* aDocument, nsIInputStream* aPostData,
                 const nsAString& aSuggestedFilename, PRBool aBypassCache,
                 NSView* aFilterView)
-: mPersist(aPersist)
+: mSniffingPersist(aPersist)
 , mTmpFile(aFile)
 , mURL(aURL)
 , mDocument(aDocument)
@@ -98,7 +98,7 @@ nsHeaderSniffer::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aReques
 {  
   if (aStateFlags & nsIWebProgressListener::STATE_START)
   {
-    nsCOMPtr<nsIWebBrowserPersist> kungFuDeathGrip(mPersist);   // be sure to keep it alive while we save
+    nsCOMPtr<nsIWebBrowserPersist> kungFuDeathGrip(mSniffingPersist);   // be sure to keep it alive while we save
                                                                 // since it owns us as a listener
     nsCOMPtr<nsIWebProgressListener> kungFuSuicideGrip(this);   // and keep ourslves alive
     
@@ -115,19 +115,23 @@ nsHeaderSniffer::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aReques
     if (httpChannel)
       httpChannel->GetResponseHeader(nsCAutoString("content-disposition"), mContentDisposition);
     
-    mPersist->CancelSave();
-    mPersist = nsnull;
+    // Kill the web browser persist that we used to get this far. We restart the download, now
+    // that we have the file name, content disposition etc.
+    mSniffingPersist->CancelSave();
+    mSniffingPersist = nsnull;
 
     PRBool exists;
     mTmpFile->Exists(&exists);
     if (exists)
         mTmpFile->Remove(PR_FALSE);
 
+    // this will create a new nsIWebBrowserPersist, and set a new download instance
+    // as its progress listener.
     rv = PerformSave(origURI);
     if (NS_FAILED(rv))
     {
-      // put up some UI
-      NSLog(@"Error saving web page");
+      // if this failed, we should have already notified the downloader (via an OnStateChange callback)
+      // that something went wrong, so no need to show more UI here.
     }
   }
   return NS_OK;
@@ -174,7 +178,8 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
 #pragma mark -
 
 
-nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
+nsresult
+nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
 {
     nsresult rv;
     // Are we an HTML document? If so, we will want to append an accessory view to
@@ -368,7 +373,8 @@ nsresult nsHeaderSniffer::PerformSave(nsIURI* inOriginalURI)
 
 // inOriginalURI is always a URI. inSourceData can be an nsIURI or an nsIDOMDocument, depending
 // on what we're saving. It's that way for nsIWebBrowserPersist.
-nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& inFileName, nsIURI* inOriginalURI)
+nsresult
+nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& inFileName, nsIURI* inOriginalURI)
 {
   nsresult rv = NS_OK;
 
@@ -412,7 +418,8 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
     PRInt32 encodingFlags = 0;
     nsCOMPtr<nsIFile> filesFolder;
     
-    if (!mContentType.Equals("text/plain")) {
+    if (!mContentType.Equals("text/plain"))
+    {
       // Create a local directory in the same dir as our file.  It
       // will hold our associated files.
       destFile->Clone(getter_AddRefs(filesFolder));
@@ -428,9 +435,19 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
       PRBool exists = PR_FALSE;
       filesFolder->Exists(&exists);
       if (!exists) {
-          rv = filesFolder->Create(nsILocalFile::DIRECTORY_TYPE, 0755);
-          if (NS_FAILED(rv))
-            return rv;
+        rv = filesFolder->Create(nsILocalFile::DIRECTORY_TYPE, 0755);
+        if (NS_FAILED(rv))
+        {
+          // we need to send a pseudo OnStateChange to tell the download that something went wrong.
+          // (nsWebProgressListener does this too)
+          downloader->OnStateChange(nsnull, nsnull,
+                                           nsIWebProgressListener::STATE_START,
+                                           NS_OK);
+          downloader->OnStateChange(nsnull, nsnull,
+                                           nsIWebProgressListener::STATE_STOP,
+                                           rv);
+          return rv;
+        }
       }
     }
     else
@@ -439,9 +456,9 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
                         nsIWebBrowserPersist::ENCODE_FLAGS_ABSOLUTE_LINKS |
                         nsIWebBrowserPersist::ENCODE_FLAGS_NOFRAMES_CONTENT;
     }
-    rv = webPersist->SaveDocument(domDoc, destURI, filesFolder, mContentType.get(), encodingFlags, 80);
+    rv = webPersist->SaveDocument(domDoc, destURI, filesFolder, mContentType.get(), encodingFlags, 80 /* wrap column */);
   }
-  
+
   return rv;
 }
 
