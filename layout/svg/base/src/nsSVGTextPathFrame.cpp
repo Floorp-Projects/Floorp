@@ -221,7 +221,7 @@ nsSVGTextPathFrame::GetDy()
 NS_IMETHODIMP
 nsSVGTextPathFrame::GetFlattenedPath(nsSVGPathData **data, nsIFrame *parent) {
   *data = nsnull;
-  nsIFrame *path;
+  nsIFrame *path = nsnull;
 
   nsAutoString str;
   mHref->GetAnimVal(str);
