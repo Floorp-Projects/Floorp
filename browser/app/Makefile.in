@@ -149,7 +149,9 @@ endif
 endif
 
 ifeq ($(OS_ARCH),BeOS)
-OS_LIBS += -ltracker
+ifdef BUILD_STATIC_LIBS
+OS_LIBS += -ltracker -lgame
+endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
