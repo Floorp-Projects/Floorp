@@ -95,11 +95,8 @@ ifdef WINCE
 RCINCLUDE  = wince/SplashScreen.rc
 endif
 
-EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovider_s
-
-LIBS	  = $(EXTRA_DSO_LIBS)       \
+LIBS	  = $(LIBS_DIR) \
 			$(MOZ_UNICHARUTIL_LIBS)	\
-			$(XPCOM_LIBS)			\
 			$(NSPR_LIBS)			\
 			$(MOZ_JS_LIBS)			\
 			$(NULL)

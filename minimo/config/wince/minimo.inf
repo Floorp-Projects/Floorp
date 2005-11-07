@@ -36,8 +36,6 @@ plds4.dll=1
 shunt.dll=1
 softokn3.dll=1
 ssl3.dll=1
-xpcom.dll=1
-xpcom_core.dll=1
 
 classic.jar=2
 classic.manifest=2
@@ -107,8 +105,6 @@ plds4.dll,,,0
 shunt.dll,,,0
 softokn3.dll,,,0
 ssl3.dll,,,0
-xpcom.dll,,,0
-xpcom_core.dll,,,0
 
 [Files.chrome]
 classic.jar,,,0

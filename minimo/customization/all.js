@@ -1,4 +1,4 @@
-pref("general.useragent.extra.minimo", "Minimo/0.009");
+("general.useragent.extra.minimo", "Minimo/0.010");
 
 pref("browser.cache.disk.enable",           false);
 pref("browser.cache.disk.capacity",         0);
@@ -637,7 +637,7 @@ pref("ssr.site.enabled", true);
 
 pref("skey.enabled", true);
 
-pref("browser.startup.homepage", "http://www.google.com/xhtml");
+pref("browser.startup.homepage", "http://www.meer.net/~dougt/minimo_ce/start.html");
 
 pref("browser.display.zoomui",10);
 pref("browser.display.zoomcontent",10);
@@ -645,3 +645,12 @@ pref("browser.display.zoomcontent",10);
 /* So forcing this to false, so it's possible to test the toggle */ 
 /* This is being used in the code, as the state holder */ 
 pref("snav.enabled", false);
+
+pref("browser.formfill.enable", true);
+
+
+/* These are opts. for slower devices */
+pref("content.max.tokenizing.time", 2250000);
+pref("content.notify.interval", 750000);
+pref("content.switch.threshold", 750000);
+pref("nglayout.initialpaint.delay", 750);
