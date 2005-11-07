@@ -156,6 +156,8 @@ nsSVGUtils::CoordToFloat(nsPresContext *aPresContext, nsIContent *aContent,
 nsresult nsSVGUtils::GetReferencedFrame(nsIFrame **aRefFrame, nsIURI* aURI, nsIContent *aContent, 
                                         nsIPresShell *aPresShell)
 {
+  *aRefFrame = nsnull;
+
   nsIContent* content = nsContentUtils::GetReferencedElement(aURI, aContent);
   if (!content)
     return NS_ERROR_FAILURE;
