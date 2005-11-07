@@ -38,7 +38,7 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile.in,v 1.8 2005/09/09 17:16:35 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile.in,v 1.9 2005/11/07 20:22:21 christophe.ravel.bugs%sun.com Exp $"
 #
 
 MOD_DEPTH = ../..
@@ -47,7 +47,7 @@ srcdir	    = @srcdir@
 VPATH	    = @srcdir@
 
 NAME        = sun-nspr
-RELEASE     = 1
+RELEASE     = 2
 TOPDIR      = /usr/src/redhat
 VERSION     = `grep PR_VERSION $(dist_includedir)/prinit.h \
                   | sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`
