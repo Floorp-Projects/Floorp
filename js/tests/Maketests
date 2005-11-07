@@ -109,14 +109,14 @@ jsbrowser: HOOK=http%3A%2F%2F$(TEST_HTTP)%2Ftests%2Fmozilla.org%2Fjs%2Fuserhook-
 jsbrowser: menu.html
 	$(call msg,jsbrowser,Begin JavaScript Test Suite)
 	$(TEST_BIN)/init-profile.sh -b $(TEST_EXE) -n $(TEST_PROFILE) -e $(TEST_DIR)/xpi -u $(TEST_DIR)/prefs/test-user.js  -t js | $(call prepend,jsbrowser)
-	$(TEST_BIN)/timed_run $(TEST_JSBROWSER_TIMEOUT) "-" $(TEST_EXE) -P $(TEST_PROFILE) -chrome chrome:$(SPIDER)%26url%3D$(URL)%26scripturl%3D$(HOOK) 2>&1 | $(call prepend,jsbrowser)
+	-$(TEST_BIN)/timed_run $(TEST_JSBROWSER_TIMEOUT) "-" $(TEST_EXE) -P $(TEST_PROFILE) -chrome chrome:$(SPIDER)%26url%3D$(URL)%26scripturl%3D$(HOOK) 2>&1 | $(call prepend,jsbrowser)
 	$(call msg,jsbrowser,End JavaScript Test Suite)
 
 e4xbrowser: HOOK=http%3A%2F%2F$(TEST_HTTP)%2Ftests%2Fmozilla.org%2Fjs%2Fuserhook-e4x.js 
 e4xbrowser: menu.html
 	$(call msg,jse4xbrowser,Begin JavaScript E4X Test Suite)
 	$(TEST_BIN)/init-profile.sh -b $(TEST_EXE) -n $(TEST_PROFILE) -e $(TEST_DIR)/xpi -u $(TEST_DIR)/prefs/test-user.js  -t e4x | $(call prepend,jse4xbrowser)
-	$(TEST_BIN)/timed_run $(TEST_E4XBROWSER_TIMEOUT) "-" $(TEST_EXE) -P $(TEST_PROFILE) -chrome chrome:$(SPIDER)%26url%3D$(URL)%26scripturl%3D$(HOOK) 2>&1 | $(call prepend,jse4xbrowser)
+	-$(TEST_BIN)/timed_run $(TEST_E4XBROWSER_TIMEOUT) "-" $(TEST_EXE) -P $(TEST_PROFILE) -chrome chrome:$(SPIDER)%26url%3D$(URL)%26scripturl%3D$(HOOK) 2>&1 | $(call prepend,jse4xbrowser)
 	$(call msg,jse4xbrowser,End JavaScript E4X Test Suite)
 
 menu.html: menuhead.html menufoot.html $(TEST_JS) Makefile
