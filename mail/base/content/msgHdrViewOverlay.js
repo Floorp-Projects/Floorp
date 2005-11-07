@@ -419,27 +419,27 @@ var messageHeaderSink = {
           if (msgHeaderParser && header.headerValue)
             fromMailbox = msgHeaderParser.extractHeaderAddressMailboxes(null, header.headerValue);
 
-          if (header.headerValue) {
-            if ((gCollectIncoming && !dontCollectAddress) || 
-                (gCollectNewsgroup && dontCollectAddress))
+          if (header.headerValue)
+          {
+            try
             {
-              if (!abAddressCollector)
-                abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
+              if (!dontCollectAddress && (gCollectIncoming || gCollectNewsgroup || gCollectOutgoing))
+              {
+                if (!abAddressCollector)
+                  abAddressCollector = Components.classes[abAddressCollectorContractID]
+                                                 .getService(Components.interfaces.nsIAbAddressCollecter);
 
-              gCollectAddress = header.headerValue;
-              // collect, and add card if doesn't exist, unknown preferred send format
-              gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, true, Components.interfaces.nsIAbPreferMailFormat.unknown);', 2000);
+                gCollectAddress = header.headerValue;
+                if (gCollectOutgoing)
+                  // collect, but only update existing cards, unknown preferred send format
+                  gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, false, Components.interfaces.nsIAbPreferMailFormat.unknown);', 2000);
+                else
+                  // collect, and add card if doesn't exist, unknown preferred send format
+                  gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, true, Components.interfaces.nsIAbPreferMailFormat.unknown);', 2000);
+              }
             }
-            else if (gCollectOutgoing) 
-            {
-              if (!abAddressCollector)
-                abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
-
-              // collect, but only update existing cards, unknown preferred send format
-              gCollectAddress = header.headerValue;
-              gCollectAddressTimer = setTimeout('abAddressCollector.collectUnicodeAddress(gCollectAddress, false, Components.interfaces.nsIAbPreferMailFormat.unknown);', 2000);
-            }
-          } 
+            catch(ex) {}
+          }
         } // if lowerCaseHeaderName == "from"
       } // while we have more headers to parse
 
