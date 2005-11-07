@@ -74,7 +74,15 @@ function init()
   if (homepage) {
     homepage = homepage.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     // only allow http(s) homepages
-    if (!/^https?:/.test(homepage))
+    var scheme = "";
+    var uri = null;
+    try {
+      uri = makeURI(homepage);
+      scheme = uri.scheme;
+    } catch (ex) {}
+    if (uri && (scheme == "http" || scheme == "https"))
+      homepage = uri.spec;
+    else
       homepage = null;
   }
     
