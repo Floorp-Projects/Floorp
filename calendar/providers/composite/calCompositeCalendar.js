@@ -342,6 +342,16 @@ calCompositeCalendar.prototype = {
     //                in calIDateTime aRangeStart, in calIDateTime aRangeEnd,
     //                in calIOperationListener aListener );
     getItems: function (aItemFilter, aCount, aRangeStart, aRangeEnd, aListener) {
+        // If there are no calendars, then we just call onOperationComplete
+        if (this.mCalendars.length == 0) {
+            aListener.onOperationComplete (this,
+                                           Components.results.NS_OK,
+                                           calIOperationListener.GET,
+                                           null,
+                                           null);
+            return;
+        }
+
         var cmpListener = new calCompositeGetListenerHelper(this.mCalendars.length, aListener, aCount);
         for (cal in this.mCalendars) {
             this.mCalendars[cal].getItems (aItemFilter, aCount, aRangeStart, aRangeEnd, cmpListener);
