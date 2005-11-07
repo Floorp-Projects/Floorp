@@ -52,7 +52,9 @@ endif
 
 DIRS         += src
 
+ifndef WINCE
 TOOL_DIRS    += shell
+endif
 
 ifdef ENABLE_TESTS
 TOOL_DIRS    += tests
