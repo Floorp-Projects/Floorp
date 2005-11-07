@@ -238,6 +238,19 @@ private:
                                            PRBool *aResult);
   PRBool IsValidSchemaBase64Binary(const nsAString & aString, char** aDecodedString);
 
+
+  nsresult ValidateBuiltinTypeHexBinary(const nsAString & aNodeValue,
+                                        PRUint32 aLength,
+                                        PRBool aLengthDefined,
+                                        PRUint32 aMinLength,
+                                        PRBool aMinLengthDefined,
+                                        PRUint32 aMaxLength,
+                                        PRBool aMaxLengthDefined,
+                                        nsStringArray *aEnumerationList,
+                                        PRBool *aResult);
+  PRBool IsValidSchemaHexBinary(const nsAString & aString);
+
+
   nsresult ValidateBuiltinTypeQName(const nsAString & aNodeValue,
                                     PRUint32 aLength,
                                     PRBool aLengthDefined,

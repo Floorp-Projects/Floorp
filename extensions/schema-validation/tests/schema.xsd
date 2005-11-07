@@ -321,6 +321,11 @@
     </restriction>
   </simpleType>
 
+  <simpleType name="hexbinary-test-1">
+    <restriction base='hexBinary'>
+    </restriction>
+  </simpleType>
+
   <simpleType name="qname-test-1">
     <restriction base='QName'>
       <maxLength value="13"/>

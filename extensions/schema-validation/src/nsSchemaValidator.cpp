@@ -71,6 +71,7 @@
 #include "prprf.h"
 #include "prtime.h"
 #include "plbase64.h"
+#include <ctype.h>
 
 #define NS_SCHEMA_1999_NAMESPACE "http://www.w3.org/1999/XMLSchema"
 #define NS_SCHEMA_2001_NAMESPACE "http://www.w3.org/2001/XMLSchema"
@@ -648,6 +649,14 @@ nsSchemaValidator::ValidateRestrictionSimpletype(const nsAString & aNodeValue,
       break;
     }
 
+    case nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY: {
+      rv = ValidateBuiltinTypeHexBinary(aNodeValue, length, isLengthDefined,
+                                        minLength, isMinLengthDefined,
+                                        maxLength, isMaxLengthDefined,
+                                        &enumerationList, &isValid);
+      break;
+    }
+
     case nsISchemaBuiltinType::BUILTIN_TYPE_QNAME: {
       rv = ValidateBuiltinTypeQName(aNodeValue, length, isLengthDefined,
                                     minLength, isMinLengthDefined,
@@ -810,6 +819,11 @@ nsSchemaValidator::ValidateBuiltinType(const nsAString & aNodeValue,
       char* decodedString;
       isValid = IsValidSchemaBase64Binary(aNodeValue, &decodedString);
       nsMemory::Free(decodedString);
+      break;
+    }
+
+    case nsISchemaBuiltinType::BUILTIN_TYPE_HEXBINARY: {
+      isValid = IsValidSchemaHexBinary(aNodeValue);
       break;
     }
 
@@ -2772,6 +2786,81 @@ nsSchemaValidator::IsValidSchemaQName(const nsAString & aString)
   rv = parserService->CheckQName(qName, PR_TRUE, &colon);
   if (NS_SUCCEEDED(rv)) {
     isValid = PR_TRUE;
+  }
+
+  return isValid;
+}
+
+// http://www.w3.org/TR/xmlschema-2/#hexBinary
+nsresult
+nsSchemaValidator::ValidateBuiltinTypeHexBinary(const nsAString & aNodeValue,
+                                                PRUint32 aLength,
+                                                PRBool aLengthDefined,
+                                                PRUint32 aMinLength,
+                                                PRBool aMinLengthDefined,
+                                                PRUint32 aMaxLength,
+                                                PRBool aMaxLengthDefined,
+                                                nsStringArray *aEnumerationList,
+                                                PRBool *aResult)
+{
+  PRBool isValid = IsValidSchemaHexBinary(aNodeValue);
+
+  if (isValid) {
+    // For hexBinary, length is measured in octets (8 bits) of binary data.  So
+    // one byte of binary data is represented by two hex digits, so we
+    // divide by 2 to get the binary data length.
+
+    PRUint32 binaryDataLength = aNodeValue.Length() / 2;
+
+    if (aLengthDefined && (binaryDataLength != aLength)) {
+      isValid = PR_FALSE;
+      LOG(("  Not valid: Not the right length (%d)", binaryDataLength));
+    }
+
+    if (isValid && aMinLengthDefined && (binaryDataLength < aMinLength)) {
+      isValid = PR_FALSE;
+      LOG(("  Not valid: Length (%d) is too small", binaryDataLength));
+    }
+
+    if (isValid && aMaxLengthDefined && (binaryDataLength > aMaxLength)) {
+      isValid = PR_FALSE;
+      LOG(("  Not valid: Length (%d) is too large", binaryDataLength));
+    }
+
+    if (isValid && aEnumerationList && (aEnumerationList->Count() > 0)) {
+      isValid = nsSchemaValidatorUtils::HandleEnumeration(aNodeValue, *aEnumerationList);
+    }
+  }
+
+  LOG((isValid ? ("  Value is valid!") : ("  Value is not valid!")));
+
+  *aResult = isValid;
+  return NS_OK;
+}
+
+PRBool
+nsSchemaValidator::IsValidSchemaHexBinary(const nsAString & aString)
+{
+  // hex binary length has to be even
+  PRUint32 length = aString.Length();
+
+  if (length % 2 != 0) 
+    return PR_FALSE;
+
+  nsAString::const_iterator start, end;
+  aString.BeginReading(start);
+  aString.EndReading(end);
+
+  PRBool isValid = PR_TRUE;
+
+  // each character has to be in [0-9a-fA-F]
+  while (start != end) {
+    PRUnichar temp = *start++;
+
+    if (!isxdigit(temp)) {
+      isValid = PR_FALSE;
+      break;
+    }
   }
 
   return isValid;
