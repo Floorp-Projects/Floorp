@@ -39,7 +39,7 @@
 #include "alghmac.h"
 #include "secerr.h"
 
-#define HMAC_PAD_SIZE 64
+#define HMAC_PAD_SIZE HASH_BLOCK_LENGTH_MAX
 
 struct HMACContextStr {
     void *hash;
@@ -86,7 +86,7 @@ HMAC_Init( HMACContext * cx, const SECHashObject *hash_obj,
     if (cx->hash == NULL)
 	goto loser;
 
-    if (secret_len > HMAC_PAD_SIZE) {
+    if (secret_len > cx->hashobj->blocklength) {
 	cx->hashobj->begin( cx->hash);
 	cx->hashobj->update(cx->hash, secret, secret_len);
 	PORT_Assert(cx->hashobj->length <= sizeof hashed_secret);
@@ -99,8 +99,8 @@ HMAC_Init( HMACContext * cx, const SECHashObject *hash_obj,
 	secret = (const unsigned char *)&hashed_secret[0];
     }
 
-    PORT_Memset(cx->ipad, 0x36, sizeof cx->ipad);
-    PORT_Memset(cx->opad, 0x5c, sizeof cx->opad);
+    PORT_Memset(cx->ipad, 0x36, cx->hashobj->blocklength);
+    PORT_Memset(cx->opad, 0x5c, cx->hashobj->blocklength);
 
     /* fold secret into padding */
     for (i = 0; i < secret_len; i++) {
@@ -139,7 +139,7 @@ HMAC_Begin(HMACContext *cx)
 {
     /* start inner hash */
     cx->hashobj->begin(cx->hash);
-    cx->hashobj->update(cx->hash, cx->ipad, sizeof(cx->ipad));
+    cx->hashobj->update(cx->hash, cx->ipad, cx->hashobj->blocklength);
 }
 
 void
@@ -162,7 +162,7 @@ HMAC_Finish(HMACContext *cx, unsigned char *result, unsigned int *result_len,
 	return SECFailure;
 
     cx->hashobj->begin(cx->hash);
-    cx->hashobj->update(cx->hash, cx->opad, sizeof(cx->opad));
+    cx->hashobj->update(cx->hash, cx->opad, cx->hashobj->blocklength);
     cx->hashobj->update(cx->hash, result, *result_len);
     cx->hashobj->end(cx->hash, result, result_len, max_result_len);
     return SECSuccess;
@@ -182,8 +182,8 @@ HMAC_Clone(HMACContext *cx)
     newcx->hash = cx->hashobj->clone(cx->hash);
     if (newcx->hash == NULL)
 	goto loser;
-    PORT_Memcpy(newcx->ipad, cx->ipad, sizeof(cx->ipad));
-    PORT_Memcpy(newcx->opad, cx->opad, sizeof(cx->opad));
+    PORT_Memcpy(newcx->ipad, cx->ipad, cx->hashobj->blocklength);
+    PORT_Memcpy(newcx->opad, cx->opad, cx->hashobj->blocklength);
     return newcx;
 
 loser:

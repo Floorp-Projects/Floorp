@@ -114,7 +114,9 @@ const SECHashObject SECHashObjects[] = {
     (void (*)(void *)) null_hash_begin,
     (void (*)(void *, const unsigned char *, unsigned int)) null_hash_update,
     (void (*)(void *, unsigned char *, unsigned int *,
-	      unsigned int)) null_hash_end
+	      unsigned int)) null_hash_end,
+    0,
+    HASH_AlgNULL
   },
   { MD2_LENGTH,
     (void * (*)(void)) md2_NewContext,
@@ -123,7 +125,9 @@ const SECHashObject SECHashObjects[] = {
     (void (*)(void *)) PK11_DigestBegin,
     (void (*)(void *, const unsigned char *, unsigned int)) PK11_DigestOp,
     (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) 
-							PK11_DigestFinal
+							PK11_DigestFinal,
+    MD2_BLOCK_LENGTH,
+    HASH_AlgMD2
   },
   { MD5_LENGTH,
     (void * (*)(void)) md5_NewContext,
@@ -132,7 +136,9 @@ const SECHashObject SECHashObjects[] = {
     (void (*)(void *)) PK11_DigestBegin,
     (void (*)(void *, const unsigned char *, unsigned int)) PK11_DigestOp,
     (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) 
-							PK11_DigestFinal
+							PK11_DigestFinal,
+    MD5_BLOCK_LENGTH,
+    HASH_AlgMD5
   },
   { SHA1_LENGTH,
     (void * (*)(void)) sha1_NewContext,
@@ -141,7 +147,9 @@ const SECHashObject SECHashObjects[] = {
     (void (*)(void *)) PK11_DigestBegin,
     (void (*)(void *, const unsigned char *, unsigned int)) PK11_DigestOp,
     (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) 
-							PK11_DigestFinal
+							PK11_DigestFinal,
+    SHA1_BLOCK_LENGTH,
+    HASH_AlgSHA1
   },
   { SHA256_LENGTH,
     (void * (*)(void)) sha256_NewContext,
@@ -150,7 +158,9 @@ const SECHashObject SECHashObjects[] = {
     (void (*)(void *)) PK11_DigestBegin,
     (void (*)(void *, const unsigned char *, unsigned int)) PK11_DigestOp,
     (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) 
-							PK11_DigestFinal
+							PK11_DigestFinal,
+    SHA256_BLOCK_LENGTH,
+    HASH_AlgSHA256
   },
   { SHA384_LENGTH,
     (void * (*)(void)) sha384_NewContext,
@@ -159,7 +169,9 @@ const SECHashObject SECHashObjects[] = {
     (void (*)(void *)) PK11_DigestBegin,
     (void (*)(void *, const unsigned char *, unsigned int)) PK11_DigestOp,
     (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) 
-							PK11_DigestFinal
+							PK11_DigestFinal,
+    SHA384_BLOCK_LENGTH,
+    HASH_AlgSHA384
   },
   { SHA512_LENGTH,
     (void * (*)(void)) sha512_NewContext,
@@ -168,7 +180,9 @@ const SECHashObject SECHashObjects[] = {
     (void (*)(void *)) PK11_DigestBegin,
     (void (*)(void *, const unsigned char *, unsigned int)) PK11_DigestOp,
     (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) 
-							PK11_DigestFinal
+							PK11_DigestFinal,
+    SHA512_BLOCK_LENGTH,
+    HASH_AlgSHA512
   },
 };
 
