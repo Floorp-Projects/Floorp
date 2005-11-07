@@ -580,9 +580,9 @@ function contextChangeProgress( event, Progress )
    startBatchTransaction();
    for (var t = 0; t < numRanges; t++) {
       tree.view.selection.getRangeAt(t, start, end);
-      for (v = start.value; v <= end.value; v++) {
-          todoItem = tree.taskView.getCalendarTaskAtRow( v );
-          var newItem = todoItem.clone().QueryInterface( Components.interfaces.calITodo );
+      for (var v = start.value; v <= end.value; v++) {
+          toDoItem = tree.taskView.getCalendarTaskAtRow( v );
+          var newItem = toDoItem.clone().QueryInterface( Components.interfaces.calITodo );
           newItem.percentComplete = Progress;
           switch (Progress) {
               case 0:
@@ -595,7 +595,7 @@ function contextChangeProgress( event, Progress )
                   newItem.status = "IN-PROCESS";
                   break;
           }
-          doTransaction('modify', newItem, newItem.calendar, todoItem, null);
+          doTransaction('modify', newItem, newItem.calendar, toDoItem, null);
       }
    }
    endBatchTransaction();
@@ -613,11 +613,11 @@ function contextChangePriority( event, Priority )
    startBatchTransaction();
    for (var t = 0; t < numRanges; t++) {
       tree.view.selection.getRangeAt(t, start, end);
-      for (v = start.value; v <= end.value; v++) {
-          todoItem = tree.taskView.getCalendarTaskAtRow( v );
-          var newItem = todoItem.clone().QueryInterface( Components.interfaces.calITodo );
+      for (var v = start.value; v <= end.value; v++) {
+          toDoItem = tree.taskView.getCalendarTaskAtRow( v );
+          var newItem = toDoItem.clone().QueryInterface( Components.interfaces.calITodo );
           newItem.priority = Priority;
-          doTransaction('modify', newItem, newItem.calendar, todoItem, null);
+          doTransaction('modify', newItem, newItem.calendar, toDoItem, null);
       }
    }
    endBatchTransaction();
