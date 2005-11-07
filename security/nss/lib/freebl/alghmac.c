@@ -35,7 +35,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "secport.h"
-#include "blapi.h"
+#include "hasht.h"
+#include "blapit.h"
+#include "alghmac.h"
 #include "secerr.h"
 
 #define HMAC_PAD_SIZE HASH_BLOCK_LENGTH_MAX
