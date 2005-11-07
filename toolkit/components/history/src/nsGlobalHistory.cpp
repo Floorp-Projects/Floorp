@@ -1183,11 +1183,8 @@ nsGlobalHistory::RemovePagesFromHost(const nsACString &aHost, PRBool aEntireDoma
   hostInfo.history = this;
   hostInfo.entireDomain = aEntireDomain;
   hostInfo.host = host.get();
-  
-  nsresult rv = RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
-  if (NS_FAILED(rv)) return rv;
 
-  return Commit(kCompressCommit);
+  return RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
 }
 
 PRBool
@@ -1320,7 +1317,10 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
 
   EndUpdateBatch();
 
-  return ( err == 0) ? NS_OK : NS_ERROR_FAILURE;
+  if (err != 0)
+    return NS_ERROR_FAILURE;
+
+  return Commit(kCompressCommit);
 }
 
 NS_IMETHODIMP
