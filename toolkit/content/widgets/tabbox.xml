@@ -344,8 +344,11 @@
                                              this.childNodes[0];
           }
           
-          var isTabFocused =
-            (document.commandDispatcher.focusedElement == this.selectedItem);
+          try {
+            var isTabFocused = document.commandDispatcher.focusedElement == this.selectedItem;
+          } catch (e) {
+            isTabFocused = false;
+          }
           this.selectedItem = aNewTab;
           if (isTabFocused) {
             aNewTab.focus();
