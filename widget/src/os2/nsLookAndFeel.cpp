@@ -221,7 +221,7 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_buttondefault:
       idx = SYSCLR_BUTTONDEFAULT;
       break;
-    case eColor__moz_menubarhovertext: {
+    case eColor__moz_menubarhovertext:
       idx = SYSCLR_MENUTEXT;
       break;
     default:
