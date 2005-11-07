@@ -90,7 +90,7 @@
                 <textbox id="calendar-uri" oninput="checkURL()"/>
             </row>
             <row align="center">
-                <checkbox id="read-only" label="Read-only"/>
+                <checkbox id="read-only" label="&calendarproperties.readonly.label;"/>
                 <spacer />
             </row>
 

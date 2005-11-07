@@ -466,6 +466,7 @@
 <!ENTITY calendarproperties.format.label   "Format:">
 <!ENTITY calendarproperties.location.label "Location:">
 <!ENTITY calendarproperties.name.label     "Name:">
+<!ENTITY calendarproperties.readonly.label "Read-only">
 
 <!-- Sunbird Help -->
 <!ENTITY calendar.help.label               "Help Contents">
