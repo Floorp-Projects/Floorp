@@ -1219,7 +1219,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD osfd)
 
 static PRBool pt_TestAbort(void)
 {
-    PRThread *me = PR_CurrentThread();
+    PRThread *me = PR_GetCurrentThread();
     if(_PT_THREAD_INTERRUPTED(me))
     {
         PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);

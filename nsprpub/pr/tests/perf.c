@@ -79,7 +79,7 @@ static void DLLProcedureCall(void)
 {
     PRInt32 i;
 	PRThreadState state;
-	PRThread *self = PR_CurrentThread();
+	PRThread *self = PR_GetCurrentThread();
 
     for (i = 0; i < count; i++) {
     	state = PR_GetThreadState(self);

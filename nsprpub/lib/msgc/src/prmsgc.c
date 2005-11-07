@@ -2288,7 +2288,7 @@ pr_TraceRootPointer(PRWord *p, void* data)
 	printTrace = 1;
     }
     else {
-	if (PR_StackSpaceLeft(PR_CurrentThread()) < 512) {
+	if (PR_StackSpaceLeft(PR_GetCurrentThread()) < 512) {
 	    fprintf(out, "\n### Path too deep (giving up):\n");
 	    printTrace = 1;
 	}

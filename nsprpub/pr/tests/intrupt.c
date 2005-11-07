@@ -73,7 +73,7 @@ static PRThreadScope thread_scope = PR_LOCAL_THREAD;
 static void PR_CALLBACK AbortCV(void *arg)
 {
     PRStatus rv;
-    PRThread *me = PR_CurrentThread();
+    PRThread *me = PR_GetCurrentThread();
 
     /* some other thread (main) is doing the interrupt */
     PR_Lock(ml);
@@ -292,7 +292,7 @@ void PR_CALLBACK Intrupt(void *arg)
     if (debug_mode) printf("Part III\n");
 	setup_listen_socket(&listner, &netaddr);
     abortIO = PR_CreateThread(
-        PR_USER_THREAD, AbortIO, PR_CurrentThread(), PR_PRIORITY_NORMAL,
+        PR_USER_THREAD, AbortIO, PR_GetCurrentThread(), PR_PRIORITY_NORMAL,
         thread_scope, PR_JOINABLE_THREAD, 0);
 
     if (PR_Accept(listner, &netaddr, PR_INTERVAL_NO_TIMEOUT) == NULL)

@@ -369,7 +369,7 @@ PR_IMPLEMENT(void) PR_DestroyCondVar(PRCondVar *cvar)
 PR_IMPLEMENT(PRStatus) PR_WaitCondVar(PRCondVar *cvar, PRIntervalTime timeout)
 {
     PRIntn rv;
-    PRThread *thred = PR_CurrentThread();
+    PRThread *thred = PR_GetCurrentThread();
 
     PR_ASSERT(cvar != NULL);
     /* We'd better be locked */
