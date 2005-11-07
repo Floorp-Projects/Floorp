@@ -197,18 +197,35 @@ InstallTriggerCheckLoadURIFromScript(JSContext *cx, const nsAString& uriStr)
 }
 
 //
+// Helper function to get native object
+//
+// This is our own version of JS_GetInstancePrivate() that in addition
+// performs the delayed creation of the native InstallTrigger if necessary
+//
+static nsIDOMInstallTriggerGlobal* getTriggerNative(JSContext *cx, JSObject *obj)
+{
+  if (!JS_InstanceOf(cx, obj, &InstallTriggerGlobalClass, nsnull))
+    return nsnull;
+
+  nsIDOMInstallTriggerGlobal *native = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
+  if (!native) {
+    // xpinstall script contexts delay creation of the native.
+    CreateNativeObject(cx, obj, &native);
+  }
+  return native;
+}
+
+//
 // Native method UpdateEnabled
 //
 PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalUpdateEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)
-    JS_GetInstancePrivate(cx, obj, &InstallTriggerGlobalClass, 0);
+  nsIDOMInstallTriggerGlobal *nativeThis = getTriggerNative(cx, obj);
+  if (!nativeThis)
+    return JS_FALSE;
 
   *rval = JSVAL_FALSE;
-
-  if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
-    return JS_TRUE;
 
   nsIScriptGlobalObject *globalObject = nsnull;
   nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
@@ -230,14 +247,11 @@ InstallTriggerGlobalUpdateEnabled(JSContext *cx, JSObject *obj, uintN argc, jsva
 PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 { 
-  nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)
-    JS_GetInstancePrivate(cx, obj, &InstallTriggerGlobalClass, 0);
+  nsIDOMInstallTriggerGlobal *nativeThis = getTriggerNative(cx, obj);
+  if (!nativeThis)
+    return JS_FALSE;
 
   *rval = JSVAL_FALSE;
-
-  if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
-    return JS_TRUE;
-
 
   // make sure XPInstall is enabled, return false if not
   nsIScriptGlobalObject *globalObject = nsnull;
@@ -414,18 +428,15 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)
-    JS_GetInstancePrivate(cx, obj, &InstallTriggerGlobalClass, 0);
+  nsIDOMInstallTriggerGlobal *nativeThis = getTriggerNative(cx, obj);
+  if (!nativeThis)
+    return JS_FALSE;
 
   uint32       chromeType = NOT_CHROME;
   nsAutoString sourceURL;
   nsAutoString name;
 
   *rval = JSVAL_FALSE;
-
-  if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) ) {
-    return JS_TRUE;
-  }
 
   // get chromeType first, the update enabled check for skins skips whitelisting
   if (argc >=1)
@@ -506,16 +517,14 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
 PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)
-    JS_GetInstancePrivate(cx, obj, &InstallTriggerGlobalClass, 0);
+  nsIDOMInstallTriggerGlobal *nativeThis = getTriggerNative(cx, obj);
+  if (!nativeThis)
+    return JS_FALSE;
 
   PRBool       nativeRet;
   PRInt32      flags = 0;
 
   *rval = JSVAL_FALSE;
-
-  if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
-    return JS_TRUE;
 
   // make sure XPInstall is enabled, return if not
   nsIScriptGlobalObject *globalObject = nsnull;
@@ -595,8 +604,9 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
 PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalCompareVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)
-    JS_GetInstancePrivate(cx, obj, &InstallTriggerGlobalClass, 0);
+  nsIDOMInstallTriggerGlobal *nativeThis = getTriggerNative(cx, obj);
+  if (!nativeThis)
+    return JS_FALSE;
 
   nsAutoString regname;
   nsAutoString version;
@@ -605,10 +615,6 @@ InstallTriggerGlobalCompareVersion(JSContext *cx, JSObject *obj, uintN argc, jsv
   // In case of error or disabled return NOT_FOUND
   PRInt32 nativeRet = nsIDOMInstallTriggerGlobal::NOT_FOUND;
   *rval = INT_TO_JSVAL(nativeRet);
-
-  if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
-    return JS_TRUE;
-
 
   // make sure XPInstall is enabled, return if not
   nsIScriptGlobalObject *globalObject = nsnull;
@@ -696,18 +702,15 @@ InstallTriggerGlobalCompareVersion(JSContext *cx, JSObject *obj, uintN argc, jsv
 PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalGetVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)
-    JS_GetInstancePrivate(cx, obj, &InstallTriggerGlobalClass, 0);
+  nsIDOMInstallTriggerGlobal *nativeThis = getTriggerNative(cx, obj);
+  if (!nativeThis)
+    return JS_FALSE;
 
   nsAutoString regname;
   nsAutoString version;
 
   // In case of error return a null value
   *rval = JSVAL_NULL;
-
-  if (nsnull == nativeThis  &&  (JS_FALSE == CreateNativeObject(cx, obj, &nativeThis)) )
-      return JS_TRUE;
-
 
   // make sure XPInstall is enabled, return if not
   nsIScriptGlobalObject *globalObject = nsnull;
