@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -72,6 +73,7 @@ function AddTestCase( description, expect, actual ) {
  */
 
 function TestCase( n, d, e, a ) {
+  this.path = (typeof gTestPath == 'undefined') ? '' : gTestPath;
   this.name        = n;
   this.description = d;
   this.expect      = e;
