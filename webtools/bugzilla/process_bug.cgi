@@ -692,7 +692,8 @@ if ($action eq Param('move-button-text')) {
     $msg .= "From: Bugzilla <" . $from . ">\n";
     $msg .= "Subject: Moving bug(s) " . join(', ', @idlist) . "\n\n";
 
-    my @fieldlist = (Bugzilla::Bug::fields(), 'group', 'long_desc', 'attachment');
+    my @fieldlist = (Bugzilla::Bug::fields(), 'group', 'long_desc',
+                     'attachment', 'attachmentdata');
     my %displayfields;
     foreach (@fieldlist) {
         $displayfields{$_} = 1;
