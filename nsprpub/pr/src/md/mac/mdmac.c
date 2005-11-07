@@ -103,7 +103,7 @@ pascal long StackSpacePatch(UInt16 trapNo)
 	char		tos;
 	PRThread	*thisThread;
 	
-	thisThread = PR_CurrentThread();
+	thisThread = PR_GetCurrentThread();
 	
 	//	If we are the primary thread, then call through to the
 	//	good ol' fashion stack space implementation.  Otherwise,

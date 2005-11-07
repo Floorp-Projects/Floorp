@@ -618,7 +618,7 @@ PR_IMPLEMENT(PRStatus)
 PR_IMPLEMENT(PRStatus)
     PR_Cleanup ()
 {
-    PRThread *me = PR_CurrentThread();
+    PRThread *me = PR_GetCurrentThread();
 
     PR_ASSERT(me->state & BT_THREAD_PRIMORD);
     if ((me->state & BT_THREAD_PRIMORD) == 0) {

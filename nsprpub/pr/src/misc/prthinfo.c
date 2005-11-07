@@ -194,7 +194,7 @@ PR_ScanStackPointers(PRScanStackFun scanFun, void* scanClosure)
 PR_IMPLEMENT(PRUword)
 PR_GetStackSpaceLeft(PRThread* t)
 {
-    PRThread *current = PR_CurrentThread();
+    PRThread *current = PR_GetCurrentThread();
     PRWord *sp, *esp;
     int stack_end;
 

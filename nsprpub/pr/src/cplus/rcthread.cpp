@@ -73,7 +73,7 @@ RCThread::RCThread(
     execution = ex_unstarted;
     identity = PR_CreateThread(
         PR_USER_THREAD, nas_Root, this,
-        PR_GetThreadPriority(PR_CurrentThread()),
+        PR_GetThreadPriority(PR_GetCurrentThread()),
         (PRThreadScope)scope, (PRThreadState)join, stackSize);
 }  /* RCThread::RCThread */
 
@@ -132,7 +132,7 @@ void RCThread::SetPriority(RCThread::Priority new_priority)
     { PR_SetThreadPriority(identity, (PRThreadPriority)new_priority); }
 
 PRThread *RCThread::Self()
-    { return PR_CurrentThread(); }
+    { return PR_GetCurrentThread(); }
 
 RCThread::Scope RCThread::GetScope() const
     { return (RCThread::Scope)PR_GetThreadScope(identity); }
