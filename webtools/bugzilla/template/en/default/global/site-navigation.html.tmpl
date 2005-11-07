@@ -67,7 +67,7 @@
             href="showdependencygraph.cgi?id=[% bug.bug_id %]">
     [% END %]
 
-    [% IF use_votes %]
+    [% IF bug.use_votes %]
       <link rel="Show" title="Votes ([% bug.votes %])"
             href="votes.cgi?action=show_bug&amp;bug_id=[% bug.bug_id %]">
     [% END %]
