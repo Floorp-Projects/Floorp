@@ -86,12 +86,10 @@ CPPSRCS		= \
 		nsStringAPI.cpp \
 		$(NULL)
 
+ifndef MINIMO
 ifeq ($(OS_ARCH)$(MOZ_ENABLE_LIBXUL),WINNT)
 CPPSRCS		+= dlldeps.cpp
 endif
-
-ifeq ($(OS_ARCH),WINCE)
-CPPSRCS		+= dlldeps.cpp
 endif
 
 ifdef XPCOM_USE_LEA
@@ -145,7 +143,9 @@ endif
 FORCE_USE_PIC	= 1 
 
 ifndef MOZ_ENABLE_LIBXUL
+ifndef MINIMO
 FORCE_SHARED_LIB = 1
+endif
 endif
 
 # UNIX98 iconv support
