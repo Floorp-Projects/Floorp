@@ -181,25 +181,37 @@ nsSVGCairoGlyphMetrics::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retva
 {
   *_retval = nsnull;
 
-  cairo_text_extents_t extent;
+  cairo_text_extents_t preceding_extent, charnum_extent;
 
   nsAutoString text;
   mSource->GetCharacterData(text);
 
   SelectFont(mCT);
+  if (charnum > 0) {
+    cairo_text_extents(mCT,
+                       NS_ConvertUCS2toUTF8(Substring(text,
+                                                      0,
+                                                      charnum)).get(),
+                       &preceding_extent);
+  } else {
+    preceding_extent.x_advance = 0.0;
+    preceding_extent.y_advance = 0.0;
+  }
   cairo_text_extents(mCT,
                      NS_ConvertUCS2toUTF8(Substring(text, charnum, 1)).get(),
-                     &extent);
+                     &charnum_extent);
 
   nsCOMPtr<nsIDOMSVGRect> rect = do_CreateInstance(NS_SVGRECT_CONTRACTID);
 
   NS_ASSERTION(rect, "could not create rect");
   if (!rect) return NS_ERROR_FAILURE;
-  
-  rect->SetX(extent.x_bearing);
-  rect->SetY(extent.y_bearing);
-  rect->SetWidth(extent.width);
-  rect->SetHeight(extent.height);
+
+  // add the space taken up by the text which comes before charnum
+  // to the position of the charnum character
+  rect->SetX(preceding_extent.x_advance + charnum_extent.x_bearing);
+  rect->SetY(preceding_extent.y_advance + charnum_extent.y_bearing);
+  rect->SetWidth(charnum_extent.width);
+  rect->SetHeight(charnum_extent.height);
 
   *_retval = rect;
   NS_ADDREF(*_retval);
