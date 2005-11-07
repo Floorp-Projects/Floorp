@@ -48,6 +48,7 @@
         buttons="accept" onload="init();" onaccept="close();">
 
   <script type="application/x-javascript" src="chrome://mozapps/content/extensions/about.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/contentAreaUtils.js"/>
   
   <stringbundleset id="aboutSet">
     <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>

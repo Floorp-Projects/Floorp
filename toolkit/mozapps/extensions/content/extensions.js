@@ -1002,8 +1002,15 @@ var gExtensionsViewController = {
     {
       if (!aSelectedItem) return;
       var homepageURL = aSelectedItem.getAttribute("homepageURL");
-      if (/^https?:/.test(homepageURL))
-        openURL(homepageURL);
+      // only allow http(s) homepages
+      var scheme = "";
+      var uri = null;
+      try {
+        uri = makeURI(homepageURL);
+        scheme = uri.scheme;
+      } catch (ex) {}
+      if (uri && (scheme == "http" || scheme == "https"))
+        openURL(uri.spec);
     },
     
     cmd_about: function (aSelectedItem)
