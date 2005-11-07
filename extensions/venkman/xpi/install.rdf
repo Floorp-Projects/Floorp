@@ -5,12 +5,12 @@
 		<em:id>{f13b157f-b174-47e7-a34d-4815ddfdfeb8}</em:id>
 		<em:version>@REVISION@</em:version>
 		
-		<!-- target: Mozilla Firefox, version 0.9 to 1.0 -->
+		<!-- target: Mozilla Firefox, version 0.9 to 1.6 -->
 		<em:targetApplication>
 			<Description>
 				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
 				<em:minVersion>0.9</em:minVersion>
-				<em:maxVersion>1.0</em:maxVersion>
+				<em:maxVersion>1.6</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 		

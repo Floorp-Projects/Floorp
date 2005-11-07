@@ -30,15 +30,16 @@ logComment("initInstall: " + err);
 
 if (verifyDiskSpace(getFolder("Program"), srDest))
 {
-    addFile("JavaScript Debugger",
-            "chrome/venkman.jar", // jar source folder 
-            getFolder("Chrome"),        // target folder
-            "");                        // target subdir 
+    addFile("JavaScript Debugger", "chrome/venkman.jar",
+            getFolder("Chrome"), "");
 
-    registerChrome(PACKAGE | DELAYED_CHROME, 
+    addFile("JavaScript Debugger Service", "components/venkman-service.js",
+            getFolder("Components"), "");
+
+    registerChrome(CONTENT | DELAYED_CHROME, 
                    getFolder("Chrome","venkman.jar"),
                    "content/venkman/");
-    registerChrome(PACKAGE | DELAYED_CHROME, 
+    registerChrome(CONTENT | DELAYED_CHROME, 
                    getFolder("Chrome","venkman.jar"),
                    "content/venkman/sm/");
     registerChrome(LOCALE | DELAYED_CHROME, 

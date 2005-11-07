@@ -63,6 +63,19 @@ function initCommands()
          ["clear-script",   cmdClearScript,                                  0],
          ["clear-instance", cmdClearInstance,                                0],
          ["close",          cmdClose,                              CMD_CONSOLE],
+         ["cmd-undo",          "cmd-docommand cmd_undo",                     0],
+         ["cmd-redo",          "cmd-docommand cmd_redo",                     0],
+         ["cmd-cut",           "cmd-docommand cmd_cut",                      0],
+         ["cmd-copy",          "cmd-docommand cmd_copy",                     0],
+         ["cmd-paste",         "cmd-docommand cmd_paste",                    0],
+         ["cmd-delete",        "cmd-docommand cmd_delete",                   0],
+         ["cmd-selectall",     "cmd-docommand cmd_selectAll",                0],
+         ["cmd-copy-link-url", "cmd-docommand cmd_copyLink",                 0],
+         ["cmd-mozilla-prefs", "cmd-docommand cmd_mozillaPrefs",             0],
+         ["cmd-prefs",         "cmd-docommand cmd_venkmanPrefs",             0],
+         ["cmd-venkman-prefs", "cmd-docommand cmd_venkmanPrefs",             0],
+         ["cmd-venkman-opts",  "cmd-docommand cmd_venkmanPrefs",             0],
+         ["cmd-docommand",     cmdDoCommand,                                 0],
          ["commands",       cmdCommands,                           CMD_CONSOLE],
          ["cont",           cmdCont,              CMD_CONSOLE | CMD_NEED_STACK],
          ["debug-script",   cmdSetScriptFlag,                                0],
@@ -685,6 +698,20 @@ function cmdCont (e)
 {
     disableDebugCommands();
     console.jsds.exitNestedEventLoop();
+}
+
+function cmdDoCommand(e)
+{
+    if (e.cmdName == "cmd_mozillaPrefs")
+    {
+        goPreferences('navigator', 
+                      'chrome://communicator/content/pref/pref-navigator.xul', 
+                      'navigator');
+    }
+    else
+    {
+        doCommand(e.cmdName);
+    }
 }
 
 function cmdEMode (e)
@@ -1467,6 +1494,8 @@ function cmdRestoreLayout (e)
         else
         {
             layout = console.prefs[prefName];
+            if (layout == "")
+                layout = DEFAULT_VURLS;
         }
     }
     

@@ -41,8 +41,6 @@
 
 <!DOCTYPE overlay SYSTEM "chrome://venkman/locale/venkman.dtd" >
 
-<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
-
 <overlay id="venkman-menu-overlay"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -95,23 +93,8 @@
         <!-- File menu placeholder, see venkman-menus.js -->
         <menu id="mainmenu:file"/>
   
-        <!-- Edit menu -->
-        <menu id="menu_Edit">
-          <menupopup id="menu_Edit_Popup">
-            <menuitem id="menu_undo"/>
-            <menuitem id="menu_redo"/>
-            <menuseparator/>
-            <menuitem id="menu_cut"/>
-            <menuitem id="menu_copy"/>
-            <menuitem id="menu_paste"/>
-            <menuitem id="menu_delete"/>
-            <menuseparator/>
-            <menuitem id="menu_selectAll"/>
-            <menuseparator/>
-            <menuitem id="menu_preferences"
-              oncommand="goPreferences('navigator', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator');"/>
-          </menupopup>
-        </menu> 
+        <!-- Edit menu placeholder, see venkman-menus.js -->
+        <menu id="mainmenu:edit"/>
   
         <!-- View menu placeholder, see venkman-menus.js -->
         <menu id="mainmenu:view"/>
@@ -128,6 +111,9 @@
         <!-- Tasks menu -->
         <menu id="windowMenu"/>
 
+        <!-- Tools menu placeholder, see venkman-menus.js -->
+        <!--<menu id="mainmenu:tools"/>-->
+        
         <!-- Help menu -->
         <!-- Mac expects a help menu with this ID, and there is nothing we can
              do about it. -->

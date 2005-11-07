@@ -44,7 +44,6 @@
 <?xml-stylesheet href="chrome://venkman/skin/venkman.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <?xul-overlay href="chrome://venkman/content/venkman-menus.xul"?>
 <?xul-overlay href="chrome://venkman/content/venkman-scripts.xul"?>

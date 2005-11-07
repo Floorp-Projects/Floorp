@@ -48,6 +48,7 @@
  -->
 
 <!DOCTYPE overlay SYSTEM "chrome://venkman/locale/venkman-overlay.dtd" >
+<?xml-stylesheet href="chrome://venkman/skin/venkman-overlay.css" type="text/css"?> 
 
 <overlay id="venkmanTaskMenuID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -60,6 +61,22 @@
 <menupopup id="toolsPopup">
   <menuitem position="5" label="&venkmanCmd.label;"
     accesskey="&venkmanCmd.akey;" oncommand="start_venkman()"/>
+</menupopup>
+
+<!-- This is the overlay that adds a "JavaScript Debugger" button to the 
+   - Firefox toolbar palette, and Tools menu. -->
+
+<toolbarpalette id="BrowserToolbarPalette">
+  <toolbarbutton id="tb-venkman-open" oncommand="start_venkman()" 
+      class="toolbarbutton-1"
+      label="&vnkButton.label;" tooltiptext="&vnkButton.label;"/>
+</toolbarpalette>
+
+<!-- Firefox -->
+<menupopup id="menu_ToolsPopup">
+  <menuitem id="tb-venkman-menu" oncommand="start_venkman()" 
+      insertafter="javascriptConsole,devToolsSeparator"
+      label="&vnkMenu.label;" accesskey="&vnkMenu.accesskey;"/>
 </menupopup>
 
 </overlay>

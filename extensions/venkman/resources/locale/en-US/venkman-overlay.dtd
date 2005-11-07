@@ -39,3 +39,8 @@
 
 <!ENTITY venkmanCmd.label				        "JavaScript Debugger">
 <!ENTITY venkmanCmd.akey				                   "D">
+
+<!ENTITY vnkButton.label   "JavaScript Debugger">
+  
+<!ENTITY vnkMenu.label     "JavaScript Debugger">
+<!ENTITY vnkMenu.accesskey "J">

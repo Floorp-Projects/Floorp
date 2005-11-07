@@ -49,7 +49,7 @@
 
   <!-- package information -->
   <RDF:Description about="urn:mozilla:package:venkman"
-        chrome:displayName="JavaScript Debugger"
+        chrome:displayName="JavaScript Debugger 0.9.85"
         chrome:author="mozilla.org"
 #expand         chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
         chrome:name="venkman">
@@ -58,9 +58,19 @@
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
     <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
+    <RDF:li resource="chrome://browser/content/browser.xul"/>
+    <RDF:li resource="chrome://messenger/content/messenger.xul"/>
   </RDF:Seq>
 
   <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
+    <RDF:li>chrome://venkman/content/venkman-overlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://browser/content/browser.xul">
+    <RDF:li>chrome://venkman/content/venkman-overlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://messenger/content/messenger.xul">
     <RDF:li>chrome://venkman/content/venkman-overlay.xul</RDF:li>
   </RDF:Seq>
 </RDF:RDF>

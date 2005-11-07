@@ -65,7 +65,7 @@ function bov_ctrln (line)
 {
     var first = this.tree.getFirstVisibleRow();
     var last = this.tree.getLastVisibleRow();
-    this.scrollToRow(line - total / 2);
+    this.scrollToRow(line - (last - first + 1) / 2);
 }
 
 /* call this to set the association between column names and data columns */
@@ -91,29 +91,29 @@ function bov_scrollto (line, align)
 {
     if (!this.tree)
         return;
-    
+
     var headerRows = 1;
-    
+
     var first = this.tree.getFirstVisibleRow();
     var last  = this.tree.getLastVisibleRow();
-    var viz   = last - first - headerRows; /* total number of visible rows */
+    var viz   = last - first + 1 - headerRows; /* total number of visible rows */
 
     /* all rows are visible, nothing to scroll */
-    if (first == 0 && last > this.rowCount)
+    if (first == 0 && last >= this.rowCount)
         return;
-    
+
     /* tree lines are 0 based, we accept one based lines, deal with it */
     --line;
 
     /* safety clamp */
     if (line < 0)
         line = 0;
-    if (line > this.rowCount)
-        line = this.rowCount;    
+    if (line >= this.rowCount)
+        line = this.rowCount - 1;
 
     if (align < 0)
     {
-        if (line > this.rowCount - viz) /* overscroll, can't put a row from */
+        if (line > this.rowCount - viz)    /* overscroll, can't put a row from */
             line = this.rowCount - viz; /* last page at the top. */
         this.tree.scrollToRow(line);
     }
@@ -123,7 +123,7 @@ function bov_scrollto (line, align)
             line = 0;   /* at the bottom. */
         else
             line = line - viz + headerRows;
-        
+
         this.tree.scrollToRow(line);
     }
     else
@@ -132,15 +132,20 @@ function bov_scrollto (line, align)
         /* lines past this line can't be centered without causing the tree
          * to show more rows than we have. */
         var lastCenterable = this.rowCount - half_viz;
-        if (line > lastCenterable)
+        if (line > half_viz)
             line = lastCenterable;
         /* lines before this can't be centered without causing the tree
          * to attempt to display negative rows. */
         else if (line < half_viz)
             line = half_viz;
+        else
+        /* round the vizible rows down to a whole number, or we try to end up
+         * on a N + 0.5 row! */
+            half_viz = Math.floor(half_viz);
+
         this.tree.scrollToRow(line - half_viz);
-    }                    
-}       
+    }
+}
 
 BasicOView.prototype.__defineGetter__("selectedIndex", bov_getsel);
 function bov_getsel()
@@ -268,7 +273,10 @@ function bov_getcelltxt (row, col)
     if (!this.columnNames)
         return "";
     
-    var ary = col.id.match (/:(.*)/);
+    if (typeof col == "object")
+        col = col.id;
+
+    var ary = col.match (/:(.*)/);
     if (ary)
         col = ary[1];
 
@@ -428,7 +436,6 @@ function XULTreeViewRecord(share)
 {
     this._share = share;
     this.visualFootprint = 1;
-    //this.childIndex = -1;
     this.isHidden = true; /* records are considered hidden until they are
                            * inserted into a live tree */
 }
@@ -501,9 +508,9 @@ function xtvr_getChildIndex ()
 XULTreeViewRecord.prototype.__defineSetter__("childIndex", xtvr_setChildIndex);
 function xtvr_setChildIndex ()
 {
-    dump ("xtvr: childIndex is read only, ignore attempt to write to it\n");
+    dd("xtvr: childIndex is read only, ignore attempt to write to it\n");
     if (typeof getStackTrace == "function")
-        dump (getStackTrace());
+        dd(getStackTrace());
 }
 
 /* count the number of parents, not including the root node */
@@ -525,7 +532,7 @@ function xtvr_getLevel ()
  * method will set up a get/set pair for the property name you specify which
  * will take care of updating the tree when the value changes.  DO NOT try
  * to change your mind later.  Do not attach a different name to the same colID,
- * and do no rename the colID.  You have been warned.
+ * and do not rename the colID.  You have been warned.
  */
 XULTreeViewRecord.prototype.setColumnPropertyName =
 function xtvr_setcol (colID, propertyName)
@@ -537,7 +544,6 @@ function xtvr_setcol (colID, propertyName)
     function xtvr_setValueShim (newValue)
     {
         this._colValues[colID] = newValue;
-        /* XXX this.invalidate(); */
         return newValue;
     }
 
@@ -562,7 +568,7 @@ function xtvr_setcolv (colID, value)
 }
 
 /*
- * set the default sort column and resort.
+ * set the default sort column and reSort.
  */
 XULTreeViewRecord.prototype.setSortColumn =
 function xtvr_setcol (colID, dir)
@@ -570,7 +576,7 @@ function xtvr_setcol (colID, dir)
     //dd ("setting sort column to " + colID);
     this._share.sortColumn = colID;
     this._share.sortDirection = (typeof dir == "undefined") ? 1 : dir;
-    this.resort();
+    this.reSort();
 }
 
 /*
@@ -634,14 +640,14 @@ function xtvr_sortcmp (a, b)
 }
 
 /*
- * this method will cause all child records to be resorted.  any records
+ * this method will cause all child records to be reSorted.  any records
  * with the default sortCompare method will be sorted by the colID passed to
  * setSortColumn.
  *
  * the local parameter is used internally to control whether or not the 
  * sorted rows are invalidated.  don't use it yourself.
  */
-XULTreeViewRecord.prototype.resort =
+XULTreeViewRecord.prototype.reSort =
 function xtvr_resort (leafSort)
 {
     if (!("childData" in this) || this.childData.length < 1 ||
@@ -657,10 +663,9 @@ function xtvr_resort (leafSort)
     
     for (var i = 0; i < this.childData.length; ++i)
     {
-        //this.childData[i].childIndex = i;
         if ("isContainerOpen" in this.childData[i] &&
             this.childData[i].isContainerOpen)
-            this.childData[i].resort(true);
+            this.childData[i].reSort(true);
         else
             this.childData[i].sortIsInvalid = true;
     }
@@ -680,10 +685,6 @@ function xtvr_resort (leafSort)
                                        rowIndex + this.visualFootprint - 1);
         }
     }
-    /*
-    else
-        dd("not a leafSort");
-    */
     delete this.sortIsInvalid;
 }
     
@@ -716,7 +717,6 @@ function xtvr_appchild (child)
     
     child.isHidden = false;
     child.parentRecord = this;
-    //child.childIndex = this.childData.length;
     this.childData.push(child);
     
     if ("isContainerOpen" in this && this.isContainerOpen)
@@ -726,9 +726,9 @@ function xtvr_appchild (child)
         {
             var tree = this.findContainerTree();
             if (tree && tree.frozen)
-                this.needsResort = true;
+                this.needsReSort = true;
             else
-                this.resort(true);  /* resort, don't invalidate.  we're going  
+                this.reSort(true);  /* reSort, don't invalidate.  we're going  
                                      * to do that in the 
                                      * onVisualFootprintChanged call. */
         }
@@ -753,8 +753,6 @@ function xtvr_appchild (children)
         child.isHidden = false;
         child.parentRecord = this;
         this.childData.push(child);
-        // this.childData[idx] = child;
-        //child.childIndex = idx++;
         delta += child.visualFootprint;
     }
     
@@ -762,7 +760,7 @@ function xtvr_appchild (children)
     {
         if (this.calculateVisualRow() >= 0)
         {
-            this.resort(true);  /* resort, don't invalidate.  we're going to do
+            this.reSort(true);  /* reSort, don't invalidate.  we're going to do
                                  * that in the onVisualFootprintChanged call. */
         }
         this.onVisualFootprintChanged(this.childData[0].calculateVisualRow(),
@@ -780,13 +778,9 @@ function xtvr_remchild (index)
     if (!ASSERT(this.childData.length, "removing from empty childData"))
         return;
     
-    //for (var i = index + 1; i < this.childData.length; ++i)
-    //    --this.childData[i].childIndex;
-    
     var orphan = this.childData[index];
     var fpDelta = -orphan.visualFootprint;
     var changeStart = orphan.calculateVisualRow();
-    //this.childData[index].childIndex = -1;
     delete orphan.parentRecord;
     arrayRemoveAt (this.childData, index);
     
@@ -809,7 +803,7 @@ function xtvr_hide ()
     var row = this.calculateVisualRow();
     this.invalidateCache();
     this.isHidden = true;
-    /* go right to the parent so we don't muck with our own visualFoorptint
+    /* go right to the parent so we don't muck with our own visualFootprint
      * record, we'll need it to be correct if we're ever unHidden. */
     if ("parentRecord" in this)
         this.parentRecord.onVisualFootprintChanged (row, -this.visualFootprint);
@@ -852,8 +846,8 @@ function xtvr_open ()
             delta += this.childData[i].visualFootprint;
     }
 
-    /* this resort should only happen if the sort column changed */
-    this.resort(true);
+    /* this reSort should only happen if the sort column changed */
+    this.reSort(true);
     this.visualFootprint += delta;
     if ("parentRecord" in this)
     {
@@ -1073,12 +1067,12 @@ function torr_calcrow ()
     return null;
 }
 
-XTRootRecord.prototype.resort =
+XTRootRecord.prototype.reSort =
 function torr_resort ()
 {
     if ("_treeView" in this && this._treeView.frozen)
     {
-        this._treeView.needsResort = true;
+        this._treeView.needsReSort = true;
         return;
     }
     
@@ -1095,10 +1089,9 @@ function torr_resort ()
     
     for (var i = 0; i < this.childData.length; ++i)
     {
-        //this.childData[i].childIndex = i;
         if ("isContainerOpen" in this.childData[i] &&
             this.childData[i].isContainerOpen)
-            this.childData[i].resort(true);
+            this.childData[i].reSort(true);
         else
             this.childData[i].sortIsInvalid = true;
     }
@@ -1216,7 +1209,7 @@ function xtv_freeze ()
 }
 
 /*
- * Reflect any changes to the tee content since the last freeze.
+ * Reflect any changes to the tree content since the last freeze.
  */
 XULTreeView.prototype.thaw =
 function xtv_thaw ()
@@ -1233,9 +1226,9 @@ function xtv_thaw ()
                                                 this.changeAmount);
     }
     
-    if ("needsResort" in this) {
-        this.childData.resort();
-        delete this.needsResort;
+    if ("needsReSort" in this) {
+        this.childData.reSort();
+        delete this.needsReSort;
     }
     
     
@@ -1293,7 +1286,7 @@ function xtv_ctrln (line)
 {
     var first = this.tree.getFirstVisibleRow();
     var last = this.tree.getLastVisibleRow();
-    this.scrollToRow(line - total / 2);
+    this.scrollToRow(line - (last - first + 1) / 2);
 }
 
 /*
@@ -1313,12 +1306,6 @@ XULTreeView.prototype.isContainer =
 function xtv_isctr (index)
 {
     var row = this.childData.locateChildByVisualRow (index);
-    /*
-    ASSERT(row, "bogus row");
-    var rv = Boolean(row && row.childData);
-    dd ("isContainer: row " + index + " returning " + rv);
-    return rv;
-    */
 
     return Boolean(row && ("alwaysHasChildren" in row || "childData" in row));
 }
@@ -1349,12 +1336,6 @@ XULTreeView.prototype.isContainerOpen =
 function xtv_isctropen (index)
 {
     var row = this.childData.locateChildByVisualRow (index);
-    /*
-    ASSERT(row, "bogus row");
-    var rv = Boolean(row && row.isContainerOpen);
-    dd ("isContainerOpen: row " + index + " returning " + rv);
-    return rv;
-    */
     return row && row.isContainerOpen;
 }
 
@@ -1376,12 +1357,6 @@ XULTreeView.prototype.isContainerEmpty =
 function xtv_isctrempt (index)
 {
     var row = this.childData.locateChildByVisualRow (index);
-    /*
-    ASSERT(row, "bogus row");
-    var rv = Boolean(row && (row.childData.length == 0));
-    dd ("isContainerEmpty: row " + index + " returning " + rv);
-    return rv;
-    */
     if ("alwaysHasChildren" in row)
         return false;
 
@@ -1404,8 +1379,6 @@ function xtv_getpi (index)
         return -1;
     
     var row = this.childData.locateChildByVisualRow (index);
-    //if (!ASSERT(row, "bogus row " + index))
-    //    return -1;
     
     var rv = row.parentRecord.calculateVisualRow();
     //dd ("getParentIndex: row " + index + " returning " + rv);
@@ -1416,13 +1389,6 @@ XULTreeView.prototype.hasNextSibling =
 function xtv_hasnxtsib (rowIndex, afterIndex)
 {
     var row = this.childData.locateChildByVisualRow (rowIndex);
-    /*
-    ASSERT(row, "bogus row");
-    rv = Boolean(row.childIndex < row.parentRecord.childData.length - 1);
-    dd ("hasNextSibling: row " + rowIndex + ", after " + afterIndex +
-        " returning " + rv);
-    return rv;
-    */
     return row.childIndex < row.parentRecord.childData.length - 1;
 }
 
@@ -1430,12 +1396,6 @@ XULTreeView.prototype.getLevel =
 function xtv_getlvl (index)
 {
     var row = this.childData.locateChildByVisualRow (index);
-    /*
-    ASSERT(row, "bogus row");
-    var rv = row.level;
-    dd ("getLevel: row " + index + " returning " + rv);
-    return rv;
-    */
     if (!row)
         return 0;
     
@@ -1463,7 +1423,10 @@ function xtv_getcelltxt (index, col)
     var row = this.childData.locateChildByVisualRow (index);
     //ASSERT(row, "bogus row " + index);
 
-    var ary = col.id.match (/:(.*)/);
+    if (typeof col == "object")
+        col = col.id;
+
+    var ary = col.match (/:(.*)/);
     if (ary)
         col = ary[1];
 

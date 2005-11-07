@@ -493,7 +493,10 @@ function bv_getcx(cx)
 console.views.breaks.getCellProperties =
 function bv_cellprops (index, col, properties)
 {
-    if (col.id == "breaks:col-0")
+    if (typeof col == "object")
+        col = col.id;
+
+    if (col == "breaks:col-0")
     {
         var row = this.childData.locateChildByVisualRow(index);
         if (row.type == "future")
@@ -771,7 +774,10 @@ function lv_rowcommand(rec)
 console.views.locals.getCellProperties =
 function lv_cellprops (index, col, properties)
 {
-    if (col.id != "locals:col-0")
+    if (typeof col == "object")
+        col = col.id;
+
+    if (col != "locals:col-0")
         return null;
     
     var row = this.childData.locateChildByVisualRow(index);
@@ -1265,7 +1271,9 @@ function scv_click (e)
         var treeBox = console.views.scripts.tree;
         treeBox.getCellAt(e.clientX, e.clientY, rowIndex, col, childElt);
         var prop;
-        switch (col.value.id)
+        if (typeof col.value == "object")
+            col.value = col.value.id;
+        switch (col.value)
         {
             case "scripts:col-0":
                 prop = "functionName";
@@ -1315,7 +1323,10 @@ function scv_setmode (flag)
 console.views.scripts.getCellProperties =
 function scv_cellprops (index, col, properties)
 {
-    if (col.id != "scripts:col-0")
+    if (typeof col == "object")
+        col = col.id;
+
+    if (col != "scripts:col-0")
         return null;
     
     var row = this.childData.locateChildByVisualRow(index);
@@ -2183,7 +2194,10 @@ function sv_getcx(cx)
 console.views.stack.getCellProperties =
 function sv_cellprops (index, col, properties)
 {
-    if (col.id != "stack:col-0")
+    if (typeof col == "object")
+        col = col.id;
+
+    if (col != "stack:col-0")
         return;
 
     var row = this.childData.locateChildByVisualRow(index);
@@ -3678,7 +3692,10 @@ function sv_click (e)
         if (row.value == -1)
           return;
         
-        colID = col.value.id;
+        if (typeof col.value == "object")
+            colID = col.value.id;
+        else
+            colID = col.value;
         row = row.value;
         
         if (colID == "source:col-0")
@@ -3974,7 +3991,10 @@ function sv_cellprops (row, col, properties)
     if (!line)
         return;
     
-    if (col.id == "source:col-0")
+    if (typeof col == "object")
+        col = col.id;
+
+    if (col == "source:col-0")
     {
         if ("lineMap" in this.childData && row in this.childData.lineMap)
         {
@@ -4023,7 +4043,10 @@ function sv_getcelltext (row, col)
         row < 0 || row > this.childData.lines.length)
         return "";
     
-    var ary = col.id.match (/:(.*)/);
+    if (typeof col == "object")
+        col = col.id;
+
+    var ary = col.match (/:(.*)/);
     if (ary)
         col = ary[1];
     
@@ -4137,7 +4160,10 @@ function onHide()
 console.views.watches.getCellProperties =
 function wv_cellprops (index, col, properties)
 {
-    if (col.id != "watches:col-0")
+    if (typeof col == "object")
+        col = col.id;
+
+    if (col != "watches:col-0")
         return null;
     
     var row = this.childData.locateChildByVisualRow(index);
@@ -4461,7 +4487,10 @@ function winv_hide ()
 console.views.windows.getCellProperties =
 function winv_cellprops (index, col, properties)
 {
-    if (col.id == "windows:col-0")
+    if (typeof col == "object")
+        col = col.id;
+
+    if (col == "windows:col-0")
     {
         var row = this.childData.locateChildByVisualRow(index);
         if (row)

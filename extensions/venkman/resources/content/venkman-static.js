@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const __vnk_version        = "0.9.83";
-const __vnk_requiredLocale = "0.9.83";
+const __vnk_version        = "0.9.85";
+const __vnk_requiredLocale = "0.9.85";
 var   __vnk_versionSuffix  = "";
 
 const __vnk_counter_url = 
@@ -530,6 +530,9 @@ function init()
     createMainMenu(document);
     createMainToolbar(document);
 
+    // Must be done after menus are "here", since it corrects them for the host.
+    initApplicationCompatibility();
+
     console.ui = {
         "status-text": document.getElementById ("status-text"),
         "profile-button": document.getElementById ("maintoolbar:profile-tb"),
@@ -590,6 +593,46 @@ function init()
     dispatch ("hook-venkman-started");
 
     dd ("}");
+}
+
+function initApplicationCompatibility()
+{
+    // This routine does nothing more than tweak the UI based on the host 
+    // application.
+
+    var windowMenu = document.getElementById("windowMenu");
+
+    // Set up simple host and platform information.
+    console.host = "Mozilla";
+    if (!windowMenu.firstChild)
+        console.host = "Firefox";
+
+    console.platform = "Unknown";
+    if (navigator.platform.search(/mac/i) > -1)
+        console.platform = "Mac";
+    if (navigator.platform.search(/win/i) > -1)
+        console.platform = "Windows";
+    if (navigator.platform.search(/linux/i) > -1)
+        console.platform = "Linux";
+
+    console.hostPlatform = console.host + console.platform;
+
+    // The menus and the component bar need to be hidden on some hosts.
+    var winMenu   = document.getElementById("windowMenu");
+    var tasksMenu = document.getElementById("tasksMenu");
+    //var toolsMenu = document.getElementById("mainmenu:tools");
+    var comBar    = document.getElementById("component-bar");
+
+    if (console.host == "Firefox") {
+        tasksMenu.parentNode.removeChild(tasksMenu);
+        winMenu.parentNode.removeChild(winMenu);
+    } else {
+        comBar.collapsed = false;
+    }
+
+    //if ((console.host != "Firefox") || (console.platform == "Linux")) {
+    //    toolsMenu.parentNode.removeChild(toolsMenu);
+    //}
 }
 
 function initPost()
@@ -675,7 +718,34 @@ function fetchLaunchCount()
                        [console.prefs["startupCount"], MSG_VAL_UNKNOWN]));
     }
 }
-    
+
+function getCommandEnabled(command)
+{
+    try {
+        var dispatcher = top.document.commandDispatcher;
+        var controller = dispatcher.getControllerForCommand(command);
+        
+        return controller.isCommandEnabled(command);
+    }
+    catch (e)
+    {
+        return false;
+    }
+}
+
+function doCommand(command)
+{
+    try {
+        var dispatcher = top.document.commandDispatcher;
+        var controller = dispatcher.getControllerForCommand(command);
+        if (controller && controller.isCommandEnabled(command))
+            controller.doCommand(command);
+    }
+    catch (e)
+    {
+    }
+}
+
 console.__defineGetter__ ("userAgent", con_ua);
 function con_ua ()
 {

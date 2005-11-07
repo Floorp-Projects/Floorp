@@ -57,4 +57,12 @@
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+
+  <RDF:Seq about="urn:mozilla:stylesheets">
+    <RDF:li resource="chrome://global/content/customizeToolbar.xul"/>
+  </RDF:Seq>
+
+  <RDF:Seq about="chrome://global/content/customizeToolbar.xul">
+    <RDF:li>chrome://venkman/skin/venkman-overlay.css</RDF:li>
+  </RDF:Seq>
 </RDF:RDF>

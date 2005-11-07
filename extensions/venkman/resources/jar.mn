@@ -51,6 +51,7 @@ venkman.jar:
   locale/en-US/venkman/profile.xml.tpl       (locale/en-US/profile.xml.tpl)
   content/venkman/venkman-output-window.html (content/venkman-output-window.html)
   content/venkman/venkman-output-base.css     (content/venkman-output-base.css)
+  skin/modern/venkman/venkman-overlay.css      (skin/venkman-overlay.css)
   skin/modern/venkman/images/clear.png         (skin/images/clear.png)
   skin/modern/venkman/images/shaded.png        (skin/images/shaded.png)
   skin/modern/venkman/images/new-tab.png       (skin/images/new-tab.png)
