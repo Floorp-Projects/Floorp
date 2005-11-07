@@ -51,10 +51,22 @@
         [% END %]
       [% END %]
 
+      [%# Bug Flags %]
+      [% FOREACH type = bug.flag_types %]
+        [% FOREACH flag = type.flags %]
+          <flag name="[% type.name FILTER xml %]"
+                status="[% flag.status FILTER xml %]"
+                setter="[% flag.setter.login FILTER xml %]"
+          [% IF flag.requestee %]
+              requestee="[% flag.requestee.login FILTER xml %]"
+          [% END %]
+          />
+        [% END %]
+      [% END %]
       [% IF displayfields.long_desc %]
         [% FOREACH c = bug.longdescs %]
           [% NEXT IF c.isprivate && !UserInGroup(Param("insidergroup")) %]
-          <long_desc>
+          <long_desc isprivate="[% c.isprivate FILTER xml %]">
             <who>[% c.email FILTER xml %]</who>
             <bug_when>[% c.time FILTER time FILTER xml %]</bug_when>
             <thetext>[% c.body FILTER xml %]</thetext>
@@ -66,20 +78,19 @@
         [% FOREACH a = bug.attachments %]
           [% NEXT IF a.isprivate && !UserInGroup(Param("insidergroup")) %]
           <attachment
-            [% IF a.isobsolete %]
-              isobsolete="1"
-            [% END %]
-            [% IF a.ispatch %]
-              ispatch="1"
-            [% END %]
+              isobsolete="[% a.isobsolete FILTER xml %]"
+              ispatch="[% a.ispatch FILTER xml %]"
+              isprivate="[% a.isprivate FILTER xml %]"
           >
             <attachid>[% a.id %]</attachid>
             <date>[% a.attached FILTER time FILTER xml %]</date>
             <desc>[% a.description FILTER xml %]</desc>
-            <ctype>[% a.contenttype FILTER xml %]</ctype>
+            <filename>[% a.filename FILTER xml %]</filename>
+            <type>[% a.contenttype FILTER xml %]</type>
         [% IF displayfields.attachmentdata %]
-            <data>[% a.data FILTER base64 %]</data>
+            <data encoding="base64">[% a.data FILTER base64 %]</data>
         [% END %]        
+
             [% FOREACH flag = a.flags %]
               <flag name="[% flag.type.name FILTER xml %]"
                     status="[% flag.status FILTER xml %]"
