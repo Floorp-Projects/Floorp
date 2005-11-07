@@ -55,7 +55,6 @@
 #include "nsINodeInfo.h"
 #include "nsIControllers.h"
 #include "nsICSSParser.h"
-#include "nsICSSStyleRule.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOM3EventTarget.h"
@@ -89,6 +88,7 @@ class nsString;
 class nsVoidArray;
 class nsIDocShell;
 class nsDOMAttributeMap;
+class nsICSSStyleRule;
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -257,9 +257,8 @@ public:
     {
       if (mChildren) {
         for (PRInt32 i = mNumChildren-1; i >= 0; i--) {
-          if (! mChildren[i])
-            break;
-          mChildren[i]->ReleaseSubtree();
+          if (mChildren[i])
+            mChildren[i]->ReleaseSubtree();
         }
       }
 
