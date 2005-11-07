@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: blapit.h,v 1.17 2005/08/13 00:07:18 wtchang%redhat.com Exp $ */
+/* $Id: blapit.h,v 1.18 2005/11/07 18:44:21 wtchang%redhat.com Exp $ */
 
 #ifndef _BLAPIT_H_
 #define _BLAPIT_H_
@@ -95,9 +95,13 @@
  * Input block size for each hash algorithm.
  */
 
+#define MD2_BLOCK_LENGTH 	 64 	/* bytes */
+#define MD5_BLOCK_LENGTH 	 64 	/* bytes */
+#define SHA1_BLOCK_LENGTH 	 64 	/* bytes */
 #define SHA256_BLOCK_LENGTH 	 64 	/* bytes */
 #define SHA384_BLOCK_LENGTH 	128 	/* bytes */
 #define SHA512_BLOCK_LENGTH 	128 	/* bytes */
+#define HASH_BLOCK_LENGTH_MAX 	SHA512_BLOCK_LENGTH
 
 #define AES_KEY_WRAP_IV_BYTES    8
 #define AES_KEY_WRAP_BLOCK_SIZE  8  /* bytes */

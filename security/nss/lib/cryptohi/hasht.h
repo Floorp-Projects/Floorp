@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: hasht.h,v 1.6 2004/04/27 23:04:35 gerv%gerv.net Exp $ */
+/* $Id: hasht.h,v 1.7 2005/11/07 18:44:20 wtchang%redhat.com Exp $ */
 
 #ifndef _HASHT_H_
 #define _HASHT_H_
@@ -72,13 +72,15 @@ typedef enum {
  * Structure to hold hash computation info and routines
  */
 struct SECHashObjectStr {
-    unsigned int length;
+    unsigned int length;  /* hash output length (in bytes) */
     void * (*create)(void);
     void * (*clone)(void *);
     void (*destroy)(void *, PRBool);
     void (*begin)(void *);
     void (*update)(void *, const unsigned char *, unsigned int);
     void (*end)(void *, unsigned char *, unsigned int *, unsigned int);
+    unsigned int blocklength;  /* hash input block size (in bytes) */
+    HASH_HashType type;
 };
 
 struct HASHContextStr {

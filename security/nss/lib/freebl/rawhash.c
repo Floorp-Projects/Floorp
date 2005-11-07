@@ -84,7 +84,9 @@ const SECHashObject SECRawHashObjects[] = {
     (void (*)(void *)) null_hash_begin,
     (void (*)(void *, const unsigned char *, unsigned int)) null_hash_update,
     (void (*)(void *, unsigned char *, unsigned int *,
-	      unsigned int)) null_hash_end
+	      unsigned int)) null_hash_end,
+    0,
+    HASH_AlgNULL
   },
   { MD2_LENGTH,
     (void * (*)(void)) MD2_NewContext,
@@ -92,7 +94,9 @@ const SECHashObject SECRawHashObjects[] = {
     (void (*)(void *, PRBool)) MD2_DestroyContext,
     (void (*)(void *)) MD2_Begin,
     (void (*)(void *, const unsigned char *, unsigned int)) MD2_Update,
-    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) MD2_End
+    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) MD2_End,
+    MD2_BLOCK_LENGTH,
+    HASH_AlgMD2
   },
   { MD5_LENGTH,
     (void * (*)(void)) MD5_NewContext,
@@ -100,7 +104,9 @@ const SECHashObject SECRawHashObjects[] = {
     (void (*)(void *, PRBool)) MD5_DestroyContext,
     (void (*)(void *)) MD5_Begin,
     (void (*)(void *, const unsigned char *, unsigned int)) MD5_Update,
-    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) MD5_End
+    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) MD5_End,
+    MD5_BLOCK_LENGTH,
+    HASH_AlgMD5
   },
   { SHA1_LENGTH,
     (void * (*)(void)) SHA1_NewContext,
@@ -108,7 +114,9 @@ const SECHashObject SECRawHashObjects[] = {
     (void (*)(void *, PRBool)) SHA1_DestroyContext,
     (void (*)(void *)) SHA1_Begin,
     (void (*)(void *, const unsigned char *, unsigned int)) SHA1_Update,
-    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) SHA1_End
+    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) SHA1_End,
+    SHA1_BLOCK_LENGTH,
+    HASH_AlgSHA1
   },
   { SHA256_LENGTH,
     (void * (*)(void)) SHA256_NewContext,
@@ -116,7 +124,10 @@ const SECHashObject SECRawHashObjects[] = {
     (void (*)(void *, PRBool)) SHA256_DestroyContext,
     (void (*)(void *)) SHA256_Begin,
     (void (*)(void *, const unsigned char *, unsigned int)) SHA256_Update,
-    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) SHA256_End
+    (void (*)(void *, unsigned char *, unsigned int *,
+	      unsigned int)) SHA256_End,
+    SHA256_BLOCK_LENGTH,
+    HASH_AlgSHA256
   },
   { SHA384_LENGTH,
     (void * (*)(void)) SHA384_NewContext,
@@ -124,7 +135,10 @@ const SECHashObject SECRawHashObjects[] = {
     (void (*)(void *, PRBool)) SHA384_DestroyContext,
     (void (*)(void *)) SHA384_Begin,
     (void (*)(void *, const unsigned char *, unsigned int)) SHA384_Update,
-    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) SHA384_End
+    (void (*)(void *, unsigned char *, unsigned int *,
+	      unsigned int)) SHA384_End,
+    SHA384_BLOCK_LENGTH,
+    HASH_AlgSHA384
   },
   { SHA512_LENGTH,
     (void * (*)(void)) SHA512_NewContext,
@@ -132,7 +146,10 @@ const SECHashObject SECRawHashObjects[] = {
     (void (*)(void *, PRBool)) SHA512_DestroyContext,
     (void (*)(void *)) SHA512_Begin,
     (void (*)(void *, const unsigned char *, unsigned int)) SHA512_Update,
-    (void (*)(void *, unsigned char *, unsigned int *, unsigned int)) SHA512_End
+    (void (*)(void *, unsigned char *, unsigned int *,
+	      unsigned int)) SHA512_End,
+    SHA512_BLOCK_LENGTH,
+    HASH_AlgSHA512
   },
 };
 
