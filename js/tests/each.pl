@@ -79,17 +79,18 @@ my @args = ("$bindir/timed_run",
             $profile,
             "-chrome",
             $spider);
-#print "args: " . join(',', @args) . "\n";
-my $rc = system @args;
-my $signal = $rc & 0x00ff;
-if ($signal == 2)
+
+system @args;
+my $rc = $? >> 8;
+
+if ($rc == 99)
 {
-    die "received signal: $signal\n";
+    exit $rc;
 }
 
 sub usage
 {
-    return "Usage: each.pl bindir browserexe profile timeout jsfile hook\n";
+    return "Usage: each.pl bindir timeout browserexe profile jsfile hook\n";
 }
 
 1;
