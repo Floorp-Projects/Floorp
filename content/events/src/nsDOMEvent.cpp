@@ -517,10 +517,17 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, PRBool aCanBubbleArg, PRBo
 
   NS_ENSURE_SUCCESS(SetEventType(aEventTypeArg), NS_ERROR_FAILURE);
 
-  mEvent->flags |=
-    aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
-  mEvent->flags |=
-    aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
+  if (aCanBubbleArg) {
+    mEvent->flags &= ~NS_EVENT_FLAG_CANT_BUBBLE;
+  } else {
+    mEvent->flags |= NS_EVENT_FLAG_CANT_BUBBLE;
+  }
+
+  if (aCancelableArg) {
+    mEvent->flags &= ~NS_EVENT_FLAG_CANT_CANCEL;
+  } else {
+    mEvent->flags |= NS_EVENT_FLAG_CANT_CANCEL;
+  }
 
   // Unset the NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY bit (which is
   // set at the end of event dispatch) so that this event can be
