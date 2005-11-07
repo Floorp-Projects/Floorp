@@ -132,8 +132,12 @@
 #endif
   <key id="print_key"            key="&calendar.print.key;"              observes="print_command"               modifiers="accel"/>
 
-  <key id="undo_key"             key="&calendar.undo.key;"               modifiers="accel"/>
-  <key id="redo_key"             key="&calendar.redo.key;"               modifiers="accel"/>
+  <key id="undo_key"             key="&calendar.undo.key;"               observes="undo_command"                modifiers="accel"/>
+#ifdef XP_UNIX
+  <key id="redo_key"             key="&calendar.undo.key;"               observes="redo_command"                modifiers="shift, accel"/>
+#else
+  <key id="redo_key"             key="&calendar.redo.key;"               observes="redo_command"                modifiers="accel"/>
+#endif
 
   <key id="key_cut"              key="&calendar.cut.key;"                observes="cut_command"                 modifiers="accel"/>
   <key id="key_copy"             key="&calendar.copy.key;"               observes="copy_command"                modifiers="accel"/>
