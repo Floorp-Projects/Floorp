@@ -226,7 +226,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
     PRUnichar buf[128];
     nsFixedString uri(buf, NS_ARRAY_LENGTH(buf), 0);
 
-    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, uri);
+    aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, uri);
     if (!uri.IsEmpty()) {
         // We'll use rdf_MakeAbsolute() to translate this to a URL.
         nsCOMPtr<nsIDocument> doc = aElement->GetDocument();
