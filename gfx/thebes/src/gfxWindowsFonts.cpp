@@ -59,7 +59,9 @@ gfxWindowsFont::gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFont
     mHWnd = (HWND)aHWnd;
 
     mFontFace = MakeCairoFontFace();
+    NS_ASSERTION(mFontFace, "Failed to make font face");
     mScaledFont = MakeCairoScaledFont(nsnull);
+    NS_ASSERTION(mScaledFont, "Failed to make scaled font");
 
     ComputeMetrics();
 }
@@ -328,7 +330,8 @@ TRY_AGAIN_SAME_SCRIPT:
         cairo_set_font_face(cr, fontFace);
         cairo_set_font_size(cr, mStyle.size);
         cairo_win32_scaled_font_select_font(scaledFont, aDC);
-        double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(scaledFont);
+        const double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(scaledFont);
+        const double cairoToPixels = cairofontfactor * mStyle.size;
 
         if (!isComplex)
             items[i].a.eScript = SCRIPT_UNDEFINED;
@@ -382,29 +385,12 @@ TRY_AGAIN_SAME_SCRIPT:
 #endif
 
             if (!aDraw) {
-                length += NSToCoordRound((abc.abcA + abc.abcB + abc.abcC) * cairofontfactor * mStyle.size);
+                length += NSToCoordRound((abs(abc.abcA) + abc.abcB + abs(abc.abcC)) * cairoToPixels);
             } else {
                 PRInt32 *spacing = 0;
                 PRInt32 justTotal = 0;
                 if (aSpacing) {
                     /* need to correct for layout/gfx spacing mismatch */
-#ifdef DEBUG_tor
-                    fprintf(stderr, "advn: ");
-                    for (int j=0; j<numGlyphs; j++) {
-                        fprintf(stderr, "%4d,", advance[j]);
-                    }
-                    fprintf(stderr, "\n");
-
-                    fprintf(stderr, "clus: ");
-                    for (j=0; j<itemLength; j++)
-                        fprintf(stderr, "%4d,", clusters[j]);
-                    fprintf(stderr, "\n");
-
-                    fprintf(stderr, "attr: ");
-                    for (j=0; j<numGlyphs; j++)
-                        fprintf(stderr, "0x%2x,", attr[j]);
-                    fprintf(stderr, "\n");
-#endif
                     // hacky inefficient justification: take the excess of what layout
                     // thinks the width is over what uniscribe thinks the width is and
                     // share it evenly between the justification opportunities
@@ -444,19 +430,8 @@ TRY_AGAIN_SAME_SCRIPT:
                             }
                         }
 #endif
-
-#ifdef DEBUG_tor
-                        fprintf(stderr, "hand: ");
-                        for (j=0; j<numGlyphs; j++) {
-                            fprintf(stderr, "%4d,", spacing[j]);
-                        }
-                        fprintf(stderr, "\n");
-#endif
-
                     }
                 }
-
-                double cairoToPixels = cairofontfactor * mStyle.size;
 
                 cairo_glyph_t *cglyphs = (cairo_glyph_t*)malloc(numGlyphs*sizeof(cairo_glyph_t));
                 PRInt32 offset = 0;
@@ -465,16 +440,37 @@ TRY_AGAIN_SAME_SCRIPT:
                     cglyphs[k].x = aX + offset + NSToCoordRound(offsets[k].du * cairoToPixels);
                     cglyphs[k].y = aY + NSToCoordRound(offsets[k].dv * cairoToPixels);
                     offset += NSToCoordRound(advance[k] * cairoToPixels);
-#if 0
+
+                    /* XXX this needs some testing */
                     if (aSpacing)
-                        offset += aSpacing[k] * cairoToPixels;
-#endif
+                        offset += spacing[k] * cairoToPixels;
                 }
+#if 0
+                /* Draw using ScriptTextOut() */
+                SaveDC(aDC);
 
+                gfxMatrix m = aContext->CurrentMatrix();
+                XFORM xform;
+                double dm[6];
+                m.ToValues(&dm[0], &dm[1], &dm[2], &dm[3], &dm[4], &dm[5]);
+                xform.eM11 = dm[0];
+                xform.eM21 = dm[1];
+                xform.eM12 = dm[2];
+                xform.eM22 = dm[3];
+                xform.eDx  = dm[4];
+                xform.eDy  = dm[5];
+                SetWorldTransform (aDC, &xform);
+
+                ScriptTextOut(aDC, &sc, aX, aY, 0, NULL, &items->a,
+                              NULL, 0, glyphs, numGlyphs,
+                              advance, NULL, offsets);
+
+                RestoreDC(aDC, -1);
+#else
+                /* Draw using cairo */
                 cairo_show_glyphs(cr, cglyphs, numGlyphs);
-
+#endif
                 free(cglyphs);
-
 
                 aX += NSToCoordRound((abs(abc.abcA) + abc.abcB + abs(abc.abcC) + justTotal) * cairoToPixels);
                 free(spacing);

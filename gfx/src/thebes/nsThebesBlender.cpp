@@ -87,6 +87,6 @@ NS_IMETHODIMP
 nsThebesBlender::GetAlphas(const nsRect& aRect, nsIDrawingSurface* aBlack,
                            nsIDrawingSurface* aWhite, PRUint8** aAlphas)
 {
-    NS_WARNING("This needs to be implemented somehow");
+    //NS_WARNING("This needs to be implemented somehow");
     return NS_ERROR_NOT_IMPLEMENTED;
 }

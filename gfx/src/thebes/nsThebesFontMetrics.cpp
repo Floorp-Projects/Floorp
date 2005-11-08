@@ -48,8 +48,10 @@ NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
 
 #include <stdlib.h>
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
 #include "gfxWindowsFonts.h"
+#elif defined(MOZ_ENABLE_GTK2)
+#include "gfxPangoFonts.h"
 #endif
 
 nsThebesFontMetrics::nsThebesFontMetrics()
@@ -73,12 +75,26 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mDeviceContext = (nsThebesDeviceContext*)aContext;
     mDev2App = aContext->DevUnitsToAppUnits();
 
+    // work around layout giving us 0 sized fonts...
+    double size = aFont.size * mDeviceContext->AppUnitsToDevUnits();
+    if (size == 0.0)
+        size = 1.0;
+
+    nsCString langGroup;
+    if (aLangGroup) {
+        const char* lg;
+        mLangGroup->GetUTF8String(&lg);
+        langGroup.Assign(lg);
+    }
+
     mFontStyle = new gfxFontStyle(aFont.style, aFont.variant,
                                   aFont.weight, aFont.decorations,
-                                  (aFont.size * mDeviceContext->AppUnitsToDevUnits()), aFont.sizeAdjust);
+                                  size, langGroup, aFont.sizeAdjust);
 
-#ifdef XP_WIN
+#if defined(XP_WIN)
     mFontGroup = new gfxWindowsFontGroup(aFont.name, mFontStyle, (HWND)mDeviceContext->GetWidget());
+#elif defined(MOZ_ENABLE_GTK2)
+    mFontGroup = new gfxPangoFontGroup(aFont.name, mFontStyle);
 #else
 #error implement me
 #endif
@@ -363,14 +379,8 @@ nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString,
 nsresult
 nsThebesFontMetrics::SetRightToLeftText(PRBool aIsRTL)
 {
+    // this doesn't seem to ever get called
+    NS_WARNING("nsThebesFontMetrics::SetRightToLeftText called!");
     return NS_OK;
 }
-
-
-
-
-
-
-
-
 

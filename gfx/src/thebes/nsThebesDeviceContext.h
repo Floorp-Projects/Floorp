@@ -121,8 +121,13 @@ public:
 
     static void DebugShowCairoSurface (const char *aName, cairo_surface_t *aSurface);
 
+    static int prefChanged(const char *aPref, void *aClosure);
 
     nsNativeWidget GetWidget() { return mWidget; }
+
+protected:
+    nsresult SetDPI(PRInt32 aPrefDPI);
+
 private:
     nsNativeWidget mWidget;
 
@@ -132,6 +137,7 @@ private:
     float mHeightFloat;
     PRInt32 mWidth;
     PRInt32 mHeight;
+    static PRInt32 mDpi;
 
     nsRefPtrHashtable<nsISupportsHashKey, gfxASurface> mWidgetSurfaceCache;
 };

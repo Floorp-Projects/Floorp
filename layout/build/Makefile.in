@@ -70,6 +70,9 @@ endif
 ifdef MOZ_PERF_METRICS
 EXTRA_DSO_LIBS	+= mozutil_s
 endif
+ifdef MOZ_ENABLE_CAIRO_GFX
+EXTRA_DSO_LIBS	+= thebes
+endif
 
 REQUIRES	= xpcom \
 		  string \
@@ -225,9 +228,11 @@ EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
 		    $(NULL)
 endif
 
+ifndef MOZ_ENABLE_CAIRO_GFX
 ifneq (,$(MOZ_ENABLE_CANVAS)$(MOZ_SVG_RENDERER_CAIRO))
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS) \
-		    $(NULL)
+                   $(NULL)
+endif
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

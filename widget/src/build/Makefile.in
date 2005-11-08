@@ -66,6 +66,10 @@ CPPSRCS		= nsWinWidgetFactory.cpp
 
 EXTRA_DSO_LIBS	= gkgfx
 
+ifdef MOZ_ENABLE_CAIRO_GFX
+EXTRA_DSO_LIBS	+= thebes
+endif
+
 LOCAL_INCLUDES	= \
 		-I$(srcdir) \
 		-I$(srcdir)/../xpwidgets \

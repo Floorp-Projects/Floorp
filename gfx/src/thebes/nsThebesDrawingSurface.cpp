@@ -63,11 +63,14 @@ NS_IMPL_ISUPPORTS1(nsThebesDrawingSurface, nsIDrawingSurface)
 
 nsThebesDrawingSurface::nsThebesDrawingSurface()
 {
+#ifdef XP_WIN
+    mWidget = nsnull;
+#endif
 }
 
 nsThebesDrawingSurface::~nsThebesDrawingSurface()
 {
-#ifdef WIN_XP
+#ifdef XP_WIN
     if (mWidget)
         mWidget->FreeNativeData(mNativeWidget, NS_NATIVE_GRAPHIC);
 #endif

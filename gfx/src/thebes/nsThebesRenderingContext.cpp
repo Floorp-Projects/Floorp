@@ -214,6 +214,10 @@ nsThebesRenderingContext::GetHints(PRUint32& aResult)
 {
     aResult = 0;
 
+    aResult |= (NS_RENDERING_HINT_BIDI_REORDERING |
+                NS_RENDERING_HINT_ARABIC_SHAPING |
+                NS_RENDERING_HINT_REORDER_SPACED_TEXT);
+
     return NS_OK;
 }
 

@@ -12,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Foundation code.
+ * The Original Code is thebes gfx code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Stuart Parmenter <stuart@mozilla.com>
+ *   Vladimir Vukicevic <vladimir@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,62 +35,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_WINDOWSFONTS_H
-#define GFX_WINDOWSFONTS_H
+#ifndef GFX_PANGOFONTS_H
+#define GFX_PANGOFONTS_H
 
-#include "prtypes.h"
 #include "gfxTypes.h"
 #include "gfxFont.h"
 
-#include <cairo-win32.h>
+#include <pango/pango.h>
 
-class gfxWindowsFont : public gfxFont {
-
+class gfxPangoFont : public gfxFont {
 public:
-    gfxWindowsFont(const nsAString &aName, const gfxFontGroup *aFontGroup, HWND aHWnd);
-    virtual ~gfxWindowsFont();
+    gfxPangoFont (const nsAString& aName,
+                  const gfxFontGroup *aFontGroup);
+    virtual ~gfxPangoFont ();
 
-    virtual const gfxFont::Metrics& GetMetrics() { return mMetrics; }
+    virtual const gfxFont::Metrics& GetMetrics();
 
-    cairo_font_face_t *CairoFontFace() { return mFontFace; }
-    cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
+    // private, but for use by gfxPangoFontGroup
+    void UpdateContext(gfxContext *ctx);
+    PangoContext *GetContext() { RealizeFont(); return mPangoCtx; }
+    void GetSize(const char *aString, PRUint32 aLength, gfxSize& inkSize, gfxSize& logSize);
+    void DrawString(gfxContext *ctx, const char *aString, PRUint32 aLength, gfxPoint pt);
 
 protected:
-    cairo_font_face_t *MakeCairoFontFace();
-    cairo_scaled_font_t *MakeCairoScaledFont(cairo_t *cr);
-    void FillLogFont();
+    nsString mName;
+    const gfxFontGroup *mFontGroup;
+    const gfxFontStyle *mFontStyle;
 
-private:
-    void ComputeMetrics();
+    PangoFontDescription *mPangoFontDesc;
+    PangoContext *mPangoCtx;
 
-    LOGFONTW mLogFont;
-    cairo_font_face_t *mFontFace;
-    cairo_scaled_font_t *mScaledFont;
-    HWND mHWnd;
+    PRBool mHasMetrics;
+    Metrics mMetrics;
 
-    gfxFont::Metrics mMetrics;
+    void RealizeFont(PRBool force = PR_FALSE);
 };
 
-
-
-class NS_EXPORT gfxWindowsFontGroup : public gfxFontGroup {
-
+class NS_EXPORT gfxPangoFontGroup : public gfxFontGroup {
 public:
-    gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle, HWND hwnd);
-    virtual ~gfxWindowsFontGroup();
-    void DrawString(gfxContext *aContext, const nsAString& aString, gfxPoint pt);
-    gfxFloat MeasureText(gfxContext *aContext, const nsAString& aString);
+    gfxPangoFontGroup (const nsAString& families,
+                       const gfxFontStyle *aStyle);
+    virtual ~gfxPangoFontGroup ();
+
+    virtual void DrawString (gfxContext *aContext,
+                             const nsAString& aString,
+                             gfxPoint pt);
+
+    virtual gfxFloat MeasureText (gfxContext *aContext,
+                                  const nsAString& aString);
 
 protected:
-    virtual gfxFont *MakeFont(const nsAString& aName);
-
-private:
-    PRInt32 MeasureOrDrawUniscribe(gfxContext *aContext,
-                                   const PRUnichar *aString, PRUint32 aLength,
-                                   PRBool aDraw, PRInt32 aX, PRInt32 aY, const PRInt32 *aSpacing);
-
-    HWND mWnd;
+    virtual gfxFont* MakeFont(const nsAString& aName);
 };
 
-#endif /* GFX_WINDOWSFONTS_H */
-
+#endif /* GFX_PANGOFONTS_H */
