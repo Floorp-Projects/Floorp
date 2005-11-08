@@ -3300,17 +3300,11 @@ static const DirTable dirAttributes[] = {
 NS_IMETHODIMP
 nsDocument::GetDir(nsAString& aDirection)
 {
-  nsCOMPtr<nsIPresShell> shell = GetShellAt(0);
-  if (shell) {
-    nsPresContext *context = shell->GetPresContext();
-    if (context) {
-      PRUint32 options = context->GetBidi();
-      for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
-        if (GET_BIDI_OPTION_DIRECTION(options) == elt->mValue) {
-          CopyASCIItoUTF16(elt->mName, aDirection);
-          break;
-        }
-      }
+  PRUint32 options = GetBidiOptions();
+  for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
+    if (GET_BIDI_OPTION_DIRECTION(options) == elt->mValue) {
+      CopyASCIItoUTF16(elt->mName, aDirection);
+      break;
     }
   }
 
@@ -3325,22 +3319,21 @@ nsDocument::GetDir(nsAString& aDirection)
 NS_IMETHODIMP
 nsDocument::SetDir(const nsAString& aDirection)
 {
-  nsIPresShell *shell = GetShellAt(0);
-
-  if (!shell) {
-    return NS_OK;
-  }
-
-  nsPresContext *context = shell->GetPresContext();
-  NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
-
-  PRUint32 options = context->GetBidi();
+  PRUint32 options = GetBidiOptions();
 
   for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
     if (aDirection == NS_ConvertASCIItoUCS2(elt->mName)) {
       if (GET_BIDI_OPTION_DIRECTION(options) != elt->mValue) {
         SET_BIDI_OPTION_DIRECTION(options, elt->mValue);
-        context->SetBidi(options, PR_TRUE);
+        nsIPresShell *shell = GetShellAt(0);
+        if (shell) {
+          nsPresContext *context = shell->GetPresContext();
+          NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
+          context->SetBidi(options, PR_TRUE);
+        } else {
+          // No presentation; just set it on ourselves
+          SetBidiOptions(options);
+        }
       }
 
       break;

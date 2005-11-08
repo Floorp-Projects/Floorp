@@ -273,8 +273,7 @@ IdAndNameHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
   // bother initializing members to 0.
 
 nsHTMLDocument::nsHTMLDocument()
-  : mCompatMode(eCompatibility_NavQuirks),
-    mTexttype(IBMBIDI_TEXTTYPE_LOGICAL)
+  : mCompatMode(eCompatibility_NavQuirks)
 {
 
   // NOTE! nsDocument::operator new() zeroes out all members, so don't
@@ -723,17 +722,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NS_PRECONDITION(nsnull != aContainer, "No content viewer container");
-
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
 
   nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
   docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));
-  nsCOMPtr<nsPresContext> cx;
-  docShell->GetPresContext(getter_AddRefs(cx));
-  if(cx){
-    mTexttype = GET_BIDI_OPTION_TEXTTYPE(cx->GetBidi());
-  }
+  PRInt32 textType = GET_BIDI_OPTION_TEXTTYPE(GetBidiOptions());
+
   //
   // The following logic is mirrored in nsWebShell::Embed!
   //
@@ -835,7 +829,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     // ahmed
     // Check if 864 but in Implicit mode !
-    if ((mTexttype == IBMBIDI_TEXTTYPE_LOGICAL) &&
+    if ((textType == IBMBIDI_TEXTTYPE_LOGICAL) &&
         (charset.LowerCaseEqualsLiteral("ibm864"))) {
       charset.AssignLiteral("IBM864i");
     }

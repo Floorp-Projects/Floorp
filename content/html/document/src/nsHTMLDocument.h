@@ -265,9 +265,6 @@ protected:
   /** # of forms in the document, synchronously set */
   PRInt32 mNumForms;
 
-  // ahmed 12-2
-  PRInt32  mTexttype;
-
   static PRUint32 gWyciwygSessionCnt;
 
   static PRBool TryHintCharset(nsIMarkupDocumentViewer* aMarkupDV,

@@ -111,7 +111,7 @@ public:
   // nsIFormSubmission
   //
   virtual nsresult SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
-                            nsIContent* aSource, nsPresContext* aPresContext,
+                            nsIContent* aSource, nsILinkHandler* aLinkHandler,
                             nsIDocShell** aDocShell, nsIRequest** aRequest);
 
   /**
@@ -191,12 +191,10 @@ public:
   /**
    * Get the encoder for a form (suitable to pass in to the constructor).
    * @param aForm the form in question
-   * @param aPresContext the pres context in which we are submitting
    * @param aCharset the charset of the form
    * @param aEncoder the returned encoder [OUT]
    */
   static nsresult GetEncoder(nsGenericHTMLElement* aForm,
-                             nsPresContext* aPresContext,
                              const nsACString& aCharset,
                              nsISaveAsCharset** aEncoder);
   /**
@@ -1133,7 +1131,6 @@ SendJSWarning(nsIContent* aContent,
 
 nsresult
 GetSubmissionFromForm(nsGenericHTMLElement* aForm,
-                      nsPresContext* aPresContext,
                       nsIFormSubmission** aFormSubmission)
 {
   nsresult rv = NS_OK;
@@ -1141,10 +1138,12 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
   //
   // Get all the information necessary to encode the form data
   //
+  nsIDocument* doc = aForm->GetCurrentDoc();
+  NS_ASSERTION(doc, "Should have doc if we're building submission!");
 
   // Get BIDI options
   PRUint8 ctrlsModAtSubmit = 0;
-  PRUint32 bidiOptions = aPresContext->GetBidi();
+  PRUint32 bidiOptions = doc->GetBidiOptions();
   ctrlsModAtSubmit = GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions);
 
   // Get encoding type (default: urlencoded)
@@ -1161,8 +1160,7 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
 
   // Get unicode encoder
   nsCOMPtr<nsISaveAsCharset> encoder;
-  nsFormSubmission::GetEncoder(aForm, aPresContext, charset,
-                               getter_AddRefs(encoder));
+  nsFormSubmission::GetEncoder(aForm, charset, getter_AddRefs(encoder));
 
   // Get form processor
   nsCOMPtr<nsIFormProcessor> formProcessor =
@@ -1207,7 +1205,7 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
 
 nsresult
 nsFormSubmission::SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
-                           nsIContent* aSource, nsPresContext* aPresContext,
+                           nsIContent* aSource, nsILinkHandler* aLinkHandler,
                            nsIDocShell** aDocShell, nsIRequest** aRequest)
 {
   nsresult rv;
@@ -1222,14 +1220,13 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
   //
   // Actually submit the data
   //
-  nsILinkHandler *handler = aPresContext->GetLinkHandler();
-  NS_ENSURE_TRUE(handler, NS_ERROR_FAILURE);
+  NS_ENSURE_ARG_POINTER(aLinkHandler);
 
-  return handler->OnLinkClickSync(aSource, eLinkVerb_Replace,
-                                  aActionURI,
-                                  PromiseFlatString(aTarget).get(),
-                                  postDataStream, nsnull,
-                                  aDocShell, aRequest);
+  return aLinkHandler->OnLinkClickSync(aSource, eLinkVerb_Replace,
+                                       aActionURI,
+                                       PromiseFlatString(aTarget).get(),
+                                       postDataStream, nsnull,
+                                       aDocShell, aRequest);
 }
 
 // JBK moved from nsFormFrame - bug 34297
@@ -1307,7 +1304,6 @@ nsFormSubmission::GetSubmitCharset(nsGenericHTMLElement* aForm,
 // static
 nsresult
 nsFormSubmission::GetEncoder(nsGenericHTMLElement* aForm,
-                             nsPresContext* aPresContext,
                              const nsACString& aCharset,
                              nsISaveAsCharset** aEncoder)
 {

@@ -95,8 +95,8 @@ class nsIDOMUserDataHandler;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0xf529a315, 0xb4ea, 0x449c, \
- { 0x93, 0x44, 0x8a, 0xf8, 0x93, 0xfe, 0x6c, 0x4e } }
+{ 0x6120dffe, 0xf8fc, 0x47b1, \
+ { 0x98, 0xd3, 0x97, 0x68, 0x0c, 0xc9, 0xc3, 0xcd } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -273,6 +273,26 @@ public:
     mBidiEnabled = aBidiEnabled;
   }
 
+  /**
+   * Get the bidi options for this document.
+   * @see nsBidiUtils.h
+   */
+  PRUint32 GetBidiOptions() const
+  {
+    return mBidiOptions;
+  }
+
+  /**
+   * Set the bidi options for this document.  This just sets the bits;
+   * callers are expected to take action as needed if they want this
+   * change to actually change anything immediately.
+   * @see nsBidiUtils.h
+   */
+  void SetBidiOptions(PRUint32 aBidiOptions)
+  {
+    mBidiOptions = aBidiOptions;
+  }
+  
   /**
    * Access HTTP header data (this may also get set from other
    * sources, like HTML META tags).
@@ -932,6 +952,10 @@ protected:
 
   // True if BIDI is enabled.
   PRBool mBidiEnabled;
+
+  // The bidi options for this document.  What this bitfield means is
+  // defined in nsBidiUtils.h
+  PRUint32 mBidiOptions;
 
   nsXPIDLCString mContentLanguage;
   nsCString mContentType;
