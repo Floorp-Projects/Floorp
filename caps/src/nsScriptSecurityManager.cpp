@@ -428,10 +428,11 @@ DeleteDomainEntry(nsHashKey *aKey, void *aData, void* closure)
 ////////////////////////////////////
 // Methods implementing ISupports //
 ////////////////////////////////////
-NS_IMPL_ISUPPORTS4(nsScriptSecurityManager,
+NS_IMPL_ISUPPORTS5(nsScriptSecurityManager,
                    nsIScriptSecurityManager,
                    nsIXPCSecurityManager,
                    nsIPrefSecurityCheck,
+                   nsIChannelEventSink,
                    nsIObserver)
 
 ///////////////////////////////////////////////////
@@ -2870,6 +2871,25 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CanAccessSecurityPreferences(PRBool* _retval)
 {
     return IsCapabilityEnabled("CapabilityPreferencesAccess", _retval);  
+}
+
+/////////////////////////////////////////////
+// Method implementing nsIChannelEventSink //
+/////////////////////////////////////////////
+NS_IMETHODIMP
+nsScriptSecurityManager::OnChannelRedirect(nsIChannel* oldChannel, 
+                                           nsIChannel* newChannel,
+                                           PRUint32 redirFlags)
+{
+    nsCOMPtr<nsIURI> oldURI, newURI;
+    oldChannel->GetURI(getter_AddRefs(oldURI));
+    newChannel->GetURI(getter_AddRefs(newURI));
+
+    NS_ENSURE_STATE(oldURI && newURI);
+
+    const PRUint32 flags = nsIScriptSecurityManager::DISALLOW_FROM_MAIL |
+                           nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA;
+    return CheckLoadURI(oldURI, newURI, flags);
 }
 
 

@@ -54,8 +54,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  unicharutil \
 		  caps \
-		  xpconnect \
-		  js \
 		  uconv \
 		  $(NULL)
 
