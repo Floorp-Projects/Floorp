@@ -2107,7 +2107,9 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
  * @param   aCount is the # of attributes you're expecting
  * @return error code (should be 0)
  */
-nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode,eHTMLTags aTag,PRInt32 aCount){
+nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode, eHTMLTags aTag,
+                                    PRInt32 aCount)
+{
   int attr=0;
 
   nsresult result=NS_OK;
@@ -2131,12 +2133,6 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode *aNode,eHTMLTags aTag,PRInt32 
         }
 
         if(aNode) {
-          // Sanitize the key for it might contain some non-alpha-non-digit characters
-          // at its end.  Ex. <OPTION SELECTED/> - This will be tokenized as "<" "OPTION",
-          // "SELECTED/", and ">". In this case the "SELECTED/" key will be sanitized to
-          // a legitimate "SELECTED" key.
-          ((CAttributeToken*)theToken)->SanitizeKey();
-          
           // If the key is empty, the attribute is unusable, so we should not
           // add it to the node.
           if (!((CAttributeToken*)theToken)->GetKey().IsEmpty()) {

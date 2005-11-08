@@ -1738,41 +1738,6 @@ PRInt32 CAttributeToken::GetTokenType(void) {
   return eToken_attribute;
 }
 
-/*
- *  Removes non-alpha-non-digit characters from the end of a KEY
- *  
- *  @update harishd 07/15/99
- *  @param  
- *  @return  
- */
-void CAttributeToken::SanitizeKey() {
-  PRInt32   length=mTextKey.Length();
-  if(length > 0) {
-    nsScannerIterator iter, begin, end;
-    mTextKey.BeginReading(begin);
-    mTextKey.EndReading(end);
-    iter = end;
-
-    // Look for the first legal character starting from
-    // the end of the string
-    do {
-      --iter;
-    } while (!nsCRT::IsAsciiAlpha(*iter) && 
-             !nsCRT::IsAsciiDigit(*iter) && 
-             (iter != begin));
-    
-    // If there were any illegal characters, just copy out the
-    // legal part
-    if (iter != --end) {
-      nsAutoString buf;
-      CopyUnicodeTo(begin, ++iter, buf);
-      mTextKey.Rebind(buf);
-    }
-  }
-
-  return;
-}
-
 const nsSubstring& CAttributeToken::GetStringValue(void)
 {
   return mTextValue.str();
@@ -1874,7 +1839,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
 /*
  * This method is meant to be used by view-source to consume invalid attributes.
  * For the purposes of this method, an invalid attribute is an attribute that
- * starts with either ' or ". We consume all ' or " and the following whitespace.
+ * starts with either ', ", or /. We consume all ', ", or / and the following whitespace.
  * 
  * @param aScanner -- the scanner we're reading our data from.
  * @param aChar -- the character we're skipping
@@ -1887,29 +1852,29 @@ nsresult ConsumeInvalidAttribute(nsScanner& aScanner,
                                  PRUnichar aChar,
                                  nsScannerIterator& aCurrent,
                                  PRInt32& aNewlineCount) {
-  NS_ASSERTION(aChar=='\'' || aChar=='"', "aChar must be a quote or apostrophe");
+  NS_ASSERTION(aChar == kApostrophe || aChar == kQuote || aChar == kForwardSlash,
+               "aChar must be a quote or apostrophe");
   nsScannerIterator end, wsbeg;
   aScanner.EndReading(end);
 
-  while (aCurrent!=end && *aCurrent==aChar) {
+  while (aCurrent != end && *aCurrent == aChar) {
     ++aCurrent;
   }
 
   aScanner.SetPosition(aCurrent);
-  return aScanner.ReadWhitespace(wsbeg,aCurrent,aNewlineCount);
+  return aScanner.ReadWhitespace(wsbeg, aCurrent, aNewlineCount);
 }
 
 /*
  *  Consume the key and value portions of the attribute.
  *  
- *  @update  rickg 03.23.2000
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @param   aFlag - contains information such as |dtd mode|view mode|doctype|etc...
  *  @return  error result
  */
-nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) {
-
+nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 aFlag)
+{
   nsresult result;
  
   nsScannerIterator wsstart, wsend;
@@ -1933,7 +1898,7 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
       PRUnichar('\r'), PRUnichar('\t'), 
       PRUnichar('>'), PRUnichar('<'),
       PRUnichar('\b'), PRUnichar('\''),
-      PRUnichar(0) };
+      PRUnichar('/'), PRUnichar(0) };
     static const nsReadEndCondition theEndCondition(theTerminalsChars);
 
     nsScannerIterator start, end;
@@ -2036,25 +2001,27 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
           else {
             //This is where we have to handle fairly busted content.
             //If you're here, it means we saw an attribute name, but couldn't find 
-            //the following equal sign.  <tag NAME=....
+            //the following equal sign.  <tag NAME....
         
             //Doing this right in all cases is <i>REALLY</i> ugly. 
             //My best guess is to grab the next non-ws char. We know it's not '=',
             //so let's see what it is. If it's a '"', then assume we're reading
             //from the middle of the value. Try stripping the quote and continuing...
-            if (kQuote==aChar || kApostrophe==aChar){
-              mInError=PR_TRUE;
+            //Note that this code also strips forward slashes to handle cases
+            //like <tag NAME/>
+            if (kQuote == aChar || kApostrophe == aChar || kForwardSlash == aChar) {
+              mInError = PR_TRUE;
 
               if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-                result=aScanner.SkipOver(aChar); //strip quote.
+                result = aScanner.SkipOver(aChar); // Strip quote or slash.
                 if (NS_SUCCEEDED(result)) {
-                  result=aScanner.SkipWhitespace(mNewlineCount);
+                  result = aScanner.SkipWhitespace(mNewlineCount);
                 }
               } else {
                 //We want to collect whitespace here so that following 
                 //attributes can have the right line number (and for
                 //parity with the non-view-source code above).
-                result=ConsumeInvalidAttribute(aScanner,aChar,wsend,mNewlineCount);
+                result = ConsumeInvalidAttribute(aScanner, aChar, wsend, mNewlineCount);
 
                 aScanner.BindSubstring(mTextKey, wsstart, wsend);
                 aScanner.SetPosition(wsend);

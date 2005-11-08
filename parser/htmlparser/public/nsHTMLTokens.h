@@ -376,7 +376,6 @@ public:
   virtual void BindKey(nsScanner* aScanner, nsScannerIterator& aStart,
                        nsScannerIterator& aEnd);
   const nsSubstring& GetValue(void) {return mTextValue.str();}
-  virtual void SanitizeKey();
   virtual const nsSubstring& GetStringValue(void);
   virtual void GetSource(nsString& anOutputString);
   virtual void AppendSourceTo(nsAString& anOutputString);
