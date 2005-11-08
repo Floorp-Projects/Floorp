@@ -222,16 +222,6 @@ protected:
 
   /** Removes the index change event listeners */
   void RemoveIndexListeners();
-
-  /**
-   * Shows an error dialog for the user the first time an
-   * xforms-binding-exception event is received by the control.
-   *
-   * The dialog can be disabled via the |xforms.disablePopup| preference.
-   *
-   * @return                 Whether handling was successful
-   */
-  PRBool HandleBindingException();
 };
 
 

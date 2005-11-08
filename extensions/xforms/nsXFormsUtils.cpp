@@ -89,6 +89,12 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIParserService.h"
 
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
+#include "nsPIDOMWindow.h"
+
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
 
@@ -1544,4 +1550,60 @@ nsXFormsUtils::GetElementById(nsIDOMDocument   *aDoc,
   NS_ADDREF(*aElement = element);
 
   return NS_OK;
+}
+
+
+/* static */
+PRBool
+nsXFormsUtils::HandleBindingException(nsIDOMElement *aElement)
+{
+  if (!aElement) {
+    return PR_FALSE;
+  }
+  nsCOMPtr<nsIDOMDocument> doc;
+  aElement->GetOwnerDocument(getter_AddRefs(doc));
+
+  nsCOMPtr<nsIDocument> iDoc(do_QueryInterface(doc));
+  if (!iDoc) {
+    return PR_FALSE;
+  }
+
+  // check for fatalError property, enforcing that only one fatal error will
+  // be shown to the user
+  if (iDoc->GetProperty(nsXFormsAtoms::fatalError)) {
+    return PR_FALSE;
+  }
+  iDoc->SetProperty(nsXFormsAtoms::fatalError, iDoc);
+
+  // Check for preference, disabling this popup
+  PRBool disablePopup = PR_FALSE;
+  nsresult rv;
+  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && pref) {
+    PRBool val;
+    if (NS_SUCCEEDED(pref->GetBoolPref("xforms.disablePopup", &val)))
+      disablePopup = val;
+  }
+  if (disablePopup)
+    return PR_FALSE;
+
+  // Get nsIDOMWindowInternal
+  nsCOMPtr<nsIDOMDocumentView> dview(do_QueryInterface(doc));
+  if (!dview)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMAbstractView> aview;
+  dview->GetDefaultView(getter_AddRefs(aview));
+
+  nsCOMPtr<nsIDOMWindowInternal> internal(do_QueryInterface(aview));
+  if (!internal)
+    return PR_FALSE;
+
+  // Show popup
+  nsCOMPtr<nsIDOMWindow> messageWindow;
+  rv = internal->OpenDialog(NS_LITERAL_STRING("chrome://xforms/content/bindingex.xul"),
+                            NS_LITERAL_STRING("XFormsBindingException"),
+                            NS_LITERAL_STRING("modal,dialog,chrome,dependent"),
+                            nsnull, getter_AddRefs(messageWindow));
+  return NS_SUCCEEDED(rv);
 }

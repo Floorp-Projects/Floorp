@@ -449,6 +449,18 @@ public:
                                              const PRBool      aOnlyXForms,
                                              nsIDOMElement    *aCaller,
                                              nsIDOMElement   **aElement);
+
+
+  /**
+   * Shows an error dialog for the user the first time an
+   * xforms-binding-exception event is received by the control.
+   *
+   * The dialog can be disabled via the |xforms.disablePopup| preference.
+   *
+   * @param aElement         Element the exception occured at
+   * @return                 Whether handling was successful
+   */
+  static PRBool HandleBindingException(nsIDOMElement *aElement);
 };
 
 #endif

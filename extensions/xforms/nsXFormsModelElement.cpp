@@ -542,6 +542,8 @@ nsXFormsModelElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
     Ready();
   } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_Reset].name)) {
     Reset();
+  } else if (type.EqualsASCII(sXFormsEventsEntries[eEvent_BindingException].name)) {
+    *aHandled = nsXFormsUtils::HandleBindingException(mElement);
   } else {
     *aHandled = PR_FALSE;
   }
