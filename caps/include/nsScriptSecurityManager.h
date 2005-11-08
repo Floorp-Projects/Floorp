@@ -52,6 +52,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPrefService.h"
 #include "nsISecurityPref.h"
+#include "nsIChannelEventSink.h"
 #include "nsIJSContextStack.h"
 #include "nsIObserver.h"
 #include "pldhash.h"
@@ -346,6 +347,7 @@ private:
 
 class nsScriptSecurityManager : public nsIScriptSecurityManager,
                                 public nsIPrefSecurityCheck,
+                                public nsIChannelEventSink,
                                 public nsIObserver
 {
 public:
@@ -357,6 +359,7 @@ public:
     NS_DECL_NSISCRIPTSECURITYMANAGER
     NS_DECL_NSIXPCSECURITYMANAGER
     NS_DECL_NSIPREFSECURITYCHECK
+    NS_DECL_NSICHANNELEVENTSINK
     NS_DECL_NSIOBSERVER
 
     static nsScriptSecurityManager*

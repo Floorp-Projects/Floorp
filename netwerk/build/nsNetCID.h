@@ -746,4 +746,16 @@
     {0xa1, 0x6c, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
 }
 
+/******************************************************************************
+ * Contracts that can be implemented by necko users.
+ */
+
+/**
+ * This contract ID will be gotten as a service and gets the opportunity to look
+ * at and veto all redirects that are processed by necko.
+ */
+#define NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID \
+  "@mozilla.org/netwerk/global-channel-event-sink;1"
+
+
 #endif // nsNetCID_h__

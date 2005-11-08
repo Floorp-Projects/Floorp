@@ -52,7 +52,6 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIURL.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIIDNService.h"
 #include "nsIStreamListenerTee.h"
 #include "nsISeekableStream.h"
@@ -2036,16 +2035,6 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
                            getter_AddRefs(newURI));
     if (NS_FAILED(rv)) return rv;
 
-    // verify that this is a legal redirect
-    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
-    if (securityManager) {
-        rv = securityManager->CheckLoadURI(mURI, newURI,
-                                           nsIScriptSecurityManager::DISALLOW_FROM_MAIL |
-                                           nsIScriptSecurityManager::DISALLOW_SCRIPT_OR_DATA);
-        if (NS_FAILED(rv)) return rv;
-    }
-
     // Kill the current cache entry if we are redirecting
     // back to ourself.
     PRBool redirectingBackToSameURI = PR_FALSE;
@@ -2083,6 +2072,20 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     rv = SetupReplacementChannel(newURI, newChannel, preserveMethod);
     if (NS_FAILED(rv)) return rv;
 
+    PRUint32 redirectFlags;
+    if (redirectType == 301) // Moved Permanently
+        redirectFlags = nsIChannelEventSink::REDIRECT_PERMANENT;
+    else
+        redirectFlags = nsIChannelEventSink::REDIRECT_TEMPORARY;
+
+    // verify that this is a legal redirect
+    nsCOMPtr<nsIChannelEventSink> globalObserver = 
+             do_GetService(NS_GLOBAL_CHANNELEVENTSINK_CONTRACTID);
+    if (globalObserver) {
+        rv = globalObserver->OnChannelRedirect(this, newChannel, redirectFlags);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     // call out to the event sink to notify it of this redirection.
     nsCOMPtr<nsIHttpEventSink> httpEventSink;
     GetCallback(httpEventSink);
@@ -2095,12 +2098,7 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     nsCOMPtr<nsIChannelEventSink> channelEventSink;
     GetCallback(channelEventSink);
     if (channelEventSink) {
-        PRUint32 flags;
-        if (redirectType == 301) // Moved Permanently
-            flags = nsIChannelEventSink::REDIRECT_PERMANENT;
-        else
-            flags = nsIChannelEventSink::REDIRECT_TEMPORARY;
-        rv = channelEventSink->OnChannelRedirect(this, newChannel, flags);
+        rv = channelEventSink->OnChannelRedirect(this, newChannel, redirectFlags);
         if (NS_FAILED(rv)) return rv;
     }
     // XXX we used to talk directly with the script security manager, but that
