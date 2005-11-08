@@ -204,14 +204,6 @@ static PRIntn PR_CALLBACK certHashtable_clearEntry(PLHashEntry *he, PRIntn /*ind
   return HT_ENUMERATE_NEXT;
 }
 
-static PRBool PR_CALLBACK crlHashTable_clearEntry(nsHashKey * aKey, void * aData, void* aClosure)
-{
-  if (aKey != nsnull) {
-    delete (nsStringKey *)aKey;
-  }
-  return PR_TRUE;
-}
-
 struct CRLDownloadEvent : PLEvent {
   nsCAutoString *urlString;
   nsIStreamListener *psmDownloader;
@@ -311,7 +303,6 @@ nsNSSComponent::~nsNSSComponent()
     PR_Unlock(mCrlTimerLock);
     PR_DestroyLock(mCrlTimerLock);
     if(crlsScheduledForDownload != nsnull){
-      crlsScheduledForDownload->Enumerate(crlHashTable_clearEntry);
       crlsScheduledForDownload->Reset();
       delete crlsScheduledForDownload;
     }
@@ -946,8 +937,8 @@ nsNSSComponent::DownloadCRLDirectly(nsAutoString url, nsAutoString key)
 nsresult nsNSSComponent::DownloadCrlSilently()
 {
   //Add this attempt to the hashtable
-  nsStringKey *hashKey = new nsStringKey(mCrlUpdateKey.get());
-  crlsScheduledForDownload->Put(hashKey,(void *)nsnull);
+  nsStringKey hashKey(mCrlUpdateKey.get());
+  crlsScheduledForDownload->Put(&hashKey,(void *)nsnull);
     
   //Set up the download handler
   PSMContentDownloader *psmDownloader = new PSMContentDownloader(PSMContentDownloader::PKCS7_CRL);
@@ -1145,7 +1136,6 @@ nsNSSComponent::StopCRLUpdateTimer()
   //If it is at all running. 
   if(mUpdateTimerInitialized == PR_TRUE){
     if(crlsScheduledForDownload != nsnull){
-      crlsScheduledForDownload->Enumerate(crlHashTable_clearEntry);
       crlsScheduledForDownload->Reset();
       delete crlsScheduledForDownload;
       crlsScheduledForDownload = nsnull;
@@ -1176,7 +1166,7 @@ nsNSSComponent::InitializeCRLUpdateTimer()
     if(NS_FAILED(rv)){
       return rv;
     }
-    crlsScheduledForDownload = new nsHashtable(PR_TRUE);
+    crlsScheduledForDownload = new nsHashtable(16, PR_TRUE);
     mCrlTimerLock = PR_NewLock();
     DefineNextTimer();
     mUpdateTimerInitialized = PR_TRUE;  
@@ -1581,12 +1571,13 @@ nsNSSComponent::Init()
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsNSSComponent,
+NS_IMPL_THREADSAFE_ISUPPORTS6(nsNSSComponent,
                               nsISignatureVerifier,
                               nsIEntropyCollector,
                               nsINSSComponent,
                               nsIObserver,
-                              nsISupportsWeakReference)
+                              nsISupportsWeakReference,
+                              nsITimerCallback)
 
 
 /* Callback functions for decoder. For now, use empty/default functions. */
