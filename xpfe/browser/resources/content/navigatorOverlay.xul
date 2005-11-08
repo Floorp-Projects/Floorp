@@ -446,7 +446,7 @@
     </menu>
 
     <menu accesskey="&goMenu.accesskey;" label="&goMenu.label;" oncommand="gotoHistoryIndex(event);">
-      <menupopup onpopupshowing="updateGoMenu(event);">
+      <menupopup id="goPopup" onpopupshowing="updateGoMenu(event);">
         <menuitem label="&goBackCmd.label;"    accesskey="&goBackCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
         <menuitem label="&goForwardCmd.label;" accesskey="&goForwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
         <menuitem label="&goHomeCmd.label;"    accesskey="&goHomeCmd.accesskey;"    command="Browser:Home" key="goHome"/>
@@ -466,7 +466,8 @@
           ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
           ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
           ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
-      <menupopup onpopupshowing="updateGroupmarkMenuitem('bookmarks_groupmark');">
+      <menupopup id="menu_BookmarksPopup"
+                 onpopupshowing="updateGroupmarkMenuitem('bookmarks_groupmark');">
         <!-- for some reason these don't work as command="" -->
         <menuitem key="addBookmarkKb"   observes="Browser:AddBookmark"/>
         <menuitem key="addBookmarkAsKb" observes="Browser:AddBookmarkAs"/>
@@ -490,7 +491,7 @@
 
   <!-- Menu for testing. -->
   <menu id="debugMenu" accesskey="U" label="Debug">
-    <menupopup>
+    <menupopup id="menu_Debug_Popup">
       <menu label="Verification">
         <menupopup>
           <menuitem label="Tables" oncommand="loadURI('resource:/res/samples/test6.html');"/>
