@@ -156,6 +156,20 @@ class nsTAString_CharT
           return iter;
         }
 
+      inline const char_type* BeginReading() const
+        {
+          const char_type *b;
+          GetReadableBuffer(&b);
+          return b;
+        }
+
+      inline const char_type* EndReading() const
+        {
+          const char_type *b;
+          size_type len = GetReadableBuffer(&b);
+          return b + len;
+        }
+
 
         /**
          * BeginWriting/EndWriting can be used to get mutable access to the
@@ -180,6 +194,19 @@ class nsTAString_CharT
           return iter;
         }
 
+      inline char_type* BeginWriting()
+        {
+          char_type *b;
+          GetWritableBuffer(&b);
+          return b;
+        }
+
+      inline char_type* EndWriting()
+        {
+          char_type *b;
+          size_type len = GetWritableBuffer(&b);
+          return b + len;
+        }
 
         /**
          * Length checking functions.  IsEmpty is a helper function to avoid
