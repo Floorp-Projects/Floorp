@@ -864,10 +864,24 @@ nsStandardURL::ACEtoDisplayIDN(const nsCSubstring &host, nsCString &result)
 /* static */ nsresult
 nsStandardURL::UTF8toDisplayIDN(const nsCSubstring &host, nsCString &result)
 {
-    if (gShowPunycode || !IsInWhitelist(host))
+    // We have to normalize the hostname before testing against the domain
+    // whitelist.  See bug 315411.
+
+    nsCAutoString temp;
+    if (gShowPunycode || NS_FAILED(gIDN->Normalize(host, temp)))
         return gIDN->ConvertUTF8toACE(host, result);
 
-    return gIDN->Normalize(host, result);
+    PRBool isACE = PR_FALSE;
+    gIDN->IsACE(temp, &isACE);
+
+    // If host is converted to ACE by the normalizer, then the host may contain
+    // unsafe characters.  See bug 283016, bug 301694, and bug 309311.
+ 
+    if (!isACE && !IsInWhitelist(temp))
+        return gIDN->ConvertUTF8toACE(temp, result);
+
+    result = temp;
+    return NS_OK;
 }
 
 /* static */ PRBool
@@ -875,6 +889,8 @@ nsStandardURL::IsInWhitelist(const nsCSubstring &host)
 {
     PRInt32 pos; 
     PRBool safe;
+
+    // XXX This code uses strings inefficiently.
 
     if (gIDNWhitelistPrefBranch && 
         (pos = nsCAutoString(host).RFind(".")) != kNotFound &&
@@ -2422,7 +2438,6 @@ nsStandardURL::GetFile(nsIFile **result)
     nsresult rv = EnsureFile();
     if (NS_FAILED(rv))
         return rv;
-
 
 #if defined(PR_LOGGING)
     if (LOG_ENABLED()) {
