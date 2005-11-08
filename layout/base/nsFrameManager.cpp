@@ -1225,9 +1225,10 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
 
     if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
       // Make sure not to do this for pseudo-frames -- those can't have :before
-      // or :after content.
+      // or :after content.  Neither can non-elements or leaf frames.
       if (!pseudoTag && localContent &&
-          localContent->IsContentOfType(nsIContent::eELEMENT)) {
+          localContent->IsContentOfType(nsIContent::eELEMENT) &&
+          !aFrame->IsLeaf()) {
         // Check for a new :before pseudo and an existing :before
         // frame, but only if the frame is the first-in-flow.
         nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
@@ -1250,11 +1251,12 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
     
     if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
       // Make sure not to do this for pseudo-frames -- those can't have :before
-      // or :after content.
+      // or :after content.  Neither can non-elements or leaf frames.
       if (!pseudoTag && localContent &&
-          localContent->IsContentOfType(nsIContent::eELEMENT)) {
+          localContent->IsContentOfType(nsIContent::eELEMENT) &&
+          !aFrame->IsLeaf()) {
         // Check for new :after content, but only if the frame is the
-        // first-in-flow.
+        // last-in-flow.
         nsIFrame* nextInFlow = aFrame->GetNextInFlow();
 
         if (!nextInFlow) {
