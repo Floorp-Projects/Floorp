@@ -156,6 +156,7 @@ CREATE TABLE `test_groups` (
   `product_id` tinyint(4) NOT NULL default '0',
   `name` varchar(64) collate latin1_bin NOT NULL default '',
   `expiration_days` smallint(6) NOT NULL default '0',
+  `obsolete` BOOL NOT NULL default '0',
   PRIMARY KEY  (`testgroup_id`),
   KEY `product_id` (`product_id`),
   KEY `name` (`name`),

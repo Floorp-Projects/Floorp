@@ -124,7 +124,7 @@ UNLOCK TABLES;
 
 /*!40000 ALTER TABLE `test_groups` DISABLE KEYS */;
 LOCK TABLES `test_groups` WRITE;
-INSERT INTO `test_groups` VALUES (1,1,'Smoketests',5),(2,1,'Basic Functional Tests',10),(3,2,'Installation and Startup',5),(4,2,'Menu bar',5),(5,3,'Smoketests',5),(6,3,'Basic Functional Tests',5);
+INSERT INTO `test_groups` VALUES (1,1,'Smoketests',5,0),(2,1,'Basic Functional Tests',10,0),(3,2,'Installation and Startup',5,0),(4,2,'Menu bar',5,0),(5,3,'Smoketests',5,0),(6,3,'Basic Functional Tests',5,0);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `test_groups` ENABLE KEYS */;
 
