@@ -38,6 +38,7 @@
 
 #include "mozStorageService.h"
 #include "mozStorageConnection.h"
+#include "plstr.h"
 
 #include "sqlite3.h"
 
@@ -67,10 +68,23 @@ mozStorageService::GetProfileStorage(const char *aStorageKey, mozIStorageConnect
     nsresult rv;
 
     nsCOMPtr<nsIFile> storageFile;
-    rv = NS_GetSpecialDirectory(NS_APP_STORAGE_50_FILE, getter_AddRefs(storageFile));
-    if (NS_FAILED(rv)) {
-        // teh wtf?
-        return rv;
+    if (PL_strcmp(aStorageKey, "memory") == 0) {
+        // just fall through with NULL storageFile, this will cause the storage
+        // connection to use a memory DB.
+    } else if (PL_strcmp(aStorageKey, "profile") == 0) {
+
+        rv = NS_GetSpecialDirectory(NS_APP_STORAGE_50_FILE, getter_AddRefs(storageFile));
+        if (NS_FAILED(rv)) {
+            // teh wtf?
+            return rv;
+        }
+
+        nsString filename;
+        storageFile->GetPath(filename);
+        nsCString filename8 = NS_ConvertUTF16toUTF8(filename.get());
+        // fall through to DB initialization
+    } else {
+        return NS_ERROR_INVALID_ARG;
     }
 
     mozStorageConnection *msc = new mozStorageConnection();

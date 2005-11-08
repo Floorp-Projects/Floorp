@@ -54,7 +54,7 @@ interface mozIStorageConnection : nsISupports {
   readonly attribute boolean connectionReady;
 
   /**
-   * the current database filename
+   * the current database filename. Empty if the database is in-memory
    */
   readonly attribute AUTF8String databaseName;
 
@@ -113,10 +113,18 @@ interface mozIStorageConnection : nsISupports {
   readonly attribute boolean transactionInProgress;
 
   /**
-   * Begin a new transaction.  If a transaction is active,
-   * @throws NS_ERROR_STORAGE_INVALID_OPERATION.
+   * Begin a new transaction.  sqlite default transactions are deferred.
+   * If a transaction is active, throws an error.
    */
   void beginTransaction ();
+
+  /**
+   * Begins a new transaction with the given type.
+   */
+  const PRInt32 TRANSACTION_DEFERRED = 0;
+  const PRInt32 TRANSACTION_IMMEDIATE = 1;
+  const PRInt32 TRANSACTION_EXCLUSIVE = 2;
+  void beginTransactionAs (in PRInt32 transactionType);
 
   /**
    * Commits the current transaction.  If no transaction is active,
