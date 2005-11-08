@@ -1340,7 +1340,6 @@ protected:
   PRPackedBool mDocumentLoading;
   PRPackedBool mDocumentOnloadBlocked;
   PRPackedBool mIsReflowing;
-  PRPackedBool mIsDestroying;
   PRPackedBool mIsReleasingAnonymousContent;
 
   PRPackedBool mIgnoreFrameDestruction;
@@ -5210,6 +5209,11 @@ nsIPresShell::ReconstructStyleDataInternal()
 
   if (!mDidInitialReflow) {
     // Nothing to do here, since we have no frames yet
+    return;
+  }
+
+  if (mIsDestroying) {
+    // We don't want to mess with restyles at this point
     return;
   }
 
