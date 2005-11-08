@@ -46,7 +46,6 @@ PR_STATIC_CALLBACK(PRBool) ReleaseObjects(void* aElement, void*);
 // copy constructor - we can't just memcpy here, because
 // we have to make sure we own our own array buffer, and that each
 // object gets another AddRef()
-NS_COM_GLUE
 nsCOMArray_base::nsCOMArray_base(const nsCOMArray_base& aOther)
 {
     // make sure we do only one allocation
@@ -54,7 +53,6 @@ nsCOMArray_base::nsCOMArray_base(const nsCOMArray_base& aOther)
     AppendObjects(aOther);
 }
 
-NS_COM_GLUE
 nsCOMArray_base::~nsCOMArray_base()
 {
     PRInt32 count = Count(), i;
@@ -64,7 +62,7 @@ nsCOMArray_base::~nsCOMArray_base()
     }                        
 }
 
-NS_COM_GLUE PRInt32
+PRInt32
 nsCOMArray_base::IndexOfObject(nsISupports* aObject) const {
     NS_ENSURE_TRUE(aObject, -1);
     nsCOMPtr<nsISupports> supports = do_QueryInterface(aObject);
@@ -84,7 +82,7 @@ nsCOMArray_base::IndexOfObject(nsISupports* aObject) const {
     return retval;
 }
 
-NS_COM_GLUE PRBool
+PRBool
 nsCOMArray_base::InsertObjectAt(nsISupports* aObject, PRInt32 aIndex) {
     PRBool result = mArray.InsertElementAt(aObject, aIndex);
     if (result)
@@ -92,7 +90,7 @@ nsCOMArray_base::InsertObjectAt(nsISupports* aObject, PRInt32 aIndex) {
     return result;
 }
 
-NS_COM_GLUE PRBool
+PRBool
 nsCOMArray_base::InsertObjectsAt(const nsCOMArray_base& aObjects, PRInt32 aIndex) {
     PRBool result = mArray.InsertElementsAt(aObjects.mArray, aIndex);
     if (result) {
@@ -105,7 +103,7 @@ nsCOMArray_base::InsertObjectsAt(const nsCOMArray_base& aObjects, PRInt32 aIndex
     return result;
 }
 
-NS_COM_GLUE PRBool
+PRBool
 nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex)
 {
     // its ok if oldObject is null here
@@ -124,7 +122,7 @@ nsCOMArray_base::ReplaceObjectAt(nsISupports* aObject, PRInt32 aIndex)
     return result;
 }
 
-NS_COM_GLUE PRBool
+PRBool
 nsCOMArray_base::RemoveObject(nsISupports *aObject)
 {
     PRBool result = mArray.RemoveElement(aObject);
@@ -133,7 +131,7 @@ nsCOMArray_base::RemoveObject(nsISupports *aObject)
     return result;
 }
 
-NS_COM_GLUE PRBool
+PRBool
 nsCOMArray_base::RemoveObjectAt(PRInt32 aIndex)
 {
     nsISupports* element = ObjectAt(aIndex);
@@ -152,7 +150,7 @@ ReleaseObjects(void* aElement, void*)
     return PR_TRUE;
 }
 
-NS_COM_GLUE void
+void
 nsCOMArray_base::Clear()
 {
     mArray.EnumerateForwards(ReleaseObjects, nsnull);
