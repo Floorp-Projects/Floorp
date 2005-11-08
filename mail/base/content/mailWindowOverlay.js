@@ -2396,7 +2396,7 @@ function HandleMDNResponse(aUrl)
   if (SelectedMessagesAreJunk())
     return;
 
-  var msgHdr = messenger.messageServiceFromURI(msgURI).messageURIToMsgHdr(msgURI);
+  var msgHdr = messenger.msgHdrFromURI(msgURI);
   var mimeHdr;
 
   try {
