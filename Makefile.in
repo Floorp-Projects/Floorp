@@ -44,8 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/build/unix/modules.mk
 
-include $(topsrcdir)/config/config.mk
-
 ifeq (,$(filter-out all,$(BUILD_MODULES))$(MOZ_XSLT_STANDALONE))
 #
 # And now for something completely different...
@@ -53,28 +51,6 @@ ifeq (,$(filter-out all,$(BUILD_MODULES))$(MOZ_XSLT_STANDALONE))
 # Tiers must be defined on module boundaries 
 #
 SUPPRESS_DEFAULT_RULES = 1
-
-default alldep all:: $(SUBMAKEFILES)
-	$(RM) -rf $(DIST)/sdk
-	$(RM) -rf $(DIST)/include
-	$(MAKE) -C config export
-	$(MAKE) nspr
-	$(MAKE) ldap
-	$(MAKE) tier_0
-	$(MAKE) tier_1
-	$(MAKE) tier_2
-	$(MAKE) tier_9
-	$(MAKE) tier_50
-ifdef MOZ_EXTENSIONS
-	$(MAKE) tier_94
-endif
-ifdef MOZ_MAIL_NEWS
-	$(MAKE) tier_97
-endif
-ifdef MOZ_CALENDAR
-	$(MAKE) tier_98
-endif
-	$(MAKE) tier_99
 
 # Make sure that the existing rulesets work
 DIRS = \
@@ -421,6 +397,30 @@ tier_99_dirs += \
 	camino \
 	$(NULL)
 endif
+
+default alldep all:: $(SUBMAKEFILES)
+	$(RM) -rf $(DIST)/sdk
+	$(RM) -rf $(DIST)/include
+	$(MAKE) -C config export
+	$(MAKE) nspr
+	$(MAKE) ldap
+	$(MAKE) tier_0
+	$(MAKE) tier_1
+	$(MAKE) tier_2
+	$(MAKE) tier_9
+	$(MAKE) tier_50
+ifdef MOZ_EXTENSIONS
+	$(MAKE) tier_94
+endif
+ifdef MOZ_MAIL_NEWS
+	$(MAKE) tier_97
+endif
+ifdef MOZ_CALENDAR
+	$(MAKE) tier_98
+endif
+	$(MAKE) tier_99
+
+include $(topsrcdir)/config/config.mk
 
 else # BUILD_MODULES
 
