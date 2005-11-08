@@ -109,23 +109,26 @@ CPPSRCS		= \
 		StdAfx.cpp       \
 		$(NULL)
 
-EXTRA_DSO_LIBS	= embed_base_s profdirserviceprovidersa_s
+LIBS		= $(DIST)/lib/$(LIB_PREFIX)profdirserviceprovidersa_s.$(LIB_SUFFIX)
 
 ifdef NS_TRACE_MALLOC
-EXTRA_DSO_LIBS	+= tracemalloc
+LIBS		+= tracemalloc
 endif
 
-LIBS		= \
-		$(EXTRA_DSO_LIBS) \
+LIBS		+= \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(NULL)
 
 ifdef GRE_BUILD
 LIBS += \
+		 $(DIST)/lib/$(LIB_PREFIX)embed_base_standalone.$(LIB_SUFFIX) \
 		 $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
 		 $(NULL)
 else
-LIBS += $(XPCOM_LIBS)
+LIBS += \
+		 $(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
+		 $(XPCOM_LIBS) \
+		 $(NULL)
 ifdef BUILD_STATIC_LIBS
 LIBS += $(MOZ_JS_LIBS)
 endif

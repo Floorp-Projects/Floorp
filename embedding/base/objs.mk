@@ -36,58 +36,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH           = ../..
-topsrcdir       = @top_srcdir@
-srcdir          = @srcdir@
-VPATH           = @srcdir@
+EMBED_CPPSRCS = nsEmbedAPI.cpp
 
-DIRS		= standalone
-
-MODULE          = embed_base
-LIBRARY_NAME    = embed_base_s
-XPIDL_MODULE	= embed_base
-
-include $(DEPTH)/config/autoconf.mk
-
-REQUIRES	= xpcom \
-		  intl \
-		  embedcomponents \
-		  $(NULL)
-
-ifdef MINIMO
-# For minimo, we would really like to treat this as a LIBXUL
-# library so that we can get the correct export defines.
-LIBXUL_LIBRARY = 1
+ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+EMBED_CPPSRCS += nsEmbedWin32.cpp
 endif
 
-DEFINES += -DMOZILLA_STRICT_API
-
-SDK_HEADERS         = \
-                nsEmbedAPI.h \
-                nsEmbedCID.h \
-                $(NULL)
-
-SDK_XPIDLSRCS   = \
-                nsIWindowCreator.idl \
-                $(NULL)
-
-
-SDK_LIBRARY     =                        \
-		$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
-		$(NULL)
-
-XPIDLSRCS	    = \
-                nsIWindowCreator2.idl \
-                $(NULL)
-
-include $(srcdir)/objs.mk
-
-CPPSRCS += $(EMBED_CPPSRCS)
-
-# we don't want the shared lib, but we want to force the creation of a
-# static lib.
-FORCE_STATIC_LIB = 1
-
-include $(topsrcdir)/config/rules.mk
-
-CXXFLAGS += $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
+ifeq ($(OS_ARCH),OS2)
+EMBED_CPPSRCS += nsEmbedOS2.cpp
+endif
