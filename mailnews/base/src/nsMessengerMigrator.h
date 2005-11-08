@@ -62,8 +62,8 @@
 #define USE_NEWSRC_MAP_FILE
 
 // in the fat file, the hostname is prefix by one of these:
-#define PSUEDO_NAME_PREFIX "newsrc-"
-#define PSUEDO_SECURE_NAME_PREFIX "snewsrc-"
+#define PSEUDO_NAME_PREFIX "newsrc-"
+#define PSEUDO_SECURE_NAME_PREFIX "snewsrc-"
 
 #if defined(XP_WIN) || defined(XP_OS2)
 /* another case of mac vs. windows in 4.x

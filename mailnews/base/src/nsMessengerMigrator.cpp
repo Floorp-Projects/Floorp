@@ -1968,7 +1968,7 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 
     // for each news server in the fat file call MigrateNewsAccount();
 	char buffer[512];
-	char psuedo_name[512];
+	char pseudo_name[512];
 	char filename[512];
 	char is_newsgroup[512];
 	PRBool ok;
@@ -2016,8 +2016,8 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 		is_newsgroup[0]='\0';
 		
 		for (i = 0, p = buffer; *p && *p != '\t' && i < 500; p++, i++)
-			psuedo_name[i] = *p;
-		psuedo_name[i] = '\0';
+			pseudo_name[i] = *p;
+		pseudo_name[i] = '\0';
 		if (*p) 
 		{
 			for (i = 0, p++; *p && *p != '\t' && i < 500; p++, i++)
@@ -2048,29 +2048,29 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 			rcFile += filename;
 #endif /* NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS */
 
-			// psuedo-name is of the form newsrc-<host> or snewsrc-<host>.  
-			if (PL_strncmp(PSUEDO_NAME_PREFIX,psuedo_name,PL_strlen(PSUEDO_NAME_PREFIX)) == 0) {
+			// pseudo-name is of the form newsrc-<host> or snewsrc-<host>.  
+			if (PL_strncmp(pseudo_NAME_PREFIX,pseudo_name,PL_strlen(pseudo_NAME_PREFIX)) == 0) {
                 // check that there is a hostname to get after the "newsrc-" part
-                NS_ASSERTION(PL_strlen(psuedo_name) > PL_strlen(PSUEDO_NAME_PREFIX), "psuedo_name is too short");
-                if (PL_strlen(psuedo_name) <= PL_strlen(PSUEDO_NAME_PREFIX)) {
+                NS_ASSERTION(PL_strlen(pseudo_name) > PL_strlen(pseudo_NAME_PREFIX), "pseudo_name is too short");
+                if (PL_strlen(pseudo_name) <= PL_strlen(PSEUDO_NAME_PREFIX)) {
                     return NS_ERROR_FAILURE;
                 }
 
-                char *hostname = psuedo_name + PL_strlen(PSUEDO_NAME_PREFIX);
+                char *hostname = pseudo_name + PL_strlen(PSEUDO_NAME_PREFIX);
                 rv = MigrateNewsAccount(identity, hostname, rcFile, newsHostsDir, PR_FALSE /* isSecure */);
                 if (NS_FAILED(rv)) {
                     // failed to migrate.  bail out
                     return rv;
                 }
 			}
-            else if (PL_strncmp(PSUEDO_SECURE_NAME_PREFIX,psuedo_name,PL_strlen(PSUEDO_SECURE_NAME_PREFIX)) == 0) {
+            else if (PL_strncmp(PSEUDO_SECURE_NAME_PREFIX,pseudo_name,PL_strlen(PSEUDO_SECURE_NAME_PREFIX)) == 0) {
                 // check that there is a hostname to get after the "snewsrc-" part
-                NS_ASSERTION(PL_strlen(psuedo_name) > PL_strlen(PSUEDO_SECURE_NAME_PREFIX), "psuedo_name is too short");
-                if (PL_strlen(psuedo_name) <= PL_strlen(PSUEDO_SECURE_NAME_PREFIX)) {
+                NS_ASSERTION(PL_strlen(pseudo_name) > PL_strlen(PSEUDO_SECURE_NAME_PREFIX), "pseudo_name is too short");
+                if (PL_strlen(pseudo_name) <= PL_strlen(PSEUDO_SECURE_NAME_PREFIX)) {
                     return NS_ERROR_FAILURE;
                 }
 
-                char *hostname = psuedo_name + PL_strlen(PSUEDO_SECURE_NAME_PREFIX);
+                char *hostname = pseudo_name + PL_strlen(PSEUDO_SECURE_NAME_PREFIX);
                 rv = MigrateNewsAccount(identity, hostname, rcFile, newsHostsDir, PR_TRUE /* isSecure */);
                 if (NS_FAILED(rv)) {
                     // failed to migrate.  bail out
