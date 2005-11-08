@@ -109,6 +109,7 @@
 #include "nsIFileStreams.h"
 #include "nsAutoPtr.h"
 #include "nsIRssIncomingServer.h"
+#include "nsNetUtil.h"
 
 
 static NS_DEFINE_CID(kMailboxServiceCID,          NS_MAILBOXSERVICE_CID);
@@ -3712,6 +3713,7 @@ nsMsgLocalMailFolder::GetUidlFromFolder(nsLocalFolderScanState *aState,
       size = aState->m_header.Length();
       if (!size)
         break;
+      // this isn't quite right - need to account for line endings
       len -= size;
       // account key header will always be before X_UIDL header
       if (!accountKey)
@@ -3722,7 +3724,8 @@ nsMsgLocalMailFolder::GetUidlFromFolder(nsLocalFolderScanState *aState,
           accountKey += strlen(HEADER_X_MOZILLA_ACCOUNT_KEY) + 2;
           aState->m_accountKey = accountKey;
         }
-      } else
+      }
+      else
       {
         aState->m_uidl = strstr(aState->m_header.get(), X_UIDL);
         if (aState->m_uidl)
@@ -3811,5 +3814,47 @@ nsMsgLocalMailFolder::WarnIfLocalFileTooBig(nsIMsgWindow *aWindow, PRBool *aTooB
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUint32 aNumKeys,
+                                                 PRBool aLocalOnly, nsIUrlListener *aUrlListener, 
+                                                 PRBool *aAsyncResults)
+{
+  NS_ENSURE_ARG_POINTER(aKeysToFetch);
+  NS_ENSURE_ARG_POINTER(aAsyncResults);
+
+  *aAsyncResults = PR_FALSE;
+  nsXPIDLCString nativePath;
+  mPath->GetNativePath(getter_Copies(nativePath));
+
+  nsCOMPtr <nsILocalFile> localStore;
+  nsCOMPtr <nsIInputStream> inputStream;
+
+  nsresult rv = NS_NewNativeLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), localStore);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < aNumKeys; i++)
+  {
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    nsXPIDLCString prevBody;
+    rv = GetMessageHeader(aKeysToFetch[i], getter_AddRefs(msgHdr));
+    NS_ENSURE_SUCCESS(rv, rv);
+    // ignore messages that already have a preview body.
+    msgHdr->GetStringProperty("preview", getter_Copies(prevBody));
+    if (!prevBody.IsEmpty())
+      continue;
+    PRUint32 messageOffset;
+
+    msgHdr->GetMessageOffset(&messageOffset);
+    nsCOMPtr <nsISeekableStream> seekableStream = do_QueryInterface(inputStream);
+    if (seekableStream)
+      rv = seekableStream->Seek(nsISeekableStream::NS_SEEK_CUR, messageOffset);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = GetMsgPreviewTextFromStream(msgHdr, inputStream);
+
+  }
+  return rv;
 }
 

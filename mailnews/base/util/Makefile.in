@@ -86,6 +86,10 @@ REQUIRES	= xpcom \
 		  nkcache \
 		  mimetype \
 		  windowwatcher \
+		  embed_base \
+		  htmlparser \
+		  content \
+		  layout \
 		  $(NULL)
 
 CPPSRCS		= \

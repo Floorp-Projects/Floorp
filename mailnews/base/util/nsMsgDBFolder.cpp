@@ -77,14 +77,20 @@
 #include "nsCPasswordManager.h"
 #include "nsMsgDBCID.h"
 #include "nsInt64.h"
-
+#include "nsReadLine.h"
+#include "nsParserCIID.h"
+#include "nsIParser.h"
+#include "nsIHTMLContentSink.h"
+#include "nsIContentSerializer.h"
+#include "nsLayoutCID.h"
+#include "nsIHTMLToTextSink.h"
+#include "nsIDocumentEncoder.h" 
 #include <time.h>
 
 #define oneHour 3600000000U
 #include "nsMsgUtils.h"
 
 static PRTime gtimeOfLastPurgeCheck;    //variable to know when to check for purge_threshhold
-
 
 #define PREF_MAIL_PROMPT_PURGE_THRESHOLD "mail.prompt_purge_threshhold"
 #define PREF_MAIL_PURGE_THRESHOLD "mail.purge_threshhold"
@@ -93,6 +99,8 @@ static PRTime gtimeOfLastPurgeCheck;    //variable to know when to check for pur
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
+static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
+static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 
 nsIAtom* nsMsgDBFolder::mFolderLoadedAtom=nsnull;
 nsIAtom* nsMsgDBFolder::mDeleteOrMoveMsgCompletedAtom=nsnull;
@@ -5068,3 +5076,143 @@ NS_IMETHODIMP nsMsgDBFolder::SetInVFEditSearchScope (PRBool aInVFEditSearchScope
   NotifyBoolPropertyChanged(kInVFEditSearchScopeAtom, oldInVFEditSearchScope, mInVFEditSearchScope);
   return NS_OK;
 }
+
+NS_IMETHODIMP nsMsgDBFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUint32 aNumKeys,
+                                                 PRBool aLocalOnly, nsIUrlListener *aUrlListener, 
+                                                 PRBool *aAsyncResults)
+{
+  NS_ENSURE_ARG_POINTER(aKeysToFetch);
+  NS_ENSURE_ARG_POINTER(aAsyncResults);
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputStream *stream) 
+{
+  /*
+  1. non mime message - the message body starts after the blank line following the headers.
+  2. mime message, multipart/alternative - we could simply scan for the boundary line, 
+     advance past its headers, and treat the next few lines as the text.
+  3. mime message, text/plain - body follows headers
+  4. multipart/mixed - scan past boundary, treat next part as body.
+
+     TODO need to worry about quoted printable and other encodings, 
+     so look for content transfer encoding.
+  */
+
+  PRUint32 len;
+  msgHdr->GetMessageSize(&len);
+  nsLineBuffer<char> *lineBuffer;
+
+  nsresult rv = NS_InitLineBuffer(&lineBuffer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString boundary, msgBody;
+  nsCAutoString curLine;
+  // might want to use a state var instead of bools.
+  PRBool inMsgBody = PR_FALSE, msgBodyIsHtml = PR_FALSE, lookingForBoundary = PR_FALSE;
+  PRBool haveBoundary = PR_FALSE;
+  while (len > 0)
+  {
+    // might be on same line as content-type, so look before
+    // we read the next line.
+    if (lookingForBoundary) 
+    {
+      PRInt32 boundaryIndex = curLine.Find("boundary=\"");
+      if (boundaryIndex != kNotFound)
+      {
+        boundaryIndex += 10;
+        PRInt32 endBoundaryIndex = curLine.RFindChar('"');
+        if (endBoundaryIndex != kNotFound)
+        {
+          // prepend "--" to boundary, and then boundary delimiter, minus the trailing " 
+          boundary.Assign("--");
+          boundary.Append(Substring(curLine, boundaryIndex, endBoundaryIndex - boundaryIndex));
+          haveBoundary = PR_TRUE;
+          lookingForBoundary = PR_FALSE;
+        }
+      }
+    }
+    PRBool more;
+    rv = NS_ReadLine(stream, lineBuffer, curLine, &more);
+    if (NS_SUCCEEDED(rv))
+    {
+      len -= MSG_LINEBREAK_LEN;
+      len -= curLine.Length();
+      if (inMsgBody)
+      {
+        if (!boundary.IsEmpty() && boundary.Equals(curLine))
+          break;
+        msgBody.Append(curLine);
+        // how much html should we parse for text? 2K? 4K?
+        if (msgBody.Length() > 2048 || (!msgBodyIsHtml && msgBody.Length() > 255))
+          break;
+        continue;
+      }
+      if (haveBoundary)
+      {
+        // this line is the boundary; continue and fall into code that looks
+        // for msg body after headers
+        if (curLine.Equals(boundary))
+          haveBoundary = PR_FALSE;
+        continue;
+      }
+      if (curLine.IsEmpty())
+      {
+        inMsgBody = PR_TRUE;
+        continue;
+      }
+      if (StringBeginsWith(curLine, NS_LITERAL_CSTRING("Content-Type:")))
+      {
+        if (FindInReadable(NS_LITERAL_CSTRING("text/html"), curLine))
+        {
+          msgBodyIsHtml = PR_TRUE;
+//           bodyFollowsHeaders = PR_TRUE;
+        }
+        else if (FindInReadable(NS_LITERAL_CSTRING("text/plain"), curLine))
+          /* bodyFollowsHeaders = PR_TRUE */;
+        else if (FindInReadable(NS_LITERAL_CSTRING("multipart/mixed"), curLine)
+          || FindInReadable(NS_LITERAL_CSTRING("multipart/alternative"), curLine))
+        {
+          lookingForBoundary = PR_TRUE;
+        }
+      }
+    }
+  }
+  // now we've got a msg body. If it's html, convert it to plain text.
+  // Then, set the previewProperty on the msg hdr to the plain text.
+  if (msgBodyIsHtml)
+  {
+    nsAutoString bodyText;
+    nsresult rv = NS_OK;
+    // Create a parser
+    nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Create the appropriate output sink
+    nsCOMPtr<nsIContentSink> sink = do_CreateInstance(NS_PLAINTEXTSINK_CONTRACTID,&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIHTMLToTextSink> textSink(do_QueryInterface(sink));
+    NS_ENSURE_TRUE(textSink, NS_ERROR_FAILURE);
+    PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak 
+                   | nsIDocumentEncoder::OutputNoScriptContent
+                   | nsIDocumentEncoder::OutputNoFramesContent
+                   | nsIDocumentEncoder::OutputBodyOnly;
+
+    textSink->Initialize(&bodyText, flags, 80);
+
+    parser->SetContentSink(sink);
+    nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID,&rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    parser->RegisterDTD(dtd);
+    nsAutoString msgBodyStr;
+    // need to do an appropriate conversion here.
+    msgBodyStr.AssignWithConversion(msgBody);
+    rv = parser->Parse(msgBodyStr, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+    CopyUTF16toUTF8(bodyText, msgBody);
+  }
+  msgHdr->SetStringProperty("preview", msgBody.get());
+  return rv;
+}
+

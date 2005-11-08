@@ -284,6 +284,10 @@ public:
   NS_IMETHOD DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow);
   NS_IMETHOD GetCanFileMessages(PRBool *aCanFileMessages);
   NS_IMETHOD GetCanDeleteMessages(PRBool *aCanDeleteMessages);
+  NS_IMETHOD FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUint32 aNumKeys,
+                                                 PRBool aLocalOnly, nsIUrlListener *aUrlListener, 
+                                                 PRBool *aAsyncResults);
+
   // nsIMsgImapMailFolder methods
   NS_DECL_NSIMSGIMAPMAILFOLDER
           

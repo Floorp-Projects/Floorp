@@ -113,6 +113,7 @@
 #include "nsEmbedCID.h"
 #include "nsIMsgComposeService.h"
 #include "nsMsgCompCID.h"
+#include "nsICacheEntryDescriptor.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -602,7 +603,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
       // automatically computed from the URI, which is in utf7 form.
       if (!currentFolderNameStr.IsEmpty())
         child->SetPrettyName(currentFolderNameStr.get());
-
+      child->SetMsgDatabase(nsnull);
     }
   }
   return rv;
@@ -996,6 +997,8 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
       unusedDB->SetSummaryValid(PR_TRUE);
       unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
       unusedDB->Close(PR_TRUE);
+      // don't want to hold onto this newly created db.
+      child->SetMsgDatabase(nsnull);
     }
   }
   if (!suppressNotification)
@@ -2624,6 +2627,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     if ((imapUIDValidity != folderValidity) /* && // if UIDVALIDITY Changed 
       !NET_IsOffline() */)
     {
+      NS_ASSERTION(PR_FALSE, "uid validity seems to have changed, blowing away db");
       nsCOMPtr<nsIFileSpec> pathSpec;
       rv = GetPath(getter_AddRefs(pathSpec));
       if (NS_FAILED(rv)) return rv;
@@ -8306,3 +8310,84 @@ void nsImapMailFolder::GetTrashFolderName(nsAString &aFolderName)
     }
   }
 }
+NS_IMETHODIMP nsImapMailFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUint32 aNumKeys,
+                                                 PRBool aLocalOnly, nsIUrlListener *aUrlListener, 
+                                                 PRBool *aAsyncResults)
+{
+  NS_ENSURE_ARG_POINTER(aKeysToFetch);
+  NS_ENSURE_ARG_POINTER(aAsyncResults);
+
+  *aAsyncResults = PR_FALSE;
+  nsresult rv = NS_OK;
+
+  for (PRUint32 i = 0; i < aNumKeys; i++)
+  {
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    nsXPIDLCString prevBody;
+    rv = GetMessageHeader(aKeysToFetch[i], getter_AddRefs(msgHdr));
+    NS_ENSURE_SUCCESS(rv, rv);
+    // ignore messages that already have a preview body.
+    msgHdr->GetStringProperty("preview", getter_Copies(prevBody));
+    if (!prevBody.IsEmpty())
+      continue;
+
+    /* check if message is in memory cache or offline store. */
+    nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIMsgMessageService> msgService = do_QueryInterface(imapService);
+    nsCOMPtr <nsIURI> url;
+    nsCOMPtr<nsIInputStream> inputStream;
+
+    nsXPIDLCString messageUri;
+    rv = GetUriForMsg(msgHdr, getter_Copies(messageUri));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = msgService->GetUrlForUri(messageUri, getter_AddRefs(url), nsnull);
+    NS_ENSURE_SUCCESS(rv,rv);
+    nsCAutoString urlSpec;
+    url->GetAsciiSpec(urlSpec);
+
+    nsCOMPtr<nsICacheSession> cacheSession;
+    rv = imapService->GetCacheSession(getter_AddRefs(cacheSession));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRInt32 uidValidity;
+    GetUidValidity(&uidValidity);
+    // stick the uid validity in front of the url, so that if the uid validity
+    // changes, we won't re-use the wrong cache entries.
+    nsCAutoString cacheKey;
+    cacheKey.AppendInt(uidValidity, 16);
+    cacheKey.Append(urlSpec);
+    nsCOMPtr <nsICacheEntryDescriptor> cacheEntry;
+
+    // if mem cache entry is broken or empty, go to next message.
+    rv = cacheSession->OpenCacheEntry(cacheKey, nsICache::ACCESS_READ, PR_TRUE, getter_AddRefs(cacheEntry));
+    if (cacheEntry)
+    {
+      rv = cacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
+      if (NS_SUCCEEDED(rv))
+      {
+        PRUint32 bytesAvailable = 0;
+        rv = inputStream->Available(&bytesAvailable);
+        if (!bytesAvailable)
+          continue;
+        rv = GetMsgPreviewTextFromStream(msgHdr, inputStream);
+      }
+    }
+    else // lets look in the offline store
+    {
+      PRUint32 msgFlags;
+      msgHdr->GetFlags(&msgFlags);
+      if (msgFlags & MSG_FLAG_OFFLINE)
+      {
+        nsMsgKey msgKey;
+        msgHdr->GetMessageKey(&msgKey);
+        nsMsgKey messageOffset;
+        PRUint32 messageSize;
+        GetOfflineFileStream(msgKey, &messageOffset, &messageSize, getter_AddRefs(inputStream));
+        if (inputStream)
+          rv = GetMsgPreviewTextFromStream(msgHdr, inputStream);
+      }
+    }
+  }
+  return rv;
+}
+

@@ -48,7 +48,6 @@
 #include "nsISimpleEnumerator.idl"
 %{ C++
 #include "nsIMsgDatabase.h"
-#include "nsMsgKeyArray.h"
 %}
 
 [ptr] native octet_ptr(PRUint8);
@@ -58,7 +57,6 @@ interface nsIMsgDBHdr;
 interface nsIMsgWindow;
 interface nsIMsgDatabase;
 interface nsIDBFolderInfo;
-interface nsMsgKeyArray;
 interface nsIMsgFilterList;
 
 interface nsIMsgFolderCacheElement;
@@ -72,7 +70,7 @@ typedef long nsMsgBiffState;
 // enumerated type for determining if a message has been replied to, forwarded, etc.
 typedef long nsMsgDispositionState;
 
-[scriptable, uuid(853d026c-6eda-4d92-a915-8c05953284a2)]
+[scriptable, uuid(28424d1c-db6f-4ac5-bc5d-418dd336120b)]
 interface nsIMsgFolder : nsICollection {
 
 const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
@@ -479,4 +477,24 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   void copyDataDone();
   void setJunkScoreForMessages(in nsISupportsArray aMessages, in string aJunkScore);
   void applyRetentionSettings();
+
+  /** 
+   * Get the beginning of the message bodies for the passed in keys and store 
+   * them in the msg hdr property "preview". This is intended for 
+   * new mail alerts, title tips on folders with new messages, and perhaps 
+   * titletips/message preview in the thread pane.
+   *
+   * @param aKeysToFetch   keys of msgs to fetch
+   * @param aNumKeys       number of keys to fetch
+   * @param aLocalOnly     whether to fetch msgs from server (imap msgs might 
+   *                       be in memory cache from junk filter)
+   * @param aUrlListener   url listener to notify if we run url to fetch msgs
+   *
+   * @result aAsyncResults if true, we ran a url to fetch one or more of msg bodies
+   *
+   */
+  void fetchMsgPreviewText([array, size_is (aNumKeys)] in nsMsgKey aKeysToFetch,
+                      in unsigned long aNumKeys, in boolean aLocalOnly, 
+                      in nsIUrlListener aUrlListener, out boolean aAsyncResults);
+
 };

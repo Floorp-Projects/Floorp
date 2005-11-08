@@ -196,6 +196,9 @@ public:
 
   // Used when headers_only is TRUE
   NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *aMessages, nsIMsgWindow *aWindow);
+  NS_IMETHOD FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUint32 aNumKeys,
+                                                 PRBool aLocalOnly, nsIUrlListener *aUrlListener, 
+                                                 PRBool *aAsyncResults);
 
 
 protected:

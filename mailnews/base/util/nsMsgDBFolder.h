@@ -104,6 +104,7 @@ public:
   NS_IMETHOD MatchName(nsString *name, PRBool *matches);
 
   nsresult CreateDirectoryForFolder(nsFileSpec &path);
+  nsresult GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInputStream *stream);
 protected:
   
 	// this is a little helper function that is not part of the public interface. 
