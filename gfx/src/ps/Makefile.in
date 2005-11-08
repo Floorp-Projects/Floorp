@@ -49,7 +49,7 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxPSModule
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
-EXTRA_DSO_LIBS = mozutil_s
+EXTRA_DSO_LIBS = mozutil_s gfxshared_s gfxpsshar gkgfx
 REQUIRES	= xpcom \
 		  string \
 		  widget \
@@ -62,7 +62,6 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  unicharutil \
 		  $(NULL)
-EXTRA_DSO_LIBS += gkgfx
 
 CPPSRCS		= \
 		nsDeviceContextPS.cpp \
@@ -89,10 +88,7 @@ EXPORT_RESOURCE	= \
 		$(srcdir)/sample.unixpsfonts.properties
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
-		-lgfxshared_s \
-		-lgfxpsshar \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \

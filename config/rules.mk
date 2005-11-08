@@ -84,6 +84,9 @@ else
 _VPATH_SRCS = $<
 endif
 
+# Add $(DIST)/lib to VPATH so that -lfoo dependencies are followed
+VPATH += $(DIST)/lib
+
 ifdef _LIBNAME_RELATIVE_PATHS
 EXPAND_LIBNAME = $(addsuffix .$(LIB_SUFFIX),$(1))
 EXPAND_MOZLIBNAME = $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/$(LIB_PREFIX),$(1)))
@@ -632,10 +635,10 @@ endif # IS_COMPONENT
 endif # EXPORT_LIBRARY
 endif # LIBRARY_NAME
 
-# Create dependencies on static libraries
+# Create dependencies on static (and shared EXTRA_DSO_LIBS) libraries
 LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(LIBS))
 HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX), $(HOST_LIBS))
-DSO_LDOPTS_DEPS = $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
+DSO_LDOPTS_DEPS = $(EXTRA_DSO_LIBS) $(filter %.$(LIB_SUFFIX), $(EXTRA_DSO_LDOPTS))
 
 ##############################################
 libs:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS)
@@ -1731,6 +1734,9 @@ ifneq (,$(MOZ_DEBUG)$(MOZ_PROFILE)$(MOZ_COVERAGE))
 .NOTPARALLEL::
 endif
 endif
+
+# Properly set LIBPATTERNS for the platform
+.LIBPATTERNS = $(if $(IMPORT_LIB_SUFFIX),$(LIB_PREFIX)%.$(IMPORT_LIB_SUFFIX)) $(LIB_PREFIX)%.$(LIB_SUFFIX) $(DLL_PREFIX)%$(DLL_SUFFIX) 
 
 tags: TAGS
 
