@@ -1114,13 +1114,13 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             while (last--) {
                 if (!IndexToExistingId(cx, obj, last, &id))
                     return JS_FALSE;
+                if (!IndexToId(cx, last + argc, &id2))
+                    return JS_FALSE;
                 if (id == JSID_HOLE) {
                     OBJ_DELETE_PROPERTY(cx, obj, id2, &junk);
                     continue;
                 }
                 if (!OBJ_GET_PROPERTY(cx, obj, id, vp))
-                    return JS_FALSE;
-                if (!IndexToId(cx, last + argc, &id2))
                     return JS_FALSE;
                 if (!OBJ_SET_PROPERTY(cx, obj, id2, vp))
                     return JS_FALSE;
