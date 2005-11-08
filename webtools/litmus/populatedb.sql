@@ -25,7 +25,7 @@ USE `litmus_staging`;
 
 /*!40000 ALTER TABLE `branches` DISABLE KEYS */;
 LOCK TABLES `branches` WRITE;
-INSERT INTO `branches` VALUES (1,1,'Trunk','Firefox/1\\.6a1'),(2,1,'1.5 Branch','Firefox/1.(0\\+|4)'),(3,1,'1.0.x Branch','Firefox/1\\.0\\.'),(4,2,'Trunk','.'),(5,3,'Trunk','.'),(6,3,'1.0.x Branch',NULL);
+INSERT INTO `branches` VALUES (1,1,'Trunk','Firefox/1\\.6a1'),(2,1,'1.5 Branch','Firefox/1.(0\\+|4|5)'),(3,1,'1.0.x Branch','Firefox/1\\.0\\.'),(4,2,'Trunk','.'),(5,3,'Trunk','.'),(6,3,'1.0.x Branch',NULL);
 UNLOCK TABLES;
 /*!40000 ALTER TABLE `branches` ENABLE KEYS */;
 
