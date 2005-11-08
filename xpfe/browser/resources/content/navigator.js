@@ -575,27 +575,6 @@ function Startup()
 
   //initConsoleListener();
 
-  if (!getBrowser().sessionHistory) {
-    /* Session history might not be available,
-       so we wrap access to it in a try block */
-    try {
-      // sessionHistory wasn't set from the browser's constructor
-      // so we'll just have to set it here.
-
-      // Wire up session and global history before any possible
-      // progress notifications for back/forward button updating
-      webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"]
-                                               .createInstance(Components.interfaces.nsISHistory);
-
-      // enable global history
-      getBrowser().docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).useGlobalHistory = true;
-    } catch (e) {}
-
-    const selectedBrowser = getBrowser().selectedBrowser;
-    if (selectedBrowser.securityUI)
-      selectedBrowser.securityUI.init(selectedBrowser.contentWindow);
-  }
-
   // hook up UI through progress listener
   getBrowser().addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
