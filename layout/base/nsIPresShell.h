@@ -91,8 +91,8 @@ class nsCSSFrameConstructor;
 class nsISelection;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x759ceea6, 0x52c1, 0x4a39, \
- { 0x9f, 0xca, 0x1d, 0xf9, 0x9f, 0x40, 0xc9, 0xd3 } }
+{ 0x775a6c25, 0x326f, 0x4a99, \
+ { 0xbb, 0x9d, 0x65, 0xdf, 0x15, 0xb3, 0x06, 0xa3 } }
 
 // Constants uses for ScrollFrameIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -724,6 +724,7 @@ protected:
 
   PRPackedBool              mStylesHaveChanged;
   PRPackedBool              mDidInitialReflow;
+  PRPackedBool              mIsDestroying;
 
 #ifdef ACCESSIBILITY
   /**
