@@ -465,25 +465,11 @@ nsFontMetricsPango::CacheFontMetrics(void)
 
     XftUnlockFace(xftFont);
 
-    /*
-    printf("%i\n", mXHeight);
-    printf("%i\n", mSuperscriptOffset);
-    printf("%i\n", mSubscriptOffset);
-    printf("%i\n", mStrikeoutOffset);
-    printf("%i\n", mStrikeoutSize);
-    printf("%i\n", mUnderlineOffset);
-    printf("%i\n", mUnderlineSize);
-    printf("%i\n", mMaxHeight);
-    printf("%i\n", mLeading);
-    printf("%i\n", mEmHeight);
-    printf("%i\n", mEmAscent);
-    printf("%i\n", mEmDescent);
-    printf("%i\n", mMaxAscent);
-    printf("%i\n", mMaxDescent);
-    printf("%i\n", mMaxAdvance);
-    printf("%i\n", mSpaceWidth);
-    printf("%i\n", mAveCharWidth);
-    */
+    fprintf (stderr, "Font\n");
+    fprintf (stderr, "    emHeight: %f emAscent: %f emDescent: %f\n", mEmHeight/f, mEmAscent/f, mEmDescent/f);
+    fprintf (stderr, "    maxAscent: %f maxDescent: %f\n", mMaxAscent/f, mMaxDescent/f);
+    fprintf (stderr, "    maxheight: %f leading: %f\n", mMaxHeight/f, mLeading/f);
+    fprintf (stderr, "    spaceWidth: %f aveCharWidth: %f xHeight: %f\n", mSpaceWidth/f, mAveCharWidth/f, mXHeight/f);
 
     return NS_OK;
 }

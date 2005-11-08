@@ -142,8 +142,8 @@
  * cairo is only used from the main thread, turn off the critical
  * sections.
  */
-#if 0
 #if !defined(CAIRO_MUTEX_DECLARE) && defined CAIRO_HAS_WIN32_SURFACE
+#if 0
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
   /* the real initialization must take place in DllMain */

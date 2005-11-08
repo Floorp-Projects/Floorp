@@ -40,7 +40,7 @@ endif
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),gtk2)
-EXPORTS	+=	gfxXlibSurface.h
+EXPORTS	+=	gfxXlibSurface.h gfxPangoFonts.h
 
 ifdef MOZ_ENABLE_GLITZ
 REQUIRES += glitzglx

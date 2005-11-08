@@ -107,7 +107,7 @@
 #include "resource.h"
 #include <commctrl.h>
 #include "prtime.h"
-#ifdef MOZ_CAIRO_GFX
+#ifdef MOZ_THEBES
 #include "nsIThebesRenderingContext.h"
 #else
 #include "nsIRenderingContextWin.h"

@@ -837,6 +837,10 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
+#if 0
+    return CAIRO_STATUS_SUCCESS;
+#endif
+
     /* If we are in-memory, then we set the clip on the image surface
      * as well as on the underlying GDI surface.
      */

@@ -38,6 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIServiceManager.h"
+#include "nsIPref.h"
+#include "nsCRT.h"
 
 #include "nsThebesDeviceContext.h"
 #include "nsThebesRenderingContext.h"
@@ -90,7 +92,11 @@ static int x11_error_handler (Display *dpy, XErrorEvent *err) {
 PRLogModuleInfo* gThebesGFXLog = nsnull;
 #endif
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
 NS_IMPL_ISUPPORTS_INHERITED0(nsThebesDeviceContext, DeviceContextImpl)
+
+PRInt32 nsThebesDeviceContext::mDpi;
 
 nsThebesDeviceContext::nsThebesDeviceContext()
 {
@@ -116,23 +122,94 @@ nsThebesDeviceContext::nsThebesDeviceContext()
 
 nsThebesDeviceContext::~nsThebesDeviceContext()
 {
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    prefs->UnregisterCallback("browser.display.screen_resolution",
+                              prefChanged, (void *)this);
+  }
+}
+
+nsresult
+nsThebesDeviceContext::SetDPI(PRInt32 aPrefDPI)
+{
+    PRInt32 OSVal;
+    PRBool do_round = PR_TRUE;
+
+#if defined(MOZ_ENABLE_GTK2)
+    float screenWidthIn = float(::gdk_screen_width_mm()) / 25.4f;
+    OSVal = NSToCoordRound(float(::gdk_screen_width()) / screenWidthIn);
+
+    if (aPrefDPI > 0) {
+        // If there's a valid pref value for the logical resolution,
+        // use it.
+        mDpi = aPrefDPI;
+    } else if ((aPrefDPI == 0) || (OSVal > 72)) {
+        // Either if the pref is 0 (force use of OS value) or the OS
+        // value is bigger than 72, use the OS value.
+        mDpi = OSVal;
+    } else {
+        // if we couldn't get the pref or it's negative, and the OS
+        // value is under 72ppi, then use 72.
+        mDpi = 72;
+    }
+
+#elif defined(XP_WIN)
+    // XXX we should really look at the widget for printing and such, but this widget is currently always null...
+    HDC dc = GetDC((HWND)nsnull);
+    OSVal = GetDeviceCaps(dc, LOGPIXELSY);
+    if (GetDeviceCaps(dc, TECHNOLOGY) != DT_RASDISPLAY)
+        do_round = PR_FALSE;
+    ReleaseDC((HWND)nsnull, dc);
+
+    mDpi = OSVal;
+
+#else
+    mDpi = 72;
+#endif
+
+    int pt2t = 72;
+
+    // make p2t a nice round number - this prevents rounding problems
+    mPixelsToTwips = float(NSIntPointsToTwips(pt2t)) / float(mDpi);
+    if (do_round)
+        mPixelsToTwips = float(NSToIntRound(mPixelsToTwips));
+    mTwipsToPixels = 1.0f / mPixelsToTwips;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsThebesDeviceContext::Init(nsNativeWidget aWidget)
 {
-#ifdef XP_WIN
-    // XXX we should really look at the widget for printing and such, but this widget is currently always null...
-    HDC dc = GetDC((HWND)aWidget);
-    mPixelsToTwips = (float)NSIntPointsToTwips(72) / (float)GetDeviceCaps(dc, LOGPIXELSY);
-    if (GetDeviceCaps(dc, TECHNOLOGY) == DT_RASDISPLAY)
-        mPixelsToTwips = (float)NSToIntRound(mPixelsToTwips);
-    mTwipsToPixels = 1.0f / mPixelsToTwips;
-    ReleaseDC((HWND)aWidget, dc);
-#else
-    mTwipsToPixels = 96 / (float) NSIntPointsToTwips(72);
-    mPixelsToTwips = 1.0f / mTwipsToPixels;
-#endif
+    static int initialized = 0;
+    PRInt32 prefVal = -1;
+    if (!initialized) {
+        initialized = 1;
+
+        // Set prefVal the value of the preference
+        // "browser.display.screen_resolution"
+        // or -1 if we can't get it.
+        // If it's negative, we pretend it's not set.
+        // If it's 0, it means force use of the operating system's logical
+        // resolution.
+        // If it's positive, we use it as the logical resolution
+        nsresult res;
+
+        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &res));
+        if (NS_SUCCEEDED(res) && prefs) {
+            res = prefs->GetIntPref("browser.display.screen_resolution", &prefVal);
+            if (NS_FAILED(res)) {
+                prefVal = -1;
+            }
+            prefs->RegisterCallback("browser.display.screen_resolution", prefChanged,
+                                    (void *)this);
+        }
+
+        SetDPI(prefVal);
+    } else {
+        SetDPI(mDpi);
+    }
 
     mWidget = aWidget;
 
@@ -533,3 +610,20 @@ nsThebesDeviceContext::SetUseAltDC(PRUint8 aValue, PRBool aOn)
 }
 
 /** End printing methods **/
+
+int
+nsThebesDeviceContext::prefChanged(const char *aPref, void *aClosure)
+{
+    nsThebesDeviceContext *context = (nsThebesDeviceContext*)aClosure;
+    nsresult rv;
+  
+    if (nsCRT::strcmp(aPref, "browser.display.screen_resolution") == 0) {
+        PRInt32 dpi;
+        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv));
+        rv = prefs->GetIntPref(aPref, &dpi);
+        if (NS_SUCCEEDED(rv))
+            context->SetDPI(dpi);
+    }
+
+    return 0;
+}

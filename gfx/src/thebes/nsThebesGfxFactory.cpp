@@ -51,21 +51,9 @@
 #include "nsThebesScreen.h"
 #include "nsThebesScreenManager.h"
 #include "nsThebesBlender.h"
-
-#ifdef MOZ_ENABLE_PANGO
-#include "nsFontMetricsPango.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsPango)
-#endif
-#ifdef XP_WIN
-#if 0
-#include "nsFontMetricsWin2.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontMetricsWin)
-#else
 #include "nsThebesFontMetrics.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontMetrics)
-#endif
-#endif
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontMetrics)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesDeviceContext)
@@ -120,14 +108,7 @@ static const nsModuleComponentInfo components[] =
   { "Thebes nsFontMetrics",
     NS_FONT_METRICS_CID,
     "@mozilla.org/gfx/fontmetrics;1",
-#ifdef MOZ_ENABLE_PANGO
-    nsFontMetricsPangoConstructor
-#elif XP_WIN
-    //nsFontMetricsWinConstructor
     nsThebesFontMetricsConstructor
-#else
-#error write me!
-#endif
   },
   { "Thebes Device Context",
     NS_DEVICE_CONTEXT_CID,

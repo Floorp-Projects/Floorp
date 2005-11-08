@@ -83,6 +83,7 @@ CPPSRCS		= \
 		nsThebesRenderingContext.cpp \
 		nsThebesScreen.cpp \
 		nsThebesScreenManager.cpp \
+		nsThebesFontMetrics.cpp \
 		$(NULL)
 
 
@@ -97,9 +98,9 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CPPSRCS		+= nsSystemFontsGTK2.cpp
 
 ifdef MOZ_ENABLE_PANGO
-CPPSRCS         += nsFontMetricsPango.cpp \
-                   mozilla-decoder.cpp \
-                   $(NULL)
+#CPPSRCS         += nsFontMetricsPango.cpp \
+#                   mozilla-decoder.cpp \
+#                   $(NULL)
 endif
 
 ifdef MOZ_ENABLE_GLITZ
@@ -110,7 +111,6 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		+= nsSystemFontsWin.cpp \
-		   nsThebesFontMetrics.cpp \
 		   $(NULL)
 REQUIRES        += glitzwgl
 

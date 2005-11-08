@@ -66,9 +66,10 @@ class gfxFontGroup;
 struct NS_EXPORT gfxFontStyle {
     gfxFontStyle(PRUint8 aStyle, PRUint8 aVariant,
                  PRUint16 aWeight, PRUint8 aDecoration, gfxFloat aSize,
+                 const nsACString& aLangGroup,
                  float aSizeAdjust=0.0f) :
         style(aStyle), variant(aVariant), weight(aWeight),
-        decorations(aDecoration), size(aSize), sizeAdjust(aSizeAdjust) {}
+        decorations(aDecoration), size(aSize), langGroup(aLangGroup), sizeAdjust(aSizeAdjust) {}
 
     // The style of font (normal, italic, oblique)
     PRUint8 style : 7;
@@ -93,6 +94,9 @@ struct NS_EXPORT gfxFontStyle {
 
     // The logical size of the font, in nscoord units
     gfxFloat size;
+
+    // the language group
+    nsCString langGroup;
 
     // The aspect-value (ie., the ratio actualsize:actualxheight) that any
     // actual physical font created from this font structure must have when
@@ -132,7 +136,7 @@ public:
         gfxFloat aveCharWidth;
         gfxFloat spaceWidth;
     };
-    virtual const gfxFont::Metrics& GetMetrics() const = 0;
+    virtual const gfxFont::Metrics& GetMetrics() = 0;
 
 protected:
     // The family name of the font
@@ -145,9 +149,12 @@ protected:
 
 class NS_EXPORT gfxFontGroup {
 public:
-    gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle) : mFamilies(aFamilies), mStyle(*aStyle) {}
+    gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle)
+        : mFamilies(aFamilies), mStyle(*aStyle), mIsRTL(PR_FALSE)
+    { }
+
     virtual ~gfxFontGroup() {
-        for (std::vector<gfxFont*>::iterator it = mFonts.begin(); it!=mFonts.end(); ++it)
+        for (gfxFontVector::iterator it = mFonts.begin(); it!=mFonts.end(); ++it)
             delete *it;
     }
 
@@ -167,7 +174,10 @@ protected:
     PRBool FillFontArray();
     nsString mFamilies;
     gfxFontStyle mStyle;
-    std::vector<gfxFont*> mFonts;
+    typedef std::vector<gfxFont*> gfxFontVector;
+    gfxFontVector mFonts;
+
+    PRBool mIsRTL;
 
     void *mData; // XXXA
 };
