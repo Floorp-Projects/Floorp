@@ -410,8 +410,9 @@
         ]]>
       </destructor>
 
-      <!-- This is necessary because the construcor might be called before
-           our docShell is available, so tabbrowser needs to call it again -->
+      <!-- This is necessary because the tabbrowser wants this stuff wired up
+           before adding its progress listener but the browser won't have a
+           docShell if we try to construct it before its frame is created -->
       <method name="init">
         <body>
         <![CDATA[
