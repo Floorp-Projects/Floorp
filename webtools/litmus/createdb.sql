@@ -13,14 +13,6 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 
 --
--- Current Database: `litmus_staging`
---
-
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `litmus_staging` /*!40100 DEFAULT CHARACTER SET latin1 COLLATE latin1_bin */;
-
-USE `litmus_staging`;
-
---
 -- Table structure for table `branches`
 --
 
@@ -129,9 +121,13 @@ CREATE TABLE `subgroups` (
   `subgroup_id` smallint(6) NOT NULL auto_increment,
   `testgroup_id` smallint(6) NOT NULL default '0',
   `name` varchar(64) collate latin1_bin NOT NULL default '',
+  `sort_order` smallint(6) NOT NULL default '1',
+  `testrunner_group_id` int(11) default NULL,
   PRIMARY KEY  (`subgroup_id`),
   KEY `testgroup_id` (`testgroup_id`),
-  KEY `name` (`name`)
+  KEY `name` (`name`),
+  KEY `sort_order` (`sort_order`),
+  KEY `testrunner_group_id` (`testrunner_group_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
 --
@@ -156,11 +152,14 @@ CREATE TABLE `test_groups` (
   `product_id` tinyint(4) NOT NULL default '0',
   `name` varchar(64) collate latin1_bin NOT NULL default '',
   `expiration_days` smallint(6) NOT NULL default '0',
-  `obsolete` BOOL NOT NULL default '0',
+  `obsolete` enum('Yes','No') collate latin1_bin NOT NULL default 'No',
+  `testrunner_plan_id` int(11) default NULL,
   PRIMARY KEY  (`testgroup_id`),
   KEY `product_id` (`product_id`),
   KEY `name` (`name`),
-  KEY `expiration_days` (`expiration_days`)
+  KEY `expiration_days` (`expiration_days`),
+  KEY `obsolete` (`obsolete`),
+  KEY `testrunner_plan_id` (`testrunner_plan_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
 --
@@ -210,14 +209,14 @@ CREATE TABLE `test_result_logs` (
   `test_result_id` int(11) NOT NULL default '0',
   `last_updated` datetime NOT NULL default '0000-00-00 00:00:00',
   `submission_time` datetime NOT NULL default '0000-00-00 00:00:00',
-  `log_path` varchar(255) collate latin1_bin default NULL,
   `log_type_id` tinyint(4) NOT NULL default '1',
+  `log_text` longtext collate latin1_bin,
   PRIMARY KEY  (`log_id`),
   KEY `test_result_id` (`test_result_id`),
   KEY `last_updated` (`last_updated`),
   KEY `submission_time` (`submission_time`),
-  KEY `log_path` (`log_path`),
-  KEY `log_type_id` (`log_type_id`)
+  KEY `log_type_id` (`log_type_id`),
+  KEY `log_text` (`log_text`(255))
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
 --
@@ -228,11 +227,9 @@ DROP TABLE IF EXISTS `test_result_status_lookup`;
 CREATE TABLE `test_result_status_lookup` (
   `result_status_id` smallint(6) NOT NULL auto_increment,
   `name` varchar(64) collate latin1_bin NOT NULL default '',
-  `style` varchar(255) collate latin1_bin NOT NULL default '',
   `class_name` varchar(16) collate latin1_bin default '',
   PRIMARY KEY  (`result_status_id`),
   KEY `name` (`name`),
-  KEY `style` (`style`),
   KEY `class_name` (`class_name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
@@ -307,6 +304,13 @@ CREATE TABLE `tests` (
   `regression_bug_id` int(11) default NULL,
   `steps` longtext collate latin1_bin,
   `expected_results` longtext collate latin1_bin,
+  `sort_order` smallint(6) NOT NULL default '1',
+  `author_id` int(11) NOT NULL default '0',
+  `creation_date` datetime NOT NULL default '0000-00-00 00:00:00',
+  `last_updated` datetime NOT NULL default '0000-00-00 00:00:00',
+  `version` smallint(6) NOT NULL default '1',
+  `testrunner_case_id` int(11) default NULL,
+  `testrunner_case_version` int(11) default NULL,
   PRIMARY KEY  (`test_id`),
   KEY `subgroup_id` (`subgroup_id`),
   KEY `summary` (`summary`),
@@ -315,7 +319,14 @@ CREATE TABLE `tests` (
   KEY `format_id` (`format_id`),
   KEY `regression_bug_id` (`regression_bug_id`),
   KEY `steps` (`steps`(255)),
-  KEY `expected_results` (`expected_results`(255))
+  KEY `expected_results` (`expected_results`(255)),
+  KEY `sort_order` (`sort_order`),
+  KEY `author_id` (`author_id`),
+  KEY `creation_date` (`creation_date`),
+  KEY `last_updated` (`last_updated`),
+  KEY `version` (`version`),
+  KEY `testrunner_case_id` (`testrunner_case_id`),
+  KEY `testrunner_case_version` (`testrunner_case_version`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_bin;
 
 --

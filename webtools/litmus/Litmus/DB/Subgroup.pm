@@ -41,7 +41,7 @@ use Litmus::DB::Testresult;
 
 Litmus::DB::Subgroup->table('subgroups');
 
-Litmus::DB::Subgroup->columns(All => qw/subgroup_id testgroup_id name/);
+Litmus::DB::Subgroup->columns(All => qw/subgroup_id testgroup_id name sort_order testrunner_group_id/);
 
 Litmus::DB::Subgroup->column_alias("subgroup_id", "subgroupid");
 Litmus::DB::Subgroup->column_alias("testgroup_id", "testgroup");

@@ -70,7 +70,7 @@ if ($reset_db) {
   my $data_file = "populatedb.sql";
  
   print "Creating tables...";
-  my $cmd = "mysql --user=$Litmus::Config::db_user --password=$Litmus::Config::db_pass < $schema_file";
+  my $cmd = "mysql --user=$Litmus::Config::db_user --password=$Litmus::Config::db_pass $Litmus::Config::db_name < $schema_file";
   my $rv = system($cmd);
   if ($rv) {
     die "Error creating database $Litmus::Config::db_name";
@@ -78,7 +78,7 @@ if ($reset_db) {
   print "done.\n";
 
   print "Populating tables...";
-  $cmd = "mysql --user=$Litmus::Config::db_user --password=$Litmus::Config::db_pass < $data_file";
+  $cmd = "mysql --user=$Litmus::Config::db_user --password=$Litmus::Config::db_pass $Litmus::Config::db_name < $data_file";
   $rv = system($cmd);
   if ($rv) {
     die "Error populating database $Litmus::Config::db_name";
