@@ -1,0 +1,430 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Places code.
+ *
+ * The Initial Developer of the Original Code is
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brett Wilson <brett@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+#include "nsIURI.idl"
+
+[scriptable, uuid(acae2b2d-5fcd-4419-b1bc-b7dc92a1836c)]
+interface nsINavHistoryResultNode : nsISupports
+{
+  /**
+   * Indentifies the parent result node in the result set. This is null for
+   * top level nodes.
+   */
+  readonly attribute nsINavHistoryResultNode parent;
+
+  /**
+   * Identifies the type of this node.
+   */
+  const PRUint32 RESULT_TYPE_URL = 0;
+  const PRUint32 RESULT_TYPE_VISIT = 1;
+  const PRUint32 RESULT_TYPE_HOST = 2;
+  const PRUint32 RESULT_TYPE_DAY = 3;
+  readonly attribute PRUInt32 type;
+
+  /**
+   * URL of the web page in question. Empty for all other types, including
+   * hosts.
+   */
+  readonly attribute AUTF8String url;
+
+  /**
+   * Title of the web page, or name of the host.
+   */
+  readonly attribute AString title;
+
+  /**
+   * Total number of times the URL has ever been accessed. For hosts, this
+   * is the total of the children under it, NOT the total times the host has
+   * been accessed (this would require an additional query, so is not given
+   * by default when most of the time it is never needed).
+   */
+  readonly attribute PRInt32 accessCount;
+
+  /**
+   * This is the time the user accessed the page.
+   *
+   * If this is a visit, it is the exact time that the page visit occurred.
+   *
+   * If this is a URL, it is the most recent time that the URL was visited.
+   * Even if you ask for all URLs for a given date range long ago, this might
+   * contain today's date if the URL was visited today.
+   *
+   * For hosts, or other node types with children, this is the most recent
+   * access time for any of the children.
+   *
+   * For days, this is midnight on the morning of the day in question in
+   * UTC time.
+   */
+  readonly attribute PRTime time;
+
+  /**
+   * This is the number of levels between this node and the top of the
+   * hierarchy. The members of result.children have indentLevel = 0, their
+   * children have indentLevel = 1, etc.
+   */
+  readonly attribute PRInt32 indentLevel;
+
+  /**
+   * This gives you the children of the nodes. It is preferrable to use this
+   * interface over the array one, since it avoids creating an nsIArray object
+   * and the interface is already the correct type.
+   */
+  readonly attribute PRInt32 childCount;
+  nsINavHistoryResultNode getChild(in PRInt32 index);
+};
+
+
+[scriptable, uuid(25b45a94-3323-4c7b-910a-315f2c59bfb4)]
+interface nsINavHistoryResult : nsISupports
+{
+  /**
+   * This gives you the children of the nodes. It is preferrable to use this
+   * interface over the array one, since it avoids creating an nsIArray object
+   * and the interface is already the correct type.
+   */
+  readonly attribute PRInt32 topLevelNodeCount;
+  nsINavHistoryResultNode getTopLevelNode(in PRInt32 index);
+
+  /**
+   * This is an array of nsINavHistoryResultNode objects that are the top-level
+   * result of the query.
+   */
+  readonly attribute nsIArray topLevel;
+
+  /**
+   * Sorts all nodes recursively by the given parameter, one of
+   * nsINavHistory.SORT_BY_*
+   */
+  void recursiveSort(in PRUint32 aSortingMode);
+
+  /**
+   * Controls whether the day appears when time columns are requested
+   * through the tree interface. True is the default, meaning the date is shown
+   */
+  attribute boolean timesIncludeDates;
+
+  /**
+   * Controls whether duplicate adjacent elements are collapsed into a single
+   * item in the tree. This prevents you from seeing multiple entries for
+   * things when you have selected to get visits. When you sort by date, the
+   * multiple entries will then appear because they will be separated (unless
+   * you clicked reload a bunch of times in a row). If you know you'll only
+   * ever want one entry per site, you should ask for URLs back instead of
+   * visits so it will be more efficient.
+   * Default = true
+   */
+  attribute boolean collapseDuplicates;
+
+  /**
+   * Call these functions to expand or collapse all elements in the tree.
+   */
+  void expandAll();
+  void collapseAll();
+
+  /**
+   * This allows you to get at the real node for a given row index in the tree.
+   */
+  nsINavHistoryResultNode nodeForTreeIndex(in PRUint32 aIndex);
+};
+
+
+/**
+ * Similar to nsIRDFObserver for history. Note that we don't pass the data
+ * source since that is always the global history.
+ *
+ * DANGER! If you are in the middle of a batch transaction, there may be a
+ * database transaction active. You can still access the DB, but be careful.
+ */
+[scriptable, uuid(849e2184-3dee-416f-91cd-6a619ca49d1c)]
+interface nsINavHistoryObserver : nsISupports
+{
+  /**
+   * Notifies you that a bunch of things are about to change, don't do any
+   * heavy-duty processing until onEndUpdateBatch is called.
+   */
+  void onBeginUpdateBatch();
+
+  /**
+   * Notifies you that we are done doing a bunch of things and you should go
+   * ahead and update UI, etc.
+   */
+  void onEndUpdateBatch();
+
+  /**
+   * True requests that you want to get called for all updates, false if you
+   * don't necessarily care about which exact things changed during a batch
+   * update. If false, this will sometimes not call you for things in between
+   * onBeginUpdateBatch and onEndUpdateBatch. You'll still get the begin and
+   * end, so you'll know something changed.
+   *
+   * Lots of observers don't care about what changes, only that something
+   * changed so they can update their UI. This allows delete operations to
+   * avoid iterating over every item, and just doing a single bulk SQL DELETE
+   * command, which is much more efficient.
+   *
+   * Note that you still might get called if you say false in some situations.
+   * This only skips certain time-consuming notifications if NO observers
+   * want the information.
+   */
+  readonly attribute boolean wantAllDetails;
+
+  /**
+   * A page has been added that was visited at a given time. It's very possible
+   * that this page already existed in history, but was just visited again.
+   * Note that adding a page can (but doesn't always) make the page unhidden.
+   * This happens implicitly and you won't get a separate change notification.
+   */
+  void onAddURI(in nsIURI aURI, in PRTime aTime);
+
+  /**
+   * This page and all of its visits are being deleted. Note: the page may not
+   * necessarily have actually existed for this function to be called.
+   *
+   * Delete notifications are only 99.99% accurate. Batch delete operations
+   * must be done in two steps, so first come notifications, then a bulk
+   * delete. If there is some error in the middle (for example, out of memory)
+   * then you'll get a notification and it won't get deleted. There's no easy
+   * way around this.
+   */
+  void onDeleteURI(in nsIURI aURI);
+
+  /**
+   * Notification that all of history is being deleted.
+   */
+  void onClearHistory();
+
+  /**
+   * A page has had some attribute on it changed. Note that for TYPED and
+   * HIDDEN, the page may not necessarily have been added yet.
+   */
+  const PRUint32 ATTRIBUTE_TITLE = 0; // aString = new title
+  const PRUint32 ATTRIBUTE_HIDDEN = 1; // aString = empty
+  const PRUint32 ATTRIBUTE_TYPED = 2; // aString = empty
+  void onPageChanged(in nsIURI aURI, in PRUint32 aWhat, in AString aValue);
+};
+
+
+/**
+ * This object encapsulates all the query parameters you're likely to need
+ * when building up history UI. All parameters are ANDed together.
+ *
+ * This is not intended to be a super-general query mechanism. This was designed
+ * so that most queries can be done in only one SQL query. This is important
+ * because, if the user has their profile on a networked drive, query latency
+ * can be non-negligible.
+ */
+
+[scriptable, uuid(884819a6-1860-4a71-8fd7-89d962c1d984)]
+interface nsINavHistoryQuery : nsISupports
+{
+  /**
+   * Time range for results (INCLUSIVE). Set to 0 to ignore and return any
+   * page. Note: PRTime is in MICROseconds since 1 Jan 1970. Javascript date
+   * objects are expressed in MILLIseconds since 1 Jan 1970.
+   *
+   * The has* functions return whether the corresponding time is non-zero and
+   * should be considered for the query.
+   */
+  attribute PRTime beginTime;
+  readonly attribute boolean hasBeginTime;
+  attribute PRTime endTime;
+  readonly attribute boolean hasEndTime;
+
+  /**
+   * These are helper functions for setting begin and end time for a specific
+   * day.
+   *   year: 4 digit year, i.e. "2005"
+   *   month: 0-11 month index
+   *   day: 1-31 day number
+   * These days are inclusive, so setting begin and end with these functions
+   * to the same day gives you all visits during that day.
+   */
+  void setBeginDate(in PRInt32 year, in PRInt32 month, in PRInt32 day);
+  void setEndDate(in PRInt32 year, in PRInt32 month, in PRInt32 day);
+
+  /**
+   * Text search terms.
+   */
+  attribute AString searchTerms;
+  readonly attribute boolean hasSearchTerms;
+
+  /**
+   * When set, returns only bookmarked items, when unset, returns anything.
+   */
+  attribute boolean onlyBookmarked;
+
+  /**
+   * This controls the meaning of 'domain', and whether it is an exact match
+   * 'domainIsHost' = true, or hierarchical (= false).
+   */
+  attribute boolean domainIsHost;
+
+  /**
+   * This is the host or domain name (controlled by domainIsHost). When
+   * domainIsHost, domain only does exact matching on host names. Otherwise,
+   * it will return anything whose host name ends in 'domain'. Empty string
+   * means ignore.
+   */
+  attribute AString domain;
+  readonly attribute boolean hasDomain;
+};
+
+[scriptable, uuid(C51F54CB-5E89-4B20-A37C-1343888935B7)]
+interface nsINavHistory : nsISupports
+{
+  /**
+   * True if there is any history. This can be used in UI to determine whether
+   * the "clear history" button should be enabled or not. This is much better
+   * than using BrowserHistory.count since that can be very slow if there is
+   * a lot of history (it must enumerate each item). This is pretty fast.
+   */
+  readonly attribute boolean hasHistoryEntries;
+
+  /**
+   * Returns true if this URI would be added to the history. You don't have to
+   * worry about calling this, addPageToSession/addURI will always check before
+   * actually adding the page. This function is public because some components
+   * may want to check if this page would go in the history (i.e. for
+   * annotations).
+   */
+  boolean canAddURI(in nsIURI aURI);
+
+  /**
+   * Grouping by day. The results will be an array of nsINavHistoryResults with
+   * type = RESULT_TYPE_DAY, one for each day where there are results. These
+   * will have children of corresponding to the search results of that day.
+   */
+  const PRUint32 GROUP_BY_DAY = 0;
+
+  /**
+   * Groping by exact host. The results will be an array of nsINavHistoryResults
+   * with type = RESULT_TYPE_HOST, one for each unique host (for example,
+   * "bugzilla.mozilla.org" and "www.mozilla.org" will be separate). The
+   * children of these will correspond to the results for each host.
+   */
+  const PRUint32 GROUP_BY_HOST = 1;
+
+  /**
+   * Grouping by toplevel domain. Similar to GROUP_BY_HOST, but there will be
+   * one result for each toplevel domain (mozilla.org will be one entry, and
+   * will contain results including, for example, "bugzilla.mozilla.org" and
+   * "www.mozilla.org").
+   */
+  const PRUint32 GROUP_BY_DOMAIN = 2;
+
+
+  /**
+   * You can ask for the results to be pre-sorted. Since the DB has indices
+   * of many items, it can produce sorted results almost for free. These should
+   * be self-explanatory.
+   *
+   * Note: re-sorting is slower, as is sorting by title or when you have a
+   * host name.
+   */
+  const PRUint32 SORT_BY_NONE = 0;
+  const PRUint32 SORT_BY_TITLE_ASCENDING = 1;
+  const PRUint32 SORT_BY_TITLE_DESCENDING = 2;
+  const PRUint32 SORT_BY_DATE_ASCENDING = 3;
+  const PRUint32 SORT_BY_DATE_DESCENDING = 4;
+  const PRUint32 SORT_BY_URL_ASCENDING = 5;
+  const PRUint32 SORT_BY_URL_DESCENDING = 6;
+  const PRUint32 SORT_BY_VISITCOUNT_ASCENDING = 7;
+  const PRUint32 SORT_BY_VISITCOUNT_DESCENDING = 8;
+
+  /**
+   * This returns a new query object that you can pass to executeQuer[y/ies].
+   * It will be initialized to all empty (so using it will give you all history).
+   */
+  nsINavHistoryQuery getNewQuery();
+
+  /**
+   * Executes a single query.
+   *
+   * sortingMode is one of SORT_BY_*
+   *
+   * Grouping mode is an array of GROUP_BY_* values that specifies the structure
+   * of the tree you want. For example, an array consisting of
+   * [GROUP_BY_DAY, GROUP_BY_DOMAIN] will give you a tree whose first level is
+   * a list of days, and whose second level is a list of domains, and whose
+   * third level is a list of pages in those domains. If you don't want a tree,
+   * you can specify an empty array.
+   *
+   * asVisits is what to return for the pages. If false, this will return "URL"
+   * results, one for each URL visited in the range. If true, this will return
+   * "visit" results, with one for each time a page was visited (this will
+   * often give you multiple results for one URL).
+   */
+  nsINavHistoryResult executeQuery(in nsINavHistoryQuery aQuery,
+    [const,array,size_is(aGroupCount)] in PRInt32 aGroupingMode, in PRUint32 aGroupCount,
+    in PRInt32 aSortingMode, in PRBool aAsVisits);
+
+  /**
+   * Executes an array of queries. All of the query objects are ORed
+   * together. Within a query, all the terms are ANDed together as in
+   * executeQuery. See executeQuery()
+   */
+  nsINavHistoryResult executeQueries(
+    [const,array,size_is(aQueryCount)] in nsINavHistoryQuery aQueries, in PRUint32 aQueryCount,
+    [const,array,size_is(aGroupCount)] in PRInt32 aGroupingMode, in PRUint32 aGroupCount,
+    in PRInt32 aSortingMode, in PRBool aAsVisits);
+
+  /**
+   * Adds a history observer. The history service will keep an owning
+   * reference to the observer.
+   */
+  void addObserver(in nsINavHistoryObserver aObserver);
+
+  /**
+   * Removes a history observer.
+   */
+  void removeObserver(in nsINavHistoryObserver aObserver);
+
+  /**
+   * Causes observers to be notified of a beginUpdateBatch when a lot of things
+   * are about to change. Calls can be nested, observers will only be
+   * notified when all batches begin/end.
+   */
+  void beginUpdateBatch();
+
+  /**
+   * Causes observers to be notified of an endUpdateBatch when a batch is
+   * done changing. Should match beginUpdateBatch or bad things will happen.
+   */
+  void endUpdateBatch();
+};

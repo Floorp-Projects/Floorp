@@ -71,7 +71,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTypeAheadFind)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsFormHistory, nsFormHistory::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
+#ifndef MOZ_PLACES
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
+#endif
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPasswordManager, nsPasswordManager::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSingleSignonPrompt)
 #ifdef MOZ_XPINSTALL
@@ -137,6 +139,8 @@ static const nsModuleComponentInfo components[] =
     NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID,
     nsFormFillControllerConstructor },
 
+#ifndef MOZ_PLACES
+  // "places" replaces global history
   { "Global History",
     NS_GLOBALHISTORY_CID,
     NS_GLOBALHISTORY2_CONTRACTID,
@@ -151,6 +155,7 @@ static const nsModuleComponentInfo components[] =
     NS_GLOBALHISTORY_CID,
     NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID,
     nsGlobalHistoryConstructor },
+#endif
 
   { "Password Manager",
     NS_PASSWORDMANAGER_CID,

@@ -41,6 +41,9 @@
 #include "nsBrowserCompsCID.h"
 #include "nsBookmarksService.h"
 #include "nsForwardProxyDataSource.h"
+#ifdef MOZ_PLACES
+#include "nsNavHistory.h"
+#endif
 #ifdef XP_WIN
 #include "nsWindowsShellService.h"
 #elif defined(XP_MACOSX)
@@ -72,6 +75,9 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsForwardProxyDataSource, Init)
+#ifdef MOZ_PLACES
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavHistory, Init)
+#endif
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsShellService)
 #elif defined(XP_MACOSX)
@@ -115,6 +121,24 @@ static const nsModuleComponentInfo components[] =
     nsGNOMEShellServiceConstructor },
 
 #endif
+
+#if defined(MOZ_PLACES)
+  { "Browser Navigation History",
+    NS_NAVHISTORY_CID,
+    NS_NAVHISTORY_CONTRACTID,
+    nsNavHistoryConstructor },
+
+  { "Browser Navigation History",
+    NS_NAVHISTORY_CID,
+    "@mozilla.org/browser/global-history;2",
+    nsNavHistoryConstructor },
+
+  { "Browser Navigation History",
+    NS_NAVHISTORY_CID,
+    "@mozilla.org/autocomplete/search;1?name=history",
+    nsNavHistoryConstructor },
+#endif
+
   { "Bookmarks",
     NS_BOOKMARKS_SERVICE_CID,
     NS_BOOKMARKS_SERVICE_CONTRACTID,
