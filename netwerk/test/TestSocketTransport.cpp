@@ -50,7 +50,7 @@
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsIDNSService.h"
 #include "nsIFileStreams.h"
 #include "nsIStreamListener.h"
@@ -123,9 +123,9 @@ public:
         , mOutput(out)
         , mWriteOffset(0)
         {
-            mBuf = NS_LITERAL_CSTRING("GET ")
-                 + nsDependentCString(path)
-                 + NS_LITERAL_CSTRING(" HTTP/1.0\r\n\r\n");
+            mBuf.Assign(NS_LITERAL_CSTRING("GET "));
+            mBuf.Append(path);
+            mBuf.Append(NS_LITERAL_CSTRING(" HTTP/1.0\r\n\r\n"));
         }
     virtual ~MyHandler() {}
 

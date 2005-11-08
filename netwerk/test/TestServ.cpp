@@ -43,7 +43,7 @@
 #include "nsIServerSocket.h"
 #include "nsISocketTransport.h"
 #include "nsNetUtil.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
 

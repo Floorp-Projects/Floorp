@@ -48,7 +48,6 @@
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
-#include "nsCRT.h"
 #include "nsIChannel.h"
 #include "nsIURL.h"
 #include "nsIInterfaceRequestor.h" 
@@ -56,8 +55,8 @@
 #include "nsIDNSService.h" 
 
 #include "nsISimpleEnumerator.h"
-#include "nsXPIDLString.h"
 #include "nsNetUtil.h"
+#include "nsStringAPI.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);

@@ -50,8 +50,8 @@
 #include "prlong.h"
 #include "plstr.h"
 #include "nsSupportsArray.h"
-#include "nsReadableUtils.h"
 #include "nsIComponentRegistrar.h"
+
 int getStrLine(const char *src, char *str, int ind, int max);
 nsresult auxLoad(char *uriBuf);
 //----------------------------------------------------------------------
@@ -276,7 +276,7 @@ MyNotifications::OnProgress(nsIRequest *req, nsISupports *ctx,
 int getStrLine(const char *src, char *str, int ind, int max) {
   char c = src[ind];
   int i=0;
-  globalStream.AssignLiteral("\0");
+  globalStream.Assign('\0');
   while(c!='\n' && c!='\0' && i<max) {
     str[i] = src[ind];
     i++; ind++;
@@ -368,8 +368,8 @@ int main(int argc, char **argv)
 
         PRTime start, finish;
 
-        rv = NS_NewISupportsArray(getter_AddRefs(uriList));
-        RETURN_IF_FAILED(rv, "NS_NewISupportsArray");
+        uriList = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+        RETURN_IF_FAILED(rv, "do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID)");
 
         // Create the Event Queue for this thread...
         nsCOMPtr<nsIEventQueueService> eqs =

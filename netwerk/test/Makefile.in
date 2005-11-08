@@ -44,7 +44,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_necko
-MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= xpcom \
 		  string \
@@ -60,30 +59,36 @@ CPPSRCS		= \
 		urltest.cpp \
 		TestCallbacks.cpp \
 		TestPageLoad.cpp \
-		TestPerf.cpp \
-		TestIDN.cpp \
 		TestURLParser.cpp \
 		TestStandardURL.cpp \
-		TestSocketTransport.cpp \
 		TestUpload.cpp \
-		TestStreamTransport.cpp \
-		TestStreamChannel.cpp \
-		TestStreamPump.cpp \
-		TestProtocols.cpp \
 		TestBlockingSocket.cpp \
 		TestDNS.cpp \
-		TestIOThreads.cpp \
 		TestOpen.cpp \
 		TestCookie.cpp \
 		TestServ.cpp \
 		ReadNTLM.cpp \
 		$(NULL)
 
+ifndef MOZ_ENABLE_LIBXUL
+CPPSRCS += \
+		TestPerf.cpp \
+		TestIDN.cpp \
+		TestSocketTransport.cpp \
+		TestStreamTransport.cpp \
+		TestStreamChannel.cpp \
+		TestStreamPump.cpp \
+		TestProtocols.cpp \
+		TestIOThreads.cpp \
+		$(NULL)
+endif
+
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
 
 LIBS		= $(EXTRA_DSO_LIBS) \
+		  $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		  $(MOZ_JS_LIBS) \
 		  $(XPCOM_LIBS) \
 		  $(NSPR_LIBS) \

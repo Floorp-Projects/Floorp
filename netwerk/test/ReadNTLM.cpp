@@ -37,10 +37,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
+
 #include "plbase64.h"
-#include "nsString.h"
-#include "nsNativeCharsetUtils.h"
-#include "nsReadableUtils.h"
+#include "nsStringAPI.h"
 #include "prmem.h"
 
 /*

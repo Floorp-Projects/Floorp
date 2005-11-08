@@ -125,9 +125,14 @@ NS_IMPL_ISUPPORTS1(EndListener, nsIStreamListener)
 
 
 nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* request) {
-    nsCOMPtr<nsIInputStream> dataStream;
-    nsresult rv = NS_NewCharInputStream(getter_AddRefs(dataStream), aData);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv;
+
+    nsCOMPtr<nsIStringInputStream> dataStream
+      (do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = dataStream->SetData(aData, strlen(aData));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 avail;
     dataStream->Available(&avail);
@@ -158,7 +163,7 @@ main(int argc, char* argv[])
         nsCOMPtr<nsICategoryManager> catman =
             do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) return rv;
-        nsXPIDLCString previous;
+        nsCString previous;
 
         ///////////////////////////////////////////
         // BEGIN - Stream converter registration

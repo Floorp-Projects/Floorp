@@ -49,7 +49,7 @@
 #include "nsISeekableStream.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsIFileStreams.h"
 #include "nsIStreamListener.h"
 #include "nsIEventQueueService.h"

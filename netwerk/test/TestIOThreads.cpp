@@ -35,7 +35,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "TestCommon.h"
+#include "nsXPCOM.h"
 #include "nsIServiceManager.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIEventTarget.h"
 #include "nsCOMPtr.h"
 #include "plevent.h"
