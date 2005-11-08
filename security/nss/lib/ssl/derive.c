@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: derive.c,v 1.2 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
+/* $Id: derive.c,v 1.3 2005/11/08 22:00:46 wtchang%redhat.com Exp $ */
 
 #include "ssl.h" 	/* prereq to sslimpl.h */
 #include "certt.h"	/* prereq to sslimpl.h */
@@ -425,7 +425,7 @@ ssl3_MasterKeyDeriveBypass(
 	    PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	    return SECFailure;
 	}
-	/* test PMS version for rollback here?  or in caller? */
+	/* caller must test PMS version for rollback */
     }
 
     /* initialize the client random, server random block */
