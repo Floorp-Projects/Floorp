@@ -2049,9 +2049,9 @@ nsMessengerMigrator::MigrateNewsAccounts(nsIMsgIdentity *identity)
 #endif /* NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS */
 
 			// pseudo-name is of the form newsrc-<host> or snewsrc-<host>.  
-			if (PL_strncmp(pseudo_NAME_PREFIX,pseudo_name,PL_strlen(pseudo_NAME_PREFIX)) == 0) {
+			if (PL_strncmp(PSEUDO_NAME_PREFIX,pseudo_name,PL_strlen(PSEUDO_NAME_PREFIX)) == 0) {
                 // check that there is a hostname to get after the "newsrc-" part
-                NS_ASSERTION(PL_strlen(pseudo_name) > PL_strlen(pseudo_NAME_PREFIX), "pseudo_name is too short");
+                NS_ASSERTION(PL_strlen(pseudo_name) > PL_strlen(PSEUDO_NAME_PREFIX), "pseudo_name is too short");
                 if (PL_strlen(pseudo_name) <= PL_strlen(PSEUDO_NAME_PREFIX)) {
                     return NS_ERROR_FAILURE;
                 }
