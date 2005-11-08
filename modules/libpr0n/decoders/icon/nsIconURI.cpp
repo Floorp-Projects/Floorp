@@ -434,13 +434,13 @@ nsMozIconURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 NS_IMETHODIMP
 nsMozIconURI::Clone(nsIURI **result)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsMozIconURI::Resolve(const nsACString &relativePath, nsACString &result)
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
