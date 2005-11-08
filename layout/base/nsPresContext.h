@@ -86,8 +86,8 @@ class nsIRenderingContext;
 #endif
 
 #define NS_IPRESCONTEXT_IID   \
-{ 0x96e4bc06, 0x8e72, 0x4941, \
-  {0xa6, 0x6c, 0x70, 0xee, 0x7d, 0x1b, 0x58, 0x21} }
+{ 0xa7f3a964, 0xbbea, 0x4559, \
+ { 0x9a, 0x5c, 0x4e, 0x3b, 0x90, 0x38, 0x13, 0x68 } }
 
 enum nsWidgetType {
   eWidgetType_Button  	= 1,
@@ -164,7 +164,7 @@ public:
 
   nsIPresShell* GetPresShell() const { return mShell; }
 
-  nsIDocument* GetDocument() { return GetPresShell()->GetDocument(); } 
+  nsIDocument* GetDocument() const { return GetPresShell()->GetDocument(); } 
   nsIViewManager* GetViewManager() { return GetPresShell()->GetViewManager(); } 
 #ifdef _IMPL_NS_LAYOUT
   nsStyleSet* StyleSet() { return GetPresShell()->StyleSet(); }
@@ -545,8 +545,10 @@ public:
 
   /**
    * Get the Bidi options for the presentation context
+   * Not inline so consumers of nsPresContext are not forced to
+   * include nsIDocument.
    */  
-  NS_HIDDEN_(PRUint32) GetBidi() const { return mBidi; }
+  NS_HIDDEN_(PRUint32) GetBidi() const;
 
   /**
    * Set the Bidi capabilities of the system
@@ -728,7 +730,6 @@ protected:
   unsigned              mIsVisual : 1;
   unsigned              mIsBidiSystem : 1;
 
-  PRUint32              mBidi;
 #endif
 #ifdef DEBUG
   PRBool                mInitialized;

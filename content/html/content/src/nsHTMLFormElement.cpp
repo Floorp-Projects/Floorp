@@ -242,8 +242,7 @@ public:
                                PRInt32* retval);
 
 protected:
-  nsresult DoSubmitOrReset(nsPresContext* aPresContext,
-                           nsEvent* aEvent,
+  nsresult DoSubmitOrReset(nsEvent* aEvent,
                            PRInt32 aMessage);
   nsresult DoReset();
 
@@ -258,26 +257,22 @@ protected:
    * @param aPresContext the presentation context
    * @param aEvent the DOM event that was passed to us for the submit
    */
-  nsresult DoSubmit(nsPresContext* aPresContext, nsEvent* aEvent);
+  nsresult DoSubmit(nsEvent* aEvent);
 
   /**
    * Prepare the submission object (called by DoSubmit)
    *
-   * @param aPresContext the presentation context
    * @param aFormSubmission the submission object
    * @param aEvent the DOM event that was passed to us for the submit
    */
-  nsresult BuildSubmission(nsPresContext* aPresContext, 
-                           nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
+  nsresult BuildSubmission(nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
                            nsEvent* aEvent);
   /**
    * Perform the submission (called by DoSubmit and FlushPendingSubmission)
    *
-   * @param aPresContext the presentation context
    * @param aFormSubmission the submission object
    */
-  nsresult SubmitSubmission(nsPresContext* aPresContext, 
-                            nsIFormSubmission* aFormSubmission);
+  nsresult SubmitSubmission(nsIFormSubmission* aFormSubmission);
   /**
    * Walk over the form elements and call SubmitNamesValues() on them to get
    * their data pumped into the FormSubmitter.
@@ -608,17 +603,15 @@ nsHTMLFormElement::Submit()
   // Send the submit event
   nsresult rv = NS_OK;
   nsCOMPtr<nsPresContext> presContext = GetPresContext();
-  if (presContext) {
-    if (mPendingSubmission) {
-      // aha, we have a pending submission that was not flushed
-      // (this happens when form.submit() is called twice)
-      // we have to delete it and build a new one since values
-      // might have changed inbetween (we emulate IE here, that's all)
-      mPendingSubmission = nsnull;
-    }
-
-    rv = DoSubmitOrReset(presContext, nsnull, NS_FORM_SUBMIT);
+  if (mPendingSubmission) {
+    // aha, we have a pending submission that was not flushed
+    // (this happens when form.submit() is called twice)
+    // we have to delete it and build a new one since values
+    // might have changed inbetween (we emulate IE here, that's all)
+    mPendingSubmission = nsnull;
   }
+
+  rv = DoSubmitOrReset(nsnull, NS_FORM_SUBMIT);
   return rv;
 }
 
@@ -628,6 +621,7 @@ nsHTMLFormElement::Reset()
   // Send the reset event
   nsresult rv = NS_OK;
   nsCOMPtr<nsPresContext> presContext = GetPresContext();
+  // XXXbz shouldn't need prescontext here!  Fix events!
   if (presContext) {
     // Calling HandleDOMEvent() directly so that reset() will work even if
     // the frame does not exist.  This does not have an effect right now, but
@@ -761,7 +755,7 @@ nsHTMLFormElement::HandleDOMEvent(nsPresContext* aPresContext,
             // to forget it and the form element will build a new one
             ForgetPendingSubmission();
           }
-          DoSubmitOrReset(aPresContext, aEvent, aEvent->message);
+          DoSubmitOrReset(aEvent, aEvent->message);
         }
         break;
       }
@@ -787,12 +781,9 @@ nsHTMLFormElement::HandleDOMEvent(nsPresContext* aPresContext,
 }
 
 nsresult
-nsHTMLFormElement::DoSubmitOrReset(nsPresContext* aPresContext,
-                                   nsEvent* aEvent,
+nsHTMLFormElement::DoSubmitOrReset(nsEvent* aEvent,
                                    PRInt32 aMessage)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
-
   // Make sure the presentation is up-to-date
   nsIDocument* doc = GetCurrentDoc();
   if (doc) {
@@ -807,7 +798,10 @@ nsHTMLFormElement::DoSubmitOrReset(nsPresContext* aPresContext,
     rv = DoReset();
   }
   else if (NS_FORM_SUBMIT == aMessage) {
-    rv = DoSubmit(aPresContext, aEvent);
+    // Don't submit if we're not in a document.
+    if (doc) {
+      rv = DoSubmit(aEvent);
+    }
   }
   return rv;
 }
@@ -836,10 +830,11 @@ nsHTMLFormElement::DoReset()
   }
 
 nsresult
-nsHTMLFormElement::DoSubmit(nsPresContext* aPresContext, nsEvent* aEvent)
+nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
 {
   NS_ASSERTION(!mIsSubmitting, "Either two people are trying to submit or the "
                "previous submit was not properly cancelled by the DocShell");
+  NS_ASSERTION(GetCurrentDoc(), "Should never get here without a current doc");
   if (mIsSubmitting) {
     // XXX Should this return an error?
     return NS_OK;
@@ -854,7 +849,7 @@ nsHTMLFormElement::DoSubmit(nsPresContext* aPresContext, nsEvent* aEvent)
   //
   // prepare the submission object
   //
-  BuildSubmission(aPresContext, submission, aEvent); 
+  BuildSubmission(submission, aEvent); 
 
   // XXXbz if the script global is that for an sXBL/XBL2 doc, it won't
   // be a window...
@@ -882,12 +877,11 @@ nsHTMLFormElement::DoSubmit(nsPresContext* aPresContext, nsEvent* aEvent)
   // 
   // perform the submission
   //
-  return SubmitSubmission(aPresContext, submission); 
+  return SubmitSubmission(submission); 
 }
 
 nsresult
-nsHTMLFormElement::BuildSubmission(nsPresContext* aPresContext, 
-                                   nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
+nsHTMLFormElement::BuildSubmission(nsCOMPtr<nsIFormSubmission>& aFormSubmission, 
                                    nsEvent* aEvent)
 {
   NS_ASSERTION(!mPendingSubmission, "tried to build two submissions!");
@@ -905,7 +899,7 @@ nsHTMLFormElement::BuildSubmission(nsPresContext* aPresContext,
   //
   // Get the submission object
   //
-  rv = GetSubmissionFromForm(this, aPresContext, getter_AddRefs(aFormSubmission));
+  rv = GetSubmissionFromForm(this, getter_AddRefs(aFormSubmission));
   NS_ENSURE_SUBMIT_SUCCESS(rv);
 
   //
@@ -918,8 +912,7 @@ nsHTMLFormElement::BuildSubmission(nsPresContext* aPresContext,
 }
 
 nsresult
-nsHTMLFormElement::SubmitSubmission(nsPresContext* aPresContext, 
-                                    nsIFormSubmission* aFormSubmission)
+nsHTMLFormElement::SubmitSubmission(nsIFormSubmission* aFormSubmission)
 {
   nsresult rv;
   //
@@ -935,7 +928,14 @@ nsHTMLFormElement::SubmitSubmission(nsPresContext* aPresContext,
   }
 
   // If there is no link handler, then we won't actually be able to submit.
-  if (!aPresContext->GetLinkHandler()) {
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) {
+    // Nothing to do
+  }
+
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsILinkHandler> linkHandler(do_QueryInterface(container));
+  if (!linkHandler) {
     mIsSubmitting = PR_FALSE;
     return NS_OK;
   }
@@ -977,7 +977,7 @@ nsHTMLFormElement::SubmitSubmission(nsPresContext* aPresContext,
 
     nsAutoHandlingUserInputStatePusher userInpStatePusher(mSubmitInitiatedFromUserInput);
 
-    rv = aFormSubmission->SubmitTo(actionURI, target, this, aPresContext,
+    rv = aFormSubmission->SubmitTo(actionURI, target, this, linkHandler,
                                    getter_AddRefs(docShell),
                                    getter_AddRefs(mSubmittingRequest));
   }
@@ -1329,8 +1329,7 @@ nsHTMLFormElement::FlushPendingSubmission()
   //
   // perform the submission with the stored pending submission
   //
-  nsCOMPtr<nsPresContext> presContext = GetPresContext();
-  SubmitSubmission(presContext, mPendingSubmission);
+  SubmitSubmission(mPendingSubmission);
 
   // now delete the pending submission object
   mPendingSubmission = nsnull;

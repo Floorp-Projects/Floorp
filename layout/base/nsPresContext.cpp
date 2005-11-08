@@ -492,6 +492,12 @@ nsPresContext::GetDocumentColorPreferences()
 void
 nsPresContext::GetUserPreferences()
 {
+  if (!GetPresShell()) {
+    // No presshell means nothing to do here.  We'll do this when we
+    // get a presshell.
+    return;
+  }
+    
   mFontScaler =
     nsContentUtils::GetIntPref("browser.display.base_font_scaler",
                                mFontScaler);
@@ -572,35 +578,41 @@ nsPresContext::GetUserPreferences()
     mImageAnimationModePref = imgIContainer::kLoopOnceAnimMode;
 
 #ifdef IBMBIDI
+  PRUint32 bidiOptions = GetBidi();
+
   PRInt32 prefInt =
     nsContentUtils::GetIntPref("bidi.direction",
-                               GET_BIDI_OPTION_DIRECTION(mBidi));
-  SET_BIDI_OPTION_DIRECTION(mBidi, prefInt);
+                               GET_BIDI_OPTION_DIRECTION(bidiOptions));
+  SET_BIDI_OPTION_DIRECTION(bidiOptions, prefInt);
 
   prefInt =
     nsContentUtils::GetIntPref("bidi.texttype",
-                               GET_BIDI_OPTION_TEXTTYPE(mBidi));
-  SET_BIDI_OPTION_TEXTTYPE(mBidi, prefInt);
+                               GET_BIDI_OPTION_TEXTTYPE(bidiOptions));
+  SET_BIDI_OPTION_TEXTTYPE(bidiOptions, prefInt);
 
   prefInt =
     nsContentUtils::GetIntPref("bidi.controlstextmode",
-                               GET_BIDI_OPTION_CONTROLSTEXTMODE(mBidi));
-  SET_BIDI_OPTION_CONTROLSTEXTMODE(mBidi, prefInt);
+                               GET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions));
+  SET_BIDI_OPTION_CONTROLSTEXTMODE(bidiOptions, prefInt);
 
   prefInt =
     nsContentUtils::GetIntPref("bidi.numeral",
-                               GET_BIDI_OPTION_NUMERAL(mBidi));
-  SET_BIDI_OPTION_NUMERAL(mBidi, prefInt);
+                               GET_BIDI_OPTION_NUMERAL(bidiOptions));
+  SET_BIDI_OPTION_NUMERAL(bidiOptions, prefInt);
 
   prefInt =
     nsContentUtils::GetIntPref("bidi.support",
-                               GET_BIDI_OPTION_SUPPORT(mBidi));
-  SET_BIDI_OPTION_SUPPORT(mBidi, prefInt);
+                               GET_BIDI_OPTION_SUPPORT(bidiOptions));
+  SET_BIDI_OPTION_SUPPORT(bidiOptions, prefInt);
 
   prefInt =
     nsContentUtils::GetIntPref("bidi.characterset",
-                               GET_BIDI_OPTION_CHARACTERSET(mBidi));
-  SET_BIDI_OPTION_CHARACTERSET(mBidi, prefInt);
+                               GET_BIDI_OPTION_CHARACTERSET(bidiOptions));
+  SET_BIDI_OPTION_CHARACTERSET(bidiOptions, prefInt);
+
+  // Set on the document, not on ourselves so we don't do the various
+  // extra SetBidi() work.
+  GetDocument()->SetBidiOptions(bidiOptions);
 #endif
 }
 
@@ -667,7 +679,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   NS_ADDREF(mDeviceContext);
 
   // Get the look and feel service here; default colors will be initialized
-  // from calling GetUserPreferences() below.
+  // from calling GetUserPreferences() when we get a presshell.
   nsresult rv = CallGetService(kLookAndFeelCID, &mLookAndFeel);
   if (NS_FAILED(rv)) {
     NS_ERROR("LookAndFeel service must be implemented for this toolkit");
@@ -709,9 +721,6 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
                                        this);
 #endif
 
-  // Initialize our state from the user preferences
-  GetUserPreferences();
-
   rv = mEventManager->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -746,6 +755,10 @@ nsPresContext::SetShell(nsIPresShell* aShell)
   mShell = aShell;
 
   if (mShell) {
+    // Initialize our state from the user preferences, now that we
+    // have a presshell, and hence a document.
+    GetUserPreferences();
+
     nsIDocument *doc = mShell->GetDocument();
     NS_ASSERTION(doc, "expect document here");
     if (doc) {
@@ -798,7 +811,7 @@ nsPresContext::UpdateCharSet(const nsAFlatCString& aCharSet)
 #ifdef IBMBIDI
   //ahmed
 
-  switch (GET_BIDI_OPTION_TEXTTYPE(mBidi)) {
+  switch (GET_BIDI_OPTION_TEXTTYPE(GetBidi())) {
 
     case IBMBIDI_TEXTTYPE_LOGICAL:
       SetVisualMode(PR_FALSE);
@@ -1142,15 +1155,15 @@ nsPresContext::GetBidiUtils()
 void
 nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
 {
-  mBidi = aSource;
-  if (IBMBIDI_TEXTDIRECTION_RTL == GET_BIDI_OPTION_DIRECTION(mBidi)
-      || IBMBIDI_NUMERAL_HINDI == GET_BIDI_OPTION_NUMERAL(mBidi)) {
+  GetDocument()->SetBidiOptions(aSource);
+  if (IBMBIDI_TEXTDIRECTION_RTL == GET_BIDI_OPTION_DIRECTION(aSource)
+      || IBMBIDI_NUMERAL_HINDI == GET_BIDI_OPTION_NUMERAL(aSource)) {
     SetBidiEnabled(PR_TRUE);
   }
-  if (IBMBIDI_TEXTTYPE_VISUAL == GET_BIDI_OPTION_TEXTTYPE(mBidi)) {
+  if (IBMBIDI_TEXTTYPE_VISUAL == GET_BIDI_OPTION_TEXTTYPE(aSource)) {
     SetVisualMode(PR_TRUE);
   }
-  else if (IBMBIDI_TEXTTYPE_LOGICAL == GET_BIDI_OPTION_TEXTTYPE(mBidi)) {
+  else if (IBMBIDI_TEXTTYPE_LOGICAL == GET_BIDI_OPTION_TEXTTYPE(aSource)) {
     SetVisualMode(PR_FALSE);
   }
   else {
@@ -1162,6 +1175,12 @@ nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
   if (mShell && aForceReflow) {
     ClearStyleDataAndReflow();
   }
+}
+
+PRUint32
+nsPresContext::GetBidi() const
+{
+  return GetDocument()->GetBidiOptions();
 }
 #endif //IBMBIDI
 
