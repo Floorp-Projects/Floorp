@@ -1528,6 +1528,9 @@
           // Wire up the first title change listener.
           this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
 
+          // Ensure the browser's session history and security UI are wired up
+          this.mCurrentBrowser.init();
+
           // Wire up the tab's progress listener and filter.
           const nsIWebProgress = Components.interfaces.nsIWebProgress;
           var tabListener = this.mTabProgressListener(this.mCurrentTab,
