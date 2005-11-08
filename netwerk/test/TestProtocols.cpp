@@ -757,7 +757,7 @@ nsresult LoadURLsFromFile(char *aFileName)
             fileBuffer.Append(buffer, len);
             // Treat each line as a URL...
             while ((offset = FindChar(fileBuffer, '\n')) != -1) {
-                urlString = Substring(fileBuffer, offset);
+                urlString = StringHead(fileBuffer, offset);
                 fileBuffer.Cut(0, offset+1);
 
                 StripChar(urlString, '\r');
