@@ -89,7 +89,22 @@ nsSpatialNavigation::KeyPress(nsIDOMEvent* aEvent)
   prefBranch->GetBoolPref("snav.enabled", &enabled);
   if (!enabled) //  this doesn't work.  wtf? if (!mService->mEnabled)
     return NS_OK;
-  
+ 
+
+  nsCOMPtr<nsIDOMNSUIEvent> uiEvent(do_QueryInterface(aEvent));
+  if (uiEvent)
+  {
+    // If a web page wants to use the keys mapped to our
+    // move, they have to use evt.preventDefault() after
+    // they get the key
+
+    PRBool preventDefault;
+    uiEvent->GetPreventDefault(&preventDefault);
+    if (preventDefault)
+      return NS_OK;
+  }
+
+
   PRInt32 formControlType = -1;
   // check to see if we are in a text field.
   // based on nsTypeAheadFind.
