@@ -5249,11 +5249,22 @@ if test -n "$XPCOM_USE_LEA"; then
 fi
 
 dnl ========================================================
+dnl = Enable places (new history/bookmarks)
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(places,
+[  --enable-places        Enable 'places' bookmark/history implementation],
+    MOZ_PLACES=1,
+    MOZ_PLACES= )
+if test -n "$MOZ_PLACES"; then
+    AC_DEFINE(MOZ_PLACES)
+fi
+
+dnl ========================================================
 dnl = Enable mozStorage
 dnl = XXX need to implement --with-system-sqlite3 (see bug 263381)
 dnl ========================================================
-dnl Implicitly enabled by default if building calendar
-if test -n "$MOZ_CALENDAR"; then
+dnl Implicitly enabled by default if building calendar or places
+if test -n "$MOZ_CALENDAR" || test -n "$MOZ_PLACES"; then
     MOZ_STORAGE=1
 fi
 MOZ_ARG_ENABLE_BOOL(storage,
@@ -6762,6 +6773,7 @@ AC_SUBST(MOZ_LDAP_XPCOM_EXPERIMENTAL)
 AC_SUBST(LDAP_CFLAGS)
 AC_SUBST(LDAP_LIBS)
 AC_SUBST(LIBICONV)
+AC_SUBST(MOZ_PLACES)
 AC_SUBST(MOZ_STORAGE)
 AC_SUBST(NS_PRINTING)
 

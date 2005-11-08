@@ -60,6 +60,26 @@ ifneq (,$(filter windows mac cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
 SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)shellservice_s.$(LIB_SUFFIX)
 endif
 
+ifdef MOZ_PLACES
+# note: this requires mork because the auto complete code used as the base class
+# for the new auto complete result implementation includes the implementation of
+# the mork results
+REQUIRES += \
+            autocomplete \
+            docshell \
+            locale \
+            layout \
+            dom \
+            mork \
+            history \
+            storage \
+            places \
+            $(NULL)
+
+LOCAL_INCLUDES += -I$(srcdir)/../places/src
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)places_s.$(LIB_SUFFIX)
+endif
+
 # Link to gkgfx for GNOME shell service
 ifeq ($(MOZ_WIDGET_TOOLKIT), gtk2)
 EXTRA_DSO_LIBS += gkgfx
