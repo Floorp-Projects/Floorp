@@ -49,12 +49,13 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
+#include "nsStringAPI.h"
 #include "nsNetCID.h"
 #include "nsIComponentRegistrar.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsXPCOM.h"
+#include "prprf.h"
 
 // Define CIDs...
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -123,7 +124,9 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, PRInt32 urlFactory = UR
         output += RESULT();
         output += ',';
         rv = tURL->GetPort(&port);
-        output.AppendInt(port);
+        char portbuffer[40];
+        PR_snprintf(portbuffer, sizeof(portbuffer), "%d", port);
+        output.Append(portbuffer);
         output += ',';
         rv = tURL->GetDirectory(temp);
         output += RESULT();
@@ -200,7 +203,7 @@ nsresult testURL(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
         }
         else if (1 == count%3) {
             if (tempurl) delete[] tempurl;
-            tempurl = nsCRT::strdup(temp);
+            tempurl = strdup(temp);
         } else { 
             if (!prevResult)
                 printf("no results to compare to!\n");

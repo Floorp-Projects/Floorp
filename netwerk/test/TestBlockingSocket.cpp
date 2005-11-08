@@ -42,7 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "prlog.h"

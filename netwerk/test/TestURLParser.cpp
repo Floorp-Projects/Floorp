@@ -4,6 +4,7 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
 
 static void
 print_field(const char *label, char *str, PRInt32 len)

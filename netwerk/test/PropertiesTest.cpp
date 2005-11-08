@@ -38,7 +38,7 @@
 
 #include "TestCommon.h"
 #include "nsXPCOM.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsIEventQueueService.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
@@ -50,8 +50,8 @@
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 #include <stdio.h>
-#include "nsReadableUtils.h"
-
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #define TEST_URL "resource:/res/test.properties"
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);
@@ -117,14 +117,7 @@ main(int argc, char* argv[])
     if (NS_FAILED(ret) || (!v.Length())) {
       break;
     }
-    char* value = ToNewCString(v);
-    if (value) {
-      printf("\"%d\"=\"%s\"\n", i, value);
-      delete[] value;
-    }
-    else {
-      printf("%d: ToNewCString failed\n", i);
-    }
+    printf("\"%d\"=\"%s\"\n", i, NS_ConvertUTF16toUTF8(v).get());
     i++;
   }
 

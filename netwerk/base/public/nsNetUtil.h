@@ -43,8 +43,7 @@
 
 #include "nsNetError.h"
 #include "nsNetCID.h"
-#include "nsReadableUtils.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsMemory.h"
 #include "nsCOMPtr.h"
 #include "prio.h" // for read/write flags, permissions, etc.
@@ -87,6 +86,8 @@
 #include "nsInterfaceRequestorAgg.h"
 #include "nsInt64.h"
 #include "nsINetUtil.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 // Helper, to simplify getting the I/O service.
 inline const nsGetServiceByCIDWithError
@@ -130,7 +131,7 @@ NS_NewURI(nsIURI* *result,
           nsIURI* baseURI = nsnull,
           nsIIOService* ioService = nsnull)     // pass in nsIIOService to optimize callers
 {
-    return NS_NewURI(result, NS_ConvertUCS2toUTF8(spec), charset, baseURI, ioService);
+    return NS_NewURI(result, NS_ConvertUTF16toUTF8(spec), charset, baseURI, ioService);
 }
 
 inline nsresult
@@ -281,7 +282,7 @@ NS_MakeAbsoluteURI(nsAString       &result,
         if (spec.IsEmpty())
             rv = baseURI->GetSpec(resultBuf);
         else
-            rv = baseURI->Resolve(NS_ConvertUCS2toUTF8(spec), resultBuf);
+            rv = baseURI->Resolve(NS_ConvertUTF16toUTF8(spec), resultBuf);
         if (NS_SUCCEEDED(rv))
             CopyUTF8toUTF16(resultBuf, result);
     }
@@ -645,6 +646,7 @@ NS_GetURLSpecFromFile(nsIFile      *aFile,
     return rv;
 }
 
+#ifdef MOZILLA_INTERNAL_API
 inline nsresult
 NS_ExamineForProxy(const char    *scheme,
                    const char    *host,
@@ -676,6 +678,7 @@ NS_ExamineForProxy(const char    *scheme,
     }
     return rv;
 }
+#endif
 
 inline nsresult
 NS_ParseContentType(const nsACString &rawContentType,
@@ -845,8 +848,9 @@ NS_NewPostDataStream(nsIInputStream  **result,
                      PRUint32          encodeFlags,
                      nsIIOService     *unused = nsnull)
 {
+    nsresult rv;
+
     if (isFile) {
-        nsresult rv;
         nsCOMPtr<nsILocalFile> file;
         nsCOMPtr<nsIInputStream> fileStream;
 
@@ -862,7 +866,17 @@ NS_NewPostDataStream(nsIInputStream  **result,
     }
 
     // otherwise, create a string stream for the data (copies)
-    return NS_NewCStringInputStream(result, data);
+    nsCOMPtr<nsIStringInputStream> stream
+        (do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv));
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = stream->SetData(data.BeginReading(), data.Length());
+    if (NS_FAILED(rv))
+        return rv;
+
+    NS_ADDREF(*result = stream);
+    return NS_OK;
 }
 
 inline nsresult

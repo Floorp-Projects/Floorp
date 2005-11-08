@@ -48,7 +48,7 @@
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsIFileStreams.h"
 #include "nsIStreamListener.h"
 #include "nsIEventQueueService.h"
@@ -380,15 +380,16 @@ main(int argc, char* argv[])
         rv = destFile->GetNativeLeafName(leafName);
         if (NS_FAILED(rv)) return rv;
 
-        nsCAutoString newName;
-        newName = leafName + NS_LITERAL_CSTRING(".1");
+        nsCAutoString newName(leafName);
+        newName.Append(NS_LITERAL_CSTRING(".1"));
         rv = destFile->SetNativeLeafName(newName);
         if (NS_FAILED(rv)) return rv;
 
         rv = RunTest(srcFile, destFile);
         NS_ASSERTION(NS_SUCCEEDED(rv), "RunTest failed");
 
-        newName = leafName + NS_LITERAL_CSTRING(".2");
+        newName = leafName;
+        newName.Append(NS_LITERAL_CSTRING(".2"));
         rv = destFile->SetNativeLeafName(newName);
         if (NS_FAILED(rv)) return rv;
 

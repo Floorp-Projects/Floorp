@@ -1,7 +1,7 @@
 #include "nsIStreamConverter.h"
-#include "nsString.h"
 #include "nsIFactory.h"
 #include "nsCOMPtr.h"
+#include "nsStringAPI.h"
 
 /* This file defines stream converter components, and their accompanying factory class.
  * These converters implement the nsIStreamConverter interface and support both

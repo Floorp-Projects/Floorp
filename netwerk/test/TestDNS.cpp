@@ -43,12 +43,13 @@
 #include "nsIDNSRecord.h"
 #include "nsICancelable.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsNetCID.h"
 #include "prinrval.h"
 #include "prthread.h"
 #include "prnetdb.h"
-#include "nsCRT.h"
+#include "nsXPCOM.h"
+#include "nsServiceManagerUtils.h"
 
 class myDNSListener : public nsIDNSListener
 {
@@ -90,6 +91,15 @@ private:
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(myDNSListener, nsIDNSListener)
 
+static PRBool IsAscii(const char *s)
+{
+  while (*s)
+    if (*s & 0x80)
+      return PR_FALSE;
+
+  return PR_TRUE;
+}
+
 int main(int argc, char **argv)
 {
     if (test_common_init(&argc, &argv) != 0)
@@ -120,10 +130,10 @@ int main(int argc, char **argv)
             for (int i=1; i<argc; ++i) {
                 // assume non-ASCII input is given in the native charset 
                 nsCAutoString hostBuf;
-                if (nsCRT::IsAscii(argv[i]))
+                if (IsAscii(argv[i]))
                     hostBuf.Assign(argv[i]);
                 else
-                    hostBuf = NS_ConvertUCS2toUTF8(NS_ConvertASCIItoUCS2(argv[i]));
+                    hostBuf = NS_ConvertUTF16toUTF8(NS_ConvertASCIItoUTF16(argv[i]));
 
                 nsCOMPtr<nsIDNSListener> listener = new myDNSListener(argv[i], i);
 

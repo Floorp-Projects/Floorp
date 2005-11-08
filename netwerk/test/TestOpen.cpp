@@ -38,7 +38,7 @@
 
 #include "TestCommon.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsIURI.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"

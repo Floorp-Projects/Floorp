@@ -82,7 +82,7 @@
 #include "nsChannelProperties.h"
 
 #include "nsISimpleEnumerator.h"
-#include "nsXPIDLString.h"
+#include "nsStringAPI.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
 #include "prtime.h"
@@ -294,7 +294,7 @@ TestAuthPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
     fgets(buf, sizeof(buf), stdin);
     n = strlen(buf);
     buf[n-1] = '\0'; // trim trailing newline
-    *user = ToNewUnicode(nsDependentCString(buf));
+    *user = NS_StringCloneData(NS_ConvertUTF8toUTF16(buf));
 
     const char *p;
 #ifdef XP_UNIX
@@ -306,7 +306,7 @@ TestAuthPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
     buf[n-1] = '\0'; // trim trailing newline
     p = buf;
 #endif
-    *pwd = ToNewUnicode(nsDependentCString(p));
+    *pwd = NS_StringCloneData(NS_ConvertUTF8toUTF16(p));
 
     // zap buf 
     memset(buf, 0, sizeof(buf));
@@ -707,6 +707,34 @@ nsresult StartLoadingURL(const char* aUrlString)
     return rv;
 }
 
+static PRInt32
+FindChar(nsCString& buffer, char c)
+{
+    const char *b;
+    PRInt32 len = NS_CStringGetData(buffer, &b);
+
+    for (PRInt32 offset = 0; offset < len; ++offset) {
+        if (b[offset] == c)
+            return offset;
+    }
+
+    return -1;
+}
+        
+
+static void
+StripChar(nsCString& buffer, char c)
+{
+    const char *b;
+    PRUint32 len = NS_CStringGetData(buffer, &b) - 1;
+
+    for (; len > 0; --len) {
+        if (b[len] == c) {
+            buffer.Cut(len, 1);
+            NS_CStringGetData(buffer, &b);
+        }
+    }
+}
 
 nsresult LoadURLsFromFile(char *aFileName)
 {
@@ -715,7 +743,7 @@ nsresult LoadURLsFromFile(char *aFileName)
     PRFileDesc* fd;
     char buffer[1024];
     nsCString fileBuffer;
-    nsCAutoString urlString;
+    nsCString urlString;
 
     fd = PR_Open(aFileName, PR_RDONLY, 777);
     if (!fd) {
@@ -728,11 +756,11 @@ nsresult LoadURLsFromFile(char *aFileName)
         if (len>0) {
             fileBuffer.Append(buffer, len);
             // Treat each line as a URL...
-            while ((offset = fileBuffer.FindChar('\n')) != -1) {
-                fileBuffer.Left(urlString, offset);
+            while ((offset = FindChar(fileBuffer, '\n')) != -1) {
+                urlString = Substring(fileBuffer, offset);
                 fileBuffer.Cut(0, offset+1);
 
-                urlString.StripChars("\r");
+                StripChar(urlString, '\r');
                 if (urlString.Length()) {
                     LOG(("\t%s\n", urlString.get()));
                     rv = StartLoadingURL(urlString.get());
@@ -742,7 +770,7 @@ nsresult LoadURLsFromFile(char *aFileName)
     } while (len>0);
 
     // If anything is left in the fileBuffer, treat it as a URL...
-    fileBuffer.StripChars("\r");
+    StripChar(fileBuffer, '\r');
     if (fileBuffer.Length()) {
         LOG(("\t%s\n", fileBuffer.get()));
         StartLoadingURL(fileBuffer.get());
