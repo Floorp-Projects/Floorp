@@ -40,8 +40,10 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "nsStringAPI.h"
-#include "nsCRT.h"
+#include "nsXPCOM.h"
+#include "nsMemory.h"
 
 static const char kAsciiData[] = "hello world";
 
@@ -83,7 +85,7 @@ static PRBool test_basic_1()
         NS_ERROR("unexpected result");
         return PR_FALSE;
       }
-    nsMemory::Free(clone);
+    NS_Free(clone);
 
     nsCStringContainer temp;
     NS_CStringContainerInit(temp);
@@ -125,36 +127,36 @@ static PRBool test_basic_2()
 
     NS_StringSetData(s, kUnicodeData, PR_UINT32_MAX);
     len = NS_StringGetData(s, &ptr);
-    if (ptr == nsnull || nsCRT::strcmp(ptr, kUnicodeData) != 0)
+    if (len != sizeof(kUnicodeData)/2 - 1)
       {
         NS_ERROR("unexpected result");
         return PR_FALSE;
       }
-    if (len != sizeof(kUnicodeData)/2 - 1)
+    if (ptr == nsnull || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
       {
         NS_ERROR("unexpected result");
         return PR_FALSE;
       }
 
     clone = NS_StringCloneData(s);
-    if (ptr == nsnull || nsCRT::strcmp(ptr, kUnicodeData) != 0)
+    if (ptr == nsnull || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
       {
         NS_ERROR("unexpected result");
         return PR_FALSE;
       }
-    nsMemory::Free(clone);
+    NS_Free(clone);
 
     nsStringContainer temp;
     NS_StringContainerInit(temp);
     NS_StringCopy(temp, s);
 
     len = NS_StringGetData(temp, &ptr);
-    if (ptr == nsnull || nsCRT::strcmp(ptr, kUnicodeData) != 0)
+    if (len != sizeof(kUnicodeData)/2 - 1)
       {
         NS_ERROR("unexpected result");
         return PR_FALSE;
       }
-    if (len != sizeof(kUnicodeData)/2 - 1)
+    if (ptr == nsnull || memcmp(ptr, kUnicodeData, sizeof(kUnicodeData)) != 0)
       {
         NS_ERROR("unexpected result");
         return PR_FALSE;

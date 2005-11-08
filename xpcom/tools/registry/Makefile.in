@@ -55,7 +55,6 @@ SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LIBS            = \
 		$(XPCOM_STANDALONE_GLUE_LDOPTS) \
-		$(NSPR_LIBS) \
 		$(NULL)
 
 # Need to link with CoreFoundation on Mac

@@ -29,11 +29,6 @@ class nsIProxyCreateInstance : public nsISupports {
 
   /* void CreateInstanceByContractID (in string aContractID, in nsISupports aOuter, in nsIIDRef iid, out voidStar result); */
   NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aOuter, const nsIID & iid, void * *result) = 0;
-
-#ifdef XPIDL_JS_STUBS
-  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
-  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIProxyCreateInstance *priv);
-#endif
 };
 
 #endif /* __gen_nsIProxyCreateInstance_h__ */

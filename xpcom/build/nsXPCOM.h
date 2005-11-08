@@ -118,7 +118,7 @@ typedef nsresult (PR_CALLBACK *nsGetModuleProc)(nsIComponentManager *aCompMgr,
  *         shutdown. Other error codes indicate a failure during
  *         initialisation.
  */
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_InitXPCOM2(nsIServiceManager* *result, 
               nsIFile* binDirectory,
               nsIDirectoryServiceProvider* appFileLocationProvider);
@@ -175,7 +175,7 @@ struct nsStaticModuleInfo {
  *         shutdown. Other error codes indicate a failure during
  *         initialisation.
  */
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_InitXPCOM3(nsIServiceManager* *result, 
               nsIFile* binDirectory,
               nsIDirectoryServiceProvider* appFileLocationProvider,
@@ -195,7 +195,7 @@ NS_InitXPCOM3(nsIServiceManager* *result,
  *         other error codes indicate a failure during initialisation.
  *
  */
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_ShutdownXPCOM(nsIServiceManager* servMgr);
 
 
@@ -209,7 +209,7 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr);
  *         other error codes indicate a failure during initialisation.
  *
  */
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_GetServiceManager(nsIServiceManager* *result);
 
 /**
@@ -222,7 +222,7 @@ NS_GetServiceManager(nsIServiceManager* *result);
  *         other error codes indicate a failure during initialisation.
  *
  */
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_GetComponentManager(nsIComponentManager* *result);
 
 /**
@@ -235,7 +235,7 @@ NS_GetComponentManager(nsIComponentManager* *result);
  *         other error codes indicate a failure during initialisation.
  *
  */
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_GetComponentRegistrar(nsIComponentRegistrar* *result);
 
 /**
@@ -248,7 +248,7 @@ NS_GetComponentRegistrar(nsIComponentRegistrar* *result);
  *         other error codes indicate a failure during initialisation.
  *
  */
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_GetMemoryManager(nsIMemory* *result);
 
 /**
@@ -274,12 +274,12 @@ NS_GetMemoryManager(nsIMemory* *result);
  *         other error codes indicate a failure.
  */
 
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_NewLocalFile(const nsAString &path, 
                 PRBool followLinks, 
                 nsILocalFile* *result);
 
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_NewNativeLocalFile(const nsACString &path, 
                       PRBool followLinks, 
                       nsILocalFile* *result);
@@ -294,7 +294,7 @@ NS_NewNativeLocalFile(const nsACString &path,
  * @result       The block of memory
  * @note         This function is thread-safe.
  */
-extern "C" NS_COM void*
+XPCOM_API(void*)
 NS_Alloc(PRSize size);
 
 /**
@@ -315,7 +315,7 @@ NS_Alloc(PRSize size);
  * allocation fails, ptr is not freed and null is returned. The returned
  * value may be the same as ptr.
  */
-extern "C" NS_COM void*
+XPCOM_API(void*)
 NS_Realloc(void* ptr, PRSize size);
 
 /**
@@ -328,7 +328,7 @@ NS_Realloc(void* ptr, PRSize size);
  *              been allocated by NS_Alloc or NS_Realloc
  * @note        This function is thread-safe.
  */
-extern "C" NS_COM void
+XPCOM_API(void)
 NS_Free(void* ptr);
 
 
@@ -413,10 +413,10 @@ NS_Free(void* ptr);
  */
 #define NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID "xpcom-category-cleared"
 
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_GetDebug(nsIDebug* *result);
 
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_GetTraceRefcnt(nsITraceRefcnt* *result);
 
 #endif

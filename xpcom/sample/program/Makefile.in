@@ -60,12 +60,6 @@ LIBS            = \
 		$(XPCOM_STANDALONE_GLUE_LDOPTS) \
 		$(NULL)
 
-# XXXbsmedberg temporary hack! The standalone glue still depends on NSPR
-# except on mac; this will be fixed soon!
-ifneq (Darwin,$(OS_ARCH))
-LIBS += $(NSPR_LIBS)
-endif
-
 # Need to link with CoreFoundation on Mac
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 LIBS            += \

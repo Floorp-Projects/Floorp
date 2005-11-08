@@ -43,12 +43,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
-MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= string
 
 CPPSRCS		= TestCOM.cpp 
-#TestHelloXPLoop.cpp nsStringTest.cpp
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
@@ -58,4 +56,8 @@ include $(topsrcdir)/config/rules.mk
 
 OS_LIBS	= $(call EXPAND_LIBNAME,rpcrt4 uuid)
 
-LIBS = $(XPCOM_LIBS) $(NSPR_LIBS)
+LIBS = \
+	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+	$(XPCOM_LIBS) \
+	$(NSPR_LIBS) \
+	$(NULL)

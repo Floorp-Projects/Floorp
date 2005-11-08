@@ -329,7 +329,7 @@ nsMemoryImpl::sIsFlushing = PR_FALSE;
 nsMemoryImpl::FlushEvent
 nsMemoryImpl::sFlushEvent;
 
-extern "C" NS_EXPORT void*
+XPCOM_API(void*)
 NS_Alloc(PRSize size)
 {
     NS_ASSERTION(size, "NS_Alloc of size 0");
@@ -342,7 +342,7 @@ NS_Alloc(PRSize size)
     return result;
 }
 
-extern "C" NS_EXPORT void*
+XPCOM_API(void*)
 NS_Realloc(void* ptr, PRSize size)
 {
     NS_ASSERTION(size, "NS_Realloc of size 0");
@@ -354,7 +354,7 @@ NS_Realloc(void* ptr, PRSize size)
     return result;
 }
 
-extern "C" NS_EXPORT void
+XPCOM_API(void)
 NS_Free(void* ptr)
 {
     PR_Free(ptr);

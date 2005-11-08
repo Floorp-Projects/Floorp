@@ -45,7 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom_tests
 XPIDL_MODULE	= proxytest
 REQUIRES	= xpcom
-MOZILLA_INTERNAL_API = 1
 
 CPPSRCS		= proxytests.cpp
 XPIDLSRCS	= nsITestProxy.idl
@@ -53,6 +52,7 @@ XPIDLSRCS	= nsITestProxy.idl
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX)) 
 
 LIBS		= \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

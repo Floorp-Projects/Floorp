@@ -98,7 +98,7 @@ interface nsIStringInputStream : nsIInputStream
 //-----------------------------------------------------------------------------
 
 #include "nsIInputStream.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 
 //-----------------------------------------------------------------------------
 // Factory method to get an nsInputStream from an nsAString.  Result will

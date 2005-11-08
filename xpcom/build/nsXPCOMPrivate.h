@@ -76,10 +76,10 @@ class nsIComponentLoader;
  */
 typedef NS_CALLBACK(XPCOMExitRoutine)(void);
 
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority);
 
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine);
 
 
@@ -178,7 +178,7 @@ typedef struct XPCOMFunctions{
 } XPCOMFunctions;
 
 typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);
-extern "C" NS_COM nsresult
+XPCOM_API(nsresult)
 NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 
 // think hard before changing this

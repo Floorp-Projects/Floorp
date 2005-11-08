@@ -43,7 +43,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
+
+ifndef MOZ_ENABLE_LIBXUL
 MOZILLA_INTERNAL_API = 1
+endif
 
 DIRS		= dynamic services
 ifeq ($(OS_ARCH),WINNT)
@@ -57,36 +60,45 @@ REQUIRES	= \
 CPPSRCS		= \
 		nsIFileEnumerator.cpp \
 		nsIFileTest.cpp \
-		TestArray.cpp \
-		TestAtoms.cpp \
-		TestAutoLock.cpp \
 		TestCallTemplates.cpp \
 		TestCOMPtr.cpp \
 		TestCOMPtrEq.cpp \
-		TestCRT.cpp \
 		TestFactory.cpp \
 		TestHashtables.cpp \
 		TestID.cpp \
 		TestINIParser.cpp \
 		TestObserverService.cpp \
+		TestServMgr.cpp \
+		TestAutoPtr.cpp \
+		TestMinStringAPI.cpp \
+		TestVersionComparator.cpp \
+		$(NULL)
+
+ifndef MOZ_ENABLE_LIBXUL
+CPPSRCS += \
+		TestArray.cpp \
+		TestAtoms.cpp \
+		TestAutoLock.cpp \
+		TestCRT.cpp \
 		TestPermanentAtoms.cpp \
 		TestPipes.cpp \
-		TestServMgr.cpp \
 		TestThreads.cpp \
 		TestXPIDLString.cpp \
 		TestDeque.cpp \
-		TestAutoPtr.cpp \
-		TestMinStringAPI.cpp \
 		TestStrings.cpp \
 		TestStorageStream.cpp \
-		TestVersionComparator.cpp \
 		$(NULL)
+endif
 
 #CPPSRCS		+= TimerTest.cpp
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/config.mk
+
+ifndef MOZILLA_INTERNAL_API
+LIBS +=	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX)
+endif
 
 LIBS		+= \
 		$(XPCOM_LIBS) \

@@ -47,13 +47,15 @@ IS_COMPONENT	= 1
 MODULE_NAME	= MyService
 LIBRARY_NAME	= MyService
 SHORT_LIBNAME	= MyServce
-MOZILLA_INTERNAL_API = 1
 
 CPPSRCS		= MyService.cpp
 
 LOCAL_INCLUDES	= -I$(srcdir)/..
 
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+EXTRA_DSO_LDOPTS += \
+	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

@@ -37,11 +37,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdio.h>
+#include "nsXPCOM.h"
 #include "TestFactory.h"
 #include "nsISupports.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
+#include "nsCOMPtr.h"
 
 NS_DEFINE_CID(kTestFactoryCID, NS_TESTFACTORY_CID);
 NS_DEFINE_CID(kTestLoadedFactoryCID, NS_TESTLOADEDFACTORY_CID);

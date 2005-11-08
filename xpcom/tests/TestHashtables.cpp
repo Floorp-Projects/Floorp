@@ -43,8 +43,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
-#include "nsCRT.h"
 #include "nsCOMArray.h"
+
+#include <stdio.h>
 
 class TestUniChar // for nsClassHashtable
 {
@@ -105,7 +106,7 @@ public:
   const char* GetKeyPointer() const { return mNode->mStr; }
   PRBool KeyEquals(const char* aEntity) const { return !strcmp(mNode->mStr, aEntity); }
   static const char* KeyToPointer(const char* aEntity) { return aEntity; }
-  static PLDHashNumber HashKey(const char* aEntity) { return nsCRT::HashCode(aEntity); }
+  static PLDHashNumber HashKey(const char* aEntity) { return HashCString(aEntity); }
   enum { ALLOW_MEMMOVE = PR_TRUE };
 
   const EntityNode* mNode;

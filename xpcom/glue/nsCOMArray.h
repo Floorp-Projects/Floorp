@@ -46,7 +46,7 @@
 
 // a class that's nsISupports-specific, so that we can contain the
 // work of this class in the XPCOM dll
-class NS_COM nsCOMArray_base
+class NS_COM_GLUE nsCOMArray_base
 {
     friend class nsArray;
 protected:

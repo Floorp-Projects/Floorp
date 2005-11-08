@@ -38,7 +38,7 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "nsAString.h"
+#include "nsStringGlue.h"
 #include "nsCOMPtr.h"
 %}
 
