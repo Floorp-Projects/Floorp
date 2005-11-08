@@ -102,14 +102,6 @@ NS_CopyNativeToUnicode(const nsACString &input, nsAString &output)
   NS_CStringToUTF16(input, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM, output);
 }
 
-inline void
-CopyUTF16toUTF8(const nsAString &input, nsACString &output)
-{
-  NS_UTF16ToCString(input, NS_CSTRING_ENCODING_UTF8, output);
-}
-
-typedef nsCString nsCAutoString;
-typedef nsString nsAutoString;
 typedef nsCString nsXPIDLCString;
 typedef nsString nsXPIDLString;
 
