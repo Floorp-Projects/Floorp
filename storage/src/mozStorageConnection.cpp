@@ -80,24 +80,31 @@ void tracefunc (void *closure, const char *stmt)
 }
 #endif
 
+/**
+ * Actually creates the connection from the DB. Called by mozStorageService.
+ * You can pass a NULL database file in to get an sqlite in-memory database.
+ */
 NS_IMETHODIMP
 mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
 {
-    NS_ENSURE_ARG_POINTER(aDatabaseFile);
-
     NS_ASSERTION (!mDBConn, "Initialize called on already opened database!");
 
     int srv;
     nsresult rv;
 
-    rv = aDatabaseFile->GetNativeLeafName(mDatabaseName);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (aDatabaseFile) {
+        rv = aDatabaseFile->GetNativeLeafName(mDatabaseName);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCAutoString nativePath;
-    rv = aDatabaseFile->GetNativePath(nativePath);
-    NS_ENSURE_SUCCESS(rv, rv);
+        nsCAutoString nativePath;
+        rv = aDatabaseFile->GetNativePath(nativePath);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-    srv = sqlite3_open (nativePath.get(), &mDBConn);
+        srv = sqlite3_open (nativePath.get(), &mDBConn);
+    } else {
+        // in memory database requested, sqlite uses a magic file name
+        srv = sqlite3_open (":memory:", &mDBConn);
+    }
     if (srv != SQLITE_OK) {
         mDBConn = nsnull;
         return NS_ERROR_FAILURE; // XXX error code
@@ -252,7 +259,7 @@ mozStorageConnection::TableExists(const nsACString& aSQLStatement, PRBool *_retv
  **/
 
 NS_IMETHODIMP
-mozStorageConnection::GetTransactionInProgress(PRInt32 *_retval)
+mozStorageConnection::GetTransactionInProgress(PRBool *_retval)
 {
     *_retval = mTransactionInProgress;
     return NS_OK;
@@ -268,6 +275,30 @@ mozStorageConnection::BeginTransaction()
     if (NS_SUCCEEDED(rv))
         mTransactionInProgress = PR_TRUE;
     return rv;
+}
+
+NS_IMETHODIMP
+mozStorageConnection::BeginTransactionAs(PRInt32 aTransactionType)
+{
+    if (mTransactionInProgress)
+        return NS_ERROR_FAILURE; // XXX error code
+    nsresult rv;
+    switch(aTransactionType) {
+        case TRANSACTION_DEFERRED:
+            rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN DEFERRED"));
+            break;
+        case TRANSACTION_IMMEDIATE:
+            rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN IMMEDIATE"));
+            break;
+        case TRANSACTION_EXCLUSIVE:
+            rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN EXCLUSIVE"));
+            break;
+        default:
+            return NS_ERROR_ILLEGAL_VALUE;
+    }
+    if (NS_SUCCEEDED(rv))
+        mTransactionInProgress = PR_TRUE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
