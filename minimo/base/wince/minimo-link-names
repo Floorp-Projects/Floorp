@@ -19,8 +19,8 @@ nsTransactionManagerModule
 appshell
 nsChromeModule
 nsMorkModule
+tkAutoCompleteModule
 nsToolkitCompsModule
-TransformiixModule
 nsXMLExtrasModule
 nsWebServicesModule
 BOOT
@@ -30,3 +30,4 @@ SoftKeyBoardModule
 nsPhoneSupportModule
 SpatialNavigationModule
 SSRModule
+nsPermissionsModule
