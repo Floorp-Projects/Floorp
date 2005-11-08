@@ -50,6 +50,8 @@
 #include "nsWeakReference.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #define NS_ITESTSERVICE_IID \
   {0x127b5253, 0x37b1, 0x43c7, \

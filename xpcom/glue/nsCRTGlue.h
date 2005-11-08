@@ -49,7 +49,7 @@
  * @param delims The set of delimiters (null-terminated)
  * @param str    The string to search (null-terminated)
  */
-const char* NS_COM_GLUE
+NS_COM_GLUE const char*
 NS_strspnp(const char *delims, const char *str);
 
 /**
@@ -68,7 +68,7 @@ NS_strspnp(const char *delims, const char *str);
  * @return       The token. If no token is found (the string is only
  *               delimiter characters), NULL is returned.
  */
-char* NS_COM_GLUE
+NS_COM_GLUE char*
 NS_strtok(const char *delims, char **str);
 
 #endif // nsCRTGlue_h__

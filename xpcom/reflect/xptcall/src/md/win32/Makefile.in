@@ -109,6 +109,6 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DEXPORT_XPTC_API -D_IMPL_NS_COM -D_IMPL_NS_BASE
+DEFINES		+= -DEXPORT_XPTC_API -D_IMPL_NS_COM
 
 LOCAL_INCLUDES	+= -I$(srcdir)/../..

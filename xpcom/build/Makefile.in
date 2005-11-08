@@ -125,6 +125,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../threads \
 		-I$(srcdir)/../threads/_xpidlgen \
 		-I$(srcdir)/../proxy/src \
+		-I$(srcdir)/../reflect/xptinfo/src \
 		$(NULL)
 
 SDK_HEADERS =  \

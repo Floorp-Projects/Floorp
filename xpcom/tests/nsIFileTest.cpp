@@ -1,5 +1,5 @@
 #include "nsILocalFile.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 
 #include <stdio.h>
 #include "nsXPCOM.h"
@@ -7,7 +7,9 @@
 #include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
-#include "nsXPIDLString.h"
+
+#include "nsComponentManagerUtils.h"
+#include "nsCOMPtr.h"
 
 void Passed();
 void Failed(const char* explanation = nsnull);

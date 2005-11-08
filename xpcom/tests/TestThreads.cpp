@@ -43,6 +43,7 @@
 #include "nspr.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
+#include "nsXPCOM.h"
 
 class nsRunner : public nsIRunnable {
 public:

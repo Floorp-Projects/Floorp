@@ -1,15 +1,13 @@
 #include "nsILocalFile.h"
-#include "nsDependentString.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 
 #include <stdio.h>
 #include "nsIComponentRegistrar.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
-#include "nsXPIDLString.h"
 #include "nsISimpleEnumerator.h"
-
+#include "nsCOMPtr.h"
 
 PRBool LoopInDir(nsILocalFile* file)
 {

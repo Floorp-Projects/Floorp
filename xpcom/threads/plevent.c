@@ -284,13 +284,13 @@ PL_CreateEventQueue(const char* name, PRThread* handlerThread)
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsNative ));
 }
 
-PR_EXTERN(PLEventQueue *) 
+PLEventQueue *
 PL_CreateNativeEventQueue(const char *name, PRThread *handlerThread)
 {
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsNative ));
 }
 
-PR_EXTERN(PLEventQueue *) 
+PLEventQueue *
 PL_CreateMonitoredEventQueue(const char *name, PRThread *handlerThread)
 {
     return( _pl_CreateEventQueue( name, handlerThread, EventQueueIsMonitored ));
@@ -1386,7 +1386,7 @@ PL_IsQueueOnCurrentThread( PLEventQueue *queue )
     return me == queue->handlerThread;
 }
 
-PR_EXTERN(PRBool)
+PRBool
 PL_IsQueueNative(PLEventQueue *queue)
 {
     return queue->type == EventQueueIsNative ? PR_TRUE : PR_FALSE;

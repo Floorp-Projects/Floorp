@@ -78,6 +78,7 @@
 
 #include "xptinfo.h"
 #include "nsIInterfaceInfoManager.h"
+#include "xptiprivate.h"
 
 #include "nsTimerImpl.h"
 #include "TimerThread.h"
@@ -214,13 +215,13 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
                                        const nsIID& aIID,
                                        void* *aInstancePtr)
 {
-    NS_ENSURE_ARG_POINTER(aInstancePtr);
+    NS_ASSERTION(aInstancePtr, "null outptr");
     NS_ENSURE_TRUE(!outer, NS_ERROR_NO_AGGREGATION);
 
-    nsCOMPtr<nsIInterfaceInfoManager> iim(dont_AddRef(XPTI_GetInterfaceInfoManager()));
-    if (!iim) {
+    nsCOMPtr<nsIInterfaceInfoManager> iim
+        (xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef());
+    if (!iim)
         return NS_ERROR_FAILURE;
-    }
 
     return iim->QueryInterface(aIID, aInstancePtr);
 }
@@ -403,7 +404,9 @@ const int components_length = sizeof(components) / sizeof(components[0]);
 
 // gDebug will be freed during shutdown.
 static nsIDebug* gDebug = nsnull;
-nsresult NS_COM NS_GetDebug(nsIDebug** result)
+
+EXPORT_XPCOM_API(nsresult)
+NS_GetDebug(nsIDebug** result)
 {
     nsresult rv = NS_OK;
     if (!gDebug)
@@ -421,7 +424,8 @@ nsresult NS_COM NS_GetDebug(nsIDebug** result)
 static nsITraceRefcnt* gTraceRefcnt = nsnull;
 #endif
 
-nsresult NS_COM NS_GetTraceRefcnt(nsITraceRefcnt** result)
+EXPORT_XPCOM_API(nsresult)
+NS_GetTraceRefcnt(nsITraceRefcnt** result)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
     nsresult rv = NS_OK;
@@ -438,20 +442,23 @@ nsresult NS_COM NS_GetTraceRefcnt(nsITraceRefcnt** result)
 #endif
 }
 
-nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
+EXPORT_XPCOM_API(nsresult)
+NS_InitXPCOM(nsIServiceManager* *result,
                              nsIFile* binDirectory)
 {
     return NS_InitXPCOM3(result, binDirectory, nsnull, nsnull, 0);
 }
 
-nsresult NS_COM NS_InitXPCOM2(nsIServiceManager* *result,
+EXPORT_XPCOM_API(nsresult)
+NS_InitXPCOM2(nsIServiceManager* *result,
                               nsIFile* binDirectory,
                               nsIDirectoryServiceProvider* appFileLocationProvider)
 {
     return NS_InitXPCOM3(result, binDirectory, appFileLocationProvider, nsnull, 0);
 }
 
-nsresult NS_COM NS_InitXPCOM3(nsIServiceManager* *result,
+EXPORT_XPCOM_API(nsresult)
+NS_InitXPCOM3(nsIServiceManager* *result,
                               nsIFile* binDirectory,
                               nsIDirectoryServiceProvider* appFileLocationProvider,
                               nsStaticModuleInfo const *staticComponents,
@@ -694,8 +701,7 @@ nsresult NS_COM NS_InitXPCOM3(nsIServiceManager* *result,
     }
     
     // Pay the cost at startup time of starting this singleton.
-    nsIInterfaceInfoManager* iim = XPTI_GetInterfaceInfoManager();
-    NS_IF_RELEASE(iim);
+    (void) xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
 
     // After autoreg, but before we actually instantiate any components,
     // add any services listed in the "xpcom-directory-providers" category
@@ -728,7 +734,7 @@ static void CallExitRoutines()
     gExitRoutines = nsnull;
 }
 
-nsresult NS_COM
+EXPORT_XPCOM_API(nsresult)
 NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
 {
     // priority are not used right now.  It will need to be implemented as more
@@ -745,7 +751,7 @@ NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
     return okay ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult NS_COM
+EXPORT_XPCOM_API(nsresult)
 NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 {
     if (!gExitRoutines)
@@ -772,7 +778,8 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 //   - Release the Registry held by Component Manager
 //   - Finally, release the component manager itself
 //
-nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
+EXPORT_XPCOM_API(nsresult)
+NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
 
     // Notify observers of xpcom shutting down
@@ -856,7 +863,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
     // Do this _after_ shutting down the component manager, because the
     // JS component loader will use XPConnect to call nsIModule::canUnload,
     // and that will spin up the InterfaceInfoManager again -- bad mojo
-    XPTI_FreeInterfaceInfoManager();
+    xptiInterfaceInfoManager::FreeInterfaceInfoManager();
 
     // Finally, release the component manager last because it unloads the
     // libraries:

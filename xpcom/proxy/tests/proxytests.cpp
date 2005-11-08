@@ -52,6 +52,8 @@
 
 #include "nsIProxyObjectManager.h"
 #include "nsIEventQueueService.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 

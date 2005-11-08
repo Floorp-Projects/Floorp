@@ -43,7 +43,7 @@
 
 /* ------------------------------------------------------------------------- */
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_StringContainerInit(nsStringContainer &aContainer)
 {
   NS_ASSERTION(sizeof(nsStringContainer) >= sizeof(nsString),
@@ -55,7 +55,7 @@ NS_StringContainerInit(nsStringContainer &aContainer)
   return NS_OK;
 }
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_StringContainerInit2(nsStringContainer &aContainer,
                         const PRUnichar   *aData,
                         PRUint32           aDataLength,
@@ -100,7 +100,7 @@ NS_StringContainerInit2(nsStringContainer &aContainer,
   return NS_OK;
 }
 
-NS_STRINGAPI(void)
+XPCOM_API(void)
 NS_StringContainerFinish(nsStringContainer &aContainer)
 {
   // call the nsString dtor
@@ -109,7 +109,7 @@ NS_StringContainerFinish(nsStringContainer &aContainer)
 
 /* ------------------------------------------------------------------------- */
 
-NS_STRINGAPI(PRUint32)
+XPCOM_API(PRUint32)
 NS_StringGetData(const nsAString &aStr, const PRUnichar **aData,
                  PRBool *aTerminated)
 {
@@ -122,7 +122,7 @@ NS_StringGetData(const nsAString &aStr, const PRUnichar **aData,
   return begin.size_forward();
 }
 
-NS_STRINGAPI(PRUint32)
+XPCOM_API(PRUint32)
 NS_StringGetMutableData(nsAString &aStr, PRUint32 aDataLength,
                         PRUnichar **aData)
 {
@@ -140,20 +140,20 @@ NS_StringGetMutableData(nsAString &aStr, PRUint32 aDataLength,
   return begin.size_forward();
 }
 
-NS_STRINGAPI(PRUnichar *)
+XPCOM_API(PRUnichar *)
 NS_StringCloneData(const nsAString &aStr)
 {
   return ToNewUnicode(aStr);
 }
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_StringSetData(nsAString &aStr, const PRUnichar *aData, PRUint32 aDataLength)
 {
   aStr.Assign(aData, aDataLength);
   return NS_OK; // XXX report errors
 }
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_StringSetDataRange(nsAString &aStr,
                       PRUint32 aCutOffset, PRUint32 aCutLength,
                       const PRUnichar *aData, PRUint32 aDataLength)
@@ -182,7 +182,7 @@ NS_StringSetDataRange(nsAString &aStr,
   return NS_OK; // XXX report errors
 }
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
 {
   aDest.Assign(aSrc);
@@ -191,7 +191,7 @@ NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
 
 /* ------------------------------------------------------------------------- */
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringContainerInit(nsCStringContainer &aContainer)
 {
   NS_ASSERTION(sizeof(nsCStringContainer) >= sizeof(nsCString),
@@ -203,7 +203,7 @@ NS_CStringContainerInit(nsCStringContainer &aContainer)
   return NS_OK;
 }
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringContainerInit2(nsCStringContainer &aContainer,
                          const char         *aData,
                          PRUint32            aDataLength,
@@ -248,7 +248,7 @@ NS_CStringContainerInit2(nsCStringContainer &aContainer,
   return NS_OK;
 }
 
-NS_STRINGAPI(void)
+XPCOM_API(void)
 NS_CStringContainerFinish(nsCStringContainer &aContainer)
 {
   // call the nsCString dtor
@@ -257,7 +257,7 @@ NS_CStringContainerFinish(nsCStringContainer &aContainer)
 
 /* ------------------------------------------------------------------------- */
 
-NS_STRINGAPI(PRUint32)
+XPCOM_API(PRUint32)
 NS_CStringGetData(const nsACString &aStr, const char **aData,
                   PRBool *aTerminated)
 {
@@ -270,7 +270,7 @@ NS_CStringGetData(const nsACString &aStr, const char **aData,
   return begin.size_forward();
 }
 
-NS_STRINGAPI(PRUint32)
+XPCOM_API(PRUint32)
 NS_CStringGetMutableData(nsACString &aStr, PRUint32 aDataLength, char **aData)
 {
   if (aDataLength != PR_UINT32_MAX) {
@@ -287,20 +287,20 @@ NS_CStringGetMutableData(nsACString &aStr, PRUint32 aDataLength, char **aData)
   return begin.size_forward();
 }
 
-NS_STRINGAPI(char *)
+XPCOM_API(char *)
 NS_CStringCloneData(const nsACString &aStr)
 {
   return ToNewCString(aStr);
 }
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringSetData(nsACString &aStr, const char *aData, PRUint32 aDataLength)
 {
   aStr.Assign(aData, aDataLength);
   return NS_OK; // XXX report errors
 }
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringSetDataRange(nsACString &aStr,
                        PRUint32 aCutOffset, PRUint32 aCutLength,
                        const char *aData, PRUint32 aDataLength)
@@ -329,7 +329,7 @@ NS_CStringSetDataRange(nsACString &aStr,
   return NS_OK; // XXX report errors
 }
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
 {
   aDest.Assign(aSrc);
@@ -338,7 +338,7 @@ NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
 
 /* ------------------------------------------------------------------------- */
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringToUTF16(const nsACString &aSrc,
                   nsCStringEncoding aSrcEncoding,
                   nsAString &aDest)
@@ -361,7 +361,7 @@ NS_CStringToUTF16(const nsACString &aSrc,
   return NS_OK; // XXX report errors
 }
 
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_UTF16ToCString(const nsAString &aSrc,
                   nsCStringEncoding aDestEncoding,
                   nsACString &aDest)

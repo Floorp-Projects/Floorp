@@ -67,7 +67,7 @@
 #include "nsCategoryManagerUtils.h"
 #include "nsIComponentLoader.h"
 #include "nsIEnumerator.h"
-#include "nsIInterfaceInfoManager.h"
+#include "xptiprivate.h"
 #include "nsIModule.h"
 #include "nsIObserverService.h"
 #include "nsISimpleEnumerator.h"
@@ -3171,9 +3171,8 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
             return NS_ERROR_NOT_INITIALIZED;
     }
 
-    nsCOMPtr<nsIInterfaceInfoManager> iim =
-        dont_AddRef(XPTI_GetInterfaceInfoManager());
-
+    nsIInterfaceInfoManager* iim =
+        xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
     if (!iim)
         return NS_ERROR_UNEXPECTED;
 

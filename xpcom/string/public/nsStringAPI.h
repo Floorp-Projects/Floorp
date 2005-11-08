@@ -39,6 +39,7 @@
 #define nsStringAPI_h__
 
 #include <string.h>
+#include "nscore.h"
 
 /**
  * nsStringAPI.h
@@ -73,14 +74,6 @@
 #endif
 
 #include "nscore.h"
-
-#if defined( XPCOM_GLUE )
-#define NS_STRINGAPI(type) extern "C" NS_HIDDEN_(type)
-#elif defined( _IMPL_NS_STRINGAPI )
-#define NS_STRINGAPI(type) extern "C" NS_EXPORT type
-#else
-#define NS_STRINGAPI(type) extern "C" NS_IMPORT type
-#endif
 
 /* The base string types */
 class nsAString;
@@ -186,7 +179,7 @@ enum {
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_StringContainerInit(nsStringContainer &aContainer);
 
 /**
@@ -210,7 +203,7 @@ NS_StringContainerInit(nsStringContainer &aContainer);
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_StringContainerInit2
   (nsStringContainer &aContainer, const PRUnichar *aData = nsnull,
    PRUint32 aDataLength = PR_UINT32_MAX, PRUint32 aFlags = 0);
@@ -224,7 +217,7 @@ NS_StringContainerInit2
  *
  * @status FROZEN
  */
-NS_STRINGAPI(void)
+XPCOM_API(void)
 NS_StringContainerFinish(nsStringContainer &aContainer);
 
 /* ------------------------------------------------------------------------- */
@@ -246,7 +239,7 @@ NS_StringContainerFinish(nsStringContainer &aContainer);
  *
  * @status FROZEN
  */
-NS_STRINGAPI(PRUint32)
+XPCOM_API(PRUint32)
 NS_StringGetData
   (const nsAString &aStr, const PRUnichar **aData,
    PRBool *aTerminated = nsnull);
@@ -280,7 +273,7 @@ NS_StringGetData
  *
  * @status FROZEN
  */
-NS_STRINGAPI(PRUint32)
+XPCOM_API(PRUint32)
 NS_StringGetMutableData
   (nsAString &aStr, PRUint32 aDataLength, PRUnichar **aData);
 
@@ -296,7 +289,7 @@ NS_StringGetMutableData
  *
  * @status FROZEN
  */
-NS_STRINGAPI(PRUnichar *)
+XPCOM_API(PRUnichar *)
 NS_StringCloneData
   (const nsAString &aStr);
 
@@ -319,7 +312,7 @@ NS_StringCloneData
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_StringSetData
   (nsAString &aStr, const PRUnichar *aData,
    PRUint32 aDataLength = PR_UINT32_MAX);
@@ -352,7 +345,7 @@ NS_StringSetData
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_StringSetDataRange
   (nsAString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength,
    const PRUnichar *aData, PRUint32 aDataLength = PR_UINT32_MAX);
@@ -374,7 +367,7 @@ NS_StringSetDataRange
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_StringCopy
   (nsAString &aDestStr, const nsAString &aSrcStr);
 
@@ -491,7 +484,7 @@ enum {
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringContainerInit(nsCStringContainer &aContainer);
 
 /**
@@ -515,7 +508,7 @@ NS_CStringContainerInit(nsCStringContainer &aContainer);
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringContainerInit2
   (nsCStringContainer &aContainer, const char *aData = nsnull,
    PRUint32 aDataLength = PR_UINT32_MAX, PRUint32 aFlags = 0);
@@ -529,7 +522,7 @@ NS_CStringContainerInit2
  *
  * @status FROZEN
  */
-NS_STRINGAPI(void)
+XPCOM_API(void)
 NS_CStringContainerFinish(nsCStringContainer &aContainer);
 
 /* ------------------------------------------------------------------------- */
@@ -551,7 +544,7 @@ NS_CStringContainerFinish(nsCStringContainer &aContainer);
  *
  * @status FROZEN
  */
-NS_STRINGAPI(PRUint32)
+XPCOM_API(PRUint32)
 NS_CStringGetData
   (const nsACString &aStr, const char **aData,
    PRBool *aTerminated = nsnull);
@@ -585,7 +578,7 @@ NS_CStringGetData
  *
  * @status FROZEN
  */
-NS_STRINGAPI(PRUint32)
+XPCOM_API(PRUint32)
 NS_CStringGetMutableData
   (nsACString &aStr, PRUint32 aDataLength, char **aData);
 
@@ -601,7 +594,7 @@ NS_CStringGetMutableData
  *
  * @status FROZEN
  */
-NS_STRINGAPI(char *)
+XPCOM_API(char *)
 NS_CStringCloneData
   (const nsACString &aStr);
 
@@ -624,7 +617,7 @@ NS_CStringCloneData
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringSetData
   (nsACString &aStr, const char *aData,
    PRUint32 aDataLength = PR_UINT32_MAX);
@@ -657,7 +650,7 @@ NS_CStringSetData
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringSetDataRange
   (nsACString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength,
    const char *aData, PRUint32 aDataLength = PR_UINT32_MAX);
@@ -679,7 +672,7 @@ NS_CStringSetDataRange
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringCopy
   (nsACString &aDestStr, const nsACString &aSrcStr);
 
@@ -784,7 +777,7 @@ enum nsCStringEncoding {
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_CStringToUTF16(const nsACString &aSource, nsCStringEncoding aSrcEncoding,
                   nsAString &aDest);
 
@@ -803,7 +796,7 @@ NS_CStringToUTF16(const nsACString &aSource, nsCStringEncoding aSrcEncoding,
  *
  * @status FROZEN
  */
-NS_STRINGAPI(nsresult)
+XPCOM_API(nsresult)
 NS_UTF16ToCString(const nsAString &aSource, nsCStringEncoding aDestEncoding,
                   nsACString &aDest);
 
@@ -1071,8 +1064,8 @@ private:
 /**
  * Below we define nsStringContainer and nsCStringContainer.  These classes
  * have unspecified structure.  In most cases, your code should use
- * nsEmbedString instead of these classes; however, if you prefer C-style
- * programming, then look no further...
+ * nsString/nsCString instead of these classes; if you prefer C-style
+ * programming, then look no further.
  */
 
 class nsStringContainer : public nsAString_external
@@ -1097,15 +1090,14 @@ public:
   nsCStringContainer() {} // MSVC6 needs this
 };
 
-/* ------------------------------------------------------------------------- */
+#ifndef MOZILLA_INTERNAL_API
+
+#include "nsDebug.h"
 
 /**
- * Below we define a number of inlined helper classes that make the frozen
- * string API easier to use.
+ * The following classes are C++ helper classes that make the frozen string
+ * API easier to use.
  */
-
-#ifndef MOZILLA_INTERNAL_API
-#include "nsDebug.h"
 
 /**
  * Rename symbols to avoid conflicting with internal versions.
@@ -1307,6 +1299,38 @@ private:
 /**
  * conversion classes
  */
+
+inline void
+CopyUTF16toUTF8(const nsAString& aSource, nsACString& aDest)
+{
+  NS_UTF16ToCString(aSource, NS_CSTRING_ENCODING_UTF8, aDest);
+}
+
+inline void
+CopyUTF8toUTF16(const nsACString& aSource, nsAString& aDest)
+{
+  NS_CStringToUTF16(aSource, NS_CSTRING_ENCODING_UTF8, aDest);
+}
+
+inline void
+LossyCopyUTF16toASCII(const nsAString& aSource, nsACString& aDest)
+{
+  NS_UTF16ToCString(aSource, NS_CSTRING_ENCODING_ASCII, aDest);
+}
+
+inline void
+CopyASCIItoUTF16(const nsACString& aSource, nsAString& aDest)
+{
+  NS_CStringToUTF16(aSource, NS_CSTRING_ENCODING_ASCII, aDest);
+}
+
+inline char*
+ToNewUTF8String(const nsAString& aSource)
+{
+  nsCString temp;
+  CopyUTF16toUTF8(aSource, temp);
+  return NS_CStringCloneData(temp);
+}
 
 class NS_ConvertASCIItoUTF16 : public nsString
 {
@@ -1728,13 +1752,32 @@ StringTail( const nsACString& str, PRUint32 count )
   return nsDependentCSubstring(str, str.Length() - count, count);
 }
 
-
-/*
- * Canonical empty strings
- */
-
 #define EmptyCString() nsCString()
 #define EmptyString() nsString()
+
+/**
+ * The following declarations are *deprecated*, and are included here only
+ * to make porting from existing code that doesn't use the frozen string API
+ * easier. They may disappear in the future.
+ */
+
+inline char*
+ToNewCString(const nsACString& aStr)
+{
+  return NS_CStringCloneData(aStr);
+}
+
+inline PRUnichar*
+ToNewUnicode(const nsAString& aStr)
+{
+  return NS_StringCloneData(aStr);
+}
+
+typedef nsString PromiseFlatString;
+typedef nsCString PromiseFlatCString;
+
+typedef nsCString nsCAutoString;
+typedef nsString nsAutoString;
 
 #endif // MOZILLA_INTERNAL_API
 

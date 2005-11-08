@@ -80,6 +80,7 @@ EXPORTS		= \
 		nsQuickSort.h \
 		nsStringGlue.h \
 		nsRefPtrHashtable.h \
+		nsStringGlue.h \
 		nsTHashtable.h \
 		nsVoidArray.h \
 		$(NULL)
