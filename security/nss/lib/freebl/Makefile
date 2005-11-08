@@ -143,16 +143,9 @@ ifeq ($(CPU_ARCH),x86)
     ASFILES  = mpi_x86.s
     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
     DEFINES += -DMP_ASSEMBLY_DIV_2DX1D
-    USE_FP_CODE = 1
+    # The floating point ECC code doesn't work on Linux x86 (bug 311432).
+    #ECL_USE_FP = 1
 endif
-ifdef NSS_ENABLE_ECC
-    ifdef USE_FP_CODE
-	#enable floating point ECC code	
-	DEFINES  += -DECL_USE_FP
-	ECL_SRCS += ecp_fp160.c ecp_fp192.c ecp_fp224.c ecp_fp.c
-	ECL_HDRS += ecp_fp.h
-    endif
-endif # NSS_ENABLE_ECC
 endif # Linux
 
 ifeq ($(OS_TARGET),AIX)
@@ -324,11 +317,7 @@ ifeq ($(CPU_ARCH),sparc)
 	DEFINES  += -DMP_USING_MONT_MULF -DMP_MONT_USE_MP_MUL
     endif
 
-    ifdef NSS_ENABLE_ECC
-	DEFINES  += -DECL_USE_FP
-	ECL_SRCS += ecp_fp160.c ecp_fp192.c ecp_fp224.c ecp_fp.c
-	ECL_HDRS += ecp_fp.h
-    endif # NSS_ENABLE_ECC
+    ECL_USE_FP = 1
 else
     # Solaris for non-sparc family CPUs
     ifdef NS_USE_GCC
@@ -362,7 +351,14 @@ else
 endif # Solaris for non-sparc family CPUs
 endif # target == SunOS
 
-$(OBJDIR)/sysrand$(OBJ_SUFFIX): sysrand.c unix_rand.c win_rand.c mac_rand.c os2_rand.c
+ifdef NSS_ENABLE_ECC
+    ifdef ECL_USE_FP
+	#enable floating point ECC code	
+	DEFINES  += -DECL_USE_FP
+	ECL_SRCS += ecp_fp160.c ecp_fp192.c ecp_fp224.c ecp_fp.c
+	ECL_HDRS += ecp_fp.h
+    endif
+endif # NSS_ENABLE_ECC
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
@@ -412,6 +408,8 @@ ECL_OBJS += $(addprefix $(OBJDIR)/$(PROG_PREFIX), $(ECL_USERS:.c=$(OBJ_SUFFIX)))
 $(ECL_OBJS): $(ECL_HDRS)
 
 
+
+$(OBJDIR)/sysrand$(OBJ_SUFFIX): sysrand.c unix_rand.c win_rand.c mac_rand.c os2_rand.c
 
 $(OBJDIR)/$(PROG_PREFIX)mpprime$(OBJ_SUFFIX): primes.c
 
