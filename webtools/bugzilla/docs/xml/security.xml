@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.7 2005/08/21 18:16:41 lpsolit%gmail.com Exp $ -->
+<!-- $Id: security.xml,v 1.8 2005/11/08 13:34:37 wurblzap%gmail.com Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -352,28 +352,25 @@ skip-networking
     <section id="security-bugzilla-charset">
     <title>Prevent users injecting malicious Javascript</title>
 
-      <para>It is possible for a Bugzilla user to take advantage of character
-      set encoding ambiguities to inject HTML into Bugzilla comments. This
-      could include malicious scripts. 
-      Due to internationalization concerns, we are unable to
-      incorporate by default the code changes suggested by 
+      <para>If you installed Bugzilla version 2.22 or later from scratch,
+      then the <emphasis>utf8</emphasis> parameter is switched on by default.
+      This makes Bugzilla explicitly set the character encoding, following
       <ulink
-      url="http://www.cert.org/tech_tips/malicious_code_mitigation.html#3">the
-      CERT advisory</ulink> on this issue.
-      Making the change in <xref linkend="security-bugzilla-charset-ex"/> will
-      prevent this problem. 
+      url="http://www.cert.org/tech_tips/malicious_code_mitigation.html#3">a
+      CERT advisory</ulink> recommending exactly this.
+      The following therefore does not apply to you; just keep
+      <emphasis>utf8</emphasis> turned on.
       </para>
 
-      <example id="security-bugzilla-charset-ex">
-      <title>Forcing Bugzilla to output a charset</title>
-
-        <para>Locate the following line in
-        <filename>Bugzilla/CGI.pm</filename>:
-        <programlisting>$self->charset('');</programlisting>
-        and change it to:
-        <programlisting>$self->charset('UTF-8');</programlisting>
-        </para>
-      </example>
+      <para>If you've upgraded from an older version, then it may be possible
+      for a Bugzilla user to take advantage of character set encoding
+      ambiguities to inject HTML into Bugzilla comments.
+      This could include malicious scripts. 
+      This is because due to internationalization concerns, we are unable to
+      turn the <emphasis>utf8</emphasis> parameter on by default for upgraded
+      installations.
+      Turning it on manually will prevent this problem.
+      </para>
     </section>    
     
   </section>
