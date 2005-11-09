@@ -952,9 +952,13 @@ sub match_field {
         my $raw_field = join(" ", $cgi->param($field));
 
         # When we add back in values later, it matters that we delete
-        # the param here, and not set it to '', so that we will add
+        # the field here, and not set it to '', so that we will add
         # things to an empty list, and not to a list containing one
-        # empty string
+        # empty string.
+        # If no match or more than one match is found for this field,
+        # we will set it back to '' so that the field remains defined
+        # outside this function (it was if we came here; else we would
+        # have returned ealier above).
         $cgi->delete($field);
 
         my @queries = ();
@@ -1039,6 +1043,11 @@ sub match_field {
                 $need_confirm = 1;  # confirmation screen shows failures
             }
         }
+        # Above, we deleted the field before adding matches. If no match
+        # or more than one match has been found, we set it back to '' so
+        # that the caller of this function can still check whether this
+        # field was defined or not (and it was if we came here).
+        $cgi->param($field, '') unless defined $cgi->param($field);
     }
 
     my $retval;
