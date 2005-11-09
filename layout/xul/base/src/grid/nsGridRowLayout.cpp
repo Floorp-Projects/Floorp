@@ -138,7 +138,12 @@ nsGridRowLayout::GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRo
      nsIBox* childBox = nsGrid::GetScrolledBox(child);
 
      nsCOMPtr<nsIBoxLayout> layout;
-     childBox->GetLayoutManager(getter_AddRefs(layout));
+     // childBox might be null if child is a scrollframe around a non-box.  But
+     // in that case I guess we can count this as a single grid row.  Or
+     // something.
+     if (childBox) {
+       childBox->GetLayoutManager(getter_AddRefs(layout));
+     }
      
      // find our requester
      nsCOMPtr<nsIGridPart> gridRow = do_QueryInterface(layout, &rv);
