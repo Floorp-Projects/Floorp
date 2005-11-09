@@ -2136,8 +2136,9 @@ function HandleJunkStatusChanged(folder)
         var sanitizeJunkMail = gPrefBranch.getBoolPref("mailnews.display.sanitizeJunkMail");
         if (changedJunkStatus && sanitizeJunkMail) // only bother doing this if we are modifying the html for junk mail....
         {
-          var folder = GetLoadedMsgFolder();
-          var moveJunkMail = (folder && folder.server && folder.server.spamSettings) ? folder.server.spamSettings.manualMark : false;
+          var loadedFolder = GetLoadedMsgFolder();
+          var moveJunkMail = (loadedFolder && loadedFolder.server && loadedFolder.server.spamSettings) ?
+	                     loadedFolder.server.spamSettings.manualMark : false;
 
           var junkScore = msgHdr.getStringProperty("junkscore"); 
           var isJunk = ((junkScore != "") && (junkScore != "0"));

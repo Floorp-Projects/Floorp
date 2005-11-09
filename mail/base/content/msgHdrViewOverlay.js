@@ -469,7 +469,7 @@ var messageHeaderSink = {
 
       // display name optimization. Eliminate any large quantities of white space from the display name.
       // such that Hello       World.txt becomes Hello World.txt.
-      var displayName = displayName.replace(/ +/g, " ");
+      displayName = displayName.replace(/ +/g, " ");
           
       currentAttachments.push (new createNewAttachmentInfo(contentType, url, displayName, uri, isExternalAttachment));
       // if we have an attachment, set the MSG_FLAG_ATTACH flag on the hdr
@@ -993,7 +993,7 @@ function updateEmailAddressNode(emailAddressNode, emailAddress, fullAddress, dis
 function AddExtraAddressProcessing(emailAddress, addressNode)
 {
   var displayName = addressNode.getTextAttribute("displayName");  
-  var emailAddress = addressNode.getTextAttribute("emailAddress");
+  var mailAddress = addressNode.getTextAttribute("emailAddress");
 
   // always show the address for the from and reply-to fields
   var parentElementId = addressNode.parentNode.id;
@@ -1001,10 +1001,10 @@ function AddExtraAddressProcessing(emailAddress, addressNode)
   if (parentElementId == "expandedfromBox" || parentElementId == "expandedreply-toBox")
     condenseName = false;
 
-  if (condenseName && gShowCondensedEmailAddresses && displayName && useDisplayNameForAddress(emailAddress))
+  if (condenseName && gShowCondensedEmailAddresses && displayName && useDisplayNameForAddress(mailAddress))
   {
     addressNode.setAttribute('label', displayName); 
-    addressNode.setAttribute("tooltiptext", emailAddress);
+    addressNode.setAttribute("tooltiptext", mailAddress);
     addressNode.setAttribute("tooltip", "emailAddressTooltip");
   }
   else
