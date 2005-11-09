@@ -131,7 +131,7 @@ private:
   void AppendNegationToString(nsAString& aString);
   void ToStringInternal(nsAString& aString, nsICSSStyleSheet* aSheet,
                         PRBool aIsPseudoElem,
-                        PRIntn aNegatedIndex) const;
+                        PRBool aIsNegated) const;
 
 public:
   PRInt32         mNameSpace;

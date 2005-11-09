@@ -80,12 +80,6 @@
 #define NS_IF_DELETE(ptr)   \
   if (ptr) { delete ptr; ptr = nsnull; }
 
-#define NS_IF_NEGATED_START(bool,str)  \
-  if (bool) { str.AppendLiteral(":not("); }
-
-#define NS_IF_NEGATED_END(bool,str)  \
-  if (bool) { str.Append(PRUnichar(')')); }
-
 MOZ_DECL_CTOR_COUNTER(nsAtomList)
 
 nsAtomList::nsAtomList(nsIAtom* aAtom)
@@ -542,16 +536,15 @@ nsCSSSelector::ToString(nsAString& aString, nsICSSStyleSheet* aSheet,
   if (!aAppend)
    aString.Truncate();
    
-  ToStringInternal(aString, aSheet, IsPseudoElement(mTag), 0);
+  ToStringInternal(aString, aSheet, IsPseudoElement(mTag), PR_FALSE);
 }
 
 void nsCSSSelector::ToStringInternal(nsAString& aString,
                                      nsICSSStyleSheet* aSheet,
                                      PRBool aIsPseudoElem,
-                                     PRIntn aNegatedIndex) const
+                                     PRBool aIsNegated) const
 {
   nsAutoString temp;
-  PRBool aIsNegated = PRBool(0 < aNegatedIndex);
   PRBool isPseudoElement = IsPseudoElement(mTag);
   
   // selectors are linked from right-to-left, so the next selector in the linked list
@@ -563,11 +556,6 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       // or a negated simple selector
       aString.Append(PRUnichar(' '));
     }
-  }
-  if (1 < aNegatedIndex) {
-    // the first mNegations does not contain a negated type element selector
-    // or a negated universal selector
-    NS_IF_NEGATED_START(aIsNegated, aString)
   }
 
   // For non-pseudo-element selectors or for lone pseudo-elements, deal with
@@ -611,13 +599,9 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
   }
       
   // smells like a universal selector
-  if (!mTag && !mIDList && !mClassList) {
-    if (1 != aNegatedIndex) {
-      aString.Append(PRUnichar('*'));
-    }
-    if (1 < aNegatedIndex) {
-      NS_IF_NEGATED_END(aIsNegated, aString)
-    }
+  if (!mTag && !mIDList && !mClassList && !mPseudoClassList && !mAttrList) {
+    // XXXldb Or if we've written a namespace.
+    aString.Append(PRUnichar('*'));
   } else {
     // Append the tag name, if there is one
     if (mTag) {
@@ -633,17 +617,14 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       nsAutoString prefix;
       mTag->ToString(prefix);
       aString.Append(prefix);
-      NS_IF_NEGATED_END(aIsNegated, aString)
     }
     // Append the id, if there is one
     if (mIDList) {
       nsAtomList* list = mIDList;
       while (list != nsnull) {
         list->mAtom->ToString(temp);
-        NS_IF_NEGATED_START(aIsNegated, aString)
         aString.Append(PRUnichar('#'));
         aString.Append(temp);
-        NS_IF_NEGATED_END(aIsNegated, aString)
         list = list->mNext;
       }
     }
@@ -652,10 +633,8 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       nsAtomList* list = mClassList;
       while (list != nsnull) {
         list->mAtom->ToString(temp);
-        NS_IF_NEGATED_START(aIsNegated, aString)
         aString.Append(PRUnichar('.'));
         aString.Append(temp);
-        NS_IF_NEGATED_END(aIsNegated, aString)
         list = list->mNext;
       }
     }
@@ -665,7 +644,6 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
   if (mAttrList) {
     nsAttrSelector* list = mAttrList;
     while (list != nsnull) {
-      NS_IF_NEGATED_START(aIsNegated, aString)
       aString.Append(PRUnichar('['));
       // Append the namespace prefix
       if (list->mNameSpace > 0) {
@@ -709,7 +687,6 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
 
       aString.Append(PRUnichar(']'));
       
-      NS_IF_NEGATED_END(aIsNegated, aString)
       list = list->mNext;
     }
   }
@@ -719,21 +696,23 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
     nsAtomStringList* list = mPseudoClassList;
     while (list != nsnull) {
       list->mAtom->ToString(temp);
-      NS_IF_NEGATED_START(aIsNegated, aString)
       aString.Append(temp);
       if (nsnull != list->mString) {
         aString.Append(PRUnichar('('));
         aString.Append(list->mString);
         aString.Append(PRUnichar(')'));
       }
-      NS_IF_NEGATED_END(aIsNegated, aString)
       list = list->mNext;
     }
   }
 
-  if (mNegations) {
-    // chain all the negated selectors
-    mNegations->ToStringInternal(aString, aSheet, PR_FALSE, aNegatedIndex + 1);
+  if (!aIsNegated) {
+    for (nsCSSSelector* negation = mNegations; negation;
+         negation = negation->mNegations) {
+      aString.AppendLiteral(":not(");
+      negation->ToStringInternal(aString, aSheet, PR_FALSE, PR_TRUE);
+      aString.Append(PRUnichar(')'));
+    }
   }
 
   // Append the operator only if the selector is not negated and is not
