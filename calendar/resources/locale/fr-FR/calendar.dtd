@@ -24,6 +24,7 @@
    -                 ArentJan Banck <ajbanck@planet.nl>
    -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -                 Matthew Willis <mattwillis@gmail.com>
+   -                 Simon Paquet <bugzilla@babylonsounds.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -50,6 +51,11 @@
 <!ENTITY alarm.units.minutes.singular  "minute" >
 <!ENTITY alarm.units.hours.singular    "heure" >
 <!ENTITY alarm.units.days.singular     "jour" >
+
+<!ENTITY repeat.units.days.both         "Jour(s)" >
+<!ENTITY repeat.units.weeks.both        "Semaine(s)" >
+<!ENTITY repeat.units.months.both       "Mois" >
+<!ENTITY repeat.units.years.both        "Année(s)" >
 
 
 <!ENTITY repeat.units.days     "Jours" >
@@ -80,11 +86,16 @@
 <!ENTITY newevent.to.label           "Pour" >
 <!ENTITY newevent.enddate.label      "Fin" >
 <!ENTITY newevent.end.label          "Fin" >
+<!ENTITY newevent.set.label          "définir…" >
 <!ENTITY newevent.settings.label     "Paramètres généraux" >
+<!ENTITY newevent.none.label         "aucun" >
+<!ENTITY newevent.custom.label       "Personnaliser…" >
 <!ENTITY newevent.alldayevent.label  "Toute la journée." >
 <!ENTITY newevent.description.label  "Description" >
 <!ENTITY newevent.uri.label          "URL" >
 <!ENTITY newevent.uri.visit.label    "Visiter l'URL" >
+<!ENTITY newevent.before.label       "avant" >
+<!ENTITY newevent.after.label        "après" >
 <!ENTITY newevent.private.label      "Privé" >
 <!ENTITY newevent.privacy.label      "Vie privée" >
 <!ENTITY newevent.private.note       "Cet événement est privé." >
@@ -100,6 +111,7 @@
 <!ENTITY newevent.end.label          "s'achève" >
 <!ENTITY newevent.isdue.label        "est terminé" >
 <!ENTITY newevent.repeat.label       "Répéter chaque" >
+<!ENTITY newevent.repeat.label2      "Répéter" >
 <!ENTITY newevent.until.label        "Jusqu'à" >
 <!ENTITY newevent.forever.label      "Toujours" >
 <!ENTITY newevent.numberoftimes.label "Nombre de fois" >
@@ -114,6 +126,8 @@
 <!ENTITY newevent.enddate.warning    "La date de début est après la date de fin.">
 <!ENTITY newevent.repeatdate.tooltip    "Choisissez une date pour la fin" >
 <!ENTITY newevent.recurend.warning    "Votre temps de répétition s'achève avant l'heure de fin.">
+<!ENTITY newevent.15minutes.before.label        "15 minutes avant" >
+<!ENTITY newevent.30minutes.before.label        "30 minutes après" >
 <!ENTITY newevent.recurnumberoftimes.warning    "Vous devez spécifier le nombre de répétitions.">
 <!ENTITY newevent.readonly.item.warning    "Cet élément est un agenda en lecture seule. Vous ne pouvez pas le modifier.">
 <!ENTITY newevent.readonly.cal.warning    "Cet agenda est en lecture seule.">
@@ -122,10 +136,34 @@
 <!ENTITY newevent.starttimeerror.alertmessage "Votre événement ne peut pas se terminer avant d'avoir commencé. Veuillez régler l'heure de début ou l'heure de fin." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "La répétition ne peut pas se faire avant la fin de l'événement. Veuillez régler la répétition, ou la désactiver." >
 <!ENTITY newevent.general.tab.label "Général" >
+
 <!ENTITY newevent.recurrence.tab.label "Répétition" >
+<!ENTITY newevent.recurrence.title          "Modifier la répétition" >
+<!ENTITY newevent.recurrence.remove.label   "Supprimer" >
+<!ENTITY newevent.recurrence.occurs.label   "Se produit" >
+<!ENTITY newevent.recurrence.day.label      "quotidiennement" >
+<!ENTITY newevent.recurrence.week.label     "hebdomadairement" >
+<!ENTITY newevent.recurrence.month.label    "mensuellement" >
+<!ENTITY newevent.recurrence.year.label     "annuellement" >
+<!ENTITY newevent.recurrence.on.label       "Le :" >
+<!ENTITY newevent.recurrence.every.label    "Chaque" >
+<!ENTITY newevent.repeat.first.label        "chaque premier" >
+<!ENTITY newevent.repeat.second.label       "chaque second" >
+<!ENTITY newevent.repeat.third.label        "chaque troisième" >
+<!ENTITY newevent.repeat.fourth.label       "chaque quatrième" >
+<!ENTITY newevent.repeat.fifth.label        "chaque cinquième" >
+<!ENTITY newevent.repeat.last.label         "chaque dernier" >
+<!ENTITY newevent.repeat.onthe.label        "Répéter le" >
+<!ENTITY newevent.repeat.forever.label      "Répéter tout le temps" >
+<!ENTITY newevent.repeat.for.label          "Répéter chaque" >
+<!ENTITY newevent.repeat.until.label        "Répéter jusqu'au" >
+<!ENTITY newevent.recurrence.exceptions.label    "Exceptions :" >
+
 <!ENTITY newevent.attendees.tab.label "Participants" >
+<!ENTITY newevent.attendees.label     "Participants" >
 <!ENTITY newevent.attachments.tab.label "Fichiers joints" >
 <!ENTITY newevent.advanced.tab.label        "Avancé" >
+<!ENTITY newevent.completed.label           "Terminé" >
 <!ENTITY newevent.status.label "Statut" >
 <!ENTITY newevent.status.longlabel "Statut de l'événement">
 <!ENTITY newevent.status.needsaction.label "Une action est requise" >
@@ -134,12 +172,12 @@
 <!ENTITY newevent.status.cancelled.label   "Annulé" >
 <!ENTITY newevent.status.tentative.label   "Provisoire" >
 <!ENTITY newevent.status.confirmed.label   "Confirmé" >
-<!ENTITY newevent.itemType.label            "Type d'élément" >                       
-<!ENTITY newevent.itemType.event.label      "Événement" >                           
-<!ENTITY newevent.itemType.todo.label       "Tâche" >                            
+<!ENTITY newevent.itemType.label            "Type d'élément" >
+<!ENTITY newevent.itemType.event.label      "Événement" >
+<!ENTITY newevent.itemType.todo.label       "Tâche" >
 <!ENTITY newevent.itemType.journal.label    "Journal" >
 <!ENTITY newevent.add.contact.label         "Ajouter" >
-<!ENTITY newevent.attach.file.label         "Joindre un fichier…" >                  
+<!ENTITY newevent.attach.file.label         "Joindre un fichier…" >
 
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "Le énième jour du mois">
 <!ENTITY newevent.advanced.repeat.dayofweek.label "Le quatrième mardi du mois">
@@ -184,6 +222,7 @@
 
 <!ENTITY event.title.alarm         "Alarme" >
 <!ENTITY event.title.new         "Nouvel événement" >
+<!ENTITY event.title.label       "Modifier l'élément" >
 <!ENTITY event.title.edit        "Modifier l'événement" >
 
 <!ENTITY onthe-text            "Le ">
@@ -267,7 +306,9 @@
 <!ENTITY calendar.dayview.button.tooltip          "Afficher un jour" >
 <!ENTITY calendar.weekview.button.tooltip         "Afficher une semaine" >
 <!ENTITY calendar.monthview.button.tooltip        "Afficher un mois" >
-<!ENTITY calendar.multiweekview.button.tooltip        "Afficher plusieurs semaines" >
+<!ENTITY calendar.multiweekview.button.tooltip    "Afficher plusieurs semaines" >
+<!ENTITY calendar.newevent.button.tooltip         "Créer un nouvel événement" >
+<!ENTITY calendar.newtask.button.tooltip          "Créer une nouvelle tâche" >
 
 <!ENTITY calendar.nextday.button.tooltip        "Jour suivant" >
 <!ENTITY calendar.prevday.button.tooltip        "Jour précédent" >
@@ -444,6 +485,8 @@
 <!ENTITY calendar.alarm.acknowledgeall.label        "Accepter toutes les alarmes" >
 <!ENTITY calendar.alarm.snooze.label                "Report d'alarme" >
 <!ENTITY calendar.alarm.title.label                 "Alarme d'agenda" >
+<!ENTITY calendar.alarm.dismiss.label               "Suspendre" >
+<!ENTITY calendar.alarm.dismissall.label            "Tout suspendre" >
 
 
 <!-- Calendar Server Dialog -->
@@ -466,6 +509,7 @@
 <!ENTITY calendarproperties.format.label   "Format :">
 <!ENTITY calendarproperties.location.label "Emplacement :">
 <!ENTITY calendarproperties.name.label     "Nom :">
+<!ENTITY calendarproperties.readonly.label "En lecture seule">
 
 <!-- Sunbird Help -->
 <!ENTITY calendar.help.label               "Contenu de l'aide">
