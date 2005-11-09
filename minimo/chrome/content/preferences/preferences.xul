@@ -100,8 +100,8 @@
       <!-- For the OKAY CANCEL buttons --> 
 
       <toolbar id="dialog-bar">
-        <toolbarbutton tabindex="8" accessrule="pref-bar" onfocus="show('summary-pane',this )" accessfocus="advanced-pane" id="okay-button"  command="cmd_PrefOkay"><label class='dialog-button' value="&okayButton.label;" /></toolbarbutton>  
-        <toolbarbutton tabindex="9" accessrule="pref-bar" onfocus="show('summary-pane',this )" accessfocus="advanced-pane" id="cancel-button"  command="cmd_PrefCancel"><label class='dialog-button' value="&cancelButton.label;" /></toolbarbutton>  
+        <toolbarbutton tabindex="8" accessrule="pref-bar"  accessfocus="advanced-pane" id="okay-button"  command="cmd_PrefOkay"><label class='dialog-button' value="&okayButton.label;" /></toolbarbutton>  
+        <toolbarbutton tabindex="9" accessrule="pref-bar"  accessfocus="advanced-pane" id="cancel-button"  command="cmd_PrefCancel"><label class='dialog-button' value="&cancelButton.label;" /></toolbarbutton>  
       </toolbar>
     </hbox>
     
