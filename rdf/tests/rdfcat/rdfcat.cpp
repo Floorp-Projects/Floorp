@@ -48,8 +48,11 @@
  */
 
 #include <stdio.h>
+#include "nsXPCOM.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIEventQueueService.h"
 #include "nsIIOService.h"
 #include "nsIInputStream.h"

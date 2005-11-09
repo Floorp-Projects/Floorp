@@ -43,7 +43,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= rdfcat$(BIN_SUFFIX)
-MOZILLA_INTERNAL_API = 1
 
 CPPSRCS		= rdfcat.cpp
 REQUIRES	= xpcom \
@@ -52,6 +51,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 LIBS		= \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(LIBS_DIR) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
