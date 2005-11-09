@@ -22,6 +22,7 @@
    -
    - Contributor(s):
    -   Stuart Parmenter <stuart.parmenter@oracle.com>
+   -   Simon Paquet <bugzilla@babylonsounds.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,21 +36,20 @@
    - the provisions above, a recipient may use your version of this file under
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
-   - ***** END LICENSE BLOCK *****
--->
+   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/calendar-event-dialog.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
 
-<!DOCTYPE dialog 
+<!DOCTYPE dialog
 [
     <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd1;
-]>
+]>     
 
 <dialog
   id="calendar-event-dialog"
-  title="Edit Item"
+  title="&event.title.label;"
   buttons="accept,cancel"
   ondialogaccept="return onAccept();"
   ondialogcancel="return onCancel();"
@@ -76,26 +76,26 @@
       <rows>
         <rows equalsize="always">
           <row align="center">
-            <label value="Title" class="label"/>
+            <label value="&newevent.title.label;" class="label"/>
             <textbox id="item-title" oninput="updateAccept();"/>
           </row>
           <row align="center">
-            <label value="Location" class="label"/>
+            <label value="&newevent.location.label;" class="label"/>
             <textbox id="item-location"/>
           </row>
 
           <row align="center">
-            <label value="URL" class="label"/>
+            <label value="&newevent.uri.label;" class="label"/>
             <textbox id="item-url"/>
           </row>
 
           <row align="center">
-            <label value="Attendees" class="label"/>
+            <label value="&newevent.attendees.label;" class="label"/>
             <textbox id="item-attendees"/>
           </row>
 
           <row align="center" class="event-only">
-            <label value="All day" class="label"/>
+            <label value="&newevent.alldayevent.label;" class="label"/>
             <hbox>
               <checkbox id="event-all-day" oncommand="updateAllDay();"/>
               <spacer flex="1"/>
@@ -103,17 +103,17 @@
           </row>
 
           <row align="center" class="event-only">
-            <label value="From" class="label"/>
+            <label value="&newevent.from.label;" class="label"/>
             <datetimepicker id="event-starttime" onchange="updateAccept();"/>
           </row>
 
           <row align="center" class="event-only">
-            <label value="To" class="label"/>
+            <label value="&newevent.to.label;" class="label"/>
             <datetimepicker id="event-endtime" onchange="updateAccept();"/>
           </row>
 
           <row align="center" class="todo-only">
-            <label value="Completed" class="label"/>
+            <label value="&newevent.status.completed.label;" class="label"/>
             <hbox>
               <checkbox id="todo-completed"/>
               <spacer flex="1"/>
@@ -121,7 +121,7 @@
           </row>
 
           <row align="center" class="todo-only">
-            <label value="Due date" class="label"/>
+            <label value="&newtodo.duedate.label;" class="label"/>
             <hbox>
               <checkbox id="todo-has-duedate" oncommand="updateDuedate();"/>
               <datetimepicker id="todo-duedate"/>
@@ -129,35 +129,35 @@
           </row>
 
           <row align="center">
-            <label value="Repeat" class="label"/>
+            <label value="&newevent.repeat.label2;" class="label"/>
             <hbox align="center">
               <checkbox id="item-recurrence" oncommand="updateRecurrence();"/>
               <spacer flex="1"/>
-              <button id="set-recurrence" label="set..." oncommand="editRecurrence();"/>
+              <button id="set-recurrence" label="&newevent.set.label;" oncommand="editRecurrence();"/>
             </hbox>
           </row>
 
           <row align="center">
-            <label value="Calendar" class="label"/>
+            <label value="&newevent.server.label;" class="label"/>
             <hbox>
-              <menulist id="item-calendar" oncommand="updateAccept()"/>
-              <label id="read-only-cal" 
-                     value="&newevent.readonly.cal.warning;" 
+              <menulist id="item-calendar"/>
+              <label id="read-only-cal"
+                     value="&newevent.readonly.cal.warning;"
                      class="warning-text-class" hidden="true"/>
             </hbox>
           </row>
 
           <row align="center">
-            <label value="Alarm" class="label"/>
+            <label value="&newevent.alarm.label;" class="label"/>
             <hbox>
               <menulist id="item-alarm" oncommand="updateAlarm()">
                 <menupopup>
-                  <menuitem label="none" value="none" selected="true"/>
+                  <menuitem label="&newevent.none.label;" value="none" selected="true"/>
                   <menuseparator/>
-                  <menuitem label="15 minutes before" length="15" unit="minutes" relation="START"/>
-                  <menuitem label="30 minutes before" length="30" unit="minutes" relation="START"/>
+                  <menuitem label="&newevent.15minutes.before.label;" length="15" unit="minutes" relation="START"/>
+                  <menuitem label="&newevent.30minutes.before.label;" length="30" unit="minutes" relation="START"/>
                   <menuseparator/>
-                  <menuitem id="alarm-custom-menuitem" label="Custom..." value="custom"/>
+                  <menuitem id="alarm-custom-menuitem" label="&newevent.custom.label;" value="custom"/>
                 </menupopup>
               </menulist>
               <spacer flex="1"/>
@@ -170,15 +170,15 @@
               <textbox id="alarm-length-field" size="1" oninput="validateIntegers(event);"/>
               <menulist id="alarm-length-units">
                 <menupopup>
-                  <menuitem label="minutes" value="minutes" selected="true"/>
-                  <menuitem label="hours" value="hours"/>
-                  <menuitem label="days" value="days"/>
+                  <menuitem label="&alarm.units.minutes;" value="minutes" selected="true"/>
+                  <menuitem label="&alarm.units.hours;" value="hours"/>
+                  <menuitem label="&alarm.units.days;" value="days"/>
                 </menupopup>
               </menulist>
               <menulist id="alarm-trigger-relation">
                 <menupopup>
-                  <menuitem label="before" value="START" selected="true"/>
-                  <menuitem label="after" value="END"/>
+                  <menuitem label="&newevent.before.label;" value="START" selected="true"/>
+                  <menuitem label="&newevent.after.label;" value="END"/>
                 </menupopup>
               </menulist>
             </hbox>

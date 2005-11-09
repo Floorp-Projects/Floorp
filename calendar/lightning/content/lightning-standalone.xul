@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!-- DOCTYPE window SYSTEM "chrome://lightning/locale/lightning.dtd" -->
+<!DOCTYPE overlay SYSTEM "chrome://lightning/locale/lightning.dtd" >
 
 <?xml-stylesheet href="chrome://lightning/skin/lightning.css" type="text/css"?>
 

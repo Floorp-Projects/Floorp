@@ -22,6 +22,7 @@
    -
    - Contributor(s):
    -   Stuart Parmenter <stuart.parmenter@oracle.com>
+   -   Simon Paquet <bugzilla@babylonsounds.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,15 +36,20 @@
    - the provisions above, a recipient may use your version of this file under
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
-   - ***** END LICENSE BLOCK *****
--->
+   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://calendar/content/datetimepickers/datetimepickers.css" ?>
 
+<!DOCTYPE dialog
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+]>
+
 <dialog
   id="calendar-recurrence-dialog"
-  title="Edit Recurrence"
+  title="&newevent.recurrence.title;"
   buttons="accept,cancel"
   ondialogaccept="return onAccept();"
   ondialogcancel="return onCancel();"
@@ -65,13 +71,13 @@
 
       <rows>
         <row align="center">
-          <label value="Occurs"/>
+          <label value="&newevent.recurrence.occurs.label;"/>
           <menulist id="period-list" oncommand="updateDeck();">
             <menupopup>
-              <menuitem label="Daily" value="0"/>
-              <menuitem label="Weekly" value="1"/>
-              <menuitem label="Monthly" value="2"/>
-              <menuitem label="Annually" value="3"/>
+              <menuitem label="&newevent.recurrence.day.label;" value="0"/>
+              <menuitem label="&newevent.recurrence.week.label;" value="1"/>
+              <menuitem label="&newevent.recurrence.month.label;" value="2"/>
+              <menuitem label="&newevent.recurrence.year.label;" value="3"/>
             </menupopup>
           </menulist>
         </row>
@@ -82,51 +88,51 @@
 
             <!-- Daily -->
             <hbox align="top">
-              <label value="Every"/>
+              <label value="&newevent.recurrence.every.label;"/>
               <textbox id="daily-days" size="3" oninput="validateIntegers(event);"/>
-              <label value="days"/>
+              <label value="&repeat.units.days;"/>
               <spacer flex="1"/>
             </hbox>
 
             <!-- Weekly -->
             <hbox>
-              <label value="On:"/>
+              <label value="&newevent.recurrence.on.label;"/>
               <vbox>
-                <checkbox id="weekly-mon" label="Monday" value="2"/>
-                <checkbox id="weekly-tue" label="Tuesday" value="3"/>
-                <checkbox id="weekly-wed" label="Wednesday" value="4"/>
-                <checkbox id="weekly-thu" label="Thursday" value="5"/>
+                <checkbox id="weekly-mon" label="&day.2.name;" value="2"/>
+                <checkbox id="weekly-tue" label="&day.3.name;" value="3"/>
+                <checkbox id="weekly-wed" label="&day.4.name;" value="4"/>
+                <checkbox id="weekly-thu" label="&day.5.name;" value="5"/>
               </vbox>
               <vbox>
-                <checkbox id="weekly-fri" label="Friday" value="6"/>
-                <checkbox id="weekly-sat" label="Saturday" value="7"/>
-                <checkbox id="weekly-sun" label="Sunday" value="1"/>
+                <checkbox id="weekly-fri" label="&day.6.name;" value="6"/>
+                <checkbox id="weekly-sat" label="&day.7.name;" value="7"/>
+                <checkbox id="weekly-sun" label="&day.1.name;" value="1"/>
               </vbox>
             </hbox>
 
             <vbox align="center">
               <menulist>
                 <menupopup>
-                  <menuitem label="every"/>
-                  <menuitem label="every first"/>
-                  <menuitem label="every second"/>
-                  <menuitem label="every third"/>
-                  <menuitem label="every fourth"/>
-                  <menuitem label="every fifth"/>
-                  <menuitem label="every last"/>
+                  <menuitem label="&newevent.recurrence.every.label;"/>
+                  <menuitem label="&newevent.repeat.first.label;"/>
+                  <menuitem label="&newevent.repeat.second.label;"/>
+                  <menuitem label="&newevent.repeat.third.label;"/>
+                  <menuitem label="&newevent.repeat.fourth.label;"/>
+                  <menuitem label="&newevent.repeat.fifth.label;"/>
+                  <menuitem label="&newevent.repeat.last.label;"/>
                 </menupopup>
               </menulist>
 
               <hbox>
-                <label value="Repeat on the"/>
+                <label value="&newevent.repeat.onthe.label;"/>
                 <textbox value="10,23,29" size="3"/>
               </hbox>
             </vbox>
 
             <hbox align="top">
-              <label value="Every"/>
+              <label value="&newevent.recurrence.every.label;"/>
               <textbox id="yearly-years" size="3" oninput="validateIntegers(event);"/>
-              <label value="years"/>
+              <label value="&repeat.units.years;"/>
               <spacer flex="1"/>
             </hbox>
 
@@ -148,27 +154,27 @@
 
         <rows equalsize="always">
           <row align="center">
-            <radio label="Repeat forever" value="forever" selected="true"/>
+            <radio label="&newevent.repeat.forever.label;" value="forever" selected="true"/>
             <spacer/>
           </row>
           <row>
-            <radio label="Repeat for" value="ntimes"/>
+            <radio label="&newevent.repeat.for.label;" value="ntimes"/>
             <hbox>
               <textbox id="repeat-ntimes-count" size="3" oninput="validateIntegers(event);"/>
               <spacer flex="0.5"/>
               <menulist id="repeat-ntimes-units">
                 <menupopup>
-                  <menuitem label="day(s)"/>
-                  <menuitem label="week(s)"/>
-                  <menuitem label="month(s)"/>
-                  <menuitem label="year(s)"/>
+                  <menuitem label="&repeat.units.days.both;"/>
+                  <menuitem label="&repeat.units.weeks.both;"/>
+                  <menuitem label="&repeat.units.months.both;"/>
+                  <menuitem label="&repeat.units.years.both;"/>
                 </menupopup>
               </menulist>
               <spacer flex="1"/>
             </hbox>
           </row>
           <row>
-            <radio label="Repeat until" value="until"/>
+            <radio label="&newevent.repeat.until.label;" value="until"/>
             <hbox>
               <datepicker id="repeat-until-date" value=""/>
               <spacer flex="1"/>
@@ -182,12 +188,12 @@
   <spacer flex="1"/>
 
   <vbox>
-    <label value="Exceptions:"/>
+    <label value="&newevent.recurrence.exceptions.label;"/>
 
     <hbox align="center">
       <listbox id="recurrence-exceptions-listbox" rows="8" flex="1"/>
       <vbox align="top">
-        <button label="Remove" oncommand="removeSelectedException();"/>
+        <button label="&newevent.recurrence.remove.label;" oncommand="removeSelectedException();"/>
       </vbox>
     </hbox>
 

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!-- DOCTYPE overlay SYSTEM "chrome://lightning/locale/lightning.dtd" -->
+<!DOCTYPE overlay SYSTEM "chrome://lightning/locale/lightning.dtd" >
 
 <?xml-stylesheet href="chrome://lightning/content/calendar-todo-list.css" type="text/css"?>
 

@@ -185,8 +185,8 @@ calEvent.prototype = {
                     icalcomp.addProperty(icalprop);
                 }
             } catch (e) {
-                // dump("failed to set " + iprop.name + " to " + iprop.value +
-                // ": " + e + "\n");
+                dump("XXX failed to set " + iprop.name + " to " + iprop.value +
+                ": " + e + "\n");
             }
         }
         return icalcomp;

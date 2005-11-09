@@ -56,6 +56,8 @@ calendar-en-US.jar:
   locale/en-US/calendar/selectAddresses.dtd	(/calendar/resources/locale/en-US/selectAddresses.dtd)
   locale/en-US/calendar/calendar.properties	(/calendar/resources/locale/en-US/calendar.properties)
   locale/en-US/calendar/dateFormat.properties	(/calendar/resources/locale/en-US/dateFormat.properties)
+  locale/en-US/calendar/menuOverlay.dtd	(/calendar/resources/locale/en-US/menuOverlay.dtd)
+* locale/en-US/calendar/prefs.dtd	(/calendar/resources/locale/en-US/prefs.dtd)
 
 classic.jar:
 #expand  skin/classic/lightning/lightning.css	(themes/__THEME__/lightning.css)

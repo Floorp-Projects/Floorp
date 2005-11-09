@@ -1,35 +1,77 @@
 <?xml version="1.0"?>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is calendar views.
+   -
+   - The Initial Developer of the Original Code is Oracle Corporation
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   - Mike Shaver        <shaver@mozilla.org>
+   - Stuart Parmenter   <stuart.parmenter@oracle.com>
+   - Vladimir Vukicevic <vladimir@pobox.com>
+   - Simon Paquet       <bugzilla@babylonsounds.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
 <?xml-stylesheet href="chrome://calendar/skin/calendar-toolbar.css" type="text/css"?>
+
+<!DOCTYPE overlay 
+[
+  <!ENTITY % dtd1 SYSTEM "chrome://lightning/locale/lightning.dtd" > %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+]>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://calendar/content/calendar-item-editing.js"/>
 
   <menupopup id="menu_NewPopup">
-    <menuitem id="ltnNewEvent" label="New Calendar Event"
-              oncommand="createEventWithDialog();"/>
-    <menuitem id="ltnNewTask" label="New Calendar Task"
-              oncommand="createTodoWithDialog();"/>
+    <menuitem id="ltnNewEvent" label="&event.title.new;" oncommand="createEventWithDialog();"/>
+    <menuitem id="ltnNewTask" label="&todo.title.new;" oncommand="createTodoWithDialog();"/>
   </menupopup>
 
   <menubar id="mail-menubar">
-    <menu id="ltnCalendarMenu" label="Calendar" insertbefore="tasksMenu">
+    <menu id="ltnCalendarMenu" label="&lightning.calendar.label;" insertbefore="tasksMenu">
       <menupopup id="ltncalendarMenuPopup">
-        <menuitem id="ltnChangeViewDay" label="Day View" oncommand="switchView('day')"/>
-        <menuitem id="ltnChangeViewWeek" label="Week View" oncommand="switchView('week')"/>
-        <menuitem id="ltnChangeViewMonth" label="Month View" oncommand="switchView('month')"/>
+        <menuitem id="ltnChangeViewDay" label="&lightning.toolbar.dayview.label;" oncommand="switchView('day')"/>
+        <menuitem id="ltnChangeViewWeek" label="&lightning.toolbar.weekview.label;" oncommand="switchView('week')"/>
+        <menuitem id="ltnChangeViewMonth" label="&lightning.toolbar.monthview.label;" oncommand="switchView('month')"/>
       </menupopup>
     </menu>
   </menubar>
 
   <toolbarpalette id="MailToolbarPalette">
-
-    <toolbarbutton id="calendar-new-event-button" class="cal-toolbarbutton-1" label="New Event" tooltiptext="New Event" oncommand="createEventWithDialog()"/>
-    <toolbarbutton id="calendar-new-task-button" class="cal-toolbarbutton-1" label="New Task" tooltiptext="New Task" oncommand="createTodoWithDialog()"/>
-    <toolbarbutton id="calendar-week-view-button" class="cal-toolbarbutton-1" label="Week View" tooltiptext="Month View" oncommand="switchView('week')"/>
-    <toolbarbutton id="calendar-month-view-button" class="cal-toolbarbutton-1" label="Month View" tooltiptext="Month View" oncommand="switchView('month')"/>
-    <toolbarbutton id="calendar-day-view-button" class="cal-toolbarbutton-1" label="Day View" tooltiptext="Day View" oncommand="switchView('day')"/>
-
+    <toolbarbutton id="calendar-new-event-button" class="cal-toolbarbutton-1" label="&calendar.newevent.button.label;" tooltiptext="&calendar.newevent.button.tooltip;" oncommand="createEventWithDialog()"/>
+    <toolbarbutton id="calendar-new-task-button" class="cal-toolbarbutton-1" label="&calendar.newtask.button.label;" tooltiptext="&calendar.newtask.button.tooltip;" oncommand="createTodoWithDialog()"/>
+    <toolbarbutton id="calendar-week-view-button" class="cal-toolbarbutton-1" label="&calendar.weekview.button.label;" tooltiptext="&calendar.weekview.button.tooltip;" oncommand="switchView('week')"/>
+    <toolbarbutton id="calendar-month-view-button" class="cal-toolbarbutton-1" label="&calendar.monthview.button.label;" tooltiptext="&calendar.monthview.button.tooltip;" oncommand="switchView('month')"/>
+    <toolbarbutton id="calendar-day-view-button" class="cal-toolbarbutton-1" label="&calendar.dayview.button.label;" tooltiptext="&calendar.dayview.button.tooltip;" oncommand="switchView('day')"/>
   </toolbarpalette>
 
 </overlay>

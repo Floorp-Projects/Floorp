@@ -1,6 +1,51 @@
 <?xml version="1.0"?>
 
-<!-- DOCTYPE overlay SYSTEM "chrome://lightning/locale/lightning.dtd" -->
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is calendar views.
+   -
+   - The Initial Developer of the Original Code is Oracle Corporation
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   - Mike Shaver        <shaver@mozilla.org>
+   - Stuart Parmenter   <stuart.parmenter@oracle.com>
+   - Vladimir Vukicevic <vladimir@pobox.com>
+   - Joey Minta         <jminta@gmail.com>
+   - Simon Paquet       <bugzilla@babylonsounds.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE overlay 
+[
+  <!ENTITY % dtd1 SYSTEM "chrome://lightning/locale/lightning.dtd" > %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %dtd2;
+]>
+
 
 <?xml-stylesheet href="chrome://lightning/skin/lightning.css" type="text/css"?>
 
@@ -23,7 +68,7 @@
   </commandset>
   <popupset>
     <popup id="calendartree-context-menu" onpopupshowing="return true;">
-      <menuitem label="Publish" observes="publish_calendar"/>
+      <menuitem label="&calendar.publish.label;" observes="publish_calendar"/>
     </popup>
   </popupset>
 </window>
@@ -40,26 +85,28 @@
   
     <tabbox flex="1">
       <tabs>
-        <tab label="Agenda"/>
-        <tab label="Todo"/>
-        <tab label="Calendars"/>
+        <tab label="&lightning.sidebar.agenda.label;"/>
+        <tab label="&lightning.sidebar.todo.label;"/>
+        <tab label="&lightning.sidebar.calendars.label;"/>
       </tabs>
       <tabpanels flex="1">
         <vbox id="agenda-tab-panel"/>    
         <vbox id="todo-tab-panel"/>
         <vbox flex="1">
           <hbox>
-            <button label="New..." oncommand="ltnNewCalendar();"/>
-            <button id="cal-sidebar-edit-calendar" label="Edit..." oncommand="ltnEditSelectedCalendar();"/>
+            <button label="&lightning.sidebar.new.label;" oncommand="ltnNewCalendar();"/>
+            <button id="cal-sidebar-edit-calendar" label="&lightning.sidebar.edit.label;" 
+                    oncommand="ltnEditSelectedCalendar();"/>
             <spacer orient="horizontal" flex="5"/>
-            <button id="cal-sidebar-delete-calendar" label="Delete" oncommand="ltnDeleteSelectedCalendar();"/>
+            <button id="cal-sidebar-delete-calendar" label="&lightning.sidebar.delete.label;" 
+                    oncommand="ltnDeleteSelectedCalendar();"/>
           </hbox>
           <tree id="calendarTree" hidecolumnpicker="true" seltype="single" onfocus="selectedCalendarPane(event)" flex="1" onselect="ltnSidebarCalendarSelected(this);" context="calendartree-context-menu">
             <treecols>
               <treecol id="col-calendar-Checkbox" cycler="true" fixed="true" width="18" >
                 <image />
               </treecol>
-              <treecol id="col-calendar-Calendar" label="Calendar" flex="1"/>
+              <treecol id="col-calendar-Calendar" label="&lightning.calendar.label;" flex="1"/>
             </treecols>
             <treechildren>
             </treechildren>
