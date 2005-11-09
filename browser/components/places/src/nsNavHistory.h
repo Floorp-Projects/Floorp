@@ -268,6 +268,7 @@ protected:
 };
 
 
+class AutoCompleteIntermediateResultSet;
 
 // nsNavHistory
 
@@ -277,7 +278,7 @@ class nsNavHistory : nsSupportsWeakReference,
                      public nsIBrowserHistory,
                      public nsIAutoCompleteSearch
 {
-  friend struct AutoCompleteIntermediateResultSet;
+  friend class AutoCompleteIntermediateResultSet;
 public:
   nsNavHistory();
 
