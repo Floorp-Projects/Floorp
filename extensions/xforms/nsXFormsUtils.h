@@ -383,12 +383,16 @@ public:
                                                      nsIDOMNode  **aInstanceNode);
 
   /**
-   * This function takes an instance data node, finds the type bound to it, and
-   * returns the seperated out type (integer) and namespace prefix (xsd).
+   * Returns the type bound to the given node.
+   *
+   * @param aInstanceData   An instance data node or attribute on an instance
+   *                        data node from which to retrieve type.
+   * @param aType           On return, type of given node.
+   * @param aNSUri          On return, namespace URI of aType.
    */
   static NS_HIDDEN_(nsresult) ParseTypeFromNode(nsIDOMNode *aInstanceData,
                                                 nsAString  &aType,
-                                                nsAString  &aNSPrefix);
+                                                nsAString  &aNSUri);
 
   /**
    * Outputs to the JavaScript console.

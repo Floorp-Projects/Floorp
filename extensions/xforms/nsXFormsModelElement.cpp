@@ -1041,26 +1041,15 @@ nsXFormsModelElement::GetTypeForControl(nsIXFormsControl  *aControl,
 nsXFormsModelElement::GetTypeAndNSFromNode(nsIDOMNode *aInstanceData,
                                            nsAString &aType, nsAString &aNSUri)
 {
-  nsAutoString schemaTypePrefix;
-  nsresult rv = nsXFormsUtils::ParseTypeFromNode(aInstanceData, aType,
-                                                 schemaTypePrefix);
+  nsresult rv = nsXFormsUtils::ParseTypeFromNode(aInstanceData, aType, aNSUri);
 
   if(rv == NS_ERROR_NOT_AVAILABLE) {
     // if there is no type assigned, then assume that the type is 'string'
     aNSUri.Assign(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA));
     aType.Assign(NS_LITERAL_STRING("string"));
     rv = NS_OK;
-  } else {
-    if (schemaTypePrefix.IsEmpty()) {
-      aNSUri.AssignLiteral("");
-    } else {
-      // get the namespace url from the prefix
-      nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(mElement, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = domNode3->LookupNamespaceURI(schemaTypePrefix, aNSUri);
-    }
   }
+
   return rv;
 }
 

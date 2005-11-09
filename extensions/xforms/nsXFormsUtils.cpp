@@ -1236,7 +1236,7 @@ nsXFormsUtils::GetInstanceNodeForData(nsIDOMNode             *aInstanceDataNode,
 
 /* static */ nsresult
 nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
-                                 nsAString &aType, nsAString &aNSPrefix)
+                                 nsAString &aType, nsAString &aNSUri)
 {
   nsresult rv = NS_OK;
 
@@ -1280,6 +1280,7 @@ nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
   }
 
   // split type (ns:type) into namespace and type.
+  nsAutoString prefix;
   PRInt32 separator = typeVal->FindChar(':');
   if ((PRUint32) separator == (typeVal->Length() - 1)) {
     const PRUnichar *strings[] = { typeVal->get() };
@@ -1288,14 +1289,35 @@ nsXFormsUtils::ParseTypeFromNode(nsIDOMNode *aInstanceData,
     return NS_ERROR_UNEXPECTED;
   } else if (separator == kNotFound) {
     // no namespace prefix, which is valid;
-    aNSPrefix.AssignLiteral("");
+    prefix.AssignLiteral("");
     aType.Assign(*typeVal);
   } else {
-    aNSPrefix.Assign(Substring(*typeVal, 0, separator));
+    prefix.Assign(Substring(*typeVal, 0, separator));
     aType.Assign(Substring(*typeVal, ++separator, typeVal->Length()));
   }
 
-  return NS_OK;
+  if (prefix.IsEmpty()) {
+    aNSUri.AssignLiteral("");
+  } else {
+    // get the namespace url from the prefix using instance data node
+    nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(aInstanceData, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = domNode3->LookupNamespaceURI(prefix, aNSUri);
+
+    if (DOMStringIsNull(aNSUri)) {
+      // if not found using instance data node, use <xf:instance> node
+      nsCOMPtr<nsIDOMNode> instanceNode;
+      rv = nsXFormsUtils::GetInstanceNodeForData(aInstanceData,
+                                                 getter_AddRefs(instanceNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      domNode3 = do_QueryInterface(instanceNode, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = domNode3->LookupNamespaceURI(prefix, aNSUri);
+    }
+  }
+
+  return rv;
 }
 
 /* static */ void

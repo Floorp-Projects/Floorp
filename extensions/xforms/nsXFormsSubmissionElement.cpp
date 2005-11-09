@@ -96,10 +96,6 @@
 #include "nsIMIMEHeaderParam.h"
 
 // namespace literals
-#define NAMESPACE_XML_SCHEMA \
-        NS_LITERAL_STRING("http://www.w3.org/2001/XMLSchema")
-#define NAMESPACE_XML_SCHEMA_INSTANCE \
-        NS_LITERAL_STRING("http://www.w3.org/2001/XMLSchema-instance")
 #define kXMLNSNameSpaceURI \
         NS_LITERAL_STRING("http://www.w3.org/2000/xmlns/")
 
@@ -1274,14 +1270,14 @@ nsXFormsSubmissionElement::CopyChildren(nsIDOMNode *source, nsIDOMNode *dest,
         return NS_ERROR_ILLEGAL_VALUE;
       }
 
-      // if |destChild| is an element node of type 'xsd:anyURI', and if we have
-      // an attachments array, then we need to perform multipart/related
+      // If |currentNode| is an element node of type 'xsd:anyURI', and if we
+      // have an attachments array, then we need to perform multipart/related
       // processing (i.e., generate a ContentID for the child of this element,
       // and append a new attachment to the attachments array).
 
       PRUint32 encType;
       if (attachments &&
-          NS_SUCCEEDED(GetElementEncodingType(destChild, &encType)) &&
+          NS_SUCCEEDED(GetElementEncodingType(currentNode, &encType)) &&
           encType == ELEMENT_ENCTYPE_URI)
       {
         // ok, looks like we have a local file to upload
@@ -1490,7 +1486,8 @@ nsXFormsSubmissionElement::SerializeDataMultipartRelated(nsIDOMNode *data,
 
   nsCOMPtr<nsIInputStream> xml;
   SubmissionAttachmentArray attachments;
-  SerializeDataXML(data, getter_AddRefs(xml), type, &attachments);
+  nsresult rv = SerializeDataXML(data, getter_AddRefs(xml), type, &attachments);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX we should output a 'charset=' with the 'Content-Type' header
 
@@ -1499,7 +1496,7 @@ nsXFormsSubmissionElement::SerializeDataMultipartRelated(nsIDOMNode *data,
                 +  NS_LITERAL_CSTRING("\r\nContent-Type: ") + type
                 +  NS_LITERAL_CSTRING("\r\nContent-ID: <") + start
                 +  NS_LITERAL_CSTRING(">\r\n\r\n");
-  nsresult rv = AppendPostDataChunk(postDataChunk, multiStream);
+  rv = AppendPostDataChunk(postDataChunk, multiStream);
   NS_ENSURE_SUCCESS(rv, rv);
 
   multiStream->AppendStream(xml);
@@ -1702,7 +1699,7 @@ nsXFormsSubmissionElement::AppendMultipartFormData(nsIDOMNode *data,
     }
     else
     {
-      // for base64binary and hexBinary types, we assume that the data is
+      // for base64Binary and hexBinary types, we assume that the data is
       // already encoded.  this assumption is based on section 8.1.6 of the
       // xforms spec.
 
@@ -1752,40 +1749,21 @@ nsXFormsSubmissionElement::GetElementEncodingType(nsIDOMNode *node, PRUint32 *en
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
   NS_ENSURE_TRUE(element, NS_ERROR_UNEXPECTED);
 
-  nsAutoString type;
-  element->GetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
-                          NS_LITERAL_STRING("type"), type);
-  if (!type.IsEmpty())
+  // check for 'xsd:base64Binary', 'xsd:hexBinary', or 'xsd:anyURI'
+  nsAutoString type, nsuri;
+  nsresult rv = nsXFormsUtils::ParseTypeFromNode(node, type, nsuri);
+  if (NS_SUCCEEDED(rv) &&
+      nsuri.EqualsLiteral(NS_NAMESPACE_XML_SCHEMA) &&
+      !type.IsEmpty())
   {
-    // check for 'xsd:base64binary', 'xsd:hexBinary', or 'xsd:anyURI'
+    if (type.Equals(NS_LITERAL_STRING("anyURI")))
+      *encType = ELEMENT_ENCTYPE_URI;
+    else if (type.Equals(NS_LITERAL_STRING("base64Binary")))
+      *encType = ELEMENT_ENCTYPE_BASE64;
+    else if (type.Equals(NS_LITERAL_STRING("hexBinary")))
+      *encType = ELEMENT_ENCTYPE_HEX;
 
     // XXX need to handle derived types (fixing bug 263384 will help)
-
-    // get 'xsd' namespace prefix
-    nsCOMPtr<nsIDOM3Node> dom3Node = do_QueryInterface(node);
-    NS_ENSURE_TRUE(dom3Node, NS_ERROR_UNEXPECTED);
-
-    nsAutoString prefix;
-    dom3Node->LookupPrefix(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA), prefix);
-
-    if (prefix.IsEmpty())
-    {
-      NS_WARNING("namespace prefix not found! -- assuming 'xsd'");
-      prefix.AssignLiteral("xsd"); // XXX HACK HACK HACK
-    }
-
-    if (type.Length() > prefix.Length() &&
-        prefix.Equals(StringHead(type, prefix.Length())) &&
-        type.CharAt(prefix.Length()) == PRUnichar(':'))
-    {
-      const nsSubstring &tail = Substring(type, prefix.Length() + 1);
-      if (tail.Equals(NS_LITERAL_STRING("anyURI")))
-        *encType = ELEMENT_ENCTYPE_URI;
-      else if (tail.Equals(NS_LITERAL_STRING("base64binary")))
-        *encType = ELEMENT_ENCTYPE_BASE64;
-      else if (tail.Equals(NS_LITERAL_STRING("hexBinary")))
-        *encType = ELEMENT_ENCTYPE_HEX;
-    }
   }
 
   return NS_OK;
