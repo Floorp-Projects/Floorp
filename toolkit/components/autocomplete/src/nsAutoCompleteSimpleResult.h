@@ -54,8 +54,10 @@ public:
   NS_DECL_NSIAUTOCOMPLETERESULT
   NS_DECL_NSIAUTOCOMPLETESIMPLERESULT
 
+private:
+  ~nsAutoCompleteSimpleResult() {}
+
 protected:
-  ~nsAutoCompleteSimpleResult() {};
 
   // What we really want is an array of structs with value/comment contents.
   // But then we'd either have to use COM or manage object lifetimes ourselves.
