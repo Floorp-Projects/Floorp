@@ -476,12 +476,12 @@
       <html:button anonid="upload_browse_button"
                    type="button"
                    onclick="this.parentNode.uploadElem.pickFile();"
-                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMActivate();"
+                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
                    xbl:inherits="accesskey"> &xforms.upload.browsetext; </html:button>
       <html:button anonid="upload_clear_button"
                    type="button"
                    onclick="this.parentNode.uploadElem.clearFile();"
-                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMActivate();"
+                   onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
                    xbl:inherits="accesskey"> &xforms.upload.cleartext; </html:button>
       <children/>
     </content>
