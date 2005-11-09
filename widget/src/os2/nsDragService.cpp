@@ -94,6 +94,7 @@ nsresult GetTempFileName(char** outText);
 void     WriteTypeEA(PCSZ filename, PCSZ type);
 int      UnicodeToCodepage( const nsAString& inString, char **outText);
 int      CodepageToUnicode( const nsACString& inString, PRUnichar **outText);
+void     RemoveCarriageReturns(char * pszText);
 
 // --------------------------------------------------------------------------
 // Global data
@@ -1319,15 +1320,43 @@ NS_IMETHODIMP nsDragService::NativeDataToTransferable( PCSZ pszText,
       rv = NS_OK;
     }
 
-      // construct the HTML flavor
+      // construct the HTML flavor - for supported graphics,
+      // use an IMG tag, for all others create a link
     nsCOMPtr<nsISupportsString> htmlPrimitive(
                             do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
     if (htmlPrimitive ) {
-      nsString htmlStr(NS_LITERAL_STRING("<a href=\"") +
+      nsString htmlStr;
+      nsCOMPtr<nsIURI> uri;
+
+      rv = NS_ERROR_FAILURE;
+      if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), pszText))) {
+        nsCOMPtr<nsIURL> url (do_QueryInterface(uri));
+        if (url) {
+          nsCAutoString extension;
+          url->GetFileExtension(extension);
+          if (!extension.IsEmpty()) {
+            if (extension.LowerCaseEqualsLiteral("gif") ||
+                extension.LowerCaseEqualsLiteral("jpg") ||
+                extension.LowerCaseEqualsLiteral("png") ||
+                extension.LowerCaseEqualsLiteral("jpeg"))
+              rv = NS_OK;
+          }
+        }
+      }
+
+      if (NS_SUCCEEDED(rv))
+        htmlStr.Assign(NS_LITERAL_STRING("<img src=\"") +
+                       outText +
+                       NS_LITERAL_STRING("\" alt=\"") +
+                       outTitle +
+                       NS_LITERAL_STRING("\"/>") );
+      else
+        htmlStr.Assign(NS_LITERAL_STRING("<a href=\"") +
                        outText +
                        NS_LITERAL_STRING("\">") +
                        (outTitle.IsEmpty() ? outText : outTitle) +
                        NS_LITERAL_STRING("</a>") );
+
       htmlPrimitive->SetData(htmlStr);
       trans->SetTransferData(kHTMLMime, htmlPrimitive, 2*htmlStr.Length());
       rv = NS_OK;
@@ -1448,6 +1477,7 @@ nsresult RenderToDTShareComplete(PDRAGTRANSFER pdxfer, USHORT usResult,
       pszText = (char*)nsMemory::Alloc( ((ULONG*)pMem)[0] + 1);
       if (pszText) {
         strcpy(pszText, &((char*)pMem)[sizeof(ULONG)] );
+        RemoveCarriageReturns(pszText);
         *outText = pszText;
         rv = NS_OK;
       }
@@ -1511,6 +1541,7 @@ nsresult GetAtom( ATOM aAtom, char** outText)
     char* pszText = (char*)nsMemory::Alloc(++ulInLength);
     if (pszText) {
       DrgQueryStrName(aAtom, ulInLength, pszText);
+      RemoveCarriageReturns(pszText);
       *outText = pszText;
       rv = NS_OK;
     }
@@ -1563,6 +1594,7 @@ nsresult GetFileContents(PCSZ pszPath, char** outText)
           readsize = fread((void *)pszText, 1, readsize, fp);
           if (readsize) {
             pszText[readsize] = '\0';
+            RemoveCarriageReturns(pszText);
             *outText = pszText;
             rv = NS_OK;
           }
@@ -1687,3 +1719,33 @@ int CodepageToUnicode(const nsACString& aString, PRUnichar **aResult)
 
 // --------------------------------------------------------------------------
 
+// removes carriage returns in-place;  it should only be used on
+// raw text buffers that haven't been assigned to a string object
+
+void RemoveCarriageReturns(char * pszText)
+{
+  ULONG  cnt;
+  char * next;
+  char * source;
+  char * target;
+
+  target = strchr(pszText, 0x0d);
+  if (!target)
+    return;
+
+  source = target + 1;
+
+  while ((next = strchr(source, 0x0d)) != 0) {
+
+    cnt = next - source;
+    memcpy(target, source, cnt);
+    target += cnt;
+    source = next + 1;
+
+  }
+
+  strcpy(target, source);
+  return;
+}
+
+// --------------------------------------------------------------------------
