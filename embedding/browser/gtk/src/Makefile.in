@@ -149,7 +149,7 @@ endif
 # symbol. N.B. that this will break if the $(FINAL_LINK_COMP_NAMES)
 # and $(FINAL_LINK_COMPS) somehow get out-of-sync and aren't in
 # _exactly_ the same order. (Hey, this is a hack!)
-components: $(FAT_FINAL_LINK_COMPS) $(FAT_FINAL_LINK_COMP_NAMES)
+components_list: $(FAT_FINAL_LINK_COMPS) $(FAT_FINAL_LINK_COMP_NAMES)
 	paste $(FAT_FINAL_LINK_COMPS) $(FAT_FINAL_LINK_COMP_NAMES) | sort -k 1,1 > $@
 
 # Compute the embedding libs by extracting them from the embedding
@@ -163,21 +163,21 @@ components: $(FAT_FINAL_LINK_COMPS) $(FAT_FINAL_LINK_COMP_NAMES)
 # the library name. This list is sorted, and joined with the list of
 # components that were actually _built_ to cull out anything that's
 # included in the manifest, but wasn't built.
-embed-link-comps: $(EMBED_MANIFEST) components
+embed-link-comps: $(EMBED_MANIFEST) components_list
 	grep '^components/' $< | \
 		awk '{ print $$1; }' | \
 		grep '\.so$$' | \
 		sed -e 's.^components/lib..' -e 's/\.so//' | \
 		sort | \
-		join -o 1.1 - components > $@
+		join -o 1.1 - components_list > $@
 
 # Compute the symbols we'll need for the ``minimal embedding client''
 # by joining the compoent list with the sorted list of embedding
 # components.
-embed-link-comp-names: embed-link-comps components
-	sort embed-link-comps | join -o 2.2 - components > $@
+embed-link-comp-names: embed-link-comps components_list
+	sort embed-link-comps | join -o 2.2 - components_list > $@
 
-GARBAGE += embed-link-comp-names embed-link-comps components
+GARBAGE += embed-link-comp-names embed-link-comps components components_list
 endif
 
 include $(topsrcdir)/config/rules.mk
