@@ -161,6 +161,8 @@
   </hbox>
 </popup>
 
+<tooltip id="folderpopup" class="folderSummaryPopup"/>
+
 <popup id="messagePaneContext"/>
 
   <toolbox id="mail-toolbox" class="toolbox-top">
@@ -184,6 +186,7 @@
             datasources="rdf:null"
             statedatasource="rdf:mailnewsfolders"
             flags="dont-build-content"
+            tooltip="folderpopup"
             ondraggesture="BeginDragFolderTree(event);"
             onselect="FolderPaneSelectionChange();">
         <template>

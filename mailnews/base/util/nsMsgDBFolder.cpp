@@ -5143,6 +5143,7 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
         if (!boundary.IsEmpty() && boundary.Equals(curLine))
           break;
         msgBody.Append(curLine);
+        msgBody.Append(" "); // convert each end of line delimter into a space
         // how much html should we parse for text? 2K? 4K?
         if (msgBody.Length() > 2048 || (!msgBodyIsHtml && msgBody.Length() > 255))
           break;

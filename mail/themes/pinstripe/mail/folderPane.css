@@ -133,3 +133,15 @@ treechildren::-moz-tree-cell-text(folderNameCol, noSelect-true) {
 .tree-folder-checkbox {
   list-style-image: none;
 }
+
+/* ::::: Folder Summary Popup ::::: */
+
+.folderSummary-subject {
+  font-weight: bold; 
+  max-width: 25em;
+}
+
+.folderSummary-previewText {
+  color: grey; 
+  max-width: 35em;
+}
