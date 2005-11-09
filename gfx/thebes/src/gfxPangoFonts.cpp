@@ -310,7 +310,7 @@ gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
     mFonts.push_back(f);
 }
 
-gfxPangoFontGroup::~gfxPangoFont()
+gfxPangoFontGroup::~gfxPangoFontGroup()
 {
 }
 
