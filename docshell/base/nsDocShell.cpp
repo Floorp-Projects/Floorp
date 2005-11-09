@@ -5419,11 +5419,34 @@ nsDocShell::RestoreFromHistory()
     mContentViewer.swap(viewer);
     viewer = nsnull; // force a release to complete ownership transfer
 
-    // Grab the window state up here so we can pass it to Open.
+    // Grab all of the related presentation from the SHEntry now.
+    // Clearing the viewer from the SHEntry will clear all of this state.
     nsCOMPtr<nsISupports> windowState;
     mLSHE->GetWindowState(getter_AddRefs(windowState));
-
     mLSHE->SetWindowState(nsnull);
+
+    PRBool sticky;
+    mLSHE->GetSticky(&sticky);
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
+
+    nsCOMArray<nsIDocShellTreeItem> childShells;
+    PRInt32 i = 0;
+    nsCOMPtr<nsIDocShellTreeItem> child;
+    while (NS_SUCCEEDED(mLSHE->ChildShellAt(i++, getter_AddRefs(child))) &&
+           child) {
+        childShells.AppendObject(child);
+    }
+
+    // get the previous content viewer size
+    nsRect oldBounds(0, 0, 0, 0);
+    mLSHE->GetViewerBounds(oldBounds);
+
+    // Restore the refresh URI list.  The refresh timers will be restarted
+    // when EndPageLoad() is called.
+    nsCOMPtr<nsISupportsArray> refreshURIList;
+    mLSHE->GetRefreshURIList(getter_AddRefs(refreshURIList));
 
     // Reattach to the window object.
     rv = mContentViewer->Open(windowState, mLSHE);
@@ -5432,11 +5455,20 @@ nsDocShell::RestoreFromHistory()
     mLSHE->SetContentViewer(nsnull);
     mEODForCurrentDocument = PR_FALSE;
 
+#ifdef DEBUG
+ {
+     nsCOMPtr<nsISupportsArray> refreshURIs;
+     mLSHE->GetRefreshURIList(getter_AddRefs(refreshURIs));
+     nsCOMPtr<nsIDocShellTreeItem> childShell;
+     mLSHE->ChildShellAt(0, getter_AddRefs(childShell));
+     NS_ASSERTION(!refreshURIs && !childShell,
+                  "SHEntry should have cleared presentation state");
+ }
+#endif
+
     // Restore the sticky state of the viewer.  The viewer has set this state
     // on the history entry in Destroy() just before marking itself non-sticky,
     // to avoid teardown of the presentation.
-    PRBool sticky;
-    mLSHE->GetSticky(&sticky);
     mContentViewer->SetSticky(sticky);
 
     // Now that we have switched documents, forget all of our children.
@@ -5466,8 +5498,6 @@ nsDocShell::RestoreFromHistory()
     if (oldMUDV && newMUDV)
         newMUDV->SetTextZoom(zoom);
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
     nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
     if (document) {
         SetCurrentURI(document->GetDocumentURI(),
@@ -5493,23 +5523,14 @@ nsDocShell::RestoreFromHistory()
     }
 
     // Now we simulate appending child docshells for subframes.
-    PRInt32 i = 0;
-    nsCOMPtr<nsIDocShellTreeItem> child;
-    while (NS_SUCCEEDED(mLSHE->ChildShellAt(i++, getter_AddRefs(child))) &&
-           child) {
-        AddChild(child);
+    for (i = 0; i < childShells.Count(); ++i) {
+        nsIDocShellTreeItem *childItem = childShells.ObjectAt(i);
+        AddChild(childItem);
 
-        nsCOMPtr<nsIDocShell> childShell = do_QueryInterface(child);
+        nsCOMPtr<nsIDocShell> childShell = do_QueryInterface(childItem);
         rv = childShell->BeginRestore(nsnull, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
     }
-
-    // And release the references in the history entry.
-    mLSHE->ClearChildShells();
-
-    // get the previous content viewer size
-    nsRect oldBounds(0, 0, 0, 0);
-    mLSHE->GetViewerBounds(oldBounds);
 
     nsCOMPtr<nsIPresShell> shell;
     nsDocShell::GetPresShell(getter_AddRefs(shell));
@@ -5546,8 +5567,7 @@ nsDocShell::RestoreFromHistory()
 
     // Restore the refresh URI list.  The refresh timers will be restarted
     // when EndPageLoad() is called.
-    mLSHE->GetRefreshURIList(getter_AddRefs(mRefreshURIList));
-    mLSHE->SetRefreshURIList(nsnull);
+    mRefreshURIList = refreshURIList;
 
     // Meta-refresh timers have been restarted for this shell, but not
     // for our children.  Walk the child shells and restart their timers.
