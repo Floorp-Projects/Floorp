@@ -144,8 +144,10 @@ const PRInt32 kBackward = 1;
 
 //#define DEBUG_charset
 
-
-#define ID_NOT_IN_DOCUMENT ((nsIContent *)1)
+// Entries in an nsSmallVoidArray must not have the low bit set, so
+// can't use "1" for ID_NOT_IN_DOCUMENT.  "2" should be a perfectly
+// reasonable value, though -- no real nsIContent* will be equal to 2.
+#define ID_NOT_IN_DOCUMENT ((nsIContent *)2)
 #define NAME_NOT_VALID ((nsBaseContentList*)1)
 
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
@@ -205,21 +207,79 @@ class IdAndNameMapEntry : public PLDHashEntryHdr
 {
 public:
   IdAndNameMapEntry(const nsAString& aString) :
-    mKey(aString), mIdContent(nsnull), mContentList(nsnull)
+    mKey(aString), mNameContentList(nsnull), mIdContentList()
   {
   }
 
   ~IdAndNameMapEntry()
   {
-    if (mContentList && mContentList != NAME_NOT_VALID) {
-      NS_RELEASE(mContentList);
+    if (mNameContentList && mNameContentList != NAME_NOT_VALID) {
+      NS_RELEASE(mNameContentList);
     }
   }
 
+  nsIContent* GetIdContent() {
+    return NS_STATIC_CAST(nsIContent*, mIdContentList.SafeElementAt(0));
+  }
+
+  // If aForce is true, the new content will become the new content
+  // returned for this ID, even if there is already such content.
+  PRBool AddIdContent(nsIContent* aContent, PRBool aForce);
+
+  PRBool RemoveIdContent(nsIContent* aContent) {
+    // XXXbz should this ever Compact() I guess when all the content is gone
+    // we'll just get cleaned up in the natural order of things...
+    return mIdContentList.RemoveElement(aContent) &&
+      mIdContentList.Count() == 0;
+  }
+
+  void FlagIDNotInDocument() {
+    NS_ASSERTION(mIdContentList.Count() == 0,
+                 "Flagging ID not in document when we have content?");
+    // Note that if this fails that's OK; this is just an optimization
+    mIdContentList.AppendElement(ID_NOT_IN_DOCUMENT);
+  }
+
   nsString mKey;
-  nsIContent *mIdContent;
-  nsBaseContentList *mContentList;
+  nsBaseContentList *mNameContentList;
+private:
+  nsSmallVoidArray mIdContentList;
 };
+
+PRBool
+IdAndNameMapEntry::AddIdContent(nsIContent* aContent, PRBool aForce)
+{
+  NS_PRECONDITION(aContent, "Must have content");
+  NS_PRECONDITION(mIdContentList.IndexOf(nsnull) == -1,
+                  "Why is null in our list?");
+  NS_PRECONDITION(aContent != ID_NOT_IN_DOCUMENT,
+                  "Bogus content pointer");
+
+  if (GetIdContent() == ID_NOT_IN_DOCUMENT) {
+    NS_ASSERTION(mIdContentList.Count() == 1, "Bogus count");
+    return mIdContentList.ReplaceElementAt(aContent, 0);
+  }
+
+  // Have to check whether it's in the list already, in case we're
+  // registering from the top when going live.
+  PRInt32 index = mIdContentList.IndexOf(aContent);
+  if (index != -1) {
+    if (!aForce) {
+      // nothing else to do here
+      return PR_TRUE;
+    }
+
+    // Remove it from index
+    if (NS_UNLIKELY(!mIdContentList.RemoveElementAt(index))) {
+      return PR_FALSE;
+    }
+
+    // Fall through to readd at 0
+  }
+    
+  return aForce ? mIdContentList.InsertElementAt(aContent, 0) :
+    mIdContentList.AppendElement(aContent);
+}
 
 
 PR_STATIC_CALLBACK(const void *)
@@ -2330,13 +2390,13 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
                                         PL_DHASH_ADD));
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
-  nsIContent *e = entry->mIdContent;
+  nsIContent *e = entry->GetIdContent();
 
-  if (e == ID_NOT_IN_DOCUMENT) {
+  if (!e || e == ID_NOT_IN_DOCUMENT) {
     // Now we have to flush.  It could be that we have a cached "not in
-    // document" but more content has been added to the document since.  Note
-    // that we have to flush notifications, so that the entry will get updated
-    // properly.
+    // document" or know nothing about this ID yet but more content has been
+    // added to the document since.  Note that we have to flush notifications,
+    // so that the entry will get updated properly.
     
     // Make sure to stash away the current generation so we can check whether
     // the table changes when we flush.
@@ -2358,7 +2418,7 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
     // We could now have a new entry, or the entry could have been
     // updated, so update e to point to the current entry's
     // mIdContent.
-    e = entry->mIdContent;
+    e = entry->GetIdContent();
   }
 
   if (e == ID_NOT_IN_DOCUMENT) {
@@ -2391,15 +2451,27 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
     }
 
     if (!e) {
+#ifdef DEBUG
+      // No reason to call MatchElementId if !IdTableIsLive, since
+      // we'd have done just that already
+      if (IdTableIsLive() && mRootContent && !aElementId.IsEmpty()) {
+        nsIContent* eDebug =
+          nsContentUtils::MatchElementId(mRootContent, aElementId);
+        NS_ASSERTION(!eDebug,
+                     "We got null for |e| but MatchElementId found something?");
+      }
+#endif
       // There is no element with the given id in the document, cache
       // the fact that it's not in the document
-      entry->mIdContent = ID_NOT_IN_DOCUMENT;
+      entry->FlagIDNotInDocument();
 
       return NS_OK;
     }
 
     // We found an element with a matching id, store that in the hash
-    entry->mIdContent = e;
+    if (NS_UNLIKELY(!entry->AddIdContent(e, PR_TRUE))) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   return CallQueryInterface(e, aReturn);
@@ -2888,7 +2960,7 @@ ReserveNameInHash(const nsAString& aName, PLDHashTable *aHash)
 
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
-  entry->mContentList = NAME_NOT_VALID;
+  entry->mNameContentList = NAME_NOT_VALID;
 
   return NS_OK;
 }
@@ -2975,7 +3047,7 @@ nsHTMLDocument::UpdateNameTableEntry(const nsAString& aName,
     return NS_OK;
   }
 
-  nsBaseContentList *list = entry->mContentList;
+  nsBaseContentList *list = entry->mNameContentList;
 
   if (!list || list == NAME_NOT_VALID) {
     return NS_OK;
@@ -3001,13 +3073,11 @@ nsHTMLDocument::AddToIdTable(const nsAString& aId, nsIContent *aContent)
                                         PL_DHASH_ADD));
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
-  const nsIContent *e = entry->mIdContent;
-
-  if (!e || e == ID_NOT_IN_DOCUMENT) {
-    entry->mIdContent = aContent;
+  if (NS_LIKELY(entry->AddIdContent(aContent, PR_FALSE))) {
+    return NS_OK;
   }
 
-  return NS_OK;
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 nsresult
@@ -3020,12 +3090,12 @@ nsHTMLDocument::UpdateIdTableEntry(const nsAString& aId, nsIContent *aContent)
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aId,
                                         op));
 
-  if (!entry) {
+  NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+
+  if (PL_DHASH_ENTRY_IS_BUSY(entry) &&
+      NS_UNLIKELY(!entry->AddIdContent(aContent, PR_TRUE))) {
+    // failed to update...
     return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-    entry->mIdContent = aContent;
   }
 
   return NS_OK;
@@ -3043,9 +3113,9 @@ nsHTMLDocument::RemoveFromNameTable(const nsAString& aName,
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aName,
                                         PL_DHASH_LOOKUP));
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mContentList &&
-      entry->mContentList != NAME_NOT_VALID) {
-    entry->mContentList->RemoveElement(aContent);
+  if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mNameContentList &&
+      entry->mNameContentList != NAME_NOT_VALID) {
+    entry->mNameContentList->RemoveElement(aContent);
   }
 
   return NS_OK;
@@ -3074,11 +3144,13 @@ nsHTMLDocument::RemoveFromIdTable(nsIContent *aContent)
                                                        &value),
                                         PL_DHASH_LOOKUP));
 
-  if (PL_DHASH_ENTRY_IS_FREE(entry) || entry->mIdContent != aContent) {
+  if (PL_DHASH_ENTRY_IS_FREE(entry)) {
     return NS_OK;
   }
 
-  PL_DHashTableRawRemove(&mIdAndNameHashTable, entry);
+  if (entry->RemoveIdContent(aContent)) {
+    PL_DHashTableRawRemove(&mIdAndNameHashTable, entry);
+  }
 
   return NS_OK;
 }
@@ -3156,9 +3228,9 @@ static void
 FindNamedItems(const nsAString& aName, nsIContent *aContent,
                IdAndNameMapEntry& aEntry, PRBool aIsXHTML)
 {
-  NS_ASSERTION(aEntry.mContentList,
+  NS_ASSERTION(aEntry.mNameContentList,
                "Entry w/o content list passed to FindNamedItems()!");
-  NS_ASSERTION(aEntry.mContentList != NAME_NOT_VALID,
+  NS_ASSERTION(aEntry.mNameContentList != NAME_NOT_VALID,
                "Entry that should never have a list passed to FindNamedItems()!");
 
   if (aContent->IsContentOfType(nsIContent::eTEXT)) {
@@ -3170,17 +3242,16 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
 
   if (!aIsXHTML && IsNamedItem(aContent, aContent->Tag(), value) &&
       value.Equals(aName)) {
-    aEntry.mContentList->AppendElement(aContent);
+    aEntry.mNameContentList->AppendElement(aContent);
   }
 
-  if (!aEntry.mIdContent) {
+  if (!aEntry.GetIdContent()) {
+    // Maybe this node has the right id?
     nsIAtom* idAttr = aContent->GetIDAttributeName();
-    if (idAttr) {
-      aContent->GetAttr(kNameSpaceID_None, idAttr, value);
-
-      if (value.Equals(aName)) {
-        aEntry.mIdContent = aContent;
-      }
+    if (idAttr &&
+        aContent->AttrValueIs(kNameSpaceID_None, idAttr,
+                              aName, eCaseMatters)) {
+      aEntry.AddIdContent(aContent, PR_FALSE);
     }
   }
 
@@ -3213,13 +3284,13 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
                                         PL_DHASH_ADD));
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
-  if (entry->mContentList == NAME_NOT_VALID) {
+  if (entry->mNameContentList == NAME_NOT_VALID) {
     // There won't be any named items by this name -- it's reserved
     return NS_OK;
   }
 
   // Now we know we _might_ have items.  Before looking at
-  // entry->mContentList, make sure to flush out content (see
+  // entry->mNameContentList, make sure to flush out content (see
   // bug 69826).
   // This is a perf killer while the document is loading!
 
@@ -3227,9 +3298,9 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   // table changes when we flush.
   PRUint32 generation = mIdAndNameHashTable.generation;
   
-  // If we already have an entry->mContentList, we need to flush out
+  // If we already have an entry->mNameContentList, we need to flush out
   // notifications too, so that it will get updated properly.
-  FlushPendingNotifications(entry->mContentList ?
+  FlushPendingNotifications(entry->mNameContentList ?
                               Flush_ContentAndNotify : Flush_Content);
 
   if (generation != mIdAndNameHashTable.generation) {
@@ -3244,7 +3315,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   }
     
 
-  nsBaseContentList *list = entry->mContentList;
+  nsBaseContentList *list = entry->mNameContentList;
 
   if (!list) {
 #ifdef DEBUG_jst
@@ -3257,8 +3328,8 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
     list = new nsBaseContentList();
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-    entry->mContentList = list;
-    NS_ADDREF(entry->mContentList);
+    entry->mNameContentList = list;
+    NS_ADDREF(entry->mNameContentList);
 
     if (mRootContent && !aName.IsEmpty()) {
       // We'll never get here if !IsXHTML(), so we can just pass
@@ -3297,7 +3368,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
 
     if (aForm) {
       // ... we're called from a form, in that case we create a
-      // nsFormContentList which will filter out the elements in the
+      // nsFormNameContentList which will filter out the elements in the
       // list that don't belong to aForm
 
       nsFormContentList *fc_list = new nsFormContentList(aForm, *list);
@@ -3331,9 +3402,9 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   // No named items were found, see if there's one registerd by id for
   // aName. If we get this far, FindNamedItems() will have been called
   // for aName, so we're guaranteed that if there is an element with
-  // the id aName, it'll be in entry->mIdContent.
+  // the id aName, it'll be entry's IdContent.
 
-  nsIContent *e = entry->mIdContent;
+  nsIContent *e = entry->GetIdContent();
 
   if (e && e != ID_NOT_IN_DOCUMENT && e->IsContentOfType(nsIContent::eHTML)) {
     nsIAtom *tag = e->Tag();
