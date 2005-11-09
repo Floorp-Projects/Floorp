@@ -801,12 +801,16 @@ static id gSharedProgressController = nil;
 
 - (BOOL)setPauseResumeToolbarItem:(NSToolbarItem*)theItem
 {
+  // since this is also the method that gets called when the customize dialog is run
+  // set the default value of the label, tooltip, icon, and pallete label to pause
+  // only set the action of the selector to pause if we validate properly
+  [theItem setLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
+  [theItem setToolTip:NSLocalizedString(@"dlPauseButtonTooltip", nil)];
+  [theItem setPaletteLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
+  [theItem setImage:[NSImage imageNamed:@"dl_pause.tif"]];
+  
   if ([self shouldAllowPauseAction]) {
-    [theItem setToolTip:NSLocalizedString(@"dlPauseButtonTooltip", nil)];
-    [theItem setLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
-    [theItem setPaletteLabel:NSLocalizedString(@"dlPauseButtonLabel", nil)];
     [theItem setAction:@selector(pause:)];
-    [theItem setImage:[NSImage imageNamed:@"dl_pause.tif"]];
     
     return [[self window] isKeyWindow]; // if not key window, dont enable
   }
