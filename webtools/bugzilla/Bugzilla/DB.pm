@@ -272,6 +272,9 @@ sub sql_fulltext_search {
     # in LIKE search clauses
     @words = map($self->quote("%$_%"), @words);
 
+    # untaint words, since they are safe to use now that we've quoted them
+    map(trick_taint($_), @words);
+
     # turn the words into a set of LIKE search clauses
     @words = map("LOWER($column) LIKE $_", @words);
 
