@@ -48,6 +48,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 #include "nsXPCOM.h"
 #include "nsCOMPtr.h"
 #include "nsIEventQueueService.h"
@@ -59,18 +60,17 @@
 #include "nsIRDFService.h"
 #include "nsIRDFXMLSource.h"
 #include "nsIServiceManager.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
-#include "nsXPIDLString.h"
+#include "nsComponentManagerUtils.h"
 #include "prthread.h"
 #include "plevent.h"
 #include "plstr.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
+#include "nsEmbedString.h"
 #include "nsNetCID.h"
-#include "nsCRT.h"
 
 ////////////////////////////////////////////////////////////////////////
 // CIDs
@@ -116,11 +116,11 @@ rdf_WriteOp(const char* aOp,
 {
     nsresult rv;
 
-    nsXPIDLCString source;
+    nsCString source;
     rv = aSource->GetValue(getter_Copies(source));
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString property;
+    nsCString property;
     rv = aProperty->GetValue(getter_Copies(property));
     if (NS_FAILED(rv)) return rv;
 
@@ -129,28 +129,22 @@ rdf_WriteOp(const char* aOp,
     nsCOMPtr<nsIRDFDate> date;
     nsCOMPtr<nsIRDFInt> number;
 
-    printf("%.8s [%s]\n", aOp, (const char*) source);
-    printf("       --[%s]--\n", (const char*) property);
+    printf("%.8s [%s]\n", aOp, source.get());
+    printf("       --[%s]--\n", property.get());
 
     if ((resource = do_QueryInterface(aTarget)) != nsnull) {
-        nsXPIDLCString target;
+        nsCString target;
         rv = resource->GetValue(getter_Copies(target));
         if (NS_FAILED(rv)) return rv;
 
-        printf("       ->[%s]\n", (const char*) target);
+        printf("       ->[%s]\n", target.get());
     }
     else if ((literal = do_QueryInterface(aTarget)) != nsnull) {
-        nsXPIDLString target;
+        nsString target;
         rv = literal->GetValue(getter_Copies(target));
         if (NS_FAILED(rv)) return rv;
 
-        char* p = ToNewCString(target);
-        if (! p)
-            return NS_ERROR_OUT_OF_MEMORY;
-        
-        printf("       ->\"%s\"\n", p);
-
-        nsCRT::free(p);
+        printf("       ->\"%s\"\n", NS_ConvertUTF16toUTF8(target).get());
     }
     else if ((date = do_QueryInterface(aTarget)) != nsnull) {
         PRTime value;
