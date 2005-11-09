@@ -100,7 +100,15 @@ function isPhishingURL(aLinkNode, aSilentMode)
   var isPhishingURL = false;
 
   var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-  hrefURL  = ioService.newURI(href, null, null);
+  var hrefURL;
+  // make sure relative link urls don't make us bail out
+  try {
+    hrefURL = ioService.newURI(href, null, null);
+  }
+  catch(ex) 
+  { 
+    return false;
+  }
   
   // only check for phishing urls if the url is an http or https link. 
   // this prevents us from flagging imap and other internally handled urls
