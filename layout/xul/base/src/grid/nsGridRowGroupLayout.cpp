@@ -198,16 +198,19 @@ nsGridRowGroupLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
     aBox->MarkDirty(aState);
     nsIBox* child = nsnull;
     aBox->GetChildBox(&child); 
-    nsIBox* deepChild = child;
 
     while(child) {
 
       // walk into scrollframes
-      deepChild = nsGrid::GetScrolledBox(child);
+      nsIBox* deepChild = nsGrid::GetScrolledBox(child);
 
       // walk into other monuments
       nsCOMPtr<nsIBoxLayout> layout;
-      deepChild->GetLayoutManager(getter_AddRefs(layout));
+      // deepChild might be null if child is a scrollframe around a non-box.
+      // But in that case there's nothing to do here, really.
+      if (deepChild) {
+        deepChild->GetLayoutManager(getter_AddRefs(layout));
+      }
       if (layout) {
         nsCOMPtr<nsIGridPart> monument( do_QueryInterface(layout) );
         if (monument) 
@@ -215,7 +218,6 @@ nsGridRowGroupLayout::DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)
       }
 
       child->GetNextBox(&child);
-      deepChild = child;
     }
   }
 
@@ -231,15 +233,19 @@ nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32
 
     nsIBox* child = nsnull;
     aBox->GetChildBox(&child); 
-    nsIBox* deepChild = child;
 
     while(child) {
       
       // first see if it is a scrollframe. If so walk down into it and get the scrolled child
-      deepChild = nsGrid::GetScrolledBox(child);
+      nsIBox* deepChild = nsGrid::GetScrolledBox(child);
 
       nsCOMPtr<nsIBoxLayout> layout;
-      deepChild->GetLayoutManager(getter_AddRefs(layout));
+      // deepChild might be null if child is a scrollframe around a non-box.
+      // But in that case I guess we can count this as a single grid row.  Or
+      // something.
+      if (deepChild) {
+        deepChild->GetLayoutManager(getter_AddRefs(layout));
+      }
       if (layout) {
         nsCOMPtr<nsIGridPart> monument( do_QueryInterface(layout) );
         if (monument) {
@@ -251,7 +257,6 @@ nsGridRowGroupLayout::CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32
       }
 
       child->GetNextBox(&child);
-      deepChild = child;
 
       // if not a monument. Then count it. It will be a bogus row
       aRowCount++;
@@ -282,15 +287,18 @@ nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)
   if (aBox) {
     nsIBox* child = nsnull;
     aBox->GetChildBox(&child); 
-    nsIBox* deepChild = child;
 
     while(child) {
       
       // first see if it is a scrollframe. If so walk down into it and get the scrolled child
-      deepChild = nsGrid::GetScrolledBox(child);
+      nsIBox* deepChild = nsGrid::GetScrolledBox(child);
 
       nsCOMPtr<nsIBoxLayout> layout;
-      deepChild->GetLayoutManager(getter_AddRefs(layout));
+      // deepChild might be null if child is a scrollframe around a non-box.
+      // But in that case there's nothing special that needs doing there.
+      if (deepChild) {
+        deepChild->GetLayoutManager(getter_AddRefs(layout));
+      }
       if (layout) {
         nsCOMPtr<nsIGridPart> monument( do_QueryInterface(layout) );
         if (monument) {
@@ -306,7 +314,6 @@ nsGridRowGroupLayout::BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)
       aRows[rowCount].Init(child, PR_TRUE);
 
       child->GetNextBox(&child);
-      deepChild = child;
 
       // if not a monument. Then count it. It will be a bogus row
       rowCount++;
