@@ -223,7 +223,7 @@ function syncPref(refElement) {
 	var refElementPref=refElement.getAttribute("preference");
 	if(refElementPref!="") {
 		gPrefQueue[refElementPref]=refElement;
-            document.getElementById("textbox-okay-pane").value+= "Changed key ="+gPrefQueue[refElementPref].value+"\n";
+		//document.getElementById("textbox-okay-pane").value+= "Changed key ="+gPrefQueue[refElementPref].value+"\n";
 	}
 }
 
