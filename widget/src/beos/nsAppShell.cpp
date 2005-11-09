@@ -500,7 +500,7 @@ void nsAppShell::RetrieveAllEvents(bool blockable)
         break;
             
       case 'natv' :	// native queue PLEvent
-        events[PRIORITY_NORMAL].AddItem(newitem);
+        events[PRIORITY_LOW].AddItem(newitem);
         break;
       }
     }
