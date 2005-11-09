@@ -44,6 +44,9 @@
 #define NS_AUTOCOMPLETECONTROLLER_CONTRACTID \
   "@mozilla.org/autocomplete/controller;1"
 
+#define NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID \
+  "@mozilla.org/autocomplete/simple-result;1"
+
 #define NS_AUTOCOMPLETEMDBRESULT_CONTRACTID \
   "@mozilla.org/autocomplete/mdb-result;1"
 
@@ -77,6 +80,10 @@
 // {F6D5EBBD-34F4-487d-9D10-3D34123E3EB9}
 #define NS_AUTOCOMPLETECONTROLLER_CID \
 { 0xf6d5ebbd, 0x34f4, 0x487d, { 0x9d, 0x10, 0x3d, 0x34, 0x12, 0x3e, 0x3e, 0xb9 } }
+
+// {2ee3039b-2de4-43d9-93b0-649beacff39a}
+#define NS_AUTOCOMPLETESIMPLERESULT_CID \
+{ 0x2ee3039b, 0x2de4, 0x43d9, { 0x93, 0xb0, 0x64, 0x9b, 0xea, 0xcf, 0xf3, 0x9a } }
 
 // {7A6F70B6-2BBD-44b5-9304-501352D44AB5}
 #define NS_AUTOCOMPLETEMDBRESULT_CID \

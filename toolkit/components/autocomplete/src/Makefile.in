@@ -62,6 +62,7 @@ REQUIRES =	xpcom \
 
 CPPSRCS = nsAutoCompleteController.cpp \
           nsAutoCompleteMdbResult.cpp \
+          nsAutoCompleteSimpleResult.cpp \
           $(NULL)
 
 EXTRA_DSO_LDOPTS += \

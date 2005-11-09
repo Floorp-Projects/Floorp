@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Places code.
+ * The Original Code is autocomplete code.
  *
  * The Initial Developer of the Original Code is
  * Google Inc.
@@ -35,54 +35,38 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nsAutoCompleteStorageResult__
-#define __nsAutoCompleteStorageResult__
+#ifndef __nsAutoCompleteSimpleResult__
+#define __nsAutoCompleteSimpleResult__
 
 #include "nsIAutoCompleteResult.h"
-#include "nsIAutoCompleteStorageResult.h"
+#include "nsIAutoCompleteSimpleResult.h"
 
-#include "nsArray.h"
+#include "nsVoidArray.h"
 #include "nsString.h"
 #include "prtypes.h"
 
-class nsAutoCompleteStorageMatch : public nsIAutoCompleteStorageMatch
+class nsAutoCompleteSimpleResult : public nsIAutoCompleteSimpleResult
 {
 public:
-  nsAutoCompleteStorageMatch(const nsAString& aValue,
-                             const nsAString& aComment,
-                             PRInt32 aPrivatePriority) :
-    mValue(aValue), mComment(aComment), mPrivatePriority(aPrivatePriority)
-  {
-  }
+  nsAutoCompleteSimpleResult();
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIAUTOCOMPLETESTORAGEMATCH
-private:
-  ~nsAutoCompleteStorageMatch() {}
-  nsString mValue;
-  nsString mComment;
-  PRInt32 mPrivatePriority;
-};
-
-class nsAutoCompleteStorageResult : public nsIAutoCompleteStorageResult
-{
-public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAUTOCOMPLETERESULT
-
-  nsAutoCompleteStorageResult();
-
-  NS_DECL_NSIAUTOCOMPLETEBASERESULT
-  NS_DECL_NSIAUTOCOMPLETESTORAGERESULT
+  NS_DECL_NSIAUTOCOMPLETESIMPLERESULT
 
 protected:
-  ~nsAutoCompleteStorageResult();
-  nsCOMArray<nsIAutoCompleteStorageMatch> mResults;
+  ~nsAutoCompleteSimpleResult() {};
 
-  nsAutoString mSearchString;
-  nsAutoString mErrorDescription;
+  // What we really want is an array of structs with value/comment contents.
+  // But then we'd either have to use COM or manage object lifetimes ourselves.
+  // Having two arrays of string simplifies this, but is stupid.
+  nsStringArray mValues;
+  nsStringArray mComments;
+
+  nsString mSearchString;
+  nsString mErrorDescription;
   PRInt32 mDefaultIndex;
   PRUint32 mSearchResult;
 };
 
-#endif // __nsAutoCompleteStorageResult__
+#endif // __nsAutoCompleteSimpleResult__

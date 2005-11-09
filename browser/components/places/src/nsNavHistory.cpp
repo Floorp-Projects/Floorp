@@ -73,6 +73,7 @@ Extra:
 #include <stdio.h>
 #include "nsNavHistory.h"
 
+#include "nsArray.h"
 #include "nsDebug.h"
 #include "nsIComponentManager.h"
 #include "nsCollationCID.h"
@@ -100,7 +101,6 @@ Extra:
 #include "nsArrayEnumerator.h"
 #include "nsUnicharUtils.h"
 #include "nsEnumeratorUtils.h"
-#include "nsAutoCompleteStorageResult.h"
 #include "nsPrintfCString.h"
 
 #include "mozIStorageService.h"
@@ -129,6 +129,9 @@ Extra:
 
 // the value of mLastNow expires every 3 seconds
 #define HISTORY_EXPIRE_NOW_TIMEOUT (3 * PR_MSEC_PER_SEC)
+
+#define NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID \
+  "@mozilla.org/autocomplete/simple-result;1"
 
 NS_IMPL_ISUPPORTS6(nsNavHistory,
                    nsINavHistory,
@@ -1803,6 +1806,65 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
 // nsIAutoCompleteSearch *******************************************************
 
+
+// AutoCompleteIntermediateResult/Set
+//
+//    This class holds intermediate autocomplete results so that they can be
+//    sorted. This list is then handed off to a result using FillResult. The
+//    major reason for this is so that we can use nsArray's sorting functions,
+//    not use COM, yet have well-defined lifetimes for the objects. This uses
+//    a void array, but makes sure to delete the objects on desctruction.
+
+struct AutoCompleteIntermediateResult
+{
+  nsString url;
+  nsString title;
+  PRUint32 priority;
+};
+class AutoCompleteIntermediateResultSet
+{
+public:
+  AutoCompleteIntermediateResultSet()
+  {
+  }
+  ~AutoCompleteIntermediateResultSet()
+  {
+    for (PRInt32 i = 0; i < mArray.Count(); i ++) {
+      AutoCompleteIntermediateResult* cur = NS_STATIC_CAST(
+                                    AutoCompleteIntermediateResult*, mArray[i]);
+      delete cur;
+    }
+  }
+  PRBool Add(const nsString& aURL, const nsString& aTitle, PRInt32 aPriority)
+  {
+    AutoCompleteIntermediateResult* cur = new AutoCompleteIntermediateResult;
+    if (! cur)
+      return PR_FALSE;
+    cur->url = aURL;
+    cur->title = aTitle;
+    cur->priority = aPriority;
+    mArray.AppendElement(cur);
+    return PR_TRUE;
+  }
+  void Sort(nsNavHistory* navHistory)
+  {
+    mArray.Sort(nsNavHistory::AutoCompleteSortComparison, navHistory);
+  }
+  nsresult FillResult(nsIAutoCompleteSimpleResult* aResult)
+  {
+    for (PRInt32 i = 0; i < mArray.Count(); i ++)
+    {
+      AutoCompleteIntermediateResult* cur = NS_STATIC_CAST(
+                                    AutoCompleteIntermediateResult*, mArray[i]);
+      nsresult rv = aResult->AppendMatch(cur->url, cur->title);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    return NS_OK;
+  }
+protected:
+  nsVoidArray mArray;
+};
+
 // nsNavHistory::StartSearch
 //
 
@@ -1816,8 +1878,8 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
 
   NS_ENSURE_ARG_POINTER(aListener);
 
-  nsCOMPtr<nsIAutoCompleteStorageResult> result =
-      do_CreateInstance("@mozilla.org/autocomplete/storage-result;1", &rv);
+  nsCOMPtr<nsIAutoCompleteSimpleResult> result =
+      do_CreateInstance(NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   result->SetSearchString(aSearchString);
 
@@ -1847,11 +1909,7 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   if (aSearchString.IsEmpty()) {
     rv = AutoCompleteTypedSearch(result);
   } else if (usePrevious) {
-    nsCOMPtr<nsIAutoCompleteStorageResult> prevStorageResult =
-      do_QueryInterface(aPreviousResult, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = AutoCompleteRefineHistorySearch(aSearchString,
-                                         prevStorageResult, result);
+    rv = AutoCompleteRefineHistorySearch(aSearchString, aPreviousResult, result);
   } else {
     rv = AutoCompleteFullHistorySearch(aSearchString, result);
   }
@@ -1892,7 +1950,7 @@ nsNavHistory::StopSearch()
 //    visit count (primary) and time since last visited (secondary).
 
 nsresult nsNavHistory::AutoCompleteTypedSearch(
-                                           nsIAutoCompleteStorageResult* result)
+                                            nsIAutoCompleteSimpleResult* result)
 {
   // note: need to test against hidden = 1 since the column can also be null
   // (meaning not hidden)
@@ -1908,13 +1966,7 @@ nsresult nsNavHistory::AutoCompleteTypedSearch(
     dbSelectStatement->GetAsString(0, entryURL);
     dbSelectStatement->GetAsString(1, entryTitle);
 
-    // note: we never take ownership of this object, we just create it and
-    // hand it to the array, which will addref it for its own use.
-    nsAutoCompleteStorageMatch* entry = new nsAutoCompleteStorageMatch(
-      entryURL, entryTitle, 0);
-    if (! entry)
-      return NS_ERROR_OUT_OF_MEMORY;
-    rv = result->AppendMatch(entry);
+    rv = result->AppendMatch(entryURL, entryTitle);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1931,7 +1983,7 @@ nsresult nsNavHistory::AutoCompleteTypedSearch(
 
 nsresult
 nsNavHistory::AutoCompleteFullHistorySearch(const nsAString& aSearchString,
-                                            nsIAutoCompleteStorageResult* result)
+                                            nsIAutoCompleteSimpleResult* result)
 {
   // figure out whether any known prefixes are present in the search string
   // so we know not to ignore them when comparing results later
@@ -1942,7 +1994,8 @@ nsNavHistory::AutoCompleteFullHistorySearch(const nsAString& aSearchString,
   nsresult rv = mDBFullAutoComplete->BindInt32Parameter(0, mAutoCompleteMaxCount);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMArray<nsIAutoCompleteStorageMatch> resultArray;
+  // load the intermediate result so it can be sorted
+  AutoCompleteIntermediateResultSet resultSet;
   PRBool hasMore = PR_FALSE;
   while (NS_SUCCEEDED(mDBFullAutoComplete->ExecuteStep(&hasMore)) && hasMore) {
 
@@ -1962,26 +2015,14 @@ nsNavHistory::AutoCompleteFullHistorySearch(const nsAString& aSearchString,
                     mDBFullAutoComplete->AsInt32(kAutoCompleteIndex_VisitCount),
                     typed);
 
-      // note: we never take ownership of this object, we just create it and
-      // hand it to the array, which will addref it for its own use.
-      nsAutoCompleteStorageMatch* entry = new nsAutoCompleteStorageMatch(
-        entryurl, entrytitle, priority);
-      if (! entry)
+      if (! resultSet.Add(entryurl, entrytitle, priority))
         return NS_ERROR_OUT_OF_MEMORY;
-      rv = resultArray.AppendObject(entry);
-      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
-  // sort and populate the result
-  resultArray.Sort(AutoCompleteSortComparison, this);
-  PRUint32 count = resultArray.Count();
-  for (PRUint32 i = 0; i < count; i ++) {
-    rv = result->AppendMatch(resultArray[i]);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
+  // sort and populate the final result
+  resultSet.Sort(this);
+  return resultSet.FillResult(result);
 }
 
 
@@ -1994,8 +2035,8 @@ nsNavHistory::AutoCompleteFullHistorySearch(const nsAString& aSearchString,
 nsresult
 nsNavHistory::AutoCompleteRefineHistorySearch(
                                   const nsAString& aSearchString,
-                                  nsIAutoCompleteStorageResult* aPreviousResult,
-                                  nsIAutoCompleteStorageResult* aNewResult)
+                                  nsIAutoCompleteResult* aPreviousResult,
+                                  nsIAutoCompleteSimpleResult* aNewResult)
 {
   // figure out whether any known prefixes are present in the search string
   // so we know not to ignore them when comparing results later
@@ -2006,14 +2047,16 @@ nsNavHistory::AutoCompleteRefineHistorySearch(
   aPreviousResult->GetMatchCount(&matchCount);
 
   for (PRUint32 i = 0; i < matchCount; i ++) {
-    nsCOMPtr<nsIAutoCompleteStorageMatch> entry;
-    nsresult rv = aPreviousResult->GetMatchAt(i, getter_AddRefs(entry));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     nsAutoString cururl;
-    entry->GetValue(cururl);
-    if (AutoCompleteCompare(cururl, aSearchString, exclude))
-      aNewResult->AppendMatch(entry);
+    nsresult rv = aPreviousResult->GetValueAt(i, cururl);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (AutoCompleteCompare(cururl, aSearchString, exclude)) {
+      nsAutoString curcomment;
+      rv = aPreviousResult->GetCommentAt(i, curcomment);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = aNewResult->AppendMatch(cururl, curcomment);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
   return NS_OK;
 }
@@ -2130,49 +2173,44 @@ nsNavHistory::AutoCompleteCompare(const nsAString& aHistoryURL,
 //    computation.
 
 int PR_CALLBACK // static
-nsNavHistory::AutoCompleteSortComparison(nsIAutoCompleteStorageMatch* match1,
-                                         nsIAutoCompleteStorageMatch* match2,
+nsNavHistory::AutoCompleteSortComparison(const void* match1Void,
+                                         const void* match2Void,
                                          void *navHistoryVoid)
 {
   // get our class pointer (this is a static function)
   nsNavHistory* navHistory = NS_STATIC_CAST(nsNavHistory*, navHistoryVoid);
 
-  // get visit counts - we're ignoring all errors and relying on default values
-  PRInt32 item1priority = 0, item2priority = 0;
-  match1->GetPrivatePriority(&item1priority);
-  match2->GetPrivatePriority(&item2priority);
+  const AutoCompleteIntermediateResult* match1 = NS_STATIC_CAST(
+                             const AutoCompleteIntermediateResult*, match1Void);
+  const AutoCompleteIntermediateResult* match2 = NS_STATIC_CAST(
+                             const AutoCompleteIntermediateResult*, match2Void);
 
   // In most cases the priorities will be different and we just use them
-  if (item1priority != item2priority)
+  if (match1->priority != match2->priority)
   {
-    return item2priority - item1priority;
+    return match2->priority - match1->priority;
   }
   else
   {
-    // get URLs
-    nsAutoString url1, url2;
-    match1->GetValue(url1);
-    match2->GetValue(url2);
-
     // secondary sorting gives priority to site names and paths (ending in a /)
     PRBool isPath1 = PR_FALSE, isPath2 = PR_FALSE;
-    if (!url1.IsEmpty())
-      isPath1 = (url1.Last() == PRUnichar('/'));
-    if (!url2.IsEmpty())
-      isPath2 = (url2.Last() == PRUnichar('/'));
+    if (!match1->url.IsEmpty())
+      isPath1 = (match1->url.Last() == PRUnichar('/'));
+    if (!match2->url.IsEmpty())
+      isPath2 = (match2->url.Last() == PRUnichar('/'));
 
-    if (isPath1 && !isPath2) return -1; // url1 is a website/path, url2 isn't
-    if (!isPath1 && isPath2) return  1; // url1 isn't a website/path, url2 is
+    if (isPath1 && !isPath2) return -1; // match1->url is a website/path, match2->url isn't
+    if (!isPath1 && isPath2) return  1; // match1->url isn't a website/path, match2->url is
 
     // find the prefixes so we can sort by the stuff after the prefixes
     AutoCompleteExclude prefix1, prefix2;
-    navHistory->AutoCompleteGetExcludeInfo(url1, &prefix1);
-    navHistory->AutoCompleteGetExcludeInfo(url2, &prefix2);
+    navHistory->AutoCompleteGetExcludeInfo(match1->url, &prefix1);
+    navHistory->AutoCompleteGetExcludeInfo(match2->url, &prefix2);
 
     // compare non-prefixed urls
     PRInt32 ret = Compare(
-      Substring(url1, prefix1.postPrefixOffset, url1.Length()),
-      Substring(url2, prefix2.postPrefixOffset, url2.Length()));
+      Substring(match1->url, prefix1.postPrefixOffset, match1->url.Length()),
+      Substring(match2->url, prefix2.postPrefixOffset, match2->url.Length()));
     if (ret != 0)
       return ret;
 

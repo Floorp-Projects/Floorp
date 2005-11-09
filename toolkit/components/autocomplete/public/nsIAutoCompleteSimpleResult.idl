@@ -11,7 +11,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Places code
+ * The Original Code is autocomplete code.
  *
  * The Initial Developer of the Original Code is
  * Google Inc.
@@ -35,20 +35,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsISupports.idl"
 #include "nsIAutoCompleteResult.idl"
-#include "nsIAutoCompleteResultTypes.idl"
 
-[uuid(82db085c-ef95-41fb-bb85-129233a8a017)]
-interface nsIAutoCompleteStorageMatch : nsISupports
-{
-  attribute AString value;
-  attribute AString comment;
-  attribute long privatePriority;
-};
+/**
+ * This class implements nsIAutoCompleteResult and provides simple methods
+ * for setting the value and result items. It can be used whenever some basic
+ * auto complete results are needed that can be pre-generated and filled into
+ * an array.
+ */
 
-[uuid(874f5288-e4e3-4e06-8b76-accd7c439e71)]
-interface nsIAutoCompleteStorageResult : nsIAutoCompleteBaseResult
+[scriptable, uuid(cc79f293-7114-4287-870b-d28aa61aa7df)]
+interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
 {
-  void appendMatch(in nsIAutoCompleteStorageMatch entry);
-  nsIAutoCompleteStorageMatch getMatchAt(in unsigned long matchIndex);
+  /**
+   * A writer for the readonly attribute 'searchString' which should contain
+   * the string that the user typed.
+   */
+  void setSearchString(in AString aSearchString);
+
+  /**
+   * A writer for the readonly attribute 'errorDescription'.
+   */
+  void setErrorDescription(in AString aErrorDescription);
+
+  /**
+   * A writer for the readonly attribute 'defaultIndex' which should contain
+   * the index of the list that will be selected by default (normally 0).
+   */
+  void setDefaultIndex(in long aDefaultIndex);
+
+  /**
+   * A writer for the readonly attribute 'searchResult' which should contain
+   * one of the constants nsIAutoCompleteResult.RESULT_* indicating the success
+   * of the search.
+   */
+  void setSearchResult(in unsigned short aSearchResult);
+
+  /**
+   * Appends a result item consisting of the given value and comment. This is
+   * how you add results.
+   */
+  void appendMatch(in AString aValue, in AString aComment);
 };
