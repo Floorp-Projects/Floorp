@@ -222,7 +222,7 @@ sub directive_ok {
     return 1 if $directive =~ /FILTER\ (html|csv|js|base64|url_quote|css_class_quote|
                                         ics|quoteUrls|time|uri|xml|lower|
                                         obsolete|inactive|closed|unitconvert|
-                                        none)/x;
+                                        none)\b/x;
 
     return 0;
 }
