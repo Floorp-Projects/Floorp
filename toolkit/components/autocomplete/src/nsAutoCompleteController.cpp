@@ -41,6 +41,7 @@
 
 #include "nsAutoCompleteController.h"
 #include "nsAutoCompleteMdbResult.h"
+#include "nsAutoCompleteSimpleResult.h"
 
 #include "nsToolkitCompsCID.h"
 #include "nsIAutoCompleteResultTypes.h"
@@ -1270,6 +1271,7 @@ nsAutoCompleteController::RowIndexToSearch(PRInt32 aRowIndex, PRInt32 *aSearchIn
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteController)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteSimpleResult)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteMdbResult)
 
 static const nsModuleComponentInfo components[] =
@@ -1278,6 +1280,11 @@ static const nsModuleComponentInfo components[] =
     NS_AUTOCOMPLETECONTROLLER_CID, 
     NS_AUTOCOMPLETECONTROLLER_CONTRACTID,
     nsAutoCompleteControllerConstructor },
+
+  { "AutoComplete Simple Result",
+    NS_AUTOCOMPLETESIMPLERESULT_CID, 
+    NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID,
+    nsAutoCompleteSimpleResultConstructor },
 
   { "AutoComplete Mdb Result",
     NS_AUTOCOMPLETEMDBRESULT_CID, 
