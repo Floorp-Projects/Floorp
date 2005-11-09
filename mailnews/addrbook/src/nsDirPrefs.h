@@ -40,7 +40,6 @@
 #define _NSDIRPREFS_H_
 
 class nsVoidArray;
-class nsIPref;
 
 #define kPreviousListVersion   2
 #define kCurrentListVersion    3
@@ -329,7 +328,6 @@ void    DIR_SavePrefsForOneServer(DIR_Server *server);
 	flag for the entry you want cleaned up. When all references to
 	the server are released, the object will be cleaned up */
 nsresult DIR_CleanUpServerPreferences(nsVoidArray *deletedList);
-void    DIR_ClearPrefBranch(const char *branch);
 
 /* Returns an allocated list of a subset of the unified list of DIR servers.
  */
