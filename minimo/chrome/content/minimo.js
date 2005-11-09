@@ -320,35 +320,37 @@ function eventHandlerMenu(e) {
     e.preventBubble();
   } 
   
-  var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
-  if(outnavTarget!="" && (e.keyCode==40||e.keyCode==38) && !gShowingMenuPopup) {
-      e.preventBubble();
-      if(e.keyCode==40) {
+  if(document.commandDispatcher&&document.commandDispatcher.focusedElement) { 
 
-        ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"),"accessnextrule");
-      }
-      if(e.keyCode==38) {
-
-        ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
-      }
-	  var tempElement=ruleElement.getAttribute("accessfocus");
-      if(tempElement.indexOf("#")>-1) {
-
-        if(tempElement=="#tabContainer") { 
-          if(getBrowser().tabContainer) {
-            getBrowser().selectedTab.focus();
-          }
-        } 
-		if(tempElement=="#tabContent") { 
-          // THis is hack to go backwards and get into browser area. 
-          // The previous approach worked in toolkitFF desktop and failed in device. 
-          
-          document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("nav-bar"));
-          document.commandDispatcher.rewindFocus();
-        } 
-        
-	  } else { 
-		  document.getElementById(tempElement).focus();
+	  var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
+	  if(outnavTarget!="" && (e.keyCode==40||e.keyCode==38) && !gShowingMenuPopup) {
+	      e.preventBubble();
+	      if(e.keyCode==40) {
+	
+	        ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessnextrule"),"accessnextrule");
+	      }
+	      if(e.keyCode==38) {
+	
+	        ruleElement=findRuleById(document.getElementById(outnavTarget).getAttribute("accessprevrule"),"accessprevrule"); 
+	      }
+		  var tempElement=ruleElement.getAttribute("accessfocus");
+	      if(tempElement.indexOf("#")>-1) {
+	
+			if(tempElement=="#tabContainer") { 
+				if(getBrowser().tabContainer) {
+					getBrowser().selectedTab.focus();
+				}
+			} 
+			if(tempElement=="#tabContent") { 
+				// THis is hack to go backwards and get into browser area. 
+				// The previous approach worked in toolkitFF desktop and failed in device. 
+				document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("nav-bar"));
+				document.commandDispatcher.rewindFocus();
+			} 
+       
+		  } else { 
+			  document.getElementById(tempElement).focus();
+		  }
 	  }
   }
 }
