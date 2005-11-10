@@ -373,7 +373,7 @@ public:
 
   void SetPluginHost(nsIPluginHost* aHost);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   nsPluginPort* FixUpPluginWindow(PRInt32 inPaintState);
   void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent);
 #endif
@@ -403,12 +403,12 @@ private:
   nsresult EnsureCachedAttrParamArrays();
 };
 
-#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && (defined(XP_MAC) || defined(XP_MACOSX)))
+#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && defined(XP_MACOSX))
 static void ConvertTwipsToPixels(nsPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect);
 #endif
 
   // Mac specific code to fix up port position and clip during paint
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
 #ifdef DO_DIRTY_INTERSECT
   // convert relative coordinates to absolute
@@ -417,7 +417,7 @@ static void ConvertTwipsToPixels(nsPresContext& aPresContext, nsRect& aTwipsRect
 
   enum { ePluginPaintIgnore, ePluginPaintEnable, ePluginPaintDisable };
 
-#endif // XP_MAC
+#endif // XP_MACOSX
 
 nsObjectFrame::~nsObjectFrame()
 {
@@ -640,8 +640,8 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
 
   // Turn off double buffering on the Mac. This depends on bug 49743 and partially
-  // fixes 32327, 19931 amd 51787
-#if defined(XP_MAC) || defined(XP_MACOSX)
+  // fixes 32327, 19931 and 51787
+#ifdef XP_MACOSX
   PRBool doubleBuffer =
     nsContentUtils::GetBoolPref("plugin.enable_double_buffer");
   
@@ -950,12 +950,12 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
   // happen until we have finished the reflow process.
   window->clipRect.top = 0;
   window->clipRect.left = 0;
-#if !(defined(XP_MAC) || defined(XP_MACOSX))
-  window->clipRect.bottom = NSTwipsToIntPixels(aSize.height, t2p);
-  window->clipRect.right = NSTwipsToIntPixels(aSize.width, t2p);
-#else
+#ifdef XP_MACOSX
   window->clipRect.bottom = 0;
   window->clipRect.right = 0;
+#else
+  window->clipRect.bottom = NSTwipsToIntPixels(aSize.height, t2p);
+  window->clipRect.right = NSTwipsToIntPixels(aSize.width, t2p);
 #endif
 }
 
@@ -1295,9 +1295,9 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
 
   nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
 
-#if defined(XP_MAC) || defined(XP_MACOSX) 
+#ifdef XP_MACOSX
   mInstanceOwner->FixUpPluginWindow(ePluginPaintDisable);
-#endif // XP_MAC || XP_MACOSX
+#endif
 
   if (bHidden)
     return rv;
@@ -1478,7 +1478,7 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
   }
 
 // Screen painting code
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   // delegate all painting to the plugin instance.
   if ((NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) && mInstanceOwner)
       mInstanceOwner->Paint(aDirtyRect);
@@ -1577,7 +1577,7 @@ nsObjectFrame::Paint(nsPresContext*       aPresContext,
       }
     }
   }
-#endif /* !XP_MAC */
+#endif
   DO_GLOBAL_REFLOW_COUNT_DSP("nsObjectFrame", &aRenderingContext);
   return NS_OK;
 }
@@ -2967,9 +2967,8 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 
 // Here's where we forward events to plugins.
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
-#if TARGET_CARBON
 static void InitializeEventRecord(EventRecord* event)
 {
     memset(event, 0, sizeof(EventRecord));
@@ -2977,9 +2976,6 @@ static void InitializeEventRecord(EventRecord* event)
     event->when = ::TickCount();
     event->modifiers = ::GetCurrentKeyModifiers();
 }
-#else
-inline void InitializeEventRecord(EventRecord* event) { ::OSEventAvail(0, event); }
-#endif
 
 void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent)
 {
@@ -3017,7 +3013,7 @@ void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord
 
 nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     CancelTimer();
 
     if (mInstance) {
@@ -3043,7 +3039,7 @@ nsresult nsPluginInstanceOwner::ScrollPositionWillChange(nsIScrollableView* aScr
 
 nsresult nsPluginInstanceOwner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
     if (mInstance) {
       nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
       if (pluginWidget && NS_SUCCEEDED(pluginWidget->StartDrawPlugin())) {
@@ -3090,7 +3086,7 @@ nsresult nsPluginInstanceOwner::Blur(nsIDOMEvent * aFocusEvent)
 
 nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
 {
-#if !(defined(XP_MAC) || defined(XP_MACOSX))
+#ifndef XP_MACOSX
   if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type) {
     // continue only for cases without child window
     return aFocusEvent->PreventDefault(); // consume event
@@ -3209,7 +3205,7 @@ nsresult nsPluginInstanceOwner::KeyUp(nsIDOMEvent* aKeyEvent)
 
 nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX) // send KeyPress events only on Mac
+#ifdef XP_MACOSX // send KeyPress events only on Mac
 
   // KeyPress events are really synthesized keyDown events.
   // Here we check the native message of the event so that
@@ -3256,7 +3252,7 @@ nsresult nsPluginInstanceOwner::KeyPress(nsIDOMEvent* aKeyEvent)
 
 nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 {
-#if !(defined(XP_MAC) || defined(XP_MACOSX))
+#ifndef XP_MACOSX
   if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
     return aKeyEvent->PreventDefault(); // consume event
   // continue only for cases without child window
@@ -3292,7 +3288,7 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 nsresult
 nsPluginInstanceOwner::MouseMove(nsIDOMEvent* aMouseEvent)
 {
-#if !(defined(XP_MAC) || defined(XP_MACOSX))
+#if !defined(XP_MACOSX)
   if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
     return aMouseEvent->PreventDefault(); // consume event
   // continue only for cases without child window
@@ -3324,7 +3320,7 @@ nsPluginInstanceOwner::MouseMove(nsIDOMEvent* aMouseEvent)
 nsresult
 nsPluginInstanceOwner::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-#if !(defined(XP_MAC) || defined(XP_MACOSX))
+#if !defined(XP_MACOSX)
   if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
     return aMouseEvent->PreventDefault(); // consume event
   // continue only for cases without child window
@@ -3396,7 +3392,7 @@ nsPluginInstanceOwner::MouseOut(nsIDOMEvent* aMouseEvent)
 
 nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
 {
-#if !(defined(XP_MAC) || defined(XP_MACOSX))
+#if !defined(XP_MACOSX)
   if (!mPluginWindow || nsPluginWindowType_Window == mPluginWindow->type)
     return aMouseEvent->PreventDefault(); // consume event
   // continue only for cases without child window
@@ -3443,7 +3439,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   if (!mInstance)   // if mInstance is null, we shouldn't be here
     return rv;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   // check for null mWidget
   if (mWidget) {
     nsCOMPtr<nsIPluginWidget> pluginWidget = do_QueryInterface(mWidget);
@@ -3589,7 +3585,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
   if (!mInstance || !mOwner)
     return;
  
-#if defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #ifdef DO_DIRTY_INTERSECT   // aDirtyRect isn't always correct, see bug 56128
   nsPoint rel(aDirtyRect.x, aDirtyRect.y);
   nsPoint abs(0,0);
@@ -3654,7 +3650,7 @@ void nsPluginInstanceOwner::Paint(const nsRect& aDirtyRect, PRUint32 ndc)
 
 NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     // validate the plugin clipping information by syncing the plugin window info to
     // reflect the current widget location. This makes sure that everything is updated
     // correctly in the event of scrolling in the window.
@@ -3687,7 +3683,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::Notify(nsITimer* /* timer */)
 
 void nsPluginInstanceOwner::StartTimer()
 {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     nsresult rv;
 
     // start a periodic timer to provide null events to the plugin instance.
@@ -3868,7 +3864,7 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
   mPluginHost = aHost;
 }
 
-#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && (defined(XP_MAC) || defined(XP_MACOSX)))
+#if defined(XP_WIN) || (defined(DO_DIRTY_INTERSECT) && defined(XP_MACOSX))
 // convert frame coordinates from twips to pixels
 static void ConvertTwipsToPixels(nsPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect)
 {
@@ -3882,7 +3878,7 @@ static void ConvertTwipsToPixels(nsPresContext& aPresContext, nsRect& aTwipsRect
 #endif
 
   // Mac specific code to fix up the port location and clipping region
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 
 #ifdef DO_DIRTY_INTERSECT
 // Convert from a frame relative coordinate to a coordinate relative to its
@@ -3981,5 +3977,5 @@ nsPluginPort* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
   return pluginPort;
 }
 
-#endif // XP_MAC || XP_MACOSX
+#endif // XP_MACOSX
 

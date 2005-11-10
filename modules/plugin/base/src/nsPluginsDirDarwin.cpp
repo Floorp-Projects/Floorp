@@ -53,18 +53,16 @@
 #include "nsPluginsDirUtils.h"
 
 #include "nsILocalFileMac.h"
-#include <Carbon/Carbon.h>
+
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+#include <Carbon/Carbon.h>
+#include <CoreServices/CoreServices.h>
 #include <mach-o/loader.h>
 #include <mach-o/fat.h>
-
-#include <CFURL.h>
-#include <CFBundle.h>
-#include <CFString.h>
-#include <CodeFragments.h>
 
 typedef NS_4XPLUGIN_CALLBACK(const char *, NP_GETMIMEDESCRIPTION) ();
 typedef NS_4XPLUGIN_CALLBACK(OSErr, BP_GETSUPPORTEDMIMETYPES) (BPSupportedMIMETypes *mimeInfo, UInt32 flags);

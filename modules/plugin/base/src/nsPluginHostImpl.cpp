@@ -4692,7 +4692,7 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
 
   // On Windows, we also want to include the Quicktime plugin from the 4.x directory
   // But because it spans several DLL's, the best check for now is by filename
-  if (nsnull != PL_strcasestr(tag->mFileName,"npqtplugin"))
+  if (PL_strcasestr(tag->mFileName,"npqtplugin") != nsnull)
     return PR_FALSE;
 
   return PR_TRUE;
