@@ -350,7 +350,7 @@ private:
   {
     eNumbers = 0,
     eLowerCase = 1,
-    eUpperCase = 2,
+    eUpperCase = 2
   };
 
   PRUint32 mUsage; 
