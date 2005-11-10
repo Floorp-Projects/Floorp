@@ -179,8 +179,10 @@ nsCSSToken::AppendToString(nsString& aBuffer)
 MOZ_DECL_CTOR_COUNTER(nsCSSScanner)
 
 nsCSSScanner::nsCSSScanner()
+  : mInputStream(nsnull)
+  , mReadPointer(nsnull)
 #ifdef CSS_REPORT_PARSE_ERRORS
-  : mError(mErrorBuf, NS_ARRAY_LENGTH(mErrorBuf), 0)
+  , mError(mErrorBuf, NS_ARRAY_LENGTH(mErrorBuf), 0)
 #endif
 {
   MOZ_COUNT_CTOR(nsCSSScanner);
@@ -188,7 +190,6 @@ nsCSSScanner::nsCSSScanner()
     // XXX need a monitor
     BuildLexTable();
   }
-  mBuffer = new PRUnichar[BUFFER_SIZE];
   mPushback = mLocalPushback;
   mPushbackSize = 4;
   // No need to init the other members, since they represent state
@@ -200,10 +201,6 @@ nsCSSScanner::~nsCSSScanner()
 {
   MOZ_COUNT_DTOR(nsCSSScanner);
   Close();
-  if (nsnull != mBuffer) {
-    delete [] mBuffer;
-    mBuffer = nsnull;
-  }
   if (mLocalPushback != mPushback) {
     delete [] mPushback;
   }
@@ -235,13 +232,27 @@ nsCSSScanner::~nsCSSScanner()
 #endif
 }
 
-void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI,
-                        PRUint32 aLineNumber)
+void nsCSSScanner::Init(nsIUnicharInputStream* aInput, 
+                        const PRUnichar * aBuffer, PRInt32 aCount, 
+                        nsIURI* aURI, PRUint32 aLineNumber)
 {
-  NS_PRECONDITION(aInput, "Null input stream pointer");
-  NS_PRECONDITION(!mInput, "Should not have an existing input stream!");
+  NS_PRECONDITION(!mInputStream, "Should not have an existing input stream!");
+  NS_PRECONDITION(!mReadPointer, "Should not have an existing input buffer!");
 
-  mInput = aInput;
+  // Read from stream via my own buffer
+  if (aInput) {
+    NS_PRECONDITION(!aBuffer, "Shouldn't have both input and buffer!");
+    NS_PRECONDITION(aCount == 0, "Shouldn't have count with a stream");
+    mInputStream = aInput;
+    mReadPointer = mBuffer;
+    mCount = 0;
+  } else {
+    NS_PRECONDITION(aBuffer, "Either aInput or aBuffer must be set");
+    // Read directly from the provided buffer
+    mInputStream = nsnull;
+    mReadPointer = aBuffer;
+    mCount = aCount;
+  }
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   // If aURI is the same as mURI, no need to reget mFileName -- it
@@ -257,19 +268,14 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI,
 #endif // CSS_REPORT_PARSE_ERRORS
   mLineNumber = aLineNumber;
 
-  // Reset variables that we use to keep track of our progress through mInput
+  // Reset variables that we use to keep track of our progress through the input
   mOffset = 0;
-  mCount = 0;
   mPushbackCount = 0;
   mLastRead = 0;
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   mColNumber = 0;
 #endif
-
-  // Note that we do NOT want to change mBuffer, mPushback, or
-  // mPushbackCount here.  We can keep using the existing values even
-  // if the input stream we're using has changed.
 }
 
 #ifdef CSS_REPORT_PARSE_ERRORS
@@ -435,7 +441,8 @@ void nsCSSScanner::ReportUnexpectedTokenParams(nsCSSToken& tok,
 
 void nsCSSScanner::Close()
 {
-  mInput = nsnull;
+  mInputStream = nsnull;
+  mReadPointer = nsnull;
 }
 
 #ifdef CSS_REPORT_PARSE_ERRORS
@@ -454,13 +461,17 @@ PRInt32 nsCSSScanner::Read(nsresult& aErrorCode)
     }
     if (mOffset == mCount) {
       mOffset = 0;
-      aErrorCode = mInput->Read(mBuffer, BUFFER_SIZE, (PRUint32*)&mCount);
+      if (!mInputStream) {
+        mCount = 0;
+        return -1;
+      }
+      aErrorCode = mInputStream->Read(mBuffer, CSS_BUFFER_SIZE, (PRUint32*)&mCount);
       if (NS_FAILED(aErrorCode) || mCount == 0) {
         mCount = 0;
         return -1;
       }
     }
-    rv = PRInt32(mBuffer[mOffset++]);
+    rv = PRInt32(mReadPointer[mOffset++]);
     if (((rv == '\n') && (mLastRead != '\r')) || (rv == '\r')) {
       // 0 is a magical line number meaning that we don't know (i.e., script)
       if (mLineNumber != 0)
