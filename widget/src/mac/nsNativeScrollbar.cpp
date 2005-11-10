@@ -127,7 +127,7 @@ nsNativeScrollbar::Destroy()
 {
   if (mMouseDownInScroll)
   {
-    PostEvent(mouseUp, 0);
+    ::PostEvent(mouseUp, 0);
   }
   return nsMacControl::Destroy();
 }
@@ -174,12 +174,63 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
     return;
   }
 
+  if (!IsQDStateOK()) {
+    // Something on a PLEvent messed with the QD state.  When the Control
+    // Manager tried to figure out where the mouse was relative to the
+    // control, it will have come up with some wacky results.  The received
+    // |part| code and the value returned by |GetControl32BitValue| will not
+    // be correct.  There's nothing that can be done about it this time
+    // through the action proc, so drop the bad data on the floor.  The
+    // port state is reset to what's appropriate for the control, and a fake
+    // mouse-down event is posted, which will force the Control Manager to
+    // look at the scrollbar again, hopefully while the corrected QD state
+    // is still in effect.
+    //
+    // This works in concert with |nsMacControl::HandleControlEvent|.
+    //
+    // This relies on the Control Manager responding to mouse-down events
+    // while the mouse is already down in a tracking loop by reexamining
+    // the position of the scrollbar.
+    EndDraw();
+    StartDraw();
+    ::PostEvent(mouseDown, 0);
+    return;
+  }
+
   GetPosition(&oldPos);
   GetLineIncrement(&incr);
   GetViewSize(&visibleImageSize);
 
+  PRBool buttonPress = PR_FALSE;
+
   switch (part)
   {
+    case kControlUpButtonPart:
+      newPos = oldPos - (mLineIncrement ? mLineIncrement : 1);
+      buttonPress = PR_TRUE;
+      break;
+    case kControlDownButtonPart:
+      newPos = oldPos + (mLineIncrement ? mLineIncrement : 1);
+      buttonPress = PR_TRUE;
+      break;
+    
+    case kControlPageUpPart:
+      newPos = oldPos - visibleImageSize;
+      break;
+    case kControlPageDownPart:
+      newPos = oldPos + visibleImageSize;
+      break;
+
+    case kControlIndicatorPart:
+      newPos = ::GetControl32BitValue(GetControl());
+      break;
+
+    default:
+      // Huh?
+      return;
+  }
+
+  if (buttonPress) {
     //
     // For the up/down buttons, scroll up or down by the line height and 
     // update the attributes on the content node (the scroll frame listens
@@ -188,69 +239,33 @@ nsNativeScrollbar::DoScrollAction(ControlPartCode part)
     // lines. Outliner ignores the indexes in ScrollbarButtonPressed() except
     // to check if one is greater than the other to indicate direction.
     //
-    
-    case kControlUpButtonPart:
-      newPos = oldPos - (mLineIncrement ? mLineIncrement : 1);
-      if ( mMediator ) {
-        BoundsCheck(0, newPos, mMaxValue);
-        mMediator->ScrollbarButtonPressed(mScrollbar, oldPos, newPos);
-      } else {
-        UpdateContentPosition(newPos);
-      }
-      break;
-         
-    case kControlDownButtonPart:
-      newPos = oldPos + (mLineIncrement ? mLineIncrement : 1);
-      if ( mMediator ) {
-        BoundsCheck(0, newPos, mMaxValue);
-        mMediator->ScrollbarButtonPressed(mScrollbar, oldPos, newPos);
-      } else {
-        UpdateContentPosition(newPos); 
-      }
-      break;
-    
+    if (mMediator) {
+      BoundsCheck(0, newPos, mMaxValue);
+      mMediator->ScrollbarButtonPressed(mScrollbar, oldPos, newPos);
+    }
+    else {
+      UpdateContentPosition(newPos);
+    }
+  }
+  else {
     //
     // For page up/down and dragging the thumb, scroll by the page height
     // (or directly report the value of the scrollbar) and update the attributes
     // on the content node (as above). If we have a mediator, we're in an
     // outliner so tell it directly that the position has changed. Note that
-    // outliner takes signed values, so we have to convert our unsigned to 
-    // signed values first.
+    // outliner takes the new position as a signed reference, so we have to
+    // convert our unsigned to signed first.
     //
-    
-    case kControlPageUpPart:
-      newPos = oldPos - visibleImageSize;
-      UpdateContentPosition(newPos);
-      if ( mMediator ) {
-        PRInt32 op = oldPos, np = mValue;
-        if ( np < 0 )
-          np = 0;
-        mMediator->PositionChanged(mScrollbar, op, np);
+    UpdateContentPosition(newPos);
+    if (mMediator) {
+      PRInt32 np = newPos;
+      if (np < 0) {
+        np = 0;
       }
-      break;
-      
-    case kControlPageDownPart:
-      newPos = oldPos + visibleImageSize;
-      UpdateContentPosition(newPos);
-      if ( mMediator ) {
-        PRInt32 op = oldPos, np = mValue;
-        if ( np < 0 )
-          np = 0;
-        mMediator->PositionChanged(mScrollbar, op, np);
-      }
-      break;
-      
-    case kControlIndicatorPart:
-      newPos = ::GetControl32BitValue(GetControl());
-      UpdateContentPosition(newPos);
-      if ( mMediator ) {
-        PRInt32 op = oldPos, np = mValue;
-        if ( np < 0 )
-          np = 0;
-        mMediator->PositionChanged(mScrollbar, op, np);
-      }
-      break;
+      mMediator->PositionChanged(mScrollbar, oldPos, np);
+    }
   }
+
   EndDraw();
     
   // update the area of the parent uncovered by the scrolling. Since

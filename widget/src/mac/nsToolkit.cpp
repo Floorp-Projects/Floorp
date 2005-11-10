@@ -42,7 +42,6 @@
 #include "nsWidgetSupport.h"
 
 #include <Gestalt.h>
-#include <Appearance.h>
 #include <Movies.h>
 
 #include "nsIEventSink.h"
@@ -202,34 +201,6 @@ nsToolkit::InitEventQueue(PRThread * aThread)
 PRBool nsToolkit::ToolkitBusy()
 {
   return (gEventQueueHandler) ? gEventQueueHandler->EventsArePending() : PR_FALSE;
-}
-
-
-//-------------------------------------------------------------------------
-//
-//-------------------------------------------------------------------------
-bool nsToolkit::HasAppearanceManager()
-{
-
-#define APPEARANCE_MIN_VERSION  0x0110    // we require version 1.1
-  
-  static bool inited = false;
-  static bool hasAppearanceManager = false;
-
-  if (inited)
-    return hasAppearanceManager;
-  inited = true;
-
-  SInt32 result;
-  if (::Gestalt(gestaltAppearanceAttr, &result) != noErr)
-    return false;   // no Appearance Mgr
-
-  if (::Gestalt(gestaltAppearanceVersion, &result) != noErr)
-    return false;   // still version 1.0
-
-  hasAppearanceManager = (result >= APPEARANCE_MIN_VERSION);
-
-  return hasAppearanceManager;
 }
 
 
