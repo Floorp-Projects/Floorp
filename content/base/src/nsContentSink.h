@@ -71,6 +71,8 @@ class nsContentSink : public nsICSSLoaderObserver,
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
                               nsresult aStatus);
 
+  nsresult ProcessMETATag(nsIContent* aContent);
+
 protected:
   nsContentSink();
   virtual ~nsContentSink();
@@ -93,8 +95,6 @@ protected:
                                     const nsSubstring& aTitle,
                                     const nsSubstring& aType,
                                     const nsSubstring& aMedia);
-
-  nsresult ProcessMETATag(nsIContent* aContent);
 
   void PrefetchHref(const nsAString &aHref, PRBool aExplicit);
 

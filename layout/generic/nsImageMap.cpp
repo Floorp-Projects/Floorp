@@ -67,6 +67,7 @@
 #include "nsIStringBundle.h"
 #include "nsIDocument.h"
 #include "nsContentUtils.h"
+#include "nsHTMLAtoms.h"
 
 static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
@@ -802,25 +803,47 @@ nsImageMap::Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIDOMHTMLMapE
 
 
 nsresult
-nsImageMap::UpdateAreasForBlock(nsIContent* aParent, PRBool* aFoundAnchor)
+nsImageMap::SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
+                           PRBool& aFoundAnchor)
 {
   nsresult rv = NS_OK;
   PRUint32 i, n = aParent->GetChildCount();
 
-  for (i = 0; (i < n) && NS_SUCCEEDED(rv); i++) {
+  // Look for <area> or <a> elements. We'll use whichever type we find first.
+  for (i = 0; i < n; i++) {
     nsIContent *child = aParent->GetChildAt(i);
 
-    nsCOMPtr<nsIDOMHTMLAnchorElement> area = do_QueryInterface(child);
-    if (area) {
-      *aFoundAnchor = PR_TRUE;
-      rv = AddArea(child);
+    if (child->IsContentOfType(nsIContent::eHTML)) {
+      // If we haven't determined that the map element contains an
+      // <a> element yet, then look for <area>.
+      if (!aFoundAnchor && child->Tag() == nsHTMLAtoms::area) {
+        aFoundArea = PR_TRUE;
+        rv = AddArea(child);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        // Continue to next child. This stops mContainsBlockContents from
+        // getting set. It also makes us ignore children of <area>s which
+        // is consistent with how we react to dynamic insertion of such
+        // children.
+        continue;
+      }
+      // If we haven't determined that the map element contains an
+      // <area> element yet, then look for <a>.
+      if (!aFoundArea && child->Tag() == nsHTMLAtoms::a) {
+        aFoundAnchor = PR_TRUE;
+        rv = AddArea(child);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
-    else {
-      rv = UpdateAreasForBlock(child, aFoundAnchor);
+    
+    if (child->IsContentOfType(nsIContent::eELEMENT)) {
+      mContainsBlockContents = PR_TRUE;
+      rv = SearchForAreas(child, aFoundArea, aFoundAnchor);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-  
-  return rv;
+
+  return NS_OK;
 }
 
 nsresult
@@ -829,38 +852,11 @@ nsImageMap::UpdateAreas()
   // Get rid of old area data
   FreeAreas();
 
-  PRUint32 i, n = mMap->GetChildCount();
-  PRBool containsBlock = PR_FALSE, containsArea = PR_FALSE;
+  PRBool foundArea = PR_FALSE;
+  PRBool foundAnchor = PR_FALSE;
+  mContainsBlockContents = PR_FALSE;
 
-  for (i = 0; i < n; i++) {
-    nsIContent *child = mMap->GetChildAt(i);
-
-    // Only look at elements and not text, comments, etc.
-    if (!child->IsContentOfType(nsIContent::eHTML))
-      continue;
-
-    // First check if this map element contains an AREA element.
-    // If so, we only look for AREA elements
-    if (!containsBlock) {
-      nsCOMPtr<nsIDOMHTMLAreaElement> area = do_QueryInterface(child);
-      if (area) {
-        containsArea = PR_TRUE;
-        AddArea(child);
-      }
-    }
-      
-    // If we haven't determined that the map element contains an
-    // AREA element yet, the look for a block element with children
-    // that are anchors.
-    if (!containsArea) {
-      UpdateAreasForBlock(child, &containsBlock);
-
-      if (containsBlock)
-        mContainsBlockContents = PR_TRUE;
-    }
-  }
-
-  return NS_OK;
+  return SearchForAreas(mMap, foundArea, foundAnchor);
 }
 
 nsresult
@@ -979,9 +975,9 @@ nsImageMap::AttributeChanged(nsIDocument* aDocument,
   // the map.  But only do this if the node is an HTML <area> or <a>
   // and the attribute that's changing is "shape" or "coords" -- those
   // are the only cases we care about.
-  if (aContent->IsContentOfType(nsIContent::eHTML) &&
-      (aContent->NodeInfo()->Equals(nsHTMLAtoms::area) ||
+  if ((aContent->NodeInfo()->Equals(nsHTMLAtoms::area) ||
        aContent->NodeInfo()->Equals(nsHTMLAtoms::a)) &&
+      aContent->IsContentOfType(nsIContent::eHTML) &&
       aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsHTMLAtoms::shape ||
        aAttribute == nsHTMLAtoms::coords)) {
