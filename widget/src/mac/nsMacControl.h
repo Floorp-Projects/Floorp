@@ -67,6 +67,7 @@ public:
 	// event handling
 	virtual PRBool		OnPaint(nsPaintEvent & aEvent);
 	virtual PRBool		DispatchMouseEvent(nsMouseEvent &aEvent);
+	OSStatus		HandleControlEvent(EventHandlerCallRef aHandlerCallRef, EventRef aEvent);
     
 	// nsIWidget interface
 	NS_IMETHOD			Enable(PRBool bState);
@@ -92,7 +93,12 @@ protected:
 	void				NSStringSetControlTitle(ControlHandle theControl, nsString title);
 	void				SetupMacControlFontForScript(short theScript);
 	static void			GetFileSystemCharset(nsCString & fileSystemCharset);
-	
+
+	OSStatus			InstallEventHandlerOnControl();
+	void				RemoveEventHandlerFromControl();
+
+	PRBool				IsQDStateOK();
+
 	nsString			mLabel;
 	PRBool				mWidgetArmed;
 	PRBool				mMouseInButton;
@@ -100,8 +106,9 @@ protected:
 	PRInt32				mValue;
 	PRInt32				mMin;
 	PRInt32				mMax;
-	ControlHandle		mControl;
+	ControlHandle			mControl;
 	short				mControlType;
+	EventHandlerRef			mControlEventHandler;
 
 	nsString			mLastLabel;
 	nsRect				mLastBounds;

@@ -49,12 +49,7 @@
 #include "nsIServiceManager.h"
 #include "nsIPlatformCharset.h"
 
-#include <ControlDefinitions.h>
-
-#include <Appearance.h>
-#include <TextUtils.h>
-#include <UnicodeConverter.h>
-#include <Fonts.h>
+#include <Carbon/Carbon.h>
 
 #if 0
 void DumpControlState(ControlHandle inControl, const char* message)
@@ -82,6 +77,12 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 nsIUnicodeEncoder * nsMacControl::mUnicodeEncoder = nsnull;
 nsIUnicodeDecoder * nsMacControl::mUnicodeDecoder = nsnull;
 
+static pascal OSStatus MacHandleControlEvent(EventHandlerCallRef aHandlerCallRef, EventRef aEvent, void* aUserData)
+{
+  nsMacControl* macControl = NS_REINTERPRET_CAST(nsMacControl*, aUserData);
+  return macControl->HandleControlEvent(aHandlerCallRef, aEvent);
+}
+
 #pragma mark -
 
 //-------------------------------------------------------------------------
@@ -98,6 +99,7 @@ nsMacControl::nsMacControl()
 
 	mControl		= nsnull;
 	mControlType	= pushButProc;
+	mControlEventHandler	= nsnull;
 
 	mLastBounds.SetRect(0,0,0,0);
 	mLastValue = 0;
@@ -172,7 +174,7 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 	if (mControl && mVisible)
 	{
 		// turn off drawing for setup to avoid ugliness
-		Boolean		isVisible = IsControlVisible(mControl);
+		Boolean		isVisible = ::IsControlVisible(mControl);
 		::SetControlVisibility(mControl, false, false);
 
 		// update title
@@ -189,30 +191,32 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 			Rect macRect;
 			nsRectToMacRect(ctlRect, macRect);
 
-			if ((mBounds.x != mLastBounds.x) || (mBounds.y != mLastBounds.y))
-				::MoveControl(mControl, macRect.left, macRect.top);
-			if ((mBounds.width != mLastBounds.width) || (mBounds.height != mLastBounds.height))
-				::SizeControl(mControl, ctlRect.width, ctlRect.height);
+			::SetControlBounds(mControl, &macRect);
 
 			mLastBounds = mBounds;
 
-			// Erase the widget rect (which can be larger than the control rect).
-			// Note: this should paint the backgrount with the right color but
-			// it doesn't work right now, see bug #5685 for more info.
+#if 0
+			// The widget rect can be larger than the control
+			// so the rect can be erased here to set up the
+			// background.  Unfortunately, the background color
+			// isn't properly set up (bug 5685).
+			//
+			// Since the only native control in use at the moment
+			// is the scrollbar, and the scrollbar does occupy
+			// the entire widget rect, there's no need to erase
+			// at all.
 			nsRect bounds = mBounds;
 			bounds.x = bounds. y = 0;
 			nsRectToMacRect(bounds, macRect);
 			::EraseRect(&macRect);
+#endif
 		}
 
 		// update value
 		if (mValue != mLastValue)
 		{
 			mLastValue = mValue;
-			if (nsToolkit::HasAppearanceManager())
-				::SetControl32BitValue(mControl, mValue);
-			else
-				::SetControlValue(mControl, mValue);
+			::SetControl32BitValue(mControl, mValue);
 		}
 
 		// update hilite
@@ -389,6 +393,9 @@ nsresult nsMacControl::CreateOrReplaceMacControl(short inControlType)
 		StartDraw();
 		mControl = ::NewControl(mWindowPtr, &macRect, "\p", mVisible, mValue, mMin, mMax, inControlType, nil);
 		EndDraw();
+
+		if (mControl)
+			InstallEventHandlerOnControl();
 		
 		// need to reset the font now
 		// XXX to do: transfer the text in the old control over too
@@ -407,6 +414,7 @@ nsresult nsMacControl::CreateOrReplaceMacControl(short inControlType)
 //-------------------------------------------------------------------------
 void nsMacControl::ClearControl()
 {
+	RemoveEventHandlerFromControl();
 	if (mControl)
 	{
 		::DisposeControl(mControl);
@@ -586,4 +594,113 @@ void nsMacControl::GetFileSystemCharset(nsCString & fileSystemCharset)
   }
   fileSystemCharset = aCharset;
 }
-	
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+DEFINE_ONE_SHOT_HANDLER_GETTER(MacHandleControlEvent)
+
+static const EventTypeSpec kControlEventList[] =
+{
+  // Installing a kEventControlDraw handler causes harmless but ugly visual
+  // imperfections in scrollbar tracks on Mac OS X 10.4.0 - 10.4.2.  This is
+  // fixed in 10.4.3.  Bug 300058.
+  { kEventClassControl, kEventControlDraw }
+};
+
+OSStatus nsMacControl::InstallEventHandlerOnControl()
+{
+  return ::InstallControlEventHandler(mControl,
+                                      GetMacHandleControlEventUPP(),
+                                      GetEventTypeCount(kControlEventList),
+                                      kControlEventList,
+                                      (void*)this,
+                                      &mControlEventHandler);
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void nsMacControl::RemoveEventHandlerFromControl()
+{
+  if (mControlEventHandler) {
+    ::RemoveEventHandler(mControlEventHandler);
+    mControlEventHandler = nsnull;
+  }
+}
+
+//-------------------------------------------------------------------------
+//
+// At present, this handles only { kEventClassControl, kEventControlDraw }.
+//
+//-------------------------------------------------------------------------
+OSStatus nsMacControl::HandleControlEvent(EventHandlerCallRef aHandlerCallRef, EventRef aEvent)
+{
+  PRBool wasDrawing = IsDrawing();
+
+  if (wasDrawing) {
+    if (!IsQDStateOK()) {
+      // If you're here, you must be drawing the control inside |TrackControl|.
+      // The converse is not necessarily true.
+      //
+      // In the |TrackControl| loop, something on a PLEvent messed with the
+      // QD state.  The state can be fixed so the control draws in the proper
+      // place by setting the port and origin before calling the next handler,
+      // but it's extremely likely that the QD state was wrong when the
+      // Control Manager looked at the mouse position, so the control's
+      // current value will be incorrect.  Nobody wants to draw a control
+      // that shows the wrong value (ex. scroll thumb position), so don't
+      // draw it.  The subclass is responsible for catching this case in
+      // its TrackControl action proc and doing something smart about it,
+      // like fixing the port state and posting a fake event to force the
+      // Control Manager to reread the value.
+      //
+      // This works in concert with |nsNativeScrollBar::DoScrollAction|.
+      return noErr;
+    }
+  }
+  else {
+    StartDraw();
+  }
+
+  OSStatus err = ::CallNextEventHandler(aHandlerCallRef, aEvent);
+
+  if (!wasDrawing) {
+    EndDraw();
+  }
+
+  return err;
+}
+
+//-------------------------------------------------------------------------
+//
+// Returns true if the port and origin are set properly for this control.
+// Useful to determine whether the Control Manager is likely to have been
+// confused when it calls back into nsMacControl or a subclass.
+//
+//-------------------------------------------------------------------------
+PRBool nsMacControl::IsQDStateOK()
+{
+  CGrafPtr controlPort = ::GetWindowPort(mWindowPtr);
+  CGrafPtr currentPort;
+  ::GetPort(&currentPort);
+
+  if (controlPort != currentPort) {
+    return PR_FALSE;
+  }
+
+  nsRect controlBounds;
+  GetBounds(controlBounds);
+  LocalToWindowCoordinate(controlBounds);
+  Rect currentBounds;
+  ::GetPortBounds(currentPort, &currentBounds);
+
+  if (-controlBounds.x != currentBounds.left ||
+      -controlBounds.y != currentBounds.top) {
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}

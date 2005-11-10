@@ -1114,6 +1114,9 @@ void nsCaret::GetCaretRectAndInvert(nsIFrame* aFrame, PRInt32 aFrameOffset)
           if (NS_SUCCEEDED(domSelection->SelectionLanguageChange(mKeyboardRTL)))
           {
             mRendContext->PopState();
+#ifdef DONT_REUSE_RENDERING_CONTEXT
+            mRendContext = nsnull;
+#endif
             return;
           }
         }
