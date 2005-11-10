@@ -605,7 +605,7 @@ CSSParserImpl::InitScanner(nsIUnicharInputStream* aInput, nsIURI* aSheetURI,
 {
   NS_ASSERTION(! mScannerInited, "already have scanner");
 
-  mScanner.Init(aInput, aSheetURI, aLineNumber);
+  mScanner.Init(aInput, nsnull, 0, aSheetURI, aLineNumber);
 #ifdef DEBUG
   mScannerInited = PR_TRUE;
 #endif
@@ -623,14 +623,20 @@ CSSParserImpl::InitScanner(const nsAString& aBuffer, nsIURI* aSheetURI,
 {
   // Having it not own the string is OK since the caller will hold on to
   // the stream until we're done parsing.
-  nsCOMPtr<nsIUnicharInputStream> input;
-  nsresult rv = NS_NewStringUnicharInputStream(getter_AddRefs(input),
-                                               &aBuffer, PR_FALSE);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  NS_ASSERTION(! mScannerInited, "already have scanner");
 
-  return InitScanner(input, aSheetURI, aLineNumber, aBaseURI);
+  const nsAFlatString& flat = PromiseFlatString(aBuffer);
+  mScanner.Init(nsnull, flat.get(), flat.Length(), aSheetURI, aLineNumber);
+
+#ifdef DEBUG
+  mScannerInited = PR_TRUE;
+#endif
+  mBaseURL = aBaseURI;
+  mSheetURL = aSheetURI;
+
+  mHavePushBack = PR_FALSE;
+
+  return NS_OK;
 }
 
 nsresult
