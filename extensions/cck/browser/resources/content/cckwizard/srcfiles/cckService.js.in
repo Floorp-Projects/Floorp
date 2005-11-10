@@ -116,10 +116,10 @@ CCKService.prototype={
     
       for (var i=1; i<=5; i++) {
         try {
-          RootKey = bundle.GetStringFromName("Root Key" + i);
+          RootKey = bundle.GetStringFromName("RootKey" + i);
           Key = bundle.GetStringFromName("Key" + i);
           Name = bundle.GetStringFromName("Name" + i);
-          NameValue = bundle.GetStringFromName("Name Value" + i);
+          NameValue = bundle.GetStringFromName("NameValue" + i);
           Type = bundle.GetStringFromName("Type" + i);
         } catch (ex) {
           RootKey = "";
