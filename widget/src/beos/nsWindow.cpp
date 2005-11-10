@@ -1308,6 +1308,7 @@ NS_METHOD nsWindow::SetFocus(PRBool aRaise)
 			
 		mView->MakeFocus(true);
 		mView->UnlockLooper();
+		DispatchFocus(NS_GOTFOCUS);
 	}
 
 	return NS_OK;
@@ -1913,16 +1914,23 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		SetFocus(((PRBool *)info->args)[0]);
 		break;
 
+#ifdef DEBUG_FOCUS
 	case nsWindow::GOT_FOCUS:
-		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
+		NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
 		if (!mEnabled)
 			return false;
-		DispatchFocus(NS_GOTFOCUS);
+		if ((uint32)info->args[0] != (uint32)mView)
+			printf("Wrong view to get focus\n");*/
 		break;
-
+#endif
 	case nsWindow::KILL_FOCUS:
-		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-		DispatchFocus(NS_LOSTFOCUS);
+		NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
+		if ((uint32)info->args[0] == (uint32)mView)
+			DispatchFocus(NS_LOSTFOCUS);
+#ifdef DEBUG_FOCUS
+		else
+			printf("Wrong view to de-focus\n");
+#endif
 #if defined BeIME
 		nsIMEBeOS::GetIME()->DispatchCancelIME();
 		if (mView && mView->LockLooper())
@@ -3278,18 +3286,31 @@ void nsViewBeOS::MakeFocus(bool focused)
 {
 	if (!IsFocus() && focused)
 		BView::MakeFocus(focused);
-
+	uint32	args[1];
+	args[0] = (uint32)this;
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if (w && (t = w->GetToolkit()) != 0)
 	{
 		MethodInfo *info = nsnull;
-		if (nsnull != (info = new MethodInfo(w, w, (focused)? nsWindow::GOT_FOCUS : nsWindow::KILL_FOCUS)))
-			t->CallMethodAsync(info);
+		if (!focused)
+		{
+			if (nsnull != (info = new MethodInfo(w, w, nsWindow::KILL_FOCUS),1,args))
+				t->CallMethodAsync(info);
+		}
+#ifdef DEBUG_FOCUS
+		else
+		{
+			if (nsnull != (info = new MethodInfo(w, w, nsWindow::GOT_FOCUS),1,args))
+				t->CallMethodAsync(info);
+		}
+#endif		
 		NS_RELEASE(t);
 	}
 }
+
 #if defined(BeIME)
+// Inline Input Method implementation
 void nsViewBeOS::DoIME(BMessage *msg)
 {
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
