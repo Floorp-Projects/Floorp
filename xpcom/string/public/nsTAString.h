@@ -130,7 +130,7 @@ class nsTAString_CharT
     public:
 
         // this acts like a virtual destructor
-      NS_COM NS_FASTCALL ~nsTAString_CharT();
+      NS_COM NS_CONSTRUCTOR_FASTCALL ~nsTAString_CharT();
 
 
         /**

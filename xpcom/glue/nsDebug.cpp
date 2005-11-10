@@ -75,7 +75,8 @@ void GlueShutdownDebug()
 }
 #endif
 
-void NSGlue_Abort(const char* aFile, PRIntn aLine)
+void NS_FASTCALL
+NSGlue_Abort(const char* aFile, PRIntn aLine)
 {     
   if (!ENSURE_DEBUGOBJECT)
     return;    
@@ -83,7 +84,8 @@ void NSGlue_Abort(const char* aFile, PRIntn aLine)
   gDebugObject->Abort(aFile, aLine);
 }     
 
-void NSGlue_Break(const char* aFile, PRIntn aLine)
+void NS_FASTCALL
+NSGlue_Break(const char* aFile, PRIntn aLine)
 { 
   if (!ENSURE_DEBUGOBJECT)
     return;    
@@ -91,15 +93,17 @@ void NSGlue_Break(const char* aFile, PRIntn aLine)
   gDebugObject->Break(aFile, aLine);
 }
 
-void NSGlue_Warning(const char* aStr, const char* aFile, PRIntn aLine)
+void NS_FASTCALL
+NSGlue_Warning(const char* aStr, const char* aFile, PRIntn aLine)
 { 
   if (!ENSURE_DEBUGOBJECT)
     return;    
   gDebugObject->Warning(aStr, aFile, aLine);
 }
 
-void NSGlue_Assertion(const char* aStr, const char* aExpr,
-                      const char* aFile, PRIntn aLine)
+void NS_FASTCALL
+NSGlue_Assertion(const char* aStr, const char* aExpr,
+                 const char* aFile, PRIntn aLine)
 { 
   if (!ENSURE_DEBUGOBJECT)
     return;    

@@ -135,6 +135,9 @@
  *    to all implementations - the compiler will _not_ warn but it will crash.
  *  - This has no effect for inline functions or functions which take a
  *    variable number of arguments.
+ *  - __fastcall on windows should not be applied to class
+ *    constructors/destructors - use the NS_CONSTRUCTOR_FASTCALL macro for
+ *    constructors/destructors.
  *
  * Examples: int NS_FASTCALL func1(char *foo);
  *           NS_HIDDEN_(int) NS_FASTCALL func2(char *foo);
@@ -142,8 +145,13 @@
 
 #if defined(__i386__) && defined(__GNUC__) && (__GNUC__ >= 3) && !defined(XP_OS2) && !defined(XP_MACOSX)
 #define NS_FASTCALL __attribute__ ((regparm (3), stdcall))
+#define NS_CONSTRUCTOR_FASTCALL __attribute__ ((regparm (3), stdcall))
+#elif defined(XP_WIN)
+#define NS_FASTCALL __fastcall
+#define NS_CONSTRUCTOR_FASTCALL
 #else
 #define NS_FASTCALL
+#define NS_CONSTRUCTOR_FASTCALL
 #endif
 
 /*

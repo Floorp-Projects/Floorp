@@ -148,7 +148,7 @@ public:
   explicit nsCSSValue(URL* aValue) NS_HIDDEN;
   explicit nsCSSValue(Image* aValue) NS_HIDDEN;
   nsCSSValue(const nsCSSValue& aCopy) NS_HIDDEN;
-  NS_FASTCALL ~nsCSSValue() NS_HIDDEN;
+  NS_CONSTRUCTOR_FASTCALL ~nsCSSValue() NS_HIDDEN;
 
   NS_HIDDEN_(nsCSSValue&)  operator=(const nsCSSValue& aCopy);
   NS_HIDDEN_(PRBool)      operator==(const nsCSSValue& aOther) const;
