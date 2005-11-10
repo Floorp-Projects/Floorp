@@ -782,27 +782,4 @@ function BrowserSNAVToggle(state) {
 } 
 
 
-/*
- * Utils :  function for the phone call calculation. 
- */
- 
-function util_stripCharsFromString (s, charList) {
-    var resultS = "";
-    for (var i = 0; i < s.length; i++)
-    {   
-        var c = s.charAt(i);
-        if (charList.indexOf(c) == -1) resultS += c;
-    }
-    return resultS;
-}
 
-function util_validateInteger(s)
-{
-    for (var i = 0; i < s.length; i++)
-    {   
-        var c = s.charAt(i);
-        if (((c < "0") || (c > "9"))) return false;
-    }
-    return true;
-}
-	
