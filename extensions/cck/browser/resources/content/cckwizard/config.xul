@@ -46,6 +46,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         buttons="accept,cancel"
         ondialogaccept="return OnConfigOK()"
+        onload="OnConfigLoad()"
         width="500"
         height="200"
         >
@@ -53,11 +54,11 @@
 
 <label>&configName.label;</label>
 <vbox>
-<textbox flex="1" id="cnc-name"/>
+<textbox flex="1" id="cnc-name" onchange="configCheckOKButton();" onkeyup="configCheckOKButton();"/>/>
 &configLocation.label;
 <hbox>
 <textbox readonly="true" flex="1" id="cnc-location"/>
-<button label="&chooseDir.label;" oncommand="choosedir('cnc-location');"/>
+<button label="&chooseDir.label;" oncommand="choosedir('cnc-location');configCheckOKButton();"/>
 </hbox>
 </vbox>
 </dialog>

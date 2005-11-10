@@ -67,7 +67,7 @@
          <menupopup>
          </menupopup>
        </menulist>
-       <button label="&showConfig.label;" oncommand="ShowConfigInfo()"/>
+       <button label="&showConfig.label;" id="showconfig" oncommand="ShowConfigInfo()"/>
      </hbox>
      <hbox>
        <button label="&newConfig.label;" id="newconfig" oncommand="CreateConfig();"/>
@@ -88,51 +88,51 @@
      <rows>
        <row align="center" flex="1">
          <vbox align="right">
-           <label pack="end">&id.label;</label>
+           <label control="id" pack="end">&id.label;</label>
          </vbox>
          <textbox id="id" tooltiptext="Format: cck-companyname@extensions.domainname.tld"/>
        </row>
        <row align="center">
          <vbox align="right">
-           <label>&name.label;</label>
+           <label control="name">&name.label;</label>
          </vbox>
          <textbox id="name"/>
        </row>
        <row align="center">
          <vbox align="right">
-           <label>&version.label;</label>
+           <label control="version">&version.label;</label>
          </vbox>
          <textbox id="version"/>
        </row>
        <row align="center">
          <vbox align="right">
-           <label>&description.label;</label>
+           <label control="description">&description.label;</label>
          </vbox>
          <textbox id="description"/>
        </row>
        <row align="center">
          <vbox align="right">
-           <label>&creator.label;</label>
+           <label control="creator">&creator.label;</label>
          </vbox>
          <textbox id="creator"/>
        </row>
        <row align="center">
          <vbox align="right">
-           <label>&homepageURL.label;</label>
+           <label control="homepageURL">&homepageURL.label;</label>
          </vbox>
          <textbox id="homepageURL"/>
        </row>
        <row align="center">
          <vbox align="right">
-           <label>&updateURL.label;</label>
+           <label control="updateURL">&updateURL.label;</label>
          </vbox>
          <textbox id="updateURL"/>
        </row>
        <row align="center">
          <vbox align="right">
-           <label>&icon.label;</label>
+           <label control="iconURL">&icon.label;</label>
          </vbox>
-         <hbox>
+         <hbox align="center">
            <textbox flex="1" id="iconURL"/>
            <image id="icon" src='' width='32' height='32'/>
            <button label="&chooseFile.label;" oncommand="chooseimage('iconURL','icon');"/>
@@ -140,7 +140,7 @@
        </row>
        <row align="center">
          <vbox align="right">
-           <label>&filename.label;</label>
+           <label control="filename">&filename.label;</label>
          </vbox>
          <hbox>
            <textbox flex="1" id="filename"/>
@@ -156,7 +156,7 @@
       <caption label="&orgName.caption;"/>
       <description>&orgName.description;</description>
       <hbox align="center">
-        <label>&orgName.label;</label>
+        <label control="OrganizationName">&orgName.label;</label>
         <textbox id="OrganizationName" maxlength="10" flex="1"/>
       </hbox>
     </groupbox>
@@ -164,7 +164,7 @@
       <caption label="&homePage.caption;"/>
       <description>&homePage.description;</description>
       <hbox align="center">
-        <label>&homePage.label;</label>
+        <label control="HomePageURL">&homePage.label;</label>
         <textbox id="HomePageURL" flex="1"/>
       </hbox>
     </groupbox>
@@ -172,7 +172,7 @@
       <caption label="&titleBar.caption;"/>
       <description>&titleBar.description;</description>
       <hbox align="center">
-        <label>&titleBar.label;</label>
+        <label control="CompanyName">&titleBar.label;</label>
         <textbox id="CompanyName" flex="1"/>
       </hbox>
     </groupbox>
@@ -183,12 +183,12 @@
       <caption label="&animLogo.caption;"/>
       <description>&animLogoURL.description;</description>
       <hbox align="center">
-        <label>&animLogoURL.label;</label>
+        <label control="AnimatedLogoURL">&animLogoURL.label;</label>
         <textbox flex="1" id="AnimatedLogoURL"/>
       </hbox>
       <description>&animLogoTooltip.description;</description>
       <hbox align="center">
-        <label>&animLogoTooltip.label;</label>
+        <label control="AnimatedLogoTooltip">&animLogoTooltip.label;</label>
         <textbox flex="1" id="AnimatedLogoTooltip"/>
       </hbox>
       <description>&animLogoAnim.description;</description>
@@ -211,15 +211,15 @@
       <caption label="&helpMenu.caption;"/>
       <description>&helpMenu.description;</description>
       <vbox>
-        <label>&helpMenuText.label;</label>
+        <label control="HelpMenuCommandName">&helpMenuText.label;</label>
         <textbox id="HelpMenuCommandName" flex="1"/>
       </vbox>
       <vbox>
-        <label>&helpMenuURL.label;</label>
+        <label control="HelpMenuCommandURL">&helpMenuURL.label;</label>
         <textbox id="HelpMenuCommandURL" flex="1"/>
       </vbox>
       <vbox>
-        <label>&helpMenuAccesskey.label;</label>
+        <label control="HelpMenuCommandAccessKey">&helpMenuAccesskey.label;</label>
         <textbox id="HelpMenuCommandAccesskey" flex="1"/>
       </vbox>
     </groupbox>
@@ -227,11 +227,11 @@
       <caption label="&allowedSites.caption;"/>
       <description>&allowedSites.description;</description>
       <vbox>
-        <label>&popupAllowedSites.label;</label>
+        <label control="PopupAllowedSites">&popupAllowedSites.label;</label>
         <textbox id="PopupAllowedSites" flex="1"/>
       </vbox>
       <vbox>
-        <label>&installAllowedSites.label;</label>
+        <label control="InstallAllowedSites">&installAllowedSites.label;</label>
         <textbox id="InstallAllowedSites" flex="1"/>
       </vbox>
     </groupbox>
@@ -266,61 +266,56 @@
     <description>&searchPlugins.description;</description>
     <separator class="groove"/>
     <hbox align="center">
-      <spacer flex="1"/>
-      <label>&file.label;</label>
+      <label control="SearchPlugin1">&file.label;</label>
       <textbox id="SearchPlugin1" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin1');"/>
     </hbox>
-      <hbox>
-      <label>&icon.label;</label>
+    <hbox align="center">
+      <label control="SearchPluginIcon1">&icon.label;</label>
       <textbox id="SearchPluginIcon1" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon1');"/>
     </hbox>
     <separator class="groove"/>
     <hbox align="center">
-      <spacer flex="1"/>
-      <label>&file.label;</label>
+      <label control="SearchPlugin2">&file.label;</label>
       <textbox id="SearchPlugin2" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin2');"/>
     </hbox>
-      <hbox>
-      <label>&icon.label;</label>
+    <hbox align="center">
+      <label control="SearchPluginIcon2">&icon.label;</label>
       <textbox id="SearchPluginIcon2" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon2');"/>
     </hbox>
     <separator class="groove"/>
     <hbox align="center">
-      <spacer flex="1"/>
-      <label>&file.label;</label>
+      <label control="SearchPlugin3">&file.label;</label>
       <textbox id="SearchPlugin3" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin3');"/>
     </hbox>
-      <hbox>
-      <label>&icon.label;</label>
+    <hbox align="center">
+      <label control="SearchPluginIcon3">&icon.label;</label>
       <textbox id="SearchPluginIcon3" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon3');"/>
     </hbox>
     <separator class="groove"/>
     <hbox align="center">
-      <spacer flex="1"/>
-      <label>&file.label;</label>
+      <label control="SearchPlugin4">&file.label;</label>
       <textbox id="SearchPlugin4" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin4');"/>
     </hbox>
-      <hbox>
-      <label>&icon.label;</label>
+    <hbox align="center">
+      <label control="SearchPluginIcon4">&icon.label;</label>
       <textbox id="SearchPluginIcon4" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon4');"/>
     </hbox>
     <separator class="groove"/>
     <hbox align="center">
-      <spacer flex="1"/>
-      <label>&file.label;</label>
+      <label control="SearchPlugin5">&file.label;</label>
       <textbox id="SearchPlugin5" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin5');"/>
     </hbox>
-      <hbox>
-      <label>&icon.label;</label>
+    <hbox align="center">
+      <label control="SearchPluginIcon5">&icon.label;</label>
       <textbox id="SearchPluginIcon5" flex="1" />
       <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon5');"/>
     </hbox>
@@ -335,33 +330,33 @@
         <textbox id="ToolbarFolder1"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;1:</label>
+        <label control="ToolbarFolder1.BookmarkTitle1">&bookmarkTitle.label;1:</label>
         <textbox id="ToolbarFolder1.BookmarkTitle1"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="ToolbarFolder1.BookmarkURL1">&bookmarkURL.label;1:</label>
         <textbox id="ToolbarFolder1.BookmarkURL1"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;2:</label>
+        <label control="ToolbarFolder1.BookmarkTitle2">&bookmarkTitle.label;2:</label>
         <textbox id="ToolbarFolder1.BookmarkTitle2"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="ToolbarFolder1.BookmarkURL2">&bookmarkURL.label;1:</label>
         <textbox id="ToolbarFolder1.BookmarkURL2"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;3:</label>
+        <label control="ToolbarFolder1.BookmarkTitle3">&bookmarkTitle.label;3:</label>
         <textbox id="ToolbarFolder1.BookmarkTitle3"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="ToolbarFolder1.BookmarkURL4">&bookmarkURL.label;1:</label>
         <textbox id="ToolbarFolder1.BookmarkURL3"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;4:</label>
+        <label control="ToolbarFolder1.BookmarkTitle4">&bookmarkTitle.label;4:</label>
         <textbox id="ToolbarFolder1.BookmarkTitle4"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="ToolbarFolder1.BookmarkURL4">&bookmarkURL.label;1:</label>
         <textbox id="ToolbarFolder1.BookmarkURL4"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;5:</label>
+        <label control="ToolbarFolder1.BookmarkTitle5">&bookmarkTitle.label;5:</label>
         <textbox id="ToolbarFolder1.BookmarkTitle5"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="ToolbarFolder1.BookmarkURL5">&bookmarkURL.label;1:</label>
         <textbox id="ToolbarFolder1.BookmarkURL5"/>
       </hbox>
     </groupbox>
@@ -372,33 +367,33 @@
       <caption label="&addToolbarBookmark.caption;"/>
       <description>&addToolbarBookmark.description;</description>
       <hbox>
-        <label>&bookmarkTitle.label;1:</label>
+        <label control="ToolbarBookmarkTitle1">&bookmarkTitle.label;1:</label>
         <textbox id="ToolbarBookmarkTitle1"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="ToolbarBookmarkURL1">&bookmarkURL.label;1:</label>
         <textbox id="ToolbarBookmarkURL1"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;2:</label>
+        <label control="ToolbarBookmarkTitle2">&bookmarkTitle.label;2:</label>
         <textbox id="ToolbarBookmarkTitle2"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="ToolbarBookmarkURL2">&bookmarkURL.label;1:</label>
         <textbox id="ToolbarBookmarkURL2"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;3:</label>
+        <label control="ToolbarBookmarkTitle3">&bookmarkTitle.label;3:</label>
         <textbox id="ToolbarBookmarkTitle3"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="ToolbarBookmarkURL3">&bookmarkURL.label;1:</label>
         <textbox id="ToolbarBookmarkURL3"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;4:</label>
+        <label control="ToolbarBookmarkTitle4">&bookmarkTitle.label;4:</label>
         <textbox id="ToolbarBookmarkTitle4"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="ToolbarBookmarkURL4">&bookmarkURL.label;1:</label>
         <textbox id="ToolbarBookmarkURL4"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;5:</label>
+        <label control="ToolbarBookmarkTitle5">&bookmarkTitle.label;5:</label>
         <textbox id="ToolbarBookmarkTitle5"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="ToolbarBookmarkURL5">&bookmarkURL.label;1:</label>
         <textbox id="ToolbarBookmarkURL5"/>
       </hbox>
     </groupbox>
@@ -409,37 +404,37 @@
       <caption label="&addBookmarkFolder.caption;"/>
       <description>&addBookmarkFolder.description;</description>
       <hbox>
-        <label>&folderTitle.label;</label>
+        <label control="BookmarkFolder1">&folderTitle.label;</label>
         <textbox id="BookmarkFolder1"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;1:</label>
+        <label control="BookmarkFolder1.BookmarkTitle1">&bookmarkTitle.label;1:</label>
         <textbox id="BookmarkFolder1.BookmarkTitle1"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="BookmarkFolder1.BookmarkURL1">&bookmarkURL.label;1:</label>
         <textbox id="BookmarkFolder1.BookmarkURL1"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;2:</label>
+        <label control="BookmarkFolder1.BookmarkTitle2">&bookmarkTitle.label;2:</label>
         <textbox id="BookmarkFolder1.BookmarkTitle2"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="BookmarkFolder1.BookmarkURL2">&bookmarkURL.label;1:</label>
         <textbox id="BookmarkFolder1.BookmarkURL2"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;3:</label>
+        <label control="BookmarkFolder1.BookmarkTitle3">&bookmarkTitle.label;3:</label>
         <textbox id="BookmarkFolder1.BookmarkTitle3"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="BookmarkFolder1.BookmarkURL3">&bookmarkURL.label;1:</label>
         <textbox id="BookmarkFolder1.BookmarkURL3"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;4:</label>
+        <label control="BookmarkFolder1.BookmarkTitle4">&bookmarkTitle.label;4:</label>
         <textbox id="BookmarkFolder1.BookmarkTitle4"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="BookmarkFolder1.BookmarkURL4">&bookmarkURL.label;1:</label>
         <textbox id="BookmarkFolder1.BookmarkURL4"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;5:</label>
+        <label control="BookmarkFolder1.BookmarkTitle5">&bookmarkTitle.label;5:</label>
         <textbox id="BookmarkFolder1.BookmarkTitle5"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="BookmarkFolder1.BookmarkURL5">&bookmarkURL.label;1:</label>
         <textbox id="BookmarkFolder1.BookmarkURL5"/>
       </hbox>
     </groupbox>
@@ -450,33 +445,33 @@
       <caption label="&addBookmark.caption;"/>
       <description>&addBookmark.description;</description>
       <hbox>
-        <label>&bookmarkTitle.label;1:</label>
+        <label control="BookmarkTitle1">&bookmarkTitle.label;1:</label>
         <textbox id="BookmarkTitle1"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="BookmarkURL1">&bookmarkURL.label;1:</label>
         <textbox id="BookmarkURL1"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;2:</label>
+        <label control="BookmarkTitle2">&bookmarkTitle.label;2:</label>
         <textbox id="BookmarkTitle2"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="BookmarkURL2">&bookmarkURL.label;1:</label>
         <textbox id="BookmarkURL2"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;3:</label>
+        <label control="BookmarkTitle3">&bookmarkTitle.label;3:</label>
         <textbox id="BookmarkTitle3"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="BookmarkURL3">&bookmarkURL.label;1:</label>
         <textbox id="BookmarkURL3"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;4:</label>
+        <label control="BookmarkTitle4">&bookmarkTitle.label;4:</label>
         <textbox id="BookmarkTitle4"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="BookmarkURL4">&bookmarkURL.label;1:</label>
         <textbox id="BookmarkURL4"/>
       </hbox>
       <hbox>
-        <label>&bookmarkTitle.label;5:</label>
+        <label control="BookmarkTitle5">&bookmarkTitle.label;5:</label>
         <textbox id="BookmarkTitle5"/>
-        <label>&bookmarkURL.label;1:</label>
+        <label control="BookmarkURL5">&bookmarkURL.label;1:</label>
         <textbox id="BookmarkURL5"/>
       </hbox>
     </groupbox>

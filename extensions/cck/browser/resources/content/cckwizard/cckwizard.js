@@ -224,6 +224,12 @@ function saveconfig()
 
 }
 
+function OnConfigLoad()
+{
+  document.documentElement.getButton("accept").setAttribute( "disabled", "true" );
+}
+
+
 function OnConfigOK()
 {
   var configname = document.getElementById('cnc-name').value;
@@ -236,6 +242,15 @@ function OnConfigOK()
     }
   } else {
     return false;
+  }
+}
+
+function configCheckOKButton()
+{
+  if ((document.getElementById("cnc-name").value) && (document.getElementById("cnc-location").value)) {
+    document.documentElement.getButton("accept").setAttribute( "disabled", "false" );
+  } else {
+    document.documentElement.getButton("accept").setAttribute( "disabled", "true" );  
   }
 }
 
@@ -1275,3 +1290,5 @@ function DoEnabling()
       break;
   }
 }
+
+
