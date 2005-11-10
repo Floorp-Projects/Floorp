@@ -66,7 +66,7 @@ struct nsPluginInfo {
 	char** fExtensionArray;
 	char* fFileName;
 	char* fFullPath;
-#if TARGET_CARBON
+#ifdef XP_MACOSX
   PRBool fBundle;
 #endif
 };

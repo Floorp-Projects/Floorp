@@ -1416,7 +1416,7 @@ NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* hand
   PRInt16 result = 0;
   
   if (fCallbacks->event) {
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     result = CallNPP_HandleEventProc(fCallbacks->event,
                                      &fNPP,
                                      (void*) event->event);
