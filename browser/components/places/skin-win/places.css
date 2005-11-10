@@ -1,0 +1,25 @@
+#placesView {
+  -moz-appearance: tabpanels;
+  margin: -10px;
+  padding: 10px;
+}
+
+.placesTree {
+  margin: 0px;
+  border: none;
+}
+
+#placesList {
+  margin: 7px 0px 10px 6px;
+}
+
+#placeContent {
+  margin: 7px 6px 10px 0px;
+}
+
+#splitter {
+  border: 0px;
+  width: 10px;
+  background-color: transparent;
+}
+
