@@ -796,8 +796,10 @@ GetNewOrUsedXPCOMObject(JNIEnv* env, jobject aJavaObject, const nsIID& aIID,
   // create an XPCOM stub, that can route any method calls to the class.
 
   // Get interface info for class
-  nsCOMPtr<nsIInterfaceInfoManager> iim =
-    getter_AddRefs(XPTI_GetInterfaceInfoManager());
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIInterfaceInfo> iinfo;
   rv = iim->GetInfoForIID(&aIID, getter_AddRefs(iinfo));
   if (NS_FAILED(rv))
