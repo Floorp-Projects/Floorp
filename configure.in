@@ -4931,9 +4931,17 @@ JAR=
 if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
   MOZ_ENABLE_JAVAXPCOM=1
 
+  case "$host_os" in
+    mingw*|cygwin*|msvc*|mks*)
+      if test -n "$JAVA_HOME"; then
+        JAVA_HOME=`cygpath -u \`cygpath -m -s "$JAVA_HOME"\``
+      fi
+      ;;
+  esac
+
   if test -n "${JAVA_INCLUDE_PATH}"; then
     dnl Make sure jni.h exists in the given include path.
-    if test ! -f $JAVA_INCLUDE_PATH/jni.h; then
+    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
       AC_MSG_ERROR([jni.h was not found in given include path $JAVA_INCLUDE_PATH.])
     fi
   else
@@ -4944,29 +4952,22 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
         ;;
       *)
         dnl Try $JAVA_HOME
-        JAVA_INCLUDE_PATH=$JAVA_HOME/include
+        JAVA_INCLUDE_PATH="$JAVA_HOME/include"
         ;;
     esac
-    if test ! -f $JAVA_INCLUDE_PATH/jni.h; then
+    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
       AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME or use --with-java-include-path={java-include-dir}.])
     fi
   fi
 
   if test -n "${JAVA_BIN_PATH}"; then
     dnl Look for javac and jar in the specified path.
-    _JAVA_PATH=$JAVA_BIN_PATH
+    JAVA_PATH="$JAVA_BIN_PATH"
   else
     dnl No path specified, so look for javac and jar are in $JAVA_HOME & $PATH.
-    _JAVA_PATH=$JAVA_HOME/bin:$PATH
+    JAVA_PATH="$JAVA_HOME/bin:$PATH"
   fi
-  case "$host_os" in
-    mingw*|cygwin*|msvc*|mks*)
-        JAVA_PATH=`cygpath -u $_JAVA_PATH`
-        ;;
-    *)
-        JAVA_PATH=$_JAVA_PATH
-        ;;
-  esac
+
   AC_PATH_PROG(JAVAC, javac, :, $JAVA_PATH)
   AC_PATH_PROG(JAR, jar, :, $JAVA_PATH)
   if test -z "$JAVAC" || test "$JAVAC" = ":" || test -z "$JAR" || test "$JAR" = ":"; then
