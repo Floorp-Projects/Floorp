@@ -843,16 +843,6 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
   if (!aFrame)
     return;
 
-  nsresult res;
-  PRUint8* alphaData;
-  PRUint32 alphaDataLength;
-  aFrame->LockAlphaData();
-  res = aFrame->GetAlphaData(&alphaData, &alphaDataLength);
-  if (!alphaData || !alphaDataLength || NS_FAILED(res)) {
-    aFrame->UnlockAlphaData();
-    return;
-  }
-
   PRInt32 frameWidth;
   PRInt32 frameHeight;
   aFrame->GetWidth(&frameWidth);
@@ -862,6 +852,14 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
   const PRInt32 height = PR_MIN(aHeight, frameHeight - aY);
 
   if (width <= 0 || height <= 0) {
+    return;
+  }
+
+  PRUint8* alphaData;
+  PRUint32 alphaDataLength;
+  aFrame->LockAlphaData();
+  nsresult res = aFrame->GetAlphaData(&alphaData, &alphaDataLength);
+  if (!alphaData || !alphaDataLength || NS_FAILED(res)) {
     aFrame->UnlockAlphaData();
     return;
   }
@@ -941,7 +939,6 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame,
   } // if aVisible
 
   aFrame->UnlockAlphaData();
-  return;
 }
 
 //******************************************************************************
@@ -959,7 +956,6 @@ void imgContainerGIF::SetMaskVisibility(gfxIImageFrame *aFrame, PRBool aVisible)
   if (NS_SUCCEEDED(res) && alphaData && alphaDataLength)
     memset(alphaData, setMaskTo, alphaDataLength);
   aFrame->UnlockAlphaData();
-  return;
 }
 
 //******************************************************************************
@@ -969,28 +965,10 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame)
   if (!aFrame)
     return;
 
-  aFrame->LockImageData();
-
-  PRUint8* aData;
   PRUint32 aDataLength;
 
-  aFrame->GetImageData(&aData, &aDataLength);
-  memset(aData, 0, aDataLength);
-
-  nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(aFrame));
-  if (ireq) {
-    PRInt32 width;
-    PRInt32 height;
-    aFrame->GetWidth(&width);
-    aFrame->GetHeight(&height);
-
-    nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
-    nsIntRect r(0, 0, width, height);
-
-    img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-  }
-
-  aFrame->UnlockImageData();
+  aFrame->GetImageDataLength(&aDataLength);
+  aFrame->SetImageData(nsnull, aDataLength, 0);
 }
 
 //******************************************************************************
@@ -1024,18 +1002,9 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   const PRUint32 bprToWrite = width * bpp;
   const PRUint32 xOffset = aX * bpp; // offset into row to start writing
 
-  PRUint8* tmpRow = NS_STATIC_CAST(PRUint8*, nsMemory::Alloc(bprToWrite));
-
-  if (!tmpRow) {
-    return;
-  }
-
-  memset(tmpRow, 0, bprToWrite);
-
   for (PRInt32 y = 0; y < height; y++) {
-    aFrame->SetImageData(tmpRow, bprToWrite, ((y + aY) * bpr) + xOffset);
+    aFrame->SetImageData(nsnull, bprToWrite, ((y + aY) * bpr) + xOffset);
   }
-  nsMemory::Free(tmpRow);
 }
 
 
