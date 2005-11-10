@@ -64,7 +64,7 @@ function sanitizeAll()
                           .getService(Components.interfaces.nsIObserverService);
         os.notifyObservers(null, "browser:purge-session-history", "");
     } catch (e) { }    
-
+    document.getElementById("privacySanitize").disabled=true;
 }
 
 
