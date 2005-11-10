@@ -54,6 +54,7 @@
         <xul:vbox pack="start" flex="1">
           <xul:label xbl:inherits="value=title"/>
           <xul:label xbl:inherits="value=time"/>
+          <xul:label xbl:inherits="value=location"/>
         </xul:vbox>
         <xul:vbox pack="start">
           <xul:button label="&calendar.alarm.snooze.label;" oncommand="var event = document.createEvent('Events'); event.initEvent('snooze', false, false); this.dispatchEvent(event);"/>

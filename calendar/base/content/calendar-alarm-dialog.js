@@ -41,6 +41,7 @@ function addAlarm(event)
   var alarmWidget = document.createElement("calendar-alarm-widget");
   alarmWidget.setAttribute("title", event.title);
   alarmWidget.setAttribute("time", event.alarmTime.toString());
+  alarmWidget.setAttribute("location", event.getProperty("LOCATION"));
   alarmWidget.addEventListener("snooze", onSnoozeAlarm, false);
   alarmWidget.addEventListener("dismiss", onDismissAlarm, false);
   alarmWidget.item = event;
