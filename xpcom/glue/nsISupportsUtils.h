@@ -211,6 +211,7 @@ struct nsCOMTypeInfo<nsISupports>
 };
 
 #define NS_GET_IID(T) nsCOMTypeInfo<T>::GetIID()
+#define NS_GET_TEMPLATE_IID(T) nsCOMTypeInfo<T>::GetIID()
 
 // a type-safe shortcut for calling the |QueryInterface()| member function
 template <class T, class DestinationType>

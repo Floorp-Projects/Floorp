@@ -72,7 +72,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
 
 #ifndef MOZ_V1_STRING_ABI
         // this acts like a virtual destructor
-      NS_COM NS_FASTCALL ~nsTSubstring_CharT();
+      NS_COM NS_CONSTRUCTOR_FASTCALL ~nsTSubstring_CharT();
 #endif
 
         /**

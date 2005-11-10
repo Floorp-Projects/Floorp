@@ -233,7 +233,7 @@ CallCreateInstance( const nsCID &aClass,
     NS_PRECONDITION(aDestination, "null parameter");
     
     return CallCreateInstance(aClass, aDelegate,
-                              NS_GET_IID(DestinationType),
+                              NS_GET_TEMPLATE_IID(DestinationType),
                               NS_REINTERPRET_CAST(void**, aDestination));
 }
 
@@ -246,7 +246,7 @@ CallCreateInstance( const nsCID &aClass,
     NS_PRECONDITION(aDestination, "null parameter");
     
     return CallCreateInstance(aClass, nsnull,
-                              NS_GET_IID(DestinationType),
+                              NS_GET_TEMPLATE_IID(DestinationType),
                               NS_REINTERPRET_CAST(void**, aDestination));
 }
 
@@ -262,7 +262,7 @@ CallCreateInstance( const char *aContractID,
     
     return CallCreateInstance(aContractID, 
                               aDelegate,
-                              NS_GET_IID(DestinationType),
+                              NS_GET_TEMPLATE_IID(DestinationType),
                               NS_REINTERPRET_CAST(void**, aDestination));
 }
 
@@ -276,7 +276,7 @@ CallCreateInstance( const char *aContractID,
     NS_PRECONDITION(aDestination, "null parameter");
     
     return CallCreateInstance(aContractID, nsnull,
-                              NS_GET_IID(DestinationType),
+                              NS_GET_TEMPLATE_IID(DestinationType),
                               NS_REINTERPRET_CAST(void**, aDestination));
 }
 
@@ -291,7 +291,7 @@ CallCreateInstance( nsIFactory *aFactory,
     NS_PRECONDITION(aDestination, "null parameter");
     
     return aFactory->CreateInstance(aDelegate,
-                                    NS_GET_IID(DestinationType),
+                                    NS_GET_TEMPLATE_IID(DestinationType),
                                     NS_REINTERPRET_CAST(void**, aDestination));
 }
 
@@ -305,7 +305,7 @@ CallCreateInstance( nsIFactory *aFactory,
     NS_PRECONDITION(aDestination, "null parameter");
     
     return aFactory->CreateInstance(nsnull,
-                                    NS_GET_IID(DestinationType),
+                                    NS_GET_TEMPLATE_IID(DestinationType),
                                     NS_REINTERPRET_CAST(void**, aDestination));
 }
 
@@ -318,7 +318,7 @@ CallGetClassObject( const nsCID &aClass,
     NS_PRECONDITION(aDestination, "null parameter");
     
     return CallGetClassObject(aClass,
-        NS_GET_IID(DestinationType), NS_REINTERPRET_CAST(void**, aDestination));
+        NS_GET_TEMPLATE_IID(DestinationType), NS_REINTERPRET_CAST(void**, aDestination));
 }
 
 template <class DestinationType>
@@ -330,7 +330,7 @@ CallGetClassObject( const char* aContractID,
     NS_PRECONDITION(aDestination, "null parameter");
     
     return CallGetClassObject(aContractID,
-        NS_GET_IID(DestinationType), NS_REINTERPRET_CAST(void**, aDestination));
+        NS_GET_TEMPLATE_IID(DestinationType), NS_REINTERPRET_CAST(void**, aDestination));
 }
 
 #endif /* nsComponentManagerUtils_h__ */
