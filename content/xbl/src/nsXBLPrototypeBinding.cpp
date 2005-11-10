@@ -1205,7 +1205,8 @@ nsXBLPrototypeBinding::ConstructInterfaceTable(const nsAString& aImpls)
   if (!aImpls.IsEmpty()) {
     // Obtain the interface info manager that can tell us the IID
     // for a given interface name.
-    nsCOMPtr<nsIInterfaceInfoManager> infoManager = getter_AddRefs(XPTI_GetInterfaceInfoManager());
+    nsCOMPtr<nsIInterfaceInfoManager>
+      infoManager(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
     if (!infoManager)
       return NS_ERROR_FAILURE;
 

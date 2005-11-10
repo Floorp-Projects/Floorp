@@ -470,7 +470,7 @@ private:
     static PRThread*         gMainThread;
 
     XPCJSRuntime*            mRuntime;
-    nsIInterfaceInfoSuperManager* mInterfaceInfoManager;
+    nsCOMPtr<nsIInterfaceInfoSuperManager> mInterfaceInfoManager;
     nsIThreadJSContextStack* mContextStack;
     nsIXPCSecurityManager*   mDefaultSecurityManager;
     PRUint16                 mDefaultSecurityManagerFlags;

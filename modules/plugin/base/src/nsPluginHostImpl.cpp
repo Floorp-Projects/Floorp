@@ -5087,7 +5087,9 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
   // only if plugins have changed will we ask XPTI to refresh
   if (pluginschanged) {
     // rescan XPTI to catch any newly installed interfaces
-    nsCOMPtr<nsIInterfaceInfoManager> iim (dont_AddRef(XPTI_GetInterfaceInfoManager()));
+    nsCOMPtr<nsIInterfaceInfoManager>
+      iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
+
     if (iim)
       iim->AutoRegisterInterfaces();
   }

@@ -40,6 +40,7 @@
 #include "xptcall.h"
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
+#include "nsServiceManagerUtils.h"
 #ifdef DEBUG
 #include <stdio.h>
 #endif
@@ -137,8 +138,8 @@ nsXTFWeakTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsXTFWeakTearoff::GetInterfaceInfo(nsIInterfaceInfo** info)
 {
-  nsCOMPtr<nsIInterfaceInfoManager> iim =
-    getter_AddRefs(XPTI_GetInterfaceInfoManager());
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
   NS_ASSERTION(iim, "could not get interface info manager");
   return iim->GetInfoForIID( &mIID, info);
 }

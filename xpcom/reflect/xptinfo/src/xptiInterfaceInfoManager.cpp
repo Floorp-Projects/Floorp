@@ -2106,21 +2106,3 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateAdditionalManagers(nsISimpleEnu
     NS_ADDREF(*_retval = enumerator);
     return NS_OK;
 }
-
-/***************************************************************************/
-
-XPTI_PUBLIC_API(nsIInterfaceInfoManager*)
-XPTI_GetInterfaceInfoManager()
-{
-    nsIInterfaceInfoManager* iim =
-        xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
-    NS_IF_ADDREF(iim);
-    return iim;
-}
-
-XPTI_PUBLIC_API(void)
-XPTI_FreeInterfaceInfoManager()
-{
-    xptiInterfaceInfoManager::FreeInterfaceInfoManager();
-}
-

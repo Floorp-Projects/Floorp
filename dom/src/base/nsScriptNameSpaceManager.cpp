@@ -291,8 +291,8 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
 nsresult
 nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
 {
-  nsCOMPtr<nsIInterfaceInfoManager> iim =
-    dont_AddRef(XPTI_GetInterfaceInfoManager());
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
   NS_ENSURE_TRUE(iim, NS_ERROR_UNEXPECTED);
 
   // First look for all interfaces whose name starts with nsIDOM
@@ -349,8 +349,8 @@ nsScriptNameSpaceManager::RegisterExternalInterfaces(PRBool aAsProto)
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIInterfaceInfoManager> iim =
-    dont_AddRef(XPTI_GetInterfaceInfoManager());
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
   NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsISimpleEnumerator> enumerator;
