@@ -1,0 +1,22 @@
+The buster is a XUL interface to the conformance tests shipped as part of
+Xalan. For information about Xalan, please see http://xml.apache.org/.
+For your convenience we provide a packed distribution of all needed files
+in http://www.axel.pike.org/mozilla/xalan.tar.gz. Please see the included 
+LICENSE.txt or http://xml.apache.org/dist/LICENSE.txt for terms of 
+distributing those files.
+
+To use the buster, open buster.xul with an XSLT enabled Mozilla.
+Open the rdf index file shipped with the test package into the 
+"Xalan index", and the available tests will show up as a tree.
+Once you have selected the tests you're interested in, press the button
+"run checked tests", and all the tests will be run.
+You can save the results into an rdf, and load it for comparison and 
+regression hunting.
+
+DiffDOM tries to find out, which tests failed, and will DumpDOM both the
+result and the reference solution. Not all reference solutions load
+properly, those need manual love.
+
+Good luck and fun
+
+Axel Hecht <axel@pike.org>
