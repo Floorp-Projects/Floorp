@@ -422,6 +422,13 @@ nsHTMLTableElement::GetTHead(nsIDOMHTMLTableSectionElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::SetTHead(nsIDOMHTMLTableSectionElement* aValue)
 {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aValue));
+  NS_ENSURE_TRUE(content, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+
+  if (!content->NodeInfo()->Equals(nsHTMLAtoms::thead)) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+  
   nsresult rv = DeleteTHead();
   if (NS_FAILED(rv)) {
     return rv;
@@ -452,6 +459,13 @@ nsHTMLTableElement::GetTFoot(nsIDOMHTMLTableSectionElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::SetTFoot(nsIDOMHTMLTableSectionElement* aValue)
 {
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aValue));
+  NS_ENSURE_TRUE(content, NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
+
+  if (!content->NodeInfo()->Equals(nsHTMLAtoms::tfoot)) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+  
   nsresult rv = DeleteTFoot();
   if (NS_SUCCEEDED(rv)) {
     if (aValue) {
