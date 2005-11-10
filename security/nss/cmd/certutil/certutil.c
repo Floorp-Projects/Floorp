@@ -2748,8 +2748,7 @@ secuCommandFlag certutil_options[] =
     certHandle = CERT_GetDefaultCertDB();
 
     if (certutil.commands[cmd_Version].activated) {
-	int version = CERT_GetDBContentVersion(certHandle);
-	printf("Certificate database content version:  %d\n", version);
+	printf("Certificate database content version: command not implemented.\n");
     }
 
     if (PL_strcmp(slotname, "internal") == 0)
