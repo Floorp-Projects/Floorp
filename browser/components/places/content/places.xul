@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+
+<window id="places"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="gPlaces.init();">
+  
+  <script type="application/x-javascript"
+          src="chrome://browser/content/places/places.js"/>
+  
+  <hbox flex="1" id="placesView">
+    <vbox flex="1">
+      <tree id="placesList" class="placesTree" flex="1" datasources="rdf:bookmarks" ref="NC:BookmarksTopRoot" 
+            flags="dont-build-content" hidecolumnpicker="true">
+        <treecols>
+          <treecol id="Name" flex="1" primary="true" hideheader="true"/>
+        </treecols>
+        <template>
+          <conditions>
+            <content uri="?uri"/>
+            <member container="?uri" child="?folder"/>
+            <triple subject="?folder" predicate="http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                    object="http://home.netscape.com/NC-rdf#Folder"/>
+            <triple subject="?folder" predicate="http://home.netscape.com/NC-rdf#Name"
+                    object="?Name"/>
+          </conditions>
+          <action>
+            <treechildren>
+              <treeitem uri="?folder">
+                <treerow>
+                  <treecell label="?Name"/>
+                </treerow>                
+              </treeitem>              
+            </treechildren>            
+          </action>          
+        </template>
+      </tree>
+      <hbox>
+        <button label="New Folder"/>          
+      </hbox>
+    </vbox>
+    <splitter id="splitter"/>
+    <vbox flex="4">
+      <hbox align="center">
+        <label>Search:</label>
+        <textbox id="search"/>
+        <button label="+"/>
+      </hbox>
+      <deck id="content" flex="1">
+        <tree id="placeContent" class="placesTree"></tree>  
+      </deck>
+      <hbox>
+        <button label="New Folder"/>
+        <button label="Save Search..."/>          
+      </hbox>
+    </vbox>
+  </hbox>
+
+</window>
+

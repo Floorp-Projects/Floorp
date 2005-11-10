@@ -1,0 +1,8 @@
+browser.jar:
+*   content/browser/places/places.xul                    (content/places.xul) 
+*   content/browser/places/places.js                     (content/places.js)
+*   content/browser/places/places.xml                    (content/places.xml)
+
+classic.jar:
+    skin/classic/browser/places/places.css               (skin-win/places.css)
+
