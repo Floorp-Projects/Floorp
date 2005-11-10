@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: loader.c,v 1.25 2005/09/21 02:53:25 nelsonb%netscape.com Exp $ */
+/* $Id: loader.c,v 1.26 2005/11/10 02:18:22 julien.pierre.bugs%sun.com Exp $ */
 
 #include "loader.h"
 #include "prmem.h"
@@ -123,6 +123,62 @@ getLibName(void)
 static const char * getLibName(void) { return default_name; }
 #endif
 
+#ifdef XP_UNIX
+#include <unistd.h>
+#endif
+
+#define BL_MAXSYMLINKS 20
+
+/*
+ * If 'link' is a symbolic link, this function follows the symbolic links
+ * and returns the pathname of the ultimate source of the symbolic links.
+ * If 'link' is not a symbolic link, this function returns a copy of 'link'.
+ * The caller should call PR_Free to free the string returned by this
+ * function.
+ */
+static char* bl_GetOriginalPathname(const char* link)
+{
+#ifdef XP_UNIX
+    char* resolved = NULL;
+    char* input = NULL;
+    PRUint32 iterations = 0;
+    PRInt32 len = 0, retlen = 0;
+    if (!link) {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return NULL;
+    }
+    len = PR_MAX(1024, strlen(link) + 1);
+    resolved = PR_Malloc(len);
+    input = PR_Malloc(len);
+    if (!resolved || !input) {
+        if (resolved) {
+            PR_Free(resolved);
+        }
+        if (input) {
+            PR_Free(input);
+        }
+        return NULL;
+    }
+    strcpy(input, link);
+    while ( (iterations++ < BL_MAXSYMLINKS) &&
+            ( (retlen = readlink(input, resolved, len - 1)) > 0) ) {
+        char* tmp = input;
+        resolved[retlen] = '\0'; /* NULL termination */
+        input = resolved;
+        resolved = tmp;
+    }
+    PR_Free(resolved);
+    return input;
+#else
+    if (link) {
+        return PL_strdup(link);
+    } else {
+        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+        return NULL;
+    }
+#endif
+}
+
 /*
  * We use PR_GetLibraryFilePathname to get the pathname of the loaded 
  * shared lib that contains this function, and then do a PR_LoadLibrary
@@ -168,7 +224,13 @@ bl_LoadLibrary(const char *name)
 
     /* Remove "libsoftokn" from the pathname and add the freebl libname */
     if (softokenPath) {
-       char* c = strrchr(softokenPath, PR_GetDirectorySeparator());
+       char* c;
+       char* originalSoftokenPath = bl_GetOriginalPathname(softokenPath);
+       if (originalSoftokenPath) {
+           PR_Free(softokenPath);
+           softokenPath = originalSoftokenPath;
+       }
+       c = strrchr(softokenPath, PR_GetDirectorySeparator());
        if (c) {
            size_t softoknPathSize = 1 + c - softokenPath;
            fullName = (char*) PORT_Alloc(strlen(name) + softoknPathSize + 1);
