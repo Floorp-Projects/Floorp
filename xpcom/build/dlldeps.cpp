@@ -146,7 +146,6 @@ void XXXNeverCalled()
     XPTC_InvokeByIndex(nsnull, 0, 0, nsnull);
     xptc_dummy();
     xptc_dummy2();
-    XPTI_GetInterfaceInfoManager();
     NS_NewGenericFactory(nsnull, nsnull);
     NS_NewGenericModule2(nsnull, nsnull);
     NS_GetWeakReference(nsnull);

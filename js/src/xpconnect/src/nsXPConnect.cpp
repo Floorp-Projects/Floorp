@@ -63,7 +63,7 @@ const char XPC_XPCONNECT_CONTRACTID[]     = "@mozilla.org/js/xpc/XPConnect;1";
 
 nsXPConnect::nsXPConnect()
     :   mRuntime(nsnull),
-        mInterfaceInfoManager(nsnull),
+        mInterfaceInfoManager(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID)),
         mContextStack(nsnull),
         mDefaultSecurityManager(nsnull),
         mDefaultSecurityManagerFlags(0),
@@ -72,10 +72,6 @@ nsXPConnect::nsXPConnect()
     // Ignore the result. If the runtime service is not ready to rumble
     // then we'll set this up later as needed.
     CreateRuntime();
-
-    nsCOMPtr<nsIInterfaceInfoManager> iim = 
-        dont_AddRef(XPTI_GetInterfaceInfoManager());
-    CallQueryInterface(iim, &mInterfaceInfoManager);
 
     CallGetService(XPC_CONTEXT_STACK_CONTRACTID, &mContextStack);
 
@@ -125,7 +121,6 @@ nsXPConnect::~nsXPConnect()
         }
     }
 
-    NS_IF_RELEASE(mInterfaceInfoManager);
     NS_IF_RELEASE(mContextStack);
     NS_IF_RELEASE(mDefaultSecurityManager);
 
@@ -1219,7 +1214,7 @@ nsXPConnect::DebugDump(PRInt16 depth)
         XPC_LOG_ALWAYS(("gOnceAliveNowDead is %d", (int)gOnceAliveNowDead));
         XPC_LOG_ALWAYS(("mDefaultSecurityManager @ %x", mDefaultSecurityManager));
         XPC_LOG_ALWAYS(("mDefaultSecurityManagerFlags of %x", mDefaultSecurityManagerFlags));
-        XPC_LOG_ALWAYS(("mInterfaceInfoManager @ %x", mInterfaceInfoManager));
+        XPC_LOG_ALWAYS(("mInterfaceInfoManager @ %x", mInterfaceInfoManager.get()));
         XPC_LOG_ALWAYS(("mContextStack @ %x", mContextStack));
         if(mRuntime)
         {

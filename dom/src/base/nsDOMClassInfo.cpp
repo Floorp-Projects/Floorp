@@ -1464,8 +1464,8 @@ nsDOMClassInfo::RegisterClassProtos(PRInt32 aClassInfoID)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIInterfaceInfoManager> iim =
-    dont_AddRef(XPTI_GetInterfaceInfoManager());
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
   NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIInterfaceInfo> if_info;
@@ -3170,8 +3170,8 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
 
 #ifdef DEBUG
   if (mData->mHasClassInterface) {
-    nsCOMPtr<nsIInterfaceInfoManager> iim =
-      dont_AddRef(XPTI_GetInterfaceInfoManager());
+    nsCOMPtr<nsIInterfaceInfoManager>
+      iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
 
     if (iim) {
       nsCOMPtr<nsIInterfaceInfo> if_info;
@@ -4401,8 +4401,8 @@ BaseStubConstructor(const nsGlobalNameStruct *name_struct, JSContext *cx,
 static nsresult
 DefineInterfaceConstants(JSContext *cx, JSObject *obj, const nsIID *aIID)
 {
-  nsCOMPtr<nsIInterfaceInfoManager> iim =
-    dont_AddRef(XPTI_GetInterfaceInfoManager());
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
   NS_ENSURE_TRUE(iim, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIInterfaceInfo> if_info;
@@ -4657,8 +4657,8 @@ DOMJSClass_HasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     ci_data = name_struct->mData;
   }
 
-  nsCOMPtr<nsIInterfaceInfoManager> iim =
-    dont_AddRef(XPTI_GetInterfaceInfoManager());
+  nsCOMPtr<nsIInterfaceInfoManager>
+    iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
   if (!iim) {
     NS_ERROR("DOMJSClass_HasInstance can't get interface info mgr.");
     nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
@@ -5288,8 +5288,8 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      nsCOMPtr<nsIInterfaceInfoManager> iim =
-        dont_AddRef(XPTI_GetInterfaceInfoManager());
+      nsCOMPtr<nsIInterfaceInfoManager>
+        iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
       NS_ENSURE_TRUE(iim, NS_ERROR_NOT_AVAILABLE);
 
       nsCOMPtr<nsIInterfaceInfo> if_info;
@@ -8989,8 +8989,8 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
     JSString *str = JSVAL_TO_STRING(id);
     char* cstring = ::JS_GetStringBytes(str);
 
-    nsCOMPtr<nsIInterfaceInfoManager> iim =
-      dont_AddRef(XPTI_GetInterfaceInfoManager());
+    nsCOMPtr<nsIInterfaceInfoManager>
+      iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
     NS_ENSURE_TRUE(iim, NS_ERROR_UNEXPECTED);
 
     nsIID* iid = nsnull;

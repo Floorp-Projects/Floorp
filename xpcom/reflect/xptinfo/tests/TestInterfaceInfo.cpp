@@ -43,6 +43,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptinfo.h"
+#include "nsServiceManagerUtils.h"
 
 #include <stdio.h>
 
@@ -57,7 +58,8 @@ int main (int argc, char **argv) {
     char *name1, *name2, *name3;
     nsIInterfaceInfo *info2, *info3, *info4, *info5;
 
-    nsIInterfaceInfoManager *iim = XPTI_GetInterfaceInfoManager();
+    nsCOMPtr<nsIInterfaceInfoManager> iim
+        (do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID));
 
     fprintf(stderr, "\ngetting iid for 'nsISupports'\n");
     iim->GetIIDForName("nsISupports", &iid1);

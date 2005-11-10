@@ -41,48 +41,10 @@
 #define xptiinfo_h___
 
 #include "prtypes.h"
+#include "nscore.h"
 #include "xpt_struct.h"
 
-/*
- * The linkage of XPTI API functions differs depending on whether the file is
- * used within the XPTI library or not.  Any source file within the XPTI
- * library should define EXPORT_XPTI_API whereas any client of the library
- * should not.
- */
-#ifdef EXPORT_XPTI_API
-#define XPTI_PUBLIC_API(t)    PR_IMPLEMENT(t)
-#define XPTI_PUBLIC_DATA(t)   PR_IMPLEMENT_DATA(t)
-#ifdef _WIN32
-#    define XPTI_EXPORT           __declspec(dllexport)
-#else
-#    define XPTI_EXPORT
-#endif
-#else
-#ifdef _WIN32
-#    define XPTI_PUBLIC_API(t)    __declspec(dllimport) t
-#    define XPTI_PUBLIC_DATA(t)   __declspec(dllimport) t
-#    define XPTI_EXPORT           __declspec(dllimport)
-#else
-#    define XPTI_PUBLIC_API(t)    PR_IMPLEMENT(t)
-#    define XPTI_PUBLIC_DATA(t)   t
-#    define XPTI_EXPORT
-#endif
-#endif
-#define XPTI_FRIEND_API(t)    XPTI_PUBLIC_API(t)
-#define XPTI_FRIEND_DATA(t)   XPTI_PUBLIC_DATA(t)
-
 class nsIInterfaceInfoManager;
-PR_BEGIN_EXTERN_C
-// Even if this is a service, it is cool to provide a direct accessor
-XPTI_PUBLIC_API(nsIInterfaceInfoManager*)
-XPTI_GetInterfaceInfoManager();
-
-// Even if this is a service, it is cool to provide a direct accessor
-XPTI_PUBLIC_API(void)
-XPTI_FreeInterfaceInfoManager();
-PR_END_EXTERN_C
-
-
 
 // Flyweight wrapper classes for xpt_struct.h structs. 
 // Everything here is dependent upon - and sensitive to changes in -
