@@ -28,15 +28,25 @@
 # ***** END LICENSE BLOCK *****
 
 use strict;
+use Getopt::Long;
+use Litmus::Config;
 $|++;
 
-BEGIN {
-	unless (-e "data/") {
-    	system("mkdir data/");
-    }
-    system("chmod -R 777 data/");
-    unless (-e "localconfig") {
-         open(OUT, ">localconfig");
+my $reset_db;
+my $help;
+GetOptions('help|?' => \$help,'r|resetdb' => \$reset_db);
+
+if ($help) {
+  &usage;
+  exit;
+}
+
+unless (-e "data/") {
+    system("mkdir", "data/");
+}
+system("chmod -R 777 data/");
+unless (-e "localconfig") {
+     open(OUT, ">localconfig");
          print OUT <<EOT;
 our \$db_host = "";
 our \$db_name = "";
@@ -50,19 +60,6 @@ EOT
         print "Go edit 'localconfig' with your configuration and \n";
         print "run this script again.";
         exit;
-    }
-}
-
-use Getopt::Long;
-use Litmus::Config;
-
-my $reset_db;
-my $help;
-GetOptions('help|?' => \$help,'r|resetdb' => \$reset_db);
-
-if ($help) {
-  &usage;
-  exit;
 }
 
 if ($reset_db) {
@@ -85,7 +82,6 @@ if ($reset_db) {
   }
   print "done.\n";
 }
-
 
 # javascript cache                  
 print "Rebuilding JS cache...";

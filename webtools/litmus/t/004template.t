@@ -39,7 +39,7 @@ use CGI qw(-no_debug);
 use File::Spec;
 use Template;
 use Test::More tests => ( scalar(@referenced_files) * scalar(@languages)
-                        + $num_actual_files * 2 );
+                        + $num_actual_files);
 
 # Capture the TESTOUT from Test::More or Test::Builder for printing errors.
 # This will handle verbosity for us automatically.
@@ -131,20 +131,6 @@ foreach my $include_path (@include_paths) {
         else {
             ok(1, "$path doesn't exist, skipping test");
         }
-    }
-
-    # check to see that all templates have a version string:
-
-    foreach my $file (@{$actual_files{$include_path}}) {
-        my $path = File::Spec->catfile($include_path, $file);
-        open(TMPL, $path);
-        my $firstline = <TMPL>;
-        if ($firstline =~ /\d+\.\d+\@[\w\.-]+/) {
-            ok(1,"$file has a version string");
-        } else {
-            ok(0,"$file does not have a version string --ERROR");
-        }
-        close(TMPL);
     }
 }
 

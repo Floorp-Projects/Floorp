@@ -18,7 +18,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#				  Zach Lipton <zach@zachlipton.com>
+#                  Zach Lipton <zach@zachlipton.com>
 #
 
 # Make it harder for us to do dangerous things in Perl.

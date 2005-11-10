@@ -59,19 +59,19 @@ $num_actual_files = 0;
 
 # Scan for the template available languages and include paths
 {
-    opendir(DIR, "template") || die "Can't open  'template': $!";
+    opendir(DIR, "templates") || die "Can't open  'templates': $!";
     my @files = grep { /^[a-z-]+$/i } readdir(DIR);
     closedir DIR;
 
     foreach my $langdir (@files) {
         next if($langdir =~ /^CVS$/i);
 
-        my $path = File::Spec->catdir('template', $langdir, 'custom');
+        my $path = File::Spec->catdir('templates', $langdir, 'custom');
         my @dirs = ();
         push(@dirs, $path) if(-d $path);
-        $path = File::Spec->catdir('template', $langdir, 'extension');
+        $path = File::Spec->catdir('templates', $langdir, 'extension');
         push(@dirs, $path) if(-d $path);
-        $path = File::Spec->catdir('template', $langdir, 'default');
+        $path = File::Spec->catdir('templates', $langdir, 'default');
         push(@dirs, $path) if(-d $path);
 
         next if(scalar(@dirs) == 0);
@@ -122,7 +122,7 @@ foreach my $include_path (@include_paths) {
   $num_actual_files += scalar(@{$actual_files{$include_path}});
 }
 
-# Scan Bugzilla's perl code looking for templates used and put them
+# Scan Litmus's perl code looking for templates used and put them
 # in the @referenced_files array to be used by the 004template.t test.
 my %seen;
 

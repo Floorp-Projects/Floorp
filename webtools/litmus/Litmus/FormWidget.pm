@@ -75,11 +75,11 @@ Litmus::FormWidget creates value lists to be used in HTML forms.
 
 =head1 AUTHOR
 
-	Chris Cooper
-	CPAN ID: CCOOPER
-	Mozilla Corporation
-	ccooper@deadsquid.com
-	http://litmus.mozilla.org/
+    Chris Cooper
+    CPAN ID: CCOOPER
+    Mozilla Corporation
+    ccooper@deadsquid.com
+    http://litmus.mozilla.org/
 
 =head1 SEE ALSO
 
@@ -249,7 +249,7 @@ sub _getValues($)
     $sth->execute();
     my @rows;
     while (my $data = $sth->fetchrow_hashref) {
-	push @rows, $data;
+    push @rows, $data;
     }
     return \@rows;
 }

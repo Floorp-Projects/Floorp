@@ -65,15 +65,6 @@ foreach my $file (@testitems) {
     $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
     next if (!$file); # skip null entries
 
-    # Check that we have a DBI module to support the DB, if this is a database
-    # module (but not Schema)
-    if ($file =~ m#Bugzilla/DB/([^/]+)\.pm$# && $file ne "Bugzilla/DB/Schema.pm") {
-        if (!grep(lc($_) =~ /$1/i, @DBI_drivers)) {
-            ok(1,$file." - Skipping, as the DBD module not installed");
-            next;
-        }
-    }
-
     open (FILE,$file);
     my $bang = <FILE>;
     close (FILE);

@@ -130,9 +130,9 @@ Select Testing Group
 <tr class="[% groupstyle %]">
 
   [% IF personal_completed != 100 AND 
-	personal_completed != 'N/A' AND 
-	(defaultgroup.testgroupid==curgroup.testgroupid OR 
-	 select_first_avail_group==1) %]
+    personal_completed != 'N/A' AND 
+    (defaultgroup.testgroupid==curgroup.testgroupid OR 
+     select_first_avail_group==1) %]
       [% selected = "checked" %]
       [% select_first_avail_group=0 %]
     [% ELSE %] 
@@ -194,11 +194,11 @@ Please select a testing group with testcases, or that has not yet been tested in
             [% IF community_completed == 100 OR completed == 'N/A' %]
                 [% groupstyle = 'completegroup' %]
             [% ELSE %]
-		[% IF not (loop.count % 2) %]
+        [% IF not (loop.count % 2) %]
                     [% groupstyle = 'even' %]
-		[% ELSE %]
+        [% ELSE %]
                     [% groupstyle = 'odd' %]
-		[% END %]
+        [% END %]
             [% END %]
             
             <tr class="[% groupstyle %]">

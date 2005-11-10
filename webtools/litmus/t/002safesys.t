@@ -30,7 +30,7 @@ use lib 't';
 
 use Support::Files;
 
-use Test::More tests => scalar(@Support::Files::testitems);
+use Test::More tests => scalar(@Support::Files::testitems-1);
 
 # Capture the TESTOUT from Test::More or Test::Builder for printing errors.
 # This will handle verbosity for us automatically.
@@ -52,6 +52,7 @@ my $perlapp = "\"$^X\"";
 foreach my $file (@testitems) {
     $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
     next if (!$file); # skip null entries
+    next if ($file =~ /populatedb\.pl$/); # except populatedb.pl
     my $command = "$perlapp -c -It -MSupport::Systemexec $file 2>&1";
     my $loginfo=`$command`;
     if ($loginfo =~ /arguments for Support::Systemexec::(system|exec)/im) {

@@ -35,7 +35,7 @@ use File::Find;
 
 
 @files = glob('*');
-find(sub { push(@files, $File::Find::name) if $_ =~ /\.pm$/;}, 'Bugzilla');
+find(sub { push(@files, $File::Find::name) if $_ =~ /\.pm$/;}, 'Litmus');
 
 sub have_pkg {
     my ($pkg) = @_;
