@@ -576,17 +576,7 @@ function BrowserPopupShowing () {
   }
 
   var selectedRange=getBrowser().selectedBrowser.contentDocument.getSelection();
-  if(selectedRange) {
-  
-   	s=util_stripCharsFromString(selectedRange,"#_+()- ");
-	if(util_validateInteger(s) && s.length >= 7) {
-	  document.getElementById("item-call").hidden=false;
-      document.getElementById("item-call").label="Call \""+ selectedRange + " \"";
-      document.getElementById("item-call").setAttribute("oncommand","DoTestSendCall("+s+")");
-    } else {
-	  document.getElementById("item-call").hidden=true;    
-    }
-  }
+ 
   /* Enable Copy */
   if(selectedRange.toString()) {
     document.getElementById("item-copy").style.display="block";
