@@ -318,6 +318,7 @@ bin/extensions/inspector@mozilla.org/defaults/preferences/inspector.js
 [talkback]
 bin/README.txt,bin/readme.txt
 bin/extensions/talkback@mozilla.org/install.rdf
+bin/extensions/talkback@mozilla.org/chrome.manifest
 bin/extensions/talkback@mozilla.org/components/libqfaservices.so
 bin/extensions/talkback@mozilla.org/components/qfaservices.xpt
 bin/extensions/talkback@mozilla.org/components/talkback/*
