@@ -2944,7 +2944,7 @@ js_DeflateStringToBuffer(JSContext *cx, const jschar* src, size_t srclen, char* 
             v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
         }
         if (v < 0x0080) {
-            // no encoding necessary - performance hack
+            /* no encoding necessary - performance hack */
             if (!dstlen)
                 goto bufferTooSmall;
             if (dst)
