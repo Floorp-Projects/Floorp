@@ -46,6 +46,7 @@ bin\components\newsblog.js
 ; Optional Talkback
 [talkback]
 bin\extensions\talkback@mozilla.org\install.rdf
+bin\extensions\talkback@mozilla.org\chrome.manifest
 bin\extensions\talkback@mozilla.org\components\qfaservices.dll
 bin\extensions\talkback@mozilla.org\components\qfaservices.xpt
 bin\extensions\talkback@mozilla.org\components\BrandRes.dll

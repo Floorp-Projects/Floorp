@@ -307,6 +307,7 @@ bin\extensions\inspector@mozilla.org\chrome\icons\default\winInspectorMain.ico
 [talkback]
 bin\README.txt,bin\readme.txt
 bin\extensions\talkback@mozilla.org\install.rdf
+bin\extensions\talkback@mozilla.org\chrome.manifest
 bin\extensions\talkback@mozilla.org\components\qfaservices.dll
 bin\extensions\talkback@mozilla.org\components\qfaservices.xpt
 bin\extensions\talkback@mozilla.org\components\BrandRes.dll
