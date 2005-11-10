@@ -5414,7 +5414,6 @@ no_catch:;
         goto inline_return;
     }
 
-out2:
     /*
      * Reset sp before freeing stack slots, because our caller may GC soon.
      * Clear spbase to indicate that we've popped the 2 * depth operand slots.
@@ -5427,6 +5426,8 @@ out2:
     } else {
         SAVE_SP(fp);
     }
+
+out2:
     if (cx->version == currentVersion && currentVersion != originalVersion)
         js_SetVersion(cx, originalVersion);
     cx->interpLevel--;
