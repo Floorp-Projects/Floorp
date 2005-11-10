@@ -1581,27 +1581,32 @@ TestUtf8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     intN mode = 1;
     jschar chars[20];
     size_t charsLength = 5;
-     char bytes[20];
+    char bytes[20];
     size_t bytesLength = 20;
-    if (argc)
-        JS_ValueToInt32 (cx, *argv, &mode);
+    if (argc && !JS_ValueToInt32(cx, *argv, &mode))
+        return JS_FALSE;
+
+    /* The following throw errors if compiled with UTF-8. */
     switch (mode) {
-        // mode 1: malformed UTF-8 string (throws error if compiled with UTF-8)
-        case 1: 
-            JS_NewStringCopyZ (cx, badUtf8); 
-            break;
-        // mode 2: big UTF-8 character (throws error if compiled with UTF-8)
-        case 2: 
-            JS_NewStringCopyZ (cx, bigUtf8); 
-            break;
-        // mode 3: bad Unicode surrogate character (throws error if compiled with UTF-8)
-        case 3: 
-            JS_EncodeCharacters (cx, badSurrogate, 6, bytes, &bytesLength); 
-            break;
-        // mode 4: use a too small buffer
-        case 4: 
-            JS_DecodeBytes(cx, "1234567890", 10, chars, &charsLength); 
-            break;
+      /* mode 1: malformed UTF-8 string. */
+      case 1: 
+        JS_NewStringCopyZ(cx, badUtf8); 
+        break;
+      /* mode 2: big UTF-8 character. */
+      case 2: 
+        JS_NewStringCopyZ(cx, bigUtf8); 
+        break;
+      /* mode 3: bad surrogate character. */
+      case 3: 
+        JS_EncodeCharacters(cx, badSurrogate, 6, bytes, &bytesLength); 
+        break;
+      /* mode 4: use a too small buffer. */
+      case 4: 
+        JS_DecodeBytes(cx, "1234567890", 10, chars, &charsLength); 
+        break;
+      default:
+        JS_ReportError(cx, "invalid mode parameter");
+        return JS_FALSE;
     }
     return !JS_IsExceptionPending (cx);
 }
