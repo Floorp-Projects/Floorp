@@ -4,3 +4,20 @@
  div#panel         { display: none  ! important;}
  table#headertitle { display: none  ! important;}
  }
+
+ @-moz-document domain(slashdot.org)
+ {
+ div#links, div#topnav, div#slogan, div#footer, div#slashboxes, div.indexhead { display:none; }
+
+ body ul { display:none !important; } 
+ 
+ div#frame, div#contents {
+  margin: 0px !important;
+  padding: 0px !important;
+ }
+ 
+ div#articles {
+  margin: 0px !important;
+  padding: 5px !important;
+ }
+}

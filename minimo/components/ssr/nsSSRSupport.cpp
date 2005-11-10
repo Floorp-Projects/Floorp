@@ -129,6 +129,13 @@ nsSSRSupport::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar
     
     prefBranch->AddObserver("ssr.", this, PR_FALSE);
 
+    PRBool enabled;
+    prefBranch->GetBoolPref("ssr.enabled", &enabled);
+    SetSSREnabled(enabled);
+
+    prefBranch->GetBoolPref("ssr.sites.enabled", &enabled);
+    SetSiteSSREnabled(enabled);
+
     return NS_OK;
   }
  
