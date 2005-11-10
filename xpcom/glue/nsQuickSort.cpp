@@ -37,6 +37,8 @@
 #include "prtypes.h"
 #include "nsQuickSort.h"
 
+PR_BEGIN_EXTERN_C
+
 #if !defined(DEBUG) && (defined(__cplusplus) || defined(__gcc))
 # ifndef INLINE
 #  define INLINE inline
@@ -93,7 +95,7 @@ med3(char *a, char *b, char *c, cmp_t* cmp, void *data)
               :(cmp(b, c, data) > 0 ? b : (cmp(a, c, data) < 0 ? a : c ));
 }
 
-extern "C" void NS_QuickSort (
+void NS_QuickSort (
 	void *a,
 	unsigned int n,
     unsigned int es,
@@ -176,3 +178,5 @@ loop:	SWAPINIT(a, es);
 	}
 /*		NS_QuickSort(pn - r, r / es, es, cmp, data);*/
 }
+
+PR_END_EXTERN_C
