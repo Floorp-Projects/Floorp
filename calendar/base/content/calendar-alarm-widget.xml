@@ -37,7 +37,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!-- DOCTYPE overlay SYSTEM "chrome://calendar/locale/calendar.dtd" -->
+<!DOCTYPE overlay SYSTEM "chrome://calendar/locale/calendar.dtd">
 
 <bindings id="calendar-alarms"
    xmlns="http://www.mozilla.org/xbl"
