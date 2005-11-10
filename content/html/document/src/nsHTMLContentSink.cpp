@@ -335,7 +335,6 @@ protected:
   nsString mTitleString;
   PRInt32 mInNotification;
   nsRefPtr<nsGenericHTMLElement> mCurrentForm;
-  nsCOMPtr<nsIContent> mCurrentMap;
 
   nsAutoVoidArray mContextStack;
   SinkContext* mCurrentContext;
@@ -386,9 +385,6 @@ protected:
    */
   void AddBaseTagInfo(nsIContent* aContent);
 
-  void ProcessBaseHref(const nsAString& aBaseHref);
-  void ProcessBaseTarget(const nsAString& aBaseTarget);
-
   // Routines for tags that require special handling
   nsresult CloseHTML();
   nsresult OpenFrameset(const nsIParserNode& aNode);
@@ -397,10 +393,8 @@ protected:
   nsresult CloseBody();
   nsresult OpenForm(const nsIParserNode& aNode);
   nsresult CloseForm();
-  nsresult ProcessAREATag(const nsIParserNode& aNode);
-  nsresult ProcessBASETag(const nsIParserNode& aNode);
+  void ProcessBASEElement(nsGenericHTMLElement* aElement);
   nsresult ProcessLINKTag(const nsIParserNode& aNode);
-  nsresult ProcessMETATag(const nsIParserNode& aNode);
 
   // Routines for tags that require special handling when we reach their end
   // tag.
@@ -1246,13 +1240,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       mSink->mInsideNoXXXTag++;
       break;
 
-    case eHTMLTag_map:
-      // We used to strip whitespace from the NAME attribute, to match
-      // a 4.x quirk, but it proved too quirky for us, and IE never
-      // did that.  See bug 79738 for details.
-      mSink->mCurrentMap = content;
-      break;
-
     case eHTMLTag_iframe:
       mSink->mNumOpenIFRAMES++;
       break;
@@ -1381,11 +1368,6 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
 
     break;
 
-  case eHTMLTag_map:
-    mSink->mCurrentMap = nsnull;
-    
-    break;
-
   case eHTMLTag_select:
   case eHTMLTag_textarea:
   case eHTMLTag_object:
@@ -1451,7 +1433,8 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       // this for elements that have useful URI attributes.
       // See bug 18478 and bug 30617 for why we need to do this.
       switch (nodeType) {
-      // leaves with 'SRC='
+      case eHTMLTag_area:
+      case eHTMLTag_meta:
       case eHTMLTag_img:
       case eHTMLTag_frame:
       case eHTMLTag_input:
@@ -1476,8 +1459,23 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       // Add new leaf to its parent
       AddLeaf(content);
 
-      // Notify input and button that they are now fully created
+      // Additional processing needed once the element is in the tree
       switch (nodeType) {
+      case eHTMLTag_base:
+        if (!mSink->mInsideNoXXXTag) {
+          mSink->ProcessBASEElement(content);
+        }
+        break;
+
+      case eHTMLTag_meta:
+        // XXX It's just not sufficient to check if the parent is head. Also
+        // check for the preference.
+        // Bug 40072: Don't evaluate METAs after FRAMESET.
+        if (!mSink->mInsideNoXXXTag && !mSink->mFrameset) {
+          rv = mSink->ProcessMETATag(content);
+        }
+        break;
+
       case eHTMLTag_input:
       case eHTMLTag_button:
         content->DoneCreatingElement();
@@ -2941,23 +2939,9 @@ HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   switch (nodeType) {
-  case eHTMLTag_area:
-    rv = ProcessAREATag(aNode);
-
-    break;
-  case eHTMLTag_base:
-    mCurrentContext->FlushTextAndRelease();
-    rv = ProcessBASETag(aNode);
-
-    break;
   case eHTMLTag_link:
     mCurrentContext->FlushTextAndRelease();
     rv = ProcessLINKTag(aNode);
-
-    break;
-  case eHTMLTag_meta:
-    mCurrentContext->FlushTextAndRelease();
-    rv = ProcessMETATag(aNode);
 
     break;
   default:
@@ -3497,71 +3481,6 @@ HTMLContentSink::AddBaseTagInfo(nsIContent* aContent)
 }
 
 nsresult
-HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
-{
-  if (!mCurrentMap) {
-    return NS_OK;
-  }
-
-  nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-
-  nsRefPtr<nsGenericHTMLElement> area =
-    CreateContentObject(aNode, nodeType, nsnull, nsnull);
-  if (!area) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Make sure to add base tag info, if needed, before setting any other
-  // attributes -- what URI attrs do will depend on the base URI.  Only do this
-  // for elements that have useful URI attributes.
-  // See bug 18478 and bug 30617 for why we need to do this.
-  AddBaseTagInfo(area);
-
-  // Set the content's attributes
-  nsresult rv = AddAttributes(aNode, area);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Add AREA object to the current map
-  mCurrentMap->AppendChildTo(area, PR_FALSE);
-
-  return NS_OK;
-}
-
-void
-HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
-{
-  //-- Make sure this page is allowed to load this URI
-  nsresult rv;
-  nsCOMPtr<nsIURI> baseHrefURI;
-  rv = NS_NewURI(getter_AddRefs(baseHrefURI), aBaseHref, nsnull);
-  if (NS_FAILED(rv)) return;
-
-  // Setting "BASE URI" from the last BASE tag appearing in HEAD.
-  if (!mBody) {
-    // The document checks if it is legal to set this base
-    rv = mDocument->SetBaseURI(baseHrefURI);
-
-    if (NS_SUCCEEDED(rv)) {
-      mDocumentBaseURI = mDocument->GetBaseURI();
-    }
-  } else {
-    // NAV compatibility quirk
-
-    nsIScriptSecurityManager *securityManager =
-      nsContentUtils::GetSecurityManager();
-
-    rv = securityManager->
-      CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), baseHrefURI,
-                                nsIScriptSecurityManager::STANDARD);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-
-    mBaseHREF = aBaseHref;
-  }
-}
-
-nsresult
 HTMLContentSink::OpenHeadContext()
 {
   if (mCurrentContext && mCurrentContext->IsCurrentContainer(eHTMLTag_head))
@@ -3605,59 +3524,51 @@ HTMLContentSink::CloseHeadContext()
 }
 
 void
-HTMLContentSink::ProcessBaseTarget(const nsAString& aBaseTarget)
+HTMLContentSink::ProcessBASEElement(nsGenericHTMLElement* aElement)
 {
-  if (!mBody) {
-    // still in real HEAD
-    mDocument->SetBaseTarget(aBaseTarget);
-  } else {
-    // NAV compatibility quirk
-    mBaseTarget = aBaseTarget;
-  }
-}
+  // href attribute
+  nsAutoString attrValue;
+  if (aElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, attrValue)) {
+    //-- Make sure this page is allowed to load this URI
+    nsresult rv;
+    nsCOMPtr<nsIURI> baseHrefURI;
+    rv = NS_NewURI(getter_AddRefs(baseHrefURI), attrValue, nsnull);
+    if (NS_FAILED(rv))
+      return;
 
-nsresult
-HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
-{
-  nsresult result = NS_OK;
-  nsGenericHTMLElement* parent = nsnull;
-
-  if (mCurrentContext) {
-    parent = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
-  }
-
-  if (parent) {
-    // Create content object
-    nsCOMPtr<nsIContent> element;
-    nsCOMPtr<nsINodeInfo> nodeInfo;
-    mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::base, nsnull,
-                                  kNameSpaceID_None,
-                                  getter_AddRefs(nodeInfo));
-
-    result = NS_NewHTMLElement(getter_AddRefs(element), nodeInfo);
-    NS_ENSURE_SUCCESS(result, result);
-
-    element->SetContentID(mDocument->GetAndIncrementContentID());
-
-    // Add in the attributes and add the base content object to the
-    // head container.
-    result = AddAttributes(aNode, element);
-    NS_ENSURE_SUCCESS(result, result);
-
-    parent->AppendChildTo(element, PR_FALSE);
-    if (!mInsideNoXXXTag) {
-      nsAutoString value;
-      if (element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
-        ProcessBaseHref(value);
+    // Setting "BASE URI" from the last BASE tag appearing in HEAD.
+    if (!mBody) {
+      // The document checks if it is legal to set this base. Failing here is
+      // ok, we just won't set a new base.
+      rv = mDocument->SetBaseURI(baseHrefURI);
+      if (NS_SUCCEEDED(rv)) {
+        mDocumentBaseURI = mDocument->GetBaseURI();
       }
+    } else {
+      // NAV compatibility quirk
 
-      if (element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
-        ProcessBaseTarget(value);
+      nsIScriptSecurityManager *securityManager =
+        nsContentUtils::GetSecurityManager();
+
+      rv = securityManager->
+        CheckLoadURIWithPrincipal(mDocument->GetPrincipal(), baseHrefURI,
+                                  nsIScriptSecurityManager::STANDARD);
+      if (NS_SUCCEEDED(rv)) {
+        mBaseHREF = attrValue;
       }
     }
   }
 
-  return result;
+  // target attribute
+  if (aElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, attrValue)) {
+    if (!mBody) {
+      // still in real HEAD
+      mDocument->SetBaseTarget(attrValue);
+    } else {
+      // NAV compatibility quirk
+      mBaseTarget = attrValue;
+    }
+  }
 }
 
 nsresult
@@ -3727,55 +3638,6 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   }
 
   return result;
-}
-
-nsresult
-HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
-{
-  nsGenericHTMLElement* parent = nsnull;
-
-  if (mCurrentContext) {
-    parent = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
-  }
-
-  if (!parent) {
-    return NS_OK;
-  }
-
-  nsresult rv = NS_OK;
-
-  // Create content object
-  nsCOMPtr<nsINodeInfo> nodeInfo;
-  rv = mNodeInfoManager->GetNodeInfo(nsHTMLAtoms::meta, nsnull,
-                                     kNameSpaceID_None,
-                                     getter_AddRefs(nodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRefPtr<nsGenericHTMLElement> it = NS_NewHTMLMetaElement(nodeInfo);
-  if (!it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  it->SetContentID(mDocument->GetAndIncrementContentID());
-
-  // Add in the attributes and add the meta content object to the head
-  // container.
-  AddBaseTagInfo(it);
-  rv = AddAttributes(aNode, it);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  parent->AppendChildTo(it, PR_FALSE);
-
-  // XXX It's just not sufficient to check if the parent is head. Also
-  // check for the preference.
-  // Bug 40072: Don't evaluate METAs after FRAMESET.
-  if (!mInsideNoXXXTag && !mFrameset) {
-    rv = nsContentSink::ProcessMETATag(it);
-  }
-
-  return rv;
 }
 
 #ifdef DEBUG

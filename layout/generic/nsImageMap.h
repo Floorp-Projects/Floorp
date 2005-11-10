@@ -114,7 +114,8 @@ protected:
   void FreeAreas();
 
   nsresult UpdateAreas();
-  nsresult UpdateAreasForBlock(nsIContent* aParent, PRBool* aFoundAnchor);
+  nsresult SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
+                         PRBool& aFoundAnchor);
 
   nsresult AddArea(nsIContent* aArea);
  
