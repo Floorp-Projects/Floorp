@@ -4268,6 +4268,7 @@ nsIFrame::GetOverflowAreaProperty(PRBool aCreateIfNecessary)
     return overflow;
   }
 
+  NS_NOTREACHED("Frame abuses NS_FRAME_OUTSIDE_CHILDREN flag");
   return nsnull;
 }
 
