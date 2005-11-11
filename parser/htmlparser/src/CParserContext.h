@@ -83,11 +83,11 @@ public:
 
     nsCOMPtr<nsIRequest> mRequest; // provided by necko to differnciate different input streams
                                    // why is mRequest strongly referenced? see bug 102376.
-    nsIDTD*              mDTD;
-    nsIRequestObserver*  mListener;
+    nsCOMPtr<nsIDTD>	 mDTD;
+    nsCOMPtr<nsIRequestObserver> mListener;
     char*                mTransferBuffer;
     void*                mKey;
-    nsITokenizer*        mTokenizer;
+    nsCOMPtr<nsITokenizer> mTokenizer;
     CParserContext*      mPrevContext;
     nsScanner*           mScanner;
     
@@ -105,8 +105,4 @@ public:
     PRUint32             mTransferBufferSize;
 };
 
-
-
 #endif
-
-

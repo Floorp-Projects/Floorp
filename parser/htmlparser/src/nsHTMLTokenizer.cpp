@@ -59,74 +59,10 @@
   And now for the main class -- nsHTMLTokenizer...
  ************************************************************************/
 
-static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kITokenizerIID,  NS_ITOKENIZER_IID);
-static NS_DEFINE_IID(kClassIID,       NS_HTMLTOKENIZER_IID); 
-
 /**
- * This method gets called as part of our COM-like interfaces.
- * Its purpose is to create an interface to parser object
- * of some type.
- *  
- * @param    aIID  id of object to discover
- * @param    aInstancePtr ptr to newly discovered interface
- * @return   NS_xxx result code
+ * Satisfy the nsISupports interface.
  */
-nsresult nsHTMLTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-
-  if(aIID.Equals(kISupportsIID))    {  // Do IUnknown...
-    *aInstancePtr = (nsISupports*)(this);                                        
-  }
-  else if(aIID.Equals(kITokenizerIID)) {  // Do ITokenizer base class...
-    *aInstancePtr = (nsITokenizer*)(this);                                        
-  }
-  else if(aIID.Equals(kClassIID)) {  // Do this class...
-    *aInstancePtr = (nsHTMLTokenizer*)(this);                                        
-  }                 
-  else {
-    *aInstancePtr=0;
-    return NS_NOINTERFACE;
-  }
-  NS_ADDREF_THIS();
-  return NS_OK;                                                        
-}
-
-/**
- * This method is defined in nsHTMLTokenizer.h. It is used to 
- * cause the COM-like construction of an HTMLTokenizer.
- *  
- * @param   aInstancePtrResult** ptr to newly instantiated parser
- * @param   aFlag Parser flags the tokenizer should be aware of
- * @param   aDocType The doctype of the current document.
- * @param   aCommand The current command (view-source, fragment, etc).
- * @return  NS_xxx error result
- */
-
-nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,
-                             PRInt32 aFlag,
-                             eParserDocType aDocType, 
-                             eParserCommands aCommand,
-                             PRInt32 aFlags) 
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsHTMLTokenizer* it = new nsHTMLTokenizer(aFlag,aDocType,aCommand,aFlags);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kClassIID, (void **) aInstancePtrResult);
-}
-
-
-NS_IMPL_ADDREF(nsHTMLTokenizer)
-NS_IMPL_RELEASE(nsHTMLTokenizer)
-
+NS_IMPL_ISUPPORTS1(nsHTMLTokenizer, nsITokenizer);
 
 /**
  * Default constructor

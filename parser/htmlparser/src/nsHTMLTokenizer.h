@@ -54,10 +54,6 @@
 #include "nsHTMLTokens.h"
 #include "nsDTDUtils.h"
 
-#define NS_HTMLTOKENIZER_IID      \
-  {0xe4238ddd, 0x9eb6, 0x11d2, \
-  {0xba, 0xa5, 0x0,     0x10, 0x4b, 0x98, 0x3f, 0xd4 }}
-
 /***************************************************************
   Notes: 
  ***************************************************************/
@@ -79,17 +75,17 @@ public:
 
 protected:
 
-  virtual nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
-  virtual nsresult ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
-  virtual nsresult ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeAttributes(PRUnichar aChar, CToken* aToken, nsScanner& aScanner);
-  virtual nsresult ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeText(CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
+  nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
+  nsresult ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
+  nsresult ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
+  nsresult ConsumeAttributes(PRUnichar aChar, CToken* aToken, nsScanner& aScanner);
+  nsresult ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
+  nsresult ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
+  nsresult ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
+  nsresult ConsumeNewline(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
+  nsresult ConsumeText(CToken*& aToken,nsScanner& aScanner);
+  nsresult ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
+  nsresult ConsumeProcessingInstruction(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
 
   nsresult ScanDocStructure(PRBool aIsFinalChunk);
 
@@ -104,10 +100,6 @@ protected:
   PRInt32            mTokenScanPos;
   PRUint32           mFlags;
 };
-
-extern nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,
-                                    PRInt32 aMode,eParserDocType aDocType,
-                                    eParserCommands aCommand, PRInt32 aFlags);
 
 #endif
 
