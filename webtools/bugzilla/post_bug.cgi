@@ -227,6 +227,7 @@ my %ccids;
 # use a hash rather than a list to avoid adding users twice
 if (defined $cgi->param('cc')) {
     foreach my $person ($cgi->param('cc')) {
+        next unless $person;
         my $ccid = DBNameToIdAndCheck($person);
         if ($ccid && !$ccids{$ccid}) {
            $ccids{$ccid} = 1;
