@@ -53,19 +53,10 @@
 // <mstyle> -- style change
 //
 
-nsresult
-NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmstyleFrame* it = new (aPresShell) nsMathMLmstyleFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;  
-  return NS_OK;
+  return new (aPresShell) nsMathMLmstyleFrame;
 }
 
 nsMathMLmstyleFrame::nsMathMLmstyleFrame()

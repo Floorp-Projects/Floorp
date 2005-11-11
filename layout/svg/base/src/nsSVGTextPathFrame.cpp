@@ -111,34 +111,26 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGTSpanFrame)
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
+nsIFrame*
 NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                       nsIFrame* parentFrame, nsIFrame** aNewFrame)
+                       nsIFrame* parentFrame)
 {
-  *aNewFrame = nsnull;
-
   NS_ASSERTION(parentFrame, "null parent");
   nsISVGTextFrame *text_container;
   parentFrame->QueryInterface(NS_GET_IID(nsISVGTextFrame), (void**)&text_container);
   if (!text_container) {
     NS_ERROR("trying to construct an SVGTextPathFrame for an invalid container");
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
   
   nsCOMPtr<nsIDOMSVGTextPathElement> tspan_elem = do_QueryInterface(aContent);
   if (!tspan_elem) {
     NS_ERROR("Trying to construct an SVGTextPathFrame for a "
              "content element that doesn't support the right interfaces");
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
-  
-  nsSVGTextPathFrame* it = new (aPresShell) nsSVGTextPathFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aNewFrame = it;
-  
-  return NS_OK;
+  return new (aPresShell) nsSVGTextPathFrame;
 }
 
 nsSVGTextPathFrame::~nsSVGTextPathFrame()

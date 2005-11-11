@@ -50,8 +50,8 @@
 class nsSVGCircleFrame : public nsSVGPathGeometryFrame
 {
 protected:
-  friend nsresult
-  NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
   virtual ~nsSVGCircleFrame();
   NS_IMETHOD InitSVG();
@@ -87,25 +87,18 @@ private:
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-  
   nsCOMPtr<nsIDOMSVGCircleElement> circle = do_QueryInterface(aContent);
   if (!circle) {
 #ifdef DEBUG
     printf("warning: trying to construct an SVGCircleFrame for a content element that doesn't support the right interfaces\n");
 #endif
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
-  
-  nsSVGCircleFrame* it = new (aPresShell) nsSVGCircleFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsSVGCircleFrame;
 }
 
 nsSVGCircleFrame::~nsSVGCircleFrame()

@@ -49,7 +49,7 @@
 class nsMathMLForeignFrameWrapper : public nsBlockFrame,
                                     public nsMathMLFrame {
 public:
-  friend nsresult NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell);
 
   NS_DECL_ISUPPORTS_INHERITED
 

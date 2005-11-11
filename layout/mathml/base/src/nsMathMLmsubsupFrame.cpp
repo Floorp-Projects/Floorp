@@ -53,19 +53,10 @@
 // <msubsup> -- attach a subscript-superscript pair to a base - implementation
 //
 
-nsresult
-NS_NewMathMLmsubsupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmsubsupFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmsubsupFrame* it = new (aPresShell) nsMathMLmsubsupFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmsubsupFrame;
 }
 
 nsMathMLmsubsupFrame::nsMathMLmsubsupFrame()

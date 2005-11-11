@@ -716,16 +716,16 @@ nsMathMLContainerFrame::WrapForeignFrames()
     child->QueryInterface(kInlineFrameCID, (void**)&inlineFrame);
     if (inlineFrame) {
       // create a new wrapper frame to wrap this child
-      nsIFrame* wrapper;
-      nsresult rv = NS_NewMathMLForeignFrameWrapper(presContext->PresShell(),
-						    &wrapper);
-      if (NS_FAILED(rv)) return rv;
+      nsIFrame* wrapper = NS_NewMathMLForeignFrameWrapper(presContext->PresShell());
+      if (NS_UNLIKELY(!wrapper)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
       nsRefPtr<nsStyleContext> newStyleContext;
       newStyleContext = presContext->StyleSet()->
 	ResolvePseudoStyleFor(mContent,
 			      nsCSSAnonBoxes::mozAnonymousBlock,
 			      mStyleContext);
-      rv = wrapper->Init(presContext, mContent, this, newStyleContext, nsnull);
+      nsresult rv = wrapper->Init(presContext, mContent, this, newStyleContext, nsnull);
       if (NS_FAILED(rv)) {
         wrapper->Destroy(presContext);
         return rv;
@@ -1494,34 +1494,16 @@ nsMathMLContainerFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
 
 //==========================
 
-nsresult
-NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmathBlockFrame* it = new (aPresShell) nsMathMLmathBlockFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmathBlockFrame;
 }
 
 //==========================
 
-nsresult
-NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmathInlineFrame* it = new (aPresShell) nsMathMLmathInlineFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmathInlineFrame;
 }

@@ -51,9 +51,8 @@
 class nsSVGRectFrame : public nsSVGPathGeometryFrame
 {
 protected:
-  friend nsresult
-  NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                     nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
   virtual ~nsSVGRectFrame();
   NS_IMETHOD InitSVG();
@@ -92,24 +91,16 @@ private:
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                   nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-
   nsCOMPtr<nsIDOMSVGRectElement> Rect = do_QueryInterface(aContent);
   if (!Rect) {
     NS_ASSERTION(Rect != nsnull, "wrong content element");
-    return NS_ERROR_NO_INTERFACE;
+    return nsnull;
   }
 
-  nsSVGRectFrame* it = new (aPresShell) nsSVGRectFrame;
-  if (!it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsSVGRectFrame;
 }
 
 nsSVGRectFrame::~nsSVGRectFrame()

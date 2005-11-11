@@ -56,19 +56,10 @@
 // <munderover> -- attach an underscript-overscript pair to a base - implementation
 //
 
-nsresult
-NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmunderoverFrame* it = new (aPresShell) nsMathMLmunderoverFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmunderoverFrame;
 }
 
 nsMathMLmunderoverFrame::nsMathMLmunderoverFrame()

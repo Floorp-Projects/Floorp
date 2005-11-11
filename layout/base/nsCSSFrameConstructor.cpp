@@ -152,13 +152,13 @@ static NS_DEFINE_CID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 #include "nsIXTFElement.h"
 #include "nsIXTFElementWrapperPrivate.h"
 #include "nsIXTFVisualWrapperPrivate.h"
-nsresult
-NS_NewXTFXULDisplayFrame(nsIPresShell*, nsIFrame**);
-nsresult
-NS_NewXTFXMLDisplayFrame(nsIPresShell*, PRBool isBlock, nsIFrame**);
+nsIFrame*
+NS_NewXTFXULDisplayFrame(nsIPresShell*);
+nsIFrame*
+NS_NewXTFXMLDisplayFrame(nsIPresShell*, PRBool isBlock);
 #ifdef MOZ_SVG
-nsresult
-NS_NewXTFSVGDisplayFrame(nsIPresShell*, nsIContent*, nsIFrame**);
+nsIFrame*
+NS_NewXTFSVGDisplayFrame(nsIPresShell*, nsIContent*);
 #endif
 #endif
 
@@ -172,62 +172,62 @@ NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell);
 #include "nsStyleUtil.h"
 #include "nsSVGUtils.h"
 
-nsresult
-NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+nsIFrame*
+NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGPolylineFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGCircleFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGEllipseFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGRectFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 #ifdef MOZ_SVG_FOREIGNOBJECT
-nsresult
-NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+nsIFrame*
+NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 #endif
-nsresult
-NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+nsIFrame*
+NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent);
+nsIFrame*
+NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent);
+nsIFrame*
+NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGUseFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 PRBool 
 NS_SVG_TestFeatures (const nsAString& value);
-extern nsresult
-NS_NewSVGLinearGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame** newFrame);
-extern nsresult
-NS_NewSVGRadialGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame** newFrame);
-extern nsresult
-NS_NewSVGStopFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame *aParentFrame, nsIFrame** newFrame);
-nsresult
-NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-extern nsresult
-NS_NewSVGImageFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame** newFrame);
-nsresult
-NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent, nsIFrame** aNewFrame);
-nsresult
-NS_NewSVGFilterFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame** newFrame);
-nsresult
-NS_NewSVGPatternFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+extern nsIFrame*
+NS_NewSVGLinearGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent);
+extern nsIFrame*
+NS_NewSVGRadialGradientFrame(nsIPresShell *aPresShell, nsIContent *aContent);
+extern nsIFrame*
+NS_NewSVGStopFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame *aParentFrame);
+nsIFrame*
+NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+extern nsIFrame*
+NS_NewSVGImageFrame(nsIPresShell *aPresShell, nsIContent *aContent);
+nsIFrame*
+NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent);
+nsIFrame*
+NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parent);
+nsIFrame*
+NS_NewSVGFilterFrame(nsIPresShell *aPresShell, nsIContent *aContent);
+nsIFrame*
+NS_NewSVGPatternFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 #endif
 
 #include "nsIDocument.h"
@@ -4606,9 +4606,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsFrameConstructorState& aState,
 #ifdef MOZ_SVG
     if (aDocElement->GetNameSpaceID() == kNameSpaceID_SVG &&
         nsSVGUtils::SVGEnabled()) {
-      rv = NS_NewSVGOuterSVGFrame(mPresShell, aDocElement, &contentFrame);
-      if (NS_FAILED(rv)) {
-        return rv;
+      contentFrame = NS_NewSVGOuterSVGFrame(mPresShell, aDocElement);
+      if (!contentFrame) {
+        return NS_ERROR_FAILURE;
       }
     }
     else 
@@ -5440,7 +5440,7 @@ nsCSSFrameConstructor::ConstructTextFrame(nsFrameConstructorState& aState,
   nsCOMPtr<nsISVGTextContainerFrame> svg_parent = do_QueryInterface(aParentFrame);
   if (svg_parent)
   {
-    NS_NewSVGGlyphFrame(mPresShell, aContent, aParentFrame, &newFrame);
+    newFrame = NS_NewSVGGlyphFrame(mPresShell, aContent, aParentFrame);
   }
   else {
     newFrame = NS_NewTextFrame(mPresShell);
@@ -7104,46 +7104,46 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
       aTag == nsMathMLAtoms::mn_ ||
       aTag == nsMathMLAtoms::ms_ ||
       aTag == nsMathMLAtoms::mtext_)
-    rv = NS_NewMathMLTokenFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLTokenFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mo_)
-    rv = NS_NewMathMLmoFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmoFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mfrac_)
-    rv = NS_NewMathMLmfracFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmfracFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::msup_)
-    rv = NS_NewMathMLmsupFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmsupFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::msub_)
-    rv = NS_NewMathMLmsubFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmsubFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::msubsup_)
-    rv = NS_NewMathMLmsubsupFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmsubsupFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::munder_)
-    rv = NS_NewMathMLmunderFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmunderFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mover_)
-    rv = NS_NewMathMLmoverFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmoverFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::munderover_)
-    rv = NS_NewMathMLmunderoverFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmunderoverFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mphantom_)
-    rv = NS_NewMathMLmphantomFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmphantomFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mpadded_)
-    rv = NS_NewMathMLmpaddedFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmpaddedFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mspace_)
-    rv = NS_NewMathMLmspaceFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmspaceFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mfenced_)
-    rv = NS_NewMathMLmfencedFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmfencedFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mmultiscripts_)
-    rv = NS_NewMathMLmmultiscriptsFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmmultiscriptsFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mstyle_)
-    rv = NS_NewMathMLmstyleFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmstyleFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::msqrt_)
-    rv = NS_NewMathMLmsqrtFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmsqrtFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mroot_)
-    rv = NS_NewMathMLmrootFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmrootFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::maction_)
-    rv = NS_NewMathMLmactionFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmactionFrame(mPresShell);
   else if (aTag == nsMathMLAtoms::mrow_   ||
            aTag == nsMathMLAtoms::merror_ ||
            aTag == nsMathMLAtoms::none_   ||
            aTag == nsMathMLAtoms::mprescripts_ )
-    rv = NS_NewMathMLmrowFrame(mPresShell, &newFrame);
+    newFrame = NS_NewMathMLmrowFrame(mPresShell);
   // CONSTRUCTION of MTABLE elements
   else if (aTag == nsMathMLAtoms::mtable_ &&
            disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
@@ -7156,8 +7156,10 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     nsStyleSet *styleSet = mPresShell->StyleSet();
 
     // first, create a MathML mrow frame that will wrap the block frame
-    rv = NS_NewMathMLmrowFrame(mPresShell, &newFrame);
-    if (NS_FAILED(rv)) return rv;
+    newFrame = NS_NewMathMLmrowFrame(mPresShell);
+    if (NS_UNLIKELY(!newFrame)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     nsRefPtr<nsStyleContext> mrowContext;
     mrowContext = styleSet->ResolvePseudoStyleFor(aContent,
                                                   nsCSSAnonBoxes::mozMathInline,
@@ -7211,15 +7213,15 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     // root <math> element
     const nsStyleDisplay* display = aStyleContext->GetStyleDisplay();
     PRBool isBlock = (NS_STYLE_DISPLAY_BLOCK == display->mDisplay);
-    rv = NS_NewMathMLmathFrame(mPresShell, &newFrame, isBlock);
+    newFrame = NS_NewMathMLmathFrame(mPresShell, isBlock);
   }
   else {
-    return rv;
+    return NS_OK;
   }
 
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
-  if (NS_SUCCEEDED(rv) && newFrame) {
+  if (newFrame) {
     // If the frame is a replaced element, then set the frame state bit
     if (isReplaced) {
       newFrame->AddStateBits(NS_FRAME_REPLACED_ELEMENT);
@@ -7254,9 +7256,11 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     newFrame->SetInitialChildList(aState.mPresContext, nsnull,
                                   childItems.childList);
 
-    rv = CreateInsertionPointChildren(aState, newFrame, aContent);
+    return CreateInsertionPointChildren(aState, newFrame, aContent);
   }
-  return rv;
+  else {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 }
 #endif // MOZ_MATHML
 
@@ -7296,7 +7300,7 @@ nsCSSFrameConstructor::ConstructXTFFrame(nsFrameConstructorState& aState,
   switch(xtfElem->GetElementType()) {
     case nsIXTFElement::ELEMENT_TYPE_SVG_VISUAL:
 #ifdef MOZ_SVG
-      rv = NS_NewXTFSVGDisplayFrame(mPresShell, aContent, &newFrame);
+      newFrame = NS_NewXTFSVGDisplayFrame(mPresShell, aContent);
 #else
       NS_ERROR("xtf svg visuals are only supported in mozilla builds with native svg");
 #endif
@@ -7304,11 +7308,11 @@ nsCSSFrameConstructor::ConstructXTFFrame(nsFrameConstructorState& aState,
     case nsIXTFElement::ELEMENT_TYPE_XML_VISUAL:
     {
       PRBool isBlock = (NS_STYLE_DISPLAY_BLOCK == disp->mDisplay);
-      rv = NS_NewXTFXMLDisplayFrame(mPresShell, isBlock, &newFrame);
+      newFrame = NS_NewXTFXMLDisplayFrame(mPresShell, isBlock);
     }
       break;
     case nsIXTFElement::ELEMENT_TYPE_XUL_VISUAL:
-      rv = NS_NewXTFXULDisplayFrame(mPresShell, &newFrame);
+      newFrame = NS_NewXTFXULDisplayFrame(mPresShell);
       break;
     case nsIXTFElement::ELEMENT_TYPE_GENERIC_ELEMENT:
       NS_ERROR("huh? ELEMENT_TYPE_GENERIC_ELEMENT should have been flagged by caller");
@@ -7320,7 +7324,7 @@ nsCSSFrameConstructor::ConstructXTFFrame(nsFrameConstructorState& aState,
 
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
-  if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
+  if (newFrame) {
     InitAndRestoreFrame(aState, aContent, 
                         aState.GetGeometricParent(disp, aParentFrame),
                         aStyleContext, nsnull, newFrame);
@@ -7364,9 +7368,11 @@ nsCSSFrameConstructor::ConstructXTFFrame(nsFrameConstructorState& aState,
     // Note: we don't worry about insertionFrame here because we know
     // that XTF elements always insert into the primary frame of their
     // insertion content.
-    rv = CreateInsertionPointChildren(aState, newFrame, aContent, PR_FALSE);
+    return CreateInsertionPointChildren(aState, newFrame, aContent, PR_FALSE);
   }
-  return rv;
+  else {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 }
 #endif // MOZ_XTF
 
@@ -7582,73 +7588,73 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
       geometricParent = aState.GetGeometricParent(disp, aParentFrame);
       
       forceView = PR_TRUE;
-      rv = NS_NewSVGOuterSVGFrame(mPresShell, aContent, &newFrame);
+      newFrame = NS_NewSVGOuterSVGFrame(mPresShell, aContent);
     }
     else {
       // This is an inner <svg> element
-      rv = NS_NewSVGInnerSVGFrame(mPresShell, aContent, &newFrame);
+      newFrame = NS_NewSVGInnerSVGFrame(mPresShell, aContent);
     }
   }
   else if (aTag == nsSVGAtoms::g) {
-    rv = NS_NewSVGGFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGGFrame(mPresShell, aContent);
   }
   else if (aTag == nsSVGAtoms::polygon)
-    rv = NS_NewSVGPolygonFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGPolygonFrame(mPresShell, aContent);
   else if (aTag == nsSVGAtoms::polyline)
-    rv = NS_NewSVGPolylineFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGPolylineFrame(mPresShell, aContent);
   else if (aTag == nsSVGAtoms::circle)
-    rv = NS_NewSVGCircleFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGCircleFrame(mPresShell, aContent);
   else if (aTag == nsSVGAtoms::defs) {
-    rv = NS_NewSVGDefsFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGDefsFrame(mPresShell, aContent);
   }
   else if (aTag == nsSVGAtoms::ellipse)
-    rv = NS_NewSVGEllipseFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGEllipseFrame(mPresShell, aContent);
   else if (aTag == nsSVGAtoms::line)
-    rv = NS_NewSVGLineFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGLineFrame(mPresShell, aContent);
   else if (aTag == nsSVGAtoms::rect)
-    rv = NS_NewSVGRectFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGRectFrame(mPresShell, aContent);
 #ifdef MOZ_SVG_FOREIGNOBJECT
   else if (aTag == nsSVGAtoms::foreignObject) {
-    rv = NS_NewSVGForeignObjectFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGForeignObjectFrame(mPresShell, aContent);
   }
 #endif
   else if (aTag == nsSVGAtoms::path)
-    rv = NS_NewSVGPathFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGPathFrame(mPresShell, aContent);
   else if (aTag == nsSVGAtoms::text) {
-    rv = NS_NewSVGTextFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGTextFrame(mPresShell, aContent);
   }
   else if (aTag == nsSVGAtoms::tspan) {
-    rv = NS_NewSVGTSpanFrame(mPresShell, aContent, aParentFrame, &newFrame);
+    newFrame = NS_NewSVGTSpanFrame(mPresShell, aContent, aParentFrame);
   }
   else if (aTag == nsSVGAtoms::linearGradient) {
-    rv = NS_NewSVGLinearGradientFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGLinearGradientFrame(mPresShell, aContent);
   }
   else if (aTag == nsSVGAtoms::radialGradient) {
-    rv = NS_NewSVGRadialGradientFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGRadialGradientFrame(mPresShell, aContent);
   }
   else if (aTag == nsSVGAtoms::stop) {
-    rv = NS_NewSVGStopFrame(mPresShell, aContent, aParentFrame, &newFrame);
+    newFrame = NS_NewSVGStopFrame(mPresShell, aContent, aParentFrame);
   }
   else if (aTag == nsSVGAtoms::use) {
-    rv = NS_NewSVGUseFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGUseFrame(mPresShell, aContent);
   }
   else if (aTag == nsSVGAtoms::marker) {
-    rv = NS_NewSVGMarkerFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGMarkerFrame(mPresShell, aContent);
   }
   else if (aTag == nsSVGAtoms::image) {
-    rv = NS_NewSVGImageFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGImageFrame(mPresShell, aContent);
   }
   else if (aTag == nsSVGAtoms::clipPath) {
-    rv = NS_NewSVGClipPathFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGClipPathFrame(mPresShell, aContent);
   }
   else if (aTag == nsSVGAtoms::textPath) {
-    rv = NS_NewSVGTextPathFrame(mPresShell, aContent, aParentFrame, &newFrame);
+    newFrame = NS_NewSVGTextPathFrame(mPresShell, aContent, aParentFrame);
   }
   else if (aTag == nsSVGAtoms::filter) {
-    rv = NS_NewSVGFilterFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGFilterFrame(mPresShell, aContent);
   }
   else if (aTag == nsSVGAtoms::pattern) {
-    rv = NS_NewSVGPatternFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGPatternFrame(mPresShell, aContent);
   }
   
   if (newFrame == nsnull) {
@@ -7667,11 +7673,11 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
     // aTag->ToString(str);
     // printf("%s>\n", NS_ConvertUCS2toUTF8(str).get());
 #endif
-    rv = NS_NewSVGGenericContainerFrame(mPresShell, aContent, &newFrame);
+    newFrame = NS_NewSVGGenericContainerFrame(mPresShell, aContent);
   }  
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
-  if (NS_SUCCEEDED(rv) && newFrame != nsnull) {
+  if (newFrame != nsnull) {
 #ifdef MOZ_SVG_FOREIGNOBJECT
     if (aTag == nsSVGAtoms::foreignObject) {
       // Claim to be relatively positioned so that we end up being the
@@ -7719,8 +7725,12 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
 
     if (!newFrame->IsLeaf())
       rv = CreateInsertionPointChildren(aState, newFrame, aContent);
+      
+    return rv;
   }
-  return rv;
+  else {
+    return NS_ERROR_FAILURE;
+  }
 }
 #endif // MOZ_SVG
 

@@ -85,7 +85,7 @@ element.
 
 class nsMathMLmfracFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmfracFrame(nsIPresShell* aPresShell);
 
   virtual void
   SetAdditionalStyleContext(PRInt32          aIndex, 

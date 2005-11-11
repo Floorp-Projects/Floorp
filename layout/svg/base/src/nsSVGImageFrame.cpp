@@ -82,8 +82,8 @@ private:
 class nsSVGImageFrame : public nsSVGPathGeometryFrame
 {
 protected:
-  friend nsresult
-  NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
   virtual ~nsSVGImageFrame();
   NS_IMETHOD InitSVG();
@@ -139,25 +139,18 @@ private:
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGImageFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-
   nsCOMPtr<nsIDOMSVGImageElement> Rect = do_QueryInterface(aContent);
   if (!Rect) {
 #ifdef DEBUG
     printf("warning: trying to construct an SVGImageFrame for a content element that doesn't support the right interfaces\n");
 #endif
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
 
-  nsSVGImageFrame* it = new (aPresShell) nsSVGImageFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsSVGImageFrame;
 }
 
 nsSVGImageFrame::~nsSVGImageFrame()

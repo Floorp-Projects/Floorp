@@ -48,7 +48,7 @@
 
 class nsMathMLmstyleFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmstyleFrame(nsIPresShell* aPresShell);
 
   NS_IMETHOD
   AttributeChanged(PRInt32         aNameSpaceID,

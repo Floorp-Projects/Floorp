@@ -50,8 +50,8 @@ class nsXTFSVGDisplayFrame : public nsXTFSVGDisplayFrameBase,
                              public nsIAnonymousContentCreator
 {
 public:
-  friend nsresult
-  NS_NewXTFSVGDisplayFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewXTFSVGDisplayFrame(nsIPresShell* aPresShell, nsIContent* aContent);
   // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 private:
@@ -74,16 +74,10 @@ protected:
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewXTFSVGDisplayFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewXTFSVGDisplayFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  nsXTFSVGDisplayFrame* it = new (aPresShell) nsXTFSVGDisplayFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsXTFSVGDisplayFrame;
 }
 
 //----------------------------------------------------------------------

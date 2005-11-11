@@ -76,19 +76,10 @@ NS_IMPL_ADDREF_INHERITED(nsMathMLmactionFrame, nsMathMLContainerFrame)
 NS_IMPL_RELEASE_INHERITED(nsMathMLmactionFrame, nsMathMLContainerFrame)
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLmactionFrame, nsMathMLContainerFrame, nsIDOMMouseListener)
 
-nsresult
-NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmactionFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmactionFrame* it = new (aPresShell) nsMathMLmactionFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmactionFrame;
 }
 
 nsMathMLmactionFrame::nsMathMLmactionFrame()

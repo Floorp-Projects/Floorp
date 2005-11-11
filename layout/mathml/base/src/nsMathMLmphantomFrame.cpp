@@ -51,19 +51,10 @@
 // <mphantom> -- make content invisible but preserve its size
 //
 
-nsresult
-NS_NewMathMLmphantomFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmphantomFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmphantomFrame* it = new (aPresShell) nsMathMLmphantomFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmphantomFrame;
 }
 
 nsMathMLmphantomFrame::nsMathMLmphantomFrame()

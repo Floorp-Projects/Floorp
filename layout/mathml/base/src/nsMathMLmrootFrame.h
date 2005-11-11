@@ -49,7 +49,7 @@
 
 class nsMathMLmrootFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmrootFrame(nsIPresShell* aPresShell);
 
   virtual void
   SetAdditionalStyleContext(PRInt32          aIndex, 

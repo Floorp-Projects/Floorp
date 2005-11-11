@@ -57,10 +57,8 @@ class nsSVGPathGeometryFrame;
 class nsSVGMarkerFrame : public nsSVGDefsFrame
 {
 protected:
-  friend nsresult
-  NS_NewSVGMarkerFrame(nsIPresShell* aPresShell,
-                       nsIContent* aContent,
-                       nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
   virtual ~nsSVGMarkerFrame();
   NS_IMETHOD InitSVG();

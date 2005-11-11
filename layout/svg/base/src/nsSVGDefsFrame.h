@@ -54,8 +54,8 @@ class nsSVGDefsFrame : public nsSVGDefsFrameBase,
                        public nsISVGValueObserver,
                        public nsSupportsWeakReference
 {
-  friend nsresult
-  NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 protected:
   nsSVGDefsFrame();
   virtual ~nsSVGDefsFrame();

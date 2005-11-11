@@ -68,19 +68,10 @@
 
 static const PRUnichar kSqrChar = PRUnichar(0x221A);
 
-nsresult
-NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmsqrtFrame* it = new (aPresShell) nsMathMLmsqrtFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmsqrtFrame;
 }
 
 nsMathMLmsqrtFrame::nsMathMLmsqrtFrame() :

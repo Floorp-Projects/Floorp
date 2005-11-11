@@ -50,8 +50,8 @@ class nsSVGPolygonFrame : public nsSVGPathGeometryFrame,
                           public nsISVGMarkable
 {
 protected:
-  friend nsresult
-  NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
   ~nsSVGPolygonFrame();
 
@@ -100,23 +100,18 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGPolygonFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
   nsCOMPtr<nsIDOMSVGAnimatedPoints> anim_points = do_QueryInterface(aContent);
   if (!anim_points) {
 #ifdef DEBUG
     printf("warning: trying to construct an SVGPolygonFrame for a content element that doesn't support the right interfaces\n");
 #endif
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
-  
-  nsSVGPolygonFrame* it = new (aPresShell) nsSVGPolygonFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsSVGPolygonFrame;
 }
 
 nsSVGPolygonFrame::~nsSVGPolygonFrame()

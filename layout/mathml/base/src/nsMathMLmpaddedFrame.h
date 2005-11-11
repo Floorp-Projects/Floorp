@@ -48,7 +48,7 @@
 
 class nsMathMLmpaddedFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell);
 
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent);

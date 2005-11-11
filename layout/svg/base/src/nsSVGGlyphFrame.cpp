@@ -78,9 +78,9 @@ class nsSVGGlyphFrame : public nsSVGGlyphFrameBase,
                         public nsISVGChildFrame
 {
 protected:
-  friend nsresult
+  friend nsIFrame*
   NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                      nsIFrame* parentFrame, nsIFrame** aNewFrame);
+                      nsIFrame* parentFrame);
   nsSVGGlyphFrame();
   virtual ~nsSVGGlyphFrame();
 
@@ -210,12 +210,9 @@ protected:
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parentFrame,
-                    nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* parentFrame)
 {
-  *aNewFrame = nsnull;
-
 #ifdef DEBUG
   NS_ASSERTION(parentFrame, "null parent");
   nsISVGTextContainerFrame *text_container;
@@ -225,14 +222,8 @@ NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* pa
   nsCOMPtr<nsITextContent> tc = do_QueryInterface(aContent);
   NS_ASSERTION(tc, "trying to construct an SVGGlyphFrame for wrong content element");
 #endif
-  
-  nsSVGGlyphFrame* it = new (aPresShell) nsSVGGlyphFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGGlyphFrame;
 }
 
 nsSVGGlyphFrame::nsSVGGlyphFrame()

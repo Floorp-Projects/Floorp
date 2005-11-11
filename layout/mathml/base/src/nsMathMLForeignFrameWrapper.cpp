@@ -59,19 +59,10 @@ NS_IMPL_ADDREF_INHERITED(nsMathMLForeignFrameWrapper, nsMathMLFrame)
 NS_IMPL_RELEASE_INHERITED(nsMathMLForeignFrameWrapper, nsMathMLFrame)
 NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLForeignFrameWrapper, nsBlockFrame, nsMathMLFrame)
 
-nsresult
-NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLForeignFrameWrapper(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLForeignFrameWrapper* it = new (aPresShell) nsMathMLForeignFrameWrapper;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLForeignFrameWrapper;
 }
 
 NS_IMETHODIMP

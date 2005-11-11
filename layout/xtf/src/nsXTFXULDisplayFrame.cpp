@@ -48,8 +48,7 @@ class nsXTFXULDisplayFrame : public nsXTFXULDisplayFrameBase,
                              public nsIAnonymousContentCreator
 {
 public:
-  friend nsresult
-  NS_NewXTFXULDisplayFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewXTFXULDisplayFrame(nsIPresShell* aPresShell);
   
   nsXTFXULDisplayFrame(nsIPresShell* aPresShell);
 
@@ -81,16 +80,10 @@ public:
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewXTFXULDisplayFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewXTFXULDisplayFrame(nsIPresShell* aPresShell)
 {
-  nsXTFXULDisplayFrame* it = new (aPresShell) nsXTFXULDisplayFrame(aPresShell);
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsXTFXULDisplayFrame(aPresShell);
 }
 
 nsXTFXULDisplayFrame::nsXTFXULDisplayFrame(nsIPresShell* aPresShell)

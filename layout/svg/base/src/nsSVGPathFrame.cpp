@@ -56,8 +56,8 @@ class nsSVGPathFrame : public nsSVGPathGeometryFrame,
                        public nsISVGPathFlatten
 {
 protected:
-  friend nsresult
-  NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
   ~nsSVGPathFrame();
   NS_IMETHOD InitSVG();
@@ -108,25 +108,18 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-  
   nsCOMPtr<nsIDOMSVGAnimatedPathData> anim_data = do_QueryInterface(aContent);
   if (!anim_data) {
 #ifdef DEBUG
     printf("warning: trying to construct an SVGPathFrame for a content element that doesn't support the right interfaces\n");
 #endif
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
-  
-  nsSVGPathFrame* it = new (aPresShell) nsSVGPathFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsSVGPathFrame;
 }
 
 nsSVGPathFrame::~nsSVGPathFrame()

@@ -89,10 +89,9 @@ class nsSVGStopFrame : public nsSVGStopFrameBase,
                                     nsISVGValue::modificationType aModType);
 
 protected:
-  friend nsresult NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
-                                     nsIContent*   aContent, 
-                                     nsIFrame*     aParentFrame, 
-                                     nsIFrame**    aNewFrame);
+  friend nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
+                                      nsIContent*   aContent, 
+                                      nsIFrame*     aParentFrame);
   virtual ~nsSVGStopFrame();
 
 private:
@@ -198,13 +197,10 @@ nsSVGStopFrame::DidModifySVGObservable(nsISVGValue* observable,
 // Public functions
 // -------------------------------------------------------------------------
 
-nsresult NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
-                            nsIContent*   aContent, 
-                            nsIFrame*     aParentFrame, 
-                            nsIFrame**    aNewFrame)
+nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
+                             nsIContent*   aContent, 
+                             nsIFrame*     aParentFrame)
 {
-  *aNewFrame = nsnull;
-  
 #ifdef DEBUG_scooter
   printf("NS_NewSVGStopFrame\n");
 #endif
@@ -212,15 +208,9 @@ nsresult NS_NewSVGStopFrame(nsIPresShell* aPresShell,
   nsCOMPtr<nsIDOMSVGStopElement> grad = do_QueryInterface(aContent);
   NS_ASSERTION(grad, "NS_NewSVGStopFrame -- Content doesn't support nsIDOMSVGStopElement");
   if (!grad)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
-  nsSVGStopFrame* it = new (aPresShell) nsSVGStopFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGStopFrame;
 }
 
 nsSVGStopFrame::~nsSVGStopFrame()
