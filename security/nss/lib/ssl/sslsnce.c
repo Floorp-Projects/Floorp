@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.35 2005/09/09 03:02:16 nelsonb%netscape.com Exp $ */
+/* $Id: sslsnce.c,v 1.36 2005/11/11 02:45:59 julien.pierre.bugs%sun.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -920,6 +920,11 @@ InitCache(cacheDesc *cache, int maxCacheEntries, PRUint32 ssl2_timeout,
     int           locks_initialized = 0;
     int           locks_to_initialize = 0;
     PRUint32      init_time;
+
+    if ( (!cache) || (maxCacheEntries < 0) || (!directory) ) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
 
     if (cache->cacheMem) {
 	/* Already done */
