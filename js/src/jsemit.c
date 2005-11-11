@@ -2043,8 +2043,8 @@ CheckSideEffects(JSContext *cx, JSTreeContext *tc, JSParseNode *pn,
             }
         }
         pn2 = pn->pn_expr;
-        if (pn->pn_type == TOK_DOT && pn2->pn_type == TOK_NAME) {
-            if (!LookupArgOrVar(cx, tc, pn2))
+        if (pn->pn_type == TOK_DOT) {
+            if (pn2->pn_type == TOK_NAME && !LookupArgOrVar(cx, tc, pn2))
                 return JS_FALSE;
             if (!(pn2->pn_op == JSOP_ARGUMENTS &&
                   pn->pn_atom == cx->runtime->atomState.lengthAtom)) {
