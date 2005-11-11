@@ -2330,7 +2330,12 @@ nsCellMap::GetDataAt(nsTableCellMap& aMap,
         }
       }
     }
-
+    if (!didZeroExpand) {
+      // mark this point dead
+      CellData* cellData = (aMap.mBCInfo) ? new BCCellData(nsnull) : new CellData(nsnull);
+      if (cellData)
+        SetDataAt(aMap, *cellData, aMapRowIndex, aColIndex, PR_FALSE);
+    }
     // if zero span adjustments were made the data may be available now
     if (!data && didZeroExpand) {
       data = GetDataAt(aMap, aMapRowIndex, aColIndex, PR_FALSE);
