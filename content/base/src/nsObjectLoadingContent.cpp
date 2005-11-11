@@ -1087,7 +1087,7 @@ nsObjectLoadingContent::FirePluginNotFound(nsIContent* thisContent)
     return;
   }
 
-  LOG(("OBJLC [%p]: Posting PluginNotFound event for content %p\n", this,
+  LOG(("OBJLC []: Posting PluginNotFound event for content %p\n",
        thisContent));
   nsresult rv = eventQ->PostEvent(ev);
   if (NS_FAILED(rv)) {
