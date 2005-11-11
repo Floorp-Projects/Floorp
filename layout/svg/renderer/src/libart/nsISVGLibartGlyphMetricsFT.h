@@ -57,7 +57,7 @@
 class nsISVGLibartGlyphMetricsFT : public nsISVGRendererGlyphMetrics
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGLIBARTGLYPHMETRICSFT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGLIBARTGLYPHMETRICSFT_IID)
   NS_IMETHOD_(FT_Face) GetFTFace() = 0;
   NS_IMETHOD_(float) GetPixelScale() = 0;
   NS_IMETHOD_(float) GetTwipsToPixels() = 0;
@@ -65,6 +65,9 @@ public:
   NS_IMETHOD_(PRUint32) GetGlyphCount() = 0;
   NS_IMETHOD_(FT_Glyph) GetGlyphAt(PRUint32 pos) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGLibartGlyphMetricsFT,
+                              NS_ISVGLIBARTGLYPHMETRICSFT_IID)
 
 /** @} */
 

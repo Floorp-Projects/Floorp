@@ -57,13 +57,15 @@
 class nsISVGLibartRegion : public nsISVGRendererRegion
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGLIBARTREGION_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGLIBARTREGION_IID)
 
   /**
    * Get region as a libart microtile array.
    */
   NS_IMETHOD_(ArtUta*) GetUta()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGLibartRegion, NS_ISVGLIBARTREGION_IID)
 
 /** @} */
 
