@@ -65,7 +65,7 @@ typedef PRUint32 nscolor;
 class nsISVGLibartBitmap : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGLIBARTBITMAP_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGLIBARTBITMAP_IID)
 
   enum PixelFormat {
     PIXEL_FORMAT_24_RGB  = 1, // linux
@@ -106,6 +106,8 @@ public:
    */
   NS_IMETHOD_(void) Flush()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGLibartBitmap, NS_ISVGLIBARTBITMAP_IID)
 
 /** @} */
 
