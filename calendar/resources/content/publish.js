@@ -97,7 +97,7 @@ function publishEntireCalendarDialogResponse(CalendarPublishObject, aProgressDia
     };
     aProgressDialog.onStartUpload();
     var oldCalendar = CalendarPublishObject.calendar;
-    oldCalendar.getItems(Components.interfaces.calICalendar.ITEM_FILTER_TYPE_ALL,
+    oldCalendar.getItems(Components.interfaces.calICalendar.ITEM_FILTER_ALL_ITEMS,
                          0, null, null, getListener);
 
 }
