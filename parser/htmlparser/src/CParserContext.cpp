@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -68,12 +69,10 @@ CParserContext::CParserContext(nsScanner* aScanner,
   mKey=aKey; 
   mPrevContext=0; 
   mListener=aListener; 
-  NS_IF_ADDREF(mListener); 
   mDTDMode=eDTDMode_unknown; 
   mAutoDetectStatus=aStatus; 
   mTransferBuffer=0; 
   mDTD=aDTD; 
-  NS_IF_ADDREF(mDTD);
   mTokenizer = 0;
   mTransferBufferSize=eTransferBufferSize; 
   mStreamListenerState=eNone; 
@@ -99,16 +98,13 @@ CParserContext::CParserContext(const CParserContext &aContext) : mMimeType() {
   mKey=aContext.mKey;
   mPrevContext=0;
   mListener=aContext.mListener;
-  NS_IF_ADDREF(mListener);
 
   mDTDMode=aContext.mDTDMode;
   mAutoDetectStatus=aContext.mAutoDetectStatus;
   mTransferBuffer=aContext.mTransferBuffer;
   mDTD=aContext.mDTD;
-  NS_IF_ADDREF(mDTD);
 
   mTokenizer = aContext.mTokenizer;
-  NS_IF_ADDREF(mTokenizer);
 
   mTransferBufferSize=eTransferBufferSize;
   mStreamListenerState=aContext.mStreamListenerState;
@@ -122,27 +118,19 @@ CParserContext::CParserContext(const CParserContext &aContext) : mMimeType() {
 
 /**
  * Destructor for parser context
- * NOTE: DO NOT destroy the dtd here.
- * @update	gess7/11/98
  */
-CParserContext::~CParserContext(){
-
+CParserContext::~CParserContext()
+{
   MOZ_COUNT_DTOR(CParserContext);
 
   if(mScanner) {
     delete mScanner;
-    mScanner=nsnull;
   }
 
-  if(mTransferBuffer)
+  if(mTransferBuffer) {
     delete [] mTransferBuffer;
-
-  NS_IF_RELEASE(mDTD);
-  NS_IF_RELEASE(mListener);
-  NS_IF_RELEASE(mTokenizer);
-
+  }
   //Remember that it's ok to simply ingore the PrevContext.
-
 }
 
 
@@ -172,7 +160,8 @@ void CParserContext::SetMimeType(const nsACString& aMimeType){
 nsresult
 CParserContext::GetTokenizer(PRInt32 aType,
                              nsIContentSink* aSink,
-                             nsITokenizer*& aTokenizer) {
+                             nsITokenizer*& aTokenizer)
+{
   nsresult result = NS_OK;
   
   if(!mTokenizer) {
@@ -195,17 +184,21 @@ CParserContext::GetTokenizer(PRInt32 aType,
         }
       }
 
-      result = NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,
-                                   mParserCommand,theFlags);
+      mTokenizer = new nsHTMLTokenizer(mDTDMode, mDocType,
+                                       mParserCommand, theFlags);
+      if (!mTokenizer) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
       // Make sure the new tokenizer has all of the necessary information.
       // XXX this might not be necessary.
-      if (mTokenizer && mPrevContext) {
+      if (mPrevContext) {
         mTokenizer->CopyState(mPrevContext->mTokenizer);
       }
     }
     else if (aType == NS_IPARSER_FLAG_XML)
     {
-      result = CallQueryInterface(mDTD, &mTokenizer);
+      mTokenizer = do_QueryInterface(mDTD, &result);
     }
   }
   

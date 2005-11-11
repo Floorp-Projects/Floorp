@@ -1111,7 +1111,7 @@ FindSuitableDTD(CParserContext& aParserContext,
   }
 
   if(theBestDTD) {
-    rv = theBestDTD->CreateNewInstance(&aParserContext.mDTD);
+    rv = theBestDTD->CreateNewInstance(getter_AddRefs(aParserContext.mDTD));
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aReturn = PR_TRUE;
@@ -1174,7 +1174,9 @@ nsParser::WillBuildModel(nsString& aFilename)
     return rv;
 
   nsITokenizer* tokenizer;
-  mParserContext->GetTokenizer(mParserContext->mDTD->GetType(), mSink, tokenizer);
+  rv = mParserContext->GetTokenizer(mParserContext->mDTD->GetType(), mSink, tokenizer);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return mParserContext->mDTD->WillBuildModel(*mParserContext, tokenizer, mSink);
 }
 
@@ -1981,18 +1983,18 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::BuildModel() {
+nsresult nsParser::BuildModel()
+{
   CParserContext* theRootContext = mParserContext;
   nsITokenizer*   theTokenizer = 0;
 
   nsresult result = NS_OK;
   if (mParserContext) {
     PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-    mParserContext->GetTokenizer(type, mSink, theTokenizer);
+    result = mParserContext->GetTokenizer(type, mSink, theTokenizer);
   }
 
-  if (theTokenizer) {
-
+  if (NS_SUCCEEDED(result)) {
     //Get the root DTD for use in model building...
     while (theRootContext->mPrevContext) {
       theRootContext = theRootContext->mPrevContext;
@@ -2007,25 +2009,8 @@ nsresult nsParser::BuildModel() {
       MOZ_TIMER_STOP(mDTDTime);
     }
   }
-  else{
+  else {
     mInternalState = result = NS_ERROR_HTMLPARSER_BADTOKENIZER;
-  }
-  return result;
-}
-
-
-/**
- * 
- * @update	gess1/22/99
- * @param 
- * @return
- */
-nsresult nsParser::GetTokenizer(nsITokenizer*& aTokenizer) {
-  nsresult result = NS_OK;
-  aTokenizer = nsnull;
-  if(mParserContext) {
-    PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-    result = mParserContext->GetTokenizer(type, mSink, aTokenizer);
   }
   return result;
 }
@@ -2033,11 +2018,6 @@ nsresult nsParser::GetTokenizer(nsITokenizer*& aTokenizer) {
 /*******************************************************************
   These methods are used to talk to the netlib system...
  *******************************************************************/
-
-#ifdef rickgdebug
-#include <fstream.h>
-  fstream* gOutFile;
-#endif
 
 /**
  *  
@@ -2070,10 +2050,6 @@ nsresult nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
   {
     mParserContext->SetMimeType(contentType);
   }
-
-#ifdef rickgdebug
-  gOutFile= new fstream("c:/temp/out.file",ios::trunc);
-#endif
 
   rv = NS_OK;
 
@@ -2621,14 +2597,6 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     mObserver->OnStopRequest(request, aContext, status);
   }
 
-#ifdef rickgdebug
-  if(gOutFile){
-    gOutFile->close();
-    delete gOutFile;
-    gOutFile = 0;
-  }
-#endif
-
   if (sParserDataListeners && mSink) {
     nsISupports *ctx = mSink->GetTarget();
     PRInt32 count = sParserDataListeners->Count();
@@ -2657,18 +2625,18 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
  *  @param   
  *  @return  TRUE if it's ok to proceed
  */
-PRBool nsParser::WillTokenize(PRBool aIsFinalChunk){
-  nsITokenizer* theTokenizer=0;
-  nsresult result = NS_OK;
-  if (mParserContext) {
-    PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-    mParserContext->GetTokenizer(type, mSink, theTokenizer);
+PRBool nsParser::WillTokenize(PRBool aIsFinalChunk)
+{
+  if (!mParserContext) {
+    return PR_TRUE;
   }
 
-  if (theTokenizer) {
-    result = theTokenizer->WillTokenize(aIsFinalChunk,&mTokenAllocator);
-  }  
-  return result;
+  nsITokenizer* theTokenizer;
+  PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
+  nsresult result = mParserContext->GetTokenizer(type, mSink, theTokenizer);
+  NS_ENSURE_SUCCESS(result, PR_FALSE);
+
+  return NS_SUCCEEDED(theTokenizer->WillTokenize(aIsFinalChunk,&mTokenAllocator));
 }
 
 
@@ -2680,18 +2648,17 @@ PRBool nsParser::WillTokenize(PRBool aIsFinalChunk){
  *  @update  gess 01/04/99
  *  @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
-  
-  nsITokenizer* theTokenizer = 0;
+nsresult nsParser::Tokenize(PRBool aIsFinalChunk)
+{
+  nsITokenizer* theTokenizer;
     
-  nsresult result = NS_OK;
-
+  nsresult result = NS_ERROR_NOT_AVAILABLE;
   if (mParserContext) {
     PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-    mParserContext->GetTokenizer(type, mSink, theTokenizer);
+    result = mParserContext->GetTokenizer(type, mSink, theTokenizer);
   }
 
-  if (theTokenizer) { 
+  if (NS_SUCCEEDED(result)) {
     if (mFlags & NS_PARSER_FLAG_FLUSH_TOKENS) {
       // For some reason tokens didn't get flushed ( probably
       // the parser got blocked before all the tokens in the
@@ -2736,7 +2703,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
       MOZ_TIMER_STOP(mTokenizeTime);
     }  
   }
-  else{
+  else {
     result = mInternalState = NS_ERROR_HTMLPARSER_BADTOKENIZER;
   }
   
@@ -2752,20 +2719,19 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
  *  @param   
  *  @return  TRUE if all went well
  */
-PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
-  PRBool result=PR_TRUE;
-
-  nsITokenizer* theTokenizer=0;
-  nsresult rv = NS_OK;
-  if (mParserContext) {
-    PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-    mParserContext->GetTokenizer(type, mSink, theTokenizer);
+PRBool nsParser::DidTokenize(PRBool aIsFinalChunk)
+{
+  if (!mParserContext) {
+    return PR_TRUE;
   }
 
-  if (NS_SUCCEEDED(rv) && theTokenizer) {
-    result = theTokenizer->DidTokenize(aIsFinalChunk);
-  }
-  return result;
+  nsITokenizer* theTokenizer;
+  PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
+  nsresult rv = mParserContext->GetTokenizer(type, mSink, theTokenizer);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  rv = theTokenizer->DidTokenize(aIsFinalChunk);
+  return NS_SUCCEEDED(rv);
 }
 
 /** 
@@ -2794,7 +2760,7 @@ nsParser::GetDTD(nsIDTD** aDTD)
 {
   if (mParserContext) {
     *aDTD = mParserContext->mDTD;
-    NS_IF_ADDREF(mParserContext->mDTD);
+    NS_IF_ADDREF(*aDTD);
   }
   
   return NS_OK;

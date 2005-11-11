@@ -313,14 +313,6 @@ class nsParser : public nsIParser,
     CParserContext*   PopContext();
     CParserContext*   PeekContext() {return mParserContext;}
 
-    /**
-     * 
-     * @update	gess 1/22/99
-     * @param 
-     * @return
-     */
-    nsresult GetTokenizer(nsITokenizer*& aTokenizer);
-
     /** 
      * Get the channel associated with this parser
      * @update harishd,gagan 07/17/01
