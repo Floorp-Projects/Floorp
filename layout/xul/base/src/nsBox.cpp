@@ -847,11 +847,10 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
   nsRect rect(nsPoint(0, 0), GetSize());
 
   if (ComputesOwnOverflowArea()) {
-    if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-      nsRect* overflow = GetOverflowAreaProperty();
-      NS_ASSERTION(overflow, "should have overflow area property");
+    nsRect* overflow = GetOverflowAreaProperty();
+    if (overflow)
       rect = *overflow;
-    }
+
   } else {
     if (!DoesClipChildren()) {
       // See if our child frames caused us to overflow after being laid
@@ -861,21 +860,14 @@ nsBox::SyncLayout(nsBoxLayoutState& aState)
       // frames in HTML inside XUL).
       nsIFrame* box;
       GetChildBox(&box);
-      while (box)
-        {
-          nsRect bounds;
-          if (box->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-            nsRect* overflowArea = box->GetOverflowAreaProperty();
-            NS_ASSERTION(overflowArea,
-                         "Should have created property for overflowing frame");
-            bounds = *overflowArea + box->GetPosition();
-          } else {
-            bounds = box->GetRect();
-          }
-          rect.UnionRect(rect, bounds);
+      while (box) {
+        nsRect* overflowArea = box->GetOverflowAreaProperty();
+        nsRect bounds = overflowArea ? *overflowArea + box->GetPosition() :
+                                       bounds = box->GetRect();
+        rect.UnionRect(rect, bounds);
 
-          box->GetNextBox(&box);
-        }
+        box->GetNextBox(&box);
+      }
     }
 
     const nsStyleDisplay* disp = GetStyleDisplay();
