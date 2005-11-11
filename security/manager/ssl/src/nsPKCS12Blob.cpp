@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsPKCS12Blob.cpp,v 1.42 2004/11/05 15:23:35 timeless%mozdev.org Exp $ */
+/* $Id: nsPKCS12Blob.cpp,v 1.43 2005/11/11 13:28:56 kaie%kuix.de Exp $ */
 
 #include "prmem.h"
 #include "prprf.h"
@@ -151,18 +151,25 @@ nsPKCS12Blob::ImportFromFile(nsILocalFile *file)
   rv = mToken->Login(PR_TRUE);
   if (NS_FAILED(rv)) return rv;
   
-  int wantRetry;
+  RetryReason wantRetry;
   
   do {
-    rv = ImportFromFileHelper(file, wantRetry);
+    rv = ImportFromFileHelper(file, im_standard_prompt, wantRetry);
+    
+    if (NS_SUCCEEDED(rv) && wantRetry == rr_auto_retry_empty_password_flavors)
+    {
+      rv = ImportFromFileHelper(file, im_try_zero_length_secitem, wantRetry);
+    }
   }
-  while (NS_SUCCEEDED(rv) && wantRetry);
+  while (NS_SUCCEEDED(rv) && (wantRetry != rr_do_not_retry));
   
   return rv;
 }
 
 nsresult
-nsPKCS12Blob::ImportFromFileHelper(nsILocalFile *file, PRBool &aWantRetry)
+nsPKCS12Blob::ImportFromFileHelper(nsILocalFile *file, 
+                                   nsPKCS12Blob::ImportMode aImportMode,
+                                   nsPKCS12Blob::RetryReason &aWantRetry)
 {
   nsNSSShutDownPreventionLock locker;
   nsresult rv;
@@ -172,18 +179,25 @@ nsPKCS12Blob::ImportFromFileHelper(nsILocalFile *file, PRBool &aWantRetry)
 
   PK11SlotInfo *slot=nsnull;
   nsXPIDLString tokenName;
-  
-  aWantRetry = PR_FALSE;
-
-  // get file password (unicode)
   unicodePw.data = NULL;
-  rv = getPKCS12FilePassword(&unicodePw);
-  if (NS_FAILED(rv)) goto finish;
-  if (unicodePw.data == NULL) {
-    handleError(PIP_PKCS12_USER_CANCELED);
-    return NS_OK;
-  }
+  
+  aWantRetry = rr_do_not_retry;
 
+  if (aImportMode == im_try_zero_length_secitem)
+  {
+    unicodePw.len = 0;
+  }
+  else
+  {
+    // get file password (unicode)
+    rv = getPKCS12FilePassword(&unicodePw);
+    if (NS_FAILED(rv)) goto finish;
+    if (unicodePw.data == NULL) {
+      handleError(PIP_PKCS12_USER_CANCELED);
+      return NS_OK;
+    }
+  }
+  
   mToken->GetTokenName(getter_Copies(tokenName));
   {
     NS_ConvertUTF16toUTF8 tokenNameCString(tokenName);
@@ -229,9 +243,22 @@ finish:
   // for every error possible.
   if (srv != SECSuccess) {
     if (SEC_ERROR_BAD_PASSWORD == PORT_GetError()) {
-      aWantRetry = PR_TRUE;
+      if (unicodePw.len == sizeof(PRUnichar))
+      {
+        // no password chars available, 
+        // unicodeToItem allocated space for the trailing zero character only.
+        aWantRetry = rr_auto_retry_empty_password_flavors;
+      }
+      else
+      {
+        aWantRetry = rr_bad_password;
+        handleError(PIP_PKCS12_NSS_ERROR);
+      }
     }
-    handleError(PIP_PKCS12_NSS_ERROR);
+    else
+    {
+      handleError(PIP_PKCS12_NSS_ERROR);
+    }
   } else if (NS_FAILED(rv)) { 
     handleError(PIP_PKCS12_RESTORE_FAILED);
   }
