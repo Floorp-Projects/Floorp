@@ -161,6 +161,48 @@ nsAsyncInstantiateEvent::CleanupEvent(PLEvent* event)
   delete ev;
 }
 
+/**
+ * A PLEvent for firing PluginNotFound DOM Events.
+ */
+struct nsPluginNotFoundEvent : public PLEvent {
+  nsPluginNotFoundEvent(nsIContent* aContent)
+  {
+    NS_ADDREF(aContent);
+    PL_InitEvent(this, aContent, nsPluginNotFoundEvent::HandleEvent,
+                 nsPluginNotFoundEvent::CleanupEvent);
+  }
+
+  ~nsPluginNotFoundEvent()
+  {
+    nsIContent* con = NS_STATIC_CAST(nsIContent*, PL_GetEventOwner(this));
+    NS_RELEASE(con);
+  }
+
+  static EventHandlerFunc HandleEvent;
+  static EventDestructorFunc CleanupEvent;
+};
+
+/* static */ void* PR_CALLBACK
+nsPluginNotFoundEvent::HandleEvent(PLEvent* event)
+{
+  nsIContent* con = NS_STATIC_CAST(nsIContent*, PL_GetEventOwner(event));
+
+  LOG(("OBJLC []: Firing plugin not found event for content %p\n", con));
+  nsContentUtils::DispatchTrustedEvent(con->GetDocument(), con,
+                                       NS_LITERAL_STRING("PluginNotFound"),
+                                       PR_TRUE, PR_TRUE);
+  return nsnull;
+}
+
+/* static */ void PR_CALLBACK
+nsPluginNotFoundEvent::CleanupEvent(PLEvent* event)
+{
+  nsPluginNotFoundEvent* ev = NS_STATIC_CAST(nsPluginNotFoundEvent*,
+                                             event);
+  delete ev;
+}
+
+
 class AutoNotifier {
   public:
     AutoNotifier(nsObjectLoadingContent* aContent, PRBool aNotify) :
@@ -293,6 +335,9 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
     UnloadContent();
   }
 
+  nsCOMPtr<nsIContent> thisContent = 
+    do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
+  NS_ASSERTION(thisContent, "must be a content");
   switch (newType) {
     case eType_Image:
       rv = LoadImageWithChannel(chan, getter_AddRefs(mFinalListener));
@@ -307,9 +352,6 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
       }
       break;
     case eType_Document: {
-      nsCOMPtr<nsIContent> thisContent = 
-        do_QueryInterface(NS_STATIC_CAST(nsIImageLoadingContent*, this));
-      NS_ASSERTION(thisContent, "must be a content");
       if (!mFrameLoader) {
         if (!thisContent->IsInDoc()) {
           // XXX frameloaders can't deal with not being in a document
@@ -373,7 +415,10 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
     case eType_Loading:
       NS_NOTREACHED("Should not have a loading type here!");
     case eType_Null:
-      // Do nothing.
+      // Do nothing, but fire the plugin not found event if needed
+      if (IsUnsupportedPlugin(thisContent)) {
+        FirePluginNotFound(thisContent);
+      }
       break;
   }
 
@@ -744,6 +789,10 @@ nsObjectLoadingContent::ObjectURIChanged(nsIURI* aURI,
         NS_NOTREACHED("Should not have a loading type here!");
       case eType_Null:
         // No need to load anything
+        if (IsUnsupportedPlugin(thisContent)) {
+          FirePluginNotFound(thisContent);
+        }
+
         break;
     };
     return NS_OK;
@@ -1024,6 +1073,28 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
   }
 }
 
+/* static */ void
+nsObjectLoadingContent::FirePluginNotFound(nsIContent* thisContent)
+{
+  nsCOMPtr<nsIEventQueue> eventQ;
+  NS_GetCurrentEventQ(getter_AddRefs(eventQ));
+  if (!eventQ) {
+    return;
+  }
+
+  nsPluginNotFoundEvent* ev = new nsPluginNotFoundEvent(thisContent);
+  if (!ev) {
+    return;
+  }
+
+  LOG(("OBJLC [%p]: Posting PluginNotFound event for content %p\n", this,
+       thisContent.get()));
+  nsresult rv = eventQ->PostEvent(ev);
+  if (NS_FAILED(rv)) {
+    PL_DestroyEvent(ev);
+  }
+}
+
 nsObjectLoadingContent::ObjectType
 nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
 {
@@ -1201,6 +1272,12 @@ nsObjectLoadingContent::ShouldShowDefaultPlugin(nsIContent* aContent)
     return PR_FALSE;
   }
 
+  return IsUnsupportedPlugin(aContent);
+}
+
+/* static */ PRBool
+nsObjectLoadingContent::IsUnsupportedPlugin(nsIContent* aContent)
+{
   if (!aContent->IsContentOfType(nsIContent::eHTML)) {
     return PR_FALSE;
   }
