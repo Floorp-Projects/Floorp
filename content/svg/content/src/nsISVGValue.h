@@ -71,7 +71,7 @@ public:
     mod_die
   };
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGVALUE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGVALUE_IID)
 
   NS_IMETHOD SetValueString(const nsAString& aValue)=0;
   NS_IMETHOD GetValueString(nsAString& aValue)=0;
@@ -82,6 +82,8 @@ public:
   NS_IMETHOD BeginBatchUpdate()=0;
   NS_IMETHOD EndBatchUpdate()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGValue, NS_ISVGVALUE_IID)
 
 nsresult
 NS_CreateSVGGenericStringValue(const nsAString& aValue, nsISVGValue** aResult);

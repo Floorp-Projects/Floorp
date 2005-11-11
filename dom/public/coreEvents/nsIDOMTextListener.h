@@ -53,9 +53,12 @@ class nsIDOMTextListener : public nsIDOMEventListener
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMTEXTLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMTEXTLISTENER_IID)
 
   NS_IMETHOD HandleText(nsIDOMEvent* aTextEvent) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMTextListener, NS_IDOMTEXTLISTENER_IID)
+
 #endif // nsIDOMTextListener_h__

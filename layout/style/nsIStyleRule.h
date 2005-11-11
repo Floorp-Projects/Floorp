@@ -83,7 +83,7 @@ struct nsRuleData;
 
 class nsIStyleRule : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_RULE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTYLE_RULE_IID)
 
   /**
    * |nsIStyleRule::MapRuleInfoInto| is a request to copy all stylistic
@@ -103,5 +103,6 @@ public:
 #endif
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleRule, NS_ISTYLE_RULE_IID)
 
 #endif /* nsIStyleRule_h___ */

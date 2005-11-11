@@ -69,7 +69,7 @@ class nsITextWidget : public nsISupports
 {
 
   public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXTWIDGET_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITEXTWIDGET_IID)
 
     /**
      * Get the text of this component.
@@ -189,6 +189,8 @@ class nsITextWidget : public nsISupports
     NS_IMETHOD GetCaretPosition(PRUint32& aPosition) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITextWidget, NS_ITEXTWIDGET_IID)
 
 #endif // nsITextWidget_h__
 

@@ -56,10 +56,12 @@
 class nsIOS2Locale : public nsISupports
 {
  public:
+   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOS2LOCALE_IID)
 
-   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IOS2LOCALE_IID)
    NS_IMETHOD GetPlatformLocale(const nsAString& locale, PULONG os2Codepage) = 0;
    NS_IMETHOD GetXPLocale(const char* os2Locale, nsAString& locale)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIOS2Locale, NS_IOS2LOCALE_IID)
 
 #endif

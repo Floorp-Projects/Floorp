@@ -137,8 +137,10 @@ typedef nsID nsIID;
  * A macro to build the static const IID accessor method
  */
 
-#define NS_DEFINE_STATIC_IID_ACCESSOR(the_iid) \
+#define NS_DECLARE_STATIC_IID_ACCESSOR(the_iid)                         \
   static const nsIID& GetIID() {static const nsIID iid = the_iid; return iid;}
+
+#define NS_DEFINE_STATIC_IID_ACCESSOR(the_interface, the_iid)
 
 /**
  * A macro to build the static const CID accessor method
@@ -147,5 +149,7 @@ typedef nsID nsIID;
 #define NS_DEFINE_STATIC_CID_ACCESSOR(the_cid) \
   static const nsID& GetCID() {static const nsID cid = the_cid; return cid;}
 
-#endif
+#define NS_GET_IID(T) nsCOMTypeInfo<T>::GetIID()
+#define NS_GET_TEMPLATE_IID(T) NS_GET_IID(T)
 
+#endif

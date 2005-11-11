@@ -54,7 +54,7 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
   NS_DECL_ISUPPORTS
 
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_SVGCLIPPATHFRAME_CID)
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_SVGCLIPPATHFRAME_CID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVGCLIPPATHFRAME_CID)
 
   NS_IMETHOD ClipPaint(nsISVGRendererCanvas* canvas,
                        nsISVGChildFrame* aParent,
@@ -84,6 +84,8 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
   // nsISVGContainerFrame interface:
   already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGClipPathFrame, NS_SVGCLIPPATHFRAME_CID)
 
 nsresult
 NS_GetSVGClipPathFrame(nsSVGClipPathFrame **aResult, nsIURI *aURI, nsIContent *aContent);

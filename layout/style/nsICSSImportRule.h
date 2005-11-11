@@ -50,7 +50,7 @@ class nsMediaList;
 
 class nsICSSImportRule : public nsICSSRule {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_IMPORT_RULE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_IMPORT_RULE_IID)
 
   NS_IMETHOD SetURLSpec(const nsString& aURLSpec) = 0;
   NS_IMETHOD GetURLSpec(nsString& aURLSpec) const = 0;
@@ -60,6 +60,8 @@ public:
 
   NS_IMETHOD SetSheet(nsICSSStyleSheet*) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSImportRule, NS_ICSS_IMPORT_RULE_IID)
 
 nsresult
 NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult, 

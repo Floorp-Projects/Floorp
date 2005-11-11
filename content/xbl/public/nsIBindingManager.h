@@ -64,7 +64,7 @@ class nsVoidArray;
 class nsIBindingManager : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBINDING_MANAGER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBINDING_MANAGER_IID)
 
   virtual nsXBLBinding* GetBinding(nsIContent* aContent) = 0;
   NS_IMETHOD SetBinding(nsIContent* aContent, nsXBLBinding* aBinding) = 0;
@@ -177,5 +177,7 @@ public:
 
   NS_IMETHOD ShouldBuildChildFrames(nsIContent* aContent, PRBool* aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIBindingManager, NS_IBINDING_MANAGER_IID)
 
 #endif // nsIBinding_Manager_h__

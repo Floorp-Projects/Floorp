@@ -54,7 +54,7 @@ struct JSObject;
 class nsIJSEventListener : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJSEVENTLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSEVENTLISTENER_IID)
 
   nsIJSEventListener(nsIScriptContext *aContext, JSObject *aScopeObject,
                      nsISupports *aTarget)
@@ -95,6 +95,8 @@ protected:
   JSObject *mScopeObject;
   nsISupports *mTarget;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSEventListener, NS_IJSEVENTLISTENER_IID)
 
 /* factory function */
 nsresult NS_NewJSEventListener(nsIScriptContext *aContext,

@@ -51,7 +51,7 @@ class nsIUGenCategory : public nsISupports {
 
 public: 
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUGENCATEGORY_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUGENCATEGORY_IID)
 
    /**
     *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt
@@ -80,5 +80,7 @@ public:
     */
    NS_IMETHOD Is( PRUnichar aChar, nsUGenCategory aCategory, PRBool* oResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIUGenCategory, NS_IUGENCATEGORY_IID)
 
 #endif  /* nsIUGenCategory_h__ */

@@ -54,7 +54,7 @@ class nsIDocument;
  */
 class nsIFragmentContentSink : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_I_FRAGMENT_CONTENT_SINK_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_I_FRAGMENT_CONTENT_SINK_IID)
   /**
    * This method is used to obtain the fragment created by
    * a fragment content sink. The value returned will be null
@@ -94,6 +94,9 @@ public:
    */
   NS_IMETHOD IgnoreFirstContainer() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFragmentContentSink,
+                              NS_I_FRAGMENT_CONTENT_SINK_IID)
 
 /**
  * Base version takes string nested in context, content surrounded by

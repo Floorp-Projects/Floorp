@@ -57,7 +57,7 @@ class nsIParser;
 
 class nsICharsetDetectionAdaptor : public nsISupports {
 public:  
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARSETDETECTIONADAPTOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHARSETDETECTIONADAPTOR_IID)
   /*   
      Initialize it by setup the nsICharsetDetector and the 
      nsIWebShellServices
@@ -66,4 +66,8 @@ public:
                   nsIDocument* aDocument, nsIParser* aParser, 
                   const char* aCharset, const char* aCommand=nsnull) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICharsetDetectionAdaptor,
+                              NS_ICHARSETDETECTIONADAPTOR_IID)
+
 #endif /* nsICDETAdaptor_h__ */

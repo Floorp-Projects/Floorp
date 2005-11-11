@@ -49,7 +49,7 @@
  */
 class nsIDOMPaintListener : public nsIDOMEventListener {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMPAINTLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMPAINTLISTENER_IID)
   /**
   * Processes a paint event
   * @param aEvent @see nsIDOMEvent.h 
@@ -71,5 +71,7 @@ public:
   */
   NS_IMETHOD Scroll(nsIDOMEvent* aEvent) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMPaintListener, NS_IDOMPAINTLISTENER_IID)
 
 #endif /* nsIDOMPaintListener_h__ */

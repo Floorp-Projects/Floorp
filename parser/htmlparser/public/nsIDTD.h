@@ -90,7 +90,7 @@ class nsIDTD : public nsISupports
 {
 public:
 
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDTD_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDTD_IID)
 
 
     NS_IMETHOD_(const nsIID&) GetMostDerivedIID(void) const = 0;
@@ -203,6 +203,8 @@ public:
 
     NS_IMETHOD_(PRInt32) GetType() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDTD, NS_IDTD_IID)
 
 #define NS_DECL_NSIDTD \
     NS_IMETHOD_(const nsIID&)  GetMostDerivedIID(void) const;\

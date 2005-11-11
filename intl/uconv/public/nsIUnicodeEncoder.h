@@ -79,13 +79,15 @@
 class nsIUnicharEncoder : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICHARENCODER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUNICHARENCODER_IID)
 
   /**
    * Converts a character from Unicode to a Charset.
    */
   NS_IMETHOD Convert(PRUnichar aChar, char * aDest, PRInt32 * aDestLength) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharEncoder, NS_IUNICHARENCODER_IID)
 
 //
 // Malloc an Encoder (unicode -> charset) buffer if the
@@ -131,7 +133,7 @@ public:
 class nsIUnicodeEncoder : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICODEENCODER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUNICODEENCODER_IID)
 
   enum {
     kOnError_Signal,        // on an error, stop and signal
@@ -215,5 +217,7 @@ public:
   NS_IMETHOD SetOutputErrorBehavior(PRInt32 aBehavior, 
       nsIUnicharEncoder * aEncoder, PRUnichar aChar) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicodeEncoder, NS_IUNICODEENCODER_IID)
 
 #endif /* nsIUnicodeEncoder_h___ */

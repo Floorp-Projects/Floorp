@@ -70,7 +70,7 @@
 class nsIUnicodeDecodeHelper : public nsISupports
 {
 public:
-   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICODEDECODEHELPER_IID)
+   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUNICODEDECODEHELPER_IID)
 
   /**
    * Converts data using a lookup table.
@@ -113,5 +113,8 @@ public:
       uMappingTable * aMappingTable, PRUnichar * aFastTable, 
       PRInt32 aTableSize) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicodeDecodeHelper,
+                              NS_IUNICODEDECODEHELPER_IID)
 
 #endif /* nsIUnicodeDecodeHelper_h___ */

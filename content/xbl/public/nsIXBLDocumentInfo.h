@@ -61,7 +61,7 @@ class nsACString;
 class nsIXBLDocumentInfo : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXBLDOCUMENTINFO_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXBLDOCUMENTINFO_IID)
 
   NS_IMETHOD GetDocument(nsIDocument** aResult)=0;
   
@@ -78,6 +78,8 @@ public:
   // Tells whether the scheme of the document URI is "chrome".
   NS_IMETHOD_(PRBool) IsChrome()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXBLDocumentInfo, NS_IXBLDOCUMENTINFO_IID)
 
 nsresult
 NS_NewXBLDocumentInfo(nsIDocument* aDocument, nsIXBLDocumentInfo** aResult);

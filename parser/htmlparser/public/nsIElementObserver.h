@@ -58,7 +58,7 @@
 
 class nsIElementObserver : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IELEMENTOBSERVER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IELEMENTOBSERVER_IID)
 
   enum { IS_DOCUMENT_WRITE = 1U };
   /*
@@ -85,6 +85,8 @@ public:
                     const PRUint32 aFlags) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIElementObserver, NS_IELEMENTOBSERVER_IID)
 
 #define NS_HTMLPARSER_VALID_META_CHARSET NS_ERROR_GENERATE_SUCCESS( \
                                           NS_ERROR_MODULE_HTMLPARSER,3000)

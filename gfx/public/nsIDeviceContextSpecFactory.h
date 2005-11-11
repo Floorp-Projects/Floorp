@@ -51,7 +51,7 @@ class nsIPrintSettings;
 class nsIDeviceContextSpecFactory : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID)
   /**
    * Initialize the device context spec factory
    * @return error status
@@ -75,5 +75,8 @@ public:
                                      nsIDeviceContextSpec *&aNewSpec,
                                      PRBool aIsPrintPreview) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDeviceContextSpecFactory,
+                              NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID)
 
 #endif

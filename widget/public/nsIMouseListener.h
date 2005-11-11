@@ -54,7 +54,7 @@
 
 class nsIMouseListener : public nsISupports {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMOUSELISTENER_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMOUSELISTENER_IID)
 
     /**
      * Processes a mouse pressed event
@@ -86,5 +86,7 @@ public:
     virtual nsEventStatus MouseMoved(const nsGUIEvent & aMouseEvent) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMouseListener, NS_IMOUSELISTENER_IID)
 
 #endif // nsIMouseListener_h__

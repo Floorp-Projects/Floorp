@@ -55,7 +55,7 @@ class nsIInputStream;
 /** Interface to a buffer that holds bytes */
 class nsIByteBuffer : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBYTEBUFFER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBYTEBUFFER_IID)
 
   NS_IMETHOD Init(PRUint32 aBufferSize) = 0;
 
@@ -76,6 +76,8 @@ public:
   NS_IMETHOD_(PRInt32) Fill(nsresult* aErrorCode, nsIInputStream* aStream,
                             PRUint32 aKeep) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIByteBuffer, NS_IBYTEBUFFER_IID)
 
 #define NS_BYTEBUFFER_CID                            \
 { /* a49d5280-0d6b-11d3-9331-00104ba0fd40 */         \

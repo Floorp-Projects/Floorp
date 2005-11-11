@@ -114,7 +114,7 @@ public:
     // Helper function to simplify getting notification callbacks.
     template <class T>
     void GetCallback(nsCOMPtr<T> &aResult) {
-        GetInterface(NS_GET_IID(T), getter_AddRefs(aResult));
+        GetInterface(NS_GET_TEMPLATE_IID(T), getter_AddRefs(aResult));
     }
 
     // Helper function for getting the nsIFTPEventSink.

@@ -56,7 +56,7 @@
 class nsProxyInfo : public nsIProxyInfo
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_PROXYINFO_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROXYINFO_IID)
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROXYINFO
@@ -90,5 +90,7 @@ private:
   PRUint32     mTimeout;
   nsProxyInfo *mNext;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsProxyInfo, NS_PROXYINFO_IID)
 
 #endif // nsProxyInfo_h__

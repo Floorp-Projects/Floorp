@@ -63,7 +63,7 @@ struct JSObject;
 class nsIScriptGlobalObject : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECT_IID)
 
   virtual void SetContext(nsIScriptContext *aContext) = 0;
   virtual nsIScriptContext *GetContext() = 0;
@@ -123,5 +123,8 @@ public:
    */
   virtual nsresult SetNewArguments(PRUint32 aArgc, void* aArgv) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptGlobalObject,
+                              NS_ISCRIPTGLOBALOBJECT_IID)
 
 #endif

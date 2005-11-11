@@ -55,7 +55,7 @@ class nsDOMAttributeMap;
 class nsIAttribute : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IATTRIBUTE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IATTRIBUTE_IID)
 
   virtual void SetMap(nsDOMAttributeMap *aMap) = 0;
   
@@ -105,5 +105,7 @@ protected:
 private:
   nsIAttribute(); // Not to be implemented.
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIAttribute, NS_IATTRIBUTE_IID)
 
 #endif /* nsIAttribute_h___ */

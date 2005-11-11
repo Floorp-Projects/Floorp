@@ -58,7 +58,7 @@ TextService interface to outside world
 class nsITextService  : public nsISupports{
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXTSERVICE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITEXTSERVICE_IID)
 
   /**
    *
@@ -67,6 +67,8 @@ public:
   NS_IMETHOD Execute() = 0;
   NS_IMETHOD GetMenuString(nsString &aString) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITextService, NS_ITEXTSERVICE_IID)
 
 #endif // nsITextService_h__
 

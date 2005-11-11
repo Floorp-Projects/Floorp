@@ -60,9 +60,11 @@
 
 class ITestClass: public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITESTCLASS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITESTCLASS_IID)
   virtual void Test() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(ITestClass, NS_ITESTCLASS_IID)
 
 extern "C" void RegisterTestFactories();
 

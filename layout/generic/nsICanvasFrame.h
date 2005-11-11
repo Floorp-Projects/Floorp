@@ -47,7 +47,7 @@
 class nsICanvasFrame : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICANVASFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASFRAME_IID)
 
   /** SetHasFocus tells the CanvasFrame to draw with focus ring
    *  @param aHasFocus PR_TRUE to show focus ring, PR_FALSE to hide it
@@ -56,6 +56,7 @@ public:
 
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasFrame, NS_ICANVASFRAME_IID)
 
 #endif  // nsICanvasFrame_h__
 

@@ -65,7 +65,7 @@ class nsISupportsArray;
 class nsIXULPrototypeDocument : public nsISerializable
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULPROTOTYPEDOCUMENT_IID);
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULPROTOTYPEDOCUMENT_IID)
 
     /**
      * Retrieve the URI of the document
@@ -97,6 +97,8 @@ public:
     NS_IMETHOD NotifyLoadDone() = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULPrototypeDocument,
+                              NS_IXULPROTOTYPEDOCUMENT_IID)
 
 // CID for factory-based creation, used only for deserialization.
 #define NS_XULPROTOTYPEDOCUMENT_CLASSNAME "XUL Prototype Document"

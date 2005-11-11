@@ -51,7 +51,7 @@ class nsICharsetDetectionObserver;
  
 class nsICharsetDetector : public nsISupports {
 public:  
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARSETDETECTOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHARSETDETECTOR_IID)
 
   /* 
      Setup the observer so it know how to notify the answer
@@ -76,4 +76,8 @@ public:
   NS_IMETHOD Done() = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICharsetDetector,
+                              NS_ICHARSETDETECTOR_IID)
+
 #endif /* nsICharsetDetector_h__ */

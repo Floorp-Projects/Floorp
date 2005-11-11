@@ -47,7 +47,7 @@ class nsICSSStyleSheet;
 
 class nsICSSLoaderObserver : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSSLOADEROBSERVER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSLOADEROBSERVER_IID)
 
   /**
    * StyleSheetLoaded is called after aSheet is marked complete and before any
@@ -66,5 +66,7 @@ public:
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
                               nsresult aStatus) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSLoaderObserver, NS_ICSSLOADEROBSERVER_IID)
 
 #endif // nsICSSLoaderObserver_h___

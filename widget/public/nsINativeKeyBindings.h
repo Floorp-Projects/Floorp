@@ -62,7 +62,7 @@ class nsINativeKeyBindings : public nsISupports
  public:
   typedef void (*DoCommandCallback)(const char *, void*);
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INATIVEKEYBINDINGS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INATIVEKEYBINDINGS_IID)
 
   virtual NS_HIDDEN_(PRBool) KeyDown(const nsNativeKeyEvent& aEvent,
                                      DoCommandCallback aCallback,
@@ -76,5 +76,7 @@ class nsINativeKeyBindings : public nsISupports
                                    DoCommandCallback aCallback,
                                    void *aCallbackData) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsINativeKeyBindings, NS_INATIVEKEYBINDINGS_IID)
 
 #endif

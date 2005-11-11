@@ -61,7 +61,7 @@ class nsIArray;
 
 class nsIInspectorCSSUtils : public nsISupports {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IINSPECTORCSSUTILS_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IINSPECTORCSSUTILS_IID)
 
     // Hooks to nsCSSProps static methods from another library (the
     // AddRefTable and ReleaseTable should be handled by the
@@ -84,5 +84,7 @@ public:
     // Hooks to XBL
     NS_IMETHOD GetBindingURLs(nsIDOMElement *aElement, nsIArray **aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIInspectorCSSUtils, NS_IINSPECTORCSSUTILS_IID)
 
 #endif /* nsIInspectorCSSUtils_h___ */

@@ -54,7 +54,7 @@ class nsIFormControl;
 class nsIRadioVisitor : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRADIOVISITOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRADIOVISITOR_IID)
 
   /**
    * Visit a node in the tree.  This is meant to be called on all radios in a
@@ -70,6 +70,8 @@ public:
    */
   NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioVisitor, NS_IRADIOVISITOR_IID)
 
 /**
  * This visitor sets CheckedChanged on all elements it finds.

@@ -127,9 +127,11 @@ enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
  */
 class nsIDebugDumpContent : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDEBUG_DUMP_CONTENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDEBUG_DUMP_CONTENT_IID)
   NS_IMETHOD DumpContentModel()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDebugDumpContent, NS_IDEBUG_DUMP_CONTENT_IID)
 
 /**
  *  This class defines the iparser interface. This XPCOM
@@ -140,7 +142,7 @@ public:
 class nsIParser : public nsISupports {
   public:
 
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPARSER_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPARSER_IID)
 
     /**
      *  Call this method if you have a DTD that you want to share with the parser.
@@ -308,6 +310,8 @@ class nsIParser : public nsISupports {
 
     NS_IMETHOD CancelParsingEvents() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIParser, NS_IPARSER_IID)
 
 /* ===========================================================*
   Some useful constants...

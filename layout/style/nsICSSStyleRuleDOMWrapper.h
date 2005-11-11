@@ -47,9 +47,12 @@
 
 class nsICSSStyleRuleDOMWrapper : public nsIDOMCSSStyleRule {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_RULE_DOM_WRAPPER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_RULE_DOM_WRAPPER_IID)
 
   NS_IMETHOD GetCSSStyleRule(nsICSSStyleRule** aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSStyleRuleDOMWrapper,
+                              NS_ICSS_STYLE_RULE_DOM_WRAPPER_IID)
 
 #endif /* !defined(nsICSSStyleRuleDOMWrapper_h_) */

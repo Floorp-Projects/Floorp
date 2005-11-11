@@ -52,7 +52,7 @@ class nsSVGFilterInstance;
 
 class nsISVGFilter : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGFILTER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGFILTER_IID)
 
   // Perform the filter operation on the images/regions
   // specified by 'instance'
@@ -61,5 +61,7 @@ public:
   // Get the standard image source requirements of this filter.
   NS_IMETHOD GetRequirements(PRUint32 *aRequirements) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGFilter, NS_ISVGFILTER_IID)
 
 #endif

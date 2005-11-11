@@ -123,7 +123,7 @@ protected:
 
 class NS_NO_VTABLE nsINSSComponent : public nsISupports {
  public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INSSCOMPONENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSSCOMPONENT_IID)
 
   NS_IMETHOD GetPIPNSSBundleString(const char *name,
                                    nsAString &outString) = 0;
@@ -159,6 +159,8 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_IMETHOD DispatchEvent(const nsAString &eventType, const nsAString &token) = 0;
   
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
 
 class nsCryptoHash : public nsICryptoHash
 {

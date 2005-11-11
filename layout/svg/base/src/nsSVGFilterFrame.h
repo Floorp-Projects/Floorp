@@ -51,7 +51,7 @@ class nsIFrame;
 
 class nsISVGFilterFrame : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGFILTERFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGFILTERFRAME_IID)
 
   NS_IMETHOD FilterPaint(nsISVGRendererCanvas *aCanvas,
                          nsISVGChildFrame *aTarget) = 0;
@@ -59,6 +59,8 @@ public:
   NS_IMETHOD GetInvalidationRegion(nsIFrame *aTarget,
                                    nsISVGRendererRegion **aRegion) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGFilterFrame, NS_ISVGFILTERFRAME_IID)
 
 nsresult
 NS_GetSVGFilterFrame(nsISVGFilterFrame **aResult,

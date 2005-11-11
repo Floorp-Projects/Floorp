@@ -54,7 +54,7 @@
 class nsIDOMLoadListener : public nsIDOMEventListener {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMLOADLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMLOADLISTENER_IID)
   /**
   * Processes a page or image load event
   * @param aMouseEvent @see nsIDOMEvent.h 
@@ -92,5 +92,7 @@ public:
   NS_IMETHOD Error(nsIDOMEvent* aEvent) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMLoadListener, NS_IDOMLOADLISTENER_IID)
 
 #endif // nsIDOMLoadListener_h__

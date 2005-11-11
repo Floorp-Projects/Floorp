@@ -76,7 +76,7 @@ class nsProxyEventClass : public nsISupports
 public:
     NS_DECL_ISUPPORTS
     
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_CLASS_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_CLASS_IID)
     static nsProxyEventClass* GetNewOrUsedClass(REFNSIID aIID);
     
     NS_IMETHOD DelegatedQueryInterface( nsProxyEventObject* self, 
@@ -102,6 +102,7 @@ private:
                                                 nsProxyEventObject** aInstancePtr);
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsProxyEventClass, NS_PROXYEVENT_CLASS_IID)
 
 
 class nsProxyEventObject : public nsXPTCStubBase
@@ -110,7 +111,7 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_OBJECT_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_OBJECT_IID)
     
     static nsProxyEventObject* GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                                  PRInt32 proxyType,
@@ -159,8 +160,7 @@ protected:
     nsProxyEventObject *mNext;
 };
 
-
-
+NS_DEFINE_STATIC_IID_ACCESSOR(nsProxyEventObject, NS_PROXYEVENT_OBJECT_IID)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsProxyObjectManager

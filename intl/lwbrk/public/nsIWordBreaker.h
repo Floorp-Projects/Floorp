@@ -56,8 +56,8 @@ typedef struct {
 class nsIWordBreaker : public nsISupports
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWORDBREAKER_IID)
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWORDBREAKER_IID)
   virtual PRBool BreakInBetween(const PRUnichar* aText1 , PRUint32 aTextLen1,
                                 const PRUnichar* aText2 ,
                                 PRUint32 aTextLen2) = 0;
@@ -70,5 +70,7 @@ public:
                            PRUint32 aPos) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIWordBreaker, NS_IWORDBREAKER_IID)
 
 #endif  /* nsIWordBreaker_h__ */

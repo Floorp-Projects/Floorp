@@ -53,10 +53,12 @@ typedef enum {
 
 class nsIXULPopupListener: public nsISupports {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULPOPUPLISTENER_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULPOPUPLISTENER_IID)
 
     NS_IMETHOD Init(nsIDOMElement* anElement, const XULPopupType& aPopupType) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULPopupListener, NS_IXULPOPUPLISTENER_IID)
 
 nsresult
 NS_NewXULPopupListener(nsIXULPopupListener** result);

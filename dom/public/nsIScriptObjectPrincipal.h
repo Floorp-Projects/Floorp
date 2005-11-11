@@ -53,9 +53,12 @@ class nsIPrincipal;
 class nsIScriptObjectPrincipal : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTOBJECTPRINCIPAL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTOBJECTPRINCIPAL_IID)
 
   virtual nsIPrincipal* GetPrincipal() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptObjectPrincipal,
+                              NS_ISCRIPTOBJECTPRINCIPAL_IID)
 
 #endif // nsIScriptObjectPrincipal_h__

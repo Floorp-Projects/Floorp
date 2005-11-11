@@ -52,7 +52,7 @@ class nsISelectionController;
 class nsITextControlFrame : public nsIFormControlFrame
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGFXTEXTCONTROLFRAME2_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGFXTEXTCONTROLFRAME2_IID)
 
   NS_IMETHOD    GetEditor(nsIEditor **aEditor) = 0;
 
@@ -89,5 +89,8 @@ public:
 
   NS_IMETHOD    GetSelectionContr(nsISelectionController **aSelCon) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlFrame,
+                              NS_IGFXTEXTCONTROLFRAME2_IID)
 
 #endif

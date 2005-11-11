@@ -99,7 +99,7 @@ class nsIHTMLContentSink : public nsIContentSink
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTML_CONTENT_SINK_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTML_CONTENT_SINK_IID)
 
   /**
    * This method is used to open the HEAD container. It is useful if a tag
@@ -232,6 +232,8 @@ public:
   NS_IMETHOD_(PRBool) IsFormOnStack() = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLContentSink, NS_IHTML_CONTENT_SINK_IID)
 
 #endif /* nsIHTMLContentSink_h___ */
 

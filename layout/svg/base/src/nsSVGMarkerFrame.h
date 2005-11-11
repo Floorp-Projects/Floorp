@@ -67,7 +67,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_SVGMARKERFRAME_CID)
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_SVGMARKERFRAME_CID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVGMARKERFRAME_CID)
 
   // nsISVGValueObserver interface:
   NS_IMETHOD DidModifySVGObservable(nsISVGValue* observable,
@@ -121,6 +121,8 @@ private:
   // second recursion prevention flag, for GetCanvasTM()
   PRPackedBool mInUse2;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGMarkerFrame, NS_SVGMARKERFRAME_CID)
 
 nsresult
 NS_GetSVGMarkerFrame(nsSVGMarkerFrame **aResult,

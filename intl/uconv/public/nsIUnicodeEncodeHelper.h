@@ -72,7 +72,7 @@ class nsIUnicodeEncodeHelper : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICODEENCODEHELPER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUNICODEENCODEHELPER_IID)
 
   /**
    * Converts data using a lookup table.
@@ -105,6 +105,7 @@ public:
   NS_IMETHOD FillInfo(PRUint32* aInfo, PRInt32 aTableCount, uMappingTable  ** aMappingTable) = 0;
 };
 
-
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicodeEncodeHelper,
+                              NS_IUNICODEENCODEHELPER_IID)
 
 #endif /* nsIUnicodeEncodeHelper_h___ */

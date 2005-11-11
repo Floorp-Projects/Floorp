@@ -47,11 +47,13 @@
 
 class nsISVGSVGFrame : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGSVGFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGSVGFRAME_IID)
 
   NS_IMETHOD SuspendRedraw()=0;        
   NS_IMETHOD UnsuspendRedraw()=0;      
   NS_IMETHOD NotifyViewportChange()=0; 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGSVGFrame, NS_ISVGSVGFRAME_IID)
 
 #endif // __NS_ISVGSVGFRAME_H__

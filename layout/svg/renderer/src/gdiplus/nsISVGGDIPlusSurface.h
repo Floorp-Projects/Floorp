@@ -56,13 +56,15 @@ using namespace Gdiplus;
 class nsISVGGDIPlusSurface : public nsISVGRendererSurface
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGGDIPLUSSURFACE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGGDIPLUSSURFACE_IID)
 
   /**
    * Obtain the Gdiplus::Graphics object for this canvas.
    */
   NS_IMETHOD_(Bitmap*) GetSurface()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGGDIPlusSurface, NS_ISVGGDIPLUSSURFACE_IID)
 
 /** @} */
 

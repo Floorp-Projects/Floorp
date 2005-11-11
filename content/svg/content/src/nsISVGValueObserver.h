@@ -62,13 +62,15 @@ class nsISVGValue;
 class nsISVGValueObserver : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGVALUEOBSERVER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGVALUEOBSERVER_IID)
   
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
                                      nsISVGValue::modificationType)=0;
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
                                      nsISVGValue::modificationType)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGValueObserver, NS_ISVGVALUEOBSERVER_IID)
 
 #endif // __NS_ISVGVALUEOBSERVER_H__
 

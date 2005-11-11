@@ -50,7 +50,7 @@
 
 class nsICanvasRenderingContextInternal : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 
   // This method should NOT hold a ref to aParentCanvas; it will be called
   // with nsnull when the element is going away.
@@ -73,5 +73,8 @@ public:
   // e.g. due to a Redraw on the frame.
   NS_IMETHOD UpdateImageFrame() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasRenderingContextInternal,
+                              NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
 
 #endif /* nsICanvasRenderingContextInternal_h___ */

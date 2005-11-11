@@ -119,11 +119,13 @@ public:
         // a non-scriptable interface, output |nsISupports| instead of the
         // interface name.
         nsCOMPtr<nsIInterfaceInfo> info;
-        nsCOMPtr<nsIInterfaceInfoManager> iim =
-          getter_AddRefs(XPTI_GetInterfaceInfoManager());
-        NS_ASSERTION(iim, "could not get interface info manager");
+        nsCOMPtr<nsIInterfaceInfoManager>
+          iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID, &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+
         rv = iim->GetInfoForIID(iid, getter_AddRefs(info));
         NS_ENSURE_SUCCESS(rv, rv);
+
         PRBool scriptable;
         if (NS_SUCCEEDED(rv)) {
           info->IsScriptable(&scriptable);
@@ -210,9 +212,10 @@ public:
   {
     nsresult rv;
 
-    nsCOMPtr<nsIInterfaceInfoManager> iim =
-      getter_AddRefs(XPTI_GetInterfaceInfoManager());
-    NS_ASSERTION(iim, "could not get interface info manager");
+    nsCOMPtr<nsIInterfaceInfoManager>
+      iim(do_GetService(NS_INTERFACEINFOMANAGER_SERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIEnumerator> etor;
     rv = iim->EnumerateInterfaces(getter_AddRefs(etor));
     NS_ENSURE_SUCCESS(rv, rv);

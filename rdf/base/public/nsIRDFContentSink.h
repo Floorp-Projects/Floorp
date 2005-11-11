@@ -60,7 +60,7 @@ class nsIURI;
 
 class nsIRDFContentSink : public nsIXMLContentSink {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFCONTENTSINK_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRDFCONTENTSINK_IID)
 
     /**
      * Initialize the content sink.
@@ -78,6 +78,7 @@ public:
     NS_IMETHOD GetDataSource(nsIRDFDataSource*& rDataSource) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRDFContentSink, NS_IRDFCONTENTSINK_IID)
 
 /**
  * This constructs a content sink that can be used without a

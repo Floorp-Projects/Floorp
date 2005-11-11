@@ -49,13 +49,13 @@ class nsGridLayout2;
 
 
 // {AF0C1603-06C3-11d4-BA07-001083023C1E}
-#define NS_IMONUMENT_IID { 0xaf0c1603, 0x6c3, 0x11d4, { 0xba, 0x7, 0x0, 0x10, 0x83, 0x2, 0x3c, 0x1e } };
+#define NS_IMONUMENT_IID { 0xaf0c1603, 0x6c3, 0x11d4, { 0xba, 0x7, 0x0, 0x10, 0x83, 0x2, 0x3c, 0x1e } }
 
 class nsIGridPart : public nsISupports {
 
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMONUMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMONUMENT_IID)
 
   NS_IMETHOD CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup)=0;
   NS_IMETHOD CastToGridLayout(nsGridLayout2** aGrid)=0;
@@ -68,6 +68,7 @@ public:
   NS_IMETHOD GetRowCount(PRInt32& aRowCount)=0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIGridPart, NS_IMONUMENT_IID)
 
 #endif
 

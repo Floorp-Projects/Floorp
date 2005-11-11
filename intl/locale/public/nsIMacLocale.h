@@ -52,13 +52,14 @@
 class nsIMacLocale : public nsISupports {
 
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMACLOCALE_IID)
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMACLOCALE_IID)
   NS_IMETHOD GetPlatformLocale(const nsAString& locale, short* scriptCode, 
                                short* langCode, short* regionCode) = 0;
   NS_IMETHOD GetXPLocale(short scriptCode, short langCode, short regionCode,
                          nsAString& locale) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMacLocale, NS_IMACLOCALE_IID)
 
 #endif

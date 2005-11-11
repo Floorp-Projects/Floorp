@@ -59,7 +59,7 @@ CallQueryReferent( T* aSource, DestinationType** aDestination )
     NS_PRECONDITION(aSource, "null parameter");
     NS_PRECONDITION(aDestination, "null parameter");
 
-    return aSource->QueryReferent(NS_GET_IID(DestinationType),
+    return aSource->QueryReferent(NS_GET_TEMPLATE_IID(DestinationType),
                                   NS_REINTERPRET_CAST(void**, aDestination));
   }
 

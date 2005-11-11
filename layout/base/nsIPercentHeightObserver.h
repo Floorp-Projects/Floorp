@@ -53,7 +53,7 @@ class  nsPresContext;
 class nsIPercentHeightObserver : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPERCENTHEIGHTOBSERVER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPERCENTHEIGHTOBSERVER_IID)
 
   // Notify the observer that aReflowState has no computed height, but it has a percent height
   virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState) = 0;
@@ -61,5 +61,8 @@ public:
   // Ask the observer if it should observe aReflowState.frame
   virtual PRBool NeedsToObserve(const nsHTMLReflowState& aReflowState) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPercentHeightObserver,
+                              NS_IPERCENTHEIGHTOBSERVER_IID)
 
 #endif // nsIPercentHeightObserver_h___ 

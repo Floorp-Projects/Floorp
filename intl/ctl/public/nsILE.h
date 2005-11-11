@@ -51,7 +51,7 @@
 class nsILE : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILE_IID)
   
   NS_IMETHOD NeedsCTLFix(const PRUnichar*, const PRInt32,
                          const PRInt32, PRBool *) = 0;
@@ -69,5 +69,8 @@ public:
   NS_IMETHOD GetRangeOfCluster(const PRUnichar*, PRUint32,
                                const PRInt32, PRInt32*, PRInt32*) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILE, NS_ILE_IID)
+
 #endif /* !nsILE_h */
 

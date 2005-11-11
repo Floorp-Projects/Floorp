@@ -57,7 +57,7 @@ class nsEvent;
 class nsIPrivateDOMEvent : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATEDOMEVENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRIVATEDOMEVENT_IID)
 
   NS_IMETHOD DuplicatePrivateData() = 0;
   NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget) = 0;
@@ -68,6 +68,8 @@ public:
   NS_IMETHOD HasOriginalTarget(PRBool* aResult)=0;
   NS_IMETHOD SetTrusted(PRBool aTrusted)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateDOMEvent, NS_IPRIVATEDOMEVENT_IID)
 
 nsresult
 NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsPresContext* aPresContext, nsEvent *aEvent);

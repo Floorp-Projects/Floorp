@@ -53,7 +53,7 @@
 class nsIButton : public nsISupports {
 
 public:
-   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBUTTON_IID) 
+   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBUTTON_IID) 
  
    /**
     * Set the label
@@ -74,5 +74,7 @@ public:
     NS_IMETHOD GetLabel(nsString &aBuffer) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIButton, NS_IBUTTON_IID) 
 
 #endif

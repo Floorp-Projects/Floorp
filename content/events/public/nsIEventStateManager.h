@@ -56,7 +56,7 @@ class imgIContainer;
 // {1dbe2518-06a1-461c-a1fd-dfbfb0ac0635}
 #define NS_IEVENTSTATEMANAGER_IID \
 { 0x1dbe2518, 0x6a1, 0x461c, \
-  { 0xa1, 0xfd, 0xdf, 0xbf, 0xb0, 0xac, 0x6, 0x35 } };
+  { 0xa1, 0xfd, 0xdf, 0xbf, 0xb0, 0xac, 0x6, 0x35 } }
 
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
@@ -72,7 +72,7 @@ public:
     eEventFocusedByApplication  // focus gained via Application (like script)
   };
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEVENTSTATEMANAGER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEVENTSTATEMANAGER_IID)
 
   NS_IMETHOD Init() = 0;
 
@@ -148,6 +148,8 @@ public:
   // Method for moving the focus forward/back.
   NS_IMETHOD ShiftFocus(PRBool aDirection, nsIContent* aStart)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventStateManager, NS_IEVENTSTATEMANAGER_IID)
 
 #define NS_EVENT_STATE_ACTIVE        0x00000001 // mouse is down on content
 #define NS_EVENT_STATE_FOCUS         0x00000002 // content has focus

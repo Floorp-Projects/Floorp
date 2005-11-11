@@ -50,7 +50,7 @@
 
 class nsIDOMMutationListener : public nsIDOMEventListener {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMUTATIONLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMMUTATIONLISTENER_IID)
     
   NS_IMETHOD SubtreeModified(nsIDOMEvent* aMutationEvent)=0;
   NS_IMETHOD NodeInserted(nsIDOMEvent* aMutationEvent)=0;
@@ -60,4 +60,8 @@ public:
   NS_IMETHOD AttrModified(nsIDOMEvent* aMutationEvent)=0;
   NS_IMETHOD CharacterDataModified(nsIDOMEvent* aMutationEvent)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMMutationListener,
+                              NS_IDOMMUTATIONLISTENER_IID)
+
 #endif // nsIDOMMutationListener_h__

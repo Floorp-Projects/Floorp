@@ -48,10 +48,13 @@
 class nsIThebesRenderingContext : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NSI_THEBES_RENDERING_CONTEXT_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NSI_THEBES_RENDERING_CONTEXT_IID)
 
     NS_IMETHOD CreateDrawingSurface(nsNativeWidget aWidget, nsIDrawingSurface* &aSurface) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIThebesRenderingContext,
+                              NSI_THEBES_RENDERING_CONTEXT_IID)
 
 #endif /* __nsIThebesRenderingContext_h */

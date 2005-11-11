@@ -171,7 +171,7 @@ struct AttributeRuleProcessorData : public RuleProcessorData {
  */
 class nsIStyleRuleProcessor : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_RULE_PROCESSOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTYLE_RULE_PROCESSOR_IID)
 
   // Shorthand for:
   //  nsCOMArray<nsIStyleRuleProcessor>::nsCOMArrayEnumFunc
@@ -211,5 +211,8 @@ public:
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
                                         nsReStyleHint* aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleRuleProcessor,
+                              NS_ISTYLE_RULE_PROCESSOR_IID)
 
 #endif /* nsIStyleRuleProcessor_h___ */

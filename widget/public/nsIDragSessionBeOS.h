@@ -51,9 +51,11 @@
 class nsIDragSessionBeOS : public nsISupports
 {
   public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONBEOS_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONBEOS_IID)
     NS_IMETHOD TransmitData( BMessage *aNegotiationReply) = 0;  
     NS_IMETHOD UpdateDragMessageIfNeeded(BMessage *aDragMessage) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDragSessionBeOS, NS_IDRAGSESSIONBEOS_IID)
 
 #endif

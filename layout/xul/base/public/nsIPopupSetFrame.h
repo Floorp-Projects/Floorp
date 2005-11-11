@@ -51,7 +51,7 @@ class nsIDOMElement;
 class nsIPopupSetFrame : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPOPUPSETFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPOPUPSETFRAME_IID)
 
   NS_IMETHOD ShowPopup(nsIContent* aElementContent, nsIContent* aPopupContent, 
                        PRInt32 aXPos, PRInt32 aYPos, 
@@ -63,6 +63,8 @@ public:
   NS_IMETHOD AddPopupFrame(nsIFrame* aPopup) = 0;
   NS_IMETHOD RemovePopupFrame(nsIFrame* aPopup) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPopupSetFrame, NS_IPOPUPSETFRAME_IID)
 
 #endif
 

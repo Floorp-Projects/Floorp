@@ -55,7 +55,7 @@ class nsPresContext;
 class nsICheckboxControlFrame : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHECKBOXCONTROLFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHECKBOXCONTROLFRAME_IID)
 
   /**
    * Sets the Pseudo Style Contexts for the Check button
@@ -68,6 +68,9 @@ public:
    */
   NS_IMETHOD OnChecked(nsPresContext* aPresContext, PRBool aChecked) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICheckboxControlFrame,
+                              NS_ICHECKBOXCONTROLFRAME_IID)
 
 #endif
 

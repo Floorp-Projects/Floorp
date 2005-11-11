@@ -47,9 +47,11 @@ struct nsSVGMark {
 class nsISVGMarkable : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGMARKABLE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGMARKABLE_IID)
 
   virtual void GetMarkPoints(nsVoidArray *aMarks) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGMarkable, NS_ISVGMARKABLE_IID)
 
 #endif

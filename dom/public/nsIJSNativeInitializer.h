@@ -54,7 +54,7 @@
 
 class nsIJSNativeInitializer : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJSNATIVEINITIALIZER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJSNATIVEINITIALIZER_IID)
 
   /**
    * Intialize a newly created native instance using the parameters
@@ -64,5 +64,7 @@ public:
                         PRUint32 argc, jsval *argv) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIJSNativeInitializer,
+                              NS_IJSNATIVEINITIALIZER_IID)
 
 #endif // nsIJSNativeInitializer_h__

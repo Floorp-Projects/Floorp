@@ -56,10 +56,12 @@ class nsIContent;
 
 class nsICSSOMFactory : public nsISupports {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSSOMFACTORY_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSOMFACTORY_IID)
 
     NS_IMETHOD CreateDOMCSSAttributeDeclaration(nsIContent *aContent,
                                                 nsDOMCSSDeclaration **aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSOMFactory, NS_ICSSOMFACTORY_IID)
 
 #endif /* nsICSSOMFactory_h___ */

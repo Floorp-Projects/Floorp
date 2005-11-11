@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla XTF project.
+ * The Original Code is Mozilla XPCOM.
  *
  * The Initial Developer of the Original Code is
- * Alex Fritze.
- * Portions created by the Initial Developer are Copyright (C) 2004
- * the Initial Developer. All Rights Reserved.
+ * Benjamin Smedberg <benjamin@smedbergs.us>.
+ *
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Mozilla Foundation <http://www.mozilla.org/>. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex@croczilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,40 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_IXTFSERVICE_H__
-#define __NS_IXTFSERVICE_H__
+#include "nsISupportsImpl.h"
 
-#include "nsISupports.h"
-
-class nsIContent;
-class nsINodeInfo;
-
-// {02AD2ADD-C5EC-4362-BB5F-E2C69BA76151}
-#define NS_IXTFSERVICE_IID                             \
-  { 0x02ad2add, 0xc5ec, 0x4362, { 0xbb, 0x5f, 0xe2, 0xc6, 0x9b, 0xa7, 0x61, 0x51 } }
-
-class nsIXTFService : public nsISupports
+nsresult NS_FASTCALL
+NS_TableDrivenQI(void* aThis, const QITableEntry* entries,
+                 REFNSIID aIID, void **aInstancePtr)
 {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXTFSERVICE_IID)
+  while (entries->iid) {
+    if (aIID.Equals(*entries->iid)) {
+      nsISupports* r =
+        NS_REINTERPRET_CAST(nsISupports*,
+          NS_REINTERPRET_CAST(char*, aThis) + entries->offset);
+      NS_ADDREF(r);
+      *aInstancePtr = r;
+      return NS_OK;
+    }
 
-    // try to create an xtf element based on namespace
-    virtual nsresult CreateElement(nsIContent** aResult,
-                                   nsINodeInfo* aNodeInfo)=0;
-};
+    ++entries;
+  }
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIXTFService, NS_IXTFSERVICE_IID)
-
-//----------------------------------------------------------------------
-// The one class implementing this interface:
-
-// {4EC832DA-6AE7-4185-807B-DADDCB5DA37A}
-#define NS_XTFSERVICE_CID                             \
-  { 0x4ec832da, 0x6ae7, 0x4185, { 0x80, 0x7b, 0xda, 0xdd, 0xcb, 0x5d, 0xa3, 0x7a } }
-
-#define NS_XTFSERVICE_CONTRACTID "@mozilla.org/xtf/xtf-service;1"
-
-nsresult NS_NewXTFService(nsIXTFService** aResult);
-
-#endif // __NS_IXTFSERVICE_H__
-
+  return NS_ERROR_NO_INTERFACE;
+}

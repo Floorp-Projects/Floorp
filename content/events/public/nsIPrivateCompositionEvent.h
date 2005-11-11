@@ -49,12 +49,15 @@
 class nsIPrivateCompositionEvent : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATECOMPOSITIONEVENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRIVATECOMPOSITIONEVENT_IID)
 
   NS_IMETHOD GetCompositionReply(struct nsTextEventReply** aReply) = 0;
   NS_IMETHOD GetReconversionReply(nsReconversionEventReply** aReply) = 0;
   NS_IMETHOD GetQueryCaretRectReply(nsQueryCaretRectEventReply** aReply) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateCompositionEvent,
+                              NS_IPRIVATECOMPOSITIONEVENT_IID)
 
 #endif // nsIPrivateCompositionEvent_h__
 

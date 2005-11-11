@@ -83,7 +83,7 @@ struct nsTimeout;
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOW_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOW_IID)
 
   virtual nsPIDOMWindow* GetPrivateRoot() = 0;
 
@@ -329,6 +329,8 @@ protected:
   nsPIDOMWindow         *mOuterWindow;
 };
 
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindow, NS_PIDOMWINDOW_IID)
 
 #ifdef _IMPL_NS_LAYOUT
 PopupControlState

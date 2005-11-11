@@ -64,12 +64,15 @@
 
 class nsISymantecDebugManager : public nsISupports {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISYMANTECDEBUGMANAGER_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISYMANTECDEBUGMANAGER_IID)
 
     NS_IMETHOD
     SetDebugAgentPassword(PRInt32 pwd) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISymantecDebugManager,
+                              NS_ISYMANTECDEBUGMANAGER_IID)
 
 ////////////////////////////////////////////////////////////////////////////////
 

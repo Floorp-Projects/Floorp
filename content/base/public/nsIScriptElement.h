@@ -53,7 +53,7 @@
  */
 class nsIScriptElement : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTELEMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTELEMENT_IID)
 
   /**
    * Content type identifying the scripting language. Can be empty, in
@@ -77,5 +77,7 @@ public:
   virtual void SetScriptLineNumber(PRUint32 aLineNumber) = 0;
   virtual PRUint32 GetScriptLineNumber() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptElement, NS_ISCRIPTELEMENT_IID)
 
 #endif // nsIScriptElement_h___

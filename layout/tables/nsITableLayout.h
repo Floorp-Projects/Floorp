@@ -56,7 +56,7 @@ class nsITableLayout : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITABLELAYOUT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITABLELAYOUT_IID)
 
   /** return all the relevant layout information about a cell.
    *  @param aRowIndex       a row which the cell intersects
@@ -88,5 +88,7 @@ public:
    */
   NS_IMETHOD GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITableLayout, NS_ITABLELAYOUT_IID)
 
 #endif

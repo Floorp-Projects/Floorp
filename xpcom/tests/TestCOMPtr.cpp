@@ -57,7 +57,7 @@
 class IFoo : public nsISupports
   {
 		public:
-			NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
+			NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
 		public:
       IFoo();
@@ -76,6 +76,8 @@ class IFoo : public nsISupports
       static unsigned int total_constructions_;
       static unsigned int total_destructions_;
   };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
 
 class IBar;
 
@@ -242,7 +244,7 @@ return_a_IFoo()
 class IBar : public IFoo
   {
   	public:
-  		NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBAR_IID)
+  		NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBAR_IID)
 
     public:
       IBar();
@@ -250,6 +252,8 @@ class IBar : public IFoo
 
       NS_IMETHOD QueryInterface( const nsIID&, void** );
   };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(IBar, NS_IBAR_IID)
 
 IBar::IBar()
   {

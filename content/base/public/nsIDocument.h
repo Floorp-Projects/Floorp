@@ -114,7 +114,7 @@ class nsIDOMUserDataHandler;
 class nsIDocument : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   nsIDocument()
@@ -968,6 +968,7 @@ protected:
   PRUint32 mPartID;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
 
 /**
  * Helper class to automatically handle batching of document updates.  This

@@ -73,7 +73,7 @@ class nsVoidArray;
 
 class nsIFormProcessor : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMPROCESSOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMPROCESSOR_IID)
 
   /* ProcessValue is called for each name value pair that is 
    * about to be submitted for both "get" and "post" form submissions.
@@ -105,6 +105,8 @@ public:
                             nsAString& aAttribute) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormProcessor, NS_IFORMPROCESSOR_IID)
 
 #endif /* nsIFormProcessor_h__ */
 

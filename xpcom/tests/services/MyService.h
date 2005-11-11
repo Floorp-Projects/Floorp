@@ -51,12 +51,14 @@
 
 class IMyService : public nsISupports {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMYSERVICE_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMYSERVICE_IID)
     
     NS_IMETHOD
     Doit(void) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(IMyService, NS_IMYSERVICE_IID)
 
 #define NS_IMYSERVICE_CID                            \
 { /* 34876550-364b-11d2-8163-006008119d7a */         \

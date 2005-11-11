@@ -62,7 +62,7 @@ static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
 // {34297A07-A8FD-d811-87C6-000244212BCB}
 #define VIEW_WRAPPER_IID \
-{ 0x34297a07, 0xa8fd, 0xd811, { 0x87, 0xc6, 0x0, 0x2, 0x44, 0x21, 0x2b, 0xcb } };
+{ 0x34297a07, 0xa8fd, 0xd811, { 0x87, 0xc6, 0x0, 0x2, 0x44, 0x21, 0x2b, 0xcb } }
 
 
 /**
@@ -71,7 +71,7 @@ static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 class ViewWrapper : public nsIInterfaceRequestor
 {
   public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(VIEW_WRAPPER_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(VIEW_WRAPPER_IID)
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEREQUESTOR
 
@@ -81,6 +81,8 @@ class ViewWrapper : public nsIInterfaceRequestor
   private:
     nsView* mView;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(ViewWrapper, VIEW_WRAPPER_IID)
 
 NS_IMPL_ADDREF(ViewWrapper)
 NS_IMPL_RELEASE(ViewWrapper)

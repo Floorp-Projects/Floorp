@@ -93,7 +93,7 @@
 class nsIUnicodeDecoder : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICODEDECODER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUNICODEDECODER_IID)
 
   enum {
     kOnError_Recover,       // on an error, recover and continue
@@ -169,5 +169,7 @@ public:
    */
   NS_IMETHOD Reset() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicodeDecoder, NS_IUNICODEDECODER_IID)
 
 #endif /* nsIUnicodeDecoder_h___ */

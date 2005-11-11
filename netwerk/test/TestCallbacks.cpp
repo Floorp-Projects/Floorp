@@ -71,9 +71,11 @@ static PRBool gError = PR_FALSE;
 
 class nsIEquals : public nsISupports {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEQUALS_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEQUALS_IID)
     NS_IMETHOD Equals(void *aPtr, PRBool *_retval) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIEquals, NS_IEQUALS_IID)
 
 class ConsumerContext : public nsIEquals {
 public:

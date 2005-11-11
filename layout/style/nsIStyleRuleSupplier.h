@@ -13,12 +13,14 @@ class nsStyleSet;
 
 class nsIStyleRuleSupplier : public nsISupports {
  public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLERULESUPPLIER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTYLERULESUPPLIER_IID)
 
   NS_IMETHOD WalkRules(nsStyleSet* aStyleSet, 
                        nsIStyleRuleProcessor::EnumFunc aFunc,
                        RuleProcessorData* aData,
                        PRBool* aCutOffInheritance)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleRuleSupplier, NS_ISTYLERULESUPPLIER_IID)
 
 #endif /* _nsIStyleRuleSupplier_h */

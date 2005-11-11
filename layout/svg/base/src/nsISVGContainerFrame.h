@@ -52,11 +52,13 @@ class nsISVGOuterSVGFrame;
 
 class nsISVGContainerFrame : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGCONTAINERFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGCONTAINERFRAME_IID)
 
   virtual nsISVGOuterSVGFrame *GetOuterSVGFrame()=0;
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM()=0; // canvas transform matrix
   virtual already_AddRefed<nsSVGCoordCtxProvider> GetCoordContextProvider()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGContainerFrame, NS_ISVGCONTAINERFRAME_IID)
 
 #endif // __NS_ISVGCONTAINERFRAME_H__

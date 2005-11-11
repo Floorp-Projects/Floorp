@@ -72,7 +72,7 @@ struct nsLabelInitData : public nsWidgetInitData {
 class nsILabel : public nsISupports {
 
   public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILABEL_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILABEL_IID)
  
    /**
     * Set the label
@@ -102,5 +102,7 @@ class nsILabel : public nsISupports {
     NS_IMETHOD SetAlignment(nsLabelAlignment aAlignment) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILabel, NS_ILABEL_IID)
 
 #endif

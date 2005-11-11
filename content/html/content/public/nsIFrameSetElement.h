@@ -72,7 +72,7 @@ struct nsFramesetSpec {
 class nsIFrameSetElement : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMESETELEMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMESETELEMENT_IID)
 
   /**
    * GetRowSpec is used to get the "rows" spec.
@@ -95,5 +95,6 @@ public:
   NS_IMETHOD GetColSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameSetElement, NS_IFRAMESETELEMENT_IID)
 
 #endif // nsIFramesetElement_h___

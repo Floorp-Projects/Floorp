@@ -60,7 +60,7 @@
 class nsIImageMac : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEMAC_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IIMAGEMAC_IID)
 
     // Convert to the os-native PICT format. Most likely
     // used for clipboard. The caller is responsible for
@@ -74,5 +74,6 @@ public:
 
 }; // nsIImageMac
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIImageMac, NS_IIMAGEMAC_IID)
 
 #endif

@@ -62,10 +62,12 @@
 class nsICharRepresentable : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARREPRESENTABLE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHARREPRESENTABLE_IID)
 
   NS_IMETHOD FillInfo(PRUint32* aInfo) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICharRepresentable, NS_ICHARREPRESENTABLE_IID)
 
 #endif /* nsIUnicodeDecoder_h__ */

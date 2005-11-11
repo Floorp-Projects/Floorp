@@ -49,7 +49,7 @@ class nsPresContext;
 
 class nsICSSGroupRule : public nsICSSRule {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_GROUP_RULE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_GROUP_RULE_IID)
 
   NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule) = 0;
 
@@ -72,5 +72,7 @@ public:
   NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext) = 0;
    
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSGroupRule, NS_ICSS_GROUP_RULE_IID)
 
 #endif /* nsICSSGroupRule_h___ */

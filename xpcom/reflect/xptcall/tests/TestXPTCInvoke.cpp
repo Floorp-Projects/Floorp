@@ -60,7 +60,7 @@ static void DoSpeedTest();
 class InvokeTestTargetInterface : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(INVOKETESTTARGET_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(INVOKETESTTARGET_IID)
     NS_IMETHOD AddTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval) = 0;
     NS_IMETHOD MultTwoInts(PRInt32 p1, PRInt32 p2, PRInt32* retval) = 0;
     NS_IMETHOD AddTwoLLs(PRInt64 p1, PRInt64 p2, PRInt64* retval) = 0;
@@ -103,6 +103,8 @@ public:
     NS_IMETHOD PassTwoStrings(const char* s1, const char* s2, char** retval) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(InvokeTestTargetInterface, INVOKETESTTARGET_IID)
 
 class InvokeTestTarget : public InvokeTestTargetInterface
 {
@@ -930,18 +932,22 @@ int main()
 class nsIFoo : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(FOO_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(FOO_IID)
     NS_IMETHOD FooMethod1(PRInt32 i) = 0;
     NS_IMETHOD FooMethod2(PRInt32 i) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFoo, FOO_IID)
+
 class nsIBar : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(BAR_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(BAR_IID)
     NS_IMETHOD BarMethod1(PRInt32 i) = 0;
     NS_IMETHOD BarMethod2(PRInt32 i) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIBar, BAR_IID)
 
 /***************************/
 

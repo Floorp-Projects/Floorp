@@ -54,7 +54,7 @@ class nsITableCellLayout : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITABLECELLAYOUT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITABLECELLAYOUT_IID)
 
   /** return the mapped cell's row and column indexes (starting at 0 for each) */
   NS_IMETHOD GetCellIndexes(PRInt32 &aRowIndex, PRInt32 &aColIndex)=0;
@@ -76,6 +76,7 @@ public:
   NS_IMETHOD GetNextCellInColumn(nsITableCellLayout **aCellLayout)=0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITableCellLayout, NS_ITABLECELLAYOUT_IID)
 
 #endif
 

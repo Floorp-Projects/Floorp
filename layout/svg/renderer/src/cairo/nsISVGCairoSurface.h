@@ -54,10 +54,12 @@
 class nsISVGCairoSurface : public nsISVGRendererSurface
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGCAIROSURFACE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGCAIROSURFACE_IID)
 
   NS_IMETHOD_(cairo_surface_t*) GetSurface() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGCairoSurface, NS_ISVGCAIROSURFACE_IID)
 
 /** @} */
 

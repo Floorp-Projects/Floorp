@@ -54,7 +54,7 @@
 class nsIDOMContextMenuListener : public nsIDOMEventListener {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCONTEXTMENULISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMCONTEXTMENULISTENER_IID)
   /**
   * Processes a context menu event
   * @param aContextMenuEvent @see nsIDOMEvent.h 
@@ -63,5 +63,8 @@ public:
   NS_IMETHOD ContextMenu(nsIDOMEvent* aContextMenuEvent) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMContextMenuListener,
+                              NS_IDOMCONTEXTMENULISTENER_IID)
 
 #endif // nsIDOMContextMenuListener_h__

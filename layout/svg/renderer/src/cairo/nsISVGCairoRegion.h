@@ -53,10 +53,12 @@
 class nsISVGCairoRegion : public nsISVGRendererRegion
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGCAIROREGION_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGCAIROREGION_IID)
 
   NS_IMETHOD_(PRBool) Contains(float x, float y) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGCairoRegion, NS_ISVGCAIROREGION_IID)
 
 /** @} */
 

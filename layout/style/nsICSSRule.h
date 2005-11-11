@@ -51,7 +51,7 @@ class nsAString;
 
 class nsICSSRule : public nsIStyleRule {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_RULE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_RULE_IID)
   enum {
     UNKNOWN_RULE = 0,
     STYLE_RULE = 1,
@@ -76,6 +76,8 @@ public:
   // supposed to have a DOM rule representation (and our code wouldn't work).
   NS_IMETHOD GetDOMRule(nsIDOMCSSRule** aDOMRule) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSRule, NS_ICSS_RULE_IID)
 
 /* Define global NS_New* functions for rules that don't need their own
    interfaces here */

@@ -47,10 +47,12 @@ class nsString;
 
 class nsIRobotSinkObserver : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IROBOTSINKOBSERVER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IROBOTSINKOBSERVER_IID)
 
   NS_IMETHOD ProcessLink(const nsString& aURLSpec) = 0;
   NS_IMETHOD VerifyDirectory(const char * verify_dir) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRobotSinkObserver, NS_IROBOTSINKOBSERVER_IID)
 
 #endif /* nsIRobotSinkObserver_h___ */

@@ -55,7 +55,7 @@ class nsIRadioGroupContainer : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRADIOGROUPCONTAINER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRADIOGROUPCONTAINER_IID)
 
   /**
    * Walk through the radio group, visiting each note with avisitor->Visit()
@@ -130,5 +130,8 @@ public:
                                 PRInt32 *aPositionIndex,
                                 PRInt32 *aItemsInGroup) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioGroupContainer,
+                              NS_IRADIOGROUPCONTAINER_IID)
 
 #endif /* nsIRadioGroupContainer_h__ */

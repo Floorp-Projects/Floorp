@@ -137,7 +137,7 @@ static nsNavigationDirection DirectionFromKeyCode_rl_tb [6] = {
 class nsIMenuParent : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUPARENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUPARENT_IID)
 
   virtual nsIMenuFrame *GetCurrentMenuItem() = 0;
   NS_IMETHOD SetCurrentMenuItem(nsIMenuFrame* aMenuItem) = 0;
@@ -176,6 +176,8 @@ public:
 
   NS_IMETHOD GetParentPopup(nsIMenuParent** aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenuParent, NS_IMENUPARENT_IID)
 
 #endif
 

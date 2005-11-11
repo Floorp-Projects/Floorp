@@ -76,7 +76,7 @@ class nsIPrincipal;
 class nsISoftwareUpdate : public nsISupports
 {
     public:
-            NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISOFTWAREUPDATE_IID)
+            NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISOFTWAREUPDATE_IID)
 
             NS_IMETHOD InstallJar(nsIFile* localFile,
                                   const PRUnichar* URL,
@@ -100,6 +100,7 @@ class nsISoftwareUpdate : public nsISupports
             NS_IMETHOD SetActiveListener(nsIXPIListener *aListener) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISoftwareUpdate, NS_ISOFTWAREUPDATE_IID)
 
 #endif // nsISoftwareUpdate_h__
 

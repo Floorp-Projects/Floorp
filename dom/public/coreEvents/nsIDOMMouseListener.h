@@ -55,7 +55,7 @@ class nsIDOMMouseListener : public nsIDOMEventListener {
 
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMOUSELISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMMOUSELISTENER_IID)
 
   /**
   * Processes a mouse down event
@@ -102,5 +102,7 @@ public:
   NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMMouseListener, NS_IDOMMOUSELISTENER_IID)
 
 #endif // nsIDOMMouseListener_h__

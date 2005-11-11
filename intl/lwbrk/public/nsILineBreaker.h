@@ -52,7 +52,7 @@
 class nsILineBreaker : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINEBREAKER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINEBREAKER_IID)
   virtual PRBool BreakInBetween( const PRUnichar* aText1 , PRUint32 aTextLen1,
                                  const PRUnichar* aText2 , 
                                  PRUint32 aTextLen2) = 0;
@@ -65,5 +65,6 @@ public:
 
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILineBreaker, NS_ILINEBREAKER_IID)
 
 #endif  /* nsILineBreaker_h__ */

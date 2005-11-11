@@ -65,7 +65,7 @@ TextServicesDocument interface to outside world
 class nsITextServicesDocument  : public nsISupports{
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXTSERVICESDOCUMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITEXTSERVICESDOCUMENT_IID)
 
   typedef enum { eDSNormal=0, eDSUndlerline } TSDDisplayStyle;
 
@@ -275,6 +275,9 @@ public:
    */
   NS_IMETHOD GetDOMRangeFor(PRInt32 aOffset, PRInt32 aLength, nsIDOMRange** aRange) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITextServicesDocument,
+                              NS_ITEXTSERVICESDOCUMENT_IID)
 
 #endif // nsITextServicesDocument_h__
 

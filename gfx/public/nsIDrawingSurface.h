@@ -72,7 +72,7 @@ typedef struct
 class nsIDrawingSurface : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAWING_SURFACE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDRAWING_SURFACE_IID)
   /**
    * Lock a rect of a drawing surface and return a
    * pointer to the upper left hand corner of the
@@ -145,6 +145,8 @@ public:
    **/
   NS_IMETHOD GetPixelFormat(nsPixelFormat *aFormat) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDrawingSurface, NS_IDRAWING_SURFACE_IID)
 
 //when creating a drawing surface, you can use this
 //to tell the drawing surface that you anticipate

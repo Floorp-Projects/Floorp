@@ -52,12 +52,14 @@ class nsISVGTextFrame : public nsISVGTextContainerFrame
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGTEXTFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGTEXTFRAME_IID)
 
   NS_IMETHOD_(void) NotifyGlyphMetricsChange(nsISVGGlyphFragmentNode* caller)=0;
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeChange(nsISVGGlyphFragmentNode* caller)=0;
   NS_IMETHOD_(PRBool) IsMetricsSuspended()=0;
   NS_IMETHOD_(PRBool) IsGlyphFragmentTreeSuspended()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGTextFrame, NS_ISVGTEXTFRAME_IID)
 
 #endif // __NS_ISVGTEXTFRAME_H__

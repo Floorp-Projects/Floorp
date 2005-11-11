@@ -52,7 +52,7 @@ class nsIStyleSheet;
 
 class nsIStyleSheetLinkingElement : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLESHEETLINKINGELEMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTYLESHEETLINKINGELEMENT_IID)
 
   /**
    * Used to make the association between a style sheet and
@@ -114,5 +114,8 @@ public:
   // anywhere else.
   virtual void SetLineNumber(PRUint32 aLineNumber) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleSheetLinkingElement,
+                              NS_ISTYLESHEETLINKINGELEMENT_IID)
 
 #endif // nsILinkingElement_h__

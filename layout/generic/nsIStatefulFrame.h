@@ -12,7 +12,7 @@ class nsPresState;
 
 class nsIStatefulFrame : public nsISupports {
  public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTATEFULFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTATEFULFRAME_IID)
 
   // If you create a special type stateful frame (e.g. scroll) that needs
   // to be captured outside of the standard pass through the frames, you'll need
@@ -25,5 +25,7 @@ class nsIStatefulFrame : public nsISupports {
   NS_IMETHOD SaveState(nsPresContext* aPresContext, nsPresState** aState) = 0;
   NS_IMETHOD RestoreState(nsPresContext* aPresContext, nsPresState* aState) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIStatefulFrame, NS_ISTATEFULFRAME_IID)
 
 #endif /* _nsIStatefulFrame_h */

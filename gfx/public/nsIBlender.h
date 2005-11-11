@@ -53,7 +53,7 @@
 class nsIBlender : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBLENDER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBLENDER_IID)
 
   /**
    * Initialize the Blender
@@ -104,5 +104,7 @@ public:
   NS_IMETHOD GetAlphas(const nsRect& aRect, nsIDrawingSurface* aBlack,
                        nsIDrawingSurface* aWhite, PRUint8** aAlphas) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIBlender, NS_IBLENDER_IID)
 
 #endif

@@ -54,7 +54,7 @@ class nsTextFragment;
  */
 class nsITextContent : public nsIContent {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXT_CONTENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITEXT_CONTENT_IID)
 
   nsITextContent(nsINodeInfo *aNodeInfo)
     : nsIContent(aNodeInfo)
@@ -101,6 +101,8 @@ public:
    */
   virtual void AppendTextTo(nsAString& aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITextContent, NS_ITEXT_CONTENT_IID)
 
 // XXX These belong elsewhere
 /**

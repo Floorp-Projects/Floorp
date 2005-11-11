@@ -72,7 +72,7 @@ public:
 
 class nsITokenizer : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITOKENIZER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITOKENIZER_IID)
 
   NS_IMETHOD                     WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator)=0;
   NS_IMETHOD                     ConsumeToken(nsScanner& aScanner,PRBool& aFlushTokens)=0;
@@ -89,6 +89,8 @@ public:
   NS_IMETHOD                     CopyState(nsITokenizer* aTokenizer)=0;
   
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITokenizer, NS_ITOKENIZER_IID)
 
 #define NS_DECL_NSITOKENIZER \
   NS_IMETHOD                     WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aTokenAllocator);\

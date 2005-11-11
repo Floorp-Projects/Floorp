@@ -49,7 +49,7 @@ class nsIEventQueue;
 class nsPIEventQueueChain : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEVENTQUEUECHAIN_IID);
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEVENTQUEUECHAIN_IID)
 
     /**
      * Add the given queue as the new youngest member of our chain.
@@ -97,6 +97,8 @@ public:
      */
     NS_IMETHOD RevokeEventsInternal(void* aOwner) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsPIEventQueueChain, NS_IEVENTQUEUECHAIN_IID)
 
 #endif /* nsPIEventQueueChain_h___ */
 

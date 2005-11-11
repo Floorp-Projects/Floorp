@@ -51,7 +51,7 @@ class nsIPresShell;
  */
 class nsILayoutDebugger : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILAYOUT_DEBUGGER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILAYOUT_DEBUGGER_IID)
 
   NS_IMETHOD SetShowFrameBorders(PRBool aEnable) = 0;
 
@@ -70,5 +70,7 @@ public:
   NS_IMETHOD GetStyleSize(nsIPresShell* aPresentation,
                           PRInt32* aSizeInBytesResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILayoutDebugger, NS_ILAYOUT_DEBUGGER_IID)
 
 #endif /* nsILayoutDebugger_h___ */

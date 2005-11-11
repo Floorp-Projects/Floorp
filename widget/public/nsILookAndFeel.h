@@ -52,7 +52,7 @@ struct nsSize;
 
 class nsILookAndFeel: public nsISupports {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILOOKANDFEEL_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILOOKANDFEEL_IID)
 
   // When modifying this list, also modify nsXPLookAndFeel::sColorPrefs
   // in widget/src/xpwidgts/nsXPLookAndFeel.cpp.
@@ -259,6 +259,9 @@ public:
                         nsSize &aSize) = 0;
 #endif
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILookAndFeel, NS_ILOOKANDFEEL_IID)
+
 
 	// On the Mac, GetColor(eColor_TextSelectForeground, color) returns this
 	// constant to specify that the foreground color should not be changed

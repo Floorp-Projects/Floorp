@@ -106,7 +106,7 @@ class nsHTMLFramesetFrame : public nsHTMLContainerFrame
 {
 public:
   // Woohoo, concrete class with an IID!
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMESETFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMESETFRAME_IID)
 
   nsHTMLFramesetFrame();
 
@@ -273,5 +273,6 @@ protected:
   PRBool mForceFrameResizability;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsHTMLFramesetFrame, NS_IFRAMESETFRAME_IID)
 
 #endif

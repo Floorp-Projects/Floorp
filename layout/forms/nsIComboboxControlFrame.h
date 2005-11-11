@@ -61,7 +61,7 @@ class nsCSSFrameConstructor;
 class nsIComboboxControlFrame : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMBOBOXCONTROLFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICOMBOBOXCONTROLFRAME_IID)
 
   /**
    * Indicates whether the list is dropped down
@@ -126,6 +126,9 @@ public:
    */
   NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIComboboxControlFrame,
+                              NS_ICOMBOBOXCONTROLFRAME_IID)
 
 #endif
 

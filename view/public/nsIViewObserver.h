@@ -53,7 +53,7 @@ class nsIViewObserver : public nsISupports
 {
 public:
   
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IVIEWOBSERVER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IVIEWOBSERVER_IID)
 
   /* called when the observer needs to paint
    * @param aRenderingContext - rendering context to paint to
@@ -99,5 +99,7 @@ public:
    */
   NS_IMETHOD_(void) WillPaint() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewObserver, NS_IVIEWOBSERVER_IID)
 
 #endif

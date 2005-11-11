@@ -57,7 +57,7 @@ class nsIPrintSettings;
  */
 class nsIPageSequenceFrame : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPAGESEQUENCEFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPAGESEQUENCEFRAME_IID)
 
   /**
    * Print the set of pages.
@@ -104,6 +104,8 @@ private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPageSequenceFrame, NS_IPAGESEQUENCEFRAME_IID)
 
 #endif /* nsIPageSequenceFrame_h___ */
 

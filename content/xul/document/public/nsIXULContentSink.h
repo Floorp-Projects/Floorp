@@ -52,7 +52,7 @@ class nsIXULPrototypeDocument;
 class nsIXULContentSink : public nsIXMLContentSink
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULCONTENTSINK_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULCONTENTSINK_IID)
 
     /**
      * Initialize the content sink, giving it an nsIDocument object
@@ -62,6 +62,7 @@ public:
     NS_IMETHOD Init(nsIDocument* aDocument, nsIXULPrototypeDocument* aPrototype) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULContentSink, NS_IXULCONTENTSINK_IID)
 
 nsresult
 NS_NewXULContentSink(nsIXULContentSink** aResult);

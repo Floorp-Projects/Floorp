@@ -59,8 +59,10 @@
 
 class NS_NO_VTABLE nsITestService : public nsISupports {
   public: 
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITESTSERVICE_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITESTSERVICE_IID)
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITestService, NS_ITESTSERVICE_IID)
 
 class nsTestService : public nsITestService, public nsSupportsWeakReference
 {

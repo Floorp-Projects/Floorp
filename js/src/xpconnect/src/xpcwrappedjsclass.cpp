@@ -469,7 +469,7 @@ class WrappedJSIdentity
 {
     // no instance methods...
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_IDENTITY_CLASS_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_IDENTITY_CLASS_IID)
 
     static void* GetSingleton()
     {
@@ -479,6 +479,9 @@ public:
         return (void*) singleton;
     }
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(WrappedJSIdentity,
+                              NS_IXPCONNECT_WRAPPED_JS_IDENTITY_CLASS_IID)
 
 /***************************************************************************/
 

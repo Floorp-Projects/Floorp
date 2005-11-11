@@ -76,7 +76,7 @@ class nsIPrincipal;
 class nsINodeInfo : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INODEINFO_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODEINFO_IID)
 
   nsINodeInfo()
     : mInner(nsnull, nsnull, kNameSpaceID_None),
@@ -310,5 +310,7 @@ protected:
   nsCOMPtr<nsIAtom> mIDAttributeAtom;
   nsNodeInfoManager* mOwnerManager; // Strong reference!
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsINodeInfo, NS_INODEINFO_IID)
 
 #endif /* nsINodeInfo_h___ */

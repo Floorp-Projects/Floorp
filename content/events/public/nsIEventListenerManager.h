@@ -60,7 +60,7 @@ struct JSObject;
 class nsIEventListenerManager : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEVENTLISTENERMANAGER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEVENTLISTENERMANAGER_IID)
 
   /**
   * Sets events listeners of all types.
@@ -194,6 +194,9 @@ public:
    */
   virtual PRBool HasUnloadListeners() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventListenerManager,
+                              NS_IEVENTLISTENERMANAGER_IID)
 
 nsresult
 NS_NewEventListenerManager(nsIEventListenerManager** aInstancePtrResult);

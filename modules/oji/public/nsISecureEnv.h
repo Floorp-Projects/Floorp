@@ -67,7 +67,7 @@ enum jni_type
 
 class nsISecureEnv : public nsISupports {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISECUREENV_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISECUREENV_IID)
 
     /**
      * Create new Java object in LiveConnect.
@@ -359,5 +359,7 @@ public:
     NS_IMETHOD GetJavaVM(/*[in]*/  JavaVM **vm,
                          /*[out]*/ jint* result) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISecureEnv, NS_ISECUREENV_IID)
 
 #endif // nsISecureEnv_h___

@@ -40,7 +40,7 @@
 
 // {2281EFC8-A8BA-4a73-8CF7-DB4EECA5EAEC}
 #define NS_IMENUFRAME_IID \
-{ 0x2281efc8, 0xa8ba, 0x4a73, { 0x8c, 0xf7, 0xdb, 0x4e, 0xec, 0xa5, 0xea, 0xec } };
+{ 0x2281efc8, 0xa8ba, 0x4a73, { 0x8c, 0xf7, 0xdb, 0x4e, 0xec, 0xa5, 0xea, 0xec } }
 
 class nsIMenuParent;
 class nsIDOMElement;
@@ -55,7 +55,7 @@ enum nsMenuType {
 class nsIMenuFrame : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUFRAME_IID)
 
   NS_IMETHOD ActivateMenu(PRBool aActivate) = 0;
   NS_IMETHOD SelectMenu(PRBool aFlag) = 0;
@@ -86,6 +86,8 @@ public:
   NS_IMETHOD GetActiveChild(nsIDOMElement** aResult)=0;
   NS_IMETHOD SetActiveChild(nsIDOMElement* aChild)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenuFrame, NS_IMENUFRAME_IID)
 
 #endif
 

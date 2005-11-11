@@ -47,7 +47,7 @@
 /// Interface to a buffer that holds unicode characters
 class nsIUnicharBuffer : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICHARBUFFER_IID);
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUNICHARBUFFER_IID)
 
   NS_IMETHOD Init(PRUint32 aBufferSize) = 0;
   NS_IMETHOD_(PRInt32) GetLength() const = 0;
@@ -55,6 +55,8 @@ public:
   NS_IMETHOD_(PRUnichar*) GetBuffer() const = 0;
   NS_IMETHOD_(PRBool) Grow(PRInt32 aNewSize) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharBuffer, NS_IUNICHARBUFFER_IID)
 
 /// Factory method for nsIUnicharBuffer.
 extern NS_COM nsresult

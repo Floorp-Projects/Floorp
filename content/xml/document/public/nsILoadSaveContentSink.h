@@ -53,9 +53,12 @@
 class nsILoadSaveContentSink : public nsIXMLContentSink {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILOADSAVE_CONTENT_SINK_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILOADSAVE_CONTENT_SINK_IID)
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILoadSaveContentSink,
+                              NS_ILOADSAVE_CONTENT_SINK_IID)
 
 /**
  * The nsIXMLContentSink passed to this method must also implement

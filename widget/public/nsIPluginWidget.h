@@ -51,7 +51,7 @@ class NS_NO_VTABLE nsIPluginWidget : public nsISupports
 {
  public: 
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGINWIDGET_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPLUGINWIDGET_IID)
 
   NS_IMETHOD GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible) = 0;
 
@@ -60,3 +60,5 @@ class NS_NO_VTABLE nsIPluginWidget : public nsISupports
   NS_IMETHOD EndDrawPlugin(void) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPluginWidget, NS_IPLUGINWIDGET_IID)

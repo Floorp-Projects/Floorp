@@ -55,7 +55,7 @@ class nsStyleContext;
 class nsIRadioControlFrame : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRADIOCONTROLFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRADIOCONTROLFRAME_IID)
 
   /**
    * Sets the Pseudo Style Contexts for the Radio button
@@ -68,6 +68,8 @@ public:
     */
    NS_IMETHOD OnChecked(nsPresContext* aPresContext, PRBool aChecked) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioControlFrame, NS_IRADIOCONTROLFRAME_IID)
 
 #endif
 

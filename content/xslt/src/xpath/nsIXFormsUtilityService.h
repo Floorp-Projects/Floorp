@@ -79,7 +79,7 @@ class nsIXFormsModelElement; /* forward declaration */
 class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
  public: 
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXFORMSUTILITYSERVICE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXFORMSUTILITYSERVICE_IID)
 
   /**
    * Function to get the corresponding model element from a xforms node or
@@ -157,6 +157,9 @@ class NS_NO_VTABLE nsIXFormsUtilityService : public nsISupports {
   NS_IMETHOD GetDaysFromDateTime(const nsAString & aValue, 
                                  PRInt32         * aDays) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXFormsUtilityService,
+                              NS_IXFORMSUTILITYSERVICE_IID)
 
 #define NS_ERROR_XFORMS_CALCUATION_EXCEPTION \
                        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL, 3001)

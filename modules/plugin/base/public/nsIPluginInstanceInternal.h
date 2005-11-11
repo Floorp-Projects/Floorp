@@ -49,7 +49,7 @@ struct JSContext;
 class NS_NO_VTABLE nsIPluginInstanceInternal : public nsISupports
 {
 public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGININSTANCEINTERNAL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPLUGININSTANCEINTERNAL_IID)
 
   virtual JSObject *GetJSObject(JSContext *cx) = 0;
 
@@ -60,5 +60,8 @@ public:
 
   virtual PRUint16 GetPluginAPIVersion() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPluginInstanceInternal,
+                              NS_IPLUGININSTANCEINTERNAL_IID)
 
 #endif /* nsIPluginInstanceInternal_h___ */
