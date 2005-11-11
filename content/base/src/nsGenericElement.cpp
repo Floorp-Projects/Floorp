@@ -3194,7 +3194,10 @@ public:
   
   nsFragmentObserver(PRUint32 aOldChildCount, nsIContent* aParent,
                      nsIDocument* aDocument) :
-    mOldChildCount(aOldChildCount), mParent(aParent), mDocument(aDocument)
+    mOldChildCount(aOldChildCount),
+    mChildrenBound(0),
+    mParent(aParent),
+    mDocument(aDocument)
   {
     NS_ASSERTION(mParent, "Must have parent!");
   }
@@ -3229,20 +3232,40 @@ public:
 
   void Notify() {
     if (mDocument && mDocument == mParent->GetCurrentDoc()) {
-      PRInt32 newCount = mParent->GetChildCount();
-      if (newCount > mOldChildCount) {
+      if (mChildrenBound > 0) {
+        // Some stuff got bound since we notified last time.  Notify on it.
+        PRUint32 boundCount = mOldChildCount + mChildrenBound;
         PRUint32 notifySlot = mOldChildCount;
-        // Make sure to update mOldChildCount so that if ContentAppended calls
-        // BeginUpdate for some reason (eg XBL) so we reenter Notify() we won't
-        // double-notify.
-        mOldChildCount = newCount;
-        mDocument->ContentAppended(mParent, notifySlot);
+        // Make sure to update mChildrenBound and mOldChildCount so that if
+        // ContentAppended calls BeginUpdate for some reason (eg XBL) so we
+        // reenter Notify() we won't double-notify.
+        mChildrenBound = 0;
+        mOldChildCount = boundCount;
+        if (boundCount == mParent->GetChildCount()) {
+          // All the kids have been bound already.  Just append
+          mDocument->ContentAppended(mParent, notifySlot);
+        } else {
+          // Just notify on the already-bound kids
+          for (PRUint32 i = notifySlot; i < boundCount; ++i) {
+            nsIContent* child = mParent->GetChildAt(i);
+            // Could have no child if script has rearranged the DOM or
+            // something...
+            if (child) {
+              mDocument->ContentInserted(mParent, child, i);
+            }
+          }
+        }
       }
     }
   }
 
+  void ChildBound() {
+    ++mChildrenBound;
+  }
+
 private:
   PRUint32 mOldChildCount;
+  PRUint32 mChildrenBound;  // Number of children bound since we last notified
   nsCOMPtr<nsIContent> mParent;
   nsIDocument* mDocument;
 };
@@ -3395,6 +3418,10 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
 
       if (NS_FAILED(res)) {
         break;
+      }
+
+      if (fragmentObs) {
+        fragmentObs->ChildBound();
       }
     }
 
