@@ -240,6 +240,12 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     void NotifyStateChanged(ObjectType aOldType, PRInt32 aOldState,
                             PRBool aSync);
 
+    /**
+     * Fires the "Plugin not found" event. This function doesn't do any checks
+     * whether it should be fired, the caller should do that.
+     */
+    static void FirePluginNotFound(nsIContent* thisContent);
+
     ObjectType GetTypeOfContent(const nsCString& aMIMEType);
 
     /**
@@ -275,6 +281,14 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * the type. This function impl should match the checks in the plugin host.
      */
     static PRBool ShouldShowDefaultPlugin(nsIContent* aContent);
+
+    /**
+     * Whether this content is an unsupported plugin. This is used for purposes
+     * of determining whether to fire PluginNotFound events etc.
+     *
+     * This should only be called if the type of this content is eType_Null.
+     */
+    static PRBool IsUnsupportedPlugin(nsIContent* aContent);
 
     /**
      * The final listener to ship the data to (imagelib, uriloader, etc)
