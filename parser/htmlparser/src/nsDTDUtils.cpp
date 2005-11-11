@@ -445,15 +445,13 @@ void nsEntryStack::PushEntry(nsTagEntry* aEntry,
  * 
  * @update	gess 04.21.2000
  */
-nsDTDContext::nsDTDContext() : mStack(), mEntities(0){
-
+nsDTDContext::nsDTDContext() : mStack()
+{
   MOZ_COUNT_CTOR(nsDTDContext);
   mResidualStyleCount=0;
   mContextTopIndex=-1;
-  mTableStates=0;
   mTokenAllocator=0;
   mNodeAllocator=0;
-  mAllBits=0;
 
 #ifdef DEBUG
   memset(mXTags,0,sizeof(mXTags));
@@ -464,15 +462,9 @@ nsDTDContext::nsDTDContext() : mStack(), mEntities(0){
  * 
  * @update	gess9/10/98
  */
-nsDTDContext::~nsDTDContext() {
+nsDTDContext::~nsDTDContext()
+{
   MOZ_COUNT_DTOR(nsDTDContext);
-
-  while(mTableStates) {
-    //pop the current state and restore it's predecessor, if any...
-    CTableState *theState=mTableStates;      
-    mTableStates=theState->mPrevious;
-    delete theState;
-  }
 }
 
 

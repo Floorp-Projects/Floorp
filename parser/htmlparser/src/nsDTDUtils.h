@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -241,22 +242,21 @@ public:
         ( but not ref. counted ) by objects, tokenizer,dtd,and dtd context,
         that cease to exist when the document is destroyed.
  ************************************************************************/
-class nsTokenAllocator {
+class nsTokenAllocator
+{
 public: 
 
-                  nsTokenAllocator();
-  virtual         ~nsTokenAllocator();
-  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsAString& aString);
-  virtual CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag);
+  nsTokenAllocator();
+  ~nsTokenAllocator();
+  CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, const nsAString& aString);
+  CToken* CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag);
 
   nsFixedSizeAllocator& GetArenaPool() { return mArenaPool; }
 
 protected:
-    nsFixedSizeAllocator mArenaPool;
-
-
+  nsFixedSizeAllocator mArenaPool;
 #ifdef  NS_DEBUG
-    int       mTotals[eToken_last-1];
+  int mTotals[eToken_last-1];
 #endif
 };
 
@@ -271,12 +271,13 @@ protected:
 class nsCParserNode;
 #endif
 
-class nsNodeAllocator {
+class nsNodeAllocator
+{
 public:
   
-                         nsNodeAllocator();
-  virtual                ~nsNodeAllocator();
-  virtual nsCParserNode* CreateNode(CToken* aToken=nsnull, nsTokenAllocator* aTokenAllocator=0);
+  nsNodeAllocator();
+  ~nsNodeAllocator();
+  nsCParserNode* CreateNode(CToken* aToken=nsnull, nsTokenAllocator* aTokenAllocator=0);
 
   nsFixedSizeAllocator&  GetArenaPool() { return mNodePool; }
 
@@ -297,7 +298,8 @@ protected:
   The dtdcontext class defines an ordered list of tags (a context).
  ************************************************************************/
 
-class nsDTDContext {
+class nsDTDContext
+{
 public:
                   nsDTDContext();
                   ~nsDTDContext();
@@ -337,24 +339,8 @@ public:
   PRInt32         mResidualStyleCount;
   PRInt32         mContextTopIndex;
 
-    //break this struct out separately so that lame compilers don't gack.
-    //By using these bits instead of bools, we have a bit-o-memory.
-  struct CFlags {
-    PRUint8  mHadBody:1;
-    PRUint8  mHadFrameset:1;
-    PRUint8  mHasOpenHead:1;
-    PRUint8  mTransitional:1;
-  };
-
-  union {
-    PRUint32  mAllBits;
-    CFlags    mFlags;
-  };    
-  
   nsTokenAllocator  *mTokenAllocator;
   nsNodeAllocator   *mNodeAllocator;
-  CTableState       *mTableStates;
-  nsDeque           mEntities;
 
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };
