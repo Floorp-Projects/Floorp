@@ -69,6 +69,6 @@ public:
     NS_IMETHOD Hide() = 0;
 }; // class nsISplashScreen
 
-NS_DECLARE_STATIC_IID_ACCESSOR(nsISplashScreen, NS_ISPLASHSCREEN_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISplashScreen, NS_ISPLASHSCREEN_IID)
 
 #endif // nsISplashScreen_h__
