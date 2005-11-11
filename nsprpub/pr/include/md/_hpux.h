@@ -44,8 +44,13 @@
 
 #define PR_LINKER_ARCH    "hpux"
 #define _PR_SI_SYSNAME   "HPUX"
-#define _PR_SI_ARCHITECTURE "hppa1.1"
+#ifdef __ia64
+#define _PR_SI_ARCHITECTURE "ia64"
+#define PR_DLL_SUFFIX        ".so"
+#else
+#define _PR_SI_ARCHITECTURE "hppa"
 #define PR_DLL_SUFFIX        ".sl"
+#endif
 
 #define _PR_VMBASE        0x30000000 
 #define _PR_STACK_VMBASE    0x50000000

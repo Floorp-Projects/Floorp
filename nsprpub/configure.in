@@ -1093,17 +1093,24 @@ tools are selected during the Xcode/Developer Tools installation.])
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(HPUX)
     AC_DEFINE(_HPUX_SOURCE)
-    AC_DEFINE(hppa)
     # OSF1 and HPUX report the POLLHUP event for a socket when the
     # shutdown(SHUT_WR) operation is called for the remote end, even though
     # the socket is still writeable. Use select(), instead of poll(), to
     # workaround this problem.
     AC_DEFINE(_PR_POLL_WITH_SELECT)
     AC_DEFINE(_USE_BIG_FDS)
-    DLL_SUFFIX=sl
     DSO_LDOPTS='-b +h $(notdir $@)'
     PR_MD_CSRCS=hpux.c
-    if test "$OS_TEST" != "ia64"; then
+    if test "$OS_TEST" = "ia64"; then
+        DLL_SUFFIX=so
+        DSO_LDOPTS="$DSO_LDOPTS +b '\$\$ORIGIN'"
+        CPU_ARCH_TAG=_$OS_TEST 
+        if test -z "$USE_64"; then
+            COMPILER_TAG=_32
+        fi
+    else
+        AC_DEFINE(hppa)
+        DLL_SUFFIX=sl
         PR_MD_ASFILES=os_HPUX.s
     fi
     if test -n "$USE_64"; then
