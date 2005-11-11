@@ -75,9 +75,9 @@ class nsSVGTSpanFrame : public nsSVGTSpanFrameBase,
                         public nsISVGValueObserver,
                         public nsSupportsWeakReference
 {
-  friend nsresult
+  friend nsIFrame*
   NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                      nsIFrame* parentFrame, nsIFrame** aNewFrame);
+                      nsIFrame* parentFrame);
 protected:
   nsSVGTSpanFrame();
   virtual ~nsSVGTSpanFrame();

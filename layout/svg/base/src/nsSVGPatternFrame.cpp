@@ -96,9 +96,8 @@ class nsSVGPatternFrame : public nsSVGPatternFrameBase,
                           public nsISVGPattern
 {
 protected:
-  friend nsresult NS_NewSVGPatternFrame(nsIPresShell* aPresShell, 
-                                        nsIContent*   aContent, 
-                                        nsIFrame**    aNewFrame);
+  friend nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell, 
+                                         nsIContent*   aContent);
 
   friend nsresult NS_GetSVGPatternFrame(nsIFrame**      result, 
                                         nsIURI*         aURI, 
@@ -1175,21 +1174,18 @@ nsSVGPatternFrame::GetPatternMatrix(nsIDOMSVGMatrix **ctm, nsIDOMSVGRect *bbox, 
 // Public functions
 // -------------------------------------------------------------------------
 
-nsresult NS_NewSVGPatternFrame(nsIPresShell* aPresShell, 
-                               nsIContent*   aContent, 
-                               nsIFrame**    aNewFrame)
+nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell, 
+                                nsIContent*   aContent)
 {
-  *aNewFrame = nsnull;
-  
   nsCOMPtr<nsIDOMSVGPatternElement> pattern = do_QueryInterface(aContent);
   NS_ASSERTION(pattern, 
                "NS_NewSVGPatternFrame -- Content doesn't support nsIDOMSVGPattern");
   if (!pattern)
-    return NS_ERROR_FAILURE;
+    return nsnull;
   
   nsSVGPatternFrame* it = new (aPresShell) nsSVGPatternFrame;
   if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
 
   nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
   NS_ASSERTION(aRef, 
@@ -1210,9 +1206,7 @@ nsresult NS_NewSVGPatternFrame(nsIPresShell* aPresShell,
 #endif
   }
 
-  *aNewFrame = it;
-
-  return NS_OK;
+  return it;
 }
 
 // Public function to locate the SVGPatternFrame structure pointed to by a URI

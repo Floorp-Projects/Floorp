@@ -42,35 +42,27 @@
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
+nsIFrame*
 NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                    nsIFrame* parentFrame, nsIFrame** aNewFrame)
+                    nsIFrame* parentFrame)
 {
-  *aNewFrame = nsnull;
-
   NS_ASSERTION(parentFrame, "null parent");
   nsISVGTextContainerFrame *text_container;
   parentFrame->QueryInterface(NS_GET_IID(nsISVGTextContainerFrame),
                               (void**)&text_container);
   if (!text_container) {
     NS_ERROR("trying to construct an SVGTSpanFrame for an invalid container");
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
   
   nsCOMPtr<nsIDOMSVGTSpanElement> tspan_elem = do_QueryInterface(aContent);
   if (!tspan_elem) {
     NS_ERROR("Trying to construct an SVGTSpanFrame for a "
              "content element that doesn't support the right interfaces");
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
-  
-  nsSVGTSpanFrame* it = new (aPresShell) nsSVGTSpanFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aNewFrame = it;
-  
-  return NS_OK;
+  return new (aPresShell) nsSVGTSpanFrame;
 }
 
 nsSVGTSpanFrame::nsSVGTSpanFrame()

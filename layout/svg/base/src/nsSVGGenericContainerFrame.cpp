@@ -41,16 +41,10 @@
 //----------------------------------------------------------------------
 // nsSVGGenericContainerFrame Implementation
 
-nsresult
-NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  nsSVGGenericContainerFrame* it = new (aPresShell) nsSVGGenericContainerFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGGenericContainerFrame;
 }
 
 nsSVGGenericContainerFrame::nsSVGGenericContainerFrame()

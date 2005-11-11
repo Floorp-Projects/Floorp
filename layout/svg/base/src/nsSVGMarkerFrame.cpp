@@ -86,18 +86,10 @@ nsSVGMarkerFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return (nsSVGDefsFrame::QueryInterface(aIID, aInstancePtr));
 }
 
-nsresult
-NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-
-  nsSVGMarkerFrame* it = new (aPresShell) nsSVGMarkerFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGMarkerFrame;
 }
 
 nsresult

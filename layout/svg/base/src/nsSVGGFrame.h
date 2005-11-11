@@ -67,8 +67,8 @@ public:
 #endif
 
 protected:
-  friend nsresult
-  NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsISVGRendererCanvas* canvas,

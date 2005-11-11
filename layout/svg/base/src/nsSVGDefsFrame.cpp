@@ -50,18 +50,10 @@
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGDefsFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-  
-  nsSVGDefsFrame* it = new (aPresShell) nsSVGDefsFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGDefsFrame;
 }
 
 nsSVGDefsFrame::nsSVGDefsFrame()

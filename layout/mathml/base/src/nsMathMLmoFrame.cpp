@@ -58,19 +58,10 @@
 // additional style context to be used by our MathMLChar.
 #define NS_MATHML_CHAR_STYLE_CONTEXT_INDEX   0
 
-nsresult
-NS_NewMathMLmoFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmoFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmoFrame* it = new (aPresShell) nsMathMLmoFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmoFrame;
 }
 
 nsMathMLmoFrame::nsMathMLmoFrame()

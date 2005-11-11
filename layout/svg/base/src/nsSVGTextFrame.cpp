@@ -79,9 +79,8 @@ class nsSVGTextFrame : public nsSVGTextFrameBase,
                        public nsISVGTextContentMetrics,
                        public nsSupportsWeakReference
 {
-  friend nsresult
-  NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                     nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 protected:
   nsSVGTextFrame();
   virtual ~nsSVGTextFrame();
@@ -214,28 +213,19 @@ protected:
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent,
-                   nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-
   nsCOMPtr<nsIDOMSVGTextElement> text_elem = do_QueryInterface(aContent);
   if (!text_elem) {
 #ifdef DEBUG
     printf("warning: trying to construct an SVGTextFrame for a "
            "content element that doesn't support the right interfaces\n");
 #endif
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
-  
-  nsSVGTextFrame* it = new (aPresShell) nsSVGTextFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aNewFrame = it;
-  
-  return NS_OK;
+  return new (aPresShell) nsSVGTextFrame;
 }
 
 nsSVGTextFrame::nsSVGTextFrame()

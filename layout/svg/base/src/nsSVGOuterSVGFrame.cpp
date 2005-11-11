@@ -158,8 +158,8 @@ class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
                            public nsSupportsWeakReference,
                            public nsSVGCoordCtxProvider
 {
-  friend nsresult
-  NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 protected:
   nsSVGOuterSVGFrame();
   virtual ~nsSVGOuterSVGFrame();
@@ -282,26 +282,18 @@ protected:
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
-{
-  *aNewFrame = nsnull;
-  
+nsIFrame*
+NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+{  
   nsCOMPtr<nsIDOMSVGSVGElement> svgElement = do_QueryInterface(aContent);
   if (!svgElement) {
 #ifdef DEBUG
     printf("warning: trying to construct an SVGOuterSVGFrame for a content element that doesn't support the right interfaces\n");
 #endif
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
 
-  nsSVGOuterSVGFrame* it = new (aPresShell) nsSVGOuterSVGFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGOuterSVGFrame;
 }
 
 nsSVGOuterSVGFrame::nsSVGOuterSVGFrame()

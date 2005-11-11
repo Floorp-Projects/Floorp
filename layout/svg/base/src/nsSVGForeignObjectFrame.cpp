@@ -72,8 +72,8 @@ class nsSVGForeignObjectFrame : public nsSVGForeignObjectFrameBase,
                                 public nsISVGValueObserver,
                                 public nsSupportsWeakReference
 {
-  friend nsresult
-  NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 protected:
   nsSVGForeignObjectFrame();
   virtual ~nsSVGForeignObjectFrame();
@@ -178,26 +178,18 @@ protected:
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-  
   nsCOMPtr<nsIDOMSVGForeignObjectElement> foreignObject = do_QueryInterface(aContent);
   if (!foreignObject) {
 #ifdef DEBUG
     printf("warning: trying to construct an SVGForeignObjectFrame for a content element that doesn't support the right interfaces\n");
 #endif
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
-  
-  nsSVGForeignObjectFrame* it = new (aPresShell) nsSVGForeignObjectFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGForeignObjectFrame;
 }
 
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame()

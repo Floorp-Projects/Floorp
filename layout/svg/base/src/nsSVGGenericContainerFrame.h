@@ -54,8 +54,8 @@ class nsSVGGenericContainerFrame : public nsSVGGenericContainerFrameBase,
                                    public nsISVGChildFrame,
                                    public nsISVGContainerFrame
 {
-  friend nsresult
-  NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 protected:
   nsSVGGenericContainerFrame();
   virtual ~nsSVGGenericContainerFrame();

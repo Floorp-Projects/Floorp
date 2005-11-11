@@ -51,9 +51,7 @@
 ////////////////////////////////////////////////////////////////////////
 // nsXTFXMLBlockDisplayFrame
 
-nsresult NS_NewXTFXMLDisplayFrame(nsIPresShell* aPresShell,
-                                  PRBool isBlock, nsIFrame** aNewFrame);
-  
+nsIFrame* NS_NewXTFXMLDisplayFrame(nsIPresShell* aPresShell, PRBool isBlock);
 
 typedef nsBlockFrame nsXTFXMLBlockDisplayFrameBase;
 
@@ -148,10 +146,6 @@ nsXTFXMLBlockDisplayFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 ////////////////////////////////////////////////////////////////////////
 // nsXTFXMLInlineDisplayFrame
 
-nsresult NS_NewXTFXMLDisplayFrame(nsIPresShell* aPresShell,
-                                  PRBool isInline, nsIFrame** aNewFrame);
-  
-
 typedef nsInlineFrame nsXTFXMLInlineDisplayFrameBase;
 
 class nsXTFXMLInlineDisplayFrame : public nsXTFXMLInlineDisplayFrameBase,
@@ -245,16 +239,11 @@ nsXTFXMLInlineDisplayFrame::CreateAnonymousContent(nsPresContext* aPresContext,
 ////////////////////////////////////////////////////////////////////////
 // Construction API
 
-nsresult
-NS_NewXTFXMLDisplayFrame(nsIPresShell* aPresShell, PRBool isBlock, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewXTFXMLDisplayFrame(nsIPresShell* aPresShell, PRBool isBlock)
 {
   if (isBlock)
-    *aNewFrame = new (aPresShell) nsXTFXMLBlockDisplayFrame();
+    return new (aPresShell) nsXTFXMLBlockDisplayFrame();
   else
-    *aNewFrame = new (aPresShell) nsXTFXMLInlineDisplayFrame();
-  
-  if (nsnull == *aNewFrame)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  return NS_OK;
+    return new (aPresShell) nsXTFXMLInlineDisplayFrame();
 }

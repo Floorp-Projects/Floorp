@@ -74,26 +74,18 @@ nsSVGClipPathFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-  
   nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
   if (!transformable) {
 #ifdef DEBUG
     printf("warning: trying to construct an SVGClipPathFrame for a content element that doesn't support the right interfaces\n");
 #endif
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
-  
-  nsSVGClipPathFrame* it = new (aPresShell) nsSVGClipPathFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGClipPathFrame;
 }
 
 nsresult

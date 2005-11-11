@@ -53,19 +53,10 @@
 // <mfenced> -- surround content with a pair of fences
 //
 
-nsresult
-NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmfencedFrame* it = new (aPresShell) nsMathMLmfencedFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;  
-  return NS_OK;
+  return new (aPresShell) nsMathMLmfencedFrame;
 }
 
 nsMathMLmfencedFrame::nsMathMLmfencedFrame()

@@ -53,19 +53,10 @@
 // <mmultiscripts> -- attach prescripts and tensor indices to a base - implementation
 //
 
-nsresult
-NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmmultiscriptsFrame* it = new (aPresShell) nsMathMLmmultiscriptsFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmmultiscriptsFrame;
 }
 
 nsMathMLmmultiscriptsFrame::nsMathMLmmultiscriptsFrame()

@@ -52,8 +52,8 @@ class nsSVGLineFrame : public nsSVGPathGeometryFrame,
                        public nsISVGMarkable
 {
 protected:
-  friend nsresult
-  NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
   virtual ~nsSVGLineFrame();
   NS_IMETHOD InitSVG();
@@ -103,25 +103,18 @@ NS_INTERFACE_MAP_END_INHERITING(nsSVGPathGeometryFrame)
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGLineFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-
   nsCOMPtr<nsIDOMSVGLineElement> line = do_QueryInterface(aContent);
   if (!line) {
 #ifdef DEBUG
     printf("warning: trying to construct an SVGLineFrame for a content element that doesn't support the right interfaces\n");
 #endif
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
 
-  nsSVGLineFrame* it = new (aPresShell) nsSVGLineFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsSVGLineFrame;
 }
 
 nsSVGLineFrame::~nsSVGLineFrame()

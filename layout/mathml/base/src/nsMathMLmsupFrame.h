@@ -49,7 +49,7 @@
 
 class nsMathMLmsupFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmsupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmsupFrame(nsIPresShell* aPresShell);
 
   NS_IMETHOD
   TransmitAutomaticData();

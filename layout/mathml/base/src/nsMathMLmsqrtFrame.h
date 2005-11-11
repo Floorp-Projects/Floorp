@@ -73,7 +73,7 @@ TODO:
 
 class nsMathMLmsqrtFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell);
 
   virtual void
   SetAdditionalStyleContext(PRInt32          aIndex, 

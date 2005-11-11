@@ -67,8 +67,8 @@ class nsSVGInnerSVGFrame : public nsSVGInnerSVGFrameBase,
                            public nsSupportsWeakReference,
                            public nsISVGSVGFrame
 {
-  friend nsresult
-  NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 protected:
   nsSVGInnerSVGFrame();
   virtual ~nsSVGInnerSVGFrame();
@@ -170,16 +170,10 @@ protected:
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  nsSVGInnerSVGFrame* it = new (aPresShell) nsSVGInnerSVGFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGInnerSVGFrame;
 }
 
 nsSVGInnerSVGFrame::nsSVGInnerSVGFrame() : mFilter(nsnull), 

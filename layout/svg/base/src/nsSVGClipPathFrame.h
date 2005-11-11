@@ -44,8 +44,8 @@ typedef nsSVGDefsFrame nsSVGClipPathFrameBase;
 
 class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
 {
-  friend nsresult
-  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
   virtual ~nsSVGClipPathFrame();
   NS_IMETHOD InitSVG();

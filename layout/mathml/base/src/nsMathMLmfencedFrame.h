@@ -48,7 +48,7 @@
 
 class nsMathMLmfencedFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell);
 
   virtual void
   SetAdditionalStyleContext(PRInt32          aIndex, 

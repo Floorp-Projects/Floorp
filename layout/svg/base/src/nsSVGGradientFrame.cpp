@@ -80,18 +80,15 @@ class nsSVGGradientFrame : public nsSVGGradientFrameBase,
                            public nsISVGGradient
 {
 protected:
-  friend nsresult NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
-                                               nsIContent*   aContent, 
-                                               nsIFrame**    aNewFrame);
+  friend nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
+                                                nsIContent*   aContent);
 
-  friend nsresult NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
-                                               nsIContent*   aContent, 
-                                               nsIFrame**    aNewFrame);
+  friend nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
+                                                nsIContent*   aContent);
 
-  friend nsresult NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
-                                     nsIContent*   aContent, 
-                                     nsIFrame*     aParentFrame, 
-                                     nsIFrame**    aNewFrame);
+  friend nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell, 
+                                      nsIContent*   aContent, 
+                                      nsIFrame*     aParentFrame);
 
   friend nsresult NS_GetSVGGradientFrame(nsIFrame**      result, 
                                          nsIURI*         aURI, 
@@ -1160,20 +1157,17 @@ nsSVGRadialGradientFrame::GetR(float *aR)
 // Public functions
 // -------------------------------------------------------------------------
 
-nsresult NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
-                                      nsIContent*   aContent, 
-                                      nsIFrame**    aNewFrame)
+nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell, 
+                                       nsIContent*   aContent)
 {
-  *aNewFrame = nsnull;
-  
   nsCOMPtr<nsIDOMSVGLinearGradientElement> grad = do_QueryInterface(aContent);
   NS_ASSERTION(grad, "NS_NewSVGLinearGradientFrame -- Content doesn't support nsIDOMSVGLinearGradient");
   if (!grad)
-    return NS_ERROR_FAILURE;
+    return nsnull;
   
   nsSVGLinearGradientFrame* it = new (aPresShell) nsSVGLinearGradientFrame;
   if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
 
   nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
   NS_ASSERTION(aRef, "NS_NewSVGLinearGradientFrame -- Content doesn't support nsIDOMSVGURIReference");
@@ -1191,25 +1185,20 @@ nsresult NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
   }
 
   it->mLoopFlag = PR_FALSE;
-  *aNewFrame = it;
-
-  return NS_OK;
+  return it;
 }
 
-nsresult NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, 
-                                      nsIContent*   aContent, 
-                                      nsIFrame**    aNewFrame)
+nsIFrame*
+NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell, nsIContent*   aContent)
 {
-  *aNewFrame = nsnull;
-  
   nsCOMPtr<nsIDOMSVGRadialGradientElement> grad = do_QueryInterface(aContent);
   NS_ASSERTION(grad, "NS_NewSVGRadialGradientFrame -- Content doesn't support nsIDOMSVGRadialGradient");
   if (!grad)
-    return NS_ERROR_FAILURE;
+    return nsnull;
   
   nsSVGRadialGradientFrame* it = new (aPresShell) nsSVGRadialGradientFrame;
   if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return nsnull;
 
   nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
   NS_ASSERTION(aRef, "NS_NewSVGRadialGradientFrame -- Content doesn't support nsIDOMSVGURIReference");
@@ -1227,9 +1216,7 @@ nsresult NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
   }
 
   it->mLoopFlag = PR_FALSE;
-  *aNewFrame = it;
-
-  return NS_OK;
+  return it;
 }
 
 // Public function to locate the SVGGradientFrame structure pointed to by a URI

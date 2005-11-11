@@ -49,7 +49,7 @@
 
 class nsMathMLmunderoverFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell);
 
   NS_IMETHOD
   Place(nsIRenderingContext& aRenderingContext,

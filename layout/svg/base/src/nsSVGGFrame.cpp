@@ -55,26 +55,18 @@
 //----------------------------------------------------------------------
 // Implementation
 
-nsresult
-NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
-{
-  *aNewFrame = nsnull;
-  
+nsIFrame*
+NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent)
+{  
   nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
   if (!transformable) {
 #ifdef DEBUG
     printf("warning: trying to construct an SVGGFrame for a content element that doesn't support the right interfaces\n");
 #endif
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
-  
-  nsSVGGFrame* it = new (aPresShell) nsSVGGFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
 
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGGFrame;
 }
 
 nsIAtom *

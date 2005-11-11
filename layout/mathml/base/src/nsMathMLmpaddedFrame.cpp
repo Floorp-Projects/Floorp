@@ -66,19 +66,10 @@
 #define NS_MATHML_PSEUDO_UNIT_LSPACE      5
 #define NS_MATHML_PSEUDO_UNIT_NAMEDSPACE  6
 
-nsresult
-NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell)
 {
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsMathMLmpaddedFrame* it = new (aPresShell) nsMathMLmpaddedFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  *aNewFrame = it;
-  return NS_OK;
+  return new (aPresShell) nsMathMLmpaddedFrame;
 }
 
 nsMathMLmpaddedFrame::nsMathMLmpaddedFrame()

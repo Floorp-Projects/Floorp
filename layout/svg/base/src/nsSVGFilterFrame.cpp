@@ -67,10 +67,8 @@ class nsSVGFilterFrame : public nsSVGDefsFrame,
                          public nsISVGFilterFrame
 {
 protected:
-  friend nsresult
-  NS_NewSVGFilterFrame(nsIPresShell* aPresShell,
-                       nsIContent* aContent,
-                       nsIFrame** aNewFrame);
+  friend nsIFrame*
+  NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent);
 
   virtual ~nsSVGFilterFrame();
   NS_IMETHOD InitSVG();
@@ -126,18 +124,10 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFilterFrame)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGDefsFrame)
 
-nsresult
-NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewFrame)
+nsIFrame*
+NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent)
 {
-  *aNewFrame = nsnull;
-
-  nsSVGFilterFrame* it = new (aPresShell) nsSVGFilterFrame;
-  if (nsnull == it)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  *aNewFrame = it;
-
-  return NS_OK;
+  return new (aPresShell) nsSVGFilterFrame;
 }
 
 nsresult

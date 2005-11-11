@@ -49,7 +49,7 @@
 
 class nsMathMLmoverFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmoverFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend nsIFrame* NS_NewMathMLmoverFrame(nsIPresShell* aPresShell);
 
   NS_IMETHOD
   Place(nsIRenderingContext& aRenderingContext,
