@@ -445,10 +445,10 @@ secmod_EncodeData(DBT *data, char * module)
     encoded->isCritical = (unsigned char) 
 			(secmod_argHasFlag("flags","critical",nss) ? 1 : 0);
 
-    order = secmod_argReadLong("trustOrder", nss, SFTK_DEFAULT_TRUST_ORDER, 
+    order = secmod_argReadLong("trustOrder", nss, SECMOD_DEFAULT_TRUST_ORDER, 
                                NULL);
     SECMOD_PUTLONG(encoded->trustOrder,order);
-    order = secmod_argReadLong("cipherOrder", nss, SFTK_DEFAULT_CIPHER_ORDER, 
+    order = secmod_argReadLong("cipherOrder", nss, SECMOD_DEFAULT_CIPHER_ORDER, 
                                NULL);
     SECMOD_PUTLONG(encoded->cipherOrder,order);
 
@@ -551,8 +551,8 @@ secmod_DecodeData(char *defParams, DBT *data, PRBool *retInternal)
     unsigned long slotID;
     unsigned long defaultFlags;
     unsigned long timeout;
-    unsigned long trustOrder	=SFTK_DEFAULT_TRUST_ORDER;
-    unsigned long cipherOrder	=SFTK_DEFAULT_CIPHER_ORDER;
+    unsigned long trustOrder	=SECMOD_DEFAULT_TRUST_ORDER;
+    unsigned long cipherOrder	=SECMOD_DEFAULT_CIPHER_ORDER;
     unsigned short len;
     unsigned short namesOffset  = 0;	/* start of the names block */
     unsigned long namesRunningOffset;	/* offset to name we are 
