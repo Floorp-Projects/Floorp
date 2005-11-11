@@ -291,6 +291,14 @@ function MiniNavStartup()
   getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,false);
   document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
 
+
+  /* 
+   * Toolkit in Minimo, box strip is active, as opposite to in FF
+   */
+  if(getBrowser().mPanelContainer.childNodes.length==1) {
+	getBrowser().mStrip.collapsed=true;
+  }
+
 }
 
 function BrowserWithoutSNAV(e) {
@@ -347,9 +355,11 @@ function eventHandlerMenu(e) {
 			if(tempElement=="#tabContent") { 
 				// THis is hack to go backwards and get into browser area. 
 				// The previous approach worked in toolkitFF desktop and failed in device. 
-				document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("nav-bar"));
-				document.commandDispatcher.rewindFocus();
-
+				//document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("nav-bar"));
+				//document.commandDispatcher.rewindFocus();
+				
+				getBrowser().contentWindow.focus();
+				
 				BrowserSNAVToggle(true);
 
 			} 
