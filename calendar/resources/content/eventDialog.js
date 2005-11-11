@@ -260,7 +260,7 @@ function loadCalendarEventDialog()
         setElementValue("alarm-length-field", event.getProperty("alarmLength"));
         setElementValue("alarm-length-units", event.getProperty("alarmUnits"));
         var startPickerDisabled = getElementValue("start-datetime", "disabled");
-        var duePickerDisabled = getElementValue("start-datetime", "disabled");
+        var duePickerDisabled = getElementValue("due-datetime", "disabled");
         if (componentType == "event" ||
            (componentType == "todo" && !(startPickerDisabled && duePickerDisabled) ) ) {
             // If the event has an alarm email address, assume email alarm type
@@ -280,9 +280,9 @@ function loadCalendarEventDialog()
                 if ( (componentType == "event") ||
                      (componentType == "todo" && !startPickerDisabled &&
                          duePickerDisabled && alarmRelated == "START") ||
-                     (componentType == "todo" && startPicker.disabled &&
+                     (componentType == "todo" && startPickerDisabled &&
                          !duePickerDisabled && alarmRelated == "END")  ||
-                     (componentType == "todo" && !startPickerDisabled && !duePicker.disabled) )
+                     (componentType == "todo" && !startPickerDisabled && !duePickerDisabled) )
                 {
                      setElementValue("alarm-trigger-relation", alarmRelated);
                 } else {
