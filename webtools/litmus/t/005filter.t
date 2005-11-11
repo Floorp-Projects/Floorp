@@ -46,7 +46,7 @@ $/ = undef;
 
 foreach my $path (@Support::Templates::include_paths) {
     $path =~ s|\\|/|g if $^O eq 'MSWin32';  # convert \ to / in path if on windows
-    $path =~ m|template/([^/]+)/([^/]+)|;
+    $path =~ m|templates/([^/]+)/([^/]+)|;
     my $lang = $1;
     my $flavor = $2;
 
@@ -153,12 +153,13 @@ foreach my $path (@Support::Templates::include_paths) {
 sub directive_ok {
     my ($file, $directive) = @_;
 
-    # Comments
-    return 1 if $directive =~ /^[+-]?#/;        
-
     # Remove any leading/trailing + or - and whitespace.
     $directive =~ s/^[+-]?\s*//;
     $directive =~ s/\s*[+-]?$//;
+
+
+    # Comments
+    return 1 if $directive =~ /^[+-]?#/;        
 
     # Empty directives are ok; they are usually line break helpers
     return 1 if $directive eq '';
@@ -187,7 +188,7 @@ sub directive_ok {
     return 1 if $directive =~ /^[0-9]+$/;
 
     # Simple assignments
-    return 1 if $directive =~ /^[\w\.\$]+\s+=\s+/;
+    return 1 if $directive =~ /^[\w\.\$]+\s?=\s?/;
 
     # Conditional literals with either sort of quotes 
     # There must be no $ in the string for it to be a literal

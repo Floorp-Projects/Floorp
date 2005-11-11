@@ -57,7 +57,7 @@
             <img src="skins/icons/platform/[% platform.iconpath FILTER html%]" 
                 width="20" height="22">
           [% ELSE %]
-            [% platform.name FILTER truncate(6) | html %]
+            [% platform.name | truncate(6) | html %]
           [% END %]
 [% END %]
 
@@ -82,7 +82,7 @@
     <table border="0">
     <tr>
     [% FOREACH curplat = test.product.platforms %]
-      <td style="[% test.state(curplat).style %]">
+      <td style="[% test.state(curplat).style | html %]">
       [% INCLUDE platform_to_img platform=curplat %]
       </td>
     [% END %]
@@ -98,7 +98,7 @@
 <div class="hotlist">
     <p>
       <font size="+2">
-        [% title %]
+        [% title FILTER html %]
       </font>
     </p>
 

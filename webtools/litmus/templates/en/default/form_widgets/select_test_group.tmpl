@@ -2,7 +2,9 @@
     <option value="">-Test Group-</option>
 [% IF test_groups %]
 [% FOREACH test_group=test_groups %]
-    <option[% IF defaults.test_group==test_group.name %] selected[% END %] value="[% test_group.name %]">[% test_group.name %]</option>
+    <option[% IF defaults.test_group==test_group.name %] selected[% END %] 
+      value="[% test_group.name | html %]">
+     [% test_group.name | html %]</option>
 [% END %]
 [% END %]
 </select>
