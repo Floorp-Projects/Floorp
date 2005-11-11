@@ -1409,10 +1409,11 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     return;
   }
 
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  xpc->WrapNative(cx, ::JS_GetGlobalObject(cx), element,
-                  NS_GET_IID(nsIDOMElement),
-                  getter_AddRefs(holder));
+  nsCOMPtr<nsISupports> supp(do_QueryInterface(element));
+  nsCOMPtr<nsIXPConnectWrappedNative> holder;
+  xpc->GetWrappedNativeOfNativeObject(cx, ::JS_GetGlobalObject(cx), supp,
+                                      NS_GET_IID(nsISupports),
+                                      getter_AddRefs(holder));
   if (!holder) {
     return;
   }
