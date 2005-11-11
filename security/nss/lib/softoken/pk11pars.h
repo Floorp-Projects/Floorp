@@ -64,8 +64,8 @@ struct secmodargSlotFlagTable {
     unsigned long value;
 };
 
-#define SFTK_DEFAULT_CIPHER_ORDER 0
-#define SFTK_DEFAULT_TRUST_ORDER 50
+#define SECMOD_DEFAULT_CIPHER_ORDER 0
+#define SECMOD_DEFAULT_TRUST_ORDER 50
 
 
 #define SECMOD_ARG_ENTRY(arg,flag) \
@@ -822,9 +822,9 @@ secmod_mkNSS(char **slotStrings, int slotCount, PRBool internal, PRBool isFIPS,
     ciphers = secmod_mkCipherFlags(ssl0, ssl1);
 
     trustOrderPair=secmod_formatIntPair("trustOrder",trustOrder,
-					SFTK_DEFAULT_TRUST_ORDER);
+					SECMOD_DEFAULT_TRUST_ORDER);
     cipherOrderPair=secmod_formatIntPair("cipherOrder",cipherOrder,
-					SFTK_DEFAULT_CIPHER_ORDER);
+					SECMOD_DEFAULT_CIPHER_ORDER);
     slotPair=secmod_formatPair("slotParams",slotParams,'{'); /* } */
     if (slotParams) PORT_Free(slotParams);
     cipherPair=secmod_formatPair("ciphers",ciphers,'\'');
