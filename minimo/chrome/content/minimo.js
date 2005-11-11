@@ -705,8 +705,13 @@ function URLBarEntered()
 {
   try
   {
+    if (!gURLBar)
+      return;
+
     var url = gURLBar.value;
-    
+    if (gURLBar.value == "" || gURLBar.value == null)
+      return;
+
     var fixedUpURI = gURIFixup.createFixupURI(url, 2 /*fixup url*/ );
     gGlobalHistory.markPageAsTyped(fixedUpURI);
     
