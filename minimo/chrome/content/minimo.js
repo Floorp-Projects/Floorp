@@ -270,11 +270,6 @@ function MiniNavStartup()
   document.addEventListener("keypress",eventHandlerMenu,true);
 
   /* 
-   * Focus event detection to toggle SNAV mode on/OFF
-   */
-  document.addEventListener("focus",eventHandlerFocus,false); 
-  
-  /* 
    * Override the title attribute <title /> in this doc with a setter.
    * This is our workaround solution so that when the tabbrowser::updateTitle
    * tries to update this document's title, nothing happens. Bug 311564
@@ -289,17 +284,17 @@ function MiniNavStartup()
  
   syncUIZoom();
   
+
+  /* 
+   * Add event clicks to Minimo toolbars and also to the mStrip BOX in the tabbrowser
+   */
+  getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,false);
+  document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
+
 }
 
-/* 
- *  Toggles SNAV ON/OFF based on focused element. If in #document, then SNAV on. Otherwise off. 
- */
-function eventHandlerFocus(e) {
- if(e.target.nodeName=="#document") {
-	BrowserSNAVToggle(true);
- } else {
-    BrowserSNAVToggle(false);
- } 
+function BrowserWithoutSNAV(e) {
+	BrowserSNAVToggle(false);
 }
 
 /*
@@ -317,7 +312,8 @@ function eventHandlerMenu(e) {
 
   if( e.keyCode==70) /*SoftKey1 or HWKey1*/ {
   	document.getElementById("menu-button").focus();
-    e.preventBubble();
+	e.preventBubble();
+	BrowserSNAVToggle(false);
   } 
   
   if(document.commandDispatcher&&document.commandDispatcher.focusedElement) { 
@@ -339,6 +335,13 @@ function eventHandlerMenu(e) {
 			if(tempElement=="#tabContainer") { 
 				if(getBrowser().tabContainer) {
 					getBrowser().selectedTab.focus();
+
+					if(getBrowser().mStrip.collapsed) {
+				
+						BrowserSNAVToggle(true);
+
+					} 
+
 				}
 			} 
 			if(tempElement=="#tabContent") { 
@@ -346,6 +349,9 @@ function eventHandlerMenu(e) {
 				// The previous approach worked in toolkitFF desktop and failed in device. 
 				document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("nav-bar"));
 				document.commandDispatcher.rewindFocus();
+
+				BrowserSNAVToggle(true);
+
 			} 
        
 		  } else { 
