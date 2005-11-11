@@ -51,7 +51,7 @@ class nsISVGGlyphFragmentLeaf : public nsISVGGlyphFragmentNode
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGGLYPHFRAGMENTLEAF_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGGLYPHFRAGMENTLEAF_IID)
 
   NS_IMETHOD_(void) SetGlyphPosition(float x, float y)=0;
   NS_IMETHOD_(float) GetGlyphPositionX()=0;
@@ -69,5 +69,8 @@ public:
   NS_IMETHOD_(PRUint16) GetTextAnchor()=0;
   NS_IMETHOD_(PRBool) IsAbsolutelyPositioned()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGGlyphFragmentLeaf,
+                              NS_ISVGGLYPHFRAGMENTLEAF_IID)
 
 #endif // __NS_ISVGGLYPHFRAGMENTLEAF_H__

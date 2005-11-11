@@ -60,7 +60,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // XXX Is this really needed?  This isn't an interface.
-  NS_DEFINE_STATIC_IID_ACCESSOR(MOZITXTTOHTMLCONV_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(MOZITXTTOHTMLCONV_IID)
 
   NS_DECL_MOZITXTTOHTMLCONV
   NS_DECL_NSIREQUESTOBSERVER
@@ -321,6 +321,8 @@ private:
 */
   PRBool ShouldLinkify(const nsCString& aURL);
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(mozTXTToHTMLConv, MOZITXTTOHTMLCONV_IID)
 
 // It's said, that Win32 and Mac don't like static const members
 const PRInt32 mozTXTToHTMLConv_lastMode = 4;

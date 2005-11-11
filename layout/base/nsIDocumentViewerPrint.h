@@ -60,7 +60,7 @@ class nsIContent;
 class nsIDocumentViewerPrint : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_VIEWER_PRINT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_VIEWER_PRINT_IID)
 
   virtual void SetIsPrinting(PRBool aIsPrinting) = 0;
   virtual PRBool GetIsPrinting() = 0;
@@ -87,6 +87,9 @@ public:
   virtual void OnDonePrinting() = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
+                              NS_IDOCUMENT_VIEWER_PRINT_IID)
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOCUMENTVIEWERPRINT \

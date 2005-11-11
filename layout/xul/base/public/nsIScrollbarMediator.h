@@ -49,7 +49,7 @@ static NS_DEFINE_IID(kIScrollbarMediatorIID, NS_ISCROLLBARMEDIATOR_IID);
 class nsIScrollbarMediator : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLBARMEDIATOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCROLLBARMEDIATOR_IID)
 
   // The nsISupports aScrollbar argument below denotes the
   // scrollbar that's firing the notification. It should be
@@ -60,6 +60,8 @@ public:
 
   NS_IMETHOD VisibilityChanged(nsISupports* aScrollbar, PRBool aVisible) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScrollbarMediator, NS_ISCROLLBARMEDIATOR_IID)
 
 #endif
 

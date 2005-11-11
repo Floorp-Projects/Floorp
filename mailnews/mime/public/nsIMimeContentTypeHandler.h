@@ -78,7 +78,7 @@ typedef struct {
 
 class nsIMimeContentTypeHandler : public nsISupports {
 public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMIME_CONTENT_TYPE_HANDLER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMIME_CONTENT_TYPE_HANDLER_IID)
 
   NS_IMETHOD    GetContentType(char **contentType) = 0;
 
@@ -86,5 +86,8 @@ public:
                                               contentTypeHandlerInitStruct *initStruct, 
                                               MimeObjectClass **objClass) = 0;
 }; 
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMimeContentTypeHandler,
+                              NS_IMIME_CONTENT_TYPE_HANDLER_IID)
 
 #endif /* nsIMimeContentTypeHandler_h_ */

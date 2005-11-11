@@ -62,7 +62,7 @@ class nsIDOMDocument; /* forward declaration */
 class nsIContentSerializer : public nsISupports {
  public: 
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENTSERIALIZER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTSERIALIZER_IID)
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
                   const char* aCharSet, PRBool aIsCopying) = 0;
@@ -102,6 +102,8 @@ class nsIContentSerializer : public nsISupports {
   NS_IMETHOD AppendDocumentStart(nsIDOMDocument *aDocument,
                                  nsAString& aStr) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentSerializer, NS_ICONTENTSERIALIZER_IID)
 
 #define NS_CONTENTSERIALIZER_CONTRACTID_PREFIX \
 "@mozilla.org/layout/contentserializer;1?mimetype="

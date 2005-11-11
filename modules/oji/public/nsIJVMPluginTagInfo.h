@@ -65,7 +65,7 @@
 
 class nsIJVMPluginTagInfo : public nsISupports {
 public:
-	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMPLUGINTAGINFO_IID)
+	NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJVMPLUGINTAGINFO_IID)
 
     NS_IMETHOD
     GetCode(const char* *result) = 0;
@@ -83,6 +83,8 @@ public:
     GetMayScript(PRBool *result) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIJVMPluginTagInfo, NS_IJVMPLUGINTAGINFO_IID)
 
 ////////////////////////////////////////////////////////////////////////////////
 

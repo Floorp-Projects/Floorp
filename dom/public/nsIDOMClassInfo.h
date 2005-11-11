@@ -467,12 +467,13 @@ class nsIDOMScriptObjectFactory;
 
 class nsIDOMCIExtension : public nsISupports {
 public:  
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCI_EXTENSION_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMCI_EXTENSION_IID)
 
   NS_IMETHOD RegisterDOMCI(const char* aName,
                            nsIDOMScriptObjectFactory* aDOMSOFactory) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMCIExtension, NS_IDOMCI_EXTENSION_IID)
 
 #define NS_DOMCI_EXTENSION_NAME(_module) ns##_module##DOMCIExtension
 #define NS_DOMCI_EXTENSION_CONSTRUCTOR(_module) \

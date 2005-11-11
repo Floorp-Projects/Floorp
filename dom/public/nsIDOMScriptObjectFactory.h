@@ -52,7 +52,7 @@ class nsIDOMEventListener;
 
 class nsIDOMScriptObjectFactory : public nsISupports {
 public:  
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOM_SCRIPT_OBJECT_FACTORY_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOM_SCRIPT_OBJECT_FACTORY_IID)
 
   NS_IMETHOD NewScriptContext(nsIScriptGlobalObject *aGlobal,
                               nsIScriptContext **aContext) = 0;
@@ -76,5 +76,8 @@ public:
                                   PRBool aHasClassInterface,
                                   const nsCID *aConstructorCID) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMScriptObjectFactory,
+                              NS_IDOM_SCRIPT_OBJECT_FACTORY_IID)
 
 #endif /* nsIDOMScriptObjectFactory_h__ */

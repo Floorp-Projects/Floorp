@@ -401,7 +401,7 @@ typedef PRBool nsDidReflowStatus;
 class nsIFrame : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAME_IID)
 
   nsPresContext* GetPresContext() const {
     return GetStyleContext()->GetRuleNode()->GetPresContext();
@@ -1494,5 +1494,7 @@ private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrame, NS_IFRAME_IID)
 
 #endif /* nsIFrame_h___ */

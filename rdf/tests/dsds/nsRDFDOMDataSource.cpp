@@ -50,7 +50,7 @@
 
 class nsRDFDOMDataSource : public nsISupports {
  public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRDFDATASOURCE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRDFDATASOURCE_IID)
 
   /* void Init (in string uri); */
   NS_IMETHOD Init(const char *uri) = 0;
@@ -112,5 +112,7 @@ class nsRDFDOMDataSource : public nsISupports {
   /* void endUpdateBatch (); */
   NS_IMETHOD EndUpdateBatch() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsRDFDOMDataSource, NS_IRDFDATASOURCE_IID)
 
 #endif /* __gen_nsRDFDOMDataSource_h__ */

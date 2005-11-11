@@ -64,7 +64,7 @@ class nsIStyleRuleProcessor;
  */
 class nsIStyleSheet : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_SHEET_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTYLE_SHEET_IID)
 
   // basic style sheet data
   NS_IMETHOD GetSheetURI(nsIURI** aSheetURI) const = 0;
@@ -104,5 +104,7 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;
 #endif
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIStyleSheet, NS_ISTYLE_SHEET_IID)
 
 #endif /* nsIStyleSheet_h___ */

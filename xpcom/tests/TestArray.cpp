@@ -50,11 +50,13 @@ static const PRBool kExitOnError = PR_TRUE;
 class IFoo : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
   NS_IMETHOD_(nsrefcnt) RefCnt() = 0;
   NS_IMETHOD_(PRInt32) ID() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
 
 class Foo : public IFoo {
 public:

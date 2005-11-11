@@ -77,7 +77,7 @@ protected:
   virtual nsresult Init();
   
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_SVG_USE_ELEMENT_IMPL_CID);
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVG_USE_ELEMENT_IMPL_CID)
 
   // interfaces:
   
@@ -131,6 +131,8 @@ protected:
   nsCOMPtr<nsIContent> mOriginal; // if we've been cloned, our "real" copy
   nsCOMPtr<nsIContent> mClone;  // cloned tree
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGUseElement, NS_SVG_USE_ELEMENT_IMPL_CID)
 
 ////////////////////////////////////////////////////////////////////////
 // implementation

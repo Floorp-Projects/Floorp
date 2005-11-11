@@ -131,7 +131,7 @@ class nsIScrollableView;
 
 class nsIFrameSelection : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMESELECTION_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMESELECTION_IID)
   enum HINT { HINTLEFT = 0, HINTRIGHT = 1};  //end of this line or beginning of next
 
   /** Init will initialize the frame selector with the necessary pres shell to 
@@ -464,6 +464,6 @@ public:
 #endif // IBMBIDI
 };
 
-
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameSelection, NS_IFRAMESELECTION_IID)
 
 #endif /* nsIFrameSelection_h___ */

@@ -78,7 +78,7 @@ class nsIDOMNSXPathExpression; /* forward declaration */
 class NS_NO_VTABLE nsIXFormsXPathEvaluator : public nsISupports {
  public: 
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(TRANSFORMIIX_XFORMS_XPATH_EVALUATOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(TRANSFORMIIX_XFORMS_XPATH_EVALUATOR_IID)
 
   /**
    * Function to create a nsIDOMNSXPathExpression from the provided expression
@@ -95,5 +95,8 @@ class NS_NO_VTABLE nsIXFormsXPathEvaluator : public nsISupports {
   NS_IMETHOD Evaluate(const nsAString & aExpression, nsIDOMNode *aContextNode, PRUint32 aContextPosition, PRUint32 aContextSize, nsIDOMNode *aResolverNode, PRUint16 aType, nsISupports *aInResult, nsISupports **aResult) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXFormsXPathEvaluator,
+                              TRANSFORMIIX_XFORMS_XPATH_EVALUATOR_IID)
 
 #endif /* nsIXFormsXPathEvaluator_h  */

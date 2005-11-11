@@ -72,7 +72,7 @@ enum nsLinkVerb {
  */
 class nsILinkHandler : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINKHANDLER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINKHANDLER_IID)
 
   /**
    * Process a click on a link.
@@ -140,5 +140,7 @@ public:
    */
   NS_IMETHOD GetLinkState(nsIURI* aLinkURI, nsLinkState& aState) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILinkHandler, NS_ILINKHANDLER_IID)
 
 #endif /* nsILinkHandler_h___ */

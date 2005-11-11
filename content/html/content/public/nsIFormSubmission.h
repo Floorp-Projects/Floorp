@@ -62,7 +62,7 @@ class nsIFormSubmission : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMSUBMISSION_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMSUBMISSION_IID)
 
   /**
    * Find out whether or not this form submission accepts files
@@ -117,6 +117,8 @@ public:
                                PRBool aMoreFilesToCome) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormSubmission, NS_IFORMSUBMISSION_IID)
 
 //
 // Factory methods

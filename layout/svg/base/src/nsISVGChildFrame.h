@@ -56,7 +56,7 @@ struct nsRect;
 class nsISVGChildFrame : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGCHILDFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGCHILDFRAME_IID)
 
   // XXX Ideally we don't want to pass the dirtyRect along but extract
   // it from nsIRenderingContext where needed (only in foreign
@@ -101,6 +101,8 @@ public:
   // if frame is not directly filtered.
   NS_IMETHOD GetFilterRegion(nsISVGRendererRegion **_retval)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGChildFrame, NS_ISVGCHILDFRAME_IID)
 
 #endif // __NS_ISVGCHILDFRAME_H__
 

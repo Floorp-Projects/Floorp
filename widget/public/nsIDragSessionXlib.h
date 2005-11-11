@@ -49,10 +49,12 @@
 
 class nsIDragSessionXlib : public nsISupports {
  public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONXLIB_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONXLIB_IID)
 
   NS_IMETHOD IsDragging(PRBool *result) = 0;
   NS_IMETHOD UpdatePosition(PRInt32 x, PRInt32 y) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDragSessionXlib, NS_IDRAGSESSIONXLIB_IID)
 
 #endif /* nsIDragSessionXLIB_h_ */

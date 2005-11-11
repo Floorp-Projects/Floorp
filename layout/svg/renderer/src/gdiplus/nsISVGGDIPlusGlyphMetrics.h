@@ -55,7 +55,7 @@
 class nsISVGGDIPlusGlyphMetrics : public nsISVGRendererGlyphMetrics
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGGDIPLUSGLYPHMETRICS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGGDIPLUSGLYPHMETRICS_IID)
 
   /**
    * Obtain the bounding rectangle of the (composite) glyph as a Gdiplus::RectF.
@@ -82,6 +82,9 @@ public:
    */
   NS_IMETHOD_(TextRenderingHint) GetTextRenderingHint()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGGDIPlusGlyphMetrics,
+                              NS_ISVGGDIPLUSGLYPHMETRICS_IID)
 
 /** @} */
 

@@ -68,7 +68,7 @@ class nsIURI;
 class nsIForm : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORM_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORM_IID)
 
   /**
    * Add an element to end of this form's list of elements
@@ -185,5 +185,7 @@ public:
   NS_IMETHOD GetActionURL(nsIURI** aActionURL) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIForm, NS_IFORM_IID)
 
 #endif /* nsIForm_h___ */

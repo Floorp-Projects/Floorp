@@ -120,8 +120,10 @@ public:
 	UnwrapJavaWrapper(JNIEnv* jenv, jobject jobj, jint* obj) = 0;
 #endif
 
- 	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMPLUGIN_IID)
+ 	NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJVMPLUGIN_IID)
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIJVMPlugin, NS_IJVMPLUGIN_IID)
 
 ////////////////////////////////////////////////////////////////////////////////
 

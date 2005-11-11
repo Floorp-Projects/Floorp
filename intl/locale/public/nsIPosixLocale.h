@@ -58,11 +58,12 @@
 class nsIPosixLocale : public nsISupports {
 
 public:
-	
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPOSIXLOCALE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPOSIXLOCALE_IID)
+
   NS_IMETHOD GetPlatformLocale(const nsAString& locale, nsACString& posixLocale) = 0;
   NS_IMETHOD GetXPLocale(const char* posixLocale, nsAString& locale) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPosixLocale, NS_IPOSIXLOCALE_IID)
 
 #endif

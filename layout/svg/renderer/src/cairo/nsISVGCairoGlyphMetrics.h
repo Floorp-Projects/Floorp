@@ -59,10 +59,13 @@
 class nsISVGCairoGlyphMetrics : public nsISVGRendererGlyphMetrics
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGCAIROGLYPHMETRICS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGCAIROGLYPHMETRICS_IID)
 
   NS_IMETHOD_(void) SelectFont(cairo_t *ctx) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGCairoGlyphMetrics,
+                              NS_ISVGCAIROGLYPHMETRICS_IID)
 
 /** @} */
 

@@ -55,7 +55,7 @@ class nsIDocShell;
  */
 class nsIXMLContent : public nsIContent {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXMLCONTENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXMLCONTENT_IID)
   
   nsIXMLContent(nsINodeInfo *aNodeInfo)
     : nsIContent(aNodeInfo)
@@ -79,5 +79,7 @@ public:
    */
   NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXMLContent, NS_IXMLCONTENT_IID)
 
 #endif // nsIXMLContent_h___

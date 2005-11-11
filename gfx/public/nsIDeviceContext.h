@@ -214,7 +214,7 @@ typedef void * nsPalette;
 class nsIDeviceContext : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_IID)
 
   /**
    * Initialize the device context from a widget
@@ -579,5 +579,7 @@ protected:
   float mAppUnitsToDevUnits;
   float mDevUnitsToAppUnits;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDeviceContext, NS_IDEVICE_CONTEXT_IID)
 
 #endif /* nsIDeviceContext_h___ */

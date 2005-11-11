@@ -244,8 +244,10 @@ struct nsDocumentMapWriteEntry;
     {0x7d37d1bb,0xcef3,0x4c5f,{0x97,0x68,0x0f,0x89,0x7f,0x1a,0xe1,0x40}}
 
 struct nsIFastLoadFileReader : public nsISupports {
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_FASTLOADFILEREADER_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_FASTLOADFILEREADER_IID)
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFastLoadFileReader, NS_FASTLOADFILEREADER_IID)
 
 /**
  * Inherit from the concrete class nsBinaryInputStream, which inherits from

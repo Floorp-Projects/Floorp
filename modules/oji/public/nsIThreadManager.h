@@ -39,6 +39,7 @@
 #define nsIThreadManager_h___
 
 #include "nsISupports.h"
+#include "nsIRunnable.h"
 #include "nspr.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,7 +60,7 @@ class nsIRunnable;
 
 class nsIThreadManager : public nsISupports {
 public:
-	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITHREADMANAGER_IID)
+	NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITHREADMANAGER_IID)
 	
 	/**
 	 * Returns a unique identifier for the "current" system thread.
@@ -123,29 +124,6 @@ public:
 	PostEvent(PRThread* thread, nsIRunnable* runnable, PRBool async) = 0;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// Runnable
-// This interface represents the invocation of a new thread.
-
-#define NS_IRUNNABLE_IID								\
-{ /* 930f3d70-6849-11d2-801f-00805f71101c */			\
-	0x930f3d70,											\
-	0x6849,												\
-	0x11d2,												\
-	{0x80, 0x1f, 0x00, 0x80, 0x5f, 0x71, 0x10, 0x1c}	\
-}
-
-class nsIRunnable : public nsISupports {
-public:
-	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRUNNABLE_IID)
-
-	/**
-	 * Defines an entry point for a newly created thread.
-	 */
-	NS_IMETHOD
-	Run() = 0;
-};
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIThreadManager, NS_ITHREADMANAGER_IID)
 
 #endif /* nsIThreadManager_h___ */

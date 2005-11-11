@@ -93,7 +93,7 @@ private:
 class nsMsgCopy : public nsIUrlListener
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGCOPY_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMSGCOPY_IID)
 
   nsMsgCopy();
   virtual ~nsMsgCopy();
@@ -138,6 +138,8 @@ public:
   nsCOMPtr<nsIMsgSend>            mMsgSendObj;
   char                            *mSavePref;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsMsgCopy, NS_IMSGCOPY_IID)
 
 // Useful function for the back end...
 nsresult	LocateMessageFolder(nsIMsgIdentity   *userIdentity, 

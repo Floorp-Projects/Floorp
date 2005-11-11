@@ -55,7 +55,7 @@ class nsIDOMDragListener : public nsIDOMEventListener {
 
 public:
 
-   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMDRAGLISTENER_IID)
+   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMDRAGLISTENER_IID)
 
   /**
   * Processes a drag enter event
@@ -93,5 +93,7 @@ public:
   NS_IMETHOD DragGesture(nsIDOMEvent* aMouseEvent) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMDragListener, NS_IDOMDRAGLISTENER_IID)
 
 #endif // nsIDOMDragListener_h__

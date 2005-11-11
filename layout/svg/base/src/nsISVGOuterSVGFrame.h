@@ -51,7 +51,7 @@ class nsPresContext;
 
 class nsISVGOuterSVGFrame : public nsISVGSVGFrame {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGOUTERSVGFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGOUTERSVGFRAME_IID)
 
   NS_IMETHOD InvalidateRegion(nsISVGRendererRegion *region, PRBool bRedraw)=0;
   NS_IMETHOD IsRedrawSuspended(PRBool* isSuspended)=0;
@@ -60,5 +60,7 @@ public:
   NS_IMETHOD GetRenderer(nsISVGRenderer**renderer)=0;
   NS_IMETHOD NotifyViewportChange()=0; // called by our correspoding content element
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGOuterSVGFrame, NS_ISVGOUTERSVGFRAME_IID)
 
 #endif // __NS_ISVGOUTERSVGFRAME_H__

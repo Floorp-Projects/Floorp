@@ -53,7 +53,7 @@ struct PRLogModuleInfo;
  */
 class nsIFrameDebug : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMEDEBUG_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMEDEBUG_IID)
   
   NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const = 0;
   /**
@@ -131,5 +131,7 @@ private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameDebug, NS_IFRAMEDEBUG_IID)
 
 #endif /* nsIFrameDebug_h___ */

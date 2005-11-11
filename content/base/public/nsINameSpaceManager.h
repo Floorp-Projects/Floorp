@@ -87,7 +87,7 @@ static const PRInt32 kNameSpaceID_None = 0;
 class nsINameSpaceManager : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INAMESPACEMANAGER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INAMESPACEMANAGER_IID)
 
   virtual nsresult RegisterNameSpace(const nsAString& aURI,
                                      PRInt32& aNameSpaceID) = 0;
@@ -98,6 +98,8 @@ public:
   virtual PRBool HasElementCreator(PRInt32 aNameSpaceID) = 0;
 };
  
+NS_DEFINE_STATIC_IID_ACCESSOR(nsINameSpaceManager, NS_INAMESPACEMANAGER_IID)
+
 nsresult NS_GetNameSpaceManager(nsINameSpaceManager** aInstancePtrResult);
 
 void NS_NameSpaceManagerShutdown();

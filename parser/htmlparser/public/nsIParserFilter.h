@@ -60,7 +60,7 @@ class CToken;
 class nsIParserFilter : public nsISupports {
   public:
 
-   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPARSERFILTER_IID)
+   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPARSERFILTER_IID)
       
    NS_IMETHOD RawBuffer(const char * buffer, PRUint32 * buffer_length) = 0;
 
@@ -72,6 +72,7 @@ class nsIParserFilter : public nsISupports {
 
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIParserFilter, NS_IPARSERFILTER_IID)
 
 
 #endif

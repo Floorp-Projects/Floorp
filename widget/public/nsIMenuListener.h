@@ -46,7 +46,7 @@ class nsIWidget;
 // {f2e79602-1700-11d5-bb6f-90f240fe493c}
 #define NS_IMENULISTENER_IID      \
 { 0xf2e79602, 0x1700, 0x11d5, \
-  { 0xbb, 0x6f, 0x90, 0xf2, 0x40, 0xfe, 0x49, 0x3c } };
+  { 0xbb, 0x6f, 0x90, 0xf2, 0x40, 0xfe, 0x49, 0x3c } }
 
 /**
  *
@@ -58,7 +58,7 @@ class nsIWidget;
 class nsIMenuListener : public nsISupports {
 
   public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENULISTENER_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENULISTENER_IID)
 
 	 /**
      * Processes a menu item selected event
@@ -90,5 +90,7 @@ class nsIMenuListener : public nsISupports {
     virtual nsEventStatus CheckRebuild(PRBool & aMenuEvent) = 0;
     virtual nsEventStatus SetRebuild(PRBool aMenuEvent) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenuListener, NS_IMENULISTENER_IID)
 
 #endif // nsIMenuListener_h__

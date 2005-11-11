@@ -683,7 +683,7 @@ nsGlobalWindow::GetPopupControlState() const
 class WindowStateHolder : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(WINDOWSTATEHOLDER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(WINDOWSTATEHOLDER_IID)
   NS_DECL_ISUPPORTS
 
   WindowStateHolder(nsGlobalWindow *aWindow,
@@ -727,6 +727,8 @@ protected:
   nsCOMPtr<nsIDOMWindowInternal> mFocusedWindow;
   nsCOMPtr<nsIXPConnectJSObjectHolder> mOuterProto;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(WindowStateHolder, WINDOWSTATEHOLDER_IID)
 
 WindowStateHolder::WindowStateHolder(nsGlobalWindow *aWindow,
                                      nsIXPConnectJSObjectHolder *aHolder,

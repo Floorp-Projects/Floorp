@@ -49,11 +49,13 @@
 class nsIDOMScrollListener : public nsIDOMEventListener {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMSCROLLLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMSCROLLLISTENER_IID)
 
   NS_IMETHOD Overflow(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Underflow(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD OverflowChanged(nsIDOMEvent* aEvent) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMScrollListener, NS_IDOMSCROLLLISTENER_IID)
 
 #endif // nsIDOMScrollListener_h__

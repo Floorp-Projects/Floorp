@@ -80,8 +80,10 @@ public:
     NS_IMETHOD
     Print(const char* msg, const char* encodingName = NULL) = 0;
     
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJVMCONSOLE_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IJVMCONSOLE_IID)
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIJVMConsole, NS_IJVMCONSOLE_IID)
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -62,7 +62,7 @@ typedef void (*PR_CALLBACK RuleAppendFunc) (nsICSSRule* aRule, void* aData);
 // Interface to the css parser.
 class nsICSSParser : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_PARSER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_PARSER_IID)
 
   // Set a style sheet for the parser to fill in. The style sheet must
   // implement the nsICSSStyleSheet interface
@@ -144,6 +144,8 @@ public:
                               PRBool aHandleAlphaColors,
                               nscolor* aColor) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSParser, NS_ICSS_PARSER_IID)
 
 nsresult
 NS_NewCSSParser(nsICSSParser** aInstancePtrResult);

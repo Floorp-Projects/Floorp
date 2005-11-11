@@ -54,11 +54,13 @@
 class nsIHTMLToTextSink : public nsISupports {
  public: 
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTMLTOTEXTSINK_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLTOTEXTSINK_IID)
 
   NS_IMETHOD Initialize(nsAString* aOutString,
                         PRUint32 aFlags, PRUint32 aWrapCol) = 0;
      // This function violates string ownership rules, see impl.
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLToTextSink, NS_IHTMLTOTEXTSINK_IID)
 
 #endif

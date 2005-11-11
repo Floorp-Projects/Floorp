@@ -951,7 +951,7 @@ template <class T> inline void
 NS_QueryNotificationCallbacks(nsIChannel  *aChannel,
                               nsCOMPtr<T> &aResult)
 {
-    NS_QueryNotificationCallbacks(aChannel, NS_GET_IID(T),
+    NS_QueryNotificationCallbacks(aChannel, NS_GET_TEMPLATE_IID(T),
                                   getter_AddRefs(aResult));
 }
 
@@ -987,7 +987,7 @@ NS_QueryNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
                               nsCOMPtr<T>           &aResult)
 {
     NS_QueryNotificationCallbacks(aCallbacks, aLoadGroup,
-                                  NS_GET_IID(T),
+                                  NS_GET_TEMPLATE_IID(T),
                                   getter_AddRefs(aResult));
 }
 

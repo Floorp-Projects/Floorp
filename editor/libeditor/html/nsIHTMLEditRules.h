@@ -48,7 +48,7 @@
 class nsIHTMLEditRules : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTMLEDITRULES_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLEDITRULES_IID)
   
   NS_IMETHOD GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *aDL)=0;
   NS_IMETHOD GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBool *aDD)=0;
@@ -58,5 +58,6 @@ public:
   NS_IMETHOD MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode)=0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLEditRules, NS_IHTMLEDITRULES_IID)
 
 #endif //nsIHTMLEditRules_h__

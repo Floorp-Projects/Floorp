@@ -61,10 +61,12 @@
 class nsICharsetAlias : public nsISupports
 {
 public:
-   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARSETALIAS_IID)
+   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHARSETALIAS_IID)
 
    NS_IMETHOD GetPreferred(const nsACString& aAlias, nsACString& aResult) = 0;
    NS_IMETHOD Equals(const nsACString& aCharset1, const nsACString& aCharset2, PRBool* aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICharsetAlias, NS_ICHARSETALIAS_IID)
 
 #endif /* nsICharsetAlias_h___ */

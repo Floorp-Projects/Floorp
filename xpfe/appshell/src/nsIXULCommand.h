@@ -60,7 +60,7 @@ class nsIMenuItem;
 class nsIXULCommand : public nsIMenuListener {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULCOMMAND_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULCOMMAND_IID)
 
   /**
    * Sets the menu
@@ -94,6 +94,7 @@ public:
   NS_IMETHOD SetDocShell(nsIDocShell * aDocShell) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULCommand, NS_IXULCOMMAND_IID)
 
 extern "C" nsresult
 NS_NewXULCommandFactory(nsIFactory** aFactory);

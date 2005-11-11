@@ -2073,7 +2073,7 @@ const char kStandardURLContractID[] = "@mozilla.org/network/standard-url;1";
 class PrincipalHolder : public nsIScriptObjectPrincipal
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(PRINCIPALHOLDER_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(PRINCIPALHOLDER_IID)
 
     PrincipalHolder(nsIPrincipal *holdee)
         : mHoldee(holdee)
@@ -2088,6 +2088,8 @@ public:
 private:
     nsCOMPtr<nsIPrincipal> mHoldee;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
 
 NS_IMPL_ISUPPORTS1(PrincipalHolder, nsIScriptObjectPrincipal)
 

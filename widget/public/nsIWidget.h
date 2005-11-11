@@ -256,7 +256,7 @@ class nsIWidget : public nsISupports {
 
   public:
 
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWIDGET_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWIDGET_IID)
 
     nsIWidget()
       : mLastChild(nsnull)
@@ -1048,5 +1048,7 @@ protected:
     nsCOMPtr<nsIWidget> mNextSibling;
     nsIWidget* mPrevSibling;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIWidget, NS_IWIDGET_IID)
 
 #endif // nsIWidget_h__

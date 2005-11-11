@@ -56,7 +56,7 @@ class nsIDOMRange;
 class nsIContentIterator : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENTITERTOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTITERTOR_IID)
 
   /* Initializes an iterator for the subtree rooted by the node aRoot
    */
@@ -98,12 +98,14 @@ public:
   virtual nsresult PositionAt(nsIContent* aCurNode) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentIterator, NS_ICONTENTITERTOR_IID)
+
 class nsIPresShell;
 
 class nsIGeneratedContentIterator : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGENERATEDCONTENTITERTOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGENERATEDCONTENTITERTOR_IID)
 
   /* Initializes an iterator for the subtree rooted by the node aRoot
    */
@@ -112,6 +114,8 @@ public:
   virtual nsresult Init(nsIPresShell *aShell, nsIContent* aContent) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIGeneratedContentIterator,
+                              NS_IGENERATEDCONTENTITERTOR_IID)
 
 #endif // __nsIContentIterator_h___
 

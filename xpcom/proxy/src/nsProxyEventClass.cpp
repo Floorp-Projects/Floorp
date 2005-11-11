@@ -304,7 +304,7 @@ class ProxyEventClassIdentity
 {
     // no instance methods...
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_IDENTITY_CLASS_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_IDENTITY_CLASS_IID)
 
     static void* GetSingleton()
     {
@@ -314,6 +314,9 @@ public:
         return (void*) singleton;
     }
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(ProxyEventClassIdentity,
+                              NS_PROXYEVENT_IDENTITY_CLASS_IID)
 
 NS_IMETHODIMP
 nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,

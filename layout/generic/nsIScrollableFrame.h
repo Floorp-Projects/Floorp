@@ -55,7 +55,7 @@ class nsBoxLayoutState;
 class nsIScrollableFrame : public nsIScrollableViewProvider {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLE_FRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCROLLABLE_FRAME_IID)
 
   /**
    * Get the frame that we are scrolling within the scrollable frame.
@@ -118,5 +118,7 @@ public:
    */
   virtual void ScrollToRestoredPosition() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScrollableFrame, NS_ISCROLLABLE_FRAME_IID)
 
 #endif

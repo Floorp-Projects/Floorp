@@ -1031,7 +1031,7 @@ protected:
 class nsIDocumentFragment : public nsIDOMDocumentFragment
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTFRAGMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENTFRAGMENT_IID)
 
   /** Tell the children their parent is gone */
   NS_IMETHOD DisconnectChildren() = 0;
@@ -1041,6 +1041,7 @@ public:
   NS_IMETHOD DropChildReferences() = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentFragment, NS_IDOCUMENTFRAGMENT_IID)
 
 #define NS_FORWARD_NSIDOMNODE_NO_CLONENODE(_to)                               \
   NS_IMETHOD GetNodeName(nsAString& aNodeName) {                              \

@@ -49,11 +49,13 @@ class nsIImageMap;
 
 class nsIImageFrame : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IIMAGEFRAME_IID)
 
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize) = 0;
 
   NS_IMETHOD GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIImageFrame, NS_IIMAGEFRAME_IID)
 
 #endif /* nsIImageFrame_h___ */

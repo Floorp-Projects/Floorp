@@ -54,7 +54,7 @@
 class nsICheckButton : public nsISupports {
 
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHECKBUTTON_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHECKBUTTON_IID)
     
    /**
     * Set the button label
@@ -91,6 +91,8 @@ public:
     NS_IMETHOD GetState(PRBool& aState) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICheckButton, NS_ICHECKBUTTON_IID)
 
 #endif  // nsICheckButton_h__
 

@@ -50,9 +50,11 @@ class nsIFocusController;
 
 class nsPIWindowRoot : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IWINDOWROOT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IWINDOWROOT_IID)
 
   NS_IMETHOD GetFocusController(nsIFocusController** aResult)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsPIWindowRoot, NS_IWINDOWROOT_IID)
 
 #endif // nsPIWindowRoot_h__

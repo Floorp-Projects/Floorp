@@ -64,7 +64,7 @@ struct JSObject;
 
 class nsILiveConnectManager : public nsISupports {
 public:
-	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILIVECONNECTMANAGER_IID)
+	NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILIVECONNECTMANAGER_IID)
 	
 	/**
 	 * Attempts to start LiveConnect using the specified JSRuntime.
@@ -96,6 +96,9 @@ public:
      NS_IMETHOD
      WrapJavaObject(JSContext* context, jobject javaObject, JSObject* *outJSObject) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILiveConnectManager,
+                              NS_ILIVECONNECTMANAGER_IID)
 
 ////////////////////////////////////////////////////////////////////////////////
 

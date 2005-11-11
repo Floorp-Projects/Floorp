@@ -2065,9 +2065,12 @@ public:
 class nsIXPCWrappedJSClass : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_CLASS_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_CLASS_IID)
     NS_IMETHOD DebugDump(PRInt16 depth) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPCWrappedJSClass,
+                              NS_IXPCONNECT_WRAPPED_JS_CLASS_IID)
 
 /*************************/
 // nsXPCWrappedJSClass represents the sharable factored out common code and
@@ -3404,7 +3407,7 @@ public:
 
     // We #define and iid so that out module local code can use QI to detect 
     // if a given nsIVariant is in fact an XPCVariant. 
-    NS_DEFINE_STATIC_IID_ACCESSOR(XPCVARIANT_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(XPCVARIANT_IID)
 
     static XPCVariant* newVariant(XPCCallContext& ccx, jsval aJSVal);
 
@@ -3426,6 +3429,8 @@ protected:
     nsDiscriminatedUnion mData;
     jsval                mJSVal;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(XPCVariant, XPCVARIANT_IID)
 
 /***************************************************************************/
 // Utilities

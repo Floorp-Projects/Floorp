@@ -61,7 +61,7 @@ typedef PRUint32 nsUpdateType;
 class nsIDocumentObserver : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_OBSERVER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_OBSERVER_IID)
 
   /**
    * Notify that a content model update is beginning. This call can be
@@ -331,6 +331,8 @@ public:
    */
   virtual void DocumentWillBeDestroyed(nsIDocument *aDocument) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 
 #define NS_DECL_NSIDOCUMENTOBSERVER                                          \
     virtual void BeginUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType);\

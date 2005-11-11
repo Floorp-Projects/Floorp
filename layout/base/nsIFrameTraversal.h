@@ -83,7 +83,7 @@ enum nsTraversalType{
 class nsIFrameTraversal : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMETRAVERSAL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMETRAVERSAL_IID)
 
   NS_IMETHOD NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
                               PRUint32 aType,
@@ -91,5 +91,6 @@ public:
                               nsIFrame *aStart) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameTraversal, NS_IFRAMETRAVERSAL_IID)
 
 #endif //NSIFRAMETRAVERSAL_H

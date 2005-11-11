@@ -55,7 +55,7 @@ class nsIContent;
 class nsIListControlFrame : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILISTCONTROLFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILISTCONTROLFRAME_IID)
 
   /**
    * Sets the ComboBoxFrame
@@ -125,6 +125,8 @@ public:
    */
   NS_IMETHOD ComboboxFinish(PRInt32 aIndex) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIListControlFrame, NS_ILISTCONTROLFRAME_IID)
 
 #endif
 

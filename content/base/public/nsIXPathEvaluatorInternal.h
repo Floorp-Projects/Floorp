@@ -51,12 +51,15 @@ class nsIXPathEvaluatorInternal : public nsISupports
 {
 public: 
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPATHEVALUATORINTERNAL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPATHEVALUATORINTERNAL_IID)
 
   /**
    * Sets the document this evaluator corresponds to
    */
   NS_IMETHOD SetDocument(nsIDOMDocument* aDocument) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPathEvaluatorInternal,
+                              NS_IXPATHEVALUATORINTERNAL_IID)
 
 #endif //nsIXPathEvaluatorInternal_h__

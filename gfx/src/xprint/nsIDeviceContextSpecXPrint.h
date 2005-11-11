@@ -49,7 +49,7 @@ class nsIDeviceContextSpecXp : public nsISupports
 {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_SPEC_XP_IID);
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_SPEC_XP_IID)
 
   /*
    * If PR_TRUE, print to printer  
@@ -192,6 +192,9 @@ public:
    **/   
    NS_IMETHOD GetCopies ( int &aCopies ) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDeviceContextSpecXp,
+                              NS_IDEVICE_CONTEXT_SPEC_XP_IID)
 
 #endif /* !nsIDeviceContextSpecXP_h___ */
 

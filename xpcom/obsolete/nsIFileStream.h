@@ -57,7 +57,7 @@ class nsIOpenFile
 : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IOPENFILE_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOPENFILE_IID)
 
 	NS_IMETHOD                         Open(
                                            const nsFileSpec& inFile,
@@ -69,6 +69,8 @@ public:
     NS_IMETHOD                         GetIsOpen(PRBool* outOpen) = 0;
 
 }; // class nsIOpenFile
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIOpenFile, NS_IOPENFILE_IID)
 
 /* a6cf90e8-15b3-11d2-932e-00805f8add32 */
 #define NS_IRANDOMACCESS_IID \
@@ -82,13 +84,14 @@ class nsIRandomAccessStore
 : public nsISeekableStream
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRANDOMACCESS_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRANDOMACCESS_IID)
 
 /* "PROTECTED" */
     NS_IMETHOD                         GetAtEOF(PRBool* outAtEOF) = 0;
     NS_IMETHOD                         SetAtEOF(PRBool inAtEOF) = 0;
 }; // class nsIRandomAccessStore
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRandomAccessStore, NS_IRANDOMACCESS_IID)
 
 #ifndef NO_XPCOM_FILE_STREAMS   // hack to work around duplicate class definitions in here
                                 // and mozilla/netwerks/base/nsIFileStreams.idl
@@ -107,8 +110,11 @@ class nsIFileSpecInputStream
 : public nsIInputStream
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILESPECINPUTSTREAM_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFILESPECINPUTSTREAM_IID)
 }; // class nsIFileSpecInputStream
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFileSpecInputStream,
+                              NS_IFILESPECINPUTSTREAM_IID)
 
 /* a6cf90e7-15b3-11d2-932e-00805f8add32 */
 #define NS_IFILESPECOUTPUTSTREAM_IID \
@@ -124,8 +130,11 @@ class nsIFileSpecOutputStream
 : public nsIOutputStream
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILESPECOUTPUTSTREAM_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFILESPECOUTPUTSTREAM_IID)
 }; // class nsIFileSpecOutputStream
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFileSpecOutputStream,
+                              NS_IFILESPECOUTPUTSTREAM_IID)
 
 #endif // NO_XPCOM_FILE_STREAMS
 

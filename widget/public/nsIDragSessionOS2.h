@@ -64,7 +64,7 @@
 class nsIDragSessionOS2 : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONOS2_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONOS2_IID)
 
   /** the dragFlags returned by most public methods fall into two groups */
 
@@ -95,6 +95,8 @@ protected:
   NS_IMETHOD NativeRenderComplete(PDRAGTRANSFER pdxfer, USHORT usResult) = 0;
   NS_IMETHOD NativeDataToTransferable( PCSZ pszText, PCSZ pszTitle, PRBool isUrl) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDragSessionOS2, NS_IDRAGSESSIONOS2_IID)
 
 #endif  // nsIDragSessionOS2_h__
 

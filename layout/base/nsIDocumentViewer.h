@@ -54,7 +54,7 @@ class nsIStyleSheet;
 class nsIDocumentViewer : public nsIContentViewer
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_VIEWER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_VIEWER_IID)
 
   NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet) = 0;
   
@@ -67,5 +67,7 @@ public:
   NS_IMETHOD CreateDocumentViewerUsing(nsPresContext* aPresContext,
                                        nsIDocumentViewer** aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewer, NS_IDOCUMENT_VIEWER_IID)
 
 #endif /* nsIDocumentViewer_h___ */

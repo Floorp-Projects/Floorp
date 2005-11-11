@@ -54,7 +54,7 @@ class NS_NO_VTABLE nsIHistoryDisplay : public nsISupports
 {
  public: 
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHISTORYDISPLAY_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHISTORYDISPLAY_IID)
 
 
   /**
@@ -71,6 +71,7 @@ class NS_NO_VTABLE nsIHistoryDisplay : public nsISupports
 
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIHistoryDisplay, NS_IHISTORYDISPLAY_IID)
 
 #define NS_DECL_NSIHISTORYDISPLAY \
   NS_IMETHOD GetItemCount(PRUint32 *outCount); \

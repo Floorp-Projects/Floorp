@@ -67,7 +67,7 @@ class nsIParser;
 class nsIContentSink : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENT_SINK_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_SINK_IID)
 
   /**
    * This method gets called when the parser begins the process
@@ -131,5 +131,7 @@ public:
    */
   virtual nsISupports *GetTarget()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentSink, NS_ICONTENT_SINK_IID)
 
 #endif /* nsIContentSink_h___ */

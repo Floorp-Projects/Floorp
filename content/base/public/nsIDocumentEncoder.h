@@ -82,7 +82,7 @@ class nsIDocumentEncoderNodeFixup : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTENCODERNODEFIXUP_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENTENCODERNODEFIXUP_IID)
 
   /**
    * Create a fixed up version of a node. This method is called before
@@ -92,11 +92,14 @@ public:
   NS_IMETHOD FixupNode(nsIDOMNode *aNode, nsIDOMNode **aOutNode) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentEncoderNodeFixup,
+                              NS_IDOCUMENTENCODERNODEFIXUP_IID)
+
 class nsIDocumentEncoder : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_ENCODER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_ENCODER_IID)
 
   /**
    * Output methods flag bits.
@@ -263,6 +266,8 @@ public:
    */
   NS_IMETHOD SetNodeFixup(nsIDocumentEncoderNodeFixup *aFixup) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentEncoder, NS_IDOCUMENT_ENCODER_IID)
 
 #endif /* nsIDocumentEncoder_h__ */
 

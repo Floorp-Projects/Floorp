@@ -55,7 +55,7 @@ class nsICSSImportRule;
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_SHEET_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_SHEET_IID)
 
   NS_IMETHOD  ContainsStyleSheet(nsIURI* aURL, PRBool& aContains, nsIStyleSheet** aTheChild=nsnull) = 0;
 
@@ -105,6 +105,8 @@ public:
   NS_IMETHOD  AddRuleProcessor(nsCSSRuleProcessor* aProcessor) = 0;
   NS_IMETHOD  DropRuleProcessor(nsCSSRuleProcessor* aProcessor) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSStyleSheet, NS_ICSS_STYLE_SHEET_IID)
 
 nsresult
 NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);

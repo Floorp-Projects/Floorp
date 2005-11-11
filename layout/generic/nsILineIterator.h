@@ -69,7 +69,7 @@
 
 class nsILineIterator : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINE_ITERATOR_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINE_ITERATOR_IID)
 
   // Return the number of lines in the block.
   NS_IMETHOD GetNumLines(PRInt32* aResult) = 0;
@@ -136,10 +136,15 @@ public:
 #endif
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILineIterator, NS_ILINE_ITERATOR_IID)
+
 //special line iterator for keyboard navigation
 class nsILineIteratorNavigator : public nsILineIterator {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILINE_ITERATOR_NAV_IID)
-
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINE_ITERATOR_NAV_IID)
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILineIteratorNavigator,
+                              NS_ILINE_ITERATOR_NAV_IID)
+
 #endif /* nsILineIterator_h___ */

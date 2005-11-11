@@ -65,7 +65,7 @@ class nsIAtom;
 
 class nsITheme: public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITHEME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITHEME_IID)
   
   NS_IMETHOD DrawWidgetBackground(nsIRenderingContext* aContext,
                                   nsIFrame* aFrame,
@@ -111,6 +111,8 @@ public:
 
   virtual PRBool WidgetIsContainer(PRUint8 aWidgetType)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)
 
 // Creator function
 extern NS_METHOD NS_NewNativeTheme(nsISupports *aOuter, REFNSIID aIID, void **aResult);

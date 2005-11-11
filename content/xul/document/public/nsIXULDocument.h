@@ -74,7 +74,7 @@ class nsIRDFDataSource;
 class nsIXULDocument : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULDOCUMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULDOCUMENT_IID)
 
   // The resource-to-element map is a one-to-many mapping of RDF
   // resources to content elements.
@@ -157,6 +157,8 @@ public:
    */
   NS_IMETHOD OnHide() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULDocument, NS_IXULDOCUMENT_IID)
 
 // factory functions
 nsresult NS_NewXULDocument(nsIXULDocument** result);

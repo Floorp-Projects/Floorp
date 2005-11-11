@@ -46,10 +46,11 @@ class nsIDocShell;
 class nsIFrameFrame : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAMEFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFRAMEFRAME_IID)
 
   NS_IMETHOD GetDocShell(nsIDocShell **aDocShell) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFrameFrame, NS_IFRAMEFRAME_IID)
 
 #endif

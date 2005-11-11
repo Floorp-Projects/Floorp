@@ -55,10 +55,12 @@ class nsITreeBoxObject;
 class nsITreeImageListener : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITREEIMAGELISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITREEIMAGELISTENER_IID)
 
   NS_IMETHOD AddCell(PRInt32 aIndex, nsITreeColumn* aCol) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITreeImageListener, NS_ITREEIMAGELISTENER_IID)
 
 // This class handles image load observation.
 class nsTreeImageListener : public imgIDecoderObserver, public nsITreeImageListener

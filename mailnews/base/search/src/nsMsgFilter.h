@@ -73,7 +73,7 @@ class nsMsgFilter : public nsIMsgFilter
 {
 public:
   NS_DECL_ISUPPORTS
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGFILTER_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMSGFILTER_IID)
 
   nsMsgFilter();
   virtual ~nsMsgFilter ();
@@ -124,5 +124,7 @@ protected:
   nsCOMPtr<nsISupportsArray> m_actionList;
   nsMsgSearchBoolExpression *m_expressionTree;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsMsgFilter, NS_IMSGFILTER_IID)
 
 #endif

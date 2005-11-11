@@ -54,13 +54,14 @@
 
 class nsIBaseDOMException : public nsISupports {
 public:  
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBASEDOMEXCEPTION_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBASEDOMEXCEPTION_IID)
 
   NS_IMETHOD Init(nsresult aNSResult, const char* aName,
                   const char* aMessage,
                   nsIException* aDefaultException) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIBaseDOMException, NS_IBASEDOMEXCEPTION_IID)
 
 #define IMPL_DOM_EXCEPTION_HEAD(classname, ifname)                           \
 class classname : public nsIException,                                       \

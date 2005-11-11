@@ -57,7 +57,7 @@ class nsIEditorSupport  : public nsISupports {
 
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEDITORSUPPORT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEDITORSUPPORT_IID)
 
   /** 
    * SplitNode() creates a new node identical to an existing node, and split the contents between the two nodes
@@ -90,6 +90,8 @@ public:
 
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIEditorSupport, NS_IEDITORSUPPORT_IID)
 
 #endif //nsIEditorSupport_h__
 

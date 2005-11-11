@@ -74,7 +74,7 @@ class nsHashKey;
 class nsImapMailCopyState: public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMAPMAILCOPYSTATE_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMAPMAILCOPYSTATE_IID)
     
     NS_DECL_ISUPPORTS
 
@@ -108,6 +108,8 @@ public:
     PRBool m_eatLF;
     PRBool m_newMsgFlags; // only used if there's no m_message 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsImapMailCopyState, NS_IMAPMAILCOPYSTATE_IID)
 
 // ACLs for this folder.
 // Generally, we will try to always query this class when performing

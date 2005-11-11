@@ -139,8 +139,10 @@ enum nsAttributeChangeType {
 class nsIPresShell_base : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_IID)
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPresShell_base, NS_IPRESSHELL_IID)
 
 class nsIPresShell : public nsIPresShell_base
 {

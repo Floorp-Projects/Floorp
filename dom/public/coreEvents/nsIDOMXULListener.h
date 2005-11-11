@@ -49,7 +49,7 @@
 class nsIDOMXULListener : public nsIDOMEventListener {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMXULLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMXULLISTENER_IID)
 
   NS_IMETHOD PopupShowing(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD PopupShown(nsIDOMEvent* aEvent) = 0;
@@ -61,5 +61,7 @@ public:
   NS_IMETHOD Broadcast(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD CommandUpdate(nsIDOMEvent* aEvent) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMXULListener, NS_IDOMXULLISTENER_IID)
 
 #endif // nsIDOMXULListener_h__

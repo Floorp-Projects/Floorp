@@ -87,7 +87,7 @@ class nsDocLoader : public nsIDocumentLoader,
                     public nsISupportsPriority
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_THIS_DOCLOADER_IMPL_CID);
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_THIS_DOCLOADER_IMPL_CID)
 
     nsDocLoader();
 
@@ -230,5 +230,7 @@ private:
     // used to clear our internal progress state between loads...
     void ClearInternalProgress(); 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsDocLoader, NS_THIS_DOCLOADER_IMPL_CID)
 
 #endif /* nsDocLoader_h__ */

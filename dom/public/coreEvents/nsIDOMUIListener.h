@@ -51,10 +51,13 @@ class nsIDOMEvent;
 
 class nsIDOMUIListener : public nsIDOMEventListener {
  public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMUILISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMUILISTENER_IID)
 
   NS_IMETHOD Activate(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD FocusIn(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD FocusOut(nsIDOMEvent* aEvent) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMUIListener, NS_IDOMUILISTENER_IID)
+
 #endif // nsIDOMUIListener_h__

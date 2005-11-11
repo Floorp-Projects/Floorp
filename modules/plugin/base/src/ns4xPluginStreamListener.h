@@ -111,7 +111,7 @@ public:
 class nsI4xPluginStreamInfo : public nsIPluginStreamInfo
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_I4XPLUGINSTREAMINFO_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_I4XPLUGINSTREAMINFO_IID)
 
   nsIRequest *GetRequest()
   {
@@ -121,5 +121,8 @@ public:
 protected:
   nsCOMPtr<nsIRequest> mRequest;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsI4xPluginStreamInfo,
+                              NS_I4XPLUGINSTREAMINFO_IID)
 
 #endif

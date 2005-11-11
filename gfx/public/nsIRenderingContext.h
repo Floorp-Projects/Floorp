@@ -104,7 +104,7 @@ typedef enum
 class nsIRenderingContext : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRENDERING_CONTEXT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRENDERING_CONTEXT_IID)
 
   //TBD: bind/unbind, transformation of scalars (hacky), 
   //potential drawmode for selection, polygons. MMP
@@ -911,6 +911,8 @@ public:
    */
   NS_IMETHOD RenderEPS(const nsRect& aRect, FILE *aDataFile) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRenderingContext, NS_IRENDERING_CONTEXT_IID)
 
 //modifiers for text rendering
 

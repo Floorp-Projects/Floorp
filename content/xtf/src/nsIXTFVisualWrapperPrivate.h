@@ -54,7 +54,7 @@ class nsIDOMElement;
 class nsIXTFVisualWrapperPrivate : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXTFVISUALWRAPPERPRIVATE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXTFVISUALWRAPPERPRIVATE_IID)
 
   NS_IMETHOD CreateAnonymousContent(nsPresContext* aPresContext,
                                     nsISupportsArray& aAnonymousItems) = 0;
@@ -62,5 +62,8 @@ public:
   virtual void GetInsertionPoint(nsIDOMElement** insertionPoint) = 0;
   virtual PRBool ApplyDocumentStyleSheets() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXTFVisualWrapperPrivate,
+                              NS_IXTFVISUALWRAPPERPRIVATE_IID)
 
 #endif // __NS_IXTFVISUALWRAPPERPRIVATE_H__

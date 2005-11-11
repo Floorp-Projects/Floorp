@@ -58,7 +58,7 @@ class nsIImapIncomingServer;
 class nsIImapMiscellaneousSink : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAPMISCELLANEOUSSINK_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IIMAPMISCELLANEOUSSINK_IID)
     
     NS_IMETHOD HeaderFetchCompleted(nsIImapProtocol* aProtocol) = 0;
   // ****
@@ -67,5 +67,7 @@ public:
   NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol, ProgressInfo* aInfo) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIImapMiscellaneousSink,
+                              NS_IIMAPMISCELLANEOUSSINK_IID)
 
 #endif

@@ -64,7 +64,7 @@ using namespace Gdiplus;
 class nsISVGGDIPlusCanvas : public nsISVGRendererCanvas
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGGDIPLUSCANVAS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGGDIPLUSCANVAS_IID)
 
   /**
    * Obtain the Gdiplus::Graphics object for this canvas.
@@ -76,6 +76,8 @@ public:
    */
   NS_IMETHOD_(Region*) GetClipRegion()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGGDIPlusCanvas, NS_ISVGGDIPLUSCANVAS_IID)
 
 /** @} */
 

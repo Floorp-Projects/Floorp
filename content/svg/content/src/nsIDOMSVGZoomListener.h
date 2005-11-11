@@ -51,8 +51,11 @@ class nsIDOMEvent;
 
 class nsIDOMSVGZoomListener : public nsIDOMEventListener {
  public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMSVGZOOMLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMSVGZOOMLISTENER_IID)
   NS_IMETHOD Zoom (nsIDOMEvent* aEvent) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMSVGZoomListener,
+                              NS_IDOMSVGZOOMLISTENER_IID)
 
 #endif // __NS_SVGZOOMEVENT_H__

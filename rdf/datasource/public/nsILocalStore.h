@@ -54,9 +54,10 @@
 class nsILocalStore : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILOCALSTORE_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILOCALSTORE_IID)
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILocalStore, NS_ILOCALSTORE_IID)
 
 extern NS_IMETHODIMP
 NS_NewLocalStore(nsISupports* aOuter, REFNSIID aIID, void** aResult);

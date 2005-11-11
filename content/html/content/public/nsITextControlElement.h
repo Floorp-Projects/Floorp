@@ -55,7 +55,7 @@ class nsITextControlFrame;
 class nsITextControlElement : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXTCONTROLELEMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ITEXTCONTROLELEMENT_IID)
 
   /**
    * Set the control's value without security checks
@@ -67,6 +67,9 @@ public:
    */
   NS_IMETHOD SetValueChanged(PRBool changed) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsITextControlElement,
+                              NS_ITEXTCONTROLELEMENT_IID)
 
 #endif // nsITextControlElement_h___
 

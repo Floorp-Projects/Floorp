@@ -82,7 +82,7 @@ class nsIImage : public nsISupports
 {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IIMAGE_IID)
 
   /**
    * Build and initialize the nsIImage
@@ -278,5 +278,7 @@ public:
    */
   NS_IMETHOD UnlockImagePixels(PRBool aMaskPixels) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIImage, NS_IIMAGE_IID)
 
 #endif

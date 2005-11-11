@@ -50,7 +50,7 @@ class nsPresState;
 
 class nsILayoutHistoryState : public nsISupports {
  public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILAYOUTHISTORYSTATE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILAYOUTHISTORYSTATE_IID)
 
   /**
    * Set |aState| as the state object for |aKey|.
@@ -70,6 +70,9 @@ class nsILayoutHistoryState : public nsISupports {
    */
   NS_IMETHOD RemoveState(const nsCString& aKey) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsILayoutHistoryState,
+                              NS_ILAYOUTHISTORYSTATE_IID)
 
 nsresult
 NS_NewLayoutHistoryState(nsILayoutHistoryState** aState);

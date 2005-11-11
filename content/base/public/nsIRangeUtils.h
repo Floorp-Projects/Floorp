@@ -55,7 +55,7 @@ class nsIContent;
 
 class nsIRangeUtils : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRANGEUTILS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRANGEUTILS_IID)
 
   NS_IMETHOD_(PRInt32) ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
                                      nsIDOMNode* aParent2, PRInt32 aOffset2) = 0;
@@ -67,6 +67,8 @@ public:
                                 PRBool *outNodeBefore,
                                 PRBool *outNodeAfter) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRangeUtils, NS_IRANGEUTILS_IID)
 
 #endif /* nsIRangeUtils_h___ */
 

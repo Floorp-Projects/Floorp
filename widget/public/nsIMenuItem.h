@@ -49,7 +49,7 @@
 // {f2e79600-1700-11d5-bb6f-90f240fe493c}
 #define NS_IMENUITEM_IID      \
 { 0xf2e79600, 0x1700, 0x11d5, \
-  { 0xbb, 0x6f, 0x90, 0xf2, 0x40, 0xfe, 0x49, 0x3c } };
+  { 0xbb, 0x6f, 0x90, 0xf2, 0x40, 0xfe, 0x49, 0x3c } }
 
 class nsIMenu;
 class nsIWidget;
@@ -71,7 +71,7 @@ enum {
 class nsIMenuItem : public nsISupports {
 
   public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUITEM_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUITEM_IID)
 
     enum EMenuItemType { eRegular = 0, eCheckbox, eRadio } ;
 
@@ -167,5 +167,7 @@ class nsIMenuItem : public nsISupports {
     NS_IMETHOD SetModifiers(PRUint8 aModifiers) = 0;
     NS_IMETHOD GetModifiers(PRUint8 * aModifiers) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenuItem, NS_IMENUITEM_IID)
 
 #endif

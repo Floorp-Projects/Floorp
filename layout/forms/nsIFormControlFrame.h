@@ -59,7 +59,7 @@ class nsIAtom;
 class nsIFormControlFrame : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMCONTROLFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMCONTROLFRAME_IID)
 
   NS_IMETHOD_(PRInt32) GetFormControlType() const =  0;
 
@@ -114,6 +114,8 @@ public:
   NS_IMETHOD OnContentReset() = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControlFrame, NS_IFORMCONTROLFRAME_IID)
 
 #endif
 

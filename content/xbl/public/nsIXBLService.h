@@ -62,7 +62,7 @@ class nsIAtom;
 class nsIXBLService : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXBLSERVICE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXBLSERVICE_IID)
 
   // This function loads a particular XBL file and installs all of the bindings
   // onto the element.
@@ -85,5 +85,7 @@ public:
   NS_IMETHOD AttachGlobalDragHandler(nsIDOMEventReceiver* aElement)=0;
   
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXBLService, NS_IXBLSERVICE_IID)
 
 #endif // nsIXBLService_h__

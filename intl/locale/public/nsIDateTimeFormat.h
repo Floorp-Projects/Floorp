@@ -60,7 +60,7 @@
 class nsIDateTimeFormat : public nsISupports {
 
 public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDATETIMEFORMAT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDATETIMEFORMAT_IID)
 
   // performs a locale sensitive date formatting operation on the time_t parameter
   NS_IMETHOD FormatTime(nsILocale* locale, 
@@ -90,5 +90,7 @@ public:
                                   const PRExplodedTime*  explodedTime, 
                                   nsString& stringOut) = 0; 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDateTimeFormat, NS_IDATETIMEFORMAT_IID)
 
 #endif  /* nsIDateTimeFormat_h__ */

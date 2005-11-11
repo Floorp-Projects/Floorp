@@ -61,7 +61,7 @@ class nsIDOMNode;
 class nsICaret: public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICARET_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICARET_IID)
 
   enum EViewCoordinates {
       eTopLevelWindowCoordinates,
@@ -118,6 +118,8 @@ public:
   NS_IMETHOD DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICaret, NS_ICARET_IID)
 
 nsresult
 NS_NewCaret(nsICaret** aInstancePtrResult);

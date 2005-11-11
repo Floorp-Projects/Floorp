@@ -50,12 +50,14 @@
 class nsIPrivateTextEvent : public nsISupports {
 
 public:
-	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATETEXTEVENT_IID)
+	NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRIVATETEXTEVENT_IID)
 
 	NS_IMETHOD GetText(nsString& aText) = 0;
 	NS_IMETHOD GetInputRange(nsIPrivateTextRangeList** aInputRange) = 0;
 	NS_IMETHOD GetEventReply(struct nsTextEventReply** aReply) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateTextEvent, NS_IPRIVATETEXTEVENT_IID)
 
 #endif // nsIPrivateTextEvent_h__
 

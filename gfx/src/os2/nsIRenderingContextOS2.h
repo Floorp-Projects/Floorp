@@ -50,7 +50,7 @@
 class nsIRenderingContextOS2 : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRENDERING_CONTEXT_OS2_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRENDERING_CONTEXT_OS2_IID)
   /**
    * Create a new drawing surface to represent an HPS.
    * @param aPS Windows HPS.
@@ -59,5 +59,8 @@ public:
    */
   NS_IMETHOD CreateDrawingSurface(HPS aPS, nsIDrawingSurface* &aSurface, nsIWidget *aWidget) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRenderingContextOS2,
+                              NS_IRENDERING_CONTEXT_OS2_IID)
 
 #endif /* nsIRenderingContextOS2_h___ */

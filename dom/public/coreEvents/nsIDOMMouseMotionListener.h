@@ -54,7 +54,7 @@
 class nsIDOMMouseMotionListener : public nsIDOMEventListener {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMMOUSEMOTIONLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMMOUSEMOTIONLISTENER_IID)
   /**
   * Processes a mouse move event
   * @param aMouseEvent @see nsIDOMEvent.h 
@@ -70,5 +70,8 @@ public:
   NS_IMETHOD DragMove(nsIDOMEvent* aMouseEvent) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMMouseMotionListener,
+                              NS_IDOMMOUSEMOTIONLISTENER_IID)
 
 #endif // nsIDOMMouseMotionListener_h__

@@ -63,7 +63,7 @@ class nsIDOMHTMLBodyElement;
 class nsIHTMLDocument : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTMLDOCUMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHTMLDOCUMENT_IID)
 
   virtual nsresult AddImageMap(nsIDOMHTMLMapElement* aMap) = 0;
 
@@ -114,5 +114,7 @@ public:
    */
   virtual nsContentList* GetForms() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)
 
 #endif /* nsIHTMLDocument_h___ */

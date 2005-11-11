@@ -49,9 +49,11 @@ class nsIPresShell;
  */
 class nsIReflowCallback : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IREFLOWCALLBACK_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IREFLOWCALLBACK_IID)
 
   NS_IMETHOD ReflowFinished(nsIPresShell* aShell, PRBool* aFlushFlag) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIReflowCallback, NS_IREFLOWCALLBACK_IID)
 
 #endif /* nsIFrameUtil_h___ */

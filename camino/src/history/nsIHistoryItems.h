@@ -76,7 +76,7 @@ class NS_NO_VTABLE nsIHistoryItem : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHISTORYITEM_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHISTORYITEM_IID)
 
   NS_IMETHOD GetURL(nsACString& outURL) = 0;
   NS_IMETHOD GetReferrer(nsACString& outReferrer) = 0;
@@ -95,6 +95,7 @@ public:
   NS_IMETHOD GetID(nsACString& outIDString) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIHistoryItem, NS_IHISTORYITEM_IID)
 
 #define NS_DECL_NSIHISTORYITEM \
   NS_IMETHOD GetURL(nsACString& outURL); \
@@ -115,7 +116,7 @@ class NS_NO_VTABLE nsIHistoryItems : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHISTORYITEMS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHISTORYITEMS_IID)
 
   /**
      * GetMaxItemCount
@@ -149,6 +150,7 @@ public:
 
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIHistoryItems, NS_IHISTORYITEMS_IID)
 
 #define NS_DECL_NSIHISTORYITEMS \
   NS_IMETHOD GetMaxItemCount(PRUint32 *outCount); \

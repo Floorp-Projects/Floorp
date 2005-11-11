@@ -52,7 +52,7 @@
 /* Class nsULE : Declaration */
 class nsULE : public nsILE {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ULE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ULE_IID)
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_ULE_CID)
   NS_DECL_ISUPPORTS
 
@@ -98,4 +98,7 @@ public:
                            PangoliteGlyphString*,
                            const char* = (const char*)NULL);
 };
+
+NS_DECLARE_STATIC_IID_ACCESSOR(nsULE, NS_ULE_IID)
+
 #endif /* !nsULE_H */

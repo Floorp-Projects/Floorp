@@ -54,7 +54,7 @@ class nsIImapIncomingServer;
 class nsIImapHostSessionList : public nsISupports
 {
 public:
-   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAPHOSTSESSIONLIST_IID)
+   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IIMAPHOSTSESSIONLIST_IID)
 
 	// Host List
 	 NS_IMETHOD	AddHostToList(const char *serverKey, nsIImapIncomingServer *server) = 0;
@@ -133,5 +133,8 @@ public:
 	 NS_IMETHOD		FindShellInCacheForHost(const char *serverKey, const char *mailboxName, const char *UID, IMAP_ContentModifiedType modType, nsIMAPBodyShell	**result) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIImapHostSessionList,
+                              NS_IIMAPHOSTSESSIONLIST_IID)
 
 #endif

@@ -54,7 +54,7 @@ class nsIKBStateControl : public nsISupports {
 
   public:
 
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IKBSTATECONTROL_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IKBSTATECONTROL_IID)
 
     /*
      * Force Input Method Editor to commit the uncommited input
@@ -104,5 +104,7 @@ class nsIKBStateControl : public nsISupports {
      */
     NS_IMETHOD CancelIMEComposition() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIKBStateControl, NS_IKBSTATECONTROL_IID)
 
 #endif // nsIKBStateControl_h__

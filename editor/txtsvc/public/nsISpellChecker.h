@@ -57,7 +57,7 @@ class nsStringArray;
 class nsISpellChecker  : public nsISupports{
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISPELLCHECKER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISPELLCHECKER_IID)
 
   /**
    * Tells the spellchecker what document to check.
@@ -146,6 +146,8 @@ public:
    */
   NS_IMETHOD SetCurrentDictionary(const nsAString &aDictionary) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISpellChecker, NS_ISPELLCHECKER_IID)
 
 #endif // nsISpellChecker_h__
 

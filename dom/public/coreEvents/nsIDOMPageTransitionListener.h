@@ -50,9 +50,13 @@ class nsIDOMEvent;
 
 class nsIDOMPageTransitionListener : public nsIDOMEventListener {
  public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMPAGETRANSITIONLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMPAGETRANSITIONLISTENER_IID)
 
   NS_IMETHOD PageShow(nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD PageHide(nsIDOMEvent* aEvent) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMPageTransitionListener,
+                              NS_IDOMPAGETRANSITIONLISTENER_IID)
+
 #endif // nsIDOMPageTransitionListener_h__

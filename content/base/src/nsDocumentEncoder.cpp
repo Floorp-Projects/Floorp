@@ -84,7 +84,7 @@ enum nsRangeIterationDirection {
 class nsDocumentEncoder : public nsIDocumentEncoder
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_ENCODER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_ENCODER_IID)
 
   nsDocumentEncoder();
   virtual ~nsDocumentEncoder();
@@ -159,6 +159,8 @@ protected:
   PRPackedBool      mHaltRangeHint;  
   PRPackedBool      mIsCopying;  // Set to PR_TRUE only while copying
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsDocumentEncoder, NS_IDOCUMENT_ENCODER_IID)
 
 NS_IMPL_ADDREF(nsDocumentEncoder)
 NS_IMPL_RELEASE(nsDocumentEncoder)

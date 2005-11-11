@@ -51,7 +51,7 @@ class nsIDOMEvent;
 
 class nsIDOMSVGListener : public nsIDOMEventListener {
  public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMSVGLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMSVGLISTENER_IID)
   NS_IMETHOD Load   (nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Unload (nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Abort  (nsIDOMEvent* aEvent) = 0;
@@ -59,5 +59,7 @@ class nsIDOMSVGListener : public nsIDOMEventListener {
   NS_IMETHOD Resize (nsIDOMEvent* aEvent) = 0;
   NS_IMETHOD Scroll (nsIDOMEvent* aEvent) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMSVGListener, NS_IDOMSVGLISTENER_IID)
 
 #endif // __NS_SVGEVENT_H__

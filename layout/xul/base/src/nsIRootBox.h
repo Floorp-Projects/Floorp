@@ -51,7 +51,7 @@ class nsIContent;
 class nsIRootBox : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IROOTBOX_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IROOTBOX_IID)
 
   virtual nsIFrame* GetPopupSetFrame() = 0;
   virtual void SetPopupSetFrame(nsIFrame* aPopupSet)=0;
@@ -62,6 +62,8 @@ public:
   virtual nsresult AddTooltipSupport(nsIContent* aNode) = 0;
   virtual nsresult RemoveTooltipSupport(nsIContent* aNode) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRootBox, NS_IROOTBOX_IID)
 
 #endif
 

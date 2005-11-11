@@ -56,7 +56,7 @@ class nsIForm;
 class nsIRadioControlElement : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRADIOCONTROLELEMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IRADIOCONTROLELEMENT_IID)
 
   /**
    * Set the radio button checked, but don't do any extra checks and don't
@@ -114,5 +114,8 @@ public:
    */
   virtual already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioControlElement,
+                              NS_IRADIOCONTROLELEMENT_IID)
 
 #endif // nsIRadioControlElement_h___

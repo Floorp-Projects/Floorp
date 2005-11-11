@@ -69,7 +69,7 @@ class nsIViewManager : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IVIEWMANAGER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IVIEWMANAGER_IID)
   /**
    * Initialize the ViewManager
    * Note: this instance does not hold a reference to the viewobserver
@@ -567,6 +567,8 @@ public:
    */
   NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll)=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
 
 // Paint timing mode flags
 

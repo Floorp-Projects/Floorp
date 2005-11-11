@@ -54,7 +54,7 @@ class nsIDOMCompositionListener : public nsIDOMEventListener {
 
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMCOMPOSITIONLISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMCOMPOSITIONLISTENER_IID)
 
   NS_IMETHOD HandleStartComposition(nsIDOMEvent* aCompositionEvent) = 0;
   NS_IMETHOD HandleEndComposition(nsIDOMEvent* aCompositionEvent) = 0;
@@ -62,4 +62,8 @@ public:
   NS_IMETHOD HandleQueryReconversion(nsIDOMEvent* aCompositionEvent) = 0;
   NS_IMETHOD HandleQueryCaretRect(nsIDOMEvent* aCompositionEvent) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMCompositionListener,
+                              NS_IDOMCOMPOSITIONLISTENER_IID)
+
 #endif // nsIDOMCompositionListener_h__

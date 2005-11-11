@@ -54,7 +54,7 @@ class nsIMenuCommandDispatcher;
 // {ab6cea83-00ff-11d5-bb6f-f432a43ead7c}
 #define NS_IMENU_IID      \
 { 0xab6cea83, 0x00ff, 0x11d5, \
-  { 0xbb, 0x6f, 0xf4, 0x32, 0xa4, 0x3e, 0xad, 0x7c } };
+  { 0xbb, 0x6f, 0xf4, 0x32, 0xa4, 0x3e, 0xad, 0x7c } }
 
 
 /**
@@ -63,7 +63,7 @@ class nsIMenuCommandDispatcher;
 class nsIMenu : public nsISupports {
 
   public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENU_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENU_IID)
 
   /**
     * Creates the Menu
@@ -193,5 +193,7 @@ class nsIMenu : public nsISupports {
     NS_IMETHOD GetMenuContent(nsIContent ** aMenuContent) = 0;
     
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenu, NS_IMENU_IID)
 
 #endif

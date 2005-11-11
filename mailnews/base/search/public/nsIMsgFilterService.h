@@ -53,7 +53,7 @@ class nsIMsgFilterService : public nsISupports
 {
 
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGFILTERSERVICE_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMSGFILTERSERVICE_IID)
 
 /* clients call OpenFilterList to get a handle to a FilterList, of existing nsMsgFilter *.
 	These are manipulated by the front end as a result of user interaction
@@ -66,6 +66,8 @@ public:
 	NS_IMETHOD CancelFilterList(nsIMsgFilterList *filterList) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMsgFilterService, NS_IMSGFILTERSERVICE_IID)
 
 #endif  // _nsIMsgFilterService_H_
 

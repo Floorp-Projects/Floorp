@@ -61,13 +61,13 @@ class nsIFastLoadService;
 
 // {CD196299-18E9-4642-AD43-666315C4D241}
 #define NS_IXULPROTOTYPECACHE_IID \
-{ 0xcd196299, 0x18e9, 0x4642, { 0xad, 0x43, 0x66, 0x63, 0x15, 0xc4, 0xd2, 0x41 } };
+{ 0xcd196299, 0x18e9, 0x4642, { 0xad, 0x43, 0x66, 0x63, 0x15, 0xc4, 0xd2, 0x41 } }
 
 
 class nsIXULPrototypeCache : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXULPROTOTYPECACHE_IID);
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULPROTOTYPECACHE_IID)
 
     NS_IMETHOD GetPrototype(nsIURI* aURI, nsIXULPrototypeDocument** _result) = 0;
     NS_IMETHOD PutPrototype(nsIXULPrototypeDocument* aDocument) = 0;
@@ -118,6 +118,7 @@ public:
     NS_IMETHOD WritePrototype(nsIXULPrototypeDocument* aDocument) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXULPrototypeCache, NS_IXULPROTOTYPECACHE_IID)
 
 NS_IMETHODIMP
 NS_NewXULPrototypeCache(nsISupports* aOuter, REFNSIID aIID, void** aResult);

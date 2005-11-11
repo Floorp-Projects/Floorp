@@ -54,7 +54,7 @@ class nsIImapUrl;
 class nsIImapExtensionSink : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAPEXTENSIONSINK_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IIMAPEXTENSIONSINK_IID)
   
   NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
                                nsIMAPACLRightsInfo* aclRights) = 0;
@@ -69,5 +69,7 @@ public:
                           nsCString* messageId,
                           nsIImapUrl * aUrl) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIImapExtensionSink, NS_IIMAPEXTENSIONSINK_IID)
 
 #endif

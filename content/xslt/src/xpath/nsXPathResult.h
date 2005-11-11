@@ -48,17 +48,19 @@
 
 // {15b9b301-2012-11d6-a7f2-e6d0a678995c}
 #define NS_IXPATHRESULT_IID \
-{ 0x15b9b301, 0x2012, 0x11d6, {0xa7, 0xf2, 0xe6, 0xd0, 0xa6, 0x78, 0x99, 0x5c }};
+{ 0x15b9b301, 0x2012, 0x11d6, {0xa7, 0xf2, 0xe6, 0xd0, 0xa6, 0x78, 0x99, 0x5c }}
 
 class nsIXPathResult : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXPATHRESULT_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPATHRESULT_IID)
     virtual nsresult SetExprResult(txAExprResult *aExprResult,
                                    PRUint16 aResultType) = 0;
     virtual nsresult GetExprResult(txAExprResult **aExprResult) = 0;
     virtual nsresult Clone(nsIXPathResult **aResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPathResult, NS_IXPATHRESULT_IID)
 
 /**
  * Helper class to keep Mozilla node objects alive as long as the nodeset is

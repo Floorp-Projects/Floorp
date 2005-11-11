@@ -51,7 +51,7 @@ class nsIDOMInstallVersion;
 
 class nsIDOMInstallVersion : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMINSTALLVERSION_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMINSTALLVERSION_IID)
   enum {
     EQUAL = 0,
     BLD_DIFF = 1,
@@ -85,6 +85,7 @@ public:
   NS_IMETHOD    CompareTo(PRInt32 aMajor, PRInt32 aMinor, PRInt32 aRelease, PRInt32 aBuild, PRInt32* aReturn)=0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMInstallVersion, NS_IDOMINSTALLVERSION_IID)
 
 #define NS_DECL_IDOMINSTALLVERSION   \
   NS_IMETHOD    GetMajor(PRInt32* aMajor);  \

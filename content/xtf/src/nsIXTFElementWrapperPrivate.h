@@ -49,10 +49,13 @@
 class nsIXTFElementWrapperPrivate : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXTFELEMENTWRAPPERPRIVATE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXTFELEMENTWRAPPERPRIVATE_IID)
 
   // element type as given in nsIXTFElement:
   virtual PRUint32 GetElementType() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXTFElementWrapperPrivate,
+                              NS_IXTFELEMENTWRAPPERPRIVATE_IID)
 
 #endif // __NS_IXTFELEMENTWRAPPERPRIVATE_H__

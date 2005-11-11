@@ -55,7 +55,7 @@ class nsIDOMHTMLOptionElement;
 class nsISelectControlFrame : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISELECTCONTROLFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISELECTCONTROLFRAME_IID)
 
   /**
    * Adds an option to the list at index
@@ -93,5 +93,8 @@ public:
   NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISelectControlFrame,
+                              NS_ISELECTCONTROLFRAME_IID)
 
 #endif

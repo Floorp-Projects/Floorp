@@ -47,11 +47,13 @@ struct nsRect;
 
 class nsIImageMap : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IIMAGEMAP_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IIMAGEMAP_IID)
 
   NS_IMETHOD GetBoundsForAreaContent(nsIContent *aContent, 
                                      nsPresContext* aPresContext, 
                                      nsRect& aBounds) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIImageMap, NS_IIMAGEMAP_IID)
 
 #endif /* nsIImageMap_h___ */

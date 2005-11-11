@@ -47,7 +47,7 @@ class nsIWidget;
 // {f2e79601-1700-11d5-bb6f-90f240fe493c}
 #define NS_IMENUBAR_IID      \
 { 0xf2e79601, 0x1700, 0x11d5, \
-  { 0xbb, 0x6f, 0x90, 0xf2, 0x40, 0xfe, 0x49, 0x3c } };
+  { 0xbb, 0x6f, 0x90, 0xf2, 0x40, 0xfe, 0x49, 0x3c } }
 
 /**
  * MenuBar widget
@@ -55,7 +55,7 @@ class nsIWidget;
 class nsIMenuBar : public nsISupports {
 
   public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUBAR_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUBAR_IID)
 
    /**
     * Creates the MenuBar
@@ -130,5 +130,7 @@ class nsIMenuBar : public nsISupports {
     NS_IMETHOD  Paint() = 0;
    
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIMenuBar, NS_IMENUBAR_IID)
 
 #endif

@@ -251,7 +251,7 @@ interface(TreeState *state)
     fputs(" {\n"
           " public: \n\n", state->file);
     if (iid) {
-        fputs("  NS_DEFINE_STATIC_IID_ACCESSOR(", state->file);
+        fputs("  NS_DECLARE_STATIC_IID_ACCESSOR(", state->file);
         write_classname_iid_define(state->file, className);
         fputs(")\n\n", state->file);
     }
@@ -265,6 +265,13 @@ interface(TreeState *state)
 
     fputs("};\n", state->file);
     fputc('\n', state->file);
+
+    if (iid) {
+        fprintf(state->file, "  NS_DEFINE_STATIC_IID_ACCESSOR(%s, ",
+                 className);
+        write_classname_iid_define(state->file, className);
+        fputs(")\n\n", state->file);
+    }
 
     /*
      * #define NS_DECL_NSIFOO - create method prototypes that can be used in

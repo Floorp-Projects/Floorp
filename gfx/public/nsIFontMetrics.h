@@ -78,7 +78,7 @@ typedef void* nsFontHandle;
 class nsIFontMetrics : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFONT_METRICS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFONT_METRICS_IID)
 
   /**
    * Initialize the font metrics. Call this after creating the font metrics.
@@ -237,5 +237,7 @@ protected:
 
   nsFont mFont;		// The font for this metrics object.
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFontMetrics, NS_IFONT_METRICS_IID)
 
 #endif /* nsIFontMetrics_h___ */

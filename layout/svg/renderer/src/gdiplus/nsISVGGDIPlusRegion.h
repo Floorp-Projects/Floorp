@@ -70,7 +70,7 @@ using namespace Gdiplus;
 class nsISVGGDIPlusRegion : public nsISVGRendererRegion
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGGDIPLUSREGION_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGGDIPLUSREGION_IID)
   
 #ifdef NS_SVG_GDIPLUS_RENDERER_USE_RECT_REGIONS
   NS_IMETHOD_(const RectF*) GetRect()const=0;
@@ -78,6 +78,8 @@ public:
   NS_IMETHOD_(const Region*) GetRegion()const=0;
 #endif
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGGDIPlusRegion, NS_ISVGGDIPLUSREGION_IID)
 
 /** @} */
 

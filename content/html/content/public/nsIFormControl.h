@@ -82,7 +82,7 @@ class nsIFormControl : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORMCONTROL_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFORMCONTROL_IID)
 
   /**
    * Get the form for this form control.
@@ -142,5 +142,7 @@ public:
 
   virtual PRBool AllowDrop() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)
 
 #endif /* nsIFormControl_h___ */

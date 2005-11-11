@@ -22,7 +22,7 @@
 
 class nsIProxyCreateInstance : public nsISupports {
  public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPROXYCREATEINSTANCE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPROXYCREATEINSTANCE_IID)
 
   /* void CreateInstanceByIID (in nsIIDRef cid, in nsISupports aOuter, in nsIIDRef iid, out voidStar result); */
   NS_IMETHOD CreateInstanceByIID(const nsIID & cid, nsISupports *aOuter, const nsIID & iid, void * *result) = 0;
@@ -30,5 +30,8 @@ class nsIProxyCreateInstance : public nsISupports {
   /* void CreateInstanceByContractID (in string aContractID, in nsISupports aOuter, in nsIIDRef iid, out voidStar result); */
   NS_IMETHOD CreateInstanceByContractID(const char *aContractID, nsISupports *aOuter, const nsIID & iid, void * *result) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIProxyCreateInstance,
+                              NS_IPROXYCREATEINSTANCE_IID)
 
 #endif /* __gen_nsIProxyCreateInstance_h__ */

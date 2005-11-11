@@ -50,7 +50,7 @@ class nsISVGTextContainerFrame : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGTEXTCONTAINERFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGTEXTCONTAINERFRAME_IID)
 
   NS_IMETHOD_(nsISVGTextFrame *) GetTextFrame()=0;
   NS_IMETHOD_(PRBool) GetAbsolutePositionAdjustmentX(float &x, PRUint32 charNum)=0;
@@ -63,5 +63,8 @@ public:
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDx()=0;
   NS_IMETHOD_(already_AddRefed<nsIDOMSVGLengthList>) GetDy()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGTextContainerFrame,
+                              NS_ISVGTEXTCONTAINERFRAME_IID)
 
 #endif // __NS_ISVGTEXTCONTAINERFRAME_H__

@@ -61,7 +61,7 @@ struct nsRect;
 class nsICompositeListener : public nsISupports {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICOMPOSITELISTENER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICOMPOSITELISTENER_IID)
 
   /**
    * Notification before a view is refreshed.
@@ -127,6 +127,8 @@ public:
                             const nsRect *aRect,
                             PRUint32 aUpdateFlags) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICompositeListener, NS_ICOMPOSITELISTENER_IID)
 
 #endif /* nsICompositeListener_h___ */
 

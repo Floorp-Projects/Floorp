@@ -74,7 +74,7 @@ class nsAttrValue;
  */
 class nsIContent : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
 
   nsIContent(nsINodeInfo *aNodeInfo)
     : mParentPtrBits(0),
@@ -866,5 +866,7 @@ protected:
   
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
 
 #endif /* nsIContent_h___ */

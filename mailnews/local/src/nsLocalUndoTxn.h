@@ -57,7 +57,7 @@ class nsLocalUndoFolderListener;
 class nsLocalMoveCopyMsgTxn : public nsMsgTxn
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_LOCALMOVECOPYMSGTXN_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_LOCALMOVECOPYMSGTXN_IID)
 
 	nsLocalMoveCopyMsgTxn();
     nsLocalMoveCopyMsgTxn(nsIMsgFolder *srcFolder,
@@ -98,6 +98,9 @@ private:
     nsUInt32Array m_dstSizeArray;
     nsLocalUndoFolderListener *mUndoFolderListener;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsLocalMoveCopyMsgTxn,
+                              NS_LOCALMOVECOPYMSGTXN_IID)
 
 class nsLocalUndoFolderListener : public nsIFolderListener
 {

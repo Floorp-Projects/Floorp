@@ -50,7 +50,7 @@
 class nsIDrawingSurfacePh : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAWING_SURFACE_PH_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDRAWING_SURFACE_PH_IID)
 
   /**
    * Initialize a drawing surface using a windows DC.
@@ -78,5 +78,7 @@ public:
                   PRUint32 aFlags) = 0;
 				  
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDrawingSurfacePh, NS_IDRAWING_SURFACE_PH_IID)
 
 #endif  // nsIDrawingSurfacePh_h___ 

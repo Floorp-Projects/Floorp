@@ -67,11 +67,13 @@ struct nsModuleComponentInfo; // forward declaration
  */
 class nsIGenericFactory : public nsIFactory {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGENERICFACTORY_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGENERICFACTORY_IID)
     
     NS_IMETHOD SetComponentInfo(const nsModuleComponentInfo *info) = 0;
     NS_IMETHOD GetComponentInfo(const nsModuleComponentInfo **infop) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIGenericFactory, NS_IGENERICFACTORY_IID)
 
 NS_COM_GLUE nsresult
 NS_NewGenericFactory(nsIGenericFactory **result,

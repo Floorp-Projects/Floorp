@@ -52,7 +52,7 @@ class nsISVGGlyphFragmentNode : public nsISupports
 {
 public:
   
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISVGGLYPHFRAGMENTNODE_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISVGGLYPHFRAGMENTNODE_IID)
 
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment()=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment()=0;
@@ -62,5 +62,8 @@ public:
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeSuspended()=0;
   NS_IMETHOD_(void) NotifyGlyphFragmentTreeUnsuspended()=0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISVGGlyphFragmentNode,
+                              NS_ISVGGLYPHFRAGMENTNODE_IID)
 
 #endif // __NS_ISVGGLYPHFRAGMENTNODE_H__

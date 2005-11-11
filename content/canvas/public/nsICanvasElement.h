@@ -48,7 +48,7 @@
 
 class nsICanvasElement : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICANVASELEMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASELEMENT_IID)
 
   /**
    * Ask the Canvas Element to return the current image container that
@@ -67,5 +67,7 @@ public:
    */
   NS_IMETHOD UpdateImageFrame () = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasElement, NS_ICANVASELEMENT_IID)
 
 #endif /* nsICanvasElement_h___ */

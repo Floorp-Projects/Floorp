@@ -67,7 +67,7 @@ class nsRulesInfo
 class nsIEditRules : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEDITRULES_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IEDITRULES_IID)
   
 //Interfaces for addref and release and queryinterface
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsIEditRules
@@ -82,6 +82,7 @@ public:
   NS_IMETHOD DocumentIsEmpty(PRBool *aDocumentIsEmpty)=0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIEditRules, NS_IEDITRULES_IID)
 
 #endif //nsEditRules_h__
 

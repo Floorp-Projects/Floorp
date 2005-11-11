@@ -225,7 +225,7 @@ nsCEnum(const nsACString& aKey, nsAutoPtr<TestUniChar>& aData, void* userArg) {
 class IFoo : public nsISupports
   {
     public:
-      NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
+      NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOO_IID)
 
     public:
       IFoo();
@@ -248,6 +248,8 @@ class IFoo : public nsISupports
       static unsigned int total_destructions_;
       nsCString mString;
   };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(IFoo, NS_IFOO_IID)
 
 unsigned int IFoo::total_constructions_;
 unsigned int IFoo::total_destructions_;

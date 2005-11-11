@@ -50,8 +50,11 @@
  */
 class nsICharsetDetectionObserver : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARSETDETECTIONOBSERVER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICHARSETDETECTIONOBSERVER_IID)
   NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICharsetDetectionObserver,
+                              NS_ICHARSETDETECTIONOBSERVER_IID)
 
 #endif /* nsICDETObserver_h__ */

@@ -64,7 +64,7 @@ protected:
   nsresult Init();
   
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_XTFELEMENTWRAPPER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_XTFELEMENTWRAPPER_IID)
 
   // nsISupports interface
   NS_DECL_ISUPPORTS_INHERITED
@@ -150,6 +150,8 @@ protected:
    */
   PRInt32 mIntrinsicState;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsXTFElementWrapper, NS_XTFELEMENTWRAPPER_IID)
 
 class nsXTFStyledElementWrapper : public nsXTFElementWrapper
 {

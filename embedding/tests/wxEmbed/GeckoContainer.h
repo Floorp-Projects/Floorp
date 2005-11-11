@@ -64,11 +64,13 @@ class GeckoContainerUI;
 class NS_NO_VTABLE nsIGeckoContainer : public nsISupports
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IGECKOCONTAINER_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGECKOCONTAINER_IID)
 
     NS_IMETHOD GetRole(nsACString &aRole) = 0;
     NS_IMETHOD GetContainerUI(GeckoContainerUI **pUI) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIGeckoContainer, NS_IGECKOCONTAINER_IID)
 
 #define NS_DECL_NSIGECKOCONTAINER \
     NS_IMETHOD GetRole(nsACString &aRole); \

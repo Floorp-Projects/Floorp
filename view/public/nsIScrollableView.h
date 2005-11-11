@@ -64,7 +64,7 @@ struct nsSize;
  */
 class nsIScrollableView {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLEVIEW_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCROLLABLEVIEW_IID)
 
   /**
    * Create the controls used to allow scrolling. Call this method
@@ -199,6 +199,8 @@ public:
    */
   NS_IMETHOD RemoveScrollPositionListener(nsIScrollPositionListener* aListener) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScrollableView, NS_ISCROLLABLEVIEW_IID)
 
 //regardless of the transparency or opacity settings
 //for this view, it can always be scrolled via a blit

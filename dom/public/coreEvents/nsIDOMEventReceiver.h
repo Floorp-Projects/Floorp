@@ -58,7 +58,7 @@ class nsIDOMEventGroup;
 class nsIDOMEventReceiver : public nsIDOMEventTarget
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOMEVENTRECEIVER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOMEVENTRECEIVER_IID)
 
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,
                                    const nsIID& aIID) = 0;
@@ -68,4 +68,7 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent) = 0;
   NS_IMETHOD GetSystemEventGroup(nsIDOMEventGroup** aGroup) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDOMEventReceiver, NS_IDOMEVENTRECEIVER_IID)
+
 #endif // nsIDOMEventReceiver_h__

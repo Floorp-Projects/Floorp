@@ -58,7 +58,7 @@ class nsAString;
 
 class nsIFocusController : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFOCUSCONTROLLER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IFOCUSCONTROLLER_IID)
 
   NS_IMETHOD GetFocusedElement(nsIDOMElement** aResult)=0;
   NS_IMETHOD SetFocusedElement(nsIDOMElement* aElement)=0;
@@ -86,6 +86,8 @@ public:
 
   NS_IMETHOD ResetElementFocus() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIFocusController, NS_IFOCUSCONTROLLER_IID)
 
 class nsFocusSuppressor {
 public:

@@ -67,7 +67,7 @@ typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
 class nsIScriptContext : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
 
   /**
    * Compile and execute a script.
@@ -356,6 +356,8 @@ public:
    */
   virtual void DidInitializeContext() = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContext, NS_ISCRIPTCONTEXT_IID)
 
 inline nsIScriptContext *
 GetScriptContextFromJSContext(JSContext *cx)

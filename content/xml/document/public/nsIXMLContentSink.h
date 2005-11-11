@@ -75,9 +75,11 @@ class nsIChannel;
 class nsIXMLContentSink : public nsIContentSink {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IXMLCONTENT_SINK_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXMLCONTENT_SINK_IID)
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIXMLContentSink, NS_IXMLCONTENT_SINK_IID)
 
 nsresult
 NS_NewXMLContentSink(nsIXMLContentSink** aInstancePtrResult, nsIDocument* aDoc,

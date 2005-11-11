@@ -93,7 +93,7 @@ static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 class nsCanvasGradient : public nsIDOMCanvasGradient
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_CANVASGRADIENT_PRIVATE_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASGRADIENT_PRIVATE_IID)
 
     nsCanvasGradient(cairo_pattern_t *cpat, nsICSSParser *cssparser)
         : mPattern(cpat), mCSSParser(cssparser)
@@ -134,6 +134,8 @@ protected:
     nsCOMPtr<nsICSSParser> mCSSParser;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasGradient, NS_CANVASGRADIENT_PRIVATE_IID)
+
 NS_IMPL_ADDREF(nsCanvasGradient)
 NS_IMPL_RELEASE(nsCanvasGradient)
 
@@ -152,7 +154,7 @@ NS_INTERFACE_MAP_END
 class nsCanvasPattern : public nsIDOMCanvasPattern
 {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_CANVASPATTERN_PRIVATE_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASPATTERN_PRIVATE_IID)
 
     nsCanvasPattern(cairo_pattern_t *cpat, PRUint8 *dataToFree)
         : mPattern(cpat), mData(dataToFree)
@@ -175,6 +177,8 @@ protected:
     cairo_pattern_t *mPattern;
     PRUint8 *mData;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsCanvasPattern, NS_CANVASPATTERN_PRIVATE_IID)
 
 NS_IMPL_ADDREF(nsCanvasPattern)
 NS_IMPL_RELEASE(nsCanvasPattern)

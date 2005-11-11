@@ -96,7 +96,7 @@ private:
 class nsSVGCoordCtxProvider : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_SVGCOORDCTXPROVIDER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SVGCOORDCTXPROVIDER_IID)
 
   nsSVGCoordCtxProvider() : mInner(new nsSVGCoordCtxHolder) {}
     
@@ -114,5 +114,8 @@ protected:
 private:
   nsRefPtr<nsSVGCoordCtxHolder> mInner;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsSVGCoordCtxProvider,
+                              NS_SVGCOORDCTXPROVIDER_IID)
 
 #endif // __NS_SVGCOORDCTXPROVIDER_H__

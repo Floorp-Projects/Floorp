@@ -54,7 +54,7 @@ class nsIBoxLayout : public nsISupports {
 
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBOX_LAYOUT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IBOX_LAYOUT_IID)
 
   NS_IMETHOD Layout(nsIBox* aBox, nsBoxLayoutState& aState)=0;
 
@@ -73,5 +73,6 @@ public:
   NS_IMETHOD BecameDirty(nsIBox* aBox, nsBoxLayoutState& aState)=0;
 };
 
-#endif
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIBoxLayout, NS_IBOX_LAYOUT_IID)
 
+#endif

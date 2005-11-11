@@ -53,10 +53,13 @@ class nsIURI;
 class nsIPrivateDOMImplementation : public nsISupports {
 
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRIVATEDOMIMPLEMENTATION_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRIVATEDOMIMPLEMENTATION_IID)
 
   NS_IMETHOD Init(nsIURI* aBaseURI) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateDOMImplementation,
+                              NS_IPRIVATEDOMIMPLEMENTATION_IID)
 
 nsresult
 NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult);

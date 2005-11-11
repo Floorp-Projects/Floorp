@@ -59,7 +59,8 @@
  */
 class nsIScriptObjectOwner : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTOBJECTOWNER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTOBJECTOWNER_IID)
+
   /**
    * Return the script object associated with this object.
    * Create a script object if not present.
@@ -85,6 +86,9 @@ public:
   NS_IMETHOD SetScriptObject(void* aScriptObject) = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptObjectOwner,
+                              NS_ISCRIPTOBJECTOWNER_IID)
+
 class nsIAtom;
 
 #define NS_ISCRIPTEVENTHANDLEROWNER_IID \
@@ -101,7 +105,7 @@ class nsIAtom;
 class nsIScriptEventHandlerOwner : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTEVENTHANDLEROWNER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTEVENTHANDLEROWNER_IID)
 
   /**
    * Compile the specified event handler, and bind it to aTarget using
@@ -133,5 +137,8 @@ public:
   virtual nsresult GetCompiledEventHandler(nsIAtom *aName,
                                            void** aHandler) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptEventHandlerOwner,
+                              NS_ISCRIPTEVENTHANDLEROWNER_IID)
 
 #endif // nsIScriptObjectOwner_h__

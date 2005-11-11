@@ -52,7 +52,7 @@ class nsIUGenDetailCategory : public nsISupports {
 
 public: 
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUGENDETAILCATEGORY_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IUGENDETAILCATEGORY_IID)
 
    /**
     *  Read ftp://ftp.unicode.org/Public/UNIDATA/ReadMe-Latest.txt
@@ -141,5 +141,8 @@ public:
     */
    NS_IMETHOD Is( PRUnichar aChar, nsUGDC aDetailCategory, PRBool* oResult) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIUGenDetailCategory,
+                              NS_IUGENDETAILCATEGORY_IID)
 
 #endif  /* nsIUGenDetailCategory_h__ */

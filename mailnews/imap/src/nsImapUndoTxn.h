@@ -58,7 +58,7 @@
 class nsImapMoveCopyMsgTxn : public nsMsgTxn
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMAPMOVECOPYMSGTXN_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMAPMOVECOPYMSGTXN_IID)
 
   nsImapMoveCopyMsgTxn();
   nsImapMoveCopyMsgTxn(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray,
@@ -103,6 +103,8 @@ protected:
 
   nsresult GetImapDeleteModel(nsIMsgFolder* aFolder, nsMsgImapDeleteModel *aDeleteModel);
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsImapMoveCopyMsgTxn, NS_IMAPMOVECOPYMSGTXN_IID)
 
 class nsImapOfflineTxn : public nsImapMoveCopyMsgTxn
 {

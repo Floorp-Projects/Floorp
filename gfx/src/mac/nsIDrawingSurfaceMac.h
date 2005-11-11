@@ -54,7 +54,7 @@ class GraphicsState;
 class nsIDrawingSurfaceMac : public nsISupports
 {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAWING_SURFACE_MAC_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDRAWING_SURFACE_MAC_IID)
 
   /**
    * Initialize a drawing surface using a Macintosh GrafPtr.
@@ -114,5 +114,8 @@ public:
   NS_IMETHOD_(void) EndQuartzDrawing(CGContextRef aContext) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIDrawingSurfaceMac,
+                              NS_IDRAWING_SURFACE_MAC_IID)
 
 #endif  // nsIDrawingSurfaceMac_h___ 

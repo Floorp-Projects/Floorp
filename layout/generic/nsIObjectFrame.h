@@ -47,7 +47,7 @@ class nsIPluginInstance;
 
 class nsIObjectFrame : public nsISupports {
 public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IOBJECTFRAME_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IOBJECTFRAME_IID)
 
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance) = 0;
 
@@ -76,5 +76,6 @@ public:
   virtual void StopPlugin() = 0;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIObjectFrame, NS_IOBJECTFRAME_IID)
 
 #endif /* nsIObjectFrame_h___ */

@@ -56,7 +56,7 @@ class nsIHistoryObserver : public nsISupports
 {
 public:
 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHISTORYOBSERVER_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IHISTORYOBSERVER_IID)
 
   NS_IMETHOD HistoryLoaded() = 0;
   NS_IMETHOD HistoryClosing() = 0;
@@ -72,6 +72,7 @@ public:
   
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIHistoryObserver, NS_IHISTORYOBSERVER_IID)
 
 #define NS_DECL_NSIHISTORYOBSERVER \
   NS_IMETHOD HistoryLoaded(); \

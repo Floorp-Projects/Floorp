@@ -50,7 +50,7 @@ class nsIPrintSettings;
 
 class nsIPrintingContext : public nsISupports {
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRINTING_CONTEXT_IID)
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRINTING_CONTEXT_IID)
     /**
      * Initialize the printing context for use.
      * @param aIsPrintPreview   TRUE if doing print preview, FALSE if normal printing.
@@ -88,5 +88,7 @@ public:
     
     NS_IMETHOD GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight) = 0;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrintingContext, NS_IPRINTING_CONTEXT_IID)
 
 #endif /* nsIPrintingContextMac_h___ */

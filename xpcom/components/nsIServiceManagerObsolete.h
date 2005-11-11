@@ -77,7 +77,7 @@ class nsServiceManagerObsolete;
 class nsIServiceManagerObsolete : public nsISupports {
 public:
 
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISERVICEMANAGER_OBSOLETE_IID);
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISERVICEMANAGER_OBSOLETE_IID)
 
     /**
      * RegisterService may be called explicitly to register a service
@@ -131,6 +131,9 @@ public:
                    nsIShutdownListener* shutdownListener = nsnull) = 0;
 
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIServiceManagerObsolete,
+                              NS_ISERVICEMANAGER_OBSOLETE_IID)
 
 // Interface to Global Services
 class NS_COM nsServiceManager {
