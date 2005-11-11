@@ -1980,40 +1980,29 @@ bool nsWindow::CallMethod(MethodInfo *info)
 
 	case nsWindow::ONWHEEL :
 		{
+			NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
+			// avoid mistargeting
+			if ((uint32)info->args[0] != (uint32)mView)
+				return false;
 			BPoint cursor(0,0);
 			uint32 buttons;
+			BPoint delta;
 			if (mView && mView->LockLooper())
 			{
 				mView->GetMouse(&cursor, &buttons, false);
+				delta = mView->GetWheel();
 				mView->UnlockLooper();
 			}
 			else
 				return false;
-			NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
-
-			nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
-
-			scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
-
-			scrollEvent.delta = (info->args)[0];
-
-			scrollEvent.time      = PR_IntervalNow();
-
-			scrollEvent.refPoint.x = nscoord(cursor.x);
-			scrollEvent.refPoint.y = nscoord(cursor.y);
-
-			// we don't use the mIsXDown bools because
-			// they get reset on Gecko reload (makes it harder
-			// to use stuff like Alt+Wheel)
-			uint32 mod (modifiers());
-
-			scrollEvent.isControl = mod & B_CONTROL_KEY;
-			scrollEvent.isShift = mod & B_SHIFT_KEY;
-			scrollEvent.isAlt   = mod & B_COMMAND_KEY;
-			scrollEvent.isMeta  = mod & B_OPTION_KEY;
-
-			nsEventStatus rv;
-			DispatchEvent (&scrollEvent, rv);
+			// BeOS TwoWheel input-filter is bit buggy atm, generating sometimes X-wheel without reason
+			// so we setting priority for Y-wheel with "else", in future code may be more elegant
+			if (nscoord(delta.y) != 0)
+			{
+				OnWheel(nsMouseScrollEvent::kIsVertical, buttons, cursor, nscoord(delta.y));
+			}
+			else if(nscoord(delta.x) != 0)
+				OnWheel(nsMouseScrollEvent::kIsHorizontal, buttons, cursor, nscoord(delta.x));
 		}
 		break;
 
@@ -2613,6 +2602,29 @@ PRBool nsWindow::OnMove(PRInt32 aX, PRInt32 aY)
 	return result;
 }
 
+void nsWindow::OnWheel(PRInt32 aDirection, uint32 aButtons, BPoint aPoint, nscoord aDelta)
+{
+		// we don't use the mIsXDown bools because
+		// they get reset on Gecko reload (makes it harder
+		// to use stuff like Alt+Wheel)
+
+		nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, this);
+		uint32 mod (modifiers());
+		scrollEvent.isControl = mod & B_CONTROL_KEY;
+		scrollEvent.isShift = mod & B_SHIFT_KEY;
+		scrollEvent.isAlt   = mod & B_COMMAND_KEY;
+		scrollEvent.isMeta  = mod & B_OPTION_KEY;
+						
+		scrollEvent.scrollFlags = aDirection;
+		scrollEvent.delta = aDelta;
+		scrollEvent.time      = PR_IntervalNow();
+		scrollEvent.refPoint.x = nscoord(aPoint.x);
+		scrollEvent.refPoint.y = nscoord(aPoint.y);
+
+		nsEventStatus rv;
+		DispatchEvent (&scrollEvent, rv);
+}
+
 //-------------------------------------------------------------------------
 //
 // Paint
@@ -2941,13 +2953,14 @@ void  nsWindowBeOS::FrameResized(float width, float height)
 //----------------------------------------------------
 
 nsViewBeOS::nsViewBeOS(nsIWidget *aWidgetWindow, BRect aFrame, const char *aName, uint32 aResizingMode, uint32 aFlags)
-	: BView(aFrame, aName, aResizingMode, aFlags), nsIWidgetStore(aWidgetWindow)
+	: BView(aFrame, aName, aResizingMode, aFlags), nsIWidgetStore(aWidgetWindow), wheel(.0,.0)
 {
 	SetViewColor(B_TRANSPARENT_COLOR);
 	paintregion.MakeEmpty();	
 	buttons = 0;
 	fRestoreMouseMask = false;
-	fJustValidated = true;	
+	fJustValidated = true;
+	fWheelDispatched = true;
 }
 
 void nsViewBeOS::Draw(BRect updateRect)
@@ -2990,6 +3003,16 @@ void nsViewBeOS::Validate(BRect r)
 	// Mozilla got previous ONPAINT message,
 	// ready for next event.
 	fJustValidated = true;
+}
+
+BPoint nsViewBeOS::GetWheel()
+{
+	BPoint retvalue = wheel;
+	// Mozilla got wheel event, so setting flag and cleaning delta storage
+	fWheelDispatched = true;
+	wheel.x = 0;
+	wheel.y = 0;
+	return retvalue;
 }
 
 void nsViewBeOS::MouseDown(BPoint point)
@@ -3178,30 +3201,35 @@ void nsViewBeOS::MessageReceived(BMessage *msg)
 	case B_MOUSE_WHEEL_CHANGED:
 		{
 			float wheel_y;
+			float wheel_x;
 
 			msg->FindFloat ("be:wheel_delta_y", &wheel_y);
+			msg->FindFloat ("be:wheel_delta_x", &wheel_x);
+			wheel.x += wheel_x;
+			wheel.y += wheel_y;
 
-			// make sure there *was* movement on the y axis
-			if (wheel_y == 0)
-				break;
-
+			if(!fWheelDispatched || (nscoord(wheel_x) == 0 && nscoord(wheel_y) == 0))
+				return;
+			uint32	args[1];
+			args[0] = (uint32)this;
 			nsWindow    *w = (nsWindow *)GetMozillaWidget();
 			nsToolkit   *t;
 
 			if (w && (t = w->GetToolkit()) != 0)
 			{
-				uint32 args[1];
-				if (wheel_y > 0)
-					args[0] = (uint32)3;
-				else
-					args[0] = (uint32)-3;
+					
 				MethodInfo *info = nsnull;
 				if (nsnull != (info = new MethodInfo(w, w, nsWindow::ONWHEEL, 1, args)))
+				{
 					t->CallMethodAsync(info);
+					fWheelDispatched = false;
+					
+				}
 				NS_RELEASE(t);
 			}
 		}
 		break;
+		
 #if defined(BeIME)
 	case B_INPUT_METHOD_EVENT:
 		DoIME(msg);
