@@ -569,6 +569,11 @@ public:
 
   NS_IMETHOD ItemLoaded(nsIHistoryItem* inHistoryItem, PRBool inFirstVisit)
   {
+    // Ignore hidden items
+    PRBool hidden;
+    if (!inHistoryItem || NS_FAILED(inHistoryItem->GetHidden(&hidden)) || hidden)
+      return NS_OK;
+
     NS_DURING // make sure we don't throw out into gecko
 
       // The logic here is slightly odd, because even when inFirstVisit is false,

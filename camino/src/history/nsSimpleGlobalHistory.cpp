@@ -846,13 +846,19 @@ nsSimpleGlobalHistory::NotifyObserversHistoryLoaded()
 nsresult
 nsSimpleGlobalHistory::NotifyObserversHistoryClosing()
 {
+  // copy the array to avoid problems when implementors of
+  // HistoryClosing() use it to remove observers
+  nsCOMPtr<nsISupportsArray> observersCopy;
+  mHistoryObservers.Clone(getter_AddRefs(observersCopy));
+  if (!observersCopy) return NS_ERROR_FAILURE;
+  
   PRUint32 numObservers;
-  mHistoryObservers.Count(&numObservers);
+  observersCopy->Count(&numObservers);
   
   for (PRUint32 i = 0; i < numObservers; i ++)
   {
     nsCOMPtr<nsISupports> element;
-    mHistoryObservers.GetElementAt(i, getter_AddRefs(element));
+    observersCopy->GetElementAt(i, getter_AddRefs(element));
   
     nsCOMPtr<nsIHistoryObserver> historyObserver = do_QueryInterface(element);
     if (historyObserver)
