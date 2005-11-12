@@ -3490,7 +3490,7 @@ nsBrowserStatusHandler.prototype =
       }
 
       // The document loaded correctly, clear the value if we should
-      if (browser.userTypedClear > 0)
+      if (browser.userTypedClear > 0 && aRequest)
         browser.userTypedValue = null;
 
       if (!gBrowser.mTabbedMode && aWebProgress.isLoadingDocument)
@@ -5444,16 +5444,7 @@ function setStyleDisabled(disabled) {
 }
 
 #ifdef ALTSS_ICON
-function updatePageStyles(evt)
-{
-  // XXX - Accessing window.content.document can generate an
-  // onLocationChange for the current tab, this can cause the url
-  // bar to be cleared. Prevent that happening by setting the clear
-  // state to zero for the duration of this function.
-  var browser = getBrowser().selectedBrowser;
-  var userTypedClear = browser.userTypedClear;
-  browser.userTypedClear = 0;
-
+function updatePageStyles(evt) {
   if (!gPageStyleButton)
     gPageStyleButton = document.getElementById("page-theme-button");
 
@@ -5480,9 +5471,6 @@ function updatePageStyles(evt)
   }
   else
     gPageStyleButton.removeAttribute("themes");
-
-  // Restore clear state
-  browser.userTypedClear = userTypedClear;
 }
 #endif
 /* End of the Page Style functions */
