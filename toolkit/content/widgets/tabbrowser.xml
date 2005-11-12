@@ -377,7 +377,7 @@
             onLocationChange : function(aWebProgress, aRequest, aLocation)
             {
               // The document loaded correctly, clear the value if we should
-              if (this.mBrowser.userTypedClear > 0)
+              if (this.mBrowser.userTypedClear > 0 && aRequest)
                 this.mBrowser.userTypedValue = null;
 
               if (aWebProgress.DOMWindow == this.mBrowser.contentWindow &&
@@ -677,11 +677,7 @@
 
             var webProgress = this.mCurrentBrowser.webProgress;
             var securityUI = this.mCurrentBrowser.securityUI;
-            // Remember the current clear state, then set it to zero
-            // so we don't clear the userTypedValue when just switching
-            // tabs. Set it back to its old state after we're done.
-            var userTypedClear = this.mCurrentBrowser.userTypedClear;
-            this.mCurrentBrowser.userTypedClear = 0;
+
             var i, p;
             for (i = 0; i < this.mProgressListeners.length; i++) {
               p = this.mProgressListeners[i];
@@ -691,8 +687,7 @@
                   p.onSecurityChange(webProgress, null, securityUI.state);
               }
             }
-            this.mCurrentBrowser.userTypedClear = userTypedClear;
-            
+
             this._fastFind.setDocShell(this.mCurrentBrowser.docShell);
 
             // Update the window title.
