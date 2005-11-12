@@ -19453,10 +19453,6 @@ cat >> confdefs.h <<\EOF
 #define JS_THREADSAFE 1
 EOF
 
-cat >> confdefs.h <<\EOF
-#define JS_STRINGS_ARE_UTF8 1
-EOF
-
 
 if test "$MOZ_DEBUG"; then
     cat >> confdefs.h <<\EOF
