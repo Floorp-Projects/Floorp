@@ -271,7 +271,6 @@ bin\components\txtsvc.xpt
 
 ; netwerk
 bin\components\necko.xpt                               
-bin\components\necko_data.xpt               
 bin\components\necko_dns.xpt                
 bin\components\necko_http.xpt               
 bin\components\necko_res.xpt                

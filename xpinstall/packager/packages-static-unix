@@ -133,7 +133,6 @@ bin/components/mimetype.xpt
 bin/components/necko_cache.xpt
 bin/components/necko_strconv.xpt
 bin/components/necko_about.xpt
-bin/components/necko_data.xpt
 bin/components/necko_dns.xpt
 bin/components/necko_ftp.xpt
 bin/components/necko_http.xpt
