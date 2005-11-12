@@ -114,6 +114,13 @@ protected:
                             const char *messageIdentifierList,
                             const char *mimePart);
 
+  nsresult FolderCommand(nsIEventQueue * clientEventQueue, 
+                    nsIMsgFolder * imapMailFolder,
+                    nsIUrlListener * urlListener,
+                    const char *command,
+                    nsImapAction imapAction,
+                    nsIURI ** url);
+
 	nsresult DiddleFlags(nsIEventQueue * aClientEventQueue,
                          nsIMsgFolder * aImapMailFolder, 
                          nsIUrlListener * aUrlListener, 
@@ -131,6 +138,7 @@ protected:
                                      nsIUrlListener* aListener,
                                      nsIURI** aURL,
                                      nsISupports* aCopyState);
+
   nsresult CreateSubscribeURI(nsIMsgIncomingServer *server, char *folderName, nsIURI **imapUrl);
   nsresult GetServerFromUrl(nsIImapUrl *aImapUrl, nsIMsgIncomingServer **aServer);
 
