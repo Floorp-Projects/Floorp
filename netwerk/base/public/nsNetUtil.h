@@ -90,11 +90,10 @@
 #include "nsServiceManagerUtils.h"
 
 // Helper, to simplify getting the I/O service.
-inline const nsGetServiceByCIDWithError
+inline const nsGetServiceByContractIDWithError
 do_GetIOService(nsresult* error = 0)
 {
-    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-    return nsGetServiceByCIDWithError(kIOServiceCID, error);
+    return nsGetServiceByContractIDWithError(NS_IOSERVICE_CONTRACTID, error);
 }
 
 // private little helper function... don't call this directly!
@@ -297,18 +296,24 @@ NS_NewInputStreamChannel(nsIChannel      **result,
                          const nsACString *contentCharset)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kInputStreamChannelCID, NS_INPUTSTREAMCHANNEL_CID);
-    nsCOMPtr<nsIInputStreamChannel> channel =
-        do_CreateInstance(kInputStreamChannelCID, &rv);
+    nsCOMPtr<nsIInputStreamChannel> isc =
+        do_CreateInstance(NS_INPUTSTREAMCHANNEL_CONTRACTID, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+    rv |= isc->SetURI(uri);
+    rv |= isc->SetContentStream(stream);
+    if (NS_FAILED(rv))
+        return rv;
+    nsCOMPtr<nsIChannel> chan = do_QueryInterface(isc, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+    if (!contentType.IsEmpty())
+        rv |= chan->SetContentType(contentType);
+    if (contentCharset && !contentCharset->IsEmpty())
+        rv |= chan->SetContentCharset(*contentCharset);
     if (NS_SUCCEEDED(rv)) {
-        rv |= channel->SetURI(uri);
-        rv |= channel->SetContentStream(stream);
-        rv |= channel->SetContentType(contentType);
-        if (contentCharset && !contentCharset->IsEmpty()) {
-            rv |= channel->SetContentCharset(*contentCharset);
-        }
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = channel);
+        *result = nsnull;
+        chan.swap(*result);
     }
     return rv;
 }
@@ -343,14 +348,15 @@ NS_NewInputStreamPump(nsIInputStreamPump **result,
                       PRBool               closeWhenDone = PR_FALSE)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kInputStreamPumpCID, NS_INPUTSTREAMPUMP_CID);
     nsCOMPtr<nsIInputStreamPump> pump =
-        do_CreateInstance(kInputStreamPumpCID, &rv);
+        do_CreateInstance(NS_INPUTSTREAMPUMP_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = pump->Init(stream, streamPos, streamLen,
                         segsize, segcount, closeWhenDone);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = pump);
+        if (NS_SUCCEEDED(rv)) {
+            *result = nsnull;
+            pump.swap(*result);
+        }
     }
     return rv;
 }
@@ -368,13 +374,14 @@ NS_NewAsyncStreamCopier(nsIAsyncStreamCopier **result,
                         PRUint32               chunkSize = 0)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kAsyncStreamCopierCID, NS_ASYNCSTREAMCOPIER_CID);
     nsCOMPtr<nsIAsyncStreamCopier> copier =
-        do_CreateInstance(kAsyncStreamCopierCID, &rv);
+        do_CreateInstance(NS_ASYNCSTREAMCOPIER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = copier->Init(source, sink, target, sourceBuffered, sinkBuffered, chunkSize);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = copier);
+        if (NS_SUCCEEDED(rv)) {
+            *result = nsnull;
+            copier.swap(*result);
+        }
     }
     return rv;
 }
@@ -384,13 +391,14 @@ NS_NewLoadGroup(nsILoadGroup      **result,
                 nsIRequestObserver *obs)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kLoadGroupCID, NS_LOADGROUP_CID);
     nsCOMPtr<nsILoadGroup> group =
-        do_CreateInstance(kLoadGroupCID, &rv);
+        do_CreateInstance(NS_LOADGROUP_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = group->SetGroupObserver(obs);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = group);
+        if (NS_SUCCEEDED(rv)) {
+            *result = nsnull;
+            group.swap(*result);
+        }
     }
     return rv;
 }
@@ -401,9 +409,8 @@ NS_NewDownloader(nsIStreamListener   **result,
                  nsIFile              *downloadLocation = nsnull)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kDownloaderCID, NS_DOWNLOADER_CID);
     nsCOMPtr<nsIDownloader> downloader =
-        do_CreateInstance(kDownloaderCID, &rv);
+        do_CreateInstance(NS_DOWNLOADER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         rv = downloader->Init(observer, downloadLocation);
         if (NS_SUCCEEDED(rv))
@@ -413,19 +420,20 @@ NS_NewDownloader(nsIStreamListener   **result,
 }
 
 inline nsresult
-NS_NewStreamLoader(nsIStreamLoader        **aResult,
-                   nsIChannel              *aChannel,
-                   nsIStreamLoaderObserver *aObserver,
-                   nsISupports             *aContext)
+NS_NewStreamLoader(nsIStreamLoader        **result,
+                   nsIChannel              *channel,
+                   nsIStreamLoaderObserver *observer,
+                   nsISupports             *context)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kStreamLoaderCID, NS_STREAMLOADER_CID);
     nsCOMPtr<nsIStreamLoader> loader =
-        do_CreateInstance(kStreamLoaderCID, &rv);
+        do_CreateInstance(NS_STREAMLOADER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = loader->Init(aChannel, aObserver, aContext);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*aResult = loader);
+        rv = loader->Init(channel, observer, context);
+        if (NS_SUCCEEDED(rv)) {
+            *result = nsnull;
+            loader.swap(*result);
+        }
     }
     return rv;
 }
@@ -458,36 +466,36 @@ NS_NewStreamLoader(nsIStreamLoader        **result,
 }
 
 inline nsresult
-NS_NewUnicharStreamLoader(nsIUnicharStreamLoader        **aResult,
-                          nsIChannel                     *aChannel,
-                          nsIUnicharStreamLoaderObserver *aObserver,
-                          nsISupports                    *aContext     = nsnull,
-                          PRUint32                        aSegmentSize = nsIUnicharStreamLoader::DEFAULT_SEGMENT_SIZE)
+NS_NewUnicharStreamLoader(nsIUnicharStreamLoader        **result,
+                          nsIChannel                     *channel,
+                          nsIUnicharStreamLoaderObserver *observer,
+                          nsISupports                    *context     = nsnull,
+                          PRUint32                        segmentSize = nsIUnicharStreamLoader::DEFAULT_SEGMENT_SIZE)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kUnicharStreamLoaderCID, NS_UNICHARSTREAMLOADER_CID);
     nsCOMPtr<nsIUnicharStreamLoader> loader =
-        do_CreateInstance(kUnicharStreamLoaderCID, &rv);
+        do_CreateInstance(NS_UNICHARSTREAMLOADER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = loader->Init(aChannel, aObserver, aContext, aSegmentSize);
-        if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*aResult = loader);
+        rv = loader->Init(channel, observer, context, segmentSize);
+        if (NS_SUCCEEDED(rv)) {
+            *result = nsnull;
+            loader.swap(*result);
+        }
     }
     return rv;
 }
 
 inline nsresult
-NS_NewSyncStreamListener(nsIStreamListener **aResult,
-                         nsIInputStream    **aStream)
+NS_NewSyncStreamListener(nsIStreamListener **result,
+                         nsIInputStream    **stream)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kSyncStreamListenerCID, NS_SYNCSTREAMLISTENER_CID);
     nsCOMPtr<nsISyncStreamListener> listener =
-        do_CreateInstance(kSyncStreamListenerCID, &rv);
+        do_CreateInstance(NS_SYNCSTREAMLISTENER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = listener->GetInputStream(aStream);
+        rv = listener->GetInputStream(stream);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*aResult = listener);
+            NS_ADDREF(*result = listener);  // cannot use nsCOMPtr::swap
     }
     return rv;
 }
@@ -500,56 +508,56 @@ NS_NewSyncStreamListener(nsIStreamListener **aResult,
  * thread's event queue, which could result in any event being processed.
  */
 inline nsresult
-NS_ImplementChannelOpen(nsIChannel      *aChannel,
-                        nsIInputStream **aResult)
+NS_ImplementChannelOpen(nsIChannel      *channel,
+                        nsIInputStream **result)
 {
     nsCOMPtr<nsIStreamListener> listener;
     nsCOMPtr<nsIInputStream> stream;
     nsresult rv = NS_NewSyncStreamListener(getter_AddRefs(listener),
                                            getter_AddRefs(stream));
     if (NS_SUCCEEDED(rv)) {
-        rv = aChannel->AsyncOpen(listener, nsnull);
+        rv = channel->AsyncOpen(listener, nsnull);
         if (NS_SUCCEEDED(rv)) {
             PRUint32 n;
             // block until the initial response is received or an error occurs.
             rv = stream->Available(&n);
-            if (NS_SUCCEEDED(rv))
-                NS_ADDREF(*aResult = stream);
+            if (NS_SUCCEEDED(rv)) {
+                *result = nsnull;
+                stream.swap(*result);
+            }
         }
     }
     return rv;
 }
 
 inline nsresult
-NS_NewRequestObserverProxy(nsIRequestObserver **aResult,
-                           nsIRequestObserver  *aObserver,
-                           nsIEventQueue       *aEventQ = nsnull)
+NS_NewRequestObserverProxy(nsIRequestObserver **result,
+                           nsIRequestObserver  *observer,
+                           nsIEventQueue       *eventQ = nsnull)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kRequestObserverProxyCID, NS_REQUESTOBSERVERPROXY_CID);
     nsCOMPtr<nsIRequestObserverProxy> proxy =
-        do_CreateInstance(kRequestObserverProxyCID, &rv);
+        do_CreateInstance(NS_REQUESTOBSERVERPROXY_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = proxy->Init(aObserver, aEventQ);
+        rv = proxy->Init(observer, eventQ);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*aResult = proxy);
+            NS_ADDREF(*result = proxy);  // cannot use nsCOMPtr::swap
     }
     return rv;
 }
 
 inline nsresult
-NS_NewSimpleStreamListener(nsIStreamListener **aResult,
-                           nsIOutputStream    *aSink,
-                           nsIRequestObserver *aObserver = nsnull)
+NS_NewSimpleStreamListener(nsIStreamListener **result,
+                           nsIOutputStream    *sink,
+                           nsIRequestObserver *observer = nsnull)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kSimpleStreamListenerCID, NS_SIMPLESTREAMLISTENER_CID);
     nsCOMPtr<nsISimpleStreamListener> listener = 
-        do_CreateInstance(kSimpleStreamListenerCID, &rv);
+        do_CreateInstance(NS_SIMPLESTREAMLISTENER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = listener->Init(aSink, aObserver);
+        rv = listener->Init(sink, observer);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*aResult = listener);
+            NS_ADDREF(*result = listener);  // cannot use nsCOMPtr::swap
     }
     return rv;
 }
@@ -557,16 +565,15 @@ NS_NewSimpleStreamListener(nsIStreamListener **aResult,
 inline nsresult
 NS_NewAsyncStreamListener(nsIStreamListener **result,
                           nsIStreamListener  *receiver,
-                          nsIEventQueue      *eventQueue)
+                          nsIEventQueue      *eventQ)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kAsyncStreamListenerCID, NS_ASYNCSTREAMLISTENER_CID);
     nsCOMPtr<nsIAsyncStreamListener> lsnr =
-        do_CreateInstance(kAsyncStreamListenerCID, &rv);
+        do_CreateInstance(NS_ASYNCSTREAMLISTENER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = lsnr->Init(receiver, eventQueue);
+        rv = lsnr->Init(receiver, eventQ);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*result = lsnr);
+            NS_ADDREF(*result = lsnr);  // cannot use nsCOMPtr::swap
     }
     return rv;
 }
@@ -596,8 +603,8 @@ NS_NewProxyInfo(const nsACString &type,
                 nsIProxyInfo    **result)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kPPSServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
-    nsCOMPtr<nsIProtocolProxyService> pps = do_GetService(kPPSServiceCID, &rv);
+    nsCOMPtr<nsIProtocolProxyService> pps =
+            do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
         rv = pps->NewProxyInfo(type, host, port, flags, PR_UINT32_MAX, nsnull,
                                result);
@@ -634,15 +641,15 @@ NS_GetFileFromURLSpec(const nsACString  &inURL,
 }
 
 inline nsresult
-NS_GetURLSpecFromFile(nsIFile      *aFile,
-                      nsACString   &aUrl,
+NS_GetURLSpecFromFile(nsIFile      *file,
+                      nsACString   &url,
                       nsIIOService *ioService = nsnull)
 {
     nsresult rv;
     nsCOMPtr<nsIFileProtocolHandler> fileHandler;
     rv = NS_GetFileProtocolHandler(getter_AddRefs(fileHandler), ioService);
     if (NS_SUCCEEDED(rv))
-        rv = fileHandler->GetURLSpecFromFile(aFile, aUrl);
+        rv = fileHandler->GetURLSpecFromFile(file, url);
     return rv;
 }
 
@@ -654,8 +661,8 @@ NS_ExamineForProxy(const char    *scheme,
                    nsIProxyInfo **proxyInfo)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kPPSServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
-    nsCOMPtr<nsIProtocolProxyService> pps = do_GetService(kPPSServiceCID, &rv);
+    nsCOMPtr<nsIProtocolProxyService> pps =
+            do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         nsCAutoString spec(scheme);
         spec.Append("://");
@@ -668,8 +675,8 @@ NS_ExamineForProxy(const char    *scheme,
         // syntactically valid for the specific protocol), and all we need
         // is something which has a valid scheme, hostname, and a string
         // to pass to PAC if needed - bbaetz
-        static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);    
-        nsCOMPtr<nsIURI> uri = do_CreateInstance(kStandardURLCID, &rv);
+        nsCOMPtr<nsIURI> uri =
+                do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv)) {
             rv = uri->SetSpec(spec);
             if (NS_SUCCEEDED(rv))
@@ -699,59 +706,56 @@ NS_ParseContentType(const nsACString &rawContentType,
 }
 
 inline nsresult
-NS_NewLocalFileInputStream(nsIInputStream **aResult,
-                           nsIFile         *aFile,
-                           PRInt32          aIOFlags       = -1,
-                           PRInt32          aPerm          = -1,
-                           PRInt32          aBehaviorFlags = 0)
+NS_NewLocalFileInputStream(nsIInputStream **result,
+                           nsIFile         *file,
+                           PRInt32          ioFlags       = -1,
+                           PRInt32          perm          = -1,
+                           PRInt32          behaviorFlags = 0)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kLocalFileInputStreamCID, NS_LOCALFILEINPUTSTREAM_CID);
     nsCOMPtr<nsIFileInputStream> in =
-        do_CreateInstance(kLocalFileInputStreamCID, &rv);
+        do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = in->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
+        rv = in->Init(file, ioFlags, perm, behaviorFlags);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*aResult = in);
+            NS_ADDREF(*result = in);  // cannot use nsCOMPtr::swap
     }
     return rv;
 }
 
 inline nsresult
-NS_NewLocalFileOutputStream(nsIOutputStream **aResult,
-                            nsIFile          *aFile,
-                            PRInt32           aIOFlags       = -1,
-                            PRInt32           aPerm          = -1,
-                            PRInt32           aBehaviorFlags = 0)
+NS_NewLocalFileOutputStream(nsIOutputStream **result,
+                            nsIFile          *file,
+                            PRInt32           ioFlags       = -1,
+                            PRInt32           perm          = -1,
+                            PRInt32           behaviorFlags = 0)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kLocalFileOutputStreamCID, NS_LOCALFILEOUTPUTSTREAM_CID);
     nsCOMPtr<nsIFileOutputStream> out =
-        do_CreateInstance(kLocalFileOutputStreamCID, &rv);
+        do_CreateInstance(NS_LOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = out->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
+        rv = out->Init(file, ioFlags, perm, behaviorFlags);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*aResult = out);
+            NS_ADDREF(*result = out);  // cannot use nsCOMPtr::swap
     }
     return rv;
 }
 
 // returns a file output stream which can be QI'ed to nsISafeOutputStream.
 inline nsresult
-NS_NewSafeLocalFileOutputStream(nsIOutputStream **aResult,
-                                nsIFile          *aFile,
-                                PRInt32           aIOFlags       = -1,
-                                PRInt32           aPerm          = -1,
-                                PRInt32           aBehaviorFlags = 0)
+NS_NewSafeLocalFileOutputStream(nsIOutputStream **result,
+                                nsIFile          *file,
+                                PRInt32           ioFlags       = -1,
+                                PRInt32           perm          = -1,
+                                PRInt32           behaviorFlags = 0)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kSafeLocalFileOutputStreamCID, NS_SAFELOCALFILEOUTPUTSTREAM_CID);
     nsCOMPtr<nsIFileOutputStream> out =
-        do_CreateInstance(kSafeLocalFileOutputStreamCID, &rv);
+        do_CreateInstance(NS_SAFELOCALFILEOUTPUTSTREAM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = out->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
+        rv = out->Init(file, ioFlags, perm, behaviorFlags);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*aResult = out);
+            NS_ADDREF(*result = out);  // cannot use nsCOMPtr::swap
     }
     return rv;
 }
@@ -760,22 +764,22 @@ NS_NewSafeLocalFileOutputStream(nsIOutputStream **aResult,
 // is attached to the original stream.  data from the original
 // stream is read into the pipe on a background thread.
 inline nsresult
-NS_BackgroundInputStream(nsIInputStream **aResult,
-                         nsIInputStream  *aStream,
-                         PRUint32         aSegmentSize  = 0,
-                         PRUint32         aSegmentCount = 0)
+NS_BackgroundInputStream(nsIInputStream **result,
+                         nsIInputStream  *stream,
+                         PRUint32         segmentSize  = 0,
+                         PRUint32         segmentCount = 0)
 {
     nsresult rv;
     nsCOMPtr<nsIStreamTransportService> sts =
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsITransport> inTransport;
-        rv = sts->CreateInputTransport(aStream, nsInt64(-1), nsInt64(-1), PR_TRUE,
-                                       getter_AddRefs(inTransport));
+        rv = sts->CreateInputTransport(stream, nsInt64(-1), nsInt64(-1),
+                                       PR_TRUE, getter_AddRefs(inTransport));
         if (NS_SUCCEEDED(rv))
             rv = inTransport->OpenInputStream(nsITransport::OPEN_BLOCKING,
-                                              aSegmentSize, aSegmentCount,
-                                              aResult);
+                                              segmentSize, segmentCount,
+                                              result);
     }
     return rv;
 }
@@ -784,39 +788,38 @@ NS_BackgroundInputStream(nsIInputStream **aResult,
 // is attached to the original stream.  data written to the pipe
 // is copied to the original stream on a background thread.
 inline nsresult
-NS_BackgroundOutputStream(nsIOutputStream **aResult,
-                          nsIOutputStream  *aStream,
-                          PRUint32          aSegmentSize  = 0,
-                          PRUint32          aSegmentCount = 0)
+NS_BackgroundOutputStream(nsIOutputStream **result,
+                          nsIOutputStream  *stream,
+                          PRUint32          segmentSize  = 0,
+                          PRUint32          segmentCount = 0)
 {
     nsresult rv;
     nsCOMPtr<nsIStreamTransportService> sts =
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsITransport> inTransport;
-        rv = sts->CreateOutputTransport(aStream, nsInt64(-1), nsInt64(-1), PR_TRUE,
-                                        getter_AddRefs(inTransport));
+        rv = sts->CreateOutputTransport(stream, nsInt64(-1), nsInt64(-1),
+                                        PR_TRUE, getter_AddRefs(inTransport));
         if (NS_SUCCEEDED(rv))
             rv = inTransport->OpenOutputStream(nsITransport::OPEN_BLOCKING,
-                                               aSegmentSize, aSegmentCount,
-                                               aResult);
+                                               segmentSize, segmentCount,
+                                               result);
     }
     return rv;
 }
 
 inline nsresult
-NS_NewBufferedInputStream(nsIInputStream **aResult,
-                          nsIInputStream *aStr,
-                          PRUint32        aBufferSize)
+NS_NewBufferedInputStream(nsIInputStream **result,
+                          nsIInputStream  *str,
+                          PRUint32         bufferSize)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kBufferedInputStreamCID, NS_BUFFEREDINPUTSTREAM_CID);
     nsCOMPtr<nsIBufferedInputStream> in =
-        do_CreateInstance(kBufferedInputStreamCID, &rv);
+        do_CreateInstance(NS_BUFFEREDINPUTSTREAM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = in->Init(aStr, aBufferSize);
+        rv = in->Init(str, bufferSize);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*aResult = in);
+            NS_ADDREF(*result = in);  // cannot use nsCOMPtr::swap
     }
     return rv;
 }
@@ -824,18 +827,17 @@ NS_NewBufferedInputStream(nsIInputStream **aResult,
 // note: the resulting stream can be QI'ed to nsISafeOutputStream iff the
 // provided stream supports it.
 inline nsresult
-NS_NewBufferedOutputStream(nsIOutputStream **aResult,
-                           nsIOutputStream  *aStr,
-                           PRUint32          aBufferSize)
+NS_NewBufferedOutputStream(nsIOutputStream **result,
+                           nsIOutputStream  *str,
+                           PRUint32          bufferSize)
 {
     nsresult rv;
-    static NS_DEFINE_CID(kBufferedOutputStreamCID, NS_BUFFEREDOUTPUTSTREAM_CID);
     nsCOMPtr<nsIBufferedOutputStream> out =
-        do_CreateInstance(kBufferedOutputStreamCID, &rv);
+        do_CreateInstance(NS_BUFFEREDOUTPUTSTREAM_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        rv = out->Init(aStr, aBufferSize);
+        rv = out->Init(str, bufferSize);
         if (NS_SUCCEEDED(rv))
-            NS_ADDREF(*aResult = out);
+            NS_ADDREF(*result = out);  // cannot use nsCOMPtr::swap
     }
     return rv;
 }
@@ -881,8 +883,8 @@ NS_NewPostDataStream(nsIInputStream  **result,
 
 inline nsresult
 NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **result,
-                                   nsIURI                  *uri,
-                                   nsIIOService            *ioService = nsnull)
+                                   nsIURI                   *uri,
+                                   nsIIOService             *ioService = nsnull)
 {
     nsCOMPtr<nsIInputStream> in;
     nsresult rv = NS_OpenURI(getter_AddRefs(in), uri, ioService);
@@ -891,8 +893,10 @@ NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **result,
             do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID, &rv);
         if (NS_SUCCEEDED(rv)) {
             rv = properties->Load(in);
-            if (NS_SUCCEEDED(rv))
-                NS_ADDREF(*result = properties);
+            if (NS_SUCCEEDED(rv)) {
+                *result = nsnull;
+                properties.swap(*result);
+            }
         }
     }
     return rv;
@@ -923,36 +927,36 @@ NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **result,
  * the channel's loadGroup.
  */
 inline void
-NS_QueryNotificationCallbacks(nsIChannel   *aChannel,
-                              const nsIID  &aIID,
-                              void        **aResult)
+NS_QueryNotificationCallbacks(nsIChannel   *channel,
+                              const nsIID  &iid,
+                              void        **result)
 {
-    NS_PRECONDITION(aChannel, "null channel");
-    *aResult = nsnull;
+    NS_PRECONDITION(channel, "null channel");
+    *result = nsnull;
 
     nsCOMPtr<nsIInterfaceRequestor> cbs;
-    aChannel->GetNotificationCallbacks(getter_AddRefs(cbs));
+    channel->GetNotificationCallbacks(getter_AddRefs(cbs));
     if (cbs)
-        cbs->GetInterface(aIID, aResult);
-    if (!*aResult) {
+        cbs->GetInterface(iid, result);
+    if (!*result) {
         // try load group's notification callbacks...
         nsCOMPtr<nsILoadGroup> loadGroup;
-        aChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+        channel->GetLoadGroup(getter_AddRefs(loadGroup));
         if (loadGroup) {
             loadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
             if (cbs)
-                cbs->GetInterface(aIID, aResult);
+                cbs->GetInterface(iid, result);
         }
     }
 }
 
 /* template helper */
 template <class T> inline void
-NS_QueryNotificationCallbacks(nsIChannel  *aChannel,
-                              nsCOMPtr<T> &aResult)
+NS_QueryNotificationCallbacks(nsIChannel  *channel,
+                              nsCOMPtr<T> &result)
 {
-    NS_QueryNotificationCallbacks(aChannel, NS_GET_TEMPLATE_IID(T),
-                                  getter_AddRefs(aResult));
+    NS_QueryNotificationCallbacks(channel, NS_GET_TEMPLATE_IID(T),
+                                  getter_AddRefs(result));
 }
 
 /**
@@ -960,35 +964,35 @@ NS_QueryNotificationCallbacks(nsIChannel  *aChannel,
  * nsIChannel implementations.
  */
 inline void
-NS_QueryNotificationCallbacks(nsIInterfaceRequestor  *aCallbacks,
-                              nsILoadGroup           *aLoadGroup,
-                              const nsIID            &aIID,
-                              void                  **aResult)
+NS_QueryNotificationCallbacks(nsIInterfaceRequestor  *callbacks,
+                              nsILoadGroup           *loadGroup,
+                              const nsIID            &iid,
+                              void                  **result)
 {
-    *aResult = nsnull;
+    *result = nsnull;
 
-    if (aCallbacks)
-        aCallbacks->GetInterface(aIID, aResult);
-    if (!*aResult) {
+    if (callbacks)
+        callbacks->GetInterface(iid, result);
+    if (!*result) {
         // try load group's notification callbacks...
-        if (aLoadGroup) {
+        if (loadGroup) {
             nsCOMPtr<nsIInterfaceRequestor> cbs;
-            aLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+            loadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
             if (cbs)
-                cbs->GetInterface(aIID, aResult);
+                cbs->GetInterface(iid, result);
         }
     }
 }
 
 /* template helper */
 template <class T> inline void
-NS_QueryNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
-                              nsILoadGroup          *aLoadGroup,
-                              nsCOMPtr<T>           &aResult)
+NS_QueryNotificationCallbacks(nsIInterfaceRequestor *callbacks,
+                              nsILoadGroup          *loadGroup,
+                              nsCOMPtr<T>           &result)
 {
-    NS_QueryNotificationCallbacks(aCallbacks, aLoadGroup,
+    NS_QueryNotificationCallbacks(callbacks, loadGroup,
                                   NS_GET_TEMPLATE_IID(T),
-                                  getter_AddRefs(aResult));
+                                  getter_AddRefs(result));
 }
 
 /**
@@ -997,14 +1001,14 @@ NS_QueryNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
  * as the value for nsISocketTransport::securityCallbacks.
  */
 inline nsresult
-NS_NewNotificationCallbacksAggregation(nsIInterfaceRequestor  *aCallbacks,
-                                       nsILoadGroup           *aLoadGroup,
-                                       nsIInterfaceRequestor **aResult)
+NS_NewNotificationCallbacksAggregation(nsIInterfaceRequestor  *callbacks,
+                                       nsILoadGroup           *loadGroup,
+                                       nsIInterfaceRequestor **result)
 {
     nsCOMPtr<nsIInterfaceRequestor> cbs;
-    if (aLoadGroup)
-        aLoadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
-    return NS_NewInterfaceRequestorAggregation(aCallbacks, cbs, aResult);
+    if (loadGroup)
+        loadGroup->GetNotificationCallbacks(getter_AddRefs(cbs));
+    return NS_NewInterfaceRequestorAggregation(callbacks, cbs, result);
 }
 
 #endif // !nsNetUtil_h__

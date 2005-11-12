@@ -197,7 +197,6 @@ components\necko_strconv.xpt
 components\necko_cache.xpt              
 
 ; optional for FTP support
-components\necko2.dll
 components\necko_ftp.xpt
 
 ; plugins

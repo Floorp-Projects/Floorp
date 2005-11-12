@@ -91,7 +91,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  uriloader \
 		  caps \
-		  necko2 \
 		  rdf \
 		  xuldoc \
 		  imglib2 \

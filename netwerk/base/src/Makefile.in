@@ -60,6 +60,8 @@ CPPSRCS		= \
 		nsTransportUtils.cpp \
 		nsAsyncStreamCopier.cpp \
 		nsAsyncStreamListener.cpp \
+		nsBaseChannel.cpp \
+		nsBaseContentStream.cpp \
 		nsBufferedStreams.cpp \
 		nsDirectoryIndexStream.cpp \
 		nsDownloader.cpp \

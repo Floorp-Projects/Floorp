@@ -738,6 +738,8 @@
  */
 
 // service implementing nsIStreamConverterService
+#define NS_STREAMCONVERTERSERVICE_CONTRACTID \
+    "@mozilla.org/streamConverters;1"
 #define NS_STREAMCONVERTERSERVICE_CID                \
 { /* 892FFEB0-3F80-11d3-A16C-0050041CAF44 */         \
     0x892ffeb0,                                      \

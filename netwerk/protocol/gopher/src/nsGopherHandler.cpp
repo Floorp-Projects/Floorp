@@ -23,6 +23,7 @@
  *
  * Contributor(s):
  *   Bradley Baetz <bbaetz@student.usyd.edu.au>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,126 +39,91 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This is based rather heavily on the datetime and finger implementations
-// and documentation
-
-#include "nspr.h"
 #include "nsGopherChannel.h"
 #include "nsGopherHandler.h"
 #include "nsIURL.h"
-#include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIProgressEventSink.h"
 #include "nsIStandardURL.h"
-#include "nsNetUtil.h"
-#include "prlog.h"
+#include "nsStandardURL.h"
 
-#ifdef PR_LOGGING
-PRLogModuleInfo* gGopherLog = nsnull;
-#endif
-
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-
-////////////////////////////////////////////////////////////////////////////////
-
-nsGopherHandler::nsGopherHandler() {
-#ifdef PR_LOGGING
-    if (!gGopherLog)
-        gGopherLog = PR_NewLogModule("nsGopherProtocol");
-#endif
-}
-
-nsGopherHandler::~nsGopherHandler() {
-    PR_LOG(gGopherLog, PR_LOG_ALWAYS, ("~nsGopherHandler() called"));
-}
+//-----------------------------------------------------------------------------
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsGopherHandler,
                               nsIProxiedProtocolHandler,
                               nsIProtocolHandler)
 
-NS_METHOD
-nsGopherHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
-    nsGopherHandler* gh = new nsGopherHandler();
-    if (!gh)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(gh);
-    nsresult rv = gh->QueryInterface(aIID, aResult);
-    NS_RELEASE(gh);
-    return rv;
-}
-    
-////////////////////////////////////////////////////////////////////////////////
-// nsIProtocolHandler methods:
+//-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsGopherHandler::GetScheme(nsACString &result) {
+nsGopherHandler::GetScheme(nsACString &result)
+{
     result.AssignLiteral("gopher");
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherHandler::GetDefaultPort(PRInt32 *result) {
+nsGopherHandler::GetDefaultPort(PRInt32 *result)
+{
     *result = GOPHER_PORT;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherHandler::GetProtocolFlags(PRUint32 *result) {
+nsGopherHandler::GetProtocolFlags(PRUint32 *result)
+{
     *result = URI_NORELATIVE | ALLOWS_PROXY | ALLOWS_PROXY_HTTP;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherHandler::NewURI(const nsACString &aSpec,
-                        const char *aCharset,
-                        nsIURI *aBaseURI,
-                        nsIURI **result) {
-    nsresult rv;
+nsGopherHandler::NewURI(const nsACString &spec, const char *originCharset,
+                        nsIURI *baseURI, nsIURI **result)
+{
+    nsStandardURL *url = new nsStandardURL();
+    if (!url)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(url);
 
-    nsCOMPtr<nsIStandardURL> url = do_CreateInstance(kStandardURLCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    nsresult rv = url->Init(nsIStandardURL::URLTYPE_STANDARD, GOPHER_PORT,
+                            spec, originCharset, baseURI);
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(url);
+        return rv;
+    }
 
-    rv = url->Init(nsIStandardURL::URLTYPE_STANDARD, GOPHER_PORT,
-                   aSpec, aCharset, aBaseURI);
-    if (NS_FAILED(rv)) return rv;
-
-    return CallQueryInterface(url, result);
+    *result = url;  // no QI needed
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherHandler::NewProxiedChannel(nsIURI* url, nsIProxyInfo* proxyInfo,
-                                   nsIChannel* *result)
+nsGopherHandler::NewProxiedChannel(nsIURI *uri, nsIProxyInfo *proxyInfo,
+                                   nsIChannel **result)
 {
-    nsGopherChannel *chan = new nsGopherChannel();
+    nsGopherChannel *chan = new nsGopherChannel(uri, proxyInfo);
     if (!chan)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(chan);
-    
-    nsresult rv = chan->Init(url, proxyInfo);
+
+    nsresult rv = chan->Init();
     if (NS_FAILED(rv)) {
         NS_RELEASE(chan);
         return rv;
     }
-
+    
     *result = chan;
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
+nsGopherHandler::NewChannel(nsIURI *uri, nsIChannel **result)
 {
-    return NewProxiedChannel(url, nsnull, result);
+    return NewProxiedChannel(uri, nsnull, result);
 }
 
 NS_IMETHODIMP 
-nsGopherHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+nsGopherHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *result)
 {
-    if (port == GOPHER_PORT)
-        *_retval = PR_TRUE;
-    else
-        *_retval = PR_FALSE;
+    *result = (port == GOPHER_PORT);
     return NS_OK;
 }

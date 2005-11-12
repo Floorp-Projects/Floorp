@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko2
+MODULE		= necko
 LIBRARY_NAME	= nkgopher_s
 LIBXUL_LIBRARY  = 1
 
@@ -53,12 +53,15 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  pref \
 		  intl \
+		  uconv \
 		  $(NULL)
 
 CPPSRCS		= \
 		nsGopherHandler.cpp \
 		nsGopherChannel.cpp \
 		$(NULL)
+
+LOCAL_INCLUDES=-I$(srcdir)/../../../base/src
 
 # we don't want the shared lib, but we want to force the creation of a
 # static lib.

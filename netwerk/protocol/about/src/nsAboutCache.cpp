@@ -79,27 +79,6 @@ nsAboutCache::NewChannel(nsIURI *aURI, nsIChannel **result)
     PRUint32 bytesWritten;
 
     *result = nsnull;
-/*
-    nsXPIDLCString path;
-    rv = aURI->GetPath(getter_Copies(path));
-    if (NS_FAILED(rv)) return rv;
-
-    PRBool clear = PR_FALSE;
-    PRBool leaks = PR_FALSE;
-
-    nsCAutoString p(path);
-    PRInt32 pos = p.Find("?");
-    if (pos > 0) {
-        nsCAutoString param;
-        (void)p.Right(param, p.Length() - (pos+1));
-        if (param.Equals("new"))
-            statType = nsTraceRefcnt::NEW_STATS;
-        else if (param.Equals("clear"))
-            clear = PR_TRUE;
-        else if (param.Equals("leaks"))
-            leaks = PR_TRUE;
-    }
-*/
     // Get the cache manager service
     nsCOMPtr<nsICacheService> cacheService = 
              do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);

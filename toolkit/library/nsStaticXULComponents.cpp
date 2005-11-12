@@ -59,12 +59,6 @@
 #define INTL_COMPAT_MODULES
 #endif
 
-#ifdef NECKO2
-#define NECKO2_MODULES MODULE(necko_secondary_protocols)
-#else
-#define NECKO2_MODULES
-#endif
-
 #ifdef MOZ_IPCD
 #define IPC_MODULE MODULE(ipcdclient)
 #else
@@ -158,8 +152,7 @@
     MODULE(nsUConvModule)                    \
     MODULE(nsI18nModule)                     \
     INTL_COMPAT_MODULES                      \
-    MODULE(necko_core_and_primary_protocols) \
-    NECKO2_MODULES                           \
+    MODULE(necko)                            \
     IPC_MODULE                               \
     MODULE(nsJarModule)                      \
     MODULE(nsPrefModule)                     \

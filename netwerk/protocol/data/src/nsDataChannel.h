@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,51 +41,18 @@
 #ifndef nsDataChannel_h___
 #define nsDataChannel_h___
 
-#include "nsIDataChannel.h"
-#include "nsIURI.h"
-#include "nsString.h"
-#include "nsILoadGroup.h"
-#include "nsIStreamListener.h"
+#include "nsBaseChannel.h"
 #include "nsIInputStream.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsCOMPtr.h"
-#include "nsIInputStreamPump.h"
 
-class nsDataChannel : public nsIDataChannel,
-                      public nsIStreamListener {
+class nsDataChannel : public nsBaseChannel {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUEST
-    NS_DECL_NSICHANNEL
-    NS_DECL_NSIDATACHANNEL
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-
-    // nsFTPChannel methods:
-    nsDataChannel();
-    virtual ~nsDataChannel();
-
-    // Define a Create method to be used with a factory:
-    static NS_METHOD
-    Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
-    
-    nsresult Init(nsIURI* uri);
-    nsresult ParseData();
+    nsDataChannel(nsIURI *uri) {
+        SetURI(uri);
+    }
 
 protected:
-    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
-    nsCOMPtr<nsIURI>                    mOriginalURI;
-    nsCOMPtr<nsIURI>                    mUrl;
-    nsCOMPtr<nsIInputStream>            mDataStream;
-    nsCOMPtr<nsILoadGroup>              mLoadGroup;
-    nsCString                           mContentType;
-    nsCString                           mContentCharset;
-    PRInt32                             mContentLength;
-    nsCOMPtr<nsISupports>               mOwner; 
-    PRBool                              mOpened;
-    nsCOMPtr<nsIStreamListener>         mListener;
-    nsCOMPtr<nsIInputStreamPump>        mPump;
+    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result);
 };
 
 #endif /* nsDataChannel_h___ */

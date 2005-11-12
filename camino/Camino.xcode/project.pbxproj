@@ -1346,7 +1346,6 @@
 				3F44ACFB05BDFB9F00CB4B08,
 				3F44ACFC05BDFB9F00CB4B08,
 				3F44ACFD05BDFB9F00CB4B08,
-				3F44ACFE05BDFB9F00CB4B08,
 				3F44AD0B05BDFB9F00CB4B08,
 				3F44AD0C05BDFB9F00CB4B08,
 				3F44AD0E05BDFB9F00CB4B08,
@@ -1448,7 +1447,6 @@
 				F6BD63E101B313EE01A962F7,
 				F6BD63E201B313EE01A962F7,
 				F6BD63E401B313EE01A962F7,
-				F6BD63E501B313EE01A962F7,
 				F6BD640E01B3156701A962F7,
 				F5D3F1CE0209235A014E447F,
 				F6BD641201B3156701A962F7,
@@ -5443,12 +5441,6 @@
 		};
 		3F44ACFD05BDFB9F00CB4B08 = {
 			fileRef = F6BD63E401B313EE01A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44ACFE05BDFB9F00CB4B08 = {
-			fileRef = F6BD63E501B313EE01A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -9947,7 +9939,6 @@
 				3F44AF9505BDFBA000CB4B08,
 				3F44AF9605BDFBA000CB4B08,
 				3F44AF9705BDFBA000CB4B08,
-				3F44AF9805BDFBA000CB4B08,
 				3F44AF9905BDFBA000CB4B08,
 				3F44AF9A05BDFBA000CB4B08,
 				3F44AF9B05BDFBA000CB4B08,
@@ -10027,12 +10018,6 @@
 		};
 		3F44AF9705BDFBA000CB4B08 = {
 			fileRef = F56F242602AC706801A967F3;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		3F44AF9805BDFBA000CB4B08 = {
-			fileRef = F56F242702AC706801A967F3;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -15423,7 +15408,6 @@
 				3FE5BA0B068A1A140001CECD,
 				0FA8EFCA0423EAAD00A80166,
 				F56F242602AC706801A967F3,
-				F56F242702AC706801A967F3,
 				F56F242B02AC706801A967F3,
 				F56F243302AC706801A967F3,
 				F56F244502AC714601A967F3,
@@ -15473,14 +15457,6 @@
 			lastKnownFileType = archive.ar;
 			name = libnecko.a;
 			path = ../netwerk/build/libnecko.a;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F56F242702AC706801A967F3 = {
-			isa = PBXFileReference;
-			lastKnownFileType = archive.ar;
-			name = libnecko2.a;
-			path = ../netwerk/build2/libnecko2.a;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
@@ -17172,14 +17148,6 @@
 			lastKnownFileType = "compiled.mach-o.bundle";
 			name = libnecko.dylib;
 			path = ../dist/Embed/components/libnecko.dylib;
-			refType = 2;
-			sourceTree = SOURCE_ROOT;
-		};
-		F6BD63E501B313EE01A962F7 = {
-			isa = PBXFileReference;
-			lastKnownFileType = "compiled.mach-o.bundle";
-			name = libnecko2.dylib;
-			path = ../dist/Embed/components/libnecko2.dylib;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

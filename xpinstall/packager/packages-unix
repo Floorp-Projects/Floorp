@@ -178,7 +178,6 @@ bin/components/mozbrwsr.xpt
 bin/components/mozcomps.xpt
 bin/components/mozfind.xpt
 bin/components/libnecko.so
-bin/components/libnecko2.so
 bin/components/necko.xpt
 bin/components/mimetype.xpt
 bin/components/necko_cache.xpt

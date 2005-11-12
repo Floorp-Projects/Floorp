@@ -109,7 +109,6 @@ components/layout_printing.xpt
 libmozz.dylib
 components/libnecko.dylib                    
 components/necko.xpt                    
-components/libnecko2.dylib                   
 components/necko_about.xpt              
 components/necko_cache.xpt              
 components/necko_data.xpt               

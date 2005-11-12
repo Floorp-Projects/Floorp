@@ -98,7 +98,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAsyncStreamCopier)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInputStreamPump)
 
 #include "nsInputStreamChannel.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsInputStreamChannel)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsInputStreamChannel, Init)
 
 #include "nsDownloader.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloader)
@@ -216,6 +216,24 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsResProtocolHandler, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsResURL)
 #endif
 
+#ifdef NECKO_PROTOCOL_gopher
+#include "nsGopherHandler.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGopherHandler)
+#endif
+
+#ifdef NECKO_PROTOCOL_viewsource
+#include "nsViewSourceHandler.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewSourceHandler)
+#endif
+
+#ifdef NECKO_PROTOCOL_data
+#include "nsDataHandler.h"
+#endif
+
+#ifdef NECKO_PROTOCOL_keyword
+#include "nsKeywordProtocolHandler.h"
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "nsURIChecker.h"
@@ -247,7 +265,7 @@ nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 
 #ifdef NECKO_PROTOCOL_gopher
 #include "nsGopherDirListingConv.h"
-nsresult NS_NewGopherDirListingConv(nsGopherDirListingConv** result);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGopherDirListingConv);
 #endif
 
 #include "nsMultiMixedConv.h"
@@ -408,32 +426,6 @@ CreateNewFTPDirListingConv(nsISupports* aOuter, REFNSIID aIID, void **aResult)
     }                                                                
     NS_RELEASE(inst);             /* get rid of extra refcnt */      
     return rv;              
-}
-#endif
-
-#ifdef NECKO_PROTOCOL_gopher
-static NS_IMETHODIMP                 
-CreateNewGopherDirListingConv(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
-{
-    if (!aResult) {
-        return NS_ERROR_INVALID_POINTER;
-    }
-    if (aOuter) {
-        *aResult = nsnull;
-        return NS_ERROR_NO_AGGREGATION;
-    }
-    nsGopherDirListingConv* inst = nsnull;
-    nsresult rv = NS_NewGopherDirListingConv(&inst);
-    if (NS_FAILED(rv)) {
-        *aResult = nsnull;
-        return rv;
-    }
-    rv = inst->QueryInterface(aIID, aResult);
-    if (NS_FAILED(rv)) {
-        *aResult = nsnull;
-    }
-    NS_RELEASE(inst);             /* get rid of extra refcnt */
-    return rv;
 }
 #endif
 
@@ -782,7 +774,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     // the generic module macro.
     { "Stream Converter Service", 
       NS_STREAMCONVERTERSERVICE_CID,
-      "@mozilla.org/streamConverters;1", 
+      NS_STREAMCONVERTERSERVICE_CONTRACTID,
       CreateNewStreamConvServiceFactory,
       RegisterStreamConverters,   // registers *all* converters
       UnregisterStreamConverters  // unregisters *all* converters
@@ -809,7 +801,7 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     { "GopherDirListingConverter",
       NS_GOPHERDIRLISTINGCONVERTER_CID,
       NS_ISTREAMCONVERTER_KEY GOPHER_TO_INDEX,
-      CreateNewGopherDirListingConv
+      nsGopherDirListingConvConstructor
     },
 #endif
 
@@ -1089,8 +1081,41 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     },
 #endif
 
+#ifdef NECKO_PROTOCOL_gopher
+    //gopher:
+    { "The Gopher Protocol Handler", 
+      NS_GOPHERHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "gopher",
+      nsGopherHandlerConstructor
+    },
+#endif
+
+#ifdef NECKO_PROTOCOL_data
+    // from netwerk/protocol/data:
+    { "Data Protocol Handler", 
+      NS_DATAPROTOCOLHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "data", 
+      nsDataHandler::Create},
+#endif
+
+#ifdef NECKO_PROTOCOL_keyword
+    // from netwerk/protocol/keyword:
+    { "The Keyword Protocol Handler", 
+      NS_KEYWORDPROTOCOLHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "keyword",
+      nsKeywordProtocolHandler::Create
+    },
+#endif
+    
+#ifdef NECKO_PROTOCOL_viewsource
+    // from netwerk/protocol/viewsource:
+    { "The ViewSource Protocol Handler", 
+      NS_VIEWSOURCEHANDLER_CID,
+      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "view-source",
+      nsViewSourceHandlerConstructor
+    }
+#endif
 };
 
-NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(necko_core_and_primary_protocols,
-                                   gNetModuleInfo,
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(necko, gNetModuleInfo,
                                    nsNetStartup, nsNetShutdown)

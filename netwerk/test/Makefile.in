@@ -106,6 +106,7 @@ _UNIT_FILES	= unit/test_all.sh \
 		  unit/test_cookie_header.js \
 		  unit/test_parse_content_type.js \
 		  unit/test_localstreams.js \
+		  unit/test_file_protocol.js \
 		  $(NULL)
 libs:: $(_UNIT_FILES)
 	$(INSTALL) $^ $(DIST)/bin/necko_unit_tests

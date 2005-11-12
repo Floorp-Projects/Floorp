@@ -115,15 +115,14 @@ nsDataHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsDataHandler::NewChannel(nsIURI* url, nsIChannel* *result)
+nsDataHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 {
-    nsresult rv;
-    
-    nsDataChannel* channel;
-    rv = nsDataChannel::Create(nsnull, NS_GET_IID(nsIDataChannel), (void**)&channel);
-    if (NS_FAILED(rv)) return rv;
+    nsDataChannel* channel = new nsDataChannel(uri);
+    if (!channel)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(channel);
 
-    rv = channel->Init(url);
+    nsresult rv = channel->Init();
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;
@@ -140,4 +139,3 @@ nsDataHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
     *_retval = PR_FALSE;
     return NS_OK;
 }
-////////////////////////////////////////////////////////////////////////////////

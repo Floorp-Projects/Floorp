@@ -65,52 +65,19 @@
  
 class nsGopherDirListingConv : public nsIStreamConverter {
 public:
-    // nsISupports methods
     NS_DECL_ISUPPORTS
-
-    // nsIStreamConverter methods
     NS_DECL_NSISTREAMCONVERTER
-
-    // nsIStreamListener methods
     NS_DECL_NSISTREAMLISTENER
-
-    // nsIRequestObserver methods
     NS_DECL_NSIREQUESTOBSERVER
 
     nsGopherDirListingConv();
-    virtual ~nsGopherDirListingConv();
-    nsresult Init();
-
-    // For factory creation.
-    static NS_METHOD
-    Create(nsISupports *aOuter, REFNSIID aIID, void **aResult) {
-        nsresult rv;
-        if (aOuter)
-            return NS_ERROR_NO_AGGREGATION;
-
-        nsGopherDirListingConv* _s = new nsGopherDirListingConv();
-        if (!_s)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(_s);
-        rv = _s->Init();
-        if (NS_FAILED(rv)) {
-            delete _s;
-            return rv;
-        }
-        rv = _s->QueryInterface(aIID, aResult);
-        NS_RELEASE(_s);
-        return rv;
-    }
 
 private:
     char* DigestBufferLines(char *aBuffer, nsCAutoString& aString);
 
-    nsCOMPtr<nsIURI>    mUri;
-
-    nsCAutoString       mBuffer;            // buffered data.
-    PRBool              mSentHeading;
-    nsIStreamListener   *mFinalListener; // this guy gets the converted data via his OnDataAvailable()
-    nsIChannel          *mPartChannel;  // the channel for the given part we're processing.
+    nsCString                   mBuffer;        // buffered data.
+    PRBool                      mSentHeading;
+    nsCOMPtr<nsIStreamListener> mFinalListener; // this guy gets the converted data via his OnDataAvailable()
 };  
 
 #endif /* __nsgopherdirlistingdconv__h__ */

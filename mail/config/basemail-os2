@@ -245,7 +245,6 @@ components\txtsvc.xpt
 
 ; netwerk
 components\necko.dll                    
-components\necko2.dll  
 components\necko.xpt                               
 components\necko_data.xpt               
 components\necko_dns.xpt                

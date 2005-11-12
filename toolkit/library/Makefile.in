@@ -178,11 +178,6 @@ DEFINES += -DMOZ_IPCD
 COMPONENT_LIBS += ipcdc
 endif
 
-ifneq (,$(strip $(filter data keyword gopher viewsource,$(NECKO_PROTOCOLS))))
-DEFINES += -DNECKO2
-COMPONENT_LIBS += necko2
-endif
-
 ifdef MOZ_ENABLE_POSTSCRIPT
 DEFINES += -DMOZ_ENABLE_POSTSCRIPT
 STATIC_LIBS += gfxpsshar

@@ -54,7 +54,6 @@ DIRS		= \
 		cache \
 		protocol \
 		build \
-		build2 \
 		resources \
 		locales \
 		$(NULL)

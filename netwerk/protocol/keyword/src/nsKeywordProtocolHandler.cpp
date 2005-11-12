@@ -181,11 +181,11 @@ nsKeywordProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     char *httpSpec = MangleKeywordIntoHTTPURL(path.get(), url.get());
     if (!httpSpec) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsCOMPtr<nsIIOService> serv(do_GetIOService(&rv));
-    if (NS_FAILED(rv)) return rv;
-
     // now we have an HTTP url, give the user an HTTP channel
-    rv = serv->NewChannel(nsDependentCString(httpSpec), nsnull, nsnull, result);
+    nsCOMPtr<nsIIOService> serv(do_GetIOService(&rv));
+    if (NS_SUCCEEDED(rv))
+      rv = serv->NewChannel(nsDependentCString(httpSpec), nsnull, nsnull, result);
+
     nsMemory::Free(httpSpec);
     return rv;
 
