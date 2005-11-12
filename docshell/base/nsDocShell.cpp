@@ -109,7 +109,6 @@
 
 // Interfaces Needed
 #include "nsIUploadChannel.h"
-#include "nsIDataChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIWebProgress.h"
 #include "nsILayoutHistoryState.h"
