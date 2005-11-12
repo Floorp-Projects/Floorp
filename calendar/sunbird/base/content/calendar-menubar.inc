@@ -414,8 +414,7 @@
                      disabled="true"/>
            <menuitem accesskey="&releaseCmd.accesskey;"
                      label="&releaseCmd.label;"
-                     oncommand="openTopWin('&releaseURL;');"
-                     disabled="true"/>
+                     oncommand="launchBrowser('&releaseURL;');" />
            <menuseparator id="menu_HelpAboutSeparator"/>
            <menuitem id="aboutName"
                      label="&aboutCmd.label;"
