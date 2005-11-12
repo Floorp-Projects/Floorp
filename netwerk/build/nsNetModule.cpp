@@ -265,7 +265,7 @@ nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 
 #ifdef NECKO_PROTOCOL_gopher
 #include "nsGopherDirListingConv.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsGopherDirListingConv);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGopherDirListingConv)
 #endif
 
 #include "nsMultiMixedConv.h"
