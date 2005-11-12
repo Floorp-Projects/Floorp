@@ -46,7 +46,7 @@ MODULE		= necko
 LIBRARY_NAME	= necko
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
-MODULE_NAME	= necko_core_and_primary_protocols
+MODULE_NAME	= necko
 GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
@@ -56,6 +56,7 @@ ifdef ENABLE_TESTS
 PACKAGE_FILE += necko-tests.pkg
 endif
 
+# caps is needed for nsICryptoHash
 REQUIRES	= xpcom \
 		  string \
 		  nkcache \
@@ -73,9 +74,6 @@ REQUIRES	= xpcom \
 CPPSRCS		= nsNetModule.cpp
 EXPORTS		= nsNetCID.h
 
-# core necko protocols (about:blank is mandatory)
-PROTOCOLS = $(filter file ftp http res,$(NECKO_PROTOCOLS))
-
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)neckobase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)neckodns_s.$(LIB_SUFFIX) \
@@ -85,7 +83,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
-		$(foreach d,$(PROTOCOLS), \
+		$(foreach d,$(NECKO_PROTOCOLS), \
 			$(DIST)/lib/$(LIB_PREFIX)nk${d}_s.$(LIB_SUFFIX)) \
 		$(NULL)
 
@@ -98,7 +96,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../mime/src \
 		-I$(srcdir)/../cache/src \
 		-I$(srcdir)/../protocol/about/src \
-		$(foreach d,$(PROTOCOLS), \
+		$(foreach d,$(NECKO_PROTOCOLS), \
 			-I$(srcdir)/../protocol/${d}/src) \
 		$(NULL)
 

@@ -140,4 +140,29 @@ NS_InputStreamIsBuffered(nsIInputStream *aInputStream);
 extern NS_COM PRBool
 NS_OutputStreamIsBuffered(nsIOutputStream *aOutputStream);
 
+/**
+ * This function is intended to be passed to nsIInputStream::ReadSegments to
+ * copy data from the nsIInputStream into a nsIOutputStream passed as the
+ * aClosure parameter to the ReadSegments function.
+ *
+ * @see nsIInputStream.idl for a description of this function's parameters.
+ */
+extern NS_COM NS_METHOD
+NS_CopySegmentToStream(nsIInputStream *aInputStream, void *aClosure,
+                       const char *aFromSegment, PRUint32 aToOffset,
+                       PRUint32 aCount, PRUint32 *aWriteCount);
+
+/**
+ * This function is intended to be passed to nsIInputStream::ReadSegments to
+ * copy data from the nsIInputStream into a character buffer passed as the
+ * aClosure parameter to the ReadSegments function.  The character buffer
+ * must be at least as large as the aCount parameter passed to ReadSegments.
+ *
+ * @see nsIInputStream.idl for a description of this function's parameters.
+ */
+extern NS_COM NS_METHOD
+NS_CopySegmentToBuffer(nsIInputStream *aInputStream, void *aClosure,
+                       const char *aFromSegment, PRUint32 aToOffset,
+                       PRUint32 aCount, PRUint32 *aWriteCount);
+
 #endif // !nsStreamUtils_h__

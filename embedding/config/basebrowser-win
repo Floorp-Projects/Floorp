@@ -210,9 +210,6 @@ components\necko_strconv.xpt
 ; cache
 components\necko_cache.xpt              
 
-; optional for gopher/viewsource/etc support
-; components\necko2.dll
-
 ; plugins
 ; Optional - only if you need plugin support
 components\gkplugin.dll

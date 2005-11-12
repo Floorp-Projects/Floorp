@@ -218,8 +218,6 @@ NS_IMETHODIMP nsStringInputStream::Read(char* aBuf, PRUint32 aCount,
     mOffset += bytesRead;
 
     *aReadCount = bytesRead;
-    if (bytesRead < aCount)
-        SetEOF();
     return NS_OK;
 }
 

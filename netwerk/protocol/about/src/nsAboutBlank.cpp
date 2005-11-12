@@ -53,7 +53,7 @@ nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
     nsIChannel* channel;
 
     nsCOMPtr<nsIInputStream> in;
-    rv = NS_NewCStringInputStream(getter_AddRefs(in), nsDependentCString(kBlankPage));
+    rv = NS_NewCStringInputStream(getter_AddRefs(in), NS_LITERAL_CSTRING(kBlankPage));
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewInputStreamChannel(&channel, aURI, in,

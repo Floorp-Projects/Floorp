@@ -43,8 +43,8 @@ interface nsIFile;
 /**
  * nsIFileChannel
  */
-[scriptable, uuid(68a26506-f947-11d3-8cda-0060b0fc14a3)]
-interface nsIFileChannel : nsIChannel
+[scriptable, uuid(06169120-136d-45a5-b535-498f1f755ab7)]
+interface nsIFileChannel : nsISupports
 {
     readonly attribute nsIFile file;
 };

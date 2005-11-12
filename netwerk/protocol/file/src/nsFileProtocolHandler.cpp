@@ -290,11 +290,13 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
 NS_IMETHODIMP
 nsFileProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
 {
+    nsresult rv;
+
     // This file may be a url file
     nsCOMPtr<nsIFileURL> url(do_QueryInterface(uri));
     if (url) {
         nsCOMPtr<nsIFile> file;
-        nsresult rv = url->GetFile(getter_AddRefs(file));
+        rv = url->GetFile(getter_AddRefs(file));
         if (NS_SUCCEEDED(rv)) {
             nsCOMPtr<nsIURI> uri;
             rv = ReadURLFile(file, getter_AddRefs(uri));
@@ -306,12 +308,12 @@ nsFileProtocolHandler::NewChannel(nsIURI *uri, nsIChannel **result)
         }
     }
 
-    nsFileChannel *chan = new nsFileChannel();
+    nsFileChannel *chan = new nsFileChannel(uri);
     if (!chan)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(chan);
 
-    nsresult rv = chan->Init(uri);
+    rv = chan->Init();
     if (NS_FAILED(rv)) {
         NS_RELEASE(chan);
         return rv;

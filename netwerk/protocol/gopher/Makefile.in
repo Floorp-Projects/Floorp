@@ -43,7 +43,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= necko2
+MODULE		= necko
 DIRS		= src
 
 include $(topsrcdir)/config/rules.mk

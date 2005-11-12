@@ -14,12 +14,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,51 +38,27 @@
 #ifndef nsInputStreamChannel_h__
 #define nsInputStreamChannel_h__
 
-#include "nsString.h"
-#include "nsCOMPtr.h"
-
+#include "nsBaseChannel.h"
 #include "nsIInputStreamChannel.h"
-#include "nsIInputStreamPump.h"
-#include "nsIInputStream.h"
-#include "nsIURI.h"
-#include "nsILoadGroup.h"
-#include "nsIStreamListener.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsIProgressEventSink.h"
 
 //-----------------------------------------------------------------------------
 
-class nsInputStreamChannel : public nsIInputStreamChannel
-                           , public nsIStreamListener
+class nsInputStreamChannel : public nsBaseChannel
+                           , public nsIInputStreamChannel
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUEST
-    NS_DECL_NSICHANNEL
+    NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIINPUTSTREAMCHANNEL
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
 
-    nsInputStreamChannel(); 
-    virtual ~nsInputStreamChannel();
+    nsInputStreamChannel() {}
 
 protected:
+    virtual ~nsInputStreamChannel() {}
 
-    nsCOMPtr<nsIInputStreamPump>        mPump;
-    nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
-    nsCOMPtr<nsIProgressEventSink>      mProgressSink;
-    nsCOMPtr<nsIURI>                    mOriginalURI;
-    nsCOMPtr<nsIURI>                    mURI;
-    nsCOMPtr<nsILoadGroup>              mLoadGroup;
-    nsCOMPtr<nsISupports>               mOwner;
-    nsCOMPtr<nsIStreamListener>         mListener;
-    nsCOMPtr<nsISupports>               mListenerContext;
-    nsCOMPtr<nsIInputStream>            mContentStream;
-    nsCString                           mContentType;
-    nsCString                           mContentCharset;
-    PRInt32                             mContentLength;
-    PRUint32                            mLoadFlags;
-    nsresult                            mStatus;
+    virtual nsresult OpenContentStream(PRBool async, nsIInputStream **result);
+
+private:
+    nsCOMPtr<nsIInputStream> mContentStream;
 };
 
 #endif // !nsInputStreamChannel_h__

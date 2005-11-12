@@ -46,6 +46,7 @@ MODULE		= necko
 LIBRARY_NAME = nkhttp_s
 LIBXUL_LIBRARY  = 1
 
+# caps is needed for nsICryptoHash
 REQUIRES	= xpcom \
 		  string \
 		  pref \

@@ -55,7 +55,6 @@ REQUIRES	= xpcom \
 		  util \
 		  pref \
 		  uconv \
-		  necko2 \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 

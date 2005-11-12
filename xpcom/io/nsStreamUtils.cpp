@@ -593,7 +593,7 @@ TestInputStream(nsIInputStream *inStr,
                 PRUint32 count,
                 PRUint32 *countWritten)
 {
-    PRBool *result = NS_REINTERPRET_CAST(PRBool *, closure);
+    PRBool *result = NS_STATIC_CAST(PRBool *, closure);
     *result = PR_TRUE;
     return NS_ERROR_ABORT;  // don't call me anymore
 }
@@ -615,7 +615,7 @@ TestOutputStream(nsIOutputStream *outStr,
                  PRUint32 count,
                  PRUint32 *countRead)
 {
-    PRBool *result = NS_REINTERPRET_CAST(PRBool *, closure);
+    PRBool *result = NS_STATIC_CAST(PRBool *, closure);
     *result = PR_TRUE;
     return NS_ERROR_ABORT;  // don't call me anymore
 }
@@ -627,4 +627,42 @@ NS_OutputStreamIsBuffered(nsIOutputStream *stream)
     PRUint32 n;
     stream->WriteSegments(TestOutputStream, &result, 1, &n);
     return result;
+}
+
+//-----------------------------------------------------------------------------
+
+NS_COM NS_METHOD
+NS_CopySegmentToStream(nsIInputStream *inStr,
+                       void *closure,
+                       const char *buffer,
+                       PRUint32 offset,
+                       PRUint32 count,
+                       PRUint32 *countWritten)
+{
+    nsIOutputStream *outStr = NS_STATIC_CAST(nsIOutputStream *, closure);
+    *countWritten = 0;
+    while (count) {
+        PRUint32 n;
+        nsresult rv = outStr->Write(buffer, count, &n);
+        if (NS_FAILED(rv))
+            return rv;
+        buffer += n;
+        count -= n;
+        *countWritten += n;
+    }
+    return NS_OK;
+}
+
+NS_COM NS_METHOD
+NS_CopySegmentToBuffer(nsIInputStream *inStr,
+                       void *closure,
+                       const char *buffer,
+                       PRUint32 offset,
+                       PRUint32 count,
+                       PRUint32 *countWritten)
+{
+    char *toBuf = NS_STATIC_CAST(char *, closure);
+    memcpy(&toBuf[offset], buffer, count);
+    *countWritten = count;
+    return NS_OK;
 }
