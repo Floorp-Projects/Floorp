@@ -137,10 +137,10 @@ SECMOD_CreateModule(const char *library, const char *moduleName,
     if (slotParams) PORT_Free(slotParams);
     /* new field */
     mod->trustOrder  = secmod_argReadLong("trustOrder",nssc,
-						SFTK_DEFAULT_TRUST_ORDER,NULL);
+						SECMOD_DEFAULT_TRUST_ORDER,NULL);
     /* new field */
     mod->cipherOrder = secmod_argReadLong("cipherOrder",nssc,
-						SFTK_DEFAULT_CIPHER_ORDER,NULL);
+						SECMOD_DEFAULT_CIPHER_ORDER,NULL);
     /* new field */
     mod->isModuleDB   = secmod_argHasFlag("flags","moduleDB",nssc);
     mod->moduleDBOnly = secmod_argHasFlag("flags","moduleDBOnly",nssc);
