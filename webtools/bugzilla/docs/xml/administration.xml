@@ -82,6 +82,22 @@
 
       <varlistentry>
         <term>
+          maildeliverymethod
+        </term>
+        <listitem>
+          <para>
+            This is used to specify how email is sent, or if it is sent at 
+            all.  There are several options included for different MTAs, 
+            along with two additional options that disable email sending.  
+            "testfile" does not send mail, but instead saves it in 
+            <filename>data/mailer.testfile</filename> for later review.  
+            "none" disables email sending entirely.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>
           shadowdb
         </term>
         <listitem>

@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.103 2005/08/01 08:39:32 mozilla%colinogilvie.co.uk Exp $ -->
+<!-- $Id: installation.xml,v 1.104 2005/11/12 00:12:05 karl%kornel.name Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -211,9 +211,7 @@
       The first thing it checks is whether you have appropriate 
       versions of all the required
       Perl modules. The aim of this section is to pass this check. 
-      When it passes, 
-      <emphasis>do not run it again</emphasis>, 
-      but proceed to <xref linkend="configuration"/>.
+      When it passes, proceed to <xref linkend="configuration"/>.
       </para>
       
       <para>
@@ -533,29 +531,58 @@
     <section id="install-MTA">
       <title>Mail Transfer Agent (MTA)</title>
     
-      <para>Bugzilla is dependent on the availability of an e-mail system for its user
-      authentication and for other tasks. </para>
+      <para>
+        Bugzilla is dependent on the availability of an e-mail system for its 
+        user authentication and for other tasks.
+      </para>
+
+      <note>
+        <para>
+          This is not entirely true.  It is possible to completely disable 
+          email sending, or to have Bugzilla store email messages in a 
+          file instead of sending them.  However, this is mainly intended 
+          for testing, as disabling or diverting email on a production 
+          machine would mean that users could miss important events (such 
+          as bug changes or the creation of new accouts).
+        </para>
+
+        <para>
+          For more information, see the "maildeliverymethod" parameter in 
+          <xref linkend="parameters" />.
+        </para>
+      </note>
     
-      <para>On Linux, any Sendmail-compatible MTA (Mail Transfer Agent) will suffice.
-      Sendmail, Postfix, qmail and Exim are examples of common MTAs. Sendmail is the 
-      original Unix MTA, but the others are easier to configure, and therefore many people
-      replace Sendmail with Postfix or Exim. They are drop-in replacements, so that Bugzilla
-      will not distinguish between them.</para>
+      <para>
+        On Linux, any Sendmail-compatible MTA (Mail Transfer Agent) will 
+        suffice.  Sendmail, Postfix, qmail and Exim are examples of common 
+        MTAs. Sendmail is the original Unix MTA, but the others are easier to 
+        configure, and therefore many people replace Sendmail with Postfix or 
+        Exim. They are drop-in replacements, so Bugzilla will not 
+        distinguish between them.
+      </para>
 
       <para>
         If you are using Sendmail, version 8.7 or higher is required.
-        If you are using a Sendmail-compatible MTA, it must be congruent with at least version 8.7 of Sendmail.
+        If you are using a Sendmail-compatible MTA, it must be congruent with 
+        at least version 8.7 of Sendmail.
       </para>
 
-      <para>Consult the manual for the specific MTA you choose for detailed installation
-      instructions. Each of these programs will have their own configuration files where you must
-      configure certain parameters to ensure that the mail is delivered properly. They
-      are implemented as services, and you should ensure that the MTA is in the
-      auto-start list of services for the machine.</para>
+      <para>
+        Consult the manual for the specific MTA you choose for detailed 
+        installation instructions. Each of these programs will have their own 
+        configuration files where you must configure certain parameters to 
+        ensure that the mail is delivered properly. They are implemented 
+        as services, and you should ensure that the MTA is in the auto-start 
+        list of services for the machine.
+      </para>
 
-      <para>If a simple mail sent with the command-line 'mail' program succeeds, then
-      Bugzilla should also be fine.</para>
+      <para>
+        If a simple mail sent with the command-line 'mail' program 
+        succeeds, then Bugzilla should also be fine.
+      </para>
+
     </section>  
+
   </section>
   
   
@@ -593,6 +620,18 @@
         the user you will create for your database. Pick a strong
         password (for simplicity, it should not contain single quote
         characters) and put it here.
+      </para>
+
+      <para>
+        You may need to change the value of 
+        <emphasis>webservergroup</emphasis> if your web server does not 
+        run in the "apache" group.  On Debian, for example, Apache runs in 
+        the "www-data" group.  If you are going to run Bugzilla on a 
+        machine where you do not have root access (such as on a shared web 
+        hosting account), you will need to leave
+        <emphasis>webservergroup</emphasis> empty, ignoring the warnings 
+        that <filename>checksetup.pl</filename> will subsequently display 
+        every time it in run.
       </para>
       
       <para>
@@ -1077,69 +1116,6 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
 
       </section>
 
-      <section id="http-aol">
-        <title>AOL Server</title>
-
-        <para>Ben FrantzDale reported success using AOL Server with Bugzilla. He
-        reported his experience and what appears below is based on that.
-        </para>
-
-        <para>AOL Server will have to be configured to run
-        <glossterm linkend="gloss-cgi">CGI</glossterm> scripts, please consult
-        the documentation that came with your server for more information on
-        how to do this.
-        </para>
-
-        <para>Because AOL Server doesn't support <filename>.htaccess</filename>
-        files, you'll have to create a <glossterm linkend="gloss-tcl">TCL</glossterm>
-        script. You should create an <filename>aolserver/modules/tcl/filter.tcl</filename>
-        file (the filename shouldn't matter) with the following contents (change
-        <computeroutput>/bugzilla/</computeroutput> to the web-based path to
-        your Bugzilla installation):
-        </para>
-
-        <programlisting>
-  ns_register_filter preauth GET /bugzilla/localconfig filter_deny
-  ns_register_filter preauth GET /bugzilla/localconfig~ filter_deny
-  ns_register_filter preauth GET /bugzilla/\#localconfig\# filter_deny
-  ns_register_filter preauth GET /bugzilla/*.pl filter_deny
-  ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
-  ns_register_filter preauth GET /bugzilla/data/* filter_deny
-  ns_register_filter preauth GET /bugzilla/template/* filter_deny
-
-  proc filter_deny { why } {
-      ns_log Notice "filter_deny"
-      return "filter_return"
-  }
-        </programlisting>
-
-        <warning>
-          <para>This probably doesn't account for all possible editor backup
-          files so you may wish to add some additional variations of
-          <filename>localconfig</filename>. For more information, see 
-          <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=186383">
-          bug 186383</ulink> or <ulink
-          url="http://online.securityfocus.com/bid/6501">Bugtraq ID 6501</ulink>.
-          </para>
-        </warning>
-
-        <note>
-          <para>If you are using webdot from research.att.com (the default
-          configuration for the <option>webdotbase</option> paramater), you
-          will need to allow access to <filename>data/webdot/*.dot</filename>
-          for the reasearch.att.com machine.
-          </para>
-          <para>If you are using a local installation of <ulink
-          url="http://www.graphviz.org">GraphViz</ulink>, you will need to allow
-          everybody to access <filename>*.png</filename>,
-          <filename>*.gif</filename>, <filename>*.jpg</filename>, and
-          <filename>*.map</filename> in the
-          <filename class="directory">data/webdot</filename> directory.
-          </para>
-        </note>
-      </section>
-      
-      
     </section>
     
     <section id="install-config-bugzilla">
@@ -1152,6 +1128,14 @@ c:\perl\bin\perl.exe -xc:\bugzilla -wT "%s" %s
         front page. If not, consult the Troubleshooting section,
         <xref linkend="troubleshooting"/>.
       </para>
+
+      <note>
+        <para>
+          The URL above may be incorrect if you installed Bugzilla into a 
+          subdirectory or used a symbolic link from your web site root to 
+          the Bugzilla directory.
+        </para>
+      </note>
       
       <para>
         Log in with the administrator account you defined in the last 
