@@ -111,7 +111,6 @@ components/libnecko.dylib
 components/necko.xpt                    
 components/necko_about.xpt              
 components/necko_cache.xpt              
-components/necko_data.xpt               
 components/necko_dns.xpt                
 components/necko_ftp.xpt                
 components/necko_http.xpt               

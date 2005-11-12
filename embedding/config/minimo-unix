@@ -134,7 +134,6 @@ components/editor.xpt
 components/libnecko.so                    
 components/necko.xpt                    
 components/necko_about.xpt              
-components/necko_data.xpt               
 components/necko_dns.xpt                
 components/necko_http.xpt               
 components/necko_res.xpt                
