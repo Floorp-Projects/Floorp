@@ -144,6 +144,10 @@ FINAL_LINK_COMP_NAMES=$(topsrcdir)/minimo/base/linux/minimo-link-names
 FINAL_LINK_LIBS=$(topsrcdir)/minimo/base/linux/minimo-link-libs
 endif
 
+# Recreate these files each time to pick up any changes.
+# XXX This is a hack; the dependency system should do this for us.
+export::
+	-rm -f embed-link-comps embed-link-comp-names components_list
 
 # Create a map that we can use to go from library name to component
 # symbol. N.B. that this will break if the $(FINAL_LINK_COMP_NAMES)
