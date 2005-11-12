@@ -4177,7 +4177,7 @@ minimo)
   MOZ_XTF=
   MOZ_XUL_APP=1
   NECKO_DISK_CACHE=
-  NECKO_PROTOCOLS_DEFAULT=="about data http file res jar"
+  NECKO_PROTOCOLS_DEFAULT=="about data http file res"
   NECKO_SMALL_BUFFERS=1
   NS_DISABLE_LOGGING=1
   NS_PRINTING=
@@ -4195,7 +4195,7 @@ mail)
   ENABLE_TESTS=
   MOZ_OJI=
   NECKO_DISK_CACHE=
-  NECKO_PROTOCOLS_DEFAULT="http file jar viewsource res data"
+  NECKO_PROTOCOLS_DEFAULT="http file viewsource res data"
   MOZ_IMG_DECODERS_DEFAULT=`echo "$MOZ_IMG_DECODERS_DEFAULT" | sed "s/ xbm//"`
   MOZ_MAIL_NEWS=1
   MOZ_LDAP_XPCOM=1
