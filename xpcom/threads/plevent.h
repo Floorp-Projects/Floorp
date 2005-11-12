@@ -85,9 +85,7 @@ and posts the event:
 		if (event == NULL) goto done;
 
 		// initialize
-		PL_InitEvent(event, owner,
-					 (PLHandleEventProc)handleMyEvent,
-					 (PLDestroyEventProc)destroyMyEvent);
+		PL_InitEvent(event, owner, handleMyEvent, destroyMyEvent);
 		event->x = x;
 		event->y = strdup(y);
 
@@ -107,7 +105,7 @@ Handling Events
 To handle an event you must write a callback that is passed the event
 record you defined containing the event's arguments:
 
-    void* handleMyEvent(MyEventType* event)
+    PR_STATIC_CALLBACK(void*) handleMyEvent(MyEventType* event)
     {
 		doit(event->x, event->y);
 		return NULL;	// you could return a value for a sync event
@@ -115,7 +113,7 @@ record you defined containing the event's arguments:
 
 Similarly for the destruction callback:
 
-    void destroyMyEvent(MyEventType* event)
+    PR_STATIC_CALLBACK(void) destroyMyEvent(MyEventType* event)
     {
 		free(event->y);	// created by strdup
 		free(event);
