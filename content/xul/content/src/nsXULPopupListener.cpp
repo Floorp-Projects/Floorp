@@ -78,6 +78,8 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIEventStateManager.h"
+#include "nsIFocusController.h"
+#include "nsPIDOMWindow.h"
 
 #include "nsIFrame.h"
 
@@ -332,10 +334,10 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
   rv = aTargetNode->GetOwnerDocument(getter_AddRefs(domDoc));
   if(NS_SUCCEEDED(rv) && domDoc)
   {
-    nsCOMPtr<nsIDocument> tempdoc = do_QueryInterface(domDoc);
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
 
     // Get nsIDOMElement for targetNode
-    nsIPresShell *shell = tempdoc->GetShellAt(0);
+    nsIPresShell *shell = doc->GetShellAt(0);
     if (!shell)
       return NS_ERROR_FAILURE;
 
@@ -369,9 +371,27 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     nsCOMPtr<nsIContent> focusableContent = do_QueryInterface(element);
     nsIEventStateManager *esm = context->EventStateManager();
 
-    if (focusableContent)
+    if (focusableContent) {
+      // Lock to scroll by SetFocus. See bug 309075.
+      nsCOMPtr<nsIFocusController> focusController = nsnull;
+      PRBool isAlreadySuppressed = PR_FALSE;
+      nsCOMPtr<nsPIDOMWindow> ourWindow =
+        do_QueryInterface(doc->GetScriptGlobalObject());
+      if (ourWindow) {
+        focusController = ourWindow->GetRootFocusController();
+        if (focusController) {
+          focusController->GetSuppressFocusScroll(&isAlreadySuppressed);
+          if (!isAlreadySuppressed)
+            focusController->SetSuppressFocusScroll(PR_TRUE);
+        }
+      }
+
       focusableContent->SetFocus(context);
-    else if (!suppressBlur)
+
+      // Unlock scroll if it's needed.
+      if (focusController && !isAlreadySuppressed)
+        focusController->SetSuppressFocusScroll(PR_FALSE);
+    } else if (!suppressBlur)
       esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
     esm->SetContentState(focusableContent, NS_EVENT_STATE_ACTIVE);
