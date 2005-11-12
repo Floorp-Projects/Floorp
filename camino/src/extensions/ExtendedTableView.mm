@@ -53,8 +53,6 @@
 
 -(void)keyDown:(NSEvent*)aEvent
 {
-  const unichar kForwardDeleteChar = 0xf728;   // couldn't find this in any cocoa header
-
   // check each char in the event array. it should be just 1 char, but
   // just in case we use a loop.
   int len = [[aEvent characters] length];
@@ -62,7 +60,7 @@
     unichar c = [[aEvent characters] characterAtIndex:i];
 
     // Check for a certain set of special keys.
-    if (c == NSDeleteCharacter || c == NSBackspaceCharacter || c == kForwardDeleteChar) {
+    if (c == NSDeleteCharacter || c == NSBackspaceCharacter || c == NSDeleteFunctionKey) {
       // delete the bookmark
       if (mDeleteAction)
         [NSApp sendAction: mDeleteAction to: [self target] from: self];
