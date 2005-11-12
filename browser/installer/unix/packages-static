@@ -119,7 +119,6 @@ bin/components/mozfind.xpt
 bin/components/necko_about.xpt
 bin/components/necko_cache.xpt
 bin/components/necko_cookie.xpt
-bin/components/necko_data.xpt
 bin/components/necko_dns.xpt
 bin/components/necko_file.xpt
 bin/components/necko_ftp.xpt
