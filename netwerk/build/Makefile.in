@@ -83,7 +83,7 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/$(LIB_PREFIX)nkmime_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkcache_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
-		$(foreach d,$(NECKO_PROTOCOLS), \
+		$(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
 			$(DIST)/lib/$(LIB_PREFIX)nk${d}_s.$(LIB_SUFFIX)) \
 		$(NULL)
 
@@ -96,7 +96,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../mime/src \
 		-I$(srcdir)/../cache/src \
 		-I$(srcdir)/../protocol/about/src \
-		$(foreach d,$(NECKO_PROTOCOLS), \
+		$(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
 			-I$(srcdir)/../protocol/${d}/src) \
 		$(NULL)
 
