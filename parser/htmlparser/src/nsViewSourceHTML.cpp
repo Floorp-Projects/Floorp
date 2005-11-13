@@ -214,16 +214,16 @@ public:
 
 enum {
   kStartTag = 0,
-  kEndTag = 1,
-  kComment = 2,
-  kCData = 3,
-  kDoctype = 4,
-  kPI = 5,
-  kEntity = 6,
-  kText = 7,
-  kAttributeName = 8,
-  kAttributeValue = 9,
-  kMarkupDecl = 12
+  kEndTag,
+  kComment,
+  kCData,
+  kDoctype,
+  kPI,
+  kEntity,
+  kText,
+  kAttributeName,
+  kAttributeValue,
+  kMarkupDecl
 };
 
 static const char* const kElementClasses[] = {
