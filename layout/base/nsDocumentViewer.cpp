@@ -3028,13 +3028,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetBidiCharacterSet(PRUint8* aCharacterSet)
 NS_IMETHODIMP DocumentViewerImpl::SetBidiOptions(PRUint32 aBidiOptions)
 {
   if (mPresContext) {
-#if 1
-    // forcing reflow will cause bug 80352. Temp turn off force reflow and
-    // wait for simon@softel.co.il to find the real solution
-    mPresContext->SetBidi(aBidiOptions, PR_FALSE);
-#else
-    mPresContext->SetBidi(aBidiOptions, PR_TRUE); // force reflow
-#endif
+    mPresContext->SetBidi(aBidiOptions, PR_TRUE); // could cause reflow
   }
   // now set bidi on all children of mContainer
   CallChildren(SetChildBidiOptions, (void*) aBidiOptions);
