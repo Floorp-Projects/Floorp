@@ -7,7 +7,7 @@ mk_add_options MOZ_CO_PROJECT=calendar
 ac_add_options --enable-application=calendar
 
 ac_add_options --enable-plaintext-editor-only
-ac_add_options --enable-necko-protocols=about,http,ftp,file,jar,res
+ac_add_options --enable-necko-protocols=about,http,ftp,file,res
 ac_add_options --enable-storage
 ac_add_options --disable-accessibility
 ac_add_options --disable-activex
