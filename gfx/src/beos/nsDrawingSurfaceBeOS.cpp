@@ -92,7 +92,8 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Lock(PRInt32 aX, PRInt32 aY,
 
   if (mBitmap && !mLocked)
   {
-
+    if (mView)
+      mView->Sync();
     if (mLockFlags & NS_LOCK_SURFACE_READ_ONLY)
       mBitmap->LockBits();
     *aStride = mBitmap->BytesPerRow();
@@ -256,9 +257,6 @@ void nsDrawingSurfaceBeOS :: UnlockDrawable()
 {
   if (!mView)
     return;
-    
-  if (mBitmap)
-    mView->Sync();
   else
     mView->UnlockLooper();
 }

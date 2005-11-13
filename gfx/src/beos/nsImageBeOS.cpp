@@ -435,6 +435,7 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsIDrawingSur
 			// Flushing tile bitmap to proper area in drawable BView	
 			view->DrawBitmap(mTileBitmap, BPoint(aTileRect.x , aTileRect.y ));
 			view->SetDrawingMode(B_OP_COPY);
+			view->Sync();
 		}
 		((nsRenderingContextBeOS&)aContext).UnlockView();
 		beosdrawing->ReleaseView();
@@ -474,6 +475,7 @@ nsresult nsImageBeOS::Optimize(nsIDeviceContext *aContext)
 // the BeOS port or not. BBitmap::Lock/UnlockBits()  may be used if necessary
 NS_IMETHODIMP nsImageBeOS::LockImagePixels(PRBool aMaskPixels) 
 {
+	// we may need some sort of syncing here in future
 	return NS_OK;
 }
 
