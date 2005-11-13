@@ -1712,8 +1712,9 @@ static BookmarkManager* gBookmarkManager = nil;
   BOOL success = [dict writeToFile:backupFile atomically:YES];
   if (success)
   {
-    long long bmFileSize = [[NSFileManager defaultManager] sizeOfFileAtPath:backupFile traverseLink:YES];
-    if (bmFileSize > 0)
+    // XXX removed to measure hit on startup perf
+    // long long bmFileSize = [[NSFileManager defaultManager] sizeOfFileAtPath:backupFile traverseLink:YES];
+    // if (bmFileSize > 0)
     {
       NSFileManager* fm = [NSFileManager defaultManager];
       BOOL removedOld = [fm removeFileAtPath:stdPath handler:self];               // out with the old...
@@ -1723,8 +1724,8 @@ static BookmarkManager* gBookmarkManager = nil;
                       stdPath, removedOld,
                       backupFile, movedNew);
     }
-    else
-      NSLog(@"writePropertyList: saved bookmarks file was empty (%qi bytes))", bmFileSize);
+    // else
+    //   NSLog(@"writePropertyList: saved bookmarks file was empty (%qi bytes))", bmFileSize);
   }
   else
     NSLog(@"writePropertyList: Failed to write file %@", pathToFile);
