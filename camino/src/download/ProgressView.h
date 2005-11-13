@@ -51,14 +51,9 @@
 @interface ProgressView : NSView
 {
 @private
-  BOOL mIsSelected;
   int mLastModifier;
   ProgressViewController* mProgressController;     // WEAK reference
 }
-
-// get/set whether the view is selected in the download list
--(BOOL)isSelected;
--(void)setSelected:(BOOL)flag;
 
 // returns the most recent modifier key used during the last 
 // click on this view

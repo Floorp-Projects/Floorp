@@ -58,9 +58,18 @@ enum {
   kLabelTagIcon
 };
 
+// Method helps set up a subscription to the download dir to listen for changes
+static void FileSystemNotificationProc(FNMessage message, OptionBits flags, void* refcon, FNSubscriptionRef subscription)
+{
+  [(ProgressViewController*)refcon checkFileExists];
+}
+
+
 @interface ProgressViewController(ProgressViewControllerPrivate)
 
 -(void)viewDidLoad;
+-(void)setupFileSystemNotification;
+-(void)unsubscribeFileSystemNotification;
 -(void)refreshDownloadInfo;
 -(void)launchFileIfAppropriate;
 -(void)setProgressViewFromDictionary:(NSDictionary*)aDict;
@@ -158,15 +167,14 @@ enum {
 
 -(id)initWithDictionary:(NSDictionary*)aDict
 {
-  if ((self = [super init]))
+  if ((self = [self init]))
   {
-    [NSBundle loadNibNamed:@"ProgressView" owner:self];
-    [self viewDidLoad];
     [self setProgressViewFromDictionary:aDict];
+    // since we are creating a progressview from a dict, the file
+    // will not be restarted, so setup file system notifications here
   }
   
   return self;
-  
 }
 
 -(void)dealloc
@@ -181,10 +189,11 @@ enum {
     NS_RELEASE(mDownloader);
   }
   
+  [self unsubscribeFileSystemNotification];
+  
   [mStartTime release];
   [mSourceURL release];
   [mDestPath release];
-  [mProgressBar release];
 
   // loading the nib has retained these, we have to release them.
   [mCompletedView release];
@@ -206,15 +215,14 @@ enum {
 
 -(void)viewDidLoad
 {
-  [mProgressBar retain]; // make sure it survives being moved between views
                          // this isn't necessarily better. Need to profile.
   [mProgressBar setUsesThreadedAnimation:NO];
   // give the views this controller as their controller
   [mCompletedView setController:self];
   [mProgressView setController:self];
   
-  mRefreshIcon = YES; // refresh the icon at least once
-  
+  mRefreshIcon = YES;
+
   // we need to register for xpcom shutdown so that we can clear the
   // services before XPCOM is shut down. We can't rely on dealloc,
   // because we don't know when it will get called (we might be autoreleased).
@@ -230,6 +238,39 @@ enum {
     return mCompletedView;
   else
     return mProgressView;
+}
+
+-(void)setupFileSystemNotification
+{
+  // there is some update, that is why we are being called again
+  // unsubscribe the old stuff and create a fresh subscription
+  [self unsubscribeFileSystemNotification];
+  
+  [self checkFileExists];
+
+  NSString *dir = [mDestPath stringByDeletingLastPathComponent];
+  if (dir)
+  {
+    mSubUPP = NewFNSubscriptionUPP(FileSystemNotificationProc);
+    OSStatus err = FNSubscribeByPath(((const UInt8*)[dir fileSystemRepresentation]), mSubUPP, (void*)self, nil, &mSubRef);
+    if (err != noErr)
+      NSLog(@"Failed to subscribe to file system notification for %@", dir);
+  }
+}
+
+-(void)unsubscribeFileSystemNotification
+{
+  if (mSubRef) 
+  {
+    FNUnsubscribe(mSubRef); 
+    mSubRef = nil;
+  }
+
+  if (mSubUPP) 
+  {
+    DisposeFNSubscriptionUPP(mSubUPP);
+    mSubUPP = nil;
+  }
 }
 
 -(IBAction)copySourceURL:(id)sender
@@ -279,7 +320,6 @@ enum {
     mDownloader->PauseDownload();
     mRefreshIcon = YES;
     [self refreshDownloadInfo];
-    [[self view] setSelected:YES]; // likes to unselect its self when switching progress views
   }
 }
 
@@ -308,9 +348,6 @@ enum {
 -(void)downloadDidEnd
 {
   if (!mDownloadDone) { // some error conditions can cause this to get called twice
-    // retain the selection when the view switches - do this before mDownloadDone changes
-    [mCompletedView setSelected:[self isSelected]];
-    
     mDownloadDone = YES;
     mDownloadTime = -[mStartTime timeIntervalSinceNow];
     [mProgressBar stopAnimation:self];
@@ -338,21 +375,35 @@ enum {
 // this handles lots of things - all of the status updates
 -(void)refreshDownloadInfo
 {
+  // note that the view you get here depends on whether we're paused/done or not,
+  // so we have to be sure to refresh the info if our state changes.
   NSView* curView = [self view];
   NSString* filename = [mDestPath lastPathComponent];
-  id iconLabel = [curView viewWithTag:kLabelTagIcon];
   
   id filenameLabel = [curView viewWithTag:kLabelTagFilename];
   if (![[filenameLabel stringValue] isEqualToString:filename])
     [filenameLabel setStringValue:filename];
   
-  if (iconLabel && mRefreshIcon) { // update the icon image
-    NSImage *iconImage = [[NSWorkspace sharedWorkspace] iconForFile:mDestPath];
+  NSImageView* iconImageView = [curView viewWithTag:kLabelTagIcon];
+  if (iconImageView && mRefreshIcon) { // update the icon image
+    NSImage* iconImage = nil;
+    if (mDownloadDone && !mFileExists)
+    {
+      // for "known missing" files, show the missing icon
+      iconImage = [NSImage imageNamed:@"unknown_file_icon"];
+    }
+    else
+    {
+      // we're currently relying on iconForFile: to give us back a generic
+      // document icon when it can't find the file (e.g. at the start of the
+      // download). We should probably supply our own icon.
+      iconImage = [[NSWorkspace sharedWorkspace] iconForFile:mDestPath];
+    }
+     
     // sometimes the finder doesn't have an icon for us (rarely)
     // when that happens just leave it at what it was before
-    if (iconImage != nil) {
-      [iconLabel setImage:iconImage];
-    }
+    if (iconImage)
+      [iconImageView setImage:iconImage];
     
     mRefreshIcon = NO; // dont change unless status changes
   }
@@ -431,7 +482,16 @@ enum {
 
 -(BOOL)isSelected
 {
-  return [[self view] isSelected];
+  return mIsSelected;
+}
+
+-(void)setSelected:(BOOL)inSelected
+{
+  if (mIsSelected != inSelected)
+  {
+    mIsSelected = inSelected;
+    [[self view] setNeedsDisplay:YES];
+  }
 }
 
 -(BOOL)isPaused
@@ -442,20 +502,45 @@ enum {
   return NO;
 }
 
+-(BOOL)fileExists
+{
+  return mFileExists; 
+}
+
+// this is the callback from the file system notification
+-(void)checkFileExists
+{
+  // if dest path doesn't exist, don't check
+  if (!mDestPath)
+    return;
+  
+  BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:mDestPath];
+  if (fileExists != mFileExists)
+  {
+    mFileExists = fileExists;
+    mRefreshIcon = YES;
+    [self refreshDownloadInfo];
+  }
+}
+
 -(void)setProgressViewFromDictionary:(NSDictionary*)aDict
 {
-  // assign values from the dict
-  mDestPath = [[aDict valueForKey:@"destPath"] retain];   
+  // set this first, because it affects which view we fill in
+  // if we're reading from the dict, the download is either completed or cancelled
+  mDownloadDone = YES; 
+
+  [self setDestinationPath:[aDict valueForKey:@"destPath"]];
   mSourceURL = [[aDict valueForKey:@"sourceURL"] retain]; 
   mDownloadSize = [[aDict valueForKey:@"downloadSize"] longLongValue];
   mCurrentProgress = [[aDict valueForKey:@"currentProgress"] longLongValue];
   mDownloadTime = [[aDict valueForKey:@"downloadTime"] doubleValue];
-  mDownloadDone = YES; // always either completed of cancelled
   
   // set as cancel if sizes dont match up
   if (mDownloadSize != mCurrentProgress)
     mUserCancelled = YES; 
   
+  // we have to force the update here
+  mRefreshIcon = YES;
   [self refreshDownloadInfo];
 }
 
@@ -638,6 +723,7 @@ enum {
 {
   [mDestPath autorelease];
   mDestPath = [aDestPath copy];
+  [self setupFileSystemNotification];
   //[self tryToSetFinderComments];
 }
 
