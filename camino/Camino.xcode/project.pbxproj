@@ -2523,6 +2523,69 @@
 			settings = {
 			};
 		};
+		0FEA7DDD0926BBEA00B06154 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = "NSFileManager+Utils.h";
+			path = "src/extensions/NSFileManager+Utils.h";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FEA7DDE0926BBEA00B06154 = {
+			fileRef = 0FEA7DDD0926BBEA00B06154;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FEA7DDF0926BBEA00B06154 = {
+			fileRef = 0FEA7DDD0926BBEA00B06154;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FEA7DE00926BBF500B06154 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = "NSFileManager+Utils.m";
+			path = "src/extensions/NSFileManager+Utils.m";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FEA7DE10926BBF500B06154 = {
+			fileRef = 0FEA7DE00926BBF500B06154;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FEA7DE20926BBF500B06154 = {
+			fileRef = 0FEA7DE00926BBF500B06154;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FEA7DE30926BC0C00B06154 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = SiteIconCache.mm;
+			path = src/browser/SiteIconCache.mm;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FEA7DE40926BC0C00B06154 = {
+			fileRef = 0FEA7DE30926BC0C00B06154;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FEA7DE50926BC0C00B06154 = {
+			fileRef = 0FEA7DE30926BC0C00B06154;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0FEBFCA1044F989900A96652 = {
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
@@ -3540,6 +3603,7 @@
 				0F222C6108C6102B00B34F14,
 				0F08FB1508D37DA90022DD45,
 				0F0F5E3D08FC660300B4EBCD,
+				0FEA7DDE0926BBEA00B06154,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4689,6 +4753,8 @@
 				0FDEEA3B08CBD04200754D9B,
 				0F08FB1808D37DB30022DD45,
 				0F0F5E3A08FC65FB00B4EBCD,
+				0FEA7DE10926BBF500B06154,
+				0FEA7DE40926BC0C00B06154,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7420,6 +7486,7 @@
 				0F222C6208C6102B00B34F14,
 				0F08FB1608D37DA90022DD45,
 				0F0F5E3E08FC660300B4EBCD,
+				0FEA7DDF0926BBEA00B06154,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8576,6 +8643,8 @@
 				0FDEEA3C08CBD04200754D9B,
 				0F08FB1908D37DB30022DD45,
 				0F0F5E3B08FC65FB00B4EBCD,
+				0FEA7DE20926BBF500B06154,
+				0FEA7DE50926BC0C00B06154,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -15159,6 +15228,7 @@
 			children = (
 				F558137C030AEF9B0176F207,
 				F558137D030AEF9B0176F207,
+				0FEA7DE30926BC0C00B06154,
 			);
 			isa = PBXGroup;
 			name = "Site icons";
@@ -16251,6 +16321,7 @@
 				3FB2BA960545EA80002B9691,
 				F5D98EBC031AC38601A96654,
 				0FBC0ED40798F96100E8E0E2,
+				0FEA7DDD0926BBEA00B06154,
 				0FBC0ED30798F96100E8E0E2,
 				F5B34B04034A50C901A80166,
 				0F5FD71B07F48CDC00E8EDBD,
@@ -16286,6 +16357,7 @@
 				3FB2BA970545EA80002B9691,
 				F5D98EB9031AC37801A96654,
 				0FBC0ECD0798F94900E8E0E2,
+				0FEA7DE00926BBF500B06154,
 				0FBC0ED00798F95400E8E0E2,
 				F5B34B01034A505F01A80166,
 				0F5FD71E07F48CE500E8EDBD,
