@@ -47,14 +47,6 @@
   return nil;
 }
 
-- (id)lastObject
-{
-  if ([self count] > 0)
-    return [self objectAtIndex:[self count] - 1];
-
-  return nil;
-}
-
 - (id)safeObjectAtIndex:(unsigned)inIndex
 {
   return (inIndex < [self count]) ? [self objectAtIndex:inIndex] : nil;
