@@ -2586,6 +2586,26 @@
 			settings = {
 			};
 		};
+		0FEA7E640926BFC600B06154 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = unknown_file_icon.tif;
+			path = resources/images/chrome/unknown_file_icon.tif;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FEA7E650926BFC600B06154 = {
+			fileRef = 0FEA7E640926BFC600B06154;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0FEA7E660926BFC600B06154 = {
+			fileRef = 0FEA7E640926BFC600B06154;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0FEBFCA1044F989900A96652 = {
 			isa = PBXFileReference;
 			lastKnownFileType = archive.ar;
@@ -4230,6 +4250,7 @@
 				0FBB8CC908D260D800D58D8D,
 				0FBB8CCA08D260D800D58D8D,
 				0F01117408F2FE7C00423C02,
+				0FEA7E650926BFC600B06154,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -8119,6 +8140,7 @@
 				0FBB8CCE08D260D800D58D8D,
 				0FBB8CCF08D260D800D58D8D,
 				0F01117508F2FE7C00423C02,
+				0FEA7E660926BFC600B06154,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -13870,6 +13892,7 @@
 				0FE7703508C799BB00AFB850,
 				0FE7703608C799BB00AFB850,
 				0FE7703708C799BB00AFB850,
+				0FEA7E640926BFC600B06154,
 			);
 			isa = PBXGroup;
 			name = images;
