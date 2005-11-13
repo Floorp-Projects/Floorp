@@ -85,7 +85,6 @@
 <!ENTITY newevent.from.label         "From" >
 <!ENTITY newevent.to.label           "To" >
 <!ENTITY newevent.enddate.label      "End" >
-<!ENTITY newevent.end.label          "End" >
 <!ENTITY newevent.set.label          "set..." >
 <!ENTITY newevent.settings.label     "General Settings" >
 <!ENTITY newevent.none.label         "none" >
