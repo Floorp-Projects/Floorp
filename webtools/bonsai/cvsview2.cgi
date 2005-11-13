@@ -758,7 +758,8 @@ sub print_cell {
     if (length($newline) <= 80) {
         $newline = sprintf("%-80.80s", $newline);
     } else {
-        $newline =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
+        # Wrap to 80 chars. Leave the newline at the end
+        $newline =~ s/(.{80})\r?\n?/$1\n/g;
     }
     $newline =~ s/&/&amp;/g;
     $newline =~ s/</&lt;/g;
