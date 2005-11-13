@@ -2532,12 +2532,6 @@
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
-		0FEA7DDE0926BBEA00B06154 = {
-			fileRef = 0FEA7DDD0926BBEA00B06154;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		0FEA7DDF0926BBEA00B06154 = {
 			fileRef = 0FEA7DDD0926BBEA00B06154;
 			isa = PBXBuildFile;
@@ -2553,12 +2547,6 @@
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
-		0FEA7DE10926BBF500B06154 = {
-			fileRef = 0FEA7DE00926BBF500B06154;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		0FEA7DE20926BBF500B06154 = {
 			fileRef = 0FEA7DE00926BBF500B06154;
 			isa = PBXBuildFile;
@@ -2573,12 +2561,6 @@
 			path = src/browser/SiteIconCache.mm;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
-		};
-		0FEA7DE40926BC0C00B06154 = {
-			fileRef = 0FEA7DE30926BC0C00B06154;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 		0FEA7DE50926BC0C00B06154 = {
 			fileRef = 0FEA7DE30926BC0C00B06154;
@@ -3623,7 +3605,6 @@
 				0F222C6108C6102B00B34F14,
 				0F08FB1508D37DA90022DD45,
 				0F0F5E3D08FC660300B4EBCD,
-				0FEA7DDE0926BBEA00B06154,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -4774,8 +4755,6 @@
 				0FDEEA3B08CBD04200754D9B,
 				0F08FB1808D37DB30022DD45,
 				0F0F5E3A08FC65FB00B4EBCD,
-				0FEA7DE10926BBF500B06154,
-				0FEA7DE40926BC0C00B06154,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
