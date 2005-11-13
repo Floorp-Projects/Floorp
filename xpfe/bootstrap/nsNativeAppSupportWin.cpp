@@ -115,6 +115,10 @@ struct JSContext;
 #define WS_EX_LAYERED 0x80000
 #endif
 
+#ifndef SM_REMOTESESSION
+#define SM_REMOTESESSION 0x1000
+#endif
+
 static HWND hwndForDOMWindow( nsISupports * );
 
 static
@@ -548,7 +552,9 @@ nsSplashScreenWin::DialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) {
 
             HMODULE user32lib = GetModuleHandle("user32.dll");
             mSetLayeredWindowAttributesProc = (MOZ_SetLayeredWindowAttributesProc) GetProcAddress(user32lib, "SetLayeredWindowAttributes");
-            if (mSetLayeredWindowAttributesProc) {
+
+            // only do fade if it's supported and the user isn't using remote desktop
+            if (mSetLayeredWindowAttributesProc && !GetSystemMetrics(SM_REMOTESESSION)) {
                 SetWindowLong(dlg, GWL_EXSTYLE,
                                  GetWindowLong(dlg, GWL_EXSTYLE) | WS_EX_LAYERED);
                 mSetLayeredWindowAttributesProc(dlg, 0,
