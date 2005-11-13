@@ -996,7 +996,7 @@ sub init {
                     $unitinterval = 'YEAR';
                 }
                 my $cutoff = "NOW() - " .
-                             $dbh->sql_interval("$quantity $unitinterval");
+                             $dbh->sql_interval($quantity, $unitinterval);
                 my $assigned_fieldid = get_field_id('assigned_to');
                 push(@supptables, "LEFT JOIN longdescs AS comment_$table " .
                                   "ON comment_$table.who = bugs.assigned_to " .

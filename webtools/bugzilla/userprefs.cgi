@@ -53,7 +53,7 @@ sub DoAccount {
     if(Param('allowemailchange')) {
         my @token = $dbh->selectrow_array(
             "SELECT tokentype, issuedate + " .
-                    $dbh->sql_interval('3 DAY') . ", eventdata
+                    $dbh->sql_interval(3, 'DAY') . ", eventdata
                FROM tokens
               WHERE userid = ?
                 AND tokentype LIKE 'email%'

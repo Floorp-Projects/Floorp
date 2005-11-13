@@ -196,7 +196,7 @@ if (defined $cgi->param('rescanallBugMail')) {
     Status("OK, now attempting to send unsent mail");
     SendSQL("SELECT bug_id FROM bugs 
               WHERE (lastdiffed IS NULL OR lastdiffed < delta_ts) AND
-             delta_ts < now() - " . $dbh->sql_interval('30 minute') .
+             delta_ts < now() - " . $dbh->sql_interval(30, 'MINUTE') .
             " ORDER BY bug_id");
     my @list;
     while (MoreSQLData()) {
@@ -808,7 +808,7 @@ Status("Checking for unsent mail");
 
 SendSQL("SELECT bug_id " .
         "FROM bugs WHERE (lastdiffed IS NULL OR lastdiffed < delta_ts) AND " .
-        "delta_ts < now() - " . $dbh->sql_interval('30 minute') .
+        "delta_ts < now() - " . $dbh->sql_interval(30, 'MINUTE') .
         " ORDER BY bug_id");
 
 while (@row = FetchSQLData()) {

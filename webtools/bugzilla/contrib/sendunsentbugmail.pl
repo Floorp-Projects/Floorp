@@ -33,7 +33,7 @@ my $dbh = Bugzilla->dbh;
 SendSQL("SELECT bug_id FROM bugs 
           WHERE lastdiffed IS NULL
                 OR lastdiffed < delta_ts AND  delta_ts < NOW() - " 
-                 . $dbh->sql_interval('30 minute') .
+                 . $dbh->sql_interval(30, 'MINUTE') .
         " ORDER BY bug_id");
 my @list;
 while (MoreSQLData()) {

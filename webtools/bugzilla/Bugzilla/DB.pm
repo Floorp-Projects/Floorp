@@ -1146,8 +1146,8 @@ formatted SQL command have prefix C<sql_>. All other methods have prefix C<bz_>.
 
  Description: Outputs proper SQL syntax for a time interval function.
               Abstract method, should be overriden by database specific code.
- Params:      $interval = the time interval requested (e.g. '30 minutes')
-              (scalar)
+ Params:      $interval - the time interval requested (e.g. '30') (integer)
+              $units    - the units the interval is in (e.g. 'MINUTE') (string)
  Returns:     formatted SQL for interval function (scalar)
 
 =item C<sql_position>

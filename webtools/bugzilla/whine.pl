@@ -34,6 +34,7 @@ use Bugzilla::Constants;
 use Bugzilla::Search;
 use Bugzilla::User;
 use Bugzilla::BugMail;
+use Bugzilla::Util;
 
 # create some handles that we'll need
 my $template = Bugzilla->template;
@@ -164,20 +165,21 @@ while (my ($schedule_id, $day, $time) = $sched_h->fetchrow_array) {
         # A time greater than now means it still has to run today
         elsif ($time >= $now_hour) {
             # set it to today + number of hours
-            $sth = $dbh->prepare( "UPDATE whine_schedules " .
-                   "SET run_next = CURRENT_DATE() + " .
-                   $dbh->sql_interval('? HOUR') .
-                   " WHERE id = ?");
+            $sth = $dbh->prepare("UPDATE whine_schedules " .
+                                 "SET run_next = CURRENT_DATE + " .
+                                 $dbh->sql_interval('?', 'HOUR') .
+                                 " WHERE id = ?");
             $sth->execute($time, $schedule_id);
         }
         # the target time is less than the current time
         else { # set it for the next applicable day
-            my $nextdate = &get_next_date($day);
-            $sth = $dbh->prepare( "UPDATE whine_schedules " .
-                   "SET run_next = ? + " .
-                   $dbh->sql_interval('? HOUR') .
-                   " WHERE id = ?");
-            $sth->execute($nextdate, $time, $schedule_id);
+            $day = &get_next_date($day);
+            $sth = $dbh->prepare("UPDATE whine_schedules " .
+                                 "SET run_next = CURRENT_DATE + " .
+                                 $dbh->sql_interval('?', 'DAY') . " + " .
+                                 $dbh->sql_interval('?', 'HOUR') .
+                                 " WHERE id = ?");
+            $sth->execute($day, $time, $schedule_id);
         }
 
     }
@@ -189,10 +191,11 @@ while (my ($schedule_id, $day, $time) = $sched_h->fetchrow_array) {
         # midnight
         my $target_time = ($time =~ /^\d+$/) ? $time : 0;
 
-        $sth = $dbh->prepare( "UPDATE whine_schedules " .
-               "SET run_next = ? + " .
-               $dbh->sql_interval('? HOUR') .
-               " WHERE id = ?");
+        $sth = $dbh->prepare("UPDATE whine_schedules " .
+                             "SET run_next = CURRENT_DATE + " .
+                             $dbh->sql_interval('?', 'DAY') . " + " .
+                             $dbh->sql_interval('?', 'HOUR') .
+                             " WHERE id = ?");
         $sth->execute($target_date, $target_time, $schedule_id);
     }
 }
@@ -592,23 +595,25 @@ sub reset_timer {
 
         my $nextdate = &get_next_date($run_day);
 
-        $sth = $dbh->prepare( "UPDATE whine_schedules " .
-                              "SET run_next = ? + " .
-                              $dbh->sql_interval('? HOUR') .
-                              " WHERE id = ?");
+        $sth = $dbh->prepare("UPDATE whine_schedules " .
+                             "SET run_next = CURRENT_DATE + " .
+                             $dbh->sql_interval('?', 'DAY') . " + " .
+                             $dbh->sql_interval('?', 'HOUR') .
+                             " WHERE id = ?");
         $sth->execute($nextdate, $target_time, $schedule_id);
         return;
     }
 
-    # Scheduling is done in terms of whole minutes, so we use subtraction to
-    # drop the seconds from the time.
     if ($minute_offset > 0) {
+        # Scheduling is done in terms of whole minutes.
+        my $next_run = $dbh->selectrow_array('SELECT NOW() + ' .
+                                             $dbh->sql_interval('?', 'MINUTE'),
+                                             undef, $minute_offset);
+        $next_run = format_time($next_run, "%Y-%m-%d %R");
+
         $sth = $dbh->prepare("UPDATE whine_schedules " .
-                             "SET run_next = NOW() + " .
-                             $dbh->sql_interval('? MINUTE') . " - " .
-                             $dbh->sql_interval('SECOND(NOW()) SECOND') .
-                             " WHERE id = ?");
-        $sth->execute($minute_offset, $schedule_id);
+                             "SET run_next = ? WHERE id = ?");
+        $sth->execute($next_run, $schedule_id);
     } else {
         # The minute offset is zero or less, which is not supposed to happen.
         # complain to STDERR
@@ -632,7 +637,7 @@ sub null_schedule {
 # time a schedule should run, excluding today
 #
 # It takes a run_day argument (see check_today, above, for an explanation),
-# and returns an SQL date
+# and returns an integer, representing a number of days.
 sub get_next_date {
     my $day = shift;
 
@@ -685,11 +690,5 @@ sub get_next_date {
             $add_days += $daysinmonth[$now_month];
         }
     }
-
-    # Get a date in whatever format the database will accept
-    $sth = $dbh->prepare("SELECT CURRENT_DATE() + " .
-                         $dbh->sql_interval('? DAY'));
-    $sth->execute($add_days);
-    return $sth->fetch->[0];
+    return $add_days;
 }
-
