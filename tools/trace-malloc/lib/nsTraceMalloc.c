@@ -66,6 +66,7 @@
 #include "prnetdb.h"
 #include "nsTraceMalloc.h"
 #include "nscore.h"
+#include "prinit.h"
 
 #ifdef XP_WIN32
 #include "nsStackFrameWin.h"
@@ -1454,6 +1455,10 @@ __ptr_t malloc(size_t size)
     PLHashEntry *he;
     allocation *alloc;
 
+    if (!PR_Initialized()) {
+        return __libc_malloc(size);
+    }
+
     start = PR_IntervalNow();
     ptr = __libc_malloc(size);
     end = PR_IntervalNow();
@@ -1490,6 +1495,21 @@ __ptr_t calloc(size_t count, size_t size)
     PLHashEntry *he;
     allocation *alloc;
 
+    /**
+     * During the initialization of the glibc/libpthread, and
+     * before main() is running, ld-linux.so.2 tries to allocate memory
+     * using calloc (call from _dl_tls_setup).
+     *
+     * Thus, our calloc replacement is invoked too early, tries to
+     * initialize NSPR, which calls dlopen, which calls into the dl
+     * -> crash.
+     *
+     * Delaying NSPR calls until NSPR is initialized helps.
+     */
+    if (!PR_Initialized()) {
+        return __libc_calloc(count, size);
+    }
+	
     start = PR_IntervalNow();
     ptr = __libc_calloc(count, size);
     end = PR_IntervalNow();
@@ -1530,6 +1550,10 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
     PLHashEntry **hep, *he;
     allocation *alloc;
     FILE *trackfp = NULL;
+
+    if (!PR_Initialized()) {
+        return __libc_realloc(ptr, size);
+    }
 
     TM_ENTER_MONITOR();
     tmstats.realloc_calls++;
@@ -1618,6 +1642,10 @@ void free(__ptr_t ptr)
     allocation *alloc;
     uint32 serial = 0, size = 0;
     PRUint32 start, end;
+
+    if (!PR_Initialized()) {
+        return __libc_free(ptr);
+    }
 
     TM_ENTER_MONITOR();
     tmstats.free_calls++;
