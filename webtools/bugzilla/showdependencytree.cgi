@@ -33,13 +33,11 @@ use Bugzilla::Bug;
 Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
-my $dbh = Bugzilla->dbh;
 my $template = Bugzilla->template;
 my $vars = {};
-
 # Connect to the shadow database if this installation is using one to improve
 # performance.
-Bugzilla->switch_to_shadow_db();
+my $dbh = Bugzilla->switch_to_shadow_db();
 
 ################################################################################
 # Data/Security Validation                                                     #

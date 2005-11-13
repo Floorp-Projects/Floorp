@@ -37,7 +37,6 @@ use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Constants;
 
 my $cgi = Bugzilla->cgi;
-my $dbh = Bugzilla->dbh;
 
 # Go directly to the XUL version of the duplicates report (duplicates.xul)
 # if the user specified ctype=xul.  Adds params if they exist, and directs
@@ -66,7 +65,7 @@ else {
     Bugzilla->login();
 }
 
-Bugzilla->switch_to_shadow_db();
+my $dbh = Bugzilla->switch_to_shadow_db();
 
 use vars qw (@legal_product);
 

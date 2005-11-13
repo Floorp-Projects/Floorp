@@ -242,17 +242,6 @@ sub batch {
     return $_batch || 0;
 }
 
-sub dbwritesallowed {
-    my $class = shift;
-
-    # We can write if we are connected to the main database.
-    # Note that if we don't have a shadowdb, then we claim that its ok
-    # to write even if we're nominally connected to the shadowdb.
-    # This is OK because this method is only used to test if misc
-    # updates can be done, rather than anything complicated.
-    return $class->dbh == $_dbh_main;
-}
-
 sub switch_to_shadow_db {
     my $class = shift;
 
@@ -265,12 +254,20 @@ sub switch_to_shadow_db {
     }
 
     $_dbh = $_dbh_shadow;
+    # we have to return $class->dbh instead of $_dbh as
+    # $_dbh_shadow may be undefined if no shadow DB is used
+    # and no connection to the main DB has been established yet.
+    return $class->dbh;
 }
 
 sub switch_to_main_db {
     my $class = shift;
 
     $_dbh = $_dbh_main;
+    # We have to return $class->dbh instead of $_dbh as
+    # $_dbh_main may be undefined if no connection to the main DB
+    # has been established yet.
+    return $class->dbh;
 }
 
 # Private methods
@@ -439,12 +436,6 @@ Bugzilla->batch will return the current state of this flag.
 =item C<dbh>
 
 The current database handle. See L<DBI>.
-
-=item C<dbwritesallowed>
-
-Determines if writes to the database are permitted. This is usually used to
-determine if some general cleanup needs to occur (such as clearing the token
-table)
 
 =item C<switch_to_shadow_db>
 

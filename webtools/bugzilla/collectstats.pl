@@ -458,10 +458,8 @@ sub CollectSeriesData {
 
     # We save a copy of the main $dbh and then switch to the shadow and get
     # that one too. Remember, these may be the same.
-    Bugzilla->switch_to_main_db();
-    my $dbh = Bugzilla->dbh;
-    Bugzilla->switch_to_shadow_db();
-    my $shadow_dbh = Bugzilla->dbh;
+    my $dbh = Bugzilla->switch_to_main_db();
+    my $shadow_dbh = Bugzilla->switch_to_shadow_db();
     
     my $serieses = $dbh->selectall_hashref("SELECT series_id, query, creator " .
                       "FROM series " .

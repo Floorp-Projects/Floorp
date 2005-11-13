@@ -35,7 +35,6 @@ my $cgi = Bugzilla->cgi;
 my $template = Bugzilla->template;
 my $vars = {};
 my $buffer = $cgi->query_string();
-my $dbh = Bugzilla->dbh;
 
 # Go straight back to query.cgi if we are adding a boolean chart.
 if (grep(/^cmd-/, $cgi->param())) {
@@ -53,7 +52,7 @@ GetVersionTable();
 
 Bugzilla->login(LOGIN_REQUIRED);
 
-Bugzilla->switch_to_shadow_db();
+my $dbh = Bugzilla->switch_to_shadow_db();
 
 my $action = $cgi->param('action') || 'menu';
 
