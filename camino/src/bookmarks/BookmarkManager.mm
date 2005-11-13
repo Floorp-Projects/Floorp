@@ -46,6 +46,8 @@
 
 #import "NSString+Utils.h"
 #import "NSThread+Utils.h"
+#import "NSFileManager+Utils.h"
+
 #import "PreferenceManager.h"
 #import "BookmarkManager.h"
 #import "Bookmark.h"
@@ -1688,21 +1690,50 @@ static BookmarkManager* gBookmarkManager = nil;
 //
 -(void)writePropertyListFile:(NSString *)pathToFile
 {
+  if (!pathToFile)
+  {
+    NSLog(@"writePropertyListFile: nil path argument");
+    return;
+  }
+  
   BookmarkFolder* rootBookmarks = [self rootBookmarks];
   if (!rootBookmarks)
     return;   // we never read anything
 
   NSDictionary* dict = [rootBookmarks writeNativeDictionary];
+  if (!dict)
+  {
+    NSLog(@"writePropertyListFile: writeNativeDictionary returned nil dictionary");
+    return;
+  }
+
   NSString* stdPath = [pathToFile stringByStandardizingPath];
   NSString* backupFile = [NSString stringWithFormat:@"%@.new", stdPath];
   BOOL success = [dict writeToFile:backupFile atomically:YES];
-  if (success) {
-    NSFileManager* fm = [NSFileManager defaultManager];
-    [fm removeFileAtPath:stdPath handler:nil];               // out with the old...
-    [fm movePath:backupFile toPath:stdPath handler:nil];     //  ... in with the new
+  if (success)
+  {
+    long long bmFileSize = [[NSFileManager defaultManager] sizeOfFileAtPath:backupFile traverseLink:YES];
+    if (bmFileSize > 0)
+    {
+      NSFileManager* fm = [NSFileManager defaultManager];
+      BOOL removedOld = [fm removeFileAtPath:stdPath handler:self];               // out with the old...
+      BOOL movedNew   = [fm movePath:backupFile toPath:stdPath handler:self];     //  ... in with the new
+      if (!removedOld || !movedNew)
+        NSLog(@"writePropertyList: move failed (removed old file at %@ %d, moved new file from %@ %d",
+                      stdPath, removedOld,
+                      backupFile, movedNew);
+    }
+    else
+      NSLog(@"writePropertyList: saved bookmarks file was empty (%qi bytes))", bmFileSize);
   }
   else
     NSLog(@"writePropertyList: Failed to write file %@", pathToFile);
+}
+
+- (BOOL)fileManager:(NSFileManager *)manager shouldProceedAfterError:(NSDictionary *)errorInfo
+{
+  NSLog(@"fileManager:shouldProceedAfterError:%@", errorInfo);
+  return NO;
 }
 
 @end
