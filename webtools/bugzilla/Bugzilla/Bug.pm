@@ -786,11 +786,9 @@ sub GetComments {
     my @comments;
     my $sth = $dbh->prepare(
             "SELECT  profiles.realname AS name, profiles.login_name AS email,
-            " . $dbh->sql_date_format('longdescs.bug_when', '%Y.%m.%d %H:%i') . "
+            " . $dbh->sql_date_format('longdescs.bug_when', '%Y.%m.%d %H:%i:%s') . "
                AS time, longdescs.thetext AS body, longdescs.work_time,
-                     isprivate, already_wrapped,
-            " . $dbh->sql_date_format('longdescs.bug_when', '%Y%m%d%H%i%s') . "
-               AS bug_when
+                     isprivate, already_wrapped
              FROM    longdescs, profiles
             WHERE    profiles.userid = longdescs.who
               AND    longdescs.bug_id = ?
@@ -799,10 +797,6 @@ sub GetComments {
 
     while (my $comment_ref = $sth->fetchrow_hashref()) {
         my %comment = %$comment_ref;
-
-        # Can't use "when" as a field name in MySQL
-        $comment{'when'} = $comment{'bug_when'};
-        delete($comment{'bug_when'});
 
         $comment{'email'} .= Param('emailsuffix');
         $comment{'name'} = $comment{'name'} || $comment{'email'};
