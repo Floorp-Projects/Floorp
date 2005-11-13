@@ -71,7 +71,8 @@ var reporterListener = {
 }
 
 function onBrowserLoad() {
-  gBrowser.addProgressListener(reporterListener);
+  if (gBrowser)
+    gBrowser.addProgressListener(reporterListener);
 }
 
 function loadReporterWizard() {
