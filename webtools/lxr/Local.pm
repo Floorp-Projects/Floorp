@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.7 2001/07/16 20:15:03 timeless%mac.com Exp $
+# $Id: Local.pm,v 1.8 2005/11/13 22:43:36 timeless%mozdev.org Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <endico@mozilla.org>
@@ -241,7 +241,8 @@ sub descexpand {
     }
 
     $desc = ""; 
-    if (open(FILE, $Path->{'real'}. $filename."README")) {
+    if (open(FILE, $Path->{'real'}. $filename."README") ||
+        open(FILE, $Path->{'real'}. $filename."ReadMe")) {
 	$path = $Path->{'virt'}.$filename;
 	$path =~ s#/(.+)/#$1#;
         while(<FILE>){
@@ -288,7 +289,8 @@ sub descexpand {
 sub dirdesc {
     my ($path) = @_;
 
-    if (-f $Path->{'real'}."/README") {
+    if (-f $Path->{'real'}."/README" ||
+        -f $Path->{'real'}."/ReadMe") {
 	    descreadme($path);
     } elsif (-f $Path->{'real'}."/README.html") {
 	    descreadmehtml($path);
@@ -343,7 +345,8 @@ sub descreadme {
     my $minlines = 5;   # Too small. Go back and add another paragraph.
     my $chopto = 10;    # Truncate long READMEs to this length
 
-    if (!(open(DESC, $Path->{'real'}."/README"))) {
+    if (!(open(DESC, $Path->{'real'}."/README") ||
+          open(DESC, $Path->{'real'}."/ReadMe"))) {
 	return;
         }
 
