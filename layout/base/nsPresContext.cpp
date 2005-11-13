@@ -610,9 +610,10 @@ nsPresContext::GetUserPreferences()
                                GET_BIDI_OPTION_CHARACTERSET(bidiOptions));
   SET_BIDI_OPTION_CHARACTERSET(bidiOptions, prefInt);
 
-  // Set on the document, not on ourselves so we don't do the various
-  // extra SetBidi() work.
-  GetDocument()->SetBidiOptions(bidiOptions);
+  // We don't need to force reflow: either we are initializing a new
+  // prescontext or we are being called from UpdateAfterPreferencesChanged()
+  // which triggers a reflow anyway.
+  SetBidi(bidiOptions, PR_FALSE);
 #endif
 }
 
@@ -1155,6 +1156,14 @@ nsPresContext::GetBidiUtils()
 void
 nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
 {
+  // Don't do all this stuff unless the options have changed.
+  if (aSource == GetBidi()) {
+    return;
+  }
+
+  NS_ASSERTION(!(aForceReflow && (GetBidi() == 0)), 
+               "ForceReflow on new prescontext");
+
   GetDocument()->SetBidiOptions(aSource);
   if (IBMBIDI_TEXTDIRECTION_RTL == GET_BIDI_OPTION_DIRECTION(aSource)
       || IBMBIDI_NUMERAL_HINDI == GET_BIDI_OPTION_NUMERAL(aSource)) {
@@ -1172,7 +1181,7 @@ nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
       SetVisualMode(IsVisualCharset(doc->GetDocumentCharacterSet()));
     }
   }
-  if (mShell && aForceReflow) {
+  if (aForceReflow) {
     ClearStyleDataAndReflow();
   }
 }
