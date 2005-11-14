@@ -988,15 +988,14 @@ struct ExitEvent : public PLEvent {
 
   nsWebCrawler* crawler;
 
-  static void PR_CALLBACK HandleMe(ExitEvent* e);
-  static void PR_CALLBACK DeleteMe(ExitEvent* e);
+  static void* PR_CALLBACK HandleMe(PLEvent* e);
+  static void PR_CALLBACK DeleteMe(PLEvent* e);
 };
 
 ExitEvent::ExitEvent(nsWebCrawler* aCrawler)
   : crawler(aCrawler)
 {
-  PL_InitEvent(this, crawler, (PLHandleEventProc) HandleMe,
-               (PLDestroyEventProc) DeleteMe);
+  PL_InitEvent(this, crawler, HandleMe, DeleteMe);
   NS_ADDREF(aCrawler);
 }
 
@@ -1005,15 +1004,18 @@ ExitEvent::~ExitEvent()
   NS_RELEASE(crawler);
 }
 
-void
-ExitEvent::HandleMe(ExitEvent* e)
+void*
+ExitEvent::HandleMe(PLEvent* aEvent)
 {
+  ExitEvent* e = NS_STATIC_CAST(ExitEvent*, aEvent);
   e->DoIt();
+  return nsnull;
 }
 
 void
-ExitEvent::DeleteMe(ExitEvent* e)
+ExitEvent::DeleteMe(PLEvent* aEvent)
 {
+  ExitEvent* e = NS_STATIC_CAST(ExitEvent*, aEvent);
   delete e;
 }
 
@@ -1043,16 +1045,15 @@ struct LoadEvent : public PLEvent {
   nsString url;
   nsWebCrawler* crawler;
 
-  static void PR_CALLBACK HandleMe(LoadEvent* e);
-  static void PR_CALLBACK DeleteMe(LoadEvent* e);
+  static void* PR_CALLBACK HandleMe(PLEvent* aEvent);
+  static void PR_CALLBACK DeleteMe(PLEvent* aEvent);
 };
 
 LoadEvent::LoadEvent(nsWebCrawler* aCrawler, const nsString& aURL)
   : url(aURL),
     crawler(aCrawler)
 {
-  PL_InitEvent(this, crawler, (PLHandleEventProc) HandleMe,
-               (PLDestroyEventProc) DeleteMe);
+  PL_InitEvent(this, crawler, HandleMe, DeleteMe);
   NS_ADDREF(aCrawler);
 }
 
@@ -1061,15 +1062,18 @@ LoadEvent::~LoadEvent()
   NS_RELEASE(crawler);
 }
 
-void
-LoadEvent::HandleMe(LoadEvent* e)
+void*
+LoadEvent::HandleMe(PLEvent* aEvent)
 {
+  LoadEvent *e = NS_STATIC_CAST(LoadEvent*, aEvent);
   e->DoIt();
+  return nsnull;
 }
 
 void
-LoadEvent::DeleteMe(LoadEvent* e)
+LoadEvent::DeleteMe(PLEvent* aEvent)
 {
+  LoadEvent *e = NS_STATIC_CAST(LoadEvent*, aEvent);
   delete e;
 }
 

@@ -127,7 +127,7 @@ HandleImagePLEvent(nsIContent *aContent, PRUint32 aMessage, PRUint32 aFlags)
   aContent->HandleDOMEvent(pres_context, &event, nsnull, aFlags, &status);
 }
 
-static void PR_CALLBACK
+static void* PR_CALLBACK
 HandleImageOnloadPLEvent(PLEvent *aEvent)
 {
   nsIContent *content = (nsIContent *)PL_GetEventOwner(aEvent);
@@ -135,17 +135,23 @@ HandleImageOnloadPLEvent(PLEvent *aEvent)
   HandleImagePLEvent(content, NS_IMAGE_LOAD,
                      NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CANT_BUBBLE);
 
+  // XXXldb Why not put this in DestroyImagePLEvent?
   NS_RELEASE(content);
+
+  return nsnull;
 }
 
-static void PR_CALLBACK
+static void* PR_CALLBACK
 HandleImageOnerrorPLEvent(PLEvent *aEvent)
 {
   nsIContent *content = (nsIContent *)PL_GetEventOwner(aEvent);
 
   HandleImagePLEvent(content, NS_IMAGE_ERROR, NS_EVENT_FLAG_INIT);
 
+  // XXXldb Why not put this in DestroyImagePLEvent?
   NS_RELEASE(content);
+
+  return nsnull;
 }
 
 static void PR_CALLBACK
@@ -202,11 +208,11 @@ FireDOMEvent(nsIContent* aContent, PRUint32 aMessage)
 
   switch (aMessage) {
   case NS_IMAGE_LOAD :
-    f = (PLHandleEventProc)::HandleImageOnloadPLEvent;
+    f = ::HandleImageOnloadPLEvent;
 
     break;
   case NS_IMAGE_ERROR :
-    f = (PLHandleEventProc)::HandleImageOnerrorPLEvent;
+    f = ::HandleImageOnerrorPLEvent;
 
     break;
   default:
@@ -215,7 +221,7 @@ FireDOMEvent(nsIContent* aContent, PRUint32 aMessage)
     return;
   }
 
-  PL_InitEvent(event, aContent, f, (PLDestroyEventProc)::DestroyImagePLEvent);
+  PL_InitEvent(event, aContent, f, ::DestroyImagePLEvent);
 
   // The event owns the content pointer now.
   NS_ADDREF(aContent);

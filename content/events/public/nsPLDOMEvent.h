@@ -61,7 +61,7 @@ struct nsPLDOMEvent : public PLEvent {
   nsString mEventType;
 };
 
-static void PR_CALLBACK HandlePLDOMEvent(nsPLDOMEvent* aEvent);
-static void PR_CALLBACK DestroyPLDOMEvent(nsPLDOMEvent* aEvent);
+static void* PR_CALLBACK HandlePLDOMEvent(PLEvent* aEvent);
+static void PR_CALLBACK DestroyPLDOMEvent(PLEvent* aEvent);
 
 #endif

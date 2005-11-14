@@ -73,19 +73,22 @@ nsresult nsPLDOMEvent::PostDOMEvent()
   nsCOMPtr<nsIEventQueue> eventQueue;
   nsresult rv = NS_GetCurrentEventQ(getter_AddRefs(eventQueue));
   if (NS_SUCCEEDED(rv)) {
-    PL_InitEvent(this, nsnull, (PLHandleEventProc) ::HandlePLDOMEvent, (PLDestroyEventProc) ::DestroyPLDOMEvent);
+    PL_InitEvent(this, nsnull, ::HandlePLDOMEvent, ::DestroyPLDOMEvent);
     rv = eventQueue->PostEvent(this);
   }
 
   return rv;
 }
 
-static void PR_CALLBACK HandlePLDOMEvent(nsPLDOMEvent* aEvent)
+static void* PR_CALLBACK HandlePLDOMEvent(PLEvent* aEvent)
 {
-  aEvent->HandleEvent();
+  nsPLDOMEvent* event = NS_STATIC_CAST(nsPLDOMEvent*, aEvent);
+  event->HandleEvent();
+  return nsnull;
 }
 
-static void PR_CALLBACK DestroyPLDOMEvent(nsPLDOMEvent* aEvent)
+static void PR_CALLBACK DestroyPLDOMEvent(PLEvent* aEvent)
 {
-  delete aEvent;
+  nsPLDOMEvent* event = NS_STATIC_CAST(nsPLDOMEvent*, aEvent);
+  delete event;
 }

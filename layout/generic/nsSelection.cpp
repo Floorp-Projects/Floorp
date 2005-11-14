@@ -7163,8 +7163,8 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
   return rv;
 }
 
-static void PR_CALLBACK HandlePLEvent(nsScrollSelectionIntoViewEvent* aEvent);
-static void PR_CALLBACK DestroyPLEvent(nsScrollSelectionIntoViewEvent* aEvent);
+static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
+static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
 struct nsScrollSelectionIntoViewEvent : public PLEvent {
   nsScrollSelectionIntoViewEvent(nsTypedSelection *aTypedSelection, SelectionRegion aRegion) {
@@ -7174,9 +7174,7 @@ struct nsScrollSelectionIntoViewEvent : public PLEvent {
     mTypedSelection = aTypedSelection;
     mRegion = aRegion;
 
-    PL_InitEvent(this, aTypedSelection,
-                 (PLHandleEventProc) ::HandlePLEvent,
-                 (PLDestroyEventProc) ::DestroyPLEvent);
+    PL_InitEvent(this, aTypedSelection, ::HandlePLEvent, ::DestroyPLEvent);
   }
 
   ~nsScrollSelectionIntoViewEvent() {}
@@ -7194,16 +7192,21 @@ struct nsScrollSelectionIntoViewEvent : public PLEvent {
   SelectionRegion   mRegion;
 };
 
-static void PR_CALLBACK HandlePLEvent(nsScrollSelectionIntoViewEvent* aEvent)
+static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
 {
-  NS_ASSERTION(nsnull != aEvent,"Event is null");
-  aEvent->HandleEvent();
+  nsScrollSelectionIntoViewEvent* event =
+    NS_STATIC_CAST(nsScrollSelectionIntoViewEvent*, aEvent);
+  NS_ASSERTION(nsnull != event,"Event is null");
+  event->HandleEvent();
+  return nsnull;
 }
 
-static void PR_CALLBACK DestroyPLEvent(nsScrollSelectionIntoViewEvent* aEvent)
+static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent)
 {
-  NS_ASSERTION(nsnull != aEvent,"Event is null");
-  delete aEvent;
+  nsScrollSelectionIntoViewEvent* event =
+    NS_STATIC_CAST(nsScrollSelectionIntoViewEvent*, aEvent);
+  NS_ASSERTION(nsnull != event,"Event is null");
+  delete event;
 }
 
 nsresult

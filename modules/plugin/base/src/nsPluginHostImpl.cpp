@@ -351,13 +351,16 @@ nsresult nsPluginDocReframeEvent::HandlePluginDocReframeEvent() {
 //----------------------------------------------------------------------
 static void* PR_CALLBACK HandlePluginDocReframePLEvent(PLEvent* aEvent)
 {
-  nsPluginDocReframeEvent* event = NS_REINTERPRET_CAST(nsPluginDocReframeEvent*, aEvent);
+  nsPluginDocReframeEvent* event =
+    NS_STATIC_CAST(nsPluginDocReframeEvent*, aEvent);
   event->HandlePluginDocReframeEvent();
   return nsnull;
 }
 static void PR_CALLBACK DestroyPluginDocReframePLEvent(PLEvent* aEvent)
 {
-  delete aEvent;
+  nsPluginDocReframeEvent* event =
+    NS_STATIC_CAST(nsPluginDocReframeEvent*, aEvent);
+  delete event;
 }
 
 
@@ -991,13 +994,16 @@ nsPluginUnloadEvent::nsPluginUnloadEvent (PRLibrary* aLibrary)
 }
 //----------------------------------------------------------------------
 // helper static callback functions for plugin unloading PLEvents
-static void PR_CALLBACK HandlePluginUnloadPLEvent(nsPluginUnloadEvent* aEvent)
+static void* PR_CALLBACK HandlePluginUnloadPLEvent(PLEvent* aEvent)
 {
-  aEvent->HandleEvent();
+  nsPluginUnloadEvent *event = NS_STATIC_CAST(nsPluginUnloadEvent*, aEvent);
+  event->HandleEvent();
+  return nsnull;
 }
-static void PR_CALLBACK DestroyPluginUnloadPLEvent(nsPluginUnloadEvent* aEvent)
+static void PR_CALLBACK DestroyPluginUnloadPLEvent(PLEvent* aEvent)
 {
-  delete aEvent;
+  nsPluginUnloadEvent *event = NS_STATIC_CAST(nsPluginUnloadEvent*, aEvent);
+  delete event;
 }
 
 // unload plugin asynchronously if possible, otherwise just unload now
@@ -1011,7 +1017,7 @@ nsresult PostPluginUnloadEvent (PRLibrary* aLibrary)
       nsPluginUnloadEvent * ev = new nsPluginUnloadEvent(aLibrary);
       if (ev) {
 
-        PL_InitEvent(ev, nsnull, (PLHandleEventProc) ::HandlePluginUnloadPLEvent, (PLDestroyEventProc) ::DestroyPluginUnloadPLEvent);
+        PL_InitEvent(ev, nsnull, ::HandlePluginUnloadPLEvent, ::DestroyPluginUnloadPLEvent);
         if (NS_SUCCEEDED(eventQueue->PostEvent(ev)))
           return NS_OK;
         else NS_WARNING("failed to post event onto queue");

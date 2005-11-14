@@ -6319,14 +6319,17 @@ struct ReflowEvent : public PLEvent {
   nsWeakPtr mPresShell;
 };
 
-static void PR_CALLBACK HandlePLEvent(ReflowEvent* aEvent)
+static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
 {
-  aEvent->HandleEvent();
+  ReflowEvent* event = NS_STATIC_CAST(ReflowEvent*, aEvent);
+  event->HandleEvent();
+  return nsnull;
 }
 
-static void PR_CALLBACK DestroyPLEvent(ReflowEvent* aEvent)
+static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent)
 {
-  delete aEvent;
+  ReflowEvent* event = NS_STATIC_CAST(ReflowEvent*, aEvent);
+  delete event;
 }
 
 
@@ -6336,9 +6339,7 @@ ReflowEvent::ReflowEvent(nsIPresShell* aPresShell)
 
   mPresShell = do_GetWeakReference(aPresShell);
 
-  PL_InitEvent(this, aPresShell,
-               (PLHandleEventProc) ::HandlePLEvent,
-               (PLDestroyEventProc) ::DestroyPLEvent);  
+  PL_InitEvent(this, aPresShell, ::HandlePLEvent, ::DestroyPLEvent);  
 }
 
 //-------------- End Reflow Event Definition ---------------------------
