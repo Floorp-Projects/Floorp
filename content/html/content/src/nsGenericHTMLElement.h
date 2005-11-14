@@ -800,6 +800,7 @@ protected:
    * Locate an nsIEditor rooted at this content node, if there is one.
    */
   NS_HIDDEN_(nsresult) GetEditor(nsIEditor** aEditor);
+  NS_HIDDEN_(nsresult) GetEditorInternal(nsIEditor** aEditor);
 };
 
 
@@ -844,6 +845,7 @@ public:
                               PRBool aNullParent = PR_TRUE);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              PRBool aNotify);
+  virtual PRUint32 GetDesiredIMEState();
 
 protected:
   /**

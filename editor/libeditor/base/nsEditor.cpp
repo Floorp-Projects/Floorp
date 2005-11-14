@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Daniel Glazman <glazman@netscape.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -123,11 +124,6 @@ static PRBool gNoisy = PR_FALSE;
 #endif
 
 
-// Value of "ime.password.onFocus.dontCare"
-static PRBool gDontCareForIMEOnFocusPassword = PR_FALSE;
-// Value of "ime.password.onBlur.dontCare"
-static PRBool gDontCareForIMEOnBlurPassword  = PR_FALSE;
-
 // Defined in nsEditorRegistration.cpp
 extern nsIParserService *sParserService;
 
@@ -160,7 +156,6 @@ nsEditor::nsEditor()
 ,  mIMEBufferLength(0)
 ,  mInIMEMode(PR_FALSE)
 ,  mIsIMEComposing(PR_FALSE)
-,  mNeedRecoverIMEOpenState(PR_FALSE)
 ,  mShouldTxnSetSelection(PR_TRUE)
 ,  mActionListeners(nsnull)
 ,  mEditorObservers(nsnull)
@@ -315,17 +310,6 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 #endif
 
   NS_POSTCONDITION(mDocWeak && mPresShellWeak, "bad state");
-
-  nsresult result;
-  nsCOMPtr<nsIPrefBranch> prefBranch = 
-      do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
-  if (NS_SUCCEEDED(result) && prefBranch) {
-    PRBool val;
-    if (NS_SUCCEEDED(prefBranch->GetBoolPref("ime.password.onFocus.dontCare", &val)))
-      gDontCareForIMEOnFocusPassword = val;
-    if (NS_SUCCEEDED(prefBranch->GetBoolPref("ime.password.onBlur.dontCare", &val)))
-      gDontCareForIMEOnBlurPassword = val;
-  }
 
   return NS_OK;
 }
@@ -2082,11 +2066,6 @@ nsEditor::BeginComposition(nsTextEventReply* aReply)
   if (mPhonetic)
     mPhonetic->Truncate(0);
 
-  // If user changes the IME open state, don't recover it.
-  // Because the user may not want to change the state.
-  if (mNeedRecoverIMEOpenState)
-    mNeedRecoverIMEOpenState = PR_FALSE;
-
   return ret;
 }
 
@@ -2250,8 +2229,6 @@ nsEditor::ForceCompositionEnd()
 NS_IMETHODIMP
 nsEditor::NotifyIMEOnFocus()
 {
-  mNeedRecoverIMEOpenState = PR_FALSE;
-
   nsCOMPtr<nsIKBStateControl> kb;
   nsresult res = GetKBStateControl(getter_AddRefs(kb));
   if (NS_FAILED(res))
@@ -2264,48 +2241,28 @@ nsEditor::NotifyIMEOnFocus()
   if (NS_FAILED(res))
     kb->ResetInputState();
 
-  if(gDontCareForIMEOnFocusPassword
-      || !(mFlags & nsIPlaintextEditor::eEditorPasswordMask))
-    return NS_OK;
-
-  PRBool isOpen;
-  res = kb->GetIMEOpenState(&isOpen);
-  if (NS_FAILED(res)) 
-    return res;
-
-  if (isOpen) {
-    res = kb->SetIMEOpenState(PR_FALSE);
-    if (NS_FAILED(res)) 
-      return res;
-  }
-
-  mNeedRecoverIMEOpenState = isOpen;
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEditor::NotifyIMEOnBlur()
 {
-  if (!mNeedRecoverIMEOpenState)
-    return NS_OK;
-  mNeedRecoverIMEOpenState = PR_FALSE;
+  return NS_OK;
+}
 
-  if (gDontCareForIMEOnBlurPassword
-      || !(mFlags & nsIPlaintextEditor::eEditorPasswordMask))
-    return NS_OK;
+NS_IMETHODIMP
+nsEditor::GetPreferredIMEState(PRUint32 *aState)
+{
+  NS_ENSURE_ARG_POINTER(aState);
 
-  nsCOMPtr<nsIKBStateControl> kb;
-  nsresult res = GetKBStateControl(getter_AddRefs(kb));
-  if (NS_FAILED(res))
-    return res;
-
-  if (kb) {
-    res = kb->SetIMEOpenState(PR_TRUE);
-    if (NS_FAILED(res)) 
-      return res;
-  }
-
+  PRUint32 flags;
+  if (NS_SUCCEEDED(GetFlags(&flags)) &&
+      flags & (nsIPlaintextEditor::eEditorPasswordMask |
+               nsIPlaintextEditor::eEditorReadonlyMask |
+               nsIPlaintextEditor::eEditorDisabledMask))
+    *aState = nsIContent::IME_STATUS_DISABLE;
+  else
+    *aState = nsIContent::IME_STATUS_ENABLE;
   return NS_OK;
 }
 
