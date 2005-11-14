@@ -422,11 +422,12 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
 
 -(IBAction) removeAllCookies: (id)aSender
 {
-  if (NSRunCriticalAlertPanel(NSLocalizedString(@"RemoveAllCookiesWarningTitle", @"RemoveAllCookiesWarningTitle"),
-                              NSLocalizedString(@"RemoveAllCookiesWarning", @"RemoveAllCookiesWarning"),
-                              NSLocalizedString(@"Remove All Cookies", @"Remove All Cookies"),
-                              NSLocalizedString(@"CancelButtonText", @"Cancel"),
-                              nil) == NSAlertDefaultReturn) {
+  if (NSRunCriticalAlertPanel([self getLocalizedString:@"RemoveAllCookiesWarningTitle"],
+                              [self getLocalizedString:@"RemoveAllCookiesWarning"],
+                              [self getLocalizedString:@"Remove All Cookies"],
+                              [self getLocalizedString:@"CancelButtonText"],
+                              nil) == NSAlertDefaultReturn)
+  {
     if (mCookieManager) {
       // remove all cookies from cookie manager
       mCookieManager->RemoveAll();
@@ -553,14 +554,21 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
 
 -(IBAction) removeAllCookiePermissions: (id)aSender
 {
-  if (mPermissionManager) {
-    // remove all permissions from permission manager
-    mPermissionManager->RemoveAll();
-    delete mCachedPermissions;
-    mCachedPermissions = nsnull;
-    mCachedPermissions = new nsCOMArray<nsIPermission>;
+  if (NSRunCriticalAlertPanel([self getLocalizedString:@"RemoveAllCookiePermissionsWarningTitle"],
+                              [self getLocalizedString:@"RemoveAllCookiePermissionsWarning"],
+                              [self getLocalizedString:@"Remove All Exceptions"],
+                              [self getLocalizedString:@"CancelButtonText"],
+                              nil) == NSAlertDefaultReturn)
+  {
+    if (mPermissionManager) {
+      // remove all permissions from permission manager
+      mPermissionManager->RemoveAll();
+      delete mCachedPermissions;
+      mCachedPermissions = nsnull;
+      mCachedPermissions = new nsCOMArray<nsIPermission>;
+    }
+    [mPermissionsTable reloadData];
   }
-  [mPermissionsTable reloadData];
 }
 
 -(IBAction) editPermissionsDone:(id)aSender
@@ -637,9 +645,9 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
         PRBool secure = PR_FALSE;
         mCachedCookies->ObjectAt(rowIndex)->GetIsSecure(&secure);
         if (secure)
-          retVal = NSLocalizedString(@"yes",@"yes");
+          retVal = [self getLocalizedString:@"yes"];
         else
-          retVal = NSLocalizedString(@"no",@"no");
+          retVal = [self getLocalizedString:@"no"];
         return retVal;
       } else if ([[aTableColumn identifier] isEqualToString: @"Expires"]) {
         PRUint64 expires = 0;
