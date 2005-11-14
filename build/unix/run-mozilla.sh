@@ -328,10 +328,24 @@ if [ -z "$MRE_HOME" ]; then
 fi
 ##
 ## Set LD_LIBRARY_PATH
-## On Solaris we use $ORIGIN instead of LD_LIBRARY_PATH unless
-## $MOZ_PROGRAM is a symbolic link, in this case we need to set
-## LD_LIBRARY_PATH because $ORIGIN doesn't work on a symbolic link.
-if [ `uname -s` != "SunOS" -o -h "$MOZ_PROGRAM" ]
+##
+## On Solaris we use $ORIGIN (set in RUNPATH) instead of LD_LIBRARY_PATH 
+## to locate shared libraries. 
+##
+## When a shared library is a symbolic link, $ORIGIN will be replaced with
+## the real path (i.e., what the symbolic link points to) by the runtime
+## linker.  For example, if dist/bin/libmozjs.so is a symbolic link to
+## js/src/libmozjs.so, $ORIGIN will be "js/src" instead of "dist/bin".
+## So the runtime linker will use "js/src" NOT "dist/bin" to locate the
+## other shared libraries that libmozjs.so depends on.  This only happens
+## when a user (developer) tries to start firefox, thunderbird, or seamonkey
+## under dist/bin. To solve the problem, we should rely on LD_LIBRARY_PATH
+## to locate shared libraries.
+##
+## Note: 
+##  We choose libmozjs.so as a representative shared library. If it is 
+##  a symbolic link, all other shared libraries are symbolic links also.
+if [ `uname -s` != "SunOS" -o -h "$MOZ_DIST_BIN/libmozjs.so" ]
 then
 	LD_LIBRARY_PATH=${MOZ_DIST_BIN}:${MOZ_DIST_BIN}/plugins:${MRE_HOME}${LD_LIBRARY_PATH+":$LD_LIBRARY_PATH"}
 fi 
