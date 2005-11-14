@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla XForms support.
+   -
+   - The Initial Developer of the Original Code is
+   - Novell, Inc.
+   - Portions created by the Initial Developer are Copyright (C) 2005
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Allan Beaufour <abeaufour@novell.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!--
+   ASSUMPTIONS:
+   *> @begin is valid, @end and @init value might not be
+      this means that steps and ticks are calculated with begin as starting point
+   *> Takes integers and floats
+
+   TODO: XXX
+   *> limit amount of ticks
+   *> handle undefined begin / end
+   *> handle end < begin (including negative steps)
+   *> @incremental should round if it is bound to integer
+
+   BUGS: XXX
+   *> leaves a trace behind, hor.bar gets darker, etc... fix transparency
+-->
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml">
+      
+  <binding id="xformswidget-range"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <children includes="label"/>
+      <html:span anonid="labelBegin" style="margin-right: 3px;"></html:span>
+      <!-- width and height set by CSS? -->
+      <html:canvas tabindex="0" anonid="canvas" width="260" height="40"
+                   onkeydown="this.parentNode.handleKey(event)"
+                   onmousedown="this.parentNode.handleMouseDown(event)"
+                   onmouseup="this.parentNode.handleMouseUp(event)"
+                   onmouseout="this.parentNode.handleMouseOut(event)"
+                   onmousemove="this.parentNode.handleMouseMove(event)">
+      </html:canvas>
+      <html:span anonid="labelEnd" style="margin-left: 3px;"> </html:span>
+      <children/>
+    </content>
+
+    <implementation implements="nsIXFormsUIWidget">
+      <!-- The "skin", should be set via CSS -->
+      <field name="strokeStyle" readonly="true">"#8f9ca4"</field>
+      <field name="strokeStyleMove" readonly="true">"red"</field>
+      <field name="fillStyle" readonly="true">"#eff3f1"</field>
+
+      <!-- Is the range initialized -->
+      <field name="isInitialized">false</field>
+
+      <!-- out of range -->
+      <field name="outOfRange">false</field>
+
+      <!-- are we currently moving the slider? -->
+      <field name="isMoving">false</field>
+
+      <!-- creates the sliderpath -->
+      <method name="sliderPath">
+        <parameter name="aPos"/>
+        <body>
+          this.ctx.beginPath();
+          var h = this.height - this.tickheight;
+          this.ctx.moveTo(aPos, h);
+          this.ctx.lineTo(aPos - this.sliderwidth, h - this.slidertip);
+          this.ctx.lineTo(aPos - this.sliderwidth, this.tickheight);
+          this.ctx.lineTo(aPos + this.sliderwidth, this.tickheight);
+          this.ctx.lineTo(aPos + this.sliderwidth, h - this.slidertip);
+          this.ctx.closePath();
+        </body>
+      </method>
+
+      <!-- creates the sliderpath -->
+      <method name="drawSlider">
+        <parameter name="aPos"/>
+        <parameter name="aMove"/>
+        <body>
+          this.ctx.save();
+
+          // do path
+          this.ctx.lineWidth = 1;
+          this.sliderPath(aPos);
+          this.ctx.strokeStyle = aMove ? this.strokeStyleMove : this.strokeStyle;
+          this.ctx.stroke();
+          this.sliderPath(aPos);
+          this.ctx.fillStyle = this.fillStyle;
+          this.ctx.fill();
+          
+          this.ctx.restore();
+        </body>
+      </method>
+
+      <!-- takes a value and calculates the x position -->
+      <method name="calcPos">
+        <parameter name="val"/>
+        <body>
+          var pos = val - this.rBegin;
+          if (this.rStep) {
+            pos = (pos / this.rStep) * this.stepsp;
+          } else {
+            pos = (pos / (this.rEnd - this.rBegin)) * this.barwidth;
+          }
+          return Math.round(pos) + this.margin;
+        </body>
+      </method>
+
+      <!-- sets the slider to a new value -->
+      <method name="setSlider">
+        <!-- The new value -->
+        <parameter name="aVal"/>
+        <!-- The mode:
+             - move: just moving the slider around, not setting the value
+
+             - set: enforce slider position from instance data,
+                    ie. do not correct it to fit a step, etc.
+
+             - [default]: set the slider to the given value, adjusting it
+                          to fit inside the allowed range
+        -->
+        <parameter name="aMode"/>
+
+        <body>
+          <![CDATA[
+
+          aVal = parseFloat(aVal);
+          if (aMode != "set" && isNaN(aVal)) {
+            return this.delegate.reportError("rangeSetSliderNaN");
+          }
+
+          var outOfRange = false;
+          if (aMode != "move") {
+            if (aMode == "set" && 
+                (isNaN(aVal) || aVal > this.adjEnd || aVal < this.rBegin)) {
+              outOfRange = true;
+            } else {
+              if (this.rStep) {
+                // adjust aVal to limits
+                valmod = (aVal - this.rBegin) % this.rStep;
+                if (valmod) {
+                  if (aMode == "set") {
+                    outOfRange = true;
+                  } else if (valmod < (this.rStep / 2)) {
+                    aVal -= valmod;
+                  } else {
+                    aVal += this.rStep - valmod;
+                  }
+                }
+              }
+              if (aVal > this.adjEnd) {
+                aVal = this.adjEnd;
+              } else if (aVal < this.rBegin) {
+                aVal = this.rBegin;
+              }
+            }
+          }
+
+          if (!outOfRange && (aMode != "move" || this.isIncremental)) {
+            // Store new value
+            this.accessors.setValue(aVal);
+          }
+
+          if (this.rVal == aVal && !this.justMoved) {
+            // slider is already drawn at correct position
+            return;
+          }
+
+          this.ctx.save();
+
+          // clear old slider
+          this.ctx.clearRect(this.calcPos(this.rVal) - this.sliderwidth - 1, this.tickheight - 1,
+                             this.sliderwidth * 2 + 2, this.tickheight * 3 + 2);
+
+          // (re)draw horisontal bar
+          this.ctx.lineWidth = 1;
+          this.ctx.fillStyle = this.fillStyle;
+          this.ctx.strokeStyle = this.strokeStyle;
+          mid = Math.round(this.height / 2);
+          // XXX only needs to be redrawn for old slider pos
+          this.ctx.fillRect(this.margin, mid - 1, this.barwidth, 3);
+          this.ctx.strokeRect(this.margin, mid - 1, this.barwidth, 3);
+
+          // check whether out-of-range state has changed, and dispatch event if it has
+          if (outOfRange != this.outOfRange) {
+            // XXX we need to set the style too
+            this.outOfRange = outOfRange;
+            var event = outOfRange ? "xforms-out-of-range" : "xforms-in-range";
+            this.dispatchXFormsNotificationEvent(event, this);
+          }
+
+          // if out-of-range, we cannot represent the value
+          if (outOfRange) {
+            this.rVal = null;
+            return null;
+          }
+
+          // draw slider at new position
+          this.justMoved = (aMode == "move");
+          this.drawSlider(this.calcPos(aVal), this.justMoved);
+
+          this.ctx.restore();
+
+          // Store new value
+          return this.rVal = aVal;
+          ]]>
+        </body>
+      </method>
+
+      <!-- get x,y offset for mouse events -->
+      <method name="getOffset">
+        <parameter name="event"/>
+        <body>
+          var obj;
+          if (document.getBoxObjectFor) {
+            obj = document.getBoxObjectFor(this.canvas);
+          } else {
+            obj = { x: event.target.offsetLeft, y: event.target.offsetTop };
+          }
+          return obj;
+        </body>
+      </method>
+
+      <!-- calculate slider position from mouse position -->
+      <method name="calcMousePos">
+        <parameter name="obj"/>
+        <parameter name="x"/>
+        <body>
+          x -= obj.margin;
+          if (obj.rStep) {
+            x = (x / obj.stepsp) * obj.rStep;
+          } else {
+            x = (x / this.barwidth) * (this.rEnd - this.rBegin);
+          }
+          return x + obj.rBegin;  
+        </body>
+      </method>
+
+      <!-- handle mouse down -->
+      <method name="handleMouseDown">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+          if (event.button == 0) {
+            this.currentOffset = this.getOffset(event);
+            this.originalVal = this.rVal;
+            this.isMoving = true;
+            var xpos = event.clientX - this.currentOffset.x;
+            if (xpos < this.margin) {
+              xpos = this.margin;
+            }
+            if (xpos > (this.barwidth + this.margin)) {
+              xpos = this.barwidth;
+            }
+            this.setSlider(this.calcMousePos(this, xpos), "move");
+            return;
+          }
+          ]]>
+        </body>
+      </method>
+
+      <!-- handle mouse up -->
+      <method name="handleMouseUp">
+        <parameter name="event"/>
+        <body>
+          if (event.button != 0 || !this.isMoving) {
+            return;
+          }
+          var x = event.clientX - this.currentOffset.x;
+          this.setSlider(this.calcMousePos(this, x));
+          this.isMoving = false;
+        </body>
+      </method>
+
+      <!-- handle mouse moves -->
+      <method name="handleMouseMove">
+        <parameter name="event"/>
+        <body>
+          <![CDATA[
+          if (!this.isMoving) {
+            return;
+          }
+          var xpos = event.clientX - this.currentOffset.x;
+          if (xpos < this.margin) {
+            xpos = this.margin;
+          }
+          if (xpos > (this.barwidth + this.margin)) {
+            xpos = this.barwidth + this.margin;
+          }
+          this.setSlider(this.calcMousePos(this, xpos), "move");
+          ]]>
+        </body>
+      </method>
+
+      <!-- handle mouse out -->
+      <method name="handleMouseOut">
+        <parameter name="event"/>
+        <body>
+          if (!this.isMoving) {
+            return;
+          }
+          this.isMoving = false;
+          this.setSlider(this.originalVal);
+        </body>
+      </method>
+
+      <method name="handleKey">
+        <parameter name="event"/>
+        <body>
+          var move;
+          if (this.rStep) {
+            move = this.rStep;
+          } else {
+            move = (this.rEnd - this.rBegin) / 20;
+          }
+
+          if (event.keyCode == event.DOM_VK_LEFT) {
+            this.setSlider(this.rVal - move);
+          } else if (event.keyCode == event.DOM_VK_RIGHT) {        
+            this.setSlider(this.rVal + move);
+          }
+        </body>
+      </method>
+
+      <method name="refresh">
+        <body>
+          <![CDATA[
+          if (!this.isInitialized) {
+            if (!this.delegate) {
+              return;
+            }
+            var labelBegin = document.getAnonymousElementByAttribute(this, "anonid", "labelBegin");
+            var labelEnd = document.getAnonymousElementByAttribute(this, "anonid", "labelEnd");
+            var canvas = document.getAnonymousElementByAttribute(this, "anonid", "canvas");
+            this.isInitialized = this.createRange(canvas, labelBegin, labelEnd,
+                                                  this.accessors.getRangeStart(),
+                                                  this.accessors.getRangeEnd(),
+                                                  this.accessors.getRangeStep());
+          }
+
+          // XXX: does not clear range if bound node "disappears"
+          if (this.isInitialized && this.accessors.hasBoundNode()) {
+            this.setSlider(this.accessors.getValue(), "set");
+          }
+          ]]>
+        </body>
+      </method>
+
+      <method name="focus">
+        <body>
+          this.canvas.focus();
+          return true;
+        </body>
+      </method>
+
+      <!-- create new range object -->
+      <method name="createRange">
+        <parameter name="aCanvas"/>
+        <parameter name="aLabelBegin"/>
+        <parameter name="aLabelEnd"/>
+        <parameter name="aBegin"/>
+        <parameter name="aEnd"/>
+        <parameter name="aStep"/>
+        <body>
+          <![CDATA[
+          if (!(aCanvas && aLabelBegin && aLabelEnd)) {
+            this.delegate.reportError("rangeNullObjects");
+            return false;
+          }
+
+          this.rBegin = parseFloat(aBegin);
+          this.rEnd = parseFloat(aEnd);
+          this.rStep = parseFloat(aStep);
+          this.rVal = this.rBegin;
+          this.isIncremental = this.getAttribute("incremental") == "true";
+          this.justMoved = false;
+
+          if (isNaN(this.rBegin) || isNaN(this.rEnd)) {
+            this.delegate.reportError("rangeNullInit");
+            return false;
+          }
+
+          // XXX should we handle this?
+          if (this.rBegin >= this.rEnd) {
+            this.delegate.reportError("rangeBeginEndError");
+            return false;
+          }
+
+          if (isNaN(this.rStep)) {
+            this.rStep = null;
+          } else if (this.rStep < 0) {
+            // XXX better handling
+            this.rStep = -this.rStep;
+          }
+
+          // set labels
+          aLabelBegin.appendChild(document.createTextNode(this.rBegin));
+          aLabelEnd.appendChild(document.createTextNode(this.rEnd));
+
+          // get canvas
+          this.canvas = aCanvas;
+          this.height = this.canvas.height;
+
+          // get and set context
+          this.ctx = this.canvas.getContext("2d");
+          this.ctx.globalAlpha = 1.0;
+          this.ctx.lineWidth = 1;
+
+          // size of horisontal bar
+          this.margin = Math.round(this.canvas.width / 45);
+          if (this.margin < 4) {
+            this.margin = 4;
+          }
+          this.barwidth = this.canvas.width - (2 * this.margin);
+
+          // slider size
+          this.sliderwidth = this.margin - 1;
+          if (this.sliderwidth < 4) {
+            this.sliderwidth = 4;
+          }
+          this.slidertip = Math.round(this.height / 10);
+          this.tickheight = this.slidertip * 2;
+
+          if (!this.rStep) {
+            this.adjEnd = this.rEnd;
+            return true;
+          }
+
+          // begin and end might not be a step
+          this.adjEnd = this.rEnd - ((this.rEnd - this.rBegin) % this.rStep);
+          this.steps  = (this.adjEnd - this.rBegin) / this.rStep;
+          this.stepsp = (this.barwidth * (this.adjEnd / this.rEnd)) / this.steps;
+          this.width = this.steps * this.stepsp;
+
+          // ticks (== steps for the moment)
+          this.ticks = this.steps;
+          this.ticksp = this.stepsp;
+
+          for (var i = 0; i <= this.ticks; ++i) {
+            var pos = Math.round(this.margin + i * this.ticksp);
+            this.ctx.moveTo(pos, this.height - this.tickheight + 1);
+            this.ctx.lineTo(pos, this.height);
+            this.ctx.closePath();
+            this.ctx.stroke();
+          }
+
+
+          return true;
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+</bindings>

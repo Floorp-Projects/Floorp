@@ -49,7 +49,7 @@ interface nsIXFormsAccessors;
  * http://developer.mozilla.org/en/docs/XForms:Custom_Controls
  *
  */
-[scriptable, uuid(5e75904d-73e8-4cee-b02c-4348a071a0e1)]
+[scriptable, uuid(902898eb-490e-4c36-a00b-9e74adcfbc43)]
 interface nsIXFormsDelegate : nsISupports
 {
   /**
@@ -61,4 +61,14 @@ interface nsIXFormsDelegate : nsISupports
    * This should be called by XBL widgets, when they are created.
    */
   void widgetAttached();
+
+  /**
+   * Report an error
+   *
+   * @param errorMsg          The error message id
+   *
+   * @todo XXX this should be extended to allow for "raw strings", not
+   * necessarily kept in bundles.
+   */
+  void reportError(in DOMString errorMsg);
 };

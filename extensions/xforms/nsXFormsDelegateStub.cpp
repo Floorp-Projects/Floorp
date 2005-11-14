@@ -180,6 +180,14 @@ nsXFormsDelegateStub::GetHasBoundNode(PRBool *aHasBoundNode)
 }
 
 NS_IMETHODIMP
+nsXFormsDelegateStub::ReportError(const nsAString& aErrorMsg)
+{
+  const nsPromiseFlatString& flat = PromiseFlatString(aErrorMsg);
+  nsXFormsUtils::ReportError(flat, mElement);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsDelegateStub::WidgetAttached()
 {
   if (UpdateRepeatState() != eType_Template)

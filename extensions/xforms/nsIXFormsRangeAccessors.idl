@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,50 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NSXFORMSACCESSORS_H__
-#define __NSXFORMSACCESSORS_H__
-
-#include "nsIClassInfo.h"
-#include "nsIXFormsAccessors.h"
-#include "nsIDelegateInternal.h"
-
-class nsIDOMElement;
+#include "nsIXFormsAccessors.idl"
 
 /**
- * Implementation of the nsIXFormsAccessors object. It is always owned by a
- * nsIXFormsDelegate.
+ * Accessors provided by XForms \<range\> controls.
+ *
+ * @see http://www.w3.org/TR/xforms/slice8.html#ui-range
  */
-class nsXFormsAccessors : public nsIXFormsAccessors,
-                          public nsIClassInfo
+[scriptable, uuid(8a6c4540-4c2b-4591-af0e-ef147543eee7)]
+interface nsIXFormsRangeAccessors : nsIXFormsAccessors
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICLASSINFO
-  NS_DECL_NSIXFORMSACCESSORS
+  /** The start of the range interval */
+  DOMString getRangeStart();
 
-  /** Constructor */
-  nsXFormsAccessors(nsIDelegateInternal* aDelegate, nsIDOMElement* aElement)
-    : mDelegate(aDelegate), mElement(aElement) 
-  {
-  }
+  /** The end of the range interval */
+  DOMString getRangeEnd();
 
-  /** Called by the owning delegate when it itself is destroyed */
-  void Destroy();
-
-protected:
-  /**
-   * Checks the status of the model item properties
-   *
-   * @param aState       The state to check
-   * @para  aStateVal    The returned state
-   */
-  nsresult GetState(PRInt32 aState, PRBool *aStateVal);
-
-  /** The delegate owning us */
-  nsIDelegateInternal*   mDelegate;
-
-  /** The control DOM element */
-  nsIDOMElement*         mElement;
+  /** The step size */
+  DOMString getRangeStep();
 };
-
-#endif

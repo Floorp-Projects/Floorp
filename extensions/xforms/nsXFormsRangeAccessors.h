@@ -36,50 +36,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NSXFORMSACCESSORS_H__
-#define __NSXFORMSACCESSORS_H__
-
-#include "nsIClassInfo.h"
-#include "nsIXFormsAccessors.h"
-#include "nsIDelegateInternal.h"
-
-class nsIDOMElement;
+#include "nsIXFormsRangeAccessors.h"
+#include "nsXFormsAccessors.h"
 
 /**
- * Implementation of the nsIXFormsAccessors object. It is always owned by a
- * nsIXFormsDelegate.
+ * Implementation for the accessors for a range element,
+ * nsIXFormsRangeAccessors.
+ *
+ * @todo Support out-of/in-range events (XXX)
  */
-class nsXFormsAccessors : public nsIXFormsAccessors,
-                          public nsIClassInfo
+class nsXFormsRangeAccessors : public nsIXFormsRangeAccessors,
+                               public nsXFormsAccessors
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICLASSINFO
-  NS_DECL_NSIXFORMSACCESSORS
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIXFORMSRANGEACCESSORS
+  NS_FORWARD_NSIXFORMSACCESSORS(nsXFormsAccessors::)
 
-  /** Constructor */
-  nsXFormsAccessors(nsIDelegateInternal* aDelegate, nsIDOMElement* aElement)
-    : mDelegate(aDelegate), mElement(aElement) 
+  // Constructor
+  nsXFormsRangeAccessors(nsIDelegateInternal* aDelegate,
+                         nsIDOMElement* aElement)
+    : nsXFormsAccessors(aDelegate, aElement)
   {
   }
 
-  /** Called by the owning delegate when it itself is destroyed */
-  void Destroy();
+  // nsIClassInfo overrides
+  NS_IMETHOD GetInterfaces(PRUint32 *aCount, nsIID * **aArray);
 
 protected:
   /**
-   * Checks the status of the model item properties
+   * Gets the value of an attribute on the element (mElement).
    *
-   * @param aState       The state to check
-   * @para  aStateVal    The returned state
+   * @param aAttr        The attribute
+   * @param aVal         The returned value ("DOMNull"s it if it's not there or empty)
    */
-  nsresult GetState(PRInt32 aState, PRBool *aStateVal);
-
-  /** The delegate owning us */
-  nsIDelegateInternal*   mDelegate;
-
-  /** The control DOM element */
-  nsIDOMElement*         mElement;
+  nsresult AttributeGetter(const nsAString &aAttr, nsAString &aVal);
 };
-
-#endif

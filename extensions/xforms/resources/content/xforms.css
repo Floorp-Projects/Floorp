@@ -80,6 +80,10 @@ output {
   -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-output');
 }
 
+range {
+  -moz-binding: url('chrome://xforms/content/range.xml#xformswidget-range');
+}
+
 input {
   -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-input');
 }

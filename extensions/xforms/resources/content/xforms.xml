@@ -122,6 +122,7 @@
         </body>
       </method>
 
+      <!-- Dispatch UI Event to the control itself -->
       <method name="dispatchDOMUIEvent">
         <parameter name="aType"/>
         <body>
@@ -132,6 +133,20 @@
         </body>
       </method>
 
+      <!--
+          Dispatch an _XForms notification event_ to a node.
+          See http://www.w3.org/TR/xforms/slice4.html#evt-notify
+      -->
+      <method name="dispatchXFormsNotificationEvent">
+        <parameter name="aEventName"/>
+        <parameter name="aTarget"/>
+        <body>
+          var ev = document.createEvent("Events");
+          ev.initEvent(aEventName, true, false);
+          aTarget.dispatchEvent(ev);
+          return true;
+        </body>
+      </method>
     </implementation>
   </binding>
   

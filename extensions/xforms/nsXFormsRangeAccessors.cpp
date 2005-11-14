@@ -36,50 +36,73 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NSXFORMSACCESSORS_H__
-#define __NSXFORMSACCESSORS_H__
+#include "nsXFormsRangeAccessors.h"
+#include "nsDOMString.h"
+#include "nsIDOMElement.h"
+#include "nsString.h"
+#include "nsXFormsUtils.h"
 
-#include "nsIClassInfo.h"
-#include "nsIXFormsAccessors.h"
-#include "nsIDelegateInternal.h"
+NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsRangeAccessors,
+                             nsXFormsAccessors,
+                             nsIXFormsRangeAccessors, 
+                             nsIClassInfo)
 
-class nsIDOMElement;
-
-/**
- * Implementation of the nsIXFormsAccessors object. It is always owned by a
- * nsIXFormsDelegate.
- */
-class nsXFormsAccessors : public nsIXFormsAccessors,
-                          public nsIClassInfo
+// nsXFormsRangeAccessors
+nsresult
+nsXFormsRangeAccessors::AttributeGetter(const nsAString &aAttr, nsAString &aVal)
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICLASSINFO
-  NS_DECL_NSIXFORMSACCESSORS
-
-  /** Constructor */
-  nsXFormsAccessors(nsIDelegateInternal* aDelegate, nsIDOMElement* aElement)
-    : mDelegate(aDelegate), mElement(aElement) 
-  {
+  nsAutoString val;
+  if (mElement) {
+    mElement->GetAttribute(aAttr, val);
+  }
+  if (val.IsEmpty()) {
+    SetDOMStringToNull(aVal);
+  } else {
+    aVal = val;
   }
 
-  /** Called by the owning delegate when it itself is destroyed */
-  void Destroy();
+  return NS_OK;
+}
 
-protected:
-  /**
-   * Checks the status of the model item properties
-   *
-   * @param aState       The state to check
-   * @para  aStateVal    The returned state
-   */
-  nsresult GetState(PRInt32 aState, PRBool *aStateVal);
 
-  /** The delegate owning us */
-  nsIDelegateInternal*   mDelegate;
+// nsIXFormsRangeElement
 
-  /** The control DOM element */
-  nsIDOMElement*         mElement;
+// XXX this should do a max(type.minumum, @start)
+NS_IMETHODIMP
+nsXFormsRangeAccessors::GetRangeStart(nsAString &aMin)
+{
+  return AttributeGetter(NS_LITERAL_STRING("start"), aMin);
+}
+
+// XXX this should do min(type.maximu, @end)
+NS_IMETHODIMP
+nsXFormsRangeAccessors::GetRangeEnd(nsAString &aMax)
+{
+  return AttributeGetter(NS_LITERAL_STRING("end"), aMax);
+}
+
+// XXX if step is not set, it should be set to something "smart" and also
+// needs to be something that is valid for the given type. This could be
+// pushed to the widget though.
+NS_IMETHODIMP
+nsXFormsRangeAccessors::GetRangeStep(nsAString &aStep)
+{
+  return AttributeGetter(NS_LITERAL_STRING("step"), aStep);
+}
+
+
+// nsIClassInfo implementation
+
+static const nsIID sScriptingIIDs[] = {
+  NS_IXFORMSACCESSORS_IID,
+  NS_IXFORMSRANGEACCESSORS_IID,
+  
 };
 
-#endif
+NS_IMETHODIMP
+nsXFormsRangeAccessors::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
+{
+  return nsXFormsUtils::CloneScriptingInterfaces(sScriptingIIDs,
+                                                 NS_ARRAY_LENGTH(sScriptingIIDs),
+                                                 aCount, aArray);
+}

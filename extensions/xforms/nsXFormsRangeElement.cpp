@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Allan Beaufour <abeaufour@novell.com>
+ *  Allan Beaufour <allan@beaufour.dk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,50 +36,52 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NSXFORMSACCESSORS_H__
-#define __NSXFORMSACCESSORS_H__
-
-#include "nsIClassInfo.h"
-#include "nsIXFormsAccessors.h"
-#include "nsIDelegateInternal.h"
-
-class nsIDOMElement;
+#include "nsXFormsDelegateStub.h"
+#include "nsXFormsRangeAccessors.h"
 
 /**
- * Implementation of the nsIXFormsAccessors object. It is always owned by a
- * nsIXFormsDelegate.
+ * Implementation of the XForms \<range\> element
+ * @see http://www.w3.org/TR/xforms/slice8.html#ui-range
+ *
+ * @todo Check data binding restrictions (XXX)
  */
-class nsXFormsAccessors : public nsIXFormsAccessors,
-                          public nsIClassInfo
+class nsXFormsRangeElement : public nsXFormsDelegateStub
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICLASSINFO
-  NS_DECL_NSIXFORMSACCESSORS
 
-  /** Constructor */
-  nsXFormsAccessors(nsIDelegateInternal* aDelegate, nsIDOMElement* aElement)
-    : mDelegate(aDelegate), mElement(aElement) 
-  {
-  }
+  // nsIXFormsDelegate overrides
+  NS_IMETHOD GetXFormsAccessors(nsIXFormsAccessors **aAccessor);
 
-  /** Called by the owning delegate when it itself is destroyed */
-  void Destroy();
-
-protected:
-  /**
-   * Checks the status of the model item properties
-   *
-   * @param aState       The state to check
-   * @para  aStateVal    The returned state
-   */
-  nsresult GetState(PRInt32 aState, PRBool *aStateVal);
-
-  /** The delegate owning us */
-  nsIDelegateInternal*   mDelegate;
-
-  /** The control DOM element */
-  nsIDOMElement*         mElement;
+#ifdef DEBUG_smaug
+  virtual const char* Name() { return "range"; }
+#endif
 };
 
-#endif
+// nsIXFormsDelegate
+
+NS_IMETHODIMP
+nsXFormsRangeElement::GetXFormsAccessors(nsIXFormsAccessors **aAccessor)
+{
+  if (!mAccessor) {
+    mAccessor = new nsXFormsRangeAccessors(this, mElement);
+    if (!mAccessor) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  NS_ADDREF(*aAccessor = mAccessor);
+  return NS_OK;
+}
+
+
+// Creator
+
+NS_HIDDEN_(nsresult)
+NS_NewXFormsRangeElement(nsIXTFElement **aResult)
+{
+  *aResult = new nsXFormsRangeElement();
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
