@@ -80,6 +80,8 @@ typedef PRUint32 nsrefcnt;
 class NS_NO_VTABLE nsISupports {
 public:
 
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISUPPORTS_IID)
+
   /**
    * @name Methods
    */
@@ -115,5 +117,9 @@ public:
 
   //@}
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsISupports, NS_ISUPPORTS_IID)
+
 /*@}*/
+
 #endif
