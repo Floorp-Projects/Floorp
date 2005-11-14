@@ -1753,7 +1753,7 @@ nsParser::ParseFragment(const nsAString& aSourceBuffer,
       CStartToken bodyToken(NS_LITERAL_STRING("BODY"), eHTMLTag_body);
       nsCParserNode bodyNode(&bodyToken, 0);
 
-      dtd->OpenBody(&bodyNode);
+      dtd->OpenContainer(&bodyNode, eHTMLTag_body);
 
       // Now parse the flushed out tags.
       result = BuildModel();
