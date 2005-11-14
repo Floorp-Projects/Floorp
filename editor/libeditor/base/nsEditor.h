@@ -609,7 +609,6 @@ protected:
   PRPackedBool                  mInIMEMode;        // are we inside an IME composition?
   PRPackedBool                  mIsIMEComposing;   // is IME in composition state?
                                                    // This is different from mInIMEMode. see Bug 98434.
-  PRPackedBool                  mNeedRecoverIMEOpenState;   // Need IME open state change on blur.
 
   PRPackedBool                  mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   // various listeners

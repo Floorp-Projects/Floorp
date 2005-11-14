@@ -24,6 +24,7 @@
  *   Makoto Kato  <m_kato@ga2.so-net.ne.jp>
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -47,6 +48,7 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIWidget.h"
+#include "nsIKBStateControl.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsDOMEvent.h"
@@ -646,15 +648,18 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           // "leak" this reference, but we take it back later
           SetFocusedContent(nsnull);
 
+          UpdateIMEState(aPresContext, currentFocus);
+
           nsEventStatus status = nsEventStatus_eIgnore;
           nsEvent focusevent(PR_TRUE, NS_FOCUS_CONTENT);
 
           if (gLastFocusedDocument != mDocument) {
             mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull,
                                       NS_EVENT_FLAG_INIT, &status);
-            if (currentFocus && currentFocus != gLastFocusedContent)
+            if (currentFocus && currentFocus != gLastFocusedContent) {
               currentFocus->HandleDOMEvent(aPresContext, &focusevent, nsnull,
                                            NS_EVENT_FLAG_INIT, &status);
+            }
           }
 
           globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull,
@@ -3870,6 +3875,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       }
       notifyContent[2] = gLastFocusedContent;
       NS_IF_ADDREF(gLastFocusedContent);
+      UpdateIMEState(mPresContext, aContent);
       // only raise window if the the focus controller is active
       SendFocusBlur(mPresContext, aContent, fcActive);
       if (mCurrentFocus != aContent) {
@@ -4412,7 +4418,7 @@ nsEventStateManager::ContentRemoved(nsIContent* aContent)
     // Note that we don't use SetContentState() here because
     // we don't want to fire a blur.  Blurs should only be fired
     // in response to clicks or tabbing.
-
+    UpdateIMEState(mPresContext, nsnull);
     SetFocusedContent(nsnull);
   }
 
@@ -5478,3 +5484,78 @@ nsEventStateManager::GetFocusControllerForDocument(nsIDocument* aDocument)
 
   return windowPrivate ? windowPrivate->GetRootFocusController() : nsnull;
 }
+
+void
+nsEventStateManager::UpdateIMEState(nsPresContext* aPresContext,
+                                    nsIContent*    aContent)
+{
+  if (!aPresContext)
+    return;
+
+  // On Printing or Print Preview, we don't need IME.
+  if (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
+      aPresContext->Type() == nsPresContext::eContext_Print) {
+    SetIMEState(aPresContext, nsIContent::IME_STATUS_DISABLE);
+    return;
+  }
+
+  PRUint32 state = nsIContent::IME_STATUS_DISABLE;
+
+  PRBool isEditable = PR_FALSE;
+  nsCOMPtr<nsISupports> container = aPresContext->GetContainer();
+  nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(container));
+  if (editorDocShell)
+    editorDocShell->GetEditable(&isEditable);
+
+  if (isEditable)
+    state = nsIContent::IME_STATUS_ENABLE;
+  else if (aContent)
+    state = aContent->GetDesiredIMEState();
+
+  if (state == nsIContent::IME_STATUS_NONE)
+    return;
+  SetIMEState(aPresContext, state);
+}
+
+void
+nsEventStateManager::SetIMEState(nsPresContext* aPresContext,
+                                 PRUint32       aState)
+{
+  if (!aPresContext)
+    return;
+
+  nsCOMPtr<nsIKBStateControl> kb;
+  nsresult rv = GetKBStateControl(aPresContext, getter_AddRefs(kb));
+  if (NS_FAILED(rv) || !kb)
+    return;
+
+  if (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
+    PRBool enable = (aState & nsIContent::IME_STATUS_ENABLE);
+    kb->SetIMEEnabled(enable);
+  }
+  if (aState & nsIContent::IME_STATUS_MASK_OPENED) {
+    PRBool open = (aState & nsIContent::IME_STATUS_OPEN);
+    kb->SetIMEOpenState(open);
+  }
+}
+
+nsresult
+nsEventStateManager::GetKBStateControl(nsPresContext* aPresContext,
+                                       nsIKBStateControl** aResult)
+{
+  NS_ENSURE_ARG_POINTER(aPresContext);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = nsnull;
+  nsIViewManager* vm = aPresContext->GetViewManager();
+  NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIWidget> widget = nsnull;
+  nsresult rv = vm->GetWidget(getter_AddRefs(widget));
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(widget);
+  NS_ENSURE_TRUE(kb, NS_ERROR_FAILURE);
+  NS_ADDREF(*aResult = kb);
+  return NS_OK;
+}
+
