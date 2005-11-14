@@ -192,6 +192,12 @@ nsProfileMigrator::ImportRegistryProfiles(const nsACString& aAppName)
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
   regFile->AppendNative(aAppName);
   regFile->AppendNative(NS_LITERAL_CSTRING("registry.dat"));
+#elif defined(XP_BEOS)
+  rv = dirService->Get(NS_BEOS_SETTINGS_DIR, NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(regFile));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  regFile->AppendNative(aAppName);
+  regFile->AppendNative(NS_LITERAL_CSTRING("appreg"));
 #else
   rv = dirService->Get(NS_UNIX_HOME_DIR, NS_GET_IID(nsILocalFile),
                        getter_AddRefs(regFile));
