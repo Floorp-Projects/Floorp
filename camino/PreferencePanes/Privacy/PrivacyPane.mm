@@ -560,11 +560,47 @@ PR_STATIC_CALLBACK(int) compareValues(nsICookie* aCookie1, nsICookie* aCookie2, 
                               [self getLocalizedString:@"CancelButtonText"],
                               nil) == NSAlertDefaultReturn)
   {
-    if (mPermissionManager) {
-      // remove all permissions from permission manager
-      mPermissionManager->RemoveAll();
+    if (mPermissionManager)
+    {
+      // since the permissions manager stores not just cookie permissions,
+      // but also images etc, we have to manually remove just the cookie
+      // ones. Ugh.
+      
+      // we have to keep a list of permissions to remove, because it's
+      // not safe to remove while enumerating
+      nsCOMArray<nsIPermission> permissionsToRemove;
+      
+      nsCOMPtr<nsISimpleEnumerator> permEnum;
+      mPermissionManager->GetEnumerator(getter_AddRefs(permEnum));
+      if (permEnum)
+      {
+        PRBool hasMoreElements = PR_FALSE;
+        while (NS_SUCCEEDED(permEnum->HasMoreElements(&hasMoreElements)) && hasMoreElements)
+        {
+          nsCOMPtr<nsISupports> curr;
+          permEnum->GetNext(getter_AddRefs(curr));
+          nsCOMPtr<nsIPermission> currPerm(do_QueryInterface(curr));
+          if (currPerm)
+          {
+            nsCAutoString type;
+            currPerm->GetType(type);
+            if (type.Equals(NS_LITERAL_CSTRING("cookie")))
+              permissionsToRemove.AppendObject(currPerm);
+          }
+        }
+      }
+
+      // now do the removal
+      int numDoomed = permissionsToRemove.Count();
+      for (int i = 0; i < numDoomed; ++i)
+      {
+        nsCAutoString curHost, curType;
+        permissionsToRemove.ObjectAt(i)->GetHost(curHost);
+        permissionsToRemove.ObjectAt(i)->GetType(curType);
+        mPermissionManager->Remove(curHost, curType.get());
+      }
+
       delete mCachedPermissions;
-      mCachedPermissions = nsnull;
       mCachedPermissions = new nsCOMArray<nsIPermission>;
     }
     [mPermissionsTable reloadData];
