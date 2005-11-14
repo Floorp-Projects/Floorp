@@ -67,11 +67,7 @@ ifeq ($(OS_TARGET)$(OS_RELEASE), SunOS5.6)
 OS_LIBS += -ldl -lxnet -lposix4 -lsocket -lnsl
 endif
 
-ifeq (,$(filter-out WIN%,$(OS_TARGET)))
-EXTRA_LIBS += $(DIST)/lib/crmf.lib
-else
-EXTRA_LIBS += $(DIST)/lib/libcrmf.$(LIB_SUFFIX) 
-endif
+EXTRA_LIBS += $(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX)
 
 include ../platlibs.mk
 
