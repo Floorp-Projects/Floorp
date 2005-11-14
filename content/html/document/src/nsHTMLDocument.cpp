@@ -222,9 +222,7 @@ public:
     return NS_STATIC_CAST(nsIContent*, mIdContentList.SafeElementAt(0));
   }
 
-  // If aForce is true, the new content will become the new content
-  // returned for this ID, even if there is already such content.
-  PRBool AddIdContent(nsIContent* aContent, PRBool aForce);
+  PRBool AddIdContent(nsIContent* aContent);
 
   PRBool RemoveIdContent(nsIContent* aContent) {
     // XXXbz should this ever Compact() I guess when all the content is gone
@@ -247,7 +245,7 @@ private:
 };
 
 PRBool
-IdAndNameMapEntry::AddIdContent(nsIContent* aContent, PRBool aForce)
+IdAndNameMapEntry::AddIdContent(nsIContent* aContent)
 {
   NS_PRECONDITION(aContent, "Must have content");
   NS_PRECONDITION(mIdContentList.IndexOf(nsnull) == -1,
@@ -264,21 +262,11 @@ IdAndNameMapEntry::AddIdContent(nsIContent* aContent, PRBool aForce)
   // registering from the top when going live.
   PRInt32 index = mIdContentList.IndexOf(aContent);
   if (index != -1) {
-    if (!aForce) {
-      // nothing else to do here
-      return PR_TRUE;
-    }
-
-    // Remove it from index
-    if (NS_UNLIKELY(!mIdContentList.RemoveElementAt(index))) {
-      return PR_FALSE;
-    }
-
-    // Fall through to readd at 0
+    // nothing else to do here
+    return PR_TRUE;
   }
     
-  return aForce ? mIdContentList.InsertElementAt(aContent, 0) :
-    mIdContentList.AppendElement(aContent);
+  return mIdContentList.AppendElement(aContent);
 }
 
 
@@ -2469,7 +2457,7 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
     }
 
     // We found an element with a matching id, store that in the hash
-    if (NS_UNLIKELY(!entry->AddIdContent(e, PR_TRUE))) {
+    if (NS_UNLIKELY(!entry->AddIdContent(e))) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -3077,7 +3065,7 @@ nsHTMLDocument::AddToIdTable(const nsAString& aId, nsIContent *aContent)
                                         PL_DHASH_ADD));
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
-  if (NS_LIKELY(entry->AddIdContent(aContent, PR_FALSE))) {
+  if (NS_LIKELY(entry->AddIdContent(aContent))) {
     return NS_OK;
   }
 
@@ -3097,7 +3085,7 @@ nsHTMLDocument::UpdateIdTableEntry(const nsAString& aId, nsIContent *aContent)
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry) &&
-      NS_UNLIKELY(!entry->AddIdContent(aContent, PR_TRUE))) {
+      NS_UNLIKELY(!entry->AddIdContent(aContent))) {
     // failed to update...
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -3255,7 +3243,7 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
     if (idAttr &&
         aContent->AttrValueIs(kNameSpaceID_None, idAttr,
                               aName, eCaseMatters)) {
-      aEntry.AddIdContent(aContent, PR_FALSE);
+      aEntry.AddIdContent(aContent);
     }
   }
 
