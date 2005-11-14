@@ -77,7 +77,7 @@ struct nsImapEvent : public PLEvent
 	void PostEvent(nsIEventQueue* aEventQ);
   virtual void SetNotifyCompletion(PRBool notifyCompletion);
   
-	static void PR_CALLBACK imap_event_handler(PLEvent* aEvent);
+	static void* PR_CALLBACK imap_event_handler(PLEvent* aEvent);
 	static void PR_CALLBACK imap_event_destructor(PLEvent *aEvent);
   PRBool m_notifyCompletion;
 };

@@ -54,8 +54,7 @@
 #include "nsICryptoHash.h"
 #include "nsIPrincipal.h"
 
-typedef struct XPITriggerEvent {
-    PLEvent     e;
+struct XPITriggerEvent : public PLEvent {
     nsString    URL;
     PRInt32     status;
     JSContext*  cx;
@@ -63,7 +62,7 @@ typedef struct XPITriggerEvent {
     jsval       cbval;
     nsCOMPtr<nsISupports> ref;
     nsCOMPtr<nsIPrincipal> princ;
-} XPITriggerEvent;
+};
 
 
 

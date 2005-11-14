@@ -236,16 +236,18 @@ void nsXPITriggerInfo::SaveCallback( JSContext *aCx, jsval aVal )
     }
 }
 
-static void  destroyTriggerEvent(XPITriggerEvent* event)
+PR_STATIC_CALLBACK(void) destroyTriggerEvent(PLEvent* aEvent)
 {
+    XPITriggerEvent *event = NS_STATIC_CAST(XPITriggerEvent*, aEvent);
     JS_BeginRequest(event->cx);
     JS_RemoveRoot( event->cx, &event->cbval );
     JS_EndRequest(event->cx);
     delete event;
 }
 
-static void* handleTriggerEvent(XPITriggerEvent* event)
+PR_STATIC_CALLBACK(void*) handleTriggerEvent(PLEvent* aEvent)
 {
+    XPITriggerEvent *event = NS_STATIC_CAST(XPITriggerEvent*, aEvent);
     jsval  ret;
     void*  mark;
     jsval* args;
@@ -323,9 +325,9 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
                 XPITriggerEvent* event = new XPITriggerEvent();
                 if (event)
                 {
-                    PL_InitEvent(&event->e, 0,
-                        (PLHandleEventProc)handleTriggerEvent,
-                        (PLDestroyEventProc)destroyTriggerEvent);
+                    PL_InitEvent(event, 0,
+                                 handleTriggerEvent,
+                                 destroyTriggerEvent);
 
                     event->URL      = URL;
                     event->status   = status;
@@ -348,7 +350,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
                     // JSContext from dying before we handle this event.
                     event->ref      = mGlobalWrapper;
 
-                    eq->PostEvent(&event->e);
+                    eq->PostEvent(event);
                 }
                 else
                     rv = NS_ERROR_OUT_OF_MEMORY;

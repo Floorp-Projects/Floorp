@@ -4364,13 +4364,16 @@ struct nsCloseEvent : public PLEvent {
   nsRefPtr<nsGlobalWindow> mWindow;
 };
 
-static void PR_CALLBACK HandleCloseEvent(nsCloseEvent* aEvent)
+static void* PR_CALLBACK HandleCloseEvent(PLEvent* aEvent)
 {
-  aEvent->HandleEvent();
+  nsCloseEvent *event = NS_STATIC_CAST(nsCloseEvent*, aEvent);
+  event->HandleEvent();
+  return nsnull;
 }
-static void PR_CALLBACK DestroyCloseEvent(nsCloseEvent* aEvent)
+static void PR_CALLBACK DestroyCloseEvent(PLEvent* aEvent)
 {
-  delete aEvent;
+  nsCloseEvent *event = NS_STATIC_CAST(nsCloseEvent*, aEvent);
+  delete event;
 }
 
 nsresult
@@ -4382,7 +4385,7 @@ nsCloseEvent::PostCloseEvent()
     eventService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(eventQueue));
     if (eventQueue) {
 
-      PL_InitEvent(this, nsnull, (PLHandleEventProc) ::HandleCloseEvent, (PLDestroyEventProc) ::DestroyCloseEvent);
+      PL_InitEvent(this, nsnull, ::HandleCloseEvent, ::DestroyCloseEvent);
       return eventQueue->PostEvent(this);
     }
   }

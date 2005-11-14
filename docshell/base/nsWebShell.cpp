@@ -354,14 +354,17 @@ struct OnLinkClickEvent : public PLEvent {
   PopupControlState        mPopupState;
 };
 
-static void PR_CALLBACK HandlePLEvent(OnLinkClickEvent* aEvent)
+static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
 {
-  aEvent->HandleEvent();
+  OnLinkClickEvent* event = NS_STATIC_CAST(OnLinkClickEvent*, aEvent);
+  event->HandleEvent();
+  return nsnull;
 }
 
-static void PR_CALLBACK DestroyPLEvent(OnLinkClickEvent* aEvent)
+static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent)
 {
-  delete aEvent;
+  OnLinkClickEvent* event = NS_STATIC_CAST(OnLinkClickEvent*, aEvent);
+  delete event;
 }
 
 OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
@@ -385,9 +388,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
 
   mPopupState = window->GetPopupControlState();
 
-  PL_InitEvent(this, nsnull,
-               (PLHandleEventProc) ::HandlePLEvent,
-               (PLDestroyEventProc) ::DestroyPLEvent);
+  PL_InitEvent(this, nsnull, ::HandlePLEvent, ::DestroyPLEvent);
 
   nsCOMPtr<nsIEventQueue> eventQueue;
   aHandler->GetEventQueue(getter_AddRefs(eventQueue));

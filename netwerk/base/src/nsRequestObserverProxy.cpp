@@ -100,11 +100,11 @@ nsARequestObserverEvent::nsARequestObserverEvent(nsIRequest *request,
     NS_PRECONDITION(mRequest, "null pointer");
 
     PL_InitEvent(&mEvent, nsnull,
-        (PLHandleEventProc) nsARequestObserverEvent::HandlePLEvent,
-        (PLDestroyEventProc) nsARequestObserverEvent::DestroyPLEvent);
+                 nsARequestObserverEvent::HandlePLEvent,
+                 nsARequestObserverEvent::DestroyPLEvent);
 }
 
-void PR_CALLBACK
+void* PR_CALLBACK
 nsARequestObserverEvent::HandlePLEvent(PLEvent *plev)
 {
     nsARequestObserverEvent *ev = FromPLEvent(plev);
@@ -113,6 +113,8 @@ nsARequestObserverEvent::HandlePLEvent(PLEvent *plev)
     // Pass control to the real event handler
     if (ev)
         ev->HandleEvent();
+
+    return nsnull;
 }
 
 void PR_CALLBACK

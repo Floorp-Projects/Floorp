@@ -71,7 +71,7 @@ public:
     NS_IMETHOD HandleEvent() = 0;
 
 protected:
-    static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
+    static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
     static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
     nsAsyncStreamObserver*      mListener;
@@ -105,7 +105,7 @@ nsStreamListenerEvent::~nsStreamListenerEvent()
     NS_IF_RELEASE(mContext);
 }
 
-void PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
+void* PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
 {
     nsStreamListenerEvent* ev = GET_STREAM_LISTENER_EVENT(aEvent);
     NS_ASSERTION(nsnull != ev,"null event.");
@@ -123,6 +123,8 @@ void PR_CALLBACK nsStreamListenerEvent::HandlePLEvent(PLEvent* aEvent)
         nsresult cancelRv = ev->mRequest->Cancel(rv);
         NS_ASSERTION(NS_SUCCEEDED(cancelRv), "Cancel failed");
     }
+
+    return nsnull;
 }
 
 void PR_CALLBACK nsStreamListenerEvent::DestroyPLEvent(PLEvent* aEvent)
@@ -139,8 +141,8 @@ nsStreamListenerEvent::Fire(nsIEventQueue* aEventQueue)
 
     PL_InitEvent(&mEvent,
                  nsnull,
-                 (PLHandleEventProc)  nsStreamListenerEvent::HandlePLEvent,
-                 (PLDestroyEventProc) nsStreamListenerEvent::DestroyPLEvent);
+                 nsStreamListenerEvent::HandlePLEvent,
+                 nsStreamListenerEvent::DestroyPLEvent);
 
     return aEventQueue->PostEvent(&mEvent);
 }

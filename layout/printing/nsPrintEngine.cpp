@@ -4555,7 +4555,7 @@ nsPrintEngine::Observe(nsISupports *aSubject, const char *aTopic, const PRUnicha
 //---------------------------------------------------------------
 //-- PLEvent Notification
 //---------------------------------------------------------------
-void PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
+PR_STATIC_CALLBACK(void*) HandlePLEvent(PLEvent* aEvent)
 {
   nsIDocumentViewerPrint *docViewerPrint = (nsIDocumentViewerPrint*)PL_GetEventOwner(aEvent);
 
@@ -4563,10 +4563,12 @@ void PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
   if (docViewerPrint) {
     docViewerPrint->OnDonePrinting();
   }
+
+  return nsnull;
 }
 
 //------------------------------------------------------------------------
-void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent)
+PR_STATIC_CALLBACK(void) DestroyPLEvent(PLEvent* aEvent)
 {
   nsIDocumentViewerPrint *docViewerPrint = (nsIDocumentViewerPrint*)PL_GetEventOwner(aEvent);
   NS_IF_RELEASE(docViewerPrint);
@@ -4606,7 +4608,7 @@ nsPrintEngine::FirePrintCompletionEvent()
     return;
   }
 
-  PL_InitEvent(event, mDocViewerPrint, (PLHandleEventProc)::HandlePLEvent, (PLDestroyEventProc)::DestroyPLEvent);
+  PL_InitEvent(event, mDocViewerPrint, ::HandlePLEvent, ::DestroyPLEvent);
 
   // The event owns the docviewer pointer now.
   NS_ADDREF(mDocViewerPrint);

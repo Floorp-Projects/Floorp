@@ -94,7 +94,7 @@ public:
     NS_IMETHOD HandleEvent() = 0;
 
 protected:
-    static void PR_CALLBACK HandlePLEvent(PLEvent *);
+    static void* PR_CALLBACK HandlePLEvent(PLEvent *);
     static void PR_CALLBACK DestroyPLEvent(PLEvent *);
 
     PLEvent                mEvent;

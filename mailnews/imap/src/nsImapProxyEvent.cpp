@@ -69,9 +69,7 @@ nsImapEvent::SetNotifyCompletion(PRBool notifyCompletion)
 void
 nsImapEvent::InitEvent()
 {
-		PL_InitEvent(this, nsnull,
-								 (PLHandleEventProc) imap_event_handler,
-								 (PLDestroyEventProc) imap_event_destructor);
+		PL_InitEvent(this, nsnull, imap_event_handler, imap_event_destructor);
 }
 
 void
@@ -83,11 +81,12 @@ nsImapEvent::PostEvent(nsIEventQueue* aEventQ)
 		aEventQ->PostEvent(this);
 }
 
-void PR_CALLBACK
+void* PR_CALLBACK
 nsImapEvent::imap_event_handler(PLEvent *aEvent)
 {
 		nsImapEvent* ev = (nsImapEvent*) aEvent;
 		ev->HandleEvent();
+		return nsnull;
 }
 
 void PR_CALLBACK

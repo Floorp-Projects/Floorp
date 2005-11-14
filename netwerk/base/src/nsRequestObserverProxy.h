@@ -88,7 +88,7 @@ public:
     virtual void HandleEvent() = 0;
 
 protected:
-    static void PR_CALLBACK HandlePLEvent(PLEvent *);
+    static void* PR_CALLBACK HandlePLEvent(PLEvent *);
     static void PR_CALLBACK DestroyPLEvent(PLEvent *);
 
     PLEvent mEvent; // this _must_ be the first data member

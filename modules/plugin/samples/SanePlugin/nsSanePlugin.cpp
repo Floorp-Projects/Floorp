@@ -76,7 +76,7 @@ struct my_JPEG_error_mgr
 typedef struct my_JPEG_error_mgr *emptr;
 
 static void PR_CALLBACK ThreadedDestroyEvent(PLEvent* aEvent);
-static void PR_CALLBACK ThreadedHandleEvent(PLEvent* aEvent);
+static void* PR_CALLBACK ThreadedHandleEvent(PLEvent* aEvent);
 
 //static void PR_CALLBACK scanimage_thread_routine( void * arg );
 
@@ -2550,10 +2550,7 @@ void PR_CALLBACK scanimage_thread_routine( void * arg )
     }
 
     // ThreadHandleEvent will now execute in the UI thread.
-    PL_InitEvent(event, 
-                 pthis,
-                 (PLHandleEventProc)  ThreadedHandleEvent,
-                 (PLDestroyEventProc) ThreadedDestroyEvent);
+    PL_InitEvent(event, pthis, ThreadedHandleEvent, ThreadedDestroyEvent);
 
     if (NS_FAILED(eventQ->PostEvent(event))) {
         NS_ERROR("Error trying to post event!\n");
@@ -2562,7 +2559,7 @@ void PR_CALLBACK scanimage_thread_routine( void * arg )
     }
 }
 
-void PR_CALLBACK ThreadedHandleEvent(PLEvent * event)
+void* PR_CALLBACK ThreadedHandleEvent(PLEvent * event)
 {
     nsSanePluginInstance *pthis = (nsSanePluginInstance *)event->owner;    
    
@@ -2577,6 +2574,8 @@ void PR_CALLBACK ThreadedHandleEvent(PLEvent * event)
 
     // Notify user that routine is finished
     pthis->DoScanCompleteCallback();
+
+    return nsnull;
 }
 
 void PR_CALLBACK ThreadedDestroyEvent(PLEvent* aEvent)

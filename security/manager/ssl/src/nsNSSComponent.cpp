@@ -212,24 +212,30 @@ struct CRLDownloadEvent : PLEvent {
 // Note that nsNSSComponent is a singleton object across all threads, 
 // and automatic downloads are always scheduled sequentially - that is, 
 // once one crl download is complete, the next one is scheduled
-static void PR_CALLBACK HandleCRLImportPLEvent(CRLDownloadEvent *aEvent)
+static void* PR_CALLBACK HandleCRLImportPLEvent(PLEvent *aEvent)
 {
+  CRLDownloadEvent *event = NS_STATIC_CAST(CRLDownloadEvent*, aEvent);
+
   nsresult rv;
   nsIURI *pURL;
   
-  if((aEvent->psmDownloader==nsnull) || (aEvent->urlString==nsnull) )
-    return;
+  if((event->psmDownloader==nsnull) || (event->urlString==nsnull) )
+    return nsnull;
 
-  rv = NS_NewURI(&pURL, aEvent->urlString->get());
+  rv = NS_NewURI(&pURL, event->urlString->get());
   if(NS_SUCCEEDED(rv)){
-    NS_OpenURI(aEvent->psmDownloader, nsnull, pURL);
+    NS_OpenURI(event->psmDownloader, nsnull, pURL);
   }
+
+  return nsnull;
 }
 
-static void PR_CALLBACK DestroyCRLImportPLEvent(CRLDownloadEvent* aEvent)
+static void PR_CALLBACK DestroyCRLImportPLEvent(PLEvent* aEvent)
 {
-  delete aEvent->urlString;
-  delete aEvent;
+  CRLDownloadEvent *event = NS_STATIC_CAST(CRLDownloadEvent*, aEvent);
+
+  delete event->urlString;
+  delete event;
 }
 
 //This class is used to run the callback code
@@ -905,7 +911,7 @@ nsNSSComponent::PostCRLImportEvent(nsCAutoString *urlString, PSMContentDownloade
 {
   //Create the event
   CRLDownloadEvent *event = new CRLDownloadEvent;
-  PL_InitEvent(event, this, (PLHandleEventProc)HandleCRLImportPLEvent, (PLDestroyEventProc)DestroyCRLImportPLEvent);
+  PL_InitEvent(event, this, HandleCRLImportPLEvent, DestroyCRLImportPLEvent);
   event->urlString = urlString;
   event->psmDownloader = (nsIStreamListener *)psmDownloader;
   

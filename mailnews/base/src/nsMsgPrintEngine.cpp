@@ -776,7 +776,7 @@ FireEvent(nsMsgPrintEngine* aMPE, PLHandleEventProc handler, PLDestroyEventProc 
   return PR_TRUE;
 }
 
-void PR_CALLBACK HandlePLEventPrintMsgWindow(PLEvent* aEvent)
+PR_STATIC_CALLBACK(void*) HandlePLEventPrintMsgWindow(PLEvent* aEvent)
 {
   nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
 
@@ -785,10 +785,12 @@ void PR_CALLBACK HandlePLEventPrintMsgWindow(PLEvent* aEvent)
   {
     msgPrintEngine->PrintMsgWindow();
   }
+
+  return nsnull;
 }
 
 //------------------------------------------------------------------------
-void PR_CALLBACK DestroyPLEventPrintMsgWindow(PLEvent* aEvent)
+PR_STATIC_CALLBACK(void) DestroyPLEventPrintMsgWindow(PLEvent* aEvent)
 {
   nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
   NS_IF_RELEASE(msgPrintEngine);
@@ -800,11 +802,11 @@ void PR_CALLBACK DestroyPLEventPrintMsgWindow(PLEvent* aEvent)
 PRBool
 nsMsgPrintEngine::FirePrintEvent()
 {
-  return FireEvent(this, (PLHandleEventProc)::HandlePLEventPrintMsgWindow, 
-                         (PLDestroyEventProc)::DestroyPLEventPrintMsgWindow);
+  return FireEvent(this, ::HandlePLEventPrintMsgWindow, 
+                         ::DestroyPLEventPrintMsgWindow);
 }
 
-void PR_CALLBACK HandlePLEventStartNext(PLEvent* aEvent)
+PR_STATIC_CALLBACK(void*) HandlePLEventStartNext(PLEvent* aEvent)
 {
   nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
 
@@ -813,10 +815,12 @@ void PR_CALLBACK HandlePLEventStartNext(PLEvent* aEvent)
   {
     msgPrintEngine->StartNextPrintOperation();
   }
+
+  return nsnull;
 }
 
 //------------------------------------------------------------------------
-void PR_CALLBACK DestroyPLEventStartNext(PLEvent* aEvent)
+PR_STATIC_CALLBACK(void) DestroyPLEventStartNext(PLEvent* aEvent)
 {
   nsMsgPrintEngine *msgPrintEngine = (nsMsgPrintEngine*)PL_GetEventOwner(aEvent);
   NS_IF_RELEASE(msgPrintEngine);
@@ -828,8 +832,8 @@ void PR_CALLBACK DestroyPLEventStartNext(PLEvent* aEvent)
 PRBool
 nsMsgPrintEngine::FireStartNextEvent()
 {
-  return FireEvent(this, (PLHandleEventProc)::HandlePLEventStartNext, 
-                         (PLDestroyEventProc)::DestroyPLEventStartNext);
+  return FireEvent(this, ::HandlePLEventStartNext, 
+                         ::DestroyPLEventStartNext);
 }
 
 /* void setStartupPPObserver (in nsIObserver startupPPObs); */

@@ -104,7 +104,7 @@ private:
 };
 
 // Define PL Callback Functions
-static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
+static void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
 static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
 
@@ -201,7 +201,7 @@ CPrintingPromptService::FirePauseEvent()
     return PR_FALSE;
   }
 
-  PL_InitEvent(event, this, (PLHandleEventProc)::HandlePLEvent, (PLDestroyEventProc)::DestroyPLEvent);
+  PL_InitEvent(event, this, ::HandlePLEvent, ::DestroyPLEvent);
 
   // The event owns the content pointer now.
   NS_ADDREF_THIS();
@@ -277,7 +277,7 @@ void CPrintingPromptService::NotifyObserver()
 }
 
 //------------------------------------------------------------------------
-void PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
+void* PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
 {
   CPrintingPromptService *printingPromptService = (CPrintingPromptService*)PL_GetEventOwner(aEvent);
 
@@ -285,6 +285,7 @@ void PR_CALLBACK HandlePLEvent(PLEvent* aEvent)
   if (printingPromptService) {
     printingPromptService->NotifyObserver();
   }
+  return nsnull;
 }
 
 //------------------------------------------------------------------------

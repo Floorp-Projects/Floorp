@@ -436,8 +436,10 @@ struct TimerEventType : public PLEvent {
 };
 
 
-void* handleTimerEvent(TimerEventType* event)
+PR_STATIC_CALLBACK(void*) handleTimerEvent(PLEvent* aEvent)
 {
+  TimerEventType *event = NS_STATIC_CAST(TimerEventType*, aEvent);
+
   nsTimerImpl* timer = NS_STATIC_CAST(nsTimerImpl*, event->owner);
   if (event->mGeneration != timer->GetGeneration())
     return nsnull;
@@ -467,8 +469,10 @@ void* handleTimerEvent(TimerEventType* event)
   return nsnull;
 }
 
-void destroyTimerEvent(TimerEventType* event)
+PR_STATIC_CALLBACK(void) destroyTimerEvent(PLEvent* aEvent)
 {
+  TimerEventType *event = NS_STATIC_CAST(TimerEventType*, aEvent);
+
   nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl*, event->owner);
   NS_RELEASE(timer);
   PR_DELETE(event);
@@ -486,9 +490,7 @@ void nsTimerImpl::PostTimerEvent()
     return;
 
   // initialize
-  PL_InitEvent((PLEvent*)event, this,
-               (PLHandleEventProc)handleTimerEvent,
-               (PLDestroyEventProc)destroyTimerEvent);
+  PL_InitEvent((PLEvent*)event, this, handleTimerEvent, destroyTimerEvent);
 
   // Since TimerThread addref'd 'this' for us, we don't need to addref here.
   // We will release in destroyMyEvent.  We do need to copy the generation

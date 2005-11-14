@@ -75,14 +75,14 @@ nsStreamObserverEvent::FireEvent(nsIEventQueue *aEventQ)
     NS_PRECONDITION(aEventQ, "null event queue");
 
     PL_InitEvent(&mEvent, nsnull,
-        (PLHandleEventProc) nsStreamObserverEvent::HandlePLEvent,
-        (PLDestroyEventProc) nsStreamObserverEvent::DestroyPLEvent);
+                 nsStreamObserverEvent::HandlePLEvent,
+                 nsStreamObserverEvent::DestroyPLEvent);
 
     PRStatus status = aEventQ->PostEvent(&mEvent);
     return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
 }
 
-void PR_CALLBACK
+void* PR_CALLBACK
 nsStreamObserverEvent::HandlePLEvent(PLEvent *aEvent)
 {
     nsStreamObserverEvent *ev = GET_STREAM_OBSERVER_EVENT(aEvent);
@@ -91,6 +91,8 @@ nsStreamObserverEvent::HandlePLEvent(PLEvent *aEvent)
     // Pass control the real event handler
     if (ev)
         ev->HandleEvent();
+
+    return nsnull;
 }
 
 void PR_CALLBACK
