@@ -65,8 +65,8 @@ class nsAttrValue;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x08b87f67, 0x2f64, 0x437b, \
- { 0x93, 0x35, 0x02, 0x60, 0x17, 0x5c, 0x0e, 0xc2 } }
+{ 0x6a654488, 0xcbb3, 0x49d4, \
+ { 0xad, 0x2d, 0x68, 0x4b, 0xad, 0xd5, 0xa7, 0x5d } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -561,6 +561,38 @@ public:
     if (aTabIndex) 
       *aTabIndex = -1; // Default, not tabbable
     return PR_FALSE;
+  }
+
+  /*
+   * Get desired IME state for the content.
+   *
+   * @return The desired IME status for the content.
+   *         This is a combination of IME_STATUS_* flags,
+   *         controlling what happens to IME when the content takes focus.
+   *         If this is IME_STATUS_NONE, IME remains in its current state.
+   *         IME_STATUS_ENABLE and IME_STATUS_DISABLE must not be set
+   *         together; likewise IME_STATUS_OPEN and IME_STATUS_CLOSE must
+   *         not be set together.
+   *         If you return IME_STATUS_DISABLE, you should not set the
+   *         OPEN or CLOSE flag; that way, when IME is next enabled,
+   *         the previous OPEN/CLOSE state will be restored (unless the newly
+   *         focused content specifies the OPEN/CLOSE state by setting the OPEN
+   *         or CLOSE flag with the ENABLE flag).
+   */
+  enum {
+    IME_STATUS_NONE    = 0x0000,
+    IME_STATUS_ENABLE  = 0x0001,
+    IME_STATUS_DISABLE = 0x0002,
+    IME_STATUS_OPEN    = 0x0004,
+    IME_STATUS_CLOSE   = 0x0008
+  };
+  enum {
+    IME_STATUS_MASK_ENABLED = IME_STATUS_ENABLE | IME_STATUS_DISABLE,
+    IME_STATUS_MASK_OPENED  = IME_STATUS_OPEN | IME_STATUS_CLOSE
+  };
+  virtual PRUint32 GetDesiredIMEState()
+  {
+    return IME_STATUS_DISABLE;
   }
 
   /**
