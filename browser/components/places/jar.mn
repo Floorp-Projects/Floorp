@@ -2,7 +2,10 @@ browser.jar:
 *   content/browser/places/places.xul                    (content/places.xul) 
 *   content/browser/places/places.js                     (content/places.js)
 *   content/browser/places/places.xml                    (content/places.xml)
+*   content/browser/places/controller.js                 (content/controller.js)
 
 classic.jar:
     skin/classic/browser/places/places.css               (skin-win/places.css)
 
+en-US.jar:
+    locale/browser/places/places.dtd                     (locale/places.dtd)
