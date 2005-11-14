@@ -308,8 +308,12 @@
 
       <method name="detachController">
         <body><![CDATA[
-          if (this.mController.input == this)
+          try { 
+            if  (this.mController.input == this)
             this.mController.input = null;
+          } catch (ex) {
+            // nothing really to do.
+          }       
         ]]></body>
       </method>
 
