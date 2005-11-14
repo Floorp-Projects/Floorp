@@ -479,6 +479,23 @@ function getFindData(e)
     findData.browser = e.sourceObject.frame;
     findData.rootSearchWindow = e.sourceObject.frame.contentWindow;
     findData.currentSearchWindow = e.sourceObject.frame.contentWindow;
+
+    /* Yay, evil hacks! findData.init doesn't care about the findService, it
+     * gets option settings from webBrowserFind. As we want the wrap option *on*
+     * when we use /find foo, we set it on the findService there. However, 
+     * restoring the original value afterwards doesn't help, because init() here 
+     * overrides that value. Unless we make .init do something else, of course:
+     */
+    findData._init = findData.init;
+    findData.init = 
+        function init()
+        { 
+            this._init();
+            const FINDSVC_ID = "@mozilla.org/find/find_service;1";
+            var findService = getService(FINDSVC_ID, "nsIFindService");
+            this.webBrowserFind.wrapFind = findService.wrapFind;
+        };
+
     return findData;
 }
 
