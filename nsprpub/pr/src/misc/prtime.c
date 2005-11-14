@@ -55,6 +55,25 @@
 #include <time.h>
 #endif
 
+/* 
+ * The COUNT_LEAPS macro counts the number of leap years passed by
+ * till the start of the given year Y.  At the start of the year 4
+ * A.D. the number of leap years passed by is 0, while at the start of
+ * the year 5 A.D. this count is 1. The number of years divisible by
+ * 100 but not divisible by 400 (the non-leap years) is deducted from
+ * the count to get the correct number of leap years.
+ *
+ * The COUNT_DAYS macro counts the number of days since 01/01/01 till the
+ * start of the given year Y. The number of days at the start of the year
+ * 1 is 0 while the number of days at the start of the year 2 is 365
+ * (which is ((2)-1) * 365) and so on. The reference point is 01/01/01
+ * midnight 00:00:00.
+ */
+
+#define COUNT_LEAPS(Y)   ( ((Y)-1)/4 - ((Y)-1)/100 + ((Y)-1)/400 )
+#define COUNT_DAYS(Y)  ( ((Y)-1)*365 + COUNT_LEAPS(Y) )
+#define DAYS_BETWEEN_YEARS(A, B)  (COUNT_DAYS(B) - COUNT_DAYS(A))
+
 
 
 
@@ -258,8 +277,6 @@ PR_ImplodeTime(const PRExplodedTime *exploded)
     PRInt64 secPerDay, usecPerSec;
     PRInt64 temp;
     PRInt64 numSecs64;
-    PRInt32 fourYears;
-    PRInt32 remainder;
     PRInt32 numDays;
     PRInt32 numSecs;
 
@@ -267,27 +284,8 @@ PR_ImplodeTime(const PRExplodedTime *exploded)
     copy = *exploded;
     PR_NormalizeTime(&copy, PR_GMTParameters);
 
-    fourYears = (copy.tm_year - 1970) / 4;
-    remainder = (copy.tm_year - 1970) % 4;
-    if (remainder < 0) {
-        remainder += 4;
-        fourYears--;
-    }
-    numDays = fourYears * (4 * 365 + 1);
-    switch (remainder) {
-        case 0:
-            break;
-        case 1:  /* 1970 */
-            numDays += 365;
-            break;
-        case 2:  /* 1970-1 */
-            numDays += 365 * 2;
-            break;
-        case 3:  /* 1970-2 */
-            numDays += 365 * 3 + 1;
-            break;
-    }
-
+    numDays = DAYS_BETWEEN_YEARS(1970, copy.tm_year);
+    
     numSecs = copy.tm_yday * 86400 + copy.tm_hour * 3600
             + copy.tm_min * 60 + copy.tm_sec;
 
@@ -403,8 +401,6 @@ PR_IMPLEMENT(void)
 PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params)
 {
     int daysInMonth;
-    PRInt32 fourYears;
-    PRInt32 remainder;
     PRInt32 numDays;
 
     /* Get back to GMT */
@@ -492,26 +488,8 @@ PR_NormalizeTime(PRExplodedTime *time, PRTimeParamFn params)
     /* Recompute yday and wday */
     time->tm_yday = time->tm_mday +
             lastDayOfMonth[IsLeapYear(time->tm_year)][time->tm_month];
-    fourYears = (time->tm_year - 1970) / 4;
-    remainder = (time->tm_year - 1970) % 4;
-    if (remainder < 0) {
-        remainder += 4;
-        fourYears--;
-    }
-    numDays = fourYears * (4 * 365 + 1);
-    switch (remainder) {
-        case 0:
-            break;
-        case 1:
-            numDays += 365;  /* 1970 */
-            break;
-        case 2:
-            numDays += 365 + 365;  /* 1970 and 1971 */
-            break;
-        case 3:
-            numDays += 365 + 365 + 366; /* 1970-2 */
-    }
-    numDays += time->tm_yday;
+	    
+    numDays = DAYS_BETWEEN_YEARS(1970, time->tm_year) + time->tm_yday;
     time->tm_wday = (numDays + 4) % 7;
     if (time->tm_wday < 0) {
         time->tm_wday += 7;
