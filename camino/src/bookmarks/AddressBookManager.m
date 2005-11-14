@@ -45,7 +45,7 @@
 #import "Bookmark.h"
 #import <AddressBook/AddressBook.h>
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4
 // These are not available for linkage before the 10.4 SDK. Value obtained via inspection.
 static NSString * const kABURLsProperty = @"URLs";
 #endif

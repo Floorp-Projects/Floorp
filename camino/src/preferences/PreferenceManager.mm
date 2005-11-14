@@ -75,7 +75,7 @@ NSString* const kPrefChangedNotificationName = @"PrefChangedNotification";
 
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4
 // These are not available for linkage before the 10.4 SDK, but the feature is in 10.3.2 and later;
 // the strings were obtained by inspection.
 static NSString* const kSCPropNetProxiesProxyAutoConfigEnable    = @"ProxyAutoConfigEnable";
