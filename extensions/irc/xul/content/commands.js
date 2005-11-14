@@ -128,6 +128,7 @@ function initCommands()
          ["log",               cmdLog,                             CMD_CONSOLE],
          ["me",                cmdMe,                              CMD_CONSOLE],
          ["motd",              cmdSimpleCommand,    CMD_NEED_SRV | CMD_CONSOLE],
+         ["mode",              cmdMode,             CMD_NEED_SRV | CMD_CONSOLE],
          ["motif",             cmdMotif,                           CMD_CONSOLE],
          ["msg",               cmdMsg,              CMD_NEED_SRV | CMD_CONSOLE],
          ["name",              cmdName,                            CMD_CONSOLE],
@@ -1776,6 +1777,41 @@ function cmdDescribe(e)
     var msg = filterOutput(e.action, "ACTION", target);
     e.sourceObject.display(msg, "ACTION", "ME!", target);
     target.act(msg);
+}
+
+function cmdMode(e)
+{
+    // get our canonical channel name, so we know what channel we talk about
+    var chan = fromUnicode(e.target, e.server);
+
+    // Make sure the user can leave the channel name out from a channel view.
+    if (e.channel && /^[\+\-].+/.test(e.target) && 
+        !(e.server.toLowerCase(chan) in e.server.channels))
+    {
+        chan = e.channel.canonicalName;
+        if (e.param && e.modestr)
+        {
+            e.paramList.unshift(e.modestr);
+        }
+        else if (e.modestr)
+        {
+            e.paramList = [e.modestr];
+            e.param = e.modestr;
+        }
+        e.modestr = e.target;
+    }
+
+    // Check whether our mode string makes sense
+    if (!(/^([+-][a-z]+)+$/i).test(e.modestr))
+    {
+        display(getMsg(MSG_ERR_INVALID_MODE, e.modestr), MT_ERROR);
+        return;
+    }
+
+    var params = (e.param) ? " " + e.paramList.join(" ") : "";
+    e.server.sendData("MODE " + chan + " " + fromUnicode(e.modestr, e.server) +
+                      params + "\n");
+
 }
 
 function cmdMotif(e)
