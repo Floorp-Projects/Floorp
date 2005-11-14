@@ -57,7 +57,6 @@ class nsIDocShell;
 class nsIDocShellTreeNode;
 class nsIDocShellTreeItem;
 class nsIFocusController;
-class nsIKBStateControl;
 class imgIContainer;
 
 // mac uses click-hold context menus, a holdover from 4.x
@@ -221,11 +220,6 @@ protected:
     eAccessKeyProcessingDown
   } ProcessingAccessKeyState;
   void HandleAccessKey(nsPresContext* aPresContext, nsKeyEvent* aEvent, nsEventStatus* aStatus, PRInt32 aChildOffset, ProcessingAccessKeyState aAccessKeyState);
-
-  void UpdateIMEState(nsPresContext* aPresContext, nsIContent* aContent);
-  void SetIMEState(nsPresContext* aPresContext, PRUint32 aState);
-  nsresult GetKBStateControl(nsPresContext* aPresContext,
-                             nsIKBStateControl** aResult);
 
   //---------------------------------------------
   // DocShell Focus Traversal Methods
