@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -52,7 +51,7 @@ struct nsQueryCaretRectEventReply;
 [ptr] native nsQueryCaretRectEventReplyPtr(nsQueryCaretRectEventReply);
 
 
-[scriptable, uuid(228a76d3-5462-4322-a63c-5f94f7f5d4ed)]
+[scriptable, uuid(205b3e49-aa58-499e-880b-aacab9dede01)]
 
 interface nsIEditorIMESupport : nsISupports
 {
@@ -113,10 +112,5 @@ interface nsIEditorIMESupport : nsISupports
 
   [noscript] void getQueryCaretRect(in nsQueryCaretRectEventReplyPtr aReply);
 
-  /**
-   * Get preferred IME status of current widget.
-   */
-
-  [noscript] void getPreferredIMEState(out unsigned long aState);
 };
 
