@@ -1555,28 +1555,30 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
                      mDisplayFrame, mButtonFrame, mItemDisplayWidth, scrollbarWidth, 
                      aReflowState.mComputedBorderPadding, size.height);
 
-  // The dropdown was reflowed UNCONSTRAINED before, now we need to check to see
-  // if it needs to be resized. 
-  //
-  // Optimization - The style (font, etc.) maybe different for the display item 
-  // than for any particular item in the dropdown. So, if the new size of combobox
-  // is smaller than the dropdown, that is OK, The dropdown MUST always be either the same
-  // size as the combo or larger if necessary
-  if (aDesiredSize.width > dropdownDesiredSize.width) {
-    if (eReflowReason_Initial == firstPassState.reason) {
-      firstPassState.reason = eReflowReason_Resize;
-    }
-    REFLOW_DEBUG_MSG3("*** Reflowing ListBox to width: %d it was %d\n", PX(aDesiredSize.width), PX(dropdownDesiredSize.width));
-
-    // Tell it we are doing the second pass, which means we will skip
-    // doing the unconstained reflow, we already know that size
-    nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
-    lcf->SetPassId(2);
-    // Reflow the dropdown list to match the width of the display + button
-    ReflowComboChildFrame(mDropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, 
-                          aDesiredSize.width, NS_UNCONSTRAINEDSIZE);
-    lcf->SetPassId(0);
+  // The dropdown was reflowed UNCONSTRAINED before, now we need to reflow it
+  // so that all children match the desired width.
+  // The dropdown MUST always be either the same size as the combo or larger
+  // if necessary. Note that individual children can be narrower in case they
+  // are constrained by 'width', 'max-width' etc.
+  if (eReflowReason_Initial == firstPassState.reason) {
+    firstPassState.reason = eReflowReason_Resize;
   }
+  REFLOW_DEBUG_MSG3("*** Reflowing ListBox to width: %d it was %d\n", PX(aDesiredSize.width), PX(dropdownDesiredSize.width));
+
+  // Tell it we are doing the second pass, which means we will skip
+  // doing the unconstained reflow, we already know that size
+  nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
+  lcf->SetPassId(2);
+  // Reflow the dropdown list to be
+  // MAX(width of the display + button, width of the widest option). bug 305705.
+  const nscoord availableWidth =
+    PR_MAX(aDesiredSize.width, dropdownDesiredSize.width -
+                               aReflowState.mComputedBorderPadding.left -
+                               aReflowState.mComputedBorderPadding.right);
+  ReflowComboChildFrame(mDropdownFrame, aPresContext, dropdownDesiredSize,
+                        firstPassState, aStatus,
+                        availableWidth, NS_UNCONSTRAINEDSIZE);
+  lcf->SetPassId(0);
 
   // Set the max element size to be the same as the desired element size.
   if (aDesiredSize.mComputeMEW) {
