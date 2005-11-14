@@ -47,6 +47,13 @@
 
 const int kDefaultExpireDays = 9;
 
+@interface OrgMozillaChimeraPreferenceHistory(Private)
+
+- (void)doClearDiskCache;
+- (void)doClearGlobalHistory;
+
+@end
+
 @implementation OrgMozillaChimeraPreferenceHistory
 
 - (id)initWithBundle:(NSBundle *)bundle
@@ -97,13 +104,59 @@ const int kDefaultExpireDays = 9;
 // Clear the user's disk cache
 -(IBAction) clearDiskCache:(id)aSender
 {
+  NSBeginCriticalAlertSheet([self getLocalizedString:@"EmptyCacheTitle"],
+                            [self getLocalizedString:@"EmptyButton"],
+                            [self getLocalizedString:@"CancelButtonText"],
+                            nil,
+                            [textFieldHistoryDays window],    // any view will do
+                            self,
+                            @selector(clearDiskCacheSheetDidEnd:returnCode:contextInfo:),
+                            nil,
+                            NULL,
+                            [self getLocalizedString:@"EmptyCacheMessage"]);
+}
+
+// use the browser history service to clear out the user's global history
+- (IBAction)clearGlobalHistory:(id)sender
+{
+  NSBeginCriticalAlertSheet([self getLocalizedString:@"ClearHistoryTitle"],
+                            [self getLocalizedString:@"ClearHistoryButton"],
+                            [self getLocalizedString:@"CancelButtonText"],
+                            nil,
+                            [textFieldHistoryDays window],    // any view willl do
+                            self,
+                            @selector(clearGlobalHistorySheetDidEnd:returnCode:contextInfo:),
+                            nil,
+                            NULL,
+                            [self getLocalizedString:@"ClearHistoryMessage"]);
+}
+
+#pragma mark -
+
+- (void)clearDiskCacheSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
+{
+  if (returnCode == NSAlertDefaultReturn)
+  {
+    [self doClearDiskCache];
+  }
+}
+
+- (void)clearGlobalHistorySheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
+{
+  if (returnCode == NSAlertDefaultReturn)
+  {
+    [self doClearGlobalHistory];
+  }
+}
+
+- (void)doClearDiskCache
+{
   nsCOMPtr<nsICacheService> cacheServ ( do_GetService("@mozilla.org/network/cache-service;1") );
   if ( cacheServ )
     cacheServ->EvictEntries(nsICache::STORE_ANYWHERE);
 }
 
-// use the browser history service to clear out the user's global history
-- (IBAction)clearGlobalHistory:(id)sender
+- (void)doClearGlobalHistory
 {
   nsCOMPtr<nsIBrowserHistory> hist ( do_GetService("@mozilla.org/browser/global-history;2") );
   if ( hist )
