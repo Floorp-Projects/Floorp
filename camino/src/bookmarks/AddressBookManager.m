@@ -84,14 +84,14 @@ static NSString * const kABURLsProperty = @"URLs";
   ABAddressBook *ab = [ABAddressBook sharedAddressBook];
   NSEnumerator *peopleEnumerator = [[ab people] objectEnumerator];
   ABPerson* person;
-  NSString *name, *homepage;
+  NSString *name = nil, *homepage = nil;
   while ((person = [peopleEnumerator nextObject])) {
-    homepage = [person valueForProperty:kABHomePageProperty];
-    if (!homepage) {
-      // |kABHomePageProperty| is depricated on Tiger, look for the new property.
-      ABMultiValue* urls = [person valueForProperty:kABURLsProperty];
-      homepage = [urls valueAtIndex:[urls indexForIdentifier:[urls primaryIdentifier]]];
-    }
+    // |kABHomePageProperty| is depricated on Tiger, look for the new property first and then
+    // the old one (as the old one is present but no longer updated by ABook).
+    ABMultiValue* urls = [person valueForProperty:kABURLsProperty];
+    homepage = [urls valueAtIndex:[urls indexForIdentifier:[urls primaryIdentifier]]];
+    if (!homepage)
+      homepage = [person valueForProperty:kABHomePageProperty];
     if ([homepage length] > 0) {
       NSString* firstName = [person valueForProperty:kABFirstNameProperty];
       NSString* lastName = [person valueForProperty:kABLastNameProperty];
