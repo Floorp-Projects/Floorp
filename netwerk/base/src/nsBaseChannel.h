@@ -165,7 +165,7 @@ public:
 
   // Helper function for querying the channel's notification callbacks.
   template <class T> void GetCallback(nsCOMPtr<T> &result) {
-    GetInterface(NS_GET_IID(T), getter_AddRefs(result));
+    GetInterface(NS_GET_TEMPLATE_IID(T), getter_AddRefs(result));
   }
 
   // Helper function for calling QueryInterface on this.
