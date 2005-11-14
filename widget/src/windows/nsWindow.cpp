@@ -4623,6 +4623,15 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       result = PR_TRUE;
       break;
 
+    case WM_ENABLE:
+      if (!wParam) {
+        // We must enable IME for common dialogs.
+        // NOTE: we don't need to recover IME status in nsWindow.
+        // Because when this window will be enabled, we will get focus event.
+        SetIMEEnabled(PR_TRUE);
+      }
+      break;
+
     case WM_ACTIVATE:
       if (mEventCallback) {
         PRInt32 fActive = LOWORD(wParam);

@@ -140,6 +140,9 @@
 #include "nsCOMArray.h"
 #include "nsNodeInfoManager.h"
 
+#include "nsIEditor.h"
+#include "nsIEditorIMESupport.h"
+
 // XXX todo: add in missing out-of-memory checks
 
 //----------------------------------------------------------------------
@@ -3058,6 +3061,23 @@ nsGenericHTMLFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return NS_OK;
 }
 
+PRUint32
+nsGenericHTMLFormElement::GetDesiredIMEState()
+{
+  nsCOMPtr<nsIEditor> editor = nsnull;
+  nsresult rv = GetEditorInternal(getter_AddRefs(editor));
+  if (NS_FAILED(rv) || !editor)
+    return nsIContent::GetDesiredIMEState();
+  nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(editor);
+  if (!imeEditor)
+    return nsIContent::GetDesiredIMEState();
+  PRUint32 state;
+  rv = imeEditor->GetPreferredIMEState(&state);
+  if (NS_FAILED(rv))
+    return nsIContent::GetDesiredIMEState();
+  return state;
+}
+
 PRBool
 nsGenericHTMLFrameElement::IsFocusable(PRInt32 *aTabIndex)
 {
@@ -3999,6 +4019,14 @@ nsGenericHTMLElement::GetEditor(nsIEditor** aEditor)
 
   if (!nsContentUtils::IsCallerChrome())
     return NS_ERROR_DOM_SECURITY_ERR;
+
+  return GetEditorInternal(aEditor);
+}
+
+nsresult
+nsGenericHTMLElement::GetEditorInternal(nsIEditor** aEditor)
+{
+  *aEditor = nsnull;
 
   nsIFormControlFrame *fcFrame = GetFormControlFrame(PR_FALSE);
   if (fcFrame) {

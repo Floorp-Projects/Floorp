@@ -85,6 +85,7 @@ public:
                            PRBool aNotify);
 
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  virtual PRUint32 GetDesiredIMEState();
 
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_OBJECT; }
@@ -254,7 +255,14 @@ PRBool nsHTMLObjectElement::IsFocusable(PRInt32 *aTabIndex)
   return nsGenericHTMLFormElement::IsFocusable(aTabIndex);
 }
 
- 
+PRUint32
+nsHTMLObjectElement::GetDesiredIMEState()
+{
+  if (Type() == eType_Plugin)
+    return nsIContent::IME_STATUS_ENABLE;
+  return nsGenericHTMLFormElement::GetDesiredIMEState();
+}
+
 // nsIFormControl
 
 NS_IMETHODIMP
