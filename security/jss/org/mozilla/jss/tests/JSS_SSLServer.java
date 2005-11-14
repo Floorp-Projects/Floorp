@@ -81,6 +81,8 @@ public class JSS_SSLServer  {
             System.out.println("Thread Interrupted, exiting normally ...\n");
             System.exit(0);
         } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            System.exit(1);
         }
     }
     

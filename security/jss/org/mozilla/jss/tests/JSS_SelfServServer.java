@@ -165,7 +165,7 @@ public class JSS_SelfServServer  {
         if ( Constants.debug_level >= 3 )
             System.out.println ("Server created socket");
         
-        //serverSock.setSoTimeout(120 * 1000);
+        //serverSock.setSoTimeout(5000);  // Set timeout for 5 sec
         serverSock.requireClientAuth (true, true);
         serverSock.setServerCertNickname (fServerCertNick);
         if ( Constants.debug_level >= 3 )

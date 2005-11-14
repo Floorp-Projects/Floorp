@@ -43,13 +43,16 @@
  * one of the internal tokens:
  *  Internal Crypto Services Token
  *  Internal Key Storage Token    (keys stored in key3.db)
+ *
+ * @see org.mozilla.jss.tests.JCASigTest
+ * @deprecated Use the JCA interface instead
  */
 
 package org.mozilla.jss.tests;
 
 import org.mozilla.jss.crypto.*;
-import org.mozilla.jss.crypto.Signature;
-import org.mozilla.jss.crypto.KeyPairGenerator;
+import java.security.Signature;
+import java.security.KeyPairGenerator;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.io.*;
@@ -102,13 +105,12 @@ public class SigTest {
         token = manager.getTokenByName(tokenname);
 
         // Generate an RSA keypair
-        kpgen = token.getKeyPairGenerator(KeyPairAlgorithm.RSA);
+        kpgen = KeyPairGenerator.getInstance("RSA");
         kpgen.initialize(1024);
         keyPair = kpgen.genKeyPair();
 
         // RSA MD5
-        signer = token.getSignatureContext(
-                        SignatureAlgorithm.RSASignatureWithMD5Digest);
+        signer = Signature.getInstance("MD5withRSA");
         System.out.println("Created a signing context");
         signer.initSign(
             (org.mozilla.jss.crypto.PrivateKey)keyPair.getPrivate());

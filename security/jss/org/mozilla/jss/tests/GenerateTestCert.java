@@ -63,7 +63,13 @@ public class GenerateTestCert {
      * Main method for testing and generating cert pairs.
      */
     public static void main(String[] args) throws Exception {
-        (new GenerateTestCert()).doIt(args);
+        if( args.length > 0 )
+            (new GenerateTestCert()).doIt(args);
+        else
+            System.out.println("USAGE: " + 
+                    "java org.mozilla.jss.tests.GenerateTestCert " + 
+                    "<test dir> <password file>\n");
+        System.exit(0);
     }
     
     /**

@@ -69,6 +69,7 @@ public class VerifyCert {
 //        cert.verify();
         } catch (Exception ex) {
             ex.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -82,7 +83,7 @@ public class VerifyCert {
                            "<DerEncodeCertFile> <OCSPResponderURL> " +
                            "<OCSPCertNickname>\n");
         System.out.println("Note: <OCSPResponderURL> and " +
-                           "<OCSPCertNickname> are optional.\n      But if used, " +
+                           "<OCSPCertNickname> are optional.\n But if used, " +
                            "both Url/nickname must be specified.");
     }
 
@@ -135,6 +136,7 @@ public class VerifyCert {
 
         } catch ( Exception e ) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
@@ -165,7 +167,8 @@ public class VerifyCert {
         if (usageList.isEmpty()) {
             System.out.println("The certificate is not valid.");
         } else {
-        System.out.println("The certificate is valid for the following usages:\n");
+        System.out.println("The certificate is valid for " +
+                           "the following usages:\n");
             Iterator iterateUsage = usageList.iterator();
             while (iterateUsage.hasNext()) {
                 System.out.println("                       " 
@@ -202,7 +205,8 @@ public class VerifyCert {
         if (usageList.isEmpty()) {
             System.out.println("The certificate is not valid.");
         } else {
-            System.out.println("The certificate is valid for the following usages:\n");
+            System.out.println("The certificate is valid for the " +
+                               "following usages:\n");
             Iterator iterateUsage = usageList.iterator();
             while (iterateUsage.hasNext()) {
                 System.out.println("                       " +

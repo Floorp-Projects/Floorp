@@ -51,7 +51,6 @@ public class SelfTest {
         CryptoToken intTok;
         CryptoManager manager;
         Password pass1=null, pass2=null;
-        KeyPairGenerator keyPairGenerator;
         java.security.KeyPair keyPair;
 		java.util.Enumeration items;
 		char[] passchar1 = {'f', 'o', 'o', 'b', 'a', 'r'};

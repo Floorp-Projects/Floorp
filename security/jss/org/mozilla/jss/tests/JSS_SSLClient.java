@@ -405,6 +405,7 @@ public class JSS_SSLClient {
                 } catch (Exception ex) {
                     System.out.println("Exception caught " + ex.getMessage());
                     ex.printStackTrace();
+                    System.exit(1);
                 }
                 // Set EOF to null to trigger server socket close
                 jssTest.setCipher(testCipher);
@@ -452,6 +453,7 @@ public class JSS_SSLClient {
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
             ex.printStackTrace();
+            System.exit(1);
         }
     }
 }

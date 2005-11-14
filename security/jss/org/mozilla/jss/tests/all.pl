@@ -294,15 +294,6 @@ $result >>=8;
 $result and print "HMACTest returned $result\n";
 print_case_result ($result,"HMACTest");
 
-
-# test signing
-#
-print "============= test signing\n";
-$result = system("$java org.mozilla.jss.tests.SigTest $testdir " .
-            "\"$signingToken\" $pwfile"); $result >>=8;
-$result and print "SigTest returned $result\n";
-print_case_result ($result,"Signing");
-
 # test JCA Sig Test
 #
 print "============= test Mozilla-JSS SigatureSPI JCASigTest\n";
@@ -328,12 +319,39 @@ $result >>=8;
 $result and print "Generate known cert pair for testing returned $result\n";
 
 #
+# List cert by certnick
+#
+print "============= List cert by certnick\n";
+$result = system("$java org.mozilla.jss.tests.ListCerts $testdir JSSCATestCert");
+$result >>=8;
+$result and print "List cert by certnick returned $result\n";
+print_case_result ($result,"List cert by certnick");
+
+#
+# Verify cert by certnick
+#
+print "============= Verify cert by certnick\n";
+$result = system("$java org.mozilla.jss.tests.VerifyCert $testdir $pwfile JSSCATestCert");
+$result >>=8;
+$result and print "Verify cert by certnick returned $result\n";
+print_case_result ($result,"Verify cert by certnick");
+
+#
 # Create keystore.pfx from generated cert db
 # for "JSSCATestCert"
 print "============= convert PKCS11 cert to PKCS12 format\n";
 $result = system("$nss_lib_dir/../bin/pk12util$exe_suffix -o $testdir/keystore.pfx -n JSSCATestCert -d ./$testdir -K netscape -W netscape");
 $result >>=8;
 $result and print "Convert PKCS11 to PKCS12 returned $result\n";
+
+#
+# TestSDR Test
+#
+print "============= TestSDR Test\n";
+$result = system("$java org.mozilla.jss.tests.TestSDR $testdir $pwfile");
+$result >>=8;
+$result and print "TestSDR test returned $result\n";
+print_case_result ($result,"TestSDR test");
 
 #
 # Start JSSE server
@@ -453,3 +471,10 @@ print "JSSTEST_SUITE: $testpass / $testrun\n";
 my $rate = $testpass / $testrun * 100;
 printf "JSSTEST_RATE: %.0f %\n",$rate;
 
+if ($testpass ne $testrun) {
+    printf "Test Status: FAILURE\n";
+    system("false");
+} else {
+    printf "Test Status: SUCCESS\n";
+    system("true");
+}

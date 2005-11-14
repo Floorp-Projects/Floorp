@@ -40,6 +40,7 @@ import org.mozilla.jss.crypto.*;
 import org.mozilla.jss.CryptoManager;
 import java.util.Enumeration;
 import java.math.BigInteger;
+import java.security.PrivateKey;
 
 public final class CloseDBs extends org.mozilla.jss.DatabaseCloser {
 
@@ -62,7 +63,7 @@ public final class CloseDBs extends org.mozilla.jss.DatabaseCloser {
         Enumeration tokens = manager.getAllTokens();
         CryptoStore store;
         X509Certificate certs[];
-        PrivateKey keys[];
+        java.security.PrivateKey keys[];
         while(tokens.hasMoreElements()) {
             CryptoToken token = (CryptoToken) tokens.nextElement();
             store = token.getCryptoStore();
@@ -76,16 +77,27 @@ public final class CloseDBs extends org.mozilla.jss.DatabaseCloser {
 
             keys = store.getPrivateKeys();
             System.out.println("Keys:");
-            for(i=0; i < keys.length; i++) {
-                System.out.println( new BigInteger( keys[i].getUniqueID() ) );
+            try {
+                for(i=0; i < keys.length; i++) {
+                    System.out.println(new BigInteger(keys[i].getEncoded()));
+                }
+            } catch (Exception ex) {
+                System.out.println(ex.getMessage());
             }
         }
 
         System.out.println("Closing databases...");
-        (new CloseDBs()).closeDatabases();
+        try {
+            (new CloseDBs()).closeDatabases();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            System.exit(1);
+        }
         System.out.println("Databases are closed.");
+        System.exit(0);
       } catch(Exception e) {
             e.printStackTrace();
+            System.exit(1);
       }
     }
 }
