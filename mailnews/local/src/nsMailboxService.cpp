@@ -551,8 +551,7 @@ NS_IMETHODIMP nsMailboxService::NewURI(const nsACString &aSpec,
       } 
       else 
       {
-        rv = aUrl->SetSpec(aSpec);
-        NS_ENSURE_SUCCESS(rv, rv);
+        aMsgUri->SetSpec(aSpec);
       }
       NS_ADDREF(*_retval = aMsgUri);
     }
