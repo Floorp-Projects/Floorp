@@ -1876,7 +1876,6 @@ nsresult ConsumeInvalidAttribute(nsScanner& aScanner,
 nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 aFlag)
 {
   nsresult result;
- 
   nsScannerIterator wsstart, wsend;
   
   if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
@@ -2009,8 +2008,12 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner, PRInt32 
             //from the middle of the value. Try stripping the quote and continuing...
             //Note that this code also strips forward slashes to handle cases
             //like <tag NAME/>
-            if (kQuote == aChar || kApostrophe == aChar || kForwardSlash == aChar) {
-              mInError = PR_TRUE;
+            if (kQuote == aChar || kApostrophe == aChar ||
+                kForwardSlash == aChar) {
+              // In XML, a trailing slash isn't an error.
+              if (kForwardSlash != aChar || !(aFlag & NS_IPARSER_FLAG_XML)) {
+                mInError = PR_TRUE;
+              }
 
               if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
                 result = aScanner.SkipOver(aChar); // Strip quote or slash.
