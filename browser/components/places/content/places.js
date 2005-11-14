@@ -35,11 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-
 var gPlaces = {
+
+  controller: null,
 
   init: function() {
     var wm =
@@ -52,8 +50,25 @@ var gPlaces = {
     var statusbar = topWindow.document.getElementById("status-bar");
     statusbar.hidden = true;
     
+    var placesList = document.getElementById("placesList");
+    var placeContent = document.getElementById("placeContent");
+    var placesCommands = document.getElementById("placesCommands");
     
-    dump("*** browser = "+ tabbrowser + "\n");
+    this.controller = 
+      new PlacesController([placesList, placeContent], placesCommands);
+  },
+  
+  get _selectedElement() {
+    LOG(document.popupNode.localName);
+  },
+  
+  makeContextMenu: function(popup) {
+    var selection = document.popupNode.selection;
+    
+    
+    LOG(document.popupNode.localName);
+    LOG(document.commandDispatcher.focusedElement.localName);
+    return true;
   },
 
 }

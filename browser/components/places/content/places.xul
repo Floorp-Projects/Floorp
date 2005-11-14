@@ -3,17 +3,99 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
+<!DOCTYPE window SYSTEM "chrome://browser/locale/places/places.dtd">
+
 <window id="places"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="gPlaces.init();">
   
   <script type="application/x-javascript"
+          src="chrome://browser/content/places/controller.js"/>
+  <script type="application/x-javascript"
           src="chrome://browser/content/places/places.js"/>
+  
+  <commandset id="placesCommands" events="*" commandupdater="true">
+    <command id="placesCmd_find" label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"/>
+    <command id="placesCmd_export" label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"/>
+    <command id="placesCmd_import"/>
+    <command id="placesCmd_select:all" label="&cmd.select_all.label;" accesskey="&cmd.select_all.accesskey;"/>
+    <commandset readonly="true">
+      <command id="placesCmd_edit:copy" label="&cmd.edit_copy.label;" accesskey="&cmd.edit_copy.accesskey;"/>
+      <command id="placesCmd_show:info" 
+#ifdef XP_WIN
+               label="&cmd.show_infoWin.label;" accesskey="&cmd.show_infoWin.accesskey;"/>
+#else
+               label="&cmd.show_infoMac.label;" accesskey="&cmd.show_infoMac.accesskey;"/>
+#endif
+    </commandset>
+    <commandset>
+      <command id="placesCmd_edit:cut" label="&cmd.edit_cut.label;" accesskey="&cmd.edit_cut.accesskey;"/>
+      <command id="placesCmd_edit:paste" label="&cmd.edit_paste.label;" accesskey="&cmd.edit_paste.accesskey;"/>
+      <command id="placesCmd_edit:delete" label="&cmd.edit_delete.label;" accesskey="&cmd.edit_delete.accesskey;"/>
+      <command id="placesCmd_rename" label="&cmd.rename.label;" accesskey="&cmd.rename.accesskey;"/>
+    </commandset>
+    <commandset type="link" readonly="true">
+      <command id="placesCmd_open" label="&cmd.open.label;" accesskey="&cmd.open.accesskey;"/>
+      <command id="placesCmd_open:window" label="&cmd.open_window.label;" accesskey="&cmd.open_window.accesskey;"/>
+      <command id="placesCmd_open:tab" label="&cmd.open_tab.label;" accesskey="&cmd.open_tab.accesskey;"/>
+    </commandset>
+    <commandset type="link">
+    </commandset>
+    <commandset type="container" readonly="true">
+      <command id="placesCmd_open:tabs" label="&cmd.open_tabs.label;" accesskey="&cmd.open_tabs.accesskey;"/>
+    </commandset>
+    <commandset type="container">
+      <command id="placesCmd_sortby:name" label="&cmd.sortby_name.label;" accesskey="&cmd.sortby_name.accesskey;"/>
+      <command id="placesCmd_new:folder" label="&cmd.new_folder.label;" accesskey="&cmd.new_folder.accesskey;"/>
+      <command id="placesCmd_new:separator" label="&cmd.new_separator.label;" accesskey="&cmd.new_separator.accesskey;"/>
+    </commandset>
+    <commandset type="container|feed" readonly="true">
+      <command id="placesCmd_reload" label="&cmd.reload.label;" accesskey="&cmd.reload.accesskey;"/>
+    </commandset>
+  </commandset>
+  
+  <keyset id="placesKeyset">
+    <key id="placesKey_find" command="placesCmd_find" key="f" modifiers="accel"/>
+    <key id="placesKey_select:all" command="placesCmd_select:all" key="&cmd.select_all.key;" modifiers="accel"/>
+    <key id="placesKey_edit:cut" command="placesCmd_edit:cut" key="&cmd.edit_cut.key;" modifiers="accel"/>
+    <key id="placesKey_edit:copy" command="placesCmd_edit:copy" key="&cmd.edit_copy.key;" modifiers="accel"/>
+    <key id="placesKey_edit:paste" command="placesCmd_edit:paste" key="&cmd.edit_paste.key;" modifiers="accel"/>
+    <key id="placesKey_edit:delete" command="placesCmd_edit:delete" keycode="VK_DELETE"/>
+    <key id="placesKey_open" command="placesCmd_open"/>
+    <key id="placesKey_open:window" command="placesCmd_open:window" keycode="VK_ENTER" modifiers="shift"/>
+    <key id="placesKey_open:tab" oncommand="placesCmd_open:tab" keycode="VK_ENTER" modifiers="accel"/>
+    <key id="placesKey_show:info" oncommand="placesCmd_show:info" key="&cmd.show_info.key;" modifiers="accel"/>
+    <key id="placesKey_rename" oncommand="placesCmd_rename" keycode="VK_F2"/>
+    <key id="placesKey_reload" oncommand="placesCmd_reload" key="&cmd.reload.key;" modifiers="accel"/>
+  </keyset>
+  
+  <popupset id="placesPopupset">
+    <popup id="placesContext">
+      <menuitem id="placesContext_open" command="placesCmd_open" default="true"/>
+      <menuitem id="placesContext_open:newwindow" command="placesCmd_open:window"/>
+      <menuitem id="placesContext_open:newtab" command="placesCmd_open:tab"/>
+      <menuseparator id="placesContext_openSeparator"/>
+      <menuitem id="placesContext_new:folder" command="placesCmd_new:folder"/>
+      <menuitem id="placesContext_new:separator" command="placesCmd_new:separator"/>
+      <menuseparator id="placesContext_newSeparator"/>
+      <menuitem id="placesContext_edit:cut" command="placesCmd_edit:cut"/>
+      <menuitem id="placesContext_edit:copy" command="placesCmd_edit:copy"/>
+      <menuitem id="placesContext_edit:paste" command="placesCmd_edit:paste"/>
+      <menuitem id="placesContext_edit:delete" command="placesCmd_edit:delete"/>
+      <menuseparator id="placesContext_editSeparator"/>
+      <menuitem id="placesContext_select:all" command="placesCmd_select:all"/>
+      <menuseparator id="placesContext_selectSeparator"/>
+      <menuitem id="placesContext_reload" command="placesCmd_reload"/>
+      <menuitem id="placesContext_sortby:name" command="placesCmd_sortby:name"/>
+      <menuseparator id="placesContext_sortSeparator"/>
+      <menuitem id="placesContext_show:info" command="placesCmd_show:info"/>
+    </popup>
+  </popupset>
   
   <hbox flex="1" id="placesView">
     <vbox flex="1">
       <tree id="placesList" class="placesTree" flex="1" datasources="rdf:bookmarks" ref="NC:BookmarksTopRoot" 
-            flags="dont-build-content" hidecolumnpicker="true">
+            flags="dont-build-content" hidecolumnpicker="true" context="placesContext">
         <treecols>
           <treecol id="Name" flex="1" primary="true" hideheader="true"/>
         </treecols>
@@ -49,7 +131,7 @@
         <button label="+"/>
       </hbox>
       <deck id="content" flex="1">
-        <tree id="placeContent" class="placesTree"></tree>  
+        <tree id="placeContent" class="placesTree" context="placesContext"></tree>  
       </deck>
       <hbox>
         <button label="New Folder"/>

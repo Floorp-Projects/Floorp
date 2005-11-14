@@ -1,0 +1,84 @@
+<!ENTITY cmd.find.label 
+  "Find in Bookmarks/History...">
+<!ENTITY cmd.find.accesskey
+  "F">
+<!ENTITY cmd.export.label
+  "Export...">
+<!ENTITY cmd.export.accesskey
+  "x">
+<!ENTITY cmd.select_all.label
+  "Select All">
+<!ENTITY cmd.select_all.accesskey
+  "A">
+<!ENTITY cmd.select_all.key
+  "a">
+<!ENTITY cmd.edit_cut.label
+  "Cut">
+<!ENTITY cmd.edit_cut.accesskey
+  "t">
+<!ENTITY cmd.edit_cut.key
+  "x">
+<!ENTITY cmd.edit_copy.label
+  "Copy">
+<!ENTITY cmd.edit_copy.accesskey
+  "C">
+<!ENTITY cmd.edit_copy.key
+  "c">
+<!ENTITY cmd.edit_paste.label
+  "Paste">
+<!ENTITY cmd.edit_paste.accesskey
+  "P">
+<!ENTITY cmd.edit_paste.key
+  "v">
+<!ENTITY cmd.edit_delete.label
+  "Delete">
+<!ENTITY cmd.edit_delete.accesskey
+  "D">
+<!ENTITY cmd.open.label
+  "Open">
+<!ENTITY cmd.open.accesskey
+  "O">
+<!ENTITY cmd.open_window.label
+  "Open in a New Window">
+<!ENTITY cmd.open_window.accesskey
+  "W">
+<!ENTITY cmd.open_tab.label
+  "Open in a New Tab">
+<!ENTITY cmd.open_tab.accesskey
+  "T">
+<!ENTITY cmd.open_tabs.label
+  "Open in Tabs">
+<!ENTITY cmd.open_tabs.accesskey
+  "s">
+<!ENTITY cmd.show_infoWin.label
+  "Properties">
+<!ENTITY cmd.show_infoWin.accesskey
+  "i">
+<!ENTITY cmd.show_infoMac.label
+  "Get Info">
+<!ENTITY cmd.show_infoMac.accesskey
+  "I">
+<!ENTITY cmd.show_info.key
+  "i">
+<!ENTITY cmd.rename.label
+  "Rename">
+<!ENTITY cmd.rename.accesskey
+  "R">
+<!ENTITY cmd.sortby_name.label
+  "Sort By Name">
+<!ENTITY cmd.sortby_name.accesskey
+  "S">
+<!ENTITY cmd.new_folder.label
+  "New Folder">
+<!ENTITY cmd.new_folder.accesskey
+  "F">
+<!ENTITY cmd.new_separator.label
+  "New Separator">
+<!ENTITY cmd.new_separator.accesskey
+  "S">
+<!ENTITY cmd.reload.label
+  "Reload">
+<!ENTITY cmd.reload.accesskey
+  "l">
+<!ENTITY cmd.reload.key
+  "r">
