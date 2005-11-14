@@ -3558,10 +3558,13 @@ enum BWCOpenDest {
 //
 // handle command-return in location or search field, opening a new tab or window as appropriate
 //
-- (BOOL) handleCommandReturn
+- (BOOL)handleCommandReturn:(BOOL)aShiftIsDown
 {
   // determine whether to load in background
   BOOL loadInBG  = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+  if (aShiftIsDown)  // if shift is being held down, do the opposite of the pref
+    loadInBG = !loadInBG;
+
   // determine whether to load in tab or window
   BOOL loadInTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
 

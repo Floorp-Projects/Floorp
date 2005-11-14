@@ -101,7 +101,8 @@ static const int kEscapeKeyCode = 53;
 
   BOOL handled = NO;
   if (keyChar == NSCarriageReturnCharacter) {
-    handled = [windowController handleCommandReturn];
+    BOOL shiftKeyIsDown = (([theEvent modifierFlags] & NSShiftKeyMask) != 0);
+    handled = [windowController handleCommandReturn:shiftKeyIsDown];
   } else if (keyChar == '+') {
     [windowController biggerTextSize:nil];
     handled = YES;
