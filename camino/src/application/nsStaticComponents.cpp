@@ -57,8 +57,7 @@
     MODULE(nsUConvModule) \
     MODULE(nsJarModule) \
     MODULE(xpconnect) \
-    MODULE(necko_core_and_primary_protocols) \
-    MODULE(necko_secondary_protocols) \
+    MODULE(necko) \
     MODULE(nsPrefModule) \
     MODULE(nsCJVMManagerModule) \
     MODULE(nsSecurityManagerModule) \
