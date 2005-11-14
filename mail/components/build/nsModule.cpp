@@ -41,11 +41,17 @@
 #include "nsMailMigrationCID.h"
 #include "nsProfileMigrator.h"
 #include "nsSeamonkeyProfileMigrator.h"
+
+#if !defined(XP_BEOS)
 #include "nsDogbertProfileMigrator.h"
+#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSeamonkeyProfileMigrator)
+
+#if !defined(XP_BEOS)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDogbertProfileMigrator)
+#endif
 
 #ifdef XP_WIN32
 
@@ -79,10 +85,12 @@ static const nsModuleComponentInfo components[] = {
     NS_SEAMONKEYPROFILEMIGRATOR_CID,
     NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey",
     nsSeamonkeyProfileMigratorConstructor },
+#if !defined(XP_BEOS)
   { "Netscape Communicator 4.x",
     NS_DOGBERTPROFILEMIGRATOR_CID,
     NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "dogbert",
     nsDogbertProfileMigratorConstructor },
+#endif
 #ifdef XP_WIN32
   { "Outlook Express Profile Migrator",
     NS_OEXPRESSPROFILEMIGRATOR_CID,
