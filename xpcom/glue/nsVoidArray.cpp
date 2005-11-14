@@ -287,8 +287,8 @@ PRBool nsVoidArray::GrowArrayBy(PRInt32 aGrowBy)
     }
     else
     {
-      newSize = PR_BIT(PR_CeilingLog2(newSize));
-      newCapacity = CAPACITYOF_IMPL(newSize);
+      PR_CEILING_LOG2(newSize, newSize);
+      newCapacity = CAPACITYOF_IMPL(PR_BIT(newSize));
     }
   }
   // frees old mImpl IF this succeeds
