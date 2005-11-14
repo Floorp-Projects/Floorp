@@ -170,6 +170,19 @@ public class KeyPairGenerator {
     }
 
     /**
+     * Tells the generator to generate sensitive or insensitive keypairs.
+     * Certain attributes of a sensitive key cannot be revealed in
+     * plaintext outside the token.  If this method is not called, the
+     * default depends on the temporaryPairs mode for backward
+     * compatibility.  The default is sensitive keypairs if the
+     * temporaryPairs mode is false, or insensitive keypairs if the
+     * temporaryPairs mode is true.
+     */
+    public void sensitivePairs(boolean sensitive) {
+        engine.sensitivePairs(sensitive);
+    }
+
+    /**
      * Tells the generator to generate extractable or unextractable
      * keypairs.  Extractable keys can be extracted from the token after
      * wrapping.  If this method is not called, the default is token

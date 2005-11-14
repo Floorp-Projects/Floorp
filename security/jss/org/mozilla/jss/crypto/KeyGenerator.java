@@ -75,6 +75,14 @@ public interface KeyGenerator {
     public void temporaryKeys(boolean temp);
 
     /**
+     * Tells the generator to generate sensitive or insensitive keys.
+     * Certain attributes of a sensitive key cannot be revealed in
+     * plaintext outside the token.  If this method is not called, the
+     * default is token dependent.
+     */
+    public void sensitiveKeys(boolean sensitive);
+
+    /**
      * Generates a symmetric key.
      */
     public SymmetricKey generate()

@@ -185,6 +185,7 @@ public final class PK11KeyPairGenerator
                                     rsaparams.getKeySize(),
                                     rsaparams.getPublicExponent().longValue(),
                                     temporaryPairMode,
+                                    sensitivePairMode,
                                     extractablePairMode);
             } else {
                 return generateRSAKeyPair(
@@ -192,6 +193,7 @@ public final class PK11KeyPairGenerator
                                     DEFAULT_RSA_KEY_SIZE,
                                     DEFAULT_RSA_PUBLIC_EXPONENT.longValue(),
                                     temporaryPairMode,
+                                    sensitivePairMode,
                                     extractablePairMode);
             }
         } else {
@@ -206,6 +208,7 @@ public final class PK11KeyPairGenerator
                 PQGParams.BigIntegerToUnsignedByteArray(dsaParams.getQ()),
                 PQGParams.BigIntegerToUnsignedByteArray(dsaParams.getG()),
                 temporaryPairMode,
+                sensitivePairMode,
                 extractablePairMode);
         }
     }
@@ -230,7 +233,7 @@ public final class PK11KeyPairGenerator
      */
     private native KeyPair
     generateRSAKeyPair(PK11Token token, int keySize, long publicExponent,
-            boolean temporary, int extractable)
+            boolean temporary, int sensitive, int extractable)
         throws TokenException;
 
     /**
@@ -239,7 +242,7 @@ public final class PK11KeyPairGenerator
      */
     private native KeyPair
     generateDSAKeyPair(PK11Token token, byte[] P, byte[] Q, byte[] G,
-            boolean temporary, int extractable)
+            boolean temporary, int sensitive, int extractable)
         throws TokenException;
 
     ///////////////////////////////////////////////////////////////////////
@@ -348,6 +351,10 @@ public final class PK11KeyPairGenerator
         temporaryPairMode = temp;
     }
 
+    public void sensitivePairs(boolean sensitive) {
+        sensitivePairMode = sensitive ? 1 : 0;
+    }
+
     public void extractablePairs(boolean extractable) {
         extractablePairMode = extractable ? 1 : 0;
     }
@@ -363,6 +370,13 @@ public final class PK11KeyPairGenerator
     private KeyPairAlgorithm algorithm;
     private boolean mKeygenOnInternalToken;
     private boolean temporaryPairMode = false;
+    //  1: sensitive
+    //  0: insensitive
+    // -1: sensitive if temporaryPairMode is false,
+    //     insensitive if temporaryPairMode is true
+    //     (the default depends on temporaryPairMode for backward
+    //     compatibility)
+    private int sensitivePairMode = -1;
     //  1: extractable
     //  0: unextractable
     // -1: unspecified (token dependent)

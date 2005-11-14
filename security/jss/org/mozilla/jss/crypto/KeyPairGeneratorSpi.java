@@ -55,6 +55,8 @@ public abstract class KeyPairGeneratorSpi {
 
     public abstract void temporaryPairs(boolean temp);
 
+    public abstract void sensitivePairs(boolean sensitive);
+
     public abstract void extractablePairs(boolean extractable);
 
     public abstract boolean keygenOnInternalToken();

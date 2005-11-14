@@ -126,14 +126,13 @@ int PK11_NumberObjectsFor(PK11SlotInfo*, CK_ATTRIBUTE*, int);
 JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
   (JNIEnv *env, jobject this, jobject token, jint keySize, jlong publicExponent,
-    jboolean temporary, jint extractable)
+    jboolean temporary, jint sensitive, jint extractable)
 {
     PK11SlotInfo* slot;
     PK11RSAGenParams params;
     SECKEYPrivateKey *privk=NULL;
     SECKEYPublicKey *pubk=NULL;
     jobject keyPair=NULL;
-    PRBool sensitive = !temporary;
     PK11AttrFlags attrFlags = 0;
 
     PR_ASSERT(env!=NULL && this!=NULL && token!=NULL);
@@ -175,6 +174,13 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateRSAKeyPair
         attrFlags |= PK11_ATTR_EXTRACTABLE;
     } else if( extractable == 0 ) {
         attrFlags |= PK11_ATTR_UNEXTRACTABLE;
+    }
+    /*
+     * The default of sensitive is set this way to be backward
+     * compatible.
+     */
+    if( sensitive == -1 ) {
+        sensitive = !temporary;
     }
     /*
      * The PRIVATE/PUBLIC attributes are set this way to be backward
@@ -244,7 +250,7 @@ finish:
 JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
   (JNIEnv *env, jobject this, jobject token, jbyteArray P, jbyteArray Q,
-    jbyteArray G, jboolean temporary, jint extractable)
+    jbyteArray G, jboolean temporary, jint sensitive, jint extractable)
 {
     PK11SlotInfo *slot;
     SECKEYPrivateKey *privk=NULL;
@@ -252,7 +258,6 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
     SECItem p, q, g;
     PQGParams *params=NULL;
     jobject keyPair=NULL;
-    PRBool sensitive = !temporary; /* workaround bug 129563 */
     PK11AttrFlags attrFlags = 0;
 
     PR_ASSERT(env!=NULL && this!=NULL && token!=NULL && P!=NULL && Q!=NULL
@@ -310,6 +315,13 @@ Java_org_mozilla_jss_pkcs11_PK11KeyPairGenerator_generateDSAKeyPair
         attrFlags |= PK11_ATTR_EXTRACTABLE;
     } else if( extractable == 0 ) {
         attrFlags |= PK11_ATTR_UNEXTRACTABLE;
+    }
+    /*
+     * The default of sensitive is set this way to be backward
+     * compatible.
+     */
+    if( sensitive == -1 ) {
+        sensitive = !temporary; /* workaround bug 129563 */
     }
     /*
      * The PRIVATE/PUBLIC attributes are set this way to be backward
