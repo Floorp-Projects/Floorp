@@ -54,8 +54,8 @@ public final class JSSProvider extends java.security.Provider {
     private static int JSS_MAJOR_VERSION  = 4;
     private static int JSS_MINOR_VERSION  = 2;
     private static int JSS_PATCH_VERSION  = 0;
-    private static double JSS_VERSION     = round((double)(JSS_MAJOR_VERSION +
-                                             (double)JSS_MINOR_VERSION/10),2);
+    private static double JSS_VERSION     = (double)JSS_MAJOR_VERSION +
+                                            round(((double)JSS_MINOR_VERSION),1)/10;
 
     public JSSProvider() {
         super("Mozilla-JSS", JSS_VERSION,
