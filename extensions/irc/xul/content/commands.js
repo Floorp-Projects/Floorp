@@ -140,6 +140,7 @@ function initCommands()
          ["notice",            cmdNotice,           CMD_NEED_SRV | CMD_CONSOLE],
          ["notify",            cmdNotify,           CMD_NEED_SRV | CMD_CONSOLE],
          ["open-at-startup",   cmdOpenAtStartup,                   CMD_CONSOLE],
+         ["oper",              cmdOper,             CMD_NEED_SRV | CMD_CONSOLE],
          ["pass",              cmdPass,             CMD_NEED_NET | CMD_CONSOLE],
          ["ping",              cmdPing,             CMD_NEED_SRV | CMD_CONSOLE],
          ["plugin-pref",       cmdPref,                            CMD_CONSOLE],
@@ -2632,6 +2633,19 @@ function cmdOpenAtStartup(e)
             display(getMsg(MSG_STARTUP_NOTFOUND, url));
         }
     }
+}
+
+function cmdOper(e)
+{
+    // Password is optional, if it is not given, we use a safe prompt.
+    if (!e.password)
+        e.password = promptPassword(getMsg(MSG_NEED_OPER_PASSWORD), "");
+
+    if (!e.password)
+        return;
+
+    e.server.sendData("OPER " + fromUnicode(e.opername, e.server) + " " + 
+                      fromUnicode(e.password, e.server) + "\n");
 }
 
 function cmdPass(e)

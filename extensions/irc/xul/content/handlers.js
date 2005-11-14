@@ -902,7 +902,7 @@ function my_unknown (e)
     e.params.shift(); /* and the dest. nick (always me) */
 
     // Handle random IRC numerics automatically.
-    var msg = getMsg("msg.err.irc." + e.code, null, "");
+    var msg = getMsg("msg.irc." + e.code, null, "");
     if (msg)
     {
         if (arrayIndexOf(e.server.channelTypes, e.params[0][0]) != -1)
@@ -917,7 +917,7 @@ function my_unknown (e)
         {
             var args = [msg, e.channel.unicodeName,
                         "knock " + e.channel.unicodeName];
-            msg = getMsg("msg.err.irc." + e.code + ".knock", args, "");
+            msg = getMsg("msg.irc." + e.code + ".knock", args, "");
             client.munger.entries[".inline-buttons"].enabled = true;
             this.display(msg);
             client.munger.entries[".inline-buttons"].enabled = false;
@@ -1440,7 +1440,7 @@ function my_464(e)
     {
         // If we are in the process of connecting we are needing a login
         // password, subtly different from after user registration.
-        this.display(MSG_ERR_IRC_464_LOGIN);
+        this.display(MSG_IRC_464_LOGIN);
     }
     else
     {
