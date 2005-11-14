@@ -560,6 +560,7 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
 
   // For non-pseudo-element selectors or for lone pseudo-elements, deal with
   // namespace prefixes.
+  PRBool wroteNamespace = PR_FALSE;
   if (!isPseudoElement || !mNext) {
     // append the namespace prefix if needed
     if (mNameSpace == kNameSpaceID_None) {
@@ -567,6 +568,7 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       // of "none" specified in the sheet by having a '|' with nothing
       // before it.
       aString.Append(PRUnichar('|'));
+      wroteNamespace = PR_TRUE;
     } else {
       nsXMLNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
     
@@ -576,67 +578,79 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       // namespace, which we handled above.  So no need to output anything when
       // sheetNS is null.
       if (sheetNS) {
-        nsIAtom *prefixAtom = nsnull;
-        // prefixAtom is non-null if and only if we have a prefix other than
-        // '*'
         if (mNameSpace != kNameSpaceID_Unknown) {
-          prefixAtom = sheetNS->FindPrefix(mNameSpace);
+          if (sheetNS->FindNameSpaceID(nsnull) != mNameSpace) {
+            nsIAtom *prefixAtom = sheetNS->FindPrefix(mNameSpace);
+            NS_ASSERTION(prefixAtom, "how'd we get a non-default namespace "
+                                     "without a prefix?");
+            nsAutoString prefix;
+            prefixAtom->ToString(prefix);
+            aString.Append(prefix);
+            aString.Append(PRUnichar('|'));
+            wroteNamespace = PR_TRUE;
+          }
+          // otherwise it must be the default namespace
+        } else {
+          // A selector for an element in any namespace.
+          if (// Use explicit "*|" only when it's not implied
+              sheetNS->FindNameSpaceID(nsnull) != kNameSpaceID_None &&
+              // :not() is special in that the default namespace is
+              // not implied for non-type selectors
+              (!aIsNegated || (!mIDList && !mClassList &&
+                               !mPseudoClassList && !mAttrList))) {
+            aString.AppendLiteral("*|");
+            wroteNamespace = PR_TRUE;
+          }
         }
-        if (prefixAtom) {
-          nsAutoString prefix;
-          prefixAtom->ToString(prefix);
-          aString.Append(prefix);
-          aString.Append(PRUnichar('|'));
-        } else if (mNameSpace == kNameSpaceID_Unknown) {
-          // explicit *| or only non-default namespace rules and we're not
-          // using any of those namespaces
-          aString.AppendLiteral("*|");
-        }
-        // else we are in the default namespace and don't need to output
-        // anything
       }
     }
   }
       
-  // smells like a universal selector
-  if (!mTag && !mIDList && !mClassList && !mPseudoClassList && !mAttrList) {
-    // XXXldb Or if we've written a namespace.
-    aString.Append(PRUnichar('*'));
+  if (!mTag) {
+    // Universal selector:  avoid writing the universal selector when we
+    // can avoid it, especially since we're required to avoid it for the
+    // inside of :not()
+    if (wroteNamespace ||
+        (!mIDList && !mClassList && !mPseudoClassList && !mAttrList &&
+         (aIsNegated || !mNegations))) {
+      aString.Append(PRUnichar('*'));
+    }
   } else {
-    // Append the tag name, if there is one
-    if (mTag) {
-      if (isPseudoElement) {
-        if (!mNext) {
-          // Lone pseudo-element selector -- toss in a wildcard type selector
-          aString.Append(PRUnichar('*'));
-        }
-        if (!nsCSSPseudoElements::IsCSS2PseudoElement(mTag)) {
-          aString.Append(PRUnichar(':'));
-        }
+    // Append the tag name
+    if (isPseudoElement) {
+      if (!mNext) {
+        // Lone pseudo-element selector -- toss in a wildcard type selector
+        // XXXldb Why?
+        aString.Append(PRUnichar('*'));
       }
-      nsAutoString prefix;
-      mTag->ToString(prefix);
-      aString.Append(prefix);
-    }
-    // Append the id, if there is one
-    if (mIDList) {
-      nsAtomList* list = mIDList;
-      while (list != nsnull) {
-        list->mAtom->ToString(temp);
-        aString.Append(PRUnichar('#'));
-        aString.Append(temp);
-        list = list->mNext;
+      if (!nsCSSPseudoElements::IsCSS2PseudoElement(mTag)) {
+        aString.Append(PRUnichar(':'));
       }
     }
-    // Append each class in the linked list
-    if (mClassList) {
-      nsAtomList* list = mClassList;
-      while (list != nsnull) {
-        list->mAtom->ToString(temp);
-        aString.Append(PRUnichar('.'));
-        aString.Append(temp);
-        list = list->mNext;
-      }
+    nsAutoString prefix;
+    mTag->ToString(prefix);
+    aString.Append(prefix);
+  }
+
+  // Append the id, if there is one
+  if (mIDList) {
+    nsAtomList* list = mIDList;
+    while (list != nsnull) {
+      list->mAtom->ToString(temp);
+      aString.Append(PRUnichar('#'));
+      aString.Append(temp);
+      list = list->mNext;
+    }
+  }
+
+  // Append each class in the linked list
+  if (mClassList) {
+    nsAtomList* list = mClassList;
+    while (list != nsnull) {
+      list->mAtom->ToString(temp);
+      aString.Append(PRUnichar('.'));
+      aString.Append(temp);
+      list = list->mNext;
     }
   }
 
