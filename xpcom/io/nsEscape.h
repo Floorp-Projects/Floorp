@@ -159,28 +159,67 @@ NS_COM PRBool NS_UnescapeURL(const char *str,
                              nsACString &result);
 
 /** returns resultant string length **/
-inline PRInt32 NS_UnescapeURL(char *str) { return nsUnescapeCount(str); }
+inline PRInt32 NS_UnescapeURL(char *str) {
+    return nsUnescapeCount(str);
+}
 
 /**
- * string friendly versions...
+ * String friendly versions...
  */
-inline const nsACString &
-NS_EscapeURL(const nsASingleFragmentCString &part, PRInt16 partType, nsACString &result) {
-    const char *temp;
-    if (NS_EscapeURL(part.BeginReading(temp), part.Length(), partType, result))
-        return result;
-    return part;
-}
-inline const nsACString &
-NS_UnescapeURL(const nsASingleFragmentCString &str, PRUint32 flags, nsACString &result) {
-    const char *temp;
-    if (NS_UnescapeURL(str.BeginReading(temp), str.Length(), flags, result))
+inline const nsCSubstring &
+NS_EscapeURL(const nsCSubstring &str, PRUint32 flags, nsCSubstring &result) {
+    if (NS_EscapeURL(str.Data(), str.Length(), flags, result))
         return result;
     return str;
 }
-// inline unescape
-inline nsAFlatCString &
-NS_UnescapeURL(nsAFlatCString &str)
+inline const nsCSubstring &
+NS_UnescapeURL(const nsCSubstring &str, PRUint32 flags, nsCSubstring &result) {
+    if (NS_UnescapeURL(str.Data(), str.Length(), flags, result))
+        return result;
+    return str;
+}
+
+// nsACString is nsCSubstring when MOZ_V1_STRING_ABI is undefined.
+#ifdef MOZ_V1_STRING_ABI
+inline const nsACString &
+NS_EscapeURL(const nsACString &str, PRUint32 flags, nsACString &result) {
+    // The iterator version of BeginReading provides us with both the data
+    // pointer and the length with only one function call.
+    nsACString::const_iterator iter;
+    str.BeginReading(iter);
+    if (NS_EscapeURL(iter.get(), iter.size_forward(), flags, result))
+        return result;
+    return str;
+}
+inline const nsACString &
+NS_EscapeURL(const nsCSubstring &str, PRUint32 flags, nsACString &result) {
+    if (NS_EscapeURL(str.Data(), str.Length(), flags, result))
+        return result;
+    return str;
+}
+inline const nsACString &
+NS_UnescapeURL(const nsACString &str, PRUint32 flags, nsACString &result) {
+    // The iterator version of BeginReading provides us with both the data
+    // pointer and the length with only one function call.
+    nsACString::const_iterator iter;
+    str.BeginReading(iter);
+    if (NS_UnescapeURL(iter.get(), iter.size_forward(), flags, result))
+        return result;
+    return str;
+}
+inline const nsACString &
+NS_UnescapeURL(const nsCSubstring &str, PRUint32 flags, nsACString &result) {
+    if (NS_UnescapeURL(str.Data(), str.Length(), flags, result))
+        return result;
+    return str;
+}
+#endif  // MOZ_V1_STRING_ABI
+
+/**
+ * Inline unescape of mutable string object.
+ */
+inline nsCString &
+NS_UnescapeURL(nsCString &str)
 {
     str.SetLength(nsUnescapeCount(str.BeginWriting()));
     return str;
