@@ -177,10 +177,10 @@
 <!ENTITY goMenu.label                           "Go">
 <!ENTITY goMenu.accesskey                       "G">
 
-<!ENTITY goTodayCmd.label                       "Go to Today">
+<!ENTITY goTodayCmd.label                       "Today">
 <!ENTITY goTodayCmd.accesskey                   "T">
 
-<!ENTITY goDateCmd.label                        "Go to Date">
+<!ENTITY goDateCmd.label                        "Date…">
 <!ENTITY goDateCmd.accesskey                    "D">
 
 <!ENTITY goPreviousCmd.label                    "Previous">

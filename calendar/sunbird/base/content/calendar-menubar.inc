@@ -323,6 +323,7 @@
                      label="&goDateCmd.label;"
                      accesskey="&goDateCmd.accesskey;"
                      observes="go_date_command"/>
+           <menuseparator/>
            <menuitem id="calendar-go-menu-previous"
                      key="go_backward_key"
                      label="&goPreviousCmd.label;"
