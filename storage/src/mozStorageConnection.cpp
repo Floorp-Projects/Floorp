@@ -92,10 +92,9 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
     int srv;
     nsresult rv;
 
-    if (aDatabaseFile) {
-        rv = aDatabaseFile->GetNativeLeafName(mDatabaseName);
-        NS_ENSURE_SUCCESS(rv, rv);
+    mDatabaseFile = aDatabaseFile;
 
+    if (aDatabaseFile) {
         nsCAutoString nativePath;
         rv = aDatabaseFile->GetNativePath(nativePath);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -139,11 +138,11 @@ mozStorageConnection::GetConnectionReady(PRBool *aConnectionReady)
 }
 
 NS_IMETHODIMP
-mozStorageConnection::GetDatabaseName(nsACString& aDatabaseName)
+mozStorageConnection::GetDatabaseFile(nsIFile **aFile)
 {
     NS_ASSERTION(mDBConn, "connection not initialized");
 
-    aDatabaseName = mDatabaseName;
+    NS_IF_ADDREF(*aFile = mDatabaseFile);
 
     return NS_OK;
 }
@@ -350,7 +349,7 @@ mozStorageConnection::CreateTable(/*const nsID& aID,*/
 }
 
 /**
- ** Functions and Triggers
+ ** Functions
  **/
 
 static void
@@ -358,8 +357,6 @@ mozStorageSqlFuncHelper (sqlite3_context *ctx,
                          int argc,
                          sqlite3_value **argv)
 {
-    fprintf (stderr, "mozStorageSqlFuncHelper: %p %d %p\n", ctx, argc, argv);
-
     void *userData = sqlite3_user_data (ctx);
     // We don't want to QI here, because this will be called a -lot-
     mozIStorageFunction *userFunction = NS_STATIC_CAST(mozIStorageFunction *, userData);
@@ -404,68 +401,6 @@ mozStorageConnection::CreateFunction(const char *aFunctionName,
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
-}
-
-NS_IMETHODIMP
-mozStorageConnection::CreateTrigger(const char *aTriggerName,
-                                    PRInt32 aTriggerType,
-                                    const char *aTableName,
-                                    const char *aTriggerFunction,
-                                    const char *aParameters)
-{
-#if 0
-    nsresult rv;
-
-    /* We don't need to split this until we need to generate
-     * our own IPC trigger
-     */
-    nsCStringArray *cstr = new nsCStringArray();
-    if (!cstr)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = cstr->ParseString (aParameters, ",");
-    if (NS_FAILED(rv)) return rv;
-#endif
-
-    char *event = nsnull;
-    if (aTriggerType == TRIGGER_EVENT_DELETE)
-        event = "DELETE";
-    else if (aTriggerType == TRIGGER_EVENT_INSERT)
-        event = "INSERT";
-    else if (aTriggerType == TRIGGER_EVENT_UPDATE)
-        event = "UPDATE";
-    else
-        return NS_ERROR_FAILURE;
-
-    char *sql = PR_sprintf_append
-        (nsnull,
-         "CREATE TEMPORARY TRIGGER %s AFTER %s ON %s FOR EACH ROW BEGIN SELECT %s(%s); END;",
-         aTriggerName,
-         event,
-         aTableName,
-         aTriggerFunction,
-         aParameters);
-    if (!sql)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    /* Now create the trigger */
-    int srv = sqlite3_exec (mDBConn,
-                            sql,
-                            nsnull,
-                            nsnull,
-                            nsnull);
-    if (srv != SQLITE_OK) {
-        HandleSqliteError(nsnull);
-        return NS_ERROR_FAILURE;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-mozStorageConnection::RemoveTrigger(const char *aTriggerName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /**

@@ -51,26 +51,34 @@ interface mozIStorageStatementParams : nsISupports {
 
 [scriptable, uuid(eee6f7c9-5586-4eaf-b35c-dca987c4ffd1)]
 interface mozIStorageStatementWrapper : nsISupports {
-  void initialize (in mozIStorageStatement aStatement);
+  /**
+   * Initialize this wrapper with aStatement.
+   */
+  void initialize(in mozIStorageStatement aStatement);
 
+  /**
+   * The statement that is wrapped.
+   */
   readonly attribute mozIStorageStatement statement;
 
   /**
-   * step, reset, and execute are passed down to the statement itself.
+   * Step, reset, and execute the wrapped statement.
    */
-  void reset ();
-  boolean step ();
-  void execute ();
+  void reset();
+  boolean step();
+  void execute();
 
   /**
-   * The current row.  Throws an exception if no row is currently available.
-   * Useful only from script.  The value of this is only valid while the
-   * statement is still executing, and is on the appropriate row
+   * The current row.  Throws an exception if no row is currently
+   * available.  Useful only from script.  The value of this is only
+   * valid while the statement is still executing, and is still on the
+   * appropriate row.
    */
   readonly attribute mozIStorageStatementRow row;
 
   /**
-   * The parameters.  Can be set in lieu of using the call notation on this.
+   * The parameters; these can be set in lieu of using the call
+   * notation on this.
    */
   readonly attribute mozIStorageStatementParams params;
 };

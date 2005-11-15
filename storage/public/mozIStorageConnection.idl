@@ -42,6 +42,13 @@ interface mozIStorageFunction;
 interface mozIStorageStatement;
 interface nsIFile;
 
+/**
+ * mozIStorageConnection represents a database connection attached to
+ * a specific file or to the in-memory data storage.  It is the
+ * primary interface for interacting with a database, including
+ * creating prepared statements, executing SQL, and examining database
+ * errors.
+ */
 [scriptable, uuid(623b8b2e-c9f9-4cc3-b15a-f3c96df2cc1c)]
 interface mozIStorageConnection : nsISupports {
   /*
@@ -54,9 +61,10 @@ interface mozIStorageConnection : nsISupports {
   readonly attribute boolean connectionReady;
 
   /**
-   * the current database filename. Empty if the database is in-memory
+   * The current database nsIFile.  Null if the database
+   * connection refers to an in-memory database.
    */
-  readonly attribute AUTF8String databaseName;
+  readonly attribute nsIFile databaseFile;
 
   /**
    * lastInsertRowID returns the row ID from the last INSERT
@@ -65,12 +73,13 @@ interface mozIStorageConnection : nsISupports {
   readonly attribute long long lastInsertRowID;
 
   /**
-   * lastError returns the last error code
+   * The last error SQLite error code.
    */
   readonly attribute long lastError;
 
   /**
-   * lastErrorString returns the last error as a string
+   * The last SQLite error as a string (in english, straight from the
+   * sqlite library).
    */
   readonly attribute AUTF8String lastErrorString;
 
@@ -79,21 +88,22 @@ interface mozIStorageConnection : nsISupports {
    */
 
   /**
-   * Create a mozIStorageStatement for the given SQL expression.
-   * The expression may use ?0 ?1 etc. to indicate numbered arguments.
+   * Create a mozIStorageStatement for the given SQL expression.  The
+   * expression may use ? to indicate sequential numbered arguments,
+   * or :name and $var to indicate named arguments.
    *
    * @param aSQLStatement  The SQL statement to execute
    *
    * @returns a new mozIStorageStatement
    */
-  mozIStorageStatement createStatement (in AUTF8String aSQLStatement);
+  mozIStorageStatement createStatement(in AUTF8String aSQLStatement);
 
   /**
    * Execute a SQL expression, expecting no arguments.
    *
    * @param aSQLStatement  The SQL statement to execute
    */
-  void executeSimpleSQL (in AUTF8String aSQLStatement);
+  void executeSimpleSQL(in AUTF8String aSQLStatement);
 
   /**
    * Check if the given table exists.
@@ -101,7 +111,7 @@ interface mozIStorageConnection : nsISupports {
    * @param aTableName   The table to check
    * @returns TRUE if table exists, FALSE otherwise.
    */
-  boolean tableExists (in AUTF8String aTableName);
+  boolean tableExists(in AUTF8String aTableName);
 
   /*
    * Transactions
@@ -116,7 +126,7 @@ interface mozIStorageConnection : nsISupports {
    * Begin a new transaction.  sqlite default transactions are deferred.
    * If a transaction is active, throws an error.
    */
-  void beginTransaction ();
+  void beginTransaction();
 
   /**
    * Begins a new transaction with the given type.
@@ -124,72 +134,53 @@ interface mozIStorageConnection : nsISupports {
   const PRInt32 TRANSACTION_DEFERRED = 0;
   const PRInt32 TRANSACTION_IMMEDIATE = 1;
   const PRInt32 TRANSACTION_EXCLUSIVE = 2;
-  void beginTransactionAs (in PRInt32 transactionType);
+  void beginTransactionAs(in PRInt32 transactionType);
 
   /**
    * Commits the current transaction.  If no transaction is active,
    * @throws NS_ERROR_STORAGE_NO_TRANSACTION.
    */
-  void commitTransaction ();
+  void commitTransaction();
 
   /**
    * Rolls back the current transaction.  If no transaction is active,
    * @throws NS_ERROR_STORAGE_NO_TRANSACTION.
    */
-  void rollbackTransaction ();
+  void rollbackTransaction();
 
   /*
    * Tables
    */
 
   /**
-   * Create the table with the given name and schema.  If the table
-   * already exists with the given schema, the non-error
-   * NS_STORAGE_TABLE_EXISTS is returned.  If the table exists but with
-   * a different schema, NS_ERROR_STORAGE_TABLE_CONFLICT (?) is thrown.
+   * Create the table with the given name and schema.
    *
-   * @param aID the owner of this table -- XXXtodo
+   * If the table already exists, NS_ERROR_FAILURE is thrown.
+   * (XXX at some point in the future it will check if the schema is
+   * the same as what is specified, but that doesn't happen currently.)
    *
-   * @param aTableName the table name to be created, consisting of [A-Za-z0-9_], and beginning with a letter.
+   * @param aTableName the table name to be created, consisting of
+   * [A-Za-z0-9_], and beginning with a letter.
    *
-   * @param aTableSchema the schema of the table; what would normally go between the parens in a CREATE TABLE
-   *                     statement: "foo INTEGER, bar STRING".
+   * @param aTableSchema the schema of the table; what would normally
+   * go between the parens in a CREATE TABLE statement: e.g., "foo
+   * INTEGER, bar STRING".
+   *
+   * @throws NS_ERROR_FAILURE if the table already exists or could not
+   * be created for any other reason.
+   *
    */
   void createTable(in string aTableName,
                    in string aTableSchema);
 
   /*
-   * Functions and Triggers
+   * Functions
    */
 
   /**
    * Create a new SQLite function
    */
-  void createFunction (in string aFunctionName,
-                       in long aNumArguments,
-                       in mozIStorageFunction aFunction);
-
-  /**
-   * Create a new trigger.  Note that we only support AFTER triggers here,
-   * not BEFORE (so that we can support IPC notification of triggers).
-   * All triggers created this way are TEMPORARY triggers, i.e. they are only
-   * valid for the duration of this connection.  Without this, triggers would
-   * persist between connections, even if the functions they refer to may no
-   * longer be defined; this would be bad.
-   *
-   * aParameters is a comma-separated list of parameters, referencing
-   * either "new.*" or "old.*", as appropriate for the trigger event
-   * type.
-   */
-  const long TRIGGER_EVENT_DELETE = 1;
-  const long TRIGGER_EVENT_INSERT = 2;
-  const long TRIGGER_EVENT_UPDATE = 3;
-
-  void createTrigger (in string aTriggerName,
-                      in long aTriggerType,
-                      in string aTableName,
-                      in string aTriggerFunction,
-                      in string aParameters);
-
-  void removeTrigger (in string aTriggerName);
+  void createFunction(in string aFunctionName,
+                      in long aNumArguments,
+                      in mozIStorageFunction aFunction);
 };

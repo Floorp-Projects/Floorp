@@ -42,6 +42,11 @@ interface mozIStorageConnection;
 interface mozIStorageValueArray;
 interface nsIArray;
 
+/**
+ * mozIStorageFunction is to be implemented by storage consumers that
+ * wish to define custom storage functions, through
+ * mozIStorageConnection's createFunction method.
+ */
 [scriptable, uuid(898d4189-7012-4ae9-a2af-435491cfa114)]
 interface mozIStorageFunction : nsISupports {
   /**
@@ -52,5 +57,5 @@ interface mozIStorageFunction : nsISupports {
    * @param aFunctionArguments    The arguments passed in to the function
    */
 
-  void onFunctionCall (in mozIStorageValueArray aFunctionArguments);
+  void onFunctionCall(in mozIStorageValueArray aFunctionArguments);
 };

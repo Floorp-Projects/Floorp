@@ -72,7 +72,7 @@ protected:
     void HandleSqliteError(const char *aSqlStatement);
 
     sqlite3 *mDBConn;
-    nsCString mDatabaseName;
+    nsCOMPtr<nsIFile> mDatabaseFile;
     PRBool mTransactionInProgress;
 
     nsCOMPtr<nsIMutableArray> mFunctions;

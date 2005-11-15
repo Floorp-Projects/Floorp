@@ -113,7 +113,7 @@ JSValStorageStatementBinder (JSContext *cx,
     } else if (JSVAL_IS_STRING(val)) {
         JSString *str = JSVAL_TO_STRING(val);
         for (i = 0; i < aNumIndexes; i++)
-            aStatement->BindWStringParameter(aParamIndexes[i], NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str)));
+            aStatement->BindStringParameter(aParamIndexes[i], nsDependentString(NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str)), JS_GetStringLength(str)));
     } else if (JSVAL_IS_BOOLEAN(val)) {
         if (val == JSVAL_TRUE) {
             for (i = 0; i < aNumIndexes; i++)
@@ -175,7 +175,7 @@ mozStorageStatementWrapper::Initialize(mozIStorageStatement *aStatement)
 
     // fetch various things we care about
     mStatement->GetParameterCount(&mParamCount);
-    mStatement->GetNumColumns(&mResultColumnCount);
+    mStatement->GetColumnCount(&mResultColumnCount);
 
     for (unsigned int i = 0; i < mResultColumnCount; i++) {
         const void *name = sqlite3_column_name16 (NativeStatement(), i);
@@ -312,7 +312,7 @@ mozStorageStatementWrapper::Call(nsIXPConnectWrappedNative *wrapper, JSContext *
     mStatement->Reset();
 
     // bind parameters
-    for (int i = 0; i < argc; i++) {
+    for (int i = 0; i < (int) argc; i++) {
         if (!JSValStorageStatementBinder(cx, mStatement, &i, 1, argv[i])) {
             *_retval = PR_FALSE;
             return NS_ERROR_INVALID_ARG;

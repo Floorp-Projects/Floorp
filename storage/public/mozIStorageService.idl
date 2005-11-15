@@ -41,29 +41,46 @@
 interface mozIStorageConnection;
 interface nsIFile;
 
+/**
+ * The mozIStorageService interface is intended to be implemented by
+ * a service that can create storage connections (mozIStorageConnection)
+ * to either a well-known profile database or to a specific database file.
+ *
+ * This is the only way to open a database connection.
+ */
 [scriptable, uuid(22cff01c-1a5a-4b11-9e27-f8f832226489)]
 interface mozIStorageService : nsISupports {
   /**
-   * Get a connection to the local profile storage.
+   * Get a connection to a named special database storage.
    *
    * @param aStorageKey a string key identifying the type of storage
-   * requested.  Valid values include: "profile", "cert".
+   * requested.  Valid values include: "profile", "memory"
    *
-   * @returns a mozIStorageConnection corresponding to
-   * the appropriate storage for the current thread.
-   * (XXX - always returns same one for now, need to add threading)
+   * @returns a new mozIStorageConnection for the requested
+   * storage database.
+   *
+   * @throws NS_ERROR_INVALID_ARG if aStorageKey is invalid.
    */
-  mozIStorageConnection getProfileStorage(in string aStorageKey);
+  mozIStorageConnection openSpecialDatabase(in string aStorageKey);
 
   /**
    * Open a connection to the specified file.
    *
    * @param aDatabaseFile a nsIFile of the database to open.
    *
-   * @returns a mozIStorageConnection corresponding to
-   * the appropriate storage for the current thread.
-   * (XXX - always returns same one for now, need to add threading)
+   * @returns a mozIStorageConnection for the requested
+   * database file.
+   *
+   * @throws NS_ERROR_FAILURE if any operation fails while opening
+   * the database.
    */
   mozIStorageConnection openDatabase(in nsIFile aDatabaseFile);
 
 };
+
+%{C++
+
+#define MOZ_STORAGE_MEMORY_STORAGE_KEY    "memory"
+#define MOZ_STORAGE_PROFILE_STORAGE_KEY   "profile"
+
+%}
