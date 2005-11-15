@@ -93,7 +93,7 @@ nsLDAPAutoCompleteSession::OnStartLookup(const PRUnichar *searchString,
     // that are too short
     //
     if (searchString[0] == 0 ||
-        nsLiteralString(searchString).FindChar(PRUnichar('@'), 0) != 
+        nsDependentString(searchString).FindChar(PRUnichar('@'), 0) != 
         kNotFound || 
         mMinStringLength && nsCRT::strlen(searchString) < mMinStringLength)  {
 
