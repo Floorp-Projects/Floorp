@@ -85,7 +85,6 @@
 <!ENTITY newevent.from.label         "De" >
 <!ENTITY newevent.to.label           "Pour" >
 <!ENTITY newevent.enddate.label      "Fin" >
-<!ENTITY newevent.end.label          "Fin" >
 <!ENTITY newevent.set.label          "définir…" >
 <!ENTITY newevent.settings.label     "Paramètres généraux" >
 <!ENTITY newevent.none.label         "aucun" >

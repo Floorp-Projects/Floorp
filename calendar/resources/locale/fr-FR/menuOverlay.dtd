@@ -180,7 +180,7 @@
 <!ENTITY goTodayCmd.label                       "Aujourd'hui">
 <!ENTITY goTodayCmd.accesskey                   "h">
 
-<!ENTITY goDateCmd.label                        "Une date…">
+<!ENTITY goDateCmd.label                        "Date…">
 <!ENTITY goDateCmd.accesskey                    "d">
 
 <!ENTITY goPreviousCmd.label                    "Précédent">
