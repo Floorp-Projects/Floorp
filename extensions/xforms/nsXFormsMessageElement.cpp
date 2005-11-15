@@ -98,6 +98,7 @@
    <?xml-stylesheet href='chrome://global/skin/' type='text/css'?> \
    <window title='[XForms]'\
      xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul' \
+     onkeypress='if (event.keyCode == event.DOM_VK_ESCAPE) window.close();' \
      onload='document.documentElement.lastChild.previousSibling \
              .firstChild.nextSibling.focus();'>"
 
@@ -656,14 +657,14 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
                                getter_AddRefs(htmlEl));
     NS_ENSURE_SUCCESS(rv, rv);
     ddoc->AppendChild(htmlEl, getter_AddRefs(tmp));
-    
+
     nsCOMPtr<nsIDOMElement> bodyEl;
     rv = ddoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
                                NS_LITERAL_STRING("body"),
                                getter_AddRefs(bodyEl));
     NS_ENSURE_SUCCESS(rv, rv);
     htmlEl->AppendChild(bodyEl, getter_AddRefs(tmp));
-    
+
     // If we have a binding, it is enough to show a simple message
     if (hasBinding) {
       nsCOMPtr<nsIDOM3Node> body3(do_QueryInterface(bodyEl));
@@ -692,7 +693,7 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
         }
       }
     }
-    
+
     nsCOMPtr<nsIDOMSerializer> serializer =
       do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -700,11 +701,11 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
     nsAutoString docString;
     rv = serializer->SerializeToString(ddoc, docString);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     rv = ConstructMessageWindowURL(docString, PR_FALSE, src);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  
+
   nsCOMPtr<nsISupports> arg;
   PRBool isModal = aLevel.EqualsLiteral("modal");
   if (isModal) {
@@ -714,7 +715,7 @@ nsXFormsMessageElement::HandleModalAndModelessMessage(nsIDOMDocument* aDoc,
     // cycles between the windows.
     arg = nsXFormsAtoms::messageProperty;
   }
-  
+
   //XXX Add support for xforms-link-error.
   nsCOMPtr<nsIDOMWindow> messageWindow;
   internal->OpenDialog(src, aLevel, options, arg, getter_AddRefs(messageWindow));
