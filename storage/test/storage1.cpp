@@ -109,8 +109,8 @@ main (int argc, char **argv)
     {
         PRUint32 len;
         
-        dbRow->GetNumColumns (&len);
-        fprintf (stderr, "Row[length %d]: %d '%s'\n", len, dbRow->AsInt32(0), dbRow->AsSharedCString(0, 0));
+        dbRow->GetNumEntries (&len);
+        fprintf (stderr, "Row[length %d]: %d '%s'\n", len, dbRow->AsInt32(0), dbRow->AsSharedUTF8String(0, 0));
     }
 
     TEST_CHECK_ERROR(rv);

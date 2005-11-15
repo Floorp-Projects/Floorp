@@ -44,7 +44,7 @@
  * mozIStorageValueArray wraps an array of SQL values,
  * such as a single database row.
  */
-[scriptable, uuid(44fc1d3b-dc91-4d17-8bc5-2069d8fd3cca)]
+[scriptable, uuid(07b5b93e-113c-4150-863c-d247b003a55d)]
 interface mozIStorageValueArray : nsISupports {
   /**
    * These type values are returned by getTypeOfIndex
