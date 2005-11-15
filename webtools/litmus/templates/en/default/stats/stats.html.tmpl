@@ -36,7 +36,7 @@
 
   <div id="content">
 
-    <h1 class="firstHeading">[% title %]</h1>
+    <h1 class="firstHeading">[% title | html %]</h1>
 
 <div class="section-full">
 <div class="section-header">
@@ -73,8 +73,12 @@ Top Testers
 [% FOREACH curtester = toptesters %]
 <tr [% IF not (loop.count % 2) %]class="even"[% ELSE %]class="odd"[% END %]>
     <td align="center">[% loop.count %]</td>
-    <td align="center">[% IF curtester.email %]<a href="mailto:[% curtester.email FILTER email %]">[% curtester.email FILTER email %]</a>[% ELSE %]Anonymous[% END %]</td>
-    <td align="center">[% curtester.numtests %]</td>
+    <td align="center">
+    [% IF curtester.email %]
+      <a href="mailto:[% curtester.email FILTER email | html | uri %]">
+        [% curtester.email FILTER email | html  %]</a>
+    [% ELSE %]Anonymous[% END %]</td>
+    <td align="center">[% curtester.numtests | html %]</td>
 </tr>
 [% END %]
 [% ELSE %]

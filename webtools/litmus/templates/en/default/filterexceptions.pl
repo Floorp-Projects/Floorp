@@ -18,7 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Gervase Markham <gerv@gerv.net>
-#				  Zach Lipton <zach@zachlipton.com>
+#                  Zach Lipton <zach@zachlipton.com>
 
 # Important! The following classes of directives are excluded in the test,
 # and so do not need to be added here. Doing so will cause warnings.
@@ -42,6 +42,37 @@
 'variables.none.tmpl' => [
   'selname',
   'onchangereal',
+],
+
+'global/footer.html.tmpl' => [
+  'style',
+],
+
+'global/header.html.tmpl' => [
+  'curscript',
+  'realonload',
+],
+
+'global/html_header.tmpl' => [
+  'curscript',
+  'js_file',
+],
+
+'global/litmus_header.tmpl' => [
+  'onload',
+],
+
+'instructions/test_result_navigation.tmpl' => [
+  'icon',
+],
+
+'sidebar/widget_testcases.tmpl' => [
+  'order_num',
+],
+
+'test/test.html.tmpl' => [
+  'checked',
+  'evenodd',
 ],
 
 );

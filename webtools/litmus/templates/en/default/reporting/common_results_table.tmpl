@@ -9,11 +9,16 @@
 
 [% IF results %]
   [% FOREACH result=results %]
-<tr class="[% status %]">
-  <td align="center"><a href="search_results.cgi?order_by_created=DESC&amp;result_status=[% status %]&amp;test_id=[% result.test_id %]">[% result.num_results %]</a></td>
-  <td align="center"><a href="show_test.cgi?id=[% result.test_id %]">[% result.test_id %]</a></td>
-  <td align="left">[% result.summary %]</td>
-  <td align="center"><a href="single_result.cgi?id=[% result.max_id %]">[% result.most_recent %]</a></td>
+<tr class="[% status | html %]">
+  <td align="center">
+    <a href="search_results.cgi?order_by_created=DESC&amp;result_status=[% status | uri | html %]&amp;test_id=[% result.test_id | uri | html %]">
+    [% result.num_results | html %]</a>
+  </td>
+  <td align="center"><a href="show_test.cgi?id=[% result.test_id | uri | html %]">
+    [% result.test_id | html %]</a></td>
+  <td align="left">[% result.summary | html %]</td>
+  <td align="center"><a href="single_result.cgi?id=[% result.max_id | uri | html %]">
+    [% result.most_recent | html %]</a></td>
 </tr>
   [% END %]
 [% ELSE %]
@@ -24,8 +29,3 @@
 
 </table>
 </form>
-
-
-
-
-

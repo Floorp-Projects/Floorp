@@ -93,10 +93,10 @@ fields = fields.concat(["steps", "results"]);
     <textarea name="steps_edit_[%test.testid FILTER html%]"
         id="steps_edit_[%test.testid FILTER html%]"
         style="display: none;"
-        rows="15" cols="45">[% test.steps %]</textarea>
+        rows="15" cols="45">[% test.steps | testdata %]</textarea>
 [% END %]
 <p id="steps_text_[%test.testid FILTER html%]">
-    [% test.steps %]</p>
+    [% test.steps | testdata %]</p>
 </td>
 
 <td valign="top" width="50%">
@@ -105,10 +105,10 @@ fields = fields.concat(["steps", "results"]);
      <textarea name="results_edit_[%test.testid FILTER html%]"
          id="results_edit_[%test.testid FILTER html%]"
         style="display: none;"
-        rows="15" cols="45">[% test.expected_results %]</textarea>
+        rows="15" cols="45">[% test.expected_results | testdata %]</textarea>
  [% END %]
  <p id="results_text_[%test.testid FILTER html%]">
-    [% test.expected_results %]</p>
+    [% test.expected_results | testdata %]</p>
 </td>
 [% IF showedit %]
 </tr>

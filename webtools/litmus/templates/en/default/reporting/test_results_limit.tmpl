@@ -68,8 +68,11 @@ function init()
 <tr class="search">
   <td class="search-heading" align="center">
 Limit to</td>
-  <td class="search"><input type="text" name="limit" value="[% limit %]" size="5"> results</td>
-  <td class="search-submit" colspan="6"><input type="reset" onclick="FormInit(this.parent, '');">&nbsp;<input type="submit" value="Show Results">
+  <td class="search">
+  <input type="text" name="limit" value="[% limit | html %]" size="5"> results</td>
+  <td class="search-submit" colspan="6">
+  <input type="reset" onclick="FormInit(this.parent, '');">&nbsp;
+  <input type="submit" value="Show Results">
 </td>
 </tr>
 

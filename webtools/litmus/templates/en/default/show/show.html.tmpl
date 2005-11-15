@@ -41,7 +41,7 @@
 
   <div id="content">
 
-    <h1 class="firstHeading">[% title %]</h1>
+    <h1 class="firstHeading">[% title | html %]</h1>
 
 <div class="section-full">
   <div class="section-header">
@@ -69,7 +69,7 @@ Current Status
 </div>
 
 
- <h1 class="firstHeading">Recent Test Results for [% title %]</h1>
+ <h1 class="firstHeading">Recent Test Results for [% title | html %]</h1>
 
 [% INCLUDE reporting/test_results.tmpl results=test_results %]
 

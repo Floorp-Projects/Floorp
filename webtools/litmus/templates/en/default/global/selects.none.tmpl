@@ -41,9 +41,10 @@
         type="hidden" 
         value="[%valuelist FILTER html%]">
     [% END %]
-    <select name="platform[%testidflag%]" id="platform[%testidflag FILTER html%]" 
-        onchange="changePlatform([%test.testid FILTER js%])"
-        class="select_platform">
+    <select name="platform[%testidflag | html %]" 
+      id="platform[%testidflag FILTER html%]" 
+      onchange="changePlatform([%test.testid FILTER js%])"
+      class="select_platform">
     </select>
 [% END %]
 

@@ -4,7 +4,11 @@
       <ul>
 [% order_num=1 %]
 [% FOREACH curtest=tests %]
-<li class="tcs" id="li[% order_num %]"><a id="a[% order_num %]" href="#" onclick="showTEST([% order_num %]); return false;">[% order_num %]. [% curtest.summary %]</a></li>[% order_num=order_num+1 %]
+<li class="tcs" id="li[% order_num %]"><a id="a[% order_num %]" href="#" 
+  onclick="showTEST([% order_num %]); return false;">[
+  % order_num %]. [% curtest.summary | html %]</a>
+</li>
+[% order_num=order_num+1 %]
 [% END %]
       </ul>
     </div>

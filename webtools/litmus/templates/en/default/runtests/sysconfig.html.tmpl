@@ -46,7 +46,7 @@
 
   <div id="content">
 
-    <h1 class="firstHeading">[% title %]</h1>
+    <h1 class="firstHeading">[% title | html %]</h1>
 
 <div class="section-full">
   <div class="section-header">
@@ -55,9 +55,9 @@ System Information
   <div class="section-content">
 
 <p>To run tests, please enter some information about your system configuration.</p>
-<form action="[% goto %]" method="post" name="form" id="form">
+<form action="[% goto | html %]" method="post" name="form" id="form">
 <input name="isSysConfig" type="hidden" value="1">
-<input name="testgroup" type="hidden" value="[% testgroup %]">
+<input name="testgroup" type="hidden" value="[% testgroup | html %]">
 
 [% # here we see if there is data to include as hidden fields. 
    # This is used in situations where we have testresults that 

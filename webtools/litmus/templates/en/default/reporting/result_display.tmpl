@@ -5,21 +5,23 @@ Summary Information
   <div class="section-content">
 
 <table class="single-result">
-<tr class="[% result.result.class_name %]">
-<td width="20%">Status:</td><td>[% result.result.name %]</td>
+<tr class="[% result.result.class_name | html %]">
+<td width="20%">Status:</td><td>[% result.result.name | html %]</td>
 </tr>
 <tr class="even">
-<td>Test Summary:</td><td>[% result.testid.summary %]</td>
+<td>Test Summary:</td><td>[% result.testid.summary | html %]</td>
 </tr>
 <tr class="odd">
-<td>Testcase ID#:</td><td><a href="show_test.cgi?id=[% result.test_id %]">[% result.test_id %]</a></td>
+<td>Testcase ID#:</td><td><a href="show_test.cgi?id=[% result.test_id | uri | html%]">
+  [% result.test_id | html %]</a></td>
 </tr>
 <tr class="even">
-<td>Submitted on:</td><td>[% result.submission_time %]</td>
+<td>Submitted on:</td><td>[% result.submission_time | html %]</td>
 </tr>
 <tr class="odd">
 <td>Submitted by:</td><td>[% IF result.user.email != "" %]
-<a href="mailto:[% result.user.email FILTER email %]?subject='Litmus test result submission #[% result.testresult_id %]'">[% result.user.email FILTER email %]</a>
+<a href="mailto:[% result.user.email FILTER email | uri | html %]?subject='Litmus test result submission #[% result.testresult_id | html | uri %]'">
+  [% result.user.email FILTER email | html%]</a>
 [% ELSE %]
 Not provided
 [% END %]</td>
@@ -38,19 +40,20 @@ Product and Platform
 
 <table class="single-result">
 <tr class="odd">
-<td width="20%">Product:</td><td>[% result.testid.subgroup.testgroup.product.name %]</td>
+<td width="20%">Product:</td><td>
+  [% result.testid.subgroup.testgroup.product.name | html %]</td>
 </tr>
 <tr class="even">
-<td>Platform:</td><td>[% result.platform.name %]</td>
+<td>Platform:</td><td>[% result.platform.name | html %]</td>
 </tr>
 <tr class="odd">
-<td>Operating System:</td><td>[% result.opsys.name %]</td>
+<td>Operating System:</td><td>[% result.opsys.name | html %]</td>
 </tr>
 <tr class="even">
-<td>Build ID:</td><td>[% result.buildid %]</td>
+<td>Build ID:</td><td>[% result.buildid | html %]</td>
 </tr>
 <tr class="odd">
-<td>User Agent:</td><td>[% result.user_agent %]</td>
+<td>User Agent:</td><td>[% result.user_agent | html %]</td>
 </tr>
 </table>
 
@@ -59,7 +62,7 @@ Product and Platform
 </div> <!--END section-full-->
 
 <form id="update_result" name="update_result" method="post" action="single_result.cgi">
-<input type="hidden" name="id" value="[% result.testresult_id %]">
+<input type="hidden" name="id" value="[% result.testresult_id | html %]">
 
 <div class="section-full">
   <div class="section-header">
@@ -71,7 +74,8 @@ Referenced Bugs
 <tr class="odd">
 [% IF defaultemail %]
 <td>
-Add bug references: <input name="new_bugs" type="text" value=""> (bug #,bug #,...) <input type="submit" value="Add Bug References">
+Add bug references: <input name="new_bugs" type="text" value=""> (bug #,bug #,...) 
+  <input type="submit" value="Add Bug References">
 </td>
 [% ELSE %]
 <td colspan="2" class="no-results">
@@ -84,7 +88,8 @@ You must log in before you can add bug references.
 [% IF result.bugs %]
 Bug IDs: 
   [% FOREACH bug=result.bugs %]
-    <a target="bugzilla" href="https://bugzilla.mozilla.org/show_bug.cgi?id=[% bug.bug_id %]">[% bug.bug_id %]</a>[% UNLESS loop.last %], [% END %] 
+    <a target="bugzilla" href="https://bugzilla.mozilla.org/show_bug.cgi?id=[% bug.bug_id | uri | html%]">
+      [% bug.bug_id | html%]</a>[% UNLESS loop.last %], [% END %] 
   [% END %]
 [% ELSE %]
 No bugs on file.
@@ -123,13 +128,16 @@ You must log in before you can leave comments.
   [% FOREACH comment=result.comments %]
 <tr [% IF not (loop.count % 2) %]class="odd"[% ELSE %]class="even"[% END %]>
 <td colspan="2">
-<p><em>------- Comment <a name="c[% comment_num %]" href="#c[% comment_num %]">#[% comment_num %]</a> From 
+<p><em>------- Comment <a name="c[% comment_num | uri | html %]" 
+  href="#c[% comment_num | uri | html%]">#[% comment_num | html %]</a> From 
     [% IF comment.user.email %]
-<a href="mailto:[% comment.user.email FILTER email %]">[% comment.user.email FILTER email %]</a>
+<a href="mailto:[% comment.user.email FILTER email | uri | html %]">
+  [% comment.user.email FILTER email | html %]</a>
     [% ELSE %]
 Anonymous
     [% END %]
- [% comment.user.submission_time %] -------</em></p>
+ [% comment.user.submission_time | html %] -------</em></p>
+[% # XXX: is this right or should it be comment.submission_time? %]
 
 <p>[% comment.comment FILTER html %]</p>
 
@@ -164,7 +172,7 @@ Logs
 <td>
 [% IF result.logs %]
   [% FOREACH log=result.logs %]
-    [% log.log_type.name %]: <br/>
+    [% log.log_type.name | html %]: <br/>
   [% END %]
 [% ELSE %]
 No logs available.

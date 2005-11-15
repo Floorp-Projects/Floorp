@@ -38,7 +38,7 @@
 
   <div id="content">
 
-    <h1 class="firstHeading">[% title %]</h1>
+    <h1 class="firstHeading">[% title | html %]</h1>
 
 <div class="section-full">
 <div class="sec_head">
@@ -127,7 +127,7 @@ Select Testing Group
     [% END %]
   [% END %]
             
-<tr class="[% groupstyle %]">
+<tr class="[% groupstyle | html %]">
 
   [% IF personal_completed != 100 AND 
     personal_completed != 'N/A' AND 
@@ -141,7 +141,7 @@ Select Testing Group
 
     <td><input [% IF personal_completed == 100 OR 
                  personal_completed == 'N/A' %]disabled [% END %] type="radio" name="group" value="[% curgroup.testgroupid FILTER html %]"
-        onchange="showsubgroup()" [% selected %]>
+        onchange="showsubgroup()" [% selected | none %]>
          [% curgroup.name FILTER html %]</td>
     <td align="center">[% personal_completed FILTER html %][% IF personal_completed != 'N/A' %]%[% END %]</td>
     <td align="center">[% community_completed FILTER html %][% IF community_completed != 'N/A' %]%[% END %]</td>
@@ -171,7 +171,7 @@ Select Subgroup
     
 <div id="divsubgroup_null" style="visibility: visible;">
 <table class="run-tests">
-[% headerrow %]
+[% headerrow | none %]
 <tr>
 <td colspan="4" class="no-results">
 Please select a testing group with testcases, or that has not yet been tested in its entirety.
@@ -184,7 +184,7 @@ Please select a testing group with testcases, or that has not yet been tested in
     [% cursubgrouplist = subgroups.$curgroup %]
     <div id="divsubgroup_[% curgroup FILTER html %]" style="display: none;">
         <table class="run-tests">
-            [% headerrow %]
+            [% headerrow | none %]
             [% select_first_avail_subgroup=1 %] 
             [% FOREACH cursubgroup = cursubgrouplist %]
 
@@ -201,7 +201,7 @@ Please select a testing group with testcases, or that has not yet been tested in
         [% END %]
             [% END %]
             
-            <tr class="[% groupstyle %]">
+            <tr class="[% groupstyle | none %]">
                 <td align="left"><input [% IF personal_completed == 100 OR personal_completed == 'N/A' %]disabled [% ELSIF select_first_avail_subgroup==1 %][% select_first_avail_subgroup=0 %]checked [% END %]type="radio" name="subgroup_[% curgroup FILTER html %]" 
                     value="[% cursubgroup.id FILTER html %]">
                     [% cursubgroup.name FILTER html %]</input></td>

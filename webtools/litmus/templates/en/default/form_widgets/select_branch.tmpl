@@ -2,7 +2,7 @@
     <option value="">-Branch-</option>
 [% IF branches %]
 [% FOREACH branch=branches %]
-    <option[% IF defaults.branch==branch.name | html %] selected[% END %] 
+    <option[% IF defaults.branch==branch.name %] selected[% END %] 
         value="[% branch.name | html %]">[% branch.name | html %]</option>
 [% END %]
 [% END %]

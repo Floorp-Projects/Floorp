@@ -39,7 +39,7 @@
 
   <div id="content">
 
-    <h1 class="firstHeading">[% title %]</h1>
+    <h1 class="firstHeading">[% title | html %]</h1>
 
 <div class="section-full">
   <div class="section-header">
@@ -52,7 +52,7 @@ Results submitted
 [% IF testcount %]
     [% IF testcount > 1 %] [% plural = 's' %] [% END %]
     <p class="pageinstruction"> You have submitted [% testcount FILTER html %] test
-        result[% plural %]. 
+        result[% plural | html %]. 
     </p>
 [% END %]
 

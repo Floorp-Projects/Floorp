@@ -2,7 +2,9 @@
     <option value="">-State-</option>
 [% IF test_statuses %]
 [% FOREACH test_status=test_statuses %]
-    <option[% IF defaults.test_status==test_status.name %] selected[% END %] value="[% test_status.status_name %]">[% test_status.name %]</option>
+    <option[% IF defaults.test_status==test_status.name %] selected[% END %] 
+        value="[% test_status.status_name | html %]">
+          [% test_status.name | html %]</option>
 [% END %]
 [% END %]
 </select>

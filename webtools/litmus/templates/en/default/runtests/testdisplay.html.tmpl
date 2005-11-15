@@ -38,7 +38,7 @@
 
   <div id="content">
 
-    <h1 class="firstHeading">[% title %]</h1>
+    <h1 class="firstHeading">[% title | html %]</h1>
 
 <div class="section-full">
 <div class="sec_head">
@@ -97,7 +97,7 @@
 [% current_order=1 %]
 [% FOREACH curtest=tests %]
    [% next_num=current_order+1 %]
-   <div class="nav" id="ma[% current_order %]">
+   <div class="nav" id="ma[% current_order | none %]">
    [% IF current_order==1 %]
      Previous
    [% ELSE %]
@@ -107,7 +107,8 @@
    [% IF current_order>=tests.size %]
      Next
    [% ELSE %]
-     <a href="#" onclick="showTEST([% next_num %]); return false;">Next</a>
+     <a href="#" onclick="showTEST([% next_num | js | html %]); return false;">
+       Next</a>
    [% END %]
    | <a href="#" onclick="showTEST('all'); return false;">Show All</a></div>
    [% current_order=current_order+1 %]
@@ -133,7 +134,7 @@
 
   [% IF num_testcases!=0 %]
     [% sep_id="p$num_testcases" %]
-    <div class="head_s" id="[% sep_id %]" style="display:none;"></div>
+    <div class="head_s" id="[% sep_id | none %]" style="display:none;"></div>
     [% separators.push(sep_id) %]
   [% END %]
 
@@ -146,8 +147,11 @@
   <div class="testcase-head">
     <table cellpadding="0" cellspacing="0">
     <tr>
-    <td class="l"><a name="test_4"></a>[% loop.count %]: [% curtest.summary %] (ID: [% curtest.testid %])</td>
-    <td class="r"><a href="show_test.cgi?id=[% curtest.testid %]">View&nbsp;/&nbsp;Edit</a></td>
+    <td class="l"><a name="test_4"></a>
+    [% loop.count %]: [% curtest.summary | html %] 
+      (ID: [% curtest.testid | html %])</td>
+    <td class="r">
+    <a href="show_test.cgi?id=[% curtest.testid | uri | html %]">View&nbsp;/&nbsp;Edit</a></td>
     </tr>
     </table>
   </div> <!--END testcase-head-->
@@ -156,8 +160,10 @@
 
   <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
-   <td width="50%" class="content"><div class="dh">Steps to Perform:</div><div class="dv">[% curtest.steps %]</div></td>
-   <td width="50%" class="content"><div class="dh">Expected Results:</div><div class="dv">[% curtest.expected_results %]</div></td>
+   <td width="50%" class="content"><div class="dh">Steps to Perform:</div>
+     <div class="dv">[% curtest.steps | html %]</div></td>
+   <td width="50%" class="content"><div class="dh">Expected Results:</div>
+     <div class="dv">[% curtest.expected_results | html %]</div></td>
   </tr>
 
   <tr>
@@ -169,14 +175,19 @@
       <div class="dh">Result:</div>
       [% INCLUDE form_widgets/radio_testresults.tmpl test_id=curtest.testid %]
       <br/>
-      <div><input type="submit" id="Submit[% curtest.testid %]" name="Submit[% curtest.testid %]" value="Submit This Result" /></div>
+      <div><input type="submit" id="Submit[% curtest.testid | html %]" 
+        name="Submit[% curtest.testid | html %]" value="Submit This Result" />
+      </div>
      </td>
 
      <td>
       <div class="dh">Notes/Comments (optional):</div>
-      <div class="dv"><textarea name="comment_[% curtest.testid %]" cols="45" rows="4" id="note_[% curtest.testid %]"></textarea></div>
+      <div class="dv">
+       <textarea name="comment_[% curtest.testid | html %]" 
+         cols="45" rows="4" id="note_[% curtest.testid | html %]"></textarea></div>
       <div class="dh">Associated Bug #s:</div>
-      <div class="dv"><input type="text" name="bugs_[% curtest.testid %]" class="result_bug" /> (bug #,bug #,...)</div>
+      <div class="dv"><input type="text" name="bugs_[% curtest.testid | html %]" 
+        class="result_bug" /> (bug #,bug #,...)</div>
      </td>
     </tr>
 
@@ -196,9 +207,9 @@
 [% END %]
 <script language="JavaScript" type="text/JavaScript">
 var tmp_pagepos=1;
-var tmp_pagetotal=[% num_testcases %];
+var tmp_pagetotal=[% num_testcases | js | html %];
 var tmp_tests=new Array([% i=1 %][% FOREACH test_id=test_ids %][% IF i>1 %],[% END %]"t[% i %]"[% i=i+1 %][% END %]);
-var tmp_separ=new Array([% i=1 %][% FOREACH separator=separators %][% IF i>1 %],[% END %]"[% separator %]"[% i=i+1 %][% END %]);
+var tmp_separ=new Array([% i=1 %][% FOREACH separator=separators %][% IF i>1 %],[% END %]"[% separator | none %]"[% i=i+1 %][% END %]);
 var tmp_menua=new Array([% i=1 %][% FOREACH test_id=test_ids %]"ma[% i %]",[% i=i+1 %][% END %]"mf");
 var tmp_menub=new Array([% i=1 %][% FOREACH test_id=test_ids %]"mb[% i %]",[% i=i+1 %][% END %]"ml");
 </script>
@@ -214,7 +225,7 @@ var tmp_menub=new Array([% i=1 %][% FOREACH test_id=test_ids %]"mb[% i %]",[% i=
 [% current_order=1 %]
 [% FOREACH curtest=tests %]
    [% next_num=current_order+1 %]
-   <div class="nav" id="mb[% current_order %]">
+   <div class="nav" id="mb[% current_order | none %]">
    [% IF current_order==1 %]
      Previous
    [% ELSE %]
@@ -224,12 +235,14 @@ var tmp_menub=new Array([% i=1 %][% FOREACH test_id=test_ids %]"mb[% i %]",[% i=
    [% IF current_order>=tests.size %]
      Next
    [% ELSE %]
-     <a href="#" onclick="showTEST([% next_num %]); return false;">Next</a>
+     <a href="#" onclick="showTEST([% next_num | js | html %]); return false;">
+       Next</a>
    [% END %]
    | <a href="#" onclick="showTEST('all'); return false;">Show All</a></div>
    [% current_order=current_order+1 %]
 [% END %]
-   <div class="nav" id="ml"><a href="#" onclick="showTEST(tmp_pagepos); return false;">Show One</a></div>
+   <div class="nav" id="ml"><a href="#" onclick="showTEST(tmp_pagepos); return false;">
+     Show One</a></div>
 [% END %]
   </td>
   </tr>
