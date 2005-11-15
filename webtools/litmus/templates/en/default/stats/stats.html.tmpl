@@ -75,8 +75,8 @@ Top Testers
     <td align="center">[% loop.count %]</td>
     <td align="center">
     [% IF curtester.email %]
-      <a href="mailto:[% curtester.email FILTER email | html | uri %]">
-        [% curtester.email FILTER email | html  %]</a>
+      <a href="mailto:[% curtester.email FILTER html | uri | email %]">
+        [% curtester.email FILTER html | email  %]</a>
     [% ELSE %]Anonymous[% END %]</td>
     <td align="center">[% curtester.numtests | html %]</td>
 </tr>

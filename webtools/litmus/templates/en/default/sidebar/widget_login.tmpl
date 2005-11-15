@@ -2,7 +2,7 @@
   <div class="pagetools">
     <div>
         <h3>Welcome!</h3>
-    <span class="email"><abbr title="[% defaultemail.email FILTER email | html %]">
+    <span class="email"><abbr title="[% defaultemail.email FILTER html | email %]">
       [% defaultemail.email.replace('\@.*','') %]</abbr></span>
     <p align="right"><a href="logout.cgi">Log out</a></p>
 <!--    <h3>Log in</h3>

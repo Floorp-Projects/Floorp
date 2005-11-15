@@ -20,8 +20,8 @@ Summary Information
 </tr>
 <tr class="odd">
 <td>Submitted by:</td><td>[% IF result.user.email != "" %]
-<a href="mailto:[% result.user.email FILTER email | uri | html %]?subject='Litmus test result submission #[% result.testresult_id | html | uri %]'">
-  [% result.user.email FILTER email | html%]</a>
+<a href="mailto:[% result.user.email FILTER html | uri | email %]?subject='Litmus test result submission #[% result.testresult_id | html | uri %]'">
+  [% result.user.email FILTER html | email %]</a>
 [% ELSE %]
 Not provided
 [% END %]</td>
@@ -131,8 +131,8 @@ You must log in before you can leave comments.
 <p><em>------- Comment <a name="c[% comment_num | uri | html %]" 
   href="#c[% comment_num | uri | html%]">#[% comment_num | html %]</a> From 
     [% IF comment.user.email %]
-<a href="mailto:[% comment.user.email FILTER email | uri | html %]">
-  [% comment.user.email FILTER email | html %]</a>
+<a href="mailto:[% comment.user.email FILTER html | uri | email %]">
+  [% comment.user.email FILTER html | email %]</a>
     [% ELSE %]
 Anonymous
     [% END %]

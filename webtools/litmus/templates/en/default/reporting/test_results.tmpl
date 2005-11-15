@@ -11,8 +11,8 @@
       [% IF loop.count>1 %]
     <hr/>[% END %]<p class='comment'><b>
        [% IF comment.user.email %]
-    <a href=\"mailto:[% comment.user.email FILTER email | html | uri %]\">
-    [% comment.user.email FILTER email | js | html %]</a>
+    <a href=\"mailto:[% comment.user.email FILTER html | email | uri %]\">
+    [% comment.user.email FILTER html | js | email %]</a>
     [% ELSE %]
     Anonymous[% END %]
     <br/>[% comment.submission_time.strftime("%Y-%m-%d&nbsp;%T %Z") %]</b>
