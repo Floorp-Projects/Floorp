@@ -931,7 +931,7 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     nsCAutoString searchFilter;
     rv = ldapSvc->CreateFilter(MAX_AUTOCOMPLETE_FILTER_SIZE,
                                mFilterTemplate,
-                               prefix, suffix, NS_LITERAL_CSTRING(""), 
+                               prefix, suffix, EmptyCString(), 
                                NS_ConvertUCS2toUTF8(mSearchString),
                                searchFilter);
     if (NS_FAILED(rv)) {
