@@ -376,4 +376,7 @@ NS_COM PRInt32
 CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
                    const nsASingleFragmentString& aUTF16String);
 
+NS_COM void
+AppendUCS4ToUTF16(const PRUint32 aSource, nsAString& aDest);
+
 #endif // !defined(nsReadableUtils_h___)

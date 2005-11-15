@@ -38,6 +38,8 @@
 #ifndef nsUTF8Utils_h_
 #define nsUTF8Utils_h_
 
+#include "nsCharTraits.h"
+
 class UTF8traits
   {
     public:
@@ -49,9 +51,6 @@ class UTF8traits
       static PRBool is5byte(char c) { return (c & 0xFC) == 0xF8; }
       static PRBool is6byte(char c) { return (c & 0xFE) == 0xFC; }
   };
-
-#define PLANE1_BASE           0x00010000  
-#define UCS2_REPLACEMENT_CHAR 0xfffd     
 
 #ifdef __GNUC__
 #define NS_ALWAYS_INLINE __attribute__((always_inline))
@@ -285,14 +284,14 @@ public:
 
     PRUnichar c = *p++;
 
-    if (0xD800 != (0xF800 & c)) // U+0000 - U+D7FF,U+E000 - U+FFFF
+    if (!IS_SURROGATE(c)) // U+0000 - U+D7FF,U+E000 - U+FFFF
       {
         if (err)
           *err = PR_FALSE;
         *buffer = p;
         return c;
       }
-    else if (0xD800 == (0xFC00 & c)) // U+D800 - U+DBFF
+    else if (IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
       {
         if (*buffer == end)
           {
@@ -304,16 +303,15 @@ public:
           }
 
         // D800- DBFF - High Surrogate
-        // N = (H- D800) *400 + 10000 + ...
-        PRUint32 ucs4 = 0x10000 + ((0x03FF & c) << 10);
+        PRUnichar h = c;
 
         c = *p++;
 
-        if (0xDC00 == (0xFC00 & c))
+        if (IS_LOW_SURROGATE(c))
           {
             // DC00- DFFF - Low Surrogate
-            // N += ( L - DC00 )
-            ucs4 |= (0x03FF & c);
+            // N = (H - D800) *400 + 10000 + (L - DC00)
+            PRUint32 ucs4 = SURROGATE_TO_UCS4(h, c);
             if (err)
               *err = PR_FALSE;
             *buffer = p;
@@ -351,13 +349,13 @@ public:
 
     PRUnichar c = *iter++;
 
-    if (0xD800 != (0xF800 & c)) // U+0000 - U+D7FF,U+E000 - U+FFFF
+    if (!IS_SURROGATE(c)) // U+0000 - U+D7FF,U+E000 - U+FFFF
       {
         if (err)
           *err = PR_FALSE;
         return c;
       }
-    else if (0xD800 == (0xFC00 & c)) // U+D800 - U+DBFF
+    else if (IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
       {
         if (iter == end)
           {
@@ -368,16 +366,15 @@ public:
           }
 
         // D800- DBFF - High Surrogate
-        // N = (H- D800) *400 + 10000 + ...
-        PRUint32 ucs4 = 0x10000 + ((0x03FF & c) << 10);
+        PRUnichar h = c;
 
         c = *iter++;
 
-        if (0xDC00 == (0xFC00 & c))
+        if (IS_LOW_SURROGATE(c))
           {
             // DC00- DFFF - Low Surrogate
-            // N += ( L - DC00 )
-            ucs4 |= (0x03FF & c);
+            // N = (H - D800) *400 + 10000 + ( L - DC00 )
+            PRUint32 ucs4 = SURROGATE_TO_UCS4(h, c);
             if (err)
               *err = PR_FALSE;
             return ucs4;
@@ -461,13 +458,11 @@ class ConvertUTF8toUTF16
               }
             else if ( ucs4 >= PLANE1_BASE )
               {
-                if ( ucs4 >= 0x00110000 )
+                if ( ucs4 >= UCS_END )
                   *out++ = UCS2_REPLACEMENT_CHAR;
                 else {
-                  // surrogate, see unicode specification 3.7 for following math.
-                  ucs4 -= PLANE1_BASE;
-                  *out++ = (PRUnichar)(ucs4 >> 10) | 0xd800u;
-                  *out++ = (PRUnichar)(ucs4 & 0x3ff) | 0xdc00u;
+                  *out++ = (value_type)H_SURROGATE(ucs4);
+                  *out++ = (value_type)L_SURROGATE(ucs4);
                 }
               }
             else
@@ -593,17 +588,16 @@ class ConvertUTF16toUTF8
                 *out++ = 0xC0 | (char)(c >> 6);
                 *out++ = 0x80 | (char)(0x003F & c);
               }
-            else if (0xD800 != (0xF800 & c)) // U+0800 - U+D7FF,U+E000 - U+FFFF
+            else if (!IS_SURROGATE(c)) // U+0800 - U+D7FF,U+E000 - U+FFFF
               {
                 *out++ = 0xE0 | (char)(c >> 12);
                 *out++ = 0x80 | (char)(0x003F & (c >> 6));
                 *out++ = 0x80 | (char)(0x003F & c );
               }
-            else if (0xD800 == (0xFC00 & c)) // U+D800 - U+DBFF
+            else if (IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
               {
                 // D800- DBFF - High Surrogate
-                // N = (H- D800) *400 + 10000 + ...
-                PRUint32 ucs4 = 0x10000 + ((0x03FF & c) << 10);
+                value_type h = c;
 
                 ++p;
                 if (p == end)
@@ -614,11 +608,11 @@ class ConvertUTF16toUTF8
                   }
                 c = *p;
 
-                if (0xDC00 == (0xFC00 & c))
+                if (IS_LOW_SURROGATE(c))
                   {
                     // DC00- DFFF - Low Surrogate
-                    // N += ( L - DC00 )
-                    ucs4 |= (0x03FF & c);
+                    // N = (H - D800) *400 + 10000 + ( L - DC00 )
+                    PRUint32 ucs4 = SURROGATE_TO_UCS4(h, c);
 
                     // 0001 0000-001F FFFF
                     *out++ = 0xF0 | (char)(ucs4 >> 18);
