@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: crsa.c,v $ $Revision: 1.2 $ $Date: 2005/11/04 23:44:19 $";
+static const char CVS_ID[] = "@(#) $RCSfile: crsa.c,v $ $Revision: 1.3 $ $Date: 2005/11/15 00:13:58 $";
 #endif /* DEBUG */
 
 #include "ckcapi.h"
@@ -738,12 +738,9 @@ nss_ckcapi_mdMechanismRSA = {
   NULL, /* VerifyInit - default errs */
   ckcapi_mdMechanismRSA_SignInit,  /* SignRecoverInit */
   NULL, /* VerifyRecoverInit - default errs */
-  NULL, /* DigestEncryptUpdate - default errs */
-  NULL, /* DecryptDigestUpdate - default errs */
-  NULL, /* SignEncryptUpdate - default errs */
-  NULL, /* DecryptVerifyUpdate - default errs */
   NULL, /* GenerateKey - default errs */
   NULL, /* GenerateKeyPair - default errs */
+  NULL, /* GetWrapKeyLength - default errs */
   NULL, /* WrapKey - default errs */
   NULL, /* UnwrapKey - default errs */
   NULL, /* DeriveKey - default errs */

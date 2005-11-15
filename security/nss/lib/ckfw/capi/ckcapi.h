@@ -40,7 +40,7 @@
 #define CKCAPI_H 1
 
 #ifdef DEBUG
-static const char CKCAPI_CVS_ID[] = "@(#) $RCSfile: ckcapi.h,v $ $Revision: 1.1 $ $Date: 2005/11/04 23:44:19 $";
+static const char CKCAPI_CVS_ID[] = "@(#) $RCSfile: ckcapi.h,v $ $Revision: 1.2 $ $Date: 2005/11/15 00:13:58 $";
 #endif /* DEBUG */
 
 #include "nssckmdt.h"
@@ -64,6 +64,10 @@ static const char CKCAPI_CVS_ID[] = "@(#) $RCSfile: ckcapi.h,v $ $Revision: 1.1 
 #include "WTypes.h"
 #include "WinCrypt.h"
 
+/*
+ * statically defined raw objects. Allows us to data description objects
+ * to this PKCS #11 module.
+ */
 struct ckcapiRawObjectStr {
   CK_ULONG n;
   const CK_ATTRIBUTE_TYPE *types;
@@ -71,17 +75,11 @@ struct ckcapiRawObjectStr {
 };
 typedef struct ckcapiRawObjectStr ckcapiRawObject;
 
-struct ckcapiCertObjectStr {
-  CK_OBJECT_CLASS objClass;
-  PCCERT_CONTEXT  certContext;
-  PRBool          hasID;
-  NSSItem	  hashKey;
-  NSSItem	  label;
-  NSSItem	  subject;
-  NSSItem	  issuer;
-  NSSItem	  serial;
-  NSSItem	  derCert;
-  NSSItem	  id;
+
+/*
+ * common values needed for both bare keys and cert referenced keys.
+ */
+struct ckcapiKeyParamsStr {
   NSSItem	  modulus;
   NSSItem	  exponent;
   NSSItem	  privateExponent;
@@ -90,30 +88,72 @@ struct ckcapiCertObjectStr {
   NSSItem	  exponent1;
   NSSItem	  exponent2;
   NSSItem	  coefficient;
+  unsigned char   publicExponentData[sizeof(CK_ULONG)];
   void		  *privateKey;
-  /* static data: to do, make these dynamic like privateKey */
-  unsigned char	  idData[256];
-  unsigned char   hashKeyData[128];
+  void		  *pubKey;
+};
+typedef struct ckcapiKeyParamsStr ckcapiKeyParams;
+
+/*
+ * Key objects. Handles bare keys which do not yet have certs associated
+ * with them. These are usually short lived, but may exist for several days
+ * while the CA is issuing the certificate.
+ */
+struct ckcapiKeyObjectStr {
+  CRYPT_KEY_PROV_INFO provInfo;
+  char            *provName;
+  char            *containerName;
+  HCRYPTPROV      hProv;
+  ckcapiKeyParams key;
+};
+typedef struct ckcapiKeyObjectStr ckcapiKeyObject;
+
+/*
+ * Certificate and certificate referenced keys.
+ */
+struct ckcapiCertObjectStr {
+  PCCERT_CONTEXT  certContext;
+  PRBool          hasID;
+  const char	  *certStore;
+  NSSItem	  label;
+  NSSItem	  subject;
+  NSSItem	  issuer;
+  NSSItem	  serial;
+  NSSItem	  derCert;
+  ckcapiKeyParams key;
+  unsigned char   *labelData;
+  /* static data: to do, make this dynamic like labelData */
   unsigned char   derSerial[128];
-  unsigned char   labelData[256];
 };
 typedef struct ckcapiCertObjectStr ckcapiCertObject;
 
 typedef enum {
   ckcapiRaw,
-  ckcapiCert
+  ckcapiCert,
+  ckcapiBareKey
 } ckcapiObjectType;
 
+/*
+ * all the various types of objects are abstracted away in cobject and
+ * cfind as ckcapiInternalObjects.
+ */
 struct ckcapiInternalObjectStr {
   ckcapiObjectType type;
   union {
-    ckcapiRawObject raw;
+    ckcapiRawObject  raw;
     ckcapiCertObject cert;
+    ckcapiKeyObject  key;
   } u;
+  CK_OBJECT_CLASS objClass;
+  NSSItem	  hashKey;
+  NSSItem	  id;
+  void		  *idData;
+  unsigned char   hashKeyData[128];
   NSSCKMDObject mdObject;
 };
 typedef struct ckcapiInternalObjectStr ckcapiInternalObject;
 
+/* our raw object data array */
 NSS_EXTERN_DATA ckcapiInternalObject nss_ckcapi_data[];
 NSS_EXTERN_DATA const PRUint32               nss_ckcapi_nObjects;
 
@@ -149,12 +189,60 @@ nss_ckcapi_FindObjectsInit
   CK_RV *pError
 );
 
+/*
+ * Object Utilities
+ */
 NSS_EXTERN NSSCKMDObject *
 nss_ckcapi_CreateMDObject
 (
   NSSArena *arena,
   ckcapiInternalObject *io,
   CK_RV *pError
+);
+
+NSS_EXTERN NSSCKMDObject *
+nss_ckcapi_CreateObject
+(
+  NSSCKFWSession *fwSession,
+  CK_ATTRIBUTE_PTR pTemplate,
+  CK_ULONG ulAttributeCount,
+  CK_RV *pError
+);
+
+NSS_EXTERN const NSSItem *
+nss_ckcapi_FetchAttribute
+(
+  ckcapiInternalObject *io, 
+  CK_ATTRIBUTE_TYPE type
+);
+
+NSS_EXTERN void
+nss_ckcapi_DestroyInternalObject
+(
+  ckcapiInternalObject *io
+);
+
+NSS_EXTERN CK_RV
+nss_ckcapi_FetchKeyContainer
+(
+  ckcapiInternalObject *iKey,
+  HCRYPTPROV  *hProv,
+  DWORD       *keySpec,
+  HCRYPTKEY   *hKey
+);
+
+/*
+ * generic utilities
+ */
+
+/*
+ * So everyone else in the worlds stores their bignum data MSB first, but not
+ * Microsoft, we need to byte swap everything coming into and out of CAPI.
+ */
+void
+ckcapi_ReverseData
+(
+  NSSItem *item
 );
 
 /*
@@ -169,21 +257,52 @@ nss_ckcapi_DERUnwrap
   char **next
 );
 
-const NSSItem *
-nss_ckcapi_FetchAttribute(
-  ckcapiInternalObject *io, 
-  CK_ATTRIBUTE_TYPE type
+/*
+ * Return the size in bytes of a wide string
+ */
+int 
+nss_ckcapi_WideSize
+(
+  LPCWSTR wide
 );
 
 /*
- * So everyone else in the worlds stores their bignum data MSB first, but not
- * Microsoft, we need to byte swap everything coming into and out of CAPI.
+ * Covert a Unicode wide character string to a UTF8 string
  */
-void
-ckcapi_ReverseData(NSSItem *item);
+char *
+nss_ckcapi_WideToUTF8
+(
+  LPCWSTR wide 
+);
 
-void
-nss_ckcapi_DestroyInternalObject(ckcapiInternalObject *io);
+/*
+ * Return a Wide String duplicated with nss allocated memory.
+ */
+LPWSTR
+nss_ckcapi_WideDup
+(
+  LPCWSTR wide
+);
+
+/*
+ * Covert a UTF8 string to Unicode wide character
+ */
+LPWSTR
+nss_ckcapi_UTF8ToWide
+(
+  char *buf
+);
+
+
+NSS_EXTERN PRUint32
+nss_ckcapi_collect_all_certs(
+  CK_ATTRIBUTE_PTR pTemplate, 
+  CK_ULONG ulAttributeCount, 
+  ckcapiInternalObject ***listp,
+  PRUint32 *sizep,
+  PRUint32 count,
+  CK_RV *pError
+);
 
 #define NSS_CKCAPI_ARRAY_SIZE(x) ((sizeof (x))/(sizeof ((x)[0])))
  

@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cfind.c,v $ $Revision: 1.1 $ $Date: 2005/11/04 02:05:04 $";
+static const char CVS_ID[] = "@(#) $RCSfile: cfind.c,v $ $Revision: 1.2 $ $Date: 2005/11/15 00:13:58 $";
 #endif /* DEBUG */
 
 #ifndef CKCAPI_H
@@ -180,7 +180,7 @@ ckcapi_match
 
 #define CKAPI_ITEM_CHUNK  20
 
-#define PUT_Object(obj) \
+#define PUT_Object(obj,err) \
   { \
     if (count >= size) { \
     *listp = *listp ? \
@@ -189,7 +189,7 @@ ckcapi_match
 		nss_ZNEWARRAY(NULL, ckcapiInternalObject *, \
 		               (size+CKAPI_ITEM_CHUNK) ) ; \
       if ((ckcapiInternalObject **)NULL == *listp) { \
-        *pError = CKR_HOST_MEMORY; \
+        err = CKR_HOST_MEMORY; \
         goto loser; \
       } \
       size += CKAPI_ITEM_CHUNK; \
@@ -198,6 +198,134 @@ ckcapi_match
     count++; \
   }
 
+
+/*
+ * pass parameters back through the callback.
+ */
+typedef struct BareCollectParamsStr {
+  CK_OBJECT_CLASS objClass;
+  CK_ATTRIBUTE_PTR pTemplate;
+  CK_ULONG ulAttributeCount;
+  ckcapiInternalObject ***listp;
+  PRUint32 size;
+  PRUint32 count;
+} BareCollectParams;
+
+/* collect_bare's callback. Called for each object that
+ * supposedly has a PROVINDER_INFO property */
+static BOOL WINAPI
+doBareCollect
+(
+  const CRYPT_HASH_BLOB *msKeyID,
+  DWORD flags,
+  void *reserved,
+  void *args,
+  DWORD cProp,
+  DWORD *propID,
+  void **propData,
+  DWORD *propSize
+)
+{
+  BareCollectParams *bcp = (BareCollectParams *) args;
+  PRUint32 size = bcp->size;
+  PRUint32 count = bcp->count;
+  ckcapiInternalObject ***listp = bcp->listp;
+  ckcapiInternalObject *io = NULL;
+  DWORD i;
+  CRYPT_KEY_PROV_INFO *keyProvInfo = NULL;
+  void *idData;
+  CK_RV error;
+ 
+  /* make sure there is a Key Provider Info property */
+  for (i=0; i < cProp; i++) {
+    if (CERT_KEY_PROV_INFO_PROP_ID == propID[i]) {
+	keyProvInfo = (CRYPT_KEY_PROV_INFO *)propData[i];
+	break;
+    }
+  }
+  if ((CRYPT_KEY_PROV_INFO *)NULL == keyProvInfo) {
+    return 1;
+  }
+
+  /* copy the key ID */
+  idData = nss_ZNEWARRAY(NULL, char, msKeyID->cbData);
+  if ((void *)NULL == idData) {
+     goto loser;
+  }
+  nsslibc_memcpy(idData, msKeyID->pbData, msKeyID->cbData);
+
+  /* build a bare internal object */  
+  io = nss_ZNEW(NULL, ckcapiInternalObject);
+  if ((ckcapiInternalObject *)NULL == io) {
+     goto loser;
+  }
+  io->type = ckcapiBareKey;
+  io->objClass = bcp->objClass;
+  io->u.key.provInfo = *keyProvInfo;
+  io->u.key.provInfo.pwszContainerName = 
+			nss_ckcapi_WideDup(keyProvInfo->pwszContainerName);
+  io->u.key.provInfo.pwszProvName = 
+			nss_ckcapi_WideDup(keyProvInfo->pwszProvName);
+  io->u.key.provName = nss_ckcapi_WideToUTF8(keyProvInfo->pwszProvName);
+  io->u.key.containerName = 
+                        nss_ckcapi_WideToUTF8(keyProvInfo->pwszContainerName);
+  io->u.key.hProv = 0;
+  io->idData = idData;
+  io->id.data = idData;
+  io->id.size = msKeyID->cbData;
+  idData = NULL;
+
+  /* see if it matches */ 
+  if( CK_FALSE == ckcapi_match(bcp->pTemplate, bcp->ulAttributeCount, io) ) {
+    goto loser;
+  }
+  PUT_Object(io, error);
+  bcp->size = size;
+  bcp->count = count;
+  return 1;
+
+loser:
+  if (io) {
+    nss_ckcapi_DestroyInternalObject(io);
+  }
+  nss_ZFreeIf(idData);
+  return 1;
+}
+
+/*
+ * collect the bare keys running around
+ */
+static PRUint32
+collect_bare(
+  CK_OBJECT_CLASS objClass,
+  CK_ATTRIBUTE_PTR pTemplate, 
+  CK_ULONG ulAttributeCount, 
+  ckcapiInternalObject ***listp,
+  PRUint32 *sizep,
+  PRUint32 count,
+  CK_RV *pError
+)
+{
+  BOOL rc;
+  BareCollectParams bareCollectParams;
+
+  bareCollectParams.objClass = objClass;
+  bareCollectParams.pTemplate = pTemplate;
+  bareCollectParams.ulAttributeCount = ulAttributeCount;
+  bareCollectParams.listp = listp;
+  bareCollectParams.size = *sizep;
+  bareCollectParams.count = count;
+
+  rc = CryptEnumKeyIdentifierProperties(NULL, CERT_KEY_PROV_INFO_PROP_ID, 0,
+       NULL, NULL, &bareCollectParams, doBareCollect);
+
+  *sizep = bareCollectParams.size;
+  return bareCollectParams.count;
+}
+
+/* find all the certs that represent the appropriate object (cert, priv key, or
+ *  pub key) in the cert store.
+ */
 static PRUint32
 collect_class(
   CK_OBJECT_CLASS objClass,
@@ -213,20 +341,20 @@ collect_class(
 {
   PRUint32 size = *sizep;
   ckcapiInternalObject *next = NULL;
-  HCERTSTORE hstore;
+  HCERTSTORE hStore;
   PCCERT_CONTEXT certContext = NULL;
   PRBool  isKey = 
      (objClass == CKO_PUBLIC_KEY) | (objClass == CKO_PRIVATE_KEY);
 
-  hstore = CertOpenSystemStore((HCRYPTPROV)NULL, storeStr);
-  if (NULL == hstore) {
+  hStore = CertOpenSystemStore((HCRYPTPROV)NULL, storeStr);
+  if (NULL == hStore) {
      return count; /* none found does not imply an error */
   }
 
   /* FUTURE: use CertFindCertificateInStore to filter better -- so we don't
    * have to enumerate all the certificates */
   while ((PCERT_CONTEXT) NULL != 
-         (certContext= CertEnumCertificatesInStore(hstore, certContext))) {
+         (certContext= CertEnumCertificatesInStore(hStore, certContext))) {
     /* first filter out non user certs if we are looking for keys */
     if (isKey) {
       /* make sure there is a Key Provider Info property */
@@ -252,18 +380,20 @@ collect_class(
       }
     }
     next->type = ckcapiCert;
-    next->u.cert.objClass = objClass;
+    next->objClass = objClass;
     next->u.cert.certContext = certContext;
     next->u.cert.hasID = hasID;
+    next->u.cert.certStore = storeStr;
     if( CK_TRUE == ckcapi_match(pTemplate, ulAttributeCount, next) ) {
       /* clear cached values that may be dependent on our old certContext */
       memset(&next->u.cert, 0, sizeof(next->u.cert));
       /* get a 'permanent' context */
       next->u.cert.certContext = CertDuplicateCertificateContext(certContext);
-      next->u.cert.objClass = objClass;
+      next->objClass = objClass;
       next->u.cert.certContext = certContext;
       next->u.cert.hasID = hasID;
-      PUT_Object(next);
+      next->u.cert.certStore = storeStr;
+      PUT_Object(next, *pError);
       next = NULL; /* need to allocate a new one now */
     } else {
       /* don't cache the values we just loaded */
@@ -271,13 +401,14 @@ collect_class(
     }
   }
 loser:
+  CertCloseStore(hStore, 0);
   nss_ZFreeIf(next);
   *sizep = size;
   return count;
 }
 
-static PRUint32
-collect_all_certs(
+NSS_IMPLEMENT PRUint32
+nss_ckcapi_collect_all_certs(
   CK_ATTRIBUTE_PTR pTemplate, 
   CK_ULONG ulAttributeCount, 
   ckcapiInternalObject ***listp,
@@ -303,7 +434,7 @@ collect_all_certs(
   return count;
 }
 
-static CK_OBJECT_CLASS
+CK_OBJECT_CLASS
 ckcapi_GetObjectClass(CK_ATTRIBUTE_PTR pTemplate, 
                       CK_ULONG ulAttributeCount)
 {
@@ -339,7 +470,7 @@ collect_objects(
     ckcapiInternalObject *o = (ckcapiInternalObject *)&nss_ckcapi_data[i];
 
     if( CK_TRUE == ckcapi_match(pTemplate, ulAttributeCount, o) ) {
-      PUT_Object(o);
+      PUT_Object(o, *pError);
     }
   }
 
@@ -350,25 +481,33 @@ collect_objects(
   *pError = CKR_OK;
   switch (objClass) {
   case CKO_CERTIFICATE:
-    count = collect_all_certs(pTemplate, ulAttributeCount, listp, 
+    count = nss_ckcapi_collect_all_certs(pTemplate, ulAttributeCount, listp, 
                               &size, count, pError);
     break;
   case CKO_PUBLIC_KEY:
     count = collect_class(objClass, "My", PR_TRUE, pTemplate, 
 			ulAttributeCount, listp, &size, count, pError);
+    count = collect_bare(objClass, pTemplate, ulAttributeCount, listp,
+			&size, count, pError);
     break;
   case CKO_PRIVATE_KEY:
     count = collect_class(objClass, "My", PR_TRUE, pTemplate, 
 			ulAttributeCount, listp, &size, count, pError);
+    count = collect_bare(objClass, pTemplate, ulAttributeCount, listp,
+			&size, count, pError);
     break;
   /* all of them */
   case CK_INVALID_HANDLE:
-    count = collect_all_certs(pTemplate, ulAttributeCount, listp, 
+    count = nss_ckcapi_collect_all_certs(pTemplate, ulAttributeCount, listp, 
                               &size, count, pError);
     count = collect_class(CKO_PUBLIC_KEY, "My", PR_TRUE, pTemplate, 
 			ulAttributeCount, listp, &size, count, pError);
+    count = collect_bare(CKO_PUBLIC_KEY, pTemplate, ulAttributeCount, listp,
+			&size, count, pError);
     count = collect_class(CKO_PRIVATE_KEY, "My", PR_TRUE, pTemplate, 
 			ulAttributeCount, listp, &size, count, pError);
+    count = collect_bare(CKO_PRIVATE_KEY, pTemplate, ulAttributeCount, listp,
+			&size, count, pError);
     break;
   default:
     goto done; /* no other object types we understand in this module */

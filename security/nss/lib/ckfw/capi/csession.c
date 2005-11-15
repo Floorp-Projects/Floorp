@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: csession.c,v $ $Revision: 1.1 $ $Date: 2005/11/04 02:05:04 $";
+static const char CVS_ID[] = "@(#) $RCSfile: csession.c,v $ $Revision: 1.2 $ $Date: 2005/11/15 00:13:58 $";
 #endif /* DEBUG */
 
 #include "ckcapi.h"
@@ -64,6 +64,24 @@ ckcapi_mdSession_FindObjectsInit
 )
 {
   return nss_ckcapi_FindObjectsInit(fwSession, pTemplate, ulAttributeCount, pError);
+}
+
+static NSSCKMDObject *
+ckcapi_mdSession_CreateObject
+(
+  NSSCKMDSession *mdSession,
+  NSSCKFWSession *fwSession,
+  NSSCKMDToken *mdToken,
+  NSSCKFWToken *fwToken,
+  NSSCKMDInstance *mdInstance,
+  NSSCKFWInstance *fwInstance,
+  NSSArena        *arena,
+  CK_ATTRIBUTE_PTR pTemplate,
+  CK_ULONG ulAttributeCount,
+  CK_RV *pError
+)
+{
+  return nss_ckcapi_CreateObject(fwSession, pTemplate, ulAttributeCount, pError);
 }
 
 NSS_IMPLEMENT NSSCKMDSession *
@@ -102,7 +120,7 @@ nss_ckcapi_CreateSession
   /* rv->GetOperationStateLen */
   /* rv->GetOperationState */
   /* rv->SetOperationState */
-  /* rv->CreateObject */
+  rv->CreateObject = ckcapi_mdSession_CreateObject;
   /* rv->CopyObject */
   rv->FindObjectsInit = ckcapi_mdSession_FindObjectsInit;
   /* rv->SeedRandom */
