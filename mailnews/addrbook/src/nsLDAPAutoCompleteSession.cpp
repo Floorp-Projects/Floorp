@@ -1415,6 +1415,15 @@ nsLDAPAutoCompleteSession::SetServerURL(nsILDAPURL * aServerURL)
 
     mServerURL = aServerURL;
 
+    // the following line will cause the next call to OnStartLookup to 
+    // call InitConnection again.  This will reinitialize all the relevant
+    // member variables and kick off an LDAP bind.  By virtue of the magic of 
+    // nsCOMPtrs, doing this will cause all the nsISupports-based stuff to
+    // be Released, which will eventually result in the old connection being
+    // destroyed, and the destructor for that calls ldap_unbind()
+    //
+    mState = UNBOUND;
+
     return NS_OK;
 }
 
