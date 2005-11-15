@@ -76,6 +76,8 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
     char **mSearchAttrs;        // outputFormat search attrs for SearchExt call
     PRUint32 mSearchAttrsSize;              // size of above array
     nsCOMPtr<nsIAuthPrompt> mAuthPrompter;  // used to prompt for the password
+    PRUint32 mVersion;                      // version of LDAP to use
+
 // XXX hack until nsUTF8String exists
 #define nsUTF8String nsCString
     nsUTF8String mLogin;                       // authenticate as this user
