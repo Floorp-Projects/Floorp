@@ -195,12 +195,12 @@ ifeq ($(OS_TARGET),SunOS)
 MKSHLIB += -R '$$ORIGIN'
 ifdef NS_USE_GCC
     ifdef GCC_USE_GNU_LD
-	MKSHLIB += -Wl,-Bsymbolic,-z,defs,-z,now,-z,text
+	MKSHLIB += -Wl,-Bsymbolic,-z,now,-z,text
     else
-	MKSHLIB += -Wl,-B,symbolic,-z,defs,-z,now,-z,text
+	MKSHLIB += -Wl,-B,symbolic,-z,now,-z,text
     endif # GCC_USE_GNU_LD
 else
-    MKSHLIB += -B symbolic -z defs -z now -z text
+    MKSHLIB += -B symbolic -z now -z text
 endif # NS_USE_GCC
 
 # Sun's WorkShop defines v8, v8plus and v9 architectures.
