@@ -268,7 +268,12 @@ nsSecureBrowserUIImpl::GetState(PRUint32* aState)
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetTooltipText(nsAString& aText)
 {
-  if (!mInfoTooltip.IsEmpty())
+  if (mPreviousSecurityState == lis_mixed_security)
+  {
+    GetBundleString(NS_LITERAL_STRING("SecurityButtonMixedContentTooltipText").get(),
+                    aText);
+  }
+  else if (!mInfoTooltip.IsEmpty())
   {
     aText = mInfoTooltip;
   }
