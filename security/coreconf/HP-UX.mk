@@ -43,11 +43,16 @@ include $(CORE_DEPTH)/coreconf/UNIX.mk
 
 DEFAULT_COMPILER = cc
 
-CPU_ARCH   = hppa
 ifeq ($(OS_TEST),ia64)
-DLL_SUFFIX = so
+	CPU_ARCH = ia64
+	CPU_TAG = _$(CPU_ARCH)
+	ifneq ($(USE_64),1)
+		64BIT_TAG = _32
+	endif
+	DLL_SUFFIX = so
 else
-DLL_SUFFIX = sl
+	CPU_ARCH = hppa
+	DLL_SUFFIX = sl
 endif
 CC         = cc
 CCC        = CC
@@ -79,6 +84,9 @@ PROCESS_MAP_FILE = grep -v ';+' $< | grep -v ';-' | \
          sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,^,+e ,' > $@
 
 DSO_LDOPTS		= -b +h $(notdir $@)
+ifeq ($(OS_TEST),ia64)
+	DSO_LDOPTS	+= +b '$$ORIGIN'
+endif
 DSO_LDFLAGS		=
 
 # +Z generates position independent code for use in shared libraries.

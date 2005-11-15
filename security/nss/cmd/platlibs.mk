@@ -196,6 +196,12 @@ EXTRA_SHARED_LIBS += -R '$$ORIGIN/../lib'
 endif
 endif
 
+ifeq ($(OS_ARCH), HP-UX) 
+ifeq ($(OS_TEST), ia64)
+EXTRA_SHARED_LIBS += -Wl,+b,'$$ORIGIN/../lib'
+endif
+endif
+
 ifeq ($(OS_ARCH), Darwin)
 EXTRA_SHARED_LIBS += -dylib_file @executable_path/libsoftokn3.dylib:$(DIST)/lib/libsoftokn3.dylib
 endif
