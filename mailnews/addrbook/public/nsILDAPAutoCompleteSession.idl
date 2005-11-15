@@ -63,6 +63,18 @@ interface nsILDAPAutoCompleteSession : nsIAutoCompleteSession {
     attribute long sizeLimit;
 
     /**
+     * Strings shorter than this will return |nsIAutoCompleteStatus::ignored|
+     * rather than triggering a search.  This allows browsers to be
+     * configured to not search on substrings so short that they
+     * aren't indexed by the LDAP server (such searches can use significantly 
+     * more server resources and return a very large number of entries).
+     * The default is 0, meaning that no such limit is in effect.
+     * 
+     * @exception NS_ERROR_NULL_POINTER  NULL pointer passed to getter
+     */
+    attribute unsigned long minStringLength;
+
+    /**
      * LDAP server to complete against, in ldap: URL format.  
      * May change to an nsILDAPServer once that infrastructure lands.
      *
