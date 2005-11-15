@@ -771,6 +771,11 @@ sub init {
                     "ON groups_$chartid.id = bug_group_map_$chartid.group_id");
             $f = "groups_$chartid.name";
          },
+         "^attach_data\.thedata,changed" => sub {
+            # Searches for attachment data's change must search
+            # the creation timestamp of the attachment instead.
+            $f = "attachments.whocares";
+         },
          "^attach_data\.thedata," => sub {
              my $atable = "attachments_$chartid";
              my $dtable = "attachdata_$chartid";
