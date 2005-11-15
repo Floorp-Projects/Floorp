@@ -37,7 +37,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: shlibsign.c,v 1.13 2004/04/25 15:02:53 gerv%gerv.net Exp $
+ * $Id: shlibsign.c,v 1.14 2005/11/15 00:34:39 julien.pierre.bugs%sun.com Exp $
  */
 
 #ifdef XP_UNIX
@@ -155,6 +155,7 @@ main (int argc, char **argv)
     int keySize = 1024;
     PQGParams *pqgParams = NULL;
     PQGVerify *pqgVerify = NULL;
+    char* nssDir = NULL;
 #ifdef USES_LINKS
     int ret;
     struct stat stat_buf;
@@ -187,7 +188,7 @@ main (int argc, char **argv)
 #endif
 
 	  case 'd':
-	    SECU_ConfigDirectory(optstate->value);
+	    nssDir = optstate->value;
 	    break;
 
           case 'i':
@@ -214,10 +215,15 @@ main (int argc, char **argv)
      */
     PK11_SetPasswordFunc(SECU_GetModulePassword);
 
-    rv = NSS_Init(SECU_ConfigDirectory(NULL));
-    if (rv != SECSuccess) {
-	rv = NSS_NoDB_Init("");
+    if (nssDir) {
+        rv = NSS_Init(nssDir);
+        if (rv != SECSuccess) {
+            rv = NSS_NoDB_Init("");
+        }
+    } else {
+        rv = NSS_NoDB_Init("");
     }
+    
     if (rv != SECSuccess) {
 	lperror("NSS_Init failed");
 	goto prdone;
