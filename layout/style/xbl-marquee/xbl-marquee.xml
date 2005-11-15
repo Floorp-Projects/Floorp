@@ -64,10 +64,7 @@
           ]]>
         </getter>
         <setter>
-          <![CDATA[
-          this._set_scrollAmount(val, true);
           this.setAttribute("scrollamount", val);
-          ]]>
         </setter>
       </property>
 
@@ -84,17 +81,15 @@
           ]]>
         </getter>
         <setter>
-          <![CDATA[
-          this._set_scrollDelay(val, true);
           this.setAttribute("scrolldelay", val);
-          ]]>
         </setter>
       </property>
 
       <property name="trueSpeed">
         <getter>
           <![CDATA[
-          if (!this.hasAttribute("trueSpeed"))
+          if (!this.hasAttribute("truespeed") || this.getAttribute('truespeed') == '' ||
+              this.getAttribute('truespeed') == 0)
             return false;
 
           return true;
@@ -102,48 +97,35 @@
         </getter>
         <setter>
           <![CDATA[
-          if (val == false)
-            this.removeAttribute('truespeed');
-          else
+          if (val)
             this.setAttribute("truespeed", "truespeed");
-
-          //needed to update this._scrollDelay
-          this._set_scrollDelay(this.getAttribute('scrolldelay'), false);
+          else
+            this.removeAttribute('truespeed');
           ]]>
         </setter>
       </property>
 
-      <field name="defaultDirection">"left"</field>
       <property name="direction">
         <getter>
           return this.getAttribute("direction");
         </getter>
         <setter>
-          // if val is false, don't change anything
-          if (val) {
-            this.setAttribute("direction", val);
-
-            // since we changed the direction, set startNewDirection to true
-            this.startNewDirection = true;
-            this.directionField = val.toLowerCase();
-          }
+          this.setAttribute("direction", val);
         </setter>
       </property>
 
-      <field name="directionField">"left"</field>
+      <field name="_direction">"left"</field>
 
-      <field name="defaultBehavior">"scroll"</field>
       <property name="behavior">
         <getter>
-          return this.behaviorField;
+          return this._behavior;
         </getter>
         <setter>
-          this.behaviorField = val ? val.toLowerCase() : this.defaultBehavior;
           this.setAttribute("behavior", val);
         </setter>
       </property>
 
-      <field name="behaviorField">"scroll"</field>
+      <field name="_behavior">"scroll"</field>
 
       <field name="dirsign">1</field>
       <field name="startAt">0</field>
@@ -176,41 +158,98 @@
       <field name="nsMarqueeVersion">"0.9.7"</field>
 
       <method name="_set_scrollDelay">
-        <parameter name="val"/>
+        <parameter name="aValue"/>
         <parameter name="aCanGenerateError"/>
         <body>
         <![CDATA[
-          if (val <= 0 || isNaN(val) || val == null) {
+          if (aValue <= 0 || isNaN(aValue) || aValue == null) {
             if (aCanGenerateError)
               throw new Error("Invalid argument for Marquee::scrollDelay");
-            return;
+            else
+              aValue = 85; //default value for scrollDelay
           }
 
-          if (val < 60) {
+          if (aValue < 60) {
             if (this.trueSpeed == true)
-              this._scrollDelay = val;
+              this._scrollDelay = aValue;
             else
               this._scrollDelay = 60;
           }
           else {
-            this._scrollDelay = val;
+            this._scrollDelay = aValue;
           }
         ]]>
         </body>
       </method>
 
       <method name="_set_scrollAmount">
-        <parameter name="val"/>
+        <parameter name="aValue"/>
         <parameter name="aCanGenerateError"/>
         <body>
         <![CDATA[
-          if ((val < 0) || isNaN(val) || val == null) {
-            if (aCanGenerateError)
+          if (aValue < 0 || isNaN(aValue) || aValue == null) {
+            if (aCanGenerateError && aValue < 0)
               throw new Error("Invalid argument for Marquee::scrollAmount");
+            if (!aCanGenerateError)
+              aValue = 6; //default value for scrollAmount
+            else
+              aValue = 0;
+          }
+
+          this._scrollAmount = aValue;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_set_behavior">
+        <parameter name="aValue"/>
+        <parameter name="aCanGenerateError"/>
+        <body>
+        <![CDATA[
+          if (typeof aValue == 'string')
+            aValue = aValue.toLowerCase();
+          if (aValue != 'alternate' && aValue != 'slide' && aValue != 'scroll' && aValue != null) {
+            if (aCanGenerateError)
+              throw new Error("Invalid argument for Marquee::behavior");
             return;
           }
 
-          this._scrollAmount = val;
+          //default to "scroll" when removeAttribute is called (aValue == null)
+          aValue = aValue ? aValue : "scroll";
+
+          if (aValue != this._behavior) {
+            this.startNewDirection = true;
+            this._behavior = aValue;
+            switch (aValue) {
+              case "alternate":
+              case "slide":
+                this.stop();
+                this._doMove(true);
+                break;
+            }      
+          }
+        ]]>
+        </body>
+      </method>
+
+      <method name="_set_direction">
+        <parameter name="aValue"/>
+        <parameter name="aCanGenerateError"/>
+        <body>
+        <![CDATA[
+          if (typeof aValue == 'string')
+            aValue = aValue.toLowerCase();
+          if (aValue != 'left' && aValue != 'right' && aValue != 'up' && aValue != 'down' && aValue != null) {
+            if (aCanGenerateError)
+              throw new Error("Invalid argument for Marquee::direction");
+            return;
+          }
+
+          //default to "left" when removeAttribute is called (aValue == null)
+          aValue = aValue ? aValue : "left";
+          if (aValue != this._direction)
+            this.startNewDirection = true;
+          this._direction = aValue; 
         ]]>
         </body>
       </method>
@@ -246,7 +285,7 @@
 
             var corrvalue = 0;
 
-            switch (this.directionField)
+            switch (this._direction)
             {
               case "up":
                 var height = document.defaultView.getComputedStyle(this, "").height;
@@ -255,8 +294,8 @@
                     corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
                 this.innerDiv.style.padding = height + " 0";
                 this.dirsign = 1;
-                this.startAt = (this.behaviorField == 'alternate') ? (this.originalHeight - corrvalue) : 0;
-                this.stopAt  = (this.behaviorField == 'alternate') ? 
+                this.startAt = (this._behavior == 'alternate') ? (this.originalHeight - corrvalue) : 0;
+                this.stopAt  = (this._behavior == 'alternate') ? 
                                 (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
               break;
 
@@ -267,17 +306,17 @@
                     corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
                 this.innerDiv.style.padding = height + " 0";
                 this.dirsign = -1;
-                this.startAt  = (this.behaviorField == 'alternate') ?
+                this.startAt  = (this._behavior == 'alternate') ?
                                 (parseInt(height) + corrvalue) : (this.originalHeight + parseInt(height));
-                this.stopAt = (this.behaviorField == 'alternate') ? (this.originalHeight - corrvalue) : 0;
+                this.stopAt = (this._behavior == 'alternate') ? (this.originalHeight - corrvalue) : 0;
               break;
 
               case "right":
                 if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth)
                     corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
                 this.dirsign = -1;
-                this.stopAt  = (this.behaviorField != 'alternate') ? 0 : (this.innerDiv.offsetWidth - corrvalue);
-                this.startAt = this.outerDiv.offsetWidth + ((this.behaviorField != 'alternate') ? 
+                this.stopAt  = (this._behavior != 'alternate') ? 0 : (this.innerDiv.offsetWidth - corrvalue);
+                this.startAt = this.outerDiv.offsetWidth + ((this._behavior != 'alternate') ? 
                                (this.innerDiv.offsetWidth + this.stopAt) : corrvalue);   
               break;
 
@@ -286,8 +325,8 @@
                 if (this.innerDiv.offsetWidth > this.outerDiv.offsetWidth)
                     corrvalue = this.innerDiv.offsetWidth - this.outerDiv.offsetWidth;
                 this.dirsign = 1;
-                this.startAt = (this.behaviorField != 'alternate') ? 0 : (this.innerDiv.offsetWidth - corrvalue);
-                this.stopAt  = this.outerDiv.offsetWidth + ((this.behaviorField != 'alternate') ? 
+                this.startAt = (this._behavior != 'alternate') ? 0 : (this.innerDiv.offsetWidth - corrvalue);
+                this.stopAt  = this.outerDiv.offsetWidth + ((this._behavior != 'alternate') ? 
                                (this.innerDiv.offsetWidth + this.startAt) : corrvalue);
             }
 
@@ -300,14 +339,14 @@
           if ((this.dirsign == 1 && this.newPosition > this.stopAt) ||
               (this.dirsign == -1 && this.newPosition < this.stopAt))
           {
-            if (this.behaviorField == "alternate")
+            if (this._behavior == "alternate")
             {
               // lets start afresh
               this.startNewDirection = true;
 
               // swap direction
               const swap = {left: "right", down: "up", up: "down", right: "left"};
-              this.directionField = swap[this.directionField];
+              this._direction = swap[this._direction];
               this.newPosition = this.stopAt + (this.dirsign * this._scrollAmount);
             }
             else
@@ -317,7 +356,7 @@
           }
 
           if (!this.startNewDirection) {
-            if ((this.directionField == "up") || (this.directionField == "down"))
+            if ((this._direction == "up") || (this._direction == "down"))
               this.outerDiv.scrollTop = this.newPosition;
             else
               this.outerDiv.scrollLeft = this.newPosition;
@@ -334,13 +373,9 @@
         <body>
         <![CDATA[
           this.stop();
-          this.startNewDirection = true;
           // store the original height before we add padding
           this.innerDiv.style.padding = 0;
           this.originalHeight = this.innerDiv.offsetHeight;
-                    
-          this._set_scrollDelay(this.getAttribute('scrolldelay'), false);
-          this._set_scrollAmount(this.getAttribute('scrollamount'), false);
 
           this._doMove(true);
         ]]>
@@ -349,15 +384,14 @@
 
       <constructor>
         <![CDATA[
-          // for performance, we store the lowercased direction/behavior in a field.
-          // default to "left"
-          this.directionField = this.hasAttribute("direction") ? this.getAttribute("direction").toLowerCase() : this.defaultDirection;
-          
-          // default to "scroll"
-          this.behaviorField = this.hasAttribute("behavior") ? this.getAttribute("behavior").toLowerCase() : this.defaultBehavior;
-
           var myThis = this;
           var lambda = function myScopeFunction() { myThis.init(); }
+
+          this._set_direction(this.getAttribute('direction'), false);
+          this._set_behavior(this.getAttribute('behavior'), false);
+          this._set_scrollDelay(this.getAttribute('scrolldelay'), false);
+          this._set_scrollAmount(this.getAttribute('scrollamount'), false);
+          this.startNewDirection = true;
 
           // init needs to be run after the page has loaded in order to calculate
           // the correct height/width
@@ -365,25 +399,54 @@
         ]]>
       </constructor>
     </implementation>
-    
+
     <handlers>
       <handler event="DOMAttrModified" phase="target">
         <![CDATA[
-        var attrName = event.attrName.toLowerCase();
-        var oldValue = event.prevValue.toLowerCase();
-        var newValue = event.newValue.toLowerCase();
+          var attrName = event.attrName.toLowerCase();
+          var oldValue = event.prevValue.toLowerCase();
+          var newValue = event.newValue.toLowerCase();
+          var canGenerateError = true;
+          if (event.attrChange == event.REMOVAL) {
+            newValue = null;
+            canGenerateError = false;
+          };
 
-        // only if a new value is specified
-        if (oldValue != newValue && newValue) {
-          if (attrName == "direction") {
-            this.startNewDirection = true;
-            this.directionField = newValue;
-          } else if (attrName == "behavior") {
-            this.behaviorField = newValue;
-            if (newValue == 'alternate')
-              this.init();
+          if (oldValue != newValue) {
+            switch (attrName) {
+              case "loop":
+                //XXX needs implementing
+                break;
+              case "scrollamount":
+               this._set_scrollAmount(newValue, canGenerateError);
+                break;
+              case "scrolldelay":
+                this._set_scrollDelay(newValue, canGenerateError);
+                this.stop();
+                this.start();
+                break;
+              case "truespeed":
+                //needed to update this._scrollDelay
+                setTimeout(function(x){ x._set_scrollDelay(x.getAttribute('scrolldelay'), false); }, 0, this);              
+                break;
+              case "behavior":
+                this._set_behavior(newValue, canGenerateError);
+                break;
+              case "direction":
+                this._set_direction(newValue, canGenerateError);
+                break;
+              case "width":
+              case "height":
+                this.startNewDirection = true;
+                break;
+              case "onbounce":
+                //XXX needs implementing
+                break;
+              case "onstart":
+                //XXX needs implementing
+                break;
+            }
           }
-        }
         ]]>
       </handler>
     </handlers>
