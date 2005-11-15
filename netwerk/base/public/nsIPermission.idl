@@ -47,7 +47,3 @@ interface nsIPermission : nsISupports
      */
     readonly attribute PRUint32 capability;
 };
-
-%{ C++
-#define NS_PERMISSION_CONTRACTID "@mozilla.org/permission;1"
-%}
