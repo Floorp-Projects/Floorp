@@ -89,6 +89,10 @@
 // png
 #include "nsPNGEncoder.h"
 #endif
+#ifdef IMG_BUILD_ENCODER_jpeg
+// jpeg
+#include "nsJPEGEncoder.h"
+#endif
 
 
 // objects that just require generic constructors
@@ -107,6 +111,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsGIFDecoder2)
 #ifdef IMG_BUILD_DECODER_jpeg
 // jpeg
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJPEGDecoder)
+#endif
+#ifdef IMG_BUILD_ENCODER_jpeg
+// jpeg
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJPEGEncoder)
 #endif
 
 #ifdef IMG_BUILD_DECODER_bmp
@@ -237,6 +245,13 @@ static const nsModuleComponentInfo components[] =
     "@mozilla.org/image/decoder;2?type=image/jpg",
     nsJPEGDecoderConstructor, },
 #endif
+#ifdef IMG_BUILD_ENCODER_jpeg
+  // jpeg (encoder)
+  { "JPEG Encoder",
+    NS_JPEGENCODER_CID,
+    "@mozilla.org/image/encoder;2?type=image/jpeg",
+    nsJPEGEncoderConstructor, },
+#endif
 
 #ifdef IMG_BUILD_DECODER_bmp
   // bmp
@@ -267,7 +282,7 @@ static const nsModuleComponentInfo components[] =
 #endif
 #ifdef IMG_BUILD_ENCODER_png
   // png
-  { "PNG Decoder",
+  { "PNG Encoder",
     NS_PNGENCODER_CID,
     "@mozilla.org/image/encoder;2?type=image/png",
     nsPNGEncoderConstructor, },
