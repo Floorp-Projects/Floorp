@@ -74,8 +74,5 @@ class CertDataOwner;
 
 - (IBAction)importCertificates:(id)sender;
 
-// testing
-- (IBAction)changePassword:(id)sender;
-
 @end
 

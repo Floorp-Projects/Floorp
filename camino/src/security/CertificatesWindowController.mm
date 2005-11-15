@@ -579,17 +579,6 @@ static CertificatesWindowController* gCertificatesWindowController;
 
 }
 
-// testing
-#include "nsITokenPasswordDialogs.h"
-
-- (IBAction)changePassword:(id)sender
-{
-  nsCOMPtr<nsITokenPasswordDialogs> tokenDlgs = do_GetService(NS_TOKENPASSWORDSDIALOG_CONTRACTID);
-  PRBool cancelled;
-  NS_NAMED_LITERAL_STRING(deviceName, "Software Security Device");
-  tokenDlgs->SetPassword(NULL, deviceName.get(), &cancelled);
-}
-
 #pragma mark -
 
 - (void)reloadCertData
