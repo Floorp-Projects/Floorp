@@ -48,15 +48,24 @@ interface nsILDAPAutoCompleteSession : nsIAutoCompleteSession {
      *
      * Required attributes are delimited by curly braces, and optional 
      * attributes are determined by brackets.  Backslash escapes any 
-     * character, including itself.  The default template is
-     * "[cn] <{mail}>", without the quotes.  This will generate autocomplete
-     * items of the form "John Doe <john.doe@foo.com>", or, if the cn is not
-     * found, " <john.doe@foo.com>".  This latter form is suboptimal, in that
-     * the space and angle brackets are a bit ugly, but should work.  See
-     * bug 81961.
+     * character, including itself.   
      *
-     * @exception NS_ERROR_NULL_POINTER     NULL pointer passed to getter
-     * @exception NS_ERROR_OUT_OF_MEMORY    Getter couldn't allocate string
+     * If outputFormat is not set, or is set to the empty string,
+     * the component implementing this interface should set the outputFormat 
+     * to a reasonable default.
+     *
+     * As an example, the "@mozilla.org/autocompleteSession;1?type=ldap"
+     * implementation currently happens to use a default of "[cn] <{mail}>", 
+     * without  the quotes.  This will generate autocomplete items of the
+     * form "John Doe <john.doe@foo.com>", or, if the cn is not found,
+     * " <john.doe@foo.com>".  This latter form is suboptimal, in that
+     * the space and angle brackets are a bit ugly, but should work as an
+     * email address.  See bug 81961.
+     * 
+     * @exception NS_ERROR_NULL_POINTER     getter: NULL pointer passed in
+     * @exception NS_ERROR_OUT_OF_MEMORY    getter/setter: allocation error
+     * @exception NS_ERROR_ILLEGAL_VALUE    setter: invalid template specified
+     * @exception NS_ERROR_UNEXPECTED       setter: probably a bug
      */
     attribute wstring outputFormat;
 
