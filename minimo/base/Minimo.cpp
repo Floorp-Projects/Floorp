@@ -239,9 +239,6 @@ nsFullScreen::ShowAllOSChrome()
 
   ShowWindow(hTaskBarWnd, SW_SHOW);
 
-  WriteConsoleLog();
-
-
   return NS_OK;
 #endif
 }
