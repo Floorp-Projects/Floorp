@@ -2960,7 +2960,6 @@ nsComponentManagerImpl::AddLoaderType(const char *typeStr, int *aTypeIndex)
 typedef struct
 {
     const nsCID* cid;
-    const char* regName;
     nsIFactory* factory;
 } UnregisterConditions;
 
@@ -2979,22 +2978,10 @@ DeleteFoundCIDs(PLDHashTable *aTable,
 
     nsFactoryEntry* factoryEntry = entry->mFactoryEntry;
     if (data->cid->Equals(factoryEntry->mCid) &&
-        ((data->regName && !PL_strcasecmp(factoryEntry->mLocation, data->regName)) ||
-         (data->factory && data->factory == factoryEntry->mFactory.get())))
+        data->factory == factoryEntry->mFactory.get())
         return PL_DHASH_REMOVE;
 
     return PL_DHASH_NEXT;
-}
-
-void
-nsComponentManagerImpl::DeleteContractIDEntriesByCID(const nsCID* aClass, const char*registryName)
-{
-    UnregisterConditions aData;
-    aData.cid     = aClass;
-    aData.regName = registryName;
-    aData.factory = nsnull;
-    PL_DHashTableEnumerate(&mContractIDs, DeleteFoundCIDs, (void*)&aData);
-
 }
 
 void
@@ -3002,7 +2989,6 @@ nsComponentManagerImpl::DeleteContractIDEntriesByCID(const nsCID* aClass, nsIFac
 {
     UnregisterConditions aData;
     aData.cid     = aClass;
-    aData.regName = nsnull;
     aData.factory = factory;
     PL_DHashTableEnumerate(&mContractIDs, DeleteFoundCIDs, (void*)&aData);
 }
@@ -3047,45 +3033,16 @@ nsresult
 nsComponentManagerImpl::UnregisterComponent(const nsCID &aClass,
                                             const char *registryName)
 {
-#ifdef PR_LOGGING
-    if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_WARNING))
-    {
-        char *buf = aClass.ToString();
-        PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-               ("nsComponentManager: UnregisterComponent(%s)", buf));
-        if (buf)
-            PR_Free(buf);
-    }
-#endif
-
-    NS_ENSURE_ARG_POINTER(registryName);
-    nsFactoryEntry *old;
-
-    // first delete all contract id entries that are registered with this cid.
-    DeleteContractIDEntriesByCID(&aClass, registryName);
-
-    // next check to see if there is a CID registered
-    old = GetFactoryEntry(aClass);
-    if (old && old->mLocation && !PL_strcasecmp(old->mLocation, registryName))
-    {
-        nsAutoMonitor mon(mMon);
-        PL_DHashTableOperate(&mFactories, &aClass, PL_DHASH_REMOVE);
-    }
-
-    PR_LOG(nsComponentManagerLog, PR_LOG_WARNING,
-           ("nsComponentManager: Factory unregister(%s) succeeded.", registryName));
-
-    return NS_OK;
+    NS_ERROR("Don't call nsIComponentManagerObsolete.unregisterComponent");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
 nsComponentManagerImpl::UnregisterComponentSpec(const nsCID &aClass,
                                                 nsIFile *aLibrarySpec)
 {
-    nsXPIDLCString registryName;
-    nsresult rv = RegistryLocationForSpec(aLibrarySpec, getter_Copies(registryName));
-    if (NS_FAILED(rv)) return rv;
-    return UnregisterComponent(aClass, registryName);
+    NS_ERROR("Don't call nsIComponentManagerObsolete.unregisterComponentSpec");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // XXX Need to pass in aWhen and servicemanager
