@@ -52,8 +52,13 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
     virtual ~nsLDAPAutoCompleteSession();
 
   protected:
-    enum SessionState { UNBOUND, INITIALIZING, BINDING, BOUND,
-                        SEARCHING } mState;
+    enum SessionState { 
+        UNBOUND = nsILDAPAutoCompFormatter::STATE_UNBOUND,
+        INITIALIZING = nsILDAPAutoCompFormatter::STATE_INITIALIZING, 
+        BINDING = nsILDAPAutoCompFormatter::STATE_BINDING, 
+        BOUND = nsILDAPAutoCompFormatter::STATE_BOUND, 
+        SEARCHING = nsILDAPAutoCompFormatter::STATE_SEARCHING 
+    } mState;
     PRUint32 mEntriesReturned;                    // # of entries returned?
     nsCOMPtr<nsILDAPConnection> mConnection;      // connection used for search
     nsCOMPtr<nsILDAPOperation> mOperation;        // current ldap op
@@ -91,7 +96,16 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
     nsresult IsMessageCurrent(nsILDAPMessage *aMessage, PRBool *aIsCurrent);
 
     // finish a search by calling mListener->OnAutoComplete, resetting state,
-    // and freeing resources.
-    void FinishAutoCompleteLookup(AutoCompleteStatus aACStatus);
+    // and freeing resources.  if aACStatus == 
+    // nsIAutoCompleteStatus::failureItems, then the formatter is called with
+    // aResult and aEndState to create an autocomplete item with the error
+    // info in it.  See nsILDAPAutoCompFormatter.idl for more info on this.
+    void FinishAutoCompleteLookup(AutoCompleteStatus aACStatus, 
+                                  const nsresult aResult,
+                                  enum SessionState aEndState);
+
+    // create and initialize the results array
+    nsresult CreateResultsArray(void);
+
 };
 
