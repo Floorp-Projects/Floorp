@@ -2363,12 +2363,7 @@ static void AppendNCR(nsSubstring& aString, PRInt32 aNCRValue)
   }
 #endif
 
-  if (IS_IN_BMP(aNCRValue))
-    aString.Append(PRUnichar(aNCRValue));
-  else {
-    aString.Append(PRUnichar(H_SURROGATE(aNCRValue)));
-    aString.Append(PRUnichar(L_SURROGATE(aNCRValue)));
-  }
+  AppendUCS4ToUTF16(ENSURE_VALID_CHAR(aNCRValue), aString);
 }
 
 /*

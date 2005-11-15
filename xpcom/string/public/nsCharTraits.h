@@ -73,6 +73,37 @@
   typedef PRBool nsCharTraits_bool;
 #endif
 
+// Some macros for working with PRUnichar
+#define PLANE1_BASE          PRUint32(0x00010000)
+// High surrogates are in the range 0xD800 -- OxDBFF
+#define IS_HIGH_SURROGATE(u) ((PRUnichar(u) & 0xFC00) == 0xD800)
+// Low surrogates are in the range 0xDC00 -- 0xDFFF
+#define IS_LOW_SURROGATE(u)  ((PRUnichar(u) & 0xFC00) == 0xDC00)
+// Faster than testing IS_HIGH_SURROGATE || IS_LOW_SURROGATE
+#define IS_SURROGATE(u)      ((PRUnichar(u) & 0xF800) == 0xD800)
+
+// Everything else is not a surrogate: 0x000 -- 0xD7FF, 0xE000 -- 0xFFFF
+
+// N = (H - 0xD800) * 0x400 + 0x10000 + (L - 0xDC00)
+// I wonder whether we could somehow assert that H is a high surrogate
+// and L is a low surrogate
+#define SURROGATE_TO_UCS4(h, l) (((PRUint32(h) & 0x03FF) << 10) + \
+                                 (PRUint32(l) & 0x03FF) + PLANE1_BASE)
+
+// Extract surrogates from a UCS4 char
+// See unicode specification 3.7 for following math.
+#define H_SURROGATE(c) PRUnichar(PRUnichar((PRUint32(c) - PLANE1_BASE) >> 10) | \
+                                 PRUnichar(0xD800))
+#define L_SURROGATE(c) PRUnichar((PRUnichar((PRUint32(c) - PLANE1_BASE) & 0x03FF) | \
+                                  PRUnichar(0xDC00)))
+
+#define IS_IN_BMP(ucs) (PRUint32(ucs) < PLANE1_BASE)
+#define UCS2_REPLACEMENT_CHAR PRUnichar(0xFFFD)
+
+#define UCS_END PRUint32(0x00110000)
+#define IS_VALID_CHAR(c) ((PRUint32(c) < UCS_END) && !IS_SURROGATE(c))
+#define ENSURE_VALID_CHAR(c) (IS_VALID_CHAR(c) ? (c) : UCS2_REPLACEMENT_CHAR)
+
 template <class CharT> struct nsCharTraits {};
 
 NS_SPECIALIZE_TEMPLATE

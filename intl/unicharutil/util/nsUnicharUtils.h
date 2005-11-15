@@ -41,7 +41,12 @@
 #ifndef nsAString_h___
 #include "nsAString.h"
 #endif
+
 #include "nsReadableUtils.h"
+
+#ifndef nsCharTraits_h___
+#include "nsCharTraits.h"
+#endif
 
 void ToLowerCase( nsAString& );
 void ToUpperCase( nsAString& );
@@ -89,16 +94,6 @@ inline PRBool IsUpperCase(PRUnichar c) {
 inline PRBool IsLowerCase(PRUnichar c) {
     return ToUpperCase(c) != c;
 }
-
-#define IS_HIGH_SURROGATE(u)  ((PRUnichar)(u) >= (PRUnichar)0xd800 && (PRUnichar)(u) <= (PRUnichar)0xdbff)
-#define IS_LOW_SURROGATE(u)  ((PRUnichar)(u) >= (PRUnichar)0xdc00 && (PRUnichar)(u) <= (PRUnichar)0xdfff)
-
-#define SURROGATE_TO_UCS4(h, l)  ((((PRUint32)(h)-(PRUint32)0xd800) << 10) +  \
-                                    (PRUint32)(l) - (PRUint32)(0xdc00) + 0x10000)
-
-#define H_SURROGATE(s) ((PRUnichar)(((PRUint32)s - (PRUint32)0x10000) >> 10) + (PRUnichar)0xd800)
-#define L_SURROGATE(s) ((PRUnichar)(((PRUint32)s - (PRUint32)0x10000) & 0x3ff) + (PRUnichar)0xdc00)
-#define IS_IN_BMP(ucs) ((PRUint32)ucs < 0x10000)
 
 /* (0x3131u <= (u) && (u) <= 0x318eu) => Hangul Compatibility Jamo */
 /* (0xac00u <= (u) && (u) <= 0xd7a3u) => Hangul Syllables          */
