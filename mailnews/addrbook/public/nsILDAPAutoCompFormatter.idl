@@ -22,9 +22,9 @@
  */
 
 #include "nsISupports.idl"
-#include "nsILDAPMessage.idl"
 
 interface nsIAutoCompleteItem;
+interface nsILDAPMessage;
 
 /**
  * An interface to allow different users of nsILDAPAutoCompleteSession to 
