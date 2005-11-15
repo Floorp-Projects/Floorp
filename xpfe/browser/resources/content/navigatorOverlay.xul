@@ -593,7 +593,7 @@
 
   <menu id="qaMenu" accesskey="Q" label="QA">
     <menupopup id="qaMenuPopup">
-      <menuitem label="Getting Involved" oncommand="loadURI('http://www.mozilla.org/start/');"/>
+      <menuitem label="Getting Involved" oncommand="loadURI('http://www.mozilla.org/projects/seamonkey/start/');"/>
       <menuitem label="Mozilla QA Overview" oncommand="loadURI('http://www.mozilla.org/quality/');"/>
 
       <menuseparator />
