@@ -220,6 +220,12 @@ argFreeData(Value *arg)
 		free(template[i].pValue);
 	    }
 	}
+	if ((arg->type & ArgMask) == ArgInitializeArgs) {
+	    CK_C_INITIALIZE_ARGS *init = (CK_C_INITIALIZE_ARGS *)arg->data;
+            if (init->LibraryParameters) {
+		free(init->LibraryParameters);
+	    }
+	}
 	free(arg->data);
     }
     arg->type &= ~ArgStatic;
@@ -345,7 +351,7 @@ NewValue(ArgType type, CK_ULONG arraySize)
 	return NULL;
     }
     value->reference = 1;
-    value->arraySize = arraySize;
+    value->arraySize = (type == ArgChar) ? 1: arraySize;
 
     memset(value->data, 0, value->size);
     return value;
@@ -735,6 +741,22 @@ NewMechanism(const char *bp, CK_ULONG mechType)
     return CKR_OK;
 }
 
+CK_RV
+NewInitializeArgs(const char *bp, CK_ULONG flags, const char *param)
+{
+    Value *value; /* new Value */
+    CK_C_INITIALIZE_ARGS *init;
+
+    value = NewValue(ArgInitializeArgs, 1);
+    init = (CK_C_INITIALIZE_ARGS *)value->data;
+    init->flags = flags;
+    if (strcmp(param, "null") != 0) {
+        init->LibraryParameters = (CK_CHAR_PTR *)strdup(param);
+    }
+    (void) AddVariable(bp, &value);
+    return CKR_OK;
+}
+
 /*
  * add a new variable to the chain
  */
@@ -933,6 +955,26 @@ save(const char *filename,Value *ptr)
     return CKR_OK;
 }
 
+static CK_RV
+increment(Value *ptr, CK_ULONG value)
+{
+    if ((ptr->type & ArgMask) != ArgULong) {
+	return CKR_ARGUMENTS_BAD;
+    }
+    *(CK_ULONG *)ptr->data += value;
+    return CKR_OK;
+}
+
+static CK_RV
+decrement(Value *ptr, CK_ULONG value)
+{
+    if ((ptr->type & ArgMask) != ArgULong) {
+	return CKR_ARGUMENTS_BAD;
+    }
+    *(CK_ULONG *)ptr->data -= value;
+    return CKR_OK;
+}
+
 CK_RV
 printArg(Value *ptr,int arg_number)
 {
@@ -1104,6 +1146,9 @@ printArg(Value *ptr,int arg_number)
     case ArgInitializeArgs:
 	initArgs = (CK_C_INITIALIZE_ARGS *)ptr->data;
 	printFlags(" Flags: ", initArgs->flags, ConstInitializeFlags);
+        if (initArgs->LibraryParameters) {
+	    printf("Params: %s\n",initArgs->LibraryParameters);
+	}
     case ArgFunctionList:
 	functionList = (CK_FUNCTION_LIST *)ptr->data;
 	printf(" Version: %d.%02d\n", VERSION(functionList->version));
@@ -1494,8 +1539,43 @@ printGeneralHelp(void)
    return CKR_OK;
 }
 
+static CK_RV
+quitIf(CK_ULONG a, const char *cmp, CK_ULONG b)
+{
+    if (strcmp(cmp, "<") == 0) {
+ 	return (a < b) ? CKR_QUIT : CKR_OK;
+    } else if (strcmp(cmp, ">") == 0) {
+ 	return (a > b) ? CKR_QUIT : CKR_OK;
+    } else if (strcmp(cmp, "<=") == 0) {
+ 	return (a <= b) ? CKR_QUIT : CKR_OK;
+    } else if (strcmp(cmp, ">=") == 0) {
+ 	return (a >= b) ? CKR_QUIT : CKR_OK;
+    } else if (strcmp(cmp, "=") == 0) {
+ 	return (a == b) ? CKR_QUIT : CKR_OK;
+    } else if (strcmp(cmp, "!=") == 0) {
+ 	return (a != b) ? CKR_QUIT : CKR_OK;
+    }
+    printf("Unkown integer comparator: '%s'\n", cmp);
+    return CKR_ARGUMENTS_BAD;
+}
+
+static CK_RV
+quitIfString(const char *a, const char *cmp, const char *b)
+{
+
+    if (strcmp(cmp, "=") == 0) {
+ 	return (strcmp(a,b) == 0) ? CKR_QUIT : CKR_OK;
+    } else if (strcmp(cmp, "!=") == 0) {
+ 	return (strcmp(a,b) != 0) ? CKR_QUIT : CKR_OK;
+    }
+    printf("Unkown string comparator: '%s'\n", cmp);
+    return CKR_ARGUMENTS_BAD;
+}
+
 CK_RV run(const char *); 
 CK_RV timeCommand(const char *); 
+CK_RV loop(const char *filename, const char *var, 
+            CK_ULONG start, CK_ULONG end, CK_ULONG step) ;
 
 /*
  * Actually dispatch the function... Bad things happen
@@ -1901,6 +1981,10 @@ do_func(int index, Value **a)
 	return restore(a[0]->data,a[1]);
     case F_Delete:
 	return DeleteVariable(a[0]->data);
+    case F_Increment:
+	return increment(a[0], *(CK_ULONG *)a[1]->data);
+    case F_Decrement:
+	return decrement(a[0], *(CK_ULONG *)a[1]->data);
     case F_List:
 	return list();
     case F_Run:
@@ -1926,6 +2010,9 @@ do_func(int index, Value **a)
     case F_NewMechanism:
 	(void) DeleteVariable(a[0]->data);
 	return NewMechanism(a[0]->data,*(CK_ULONG *)a[1]->data);
+    case F_NewInitializeArgs:
+	(void) DeleteVariable(a[0]->data);
+	return NewInitializeArgs(a[0]->data,*(CK_ULONG *)a[1]->data,a[2]->data);
     case F_System:
         value = *(int *)a[0]->data;
 	if (value & 0x80000000) {
@@ -1934,6 +2021,9 @@ do_func(int index, Value **a)
 	    systemFlags |= value;
 	}
 	return CKR_OK;
+    case F_Loop:
+	return loop(a[0]->data,a[1]->data,*(CK_ULONG *)a[2]->data,
+		*(CK_ULONG *)a[3]->data,*(CK_ULONG *)a[4]->data);
     case F_Help:
 	if (a[0]) {
 	    helpIndex = lookup(a[0]->data);
@@ -1944,6 +2034,10 @@ do_func(int index, Value **a)
 	    return CKR_OK;
 	}
 	return printGeneralHelp();
+    case F_QuitIfString:
+	return quitIfString(a[0]->data,a[1]->data,a[2]->data);
+    case F_QuitIf:
+	return quitIf(*(CK_ULONG *)a[0]->data,a[1]->data,*(CK_ULONG *)a[2]->data);
     case F_Quit:
 	return CKR_QUIT;
     default:
@@ -1992,7 +2086,8 @@ processCommand(const char * buf)
     return error;
 }
 
-CK_RV  timeCommand(const char *command) 
+CK_RV
+timeCommand(const char *command) 
 {
     CK_RV ckrv;
     PRIntervalTime startTime = PR_IntervalNow();
@@ -2036,7 +2131,8 @@ process(FILE *inFile,int user)
     return ckrv;
 }
 
-CK_RV  run(const char *filename) 
+CK_RV
+run(const char *filename) 
 {
     FILE *infile;
     CK_RV ckrv;
@@ -2051,6 +2147,29 @@ CK_RV  run(const char *filename)
     ckrv = process(infile, 0);
 
     fclose(infile);
+    return ckrv;
+}
+
+CK_RV
+loop(const char *filename, const char *var, 
+     CK_ULONG start, CK_ULONG end, CK_ULONG step) 
+{
+    CK_ULONG i = 0;
+    Value *value = 0;
+    CK_RV ckrv;
+
+    for (i=start; i < end; i += step)
+    {
+        value = NewValue(ArgULong, 1);
+	*(CK_ULONG *)value->data = i;
+	DeleteVariable(var);
+	AddVariable(var, &value);
+	ckrv = run(filename);
+	argFree(value);
+	if (ckrv == CKR_QUIT) {
+	    break;
+	}
+    }
     return ckrv;
 }
 

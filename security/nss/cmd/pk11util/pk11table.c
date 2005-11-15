@@ -1221,6 +1221,13 @@ const Commands _commands[] = {
 " size        number of elements in the array\n",
 	{ArgVar|ArgNew, ArgVar, ArgULong, ArgNone, ArgNone, 
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
+    {"NewInitArg", F_NewInitializeArgs,
+"NewInitArg varName string\n\n"
+"Creates a new init variable.\n"
+" varName     variable name of the new initArg\n"
+" string      string parameter for init arg\n",
+	{ArgVar|ArgNew, ArgULong, ArgVar|ArgNew, ArgNone, ArgNone, 
+	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"NewTemplate", F_NewTemplate,
 "NewTemplate varName attributeList\n\n"
 "Create a new empty template and populate the attribute list\n"
@@ -1291,10 +1298,20 @@ const Commands _commands[] = {
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Restore", F_RestoreVar,
 "Restore filename variable\n\n"
-"Restors a variable from a file\n"
+"Restores a variable from a file\n"
 " fileName        target file to restore the variable from\n"
 " variable        variable to restore\n",
 	{ArgVar|ArgNew, ArgVar, ArgNone, ArgNone, ArgNone,
+	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
+    {"Increment", F_Increment,
+"Increment variable value\n\n"
+"Increment a variable by value\n",
+	{ArgVar, ArgULong, ArgNone, ArgNone, ArgNone,
+	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
+    {"Decrement", F_Decrement,
+"Decrement variable value\n\n"
+"Decrement a variable by value\n",
+	{ArgVar, ArgULong, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"List", F_List,
 "List all the variables\n",
@@ -1315,13 +1332,30 @@ const Commands _commands[] = {
 	{ArgVar|ArgFull, ArgNone, ArgNone, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"System", F_System,
-	"Fix Me... ",
+	"Set System Flag",
 	{ArgULong, ArgNone, ArgNone, ArgNone, ArgNone,
+	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
+    {"LoopRun", F_Loop,
+"LoopRun filename var start end step\n\n"
+"Run in a loop. Loop exit if scrip does and explicit quit (Quit QuitIf etc.)",
+	{ArgVar|ArgNew, ArgVar|ArgNew, ArgULong, ArgULong, ArgULong,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Help", F_Help,
 "Help [command]\n\n"
 "print general help, or help for a specific command\n",
 	{ArgVar|ArgOpt, ArgNone, ArgNone, ArgNone, ArgNone,
+	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
+    {"QuitIf", F_QuitIf,
+"QuitIf arg1 comparator arg2\n\n"
+"Exit from this program if Condition is valid, valid comparators:\n"
+"  < > <= >= = !=\n",
+	{ArgULong, ArgVar|ArgNew, ArgULong, ArgNone, ArgNone,
+	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
+    {"QuitIfString", F_QuitIfString,
+"QuitIfString arg1 comparator arg2\n\n"
+"Exit from this program if Condition is valid, valid comparators:\n"
+"  = !=\n",
+	{ArgVar|ArgNew, ArgVar|ArgNew, ArgVar|ArgNew, ArgNone, ArgNone,
 	 ArgNone, ArgNone, ArgNone, ArgNone, ArgNone }},
     {"Quit", F_Quit,
 "Exit from this program",
