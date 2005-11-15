@@ -32,6 +32,7 @@
 #include "nsISupportsArray.h"
 #include "nsIConsoleService.h"
 #include "nsVoidArray.h"
+#include "nsIAuthPrompt.h"
 
 // 964665d0-1dd1-11b2-aeae-897834fb00b9
 //
@@ -73,6 +74,10 @@ class nsLDAPAutoCompleteSession : public nsILDAPMessageListener,
     PRUint32 mCjkMinStringLength;           // ignore CJK strings < this size
     char **mSearchAttrs;        // outputFormat search attrs for SearchExt call
     PRUint32 mSearchAttrsSize;              // size of above array
+    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;  // used to prompt for the password
+// XXX hack until nsUTF8String exists
+#define nsUTF8String nsCString
+    nsUTF8String mLogin;                       // authenticate as this user
 
     // used to format the ldap message into an nsIAutoCompleteItem
     //
