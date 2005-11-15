@@ -69,7 +69,7 @@ interface nsILDAPAutoCompFormatter : nsISupports {
      * was in when the error occured (aState) is formatted into a general
      * error message which is put in the value attribute of the item,
      * and the specific error (aErrorCode) is formatted into another message
-     * which is put in an nsISupportsWString in the param attribute of the
+     * which is put in an nsISupportsString in the param attribute of the
      * item.
      *
      * @param aState        state of autocomplete session when error occurred
