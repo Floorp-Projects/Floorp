@@ -72,15 +72,20 @@ interface nsILDAPAutoCompleteSession : nsIAutoCompleteSession {
      * Strings shorter than this will return |nsIAutoCompleteStatus::ignored|
      * rather than triggering a search.  This allows browsers to be
      * configured to not search on substrings so short that they
-     * aren't indexed by the LDAP server (such searches can use significantly 
-     * more server resources and return a very large number of entries).
-     * As of this writing, the "@mozilla.org/autocompleteSession;1?type=ldap"
-     * contractid uses a default of two, as this avoids unindexed searches
-     * with at least one widely-deployed webserver.
+     * aren't indexed by the LDAP server (such searches can use
+     * significantly more server resources and return a very large
+     * number of entries).  cjkMinStringLength is used for CJK
+     * languages, and minStringLength for everything else.  As of this
+     * writing, the "@mozilla.org/autocompleteSession;1?type=ldap"
+     * contractid uses defaults of two and zero, respectively.  This
+     * avoids most unindexed searches with at least one widely-deployed
+     * webserver, but allows CJK languages, where a single glyph can be an
+     * an entire name to still get results.
      * 
      * @exception NS_ERROR_NULL_POINTER  NULL pointer passed to getter
      */
     attribute unsigned long minStringLength;
+    attribute unsigned long cjkMinStringLength;
 
     /**
      * LDAP server to complete against, in ldap: URL format.  
