@@ -21,7 +21,6 @@
  *
  */
 
-
 // Work around lack of conditional build logic in codewarrior's
 // build system.  The MOZ_LDAP_XPCOM preprocessor symbol is only 
 // defined on Mac because noone else needs this weirdness; thus 
@@ -33,7 +32,6 @@
 
 #include "nsLDAPAutoCompleteSession.h"
 #include "nsIComponentManager.h"
-#include "nsIConsoleService.h"
 #include "nsIServiceManager.h"
 #include "nsIProxyObjectManager.h"
 #include "nsString.h"
@@ -442,12 +440,6 @@ nsLDAPAutoCompleteSession::OnLDAPBind(nsILDAPMessage *aMessage)
 nsresult
 nsLDAPAutoCompleteSession::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 {
-    // ldap attribute names used to fill in fields in nsIAutoCompleteItem
-    //
-    // XXXdmose need to get this from outputFormat
-    //
-    const char *valueField="mail";
-
     nsresult rv;        // temporary for return vals
 
     PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
@@ -459,6 +451,18 @@ nsLDAPAutoCompleteSession::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     NS_ASSERTION(mResultsArray,
                  "nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
                  "mResultsArrayItems is uninitialized");
+
+    nsAutoString value;
+    rv = GenerateAutoCompleteValue(aMessage, value);
+    if (NS_FAILED(rv)) {
+        // Something went wrong lower down the stack; a message should have 
+        // already been logged there.  Return an error (which ultimately gets
+        // ignored, since this is being called through an async proxy).  But
+        // the important thing is that we're bailing out here rather than 
+        // trying to generate a bogus nsIAutoCompleteItem
+        //
+        return NS_ERROR_FAILURE;
+    }
 
     // create an nsIAutoCompleteItem to hold the returned value
     //
@@ -476,50 +480,17 @@ nsLDAPAutoCompleteSession::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
         //
         return NS_ERROR_FAILURE;
     }
-        
-    // get the attribute values for the field which will be used to fill in
-    // nsIAutoCompleteItem::value
-    //
-    PRUint32 numVals;
-    PRUnichar **values;
-
-    rv = aMessage->GetValues(valueField, &numVals, &values);
-    if (NS_FAILED(rv)) {
-
-        switch (rv) {
-        case NS_ERROR_LDAP_DECODING_ERROR:
-            // XXXdmose log error for non-debug builds?  could mean that this 
-            // entry didn't have an attr named "email".
-            //
-            NS_WARNING("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
-                       "error decoding email attribute");
-            return NS_ERROR_LDAP_DECODING_ERROR;
-
-        case NS_ERROR_OUT_OF_MEMORY:
-        case NS_ERROR_UNEXPECTED:
-            return rv;
-
-        default:
-            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
-                     "unexpected return code from aMessage->getValues()");
-            return NS_ERROR_UNEXPECTED;
-        }
-    }
 
     // just use the first value for the email attribute; subsequent values
-    // are ignored
+    // are ignored.  XXXdmose should do better than this; bug 76595.
     //
-    rv = item->SetValue(values[0]);
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numVals, values);
-
+    rv = item->SetValue(value.get());
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
                  "item->SetValue failed");
 
         return NS_ERROR_FAILURE;
     }
-
-    // XXXdmose process outputFormat here
 
     rv = mResultsArray->AppendElement(item);
     if (NS_FAILED(rv)) {
@@ -533,6 +504,219 @@ nsLDAPAutoCompleteSession::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     mEntriesReturned++;
 
     return NS_OK;
+}
+
+// use outputFormat to generate an autocomplete value from attributes.  
+// any errors (including failure to find a required attribute) return 
+// an NS_ERROR_* up the stack so that the caller doesn't try and generate
+// an nsIAutoCompleteItem from this.
+//
+nsresult
+nsLDAPAutoCompleteSession::GenerateAutoCompleteValue(nsILDAPMessage *aMessage,
+                                                     nsAWritableString &aValue)
+{
+    nsresult rv;    // temp for return values
+
+    // if our outputFormat attribute hasn't been set, use the default
+    //
+    if (mOutputFormat.IsEmpty()) {
+        mOutputFormat = NS_LITERAL_STRING("[cn] <{mail}>");
+    }
+
+    // get some iterators to parse mOutputFormat
+    //
+    nsReadingIterator<PRUnichar> iter, iterEnd;
+    mOutputFormat.BeginReading(iter);
+    mOutputFormat.EndReading(iterEnd);
+
+    // get the console service for error logging
+    //
+    nsCOMPtr<nsIConsoleService> consoleSvc = 
+        do_GetService("@mozilla.org/consoleservice;1", &rv);
+    if (NS_FAILED(rv)) {
+        NS_WARNING("nsLDAPAutoCompleteSession::GenerateAutoCompleteValue(): "
+                   "couldn't get console service");
+    }
+
+    PRBool attrRequired = PR_FALSE;     // is this attr required or optional?
+
+    // parse until we hit the end of the string
+    //
+    while (iter != iterEnd) {
+
+        switch (*iter) {            // process the next char
+
+        case PRUnichar('{'):
+
+            attrRequired = PR_TRUE;  // this attribute is required
+
+            /*FALLTHROUGH*/
+
+        case PRUnichar('['):
+
+            rv = ProcessAttribute(iter, iterEnd, aMessage, attrRequired,
+                                  consoleSvc, aValue);
+            if ( NS_FAILED(rv) ) {
+
+                // something unrecoverable happened; stop parsing and 
+                // propagate the error up the stack
+                //
+                return NS_ERROR_FAILURE;
+            }
+
+            attrRequired = PR_FALSE; // reset to the default for the next pass
+
+            break;
+
+        case PRUnichar('\\'):
+
+            // advance the iterator and be sure we haven't run off the end
+            //
+            iter++;
+            if (iter == iterEnd) {
+
+                // abort; missing escaped char
+                //
+                if (consoleSvc) {
+                    consoleSvc->LogStringMessage(
+                        NS_LITERAL_STRING(
+                            "LDAP autocomplete session: error parsing outputFormat: premature end of string after \\ escape").get());
+
+                    NS_ERROR("LDAP autocomplete session: error parsing "
+                             "outputFormat: premature end of string after \\ "
+                             "escape");
+                }
+
+                return NS_ERROR_FAILURE;
+            }
+
+            /*FALLTHROUGH*/
+
+        default:
+
+            // this character gets treated as a literal
+            //
+            aValue.Append(*iter);
+
+        }
+
+        iter++; // advance the iterator
+    }
+
+    return NS_OK;
+}
+
+nsresult 
+nsLDAPAutoCompleteSession::ProcessAttribute(
+    nsReadingIterator<PRUnichar> &aIter,        // iterators for mOutputString
+    nsReadingIterator<PRUnichar> &aIterEnd, 
+    nsILDAPMessage *aMessage,                   // message being processed
+    PRBool aAttrRequired,                       // required?  or just optional?
+    nsCOMPtr<nsIConsoleService> &aConsoleSvc,   // no need to reacquire this
+    nsAWritableString &aValue)                  // value being built
+{
+    nsCAutoString attrName;
+
+    // reset attrname, and move past the opening brace
+    //
+    aIter++;
+
+    // get the rest of the attribute name
+    //
+    do {
+
+        // be sure we haven't run off the end
+        //
+        if (aIter == aIterEnd) {
+
+            // abort; missing closing delimiter
+            //
+            if (aConsoleSvc) {
+                aConsoleSvc->LogStringMessage(
+                    NS_LITERAL_STRING(
+                        "LDAP autocomplete session: error parsing outputFormat: missing } or ]").get());
+
+                NS_ERROR("LDAP autocomplete session: error parsing "
+                         "outputFormat: missing } or ]");
+            }
+
+            return NS_ERROR_FAILURE;
+
+        } else if ( (aAttrRequired && *aIter == PRUnichar('}')) || 
+                    *aIter == PRUnichar(']') ) {
+
+            // done with this attribute
+            //
+            break;
+
+        } else {
+
+            // this must be part of the attribute name
+            //
+            attrName.Append(char(*aIter));
+        }
+
+        aIter++;
+
+    } while (1);
+                      
+    // get the attribute values for the field which will be used 
+    // to fill in nsIAutoCompleteItem::value
+    //
+    PRUint32 numVals;
+    PRUnichar **values;
+
+    nsresult rv;
+    rv = aMessage->GetValues(attrName, &numVals, &values);
+    if (NS_FAILED(rv)) {
+
+        switch (rv) {
+        case NS_ERROR_LDAP_DECODING_ERROR:
+            // this may not be an error, per se; it could just be that the 
+            // requested attribute does not exist in this particular message,
+            // either because we didn't request it with the search operation,
+            // or because it doesn't exist on the server.
+            //
+            PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_WARNING,
+                   ("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
+                       "couldn't decode '%s' attribute", attrName.get()));
+            break;
+
+        case NS_ERROR_OUT_OF_MEMORY:
+        case NS_ERROR_UNEXPECTED:
+            break;
+
+        default:
+            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
+                     "unexpected return code from aMessage->getValues()");
+            rv = NS_ERROR_UNEXPECTED;
+            break;
+        }
+
+        // if this was a required attribute, don't append anything to aValue
+        // and return the error code
+        //
+        if (aAttrRequired) {
+            return rv;
+        } else {
+            // otherwise forget about this attribute, but return NS_OK, which
+            // will cause our caller to continue processing outputFormat in 
+            // order to generate an nsIAutoCompleteItem.
+            //
+            return NS_OK;
+        }
+    }
+
+    // append the value to our string; then free the array of results
+    //
+    aValue.Append(values[0]);
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numVals, values);
+
+    // if this attribute wasn't required, we fall through to here, and return 
+    // ok
+    //
+    return NS_OK;
+
 }
 
 nsresult
