@@ -187,7 +187,6 @@ public:
     nsresult HashContractID(const char *acontractID, PRUint32 aContractIDLen,
                             nsFactoryEntry *fe_ptr);
 
-    void DeleteContractIDEntriesByCID(const nsCID* aClass, const char*registryName);
     void DeleteContractIDEntriesByCID(const nsCID* aClass, nsIFactory* factory);
 
     nsresult UnloadLibraries(nsIServiceManager *servmgr, PRInt32 when);
