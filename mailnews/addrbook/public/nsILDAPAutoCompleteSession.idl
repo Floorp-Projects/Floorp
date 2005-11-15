@@ -36,8 +36,15 @@ interface nsILDAPAutoCompleteSession : nsIAutoCompleteSession {
      * A template used to construct the RFC 1960 LDAP search filter to use 
      * while autocompleting.  
      *
-     * XXX syntax to-be-determined in an upcoming checkin
-     * 
+     * The authoritative documentation for the format in use can be found at 
+     * at <http://docs.iplanet.com/docs/manuals/dirsdk/csdk41/html/filter.htm>.
+     * The Linux/OpenLDAP man page for ldapfilter.conf(5) does a pretty decent
+     * job as well, however.
+     *
+     * As of this writing, the "@mozilla.org/autocompleteSession;1?type=ldap" 
+     * contractid happens to use a default value of 
+     * (|(cn=%v1*%v2-*)(mail=%v1*%v2-*)(sn=%v1*%v2-*))
+     *
      * @exception NS_ERROR_NULL_POINTER     NULL pointer passed to getter
      * @exception NS_ERROR_OUT_OF_MEMORY    Getter couldn't allocate string
      */
@@ -90,7 +97,9 @@ interface nsILDAPAutoCompleteSession : nsIAutoCompleteSession {
      * configured to not search on substrings so short that they
      * aren't indexed by the LDAP server (such searches can use significantly 
      * more server resources and return a very large number of entries).
-     * The default is 0, meaning that no such limit is in effect.
+     * As of this writing, the "@mozilla.org/autocompleteSession;1?type=ldap"
+     * contractid uses a default of two, as this avoids unindexed searches
+     * with at least one widely-deployed webserver.
      * 
      * @exception NS_ERROR_NULL_POINTER  NULL pointer passed to getter
      */
