@@ -1,0 +1,208 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Annotation code
+ *
+ * The Initial Developer of the Original Code is
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brett Wilson <brettw@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+#include "nsIURI.idl"
+#include "nsIVariant.idl"
+
+[scriptable, uuid(05537263-9bb4-45c8-ae96-461817f53972)]
+interface nsIAnnotationService : nsISupports
+{
+    /**
+     * Valid values for aExpiration, which sets the expiration policy for your
+     * annotation. These times are measured since the last visit date of the
+     * page in question. This means that if you set an annotation with anything
+     * but session expiratin, it will not expire so long as the user keeps
+     * visiting the page from time to time.
+     */
+
+    /* EXPIRATION IS CURRENTLY UNIMPLEMENTED. This is here as a proposed
+       expiration policy. May be changed. Currently, use 0 for expiration.
+     */
+      // For temporary stuff that can be discarded when the user exists
+    const long EXPIRE_SESSION = 0;
+
+      // for short-lived temporary data that you still want to outlast a session
+    const long EXPIRE_DAYS = 1;
+
+      // for general page settings, things the user is interested in seeing
+      // if they come back to this page some time in the future.
+    const long EXPIRE_WEEKS = 2;
+
+      // Something that the user will be interested in seeing in their
+      // history like favicons. If they haven't visited a page in a couple
+      // of months, they probably aren't interested in much other annotation,
+      // the positions of things, or other stuff you create, so put that in
+      // the weeks policy.
+    const long EXPIRE_MONTHS = 3;
+
+      // For small, user-entered data like notes that should never expire.
+    const long EXPIRE_NEVER = 5;
+
+    /**
+     * Sets an annotation, overwriting any previous annotation with the same
+     * URL/name. IT IS YOUR JOB TO NAMESPACE YOUR ANNOTATION NAMES.
+     * Use the form "namespace/value", so your name would be like
+     * "bills_extension/page_state" or "history/thumbnail".
+     *
+     * Do not use characters that are not valid in URLs such as spaces, ":",
+     * or many other symbols.
+     *
+     * aExpiration is one of EXPIRE_* above. aFlags should be 0 for now, some
+     * flags will be defined in the future.
+     */
+    void setAnnotation(in nsIURI aURI, in ACString aName, in nsIVariant aValue,
+                       in long aFlags, in long aExpiration);
+
+    /**
+     * Sets an annotation just like setAnnotation, but takes a string as
+     * input, which will be more convenient for C++.
+     */
+    void setAnnotationString(in nsIURI aURI, in ACString aName,
+                             in AString aValue, in long aFlags,
+                             in long aExpiration);
+
+    /**
+     * Sets an annotation just like setAnnotation, but takes an Int32 as input
+     * for convenience.
+     */
+    void setAnnotationInt32(in nsIURI aURI, in ACString aName,
+                            in PRInt32 aValue, in long aFlags,
+                            in long aExpiration);
+
+    /*
+     * Sets an annotation just like setAnnotation, but takes binary data as
+     * input. You MUST supply a valid MIME type.
+     */
+    void setAnnotationBinary(in nsIURI aURI, in ACString aName,
+                             [const,array,size_is(aDataLen)] in octet aData,
+                             in unsigned long aDataLen, in ACString aMimeType,
+                             in long aFlags, in long aExpiration);
+
+    /**
+     * Retrieves the value of an existing annotation. Throws if the annotation
+     * does not exist.
+     */
+    nsIVariant getAnnotation(in nsIURI aURI, in ACString aName);
+
+    /**
+     * Same as getAnnotation but a convenience function for C++ for strings.
+     */
+    AString getAnnotationString(in nsIURI aURI, in ACString aName);
+
+    /**
+     * Same as getAnnotation but a convenience function for C++ for ints. If
+     * the value doesn't look like an int, returns 0. (this is current sqlite
+     * behavior when asking for an int when there is not one, it will likely
+     * change in the future if we start caching stuff).
+     */
+    PRInt32 getAnnotationInt32(in nsIURI aURI, in ACString aName);
+
+    /**
+     * Same as getAnnotation but for binary data. This also returns the
+     * MIME type.
+     */
+    void getAnnotationBinary(in nsIURI aURI, in ACString aName,
+                             [array,size_is(aDataLen)] out octet aData,
+                             out unsigned long aDataLen,
+                             out ACString aMimeType);
+
+    /**
+     * Retrieves info about an existing annotation. aMimeType will be empty
+     * if the value was not binary data.
+     *
+     * aStorageType will be one of mozIStorageValueArray.VALUE_TYPE_* and
+     * indicates how the value is stored (if you want to determine whether
+     * the data is binary, etc.)
+     *
+     * example JS:
+     *   var flags = {}, exp = {}, mimeType = {};
+     *   annotator.getAnnotationInfo(myURI, "foo", flags, exp, mimeType);
+     *   // now you can use 'exp.value' and 'flags.value'
+     */
+    void getAnnotationInfo(in nsIURI aURI, in ACString aName,
+                           out long aFlags, out long aExpiration,
+                           out ACString aMimeType, out long aStorageType);
+
+    /**
+     * Get the names of all annotations for this URI.
+     *
+     * example JS:
+     *   var annotations = annotator.getAnnotations(myURI, {});
+     */
+    // IMPLEMENT ME
+    //void getAnnotations(in AString aURI, out unsigned long count,
+    //  [retval, array, size_is(count)] out wstring result);
+
+    /**
+     * Get the values of several annotations with arbitrary URI/name pairs.
+     * There is some latency associated with each annotation query, so it is
+     * a good idea to use this function if it is possible for you to batch
+     * your requests together.
+     *
+     * This will return an array with the same number of values you requested.
+     * If the requested URI/name pair does not exist, the corresponding result
+     * element will be NULL.
+     *
+     * @param aURIList The list of URIs
+     */
+    /* IMPLEMENT ME?
+    void getMultipleAnnotations([array, size_is(aCount)] in nsIURI aURIList,
+      [array, size_is(aCount)] in wstring aNameList, in unsigned long aCount,
+      out unsigned long aResultCount,
+      [retval, array, size_is(aResultCount)] out wstring aResultList);
+    */
+
+    /**
+     * Test for annotation existance.
+     */
+    boolean hasAnnotation(in nsIURI aURI, in ACString aName);
+
+    /**
+     * Removes a specific annotation. Succeeds even if the annotation is
+     * not found.
+     */
+    void removeAnnotation(in nsIURI aURI, in ACString aName);
+
+    /**
+     * Removes all annotations for the given page.
+     * We may want some other similar functions to get annotations with given
+     * flags (once we have flags defined).
+     */
+    //void removePageAnnotations(in nsIURI aURI);
+};
