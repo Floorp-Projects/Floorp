@@ -94,8 +94,8 @@
 // See unicode specification 3.7 for following math.
 #define H_SURROGATE(c) PRUnichar(PRUnichar((PRUint32(c) - PLANE1_BASE) >> 10) | \
                                  PRUnichar(0xD800))
-#define L_SURROGATE(c) PRUnichar((PRUnichar((PRUint32(c) - PLANE1_BASE) & 0x03FF) | \
-                                  PRUnichar(0xDC00)))
+#define L_SURROGATE(c) PRUnichar(PRUnichar((PRUint32(c) - PLANE1_BASE) & 0x03FF) | \
+                                 PRUnichar(0xDC00))
 
 #define IS_IN_BMP(ucs) (PRUint32(ucs) < PLANE1_BASE)
 #define UCS2_REPLACEMENT_CHAR PRUnichar(0xFFFD)
