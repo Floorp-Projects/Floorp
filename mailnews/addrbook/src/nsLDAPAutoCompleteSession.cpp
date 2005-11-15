@@ -685,6 +685,17 @@ nsLDAPAutoCompleteSession::OnLDAPBind(nsILDAPMessage *aMessage)
                 // pop up a dialog telling the user to go manually delete
                 // this password in the password manager.
             }
+
+            // XXXdmose We should probably pop up an error dialog telling
+            // the user that the login failed here, rather than just bringing 
+            // up the password dialog again, which is what calling OnLDAPInit()
+            // does.  See bug 152997.
+
+            PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+                   ("nsLDAPAutoCompleteSession::OnLDAPBind(): auth error;"
+                    " calling OnLDAPInit() again"));
+        
+            return OnLDAPInit(NS_OK);
         }
 
         // reset to the default state
