@@ -78,7 +78,9 @@ EXPORTS		= \
 		jos2fig.h \
 		$(NULL)
 
-ifneq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT)))
+# These files enable support for writing JPEGs
+# (on certain platforms, or if JPEG image encoder support is required)
+ifneq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT))$(filter jpeg,$(MOZ_IMG_ENCODERS)))
 CSRCS		+= \
 		jcapimin.c \
 		jcparam.c \
