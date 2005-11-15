@@ -951,8 +951,8 @@ nsLDAPAutoCompleteSession::InitConnection()
 
     // host to connect to
     //
-    nsXPIDLCString host;
-    rv = mServerURL->GetHost(getter_Copies(host));
+    nsCAutoString host;
+    rv = mServerURL->GetAsciiHost(host);
     if (NS_FAILED(rv)) {
         FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
                                  UNBOUND);
@@ -988,7 +988,7 @@ nsLDAPAutoCompleteSession::InitConnection()
     // lookup to occur, and we'll finish the binding of the connection
     // in the OnLDAPInit() listener function.
     //
-    rv = mConnection->Init(host, port, 0, selfProxy);
+    rv = mConnection->Init(host.get(), port, 0, selfProxy);
     if NS_FAILED(rv) {
         switch (rv) {
 
