@@ -47,6 +47,8 @@
 #include "nsNetUtil.h"
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
+#include "nsILDAPService.h"
+#include "nsILDAPMessage.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *sLDAPAutoCompleteLogModule = 0;
@@ -63,8 +65,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPAutoCompleteSession,
 
 nsLDAPAutoCompleteSession::nsLDAPAutoCompleteSession() :
     mState(UNBOUND), 
-    mFilterTemplate(NS_LITERAL_STRING(
-                      "(|(cn=%v1*%v2-*)(mail=%v1*%v2-*)(sn=%v1*%v2-*))")),
+    mFilterTemplate("(|(cn=%v1*%v2-*)(mail=%v1*%v2-*)(sn=%v1*%v2-*))"),
     mMaxHits(100), mMinStringLength(2), mCjkMinStringLength(0), 
     mSearchAttrs(0), mSearchAttrsSize(0)
 {
@@ -83,7 +84,7 @@ nsLDAPAutoCompleteSession::~nsLDAPAutoCompleteSession()
 /* void onStartLookup (in wstring searchString, in nsIAutoCompleteResults previousSearchResult, in nsIAutoCompleteListener listener); */
 NS_IMETHODIMP 
 nsLDAPAutoCompleteSession::OnStartLookup(const PRUnichar *searchString, 
-                                 nsIAutoCompleteResults *previousSearchResult,
+                                         nsIAutoCompleteResults *previousSearchResult,
                                          nsIAutoCompleteListener *listener)
 {
     nsresult rv; // hold return values from XPCOM calls
@@ -598,7 +599,7 @@ nsLDAPAutoCompleteSession::OnLDAPInit(nsILDAPConnection *aConn, nsresult aStatus
     PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
            ("nsLDAPAutoCompleteSession:OnLDAPInit(): initiating "
             "SimpleBind\n"));
-    rv = mOperation->SimpleBind(passwd); 
+    rv = mOperation->SimpleBind(NS_ConvertUCS2toUTF8(passwd)); 
     if (NS_FAILED(rv)) {
 
         switch (rv) {
@@ -883,8 +884,8 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     // get the search filter associated with the directory server url; 
     // it will be ANDed with the rest of the search filter that we're using.
     //
-    nsXPIDLCString urlFilter;
-    rv = mServerURL->GetFilter(getter_Copies(urlFilter));
+    nsCAutoString urlFilter;
+    rv = mServerURL->GetFilter(urlFilter);
     if ( NS_FAILED(rv) ){
         FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv,
                                  BOUND);
@@ -906,32 +907,32 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     // if urlFilter is unset (or set to the default "objectclass=*"), there's
     // no need to AND in an empty search term, so leave prefix and suffix empty
     //
-    nsAutoString prefix, suffix;
-    if (urlFilter[0] != 0 && nsCRT::strcmp(urlFilter, "(objectclass=*)")) {
+    nsCAutoString prefix, suffix;
+    if (!urlFilter.Equals(NS_LITERAL_CSTRING("(objectclass=*)"))) {
 
         // if urlFilter isn't parenthesized, we need to add in parens so that
         // the filter works as a term to &
         //
         if (urlFilter[0] != '(') {
-            prefix = NS_LITERAL_STRING("(&(") +
-                NS_ConvertUTF8toUCS2(urlFilter) +
-                NS_LITERAL_STRING(")");
+            prefix = NS_LITERAL_CSTRING("(&(") + urlFilter +
+                NS_LITERAL_CSTRING(")");
         } else {
-            prefix = NS_LITERAL_STRING("(&") +
-                NS_ConvertUTF8toUCS2(urlFilter);
+            prefix = NS_LITERAL_CSTRING("(&") + urlFilter;
         }
         
-        suffix = PRUnichar(')');
+        suffix = ')';
     }
 
     // generate an LDAP search filter from mFilterTemplate.  If it's unset,
     // use the default.
     //
 #define MAX_AUTOCOMPLETE_FILTER_SIZE 1024
-    nsAutoString searchFilter;
-    rv = ldapSvc->CreateFilter(MAX_AUTOCOMPLETE_FILTER_SIZE, mFilterTemplate,
-                               prefix, suffix, NS_LITERAL_STRING(""), 
-                               mSearchString, searchFilter);
+    nsCAutoString searchFilter;
+    rv = ldapSvc->CreateFilter(MAX_AUTOCOMPLETE_FILTER_SIZE,
+                               mFilterTemplate,
+                               prefix, suffix, NS_LITERAL_CSTRING(""), 
+                               NS_ConvertUCS2toUTF8(mSearchString),
+                               searchFilter);
     if (NS_FAILED(rv)) {
         switch(rv) {
 
@@ -979,8 +980,8 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     
     // get the base dn to search
     //
-    nsXPIDLCString dn;
-    rv = mServerURL->GetDn(getter_Copies(dn));
+    nsCAutoString dn;
+    rv = mServerURL->GetDn(dn);
     if ( NS_FAILED(rv) ){
         FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv,
                                  BOUND);
@@ -1002,9 +1003,8 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     //
     // XXXdmose what about timeouts? 
     //
-    rv = mOperation->SearchExt(NS_ConvertUTF8toUCS2(dn).get(), scope, 
-                               searchFilter.get(), mSearchAttrsSize,
-                               NS_CONST_CAST(const char **, mSearchAttrs), 0, 
+    rv = mOperation->SearchExt(dn, scope, searchFilter, mSearchAttrsSize,
+                               NS_CONST_CAST(const char **, mSearchAttrs), 0,
                                mMaxHits);
     if (NS_FAILED(rv)) {
         switch(rv) {
@@ -1140,8 +1140,7 @@ nsLDAPAutoCompleteSession::InitConnection()
     //
     rv = mConnection->Init(host.get(), port,
                            (options & nsILDAPURL::OPT_SECURE) ? PR_TRUE 
-                           : PR_FALSE, NS_ConvertUTF8toUCS2(mLogin).get(), 
-                           selfProxy, nsnull);
+                           : PR_FALSE, mLogin, selfProxy, nsnull);
     if NS_FAILED(rv) {
         switch (rv) {
 
@@ -1322,25 +1321,18 @@ nsLDAPAutoCompleteSession::FinishAutoCompleteLookup(
 
 // methods for nsILDAPAutoCompleteSession
 
-// attribute wstring searchFilter;
+// attribute AUTF8String searchFilter;
 NS_IMETHODIMP 
-nsLDAPAutoCompleteSession::GetFilterTemplate(PRUnichar * *aFilterTemplate)
+nsLDAPAutoCompleteSession::GetFilterTemplate(nsACString & aFilterTemplate)
 {
-    if (!aFilterTemplate) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *aFilterTemplate = ToNewUnicode(mFilterTemplate);
-    if (!*aFilterTemplate) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
+    aFilterTemplate.Assign(mFilterTemplate);
 
     return NS_OK;
 }
 NS_IMETHODIMP 
-nsLDAPAutoCompleteSession::SetFilterTemplate(const PRUnichar * aFilterTemplate)
+nsLDAPAutoCompleteSession::SetFilterTemplate(const nsACString & aFilterTemplate)
 {
-    mFilterTemplate = aFilterTemplate;
+    mFilterTemplate.Assign(aFilterTemplate);
 
     return NS_OK;
 }
