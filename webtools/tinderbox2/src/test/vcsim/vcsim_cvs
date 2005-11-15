@@ -1,0 +1,273 @@
+#!#perl# #perlflags# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+
+# cvs - simulate the output of the command:
+#	cvs history -c -a -D '11/05/2003 14:07:34'
+# So that I can debug tinderbox on machines where this
+# program is not installed.
+
+# $Revision: 1.1 $ 
+# $Date: 2005/11/15 20:10:15 $ 
+# $Author: bear%code-bear.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcsim/vcsim_cvs,v $ 
+# $Name:  $ 
+
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Tinderbox build tool.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
+# Contributor(s): 
+
+
+use Time::Local;
+use Getopt::Long;
+
+
+@RECTYPES = qw( M A );
+
+# Some of these authors come directly from the Mozilla project, others
+# look like the kind of CVS users I see on the projects I work on.
+
+@AUTHORS = qw( bob steve joe alice john jane sue
+	       dbaron%fas.harvard.edu timeless%mozdev.org
+	       roc+%cs.cmu.edu) ;
+
+# A list of typical file names.
+
+@BASENAMES = (
+	      'download.html',
+	      'nsLocalFileOS2.cpp',
+	      'nsLocalFileOS2.h',
+	      'Makefile.in',
+	      '.cvsignore',
+	      'configure',
+	      'rel_notes.txt',
+	      'configure.in',
+	      'file with spaces',
+	      );
+
+# Names of directories
+
+@DIRNAMES = qw(
+	       /mozilla/webtools
+	       mozilla/webtools/tinderbox2
+	       mozilla/webtools/tinderbox2/src
+	       mozilla/webtools/tinderbox2/src/lib
+	       mozilla/webtools/tinderbox2/src/bin
+	       mozilla/webtools/tinderbox2/src/man
+	       );
+
+
+# choose an element of a list at random
+
+sub pickone {
+    my (@list) = @_;
+
+    my ($random_num) = rand scalar(@list);
+    $random_num =~ s/\..*//;
+    my $element = $list[$random_num];
+
+    return $element;
+}
+
+# Given a time in perl time format return a string which looks like a
+# time string cvs would give us.  There are two types of strings
+# returned by different versioni of perl we randomly return a string
+# of either type.
+
+sub time2cvsformat {
+  # convert time() format to cvs input format
+  my ($time) = @_;
+
+  my ($sec,$min,$hour,$mday,$mon,
+      $year,$wday,$yday,$isdst) =
+        localtime($time);
+
+  $mon++;
+  $year += 1900;
+
+  # some versions of CVS give data in the format:
+  #        2001-01-04
+  # others use:
+  #        01/04
+  # we will simulate this by picking format for each line.
+  # though in real life any cvs output will have only one format.
+
+  my ($cvs_date_str);
+
+  my $num = rand 10;
+  if ($num >= 5) {
+      $cvs_date_str = sprintf("%04u-%02u-%02u %02u:%02u",
+			       $year, $mon, $mday, $hour, $min,);
+  } else {
+      $cvs_date_str = sprintf("%02u/%02u %02u:%02u",
+			      $mon, $mday, $hour, $min, );
+  }
+
+  return $cvs_date_str;
+}
+
+# generate numbers which look like CVS revision numbers.
+
+sub simulate_cvs_version {
+
+    # Most revisions have only one number after the first . 
+    # Though some are quite long
+
+    my $num = rand 10;
+    $num =~ s/\..*//;
+    if ($num >= 5) {
+	$num = 1;
+    }
+    my $suffix;
+    foreach $i (1 .. $num) {
+	my $version = rand 200;
+	$version =~ s/\..*//;
+
+	$suffix .= '.'.$version
+    }
+
+    # most revision numbers begin with 1 though there are a few 2 and 3
+
+    $num = rand 10;
+    $num =~ s/\..*//;
+    if ($num >= 3) {
+	$num = 0;
+    }
+    $num ++;
+
+    return $num.$suffix;
+}
+
+# parse the time argument into perl time
+#      -D '12/31/2005 14:54:13 GMT'
+
+sub cvs_date_str2time {      
+    my ($cvs_date_str) = @_;
+    
+    my ($date_str, $time_str, $tz)
+	      = split(/\s+/, $cvs_date_str);
+
+    ($tz == "GMT") || 
+	die("Time zone must be GMT.\n");
+
+    my ($mon, $mday, $year) = split('/', $date_str);
+    my ($hour, $min, $sec) = split(':', $time_str);
+
+    # The perl conventions for these variables is 0 origin while
+    # the "display" convention for these variables is 1 origin.
+    
+    $mon--;
+    
+    my ($time) = timegm($sec,$min,$hour,$mday,$mon,$year);    
+    
+    return $time;
+}
+
+sub parse_args {
+
+# We must be able to simulate the cvs calls which tinderbox makes:
+#    cvs
+#    -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
+#    history
+#    -c -a -D '12/31/2005 14:54:13 GMT'
+
+    @ORIG_ARGV = @ARGV;
+
+    my ($cvs_date_str,$cvs_root,);
+
+    while (scalar(@ARGV)) {
+	my $arg = shift(@ARGV);
+
+	($arg eq 'history') &&
+	    next;
+	($arg eq '-c') &&
+	    next;
+	($arg eq '-a') &&
+	    next;
+
+	($arg eq '-d') &&
+	    ($cvs_root = shift @ARGV);
+	($arg eq '-D') &&
+	    ($cvs_date_str= shift @ARGV);
+    }
+
+    $DATE = cvs_date_str2time('1/05/2003 14:07:34');
+#    $DATE = cvs_date_str2time($cvs_date_str);
+    $TIME_NOW = time();
+
+  return 1;
+} # parse_args
+
+parse_args();
+
+my $tzone = '+0000';
+my $eqeq = '==';
+my $dest_dir = '<remote>';
+my $spaces = '                ';
+
+
+my $time = $DATE;
+
+while ($time < $TIME_NOW) {
+
+    my $next_checkin = rand (60*60*2);
+    $next_checkin =~ s/\..*//;
+    
+    $time += $next_checkin;
+    
+    my ($rectype, $date, $author, 
+	$revision, $file, $repository_dir,);
+    
+    # In the simulation we usually have one single checkin but
+    # sometimes we get a bunch of files at the same time.
+
+    my $num = rand 10;
+    $num =~ s/\..*//;
+    if ($num >= 5) {
+	$num = 1;
+    }
+    
+    foreach $i (1 .. $num) {
+	
+	$author = pickone(@AUTHORS);
+	$repository_dir = pickone(@DIRNAMES);
+	$rectype = pickone(@RECTYPES);
+	$file = pickone(@BASENAMES);
+	$revision = simulate_cvs_version();
+	
+	# Make no effort to count the correct number of spaces in the
+	# format, the output here should just look plausible.
+
+	# I believe the CVS spacing will vary depending on the length of
+	# the longest data element so is not fixed anyway.
+	
+	# My parsers use a split so we do not need to worry about multiple
+	# spaces for testing my code.
+	
+	print join (' ', 
+		    $rectype, time2cvsformat($time), $tzone, 
+		    $author, $spaces, $revision, $spaces, 
+		    $file, $spaces, $repository_dir,
+		    $spaces, $eqeq, $dest_dir, 
+		    "\n");
+	
+    }
+}
