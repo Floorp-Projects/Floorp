@@ -114,7 +114,7 @@ sub sql_limit {
 sub sql_to_days {
     my ($self, $date) = @_;
 
-    return "TO_CHAR($date, 'J')::int";
+    return "TO_CHAR(${date}::date, 'J')::int";
 }
 
 sub sql_date_format {

@@ -33,6 +33,8 @@ package Bugzilla::Chart;
 use Bugzilla::Util;
 use Bugzilla::Series;
 
+use Date::Format;
+
 sub new {
     my $invocant = shift;
     my $class = ref($invocant) || $invocant;
@@ -233,14 +235,18 @@ sub readData {
         $dateto = $self->{'dateto'};
     }
 
+    # Convert UNIX times back to a date format usable for SQL queries.
+    my $sql_from = time2str('%Y-%m-%d', $datefrom);
+    my $sql_to = time2str('%Y-%m-%d', $dateto);
+
     # Prepare the query which retrieves the data for each series
-    my $query = "SELECT " . $dbh->sql_to_days('series_date') . " - " . 
-                            $dbh->sql_to_days("FROM_UNIXTIME($datefrom)") .
-                ", series_value FROM series_data " .
+    my $query = "SELECT " . $dbh->sql_to_days('series_date') . " - " .
+                            $dbh->sql_to_days('?') . ", series_value " .
+                "FROM series_data " .
                 "WHERE series_id = ? " .
-                "AND series_date >= FROM_UNIXTIME($datefrom)";
+                "AND series_date >= ?";
     if ($dateto) {
-        $query .= " AND series_date <= FROM_UNIXTIME($dateto)";
+        $query .= " AND series_date <= ?";
     }
     
     my $sth = $dbh->prepare($query);
@@ -256,7 +262,12 @@ sub readData {
         foreach my $series (@$line) {
 
             # Get the data for this series and add it on
-            $sth->execute($series->{'series_id'});
+            if ($dateto) {
+                $sth->execute($sql_from, $series->{'series_id'}, $sql_from, $sql_to);
+            }
+            else {
+                $sth->execute($sql_from, $series->{'series_id'}, $sql_from);
+            }
             my $points = $sth->fetchall_arrayref();
 
             foreach my $point (@$points) {
