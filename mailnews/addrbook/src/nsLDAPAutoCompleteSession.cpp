@@ -116,6 +116,8 @@ nsLDAPAutoCompleteSession::OnStartLookup(const PRUnichar *searchString,
     if (searchString[0] == 0 ||
         nsDependentString(searchString).FindChar(PRUnichar('@'), 0) != 
         kNotFound || 
+        nsDependentString(searchString).FindChar(PRUnichar(','), 0) != 
+        kNotFound || 
         ( !IS_CJK_CHAR_FOR_LDAP(searchString[0]) ?
           mMinStringLength && nsCRT::strlen(searchString) < mMinStringLength :
           mCjkMinStringLength && nsCRT::strlen(searchString) < 
