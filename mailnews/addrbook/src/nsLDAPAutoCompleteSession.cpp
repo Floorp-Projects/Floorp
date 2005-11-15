@@ -846,7 +846,7 @@ nsLDAPAutoCompleteSession::OnLDAPSearchResult(nsILDAPMessage *aMessage)
     // This seems to be necessary for things to work, though I'm not sure
     // why that's true.
     //
-    rv = mResults->SetSearchString(mSearchString.GetUnicode());
+    rv = mResults->SetSearchString(mSearchString.get());
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchResult(): couldn't "
                  "set search string in results object");
