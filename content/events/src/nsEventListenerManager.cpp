@@ -39,6 +39,8 @@
 #include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
 #include "nsEventListenerManager.h"
+#include "nsICaret.h"
+#include "nsIFrameSelection.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMMouseListener.h"
@@ -57,6 +59,7 @@
 #include "nsIDOMMutationListener.h"
 #include "nsIDOMUIListener.h"
 #include "nsIDOMPageTransitionListener.h"
+#include "nsITextControlFrame.h"
 #ifdef MOZ_SVG
 #include "nsIDOMSVGListener.h"
 #include "nsIDOMSVGZoomListener.h"
@@ -2239,24 +2242,146 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
     if (aEvent->message == NS_CONTEXTMENU_KEY)
       NS_IF_RELEASE(((nsGUIEvent*)aEvent)->widget);   // nulls out widget
     ret = NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsInputEvent*, aEvent));
+    NS_ENSURE_SUCCESS(ret, ret);
   }
 
-  if (NS_SUCCEEDED(ret)) {
-    // update the target
-    if (currentFocus) {
-      // Reset event coordinates relative to focused frame in view
-      nsPoint targetPt;
-      GetCoordinatesFor(currentFocus, aPresContext, shell, targetPt);
-      aEvent->refPoint.x = targetPt.x;
-      aEvent->refPoint.y = targetPt.y;
+  // see if we should use the caret position for the popup
+  PRBool useCaretPosition = PR_FALSE;
+  nsPoint caretPoint;
+  if (aEvent->message == NS_CONTEXTMENU_KEY) {
+    useCaretPosition = PrepareToUseCaretPosition(((nsGUIEvent*)aEvent)->widget,
+                                                 shell, caretPoint);
+  }
 
-      currentTarget = do_QueryInterface(currentFocus);
-      nsCOMPtr<nsIPrivateDOMEvent> pEvent(do_QueryInterface(*aDOMEvent));
-      pEvent->SetTarget(currentTarget);
-    }
+  if (useCaretPosition) {
+    aEvent->refPoint.x = caretPoint.x;
+    aEvent->refPoint.y = caretPoint.y;
+  } else if (currentFocus) {
+    // Reset event coordinates relative to focused frame in view
+    nsPoint targetPt;
+    GetCoordinatesFor(currentFocus, aPresContext, shell, targetPt);
+    aEvent->refPoint.x = targetPt.x;
+    aEvent->refPoint.y = targetPt.y;
+
+    currentTarget = do_QueryInterface(currentFocus);
+    nsCOMPtr<nsIPrivateDOMEvent> pEvent(do_QueryInterface(*aDOMEvent));
+    pEvent->SetTarget(currentTarget);
   }
 
   return ret;
+}
+
+// nsEventListenerManager::PrepareToUseCaretPosition
+//
+//    This checks to see if we should use the caret position for popup context
+//    menus. Returns true if the caret position should be used, and the window
+//    coordinates of that position are placed into WindowX/Y. This function
+//    will also scroll the window as needed to make the caret visible.
+//
+//    The event widget should be the widget that generated the event, and
+//    whose coordinate system the resulting event's refPoint should be
+//    relative to.
+
+PRBool
+nsEventListenerManager::PrepareToUseCaretPosition(nsIWidget* aEventWidget,
+                                                  nsIPresShell* aShell,
+                                                  nsPoint& aTargetPt)
+{
+  nsresult rv;
+
+  // check caret visibility
+  nsCOMPtr<nsICaret> caret;
+  rv = aShell->GetCaret(getter_AddRefs(caret));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  PRBool caretVisible = PR_FALSE;
+  rv = caret->GetCaretVisible(&caretVisible);
+  if (NS_FAILED(rv) || ! caretVisible)
+    return PR_FALSE;
+
+  // caret selection
+  nsCOMPtr<nsISelection> domSelection;
+  rv = caret->GetCaretDOMSelection(getter_AddRefs(domSelection));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  // since the match could be an anonymous textnode inside a
+  // <textarea> or text <input>, we need to get the outer frame
+  // note: frames are not refcounted
+  nsIFrame* frame = nsnull; // may be NULL
+  nsITextControlFrame* tcFrame = nsnull; // may be NULL
+  nsCOMPtr<nsIDOMNode> node;
+  rv = domSelection->GetFocusNode(getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  nsCOMPtr<nsIContent> content(do_QueryInterface(node));
+  for ( ; content; content = content->GetParent()) {
+    if (!content->IsNativeAnonymous()) {
+      frame = aShell->GetPrimaryFrameFor(content);
+      if (frame) {
+        // not refcounted, will be NULL for some elements
+        CallQueryInterface(frame, &tcFrame);
+      }
+      break;
+    }
+  }
+
+  // It seems like selCon->ScrollSelectionIntoView should be enough, but it's
+  // not. The problem is that scrolling the selection into view when it is
+  // below the current viewport will align the top line of the frame exactly
+  // with the bottom of the window. This is fine, BUT, the popup event causes
+  // the control to be re-focused which does this exact call to
+  // ScrollFrameIntoView, which has a one-pixel disagreement of whether the
+  // frame is actually in view. The result is that the frame is aligned with
+  // the top of the window, but the menu is still at the bottom.
+  //
+  // Doing this call first forces the frame to be in view, eliminating the
+  // problem. The only difference in the result is that if your cursor is in
+  // an edit box below the current view, you'll get the edit box aligned with
+  // the top of the window. This is arguably better behavior anyway.
+  if (frame) {
+    rv = aShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
+                                     NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  }
+
+  // Actually scroll the selection (ie caret) into view. Note that this must
+  // be synchronous since we will be checking the caret position on the screen.
+  //
+  // Be easy about errors, and just don't scroll in those cases. Better to have
+  // the correct menu at a weird place than the wrong menu.
+  nsCOMPtr<nsISelectionController> selCon;
+  if (tcFrame)
+    tcFrame->GetSelectionContr(getter_AddRefs(selCon));
+  else
+    selCon = do_QueryInterface(aShell);
+  if (selCon) {
+    rv = selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+        nsISelectionController::SELECTION_FOCUS_REGION, PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  }
+
+  // get caret position relative to some view (normally the same as the
+  // event widget view, but this is not guaranteed)
+  PRBool isCollapsed;
+  nsIView* view;
+  nsRect caretCoords;
+  rv = caret->GetCaretCoordinates(nsICaret::eRenderingViewCoordinates,
+                                  domSelection, &caretCoords, &isCollapsed,
+                                  &view);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  // in case the view used for caret coordinates was something else, we need
+  // to bring those coordinates into the space of the widget view
+  nsIView* widgetView = nsIView::GetViewFor(aEventWidget);
+  nsPoint viewToWidget;
+  widgetView->GetNearestWidget(&viewToWidget);
+  nsPoint viewDelta = view->GetOffsetTo(widgetView) + viewToWidget;
+
+  // caret coordinates are in twips, convert to pixels
+  float t2p = aShell->GetPresContext()->TwipsToPixels();
+  aTargetPt.x = NSTwipsToIntPixels(viewDelta.x + caretCoords.x + caretCoords.width, t2p);
+  aTargetPt.y = NSTwipsToIntPixels(viewDelta.y + caretCoords.y + caretCoords.height, t2p);
+
+  return PR_TRUE;
 }
 
 // Get coordinates relative to root view for element, 
