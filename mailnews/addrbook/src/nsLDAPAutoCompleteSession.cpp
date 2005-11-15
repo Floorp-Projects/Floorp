@@ -281,14 +281,14 @@ nsLDAPAutoCompleteSession::OnStopLookup()
         // Abandon the operation, if there is one
         //
         if (mOperation) {
-            nsresult rv = mOperation->Abandon();
+            nsresult rv = mOperation->AbandonExt();
 
             if (NS_FAILED(rv)) {
                 // since there's nothing interesting that can or should be
                 // done if this abandon failed, warn about it and move on
                 //
                 NS_WARNING("nsLDAPAutoCompleteSession::OnStopLookup(): "
-                           "error calling mOperation->Abandon()");
+                           "error calling mOperation->AbandonExt()");
             }
 
             // force nsCOMPtr to release mOperation
@@ -899,6 +899,28 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
         return NS_ERROR_UNEXPECTED;
     }
 
+    // set the server and client controls on the operation
+    if (mSearchServerControls) {
+        rv = mOperation->SetServerControls(mSearchServerControls);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPAutoCompleteSession::StartLDAPSearch(): couldn't "
+                     "initialize LDAP search operation server controls");
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
+                                     BOUND);
+            return NS_ERROR_UNEXPECTED;
+        }
+    }
+    if (mSearchClientControls) {
+        rv = mOperation->SetClientControls(mSearchClientControls);
+        if (NS_FAILED(rv)) {
+            NS_ERROR("nsLDAPAutoCompleteSession::StartLDAPSearch(): couldn't "
+                     "initialize LDAP search operation client controls");
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
+                                     BOUND);
+            return NS_ERROR_UNEXPECTED;
+        }
+    }
+
     // get the search filter associated with the directory server url; 
     // it will be ANDed with the rest of the search filter that we're using.
     //
@@ -1017,13 +1039,31 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
         return NS_ERROR_UNEXPECTED;
     }
 
+    // take the relevant controls on this object and set them
+    // on the operation
+    rv = mOperation->SetServerControls(mSearchServerControls.get());
+    if ( NS_FAILED(rv) ){
+        mState = BOUND;
+        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
+                                 BOUND);
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    rv = mOperation->SetClientControls(mSearchClientControls.get());
+    if ( NS_FAILED(rv) ){
+        mState = BOUND;
+        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
+                                 BOUND);
+        return NS_ERROR_UNEXPECTED;
+    }
+
     // time to kick off the search.
     //
     // XXXdmose what about timeouts? 
     //
     rv = mOperation->SearchExt(dn, scope, searchFilter, mSearchAttrsSize,
-                               NS_CONST_CAST(const char **, mSearchAttrs), 0,
-                               mMaxHits);
+                               NS_CONST_CAST(const char **, mSearchAttrs),
+                               0, mMaxHits);
     if (NS_FAILED(rv)) {
         switch(rv) {
 
@@ -1584,6 +1624,34 @@ nsLDAPAutoCompleteSession::SetVersion(PRUint32 aVersion)
     }
 
     mVersion = aVersion;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::GetSearchServerControls(nsIMutableArray **aControls)
+{
+    NS_IF_ADDREF(*aControls = mSearchServerControls);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::SetSearchServerControls(nsIMutableArray *aControls)
+{
+    mSearchServerControls = aControls;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLDAPAutoCompleteSession::GetSearchClientControls(nsIMutableArray **aControls)
+{
+    NS_IF_ADDREF(*aControls = mSearchClientControls);
+    return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsLDAPAutoCompleteSession::SetSearchClientControls(nsIMutableArray *aControls)
+{
+    mSearchClientControls = aControls;
     return NS_OK;
 }
 
