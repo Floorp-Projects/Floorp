@@ -61,9 +61,9 @@ mozStorageService::~mozStorageService()
 #define NS_APP_STORAGE_50_FILE "UStor"
 #endif
 
-/* mozIStorageConnection getProfileStorage (in string aStorageKey); */
+/* mozIStorageConnection openSpecialDatabase(in string aStorageKey); */
 NS_IMETHODIMP
-mozStorageService::GetProfileStorage(const char *aStorageKey, mozIStorageConnection **_retval)
+mozStorageService::OpenSpecialDatabase(const char *aStorageKey, mozIStorageConnection **_retval)
 {
     nsresult rv;
 

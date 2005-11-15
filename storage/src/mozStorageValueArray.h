@@ -62,7 +62,7 @@ public:
 
 private:
     sqlite3_stmt *mSqliteStatement;
-    PRUint32 mNumColumns;
+    PRUint32 mNumEntries;
 };
 
 class mozStorageArgvValueArray : public mozIStorageValueArray

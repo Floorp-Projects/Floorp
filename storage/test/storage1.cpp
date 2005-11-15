@@ -92,10 +92,6 @@ main (int argc, char **argv)
     rv = dbConn->CreateStatement (NS_LITERAL_CSTRING("SELECT i FROM foo"), getter_AddRefs(dbFooSelectStatement));
     TEST_CHECK_ERROR(rv);
 
-    rv = dbConn->CreateTrigger("foo_trig", mozIStorageConnection::TRIGGER_EVENT_INSERT,
-                               "foo", "x_test", "1");
-    TEST_CHECK_ERROR(rv);
-
     for (int i = 0; i < 10; i++) {
         rv = dbFooInsertStatement->BindInt32Parameter (0, i);
         TEST_CHECK_ERROR(rv);
@@ -119,23 +115,4 @@ main (int argc, char **argv)
 
     TEST_CHECK_ERROR(rv);
     fprintf (stderr, "Done. %d 0x%08x %p\n", rv, rv, dbRow.get());
-
-#if 0
-    // try an enumerator
-    fprintf (stderr, "Trying via an enumerator\n");
-
-    nsCOMPtr<nsISimpleEnumerator> dbEnum;
-
-    (void) dbFooSelectStatement->Reset ();
-    rv = dbFooSelectStatement->ExecuteEnumerator (getter_AddRefs(dbEnum));
-    TEST_CHECK_ERROR(rv);
-
-    PRBool b;
-    while ((dbEnum->HasMoreElements(&b) == NS_OK) && b) {
-        dbEnum->GetNext (getter_AddRefs (dbRow));
-        PRUint32 len;
-        dbRow->GetLength (&len);
-        fprintf (stderr, "Row[length %d]: %d '%s'\n", len, dbRow->AsInt32(0), dbRow->AsSharedCString(0, 0));
-    }
-#endif
 }

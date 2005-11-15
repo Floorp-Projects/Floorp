@@ -51,76 +51,73 @@ interface mozIStorageStatement : mozIStorageValueArray {
    * Initialize this query with the given SQL statement.
    *
    */
-  void initialize (in mozIStorageConnection aDBConnection, in AUTF8String aSQLStatement);
+  void initialize(in mozIStorageConnection aDBConnection,
+                  in AUTF8String aSQLStatement);
 
-  mozIStorageStatement clone ();
+  /**
+   * Create a clone of this statement, by initializing a new statement
+   * with the same connection and same SQL statement as this one.  It
+   * does not preserve statement state; that is, if a statement is
+   * being executed when it is cloned, the new statement will not be
+   * executing.
+   */
+  mozIStorageStatement clone();
 
   /*
    * Number of parameters
    */
   readonly attribute unsigned long parameterCount;
 
-  /*
+  /**
    * Name of nth parameter, if given
    */
   AUTF8String getParameterName(in unsigned long aParamIndex);
 
-  /*
-   * Indexes of named parameter
+  /**
+   * All indexes of a named parameter, if it's specified more than once
    */
-  void getParameterIndexes(in AUTF8String aParameterName,
-                           out unsigned long aCount,
-                           [array,size_is(aCount),retval] out unsigned long aIndexes);
-  /*
+  void getParameterIndexes
+    (in AUTF8String aParameterName,
+     out unsigned long aCount,
+     [array,size_is(aCount),retval] out unsigned long aIndexes);
+
+  /**
    * Number of columns returned
    */
   readonly attribute unsigned long columnCount;
 
-  /*
+  /**
    * Name of nth column
    */
   AUTF8String getColumnName(in unsigned long aColumnIndex);
 
-  /*
+  /**
    * Reset parameters/statement execution
    */
-  void reset ();
-
-  /*
-   * Parameter binding
-   */
-  void bindCStringParameter (in unsigned long aParamIndex, in string aValue);
-  void bindUTF8StringParameter (in unsigned long aParamIndex, in AUTF8String aValue);
-
-  void bindWStringParameter (in unsigned long aParamIndex, in wstring aValue);
-  void bindStringParameter (in unsigned long aParamIndex, in AString aValue);
-
-  void bindDoubleParameter (in unsigned long aParamIndex, in double aValue);
-  void bindInt32Parameter (in unsigned long aParamIndex, in long aValue);
-  void bindInt64Parameter (in unsigned long aParamIndex, in long long aValue);
-
-  void bindNullParameter (in unsigned long aParamIndex);
-
-  void bindDataParameter (in unsigned long aParamIndex, [array,const,size_is(aValueSize)] in octet aValue, in unsigned long aValueSize);
-
-  // void bindParameters (in string aFormatString, ...);
+  void reset();
 
   /**
-   * Execute the query, ignoring any results.  This is accomplished
-   * by calling step() once, and then calling reset().
+   * Bind the given value to the parameter at aParamIndex.
+   */
+  void bindUTF8StringParameter(in unsigned long aParamIndex,
+                               in AUTF8String aValue);
+  void bindStringParameter(in unsigned long aParamIndex, in AString aValue);
+  void bindDoubleParameter(in unsigned long aParamIndex, in double aValue);
+  void bindInt32Parameter(in unsigned long aParamIndex, in long aValue);
+  void bindInt64Parameter(in unsigned long aParamIndex, in long long aValue);
+  void bindNullParameter(in unsigned long aParamIndex);
+  void bindBlobParameter(in unsigned long aParamIndex,
+                         [array,const,size_is(aValueSize)] in octet aValue,
+                         in unsigned long aValueSize);
+
+  /**
+   * Execute the query, ignoring any results.  This is accomplished by
+   * calling step() once, and then calling reset().
    *
    * Error and last insert info, etc. are available from
    * the mozStorageConnection.
    */
-  void execute ();
-
-  /**
-   * Execute the query, using any currently-bound parameters.
-   *
-   * @returns a mozIStorageDataSet containing all the rows of the query
-   * result.
-   */
-  mozIStorageDataSet executeDataSet ();
+  void execute();
 
   /**
    * Execute a query, using any currently-bound parameters.  Reset
@@ -132,7 +129,7 @@ interface mozIStorageStatement : mozIStorageValueArray {
    * the statement.
    *
    */
-  boolean executeStep ();
+  boolean executeStep();
 
   /**
    * The current state.  Row getters are only valid while
