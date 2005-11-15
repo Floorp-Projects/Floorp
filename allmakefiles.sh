@@ -1166,6 +1166,7 @@ embedding/components/profilesharingsetup/src/Makefile
         modules/libpr0n/decoders/xbm/Makefile
         modules/libpr0n/encoders/Makefile
         modules/libpr0n/encoders/png/Makefile
+        modules/libpr0n/encoders/jpeg/Makefile
 "
 
     MAKEFILES_accessible="
