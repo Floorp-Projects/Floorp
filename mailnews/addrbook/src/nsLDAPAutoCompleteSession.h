@@ -24,6 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAutoCompleteSession.h"
 #include "nsILDAPConnection.h"
+#include "nsILDAPOperation.h"
 #include "nsILDAPMessageListener.h"
 #include "nsILDAPAutoCompleteSession.h"
 #include "nsILDAPAutoCompFormatter.h"
