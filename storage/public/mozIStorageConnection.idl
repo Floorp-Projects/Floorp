@@ -49,7 +49,7 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(623b8b2e-c9f9-4cc3-b15a-f3c96df2cc1c)]
+[scriptable, uuid(e045e635-94af-48af-9a8d-80f1a88a35f3)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status

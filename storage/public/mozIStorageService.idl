@@ -48,7 +48,7 @@ interface nsIFile;
  *
  * This is the only way to open a database connection.
  */
-[scriptable, uuid(22cff01c-1a5a-4b11-9e27-f8f832226489)]
+[scriptable, uuid(a4a0cad9-e0da-4379-bee4-2feef3dddc7e)]
 interface mozIStorageService : nsISupports {
   /**
    * Get a connection to a named special database storage.

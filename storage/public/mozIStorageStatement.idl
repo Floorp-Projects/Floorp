@@ -45,7 +45,7 @@ interface nsISimpleEnumerator;
 
 [ptr] native sqlite3stmtptr(struct sqlite3_stmt);
 
-[scriptable, uuid(656aa634-36e2-4977-802e-79bce39c1024)]
+[scriptable, uuid(1f39bc95-090d-40a5-9dee-6d5a591e48bf)]
 interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Initialize this query with the given SQL statement.
