@@ -35,8 +35,8 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIProxyObjectManager.h"
-#include "nsString.h"
 #include "nsILDAPURL.h"
+#include "nsILDAPService.h"
 #include "nsXPIDLString.h"
 #include "nspr.h"
 #include "nsLDAP.h"
@@ -49,7 +49,9 @@ NS_IMPL_ISUPPORTS3(nsLDAPAutoCompleteSession, nsIAutoCompleteSession,
                    nsILDAPMessageListener, nsILDAPAutoCompleteSession)
 
 nsLDAPAutoCompleteSession::nsLDAPAutoCompleteSession() :
-    mState(UNBOUND), mMaxHits(100), mMinStringLength(0)
+    mState(UNBOUND), 
+    mFilterTemplate(NS_LITERAL_STRING("(|(cn=%v*)(mail=%v*)(sn=%v*))")),
+    mMaxHits(100), mMinStringLength(0)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -852,18 +854,80 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
         return NS_ERROR_UNEXPECTED;
     }
 
-    // XXXdmose process the mFilterTemplate here; ensuring that it's been set.
-    // This is waiting on substring replacement code, bug 74896.  Note that
-    // we need to vet the input text for special LDAP filter chars lik
-    // '|', '(', etc.
+    // get the search filter associated with the directory server url; 
+    // it will be ANDed with the rest of the search filter that we're using.
     //
-    nsCAutoString searchFilter("(|(cn=");
-    searchFilter.Append(NS_ConvertUCS2toUTF8(mSearchString));
-    searchFilter.Append("*)(sn=");
-    searchFilter.Append(NS_ConvertUCS2toUTF8(mSearchString));
-    searchFilter.Append("*))");
+    nsXPIDLCString urlFilter;
+    rv = mServerURL->GetFilter(getter_Copies(urlFilter));
+    if ( NS_FAILED(rv) ){
+        mState = BOUND;
+        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+        return NS_ERROR_UNEXPECTED;
+    }
 
-    // create a result set 
+    // get the LDAP service, since createFilter is called through it.
+    //
+    nsCOMPtr<nsILDAPService> ldapSvc = do_GetService(
+        "@mozilla.org/network/ldap-service;1", &rv);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPAutoCompleteSession::StartLDAPSearch(): couldn't "
+                 "get @mozilla.org/network/ldap-service;1");
+        mState = BOUND;
+        FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+        return NS_ERROR_FAILURE;
+    }
+
+    // if urlFilter is unset (or set to the default "objectclass=*"), there's
+    // no need to AND in an empty search term, so leave prefix and suffix empty
+    //
+    nsAutoString prefix, suffix;
+    if (urlFilter[0] != 0 && nsCRT::strcmp(urlFilter, "(objectclass=*)")) {
+        prefix = NS_LITERAL_STRING("(&") + NS_ConvertUTF8toUCS2(urlFilter);
+        suffix = PRUnichar(')');
+    }
+
+    // generate an LDAP search filter from mFilterTemplate.  If it's unset,
+    // use the default.
+    //
+#define MAX_AUTOCOMPLETE_FILTER_SIZE 1024
+    nsAutoString searchFilter;
+    rv = ldapSvc->CreateFilter(MAX_AUTOCOMPLETE_FILTER_SIZE, mFilterTemplate,
+                               prefix, suffix, NS_LITERAL_STRING(""), 
+                               mSearchString, searchFilter);
+    if (NS_FAILED(rv)) {
+        switch(rv) {
+
+        case NS_ERROR_OUT_OF_MEMORY:
+            mState=BOUND;
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+            return rv;
+
+        case NS_ERROR_NOT_AVAILABLE:
+            PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+                   ("nsLDAPAutoCompleteSession::StartLDAPSearch(): "
+                    "createFilter generated filter longer than max filter "
+                    "size of %d", MAX_AUTOCOMPLETE_FILTER_SIZE));
+            mState=BOUND;
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+            return rv;
+
+        case NS_ERROR_INVALID_ARG:
+        case NS_ERROR_UNEXPECTED:
+        default:
+
+            // all this stuff indicates code bugs
+            //
+            NS_ERROR("nsLDAPAutoCompleteSession::StartLDAPSearch(): "
+                     "createFilter returned unexpected value");
+
+            mState=BOUND;
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
+            return NS_ERROR_UNEXPECTED;
+        }
+
+    }
+
+    // create a result set
     //
     mResults = do_CreateInstance(NS_AUTOCOMPLETERESULTS_CONTRACTID, &rv);
 
@@ -918,8 +982,7 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     //          attributes. requires tweaking SearchExt.
     //
     rv = mOperation->SearchExt(NS_ConvertUTF8toUCS2(dn).get(), scope, 
-                               NS_ConvertUTF8toUCS2(searchFilter).get(),
-                               0, 0, 0, mMaxHits);
+                               searchFilter.get(), 0, 0, 0, mMaxHits);
     if (NS_FAILED(rv)) {
         switch(rv) {
 
