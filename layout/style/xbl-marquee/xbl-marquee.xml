@@ -427,7 +427,9 @@
                 break;
               case "truespeed":
                 //needed to update this._scrollDelay
-                setTimeout(function(x){ x._set_scrollDelay(x.getAttribute('scrolldelay'), false); }, 0, this);              
+                var myThis = this;
+                var lambda = function() {myThis._set_scrollDelay(myThis.getAttribute('scrolldelay'), false);}
+                window.setTimeout(lambda, 0);
                 break;
               case "behavior":
                 this._set_behavior(newValue, canGenerateError);
