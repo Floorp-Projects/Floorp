@@ -38,6 +38,7 @@
 #include "nsILDAPURL.h"
 #include "nsILDAPService.h"
 #include "nsXPIDLString.h"
+#include "nsReadableUtils.h"
 #include "nspr.h"
 #include "nsLDAP.h"
 
@@ -1170,7 +1171,7 @@ nsLDAPAutoCompleteSession::GetFilterTemplate(PRUnichar * *aFilterTemplate)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *aFilterTemplate = mFilterTemplate.ToNewUnicode();
+    *aFilterTemplate = ToNewUnicode(mFilterTemplate);
     if (!*aFilterTemplate) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
