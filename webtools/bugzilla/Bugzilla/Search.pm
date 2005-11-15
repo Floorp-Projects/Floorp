@@ -880,7 +880,7 @@ sub init {
              $f = "setters_$chartid.login_name";
          },
          
-         "^changedin," => sub {
+         "^(changedin|days_elapsed)," => sub {
              $f = "(" . $dbh->sql_to_days('NOW()') . " - " .
                         $dbh->sql_to_days('bugs.delta_ts') . ")";
          },

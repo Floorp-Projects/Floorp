@@ -1712,9 +1712,6 @@ AddFDef("attachments.isprivate", "Attachment is private", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
 AddFDef("creation_ts", "Creation date", 0);
 AddFDef("delta_ts", "Last changed date", 0);
-AddFDef("(" . $dbh->sql_to_days('NOW()') . " - " .
-              $dbh->sql_to_days('bugs.delta_ts') . ")",
-        "Days since bug changed", 0);
 AddFDef("longdesc", "Comment", 0);
 AddFDef("alias", "Alias", 0);
 AddFDef("everconfirmed", "Ever Confirmed", 0);
@@ -1743,6 +1740,65 @@ AddFDef("content", "Content", 0);
 $dbh->do("DELETE FROM fielddefs WHERE name='attachments.thedata'");
 AddFDef("attach_data.thedata", "Attachment data", 0);
 AddFDef("attachments.isurl", "Attachment is a URL", 0);
+
+# 2005-11-13 LpSolit@gmail.com - Bug 302599
+# One of the field names was a fragment of SQL code, which is DB dependent.
+# We have to rename it to a real name, which is DB independent.
+my $new_field_name = 'days_elapsed';
+my $field_description = 'Days since bug changed';
+
+my ($old_field_id, $old_field_name) =
+    $dbh->selectrow_array('SELECT fieldid, name
+                           FROM fielddefs
+                           WHERE description = ?',
+                           undef, $field_description);
+
+if ($old_field_id && ($old_field_name ne $new_field_name)) {
+    print "SQL fragment found in the 'fielddefs' table...\n";
+    print "Old field name: " . $old_field_name . "\n";
+    # We have to fix saved searches first. Queries have been escaped
+    # before being saved. We have to do the same here to find them.
+    $old_field_name = url_quote($old_field_name);
+    my $broken_named_queries =
+        $dbh->selectall_arrayref('SELECT userid, name, query
+                                  FROM namedqueries WHERE ' .
+                                  $dbh->sql_istrcmp('query', '?', 'LIKE'),
+                                  undef, "%=$old_field_name%");
+
+    my $sth_UpdateQueries = $dbh->prepare('UPDATE namedqueries SET query = ?
+                                           WHERE userid = ? AND name = ?');
+
+    print "Fixing saved searches...\n" if scalar(@$broken_named_queries);
+    foreach my $named_query (@$broken_named_queries) {
+        my ($userid, $name, $query) = @$named_query;
+        $query =~ s/=\Q$old_field_name\E(&|$)/=$new_field_name$1/gi;
+        $sth_UpdateQueries->execute($query, $userid, $name);
+    }
+
+    # We now do the same with saved chart series.
+    my $broken_series =
+        $dbh->selectall_arrayref('SELECT series_id, query
+                                  FROM series WHERE ' .
+                                  $dbh->sql_istrcmp('query', '?', 'LIKE'),
+                                  undef, "%=$old_field_name%");
+
+    my $sth_UpdateSeries = $dbh->prepare('UPDATE series SET query = ?
+                                          WHERE series_id = ?');
+
+    print "Fixing saved chart series...\n" if scalar(@$broken_series);
+    foreach my $series (@$broken_series) {
+        my ($series_id, $query) = @$series;
+        $query =~ s/=\Q$old_field_name\E(&|$)/=$new_field_name$1/gi;
+        $sth_UpdateSeries->execute($query, $series_id);
+    }
+
+    # Now that saved searches have been fixed, we can fix the field name.
+    print "Fixing the 'fielddefs' table...\n";
+    print "New field name: " . $new_field_name . "\n";
+    $dbh->do('UPDATE fielddefs SET name = ? WHERE fieldid = ?',
+              undef, ($new_field_name, $old_field_id));
+}
+AddFDef($new_field_name, $field_description, 0);
 
 ###########################################################################
 # Detect changed local settings
