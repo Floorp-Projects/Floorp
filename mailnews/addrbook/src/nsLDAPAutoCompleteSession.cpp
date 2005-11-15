@@ -870,6 +870,14 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
                                      BOUND);
             return NS_OK;
 
+        case NS_ERROR_LDAP_FILTER_ERROR:
+            PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
+                   ("nsLDAPAutoCompleteSession::StartLDAPSearch(): SearchExt "
+                    "returned NS_ERROR_LDAP_FILTER_ERROR"));
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
+                                     BOUND);
+            return NS_OK;
+
         case NS_ERROR_LDAP_SERVER_DOWN:
             // XXXdmose discuss with leif how to handle this in general in the 
             // LDAP XPCOM SDK.  
@@ -895,7 +903,7 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
             //
             NS_ERROR("nsLDAPAutoCompleteSession::StartLDAPSearch(): SearchExt "
                      "returned unexpected value");
-            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, 0, 
+            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failureItems, rv, 
                                      BOUND);
             return NS_ERROR_UNEXPECTED;
         }
