@@ -30,6 +30,7 @@
 //
 #if !defined(XP_MAC) || defined(MOZ_LDAP_XPCOM)
 
+#include "nsString.h"
 #include "nsLDAPAutoCompleteSession.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -484,7 +485,7 @@ nsLDAPAutoCompleteSession::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     // just use the first value for the email attribute; subsequent values
     // are ignored.  XXXdmose should do better than this; bug 76595.
     //
-    rv = item->SetValue(value.get());
+    rv = item->SetValue(value);
     if (NS_FAILED(rv)) {
         NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
                  "item->SetValue failed");
