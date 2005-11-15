@@ -117,19 +117,8 @@ nsLDAPAutoCompleteSession::OnStartLookup(const PRUnichar *searchString,
         return NS_ERROR_FAILURE;
     }
 
-    // if mOutputFormat is unset, set it to our default, using the 
-    // XPCOM setter so that the internal array will be built up
-    //
-    if (mOutputFormat.IsEmpty()) {
-        rv = SetOutputFormat(NS_LITERAL_STRING("[cn] <{mail}>").get());
-        if (NS_FAILED(rv)) {
-            // if we got here, we've either hit a bug or run out of memory
-            // in either case, we're screwed.  In a debug build, something
-            // will have already been logged.  Time to bail out.
-            FinishAutoCompleteLookup(nsIAutoCompleteStatus::failed);
-            return NS_ERROR_FAILURE;
-        }
-    }
+    NS_ASSERTION(mFormatter, "nsLDAPAutoCompleteSession::OnStartLookup(): "
+                 "formatter attribute has not been set");
 
     // see if this is a narrow search that we could potentially do locally
     //
@@ -461,8 +450,6 @@ nsLDAPAutoCompleteSession::OnLDAPBind(nsILDAPMessage *aMessage)
 nsresult
 nsLDAPAutoCompleteSession::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 {
-    nsresult rv;        // temporary for return vals
-
     PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG, 
            ("nsLDAPAutoCompleteSession::OnLDAPSearchEntry entered\n"));
 
@@ -473,43 +460,22 @@ nsLDAPAutoCompleteSession::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
                  "nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
                  "mResultsArrayItems is uninitialized");
 
-    nsAutoString value;
-    rv = ProcessOutputFormat(mOutputFormat, aMessage, &value, 0);
-    if (NS_FAILED(rv)) {
-        // Something went wrong lower down the stack; a message should have 
-        // already been logged there.  Return an error (which ultimately gets
-        // ignored, since this is being called through an async proxy).  But
-        // the important thing is that we're bailing out here rather than 
-        // trying to generate a bogus nsIAutoCompleteItem
-        //
-        return NS_ERROR_FAILURE;
-    }
+    // Errors in this method return an error (which ultimately gets
+    // ignored, since this is being called through an async proxy).
+    // But the important thing is that we're bailing out here rather
+    // than trying to generate a bogus nsIAutoCompleteItem.  Also note
+    // that FinishAutoCompleteLookup is _NOT_ being called here, because
+    // this error may just have to do with this particular item.
 
-    // create an nsIAutoCompleteItem to hold the returned value
+    // generate an autocomplete item from this message by calling the
+    // formatter
     //
-    nsCOMPtr<nsIAutoCompleteItem> item = do_CreateInstance(
-        NS_AUTOCOMPLETEITEM_CONTRACTID, &rv);
-
+    nsCOMPtr<nsIAutoCompleteItem> item;
+    nsresult rv = mFormatter->Format(aMessage, getter_AddRefs(item));
     if (NS_FAILED(rv)) {
-        NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchEntry couldn't"
-                 " create " NS_AUTOCOMPLETEITEM_CONTRACTID "\n");
-
-        // don't call FinishAutoCompleteLookup(), as this could conceivably 
-        // be an anomaly, and perhaps the next message will be ok.  if this
-        // really was a problem, this search should eventually get
-        // reaped by a timeout (once that code gets implemented).
-        //
-        return NS_ERROR_FAILURE;
-    }
-
-    // just use the first value for the email attribute; subsequent values
-    // are ignored.  XXXdmose should do better than this; bug 76595.
-    //
-    rv = item->SetValue(value);
-    if (NS_FAILED(rv)) {
-        NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
-                 "item->SetValue failed");
-
+        PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_DEBUG,
+               ("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
+                "mFormatter->Format() failed"));
         return NS_ERROR_FAILURE;
     }
 
@@ -525,267 +491,6 @@ nsLDAPAutoCompleteSession::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     mEntriesReturned++;
 
     return NS_OK;
-}
-
-// parse and process the outputFormat attribute.  If aStringArray is
-// non-NULL, return a list of the attributes from mOutputFormat in
-// aStringArray.  Otherwise, generate an autocomplete value from the
-// information in aMessage and append it to aValue.  Any errors
-// (including failure to find a required attribute while building up aValue) 
-// return an NS_ERROR_* up the stack so that the caller doesn't try and
-// generate an nsIAutoCompleteItem from this.
-//
-nsresult
-nsLDAPAutoCompleteSession::ProcessOutputFormat(
-    nsAReadableString &aOutputFormat, nsILDAPMessage *aMessage,
-    nsAWritableString *aValue, nsCStringArray *aAttrs)
-{
-    nsresult rv;    // temp for return values
-
-    // get some iterators to parse aOutputFormat
-    //
-    nsReadingIterator<PRUnichar> iter, iterEnd;
-    aOutputFormat.BeginReading(iter);
-    aOutputFormat.EndReading(iterEnd);
-
-    // get the console service for error logging
-    //
-    nsCOMPtr<nsIConsoleService> consoleSvc = 
-        do_GetService("@mozilla.org/consoleservice;1", &rv);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("nsLDAPAutoCompleteSession::ProcessOutputFormat(): "
-                   "couldn't get console service");
-    }
-
-    PRBool attrRequired = PR_FALSE;     // is this attr required or optional?
-    nsCAutoString attrName;             // current attr to get
-
-    // parse until we hit the end of the string
-    //
-    while (iter != iterEnd) {
-
-        switch (*iter) {            // process the next char
-
-        case PRUnichar('{'):
-
-            attrRequired = PR_TRUE;  // this attribute is required
-
-            /*FALLTHROUGH*/
-
-        case PRUnichar('['):
-
-            rv = ParseAttrName(iter, iterEnd, attrRequired, consoleSvc, 
-                               attrName);
-            if ( NS_FAILED(rv) ) {
-
-                // something unrecoverable happened; stop parsing and 
-                // propagate the error up the stack
-                //
-                return rv;
-            }
-
-            // if we're building an array
-            if ( aAttrs ) { 
-
-                // and it doesn't already contain this string
-                if (aAttrs->IndexOfIgnoreCase(attrName) == -1) { 
-
-                    // add it
-                    if (!aAttrs->AppendCString(attrName)) {
-                        
-                        // current AppendCString always returns PR_TRUE;
-                        // if we hit this error, something has changed in
-                        // that code
-                        //
-                        NS_ERROR(
-                            "nsLDAPAutoCompleteSession::ProcessOutputFormat():"
-                            " aAttrs->AppendCString(attrName) failed");
-                        return NS_ERROR_UNEXPECTED;
-                    }
-                }
-            } else {
-
-                // otherwise, append the first value of this attr to aValue
-
-                rv = AppendFirstAttrValue(attrName, aMessage, attrRequired, 
-                                          *aValue);
-                if ( NS_FAILED(rv) ) {
-
-                    // something unrecoverable happened; stop parsing and 
-                    // propagate the error up the stack
-                    //
-                    return NS_ERROR_FAILURE;
-                }
-            }
-
-            attrName.Truncate();     // clear out for next pass
-            attrRequired = PR_FALSE; // reset to the default for the next pass
-
-            break;
-
-        case PRUnichar('\\'):
-
-            // advance the iterator and be sure we haven't run off the end
-            //
-            ++iter;
-            if (iter == iterEnd) {
-
-                // abort; missing escaped char
-                //
-                if (consoleSvc) {
-                    consoleSvc->LogStringMessage(
-                        NS_LITERAL_STRING(
-                            "LDAP autocomplete session: error parsing outputFormat: premature end of string after \\ escape").get());
-
-                    NS_ERROR("LDAP autocomplete session: error parsing "
-                             "outputFormat: premature end of string after \\ "
-                             "escape");
-                }
-
-                return NS_ERROR_ILLEGAL_VALUE;
-            }
-
-            /*FALLTHROUGH*/
-
-        default:
-            
-            // if we're not just building an array of attribute names, append
-            // this character to the item we're generating.
-            //
-            if (!aAttrs) {
-
-                // this character gets treated as a literal
-                //
-                (*aValue).Append(*iter);
-            }
-        }
-
-        ++iter; // advance the iterator
-    }
-
-    return NS_OK;
-}
-
-nsresult 
-nsLDAPAutoCompleteSession::ParseAttrName(
-    nsReadingIterator<PRUnichar> &aIter,        // iterators for mOutputString
-    nsReadingIterator<PRUnichar> &aIterEnd, 
-    PRBool aAttrRequired,                       // required?  or just optional?
-    nsCOMPtr<nsIConsoleService> &aConsoleSvc,   // no need to reacquire this
-    nsAWritableCString &aAttrName)              // attribute token
-{
-    // reset attrname, and move past the opening brace
-    //
-    ++aIter;
-
-    // get the rest of the attribute name
-    //
-    do {
-
-        // be sure we haven't run off the end
-        //
-        if (aIter == aIterEnd) {
-
-            // abort; missing closing delimiter
-            //
-            if (aConsoleSvc) {
-                aConsoleSvc->LogStringMessage(
-                    NS_LITERAL_STRING(
-                        "LDAP autocomplete session: error parsing outputFormat: missing } or ]").get());
-
-                NS_ERROR("LDAP autocomplete session: error parsing "
-                         "outputFormat: missing } or ]");
-            }
-
-            return NS_ERROR_ILLEGAL_VALUE;
-
-        } else if ( (aAttrRequired && *aIter == PRUnichar('}')) || 
-                    (!aAttrRequired && *aIter == PRUnichar(']')) ) {
-
-            // done with this attribute
-            //
-            break;
-
-        } else {
-
-            // this must be part of the attribute name
-            //
-            aAttrName.Append(char(*aIter));
-        }
-
-        ++aIter;
-
-    } while (1);
-
-    return NS_OK;
-}
-
-nsresult
-nsLDAPAutoCompleteSession::AppendFirstAttrValue(
-    nsAReadableCString &aAttrName, // attr to get
-    nsILDAPMessage *aMessage,      // msg to get values from
-    PRBool aAttrRequired,          // is this a required value?
-    nsAWritableString &aValue)
-{
-    // get the attribute values for the field which will be used 
-    // to fill in nsIAutoCompleteItem::value
-    //
-    PRUint32 numVals;
-    PRUnichar **values;
-
-    nsresult rv;
-    rv = aMessage->GetValues(PromiseFlatCString(aAttrName).get(), &numVals, 
-                             &values);
-    if (NS_FAILED(rv)) {
-
-        switch (rv) {
-        case NS_ERROR_LDAP_DECODING_ERROR:
-            // this may not be an error, per se; it could just be that the 
-            // requested attribute does not exist in this particular message,
-            // either because we didn't request it with the search operation,
-            // or because it doesn't exist on the server.
-            //
-            PR_LOG(sLDAPAutoCompleteLogModule, PR_LOG_WARNING,
-                   ("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
-                    "couldn't decode '%s' attribute", 
-                    PromiseFlatCString(aAttrName).get()));
-            break;
-
-        case NS_ERROR_OUT_OF_MEMORY:
-        case NS_ERROR_UNEXPECTED:
-            break;
-
-        default:
-            NS_ERROR("nsLDAPAutoCompleteSession::OnLDAPSearchEntry(): "
-                     "unexpected return code from aMessage->getValues()");
-            rv = NS_ERROR_UNEXPECTED;
-            break;
-        }
-
-        // if this was a required attribute, don't append anything to aValue
-        // and return the error code
-        //
-        if (aAttrRequired) {
-            return rv;
-        } else {
-            // otherwise forget about this attribute, but return NS_OK, which
-            // will cause our caller to continue processing outputFormat in 
-            // order to generate an nsIAutoCompleteItem.
-            //
-            return NS_OK;
-        }
-    }
-
-    // append the value to our string; then free the array of results
-    //
-    aValue.Append(values[0]);
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numVals, values);
-
-    // if this attribute wasn't required, we fall through to here, and return 
-    // ok
-    //
-    return NS_OK;
-
 }
 
 nsresult
@@ -1315,74 +1020,6 @@ nsLDAPAutoCompleteSession::SetFilterTemplate(const PRUnichar * aFilterTemplate)
     return NS_OK;
 }
 
-// attribute wstring outputFormat;
-NS_IMETHODIMP 
-nsLDAPAutoCompleteSession::GetOutputFormat(PRUnichar * *aOutputFormat)
-{
-    if (!aOutputFormat) {
-        return NS_ERROR_NULL_POINTER;
-    }
-
-    *aOutputFormat = mOutputFormat.ToNewUnicode();
-    if (!*aOutputFormat) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return NS_OK;
-}
-NS_IMETHODIMP 
-nsLDAPAutoCompleteSession::SetOutputFormat(const PRUnichar * aOutputFormat)
-{
-    // set up an array of search attributes to be used in any calls to 
-    // nsLDAPOperation::SearchExt().  This also allows any errors in 
-    // aOutputFormat to be caught sooner, rather than later.
-    //
-    nsCStringArray searchAttrs;
-    nsresult rv = ProcessOutputFormat(nsDependentString(aOutputFormat), 0, 0,
-                                      &searchAttrs);
-    if (NS_FAILED(rv)) {
-        NS_WARNING("nsLDAPAutoCompleteSession::SetOutputFormat(): "
-                   "ProcessOutputFormat() failed");
-        return rv;
-    }
-
-    // build up the raw XPCOM array that we'll be passing to 
-    // SearchExt()
-    //
-    PRUint32 count = searchAttrs.Count();   // size of XPCOM array we'll need
-    PRUint32 rawSearchAttrsSize = 0;        // grown as XPCOM array is built
-    char **rawSearchAttrs = 
-        NS_STATIC_CAST(char **, nsMemory::Alloc(count * sizeof(char *)));
-    if (!rawSearchAttrs) {
-        NS_ERROR("nsLDAPAutoCompleteSession::SetOutputFormat: out of memory");
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Loop through the string array, and build up the C-array.
-    //
-    while (rawSearchAttrsSize < count) {
-        if (!(rawSearchAttrs[rawSearchAttrsSize] = 
-              (searchAttrs.CStringAt(rawSearchAttrsSize))->ToNewCString())) {
-            NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(rawSearchAttrsSize, 
-                                                  rawSearchAttrs);
-            NS_ERROR("nsLDAPAutoCompleteSession::SetOutputFormat: out of "
-                     "memory");
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        rawSearchAttrsSize++;
-    }
-
-    // ok, we've succeed in building up the new array.  deallocate the
-    // old array as necessary, then assign in the new member vars.
-    //
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(mSearchAttrsSize, mSearchAttrs);
-
-    mSearchAttrsSize = rawSearchAttrsSize;
-    mSearchAttrs = rawSearchAttrs;
-    mOutputFormat = aOutputFormat; 
-
-    return NS_OK;
-}
 
 // attribute long maxHits;
 NS_IMETHODIMP 
@@ -1414,8 +1051,7 @@ nsLDAPAutoCompleteSession::GetServerURL(nsILDAPURL * *aServerURL)
         return NS_ERROR_NULL_POINTER;
     }
     
-    *aServerURL = mServerURL;
-    NS_IF_ADDREF(*aServerURL);
+    NS_IF_ADDREF(*aServerURL = mServerURL);
 
     return NS_OK;
 }
@@ -1511,6 +1147,41 @@ nsLDAPAutoCompleteSession::IsMessageCurrent(nsILDAPMessage *aMessage,
     return NS_OK;
 }
 
+// attribute nsILDAPAutoCompFormatter formatter
+NS_IMETHODIMP 
+nsLDAPAutoCompleteSession::GetFormatter(nsILDAPAutoCompFormatter* *aFormatter)
+{
+    if (! aFormatter ) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    
+    NS_IF_ADDREF(*aFormatter = mFormatter);
+
+    return NS_OK;
+}
+NS_IMETHODIMP 
+nsLDAPAutoCompleteSession::SetFormatter(nsILDAPAutoCompFormatter* aFormatter)
+{
+    if (! aFormatter ) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    NS_ASSERTION(mState == UNBOUND || mState == BOUND, 
+                 "nsLDAPAutoCompleteSession::SetFormatter was called when "
+                 "mState was set to something other than BOUND or UNBOUND");
+
+    mFormatter = aFormatter;
+
+    // get and cache the attributes that will be used to do lookups
+    //
+    nsresult rv = mFormatter->GetAttributes(&mSearchAttrsSize, &mSearchAttrs);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("nsLDAPAutoCompleteSession::SetFormatter(): "
+                 " mFormatter->GetAttributes failed");
+        return NS_ERROR_FAILURE;
+    }
+    
+    return NS_OK;
+}
 
 #endif
-
