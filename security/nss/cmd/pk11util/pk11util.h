@@ -16,6 +16,7 @@ typedef enum {
     F_SetVar,
     F_SetStringVar,
     F_NewArray,
+    F_NewInitializeArgs,
     F_NewTemplate,
     F_NewMechanism,
     F_BuildTemplate,
@@ -23,15 +24,20 @@ typedef enum {
     F_Print,
     F_SaveVar,
     F_RestoreVar,
+    F_Increment,
+    F_Decrement,
     F_Delete,
     F_List,
     F_Run,
     F_Load,
     F_Unload,
     F_System,
+    F_Loop,
     F_Time,
     F_Help,
     F_Quit,
+    F_QuitIf,
+    F_QuitIfString,
 } FunctionType;
 
 /*
