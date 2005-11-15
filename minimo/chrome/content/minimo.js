@@ -601,9 +601,11 @@ function BrowserPopupShowing () {
   /* Enable Paste - Can paste only if the focused element has a value attribute. :) 
     THis may affect XHTML nodes. Users may be able to paste things within XML nodes. 
   */
-  if(document.commandDispatcher.focusedElement.nodeName=="INPUT"||document.commandDispatcher.focusedElement.nodeName=="TEXTAREA") {
-    if(DoClipCheckPaste()) {
-      document.getElementById("item-paste").style.display="block";	
+  if (document.commandDispatcher.focusedElement) {
+    if(document.commandDispatcher.focusedElement.nodeName=="INPUT"||document.commandDispatcher.focusedElement.nodeName=="TEXTAREA") {
+      if(DoClipCheckPaste()) {
+        document.getElementById("item-paste").style.display="block";	
+      }
     }
   }
 }
@@ -796,10 +798,6 @@ function MenuPopupHidden() {
  *  https://bugzilla.mozilla.org/show_bug.cgi?id=311287#c1 - we should have the snav interface here. 
  */
 function BrowserSNAVToggle(state) {
-  if(gStateSNAV != state) { // goes through actually doing, only first time. 
-    gPref.setBoolPref("snav.enabled", state);
-    gStateSNAV=state;
-  } 
 } 
 
 

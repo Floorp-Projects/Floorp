@@ -72,24 +72,34 @@ WindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
         return NS_ERROR_NOT_INITIALIZED;
     
     nsCOMPtr<nsIXULWindow> newWindow;
-    
-    nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-    if (!appShell)
-      return NS_ERROR_FAILURE;
-    
-    nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
-    
-    unsigned long x, y;
-    GetScreenSize(&x, &y);
-    
-    appShell->CreateTopLevelWindow(xulParent, 
-                                   0, 
-                                   aChromeFlags,
-                                   x,
-                                   y,
-                                   mAppShell, 
-                                   getter_AddRefs(newWindow));
-    
+#if 0
+    if (aParent) {
+      nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
+      
+      if (xulParent)
+        xulParent->CreateNewWindow(aChromeFlags, mAppShell, getter_AddRefs(newWindow));
+    }
+    else
+#endif
+    { 
+      nsCOMPtr<nsIAppShellService> appShell(do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+      if (!appShell)
+        return NS_ERROR_FAILURE;
+      
+      nsCOMPtr<nsIXULWindow> xulParent(do_GetInterface(aParent));
+      
+      unsigned long x, y;
+      GetScreenSize(&x, &y);
+      
+      appShell->CreateTopLevelWindow(xulParent, // get rid of if you undef above 
+                                     0, 
+                                     aChromeFlags,
+                                     x,
+                                     y,
+                                     mAppShell, 
+                                     getter_AddRefs(newWindow));
+    }
+
     // if anybody gave us anything to work with, use it
     if (newWindow) {
       newWindow->SetContextFlags(aContextFlags);
@@ -97,6 +107,6 @@ WindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
       if (thing)
         CallGetInterface(thing.get(), aNewWindow);
     }
-    
+
     return *aNewWindow ? NS_OK : NS_ERROR_FAILURE;
 }

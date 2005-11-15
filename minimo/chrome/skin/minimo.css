@@ -36,8 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* This CSS rule has to be here because code is accessing styleSheets[1].rules[0]! */ 
+
+/* 	background-position:0px 100%; */
+
 #urlbar input {
-	background-position:0px 100%;
 	background-repeat:no-repeat;
 	background-image:url(chrome://minimo/skin/transfer.jpg);
 	padding:0px;

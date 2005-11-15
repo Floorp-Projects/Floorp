@@ -98,6 +98,8 @@ pushd $SRCDIR
 
 cp -a ../customization/all.js                             $OBJDIR/dist/minimo/greprefs
 
+cat ../customization/ua.css.additions >> $OBJDIR/dist/minimo/res/ua.css
+
 echo Copying ARM shunt lib.  Adjust if you are not building ARM
 
 cp -a ../../build/wince/shunt/build/ARMV4Rel/shunt.dll $OBJDIR/dist/minimo

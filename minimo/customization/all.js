@@ -1,13 +1,16 @@
-("general.useragent.extra.minimo", "Minimo/0.010");
+pref("general.useragent.extra.minimo", "Minimo/0.010");
 
 pref("browser.cache.disk.enable",           false);
 pref("browser.cache.disk.capacity",         0);
 pref("browser.cache.memory.enable",         true);
-pref("browser.cache.memory.capacity",       256);
+pref("browser.cache.memory.capacity",       1024);
 // -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
 pref("browser.cache.disk_cache_ssl",        false);
 // 0 = once-per-session, 1 = each-time, 2 = never, 3 = when-appropriate/automatically
 pref("browser.cache.check_doc_frequency",   3);
+// Fastback caching - if this pref is negative, then we calculate the number
+// of content viewers to cache based on the amount of available memory.
+pref("browser.sessionhistory.max_total_viewers", -1);
 
 pref("browser.display.use_document_fonts",  1);  // 0 = never, 1 = quick, 2 = always
 pref("browser.display.use_document_colors", true);
@@ -62,6 +65,8 @@ pref("browser.tabs.loadGroup", 1);
 //  2 - loads last page visited
 pref("browser.tabs.loadOnNewTab", 0);
 pref("browser.windows.loadOnNewWindow", 1);
+
+pref("browser.link.open_newwindow", 3);
 
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
@@ -232,27 +237,27 @@ pref("network.http.use-cache", true);
 // HTTP traffic.  an empty value indicates the normal TCP/IP socket type.
 pref("network.http.default-socket-type", "");
 
-pref("network.http.keep-alive", false); // set it to false in case of problems
-pref("network.http.proxy.keep-alive", false);
-pref("network.http.keep-alive.timeout", 300);
+pref("network.http.keep-alive", true); // set it to false in case of problems
+pref("network.http.proxy.keep-alive", true);
+pref("network.http.keep-alive.timeout", 600);
 
 // limit the absolute number of http connections.
-pref("network.http.max-connections", 2);
+pref("network.http.max-connections", 4);
 
 // limit the absolute number of http connections that can be established per
 // host.  if a http proxy server is enabled, then the "server" is the proxy
 // server.  Otherwise, "server" is the http origin server.
-pref("network.http.max-connections-per-server", 1);
+pref("network.http.max-connections-per-server", 4);
 
 // if network.http.keep-alive is true, and if NOT connecting via a proxy, then
 // a new connection will only be attempted if the number of active persistent
 // connections to the server is less then max-persistent-connections-per-server.
-pref("network.http.max-persistent-connections-per-server", 0);
+pref("network.http.max-persistent-connections-per-server", 1);
 
 // if network.http.keep-alive is true, and if connecting via a proxy, then a
 // new connection will only be attempted if the number of active persistent
 // connections to the proxy is less then max-persistent-connections-per-proxy.
-pref("network.http.max-persistent-connections-per-proxy", 0);
+pref("network.http.max-persistent-connections-per-proxy", 1);
 
 // amount of time (in seconds) to suspend pending requests, before spawning a
 // new connection, once the limit on the number of persistent connections per
@@ -293,7 +298,7 @@ pref("network.enableIDN", false);
 pref("network.dns.ipv4OnlyDomains", ".doubleclick.net");
 
 // This preference can be used to turn off IPv6 name lookups. See bug 68796.
-pref("network.dns.disableIPv6", false);
+pref("network.dns.disableIPv6", true);
 
 // This preference controls whether or not URLs with UTF-8 characters are
 // escaped.  Set this preference to TRUE for strict RFC2396 conformance.
@@ -301,7 +306,7 @@ pref("network.standard-url.escape-utf8", true);
 
 // This preference controls whether or not URLs are always encoded and sent as
 // UTF-8.
-pref("network.standard-url.encode-utf8", true);
+pref("network.standard-url.encode-utf8", false);
 
 // directory listing format
 // 2: HTML
@@ -310,7 +315,7 @@ pref("network.standard-url.encode-utf8", true);
 pref("network.dir.format", 2);
 
 // enables the prefetch service (i.e., prefetching of <link rel="next"> URLs).
-pref("network.prefetch-next", true);
+pref("network.prefetch-next", false);
 
 
 // The following prefs pertain to the negotiate-auth extension (see bug 17578),
@@ -484,7 +489,7 @@ pref("layout.word_select.stop_at_punctuation", true);
 pref("layout.enable_japanese_specific_transform", false);
 
 // pref to force frames to be resizable
-pref("layout.frames.force_resizability", false);
+pref("layout.frames.force_resizability", true);
 
 // pref to permit users to make verified SOAP calls by default
 pref("capability.policy.default.SOAPCall.invokeVerifySourceHeader", "allAccess");
@@ -642,9 +647,7 @@ pref("browser.startup.homepage", "http://www.meer.net/~dougt/minimo_ce/start.htm
 pref("browser.display.zoomui",10);
 pref("browser.display.zoomcontent",10);
 
-/* So forcing this to false, so it's possible to test the toggle */ 
-/* This is being used in the code, as the state holder */ 
-pref("snav.enabled", false);
+pref("snav.enabled", true);
 
 pref("browser.formfill.enable", true);
 

@@ -48,6 +48,7 @@
 // Global variables
 const static char* start_url = "chrome://minimo/content/minimo.xul";
 
+//const static char* start_url = "http://www.mozilla.org";
 //const static char* start_url = "http://www.meer.net/~dougt/test.html";
 //const static char* start_url = "resource://gre/res/start.html";
 //const static char* start_url = "resource://gre/res/1.html";
@@ -238,6 +239,9 @@ nsFullScreen::ShowAllOSChrome()
 
   ShowWindow(hTaskBarWnd, SW_SHOW);
 
+  WriteConsoleLog();
+
+
   return NS_OK;
 #endif
 }
@@ -290,9 +294,17 @@ nsBadCertListener::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo, nsIX5
   bundle->GetStringFromName(NS_LITERAL_STRING("confirmUnknownIssuer").get(), getter_Copies(message));
   bundle->GetStringFromName(NS_LITERAL_STRING("securityWarningTitle").get(), getter_Copies(title));
 
+  nsCOMPtr<nsIWindowWatcher> wwatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+  if (!wwatcher)
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMWindow> parent;
+  if (!parent)
+    wwatcher->GetActiveWindow(getter_AddRefs(parent));
+
   PRBool result;
   nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
-  dlgService->Confirm(nsnull, title, message, &result);
+  dlgService->Confirm(parent, title, message, &result);
 
   *_retval = result;
 
@@ -320,9 +332,17 @@ nsBadCertListener::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo, cons
   bundle->GetStringFromName(NS_LITERAL_STRING("confirmMismatch").get(), getter_Copies(message));
   bundle->GetStringFromName(NS_LITERAL_STRING("securityWarningTitle").get(), getter_Copies(title));
 
+  nsCOMPtr<nsIWindowWatcher> wwatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+  if (!wwatcher)
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMWindow> parent;
+  if (!parent)
+    wwatcher->GetActiveWindow(getter_AddRefs(parent));
+
   PRBool result;
   nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
-  dlgService->Confirm(nsnull, title, message, &result);
+  dlgService->Confirm(parent, title, message, &result);
 
   *_retval = result;
 
@@ -347,9 +367,17 @@ nsBadCertListener::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo, nsIX509
   bundle->GetStringFromName(NS_LITERAL_STRING("confirmCertExpired").get(), getter_Copies(message));
   bundle->GetStringFromName(NS_LITERAL_STRING("securityWarningTitle").get(), getter_Copies(title));
 
+  nsCOMPtr<nsIWindowWatcher> wwatcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+  if (!wwatcher)
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDOMWindow> parent;
+  if (!parent)
+    wwatcher->GetActiveWindow(getter_AddRefs(parent));
+
   PRBool result;
   nsCOMPtr<nsIPromptService> dlgService(do_GetService(NS_PROMPTSERVICE_CONTRACTID));
-  dlgService->Confirm(nsnull, title, message, &result);
+  dlgService->Confirm(parent, title, message, &result);
 
   *_retval = result;
 
@@ -397,6 +425,7 @@ void DoPreferences()
         return;
 
     prefBranch->SetIntPref("snav.keyCode.modifier", 0);
+    prefBranch->SetBoolPref("snav.enabled", true);
 }
 
 #define NS_FULLSCREEN_CID                          \
@@ -499,10 +528,7 @@ typedef struct _library
 
 _library Libraries[] =
 {
-    {  L"nss3.dll",       NULL },
-    {  L"softokn3.dll",   NULL },
-    {  L"nssckbi.dll",    NULL },
-    {  L"ssl3.dll",       NULL },
+  {  L"nssckbi.dll",    NULL },
   {  NULL, NULL },
 };
 
@@ -600,7 +626,7 @@ int main(int argc, char *argv[])
   prefBranch = 0;
 
   if (dumpJSConsole)
-      WriteConsoleLog();
+    WriteConsoleLog();
 
   // Close down Embedding APIs
   NS_TermEmbedding();
