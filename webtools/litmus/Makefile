@@ -41,3 +41,5 @@ templates: index.html.tmpl
 ctags: 
 	`which ctags` --excmd=number --tag-relative=no --fields=+a+m+n+S -R `pwd`
 	
+test: 
+	perl runtests.pl
