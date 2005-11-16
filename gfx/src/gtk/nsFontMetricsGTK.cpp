@@ -61,6 +61,7 @@
 #include "nsAString.h"
 #include "nsXPIDLString.h"
 #include "nsFontDebug.h"
+#include "nsCharTraits.h"
 #ifdef MOZ_ENABLE_FREETYPE2
 #include "nsFT2FontNode.h"
 #include "nsFontFreeType.h"
@@ -75,10 +76,6 @@
 
 #include <X11/Xatom.h>
 #include <gdk/gdk.h>
-
-#define IS_SURROGATE(u)      (u > 0x10000)
-
-#define UCS2_NOMAPPING 0XFFFD
 
 #ifdef PR_LOGGING 
 static PRLogModuleInfo * FontMetricsGTKLM = PR_NewLogModule("FontMetricsGTK");
@@ -3443,8 +3440,8 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
     return AddToLoadedFontsList(ftfont);
   }
 
-  if (IS_SURROGATE(aChar)) {
-    // SURROGATE is only supported by FreeType
+  if (!IS_IN_BMP(aChar)) {
+    // Non-BMP is only supported by FreeType
     return nsnull;
   }
 #endif
@@ -5043,10 +5040,10 @@ nsFontMetricsGTK::SearchNode(nsFontNode* aNode, PRUint32 aChar)
    * loading a font with the same map.
    */
   if (charSetInfo->mCharSet) {
-    // if SURROGATE char, ignore charSetInfo->mCCMap checking
+    // if not BMP char, ignore charSetInfo->mCCMap checking
     // because the exact ccmap is never created before loading
     // NEED TO FIX: need better way
-    if (IS_SURROGATE(aChar) ) {
+    if (!IS_IN_BMP(aChar) ) {
       goto check_done;
     }
     PRUint16* ccmap = charSetInfo->mCCMap;
@@ -6540,8 +6537,8 @@ nsFontMetricsGTK::FindFont(PRUint32 aChar)
   // If this is is the 'unknown' char (ie: converter could not 
   // convert it) there is no sense in searching any further for 
   // a font. Just returing mWesternFont
-  if (aChar == UCS2_NOMAPPING) {
-    FIND_FONT_PRINTF(("      ignore the 'UCS2_NOMAPPING' character, return mWesternFont"));
+  if (aChar == UCS2_REPLACEMENT_CHAR) {
+    FIND_FONT_PRINTF(("      ignore the 'UCS2_REPLACEMENT_CHAR' character, return mWesternFont"));
     return mWesternFont;
   }
 
