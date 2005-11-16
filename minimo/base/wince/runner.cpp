@@ -5,6 +5,8 @@
 
 int main(int argc, char *argv[])
 {
+  SetCursor(LoadCursor(NULL,IDC_WAIT));
+
   HWND h = FindWindowW(NULL, L"Minimo");
   if (h)
   {
@@ -37,6 +39,8 @@ int main(int argc, char *argv[])
                          NULL,
                          NULL,
                          &pi);
+
+  SetCursor(NULL);
   return 0;
 }
 
