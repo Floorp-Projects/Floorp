@@ -217,7 +217,6 @@ function MiniNavStartup()
   var homepage = "http://www.mozilla.org";
 
   try {
-
     gURLBar = document.getElementById("urlbar");
     var currentTab=getBrowser().selectedTab;
     browserInit(currentTab);
@@ -257,7 +256,9 @@ function MiniNavStartup()
         homepage = fixedUpURI.spec;
       }
     } catch (ignore) {}
-      
+
+    BrowserSNAVToggle(true);
+
   } catch (e) {
     alert("Error trying to startup browser.  Please report this as a bug:\n" + e);
   }
@@ -288,8 +289,8 @@ function MiniNavStartup()
   /* 
    * Add event clicks to Minimo toolbars and also to the mStrip BOX in the tabbrowser
    */
-  getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,false);
-  document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
+  getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,true);
+  document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,true);
 
 
   /* 
