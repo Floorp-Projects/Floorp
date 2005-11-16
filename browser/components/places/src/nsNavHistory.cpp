@@ -146,8 +146,8 @@ static PRInt32 ComputeAutoCompletePriority(const nsAString& aUrl,
                                            PRBool aWasTyped);
 static nsresult GetReversedHostname(nsIURI* aURI, nsAString& host);
 static void GetReversedHostname(const nsString& aForward, nsAString& aReversed);
-static void GetSubstringFromNthDot(const nsString& aInput, int aStartingSpot,
-                                   int aN, PRBool aIncludeDot,
+static void GetSubstringFromNthDot(const nsString& aInput, PRInt32 aStartingSpot,
+                                   PRInt32 aN, PRBool aIncludeDot,
                                    nsAString& aSubstr);
 static PRInt32 GetTLDCharCount(const nsString& aHost);
 static PRInt32 GetTLDType(const nsString& aHostTail);
@@ -159,16 +159,16 @@ static void ParseSearchQuery(const nsString& aQuery, nsStringArray* aTerms);
 inline void ReverseString(const nsString& aInput, nsAString& aReversed)
 {
   aReversed.Truncate(0);
-  for (int i = aInput.Length() - 1; i >= 0; i --)
+  for (PRInt32 i = aInput.Length() - 1; i >= 0; i --)
     aReversed.Append(aInput[i]);
 }
-inline void parameterString(int paramIndex, nsACString& aParamString)
+inline void parameterString(PRInt32 paramIndex, nsACString& aParamString)
 {
   aParamString = nsPrintfCString("?%d", paramIndex + 1);
 }
 
 // emulate string comparison (used for sorting) for PRTime and int
-inline int ComparePRTime(PRTime a, PRTime b)
+inline PRInt32 ComparePRTime(PRTime a, PRTime b)
 {
   if (LL_CMP(a, <, b))
     return -1;
@@ -176,7 +176,7 @@ inline int ComparePRTime(PRTime a, PRTime b)
     return 1;
   return 0;
 }
-inline int CompareIntegers(PRUint32 a, PRUint32 b)
+inline PRInt32 CompareIntegers(PRUint32 a, PRUint32 b)
 {
   return a - b;
 }
@@ -202,17 +202,17 @@ protected:
   nsNavHistory& mNavHistory;
 };
 
-const int nsNavHistory::kGetInfoIndex_PageID = 0;
-const int nsNavHistory::kGetInfoIndex_URL = 1;
-const int nsNavHistory::kGetInfoIndex_Title = 2;
-const int nsNavHistory::kGetInfoIndex_VisitCount = 3;
-const int nsNavHistory::kGetInfoIndex_VisitDate = 4;
-const int nsNavHistory::kGetInfoIndex_RevHost = 5;
+const PRInt32 nsNavHistory::kGetInfoIndex_PageID = 0;
+const PRInt32 nsNavHistory::kGetInfoIndex_URL = 1;
+const PRInt32 nsNavHistory::kGetInfoIndex_Title = 2;
+const PRInt32 nsNavHistory::kGetInfoIndex_VisitCount = 3;
+const PRInt32 nsNavHistory::kGetInfoIndex_VisitDate = 4;
+const PRInt32 nsNavHistory::kGetInfoIndex_RevHost = 5;
 
-const int nsNavHistory::kAutoCompleteIndex_URL = 0;
-const int nsNavHistory::kAutoCompleteIndex_Title = 1;
-const int nsNavHistory::kAutoCompleteIndex_VisitCount = 2;
-const int nsNavHistory::kAutoCompleteIndex_Typed = 3;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_VisitCount = 2;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_Typed = 3;
 
 static nsDataHashtable<nsStringHashKey, int>* gTldTypes;
 static const char* gQuitApplicationMessage = "quit-application";
@@ -656,7 +656,7 @@ nsNavHistory::InternalAdd(nsIURI* aURI, PRUint32 aSessionID,
   // Notify observers. Note that we finish the transaction before doing this in
   // case they need to use the DB
   transaction.Commit();
-  for (int i = 0; i < mObservers.Count(); i ++)
+  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
     mObservers[i]->OnAddURI(aURI, aVisitDate);
 
   return NS_OK;
@@ -673,7 +673,7 @@ nsNavHistory::InternalAdd(nsIURI* aURI, PRUint32 aSessionID,
 nsresult
 nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
                                  PRBool aHidden, PRBool aTyped,
-                                 int aVisitCount, PRInt64* aPageID)
+                                 PRInt32 aVisitCount, PRInt64* aPageID)
 {
   nsCOMPtr<mozIStorageStatement> dbInsertStatement;
   nsresult rv = mDBConn->CreateStatement(
@@ -1070,9 +1070,9 @@ nsNavHistory::ExecuteQueries(const nsINavHistoryQuery** aQueries,
 
   PRInt32 numParameters = 0;
   nsCAutoString conditions;
-  for (PRInt32 i = 0; i < (int)aQueryCount; i ++) {
+  for (PRUint32 i = 0; i < aQueryCount; i ++) {
     nsCString queryClause;
-    int clauseParameters = 0;
+    PRInt32 clauseParameters = 0;
     rv = QueryToSelectClause(NS_CONST_CAST(nsINavHistoryQuery*, aQueries[i]),
                              numParameters, &queryClause, &clauseParameters);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1137,8 +1137,8 @@ nsNavHistory::ExecuteQueries(const nsINavHistoryQuery** aQueries,
 
   // bind parameters
   numParameters = 0;
-  for (int i = 0; i < (int)aQueryCount; i ++) {
-    int clauseParameters = 0;
+  for (PRUint32 i = 0; i < aQueryCount; i ++) {
+    PRInt32 clauseParameters = 0;
     rv = BindQueryClauseParameters(statement, numParameters,
                                    NS_CONST_CAST(nsINavHistoryQuery*, aQueries[i]),
                                    &clauseParameters);
@@ -1237,7 +1237,7 @@ nsNavHistory::BeginUpdateBatch()
 {
   mBatchesInProgress ++;
   if (mBatchesInProgress == 1) {
-    for(int i = 0; i < mObservers.Count(); i ++)
+    for(PRInt32 i = 0; i < mObservers.Count(); i ++)
       mObservers[i]->OnBeginUpdateBatch();
   }
   return NS_OK;
@@ -1253,7 +1253,7 @@ nsNavHistory::EndUpdateBatch()
     return NS_ERROR_FAILURE;
   mBatchesInProgress --;
   if (mBatchesInProgress == 0) {
-    for(int i = 0; i < mObservers.Count(); i ++)
+    for(PRInt32 i = 0; i < mObservers.Count(); i ++)
       mObservers[i]->OnEndUpdateBatch();
   }
   return NS_OK;
@@ -1376,7 +1376,7 @@ nsNavHistory::RemovePage(nsIURI *aURI)
   // that we always call the observers even though we aren't sure something
   // actually got deleted.
   transaction.Commit();
-  for (int i = 0; i < mObservers.Count(); i ++)
+  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
     mObservers[i]->OnDeleteURI(aURI);
 
   return NS_OK;
@@ -1436,7 +1436,8 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
 
   // see if we have to pass all deletes to the observers
   PRBool sendObserversEverything = PR_FALSE;
-  for (int i = 0; i < mObservers.Count(); i ++) {
+  PRInt32 i;
+  for (i = 0; i < mObservers.Count(); i ++) {
     PRBool thisObserver = PR_FALSE;
     mObservers[i]->GetWantAllDetails(&thisObserver);
     sendObserversEverything |= thisObserver;
@@ -1475,7 +1476,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
       if (NS_FAILED(NS_NewURI(getter_AddRefs(thisURI), thisURIString,
                               nsnull, nsnull)))
         continue; // bad URI
-      for (int i = 0; i < mObservers.Count(); i ++)
+      for (i = 0; i < mObservers.Count(); i ++)
         mObservers[i]->OnDeleteURI(thisURI);
     }
   }
@@ -1571,7 +1572,7 @@ nsNavHistory::RemoveAllPages()
   transaction.Commit();
 
   // notify observers
-  for (int i = 0; i < mObservers.Count(); i ++)
+  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
     mObservers[i]->OnClearHistory();
 
   return NS_OK;
@@ -1649,7 +1650,7 @@ nsNavHistory::HidePage(nsIURI *aURI)
 
   // notify observers, finish transaction first
   transaction.Commit();
-  for (int i = 0; i < mObservers.Count(); i ++)
+  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
     mObservers[i]->OnPageChanged(aURI, nsINavHistoryObserver::ATTRIBUTE_HIDDEN,
                                  NS_LITERAL_STRING(""));
 
@@ -1733,7 +1734,7 @@ nsNavHistory::MarkPageAsTyped(nsIURI *aURI)
 
   // observers, be sure to finish transaction first
   transaction.Commit();
-  for (int i = 0; i < mObservers.Count(); i ++)
+  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
     mObservers[i]->OnPageChanged(aURI, nsINavHistoryObserver::ATTRIBUTE_TYPED,
                                  NS_LITERAL_STRING(""));
 
@@ -1803,7 +1804,7 @@ nsNavHistory::SetPageTitle(nsIURI *aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // observers
-  for (int i = 0; i < mObservers.Count(); i ++) 
+  for (PRInt32 i = 0; i < mObservers.Count(); i ++) 
     mObservers[i]->OnPageChanged(aURI, nsINavHistoryObserver::ATTRIBUTE_TITLE,
                                  aTitle);
 
@@ -2212,7 +2213,7 @@ nsNavHistory::AutoCompleteCompare(const nsAString& aHistoryURL,
 //    priorities (by ComputeAutoCompletePriority) are used without further
 //    computation.
 
-int PR_CALLBACK // static
+PRInt32 PR_CALLBACK // static
 nsNavHistory::AutoCompleteSortComparison(const void* match1Void,
                                          const void* match2Void,
                                          void *navHistoryVoid)
@@ -2273,9 +2274,9 @@ nsNavHistory::AutoCompleteSortComparison(const void* match1Void,
 
 nsresult
 nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
-                                  int aStartParameter,
+                                  PRInt32 aStartParameter,
                                   nsCString* aClause,
-                                  int* aParamCount)
+                                  PRInt32* aParamCount)
 {
   PRBool hasIt;
 
@@ -2335,9 +2336,9 @@ nsNavHistory::QueryToSelectClause(nsINavHistoryQuery* aQuery, // const
 
 nsresult
 nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
-                                        int aStartParameter,
+                                        PRInt32 aStartParameter,
                                         nsINavHistoryQuery* aQuery, // const
-                                        int* aParamCount)
+                                        PRInt32* aParamCount)
 {
   nsresult rv;
   (*aParamCount) = 0;
@@ -2453,7 +2454,7 @@ nsNavHistory::RecursiveGroup(const nsCOMArray<nsNavHistoryResultNode>& aSource,
   if (aGroupCount > 1) {
     // Sort another level: We need to copy the array since we want the output
     // to be our level's destionation arrays.
-    for (int i = 0; i < aDest->Count(); i ++) {
+    for (PRInt32 i = 0; i < aDest->Count(); i ++) {
       nsNavHistoryResultNode* curNode = (*aDest)[i];
       if (curNode->mChildren.Count() > 0) {
         nsCOMArray<nsNavHistoryResultNode> temp(curNode->mChildren);
@@ -2494,7 +2495,7 @@ nsNavHistory::GroupByHost(const nsCOMArray<nsNavHistoryResultNode>& aSource,
   nsDataHashtable<nsStringHashKey, nsNavHistoryResultNode*> hosts;
   if (! hosts.Init(256))
     return NS_ERROR_OUT_OF_MEMORY;
-  for (int i = 0; i < aSource.Count(); i ++)
+  for (PRInt32 i = 0; i < aSource.Count(); i ++)
   {
     const nsString& curHostName = aSource[i]->mHost;
     nsNavHistoryResultNode* curHostGroup = nsnull;
@@ -2531,7 +2532,7 @@ nsNavHistory::GroupByDomain(const nsCOMArray<nsNavHistoryResultNode>& aSource,
   nsDataHashtable<nsStringHashKey, nsNavHistoryResultNode*> hosts;
   if (! hosts.Init(256))
     return NS_ERROR_OUT_OF_MEMORY;
-  for (int i = 0; i < aSource.Count(); i ++)
+  for (PRInt32 i = 0; i < aSource.Count(); i ++)
   {
     const nsString& curHostName = aSource[i]->mHost;
     nsAutoString topDomain;
@@ -2540,7 +2541,7 @@ nsNavHistory::GroupByDomain(const nsCOMArray<nsNavHistoryResultNode>& aSource,
       topDomain = curHostName;
     } else {
       // regular host name, find the substring to use as the parent host name
-      int tldLength = GetTLDCharCount(curHostName);
+      PRInt32 tldLength = GetTLDCharCount(curHostName);
       if (tldLength < (int)curHostName.Length()) {
         // bugzilla.mozilla.org : tldLength = 3, topDomain = mozilla.org
         GetSubstringFromNthDot(curHostName,
@@ -2602,14 +2603,14 @@ nsNavHistory::FilterResultSet(const nsCOMArray<nsNavHistoryResultNode>& aSet,
   }
   */
 
-  for (int nodeIndex = 0; nodeIndex < aSet.Count(); nodeIndex ++) {
+  for (PRInt32 nodeIndex = 0; nodeIndex < aSet.Count(); nodeIndex ++) {
     PRBool allTermsFound = PR_TRUE;
 
     nsStringArray curAnnotations;
     /*
     if (searchAnnotations.Count()) {
       // come up with a list of all annotation *values* we need to search
-      for (int annotIndex = 0; annotIndex < searchAnnotations.Count(); annotIndex ++) {
+      for (PRInt32 annotIndex = 0; annotIndex < searchAnnotations.Count(); annotIndex ++) {
         nsString annot;
         if (NS_SUCCEEDED(mAnnotationService->GetAnnotationString(
                                          aSet[nodeIndex]->mUrl,
@@ -2620,7 +2621,7 @@ nsNavHistory::FilterResultSet(const nsCOMArray<nsNavHistoryResultNode>& aSet,
     }
     */
 
-    for (int termIndex = 0; termIndex < terms.Count(); termIndex ++) {
+    for (PRInt32 termIndex = 0; termIndex < terms.Count(); termIndex ++) {
       PRBool termFound = PR_FALSE;
       // title and URL
       if (CaseInsensitiveFindInReadable(*terms[termIndex],
@@ -2630,7 +2631,7 @@ nsNavHistory::FilterResultSet(const nsCOMArray<nsNavHistoryResultNode>& aSet,
         termFound = PR_TRUE;
       // searchable annotations
       if (! termFound) {
-        for (int annotIndex = 0; annotIndex < curAnnotations.Count(); annotIndex ++) {
+        for (PRInt32 annotIndex = 0; annotIndex < curAnnotations.Count(); annotIndex ++) {
           if (CaseInsensitiveFindInReadable(*terms[termIndex],
                                             *curAnnotations[annotIndex]))
             termFound = PR_TRUE;
@@ -2869,7 +2870,7 @@ nsresult nsNavHistory::ImportFromMork()
 
   mDBConn->BeginTransaction();
 
-  int insertCount = 0;
+  PRInt32 insertCount = 0;
   while(1) {
     cursor->NextRow(env, &currentRow, &pos);
     NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
@@ -2899,7 +2900,7 @@ nsresult nsNavHistory::ImportFromMork()
       title = nsString((PRUnichar*)yarn.mYarn_Buf);
 
     // visit count
-    int visitCount = 0;
+    PRInt32 visitCount = 0;
     currentRow->AliasCellYarn(env, visitCountColumn, &yarn);
     if (err == 0 && yarn.mYarn_Buf)
       sscanf((char*)yarn.mYarn_Buf, "%d", &visitCount);
@@ -3047,7 +3048,7 @@ GetUnreversedHostname(const nsString& aBackward, nsAString& aForward)
   aForward.Truncate(0);
   if (! aBackward.IsEmpty() && aBackward[aBackward.Length()-1] == '.') {
     // copy everything except the trailing dot
-    for (int i = aBackward.Length() - 2; i >= 0; i -- )
+    for (PRInt32 i = aBackward.Length() - 2; i >= 0; i -- )
       aForward.Append(aBackward[i]);
   } else {
     NS_WARNING("Malformed reversed host name: no trailing dot");
@@ -3070,8 +3071,8 @@ GetUnreversedHostname(const nsString& aBackward, nsAString& aForward)
 
 PRBool IsNumericHostName(const nsString& aHost)
 {
-  int periodCount = 0;
-  for (int i = 0; i < (int)aHost.Length(); i ++) {
+  PRInt32 periodCount = 0;
+  for (PRUint32 i = 0; i < aHost.Length(); i ++) {
     char cur = aHost[i];
     if (cur == '.')
       periodCount ++;
@@ -3096,8 +3097,8 @@ inline PRBool isQueryWhitespace(PRUnichar ch)
 
 void ParseSearchQuery(const nsString& aQuery, nsStringArray* aTerms)
 {
-  int lastBegin = -1;
-  for (int i = 0; i < (int)aQuery.Length(); i ++) {
+  PRInt32 lastBegin = -1;
+  for (PRUint32 i = 0; i < aQuery.Length(); i ++) {
     if (isQueryWhitespace(aQuery[i]) || aQuery[i] == '"') {
       if (lastBegin >= 0) {
         // found the end of a word
@@ -3199,7 +3200,7 @@ GetTLDType(const nsString& aHostTail)
     // FIXME: add the rest
   }
 
-  int type = 0;
+  PRInt32 type = 0;
   if (gTldTypes->Get(aHostTail, &type))
     return type;
   else
@@ -3215,11 +3216,11 @@ GetTLDType(const nsString& aHostTail)
 //    It is legal to pass in a starting position < 0 so you can just
 //    use Length()-1 as the starting position even if the length is 0.
 
-void GetSubstringFromNthDot(const nsString& aInput, int aStartingSpot,
-                            int aN, PRBool aIncludeDot, nsAString& aSubstr)
+void GetSubstringFromNthDot(const nsString& aInput, PRInt32 aStartingSpot,
+                            PRInt32 aN, PRBool aIncludeDot, nsAString& aSubstr)
 {
-  int dotsFound = 0;
-  for (int i = aStartingSpot; i >= 0; i --) {
+  PRInt32 dotsFound = 0;
+  for (PRInt32 i = aStartingSpot; i >= 0; i --) {
     if (aInput[i] == '.') {
       dotsFound ++;
       if (dotsFound == aN) {
@@ -3240,7 +3241,7 @@ void GetSubstringFromNthDot(const nsString& aInput, int aStartingSpot,
 //    Binds the specified URI as the parameter 'index' for the statment.
 //    URIs are always bound as UTF8
 
-nsresult BindStatementURI(mozIStorageStatement* statement, int index,
+nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
                           nsIURI* aURI)
 {
   nsCAutoString utf8URISpec;
@@ -3508,7 +3509,7 @@ nsNavHistoryResult::Init()
 void
 nsNavHistoryResult::FilledAllResults()
 {
-  for (int i = 0; i < mTopLevelElements.Count(); i ++) {
+  for (PRInt32 i = 0; i < mTopLevelElements.Count(); i ++) {
     mTopLevelElements[i]->mParent = nsnull;
     FillTreeStats(mTopLevelElements[i], 0);
   }
@@ -3655,7 +3656,7 @@ nsNavHistoryResult::RecursiveSortArray(
   }
 
   // sort any children
-  for (int i = 0; i < aSources.Count(); i ++) {
+  for (PRInt32 i = 0; i < aSources.Count(); i ++) {
     if (aSources[i]->mChildren.Count() > 0)
       RecursiveSortArray(aSources[i]->mChildren, aSortingMode);
   }
@@ -3687,9 +3688,9 @@ nsNavHistoryResult::RecursiveApplyTreeState(
     nsCOMArray<nsNavHistoryResultNode>& aList,
     const nsDataHashtable<nsStringHashKey, int>& aExpanded)
 {
-  for (int i = 0; i < aList.Count(); i ++) {
+  for (PRInt32 i = 0; i < aList.Count(); i ++) {
     if (aList[i]->mChildren.Count()) {
-      int beenExpanded = 0;
+      PRInt32 beenExpanded = 0;
       if (aExpanded.Get(aList[i]->mTitle, &beenExpanded) && beenExpanded)
         aList[i]->mExpanded = PR_TRUE;
       else
@@ -3731,7 +3732,7 @@ void
 nsNavHistoryResult::RecursiveExpandCollapse(
     nsCOMArray<nsNavHistoryResultNode>& aList, PRBool aExpand)
 {
-  for (int i = 0; i < aList.Count(); i ++) {
+  for (PRInt32 i = 0; i < aList.Count(); i ++) {
     if (aList[i]->mChildren.Count()) {
       aList[i]->mExpanded = aExpand;
       RecursiveExpandCollapse(aList[i]->mChildren, aExpand);
@@ -3790,7 +3791,7 @@ nsNavHistoryResult::SetTreeSortingIndicator()
   PRInt32 colCount;
   rv = columns->GetCount(&colCount);
   if (NS_FAILED(rv)) return;
-  for (int i = 0; i < colCount; i ++) {
+  for (PRInt32 i = 0; i < colCount; i ++) {
     columns->GetColumnAt(i, getter_AddRefs(column));
     if (NS_FAILED(rv)) return;
     if (GetColumnType(column) == desiredColumn) {
@@ -3817,7 +3818,7 @@ nsNavHistoryResult::SetTreeSortingIndicator()
 //
 //    The collation object must be allocated before sorting on title!
 
-int PR_CALLBACK nsNavHistoryResult::SortComparison_TitleLess(
+PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_TitleLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   nsNavHistoryResult* result = NS_STATIC_CAST(nsNavHistoryResult*, closure);
@@ -3834,7 +3835,7 @@ int PR_CALLBACK nsNavHistoryResult::SortComparison_TitleLess(
   }
   return value;
 }
-int PR_CALLBACK nsNavHistoryResult::SortComparison_TitleGreater(
+PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_TitleGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -SortComparison_TitleLess(a, b, closure);
@@ -3847,12 +3848,12 @@ int PR_CALLBACK nsNavHistoryResult::SortComparison_TitleGreater(
 //    microseconds, it will be very difficult to get collisions. This would be
 //    most likely for imported history, which I'm not too worried about.
 
-int PR_CALLBACK nsNavHistoryResult::SortComparison_DateLess(
+PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_DateLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return ComparePRTime(a->mTime, b->mTime);
 }
-int PR_CALLBACK nsNavHistoryResult::SortComparison_DateGreater(
+PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_DateGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -ComparePRTime(a->mTime, b->mTime);
@@ -3864,7 +3865,7 @@ int PR_CALLBACK nsNavHistoryResult::SortComparison_DateGreater(
 //    Certain types of parent nodes are treated specially because URLs are not
 //    meaningful.
 
-int PR_CALLBACK nsNavHistoryResult::SortComparison_URLLess(
+PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_URLLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   if (a->mType != b->mType) {
@@ -3873,7 +3874,7 @@ int PR_CALLBACK nsNavHistoryResult::SortComparison_URLLess(
     return 0;
   }
 
-  int value;
+  PRInt32 value;
   if (a->mType == nsINavHistoryResultNode::RESULT_TYPE_HOST) {
     // for host nodes, use title (= host name)
     nsNavHistoryResult* result = NS_STATIC_CAST(nsNavHistoryResult*, closure);
@@ -3893,7 +3894,7 @@ int PR_CALLBACK nsNavHistoryResult::SortComparison_URLLess(
   }
   return value;
 }
-int PR_CALLBACK nsNavHistoryResult::SortComparison_URLGreater(
+PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_URLGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -SortComparison_URLLess(a, b, closure);
@@ -3904,18 +3905,18 @@ int PR_CALLBACK nsNavHistoryResult::SortComparison_URLGreater(
 //
 //    Fall back on dates for conflict resolution
 
-int PR_CALLBACK nsNavHistoryResult::SortComparison_VisitCountLess(
+PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_VisitCountLess(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
-  int value = CompareIntegers(a->mAccessCount, b->mAccessCount);
+  PRInt32 value = CompareIntegers(a->mAccessCount, b->mAccessCount);
   if (value == 0)
     return ComparePRTime(a->mTime, b->mTime);
   return value;
 }
-int PR_CALLBACK nsNavHistoryResult::SortComparison_VisitCountGreater(
+PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_VisitCountGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
-  int value = -CompareIntegers(a->mAccessCount, b->mAccessCount);
+  PRInt32 value = -CompareIntegers(a->mAccessCount, b->mAccessCount);
   if (value == 0)
     return -ComparePRTime(a->mTime, b->mTime);
   return value;
@@ -3928,13 +3929,13 @@ int PR_CALLBACK nsNavHistoryResult::SortComparison_VisitCountGreater(
 //    in bookeeping information and statistics for parent nodes.
 
 void
-nsNavHistoryResult::FillTreeStats(nsNavHistoryResultNode* aResult, int aLevel)
+nsNavHistoryResult::FillTreeStats(nsNavHistoryResultNode* aResult, PRInt32 aLevel)
 {
   aResult->mIndentLevel = aLevel;
   if (aResult->mChildren.Count() > 0) {
     PRInt32 totalAccessCount = 0;
     PRTime mostRecentTime = 0;
-    for (int i = 0; i < aResult->mChildren.Count(); i ++ ) {
+    for (PRInt32 i = 0; i < aResult->mChildren.Count(); i ++ ) {
       nsNavHistoryResultNode* child = NS_STATIC_CAST(
           nsNavHistoryResultNode*, aResult->mChildren[i]);
 
@@ -3965,7 +3966,7 @@ nsNavHistoryResult::InitializeVisibleList()
   // set the visible indices on those elements (normally this is done by
   // InsertVisibleSection)
   BuildVisibleSection(mTopLevelElements, &mVisibleElements);
-  for (int i = 0; i < mVisibleElements.Count(); i ++)
+  for (PRInt32 i = 0; i < mVisibleElements.Count(); i ++)
     VisibleElementAt(i)->mVisibleIndex = i;
 }
 
@@ -3978,7 +3979,7 @@ nsNavHistoryResult::InitializeVisibleList()
 void
 nsNavHistoryResult::RebuildList()
 {
-  int oldVisibleCount = mVisibleElements.Count();
+  PRInt32 oldVisibleCount = mVisibleElements.Count();
 
   mAllElements.Clear();
   mVisibleElements.Clear();
@@ -4002,7 +4003,7 @@ void
 nsNavHistoryResult::RebuildAllListRecurse(
     const nsCOMArray<nsNavHistoryResultNode>& aSource)
 {
-  for (int i = 0; i < aSource.Count(); i ++) {
+  for (PRInt32 i = 0; i < aSource.Count(); i ++) {
     PRUint32 allCount = mAllElements.Count();
     if (mCollapseDuplicates && allCount > 0 && aSource[i]->mID != 0 &&
         AllElementAt(allCount - 1)->mID == aSource[i]->mID) {
@@ -4033,7 +4034,7 @@ void
 nsNavHistoryResult::BuildVisibleSection(
     const nsCOMArray<nsNavHistoryResultNode>& aSources, nsVoidArray* aVisible)
 {
-  for (int i = 0; i < aSources.Count(); i ++) {
+  for (PRInt32 i = 0; i < aSources.Count(); i ++) {
     nsNavHistoryResultNode* cur = aSources[i];
     if (mCollapseDuplicates && aVisible->Count() > 0 && aSources[i]->mID != 0) {
       nsNavHistoryResultNode* prev =
@@ -4057,7 +4058,7 @@ nsNavHistoryResult::BuildVisibleSection(
 
 void
 nsNavHistoryResult::InsertVisibleSection(const nsVoidArray& aAddition,
-                                         int aInsertHere)
+                                         PRInt32 aInsertHere)
 {
   NS_ASSERTION(aInsertHere >= 0 && aInsertHere <= mVisibleElements.Count(),
                "Invalid insertion point");
@@ -4065,7 +4066,7 @@ nsNavHistoryResult::InsertVisibleSection(const nsVoidArray& aAddition,
 
   // we need to update all the elements from the insertion point to the end
   // of the list of their new indices
-  for (int i = aInsertHere; i < mVisibleElements.Count(); i ++)
+  for (PRInt32 i = aInsertHere; i < mVisibleElements.Count(); i ++)
     VisibleElementAt(i)->mVisibleIndex = i;
 }
 
@@ -4077,7 +4078,7 @@ nsNavHistoryResult::InsertVisibleSection(const nsVoidArray& aAddition,
 //    element list. Returns the number of rows deleted
 
 int
-nsNavHistoryResult::DeleteVisibleChildrenOf(int aIndex)
+nsNavHistoryResult::DeleteVisibleChildrenOf(PRInt32 aIndex)
 {
   NS_ASSERTION(aIndex >= 0 && aIndex < mVisibleElements.Count(),
                "Index out of bounds");
@@ -4087,9 +4088,10 @@ nsNavHistoryResult::DeleteVisibleChildrenOf(int aIndex)
                "Trying to collapse an improper node");
 
   // compute the index of the element just after the end of the deleted region
-  int outerLevel = parentNode->mIndentLevel;
-  int nextOuterIndex = mVisibleElements.Count();
-  for (int i = aIndex + 1; i < mVisibleElements.Count(); i ++) {
+  PRInt32 outerLevel = parentNode->mIndentLevel;
+  PRInt32 nextOuterIndex = mVisibleElements.Count();
+  PRInt32 i;
+  for (i = aIndex + 1; i < mVisibleElements.Count(); i ++) {
     if (VisibleElementAt(i)->mIndentLevel <= outerLevel) {
       nextOuterIndex = i;
       break;
@@ -4097,13 +4099,13 @@ nsNavHistoryResult::DeleteVisibleChildrenOf(int aIndex)
   }
 
   // Mark those elements as invisible and remove them.
-  for (int i = aIndex + 1; i < nextOuterIndex; i ++)
+  for (i = aIndex + 1; i < nextOuterIndex; i ++)
     VisibleElementAt(i)->mVisibleIndex = -1;
-  int deleteCount = nextOuterIndex - aIndex - 1;
+  PRInt32 deleteCount = nextOuterIndex - aIndex - 1;
   mVisibleElements.RemoveElementsAt(aIndex + 1, deleteCount);
 
   // re-number the moved elements
-  for (int i = aIndex + 1; i < mVisibleElements.Count(); i ++)
+  for (i = aIndex + 1; i < mVisibleElements.Count(); i ++)
     VisibleElementAt(i)->mVisibleIndex = i;
 
   return deleteCount;
@@ -4389,7 +4391,7 @@ NS_IMETHODIMP nsNavHistoryResult::ToggleOpenState(PRInt32 index)
   nsNavHistoryResultNode* curNode = VisibleElementAt(index);
   if (curNode->mExpanded) {
     // collapse
-    int deleteCount = DeleteVisibleChildrenOf(index);
+    PRInt32 deleteCount = DeleteVisibleChildrenOf(index);
     curNode->mExpanded = PR_FALSE;
     if (mTree)
       mTree->RowCountChanged(index + 1, -deleteCount);
