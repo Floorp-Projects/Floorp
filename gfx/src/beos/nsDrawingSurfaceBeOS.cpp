@@ -247,16 +247,26 @@ bool nsDrawingSurfaceBeOS :: LockDrawable()
 {
   //TODO: try to avoid exta locking also for onscreen BView.
   //Perhaps it needs synchronization with widget through nsToolkit and lock counting.
-  bool rv = true;
+  bool rv = false;
   if (!mBitmap)
-    rv = mView->LockLooper();
+  {
+    // Non-bitmap (BWindowed) view - lock it as required if exists
+    rv = mView && mView->LockLooper();
+  }
+  else
+  {
+    // Was locked in Init(), only test
+  	rv = mBitmap->Lock();
+  }
   return rv;
 }
 
 void nsDrawingSurfaceBeOS :: UnlockDrawable()
 {
-  if (!mView)
+  // Do nothing, bitmap is locked for lifetime in our implementation
+  if (mBitmap)
     return;
-  else
+  // Non-bitmap (BWindowed) view - unlock it as required.
+  if (mView)
     mView->UnlockLooper();
 }
