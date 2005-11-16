@@ -70,9 +70,10 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 /*
  * JS-specific heap sort function.
  */
-typedef int (*JSComparator)(const void *a, const void *b, void *arg);
+typedef JSBool (*JSComparator)(void *arg, const void *a, const void *b,
+                               int *result);
 
-extern void
+extern JSBool
 js_HeapSort(void *vec, size_t nel, void *pivot, size_t elsize,
             JSComparator cmp, void *arg);
 

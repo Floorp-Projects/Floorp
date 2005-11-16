@@ -701,13 +701,13 @@ typedef struct HSortArgs {
     JSBool       fastcopy;
 } HSortArgs;
 
-static int
-sort_compare(const void *a, const void *b, void *arg);
+static JSBool
+sort_compare(void *arg, const void *a, const void *b, int *result);
 
 static int
-sort_compare_strings(const void *a, const void *b, void *arg);
+sort_compare_strings(void *arg, const void *a, const void *b, int *result);
 
-static void
+static JSBool
 HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
 {
     void *pivot, *vec, *vec2, *arg, *a, *b;
@@ -715,6 +715,7 @@ HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
     JSComparator cmp;
     JSBool fastcopy;
     size_t j, hiDiv2;
+    int cmp_result;
 
     pivot = hsa->pivot;
     vec = hsa->vec;
@@ -726,12 +727,17 @@ HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
     fastcopy = hsa->fastcopy;
 #define MEMCPY(p,q,n) \
     (fastcopy ? (void)(*(jsval*)(p) = *(jsval*)(q)) : (void)memcpy(p, q, n))
+#define CALL_CMP(a, b) \
+    if (!cmp(arg, (a), (b), &cmp_result)) return JS_FALSE;
 
     if (lo == 1) {
         j = 2;
         b = (char *)vec + elsize;
-        if (j < hi && cmp(vec, b, arg) < 0)
-            j++;
+        if (j < hi) {
+            CALL_CMP(vec, b);
+            if (cmp_result < 0)
+                j++;
+        }
         a = (char *)vec + (hi - 1) * elsize;
         b = (char *)vec2 + j * elsize;
 
@@ -740,8 +746,11 @@ HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
          * bigger then biggest of vec[0] and vec[1], and cmp(a, b, arg) <= 0
          * always holds.
          */
-        if ((building || hi == 2) && cmp(a, b, arg) >= 0)
-            return;
+        if (building || hi == 2) {
+            CALL_CMP(a, b);
+            if (cmp_result >= 0)
+                return JS_TRUE;
+        }
 
         MEMCPY(pivot, a, elsize);
         MEMCPY(a, b, elsize);
@@ -756,10 +765,14 @@ HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
         j = lo + lo;
         a = (char *)vec2 + j * elsize;
         b = (char *)vec + (j - 1) * elsize;
-        if (j < hi && cmp(a, b, arg) < 0)
-            j++;
+        if (j < hi) {
+            CALL_CMP(a, b);
+            if (cmp_result < 0)
+                j++;
+        }
         b = (char *)vec2 + j * elsize;
-        if (cmp(pivot, b, arg) >= 0)
+        CALL_CMP(pivot, b);
+        if (cmp_result >= 0)
             break;
 
         a = (char *)vec2 + lo * elsize;
@@ -769,10 +782,15 @@ HeapSortHelper(JSBool building, HSortArgs *hsa, size_t lo, size_t hi)
 
     a = (char *)vec2 + lo * elsize;
     MEMCPY(a, pivot, elsize);
+
+    return JS_TRUE;
+
+#undef CALL_CMP
 #undef MEMCPY
+
 }
 
-void
+JSBool
 js_HeapSort(void *vec, size_t nel, void *pivot, size_t elsize,
             JSComparator cmp, void *arg)
 {
@@ -786,21 +804,26 @@ js_HeapSort(void *vec, size_t nel, void *pivot, size_t elsize,
     hsa.arg = arg;
     hsa.fastcopy = (cmp == sort_compare || cmp == sort_compare_strings);
 
-    for (i = nel/2; i != 0; i--)
-        HeapSortHelper(JS_TRUE, &hsa, i, nel);
-    while (nel > 2)
-        HeapSortHelper(JS_FALSE, &hsa, 1, --nel);
+    for (i = nel/2; i != 0; i--) {
+        if (!HeapSortHelper(JS_TRUE, &hsa, i, nel))
+            return JS_FALSE;
+    }
+    while (nel > 2) {
+        if (!HeapSortHelper(JS_FALSE, &hsa, 1, --nel))
+            return JS_FALSE;
+    }
+
+    return JS_TRUE;
 }
 
 typedef struct CompareArgs {
     JSContext   *context;
     jsval       fval;
     jsval       *localroot;     /* need one local root, for sort_compare */
-    JSBool      status;
 } CompareArgs;
 
-static int
-sort_compare(const void *a, const void *b, void *arg)
+static JSBool
+sort_compare(void *arg, const void *a, const void *b, int *result)
 {
     jsval av = *(const jsval *)a, bv = *(const jsval *)b;
     CompareArgs *ca = (CompareArgs *) arg;
@@ -822,6 +845,7 @@ sort_compare(const void *a, const void *b, void *arg)
     else
         special = JSVAL_NULL;
 
+    ok = JS_TRUE;
     if (special != JSVAL_NULL) {
         if (av == bv)
             cmp = 0;
@@ -847,7 +871,7 @@ sort_compare(const void *a, const void *b, void *arg)
             if (astr && (bstr = js_ValueToString(cx, bv)))
                 cmp = js_CompareStrings(astr, bstr);
             else
-                ca->status = JS_FALSE;
+                ok = JS_FALSE;
         }
     } else {
         argv[0] = av;
@@ -873,18 +897,18 @@ sort_compare(const void *a, const void *b, void *arg)
                 }
             }
         }
-        if (!ok)
-            ca->status = ok;
     }
-    return (int)cmp;
+    *result = (int)cmp;
+    return ok;
 }
 
 static int
-sort_compare_strings(const void *a, const void *b, void *arg)
+sort_compare_strings(void *arg, const void *a, const void *b, int *result)
 {
     jsval av = *(const jsval *)a, bv = *(const jsval *)b;
 
-    return (int) js_CompareStrings(JSVAL_TO_STRING(av), JSVAL_TO_STRING(bv));
+    *result = (int) js_CompareStrings(JSVAL_TO_STRING(av), JSVAL_TO_STRING(bv));
+    return JS_TRUE;
 }
 
 static JSBool
@@ -896,6 +920,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSStackFrame *fp;
     jsid id;
     size_t nbytes;
+    JSBool ok;
 
     /*
      * Optimize the default compare function case if all of obj's elements
@@ -946,8 +971,8 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     newlen = 0;
     for (i = 0; i < len; i++) {
-        ca.status = IndexToExistingId(cx, obj, i, &id);
-        if (!ca.status)
+        ok = IndexToExistingId(cx, obj, i, &id);
+        if (!ok)
             goto out;
 
         if (id == JSID_HOLE) {
@@ -957,8 +982,8 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         }
         newlen++;
 
-        ca.status = OBJ_GET_PROPERTY(cx, obj, id, &vec[i]);
-        if (!ca.status)
+        ok = OBJ_GET_PROPERTY(cx, obj, id, &vec[i]);
+        if (!ok)
             goto out;
 
         /* We know JSVAL_IS_STRING yields 0 or 1, so avoid a branch via &=. */
@@ -969,14 +994,13 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ca.fval = fval;
     ca.localroot = argv + argc;       /* local GC root for temporary string */
     pivotroot    = argv + argc + 1;   /* local GC root for pivot val */
-    ca.status = JS_TRUE;
-    js_HeapSort(vec, (size_t) len, pivotroot, sizeof(jsval),
-                all_strings ? sort_compare_strings : sort_compare,
-                &ca);
+    ok = js_HeapSort(vec, (size_t) len, pivotroot, sizeof(jsval),
+                     all_strings ? sort_compare_strings : sort_compare,
+                     &ca);
 
-    if (ca.status) {
-        ca.status = InitArrayElements(cx, obj, newlen, vec);
-        if (ca.status)
+    if (ok) {
+        ok = InitArrayElements(cx, obj, newlen, vec);
+        if (ok)
             *rval = OBJECT_TO_JSVAL(obj);
 
         /* Re-create any holes that sorted to the end of the array. */
@@ -993,7 +1017,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 out:
     if (vec)
         JS_free(cx, vec);
-    return ca.status;
+    return ok;
 }
 #endif /* JS_HAS_SOME_PERL_FUN */
 
