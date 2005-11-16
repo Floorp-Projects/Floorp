@@ -186,6 +186,7 @@ sub setup_vars {
     print "NATIVE_FLAG=$ENV{NATIVE_FLAG}\n";
     print "$ld_lib_path=$ENV{$ld_lib_path}\n";
     print "CLASSPATH=$ENV{CLASSPATH}\n";
+    print "BUILD_OPT=$ENV{BUILD_OPT}\n";
     print "USE_64=$ENV{USE_64}\n";
     print "testdir=$testdir\n";
     print "portJSSEServer=$portJSSEServer\n";       
