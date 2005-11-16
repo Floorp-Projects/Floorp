@@ -53,6 +53,10 @@
 
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
+#include "nsCharTraits.h"
+
+#define ADD_TO_HASHVAL(hashval, c) \
+    hashval = (hashval>>28) ^ (hashval<<4) ^ (c)
 
 // XXX Bug: These tables don't lowercase the upper 128 characters properly
 
@@ -277,7 +281,7 @@ PRUint32 nsCRT::HashCode(const char* str, PRUint32* resultingStrLen)
 
   unsigned char c;
   while ( (c = *s++) )
-    h = (h>>28) ^ (h<<4) ^ c;
+    ADD_TO_HASHVAL(h, c);
 
   if ( resultingStrLen )
     *resultingStrLen = (s-str)-1;
@@ -293,7 +297,7 @@ PRUint32 nsCRT::HashCode(const PRUnichar* str, PRUint32* resultingStrLen)
 
   PRUnichar c;
   while ( (c = *s++) )
-    h = (h>>28) ^ (h<<4) ^ c;
+    ADD_TO_HASHVAL(h, c);
 
   if ( resultingStrLen )
     *resultingStrLen = (s-str)-1;
@@ -316,12 +320,12 @@ PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* str, PRUint32* resultingStrLen)
           /*
            * On the fly, decoding from UTF-16 (and/or UCS-2) into UTF-8 as per
            *  http://www.ietf.org/rfc/rfc2781.txt
-           *  http://www.ietf.org/rfc/rfc2279.txt
+           *  http://www.ietf.org/rfc/rfc3629.txt
            */
 
         if ( !W1 )
           {
-            if ( W < 0xD800 || 0xDFFF < W )
+            if ( !IS_SURROGATE(W) )
               {
                 U = W;
                 if ( W <= 0x007F )
@@ -331,7 +335,7 @@ PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* str, PRUint32* resultingStrLen)
                 else
                   code_length = 3;
               }
-            else if ( /* 0xD800 <= W1 && */ W <= 0xDBFF )
+            else if ( IS_HIGH_SURROGATE(W) )
               W1 = W;
 #ifdef DEBUG
             else NS_ERROR("Got low surrogate but no previous high surrogate");
@@ -342,15 +346,11 @@ PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* str, PRUint32* resultingStrLen)
               // as required by the standard, this code is careful to
               //  throw out illegal sequences
 
-            if ( 0xDC00 <= W && W <= 0xDFFF )
+            if ( IS_LOW_SURROGATE(W) )
               {
-                U = PRUint32( (W1&0x03FF)<<10 | (W&0x3FFF) );
-                if ( U <= 0x001FFFFF )
-                  code_length = 4;
-                else if ( U <= 0x3FFFFFF )
-                  code_length = 5;
-                else
-                  code_length = 6;
+                U = SURROGATE_TO_UCS4(W1, W);
+                NS_ASSERTION(IS_VALID_CHAR(U), "How did this happen?");
+                code_length = 4;
               }
 #ifdef DEBUG
             else NS_ERROR("High surrogate not followed by low surrogate");
@@ -361,27 +361,26 @@ PRUint32 nsCRT::HashCodeAsUTF8(const PRUnichar* str, PRUint32* resultingStrLen)
 
         if ( code_length > 0 )
           {
-            static const PRUint16 sBytePrefix[7]  = { 0x0000, 0x0000, 0x00C0, 0x00E0, 0x00F0, 0x00F8, 0x00FC };
-            static const PRUint16 sShift[7]       = { 0, 0, 6, 12, 18, 24, 30 };
+            static const PRUint16 sBytePrefix[5]  = { 0x0000, 0x0000, 0x00C0, 0x00E0, 0x00F0  };
+            static const PRUint16 sShift[5]       = { 0, 0, 6, 12, 18 };
 
               /*
-               * Unlike the algorithm in http://www.ietf.org/rfc/rfc2279.txt
+               *  Unlike the algorithm in http://www.ietf.org/rfc/rfc3629.txt
                *  we must calculate the bytes in left to right order so that
                *  our hash result matches what the narrow version would calculate
                *  on an already UTF-8 string.
                */
 
               // hash the first (and often, only, byte)
-            h = (h>>28) ^ (h<<4) ^ (sBytePrefix[code_length] | (U>>sShift[code_length]));
+            ADD_TO_HASHVAL(h, (sBytePrefix[code_length] |
+                               (U>>sShift[code_length])));
 
               // an unrolled loop for hashing any remaining bytes in this sequence
             switch ( code_length )
               {  // falling through in each case
-                case 6:   h = (h>>28) ^ (h<<4) ^ (0x80 | ((U>>24) & 0x003F));
-                case 5:   h = (h>>28) ^ (h<<4) ^ (0x80 | ((U>>18) & 0x003F));
-                case 4:   h = (h>>28) ^ (h<<4) ^ (0x80 | ((U>>12) & 0x003F));
-                case 3:   h = (h>>28) ^ (h<<4) ^ (0x80 | ((U>>6 ) & 0x003F));
-                case 2:   h = (h>>28) ^ (h<<4) ^ (0x80 | ( U      & 0x003F));
+                case 4:   ADD_TO_HASHVAL(h, (0x80 | ((U>>12) & 0x003F)));
+                case 3:   ADD_TO_HASHVAL(h, (0x80 | ((U>>6 ) & 0x003F)));
+                case 2:   ADD_TO_HASHVAL(h, (0x80 | ( U      & 0x003F)));
                 default:  code_length = 0;
                   break;
               }
