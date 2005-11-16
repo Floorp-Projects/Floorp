@@ -147,6 +147,12 @@ interface nsIXPConnectWrappedNative;
 interface nsIInterfaceInfo;
 interface nsIXPCSecurityManager;
 
+%{C++
+#ifndef XPCONNECT_STANDALONE
+class nsIPrincipal;
+#endif
+%}
+
 /***************************************************************************/
 [uuid(8916a320-d118-11d3-8f3a-0010a4e73d9a)]
 interface nsIXPConnectJSObjectHolder : nsISupports
@@ -154,7 +160,7 @@ interface nsIXPConnectJSObjectHolder : nsISupports
     readonly attribute JSObjectPtr      JSObject;
 };
 
-[uuid(215DBE02-94A7-11d2-BA58-00805F8A5DD7)]
+[uuid(7021D99D-6344-4CC0-96E7-943ED58792B8)]
 interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
@@ -179,12 +185,28 @@ interface nsIXPConnectWrappedNative : nsIXPConnectJSObjectHolder
      */
     voidPtrPtr GetSecurityInfoAddress();
 
+    /*
+     * NOTE: Add new IDL methods _before_ the C++ block below if you
+     * add them.  Otherwise the vtable won't be what xpidl thinks it
+     * is, since GetObjectPrincipal() is virtual.
+     */
+
 %{C++
     /**
      * Faster access to the native object from C++.  Will never return null.
      */
     nsISupports* Native() const { return mIdentity; }
 
+#ifndef XPCONNECT_STANDALONE
+    /**
+     * Get the object principal for this wrapper.  Note that this may well end
+     * up being null; in that case one should seek principals elsewhere.  Null
+     * here does NOT indicate system principal or no principals at all, just
+     * that this wrapper doesn't have an intrinsic one.
+     */
+    virtual nsIPrincipal* GetObjectPrincipal() const = 0;   
+#endif
+    
 protected:
     nsISupports *mIdentity;
 public:

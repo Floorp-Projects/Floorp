@@ -2360,6 +2360,20 @@ NS_IMETHODIMP XPCWrappedNative::GetJSObjectPrototype(JSObject * *aJSObjectProtot
     return NS_OK;
 }
 
+#ifndef XPCONNECT_STANDALONE
+nsIPrincipal*
+XPCWrappedNative::GetObjectPrincipal() const
+{
+    nsIPrincipal* principal = GetScope()->GetPrincipal();
+#ifdef DEBUG
+    nsCOMPtr<nsIScriptObjectPrincipal> objPrin(do_QueryInterface(mIdentity));
+    NS_ASSERTION(!objPrin || objPrin->GetPrincipal() == principal,
+                 "Principal mismatch.  Expect bad things to happen");
+#endif
+    return principal;
+}
+#endif
+
 /* readonly attribute nsIXPConnect XPConnect; */
 NS_IMETHODIMP XPCWrappedNative::GetXPConnect(nsIXPConnect * *aXPConnect)
 {

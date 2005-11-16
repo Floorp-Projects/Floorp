@@ -176,6 +176,31 @@ XPCWrappedNativeScope::SetGlobal(XPCCallContext& ccx, JSObject* aGlobal)
     // nsXPConnect::InitClassesWithNewWrappedGlobal.
 
     mGlobalJSObject = aGlobal;
+#ifndef XPCONNECT_STANDALONE
+    mScriptObjectPrincipal = nsnull;
+    // Now init our script object principal, if the new global has one
+    if (aGlobal)
+    {
+        JSContext* cx = ccx.GetJSContext();
+        const JSClass* jsClass = JS_GetClass(cx, aGlobal);
+        if (jsClass && !(~jsClass->flags & (JSCLASS_HAS_PRIVATE |
+                                            JSCLASS_PRIVATE_IS_NSISUPPORTS)))
+        {
+            // Our global has an nsISupports native pointer.  Let's
+            // see whether it's what we want.
+            nsISupports* priv = (nsISupports*)JS_GetPrivate(cx, aGlobal);
+            nsCOMPtr<nsIXPConnectWrappedNative> native =
+                do_QueryInterface(priv);
+            if (native)
+            {
+                mScriptObjectPrincipal = do_QueryWrappedNative(native);
+            }
+            if (!mScriptObjectPrincipal) {
+                mScriptObjectPrincipal = do_QueryInterface(priv);
+            }
+        }
+    }
+#endif
 
     // Lookup 'globalObject.Object.prototype' for our wrapper's proto
     {
