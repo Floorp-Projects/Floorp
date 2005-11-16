@@ -181,6 +181,7 @@
     MODULE(application)                      \
     MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \
+    MODULE(tkAutoCompleteModule)             \
     MODULE(nsToolkitCompsModule)             \
     XREMOTE_MODULES                          \
     MODULE(nsSoftwareUpdate)                 \
