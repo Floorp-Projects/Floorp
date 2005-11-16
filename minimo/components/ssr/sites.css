@@ -21,3 +21,32 @@
   padding: 5px !important;
  }
 }
+
+@-moz-document domain(digg.com)
+{
+ * { width: auto ! important;
+   }
+
+ div#container
+ {
+     min-width: 0 ! important;
+ }
+
+ li.digg-count
+ {
+    font-size: 6px ! important;
+ }
+
+ div#google-broad, div#header
+ {
+    display: none  ! important;
+    margin: 0      ! important; 
+    padding: 0     ! important;
+ }
+
+ div#contents
+ {
+    margin: 0      ! important; 
+    padding: 0     ! important;
+ }
+}
