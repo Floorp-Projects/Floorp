@@ -1364,11 +1364,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
     }
   }
 
-  nsCOMPtr<nsICaret> caret;
-  result = mShell->GetCaret(getter_AddRefs(caret));
-  if (NS_FAILED(result) || !caret)
-    return 0;
-
   offsetused = mDomSelections[index]->FetchFocusOffset();
   weakNodeUsed = mDomSelections[index]->FetchFocusNode();
 
@@ -4729,20 +4724,30 @@ nsTypedSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame, PRInt32 *
   if (!aReturnFrame)
     return NS_ERROR_NULL_POINTER;
   
+  nsCOMPtr<nsIContent> content = do_QueryInterface(FetchFocusNode());
+  if (!content || !mFrameSelection)
+    return NS_ERROR_FAILURE;
+  
+  nsIPresShell *presShell = mFrameSelection->GetShell();
+
+  nsCOMPtr<nsICaret> caret;
+  nsresult result = presShell->GetCaret(getter_AddRefs(caret));
+  if (NS_FAILED(result) || !caret)
+    return NS_ERROR_FAILURE;
+
   PRInt32 frameOffset = 0;
   *aReturnFrame = 0;
   if (!aOffsetUsed)
     aOffsetUsed = &frameOffset;
-    
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(FetchFocusNode());
-  if (content && mFrameSelection)
-  {
-    nsIFrameSelection::HINT hint;
-    mFrameSelection->GetHint(&hint);
-    return mFrameSelection->GetFrameForNodeOffset(content, FetchFocusOffset(),hint,aReturnFrame, aOffsetUsed);
-  }
-  return NS_ERROR_FAILURE;
+  nsIFrameSelection::HINT hint;
+  mFrameSelection->GetHint(&hint);
+  
+  PRUint8 caretBidiLevel;
+  presShell->GetCaretBidiLevel(&caretBidiLevel);
+
+  return caret->GetCaretFrameForNodeOffset(content, FetchFocusOffset(), hint, caretBidiLevel,
+                                           aReturnFrame, aOffsetUsed);
 }
 
 

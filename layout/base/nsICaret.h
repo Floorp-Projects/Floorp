@@ -41,6 +41,7 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsCoord.h"
+#include "nsIFrameSelection.h"
 
 struct nsRect;
 struct nsPoint;
@@ -53,10 +54,10 @@ class nsISelection;
 class nsIDOMNode;
 
 // IID for the nsICaret interface
-// c2ba7b60-ccbf-4f2b-8bf7-07493bbf3377
+// dcb01833-509d-4fcb-8f7f-6beb006261b9
 #define NS_ICARET_IID \
-{ 0xc2ba7b60, 0xccbf, 0x4f2b, \
-  { 0x8b, 0xf7, 0x07, 0x49, 0x3b, 0xbf, 0x33, 0x77 } }
+{ 0xdcb01833, 0x509d, 0x4fcb, \
+  { 0x8f, 0x7f, 0x6b, 0xeb, 0x00, 0x62, 0x61, 0xb9 } }
 
 class nsICaret: public nsISupports
 {
@@ -117,6 +118,13 @@ public:
    **/
   NS_IMETHOD DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset) = 0;
 
+  /** GetCaretFrameForNodeOffset
+    *  Get the frame and content offset at which the caret is drawn,
+    *  invoking the bidi caret positioning algorithm if necessary
+    **/
+  NS_IMETHOD GetCaretFrameForNodeOffset (nsIContent* aContentNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint, PRUint8 aBidiLevel,
+                                         nsIFrame** aReturnFrame, PRInt32* aReturnOffset) = 0;
+    
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICaret, NS_ICARET_IID)

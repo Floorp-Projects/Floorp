@@ -336,10 +336,15 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
   nsIFrameSelection::HINT hint;
   frameSelection->GetHint(&hint);
 
-  err = frameSelection->GetFrameForNodeOffset(contentNode,
-                                              focusOffset, hint,
-                                              &theFrame,
-                                              &theFrameOffset);
+  PRUint8 bidiLevel;
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  presShell->GetCaretBidiLevel(&bidiLevel);
+  
+  err = GetCaretFrameForNodeOffset(contentNode,
+                                   focusOffset, hint,
+                                   bidiLevel,
+                                   &theFrame,
+                                   &theFrameOffset);
   if (NS_FAILED(err) || !theFrame)
     return err;
   
@@ -352,7 +357,6 @@ NS_IMETHODIMP nsCaret::GetCaretCoordinates(EViewCoordinates aRelativeToType, nsI
     return NS_ERROR_UNEXPECTED;
   // ramp up to make a rendering context for measuring text.
   // First, we get the pres context ...
-  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   nsPresContext *presContext = presShell->GetPresContext();
 
   // ... then tell it to make a rendering context
@@ -423,9 +427,13 @@ NS_IMETHODIMP nsCaret::SetVisibilityDuringSelection(PRBool aVisibility)
 NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
 {
   NS_ENSURE_ARG(aNode);
+
+  PRUint8 bidiLevel;
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  presShell->GetCaretBidiLevel(&bidiLevel);
   
   // XXX we need to do more work here to get the correct hint.
-  return DrawAtPositionWithHint(aNode, aOffset, nsIFrameSelection::HINTLEFT) ?
+  return DrawAtPositionWithHint(aNode, aOffset, nsIFrameSelection::HINTLEFT, bidiLevel) ?
     NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -532,20 +540,70 @@ nsresult nsCaret::StopBlinking()
 PRBool
 nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
                                 PRInt32                 aOffset,
-                                nsIFrameSelection::HINT aFrameHint)
+                                nsIFrameSelection::HINT aFrameHint,
+                                PRUint8                 aBidiLevel)
 {  
   nsCOMPtr<nsIContent> contentNode = do_QueryInterface(aNode);
   if (!contentNode)
     return PR_FALSE;
       
+  nsIFrame* theFrame = nsnull;
+  PRInt32   theFrameOffset = 0;
+
+  nsresult rv = GetCaretFrameForNodeOffset(contentNode, aOffset, aFrameHint, aBidiLevel,
+                                           &theFrame, &theFrameOffset);
+  if (NS_FAILED(rv) || !theFrame)
+    return PR_FALSE;
+  
+  // now we have a frame, check whether it's appropriate to show the caret here
+  const nsStyleUserInterface* userinterface = theFrame->GetStyleUserInterface();
+  if (
+#ifdef SUPPORT_USER_MODIFY
+        // editable content still defaults to NS_STYLE_USER_MODIFY_READ_ONLY at present. See bug 15284
+      (userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
+#endif          
+      (userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE) ||
+      (userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED))
+  {
+    return PR_FALSE;
+  }  
+
+  if (!mDrawn)
+  {
+    // save stuff so we can erase the caret later
+    mLastContent = contentNode;
+    mLastContentOffset = aOffset;
+    mLastHint = aFrameHint;
+    mLastBidiLevel = aBidiLevel;
+
+    // If there has been a reflow, set the caret Bidi level to the level of the current frame
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+    if (aBidiLevel & BIDI_LEVEL_UNDEFINED)
+      presShell->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
+  }
+
+  GetCaretRectAndInvert(theFrame, theFrameOffset);
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP 
+nsCaret::GetCaretFrameForNodeOffset (nsIContent*             aContentNode,
+                                     PRInt32                 aOffset,
+                                     nsIFrameSelection::HINT aFrameHint,
+                                     PRUint8                 aBidiLevel,
+                                     nsIFrame**              aReturnFrame,
+                                     PRInt32*                aReturnOffset)
+{
+
   //get frame selection and find out what frame to use...
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!presShell)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISelectionPrivate> privateSelection(do_QueryReferent(mDomSelectionWeak));
   if (!privateSelection)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIFrameSelection> frameSelection;
   privateSelection->GetFrameSelection(getter_AddRefs(frameSelection));
@@ -553,12 +611,10 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
   nsIFrame* theFrame = nsnull;
   PRInt32   theFrameOffset = 0;
 
-  nsresult rv = frameSelection->GetFrameForNodeOffset(contentNode, aOffset, aFrameHint, &theFrame, &theFrameOffset);
+  nsresult rv = frameSelection->GetFrameForNodeOffset(aContentNode, aOffset, aFrameHint, &theFrame, &theFrameOffset);
   if (NS_FAILED(rv) || !theFrame)
-    return PR_FALSE;
+    return NS_ERROR_FAILURE;
 
-#ifdef IBMBIDI
-  PRUint8 bidiLevel=0;
   // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
   //
   // Direction Style from this->GetStyleData()
@@ -570,28 +626,9 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
   nsPresContext *presContext = presShell->GetPresContext();
   if (presContext && presContext->BidiEnabled())
   {
-    if (mDrawn) {
-      bidiLevel = mLastBidiLevel;
-    } else {
-      presShell->GetCaretBidiLevel(&bidiLevel);
-      if (bidiLevel & BIDI_LEVEL_UNDEFINED)
-      {
-        PRUint8 newBidiLevel;
-        bidiLevel &= ~BIDI_LEVEL_UNDEFINED;
-        // There has been a reflow, so we reset the cursor Bidi level to the level of the current frame
-        if (!presContext) // Use the style default or default to 0
-        {
-          newBidiLevel = theFrame->GetStyleVisibility()->mDirection;
-        }
-        else
-        {
-          newBidiLevel = NS_GET_EMBEDDING_LEVEL(theFrame);
-          presShell->SetCaretBidiLevel(newBidiLevel);
-          bidiLevel = newBidiLevel;
-        }
-      }
-      mLastBidiLevel = bidiLevel;
-    }
+    // If there has been a reflow, take the caret Bidi level to be the level of the current frame
+    if (aBidiLevel & BIDI_LEVEL_UNDEFINED)
+      aBidiLevel = NS_GET_EMBEDDING_LEVEL(theFrame);
 
     PRInt32 start;
     PRInt32 end;
@@ -603,27 +640,26 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
     theFrame->GetOffsets(start, end);
     if (start == 0 || end == 0 || start == theFrameOffset || end == theFrameOffset)
     {
-      /* Boundary condition, we need to know the Bidi levels of the characters before and after the cursor */
-      if (NS_SUCCEEDED(frameSelection->GetPrevNextBidiLevels(presContext, contentNode, aOffset,
+      /* Boundary condition, we need to know the Bidi levels of the characters before and after the caret */
+      if (NS_SUCCEEDED(frameSelection->GetPrevNextBidiLevels(presContext, aContentNode, aOffset,
                                                              &frameBefore, &frameAfter,
                                                              &levelBefore, &levelAfter)))
       {
-        if ((levelBefore != levelAfter) || (bidiLevel != levelBefore))
+        if ((levelBefore != levelAfter) || (aBidiLevel != levelBefore))
         {
-          bidiLevel = PR_MAX(bidiLevel, PR_MIN(levelBefore, levelAfter));                                 // rule c3
-          bidiLevel = PR_MIN(bidiLevel, PR_MAX(levelBefore, levelAfter));                                 // rule c4
-          if (bidiLevel == levelBefore                                                                    // rule c1
-              || bidiLevel > levelBefore && bidiLevel < levelAfter && !((bidiLevel ^ levelBefore) & 1)    // rule c5
-              || bidiLevel < levelBefore && bidiLevel > levelAfter && !((bidiLevel ^ levelBefore) & 1))   // rule c9
+          aBidiLevel = PR_MAX(aBidiLevel, PR_MIN(levelBefore, levelAfter));                                  // rule c3
+          aBidiLevel = PR_MIN(aBidiLevel, PR_MAX(levelBefore, levelAfter));                                  // rule c4
+          if (aBidiLevel == levelBefore                                                                      // rule c1
+              || aBidiLevel > levelBefore && aBidiLevel < levelAfter && !((aBidiLevel ^ levelBefore) & 1)    // rule c5
+              || aBidiLevel < levelBefore && aBidiLevel > levelAfter && !((aBidiLevel ^ levelBefore) & 1))   // rule c9
           {
             if (theFrame != frameBefore)
             {
-              if (frameBefore) // if there is a frameBefore, move into it, setting HINTLEFT to make sure we stay there
+              if (frameBefore) // if there is a frameBefore, move into it
               {
                 theFrame = frameBefore;
                 theFrame->GetOffsets(start, end);
                 theFrameOffset = end;
-//              frameSelection->SetHint(nsIFrameSelection::HINTLEFT);
               }
               else 
               {
@@ -648,19 +684,18 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
               }
             }
           }
-          else if (bidiLevel == levelAfter                                                                   // rule c2
-                   || bidiLevel > levelBefore && bidiLevel < levelAfter && !((bidiLevel ^ levelAfter) & 1)   // rule c6  
-                   || bidiLevel < levelBefore && bidiLevel > levelAfter && !((bidiLevel ^ levelAfter) & 1))  // rule c10
+          else if (aBidiLevel == levelAfter                                                                     // rule c2
+                   || aBidiLevel > levelBefore && aBidiLevel < levelAfter && !((aBidiLevel ^ levelAfter) & 1)   // rule c6  
+                   || aBidiLevel < levelBefore && aBidiLevel > levelAfter && !((aBidiLevel ^ levelAfter) & 1))  // rule c10
           {
             if (theFrame != frameAfter)
             {
               if (frameAfter)
               {
-                // if there is a frameAfter, move into it, setting HINTRIGHT to make sure we stay there
+                // if there is a frameAfter, move into it
                 theFrame = frameAfter;
                 theFrame->GetOffsets(start, end);
                 theFrameOffset = start;
-//              frameSelection->SetHint(nsIFrameSelection::HINTRIGHT);
               }
               else 
               {
@@ -687,29 +722,29 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
               }
             }
           }
-          else if (bidiLevel > levelBefore && bidiLevel < levelAfter  // rule c7/8
-                   && !((levelBefore ^ levelAfter) & 1)               //  before and after have the same parity
-                   && ((bidiLevel ^ levelAfter) & 1))                 // cursor has different parity
+          else if (aBidiLevel > levelBefore && aBidiLevel < levelAfter  // rule c7/8
+                   && !((levelBefore ^ levelAfter) & 1)                 // before and after have the same parity
+                   && ((aBidiLevel ^ levelAfter) & 1))                  // caret has different parity
           {
-            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameAfter, eDirNext, bidiLevel, &theFrame)))
+            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameAfter, eDirNext, aBidiLevel, &theFrame)))
             {
               theFrame->GetOffsets(start, end);
               levelAfter = NS_GET_EMBEDDING_LEVEL(theFrame);
-              if (bidiLevel & 1) // c8: caret to the right of the rightmost character
+              if (aBidiLevel & 1) // c8: caret to the right of the rightmost character
                 theFrameOffset = (levelAfter & 1) ? start : end;
               else               // c7: caret to the left of the leftmost character
                 theFrameOffset = (levelAfter & 1) ? end : start;
             }
           }
-          else if (bidiLevel < levelBefore && bidiLevel > levelAfter  // rule c11/12
-                   && !((levelBefore ^ levelAfter) & 1)               //  before and after have the same parity
-                   && ((bidiLevel ^ levelAfter) & 1))                 // cursor has different parity
+          else if (aBidiLevel < levelBefore && aBidiLevel > levelAfter  // rule c11/12
+                   && !((levelBefore ^ levelAfter) & 1)                 // before and after have the same parity
+                   && ((aBidiLevel ^ levelAfter) & 1))                  // caret has different parity
           {
-            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameBefore, eDirPrevious, bidiLevel, &theFrame)))
+            if (NS_SUCCEEDED(frameSelection->GetFrameFromLevel(presContext, frameBefore, eDirPrevious, aBidiLevel, &theFrame)))
             {
               theFrame->GetOffsets(start, end);
               levelBefore = NS_GET_EMBEDDING_LEVEL(theFrame);
-              if (bidiLevel & 1) // c12: caret to the left of the leftmost character
+              if (aBidiLevel & 1) // c12: caret to the left of the leftmost character
                 theFrameOffset = (levelBefore & 1) ? end : start;
               else               // c11: caret to the right of the rightmost character
                 theFrameOffset = (levelBefore & 1) ? start : end;
@@ -719,31 +754,9 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
       }
     }
   }
-#endif // IBMBIDI
-
-  // now we have a frame, check whether it's appropriate to show the caret here
-  const nsStyleUserInterface* userinterface = theFrame->GetStyleUserInterface();
-  if (
-#ifdef SUPPORT_USER_MODIFY
-        // editable content still defaults to NS_STYLE_USER_MODIFY_READ_ONLY at present. See bug 15284
-      (userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
-#endif          
-      (userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE) ||
-      (userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED))
-  {
-    return PR_FALSE;
-  }  
-
-  if (!mDrawn)
-  {
-    // save stuff so we can erase the caret later
-    mLastContent = contentNode;
-    mLastContentOffset = aOffset;
-    mLastHint = aFrameHint;
-  }
-
-  GetCaretRectAndInvert(theFrame, theFrameOffset);
-  return PR_TRUE;
+  *aReturnFrame = theFrame;
+  *aReturnOffset = theFrameOffset;
+  return NS_OK;
 }
 
 
@@ -910,6 +923,7 @@ void nsCaret::DrawCaret()
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
   nsIFrameSelection::HINT hint;
+  PRUint8 bidiLevel;
 
   if (!mDrawn)
   {
@@ -933,6 +947,9 @@ void nsCaret::DrawCaret()
     
     if (NS_FAILED(domSelection->GetFocusOffset(&offset)))
       return;
+
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+    presShell->GetCaretBidiLevel(&bidiLevel);
   }
   else
   {
@@ -950,9 +967,10 @@ void nsCaret::DrawCaret()
     node = do_QueryInterface(mLastContent);
     offset = mLastContentOffset;
     hint = mLastHint;
+    bidiLevel = mLastBidiLevel;
   }
 
-  DrawAtPositionWithHint(node, offset, hint);
+  DrawAtPositionWithHint(node, offset, hint, bidiLevel);
 }
 
 void nsCaret::GetCaretRectAndInvert(nsIFrame* aFrame, PRInt32 aFrameOffset)
