@@ -391,10 +391,6 @@ nsXFormsUtils::EvaluateXPath(const nsAString        &aExpression,
                              nsCOMArray<nsIDOMNode> *aSet,
                              nsStringArray          *aIndexesUsed)
 {
-  nsCOMPtr<nsIDOMDocument> doc;
-  aContextNode->GetOwnerDocument(getter_AddRefs(doc));
-  NS_ENSURE_TRUE(doc, nsnull);
-
   nsCOMPtr<nsIXFormsXPathEvaluator> eval = 
            do_CreateInstance("@mozilla.org/dom/xforms-xpath-evaluator;1");
   NS_ENSURE_TRUE(eval, nsnull);
