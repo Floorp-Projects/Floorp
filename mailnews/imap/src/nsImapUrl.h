@@ -95,11 +95,11 @@ protected:
   
   void		ParseFolderPath(char **resultingCanonicalPath);
   void		ParseSearchCriteriaString();
-  void		ParseChildDiscoveryDepth();
   void		ParseUidChoice();
   void		ParseMsgFlags();
   void		ParseListOfMessageIds();
   void          ParseCustomMsgFetchAttribute();
+  void          ParseNumBytes();
 
   nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
   
@@ -115,6 +115,7 @@ protected:
   nsCString     m_customCommandResult; // custom command response
   nsCString     m_customAddFlags;       // these two are for setting and clearing custom flags
   nsCString     m_customSubtractFlags;
+  PRInt32       m_numBytesToFetch; // when doing a msg body preview, how many bytes to read
   PRPackedBool m_validUrl;
   PRPackedBool m_runningUrl;
   PRPackedBool m_idsAreUids;
@@ -126,7 +127,6 @@ protected:
   PRPackedBool m_shouldStoreMsgOffline;
   PRPackedBool m_rerunningUrl; // first attempt running this failed with connection error; retrying
   nsImapContentModifiedType	m_contentModified;
-  PRInt32 m_discoveryDepth;
 
   nsXPIDLCString  m_userName;
   nsXPIDLCString  m_serverKey;

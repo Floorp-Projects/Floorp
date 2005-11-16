@@ -58,7 +58,7 @@ interface nsIImapIncomingServer;
 interface nsICacheSession;
 
 
-[scriptable, uuid(18236127-FA1D-11d3-98BA-001083010E9B)]
+[scriptable, uuid(4032dc12-8684-4458-9b41-647034d8c7d2)]
 interface nsIImapService : nsISupports
 {
 	// As always, you can pass in null for the url listener and the url if you don't require either.....
@@ -98,6 +98,12 @@ interface nsIImapService : nsISupports
                   out nsIURI aURL,
                   in string aMessageIdentifierList,
                   in boolean aMessageIdsAreUID);
+
+  nsIURI getBodyStart(in nsIEventQueue aClientEventQueue, 
+                  in nsIMsgFolder aImapMailFolder,
+                  in nsIUrlListener aUrlListener,
+                  in string aMessageIdentifierList,
+                  in long numBytes);
 
   void expunge(in nsIEventQueue aClientEventQueue, 
                in nsIMsgFolder aImapMailFolder,
@@ -166,13 +172,6 @@ interface nsIImapService : nsISupports
                         in string folderPath,
                         out nsIURI aURL);
 
-  void discoverLevelChildren(in nsIEventQueue aClientEventQueue, 
-                             in nsIMsgFolder aImapMailFolder,
-                             in nsIUrlListener aUrlListener,
-                             in string folderPath,
-                             in long aLevel,
-                             out nsIURI aURL);
-
   void onlineMessageCopy(in nsIEventQueue aClientEventQueue, 
                          in nsIMsgFolder aSrcFolder,
                          in string aMessageIds,
@@ -198,6 +197,7 @@ interface nsIImapService : nsISupports
   
   void downloadMessagesForOffline(in string aMessageIds, in nsIMsgFolder aSrcFolder,
                       in nsIUrlListener aListener, in nsIMsgWindow   aMsgWindow);
+
   nsIURI moveFolder(in nsIEventQueue aClientEventQueue, 
                     in nsIMsgFolder aSrcFolder,
                     in nsIMsgFolder aDstFolder,

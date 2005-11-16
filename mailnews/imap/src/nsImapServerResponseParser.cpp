@@ -1271,6 +1271,10 @@ void nsImapServerResponseParser::msg_fetch()
           fFlagState->GetUidOfMessage(fFetchResponseIndex - 1, &fCurrentResponseUID);
         bodystructure_data();
       }
+      else if (!PL_strncasecmp(fNextToken, "BODY[TEXT", 9))
+      {
+        mime_data();
+      }
       else if (!PL_strncasecmp(fNextToken, "BODY[", 5) && PL_strncasecmp(fNextToken, "BODY[]", 6))
       {
         fDownloadingHeaders = PR_FALSE;
@@ -1367,6 +1371,20 @@ typedef struct
 	envelopeItemType type;
 } envelopeItem;
 
+// RFC3501:  envelope  = "(" env-date SP env-subject SP env-from SP
+//                       env-sender SP env-reply-to SP env-to SP env-cc SP
+//                       env-bcc SP env-in-reply-to SP env-message-id ")"
+//           env-date    = nstring
+//           env-subject = nstring
+//           env-from    = "(" 1*address ")" / nil
+//           env-sender  = "(" 1*address ")" / nil
+//           env-reply-to= "(" 1*address ")" / nil
+//           env-to      = "(" 1*address ")" / nil
+//           env-cc      = "(" 1*address ")" / nil
+//           env-bcc     = "(" 1*address ")" / nil
+//           env-in-reply-to = nstring
+//           env-message-id  = nstring
+
 static const envelopeItem EnvelopeTable[] =
 {
   {"Date", envelopeString},
@@ -1383,12 +1401,6 @@ static const envelopeItem EnvelopeTable[] =
 
 void nsImapServerResponseParser::envelope_data()
 {
-	 //date, subject, from, sender,
-  // reply-to, to, cc, bcc, in-reply-to, and message-id.
-  // The date, subject, in-reply-to, and message-id
-  //fields are strings.  The from, sender, reply-to,
-  //to, cc, and bcc fields are addresses
-  
   AdvanceToNextToken();
   fNextToken++; // eat '('
   for (int tableIndex = 0; tableIndex < (int)(sizeof(EnvelopeTable) / sizeof(EnvelopeTable[0])); tableIndex++)
@@ -2551,7 +2563,8 @@ void nsImapServerResponseParser::mime_part_data()
     HandleMemoryFailure();
 }
 
-// FETCH BODYSTRUCTURE parser
+// parse FETCH BODYSTRUCTURE response, "a parenthesized list that describes
+// the [MIME-IMB] body structure of a message" [RFC 3501].
 void nsImapServerResponseParser::bodystructure_data()
 {
   AdvanceToNextToken();
@@ -2562,18 +2575,20 @@ void nsImapServerResponseParser::bodystructure_data()
                                                                nsCRT::strdup("message"), nsCRT::strdup("rfc822"),
                                                                NULL, NULL, NULL, 0);
     nsIMAPBodypart *body = bodystructure_part(PL_strdup("1"), message);
-    if (!body)
-      delete message;
+    if (body)
+      message->SetBody(body);
     else
     {
-      message->SetBody(body);
-      m_shell = new nsIMAPBodyShell(&fServerConnection, message, CurrentResponseUID(), GetSelectedMailboxName());
+      delete message;
+      message = nsnull;
     }
+    m_shell = new nsIMAPBodyShell(&fServerConnection, message, CurrentResponseUID(), GetSelectedMailboxName());
   }
   else
     SetSyntaxError(PR_TRUE);
 }
 
+// RFC3501:  body = "(" (body-type-1part / body-type-mpart) ")"
 nsIMAPBodypart *
 nsImapServerResponseParser::bodystructure_part(char *partNum, nsIMAPBodypart *parentPart)
 {
@@ -2591,6 +2606,8 @@ nsImapServerResponseParser::bodystructure_part(char *partNum, nsIMAPBodypart *pa
     return bodystructure_leaf(partNum, parentPart);
 }
 
+// RFC3501: body-type-1part = (body-type-basic / body-type-msg / body-type-text)
+//                            [SP body-ext-1part]
 nsIMAPBodypart *
 nsImapServerResponseParser::bodystructure_leaf(char *partNum, nsIMAPBodypart *parentPart) 
 {
@@ -2736,6 +2753,8 @@ nsImapServerResponseParser::bodystructure_leaf(char *partNum, nsIMAPBodypart *pa
 }
 
 
+// RFC3501:  body-type-mpart = 1*body SP media-subtype
+//                             [SP body-ext-mpart]
 nsIMAPBodypart *
 nsImapServerResponseParser::bodystructure_multipart(char *partNum, nsIMAPBodypart *parentPart) 
 {
@@ -2768,7 +2787,8 @@ nsImapServerResponseParser::bodystructure_multipart(char *partNum, nsIMAPBodypar
       }
     }
 
-    // multipart subtype (mixed, alternative, etc.)
+    // RFC3501:  media-subtype   = string
+    // (multipart subtype: mixed, alternative, etc.)
     if (isValid && ContinueParse())
     {
       char *bodySubType = CreateNilString();
@@ -2776,9 +2796,13 @@ nsImapServerResponseParser::bodystructure_multipart(char *partNum, nsIMAPBodypar
       if (ContinueParse())
         AdvanceToNextToken();
     }
+
+    // extension data:
+    // RFC3501:  body-ext-mpart = body-fld-param [SP body-fld-dsp [SP body-fld-lang
+    //                            [SP body-fld-loc *(SP body-extension)]]]
     
-    // body parameters (includes boundary parameter): parenthesized list 
-    // note: this is optional data
+    // body parameter parenthesized list (optional data), includes boundary parameter
+    // RFC3501:  body-fld-param  = "(" string SP string *(SP string SP string) ")" / nil
     char *boundaryData = nsnull;
     if (isValid && ContinueParse() && *fNextToken == '(')
     {
@@ -2883,12 +2907,12 @@ void nsImapServerResponseParser::quota_data()
 
 PRBool nsImapServerResponseParser::GetFillingInShell()
 {
-	return (m_shell != nsnull);
+  return (m_shell != nsnull);
 }
 
 PRBool nsImapServerResponseParser::GetDownloadingHeaders()
 {
-	return fDownloadingHeaders;
+  return fDownloadingHeaders;
 }
 
 // Tells the server state parser to use a previously cached shell.

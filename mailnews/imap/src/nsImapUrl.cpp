@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -146,9 +147,9 @@ NS_IMETHODIMP nsImapUrl::SetMsgWindow(nsIMsgWindow *aMsgWindow)
 
 nsImapUrl::~nsImapUrl()
 {
-	PR_FREEIF(m_listOfMessageIds);
-	PR_FREEIF(m_destinationCanonicalFolderPathSubString);
-	PR_FREEIF(m_sourceCanonicalFolderPathSubString);
+  PR_FREEIF(m_listOfMessageIds);
+  PR_FREEIF(m_destinationCanonicalFolderPathSubString);
+  PR_FREEIF(m_sourceCanonicalFolderPathSubString);
   PR_FREEIF(m_searchCriteriaString);
 }
   
@@ -414,7 +415,7 @@ NS_IMETHODIMP nsImapUrl::GetCustomSubtractFlags(char **aResult)
 
 NS_IMETHODIMP nsImapUrl::GetImapPartToFetch(char **result) 
 {
-	//  here's the old code....
+  //  here's the old code....
 
   // unforunately an imap part can have the form: /;section= OR
   // it can have the form ?section=. We need to look for both.
@@ -458,25 +459,24 @@ NS_IMETHODIMP nsImapUrl::GetOnlineSubDirSeparator(char* separator)
   }
 }
 
+NS_IMETHODIMP nsImapUrl::GetNumBytesToFetch(PRInt32 *aNumBytesToFetch)
+{
+  NS_ENSURE_ARG_POINTER(aNumBytesToFetch);
+  *aNumBytesToFetch = m_numBytesToFetch;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsImapUrl::SetOnlineSubDirSeparator(char onlineDirSeparator)
 {
-	m_onlineSubDirSeparator = onlineDirSeparator;
+  m_onlineSubDirSeparator = onlineDirSeparator;
   return NS_OK;
 }
 
 // this method is only called from the imap thread
 NS_IMETHODIMP nsImapUrl::MessageIdsAreUids(PRBool *result)
 {
-	*result = m_idsAreUids;
-  return NS_OK;
-}
-
-// this method is only called from the imap thread
-NS_IMETHODIMP 
-nsImapUrl::GetChildDiscoveryDepth(PRInt32* result)
-{
-  *result = m_discoveryDepth;
+  *result = m_idsAreUids;
   return NS_OK;
 }
 
@@ -522,6 +522,13 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
       ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
       ParseListOfMessageIds();
       ParseCustomMsgFetchAttribute();
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "previewBody"))
+    {
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+      ParseNumBytes();
     }
     else if (!nsCRT::strcasecmp(m_urlidSubString, "deletemsg"))
     {
@@ -652,12 +659,6 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
     else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverchildren"))
     {
       m_imapAction = nsImapDiscoverChildrenUrl;
-      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-    }
-    else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverlevelchildren"))
-    {
-      m_imapAction = nsImapDiscoverLevelChildrenUrl;
-      ParseChildDiscoveryDepth();
       ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
     }
     else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverallboxes"))
@@ -1465,18 +1466,6 @@ void nsImapUrl::ParseSearchCriteriaString()
 }
 
 
-void nsImapUrl::ParseChildDiscoveryDepth()
-{
-	char *discoveryDepth = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
-	if (!discoveryDepth)
-	{
-		m_validUrl = PR_FALSE;
-		m_discoveryDepth = 0;
-		return;
-	}
-	m_discoveryDepth = atoi(discoveryDepth);
-}
-
 void nsImapUrl::ParseUidChoice()
 {
 	char *uidChoiceString = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
@@ -1524,6 +1513,12 @@ void nsImapUrl::ParseCustomMsgFetchAttribute()
 {
   m_msgFetchAttribute = m_tokenPlaceHolder ? nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)nsnull;
 }
+
+void nsImapUrl::ParseNumBytes()
+{
+  m_numBytesToFetch = m_tokenPlaceHolder ? atoi(nsCRT::strtok(m_tokenPlaceHolder, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder)) : 0;
+}
+
 // nsIMsgI18NUrl support
 
 nsresult nsImapUrl::GetMsgFolder(nsIMsgFolder **msgFolder)

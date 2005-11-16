@@ -2805,11 +2805,18 @@ NS_IMETHODIMP nsImapMailFolder::ParseMsgHdrs(nsIImapProtocol *aProtocol, nsIImap
 {
   PRInt32 numHdrs;
   nsCOMPtr <nsIImapHeaderInfo> headerInfo;
-
+  nsCOMPtr <nsIImapUrl> aImapUrl;
+  nsImapAction imapAction = nsIImapUrl::nsImapTest; // unused value.
   if (!mDatabase)
     GetDatabase(nsnull);
   
   nsresult rv = aHdrXferInfo->GetNumHeaders(&numHdrs);
+  if (aProtocol)
+  {
+    (void) aProtocol->GetRunningImapURL(getter_AddRefs(aImapUrl));
+    if (aImapUrl)
+      aImapUrl->GetImapAction(&imapAction);
+  }
   for (PRUint32 i = 0; NS_SUCCEEDED(rv) && i < numHdrs; i++)
   {
 
@@ -2825,6 +2832,20 @@ NS_IMETHODIMP nsImapMailFolder::ParseMsgHdrs(nsIImapProtocol *aProtocol, nsIImap
     headerInfo->GetMsgUid(&msgKey);
     if (msgKey == nsMsgKey_None) // not a valid uid.
       continue;
+    if (imapAction == nsIImapUrl::nsImapMsgPreview)
+    {
+      nsCOMPtr <nsIMsgDBHdr> msgHdr;
+      headerInfo->GetMsgHdrs(&msgHdrs);
+      // create an input stream based on the hdr string.
+      nsCOMPtr<nsIStringInputStream> inputStream = 
+            do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      inputStream->ShareData(msgHdrs, strlen(msgHdrs));
+      GetMessageHeader(msgKey, getter_AddRefs(msgHdr));
+      if (msgHdr)
+        GetMsgPreviewTextFromStream(msgHdr, inputStream);
+      continue;
+    }
     if (mDatabase && NS_SUCCEEDED(mDatabase->ContainsKey(msgKey, &containsKey)) && containsKey)
     {
       NS_ASSERTION(PR_FALSE, "downloading hdrs for hdr we already have");
@@ -2835,7 +2856,7 @@ NS_IMETHODIMP nsImapMailFolder::ParseMsgHdrs(nsIImapProtocol *aProtocol, nsIImap
     headerInfo->GetMsgHdrs(&msgHdrs);
     rv = ParseAdoptedHeaderLine(msgHdrs, msgKey);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = NormalEndHeaderParseStream(aProtocol);
+    rv = NormalEndHeaderParseStream(aProtocol, aImapUrl);
   }
 
   return rv;
@@ -2894,8 +2915,7 @@ nsresult nsImapMailFolder::ParseAdoptedHeaderLine(const char *aMessageLine, PRUi
   return NS_OK;
 }
     
-nsresult nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
-                                                           aProtocol)
+nsresult nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol *aProtocol, nsIImapUrl* imapUrl)
 {
   nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
   nsresult rv = NS_OK;
@@ -2914,18 +2934,12 @@ nsresult nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
     PRInt32 headersSize;
 
     nsCOMPtr <nsIMsgWindow> msgWindow;
-    if (aProtocol)
+    nsCOMPtr <nsIMsgMailNewsUrl> msgUrl;
+    if (imapUrl)
     {
-      nsCOMPtr <nsIImapUrl> aImapUrl;
-      nsCOMPtr <nsIMsgMailNewsUrl> msgUrl;
-      rv = aProtocol->GetRunningImapURL(getter_AddRefs(aImapUrl));
-      if (NS_SUCCEEDED(rv) && aImapUrl)
-      {
-        msgUrl = do_QueryInterface(aImapUrl);
-        if (msgUrl)
-          msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-      }
-
+      msgUrl = do_QueryInterface(imapUrl);
+      if (msgUrl)
+        msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
     }
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = GetServer(getter_AddRefs(server));
@@ -3170,6 +3184,7 @@ NS_IMETHODIMP nsImapMailFolder::CopyDataDone()
   return NS_OK;
 }
 
+// sICopyMessageListener methods, BeginCopy, CopyData, EndCopy, EndMove, StartMessage, EndMessage
 
 NS_IMETHODIMP nsImapMailFolder::CopyData(nsIInputStream *aIStream,
                      PRInt32 aLength)
@@ -4808,7 +4823,19 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE, PR_TRUE/* dbBatching*/);
                 // even if we're showing deleted messages, 
                 // we still need to notify FE so it will show the imap deleted flag
-                srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);      
+                srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+                // is there a way to see that we think we have new msgs?
+                nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+                if (NS_SUCCEEDED(rv))
+                {
+                  PRBool showPreviewText;
+                  prefBranch->GetBoolPref("mail.showPreviewText", &showPreviewText);
+                  // if we're showing preview text, update ourselves if we got a new unread
+                  // message copied so that we can download the new headers and have a chance
+                  // to preview the msg bodies.
+                  if (!folderOpen && showPreviewText && m_copyState->m_unreadCount > 0)
+                    UpdateFolder(msgWindow);
+                }
               }
               else
               {
@@ -8317,6 +8344,8 @@ NS_IMETHODIMP nsImapMailFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUi
   NS_ENSURE_ARG_POINTER(aKeysToFetch);
   NS_ENSURE_ARG_POINTER(aAsyncResults);
 
+  nsMsgKeyArray keysToFetchFromServer;
+
   *aAsyncResults = PR_FALSE;
   nsresult rv = NS_OK;
 
@@ -8376,18 +8405,32 @@ NS_IMETHODIMP nsImapMailFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUi
     {
       PRUint32 msgFlags;
       msgHdr->GetFlags(&msgFlags);
+      nsMsgKey msgKey;
+      msgHdr->GetMessageKey(&msgKey);
       if (msgFlags & MSG_FLAG_OFFLINE)
       {
-        nsMsgKey msgKey;
-        msgHdr->GetMessageKey(&msgKey);
         nsMsgKey messageOffset;
         PRUint32 messageSize;
         GetOfflineFileStream(msgKey, &messageOffset, &messageSize, getter_AddRefs(inputStream));
         if (inputStream)
           rv = GetMsgPreviewTextFromStream(msgHdr, inputStream);
       }
+      else if (!aLocalOnly)
+        keysToFetchFromServer.Add(msgKey);
     }
   }
-  return rv;
+  if (keysToFetchFromServer.GetSize() > 0)
+  {
+      nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv,rv);
+      PRUint32 msgCount = keysToFetchFromServer.GetSize();
+      nsCAutoString messageIds;
+
+      AllocateImapUidString(keysToFetchFromServer.GetArray(), msgCount, 
+                           nsnull, messageIds);
+      rv = imapService->GetBodyStart(m_eventQueue, this, aUrlListener,
+                                         messageIds.get(), 2048, nsnull);
+  }
+  return NS_OK;
 }
 

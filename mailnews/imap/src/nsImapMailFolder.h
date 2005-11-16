@@ -350,7 +350,7 @@ protected:
   
   nsresult SetupHeaderParseStream(PRUint32 size, const char *content_type, nsIMailboxSpec *boxSpec);
   nsresult  ParseAdoptedHeaderLine(const char *messageLine, PRUint32 msgKey);
-  nsresult  NormalEndHeaderParseStream(nsIImapProtocol *aProtocol);
+  nsresult  NormalEndHeaderParseStream(nsIImapProtocol *aProtocol, nsIImapUrl *imapUrl);
   
   void EndOfflineDownload();
 

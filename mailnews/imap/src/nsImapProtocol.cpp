@@ -987,6 +987,7 @@ NS_IMETHODIMP nsImapProtocol::OnInputStreamReady(nsIAsyncInputStream *inStr)
     if (bytesAvailable != 0)
     {
       PR_EnterMonitor(m_urlReadyToRunMonitor);
+      m_lastActiveTime = PR_Now();
       m_nextUrlReadyToRun = PR_TRUE;
       PR_Notify(m_urlReadyToRunMonitor);
       PR_ExitMonitor(m_urlReadyToRunMonitor);
@@ -1055,7 +1056,6 @@ nsImapProtocol::TellThreadToDie(PRBool isSafeToClose)
 NS_IMETHODIMP
 nsImapProtocol::GetLastActiveTimeStamp(PRTime* aTimeStamp)
 {
-  nsAutoCMonitor mon(this);
   if (aTimeStamp)
       *aTimeStamp = m_lastActiveTime;
   return NS_OK;
@@ -1415,7 +1415,6 @@ PRBool nsImapProtocol::ProcessCurrentURL()
       if (request)
         rv = m_channelListener->OnStopRequest(request, m_channelContext, NS_OK);
   }
-  m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
   SetFlag(IMAP_CLEAN_UP_URL_STATE);
 
   nsCOMPtr <nsISupports> copyState;
@@ -1568,6 +1567,11 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSuppressLoggi
       ClearFlag(IMAP_CONNECTION_IS_OPEN); 
       TellThreadToDie(PR_FALSE);
       SetConnectionStatus(-1);
+      if (m_runningUrl && !m_retryUrlOnError)
+      {
+        m_runningUrl->SetRerunningUrl(PR_TRUE);
+        m_retryUrlOnError = PR_TRUE;
+      }
     }
   }
 
@@ -1999,13 +2003,14 @@ void nsImapProtocol::ProcessSelectedStateURL()
       case nsIImapUrl::nsImapMsgFetch:
       case nsIImapUrl::nsImapMsgFetchPeek:
       case nsIImapUrl::nsImapMsgDownloadForOffline:
+      case nsIImapUrl::nsImapMsgPreview:
         {
           nsXPIDLCString messageIdString;
           m_runningUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
           // we dont want to send the flags back in a group
           // GetServerStateParser().ResetFlagInfo(0);
           if (HandlingMultipleMessages(messageIdString) || m_imapAction == nsIImapUrl::nsImapMsgDownloadForOffline
-            || m_imapAction == nsIImapUrl::nsImapMsgFetchPeek)
+            || m_imapAction == nsIImapUrl::nsImapMsgFetchPeek || m_imapAction == nsIImapUrl::nsImapMsgPreview)
           {
             // multiple messages, fetch them all
             SetProgressString(IMAP_FOLDER_RECEIVING_MESSAGE_OF);
@@ -2017,8 +2022,11 @@ void nsImapProtocol::ProcessSelectedStateURL()
             if (m_imapAction == nsIImapUrl::nsImapMsgFetchPeek)
               SetContentModified(IMAP_CONTENT_NOT_MODIFIED);
             FetchMessage(messageIdString, 
-              kEveryThingRFC822Peek,
+              (m_imapAction == nsIImapUrl::nsImapMsgPreview)
+              ? kBodyStart : kEveryThingRFC822Peek,
               bMessageIdsAreUids);
+            if (m_imapAction == nsIImapUrl::nsImapMsgPreview)
+              HeaderFetchCompleted(); 
             SetProgressString(0);
           }
           else
@@ -2932,6 +2940,16 @@ nsImapProtocol::FetchMessage(const char * messageIds,
   case kRFC822Size:
     commandString.Append(" %s (RFC822.SIZE)");
     break;
+  case kBodyStart:
+    {
+      PRInt32 numBytesToFetch;
+      m_runningUrl->GetNumBytesToFetch(&numBytesToFetch);
+
+      commandString.Append(" %s (UID BODY.PEEK[HEADER.FIELDS (Content-Type)] BODY.PEEK[TEXT]<0.");
+      commandString.AppendInt(numBytesToFetch);
+      commandString.Append(">)");
+    }
+    break;
   case kRFC822HeadersOnly:
     if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
     {
@@ -3181,7 +3199,7 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
     if (m_imapMessageSink && downloadLineDontDelete && echoLineToMessageSink && !GetPseudoInterrupted())
     {
       m_imapMessageSink->ParseAdoptedMsgLine(downloadLineDontDelete->adoptedMessageLine, 
-      downloadLineDontDelete->uidOfMessage);
+                                             downloadLineDontDelete->uidOfMessage);
     }
   }
   // ***** We need to handle the pseudo interrupt here *****
@@ -3342,7 +3360,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool isPartia
     if (!m_curHdrInfo)
       BeginMessageDownLoad(GetServerStateParser().SizeOfMostRecentMessage(), MESSAGE_RFC822);
     m_curHdrInfo->CacheLine(messageLine, GetServerStateParser().CurrentResponseUID());
-    PR_FREEIF(localMessageLine);
+    PR_Free(localMessageLine);
     return;
   }
   // if this line is for a different message, or the incoming line is too big
@@ -3374,7 +3392,7 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool isPartia
   else
     m_downloadLineCache.CacheLine(messageLine, GetServerStateParser().CurrentResponseUID());
 
-  PR_FREEIF(localMessageLine);
+  PR_Free(localMessageLine);
 }
 
 
@@ -7149,19 +7167,6 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
         if (canonicalParent)
         {
           NthLevelChildList(canonicalParent, 2);
-          PR_Free(canonicalParent);
-        }
-        break;
-      }
-    case nsIImapUrl::nsImapDiscoverLevelChildrenUrl:
-      {
-        char *canonicalParent = nsnull;
-        m_runningUrl->CreateServerSourceFolderPathString(&canonicalParent);
-        PRInt32 depth = 0;
-        m_runningUrl->GetChildDiscoveryDepth(&depth);
-        if (canonicalParent)
-        {
-          NthLevelChildList(canonicalParent, depth);
           PR_Free(canonicalParent);
         }
         break;

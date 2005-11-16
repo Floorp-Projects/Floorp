@@ -60,7 +60,7 @@ interface nsImapContentModifiedTypes
 	const long IMAP_CONTENT_FORCE_CONTENT_NOT_MODIFIED = 3;
 } ;
 
-[scriptable, uuid(5db36585-f1b7-41bb-a270-eb11f1f49924)]
+[scriptable, uuid(76497ba8-2a58-4d59-8347-0cf6c6a50586)]
 interface nsIImapUrl : nsISupports
 {
 	// Initialization method used to initialize the url...
@@ -97,8 +97,8 @@ interface nsIImapUrl : nsISupports
   
   boolean messageIdsAreUids();
   readonly attribute imapMessageFlagsType msgFlags; // kAddMsgFlags or kSubtractMsgFlags only
-  readonly attribute long childDiscoveryDepth;
 
+  readonly attribute long numBytesToFetch;
   attribute char onlineSubDirSeparator;
   attribute boolean allowContentChange;
   attribute boolean mimePartSelectorDetected;
@@ -142,7 +142,6 @@ interface nsIImapUrl : nsISupports
   const long nsImapLsubFolders	= 0x00000009;
   const long nsImapGetMailAccountUrl = 0x0000000A;
   const long nsImapDiscoverChildrenUrl = 0x0000000B;
-  const long nsImapDiscoverLevelChildrenUrl	= 0x0000000C;
   const long nsImapDiscoverAllBoxesUrl = 0x0000000D;
   const long nsImapDiscoverAllAndSubscribedBoxesUrl	= 0x0000000E;
   const long nsImapAppendMsgFromFile = 0x0000000F;
@@ -179,6 +178,7 @@ interface nsIImapUrl : nsISupports
   const long nsImapOnlineMove	= 0x10000021;
   const long nsImapOnlineToOfflineCopy = 0x10000022;
   const long nsImapOnlineToOfflineMove = 0x10000023;
+  const long nsImapMsgPreview = 0x10000024;
   const long nsImapBiff	= 0x10000026;
   const long nsImapSelectNoopFolder	= 0x10000027;
   const long nsImapAppendDraftFromFile = 0x10000028;

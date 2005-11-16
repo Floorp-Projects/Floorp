@@ -113,7 +113,7 @@ nsIMAPBodyShell::nsIMAPBodyShell(nsImapProtocol *protocolConnection, nsIMAPBodyp
   
   SetContentModified(GetShowAttachmentsInline() ? IMAP_CONTENT_MODIFIED_VIEW_INLINE : IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS);
 
-  SetIsValid(PR_TRUE);
+  SetIsValid(m_message != nsnull);
 }
 
 nsIMAPBodyShell::~nsIMAPBodyShell()

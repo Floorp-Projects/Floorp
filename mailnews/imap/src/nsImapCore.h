@@ -153,7 +153,8 @@ typedef enum {
     kRFC822Size,
     kRFC822HeadersOnly,
     kMIMEPart,
-    kMIMEHeader
+    kMIMEHeader,
+    kBodyStart
 } nsIMAPeFetchFields;
     
 // This class is currently only used for the one-time upgrade
