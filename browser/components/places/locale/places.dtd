@@ -98,4 +98,8 @@
   "Group by Post">
 <!ENTITY cmd.groupby_post.accesskey
   "P">
+<!ENTITY col.title.label
+  "Title">
+<!ENTITY col.url.label
+  "Location">
 
