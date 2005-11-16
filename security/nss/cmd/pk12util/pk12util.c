@@ -301,6 +301,9 @@ P12U_GetP12FilePassword(PRBool confirmPw, secuPWData *p12FilePw)
 	p0 = p12FilePw->data;
     }
 
+    if (p0 == NULL) {
+        return NULL;
+    }
     pwItem = SECITEM_AllocItem(NULL, NULL, PL_strlen(p0) + 1);
     memcpy(pwItem->data, p0, pwItem->len);
 
