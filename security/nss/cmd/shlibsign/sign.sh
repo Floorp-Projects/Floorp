@@ -2,7 +2,7 @@
 case "${3}" in
 WIN*)
     if echo "${PATH}" | grep -c \; >/dev/null; then
-        PATH=${1}/bin\;${1}/lib\;${4}\;${PATH}
+        PATH=${1}/lib\;${1}/bin\;${4}\;${PATH}
     else
         # ARG1 is ${1} with the drive letter escaped.
         if echo "${1}" | grep -c : >/dev/null; then
@@ -15,7 +15,7 @@ WIN*)
         else
             ARG4=${4}
         fi
-        PATH=${ARG1}/bin:${ARG1}/lib:${ARG4}:${PATH}
+        PATH=${ARG1}/lib:${ARG1}/bin:${ARG4}:${PATH}
     fi
     export PATH
     echo ${2}/shlibsign -v -i ${5}
