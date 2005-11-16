@@ -673,13 +673,11 @@ NS_IMETHODIMP
 nsDOMAttribute::LookupPrefix(const nsAString& aNamespaceURI,
                              nsAString& aPrefix)
 {
-  aPrefix.Truncate();
-
   nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(GetContentInternal()));
-  if (node) {
+  if (node)
     return node->LookupPrefix(aNamespaceURI, aPrefix);
-  }
 
+  SetDOMStringToNull(aPrefix);
   return NS_OK;
 }
 
@@ -687,12 +685,12 @@ NS_IMETHODIMP
 nsDOMAttribute::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                    nsAString& aNamespaceURI)
 {
-  aNamespaceURI.Truncate();
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(GetContentInternal()));
   if (node)
-    rv = node->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
-  return rv;
+    return node->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
+
+  SetDOMStringToNull(aNamespaceURI);
+  return NS_OK;
 }
 
 void*
