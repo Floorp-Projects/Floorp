@@ -302,6 +302,7 @@ function AccountDataToPageData(accountData, pageData)
     setPageData(pageData, "login", "rememberPassword", server.rememberPassword);
     setPageData(pageData, "accname", "prettyName", server.prettyName);
     setPageData(pageData, "accname", "userset", false);
+    setPageData(pageData, "ispdata", "supplied", false);
     
     var identity;
     
@@ -931,6 +932,8 @@ function PrefillAccountForIsp(ispName)
     dump("PrefillAccountForISP: filling with " + ispData + "\n");
     SetCurrentAccountData(ispData);
     AccountDataToPageData(ispData, pageData);
+
+    setPageData(pageData, "ispdata", "supplied", true);
 }
 
 // does any cleanup work for the the account data

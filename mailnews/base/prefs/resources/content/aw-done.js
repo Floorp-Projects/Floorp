@@ -102,28 +102,29 @@ function donePageInit() {
         smtpUserName = getUsernameFromEmail(email);
     setDivTextFromForm("smtpServer.username", smtpUserName);
 
-    var accountName="";
     if (pageData.accname && pageData.accname.prettyName) {
-        accountName = pageData.accname.prettyName.value;
+      // If currentAccountData has a pretty name (e.g. news link or from
+      // isp data) only set the user name with the pretty name if the
+      // pretty name originally came from ispdata
+      if ((currentAccountData && 
+           currentAccountData.incomingServer.prettyName) &&
+           (pageData.ispdata && 
+            pageData.ispdata.supplied &&
+            pageData.ispdata.supplied.value))
+      {
+        // Get the polished account name - if the user has modified the
+        // account name then use that, otherwise use the userName.
+        pageData.accname.prettyName.value =
+          gPrefsBundle.getFormattedString("accountName",
+                         [currentAccountData.incomingServer.prettyName,
+                          (pageData.accname.userset && pageData.accname.userset.value) ? pageData.accname.prettyName.value : userName]);
+      }
+      // else just use the default supplied name
 
-        // Only if the user hasn't set the account name should we use the
-        // values from the rdf file - if the account data exists.
-        // Get the pretty name and polish the account name
-        if (pageData.accname.userset &&
-            !pageData.accname.userset.value &&
-            currentAccountData && 
-            currentAccountData.incomingServer.prettyName)
-        {
-            var prettyName = currentAccountData.incomingServer.prettyName; 
-            // Get the polished account name 
-            accountName = gPrefsBundle.getFormattedString("accountName",
-                                                          [prettyName,
-                                                           userName]);
-            // Set that to be the name in the pagedata 
-            pageData.accname.prettyName.value = accountName;
-        }
+      setDivTextFromForm("account.name", pageData.accname.prettyName.value);
+    } else {
+      setDivTextFromForm("account.name", "");
     }
-    setDivTextFromForm("account.name", accountName);
 
     // Show mail servers (incoming&outgoing) details
     // based on current account data. ISP can set 
