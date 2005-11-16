@@ -439,7 +439,7 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
     if (quote && Sprint(sp, "%c", (char)quote) < 0)
         return NULL;
 
-    /* 
+    /*
      * If we haven't Sprint'd anything yet, Sprint an empty string so that
      * the OFF2STR below gives a valid result.
      */
@@ -666,15 +666,18 @@ typedef struct TableEntry {
     jsint       order;          /* source order for stable tableswitch sort */
 } TableEntry;
 
-static int
-CompareOffsets(const void *v1, const void *v2, void *arg)
+static JSBool
+CompareOffsets(void *arg, const void *v1, const void *v2, int *result)
 {
+    ptrdiff_t offset_diff;
     const TableEntry *te1 = (const TableEntry *) v1,
                      *te2 = (const TableEntry *) v2;
 
-    if (te1->offset == te2->offset)
-        return (int) (te1->order - te2->order);
-    return (int) (te1->offset - te2->offset);
+    offset_diff = te1->offset - te2->offset;
+    *result = (offset_diff == 0 ? te1->order - te2->order
+               : offset_diff < 0 ? -1
+               : 1);
+    return JS_TRUE;
 }
 
 static JSBool
@@ -2511,7 +2514,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 #if JS_HAS_XML_SUPPORT
               case JSOP_STARTXML:
               case JSOP_STARTXMLEXPR:
-                inXML = op == JSOP_STARTXML; 
+                inXML = op == JSOP_STARTXML;
                 todo = -2;
                 break;
 
@@ -2586,7 +2589,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
               case JSOP_XMLELTEXPR:
               case JSOP_XMLTAGEXPR:
                 todo = Sprint(&ss->sprinter, "{%s}", POP_STR());
-                inXML = JS_TRUE; 
+                inXML = JS_TRUE;
                 /* If we're an attribute value, we shouldn't quote this. */
                 quoteAttr = JS_FALSE;
                 break;
