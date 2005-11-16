@@ -66,7 +66,7 @@ FeedParser.prototype =
       // to the unencoded response.
       var xmlString=serializer.serializeToString(aDOM.documentElement);
       return this.parseAsRSS1(aFeed, xmlString, aBaseURI);
-    } 
+    }
     else if (aDOM.documentElement.namespaceURI == ATOM_03_NS)
     {
       debug(aFeed.url + " is an Atom 0.3 feed");
@@ -79,8 +79,7 @@ FeedParser.prototype =
     }
     else if (aSource.search(/"http:\/\/my\.netscape\.com\/rdf\/simple\/0\.9\/"/) != -1)
     {
-      // RSS 0.9x is forward compatible with RSS 2.0, so use the RSS2 parser to handle it.
-      debug(aFeed.url + " is an 0.9x feed");
+      debug(aFeed.url + " is an 0.90 feed");
       return this.parseAsRSS2(aFeed, aDOM);
     }
     // XXX Explicitly check for RSS 2.0 instead of letting it be handled by the
@@ -104,15 +103,19 @@ FeedParser.prototype =
     if (!channel)
       return aFeed.onParseError(aFeed);
 
-    aFeed.title = aFeed.title || getNodeValue(channel.getElementsByTagNameNS("","title")[0]);
-    aFeed.description = getNodeValue(channel.getElementsByTagNameNS("","description")[0]);
-    aFeed.link = getNodeValue(channel.getElementsByTagNameNS("","link")[0]);
+    //usually the empty string, unless this is RSS .90
+    var nsURI = channel.namespaceURI || "";
+    debug("channel NS: '" + nsURI +"'");
+
+    aFeed.title = aFeed.title || getNodeValue(channel.getElementsByTagNameNS(nsURI,"title")[0]);
+    aFeed.description = getNodeValue(channel.getElementsByTagNameNS(nsURI,"description")[0]);
+    aFeed.link = getNodeValue(channel.getElementsByTagNameNS(nsURI,"link")[0]);
 
     if (!aFeed.parseItems)
       return parsedItems;
 
     aFeed.invalidateItems();
-    var itemNodes = aDOM.getElementsByTagNameNS("","item");
+    var itemNodes = aDOM.getElementsByTagNameNS(nsURI,"item");
 
     for (var i=0; i < itemNodes.length; i++) 
     {
@@ -121,8 +124,8 @@ FeedParser.prototype =
       item.feed = aFeed;
       item.characterSet = "UTF-8";
 
-      var link = getNodeValue(itemNode.getElementsByTagNameNS("","link")[0]);
-      var guidNode = itemNode.getElementsByTagNameNS("","guid")[0];
+      var link = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"link")[0]);
+      var guidNode = itemNode.getElementsByTagNameNS(nsURI,"guid")[0];
       var guid;
       var isPermaLink;
       if (guidNode) 
@@ -137,17 +140,17 @@ FeedParser.prototype =
 
       item.url = link ? link : (guid && isPermaLink) ? guid : null;
       item.id = guid;
-      item.description = getNodeValue(itemNode.getElementsByTagNameNS("","description")[0]);
-      item.title = getNodeValue(itemNode.getElementsByTagNameNS("","title")[0])
+      item.description = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"description")[0]);
+      item.title = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"title")[0])
                    || (item.description ? (this.stripTags(item.description).substr(0, 150)) : null)
                    || item.title;
 
-      item.author = getNodeValue(itemNode.getElementsByTagNameNS("","author")[0]
-                                 || itemNode.getElementsByTagNameNS("","creator")[0])
+      item.author = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"author")[0]
+                                 || itemNode.getElementsByTagNameNS(nsURI,"creator")[0])
                                  || aFeed.title
                                  || item.author;
-      item.date = getNodeValue(itemNode.getElementsByTagNameNS("","pubDate")[0]
-                               || itemNode.getElementsByTagNameNS("","date")[0])
+      item.date = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"pubDate")[0]
+                               || itemNode.getElementsByTagNameNS(nsURI,"date")[0])
                                || item.date;
     
       // If the date is invalid, users will see the beginning of the epoch
@@ -166,7 +169,7 @@ FeedParser.prototype =
       var content = getNodeValue(itemNode.getElementsByTagNameNS(RSS_CONTENT_NS, "encoded")[0]);
 
       // Handle an enclosure (if present)
-      var enclosureNode = itemNode.getElementsByTagNameNS("","enclosure")[0];
+      var enclosureNode = itemNode.getElementsByTagNameNS(nsURI,"enclosure")[0];
       if (enclosureNode)
         item.enclosure = new FeedEnclosure(enclosureNode.getAttribute("url"), 
                                           enclosureNode.getAttribute("type"),
@@ -189,7 +192,7 @@ FeedParser.prototype =
     
     // Get information about the feed as a whole.
     var channel = ds.GetSource(RDF_TYPE, RSS_CHANNEL, true);
-
+    
     aFeed.title = aFeed.title || getRDFTargetValue(ds, channel, RSS_TITLE);
     aFeed.description = getRDFTargetValue(ds, channel, RSS_DESCRIPTION);
     aFeed.link = getRDFTargetValue(ds, channel, RSS_LINK);
