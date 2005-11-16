@@ -493,7 +493,22 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetDatabaseWOReparse(nsIMsgDatabase **aDatab
     {
       rv = msgDBService->OpenFolderDB(this, PR_FALSE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(mDatabase));
       if (mDatabase && NS_SUCCEEDED(rv))
+      {
         mDatabase->AddListener(this);
+        PRBool hasNewMessages = PR_FALSE;
+        for (PRUint32 keyIndex = 0; keyIndex < m_newMsgs.GetSize(); keyIndex++)
+        {
+          PRBool isRead = PR_FALSE;
+          mDatabase->IsRead(m_newMsgs[keyIndex], &isRead);
+          if (!isRead)
+          {
+            hasNewMessages = PR_TRUE;
+            mDatabase->AddToNewList(m_newMsgs[keyIndex]);
+          }
+        }
+        SetHasNewMessages(hasNewMessages);
+
+      }
     }
   }
   *aDatabase = mDatabase;

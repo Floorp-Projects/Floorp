@@ -2003,6 +2003,7 @@
           
           // now get the database
           var msgDatabase = msgFolder.getMsgDatabase(msgWindow);
+          msgFolder.setMsgDatabase(null);
           var msgKeys = {};
           var numMsgKeys = {};
           msgDatabase.getNewList(numMsgKeys, msgKeys);
@@ -2016,12 +2017,14 @@
 
           try {
             msgFolder.fetchMsgPreviewText(msgKeys.value, numMsgKeys.value, false, null, asyncResults); 
+            msgFolder.setMsgDatabase(null);
           }
           catch (ex)
           {
             // fetchMsgPreviewText throws an error when we call it on a news folder, we should just not show
             // the tooltip if this method returns an error.
             dump('fetchMsgPreviewText threw an error or failed to set any preview text data\n');
+            msgFolder.setMsgDatabase(null);
             return false; 
           }
 
@@ -2035,7 +2038,7 @@
 			                msgPopup, msgDatabase.GetMsgHdrForKey(msgKeys.value[index++])); 
 
             document.getAnonymousNodes(this)[0].appendChild(msgPopup);
-          }            
+          }
           return true;
         ]]>
       </handler>

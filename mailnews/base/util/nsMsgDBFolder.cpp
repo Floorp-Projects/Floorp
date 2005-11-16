@@ -299,27 +299,7 @@ NS_IMETHODIMP nsMsgDBFolder::EndFolderLoading(void)
 
   //GGGG       check for new mail here and call SetNewMessages...?? -- ONE OF THE 2 PLACES
   if(mDatabase)
-  {
-      nsresult rv;
-    PRBool hasNewMessages;
-
-    rv = mDatabase->HasNew(&hasNewMessages);
-    if (!hasNewMessages)
-    {
-      for (PRUint32 keyIndex = 0; keyIndex < m_newMsgs.GetSize(); keyIndex++)
-      {
-        PRBool isRead = PR_FALSE;
-        mDatabase->IsRead(m_newMsgs[keyIndex], &isRead);
-        if (!isRead)
-        {
-          mDatabase->AddToNewList(m_newMsgs[keyIndex]);
-          hasNewMessages = PR_TRUE;
-        }
-      }
-     m_newMsgs.RemoveAll();
-    }
-    SetHasNewMessages(hasNewMessages);
-  }
+    m_newMsgs.RemoveAll();
 
   return NS_OK;
 }
@@ -5111,7 +5091,8 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
   // might want to use a state var instead of bools.
   PRBool inMsgBody = PR_FALSE, msgBodyIsHtml = PR_FALSE, lookingForBoundary = PR_FALSE;
   PRBool haveBoundary = PR_FALSE;
-  while (len > 0)
+  PRBool more = PR_TRUE;
+  while (len > 0 && more)
   {
     // might be on same line as content-type, so look before
     // we read the next line.
@@ -5132,7 +5113,6 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
         }
       }
     }
-    PRBool more;
     rv = NS_ReadLine(stream, lineBuffer, curLine, &more);
     if (NS_SUCCEEDED(rv))
     {
@@ -5162,17 +5142,22 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr *msgHdr, nsIInpu
         inMsgBody = PR_TRUE;
         continue;
       }
-      if (StringBeginsWith(curLine, NS_LITERAL_CSTRING("Content-Type:")))
+      if (StringBeginsWith(curLine, NS_LITERAL_CSTRING("Content-Type:"),
+                          nsCaseInsensitiveCStringComparator()))
       {
-        if (FindInReadable(NS_LITERAL_CSTRING("text/html"), curLine))
+        if (FindInReadable(NS_LITERAL_CSTRING("text/html"), curLine,
+          nsCaseInsensitiveCStringComparator()))
         {
           msgBodyIsHtml = PR_TRUE;
 //           bodyFollowsHeaders = PR_TRUE;
         }
-        else if (FindInReadable(NS_LITERAL_CSTRING("text/plain"), curLine))
+        else if (FindInReadable(NS_LITERAL_CSTRING("text/plain"), curLine,
+                                nsCaseInsensitiveCStringComparator()))
           /* bodyFollowsHeaders = PR_TRUE */;
-        else if (FindInReadable(NS_LITERAL_CSTRING("multipart/mixed"), curLine)
-          || FindInReadable(NS_LITERAL_CSTRING("multipart/alternative"), curLine))
+        else if (FindInReadable(NS_LITERAL_CSTRING("multipart/mixed"), curLine,
+                                nsCaseInsensitiveCStringComparator())
+          || FindInReadable(NS_LITERAL_CSTRING("multipart/alternative"), curLine,
+                            nsCaseInsensitiveCStringComparator()))
         {
           lookingForBoundary = PR_TRUE;
         }

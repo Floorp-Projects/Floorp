@@ -175,6 +175,8 @@ pref("mail.receipt.request_header_type", 0);           // 0: MDN-DNT header  1: 
 pref("mail.receipt.request_return_receipt_on", false);
 pref("mail.mdn.report.enabled", true);                 // false: Never send true: Send sometimes
 
+pref("mail.showPreviewText", false);
+
 pref("news.default_cc",                     "");
 pref("news.default_fcc",                    ""); // mailbox:URL or Imap://Host/OnlineFolderName
 pref("news.use_fcc",                        true);
