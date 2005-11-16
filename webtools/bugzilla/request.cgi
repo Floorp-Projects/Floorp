@@ -107,9 +107,9 @@ sub queue {
                   ON flags.requestee_id  = requestees.userid
           INNER JOIN bugs
                   ON flags.bug_id = bugs.bug_id
-           LEFT JOIN products
+          INNER JOIN products
                   ON bugs.product_id = products.id
-           LEFT JOIN components
+          INNER JOIN components
                   ON bugs.component_id = components.id
            LEFT JOIN bug_group_map AS bgmap
                   ON bgmap.bug_id = bugs.bug_id
@@ -124,7 +124,9 @@ sub queue {
     " WHERE     ((bgmap.group_id IS NULL) OR
                  (ccmap.who IS NOT NULL AND cclist_accessible = 1) OR
                  (bugs.reporter = $userid AND bugs.reporter_accessible = 1) OR
-                 (bugs.assigned_to = $userid))";
+                 (bugs.assigned_to = $userid) " .
+                 (Param('useqacontact') ? "OR
+                 (bugs.qa_contact = $userid))" : ")");
     
     # Non-deleted flags only
     $query .= " AND flags.is_active = 1 ";
