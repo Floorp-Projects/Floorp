@@ -43,6 +43,7 @@
 #include "nsForwardProxyDataSource.h"
 #ifdef MOZ_PLACES
 #include "nsNavHistory.h"
+#include "nsNavBookmarks.h"
 #endif
 #ifdef XP_WIN
 #include "nsWindowsShellService.h"
@@ -77,6 +78,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsForwardProxyDataSource, Init)
 #ifdef MOZ_PLACES
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavHistory, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavBookmarks, Init)
 #endif
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsShellService)
@@ -137,6 +139,11 @@ static const nsModuleComponentInfo components[] =
     NS_NAVHISTORY_CID,
     "@mozilla.org/autocomplete/search;1?name=history",
     nsNavHistoryConstructor },
+
+  { "Browser Bookmarks Service",
+    NS_NAVBOOKMARKSSERVICE_CID,
+    NS_NAVBOOKMARKSSERVICE_CONTRACTID,
+    nsNavBookmarksConstructor },
 #endif
 
   { "Bookmarks",
