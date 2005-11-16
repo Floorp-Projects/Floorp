@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: cobject.c,v $ $Revision: 1.3 $ $Date: 2005/11/15 00:13:58 $";
+static const char CVS_ID[] = "@(#) $RCSfile: cobject.c,v $ $Revision: 1.4 $ $Date: 2005/11/16 01:17:25 $";
 #endif /* DEBUG */
 
 #include "ckcapi.h"
@@ -327,6 +327,39 @@ nss_ckcapi_GetBoolAttribute
 }
 
 /*
+ * get an attribute which is type CK_BBOOL.
+ */
+char *
+nss_ckcapi_GetStringAttribute
+(
+  CK_ATTRIBUTE_TYPE type,
+  CK_ATTRIBUTE *template,
+  CK_ULONG templateSize, 
+  CK_RV *pError
+)
+{
+  NSSItem item;
+  char *str;
+
+  /* get the attribute */
+  *pError = nss_ckcapi_GetAttribute(type, template, templateSize, &item);
+  if (CKR_OK != *pError) {
+    return (char *)NULL;
+  }
+  /* make sure it is null terminated */
+  str = nss_ZNEWARRAY(NULL, char, item.size+1);
+  if ((char *)NULL == str) {
+    *pError = CKR_HOST_MEMORY;
+    return (char *)NULL;
+  }
+
+  nsslibc_memcpy(str, item.data, item.size);
+  str[item.size] = 0;
+
+  return str;
+}
+
+/*
  * Return the size in bytes of a wide string
  */
 int
@@ -335,7 +368,12 @@ nss_ckcapi_WideSize
   LPCWSTR wide
 )
 {
-  DWORD size = wcslen(wide)+1;
+  DWORD size;
+
+  if ((LPWSTR)NULL == wide) {
+    return 0;
+  }
+  size = wcslen(wide)+1;
   return size*2;
 }
 
@@ -348,19 +386,25 @@ nss_ckcapi_WideToUTF8
   LPCWSTR wide 
 )
 {
-  DWORD len = nss_ckcapi_WideSize(wide);
+  DWORD len;
   DWORD size;
   char *buf;
 
+  if ((LPWSTR)NULL == wide) {
+    return (char *)NULL;
+  }
+
+  len = nss_ckcapi_WideSize(wide);
+
   size = WideCharToMultiByte(CP_UTF8, 0, wide, len, NULL, 0, NULL, 0);
   if (size == 0) {
-    return NULL;
+    return (char *)NULL;
   }
   buf = nss_ZNEWARRAY(NULL, char, size);
   size = WideCharToMultiByte(CP_UTF8, 0, wide, len, buf, size, NULL, 0);
   if (size == 0) {
     nss_ZFreeIf(buf);
-    return NULL;
+    return (char *)NULL;
   }
   return buf;
 }
@@ -376,6 +420,12 @@ nss_ckcapi_WideDup
 {
   DWORD len = nss_ckcapi_WideSize(wide);
   LPWSTR buf;
+
+  if ((LPWSTR)NULL == wide) {
+    return (LPWSTR)NULL;
+  }
+
+  len = nss_ckcapi_WideSize(wide);
 
   buf = (LPWSTR) nss_ZNEWARRAY(NULL, char, len);
   if ((LPWSTR) NULL == buf) {
@@ -398,15 +448,21 @@ nss_ckcapi_UTF8ToWide
   DWORD len = strlen(buf)+1;
   LPWSTR wide;
 
+  if ((char *)NULL == buf) {
+    return (LPWSTR) NULL;
+  }
+    
+  len = strlen(buf)+1;
+
   size = MultiByteToWideChar(CP_UTF8, 0, buf, len, NULL, 0);
   if (size == 0) {
-    return NULL;
+    return (LPWSTR) NULL;
   }
-  wide = (LPWSTR)nss_ZNEWARRAY(NULL, char, size);
+  wide = nss_ZNEWARRAY(NULL, WCHAR, size);
   size = MultiByteToWideChar(CP_UTF8, 0, buf, len, wide, size);
   if (size == 0) {
     nss_ZFreeIf(wide);
-    return NULL;
+    return (LPWSTR) NULL;
   }
   return wide;
 }
@@ -1253,7 +1309,7 @@ ckcapi_cert_getPrivateKeyInfo
   if (!rc) {
     return (CRYPT_KEY_PROV_INFO *)NULL;
   }
-  prov = (CRYPT_KEY_PROV_INFO *)nss_ZNEWARRAY(NULL, char, size);
+  prov = (CRYPT_KEY_PROV_INFO *)nss_ZAlloc(NULL, size);
   if ((CRYPT_KEY_PROV_INFO *)prov == NULL) {
     return (CRYPT_KEY_PROV_INFO *) NULL;
   }
@@ -1286,7 +1342,7 @@ ckcapi_cert_getProvInfo
   if (!rc) {
     return (CRYPT_KEY_PROV_INFO *)NULL;
   }
-  prov = (CRYPT_KEY_PROV_INFO *)nss_ZNEWARRAY(NULL, char, size);
+  prov = (CRYPT_KEY_PROV_INFO *)nss_ZAlloc(NULL, size);
   if ((CRYPT_KEY_PROV_INFO *)prov == NULL) {
     return (CRYPT_KEY_PROV_INFO *) NULL;
   }
@@ -1732,9 +1788,11 @@ nss_ckcapi_CreateCertificate
   PCCERT_CONTEXT certContext = NULL;
   PCCERT_CONTEXT storedCertContext = NULL;
   CRYPT_KEY_PROV_INFO *prov_info = NULL;
+  char *nickname = NULL;
   HCERTSTORE hStore = 0;
   DWORD msError = 0;
   PRBool hasID;
+  CK_RV dummy;
   BOOL rc;
 
   *pError = nss_ckcapi_GetAttribute(CKA_VALUE, pTemplate, 
@@ -1790,6 +1848,7 @@ nss_ckcapi_CreateCertificate
       *pError = CKR_DEVICE_ERROR;
       goto loser;
     }
+    
   /* does it look like a CA */
   } else if (ckcapi_cert_isCA(certContext)) {
     storeStr = ckcapi_cert_isRoot(certContext) ? "CA" : "Root";
@@ -1799,6 +1858,32 @@ nss_ckcapi_CreateCertificate
   } else {
   /* just pick a store */
     storeStr = "CA";
+  }
+
+  /* get the nickname, not an error if we can't find it */
+  nickname = nss_ckcapi_GetStringAttribute(CKA_LABEL, pTemplate, 
+				  ulAttributeCount, &dummy);
+  if (nickname) {
+    LPWSTR nicknameUTF16 = NULL;
+    CRYPT_DATA_BLOB nicknameBlob;
+
+    nicknameUTF16 = nss_ckcapi_UTF8ToWide(nickname);
+    nss_ZFreeIf(nickname);
+    nickname = NULL;
+    if ((LPWSTR)NULL == nicknameUTF16) {
+      *pError = CKR_HOST_MEMORY;
+      goto loser;
+    }
+    nicknameBlob.cbData = nss_ckcapi_WideSize(nicknameUTF16);
+    nicknameBlob.pbData = (BYTE *)nicknameUTF16;
+    rc = CertSetCertificateContextProperty(certContext,
+	CERT_FRIENDLY_NAME_PROP_ID, 0, &nicknameBlob);
+    nss_ZFreeIf(nicknameUTF16);
+    if (!rc) {
+      msError = GetLastError();
+      *pError = CKR_DEVICE_ERROR;
+      goto loser;
+    }
   }
 
   hStore = CertOpenSystemStore((HCRYPTPROV) NULL, storeStr);
@@ -1946,7 +2031,7 @@ ckcapi_buildPrivateKeyBlob
     goto loser;
   }
   dataSize = (modSize*4)+(modSize/2) + sizeof(CAPI_RSA_KEY_BLOB);
-  keyBlobData = (CAPI_RSA_KEY_BLOB *)nss_ZNEWARRAY(NULL, char, dataSize);
+  keyBlobData = (CAPI_RSA_KEY_BLOB *)nss_ZAlloc(NULL, dataSize);
   if ((CAPI_RSA_KEY_BLOB *)NULL == keyBlobData) {
     error = CKR_HOST_MEMORY;
     goto loser;
