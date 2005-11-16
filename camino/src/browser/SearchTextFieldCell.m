@@ -165,11 +165,8 @@ const float STFSymbolYOffset = 4.0;
   mShouldShowSelectedPopUpItem = shouldShow;
 }
 
-
 - (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
 {
-  BOOL wasShowingFirstResponder = [self showsFirstResponder];
-
   // Draw the left end of the widget
   NSPoint leftImageOrigin = cellFrame.origin;
   leftImageOrigin.y += [mLeftImage size].height;
@@ -215,13 +212,12 @@ const float STFSymbolYOffset = 4.0;
 
   [self showSelectedPopUpItem:([self controlView] && ![[self controlView] isFirstResponder])];
 
-  // Invalidate the focus ring to draw/undraw it depending on if we're in the
-  // key window. This will cause us to redraw the entire text field cell every time
-  // the insertion point flashes, but only then (it used to redraw any time anything in 
-  // the chrome changed).
-  if (wasShowingFirstResponder) {
-    [controlView setKeyboardFocusRingNeedsDisplayInRect:cellFrame];
-    if ([[controlView window] isKeyWindow]) {
+  // draw the focus ring ourselves
+  BOOL showingFirstResponder = [self showsFirstResponder];
+  if (showingFirstResponder) 
+  {
+    if ([[controlView window] isKeyWindow])
+    {
       [NSGraphicsContext saveGraphicsState];
       
       NSSetFocusRingStyle(NSFocusRingOnly);
@@ -231,10 +227,10 @@ const float STFSymbolYOffset = 4.0;
     }
   }
   
-  // Draw the text field
+  // Draw the text field (but stop it from drawing its focus ring)
   [self setShowsFirstResponder:NO];
   [super drawWithFrame:[self textFieldRectFromRect:cellFrame] inView:controlView];
-  [self setShowsFirstResponder:wasShowingFirstResponder];
+  [self setShowsFirstResponder:showingFirstResponder];
 }
 
 
