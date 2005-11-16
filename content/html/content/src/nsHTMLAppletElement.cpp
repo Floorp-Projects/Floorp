@@ -84,8 +84,7 @@ public:
   NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
   // Let applet decide whether it wants focus from mouse clicks
-  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull)
-    { if (aTabIndex) GetTabIndex(aTabIndex); return PR_TRUE; }
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -309,4 +308,20 @@ PRInt32
 nsHTMLAppletElement::IntrinsicState() const
 {
   return nsGenericHTMLElement::IntrinsicState() | ObjectState();
+}
+
+PRBool
+nsHTMLAppletElement::IsFocusable(PRInt32 *aTabIndex)
+{
+  if (Type() == eType_Plugin) {
+    // Has plugin content (java): let the plugin decide what to do in terms of
+    // internal focus from mouse clicks
+    if (aTabIndex) {
+      GetTabIndex(aTabIndex);
+    }
+  
+    return PR_TRUE;
+  }
+
+  return nsGenericHTMLElement::IsFocusable(aTabIndex);
 }
