@@ -82,3 +82,20 @@
   "l">
 <!ENTITY cmd.reload.key
   "r">
+<!ENTITY cmd.groupby_site.label
+  "Group by Site">
+<!ENTITY cmd.groupby_site.accesskey
+  "S">
+<!ENTITY cmd.groupby_page.label
+  "Group by Page">
+<!ENTITY cmd.groupby_page.accesskey
+  "P">
+<!ENTITY cmd.groupby_feed.label
+  "Group by Subscription">
+<!ENTITY cmd.groupby_feed.accesskey
+  "S">
+<!ENTITY cmd.groupby_post.label
+  "Group by Post">
+<!ENTITY cmd.groupby_post.accesskey
+  "P">
+

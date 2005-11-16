@@ -44,6 +44,8 @@
 
 */
 
+const PLACES_URI = "chrome://browser/content/places/places.xul";
+
 function LOG(str) {
   dump("*** " + str + "\n");
 }
