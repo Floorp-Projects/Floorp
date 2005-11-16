@@ -6,7 +6,8 @@ const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
 const nsIFactory = Components.interfaces.nsIFactory;
 
 function XULAppInfoService()
-{}
+{
+}
 
 XULAppInfoService.prototype.vendor = "mozilla.org";
 XULAppInfoService.prototype.ID = "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}";
