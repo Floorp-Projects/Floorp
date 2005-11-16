@@ -83,6 +83,8 @@ class nsCaret : public nsICaret,
                               
     static void   CaretBlinkCallback(nsITimer *aTimer, void *aClosure);
   
+    NS_IMETHOD    GetCaretFrameForNodeOffset (nsIContent* aContentNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint, PRUint8 aBidiLevel,
+                                              nsIFrame** aReturnFrame, PRInt32* aReturnOffset);
   protected:
 
     void          KillTimer();
@@ -92,7 +94,7 @@ class nsCaret : public nsICaret,
     nsresult      StopBlinking();
     
     void          GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsRect& outClipRect, nsIView **outRenderingView, nsIView **outRelativeView);
-    PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint);
+    PRBool        DrawAtPositionWithHint(nsIDOMNode* aNode, PRInt32 aOffset, nsIFrameSelection::HINT aFrameHint, PRUint8 aBidiLevel);
     PRBool        MustDrawCaret();
     void          DrawCaret();
     void          DrawCaretAfterBriefDelay();
