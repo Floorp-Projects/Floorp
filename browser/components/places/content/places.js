@@ -65,12 +65,16 @@ PlacesPage.init = function PP_init() {
     new PlacesController([placesList, placeContent], placesCommands);
 
   const NH = Ci.nsINavHistory;  
+  const NHQO = Ci.nsINavHistoryQueryOptions;
   var places = 
       Cc["@mozilla.org/browser/nav-history;1"].getService(NH);
   var query = places.getNewQuery();
   var date = new Date();
-  var result = places.executeQuery(query, [NH.GROUP_BY_HOST], 
-                                   1, NH.SORT_BY_NONE, false);
+  var options = places.getNewQueryOptions();
+  options.setGroupingMode([NHQO.GROUP_BY_HOST], 1);
+  options.setSortingMode(NHQO.SORT_BY_NONE);
+  options.setResultType(NHQO.RESULT_TYPE_URL);
+  var result = places.executeQuery(query, options);
   result.QueryInterface(Ci.nsITreeView);
   var placeContent = document.getElementById("placeContent");
   placeContent.view = result;
