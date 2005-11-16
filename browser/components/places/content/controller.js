@@ -55,44 +55,6 @@ const Cc = Components.classes;
 const Cr = Components.results;
 
 /**
- * { 
- *   generic    : [],
- *   <type>     : { 
- *       mutable: [],
- *     immutable: [] 
- *                },
- *   ..
- * }
- */
-function PlacesCommands(commandset) {
-  this._cmds = { 
-    generic: []
-  };
-  this.parseCommands(commandset, this._cmds.generic);
-}
-
-/**
- *
- */
-PlacesCommands.prototype.parseCommands = 
-function PC_parseCommands(commandset, ary) {
-  var kids = commandset.childNodes.length;
-  for (var i = 0; i < kids.length; ++i) {
-    var ln = kids[i].localName;
-    if (ln == "command")
-      ary.push(kids[i]);
-    else if (ln == "commandset") {
-      var type = kids[i].getAttribute("type");
-      var mutable = kids[i].getAttribute("mutable") == "true";
-      if (!(type in this._cmds))
-        this._cmds[type] = { mutable: [], immutable: [] };
-      var dest = this._cmds[type][mutable ? "mutable" : "immutable"];
-      this.parseCommands(kids[i], dest);
-    }
-  }
-}
-
-/**
  * Implements nsIController, nsICommandController... 
  * @param   elements
  *          A list of elements that this controller applies to
@@ -107,8 +69,6 @@ function PlacesController(elements, commandSet) {
     
   for (var i = 0; i < elements.length; ++i)
     elements[i].controllers.appendController(this);
-  
-  this._commands = new PlacesCommands(commandSet);
 }
 
 PlacesController.prototype.isCommandEnabled =

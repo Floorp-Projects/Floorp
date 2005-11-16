@@ -138,8 +138,8 @@
         <vbox flex="1">
           <tree id="placeContent" class="placesTree" context="placesContext" flex="1">
             <treecols>
-              <treecol id="title" flex="1"/>
-              <treecol id="url" flex="1"/>
+              <treecol label="&col.title.label;" id="title" flex="1" primary="true"/>
+              <treecol label="&col.url.label;" id="url" flex="1"/>
             </treecols>
             <treechildren id="placesContentChildren" flex="1"/>
           </tree>

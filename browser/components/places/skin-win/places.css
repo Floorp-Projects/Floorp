@@ -23,3 +23,34 @@
   background-color: transparent;
 }
 
+#placesContentChildren::-moz-tree-image(title) {
+  padding-right: 2px;
+  margin: 0px 2px;
+  list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+#placesContentChildren::-moz-tree-image(title, container) {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+#placesContentChildren::-moz-tree-image(title, open) {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+
+#placesContentChildren::-moz-tree-image(title, separator) {
+  list-style-image: none;
+  width: 0px !important;
+  height: 0px !important;
+  margin: 0px;
+}
+
+#placesContentChildren::-moz-tree-cell-text(title, separator) {
+  color: ThreeDShadow;
+  margin: 0px 5px;
+}
+
+#placesContentChildren::-moz-tree-cell-text(title, separator, selected, focus) {
+  color: HighlightText;
+}
+
