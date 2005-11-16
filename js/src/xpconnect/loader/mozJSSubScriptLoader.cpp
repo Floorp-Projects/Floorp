@@ -245,7 +245,8 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
     /* load up the url.  From here on, failures are reflected as ``custom''
      * js exceptions */
     PRInt32   len = -1;
-    PRUint32  readcount;
+    PRUint32  readcount = 0;  // Total amount of data read
+    PRUint32  lastReadCount = 0;  // Amount of data read in last Read() call
     char     *buf = nsnull;
     
     JSString        *errmsg;
@@ -287,13 +288,17 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
     buf = new char[len + 1];
     if (!buf)
         return NS_ERROR_OUT_OF_MEMORY;
+    buf[len] = '\0';
     
-    rv = instream->Read (buf, len, &readcount);
-    if (NS_FAILED(rv))
-    {
-        errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_BADREAD);
-        goto return_exception;
-    }
+    do {
+        rv = instream->Read (buf + readcount, len - readcount, &lastReadCount);
+        if (NS_FAILED(rv))
+        {
+            errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_BADREAD);
+            goto return_exception;
+        }
+        readcount += lastReadCount;
+    } while (lastReadCount && readcount != PRUint32(len));
     
     if (NS_STATIC_CAST(PRUint32, len) != readcount)
     {
