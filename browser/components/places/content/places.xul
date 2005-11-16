@@ -7,7 +7,7 @@
 
 <window id="places"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="gPlaces.init();">
+        onload="PlacesPage.init();" onunload="PlacesPage.uninit();">
   
   <script type="application/x-javascript"
           src="chrome://browser/content/places/controller.js"/>
@@ -43,6 +43,10 @@
     </commandset>
     <commandset type="container" readonly="true">
       <command id="placesCmd_open:tabs" label="&cmd.open_tabs.label;" accesskey="&cmd.open_tabs.accesskey;"/>
+      <command id="placesCmd_groupby:site" label="&cmd.groupby_site.label;" accesskey="&cmd.groupby_site.accesskey;"/>
+      <command id="placesCmd_groupby:page" label="&cmd.groupby_page.label;" accesskey="&cmd.groupby_page.accesskey;"/>
+      <command id="placesCmd_groupby:feed" label="&cmd.groupby_feed.label;" accesskey="&cmd.groupby_feed.accesskey;"/>
+      <command id="placesCmd_groupby:post" label="&cmd.groupby_post.label;" accesskey="&cmd.groupby_post.accesskey;"/>
     </commandset>
     <commandset type="container">
       <command id="placesCmd_sortby:name" label="&cmd.sortby_name.label;" accesskey="&cmd.sortby_name.accesskey;"/>
@@ -131,12 +135,34 @@
         <button label="+"/>
       </hbox>
       <deck id="content" flex="1">
-        <tree id="placeContent" class="placesTree" context="placesContext"></tree>  
+        <vbox flex="1">
+          <tree id="placeContent" class="placesTree" context="placesContext" flex="1">
+            <treecols>
+              <treecol id="title" flex="1"/>
+              <treecol id="url" flex="1"/>
+            </treecols>
+            <treechildren id="placesContentChildren" flex="1"/>
+          </tree>
+          <deck id="commands">
+            <hbox id="commands_bookmark">
+              <button id="newFolder" command="placesCmd_new:folder"/>
+              <spacer flex="1"/>
+            </hbox>
+            <hbox id="commands_history">
+              <button id="groupBy_site"  command="placesCmd_groupby:site"/>
+              <button id="groupBy_page" command="placesCmd_groupby:page"/>
+              <spacer flex="1"/>
+            </hbox>
+            <hbox id="commands_feed">
+              <button id="subscribe" command="placesCmd_new:folder"/>
+              <separator/>
+              <button id="groupOption0"  command="placesCmd_groupby:site"/>
+              <button id="groupOption1" command="placesCmd_groupby:page"/>
+              <spacer flex="1"/>
+            </hbox>
+          </deck>
+        </vbox>
       </deck>
-      <hbox>
-        <button label="New Folder"/>
-        <button label="Save Search..."/>          
-      </hbox>
     </vbox>
   </hbox>
 
