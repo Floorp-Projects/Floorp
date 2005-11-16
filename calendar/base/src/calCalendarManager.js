@@ -122,7 +122,7 @@ calCalendarManager.prototype = {
 
         var dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
 
-        this.mDB = dbService.getProfileStorage("profile");
+        this.mDB = dbService.openSpecialDatabase("profile");
 
         for (table in sqlTables) {
             try {
