@@ -2049,6 +2049,13 @@ nsGenericHTMLElement::ParseAttribute(nsIAtom* aAttribute,
     return aResult.ParseIntWithBounds(aValue, -32768, 32767);
   }
 
+  if (aAttribute == nsHTMLAtoms::name && !aValue.IsEmpty()) {
+    // Store name as an atom.  name="" means that the element has no name,
+    // not that it has an emptystring as the name.
+    aResult.ParseAtom(aValue);
+    return PR_TRUE;
+  }
+
   return nsGenericElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 

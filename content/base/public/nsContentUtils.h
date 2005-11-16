@@ -204,6 +204,12 @@ public:
                                     const nsAString& aId);
 
   /**
+   * Similar to above, but to be used if one already has an atom for the ID
+   */
+  static nsIContent* MatchElementId(nsIContent *aContent,
+                                    nsIAtom* aId);
+
+  /**
    * Given a URI containing an element reference (#whatever),
    * resolve it to the target content element with the given ID.
    *

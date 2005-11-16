@@ -2493,12 +2493,11 @@ nsContentUtils::DispatchTrustedEvent(nsIDocument* aDoc, nsISupports* aTarget,
   return target->DispatchEvent(event, aDefaultAction ? aDefaultAction : &dummy);
 }
 
-static nsIContent*
-MatchElementId(nsIContent *aContent, nsIAtom* aId)
+/* static */
+nsIContent*
+nsContentUtils::MatchElementId(nsIContent *aContent, nsIAtom* aId)
 {
-  nsIAtom* idAttrName = aContent->GetIDAttributeName();
-  if (idAttrName && aContent->AttrValueIs(kNameSpaceID_None, idAttrName, aId,
-                                          eCaseMatters)) {
+  if (aId == aContent->GetID()) {
     return aContent;
   }
   
@@ -2527,7 +2526,7 @@ nsContentUtils::MatchElementId(nsIContent *aContent, const nsAString& aId)
     return nsnull;
   }
 
-  return ::MatchElementId(aContent, id);
+  return MatchElementId(aContent, id);
 }
 
 // Convert the string from the given charset to Unicode.

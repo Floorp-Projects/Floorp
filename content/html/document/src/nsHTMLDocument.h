@@ -210,11 +210,9 @@ protected:
 
   nsresult RegisterNamedItems(nsIContent *aContent);
   nsresult UnregisterNamedItems(nsIContent *aContent);
-  nsresult UpdateNameTableEntry(const nsAString& aName,
-                                nsIContent *aContent);
-  nsresult AddToIdTable(const nsAString& aId, nsIContent *aContent);
-  nsresult UpdateIdTableEntry(const nsAString& aId, nsIContent *aContent);
-  nsresult RemoveFromNameTable(const nsAString& aName, nsIContent *aContent);
+  nsresult UpdateNameTableEntry(nsIAtom* aName, nsIContent *aContent);
+  nsresult UpdateIdTableEntry(nsIAtom* aId, nsIContent *aContent);
+  nsresult RemoveFromNameTable(nsIAtom* aName, nsIContent *aContent);
   nsresult RemoveFromIdTable(nsIContent *aContent);
 
   void InvalidateHashTables();
