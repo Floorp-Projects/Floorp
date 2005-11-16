@@ -186,7 +186,6 @@ en-US.jar:
     locale/en-US/global/console.properties                      (console/resources/locale/en-US/console.properties)
     locale/en-US/global/finddialog.dtd                          (find/resources/locale/en-US/finddialog.dtd)
     locale/en-US/global/finddialog.properties                   (find/resources/locale/en-US/finddialog.properties)
-    locale/en-US/global/ldapAutoCompErrs.properties             (autocomplete/resources/locale/en-US/ldapAutoCompErrs.properties)
 *   locale/en-US/cookie/contents.rdf                            (cookie/locale/en-US/contents.rdf)
     locale/en-US/cookie/cookieAcceptDialog.properties           (/toolkit/locales/en-US/chrome/cookie/cookieAcceptDialog.properties)
     locale/en-US/cookie/cookieAcceptDialog.dtd                  (/toolkit/locales/en-US/chrome/cookie/cookieAcceptDialog.dtd)
