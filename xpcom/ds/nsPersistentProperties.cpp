@@ -335,7 +335,6 @@ AddElemToArray(PLDHashTable* table, PLDHashEntryHdr *hdr,
   if (!element)
      return PL_DHASH_STOP;
 
-  NS_ADDREF(element);
   propArray->InsertElementAt(element, i);
 
   return PL_DHASH_NEXT;
@@ -345,12 +344,14 @@ AddElemToArray(PLDHashTable* table, PLDHashEntryHdr *hdr,
 NS_IMETHODIMP
 nsPersistentProperties::Enumerate(nsISimpleEnumerator** aResult)
 {
-  nsCOMPtr<nsIBidirectionalEnumerator> iterator;
-
-  nsISupportsArray* propArray;
-  nsresult rv = NS_NewISupportsArray(&propArray);
-  if (rv != NS_OK)
+  nsCOMPtr<nsISupportsArray> propArray;
+  nsresult rv = NS_NewISupportsArray(getter_AddRefs(propArray));
+  if (NS_FAILED(rv))
     return rv;
+
+  // We know the necessary size; we can avoid growing it while adding elements
+  if (!propArray->SizeTo(mTable.entryCount))
+   return NS_ERROR_OUT_OF_MEMORY;
 
   // Step through hash entries populating a transient array
   PRUint32 n =
