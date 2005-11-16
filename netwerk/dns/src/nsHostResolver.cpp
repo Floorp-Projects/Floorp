@@ -171,6 +171,7 @@ nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
     rec->af = key->af;
 
     rec->_refc = 1; // addref
+    NS_LOG_ADDREF(rec, 1, "nsHostRecord", sizeof(nsHostRecord));
     rec->addr_info = nsnull;
     rec->addr = nsnull;
     rec->expiration = NowInMinutes();
