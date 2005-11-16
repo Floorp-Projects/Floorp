@@ -239,8 +239,8 @@ nsNavHistory::~nsNavHistory()
 
   // remove the static reference to the service. Check to make sure its us
   // in case somebody creates an extra instance of the service.
-  if (gHistoryService == this)
-    gHistoryService = nsnull;
+  NS_ASSERTION(gHistoryService == this, "YOU CREATED 2 COPIES OF THE HISTORY SERVICE.");
+  gHistoryService = nsnull;
 }
 
 
@@ -450,7 +450,7 @@ nsNavHistory::SaveExpandItem(const nsAString& aTitle)
 
 // nsNavHistory::GetUrlIdFor
 //
-//    Called by the bookmarks and annotation servii, this function returns the
+//    Called by the bookmarks and annotation services, this function returns the
 //    ID of the row for the given URL, optionally creating one if it doesn't
 //    exist. A newly created entry will have no visits.
 //
