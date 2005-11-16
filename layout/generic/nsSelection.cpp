@@ -1437,34 +1437,31 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelection
       theFrame->GetOffsets(frameStart, frameEnd);
 
       tHint = (HINT)pos.mPreferLeft;
-      if (frameStart !=0 || frameEnd !=0) // Otherwise the frame is not a text frame, so nothing more to do
-      {
-        switch (aKeycode) {
-          case nsIDOMKeyEvent::DOM_VK_HOME:
-          case nsIDOMKeyEvent::DOM_VK_END:
+      switch (aKeycode) {
+        case nsIDOMKeyEvent::DOM_VK_HOME:
+        case nsIDOMKeyEvent::DOM_VK_END:
 
-            // force the offset to the logical beginning (for HOME) or end (for END) of the frame
-            // (if it is an RTL frame it will be at the visual beginning or end, which we don't want in this case)
-            if (nsIDOMKeyEvent::DOM_VK_HOME == aKeycode)
-              pos.mContentOffset = frameStart;
-            else
-              pos.mContentOffset = frameEnd;
+          // force the offset to the logical beginning (for HOME) or end (for END) of the frame
+          // (if it is an RTL frame it will be at the visual beginning or end, which we don't want in this case)
+          if (nsIDOMKeyEvent::DOM_VK_HOME == aKeycode)
+            pos.mContentOffset = frameStart;
+          else
+            pos.mContentOffset = frameEnd;
 
-            // set the cursor Bidi level to the paragraph embedding level
-            mShell->SetCaretBidiLevel(NS_GET_BASE_LEVEL(theFrame));
-            break;
+          // set the cursor Bidi level to the paragraph embedding level
+          mShell->SetCaretBidiLevel(NS_GET_BASE_LEVEL(theFrame));
+          break;
 
-          default:
-            // If the current position is not a frame boundary, it's enough just to take the Bidi level of the current frame
-            if ((pos.mContentOffset != frameStart && pos.mContentOffset != frameEnd)
-                || (eSelectDir == aAmount)
-                || (eSelectLine == aAmount))
-            {
-              mShell->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
-            }
-            else
-              BidiLevelFromMove(context, mShell, pos.mResultContent, pos.mContentOffset, aKeycode, tHint);
-        }
+        default:
+          // If the current position is not a frame boundary, it's enough just to take the Bidi level of the current frame
+          if ((pos.mContentOffset != frameStart && pos.mContentOffset != frameEnd)
+              || (eSelectDir == aAmount)
+              || (eSelectLine == aAmount))
+          {
+            mShell->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
+          }
+          else
+            BidiLevelFromMove(context, mShell, pos.mResultContent, pos.mContentOffset, aKeycode, tHint);
       }
 #ifdef VISUALSELECTION
       // Handle visual selection
