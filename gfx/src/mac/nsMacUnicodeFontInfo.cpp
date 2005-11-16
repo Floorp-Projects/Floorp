@@ -604,16 +604,14 @@ PRBool nsMacUnicodeFontInfo::HasGlyphFor(PRUnichar aChar)
   if (0xfffd == aChar)
     return PR_FALSE;
 
-  // MacOS 8.6 do not have FMxxx etc so we have to check
-  if (nsDeviceContextMac::HaveFontManager90()) {       
-    if (!gCCMap) 
-      gCCMap = InitGlobalCCMap();
+  if (!gCCMap) 
+    gCCMap = InitGlobalCCMap();
 
-    NS_ASSERTION(gCCMap, "cannot init global ccmap");
+  NS_ASSERTION(gCCMap, "cannot init global ccmap");
     
-    if (gCCMap)
-      return CCMAP_HAS_CHAR(gCCMap, aChar);
- }
+  if (gCCMap)
+    return CCMAP_HAS_CHAR(gCCMap, aChar);
+
   return PR_FALSE;
 }
 

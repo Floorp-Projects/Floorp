@@ -338,19 +338,10 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
                                                               kTextEncodingDefaultVariant,
                                                               kTextEncodingDefaultFormat);
                                                               
-        // MacOS 8.6 do not have FMxxx etc so we have to check
-        if (HaveFontManager90()) {       
-          FMFontFamily fontFamily;
-          fontFamily = ::FMGetFontFamilyFromName(fontName);
-          err = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
-        } else {
-          short	fondID;
-          ::GetFNum(fontName, &fondID);
-          ScriptCode script = ::FontToScript(fondID);
-          err = ::UpgradeScriptInfoToTextEncoding(script, kTextLanguageDontCare, 
-                                                  kTextRegionDontCare, NULL, &fontEncoding);
+        FMFontFamily fontFamily;
+        fontFamily = ::FMGetFontFamilyFromName(fontName);
+        err = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
 
-        }
         if (err == noErr)
         {
            err = ::TECCreateConverter(&converter, fontEncoding, unicodeEncoding);
@@ -730,19 +721,11 @@ NS_IMETHODIMP nsDeviceContextMac::BeginPage(void)
  */
 NS_IMETHODIMP nsDeviceContextMac::EndPage(void)
 {
-#if !TARGET_CARBON
- 	if(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrintManagerOpen) {
- 		::SetPort((GrafPtr)(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort));
-		::PrClosePage(((nsDeviceContextSpecMac*)(this->mSpec).get())->mPrinterPort);
-	}
-    return NS_OK;
-#else
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIPrintingContext> printingContext = do_QueryInterface(mSpec);
     if (printingContext)
         rv = printingContext->EndPage();
     return rv;
-#endif
 }
 
 
@@ -803,27 +786,31 @@ void nsDeviceContextMac :: InitFontInfoList()
 		if (!gFontInfoList)
 			return;
 
-#if TARGET_CARBON
         // use the new Font Manager enumeration API.
-        FMFontFamilyIterator iter;
-        err = FMCreateFontFamilyIterator(NULL, NULL, kFMDefaultOptions, &iter);
+        ATSFontFamilyIterator iter;
+        err = ::ATSFontFamilyIteratorCreate(kATSFontContextLocal,
+			NULL, NULL, // filter and its refcon
+			kATSOptionFlagsDefaultScope,
+			&iter);
         if (err != noErr)
             return;
         
 		TextEncoding unicodeEncoding = ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
 															kTextEncodingDefaultVariant,
-													 		kTextEncodingDefaultFormat);
+													 		kUnicodeUTF8Format);
         // enumerate all fonts.
-        TECObjectRef converter = 0;
-        TextEncoding oldFontEncoding = 0;
-        FMFontFamily fontFamily;
-        while (FMGetNextFontFamily(&iter, &fontFamily) == noErr) {
+        TECObjectRef converter = NULL;
+        TextEncoding oldFontEncoding = NULL;
+        ATSFontFamilyRef fontFamily;
+        while (::ATSFontFamilyIteratorNext(iter, &fontFamily) == noErr) {
+		    // we'd like to use ATSFontFamilyGetName here, but it's ignorant of the
+        // font encodings, resulting in garbage names for non-western fonts.
             Str255 fontName;
-            err = ::FMGetFontFamilyName(fontFamily, fontName);
+            err = ::ATSFontFamilyGetQuickDrawName(fontFamily, fontName);
             if (err != noErr || fontName[0] == 0 || fontName[1] == '.' || fontName[1] == '%')
                 continue;
             TextEncoding fontEncoding;
-            err = ::FMGetFontFamilyTextEncoding(fontFamily, &fontEncoding);
+            fontEncoding = ::ATSFontFamilyGetEncoding(fontFamily);
             if (oldFontEncoding != fontEncoding) {
                 oldFontEncoding = fontEncoding;
                 if (converter)
@@ -833,73 +820,19 @@ void nsDeviceContextMac :: InitFontInfoList()
                     continue;
             }
             // convert font name to UNICODE.
-			PRUnichar unicodeFontName[sizeof(fontName)];
+			UInt8 unicodeFontName[sizeof(fontName)];
 			ByteCount actualInputLength, actualOutputLength;
 			err = ::TECConvertText(converter, &fontName[1], fontName[0], &actualInputLength, 
 										(TextPtr)unicodeFontName , sizeof(unicodeFontName), &actualOutputLength);	
-			unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = '\0';
+			unicodeFontName[actualOutputLength] = NULL;
 
-			nsAutoString temp(unicodeFontName);
+			nsString temp = NS_ConvertUTF8toUTF16(nsDependentCString(unicodeFontName));
     		FontNameKey key(temp);
-			gFontInfoList->Put(&key, (void*)fontFamily);
+			gFontInfoList->Put(&key, (void*)::FMGetFontFamilyFromATSFontFamilyRef(fontFamily));
         }
         if (converter)
             err = ::TECDisposeConverter(converter);
-        err = FMDisposeFontFamilyIterator(&iter);
-#else
-		short numFONDs = ::CountResources('FOND');
-		TextEncoding unicodeEncoding = ::CreateTextEncoding(kTextEncodingUnicodeDefault, 
-															kTextEncodingDefaultVariant,
-													 		kTextEncodingDefaultFormat);
-		TECObjectRef converter = nil;
-		ScriptCode lastscript = smUninterp;
-		for (short i = 1; i <= numFONDs ; i++)
-		{
-			Handle fond = ::GetIndResource('FOND', i);
-			if (fond)
-			{
-				short	fondID;
-				OSType	resType;
-				Str255	fontName;
-				::GetResInfo(fond, &fondID, &resType, fontName); 
-				if( (0 != fontName[0]) && ('.' != fontName[1]) && ('%' != fontName[1]))
-				{
-					ScriptCode script = ::FontToScript(fondID);
-					if (script != lastscript)
-					{
-						lastscript = script;
-
-						TextEncoding sourceEncoding;
-						err = ::UpgradeScriptInfoToTextEncoding(script, kTextLanguageDontCare, 
-									kTextRegionDontCare, NULL, &sourceEncoding);
-								
-						if (converter)
-							err = ::TECDisposeConverter(converter);
-
-						err = ::TECCreateConverter(&converter, sourceEncoding, unicodeEncoding);
-						if (err != noErr)
-							converter = nil;
-					}
-
-					if (converter)
-					{
-						PRUnichar unicodeFontName[sizeof(fontName)];
-						ByteCount actualInputLength, actualOutputLength;
-						err = ::TECConvertText(converter, &fontName[1], fontName[0], &actualInputLength, 
-													(TextPtr)unicodeFontName , sizeof(unicodeFontName), &actualOutputLength);	
-						unicodeFontName[actualOutputLength / sizeof(PRUnichar)] = '\0';
-						nsAutoString fontNameString(unicodeFontName);
-
-		        		FontNameKey key(fontNameString);
-						gFontInfoList->Put(&key, (void*)fondID);
-					}
-					::ReleaseResource(fond);
-				}
-			}
-		}
-		if (converter)
-			err = ::TECDisposeConverter(converter);				
-#endif /* !TARGET_CARBON */
+        err = ::ATSFontFamilyIteratorRelease(&iter);
 	}
 }
 
@@ -996,11 +929,6 @@ PRUint32 nsDeviceContextMac::GetScreenResolution()
 	}
 
 	return mPixelsPerInch;
-}
-
-PRBool nsDeviceContextMac::HaveFontManager90()
-{
-  return (kUnresolvedCFragSymbolAddress != (UInt32) FMGetFontFamilyFromName);
 }
 
 
@@ -1114,7 +1042,7 @@ EnumerateFont(nsHashKey *aKey, void *aData, void* closure)
   PRUnichar** array = info->mArray;
   int j = info->mCount;
   PRBool match = PR_FALSE;
-#if TARGET_CARBON
+
   // we need to match the cast of FMFontFamily in nsDeviceContextMac :: InitFontInfoList()
   FMFontFamily fontFamily = (FMFontFamily) NS_PTR_TO_INT32(aData);
   TextEncoding fontEncoding;
@@ -1124,11 +1052,7 @@ EnumerateFont(nsHashKey *aKey, void *aData, void* closure)
     status = ::RevertTextEncodingToScriptInfo(fontEncoding, &script, nsnull, nsnull);
     match = ((noErr == status) && (script == info->mScript));
   }
-#else
-  short	fondID = (short) aData;
-  ScriptCode script = ::FontToScript(fondID);
-	match = (script == info->mScript) ;
-#endif
+
   if (match) {
 	  PRUnichar* str = ToNewUnicode(((FontNameKey*)aKey)->mString);
 	  if (!str) {
