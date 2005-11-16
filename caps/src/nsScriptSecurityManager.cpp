@@ -2083,7 +2083,11 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 
 // static
 nsIPrincipal*
-nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj)
+nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj
+#ifdef DEBUG
+                                              , PRBool aAllowShortCircuit
+#endif
+                                              )
 {
     NS_ASSERTION(aCx && aObj, "Bad call to doGetObjectPrincipal()!");
     nsIPrincipal* result = nsnull;
@@ -2097,7 +2101,6 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj)
         {
             // No need to refcount |priv| here.
             nsISupports *priv = (nsISupports *)JS_GetPrivate(aCx, aObj);
-            nsCOMPtr<nsIScriptObjectPrincipal> objPrin;
 
             /*
              * If it's a wrapped native (as most
@@ -2107,16 +2110,37 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj)
             nsCOMPtr<nsIXPConnectWrappedNative> xpcWrapper =
                 do_QueryInterface(priv);
 
-            if (xpcWrapper)
+            if (NS_LIKELY(xpcWrapper != nsnull))
             {
-                objPrin = do_QueryWrappedNative(xpcWrapper);
+#ifdef DEBUG
+                if (aAllowShortCircuit)
+                {
+#endif
+                    result = xpcWrapper->GetObjectPrincipal();
+#ifdef DEBUG
+                }
+                else
+                {
+                    nsCOMPtr<nsIScriptObjectPrincipal> objPrin;
+                    objPrin = do_QueryWrappedNative(xpcWrapper);
+                    if (objPrin)
+                    {
+                        result = objPrin->GetPrincipal();
+                    }                    
+                }
+#endif
             }
             else
             {
+                nsCOMPtr<nsIScriptObjectPrincipal> objPrin;
                 objPrin = do_QueryInterface(priv);
+                if (objPrin)
+                {
+                    result = objPrin->GetPrincipal();
+                }
             }
 
-            if (objPrin && (result = objPrin->GetPrincipal()))
+            if (result)
             {
                 break;
             }
@@ -2125,6 +2149,10 @@ nsScriptSecurityManager::doGetObjectPrincipal(JSContext *aCx, JSObject *aObj)
         aObj = JS_GetParent(aCx, aObj);
     } while (aObj);
 
+    NS_ASSERTION(!aAllowShortCircuit ||
+                 result == doGetObjectPrincipal(aCx, aObj, PR_FALSE),
+                 "Principal mismatch.  Not good");
+    
     return result;
 }
 

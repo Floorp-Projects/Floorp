@@ -109,8 +109,11 @@
 #include "nsSupportsArray.h"
 
 #include "nsIXPCScriptNotify.h"  // used to notify: ScriptEvaluated
+
 #ifndef XPCONNECT_STANDALONE
 #define XPC_USE_SECURITY_CHECKED_COMPONENT
+#include "nsIScriptObjectPrincipal.h"
+#include "nsIPrincipal.h"
 #endif
 
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
@@ -1025,6 +1028,13 @@ public:
     JSObject*
     GetPrototypeJSObject() const {return mPrototypeJSObject;}
 
+#ifndef XPCONNECT_STANDALONE
+    nsIPrincipal*
+    GetPrincipal() const
+    {return mScriptObjectPrincipal ?
+         mScriptObjectPrincipal->GetPrincipal() : nsnull;}
+#endif
+    
     JSObject*
     GetPrototypeJSFunction() const {return mPrototypeJSFunction;}
 
@@ -1088,9 +1098,22 @@ private:
     ClassInfo2WrappedNativeProtoMap* mWrappedNativeProtoMap;
     nsXPCComponents*                 mComponents;
     XPCWrappedNativeScope*           mNext;
+    // The JS global object for this scope.  If non-null, this will be the
+    // default parent for the XPCWrappedNatives that have us as the scope,
+    // unless a PreCreate hook overrides it.  Note that this _may_ be null (see
+    // constructor).
     JSObject*                        mGlobalJSObject;
     JSObject*                        mPrototypeJSObject;
     JSObject*                        mPrototypeJSFunction;
+
+#ifndef XPCONNECT_STANDALONE
+    // The script object principal instance corresponding to our current global
+    // JS object.
+    // XXXbz what happens if someone calls JS_SetPrivate on mGlobalJSObject.
+    // How do we deal?  Do we need to?  I suspect this isn't worth worrying
+    // about, since all of our scope objects are verified as not doing that.
+    nsCOMPtr<nsIScriptObjectPrincipal> mScriptObjectPrincipal;
+#endif
 };
 
 /***************************************************************************/
@@ -1786,6 +1809,10 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDNATIVE
+
+#ifndef XPCONNECT_STANDALONE
+    virtual nsIPrincipal* GetObjectPrincipal() const;
+#endif
 
     JSBool
     IsValid() const {return nsnull != mFlatJSObject;}
@@ -2866,8 +2893,6 @@ private:
 
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
-#include "nsIPrincipal.h"
-#include "nsIScriptObjectPrincipal.h"
 
 class BackstagePass : public nsIScriptObjectPrincipal, public nsIXPCScriptable
 {

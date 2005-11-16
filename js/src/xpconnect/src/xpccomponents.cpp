@@ -2250,16 +2250,8 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     if (!sandbox)
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
-    rv = xpc->InitClasses(cx, sandbox);
-    if (NS_SUCCEEDED(rv) &&
-        !JS_DefineFunctions(cx, sandbox, SandboxFunctions)) {
-        rv = NS_ERROR_FAILURE;
-    }
-    if (NS_FAILED(rv))
-        return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
-
+    // Make sure to set up principals on the sandbox before initing classes
     nsIScriptObjectPrincipal *sop = nsnull;
-
     if (JSVAL_IS_STRING(argv[0])) {
         JSString *codebasestr = JSVAL_TO_STRING(argv[0]);
         nsCAutoString codebase(JS_GetStringBytes(codebasestr),
@@ -2315,6 +2307,17 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
         NS_RELEASE(sop);
         return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
     }
+
+    // After this point |sop| will be released when |sandbox| is
+    // finalized, so no need to worry about it from now on.
+
+    rv = xpc->InitClasses(cx, sandbox);
+    if (NS_SUCCEEDED(rv) &&
+        !JS_DefineFunctions(cx, sandbox, SandboxFunctions)) {
+        rv = NS_ERROR_FAILURE;
+    }
+    if (NS_FAILED(rv))
+        return ThrowAndFail(NS_ERROR_XPC_UNEXPECTED, cx, _retval);
 
     if (vp)
         *vp = OBJECT_TO_JSVAL(sandbox);
