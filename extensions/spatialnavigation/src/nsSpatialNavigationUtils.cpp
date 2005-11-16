@@ -338,17 +338,6 @@ isArea(nsIContent* content)
 }
 
 PRBool
-isDocument(nsIFrame* frame)
-{
-  nsIContent* content = frame->GetContent();
-
-  if (!content || !content->IsContentOfType(nsIContent::eHTML))
-      return PR_FALSE;
-
-  return isContentOfType(content, "map");
-}
-
-PRBool
 isMap(nsIFrame* frame)
 {
   nsIContent* content = frame->GetContent();
