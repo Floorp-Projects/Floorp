@@ -1,0 +1,264 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Places.
+ *
+ * The Initial Developer of the Original Code is
+ * Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2005
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brian Ryner <bryner@brianryner.com> (original author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsINavHistoryResult;
+
+/**
+ * Observer for bookmark changes.
+ */
+
+[scriptable, uuid(c4159523-bedb-4e3f-a163-087e6d89e8a6)]
+interface nsINavBookmarkObserver : nsISupports
+{
+  /**
+   * Notify this observer that a batch transaction has started.
+   * Other notifications will be sent during the batch change,
+   * but the observer is guaranteed that onEndUpdateBatch() will be called
+   * at the completion of changes.
+   */
+  void onBeginUpdateBatch();
+
+  /**
+   * Notify this observer that a batch transaction has ended.
+   */
+  void onEndUpdateBatch();
+
+  /**
+   * True requests that you want to get called for all updates, false if you
+   * don't necessarily care about which exact things changed during a batch
+   * update. If false, this will sometimes not call you for things in between
+   * onBeginUpdateBatch and onEndUpdateBatch. You'll still get the begin and
+   * end, so you'll know something changed.
+   *
+   * Lots of observers don't care about what changes, only that something
+   * changed so they can update their UI. This allows delete operations to
+   * avoid iterating over every item, and just doing a single bulk SQL DELETE
+   * command, which is much more efficient.
+   *
+   * Note that you still might get called if you say false in some situations.
+   * This only skips certain time-consuming notifications if NO observers
+   * want the information.
+   */
+  readonly attribute boolean wantAllDetails;
+
+  /**
+   * Notify this observer that the bookmark was added.
+   * Called after the actual add took place.
+   *
+   * @param bookmark   The bookmark item that was added.
+   * @param folder     The folder that the item was added to.
+   * @param index      The item's index in the folder.
+   */
+  void onItemAdded(in nsIURI bookmark, in PRInt64 folder, in long index);
+
+  /**
+   * Notify this observer that the bookmark was removed.
+   * Called after the actual remove took place.
+   *
+   * @param bookmark   The bookmark item will be removed.
+   * @param folder     The folder that the item was removed from.
+   * @param index      The bookmark's index in the folder.
+   */
+  void onItemRemoved(in nsIURI bookmark, in PRInt64 container, in long index);
+
+  /**
+   * Notify this observer that a bookmark's information has changed.  This
+   * will be called whenever any attributes like "title" are changed.
+   *
+   * @param bookmark The bookmark which changed.
+   * @param property The property which changed.
+   */
+  void onItemChanged(in nsIURI bookmark, in ACString property);
+
+  /**
+   * Notify this observer that a bookmark folder has been added.
+   *  @param folder     The id of the folder that was added.
+   *  @param parent     The id of the folder's parent.
+   *  @param index      The folder's index inside its parent.
+   */
+  void onFolderAdded(in PRInt64 folder, in PRInt64 parent, in long index);
+
+  /**
+   * Notify this observer that a bookmark folder has been removed.
+   *  @param folder     The id of the folder that was removed.
+   *  @param parent     The id of the folder's old parent.
+   *  @param index      The folder's old index in its parent.
+   */
+  void onFolderRemoved(in PRInt64 folder, in PRInt64 parent, in long index);
+
+  /**
+   * Notify this observer that a bookmark folder has been moved.
+   *  @param folder     The id of the folder that was moved.
+   *  @param newParent  The id of the folder's new paremt.
+   *  @param index      The folder's index inside newParent.
+   */
+  void onFolderMoved(in PRInt64 folder, in PRInt64 newParent, in long index);
+
+  /**
+   * Notify this observer that a bookmark folder's information has changed.
+   * This will be called whenever any attributes like "title" are changed.
+   *  @param folder     The id of the folder that was changed.
+   *  @param property   The property that was changed.
+   */
+  void onFolderChanged(in PRInt64 folder, in ACString property);
+};
+
+/**
+ * The BookmarksService interface provides methods for managing bookmarked
+ * history items.  Bookmarks consist of a set of user-customizable
+ * folders.  A URI in history can be contained in one or more such folders.
+ */
+
+[scriptable, uuid(5feca204-b735-40e8-921f-8b057eedffe2)]
+interface nsINavBookmarksService : nsISupports
+{
+  /**
+   * The folder ID of the bookmarks root.
+   */
+  readonly attribute PRInt64 bookmarksRoot;
+
+  /**
+   * A query result containing the bookmarks folder tree.
+   */
+  readonly attribute nsINavHistoryResult bookmarks;
+
+  /**
+   * Inserts a child item into the given folder.
+   *  @param folder     The id of the parent folder
+   *  @param item       The URI to insert
+   *  @param index      The index to insert at, or -1 to append
+   */
+  void insertItem(in PRInt64 folder, in nsIURI item, in PRInt32 index);
+
+  /**
+   * Removes a child item from the given folder.
+   *  @param folder     The folder to remove the child from
+   *  @param item       The child item to remove
+   */
+  void removeItem(in PRInt64 folder, in nsIURI child);
+
+  /**
+   * Creates a new child folder and inserts it under the given parent.
+   *  @param parent     The id of the parent folder
+   *  @param name       The name of the new folder
+   *  @param index      The index to insert at, or -1 to append
+   *  @returns the ID of the newly-inserted folder
+   */
+  PRInt64 createFolder(in PRInt64 parent, in AString name, in PRInt32 index);
+
+  /**
+   * Removes a folder from the bookmarks tree.
+   *  @param folder     The id of the folder to remove.
+   */
+  void removeFolder(in PRInt64 folder);
+
+  /**
+   * Moves a folder to a different container, preserving its contents.
+   *  @param folder      The folder to move
+   *  @param newParent   The id of the folder's new parent
+   *  @param index       The folder's index under newParent, or -1 to append
+   */
+  void moveFolder(in PRInt64 folder, in PRInt64 newParent, in PRInt32 index);
+
+  /**
+   * Set the history/bookmark title for a URI.  The new title will be used
+   * anywhere the URI is shown in bookmarks or history.
+   *  @param uri   The URI whose name should be set
+   *  @param title The new title for the URI
+   */
+  void setItemTitle(in nsIURI uri, in AString title);
+
+  /**
+   * Get the history/bookmark title for the URI.
+   *  @param uri   The URI whose title should be retrieved
+   *  @returns     The title for the URI.
+   */
+  AString getItemTitle(in nsIURI uri);
+
+  /**
+   * Set the title for a bookmark folder.
+   *  @param folder     The folder whose title should be set
+   *  @param title      The new title for the folder
+   */
+  void setFolderTitle(in PRInt64 folder, in AString title);
+
+  /**
+   * Get the title for a bookmark folder.
+   *  @param folder     The folder whose title should be retrieved
+   *  @returns          The title for the folder
+   */
+  AString getFolderTitle(in PRInt64 folder);
+
+  /**
+   * Returns true if the given URI is in any bookmark folder.
+   */
+  boolean isBookmarked(in nsIURI uri);
+
+  /**
+   * Returns the list of folder ids that contain the given URI.
+   */
+  void getBookmarkCategories(in nsIURI uri, out PRUint32 count,
+                             [array, retval, size_is(count)] out PRInt64 categories);
+
+  /**
+   * Adds a bookmark observer. The bookmark service will keep an owning
+   * reference to the observer.
+   */
+  void addObserver(in nsINavBookmarkObserver aObserver);
+
+  /**
+   * Removes a bookmark observer.
+   */
+  void removeObserver(in nsINavBookmarkObserver aObserver);
+
+  /**
+   * Causes observers to be notified of a beginUpdateBatch when a lot of things
+   * are about to change. Calls can be nested, observers will only be
+   * notified when all batches begin/end.
+   */
+  void beginUpdateBatch();
+
+  /**
+   * Causes observers to be notified of an endUpdateBatch when a batch is
+   * done changing. Should match beginUpdateBatch or bad things will happen.
+   */
+  void endUpdateBatch();
+};

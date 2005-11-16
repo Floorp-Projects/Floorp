@@ -87,3 +87,9 @@
 
 #define NS_NAVHISTORY_CONTRACTID \
   "@mozilla.org/browser/nav-history;1"
+
+#define NS_NAVBOOKMARKSSERVICE_CID \
+{ 0x9de95a0c, 0x39a4, 0x4d64, {0x9a, 0x53, 0x17, 0x94, 0x0d, 0xd7, 0xca, 0xbb}}
+
+#define NS_NAVBOOKMARKSSERVICE_CONTRACTID \
+  "@mozilla.org/browser/nav-bookmarks-service;1"
