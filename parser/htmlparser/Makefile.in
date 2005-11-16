@@ -46,7 +46,7 @@ MODULE		= htmlparser
 DIRS		= public src
 
 ifdef ENABLE_TESTS
-TOOLDIRS	+= tests
+TOOL_DIRS	+= tests
 
 ifndef MOZ_ENABLE_LIBXUL
 TOOL_DIRS	+= robot
