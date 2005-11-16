@@ -3833,8 +3833,14 @@ nsGenericHTMLElement::GetHostFromHrefString(const nsAString& aHref,
   aHost.Truncate();
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_MALFORMED_URI) {
+      // Don't throw from these methods!  Not a valid URI means return
+      // empty string.
+      rv = NS_OK;
+    }
     return rv;
+  }
 
   nsCAutoString hostport;
   rv = uri->GetHostPort(hostport);
@@ -3857,8 +3863,14 @@ nsGenericHTMLElement::GetHostnameFromHrefString(const nsAString& aHref,
   aHostname.Truncate();
   nsCOMPtr<nsIURI> url;
   nsresult rv = NS_NewURI(getter_AddRefs(url), aHref);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_MALFORMED_URI) {
+      // Don't throw from these methods!  Not a valid URI means return
+      // empty string.
+      rv = NS_OK;
+    }
     return rv;
+  }
 
   nsCAutoString host;
   rv = url->GetHost(host);
@@ -3882,8 +3894,12 @@ nsGenericHTMLElement::GetPathnameFromHrefString(const nsAString& aHref,
   nsCOMPtr<nsIURI> uri;
 
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_MALFORMED_URI) {
+      rv = NS_OK;
+    }
     return rv;
+  }
 
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
 
@@ -3912,8 +3928,12 @@ nsGenericHTMLElement::GetSearchFromHrefString(const nsAString& aHref,
   nsCOMPtr<nsIURI> uri;
 
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_MALFORMED_URI) {
+      rv = NS_OK;
+    }
     return rv;
+  }
 
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
 
@@ -3943,8 +3963,12 @@ nsGenericHTMLElement::GetPortFromHrefString(const nsAString& aHref,
   aPort.Truncate();
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_MALFORMED_URI) {
+      rv = NS_OK;
+    }
     return rv;
+  }
 
   PRInt32 port;
   rv = uri->GetPort(&port);
@@ -3974,8 +3998,12 @@ nsGenericHTMLElement::GetHashFromHrefString(const nsAString& aHref,
   nsCOMPtr<nsIURI> uri;
 
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aHref);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    if (rv == NS_ERROR_MALFORMED_URI) {
+      rv = NS_OK;
+    }
     return rv;
+  }
 
   nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
 
