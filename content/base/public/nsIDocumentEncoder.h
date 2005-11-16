@@ -39,7 +39,7 @@
 #define nsIDocumentEncoder_h__
 
 #include "nsISupports.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 
 class nsIDocumentEncoder;
 class nsIDocument;

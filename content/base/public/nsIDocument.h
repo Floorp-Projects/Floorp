@@ -39,7 +39,7 @@
 
 #include "nsISupports.h"
 #include "nsEvent.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsCOMArray.h"
 #include "nsIDocumentObserver.h"
 #include "nsCOMPtr.h"
@@ -48,11 +48,9 @@
 #include "nsWeakPtr.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsILoadGroup.h"
-#include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "mozFlushType.h"
 #include "nsPropertyTable.h"
-#include "nsHashSets.h"
 #include "nsAutoPtr.h"
 #include "nsIAtom.h"
 
@@ -138,7 +136,7 @@ public:
   /**
    * Return the title of the document. May return null.
    */
-  const nsAFlatString& GetDocumentTitle() const
+  const nsString& GetDocumentTitle() const
   {
     return mDocumentTitle;
   }
@@ -199,7 +197,7 @@ public:
    * will trigger a startDocumentLoad if necessary to answer the
    * question.
    */
-  const nsAFlatCString& GetDocumentCharacterSet() const
+  const nsCString& GetDocumentCharacterSet() const
   {
     return mCharacterSet;
   }
@@ -247,7 +245,7 @@ public:
    */
   void GetContentLanguage(nsAString& aContentLanguage) const
   {
-    CopyASCIItoUCS2(mContentLanguage, aContentLanguage);
+    CopyASCIItoUTF16(mContentLanguage, aContentLanguage);
   }
 
   // The state BidiEnabled should persist across multiple views
@@ -957,7 +955,7 @@ protected:
   // defined in nsBidiUtils.h
   PRUint32 mBidiOptions;
 
-  nsXPIDLCString mContentLanguage;
+  nsCString mContentLanguage;
   nsCString mContentType;
 
   // The document's security info

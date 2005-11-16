@@ -41,12 +41,15 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsEvent.h"
-#include "nsAString.h"
+#include "nsStringGlue.h"
 #include "nsContentErrors.h"
 #include "nsPropertyTable.h"
 #include "nsCaseTreatment.h"
-#include "nsINodeInfo.h"
 #include "nsChangeHint.h"
+
+#ifdef MOZILLA_INTERNAL_API
+#include "nsINodeInfo.h"
+#endif
 
 // Forward declarations
 class nsIAtom;
@@ -75,6 +78,10 @@ class nsAttrValue;
 class nsIContent : public nsISupports {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENT_IID)
+
+#ifdef MOZILLA_INTERNAL_API
+  // If you're using the external API, the only thing you can know about
+  // nsIContent is that it exists with an IID
 
   nsIContent(nsINodeInfo *aNodeInfo)
     : mParentPtrBits(0),
@@ -897,6 +904,8 @@ protected:
   PtrBits      mParentPtrBits;
   
   nsCOMPtr<nsINodeInfo> mNodeInfo;
+
+#endif // MOZILLA_INTERNAL_API
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContent, NS_ICONTENT_IID)
