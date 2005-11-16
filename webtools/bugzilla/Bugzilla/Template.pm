@@ -221,6 +221,12 @@ sub get_format {
 ###############################################################################
 # Templatization Code
 
+# The Template Toolkit throws an error if a loop iterates >1000 times.
+# We want to raise that limit.
+# NOTE: If you change this number, you MUST RE-RUN checksetup.pl!!!
+# If you do not re-run checksetup.pl, the change you make will not apply
+$Template::Directive::WHILE_MAX = 1000000;
+
 # Use the Toolkit Template's Stash module to add utility pseudo-methods
 # to template variables.
 use Template::Stash;
