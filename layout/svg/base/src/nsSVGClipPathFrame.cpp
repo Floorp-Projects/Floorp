@@ -176,6 +176,11 @@ nsSVGClipPathFrame::ClipHitTest(nsISVGChildFrame* aParent,
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame) {
+      // Notify the child frame that we may be working with a
+      // different transform, so it can update its covered region
+      // (used to shortcut hit testing).
+      SVGFrame->NotifyCanvasTMChanged(PR_FALSE);
+
       nsIFrame *temp = nsnull;
       nsresult rv = SVGFrame->GetFrameForPointSVG(aX, aY, &temp);
       if (NS_SUCCEEDED(rv) && temp) {
