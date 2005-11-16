@@ -79,7 +79,7 @@ PlacesPage.init = function PP_init() {
 };
 
 PlacesPage.uninit = function PP_uninit() {
-  this.observer._hidePlacesUI();
+  this._hidePlacesUI();
 };
 
 PlacesPage.onTabSelect = function PP_onTabSelect(event) {
