@@ -87,6 +87,7 @@
 #include "nsAbLDAPReplicationData.h"
 #include "nsAbLDAPChangeLogQuery.h"
 #include "nsAbLDAPChangeLogData.h"
+#include "nsLDAPAutoCompleteSession.h"
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddressBook)
@@ -126,6 +127,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPReplicationQuery)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessReplicationData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPChangeLogQuery)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessChangeLogData)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
@@ -314,6 +316,11 @@ static const nsModuleComponentInfo components[] =
     NS_ABLDAPAUTOCOMPFORMATTER_CID,
     NS_ABLDAPAUTOCOMPFORMATTER_CONTRACTID,
     nsAbLDAPAutoCompFormatterConstructor },
+
+  { "LDAP Autocomplete Session",
+     NS_LDAPAUTOCOMPLETESESSION_CID,
+     "@mozilla.org/autocompleteSession;1?type=ldap",
+     nsLDAPAutoCompleteSessionConstructor },
 
 #endif
 

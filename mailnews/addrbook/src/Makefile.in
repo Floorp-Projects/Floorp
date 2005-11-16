@@ -146,6 +146,7 @@ CPPSRCS		+= nsAbLDAPDirectory.cpp \
                 nsAbLDAPReplicationData.cpp \
                 nsAbLDAPChangeLogQuery.cpp \
                 nsAbLDAPChangeLogData.cpp \
+		nsLDAPAutoCompleteSession.cpp \
 		$(NULL)
 endif
 

@@ -192,6 +192,7 @@ messenger.jar:
 
 en-US.jar:
 *   locale/en-US/messenger/contents.rdf                                (base/resources/locale/en-US/contents.rdf)
+    locale/en-US/messenger/addressbook/ldapAutoCompErrs.properties     (addrbook/resources/locale/en-US/ldapAutoCompErrs.properties)
     locale/en-US/messenger/addressbook/abAddressBookNameDialog.dtd     (addrbook/resources/locale/en-US/abAddressBookNameDialog.dtd)
     locale/en-US/messenger/addressbook/abCardOverlay.dtd               (addrbook/resources/locale/en-US/abCardOverlay.dtd)
     locale/en-US/messenger/addressbook/abCardViewOverlay.dtd           (addrbook/resources/locale/en-US/abCardViewOverlay.dtd)

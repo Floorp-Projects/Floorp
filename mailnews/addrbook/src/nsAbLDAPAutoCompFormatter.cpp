@@ -212,12 +212,12 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
     } 
 
     rv = stringBundleSvc->CreateBundle(
-        "chrome://global/locale/ldapAutoCompErrs.properties",
+        "chrome://mailnews/locale/addressbook/ldapAutoCompErrs.properties",
         getter_AddRefs(ldapACBundle));
     if (NS_FAILED(rv)) {
         NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
                  " error creating string bundle"
-                 " chrome://global/locale/ldapAutoCompErrs.properties");
+                 " chrome://mailnews/locale/addressbook/ldapAutoCompErrs.properties");
         return rv;
     }
 
@@ -228,7 +228,7 @@ nsAbLDAPAutoCompFormatter::FormatException(PRInt32 aState,
     if (NS_FAILED(rv)) {
         NS_ERROR("nsAbLDAPAutoCompleteFormatter::FormatException():"
                  " error getting general error from bundle"
-                 " chrome://global/locale/ldapAutoCompErrs.properties");
+                 " chrome://mailnews/locale/addressbook/ldapAutoCompErrs.properties");
         return rv;
     }
 
