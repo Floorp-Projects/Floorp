@@ -14507,7 +14507,7 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
   MOZ_ENABLE_JAVAXPCOM=1
 
   case "$host_os" in
-    mingw*|cygwin*|msvc*|mks*)
+    cygwin*|msvc*|mks*)
       if test -n "$JAVA_HOME"; then
         JAVA_HOME=`cygpath -u \`cygpath -m -s "$JAVA_HOME"\``
       fi
