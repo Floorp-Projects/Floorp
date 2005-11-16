@@ -298,6 +298,10 @@ function MiniNavStartup()
   if(getBrowser().mPanelContainer.childNodes.length==1) {
 	getBrowser().mStrip.collapsed=true;
   }
+  
+  /* Recover whiever is the state SNAV in the pref */ 
+
+  gStateSNAV = gPref.getBoolPref("snav.enabled"); 
 
 }
 
@@ -798,6 +802,10 @@ function MenuPopupHidden() {
  *  https://bugzilla.mozilla.org/show_bug.cgi?id=311287#c1 - we should have the snav interface here. 
  */
 function BrowserSNAVToggle(state) {
+  if(gStateSNAV != state) { // goes through actually doing, only first time.    
+    gPref.setBoolPref("snav.enabled", state);                                   
+    gStateSNAV=state;                                                           
+  }       
 } 
 
 
