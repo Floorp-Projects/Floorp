@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 #include "jstypes.h"
 #include "jsarena.h"
 #include "jsutil.h"
@@ -2501,6 +2502,8 @@ main(int argc, char **argv, char **envp)
 #endif
 
     gStackBase = (jsuword)&stackDummy;
+
+    setlocale(LC_ALL, "");
 
 #ifdef XP_OS2
    /* these streams are normally line buffered on OS/2 and need a \n, *
