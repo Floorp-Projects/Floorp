@@ -444,7 +444,7 @@ nsSoftKeyBoard::HandleEvent(nsIDOMEvent* aEvent)
 
   nsAutoString eventType;
   aEvent->GetType(eventType);
-  
+
   if (eventType.EqualsLiteral("keypress"))
   {
     PRUint32 keyCode;
@@ -559,8 +559,33 @@ nsSoftKeyBoard::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  if (eventType.EqualsLiteral("focus"))
+  if (eventType.EqualsLiteral("click"))
+  {
     OpenSIP();
+    return NS_OK;
+  }
+
+  PRBool popupConditions = PR_FALSE;
+  nsCOMPtr<nsPIDOMWindow> privateWindow = do_QueryInterface(mTopWindow);
+  if (!privateWindow)
+    return NS_OK;
+
+  nsIDOMWindowInternal *rootWindow = privateWindow->GetPrivateRoot();
+  if (!rootWindow)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMWindow> windowContent;
+  rootWindow->GetContent(getter_AddRefs(windowContent));
+  privateWindow = do_QueryInterface(windowContent);
+
+  if (privateWindow)
+    popupConditions = privateWindow->IsLoadingOrRunningTimeout();
+  
+  if (eventType.EqualsLiteral("focus"))
+  {
+    if (popupConditions == PR_FALSE)
+      OpenSIP();
+  }
   else
     CloseSIP();
   
@@ -670,6 +695,7 @@ nsSoftKeyBoard::Init(nsIDOMWindow *aWindow)
   receiver->AddEventListener(NS_LITERAL_STRING("blur"), this, PR_TRUE);
   receiver->AddEventListener(NS_LITERAL_STRING("keypress"), this, PR_TRUE);
 
+  receiver->AddEventListener(NS_LITERAL_STRING("click"), this, PR_TRUE);
   
   return NS_OK;
 }
@@ -689,7 +715,9 @@ nsSoftKeyBoard::Shutdown()
 
   receiver->RemoveEventListener(NS_LITERAL_STRING("focus"), this, PR_TRUE);
   receiver->RemoveEventListener(NS_LITERAL_STRING("blur"), this, PR_TRUE);
-  
+  receiver->RemoveEventListener(NS_LITERAL_STRING("keypress"), this, PR_TRUE);
+  receiver->RemoveEventListener(NS_LITERAL_STRING("click"), this, PR_TRUE);
+
   mTopWindow = nsnull;
 
   return NS_OK;
