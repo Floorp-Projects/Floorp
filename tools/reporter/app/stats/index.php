@@ -38,7 +38,7 @@
 
 require_once('../../config.inc.php');
 require_once($config['base_path'].'/includes/iolib.inc.php');
-require_once($config['base_path'].'/includes/contrib/adodb/adodb.inc.php');
+require_once($config['base_path'].'/includes/db.inc.php');
 require_once($config['base_path'].'/includes/contrib/smarty/libs/Smarty.class.php');
 require_once($config['base_path'].'/includes/security.inc.php');
 
@@ -50,7 +50,6 @@ header("Cache-control: private"); //IE 6 Fix
 
 // Open DB
 $db = NewADOConnection($config['db_dsn']);
-if (!$db) die("Connection failed");
 $db->SetFetchMode(ADODB_FETCH_ASSOC);
 
 $content = initializeTemplate();
@@ -111,6 +110,6 @@ $db->Close();
 
 $title = "Statistics";
 
-displayPage($content, 'stats.tpl', $title);
+displayPage($content, 'stats', 'stats.tpl');
 ?>
 

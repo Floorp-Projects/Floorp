@@ -90,6 +90,6 @@ $content->assign('report_description',     $query->fields['report_description'])
 
 $title = 'Mozilla Reporter: '.$query->fields['report_id'];
 
-displayPage($content, 'report.tpl', $title);
+displayPage($content, 'report', 'report.tpl', $title);
 ?>
 

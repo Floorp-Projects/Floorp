@@ -49,14 +49,18 @@ session_start();
 header("Cache-control: private"); //IE 6 Fix
 printheaders();
 
+$method = 'html';
+
 $title = "Searching Results";
+
 $content = initializeTemplate();
+$content->assign('method', $method);
 
 // Open DB
 $db = NewADOConnection($config['db_dsn']);
 $db->SetFetchMode(ADODB_FETCH_ASSOC);
+$db->debug = true;
 
-// DELETED
 $query = new query;
 $query_input = $query->getQueryInputs();
 
@@ -68,24 +72,25 @@ $result = $query->doQuery($query_input['selected'],
                           $query_input['page'],
                           $query_input['count']
           );
-$output = $query->outputHTML($result, $query_input);
 
+$output = $query->outputHTML($result, $query_input, $continuity_params, $columnHeaders);
 if (sizeof($output['data']) == 0){
     $content->assign('error', 'No Results found');
-    displayPage($content, 'query.tpl');
+    displayPage($content, 'query', 'query.tpl');
     exit;
 }
 
-$content->assign('continuityParams', $query->continuityParams($query_input));
+$continuity_params = $query->continuityParams($query_input);
+$content->assign('continuity_params', $continuity_params);
+$content->assign('column', $query->columnHeaders($query_input, $continuity_params));
+$content->assign('row', $output['data']);
+$content->assign('continuityParams', $continuity_params);
 $content->assign('count', $result['totalResults']);
 $content->assign('show', $query_input['show']);
 $content->assign('page', $query_input['page']);
 
-$content->assign('column', $output['columnHeaders']);
-$content->assign('row', $output['data']);
-displayPage($content, 'query.tpl');
+displayPage($content, 'query', 'query.tpl');
 
 // disconnect database
 $db->Close();
-
 ?>
