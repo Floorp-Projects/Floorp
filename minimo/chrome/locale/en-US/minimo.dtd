@@ -32,7 +32,7 @@
 <!ENTITY zoomText.label                "Text:" >
 <!ENTITY zoomUIText.label              "UI:" >
 <!ENTITY zoomTextPlus.label            "+" >
-<!ENTITY zoomTextMinus.label           "-" >
+<!ENTITY zoomTextMinus.label           " - " >
 <!ENTITY zoomUIText.label              "UI zoom:" >
 
 <!-- toolbar view rss --> 
@@ -42,3 +42,8 @@
 <!-- toolbar search -->
 <!ENTITY searchText.label              "Search for: " >
 <!ENTITY searchToolbar.label           "Search" >
+
+<!-- toolbar find -->
+<!ENTITY findText.label              "Find string: " >
+<!ENTITY findToolbar.label           "Find" >
+<!ENTITY nextText.label              "Next" >
