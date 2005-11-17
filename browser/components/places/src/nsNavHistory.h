@@ -526,6 +526,11 @@ protected:
                              const void* match2Void,
                              void *navHistoryVoid);
 
+  // in nsNavHistoryQuery.cpp
+  nsresult TokensToQueries(const nsVoidArray& aTokens,
+                              nsCOMArray<nsINavHistoryQuery>* aQueries,
+                              nsNavHistoryQueryOptions* aOptions);
+
   nsresult ImportFromMork();
 };
 
