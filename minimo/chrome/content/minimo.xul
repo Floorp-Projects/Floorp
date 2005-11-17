@@ -100,6 +100,9 @@
     <!-- This entire focusnavigation set is not XBLized yet, 
          Minimo JS code will look into it anyways.  --> 
          
+         
+    <!-- focushandler should have only accessfocus and target and the memory cookie maybe --> 
+    
     <focusnavigation>           
      <focushandler id="focus_tabcontent"     target="content"        accessfocus="#tabContent"  />
      <focushandler id="focus_nav-bar"        target="nav-bar"        accessfocus="menu-button"   accessnextrule="focus_toolbar-view"   accessprevrule="focus_tabcontent" />
@@ -161,18 +164,27 @@
 	   <!-- This toolbar menu works only with Mouse so far and shows 
 	        when gFullScreen mode is true --> 
 	        
-       <toolbar id="nav-bar-contextual" hidden="true">
-         <toolbarbutton class="menu-button"    command="cmd_BrowserMenuContextual" />  
-         <toolbarbutton class="back-button"    command="cmd_BrowserBack" />  
-         <toolbarbutton class="forward-button" command="cmd_BrowserForward" />  
-         <toolbarbutton class="reload-button"  command="cmd_BrowserReload"/>
-       </toolbar>
+		<!--
+		<toolbar id="nav-bar-contextual" hidden="true">
+			<toolbarbutton class="menu-button"    command="cmd_BrowserMenuContextual" />  
+			<toolbarbutton class="back-button"    command="cmd_BrowserBack" />  
+			<toolbarbutton class="forward-button" command="cmd_BrowserForward" />  
+			<toolbarbutton class="reload-button"  command="cmd_BrowserReload"/>
+		</toolbar>
+		-->
        
-       <menuitem id="link_as_new_tab" label="&linknewtab.label;" oncommand="BrowserOpenLinkAsTab()" hidden="true"/>
-	   <menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand="" hidden="true"/>
-	   <menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
-	   <menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
-       <menuitem id="item-paste"  label="Paste" oncommand="DoClipPaste()"/>
+		<menuitem id="link_as_new_tab"    label="&linknewtab.label;" oncommand="BrowserOpenLinkAsTab()" hidden="true"/>
+
+		<menuitem id="item-backbutton"    label="&backButton.label;"    command="cmd_BrowserBack"     hidden="true"/>
+		<menuitem id="item-forwardbutton" label="&forwardButton.label;" command="cmd_BrowserForward"  hidden="true"/>
+		<menuitem id="item-reloadbutton"  label="&reloadButton.label;"  command="cmd_BrowserReload"   hidden="true"/>
+
+		<menuitem id="item-call"   label="" insertbefore="context-sep-view" oncommand="" hidden="true"/>
+
+		<menuitem id="full_screen" label="Toggle FullScreen" oncommand="DoFullScreen()"/>
+
+		<menuitem id="item-copy"   label="Copy" oncommand="DoClipCopy()" />
+		<menuitem id="item-paste"  label="Paste" oncommand="DoClipPaste()"/>
        
 	</popup>
 	
