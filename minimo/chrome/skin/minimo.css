@@ -60,7 +60,7 @@ toolbar *, #appcontent *, * {
 }
 
 .tabs-closebutton-box{
-    list-style-image: url("chrome://minimo/skin/close.png");
+    list-style-image: url("chrome://minimo/skin/close-11px.png");
 }
 
 #lock-icon.security-na {
