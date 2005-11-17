@@ -659,6 +659,43 @@ function DoBrowserRSS() {
   }  
 }
 
+
+/* Toolbar specific code - to be removed from here */ 
+
+
+function DoBrowserFind() {
+//  BrowserViewFind();
+  try { 
+    var vQuery=document.getElementById("toolbar-find-tag").value;
+    if(vQuery!="") {
+	getBrowser().contentWindow.focus();
+
+	/* FIND DOCUMENTATION: 
+	 41 const FIND_NORMAL = 0;
+	 42 const FIND_TYPEAHEAD = 1;
+	 43 const FIND_LINKS = 2;
+	http://lxr.mozilla.org/mozilla/source/toolkit/components/typeaheadfind/content/findBar.js
+	*/
+	getBrowser().fastFind.find(vQuery,0);
+    }
+  } catch (e) {
+   alert(e);
+  }  
+}
+
+/* Toolbar specific code - to be removed from here */ 
+
+function DoBrowserFindNext() {
+  try { 
+	getBrowser().fastFind.findNext();
+  } catch (e) {
+   alert(e);
+  }  
+}
+
+
+
+
 function DoPanelPreferences() {
   window.openDialog("chrome://minimo/content/preferences/preferences.xul","preferences","modal,centerscreeen,chrome,resizable=no");
   // BrowserReload(); 
