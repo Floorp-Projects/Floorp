@@ -172,26 +172,6 @@ enum {
  MOUSE_SCROLL_TEXTSIZE
 };
 
-static nsIScriptGlobalObject *
-GetDocumentOuterWindow(nsIDocument *aDocument)
-{
-  if (aDocument) {
-    nsIScriptGlobalObject *sgo = aDocument->GetScriptGlobalObject();
-    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(sgo);
-
-    if (win) {
-      nsCOMPtr<nsIScriptGlobalObject> outersgo =
-        do_QueryInterface(win->GetOuterWindow());
-
-      return outersgo;
-    }
-
-    return sgo;
-  }
-
-  return nsnull;
-}
-
 static nsIDocument *
 GetDocumentFromWindow(nsIDOMWindow *aWindow)
 {
@@ -558,7 +538,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       if (mDocument) {
         if (gLastFocusedDocument && gLastFocusedPresContext) {
           nsCOMPtr<nsPIDOMWindow> ourWindow =
-            do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
+            gLastFocusedDocument->GetWindow();
 
           // If the focus controller is already suppressed, it means that we
           // are in the middle of an activate sequence. In this case, we do
@@ -638,7 +618,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         // then the content node, then the window.
 
         nsCOMPtr<nsIScriptGlobalObject> globalObject =
-          GetDocumentOuterWindow(mDocument);
+          do_QueryInterface(mDocument->GetWindow());
 
         if (globalObject) {
           // We don't want there to be a focused content node while we're
@@ -675,14 +655,12 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         if (gLastFocusedDocument && gLastFocusedDocument != mDocument) {
 
           nsIFocusController *lastController = nsnull;
-          nsCOMPtr<nsPIDOMWindow> lastWindow =
-            do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
+          nsPIDOMWindow* lastWindow = gLastFocusedDocument->GetWindow();
           if (lastWindow)
             lastController = lastWindow->GetRootFocusController();
 
           nsIFocusController *nextController = nsnull;
-          nsCOMPtr<nsPIDOMWindow> nextWindow =
-            do_QueryInterface(GetDocumentOuterWindow(mDocument));
+          nsPIDOMWindow* nextWindow = mDocument->GetWindow();
           if (nextWindow)
             nextController = nextWindow->GetRootFocusController();
 
@@ -723,22 +701,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
         EnsureDocument(aPresContext);
 
-        // We can get a deactivate on an Ender (editor) widget.  In this
-        // case, we would like to obtain the DOM Window to start
-        // with by looking at gLastFocusedContent.
-        nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-        if (gLastFocusedContent) {
-          nsIDocument* doc = gLastFocusedContent->GetDocument();
-
-          if (doc) {
-            ourGlobal = GetDocumentOuterWindow(doc);
-          } else {
-            ourGlobal = GetDocumentOuterWindow(mDocument);
-            NS_RELEASE(gLastFocusedContent);
-          }
-        }
-        else {
-          ourGlobal = GetDocumentOuterWindow(mDocument);
+        if (gLastFocusedContent && !gLastFocusedContent->IsInDoc()) {
+          NS_RELEASE(gLastFocusedContent);
         }
 
         // Now fire blurs.  We fire a blur on the focused document, element,
@@ -776,7 +740,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
             // gLastFocusedDocument to change.
 
             nsCOMPtr<nsIScriptGlobalObject> globalObject =
-              GetDocumentOuterWindow(gLastFocusedDocument);
+              do_QueryInterface(gLastFocusedDocument->GetWindow());
 
             gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext,
                                                  &event, nsnull,
@@ -806,8 +770,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
       EnsureDocument(aPresContext);
 
-      nsCOMPtr<nsPIDOMWindow> win =
-        do_QueryInterface(GetDocumentOuterWindow(mDocument));
+      nsCOMPtr<nsPIDOMWindow> win = mDocument->GetWindow();
 
       if (!win) {
         NS_ERROR("win is null.  this happens [often on xlib builds].  see bug #79213");
@@ -885,7 +848,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       EnsureDocument(aPresContext);
 
       nsCOMPtr<nsIScriptGlobalObject> ourGlobal =
-        GetDocumentOuterWindow(mDocument);
+        do_QueryInterface(mDocument->GetWindow());
 
       // Suppress the focus controller for the duration of the
       // de-activation.  This will cause it to remember the last
@@ -1608,8 +1571,7 @@ nsEventStateManager::ChangeTextSize(PRInt32 change)
 {
   if(!gLastFocusedDocument) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsPIDOMWindow> ourWindow =
-    do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
+  nsPIDOMWindow* ourWindow = gLastFocusedDocument->GetWindow();
   if(!ourWindow) return NS_ERROR_FAILURE;
 
   nsIDOMWindowInternal *rootWindow = ourWindow->GetPrivateRoot();
@@ -3054,8 +3016,7 @@ nsEventStateManager::ChangeFocusWith(nsIContent* aFocusContent,
   // Get focus controller.
   EnsureDocument(mPresContext);
   nsCOMPtr<nsIFocusController> focusController = nsnull;
-  nsCOMPtr<nsPIDOMWindow> window =
-    do_QueryInterface(GetDocumentOuterWindow(mDocument));
+  nsCOMPtr<nsPIDOMWindow> window = mDocument->GetWindow();
   if (window)
     focusController = window->GetRootFocusController();
 
@@ -3117,8 +3078,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
   nsIDocument *doc = presShell->GetDocument();
 
-  nsCOMPtr<nsIDOMWindowInternal> domwin =
-    do_QueryInterface(GetDocumentOuterWindow(doc));
+  nsCOMPtr<nsIDOMWindowInternal> domwin = doc->GetWindow();
 
   nsCOMPtr<nsIWidget> widget;
   nsIViewManager* vm = presShell->GetViewManager();
@@ -3883,8 +3843,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       }
 
 #ifdef DEBUG_aleventhal
-      nsCOMPtr<nsPIDOMWindow> currentWindow =
-        do_QueryInterface(GetDocumentOuterWindow(mDocument));
+      nsCOMPtr<nsPIDOMWindow> currentWindow = mDocument->GetWindow();
       if (currentWindow) {
         nsIFocusController *fc = currentWindow->GetRootFocusController();
         if (fc) {
@@ -4143,13 +4102,12 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
           // Make sure we're not switching command dispatchers, if so,
           // surpress the blurred one
           if(gLastFocusedDocument && mDocument) {
-            nsCOMPtr<nsPIDOMWindow> newWindow =
-              do_QueryInterface(GetDocumentOuterWindow(mDocument));
+            nsCOMPtr<nsPIDOMWindow> newWindow = mDocument->GetWindow();
             if (newWindow) {
               nsIFocusController *newFocusController =
                 newFocusController = newWindow->GetRootFocusController();
               nsCOMPtr<nsPIDOMWindow> oldWindow =
-                do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
+                gLastFocusedDocument->GetWindow();
               if (oldWindow) {
                 nsIFocusController *suppressed = oldWindow->GetRootFocusController();
                 if (suppressed != newFocusController) {
@@ -4191,7 +4149,7 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
     nsCOMPtr<nsIScriptGlobalObject> globalObject;
 
     if(gLastFocusedDocument)
-      globalObject = GetDocumentOuterWindow(gLastFocusedDocument);
+      globalObject = do_QueryInterface(gLastFocusedDocument->GetWindow());
 
     EnsureDocument(presShell);
 
@@ -4202,12 +4160,10 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
       // Make sure we're not switching command dispatchers, if so,
       // suppress the blurred one if it isn't already suppressed
       if (mDocument && !oldFocusSuppressor.Suppressing()) {
-        nsCOMPtr<nsPIDOMWindow> newWindow =
-          do_QueryInterface(GetDocumentOuterWindow(mDocument));
+        nsCOMPtr<nsPIDOMWindow> newWindow = mDocument->GetWindow();
 
         if (newWindow) {
-          nsCOMPtr<nsPIDOMWindow> oldWindow =
-            do_QueryInterface(GetDocumentOuterWindow(gLastFocusedDocument));
+          nsCOMPtr<nsPIDOMWindow> oldWindow = do_QueryInterface(globalObject);
           nsIFocusController *newFocusController = newWindow->GetRootFocusController();
           if (oldWindow) {
             nsIFocusController *suppressed = oldWindow->GetRootFocusController();
@@ -4356,8 +4312,7 @@ void nsEventStateManager::EnsureFocusSynchronization()
   // cannot get out of sync.
   // See Bug 304751, calling FireOnChange() inside
   //                 nsComboboxControlFrame::SetFocus() is bad
-  nsCOMPtr<nsPIDOMWindow> currentWindow =
-    do_QueryInterface(GetDocumentOuterWindow(mDocument));
+  nsCOMPtr<nsPIDOMWindow> currentWindow = mDocument->GetWindow();
   if (currentWindow) {
     nsIFocusController *fc = currentWindow->GetRootFocusController();
     if (fc) {

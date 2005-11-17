@@ -744,6 +744,8 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     else global = do_QueryInterface(mTarget);
     if (global) {
       nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(global));
+      NS_ASSERTION(window->IsInnerWindow(),
+                   "Setting mutation listener bits on outer window?");
       window->SetMutationListeners(aSubType);
     }
   }
@@ -2221,7 +2223,7 @@ nsEventListenerManager::FixContextMenuEvent(nsPresContext* aPresContext,
   if (aEvent->message == NS_CONTEXTMENU_KEY) {
     nsIDocument *doc = shell->GetDocument();
     if (doc) {
-      nsCOMPtr<nsPIDOMWindow> privWindow = do_QueryInterface(doc->GetScriptGlobalObject());
+      nsPIDOMWindow* privWindow = doc->GetWindow();
       if (privWindow) {
         nsIFocusController *focusController =
           privWindow->GetRootFocusController();
