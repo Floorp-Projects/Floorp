@@ -203,7 +203,7 @@ protected:
   PRBool EatWhiteSpace(nsresult& aErrorCode);
   PRBool EatNewline(nsresult& aErrorCode);
 
-  PRInt32 ParseEscape(nsresult& aErrorCode);
+  void ParseAndAppendEscape(nsresult& aErrorCode, nsString& aOutput);
   PRBool ParseIdent(nsresult& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
   PRBool ParseAtKeyword(nsresult& aErrorCode, PRInt32 aChar,
                         nsCSSToken& aResult);
