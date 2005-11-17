@@ -24,15 +24,18 @@
         <input type="hidden" name="add_bugids" value="1">
         <input type="submit" value="Add"> [% terms.bugs %]
         <input type="text" name="bug_ids" size="8" maxlength="80"> to
-        <select name="oldqueryname">
-          [% FOREACH q = user.queries %]
-            [% IF q.query_type == constants.LIST_OF_BUGS %]
-              <option value="[% q.name FILTER html %]">
-                [% q.name FILTER html %]</option>
-            [% END %]
+        [% foundq = 0 %]
+        [% FOREACH q = user.queries %]
+          [% NEXT UNLESS q.query_type == constants.LIST_OF_BUGS %]
+          [% IF !foundq %]
+            [% foundq = 1 %]
+            <select name="oldqueryname">
           [% END %]
-        </select>
-        or to the new saved search:
+          <option value="[% q.name FILTER html %]">
+            [% q.name FILTER html %]</option>
+        [% END %]
+        [% "</select> or to " IF foundq %]
+        the new saved search:
         <input type="text" name="newqueryname" size="20" maxlength="64">
       </form>
     </div>
