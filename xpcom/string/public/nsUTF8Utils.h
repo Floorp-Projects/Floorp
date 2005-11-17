@@ -461,8 +461,8 @@ class ConvertUTF8toUTF16
                 if ( ucs4 >= UCS_END )
                   *out++ = UCS2_REPLACEMENT_CHAR;
                 else {
-                  *out++ = (value_type)H_SURROGATE(ucs4);
-                  *out++ = (value_type)L_SURROGATE(ucs4);
+                  *out++ = (buffer_type)H_SURROGATE(ucs4);
+                  *out++ = (buffer_type)L_SURROGATE(ucs4);
                 }
               }
             else
