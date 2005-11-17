@@ -39,6 +39,7 @@
 #define nsColor_h___
 
 #include "gfxCore.h"
+#include "nscore.h"
 
 class nsAString;
 class nsString;

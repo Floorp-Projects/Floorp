@@ -40,7 +40,7 @@
 
 #include "gfxCore.h"
 #include "nsCoord.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 
 // XXX we need a method to enumerate all of the possible fonts on the
 // system across family, weight, style, size, etc. But not here!
