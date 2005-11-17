@@ -428,9 +428,12 @@ protected:
 
   PRInt32       mMenuCmdId;
 
-    // Window styles used by this window before chrome was hidden
+  // Window styles used by this window before chrome was hidden
   DWORD         mOldStyle;
   DWORD         mOldExStyle;
+
+  // To enable/disable IME
+  HIMC          mOldIMC;
 
   static UINT   gCurrentKeyboardCP;
   static HKL    gKeyboardLayout;

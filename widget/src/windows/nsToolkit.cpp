@@ -1129,6 +1129,11 @@ nsIMM::nsIMM(const char* aModuleName /* = "IMM32.DLL" */)
       (SetOpenStatusPtr)GetProcAddress(mInstance,"ImmSetOpenStatus");
     NS_ASSERTION(mSetOpenStatus != NULL,
                  "nsIMM.ImmSetOpenStatus failed.");
+
+    mAssociateContext =
+      (AssociateContextPtr)GetProcAddress(mInstance,"ImmAssociateContext");
+    NS_ASSERTION(mAssociateContext != NULL,
+                 "nsIMM.ImmAssociateContext failed.");
   } else {
     mGetCompositionStringA=NULL;
     mGetCompositionStringW=NULL;
@@ -1142,6 +1147,7 @@ nsIMM::nsIMM(const char* aModuleName /* = "IMM32.DLL" */)
     mGetDefaultIMEWnd=NULL;
     mGetOpenStatus=NULL;
     mSetOpenStatus=NULL;
+    mAssociateContext=NULL;
   }
 
 #else // WinCE
@@ -1159,6 +1165,7 @@ nsIMM::nsIMM(const char* aModuleName /* = "IMM32.DLL" */)
   mGetDefaultIMEWnd=(GetDefaultIMEWndPtr)ImmGetDefaultIMEWnd;
   mGetOpenStatus=(GetOpenStatusPtr)ImmGetOpenStatus;
   mSetOpenStatus=(SetOpenStatusPtr)ImmSetOpenStatus;
+  mAssociateContext=(AssociateContextPtr)ImmAssociateContext;
 #endif
 }
 
@@ -1183,6 +1190,7 @@ nsIMM::~nsIMM()
   mGetDefaultIMEWnd=NULL;
   mGetOpenStatus=NULL;
   mSetOpenStatus=NULL;
+  mAssociateContext=NULL;
 }
 
 //-------------------------------------------------------------------------
@@ -1314,109 +1322,11 @@ nsIMM::SetOpenStatus(HIMC aIMC, BOOL aStatus)
 
 //-------------------------------------------------------------------------
 //
-//  nsWinNLS class(Native WinNLS wrapper)
 //
 //-------------------------------------------------------------------------
-nsWinNLS&
-nsWinNLS::LoadModule()
+HIMC
+nsIMM::AssociateContext(HWND aWnd, HIMC aIMC)
 {
-  static nsWinNLS gWinNLS;
-  return gWinNLS;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-nsWinNLS::nsWinNLS(const char* aModuleName /* = "USER32.DLL" */)
-{
-#ifndef WINCE
-  mInstance=::LoadLibrary(aModuleName);
-
-  if (mInstance) {
-    mWINNLSEnableIME =
-      (WINNLSEnableIMEPtr)GetProcAddress(mInstance, "WINNLSEnableIME");
-    NS_ASSERTION(mWINNLSEnableIME != NULL,
-                 "nsWinNLS.WINNLSEnableIME failed.");
-
-    mWINNLSGetEnableStatus =
-      (WINNLSGetEnableStatusPtr)GetProcAddress(mInstance,
-                                               "WINNLSGetEnableStatus");
-    NS_ASSERTION(mWINNLSGetEnableStatus != NULL,
-                 "nsWinNLS.WINNLSGetEnableStatus failed.");
-  } else {
-    mWINNLSEnableIME = NULL;
-    mWINNLSGetEnableStatus = NULL;
-  }
-#else // WinCE
-  mInstance = NULL;
-
-  mWINNLSEnableIME = NULL;
-  mWINNLSGetEnableStatus = NULL;
-
-  // XXX If WINNLSEnableIME and WINNLSGetEnableStatus can be used on WinCE,
-  // Should use these.
-  // 
-  // mWINNLSGetEnableStatus = (WINNLSGetEnableStatusPtr)WINNLSGetEnableStatus;
-#endif
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-nsWinNLS::~nsWinNLS()
-{
-  if(mInstance)
-    ::FreeLibrary(mInstance);
-
-  mWINNLSEnableIME = NULL;
-  mWINNLSGetEnableStatus = NULL;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-PRBool
-nsWinNLS::SetIMEEnableStatus(HWND aWnd, PRBool aState)
-{
-  // If mWINNLSEnableIME wasn't loaded, we should return PR_TRUE.
-  // If we cannot load it, we cannot disable the IME. So, the IME enable state
-  // is *always* TRUE.
-  return (mWINNLSEnableIME) ? !!mWINNLSEnableIME(aWnd, aState) : PR_TRUE;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-PRBool
-nsWinNLS::GetIMEEnableStatus(HWND aWnd)
-{
-  // If mWINNLSGetEnableStatus wasn't loaded, we should return PR_TRUE.
-  // If we cannot load it, maybe we cannot load mWINNLSEnableIME too.
-  // So, if mWINNLSEnableIME wasn't loaded, the IME enable state is always TRUE.
-  return (mWINNLSGetEnableStatus) ? !!mWINNLSGetEnableStatus(aWnd) : PR_TRUE;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-PRBool
-nsWinNLS::CanUseSetIMEEnableStatus()
-{
-  return (mWINNLSEnableIME) ? PR_TRUE : PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
-PRBool
-nsWinNLS::CanUseGetIMEEnableStatus()
-{
-  return (mWINNLSGetEnableStatus) ? PR_TRUE : PR_FALSE;
+  return (mAssociateContext) ? mAssociateContext(aWnd, aIMC) : NULL;
 }
 

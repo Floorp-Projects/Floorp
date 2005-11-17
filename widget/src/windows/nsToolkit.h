@@ -210,6 +210,7 @@ class nsIMM
   typedef LONG (CALLBACK *GetDefaultIMEWndPtr) (HWND);
   typedef BOOL (CALLBACK *GetOpenStatusPtr)    (HIMC);
   typedef BOOL (CALLBACK *SetOpenStatusPtr)    (HIMC, BOOL);
+  typedef HIMC (CALLBACK *AssociateContextPtr) (HWND, HIMC);
 public:
 
   static nsIMM& LoadModule();
@@ -231,6 +232,7 @@ public:
   LONG GetDefaultIMEWnd(HWND aWnd);
   BOOL GetOpenStatus(HIMC aIMC);
   BOOL SetOpenStatus(HIMC aIMC, BOOL aStatus);
+  HIMC AssociateContext(HWND aWnd, HIMC aIMC);
 private:
 
   HINSTANCE           mInstance;
@@ -246,36 +248,7 @@ private:
   GetDefaultIMEWndPtr mGetDefaultIMEWnd;
   GetOpenStatusPtr    mGetOpenStatus;
   SetOpenStatusPtr    mSetOpenStatus;
-};
-
-//-------------------------------------------------------------------------
-//
-// Native WinNLS wrapper
-//
-//-------------------------------------------------------------------------
-class nsWinNLS
-{
-  //prototypes for DLL function calls...
-  typedef LONG (CALLBACK *WINNLSEnableIMEPtr)       (HWND, BOOL);
-  typedef LONG (CALLBACK *WINNLSGetEnableStatusPtr) (HWND);
-public:
-
-  static nsWinNLS& LoadModule();
-
-  nsWinNLS(const char* aModuleName = "USER32.DLL");
-  ~nsWinNLS();
-
-  PRBool SetIMEEnableStatus(HWND aWnd, PRBool aState);
-  PRBool GetIMEEnableStatus(HWND aWnd);
-
-  PRBool CanUseSetIMEEnableStatus();
-  PRBool CanUseGetIMEEnableStatus();
-
-private:
-
-  HINSTANCE                mInstance;
-  WINNLSEnableIMEPtr       mWINNLSEnableIME;
-  WINNLSGetEnableStatusPtr mWINNLSGetEnableStatus;
+  AssociateContextPtr mAssociateContext;
 };
 
 //-------------------------------------------------------------------------
@@ -391,7 +364,7 @@ private:
 #define NS_IMM_GETDEFAULTIMEWND(hWnd, phDefWnd) \
 { \
   if (nsToolkit::gAIMMApp) \
-    return nsToolkit::gAIMMApp->GetDefaultIMEWnd(hWnd, phDefWnd); \
+    nsToolkit::gAIMMApp->GetDefaultIMEWnd(hWnd, phDefWnd); \
   else { \
     nsIMM& theIMM = nsIMM::LoadModule(); \
     *(phDefWnd) = (HWND)theIMM.GetDefaultIMEWnd(hWnd);  \
@@ -415,6 +388,16 @@ private:
   else { \
     nsIMM& theIMM = nsIMM::LoadModule(); \
     theIMM.SetOpenStatus(hIMC, bOpen);  \
+  } \
+}
+
+#define NS_IMM_ASSOCIATECONTEXT(hWnd, hIMC, phOldIMC) \
+{ \
+  if (nsToolkit::gAIMMApp) \
+    nsToolkit::gAIMMApp->AssociateContext(hWnd, hIMC, phOldIMC); \
+  else { \
+    nsIMM& theIMM = nsIMM::LoadModule(); \
+    *(phOldIMC) = theIMM.AssociateContext(hWnd, hIMC);  \
   } \
 }
 

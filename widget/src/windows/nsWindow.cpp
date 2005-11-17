@@ -836,6 +836,7 @@ nsWindow::nsWindow() : nsBaseWidget()
   mOldStyle           = 0;
   mOldExStyle         = 0;
   mPainting           = 0;
+  mOldIMC             = NULL;
 
   mLeadByte = '\0';
   mBlurEventSuppressionLevel = 0;
@@ -1630,6 +1631,12 @@ NS_METHOD nsWindow::Destroy()
     mEventCallback = nsnull;
     if (gAttentionTimerMonitor)
       gAttentionTimerMonitor->KillTimer(mWnd);
+
+    // if IME is disabled, restore it.
+    if (mOldIMC) {
+      NS_IMM_ASSOCIATECONTEXT(mWnd, mOldIMC, &mOldIMC);
+      NS_ASSERTION(!mOldIMC, "Another IMC was associated");
+    }
 
     HICON icon;
     icon = (HICON) nsToolkit::mSendMessage(mWnd, WM_SETICON, (WPARAM)ICON_BIG, (LPARAM) 0);
@@ -4623,15 +4630,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       result = PR_TRUE;
       break;
 
-    case WM_ENABLE:
-      if (!wParam) {
-        // We must enable IME for common dialogs.
-        // NOTE: we don't need to recover IME status in nsWindow.
-        // Because when this window will be enabled, we will get focus event.
-        SetIMEEnabled(PR_TRUE);
-      }
-      break;
-
     case WM_ACTIVATE:
       if (mEventCallback) {
         PRInt32 fActive = LOWORD(wParam);
@@ -7358,14 +7356,10 @@ NS_IMETHODIMP nsWindow::SetIMEEnabled(PRBool aState)
 {
   if (sIMEIsComposing)
     ResetInputState();
-  nsWinNLS &theWinNLS = nsWinNLS::LoadModule();
-  if (!theWinNLS.CanUseSetIMEEnableStatus()) {
-    NS_WARNING("WINNLSEnableIME API is not loaded.");
-    return NS_ERROR_FAILURE;
-  }
-  PRBool lastStatus = theWinNLS.SetIMEEnableStatus(mWnd, aState);
-  if (aState && !lastStatus)
-    ::SendMessage(mWnd, WM_IME_NOTIFY, IMN_OPENSTATUSWINDOW, 0L);
+  if (!aState != !mOldIMC)
+    return NS_OK;
+  NS_IMM_ASSOCIATECONTEXT(mWnd, aState ? mOldIMC : NULL, &mOldIMC);
+  NS_ASSERTION(!aState || !mOldIMC, "Another IMC was associated");
 
   return NS_OK;
 }
@@ -7373,12 +7367,7 @@ NS_IMETHODIMP nsWindow::SetIMEEnabled(PRBool aState)
 //==========================================================================
 NS_IMETHODIMP nsWindow::GetIMEEnabled(PRBool* aState)
 {
-  nsWinNLS &theWinNLS = nsWinNLS::LoadModule();
-  if (!theWinNLS.CanUseGetIMEEnableStatus()) {
-    NS_WARNING("WINNLSGetEnableStatus API is not loaded.");
-    return NS_ERROR_FAILURE;
-  }
-  *aState = !!theWinNLS.GetIMEEnableStatus(mWnd);
+  *aState = !mOldIMC;
   return NS_OK;
 }
 
