@@ -55,7 +55,9 @@ endif
 DIRS		+= public idl src
 
 ifdef ENABLE_TESTS
+ifndef MOZ_ENABLE_LIBXUL
 TOOL_DIRS	+= tests
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
