@@ -721,8 +721,8 @@ function DoFullScreen()
   
   document.getElementById("nav-bar").hidden = gFullScreen;
 
-  // Maybe a simpler approach here, via some attribute or documented interface?
-  if(getBrowser().mPanelContainer.childNodes.length==1) {
+  // Is this the simpler approach to count tabs? 
+  if(getBrowser().mPanelContainer.childNodes.length>1) {
 	  getBrowser().setStripVisibilityTo(!gFullScreen);
   } 
   
