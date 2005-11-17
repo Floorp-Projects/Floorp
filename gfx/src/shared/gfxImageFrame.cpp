@@ -300,14 +300,14 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
   PRUint8 *imgData = mImage->GetBits();
   PRInt32 imgLen = row_stride * mSize.height;
 
-  PRInt32 newOffset;
-
+  PRInt32 newOffset = aOffset;
   if (!mTopToBottom) {
     // Adjust: We need offset to be top-down rows & LTR within each row
-    PRUint32 yOffset = ((PRUint32)(aOffset / row_stride)) * row_stride;
-    newOffset = ((mSize.height - 1) * row_stride) - yOffset + (aOffset % row_stride);
-  } else
-    newOffset = aOffset;
+    const PRUint32 rows = 1 + ((aLength-1) / row_stride);
+    const PRUint32 xOffset = (aOffset % row_stride);
+    const PRUint32 yOffset = (aOffset / row_stride);
+    newOffset = ((mSize.height - rows - yOffset) * row_stride) + (aOffset % row_stride);
+  }
 
   if (((newOffset + (PRInt32)aLength) > imgLen) || !imgData) {
     mImage->UnlockImagePixels(PR_FALSE);
@@ -398,13 +398,14 @@ NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength
   PRUint8 *alphaData = mImage->GetAlphaBits();
   PRInt32 alphaLen = row_stride * mSize.height;
 
-  PRInt32 offset;
+  PRInt32 offset = aOffset;
   if (!mTopToBottom) {
     // Adjust: We need offset to be top-down rows & LTR within each row
-    PRUint32 yOffset = ((PRUint32)(aOffset / row_stride)) * row_stride;
-    offset = ((mSize.height - 1) * row_stride) - yOffset + (aOffset % row_stride);
-  } else
-    offset = aOffset;
+    const PRUint32 rows = 1 + ((aLength-1) / row_stride);
+    const PRUint32 xOffset = (aOffset % row_stride);
+    const PRUint32 yOffset = (aOffset / row_stride);
+    offset = ((mSize.height - rows - yOffset) * row_stride) + (aOffset % row_stride);
+  }
 
   if (((offset + (PRInt32)aLength) > alphaLen) || !alphaData) {
     mImage->UnlockImagePixels(PR_TRUE);
