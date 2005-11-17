@@ -1444,9 +1444,11 @@ nsGlobalHistory::HidePage(nsIURI *aURI)
 NS_IMETHODIMP
 nsGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   nsCAutoString spec;
   nsresult rv = aURI->GetSpec(spec);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
   
   nsCOMPtr<nsIMdbRow> row;
   rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
@@ -1466,15 +1468,16 @@ nsGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
 NS_IMETHODIMP
 nsGlobalHistory::SetURIGeckoFlags(nsIURI *aURI, PRUint32 aFlags)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   nsCAutoString spec;
   nsresult rv = aURI->GetSpec(spec);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   nsCOMPtr<nsIMdbRow> row;
   rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv))
     return rv;
-  }
 
   return SetRowValue(row, kToken_GeckoFlagsColumn, (PRInt32)aFlags);
 }
@@ -1482,15 +1485,16 @@ nsGlobalHistory::SetURIGeckoFlags(nsIURI *aURI, PRUint32 aFlags)
 NS_IMETHODIMP
 nsGlobalHistory::GetURIGeckoFlags(nsIURI *aURI, PRUint32* aFlags)
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   nsCAutoString spec;
   nsresult rv = aURI->GetSpec(spec);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   nsCOMPtr<nsIMdbRow> row;
   rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
-  if (NS_FAILED(rv)) {
+  if (NS_FAILED(rv))
     return rv;
-  }
 
   if (!HasCell(mEnv, row, kToken_GeckoFlagsColumn))
     return NS_ERROR_FAILURE;
