@@ -176,6 +176,23 @@ interface nsIContentPolicy : nsISupports
    *                          callers to pass extra data to callees.
    *
    * @return ACCEPT or REJECT_*
+   *
+   * @note shouldLoad can be called while the DOM and layout of the document
+   * involved is in an inconsistent state.  This means that implementors of
+   * this method MUST NOT do any of the following:
+   * 1)  Modify the DOM in any way (e.g. setting attributes is a no-no).
+   * 2)  Query any DOM properties that depend on layout (e.g. offset*
+   *     properties).
+   * 3)  Query any DOM properties that depend on style (e.g. computed style).
+   * 4)  Query any DOM properties that depend on the current state of the DOM
+   *     outside the "context" node (e.g. lengths of node lists).
+   * 5)  [JavaScript implementations only] Access properties of any sort on any
+   *     object without using XPCNativeWrapper (either explicitly or
+   *     implicitly).  Due to various DOM0 things, this leads to item 4.
+   * If you do any of these things in your shouldLoad implementation, expect
+   * unpredictable behavior, possibly including crashes, content not showing
+   * up, content showing up doubled, etc.  If you need to do any of the things
+   * above, do them off timeout or event.
    */
   short shouldLoad(in unsigned long aContentType,
                    in nsIURI        aContentLocation,
@@ -214,6 +231,10 @@ interface nsIContentPolicy : nsISupports
    *                          callers to pass extra data to callees.
    *
    * @return ACCEPT or REJECT_*
+   *
+   * @note shouldProcess can be called while the DOM and layout of the document
+   * involved is in an inconsistent state.  See the note on shouldLoad to see
+   * what this means for implementors of this method.
    */
   short shouldProcess(in unsigned long aContentType,
                       in nsIURI        aContentLocation,
