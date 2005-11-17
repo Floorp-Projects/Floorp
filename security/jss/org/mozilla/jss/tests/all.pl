@@ -76,7 +76,7 @@ sub setup_vars {
     my $truncate_lib_path = 1;
     if( $osname =~ /HP/ ) {
         $ld_lib_path = "SHLIB_PATH";
-	$scriptext = "sh";
+        $scriptext = "sh";
     } elsif( $osname =~ /win/i ) {
         $ld_lib_path = "PATH";
         $truncate_lib_path = 0;
@@ -86,7 +86,7 @@ sub setup_vars {
         $lib_jss    = "jss";
     } else {
         $ld_lib_path = "LD_LIBRARY_PATH";
-	$scriptext = "sh";
+        $scriptext = "sh";
     }
 
     my $jar_dbg_suffix = "_dbg";
@@ -109,20 +109,20 @@ sub setup_vars {
         $jss_rel_dir   = "$dist_dir/../classes$dbg_suffix/org";
         $jss_classpath = "$dist_dir/../xpclass$jar_dbg_suffix.jar";
 
-		# Test directory = $DIST_DIR
-		# make it absolute path
-		$testdir = `cd $dist_dir;pwd`;
-		# take the last part (can be overriden if not <OS><VERSION>_<OPT|DBG>.OBJ
-		$testdir = `basename $testdir`;
-		chomp $testdir;
+        # Test directory = $DIST_DIR
+        # make it absolute path
+        $testdir = `cd $dist_dir;pwd`;
+        # take the last part (can be overriden if not <OS><VERSION>_<OPT|DBG>.OBJ
+        $testdir = `basename $testdir`;
+        chomp $testdir;
     } elsif( $$argv[0] eq "release" ) {
         shift @$argv;
 
         $jss_rel_dir     = shift @$argv or usage();
         my $nss_rel_dir  = shift @$argv or usage();
         my $nspr_rel_dir = shift @$argv or usage();
-		$testdir = `basename $nss_rel_dir`;
-		chomp $testdir;
+        $testdir = `basename $nss_rel_dir`;
+        chomp $testdir;
 
         $ENV{CLASSPATH} .= "$jss_rel_dir/../xpclass$jar_dbg_suffix.jar";
         $ENV{$ld_lib_path} =
@@ -154,19 +154,19 @@ sub setup_vars {
     $java = "$ENV{JAVA_HOME}/jre/bin/java$exe_suffix";
     my $java_64bit = 0;
     if ($osname eq "SunOS") {
-	if ($ENV{USE_64}) {
-	    my $cpu = `/usr/bin/isainfo -n`;
-	    if ($cpu == "amd64") {
-		$java = "$ENV{JAVA_HOME}/jre/bin/amd64/java$exe_suffix";
-		$java_64bit = 1;
-	    }
-	}
+        if ($ENV{USE_64}) {
+            my $cpu = `/usr/bin/isainfo -n`;
+            if ($cpu == "amd64") {
+                $java = "$ENV{JAVA_HOME}/jre/bin/amd64/java$exe_suffix";
+                $java_64bit = 1;
+        }
+    }
     }
     (-f $java) or die "'$java' does not exist\n";
     $java = $java . $ENV{NATIVE_FLAG};
 
     if ($ENV{USE_64} && !$java_64bit) {
-	$java = $java . " -d64";
+    $java = $java . " -d64";
     }
 
     $pwfile = "passwords";
@@ -189,13 +189,13 @@ sub setup_vars {
     print "BUILD_OPT=$ENV{BUILD_OPT}\n";
     print "USE_64=$ENV{USE_64}\n";
     print "testdir=$testdir\n";
-    print "portJSSEServer=$portJSSEServer\n";       
-    print "portJSSServer=$portJSSServer\n";       
+    print "portJSSEServer=$portJSSEServer\n";
+    print "portJSSServer=$portJSSServer\n";
 }
 
 sub print_case_result {
     my $result = shift;
-	my $testname = shift;
+    my $testname = shift;
 
     $testrun++;
     if ($result == 0) {
@@ -261,6 +261,17 @@ $result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $po
 $result >>=8;
 $result and print "SSLClientAuth returned $result\n";
 print_case_result ($result,"Sockets");
+
+$portJSSServer=$portJSSServer+1;
+
+#
+# test sockets in bypass mode
+#
+print "============= test sockets using bypass \n";
+$result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer bypass");
+$result >>=8;
+$result and print "SSLClientAuth using bypass mode returned $result\n";
+print_case_result ($result,"SSLClientAuth using bypass");
 
 # test key gen
 #
@@ -358,7 +369,7 @@ print_case_result ($result,"TestSDR test");
 # Start JSSE server
 #
 print "============= Start JSSE server tests\n";
-$result=system("./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer");
+$result=system("./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer $java");
 $result >>=8;
 $result and print "JSSE servers returned $result\n";
 
@@ -371,11 +382,13 @@ $result >>=8;
 $result and print "JSS client returned $result\n";
 print_case_result ($result,"JSSE server / JSS client");
 
+$portJSSServer=$portJSSServer+1;
+
 #
 # Start JSS server
 #
 print "============= Start JSS server tests\n";
-$result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff");
+$result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypassOff $java");
 $result >>=8;
 $result and print "JSS servers returned $result\n";
 
@@ -406,20 +419,13 @@ $result >>=8;
 $result and print "Disable FIPSMODE returned $result\n";
 print_case_result ($result,"FIPSMODE disabled");
 
-#
-# test sockets in bypass mode
-#
-print "============= test sockets using bypass \n";
-$result = system("$java org.mozilla.jss.tests.SSLClientAuth $testdir $pwfile $portJSSServer bypass");
-$result >>=8;
-$result and print "SSLClientAuth using bypass mode returned $result\n";
-print_case_result ($result,"SSLClientAuth using bypass");
+$portJSSEServer=$portJSSEServer+1;
 
 #
 # Start JSSE server to test JSS client in bypassPKCS11 mode
 #
 print "============= Start JSSE server tests to test the bypass\n";
-$result=system("./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer");
+$result=system("./startJsseServ.$scriptext $jss_classpath $testdir $portJSSEServer $java");
 $result >>=8;
 $result and print "JSSE servers testing JSS client in bypassPKCS11 test returned $result\n";
 
@@ -432,11 +438,13 @@ $result >>=8;
 $result and print "JSS client in bypassPKCS11 mode returned $result\n";
 print_case_result ($result,"JSSE server / JSS client in bypassPKCS11 mode");
 
+$portJSSServer=$portJSSServer+1;
+
 #
 # Start JSS server in bypassPKCS11 mode 
 #
 print "============= Start JSS server tests in bypassPKCS11 mode\n";
-$result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypass");
+$result=system("./startJssServ.$scriptext $jss_classpath $testdir $portJSSServer bypass $java");
 $result >>=8;
 $result and print "JSS servers in bypassPKCS11 mode returned $result\n";
 
