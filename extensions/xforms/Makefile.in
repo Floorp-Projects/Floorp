@@ -133,6 +133,7 @@ XPIDLSRCS	= \
 		nsIXFormsRangeAccessors.idl \
 		nsIXFormsUploadElement.idl \
 		nsIXFormsUploadUIElement.idl \
+		nsIXFormsCopyElement.idl \
 		$(NULL)
 
 # XForms source files
@@ -191,6 +192,7 @@ CPPSRCS		= \
 		nsXFormsRangeElement.cpp \
 		nsXFormsAccessors.cpp \
 		nsXFormsRangeAccessors.cpp \
+		nsXFormsCopyElement.cpp \
 		$(NULL)
 
 # Standard Mozilla make rules

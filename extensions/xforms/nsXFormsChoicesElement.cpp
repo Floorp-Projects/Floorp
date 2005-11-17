@@ -219,6 +219,36 @@ nsXFormsChoicesElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXFormsChoicesElement::SelectItemByNode(nsIDOMNode *aNode,
+                                         nsIDOMNode **aSelected)
+{
+  NS_ENSURE_ARG_POINTER(aSelected);
+  NS_ENSURE_STATE(mElement);
+  *aSelected = nsnull;
+  nsCOMPtr<nsIDOMNodeList> children;
+  nsresult rv = mElement->GetChildNodes(getter_AddRefs(children));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 childCount = 0;
+  children->GetLength(&childCount);
+
+  nsCOMPtr<nsIDOMNode> childNode;
+  nsCOMPtr<nsIXFormsSelectChild> childItem;
+
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    children->Item(i, getter_AddRefs(childNode));
+    childItem = do_QueryInterface(childNode);
+    if (childItem) {
+      childItem->SelectItemByNode(aNode, aSelected);
+      if (*aSelected)
+        return NS_OK;
+    }
+  }
+  
+  return NS_OK;
+}
+
 // internal methods
 
 void

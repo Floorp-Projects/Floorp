@@ -326,6 +326,7 @@ protected:
                                 PRBool           aMarkNode = PR_TRUE,
                                 PRBool           aIsCalculate = PR_FALSE,
                                 PRBool          *aNodeChanged = nsnull);
+
 public:
   /**
    * Constructor
@@ -418,6 +419,18 @@ public:
    */
   nsresult GetNodeValue(nsIDOMNode *aContextNode,
                         nsAString  &aNodeValue);
+
+  /**
+   * Set the contents of a node
+   *
+   * @param aContextNode     The node to set the contents of
+   * @param aContentEnvelope The container of the contents that need to be
+   *                         moved under aContextNode
+   * @param aNodeChanged     Was node changed?
+   */
+  nsresult SetNodeContent(nsIDOMNode      *aContextNode,
+                          nsIDOMNode      *aContentEnvelope,
+                          PRBool          *aNodeChanged = nsnull);
 
   /**
    * External interface of GetNCNodeState(), returns const pointer to the node

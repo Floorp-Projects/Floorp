@@ -73,6 +73,7 @@ NS_HIDDEN_(nsresult) NS_NewXFormsValueElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsChoicesElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsItemSetElement(nsIXTFElement **aElement);
 NS_HIDDEN_(nsresult) NS_NewXFormsRangeElement(nsIXTFElement **aElement);
+NS_HIDDEN_(nsresult) NS_NewXFormsCopyElement(nsIXTFElement **aElement);
 
 //Action Module Elements
 NS_HIDDEN_(nsresult) NS_NewXFormsDispatchElement(nsIXTFElement **aResult);
@@ -191,6 +192,8 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsUploadElement(aElement);
   if (aTagName.EqualsLiteral("range"))
     return NS_NewXFormsRangeElement(aElement);
+  if (aTagName.EqualsLiteral("copy"))
+    return NS_NewXFormsCopyElement(aElement);
 
   *aElement = nsnull;
   return NS_ERROR_FAILURE;

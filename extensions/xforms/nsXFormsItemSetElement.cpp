@@ -191,6 +191,38 @@ nsXFormsItemSetElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **
 }
 
 NS_IMETHODIMP
+nsXFormsItemSetElement::SelectItemByNode(nsIDOMNode *aNode,
+                                         nsIDOMNode **aSelected)
+{
+  NS_ENSURE_ARG_POINTER(aSelected);
+  NS_ENSURE_STATE(mElement);
+  *aSelected = nsnull;
+  // nsIXFormsItemSetUIElement is implemented by the XBL binding.
+  nsCOMPtr<nsIXFormsItemSetUIElement> uiItemSet(do_QueryInterface(mElement));
+  NS_ENSURE_STATE(uiItemSet);
+
+  nsCOMPtr<nsIDOMElement> anonContent;
+  uiItemSet->GetAnonymousItemSetContent(getter_AddRefs(anonContent));
+  NS_ENSURE_STATE(anonContent);
+
+  nsCOMPtr<nsIDOMNode> child, tmp;
+  anonContent->GetFirstChild(getter_AddRefs(child));
+  // Trying to select the first possible (generated) \<item\> element.
+  while (child) {
+    nsCOMPtr<nsIXFormsSelectChild> selectChild(do_QueryInterface(child));
+    if (selectChild) {
+      selectChild->SelectItemByNode(aNode, aSelected);
+      if (*aSelected) {
+        return NS_OK;
+      }
+    }
+    tmp.swap(child);
+    tmp->GetNextSibling(getter_AddRefs(child));
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXFormsItemSetElement::Bind()
 {
   mModel = nsXFormsUtils::GetModel(mElement);

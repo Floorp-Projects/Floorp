@@ -52,7 +52,7 @@ class nsStringArray;
  * of an XForms select element (choices, item, itemset).
  */
 
-[scriptable, uuid(a29ac2bd-f36a-451e-99e1-0f3bd94ffbef)]
+[scriptable, uuid(9fac2f59-4ec8-456f-ad06-4e28cd7d5b2c)]
 interface nsIXFormsSelectChild : nsISupports
 {
   /*
@@ -61,4 +61,11 @@ interface nsIXFormsSelectChild : nsISupports
    * this method returns that \<item\>.
    */
   nsIDOMNode selectItemByValue(in AString value);
+
+  /*
+   * selectItemByNode is used in \<select1\> and \<select\>. If the
+   * XFormsSelectChild is or contains an \<item\>, which has a node 'equal' the
+   * parameter |aNode|, this method returns the first \<item\> that matches.
+   */
+  nsIDOMNode selectItemByNode(in nsIDOMNode aNode);
 };

@@ -47,6 +47,7 @@
 #include "nsDeque.h"
 #include "nsIModelElementPrivate.h"
 #include "nsXFormsUtils.h"
+#include "nsDOMError.h"
 
 #ifdef DEBUG
 //#  define DEBUG_XF_MDG
@@ -739,6 +740,101 @@ nsXFormsMDGEngine::SetNodeValueInternal(nsIDOMNode       *aContextNode,
   if (aMarkNode) {
       MarkNodeAsChanged(aContextNode);
   }
+  
+  return NS_OK;
+}
+
+nsresult
+nsXFormsMDGEngine::SetNodeContent(nsIDOMNode       *aContextNode,
+                                  nsIDOMNode       *aContentEnvelope,
+                                  PRBool           *aNodeChanged)
+{
+  NS_ENSURE_ARG(aContextNode);
+  NS_ENSURE_ARG(aContentEnvelope);
+
+  // ok, this is tricky.  This function will REPLACE the contents of
+  // aContextNode with the CONTENTS of aContentEnvelope.  No, not a clone of 
+  // the contents, but the contents themselves.  If aContentEnvelope has no
+  // contents, then any contents that aContextNode has will still be removed.
+  // In order to determine whether the incoming node content is the same as what
+  // is already contained in aContextNode, aContentEnvelope MUST be a clone (not
+  // deep) of aContextNode, otherwise aNodeChanged will always be returned as
+  // being PR_TRUE.  I took this approach because I think it is much more
+  // efficient for the caller to build a complete list of what goes in the
+  // contents in one go rather than allowing any number of appends to existing
+  // content one node at a time.  There are quite a few links in the call chain
+  // to go from nsXFormsDelegateStub to here.
+
+  if (aNodeChanged) {
+    *aNodeChanged = PR_FALSE;
+  }
+
+  const nsXFormsNodeState* ns = GetNodeState(aContextNode);
+  NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
+
+  // If the node is read-only and not set by a @calculate MIP,
+  // ignore the call
+  if (ns->IsReadonly()) {
+    ///
+    /// @todo Better feedback for readonly nodes? (XXX)
+    return NS_OK;
+  }
+
+  PRUint16 nodeType;
+  nsresult rv = aContextNode->GetNodeType(&nodeType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (nodeType != nsIDOMNode::ELEMENT_NODE) {
+    // got to return something pretty unique that we can check down the road in
+    // order to dispatch any error events
+    return NS_ERROR_DOM_WRONG_TYPE_ERR;
+  }
+
+  PRBool nodesEqual = nsXFormsUtils::AreNodesEqual(aContextNode,
+                                                   aContentEnvelope,
+                                                   PR_FALSE);
+  if (nodesEqual) {
+    return NS_OK;
+  }
+
+  // remove any child nodes that aContextNode already contains
+  nsCOMPtr<nsIDOMNode> resultNode;
+  nsCOMPtr<nsIDOMNodeList> childList;
+  rv = aContextNode->GetChildNodes(getter_AddRefs(childList));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (childList) {
+    PRUint32 length;
+    rv = childList->GetLength(&length);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (PRInt32 i = length-1; i >= 0; i--) {
+      nsCOMPtr<nsIDOMNode> childNode;
+      rv = childList->Item(i, getter_AddRefs(childNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = aContextNode->RemoveChild(childNode, getter_AddRefs(resultNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  // add contents of the envelope under aContextNode
+  nsCOMPtr<nsIDOMNode> childNode;
+  rv = aContentEnvelope->GetFirstChild(getter_AddRefs(childNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+  while (childNode) {
+    rv = aContextNode->AppendChild(childNode, getter_AddRefs(resultNode));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aContentEnvelope->GetFirstChild(getter_AddRefs(childNode));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // NB: Never reached for Readonly nodes.  
+  if (aNodeChanged) {
+    *aNodeChanged = PR_TRUE;
+  }
+
+  // Not calling MarkNodeAsChanged since caller will do a full rebuild
   
   return NS_OK;
 }

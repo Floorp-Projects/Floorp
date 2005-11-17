@@ -56,6 +56,8 @@
 #include "nsIXFormsLabelElement.h"
 #include "nsIDocument.h"
 #include "nsXFormsModelElement.h"
+#include "nsIXFormsCopyElement.h"
+#include "nsIDOMEventTarget.h"
 
 /**
  * nsXFormsItemElement implements the XForms \<item\> element.
@@ -69,7 +71,8 @@ class nsXFormsItemElement : public nsXFormsBindableStub,
                             public nsIXFormsItemElement
 {
 public:
-  nsXFormsItemElement() : mElement(nsnull), mDoneAddingChildren(PR_FALSE)
+  nsXFormsItemElement() : mElement(nsnull), mDoneAddingChildren(PR_FALSE),
+                          mIsCopyItem(PR_FALSE)
   {
   }
 
@@ -91,9 +94,14 @@ public:
   // nsIXFormsSelectChild
   NS_DECL_NSIXFORMSSELECTCHILD
 
+
 private:
   nsIDOMElement* mElement;
   PRBool         mDoneAddingChildren;
+
+  // If true, indicates that this item contains a xf:copy element (via
+  // xf:itemset) rather than a xf:value element
+  PRBool         mIsCopyItem;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsItemElement,
@@ -219,12 +227,50 @@ nsXFormsItemElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **aSe
 {
   NS_ENSURE_ARG_POINTER(aSelected);
   NS_ENSURE_STATE(mElement);
+
+  *aSelected = nsnull;
+  if (mIsCopyItem) {
+    // copy items are selected by node, not by value
+    return NS_OK;
+  }
+
   nsAutoString value;
-  GetValue(value);
-  if (aValue.Equals(value)) {
+  nsresult rv = GetValue(value);
+
+  if (NS_SUCCEEDED(rv) && aValue.Equals(value)) {
     NS_ADDREF(*aSelected = mElement);
-  } else {
-    *aSelected = nsnull;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsXFormsItemElement::SelectItemByNode(nsIDOMNode *aNode, nsIDOMNode **aSelected)
+{
+  NS_ENSURE_ARG_POINTER(aSelected);
+  NS_ENSURE_STATE(mElement);
+  PRBool isCopyItem;
+  *aSelected = nsnull;
+
+  // If this item doesn't contain a copy element but instead has a value
+  // element, then there is no sense testing further.
+  GetIsCopyItem(&isCopyItem);
+  if (!isCopyItem) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMNode> copyNode;
+  nsresult rv = GetCopyNode(getter_AddRefs(copyNode));
+  NS_ENSURE_STATE(copyNode);
+
+  PRUint16 nodeType;
+  copyNode->GetNodeType(&nodeType);
+
+  // copy elements are only allowed to bind to ELEMENT_NODEs per spec.  But
+  // test first before doing all of this work.
+  if ((nodeType == nsIDOMNode::ELEMENT_NODE) && 
+      (nsXFormsUtils::AreNodesEqual(copyNode, aNode))) {
+    NS_ADDREF(*aSelected = mElement);
   }
 
   return NS_OK;
@@ -233,7 +279,16 @@ nsXFormsItemElement::SelectItemByValue(const nsAString &aValue, nsIDOMNode **aSe
 NS_IMETHODIMP
 nsXFormsItemElement::GetValue(nsAString &aValue)
 {
- 
+  PRBool isCopyItem;
+  GetIsCopyItem(&isCopyItem);
+  if (isCopyItem) {
+    // if this item was built by an itemset and the itemset's template used
+    // a copy element, then there is no value element to be had.  No sense
+    // continuing.
+    aValue.Truncate(0);
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIDOMNode> firstChild, container;
   mElement->GetFirstChild(getter_AddRefs(firstChild));
 
@@ -268,6 +323,52 @@ nsXFormsItemElement::GetValue(nsAString &aValue)
 
   // No value children, so our value is empty
   aValue.Truncate(0);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemElement::GetCopyNode(nsIDOMNode **aNode)
+{
+  NS_ENSURE_ARG_POINTER(aNode);
+
+  PRBool isCopyItem;
+  GetIsCopyItem(&isCopyItem);
+  if (!isCopyItem) {
+    // If this item doesn't contain a copy element but instead has a value
+    // element, then there is no sense continuing.
+    *aNode = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  // Since this item really contains a copy element, then firstChild MUST be
+  // a contextcontainer since copy elements can only exist as a child of an
+  // itemset.
+  nsCOMPtr<nsIDOMNode> container;
+  mElement->GetFirstChild(getter_AddRefs(container));
+
+  // Find the copy element contained by this item and get the copyNode from it.
+  nsCOMPtr<nsIDOMNodeList> children;
+  nsresult rv = container->GetChildNodes(getter_AddRefs(children));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 childCount;
+  children->GetLength(&childCount);
+
+  nsCOMPtr<nsIDOMNode> child;
+  nsAutoString value;
+
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    children->Item(i, getter_AddRefs(child));
+    nsCOMPtr<nsIXFormsCopyElement> copyElement = do_QueryInterface(child);
+    if (copyElement) {
+      return copyElement->GetCopyNode(aNode);
+    }
+  }     
+
+  // No copy element as a child.  Set return node to null and set the copyitem
+  // boolean to false so we don't go through this unnecessary pain again.
+  aNode = nsnull;
+  SetIsCopyItem(PR_FALSE);
   return NS_OK;
 }
 
@@ -365,6 +466,21 @@ nsXFormsItemElement::LabelRefreshed()
     }
     current = parent;
   } while(current);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemElement::GetIsCopyItem(PRBool *aIsCopyItem)
+{
+  NS_ENSURE_ARG(aIsCopyItem);
+  *aIsCopyItem = mIsCopyItem;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsItemElement::SetIsCopyItem(PRBool aIsCopyItem)
+{
+  mIsCopyItem = aIsCopyItem;
   return NS_OK;
 }
 

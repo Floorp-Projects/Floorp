@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,12 +15,12 @@
  * The Original Code is Mozilla XForms support.
  *
  * The Initial Developer of the Original Code is
- * Olli Pettay.
+ * IBM Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Olli Pettay <Olli.Pettay@helsinki.fi> (original author)
+ *   Aaron Reed <aaronr@us.ibm.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,51 +36,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+/**
+ * This interface is implemented by XForms \<copy\> elements.
+ */
+
 #include "nsISupports.idl"
 #include "nsIDOMNode.idl"
-#include "nsIXFormsDelegate.idl"
 
-/**
- * Interface implemented by the item element.
- */
-[scriptable, uuid(ec8d3556-8ed2-4143-88d1-6b7b2c8b0b3b)]
-interface nsIXFormsItemElement : nsISupports
+[uuid(4af9ad8e-5266-44ac-b9f7-ef2cb9fe2637)]
+interface nsIXFormsCopyElement : nsISupports
 {
   /**
-   * The text value of the \<label\> child element of the item.
-   */
-  readonly attribute AString labelText;
-
-  /**
-   * The value of the item element.
-   */
-  readonly attribute AString value;
-
-  /**
-   * Marks item active. In current implementation '_moz_active' attribute is 
-   * set to the element if aActive is true. The attribute can be used when
-   * styling the element.
-   */
-  void setActive(in boolean aActive);
-
-  /**
-   * This is called by the \<label\> child element whenever it is refreshed.
-   * This information will be propagated by the \<item\> to the nearest
-   * \<select1\> element, which can then refresh its UI.
-   */
-  void labelRefreshed();
-
-  /**
-   * Indicates whether the item element contains a value child or a copy
-   * child.  We'll assume that if the item is NOT a copy item, then it must
-   * be a value item.  Which means that it must contain a XForms value element
-   * child.
-   */
-  attribute boolean isCopyItem;
-
-  /*
-   * returns the node that the contained copy element is bound to
+   * Returns the node that will be deep copied into the instance data if the
+   * item element which contains this copy element is selected.
    */
   readonly attribute nsIDOMNode copyNode;
-
 };

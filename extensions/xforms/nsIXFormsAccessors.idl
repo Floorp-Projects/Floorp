@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIDOMNode.idl"
 
 /**
  * Interface exposing the states of an XForms control.
@@ -44,7 +45,7 @@
  * For more information on this interface please see
  * http://developer.mozilla.org/en/docs/XForms:Custom_Controls
  */
-[scriptable, uuid(8e8c5022-a61d-42cf-9551-74215dc611ad)]
+[scriptable, uuid(74992960-42a9-4479-a1ff-f7f1b37e187a)]
 interface nsIXFormsAccessors : nsISupports
 {
   /**
@@ -81,4 +82,22 @@ interface nsIXFormsAccessors : nsISupports
    * true, if XForms control is bound to a node in a data model.
    */
   boolean hasBoundNode();
+
+  /**
+   * Node that the control is bound to in its data model.
+   */
+  nsIDOMNode getBoundNode();
+
+  /**
+   * Used to set the complete contents of the bound node.  This function is
+   * meant to be used like setValue() except that it can be used to set more
+   * than just the first textnode contained under the bound node.  If there
+   * is nothing contained under aNode, then all children of the bound node
+   * will be eliminated.
+   *
+   * @param aNode         aNode should be a copy of the bound node.  setContent
+   *                      will take the contents of aNode and move them under
+   *                      bound node.
+   */
+  void setContent(in nsIDOMNode aNode);
 };

@@ -465,6 +465,39 @@ public:
    * @return                 Whether handling was successful
    */
   static PRBool HandleBindingException(nsIDOMElement *aElement);
+
+  /**
+   * Returns whether the given NamedNodeMaps of Entities are equal
+   *
+   */
+  static NS_HIDDEN_(PRBool) AreEntitiesEqual(nsIDOMNamedNodeMap *aEntities1,
+                                             nsIDOMNamedNodeMap *aEntities2);
+
+  /**
+   * Returns whether the given NamedNodeMaps of Notations are equal
+   *
+   */
+  static NS_HIDDEN_(PRBool) AreNotationsEqual(nsIDOMNamedNodeMap *aNotations1,
+                                              nsIDOMNamedNodeMap *aNotations2);
+
+  /**
+   * Returns whether the given nodes are equal as described in the isEqualNode
+   * function defined in the DOM Level 3 Core spec.
+   * http://www.w3.org/TR/2004/REC-DOM-Level-3-Core-20040407/DOM3-Core.html#core-Node3-isEqualNode
+   *
+   * XXX: this is just temporary until isEqualNode is implemented in Mozilla
+   * (https://bugzilla.mozilla.org/show_bug.cgi?id=159167)
+   *
+   * @param aFirstNode          The first node to compare
+   * @param aSecondNode         The second node to compare
+   * @param aAlreadyNormalized  Whether the two nodes and their children, etc.
+   *                            have already been normalized to allow for
+   *                            more accurate child node comparisons, as
+   *                            recommended in the DOM Level 3 Core spec.
+   */
+  static NS_HIDDEN_(PRBool) AreNodesEqual(nsIDOMNode *aFirstNode,
+                                          nsIDOMNode *aSecondNode,
+                                          PRBool      aAlreadyNormalized = PR_FALSE);
 };
 
 #endif

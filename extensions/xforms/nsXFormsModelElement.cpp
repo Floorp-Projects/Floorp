@@ -1139,6 +1139,16 @@ nsXFormsModelElement::GetNodeValue(nsIDOMNode *aContextNode,
 }
  
 NS_IMETHODIMP
+nsXFormsModelElement::SetNodeContent(nsIDOMNode      *aContextNode,
+                                     nsIDOMNode      *aNodeContent,
+                                     PRBool          *aNodeChanged)
+{ 
+  return mMDG.SetNodeContent(aContextNode,
+                             aNodeContent,
+                             aNodeChanged);
+}
+
+NS_IMETHODIMP
 nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);

@@ -44,6 +44,7 @@
 #include "nsDOMString.h"
 #include "nsIEventStateManager.h"
 #include "nsIContent.h"
+#include "nsIXFormsControl.h"
 
 NS_IMPL_ISUPPORTS2(nsXFormsAccessors, nsIXFormsAccessors, nsIClassInfo)
 
@@ -111,6 +112,48 @@ NS_IMETHODIMP
 nsXFormsAccessors::IsValid(PRBool *aStateVal)
 {
   return GetState(NS_EVENT_STATE_VALID, aStateVal);
+}
+
+NS_IMETHODIMP
+nsXFormsAccessors::SetContent(nsIDOMNode *aNode)
+{
+  NS_ENSURE_STATE(mElement);
+
+  nsCOMPtr<nsIDOMNode> boundNode;
+  nsresult rv = GetBoundNode(getter_AddRefs(boundNode));
+  NS_ENSURE_STATE(boundNode);
+
+  nsCOMPtr<nsIModelElementPrivate> modelPriv = nsXFormsUtils::GetModel(mElement);
+  NS_ENSURE_STATE(modelPriv);
+
+  PRBool changed;
+  rv = modelPriv->SetNodeContent(boundNode, aNode, &changed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (changed) {
+    nsCOMPtr<nsIDOMNode> model = do_QueryInterface(modelPriv);
+ 
+    if (model) {
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Recalculate);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Revalidate);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Refresh);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsAccessors::GetBoundNode(nsIDOMNode **aBoundNode)
+{
+  NS_ENSURE_ARG_POINTER(aBoundNode);
+  if (mDelegate) {
+    nsCOMPtr<nsIXFormsControl> control = do_QueryInterface(mDelegate);
+    return control->GetBoundNode(aBoundNode);
+  }
+  return NS_OK;
 }
 
 // nsIClassInfo implementation
