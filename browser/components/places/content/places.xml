@@ -18,7 +18,101 @@
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       </xul:hbox>
     </content>
-
+  </binding>
+  
+  <binding id="places-tree" extends="chrome://global/content/bindings/tree.xml#tree">
+    <implementation>
+      <property name="selectionFlags">
+        <getter><![CDATA[ 
+          // XXXben - this should be in the controller itself, not the view!
+          // the view should not be making these determinations!
+          const NHRN = Ci.nsINavHistoryResultNode;
+          function nodeIsURL(node) {
+            return (node.type == NRHN.RESULT_TYPE_URL ||
+                    node.type == NRHN.RESULT_TYPE_VISIT);
+          }
+        
+          function nodeIsContainer(node) {
+            return !nodeIsURL(node);
+          }
+        
+          var flags = 0;
+          var nodes = this.getSelectionNodes();
+          var nodeCount = nodes.length;
+          if (nodeCount == 1 && nodeIsContainer(nodes[0])
+            flags |= SELECTION_IS_OPEN_CONTAINER; // XXXben closed container too!
+          
+          for (var i = 0; i < nodes.length; ++i) {
+            var node = nodes[i];
+            if (nodeIsURL(node))
+              flags |= SELECTION_COTNAINS_URL;
+            else
+              flags |= SELECTION_CONTAINS_CONTAINER;
+            
+            if (node.parent.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER &&
+                !this.query.hasSearchTerms) 
+              flags |= SELECTION_IS_MOVABLE;
+            flags |= SELECTION_IS_CHANGEABLE + SELECTION_IS_REMOVABLE;
+          }
+          return flags;
+        ]]></getter>
+      </property>
+      
+      <property name="hasSelection">
+        <getter>
+          return this.view.selection.getRangeCount() >= 1;
+        </getter>
+      </property>
+      
+      <property name="hasSingleSelection">
+        <getter>
+          var selection = this.view.selection;
+          var rc = selection.getRangeCount();
+          if (rc != 1)
+            return false;
+          var min = { }, max = { };
+          selection.getRangeAt(0, min, max);
+          return (min.value == max.value);
+        </getter>
+        
+      </property>
+      
+      <method name="getSelectionNodes">
+        <body><![CDATA[ 
+          var result = this.view.queryInterface(Ci.nsINavHistoryResult);
+          var selection = this.view.selection;
+          var rc = selection.getRangeCount();
+          var nodes = [];
+          for (var i = 0; i < rc; ++i) {
+            var min = { }, max = { };
+            selection.getRangeAt(i, min, max);
+            
+            for (var j = min.value; j <= max.value; ++j)
+              nodes.push(result.nodeForTreeIndex(j));
+          }
+          return nodes;
+        ]]></body>
+      </method>
+      
+      <property name="selectedURL">
+        <getter><![CDATA[
+          var view = this.view;
+          var selection = view.selection;
+          var rc = selection.getRangeCount();
+          if (rc != 1) 
+            return null;
+          var min = { }, max = { };
+          selection.getRangeAt(0, min, max);
+          
+          // Cannot load containers
+          if (view.isContainer(min.value) || view.isSeparator(min.value))
+            return null;
+            
+          var result = view.QueryInterface(Ci.nsINavHistoryResult);
+          return result.nodeForTreeIndex(min.value).url;
+        ]]></getter>
+      </property>
+    </implementation>
   </binding>
 
   

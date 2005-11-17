@@ -355,11 +355,11 @@ class GroupingQueryList
 {
 public:
   PRInt32* mItems;
-  static const PRInt32 mMaxGroups = 32;
+  static const PRInt32 sMaxGroups;
   PRInt32 mGroupCount;
   GroupingQueryList() : mGroupCount(0)
   {
-    mItems = new PRInt32[mMaxGroups];
+    mItems = new PRInt32[sMaxGroups];
   }
   ~GroupingQueryList()
   {
@@ -368,7 +368,7 @@ public:
   }
   void Add(PRInt32 g)
   {
-    if (mGroupCount < mMaxGroups) {
+    if (mGroupCount < sMaxGroups) {
       mItems[mGroupCount] = g;
       mGroupCount ++;
     } else {
@@ -377,6 +377,7 @@ public:
   }
 };
 
+const PRInt32 GroupingQueryList::sMaxGroups = 32;
 
 // TokensToQueries
 

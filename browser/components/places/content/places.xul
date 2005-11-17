@@ -77,7 +77,8 @@
   </keyset>
   
   <popupset id="placesPopupset">
-    <popup id="placesContext">
+    <popup id="placesContext" 
+           onpopupshowing="return PlacesPage.controller.buildContextMenu(this);">
       <menuitem id="placesContext_open" command="placesCmd_open" default="true"/>
       <menuitem id="placesContext_open:newwindow" command="placesCmd_open:window"/>
       <menuitem id="placesContext_open:newtab" command="placesCmd_open:tab"/>

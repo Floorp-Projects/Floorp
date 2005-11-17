@@ -54,6 +54,14 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
 
+const SELECTION_CONTAINS_URL = 0x01;
+const SELECTION_CONTAINS_CONTAINER = 0x02;
+const SELECTION_IS_OPEN_CONTAINER = 0x04;
+const SELECTION_IS_CLOSED_CONTAINER = 0x08;
+const SELECTION_IS_CHANGEABLE = 0x10;
+const SELECTION_IS_REMOVABLE = 0x20;
+const SELECTION_IS_MOVABLE = 0x40;
+
 /**
  * Implements nsIController, nsICommandController... 
  * @param   elements
@@ -106,6 +114,32 @@ function PC_onEvent(eventName) {
   LOG("onEvent: " + eventName);
 
 };
+
+PlacesController.prototype.buildContextMenu = 
+function PC_buildContextMenu(popup) {
+  return true;
+};
+
+/*
+ 
+ AVI rules:
+ 
+ readonly attribute boolean hasSelection;
+ readonly attribute boolean hasSingleSelection;
+ void getSelectedNodes([retval, array, size_is(nodeCount)] out nodes, out nodeCount);
+ 
+ selection flags
+
+ flags:
+   SELECTION_CONTAINS_URL
+   SELECTION_CONTAINS_CONTAINER_OPEN
+   SELECTION_CONTAINS_CONTAINER_CLOSED
+   SELECTION_CONTAINS_CHANGEABLE
+   SELECTION_CONTAINS_REMOVABLE
+   SELECTION_CONTAINS_MOVABLE 
+ 
+*/
+
 
 PlacesController.prototype.QueryInterface = 
 function PC_QueryInterface(iid) {
