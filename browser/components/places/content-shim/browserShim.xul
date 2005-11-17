@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<overlay id="placesBrowserShim"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/x-javascript"
+          src="chrome://browser/content/places/browserShim.js"/>
+  
+</overlay>
+
