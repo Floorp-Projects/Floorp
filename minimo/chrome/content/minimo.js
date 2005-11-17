@@ -534,6 +534,19 @@ function BrowserViewSearch() {
   }
 }
 
+
+/**
+  * Has to go through some other approach like a XML-based rule system. 
+  * Those are constraints conditions and action. 
+  **/
+  
+function BrowserViewFind() {
+  document.getElementById("toolbar-find").collapsed=!document.getElementById("toolbar-find").collapsed;
+  if(document.getElementById("toolbar-find").collapsed &&  document.getElementById("command_ViewFind").getAttribute("checked")=="true") {
+	document.getElementById("command_ViewFind").setAttribute("checked","false");
+  }
+}
+
 /** 
   * urlbar indentity, style, progress indicator.
   **/ 
