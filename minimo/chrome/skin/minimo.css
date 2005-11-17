@@ -121,53 +121,53 @@ caption {
 }
 
 #menu-button {
-	background: url("chrome://minimo/skin/m.png") no-repeat 50% 50%;
-      width:20px !important;
-      height:12px !important;
+	background: url("chrome://minimo/skin/m-color.png") no-repeat 50% 50%;
+    width:15px !important;
+    height:15px !important;
 }
 
 #back-button
   {
-	  list-style-image      : url("chrome://minimo/skin/back.gif");
+	  list-style-image      : url("chrome://minimo/skin/back-color.png");
 	  margin-left:2px;
   }
 
 #forward-button
   {
-	  list-style-image      : url("chrome://minimo/skin/forward.gif");
+	  list-style-image      : url("chrome://minimo/skin/forward-color.png");
   }
 
 #stop-button 
   {
-	  list-style-image      : url("chrome://minimo/skin/stop.gif");
+	  list-style-image      : url("chrome://minimo/skin/stop-color.png");
   }
 
 .menu-button
   {
-    background: url("chrome://minimo/skin/m.png") no-repeat 50% 50%;
-    width:20px !important;
-    height:12px !important;
+    background: url("chrome://minimo/skin/m-color.png") no-repeat 50% 50%;
+    width:15px !important;
+    height:15px !important;
   }
 
 .back-button
   {
-	  list-style-image      : url("chrome://minimo/skin/back.gif");
+	  list-style-image      : url("chrome://minimo/skin/back-color.png");
 	  margin-left:2px;
   }
 
 .forward-button
   {
-	  list-style-image      : url("chrome://minimo/skin/forward.gif");
+	  list-style-image      : url("chrome://minimo/skin/forward-color.png");
   }
 
 .stop-button 
   {
-	  list-style-image      : url("chrome://minimo/skin/stop.gif");
+	  list-style-image      : url("chrome://minimo/skin/stop-color.png");
   }
 
 .reload-button 
   {
-	  list-style-image      : url("chrome://minimo/skin/reload.gif");
+	  list-style-image      : url("chrome://minimo/skin/reload-color.png");
   }
   
 .separator-menu {
