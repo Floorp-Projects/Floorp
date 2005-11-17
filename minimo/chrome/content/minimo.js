@@ -50,8 +50,9 @@ var gShowingMenuPopup=null;
 
 var gPref = null;                    // so far snav toggles on / off via direct access to pref.
                                      // See bugzilla.mozilla.org/show_bug.cgi?id=311287#c1
-var gStateSNAV = false;              // Default SNAV is false. , see above bug. 
-                                     
+
+var gSNAV=-1; 
+
 function nsBrowserStatusHandler()
 {
 }
@@ -217,6 +218,7 @@ function MiniNavStartup()
   var homepage = "http://www.mozilla.org";
 
   try {
+
     gURLBar = document.getElementById("urlbar");
     var currentTab=getBrowser().selectedTab;
     browserInit(currentTab);
@@ -256,9 +258,7 @@ function MiniNavStartup()
         homepage = fixedUpURI.spec;
       }
     } catch (ignore) {}
-
-    BrowserSNAVToggle(true);
-
+      
   } catch (e) {
     alert("Error trying to startup browser.  Please report this as a bug:\n" + e);
   }
@@ -289,8 +289,8 @@ function MiniNavStartup()
   /* 
    * Add event clicks to Minimo toolbars and also to the mStrip BOX in the tabbrowser
    */
-  getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,true);
-  document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,true);
+  getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,false);
+  document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
 
 
   /* 
@@ -300,14 +300,22 @@ function MiniNavStartup()
 	getBrowser().mStrip.collapsed=true;
   }
   
-  /* Recover whiever is the state SNAV in the pref */ 
-
-  gStateSNAV = gPref.getBoolPref("snav.enabled"); 
-
 }
 
 function BrowserWithoutSNAV(e) {
-	BrowserSNAVToggle(false);
+ if(gSNAV==1||gSNAV==-1) {
+	gSNAV=0;
+      gURLBar.value="0"+gURLBar.value;
+      gPref.setBoolPref("snav.enabled", false);                                   
+ } 
+}
+
+function BrowserWithSNAV(e) {
+ if(gSNAV==0||gSNAV==-1) {
+	gSNAV=1;
+      gURLBar.value="1"+gURLBar.value;
+      gPref.setBoolPref("snav.enabled", true);                                   
+ } 
 }
 
 /*
@@ -326,7 +334,8 @@ function eventHandlerMenu(e) {
   if( e.keyCode==70) /*SoftKey1 or HWKey1*/ {
   	document.getElementById("menu-button").focus();
 	e.preventBubble();
-	BrowserSNAVToggle(false);
+	BrowserWithoutSNAV();
+	
   } 
   
   if(document.commandDispatcher&&document.commandDispatcher.focusedElement) { 
@@ -351,7 +360,7 @@ function eventHandlerMenu(e) {
 
 					if(getBrowser().mStrip.collapsed) {
 				
-						BrowserSNAVToggle(true);
+						BrowserWithSNAV();
 
 					} 
 
@@ -365,7 +374,7 @@ function eventHandlerMenu(e) {
 				
 				getBrowser().contentWindow.focus();
 				
-				BrowserSNAVToggle(true);
+				BrowserWithSNAV();
 
 			} 
        
@@ -404,6 +413,12 @@ function browserInit(refTab)
    * 
    */
   var refBrowser=getBrowser().getBrowserForTab(refTab);
+  
+  /* New Browser OnFocus SNAV Toggle */
+  
+  refBrowser.addEventListener("focus", BrowserWithSNAV , true);
+  
+  
   try {
     refBrowser.markupDocumentViewer.textZoom = .90;
   } catch (e) {
@@ -798,16 +813,6 @@ function MenuPopupHidden() {
     gShowingMenuPopup=false;
 }
 
-/*
- *  So far the whole idea of pref is gone since this use the pref itself to toggle. 
- *  https://bugzilla.mozilla.org/show_bug.cgi?id=311287#c1 - we should have the snav interface here. 
- */
-function BrowserSNAVToggle(state) {
-  if(gStateSNAV != state) { // goes through actually doing, only first time.    
-    gPref.setBoolPref("snav.enabled", state);                                   
-    gStateSNAV=state;                                                           
-  }       
-} 
 
 
 
