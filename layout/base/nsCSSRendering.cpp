@@ -3583,10 +3583,10 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
   if (thickness<=aTwipsPerPixel) {
     // NOTHING FANCY JUST DRAW OUR OUTSIDE BORDER
     thecurve.SetPoints(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
-    thecurve.SubDivide((nsIRenderingContext*)&aRenderingContext,0,0);
+    thecurve.SubDivide((nsIRenderingContext*)&aRenderingContext,nsnull,nsnull);
     aRenderingContext.DrawLine((nscoord)aPoints[2].x,(nscoord)aPoints[2].y,(nscoord)aPoints[3].x,(nscoord)aPoints[3].y);
     thecurve.SetPoints(aPoints[3].x,aPoints[3].y,aPoints[4].x,aPoints[4].y,aPoints[5].x,aPoints[5].y);
-    thecurve.SubDivide((nsIRenderingContext*)&aRenderingContext,0,0);
+    thecurve.SubDivide((nsIRenderingContext*)&aRenderingContext,nsnull,nsnull);
   } else {
     
     if (!aIsOutline) {
@@ -3961,7 +3961,7 @@ QBCurve::SubDivide(nsIRenderingContext *aRenderingContext,nsPoint aPointArray[],
   QBCurve   curve1,curve2;
   float     fx,fy,smag, oldfx, oldfy, oldsmag;
   
-  if (*aCurIndex >= MAXPOLYPATHSIZE)
+  if (aCurIndex && (*aCurIndex >= MAXPOLYPATHSIZE))
     return;
   
   oldfx = (this->mAnc1.x + this->mAnc2.x)/2.0f - this->mCon.x;
