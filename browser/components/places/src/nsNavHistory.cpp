@@ -1854,7 +1854,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 {
   if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
     if (gTldTypes) {
-      delete[] gTldTypes;
+      delete gTldTypes;
       gTldTypes = nsnull;
     }
     gPrefService->SavePrefFile(nsnull);
