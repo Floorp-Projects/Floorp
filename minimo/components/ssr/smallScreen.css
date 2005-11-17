@@ -10,7 +10,7 @@ html * {
 
 /* for all elements but the root element and the body, let's */
 /* cancel all annoying document's settings */
-html * {
+html *:not(select):not(option):not(optgroup) {
   /* first cancel all size settings */
   width: auto ! important;
   height: auto ! important;

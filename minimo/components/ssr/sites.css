@@ -50,3 +50,15 @@
     padding: 0     ! important;
  }
 }
+
+
+@-moz-document domain(weblogs.mozillazine.org)
+{
+ div#rightcol-full
+ {
+    display: none  ! important;
+    margin: 0      ! important; 
+    padding: 0     ! important;
+ }
+}
+
