@@ -239,8 +239,7 @@ pascal void nsFilePicker::FileDialogEventHandlerProc(NavEventCallbackMessage msg
           WindowPtr window = reinterpret_cast<WindowPtr>(cbRec->eventData.eventDataParms.event->message);
           nsCOMPtr<nsIEventSink> sink;
           nsToolkit::GetWindowEventSink (window, getter_AddRefs(sink));
-          if (sink)
-          {
+          if (sink) {
             ::BeginUpdate(window);
             PRBool handled = PR_FALSE;
             sink->DispatchEvent(cbRec->eventData.eventDataParms.event, &handled);
@@ -259,6 +258,23 @@ pascal void nsFilePicker::FileDialogEventHandlerProc(NavEventCallbackMessage msg
       menuItem.menuCreator = self->mSelectedType + self->mTypeOffset;
       menuItem.menuItemName[0] = 0;
       (void)::NavCustomControl(cbRec->context, kNavCtlSelectCustomType, &menuItem);
+
+      // Set the directory to mDisplayDirectory if available
+      if (self->mDisplayDirectory != nsnull) {
+        nsCOMPtr<nsILocalFileMac> localDisplay = do_QueryInterface(self->mDisplayDirectory);
+        if (localDisplay) {
+          FSRef displayFSRef;
+          if (NS_SUCCEEDED(localDisplay->GetFSRef(&displayFSRef))) {
+            AEDesc desc;
+            OSErr status = ::AECreateDesc(typeFSRef, &displayFSRef,
+                                          sizeof(displayFSRef), &desc);
+            if (status == noErr) {
+              (void)::NavCustomControl(cbRec->context, kNavCtlSetLocation, &desc);
+              (void)::AEDisposeDesc(&desc);
+            }
+          }
+        }
+      }
     }
     break;
     
