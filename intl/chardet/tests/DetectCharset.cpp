@@ -39,6 +39,9 @@
 #include "nsIComponentManager.h"
 #include "nsICharsetDetector.h"
 #include "nsICharsetDetectionObserver.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #if defined(XP_WIN) || defined(XP_OS2)

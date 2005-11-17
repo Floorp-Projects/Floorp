@@ -40,7 +40,6 @@
 
 #include "nsISupports.h"
 #include "nscore.h"
-#include "nsString.h"
 
 // {07D3D8E0-9614-11d2-B3AD-00805F8A6670}
 #define NS_ICASECONVERSION_IID \

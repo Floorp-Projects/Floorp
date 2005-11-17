@@ -42,8 +42,8 @@
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
 #include "nsLWBrkCIID.h"
-#include "nsReadableUtils.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
+#include "nsEmbedString.h"
 
 #define WORK_AROUND_SERVICE_MANAGER_ASSERT
 
@@ -99,7 +99,7 @@ PRBool TestASCIILB(nsILineBreaker *lb,
                  const char* in, const PRUint32 len, 
                  const PRUint32* out, PRUint32 outlen)
 {
-         nsAutoString eng1; eng1.AssignWithConversion(in);
+         NS_ConvertASCIItoUTF16 eng1(in);
          PRUint32 i,j;
          PRUint32 res[256];
          PRBool ok = PR_TRUE;
@@ -152,7 +152,7 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
                  const char* in, const PRUint32 len, 
                  const PRUint32* out, PRUint32 outlen)
 {
-         nsAutoString eng1; eng1.AssignWithConversion(in);
+         NS_ConvertASCIItoUTF16 eng1(in);
 
          PRUint32 i,j;
          PRUint32 res[256];
@@ -371,33 +371,27 @@ void SamplePrintWordWithBreak()
    CallGetService(kWBrkCID, &wbk);
 
    nsAutoString result;
-   nsAutoString tmp;
 
    for(PRUint32 i = 0; i < numOfFragment; i++)
    {
-      nsAutoString fragText; fragText.AssignWithConversion(wb[i]); 
+      NS_ConvertASCIItoUTF16 fragText(wb[i]);
 
       PRInt32 cur = 0;
       cur = wbk->NextWord(fragText.get(), fragText.Length(), cur);
       PRUint32 start = 0;
       for(PRUint32 j = 0; cur != NS_WORDBREAKER_NEED_MORE_TEXT ; j++)
       {
-            tmp.Truncate();
-            fragText.Mid(tmp, start, cur - start);
-            result.Append(tmp);
-            result.AppendLiteral("^");
+            result.Append(Substring(fragText, start, cur - start));
+            result.Append('^');
             start = (cur >= 0 ? cur : cur - start);
             cur = wbk->NextWord(fragText.get(), fragText.Length(), cur);
       }
 
-      tmp.Truncate();
-      fragText.Mid(tmp, start, fragText.Length() - start);
-      result.Append(tmp);
-
+      result.Append(Substring(fragText, fragText.Length() - start));
 
       if( i != (numOfFragment -1 ))
       {
-        nsAutoString nextFragText; nextFragText.AssignWithConversion(wb[i+1]);
+        NS_ConvertASCIItoUTF16 nextFragText(wb[i+1]);
  
         PRBool canBreak = PR_TRUE;
         canBreak = wbk->BreakInBetween( fragText.get(), 
@@ -405,13 +399,13 @@ void SamplePrintWordWithBreak()
                                         nextFragText.get(), 
                                         nextFragText.Length());
         if(canBreak)
-            result.AppendLiteral("^");
+            result.Append('^');
 
-        fragText = nextFragText;
+        fragText.Assign(nextFragText);
       }
    }
    printf("Output From  SamplePrintWordWithBreak() \n\n");
-   printf("[%s]\n", NS_LossyConvertUCS2toASCII(result).get());
+   printf("[%s]\n", NS_ConvertUTF16toUTF8(result).get());
 
    NS_IF_RELEASE(wbk);
 }
@@ -423,20 +417,19 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
 
    CallGetService(kWBrkCID, &wbk);
 
-   nsAutoString fragText; fragText.AssignWithConversion(wb[fragN]); 
+   NS_ConvertASCIItoUTF16 fragText(wb[fragN]); 
    
-   nsAutoString result;
    nsWordRange res = wbk->FindWord(fragText.get(), fragText.Length(), offset);
 
    PRBool canBreak;
-   fragText.Mid(result, res.mBegin, res.mEnd-res.mBegin);
+   nsAutoString result(Substring(fragText, res.mBegin, res.mEnd-res.mBegin));
 
    if((PRUint32)fragText.Length() == res.mEnd) // if we hit the end of the fragment
    {
      nsAutoString curFragText = fragText;
      for(PRUint32  p = fragN +1; p < numOfFragment ;p++)
      {
-        nsAutoString nextFragText; nextFragText.AssignWithConversion(wb[p]);
+        NS_ConvertASCIItoUTF16 nextFragText(wb[p]);
         canBreak = wbk->BreakInBetween(curFragText.get(), 
                                        curFragText.Length(),
                                        nextFragText.get(), 
@@ -447,14 +440,12 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
         nsWordRange r = wbk->FindWord(nextFragText.get(), nextFragText.Length(),
                                       0);
 
-        nsAutoString tmp;
-        nextFragText.Mid(tmp,r.mBegin,r.mEnd-r.mBegin);
-        result.Append(tmp);
+        result.Append(Substring(nextFragText, r.mBegin, r.mEnd - r.mBegin));
 
         if((PRUint32)nextFragText.Length() != r.mEnd)
           break;
 
-        nextFragText = curFragText;
+        nextFragText.Assign(curFragText);
      }
    }
    
@@ -463,7 +454,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
      nsAutoString curFragText = fragText;
      for(PRUint32  p = fragN ; p > 0 ;p--)
      {
-        nsAutoString prevFragText; prevFragText.AssignWithConversion(wb[p-1]); 
+        NS_ConvertASCIItoUTF16 prevFragText(wb[p-1]); 
         canBreak = wbk->BreakInBetween(prevFragText.get(), 
                                        prevFragText.Length(),
                                        curFragText.get(), 
@@ -474,19 +465,17 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
         nsWordRange r = wbk->FindWord(prevFragText.get(), prevFragText.Length(), 
                                       prevFragText.Length());
 
-        nsAutoString tmp;
-        prevFragText.Mid(tmp,r.mBegin,r.mEnd-r.mBegin);
-        result.Insert(tmp,0);
+        result.Insert(Substring(prevFragText, r.mBegin, r.mEnd - r.mBegin), 0);
 
         if(0 != r.mBegin)
           break;
 
-        prevFragText = curFragText;
+        prevFragText.Assign(curFragText);
      }
    }
    
    printf("Output From  SamplePrintWordWithBreak() \n\n");
-   printf("[%s]\n", NS_LossyConvertUCS2toASCII(result).get());
+   printf("[%s]\n", NS_ConvertUTF16toUTF8(result).get());
 
    NS_IF_RELEASE(wbk);
 }
