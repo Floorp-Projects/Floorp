@@ -79,6 +79,5 @@ else {
     $content->assign('selected',                array('report_id', 'host_hostname'));
 }
 
-
-displayPage($content, 'index.tpl');
+displayPage($content, 'index', 'index.tpl');
 ?>

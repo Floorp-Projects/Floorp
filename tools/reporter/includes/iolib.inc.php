@@ -70,10 +70,11 @@ function templateStandardVars($object){
     return $object;
 }
 
-function displayPage($object, $objectTemplate, $title = 'Mozilla Reporter'){
+function displayPage($object, $path, $objectTemplate, $title = 'Mozilla Reporter'){
     $page = initializeTemplate();
     $page->assign('content', $object->fetch($objectTemplate));
     $page->assign('title', $title);
+    $page->assign('path', $path);
     $page->display('layout.tpl');
     return;
 }

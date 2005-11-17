@@ -3,48 +3,50 @@ require_once($config['base_path'].'/includes/contrib/adodb/adodb.inc.php');
 
 class query
 {
+        // approved "selectable" and "queryable" fields
+        var $approved_selects = array('count' /*special */,
+                                      'host_id',
+                                      'host_hostname',
+                                      'report_id',
+                                      'report_url',
+                                      'report_host_id',
+                                      'report_problem_type',
+                                      'report_description',
+                                      'report_behind_login',
+                                      'report_useragent',
+                                      'report_platform',
+                                      'report_oscpu',
+                                      'report_language',
+                                      'report_gecko',
+                                      'report_buildconfig',
+                                      'report_product',
+    /*                                'report_email',
+                                      'report_ip',
+    */                                'report_file_date'
+        );
+        var $approved_wheres = array('count',
+                                     'host_hostname',
+                                     'report_id',
+                                     'report_url',
+                                     'report_problem_type',
+                                     'report_description',
+                                     'report_behind_login',
+                                     'report_useragent',
+                                     'report_platform',
+                                     'report_oscpu',
+                                     'report_gecko',
+                                     'report_language',
+                                     'report_gecko',
+                                     'report_buildconfig',
+                                     'report_product',
+                                     'report_file_date'
+        );
+
+
     function query(){}
 
     function getQueryInputs(){
         global $config;
-
-        // approved "selectable" and "queryable" fields
-        $approved_selects = array('count' /*special */,
-                                  'host_id',
-                                  'host_hostname',
-                                  'report_id',
-                                  'report_url',
-                                  'report_host_id',
-                                  'report_problem_type',
-                                  'report_description',
-                                  'report_behind_login',
-                                  'report_useragent',
-                                  'report_platform',
-                                  'report_oscpu',
-                                  'report_language',
-                                  'report_gecko',
-                                  'report_buildconfig',
-                                  'report_product',
-/*                                'report_email',
-                                  'report_ip',
-*/                                'report_file_date'
-        );
-        $approved_wheres = array('host_hostname',
-                                 'report_id',
-                                 'report_url',
-                                 'report_problem_type',
-                                 'report_description',
-                                 'report_behind_login',
-                                 'report_useragent',
-                                 'report_platform',
-                                 'report_oscpu',
-                                 'report_gecko',
-                                 'report_language',
-                                 'report_gecko',
-                                 'report_buildconfig',
-                                 'report_product',
-                                 'report_file_date'
-        );
 
         /*******************
          * ASCDESC
@@ -54,16 +56,6 @@ class query
         } else {
             $ascdesc = 'desc';
         }
-
-        /*******************
-         * ORDER BY
-         *******************/
-        if (isset($_GET['orderby']) && in_array($_GET['orderby'], $approved_wheres)) {
-            $orderby = $_GET['orderby'];
-        } else {
-            $orderby = 'report_file_date';
-        }
-        // no default, since we sub order later on
 
         /*******************
          * SHOW (really "Limit")
@@ -107,7 +99,9 @@ class query
         */
         if ($_GET['selected'] && !isset($_GET['count'])){
             foreach($_GET['selected'] as $selectedChild){
-              $selected[$selectedChild] = $config['fields'][$selectedChild];
+                if(in_array(strtolower($selectedChild), $this->approved_selects)){
+                    $selected[$selectedChild] = $config['fields'][$selectedChild];
+                }
             }
         } else {
 
@@ -149,7 +143,7 @@ class query
                we allow.  Others simly don't make sense, or we don't
                allow them for security purposes.
             */
-            if (in_array($column, $approved_wheres)){
+            if (in_array(strtolower($column), $this->approved_wheres) && strtolower($column) != 'count' && strtolower($column)){
                 // these are our various ways of saying "no value"
                 if (($value != -1) && ($value != null) && ($value != '0')){
                     // if there's a wildcard (%,_) we should use 'LIKE', otherwise '='
@@ -159,7 +153,7 @@ class query
                         $operator = "LIKE";
                     }
                     // Add to query
-                    if (in_array($column, $approved_wheres)){
+                    if (in_array(strtolower($column), $this->approved_wheres)){
                         $where[] = array($column, $operator, $value);
                     }
                 }
@@ -179,7 +173,6 @@ class query
 
     function doQuery($select, $where, $orderby, $ascdesc, $show, $page, $count){
         global $db;
-        $db->debug = true;
 
         /************
          * SELECT
@@ -190,7 +183,7 @@ class query
             // we sanitize on our own
             if ($select_child == 'count'){
                 $sql_select .= 'COUNT( '.$count.' ) AS count';
-                $orderby = 'COUNT';
+                $orderby = 'count';
             } else {
                 $sql_select .= $select_child;
             }
@@ -245,13 +238,15 @@ class query
         }
         $sql_where .= 'host.host_id = report_host_id ';
 
-        /************
-         * OrderBy
-         ************/
-        if($orderby){
+        /*******************
+         * ORDER BY
+         *******************/
+        if (isset($orderby) && in_array(strtolower($orderby), $this->approved_wheres)) {
             $sql_orderby = 'ORDER BY '.$orderby.' ';
+        } else {
+            $sql_orderby = 'ORDER BY report_file_date ';
         }
-        
+
         /*******************
          * Count
          *******************/
@@ -329,22 +324,16 @@ class query
                 } else {
                     $o_ascdesc = 'desc';
                 }
-
-                $column[$columnCount]['url'] = '?'.$continuity_params.'&amp;orderby='.$o_orderby.'&amp;ascdesc='.$o_ascdesc;
+                if((isset($query_input['count']) && $title_name == 'count') || !isset($query_input['count'])){
+                    $column[$columnCount]['url'] = '?'.$continuity_params.'&amp;orderby='.$o_orderby.'&amp;ascdesc='.$o_ascdesc;
+                }
                 $columnCount++;
             }
         }
         return $column;
     }
 
-    function outputHTML($result, $query_input){
-
-        // Continuity
-        $continuity_params = $this->continuityParams($query_input);
-
-        // Columns
-        $columnHeaders = $this->columnHeaders($query_input, $continuity_params);
-
+    function outputHTML($result, $query_input, $continuity_params, $columnHeaders){
         // Data
         $data = array();
         $rowNum = 0;
@@ -358,7 +347,7 @@ class query
                     $data[$rowNum][0]['url']  = '/query/?host_hostname='.$row['host_hostname'];
                 }
                 else {
-                  $data[$rowNum][0]['url']  = '/report/?report_id='.$row['report_id'];
+                    $data[$rowNum][0]['url']  = '/report/?report_id='.$row['report_id'];
                 }
                 $colNum++;
     
@@ -372,7 +361,7 @@ class query
                 $rowNum++;
             }
         }
-        return array('columnHeaders' => $columnHeaders, 'data' => $data);
+        return array('data' => $data);
     }
 
     function outputXML(){}
