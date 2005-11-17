@@ -69,6 +69,7 @@ REQUIRES = xpcom \
 LOCAL_INCLUDES = -I$(srcdir)/../../build
 
 CPPSRCS = \
+          nsAnnoProtocolHandler.cpp \
           nsAnnotationService.cpp \
           nsNavHistory.cpp \
           nsNavBookmarks.cpp \
