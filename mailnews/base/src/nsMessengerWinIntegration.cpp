@@ -459,38 +459,60 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTit
     return NS_OK; 
 
   nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
-  PRBool showAlert = PR_TRUE; 
+  PRBool showAlert = PR_TRUE;
   
   if (prefBranch)
     prefBranch->GetBoolPref(SHOW_ALERT_PREF, &showAlert);
   
   if (showAlert)
   {
-#if 0
-    nsCOMPtr<nsISupportsArray> argsArray;
-    rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
-    NS_ENSURE_SUCCESS(rv, rv);
+#ifdef MOZ_THUNDERBIRD
+    // Since the new mail notification alert isn't ready for primetype yet,
+    // tie it to the showPreviewText pref so testers can try it out
+    // in their builds...
+    PRBool useNewAlert = PR_FALSE;
+    if (prefBranch)
+      prefBranch->GetBoolPref("mail.showPreviewText", &useNewAlert);
 
-    // pass in the array of folders with unread messages
-    nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    ifptr->SetData(mFoldersWithNewMail);
-    ifptr->SetDataIID(&NS_GET_IID(nsISupportsArray));
-    argsArray->AppendElement(ifptr);
+    if (useNewAlert)
+    { 
+      nsCOMPtr<nsISupportsArray> argsArray;
+      rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIMessengerOSIntegration*, this));
-    ifptr->SetData(supports);
-    ifptr->SetDataIID(&NS_GET_IID(nsIObserver));
-    argsArray->AppendElement(ifptr);
+      // pass in the array of folders with unread messages
+      nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      ifptr->SetData(mFoldersWithNewMail);
+      ifptr->SetDataIID(&NS_GET_IID(nsISupportsArray));
+      argsArray->AppendElement(ifptr);
 
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-    nsCOMPtr<nsIDOMWindow> newWindow;
-    rv = wwatch->OpenWindow(0, ALERT_CHROME_URL, "_blank",
-                "chrome,dialog=yes,titlebar=no,popup=yes", argsArray,
-                 getter_AddRefs(newWindow));
-   mAlertInProgress = PR_TRUE;
+      ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIMessengerOSIntegration*, this));
+      ifptr->SetData(supports);
+      ifptr->SetDataIID(&NS_GET_IID(nsIObserver));
+      argsArray->AppendElement(ifptr);
+
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+      nsCOMPtr<nsIDOMWindow> newWindow;
+      rv = wwatch->OpenWindow(0, ALERT_CHROME_URL, "_blank",
+                  "chrome,dialog=yes,titlebar=no,popup=yes", argsArray,
+                   getter_AddRefs(newWindow));
+     mAlertInProgress = PR_TRUE;
+    }
+    else
+    {
+      // this code will go away when the new alert service is ready to be turned on...
+      nsCOMPtr<nsIAlertsService> alertsService (do_GetService(NS_ALERTSERVICE_CONTRACTID, &rv));
+      if (NS_SUCCEEDED(rv))
+      {
+        rv = alertsService->ShowAlertNotification(NS_LITERAL_STRING(NEW_MAIL_ALERT_ICON), nsDependentString(aAlertTitle),
+                                                  nsDependentString(aAlertText), PR_TRUE, 
+                                                  NS_ConvertASCIItoUCS2(aFolderURI), this); 
+        mAlertInProgress = PR_TRUE;
+      }
+    }
 #else
     nsCOMPtr<nsIAlertsService> alertsService (do_GetService(NS_ALERTSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
