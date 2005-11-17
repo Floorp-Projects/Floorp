@@ -593,10 +593,21 @@ function BrowserPopupShowing () {
   /*
    * Open Link as New Tab  
    */ 
+   
   if(document.commandDispatcher.focusedElement && document.commandDispatcher.focusedElement.href) {
 	document.getElementById("link_as_new_tab").hidden=false;
+
+	document.getElementById("item-backbutton").hidden=true;
+	document.getElementById("item-forwardbutton").hidden=true;
+	document.getElementById("item-reloadbutton").hidden=true;
+
   } else {
 	document.getElementById("link_as_new_tab").hidden=true;
+	
+	document.getElementById("item-backbutton").hidden=false;
+	document.getElementById("item-forwardbutton").hidden=false;
+	document.getElementById("item-reloadbutton").hidden=false;
+	
   }
 
   var selectedRange=getBrowser().selectedBrowser.contentDocument.getSelection();
