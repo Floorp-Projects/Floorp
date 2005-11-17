@@ -55,7 +55,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIDirectoryService.h"
-
+#include "nsIWindowWatcher.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
@@ -93,7 +93,7 @@
 #define MAIL_COMMANDLINE_ARG " -mail"
 #define IDI_MAILBIFF 101
 #define UNREAD_UPDATE_INTERVAL	(20 * 1000)	// 20 seconds
-
+#define ALERT_CHROME_URL "chrome://messenger/content/newmailalert.xul"
 #define NEW_MAIL_ALERT_ICON "chrome://messenger/skin/icons/new-mail-alert.png"
 #define SHOW_ALERT_PREF "mail.biff.show_alert"
 
@@ -466,6 +466,32 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTit
   
   if (showAlert)
   {
+#if 0
+    nsCOMPtr<nsISupportsArray> argsArray;
+    rv = NS_NewISupportsArray(getter_AddRefs(argsArray));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // pass in the array of folders with unread messages
+    nsCOMPtr<nsISupportsInterfacePointer> ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    ifptr->SetData(mFoldersWithNewMail);
+    ifptr->SetDataIID(&NS_GET_IID(nsISupportsArray));
+    argsArray->AppendElement(ifptr);
+
+    ifptr = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsISupports> supports = do_QueryInterface(NS_STATIC_CAST(nsIMessengerOSIntegration*, this));
+    ifptr->SetData(supports);
+    ifptr->SetDataIID(&NS_GET_IID(nsIObserver));
+    argsArray->AppendElement(ifptr);
+
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+    nsCOMPtr<nsIDOMWindow> newWindow;
+    rv = wwatch->OpenWindow(0, ALERT_CHROME_URL, "_blank",
+                "chrome,dialog=yes,titlebar=no,popup=yes", argsArray,
+                 getter_AddRefs(newWindow));
+   mAlertInProgress = PR_TRUE;
+#else
     nsCOMPtr<nsIAlertsService> alertsService (do_GetService(NS_ALERTSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
     {
@@ -474,6 +500,7 @@ nsresult nsMessengerWinIntegration::ShowAlertMessage(const PRUnichar * aAlertTit
                                                 NS_ConvertASCIItoUCS2(aFolderURI), this); 
       mAlertInProgress = PR_TRUE;
     }
+#endif
   }
 
   if (!showAlert || NS_FAILED(rv)) // go straight to showing the system tray icon.

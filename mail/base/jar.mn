@@ -48,6 +48,8 @@ messenger.jar:
     content/messenger/startpage-gecko-rtl.png       (content/startpage-gecko-rtl.png)
     content/messenger/messenger.css                 (content/messenger.css)
 *   content/messenger/search.xml                    (content/search.xml)
+*   content/messenger/newmailalert.xul              (content/newmailalert.xul)
+    content/messenger/newmailalert.js               (content/newmailalert.js)
 #ifdef MOZ_USE_GENERIC_BRANDING
 % content branding %content/branding/ xpcnativewrappers=yes
     content/branding/about-credits.png              (content/about-credits.png)

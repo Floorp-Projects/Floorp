@@ -24,7 +24,8 @@ classic.jar:
     skin/classic/messenger/searchDialog.css
     skin/classic/messenger/msgSelectOffline.css
     skin/classic/messenger/filterDialog.css
-    skin/classic/messenger/dialogs.css 
+    skin/classic/messenger/dialogs.css
+    skin/classic/messenger/newmailalert.css
     skin/classic/messenger/addressbook/addressbook.css          (addrbook/addressbook.css)
     skin/classic/messenger/addressbook/abContactsPanel.css      (addrbook/abContactsPanel.css)
     skin/classic/messenger/addressbook/cardDialog.css           (addrbook/cardDialog.css)
