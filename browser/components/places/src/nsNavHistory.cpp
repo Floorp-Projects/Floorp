@@ -3287,8 +3287,7 @@ nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
 
 NS_IMPL_ISUPPORTS1(nsNavHistoryResultNode, nsINavHistoryResultNode)
 
-nsNavHistoryResultNode::nsNavHistoryResultNode() : mID(0), mExpanded(PR_FALSE),
-                                                   mQueriedChildren(PR_FALSE)
+nsNavHistoryResultNode::nsNavHistoryResultNode() : mID(0), mExpanded(PR_FALSE)
 {
 }
 
@@ -3544,6 +3543,23 @@ nsNavHistoryResult::FilledAllResults()
   InitializeVisibleList();
 }
 
+// nsNavHistoryResult::BuildChildrenFor
+
+nsresult
+nsNavHistoryResult::BuildChildrenFor(nsNavHistoryResultNode *aNode)
+{
+  nsresult rv = aNode->BuildChildren();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  FillTreeStats(aNode, aNode->mIndentLevel);
+
+  for (PRInt32 i = 0; i < aNode->mChildren.Count(); ++i) {
+    // XXX inefficient, need to be able to InsertElementsAt from nsCOMArray!
+    mAllElements.InsertElementAt(aNode->mChildren[i],
+                                 aNode->mFlatIndex + 1 + i);
+  }
+  return NS_OK;
+}
 
 // nsNavHistoryResult::GetTopLevelNodeCount
 
@@ -4070,8 +4086,12 @@ nsNavHistoryResult::BuildVisibleSection(
     }
 
     aVisible->AppendElement(cur);
-    if (cur->mChildren.Count() > 0 && cur->mExpanded)
-      BuildVisibleSection(cur->mChildren, aVisible);
+    if (cur->mExpanded) {
+      BuildChildrenFor(cur);
+      if (cur->mChildren.Count() > 0) {
+        BuildVisibleSection(cur->mChildren, aVisible);
+      }
+    }
   }
 }
 
@@ -4214,7 +4234,10 @@ NS_IMETHODIMP nsNavHistoryResult::IsContainerEmpty(PRInt32 index, PRBool *_retva
 {
   if (index < 0 || index >= mVisibleElements.Count())
     return NS_ERROR_INVALID_ARG;
-  *_retval = (VisibleElementAt(index)->mChildren.Count() == 0);
+
+  nsNavHistoryResultNode *node = VisibleElementAt(index);
+  *_retval = (node->mType != nsINavHistoryResultNode::RESULT_TYPE_FOLDER &&
+              node->mChildren.Count() == 0);
   return NS_OK;
 }
 
@@ -4427,6 +4450,8 @@ NS_IMETHODIMP nsNavHistoryResult::ToggleOpenState(PRInt32 index)
     mHistoryService->SaveCollapseItem(curNode->mTitle);
   } else {
     // expand
+    BuildChildrenFor(curNode);
+
     nsVoidArray addition;
     BuildVisibleSection(curNode->mChildren, &addition);
     InsertVisibleSection(addition, index + 1);

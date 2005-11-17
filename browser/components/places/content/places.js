@@ -78,7 +78,10 @@ PlacesPage.init = function PP_init() {
   result.QueryInterface(Ci.nsITreeView);
   var placeContent = document.getElementById("placeContent");
   placeContent.view = result;
-  
+
+  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
+  document.getElementById("placesList").view = bmsvc.bookmarks.QueryInterface(Ci.nsITreeView);
+
   this._showPlacesUI();
 };
 

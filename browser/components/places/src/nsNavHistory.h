@@ -120,6 +120,9 @@ public:
 protected:
   virtual ~nsNavHistoryResultNode() {}
 
+  // Generate the children for this node.
+  virtual nsresult BuildChildren() { return NS_OK; }
+
   // parent of this element, NULL if no parent. Filled in by FillAllElements
   // in the result set.
   nsNavHistoryResultNode* mParent;
@@ -153,9 +156,6 @@ protected:
   // this is set to the default in the constructor
   PRBool mExpanded;
 
-  // for bookmark folders, stores whether we've queried for the child list yet
-  PRBool mQueriedChildren;
-
   friend class nsNavHistory;
   friend class nsNavHistoryResult;
 };
@@ -182,6 +182,8 @@ public:
   void ApplyTreeState(
       const nsDataHashtable<nsStringHashKey, int>& aExpanded);
   void FilledAllResults();
+
+  nsresult BuildChildrenFor(nsNavHistoryResultNode *aNode);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYRESULT
