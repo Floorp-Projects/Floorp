@@ -101,30 +101,12 @@
   
   <hbox flex="1" id="placesView">
     <vbox flex="1">
-      <tree id="placesList" class="placesTree" flex="1" datasources="rdf:bookmarks" ref="NC:BookmarksTopRoot" 
-            flags="dont-build-content" hidecolumnpicker="true" context="placesContext">
+      <tree id="placesList" class="placesTree" flex="1"
+            hidecolumnpicker="true" context="placesContext">
         <treecols>
-          <treecol id="Name" flex="1" primary="true" hideheader="true"/>
+          <treecol id="title" flex="1" primary="true" hideheader="true"/>
         </treecols>
-        <template>
-          <conditions>
-            <content uri="?uri"/>
-            <member container="?uri" child="?folder"/>
-            <triple subject="?folder" predicate="http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
-                    object="http://home.netscape.com/NC-rdf#Folder"/>
-            <triple subject="?folder" predicate="http://home.netscape.com/NC-rdf#Name"
-                    object="?Name"/>
-          </conditions>
-          <action>
-            <treechildren>
-              <treeitem uri="?folder">
-                <treerow>
-                  <treecell label="?Name"/>
-                </treerow>                
-              </treeitem>              
-            </treechildren>            
-          </action>          
-        </template>
+        <treechildren id="placesListChildren" flex="1"/>
       </tree>
       <hbox class="commands">
         <button id="newPlace" command="placesCmd_new:folder"/>

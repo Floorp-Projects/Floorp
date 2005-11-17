@@ -45,15 +45,14 @@ class nsNavBookmarks;
 class nsNavFolderResultNode : public nsNavHistoryResultNode
 {
 public:
-  nsNavFolderResultNode() :
-    nsNavHistoryResultNode(), mQueriedChildren(PR_FALSE) { }
+  nsNavFolderResultNode() : nsNavHistoryResultNode(),
+                            mBuiltChildren(PR_FALSE) { }
 
-  NS_IMETHOD GetChildCount(PRInt32 *aChildCount);
-  NS_IMETHOD GetChild(PRInt32 aIndex, nsINavHistoryResultNode **aChild);
+  virtual nsresult BuildChildren();
 
 private:
   friend class nsNavBookmarks;
-  PRBool mQueriedChildren;
+  PRBool mBuiltChildren;
 };
 
 class nsNavBookmarks : public nsINavBookmarksService,
