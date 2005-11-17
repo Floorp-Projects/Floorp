@@ -43,7 +43,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 PROGRAM		= TestLineBreak$(BIN_SUFFIX)
-MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= xpcom \
 		  string \
@@ -51,9 +50,12 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= TestLineBreak.cpp
 
-LIBS		= $(XPCOM_LIBS) $(NSPR_LIBS)
+LIBS		= \
+		  $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+		  $(XPCOM_LIBS) \
+		  $(NSPR_LIBS) \
+		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= -I$(srcdir)/../public
-

@@ -42,8 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOZILLA_INTERNAL_API = 1
-
 CPPSRCS		= StringBundleTest.cpp
 REQUIRES	= xpcom \
 		  string \
@@ -63,6 +61,7 @@ EXPORT_RESOURCE	= \
 		$(NULL)
 
 LIBS		= \
+		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(MOZ_JS_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
