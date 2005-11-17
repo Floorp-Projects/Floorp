@@ -204,34 +204,6 @@ NS_IMETHODIMP nsDeviceContextMac :: GetScrollBarDimensions(float &aWidth, float 
 
 
 /** ---------------------------------------------------
- *  
- */
-static bool HasAppearanceManager()
-{
-
-#define APPEARANCE_MIN_VERSION	0x0110		// we require version 1.1
-	
-	static bool inited = false;
-	static bool hasAppearanceManager = false;
-
-	if (inited)
-		return hasAppearanceManager;
-	inited = true;
-
-	SInt32 result;
-	if (::Gestalt(gestaltAppearanceAttr, &result) != noErr)
-		return false;		// no Appearance Mgr
-
-	if (::Gestalt(gestaltAppearanceVersion, &result) != noErr)
-		return false;		// still version 1.0
-
-	hasAppearanceManager = (result >= APPEARANCE_MIN_VERSION);
-
-	return hasAppearanceManager;
-}
-
-
-/** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
  */
@@ -281,7 +253,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
             aFont->name.AssignLiteral("sans-serif");
             aFont->size = NSToCoordRound(aFont->size * 0.875f); // quick hack
       }
-      else if (HasAppearanceManager())
+      else
       {
         ThemeFontID fontID = kThemeViewsFont;
         switch (aID)
@@ -307,6 +279,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
               // moz
           case eSystemFont_Tooltips:      fontID = kThemeSmallSystemFont;    break;
           case eSystemFont_Widget:        fontID = kThemeSmallSystemFont;    break;
+          default: break;
         }
 
         Str255 fontName;
@@ -371,10 +344,6 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
           aFont->style = NS_FONT_STYLE_ITALIC;
         if (fontStyle & underline)
           aFont->decorations = NS_FONT_DECORATION_UNDERLINE;
-      }
-      else
-      {
-        aFont->name.AssignLiteral("geneva");
       }
       break;
 
@@ -470,7 +439,6 @@ nsDeviceContextMac :: FindScreenForSurface ( nsIScreen** outScreen )
   Rect bounds;
   ::GetWindowPortBounds ( window, &bounds );
 
-  nsresult rv = NS_OK;
   if ( mScreenManager ) {
     if ( !(bounds.top || bounds.left || bounds.bottom || bounds.right) ) {
       NS_WARNING ( "trying to find screen for sizeless window" );
@@ -514,8 +482,8 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceSurfaceDimensions(PRInt32 & outWidth,
 
 	if( mSpec ) {
 	  // we have a printer device
-		outWidth = (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits;
-		outHeight = (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits;
+		outWidth = NS_STATIC_CAST(PRInt32, (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits);
+		outHeight = NS_STATIC_CAST(PRInt32, (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits);
 	}
 	else {
     // we have a screen device. find the screen that the window is on and
@@ -550,8 +518,8 @@ nsDeviceContextMac::GetRect(nsRect &aRect)
 	  // we have a printer device
 	  aRect.x = 0;
 	  aRect.y = 0;
-		aRect.width = (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits;
-		aRect.height = (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits;
+		aRect.width = NS_STATIC_CAST(nscoord, (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits);
+		aRect.height = NS_STATIC_CAST(nscoord, (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits);
 	}
 	else {
     // we have a screen device. find the screen that the window is on and
@@ -586,8 +554,8 @@ NS_IMETHODIMP nsDeviceContextMac::GetClientRect(nsRect &aRect)
 	if( mSpec ) {
 	  // we have a printer device
 	  aRect.x = aRect.y = 0;
-		aRect.width = (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits;
-		aRect.height = (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits;
+		aRect.width = NS_STATIC_CAST(nscoord, (mPageRect.right-mPageRect.left)*mDevUnitsToAppUnits);
+		aRect.height = NS_STATIC_CAST(nscoord, (mPageRect.bottom-mPageRect.top)*mDevUnitsToAppUnits);
 	}
 	else {
     // we have a screen device. find the screen that the window is on and
@@ -642,8 +610,8 @@ NS_IMETHODIMP nsDeviceContextMac::GetDeviceContextFor(nsIDeviceContextSpec *aDev
         double top, left, bottom, right;
         printingContext->GetPageRect(&top, &left, &bottom, &right);
         Rect& pageRect = macDC->mPageRect;
-        pageRect.top = top, pageRect.left = left;
-        pageRect.bottom = bottom, pageRect.right = right;
+        pageRect.top = (PRInt16)top, pageRect.left = (PRInt16)left;
+        pageRect.bottom = (PRInt16)bottom, pageRect.right = (PRInt16)right;
     }
 
 
@@ -800,7 +768,7 @@ void nsDeviceContextMac :: InitFontInfoList()
 													 		kUnicodeUTF8Format);
         // enumerate all fonts.
         TECObjectRef converter = NULL;
-        TextEncoding oldFontEncoding = NULL;
+        TextEncoding oldFontEncoding = 0;
         ATSFontFamilyRef fontFamily;
         while (::ATSFontFamilyIteratorNext(iter, &fontFamily) == noErr) {
 		    // we'd like to use ATSFontFamilyGetName here, but it's ignorant of the
@@ -820,11 +788,11 @@ void nsDeviceContextMac :: InitFontInfoList()
                     continue;
             }
             // convert font name to UNICODE.
-			UInt8 unicodeFontName[sizeof(fontName)];
+			char unicodeFontName[sizeof(fontName)];
 			ByteCount actualInputLength, actualOutputLength;
 			err = ::TECConvertText(converter, &fontName[1], fontName[0], &actualInputLength, 
 										(TextPtr)unicodeFontName , sizeof(unicodeFontName), &actualOutputLength);	
-			unicodeFontName[actualOutputLength] = NULL;
+			unicodeFontName[actualOutputLength] = '\0';
 
 			nsString temp = NS_ConvertUTF8toUTF16(nsDependentCString(unicodeFontName));
     		FontNameKey key(temp);
