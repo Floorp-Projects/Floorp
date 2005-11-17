@@ -1,7 +1,7 @@
 #placesView {
   -moz-appearance: tabpanels;
   margin: -10px;
-  padding: 10px;
+  padding: 8px 6px 6px 8px;
 }
 
 .placesTree {
@@ -10,11 +10,15 @@
 }
 
 #placesList {
-  margin: 7px 0px 10px 6px;
+  margin: 7px 0px 7px 6px;
 }
 
 #placeContent {
-  margin: 7px 6px 10px 0px;
+  margin: 0px 6px 7px 0px;
+}
+
+#showAdvancedSearch {
+  font-size: smaller;
 }
 
 #splitter {
@@ -52,5 +56,26 @@
 
 #placesContentChildren::-moz-tree-cell-text(title, separator, selected, focus) {
   color: HighlightText;
+}
+
+.commands {
+  padding-bottom: 5px;  
+}
+
+#searchFilter {
+  -moz-binding: url("chrome://browser/content/places/places.xml#textbox-timed-arbitrary");
+}
+
+#filterCollection {
+  -moz-appearance: none;
+  background-color: transparent;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+  min-width: 0px;
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://browser/skin/Search-bar.png");
+  -moz-user-focus: ignore;
 }
 

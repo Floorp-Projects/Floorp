@@ -102,4 +102,20 @@
   "Title">
 <!ENTITY col.url.label
   "Location">
+<!ENTITY advancedSearch.label
+  "More Options...">
+<!ENTITY advancedSearch.accesskey
+  "O">
+<!ENTITY search.label
+  "Search:">
+<!ENTITY search.accesskey
+  "S">
+<!ENTITY search.collection.label
+  "Current Collection Only">
+<!ENTITY search.collection.accesskey
+  "C">
+<!ENTITY search.all.label
+  "All Bookmarks and History">
+<!ENTITY search.all.accesskey
+  "A">
 
