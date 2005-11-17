@@ -85,6 +85,7 @@ public:
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
   // Let applet decide whether it wants focus from mouse clicks
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+  virtual PRUint32 GetDesiredIMEState();
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -325,3 +326,12 @@ nsHTMLAppletElement::IsFocusable(PRInt32 *aTabIndex)
 
   return nsGenericHTMLElement::IsFocusable(aTabIndex);
 }
+
+PRUint32
+nsHTMLAppletElement::GetDesiredIMEState()
+{
+  if (nsObjectLoadingContent::Type() == eType_Plugin)
+    return nsIContent::IME_STATUS_ENABLE;
+  return nsIContent::GetDesiredIMEState();
+}
+

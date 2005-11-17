@@ -131,7 +131,8 @@ public:
   NS_IMETHOD GetTabIndex(PRInt32* aTabIndex);
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
-  
+  virtual PRUint32 GetDesiredIMEState();
+
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -603,4 +604,13 @@ nsHTMLSharedElement::IsFocusable(PRInt32 *aTabIndex)
   }
 
   return nsGenericHTMLElement::IsFocusable(aTabIndex);
+}
+
+PRUint32
+nsHTMLSharedElement::GetDesiredIMEState()
+{
+  if (mNodeInfo->Equals(nsHTMLAtoms::embed) &&
+      nsObjectLoadingContent::Type() == eType_Plugin)
+    return nsIContent::IME_STATUS_ENABLE;
+  return nsIContent::GetDesiredIMEState();
 }
