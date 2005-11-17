@@ -110,8 +110,9 @@
      <focushandler id="focus_nav-bar"        target="nav-bar"        accessfocus="menu-button"   accessnextrule="focus_toolbar-view"   accessprevrule="focus_tabcontent" />
      <focushandler id="focus_toolbar-view"   target="toolbar-view"   accessfocus="zoomplusitem"  accessnextrule="focus_toolbar-rss"    accessprevrule="focus_nav-bar" />
      <focushandler id="focus_toolbar-rss"    target="toolbar-rss"    accessfocus="rss-close"     accessnextrule="focus_toolbar-search" accessprevrule="focus_toolbar-view" />
-     <focushandler id="focus_toolbar-search" target="toolbar-search" accessfocus="search-close"  accessnextrule="focus_content"        accessprevrule="focus_toolbar-rss" />
-     <focushandler id="focus_content"        target="content"        accessfocus="#tabContainer" accessnextrule="focus_tabcontent"     accessprevrule="focus_toolbar-search" />
+     <focushandler id="focus_toolbar-search" target="toolbar-search" accessfocus="search-close"  accessnextrule="focus_toolbar-find"   accessprevrule="focus_toolbar-rss" />
+     <focushandler id="focus_toolbar-find"   target="toolbar-find"   accessfocus="find-close"    accessnextrule="focus_content"        accessprevrule="focus_toolbar-search" />
+     <focushandler id="focus_content"        target="content"        accessfocus="#tabContainer" accessnextrule="focus_tabcontent"     accessprevrule="focus_toolbar-find" />
     </focusnavigation>  
 
 
