@@ -35,9 +35,12 @@
       <command id="placesCmd_rename" label="&cmd.rename.label;" accesskey="&cmd.rename.accesskey;"/>
     </commandset>
     <commandset type="link" readonly="true">
-      <command id="placesCmd_open" label="&cmd.open.label;" accesskey="&cmd.open.accesskey;"/>
-      <command id="placesCmd_open:window" label="&cmd.open_window.label;" accesskey="&cmd.open_window.accesskey;"/>
-      <command id="placesCmd_open:tab" label="&cmd.open_tab.label;" accesskey="&cmd.open_tab.accesskey;"/>
+      <command id="placesCmd_open" label="&cmd.open.label;" accesskey="&cmd.open.accesskey;"
+               oncommand="PlacesPage.openLinkInCurrentWindow();"/>
+      <command id="placesCmd_open:window" label="&cmd.open_window.label;" accesskey="&cmd.open_window.accesskey;"
+               oncommand="PlacesPage.openLinkInNewWindow();"/>
+      <command id="placesCmd_open:tab" label="&cmd.open_tab.label;" accesskey="&cmd.open_tab.accesskey;"
+               oncommand="PlacesPage.openLinkInNewTab();"/>
     </commandset>
     <commandset type="link">
     </commandset>
@@ -152,7 +155,8 @@
       </hbox>
       <deck id="content" flex="1">
         <vbox flex="1">
-          <tree id="placeContent" class="placesTree" context="placesContext" flex="1">
+          <tree id="placeContent" class="placesTree" context="placesContext" flex="1"
+                ondblclick="PlacesPage.mouseLoadURIInBrowser(event);">
             <treecols>
               <treecol label="&col.title.label;" id="title" flex="1" primary="true"/>
               <treecol label="&col.url.label;" id="url" flex="1"/>

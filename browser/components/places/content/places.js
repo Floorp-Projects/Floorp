@@ -148,3 +148,70 @@ PlacesPage._buildQuery = function PP__buildQuery(filterString) {
   placeContent.view = result;
 };
 
+PlacesPage._getLoadFunctionForEvent = 
+function PP__getLoadFunctionForEvent(event) {
+  if (event.button != 0)
+    return null;
+  
+  if (event.ctrlKey)
+    return this.openLinkInNewTab;
+  else if (event.shiftKey)
+    return this.openLinkInNewWindow;
+  return this.openLinkInCurrentWindow;
+};
+
+// XXXben this is actually an AVI interface method and should be defined as such.
+PlacesPage._getSelectedURL = function PP__getSelectedURL() {
+  // Get the selected item
+  var placesContent = document.getElementById("placeContent");
+  var view = placesContent.view;
+  var selection = view.selection;
+  var rc = selection.getRangeCount();
+  if (rc != 1) 
+    return null;
+  var min = { }, max = { };
+  selection.getRangeAt(0, min, max);
+  
+  // Cannot load containers
+  if (view.isContainer(min.value) || view.isSeparator(min.value))
+    return null;
+    
+  var result = view.QueryInterface(Ci.nsINavHistoryResult);
+  return result.nodeForTreeIndex(min.value).url;
+};
+
+/**
+ * Loads a URL in the appropriate tab or window, given the user's preference
+ * specified by modifier keys tracked by a DOM event
+ * @param   event
+ *          The DOM Mouse event with modifier keys set that track the user's
+ *          preferred destination window or tab.
+ */
+PlacesPage.mouseLoadURIInBrowser = function PP_loadURIInBrowser(event) {
+  this._getLoadFunctionForEvent(event)();
+};
+
+/**
+ * Loads the selected URL in a new tab. 
+ */
+PlacesPage.openLinkInNewTab = function PP_openLinkInNewTab() {
+  var url = this._getSelectedURL();
+  this._topWindow.openNewTabWith(url, null, null);
+};
+
+/**
+ * Loads the selected URL in a new window.
+ */
+PlacesPage.openLinkInNewWindow = function PP_openLinkInNewWindow() {
+  var url = this._getSelectedURL();
+  this._topWindow.openNewWindowWith(url, null, null);
+};
+
+/**
+ * Loads the selected URL in the current window, replacing the Places page.
+ */
+PlacesPage.openLinkInCurrentWindow = function PP_openLinkInCurrentWindow() {
+  var url = this._getSelectedURL();
+  this._topWindow.loadURI(url, null, null);
+};
+

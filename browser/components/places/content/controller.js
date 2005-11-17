@@ -79,14 +79,14 @@ function PC_isCommandEnabled(command) {
 
 PlacesController.prototype.supportsCommand = 
 function PC_supportsCommand(command) {
-  LOG("supportsCommand: " + command);
+  //LOG("supportsCommand: " + command);
   return document.getElementById(command) != null;
 };
 
 PlacesController.prototype.doCommand = 
 function PC_doCommand(command) {
   LOG("doCommand: " + command);
-
+  
 };
 
 PlacesController.prototype.doCommandWithParams = 
