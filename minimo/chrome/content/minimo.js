@@ -305,7 +305,6 @@ function MiniNavStartup()
 function BrowserWithoutSNAV(e) {
  if(gSNAV==1||gSNAV==-1) {
 	gSNAV=0;
-      gURLBar.value="0"+gURLBar.value;
       gPref.setBoolPref("snav.enabled", false);                                   
  } 
 }
@@ -313,7 +312,6 @@ function BrowserWithoutSNAV(e) {
 function BrowserWithSNAV(e) {
  if(gSNAV==0||gSNAV==-1) {
 	gSNAV=1;
-      gURLBar.value="1"+gURLBar.value;
       gPref.setBoolPref("snav.enabled", true);                                   
  } 
 }
@@ -358,24 +356,14 @@ function eventHandlerMenu(e) {
 				if(getBrowser().tabContainer) {
 					getBrowser().selectedTab.focus();
 
-					if(getBrowser().mStrip.collapsed) {
-				
-						BrowserWithSNAV();
-
+					if(getBrowser().mStrip.collapsed) {				
+						getBrowser().contentWindow.focus();
 					} 
 
 				}
 			} 
-			if(tempElement=="#tabContent") { 
-				// THis is hack to go backwards and get into browser area. 
-				// The previous approach worked in toolkitFF desktop and failed in device. 
-				//document.commandDispatcher.advanceFocusIntoSubtree(document.getElementById("nav-bar"));
-				//document.commandDispatcher.rewindFocus();
-				
+			if(tempElement=="#tabContent") { 			
 				getBrowser().contentWindow.focus();
-				
-				BrowserWithSNAV();
-
 			} 
        
 		  } else { 
