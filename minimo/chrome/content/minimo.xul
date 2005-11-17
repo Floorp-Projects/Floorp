@@ -45,6 +45,7 @@
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-view.xul"?>
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-rss.xul"?>
 <?xul-overlay href="chrome://minimo/content/toolbars/toolbar-search.xul"?>
+<?xul-overlay href="chrome://minimo/content/toolbars/toolbar-find.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % minimoDTD SYSTEM "chrome://minimo/locale/minimo.dtd" >
@@ -82,6 +83,7 @@
     <command id="cmd_ViewOptions"            oncommand="BrowserViewOptions()"/>
     <command id="cmd_ViewRSS"                oncommand="BrowserViewRSS()"/>
     <command id="cmd_ViewSearch"             oncommand="BrowserViewSearch()"/>
+    <command id="cmd_ViewFind"               oncommand="BrowserViewFind()"/>
     <command id="cmd_BrowserBack"            oncommand="BrowserBack()" />
     <command id="cmd_BrowserForward"         oncommand="BrowserForward()" />
     <command id="cmd_BrowserReload"          oncommand="BrowserReload()" />
@@ -205,6 +207,7 @@
         <menuitem id="command_ViewOptions" class="separator-menu"  type="checkbox" command="cmd_ViewOptions" label="&zoom.label;"  /> 
         <menuitem id="command_ViewRSS"  type="checkbox" command="cmd_ViewRSS" label="&rssBMtitle.label;"  /> 
         <menuitem id="command_ViewSearch"  type="checkbox" command="cmd_ViewSearch" label="&searchToolbar.label;"  /> 
+        <menuitem id="command_ViewFind"    type="checkbox" command="cmd_ViewFind" label="&findToolbar.label;"  /> 
         
         <!-- separator for now in CSS - need to redesign -->
         <menuitem id="command_Quit" class="separator-menu"  command="cmd_Quit" label="&quit.label;"  /> 
