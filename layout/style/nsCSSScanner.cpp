@@ -786,10 +786,7 @@ PRBool nsCSSScanner::NextURL(nsresult& aErrorCode, nsCSSToken& aToken)
         ch = Read(aErrorCode);
         if (ch < 0) break;
         if (ch == CSS_ESCAPE) {
-          ch = ParseEscape(aErrorCode);
-          if (0 < ch) {
-            ident.Append(PRUnichar(ch));
-          }
+          ParseAndAppendEscape(aErrorCode, ident);
         } else if ((ch == '"') || (ch == '\'') || (ch == '(')) {
           // This is an invalid URL spec
           ok = PR_FALSE;
@@ -825,12 +822,14 @@ PRBool nsCSSScanner::NextURL(nsresult& aErrorCode, nsCSSToken& aToken)
 }
 
 
-PRInt32 nsCSSScanner::ParseEscape(nsresult& aErrorCode)
+void
+nsCSSScanner::ParseAndAppendEscape(nsresult& aErrorCode, nsString& aOutput)
 {
   PRUint8* lexTable = gLexTable;
   PRInt32 ch = Peek(aErrorCode);
   if (ch < 0) {
-    return CSS_ESCAPE;
+    aOutput.Append(CSS_ESCAPE);
+    return;
   }
   if ((ch <= 255) && ((lexTable[ch] & IS_HEX_DIGIT) != 0)) {
     PRInt32 rv = 0;
@@ -877,18 +876,22 @@ PRInt32 nsCSSScanner::ParseEscape(nsresult& aErrorCode)
         }
       }
     }
-    return rv;
+    NS_ASSERTION(rv >= 0, "How did rv become negative?");
+    if (rv > 0) {
+      AppendUCS4ToUTF16(ENSURE_VALID_CHAR(rv), aOutput);
+    }
+    return;
   } else {
     // "Any character except a hexidecimal digit can be escaped to
     // remove its special meaning by putting a backslash in front"
     // -- CSS1 spec section 7.1
-    if (EatNewline(aErrorCode)) { // skip escaped newline
-      ch = 0;
-    }
-    else {
+    if (!EatNewline(aErrorCode)) { // skip escaped newline
       (void) Read(aErrorCode);
+      if (ch > 0) {
+        aOutput.Append(ch);
+      }
     }
-    return ch;
+    return;
   }
 }
 
@@ -903,19 +906,16 @@ PRBool nsCSSScanner::GatherIdent(nsresult& aErrorCode, PRInt32 aChar,
                                  nsString& aIdent)
 {
   if (aChar == CSS_ESCAPE) {
-    aChar = ParseEscape(aErrorCode);
+    ParseAndAppendEscape(aErrorCode, aIdent);
   }
-  if (0 < aChar) {
-    aIdent.Append(PRUnichar(aChar));
+  else if (0 < aChar) {
+    aIdent.Append(aChar);
   }
   for (;;) {
     aChar = Read(aErrorCode);
     if (aChar < 0) break;
     if (aChar == CSS_ESCAPE) {
-      aChar = ParseEscape(aErrorCode);
-      if (0 < aChar) {
-        aIdent.Append(PRUnichar(aChar));
-      }
+      ParseAndAppendEscape(aErrorCode, aIdent);
     } else if ((aChar > 255) || ((gLexTable[aChar] & IS_IDENT) != 0)) {
       aIdent.Append(PRUnichar(aChar));
     } else {
@@ -1125,13 +1125,10 @@ PRBool nsCSSScanner::ParseString(nsresult& aErrorCode, PRInt32 aStop,
       break;
     }
     if (ch == CSS_ESCAPE) {
-      ch = ParseEscape(aErrorCode);
-      if (ch < 0) {
-        return PR_FALSE;
-      }
+      ParseAndAppendEscape(aErrorCode, aToken.mIdent);
     }
-    if (0 < ch) {
-      aToken.mIdent.Append(PRUnichar(ch));
+    else if (0 < ch) {
+      aToken.mIdent.Append(ch);
     }
   }
   return PR_TRUE;
