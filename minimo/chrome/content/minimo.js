@@ -291,14 +291,6 @@ function MiniNavStartup()
    */
   getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,false);
   document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
-
-
-  /* 
-   * Toolkit in Minimo, box strip is active, as opposite to in FF
-   */
-  if(getBrowser().mPanelContainer.childNodes.length==1) {
-	getBrowser().mStrip.collapsed=true;
-  }
   
 }
 
@@ -729,7 +721,11 @@ function DoFullScreen()
   
   document.getElementById("nav-bar").hidden = gFullScreen;
 
-  getBrowser().setStripVisibilityTo(!gFullScreen);
+  // Maybe a simpler approach here, via some attribute or documented interface?
+  if(getBrowser().mPanelContainer.childNodes.length==1) {
+	  getBrowser().setStripVisibilityTo(!gFullScreen);
+  } 
+  
   window.fullScreen = gFullScreen;  
 
   document.getElementById("nav-bar-contextual").hidden = !gFullScreen;    
