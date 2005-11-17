@@ -1151,7 +1151,7 @@ nsNavHistory::ExecuteQueries(const nsINavHistoryQuery** aQueries, PRUint32 aQuer
 
   // bind parameters
   numParameters = 0;
-  for (PRUint32 i = 0; i < aQueryCount; i ++) {
+  for (i = 0; i < aQueryCount; i ++) {
     PRInt32 clauseParameters = 0;
     rv = BindQueryClauseParameters(statement, numParameters,
                                    NS_CONST_CAST(nsINavHistoryQuery*, aQueries[i]),

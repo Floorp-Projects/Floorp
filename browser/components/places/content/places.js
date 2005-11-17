@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla History System
+ * The Original Code is Mozilla Places System.
  *
  * The Initial Developer of the Original Code is Google Inc.
  * Portions created by the Initial Developer are Copyright (C) 2005
@@ -55,7 +55,7 @@ PlacesPage.init = function PP_init() {
   function onTabSelect(event) {
     self.onTabSelect(event);
   }
-  this._tabbrowser.addEventListener("select", onTabSelect, false);
+  this._tabbrowser.mTabContainer.addEventListener("select", onTabSelect, false);
 
   var placesList = document.getElementById("placesList");
   var placeContent = document.getElementById("placeContent");
@@ -106,64 +106,45 @@ PlacesPage._hidePlacesUI = function PP__hidePlacesUI() {
   statusbar.hidden = this._oldStatusBarState;
 };
 
-PlacesPage.setPopulator = 
-function PP_setPopulator(uiID, providerType, populator) {
-  if (!(uiID in this._populators))
-    this._populators[uiID] = { };
-  // There can only be one populator per provider type. 
-  this._populators[uiID][providerType] = populator;
-};
-
-PlacesPage.removePopulator = 
-function PP_removePopulator(uiID, providerType) {
-  if (!(uiID in this._populators))
-    throw Cr.NS_ERROR_INVALID_ARGUMENT;
-  delete this._populators[uiID][providerType];
-};
-
 PlacesPage.loadQuery = function PP_loadQuery(uri) {
   var placeURI = uri.QueryInterface(Ci.mozIPlaceURI);
   this._updateUI(placeURI.providerType);
 };
 
-function CommandBarPopulator() {
-  this.element = document.getElementById("commandBar");
-  this.newFolder = document.getElementById("commandBar_newFolder");
-  this.groupOptions = document.getElementById("commandBar_groupOptions");
-  this.groupOption0 = document.getElementById("commandBar_groupOption0");
-  this.groupOption1 = document.getElementById("commandBar_groupOption1");
-  this.saveSearch = document.getElementById("commandBar_saveSearch");
-  
-  this.FOLDER_BUTTON = 0x01;
-  this.GROUP_OPTIONS = 0x02;
-  this.SAVE_SEARCH = 0x04;
-    
-  function Config(buttons, folderCommand, group0Command, group1Command) {
-    this.buttons = buttons;
-    this.folderCommand = folderCommand;
-    this.group0Command = group0Command;
-    this.group1Command = group1Command;
+PlacesPage.showAdvancedOptions = function PP_showAdvancedOptions() {
+  alert("Show advanced query builder.");
+};
+
+PlacesPage.setFilterCollection = function PP_setFilterCollection(collectionName) {
+  var searchFilter = document.getElementById("searchFilter");
+  searchFilter.setAttribute("collection", collectionName);
+};
+
+PlacesPage.applyFilter = function PP_applyFilter(filterString) {
+  var searchFilter = document.getElementById("searchFilter");
+  var collectionName = searchFilter.getAttribute("collection");
+  if (collectionName == "collection") {
+    alert("Search Only This Collection Not Yet Supported");
+    this.setFilterCollection("all");
   }
-  
-  this.config = { 
-    bookmark: new Config(self.FOLDER_BUTTON, null, null, null),
-    history:  new Config(self.GROUP_OPTIONS, null, "placesCmd_groupby:site",
-                         "placesCmd_groupby:page"),
-    search:   new Config(self.GROUP_OPTIONS | self.SAVE_SEARCH, null, 
-                         "placesCmd_groupby:site", "placesCmd_groupby:page"),
-    feed:     new Config(self.GROUP_OPTIONS | self.SAVE_SEARCH | self.FOLDER_BUTTON, 
-                         "placesCmd_subscribe", "placesCmd_groupby:feed", 
-                         "placesCmd_groupby:post")
-  };
-}
-CommandBarPopulator.prototype.exec = 
-function CBP_exec(providerType) {
-  var config = this.config[providerType];
-  this.newFolder.hidden = !(config.buttons & this.FOLDER_BUTTON);
-  this.groupOptions.hidden = !(config.buttons & this.GROUP_OPTIONS);
-  this.saveSearch.hidden = !(config.buttons & this.SAVE_SEARCH);
-  this.newFolder.command = config.folderCommand;
-  this.groupOption0.command = config.group0Command;
-  this.groupOption1.command = config.group1Command;
+  else if (collectionName == "all") {
+    this._buildQuery(filterString);
+  }
+};
+
+PlacesPage._buildQuery = function PP__buildQuery(filterString) {
+  const NH = Ci.nsINavHistory;  
+  const NHQO = Ci.nsINavHistoryQueryOptions;
+  var places = Cc["@mozilla.org/browser/nav-history;1"].getService(NH);
+  var query = places.getNewQuery();
+  query.searchTerms = filterString;
+  var options = places.getNewQueryOptions();
+  options.setGroupingMode([NHQO.GROUP_BY_HOST], 1);
+  options.setSortingMode(NHQO.SORT_BY_NONE);
+  options.setResultType(NHQO.RESULT_TYPE_URL);
+  var result = places.executeQuery(query, options);
+  result.QueryInterface(Ci.nsITreeView);
+  var placeContent = document.getElementById("placeContent");
+  placeContent.view = result;
 };
 
