@@ -321,18 +321,29 @@ pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/in
 // On OS X, if the wheel has one axis only, shift+wheel comes through as a
 // horizontal scroll event. Thus, we can't assign anything other than normal
 // scrolling to shift+wheel.
-pref("mousewheel.withmetakey.action",3);
+pref("mousewheel.withshiftkey.action",0);
+pref("mousewheel.withshiftkey.sysnumlines",true);
+pref("mousewheel.withshiftkey.numlines",1);
+pref("mousewheel.withaltkey.action",2);
+pref("mousewheel.withaltkey.sysnumlines",false);
+pref("mousewheel.withaltkey.numlines",1);
+pref("mousewheel.withmetakey.action",0);
 pref("mousewheel.withmetakey.sysnumlines",false);
-pref("mousewheel.withcontrolkey.action",2);
-pref("mousewheel.withcontrolkey.sysnumlines",false);
+pref("mousewheel.withmetakey.numlines",1);
 #else
-pref("mousewheel.withcontrolkey.action",3);
-pref("mousewheel.withcontrolkey.sysnumlines",false);
 pref("mousewheel.withshiftkey.action",2);
 pref("mousewheel.withshiftkey.sysnumlines",false);
-#endif
+pref("mousewheel.withshiftkey.numlines",1);
 pref("mousewheel.withaltkey.action",0);
 pref("mousewheel.withaltkey.sysnumlines",false);
+pref("mousewheel.withaltkey.numlines",1);
+pref("mousewheel.withmetakey.action",0);
+pref("mousewheel.withmetakey.sysnumlines",true);
+pref("mousewheel.withmetakey.numlines",1);
+#endif
+pref("mousewheel.withcontrolkey.action",3);
+pref("mousewheel.withcontrolkey.sysnumlines",false);
+pref("mousewheel.withcontrolkey.numlines",1);
 
 pref("profile.allow_automigration", false);   // setting to false bypasses automigration in the profile code
 
