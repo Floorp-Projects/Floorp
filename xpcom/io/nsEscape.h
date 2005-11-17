@@ -216,6 +216,21 @@ NS_UnescapeURL(const nsCSubstring &str, PRUint32 flags, nsACString &result) {
 #endif  // MOZ_V1_STRING_ABI
 
 /**
+ * CString version of nsEscape. Returns true on success, false
+ * on out of memory. To reverse this function, use NS_UnescapeURL.
+ */
+inline PRBool
+NS_Escape(const nsCString& aOriginal, nsCString& aEscaped,
+          nsEscapeMask aMask)
+{
+  char* esc = nsEscape(aOriginal.get(), aMask);
+  if (! esc)
+    return PR_FALSE;
+  aEscaped.Adopt(esc);
+  return PR_TRUE;
+}
+
+/**
  * Inline unescape of mutable string object.
  */
 inline nsCString &
