@@ -481,68 +481,50 @@
     <groupbox>
       <caption label="&prefs.label;"/>
       <description>&prefs.description;</description>
-      <hbox>
-        <label control="PreferenceName1">&prefName.label;1:</label>
-        <textbox id="PreferenceName1"/>
-        <label control="PreferenceValue1">&prefValue.label;</label>
-        <textbox id="PreferenceValue1"/>
-      </hbox>
-      <hbox>
-        <label control="PreferenceName2">&prefName.label;2:</label>
-        <textbox id="PreferenceName2"/>
-        <label control="PreferenceValue2">&prefValue.label;</label>
-        <textbox id="PreferenceValue2"/>
-      </hbox>
-      <hbox>
-        <label control="PreferenceName3">&prefName.label;3:</label>
-        <textbox id="PreferenceName3"/>
-        <label control="PreferenceValue3">&prefValue.label;</label>
-        <textbox id="PreferenceValue3"/>
-      </hbox>
-      <hbox>
-        <label control="PreferenceName4">&prefName.label;4:</label>
-        <textbox id="PreferenceName4"/>
-        <label control="PreferenceValue4">&prefValue.label;</label>
-        <textbox id="PreferenceValue4"/>
-      </hbox>
-      <hbox>
-        <label control="PreferenceName5">&prefName.label;5:</label>
-        <textbox id="PreferenceName5"/>
-        <label control="PreferenceValue5">&prefValue.label;</label>
-        <textbox id="PreferenceValue5"/>
-      </hbox>
-      <hbox>
-        <label control="PreferenceName6">&prefName.label;6:</label>
-        <textbox id="PreferenceName6"/>
-        <label control="PreferenceValue6">&prefValue.label;</label>
-        <textbox id="PreferenceValue6"/>
-      </hbox>
-      <hbox>
-        <label control="PreferenceName7">&prefName.label;7:</label>
-        <textbox id="PreferenceName7"/>
-        <label control="PreferenceValue7">&prefValue.label;</label>
-        <textbox id="PreferenceValue7"/>
-      </hbox>
-      <hbox>
-        <label control="PreferenceName8">&prefName.label;8:</label>
-        <textbox id="PreferenceName8"/>
-        <label control="PreferenceValue8">&prefValue.label;</label>
-        <textbox id="PreferenceValue8"/>
-      </hbox>
-      <hbox>
-        <label control="PreferenceName9">&prefName.label;9:</label>
-        <textbox id="PreferenceName9"/>
-        <label control="PreferenceValue9">&prefValue.label;</label>
-        <textbox id="PreferenceValue9"/>
-      </hbox>
-      <hbox>
-        <label control="PreferenceName10">&prefName.label;10:</label>
-        <textbox id="PreferenceName10"/>
-        <label control="PreferenceValue10">&prefValue.label;</label>
-        <textbox id="PreferenceValue10"/>
-      </hbox>
+      <hbox flex="1">
+      <vbox flex="1">
+    <listbox id="prefList" flex="1" rows="5" 
+          sortDirection="ascending">
+      
+    </listbox>
+    </vbox>
+        <vbox>
+          <button id="newButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
+                  oncommand="onNewPreference();"/>
+          <button id="editButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
+                  oncommand="onEditPreference();"/>
+          <button id="deleteButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
+                  oncommand="onDeletePreference();"/>
+          <spacer flex="1"/>
+        </vbox>
+        </hbox>
     </groupbox>
   </wizardpage>
+  
+  <wizardpage label="&customizeRegistry.label;">
+    <groupbox>
+      <caption label="&registry.label;"/>
+      <description>&registry.description;</description>
+      <hbox flex="1">
+      <vbox flex="1">
+    <listbox id="regList" flex="1" rows="5" 
+          sortDirection="ascending">
+      
+    </listbox>
+    </vbox>
+        <vbox>
+          <button id="newButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
+                  oncommand="onNewRegKey();"/>
+          <button id="editButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
+                  oncommand="onEditRegKey();"/>
+          <button id="deleteButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
+                  oncommand="onDeleteRegKey();"/>
+          <spacer flex="1"/>
+        </vbox>
+        </hbox>
+    </groupbox>
+  </wizardpage>
+
 
   <wizardpage label="&customizeCerts.label;" onpageadvanced="return ValidateFile('CertPath1','CertPath2','CertPath3','CertPath4','CertPath5');">>
     <description>&customizeCerts.warning;</description>

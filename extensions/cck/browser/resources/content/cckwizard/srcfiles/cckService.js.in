@@ -114,17 +114,19 @@ CCKService.prototype={
     if ("@mozilla.org/windows-registry-key;1" in Components.classes) {
       const nsIWindowsRegKey = Components.interfaces.nsIWindowsRegKey;
     
-      for (var i=1; i<=5; i++) {
+      var i = 1;
+      do {
         try {
+          RegName = bundle.GetStringFromName("RegName" + i);
           RootKey = bundle.GetStringFromName("RootKey" + i);
           Key = bundle.GetStringFromName("Key" + i);
           Name = bundle.GetStringFromName("Name" + i);
           NameValue = bundle.GetStringFromName("NameValue" + i);
           Type = bundle.GetStringFromName("Type" + i);
         } catch (ex) {
-          RootKey = "";
+          RegName = "";
         }
-        if (RootKey && RootKey.length) {
+        if (RegName && RegName.length) {
           var key = Components.classes["@mozilla.org/windows-registry-key;1"]
                               .createInstance(nsIWindowsRegKey);
           var rootKey;
@@ -159,7 +161,8 @@ CCKService.prototype={
           }
           key.close();
         }
-      }
+        i++;
+      } while (RegName && RegName.length)
     } 
 
     const nsIX509CertDB2 = Components.interfaces.nsIX509CertDB2;

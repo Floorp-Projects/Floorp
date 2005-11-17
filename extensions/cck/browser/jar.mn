@@ -7,6 +7,8 @@ cckwizard.jar:
  content/cckwizard/cckwizard.xul                          (resources/content/cckwizard/cckwizard.xul)
  content/cckwizard/cckwizard.properties                   (resources/content/cckwizard/cckwizard.properties)
  content/cckwizard/config.xul                             (resources/content/cckwizard/config.xul)
+ content/cckwizard/pref.xul                               (resources/content/cckwizard/pref.xul)
+ content/cckwizard/reg.xul                                (resources/content/cckwizard/reg.xul)
  content/cckwizard/showconfig.xul                         (resources/content/cckwizard/showconfig.xul)
  content/cckwizard/srcfiles/cck-browser-overlay.xul.in    (resources/content/cckwizard/srcfiles/cck-browser-overlay.xul.in)
  content/cckwizard/srcfiles/cck.dtd.in                    (resources/content/cckwizard/srcfiles/cck.dtd.in)

@@ -113,10 +113,29 @@
 
 <!ENTITY  customizePrefs.label          "Customize Preferences">
 <!ENTITY  prefs.label                   "Preferences">
-<!ENTITY  prefs.description             "You can add up to five custom preferences. Note these preferences are stored exactly as written, so put quotes around string preferences.">
+<!ENTITY  prefs.description             "Note these preferences are stored exactly as written, so put quotes around string preferences.">
 
 <!ENTITY  prefName.label                "Preference Name">
 <!ENTITY  prefValue.label               "Value: ">
+
+<!ENTITY  newButton.label               "New">
+<!ENTITY  newButton.accesskey           "N">
+<!ENTITY  deleteButton.label            "Delete">
+<!ENTITY  deleteButton.accesskey        "D">
+<!ENTITY  editButton.label              "Edit">
+<!ENTITY  editButton.accesskey          "E">
+
+<!ENTITY  customizeRegistry.label       "Customize Registry (Windows Only)">
+
+<!ENTITY  registry.label                "Registry">
+<!ENTITY  registry.description          "You can add up to five registry items.">
+
+<!ENTITY  regRootKey.label              "Root Key">
+<!ENTITY  regKey.label                  "Key">
+<!ENTITY  regName.label                 "Name">
+<!ENTITY  regNameValue.label            "Name Value">
+<!ENTITY  regType.label                 "Type">
+
 
 <!ENTITY  customizeCerts.label          "Customize Certificates">
 <!ENTITY  customizeCerts.warning       "You may select up to five certificates to be preinstalled.<html:br/><html:br/>
