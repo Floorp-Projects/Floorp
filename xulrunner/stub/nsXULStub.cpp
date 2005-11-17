@@ -42,10 +42,12 @@
 
 #ifdef XP_WIN
 #include <windows.h>
+#include <io.h>
 #define snprintf _snprintf
 #define PATH_SEPARATOR_CHAR '\\'
 #define XULRUNNER_BIN "xulrunner.exe"
 #include "nsWindowsRestart.cpp"
+#define R_OK 04
 #else
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -110,7 +112,14 @@ main(int argc, char **argv)
   if (!lastSlash)
     return 1;
 
-  strcpy(lastSlash + 1, "application.ini");
+  *(++lastSlash) = '\0';
+
+  char greDir[MAXPATHLEN];
+  snprintf(greDir, sizeof(greDir),
+           "%sxulrunner" XPCOM_FILE_PATH_SEPARATOR XPCOM_DLL,
+           iniPath);
+
+  strncpy(lastSlash, "application.ini", sizeof(iniPath) - (lastSlash - iniPath));
 
   nsINIParser parser;
   rv = parser.Init(iniPath);
@@ -119,41 +128,42 @@ main(int argc, char **argv)
     return 1;
   }
 
-  char greDir[MAXPATHLEN];
-  char minVersion[VERSION_MAXLEN];
+  if (access(greDir, R_OK) != 0) {
+    char minVersion[VERSION_MAXLEN];
 
-  // If a gecko maxVersion is not specified, we assume that the app uses only
-  // frozen APIs, and is therefore compatible with any xulrunner 1.x.
-  char maxVersion[VERSION_MAXLEN] = "2";
+    // If a gecko maxVersion is not specified, we assume that the app uses only
+    // frozen APIs, and is therefore compatible with any xulrunner 1.x.
+    char maxVersion[VERSION_MAXLEN] = "2";
 
-  GREVersionRange range = {
-    minVersion,
-    PR_TRUE,
-    maxVersion,
-    PR_FALSE
-  };
+    GREVersionRange range = {
+      minVersion,
+      PR_TRUE,
+      maxVersion,
+      PR_FALSE
+    };
 
-  rv = parser.GetString("Gecko", "MinVersion", minVersion, sizeof(minVersion));
-  if (NS_FAILED(rv)) {
-    fprintf(stderr,
-            "The application.ini does not specify a [Gecko] MinVersion\n");
-    return 1;
-  }
+    rv = parser.GetString("Gecko", "MinVersion", minVersion, sizeof(minVersion));
+    if (NS_FAILED(rv)) {
+      fprintf(stderr,
+              "The application.ini does not specify a [Gecko] MinVersion\n");
+      return 1;
+    }
 
-  rv = parser.GetString("Gecko", "MaxVersion", maxVersion, sizeof(maxVersion));
-  if (NS_SUCCEEDED(rv))
-    range.upperInclusive = PR_TRUE;
+    rv = parser.GetString("Gecko", "MaxVersion", maxVersion, sizeof(maxVersion));
+    if (NS_SUCCEEDED(rv))
+      range.upperInclusive = PR_TRUE;
 
-  rv = GRE_GetGREPathWithProperties(&range, 1, nsnull, 0,
+    rv = GRE_GetGREPathWithProperties(&range, 1, nsnull, 0,
                                     greDir, sizeof(greDir));
-  if (NS_FAILED(rv)) {
-    // XXXbsmedberg: Do something much smarter here: notify the
-    // user/offer to download/?
+    if (NS_FAILED(rv)) {
+      // XXXbsmedberg: Do something much smarter here: notify the
+      // user/offer to download/?
 
-    fprintf(stderr,
-            "Could not find compatible GRE between version %s and %s.\n", 
-            range.lower, range.upper);
-    return 1;
+      fprintf(stderr,
+              "Could not find compatible GRE between version %s and %s.\n", 
+              range.lower, range.upper);
+      return 1;
+    }
   }
 
   lastSlash = strrchr(greDir, PATH_SEPARATOR_CHAR);
