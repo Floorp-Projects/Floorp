@@ -50,7 +50,7 @@
     [% END %]
   [% END -%]
 [% ELSE -%]
-  [% colsepchar %][% num_bugs %]
+  [% colsepchar %][% num_bugs FILTER csv %]
 [% END %]
 
 [% FOREACH row = row_names %]

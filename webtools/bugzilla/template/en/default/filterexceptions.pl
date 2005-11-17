@@ -128,7 +128,6 @@
 ],
 
 'reports/report-table.csv.tmpl' => [
-  'num_bugs',
   'data.$tbl.$col.$row',
   'colsepchar',
 ],
