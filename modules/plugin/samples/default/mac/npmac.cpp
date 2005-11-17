@@ -89,7 +89,7 @@
 #endif
 
 
-#ifdef XP_MACOSX
+#ifdef __ppc__
 
 // glue for mapping outgoing Macho function pointers to TVectors
 struct TFPtoTVGlue{
@@ -172,7 +172,7 @@ static void* SetupTVtoFPGlue(TTVtoFPGlue* functionGlue, void* tvp)
 #define PLUGIN_TO_HOST_GLUE(name, fp) (fp)
 #define HOST_TO_PLUGIN_GLUE(name, fp) (fp)
 
-#endif /* XP_MACOSX */
+#endif /* __ppc__ */
 
 
 #pragma mark -
