@@ -1372,6 +1372,7 @@ sub SanitizeModule {
 
     return $module if (!defined($module));
     $module =~ s/\000/_NULL_/g;
+    return "default" if ($module !~ m/^[A-Za-z]+[\w\-\.\+]*/);
     $module =~ s/([A-Za-z])([\w\-\.\+]*).*/$1$2/;
     return $module;
 }

@@ -210,20 +210,6 @@ sub make_popup {
     return $popup;
 }
 
-sub make_cgi_args {
-    my ($k,$v);
-    my $ret = "";
-
-    for $k (sort keys %::FORM){
-        $ret .= ($ret eq "" ? '?' : '&');
-        $v = $::FORM{$k};
-        $ret .= &url_encode2($k);
-        $ret .= '=';
-        $ret .= &url_encode2($v);
-    }
-    return $ret;
-}
-
 sub cvsmenu {
      my ($extra) = @_;
      my ($pass, $i, $page, $title);

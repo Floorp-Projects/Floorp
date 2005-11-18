@@ -440,7 +440,6 @@ rview.cgi		Lets you browse a directory in a CVS repository.
 				rview.cgi dir= cvsroot= rev=
 				rview.cgi dir= cvsroot= rev= ?=chdir
 				rview.cgi dir= cvsroot= rev= ?=Set Branch
-				&make_cgi_args ???
 				../registry/file.cgi cvsroot= file= dir=
 
 showcheckins.cgi	Perl.  Shows some set of checkins in a bonsai hook.

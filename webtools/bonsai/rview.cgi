@@ -65,7 +65,7 @@ my $dir = $::FORM{"dir"} || "";
 $dir =~ s/^[\/]+([^:]*)/$1/;
 $dir =~ s/([^:]*)[\/]+$/$1/;
 my $path = "$CVS_ROOT/$dir";
-&ChrootFilename($CVS_ROOT, $path);
+$path = &ChrootFilename($CVS_ROOT, $path);
 die "Invalid directory: " . &shell_escape($dir) . ".\n" if (! -d $path);
 
 my $rev = &SanitizeRevision($::FORM{"rev"});
@@ -186,15 +186,14 @@ if( @dirs != 0 ){
     print "<table>\n<TR VALIGN=TOP>\n<td>\n";
 
     for my $i (@dirs){
-        $::FORM{"dir"} = ($dir ne "" ? "$dir/$i" : $i);
-        my $anchor = &make_cgi_args;
+        my $ldir = ($dir ne "" ? "$dir/$i" : $i);
+        my $anchor = "?dir=$ldir$rootstr";
         print "<dt><a href=rview.cgi${anchor}>$i</a>\n";
         if( $j % $split == 0 ){
             print "\n<td>\n";
         }
         $j++;
     }
-    $::FORM{"dir"} = $dir;
     print "\n</tr>\n</table>\n";
 }
 
