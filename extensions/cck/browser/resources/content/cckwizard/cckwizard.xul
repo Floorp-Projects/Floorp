@@ -21,6 +21,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Brian King <brian@mozdev.org>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE prefwindow SYSTEM "chrome://cckwizard/locale/cckWizard.dtd">
+<!DOCTYPE wizard SYSTEM "chrome://cckwizard/locale/cckWizard.dtd">
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
@@ -223,6 +224,9 @@
         <textbox id="HelpMenuCommandAccesskey" flex="1"/>
       </vbox>
     </groupbox>
+  </wizardpage>
+      
+  <wizardpage label="&customizePartFour.label;">  
     <groupbox>
       <caption label="&allowedSites.caption;"/>
       <description>&allowedSites.description;</description>
@@ -325,39 +329,44 @@
     <groupbox>
       <caption label="&addToolbarFolder.caption;"/>
       <description>&addToolbarFolder.description;</description>
-      <hbox>
+      <hbox align="center">
         <label>&folderTitle.label;</label>
         <textbox id="ToolbarFolder1"/>
       </hbox>
-      <hbox>
-        <label control="ToolbarFolder1.BookmarkTitle1">&bookmarkTitle.label;1:</label>
-        <textbox id="ToolbarFolder1.BookmarkTitle1"/>
-        <label control="ToolbarFolder1.BookmarkURL1">&bookmarkURL.label;1:</label>
-        <textbox id="ToolbarFolder1.BookmarkURL1"/>
+      <label value="&bookmark.label; 1"/>
+      <hbox align="center">
+        <label control="ToolbarFolder1.BookmarkTitle2">&bookmarkTitle.label;</label>
+        <textbox id="ToolbarFolder1.BookmarkTitle1" flex="1"/>
+        <label control="ToolbarFolder1.BookmarkURL1">&bookmarkURL.label;</label>
+        <textbox id="ToolbarFolder1.BookmarkURL1" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="ToolbarFolder1.BookmarkTitle2">&bookmarkTitle.label;2:</label>
-        <textbox id="ToolbarFolder1.BookmarkTitle2"/>
-        <label control="ToolbarFolder1.BookmarkURL2">&bookmarkURL.label;1:</label>
-        <textbox id="ToolbarFolder1.BookmarkURL2"/>
+      <label value="&bookmark.label; 2"/>
+      <hbox align="center">
+        <label control="ToolbarFolder1.BookmarkTitle2">&bookmarkTitle.label;</label>
+        <textbox id="ToolbarFolder1.BookmarkTitle2" flex="1"/>
+        <label control="ToolbarFolder1.BookmarkURL2">&bookmarkURL.label;</label>
+        <textbox id="ToolbarFolder1.BookmarkURL2" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="ToolbarFolder1.BookmarkTitle3">&bookmarkTitle.label;3:</label>
-        <textbox id="ToolbarFolder1.BookmarkTitle3"/>
-        <label control="ToolbarFolder1.BookmarkURL4">&bookmarkURL.label;1:</label>
-        <textbox id="ToolbarFolder1.BookmarkURL3"/>
+      <label value="&bookmark.label; 3"/>
+      <hbox align="center">
+        <label control="ToolbarFolder1.BookmarkTitle3">&bookmarkTitle.label;</label>
+        <textbox id="ToolbarFolder1.BookmarkTitle3" flex="1"/>
+        <label control="ToolbarFolder1.BookmarkURL3">&bookmarkURL.label;</label>
+        <textbox id="ToolbarFolder1.BookmarkURL3" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="ToolbarFolder1.BookmarkTitle4">&bookmarkTitle.label;4:</label>
-        <textbox id="ToolbarFolder1.BookmarkTitle4"/>
-        <label control="ToolbarFolder1.BookmarkURL4">&bookmarkURL.label;1:</label>
-        <textbox id="ToolbarFolder1.BookmarkURL4"/>
+      <label value="&bookmark.label; 4"/>
+      <hbox align="center">
+        <label control="ToolbarFolder1.BookmarkTitle4">&bookmarkTitle.label;</label>
+        <textbox id="ToolbarFolder1.BookmarkTitle4" flex="1"/>
+        <label control="ToolbarFolder1.BookmarkURL4">&bookmarkURL.label;</label>
+        <textbox id="ToolbarFolder1.BookmarkURL4" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="ToolbarFolder1.BookmarkTitle5">&bookmarkTitle.label;5:</label>
-        <textbox id="ToolbarFolder1.BookmarkTitle5"/>
-        <label control="ToolbarFolder1.BookmarkURL5">&bookmarkURL.label;1:</label>
-        <textbox id="ToolbarFolder1.BookmarkURL5"/>
+      <label value="&bookmark.label; 5"/>
+      <hbox align="center">
+        <label control="ToolbarFolder1.BookmarkTitle5">&bookmarkTitle.label;</label>
+        <textbox id="ToolbarFolder1.BookmarkTitle5" flex="1"/>
+        <label control="ToolbarFolder1.BookmarkURL5">&bookmarkURL.label;</label>
+        <textbox id="ToolbarFolder1.BookmarkURL5" flex="1"/>
       </hbox>
     </groupbox>
   </wizardpage>
@@ -366,35 +375,40 @@
     <groupbox>
       <caption label="&addToolbarBookmark.caption;"/>
       <description>&addToolbarBookmark.description;</description>
-      <hbox>
-        <label control="ToolbarBookmarkTitle1">&bookmarkTitle.label;1:</label>
-        <textbox id="ToolbarBookmarkTitle1"/>
-        <label control="ToolbarBookmarkURL1">&bookmarkURL.label;1:</label>
-        <textbox id="ToolbarBookmarkURL1"/>
+      <label value="&bookmark.label; 1"/>
+      <hbox align="center">
+        <label control="ToolbarBookmarkTitle1">&bookmarkTitle.label;</label>
+        <textbox id="ToolbarBookmarkTitle1" flex="1"/>
+        <label control="ToolbarBookmarkURL1">&bookmarkURL.label;</label>
+        <textbox id="ToolbarBookmarkURL1" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="ToolbarBookmarkTitle2">&bookmarkTitle.label;2:</label>
-        <textbox id="ToolbarBookmarkTitle2"/>
-        <label control="ToolbarBookmarkURL2">&bookmarkURL.label;1:</label>
-        <textbox id="ToolbarBookmarkURL2"/>
+      <label value="&bookmark.label; 2"/>
+      <hbox align="center">
+        <label control="ToolbarBookmarkTitle2">&bookmarkTitle.label;</label>
+        <textbox id="ToolbarBookmarkTitle2" flex="1"/>
+        <label control="ToolbarBookmarkURL2">&bookmarkURL.label;</label>
+        <textbox id="ToolbarBookmarkURL2" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="ToolbarBookmarkTitle3">&bookmarkTitle.label;3:</label>
-        <textbox id="ToolbarBookmarkTitle3"/>
-        <label control="ToolbarBookmarkURL3">&bookmarkURL.label;1:</label>
-        <textbox id="ToolbarBookmarkURL3"/>
+      <label value="&bookmark.label; 3"/>
+      <hbox align="center">
+        <label control="ToolbarBookmarkTitle3">&bookmarkTitle.label;</label>
+        <textbox id="ToolbarBookmarkTitle3" flex="1"/>
+        <label control="ToolbarBookmarkURL3">&bookmarkURL.label;</label>
+        <textbox id="ToolbarBookmarkURL3" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="ToolbarBookmarkTitle4">&bookmarkTitle.label;4:</label>
-        <textbox id="ToolbarBookmarkTitle4"/>
-        <label control="ToolbarBookmarkURL4">&bookmarkURL.label;1:</label>
-        <textbox id="ToolbarBookmarkURL4"/>
+      <label value="&bookmark.label; 4"/>
+      <hbox align="center">
+        <label control="ToolbarBookmarkTitle4">&bookmarkTitle.label;</label>
+        <textbox id="ToolbarBookmarkTitle4" flex="1"/>
+        <label control="ToolbarBookmarkURL4">&bookmarkURL.label;</label>
+        <textbox id="ToolbarBookmarkURL4" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="ToolbarBookmarkTitle5">&bookmarkTitle.label;5:</label>
-        <textbox id="ToolbarBookmarkTitle5"/>
-        <label control="ToolbarBookmarkURL5">&bookmarkURL.label;1:</label>
-        <textbox id="ToolbarBookmarkURL5"/>
+      <label value="&bookmark.label; 5"/>
+      <hbox align="center">
+        <label control="ToolbarBookmarkTitle5">&bookmarkTitle.label;</label>
+        <textbox id="ToolbarBookmarkTitle5" flex="1"/>
+        <label control="ToolbarBookmarkURL5">&bookmarkURL.label;</label>
+        <textbox id="ToolbarBookmarkURL5" flex="1"/>
       </hbox>
     </groupbox>
   </wizardpage>
@@ -403,39 +417,44 @@
     <groupbox>
       <caption label="&addBookmarkFolder.caption;"/>
       <description>&addBookmarkFolder.description;</description>
-      <hbox>
+      <hbox align="center">
         <label control="BookmarkFolder1">&folderTitle.label;</label>
         <textbox id="BookmarkFolder1"/>
       </hbox>
-      <hbox>
-        <label control="BookmarkFolder1.BookmarkTitle1">&bookmarkTitle.label;1:</label>
-        <textbox id="BookmarkFolder1.BookmarkTitle1"/>
-        <label control="BookmarkFolder1.BookmarkURL1">&bookmarkURL.label;1:</label>
-        <textbox id="BookmarkFolder1.BookmarkURL1"/>
+      <label value="&bookmark.label; 1"/>
+      <hbox align="center">
+        <label control="BookmarkFolder1.BookmarkTitle1">&bookmarkTitle.label;</label>
+        <textbox id="BookmarkFolder1.BookmarkTitle1" flex="1"/>
+        <label control="BookmarkFolder1.BookmarkURL1">&bookmarkURL.label;</label>
+        <textbox id="BookmarkFolder1.BookmarkURL1" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="BookmarkFolder1.BookmarkTitle2">&bookmarkTitle.label;2:</label>
-        <textbox id="BookmarkFolder1.BookmarkTitle2"/>
-        <label control="BookmarkFolder1.BookmarkURL2">&bookmarkURL.label;1:</label>
-        <textbox id="BookmarkFolder1.BookmarkURL2"/>
+      <label value="&bookmark.label; 2"/>
+      <hbox align="center">
+        <label control="BookmarkFolder1.BookmarkTitle2">&bookmarkTitle.label;</label>
+        <textbox id="BookmarkFolder1.BookmarkTitle2" flex="1"/>
+        <label control="BookmarkFolder1.BookmarkURL2">&bookmarkURL.label;</label>
+        <textbox id="BookmarkFolder1.BookmarkURL2" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="BookmarkFolder1.BookmarkTitle3">&bookmarkTitle.label;3:</label>
-        <textbox id="BookmarkFolder1.BookmarkTitle3"/>
-        <label control="BookmarkFolder1.BookmarkURL3">&bookmarkURL.label;1:</label>
-        <textbox id="BookmarkFolder1.BookmarkURL3"/>
+      <label value="&bookmark.label; 3"/>
+      <hbox align="center">
+        <label control="BookmarkFolder1.BookmarkTitle3">&bookmarkTitle.label;</label>
+        <textbox id="BookmarkFolder1.BookmarkTitle3" flex="1"/>
+        <label control="BookmarkFolder1.BookmarkURL3">&bookmarkURL.label;</label>
+        <textbox id="BookmarkFolder1.BookmarkURL3" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="BookmarkFolder1.BookmarkTitle4">&bookmarkTitle.label;4:</label>
-        <textbox id="BookmarkFolder1.BookmarkTitle4"/>
-        <label control="BookmarkFolder1.BookmarkURL4">&bookmarkURL.label;1:</label>
-        <textbox id="BookmarkFolder1.BookmarkURL4"/>
+      <label value="&bookmark.label; 4"/>
+      <hbox align="center">
+        <label control="BookmarkFolder1.BookmarkTitle4">&bookmarkTitle.label;</label>
+        <textbox id="BookmarkFolder1.BookmarkTitle4" flex="1"/>
+        <label control="BookmarkFolder1.BookmarkURL4">&bookmarkURL.label;</label>
+        <textbox id="BookmarkFolder1.BookmarkURL4" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="BookmarkFolder1.BookmarkTitle5">&bookmarkTitle.label;5:</label>
-        <textbox id="BookmarkFolder1.BookmarkTitle5"/>
-        <label control="BookmarkFolder1.BookmarkURL5">&bookmarkURL.label;1:</label>
-        <textbox id="BookmarkFolder1.BookmarkURL5"/>
+      <label value="&bookmark.label; 5"/>
+      <hbox align="center">
+        <label control="BookmarkFolder1.BookmarkTitle5">&bookmarkTitle.label;</label>
+        <textbox id="BookmarkFolder1.BookmarkTitle5" flex="1"/>
+        <label control="BookmarkFolder1.BookmarkURL5">&bookmarkURL.label;</label>
+        <textbox id="BookmarkFolder1.BookmarkURL5" flex="1"/>
       </hbox>
     </groupbox>
   </wizardpage>
@@ -444,35 +463,40 @@
     <groupbox>
       <caption label="&addBookmark.caption;"/>
       <description>&addBookmark.description;</description>
-      <hbox>
-        <label control="BookmarkTitle1">&bookmarkTitle.label;1:</label>
-        <textbox id="BookmarkTitle1"/>
-        <label control="BookmarkURL1">&bookmarkURL.label;1:</label>
-        <textbox id="BookmarkURL1"/>
+      <label value="&bookmark.label; 1"/>
+      <hbox align="center">
+        <label control="BookmarkTitle1">&bookmarkTitle.label;</label>
+        <textbox id="BookmarkTitle1" flex="1"/>
+        <label control="BookmarkURL1">&bookmarkURL.label;</label>
+        <textbox id="BookmarkURL1" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="BookmarkTitle2">&bookmarkTitle.label;2:</label>
-        <textbox id="BookmarkTitle2"/>
-        <label control="BookmarkURL2">&bookmarkURL.label;1:</label>
-        <textbox id="BookmarkURL2"/>
+      <label value="&bookmark.label; 2"/>
+      <hbox align="center">
+        <label control="BookmarkTitle2">&bookmarkTitle.label;</label>
+        <textbox id="BookmarkTitle2" flex="1"/>
+        <label control="BookmarkURL2">&bookmarkURL.label;</label>
+        <textbox id="BookmarkURL2" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="BookmarkTitle3">&bookmarkTitle.label;3:</label>
-        <textbox id="BookmarkTitle3"/>
-        <label control="BookmarkURL3">&bookmarkURL.label;1:</label>
-        <textbox id="BookmarkURL3"/>
+      <label value="&bookmark.label; 3"/>
+      <hbox align="center">
+        <label control="BookmarkTitle3">&bookmarkTitle.label;</label>
+        <textbox id="BookmarkTitle3" flex="1"/>
+        <label control="BookmarkURL3">&bookmarkURL.label;</label>
+        <textbox id="BookmarkURL3" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="BookmarkTitle4">&bookmarkTitle.label;4:</label>
-        <textbox id="BookmarkTitle4"/>
-        <label control="BookmarkURL4">&bookmarkURL.label;1:</label>
-        <textbox id="BookmarkURL4"/>
+      <label value="&bookmark.label; 4"/>
+      <hbox align="center">
+        <label control="BookmarkTitle4">&bookmarkTitle.label;</label>
+        <textbox id="BookmarkTitle4" flex="1"/>
+        <label control="BookmarkURL4">&bookmarkURL.label;</label>
+        <textbox id="BookmarkURL4" flex="1"/>
       </hbox>
-      <hbox>
-        <label control="BookmarkTitle5">&bookmarkTitle.label;5:</label>
-        <textbox id="BookmarkTitle5"/>
-        <label control="BookmarkURL5">&bookmarkURL.label;1:</label>
-        <textbox id="BookmarkURL5"/>
+      <label value="&bookmark.label; 5"/>
+      <hbox align="center">
+        <label control="BookmarkTitle5">&bookmarkTitle.label;</label>
+        <textbox id="BookmarkTitle5" flex="1"/>
+        <label control="BookmarkURL5">&bookmarkURL.label;</label>
+        <textbox id="BookmarkURL5" flex="1"/>
       </hbox>
     </groupbox>
   </wizardpage>

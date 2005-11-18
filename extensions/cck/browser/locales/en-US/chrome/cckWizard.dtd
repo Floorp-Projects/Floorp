@@ -68,6 +68,7 @@
 <!ENTITY  helpMenuURL.label             "Help Menu Item URL:">
 <!ENTITY  helpMenuAccesskey.label       "Help Menu Item Accesskey:">
 
+<!ENTITY  customizePartFour.label      "Customize the Browser - Part Four">
 <!ENTITY  allowedSites.caption          "Allowed Sites">
 <!ENTITY  allowedSites.description      "You can specify domains for which popups and/or XPI installs are allowed. List the domains, separated by a comma.">
 <!ENTITY  popupAllowedSites.label       "Popup Allowed Sites:">
@@ -106,9 +107,9 @@
 <!ENTITY  addBookmark.description        "You can add up to five bookmarks.">
 
 
-
-<!ENTITY  bookmarkTitle.label           "Bookmark Title">
-<!ENTITY  bookmarkURL.label             "URL">
+<!ENTITY  bookmark.label                  "Bookmark">
+<!ENTITY  bookmarkTitle.label           "Title:">
+<!ENTITY  bookmarkURL.label             "URL:">
 
 
 <!ENTITY  customizePrefs.label          "Customize Preferences">
