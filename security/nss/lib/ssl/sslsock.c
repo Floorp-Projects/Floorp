@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.43 2005/09/23 01:04:32 nelsonb%netscape.com Exp $ */
+/* $Id: sslsock.c,v 1.44 2005/11/18 01:21:22 nelsonb%netscape.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -857,6 +857,20 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
     return SECSuccess;
 }
 
+/* function tells us if the cipher suite is one that we no longer support. */
+static PRBool 
+ssl_IsRemovedCipherSuite(PRInt32 suite)
+{
+    switch (suite) {
+    case SSL_FORTEZZA_DMS_WITH_NULL_SHA:
+    case SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA:
+    case SSL_FORTEZZA_DMS_WITH_RC4_128_SHA:
+    	return PR_TRUE;
+    default:
+    	return PR_FALSE;
+    }
+}
+
 /* Part of the public NSS API.
  * Since this is a global (not per-socket) setting, we cannot use the
  * HandshakeLock to protect this.  Probably want a global lock.
@@ -871,6 +885,8 @@ SSL_SetPolicy(long which, int policy)
 	else if (which == SSL_RSA_OLDFIPS_WITH_DES_CBC_SHA)
 	    which = SSL_RSA_FIPS_WITH_DES_CBC_SHA;
     }
+    if (ssl_IsRemovedCipherSuite(which))
+    	return SECSuccess;
     return SSL_CipherPolicySet(which, policy);
 }
 
@@ -879,7 +895,9 @@ SSL_CipherPolicySet(PRInt32 which, PRInt32 policy)
 {
     SECStatus rv;
 
-    if (SSL_IS_SSL2_CIPHER(which)) {
+    if (ssl_IsRemovedCipherSuite(which)) {
+    	rv = SECSuccess;
+    } else if (SSL_IS_SSL2_CIPHER(which)) {
 	rv = ssl2_SetPolicy(which, policy);
     } else {
 	rv = ssl3_SetPolicy((ssl3CipherSuite)which, policy);
@@ -896,7 +914,10 @@ SSL_CipherPolicyGet(PRInt32 which, PRInt32 *oPolicy)
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
-    if (SSL_IS_SSL2_CIPHER(which)) {
+    if (ssl_IsRemovedCipherSuite(which)) {
+	*oPolicy = SSL_NOT_ALLOWED;
+    	rv = SECSuccess;
+    } else if (SSL_IS_SSL2_CIPHER(which)) {
 	rv = ssl2_GetPolicy(which, oPolicy);
     } else {
 	rv = ssl3_GetPolicy((ssl3CipherSuite)which, oPolicy);
@@ -919,6 +940,8 @@ SSL_EnableCipher(long which, PRBool enabled)
 	else if (which == SSL_RSA_OLDFIPS_WITH_DES_CBC_SHA)
 	    which = SSL_RSA_FIPS_WITH_DES_CBC_SHA;
     }
+    if (ssl_IsRemovedCipherSuite(which))
+    	return SECSuccess;
     return SSL_CipherPrefSetDefault(which, enabled);
 }
 
@@ -926,7 +949,9 @@ SECStatus
 SSL_CipherPrefSetDefault(PRInt32 which, PRBool enabled)
 {
     SECStatus rv;
-    
+
+    if (ssl_IsRemovedCipherSuite(which))
+    	return SECSuccess;
     if (enabled && ssl_defaults.noStepDown && SSL_IsExportCipherSuite(which)) {
     	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 	return SECFailure;
@@ -948,7 +973,10 @@ SSL_CipherPrefGetDefault(PRInt32 which, PRBool *enabled)
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
-    if (SSL_IS_SSL2_CIPHER(which)) {
+    if (ssl_IsRemovedCipherSuite(which)) {
+	*enabled = PR_FALSE;
+    	rv = SECSuccess;
+    } else if (SSL_IS_SSL2_CIPHER(which)) {
 	rv = ssl2_CipherPrefGetDefault(which, enabled);
     } else {
 	rv = ssl3_CipherPrefGetDefault((ssl3CipherSuite)which, enabled);
@@ -966,6 +994,8 @@ SSL_CipherPrefSet(PRFileDesc *fd, PRInt32 which, PRBool enabled)
 	SSL_DBG(("%d: SSL[%d]: bad socket in CipherPrefSet", SSL_GETPID(), fd));
 	return SECFailure;
     }
+    if (ssl_IsRemovedCipherSuite(which))
+    	return SECSuccess;
     if (enabled && ss->opt.noStepDown && SSL_IsExportCipherSuite(which)) {
     	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 	return SECFailure;
@@ -993,7 +1023,10 @@ SSL_CipherPrefGet(PRFileDesc *fd, PRInt32 which, PRBool *enabled)
 	*enabled = PR_FALSE;
 	return SECFailure;
     }
-    if (SSL_IS_SSL2_CIPHER(which)) {
+    if (ssl_IsRemovedCipherSuite(which)) {
+	*enabled = PR_FALSE;
+    	rv = SECSuccess;
+    } else if (SSL_IS_SSL2_CIPHER(which)) {
 	rv = ssl2_CipherPrefGet(ss, which, enabled);
     } else {
 	rv = ssl3_CipherPrefGet(ss, (ssl3CipherSuite)which, enabled);
@@ -1445,7 +1478,6 @@ SECStatus PR_CALLBACK
 ssl_SetTimeout(PRFileDesc *fd, PRIntervalTime timeout)
 {
     sslSocket *ss;
-    int        rv;
 
     ss = ssl_GetPrivate(fd);
     if (!ss) {
