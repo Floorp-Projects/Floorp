@@ -252,9 +252,10 @@ nsLocalFile::nsLocalFile(const nsLocalFile& other)
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsLocalFile,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile,
                               nsIFile,
-                              nsILocalFile)
+                              nsILocalFile,
+                              nsIHashable)
 
 nsresult
 nsLocalFile::nsLocalFileConstructor(nsISupports *outer, 
