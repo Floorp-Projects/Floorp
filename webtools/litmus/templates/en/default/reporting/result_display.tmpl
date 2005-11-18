@@ -163,8 +163,7 @@ You must log in before you can leave comments.
     [% ELSE %]
 Anonymous
     [% END %]
- [% comment.user.submission_time | html %] -------</em></p>
-[% # XXX: is this right or should it be comment.submission_time? %]
+ [% comment.submission_time.strftime("%Y-%m-%d %T %Z") | html %] -------</em></p>
 
 <p>[% comment.comment FILTER html %]</p>
 

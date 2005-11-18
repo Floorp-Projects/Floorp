@@ -383,7 +383,7 @@ div.pagetools ul {
     margin-bottom: 5px;
 }
 
-table.single-result, table.comments {
+table.single-result, table.comments, table.stats {
     margin-top: 5px;
 }
 
