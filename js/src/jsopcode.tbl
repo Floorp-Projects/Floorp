@@ -392,3 +392,9 @@ OPDEF(JSOP_LITOPX,        191,"litopx",     NULL,     5,  0,  0, 12,  JOF_LITOPX
 OPDEF(JSOP_STARTXML,      192,"startxml",    NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_STARTXMLEXPR,  193,"startxmlexpr",NULL,    1,  0,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_SETMETHOD,     194,"setmethod",   NULL,    3,  2,  1,  1,  JOF_CONST|JOF_PROP)
+
+/*
+ * Stop interpretation, emitted at end of script to save the threaded bytecode
+ * interpreter an extra branch test on every DO_NEXT_OP (see jsinterp.c).
+ */
+OPDEF(JSOP_STOP,          195,"stop",        NULL,    1,  0,  0,  0,  JOF_BYTE)
