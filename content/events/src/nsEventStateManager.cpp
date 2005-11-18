@@ -5509,7 +5509,10 @@ nsEventStateManager::GetKBStateControl(nsPresContext* aPresContext,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
   nsCOMPtr<nsIKBStateControl> kb = do_QueryInterface(widget);
-  NS_ENSURE_TRUE(kb, NS_ERROR_FAILURE);
+  // Don't use NS_ENSURE_TRUE. Because nsIWidget is not having
+  // nsIKBStateControl always. e.g., GTK2, OS/2, BeOS...
+  if (!kb)
+    return NS_ERROR_FAILURE;
   NS_ADDREF(*aResult = kb);
   return NS_OK;
 }
