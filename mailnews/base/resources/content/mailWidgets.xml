@@ -1981,14 +1981,9 @@
   <binding id="folderSummary-popup" extends="chrome://global/content/bindings/popup.xml#tooltip">
     <content>
       <children>
-        <xul:vbox/>
+        <xul:folderSummary/>
       </children>
     </content>
-    
-    <implementation>
-      <field name="mMaxMsgHdrsInPopup">8</field>
-    </implementation>
-
     <handlers>
       <handler event="popupshowing">
         <![CDATA[
@@ -2000,64 +1995,92 @@
           var msgFolder = GetFolderResource(folderTree, row).QueryInterface(Components.interfaces.nsIMsgFolder);
           if (!msgFolder || msgFolder.isServer) 
             return false;
-          
-          // now get the database
-          var msgDatabase = msgFolder.getMsgDatabase(msgWindow);
-          msgFolder.setMsgDatabase(null);
-          var msgKeys = {};
-          var numMsgKeys = {};
-          msgDatabase.getNewList(numMsgKeys, msgKeys);
-
-          if (!numMsgKeys.value)
-            return false;
-
-          // fetchMsgPreviewText forces the previewText property to get generated
-          // for each of the message keys.
-          var asyncResults = {};
-
-          try {
-            msgFolder.fetchMsgPreviewText(msgKeys.value, numMsgKeys.value, false, null, asyncResults); 
-            msgFolder.setMsgDatabase(null);
-          }
-          catch (ex)
-          {
-            // fetchMsgPreviewText throws an error when we call it on a news folder, we should just not show
-            // the tooltip if this method returns an error.
-            dump('fetchMsgPreviewText threw an error or failed to set any preview text data\n');
-            msgFolder.setMsgDatabase(null);
-            return false; 
-          }
-
-          var index = 0;
-          while (index < this.mMaxMsgHdrsInPopup && index < numMsgKeys.value)
-          {
-            var msgPopup = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "folderSummaryMessage");
-            // hack to work around the fact that the xbl binding from createElementNS is asynch. 
-            setTimeout(function(aMsgPopup, aMsgHdr) {
-                      aMsgPopup.init(aMsgHdr); }, 0, 
-			                msgPopup, msgDatabase.GetMsgHdrForKey(msgKeys.value[index++])); 
-
-            document.getAnonymousNodes(this)[0].appendChild(msgPopup);
-          }
-          return true;
+          return document.getAnonymousNodes(this)[0].parseFolder(msgFolder);
         ]]>
       </handler>
 
       <handler event="popuphiding">
-        <![CDATA[
-          var containingBox = document.getAnonymousNodes(this)[0];
-          while (containingBox.hasChildNodes()) 
-            containingBox.removeChild(containingBox.lastChild);          
-        ]]>
+        document.getAnonymousNodes(this)[0].clear();
       </handler>
     </handlers>
+  </binding>
+
+  <binding id="folderSummary">
+    <content>
+      <xul:vbox/>
+    </content>
+    
+    <implementation>
+      <field name="mMaxMsgHdrsInPopup">8</field>
+      <method name="parseFolder">
+        <parameter name="aFolder"/>
+        <body>
+          <![CDATA[
+            // from nsMsgFolderFlags.h
+            const kMsgPopupFolderFlagTrash = 0x0100;
+            const kMsgPopupFolderFlagJunk = 0x40000000;
+            // skip servers, Trash and Junk folders
+            if (!aFolder || aFolder.isServer || aFolder.getFlag(kMsgPopupFolderFlagJunk) || aFolder.getFlag(kMsgPopupFolderFlagTrash))
+              return false;
+          
+            // now get the database
+            var msgDatabase = aFolder.getMsgDatabase(null);
+            aFolder.setMsgDatabase(null);
+            var msgKeys = {};
+            var numMsgKeys = {};
+            msgDatabase.getNewList(numMsgKeys, msgKeys);
+
+            if (!numMsgKeys.value)
+              return false;
+
+            // fetchMsgPreviewText forces the previewText property to get generated
+            // for each of the message keys.
+            var asyncResults = {};
+
+            try {
+              aFolder.fetchMsgPreviewText(msgKeys.value, numMsgKeys.value, false, null, asyncResults);
+              aFolder.setMsgDatabase(null);
+            }
+            catch (ex)
+            {
+              // fetchMsgPreviewText throws an error when we call it on a news folder, we should just not show
+              // the tooltip if this method returns an error.
+              aFolder.setMsgDatabase(null);
+              return false; 
+            }
+
+            var index = 0;
+            while (document.getAnonymousNodes(this)[0].childNodes.length < this.mMaxMsgHdrsInPopup && index < numMsgKeys.value)
+            {
+              var msgPopup = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "folderSummaryMessage");
+              // hack to work around the fact that the xbl binding from createElementNS is asynch. 
+              setTimeout(function(aMsgPopup, aMsgHdr) {
+                        aMsgPopup.init(aMsgHdr); }, 0, 
+			                  msgPopup, msgDatabase.GetMsgHdrForKey(msgKeys.value[index++])); 
+              document.getAnonymousNodes(this)[0].appendChild(msgPopup);
+            }            
+            return true;
+          ]]>
+        </body>
+      </method>
+
+      <method name="clear">
+        <body>
+          <![CDATA[
+            var containingBox = document.getAnonymousNodes(this)[0];
+            while (containingBox.hasChildNodes()) 
+              containingBox.removeChild(containingBox.lastChild);      
+          ]]>
+        </body>
+      </method>
+    </implementation>
   </binding>
 
   <binding id="folderSummary-message">
     <content>
       <xul:vbox>
         <xul:hbox>
-          <xul:label class="folderSummary-subject" xbl:inherits="value=subject,crop" crop="right"/>
+          <xul:label class="folderSummary-subject" xbl:inherits="value=subject" crop="right"/>
           <xul:label class="folderSummary-sender" xbl:inherits="value=sender" crop="right"/>
         </xul:hbox>
         <xul:description class="folderSummary-previewText" xbl:inherits="value=previewText" crop="right"></xul:description>
