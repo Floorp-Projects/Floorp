@@ -330,8 +330,8 @@ nsHTMLAppletElement::IsFocusable(PRInt32 *aTabIndex)
 PRUint32
 nsHTMLAppletElement::GetDesiredIMEState()
 {
-  if (nsObjectLoadingContent::Type() == eType_Plugin)
+  if (Type() == eType_Plugin)
     return nsIContent::IME_STATUS_ENABLE;
-  return nsIContent::GetDesiredIMEState();
+  return nsGenericHTMLElement::GetDesiredIMEState();
 }
 
