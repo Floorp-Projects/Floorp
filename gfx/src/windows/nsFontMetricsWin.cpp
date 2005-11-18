@@ -84,7 +84,7 @@ PRBool IsWin95OrWin98()
   }
   return gIsWIN95OR98;
 #else
-  return PR_FALSE;
+  return PR_TRUE;
 #endif
 }
 
