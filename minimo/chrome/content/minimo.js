@@ -162,7 +162,7 @@ nsBrowserStatusHandler.prototype =
      const rsschromemask = "chrome://minimo/content/rssview/rssblank.xhtml";
 
      if(aLocation.spec.substr(0, rsschromemask.length) == rsschromemask) {
-        this.urlBar.value="SB: "+gRSSTag; 
+        this.urlBar.value="sb:"+gRSSTag; 
      } else {
       domWindow = aWebProgress.DOMWindow;
       // Update urlbar only if there was a load on the root docshell
@@ -651,10 +651,14 @@ function DoBrowserSearch() {
 
 /* Toolbar specific code - to be removed from here */ 
 
-function DoBrowserRSS() {
-  BrowserViewRSS();
+function DoBrowserRSS(sKey) {
+
+  if(!sKey) BrowserViewRSS(); // The toolbar is being used. Otherwise it is via the sb: trap protocol. 
+
   try { 
-    if(document.getElementById("toolbar-rss-rsstag").value!="") {
+    if(sKey) {
+      gRSSTag=sKey;
+    } else if(document.getElementById("toolbar-rss-rsstag").value!="") {
       gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
     }
     getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssblank.xhtml');
@@ -663,7 +667,6 @@ function DoBrowserRSS() {
    
   }  
 }
-
 
 /* Toolbar specific code - to be removed from here */ 
 
@@ -794,6 +797,15 @@ function URLBarEntered()
     var url = gURLBar.value;
     if (gURLBar.value == "" || gURLBar.value == null)
       return;
+
+    /* Trap to SB 'protocol' */ 
+
+    if(gURLBar.value.substring(0,3)=="sb:") {
+	 DoBrowserRSS(gURLBar.value.split("sb:")[1]);
+	return;
+    }
+
+    /* Other normal cases */ 
 
     var fixedUpURI = gURIFixup.createFixupURI(url, 2 /*fixup url*/ );
     gGlobalHistory.markPageAsTyped(fixedUpURI);
