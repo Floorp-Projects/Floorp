@@ -1568,6 +1568,30 @@
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
+		0FA9712E092AF99F005C1CA6 = {
+			children = (
+				0FA9712F092AF9A0005C1CA6,
+			);
+			isa = PBXGroup;
+			name = images;
+			path = PreferencePanes/Privacy/images;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FA9712F092AF9A0005C1CA6 = {
+			isa = PBXFileReference;
+			lastKnownFileType = image.tiff;
+			name = action_button.tiff;
+			path = PreferencePanes/Privacy/images/action_button.tiff;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0FA97130092AF9A0005C1CA6 = {
+			fileRef = 0FA9712F092AF9A0005C1CA6;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0FACBFEC07DC020D00DEE23A = {
 			children = (
 				0FACBFED07DC020D00DEE23A,
@@ -6838,6 +6862,7 @@
 				3F44ADC705BDFBA000CB4B08,
 				3F44ADC805BDFBA000CB4B08,
 				3F44ADC905BDFBA000CB4B08,
+				0FA97130092AF9A0005C1CA6,
 			);
 			isa = PBXResourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -15829,6 +15854,7 @@
 				F57F205F029997E701000106,
 				F57F2060029997E701000106,
 				F57F2061029997E701000106,
+				0FA9712E092AF99F005C1CA6,
 				F517052F034B5E9701026D5D,
 			);
 			isa = PBXGroup;
