@@ -65,13 +65,14 @@ my %constants;
 $constants{litmus_version} = $Litmus::Config::version;
 
 # html tag stripper:
-my $strip = HTML::StripScripts::Parser->new({
-                            Context => 'Inline', 
-                            AllowHref => 1,
-                            BanAllBut => ['a', 'b', 'br', 'em', 'p', 'i', 'hr', 
-                            			  'ul', 'ol', 'li'],
-                            strict_names => 1,
-                            });
+my $strip = HTML::StripScripts::Parser->new(
+                            {
+                                AllowHref => 1,
+                                BanAllBut => ['a', 'b', 'br', 'em', 'p', 'i', 'hr', 
+                                          'ul', 'ol', 'li'],
+                            },
+                              strict_names => 1,
+                            );
 
 ###############################################################################
 # Templatization Code
