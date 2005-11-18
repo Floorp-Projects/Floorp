@@ -2524,6 +2524,37 @@ nsLocalFile::GetTarget(nsAString &_retval)
     return rv;
 }
 
+// nsIHashable
+
+NS_IMETHODIMP
+nsLocalFile::Equals(nsIHashable* aOther, PRBool *aResult)
+{
+    nsCOMPtr<nsIFile> otherfile(do_QueryInterface(aOther));
+    if (!otherfile) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+
+    return Equals(otherfile, aResult);
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetHashCode(PRUint32 *aResult)
+{
+    // In order for short and long path names to hash to the same value we
+    // always hash on the short pathname.
+
+    char thisshort[MAX_PATH];
+    DWORD thisr = GetShortPathName(mWorkingPath.get(),
+                                   thisshort, sizeof(thisshort));
+    if (thisr < sizeof(thisshort))
+        *aResult = nsCRT::HashCode(thisshort);
+    else
+        *aResult = nsCRT::HashCode(mWorkingPath.get());
+
+    return NS_OK;
+}
+
 nsresult
 NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result)
 {

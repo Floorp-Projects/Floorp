@@ -2038,6 +2038,28 @@ nsresult nsLocalFile::CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutS
   return rv;
 }
 
+// nsIHashable
+
+NS_IMETHODIMP
+nsLocalFile::Equals(nsIHashable* aOther, PRBool *aResult)
+{
+    nsCOMPtr<nsIFile> otherfile(do_QueryInterface(aOther));
+    if (!otherfile) {
+        *aResult = PR_FALSE;
+        return NS_OK;
+    }
+
+    return Equals(otherfile, aResult);
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetHashCode(PRUint32 *aResult)
+{
+    CFURLRef whichURLRef = mFollowLinks ? mTargetRef : mBaseRef;
+    *aResult = CFHash(whichURLRef);
+    return NS_OK;
+}
+
 //*****************************************************************************
 //  Global Functions
 //*****************************************************************************
