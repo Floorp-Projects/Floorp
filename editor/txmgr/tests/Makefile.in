@@ -42,8 +42,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MOZILLA_INTERNAL_API = 1
-
 REQUIRES	= xpcom \
 		  txmgr \
 		  $(NULL)
@@ -52,7 +50,10 @@ PROGRAM		= TestTXMgr$(BIN_SUFFIX)
 
 CPPSRCS		= TestTXMgr.cpp
 
-LIBS		= $(MOZ_COMPONENT_LIBS)
+LIBS = \
+	$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
