@@ -1773,19 +1773,31 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
 
             subject.Insert(NS_LITERAL_STRING("Re: "), 0);
             m_compFields->SetSubject(subject);
+          
+            nsXPIDLCString author, authorEmailAddress;
+            msgHdr->GetAuthor(getter_Copies(author));
+            nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
+            if (parser) {
+              // convert to UTF8 before passing to MakeFullAddress
+              rv = parser->ExtractHeaderAddressMailboxes(nsnull, author.get(), 
+                                                            getter_Copies(authorEmailAddress));
+            }
+            nsXPIDLCString curIdentityEmail;
+            m_identity->GetEmail(getter_Copies(curIdentityEmail));
 
-            nsXPIDLCString author;
-            rv = msgHdr->GetAuthor(getter_Copies(author));
-            if (NS_FAILED(rv))
-              return rv;
+            nsXPIDLCString toField;
+            if (curIdentityEmail.Equals(authorEmailAddress))
+              msgHdr->GetRecipients(getter_Copies(toField));
+            else
+              toField.Assign(author);
 
-            rv = mimeConverter->DecodeMimeHeader(author,
+            rv = mimeConverter->DecodeMimeHeader(toField,
                 getter_Copies(decodedCString),
                 originCharset.get(), charsetOverride);
             if (NS_SUCCEEDED(rv) && decodedCString)
               m_compFields->SetTo(decodedCString);
             else
-              m_compFields->SetTo(author);
+              m_compFields->SetTo(toField);
 
             // Setup quoting callbacks for later...
             mWhatHolder = 1;
