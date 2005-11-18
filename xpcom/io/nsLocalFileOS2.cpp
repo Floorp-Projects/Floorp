@@ -608,7 +608,11 @@ nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void*
 // nsLocalFile::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile, nsILocalFile, nsIFile, nsILocalFileOS2)
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
+                              nsILocalFile,
+                              nsIFile,
+                              nsILocalFileOS2,
+                              nsIHashable)
 
 
 //-----------------------------------------------------------------------------

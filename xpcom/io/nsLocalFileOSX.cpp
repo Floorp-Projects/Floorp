@@ -334,10 +334,11 @@ nsLocalFile::~nsLocalFile()
 #pragma mark -
 #pragma mark [nsISupports]
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsLocalFile,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
                               nsILocalFileMac,
                               nsILocalFile,
-                              nsIFile)
+                              nsIFile,
+                              nsIHashable)
                               
 NS_METHOD nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
