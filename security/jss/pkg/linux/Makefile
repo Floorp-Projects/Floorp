@@ -38,13 +38,15 @@
 #
 # ***** END LICENSE BLOCK *****
 #
-#ident	"$Id: Makefile,v 1.20 2005/11/07 20:19:05 christophe.ravel.bugs%sun.com Exp $"
+#ident	"$Id: Makefile,v 1.21 2005/11/18 21:52:41 christophe.ravel.bugs%sun.com Exp $"
 #
 
 CORE_DEPTH = ../../..
 
 NAME        = sun-jss
-RELEASE     = 1
+ifndef RPM_RELEASE
+RPM_RELEASE = 1
+endif
 VERSION     = `grep JSS_VERSION $(CORE_DEPTH)/jss/org/mozilla/jss/util/jssver.h \
 		| sed -e 's/"$$//' -e 's/.*"//' -e 's/ .*//'`
 PWD         = `pwd`
@@ -90,7 +92,7 @@ endif
 	echo "%define _topdir `pwd`" >>temp.spec
 	sed -e "s/NAME_REPLACE/$(NAME)/" \
 		-e "s/VERSION_REPLACE/$(VERSION)/" \
-		-e "s/RELEASE_REPLACE/$(RELEASE)/" \
+		-e "s/RELEASE_REPLACE/$(RPM_RELEASE)/" \
 	<$(NAME).spec >>temp.spec
 	echo "" >>temp.spec
 	echo "%files" >>temp.spec
