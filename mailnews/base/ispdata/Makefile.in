@@ -58,8 +58,12 @@ GARBAGE		+= $(addprefix $(EXPORT_DIR)/, $(EXPORT_RESOURCE_FILES)) \
 				$(addprefix $(EXPORT_DIR_L10N)/, $(EXPORT_RESOURCE_FILES))
 
 ifneq ($(EXPORT_RESOURCE_FILES),$(NULL))
-libs::
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_FILES)) $(EXPORT_DIR)
-	$(INSTALL) $(addprefix $(srcdir)/, $(EXPORT_RESOURCE_FILES)) $(EXPORT_DIR_L10N)
+libs:: $(EXPORT_RESOURCE_FILES)
+	$(INSTALL) $^ $(EXPORT_DIR)
+	$(INSTALL) $^ $(EXPORT_DIR_L10N)
+
+install:: $(EXPORT_RESOURCE_FILES)
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp
+	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/isp/US
 endif
 
