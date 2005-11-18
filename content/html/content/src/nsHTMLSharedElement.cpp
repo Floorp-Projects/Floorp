@@ -610,7 +610,7 @@ PRUint32
 nsHTMLSharedElement::GetDesiredIMEState()
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::embed) &&
-      nsObjectLoadingContent::Type() == eType_Plugin)
+      Type() == eType_Plugin)
     return nsIContent::IME_STATUS_ENABLE;
-  return nsIContent::GetDesiredIMEState();
+  return nsGenericHTMLElement::GetDesiredIMEState();
 }

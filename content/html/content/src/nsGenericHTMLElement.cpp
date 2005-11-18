@@ -3074,14 +3074,14 @@ nsGenericHTMLFormElement::GetDesiredIMEState()
   nsCOMPtr<nsIEditor> editor = nsnull;
   nsresult rv = GetEditorInternal(getter_AddRefs(editor));
   if (NS_FAILED(rv) || !editor)
-    return nsIContent::GetDesiredIMEState();
+    return nsGenericHTMLElement::GetDesiredIMEState();
   nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(editor);
   if (!imeEditor)
-    return nsIContent::GetDesiredIMEState();
+    return nsGenericHTMLElement::GetDesiredIMEState();
   PRUint32 state;
   rv = imeEditor->GetPreferredIMEState(&state);
   if (NS_FAILED(rv))
-    return nsIContent::GetDesiredIMEState();
+    return nsGenericHTMLElement::GetDesiredIMEState();
   return state;
 }
 
