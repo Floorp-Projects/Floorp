@@ -24,6 +24,20 @@ function rssfetch(refTab,targetDoc, targetElement) {
 
 }
 
+
+function rssfetchpage(targetDoc, targetElement) {
+
+
+	var testLoad=new blenderObject();
+	testLoad.xmlSet(document.location.search.split("?url=")[1]);
+	testLoad.xslSet("rss_template_html.xml");
+	testLoad.setTargetDocument(targetDoc);
+	testLoad.setTargetElement(targetElement);
+	testLoad.run();
+
+}
+
+
 ////
 /// loads the XSL style and data-source and mix them into a new doc. 
 //
@@ -88,13 +102,9 @@ blenderObject.prototype.apply = function () {
 		} catch (e) {
 		}
             this.targetElement.appendChild(htmlFragment.firstChild);
-		//this.targetElement.setAttribute("test");
 
 
-/* has to be the actual browser */
-
-		this.refTab.setAttribute("image","chrome://minimo/skin/rssfavicon.png");
-		this.refTab.label="SB: "+gRSSTag;
+		document.getElementById("loadmessage").style.display="none";
 
 	}
 }
@@ -110,5 +120,4 @@ blenderObject.prototype.run = function () {
 	}
 
 }
-
 
