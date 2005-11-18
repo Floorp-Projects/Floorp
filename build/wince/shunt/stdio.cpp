@@ -193,7 +193,24 @@ MOZCE_SHUNT_API char* mozce_getcwd(char* buff, size_t size)
 
 MOZCE_SHUNT_API int mozce_printf(const char * format, ...)
 {
-        nclograw(format, strlen(format));
+#ifdef DEBUG
+#define MAX_CHARS_IN_VARIABLE_STRING 1024
+    
+    char buf[MAX_CHARS_IN_VARIABLE_STRING];
+    
+    TCHAR tBuf[MAX_CHARS_IN_VARIABLE_STRING];
+    
+    va_list ptr;
+    va_start(ptr,format);
+    vsprintf(buf,format,ptr);
+    
+    mbstowcs(tBuf, buf, MAX_CHARS_IN_VARIABLE_STRING);
+    
+    OutputDebugString(tBuf);
+    
+    return 1;
+#endif
+
     return 0;
 }
 

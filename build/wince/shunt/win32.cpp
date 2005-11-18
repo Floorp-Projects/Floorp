@@ -904,6 +904,11 @@ MOZCE_SHUNT_API void mozce_GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFile
 #define MIN(a,b) (((a)<(b)) ? (a) : (b))
 #endif
 
+
+#ifndef MAX
+#define MAX(a,b) (((a)>(b)) ? (a) : (b))
+#endif
+
 MOZCE_SHUNT_API DWORD mozce_GetFullPathName(const char* lpFileName, 
                                             DWORD nBufferLength, 
                                             const char* lpBuffer, 
@@ -1114,6 +1119,75 @@ MOZCE_SHUNT_API struct lconv * mozce_localeconv(void)
     return &s_locale_conv;
 }
 
+MOZCE_SHUNT_API BOOL mozce_AlphaBlend(
+                                      HDC hdcDest,                 // handle to destination DC
+                                      int nXOriginDest,            // x-coord of upper-left corner
+                                      int nYOriginDest,            // y-coord of upper-left corner
+                                      int nWidthDest,              // destination width
+                                      int nHeightDest,             // destination height
+                                      HDC hdcSrc,                  // handle to source DC
+                                      int nXOriginSrc,             // x-coord of upper-left corner
+                                      int nYOriginSrc,             // y-coord of upper-left corner
+                                      int nWidthSrc,               // source width
+                                      int nHeightSrc,              // source height
+                                      BLENDFUNCTION blendFunction  // alpha-blending function
+                                      ){
+    DWORD SCA = blendFunction.SourceConstantAlpha;
+    int w = MIN(nWidthSrc,nWidthDest);
+    int h = MIN(nHeightSrc, nHeightDest);
+    for ( int x = 0; x<= w; x++){
+        for( int y = 0; y<=h; y++){
+            COLORREF dc = GetPixel(hdcDest, nXOriginDest+x, nYOriginDest+y);
+            COLORREF sc = GetPixel(hdcSrc,  nXOriginSrc+x,  nYOriginSrc+y);
+            color Src,Dst;
+            Src.Red = GetRValue(sc);
+            Dst.Red = GetRValue(dc);
+            Src.Green = GetGValue(sc);
+            Dst.Green = GetGValue(dc);
+            Src.Blue = GetBValue(sc);
+            Dst.Blue = GetBValue(dc);
+            
+            Src.Alpha = 1.0 - (double)((sc >> 24)/255.0);
+            Dst.Alpha = 1.0 - (double)((dc >> 24)/255.0);
+            
+            //Src.Alpha = 1.0;//(double)((sc >> 24)/255.0);
+            //Dst.Alpha = 1.0;//(double)((dc >> 24)/255.0);
+            
+            
+            if(blendFunction.AlphaFormat & AC_SRC_ALPHA){
+                Dst.Red 	= (unsigned char)(Src.Red * (SCA/255.0) 	+ Dst.Red * (1.0 - (SCA/255.0)));
+                Dst.Green 	= (unsigned char)(Src.Green * (SCA/255.0) 	+ Dst.Green * (1.0 - (SCA/255.0)));
+                Dst.Blue 	= (unsigned char)(Src.Blue * (SCA/255.0) 	+ Dst.Blue * (1.0 - (SCA/255.0)));
+                Dst.Alpha 	= MAX(0,MIN(1,Src.Alpha * (SCA/255.0) 	+ Dst.Alpha * (1.0 - (SCA/255.0))));
+            }else if(SCA == 0xff){
+                Dst.Red 	= (unsigned char)(Src.Alpha*Src.Red 	+ (1 - Src.Alpha) * Dst.Red);
+                Dst.Green 	= (unsigned char)(Src.Alpha*Src.Green 	+ (1 - Src.Alpha) * Dst.Green);
+                Dst.Blue 	= (unsigned char)(Src.Alpha*Src.Blue 	+ (1 - Src.Alpha) * Dst.Blue);
+                Dst.Alpha 	= MAX(0,MIN(1,Src.Alpha 	+ (1 - Src.Alpha) * Dst.Alpha));
+            }else{
+                Src.Red 	= (unsigned char)(Src.Red 	* SCA / 255.0);
+                Src.Green 	= (unsigned char)(Src.Green 	* SCA / 255.0);
+                Src.Blue 	= (unsigned char)(Src.Blue 	* SCA / 255.0);
+                Src.Alpha 	= MAX(0,MIN(1,Src.Alpha 	* SCA / 255.0));
+                double t = (Src.Red 	+ (1 - Src.Alpha) * Dst.Red);
+                Dst.Red 	= (unsigned char)(t>255?255:t);
+                t = (Src.Green 	+ (1 - Src.Alpha) * Dst.Green);
+                Dst.Green 	= (unsigned char)(t>255?255:t);
+                t = (Src.Blue 	+ (1 - Src.Alpha) * Dst.Blue);
+                Dst.Blue 	= (unsigned char)(t>255?255:t);
+                Dst.Alpha 	= MAX(0,MIN(1,Src.Alpha 	+ (1 - Src.Alpha) * Dst.Alpha));
+            }
+            SetPixel(hdcDest,nXOriginDest+x, nYOriginDest+y, RGB(Dst.Red,Dst.Green,Dst.Blue));
+            
+            //(((unsigned char)(Dst.Alpha*255) & 0xff) << 24)|
+        }
+    }
+    
+    
+    return true;
+    
+}
+
 #if 0
 {
 #endif
@@ -1124,9 +1198,9 @@ void dumpMemoryInfo()
     MEMORYSTATUS ms;
     ms.dwLength = sizeof(MEMORYSTATUS);
     
-
+    
     GlobalMemoryStatus(&ms);
-
+    
     wprintf(L"-> %d %d %d %d %d %d %d\n", 
             ms.dwMemoryLoad, 
             ms.dwTotalPhys, 
