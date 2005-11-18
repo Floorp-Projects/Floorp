@@ -483,17 +483,14 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 #endif
 
         /*
-         * No need to emit bytecode here -- Statements already has, for each
+         * No need to emit code here -- Statements already has, for each
          * statement in turn.  Search for TCF_COMPILING in Statements, below.
          * That flag is set for every tc == &cg->treeContext, and it implies
          * that the tc can be downcast to a cg and used to emit code during
          * parsing, rather than at the end of the parse phase.
-         *
-         * Update: the threaded interpreter needs a stop instruction, so we
-         * do have to emit that here.
          */
         JS_ASSERT(cg->treeContext.flags & TCF_COMPILING);
-        ok = js_Emit1(cx, cg, JSOP_STOP) >= 0;
+        ok = JS_TRUE;
     }
 
 #ifdef METER_PARSENODES
@@ -708,17 +705,10 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
                   : JSFRAME_COMPILING;
     cx->fp = &frame;
 
-    /*
-     * Farble the body so that it looks like a block statement to js_EmitTree,
-     * which is called beneath FunctionBody (see Statements, further below in
-     * this file).
-     *
-     * NB: with threaded interpretation, we must emit a stop opcode at the end
-     * of every scripted function and top-level script.
-     */
+    /* Ensure that the body looks like a block statement to js_EmitTree. */
     CURRENT_TOKEN(ts).type = TOK_LC;
     pn = FunctionBody(cx, ts, fun, &funcg.treeContext);
-    if (!pn || js_Emit1(cx, &funcg, JSOP_STOP) < 0) {
+    if (!pn) {
         ok = JS_FALSE;
     } else {
         /*
