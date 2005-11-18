@@ -1,5 +1,5 @@
-<select name="branch">
-    <option value="">-Branch-</option>
+<select name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %]>
+    [% IF placeholder %]<option value="">-Branch-</option>[% END %]
 [% IF branches %]
 [% FOREACH branch=branches %]
     <option[% IF defaults.branch==branch.name %] selected[% END %] 

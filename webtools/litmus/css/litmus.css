@@ -1,12 +1,10 @@
-
 /* 1) Main ********************************************************************** */
 
 body {
     margin: 0 30px 2em 30px;
     color: #333;
-    line-height: 140%;
     background: #fff url("images/body_back.gif") repeat-x;
-    font-size: 0.9em;
+    font-size: 65%;
 }
 
 body, td, th, h3, input, pre { /* redundant rules for bad browsers  */
@@ -32,16 +30,16 @@ h1.firstHeading, h1.errorHeading {
     border-bottom: none;
     margin-top: 0;
     font-size: 1.4em;
-    line-height: 1.2em;
+    line-height: 1.0em;
     text-transform: lowercase; 
-}
-
-h1.firstHeading a {
-    font-size: 0.5em;
 }
 
 h1.errorHeading {
         color: #F00;
+}
+
+select {
+    font-size: 0.9em;
 }
 
 /* 2) Links********************************************************************** */
@@ -91,7 +89,7 @@ a:active {
     position: relative;
     margin: 0 0 10px 0;
     height: 60px;
-        border: solid #BBB 1px;
+    border: solid #BBB 1px;
 }
 
 #header h1 {
@@ -102,7 +100,8 @@ a:active {
 }
 #header h1 a,#header h1 a:hover {
     display: block;
-    width: 150px; height: 60px;
+    width: 150px; 
+    height: 60px;
     background: url("../images/title.png") no-repeat;
     font-size: 1px;
     text-indent: -7000em;
@@ -113,7 +112,6 @@ a:active {
     top: 8px; 
     right: 0;
     font-family: tahoma, arial, sans-serif;
-    font-size: 85%;
 }
 #header form label {
     font-weight: bold;
@@ -139,7 +137,7 @@ a:active {
     margin: 10px 0 0 170px;
     width: auto;
     text-align: center;
-    font-size: 0.8em;
+    font-size: 0.9em;
     text-transform: lowercase; 
 }
 #footer ul {
@@ -214,7 +212,6 @@ a:active {
     display: block;
     font-family: verdana, arial, sans-serif;
     text-decoration: none;
-    font-size: 85%;
     font-weight: bold;
     color: #fff;
     height: 2em;
@@ -247,7 +244,6 @@ a:active {
 }
 #navigation #personal a {
     font-family: tahoma, arial, sans-serif;
-    font-size: 80%;
     font-weight: bold;
     color: #fff;
     display: block;
@@ -268,7 +264,6 @@ a:active {
 #sidebar h3 {
     text-transform: lowercase; 
     font-weight: bold;
-    font-size: 0.9em;
     margin: 1em 0 0.3em;
 }
 #sidebar h3:first-child {
@@ -280,7 +275,6 @@ a:active {
 }
 #sidebar p,
 #sidebar li {
-    font-size: 0.85em;
     margin: 0 0 0 2em;
     padding: 0;
 }
@@ -297,7 +291,13 @@ a:active {
         padding: 2px;
 }
 
-
+#sidebar hr {
+        width: 60%;
+        color: #BBBBBB;
+        background-color: #BBBBBB;
+        height: 1px;
+        border: 0;
+}
 
 /* 7) Related ******************************************************************* */
 
@@ -338,16 +338,11 @@ div.pagetools h3 {
 div.pagetools ul {
         list-style: none;
 }
-div.pagetools input span.email {
-    font-size: 0.8em;
-}
-
 
 /* 9) Breadcrumbs**************************************************************** */
 
 #breadcrumbs {
     margin: 11px 0 0 0; padding: 0;
-    font-size: 0.85em;
     font-weight: bold;
     width: 100%;
     clear: both;
@@ -381,189 +376,194 @@ div.pagetools input span.email {
 
 /* 10 Test Results ************************************************************** */
 
-.test-results, .single-result, .comments, .test-config, .stats {
-        border-collapse: collapse;
-        width: 100%;
-        background: #ffffff;
-        margin-bottom: 5px;
+.single-result, .comments, .test-config, .stats {
+    border-collapse: collapse;
+    width: 100%;
+    background: #ffffff;
+    margin-bottom: 5px;
+}
+
+table.single-result, table.comments {
+    margin-top: 5px;
 }
 
 .test-results {
-        border: solid #666666 1px;
-        margin-bottom: 10px;
+    border-collapse: collapse;
+    margin-bottom: 5px;    
+    width: 100%;
+    background: #ffffff;
 }
 
 .stats {
-        border: solid #bbbbbb 1px;
-        margin-bottom: 10px;
+    border: solid #bbbbbb 1px;
+    margin-bottom: 10px;
 }
 
 table.section {
-    border-spacing: 10px;
     border: none;
     width: 100%;
 }
 
 .run-tests {
-    padding: 10px;
-    border-collapse: collapse;
-        background: #ffffff;
-        border: solid #666666 1px;
-        margin-bottom: 10px;
+    border: solid #666666 1px;
+    background: #ffffff;
+    margin-bottom: 10px;
 }
 
 #configuration {
-        display: block;
+    display: block;
 }
 
 .comments {
-        border: solid #BBB 1px;
-        background: #DDD;
-        color: #000;
+    border: solid #BBB 1px;
+    background: #DDD;
+    color: #000;
 }    
 
 .test-results td, .single-result td, .comments td {
-        vertical-align: top;
-        padding: 3px 5px 3px 5px;
-        font-size: .8em;
+    vertical-align: top;
+    padding: 3px 5px 3px 5px;
+    margin: 0px;
 }
 
 .single-result td {
-        border: solid #BBB 1px;
+    border: solid #BBB 1px;
+}
+
+.run-tests tr {
+    padding: 10px;
 }
 
 .run-tests td {        
     vertical-align: middle;
-        padding: 3px 5px 3px 5px;
+    padding: 3px 5px 3px 5px;
 }
 
 .test-results td, .run-tests td {
-        border: solid #BBB 1px;
+    border: solid #BBB 1px;
 }
 
 td.header, th {
     vertical-align: middle;
-        background: #DDD;
-        border: solid #BBB 1px;
-        font-weight: bold;
-        font-size: .85em;
+    background: #DDD;
+    border: solid #BBB 1px;
+    font-weight: bold;
     text-transform: lowercase; 
-        text-align: center;
+    text-align: center;
     color: #666666;
-        padding: 0px 5px 0px 5px;
+    padding: 0px 5px 0px 5px;
 }
 
 .run-tests td.header {
-        background: #DDD;
-        border: solid #BBB 1px;
-        font-weight: bold;
-        font-size: 1.05em;
+    background: #DDD;
+    border: solid #BBB 1px;
+    font-weight: bold;
+    font-size: 1.05em;
     text-transform: lowercase; 
-        text-align: right;
-        padding: 0px 5px 0px 5px;
+    text-align: right;
+    padding: 0px 5px 0px 5px;
 }
 
 .no-results {
-        background: inherit;
+    background: inherit;
     color: #F00;
-        text-align: center;
+    text-align: center;
 }
 
 .radio-testresults {
-        border: solid #BBB 1px;
-        border-collapse: collapse;
-        padding: 3px 5px 3px 5px;
+    border: solid #BBB 1px;
+    border-collapse: collapse;
+    padding: 3px 5px 3px 5px;
     margin: 5px;
 }  
 
 .testresults-submitted {
-        border-collapse: collapse;
+    border-collapse: collapse;
     margin: 0px;
     padding: 0px;
 }  
 
 .testresults-submitted td {
-        border: solid #BBB 1px;
+    border: solid #BBB 1px;
     padding: 3px;
     padding-left: 10px;
     padding-right: 10px;
 }
 
 table.radio-testresults tr {
-        border: solid #BBB 1px;
-        padding: 3px 5px 3px 5px;
+    border: solid #BBB 1px;
+    padding: 3px 5px 3px 5px;
 }  
 
 .pass {
-        background: #9F9;
+    background: #9F9;
 }
 
 .pass a:hover {
-        color: #00cc00;
+    color: #00cc00;
 }
 
 .fail {
-        background: #F99;
+    background: #F99;
 }
 
 .fail a:hover {
-        color: #cc0000;
+    color: #cc0000;
 }
 
 .unclear {
-        background: #FF9;
+    background: #FF9;
 }
 
 .unclear a:hover {
-        color: #cccc00;
+    color: #cccc00;
 }
 
 .test-results tr.search {
-        background: #DDD;
-        border: solid #BBB 1px;
-        font-size: 1em;
-        text-align: center;
-        padding: 0px 5px 0px 5px;
+    background: #DDD;
+    border: solid #BBB 1px;
+    font-size: 1em;
+    text-align: center;
+    padding: 0px 5px 0px 5px;
 }
 
 .test-results td.search-heading {
     text-transform: lowercase;
     text-align: center;
-        vertical-align: middle;
+    vertical-align: middle;
     font-weight: bold;
     color: #666666;
 }
 
 .test-results td.search {
-        text-align: center;
-        vertical-align: middle;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .test-results td.search-submit {
-        text-align: right;
-        vertical-align: middle;
+    text-align: right;
+    vertical-align: middle;
 }
 
 .legend td {
-        vertical-align: top;
-        padding: 3px 5px 3px 5px;
-        border: solid #BBB 1px;
-        font-size: .8em;
-        text-align: center;
+    vertical-align: top;
+    padding: 3px 5px 3px 5px;
+    border: solid #BBB 1px;
+    text-align: center;
 }
 
 .advanced-search {
     padding: 0px;
-        width: 100%;
+    width: 100%;
 }
 
 .advanced-search td.heading {
-        font-weight: bold;
+    font-weight: bold;
 }
 
 .advanced-search td.instructions {
-        text-align: center;
-        padding: 0px 5px 10px 5px;
+    text-align: center;
+    padding: 0px 5px 10px 5px;
 }
 
 .test-config td.header {
@@ -580,13 +580,13 @@ div.title_sub {
 }
  
 div.sec_head { 
-    background-color: #d0d0d0; 
     padding: 0px; 
     font-weight: bold;
+    background-color: #dddddd;
 }
 
 div.testcase-head { 
-    background-color: #dddddd;
+    background-color: #cccccc;
     padding: 0px; 
     font-weight: bold;
 }
@@ -597,29 +597,18 @@ div.sec_head table, div.testcase-head table {
 }
 
 div.sec_head td.l, div.testcase-head td.l {
-    padding: 3px;
-    padding-left: 10px;
-    padding-right: 10px;
     font-weight: bold;
-    font-size: 1.0em;
-    line-height: 1.0em;
     text-transform: lowercase;
     color: #666666;
 }
 
 div.sec_head td.r, div.testcase-head td.r {
-    padding: 3px;
-    padding-left: 10px;
-    padding-right: 10px;
     text-align: right;
-    padding: 5px;    
     vertical-align: middle;
-    font-size: 0.7em;
 }
 
 div.nav { 
-    background-color: #d0d0d0;
-    display: none;
+    background-color: #dddddd;
     text-align: right;
     text-transform: lowercase; 
 }
@@ -635,6 +624,7 @@ div.nav a:hover {
 }
 
 div.summary { 
+    margin-top: 5px;
     background-color: #efefef; 
 }
 
@@ -642,7 +632,7 @@ div.summary td {
     vertical-align:   top;
     background-color: #efefef; 
     padding:          10px;
-        width:            25%;
+    width:            25%;
 }
 
 div.summary p {
@@ -664,16 +654,13 @@ div.tcs {
 
 div.tcs table {
     width:200px;
-/* border-color:#ffffff;
-*     border-style:solid;
-*    border-width:0 2px 2px 0;
-*/    padding:10px;
+    padding:10px;
 }
 
 table.tcm { 
-        border: solid #bbbbbb 1px;
+    border: solid #bbbbbb 1px;
     width:100%;
-    margin: 0px;
+    margin: 5px 0px 0px 0px;
 }
 
 table.tcm td { 
@@ -684,7 +671,7 @@ table.tcm td {
 }
 
 table.tcm td.header {
-    background-color: #d0d0d0; 
+    background-color: #dddddd;
 }
 
 td.content ul, td.content ol {
@@ -721,7 +708,7 @@ div.t_link a {
 #popup {
     position: absolute;
     margin: -5em 0 0 -5em;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
 .who#popup{
@@ -794,7 +781,6 @@ textarea {
 }
 
 .t_link {
-    font-size: 0.8em;
     font-weight: bold;
     text-transform: lowercase;
 }
@@ -814,9 +800,7 @@ ul.select-group {
 }
 
 div.instructions {
-        border-collapse: collapse;
-    padding:         10px;
-    font-size:       0.8em;
+    border-collapse: collapse;
 }
 
 ul.instructions {
@@ -833,7 +817,6 @@ ol {
 #pageload {
     position: relative;
     left: 100px;
-    font-size: 0.7em;
     text-align: center;
     text-transform: lowercase;     
 }    
@@ -852,18 +835,22 @@ ol {
     background-color: #666666;
 }
 
-div.section-full {
-        border: solid #bbbbbb 1px;
-        margin-bottom: 5px;    
+div.section-full, div.category, div.section, div.testcase {
+    padding: 10px;
+    margin-bottom: 5px;    
+    border: solid #bbbbbb 1px;
     background-color: #dddddd;
 }
 
-div.section-full {
+div.testcase {
+    background-color: #cccccc;
+}
+
+div.section-full, div.category {
     width: 100%;
 }
 
 div.section-header {
-    padding: 10px;
     font-size: 1.0em;
     line-height: 1.0em;
     font-weight: bold;
@@ -871,11 +858,36 @@ div.section-header {
     text-transform: lowercase;
 }
 
+div.category h2, div.category h3 {
+    font-weight: bold;
+    color: #666666;
+    text-transform: lowercase;
+    padding: 0px;
+    margin: 2px;
+}
+
+div.category h2 {
+    margin-bottom: 10px;
+    font-size: 1.0em;
+    line-height: 1.0em;
+}
+
+div.category h3 {
+    margin: 5px 0px 5px 0px;
+    color: #363636;
+    font-size: 0.9em;
+    line-height: 0.9em;
+}
+
+div.collapsable {
+/*    font-size: 0.85em;*/
+}
+
 div.section-content {
-    padding: 5px;
+    padding: 0px;
     padding-left: 10px;
     padding-right: 10px;
-    font-size: 0.8em;
+/*    font-size: 0.8em;*/
 }
 
 .submit {
@@ -891,8 +903,9 @@ div.section-content {
 }
 
 table.section td.subsection {
-        border: solid #bbbbbb 1px;
-        margin-bottom: 5px;    
+    padding: 10px;
+    border: solid #bbbbbb 1px;
+    margin-bottom: 5px;    
     background-color: #dddddd;
     vertical-align: top;
 }
@@ -901,4 +914,34 @@ img.icon {
     vertical-align: middle;
     border: 0;
     padding: 5px;
+}
+
+table.category {
+    border: 0px;
+    margin: 0px;
+}
+
+table.category select {
+    width: 20em;
+}
+
+table.category td {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+
+table.category h1 {
+    font-size: 1.1em;
+}
+
+input.button {
+    font-size: 0.9em;
+    margin-top: 5px;
+}    
+
+div.advSearchForm {
+    padding: 0px;
+    margin: 0px;
+    border: 0px;
 }

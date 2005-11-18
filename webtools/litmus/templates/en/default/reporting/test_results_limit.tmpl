@@ -1,3 +1,30 @@
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
+  #
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
+  #
+  # The Original Code is Litmus.
+  #
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2005
+  # the Initial Developer. All Rights Reserved.
+  #
+  # Contributor(s):
+  #   Chris Cooper <ccooper@deadsquid.com>
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
+#%]
+
 [% PROCESS global/selects.none.tmpl %]
 
 <form name="search_results" method="get" action="search_results.cgi" onSubmit="if(this.summary.value=='-Summary-'){this.summary.value = '';}">
@@ -59,10 +86,10 @@ function init()
   <td class="search">[% INCLUDE form_widgets/select_timespan.tmpl %]</td>
   <td class="search"></td>
   <td class="search">[% INCLUDE form_widgets/input_summary.tmpl %]</td>
-  <td class="search">[% INCLUDE form_widgets/select_test_group.tmpl %]</td>
-  <td class="search">[% INCLUDE form_widgets/select_product.tmpl %]</td>
-  <td class="search">[% INCLUDE form_widgets/select_platform.tmpl %]</td>
-  <td class="search">[% INCLUDE form_widgets/select_branch.tmpl %]</td>
+  <td class="search">[% INCLUDE form_widgets/select_test_group.tmpl name="test_group" placeholder=1 %]</td>
+  <td class="search">[% INCLUDE form_widgets/select_product.tmpl name="product" placeholder=1 %]</td>
+  <td class="search">[% INCLUDE form_widgets/select_platform.tmpl name="platform" placeholder=1 %]</td>
+  <td class="search">[% INCLUDE form_widgets/select_branch.tmpl name="branch" placeholder=1 %]</td>
 </tr>
 
 <tr class="search">
@@ -71,8 +98,8 @@ Limit to</td>
   <td class="search">
   <input type="text" name="limit" value="[% limit | html %]" size="5"> results</td>
   <td class="search-submit" colspan="6">
-  <input type="reset" onclick="FormInit(this.parent, '');">&nbsp;
-  <input type="submit" value="Show Results">
+  <input class="button" type="reset" onclick="FormInit(this.parent, '');">&nbsp;
+  <input class="button" type="submit" value="Show Results">
 </td>
 </tr>
 

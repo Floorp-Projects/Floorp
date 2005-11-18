@@ -1,0 +1,71 @@
+<div id="opsyses" class="category">
+
+<h2>Operating Systems</h2>
+
+<h3 class="display opsys_add"><a name="#opsys_add">Add&nbsp;&raquo;</a></h3>
+<div id="opsys_add" class="collapsable">
+<form name="opsys_add">
+<table class="category">
+<tr>
+<td>Name:</td>
+<td><input name="new_opsys_name" type="text" size="30"></td>
+</tr>
+<tr>
+<td>Platform:</td>
+<td>
+[% INCLUDE form_widgets/select_platform.tmpl name="opsys_add_platform" placeholder=1 %]
+</td>
+</tr>
+<tr>
+<td>Detect Regexp:</td>
+<td><input name="new_detect_regexp" type="text" size="30"></td>
+</tr>
+<tr>
+<td colspan="2" align="right">
+<input class="category" name="reset" type="reset" value="Reset">&nbsp;<input class="category" name="add_opsys" type="submit" value="Add New Operating System">
+</td>
+</tr>
+</table>
+</form>
+</div>
+
+<h3 class="display opsys_modify"><a name="#opsys_modify">Modify / Delete&nbsp;&raquo;</a></h3>
+<div id="opsys_modify" class="collapsable">
+<form name="opsys_modify">
+<table class="category">
+<tr>
+<td colspan="2" align="left">
+Select Existing Operating System:<br/>
+[% INCLUDE form_widgets/select_opsys.tmpl size=5 name="opsys_modify_existing" %]
+</td>
+</tr>
+<tr>
+<td>Name:</td>
+<td><input disabled name="modify_opsys_name" type="text" size="30"></td>
+</tr>
+<tr>
+<td>Platform:</td>
+<td>
+[% INCLUDE form_widgets/select_platform.tmpl name="opsys_modify_platform" placeholder=1 disabled=1 %]
+</td>
+</tr>
+<tr>
+<td>Detect Regexp:</td>
+<td><input disabled name="modify_detect_regexp" type="text" size="30"></td>
+</tr>
+<tr>
+<td colspan="2" align="right">
+<input disabled class="category" name="delete_opsys" type="submit" value="Delete Opsys">&nbsp;<input disabled class="category" name="update_opsys" type="submit" value="Update Operating System">
+</td>
+</tr>
+</table>
+</form>
+
+</div>
+
+</div>
+
+
+
+
+

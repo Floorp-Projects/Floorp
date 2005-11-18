@@ -1,21 +1,28 @@
-[%# The contents of this file are subject to the Mozilla Public
-  # License Version 1.1 (the "License"); you may not use this file
-  # except in compliance with the License. You may obtain a copy of
-  # the License at http://www.mozilla.org/MPL/
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
   #
-  # Software distributed under the License is distributed on an "AS
-  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-  # implied. See the License for the specific language governing
-  # rights and limitations under the License.
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
   #
   # The Original Code is Litmus.
   #
-  # The Initial Developer of the Original Code is Netscape Communications
-  # Corporation. Portions created by Netscape are
-  # Copyright (C) 1998 Netscape Communications Corporation. All
-  # Rights Reserved.
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2005
+  # the Initial Developer. All Rights Reserved.
   #
-  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+  # Contributor(s):
+  #   Chris Cooper <ccooper@deadsquid.com>
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
 #%]
   
 [%# INTERFACE:
@@ -29,7 +36,7 @@
 
 [% onload = 'showsubgroup()' %]
 
-[% INCLUDE global/html_header.tmpl js_files=['js/SubGroup.js','js/SelectBoxes.js','js/RunTests.js'] %] 
+[% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/SubGroup.js','js/SelectBoxes.js','js/RunTests.js'] %] 
 [% INCLUDE global/litmus_header.tmpl %]
 
 <div id="page">
@@ -41,16 +48,11 @@
     <h1 class="firstHeading">[% title | html %]</h1>
 
 <div class="section-full">
-<div class="sec_head">
-<table width="100%">
-<tr>
-<td class="l">&raquo;&nbsp;Testing Configuration Summary</td>
-<td class="r"><a href="#" onclick="divSWAP('sum'); return false;">Hide / Show</a></td>
-</tr>
-</table>
+<div class="section-header">
+<a onclick="testConfigHeight.toggle();" name="#testconfig">Testing Configuration&nbsp;&raquo;</a>
 </div>
 
-  <div id="sum" class="summary" style="display: none;">
+<div id="testconfig" class="summary">
   <table class="test-config">
   <tr>
 
@@ -69,27 +71,20 @@
   </tr>
   </table>
 
-  </div> <!--END sum-->
+</div> <!--END sum-->
 
-</div> <!--END section-full-->
-
-<div class="section-full">
-<div class="sec_head">
-<table width="100%">
-<tr>
-<td class="l">&raquo;&nbsp;Percentages Explained</td>
-<td class="r"><a href="#" onclick="divSWAP('instructions'); return false;">Hide / Show</a></td>
-</tr>
-</table>
 </div>
 
-<div id="instructions" class="instructions" style="display: none;">
+<div class="section-full">
+<div class="section-header">
+<a onclick="percentagesHeight.toggle();" name="#percentages">Percentages Explained&nbsp;&raquo;</a>
+</div>
+
+<div id="percentages" class="instructions">
 [% INCLUDE instructions/percentages_explained.tmpl %]
 </div>
 
 </div>
-
-<hr />
 
 <div class="section-full">
   <div class="section-header">
@@ -127,7 +122,7 @@ Select Testing Group
     [% END %]
   [% END %]
             
-<tr class="[% groupstyle | html %]">
+<tr class="[% groupstyle | none %]">
 
   [% IF personal_completed != 100 AND 
     personal_completed != 'N/A' AND 
@@ -221,7 +216,7 @@ Please select a testing group with testcases, or that has not yet been tested in
 </p>
 
 <div id="div_submit">
-<input type="submit" name="Submit" value="Submit">
+<input class="button" type="submit" name="Submit" value="Submit">
 </div>
 
 </form>
@@ -232,6 +227,12 @@ Please select a testing group with testcases, or that has not yet been tested in
 </div> <!--END section-full-->
 
   </div> <!--END content-->
+
+  <script type="text/javascript">
+    Element.cleanWhitespace('testconfig');
+    Element.cleanWhitespace('percentages');
+    group_init();
+  </script>
 
 </div> <!--END page-->
 

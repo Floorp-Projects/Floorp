@@ -5,11 +5,12 @@
 [% order_num=1 %]
 [% FOREACH curtest=tests %]
 <li class="tcs" id="li[% order_num %]"><a id="a[% order_num %]" href="#" 
-  onclick="showTEST([% order_num %]); return false;">[
-  % order_num %]. [% curtest.summary | html %]</a>
+  onclick="allStretch.showThisHideOpen($('t[% order_num %]-content'), 100, 'height'); return false;">[% order_num %]. [% curtest.summary | html %]</a>
 </li>
 [% order_num=order_num+1 %]
 [% END %]
+<hr/>
+<li class="tcs" id="li_all"><a id="a_all" href="#" onclick="allStretch.showAll('height'); return false;">show all</a>
       </ul>
     </div>
   </div>

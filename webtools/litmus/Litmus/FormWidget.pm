@@ -134,6 +134,20 @@ sub getBranches()
 }
 
 #########################################################################
+sub getOpsyses()
+{
+    my $sql = "SELECT DISTINCT(name) FROM opsyses ORDER BY name";
+    return _getValues($sql);
+}
+
+#########################################################################
+sub getLogTypes()
+{
+    my $sql = "SELECT DISTINCT(name) FROM log_type_lookup ORDER BY name";
+    return _getValues($sql);
+}
+
+#########################################################################
 sub getTestStatuses()
 {
     my $sql = "SELECT test_status_id,name FROM test_status_lookup ORDER BY test_status_id";

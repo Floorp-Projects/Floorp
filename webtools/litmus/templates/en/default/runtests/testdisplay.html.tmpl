@@ -1,21 +1,28 @@
-[%# The contents of this file are subject to the Mozilla Public
-  # License Version 1.1 (the "License"); you may not use this file
-  # except in compliance with the License. You may obtain a copy of
-  # the License at http://www.mozilla.org/MPL/
+[%# ***** BEGIN LICENSE BLOCK *****
+  # Version: MPL 1.1
   #
-  # Software distributed under the License is distributed on an "AS
-  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-  # implied. See the License for the specific language governing
-  # rights and limitations under the License.
+  # The contents of this file are subject to the Mozilla Public License Version
+  # 1.1 (the "License"); you may not use this file except in compliance with
+  # the License. You may obtain a copy of the License at
+  # http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS IS" basis,
+  # WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  # for the specific language governing rights and limitations under the
+  # License.
   #
   # The Original Code is Litmus.
   #
-  # The Initial Developer of the Original Code is Netscape Communications
-  # Corporation. Portions created by Netscape are
-  # Copyright (C) 1998 Netscape Communications Corporation. All
-  # Rights Reserved.
+  # The Initial Developer of the Original Code is
+  # The Mozilla Corporation.
+  # Portions created by the Initial Developer are Copyright (C) 2005
+  # the Initial Developer. All Rights Reserved.
   #
-  # Contributor(s): Zach Lipton <zach@zachlipton.com>
+  # Contributor(s):
+  #   Chris Cooper <ccooper@deadsquid.com>
+  #   Zach Lipton <zach@zachlipton.com>
+  #
+  # ***** END LICENSE BLOCK *****
 #%]
   
 [%# INTERFACE:
@@ -27,9 +34,7 @@
   # @results   - the list of all possible test results
 #%]
 
-[% onload="showTEST('all');" %]
-
-[% INCLUDE global/html_header.tmpl js_files=['js/RunTests.js'] %]
+[% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/RunTests.js'] %] 
 [% INCLUDE global/litmus_header.tmpl %]
 
 <div id="page">
@@ -40,17 +45,13 @@
 
     <h1 class="firstHeading">[% title | html %]</h1>
 
+
 <div class="section-full">
-<div class="sec_head">
-<table width="100%">
-<tr>
-<td class="l">&raquo;&nbsp;Testing Configuration Summary</td>
-<td class="r"><a href="#" onclick="divSWAP('sum'); return false;">Hide / Show Summary</a></td>
-</tr>
-</table>
+<div class="section-header">
+<a onclick="testConfigHeight.toggle();" name="#testconfig">Testing Configuration&nbsp;&raquo;</a>
 </div>
 
-  <div id="sum" class="summary" style="display: none;">
+<div id="testconfig" class="summary">
   <table class="test-config">
   <tr>
 
@@ -78,8 +79,6 @@
   </div>
 </div>
 
-<hr />
-
 <form action="process_test.cgi" method="post" name="form" id="form">
 <input name="isTestResult" type="hidden" value="true" />
 <input name="editingTestcases" id="editingTestcases" type="hidden" value="" />
@@ -91,36 +90,13 @@
   <tr>
   <td class="l">Testcases</td>
   <td class="r">
-[% IF tests.size <= 1 %]
-<div class="nav" id="ma1">Previous | Next | Show All</div>
-[% ELSE %]
-[% current_order=1 %]
-[% FOREACH curtest=tests %]
-   [% next_num=current_order+1 %]
-   <div class="nav" id="ma[% current_order | none %]">
-   [% IF current_order==1 %]
-     Previous
-   [% ELSE %]
-     <a href="#" onclick="showTEST([% current_order - 1 %]); return false;">Previous</a>
-   [% END %] 
-   | 
-   [% IF current_order>=tests.size %]
-     Next
-   [% ELSE %]
-     <a href="#" onclick="showTEST([% next_num | js | html %]); return false;">
-       Next</a>
-   [% END %]
-   | <a href="#" onclick="showTEST('all'); return false;">Show All</a></div>
-   [% current_order=current_order+1 %]
-[% END %]
-   <div class="nav" id="mf"><a href="#" onclick="showTEST(tmp_pagepos); return false;">Show One</a></div>
-[% END %]
+<div class="nav"><a id="top_all" href="#" onclick="allStretch.showAll('height'); return false;">Show All</a></div>
   </td>
   </tr>
   </table>
 </div> <!--END sec_head-->
 
-</div> <!--END section-full-->
+<br/>
 
 [% first_test_id=0 %]
 [% num_testcases=0 %]
@@ -143,27 +119,25 @@
 
   <!-- Test [% i %] Start -->
 
-  <div class="section-full" id="t[% i %]" style="display:[% IF num_testcases==1 %]block[% ELSE %]none[% END %];">
+  <div class="testcase" id="t[% i %]">
   <div class="testcase-head">
     <table cellpadding="0" cellspacing="0">
     <tr>
-    <td class="l"><a name="test_4"></a>
-    [% loop.count %]: [% curtest.summary | html %] 
-      (ID: [% curtest.testid | html %])</td>
+    <td class="l"><a name="test_[% i %]" onclick="allStretch.showThisHideOpen(document.getElementById('t[% i %]-content'), 100, 'height');">[% loop.count %]: [% curtest.summary | html %]&nbsp;&raquo;</a></td>
     <td class="r">
-    <a href="show_test.cgi?id=[% curtest.testid | uri | html %]">View&nbsp;/&nbsp;Edit</a></td>
+    <a title="Testcase ID#: [% curtest.testid | html %]" href="show_test.cgi?id=[% curtest.testid | uri | html %]">View&nbsp;/&nbsp;Edit</a></td>
     </tr>
     </table>
   </div> <!--END testcase-head-->
 
-  <div class="section-content">
+  <div id="t[% i %]-content" class="section-content">
 
   <table cellspacing="0" cellpadding="0" class="tcm">
   <tr>
    <td width="50%" class="content"><div class="dh">Steps to Perform:</div>
-     <div class="dv">[% curtest.steps | html %]</div></td>
+     <div class="dv">[% curtest.steps %]</div></td>
    <td width="50%" class="content"><div class="dh">Expected Results:</div>
-     <div class="dv">[% curtest.expected_results | html %]</div></td>
+     <div class="dv">[% curtest.expected_results %]</div></td>
   </tr>
 
   <tr>
@@ -175,8 +149,7 @@
       <div class="dh">Result:</div>
       [% INCLUDE form_widgets/radio_testresults.tmpl test_id=curtest.testid %]
       <br/>
-      <div><input type="submit" id="Submit[% curtest.testid | html %]" 
-        name="Submit[% curtest.testid | html %]" value="Submit This Result" />
+      <div><input class="button" type="submit" id="Submit[% curtest.testid | html %]" name="Submit[% curtest.testid | html %]" value="Submit This Result" onClick="return confirmPartialSubmission()"/>
       </div>
      </td>
 
@@ -217,39 +190,23 @@ var tmp_menub=new Array([% i=1 %][% FOREACH test_id=test_ids %]"mb[% i %]",[% i=
 <div class="sec_head">
   <table cellspacing="0" cellpadding="0">
   <tr>
-  <td class="submitall"><div class="v3"><input type="submit" id="Submit" name="Submit" value="Submit All Results" onclick="findEdited()" /></div></td>
+  <td class="submitall"><div class="v3"><input class="button" type="submit" id="Submit" name="Submit" value="Submit All Results" onclick="findEdited()" /></div></td>
   <td class="r">
-[% IF tests.size <= 1 %]
-<div class="nav" id="mb1">Previous | Next | Show All</div>
-[% ELSE %]
-[% current_order=1 %]
-[% FOREACH curtest=tests %]
-   [% next_num=current_order+1 %]
-   <div class="nav" id="mb[% current_order | none %]">
-   [% IF current_order==1 %]
-     Previous
-   [% ELSE %]
-     <a href="#" onclick="showTEST([% current_order - 1 %]); return false;">Previous</a>
-   [% END %] 
-   | 
-   [% IF current_order>=tests.size %]
-     Next
-   [% ELSE %]
-     <a href="#" onclick="showTEST([% next_num | js | html %]); return false;">
-       Next</a>
-   [% END %]
-   | <a href="#" onclick="showTEST('all'); return false;">Show All</a></div>
-   [% current_order=current_order+1 %]
-[% END %]
-   <div class="nav" id="ml"><a href="#" onclick="showTEST(tmp_pagepos); return false;">
-     Show One</a></div>
-[% END %]
+<div class="nav"><a id="bottom_all" href="#" onclick="allStretch.showAll('height'); return false;">Show All</a></div>
   </td>
   </tr>
   </table>
 </div>
 
+</div> <!--END section-full-->
+
 </form>
+
+  <script type="text/javascript">
+    Element.cleanWhitespace('testconfig');
+    showAll=0;
+    tc_init();
+  </script>
 
 </div> <!--END content-->
 

@@ -1,5 +1,5 @@
-<select name="result_status">
-    <option value="">-Status-</option>
+<select name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %]>
+    [% IF placeholder %]<option value="">-Status-</option>[% END %]
 [% IF result_statuses %]
 [% FOREACH result_status=result_statuses %]
     <option[% IF defaults.result_status==result_status.class_name %] 

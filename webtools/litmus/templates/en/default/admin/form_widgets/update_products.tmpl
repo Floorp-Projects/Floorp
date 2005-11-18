@@ -1,0 +1,59 @@
+<div id="products" class="category">
+
+<h2>Products</h2>
+
+<h3 class="display product_add"><a name="#product_add">Add&nbsp;&raquo;</a></h3>
+<div id="product_add" class="collapsable">
+<form name="product_add">
+<table class="category">
+<tr>
+<td>Name:</td>
+<td><input name="new_product_name" type="text" size="30"></td>
+</tr>
+<tr>
+<td>Icon Path:</td>
+<td><input name="new_icon_path" type="text" size="30"></td>
+</tr>
+<tr>
+<td colspan="2" align="right">
+<input class="category" name="reset" type="reset" value="Reset">&nbsp;<input class="category" name="add_product" type="submit" value="Add New Product">
+</td>
+</tr>
+</table>
+</form>
+</div>
+
+<h3 class="display product_modify"><a name="#product_modify">Modify / Delete&nbsp;&raquo;</a></h3>
+<div id="product_modify" class="collapsable">
+<form name="product_modify">
+<table class="category">
+<tr>
+<td colspan="2" align="left">
+Select Existing Product:<br/>
+[% INCLUDE form_widgets/select_product.tmpl name="product_modify_existing" size=5 %]
+</td>
+</tr>
+<tr>
+<td>Name:</td>
+<td><input disabled name="modify_product_name" type="text" size="30"></td>
+</tr>
+<tr>
+<td>Icon Path:</td>
+<td><input disabled name="modify_icon_path" type="text" size="30"></td>
+</tr>
+<tr>
+<td colspan="2" align="right">
+<input disabled class="category" name="delete_product" type="submit" value="Delete Product">&nbsp;<input disabled class="category" name="update_product" type="submit" value="Update Product">
+</td>
+</tr>
+</table>
+</form>
+
+</div>
+
+</div>
+
+
+
+
+

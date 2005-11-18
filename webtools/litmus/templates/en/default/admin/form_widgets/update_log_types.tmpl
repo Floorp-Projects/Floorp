@@ -1,0 +1,51 @@
+<div id="log_types" class="category">
+
+<h2>Log Types</h2>
+
+<h3 class="display log_type_add"><a name="#log_type_add">Add&nbsp;&raquo;</a></h3>
+<div id="log_type_add" class="collapsable">
+<form name="log_type_add">
+<table class="category">
+<tr>
+<td>Name:</td>
+<td><input name="new_log_type_name" type="text" size="30"></td>
+</tr>
+<tr>
+<td colspan="2" align="right">
+<input class="category" name="reset" type="reset" value="Reset">&nbsp;<input class="category" name="add_log_type" type="submit" value="Add New Log Type">
+</td>
+</tr>
+</table>
+</form>
+</div>
+
+<h3 class="display log_type_modify"><a name="#log_type_modify">Modify / Delete&nbsp;&raquo;</a></h3>
+<div id="log_type_modify" class="collapsable">
+<form name="log_type_modify">
+<table class="category">
+<tr>
+<td colspan="2" align="left">
+Select Existing Log Type:<br/>
+[% INCLUDE form_widgets/select_log_type.tmpl name="log_type_modify_existing" size=5 %]
+</td>
+</tr>
+<tr>
+<td>Name:</td>
+<td><input disabled name="modify_log_type_name" type="text" size="30"></td>
+</tr>
+<tr>
+<td colspan="2" align="right">
+<input disabled class="category" name="delete_log_type" type="submit" value="Delete Log Type">&nbsp;<input disabled class="category" name="update_log_type" type="submit" value="Update Log Type">
+</td>
+</tr>
+</table>
+</form>
+
+</div>
+
+</div>
+
+
+
+
+

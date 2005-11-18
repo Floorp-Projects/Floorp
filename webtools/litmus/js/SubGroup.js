@@ -51,4 +51,9 @@ function showsubgroup() {
 
 }
 
-
+function group_init() {
+    testConfigHeight = new fx.Height('testconfig', {duration: 400});
+    percentagesHeight = new fx.Height('percentages', {duration: 400});
+    testConfigHeight.hide();
+    percentagesHeight.hide();
+}

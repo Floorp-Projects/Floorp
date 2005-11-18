@@ -25,7 +25,7 @@
   # ***** END LICENSE BLOCK *****
 #%]
   
-[% INCLUDE global/html_header.tmpl js_files=['js/RunTests.js','js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/Navigation.js'] %]
+[% INCLUDE global/html_header.tmpl js_files=['js/prototype.lite.js','js/moo.fx.js','js/moo.fx.pack.js','js/EditCategories.js'] %]
 [% INCLUDE global/litmus_header.tmpl %]
 
 <div id="page">
@@ -34,14 +34,27 @@
 
   <div id="content">
 
-    <h1 class="firstHeading">Recent Test Results</h1>
-    [% INCLUDE reporting/test_results.tmpl show_instructions=1 %]
+    <h1 class="firstHeading">[% title %]</h1>
+
+    <div id="categories">
+
+    [% INCLUDE admin/form_widgets/update_products.tmpl %]
+    [% INCLUDE admin/form_widgets/update_platforms.tmpl %]
+    [% INCLUDE admin/form_widgets/update_branches.tmpl %]
+    [% INCLUDE admin/form_widgets/update_opsyses.tmpl %]
+    [% INCLUDE admin/form_widgets/update_log_types.tmpl %]
+
+    </div>
 
   </div> <!--END content-->
 
   <script type="text/javascript">
-    Element.cleanWhitespace('instructions');
-    nav_init();
+    Element.cleanWhitespace('products');
+    Element.cleanWhitespace('platforms');
+    Element.cleanWhitespace('branches');
+    Element.cleanWhitespace('opsyses');
+    Element.cleanWhitespace('log_types');
+    ec_init();
   </script>
 
 </div> <!--END page-->

@@ -1,5 +1,5 @@
-<select name="test_id">
-    <option value="">-Testcase ID#-</option>
+<select name="[% name %]"[% IF size %] size="[% size %]"[% END %][% IF disabled %] disabled[% END %]>
+    [% IF placeholder %]<option value="">-Testcase ID#-</option>[% END %]
 [% IF test_ids %]
 [% FOREACH test_id=test_ids %]
     <option[% IF defaults.test_id==test_id.test_id %] selected[% END %] 
