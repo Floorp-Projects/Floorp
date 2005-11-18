@@ -25,6 +25,7 @@
  *   Dean Tessman <dean_tessman@hotmail.com>
  *   Mats Palmgren <mats.palmgren@bredband.net>
  *   Masayuki Nakano <masayuki@d-toybox.com>
+ *   Ginn Chen <ginn.chen@sun.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -5112,11 +5113,10 @@ nsEventStateManager::ResetBrowseWithCaret()
   nsIPresShell *presShell = mPresContext->GetPresShell();
 
   // Make caret visible or not, depending on what's appropriate
-  if (presShell) {
-    SetContentCaretVisible(presShell, mCurrentFocus,
-                           browseWithCaret &&
-                           (!gLastFocusedDocument ||
-                            gLastFocusedDocument == mDocument));
+  // Set caret visibility for focused document only
+  // Others will be set when they get focused again
+  if (presShell && gLastFocusedDocument && gLastFocusedDocument == mDocument) {
+    SetContentCaretVisible(presShell, mCurrentFocus, browseWithCaret);
   }
 }
 
