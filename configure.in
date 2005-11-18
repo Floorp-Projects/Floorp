@@ -4178,7 +4178,7 @@ minimo)
   MOZ_XTF=
   MOZ_XUL_APP=1
   NECKO_DISK_CACHE=
-  NECKO_PROTOCOLS_DEFAULT=="about data http file res"
+  NECKO_PROTOCOLS_DEFAULT="about data http file res"
   NECKO_SMALL_BUFFERS=1
   NS_DISABLE_LOGGING=1
   NS_PRINTING=
