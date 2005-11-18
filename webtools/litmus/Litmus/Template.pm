@@ -171,7 +171,8 @@ sub create {
             
             # dummy filter when we don't actually need to filter anything
             none => sub {
-                return;
+            	my ($var) = @_;
+                return $var;
             },
         },
     });
