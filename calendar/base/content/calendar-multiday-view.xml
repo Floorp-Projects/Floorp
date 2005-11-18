@@ -279,6 +279,7 @@
       <field name="mDate">null</field>
       <field name="mTimezone">"UTC"</field>
       <field name="mDragState">null</field>
+      <field name="mLayoutBatchCount">0</field>
 
       <!-- properties -->
       <property name="pixelsPerMinute">
@@ -436,6 +437,19 @@
         ]]></body>
       </method>
 
+      <method name="startLayoutBatchChange">
+        <body><![CDATA[
+            this.mLayoutBatchCount++;
+        ]]></body>
+      </method>
+      <method name="endLayoutBatchChange">
+        <body><![CDATA[
+            this.mLayoutBatchCount--;
+            if (this.mLayoutBatchCount == 0)
+              this.relayout();
+        ]]></body>
+      </method>
+
       <method name="setAttribute">
         <parameter name="aAttr"/>
         <parameter name="aVal"/>
@@ -552,6 +566,9 @@
 
       <method name="relayout">
         <body><![CDATA[
+
+          if (this.mLayoutBatchCount > 0)
+              return;
 
           function createXULElement(el) {
               return document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", el);
@@ -2106,6 +2123,7 @@
               dayEventsBox.setAttribute("item-context", this.getAttribute("item-context") || this.getAttribute("context"));
               daybox.appendChild(dayEventsBox);
 
+              dayEventsBox.startLayoutBatchChange();
               dayEventsBox.setStartEndMinutes(this.mStartMin, this.mEndMin);
               dayEventsBox.setAttribute("orient", orient);
               dayEventsBox.date = d;
@@ -2149,6 +2167,9 @@
 
           // fix pixels-per-minute
           this.onResize();
+          for each (col in this.mDateColumns) {
+               col.column.endLayoutBatchChange();
+          }
         ]]></body>
       </method>
 
