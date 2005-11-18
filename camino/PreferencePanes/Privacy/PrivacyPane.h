@@ -71,13 +71,10 @@ class nsICookie;
   IBOutlet SearchTextField*   mPermissionFilterField;
   nsIPermissionManager*       mPermissionManager;   // STRONG (should be nsCOMPtr)
   nsCOMArray<nsIPermission>*  mCachedPermissions;   // parallel list for speed, STRONG
-  IBOutlet NSButton*          mRemoveAllPermissionsButton;
       
   // cookie sheet
   IBOutlet id                 mCookiesPanel;
   IBOutlet ExtendedTableView* mCookiesTable;
-  IBOutlet NSButton*          mRemoveCookiesButton;
-  IBOutlet NSButton*          mRemoveAllCookiesButton;
   IBOutlet SearchTextField*   mCookiesFilterField;
   nsICookieManager*           mCookieManager;
   nsCOMArray<nsICookie>*      mCachedCookies;
@@ -96,6 +93,8 @@ class nsICookie;
 -(IBAction) editCookiesDone:(id)aSender;
 -(IBAction) removeCookies:(id)aSender;
 -(IBAction) removeAllCookies:(id)aSender;
+-(IBAction) blockCookiesFromSites:(id)aSender;
+-(IBAction) removeCookiesAndBlockSites:(id)aSender;
 
 // permission editing functions
 -(void) populatePermissionCache;

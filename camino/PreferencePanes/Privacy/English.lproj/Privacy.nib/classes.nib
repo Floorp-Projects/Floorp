@@ -16,6 +16,7 @@
         {CLASS = NSTableView; LANGUAGE = ObjC; SUPERCLASS = NSControl; }, 
         {
             ACTIONS = {
+                blockCookiesFromSites = id; 
                 clickAskAboutCookies = id; 
                 clickAutoFillPasswords = id; 
                 clickCookieBehavior = id; 
@@ -29,6 +30,7 @@
                 removeAllCookies = id; 
                 removeCookiePermissions = id; 
                 removeCookies = id; 
+                removeCookiesAndBlockSites = id; 
             }; 
             CLASS = OrgMozillaChimeraPreferencePrivacy; 
             LANGUAGE = ObjC; 
@@ -43,13 +45,11 @@
                 mPermissionFilterField = SearchTextField; 
                 mPermissionsPanel = id; 
                 mPermissionsTable = ExtendedTableView; 
-                mRemoveAllCookiesButton = NSButton; 
-                mRemoveAllPermissionsButton = NSButton; 
-                mRemoveCookiesButton = NSButton; 
                 mStorePasswords = NSButton; 
             }; 
             SUPERCLASS = PreferencePaneBase; 
         }, 
+        {CLASS = PopupMenuButton; LANGUAGE = ObjC; SUPERCLASS = NSButton; }, 
         {CLASS = PreferencePaneBase; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }, 
         {
             ACTIONS = {selectText = id; }; 
