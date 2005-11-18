@@ -65,7 +65,6 @@ CPPSRCS		= \
 		nsRDFContentSink.cpp \
 		nsRDFContainer.cpp \
 		nsRDFContainerUtils.cpp \
-		nsRDFParserUtils.cpp \
 		nsRDFService.cpp \
 		nsRDFXMLDataSource.cpp \
 		nsRDFXMLParser.cpp \

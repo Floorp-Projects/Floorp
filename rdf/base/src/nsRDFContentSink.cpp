@@ -83,7 +83,6 @@
 #include "nsIURL.h"
 #include "nsIXMLContentSink.h"
 #include "nsRDFCID.h"
-#include "nsRDFParserUtils.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "prlog.h"
@@ -826,6 +825,14 @@ RDFContentSinkImpl::AddText(const PRUnichar* aText, PRInt32 aLength)
     return NS_OK;
 }
 
+PRBool
+rdf_RequiresAbsoluteURI(const nsString& uri)
+{
+    // cheap shot at figuring out if this requires an absolute url translation
+    return !(StringBeginsWith(uri, NS_LITERAL_STRING("urn:")) ||
+             StringBeginsWith(uri, NS_LITERAL_STRING("chrome:")));
+}
+
 nsresult
 RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
                                         nsIRDFResource** aResource,
@@ -833,10 +840,6 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
 {
     // This corresponds to the dirty work of production [6.5]
     nsresult rv;
-
-    nsCAutoString docURI;
-    rv = mDocumentURL->GetSpec(docURI);
-    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIAtom> localName;
     for (; *aAttributes; aAttributes += 2) {
@@ -858,20 +861,21 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
             if (aIsAnonymous)
                 *aIsAnonymous = PR_FALSE;
 
-            nsAutoString uri(aAttributes[1]);
-            nsRDFParserUtils::StripAndConvert(uri);
-
-            rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(docURI), uri);
-
-            return gRDFService->GetUnicodeResource(uri, aResource);
+            nsAutoString relURI(aAttributes[1]);
+            if (rdf_RequiresAbsoluteURI(relURI)) {
+                nsCAutoString uri;
+                rv = mDocumentURL->Resolve(NS_ConvertUCS2toUTF8(aAttributes[1]), uri);
+                if (NS_FAILED(rv)) return rv;
+                
+                return gRDFService->GetResource(uri, 
+                                                aResource);
+            } 
+            return gRDFService->GetResource(NS_ConvertUCS2toUTF8(aAttributes[1]), 
+                                            aResource);
         }
         else if (localName == kIdAtom) {
             if (aIsAnonymous)
                 *aIsAnonymous = PR_FALSE;
-
-            nsAutoString name(aAttributes[1]);
-            nsRDFParserUtils::StripAndConvert(name);
-
             // In the spirit of leniency, we do not bother trying to
             // enforce that this be a valid "XML Name" (see
             // http://www.w3.org/TR/REC-xml#NT-Nmtoken), as per
@@ -880,11 +884,14 @@ RDFContentSinkImpl::GetIdAboutAttribute(const PRUnichar** aAttributes,
             // Construct an in-line resource whose URI is the
             // document's URI plus the XML name specified in the ID
             // attribute.
-            name.Insert(PRUnichar('#'), 0);
-          
-            rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(docURI), name);
+            nsCAutoString name;
+            nsCAutoString ref('#');
+            AppendUTF16toUTF8(aAttributes[1], ref);
 
-            return gRDFService->GetUnicodeResource(name, aResource);
+            rv = mDocumentURL->Resolve(ref, name);
+            if (NS_FAILED(rv)) return rv;
+
+            return gRDFService->GetResource(name, aResource);
         }
         else if (localName == kAboutEachAtom) {
             // XXX we don't deal with aboutEach...
@@ -923,17 +930,21 @@ RDFContentSinkImpl::GetResourceAttribute(const PRUnichar** aAttributes,
       // first thing that was specified and ignore the other.
 
       if (localName == kResourceAtom) {
-          nsAutoString uri(aAttributes[1]);
-          nsRDFParserUtils::StripAndConvert(uri);
-
           // XXX Take the URI and make it fully qualified by
           // sticking it into the document's URL. This may not be
           // appropriate...
-          nsCAutoString documentURL;
-          mDocumentURL->GetSpec(documentURL);
-          rdf_MakeAbsoluteURI(NS_ConvertUTF8toUCS2(documentURL), uri);
+          nsAutoString relURI(aAttributes[1]);
+          if (rdf_RequiresAbsoluteURI(relURI)) {
+              nsresult rv;
+              nsCAutoString uri;
 
-          return gRDFService->GetUnicodeResource(uri, aResource);
+              rv = mDocumentURL->Resolve(NS_ConvertUCS2toUTF8(aAttributes[1]), uri);
+              if (NS_FAILED(rv)) return rv;
+
+              return gRDFService->GetResource(uri, aResource);
+          } 
+          return gRDFService->GetResource(NS_ConvertUCS2toUTF8(aAttributes[1]), 
+                                          aResource);
       }
   }
   return NS_ERROR_FAILURE;
@@ -977,9 +988,6 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
           }
       }
 
-      nsAutoString v(aAttributes[1]);
-      nsRDFParserUtils::StripAndConvert(v);
-
       const char* attrName;
       localName->GetUTF8String(&attrName);
 
@@ -991,7 +999,8 @@ RDFContentSinkImpl::AddProperties(const PRUnichar** aAttributes,
       gRDFService->GetResource(propertyStr, getter_AddRefs(property));
 
       nsCOMPtr<nsIRDFLiteral> target;
-      gRDFService->GetLiteral(v.get(), getter_AddRefs(target));
+      gRDFService->GetLiteral(aAttributes[1], 
+                              getter_AddRefs(target));
 
       mDataSource->Assert(aSubject, property, target, PR_TRUE);
   }
@@ -1007,8 +1016,7 @@ RDFContentSinkImpl::SetParseMode(const PRUnichar **aAttributes)
             SplitExpatName(aAttributes[0], getter_AddRefs(localName));
 
         if (localName == kParseTypeAtom) {
-            nsAutoString v(aAttributes[1]);
-            nsRDFParserUtils::StripAndConvert(v);
+            nsDependentString v(aAttributes[1]);
 
             if (nameSpaceURI.IsEmpty() ||
                 nameSpaceURI.EqualsLiteral(RDF_NAMESPACE_URI)) {

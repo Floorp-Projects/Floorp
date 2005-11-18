@@ -64,15 +64,6 @@ class nsIURI;
 nsresult
 rdf_MakeRelativeRef(const nsCSubstring& aBaseURI, nsCString& aURI);
 
-nsresult
-rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI);
-
-nsresult
-rdf_MakeAbsoluteURI(nsIURI* aBaseURL, nsString& aURI);
-
-nsresult
-rdf_MakeAbsoluteURI(nsIURI* aBaseURL, nsCString& aURI);
-
 void
 rdf_FormatDate(PRTime aTime, nsACString &aResult);
 
