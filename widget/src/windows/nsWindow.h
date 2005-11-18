@@ -317,6 +317,9 @@ protected:
   BOOL                    OnIMEQueryCharPosition(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
 
   void                    GetCompositionString(HIMC aHIMC, DWORD aIndex, nsString* aStrUnicode, nsCString* aStrAnsi);
+  void                    ResolveIMECaretPos(nsWindow* aClient,
+                                             nsRect&   aEventResult,
+                                             nsRect&   aResult);
 
   virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode,
                                            LPARAM aKeyCode, PRUint32 aFlags = 0);
