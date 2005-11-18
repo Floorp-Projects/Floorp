@@ -423,21 +423,15 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
      * nsrcnotes and ntrynotes fields to come before everything except magic,
      * length, prologLength, and version, so that srcnote and trynote storage
      * can be allocated as part of the JSScript (along with bytecode storage).
-     *
-     * So far, the magic number has not changed for every jsopcode.tbl change.
-     * We stipulate forward compatibility by requiring old bytecodes never to
-     * change or go away (modulo a few exceptions before the XDR interfaces
-     * evolved, and a few exceptions during active trunk development).  With
-     * the addition of JSOP_STOP to support JS_THREADED_INTERP, we make a new
-     * magic number (_5) so that we know to append JSOP_STOP to old scripts
-     * when deserializing.
      */
     if (xdr->mode == JSXDR_ENCODE)
         magic = JSXDR_MAGIC_SCRIPT_CURRENT;
     if (!JS_XDRUint32(xdr, &magic))
         return JS_FALSE;
-    JS_ASSERT((uint32)JSXDR_MAGIC_SCRIPT_5 - (uint32)JSXDR_MAGIC_SCRIPT_1 == 4);
-    if (magic - (uint32)JSXDR_MAGIC_SCRIPT_1 > 4) {
+    if (magic != JSXDR_MAGIC_SCRIPT_4 &&
+        magic != JSXDR_MAGIC_SCRIPT_3 &&
+        magic != JSXDR_MAGIC_SCRIPT_2 &&
+        magic != JSXDR_MAGIC_SCRIPT_1) {
         if (!hasMagic) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_BAD_SCRIPT_MAGIC);
@@ -490,11 +484,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     }
 
     if (xdr->mode == JSXDR_DECODE) {
-        size_t alloclength = length;
-        if (magic < JSXDR_MAGIC_SCRIPT_5)
-            ++alloclength;      /* add a byte for JSOP_STOP */
-
-        script = js_NewScript(cx, alloclength, nsrcnotes, ntrynotes);
+        script = js_NewScript(cx, length, nsrcnotes, ntrynotes);
         if (!script)
             return JS_FALSE;
         if (magic >= JSXDR_MAGIC_SCRIPT_2) {
@@ -520,25 +510,13 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
         goto error;
     }
 
-    if (magic < JSXDR_MAGIC_SCRIPT_5) {
+    if (magic < JSXDR_MAGIC_SCRIPT_4) {
+        if (!JS_XDRUint32(xdr, &nsrcnotes))
+            goto error;
         if (xdr->mode == JSXDR_DECODE) {
-            /*
-             * Append JSOP_STOP to old scripts, to relieve the interpreter
-             * from having to bounds-check pc.  Also take care to increment
-             * length, as it is used below and must count all bytecode.
-             */
-            script->code[length++] = JSOP_STOP;
-        }
-
-        if (magic < JSXDR_MAGIC_SCRIPT_4) {
-            if (!JS_XDRUint32(xdr, &nsrcnotes))
+            notes = (jssrcnote *) JS_malloc(cx, nsrcnotes * sizeof(jssrcnote));
+            if (!notes)
                 goto error;
-            if (xdr->mode == JSXDR_DECODE) {
-                notes = (jssrcnote *)
-                        JS_malloc(cx, nsrcnotes * sizeof(jssrcnote));
-                if (!notes)
-                    goto error;
-            }
         }
     }
 
