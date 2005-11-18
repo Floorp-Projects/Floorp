@@ -1100,7 +1100,7 @@ struct nsContractIDMapData
 #define NS_DEFINE_CONSTRUCTOR_DATA(_class, _contract_id)                      \
   { eDOMClassInfo_##_class##_id, _contract_id },
 
-static nsContractIDMapData sConstructorMap[] =
+static const nsContractIDMapData kConstructorMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_DATA(XPathEvaluator,
                              NS_XPATH_EVALUATOR_CONTRACTID)
@@ -4399,9 +4399,9 @@ static const char*
 FindConstructorContractID(PRInt32 aDOMClassInfoID)
 {
   PRUint32 i;
-  for (i = 0; i < NS_ARRAY_LENGTH(sConstructorMap); ++i) {
-    if (sConstructorMap[i].mDOMClassInfoID == aDOMClassInfoID) {
-      return sConstructorMap[i].mContractID;
+  for (i = 0; i < NS_ARRAY_LENGTH(kConstructorMap); ++i) {
+    if (kConstructorMap[i].mDOMClassInfoID == aDOMClassInfoID) {
+      return kConstructorMap[i].mContractID;
     }
   }
   return nsnull;
