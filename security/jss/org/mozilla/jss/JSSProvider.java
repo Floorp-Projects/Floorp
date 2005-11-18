@@ -35,8 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 package org.mozilla.jss;
 
-import java.math.*;
-
 public final class JSSProvider extends java.security.Provider {
 
     /********************************************************************/
@@ -54,8 +52,9 @@ public final class JSSProvider extends java.security.Provider {
     private static int JSS_MAJOR_VERSION  = 4;
     private static int JSS_MINOR_VERSION  = 2;
     private static int JSS_PATCH_VERSION  = 0;
-    private static double JSS_VERSION     = (double)JSS_MAJOR_VERSION +
-                                            round(((double)JSS_MINOR_VERSION),1)/10;
+    private static double JSS_VERSION     = JSS_MAJOR_VERSION +
+                                           (JSS_MINOR_VERSION * 100 +
+                                            JSS_PATCH_VERSION)/10000.0;
 
     public JSSProvider() {
         super("Mozilla-JSS", JSS_VERSION,
@@ -227,23 +226,13 @@ public final class JSSProvider extends java.security.Provider {
     }
 
     public String toString() {
-        String mozillaProviderVersion = new Double(JSS_VERSION).toString();
+        String mozillaProviderVersion = JSS_MAJOR_VERSION + "." + 
+                                        JSS_MINOR_VERSION;
         if ( JSS_PATCH_VERSION != 0 ) {
             mozillaProviderVersion = mozillaProviderVersion + "." +
                                      JSS_PATCH_VERSION;
         }
 
         return "Mozilla-JSS version " + mozillaProviderVersion;
-    }
-
-    /**
-     * Convenience method to round double  
-     * @param double value, int round value
-     * @return rounded double
-     */
-    private static double round(double value, int decimalPlace) {
-        BigDecimal bd = new BigDecimal(value);
-        bd = bd.setScale(decimalPlace,BigDecimal.ROUND_UP);
-        return bd.doubleValue();
     }
 }
