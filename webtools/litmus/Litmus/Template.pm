@@ -68,7 +68,8 @@ $constants{litmus_version} = $Litmus::Config::version;
 my $strip = HTML::StripScripts::Parser->new({
                             Context => 'Inline', 
                             AllowHref => 1,
-                            BanAllBut => ['a', 'b', 'br', 'em', 'p', 'i', 'hr'],
+                            BanAllBut => ['a', 'b', 'br', 'em', 'p', 'i', 'hr', 
+                            			  'ul', 'ol', 'li'],
                             strict_names => 1,
                             });
 
