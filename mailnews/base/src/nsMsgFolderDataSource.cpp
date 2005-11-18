@@ -65,6 +65,7 @@
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsArray.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsINntpIncomingServer.h"
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
 #include "nsIPrompt.h"
@@ -1476,11 +1477,17 @@ nsMsgFolderDataSource::createFolderIsSecureNode(nsIMsgFolder* folder,
   rv = folder->GetServer(getter_AddRefs(server));
 
   if (NS_SUCCEEDED(rv) && server) {
-    PRInt32 socketType;
-    rv = server->GetSocketType(&socketType);
-    if (NS_SUCCEEDED(rv) && (socketType == nsIMsgIncomingServer::alwaysUseTLS || 
-                             socketType == nsIMsgIncomingServer::useSSL))
-      isSecure = PR_TRUE;
+    nsCOMPtr<nsINntpIncomingServer> nntpIncomingServer = do_QueryInterface(server);
+
+    if(nntpIncomingServer)  
+      rv = server->GetIsSecure(&isSecure);
+    else {
+      PRInt32 socketType;
+      rv = server->GetSocketType(&socketType);
+      if (NS_SUCCEEDED(rv) && (socketType == nsIMsgIncomingServer::alwaysUseTLS || 
+                              socketType == nsIMsgIncomingServer::useSSL))
+        isSecure = PR_TRUE;
+    }
   }
 
   *target = (isSecure) ? kTrueLiteral : kFalseLiteral;
