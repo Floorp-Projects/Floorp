@@ -43,7 +43,6 @@
 #include "nsIContent.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMNode.h"
-#include "nsXPathException.h"
 #include "nsIDOMDocument.h"
 #include "nsDOMString.h"
 
@@ -68,7 +67,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPathResult)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIXPathResult)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathResult)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathResult)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XPathResult)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP

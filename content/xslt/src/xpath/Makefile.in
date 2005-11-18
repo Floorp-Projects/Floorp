@@ -97,7 +97,6 @@ CPPSRCS = txAdditiveExpr.cpp \
         txVariableRefExpr.cpp
 ifndef MOZ_XSLT_STANDALONE
 CPPSRCS += nsXPathEvaluator.cpp \
-           nsXPathException.cpp \
            nsXPathExpression.cpp \
            nsXPathNSResolver.cpp \
            nsXPathResult.cpp \

@@ -77,6 +77,11 @@ DOM_MSG_DEF(NS_ERROR_DOM_SVG_INVALID_VALUE_ERR, "One of the parameters has an in
 DOM_MSG_DEF(NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE, "The matrix could not be computed")
 #endif
 
+/* DOM error codes from http://www.w3.org/TR/DOM-Level-3-XPath/ */
+
+DOM_MSG_DEF(NS_ERROR_DOM_INVALID_EXPRESSION_ERR, "The expression is not a legal expression.")
+DOM_MSG_DEF(NS_ERROR_DOM_TYPE_ERR, "The expression cannot be converted to return the specified type.")
+
 /* DOM error codes defined by us */
 
 /* XXX string should be specified by norris */

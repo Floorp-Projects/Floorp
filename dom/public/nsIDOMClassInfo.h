@@ -355,6 +355,16 @@ enum nsDOMClassInfoID {
   // WindowUtils
   eDOMClassInfo_WindowUtils_id,
 
+  // XSLTProcessor
+  eDOMClassInfo_XSLTProcessor_id,
+
+  // DOM Level 3 XPath objects
+  eDOMClassInfo_XPathEvaluator_id,
+  eDOMClassInfo_XPathException_id,
+  eDOMClassInfo_XPathExpression_id,
+  eDOMClassInfo_XPathNSResolver_id,
+  eDOMClassInfo_XPathResult_id,
+
   // Define this near the end so that enabling/disabling foreignobject doesn't
   // break binary compatibility
 #if defined(MOZ_SVG) && defined(MOZ_SVG_FOREIGNOBJECT)

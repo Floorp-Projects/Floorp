@@ -45,7 +45,6 @@
 
 #include "nsXPath1Scheme.h"
 #include "nsXPathEvaluator.h"
-#include "nsXPathException.h"
 #include "nsDOMError.h"
 #include "nsXPathResult.h"
 #include "nsIDOMNode.h"

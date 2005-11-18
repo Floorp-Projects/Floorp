@@ -40,7 +40,6 @@
 #define nsXPathEvaluator_h__
 
 #include "nsIDOMXPathEvaluator.h"
-#include "txIXPathContext.h"
 #include "nsIXPathEvaluatorInternal.h"
 #include "nsIWeakReference.h"
 #include "nsAutoPtr.h"
@@ -71,38 +70,6 @@ public:
     NS_IMETHOD SetDocument(nsIDOMDocument* aDocument);
 
 private:
-    // txIParseContext implementation
-    class ParseContextImpl : public txIParseContext
-    {
-    public:
-        ParseContextImpl(nsIDOMXPathNSResolver* aResolver,
-                         PRBool aIsCaseSensitive)
-            : mResolver(aResolver), mLastError(NS_OK),
-              mIsCaseSensitive(aIsCaseSensitive)
-        {
-        }
-
-        ~ParseContextImpl()
-        {
-        }
-
-        nsresult getError()
-        {
-            return mLastError;
-        }
-
-        nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
-        nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
-                                     FunctionCall*& aFunction);
-        PRBool caseInsensitiveNameTests();
-        void SetErrorOffset(PRUint32 aOffset);
-
-    private:
-        nsIDOMXPathNSResolver* mResolver;
-        nsresult mLastError;
-        PRBool mIsCaseSensitive;
-    };
-
     nsWeakPtr mDocument;
     nsRefPtr<txResultRecycler> mRecycler;
 };

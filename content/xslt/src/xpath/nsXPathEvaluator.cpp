@@ -40,7 +40,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIDOMClassInfo.h"
-#include "nsXPathException.h"
 #include "nsXPathExpression.h"
 #include "nsXPathNSResolver.h"
 #include "nsXPathResult.h"
@@ -56,11 +55,44 @@
 #include "txError.h"
 #include "nsContentUtils.h"
 
+// txIParseContext implementation
+class nsXPathEvaluatorParseContext : public txIParseContext
+{
+public:
+    nsXPathEvaluatorParseContext(nsIDOMXPathNSResolver *aResolver,
+                                 PRBool aIsCaseSensitive)
+        : mResolver(aResolver),
+          mLastError(NS_OK),
+          mIsCaseSensitive(aIsCaseSensitive)
+    {
+    }
+
+    ~nsXPathEvaluatorParseContext()
+    {
+    }
+
+    nsresult getError()
+    {
+        return mLastError;
+    }
+
+    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, PRInt32& aID);
+    nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
+                                 FunctionCall*& aFunction);
+    PRBool caseInsensitiveNameTests();
+    void SetErrorOffset(PRUint32 aOffset);
+
+private:
+    nsIDOMXPathNSResolver* mResolver;
+    nsresult mLastError;
+    PRBool mIsCaseSensitive;
+};
+
 NS_IMPL_AGGREGATED(nsXPathEvaluator)
 NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsXPathEvaluator)
     NS_INTERFACE_MAP_ENTRY(nsIDOMXPathEvaluator)
     NS_INTERFACE_MAP_ENTRY(nsIXPathEvaluatorInternal)
-    NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathEvaluator)
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XPathEvaluator)
 NS_INTERFACE_MAP_END
 
 nsXPathEvaluator::nsXPathEvaluator(nsISupports *aOuter)
@@ -93,7 +125,8 @@ nsXPathEvaluator::CreateExpression(const nsAString & aExpression,
     }
 
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-    ParseContextImpl pContext(aResolver, !doc || doc->IsCaseSensitive());
+    nsXPathEvaluatorParseContext pContext(aResolver,
+                                          !doc || doc->IsCaseSensitive());
     nsAutoPtr<Expr> expression;
     rv = txExprParser::createExpr(PromiseFlatString(aExpression), &pContext,
                                   getter_Transfers(expression));
@@ -157,11 +190,11 @@ nsXPathEvaluator::SetDocument(nsIDOMDocument* aDocument)
 }
 
 /*
- * Implementation of txIParseContext private to nsXPathEvaluator
- * ParseContextImpl bases on a nsIDOMXPathNSResolver
+ * Implementation of txIParseContext private to nsXPathEvaluator, based on a
+ * nsIDOMXPathNSResolver
  */
 
-nsresult nsXPathEvaluator::ParseContextImpl::resolveNamespacePrefix
+nsresult nsXPathEvaluatorParseContext::resolveNamespacePrefix
     (nsIAtom* aPrefix, PRInt32& aID)
 {
     aID = kNameSpaceID_Unknown;
@@ -194,19 +227,19 @@ nsresult nsXPathEvaluator::ParseContextImpl::resolveNamespacePrefix
 }
 
 nsresult
-nsXPathEvaluator::ParseContextImpl::resolveFunctionCall(nsIAtom* aName,
-                                                        PRInt32 aID,
-                                                        FunctionCall*& aFn)
+nsXPathEvaluatorParseContext::resolveFunctionCall(nsIAtom* aName,
+                                                  PRInt32 aID,
+                                                  FunctionCall*& aFn)
 {
     return NS_ERROR_XPATH_UNKNOWN_FUNCTION;
 }
 
-PRBool nsXPathEvaluator::ParseContextImpl::caseInsensitiveNameTests()
+PRBool nsXPathEvaluatorParseContext::caseInsensitiveNameTests()
 {
     return !mIsCaseSensitive;
 }
 
 void
-nsXPathEvaluator::ParseContextImpl::SetErrorOffset(PRUint32 aOffset)
+nsXPathEvaluatorParseContext::SetErrorOffset(PRUint32 aOffset)
 {
 }

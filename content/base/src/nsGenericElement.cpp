@@ -102,7 +102,6 @@
 
 #include "jsapi.h"
 
-#include "nsIDOMXPathEvaluator.h"
 #include "nsNodeInfoManager.h"
 #include "nsICategoryManager.h"
 #include "nsIDOMNSFeatureFactory.h"
@@ -1195,9 +1194,6 @@ nsGenericElement::SetPrefix(const nsAString& aPrefix)
   return NS_OK;
 }
 
-extern PRBool gCheckedForXPathDOM;
-extern PRBool gHaveXPathDOM;
-
 nsresult
 nsGenericElement::InternalIsSupported(nsISupports* aObject,
                                       const nsAString& aFeature,
@@ -1239,18 +1235,11 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
         PL_strcmp(v, "2.0") == 0) {
       *aReturn = PR_TRUE;
     }
-  } else if ((!gCheckedForXPathDOM || gHaveXPathDOM) &&
-             PL_strcasecmp(f, "XPath") == 0 &&
-             (aVersion.IsEmpty() ||
-              PL_strcmp(v, "3.0") == 0)) {
-    if (!gCheckedForXPathDOM) {
-      nsCOMPtr<nsIDOMXPathEvaluator> evaluator =
-        do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID);
-      gHaveXPathDOM = (evaluator != nsnull);
-      gCheckedForXPathDOM = PR_TRUE;
+  } else if (PL_strcasecmp(f, "XPath") == 0) {
+    if (aVersion.IsEmpty() ||
+        PL_strcmp(v, "3.0") == 0) {
+      *aReturn = PR_TRUE;
     }
-
-    *aReturn = gHaveXPathDOM;
   }
 #ifdef MOZ_SVG
   else if (PL_strcasecmp(f, "SVGEvents") == 0 ||

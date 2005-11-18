@@ -40,7 +40,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIDOMClassInfo.h"
-#include "nsXPathException.h"
 #include "nsXPathExpression.h"
 #include "nsXPathNSResolver.h"
 #include "nsXPathResult.h"
