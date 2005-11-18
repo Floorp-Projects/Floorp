@@ -137,7 +137,6 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
-#include "nsIComponentRegistrar.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
@@ -784,9 +783,6 @@ nsDocument::~nsDocument()
   delete mBoxObjectTable;
 }
 
-PRBool gCheckedForXPathDOM = PR_FALSE;
-PRBool gHaveXPathDOM = PR_FALSE;
-
 NS_INTERFACE_MAP_BEGIN(nsDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDocument)
@@ -814,21 +810,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocument)
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
     if (!mXPathEvaluatorTearoff) {
       nsresult rv;
-      if (!gCheckedForXPathDOM) {
-        nsCOMPtr<nsIComponentRegistrar> cr;
-        rv = NS_GetComponentRegistrar(getter_AddRefs(cr));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        gCheckedForXPathDOM = PR_TRUE;
-
-        cr->IsContractIDRegistered(NS_XPATH_EVALUATOR_CONTRACTID,
-                                   &gHaveXPathDOM);
-      }
-
-      if (!gHaveXPathDOM) {
-        return NS_ERROR_NO_INTERFACE;
-      }
-
       mXPathEvaluatorTearoff =
         do_CreateInstance(NS_XPATH_EVALUATOR_CONTRACTID,
                           NS_STATIC_CAST(nsIDocument *, this), &rv);

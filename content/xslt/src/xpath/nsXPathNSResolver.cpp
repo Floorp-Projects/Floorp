@@ -39,13 +39,14 @@
 #include "nsXPathNSResolver.h"
 #include "nsIDOMClassInfo.h"
 #include "nsDOMString.h"
+#include "nsContentUtils.h"
 
 NS_IMPL_ADDREF(nsXPathNSResolver)
 NS_IMPL_RELEASE(nsXPathNSResolver)
 NS_INTERFACE_MAP_BEGIN(nsXPathNSResolver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXPathNSResolver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathNSResolver)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathNSResolver)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XPathNSResolver)
 NS_INTERFACE_MAP_END
 
 nsXPathNSResolver::nsXPathNSResolver(nsIDOMNode* aNode)

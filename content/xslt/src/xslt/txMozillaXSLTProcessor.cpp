@@ -251,7 +251,7 @@ NS_INTERFACE_MAP_BEGIN(txMozillaXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
     NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXSLTProcessor)
-    NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XSLTProcessor)
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XSLTProcessor)
 NS_INTERFACE_MAP_END
 
 txMozillaXSLTProcessor::txMozillaXSLTProcessor() : mStylesheetDocument(nsnull),
