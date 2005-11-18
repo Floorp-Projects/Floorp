@@ -92,7 +92,7 @@
                 <row align="center">
                     <label value="&calendarproperties.location.label;"/>
                     <textbox id="calendar-uri"
-                             required="true" onchange="checkRequired();" onkeyup="checkRequired();"/>
+                             required="true" oninput="checkRequired();" />
                 </row>
                 <!--
                 <description>&locationpage.login.description;</description>
@@ -125,7 +125,7 @@
                 <row align="center">
                     <label value="&calendarproperties.name.label;"/>
                     <textbox id="calendar-name"
-                             required="true" onchange="checkRequired();" onkeyup="checkRequired();"/>
+                             required="true" oninput="checkRequired();"/>
                 </row>
                 <row align="center">
                     <label value="&calendarproperties.color.label;"/>
