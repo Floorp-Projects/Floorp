@@ -74,6 +74,8 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= nsMsgNewsFactory.cpp
 
+LOCAL_INCLUDES += -I$(srcdir)/../src
+
 SHARED_LIBRARY_LIBS = $(DIST)/lib/$(LIB_PREFIX)msgnews_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LIBS = rdfutil_s
