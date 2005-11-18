@@ -42,6 +42,7 @@
 #endif
 
 #include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 
@@ -49,8 +50,6 @@
 #include "nsIClassInfo.h"
 #include "nsIVariant.h"
 #include "nsMemory.h"
-
-#include "nsIAtom.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
@@ -281,9 +280,10 @@ nsScriptablePeer::ConvertVariants(nsIVariant *aIn, VARIANT *aOut)
     case nsIDataType::VTYPE_STRING_SIZE_IS:
     case nsIDataType::VTYPE_CHAR_STR:
         {
-            nsXPIDLCString value;
+            nsCString value;
             aIn->GetAsString(getter_Copies(value));
-            nsAutoString valueWide; valueWide.AssignWithConversion(value);
+            nsString valueWide;
+            NS_CStringToUTF16(value, NS_CSTRING_ENCODING_ASCII, valueWide);
             aOut->vt = VT_BSTR;
             aOut->bstrVal = SysAllocString(valueWide.get());
         }
@@ -291,7 +291,7 @@ nsScriptablePeer::ConvertVariants(nsIVariant *aIn, VARIANT *aOut)
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
     case nsIDataType::VTYPE_WCHAR_STR:
         {
-            nsXPIDLString value;
+            nsString value;
             aIn->GetAsWString(getter_Copies(value));
             aOut->vt = VT_BSTR;
             aOut->bstrVal = SysAllocString(value.get());
@@ -320,7 +320,8 @@ nsScriptablePeer::ConvertVariants(nsIVariant *aIn, VARIANT *aOut)
         {
             nsCAutoString value;
             aIn->GetAsACString(value);
-            nsAutoString valueWide; valueWide.AssignWithConversion(value.get());
+            nsAutoString valueWide;
+            NS_CStringToUTF16(value, NS_CSTRING_ENCODING_ASCII, valueWide);
             aOut->vt = VT_BSTR;
             aOut->bstrVal = SysAllocString(valueWide.get());
         }

@@ -43,9 +43,10 @@
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
+#include "nsMemory.h"
 
 
 #include "XPCBrowser.h"

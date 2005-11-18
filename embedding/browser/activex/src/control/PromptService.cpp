@@ -46,7 +46,6 @@
 #include "nsIPromptService.h"
 #include "nsIFactory.h"
 #include "nsIDOMWindow.h"
-#include "nsReadableUtils.h"
 
 class PromptDlg
 {

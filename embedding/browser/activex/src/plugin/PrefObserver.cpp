@@ -46,8 +46,7 @@
 #include "nsIPrefBranch2.h"
 #include "nsWeakReference.h"
 #include "nsIObserver.h"
-#include "nsCRT.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 
 #include "XPConnect.h"
 
@@ -116,7 +115,7 @@ NS_INTERFACE_MAP_END
 /* void observe (in nsISupports aSubject, in string aTopic, in wstring aData); */
 NS_IMETHODIMP PrefObserver::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData)
 {
-    if (nsCRT::strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic) != 0)
+    if (strcmp(NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, aTopic) != 0)
     {
         return S_OK;
     }
@@ -127,9 +126,9 @@ NS_IMETHODIMP PrefObserver::Observe(nsISupports *aSubject, const char *aTopic, c
         return rv;
 
     NS_ConvertUTF16toUTF8 pref(aData);
-    if (nsCRT::strcmp(kActiveXHostingFlags, pref.get()) == 0 ||
-        nsCRT::strcmp(kUserAgentPref, pref.get()) == 0 ||
-        nsCRT::strcmp(kProxyPref, pref.get()) == 0)
+    if (strcmp(kActiveXHostingFlags, pref.get()) == 0 ||
+        strcmp(kUserAgentPref, pref.get()) == 0 ||
+        strcmp(kProxyPref, pref.get()) == 0)
     {
         Sync(prefBranch);
     }
