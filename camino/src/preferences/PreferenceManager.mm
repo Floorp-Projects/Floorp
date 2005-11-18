@@ -76,11 +76,18 @@ NSString* const kPrefChangedNotificationName = @"PrefChangedNotification";
 static NSString* const AdBlockingChangedNotificationName = @"AdBlockingChanged";
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4
-// These are not available for linkage before the 10.4 SDK, but the feature is in 10.3.2 and later;
-// the strings were obtained by inspection.
-static NSString* const kSCPropNetProxiesProxyAutoConfigEnable    = @"ProxyAutoConfigEnable";
-static NSString* const kSCPropNetProxiesProxyAutoConfigURLString = @"ProxyAutoConfigURLString";
-static NSString* const kSCPropNetProxiesProxyAutoDiscoveryEnable = @"ProxyAutoDiscoveryEnable";
+// These are supposedly not available before the 10.4 SDK, but some of the
+// keys are present in the 10.3.9 SDK.   The feature is in 10.3.2 and later;
+// the strings were obtained by inspection.  Handle these as #undef/#define
+// to avoid bad interactions with what the SDK might have provided.  This is
+// in MAC_OS_X_VERSION_MIN_REQUIRED because the constants may externs, hence,
+// we're interested in the library version at runtime.
+#undef  kSCPropNetProxiesProxyAutoConfigEnable
+#define kSCPropNetProxiesProxyAutoConfigEnable    @"ProxyAutoConfigEnable"
+#undef  kSCPropNetProxiesProxyAutoConfigURLString
+#define kSCPropNetProxiesProxyAutoConfigURLString @"ProxyAutoConfigURLString"
+#undef  kSCPropNetProxiesProxyAutoDiscoveryEnable
+#define kSCPropNetProxiesProxyAutoDiscoveryEnable @"ProxyAutoDiscoveryEnable"
 #endif
 
 // This is an arbitrary version stamp that gets written to the prefs file.
