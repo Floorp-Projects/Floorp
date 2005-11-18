@@ -1094,7 +1094,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
 struct nsContractIDMapData
 {
   PRInt32 mDOMClassInfoID;
-  const char * const mContractID;
+  const char *mContractID;
 };
 
 #define NS_DEFINE_CONSTRUCTOR_DATA(_class, _contract_id)                      \
