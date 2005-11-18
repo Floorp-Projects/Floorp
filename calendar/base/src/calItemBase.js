@@ -484,7 +484,7 @@ calItemBase.prototype = {
         
         var gen = icalcomp.getFirstProperty("X-MOZILLA-GENERATION");
         if (gen)
-            this.mGeneration = parseInt(gen.stringValue);
+            this.mGeneration = parseInt(gen.value);
 
         // find recurrence properties
         var rec = null;
@@ -521,7 +521,7 @@ calItemBase.prototype = {
             var triggerProp = alarmComp.getFirstProperty("TRIGGER");
             var duration = Components.classes["@mozilla.org/calendar/duration;1"]
                                      .createInstance(Components.interfaces.calIDuration);
-            duration.icalString = triggerProp.stringValue;
+            duration.icalString = triggerProp.valueAsIcalString;
 
             if (duration.minutes) {
                 this.setProperty("alarmLength", duration.minutes);
@@ -552,7 +552,7 @@ calItemBase.prototype = {
              prop = icalcomp.getNextProperty("ANY")) {
             if (!promoted[prop.propertyName]) {
                 // XXX keep parameters around, sigh
-                this.setProperty(prop.propertyName, prop.stringValue);
+                this.setProperty(prop.propertyName, prop.value);
             }
         }
     },
@@ -579,7 +579,7 @@ calItemBase.prototype = {
 
         if (this.mGeneration) {
             var genprop = icalProp("X-MOZILLA-GENERATION");
-            genprop.stringValue = String(this.mGeneration);
+            genprop.value = String(this.mGeneration);
             icalcomp.addProperty(genprop);
         }
 
@@ -601,7 +601,7 @@ calItemBase.prototype = {
             duration[this.getProperty("alarmUnits")] = this.getProperty("alarmLength");
 
             var triggerProp = icssvc.createIcalProperty("TRIGGER");
-            triggerProp.stringValue = duration.icalString;
+            triggerProp.valueAsIcalString = duration.icalString;
 
             if (this.getProperty("alarmRelated") == "END") 
                 triggerProp.setParameter("RELATED", "END");
@@ -610,7 +610,7 @@ calItemBase.prototype = {
 
             if (this.getProperty("alarmEmailAddress")) {
                 var emailProp = icssvc.createIcalProperty("X-EMAILADDRESS");
-                emailProp.stringValue = this.getProperty("alarmEmailAddress");
+                emailProp.value = this.getProperty("alarmEmailAddress");
                 alarmComp.addProperty(emailProp);
             }
 

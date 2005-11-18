@@ -168,7 +168,19 @@ interface calIIcalComponent : nsISupports
 [scriptable,uuid(17349a10-5d80-47fa-9bea-f22957357675)]
 interface calIIcalProperty : nsISupports
 {
-    attribute AUTF8String stringValue;
+    /**
+     * The value of the property as string.
+     * The exception for properties of TEXT or X- type, those will be unescaped
+     * when getting, and also expects an unescaped string when setting.
+     * Datetime, numeric and other non-text types are represented as ical string
+     */
+    attribute AUTF8String value;
+
+    /**
+     * The value of the property in (escaped) ical format.
+     */
+    attribute AUTF8String valueAsIcalString;
+
     // XXX attribute AUTF8String stringValueWithParams; ?
     readonly attribute AUTF8String propertyName;
 
