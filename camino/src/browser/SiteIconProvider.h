@@ -51,26 +51,12 @@ class NeckoCacheHelper;
 {
   NeckoCacheHelper*       mIconsCacheHelper;
   NSMutableDictionary*    mRequestDict;   // dict of favicon url -> request url
-  
-  NSMutableDictionary*    mIconDictionary;    // map of favorite url -> NSImage
 }
 
 + (SiteIconProvider*)sharedFavoriteIconProvider;
 
 // get the default location (http://www.foo.bar/favicon.ico) for the given URI
 + (NSString*)defaultFaviconLocationStringFromURI:(NSString*)inURI;
-
-// Start a favicon.ico load for the given URI, which can be any URI.
-// The caller will get a 'SiteIconLoadNotificationName' notification
-// when the load is done, with the image at the 'SiteIconLoadImageKey' key
-// in the notifcation userInfo. The caller will have had to register with the
-// NSNotifcationCenter in order to receive this notifcation. The notification
-// is dispatched with 'sender' as the object.
-// This method returns YES if the uri request was dispatched (i.e. if we know
-// that we've looked for, and failed to find, this icon before). If it returns
-// YES, then the 'SiteIconLoadNotificationName' notification will be sent out.
-
-- (BOOL)loadFavoriteIcon:(id)sender forURI:(NSString *)inURI allowNetwork:(BOOL)inAllowNetwork;
 
 // fetch the icon for the given page.
 // inIconURI is the URI of the icon (if specified via a <link> element), or nil for the default

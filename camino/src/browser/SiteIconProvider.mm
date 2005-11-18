@@ -39,6 +39,8 @@
 
 #import "SiteIconProvider.h"
 
+#import "SiteIconCache.h"
+
 #include "prtime.h"
 #include "nsString.h"
 #include "nsISupports.h"
@@ -304,7 +306,6 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   if ((self = [super init]))
   {
     mRequestDict    = [[NSMutableDictionary alloc] initWithCapacity:5];
-    mIconDictionary = [[NSMutableDictionary alloc] initWithCapacity:100];
 
     mIconsCacheHelper = new NeckoCacheHelper();
     nsresult rv = mIconsCacheHelper->Init("MissedIconsCache");
@@ -322,13 +323,15 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   delete mIconsCacheHelper;
 
   [mRequestDict release];
-  [mIconDictionary release];
   
   [super dealloc];
 }
 
 - (NSString*)favoriteIconURLFromPageURL:(NSString*)inPageURL
 {
+  if ([inPageURL length] == 0)
+    return nil;
+
   NSString* faviconURL = nil;
   
   // do we have a link icon for this page?
@@ -368,11 +371,6 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   	mIconsCacheHelper->FaviconForURIIsMissing(nsCString([inURI UTF8String]), &inCache);
 
   return inCache;
-}
-
-- (BOOL)loadFavoriteIcon:(id)sender forURI:(NSString *)inURI allowNetwork:(BOOL)inAllowNetwork
-{
-  return [self fetchFavoriteIconForPage:inURI withIconLocation:nil allowNetwork:inAllowNetwork notifyingClient:sender];
 }
 
 #define SITE_ICON_EXPIRATION_SECONDS (60 * 60 * 24 * 7)    // 1 week
@@ -415,7 +413,10 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
     [faviconImage setSize:NSMakeSize(16, 16)];
     
     // add the image to the cache
-    [mIconDictionary setObject:faviconImage forKey:inURI];
+    [[SiteIconCache sharedSiteIconCache] setSiteIcon:faviconImage
+                                              forURL:inURI
+                                      withExpiration:[NSDate dateWithTimeIntervalSinceNow:SITE_ICON_EXPIRATION_SECONDS]
+                                          memoryOnly:NO];
   }
 
   // figure out what URL triggered this favicon request
@@ -466,16 +467,12 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
 
 - (NSImage*)favoriteIconForPage:(NSString*)inPageURI
 {
-  if ([inPageURI length] == 0)
-    return nil;
-
   // map uri to image location uri
   NSString* iconURL = [self favoriteIconURLFromPageURL:inPageURI];
-  NSImage* siteIcon = [mIconDictionary objectForKey:iconURL];
-#ifdef VERBOSE_SITE_ICON_LOADING
-  NSLog(@"got icon %p for url %@", siteIcon, iconURL);
-#endif
-  return siteIcon;
+  if ([iconURL length] == 0)
+    return nil;
+
+  return [[SiteIconCache sharedSiteIconCache] siteIconForURL:iconURL];
 }
 
 - (void)registerFaviconImage:(NSImage*)inImage forPageURI:(NSString*)inURI
@@ -483,7 +480,10 @@ MakeFaviconURIFromURI(const nsAString& inURIString, nsAString& outFaviconURI)
   if (inImage == nil || [inURI length] == 0)
     return;
 
-  [mIconDictionary setObject:inImage forKey:inURI];
+  [[SiteIconCache sharedSiteIconCache] setSiteIcon:inImage
+                                            forURL:inURI
+                                    withExpiration:[NSDate distantFuture]
+                                        memoryOnly:YES];
 }
 
 - (BOOL)fetchFavoriteIconForPage:(NSString*)inPageURI
