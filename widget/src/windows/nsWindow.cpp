@@ -7261,8 +7261,9 @@ nsWindow::ResolveIMECaretPos(nsWindow* aClient,
                              nsRect&   aResult)
 {
   // RootView coordinates -> Screen coordinates
-  nsCOMPtr<nsWindow> topWindow = getter_AddRefs(GetTopLevelWindow());
+  nsWindow* topWindow = GetTopLevelWindow();
   topWindow->WidgetToScreen(aEventResult, aResult);
+  NS_RELEASE(topWindow);
   // if aClient is nsnull, returns screen coordinates
   if (!aClient)
     return;
