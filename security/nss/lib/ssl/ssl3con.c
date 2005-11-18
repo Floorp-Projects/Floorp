@@ -39,7 +39,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl3con.c,v 1.75 2005/09/28 07:55:37 nelsonb%netscape.com Exp $ */
+/* $Id: ssl3con.c,v 1.76 2005/11/18 01:25:20 nelsonb%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -4179,13 +4179,9 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	sid->u.ssl3.cipherSuite == ss->ssl3.hs.cipher_suite) do {
 	ssl3CipherSpec *pwSpec = ss->ssl3.pwSpec;
 
-	PK11SlotInfo *slot;
-	PK11SymKey *  wrapKey;     /* wrapping key */
-	CK_FLAGS      keyFlags      = 0;
-
 	SECItem       wrappedMS;   /* wrapped master secret. */
 
-        ss->sec.authAlgorithm = sid->authAlgorithm;
+	ss->sec.authAlgorithm = sid->authAlgorithm;
 	ss->sec.authKeyBits   = sid->authKeyBits;
 	ss->sec.keaType       = sid->keaType;
 	ss->sec.keaKeyBits    = sid->keaKeyBits;
@@ -4196,6 +4192,10 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	 * c) key is unwrapped, and we're bypassing PKCS11.
 	 */
 	if (sid->u.ssl3.keys.msIsWrapped) {
+	    PK11SlotInfo *slot;
+	    PK11SymKey *  wrapKey;     /* wrapping key */
+	    CK_FLAGS      keyFlags      = 0;
+
 	    if (ss->opt.bypassPKCS11) {
 		/* we cannot restart a non-bypass session in a 
 		** bypass socket.
@@ -4246,6 +4246,7 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	} else {
 	    /* We CAN restart a bypass session in a non-bypass socket. */
 	    /* need to import the raw master secret to session object */
+	    PK11SlotInfo *slot = PK11_GetInternalSlot();
 	    wrappedMS.data = sid->u.ssl3.keys.wrapped_master_secret;
 	    wrappedMS.len  = sid->u.ssl3.keys.wrapped_master_secret_len;
 	    pwSpec->master_secret =  
