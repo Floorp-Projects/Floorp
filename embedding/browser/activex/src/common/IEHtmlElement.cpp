@@ -40,7 +40,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
-#include "nsString.h"
 
 #include "IEHtmlElement.h"
 #include "IEHtmlElementCollection.h"

@@ -186,7 +186,7 @@ CMozillaBrowser::CMozillaBrowser()
     mBrowserHelperListCount = 0;
 
     // Name of the default profile to use
-    mProfileName.AssignLiteral("MozillaControl");
+    mProfileName.Assign(NS_LITERAL_STRING("MozillaControl"));
 
     // Initialise the web browser
     Initialize();
@@ -448,7 +448,7 @@ LRESULT CMozillaBrowser::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&
                 ios->GetProtocolHandler(kDesignModeScheme, getter_AddRefs(ph));
                 if (ph &&
                     NS_SUCCEEDED(ph->GetScheme(phScheme)) &&
-                    phScheme.LowerCaseEqualsASCII(kDesignModeScheme))
+                    phScheme.Equals(NS_LITERAL_CSTRING(kDesignModeScheme)))
                 {
                     Navigate(const_cast<BSTR>(kDesignModeURL), NULL, NULL, NULL, NULL);
                 }
@@ -786,8 +786,8 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
     nsCAutoString aURI;
     uri->GetSpec(aURI);
 
-    nsAutoString strURI(NS_LITERAL_STRING("view-source:"));
-    AppendUTF8toUTF16(aURI, strURI);
+    NS_ConvertUTF8toUTF16 strURI(aURI);
+    strURI.Insert(NS_LITERAL_STRING("view-source:"), 0);
 
     // Ask the client to create a window to view the source in
     CIPtr(IDispatch) spDispNew;
@@ -932,18 +932,27 @@ LRESULT CMozillaBrowser::OnLinkCopyShortcut(WORD wNotifyCode, WORD wID, HWND hWn
     {
         EmptyClipboard();
 
+        NS_ConvertUTF16toUTF8 curi(uri);
+        const char *stringText;
+        PRUint32 stringLen = NS_CStringGetData(curi,
+                                               &stringText);
+
         // CF_TEXT
-        HGLOBAL hmemText = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, uri.Length() + 1);
+        HGLOBAL hmemText = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT,
+                                       stringLen + 1);
         char *pszText = (char *) GlobalLock(hmemText);
-        uri.ToCString(pszText, uri.Length() + 1);
+        strncpy(pszText, stringText, stringLen);
+        pszText[stringLen] = '\0';
         GlobalUnlock(hmemText);
         SetClipboardData(CF_TEXT, hmemText);
 
         // UniformResourceLocator - CFSTR_SHELLURL
         const UINT cfShellURL = RegisterClipboardFormat(CFSTR_SHELLURL);
-        HGLOBAL hmemURL = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, uri.Length() + 1);
+        HGLOBAL hmemURL = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT,
+                                      stringLen + 1);
         char *pszURL = (char *) GlobalLock(hmemURL);
-        uri.ToCString(pszURL, uri.Length() + 1);
+        strncpy(pszText, stringText, stringLen);
+        pszText[stringLen] = '\0';
         GlobalUnlock(hmemURL);
         SetClipboardData(cfShellURL, hmemURL);
 

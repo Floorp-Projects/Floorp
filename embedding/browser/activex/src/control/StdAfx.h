@@ -67,9 +67,8 @@
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "nsViewsCID.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 
 #include "nsIHTTPChannel.h"
 
@@ -95,7 +94,6 @@
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "nsISelection.h"
-#include "nsPresContext.h"
 #include "nsIPrompt.h"
 #include "nsIEditor.h"
 #include "nsIEditingSession.h"
@@ -106,7 +104,6 @@
 #include "nsIStreamListener.h"
 #include "nsUnitConversion.h"
 #include "nsVoidArray.h"
-#include "nsCRT.h"
 
 #include "nsIDocumentViewer.h"
 #include "nsIDOMNode.h"

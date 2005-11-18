@@ -109,7 +109,7 @@ public:
 
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsNetUtil.h"
 
 #include "nsIContent.h"

@@ -48,8 +48,10 @@
 #include "nsIBaseWindow.h"
 #include "nsIWindowWatcher.h"
 #include "nsIInputStream.h"
-#include "nsIByteArrayInputStream.h"
+#include "nsIStringStream.h"
 #include "nsIURI.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "PropertyList.h"
 
@@ -184,7 +186,7 @@ public:
 
             if (homePage)
             {
-                nsXPIDLString homePageString;
+                nsString homePageString;
                 nsresult rv = homePage->ToString(getter_Copies(homePageString));
                 if (NS_SUCCEEDED(rv))
                 {
@@ -225,6 +227,8 @@ public:
     {
         ATLTRACE(_T("IWebBrowserImpl::Navigate()\n"));
         ENSURE_BROWSER_IS_VALID();
+
+        nsresult rv;
 
         // Extract the URL parameter
         if (URL == NULL)
@@ -368,9 +372,9 @@ public:
                     SafeArrayUnlock(PostData->parray);
 
                     // Create a byte array input stream object.
-                    nsCOMPtr<nsIByteArrayInputStream> stream;
-                    nsresult rv = NS_NewByteArrayInputStream(
-                        getter_AddRefs(stream), tmp, nSize);
+                    nsCOMPtr<nsIStringInputStream> stream
+                        (do_CreateInstance("@mozilla.org/io/string-input-stream;1"));
+                    rv = stream->AdoptData(tmp, nSize);
                     if (NS_FAILED(rv) || !stream)
                     {
                         NS_ASSERTION(0, "cannot create byte stream");
@@ -384,7 +388,7 @@ public:
         }
 
         // Extract the headers parameter
-        nsCOMPtr<nsIByteArrayInputStream> headersStream;
+        nsCOMPtr<nsIStringInputStream> headersStream;
         if (Headers &&
             Headers->vt == VT_BSTR &&
             Headers->bstrVal)
@@ -403,15 +407,15 @@ public:
                     tmp[nSize - 1] = '\0';
 
                     // Create a byte array input stream object which will own the buffer
-                    nsCOMPtr<nsIByteArrayInputStream> stream;
-                    nsresult rv = 
-                        NS_NewByteArrayInputStream(getter_AddRefs(stream), tmp, nSize);
-                    if (NS_FAILED(rv) || !stream)
+                    headersStream = do_CreateInstance("@mozilla.org/io/string-input-stream;1");
+                    if (headersStream)
+                        rv = headersStream->AdoptData(tmp, nSize);
+
+                    if (NS_FAILED(rv) || !headersStream)
                     {
                         NS_ASSERTION(0, "cannot create byte stream");
                         nsMemory::Free(tmp);
                     }
-                    headersStream = do_QueryInterface(stream);
                 }
             }
         }
@@ -428,7 +432,7 @@ public:
         }
     
         // Load the URL    
-        nsresult rv = NS_ERROR_FAILURE;
+        rv = NS_ERROR_FAILURE;
         if (webNavToUse)
         {
             rv = webNavToUse->LoadURI(URL,
@@ -664,18 +668,18 @@ public:
             return SetErrorInfo(E_INVALIDARG);
         }
         // Get the url from the web shell
-        nsXPIDLString szLocationName;
+        nsString szLocationName;
         ENSURE_GET_WEBNAV();
         nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(webNav);
         baseWindow->GetTitle(getter_Copies(szLocationName));
-        if (nsnull == (const PRUnichar *) szLocationName)
+        if (!szLocationName.get())
         {
             return SetErrorInfo(E_UNEXPECTED);
         }
 
         // Convert the string to a BSTR
         USES_CONVERSION;
-        LPCOLESTR pszConvertedLocationName = W2COLE((const PRUnichar *) szLocationName);
+        LPCOLESTR pszConvertedLocationName = W2COLE(szLocationName.get());
         *LocationName = SysAllocString(pszConvertedLocationName);
 
         return S_OK;

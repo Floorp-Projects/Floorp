@@ -54,7 +54,7 @@
 
 #ifdef XPC_IDISPATCH_SUPPORT
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"

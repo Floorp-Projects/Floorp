@@ -65,14 +65,14 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
 #include "nsVoidArray.h"
-#include "nsCRT.h"
 
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
