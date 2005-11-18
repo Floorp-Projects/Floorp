@@ -43,7 +43,22 @@
         title="&xforms.bindingdialog.title;"
         buttons="accept"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="document.getElementById('XFormsBindingDialog').getButton('accept').focus();">
+        onload="document.documentElement.getButton('accept').focus();">
+
+  <script type="application/x-javascript">
+    function toJSConsole() {
+      var js = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                         .getService(Components.interfaces.nsIWindowMediator)
+                         .getMostRecentWindow('global:console');
+      if (js)
+        js.focus();
+      else
+        Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                  .getService(Components.interfaces.nsIWindowWatcher)
+                  .openWindow(null, "chrome://global/content/console.xul",
+                              "", "all,dialog=no", null);
+      }
+  </script>
 
   <hbox flex="1">
     <hbox align="start">
@@ -54,7 +69,7 @@
       <description class="header descr1">
         &xforms.bindingdialog.description1;
       </description>
-      <label class="descr2 text-link" onclick="open('chrome://global/content/console.xul', 'global:console', 'menubar=no,resizable=yes')">
+      <label class="descr2 text-link" onclick="toJSConsole()">
         &xforms.bindingdialog.description2;
       </label>
     </vbox>
