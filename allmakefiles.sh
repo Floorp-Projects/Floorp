@@ -429,7 +429,6 @@ netwerk/protocol/about/Makefile
 netwerk/protocol/about/public/Makefile
 netwerk/protocol/about/src/Makefile
 netwerk/protocol/data/Makefile
-netwerk/protocol/data/public/Makefile
 netwerk/protocol/data/src/Makefile
 netwerk/protocol/file/Makefile
 netwerk/protocol/file/public/Makefile
