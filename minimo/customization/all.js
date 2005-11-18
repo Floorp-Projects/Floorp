@@ -657,3 +657,6 @@ pref("content.max.tokenizing.time", 2250000);
 pref("content.notify.interval", 750000);
 pref("content.switch.threshold", 750000);
 pref("nglayout.initialpaint.delay", 750);
+
+pref("browser.chrome.favicons",true);
+pref("browser.chrome.site_icons",true);
