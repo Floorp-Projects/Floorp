@@ -37,9 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGlueLinking.h"
+#include "nsXPCOMGlue.h"
 
 #include <windows.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 struct DependentLib
 {
@@ -48,6 +50,7 @@ struct DependentLib
 };
 
 static DependentLib *sTop;
+HINSTANCE sXULLibrary;
 
 static void
 AppendDependentLib(HINSTANCE libHandle)
@@ -106,6 +109,11 @@ XPCOMGlueLoad(const char *xpcomFile)
             *lastSlash = '\0';
 
             XPCOMGlueLoadDependentLibs(xpcomDir, ReadDependentCB);
+
+            sprintf(lastSlash, "\\" XUL_DLL);
+
+            sXULLibrary =
+                LoadLibraryEx(xpcomDir, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
         }
     }
 
@@ -137,4 +145,28 @@ XPCOMGlueUnload()
 
         delete temp;
     }
+
+    if (sXULLibrary) {
+        FreeLibrary(sXULLibrary);
+        sXULLibrary = nsnull;
+    }
+}
+
+nsresult
+XPCOMGlueLoadXULFunctions(nsDynamicFunctionLoad *symbols)
+{
+    if (!sXULLibrary)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv = NS_OK;
+    while (symbols->functionName) {
+        *symbols->function = 
+            (NSFuncPtr) GetProcAddress(sXULLibrary, symbols->functionName);
+        if (!symbols->function)
+            rv = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+
+        ++symbols;
+    }
+
+    return rv;
 }

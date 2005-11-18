@@ -37,11 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGlueLinking.h"
+#include "nsXPCOMGlue.h"
 
 #include <mach-o/dyld.h>
 #include <sys/param.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 static void
 ReadDependentCB(const char *aDependentLib)
@@ -84,4 +86,26 @@ void
 XPCOMGlueUnload()
 {
   // nothing to do, since we cannot unload dylibs on OS X
+}
+
+nsresult
+XPCOMGlueLoadXULFunctions(nsDynamicFunctionLoad *symbols)
+{
+    nsresult rv = NS_OK;
+    while (symbols->functionName) {
+        char buffer[512];
+        snprintf(buffer, sizeof(buffer), "_%s", symbols->functionName);
+
+        if (!NSIsSymbolNameDefined(buffer)) {
+            rv = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+        }
+        else {
+            NSSymbol sym = NSLookupAndBindSymbol(buffer);
+            *symbols->function = (NSFuncPtr) NSAddressOfSymbol(sym);
+        }
+
+        ++symbols;
+    }
+
+    return rv;
 }
