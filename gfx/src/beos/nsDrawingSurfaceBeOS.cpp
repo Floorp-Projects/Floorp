@@ -255,8 +255,8 @@ bool nsDrawingSurfaceBeOS :: LockDrawable()
   }
   else
   {
-    // Was locked in Init(), only test
-  	rv = mBitmap->Lock();
+    // Was locked in Init(), only test for locked state here
+  	rv = mBitmap->IsLocked();
   }
   return rv;
 }
