@@ -114,7 +114,8 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsAString& aRootName,
 
 txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
                                        nsIDOMDocumentFragment* aFragment)
-    : mBadChildLevel(0),
+    : mTreeDepth(0),
+      mBadChildLevel(0),
       mTableState(NORMAL),
       mDontAddCurrent(PR_FALSE),
       mHaveTitleElement(PR_FALSE),
