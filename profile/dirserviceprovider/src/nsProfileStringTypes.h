@@ -51,7 +51,7 @@
 
 #ifndef MOZILLA_INTERNAL_API
 
-#include "nsStringAPI.h"
+#include "nsEmbedString.h"
 
 typedef nsCString nsPromiseFlatCString;
 typedef nsCString nsCAutoString;
