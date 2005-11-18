@@ -1406,6 +1406,10 @@ ALPHABLENDPROC nsImageWin::gAlphaBlend = NULL;
 
 PRBool nsImageWin::CanAlphaBlend(void)
 {
+#ifdef WINCE
+  gAlphaBlend = nsnull;
+  return PR_FALSE;
+#else
   static PRBool alreadyChecked = PR_FALSE;
 
   if (!alreadyChecked) {
@@ -1424,6 +1428,7 @@ PRBool nsImageWin::CanAlphaBlend(void)
   }
 
   return gAlphaBlend != NULL;
+#endif
 }
 
 

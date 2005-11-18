@@ -607,14 +607,16 @@ NS_IMETHODIMP nsDeviceContextWin::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
   aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
   aPaletteInfo.numReserved = mPaletteInfo.numReserved;
 
-#ifndef WINCE
   if (NULL == mPaletteInfo.palette) {
+#ifndef WINCE
     HWND    hwnd = (HWND)mWidget;
     HDC     hdc = ::GetDC(hwnd);
     mPaletteInfo.palette = ::CreateHalftonePalette(hdc);  
     ::ReleaseDC(hwnd, hdc);                                                     
-  }
+#else
+    mPaletteInfo.palette = (HPALETTE) GetStockObject(DEFAULT_PALETTE);
 #endif
+  }
 
   aPaletteInfo.palette = mPaletteInfo.palette;
                                          
