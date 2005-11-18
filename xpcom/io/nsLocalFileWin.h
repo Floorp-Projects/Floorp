@@ -48,6 +48,7 @@
 #include "nsIFile.h"
 #include "nsIFactory.h"
 #include "nsILocalFileWin.h"
+#include "nsIHashable.h"
 
 #include "windows.h"
 
@@ -61,7 +62,8 @@ DEFINE_OLEGUID(IID_IPersistFile, 0x0000010BL, 0, 0);
 
 #include <sys/stat.h>
 
-class nsLocalFile : public nsILocalFileWin
+class nsLocalFile : public nsILocalFileWin,
+                    public nsIHashable
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
@@ -81,6 +83,9 @@ public:
 
     // nsILocalFileWin interface
     NS_DECL_NSILOCALFILEWIN
+
+    // nsIHashable interface
+    NS_DECL_NSIHASHABLE
 
 public:
     static void GlobalInit();

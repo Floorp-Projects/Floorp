@@ -51,6 +51,7 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsIHashable.h"
 
 /** 
  *  we need these for statfs()
@@ -80,7 +81,8 @@
     #include <sys/mount.h>
 #endif
 
-class NS_COM nsLocalFile : public nsILocalFile
+class NS_COM nsLocalFile : public nsILocalFile,
+                           public nsIHashable
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
@@ -97,6 +99,9 @@ public:
 
     // nsILocalFile
     NS_DECL_NSILOCALFILE
+
+    // nsIHashable
+    NS_DECL_NSIHASHABLE
 
 public:
     static void GlobalInit();

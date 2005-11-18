@@ -40,6 +40,7 @@
 
 #include "nsID.h"
 #include "nsISupports.h"
+#include "nsIHashable.h"
 #include "nsCOMPtr.h"
 #include "pldhash.h"
 #include NEW_H
@@ -315,6 +316,46 @@ public:
 
 private:
   const char* mKey;
+};
+
+/**
+ * Hashtable key class to use with objects that support nsIHashable
+ */
+class nsHashableHashKey : public PLDHashEntryHdr
+{
+public:
+    typedef nsIHashable* KeyType;
+    typedef const nsIHashable* KeyTypePointer;
+
+    nsHashableHashKey(const nsIHashable* aKey) :
+        mKey(NS_CONST_CAST(nsIHashable*, aKey)) { }
+    nsHashableHashKey(const nsHashableHashKey& toCopy) :
+        mKey(toCopy.mKey) { }
+    ~nsHashableHashKey() { }
+
+    nsIHashable* GetKey() const { return mKey; }
+    const nsIHashable* GetKeyPointer() const { return mKey; }
+
+    PRBool KeyEquals(const nsIHashable* aKey) const {
+        PRBool eq;
+        if (NS_SUCCEEDED(mKey->Equals(NS_CONST_CAST(nsIHashable*,aKey), &eq))) {
+            return eq;
+        }
+        return PR_FALSE;
+    }
+
+    static const nsIHashable* KeyToPointer(nsIHashable* aKey) { return aKey; }
+    static PLDHashNumber HashKey(const nsIHashable* aKey) {
+        PRUint32 code = 8888; // magic number if GetHashCode fails :-(
+        nsresult rv = NS_CONST_CAST(nsIHashable*,aKey)->GetHashCode(&code);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "GetHashCode should not throw!");
+        return code;
+    }
+    
+    enum { ALLOW_MEMMOVE = PR_TRUE };
+
+private:
+    nsCOMPtr<nsIHashable> mKey;
 };
 
 #endif // nsTHashKeys_h__
