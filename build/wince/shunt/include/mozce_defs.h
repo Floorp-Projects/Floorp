@@ -449,18 +449,6 @@ typedef struct mozce_OUTLINETEXTMETRIC
 #define MM_TEXT             1
 #endif
 
-
-typedef struct _BLENDFUNCTION 
-{
-  BYTE     BlendOp;
-  BYTE     BlendFlags;
-  BYTE     SourceConstantAlpha;
-  BYTE     AlphaFormat;
-} BLENDFUNCTION, *PBLENDFUNCTION, *LPBLENDFUNCTION;
-
-#define AC_SRC_OVER 0
-
-
 #ifndef SM_CYVTHUMB
 #define SM_CYVTHUMB 9
 #endif
@@ -518,5 +506,36 @@ typedef struct mozce_MAT2 {
   mozce_FIXED eM21; 
   mozce_FIXED eM22; 
 } mozce_MAT2; 
+
+
+
+typedef struct _BLENDFUNCTION
+{
+    BYTE   BlendOp;
+    BYTE   BlendFlags;
+    BYTE   SourceConstantAlpha;
+    BYTE   AlphaFormat;
+}BLENDFUNCTION,*PBLENDFUNCTION;
+
+
+//
+// currentlly defined blend function
+//
+
+#define AC_SRC_OVER                 0x00
+
+//
+// alpha format flags
+//
+
+#define AC_SRC_ALPHA                0x01
+
   
+struct color{
+	unsigned char Red;
+	unsigned char Green;
+	unsigned char Blue;
+	double Alpha;
+};
+
 #endif

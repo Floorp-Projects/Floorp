@@ -664,31 +664,38 @@ MOZCE_SHUNT_API BOOL mozce_ExtTextOutA(HDC inDC, int inX, int inY, UINT inOption
     MOZCE_PRECHECK
 
 #ifdef DEBUG
-    mozce_printf("mozce_ExtTextOutA called\n");
+        mozce_printf("mozce_ExtTextOutA (%s) called\n", inString);
 #endif
-
+    
     BOOL retval = false;
     
     if (inCount == -1)
-		inCount = strlen(inString);
-
+        inCount = strlen(inString);
+    
     int wLen = 0;
     LPTSTR wStr = a2w_malloc(inString, inCount, &wLen);
-
+    
     if(NULL != wStr)
-    {
+    {	
         retval = ExtTextOutW(inDC, inX, inY, inOptions, inRect, wStr, wLen, inDx);
+        
         free(wStr);
         wStr = NULL;
     }
-
+    
     return retval;
 }
 
 
 MOZCE_SHUNT_API BOOL mozce_TextOutA(HDC hdc, int nXStart, int nYStart, const char* lpString, int cbString)
 {
-  return mozce_ExtTextOutA(hdc, nXStart, nYStart, 0, NULL, lpString, cbString, NULL);
+    MOZCE_PRECHECK
+
+#ifdef DEBUG
+    mozce_printf("mozce_TextOutA (%s) called\n", lpString);
+#endif
+    
+    return mozce_ExtTextOutA(hdc, nXStart, nYStart, 0, NULL, lpString, cbString, NULL);
 }
 
 MOZCE_SHUNT_API DWORD mozce_GetGlyphOutlineA(HDC inDC, CHAR inChar, UINT inFormat, void* inGM, DWORD inBufferSize, LPVOID outBuffer, CONST mozce_MAT2* inMAT2)

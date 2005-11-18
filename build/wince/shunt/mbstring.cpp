@@ -51,7 +51,7 @@ extern "C" {
 **  Right now, bail with a default implementation.
 */
 
-// #define LOG_CALLS
+#define LOG_CALLS
 
 MOZCE_SHUNT_API unsigned char* mozce_mbsinc(const unsigned char* inCurrent)
 {
