@@ -37,11 +37,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGlueLinking.h"
+#include "nsXPCOMGlue.h"
 
 #define INCL_DOS
 #define INCL_DOSERRORS
 #include <os2.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 struct DependentLib
 {
@@ -50,6 +52,7 @@ struct DependentLib
 };
 
 static DependentLib *sTop;
+HMODULE sXULLibrary = NULLHANDLE;
 
 static void
 AppendDependentLib(HMODULE libHandle)
@@ -68,12 +71,12 @@ static void
 ReadDependentCB(const char *aDependentLib)
 {
     CHAR pszError[_MAX_PATH];
-    ULONG ulRc = NO_ERROR;
+    ULONG ulrc = NO_ERROR;
     HMODULE h;
 
-    ulRc = DosLoadModule(pszError, _MAX_PATH, aDependentLib, &h);
+    ulrc = DosLoadModule(pszError, _MAX_PATH, aDependentLib, &h);
 
-    if (ulRc != NO_ERROR)
+    if (ulrc != NO_ERROR)
         return;
 
     AppendDependentLib(h);
@@ -85,9 +88,11 @@ ns_strrpbrk(char *string, const char *strCharSet)
 {
     char *found = NULL;
     for (; *string; ++string) {
-        for(const char *search = strCharSet; *search; ++search) {
+        for (const char *search = strCharSet; *search; ++search) {
             if (*search == *string) {
                 found = string;
+                // Since we're looking for the last char, we save "found"
+                // until we're at the end of the string.
             }
         }
     }
@@ -98,6 +103,10 @@ ns_strrpbrk(char *string, const char *strCharSet)
 GetFrozenFunctionsFunc
 XPCOMGlueLoad(const char *xpcomFile)
 {
+    CHAR pszError[_MAX_PATH];
+    ULONG ulrc = NO_ERROR;
+    HMODULE h;
+
     if (xpcomFile[0] == '.' && xpcomFile[1] == '\0') {
         xpcomFile = XPCOM_DLL;
     }
@@ -110,21 +119,19 @@ XPCOMGlueLoad(const char *xpcomFile)
             *lastSlash = '\0';
 
             XPCOMGlueLoadDependentLibs(xpcomDir, ReadDependentCB);
+
+            sprintf(lastSlash, "\\" XUL_DLL);
+
+            DosLoadModule(pszError, _MAX_PATH, xpcomDir, &sXULLibrary);
         }
     }
 
-    CHAR pszError[_MAX_PATH];
-    ULONG ulRc = NO_ERROR;
-    HMODULE h;
+    ulrc = DosLoadModule(pszError, _MAX_PATH, xpcomFile, &h);
 
-    ulRc = DosLoadModule(pszError, _MAX_PATH, xpcomFile, &h);
-
-    if (ulRc != NO_ERROR)
+    if (ulrc != NO_ERROR)
         return nsnull;
 
     AppendDependentLib(h);
-
-    ULONG ulrc = NO_ERROR;
 
     GetFrozenFunctionsFunc sym;
 
@@ -147,4 +154,30 @@ XPCOMGlueUnload()
 
         delete temp;
     }
+
+    if (sXULLibrary) {
+        DosFreeModule(sXULLibrary);
+        sXULLibrary = nsnull;
+    }
+}
+
+nsresult
+XPCOMGlueLoadXULFunctions(nsDynamicFunctionLoad *symbols)
+{
+    ULONG ulrc = NO_ERROR;
+
+    if (!sXULLibrary)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    nsresult rv = NS_OK;
+    while (symbols->functionName) {
+        ulrc = DosQueryProcAddr(sXULLibrary, 0, symbols->functionName, (PFN*)symbols->function);
+
+        if (ulrc != NO_ERROR)
+            rv = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+
+        ++symbols;
+    }
+
+    return rv;
 }
