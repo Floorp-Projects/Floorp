@@ -102,6 +102,24 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
 extern "C" NS_HIDDEN_(nsresult)
 XPCOMGlueStartup(const char* xpcomFile);
 
+typedef void (*NSFuncPtr)();
+
+struct nsDynamicFunctionLoad
+{
+    const char *functionName;
+    NSFuncPtr  *function;
+};
+
+/**
+ * Dynamically load functions from libxul.
+ *
+ * @throws NS_ERROR_NOT_INITIALIZED if XPCOMGlueStartup() was not called or
+ *         if the libxul DLL was not found.
+ * @throws NS_ERROR_LOSS_OF_SIGNIFICANT_DATA if only some of the required
+ *         functions were found.
+ */
+extern "C" NS_HIDDEN_(nsresult)
+XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad *symbols);
 
 /**
  * Finish the XPCOM glue after it is no longer needed.

@@ -37,10 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsGlueLinking.h"
+#include "nsXPCOMGlue.h"
 
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #if defined(SUNOS4) || defined(NEXTSTEP) || \
     (defined(OPENBSD) || defined(NETBSD)) && !defined(__ELF__)
@@ -56,6 +58,7 @@ struct DependentLib
 };
 
 static DependentLib *sTop;
+static void* sXULLibHandle;
 
 static void
 AppendDependentLib(void *libHandle)
@@ -90,6 +93,10 @@ XPCOMGlueLoad(const char *xpcomFile)
             *lastSlash = '\0';
 
             XPCOMGlueLoadDependentLibs(xpcomDir, ReadDependentCB);
+
+            sprintf(lastSlash, "/" XUL_DLL);
+
+            sXULLibHandle = dlopen(xpcomDir, RTLD_GLOBAL | RTLD_LAZY);
         }
     }
 
@@ -126,4 +133,30 @@ XPCOMGlueUnload()
 
         delete temp;
     }
+
+    if (sXULLibHandle) {
+        dlclose(sXULLibHandle);
+        sXULLibHandle = nsnull;
+    }
+}
+
+nsresult
+XPCOMGlueLoadXULFunctions(nsDynamicFunctionLoad *symbols)
+{
+    // We don't null-check sXULLibHandle because this might work even
+    // if it is null (same as RTLD_DEFAULT)
+
+    nsresult rv = NS_OK;
+    while (symbols->functionName) {
+        char buffer[512];
+        snprintf(buffer, sizeof(buffer),
+                 LEADING_UNDERSCORE "%s", symbols->functionName);
+
+        *symbols->function = (NSFuncPtr) dlsym(sXULLibHandle, buffer);
+        if (!symbols->function)
+            rv = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
+
+        ++symbols;
+    }
+    return rv;
 }
