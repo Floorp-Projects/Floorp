@@ -41,6 +41,7 @@ messenger.jar:
     content/messenger/am-help.js                                               (base/prefs/resources/content/am-help.js)
     content/messenger/am-server.xul                                            (base/prefs/resources/content/am-server.xul)
     content/messenger/am-serverwithnoidentities.xul                            (base/prefs/resources/content/am-serverwithnoidentities.xul)
+    content/messenger/am-serverwithnoidentities.js                             (base/prefs/resources/content/am-serverwithnoidentities.js)
     content/messenger/am-server.js                                             (base/prefs/resources/content/am-server.js)
     content/messenger/am-server-top.xul                                        (base/prefs/resources/content/am-server-top.xul)
     content/messenger/am-copies.xul                                            (base/prefs/resources/content/am-copies.xul)
