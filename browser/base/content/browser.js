@@ -895,33 +895,7 @@ function delayedStartup()
   gClickSelectsAll = gPrefService.getBoolPref("browser.urlbar.clickSelectsAll");
 
 #ifdef HAVE_SHELL_SERVICE
-  // Perform default browser checking (after window opens).
-  var shell = getShellService();
-  if (shell) {
-    var shouldCheck = shell.shouldCheckDefaultBrowser;
-    if (shouldCheck && !shell.isDefaultBrowser(true)) {
-      var brandBundle = document.getElementById("bundle_brand");
-      var shellBundle = document.getElementById("bundle_shell");
-
-      var brandShortName = brandBundle.getString("brandShortName");
-      var promptTitle = shellBundle.getString("setDefaultBrowserTitle");
-      var promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage",
-                                                         [brandShortName]);
-      var checkboxLabel = shellBundle.getFormattedString("setDefaultBrowserDontAsk",
-                                                         [brandShortName]);
-      const IPS = Components.interfaces.nsIPromptService;
-      var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                                .getService(IPS);
-      var checkEveryTime = { value: shouldCheck };
-      var rv = ps.confirmEx(window, promptTitle, promptMessage,
-                            (IPS.BUTTON_TITLE_YES * IPS.BUTTON_POS_0) +
-                            (IPS.BUTTON_TITLE_NO * IPS.BUTTON_POS_1),
-                            null, null, null, checkboxLabel, checkEveryTime);
-      if (rv == 0)
-        shell.setDefaultBrowser(true, false);
-      shell.shouldCheckDefaultBrowser = checkEveryTime.value;
-    }
-  } else {
+  if (!getShellService()) {
     // We couldn't get the shell service; go hide the mail toolbar button.
     var mailbutton = document.getElementById("mail-button");
     if (mailbutton)
@@ -5768,12 +5742,16 @@ function getPluginInfo(pluginElement)
     } else {
       pluginsPage = pluginElement.getAttribute("pluginspage");
     }
-    var doc = pluginElement.ownerDocument;
-    var docShell = findChildShell(doc, gBrowser.selectedBrowser.docShell, null);
-    try {
-      pluginsPage = makeURI(pluginsPage, doc.characterSet, docShell.currentURI).spec;
-    } catch (ex) { 
-      pluginsPage = "";
+
+    // only attempt if a pluginsPage is defined.
+    if (pluginsPage) {
+      var doc = pluginElement.ownerDocument;
+      var docShell = findChildShell(doc, gBrowser.selectedBrowser.docShell, null);
+      try {
+        pluginsPage = makeURI(pluginsPage, doc.characterSet, docShell.currentURI).spec;
+      } catch (ex) { 
+        pluginsPage = "";
+      }
     }
 
     tagMimetype = pluginElement.QueryInterface(Components.interfaces.nsIObjectLoadingContent)
