@@ -1,0 +1,10 @@
+<html><head>
+<title>Testcase bug 280217 - Crash on changing display type to table-row on hidden inputs</title>
+<style>
+body:hover input{display:table-row;}
+</style>
+</head>
+<body>
+Hovering over this text should not crash Mozilla
+<input type="hidden"><input type="hidden">
+</body></html>

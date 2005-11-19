@@ -1,0 +1,24 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug 253781</title>
+    <style>
+                  * {margin:0;padding:0;}
+    </style>
+</head>
+<body>
+
+
+<table width="100%" id="mytable" style="visibility: hidden">
+	<caption>table caption</caption>
+	<tr>
+		<td>cell data</td>
+	</tr>
+</table>
+
+<script>
+setTimeout("document.getElementById('mytable').style.visibility='visible'",5);
+</script>
+
+
+</body></html>
