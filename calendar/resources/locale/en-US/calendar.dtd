@@ -259,7 +259,7 @@
 <!ENTITY calendar.tools.modify.tooltip         "Modify Event" >
 
 <!ENTITY calendar.newtask.button.tooltip          "Create a new task" >
-<!ENTITY calendar.newevent.button.tooltip         "Create a new calendar event" >
+<!ENTITY calendar.newevent.button.tooltip         "Create a new event" >
 <!ENTITY calendar.delete.button.tooltip           "Delete selected event" >
 <!ENTITY calendar.edit.button.tooltip             "Edit selected event" >
 
@@ -306,8 +306,6 @@
 <!ENTITY calendar.weekview.button.tooltip         "Switch to week view" >
 <!ENTITY calendar.monthview.button.tooltip        "Switch to month view" >
 <!ENTITY calendar.multiweekview.button.tooltip        "Switch to multiweek view" >
-<!ENTITY calendar.newevent.button.tooltip         "Create a new event" >
-<!ENTITY calendar.newtask.button.tooltip          "Create a new task" >
 
 <!ENTITY calendar.nextday.button.tooltip        "Next Day" >
 <!ENTITY calendar.prevday.button.tooltip        "Previous Day" >
