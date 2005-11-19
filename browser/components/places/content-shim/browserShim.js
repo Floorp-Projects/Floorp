@@ -63,8 +63,9 @@ PlacesBrowserShim.init = function PBS_init() {
 };
 
 PlacesBrowserShim.addBookmark = function PBS_addBookmark() {
-  var uri = getBrowser().selectedBrowser.currentURI;
-  this._bookmarkURI(this._bookmarks.bookmarkRoot, uri);
+  var selectedBrowser = getBrowser().selectedBrowser;
+  this._bookmarkURI(this._bookmarks.bookmarkRoot, selectedBrowser.currentURI, 
+                    selectedBrowser.contentTitle);
 };
 
 PlacesBrowserShim.addBookmarks = function PBS_addBookmarks() {
@@ -72,11 +73,14 @@ PlacesBrowserShim.addBookmarks = function PBS_addBookmarks() {
                                             "Goats", -1);
   var browsers = getBrowser().browsers;
   for (var i = 0; i < browsers.length; ++i)
-    this._bookmarkURI(folder, browsers[i].currentURI);
+    this._bookmarkURI(folder, browsers[i].currentURI, 
+                      browsers[i].contentTitle);
 };
 
-PlacesBrowserShim._bookmarkURI = function PBS__bookmarkURI(folder, uri) {
+PlacesBrowserShim._bookmarkURI = 
+function PBS__bookmarkURI(folder, uri, title) {
   this._bookmarks.insertItem(folder, uri, -1);
+  this._bookmarks.setItemTitle(uri, title);
 };
 
 PlacesBrowserShim.showPlaces = function PBS_showPlaces() {

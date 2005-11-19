@@ -181,12 +181,30 @@ PlacesPage.mouseLoadURIInBrowser = function PP_loadURIInBrowser(event) {
   this._getLoadFunctionForEvent(event)();
 };
 
+function getSelectedURL() {
+  var placeContent = document.getElementById("placeContent");
+  var view = placeContent.view;
+  var selection = view.selection;
+  var rc = selection.getRangeCount();
+  if (rc != 1) 
+    return null;
+  var min = { }, max = { };
+  selection.getRangeAt(0, min, max);
+  
+  // Cannot load containers
+  if (view.isContainer(min.value) || view.isSeparator(min.value))
+    return null;
+    
+  var result = view.QueryInterface(Ci.nsINavHistoryResult);
+  return result.nodeForTreeIndex(min.value).url;
+}
+
 /**
  * Loads the selected URL in a new tab. 
  */
 PlacesPage.openLinkInNewTab = function PP_openLinkInNewTab() {
   var placeContent = document.getElementById("placeContent");
-  this._topWindow.openNewTabWith(placeContent.selectedURL, null, null);
+  this._topWindow.openNewTabWith(getSelectedURL() /* placeContent.selectedURL*/, null, null);
 };
 
 /**
@@ -194,7 +212,7 @@ PlacesPage.openLinkInNewTab = function PP_openLinkInNewTab() {
  */
 PlacesPage.openLinkInNewWindow = function PP_openLinkInNewWindow() {
   var placeContent = document.getElementById("placeContent");
-  this._topWindow.openNewWindowWith(placeContent.selectedURL, null, null);
+  this._topWindow.openNewWindowWith(getSelectedURL() /*placeContent.selectedURL*/, null, null);
 };
 
 /**
@@ -202,7 +220,7 @@ PlacesPage.openLinkInNewWindow = function PP_openLinkInNewWindow() {
  */
 PlacesPage.openLinkInCurrentWindow = function PP_openLinkInCurrentWindow() {
   var placeContent = document.getElementById("placeContent");
-  this._topWindow.loadURI(placeContent.selectedURL, null, null);
+  this._topWindow.loadURI(getSelectedURL()/*placeContent.selectedURL*/, null, null);
 };
 
 /**
@@ -215,3 +233,4 @@ PlacesPage.placeSelected = function PP_placeSelected(event) {
   var folder = resultView.nodeForTreeIndex(resultView.selection.currentIndex);
   document.getElementById("placeContent").view = this._bmsvc.getFolderChildren(folder.folderId, Components.interfaces.nsINavBookmarksService.ALL_CHILDREN);
 };
+
