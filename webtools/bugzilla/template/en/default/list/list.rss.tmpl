@@ -63,7 +63,7 @@
     </title>
     <link>[% Param('urlbase') FILTER xml %]show_bug.cgi?id=[% bug.bug_id FILTER xml %]</link>
     <dc:creator>[% bug.reporter_realname FILTER xml %]</dc:creator>
-    <dc:date>[% date.format( format=>"%Y-%m-%dT%H:%MZ",time=>bug.opentime) FILTER xml %]</dc:date> 
+    <dc:date>[% date.format(format=>"%Y-%m-%dT%H:%MZ",time=>bug.opentime,gmt=>1) FILTER xml %]</dc:date> 
     <description>
       [%# Filter out the entire block, so that we don't need to escape the html code out %]
       [% FILTER xml %]
