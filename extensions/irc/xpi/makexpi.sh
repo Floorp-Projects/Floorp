@@ -34,19 +34,19 @@ function safeCommand()
   OUTF=""
   LASTP=""
   for P in "$@"; do
-    if [ "$LASTP" == "<" ]; then
+    if [ "$LASTP" = "<" ]; then
       if [ -n "$INF" ]; then
         echo "ERROR: Multiple input files passed to safeCommand()." >&2
         exit 2
       fi
       INF="$P"
-    elif [ "$LASTP" == ">" ]; then
+    elif [ "$LASTP" = ">" ]; then
       if [ -n "$OUTF" ]; then
         echo "ERROR: Multiple output files passed to safeCommand()." >&2
         exit 2
       fi
       OUTF="$P"
-    elif [ "$P" == ">" -o "$P" == "<" ]; then
+    elif [ "$P" = ">" -o "$P" = "<" ]; then
       echo >/dev/null
     else
       CMD[$CMD_COUNT]="$P"
@@ -169,7 +169,7 @@ echo -n .
 safeCommand sed "s|@REVISION@|$VERSION|g" '<' "$XPIFILES/install.js" '>' "$XPIROOT/install.js"
 echo -n .
 safeCommand mv "$FEDIR/xul/content/contents.rdf" "$FEDIR/xul/content/contents.rdf.in"
-safeCommand sed "s|@MOZILLA_VERSION@|cz-$VERSION|g;s|\(chrome:displayName=\)\\\"[^\\\"]\+\\\"|\1\\\"ChatZilla $VERSION\\\"|g" '<' "$FEDIR/xul/content/contents.rdf.in" '>' "$FEDIR/xul/content/contents.rdf"
+safeCommand sed "s|@MOZILLA_VERSION@|cz-$VERSION|g;s|\(chrome:displayName=\)\"[^\"]\{1,\}\"|\1\"ChatZilla $VERSION\"|g" '<' "$FEDIR/xul/content/contents.rdf.in" '>' "$FEDIR/xul/content/contents.rdf"
 safeCommand rm "$FEDIR/xul/content/contents.rdf.in"
 echo -n .
 safeCommand mv "$FEDIR/xul/locale/en-US/contents.rdf" "$FEDIR/xul/locale/en-US/contents.rdf.in"
