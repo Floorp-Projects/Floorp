@@ -32,8 +32,8 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% title = "$terms.Bug List" %]
-[% IF searchname %]
-  [% title = title _ ": " _ searchname %]
+[% IF searchname || defaultsavename %]
+  [% title = title _ ": " _ (searchname OR defaultsavename) FILTER html %]
 [% END %]
 
 [% style_urls = [ "skins/standard/buglist.css" ] %]
