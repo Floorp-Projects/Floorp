@@ -103,25 +103,7 @@ nsBrowserStatusHandler.prototype =
       
       if (aStateFlags & nsIWebProgressListener.STATE_STOP)
       {
-      
-        /* Find this Browser and this Tab */ 
-        
-        if (getBrowser().mTabbedMode) {
-          for (var i = 0; i < getBrowser().mPanelContainer.childNodes.length; i++) {
-            if(getBrowser().getBrowserAtIndex(i).contentDocument==aWebProgress.DOMWindow.document) {				
-              refBrowser=getBrowser().getBrowserAtIndex(i);
-              tabItem=getBrowser().mTabContainer.childNodes[i];
-			} 
-          }
-        }
-        
-        /* Apply RSS fetch if the request type is for rss view. 
-           Gotta fix this to use a better approach.  */
-        
-        const rsschromemask = "rssblank";
-        if(aRequest.name.indexOf(rsschromemask)>-1) {
-          rssfetch(tabItem,refBrowser.contentDocument,refBrowser.contentDocument.body);
-        }
+
       
         /* To be fixed. We dont want to directly access sytle from here */
         document.styleSheets[1].cssRules[0].style.backgroundPosition="1000px 100%";
@@ -148,7 +130,6 @@ nsBrowserStatusHandler.prototype =
       return;
     }
   },
-
   onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
   {
     var percentage = parseInt((aCurTotalProgress * 100) / aMaxTotalProgress);
@@ -159,10 +140,13 @@ nsBrowserStatusHandler.prototype =
      /* Ideally we dont want to check this here.
      Better to have some other protocol view-rss in the chrome */
 
-     const rsschromemask = "chrome://minimo/content/rssview/rssblank.xhtml";
+     const rsschromemask = "chrome://minimo/content/rssview/rssload.html";
 
      if(aLocation.spec.substr(0, rsschromemask.length) == rsschromemask) {
+
+        /* We trap the URL */ 
         this.urlBar.value="sb:"+gRSSTag; 
+  
      } else {
       domWindow = aWebProgress.DOMWindow;
       // Update urlbar only if there was a load on the root docshell
@@ -653,19 +637,39 @@ function DoBrowserSearch() {
 
 function DoBrowserRSS(sKey) {
 
-  if(!sKey) BrowserViewRSS(); // The toolbar is being used. Otherwise it is via the sb: trap protocol. 
+	  if(!sKey) BrowserViewRSS(); // The toolbar is being used. Otherwise it is via the sb: trap protocol. 
+	
+	  try { 
+	    if(sKey) {
+	      gRSSTag=sKey;
+	    } else if(document.getElementById("toolbar-rss-rsstag").value!="") {
+	      gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
+	    }
+	    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssload.html?url=http://del.icio.us/rss/tag/'+gRSSTag);
+	    browserInit(getBrowser().selectedTab);
+	  } catch (e) {
+	   
+	  }  
+}
 
-  try { 
-    if(sKey) {
-      gRSSTag=sKey;
-    } else if(document.getElementById("toolbar-rss-rsstag").value!="") {
-      gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
-    }
-    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssblank.xhtml');
-    browserInit(getBrowser().selectedTab);
-  } catch (e) {
-   
-  }  
+/* Toolbar specific code - to be removed from here */ 
+
+function DoBrowserSB(sKey) {
+
+	  if(!sKey) BrowserViewRSS(); // The toolbar is being used. Otherwise it is via the sb: trap protocol. 
+	
+	  try { 
+	    if(sKey) {
+	      gRSSTag=sKey;
+	    } else if(document.getElementById("toolbar-rss-rsstag").value!="") {
+	      gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
+	    }
+
+	    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssload.html?url=http://del.icio.us/rss/tag/'+gRSSTag);
+	    browserInit(getBrowser().selectedTab);
+	  } catch (e) {
+	   
+	  }  
 }
 
 /* Toolbar specific code - to be removed from here */ 
@@ -801,7 +805,7 @@ function URLBarEntered()
     /* Trap to SB 'protocol' */ 
 
     if(gURLBar.value.substring(0,3)=="sb:") {
-	 DoBrowserRSS(gURLBar.value.split("sb:")[1]);
+	 DoBrowserSB(gURLBar.value.split("sb:")[1]);
 	return;
     }
 
