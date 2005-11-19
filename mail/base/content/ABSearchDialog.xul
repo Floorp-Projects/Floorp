@@ -38,6 +38,7 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://messenger/skin/searchDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/abResultsPane.css" type="text/css"?>
 
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
