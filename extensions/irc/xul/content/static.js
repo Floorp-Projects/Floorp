@@ -861,7 +861,7 @@ function insertChannelLink (matchText, containerTag, eventData)
 
 function insertBugzillaLink (matchText, containerTag, eventData)
 {
-    var number = matchText.match (/(\d+)/)[1];
+    var idOrAlias = matchText.match(/bug\s+#?(\d{3,6}|[^\s,]{1,20})/)[1];
 
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
@@ -874,7 +874,7 @@ function insertBugzillaLink (matchText, containerTag, eventData)
     else
         bugURL = client.prefs["bugURL"];
 
-    anchor.setAttribute ("href", bugURL.replace("%s", number));
+    anchor.setAttribute ("href", bugURL.replace("%s", idOrAlias));
     anchor.setAttribute ("class", "chatzilla-link");
     anchor.setAttribute ("target", "_content");
     insertHyphenatedWord (matchText, anchor);

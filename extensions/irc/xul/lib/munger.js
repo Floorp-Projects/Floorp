@@ -78,7 +78,8 @@ function initMunger()
     munger.addRule ("mailto",
        /(?:\s|\W|^)((mailto:)?[^<>\[\]()\'\"\s\u201d]+@[^.<>\[\]()\'\"\s\u201d]+\.[^<>\[\]()\'\"\s\u201d]+)/i,
                     insertMailToLink);
-    munger.addRule ("bugzilla-link", /(?:\s|\W|^)(bug\s+#?\d{3,6})/i,
+    munger.addRule ("bugzilla-link",
+                    /(?:\s|\W|^)(bug\s+(?:#?\d{3,6}|#[^\s,]{1,20}))/i,
                     insertBugzillaLink);
     munger.addRule ("channel-link",
                 /(?:\s|\W|^)[@+]?(#[^<>\[\](){}\"\s\u201d]*[^:,.<>\[\](){}\'\"\s\u201d])/i,
