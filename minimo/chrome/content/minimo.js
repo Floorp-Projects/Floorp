@@ -645,12 +645,14 @@ function DoBrowserRSS(sKey) {
 	    } else if(document.getElementById("toolbar-rss-rsstag").value!="") {
 	      gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
 	    }
-	    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssload.html?url=http://del.icio.us/rss/tag/'+gRSSTag);
+
+	    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssload.html?url=http://rss.slashdot.org/Slashdot/slashdot');
 	    browserInit(getBrowser().selectedTab);
 	  } catch (e) {
 	   
 	  }  
 }
+
 
 /* Toolbar specific code - to be removed from here */ 
 
@@ -805,10 +807,17 @@ function URLBarEntered()
     /* Trap to SB 'protocol' */ 
 
     if(gURLBar.value.substring(0,3)=="sb:") {
-	 DoBrowserSB(gURLBar.value.split("sb:")[1]);
-	return;
+		DoBrowserSB(gURLBar.value.split("sb:")[1]);
+		return;
     }
 
+    /* Trap to RSS 'protocol' */ 
+
+    if(gURLBar.value.substring(0,9)=="slashdot:") {
+		DoBrowserRSS(gURLBar.value.split("slashdot:")[1]);
+		return;
+    }
+    
     /* Other normal cases */ 
 
     var fixedUpURI = gURIFixup.createFixupURI(url, 2 /*fixup url*/ );
