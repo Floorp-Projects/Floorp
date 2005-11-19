@@ -58,7 +58,7 @@
 
 					<hbox flex="1" style="margin-top:4px ! important">
 						 <label value="&rssText.label;"  />
-						 <textbox tabindex="15" accessrule="focus_toolbar-rss"  id="toolbar-rss-rsstag" flex="1" onchange="return DoBrowserRSS();"/> 
+						 <textbox tabindex="15" accessrule="focus_toolbar-rss"  id="toolbar-rss-rsstag" flex="1" onchange="return DoBrowserSB();"/> 
 					</hbox>
 				</vbox>
 				<vbox>
