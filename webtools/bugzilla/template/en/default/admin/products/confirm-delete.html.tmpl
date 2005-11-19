@@ -167,27 +167,30 @@
     </td>
   </tr>
 
-  <tr>
-    <td valign="top">
-      [% IF product.milestones.size > 0 %]
-        <a href="editmilestones.cgi?product=[%- product.name FILTER url_quote %]
-           [%- classification_url_part -%]">
+
+  [% IF Param('usetargetmilestone') %]
+    <tr>
+      <td valign="top">
+        [% IF product.milestones.size > 0 %]
+          <a href="editmilestones.cgi?product=[%- product.name FILTER url_quote %]
+             [%- classification_url_part -%]">
+            Milestones:
+          </a>
+        [% ELSE %]
           Milestones:
-        </a>
-      [% ELSE %]
-        Milestones:
-      [% END %]
-    </td>
-    <td>
-      [% IF product.milestones.size > 0 %]
-        [% FOREACH m = product.milestones %]
-          [% m.name FILTER html %]<br>
         [% END %]
-      [% ELSE %]
-        none
-      [% END %]
-    </td>
-  </tr>
+      </td>
+      <td>
+        [% IF product.milestones.size > 0 %]
+          [% FOREACH m = product.milestones %]
+            [% m.name FILTER html %]<br>
+          [% END %]
+        [% ELSE %]
+          none
+        [% END %]
+      </td>
+    </tr>
+  [% END %]
 
   <tr>
     <td>[% terms.Bugs %]:</td>
