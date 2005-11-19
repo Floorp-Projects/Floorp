@@ -229,7 +229,7 @@ CIRCNetwork.prototype.connect =
 function net_connect(requireSecurity)
 {
     if ("primServ" in this && this.primServ.isConnected)
-        return;
+        return true;
 
     // We need to test for secure servers in the network object here,
     // because without them all connection attempts will fail anyway.
