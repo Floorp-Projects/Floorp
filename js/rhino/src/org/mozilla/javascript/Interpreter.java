@@ -958,7 +958,7 @@ public class Interpreter
                 stackChange(1);
                 int afterSecondJumpStart = itsICodeTop;
                 int jump = (type == Token.AND) ? Token.IFNE : Token.IFEQ;
-                addForwardGoto(jump);
+                addGotoOp(jump);
                 stackChange(-1);
                 addIcode(Icode_POP);
                 stackChange(-1);
@@ -975,12 +975,12 @@ public class Interpreter
                 Node ifElse = ifThen.getNext();
                 visitExpression(child, 0);
                 int elseJumpStart = itsICodeTop;
-                addForwardGoto(Token.IFNE);
+                addGotoOp(Token.IFNE);
                 stackChange(-1);
                 // Preserve tail context flag if any
                 visitExpression(ifThen, contextFlags & ECF_TAIL);
                 int afterElseJumpStart = itsICodeTop;
-                addForwardGoto(Token.GOTO);
+                addGotoOp(Token.GOTO);
                 resolveForwardGoto(elseJumpStart);
                 itsStackDepth = savedStackDepth;
                 // Preserve tail context flag if any
@@ -1448,18 +1448,11 @@ public class Interpreter
         if (!(label < itsLabelTableTop)) Kit.codeBug();
         int targetPC = itsLabelTable[label];
 
-        int gotoPC = itsICodeTop;
-        if (validIcode(gotoOp)) {
-            addIcode(gotoOp);
-        } else {
-            addToken(gotoOp);
-        }
-
         if (targetPC != -1) {
-            recordJump(gotoPC, targetPC);
-            itsICodeTop += 2;
+            addBackwardGoto(gotoOp, targetPC);
         } else {
-            addUint16(0);
+            int gotoPC = itsICodeTop;
+            addGotoOp(gotoOp);
             int top = itsFixupTableTop;
             if (itsFixupTable == null || top == itsFixupTable.length) {
                 if (itsFixupTable == null) {
@@ -1486,50 +1479,43 @@ public class Interpreter
                 // Unlocated label
                 throw Kit.codeBug();
             }
-            recordJump(jumpSource, pc);
+            resolveGoto(jumpSource, pc);
         }
         itsFixupTableTop = 0;
     }
 
     private void addBackwardGoto(int gotoOp, int jumpPC)
     {
-        if (jumpPC >= itsICodeTop) throw Kit.codeBug();
         int fromPC = itsICodeTop;
-        addIcode(gotoOp);
-        recordJump(fromPC, jumpPC);
-        itsICodeTop += 2;
-    }
-
-    private void addForwardGoto(int gotoOp)
-    {
-        addToken(gotoOp);
-        addUint16(0);
+        // Ensure that this is a jump backward
+        if (fromPC <= jumpPC) throw Kit.codeBug();
+        addGotoOp(gotoOp);
+        resolveGoto(fromPC, jumpPC);
     }
 
     private void resolveForwardGoto(int fromPC)
     {
-        if (fromPC + 3 > itsICodeTop) throw Kit.codeBug();
-        recordJump(fromPC, itsICodeTop);
+        // Ensure that forward jump skips at least self bytecode
+        if (itsICodeTop < fromPC + 3) throw Kit.codeBug();
+        resolveGoto(fromPC, itsICodeTop);
     }
 
-    private void recordJump(int jumpSource, int jumpDestination)
+    private void resolveGoto(int fromPC, int jumpPC)
     {
-        if (jumpSource == jumpDestination) throw Kit.codeBug();
-        int offsetSite = jumpSource + 1;
-        int offset = jumpDestination - jumpSource;
+        int offset = jumpPC - fromPC;
+        // Ensure that jumps do not overlap
+        if (0 <= offset && offset <= 2) throw Kit.codeBug();
+        int offsetSite = fromPC + 1;
         if (offset != (short)offset) {
             if (itsData.longJumps == null) {
                 itsData.longJumps = new UintMap();
             }
-            itsData.longJumps.put(offsetSite, jumpDestination);
+            itsData.longJumps.put(offsetSite, jumpPC);
             offset = 0;
         }
-        int deltaCapacity = offsetSite + 2 - itsData.itsICode.length;
-        if (deltaCapacity > 0) {
-            increaseICodeCapasity(deltaCapacity);
-        }
-        itsData.itsICode[offsetSite] = (byte)(offset >> 8);
-        itsData.itsICode[offsetSite + 1] = (byte)offset;
+        byte[] array = itsData.itsICode;
+        array[offsetSite] = (byte)(offset >> 8);
+        array[offsetSite + 1] = (byte)offset;
     }
 
     private void addToken(int token)
@@ -1597,6 +1583,18 @@ public class Interpreter
         itsData.itsDoubleTable[index] = num;
         itsDoubleTableTop = index + 1;
         return index;
+    }
+
+    private void addGotoOp(int gotoOp)
+    {
+        byte[] array = itsData.itsICode;
+        int top = itsICodeTop;
+        if (top + 3 > array.length) {
+            array = increaseICodeCapasity(3);
+        }
+        array[top] = (byte)gotoOp;
+        // Offset would written later
+        itsICodeTop = top + 1 + 2;
     }
 
     private void addVarOp(int op, int varIndex)
