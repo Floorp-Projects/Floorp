@@ -4550,4 +4550,21 @@ $dbh->do("UPDATE components " .
 
 unlink "$datadir/versioncache";
 
+# Check if the default parameter for urlbase is still set, and if so, give
+# notification that they should go and visit editparams.cgi 
+
+my @params = Bugzilla::Config::Core::get_param_list();
+my $urlbase_default = '';
+foreach my $item (@params) {
+    next unless $item->{'name'} eq 'urlbase';
+    $urlbase_default = $item->{'default'};
+    last;
+}
+
+if (Param('urlbase') eq $urlbase_default) {
+    print "Now that you have installed Bugzilla, you should visit the \n" .
+          "'Parameters' page (linked in the footer of the Administrator \n" .
+          "account) to ensure it is set up as you wish - this includes \n" .
+          "setting the 'urlbase' option to the correct url.\n" unless $silent;
+}
 ################################################################################
