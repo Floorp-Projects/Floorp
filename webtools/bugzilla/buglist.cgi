@@ -674,6 +674,9 @@ if ($format->{'extension'} eq 'ics') {
 }
 
 if ($format->{'extension'} eq 'rss') {
+    # The title of the RSS feed will be the same one as for the bug list.
+    $vars->{'title'} = $cgi->param('title');
+
     # This is the list of fields that are needed by the rss filter.
     my @required_rss_columns = (
       'short_desc',
