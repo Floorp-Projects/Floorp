@@ -79,16 +79,15 @@ function loadEventsFromFile()
         var types = exporter.getFileTypes({});
         var type;
         for each (type in types) {
-            fp.appendFilter(type.description, "*."+type.extension);
+            fp.appendFilter(type.description, type.extensionFilter);
             contractids.push(contractid);
         }
     }
 
     fp.show();
 
-    var filePath = fp.file.path;
-
-    if (filePath) {
+    if (fp.file && fp.file.path && fp.file.path.length > 0) {
+        var filePath = fp.file.path;
         var importer = Components.classes[contractids[fp.filterIndex]]
                                  .getService(Components.interfaces.calIImporter);
 
@@ -218,7 +217,7 @@ function saveEventsToFile(calendarEventArray)
        var types = exporter.getFileTypes({});
        var type;
        for each (type in types) {
-           fp.appendFilter(type.description, "*."+type.extension);
+           fp.appendFilter(type.description, type.extensionFilter);
            contractids.push(contractid);
        }
    }
@@ -239,7 +238,7 @@ function saveEventsToFile(calendarEventArray)
 
       var filePath = fp.file.path;
       if(filePath.indexOf(".") == -1 )
-          filePath += "."+exporter.getFileTypes({})[0].extension;
+          filePath += "."+exporter.getFileTypes({})[0].defaultExtension;
 
       const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
       const FILEOUT_CTRID = "@mozilla.org/network/file-output-stream;1";

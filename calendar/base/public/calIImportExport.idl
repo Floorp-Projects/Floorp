@@ -46,9 +46,18 @@ interface nsIOutputStream;
 interface calIFileType : nsISupports
 {
   /**
-   * The extension to use in the filepicker's filter list
+   * The default extension that should be associated 
+   * with files of this type.
    */
-  readonly attribute AString extension;
+  readonly attribute AString defaultExtension;
+
+  /**
+   * The extension filter to use in the filepicker's filter list.
+   * Separate multiple extensions with semicolon and space. 
+   * For example "*.html; *.htm".
+   */
+  readonly attribute AString extensionFilter;
+
   /**
    * The description to show to the user in the filter list.
    */

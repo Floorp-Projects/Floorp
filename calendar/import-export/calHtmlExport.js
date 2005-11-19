@@ -54,9 +54,10 @@ function QueryInterface(aIID) {
 
 calHtmlExporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
-    aCount.value = 2;
-    return([{extension:'html',description:'HTML'},
-            {extension:'htm',description:'HTML'}]);
+    aCount.value = 1;
+    return([{defaultExtension:'html', 
+             extensionFilter:'*.html; *.htm', 
+             description:'HTML'}]);
 };
 
 // not prototype.export. export is reserved.

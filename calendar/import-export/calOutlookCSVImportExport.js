@@ -55,7 +55,9 @@ function QueryInterface(aIID) {
 calOutlookCSVImporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
     aCount.value = 1;
-    return([{extension:'csv',description:'Comma Separated Values (from Outlook)'}]);
+    return([{defaultExtension:'csv', 
+             extensionFilter:'*.csv', 
+             description:'Comma Separated Values (from Outlook)'}]);
 };
 
 const localeEn = {
@@ -398,7 +400,9 @@ function QueryInterface(aIID) {
 calOutlookCSVExporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
     aCount.value = 1;
-    return([{extension:'csv',description:'Comma Separated Values (for Outlook)'}]);
+    return([{defaultExtension:'csv', 
+             extensionFilter:'*.csv', 
+             description:'Comma Separated Values (from Outlook)'}]);
 };
 
 // not prototype.export. export is reserved.

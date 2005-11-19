@@ -54,7 +54,9 @@ function QueryInterface(aIID) {
 calIcsImporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
     aCount.value = 1;
-    return([{extension:'ics',description:'iCalendar'}]);
+    return([{defaultExtension:'ics', 
+             extensionFilter:'*.ics', 
+             description:'iCalendar'}]);
 };
 
 calIcsImporter.prototype.importFromStream =
@@ -136,7 +138,9 @@ function QueryInterface(aIID) {
 calIcsExporter.prototype.getFileTypes =
 function getFileTypes(aCount) {
     aCount.value = 1;
-    return([{extension:'ics',description:'iCalendar'}]);
+    return([{defaultExtension:'ics', 
+             extensionFilter:'*.ics', 
+             description:'iCalendar'}]);
 };
 
 // not prototype.export. export is reserved.
