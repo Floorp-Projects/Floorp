@@ -1,4 +1,20 @@
 calendar.jar:
+%   content calendar %content/calendar/
+#ifndef MOZ_SUNBIRD
+%   overlay chrome://browser/content/browser.xul chrome://calendar/content/calExtOverlay.xul
+%   overlay chrome://communicator/content/tasksOverlay.xul chrome://calendar/content/calendarOverlay.xul
+%   overlay chrome://communicator/content/pref/preftree.xul chrome://calendar/content/pref/prefOverlay.xul
+%   overlay chrome://communicator/content/pref/pref-appearance.xul chrome://calendar/content/pref/prefOverlay.xul
+%   overlay chrome://messenger/content/mailWindowOverlay.xul chrome://calendar/content/calExtOverlay.xul
+%   overlay chrome://messenger/content/messengercompose/messengercompose.xul chrome://calendar/content/calExtOverlay.xul
+*   content/calendar/contents.rdf (content/contents.rdf)
+    locale/en-US/calendar/contents.rdf (locale/en-US/contents.rdf)
+*   skin/classic/calendar/contents.rdf (skin/classic/contents.rdf)
+*   skin/modern/calendar/contents.rdf (skin/modern/contents.rdf)
+#endif
+%   locale calendar en-US %locale/en-US/calendar/
+%   skin calendar classic/1.0 %skin/classic/calendar/
+%   skin calendar modern/1.0 %skin/modern/calendar/
     content/calendar/about.html (content/about.html)
     content/calendar/about.xul (content/about.xul)
 *   content/calendar/applicationUtil.js (content/applicationUtil.js)
@@ -28,7 +44,6 @@ calendar.jar:
     content/calendar/calendarProperties.xul (content/calendarProperties.xul)
     content/calendar/calendarProperties.js (content/calendarProperties.js)
     content/calendar/clipboard.js (content/clipboard.js)
-*   content/calendar/contents.rdf (content/contents.rdf)
     content/calendar/dateUtils.js (content/dateUtils.js)
     content/calendar/dayView.js (content/dayView.js)
     content/calendar/dayView.xul (content/dayView.xul)
@@ -86,7 +101,6 @@ calendar.jar:
     locale/en-US/calendar/calendarCreation.dtd (locale/en-US/calendarCreation.dtd)
     locale/en-US/calendar/calendar.properties (locale/en-US/calendar.properties)
     locale/en-US/calendar/categories.properties  (locale/en-US/categories.properties) 
-    locale/en-US/calendar/contents.rdf (locale/en-US/contents.rdf)
     locale/en-US/calendar/dateFormat.properties (locale/en-US/dateFormat.properties)
     locale/en-US/calendar/email.properties (locale/en-US/email.properties)
     locale/en-US/calendar/global.dtd (locale/en-US/global.dtd)
@@ -107,7 +121,6 @@ calendar.jar:
     skin/classic/calendar/calendar-button.css (skin/classic/calendar-button.css)
     skin/classic/calendar/calendartoolbar.png (skin/classic/calendartoolbar.png)
     skin/classic/calendar/calendartoolbar_small.png (skin/classic/calendartoolbar_small.png)
-*   skin/classic/calendar/contents.rdf (skin/classic/contents.rdf)
     skin/classic/calendar/dialogOverlay.css (skin/classic/dialogOverlay.css)
     skin/classic/calendar/dot.png (skin/classic/dot.png)
     skin/classic/calendar/dot_selected.png (skin/classic/dot_selected.png)
@@ -145,7 +158,6 @@ calendar.jar:
     skin/modern/calendar/calendar-button.css (skin/modern/calendar-button.css)
     skin/modern/calendar/calendartoolbar.png (skin/modern/calendartoolbar.png)
     skin/modern/calendar/calendartoolbar_small.png (skin/modern/calendartoolbar_small.png)
-*   skin/modern/calendar/contents.rdf (skin/modern/contents.rdf)
     skin/modern/calendar/dialogOverlay.css (skin/modern/dialogOverlay.css)
     skin/modern/calendar/dot.png (skin/modern/dot.png)
     skin/modern/calendar/dot_selected.png (skin/modern/dot_selected.png)

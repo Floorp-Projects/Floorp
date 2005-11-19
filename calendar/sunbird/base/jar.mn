@@ -1,4 +1,5 @@
 calendar.jar:
+% content calendar %content/calendar/
    content/calendar/about-sunbird.png            (content/about-sunbird.png)
 *  content/calendar/aboutCredits.png             (content/aboutCredits.png)
 *  content/calendar/aboutDialog.css              (content/aboutDialog.css)
