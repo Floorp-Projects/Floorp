@@ -288,6 +288,7 @@ class query
          **************/
         $dbQuery = $db->SelectLimit($sql,$show,$start,$inputarr=false);
 
+        $dbResult = array();
         if ($dbQuery){
             while (!$dbQuery->EOF) {
                 $dbResult[] = $dbQuery->fields;
@@ -298,14 +299,19 @@ class query
          * Count Total
          **************/
         if($dbQuery){
-            $totalQuery = $db->Execute("SELECT COUNT(*)
+            $totalQuery = $db->Execute("SELECT `report_id`
                                         FROM `report`, `host`
                                         $sql_where");
-            $totalResults = $totalQuery->fields['COUNT(*)'];
+            $totalResults = array();                            
+            if($totalQuery){
+                while(!$totalQuery->EOF){
+                    $totalResults[] = $totalQuery->fields['report_id'];
+                    $totalQuery->MoveNext();
+                }
+            }
         }
 
-
-        return array('data' => $dbResult, 'totalResults' => $totalResults);
+        return array('data' => $dbResult, 'totalResults' => sizeof($totalResults), 'reportList' => $totalResults);
     }
 
     function continuityParams($query_input){

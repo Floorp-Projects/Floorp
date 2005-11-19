@@ -41,6 +41,8 @@ require_once($config['base_path'].'/includes/iolib.inc.php');
 require_once($config['base_path'].'/includes/db.inc.php');
 require_once($config['base_path'].'/includes/contrib/smarty/libs/Smarty.class.php');
 require_once($config['base_path'].'/includes/security.inc.php');
+require_once($config['base_path'].'/includes/query.inc.php');
+
 
 // Start Session
 session_name('reportSessID');
@@ -87,6 +89,42 @@ $content->assign('report_file_date',       $query->fields['report_file_date']);
 $content->assign('report_email',           $query->fields['report_email']);
 $content->assign('report_ip',              $query->fields['report_ip']);
 $content->assign('report_description',     $query->fields['report_description']);
+
+// Last/Next Functionality
+if(isset($_SESSION['reportList'])){
+    $query = new query;
+    $query_input = $query->getQueryInputs();
+
+    $continuity_params = $query->continuityParams($query_input);
+
+    $content->assign('continuity_params',             $continuity_params[0]);
+
+    $reportIndex = array_search($_GET['report_id'],   $_SESSION['reportList']);
+
+    $content->assign('index',                         $reportIndex);
+    $content->assign('total',                         sizeof($_SESSION['reportList']));
+
+
+
+    $content->assign('showReportNavigation',          true);
+
+    if($reportIndex > 0){
+        $content->assign('first_report',              $_SESSION['reportList'][0]);
+        $content->assign('previous_report',           $_SESSION['reportList'][$reportIndex-1]);
+    } else {
+        $content->assign('first_report',              'disable');
+        $content->assign('previous_report',           'disable');
+    }
+    if($reportIndex < sizeof($_SESSION['reportList'])-1){
+        $content->assign('next_report',               $_SESSION['reportList'][$reportIndex+1]);
+        $content->assign('last_report',               $_SESSION['reportList'][sizeof($_SESSION['reportList'])-1]);
+    } else {
+        $content->assign('next_report',               'disable');
+        $content->assign('last_report',               'disable');
+    }
+} else {
+    $content->assign('showReportNavigation',          false);
+}
 
 $title = 'Mozilla Reporter: '.$query->fields['report_id'];
 

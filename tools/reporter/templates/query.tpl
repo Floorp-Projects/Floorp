@@ -4,6 +4,12 @@
         <p>{$error}.  <a href="javascript:history.go(-1);">Back</a></p>
     </div>
 {else}
+{if $notice != ''}
+    <div class="notice">
+         <h3>Notice:</h3>
+         <p>{$notice}</p>
+    </div>
+{/if}
 <table id="reporterQuery" class="fixedTable" cellspacing="0" cellpadding="0" style="width:100%">
 	<tr class="header">
 		{section name=mysec loop=$column}
@@ -73,6 +79,8 @@ Show:     {$show}
 TotPage:  {$totalPages}
 </pre>
 *}
+<br />
+<p><small>Your query returned {$count} reports</small></p>
 </div>
 {/if}
 {/if}

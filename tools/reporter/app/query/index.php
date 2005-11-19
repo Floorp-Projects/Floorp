@@ -73,23 +73,37 @@ $result = $query->doQuery($query_input['selected'],
           );
 
 $continuity_params = $query->continuityParams($query_input);
+
 $output = $query->outputHTML($result, $query_input, $continuity_params, $columnHeaders);
+
+// disconnect database
+$db->Close();
+
 if (sizeof($output['data']) == 0){
     $content->assign('error', 'No Results found');
     displayPage($content, 'query', 'query.tpl');
     exit;
 }
 
-$content->assign('continuity_params', $continuity_params);
-$content->assign('column', $query->columnHeaders($query_input, $continuity_params));
-$content->assign('row', $output['data']);
-$content->assign('continuityParams', $continuity_params[1]);
-$content->assign('count', $result['totalResults']);
-$content->assign('show', $query_input['show']);
-$content->assign('page', $query_input['page']);
+// Start Next/Prev Navigation
+/*******
+ * We cap the navigation at 2000 items because php sometimes acts wierd
+ * when sessions get to big.  In most cases, this won't effect anyone.
+ *******/
+if($result['totalResults'] < 2000){
+    $_SESSION['reportList'] = $result['reportList'];
+} else {
+    unset($_SESSION['reportList']);
+    $content->assign('notice', 'This query returned too many reports for next/previous navigation to work');
+}
+
+$content->assign('continuity_params',  $continuity_params);
+$content->assign('column',             $query->columnHeaders($query_input, $continuity_params));
+$content->assign('row',                $output['data']);
+$content->assign('continuityParams',   $continuity_params[1]);
+$content->assign('count',              $result['totalResults']);
+$content->assign('show',               $query_input['show']);
+$content->assign('page',               $query_input['page']);
 
 displayPage($content, 'query', 'query.tpl');
-
-// disconnect database
-$db->Close();
 ?>
