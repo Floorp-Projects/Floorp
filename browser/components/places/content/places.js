@@ -41,6 +41,7 @@ var PlacesPage = {
   _topWindow: null,
   _topDocument: null,
   _populators: { },
+  _bmsvc : null,
 };
 
 PlacesPage.init = function PP_init() {
@@ -66,6 +67,7 @@ PlacesPage.init = function PP_init() {
 
   const NH = Ci.nsINavHistory;  
   const NHQO = Ci.nsINavHistoryQueryOptions;
+  const TV = Ci.nsITreeView;
   var places = 
       Cc["@mozilla.org/browser/nav-history;1"].getService(NH);
   var query = places.getNewQuery();
@@ -75,12 +77,15 @@ PlacesPage.init = function PP_init() {
   options.setSortingMode(NHQO.SORT_BY_NONE);
   options.setResultType(NHQO.RESULT_TYPE_URL);
   var result = places.executeQuery(query, options);
-  result.QueryInterface(Ci.nsITreeView);
+  result.QueryInterface(TV);
   var placeContent = document.getElementById("placeContent");
   placeContent.view = result;
 
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(Ci.nsINavBookmarksService);
-  document.getElementById("placesList").view = bmsvc.bookmarks.QueryInterface(Ci.nsITreeView);
+  const BS = Ci.nsINavBookmarksService;
+  this._bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(BS);
+  var children = this._bmsvc.getFolderChildren(this._bmsvc.placesRoot,
+                                               BS.FOLDER_CHILDREN);
+  document.getElementById("placesList").view = children.QueryInterface(TV);
 
   this._showPlacesUI();
 };
@@ -200,3 +205,13 @@ PlacesPage.openLinkInCurrentWindow = function PP_openLinkInCurrentWindow() {
   this._topWindow.loadURI(placeContent.selectedURL, null, null);
 };
 
+/**
+ * Called when a place folder is selected in the left pane.
+ */
+PlacesPage.placeSelected = function PP_placeSelected(event) {
+  var resultView = event.target.view;
+  resultView.QueryInterface(Components.interfaces.nsINavHistoryResult);
+
+  var folder = resultView.nodeForTreeIndex(resultView.selection.currentIndex);
+  document.getElementById("placeContent").view = this._bmsvc.getFolderChildren(folder.folderId, Components.interfaces.nsINavBookmarksService.ALL_CHILDREN);
+};

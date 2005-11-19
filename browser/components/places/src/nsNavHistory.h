@@ -117,11 +117,14 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYRESULTNODE
 
+  // Generate the children for this node.
+  virtual nsresult BuildChildren(PRUint32 aOptions) { return NS_OK; }
+
+  // Non-XPCOM member accessors
+  PRInt32 Type() const { return mType; }
+
 protected:
   virtual ~nsNavHistoryResultNode() {}
-
-  // Generate the children for this node.
-  virtual nsresult BuildChildren() { return NS_OK; }
 
   // parent of this element, NULL if no parent. Filled in by FillAllElements
   // in the result set.
@@ -185,6 +188,8 @@ public:
 
   nsresult BuildChildrenFor(nsNavHistoryResultNode *aNode);
 
+  void SetBookmarkOptions(PRUint32 aOptions) { mBookmarkOptions = aOptions; }
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYRESULT
   NS_DECL_NSITREEVIEW
@@ -230,6 +235,9 @@ protected:
 
   // keep track of sorting state
   PRUint32 mCurrentSort;
+
+  // bookmark types for this result (nsINavBookmarksService::*_CHILDREN)
+  PRUint32 mBookmarkOptions;
 
   void FillTreeStats(nsNavHistoryResultNode* aResult, PRInt32 aLevel);
   void InitializeVisibleList();

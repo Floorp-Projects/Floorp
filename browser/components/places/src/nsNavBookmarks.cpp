@@ -96,7 +96,11 @@ nsNavBookmarks::Init()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mRoot = 0;
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id, name FROM moz_bookmarks_containers WHERE id = ?1"),
+                               getter_AddRefs(mDBGetFolderInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mRoot = mBookmarksRoot = mToolbarRoot = 0;
   {
     nsCOMPtr<mozIStorageStatement> statement;
     rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT folder_child FROM moz_bookmarks_assoc WHERE parent IS NULL"),
@@ -111,15 +115,44 @@ nsNavBookmarks::Init()
     }
   }
 
+  nsCAutoString buffer;
+
+  if (mRoot) {
+    // Locate the bookmarks and toolbar folders
+    buffer.AssignLiteral("SELECT folder_child FROM moz_bookmarks_assoc a JOIN moz_bookmarks_containers c ON a.folder_child = c.id WHERE c.name = ?1 AND a.parent = ");
+    buffer.AppendInt(mRoot);
+
+    nsCOMPtr<mozIStorageStatement> locateChild;
+    rv = dbConn->CreateStatement(buffer, getter_AddRefs(locateChild));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = locateChild->BindStringParameter(0, NS_LITERAL_STRING("Bookmarks"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool results;
+    rv = locateChild->ExecuteStep(&results);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (results) {
+      mBookmarksRoot = locateChild->AsInt64(0);
+    }
+    rv = locateChild->Reset();
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = locateChild->BindStringParameter(0, NS_LITERAL_STRING("Personal Toolbar Folder"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = locateChild->ExecuteStep(&results);
+    if (results) {
+      mToolbarRoot = locateChild->AsInt64(0);
+    }
+  }
+
   if (!mRoot) {
-    // Create the root container
+    // Create the root Places container
     rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_containers (name) VALUES (NULL)"));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = dbConn->GetLastInsertRowID(&mRoot);
     NS_ENSURE_SUCCESS(rv, rv);
+    NS_ASSERTION(mRoot != 0, "row id must be non-zero!");
 
-    nsCAutoString buffer;
     buffer.AssignLiteral("INSERT INTO moz_bookmarks_assoc (folder_child) VALUES(");
     buffer.AppendInt(mRoot);
     buffer.AppendLiteral(")");
@@ -127,18 +160,52 @@ nsNavBookmarks::Init()
     rv = dbConn->ExecuteSimpleSQL(buffer);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+  if (!mBookmarksRoot) {
+    CreateFolder(mRoot, NS_LITERAL_STRING("Bookmarks"), 0, &mBookmarksRoot);
+    NS_ASSERTION(mBookmarksRoot != 0, "row id must be non-zero!");
+  }
+  if (!mToolbarRoot) {
+    CreateFolder(mRoot, NS_LITERAL_STRING("Personal Toolbar Folder"), 1,
+                 &mToolbarRoot);
+    NS_ASSERTION(mToolbarRoot != 0, "row id must be non-zero!");
+  }
 
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT a.* FROM moz_bookmarks_assoc a, moz_history h WHERE h.url = ?1 AND a.item_child = h.id"),
                                getter_AddRefs(mDBFindURIBookmarks));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // This gigantic statement constructs a result where the first columns exactly match
-  // those returned by mDBGetVisitPageInfo, and additionally contains columns for
-  // position, item_child, and folder_child from moz_bookmarks_assoc, and name from
-  // moz_bookmarks_containers.  The end result is a list of all folder and item children
-  // for a given folder id, sorted by position.
-  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT h.id, h.url, h.title, h.visit_count, MAX(fullv.visit_date), h.rev_host, a.position, a.item_child, a.folder_child, null FROM moz_bookmarks_assoc a JOIN moz_history h ON a.item_child = h.id LEFT JOIN moz_historyvisit v ON h.id = v.page_id LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE a.parent = ?1 GROUP BY h.id UNION ALL SELECT null, null, null, null, null, null, a.position, a.item_child, a.folder_child, c.name FROM moz_bookmarks_assoc a JOIN moz_bookmarks_containers c ON c.id = a.folder_child WHERE a.parent = ?1 ORDER BY a.position"),
+  // Construct a result where the first columns exactly match those returned by
+  // mDBGetVisitPageInfo, and additionally contains columns for position,
+  // item_child, and folder_child from moz_bookmarks_assoc.  This selects only
+  // _item_ children which are in moz_history.
+  NS_NAMED_LITERAL_CSTRING(selectItemChildren,
+                           "SELECT h.id, h.url, h.title, h.visit_count, MAX(fullv.visit_date), h.rev_host, a.position, a.item_child, a.folder_child, null FROM moz_bookmarks_assoc a JOIN moz_history h ON a.item_child = h.id LEFT JOIN moz_historyvisit v ON h.id = v.page_id LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE a.parent = ?1 GROUP BY h.id");
+
+  // Construct a result where the first columns are padded out to the width
+  // of mDBGetVisitPageInfo, containing additional columns for position,
+  // item_child, and folder_child from moz_bookmarks_assoc, and name from
+  // moz_bookmarks_containers.  This selects only _folder_ children which are
+  // in moz_bookmarks_containers.
+  NS_NAMED_LITERAL_CSTRING(selectFolderChildren,
+                           "SELECT null, null, null, null, null, null, a.position, a.item_child, a.folder_child, c.name FROM moz_bookmarks_assoc a JOIN moz_bookmarks_containers c ON c.id = a.folder_child WHERE a.parent = ?1");
+
+  NS_NAMED_LITERAL_CSTRING(orderByPosition, " ORDER BY a.position");
+
+  // Select all children of a given folder, sorted by position
+  rv = dbConn->CreateStatement(selectItemChildren +
+                               NS_LITERAL_CSTRING(" UNION ALL ") +
+                               selectFolderChildren + orderByPosition,
                                getter_AddRefs(mDBGetChildren));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Returns only the item children in a folder
+  rv = dbConn->CreateStatement(selectItemChildren + orderByPosition,
+                               getter_AddRefs(mDBGetItemChildren));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Returns only the folder children in a folder
+  rv = dbConn->CreateStatement(selectFolderChildren + orderByPosition,
+                               getter_AddRefs(mDBGetFolderChildren));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT COUNT(*) FROM moz_bookmarks_assoc WHERE parent = ?1"),
@@ -174,9 +241,23 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::GetBookmarksRoot(PRInt64 *aRoot)
+nsNavBookmarks::GetPlacesRoot(PRInt64 *aRoot)
 {
   *aRoot = mRoot;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetBookmarksRoot(PRInt64 *aRoot)
+{
+  *aRoot = mBookmarksRoot;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetToolbarRoot(PRInt64 *aRoot)
+{
+  *aRoot = mToolbarRoot;
   return NS_OK;
 }
 
@@ -287,9 +368,9 @@ nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
   nsresult rv = AdjustIndices(aParent, index, -1, 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_containers (name) VALUES (") +
+  rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_containers (name) VALUES (\"") +
                                 NS_ConvertUTF16toUTF8(aName) +
-                                NS_LITERAL_CSTRING(")"));
+                                NS_LITERAL_CSTRING("\")"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRInt64 child;
@@ -508,13 +589,14 @@ nsNavBookmarks::GetFolderTitle(PRInt64 aFolder, nsAString &aTitle)
 }
 
 nsresult
-nsNavFolderResultNode::BuildChildren()
+nsNavFolderResultNode::BuildChildren(PRUint32 aOptions)
 {
   if (mBuiltChildren) {
     return NS_OK;
   }
 
-  nsresult rv = nsNavBookmarks::sInstance->FillFolderChildren(this);
+  nsresult rv = nsNavBookmarks::sInstance->QueryFolderChildren(mID, aOptions,
+                                                               &mChildren);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mBuiltChildren = PR_TRUE;
@@ -523,15 +605,26 @@ nsNavFolderResultNode::BuildChildren()
 
 nsresult
 nsNavBookmarks::ResultNodeForFolder(PRInt64 aID,
-                                    const nsString &aTitle,
                                     nsNavHistoryResultNode **aNode)
 {
+  mozStorageStatementScoper scope(mDBGetFolderInfo);
+  mDBGetFolderInfo->BindInt64Parameter(0, aID);
+
+  PRBool results;
+  nsresult rv = mDBGetFolderInfo->ExecuteStep(&results);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ASSERTION(results, "ResultNodeForFolder expects a valid folder id");
+
+  nsAutoString title;
+  rv = mDBGetFolderInfo->GetString(kGetFolderInfoIndex_Title, title);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsNavFolderResultNode *node = new nsNavFolderResultNode();
   NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
 
   node->mID = aID;
   node->mType = nsINavHistoryResultNode::RESULT_TYPE_FOLDER;
-  node->mTitle = aTitle;
+  node->mTitle = title;
   node->mAccessCount = 0;
   node->mTime = 0;
 
@@ -554,8 +647,7 @@ nsNavBookmarks::GetBookmarks(nsINavHistoryResult **aResult)
 
   // Fill the result with a single result node for the bookmarks root.
   nsCOMPtr<nsNavHistoryResultNode> topNode;
-  rv = ResultNodeForFolder(mRoot, NS_LITERAL_STRING("Bookmarks"),
-                           getter_AddRefs(topNode));
+  rv = ResultNodeForFolder(mRoot, getter_AddRefs(topNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ENSURE_TRUE(result->GetTopLevel()->AppendObject(topNode), 
@@ -567,34 +659,87 @@ nsNavBookmarks::GetBookmarks(nsINavHistoryResult **aResult)
   return NS_OK;
 }
 
-nsresult
-nsNavBookmarks::FillFolderChildren(nsNavFolderResultNode *aNode)
+NS_IMETHODIMP
+nsNavBookmarks::GetFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
+                                  nsINavHistoryResult **aChildren)
 {
-  NS_ASSERTION(aNode->mChildren.Count() == 0, "already have child nodes");
+  *aChildren = nsnull;
 
-  mozStorageStatementScoper scope(mDBGetChildren);
-  mozStorageTransaction transaction(DBConn(), PR_FALSE);
+  nsRefPtr<nsNavHistoryResult> result = History()->NewHistoryResult();
+  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = mDBGetChildren->BindInt64Parameter(0, aNode->mID);
+  result->SetBookmarkOptions(aOptions);
+
+  nsresult rv = QueryFolderChildren(aFolder, aOptions, result->GetTopLevel());
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMArray<nsNavHistoryResultNode>* children = &aNode->mChildren;
+  result->FilledAllResults();
 
-  PRBool results;
-  while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&results)) && results) {
-    nsCOMPtr<nsNavHistoryResultNode> node;
-    if (mDBGetChildren->IsNull(kGetChildrenIndex_FolderChild)) {
-      rv = History()->RowToResult(mDBGetChildren, PR_FALSE, getter_AddRefs(node));
-    } else {
-      PRInt64 folder = mDBGetChildren->AsInt64(kGetChildrenIndex_FolderChild);
-      nsAutoString title;
-      mDBGetChildren->GetString(kGetChildrenIndex_FolderTitle, title);
-      rv = ResultNodeForFolder(folder, title, getter_AddRefs(node));
-    }
+  NS_STATIC_CAST(nsRefPtr<nsINavHistoryResult>, result).swap(*aChildren);
+  return NS_OK;
+}
 
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(children->AppendObject(node), NS_ERROR_OUT_OF_MEMORY);
+// Special flag OR'd with *_CHILDREN to specify that we do _not_ want to
+// build children for folders.
+
+#define BUILD_CHILDREN_NO_RECURSE (1 << 31)
+
+nsresult
+nsNavBookmarks::QueryFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
+                                    nsCOMArray<nsNavHistoryResultNode>* aChildren)
+{
+  mozStorageTransaction transaction(DBConn(), PR_FALSE);
+  PRBool noRecurse = (aOptions & BUILD_CHILDREN_NO_RECURSE) != 0;
+  aOptions &= ~BUILD_CHILDREN_NO_RECURSE;
+
+  mozIStorageStatement *statement;
+  if (aOptions == ALL_CHILDREN ||
+      aOptions == (ITEM_CHILDREN | FOLDER_CHILDREN)) {
+    statement = mDBGetChildren;
+  } else if (aOptions == ITEM_CHILDREN) {
+    statement = mDBGetItemChildren;
+  } else if (aOptions == FOLDER_CHILDREN) {
+    statement = mDBGetFolderChildren;
+  } else {
+    return NS_ERROR_INVALID_ARG;
   }
+
+  nsresult rv;
+  {
+    mozStorageStatementScoper scope(statement);
+
+    rv = statement->BindInt64Parameter(0, aFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool results;
+    while (NS_SUCCEEDED(statement->ExecuteStep(&results)) && results) {
+      PRBool isFolder = !statement->IsNull(kGetChildrenIndex_FolderChild);
+      nsCOMPtr<nsNavHistoryResultNode> node;
+      if (isFolder) {
+        PRInt64 folder = statement->AsInt64(kGetChildrenIndex_FolderChild);
+        rv = ResultNodeForFolder(folder, getter_AddRefs(node));
+      } else {
+        rv = History()->RowToResult(statement, PR_FALSE, getter_AddRefs(node));
+      }
+
+      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_TRUE(aChildren->AppendObject(node), NS_ERROR_OUT_OF_MEMORY);
+    }
+  }
+
+  // Now build children for any folder children we just created.  This is
+  // pretty cheap (only go down 1 level) and allows us to know whether
+  // to draw a twisty.
+  if (!noRecurse) {
+    for (PRInt32 i = 0; i < aChildren->Count(); ++i) {
+      nsNavHistoryResultNode *child = (*aChildren)[i];
+      if (child->Type() == nsINavHistoryResultNode::RESULT_TYPE_FOLDER) {
+        rv = child->BuildChildren(aOptions | BUILD_CHILDREN_NO_RECURSE);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+  }
+
 
   return transaction.Commit();
 }
