@@ -66,7 +66,7 @@ $content = initializeTemplate();
 
 if (!$query->fields){
     $content->assign('error', 'No Report Found');
-    displayPage($content, 'report.tpl', 'Mozilla Reporter - Error');
+    displayPage($content, 'report', 'report.tpl', 'Mozilla Reporter - Error');
     exit;
 }
 
