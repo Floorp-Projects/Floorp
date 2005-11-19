@@ -171,6 +171,12 @@ static JSClass prop_iterator_class = {
 #define RESTORE_SP(fp)  (sp = (fp)->sp)
 
 /*
+ * Commit deferred stores of interpreter registers to their homes in fp, when
+ * calling out of the interpreter loop or threaded code.
+ */
+#define SAVE_SP_AND_PC(fp) (SAVE_SP(fp), (fp)->pc = pc)
+
+/*
  * Push the generating bytecode's pc onto the parallel pc stack that runs
  * depth slots below the operands.
  *
@@ -216,7 +222,7 @@ static JSClass prop_iterator_class = {
         if (JSVAL_IS_INT(v_)) {                                               \
             i = JSVAL_TO_INT(v_);                                             \
         } else {                                                              \
-            SAVE_SP(fp);                                                      \
+            SAVE_SP_AND_PC(fp);                                               \
             ok = js_ValueToECMAInt32(cx, v_, &i);                             \
             if (!ok)                                                          \
                 goto out;                                                     \
@@ -230,7 +236,7 @@ static JSClass prop_iterator_class = {
         if (JSVAL_IS_INT(v_) && (i_ = JSVAL_TO_INT(v_)) >= 0) {               \
             ui = (uint32) i_;                                                 \
         } else {                                                              \
-            SAVE_SP(fp);                                                      \
+            SAVE_SP_AND_PC(fp);                                               \
             ok = js_ValueToECMAUint32(cx, v_, &ui);                           \
             if (!ok)                                                          \
                 goto out;                                                     \
@@ -248,7 +254,7 @@ static JSClass prop_iterator_class = {
         } else if (JSVAL_IS_DOUBLE(v)) {                                      \
             d = *JSVAL_TO_DOUBLE(v);                                          \
         } else {                                                              \
-            SAVE_SP(fp);                                                      \
+            SAVE_SP_AND_PC(fp);                                               \
             ok = js_ValueToNumber(cx, v, &d);                                 \
             if (!ok)                                                          \
                 goto out;                                                     \
@@ -263,7 +269,7 @@ static JSClass prop_iterator_class = {
         } else if (JSVAL_IS_BOOLEAN(v)) {                                     \
             b = JSVAL_TO_BOOLEAN(v);                                          \
         } else {                                                              \
-            SAVE_SP(fp);                                                      \
+            SAVE_SP_AND_PC(fp);                                               \
             ok = js_ValueToBoolean(cx, v, &b);                                \
             if (!ok)                                                          \
                 goto out;                                                     \
@@ -276,7 +282,7 @@ static JSClass prop_iterator_class = {
         if (!JSVAL_IS_PRIMITIVE(v)) {                                         \
             obj = JSVAL_TO_OBJECT(v);                                         \
         } else {                                                              \
-            SAVE_SP(fp);                                                      \
+            SAVE_SP_AND_PC(fp);                                               \
             obj = js_ValueToNonNullObject(cx, v);                             \
             if (!obj) {                                                       \
                 ok = JS_FALSE;                                                \
@@ -1691,7 +1697,7 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
 #define CHECK_ELEMENT_ID(obj, id)                                             \
     JS_BEGIN_MACRO                                                            \
         if (JSID_IS_OBJECT(id) && !OBJECT_IS_XML(cx, obj)) {                  \
-            SAVE_SP(fp);                                                      \
+            SAVE_SP_AND_PC(fp);                                               \
             ok = InternStringElementId(cx, OBJECT_JSID_TO_JSVAL(id), &id);    \
             if (!ok)                                                          \
                 goto out;                                                     \
@@ -1712,6 +1718,28 @@ InternNonIntElementId(JSContext *cx, jsval idval, jsid *idp)
 
 #define MAX_INLINE_CALL_COUNT 1000
 
+/*
+ * Threaded interpretation via computed goto appears to be well-supported by
+ * GCC 3 and higher.  IBM's C compiler when run with the right options (e.g.,
+ * -qlanglvl=extended) also supports threading.  Ditto the SunPro C compiler.
+ * Add your compiler support macros here.
+ */
+#if __GNUC__ >= 3 ||                                                          \
+    (__IBMC__ >= 700 && defined __IBM_COMPUTED_GOTO) ||                       \
+    __SUNPRO_C >= 0x570
+# define JS_THREADED_INTERP 1
+#else
+# undef JS_THREADED_INTERP
+#endif
+
+typedef enum JSOpLength {
+#define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
+    op##_LENGTH = length,
+#include "jsopcode.tbl"
+#undef OPDEF
+    JSOP_LIMIT_LENGTH
+} JSOpLength;
+
 JSBool
 js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 {
@@ -1729,7 +1757,6 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     void *mark;
     jsbytecode *endpc, *pc2;
     JSOp op, op2;
-    const JSCodeSpec *cs;
     jsatomid atomIndex;
     JSAtom *atom;
     uintN argc, slot, attrs;
@@ -1745,7 +1772,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JSClass *clasp, *funclasp;
     JSFunction *fun;
     JSType type;
-#ifdef DEBUG
+#if !defined JS_THREADED_INTERP && defined DEBUG
     FILE *tracefp;
 #endif
 #if JS_HAS_EXPORT_IMPORT
@@ -1763,12 +1790,45 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #endif
     int stackDummy;
 
+#ifdef JS_THREADED_INTERP
+    static void *normalJumpTable[] = {
+# define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
+        &&L_##op,
+# include "jsopcode.tbl"
+# undef OPDEF
+    };
+
+    static void *interruptJumpTable[] = {
+# define OPDEF(op,val,name,token,length,nuses,ndefs,prec,format) \
+        &&interrupt,
+# include "jsopcode.tbl"
+# undef OPDEF
+    };
+
+    register void **jumpTable = normalJumpTable;
+
+# define DO_OP()            goto *jumpTable[op]
+# define DO_NEXT_OP(n)      do { op = *(pc += (n)); DO_OP(); } while (0)
+# define BEGIN_CASE(OP)     case OP: L_##OP:
+# define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
+# define END_VARLEN_CASE    DO_NEXT_OP(len);
+# define EMPTY_CASE(OP)     BEGIN_CASE(OP) op = *++pc; DO_OP();
+#else
+# define DO_OP()            goto do_op
+# define DO_NEXT_OP(n)      goto advance_pc
+# define BEGIN_CASE(OP)     case OP:
+# define END_CASE(OP)       break;
+# define END_VARLEN_CASE    break;
+# define EMPTY_CASE(OP)     BEGIN_CASE(OP) END_CASE(OP)
+#endif
+
     *result = JSVAL_VOID;
     rt = cx->runtime;
 
     /* Set registerized frame pointer and derived script pointer. */
     fp = cx->fp;
     script = fp->script;
+    JS_ASSERT(script->length != 0);
 
     /* Count of JS function calls that nest in this C js_Interpret frame. */
     inlineCallCount = 0;
@@ -1799,7 +1859,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #define CHECK_BRANCH(len)                                                     \
     JS_BEGIN_MACRO                                                            \
         if (len <= 0 && onbranch) {                                           \
-            SAVE_SP(fp);                                                      \
+            SAVE_SP_AND_PC(fp);                                               \
             if (!(ok = (*onbranch)(cx, script)))                              \
                 goto out;                                                     \
         }                                                                     \
@@ -1809,10 +1869,20 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
      * Load the debugger's interrupt hook here and after calling out to native
      * functions (but not to getters, setters, or other native hooks), so we do
      * not have to reload it each time through the interpreter loop -- we hope
-     * the compiler can keep it in a register.
-     * XXX if it spills, we still lose
+     * the compiler can keep it in a register when it is non-null.
      */
-#define LOAD_INTERRUPT_HANDLER(rt)  (interruptHandler = (rt)->interruptHandler)
+#ifdef JS_THREADED_INTERP
+# define LOAD_JUMP_TABLE()                                                    \
+    (jumpTable = interruptHandler ? interruptJumpTable : normalJumpTable)
+#else
+# define LOAD_JUMP_TABLE()      /* nothing */
+#endif
+
+#define LOAD_INTERRUPT_HANDLER(rt)                                            \
+    JS_BEGIN_MACRO                                                            \
+        interruptHandler = (rt)->interruptHandler;                            \
+        LOAD_JUMP_TABLE();                                                    \
+    JS_END_MACRO
 
     LOAD_INTERRUPT_HANDLER(rt);
 
@@ -1846,13 +1916,48 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         mark = NULL;
     }
 
-    endpc = script->code + script->length;
-    while (pc < endpc) {
-        fp->pc = pc;
+#ifdef JS_THREADED_INTERP
+
+    /*
+     * This is a loop, but it does not look like a loop.  The loop-closing
+     * jump is distributed throughout interruptJumpTable, and comes back to
+     * the interrupt label.  The dispatch on op is through normalJumpTable.
+     * The trick is LOAD_INTERRUPT_HANDLER setting jumpTable appropriately.
+     */
+    if (interruptHandler) {
+interrupt:
+        SAVE_SP_AND_PC(fp);
+        switch (interruptHandler(cx, script, pc, &rval,
+                                 rt->interruptHandlerData)) {
+          case JSTRAP_ERROR:
+            ok = JS_FALSE;
+            goto out;
+          case JSTRAP_CONTINUE:
+            break;
+          case JSTRAP_RETURN:
+            fp->rval = rval;
+            goto out;
+#if JS_HAS_EXCEPTIONS
+          case JSTRAP_THROW:
+            cx->throwing = JS_TRUE;
+            cx->exception = rval;
+            ok = JS_FALSE;
+            goto out;
+#endif /* JS_HAS_EXCEPTIONS */
+          default:;
+        }
+        LOAD_INTERRUPT_HANDLER(rt);
+    }
+
+    op = (JSOp) *pc;
+    goto *normalJumpTable[op];
+
+#else  /* !JS_THREADED_INTERP */
+
+    for (;;) {
         op = (JSOp) *pc;
       do_op:
-        cs = &js_CodeSpec[op];
-        len = cs->length;
+        len = js_CodeSpec[op].length;
 
 #ifdef DEBUG
         tracefp = (FILE *) cx->tracefp;
@@ -1863,9 +1968,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             js_Disassemble1(cx, script, pc,
                             PTRDIFF(pc, script->code, jsbytecode), JS_FALSE,
                             tracefp);
-            nuses = cs->nuses;
+            nuses = js_CodeSpec[op].nuses;
             if (nuses) {
-                SAVE_SP(fp);
+                SAVE_SP_AND_PC(fp);
                 for (n = -nuses; n < 0; n++) {
                     str = js_DecompileValueGenerator(cx, n, sp[n], NULL);
                     if (str) {
@@ -1877,10 +1982,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 fprintf(tracefp, " @ %d\n", sp - fp->spbase);
             }
         }
-#endif
+#endif /* DEBUG */
 
         if (interruptHandler) {
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             switch (interruptHandler(cx, script, pc, &rval,
                                      rt->interruptHandlerData)) {
               case JSTRAP_ERROR:
@@ -1903,27 +2008,31 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             LOAD_INTERRUPT_HANDLER(rt);
         }
 
+#endif /* !JS_THREADED_INTERP */
+
         switch (op) {
-          case JSOP_NOP:
-            break;
+          BEGIN_CASE(JSOP_STOP)
+            goto out;
 
-          case JSOP_GROUP:
+          EMPTY_CASE(JSOP_NOP)
+
+          BEGIN_CASE(JSOP_GROUP)
             obj = NULL;
-            break;
+          END_CASE(JSOP_GROUP)
 
-          case JSOP_PUSH:
+          BEGIN_CASE(JSOP_PUSH)
             PUSH_OPND(JSVAL_VOID);
-            break;
+          END_CASE(JSOP_PUSH)
 
-          case JSOP_POP:
+          BEGIN_CASE(JSOP_POP)
             sp--;
-            break;
+          END_CASE(JSOP_POP)
 
-          case JSOP_POP2:
+          BEGIN_CASE(JSOP_POP2)
             sp -= 2;
-            break;
+          END_CASE(JSOP_POP2)
 
-          case JSOP_SWAP:
+          BEGIN_CASE(JSOP_SWAP)
             /*
              * N.B. JSOP_SWAP doesn't swap the corresponding generating pcs
              * for the operands it swaps.
@@ -1931,15 +2040,15 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             ltmp = sp[-1];
             sp[-1] = sp[-2];
             sp[-2] = ltmp;
-            break;
+          END_CASE(JSOP_SWAP)
 
-          case JSOP_POPV:
+          BEGIN_CASE(JSOP_POPV)
             *result = POP_OPND();
-            break;
+          END_CASE(JSOP_POPV)
 
-          case JSOP_ENTERWITH:
+          BEGIN_CASE(JSOP_ENTERWITH)
             FETCH_OBJECT(cx, -1, rval, obj);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             withobj = js_NewObject(cx, &js_WithClass, obj, fp->scopeChain);
             if (!withobj)
                 goto out;
@@ -1947,9 +2056,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             OBJ_SET_SLOT(cx, withobj, JSSLOT_PRIVATE, rval);
             fp->scopeChain = withobj;
             STORE_OPND(-1, OBJECT_TO_JSVAL(withobj));
-            break;
+          END_CASE(JSOP_ENTERWITH)
 
-          case JSOP_LEAVEWITH:
+          BEGIN_CASE(JSOP_LEAVEWITH)
             rval = POP_OPND();
             JS_ASSERT(JSVAL_IS_OBJECT(rval));
             withobj = JSVAL_TO_OBJECT(rval);
@@ -1958,18 +2067,18 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             rval = OBJ_GET_SLOT(cx, withobj, JSSLOT_PARENT);
             JS_ASSERT(JSVAL_IS_OBJECT(rval));
             fp->scopeChain = JSVAL_TO_OBJECT(rval);
-            break;
+          END_CASE(JSOP_LEAVEWITH)
 
-          case JSOP_SETRVAL:
+          BEGIN_CASE(JSOP_SETRVAL)
             fp->rval = POP_OPND();
-            break;
+          END_CASE(JSOP_SETRVAL)
 
-          case JSOP_RETURN:
+          BEGIN_CASE(JSOP_RETURN)
             CHECK_BRANCH(-1);
             fp->rval = POP_OPND();
             /* FALL THROUGH */
 
-          case JSOP_RETRVAL:    /* fp->rval already set */
+          BEGIN_CASE(JSOP_RETRVAL)    /* fp->rval already set */
             if (inlineCallCount)
           inline_return:
             {
@@ -1989,7 +2098,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #endif
 
                 /* Restore context version only if callee hasn't set version. */
-                if (cx->version == currentVersion) {
+                if (JS_LIKELY(cx->version == currentVersion)) {
                     currentVersion = ifp->callerVersion;
                     if (currentVersion != cx->version)
                         js_SetVersion(cx, currentVersion);
@@ -2011,120 +2120,127 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 script = fp->script;
                 depth = (jsint) script->depth;
                 pc = fp->pc;
+#ifndef JS_THREADED_INTERP
                 endpc = script->code + script->length;
+#endif
 
                 /* Store the generating pc for the return value. */
                 vp[-depth] = (jsval)pc;
 
-                /* Set remaining variables for 'goto advance_pc'. */
-                op = (JSOp) *pc;
-                cs = &js_CodeSpec[op];
-                len = cs->length;
-
                 /* Resume execution in the calling frame. */
                 inlineCallCount--;
-                if (ok)
-                    goto advance_pc;
+                if (JS_LIKELY(ok)) {
+                    JS_ASSERT((JSOp)*pc == JSOP_CALL);
+                    len = JSOP_CALL_LENGTH;
+                    DO_NEXT_OP(len);
+                }
             }
             goto out;
 
 #if JS_HAS_SWITCH_STATEMENT
-          case JSOP_DEFAULT:
+          BEGIN_CASE(JSOP_DEFAULT)
             (void) POP();
             /* FALL THROUGH */
 #endif
-          case JSOP_GOTO:
+          BEGIN_CASE(JSOP_GOTO)
             len = GET_JUMP_OFFSET(pc);
             CHECK_BRANCH(len);
-            break;
+          END_VARLEN_CASE
 
-          case JSOP_IFEQ:
+          BEGIN_CASE(JSOP_IFEQ)
             POP_BOOLEAN(cx, rval, cond);
             if (cond == JS_FALSE) {
                 len = GET_JUMP_OFFSET(pc);
                 CHECK_BRANCH(len);
+                DO_NEXT_OP(len);
             }
-            break;
+          END_CASE(JSOP_IFEQ)
 
-          case JSOP_IFNE:
+          BEGIN_CASE(JSOP_IFNE)
             POP_BOOLEAN(cx, rval, cond);
             if (cond != JS_FALSE) {
                 len = GET_JUMP_OFFSET(pc);
                 CHECK_BRANCH(len);
+                DO_NEXT_OP(len);
             }
-            break;
+          END_CASE(JSOP_IFNE)
 
-          case JSOP_OR:
+          BEGIN_CASE(JSOP_OR)
             POP_BOOLEAN(cx, rval, cond);
             if (cond == JS_TRUE) {
                 len = GET_JUMP_OFFSET(pc);
                 PUSH_OPND(rval);
+                DO_NEXT_OP(len);
             }
-            break;
+          END_CASE(JSOP_OR)
 
-          case JSOP_AND:
+          BEGIN_CASE(JSOP_AND)
             POP_BOOLEAN(cx, rval, cond);
             if (cond == JS_FALSE) {
                 len = GET_JUMP_OFFSET(pc);
                 PUSH_OPND(rval);
+                DO_NEXT_OP(len);
             }
-            break;
-
+          END_CASE(JSOP_AND)
 
 #if JS_HAS_SWITCH_STATEMENT
-          case JSOP_DEFAULTX:
+          BEGIN_CASE(JSOP_DEFAULTX)
             (void) POP();
             /* FALL THROUGH */
 #endif
-          case JSOP_GOTOX:
+          BEGIN_CASE(JSOP_GOTOX)
             len = GET_JUMPX_OFFSET(pc);
             CHECK_BRANCH(len);
-            break;
+          END_VARLEN_CASE
 
-          case JSOP_IFEQX:
+          BEGIN_CASE(JSOP_IFEQX)
             POP_BOOLEAN(cx, rval, cond);
             if (cond == JS_FALSE) {
                 len = GET_JUMPX_OFFSET(pc);
                 CHECK_BRANCH(len);
+                DO_NEXT_OP(len);
             }
-            break;
+          END_CASE(JSOP_IFEQX)
 
-          case JSOP_IFNEX:
+          BEGIN_CASE(JSOP_IFNEX)
             POP_BOOLEAN(cx, rval, cond);
             if (cond != JS_FALSE) {
                 len = GET_JUMPX_OFFSET(pc);
                 CHECK_BRANCH(len);
+                DO_NEXT_OP(len);
             }
-            break;
+          END_CASE(JSOP_IFNEX)
 
-          case JSOP_ORX:
+          BEGIN_CASE(JSOP_ORX)
             POP_BOOLEAN(cx, rval, cond);
             if (cond == JS_TRUE) {
                 len = GET_JUMPX_OFFSET(pc);
                 PUSH_OPND(rval);
+                DO_NEXT_OP(len);
             }
-            break;
+          END_CASE(JSOP_ORX)
 
-          case JSOP_ANDX:
+          BEGIN_CASE(JSOP_ANDX)
             POP_BOOLEAN(cx, rval, cond);
             if (cond == JS_FALSE) {
                 len = GET_JUMPX_OFFSET(pc);
                 PUSH_OPND(rval);
+                DO_NEXT_OP(len);
             }
-            break;
+          END_CASE(JSOP_ANDX)
 
-          case JSOP_TOOBJECT:
+          BEGIN_CASE(JSOP_TOOBJECT)
             rval = FETCH_OPND(-1);
             if (!JSVAL_IS_PRIMITIVE(rval)) {
                 obj = JSVAL_TO_OBJECT(rval);
             } else {
-                SAVE_SP(fp);
+                SAVE_SP_AND_PC(fp);
                 ok = js_ValueToObject(cx, rval, &obj);
                 if (!ok)
                     goto out;
             }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-            break;
+          END_CASE(JSOP_TOOBJECT)
 
 /*
  * If the index value at sp[n] is not an int that fits in a jsval, it could
@@ -2138,7 +2254,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         if (JSVAL_IS_INT(idval_)) {                                           \
             id = INT_JSVAL_TO_JSID(idval_);                                   \
         } else {                                                              \
-            SAVE_SP(fp);                                                      \
+            SAVE_SP_AND_PC(fp);                                               \
             ok = InternNonIntElementId(cx, idval_, &id);                      \
             if (!ok)                                                          \
                 goto out;                                                     \
@@ -2146,8 +2262,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JS_END_MACRO
 
 #if JS_HAS_IN_OPERATOR
-          case JSOP_IN:
-            SAVE_SP(fp);
+          BEGIN_CASE(JSOP_IN)
+            SAVE_SP_AND_PC(fp);
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval)) {
                 str = js_DecompileValueGenerator(cx, -1, rval, NULL);
@@ -2169,10 +2285,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             STORE_OPND(-1, BOOLEAN_TO_JSVAL(prop != NULL));
             if (prop)
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
-            break;
+          END_CASE(JSOP_IN)
 #endif /* JS_HAS_IN_OPERATOR */
 
-          case JSOP_FORPROP:
+          BEGIN_CASE(JSOP_FORPROP)
             /*
              * Handle JSOP_FORPROP first, so the cost of the goto do_forinloop
              * is not paid for the more common cases.
@@ -2183,7 +2299,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             i = -2;
             goto do_forinloop;
 
-          case JSOP_FORNAME:
+          BEGIN_CASE(JSOP_FORNAME)
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
 
@@ -2195,7 +2311,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * then we'd have to move this into the common code and condition
              * it on op == JSOP_FORNAME.
              */
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
             if (!ok)
                 goto out;
@@ -2204,8 +2320,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             lval = OBJECT_TO_JSVAL(obj);
             /* FALL THROUGH */
 
-          case JSOP_FORARG:
-          case JSOP_FORVAR:
+          BEGIN_CASE(JSOP_FORARG)
+          BEGIN_CASE(JSOP_FORVAR)
             /*
              * JSOP_FORARG and JSOP_FORVAR don't require any lval computation
              * here, because they address slots on the stack (in fp->args and
@@ -2213,7 +2329,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              */
             /* FALL THROUGH */
 
-          case JSOP_FORELEM:
+          BEGIN_CASE(JSOP_FORELEM)
             /*
              * JSOP_FORELEM simply initializes or updates the iteration state
              * and leaves the index expression evaluation and assignment to the
@@ -2252,10 +2368,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             rval = *vp;
 
             /*
-             * Save sp in fp now, before any OBJ_* call-outs that might nest
-             * an interpreter or GC activation on this context.
+             * Save sp and pc in fp now, before any OBJ_* call-outs that might
+             * nest an interpreter or GC activation on this context.
              */
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
 
             /* Is this the first iteration ? */
             if (JSVAL_IS_VOID(rval)) {
@@ -2483,22 +2599,23 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
           end_forinloop:
             sp += i + 1;
             PUSH_OPND(rval);
-            break;
+            len = js_CodeSpec[op].length;
+            DO_NEXT_OP(len);
           }
 
-          case JSOP_DUP:
+          BEGIN_CASE(JSOP_DUP)
             JS_ASSERT(sp > fp->spbase);
             rval = sp[-1];
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_DUP)
 
-          case JSOP_DUP2:
+          BEGIN_CASE(JSOP_DUP2)
             JS_ASSERT(sp - 1 > fp->spbase);
             lval = FETCH_OPND(-2);
             rval = FETCH_OPND(-1);
             PUSH_OPND(lval);
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_DUP2)
 
 #define PROPERTY_OP(n, call)                                                  \
     JS_BEGIN_MACRO                                                            \
@@ -2506,7 +2623,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         FETCH_OBJECT(cx, n, lval, obj);                                       \
                                                                               \
         /* Get or set the property, set ok false if error, true if success. */\
-        SAVE_SP(fp);                                                          \
+        SAVE_SP_AND_PC(fp);                                                   \
         call;                                                                 \
         if (!ok)                                                              \
             goto out;                                                         \
@@ -2524,7 +2641,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         CHECK_ELEMENT_ID(obj, id);                                            \
                                                                               \
         /* Get or set the element, set ok false if error, true if success. */ \
-        SAVE_SP(fp);                                                          \
+        SAVE_SP_AND_PC(fp);                                                   \
         call;                                                                 \
         if (!ok)                                                              \
             goto out;                                                         \
@@ -2532,9 +2649,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
 /*
  * Direct callers, i.e. those who do not wrap CACHED_GET and CACHED_SET calls
- * in PROPERTY_OP or ELEMENT_OP macro calls must SAVE_SP(fp); beforehand, just
- * in case a getter or setter function is invoked.  CACHED_GET and CACHED_SET
- * use cx, obj, id, and rval from their caller's lexical environment.
+ * in PROPERTY_OP or ELEMENT_OP macro calls must SAVE_SP_AND_PC(fp); before
+ * calling, just in case a getter or setter function is invoked.  CACHED_GET
+ * and CACHED_SET use cx, obj, id, and rval from their callers' environments.
  */
 #define CACHED_GET(call)        CACHED_GET_VP(call, &rval)
 
@@ -2593,18 +2710,18 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     JS_END_MACRO
 
 #define BEGIN_LITOPX_CASE(OP,PCOFF)                                           \
-          case OP:                                                            \
+          BEGIN_CASE(OP)                                                      \
             atomIndex = GET_ATOM_INDEX(pc + PCOFF);                           \
           do_##OP:                                                            \
             atom = js_GetAtom(cx, &script->atomMap, atomIndex);
 
-#define END_LITOPX_CASE                                                       \
-            break;                                                            \
+#define END_LITOPX_CASE(OP)                                                   \
+          END_CASE(OP)
 
           BEGIN_LITOPX_CASE(JSOP_SETCONST, 0)
             obj = fp->varobj;
             rval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(atom), rval,
                                      NULL, NULL,
                                      JSPROP_ENUMERATE | JSPROP_PERMANENT |
@@ -2613,32 +2730,32 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_SETCONST)
 
           BEGIN_LITOPX_CASE(JSOP_BINDNAME, 0)
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             obj = js_FindIdentifierBase(cx, ATOM_TO_JSID(atom));
             if (!obj) {
                 ok = JS_FALSE;
                 goto out;
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_BINDNAME)
 
-          case JSOP_SETNAME:
+          BEGIN_CASE(JSOP_SETNAME)
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
             rval = FETCH_OPND(-1);
             lval = FETCH_OPND(-2);
             JS_ASSERT(!JSVAL_IS_PRIMITIVE(lval));
             obj  = JSVAL_TO_OBJECT(lval);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
             if (!ok)
                 goto out;
             sp--;
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_SETNAME)
 
 #define INTEGER_OP(OP, EXTRA_CODE)                                            \
     JS_BEGIN_MACRO                                                            \
@@ -2655,17 +2772,17 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #define BITWISE_OP(OP)          INTEGER_OP(OP, (void) 0;)
 #define SIGNED_SHIFT_OP(OP)     INTEGER_OP(OP, j &= 31;)
 
-          case JSOP_BITOR:
+          BEGIN_CASE(JSOP_BITOR)
             BITWISE_OP(|);
-            break;
+          END_CASE(JSOP_BITOR)
 
-          case JSOP_BITXOR:
+          BEGIN_CASE(JSOP_BITXOR)
             BITWISE_OP(^);
-            break;
+          END_CASE(JSOP_BITXOR)
 
-          case JSOP_BITAND:
+          BEGIN_CASE(JSOP_BITAND)
             BITWISE_OP(&);
-            break;
+          END_CASE(JSOP_BITAND)
 
 #define RELATIONAL_OP(OP)                                                     \
     JS_BEGIN_MACRO                                                            \
@@ -2717,21 +2834,21 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         ops = (JSXMLObjectOps *) obj2->map->ops;                              \
         if (obj2 == JSVAL_TO_OBJECT(rval))                                    \
             rval = lval;                                                      \
-        SAVE_SP(fp);                                                          \
+        SAVE_SP_AND_PC(fp);                                                   \
         ok = ops->equality(cx, obj2, rval, &cond);                            \
         if (!ok)                                                              \
             goto out;                                                         \
         cond = cond OP JS_TRUE;                                               \
     } else
 
-#define XML_NAME_EQUALITY_OP(OP)                                              \
+#define EXTENDED_EQUALITY_OP(OP)                                              \
     if (ltmp == JSVAL_OBJECT &&                                               \
         (obj2 = JSVAL_TO_OBJECT(lval)) &&                                     \
         ((clasp = OBJ_GET_CLASS(cx, obj2))->flags & JSCLASS_IS_EXTENDED)) {   \
         JSExtendedClass *xclasp;                                              \
                                                                               \
         xclasp = (JSExtendedClass *) clasp;                                   \
-        SAVE_SP(fp);                                                          \
+        SAVE_SP_AND_PC(fp);                                                   \
         ok = xclasp->equality(cx, obj2, rval, &cond);                         \
         if (!ok)                                                              \
             goto out;                                                         \
@@ -2739,7 +2856,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     } else
 #else
 #define XML_EQUALITY_OP(OP)             /* nothing */
-#define XML_NAME_EQUALITY_OP(OP)        /* nothing */
+#define EXTENDED_EQUALITY_OP(OP)        /* nothing */
 #endif
 
 #define EQUALITY_OP(OP, IFNAN)                                                \
@@ -2759,7 +2876,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 d2 = *JSVAL_TO_DOUBLE(rval);                                  \
                 cond = JSDOUBLE_COMPARE(d, OP, d2, IFNAN);                    \
             } else {                                                          \
-                XML_NAME_EQUALITY_OP(OP)                                      \
+                EXTENDED_EQUALITY_OP(OP)                                      \
                 /* Handle all undefined (=>NaN) and int combinations. */      \
                 cond = lval OP rval;                                          \
             }                                                                 \
@@ -2791,13 +2908,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
     JS_END_MACRO
 
-          case JSOP_EQ:
+          BEGIN_CASE(JSOP_EQ)
             EQUALITY_OP(==, JS_FALSE);
-            break;
+          END_CASE(JSOP_EQ)
 
-          case JSOP_NE:
+          BEGIN_CASE(JSOP_NE)
             EQUALITY_OP(!=, JS_TRUE);
-            break;
+          END_CASE(JSOP_NE)
 
 #if !JS_BUG_FALLIBLE_EQOPS
 #define NEW_EQUALITY_OP(OP)                                                   \
@@ -2809,68 +2926,68 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));                               \
     JS_END_MACRO
 
-          case JSOP_NEW_EQ:
+          BEGIN_CASE(JSOP_NEW_EQ)
             NEW_EQUALITY_OP(==);
-            break;
+          END_CASE(JSOP_NEW_EQ)
 
-          case JSOP_NEW_NE:
+          BEGIN_CASE(JSOP_NEW_NE)
             NEW_EQUALITY_OP(!=);
-            break;
+          END_CASE(JSOP_NEW_NE)
 
 #if JS_HAS_SWITCH_STATEMENT
-          case JSOP_CASE:
+          BEGIN_CASE(JSOP_CASE)
             NEW_EQUALITY_OP(==);
             (void) POP();
             if (cond) {
                 len = GET_JUMP_OFFSET(pc);
                 CHECK_BRANCH(len);
-            } else {
-                PUSH(lval);
+                DO_NEXT_OP(len);
             }
-            break;
+            PUSH(lval);
+          END_CASE(JSOP_CASE)
 
-          case JSOP_CASEX:
+          BEGIN_CASE(JSOP_CASEX)
             NEW_EQUALITY_OP(==);
             (void) POP();
             if (cond) {
                 len = GET_JUMPX_OFFSET(pc);
                 CHECK_BRANCH(len);
-            } else {
-                PUSH(lval);
+                DO_NEXT_OP(len);
             }
-            break;
+            PUSH(lval);
+          END_CASE(JSOP_CASEX)
 #endif
 
 #endif /* !JS_BUG_FALLIBLE_EQOPS */
 
-          case JSOP_LT:
+          BEGIN_CASE(JSOP_LT)
             RELATIONAL_OP(<);
-            break;
+          END_CASE(JSOP_LT)
 
-          case JSOP_LE:
+          BEGIN_CASE(JSOP_LE)
             RELATIONAL_OP(<=);
-            break;
+          END_CASE(JSOP_LE)
 
-          case JSOP_GT:
+          BEGIN_CASE(JSOP_GT)
             RELATIONAL_OP(>);
-            break;
+          END_CASE(JSOP_GT)
 
-          case JSOP_GE:
+          BEGIN_CASE(JSOP_GE)
             RELATIONAL_OP(>=);
-            break;
+          END_CASE(JSOP_GE)
 
 #undef EQUALITY_OP
 #undef RELATIONAL_OP
 
-          case JSOP_LSH:
+          BEGIN_CASE(JSOP_LSH)
             SIGNED_SHIFT_OP(<<);
-            break;
+          END_CASE(JSOP_LSH)
 
-          case JSOP_RSH:
+          BEGIN_CASE(JSOP_RSH)
             SIGNED_SHIFT_OP(>>);
-            break;
+          END_CASE(JSOP_RSH)
 
-          case JSOP_URSH:
+          BEGIN_CASE(JSOP_URSH)
           {
             uint32 u;
 
@@ -2880,14 +2997,14 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             d = u >> j;
             sp--;
             STORE_NUMBER(cx, -1, d);
-            break;
           }
+          END_CASE(JSOP_URSH)
 
 #undef INTEGER_OP
 #undef BITWISE_OP
 #undef SIGNED_SHIFT_OP
 
-          case JSOP_ADD:
+          BEGIN_CASE(JSOP_ADD)
             rval = FETCH_OPND(-1);
             lval = FETCH_OPND(-2);
 #if JS_HAS_XML_SUPPORT
@@ -2897,43 +3014,44 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 JSXMLObjectOps *ops;
 
                 ops = (JSXMLObjectOps *) obj2->map->ops;
-                SAVE_SP(fp);
+                SAVE_SP_AND_PC(fp);
                 ok = ops->concatenate(cx, obj2, rval, &rval);
                 if (!ok)
                     goto out;
                 sp--;
                 STORE_OPND(-1, rval);
-                break;
-            }
+            } else
 #endif
-            VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_VOID, &ltmp);
-            VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &rtmp);
-            if ((cond = JSVAL_IS_STRING(ltmp)) || JSVAL_IS_STRING(rtmp)) {
-                SAVE_SP(fp);
-                if (cond) {
-                    str = JSVAL_TO_STRING(ltmp);
-                    ok = (str2 = js_ValueToString(cx, rtmp)) != NULL;
+            {
+                VALUE_TO_PRIMITIVE(cx, lval, JSTYPE_VOID, &ltmp);
+                VALUE_TO_PRIMITIVE(cx, rval, JSTYPE_VOID, &rtmp);
+                if ((cond = JSVAL_IS_STRING(ltmp)) || JSVAL_IS_STRING(rtmp)) {
+                    SAVE_SP_AND_PC(fp);
+                    if (cond) {
+                        str = JSVAL_TO_STRING(ltmp);
+                        ok = (str2 = js_ValueToString(cx, rtmp)) != NULL;
+                    } else {
+                        str2 = JSVAL_TO_STRING(rtmp);
+                        ok = (str = js_ValueToString(cx, ltmp)) != NULL;
+                    }
+                    if (!ok)
+                        goto out;
+                    str = js_ConcatStrings(cx, str, str2);
+                    if (!str) {
+                        ok = JS_FALSE;
+                        goto out;
+                    }
+                    sp--;
+                    STORE_OPND(-1, STRING_TO_JSVAL(str));
                 } else {
-                    str2 = JSVAL_TO_STRING(rtmp);
-                    ok = (str = js_ValueToString(cx, ltmp)) != NULL;
+                    VALUE_TO_NUMBER(cx, lval, d);
+                    VALUE_TO_NUMBER(cx, rval, d2);
+                    d += d2;
+                    sp--;
+                    STORE_NUMBER(cx, -1, d);
                 }
-                if (!ok)
-                    goto out;
-                str = js_ConcatStrings(cx, str, str2);
-                if (!str) {
-                    ok = JS_FALSE;
-                    goto out;
-                }
-                sp--;
-                STORE_OPND(-1, STRING_TO_JSVAL(str));
-            } else {
-                VALUE_TO_NUMBER(cx, lval, d);
-                VALUE_TO_NUMBER(cx, rval, d2);
-                d += d2;
-                sp--;
-                STORE_NUMBER(cx, -1, d);
             }
-            break;
+          END_CASE(JSOP_ADD)
 
 #define BINARY_OP(OP)                                                         \
     JS_BEGIN_MACRO                                                            \
@@ -2944,20 +3062,20 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         STORE_NUMBER(cx, -1, d);                                              \
     JS_END_MACRO
 
-          case JSOP_SUB:
+          BEGIN_CASE(JSOP_SUB)
             BINARY_OP(-);
-            break;
+          END_CASE(JSOP_SUB)
 
-          case JSOP_MUL:
+          BEGIN_CASE(JSOP_MUL)
             BINARY_OP(*);
-            break;
+          END_CASE(JSOP_MUL)
 
-          case JSOP_DIV:
+          BEGIN_CASE(JSOP_DIV)
             FETCH_NUMBER(cx, -1, d2);
             FETCH_NUMBER(cx, -2, d);
             sp--;
             if (d2 == 0) {
-#if defined(XP_WIN)
+#ifdef XP_WIN
                 /* XXX MSVC miscompiles such that (NaN == 0) */
                 if (JSDOUBLE_IS_NaN(d2))
                     rval = DOUBLE_TO_JSVAL(rt->jsNaN);
@@ -2974,36 +3092,36 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 d /= d2;
                 STORE_NUMBER(cx, -1, d);
             }
-            break;
+          END_CASE(JSOP_DIV)
 
-          case JSOP_MOD:
+          BEGIN_CASE(JSOP_MOD)
             FETCH_NUMBER(cx, -1, d2);
             FETCH_NUMBER(cx, -2, d);
             sp--;
             if (d2 == 0) {
                 STORE_OPND(-1, DOUBLE_TO_JSVAL(rt->jsNaN));
             } else {
-#if defined(XP_WIN)
+#ifdef XP_WIN
               /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
               if (!(JSDOUBLE_IS_FINITE(d) && JSDOUBLE_IS_INFINITE(d2)))
 #endif
                 d = fmod(d, d2);
                 STORE_NUMBER(cx, -1, d);
             }
-            break;
+          END_CASE(JSOP_MOD)
 
-          case JSOP_NOT:
+          BEGIN_CASE(JSOP_NOT)
             POP_BOOLEAN(cx, rval, cond);
             PUSH_OPND(BOOLEAN_TO_JSVAL(!cond));
-            break;
+          END_CASE(JSOP_NOT)
 
-          case JSOP_BITNOT:
+          BEGIN_CASE(JSOP_BITNOT)
             FETCH_INT(cx, -1, i);
             d = (jsdouble) ~i;
             STORE_NUMBER(cx, -1, d);
-            break;
+          END_CASE(JSOP_BITNOT)
 
-          case JSOP_NEG:
+          BEGIN_CASE(JSOP_NEG)
             FETCH_NUMBER(cx, -1, d);
 #ifdef HPUX
             /*
@@ -3016,21 +3134,21 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             d = -d;
 #endif
             STORE_NUMBER(cx, -1, d);
-            break;
+          END_CASE(JSOP_NEG)
 
-          case JSOP_POS:
+          BEGIN_CASE(JSOP_POS)
             FETCH_NUMBER(cx, -1, d);
             STORE_NUMBER(cx, -1, d);
-            break;
+          END_CASE(JSOP_POS)
 
-          case JSOP_NEW:
+          BEGIN_CASE(JSOP_NEW)
             /* Get immediate argc and find the constructor function. */
             argc = GET_ARGC(pc);
 
 #if JS_HAS_INITIALIZERS
           do_new:
 #endif
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             vp = sp - (2 + argc);
             JS_ASSERT(vp >= fp->spbase);
 
@@ -3097,26 +3215,27 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             /* Check the return value and update obj from it. */
             rval = *vp;
             if (JSVAL_IS_PRIMITIVE(rval)) {
-                if (fun || !JS_VERSION_IS_ECMA(cx)) {
-                    *vp = OBJECT_TO_JSVAL(obj);
-                    break;
+                if (!fun && JS_VERSION_IS_ECMA(cx)) {
+                    /* native [[Construct]] returning primitive is error */
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_BAD_NEW_RESULT,
+                                         js_ValueToPrintableString(cx, rval));
+                    ok = JS_FALSE;
+                    goto out;
                 }
-                /* native [[Construct]] returning primitive is error */
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_NEW_RESULT,
-                                     js_ValueToPrintableString(cx, rval));
-                ok = JS_FALSE;
-                goto out;
+                *vp = OBJECT_TO_JSVAL(obj);
+            } else {
+                obj = JSVAL_TO_OBJECT(rval);
             }
-            obj = JSVAL_TO_OBJECT(rval);
             JS_RUNTIME_METER(rt, constructs);
-            break;
+            len = js_CodeSpec[op].length;
+            DO_NEXT_OP(len);
 
-          case JSOP_DELNAME:
+          BEGIN_CASE(JSOP_DELNAME)
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
 
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
             if (!ok)
                 goto out;
@@ -3130,42 +3249,42 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                     goto out;
             }
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_DELNAME)
 
-          case JSOP_DELPROP:
+          BEGIN_CASE(JSOP_DELPROP)
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
             PROPERTY_OP(-1, ok = OBJ_DELETE_PROPERTY(cx, obj, id, &rval));
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_DELPROP)
 
-          case JSOP_DELELEM:
+          BEGIN_CASE(JSOP_DELELEM)
             ELEMENT_OP(-1, ok = OBJ_DELETE_PROPERTY(cx, obj, id, &rval));
             sp--;
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_DELELEM)
 
-          case JSOP_TYPEOF:
+          BEGIN_CASE(JSOP_TYPEOF)
             rval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             type = JS_TypeOfValue(cx, rval);
             atom = rt->atomState.typeAtoms[type];
             STORE_OPND(-1, ATOM_KEY(atom));
-            break;
+          END_CASE(JSOP_TYPEOF)
 
-          case JSOP_VOID:
+          BEGIN_CASE(JSOP_VOID)
             (void) POP_OPND();
             PUSH_OPND(JSVAL_VOID);
-            break;
+          END_CASE(JSOP_VOID)
 
-          case JSOP_INCNAME:
-          case JSOP_DECNAME:
-          case JSOP_NAMEINC:
-          case JSOP_NAMEDEC:
+          BEGIN_CASE(JSOP_INCNAME)
+          BEGIN_CASE(JSOP_DECNAME)
+          BEGIN_CASE(JSOP_NAMEINC)
+          BEGIN_CASE(JSOP_NAMEDEC)
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
 
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
             if (!ok)
                 goto out;
@@ -3177,35 +3296,41 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             i = 0;
             goto do_incop;
 
-          case JSOP_INCPROP:
-          case JSOP_DECPROP:
-          case JSOP_PROPINC:
-          case JSOP_PROPDEC:
+          BEGIN_CASE(JSOP_INCPROP)
+          BEGIN_CASE(JSOP_DECPROP)
+          BEGIN_CASE(JSOP_PROPINC)
+          BEGIN_CASE(JSOP_PROPDEC)
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
             lval = FETCH_OPND(-1);
             i = -1;
             goto do_incop;
 
-          case JSOP_INCELEM:
-          case JSOP_DECELEM:
-          case JSOP_ELEMINC:
-          case JSOP_ELEMDEC:
+          BEGIN_CASE(JSOP_INCELEM)
+          BEGIN_CASE(JSOP_DECELEM)
+          BEGIN_CASE(JSOP_ELEMINC)
+          BEGIN_CASE(JSOP_ELEMDEC)
             FETCH_ELEMENT_ID(-1, id);
             lval = FETCH_OPND(-2);
             i = -2;
 
           do_incop:
+          {
+            const JSCodeSpec *cs;
+
             VALUE_TO_OBJECT(cx, lval, obj);
             if (i < 0)
                 STORE_OPND(i, OBJECT_TO_JSVAL(obj));
             CHECK_ELEMENT_ID(obj, id);
 
             /* The operand must contain a number. */
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval));
             if (!ok)
                 goto out;
+
+            /* Preload for use in the if/else immediately below. */
+            cs = &js_CodeSpec[op];
 
             /* The expression result goes in rtmp, the updated value in rval. */
             if (JSVAL_IS_INT(rval) &&
@@ -3256,7 +3381,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             sp += i;
             PUSH_OPND(rtmp);
-            break;
+            len = js_CodeSpec[op].length;
+            DO_NEXT_OP(len);
+          }
 
 /*
  * NB: This macro can't use JS_BEGIN_MACRO/JS_END_MACRO around its body because
@@ -3274,35 +3401,44 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         rval OP 2;                                                            \
         *vp = rval;                                                           \
         PUSH_OPND(PRE);                                                       \
-        break;                                                                \
+        goto end_nonint_fast_incop;                                           \
     }                                                                         \
     goto do_nonint_fast_incop;
 
-          case JSOP_INCARG:
+          BEGIN_CASE(JSOP_INCARG)
             FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rval, +=, MAX);
-          case JSOP_DECARG:
+          BEGIN_CASE(JSOP_DECARG)
             FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rval, -=, MIN);
-          case JSOP_ARGINC:
+          BEGIN_CASE(JSOP_ARGINC)
             FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rtmp, +=, MAX);
-          case JSOP_ARGDEC:
+          BEGIN_CASE(JSOP_ARGDEC)
             FAST_INCREMENT_OP(GET_ARGNO(pc), nargs, argv, rtmp, -=, MIN);
 
-          case JSOP_INCVAR:
+          BEGIN_CASE(JSOP_INCVAR)
             FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rval, +=, MAX);
-          case JSOP_DECVAR:
+          BEGIN_CASE(JSOP_DECVAR)
             FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rval, -=, MIN);
-          case JSOP_VARINC:
+          BEGIN_CASE(JSOP_VARINC)
             FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rtmp, +=, MAX);
-          case JSOP_VARDEC:
+          BEGIN_CASE(JSOP_VARDEC)
             FAST_INCREMENT_OP(GET_VARNO(pc), nvars, vars, rtmp, -=, MIN);
+
+          end_nonint_fast_incop:
+            len = JSOP_INCARG_LENGTH;   /* all arg/var incops are same length */
+            DO_NEXT_OP(len);
 
 #undef FAST_INCREMENT_OP
 
           do_nonint_fast_incop:
+          {
+            const JSCodeSpec *cs = &js_CodeSpec[op];
+
             NONINT_INCREMENT_OP_MIDDLE();
             *vp = rval;
             PUSH_OPND(rtmp);
-            break;
+            len = cs->length;
+            DO_NEXT_OP(len);
+          }
 
 #define FAST_GLOBAL_INCREMENT_OP(SLOWOP,PRE,OP,MINMAX)                        \
     slot = GET_VARNO(pc);                                                     \
@@ -3310,7 +3446,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     lval = fp->vars[slot];                                                    \
     if (JSVAL_IS_NULL(lval)) {                                                \
         op = SLOWOP;                                                          \
-        goto do_op;                                                           \
+        DO_OP();                                                              \
     }                                                                         \
     slot = JSVAL_TO_INT(lval);                                                \
     obj = fp->varobj;                                                         \
@@ -3321,36 +3457,45 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         rval OP 2;                                                            \
         OBJ_SET_SLOT(cx, obj, slot, rval);                                    \
         PUSH_OPND(PRE);                                                       \
-        break;                                                                \
+        goto end_nonint_fast_global_incop;                                    \
     }                                                                         \
     goto do_nonint_fast_global_incop;
 
-          case JSOP_INCGVAR:
+          BEGIN_CASE(JSOP_INCGVAR)
             FAST_GLOBAL_INCREMENT_OP(JSOP_INCNAME, rval, +=, MAX);
-          case JSOP_DECGVAR:
+          BEGIN_CASE(JSOP_DECGVAR)
             FAST_GLOBAL_INCREMENT_OP(JSOP_DECNAME, rval, -=, MIN);
-          case JSOP_GVARINC:
+          BEGIN_CASE(JSOP_GVARINC)
             FAST_GLOBAL_INCREMENT_OP(JSOP_NAMEINC, rtmp, +=, MAX);
-          case JSOP_GVARDEC:
+          BEGIN_CASE(JSOP_GVARDEC)
             FAST_GLOBAL_INCREMENT_OP(JSOP_NAMEDEC, rtmp, -=, MIN);
+
+          end_nonint_fast_global_incop:
+            len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
+            DO_NEXT_OP(len);
 
 #undef FAST_GLOBAL_INCREMENT_OP
 
           do_nonint_fast_global_incop:
+          {
+            const JSCodeSpec *cs = &js_CodeSpec[op];
+
             NONINT_INCREMENT_OP_MIDDLE();
             OBJ_SET_SLOT(cx, obj, slot, rval);
             PUSH_OPND(rtmp);
-            break;
+            len = cs->length;
+            DO_NEXT_OP(len);
+          }
 
-          case JSOP_GETPROP:
+          BEGIN_CASE(JSOP_GETPROP)
             /* Get an immediate atom naming the property. */
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
             PROPERTY_OP(-1, CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval)));
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_GETPROP)
 
-          case JSOP_SETPROP:
+          BEGIN_CASE(JSOP_SETPROP)
             /* Pop the right-hand side into rval for OBJ_SET_PROPERTY. */
             rval = FETCH_OPND(-1);
 
@@ -3360,33 +3505,33 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             PROPERTY_OP(-2, CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval)));
             sp--;
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_SETPROP)
 
-          case JSOP_GETELEM:
+          BEGIN_CASE(JSOP_GETELEM)
             ELEMENT_OP(-1, CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval)));
             sp--;
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_GETELEM)
 
-          case JSOP_SETELEM:
+          BEGIN_CASE(JSOP_SETELEM)
             rval = FETCH_OPND(-1);
             ELEMENT_OP(-2, CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval)));
             sp -= 2;
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_SETELEM)
 
-          case JSOP_ENUMELEM:
+          BEGIN_CASE(JSOP_ENUMELEM)
             /* Funky: the value to set is under the [obj, id] pair. */
             FETCH_ELEMENT_ID(-1, id);
             FETCH_OBJECT(cx, -2, lval, obj);
             CHECK_ELEMENT_ID(obj, id);
             rval = FETCH_OPND(-3);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
             sp -= 3;
-            break;
+          END_CASE(JSOP_ENUMELEM)
 
 /*
  * LAZY_ARGS_THISP allows the JSOP_ARGSUB bytecode to defer creation of the
@@ -3398,20 +3543,20 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
  */
 #define LAZY_ARGS_THISP ((JSObject *) 1)
 
-          case JSOP_PUSHOBJ:
+          BEGIN_CASE(JSOP_PUSHOBJ)
             if (obj == LAZY_ARGS_THISP && !(obj = js_GetArgsObject(cx, fp))) {
                 ok = JS_FALSE;
                 goto out;
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-            break;
+          END_CASE(JSOP_PUSHOBJ)
 
-          case JSOP_CALL:
-          case JSOP_EVAL:
+          BEGIN_CASE(JSOP_CALL)
+          BEGIN_CASE(JSOP_EVAL)
             argc = GET_ARGC(pc);
             vp = sp - (argc + 2);
             lval = *vp;
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
 
             if (JSVAL_IS_FUNCTION(cx, lval) &&
                 (obj = JSVAL_TO_OBJECT(lval),
@@ -3499,7 +3644,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
                 /* Switch to new version if currentVersion wasn't overridden. */
                 newifp->callerVersion = cx->version;
-                if (cx->version == currentVersion) {
+                if (JS_LIKELY(cx->version == currentVersion)) {
                     currentVersion = script->version;
                     if (currentVersion != cx->version)
                         js_SetVersion(cx, currentVersion);
@@ -3508,10 +3653,15 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 /* Push the frame and set interpreter registers. */
                 cx->fp = fp = &newifp->frame;
                 pc = script->code;
+#ifndef JS_THREADED_INTERP
                 endpc = pc + script->length;
+#endif
                 inlineCallCount++;
                 JS_RUNTIME_METER(rt, inlineCalls);
-                continue;
+
+                /* Load first opcode and dispatch it (safe since JSOP_STOP). */
+                op = *pc;
+                DO_OP();
 
               bad_inline_call:
                 script = fp->script;
@@ -3550,12 +3700,12 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
 #endif
             obj = NULL;
-            break;
+          END_CASE(JSOP_CALL)
 
 #if JS_HAS_LVALUE_RETURN
-          case JSOP_SETCALL:
+          BEGIN_CASE(JSOP_SETCALL)
             argc = GET_ARGC(pc);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_Invoke(cx, argc, 0);
             RESTORE_SP(fp);
             LOAD_BRANCH_CALLBACK(cx);
@@ -3571,24 +3721,26 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             PUSH_OPND(cx->rval2);
             cx->rval2set = JS_FALSE;
             obj = NULL;
-            break;
+          END_CASE(JSOP_SETCALL)
 #endif
 
-          case JSOP_NAME:
+          BEGIN_CASE(JSOP_NAME)
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
 
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
             if (!ok)
                 goto out;
             if (!prop) {
                 /* Kludge to allow (typeof foo == "undefined") tests. */
+                len = JSOP_NAME_LENGTH;
+                endpc = script->code + script->length;
                 for (pc2 = pc + len; pc2 < endpc; pc2++) {
                     op2 = (JSOp)*pc2;
                     if (op2 == JSOP_TYPEOF) {
                         PUSH_OPND(JSVAL_VOID);
-                        goto advance_pc;
+                        DO_NEXT_OP(len);
                     }
                     if (op2 != JSOP_GROUP)
                         break;
@@ -3603,52 +3755,51 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 if (!ok)
                     goto out;
                 PUSH_OPND(rval);
-                break;
-            }
-
-            /* Get and push the obj[id] property's value. */
-            sprop = (JSScopeProperty *)prop;
-            slot = (uintN)sprop->slot;
-            rval = (slot != SPROP_INVALID_SLOT)
-                   ? LOCKED_OBJ_GET_SLOT(obj2, slot)
-                   : JSVAL_VOID;
-            JS_UNLOCK_OBJ(cx, obj2);
-            ok = SPROP_GET(cx, sprop, obj, obj2, &rval);
-            JS_LOCK_OBJ(cx, obj2);
-            if (!ok) {
+            } else {
+                /* Get and push the obj[id] property's value. */
+                sprop = (JSScopeProperty *)prop;
+                slot = (uintN)sprop->slot;
+                rval = (slot != SPROP_INVALID_SLOT)
+                       ? LOCKED_OBJ_GET_SLOT(obj2, slot)
+                       : JSVAL_VOID;
+                JS_UNLOCK_OBJ(cx, obj2);
+                ok = SPROP_GET(cx, sprop, obj, obj2, &rval);
+                JS_LOCK_OBJ(cx, obj2);
+                if (!ok) {
+                    OBJ_DROP_PROPERTY(cx, obj2, prop);
+                    goto out;
+                }
+                if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2)))
+                    LOCKED_OBJ_SET_SLOT(obj2, slot, rval);
                 OBJ_DROP_PROPERTY(cx, obj2, prop);
-                goto out;
+                PUSH_OPND(rval);
             }
-            if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj2)))
-                LOCKED_OBJ_SET_SLOT(obj2, slot, rval);
-            OBJ_DROP_PROPERTY(cx, obj2, prop);
-            PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_NAME)
 
-          case JSOP_UINT16:
+          BEGIN_CASE(JSOP_UINT16)
             i = (jsint) GET_ATOM_INDEX(pc);
             rval = INT_TO_JSVAL(i);
             PUSH_OPND(rval);
             obj = NULL;
-            break;
+          END_CASE(JSOP_UINT16)
 
-          case JSOP_UINT24:
+          BEGIN_CASE(JSOP_UINT24)
             i = (jsint) GET_LITERAL_INDEX(pc);
             rval = INT_TO_JSVAL(i);
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_UINT24)
 
-          case JSOP_LITERAL:
+          BEGIN_CASE(JSOP_LITERAL)
             atomIndex = GET_LITERAL_INDEX(pc);
             atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             PUSH_OPND(ATOM_KEY(atom));
             obj = NULL;
-            break;
+          END_CASE(JSOP_LITERAL)
 
-          case JSOP_FINDNAME:
+          BEGIN_CASE(JSOP_FINDNAME)
             atomIndex = GET_LITERAL_INDEX(pc);
             atom = js_GetAtom(cx, &script->atomMap, atomIndex);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             obj = js_FindIdentifierBase(cx, ATOM_TO_JSID(atom));
             if (!obj) {
                 ok = JS_FALSE;
@@ -3656,11 +3807,14 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             PUSH_OPND(ATOM_KEY(atom));
-            break;
+          END_CASE(JSOP_FINDNAME)
 
-          case JSOP_LITOPX:
+          BEGIN_CASE(JSOP_LITOPX)
             atomIndex = GET_LITERAL_INDEX(pc);
             op = pc[1 + LITERAL_INDEX_LEN];
+#ifdef JS_THREADED_INTERP
+            pc += JSOP_LITOPX_LENGTH - js_CodeSpec[op].length;
+#endif
             switch (op) {
               case JSOP_ANONFUNOBJ:   goto do_JSOP_ANONFUNOBJ;
               case JSOP_BINDNAME:     goto do_JSOP_BINDNAME;
@@ -3696,11 +3850,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
               default:                JS_ASSERT(0);
             }
             /* NOTREACHED */
-            break;
 
-          case JSOP_NUMBER:
-          case JSOP_STRING:
-          case JSOP_OBJECT:
+          BEGIN_CASE(JSOP_NUMBER)
+          BEGIN_CASE(JSOP_STRING)
+          BEGIN_CASE(JSOP_OBJECT)
             atomIndex = GET_ATOM_INDEX(pc);
 
           do_JSOP_NUMBER:
@@ -3709,7 +3862,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             atom = js_GetAtom(cx, &script->atomMap, atomIndex);
             PUSH_OPND(ATOM_KEY(atom));
             obj = NULL;
-            break;
+          END_CASE(JSOP_NUMBER)
 
           BEGIN_LITOPX_CASE(JSOP_REGEXP, 0)
           {
@@ -3823,24 +3976,24 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             PUSH_OPND(rval);
             obj = NULL;
           }
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_REGEXP)
 
-          case JSOP_ZERO:
+          BEGIN_CASE(JSOP_ZERO)
             PUSH_OPND(JSVAL_ZERO);
             obj = NULL;
-            break;
+          END_CASE(JSOP_ZERO)
 
-          case JSOP_ONE:
+          BEGIN_CASE(JSOP_ONE)
             PUSH_OPND(JSVAL_ONE);
             obj = NULL;
-            break;
+          END_CASE(JSOP_ONE)
 
-          case JSOP_NULL:
+          BEGIN_CASE(JSOP_NULL)
             PUSH_OPND(JSVAL_NULL);
             obj = NULL;
-            break;
+          END_CASE(JSOP_NULL)
 
-          case JSOP_THIS:
+          BEGIN_CASE(JSOP_THIS)
             obj = fp->thisp;
             clasp = OBJ_GET_CLASS(cx, obj);
             if (clasp->flags & JSCLASS_IS_EXTENDED) {
@@ -3858,20 +4011,20 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             obj = NULL;
-            break;
+          END_CASE(JSOP_THIS)
 
-          case JSOP_FALSE:
+          BEGIN_CASE(JSOP_FALSE)
             PUSH_OPND(JSVAL_FALSE);
             obj = NULL;
-            break;
+          END_CASE(JSOP_FALSE)
 
-          case JSOP_TRUE:
+          BEGIN_CASE(JSOP_TRUE)
             PUSH_OPND(JSVAL_TRUE);
             obj = NULL;
-            break;
+          END_CASE(JSOP_TRUE)
 
 #if JS_HAS_SWITCH_STATEMENT
-          case JSOP_TABLESWITCH:
+          BEGIN_CASE(JSOP_TABLESWITCH)
             pc2 = pc;
             len = GET_JUMP_OFFSET(pc2);
 
@@ -3884,7 +4037,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 (cx->version & JSVERSION_MASK) >= JSVERSION_1_4) {
                 rval = POP_OPND();
                 if (!JSVAL_IS_INT(rval))
-                    break;
+                    DO_NEXT_OP(len);
                 i = JSVAL_TO_INT(rval);
             } else {
                 FETCH_INT(cx, -1, i);
@@ -3903,9 +4056,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 if (off)
                     len = off;
             }
-            break;
+          END_VARLEN_CASE
 
-          case JSOP_LOOKUPSWITCH:
+          BEGIN_CASE(JSOP_LOOKUPSWITCH)
             lval = POP_OPND();
             pc2 = pc;
             len = GET_JUMP_OFFSET(pc2);
@@ -3913,7 +4066,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             if (!JSVAL_IS_NUMBER(lval) &&
                 !JSVAL_IS_STRING(lval) &&
                 !JSVAL_IS_BOOLEAN(lval)) {
-                goto advance_pc;
+                DO_NEXT_OP(len);
             }
 
             pc2 += JUMP_OFFSET_LEN;
@@ -3928,7 +4081,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         if (match) {                                                          \
             pc2 += ATOM_INDEX_LEN;                                            \
             len = GET_JUMP_OFFSET(pc2);                                       \
-            goto advance_pc;                                                  \
+            DO_NEXT_OP(len);                                                  \
         }                                                                     \
         pc2 += ATOM_INDEX_LEN + JUMP_OFFSET_LEN;                              \
         npairs--;                                                             \
@@ -3952,9 +4105,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 )
             }
 #undef SEARCH_PAIRS
-            break;
+          END_VARLEN_CASE
 
-          case JSOP_TABLESWITCHX:
+          BEGIN_CASE(JSOP_TABLESWITCHX)
             pc2 = pc;
             len = GET_JUMPX_OFFSET(pc2);
 
@@ -3967,7 +4120,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 (cx->version & JSVERSION_MASK) >= JSVERSION_1_4) {
                 rval = POP_OPND();
                 if (!JSVAL_IS_INT(rval))
-                    break;
+                    DO_NEXT_OP(len);
                 i = JSVAL_TO_INT(rval);
             } else {
                 FETCH_INT(cx, -1, i);
@@ -3986,9 +4139,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 if (off)
                     len = off;
             }
-            break;
+          END_VARLEN_CASE
 
-          case JSOP_LOOKUPSWITCHX:
+          BEGIN_CASE(JSOP_LOOKUPSWITCHX)
             lval = POP_OPND();
             pc2 = pc;
             len = GET_JUMPX_OFFSET(pc2);
@@ -3996,7 +4149,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             if (!JSVAL_IS_NUMBER(lval) &&
                 !JSVAL_IS_STRING(lval) &&
                 !JSVAL_IS_BOOLEAN(lval)) {
-                goto advance_pc;
+                DO_NEXT_OP(len);
             }
 
             pc2 += JUMPX_OFFSET_LEN;
@@ -4011,7 +4164,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         if (match) {                                                          \
             pc2 += ATOM_INDEX_LEN;                                            \
             len = GET_JUMPX_OFFSET(pc2);                                      \
-            goto advance_pc;                                                  \
+            DO_NEXT_OP(len);                                                  \
         }                                                                     \
         pc2 += ATOM_INDEX_LEN + JUMPX_OFFSET_LEN;                             \
         npairs--;                                                             \
@@ -4035,17 +4188,16 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 )
             }
 #undef SEARCH_EXTENDED_PAIRS
-            break;
+          END_VARLEN_CASE
 
-          case JSOP_CONDSWITCH:
-            break;
+          EMPTY_CASE(JSOP_CONDSWITCH)
 
 #endif /* JS_HAS_SWITCH_STATEMENT */
 
 #if JS_HAS_EXPORT_IMPORT
-          case JSOP_EXPORTALL:
-            SAVE_SP(fp);
+          BEGIN_CASE(JSOP_EXPORTALL)
             obj = fp->varobj;
+            SAVE_SP_AND_PC(fp);
             ida = JS_Enumerate(cx, obj);
             if (!ida) {
                 ok = JS_FALSE;
@@ -4068,12 +4220,12 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 }
                 JS_DestroyIdArray(cx, ida);
             }
-            break;
+          END_CASE(JSOP_EXPORTALL)
 
           BEGIN_LITOPX_CASE(JSOP_EXPORTNAME, 0)
             id   = ATOM_TO_JSID(atom);
             obj  = fp->varobj;
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
             if (!ok)
                 goto out;
@@ -4090,29 +4242,30 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             if (!ok)
                 goto out;
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_EXPORTNAME)
 
-          case JSOP_IMPORTALL:
+          BEGIN_CASE(JSOP_IMPORTALL)
             id = (jsid) JSVAL_VOID;
             PROPERTY_OP(-1, ok = ImportProperty(cx, obj, id));
             sp--;
-            break;
+          END_CASE(JSOP_IMPORTALL)
 
-          case JSOP_IMPORTPROP:
+          BEGIN_CASE(JSOP_IMPORTPROP)
             /* Get an immediate atom naming the property. */
             atom = GET_ATOM(cx, script, pc);
             id   = ATOM_TO_JSID(atom);
             PROPERTY_OP(-1, ok = ImportProperty(cx, obj, id));
             sp--;
-            break;
+          END_CASE(JSOP_IMPORTPROP)
 
-          case JSOP_IMPORTELEM:
+          BEGIN_CASE(JSOP_IMPORTELEM)
             ELEMENT_OP(-1, ok = ImportProperty(cx, obj, id));
             sp -= 2;
-            break;
+          END_CASE(JSOP_IMPORTELEM)
 #endif /* JS_HAS_EXPORT_IMPORT */
 
-          case JSOP_TRAP:
+          BEGIN_CASE(JSOP_TRAP)
+            SAVE_SP_AND_PC(fp);
             switch (JS_HandleTrap(cx, script, pc, &rval)) {
               case JSTRAP_ERROR:
                 ok = JS_FALSE;
@@ -4122,7 +4275,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 op = (JSOp) JSVAL_TO_INT(rval);
                 JS_ASSERT((uintN)op < (uintN)JSOP_LIMIT);
                 LOAD_INTERRUPT_HANDLER(rt);
-                goto do_op;
+                DO_OP();
               case JSTRAP_RETURN:
                 fp->rval = rval;
                 goto out;
@@ -4136,19 +4289,19 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
               default:;
             }
             LOAD_INTERRUPT_HANDLER(rt);
-            break;
+          END_CASE(JSOP_TRAP)
 
-          case JSOP_ARGUMENTS:
-            SAVE_SP(fp);
+          BEGIN_CASE(JSOP_ARGUMENTS)
+            SAVE_SP_AND_PC(fp);
             ok = js_GetArgsValue(cx, fp, &rval);
             if (!ok)
                 goto out;
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_ARGUMENTS)
 
-          case JSOP_ARGSUB:
+          BEGIN_CASE(JSOP_ARGSUB)
             id = INT_TO_JSID(GET_ARGNO(pc));
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_GetArgsProperty(cx, fp, id, &obj, &rval);
             if (!ok)
                 goto out;
@@ -4164,66 +4317,66 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 obj = LAZY_ARGS_THISP;
             }
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_ARGSUB)
 
 #undef LAZY_ARGS_THISP
 
-          case JSOP_ARGCNT:
+          BEGIN_CASE(JSOP_ARGCNT)
             id = ATOM_TO_JSID(rt->atomState.lengthAtom);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_GetArgsProperty(cx, fp, id, &obj, &rval);
             if (!ok)
                 goto out;
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_ARGCNT)
 
-          case JSOP_GETARG:
+          BEGIN_CASE(JSOP_GETARG)
             slot = GET_ARGNO(pc);
             JS_ASSERT(slot < fp->fun->nargs);
             PUSH_OPND(fp->argv[slot]);
             obj = NULL;
-            break;
+          END_CASE(JSOP_GETARG)
 
-          case JSOP_SETARG:
+          BEGIN_CASE(JSOP_SETARG)
             slot = GET_ARGNO(pc);
             JS_ASSERT(slot < fp->fun->nargs);
             vp = &fp->argv[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
             obj = NULL;
-            break;
+          END_CASE(JSOP_SETARG)
 
-          case JSOP_GETVAR:
+          BEGIN_CASE(JSOP_GETVAR)
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->fun->nvars);
             PUSH_OPND(fp->vars[slot]);
             obj = NULL;
-            break;
+          END_CASE(JSOP_GETVAR)
 
-          case JSOP_SETVAR:
+          BEGIN_CASE(JSOP_SETVAR)
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->fun->nvars);
             vp = &fp->vars[slot];
             GC_POKE(cx, *vp);
             *vp = FETCH_OPND(-1);
             obj = NULL;
-            break;
+          END_CASE(JSOP_SETVAR)
 
-          case JSOP_GETGVAR:
+          BEGIN_CASE(JSOP_GETGVAR)
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->nvars);
             lval = fp->vars[slot];
             if (JSVAL_IS_NULL(lval)) {
                 op = JSOP_NAME;
-                goto do_op;
+                DO_OP();
             }
             slot = JSVAL_TO_INT(lval);
             obj = fp->varobj;
             rval = OBJ_GET_SLOT(cx, obj, slot);
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_GETGVAR)
 
-          case JSOP_SETGVAR:
+          BEGIN_CASE(JSOP_SETGVAR)
             slot = GET_VARNO(pc);
             JS_ASSERT(slot < fp->nvars);
             rval = FETCH_OPND(-1);
@@ -4237,7 +4390,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                  */
                 atom = GET_ATOM(cx, script, pc);
                 id = ATOM_TO_JSID(atom);
-                SAVE_SP(fp);
+                SAVE_SP_AND_PC(fp);
                 CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
                 if (!ok)
                     goto out;
@@ -4247,10 +4400,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 GC_POKE(cx, obj->slots[slot]);
                 OBJ_SET_SLOT(cx, obj, slot, rval);
             }
-            break;
+          END_CASE(JSOP_SETGVAR)
 
-          case JSOP_DEFCONST:
-          case JSOP_DEFVAR:
+          BEGIN_CASE(JSOP_DEFCONST)
+          BEGIN_CASE(JSOP_DEFVAR)
             atomIndex = GET_ATOM_INDEX(pc);
 
           do_JSOP_DEFCONST:
@@ -4304,7 +4457,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
 
             OBJ_DROP_PROPERTY(cx, obj2, prop);
-            break;
+          END_CASE(JSOP_DEFVAR)
 
           BEGIN_LITOPX_CASE(JSOP_DEFFUN, 0)
           {
@@ -4422,7 +4575,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 #endif
             OBJ_DROP_PROPERTY(cx, parent, prop);
           }
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_DEFFUN)
 
 #if JS_HAS_LEXICAL_CLOSURE
           BEGIN_LITOPX_CASE(JSOP_DEFLOCALFUN, VARNO_LEN)
@@ -4440,7 +4593,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
             parent = fp->scopeChain;
             if (OBJ_GET_PARENT(cx, obj) != parent) {
-                SAVE_SP(fp);
+                SAVE_SP_AND_PC(fp);
                 obj = js_CloneFunctionObject(cx, obj, parent);
                 if (!obj) {
                     ok = JS_FALSE;
@@ -4448,7 +4601,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 }
             }
             fp->vars[slot] = OBJECT_TO_JSVAL(obj);
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_DEFLOCALFUN)
 
           BEGIN_LITOPX_CASE(JSOP_ANONFUNOBJ, 0)
             /* Push the specified function object literal. */
@@ -4457,7 +4610,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             /* If re-parenting, push a clone of the function object. */
             parent = fp->scopeChain;
             if (OBJ_GET_PARENT(cx, obj) != parent) {
-                SAVE_SP(fp);
+                SAVE_SP_AND_PC(fp);
                 obj = js_CloneFunctionObject(cx, obj, parent);
                 if (!obj) {
                     ok = JS_FALSE;
@@ -4466,7 +4619,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             obj = NULL;
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_ANONFUNOBJ)
 
           BEGIN_LITOPX_CASE(JSOP_NAMEDFUNOBJ, 0)
             /* ECMA ed. 3 FunctionExpression: function Identifier [etc.]. */
@@ -4481,7 +4634,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * current scope chain, and then making the new object the parent
              * of the Function object clone.
              */
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             obj2 = fp->scopeChain;
             parent = js_ConstructObject(cx, &js_ObjectClass, NULL, obj2,
                                         0, NULL);
@@ -4555,7 +4708,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              */
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             obj = NULL;
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_NAMEDFUNOBJ)
 
           BEGIN_LITOPX_CASE(JSOP_CLOSURE, 0)
             /*
@@ -4576,7 +4729,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * have seen the right parent already and created a sufficiently
              * well-scoped function object.
              */
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             obj2 = fp->scopeChain;
             if (OBJ_GET_PARENT(cx, obj) != obj2) {
                 obj = js_CloneFunctionObject(cx, obj, obj2);
@@ -4636,16 +4789,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
 #endif
             OBJ_DROP_PROPERTY(cx, parent, prop);
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_CLOSURE)
 #endif /* JS_HAS_LEXICAL_CLOSURE */
 
 #if JS_HAS_GETTER_SETTER
-          case JSOP_GETTER:
-          case JSOP_SETTER:
-            JS_ASSERT(len == 1);
+          BEGIN_CASE(JSOP_GETTER)
+          BEGIN_CASE(JSOP_SETTER)
             op2 = (JSOp) *++pc;
-            cs = &js_CodeSpec[op2];
-            len = cs->length;
             switch (op2) {
               case JSOP_SETNAME:
               case JSOP_SETPROP:
@@ -4705,7 +4855,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * Getters and setters are just like watchpoints from an access
              * control point of view.
              */
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = OBJ_CHECK_ACCESS(cx, obj, id, JSACC_WATCH, &rtmp, &attrs);
             if (!ok)
                 goto out;
@@ -4732,18 +4882,19 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
 
             sp += i;
-            if (cs->ndefs)
+            if (js_CodeSpec[op2].ndefs)
                 STORE_OPND(-1, rval);
-            break;
+            len = js_CodeSpec[op2].length;
+            DO_NEXT_OP(len);
 #endif /* JS_HAS_GETTER_SETTER */
 
 #if JS_HAS_INITIALIZERS
-          case JSOP_NEWINIT:
+          BEGIN_CASE(JSOP_NEWINIT)
             argc = 0;
             fp->sharpDepth++;
             goto do_new;
 
-          case JSOP_ENDINIT:
+          BEGIN_CASE(JSOP_ENDINIT)
             if (--fp->sharpDepth == 0)
                 fp->sharpArray = NULL;
 
@@ -4752,9 +4903,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             lval = FETCH_OPND(-1);
             JS_ASSERT(JSVAL_IS_OBJECT(lval));
             cx->newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(lval);
-            break;
+          END_CASE(JSOP_ENDINIT)
 
-          case JSOP_INITPROP:
+          BEGIN_CASE(JSOP_INITPROP)
             /* Pop the property's value into rval. */
             JS_ASSERT(sp - fp->spbase >= 2);
             rval = FETCH_OPND(-1);
@@ -4765,7 +4916,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             i = -1;
             goto do_init;
 
-          case JSOP_INITELEM:
+          BEGIN_CASE(JSOP_INITELEM)
             /* Pop the element's value into rval. */
             JS_ASSERT(sp - fp->spbase >= 3);
             rval = FETCH_OPND(-1);
@@ -4784,16 +4935,17 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             CHECK_ELEMENT_ID(obj, id);
 
             /* Set the property named by obj[id] to rval. */
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
             sp += i;
-            break;
+            len = js_CodeSpec[op].length;
+            DO_NEXT_OP(len);
 
 #if JS_HAS_SHARP_VARS
-          case JSOP_DEFSHARP:
-            SAVE_SP(fp);
+          BEGIN_CASE(JSOP_DEFSHARP)
+            SAVE_SP_AND_PC(fp);
             obj = fp->sharpArray;
             if (!obj) {
                 obj = js_NewArrayObject(cx, 0, NULL);
@@ -4817,16 +4969,16 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
             if (!ok)
                 goto out;
-            break;
+          END_CASE(JSOP_DEFSHARP)
 
-          case JSOP_USESHARP:
+          BEGIN_CASE(JSOP_USESHARP)
             i = (jsint) GET_ATOM_INDEX(pc);
             id = INT_TO_JSID(i);
             obj = fp->sharpArray;
             if (!obj) {
                 rval = JSVAL_VOID;
             } else {
-                SAVE_SP(fp);
+                SAVE_SP_AND_PC(fp);
                 ok = OBJ_GET_PROPERTY(cx, obj, id, &rval);
                 if (!ok)
                     goto out;
@@ -4840,18 +4992,17 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             }
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_USESHARP)
 #endif /* JS_HAS_SHARP_VARS */
 #endif /* JS_HAS_INITIALIZERS */
 
 #if JS_HAS_EXCEPTIONS
           /* No-ops for ease of decompilation and jit'ing. */
-          case JSOP_TRY:
-          case JSOP_FINALLY:
-            break;
+          EMPTY_CASE(JSOP_TRY)
+          EMPTY_CASE(JSOP_FINALLY)
 
           /* Reset the stack to the given depth. */
-          case JSOP_SETSP:
+          BEGIN_CASE(JSOP_SETSP)
             i = (jsint) GET_ATOM_INDEX(pc);
             JS_ASSERT(i >= 0);
             sp = fp->spbase + i;
@@ -4862,34 +5013,33 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 obj = OBJ_GET_PARENT(cx, obj);
             }
             fp->scopeChain = obj;
-            break;
+          END_CASE(JSOP_SETSP)
 
-          case JSOP_GOSUB:
-            i = PTRDIFF(pc, script->main, jsbytecode) + len;
+          BEGIN_CASE(JSOP_GOSUB)
+            i = PTRDIFF(pc, script->main, jsbytecode) + JSOP_GOSUB_LENGTH;
             len = GET_JUMP_OFFSET(pc);
             PUSH(INT_TO_JSVAL(i));
-            break;
+          END_VARLEN_CASE
 
-          case JSOP_GOSUBX:
-            i = PTRDIFF(pc, script->main, jsbytecode) + len;
+          BEGIN_CASE(JSOP_GOSUBX)
+            i = PTRDIFF(pc, script->main, jsbytecode) + JSOP_GOSUBX_LENGTH;
             len = GET_JUMPX_OFFSET(pc);
             PUSH(INT_TO_JSVAL(i));
-            break;
+          END_VARLEN_CASE
 
-          case JSOP_RETSUB:
+          BEGIN_CASE(JSOP_RETSUB)
             rval = POP();
             JS_ASSERT(JSVAL_IS_INT(rval));
-            i = JSVAL_TO_INT(rval);
-            pc = script->main + i;
-            len = 0;
-            break;
+            len = JSVAL_TO_INT(rval);
+            pc = script->main;
+          END_VARLEN_CASE
 
-          case JSOP_EXCEPTION:
+          BEGIN_CASE(JSOP_EXCEPTION)
             PUSH(cx->exception);
             cx->throwing = JS_FALSE;
-            break;
+          END_CASE(JSOP_EXCEPTION)
 
-          case JSOP_THROW:
+          BEGIN_CASE(JSOP_THROW)
             cx->throwing = JS_TRUE;
             cx->exception = POP_OPND();
             ok = JS_FALSE;
@@ -4910,7 +5060,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             obj = JSVAL_TO_OBJECT(lval);
 
             /* Define obj[id] to contain rval and to be permanent. */
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = OBJ_DEFINE_PROPERTY(cx, obj, id, rval, NULL, NULL,
                                      JSPROP_PERMANENT, NULL);
             if (!ok)
@@ -4918,15 +5068,15 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
             /* Now that we're done with rval, pop it. */
             sp--;
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_INITCATCHVAR)
 #endif /* JS_HAS_EXCEPTIONS */
 
 #if JS_HAS_INSTANCEOF
-          case JSOP_INSTANCEOF:
+          BEGIN_CASE(JSOP_INSTANCEOF)
+            SAVE_SP_AND_PC(fp);
             rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval) ||
                 !(obj = JSVAL_TO_OBJECT(rval))->map->ops->hasInstance) {
-                SAVE_SP(fp);
                 str = js_DecompileValueGenerator(cx, -1, rval, NULL);
                 if (str) {
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -4938,21 +5088,20 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             lval = FETCH_OPND(-2);
             cond = JS_FALSE;
-            SAVE_SP(fp);
             ok = obj->map->ops->hasInstance(cx, obj, lval, &cond);
             if (!ok)
                 goto out;
             sp--;
             STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));
-            break;
+          END_CASE(JSOP_INSTANCEOF)
 #endif /* JS_HAS_INSTANCEOF */
 
 #if JS_HAS_DEBUGGER_KEYWORD
-          case JSOP_DEBUGGER:
+          BEGIN_CASE(JSOP_DEBUGGER)
           {
             JSTrapHandler handler = rt->debuggerHandler;
             if (handler) {
-                SAVE_SP(fp);
+                SAVE_SP_AND_PC(fp);
                 switch (handler(cx, script, pc, &rval,
                                 rt->debuggerHandlerData)) {
                   case JSTRAP_ERROR:
@@ -4974,47 +5123,47 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 }
                 LOAD_INTERRUPT_HANDLER(rt);
             }
-            break;
           }
+          END_CASE(JSOP_DEBUGGER)
 #endif /* JS_HAS_DEBUGGER_KEYWORD */
 
 #if JS_HAS_XML_SUPPORT
-          case JSOP_DEFXMLNS:
+          BEGIN_CASE(JSOP_DEFXMLNS)
             rval = POP();
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_SetDefaultXMLNamespace(cx, rval);
             if (!ok)
                 goto out;
-            break;
+          END_CASE(JSOP_DEFXMLNS)
 
-          case JSOP_ANYNAME:
-            SAVE_SP(fp);
+          BEGIN_CASE(JSOP_ANYNAME)
+            SAVE_SP_AND_PC(fp);
             ok = js_GetAnyName(cx, &rval);
             if (!ok)
                 goto out;
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_ANYNAME)
 
           BEGIN_LITOPX_CASE(JSOP_QNAMEPART, 0)
             PUSH_OPND(ATOM_KEY(atom));
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_QNAMEPART)
 
           BEGIN_LITOPX_CASE(JSOP_QNAMECONST, 0)
             rval = ATOM_KEY(atom);
             lval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             obj = js_ConstructXMLQNameObject(cx, lval, rval);
             if (!obj) {
                 ok = JS_FALSE;
                 goto out;
             }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_QNAMECONST)
 
-          case JSOP_QNAME:
+          BEGIN_CASE(JSOP_QNAME)
             rval = FETCH_OPND(-1);
             lval = FETCH_OPND(-2);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             obj = js_ConstructXMLQNameObject(cx, lval, rval);
             if (!obj) {
                 ok = JS_FALSE;
@@ -5022,36 +5171,36 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             sp--;
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-            break;
+          END_CASE(JSOP_QNAME)
 
-          case JSOP_TOATTRNAME:
+          BEGIN_CASE(JSOP_TOATTRNAME)
             rval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_ToAttributeName(cx, &rval);
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_TOATTRNAME)
 
-          case JSOP_TOATTRVAL:
+          BEGIN_CASE(JSOP_TOATTRVAL)
             rval = FETCH_OPND(-1);
             JS_ASSERT(JSVAL_IS_STRING(rval));
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             str = js_EscapeAttributeValue(cx, JSVAL_TO_STRING(rval));
             if (!str) {
                 ok = JS_FALSE;
                 goto out;
             }
             STORE_OPND(-1, STRING_TO_JSVAL(str));
-            break;
+          END_CASE(JSOP_TOATTRVAL)
 
-          case JSOP_ADDATTRNAME:
-          case JSOP_ADDATTRVAL:
+          BEGIN_CASE(JSOP_ADDATTRNAME)
+          BEGIN_CASE(JSOP_ADDATTRVAL)
             rval = FETCH_OPND(-1);
             lval = FETCH_OPND(-2);
             str = JSVAL_TO_STRING(lval);
             str2 = JSVAL_TO_STRING(rval);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             str = js_AddAttributePart(cx, op == JSOP_ADDATTRNAME, str, str2);
             if (!str) {
                 ok = JS_FALSE;
@@ -5059,33 +5208,33 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             sp--;
             STORE_OPND(-1, STRING_TO_JSVAL(str));
-            break;
+          END_CASE(JSOP_ADDATTRNAME)
 
-          case JSOP_BINDXMLNAME:
+          BEGIN_CASE(JSOP_BINDXMLNAME)
             lval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_FindXMLProperty(cx, lval, &obj, &rval);
             if (!ok)
                 goto out;
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_BINDXMLNAME)
 
-          case JSOP_SETXMLNAME:
+          BEGIN_CASE(JSOP_SETXMLNAME)
             obj = JSVAL_TO_OBJECT(FETCH_OPND(-3));
             lval = FETCH_OPND(-2);
             rval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_SetXMLProperty(cx, obj, lval, &rval);
             if (!ok)
                 goto out;
             sp -= 2;
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_SETXMLNAME)
 
-          case JSOP_XMLNAME:
+          BEGIN_CASE(JSOP_XMLNAME)
             lval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_FindXMLProperty(cx, lval, &obj, &rval);
             if (!ok)
                 goto out;
@@ -5093,13 +5242,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_XMLNAME)
 
-          case JSOP_DESCENDANTS:
-          case JSOP_DELDESC:
+          BEGIN_CASE(JSOP_DESCENDANTS)
+          BEGIN_CASE(JSOP_DELDESC)
             FETCH_OBJECT(cx, -2, lval, obj);
             rval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             ok = js_GetXMLDescendants(cx, obj, rval, &rval);
             if (!ok)
                 goto out;
@@ -5114,63 +5263,62 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
             sp--;
             STORE_OPND(-1, rval);
-            break;
+          END_CASE(JSOP_DESCENDANTS)
 
-          case JSOP_FILTER:
+          BEGIN_CASE(JSOP_FILTER)
             FETCH_OBJECT(cx, -1, lval, obj);
             len = GET_JUMP_OFFSET(pc);
-            SAVE_SP(fp);
-            ok = js_FilterXMLList(cx, obj, pc + cs->length, &rval);
+            SAVE_SP_AND_PC(fp);
+            ok = js_FilterXMLList(cx, obj, pc + js_CodeSpec[op].length, &rval);
             if (!ok)
                 goto out;
             JS_ASSERT(fp->sp == sp);
             STORE_OPND(-1, rval);
-            break;
+          END_VARLEN_CASE
 
-          case JSOP_ENDFILTER:
+          BEGIN_CASE(JSOP_ENDFILTER)
             *result = POP_OPND();
             goto out;
 
-	  case JSOP_STARTXML:
-	  case JSOP_STARTXMLEXPR:
-	    break;
+	  EMPTY_CASE(JSOP_STARTXML)
+	  EMPTY_CASE(JSOP_STARTXMLEXPR)
 
-          case JSOP_TOXML:
+          BEGIN_CASE(JSOP_TOXML)
             rval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             obj = js_ValueToXMLObject(cx, rval);
             if (!obj) {
                 ok = JS_FALSE;
                 goto out;
             }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-            break;
+          END_CASE(JSOP_TOXML)
 
-          case JSOP_TOXMLLIST:
+          BEGIN_CASE(JSOP_TOXMLLIST)
             rval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             obj = js_ValueToXMLListObject(cx, rval);
             if (!obj) {
                 ok = JS_FALSE;
                 goto out;
             }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-            break;
+          END_CASE(JSOP_TOXMLLIST)
 
-          case JSOP_XMLTAGEXPR:
+          BEGIN_CASE(JSOP_XMLTAGEXPR)
             rval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             str = js_ValueToString(cx, rval);
             if (!str) {
                 ok = JS_FALSE;
                 goto out;
             }
             STORE_OPND(-1, STRING_TO_JSVAL(str));
-            break;
+          END_CASE(JSOP_XMLTAGEXPR)
 
-          case JSOP_XMLELTEXPR:
+          BEGIN_CASE(JSOP_XMLELTEXPR)
             rval = FETCH_OPND(-1);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             if (VALUE_IS_XML(cx, rval)) {
                 str = js_ValueToXMLString(cx, rval);
             } else {
@@ -5183,10 +5331,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             }
             STORE_OPND(-1, STRING_TO_JSVAL(str));
-            break;
+          END_CASE(JSOP_XMLELTEXPR)
 
           BEGIN_LITOPX_CASE(JSOP_XMLOBJECT, 0)
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             obj = js_CloneXMLObject(cx, ATOM_TO_OBJECT(atom));
             if (!obj) {
                 ok = JS_FALSE;
@@ -5194,7 +5342,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             obj = NULL;
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_XMLOBJECT)
 
           BEGIN_LITOPX_CASE(JSOP_XMLCDATA, 0)
             str = ATOM_TO_STRING(atom);
@@ -5204,7 +5352,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_XMLCDATA)
 
           BEGIN_LITOPX_CASE(JSOP_XMLCOMMENT, 0)
             str = ATOM_TO_STRING(atom);
@@ -5214,13 +5362,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             }
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_XMLCOMMENT)
 
           BEGIN_LITOPX_CASE(JSOP_XMLPI, 0)
             str = ATOM_TO_STRING(atom);
             rval = FETCH_OPND(-1);
             str2 = JSVAL_TO_STRING(rval);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
             obj = js_NewXMLSpecialObject(cx,
                                          JSXML_CLASS_PROCESSING_INSTRUCTION,
                                          str, str2);
@@ -5229,13 +5377,13 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             }
             STORE_OPND(-1, OBJECT_TO_JSVAL(obj));
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_XMLPI)
 
           BEGIN_LITOPX_CASE(JSOP_GETMETHOD, 0)
             /* Get an immediate atom naming the property. */
             id   = ATOM_TO_JSID(atom);
             FETCH_OBJECT(cx, -1, lval, obj);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
 
             /* Special-case XML object method lookup, per ECMA-357. */
             if (OBJECT_IS_XML(cx, obj)) {
@@ -5251,14 +5399,14 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             if (!ok)
                 goto out;
             STORE_OPND(-1, rval);
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_GETMETHOD)
 
           BEGIN_LITOPX_CASE(JSOP_SETMETHOD, 0)
             /* Get an immediate atom naming the property. */
             id   = ATOM_TO_JSID(atom);
             rval = FETCH_OPND(-1);
             FETCH_OBJECT(cx, -2, lval, obj);
-            SAVE_SP(fp);
+            SAVE_SP_AND_PC(fp);
 
             /* Special-case XML object method lookup, per ECMA-357. */
             if (OBJECT_IS_XML(cx, obj)) {
@@ -5273,20 +5421,25 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
                 goto out;
             --sp;
             STORE_OPND(-1, rval);
-          END_LITOPX_CASE
+          END_LITOPX_CASE(JSOP_SETMETHOD)
 
-          case JSOP_GETFUNNS:
+          BEGIN_CASE(JSOP_GETFUNNS)
             ok = js_GetFunctionNamespace(cx, &rval);
             if (!ok)
                 goto out;
             PUSH_OPND(rval);
-            break;
+          END_CASE(JSOP_GETFUNNS)
 
-          case JSOP_FOREACH:
+          BEGIN_CASE(JSOP_FOREACH)
             foreach = JS_TRUE;
-            break;
+          END_CASE(JSOP_FOREACH)
 #endif /* JS_HAS_XML_SUPPORT */
 
+#ifdef JS_THREADED_INTERP
+          L_JSOP_BACKPATCH:
+          L_JSOP_BACKPATCH_PUSH:
+          L_JSOP_BACKPATCH_POP:
+#endif
           default: {
             char numBuf[12];
             JS_snprintf(numBuf, sizeof numBuf, "%d", op);
@@ -5297,6 +5450,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
           }
         }
 
+#ifndef JS_THREADED_INTERP
     advance_pc:
         pc += len;
 
@@ -5305,9 +5459,9 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             intN ndefs, n;
             jsval *siter;
 
-            ndefs = cs->ndefs;
+            ndefs = js_CodeSpec[op].ndefs;
             if (ndefs) {
-                SAVE_SP(fp);
+                SAVE_SP_AND_PC(fp);
                 if (op == JSOP_FORELEM && sp[-1] == JSVAL_FALSE)
                     --ndefs;
                 for (n = -ndefs; n < 0; n++) {
@@ -5328,8 +5482,10 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
             }
             fputc('\n', tracefp);
         }
-#endif
+#endif /* DEBUG */
     }
+#endif /* !JS_THREADED_INTERP */
+
 out:
 
 #if JS_HAS_EXCEPTIONS
@@ -5366,7 +5522,7 @@ out:
              */
             JSTrapHandler handler = rt->throwHook;
             if (handler) {
-                SAVE_SP(fp);
+                SAVE_SP_AND_PC(fp);
                 switch (handler(cx, script, pc, &rval, rt->throwHookData)) {
                   case JSTRAP_ERROR:
                     cx->throwing = JS_FALSE;
@@ -5395,7 +5551,7 @@ out:
 #if JS_HAS_XML_SUPPORT
                 foreach = JS_FALSE;
 #endif
-                goto advance_pc;
+                DO_NEXT_OP(len);
             }
         }
 no_catch:;

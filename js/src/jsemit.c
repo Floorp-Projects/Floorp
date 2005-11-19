@@ -2774,7 +2774,7 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
                   ? JSFRAME_COMPILING | JSFRAME_COMPILE_N_GO
                   : JSFRAME_COMPILING;
     cx->fp = &frame;
-    ok = js_EmitTree(cx, cg, body);
+    ok = js_EmitTree(cx, cg, body) && js_Emit1(cx, cg, JSOP_STOP) >= 0;
     cx->fp = fp;
     if (!ok)
         return JS_FALSE;
