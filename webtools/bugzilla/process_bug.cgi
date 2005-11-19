@@ -164,18 +164,19 @@ foreach my $field ("dependson", "blocked") {
             # ValidateBugID is called without $field here so that it will
             # throw an error if any of the changed bugs are not visible.
             ValidateBugID($id);
-            if (!CheckCanChangeField($field, $bug->bug_id, 0, 1)) {
-                $vars->{'privs'} = $PrivilegesRequired;
-                $vars->{'field'} = $field;
-                ThrowUserError("illegal_change", $vars);
-            }
             if (Param("strict_isolation")) {
-                my $deltabug = new Bugzilla::Bug($id, $user);
+                my $deltabug = new Bugzilla::Bug($id, $user->id);
                 if (!$user->can_edit_product($deltabug->{'product_id'})) {
                     $vars->{'field'} = $field;
                     ThrowUserError("illegal_change_deps", $vars);
                 }
             }
+        }
+        if ((@$added  || @$removed)
+            && (!CheckCanChangeField($field, $bug->bug_id, 0, 1))) {
+            $vars->{'privs'} = $PrivilegesRequired;
+            $vars->{'field'} = $field;
+            ThrowUserError("illegal_change", $vars);
         }
     } else {
         # Bugzilla does not support mass-change of dependencies so they
@@ -855,6 +856,8 @@ foreach my $field ("rep_platform", "priority", "bug_severity",
 }
 
 my $prod_id;
+my $prod_changed;
+my @newprod_ids;
 if ($cgi->param('product') ne $cgi->param('dontchange')) {
     $prod_id = get_product_id($cgi->param('product'));
     $prod_id ||
@@ -862,17 +865,23 @@ if ($cgi->param('product') ne $cgi->param('dontchange')) {
                      {product => $cgi->param('product')});
       
     DoComma();
+    @newprod_ids = ($prod_id);
+    $prod_changed = 1;
     $::query .= "product_id = $prod_id";
 } else {
-    SendSQL("SELECT DISTINCT product_id FROM bugs WHERE bug_id IN (" .
-            join(',', @idlist) . ") " . $dbh->sql_limit(2));
-    $prod_id = FetchOneColumn();
-    $prod_id = undef if (FetchOneColumn());
+    @newprod_ids = @{$dbh->selectcol_arrayref("SELECT DISTINCT product_id
+                                               FROM bugs 
+                                               WHERE bug_id IN (" .
+                                                   join(',', @idlist) . 
+                                               ")")};
+    if (scalar(@newprod_ids) == 1) {
+        ($prod_id) = @newprod_ids;
+    }
 }
 
 my $comp_id;
 if ($cgi->param('component') ne $cgi->param('dontchange')) {
-    if (!defined $prod_id) {
+    if (scalar(@newprod_ids) > 1) {
         ThrowUserError("no_component_change_for_multiple_products");
     }
     $comp_id = get_component_id($prod_id,
@@ -1005,9 +1014,16 @@ if (defined $cgi->param('newcc')
 # only way to keep these informations when bugs are reassigned by
 # component as $cgi->param('assigned_to') and $cgi->param('qa_contact')
 # are not the right fields to look at.
+# If the assignee or qacontact is changed, the new one is checked when
+# changed information is validated.  If not, then the unchanged assignee
+# or qacontact may have to be validated later.
 
 my $assignee;
 my $qacontact;
+my $qacontact_checked = 0;
+my $assignee_checked = 0;
+
+my %usercache = ();
 
 if (defined $cgi->param('qa_contact')
     && $cgi->param('knob') ne "reassignbycomponent")
@@ -1016,11 +1032,22 @@ if (defined $cgi->param('qa_contact')
     # The QA contact cannot be deleted from show_bug.cgi for a single bug!
     if ($name ne $cgi->param('dontchange')) {
         $qacontact = DBNameToIdAndCheck($name) if ($name ne "");
-        if (Param("strict_isolation")) {
-                my $product_id = get_product_id($cgi->param('product'));
-                Bugzilla::Bug::can_add_user_to_bug(
-                    $product_id, $cgi->param('id'), $qacontact);
+        if ($qacontact && Param("strict_isolation")) {
+                $usercache{$qacontact} ||= Bugzilla::User->new($qacontact);
+                my $qa_user = $usercache{$qacontact};
+                foreach my $product_id (@newprod_ids) {
+                    if (!$qa_user->can_edit_product($product_id)) {
+                        my $product_name = get_product_name($product_id);
+                        ThrowUserError('invalid_user_group',
+                                          {'users'   => $qa_user->login,
+                                           'product' => $product_name,
+                                           'bug_id' => (scalar(@idlist) > 1)
+                                                         ? undef : $idlist[0]
+                                          });
+                    }
+                }
         }
+        $qacontact_checked = 1;
         DoComma();
         if($qacontact) {
             $::query .= "qa_contact = $qacontact";
@@ -1082,18 +1109,28 @@ SWITCH: for ($cgi->param('knob')) {
         }
         ChangeStatus('NEW');
         DoComma();
-        if (defined $cgi->param('assigned_to')) { 
-            my $uid = DBNameToIdAndCheck($cgi->param('assigned_to'));
+        if (defined $cgi->param('assigned_to')
+            && trim($cgi->param('assigned_to')) ne "") { 
+            $assignee = DBNameToIdAndCheck(trim($cgi->param('assigned_to')));
             if (Param("strict_isolation")) {
-                my $product_id = get_product_id($cgi->param('product'));
-                Bugzilla::Bug::can_add_user_to_bug(
-                    $product_id, $cgi->param('id'), $uid);
+                $usercache{$assignee} ||= Bugzilla::User->new($assignee);
+                my $assign_user = $usercache{$assignee};
+                foreach my $product_id (@newprod_ids) {
+                    if (!$assign_user->can_edit_product($product_id)) {
+                        my $product_name = get_product_name($product_id);
+                        ThrowUserError('invalid_user_group',
+                                          {'users'   => $assign_user->login,
+                                           'product' => $product_name,
+                                           'bug_id' => (scalar(@idlist) > 1)
+                                                         ? undef : $idlist[0]
+                                          });
+                    }
+                }
             }
-        } elsif (!defined $cgi->param('assigned_to')
-            || trim($cgi->param('assigned_to')) eq "") {
+        } else {
             ThrowUserError("reassign_to_empty");
         }
-        $assignee = DBNameToIdAndCheck(trim($cgi->param('assigned_to')));
+        $assignee_checked = 1;
         $::query .= "assigned_to = $assignee";
         last SWITCH;
     };
@@ -1290,6 +1327,75 @@ sub LogDependencyActivity {
     return 0;
 }
 
+if (Param("strict_isolation")) {
+    my @blocked_cc = ();
+    foreach my $pid (keys %cc_add) {
+        $usercache{$pid} ||= Bugzilla::User->new($pid);
+        my $cc_user = $usercache{$pid};
+        foreach my $product_id (@newprod_ids) {
+            if (!$cc_user->can_edit_product($product_id)) {
+                push (@blocked_cc, $cc_user->login);
+                last;
+            }
+        }
+    }
+    if (scalar(@blocked_cc)) {
+        ThrowUserError("invalid_user_group", 
+            {'users' => \@blocked_cc,
+             'bug_id' => (scalar(@idlist) > 1) ? undef : $idlist[0]});
+    }
+}
+
+if ($prod_changed && Param("strict_isolation")) {
+    my $sth_cc = $dbh->prepare("SELECT who
+                                FROM cc
+                                WHERE bug_id = ?");
+    my $sth_bug = $dbh->prepare("SELECT assigned_to, qa_contact
+                                 FROM bugs
+                                 WHERE bug_id = ?");
+    my $prod_name = get_product_name($prod_id);
+    foreach my $id (@idlist) {
+        $sth_cc->execute($id);
+        my @blocked_cc = ();
+        while (my ($pid) = $sth_cc->fetchrow_array) {
+            $usercache{$pid} ||= Bugzilla::User->new($pid);
+            my $cc_user = $usercache{$pid};
+            if (!$cc_user->can_edit_product($prod_id)) {
+                push (@blocked_cc, $cc_user->login);
+            }
+        }
+        if (scalar(@blocked_cc)) {
+            ThrowUserError('invalid_user_group',
+                              {'users'   => \@blocked_cc,
+                               'bug_id' => $id,
+                               'product' => $prod_name});
+        }
+        $sth_bug->execute($id);
+        my ($assignee, $qacontact) = $sth_bug->fetchrow_array;
+        if (!$assignee_checked) {
+            $usercache{$assignee} ||= Bugzilla::User->new($assignee);
+            my $assign_user = $usercache{$assignee};
+            if (!$assign_user->can_edit_product($prod_id)) {
+                    ThrowUserError('invalid_user_group',
+                                      {'users'   => $assign_user->login,
+                                       'bug_id' => $id,
+                                       'product' => $prod_name});
+            }
+        }
+        if (!$qacontact_checked && $qacontact) {
+            $usercache{$qacontact} ||= Bugzilla::User->new($qacontact);
+            my $qa_user = $usercache{$qacontact};
+            if (!$qa_user->can_edit_product($prod_id)) {
+                    ThrowUserError('invalid_user_group',
+                                      {'users'   => $qa_user->login,
+                                       'bug_id' => $id,
+                                       'product' => $prod_name});
+            }
+        }
+    }
+}
+
+
 # This loop iterates once for each bug to be processed (i.e. all the
 # bugs selected when this script is called with multiple bugs selected
 # from buglist.cgi, or just the one bug when called from
@@ -1396,15 +1502,6 @@ foreach my $id (@idlist) {
             $vars->{'privs'} = $PrivilegesRequired;
             ThrowUserError("illegal_change", $vars);
         }
-    }
-    if ($cgi->param('assigned_to') && Param("strict_isolation")) { 
-        my $uid = DBNameToIdAndCheck($cgi->param('assigned_to'));
-        Bugzilla::Bug::can_add_user_to_bug(
-            $bug_obj->{'product_id'}, $id, $uid);
-    }
-    if ($cgi->param('qa_contact') && Param("strict_isolation")) { 
-        Bugzilla::Bug::can_add_user_to_bug(
-            $bug_obj->{'product_id'}, $id, $qacontact);
     }
     
     # When editing multiple bugs, users can specify a list of keywords to delete
@@ -1543,7 +1640,7 @@ foreach my $id (@idlist) {
         }
     }
     $query .= " where bug_id = $id";
-    
+
     if ($::comma ne "") {
         SendSQL($query);
     }
@@ -1621,21 +1718,7 @@ foreach my $id (@idlist) {
             $oncc{FetchOneColumn()} = 1;
         }
 
-        my (@added, @removed, @blocked_cc) = ();
-        
-        if (Param("strict_isolation")) {
-            foreach my $pid (keys %cc_add) {
-                my $user = Bugzilla::User->new($pid);
-                if (!$user->can_edit_product($bug_obj->{'product_id'})) {
-                    push (@blocked_cc, $cc_add{$pid});
-                }
-            }
-            if (scalar(@blocked_cc)) {
-                my $blocked_cc = join(", ", @blocked_cc);
-                ThrowUserError("invalid_user_group", 
-                    {'user' => $blocked_cc , bug_id => $id });
-            }
-        }
+        my (@added, @removed) = ();
  
         foreach my $pid (keys %cc_add) {
             # If this person isn't already on the cc list, add them

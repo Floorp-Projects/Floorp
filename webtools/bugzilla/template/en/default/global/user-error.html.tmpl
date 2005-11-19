@@ -670,8 +670,19 @@
 
   [% ELSIF error == "invalid_user_group" %]
     [% title = "Invalid User Group" %]
-    User '[% user FILTER html %]' is not able to edit the 
-    [% terms.bug %] '[% bug_id FILTER html %]'.
+    [% IF users.size > 1 %] Users [% ELSE %] User [% END %]
+    '[% users.join(', ') FILTER html %]'
+    [% IF users.size > 1 %] are [% ELSE %] is [% END %]
+    not able to edit the
+    [% IF product %]
+      '[% product FILTER html %]'
+    [% END %]
+    [%+ field_descs.product FILTER html %]
+    [% IF bug_id %]
+      for [% terms.bug %] '[% bug_id FILTER html %]'.
+    [% ELSE %]
+      for at least one [% terms.bug %] being changed.
+    [% END %]
 
   [% ELSIF error == "invalid_username" %]
     [% title = "Invalid Username" %]
