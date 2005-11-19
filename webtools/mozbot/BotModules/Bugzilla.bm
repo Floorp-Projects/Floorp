@@ -168,13 +168,13 @@ sub Told {
         my $bug = $1;
         # Single bugs use xml.cgi, because then we get error messages
         if ($bug =~ m/^\d+$/) {
-            $self->FetchBug($event, $bug, 'bug', 0, 0);
+            $self->FetchBug($event, $bug, 'bug', {'sayAlways' => 1});
         } else {
-            $self->FetchBug($event, $bug, 'bugs', 0, 0);
+            $self->FetchBug($event, $bug, 'bugs', {'sayAlways' => 1});
         }
         $self->{'bugsHistory'}->{$target}->{$bug} = $event->{'time'} if $bug =~ m/^[0-9]+$/os;
     } elsif ($message =~ m/^\s*bug-?total\s+(.+?)\s*$/osi) {
-        $self->FetchBug($event, $1, 'total', 0, 0);
+        $self->FetchBug($event, $1, 'total');
     } elsif ($self->isAdmin($event)) {
         if ($message =~ m/^\s*mute\s+bugzilla\s+in\s+(\S+?)\s*$/osi) {
             $self->{'mutes'} .= " $1";
@@ -230,7 +230,7 @@ sub CheckForBugs {
             }
         } while (defined($bug));
         if ($bugsToFetch ne '') {
-            $self->FetchBug($event, $bugsToFetch, 'bug', $skipURI, 1);
+            $self->FetchBug($event, $bugsToFetch, 'bug', {'skipURI' => $skipURI, 'skipZaroo' =>1});
         }
         return $bugsFound;
     }
@@ -251,7 +251,7 @@ sub Baffled {
     my ($event, $message) = @_;
     if ($message =~ m/^\s*(...+?)\s+bugs\s*$/osi) {
         my $target = $event->{'target'};
-        $self->FetchBug($event, $1, 'dwim', 0, 0);
+        $self->FetchBug($event, $1, 'dwim');
     } else {
         return $self->SUPER::Baffled(@_);
     }
@@ -278,13 +278,16 @@ sub Saw {
 
 sub FetchBug {
     my $self = shift;
-    my ($event, $bugParams, $subtype, $skipURI, $skipZaroo) = @_;
+    my ($event, $bugParams, $subtype, $params) = @_;
+    my $skipURI = exists($params->{'skipURI'}) ? $params->{'skipURI'} : 0;
+    my $skipZaroo = exists($params->{'skipZaroo'}) ? $params->{'skipZaroo'} : 0;
+    my $sayAlways = exists($params->{'sayAlways'}) ? $params->{'sayAlways'} :  0;
     my $uri;
     my $type;
     my @bugs = split(' ', $bugParams);
     my @ids = ();
     foreach my $bug (@bugs) {
-        if($self->needToFetchBug($event->{'target'}, $event->{'time'}, $bug)) {
+        if($sayAlways || $self->needToFetchBug($event->{'target'}, $event->{'time'}, $bug)) {
             push @ids, $bug;
             $self->{'bugsHistory'}->{$event->{'target'}}->{$bug} = $event->{'time'};
         }
