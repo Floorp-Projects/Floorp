@@ -140,7 +140,7 @@ nsBrowserStatusHandler.prototype =
      /* Ideally we dont want to check this here.
      Better to have some other protocol view-rss in the chrome */
 
-     const rsschromemask = "chrome://minimo/content/rssview/rssload.html";
+     const rsschromemask = "chrome://minimo/content/rssview/rssload.xhtml";
 
      if(aLocation.spec.substr(0, rsschromemask.length) == rsschromemask) {
 
@@ -646,7 +646,7 @@ function DoBrowserRSS(sKey) {
 	      gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
 	    }
 
-	    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssload.html?url=http://rss.slashdot.org/Slashdot/slashdot');
+	    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssload.xhtml?url=http://rss.slashdot.org/Slashdot/slashdot');
 	    browserInit(getBrowser().selectedTab);
 	  } catch (e) {
 	   
@@ -667,7 +667,7 @@ function DoBrowserSB(sKey) {
 	      gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
 	    }
 
-	    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssload.html?url=http://del.icio.us/rss/tag/'+gRSSTag);
+	    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssload.xhtml?url=http://del.icio.us/rss/tag/'+gRSSTag);
 	    browserInit(getBrowser().selectedTab);
 	  } catch (e) {
 	   
