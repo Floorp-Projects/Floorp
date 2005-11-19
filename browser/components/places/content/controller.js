@@ -126,6 +126,8 @@ function PC_buildContextMenu(popup) {
  
  readonly attribute boolean hasSelection;
  readonly attribute boolean hasSingleSelection;
+ readonly attribute boolean selectionIsContainer;
+ readonly attribute boolean containerIsOpen;
  void getSelectedNodes([retval, array, size_is(nodeCount)] out nodes, out nodeCount);
  
  selection flags
@@ -140,7 +142,6 @@ function PC_buildContextMenu(popup) {
  
 */
 
-
 PlacesController.prototype.QueryInterface = 
 function PC_QueryInterface(iid) {
   if (!iid.equals(Ci.nsIController) &&
@@ -148,4 +149,18 @@ function PC_QueryInterface(iid) {
     throw Cr.NS_ERROR_NO_INTERFACE;
   return this;
 };
+
+var PlacesUtils = {};
+
+/*
+
+ Given a:
+   - view, via AVI
+   - query
+   - query options
+   
+ Determine the state of commands!
+
+*/
+
 
