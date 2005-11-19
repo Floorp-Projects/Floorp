@@ -48,7 +48,7 @@ public:
   nsNavFolderResultNode() : nsNavHistoryResultNode(),
                             mBuiltChildren(PR_FALSE) { }
 
-  virtual nsresult BuildChildren();
+  virtual nsresult BuildChildren(PRUint32 aOptions);
 
 private:
   friend class nsNavBookmarks;
@@ -84,10 +84,11 @@ private:
   nsresult AdjustIndices(PRInt64 aFolder,
                          PRInt32 aStartIndex, PRInt32 aEndIndex,
                          PRInt32 aDelta);
-  nsresult ResultNodeForFolder(PRInt64 aFolder, const nsString &aTitle,
+  nsresult ResultNodeForFolder(PRInt64 aFolder,
                                nsNavHistoryResultNode **aNode);
-  nsresult FillFolderChildren(nsNavFolderResultNode *aNode);
   PRInt32 FolderCount(PRInt64 aFolder);
+  nsresult QueryFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
+                               nsCOMArray<nsNavHistoryResultNode>* aChildren);
 
   nsNavHistory* History() { return nsNavHistory::GetHistoryService(); }
 
@@ -98,13 +99,16 @@ private:
 
   nsCOMArray<nsINavBookmarkObserver> mObservers;
   PRInt64 mRoot;
+  PRInt64 mBookmarksRoot;
+  PRInt64 mToolbarRoot;
 
   nsCOMPtr<mozIStorageStatement> mDBGetFolderInfo;    // kGetFolderInfoIndex_* results
   static const PRInt32 kGetFolderInfoIndex_FolderID;
   static const PRInt32 kGetFolderInfoIndex_Title;
 
   nsCOMPtr<mozIStorageStatement> mDBGetChildren;       // kGetInfoIndex_* results + kGetChildrenIndex_* results
-
+  nsCOMPtr<mozIStorageStatement> mDBGetItemChildren;
+  nsCOMPtr<mozIStorageStatement> mDBGetFolderChildren;
   static const PRInt32 kGetChildrenIndex_Position;
   static const PRInt32 kGetChildrenIndex_ItemChild;
   static const PRInt32 kGetChildrenIndex_FolderChild;

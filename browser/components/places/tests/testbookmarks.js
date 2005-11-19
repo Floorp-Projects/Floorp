@@ -137,19 +137,9 @@ var root = bmsvc.bookmarksRoot;
 
 // add some bookmarks and folders
 
-bmsvc.insertItem(root, uri("http://www.mozilla.org/"), 0);
-if (observer._itemAdded.spec != "http://www.mozilla.org/" ||
-    observer._itemAddedFolder != root || observer._itemAddedIndex != 0) {
-  dump("insertItem notification FAILED\n");
-}
-bmsvc.setItemTitle(uri("http://www.mozilla.org/"), "Mozilla.org");
-if (observer._itemChanged.spec != "http://www.mozilla.org/" ||
-    observer._itemChangedProperty != "title") {
-  dump("setItemTitle notification FAILED\n");
-}
 bmsvc.insertItem(root, uri("http://google.com/"), -1);
 if (observer._itemAdded.spec != "http://google.com/" ||
-    observer._itemAddedFolder != root || observer._itemAddedIndex != 1) {
+    observer._itemAddedFolder != root || observer._itemAddedIndex != 0) {
   dump("insertItem notification FAILED\n");
 }
 bmsvc.setItemTitle(uri("http://google.com/"), "Google");
@@ -157,32 +147,69 @@ if (observer._itemChanged.spec != "http://google.com/" ||
     observer._itemChangedProperty != "title") {
   dump("setItemTitle notification FAILED\n");
 }
-bmsvc.removeItem(root, uri("http://www.mozilla.org/"));
-if (observer._itemRemoved.spec != "http://www.mozilla.org/" ||
-    observer._itemRemovedFolder != root || observer._itemRemovedIndex != 0) {
-  dump("removeItem notification FAILED\n");
+
+var workFolder = bmsvc.createFolder(root, "Work", 1);
+if (observer._folderAdded != workFolder ||
+    observer._folderAddedParent != root ||
+    observer._folderAddedIndex != 1) {
+  dump("createFolder notification FAILED\n");
 }
-bmsvc.insertItem(root, uri("http://www.mozilla.org/"), -1);
-if (observer._itemAdded.spec != "http://www.mozilla.org/" ||
-    observer._itemAddedFolder != root || observer._itemAddedIndex != 1) {
+bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), 0);
+if (observer._itemAdded.spec != "http://developer.mozilla.org/" ||
+    observer._itemAddedFolder != workFolder || observer._itemAddedIndex != 0) {
   dump("insertItem notification FAILED\n");
 }
+bmsvc.setItemTitle(uri("http://developer.mozilla.org/"), "DevMo");
+if (observer._itemChanged.spec != "http://developer.mozilla.org/" ||
+    observer._itemChangedProperty != "title") {
+  dump("setItemTitle notification FAILED\n");
+}
+bmsvc.insertItem(workFolder, uri("http://msdn.microsoft.com/"), -1);
+if (observer._itemAdded.spec != "http://msdn.microsoft.com/" ||
+    observer._itemAddedFolder != workFolder || observer._itemAddedIndex != 1) {
+  dump("insertItem notification FAILED\n");
+}
+bmsvc.setItemTitle(uri("http://msdn.microsoft.com/"), "MSDN");
+if (observer._itemChanged.spec != "http://msdn.microsoft.com/" ||
+    observer._itemChangedProperty != "title") {
+  dump("setItemTitle notification FAILED\n");
+}
+bmsvc.removeItem(workFolder, uri("http://developer.mozilla.org/"));
+if (observer._itemRemoved.spec != "http://developer.mozilla.org/" ||
+    observer._itemRemovedFolder != workFolder ||
+    observer._itemRemovedIndex != 0) {
+  dump("removeItem notification FAILED\n");
+}
+bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), -1);
+if (observer._itemAdded.spec != "http://developer.mozilla.org/" ||
+    observer._itemAddedFolder != workFolder || observer._itemAddedIndex != 1) {
+  dump("insertItem notification FAILED\n");
+}
+var homeFolder = bmsvc.createFolder(root, "Home", -1);
+if (observer._folderAdded != homeFolder ||
+    observer._folderAddedParent != root || observer._folderAddedIndex != 2) {
+  dump("createFolder notification FAILED\n");
+}
+bmsvc.insertItem(homeFolder, uri("http://espn.com/"), 0);
+if (observer._itemAdded.spec != "http://espn.com/" ||
+    observer._itemAddedFolder != homeFolder || observer._itemAddedIndex != 0) {
+  dump("insertItem notification FAILED\n");
+}
+bmsvc.setItemTitle(uri("http://espn.com/"), "ESPN");
+if (observer._itemChanged.spec != "http://espn.com/" ||
+    observer._itemChangedProperty != "title") {
+  dump("setItemTitle notification FAILED\n");
+}
 
-///  EXPECTED TABLE RESULTS
+///  EXPECTED TABLE RESULTS   FIXME
 ///  moz_bookmarks_assoc:
 ///  item_child    folder_child    parent    position
 ///  ----------    ------------    ------    --------
-///                1
-///  2                             1         0
-///  1                             1         1
 ///
 ///  moz_history:
 ///  id            url
 ///  --            ------------------------
-///  1             http://www.mozilla.org/
-///  2             http://google.com/
 ///
 ///  moz_bookmarks_containers:
 ///  id
 ///  --
-//   1

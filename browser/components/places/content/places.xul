@@ -103,7 +103,8 @@
   <hbox flex="1" id="placesView">
     <vbox flex="1">
       <tree id="placesList" class="placesTree" flex="1"
-            hidecolumnpicker="true" context="placesContext">
+            hidecolumnpicker="true" context="placesContext"
+            onselect="PlacesPage.placeSelected(event);">
         <treecols>
           <treecol id="title" flex="1" primary="true" hideheader="true"/>
         </treecols>
