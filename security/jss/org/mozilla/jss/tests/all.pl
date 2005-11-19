@@ -419,6 +419,24 @@ $result >>=8;
 $result and print "Disable FIPSMODE returned $result\n";
 print_case_result ($result,"FIPSMODE disabled");
 
+#
+# Test SecretKeys
+#
+print "============= Start Secret Key Gen and Ciphers\n";
+$result = system("$java org.mozilla.jss.tests.SymKeyGen $testdir");
+$result >>=8;
+$result and print "SymKeyGen returned $result\n";
+print_case_result ($result,"SymKeyGen successful");
+
+#
+# Test Mozilla-JSS SecretKeys
+#
+print "============= Start Mozilla-JSS Secret Key Gen and Ciphers\n";
+$result = system("$java org.mozilla.jss.tests.JCASymKeyGen $testdir");
+$result >>=8;
+$result and print "JCASymKeyGen returned $result\n";
+print_case_result ($result,"JCASymKeyGen successful");
+
 $portJSSEServer=$portJSSEServer+1;
 
 #

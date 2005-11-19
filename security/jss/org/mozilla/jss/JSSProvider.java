@@ -151,6 +151,8 @@ public final class JSSProvider extends java.security.Provider {
         /////////////////////////////////////////////////////////////
         put("AlgorithmParameters.IvAlgorithmParameters",
             "org.mozilla.jss.provider.java.security.IvAlgorithmParameters");
+        put("AlgorithmParameters.RC2AlgorithmParameters",
+            "org.mozilla.jss.provider.java.security.RC2AlgorithmParameters");
 
         /////////////////////////////////////////////////////////////
         // Cipher

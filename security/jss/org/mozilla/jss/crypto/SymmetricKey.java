@@ -45,6 +45,8 @@ public interface SymmetricKey {
     public static final Type RC4 = Type.RC4;
     public static final Type RC2 = Type.RC2;
     public static final Type SHA1_HMAC = Type.SHA1_HMAC;
+    public static final Type AES = Type.AES;
+    
     public Type getType();
 
     public CryptoToken getOwningToken();

@@ -58,6 +58,10 @@ public final class PK11SymKey implements SymmetricKey {
             return RC4;
         } else if(kt == KeyType.RC2) {
             return RC2;
+        } else if(kt == KeyType.AES) {
+            return AES;
+        } else if(kt == KeyType.SHA1_HMAC) {
+            return SHA1_HMAC;
         } else {
             Assert.notReached("Unrecognized key type");
             return DES;
