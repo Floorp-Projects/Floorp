@@ -2379,6 +2379,7 @@ function multilineInputMode (state)
         multiInputBox.setAttribute ("collapsed", "false");
         // multiInput should have the same direction as singleInput
         multiInput.setAttribute("dir", singleInput.getAttribute("dir"));
+        multiInput.value = (client.input ? client.input.value : "");
         client.input = multiInput;
     }
     else  /* turn off multiline input mode */
@@ -2392,6 +2393,7 @@ function multilineInputMode (state)
         singleInputBox.setAttribute ("collapsed", "false");
         // singleInput should have the same direction as multiInput
         singleInput.setAttribute("dir", multiInput.getAttribute("dir"));
+        singleInput.value = (client.input ? client.input.value : "");
         client.input = singleInput;
     }
 
