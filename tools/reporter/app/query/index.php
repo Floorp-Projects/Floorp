@@ -57,9 +57,8 @@ $content = initializeTemplate();
 $content->assign('method', $method);
 
 // Open DB
-$db = NewADOConnection($config['db_dsn']);
+$db = NewDBConnection($config['db_dsn']);
 $db->SetFetchMode(ADODB_FETCH_ASSOC);
-$db->debug = true;
 
 $query = new query;
 $query_input = $query->getQueryInputs();
@@ -73,6 +72,7 @@ $result = $query->doQuery($query_input['selected'],
                           $query_input['count']
           );
 
+$continuity_params = $query->continuityParams($query_input);
 $output = $query->outputHTML($result, $query_input, $continuity_params, $columnHeaders);
 if (sizeof($output['data']) == 0){
     $content->assign('error', 'No Results found');
@@ -80,11 +80,10 @@ if (sizeof($output['data']) == 0){
     exit;
 }
 
-$continuity_params = $query->continuityParams($query_input);
 $content->assign('continuity_params', $continuity_params);
 $content->assign('column', $query->columnHeaders($query_input, $continuity_params));
 $content->assign('row', $output['data']);
-$content->assign('continuityParams', $continuity_params);
+$content->assign('continuityParams', $continuity_params[1]);
 $content->assign('count', $result['totalResults']);
 $content->assign('show', $query_input['show']);
 $content->assign('page', $query_input['page']);

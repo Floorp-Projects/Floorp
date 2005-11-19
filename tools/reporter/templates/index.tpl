@@ -11,7 +11,7 @@
 <fieldset>
 	<legend>Search for a Report</legend>
 	<form method="get" action="{$app_url}/query/">
-	<table id="queryTable">
+	<table id="reporterSearch">
 		<tr>
 			<td class="label"><label for="report_description">Description:</label></td>
  			<td><input id="report_description" name="report_description" type="text" size="35" value="{$report_description}"></td>
@@ -96,9 +96,9 @@
 		<tr>
 			<td class="label"><label for="report_behind_login">Site requires login:</label></td>
 			<td>
-				<input type="radio" name="report_behind_login" id="-1" value="-1" {if $report_behind_login == '-1' || $report_behind_login == ''}checked="true"{/if}><label for="-1">Any</label>
-				<input type="radio" name="report_behind_login" id="0" value="0" {if $report_behind_login == '0'}checked="true"{/if}><label for="0">Yes</label>
-				<input type="radio" name="report_behind_login" id="1" value="1" {if $report_behind_login == '1'}checked="true"{/if}><label for="1">No</label>
+				<input type="radio" name="report_behind_login" id="behind_login_null" value="-1" {if $report_behind_login == '-1' || $report_behind_login == ''}checked="true"{/if}><label for="behind_login_null">Any</label>
+				<input type="radio" name="report_behind_login" id="behind_login_yes" value="0" {if $report_behind_login == '0'}checked="true"{/if}><label for="behind_login_yes">Yes</label>
+				<input type="radio" name="report_behind_login" id="behind_login_no" value="1" {if $report_behind_login == '1'}checked="true"{/if}><label for="behind_login_no">No</label>
 			</td>
 		</tr>
 		<tr>

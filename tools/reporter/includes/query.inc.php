@@ -3,26 +3,27 @@ require_once($config['base_path'].'/includes/contrib/adodb/adodb.inc.php');
 
 class query
 {
-        // approved "selectable" and "queryable" fields
+        // approved "selectable" and "queryable" fields.  In sort order
         var $approved_selects = array('count' /*special */,
-                                      'host_id',
+                                      'report_file_date',
                                       'host_hostname',
-                                      'report_id',
                                       'report_url',
-                                      'report_host_id',
-                                      'report_problem_type',
-                                      'report_description',
                                       'report_behind_login',
                                       'report_useragent',
+                                      'report_problem_type',
                                       'report_platform',
                                       'report_oscpu',
-                                      'report_language',
                                       'report_gecko',
-                                      'report_buildconfig',
                                       'report_product',
+                                      'report_language',
+                                      'report_id',
+                                      'report_buildconfig',
+                                      'report_description',
     /*                                'report_email',
                                       'report_ip',
-    */                                'report_file_date'
+    */
+                                      'report_host_id',
+                                      'host_id',
         );
         var $approved_wheres = array('count',
                                      'host_hostname',
@@ -109,6 +110,16 @@ class query
             $selected = array('report_id' => 'Report ID', 'host_hostname' => 'Host');
         }
 
+
+      /*******************
+       * ORDER BY
+       *******************/
+        $orderby = array();
+        if(in_array(strtolower($_GET['orderby']), $this->approved_selects)){
+            $orderby[] = $_GET['orderby'];
+        }
+        $orderby = array_merge($orderby, $this->calcOrderBy($selected));
+
         // If we are counting, we need to add A column for it
         if (isset($_GET['count'])){
             // set the count variable
@@ -120,8 +131,10 @@ class query
             $_GET['count'] = 'host_id'; // XXX we just hardcode this (just easier for now, and all people will be doing).
             // XX NOTE:  We don't escape count below because 'host_id' != `host_id`.
 
-            //Sort by
-            if (!isset($orderby)){ //XXX this isn't ideal, but nobody will sort by date (pointless and not an option)
+            /*******************
+             * ORDER BY
+             *******************/
+            if (!isset($orderby)){
                 $orderby = 'count';
             }
         }
@@ -183,7 +196,7 @@ class query
             // we sanitize on our own
             if ($select_child == 'count'){
                 $sql_select .= 'COUNT( '.$count.' ) AS count';
-                $orderby = 'count';
+                $orderby = array_merge(array('count'), $orderby);
             } else {
                 $sql_select .= $select_child;
             }
@@ -241,11 +254,22 @@ class query
         /*******************
          * ORDER BY
          *******************/
-        if (isset($orderby) && in_array(strtolower($orderby), $this->approved_wheres)) {
-            $sql_orderby = 'ORDER BY '.$orderby.' ';
-        } else {
-            $sql_orderby = 'ORDER BY report_file_date ';
-        }
+         if(isset($orderby)){
+             $sql_orderby = 'ORDER BY ';
+             $orderbyCounter =0;
+             foreach($orderby as $orderChild){
+                 $sql_orderby .= $orderChild;
+                 if($orderbyCounter == 0){
+                     $sql_orderby .= ' '.$ascdesc;
+                 }
+                 $sql_orderby .= ',';
+                 $orderbyCounter++;
+             }
+             $sql_orderby = substr($sql_orderby,0,-1).' ';
+             if(sizeof($orderby) > 1){
+                 $sql_orderby .= ' DESC ';
+             }
+         }
 
         /*******************
          * Count
@@ -254,7 +278,7 @@ class query
             $sql_groupby = 'GROUP BY host_id DESC ';
         }
 
-        $sql = $sql_select." \r".$sql_from." \r".$sql_where." \r".$sql_groupby.$sql_orderby.$ascdesc." \r".$sql_subOrder;
+        $sql = $sql_select." \r".$sql_from." \r".$sql_where." \r".$sql_groupby.$sql_orderby." \r".$sql_subOrder;
 
         // Calculate Start
         $start = ($page-1)*$show;
@@ -290,23 +314,33 @@ class query
             if($item[0] == 'report_id' && $query_input['artificialReportID']){
             } else {
                 if(!is_numeric($item[2])){
-                    $continuity_params .= $item[0].'='.$item[2];
+                    $standard .= $item[0].'='.$item[2].'&amp;';;
                 } else {
-                    $continuity_params .= $item[0].'='.urlencode($item[2]);
+                    $standard .= $item[0].'='.urlencode($item[2]).'&amp;';;
                 }
-                $continuity_params .= '&amp;';
             }
         }
         foreach($query_input['selected'] as $selected_node => $selected_item){
             if($selected_node == 'report_id' && $query_input['artificialReportID']){
             } else {
-                $continuity_params .= 'selected%5B%5D='.$selected_node.'&amp;';
+                if($selected_node == 'count'){
+                    $complete .= 'selected%5B%5D='.$selected_node.'&amp;';
+                } else {
+                    $standard .= 'selected%5B%5D='.$selected_node.'&amp;';
+                }
             }
         }
+
+        // make complete standard + complete
+        $complete = $standard.$complete;
+
+        // finish off complete
         if($query_input['count']){
-             $continuity_params .= '&amp;count=on';
+             $complete .= '&amp;count=on';
         }
-        return $continuity_params;
+
+        // lets return
+        return array($standard, $complete);
     }
 
     function columnHeaders($query_input, $continuity_params){
@@ -325,7 +359,7 @@ class query
                     $o_ascdesc = 'desc';
                 }
                 if((isset($query_input['count']) && $title_name == 'count') || !isset($query_input['count'])){
-                    $column[$columnCount]['url'] = '?'.$continuity_params.'&amp;orderby='.$o_orderby.'&amp;ascdesc='.$o_ascdesc;
+                    $column[$columnCount]['url'] = '?'.$continuity_params[1].'&amp;orderby='.$o_orderby.'&amp;ascdesc='.$o_ascdesc;
                 }
                 $columnCount++;
             }
@@ -334,6 +368,8 @@ class query
     }
 
     function outputHTML($result, $query_input, $continuity_params, $columnHeaders){
+        global $iolib;
+
         // Data
         $data = array();
         $rowNum = 0;
@@ -344,16 +380,24 @@ class query
                 // Prepend if new_front;
                 $data[$rowNum][0]['text'] = 'Detail';
                 if (isset($row['count'])){
-                    $data[$rowNum][0]['url']  = '/query/?host_hostname='.$row['host_hostname'];
+                    $data[$rowNum][0]['url']  = '/query/?host_hostname='.$row['host_hostname'].'&amp;'.$continuity_params[0];
                 }
                 else {
-                    $data[$rowNum][0]['url']  = '/report/?report_id='.$row['report_id'];
+                    $data[$rowNum][0]['url']  = '/report/?report_id='.$row['report_id'].'&amp;'.$continuity_params[0];
                 }
                 $colNum++;
     
                 foreach($row as $cellName => $cellData){
                     if($cellName == 'report_id' && $query_input['artificialReportID']){
                     } else {
+                        $data[$rowNum][$colNum]['col'] = $cellName;
+
+                        if($cellName == 'report_problem_type'){
+                            $cellData = resolveProblemTypes($cellData);
+                        }
+                        else if($cellName == 'report_behind_login'){
+                            $cellData = resolveBehindLogin($cellData);
+                        }
                         $data[$rowNum][$colNum]['text'] = $cellData;
                     }
                     $colNum++;
@@ -368,5 +412,15 @@ class query
     function outputCSV(){}
     function outputXLS(){}
     function outputRSS(){}
+    
+    function calcOrderBy($query){
+        $result = array();
+        foreach($this->approved_selects as $selectNode){
+            if(array_key_exists($selectNode, $query)){
+                $result[] = $selectNode;
+            }
+        }
+        return $result;
+    }
 }
 ?>
