@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.104 2005/11/12 00:12:05 karl%kornel.name Exp $ -->
+<!-- $Id: installation.xml,v 1.105 2005/11/19 22:06:46 mozilla%colinogilvie.co.uk Exp $ -->
 <chapter id="installing-bugzilla">
   <title>Installing Bugzilla</title>
 
@@ -1575,52 +1575,13 @@ C:\perl&gt; <command>ppm install &lt;module name&gt;</command>
       </section>
   
       <section id="win32-code-changes">
-        <title>Code changes required to run on win32</title>
+        <title>Code changes required to run on Win32</title>
 
         <para>
-          Bugzilla on win32 is mostly supported out of the box; one
-          remaining issue is related to bug email. To make bug email
-          work on Win32 (until
-          <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=49893">bug
-          49893</ulink> lands), the
-          simplest way is to have the Net::SMTP Perl module installed and 
-          change this line in the file Bugzilla/Bugmail.pm:
+          Bugzilla on Win32 is supported out of the box from version 2.20; this
+          means that no code changes are required to get Bugzilla running.
         </para>
-
-        <programlisting>
-open(SENDMAIL, "|/usr/lib/sendmail $sendmailparam -t -i") ||
-  die "Can't open sendmail";
-
-print SENDMAIL trim($msg) . "\n";
-close SENDMAIL;
-        </programlisting>
-
-        <para>
-          to
-        </para>
-
-        <programlisting>
-use Net::SMTP;
-my $smtp_server = 'smtp.mycompany.com';  # change this
-
-# Use die on error, so that the mail will be in the 'unsent mails' and
-# can be sent from the sanity check page.
-my $smtp = Net::SMTP->new($smtp_server) ||
-  die 'Cannot connect to server \'$smtp_server\'';
-
-$smtp->mail('bugzilla-daemon@mycompany.com');  # change this
-$smtp->to($person);
-$smtp->data();
-$smtp->datasend($msg);
-$smtp->dataend();
-$smtp->quit;
-        </programlisting>
-
-        <para>
-          Don't forget to change the name of your SMTP server and the
-          domain of the sending email address (after the '@') in the
-          above lines of code.
-        </para>
+        
       </section>
 
       <section id="win32-http">
@@ -1647,7 +1608,16 @@ $smtp->quit;
         </note>
 
       </section>
+      
+      <section id="win32-email">
+        <title>Sending Email</title>
 
+        <para>
+          To enable Bugzilla to send email on Windows, the server running the
+          Bugzilla code must be able to connect to, or act as, an SMTP server.
+        </para>
+        
+      </section>
     </section>
 
     <section id="os-macosx">
