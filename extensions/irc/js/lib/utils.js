@@ -1039,8 +1039,8 @@ function confirmEx(msg, buttons, defaultButton, checkText,
     if (!checkVal)
         checkVal = new Object();
 
-    rv = ps.confirmEx(parent, title, msg, buttonFlags, buttonText[0], 
-                      buttonText[1], buttonText[2], checkText, checkVal);
+    var rv = ps.confirmEx(parent, title, msg, buttonFlags, buttonText[0],
+                          buttonText[1], buttonText[2], checkText, checkVal);
     return rv;
 }
 
@@ -1070,7 +1070,7 @@ function promptPassword(msg, initial, parent, title)
         parent = window;
     if (!title)
         title = MSG_PROMPT;
-    rv = { value: initial };
+    var rv = { value: initial };
 
     if (!ps.promptPassword (parent, title, msg, rv, null, {value: null}))
         return null;
