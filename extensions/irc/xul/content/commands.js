@@ -1705,6 +1705,9 @@ function cmdToggleUI(e)
             {
                 client.rdf.setTreeRoot("user-list",
                                        sourceObject.getGraphResource());
+                setSelectedNicknames(document.getElementById("user-list"),
+                                     sourceObject.userlistSelection);
+                
             }
             else
             {
@@ -1716,6 +1719,11 @@ function cmdToggleUI(e)
     }
     else
     {
+        if ((e.thing == "userlist") && (sourceObject.TYPE == "IRCChannel"))
+        {
+            var rv = getSelectedNicknames(document.getElementById("user-list"));
+            sourceObject.userlistSelection = rv;
+        }
         newState = "true";
     }
 

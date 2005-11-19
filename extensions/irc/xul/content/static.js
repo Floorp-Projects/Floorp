@@ -1347,13 +1347,35 @@ function getUserlistContext(cx)
     if (!cx.channel)
         return cx;
 
+    var user, tree = document.getElementById("user-list");
     cx.userList = new Array();
-    cx.nicknameList = new Array();
     cx.canonNickList = new Array();
+    cx.nicknameList = getSelectedNicknames(tree);
 
-    var tree = document.getElementById("user-list");
+    for (var i = 0; i < cx.nicknameList.length; ++i)
+    {
+        user = cx.channel.getUser(cx.nicknameList[i])
+        cx.userList.push(user);
+        cx.canonNickList.push(user.canonicalName);
+        if (i == 0)
+        {
+            cx.user = user;
+            cx.nickname = user.unicodeName;
+            cx.canonNick = user.canonicalName;
+        }
+    }
+
+    return cx;
+}
+
+function getSelectedNicknames(tree)
+{
+    var rv = [];
+    if (!tree || !tree.view || !tree.view.selection)
+        return rv;
     var rangeCount = tree.view.selection.getRangeCount();
 
+    // Loop through the selection ranges.
     for (var i = 0; i < rangeCount; ++i)
     {
         var start = {}, end = {};
@@ -1361,29 +1383,41 @@ function getUserlistContext(cx)
 
         // If they == -1, we've got no selection, so bail.
         if ((start.value == -1) && (end.value == -1))
-            return cx;
+            continue;
 
+        // Loop through the contents of the current selection range.
         for (var k = start.value; k <= end.value; ++k)
         {
-            var item = tree.contentView.getItemAtIndex(k);
-            var cell = item.firstChild.firstChild;
-            var user = cx.channel.getUser(cell.getAttribute("unicodeName"));
-            if (user)
-            {
-                cx.userList.push(user);
-                cx.nicknameList.push(user.unicodeName);
-                cx.canonNickList.push(user.canonicalName);
-                if (i == 0 && k == start.value)
-                {
-                    cx.user = user;
-                    cx.nickname = user.unicodeName;
-                    cx.canonNick = user.canonicalName;
-                }
-            }
+            var item = tree.contentView.getItemAtIndex(k).firstChild.firstChild;
+            var userName = item.getAttribute("unicodeName");
+            rv.push(userName);
         }
     }
+    return rv;
+}
 
-    return cx;
+function setSelectedNicknames(tree, nicknameAry)
+{
+    if (!nicknameAry)
+        return;
+    var item, unicodeName, resultAry = [];
+    // Clear selection:
+    tree.view.selection.select(-1);
+    // Loop through the tree to (re-)select nicknames
+    for (var i = 0; i < tree.view.rowCount; i++)
+    {
+        item = tree.contentView.getItemAtIndex(i).firstChild.firstChild;
+        unicodeName = item.getAttribute("unicodeName");
+        if ((unicodeName != "") && arrayContains(nicknameAry, unicodeName))
+        {
+            tree.view.selection.toggleSelect(i);
+            resultAry.push(unicodeName);
+        }
+    }
+    // Make sure we pass back a correct array:
+    nicknameAry.length = 0;
+    for (var j = 0; j < resultAry.length; j++)
+        nicknameAry.push(resultAry[j]);
 }
 
 function getFontContext(cx)
@@ -2466,10 +2500,15 @@ function setCurrentObject (obj)
         return;
 
     var tb, userList;
+    userList = document.getElementById("user-list");
 
     if ("currentObject" in client && client.currentObject)
     {
-        tb = getTabForObject(client.currentObject);
+        var co = client.currentObject;
+        // Save any nicknames selected
+        if (client.currentObject.TYPE == "IRCChannel")
+            co.userlistSelection = getSelectedNicknames(userList);
+        tb = getTabForObject(co);
     }
     if (tb)
     {
@@ -2477,9 +2516,8 @@ function setCurrentObject (obj)
         tb.setAttribute ("state", "normal");
     }
 
-    /* Unselect currently selected users. */
-    userList = document.getElementById("user-list");
-    /* If the splitter's collapsed, the userlist *isn't* visible, but we'll not
+    /* Unselect currently selected users.
+     * If the splitter's collapsed, the userlist *isn't* visible, but we'll not
      * get told when it becomes visible, so update it even if it's only the
      * splitter visible. */
     if (isVisible("user-list-box") || isVisible("main-splitter"))
@@ -2492,7 +2530,10 @@ function setCurrentObject (obj)
         if (obj.TYPE == "IRCChannel")
         {
             client.rdf.setTreeRoot("user-list", obj.getGraphResource());
-            updateUserList();
+            reSortUserlist(userList);
+            // Restore any selections previously made
+            if (("userlistSelection" in obj) && obj.userlistSelection)
+                setSelectedNicknames(userList, obj.userlistSelection);
         }
         else
         {
@@ -2691,13 +2732,28 @@ function setListMode(mode)
 
 function updateUserList()
 {
-    var node;
-    var sortDirection;
+    var node, chan;
 
     node = document.getElementById("user-list");
     if (!node.view)
         return;
 
+    // We'll lose the selection in a bit, if we don't save it if necessary:
+    if (("currentObject" in client) && client.currentObject &&
+        client.currentObject.TYPE == "IRCChannel")
+    {
+        chan = client.currentObject;
+        chan.userlistSelection = getSelectedNicknames(node, chan);
+    }
+    reSortUserlist(node);
+
+    // If this is a channel, restore the selection in the userlist.
+    if (chan)
+        setSelectedNicknames(node, client.currentObject.userlistSelection);
+}
+
+function reSortUserlist(node)
+{
     const nsIXULSortService = Components.interfaces.nsIXULSortService;
     const isupports_uri = "@mozilla.org/xul/xul-sort-service;1";
 
