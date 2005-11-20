@@ -85,6 +85,8 @@ function userOnAfterPage()
 
 // only report failures
   win.document.forms.testCases.failures.checked = true;
+// use standards mode
+  win.document.forms.testCases.doctype.value = "standards";
 // these calls are all async
   win.selectAll('ecma');
   win.selectAll('ecma_2');
