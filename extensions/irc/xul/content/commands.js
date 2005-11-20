@@ -1594,7 +1594,7 @@ function cmdName(e)
 
 function cmdNames(e)
 {
-    if (e.channelName)
+    if (e.hasOwnProperty("channelName"))
     {
         e.channel = new CIRCChannel(e.server, e.channelName);
     }
@@ -2147,31 +2147,16 @@ function cmdCTCP(e)
 
 function cmdJoin(e)
 {
-    /* Why are we messing with __proto__?
-     *
-     * Well, the short answer is so we can check the parameters passed to the
-     * command properly.
-     *
-     * The long answer is that when a command is being dispatch, e.__proto__ is
-     * set to the result of getObjectDetails() on the source view. This is for
-     * a reason - it means that a parameter <channel-name> is automatically
-     * filled in when run from a channel view, for example. However, here we
-     * don't want just "a parameter" to satisfy some need, we actually want to
-     * check the user's supplied parameters - clearing __proto__ allows this.
-     * Naturally we put it back afterwards. (The upshot, and intended effect,
-     * is that doing "/join" from a channel view will still open the dialog.)
+    /* This check makes sure we only check if the *user* entered anything, and
+     * ignore any contextual information, like the channel the command was
+     * run on.
      */
-    var oldProto = e.__proto__;
-    e.__proto__ = Object;
-
-    if (!e.channelName)
+    if (!e.hasOwnProperty("channelName") || !e.channelName)
     {
         window.openDialog("chrome://chatzilla/content/channels.xul", "",
                           "modal,resizable=yes", { client: client })
         return null;
     }
-
-    e.__proto__ = oldProto;
 
     if (!("charset" in e))
     {
@@ -2183,7 +2168,7 @@ function cmdJoin(e)
         return null;
     }
 
-    if (e.channelName && (e.channelName.search(",") != -1))
+    if (e.channelName.search(",") != -1)
     {
         // We can join multiple channels! Woo!
         var chan;
@@ -2198,19 +2183,6 @@ function cmdJoin(e)
                                       key: keys.shift() });
         }
         return chan;
-    }
-    if (!e.channelName)
-    {
-        var channel = e.channel;
-        if (!channel)
-        {
-            display(getMsg(MSG_ERR_REQUIRED_PARAM, "channel"), MT_ERROR);
-            return null;
-        }
-
-        e.channelName = channel.unicodeName;
-        if (channel.mode.key)
-            e.key = channel.mode.key
     }
 
     if (arrayIndexOf(e.server.channelTypes, e.channelName[0]) == -1)
@@ -2248,7 +2220,7 @@ function cmdLeave(e)
         return;
     }
 
-    if (e.channelName)
+    if (e.hasOwnProperty("channelName"))
     {
         if (arrayIndexOf(e.server.channelTypes, e.channelName[0]) == -1)
         {

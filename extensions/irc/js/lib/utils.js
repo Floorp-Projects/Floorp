@@ -336,8 +336,21 @@ function Clone (obj)
 {
     var robj = new Object();
 
-    for (var p in obj)
-        robj[p] = obj[p];
+    if ("__proto__" in obj)
+    {
+        // Special clone for Spidermonkey.
+        for (var p in obj)
+        {
+            if (obj.hasOwnProperty(p))
+                robj[p] = obj[p];
+        }
+        robj.__proto__ = obj.__proto__;
+    }
+    else
+    {
+        for (var p in obj)
+            robj[p] = obj[p];
+    }
 
     return robj;
 

@@ -1332,7 +1332,10 @@ function getTabContext(cx, element)
     while (element)
     {
         if (element.localName == "tab")
-            return getObjectDetails(element.view);
+        {
+            cx.__proto__ = getObjectDetails(element.view);
+            return cx;
+        }
         element = element.parentNode;
     }
 
