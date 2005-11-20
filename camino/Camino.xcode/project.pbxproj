@@ -1501,6 +1501,7 @@
 				F6BD639601B3131201A962F7,
 				F6BD63A201B3131201A962F7,
 				F6BD639701B3131201A962F7,
+				F6BD639701B3131201A962F8,
 				F6BD639801B3131201A962F7,
 				F6BD639901B3131201A962F7,
 				F6BD639A01B3131201A962F7,
@@ -5252,6 +5253,7 @@
 				3F44ACD705BDFB9F00CB4B08,
 				3F44ACD905BDFB9F00CB4B08,
 				3F44ACDA05BDFB9F00CB4B08,
+				3F44ACDA05BDFB9F00CB4B09,
 				3F44ACDB05BDFB9F00CB4B08,
 				3F44ACDC05BDFB9F00CB4B08,
 				3F44ACDD05BDFB9F00CB4B08,
@@ -5352,6 +5354,12 @@
 		};
 		3F44ACDA05BDFB9F00CB4B08 = {
 			fileRef = F6BD639701B3131201A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F44ACDA05BDFB9F00CB4B09 = {
+			fileRef = F6BD639701B3131201A962F8;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -9146,6 +9154,7 @@
 				3F44AF0E05BDFBA000CB4B08,
 				3F44AF0F05BDFBA000CB4B08,
 				3F44AF1005BDFBA000CB4B08,
+				3F44AF1005BDFBA000CB4B09,
 				3F44AF1105BDFBA000CB4B08,
 				3F44AF1205BDFBA000CB4B08,
 				3F44AF1305BDFBA000CB4B08,
@@ -9218,6 +9227,12 @@
 		};
 		3F44AF1005BDFBA000CB4B08 = {
 			fileRef = F6BD639701B3131201A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F44AF1005BDFBA000CB4B09 = {
+			fileRef = F6BD639701B3131201A962F8;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -10093,6 +10108,8 @@
 				4DC41D400869D7A400947044,
 				4DC41D3F0869D7A400947044,
 				4DC41D410869D7A400947044,
+				4DC41D410869D7A400947045,
+				4DC41D410869D7A400947046,
 				3F44AFBB05BDFBA000CB4B08,
 				3F44AFBC05BDFBA000CB4B08,
 				3F44AFBD05BDFBA000CB4B08,
@@ -12444,6 +12461,22 @@
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};
+		4DC41D3E0869D7A400947045 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libmozpng.a;
+			path = ../dist/lib/libmozcairo.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		4DC41D3E0869D7A400947046 = {
+			isa = PBXFileReference;
+			lastKnownFileType = archive.ar;
+			name = libmozpng.a;
+			path = ../dist/lib/libmozlibpixman.a;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
 		4DC41D3F0869D7A400947044 = {
 			fileRef = 4DC41D3C0869D7A400947044;
 			isa = PBXBuildFile;
@@ -12458,6 +12491,18 @@
 		};
 		4DC41D410869D7A400947044 = {
 			fileRef = 4DC41D3E0869D7A400947044;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DC41D410869D7A400947045 = {
+			fileRef = 4DC41D3E0869D7A400947045;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		4DC41D410869D7A400947046 = {
+			fileRef = 4DC41D3E0869D7A400947046;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -15549,6 +15594,8 @@
 				4DC41D3D0869D7A400947044,
 				4DC41D3C0869D7A400947044,
 				4DC41D3E0869D7A400947044,
+				4DC41D3E0869D7A400947045,
+				4DC41D3E0869D7A400947046,
 			);
 			isa = PBXGroup;
 			name = "Gecko Static Components";
@@ -16998,6 +17045,14 @@
 			lastKnownFileType = file;
 			name = dom_base.xpt;
 			path = ../dist/Embed/components/dom_base.xpt;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		F6BD639701B3131201A962F8 = {
+			isa = PBXFileReference;
+			lastKnownFileType = file;
+			name = dom_core.xpt;
+			path = ../dist/Embed/components/dom_canvas.xpt;
 			refType = 2;
 			sourceTree = SOURCE_ROOT;
 		};

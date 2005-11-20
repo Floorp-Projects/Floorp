@@ -61,6 +61,7 @@ components/docshell.xpt
 ; dom
 components/dom.xpt                      
 components/dom_base.xpt
+components/dom_canvas.xpt
 components/dom_core.xpt
 components/dom_css.xpt
 components/dom_events.xpt

@@ -2,13 +2,11 @@ mk_add_options MOZ_CO_PROJECT=macbrowser
 ac_add_options --enable-application=macbrowser
 ac_add_options --enable-default-toolkit=cocoa
 ac_add_options --disable-tests
-ac_add_options --disable-mailnews
-ac_add_options --disable-ldap
 ac_add_options --disable-accessibility
 ac_add_options --disable-jsd
 ac_add_options --disable-mathml
-ac_add_options --without-system-zlib
 ac_add_options --enable-single-profile
+ac_add_options --enable-canvas
 
 # Pick the right SDK depending on the CPU.  This doesn't even pretend to be
 # cross-friendly, but neither do other parts of the Camino build, and it's
