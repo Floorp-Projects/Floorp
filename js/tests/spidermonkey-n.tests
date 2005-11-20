@@ -32,3 +32,8 @@ js1_5/Regress/regress-173067.js
 # to hang.
 #
 ecma_3/RegExp/regress-307456.js
+#
+# per comment in bug, this test is obsolete
+# for spidermonkey and rhino.
+#
+ecma_3/Statements/regress-121744.js
