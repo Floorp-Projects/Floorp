@@ -44,91 +44,115 @@ var expect = 'no error';
 printBugNumber (bug);
 printStatus (summary);
 
-
-// var \u0440\u0441 = 'Unicode Symbol (Russian)';
-  
-expect = '\u0440\u0441 is not defined';
-status = summary + ': Access undefined Unicode symbol';
-
-try
-{
-  \u0440\u0441;
+/*
+ * The test uses the default way to compress Unicode to bytes by simply using
+ * the low-order byte and ignoring the high-order byte. 
+ * Throwing an Error instance translates internally the supplied message to 
+ * bytes and back to Unicode again.
+ * Therefore, if UTF-8 is disabled, the message is truncated to "AB".
+ */
+ 
+var utf8Enabled = false;
+try 
+{ 
+    throw new Error ("\u0441\u0462");
+} 
+catch (e) 
+{ 
+    utf8Enabled = (e.message != "AB");
 }
-catch (e)
-{
-  actual = e.message;
-}
 
-reportCompare(expect, actual, status);
+// Run the tests only if UTF-8 is enabled
 
-status = summary + ': Throw Error with Unicode message';
-expect = 'test \u0440\u0441';
-try
-{
-  throw Error (expect);
-}
-catch (e)
-{
-  actual = e.message;
-}
-reportCompare(expect, actual, status);
+printStatus('UTF8 is ' + (utf8Enabled?'':'not ') + 'enabled');
 
-var inShell = (typeof stringsAreUtf8 == "function");
-
-if (inShell && stringsAreUtf8()) 
+if (utf8Enabled)
 {
-    status = summary + ': UTF-8 test: bad UTF-08 sequence';
-    expect = 'Error';
-    actual = 'No error!';
+    // var \u0440\u0441 = 'Unicode Symbol (Russian)';
+      
+    expect = '\u0440\u0441 is not defined';
+    status = summary + ': Access undefined Unicode symbol';
+
     try
     {
-        testUtf8(1);
+        \u0440\u0441;
     }
     catch (e)
     {
-        actual = 'Error';
+        actual = e.message;
     }
+
     reportCompare(expect, actual, status);
 
-    status = summary + ': UTF-8 character too big to fit into Unicode surrogate pairs';
-    expect = 'Error';
-    actual = 'No error!';
+    status = summary + ': Throw Error with Unicode message';
+    expect = 'test \u0440\u0441';
     try
     {
-        testUtf8(2);
+        throw Error (expect);
     }
     catch (e)
     {
-        actual = 'Error';
+        actual = e.message;
     }
     reportCompare(expect, actual, status);
 
-    status = summary + ': bad Unicode surrogate character';
-    expect = 'Error';
-    actual = 'No error!';
-    try
-    {
-        testUtf8(3);
-    }
-    catch (e)
-    {
-        actual = 'Error';
-    }
-    reportCompare(expect, actual, status);
-}
+    var inShell = (typeof stringsAreUtf8 == "function");
 
-if (inShell)
-{
-    status = summary + ': conversion target buffer overrun';
-    expect = 'Error';
-    actual = 'No error!';
-    try
+    if (inShell && stringsAreUtf8()) 
     {
-        testUtf8(4);
+        status = summary + ': UTF-8 test: bad UTF-08 sequence';
+        expect = 'Error';
+        actual = 'No error!';
+        try
+        {
+            testUtf8(1);
+        }
+        catch (e)
+        {
+            actual = 'Error';
+        }
+        reportCompare(expect, actual, status);
+
+        status = summary + ': UTF-8 character too big to fit into Unicode surrogate pairs';
+        expect = 'Error';
+        actual = 'No error!';
+        try
+        {
+            testUtf8(2);
+        }
+        catch (e)
+        {
+            actual = 'Error';
+        }
+        reportCompare(expect, actual, status);
+
+        status = summary + ': bad Unicode surrogate character';
+        expect = 'Error';
+        actual = 'No error!';
+        try
+        {
+            testUtf8(3);
+        }
+        catch (e)
+        {
+            actual = 'Error';
+        }
+        reportCompare(expect, actual, status);
     }
-    catch (e)
+
+    if (inShell)
     {
-        actual = 'Error';
+        status = summary + ': conversion target buffer overrun';
+        expect = 'Error';
+        actual = 'No error!';
+        try
+        {
+            testUtf8(4);
+        }
+        catch (e)
+        {
+            actual = 'Error';
+        }
+        reportCompare(expect, actual, status);
     }
-    reportCompare(expect, actual, status);
 }
