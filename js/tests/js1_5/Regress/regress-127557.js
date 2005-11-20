@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -73,14 +74,16 @@ function f(x,y)
   return h;
 }
 
-status = inSection(1);
-var g = clone(f);
-g.prototype = new Object;
-var h = g(5,6);
-actual = h();
-expect = '5,6';
-addThis();
-
+if (typeof clone == 'function')
+{
+  status = inSection(1);	
+  var g = clone(f);
+  g.prototype = new Object;
+  var h = g(5,6);
+  actual = h();
+  expect = '5,6';
+  addThis();
+}
 
 
 

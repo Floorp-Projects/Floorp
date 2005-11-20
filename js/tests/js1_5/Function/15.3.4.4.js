@@ -61,9 +61,12 @@ function getBoundMethod()
   return it.bindMethod("boundMethod", function () { return this; });
 }
 
-description = 'bound method: this == GLOBAL';
-var func = getBoundMethod();
-expect = GLOBAL;
-actual = func.call();
-reportCompare(expect, actual, description);
-
+// it is a js shell only construction
+if (typeof it != 'undefined')
+{
+  description = 'bound method: this == GLOBAL';
+  var func = getBoundMethod();
+  expect = GLOBAL;
+  actual = func.call();
+  reportCompare(expect, actual, description);
+}
