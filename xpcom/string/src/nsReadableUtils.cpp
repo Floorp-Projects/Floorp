@@ -1169,7 +1169,7 @@ CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
 
 NS_COM
 void
-AppendUCS4ToUTF16(PRUint32 aSource, nsAString& aDest)
+AppendUCS4ToUTF16(const PRUint32 aSource, nsAString& aDest)
   {
     NS_ASSERTION(IS_VALID_CHAR(aSource), "Invalid UCS4 char");
     if (IS_IN_BMP(aSource))
