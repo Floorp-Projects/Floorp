@@ -1,4 +1,4 @@
-# $Id: Config.pm,v 1.5 2002/08/16 01:31:20 myk%mozilla.org Exp $
+# $Id: Config.pm,v 1.6 2005/11/20 22:10:40 timeless%mozdev.org Exp $
 
 package LXR::Config;
 
@@ -60,6 +60,12 @@ sub treeify {
 
         #append tree name to dbdir
         $self->{'dbdir'} =  $self->{'dbdir'} . "/" . $self->{'treename'} ;
+
+        #find the cvsroot to sed in proper bonsai url
+        my $path = $self->{'sourceroot'};
+        my @pathdirs = split(/\//, $path);
+        my $pathnum = @pathdirs;
+        $self->{'bonsaicvsroot'} = $pathdirs[$pathnum - 1]; 
 
     }
     return($self);

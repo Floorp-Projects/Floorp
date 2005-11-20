@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.26 2004/07/14 23:08:22 timeless%mozdev.org Exp $
+# $Id: Common.pm,v 1.27 2005/11/20 22:10:38 timeless%mozdev.org Exp $
 
 package LXR::Common;
 
@@ -575,6 +575,9 @@ sub treename {
     return $Conf->{'treename'};
 }
 
+sub bonsaicvsroot {
+    return $Conf->{'bonsaicvsroot'};
+}
 
 sub titleexpand {
     if ($who eq 'source' || $who eq 'sourcedir' || $who eq 'diff') {
@@ -790,15 +793,16 @@ sub makeheader {
 #	  "</head>\n",
 
     	  &expandtemplate($template,
-			  ('title',	\&titleexpand),
-			  ('banner',	\&bannerexpand),
-			  ('baseurl',	\&baseurl),
-			  ('dotdoturl',	\&dotdoturl),
-			  ('thisurl',	\&thisurl),
-			  ('pathname',	\&pathname),
-			  ('treename',	\&treename),
-    			  ('modes',	\&modeexpand),
-    			  ('variables',	\&varexpand)));
+			  ('title',		\&titleexpand),
+			  ('banner',		\&bannerexpand),
+			  ('baseurl',		\&baseurl),
+			  ('dotdoturl',		\&dotdoturl),
+			  ('thisurl',		\&thisurl),
+			  ('pathname',		\&pathname),
+			  ('treename',		\&treename),
+    			  ('modes',		\&modeexpand),
+    			  ('bonsaicvsroot',	\&bonsaicvsroot),
+    			  ('variables',		\&varexpand)));
 }
 
 
