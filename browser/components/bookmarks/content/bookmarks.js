@@ -1792,7 +1792,6 @@ var BookmarksUtils = {
     setTimeout(function () {remoteDS.Flush()}, 100);
   },
 
-  // should update the caller, aShowDialog is no more necessary
   addBookmark: function (aURL, aTitle, aCharset, aIsWebPanel, aDescription)
   {
     var dArgs = {
