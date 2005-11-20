@@ -87,6 +87,39 @@ extern SECKEYPrivateKey *CERTUTIL_GeneratePrivateKey(KeyType keytype,
 
 static char *progName;
 
+static char *
+Gets_s(char *buff, size_t size) {
+    char *str;
+    
+    if (buff == NULL || size < 1) {
+        PORT_Assert(0);
+        return NULL;
+    }
+    if ((str = fgets(buff, size, stdin)) != NULL) {
+        int len = PORT_Strlen(str);
+        /*
+         * fgets() automatically converts native text file
+         * line endings to '\n'.  As defensive programming
+         * (just in case fgets has a bug or we put stdin in
+         * binary mode by mistake), we handle three native 
+         * text file line endings here:
+         *   '\n'      Unix (including Linux and Mac OS X)
+         *   '\r''\n'  DOS/Windows & OS/2
+         *   '\r'      Mac OS Classic
+         * len can not be less then 1, since in case with
+         * empty string it has at least '\n' in the buffer
+         */
+        if (buff[len - 1] == '\n' || buff[len - 1] == '\r') {
+            buff[len - 1] = '\0';
+            if (len > 1 && buff[len - 2] == '\r')
+                buff[len - 2] = '\0';
+        }
+    } else {
+        buff[0] = '\0';
+    }
+    return str;
+}
+
 static CERTGeneralName *
 GetGeneralName (PRArenaPool *arena)
 {
@@ -105,16 +138,17 @@ GetGeneralName (PRArenaPool *arena)
 	puts ("\t1 - instance of other name\n\t2 - rfc822Name\n\t3 - dnsName\n");
 	puts ("\t4 - x400Address\n\t5 - directoryName\n\t6 - ediPartyName\n");
 	puts ("\t7 - uniformResourceidentifier\n\t8 - ipAddress\n\t9 - registerID\n");
-	puts ("\tOther - omit\n\t\tChoice:");
-	if (scanf ("%d", &intValue) == EOF) {
+	puts ("\tAny other number to finish\n\t\tChoice:");
+	if (Gets_s (buffer, sizeof(buffer)) == NULL) {
 	    PORT_SetError(SEC_ERROR_INPUT_LEN);
-            GEN_BREAK (SECFailure);
-        }
+	    GEN_BREAK (SECFailure);
+	}
+	intValue = PORT_Atoi (buffer);
         /*
          * Should use ZAlloc instead of Alloc to avoid problem with garbage
          * initialized pointers in CERT_CopyName
          */
-	if (intValue >= certOtherName || intValue <= certRegisterID) {
+	if (intValue >= certOtherName && intValue <= certRegisterID) {
 	    if (namesList == NULL) {
 		namesList = current = tail = PORT_ArenaZNew(arena, CERTGeneralName);
 	    } else {
@@ -129,10 +163,10 @@ GetGeneralName (PRArenaPool *arena)
 	current->type = intValue;
 	puts ("\nEnter data:");
 	fflush (stdout);
-	if (gets (buffer) == NULL) {
+	if (Gets_s (buffer, sizeof(buffer)) == NULL) {
 	    PORT_SetError(SEC_ERROR_INPUT_LEN);
-            GEN_BREAK (SECFailure);
-        }
+	    GEN_BREAK (SECFailure);
+	}
 	switch (current->type) {
 	    case certURI:
 	    case certDNSName:
@@ -199,13 +233,16 @@ static SECStatus
 GetString(PRArenaPool *arena, char *prompt, SECItem *value)
 {
     char buffer[251];
+    char *buffPrt;
 
+    buffer[0] = '\0';
     value->data = NULL;
     value->len = 0;
     
     puts (prompt);
-    gets (buffer);
-    if (strlen (buffer) > 0) {
+    buffPrt = Gets_s (buffer, sizeof(buffer));
+    /* returned NULL here treated the same way as empty string */
+    if (buffPrt && strlen (buffer) > 0) {
 	value->data = PORT_ArenaAlloc (arena, strlen (buffer));
 	if (value->data == NULL) {
 	    PORT_SetError (SEC_ERROR_NO_MEMORY);
@@ -271,20 +308,12 @@ static PRBool
 GetYesNo(char *prompt) 
 {
     char buf[3];
+    char *buffPrt;
 
-    PR_Sync(PR_STDIN);
-    PR_Write(PR_STDOUT, prompt, strlen(prompt)+1);
-    PR_Read(PR_STDIN, buf, sizeof(buf));
-    return (buf[0] == 'y' || buf[0] == 'Y') ? PR_TRUE : PR_FALSE;
-#if 0
-    char charValue;
-
-    puts (prompt);
-    scanf ("%c", &charValue);
-    if (charValue != 'y' && charValue != 'Y')
-	return (0);
-    return (1);
-#endif
+    buf[0] = 'n';
+    puts(prompt);
+    buffPrt = Gets_s(buf, sizeof(buf));
+    return (buffPrt && (buf[0] == 'y' || buf[0] == 'Y')) ? PR_TRUE : PR_FALSE;
 }
 
 static SECStatus
@@ -1412,6 +1441,7 @@ AddKeyUsage (void *extHandle)
     unsigned char keyUsage = 0x0;
     char buffer[5];
     int value;
+    PRBool yesNoAns;
 
     while (1) {
 	fprintf(stdout, "%-25s 0 - Digital Signature\n", "");
@@ -1422,10 +1452,18 @@ AddKeyUsage (void *extHandle)
 	fprintf(stdout, "%-25s 5 - Cert signing key\n", "");   
 	fprintf(stdout, "%-25s 6 - CRL signing key\n", "");
 	fprintf(stdout, "%-25s Other to finish\n", "");
-	if (gets (buffer)) {
-	    value = atoi (buffer);
+	if (Gets_s (buffer, sizeof(buffer))) {
+	    value = PORT_Atoi (buffer);
 	    if (value < 0 || value > 6)
 	        break;
+	    if (value == 0) {
+		/* Checking that zero value of variable 'value'
+		 * corresponds to '0' input made by user */
+		char *chPtr = strchr(buffer, '0');
+		if (chPtr == NULL) {
+		    continue;
+		}
+	    }
 	    keyUsage |= (0x80 >> value);
 	}
 	else {		/* gets() returns NULL on EOF or error */
@@ -1435,13 +1473,11 @@ AddKeyUsage (void *extHandle)
 
     bitStringValue.data = &keyUsage;
     bitStringValue.len = 1;
-    buffer[0] = 'n';
-    puts ("Is this a critical extension [y/n]? ");
-    gets (buffer);	
+    yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
     return (CERT_EncodeAndAddBitStrExtension
 	    (extHandle, SEC_OID_X509_KEY_USAGE, &bitStringValue,
-	     (buffer[0] == 'y' || buffer[0] == 'Y') ? PR_TRUE : PR_FALSE));
+	     yesNoAns));
 
 }
 
@@ -1562,6 +1598,7 @@ AddExtKeyUsage (void *extHandle)
   CERTOidSequence *os;
   SECStatus rv;
   SECItem *item;
+  PRBool yesNoAns;
 
   os = CreateOidSequence();
   if( (CERTOidSequence *)NULL == os ) {
@@ -1578,12 +1615,21 @@ AddExtKeyUsage (void *extHandle)
     fprintf(stdout, "%-25s 6 - Step-up\n", "");
     fprintf(stdout, "%-25s Other to finish\n", "");
 
-    if (gets(buffer) == NULL) {
+    if (Gets_s(buffer, sizeof(buffer)) == NULL) {
         PORT_SetError(SEC_ERROR_INPUT_LEN);
         rv = SECFailure;
         goto loser;
     }
-    value = atoi(buffer);
+    value = PORT_Atoi(buffer);
+
+    if (value == 0) {
+        /* Checking that zero value of variable 'value'
+         * corresponds to '0' input made by user */
+        char *chPtr = strchr(buffer, '0');
+        if (chPtr == NULL) {
+            continue;
+        }
+    }
 
     switch( value ) {
     case 0:
@@ -1617,13 +1663,10 @@ AddExtKeyUsage (void *extHandle)
  endloop:;
   item = EncodeOidSequence(os);
 
-  buffer[0] = 'n';
-  puts ("Is this a critical extension [y/n]? ");
-  gets (buffer);	
+  yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
   rv = CERT_AddExtension(extHandle, SEC_OID_X509_EXT_KEY_USAGE, item,
-                         ((buffer[0] == 'y' || buffer[0] == 'Y')
-                          ? PR_TRUE : PR_FALSE), PR_TRUE);
+                         yesNoAns, PR_TRUE);
   /*FALLTHROUGH*/
  loser:
   DestroyOidSequence(os);
@@ -1637,6 +1680,7 @@ AddNscpCertType (void *extHandle)
     unsigned char keyUsage = 0x0;
     char buffer[5];
     int value;
+    PRBool yesNoAns;
 
     while (1) {
 	fprintf(stdout, "%-25s 0 - SSL Client\n", "");
@@ -1648,25 +1692,31 @@ AddNscpCertType (void *extHandle)
 	fprintf(stdout, "%-25s 6 - S/MIME CA\n", "");
 	fprintf(stdout, "%-25s 7 - Object Signing CA\n", "");
 	fprintf(stdout, "%-25s Other to finish\n", "");
-	if (gets (buffer) == NULL) {
+	if (Gets_s (buffer, sizeof(buffer)) == NULL) {
 	    PORT_SetError(SEC_ERROR_INPUT_LEN);
-            return SECFailure;
-        }
-	value = atoi (buffer);
+	    return SECFailure;
+	}
+	value = PORT_Atoi (buffer);
 	if (value < 0 || value > 7)
 	    break;
+	if (value == 0) {
+	    /* Checking that zero value of variable 'value'
+	     * corresponds to '0' input made by user */
+	    char *chPtr = strchr(buffer, '0');
+	    if (chPtr == NULL) {
+		continue;
+	    }
+	}
 	keyUsage |= (0x80 >> value);
     }
 
     bitStringValue.data = &keyUsage;
     bitStringValue.len = 1;
-    buffer[0] = 'n';
-    puts ("Is this a critical extension [y/n]? ");
-    gets (buffer);	
+    yesNoAns = GetYesNo("Is this a critical extension [y/N]?");
 
     return (CERT_EncodeAndAddBitStrExtension
 	    (extHandle, SEC_OID_NS_CERT_EXT_CERT_TYPE, &bitStringValue,
-	     (buffer[0] == 'y' || buffer[0] == 'Y') ? PR_TRUE : PR_FALSE));
+	     yesNoAns));
 
 }
 
@@ -1761,32 +1811,29 @@ AddBasicConstraint(void *extHandle)
     SECItem encodedValue;
     SECStatus rv;
     char buffer[10];
+    PRBool yesNoAns;
 
     encodedValue.data = NULL;
     encodedValue.len = 0;
     do {
 	basicConstraint.pathLenConstraint = CERT_UNLIMITED_PATH_CONSTRAINT;
-	puts ("Is this a CA certificate [y/n]?");
-	gets (buffer);
-	basicConstraint.isCA = (buffer[0] == 'Y' || buffer[0] == 'y') ?
-                                PR_TRUE : PR_FALSE;
+	basicConstraint.isCA = GetYesNo ("Is this a CA certificate [y/N]?");
 
+	buffer[0] = '\0';
 	puts ("Enter the path length constraint, enter to skip [<0 for unlimited path]:");
-	gets (buffer);
+	Gets_s (buffer, sizeof(buffer));
 	if (PORT_Strlen (buffer) > 0)
-	    basicConstraint.pathLenConstraint = atoi (buffer);
+	    basicConstraint.pathLenConstraint = PORT_Atoi (buffer);
 	
 	rv = CERT_EncodeBasicConstraintValue (NULL, &basicConstraint, &encodedValue);
 	if (rv)
 	    return (rv);
 
-	buffer[0] = 'n';
-	puts ("Is this a critical extension [y/n]? ");
-	gets (buffer);	
+	yesNoAns = GetYesNo ("Is this a critical extension [y/N]?");
+
 	rv = CERT_AddExtension
 	     (extHandle, SEC_OID_X509_BASIC_CONSTRAINTS,
-	      &encodedValue, (buffer[0] == 'y' || buffer[0] == 'Y') ?
-              PR_TRUE : PR_FALSE ,PR_TRUE);
+	      &encodedValue, yesNoAns, PR_TRUE);
     } while (0);
     PORT_Free (encodedValue.data);
     return (rv);
@@ -1875,7 +1922,7 @@ AddAuthKeyID (void *extHandle)
     CERTAuthKeyID *authKeyID = NULL;    
     PRArenaPool *arena = NULL;
     SECStatus rv = SECSuccess;
-    char buffer[512];
+    PRBool yesNoAns;
 
     do {
 	arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
@@ -1884,7 +1931,7 @@ AddAuthKeyID (void *extHandle)
 	    GEN_BREAK (SECFailure);
 	}
 
-	if (GetYesNo ("Enter value for the authKeyID extension [y/n]?\n") == 0)
+	if (GetYesNo ("Enter value for the authKeyID extension [y/N]?") == 0)
 	    break;
 	
 	authKeyID = PORT_ArenaZAlloc (arena, sizeof (CERTAuthKeyID));
@@ -1904,13 +1951,10 @@ AddAuthKeyID (void *extHandle)
 	rv = GetString (arena, "Enter value for the authCertSerial field, enter to omit:",
 			&authKeyID->authCertSerialNumber);
 
-	buffer[0] = 'n';
-	puts ("Is this a critical extension [y/n]? ");
-	gets (buffer);	
+	yesNoAns = GetYesNo ("Is this a critical extension [y/N]?");
 
 	rv = SECU_EncodeAndAddExtensionValue
-	    (arena, extHandle, authKeyID,
-	     (buffer[0] == 'y' || buffer[0] == 'Y') ? PR_TRUE : PR_FALSE,
+	    (arena, extHandle, authKeyID, yesNoAns,
 	     SEC_OID_X509_AUTH_KEY_ID, 
 	     (EXTEN_EXT_VALUE_ENCODER) CERT_EncodeAuthKeyID);
 	if (rv)
@@ -1930,7 +1974,7 @@ AddCrlDistPoint(void *extHandle)
     CRLDistributionPoint *current;
     SECStatus rv = SECSuccess;
     int count = 0, intValue;
-    char buffer[5];
+    char buffer[512];
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if ( !arena )
@@ -1945,8 +1989,12 @@ AddCrlDistPoint(void *extHandle)
 
 	/* Get the distributionPointName fields - this field is optional */
 	puts ("Enter the type of the distribution point name:\n");
-	puts ("\t1 - Full Name\n\t2 - Relative Name\n\tOther - omit\n\t\tChoice: ");
-	scanf ("%d", &intValue);
+	puts ("\t1 - Full Name\n\t2 - Relative Name\n\tAny other number to finish\n\t\tChoice: ");
+	if (Gets_s (buffer, sizeof(buffer)) == NULL) {
+	    PORT_SetError(SEC_ERROR_INPUT_LEN);
+	    GEN_BREAK (SECFailure);
+	}
+	intValue = PORT_Atoi (buffer);
 	switch (intValue) {
 	    case generalName:
 		current->distPointType = intValue;
@@ -1956,12 +2004,13 @@ AddCrlDistPoint(void *extHandle)
 		
 	    case relativeDistinguishedName: {
 		CERTName *name;
-		char buffer[512];
 
 		current->distPointType = intValue;
 		puts ("Enter the relative name: ");
 		fflush (stdout);
-		gets (buffer);
+		if (Gets_s (buffer, sizeof(buffer)) == NULL) {
+		    GEN_BREAK (SECFailure);
+		}
 		/* For simplicity, use CERT_AsciiToName to converse from a string
 		   to NAME, but we only interest in the first RDN */
 		name = CERT_AsciiToName (buffer);
@@ -1980,9 +2029,21 @@ AddCrlDistPoint(void *extHandle)
 	puts ("\nSelect one of the following for the reason flags\n");
 	puts ("\t0 - unused\n\t1 - keyCompromise\n\t2 - caCompromise\n\t3 - affiliationChanged\n");
 	puts ("\t4 - superseded\n\t5 - cessationOfOperation\n\t6 - certificateHold\n");
-	puts ("\tother - omit\t\tChoice: ");
+	puts ("\tAny other number to finish\t\tChoice: ");
 	
-	scanf ("%d", &intValue);
+	if (Gets_s (buffer, sizeof(buffer)) == NULL) {
+	    PORT_SetError(SEC_ERROR_INPUT_LEN);
+	    GEN_BREAK (SECFailure);
+	}
+	intValue = PORT_Atoi (buffer);
+	if (intValue == 0) {
+	    /* Checking that zero value of variable 'value'
+	     * corresponds to '0' input made by user */
+	    char *chPtr = strchr(buffer, '0');
+	    if (chPtr == NULL) {
+		intValue = -1;
+	    }
+	}
 	if (intValue >= 0 && intValue <8) {
 	    current->reasons.data = PORT_ArenaAlloc (arena, sizeof(char));
 	    if (current->reasons.data == NULL) {
@@ -2013,7 +2074,7 @@ AddCrlDistPoint(void *extHandle)
 	
 	crlDistPoints->distPoints[count] = current;
 	++count;
-	if (GetYesNo ("Enter more value for the CRL distribution point extension [y/n]\n") == 0) {
+	if (GetYesNo ("Enter more value for the CRL distribution point extension [y/N]") == 0) {
 	    /* Add null to the end of the crlDistPoints to mark end of data */
 	    crlDistPoints->distPoints = PORT_ArenaGrow(arena, 
 		 crlDistPoints->distPoints,
@@ -2027,13 +2088,10 @@ AddCrlDistPoint(void *extHandle)
     } while (1);
     
     if (rv == SECSuccess) {
-	buffer[0] = 'n';
-	puts ("Is this a critical extension [y/n]? ");
-	gets (buffer);	
+	PRBool yesNoAns = GetYesNo ("Is this a critical extension [y/N]?");
 	
 	rv = SECU_EncodeAndAddExtensionValue(arena, extHandle, crlDistPoints,
-	      (buffer[0] == 'Y' || buffer[0] == 'y') ? PR_TRUE : PR_FALSE,
-	      SEC_OID_X509_CRL_DIST_POINTS,
+	      yesNoAns, SEC_OID_X509_CRL_DIST_POINTS,
 	      (EXTEN_EXT_VALUE_ENCODER)  CERT_EncodeCRLDistributionPoints);
     }
     if (arena)
