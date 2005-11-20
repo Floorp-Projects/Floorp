@@ -640,16 +640,11 @@ MOZCE_SHUNT_API BOOL mozce_GetTextExtentExPointA(HDC inDC, const char * inStr, i
   mozce_printf("mozce_GetTextExtentExPointA called (%d)\n", inLen);
 #endif
 
-    char* mutableStr = (char*) inStr;
     BOOL retval = FALSE;
 
-    if (!mutableStr)
-        return retval;
-
-    mutableStr[inLen] = '\0';
-
-    LPTSTR wStr = a2w_malloc(mutableStr, inLen, NULL);
-
+    // BUG:  if inString has any embedded nulls, this function will not produce the desired effect!
+	LPTSTR wStr = a2w_malloc(inStr, inLen, NULL);
+	
     if(NULL != wStr)
     {
         retval = GetTextExtentExPointW(inDC, wStr, inLen, inMaxExtent, outFit, outDx, inSize);
