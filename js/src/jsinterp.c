@@ -208,34 +208,6 @@ static JSClass prop_iterator_class = {
         STORE_OPND(n, v_);                                                    \
     JS_END_MACRO
 
-#define STORE_INT(cx, n, i)                                                   \
-    JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
-                                                                              \
-        if (INT_FITS_IN_JSVAL(i)) {                                           \
-            v_ = INT_TO_JSVAL(i);                                             \
-        } else {                                                              \
-            ok = js_NewDoubleValue(cx, (jsdouble)(i), &v_);                   \
-            if (!ok)                                                          \
-                goto out;                                                     \
-        }                                                                     \
-        STORE_OPND(n, v_);                                                    \
-    JS_END_MACRO
-
-#define STORE_UINT(cx, n, u)                                                  \
-    JS_BEGIN_MACRO                                                            \
-        jsval v_;                                                             \
-                                                                              \
-        if ((u) <= JSVAL_INT_MAX) {                                           \
-            v_ = INT_TO_JSVAL(u);                                             \
-        } else {                                                              \
-            ok = js_NewDoubleValue(cx, (jsdouble)(u), &v_);                   \
-            if (!ok)                                                          \
-                goto out;                                                     \
-        }                                                                     \
-        STORE_OPND(n, v_);                                                    \
-    JS_END_MACRO
-
 #define FETCH_NUMBER(cx, n, d)                                                \
     JS_BEGIN_MACRO                                                            \
         jsval v_;                                                             \
@@ -2789,10 +2761,12 @@ interrupt:
     JS_BEGIN_MACRO                                                            \
         FETCH_INT(cx, -1, j);                                                 \
         FETCH_INT(cx, -2, i);                                                 \
+        if (!ok)                                                              \
+            goto out;                                                         \
         EXTRA_CODE                                                            \
-        i = i OP j;                                                           \
+        d = i OP j;                                                           \
         sp--;                                                                 \
-        STORE_INT(cx, -1, i);                                                 \
+        STORE_NUMBER(cx, -1, d);                                              \
     JS_END_MACRO
 
 #define BITWISE_OP(OP)          INTEGER_OP(OP, (void) 0;)
@@ -3019,9 +2993,10 @@ interrupt:
 
             FETCH_INT(cx, -1, j);
             FETCH_UINT(cx, -2, u);
-            u >>= j & 31;
+            j &= 31;
+            d = u >> j;
             sp--;
-            STORE_UINT(cx, -1, u);
+            STORE_NUMBER(cx, -1, d);
           }
           END_CASE(JSOP_URSH)
 
@@ -3142,66 +3117,28 @@ interrupt:
 
           BEGIN_CASE(JSOP_BITNOT)
             FETCH_INT(cx, -1, i);
-            i = ~i;
-            STORE_INT(cx, -1, i);
+            d = (jsdouble) ~i;
+            STORE_NUMBER(cx, -1, d);
           END_CASE(JSOP_BITNOT)
 
           BEGIN_CASE(JSOP_NEG)
-            /*
-             * Optimize the case of an int-tagged operand by noting that
-             * INT_FITS_IN_JSVAL(i) => INT_FITS_IN_JSVAL(-i) unless i is 0
-             * when -i is the negative zero which is jsdouble.
-             */
-            rval = FETCH_OPND(-1);
-            if (JSVAL_IS_INT(rval) && (i = JSVAL_TO_INT(rval)) != 0) {
-                i = -i;
-                JS_ASSERT(INT_FITS_IN_JSVAL(i));
-                rval = INT_TO_JSVAL(i);
-            } else {
-                if (JSVAL_IS_DOUBLE(rval)) {
-                    d = *JSVAL_TO_DOUBLE(rval);
-                } else {
-                    SAVE_SP_AND_PC(fp);
-                    ok = js_ValueToNumber(cx, rval, &d);
-                    if (!ok)
-                        goto out;
-                }
-                if (JSDOUBLE_IS_NEGZERO(d)) {
-                    rval = INT_TO_JSVAL(0);
-                } else {
+            FETCH_NUMBER(cx, -1, d);
 #ifdef HPUX
-                    /*
-                     * Negation of a zero doesn't produce a negative
-                     * zero on HPUX. Perform the operation by bit
-                     * twiddling.
-                     */
-                    JSDOUBLE_HI32(d) ^= JSDOUBLE_HI32_SIGNBIT;
+            /*
+             * Negation of a zero doesn't produce a negative
+             * zero on HPUX. Perform the operation by bit
+             * twiddling.
+             */
+            JSDOUBLE_HI32(d) ^= JSDOUBLE_HI32_SIGNBIT;
 #else
-                    d = -d;
+            d = -d;
 #endif
-                    /* Here the negated number must not fit INT jsval. */
-                    JS_ASSERT(!JSDOUBLE_IS_INT(d, i) || !INT_FITS_IN_JSVAL(i));
-                    ok = js_NewDoubleValue(cx, d, &rval);
-                    if (!ok)
-                        goto out;
-                }
-            }
-            STORE_OPND(-1, rval);
+            STORE_NUMBER(cx, -1, d);
           END_CASE(JSOP_NEG)
 
           BEGIN_CASE(JSOP_POS)
-            rval = FETCH_OPND(-1);
-            if (!JSVAL_IS_NUMBER(rval)) {
-                SAVE_SP_AND_PC(fp);
-                ok = js_ValueToNumber(cx, rval, &d);
-                if (!ok)
-                    goto out;
-                ok = js_NewNumberValue(cx, d, &rval);
-                if (!ok)
-                    goto out;
-                sp[-1] = rval;
-            }
-            sp[-1-depth] = (jsval)pc;
+            FETCH_NUMBER(cx, -1, d);
+            STORE_NUMBER(cx, -1, d);
           END_CASE(JSOP_POS)
 
           BEGIN_CASE(JSOP_NEW)
