@@ -93,6 +93,11 @@ function err( msg, page, line ) {
     testcase.passed = false;
     testcase.reason = "Error: " + msg + 
       " Source File: " + page + " Line: " + line + ".";
+    if (document.location.href.indexOf('-n.js') != -1)
+    {
+      // negative test
+      testcase.passed = true;
+    }
     return;
   }
 

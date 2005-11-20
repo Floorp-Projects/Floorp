@@ -111,6 +111,11 @@ reportFailure = function (msg, page, line)
       EXPECTED = 'Unknown';
     }
     testcase = new TestCase(gTestName, DESCRIPTION, EXPECTED, "error");
+    if (document.location.href.indexOf('-n.js') != -1)
+    {
+      // negative test
+      testcase.passed = true;
+    }
   }
 
   testcase.reason += msg;
@@ -123,7 +128,10 @@ reportFailure = function (msg, page, line)
   {
     testcase.reason += ' Line: ' + line;
   }
-  _reportFailure(msg);
+  if (!testcase.passed)
+  {
+    _reportFailure(msg);
+  }
 
 };
 
