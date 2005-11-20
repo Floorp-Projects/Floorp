@@ -124,9 +124,18 @@ function test2()
        test file and assumes the path to the test case
        is a subdirectory of the directory containing jsDriver.pl
     */
-    var expectedLine = 130;
-    var expectedFileName = './js1_5/Exceptions/regress-50447-1.js';
-       
+    var expectedLine = 139;
+    var expectedFileName = 'js1_5/Exceptions/regress-50447-1.js';
+    if (typeof document == "undefined")
+    {
+        expectedFileName = './' + expectedFileName;
+    }
+    else
+    {
+        expectedFileName = document.location.href.
+            replace(/[^\/]*(\?.*)$/, '') +
+            expectedFileName;
+    }
     var e = new InternalError ("msg");
     reportCompare ("(new InternalError(\"msg\", \"" + 
                    expectedFileName + "\", " + expectedLine + "))",
@@ -152,7 +161,17 @@ function test3()
 
     enterFunc ("test3");
 
-    var expectedFileName = './js1_5/Exceptions/regress-50447-1.js';
+    var expectedFileName = 'js1_5/Exceptions/regress-50447-1.js';
+    if (typeof document == "undefined")
+    {
+        expectedFileName = './' + expectedFileName;
+    }
+    else
+    {
+        expectedFileName = document.location.href.
+            replace(/[^\/]*(\?.*)$/, '') +
+            expectedFileName;
+    }
 
     var e = new InternalError ("msg");
     e.lineNumber = 10;
@@ -174,7 +193,7 @@ function test4()
     /* generate an error with only msg and filename properties */
     enterFunc ("test4");
 
-    var expectedLine = 179;
+    var expectedLine = 198;
 
     var e = new InternalError ("msg", "file");
     reportCompare ("(new InternalError(\"msg\", \"file\", " + expectedLine + "))",
