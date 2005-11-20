@@ -284,6 +284,13 @@ $Template::Stash::SCALAR_OPS->{ truncate } =
 ###############################################################################
 
 # Construct the Template object
+    my %opts = @_;
+    if ($opts{'clean_cache'}) {
+        # checksetup.pl will call us once for any template/lang directory.
+        # We need a possibility to reset the cache, so that no files from
+        # the previous language pollute the action.
+        $template_include_path = undef;
+    }
 
 # Note that all of the failure cases here can't use templateable errors,
 # since we won't have a template to use...

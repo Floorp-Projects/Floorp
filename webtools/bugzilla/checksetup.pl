@@ -1220,27 +1220,6 @@ unless ($switch{'no_templates'}) {
        }
     }
 
-    # Search for template directories
-    # We include the default and custom directories separately to make
-    # sure we compile all templates
-    my @templatepaths = ();
-    {
-        use File::Spec; 
-        opendir(DIR, $templatedir) || die "Can't open '$templatedir': $!";
-        my @files = grep { /^[a-z-]+$/i } readdir(DIR);
-        closedir DIR;
-
-        foreach my $dir (@files) {
-            next if($dir =~ /^CVS$/i);
-            my $path = File::Spec->catdir($templatedir, $dir, 'custom');
-            push(@templatepaths, $path) if(-d $path);
-            $path = File::Spec->catdir($templatedir, $dir, 'extension');
-            push(@templatepaths, $path) if(-d $path);
-            $path = File::Spec->catdir($templatedir, $dir, 'default');
-            push(@templatepaths, $path) if(-d $path);
-        }
-    }
-
     # Precompile stuff. This speeds up initial access (so the template isn't
     # compiled multiple times simultaneously by different servers), and helps
     # to get the permissions right.
@@ -1267,12 +1246,25 @@ unless ($switch{'no_templates'}) {
         
         # Don't hang on templates which use the CGI library
         eval("use CGI qw(-no_debug)");
-        $::template = Bugzilla::Template->create();
+        
+        use File::Spec; 
+        opendir(DIR, $templatedir) || die "Can't open '$templatedir': $!";
+        my @files = grep { /^[a-z-]+$/i } readdir(DIR);
+        closedir DIR;
 
-        foreach $::templatepath (@templatepaths) {
-           # Traverse the template hierarchy. 
-           find({ wanted => \&compile, no_chdir => 1 }, $::templatepath);
-       }
+        foreach my $dir (@files) {
+            next if($dir =~ /^CVS$/i);
+            local $ENV{'HTTP_ACCEPT_LANGUAGE'} = $dir;
+            SetParam("languages", "$dir,en");
+            $::template = Bugzilla::Template->create(clean_cache => 1);
+            my @templatepaths;
+            foreach my $subdir (qw(custom extension default)) {
+                $::templatepath = File::Spec->catdir($templatedir, $dir, $subdir);
+                next unless -d $::templatepath;
+                # Traverse the template hierarchy. 
+                find({ wanted => \&compile, no_chdir => 1 }, $::templatepath);
+            }
+        }
     }
 }
 
