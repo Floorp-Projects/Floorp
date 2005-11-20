@@ -44,6 +44,7 @@
 #import "BookmarkButton.h"
 #import "BookmarkManager.h"
 #import "BrowserWindowController.h"
+#import "BrowserWindow.h"
 #import "Bookmark.h"
 #import "BookmarkFolder.h"
 #import "NSPasteboard+Utils.h"
@@ -111,8 +112,49 @@ static const int kBMBarScanningStep = 5;
   [self buildButtonList];
 }
 
+static void VerticalGrayGradient(void* inInfo, float const* inData, float* outData)
+{
+  float* grays = NS_STATIC_CAST(float*, inInfo);
+  outData[0] = (1.0-inData[0])*grays[0] + inData[0]*grays[1];
+  outData[1] = 1.0;
+}
+
 - (void)drawRect:(NSRect)aRect
 {
+  // If the unified title bar and toolbar is in use (>=10.4 with the
+  // appropriate attribute set on the window), the bookmark bar gets a
+  // background gradient that matches the unified title bar/toolbar.  This
+  // gradient is only used if the window is main.  If the window is not main,
+  // the title bar and toolbar will have a different (inactive) appearance, so
+  // so the gradient won't be used.
+
+  BrowserWindow* browserWin = [self window];
+  if ([browserWin hasUnifiedToolbarAppearance] && [browserWin isMainWindow]) {
+    float grays[2] = {235.0/255.0, 214.0/255.0};
+
+    NSRect bounds = [self bounds];
+    bounds.size.height -= 1.0;
+
+    struct CGFunctionCallbacks callbacks = {0, VerticalGrayGradient, NULL};
+    CGFunctionRef function = CGFunctionCreate(grays, 1, NULL, 2, NULL,
+                                              &callbacks);
+
+    CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceGray();
+    CGShadingRef shading = CGShadingCreateAxial(colorspace,
+                                                CGPointMake(NSMinX(bounds),
+                                                            NSMinY(bounds)),
+                                                CGPointMake(NSMinX(bounds),
+                                                            NSMaxY(bounds)),
+                                                function, false, false);
+    CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+
+    CGContextDrawShading(context, shading);
+
+    CGShadingRelease(shading);
+    CGColorSpaceRelease(colorspace);
+    CGFunctionRelease(function);
+  }
+
   if (mDrawBorder)
   {
     [[NSColor controlShadowColor] set];

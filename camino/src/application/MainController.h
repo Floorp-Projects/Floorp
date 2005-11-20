@@ -210,8 +210,4 @@ typedef enum EBookmarkOpenBehavior
 // prompts the user to reset the cache, then does it
 - (IBAction)emptyCache:(id)sender;
 
-// OS feature checks
-+ (BOOL)supportsSpotlight;
-+ (BOOL)supportsBonjour;
-
 @end

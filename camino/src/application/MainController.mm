@@ -128,52 +128,6 @@ const int kReuseWindowOnAE = 2;
 
 @implementation MainController
 
-//
-// +isRunningOnTiger
-//
-// returns YES if we're on 10.4 or better
-//
-+ (BOOL)isTigerOrHigher
-{
-  static BOOL sInitTigerOrHigher = NO;
-  static BOOL sRunningOnTiger = NO;
-  if (!sInitTigerOrHigher) {
-    long version = 0;
-    ::Gestalt(gestaltSystemVersion, &version);
-    if (version >= 0x00001040) 
-      sRunningOnTiger = YES;
-    sInitTigerOrHigher = YES;
-  }
-  return sRunningOnTiger;
-}
-
-//
-// +supportsSpotlight
-//
-// returns YES if we're running on a machine that supports spotlight (tiger or higher)
-//
-+ (BOOL)supportsSpotlight
-{
-  return [self isTigerOrHigher];
-}
-
-//
-// +supportsBonjour
-//
-// returns YES if we're running on a machine that supports bonjour (formerly rendezvous, 10.2
-// or higher)
-//
-+ (BOOL)supportsBonjour
-{
-  // are we on 10.2.3 or higher? The DNS resolution stuff is broken before 10.2.3
-  BOOL supportsBonjour = NO;
-  long version = 0;
-  ::Gestalt(gestaltSystemVersion, &version);
-  if (version >= 0x00001023) 
-    supportsBonjour = YES;
-  return supportsBonjour;
-}
-
 -(id)init
 {
   if ( (self = [super init]) ) {
@@ -468,7 +422,7 @@ const int kReuseWindowOnAE = 2;
   BOOL doingRendezvous = NO;
   
   if ([[PreferenceManager sharedInstance] getBooleanPref:"chimera.enable_rendezvous" withSuccess:NULL]) {
-    if ([MainController supportsBonjour]) {
+    if ([NSWorkspace supportsBonjour]) {
       NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
       [notificationCenter addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
       [notificationCenter addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];

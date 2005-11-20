@@ -137,5 +137,69 @@
   return [name autorelease];
 }
 
-@end
+//
+// +systemVersion
+//
+// Returns the host's OS version as returned by the 'sysv' gestalt selector,
+// 10.x.y = 0x000010xy
+//
++ (long)systemVersion
+{
+  static long sSystemVersion = 0;
+  if (!sSystemVersion)
+    Gestalt(gestaltSystemVersion, &sSystemVersion);
+  return sSystemVersion;
+}
 
+//
+// +isTigerOrHigher
+//
+// returns YES if we're on 10.4 or better
+//
++ (BOOL)isTigerOrHigher
+{
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+  return YES;
+#else
+  return [self systemVersion] >= 0x1040;
+#endif
+}
+
+//
+// +supportsBonjour
+//
+// returns YES if we're running on a machine that supports bonjour (formerly rendezvous, 10.2
+// or higher)
+//
++ (BOOL)supportsBonjour
+{
+  // The DNS resolution stuff is broken before 10.2.3
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_3
+  return YES;
+#else
+  return [self systemVersion] >= 0x1023;
+#endif
+}
+
+//
+// +supportsSpotlight
+//
+// returns YES if we're running on a machine that supports spotlight (tiger or higher)
+//
++ (BOOL)supportsSpotlight
+{
+  return [self isTigerOrHigher];
+}
+
+//
+// +supportsUnifiedToolbar
+//
+// Returns YES if we're running on a machine that supports the unified title
+// bar and toolbar window appearance (Tiger or higher).
+//
++ (BOOL)supportsUnifiedToolbar
+{
+  return [self isTigerOrHigher];
+}
+
+@end

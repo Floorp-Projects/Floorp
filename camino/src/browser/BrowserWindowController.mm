@@ -522,16 +522,31 @@ enum BWCOpenDest {
   }
 }
 
+- (void)windowDidChangeMain
+{
+  // On 10.4, the unified title bar and toolbar is used, and the bookmark
+  // toolbar's appearance is tweaked to better match the unified look.
+  // Its active/inactive state needs to change along with the toolbar's.
+  BrowserWindow* browserWin = [self window];
+  if ([browserWin hasUnifiedToolbarAppearance]) {
+    BookmarkToolbar* bookmarkToolbar = [self bookmarkToolbar];
+    if (bookmarkToolbar)
+      [bookmarkToolbar setNeedsDisplay:YES];
+  }
+}
+
 - (void)windowDidBecomeMain:(NSNotification *)notification
 {
-  // MainController listens for window layering notifications and updates bookmarks,
-  // so we don't need to do anything here
+  // MainController listens for window layering notifications and updates
+  // bookmarks.
+  [self windowDidChangeMain];
 }
 
 - (void)windowDidResignMain:(NSNotification *)notification
 {
-  // MainController listens for window layering notifications and updates bookmarks,
-  // so we don't need to do anything here
+  // MainController listens for window layering notifications and updates
+  // bookmarks.
+  [self windowDidChangeMain];
 }
 
 -(void)mouseMoved:(NSEvent*)aEvent

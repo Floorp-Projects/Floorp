@@ -41,6 +41,14 @@
 #import "BrowserWindowController.h"
 #import "AutoCompleteTextField.h"
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4
+// Windows on 10.4 will have this style attribute set because the bit is set
+// in the nib, but unless building against the 10.4 SDK, the enum won't exist.
+enum {
+  NSUnifiedTitleAndToolbarWindowMask = 1 << 12
+};
+#endif
+
 static const int kEscapeKeyCode = 53;
 
 @implementation BrowserWindow
@@ -127,6 +135,15 @@ static const int kEscapeKeyCode = 53;
 
   [[windowController getBrowserWrapper] getTitle:&titleString andHref:&urlString];
   return urlString;
+}
+
+// True when the window has the unified toolbar bit set and is capable of
+// displaying the unified appearance, even if the window is not main.
+// Use |hasUnifiedToolbarAppearance && isMainWindow| when necessary.
+- (BOOL)hasUnifiedToolbarAppearance
+{
+  return [NSWorkspace supportsUnifiedToolbar] &&
+         [self styleMask] & NSUnifiedTitleAndToolbarWindowMask;
 }
 
 @end

@@ -47,6 +47,7 @@
 #import "NSString+Utils.h"
 #import "NSThread+Utils.h"
 #import "NSFileManager+Utils.h"
+#import "NSWorkspace+Utils.h"
 
 #import "PreferenceManager.h"
 #import "BookmarkManager.h"
@@ -901,7 +902,7 @@ static BookmarkManager* gBookmarkManager = nil;
 
   if ([bmItem isKindOfClass:[Bookmark class]])
   {
-    if ([MainController supportsSpotlight])
+    if ([NSWorkspace supportsSpotlight])
       [bmItem writeBookmarksMetadataToPath:mMetadataPath];
 
     [self registerBookmarkForLoads:bmItem];
@@ -929,7 +930,7 @@ static BookmarkManager* gBookmarkManager = nil;
 
   if ([bmItem isKindOfClass:[Bookmark class]])
   {
-    if ([MainController supportsSpotlight])
+    if ([NSWorkspace supportsSpotlight])
       [bmItem removeBookmarksMetadataFromPath:mMetadataPath];
 
     [self unregisterBookmarkForLoads:bmItem ignoringURL:YES];
@@ -953,7 +954,7 @@ static BookmarkManager* gBookmarkManager = nil;
   if ([item isKindOfClass:[Bookmark class]])
   {
     // update Spotlight metadata
-    if ([MainController supportsSpotlight] && (changeFlags & kBookmarkItemSignificantChangeFlagsMask))
+    if ([NSWorkspace supportsSpotlight] && (changeFlags & kBookmarkItemSignificantChangeFlagsMask))
       [item writeBookmarksMetadataToPath:mMetadataPath];
     
     // and re-register in the maps if the url changed
@@ -995,7 +996,7 @@ static BookmarkManager* gBookmarkManager = nil;
 // 
 - (void)writeBookmarksMetadataForSpotlight
 {
-  if (![MainController supportsSpotlight])
+  if (![NSWorkspace supportsSpotlight])
     return;
 
   // XXX if we quit while this thread is still running, we'll end up with incomplete metadata
