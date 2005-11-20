@@ -66,7 +66,8 @@
   
   <p>
     Next, please take a moment to explain why you are doing this:<br>
-    <input type="text" name="reason" size="80" maxlength="200">
+    <input type="text" name="reason" size="80" maxlength="200" value="
+    [%- reason_default FILTER html %]">
   </p>
   
   <p>
@@ -75,21 +76,27 @@
     are impersonating them.
   </p>
   
-  <p>
-    Finally, click the button to begin the session:
-    <input type="submit" value="Begin Session">
-    <input type="hidden" name="action" value="sudo-transition">
-  </p>
-  
-  [% IF will_logout %]
+  [% IF user.get_flag("can_logout") %]
     <p>
-      When you press the button, you may be logged out and asked to log in 
-      again.  This is done for two reasons.  First of all, it is done to reduce 
+      Finally, enter your [% terms.Bugzilla %] password: 
+      <input type="hidden" name="Bugzilla_login" value="
+      [%- user.login FILTER html %]">
+      <input type="password" name="Bugzilla_password" maxlength="20" size="20">
+      <br>
+      This is done for two reasons.  First of all, it is done to reduce 
       the chances of someone doing large amounts of damage using your 
       already-logged-in account.  Second, it is there to force you to take the 
       time to consider if you really need to use this feature.
     </p>
   [% END %]
+  
+  <p>
+    Click the button to begin the session:
+    <input type="submit" value="Begin Session">
+    <input type="hidden" name="action" value="begin-sudo">
+    <input type="hidden" name="token" value="[% token FILTER html %]">
+  </p>
+
 </form>
 
 [% PROCESS global/footer.html.tmpl %]

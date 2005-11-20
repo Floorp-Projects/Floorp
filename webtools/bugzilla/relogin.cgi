@@ -31,6 +31,7 @@ use Bugzilla;
 use Bugzilla::BugMail;
 use Bugzilla::Constants;
 use Bugzilla::Error;
+use Bugzilla::Token;
 use Bugzilla::User;
 use Bugzilla::Util;
 use Date::Format;
@@ -43,8 +44,8 @@ my $action = $cgi->param('action') || 'logout';
 my $vars = {};
 my $target;
 
-# sudo: Display the sudo information & login page
-if ($action eq 'sudo') {
+# prepare-sudo: Display the sudo information & login page
+if ($action eq 'prepare-sudo') {
     # We must have a logged-in user to do this
     # That user must be in the 'bz_sudoers' group
     my $user = Bugzilla->login(LOGIN_REQUIRED);
@@ -60,77 +61,44 @@ if ($action eq 'sudo') {
         ThrowUserError('sudo_in_progress', { target => $user->login });
     }
 
-    # We may have been given a value to put into the field
-    # Don't pass it through unless it's actually a user
-    # Could the default value be protected?  Maybe, but we will save the
-    # disappointment for later!
-    if (defined($cgi->param('target_login')) &&
-        Bugzilla::User::login_to_id($cgi->param('target_login')) != 0)
-    {
-        $vars->{'target_login_default'} = $cgi->param('target_login');
-    }
+    # Keep a temporary record of the user visitng this page
+    $vars->{'token'} = Bugzilla::Token::IssueSessionToken('sudo_prepared');
 
     # Show the sudo page
-    $vars->{'will_logout'} = $user->get_flag('can_logout');
+    $vars->{'target_login_default'} = $cgi->param('target_login');
+    $vars->{'reason_default'} = $cgi->param('reason');
     $target = 'admin/sudo.html.tmpl';
-}
-# transition-sudo: Validate target, logout user, and redirect for session start
-elsif ($action eq 'sudo-transition') {
-    # Get the current user
-    my $user = Bugzilla->login(LOGIN_REQUIRED);
-    unless ($user->in_group('bz_sudoers')) {
-        ThrowUserError('auth_failure', {  group => 'bz_sudoers',
-                                         action => 'begin',
-                                         object => 'sudo_session' }
-        );
-    }
-    
-    # Get & verify the target user (the user who we will be impersonating)
-    unless (defined($cgi->param('target_login')) &&
-            Bugzilla::User::login_to_id($cgi->param('target_login')) != 0)
-    {
-        ThrowUserError('invalid_username', 
-                       { 'name' => $cgi->param('target_login') }
-        );
-    }
-    my $target_user = new Bugzilla::User(
-        Bugzilla::User::login_to_id($cgi->param('target_login'))
-    );
-    unless (defined($target_user) &&
-            $target_user->id != 0)
-    {
-        ThrowUserError('invalid_username', 
-                       { 'name' => $cgi->param('target_login') }
-        );
-    }
-    unless (defined($cgi->param('target_login')) &&
-            $target_user->id != 0)
-    {
-        ThrowUserError('invalid_username', 
-                       { 'name' => $cgi->param('target_login') }
-        );
-    }
-    if ($target_user->in_group('bz_sudo_protect')) {
-        ThrowUserError('sudo_protected', { login => $target_user->login });
-    }
-    
-    # If we have a reason passed in, keep it under 200 characters
-    my $reason = $cgi->param('reason') || '';
-    $reason = substr($reason, $[, 200);
-    my $reason_string = '&reason=' . url_quote($reason);
-    
-    # Log out and redirect user to the new page
-    Bugzilla->logout();
-    $target = 'relogin.cgi';
-    print $cgi->redirect($target . '?action=begin-sudo&target_login=' .
-                         url_quote($target_user->login) . $reason_string);
-    exit;
 }
 # begin-sudo: Confirm login and start sudo session
 elsif ($action eq 'begin-sudo') {
-    # We must have a logged-in user to do this
-    # That user must be in the 'bz_sudoers' group
+    # We must be sure that the user is authenticating by providing a login
+    # and password.
+    # We only need to do this for authentication methods that involve Bugzilla 
+    # directly obtaining a login (i.e. normal CGI login), as opposed to other 
+    # methods (like Environment vars login).  We assume that if a user can log 
+    # out, they can also log in:
+
+    # First, record if Bugzilla_login and Bugzilla_password were provided
+    my $credentials_provided;
+    if (defined($cgi->param('Bugzilla_login'))
+        && defined($cgi->param('Bugzilla_password')))
+    {
+        $credentials_provided = 1;
+    }
+    
+    # Next, log in the user
     my $user = Bugzilla->login(LOGIN_REQUIRED);
+    
+    # At this point, the user is logged in.  However, if they used a method
+    # where they could have provided a username/password (i.e. CGI), but they 
+    # did not provide a username/password, then throw an error.
+    if ($user->get_flag('can_logout') && !$credentials_provided) {
+        ThrowUserError('sudo_password_required',
+                       { target_login => $cgi->param('target_login'),
+                               reason => $cgi->param('reason')});
+    }
+    
+    # The user must be in the 'bz_sudoers' group
     unless ($user->in_group('bz_sudoers')) {
         ThrowUserError('auth_failure', {  group => 'bz_sudoers',
                                          action => 'begin',
@@ -138,35 +106,41 @@ elsif ($action eq 'begin-sudo') {
         );
     }
     
+    # Do not try to start a new session if one is already in progress!
+    if (defined(Bugzilla->sudoer)) {
+        ThrowUserError('sudo_in_progress', { target => $user->login });
+    }
+
+    # Did the user actually go trough the 'sudo-prepare' action?  Do some 
+    # checks on the token the action should have left.
+    my ($token_user, $token_timestamp, $token_data) =
+        Bugzilla::Token::GetTokenData($cgi->param('token'));
+    unless (defined($token_user)
+            && defined($token_data)
+            && ($token_user == $user->id)
+            && ($token_data eq 'sudo_prepared'))
+    {
+        ThrowUserError('sudo_preparation_required', 
+                       { target_login => $cgi->param('target_login'),
+                               reason => $cgi->param('reason')});
+    }
+    Bugzilla::Token::DeleteToken($cgi->param('token'));
+
     # Get & verify the target user (the user who we will be impersonating)
-    unless (defined($cgi->param('target_login')) &&
-            Bugzilla::User::login_to_id($cgi->param('target_login')) != 0)
+    my $target_user = 
+        Bugzilla::User->new_from_login($cgi->param('target_login'));
+    unless (defined($target_user)
+            && $target_user->id
+            && $user->can_see_user($target_user))
     {
-        ThrowUserError('invalid_username', 
-                       { 'name' => $cgi->param('target_login') }
-        );
-    }
-    my $target_user = new Bugzilla::User(
-        Bugzilla::User::login_to_id($cgi->param('target_login'))
-    );
-    unless (defined($target_user) &&
-            $target_user->id != 0)
-    {
-        ThrowUserError('invalid_username', 
-                       { 'name' => $cgi->param('target_login') }
-        );
-    }
-    unless (defined($cgi->param('target_login')) &&
-            $target_user->id != 0)
-    {
-        ThrowUserError('invalid_username', 
+        ThrowUserError('user_match_failed',
                        { 'name' => $cgi->param('target_login') }
         );
     }
     if ($target_user->in_group('bz_sudo_protect')) {
         ThrowUserError('sudo_protected', { login => $target_user->login });
     }
-    
+
     # If we have a reason passed in, keep it under 200 characters
     my $reason = $cgi->param('reason') || '';
     $reason = substr($reason, $[, 200);
@@ -175,13 +149,13 @@ elsif ($action eq 'begin-sudo') {
     my $time_string = time2str('%a, %d-%b-%Y %T %Z', time+(6*60*60), 'GMT');
 
     # For future sessions, store the unique ID of the target user
-    Bugzilla->cgi->send_cookie('-name'    => 'sudo',
-                               '-expires' => $time_string,
-                               '-value'   => $target_user->id
+    $cgi->send_cookie('-name'    => 'sudo',
+                      '-expires' => $time_string,
+                      '-value'   => $target_user->id
     );
     
     # For the present, change the values of Bugzilla::user & Bugzilla::sudoer
-    Bugzilla->sudo_request($target_user, Bugzilla->user);
+    Bugzilla->sudo_request($target_user, $user);
     
     # NOTE: If you want to log the start of an sudo session, do it here.
 
@@ -205,7 +179,6 @@ elsif ($action eq 'end-sudo') {
     Bugzilla->login(LOGIN_OPTIONAL);
     my $sudoer = Bugzilla->sudoer;
     if (defined($sudoer)) {
-        Bugzilla->logout_request();
         Bugzilla->sudo_request($sudoer, undef);
     }
 
@@ -224,10 +197,6 @@ elsif ($action eq 'logout') {
     $cgi->remove_cookie('sudo');
 
     Bugzilla->logout();
-
-    my $template = Bugzilla->template;
-    my $cgi = Bugzilla->cgi;
-    print $cgi->header();
 
     $vars->{'message'} = "logged_out";
     $target = 'global/message.html.tmpl';

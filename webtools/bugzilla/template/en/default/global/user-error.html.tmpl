@@ -1128,6 +1128,20 @@
     An sudo session (impersonating [% target FILTER html %]) is in progress.  
     End that session (using the link in the footer) before starting a new one.
 
+  [% ELSIF error == "sudo_password_required" %]
+    [% title = "Password Required" %]
+    Your [% terms.Bugzilla %] password is required to begin a sudo 
+    session. Please <a href="relogin.cgi?action=prepare-sudo&target_login=
+    [%- target_login FILTER html %]&reason=
+    [%- reason FILTER html %]">go back</a> and enter your password</a>.
+    
+  [% ELSIF error == "sudo_preparation_required" %]
+    [% title = "Preparation Required" %]
+    You may not start a sudo session directly.  Please
+    <a href="relogin.cgi?action=prepare-sudo&target_login=
+    [%- target_login FILTER html %]&reason=
+    [%- reason FILTER html %]">start your session normally</a>.
+
   [% ELSIF error == "sudo_protected" %]
     [% title = "User Protected" %]
     The user [% login FILTER html %] may not be impersonated by sudoers.
@@ -1201,6 +1215,11 @@
   [% ELSIF error == "user_login_required" %]
     [% title = "Login Name Required" %]
     You must enter a login name for the new user.
+
+  [% ELSIF error == "user_match_failed" %]
+    [% title = "Match Failed" %]
+    <tt>[% name FILTER html %]</tt> does not exist or you are not allowed 
+    to see that user.
 
   [% ELSIF error == "votes_must_be_nonnegative" %]
     [% title = "Votes Must Be Non-negative" %]
