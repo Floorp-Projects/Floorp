@@ -174,7 +174,7 @@ LibartLinearGradient(ArtRender *render, nsISVGGradient *aGrad, double *affine)
   dx = x2 - x1;
   dy = y2 - y1;
 
-  // Protect against devide by 0
+  // Protect against divide by 0
   if (fabs(dx) + fabs(dy) <= EPSILON )
     scale = 0.;
   else

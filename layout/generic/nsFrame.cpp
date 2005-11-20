@@ -375,7 +375,7 @@ SelectionImageService::CreateImage(nscolor aImageColor, imgIContainer *aContaine
         image->GetImageBytesPerRow(&bpr);
         image->GetAlphaBytesPerRow(&abpr);
 
-        //its better to temporarily go after heap than put big data on stack
+        //it's better to temporarily go after heap than put big data on stack
         unsigned char *row_data = (unsigned char *)malloc(bpr);
         if (!row_data)
           return NS_ERROR_OUT_OF_MEMORY;
@@ -1138,7 +1138,7 @@ nsFrame::FrameOrParentHasSpecialSelectionStyle(PRUint8 aSelectionStyle, nsIFrame
 NS_IMETHODIMP
 nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
 {
-  if (!aSelectable) //its ok if aSelectStyle is null
+  if (!aSelectable) //it's ok if aSelectStyle is null
     return NS_ERROR_NULL_POINTER;
 
   // Like 'visibility', we must check all the parents: if a parent
@@ -1234,7 +1234,7 @@ ContentContainsPoint(nsPresContext *aPresContext,
 
   while (frame) {
     // Get the frame's rect and make it relative to the
-    // upper left corner of it's parent view.
+    // upper left corner of its parent view.
 
     nsRect frameRect = frame->GetRect();
     frameRect.x = offsetPoint.x;
@@ -3147,7 +3147,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
   result = it->GetNumLines(&countLines);
   if (aOutSideLimit > 0) //start at end
     searchingLine = countLines;
-  else if (aOutSideLimit <0)//start at begining
+  else if (aOutSideLimit <0)//start at beginning
     searchingLine = -1;//"next" will be 0  
   else 
     if ((aPos->mDirection == eDirPrevious && searchingLine == 0) || 
@@ -3763,7 +3763,7 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 
         int edgeCase = 0;//no edge case. this should look at thisLine
         PRBool doneLooping = PR_FALSE;//tells us when no more block frames hit.
-        //this part will find a frame or a block frame. if its a block frame
+        //this part will find a frame or a block frame. if it's a block frame
         //it will "drill down" to find a viable frame or it will return an error.
         nsIFrame *lastFrame = this;
         do {
@@ -3792,7 +3792,7 @@ nsFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 /* SPECIAL CHECK FOR TABLE NAVIGATION
   tables need to navigate also and the frame that supports it is nsTableRowGroupFrame which is INSIDE
   nsTableOuterFrame.  if we have stumbled onto an nsTableOuter we need to drill into nsTableRowGroup
-  if we hit a header or footer thats ok just go into them,
+  if we hit a header or footer that's ok just go into them,
 */
             PRBool searchTableBool = PR_FALSE;
             if (aPos->mResultFrame->GetType() == nsLayoutAtoms::tableOuterFrame ||
@@ -4081,7 +4081,7 @@ nsFrame::GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *
     return result;
   if (!isupports)
     return NS_ERROR_NULL_POINTER;
-  //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+  //we must CAST here to an nsIFrame. nsIFrame doesn't really follow the rules
   //for speed reasons
 #ifndef IBMBIDI
   nsIFrame *newFrame = (nsIFrame *)isupports;
@@ -4769,7 +4769,7 @@ nsFrame::RefreshSizeCache(nsBoxLayoutState& aState)
     NS_ASSERTION(reason != eReflowReason_Incremental || path,
                  "HandleIncrementalReflow should have changed the reason to dirty.");
 
-    // If we don't have any HTML constraints and its a resize, then nothing in the block
+    // If we don't have any HTML constraints and it's a resize, then nothing in the block
     // could have changed, so no refresh is necessary.
     nsBoxLayoutMetrics* metrics = BoxMetrics();
     if (!DoesNeedRecalc(metrics->mBlockPrefSize) && reason == eReflowReason_Resize)
@@ -4908,7 +4908,7 @@ nsFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
        metrics->mPrefSize = metrics->mBlockPrefSize;
 
        // notice we don't need to add our borders or padding
-       // in. Thats because the block did it for us.
+       // in. That's because the block did it for us.
        // but we do need to add insets so debugging will work.
        AddInset(metrics->mPrefSize);
        nsIBox::AddCSSPrefSize(aState, this, metrics->mPrefSize);
@@ -5453,7 +5453,7 @@ nsFrame::HandleIncrementalReflow(nsBoxLayoutState& aState,
   {
    // if the child we are reflowing is the child we popped off the incremental 
    // reflow chain then we need to reflow it no matter what.
-   // if its not the child we got from the reflow chain then this child needs reflow
+   // if it's not the child we got from the reflow chain then this child needs reflow
    // because as a side effect of the incremental child changing size it needs to be resized.
    // This will happen a lot when a box that contains 2 children with different flexibilities
    // if on child gets bigger the other is affected because it is proprotional to the first.
@@ -5517,7 +5517,7 @@ nsFrame::HandleIncrementalReflow(nsBoxLayoutState& aState,
        aNeedsReflow = BoxMetrics()->mStyleChange || (childState & NS_FRAME_IS_DIRTY) || (childState & NS_FRAME_HAS_DIRTY_CHILDREN);
    break;
 
-   // if its an initial reflow we must place the child.
+   // if it's an initial reflow we must place the child.
    // otherwise we might think it was already placed when it wasn't
    case eReflowReason_Initial:
        aMoveFrame = PR_TRUE;

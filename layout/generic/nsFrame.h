@@ -462,7 +462,7 @@ protected:
 
   PRInt16 DisplaySelection(nsPresContext* aPresContext, PRBool isOkToTurnOn = PR_FALSE);
   
-  //this will modify aPos and return the next frame ect.
+  //this will modify aPos and return the next frame etc.
   NS_IMETHOD GetFrameFromDirection(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos);
 
   // Style post processing hook

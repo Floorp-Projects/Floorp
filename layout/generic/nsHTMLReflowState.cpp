@@ -267,7 +267,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
 #endif // IBMBIDI
 }
 
-// Version that species the containing block width and height
+// Version that specifies the containing block width and height
 nsHTMLReflowState::nsHTMLReflowState(nsPresContext*          aPresContext,
                                      const nsHTMLReflowState& aParentReflowState,
                                      nsIFrame*                aFrame,
@@ -1673,7 +1673,7 @@ static eNormalLineHeightControl GetNormalLineHeightCalcControl(void)
 {
   if (sNormalLineHeightControl == eUninitialized) {
     // browser.display.normal_lineheight_calc_control is not user
-    // changable, so no need to register callback for it.
+    // changeable, so no need to register callback for it.
     sNormalLineHeightControl =
       NS_STATIC_CAST(eNormalLineHeightControl,
                      nsContentUtils::GetIntPref("browser.display.normal_lineheight_calc_control", eNoExternalLeading));

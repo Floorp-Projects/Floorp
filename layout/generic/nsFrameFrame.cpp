@@ -298,7 +298,7 @@ nsSubDocumentFrame::GetDesiredSize(nsPresContext* aPresContext,
   float p2t = 0;
   if (!mContent->IsContentOfType(nsIContent::eXUL))
     // If no width/height was specified, use 300/150.
-    // This is for compatability with IE.
+    // This is for compatibility with IE.
     p2t = aPresContext->ScaledPixelsToTwips();
 
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {

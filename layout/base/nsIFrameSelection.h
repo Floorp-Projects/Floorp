@@ -73,7 +73,7 @@ struct SelectionDetails
 };
 
 /*PeekOffsetStruct
-   *  @param mShell is used to get the PresContext usefull for measuring text ect.
+   *  @param mShell is used to get the PresContext useful for measuring text etc.
    *  @param mDesiredX is the "desired" location of the new caret
    *  @param mAmount eWord, eCharacter, eLine
    *  @param mDirection enum defined in this file to be eForward or eBackward
@@ -83,7 +83,7 @@ struct SelectionDetails
    *  @param mResultFrame resulting frame for peeking
    *  @param mEatingWS boolean to tell us the state of our search for Next/Prev
    *  @param mPreferLeft true = prev line end, false = next line begin
-   *  @param mJumpLines if this is true then its ok to cross lines while peeking
+   *  @param mJumpLines if this is true then it's ok to cross lines while peeking
    *  @param mScrollViewStop if this is true then stop peeking across scroll view boundary
 */
 struct nsPeekOffsetStruct
@@ -136,10 +136,10 @@ public:
 
   /** Init will initialize the frame selector with the necessary pres shell to 
    *  be used by most of the methods
-   *  @param aShell is the parameter to be used for most of the other calls for callbacks ect
+   *  @param aShell is the parameter to be used for most of the other calls for callbacks etc
    *  @param aLimiter limits the selection to nodes with aLimiter parents
    */
-  NS_IMETHOD Init(nsIPresShell *aShell, nsIContent *aLimiter) = 0; //default since this isnt used for embedding
+  NS_IMETHOD Init(nsIPresShell *aShell, nsIContent *aLimiter) = 0; //default since this isn't used for embedding
 
   /* SetScrollableView sets the scroll view
    *  @param aScrollView is the scroll view for this selection.
@@ -182,7 +182,7 @@ public:
    *  @param aMultipleSelection will tell the frame selector to replace /or not the old selection. 
    *         cannot coexist with aContinueSelection
    *  @param aHint will tell the selection which direction geometrically to actually show the caret on. 
-   *         1 = end of this line 0 = beggining of this line
+   *         1 = end of this line 0 = beginning of this line
    */
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
                        PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint) = 0; 
@@ -204,7 +204,7 @@ public:
    *    TABLESELECTION_COLUMN    We should select a row (content points to any cell in column)
    *    TABLESELECTION_TABLE     We should select a table (content points to the table)
    *    TABLESELECTION_ALLCELLS  We should select all cells (content points to any cell in table)
-   *  @param aMouseEvent         passed in so we we can get where event occured and what keys are pressed
+   *  @param aMouseEvent         passed in so we can get where event occurred and what keys are pressed
    */
   NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent) = 0;
 
@@ -369,7 +369,7 @@ public:
    *  when the user clicks over an existing selection. A aDelay
    *  value of PR_TRUE means delay clearing the selection and
    *  placing the caret until MouseUp, when the user clicks over
-   *  an existing selection. This is especially usefull when applications
+   *  an existing selection. This is especially useful when applications
    *  want to support Drag & Drop of the current selection. A value
    *  of PR_FALSE means place the caret immediately. If the application
    *  never calls this method, the nsIFrameSelection implementation

@@ -88,7 +88,7 @@ nsFileControlFrame::nsFileControlFrame():
   mCachedState(nsnull),
   mDidPreDestroy(PR_FALSE)
 {
-    //Shrink the area around it's contents
+    //Shrink the area around its contents
   SetFlags(NS_BLOCK_SHRINK_WRAP);
 }
 
@@ -485,7 +485,7 @@ nsFileControlFrame::SetInitialChildList(nsPresContext* aPresContext,
 {
   nsresult r = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
-  // given that the CSS frame constuctor created all our frames. We need to find the text field
+  // given that the CSS frame constructor created all our frames. We need to find the text field
   // so we can get info from it.
   mTextFrame = GetTextControlFrame(this);
 }

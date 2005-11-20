@@ -516,7 +516,7 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
     // mDragStart is in frame coordinates
     nscoord start = mDragStart;
 
-    // take our current position and substract the start location
+    // take our current position and subtract the start location
     pos -= start;
 
     //printf("Diff=%d\n", pos);

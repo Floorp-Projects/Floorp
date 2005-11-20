@@ -395,7 +395,7 @@ nsMathMLContainerFrame::Stretch(nsIRenderingContext& aRenderingContext,
         // (need to test coreFrame since <mfrac> resets other things)
         if (parentData.coreFrame != mEmbellishData.coreFrame) {
           // (we fetch values from the core since they may use units that depend
-          // on style data, and style changes could have occured in the core since
+          // on style data, and style changes could have occurred in the core since
           // our last visit there)
           nsEmbellishData coreData;
           GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);

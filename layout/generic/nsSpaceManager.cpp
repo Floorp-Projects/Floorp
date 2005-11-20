@@ -192,7 +192,7 @@ void nsSpaceManager::Shutdown()
       nsMemory::Free(spaceManager);
   }
 
-  // Disable futher caching.
+  // Disable further caching.
   sCachedSpaceManagerCount = -1;
 }
 
@@ -508,7 +508,7 @@ nsSpaceManager::CanJoinBands(BandRect* aBand, BandRect* aPrevBand)
  * Tries to join the two adjacent bands. Returns PR_TRUE if successful and
  * PR_FALSE otherwise
  *
- * If the two bands are joined, the previous band is the the band that's deleted
+ * If the two bands are joined, the previous band is the band that's deleted
  */
 PRBool
 nsSpaceManager::JoinBands(BandRect* aBand, BandRect* aPrevBand)

@@ -4221,7 +4221,7 @@ nsTextFrame::PeekOffset(nsPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       nsTextTransformer tx(aPresContext);
       PrepareUnicodeText(tx, &indexBuffer, &paintBuffer, &textLength);
 
-      if (textLength)//if no renderable length, you cant park here.
+      if (textLength)//if no renderable length, you can't park here.
       {
         aPos->mContentOffset = aPos->mStartOffset;
         result = NS_OK;
@@ -6334,7 +6334,7 @@ void nsTextFrame::AdjustSelectionPointsForBidi(SelectionDetails *sdptr,
     sdptr->mStart = textLength - sdptr->mEnd;
     sdptr->mEnd   = textLength - swap;
 
-    // temp fix for 75026 crasher untill we fix the bidi code
+    // temp fix for 75026 crasher until we fix the bidi code
     // the above bidi code cause mStart < 0 in some case
     // the problem is we have whitespace compression code in 
     // nsTextTransformer which cause mEnd > textLength

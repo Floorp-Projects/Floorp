@@ -1008,7 +1008,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aMax
     numColsForColsAttr = (NS_STYLE_TABLE_COLS_ALL == mCols) ? numCols : mCols;
   }
 
-  // For every column, determine it's min and desired width based on cell style
+  // For every column, determine its min and desired width based on cell style
   // base on cells which do not span cols. Also, determine mCellSpacingTotal
   for (colX = 0; colX < numCols; colX++) { 
     nscoord minWidth = 0;

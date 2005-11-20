@@ -175,7 +175,7 @@ nsScrollbarButtonFrame::MouseClicked()
      else if (value.EqualsLiteral("increment"))
          curpos += increment;
 
-      // make sure the current positon is between the current and max positions
+      // make sure the current position is between the current and max positions
     if (curpos < 0)
        curpos = 0;
     else if (curpos > maxpos)

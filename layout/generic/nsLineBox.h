@@ -441,7 +441,7 @@ public:
 
   // Call this only while in Reflow() for the block the line belongs
   // to, only between reflowing the line (or sliding it, if we skip
-  // reflowing it) and the end of reflowing the the block.
+  // reflowing it) and the end of reflowing the block.
   PRBool CachedIsEmpty();
 
   void InvalidateCachedIsEmpty() {

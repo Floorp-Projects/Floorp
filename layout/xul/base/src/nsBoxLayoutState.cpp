@@ -124,7 +124,7 @@ nsBoxLayoutState::HandleReflow(nsIBox* aRootBox)
             mType = Resize;
          break;
 
-         // if its an initial reflow we must place the child.
+         // if it's an initial reflow we must place the child.
          // otherwise we might think it was already placed when it wasn't
          case eReflowReason_Initial:
             mType = Initial;
@@ -209,7 +209,7 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox)
         // don't want to just mark dirty that would notify the
         // box and it would notify its layout manager. This would 
         // be really bad for grid because it would blow away
-        // all is cached infomation for is colums and rows. Because the
+        // all is cached information for is colums and rows. Because the
         // our parent is most likely a rows or columns and it will think
         // its child is getting bigger or something.
         nsIBox* parent;

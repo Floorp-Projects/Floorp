@@ -1477,8 +1477,8 @@ nsGfxScrollFrameInner::GetScrollbarStylesFromFrame() const
 
   /**
    * this code is resposible for restoring the scroll position back to some
-   * saved positon. if the user has not moved the scroll position manually
-   * we keep scrolling down until we get to our orignally position. keep in
+   * saved position. if the user has not moved the scroll position manually
+   * we keep scrolling down until we get to our original position. keep in
    * mind that content could incrementally be coming in. we only want to stop
    * when we reach our new position.
    */

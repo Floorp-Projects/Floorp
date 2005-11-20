@@ -2046,7 +2046,7 @@ void nsCellMap::RebuildConsideringCells(nsTableCellMap& aMap,
     }
   }
 
-  // For for cell deletion, since the row is not being deleted, 
+  // For cell deletion, since the row is not being deleted, 
   // keep mRowCount the same as before. 
   mRowCount = PR_MAX(mRowCount, mRowCountOrig);
 

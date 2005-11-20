@@ -342,7 +342,7 @@ nsComboboxControlFrame::nsComboboxControlFrame()
 
   mRecentSelectedIndex = -1;
 
-  //Shrink the area around it's contents
+  //Shrink the area around its contents
   //SetFlags(NS_BLOCK_SHRINK_WRAP);
 
   REFLOW_COUNTER_INIT()
@@ -680,7 +680,7 @@ nsComboboxControlFrame::PositionDropdown(nsPresContext* aPresContext,
    // frame.
 
    // Note: As first glance, it appears that you could simply get the absolute bounding box for the
-   // dropdown list by first getting it's view, then getting the view's nsIWidget, then asking the nsIWidget
+   // dropdown list by first getting its view, then getting the view's nsIWidget, then asking the nsIWidget
    // for it's AbsoluteBounds. The problem with this approach, is that the dropdown lists y location can
    // change based on whether the dropdown is placed below or above the display frame.
    // The approach, taken here is to get use the absolute position of the display frame and use it's location
@@ -1307,7 +1307,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
         // when this flow of control drops out of this if it will do a reflow
         // on the AreaFrame which SHOULD make it get tothe drop down 
         // except that it is in the popup list, so we have it reflowed as
-        // a StyleChange, this is not as effecient as doing an Incremental
+        // a StyleChange, this is not as efficient as doing an Incremental
         //
         // At this point we want to by pass the reflow optimization in the dropdown
         // because we aren't why it is getting an incremental reflow, but we do
@@ -1494,7 +1494,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   nsMargin dspBorderPadding(0, 0, 0, 0);
   mDisplayFrame->CalcBorderPadding(dspBorderPadding);
 
-  // Substract dropdown's borderPadding from the width of the dropdown rect
+  // Subtract dropdown's borderPadding from the width of the dropdown rect
   // to get the size of the content area
   //
   // the height will come from the mDisplayFrame's height

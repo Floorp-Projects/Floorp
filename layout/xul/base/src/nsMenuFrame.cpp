@@ -880,7 +880,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       // XXX, bug 137033, In Windows, if mouse is outside the window when the menupopup closes, no
       // mouse_enter/mouse_exit event will be fired to clear current hover state, we should clear it manually.
-      // This code may not the best solution, but we can leave it here untill we find the better approach.
+      // This code may not the best solution, but we can leave it here until we find the better approach.
 
       nsIEventStateManager *esm = mPresContext->EventStateManager();
 

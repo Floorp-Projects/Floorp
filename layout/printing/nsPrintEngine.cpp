@@ -1048,7 +1048,7 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
   // You have to have both a PrintOptions and a PrintSetting to call
   // CheckForPrinters.
   // The user can pass in a null PrintSettings, but you can only
-  // create one if you have a PrintOptions.  So we we might as check
+  // create one if you have a PrintOptions.  So we might as check
   // to if we have a PrintOptions first, because we can't do anything
   // below without it then inside we check to se if the printSettings
   // is null to know if we need to create on.
@@ -1710,7 +1710,7 @@ nsPrintEngine::IsParentAFrameSet(nsIDocShell * aParent)
   aParent->GetPresShell(getter_AddRefs(shell));
   NS_ASSERTION(shell, "shell can't be null");
 
-  // See if if the incoming doc is the root document
+  // See if the incoming doc is the root document
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(aParent));
   if (!parentAsItem) return PR_FALSE;
 
@@ -1743,7 +1743,7 @@ nsPrintEngine::IsParentAFrameSet(nsIDocShell * aParent)
 
 
 //---------------------------------------------------------------------
-// Recursively build a list of of sub documents to be printed
+// Recursively build a list of sub documents to be printed
 // that mirrors the document tree
 void
 nsPrintEngine::BuildDocTree(nsIDocShellTreeNode * aParentNode,
@@ -1893,12 +1893,12 @@ nsPrintEngine::CheckForChildFrameSets(nsPrintObject* aPO)
 // This method is key to the entire print mechanism.
 //
 // This "maps" or figures out which sub-doc represents a
-// given Frame or IFrame in it's parent sub-doc.
+// given Frame or IFrame in its parent sub-doc.
 //
 // So the Mcontent pointer in the child sub-doc points to the
-// content in the it's parent document, that caused it to be printed.
+// content in the its parent document, that caused it to be printed.
 // This is used later to (after reflow) to find the absolute location
-// of the sub-doc on it's parent's page frame so it can be
+// of the sub-doc on its parent's page frame so it can be
 // printed in the correct location.
 //
 // This method recursvely "walks" the content for a document finding
@@ -2293,7 +2293,7 @@ nsPrintEngine::SetupToPrintContent(nsIDeviceContext* aDContext,
   // so just transfer it to the PrintData and we will skip the extra shrinkage reflow
   //
   // doSetPixelScale tells Reflow whether to set the shrinkage value into the DC
-  // The first tru we do not want to do this, the second time thru we do
+  // The first time we do not want to do this, the second time through we do
   PRBool doSetPixelScale = PR_FALSE;
   PRBool ppIsShrinkToFit = mPrtPreview && mPrtPreview->mShrinkToFit;
   if (ppIsShrinkToFit) {
@@ -2559,7 +2559,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
   NS_ASSERTION(aPO, "Pointer is null!");
   if (!aPO) return NS_ERROR_FAILURE;
 
-  // If it is hidden don't bother reflow it or any of it's children
+  // If it is hidden don't bother reflowing it or any of its children
   if (aPO->mIsHidden) return NS_OK;
 
   // create the PresContext
@@ -2628,7 +2628,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO, PRBool aDoCalcShrink)
   PR_PL(("In DV::ReflowPrintObject PO: %p (%9s) Setting w,h to %d,%d\n", aPO, gFrameTypesStr[aPO->mFrameType], width, height));
 
   // XXX - Hack Alert
-  // OK, so ther eis a selection, we will print the entire selection
+  // OK, so there is a selection, we will print the entire selection
   // on one page and then crop the page.
   // This means you can never print any selection that is longer than
   // one page put it keeps it from page breaking in the middle of your
@@ -3562,7 +3562,7 @@ nsPrintEngine::PrintPage(nsPresContext*   aPresContext,
       NS_ASSERTION(po, "nsPrintObject can't be null!");
       if (po->IsPrintable()) {
         // Now verify that SubDoc's PageNum matches the
-        // page num of it's parent doc
+        // page num of its parent doc
         curPageSeq->GetCurrentPageNum(&pageNum);
         nsIFrame* fr;
         CallQueryInterface(curPageSeq, &fr);
@@ -3711,7 +3711,7 @@ nsPrintEngine::FindSelectionBounds(nsPresContext* aPresContext,
   NS_ASSERTION(aPresContext, "Pointer is null!");
   NS_ASSERTION(aParentFrame, "Pointer is null!");
 
-  // loop thru named child lists
+  // loop through named child lists
   nsIAtom* childListName = nsnull;
   PRInt32  childListIndex = 0;
   do {
@@ -3757,7 +3757,7 @@ nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
   nsIFrame * endFrame   = nsnull;
 
   // start out with the sequence frame and search the entire frame tree
-  // capturing the the starting and ending child frames of the selection
+  // capturing the starting and ending child frames of the selection
   // and their rects
   nsRect r = seqFrame->GetRect();
   FindSelectionBounds(aPresContext, aRC, seqFrame, r,

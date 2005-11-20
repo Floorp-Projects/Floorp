@@ -360,7 +360,7 @@ protected:
                                     nsRect&         aRect,
                                     nsRect&         aChildRect);
 
-  // Static memeber variables
+  // Static member variables
   PRBool mIsCreatingPrintPreview;
   PRBool mIsDoingPrinting;
 

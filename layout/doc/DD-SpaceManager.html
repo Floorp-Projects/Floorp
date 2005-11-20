@@ -9,7 +9,7 @@
  
 <h1><font color="#cc0000">Gecko Layout Detailed Design Document</font></h1>
  
-<h1>Space Manger Detailed Design</h1>
+<h1>Space Manager Detailed Design</h1>
  
 <h2>Overview</h2>
 <p>
@@ -25,14 +25,14 @@
 <hr width="100%" size="2"> 
 <h2>nsSpaceManager</h2>
 <p>
-   The Space Manger is the central class is a group of classes that manage
+   The Space Manager is the central class is a group of classes that manage
  the occupied and available space that exists in horizontal bands across
 a  canvas. &nbsp;The primary goal of the Space Manager is to provide information
  about those bands of space to support the CSS notion of floated elements.
 </p>
  
 <p>
-  There are three important parts to the Space Manger API: the parts that 
+  There are three important parts to the Space Manager API: the parts that 
 deal with the coordinate space of the Space Manager, the parts that deal with
 the regions managed by the Space Manager, and the parts that manage float
 impact intervals.
@@ -321,7 +321,7 @@ private:
 <p>
   The Constructor requires a Presentation Shell, used for arena allocations
  mostly, and a frame that this Space Manager is rooted on. &nbsp;The coordinate
- space of this Space Manger is relative to the frame passed in to the constructor.
+ space of this Space Manager is relative to the frame passed in to the constructor.
 </p>
  
 <pre>  nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame);
@@ -588,7 +588,7 @@ as available, and with a rect corresponding to the area remainin in the band
 </ul>
  
 <h4>Algorithm 2: AddRectRegion</h4>
-Clients call into this method to notify the Space Manger that a new frame
+Clients call into this method to notify the Space Manager that a new frame
 is occupying some space.
 
 <ul>

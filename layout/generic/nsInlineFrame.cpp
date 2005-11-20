@@ -492,7 +492,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     if (irs.mSetParentPointer) {
       frame->SetParent(this);
 
-      // We also need to check if frame has a next-in-flow. It it does, then set
+      // We also need to check if frame has a next-in-flow. If it does, then set
       // its parent frame pointer, too. Otherwise, if we reflow frame and it's
       // complete we'll fail when deleting its next-in-flow which is no longer
       // needed. This scenario doesn't happen often, but it can happen

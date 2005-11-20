@@ -243,7 +243,7 @@ public:
 #endif
 
   /**
-   * Get the default font correponding to the given ID.  This object is
+   * Get the default font corresponding to the given ID.  This object is
    * read-only, you must copy the font to modify it.
    */
   virtual NS_HIDDEN_(const nsFont*) GetDefaultFontExternal(PRUint8 aFontID) const;
@@ -466,7 +466,7 @@ public:
   }
 
   /**
-   * Set and get methods for controling the background drawing
+   * Set and get methods for controlling the background drawing
   */
   PRBool GetBackgroundImageDraw() const { return mDrawImageBackground; }
   void   SetBackgroundImageDraw(PRBool aCanDraw)

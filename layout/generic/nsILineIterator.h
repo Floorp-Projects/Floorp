@@ -54,7 +54,7 @@
 //
 // NOTE: while you can get this interface by doing a slezy hacky
 // QueryInterface on block frames, it isn't like a normal com
-// interface: its not reflexive (you can't query back to the block
+// interface: it's not reflexive (you can't query back to the block
 // frame) and unlike other frames, it *IS* reference counted so don't
 // forget to NS_RELEASE it when you are done with it!
 
@@ -98,7 +98,7 @@ public:
                      nsRect& aLineBounds,
                      PRUint32* aLineFlags) = 0;
 
-  // Given a frame thats a child of the block, find which line its on
+  // Given a frame that's a child of the block, find which line its on
   // and return that line index into aIndexResult. aIndexResult will
   // be set to -1 if the frame cannot be found.
   NS_IMETHOD FindLineContaining(nsIFrame* aFrame,

@@ -74,7 +74,7 @@ struct nsHypotheticalBox;
  */
 enum nsReflowReason {
   eReflowReason_Initial = 0,       // initial reflow of a newly created frame
-  eReflowReason_Incremental = 1,   // an incremental change has occured. see the reflow command for details
+  eReflowReason_Incremental = 1,   // an incremental change has occurred. see the reflow command for details
   eReflowReason_Resize = 2,        // general request to determine a desired size
   eReflowReason_StyleChange = 3,   // request to reflow because of a style change. Note: you must reflow
                                    // all your child frames

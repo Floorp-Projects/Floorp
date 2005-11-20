@@ -51,7 +51,7 @@ select[size] {
 }
   
 xul|*.select-treebody::-moz-tree-row {
-/*  -moz-apperance: treeitem; */
+/*  -moz-appearance: treeitem; */
   border: 1px solid transparent;
 }
 

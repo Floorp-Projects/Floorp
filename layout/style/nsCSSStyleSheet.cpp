@@ -3291,7 +3291,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 #undef STATE_CHECK
 
 // Right now, there are four operators:
-//   PRUnichar(0), the descendent combinator, is greedy
+//   PRUnichar(0), the descendant combinator, is greedy
 //   '~', the indirect adjacent sibling combinator, is greedy
 //   '+' and '>', the direct adjacent sibling and child combinators, are not
 #define NS_IS_GREEDY_OPERATOR(ch) (ch == PRUnichar(0) || ch == PRUnichar('~'))

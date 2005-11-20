@@ -912,8 +912,8 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   nscoord visibleHeight = 0;
   if (isInDropDownMode) {
     // Compute the visible height of the drop-down list
-    // The dropdown list height is the smaller of it's height setting or the height
-    // of the smallest box that can drawn around it's contents.
+    // The dropdown list height is the smaller of its height setting or the height
+    // of the smallest box that can drawn around its contents.
     visibleHeight = scrolledAreaHeight;
 
     mNumDisplayRows = kMaxDropDownRows;
@@ -1953,7 +1953,7 @@ nsListControlFrame::DoneAddingChildren(PRBool aIsDone)
     // for all the content.
     // If so, then we can initialize;
     if (mIsAllFramesHere == PR_FALSE) {
-      // if all the frames are now present we can initalize
+      // if all the frames are now present we can initialize
       if (CheckIfAllFramesHere()) {
         mHasBeenInitialized = PR_TRUE;
         ResetList(PR_TRUE);
@@ -2220,7 +2220,7 @@ nsListControlFrame::SyncViewWithFrame()
 {
     // Resync the view's position with the frame.
     // The problem is the dropdown's view is attached directly under
-    // the root view. This means it's view needs to have it's coordinates calculated
+    // the root view. This means its view needs to have its coordinates calculated
     // as if it were in it's normal position in the view hierarchy.
   mComboboxFrame->AbsolutelyPositionDropDown();
 

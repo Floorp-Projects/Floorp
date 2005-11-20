@@ -19,7 +19,7 @@ pre.log {display:table-cell}
 
  <h2>Block Reflow</h2>
 <p>
-Another possibilty to debug the reflow process is implemented inside <a href="http://lxr.mozilla.org/seamonkey/source/layout/html/base/src/nsBlockFrame.cpp">nsBlockFrame.cpp</a>. It can be invoked by<p>
+Another way to debug the reflow process is implemented inside <a href="http://lxr.mozilla.org/seamonkey/source/layout/html/base/src/nsBlockFrame.cpp">nsBlockFrame.cpp</a>. It can be invoked by<p>
 <code>set GECKO_BLOCK_DEBUG_FLAGS=reflow</code>
 <p>
 The available options are:
@@ -177,7 +177,7 @@ mColWidths=360 360 360 360
 ***END TABLE DUMP***
 </pre>
 <p>
-The first column has already the minimum content width, the table column can't shrink below that, the desired content width of <span class="log">540</span> twips, thats the space to layout <code>cell 1</code> without wrapping the text and the <span class="log">1230</span> which correspond to the <code>style="width:80px"</code> at the first cell. At this step the final size is <span class="log">360</span> twips.
+The first column has already the minimum content width, the table column can't shrink below that, the desired content width of <span class="log">540</span> twips, that's the space to layout <code>cell 1</code> without wrapping the text and the <span class="log">1230</span> which correspond to the <code>style="width:80px"</code> at the first cell. At this step the final size is <span class="log">360</span> twips.
 <p>
 <table cellpadding="8">
 <tr>

@@ -132,7 +132,7 @@ static Flags flagO[2]={ DIRPROP_FLAG(LRO), DIRPROP_FLAG(RLO) };
  * that look at immediately surrounding types.
  *
  * As a related topic, this implementation does not remove Boundary Neutral
- * types from the input, but ignores them whereever this is relevant.
+ * types from the input, but ignores them whenever this is relevant.
  * For example, the loop for the resolution of the weak types reads
  * types until it finds a non-BN.
  * Also, explicit embedding codes are neither changed into BN nor removed.
@@ -1092,7 +1092,7 @@ void nsBidi::ResolveImplicitLevels(PRInt32 aStart, PRInt32 aLimit,
   }
 
   /* perform (Nn) - here,
-  the character after the the neutrals is aEOR, which is either L or R */
+  the character after the neutrals is aEOR, which is either L or R */
   /* this is one iteration late for the neutrals */
   if(neutralStart>=0) {
     /*

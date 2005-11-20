@@ -74,7 +74,7 @@
        striped background set on <tr> will line up across rows
        even if the cells are assigned arbitrary border widths.
 
-       For example, the continous border on the top edge of a
+       For example, the continuous border on the top edge of a
        row group is the collapse of any row group, row, and
        table borders involved. (The first row group's top would
        be [table-top + row group top + first row top]. It's bottom

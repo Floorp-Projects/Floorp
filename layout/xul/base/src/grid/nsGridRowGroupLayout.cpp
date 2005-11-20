@@ -340,7 +340,7 @@ nsGridRowGroupLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIs
   nsresult rv = nsGridRowLayout::GetTotalMargin(aBox, aMargin, aIsHorizontal);
   
   // make sure we have the scrollframe on the outside if it has one.
-  // thats where the border it.
+  // that's where the border is.
   aBox = nsGrid::GetScrollBox(aBox);
 
   // add our border/padding to it

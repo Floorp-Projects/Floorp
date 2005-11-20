@@ -676,7 +676,7 @@ void DebugCheckChildSize(nsIFrame*            aChild,
 }
 #endif
 
-// the computed height for the cell, which descendents use for percent height calculations
+// the computed height for the cell, which descendants use for percent height calculations
 // it is the height (minus border, padding) of the cell's first in flow during its final 
 // reflow without an unconstrained height.
 static nscoord

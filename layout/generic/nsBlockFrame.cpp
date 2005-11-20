@@ -1344,7 +1344,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   if (!aState.GetFlag(BRS_ISBOTTOMMARGINROOT)) {
     // Apply rule from CSS 2.1 section 8.3.1. If we have some empty
     // line with clearance and a non-zero top margin and all
-    // subsequent lines are empty, then we do not allow our childrens'
+    // subsequent lines are empty, then we do not allow our children's
     // carried out bottom margin to be carried out of us and collapse
     // with our own bottom margin.
     if (CheckForCollapsedBottomMarginFromClearanceLine()) {
@@ -1696,7 +1696,7 @@ nsBlockFrame::MarkLineDirty(line_iterator aLine)
   }
 #endif
 
-  // Mark previous line dirty if its an inline line so that it can
+  // Mark previous line dirty if it's an inline line so that it can
   // maybe pullup something from the line just affected.
   // XXX We don't need to do this if aPrevLine ends in a break-after...
   if (aLine != mLines.front() &&
@@ -3161,7 +3161,7 @@ nsBlockFrame::ShouldApplyTopMargin(nsBlockReflowState& aState,
   // Determine if this line is "essentially" the first line
   for (line_iterator line = begin_lines(); line != aLine; ++line) {
     if (!line->CachedIsEmpty() || line->HasClearance()) {
-      // A line which preceeds aLine is non-empty, or has clearance,
+      // A line which precedes aLine is non-empty, or has clearance,
       // so therefore the top margin applies.
       aState.SetFlag(BRS_APPLYTOPMARGIN, PR_TRUE);
       return PR_TRUE;
@@ -3267,7 +3267,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
   // See if we should apply the top margin. If the block frame being
   // reflowed is a continuation (non-null prev-in-flow) then we don't
-  // apply its top margin because its not significant. Otherwise, dig
+  // apply its top margin because it's not significant. Otherwise, dig
   // deeper.
   PRBool applyTopMargin =
     !frame->GetPrevInFlow() && ShouldApplyTopMargin(aState, aLine);
@@ -3647,7 +3647,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // first line box.
         //
         // There are exactly two places a bullet can be placed: near the
-        // first or second line. Its only placed on the second line in a
+        // first or second line. It's only placed on the second line in a
         // rare case: an empty first line followed by a second line that
         // contains a block (example: <LI>\n<P>... ). This is where
         // the second case can happen.
@@ -4092,7 +4092,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       // Break-before cases.
       if (aFrame == aLine->mFirstChild) {
         // If we break before the first frame on the line then we must
-        // be trying to place content where theres no room (e.g. on a
+        // be trying to place content where there's no room (e.g. on a
         // line with wide floats). Inform the caller to reflow the
         // line after skipping past a float.
         *aLineReflowStatus = LINE_REFLOW_REDO;
@@ -4379,7 +4379,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   // first line box.
   //
   // There are exactly two places a bullet can be placed: near the
-  // first or second line. Its only placed on the second line in a
+  // first or second line. It's only placed on the second line in a
   // rare case: an empty first line followed by a second line that
   // contains a block (example: <LI>\n<P>... ).
   //
@@ -4521,7 +4521,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       newY > aState.mBottomEdge &&
       aState.mBottomEdge != NS_UNCONSTRAINEDSIZE &&
       !aUpdateMaximumWidth) {
-    // Push this line and all of it's children and anything else that
+    // Push this line and all of its children and anything else that
     // follows to our next-in-flow
     NS_ASSERTION((aState.mCurrentLine == aLine), "oops");
     PushLines(aState, aLine.prev());
@@ -5313,7 +5313,7 @@ nsBlockFrame::AddFrames(nsIFrame* aFrameList,
   if (aPrevSibling) {
     // XXX_perf This is technically O(N^2) in some cases, but by using
     // RFind instead of Find, we make it O(N) in the most common case,
-    // which is appending cotent.
+    // which is appending content.
 
     // Find the line that contains the previous sibling
     if (! nsLineBox::RFindLineContaining(aPrevSibling,
@@ -5864,7 +5864,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       // round down to twips per pixel so that we fit
       // needed when prev. float has procentage width
       // (maybe is a table flaw that makes table chose to round up
-      // but i don't want to change that, too risky)
+      // but I don't want to change that, too risky)
       nscoord twp = aState.mPresContext->IntScaledPixelsToTwips(1);
       availWidth -=  availWidth % twp;
     }
@@ -6632,7 +6632,7 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
       
       if (NS_SUCCEEDED(result) && pos.mResultFrame){
         if (result == NS_OK)
-          it = do_QueryInterface(pos.mResultFrame, &result);//if this fails thats ok
+          it = do_QueryInterface(pos.mResultFrame, &result);//if this fails that's ok
         resultFrame = pos.mResultFrame;
         mainframe = resultFrame;
       }
@@ -7346,7 +7346,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
       reason = eReflowReason_Resize;
     }
 
-    // ...unless its an incremental `style changed' reflow targeted at
+    // ...unless it's an incremental `style changed' reflow targeted at
     // the block, in which case, we propagate that to its children.
     nsHTMLReflowCommand *command = rs.path->mReflowCommand;
     if (command) {
@@ -7418,7 +7418,7 @@ void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList, nsIFrame*
   }
 }
 
-//XXX get rid of this -- its slow
+//XXX get rid of this -- it's slow
 void
 nsBlockFrame::BuildFloatList(nsBlockReflowState& aState)
 {

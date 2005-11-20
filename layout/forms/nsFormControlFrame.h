@@ -165,7 +165,7 @@ public:
   virtual void ControlChanged(nsPresContext* aPresContext) {}
 
   /**
-    * Chance to Initialize to a defualt value
+    * Chance to Initialize to a default value
     */
   virtual void InitializeControl(nsPresContext* aPresContext);
 

@@ -90,7 +90,7 @@ NS_NewIsIndexFrame(nsIPresShell* aPresShell)
 
 nsIsIndexFrame::nsIsIndexFrame()
 {
-    //Shrink the area around it's contents
+    //Shrink the area around its contents
   SetFlags(NS_BLOCK_SHRINK_WRAP | NS_BLOCK_SPACE_MGR);
 }
 
@@ -98,8 +98,8 @@ nsIsIndexFrame::~nsIsIndexFrame()
 {
   // remove ourself as a listener of the text control (bug 40533)
   if (mInputContent) {
-    nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mInputContent));
-    reciever->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
+    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mInputContent));
+    receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMKeyListener));
   }
 }
 

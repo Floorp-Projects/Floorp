@@ -51,7 +51,7 @@ enum nsReflowType {
   /**
    * This reflow command is used when the style for a frame has
    * changed. This also implies that if the frame is a container
-   * that its childrens style has also changed. The target of the
+   * that its children's style has also changed. The target of the
    * reflow command is the frame that changed style.
    */
   eReflowType_StyleChanged,

@@ -210,7 +210,7 @@ nsContainerFrame::Paint(nsPresContext*      aPresContext,
 }
 
 // Paint the children of a container, assuming nothing about the
-// childrens spatial arrangement. Given relative positioning, negative
+// children's spatial arrangement. Given relative positioning, negative
 // margins, etc, that's probably a good thing.
 //
 // Note: aDirtyRect is in our coordinate system (and of course, child

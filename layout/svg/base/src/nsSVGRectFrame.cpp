@@ -250,7 +250,7 @@ nsSVGRectFrame::ConstructPath(nsISVGRendererPathBuilder* pathBuilder)
 
   /* If either the 'rx' or the 'ry' attribute isn't set in the markup, then we
      have to set it to the value of the other. We do this after clamping rx and
-     ry since omiting one of the attributes implicitly means they should both
+     ry since omitting one of the attributes implicitly means they should both
      be the same. */
   PRBool hasRx = mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::rx);
   PRBool hasRy = mContent->HasAttr(kNameSpaceID_None, nsSVGAtoms::ry);

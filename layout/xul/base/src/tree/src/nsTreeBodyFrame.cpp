@@ -2702,7 +2702,7 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
   // determine the twisty rect's true width.  This is done by examining the style context for
   // a width first.  If it has one, we use that.  If it doesn't, we use the image's natural width.
   // If the image hasn't loaded and if no width is specified, then we just bail. If there is
-  // a -moz-apperance involved, adjust the rect by the minimum widget size provided by
+  // a -moz-appearance involved, adjust the rect by the minimum widget size provided by
   // the theme implementation.
   nsRect imageSize = GetImageSize(aRowIndex, aColumn, PR_TRUE, twistyContext);
   if (imageSize.height > twistyRect.height)
@@ -2737,7 +2737,7 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
     PaintBackgroundLayer(twistyContext, aPresContext, aRenderingContext, twistyRect, aDirtyRect);
 
     if ( useTheme ) {
-      // yeah, i know it says we're drawing a background, but a twisty is really a fg
+      // yeah, I know it says we're drawing a background, but a twisty is really a fg
       // object since it doesn't have anything that gecko would want to draw over it. Besides,
       // we have to prevent imagelib from drawing it.
       theme->DrawWidgetBackground(&aRenderingContext, this, 

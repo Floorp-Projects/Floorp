@@ -826,7 +826,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   // ``above'' another float that preceded it in the flow.
   mY = NS_MAX(mSpaceManager->GetLowestRegionTop() + BorderPadding().top, mY);
 
-  // See if the float should clear any preceeding floats...
+  // See if the float should clear any preceding floats...
   if (NS_STYLE_CLEAR_NONE != floatDisplay->mBreakType) {
     // XXXldb Does this handle vertical margins correctly?
     mY = ClearFloats(mY, floatDisplay->mBreakType);

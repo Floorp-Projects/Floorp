@@ -38,7 +38,7 @@ job. The classes that are considered part of the Space Manager are:<br>
 </ul>
   Outside of the Space Manager itself, the clients of the Space Manager also
  play an inportant part in the management of he available and used space.
-&nbsp;The primary classes that interact witht eh Space Manager are:<br>
+&nbsp;The primary classes that interact with the Space Manager are:<br>
  
 <ul>
    <li>nsBlockReflowState</li>
@@ -58,7 +58,7 @@ in nsBlockReflowState).  &nbsp;<br>
 changes to floated elements. &nbsp;This is referred to as Propagation
 of Float Damage and is handled by the Block Frame, making use of the
 Space Manager. When a float is incrementally reflowed, the Space
-Manger is notified if the float's region has changed. If so, the
+Manager is notified if the float's region has changed. If so, the
 vertical space that has been affected (including both the float's old
 region and the float's new region) is noted in the internal
 nsIntervalSet as potential float damage (the method is
@@ -110,14 +110,14 @@ data.<br>
    
   <h2>Use Case</h2>
    
-  <h4>Use Case 1: Space Manger is Created / Destroyed</h4>
+  <h4>Use Case 1: Space Manager is Created / Destroyed</h4>
   Space Manager instances are created in the nsBlockFrame's Reflow method.
  &nbsp;<br>
    
   <ul>
      <li>An instance is created&nbsp;</li>
-     <li>The BlockReflowState's previous Space Manger is saved off.</li>
-     <li>The new Space Manger instance is associated with the BlockReflowState. 
+     <li>The BlockReflowState's previous Space Manager is saved off.</li>
+     <li>The new Space Manager instance is associated with the BlockReflowState. 
 &nbsp;</li>
      <li>After the block frame's Reflow has completed, the old Space Manager 
 instance is re-associated with the BlockReflowState</li>
@@ -139,7 +139,7 @@ The general algorightm in <i>nsBlockReflowState::RecoverFloats</i> is:<br>
   <ul>
      <li>For each line in the block, see if it has floated blocks</li>
      <li>If floats are in the line, iterate over the floats and add each
- one to the Space Manger via the AddRectRegion method. &nbsp;The actual rect
+ one to the Space Manager via the AddRectRegion method. &nbsp;The actual rect
  for the frame is cached in an nsFloatCache so it does not have to be recomputed.</li>
      <li>If the block has any block children, then translate the Space Manager
  to the child block's origin and update the space manager in the context
@@ -171,7 +171,7 @@ The general algorightm in <i>nsBlockReflowState::FlowAndPlaceFloat</i> is:<br>
   The nsBlockFrame makes use of the Space Manager indirectly to get the available
  space to reflow a child block or inline frame into. The block frame uses
 a helper method on the nsBlockReflowState class to do the actual computation
- of available space based on the data in the Space Manger. Here is how it
+ of available space based on the data in the Space Manager. Here is how it
 works for reflowing an inline frame within a block (this also occurs for
 reflowing a block frame and, partially, for preparing for a resize reflow).<br>
    
@@ -200,7 +200,7 @@ damage</h4>
   <ul>
      <li>A non-dirty line is encountered by the Block Frame in ReflowDirtyLines</li>
      <li>Block Frame calls its PropagateFloatDamage method</li>
-     <li>The Space Manger is checked to see if ther is any float damage</li>
+     <li>The Space Manager is checked to see if there is any float damage</li>
      <li>If there is, then the block frame asks the Space Manager if the
 line in question intersects the float damage</li>
      <li>If the line does intersect a damage interval, then the line is marked 

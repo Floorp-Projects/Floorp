@@ -177,7 +177,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
 
   // Instead of always pre-initializing the free-lists for frames and
   // spans, we do it on demand so that situations that only use a few
-  // frames and spans won't waste alot of time in unneeded
+  // frames and spans won't waste a lot of time in unneeded
   // initialization.
   PL_INIT_ARENA_POOL(&mArena, "nsLineLayout", 1024);
   mFrameFreeList = nsnull;
@@ -606,7 +606,7 @@ nsLineLayout::EndSpan(nsIFrame* aFrame,
   aSizeResult.height = maxHeight;
   if (aMaxElementWidth) {
     if (psd->mNoWrap) {
-      // When we have a non-breakable span, it's max-element-width
+      // When we have a non-breakable span, its max-element-width
       // width is its entire width.
       *aMaxElementWidth = width;
     }
@@ -736,7 +736,7 @@ nsLineLayout::FreeSpan(PerSpanData* psd)
     pfd = next;
   }
 
-  // Now put the span on the free list since its free too
+  // Now put the span on the free list since it's free too
   psd->mNextFreeSpan = mSpanFreeList;
   mSpanFreeList = psd;
 #ifdef DEBUG
@@ -1025,7 +1025,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       }
     }
     else if (nsLayoutAtoms::textFrame == frameType) {
-      // Note non-empty text-frames for inline frame compatability hackery
+      // Note non-empty text-frames for inline frame compatibility hackery
       pfd->SetFlag(PFD_ISTEXTFRAME, PR_TRUE);
       // XXX An empty text frame at the end of the line seems not
       // to have zero width.
@@ -1358,7 +1358,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
       // frame. If it is, then allow the frame next to it to fit.
       if (pfd->GetFlag(PFD_ISNONEMPTYTEXTFRAME)) {
         // This must be the first piece of non-empty text (because
-        // aNotSafeToBreak is true) or its a piece of text that is
+        // aNotSafeToBreak is true) or it's a piece of text that is
         // part of a larger word.
         pfd->SetFlag(PFD_ISSTICKY, PR_TRUE);
       }
@@ -1420,7 +1420,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
     // only things on a line will be those things that "fit".
     //
     // 2. Before a float is placed on a line, the line has to be empty
-    // (otherwise its a "below current line" flaoter and will be placed
+    // (otherwise it's a "below current line" float and will be placed
     // after the line).
     //
     // Therefore, if the span directly or indirectly has a float
@@ -2005,7 +2005,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         (0 == spanFramePFD->mMargin.right) &&
         (0 == spanFramePFD->mMargin.bottom) &&
         (0 == spanFramePFD->mMargin.left)))) {
-    // This code handles an issue with compatability with non-css
+    // This code handles an issue with compatibility with non-css
     // conformant browsers. In particular, there are some cases
     // where the font-size and line-height for a span must be
     // ignored and instead the span must *act* as if it were zero
@@ -3043,7 +3043,7 @@ nsLineLayout::FindNextText(nsPresContext* aPresContext, nsIFrame* aFrame)
 
   // So this is kind of funky. During reflow, overflow frames will
   // have their parent pointers set up lazily. We assume that, on
-  // entry, aFrame has it's parent pointer set correctly (as do all of
+  // entry, aFrame has its parent pointer set correctly (as do all of
   // its ancestors). Starting from that, we need to make sure that as
   // we traverse through frames trying to find the next text frame, we
   // leave the frames with their parent pointers set correctly, so the

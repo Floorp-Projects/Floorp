@@ -121,7 +121,7 @@ nsMathMLFrame::UpdatePresentationData(PRInt32         aScriptLevelIncrement,
 
 // Helper to give a style context suitable for doing the stretching of
 // a MathMLChar. Frame classes that use this should ensure that the 
-// extra leaf style contexts given to the MathMLChars are acessible to
+// extra leaf style contexts given to the MathMLChars are accessible to
 // the Style System via the Get/Set AdditionalStyleContext() APIs.
 /* static */ void
 nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,

@@ -190,7 +190,7 @@ public:
    * Returns a pointer to the word, the number of characters in the word, the
    * content length of the word, whether it is whitespace, and whether the
    * text was transformed (any of the transformations listed above). The content
-   * length can be greater than the word length if whitespace compression occured
+   * length can be greater than the word length if whitespace compression occurred
    * or if characters were discarded
    *
    * The default behavior is to reset the transform buffer to the beginning,
@@ -362,7 +362,7 @@ protected:
   // The frame's text-transform state
   PRUint8 mTextTransform;
 
-  // Flag for controling mLeaveAsAscii, mHasMultibyte, mTransformedTextIsAscii
+  // Flag for controlling mLeaveAsAscii, mHasMultibyte, mTransformedTextIsAscii
   PRUint8 mFlags;
 
   // prefs used to configure the double-click word selection behavior

@@ -212,7 +212,7 @@ nsGrid::RebuildIfNeeded()
   //   </row>
   // </rows>
   //
-  // computedColumnCount = 2 // for the 2 buttons in the the row tag
+  // computedColumnCount = 2 // for the 2 buttons in the row tag
   // computedRowCount = 0 // there is nothing in the  column tag
   // mColumnCount = 1 // one column defined
   // mRowCount = 1 // one row defined
@@ -745,7 +745,7 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
   nsMargin totalBorderPadding(0,0,0,0);
   nsMargin totalMargin(0,0,0,0);
 
-  // if there is a box and its not bogus take its
+  // if there is a box and it's not bogus take its
   // borders padding and insets into account
   if (box && !row->mIsBogus)
   {
@@ -797,10 +797,10 @@ nsGrid::GetRowOffsets(nsBoxLayoutState& aState, PRInt32 aIndex, nscoord& aTop, n
   // of each columns. 
 
   // If we are the first row then get the largest top border/padding in 
-  // our columns. If thats larger than the rows top border/padding use it.
+  // our columns. If that's larger than the rows top border/padding use it.
 
   // If we are the last row then get the largest bottom border/padding in 
-  // our columns. If thats larger than the rows bottom border/padding use it.
+  // our columns. If that's larger than the rows bottom border/padding use it.
   PRInt32 firstIndex = 0;
   PRInt32 lastIndex = 0;
   nsGridRow* firstRow = nsnull;
@@ -1214,7 +1214,7 @@ nsGrid::IsGrid(nsIBox* aBox)
 }
 
 /**
- * This get the flexibilty of the row at aIndex. Its not trivial. There are a few
+ * This get the flexibilty of the row at aIndex. It's not trivial. There are a few
  * things we need to look at. Specifically we need to see if any <rows> or <columns>
  * tags are around us. Their flexibilty will affect ours.
  */
@@ -1490,8 +1490,8 @@ nsGrid::GetScrollBox(nsIBox* aChild)
   aChild->GetParentBox(&parent);
 
   // walk up until we find a scrollframe or a part
-  // if its a scrollframe return it.
-  // if its a parent then the child passed does not
+  // if it's a scrollframe return it.
+  // if it's a parent then the child passed does not
   // have a scroll frame immediately wrapped around it.
   while (parent) {
     nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(parent);

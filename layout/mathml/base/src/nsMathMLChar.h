@@ -178,7 +178,7 @@ public:
   }
 
   // Hooks to access the extra leaf style contexts given to the MathMLChars.
-  // They provide an interface to make them acessible to the Style System via
+  // They provide an interface to make them accessible to the Style System via
   // the Get/Set AdditionalStyleContext() APIs. Owners of MathMLChars
   // should honor these APIs.
   nsStyleContext* GetStyleContext() const;

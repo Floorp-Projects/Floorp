@@ -121,7 +121,7 @@ public:
    * the dropdown and it needs to roll up it has to decide whether to keep the current 
    * selection or not. This method is used to get the current index in the combobox to
    * compare it to the current index in the dropdown to see if the combox has been updated
-   * and that way it knows whether to "cancel" the the current selection residing in the 
+   * and that way it knows whether to "cancel" the current selection residing in the 
    * dropdown. Or whether to leave the selection alone.
    */
   NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex) = 0;
