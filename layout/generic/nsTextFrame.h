@@ -73,6 +73,18 @@ public:
 // Contains extra style data needed only for painting (not reflowing)
 class nsTextPaintStyle : public nsTextStyle {
 public:
+  enum{
+    eNormalSelection =
+      nsISelectionController::SELECTION_NORMAL,
+    eIMESelections =
+      nsISelectionController::SELECTION_IME_RAWINPUT |
+      nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT |
+      nsISelectionController::SELECTION_IME_CONVERTEDTEXT |
+      nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT,
+    eAllSelections =
+      eNormalSelection | eIMESelections
+  };
+
   const nsStyleColor* mColor;
 
   nsTextPaintStyle(nsPresContext* aPresContext,
@@ -83,9 +95,17 @@ public:
   ~nsTextPaintStyle();
 
   nscolor GetTextColor();
-  void GetSelectionColors(nscolor* foreColor,
-                          nscolor* backColor,
+  void GetSelectionColors(nscolor* aForeColor,
+                          nscolor* aBackColor,
                           PRBool*  aBackIsTransparent);
+  void GetIMESelectionColors(SelectionType aSelectionType,
+                             nscolor*      aForeColor,
+                             nscolor*      aBackColor,
+                             PRBool*       aBackIsTransparent);
+  // if this returns PR_FALSE, we don't need to draw underline.
+  PRBool GetIMEUnderline(SelectionType aSelectionType,
+                         nscolor*      aLineColor,
+                         float*        aRelativeSize);
 protected:
   nsPresContext* mPresContext;
   nsStyleContext* mStyleContext;
@@ -105,9 +125,35 @@ protected:
   nscolor mSelectionBGColor;
   PRBool  mSelectionBGIsTransparent;
 
+  // IME selection colors and underline info
+  struct nsIMEColor {
+    PRBool mInit;
+    nscolor mTextColor;
+    nscolor mBGColor;
+    nscolor mBGIsTransparent;
+    nscolor mUnderlineColor;
+  };
+  nsIMEColor mIMEColor[4];
+  // indexs
+  enum {
+    eIndexRawInput = 0,
+    eIndexSelRawText,
+    eIndexConvText,
+    eIndexSelConvText
+  };
+  float mIMEUnderlineRelativeSize;
+
+  // Color initializations
   PRBool InitCommonColors();
   PRBool InitSelectionColors();
+
+  nsIMEColor* GetIMEColor(SelectionType aSelectionType);
+  PRBool InitIMEColors(SelectionType aSelectionType, nsIMEColor*);
+
   PRBool EnsureSufficientContrast(nscolor *aForeColor, nscolor *aBackColor);
+
+  nscolor GetResolvedForeColor(nscolor aColor, nscolor aDefaultForeColor,
+                               nscolor aBackColor);
 };
 
 class nsTextFrame : public nsFrame {
