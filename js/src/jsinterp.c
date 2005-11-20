@@ -2130,7 +2130,7 @@ interrupt:
                 /* Resume execution in the calling frame. */
                 inlineCallCount--;
                 if (JS_LIKELY(ok)) {
-                    JS_ASSERT((JSOp)*pc == JSOP_CALL);
+                    JS_ASSERT(js_CodeSpec[*pc].length == JSOP_CALL_LENGTH);
                     len = JSOP_CALL_LENGTH;
                     DO_NEXT_OP(len);
                 }
