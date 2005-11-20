@@ -358,15 +358,27 @@ JSClass js_ArrayClass = {
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
+enum ArrayToSringOp {
+    TO_STRING,
+    TO_LOCALE_STRING,
+    TO_SOURCE
+};
+
+/*
+ * When op is TO_STRING or TO_LOCALE_STRING sep indicates a separator to use
+ * or "," when sep is NULL.
+ * When op is TO_SOURCE sep must be NULL.
+ */
 static JSBool
-array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
-               jsval *rval, JSBool localeString)
+array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToSringOp op,
+               JSString *sep, jsval *rval)
 {
     JSBool ok;
     jsuint length, index;
     jschar *chars, *ochars;
-    size_t nchars, growth, seplen, tmplen;
+    size_t nchars, growth, seplen, tmplen, extratail;
     const jschar *sepstr;
+    jsid id;
     JSString *str;
     JSHashEntry *he;
     JSObject *obj2;
@@ -384,7 +396,7 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
     he = js_EnterSharpObject(cx, obj, NULL, &chars);
     if (!he)
         return JS_FALSE;
-    if (literalize) {
+    if (op == TO_SOURCE) {
         if (IS_SHARP(he)) {
 #if JS_HAS_SHARP_VARS
             nchars = js_strlen(chars);
@@ -398,10 +410,11 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
         }
 
         /*
-         * Allocate 1 + 3 + 1 for "[", the worst-case closing ", ]", and the
-         * terminating 0.
+         * Always allocate 2 extra chars for closing ']' and terminating 0
+         * and then preallocate 1 + extratail to include starting '['.
          */
-        growth = (1 + 3 + 1) * sizeof(jschar);
+        extratail = 2;
+        growth = (1 + extratail) * sizeof(jschar);
         if (!chars) {
             nchars = 0;
             chars = (jschar *) malloc(growth);
@@ -418,17 +431,22 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
             }
         }
         chars[nchars++] = '[';
+        JS_ASSERT(sep == NULL);
+        sepstr = NULL;  /* indicates to use ", " as separator */
+        seplen = 2;
+
     } else {
         /*
          * Free any sharp variable definition in chars.  Normally, we would
          * MAKE_SHARP(he) so that only the first sharp variable annotation is
          * a definition, and all the rest are references, but in the current
-         * case of (!literalize), we don't need chars at all.
+         * case of (op != TO_SOURCE), we don't need chars at all.
          */
         if (chars)
             JS_free(cx, chars);
         chars = NULL;
         nchars = 0;
+        extratail = 1;  /* allocate extra char for terminating 0 */
 
         /* Return the empty string on a cycle as well as on empty join. */
         if (IS_BUSY(he) || length == 0) {
@@ -439,24 +457,56 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
 
         /* Flag he as BUSY so we can distinguish a cycle from a join-point. */
         MAKE_BUSY(he);
+
+        if (sep) {
+            sepstr = JSSTRING_CHARS(sep);
+            seplen = JSSTRING_LENGTH(sep);
+        } else {
+            sepstr = NULL;      /* indicates to use "," as separator */
+            seplen = 1;
+        }
     }
-    sepstr = NULL;
-    seplen = JSSTRING_LENGTH(sep);
 
     /* Use rval to locally root each element value as we loop and convert. */
 #define v (*rval)
 
-    v = JSVAL_NULL;
     for (index = 0; index < length; index++) {
-        ok = JS_GetElement(cx, obj, index, &v);
+        if (op != TO_SOURCE) {
+            ok = JS_GetElement(cx, obj, index, &v);
+        } else {
+            ok = IndexToExistingId(cx, obj, index, &id);
+            if (!ok)
+                goto done;
+            if (id == JSID_HOLE) {
+                str = cx->runtime->emptyString;
+                /*
+                 * For tail holes always append single "," and not ", "
+                 * unless the version is JS1.2 where for extra compatibility
+                 * the full ", " is added even in the tail case.
+                 */
+                if (index + 1 == length && !JS_VERSION_IS_1_2(cx))
+                    seplen = 1;
+                goto got_str;
+            }
+            ok = OBJ_GET_PROPERTY(cx, obj, id, &v);
+        }
+
         if (!ok)
             goto done;
 
-        if ((!literalize || JS_VERSION_IS_1_2(cx)) &&
+        if ((op != TO_SOURCE || JS_VERSION_IS_1_2(cx)) &&
             (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v))) {
             str = cx->runtime->emptyString;
+            if (op == TO_SOURCE) {
+                /*
+                 * JS1.2 treats null and undefined in the same way as holes.
+                 * It requires to add terminating ", " after empty string
+                 * representing tail null or undefined.
+                 */
+                goto got_str;
+            }
         } else {
-            if (localeString) {
+            if (op == TO_LOCALE_STRING) {
                 if (!js_ValueToObject(cx, v, &obj2) ||
                     !js_TryMethod(cx, obj2,
                                   cx->runtime->atomState.toLocaleStringAtom,
@@ -465,8 +515,11 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
                 } else {
                     str = js_ValueToString(cx, v);
                 }
+            } else if (op == TO_STRING) {
+                str = js_ValueToString(cx, v);
             } else {
-                str = (literalize ? js_ValueToSource : js_ValueToString)(cx, v);
+                JS_ASSERT(op == TO_SOURCE);
+                str = js_ValueToSource(cx, v);
             }
             if (!str) {
                 ok = JS_FALSE;
@@ -474,10 +527,14 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
             }
         }
 
-        /* Allocate 3 + 1 at end for ", ", closing bracket, and zero. */
-        growth = (nchars + (sepstr ? seplen : 0) +
-                  JSSTRING_LENGTH(str) +
-                  3 + 1) * sizeof(jschar);
+        /* Do not append separator after the last element. */
+        if (index + 1 == length)
+            seplen = 0;
+
+      got_str:
+        /* Allocate 1 at end for closing bracket and zero. */
+        growth = (nchars + JSSTRING_LENGTH(str) + seplen + extratail)
+                 * sizeof(jschar);
         if (!chars) {
             chars = (jschar *) malloc(growth);
             if (!chars)
@@ -490,26 +547,27 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
             }
         }
 
-        if (sepstr) {
-            js_strncpy(&chars[nchars], sepstr, seplen);
-            nchars += seplen;
-        }
-        sepstr = JSSTRING_CHARS(sep);
-
         tmplen = JSSTRING_LENGTH(str);
         js_strncpy(&chars[nchars], JSSTRING_CHARS(str), tmplen);
         nchars += tmplen;
+
+        if (seplen) {
+            if (sepstr) {
+                js_strncpy(&chars[nchars], sepstr, seplen);
+            } else {
+                JS_ASSERT(seplen == 1 || seplen == 2);
+                chars[nchars] = ',';
+                if (seplen == 2)
+                    chars[nchars + 1] = ' ';
+            }
+            nchars += seplen;
+        }
     }
 
   done:
-    if (literalize) {
-        if (chars) {
-            if (JSVAL_IS_VOID(v)) {
-                chars[nchars++] = ',';
-                chars[nchars++] = ' ';
-            }
+    if (op == TO_SOURCE) {
+        if (chars)
             chars[nchars++] = ']';
-        }
     } else {
         CLEAR_BUSY(he);
     }
@@ -528,6 +586,7 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
         return JS_FALSE;
     }
     chars[nchars] = 0;
+    JS_ASSERT((nchars + 1) * sizeof(jschar) == growth);
     str = js_NewString(cx, chars, nchars, 0);
     if (!str) {
         free(chars);
@@ -537,17 +596,12 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
     return JS_TRUE;
 }
 
-static jschar   comma_space_ucstr[] = {',', ' ', 0};
-static jschar   comma_ucstr[]       = {',', 0};
-static JSString comma_space         = {2, comma_space_ucstr};
-static JSString comma               = {1, comma_ucstr};
-
 #if JS_HAS_TOSOURCE
 static JSBool
 array_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                jsval *rval)
 {
-    return array_join_sub(cx, obj, &comma_space, JS_TRUE, rval, JS_FALSE);
+    return array_join_sub(cx, obj, TO_SOURCE, NULL, rval);
 }
 #endif
 
@@ -555,15 +609,13 @@ static JSBool
 array_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                jsval *rval)
 {
-    JSBool literalize;
-
     /*
      * JS1.2 arrays convert to array literals, with a comma followed by a space
      * between each element.
      */
-    literalize = JS_VERSION_IS_1_2(cx);
-    return array_join_sub(cx, obj, literalize ? &comma_space : &comma,
-                          literalize, rval, JS_FALSE);
+    return array_join_sub(cx, obj,
+                          (JS_VERSION_IS_1_2(cx) ? TO_SOURCE : TO_STRING),
+                          NULL, rval);
 }
 
 static JSBool
@@ -574,7 +626,7 @@ array_toLocaleString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
      *  Passing comma here as the separator. Need a way to get a
      *  locale-specific version.
      */
-    return array_join_sub(cx, obj, &comma, JS_FALSE, rval, JS_TRUE);
+    return array_join_sub(cx, obj, TO_LOCALE_STRING, NULL, rval);
 }
 
 static JSBool
@@ -623,13 +675,15 @@ array_join(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
 
-    if (JSVAL_IS_VOID(argv[0]))
-        return array_join_sub(cx, obj, &comma, JS_FALSE, rval, JS_FALSE);
-    str = js_ValueToString(cx, argv[0]);
-    if (!str)
-        return JS_FALSE;
-    argv[0] = STRING_TO_JSVAL(str);
-    return array_join_sub(cx, obj, str, JS_FALSE, rval, JS_FALSE);
+    if (JSVAL_IS_VOID(argv[0])) {
+        str = NULL;
+    } else {
+        str = js_ValueToString(cx, argv[0]);
+        if (!str)
+            return JS_FALSE;
+        argv[0] = STRING_TO_JSVAL(str);
+    }
+    return array_join_sub(cx, obj, TO_STRING, str, rval);
 }
 
 static JSBool
