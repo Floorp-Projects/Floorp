@@ -541,6 +541,9 @@ nsTextPaintStyle::nsTextPaintStyle(nsPresContext* aPresContext,
   mContent = aContent;
   mSelectionStatus = aSelectionStatus;
   mColor = mStyleContext->GetStyleColor();
+  for (int i = 0; i < 4; i++)
+    mIMEColor[i].mInit = PR_FALSE;
+  mIMEUnderlineRelativeSize = -1.0f;
 }
 
 nsTextPaintStyle::~nsTextPaintStyle()
@@ -593,6 +596,7 @@ nsTextPaintStyle::GetSelectionColors(nscolor* aForeColor,
 {
   NS_ASSERTION(aForeColor, "aForeColor is null");
   NS_ASSERTION(aBackColor, "aBackColor is null");
+  NS_ASSERTION(aBackIsTransparent, "aBackIsTransparent is null");
 
   if (!mInitSelectionColors && !InitSelectionColors()) {
     NS_ERROR("Fail to initialize selection colors");
@@ -602,6 +606,52 @@ nsTextPaintStyle::GetSelectionColors(nscolor* aForeColor,
   *aForeColor = mSelectionTextColor;
   *aBackColor = mSelectionBGColor;
   *aBackIsTransparent = mSelectionBGIsTransparent;
+}
+
+void
+nsTextPaintStyle::GetIMESelectionColors(SelectionType aSelectionType,
+                                        nscolor*      aForeColor,
+                                        nscolor*      aBackColor,
+                                        PRBool*       aBackIsTransparent)
+{
+  NS_ASSERTION(aForeColor, "aForeColor is null");
+  NS_ASSERTION(aBackColor, "aBackColor is null");
+  NS_ASSERTION(aBackIsTransparent, "aBackIsTransparent is null");
+
+  nsIMEColor* IMEColor = GetIMEColor(aSelectionType);
+  if (!IMEColor) {
+    NS_ERROR("aSelectionType is invalid");
+    return;
+  }
+  if (!IMEColor->mInit)
+    return;
+  *aForeColor = IMEColor->mTextColor;
+  *aBackColor = IMEColor->mBGColor;
+  *aBackIsTransparent = IMEColor->mBGIsTransparent;
+}
+
+PRBool
+nsTextPaintStyle::GetIMEUnderline(SelectionType aSelectionType,
+                                  nscolor*      aLineColor,
+                                  float*        aRelativeSize)
+{
+  NS_ASSERTION(aLineColor, "aLineColor is null");
+  NS_ASSERTION(aRelativeSize, "aRelativeSize is null");
+
+  nsIMEColor* IMEColor = GetIMEColor(aSelectionType);
+  if (!IMEColor) {
+    NS_ERROR("aSelectionType is invalid");
+    return PR_FALSE;
+  }
+  if (!IMEColor->mInit)
+    return PR_FALSE;
+  if (IMEColor->mUnderlineColor == NS_TRANSPARENT ||
+      mIMEUnderlineRelativeSize <= 0.0f)
+    return PR_FALSE;
+
+  *aLineColor = IMEColor->mUnderlineColor;
+  *aRelativeSize = mIMEUnderlineRelativeSize;
+  return PR_TRUE;
 }
 
 PRBool
@@ -705,6 +755,143 @@ nsTextPaintStyle::InitSelectionColors()
 
   mInitSelectionColors = PR_TRUE;
   return PR_TRUE;
+}
+
+nsTextPaintStyle::nsIMEColor*
+nsTextPaintStyle::GetIMEColor(SelectionType aSelectionType)
+{
+  PRInt32 index;
+  switch (aSelectionType) {
+    case nsISelectionController::SELECTION_IME_RAWINPUT:
+      index = eIndexRawInput;
+      break;
+    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
+      index = eIndexSelRawText;
+      break;
+    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
+      index = eIndexConvText;
+      break;
+    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
+      index = eIndexSelConvText;
+      break;
+    default:
+      NS_ERROR("aSelectionType is Invalid");
+      return nsnull;
+  }
+  nsIMEColor* IMEColor = &mIMEColor[index];
+  if (!IMEColor->mInit && !InitIMEColors(aSelectionType, IMEColor))
+    NS_ERROR("Fail to initialize IME color");
+  return IMEColor;
+}
+
+PRBool
+nsTextPaintStyle::InitIMEColors(SelectionType aSelectionType,
+                                nsIMEColor*   aIMEColor)
+{
+  if (!mPresContext || !aIMEColor)
+    return PR_FALSE;
+
+  NS_ASSERTION(!aIMEColor->mInit, "this is already initialized");
+
+  nsILookAndFeel::nsColorID foreColorID, backColorID, lineColorID;
+  switch (aSelectionType) {
+    case nsISelectionController::SELECTION_IME_RAWINPUT:
+      foreColorID = nsILookAndFeel::eColor_IMERawInputForeground;
+      backColorID = nsILookAndFeel::eColor_IMERawInputBackground;
+      lineColorID = nsILookAndFeel::eColor_IMERawInputUnderline;
+      break;
+    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
+      foreColorID = nsILookAndFeel::eColor_IMESelectedRawTextForeground;
+      backColorID = nsILookAndFeel::eColor_IMESelectedRawTextBackground;
+      lineColorID = nsILookAndFeel::eColor_IMESelectedRawTextUnderline;
+      break;
+    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
+      foreColorID = nsILookAndFeel::eColor_IMEConvertedTextForeground;
+      backColorID = nsILookAndFeel::eColor_IMEConvertedTextBackground;
+      lineColorID = nsILookAndFeel::eColor_IMEConvertedTextUnderline;
+      break;
+    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
+      foreColorID = nsILookAndFeel::eColor_IMESelectedConvertedTextForeground;
+      backColorID = nsILookAndFeel::eColor_IMESelectedConvertedTextBackground;
+      lineColorID = nsILookAndFeel::eColor_IMESelectedConvertedTextUnderline;
+      break;
+    default:
+      NS_ERROR("aSelectionType is Invalid");
+      return PR_FALSE;
+  }
+
+  nsILookAndFeel* look = mPresContext->LookAndFeel();
+  if (!look)
+    return PR_FALSE;
+
+  nscolor foreColor, backColor, lineColor;
+  look->GetColor(foreColorID, foreColor);
+  look->GetColor(backColorID, backColor);
+  look->GetColor(lineColorID, lineColor);
+
+  // Convert special color to actual color
+  NS_ASSERTION(foreColor != NS_TRANSPARENT,
+               "foreColor cannot be NS_TRANSPARENT");
+  NS_ASSERTION(backColor != NS_SAME_AS_FOREGROUND_COLOR,
+               "backColor cannot be NS_SAME_AS_FOREGROUND_COLOR");
+  NS_ASSERTION(backColor != NS_40PERCENT_FOREGROUND_COLOR,
+               "backColor cannot be NS_40PERCENT_FOREGROUND_COLOR");
+
+  PRBool backIsTransparent = PR_FALSE;
+  if (backColor == NS_TRANSPARENT)
+    backIsTransparent = PR_TRUE;
+
+  foreColor = GetResolvedForeColor(foreColor, GetTextColor(), backColor);
+
+  if (!backIsTransparent)
+    EnsureSufficientContrast(&foreColor, &backColor);
+
+  lineColor = GetResolvedForeColor(lineColor, foreColor, backColor);
+
+  aIMEColor->mTextColor       = foreColor;
+  aIMEColor->mBGColor         = backColor;
+  aIMEColor->mBGIsTransparent = backIsTransparent;
+  aIMEColor->mUnderlineColor  = lineColor;
+  aIMEColor->mInit            = PR_TRUE;
+
+  if (mIMEUnderlineRelativeSize == -1.0f) {
+    look->GetMetric(nsILookAndFeel::eMetricFloat_IMEUnderlineRelativeSize,
+                    mIMEUnderlineRelativeSize);
+    NS_ASSERTION(mIMEUnderlineRelativeSize >= 0.0f,
+                 "underline size must be larger than 0");
+  }
+
+  return PR_TRUE;
+}
+
+inline nscolor Get40PercentColor(nscolor aForeColor, nscolor aBackColor)
+{
+  nscolor foreColor = NS_RGBA(NS_GET_R(aForeColor),
+                              NS_GET_G(aForeColor),
+                              NS_GET_B(aForeColor),
+                              (PRUint8)(255 * 0.4f));
+  return NS_ComposeColors(aBackColor, foreColor);
+}
+
+nscolor
+nsTextPaintStyle::GetResolvedForeColor(nscolor aColor,
+                                       nscolor aDefaultForeColor,
+                                       nscolor aBackColor)
+{
+  if (aColor == NS_SAME_AS_FOREGROUND_COLOR)
+    return aDefaultForeColor;
+
+  if (aColor != NS_40PERCENT_FOREGROUND_COLOR)
+    return aColor;
+
+  // Get actual background color
+  nscolor actualBGColor = aBackColor;
+  if (actualBGColor == NS_TRANSPARENT) {
+    if (!mInitCommonColors && !InitCommonColors())
+      return aDefaultForeColor;
+    actualBGColor = mFrameBackgroundColor;
+  }
+  return Get40PercentColor(aDefaultForeColor, actualBGColor);
 }
 
 //-----------------------------------------------------------------------------
@@ -836,10 +1023,10 @@ nsContinuingTextFrame::GetFirstInFlow() const
 //helper class for drawing multiply selected text
 class DrawSelectionIterator
 {
-  enum {SELECTION_TYPES_WE_CARE_ABOUT=nsISelectionController::SELECTION_NONE+nsISelectionController::SELECTION_NORMAL};
 public:
   DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,
-                        PRUint32 aTextLength, nsTextPaintStyle &aTextStyle);
+                        PRUint32 aTextLength, nsTextPaintStyle &aTextStyle,
+                        SelectionType aCareSelections);
   ~DrawSelectionIterator();
   PRBool      First();
   PRBool      Next();
@@ -886,9 +1073,12 @@ private:
 DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails, 
                                              PRUnichar *aText, 
                                              PRUint32 aTextLength, 
-                                             nsTextPaintStyle &aTextStyle)
+                                             nsTextPaintStyle &aTextStyle,
+                                             SelectionType aCareSelections)
                                              :mOldStyle(aTextStyle)
 {
+  NS_ASSERTION(aCareSelections, "aCareSelection value must not be zero!");
+
   mDetails = aSelDetails;
   mCurrentIdx = 0;
   mUniStr = aText;
@@ -907,40 +1097,42 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
   //special case for 1 selection. later
   const SelectionDetails *details = aSelDetails;
   if (details->mNext) {
-    mTypes = new PRUint8[mLength];
-    if (!mTypes)
-      return;
-    memset(mTypes,0,mLength); // initialize to 0
-    while (details) {
-      if ((details->mType & SELECTION_TYPES_WE_CARE_ABOUT) &&
-          (details->mStart != details->mEnd)) {
-        mInit = PR_TRUE; // WE FOUND SOMETHING WE CARE ABOUT
-        for (int i = details->mStart; i < details->mEnd; i++) {
-          if ((PRUint32)i>=mLength) {
-            NS_ASSERTION(0, "Selection Details out of range?");
-            return;
-          }
-          mTypes[i] |= details->mType;
-        }
-      }
-      details= details->mNext;
-    }
-    if (!mInit && mTypes) {
-      // we have details but none that we care about.
-      delete [] mTypes;
-      mTypes = nsnull;
-      mDone = PR_TRUE; // we are finished
-    }
+    // go to next
   } else if (details->mStart == details->mEnd) {
     // no collapsed selections here!
     mDone = PR_TRUE;
     return;
-  } else if (!(details->mType & SELECTION_TYPES_WE_CARE_ABOUT )) {
+  } else if (!(details->mType & aCareSelections)) {
     //if all we have is selection we DONT care about, do nothing
     mDone = PR_TRUE;
     return;
   }
-  mInit = PR_TRUE;
+
+  mTypes = new PRUint8[mLength];
+  if (!mTypes)
+    return;
+  memset(mTypes, 0, mLength);
+  while (details) {
+    if ((details->mType & aCareSelections) &&
+        (details->mStart != details->mEnd)) {
+      mInit = PR_TRUE; // WE FOUND SOMETHING WE CARE ABOUT
+      for (int i = details->mStart; i < details->mEnd; i++) {
+        if ((PRUint32)i >= mLength) {
+          NS_ASSERTION(0, "Selection Details out of range?");
+          return;
+        }
+        mTypes[i] |= details->mType;
+      }
+    }
+    details= details->mNext;
+  }
+  if (!mInit) {
+    // we have details but none that we care about.
+    delete [] mTypes;
+    mTypes = nsnull;
+    mDone = PR_TRUE; // we are finished
+    mInit = PR_TRUE;
+  }
 }
 
 DrawSelectionIterator::~DrawSelectionIterator()
@@ -1058,20 +1250,27 @@ DrawSelectionIterator::GetSelectionColors(nscolor *aForeColor,
                                           nscolor *aBackColor,
                                           PRBool  *aBackIsTransparent)
 {
-  PRBool isSelection =
-    (mTypes &&
-      (mTypes[mCurrentIdx] & nsISelectionController::SELECTION_NORMAL)) ||
-    (!mTypes && mCurrentIdx == (PRUint32)mDetails->mStart);
+  if (mTypes) {
+    // Normal selection
+    if (mTypes[mCurrentIdx] & nsTextPaintStyle::eNormalSelection) {
+      mOldStyle.GetSelectionColors(aForeColor, aBackColor,
+                                   aBackIsTransparent);
+      return PR_TRUE;
+    }
 
-  if (!isSelection) {
-    *aBackIsTransparent = PR_FALSE;
-    *aForeColor = mOldStyle.GetTextColor();
-    return PR_FALSE;
+    // IME selections
+    if (mTypes[mCurrentIdx] & nsTextPaintStyle::eIMESelections) {
+      mOldStyle.GetIMESelectionColors(mTypes[mCurrentIdx],
+                                      aForeColor, aBackColor,
+                                      aBackIsTransparent);
+      return PR_TRUE;
+    }
   }
 
-  mOldStyle.GetSelectionColors(aForeColor, aBackColor,
-                               aBackIsTransparent);
-  return PR_TRUE;
+  // Non-supported Selection or Non-selection text
+  *aBackIsTransparent = PR_FALSE;
+  *aForeColor = mOldStyle.GetTextColor();
+  return PR_FALSE;
 }
 
 PRBool
@@ -1685,23 +1884,6 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 
 #endif
 
-// XXX letter-spacing
-// XXX word-spacing
-#if defined(XP_MACOSX)
-#define NO_INVERT
-#elif defined(XP_WIN) || defined(XP_OS2) || defined(XP_UNIX) || defined(XP_BEOS)
-#define USE_INVERT_FOR_SELECTION
-#endif
-
-// XXX we should get the following from style sheet or LookAndFeel later
-#if defined(NO_INVERT)
-#define IME_UNDERLINECOLOR NS_RGB(149,149,149)     //light gray
-#define IME_SELECTED_UNDERLINECOLOR NS_RGB(0,0,0)  //black
-#else
-#define IME_RAW_COLOR NS_RGB(198,33,66)
-#define IME_CONVERTED_COLOR NS_RGB(255,198,198)
-#endif
-
 void 
 nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                                   nsStyleContext* aStyleContext,
@@ -1827,104 +2009,43 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
             else
               aRenderingContext.GetWidth(aText + start,
                                            PRUint32(end - start), textWidth);
-  
           }
+
+          nscolor lineColor;
+          float relativeSize;
           nscoord offset, size;
           nscoord baseline = mAscent;
-          switch (aDetails->mType)
-          {
-          case nsISelectionController::SELECTION_NORMAL:
-#if 0
-            {
-            //using new selectionpainting now
-//
-// XOR InvertRect is currently implemented only in the unix and windows
-// rendering contexts.  When other platforms implement InvertRect(), they
-// can be added here.  Eventually this #ifdef should die.
-//
-// For platforms that dont implement InvertRect(), the selection will be 
-// a non-filled rectangle.
-#ifdef USE_INVERT_FOR_SELECTION
-              aRenderingContext.SetColor(NS_RGB(255,255,255));
-              aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
-#else
-              aRenderingContext.SetColor(NS_RGB(0,0,0));
-              aRenderingContext.DrawRect(aX + startOffset, aY, textWidth, rect.height);
-#endif
-            }
-#endif //0
-                                break;
-           case nsISelectionController::SELECTION_SPELLCHECK:{
+          switch (aDetails->mType) {
+            case nsISelectionController::SELECTION_NORMAL:
+              break;
+            case nsISelectionController::SELECTION_SPELLCHECK:
               aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
               aRenderingContext.SetColor(NS_RGB(255,0,0));
-              aRenderingContext.DrawLine(aX + startOffset, aY + baseline - offset, aX + startOffset + textWidth, aY + baseline - offset);
-                                }break;
-
-#ifdef NO_INVERT
-           case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
-           case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:{
-              aTextStyle.mNormalFont->GetUnderline(offset, size);
-              aRenderingContext.SetColor(IME_SELECTED_UNDERLINECOLOR);
-#ifdef XP_MACOSX // underline thickness is 2 pixel
-              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, 2*size);
-#else
-              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
-#endif
-                                }break;
-           case nsISelectionController::SELECTION_IME_RAWINPUT:
-           case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:{
-              aTextStyle.mNormalFont->GetUnderline(offset, size);
-              aRenderingContext.SetColor(IME_UNDERLINECOLOR);
-#ifdef XP_MACOSX // underline thicness is 2 pixel
-              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, 2*size);
-#else
-              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
-#endif
-                                }break;
-// end NO_INVERT part
-
-#else             
-           case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:{
-#ifdef USE_INVERT_FOR_SELECTION
-              aRenderingContext.SetColor(NS_RGB(255,255,255));
-              aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
-#else
-              aRenderingContext.SetColor(NS_RGB(255,255,128));
-              aRenderingContext.DrawRect(aX + startOffset, aY, textWidth, rect.height);
-#endif        
-              aTextStyle.mNormalFont->GetUnderline(offset, size);
-              aRenderingContext.SetColor(IME_RAW_COLOR);
-              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
-                                }break;
-          case nsISelectionController::SELECTION_IME_RAWINPUT:{
-              aTextStyle.mNormalFont->GetUnderline(offset, size);
-              aRenderingContext.SetColor(IME_RAW_COLOR);
-              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
-                                }break;
-          case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:{
-#ifdef USE_INVERT_FOR_SELECTION
-              aRenderingContext.SetColor(NS_RGB(255,255,255));
-              aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
-#else
-              aRenderingContext.SetColor(NS_RGB(255,255,128));
-              aRenderingContext.DrawRect(aX + startOffset, aY, textWidth, rect.height);
-#endif        
-              aTextStyle.mNormalFont->GetUnderline(offset, size);
-              aRenderingContext.SetColor(IME_CONVERTED_COLOR);
-              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
-                                }break;
-          case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:{
-              aTextStyle.mNormalFont->GetUnderline(offset, size);
-              aRenderingContext.SetColor(IME_CONVERTED_COLOR);
-              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
-                                }break;
-#endif
-          default:
-            NS_ASSERTION(0,"what type of selection do i not know about?");
-            break;
+              aRenderingContext.DrawLine(aX + startOffset,
+                                         aY + baseline - offset,
+                                         aX + startOffset + textWidth,
+                                         aY + baseline - offset);
+              break;
+            case nsISelectionController::SELECTION_IME_RAWINPUT:
+            case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
+            case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
+            case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
+              if (aTextStyle.GetIMEUnderline(aDetails->mType,
+                                             &lineColor,
+                                             &relativeSize)) {
+                aTextStyle.mNormalFont->GetUnderline(offset, size);
+                aRenderingContext.SetColor(lineColor);
+                aRenderingContext.FillRect(aX + startOffset + size,
+                                           aY + baseline - offset,
+                                           textWidth - 2 * size,
+                                           (nscoord)(relativeSize * size));
+              }
+              break;
+            default:
+              NS_ASSERTION(0,"what type of selection do i not know about?");
+              break;
           }
-
         }
       }
       aDetails = aDetails->mNext;
@@ -2160,7 +2281,8 @@ nsTextFrame::IsTextInSelection(nsPresContext* aPresContext,
     DrawSelectionIterator iter(details,
                                text,
                                (PRUint32)textLength,
-                               ts);
+                               ts,
+                               nsTextPaintStyle::eNormalSelection);
     if (!iter.IsDone() && iter.First()) {
       isSelected = PR_TRUE;
     }
@@ -2399,7 +2521,8 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
       DrawSelectionIterator iter(details,
                                  text,
                                  (PRUint32)textLength,
-                                 aTextStyle);
+                                 aTextStyle,
+                                 nsTextPaintStyle::eAllSelections);
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
@@ -3113,7 +3236,8 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
       DrawSelectionIterator iter(details,
                                  text,
                                  (PRUint32)textLength,
-                                 aTextStyle);
+                                 aTextStyle,
+                                 nsTextPaintStyle::eAllSelections);
       if (!iter.IsDone() && iter.First())
       {
         nscoord currentX = dx;
@@ -3366,7 +3490,8 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
         DrawSelectionIterator iter(details,
                                    (PRUnichar *)text,
                                    (PRUint32)textLength,
-                                   aTextStyle);
+                                   aTextStyle,
+                                   nsTextPaintStyle::eAllSelections);
 
         // See if this rendering backend supports getting cluster
         // information.
