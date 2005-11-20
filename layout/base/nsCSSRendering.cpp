@@ -1853,7 +1853,7 @@ void nsCSSRendering::DrawCompositeSide(nsIRenderingContext& aRenderingContext,
   // Alternatively we could add support for a -moz-border-diagonal property, which is
   // what this code actually draws (instead of a curve).
 
-  // determine the the number of pixels we need to draw for this side
+  // determine the number of pixels we need to draw for this side
   // and the start and end radii
   nscoord shrinkage, startRadius, endRadius;
   if (aWhichSide == NS_SIDE_TOP) {
@@ -3092,11 +3092,11 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
               start. Always negative or zero.
 
           x = x0 and y0 in the code. The point at which tiling must start
-              so that the fewest tiles are laid out while completly
+              so that the fewest tiles are laid out while completely
               covering the dirtyRect area.
 
           z = x1 and y1 in the code. The point at which tiling must end so
-              that the fewest tiles are laid out while completly covering
+              that the fewest tiles are laid out while completely covering
               the dirtyRect area.
 
           w = the width of the tile (tileWidth).

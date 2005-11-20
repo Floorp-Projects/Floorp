@@ -316,7 +316,7 @@ nsMathMLmfracFrame::Place(nsIRenderingContext& aRenderingContext,
   // by default, leave at least one-pixel padding at either end, or use
   // lspace & rspace that may come from <mo> if we are an embellished container
   // (we fetch values from the core since they may use units that depend
-  // on style data, and style changes could have occured in the core since
+  // on style data, and style changes could have occurred in the core since
   // our last visit there)
   nsEmbellishData coreData;
   GetEmbellishDataFrom(mEmbellishData.coreFrame, coreData);

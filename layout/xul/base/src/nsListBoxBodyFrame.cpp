@@ -90,7 +90,7 @@
 // notices it as a delay.
 #define USER_TIME_THRESHOLD 150000
 
-// how long it takes to layout a single row inital value.
+// how long it takes to layout a single row initial value.
 // we will time this after we scroll a few rows.
 #define TIME_PER_ROW_INITAL  50000
 

@@ -760,7 +760,7 @@ IsValidSelectionPoint(nsSelection *aFrameSel, nsIContent *aContent)
       return PR_FALSE;
     if (tLimiter && tLimiter != aContent)
     {
-      if (tLimiter != aContent->GetParent()) //if newfocus == the limiter. thats ok. but if not there and not parent bad
+      if (tLimiter != aContent->GetParent()) //if newfocus == the limiter. that's ok. but if not there and not parent bad
         return PR_FALSE; //not in the right content. tLimiter said so
     }
   }
@@ -1021,8 +1021,8 @@ nsSelection::GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent
   // parent/child relationship becomes invalid.
   //
   // An example of an invalid parent/child relationship is anonymous content.
-  // Anonymous content has a pointer to it's parent, but it is not listed
-  // as a child of it's parent. In this case, the anonymous content would
+  // Anonymous content has a pointer to its parent, but it is not listed
+  // as a child of its parent. In this case, the anonymous content would
   // be considered the root of the subtree.
 
   if (!aContent || !aParent)
@@ -1522,7 +1522,7 @@ nsSelection::HandleKeyEvent(nsPresContext* aPresContext, nsGUIEvent *aGuiEvent)
            return NS_ERROR_FAILURE;
     }
 
-//XXX Need xp way get platfrom specific behavior into key navigation.
+//XXX Need xp way get platform specific behavior into key navigation.
 //XXX This really shouldn't have to use an ifdef
 #ifdef _WIN32
     if (keyEvent->isAlt) {
@@ -1893,7 +1893,7 @@ nsSelection::VisualSelectFrames(nsPresContext *aPresContext,
 
     // Select from the anchor point to the edge of the frame
     // Which edge? If the selection direction is forward the right edge, if it is backward the left edge
-    // For rtl frames the right edge is the begining of the frame, for ltr frames it is the end and vice versa
+    // For rtl frames the right edge is the beginning of the frame, for ltr frames it is the end and vice versa
     if ((eDirNext == selectionDirection) == (anchorLevel & 1))
       result = SelectToEdge(anchorFrame, anchorContent, anchorOffset, 0, PR_FALSE);
     else
@@ -1949,7 +1949,7 @@ nsSelection::VisualSelectFrames(nsPresContext *aPresContext,
     // i.e. the rightmost character if the current paragraph embedding level is even (LTR paragraph)
     // or the leftmost character if the current paragraph embedding level is odd (RTL paragraph)
     //
-    // As before, for rtl frames the right edge is the begining of the frame, for ltr frames it is the end and vice versa
+    // As before, for rtl frames the right edge is the beginning of the frame, for ltr frames it is the end and vice versa
     //
     // If selection direction is backwards, vice versa throughout
     //
@@ -2181,7 +2181,7 @@ nsSelection::GetPrevNextBidiLevels(nsPresContext *aPresContext,
     return result;
   if (!isupports)
     return NS_ERROR_NULL_POINTER;
-  //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+  //we must CAST here to an nsIFrame. nsIFrame doesn't really follow the rules
   //for speed reasons
   nsIFrame *newFrame = (nsIFrame *)isupports;
 
@@ -2236,7 +2236,7 @@ NS_IMETHODIMP nsSelection::GetFrameFromLevel(nsPresContext *aPresContext,
       return result;
     if (!isupports)
       return NS_ERROR_NULL_POINTER;
-    //we must CAST here to an nsIFrame. nsIFrame doesnt really follow the rules
+    //we must CAST here to an nsIFrame. nsIFrame doesn't really follow the rules
     //for speed reasons
     foundFrame = (nsIFrame *)isupports;
     foundLevel = NS_GET_EMBEDDING_LEVEL(foundFrame);
@@ -2645,7 +2645,7 @@ printf(" * TakeFocus - moving into new cell\n");
       {
         // XXXX Problem: Shift+click in browser is appending text selection to selected table!!!
         //   is this the place to erase seleced cells ?????
-        if (mDomSelections[index]->GetDirection() == eDirNext && aContentEndOffset > aContentOffset) //didnt go far enough 
+        if (mDomSelections[index]->GetDirection() == eDirNext && aContentEndOffset > aContentOffset) //didn't go far enough 
         {
           mDomSelections[index]->Extend(domNode, aContentEndOffset);//this will only redraw the diff 
         }
@@ -4033,7 +4033,7 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
   // if we simply cannot have children, return NS_OK as a non-failing,
   // non-completing case for table selection
   if (!content->IsContentOfType(nsIContent::eELEMENT))
-    return NS_OK; //got to be a text node, definately not a table row/cell
+    return NS_OK; //got to be a text node, definitely not a table row/cell
   
   PRInt32 startOffset;
   PRInt32 endOffset;
@@ -5538,7 +5538,7 @@ nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext, nsIView *aView, 
     //
     // Map the globalPoint back into aView's coordinate system. We
     // have to get the globalOffsets again because aView's
-    // window and it's parents may have changed their offsets.
+    // window and its parents may have changed their offsets.
     //
     result = GetViewAncestorOffset(aView, nsnull, &globalOffset.x, &globalOffset.y);
 
@@ -5980,7 +5980,7 @@ nsTypedSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, 
             dirtyend = PR_TRUE;
           }
           else
-            found = PR_FALSE; //didnt find the right cell yet
+            found = PR_FALSE; //didn't find the right cell yet
         }
         else if (atom == nsHTMLAtoms::td ||
                  atom == nsHTMLAtoms::th) //you are in "cell" mode put selection to end of cell

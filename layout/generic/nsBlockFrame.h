@@ -341,7 +341,7 @@ protected:
   }
 
   /** move the frames contained by aLine by aDY
-    * if aLine is a block, it's child floats are added to the state manager
+    * if aLine is a block, its child floats are added to the state manager
     */
   void SlideLine(nsBlockReflowState& aState,
                  nsLineBox* aLine, nscoord aDY);

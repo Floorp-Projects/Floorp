@@ -54,12 +54,12 @@
 //    Necessary.
 //
 // However there is a catch. Some html components like block frames can not determine their preferred size. 
-// this is their size if they were layed out intrinsically. So the box will flow the child to determine this can
+// this is their size if they were laid out intrinsically. So the box will flow the child to determine this can
 // cache the value.
 
 // Boxes and Incremental Reflow
 // ----------------------------
-// Boxes layout out top down by adding up their childrens min, max, and preferred sizes. Only problem is if a incremental
+// Boxes layout out top down by adding up their children's min, max, and preferred sizes. Only problem is if a incremental
 // reflow occurs. The preferred size of a child deep in the hierarchy could change. And this could change
 // any number of syblings around the box. Basically any children in the reflow chain must have their caches cleared
 // so when asked for there current size they can relayout themselves. 

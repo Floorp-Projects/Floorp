@@ -1256,7 +1256,7 @@ nsTableOuterFrame::OuterReflowChild(nsPresContext*            aPresContext,
 
 
   // If mComputedWidth > availWidth and availWidth >= minWidth for a nested percent table 
-  // then adjust mComputedWidth based on availableWidth if this isn't the intial reflow   
+  // then adjust mComputedWidth based on availableWidth if this isn't the initial reflow   
   if ((NS_UNCONSTRAINEDSIZE != childRS.mComputedWidth)  &&
       (eReflowReason_Initial != aReflowReason)          &&
       (childRS.mComputedWidth + childRS.mComputedBorderPadding.left +
@@ -2119,7 +2119,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsPresContext* aPresContext,
     aChild->SetNextSibling(nextInFlow->GetNextSibling());
   }
 
-  // Delete the next-in-flow frame and adjust it's parent's child count
+  // Delete the next-in-flow frame and adjust its parent's child count
   nextInFlow->Destroy(aPresContext);
 
   NS_POSTCONDITION(!aChild->GetNextInFlow(), "non null next-in-flow");

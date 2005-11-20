@@ -191,7 +191,7 @@ nsTableRowFrame::Init(nsPresContext*  aPresContext,
 {
   nsresult  rv;
 
-  // Let the the base class do its initialization
+  // Let the base class do its initialization
   rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
                                   aPrevInFlow);
 

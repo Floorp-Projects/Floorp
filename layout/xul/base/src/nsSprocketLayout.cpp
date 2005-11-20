@@ -869,7 +869,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
       else
          currentBox->flex = flex;
 
-      // we we specified all our children are equal size;
+      // we specified all our children are equal size;
       if (frameState & NS_STATE_EQUAL_SIZE) {
 
         if (prefWidth > biggestPrefWidth) 
@@ -916,7 +916,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
 
   }
 
-  // we we specified all our children are equal size;
+  // we specified all our children are equal size;
   if (frameState & NS_STATE_EQUAL_SIZE) {
     currentBox = aBoxSizes;
 
@@ -1046,7 +1046,7 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
 
       // if we are a horizontal box see if the child will fit inside us.
       if ( childActualHeight > containingHeight) {
-            // if we are a horizontal box and the the child it bigger than our height
+            // if we are a horizontal box and the child is bigger than our height
 
             // ok if the height changed then we need to reflow everyone but us at the new height
             // so we will set the changed index to be us. And signal that we need a new pass.

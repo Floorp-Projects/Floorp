@@ -782,7 +782,7 @@ public:
    * Get the frame that should receive events for a given point in the
    * coordinate space of this frame, if the frame is painted in
    * the given paint layer.  A frame should return itself if it should
-   * recieve the events.  A successful return value indicates that a
+   * receive the events.  A successful return value indicates that a
    * point was found.
    */
   virtual nsIFrame* GetFrameForPoint(const nsPoint&    aPoint,

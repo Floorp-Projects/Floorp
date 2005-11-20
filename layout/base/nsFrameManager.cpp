@@ -1327,7 +1327,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
                 ReResolveStyleContext(aPresContext, child, content,
                                       aChangeList, aMinChange);
               } else {
-                NOISY_TRACE_FRAME("child frame already resolved as descendent, skipping",aFrame);
+                NOISY_TRACE_FRAME("child frame already resolved as descendant, skipping",aFrame);
               }
             }
           }

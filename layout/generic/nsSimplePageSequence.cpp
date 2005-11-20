@@ -319,7 +319,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   // XXX - Hack Alert
-  // OK,  so ther eis a selection, we will print the entire selection 
+  // OK,  so there is a selection, we will print the entire selection 
   // on one page and then crop the page.
   // This means you can never print any selection that is longer than one page
   // put it keeps it from page breaking in the middle of your print of the selection
@@ -565,7 +565,7 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
     pageNumberFormat.AssignASCII(aDefPropVal);
   }
 
-  // Sets the format into a static data memeber which will own the memory and free it
+  // Sets the format into a static data member which will own the memory and free it
   PRUnichar* uStr = ToNewUnicode(pageNumberFormat);
   if (uStr != nsnull) {
     SetPageNumberFormat(uStr, aPageNumOnly); // nsPageFrame will own the memory

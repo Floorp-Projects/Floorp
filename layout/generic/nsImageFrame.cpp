@@ -455,7 +455,7 @@ nsImageFrame::ShouldCreateImageFrameFor(nsIContent* aContent,
   }
 
   // Check if we want to use a placeholder box with an icon or just
-  // let the the presShell make us into inline text.  Decide as follows:
+  // let the presShell make us into inline text.  Decide as follows:
   //
   //  - if our special "force icons" style is set, show an icon
   //  - else if our "do not show placeholders" pref is set, skip the icon
@@ -634,7 +634,7 @@ nsImageFrame::OnStopDecode(imgIRequest *aRequest,
       mIntrinsicSize.SizeTo(0, 0);
     }
 
-    if (mState & IMAGE_GOTINITIALREFLOW) { // do nothing if we havn't gotten the inital reflow yet
+    if (mState & IMAGE_GOTINITIALREFLOW) { // do nothing if we haven't gotten the initial reflow yet
       if (!(mState & IMAGE_SIZECONSTRAINED) && intrinsicSizeChanged) {
         NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
         if (mParent && presShell) { 
@@ -1197,7 +1197,7 @@ nsImageFrame::DisplayAltFeedback(nsPresContext*      aPresContext,
       }
     }
 
-    // if we could not draw the image, then just draw some grafitti
+    // if we could not draw the image, then just draw some graffiti
     if (!iconUsed) {
       nscolor oldColor;
       aRenderingContext.DrawRect(0,0,size,size);

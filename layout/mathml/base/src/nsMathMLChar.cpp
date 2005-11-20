@@ -1414,7 +1414,7 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
        chars are handled in a special manner. When this situation is
        detected, the initial char (referred to as "parent") creates a
        singly-linked list of child chars, asking them to stretch in
-       a divided space. A convention is used in the the setup of
+       a divided space. A convention is used in the setup of
        nsGlyphTable to express that a composite parent char can be built
        from child chars.
     b) There are some chars that have no middle and glue glyphs. For

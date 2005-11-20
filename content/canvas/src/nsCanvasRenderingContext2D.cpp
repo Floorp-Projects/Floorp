@@ -241,7 +241,7 @@ protected:
     // Member vars
     PRInt32 mWidth, mHeight;
 
-    // the canvas element informs us when its going away,
+    // the canvas element informs us when it's going away,
     // so these are not nsCOMPtrs
     nsICanvasElement* mCanvasElement;
 

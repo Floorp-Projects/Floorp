@@ -227,7 +227,7 @@ nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHoriz
     // if first or last
     if (child == aBox || next == nsnull) {
 
-       // if its not the first child remove the top margin
+       // if it's not the first child remove the top margin
        // we don't need it.
        if (child != aBox)
        {
@@ -237,7 +237,7 @@ nsGridRowLayout::GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHoriz
               margin.left = 0;
        }
 
-       // if its not the last child remove the bottom margin
+       // if it's not the last child remove the bottom margin
        // we don't need it.
        if (next != nsnull)
        {

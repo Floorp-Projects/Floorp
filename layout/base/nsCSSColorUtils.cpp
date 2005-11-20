@@ -289,7 +289,7 @@ double    h,f,percent;
     q = (PRUint16)(percent*(255-(aSat*f)));
     t = (PRUint16)(percent*(255-(aSat*(1.0-f))));
 
-    // i is guarenteed to never be larger than 5.
+    // i is guaranteed to never be larger than 5.
     switch(i){
       case 0: r = aValue; g = t; b = p;break;
       case 1: r = q; g = aValue; b = p;break;

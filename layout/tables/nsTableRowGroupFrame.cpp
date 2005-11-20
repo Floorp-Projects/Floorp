@@ -1056,9 +1056,9 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*          aPresContext,
           }
         } 
         else {
-          // The row frame is complete because either (1) it's minimum height is greater than the 
+          // The row frame is complete because either (1) its minimum height is greater than the 
           // available height we gave it, or (2) it may have been given a larger height through 
-          // style than it's content, or (3) it contains a rowspan >1 cell which hasn't been
+          // style than its content, or (3) it contains a rowspan >1 cell which hasn't been
           // reflowed with a constrained height yet (we will find out when SplitSpanningCells is
           // called below)
           if (rowMetrics.height >= availSize.height) {
@@ -1663,7 +1663,7 @@ nsTableRowGroupFrame::IR_TargetIsChild(nsPresContext*        aPresContext,
         ((nsTableRowFrame*)aNextFrame)->DidResize(aPresContext, aReflowState.reflowState);
         // the overflow area may have changed inflate the overflow area
         if (aReflowState.tableFrame->IsAutoHeight()) {
-          // Because other cells in the row may need to be be aligned differently,
+          // Because other cells in the row may need to be aligned differently,
           // repaint the entire row
           // XXX Improve this so the row knows it should bitblt (or repaint) those
           // cells that change position...
@@ -2025,7 +2025,7 @@ nsTableRowGroupFrame::GetNextSiblingOnLine(nsIFrame*& aFrame,
 
   CellData* cellData = cellMap->GetDataAt(aLineNumber, colIndex + 1);
   
-  if (!cellData)// if this isnt a valid cell, drop down and check the next line
+  if (!cellData)// if this isn't a valid cell, drop down and check the next line
   {
     cellData = cellMap->GetDataAt(aLineNumber + 1, 0);
     if (!cellData)

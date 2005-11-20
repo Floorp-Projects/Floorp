@@ -71,7 +71,7 @@ public:
 
   /**
    * Set the suggested size for the form element. 
-   * This is used to control the size of the element during reflow if it hasn't had it's size
+   * This is used to control the size of the element during reflow if it hasn't had its size
    * explicitly set.
    * @param aWidth width of the form element
    * @param aHeight height of the form element

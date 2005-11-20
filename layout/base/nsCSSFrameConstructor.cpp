@@ -4099,7 +4099,7 @@ nsCSSFrameConstructor::ConstructTableForeignFrame(nsFrameConstructorState& aStat
                parentFrame == aState.mPseudoFrames.mCellInner.mFrame,
                "Weird parent in ConstructTableForeignFrame");
 
-  // Push the parent as the floater containing block
+  // Push the parent as the float containing block
   nsFrameConstructorSaveState saveState;
   aState.PushFloatContainingBlock(parentFrame, saveState, PR_FALSE, PR_FALSE);
   
@@ -5087,7 +5087,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
         // Construct a frame-based combo box.
         // The frame-based combo box is built out of three parts. A display area, a button and
         // a dropdown list. The display area and button are created through anonymous content.
-        // The drop-down list's frame is created explicitly. The combobox frame shares it's content
+        // The drop-down list's frame is created explicitly. The combobox frame shares its content
         // with the drop-down list.
       PRUint32 flags = NS_BLOCK_SHRINK_WRAP | NS_BLOCK_SPACE_MGR;
       nsIFrame* comboboxFrame = NS_NewComboboxControlFrame(mPresShell, flags);
@@ -5219,7 +5219,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 }
 
 /**
- * Used to be InitializeScrollFrame but now its only used for the select tag
+ * Used to be InitializeScrollFrame but now it's only used for the select tag
  * But the select tag should really be fixed to use GFX scrollbars that can
  * be create with BuildScrollFrame.
  */
@@ -6412,7 +6412,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsFrameConstructorState& aState,
       // if our parent is a block frame then do things the way html likes it
       // if not then we are in a box so do what boxes like. On example is boxes
       // do not support the absolute positioning of their children. While html blocks
-      // thats why we call different things here.
+      // that's why we call different things here.
       nsIAtom* frameType = geometricParent->GetType();
       if ((frameType == nsLayoutAtoms::blockFrame) ||
           (frameType == nsLayoutAtoms::areaFrame)) {
@@ -7681,7 +7681,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsFrameConstructorState& aState,
 #ifdef MOZ_SVG_FOREIGNOBJECT
     if (aTag == nsSVGAtoms::foreignObject) {
       // Claim to be relatively positioned so that we end up being the
-      // absolute containing block.  Also, push "null" as the floater
+      // absolute containing block.  Also, push "null" as the float
       // containing block so that we get the SPACE_MGR bit set.
       nsFrameConstructorSaveState saveState;
       aState.PushFloatContainingBlock(nsnull, saveState, PR_FALSE, PR_FALSE);
@@ -9356,12 +9356,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
 
   // In order to shave off some cycles, we only dig up the
   // containing block haveFirst* flags if the parent frame where
-  // the insertion/append is occuring is an inline or block
+  // the insertion/append is occurring is an inline or block
   // container. For other types of containers this isn't relevant.
   const nsStyleDisplay* parentDisplay = parentFrame->GetStyleDisplay();
 
   // Examine the parentFrame where the insertion is taking
-  // place. If its a certain kind of container then some special
+  // place. If it's a certain kind of container then some special
   // processing is done.
   if ((NS_STYLE_DISPLAY_BLOCK == parentDisplay->mDisplay) ||
       (NS_STYLE_DISPLAY_LIST_ITEM == parentDisplay->mDisplay) ||
@@ -9577,7 +9577,7 @@ nsCSSFrameConstructor::ReinsertContent(nsIContent*     aContainer,
  *
  * @param   aRemovedFrame this is the frame that was removed from the
  *            content model. As we recurse we need to remember this so we
- *            can check if out-of-flow frames are a descendent of the frame
+ *            can check if out-of-flow frames are a descendant of the frame
  *            being removed
  * @param   aFrame the local subtree that is being deleted. This is initially
  *            the same as aRemovedFrame, but as we recurse down the tree
@@ -11569,7 +11569,7 @@ nsCSSFrameConstructor::HaveSpecialBlockStyle(nsIContent* aContent,
  * Request to process the child content elements and create frames.
  *
  * @param   aContent the content object whose child elements to process
- * @param   aFrame the the associated with aContent. This will be the
+ * @param   aFrame the frame associated with aContent. This will be the
  *            parent frame (both content and geometric) for the flowed
  *            child frames
  */
@@ -11898,7 +11898,7 @@ nsCSSFrameConstructor::InsertFirstLineFrames(
       }
       else {
         // Easy case: the regular insertion logic can insert the new
-        // frame because its a block frame.
+        // frame because it's a block frame.
       }
     }
   }
@@ -12746,7 +12746,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // This inline frame contains several types of children. Therefore
   // this frame has to be chopped into several pieces. We will produce
   // as a result of this 3 lists of children. The first list contains
-  // all of the inline children that preceed the first block child
+  // all of the inline children that precede the first block child
   // (and may be empty). The second list contains all of the block
   // children and any inlines that are between them (and must not be
   // empty, otherwise - why are we here?). The final list contains all

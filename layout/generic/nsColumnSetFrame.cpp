@@ -237,7 +237,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState)
   if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
     colWidth = colStyle->mColumnWidth.GetCoordValue();
 
-    // Reduce column count if necesary to make columns fit in the
+    // Reduce column count if necessary to make columns fit in the
     // available width. Compute max number of columns that fit in
     // availContentWidth, satisfying colGap*(maxColumns - 1) +
     // colWidth*maxColumns <= availContentWidth
@@ -709,7 +709,7 @@ nsColumnSetFrame::Reflow(nsPresContext*          aPresContext,
         kidReason = eReflowReason_StyleChange;
         break;
         
-        // if its a dirty type then reflow us with a dirty reflow
+        // if it's a dirty type then reflow us with a dirty reflow
       case eReflowType_ReflowDirty:
         kidReason = eReflowReason_Dirty;
         break;

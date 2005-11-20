@@ -318,7 +318,7 @@ nsHTMLButtonControlFrame::Paint(nsPresContext*      aPresContext,
 
 #else // temporary
     // XXX This is temporary
-  // clips to it's size minus the border 
+  // clips to its size minus the border 
   // but the real problem is the FirstChild (the AreaFrame)
   // isn't being constrained properly
   // Bug #17474
@@ -384,7 +384,7 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   nsIFrame* firstKid = mFrames.FirstChild();
   nsSize availSize(aReflowState.mComputedWidth, NS_INTRINSICSIZE);
 
-  // Indent the child inside us by the the focus border. We must do this separate from the
+  // Indent the child inside us by the focus border. We must do this separate from the
   // regular border.
   nsMargin focusPadding = mRenderer.GetAddedButtonBorderAndPadding();
 

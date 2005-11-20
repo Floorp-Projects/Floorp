@@ -116,7 +116,7 @@ nsPrintPreviewListener::RemoveListeners()
 //
 // GetActionForEvent
 //
-// Helper function to let certain key events thru
+// Helper function to let certain key events through
 //
 enum eEventAction {
   eEventAction_Tab,       eEventAction_ShiftTab,

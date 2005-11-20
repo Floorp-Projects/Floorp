@@ -468,7 +468,7 @@ private:
   // our stack of mark where push has been called
   StackMark* mMarks;
 
-  // the current top of the the mark list
+  // the current top of the mark list
   PRUint32 mStackTop;
 
   // the size of the mark array
@@ -3114,7 +3114,7 @@ NS_IMETHODIMP
 PresShell::LineMove(PRBool aForward, PRBool aExtend)
 {
   nsresult result = mSelection->LineMove(aForward, aExtend);  
-// if we cant go down/up any more we must then move caret completely to 
+// if we can't go down/up any more we must then move caret completely to 
 // end/beginning respectively.
   if (NS_FAILED(result)) 
     result = CompleteMove(aForward,aExtend);
@@ -3993,7 +3993,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
           content = content->GetChildAt(0);
         }
         nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-        NS_ASSERTION(node, "No nsIDOMNode for descendent of anchor");
+        NS_ASSERTION(node, "No nsIDOMNode for descendant of anchor");
         jumpToRange->SelectNodeContents(node);
       }
     }
@@ -4518,7 +4518,7 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
   nsIFrame* rootFrame = FrameManager()->GetRootFrame();
   if (!rootFrame) return NS_OK;
   // Capture frame state for the root scroll frame
-  // Don't capture state when first creating doc element heirarchy
+  // Don't capture state when first creating doc element hierarchy
   // As the scroll position is 0 and this will cause us to loose
   // our previously saved place!
   if (aLeavingPage) {
@@ -5985,7 +5985,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
         // Treat focus/blur events as user input if they happen while
         // executing trusted script, or no script at all. If they
         // happen during execution of non-trusted script, then they
-        // should not be considerd user input.
+        // should not be considered user input.
         if (!nsContentUtils::IsCallerChrome()) {
           break;
         }

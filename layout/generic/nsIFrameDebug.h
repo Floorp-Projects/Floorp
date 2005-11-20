@@ -72,7 +72,7 @@ public:
   NS_IMETHOD_(nsFrameState)  GetDebugStateBits() const = 0;
   /**
    * Called to dump out regression data that describes the layout
-   * of the frame and it's children, and so on. The format of the
+   * of the frame and its children, and so on. The format of the
    * data is dictated to be XML (using a specific DTD); the
    * specific kind of data dumped is up to the frame itself, with
    * the caveat that some base types are defined.

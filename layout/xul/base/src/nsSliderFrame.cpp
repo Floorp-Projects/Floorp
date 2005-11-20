@@ -454,7 +454,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
        nsIFrame* thumbFrame = mFrames.FirstChild();
 
-       // take our current position and substract the start location
+       // take our current position and subtract the start location
        pos -= mDragStart;
        PRBool isMouseOutsideThumb = PR_FALSE;
        if (gSnapMultiplier) {

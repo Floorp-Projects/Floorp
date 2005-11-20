@@ -232,7 +232,7 @@ nsListBoxLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
       PRInt32 newPos = yOffset+margin.top;
 
       // are we pushing down or pulling up any rows?
-      // Then we may have to redraw everything below the the moved 
+      // Then we may have to redraw everything below the moved 
       // rows.
       if (redrawStart == -1 && childRect.y != newPos)
         redrawStart = newPos;

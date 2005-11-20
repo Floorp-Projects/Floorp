@@ -115,7 +115,7 @@ NS_IMETHODIMP
 nsSVGCairoRectRegion::Combine(nsISVGRendererRegion *other,
                               nsISVGRendererRegion **_retval)
 {
-  nsSVGCairoRectRegion *_other = static_cast<nsSVGCairoRectRegion*>(other); // ok, i know i'm being bad
+  nsSVGCairoRectRegion *_other = static_cast<nsSVGCairoRectRegion*>(other); // ok, I know I'm being bad
 
   float x1 = PR_MIN(mX, _other->mX);
   float y1 = PR_MIN(mY, _other->mY);

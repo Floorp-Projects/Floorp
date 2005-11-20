@@ -122,7 +122,7 @@ nsDOMCSSValueList::GetCssText(nsAString& aCssText)
       }
 
       // If this isn't the first item in the list, then
-      // its ok to append a separator.
+      // it's ok to append a separator.
       if (!aCssText.IsEmpty()) {
         aCssText.Append(separator);
       }

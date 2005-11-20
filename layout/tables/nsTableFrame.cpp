@@ -1811,7 +1811,7 @@ nsTableFrame::IsPrematureSpecialHeightReflow(const nsHTMLReflowState& aReflowSta
  * 2) After the pass 2 reflow, if the table's NeedToInitiateSpecialReflow(true) was called, it
  *    will do the special height reflow, setting the reflow state's mFlages.mSpecialHeightReflow
  *    to true and mSpecialHeightInitiator to itself. It won't do this if IsPrematureSpecialHeightReflow()
- *    returns true because in that case another special height reflow will be comming along with the
+ *    returns true because in that case another special height reflow will be coming along with the
  *    containing table as the mSpecialHeightInitiator. It is only relevant to do the reflow when
  *    the mSpecialHeightInitiator is the containing table, because if it is a remote ancestor, then
  *    appropriate heights will not be known.
@@ -6781,7 +6781,7 @@ BCHorizontalSeg::BCHorizontalSeg()
   * @param aSubWidth          - how wide is the nonowning width of the corner
   * @param aBevel             - is the corner beveled
   * @param aTopVerSegWidth    - vertical segment width going down
-  * @param aBottomVerSegWidth - vertical segment width comming from up
+  * @param aBottomVerSegWidth - vertical segment width coming from up
   * @param aHorSegHeight      - the height of the segment
   * @param aLastCell          - cell frame above this segment
   * @param aPixelsToTwips     - conversion factor
@@ -7405,7 +7405,7 @@ void nsTableFrame::DebugReflow(nsIFrame*            aFrame,
     parentRS = parentRS->parentReflowState;
   }
 #endif
-  // get the the frame summary timer
+  // get the frame summary timer
   nsIAtom* frameType = aFrame->GetType();
   nsReflowTimer* frameTimer = GetFrameTimer(aFrame, frameType);
   if (!frameTimer) {NS_ASSERTION(PR_FALSE, "no frame timer");return;}

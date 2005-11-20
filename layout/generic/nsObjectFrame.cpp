@@ -2779,7 +2779,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   rv = NS_NewISupportsArray(getter_AddRefs(ourParams));
   NS_ENSURE_SUCCESS(rv, rv);
  
-  // use the DOM to get us ALL our dependant PARAM tags, even if not
+  // use the DOM to get us ALL our dependent PARAM tags, even if not
   // ours
   nsCOMPtr<nsIDOMElement> mydomElement = do_QueryInterface(content);
   NS_ENSURE_TRUE(mydomElement, NS_ERROR_NO_INTERFACE);
@@ -2807,7 +2807,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   if (allParams) {
     PRUint32 numAllParams; 
     allParams->GetLength(&numAllParams);
-    // loop through every so called dependant PARAM tag to check if it
+    // loop through every so called dependent PARAM tag to check if it
     // "belongs" to us
 
     for (PRUint32 i = 0; i < numAllParams; i++) {

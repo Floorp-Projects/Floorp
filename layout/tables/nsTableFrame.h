@@ -864,7 +864,7 @@ protected:
   nsAutoVoidArray mColFrames;  
 
   struct TableBits {
-    PRUint32 mHadInitialReflow:1;      // has intial reflow happened
+    PRUint32 mHadInitialReflow:1;      // has initial reflow happened
     PRUint32 mHaveReflowedColGroups:1; // have the col groups gotten their initial reflow
     PRUint32 mNeedStrategyBalance:1;   // does the strategy needs to balance the table
     PRUint32 mNeedStrategyInit:1;      // does the strategy needs to be initialized and then balance the table
