@@ -306,7 +306,7 @@ GRE_GetGREPathWithProperties(const GREVersionRange *versions,
   HKEY hRegKey = NULL;
     
   // A couple of key points here:
-  // 1. Note the usage of the "Software\\Mozilla\\GRE" subkey - this allows
+  // 1. Note the usage of the "Software\\mozilla.org\\GRE" subkey - this allows
   //    us to have multiple versions of GREs on the same machine by having
   //    subkeys such as 1.0, 1.1, 2.0 etc. under it.
   // 2. In this sample below we're looking for the location of GRE version 1.2
@@ -567,9 +567,10 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
                       PRUint32 propertiesLength,
                       char* aBuffer, PRUint32 aBufLen)
 {
-  // Formerly, GREs were registered at the key HKLM/Software/Mozilla/GRE/<version>
-  // valuepair GreHome=Path. Nowadays, they are registered in any subkey of
-  // Software/Mozilla/GRE, with the following valuepairs:
+  // Formerly, GREs were registered at the registry key
+  // HKLM/Software/mozilla.org/GRE/<version> valuepair GreHome=Path.
+  // Nowadays, they are registered in any subkey of
+  // Software/mozilla.org/GRE, with the following valuepairs:
   //   Version=<version> (REG_SZ)
   //   GreHome=<path>    (REG_SZ or REG_EXPAND_SZ)
   //   <Property>=<value> (REG_SZ)
@@ -579,7 +580,7 @@ GRE_GetPathFromRegKey(HKEY aRegKey,
   // to selecting one GRE over another.
   //
   // When a GRE is being registered, it should try to register itself at
-  // HKLM/Software/Mozilla/GRE/<Version> first, to preserve compatibility
+  // HKLM/Software/mozilla.org/GRE/<Version> first, to preserve compatibility
   // with older glue. If this key is already taken (i.e. there is more than
   // one GRE of that version installed), it should append a unique number to
   // the version, for example:
