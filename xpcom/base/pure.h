@@ -45,14 +45,14 @@ int __cdecl PurifyDescribe(void *addr)			;
 int __cdecl PurifyWhatColors(void *addr, int size) 	;
 //
 // Functions to test the state of memory.  If the memory is not
-// accessable, an error is signaled just as if there were a memory
+// accessible, an error is signaled just as if there were a memory
 // reference and the function returns false.
 //
 int __cdecl PurifyAssertIsReadable(const void *addr, int size)	;
 int __cdecl PurifyAssertIsWritable(const void *addr, int size)	;
 //
 // Functions to test the state of memory.  If the memory is not
-// accessable, these functions return false.  No error is signaled.
+// accessible, these functions return false.  No error is signaled.
 //
 int __cdecl PurifyIsReadable(const void *addr, int size)	;
 int __cdecl PurifyIsWritable(const void *addr, int size)	;

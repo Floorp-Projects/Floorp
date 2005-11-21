@@ -346,7 +346,7 @@ nsTransferable::GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
 //
 // Returns the data of the requested flavor, obtained from either having the data on hand or
 // using a converter to get it. The data is wrapped in a nsISupports primitive so that it is
-// accessable from JS.
+// accessible from JS.
 //
 NS_IMETHODIMP
 nsTransferable::GetTransferData(const char *aFlavor, nsISupports **aData, PRUint32 *aDataLen)

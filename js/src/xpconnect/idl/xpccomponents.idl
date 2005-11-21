@@ -199,6 +199,6 @@ interface nsIXPCComponents : nsISupports
     /* DEPRECATED: use Components.utils.reportError instead. */
     void reportError();
 
-    /* 'lastResult' is accessable via JavaScript only */
-    /* 'returnCode' is accessable via JavaScript only */
+    /* 'lastResult' is accessible via JavaScript only */
+    /* 'returnCode' is accessible via JavaScript only */
 };

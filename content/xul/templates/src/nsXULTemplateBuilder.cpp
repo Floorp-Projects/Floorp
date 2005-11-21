@@ -797,7 +797,7 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* doc)
 
         if (NS_FAILED(rv)) {
             // This is only a warning because the data source may not
-            // be accessable for any number of reasons, including
+            // be accessible for any number of reasons, including
             // security, a bad URL, etc.
 #ifdef DEBUG
             nsCAutoString msg;

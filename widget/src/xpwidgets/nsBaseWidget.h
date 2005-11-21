@@ -180,7 +180,7 @@ protected:
   PRInt32           mZIndex;
   nsSizeMode        mSizeMode;
     
-    // Enumeration of the methods which are accessable on the "main GUI thread"
+    // Enumeration of the methods which are accessible on the "main GUI thread"
     // via the CallMethod(...) mechanism...
     // see nsSwitchToUIThread
   enum {

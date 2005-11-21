@@ -336,7 +336,7 @@ protected:
    HBITMAP CreateTransparencyMask(PRInt32  format, PRUint8* aImageData,
                                   PRUint32 aWidth, PRUint32 aHeight);
 
-   // Enumeration of the methods which are accessable on the PM thread
+   // Enumeration of the methods which are accessible on the PM thread
    enum {
       CREATE,
       DESTROY,

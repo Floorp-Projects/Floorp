@@ -3739,7 +3739,7 @@ nsDOMClassInfo::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
       // this document is a result from using XMLHttpRequest or it's a
       // document created through a DOMImplementation. In that case
       // there's nothing we can do since the context on which the
-      // document was created is not accessable and we can't do a
+      // document was created is not accessible and we can't do a
       // security check, but the document must remain
       // scriptable. Documents loaded through these methods have
       // already been vetted by the security manager before they were
