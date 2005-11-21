@@ -89,7 +89,7 @@ XPCOMGlueUnload()
 }
 
 nsresult
-XPCOMGlueLoadXULFunctions(nsDynamicFunctionLoad *symbols)
+XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad *symbols)
 {
     nsresult rv = NS_OK;
     while (symbols->functionName) {

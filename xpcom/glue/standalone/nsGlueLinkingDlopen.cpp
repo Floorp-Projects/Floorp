@@ -141,7 +141,7 @@ XPCOMGlueUnload()
 }
 
 nsresult
-XPCOMGlueLoadXULFunctions(nsDynamicFunctionLoad *symbols)
+XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad *symbols)
 {
     // We don't null-check sXULLibHandle because this might work even
     // if it is null (same as RTLD_DEFAULT)
@@ -153,7 +153,7 @@ XPCOMGlueLoadXULFunctions(nsDynamicFunctionLoad *symbols)
                  LEADING_UNDERSCORE "%s", symbols->functionName);
 
         *symbols->function = (NSFuncPtr) dlsym(sXULLibHandle, buffer);
-        if (!symbols->function)
+        if (!*symbols->function)
             rv = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
 
         ++symbols;
