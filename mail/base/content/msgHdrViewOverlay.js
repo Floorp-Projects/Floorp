@@ -364,7 +364,6 @@ var messageHeaderSink = {
     processHeaders: function(headerNameEnumerator, headerValueEnumerator, dontCollectAddress)
     {
       this.onStartHeaders(); 
-      var fromMailbox;
 
       const kMailboxSeparator = ", ";
       var index = 0;
@@ -382,12 +381,7 @@ var messageHeaderSink = {
         // already. 
         if (lowerCaseHeaderName == "x-mailer" || lowerCaseHeaderName == "x-mimeole")
           lowerCaseHeaderName = "user-agent";   
-        else if (lowerCaseHeaderName == "sender" && msgHeaderParser &&
-            header.headerValue && fromMailbox)
-        {
-          if (msgHeaderParser.extractHeaderAddressMailboxes(null, header.headerValue) == fromMailbox)
-            continue;
-        }
+
         if (this.mDummyMsgHeader)
         {
           if (lowerCaseHeaderName == "from")
@@ -423,9 +417,6 @@ var messageHeaderSink = {
 
         if (lowerCaseHeaderName == "from")
         {
-          if (msgHeaderParser && header.headerValue)
-            fromMailbox = msgHeaderParser.extractHeaderAddressMailboxes(null, header.headerValue);
-
           if (header.headerValue)
           {
             try
