@@ -46,8 +46,7 @@ _PR_ia64_AtomicIncrement:
 #ifndef _LP64
         addp4 r32 = 0, r32  ;;
 #endif
-        fetchadd4.acq r8 = [r32], 1
-        ;;
+        fetchadd4.acq r8 = [r32], 1  ;;
         adds r8 = 1, r8
         br.ret.sptk.many b0
         .endp _PR_ia64_AtomicIncrement#
@@ -64,8 +63,7 @@ _PR_ia64_AtomicDecrement:
 #ifndef _LP64
         addp4 r32 = 0, r32  ;;
 #endif
-        fetchadd4.rel r8 = [r32], -1
-        ;;
+        fetchadd4.rel r8 = [r32], -1  ;;
         adds r8 = -1, r8
         br.ret.sptk.many b0
         .endp _PR_ia64_AtomicDecrement#
@@ -82,15 +80,12 @@ _PR_ia64_AtomicAdd:
 #ifndef _LP64
         addp4 r32 = 0, r32  ;;
 #endif
-        ld4 r15 = [r32]
-        ;;
+        ld4 r15 = [r32]  ;;
 .L3:
         mov r14 = r15
         mov ar.ccv = r15
-        add r8 = r15, r33
-        ;;
-        cmpxchg4.acq r15 = [r32], r8, ar.ccv
-        ;;
+        add r8 = r15, r33  ;;
+        cmpxchg4.acq r15 = [r32], r8, ar.ccv  ;;
         cmp4.ne p6, p7 =  r15, r14
         (p6) br.cond.dptk .L3
         br.ret.sptk.many b0
