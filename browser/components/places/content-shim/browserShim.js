@@ -64,7 +64,7 @@ PlacesBrowserShim.init = function PBS_init() {
 
 PlacesBrowserShim.addBookmark = function PBS_addBookmark() {
   var selectedBrowser = getBrowser().selectedBrowser;
-  this._bookmarkURI(this._bookmarks.bookmarkRoot, selectedBrowser.currentURI, 
+  this._bookmarkURI(this._bookmarks.bookmarksRoot, selectedBrowser.currentURI, 
                     selectedBrowser.contentTitle);
 };
 
