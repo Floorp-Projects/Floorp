@@ -113,6 +113,8 @@
 
 #include "nsVariant.h"
 
+#include "nsUUIDGenerator.h"
+
 #ifdef GC_LEAK_DETECTOR
 #include "nsLeakDetector.h"
 #endif
@@ -209,6 +211,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimelineService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHashPropertyBag, Init)
 
 NS_GENERIC_AGGREGATED_CONSTRUCTOR_INIT(nsProperties, Init)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUUIDGenerator)
 
 static NS_METHOD
 nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
@@ -392,6 +396,8 @@ static const nsModuleComponentInfo components[] = {
 
 #define NS_HASH_PROPERTY_BAG_CLASSNAME "Hashtable Property Bag"
     COMPONENT(HASH_PROPERTY_BAG, nsHashPropertyBagConstructor),
+
+    COMPONENT(UUID_GENERATOR, nsUUIDGeneratorConstructor),
 
 #if defined(XP_WIN) && !defined(WINCE)
     COMPONENT(WINDOWSREGKEY, nsWindowsRegKeyConstructor),
