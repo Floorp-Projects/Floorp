@@ -210,7 +210,7 @@ nsLDAPSyncQuery::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
 {
     nsresult rv;       
 
-    // Attributes are retrived in StartLDAPSearch
+    // Attributes are retrieved in StartLDAPSearch
     // iterate through them
     //
     for (PRUint32 i = 0; i < mAttrCount; i++) {

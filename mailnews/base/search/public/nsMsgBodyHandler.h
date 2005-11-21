@@ -5,7 +5,7 @@
 #include "nsIMsgSearchScopeTerm.h"
 #include "nsILineInputStream.h"
 //---------------------------------------------------------------------------
-// nsMsgBodyHandler: used to retrive lines from POP and IMAP offline messages.
+// nsMsgBodyHandler: used to retrieve lines from POP and IMAP offline messages.
 // This is a helper class used by nsMsgSearchTerm::MatchBody
 //---------------------------------------------------------------------------
 class nsMsgBodyHandler

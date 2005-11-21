@@ -3203,7 +3203,7 @@ static int freePage(MemPage *pPage){
     put4byte(&pPage1->aData[32], pPage->pgno);
     TRACE(("FREE-PAGE: %d first\n", pPage->pgno));
   }else{
-    /* Other free pages already exist.  Retrive the first trunk page
+    /* Other free pages already exist.  Retrieve the first trunk page
     ** of the freelist and find out how many leaves it has. */
     MemPage *pTrunk;
     rc = getPage(pBt, get4byte(&pPage1->aData[32]), &pTrunk);

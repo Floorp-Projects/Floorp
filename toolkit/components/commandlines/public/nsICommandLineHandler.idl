@@ -53,7 +53,7 @@ interface nsICommandLine;
  * Category             Entry          Value
  * command-line-handler b-jsdebug      @mozilla.org/venkman/clh;1
  * command-line-handler c-extensions   @mozilla.org/extension-manager/clh;1
- * command-line-hanlder m-edit         @mozilla.org/composer/clh;1
+ * command-line-handler m-edit         @mozilla.org/composer/clh;1
  * command-line-handler m-irc          @mozilla.org/chatzilla/clh;1
  * command-line-handler y-final        @mozilla.org/browser/clh-final;1
  *

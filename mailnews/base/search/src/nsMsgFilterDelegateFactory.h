@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* creates or retrives filter objects based on their URI */
+/* creates or retrieves filter objects based on their URI */
 
 #include "nsIRDFDelegateFactory.h"
 

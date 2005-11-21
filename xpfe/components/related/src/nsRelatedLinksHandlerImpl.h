@@ -46,7 +46,7 @@
 #include "nsIRDFDataSource.h"
 
 ////////////////////////////////////////////////////////////////////////
-// RelatedLinksHanlderImpl
+// RelatedLinksHandlerImpl
 
 class RelatedLinksHandlerImpl : public nsIRelatedLinksHandler,
 				public nsIRDFDataSource

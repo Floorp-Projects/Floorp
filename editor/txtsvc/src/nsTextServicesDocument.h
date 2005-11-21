@@ -89,7 +89,7 @@ private:
   static nsIAtom *sVarAtom;
   static nsIAtom *sWbrAtom;
 
-  typedef enum { eIsDone=0,        // No iterator (I), or itertor doesn't point to anything valid.
+  typedef enum { eIsDone=0,        // No iterator (I), or iterator doesn't point to anything valid.
                  eValid,           // I points to first text node (TN) in current block (CB).
                  ePrev,            // No TN in CB, I points to first TN in prev block.
                  eNext             // No TN in CB, I points to first TN in next block.

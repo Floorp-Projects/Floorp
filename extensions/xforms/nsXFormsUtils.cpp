@@ -510,7 +510,7 @@ nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement           *aElement,
 
       return NS_OK;
     } else {
-      // If there is a (outer) bind element, we retrive its nodeset.
+      // If there is a (outer) bind element, we retrieve its nodeset.
       bindElement->GetAttribute(NS_LITERAL_STRING("nodeset"), expr);
     }
   } else {

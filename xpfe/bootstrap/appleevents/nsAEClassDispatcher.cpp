@@ -46,7 +46,7 @@
 /*----------------------------------------------------------------------------
 	AEDispatchHandler 
 	
-	Ownership of the hanlder passes to this object
+	Ownership of the handler passes to this object
 ----------------------------------------------------------------------------*/
 
 AEDispatchHandler::AEDispatchHandler(DescType handlerClass, AEGenericClass* handler, Boolean deleteOnRemove /* = true*/ )

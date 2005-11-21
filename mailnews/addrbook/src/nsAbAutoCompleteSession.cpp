@@ -404,7 +404,7 @@ nsresult nsAbAutoCompleteSession::SearchCards(nsIAbDirectory* directory, nsAbAut
               continue;
           }
             
-            //Now, retrive the user name and nickname
+            //Now, retrieve the user name and nickname
           rv = card->GetDisplayName(getter_Copies(pDisplayNameStr));
           if (NS_FAILED(rv))
               continue;
