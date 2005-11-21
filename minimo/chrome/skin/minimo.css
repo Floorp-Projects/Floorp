@@ -191,3 +191,37 @@ caption {
 }
 
 
+/* Feed icon - not reviewed yet, TOOK from the browser code */
+
+
+
+#feed-button, #feed-button > .button-box,
+#feed-button:hover:active > .button-box {
+  padding: 0px;
+  margin: 0px;
+  border: 0px; 
+  background-color: transparent;
+}
+
+#feed-button .button-menu-dropmarker,
+#feed-button .button-text {
+  display: none;
+}
+
+
+#feed-button {
+  -moz-binding: url("chrome://global/content/bindings/button.xml#menu");
+  -moz-appearance: none; 
+  min-width: 0px; 
+  margin-right: 1px !important;
+}
+
+
+#feed-button[feeds] {
+  list-style-image: url("chrome://minimo/skin/rssfavicon.png");
+}
+#feed-button[chromedir="rtl"][feeds] {
+  list-style-image: url("chrome://minimo/skin/rssfavicon.png");
+}
+
+
