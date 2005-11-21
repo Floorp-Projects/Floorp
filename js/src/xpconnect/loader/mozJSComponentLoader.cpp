@@ -1502,7 +1502,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
 
         char *buf = NS_STATIC_CAST(char*, PR_MemMap(map, 0, fileSize32));
         if (!buf) {
-            NS_ERROR("Failed to map file");
+            NS_WARNING("Failed to map file");
             return NS_ERROR_FAILURE;
         }
 
