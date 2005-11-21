@@ -84,6 +84,7 @@
     <command id="cmd_ViewRSS"                oncommand="BrowserViewRSS()"/>
     <command id="cmd_ViewSearch"             oncommand="BrowserViewSearch()"/>
     <command id="cmd_ViewFind"               oncommand="BrowserViewFind()"/>
+    <command id="cmd_BrowserOpenLinkAsNewTab" oncommand="BrowserOpenLinkAsTab()" />
     <command id="cmd_BrowserBack"            oncommand="BrowserBack()" />
     <command id="cmd_BrowserForward"         oncommand="BrowserForward()" />
     <command id="cmd_BrowserReload"          oncommand="BrowserReload()" />
@@ -176,7 +177,7 @@
 		</toolbar>
 		-->
        
-		<menuitem id="link_as_new_tab"    label="&linknewtab.label;" oncommand="BrowserOpenLinkAsTab()" hidden="true"/>
+		<menuitem id="link_as_new_tab"    label="&linknewtab.label;" command="cmd_BrowserOpenLinkAsNewTab" hidden="true"/>
 
 		<menuitem id="item-backbutton"    label="&backButton.label;"    command="cmd_BrowserBack"     hidden="true"/>
 		<menuitem id="item-forwardbutton" label="&forwardButton.label;" command="cmd_BrowserForward"  hidden="true"/>
