@@ -408,8 +408,8 @@ if (!$xmlparser && !$silent) {
 }
 if (!$imagemagick && !$silent) {
     print "If you want to convert BMP image attachments to PNG to conserve\n",
-          "disk space, you will need to install the ImageMagick application\n ",
-          "Available from http://www.imagemagick.org, and the Image::Magick",
+          "disk space, you will need to install the ImageMagick application\n",
+          "Available from http://www.imagemagick.org, and the Image::Magick\n",
           "Perl module by running (as $::root):\n\n",
     "   " . install_command("Image::Magick") . "\n\n";
 
