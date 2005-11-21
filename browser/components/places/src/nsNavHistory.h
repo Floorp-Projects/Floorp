@@ -85,6 +85,7 @@ class nsNavHistoryQuery : public nsINavHistoryQuery
 {
 public:
   nsNavHistoryQuery();
+  // note: we use a copy constructor in Clone(), the default is good enough
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYQUERY
@@ -109,10 +110,15 @@ protected:
 
 // nsNavHistoryResultNode
 
+#define NS_NAVHISTORYRESULTNODE_IID \
+{0x54b61d38, 0x57c1, 0x11da, {0x95, 0xb8, 0x00, 0x13, 0x21, 0xc9, 0xf6, 0x9e}}
+
 class nsNavHistoryResultNode : public nsINavHistoryResultNode
 {
 public:
   nsNavHistoryResultNode();
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYRESULTNODE_IID)
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYRESULTNODE
@@ -176,7 +182,10 @@ class nsNavHistoryResult : public nsINavHistoryResult,
 {
 public:
   nsNavHistoryResult(nsNavHistory* aHistoryService,
-                     nsIStringBundle* aHistoryBundle);
+                     nsIStringBundle* aHistoryBundle,
+                     const nsINavHistoryQuery** aQueries,
+                     PRUint32 aQueryCount,
+                     nsINavHistoryQueryOptions *aOptions);
 
   // Two-stage init, MUST BE CALLED BEFORE ANYTHING ELSE
   nsresult Init();
@@ -202,12 +211,13 @@ protected:
   nsCOMPtr<nsITreeBoxObject> mTree; // may be null if no tree has bound itself
   nsCOMPtr<nsITreeSelection> mSelection; // may be null
 
-  // This is a COM ptr that MUST BE AddRef'ed and Release'd MANUALLY.
-  // nsNavHistory has nsISupports as an ambiguous base class, so nsCOMPtr
-  // won't work.
   nsRefPtr<nsNavHistory> mHistoryService;
 
   PRBool mCollapseDuplicates;
+
+  // what generated this result set
+  nsCOMArray<nsINavHistoryQuery> mSourceQueries;
+  nsCOMPtr<nsINavHistoryQueryOptions> mSourceOptions;
 
   // for locale-specific date formatting and string sorting
   nsCOMPtr<nsILocale> mLocale;
@@ -296,7 +306,7 @@ public:
                                mGroupCount(0), mGroupings(nsnull), mExpandPlaces(PR_FALSE)
   { }
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INAVHISTORYQUERYOPTIONS_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERYOPTIONS_IID)
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSINAVHISTORYQUERYOPTIONS
@@ -309,6 +319,8 @@ public:
   PRBool ExpandPlaces() const { return mExpandPlaces; }
 
 private:
+  nsNavHistoryQueryOptions(const nsNavHistoryQueryOptions& other) {} // no copy
+
   ~nsNavHistoryQueryOptions() { delete[] mGroupings; }
 
   PRInt32 mSort;
@@ -396,9 +408,14 @@ public:
   nsresult RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
                        nsNavHistoryResultNode** aResult);
 
-  // Construct a new HistoryResult object.
-  nsNavHistoryResult* NewHistoryResult()
-  { return new nsNavHistoryResult(this, mBundle); }
+  // Construct a new HistoryResult object. You can give it null query/options.
+  nsNavHistoryResult* NewHistoryResult(const nsINavHistoryQuery** aQueries,
+                                       PRUint32 aQueryCount,
+                                       nsINavHistoryQueryOptions* aOptions)
+  {
+    return new nsNavHistoryResult(this, mBundle, aQueries, aQueryCount,
+                                  aOptions);
+  }
 
 private:
   ~nsNavHistory();

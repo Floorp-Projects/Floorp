@@ -638,8 +638,8 @@ nsNavBookmarks::GetBookmarks(nsINavHistoryResult **aResult)
 {
   *aResult = nsnull;
 
-  nsNavHistory *history = History();
-  nsRefPtr<nsNavHistoryResult> result(History()->NewHistoryResult());
+  nsRefPtr<nsNavHistoryResult> result(
+                                History()->NewHistoryResult(nsnull, 0, nsnull));
   NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
   nsresult rv = result->Init();
@@ -665,7 +665,8 @@ nsNavBookmarks::GetFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
 {
   *aChildren = nsnull;
 
-  nsRefPtr<nsNavHistoryResult> result = History()->NewHistoryResult();
+  nsRefPtr<nsNavHistoryResult> result(
+                                History()->NewHistoryResult(nsnull, 0, nsnull));
   NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
   result->SetBookmarkOptions(aOptions);
