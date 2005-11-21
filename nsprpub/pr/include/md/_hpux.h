@@ -85,7 +85,18 @@
 #define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
 #define _PR_ACCEPT_INHERIT_NONBLOCK
 
-#undef _PR_HAVE_ATOMIC_OPS
+#if defined(__ia64)
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+extern PRInt32 _PR_ia64_AtomicIncrement(PRInt32 *val);
+#define _MD_ATOMIC_INCREMENT          _PR_ia64_AtomicIncrement
+extern PRInt32 _PR_ia64_AtomicDecrement(PRInt32 *val);
+#define _MD_ATOMIC_DECREMENT          _PR_ia64_AtomicDecrement
+extern PRInt32 _PR_ia64_AtomicAdd(PRInt32 *ptr, PRInt32 val);
+#define _MD_ATOMIC_ADD                _PR_ia64_AtomicAdd
+extern PRInt32 _PR_ia64_AtomicSet(PRInt32 *val, PRInt32 newval);
+#define _MD_ATOMIC_SET                _PR_ia64_AtomicSet
+#endif
 
 #ifdef _PR_INET6
 #define _PR_HAVE_INET_NTOP

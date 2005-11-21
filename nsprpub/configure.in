@@ -1108,6 +1108,7 @@ tools are selected during the Xcode/Developer Tools installation.])
         if test -z "$USE_64"; then
             COMPILER_TAG=_32
         fi
+        PR_MD_ASFILES=os_HPUX_ia64.s
     else
         AC_DEFINE(hppa)
         DLL_SUFFIX=sl
