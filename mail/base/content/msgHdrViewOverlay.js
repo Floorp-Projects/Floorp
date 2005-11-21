@@ -364,6 +364,7 @@ var messageHeaderSink = {
     processHeaders: function(headerNameEnumerator, headerValueEnumerator, dontCollectAddress)
     {
       this.onStartHeaders(); 
+      var fromMailbox;
 
       const kMailboxSeparator = ", ";
       var index = 0;
@@ -422,6 +423,9 @@ var messageHeaderSink = {
 
         if (lowerCaseHeaderName == "from")
         {
+          if (msgHeaderParser && header.headerValue)
+            fromMailbox = msgHeaderParser.extractHeaderAddressMailboxes(null, header.headerValue);
+
           if (header.headerValue)
           {
             try
