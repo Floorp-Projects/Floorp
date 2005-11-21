@@ -71,6 +71,9 @@ function ltnOnLoad(event)
     // any load that occurs
     document.removeEventListener("load", ltnOnLoad, true);
 
+    // Hide the calendar view so it doesn't push the status-bar offscreen
+    collapseElement(document.getElementById("calendar-view-box"));
+
     // Start observing preferences
     var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefService);
@@ -106,6 +109,16 @@ function currentView()
 
 function showCalendar(aDate1, aDate2)
 {
+    // If we got this call while a mail-view is being shown, we need to
+    // hide all of the mail stuff so we have room to display the calendar
+    var calendarViewBox = document.getElementById("calendar-view-box");
+    if (calendarViewBox.style.visibility == "collapse") {
+        collapseElement(GetMessagePane());
+        collapseElement(document.getElementById("threadpane-splitter"));
+        collapseElement(gSearchBox);
+        uncollapseElement(calendarViewBox);
+    }
+
     var view = currentView();
 
     if (view.displayCalendar != getCompositeCalendar()) {
@@ -163,13 +176,15 @@ function switchView(type) {
 
 function selectedCalendarPane(event)
 {
-    document.getElementById("displayDeck").selectedPanel =
-        document.getElementById("calendar-view-box");
+    var deck = document.getElementById("displayDeck");
 
-    // give the view the calendar, but make sure that everything
-    // has uncollapsed first before we try to relayout!
-    // showCalendar(today());
-    setTimeout(function() { showCalendar(today()); }, 0);
+    // If we're already showing a calendar view, don't do anything
+    if (deck.selectedPanel.id == "calendar-view-box")
+        return;
+
+    deck.selectedPanel = document.getElementById("calendar-view-box");
+
+    switchView('week');
 }
 
 function LtnObserveDisplayDeckChange(event)
@@ -184,13 +199,14 @@ function LtnObserveDisplayDeckChange(event)
 
     var id = null;
     try { id = deck.selectedPanel.id } catch (e) { }
-    if (id == "calendar-view-box") {
-        GetMessagePane().collapsed = true;
-        document.getElementById("threadpane-splitter").collapsed = true;
-        gSearchBox.collapsed = true;
-        deck.selectedPanel.style.visibility = "";
-    } else {
-        document.getElementById("calendar-view-box").style.visibility = "collapse";
+
+    // Now we're switching back to the mail view, so put everything back that
+    // we collapsed in switchView()
+    if (id != "calendar-view-box") {
+        collapseElement(document.getElementById("calendar-view-box"));
+        uncollapseElement(GetMessagePane());
+        uncollapseElement(document.getElementById("threadpane-splitter"));
+        uncollapseElement(gSearchBox);
     }
 }
 

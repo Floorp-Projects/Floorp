@@ -42,3 +42,12 @@ function ltnGetAtom(str) {
 
 var CalDateTime = new Components.Constructor("@mozilla.org/calendar/datetime;1",
                                              Components.interfaces.calIDateTime);
+
+// Use these functions, since setting |element.collapsed = true| is NOT reliable
+function collapseElement(element) {
+    element.style.visibility = "collapse";
+}
+
+function uncollapseElement(element) {
+    element.style.visibility = "";
+}
