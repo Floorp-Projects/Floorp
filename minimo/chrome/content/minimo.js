@@ -140,13 +140,22 @@ nsBrowserStatusHandler.prototype =
      /* Ideally we dont want to check this here.
      Better to have some other protocol view-rss in the chrome */
 
-     const rsschromemask = "chrome://minimo/content/rssview/rssload.xhtml";
+     const rssmask = "chrome://minimo/content/rssview/rssload.xhtml?url=";
+     const sbmask = "chrome://minimo/content/rssview/rssload.xhtml?url=http://del.icio.us/rss/tag/";
 
-     if(aLocation.spec.substr(0, rsschromemask.length) == rsschromemask) {
+     if(aLocation.spec.substr(0, rssmask .length) == rssmask ) {
 
-        /* We trap the URL */ 
-        this.urlBar.value="sb:"+gRSSTag; 
+	     if(aLocation.spec.substr(0, sbmask .length) == sbmask ) {
+	        /* We trap the URL */ 
+	        this.urlBar.value="sb:"+gRSSTag; 
   
+		} else {
+
+	        /* We trap the URL */ 
+	        this.urlBar.value="rss:"+gRSSTag; 
+
+		}
+
      } else {
       domWindow = aWebProgress.DOMWindow;
       // Update urlbar only if there was a load on the root docshell
