@@ -428,8 +428,10 @@
                accesskey="&SearchNameOrEmail.accesskey;"
                control="searchInput"/>
         <textbox id="searchInput" flex="1" 
-                oninput="onAbSearchInput(false);"
-                onkeypress="onAbSearchKeyPress(event);"
+                type="timed" timeout="800"
+                oninput="SearchInputChanged();"
+                oncommand="onEnterInSearchBar();"
+                onkeypress="if (event.keyCode == KeyEvent.DOM_VK_RETURN) this.select();"
                 onfocus="this.select();" onclick="this.select();"/>
         <button id="clear" label="&clearButton.label;" disabled="true"
                 accesskey="&clearButton.accesskey;"

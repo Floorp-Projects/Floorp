@@ -925,47 +925,15 @@ function GetSelectedDirectory()
   }
 }
 
-function onAbSearchKeyPress(event)
-{
-  // 13 == return
-  if (event && event.keyCode == 13) 
-    onAbSearchInput(true);
-}
-    
-function onAbSearchInput(returnKeyHit)
-{
-  SearchInputChanged();
-
-  if (gSearchTimer) {
-    clearTimeout(gSearchTimer);
-    gSearchTimer = null;
-  }
-
-  if (returnKeyHit) {
-    gSearchInput.select();
-    onEnterInSearchBar();
-  }
-  else {
-    gSearchTimer = setTimeout("onEnterInSearchBar();", 800);
-  }
-}
-
 function SearchInputChanged() 
 {
-  var clearButton = document.getElementById("clear");
-  if (clearButton) {
-    if (gSearchInput.value && (gSearchInput.value != ""))
-      clearButton.removeAttribute("disabled");
-    else
-      clearButton.setAttribute("disabled", "true");
-  }
+  gSearchInput.nextSibling.disabled = !gSearchInput.value;
 }
 
 function onAbClearSearch() 
 {
-  if (gSearchInput) 
-    gSearchInput.value ="";  //on input does not get fired for some reason
-  onAbSearchInput(true);
+  gSearchInput.value = "";
+  onEnterInSearchBar();
 }
 
 function AbSwapFirstNameLastName()
