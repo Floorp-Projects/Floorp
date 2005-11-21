@@ -134,7 +134,12 @@
                  autocompletepopup="PopupAutoComplete"
                  onfocus="URLBarFocusHandler();"
                  ontextentered="return URLBarEntered();">
-            <hbox><image id="lock-icon" class="security-na" /></hbox>
+            <hbox>
+				<button type="menu" style="-moz-user-focus: none" class="plain" id="feed-button">
+					<menupopup id='feed-button-menu' position="after_end" />
+				</button>
+            	<image id="lock-icon" class="security-na" />
+            </hbox>
         </textbox>
 
     </toolbar>
