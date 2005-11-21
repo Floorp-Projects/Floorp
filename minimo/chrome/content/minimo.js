@@ -47,6 +47,7 @@ var gRSSTag="minimo";
 var gGlobalHistory = null;
 var gURIFixup = null;
 var gShowingMenuPopup=null;
+var gFocusedElementHREFContextMenu=null;
 
 var gPref = null;                    // so far snav toggles on / off via direct access to pref.
                                      // See bugzilla.mozilla.org/show_bug.cgi?id=311287#c1
@@ -111,6 +112,8 @@ nsBrowserStatusHandler.prototype =
         this.stopreloadButton.className = "reload-button";
         this.stopreloadButton.command= "cmd_BrowserReload";
         
+
+
         return;
       }
       return;
@@ -163,6 +166,8 @@ nsBrowserStatusHandler.prototype =
         this.urlBar.value = aLocation.spec;
       }
     }
+
+    BrowserUpdateFeeds();
 },
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
@@ -285,7 +290,109 @@ function MiniNavStartup()
   getBrowser().mStrip.addEventListener("click",BrowserWithoutSNAV,false);
   document.getElementById("mini-toolbars").addEventListener("click",BrowserWithoutSNAV,false);
   
+
+  getBrowser().addEventListener("DOMLinkAdded", BrowserLinkAdded, false);
+
 }
+
+/*
+ * Page's new Link tag handlers. This should be able to be smart about RSS, CSS, and maybe other Minimo stuff?  
+ * So far we have this here, so we can experience and try some new stuff. To be tabrowsed.
+ */
+function BrowserLinkAdded(event) {
+// ref http://lxr.mozilla.org/mozilla/source/browser/base/content/browser.js#2070
+
+	/* 
+       * Taken from browser.js - yes this should be in tabbrowser
+       */
+
+	var erel = event.target.rel;
+	var etype = event.target.type;
+	var etitle = event.target.title;
+	var ehref = event.target.href;
+
+	const alternateRelRegex = /(^|\s)alternate($|\s)/i;
+	const rssTitleRegex = /(^|\s)rss($|\s)/i;
+
+	if (!alternateRelRegex.test(erel) || !etype) return;
+	
+	etype = etype.replace(/^\s+/, "");
+	etype = etype.replace(/\s+$/, "");
+	etype = etype.replace(/\s*;.*/, "");
+	etype = etype.toLowerCase();
+
+	if (etype == "application/rss+xml" || etype == "application/atom+xml" || (etype == "text/xml" || etype == "application/xml" || etype == "application/rdf+xml") && rssTitleRegex.test(etitle))
+	{
+
+		const targetDoc = event.target.ownerDocument;
+
+		var browsers = getBrowser().browsers;
+		var shellInfo = null;
+
+		for (var i = 0; i < browsers.length; i++) {
+			var shell = findChildShell(targetDoc, browsers[i].docShell, null);
+			if (shell) shellInfo = { shell: shell, browser: browsers[i] };
+		}
+
+		//var shellInfo = this._getContentShell(targetDoc);
+
+		var browserForLink = shellInfo.browser;
+
+		if(!browserForLink) return;
+
+		var feeds = [];
+		if (browserForLink.feeds != null) feeds = browserForLink.feeds;
+		var wrapper = event.target;
+		feeds.push({ href: wrapper.href, type: etype, title: wrapper.title});
+		browserForLink.feeds = feeds;
+
+		if (browserForLink == getBrowser() || browserForLink == getBrowser().mCurrentBrowser) {
+			var feedButton = document.getElementById("feed-button");
+			if (feedButton) {
+				feedButton.setAttribute("feeds", "true");
+//				feedButton.setAttribute("tooltiptext", gNavigatorBundle.getString("feedHasFeeds"));	
+                        document.getElementById("feed-button-menu").setAttribute("onpopupshowing","DoBrowserRSS('"+ehref+"')");
+			}
+		}
+	}
+}
+
+function BrowserUpdateFeeds() {
+	var feedButton = document.getElementById("feed-button");
+	if (!feedButton)
+		return;
+
+	var feeds = getBrowser().mCurrentBrowser.feeds;
+
+	if (!feeds || feeds.length == 0) {
+		if (feedButton.hasAttribute("feeds")) feedButton.removeAttribute("feeds");
+//		feedButton.setAttribute("tooltiptext",  gNavigatorBundle.getString("feedNoFeeds"));
+	} else {
+		feedButton.setAttribute("feeds", "true");
+            document.getElementById("feed-button-menu").setAttribute("onpopupshowing","DoBrowserRSS('"+feeds[0].href+"')");
+
+//		feedButton.setAttribute("tooltiptext", gNavigatorBundle.getString("feedHasFeeds"));
+	}
+}
+
+
+function findChildShell(aDocument, aDocShell, aSoughtURI) {
+		aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation);
+		aDocShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+		var doc = aDocShell.getInterface(Components.interfaces.nsIDOMDocument);
+		if ((aDocument && doc == aDocument) || 
+			(aSoughtURI && aSoughtURI.spec == aDocShell.currentURI.spec))
+			return aDocShell;
+ 
+		var node = aDocShell.QueryInterface(Components.interfaces.nsIDocShellTreeNode);
+		for (var i = 0; i < node.childCount; ++i) {
+			var docShell = node.getChildAt(i);
+			docShell = findChildShell(aDocument, docShell, aSoughtURI);
+			if (docShell) return docShell;
+		}
+		return null;
+}
+
 
 function BrowserWithoutSNAV(e) {
  if(gSNAV==1||gSNAV==-1) {
@@ -461,9 +568,10 @@ function BrowserOpenTab()
  */
 function BrowserOpenLinkAsTab() 
 {
-  if(document.commandDispatcher.focusedElement.href) {
+
+  if(gFocusedElementHREFContextMenu) {
     try { 
-      getBrowser().selectedTab = getBrowser().addTab(document.commandDispatcher.focusedElement.href);
+      getBrowser().selectedTab = getBrowser().addTab(gFocusedElementHREFContextMenu);
       browserInit(getBrowser().selectedTab);
     } catch (e) {
       alert(e);
@@ -586,6 +694,9 @@ function BrowserUIResetZoomMinus() {
   to evaluate when the selected content area is a phone number, 
   thus mutate the popup menu to the right make call item 
 */ 
+
+
+
 function BrowserPopupShowing () {
 
   /*
@@ -593,6 +704,7 @@ function BrowserPopupShowing () {
    */ 
    
   if(document.commandDispatcher.focusedElement && document.commandDispatcher.focusedElement.href) {
+	gFocusedElementHREFContextMenu=document.commandDispatcher.focusedElement.href;
 	document.getElementById("link_as_new_tab").hidden=false;
 
 	document.getElementById("item-backbutton").hidden=true;
@@ -612,6 +724,7 @@ function BrowserPopupShowing () {
  
   /* Enable Copy */
   if(selectedRange.toString()) {
+
     document.getElementById("item-copy").style.display="block";
   }
   
