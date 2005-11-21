@@ -640,13 +640,15 @@ function DoBrowserRSS(sKey) {
 	  if(!sKey) BrowserViewRSS(); // The toolbar is being used. Otherwise it is via the sb: trap protocol. 
 	
 	  try { 
+	  
 	    if(sKey) {
 	      gRSSTag=sKey;
 	    } else if(document.getElementById("toolbar-rss-rsstag").value!="") {
 	      gRSSTag=document.getElementById("toolbar-rss-rsstag").value;
 	    }
 
-	    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssload.xhtml?url=http://rss.slashdot.org/Slashdot/slashdot');
+	    getBrowser().selectedTab = getBrowser().addTab('chrome://minimo/content/rssview/rssload.xhtml?url='+gRSSTag);
+	    
 	    browserInit(getBrowser().selectedTab);
 	  } catch (e) {
 	   
@@ -813,8 +815,8 @@ function URLBarEntered()
 
     /* Trap to RSS 'protocol' */ 
 
-    if(gURLBar.value.substring(0,9)=="slashdot:") {
-		DoBrowserRSS(gURLBar.value.split("slashdot:")[1]);
+    if(gURLBar.value.substring(0,4)=="rss:") {
+		DoBrowserRSS(gURLBar.value.split("rss:")[1]);
 		return;
     }
     
