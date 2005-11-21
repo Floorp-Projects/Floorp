@@ -286,7 +286,7 @@ nsLDAPDataSource.prototype = {
      * Find a child of that is related to the source by the given arc
      * and truth value
      *
-     * @return NS_RDF_NO_VALUE if there is no target accessable from the
+     * @return NS_RDF_NO_VALUE if there is no target accessible from the
      * source via the specified property.
      *
      * nsIRDFNode GetTarget (in nsIRDFResource aSource,

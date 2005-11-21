@@ -783,7 +783,7 @@ nsDragService::DragSendDataProc(FlavorType inFlavor, void* inRefCon, ItemReferen
     PRUint32 dataSize = 0;
     retVal = dragService->GetDataForFlavor(dragService->mDataItems, inDragRef, inItemRef, inFlavor, &data, &dataSize);
     if ( retVal == noErr ) {      
-        // make the data accessable to the DragManager
+        // make the data accessible to the DragManager
         retVal = ::SetDragItemFlavorData ( inDragRef, inItemRef, inFlavor, data, dataSize, 0 );
         NS_ASSERTION ( retVal == noErr, "SDIFD failed in DragSendDataProc" );
     }
