@@ -1755,7 +1755,7 @@ nsMacWindow::DispatchMenuEvent ( void* anEvent, PRInt32 aNativeResult, PRBool *_
 // The drag manager has let us know that something related to a drag has
 // occurred in this window. It could be any number of things, ranging from 
 // a drop, to a drag enter/leave, or a drag over event. The actual event
-// is passed in |aMessage| and is passed along to our event hanlder so Gecko
+// is passed in |aMessage| and is passed along to our event handler so Gecko
 // knows about it.
 //
 NS_IMETHODIMP

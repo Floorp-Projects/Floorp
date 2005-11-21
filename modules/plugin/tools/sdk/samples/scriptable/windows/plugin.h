@@ -52,7 +52,7 @@ public:
   NPBool isInitialized();
 
   // we need to provide implementation of this method as it will be
-  // used by Mozilla to retrive the scriptable peer
+  // used by Mozilla to retrieve the scriptable peer
   NPError	GetValue(NPPVariable variable, void *value);
 
   // locals

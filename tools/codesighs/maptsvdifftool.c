@@ -1227,7 +1227,7 @@ int initOptions(Options* outOptions, int inArgc, char** inArgv)
             else
             {
                 retval = __LINE__;
-                ERROR_REPORT(retval, current->mLongName, "No hanlder for command line switch.");
+                ERROR_REPORT(retval, current->mLongName, "No handler for command line switch.");
             }
         }
     }

@@ -140,7 +140,7 @@ class nsParser : public nsIParser,
     NS_IMETHOD_(void) SetContentSink(nsIContentSink* aSink);
 
     /**
-     * retrive the sink set into the parser 
+     * retrieve the sink set into the parser 
      * @update	gess5/11/98
      * @param   aSink is the new sink to be used by parser
      * @return  old sink, or NULL

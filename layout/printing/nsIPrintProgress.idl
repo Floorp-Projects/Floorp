@@ -68,7 +68,7 @@ interface nsIPrintProgress: nsIWebProgressListener {
   */
   void doneIniting();
   
-  /* Retrive the prompter, needed to display modal dialog on top of progress dialog */
+  /* Retrieve the prompter, needed to display modal dialog on top of progress dialog */
   nsIPrompt getPrompter();
 
   /* Indicated if the user asked to cancel the current process */

@@ -558,7 +558,7 @@ public:
   NS_IMETHOD GetAltDevice(nsIDeviceContext** aAltDC) = 0;
 
   /**
-   * Turn on/off which types of information is retrived 
+   * Turn on/off which types of information is retrieved 
    * via the alt device context
    */
   NS_IMETHOD SetUseAltDC(PRUint8 aValue, PRBool aOn) = 0;
