@@ -387,19 +387,6 @@ treechildren::-moz-tree-image(remote-err) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/remote-addrbook-error.png");
 }
 
-.identity-menulist {
-  -moz-binding: url(chrome://messenger/content/messengercompose/mailComposeBindings.xml#fromMenuList);
-}
-
-.identity-popup-item {                                                                               
-  -moz-binding: url(chrome://messenger/content/messengercompose/mailComposeBindings.xml#fromMenuitem);
-}     
-
-.composemenu-text-2 {
-  font-style: italic;
-  color: GrayText;
-}
-
 /* ::::: addressing widget ::::: */
   
 #addressingWidget {

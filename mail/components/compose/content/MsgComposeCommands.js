@@ -1232,12 +1232,11 @@ function ComposeStartup(recycled, aParams)
   }
 
   var identityList = document.getElementById("msgIdentity");
-  var identityListPopup = document.getElementById("msgIdentityPopup");
 
   document.addEventListener("keypress", awDocumentKeyPress, true);
 
-  if (identityListPopup)
-    FillIdentityListPopup(identityListPopup);
+  if (identityList)
+    FillIdentityList(identityList);
 
   if (!params) {
     // This code will go away soon as now arguments are passed to the window using a object of type nsMsgComposeParams instead of a string
@@ -2334,7 +2333,7 @@ function compareAccountSortOrder(account1, account2)
     return 0;
 }
 
-function FillIdentityListPopup(popup)
+function FillIdentityList(menulist)
 {
   var accounts = queryISupportsArray(gAccountManager.accounts, Components.interfaces.nsIMsgAccount);
   accounts.sort(compareAccountSortOrder);
@@ -2346,13 +2345,8 @@ function FillIdentityListPopup(popup)
     var identites = queryISupportsArray(accounts[i].identities, Components.interfaces.nsIMsgIdentity);
     for (var j in identites) {
       var identity = identites[j];
-      var item = document.createElement("menuitem");
-      item.className = "identity-popup-item";
-      item.setAttribute("label", identity.identityName);
-      item.setAttribute("value", identity.key);
+      var item = menulist.appendItem(identity.identityName, identity.key, server.prettyName);
       item.setAttribute("accountkey", accounts[i].key);
-      item.setAttribute("accountname", " - " + server.prettyName);
-      popup.appendChild(item);
     }
   }
 }

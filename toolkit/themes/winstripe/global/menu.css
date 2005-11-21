@@ -90,6 +90,12 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
   font-weight: inherit;
 }
 
+.menu-description {
+  font-style: italic;
+  color: GrayText;
+  -moz-margin-start: 1ex !important;
+}
+
 .menu-accel,
 .menu-iconic-accel {
   -moz-margin-end: 19px !important;

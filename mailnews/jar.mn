@@ -175,7 +175,6 @@ messenger.jar:
     content/messenger/messengercompose/askSendFormat.xul                       (compose/resources/content/askSendFormat.xul)
     content/messenger/messengercompose/sendProgress.xul                        (compose/resources/content/sendProgress.xul)
     content/messenger/messengercompose/sendProgress.js                         (compose/resources/content/sendProgress.js)
-    content/messenger/messengercompose/mailComposeBindings.xml                 (compose/resources/content/mailComposeBindings.xml)
     content/messenger/messengercompose/MsgAttachPage.xul                       (compose/resources/content/MsgAttachPage.xul)
     content/messenger/messengercompose/MsgAttachPage.js                        (compose/resources/content/MsgAttachPage.js)
     content/messenger/messengercompose/mailComposeExtrasOverlay.xul            (compose/resources/content/mailComposeExtrasOverlay.xul)

@@ -82,6 +82,12 @@ menulist[open="true"]:focus > .menulist-label-box {
   -moz-margin-start: 1px !important;
 }
 
+.menulist-description {
+  font-style: italic;
+  color: GrayText;
+  -moz-margin-start: 1ex !important;
+}
+
 /* ..... dropmarker ..... */
 
 .menulist-dropmarker {

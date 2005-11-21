@@ -697,7 +697,7 @@
         <vbox flex="1" id="addresses-box">
           <hbox align="center">
             <label value="&fromAddr.label;" accesskey="&fromAddr.accesskey;" control="msgIdentity"/>
-            <menulist id="msgIdentity" class="identity-menulist" label="..." flex="1" oncommand="LoadIdentity(false);">
+            <menulist id="msgIdentity" type="description" flex="1" oncommand="LoadIdentity(false);">
               <menupopup id="msgIdentityPopup"/>
             </menulist>
           </hbox> 
