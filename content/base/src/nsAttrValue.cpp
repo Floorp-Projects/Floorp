@@ -313,7 +313,8 @@ nsAttrValue::ToString(nsAString& aResult) const
     }
     case eAtom:
     {
-      NS_STATIC_CAST(nsIAtom*, GetPtr())->ToString(aResult);
+      nsIAtom *atom = NS_STATIC_CAST(nsIAtom*, GetPtr());
+      atom->ToString(aResult);
 
       break;
     }
@@ -370,8 +371,8 @@ nsAttrValue::ToString(nsAString& aResult) const
     case eCSSStyleRule:
     {
       aResult.Truncate();
-      nsCSSDeclaration* decl = 
-        GetMiscContainer()->mCSSStyleRule->GetDeclaration();
+      MiscContainer *container = GetMiscContainer();
+      nsCSSDeclaration* decl = container->mCSSStyleRule->GetDeclaration();
       if (decl) {
         decl->ToString(aResult);
       }
