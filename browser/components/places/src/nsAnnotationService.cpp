@@ -39,6 +39,7 @@
 #include "nsAnnotationService.h"
 #include "mozStorageCID.h"
 #include "nsNavHistory.h"
+#include "nsNetUtil.h"
 #include "mozIStorageValueArray.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageFunction.h"
@@ -151,6 +152,12 @@ nsAnnotationService::SetAnnotationString(nsIURI* aURI,
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
   transaction.Commit();
+
+  // should reset the statement; observers may call our service back to get
+  // annotation values!
+  statement->Reset();
+  statementResetter.Abandon();
+  CallSetObservers(aURI, aName);
   return NS_OK;
 }
 
@@ -177,6 +184,12 @@ nsAnnotationService::SetAnnotationInt32(nsIURI* aURI,
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
   transaction.Commit();
+
+  // should reset the statement; observers may call our service back to get
+  // annotation values!
+  statement->Reset();
+  statementResetter.Abandon();
+  CallSetObservers(aURI, aName);
   return NS_OK;
 }
 
@@ -208,6 +221,12 @@ nsAnnotationService::SetAnnotationBinary(nsIURI* aURI,
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
   transaction.Commit();
+
+  // should reset the statement; observers may call our service back to get
+  // annotation values!
+  statement->Reset();
+  statementResetter.Abandon();
+  CallSetObservers(aURI, aName);
   return NS_OK;
 }
 
@@ -338,6 +357,53 @@ nsAnnotationService::RemoveAnnotation(nsIURI* aURI,
 }
 
 
+// nsAnnotationService::AddObserver
+
+NS_IMETHODIMP
+nsAnnotationService::AddObserver(nsIAnnotationObserver* aObserver)
+{
+  if (mObservers.IndexOfObject(aObserver) >= 0)
+    return NS_ERROR_INVALID_ARG; // already registered
+  if (!mObservers.AppendObject(aObserver))
+    return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
+
+// nsAnnotationService::RemoveObserver
+
+NS_IMETHODIMP
+nsAnnotationService::RemoveObserver(nsIAnnotationObserver* aObserver)
+{
+  if (!mObservers.RemoveObject(aObserver))
+    return NS_ERROR_INVALID_ARG;
+  return NS_OK;
+}
+
+
+// nsAnnotationService::GetAnnotationURI
+
+NS_IMETHODIMP
+nsAnnotationService::GetAnnotationURI(nsIURI* aURI, const nsACString& aName,
+                                      nsIURI** _result)
+{
+  if (aName.IsEmpty())
+    return NS_ERROR_INVALID_ARG;
+
+  nsCAutoString annoSpec;
+  nsresult rv = aURI->GetSpec(annoSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString spec;
+  spec.AssignLiteral("moz-anno:");
+  spec += aName;
+  spec += NS_LITERAL_CSTRING(":");
+  spec += annoSpec;
+
+  return NS_NewURI(_result, spec);
+}
+
+
 // nsAnnotationService::HasAnnotationInternal
 //
 //    This is just like HasAnnotation but takes a URL ID. It will also give
@@ -454,4 +520,14 @@ nsAnnotationService::StartSetAnnotation(nsIURI* aURI,
   // and MIME type and execute the statement
   statementResetter.Abandon();
   return NS_OK;
+}
+
+
+// nsAnnotationService::CallSetObservers
+
+void
+nsAnnotationService::CallSetObservers(nsIURI* aURI, const nsACString& aName)
+{
+  for (PRInt32 i = 0; i < mObservers.Count(); i ++)
+    mObservers[i]->OnAnnotationSet(aURI, aName);
 }

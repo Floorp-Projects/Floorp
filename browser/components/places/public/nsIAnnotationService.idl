@@ -41,6 +41,23 @@
 interface nsIURI;
 interface nsIVariant;
 
+[scriptable, uuid(4ff680af-643e-4144-809f-dc53f71d7def)]
+interface nsIAnnotationObserver : nsISupports
+{
+    /**
+     * Called when an annotation value is set. It could be a new annotation,
+     * or it could be a new value for an existing annotation.
+     */
+    void onAnnotationSet(in nsIURI aURI, in AUTF8String aName);
+
+    /**
+     * Called when an annotation is deleted. If aName is empty, then ALL
+     * annotations for the given URI have been deleted. This is not called when
+     * annotations are expired (normally happens when the app exits).
+     */
+    void onAnnotationRemoved(in nsIURI aURI, in AUTF8String aName);
+};
+
 [scriptable, uuid(05537263-9bb4-45c8-ae96-461817f53972)]
 interface nsIAnnotationService : nsISupports
 {
@@ -87,14 +104,14 @@ interface nsIAnnotationService : nsISupports
      * aExpiration is one of EXPIRE_* above. aFlags should be 0 for now, some
      * flags will be defined in the future.
      */
-    void setAnnotation(in nsIURI aURI, in ACString aName, in nsIVariant aValue,
+    void setAnnotation(in nsIURI aURI, in AUTF8String aName, in nsIVariant aValue,
                        in PRInt32 aFlags, in PRInt32 aExpiration);
 
     /**
      * Sets an annotation just like setAnnotation, but takes a string as
      * input, which will be more convenient for C++.
      */
-    void setAnnotationString(in nsIURI aURI, in ACString aName,
+    void setAnnotationString(in nsIURI aURI, in AUTF8String aName,
                              in AString aValue, in PRInt32 aFlags,
                              in PRInt32 aExpiration);
 
@@ -102,7 +119,7 @@ interface nsIAnnotationService : nsISupports
      * Sets an annotation just like setAnnotation, but takes an Int32 as input
      * for convenience.
      */
-    void setAnnotationInt32(in nsIURI aURI, in ACString aName,
+    void setAnnotationInt32(in nsIURI aURI, in AUTF8String aName,
                             in PRInt32 aValue, in PRInt32 aFlags,
                             in PRInt32 aExpiration);
 
@@ -110,21 +127,21 @@ interface nsIAnnotationService : nsISupports
      * Sets an annotation just like setAnnotation, but takes binary data as
      * input. You MUST supply a valid MIME type.
      */
-    void setAnnotationBinary(in nsIURI aURI, in ACString aName,
+    void setAnnotationBinary(in nsIURI aURI, in AUTF8String aName,
                              [const,array,size_is(aDataLen)] in octet aData,
-                             in PRUint32 aDataLen, in ACString aMimeType,
+                             in PRUint32 aDataLen, in AUTF8String aMimeType,
                              in PRInt32 aFlags, in PRInt32 aExpiration);
 
     /**
      * Retrieves the value of an existing annotation. Throws if the annotation
      * does not exist.
      */
-    nsIVariant getAnnotation(in nsIURI aURI, in ACString aName);
+    nsIVariant getAnnotation(in nsIURI aURI, in AUTF8String aName);
 
     /**
      * Same as getAnnotation but a convenience function for C++ for strings.
      */
-    AString getAnnotationString(in nsIURI aURI, in ACString aName);
+    AString getAnnotationString(in nsIURI aURI, in AUTF8String aName);
 
     /**
      * Same as getAnnotation but a convenience function for C++ for ints. If
@@ -132,16 +149,16 @@ interface nsIAnnotationService : nsISupports
      * behavior when asking for an int when there is not one, it will likely
      * change in the future if we start caching stuff).
      */
-    PRInt32 getAnnotationInt32(in nsIURI aURI, in ACString aName);
+    PRInt32 getAnnotationInt32(in nsIURI aURI, in AUTF8String aName);
 
     /**
      * Same as getAnnotation but for binary data. This also returns the
      * MIME type.
      */
-    void getAnnotationBinary(in nsIURI aURI, in ACString aName,
+    void getAnnotationBinary(in nsIURI aURI, in AUTF8String aName,
                              [array,size_is(aDataLen)] out octet aData,
                              out PRUint32 aDataLen,
-                             out ACString aMimeType);
+                             out AUTF8String aMimeType);
 
     /**
      * Retrieves info about an existing annotation. aMimeType will be empty
@@ -156,9 +173,9 @@ interface nsIAnnotationService : nsISupports
      *   annotator.getAnnotationInfo(myURI, "foo", flags, exp, mimeType);
      *   // now you can use 'exp.value' and 'flags.value'
      */
-    void getAnnotationInfo(in nsIURI aURI, in ACString aName,
+    void getAnnotationInfo(in nsIURI aURI, in AUTF8String aName,
                            out PRInt32 aFlags, out PRInt32 aExpiration,
-                           out ACString aMimeType, out PRInt32 aStorageType);
+                           out AUTF8String aMimeType, out PRInt32 aStorageType);
 
     /**
      * Get the names of all annotations for this URI.
@@ -192,13 +209,13 @@ interface nsIAnnotationService : nsISupports
     /**
      * Test for annotation existance.
      */
-    boolean hasAnnotation(in nsIURI aURI, in ACString aName);
+    boolean hasAnnotation(in nsIURI aURI, in AUTF8String aName);
 
     /**
      * Removes a specific annotation. Succeeds even if the annotation is
      * not found.
      */
-    void removeAnnotation(in nsIURI aURI, in ACString aName);
+    void removeAnnotation(in nsIURI aURI, in AUTF8String aName);
 
     /**
      * Removes all annotations for the given page.
@@ -206,4 +223,26 @@ interface nsIAnnotationService : nsISupports
      * flags (once we have flags defined).
      */
     //void removePageAnnotations(in nsIURI aURI);
+
+
+    /**
+     * Adds an annotation observer. The annotation service will keep an owning
+     * reference to the observer object.
+     */
+    void addObserver(in nsIAnnotationObserver aObserver);
+
+
+    /**
+     * Removes an annotaton observer previously registered by addObserver.
+     */
+    void removeObserver(in nsIAnnotationObserver aObserver);
+
+    /**
+     * Returns a URI that can be used to access the given binary annotation.
+     * This function does NOT check that the annotation exists. Also, note that
+     * you can only load URIs for annotations that have have a valid MIME type
+     * set by setAnnotationBinary. No non-URI valid chars in name, especially
+     * colon, which will mess up parsing.
+     */
+    nsIURI getAnnotationURI(in nsIURI aURI, in AUTF8String aName);
 };

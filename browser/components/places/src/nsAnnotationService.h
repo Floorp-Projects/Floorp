@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIAnnotationService.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
@@ -63,6 +64,8 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBGetAnnotationFromURI;
   nsCOMPtr<mozIStorageStatement> mDBAddAnnotation;
 
+  nsCOMArray<nsIAnnotationObserver> mObservers;
+
   static const int kAnnoIndex_ID;
   static const int kAnnoIndex_Page;
   static const int kAnnoIndex_Name;
@@ -79,4 +82,5 @@ protected:
                               const nsACString& aName,
                               PRInt32 aFlags, PRInt32 aExpiration,
                               mozIStorageStatement** aStatement);
+  void CallSetObservers(nsIURI* aURI, const nsACString& aName);
 };
