@@ -156,7 +156,6 @@ bin\plugins\npnul32.dll
 bin\components\helperAppDlg.xpt
 bin\components\nsKillAll.js
 bin\components\progressDlg.xpt
-bin\components\transformiix.dll
 bin\components\dom_xpath.xpt
 bin\AccessibleMarshal.dll
 bin\components\nsSetDefaultBrowser.js
