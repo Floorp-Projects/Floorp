@@ -1366,11 +1366,23 @@ js_HasOwnPropertyHelper(JSContext *cx, JSObject *obj, JSLookupPropOp lookup,
         *rval = JSVAL_FALSE;
     } else if (obj2 == obj) {
         *rval = JSVAL_TRUE;
-    } else if (OBJ_IS_NATIVE(obj2)) {
-        sprop = (JSScopeProperty *)prop;
-        *rval = BOOLEAN_TO_JSVAL(SPROP_IS_SHARED_PERMANENT(sprop));
     } else {
-        *rval = JSVAL_FALSE;
+        JSClass *clasp;
+        JSExtendedClass *xclasp;
+
+        clasp = OBJ_GET_CLASS(cx, obj);
+        xclasp = (clasp->flags & JSCLASS_IS_EXTENDED)
+                 ? (JSExtendedClass *)clasp
+                 : NULL;
+        if (xclasp && xclasp->outerObject &&
+            xclasp->outerObject(cx, obj2) == obj) {
+            *rval = JSVAL_TRUE;
+        } else if (OBJ_IS_NATIVE(obj2)) {
+            sprop = (JSScopeProperty *)prop;
+            *rval = BOOLEAN_TO_JSVAL(SPROP_IS_SHARED_PERMANENT(sprop));
+        } else {
+            *rval = JSVAL_FALSE;
+        }
     }
     if (prop)
         OBJ_DROP_PROPERTY(cx, obj2, prop);
