@@ -29,6 +29,7 @@ use lib qw(.);
 
 require "globals.pl";
 use Bugzilla::Constants;
+use Bugzilla::Util;
 use Bugzilla::User;
 
 ###########################################################################
@@ -500,13 +501,11 @@ DoubleCrossCheck("milestones", "product_id", "value",
  
 Status("Checking profile logins");
 
-my $emailregexp = Param("emailregexp");
 SendSQL("SELECT userid, login_name FROM profiles");
 
 while (my ($id,$email) = (FetchSQLData())) {
-    unless ($email =~ m/$emailregexp/) {
-        Alert "Bad profile email address, id=$id,  &lt;$email&gt;."
-    }
+    validate_email_syntax($email)
+      || Alert "Bad profile email address, id=$id,  &lt;$email&gt;.";
 }
 
 ###########################################################################
