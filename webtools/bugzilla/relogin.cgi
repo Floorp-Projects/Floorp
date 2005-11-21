@@ -201,6 +201,11 @@ elsif ($action eq 'logout') {
     $vars->{'message'} = "logged_out";
     $target = 'global/message.html.tmpl';
 }
+# No valid action found
+else {
+    Bugzilla->login(LOGIN_OPTIONAL);
+    ThrowCodeError('unknown_action', {action => $action});
+}
 
 # Display the template
 print $cgi->header();
