@@ -201,15 +201,33 @@ if (observer._itemChanged.spec != "http://espn.com/" ||
   dump("setItemTitle notification FAILED\n");
 }
 
-///  EXPECTED TABLE RESULTS   FIXME
+///  EXPECTED TABLE RESULTS
 ///  moz_bookmarks_assoc:
 ///  item_child    folder_child    parent    position
 ///  ----------    ------------    ------    --------
+///                1
+///                2               1         0
+///                3               1         1
+///  1                             2         0
+///                4               2         1
+///  3                             4         0
+///  2                             4         1
+///                5               2         2
+///  4                             5         0
 ///
 ///  moz_history:
 ///  id            url
 ///  --            ------------------------
+///  1             http://google.com/
+///  2             http://developer.mozilla.org/
+///  3             http://msdn.microsoft.com/
+///  4             http://espn.com/
 ///
 ///  moz_bookmarks_containers:
-///  id
-///  --
+///  id            name
+///  --            -----------------------
+///  1
+///  2             Bookmarks
+///  3             Personal Toolbar Folder
+///  4             Work
+///  5             Home
