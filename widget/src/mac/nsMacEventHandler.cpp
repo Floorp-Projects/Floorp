@@ -804,7 +804,7 @@ static PRUint32 ConvertMacToRaptorKeyCode(UInt32 eventMessage, UInt32 eventModif
 
 void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent, 
     EventRecord& aOSEvent, nsWindow* aFocusedWidget, PRUint32 aMessage,
-    PRBool* aIsChar, PRBool aConvertChar)
+    PRBool aConvertChar)
 {
 	//
 	// initalize the basic message parts
@@ -828,15 +828,11 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent,
 	//
 	// nsKeyEvent parts
 	//
-  if (aIsChar)
-    *aIsChar = PR_FALSE; 
   if (aMessage == NS_KEY_PRESS 
 		&& !IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8) )
 	{
     if (aKeyEvent.isControl)
 		{
-      if (aIsChar)
-        *aIsChar = PR_TRUE;
       if (aConvertChar) 
       {
 			aKeyEvent.charCode = (aOSEvent.message & charCodeMask);
@@ -858,8 +854,6 @@ void nsMacEventHandler::InitializeKeyEvent(nsKeyEvent& aKeyEvent,
       } // if (!aKeyEvent.isMeta)
     
 			aKeyEvent.keyCode	= 0;
-      if (aIsChar)
-        *aIsChar =  PR_TRUE; 
       if (aConvertChar) 
       {
 			aKeyEvent.charCode = ConvertKeyEventToUnicode(aOSEvent);
@@ -1158,13 +1152,11 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
   if (!focusedWidget)
     focusedWidget = mTopLevelWidget;
   
-  PRBool isCharacter = PR_FALSE;
-
   // simulate key down event if this isn't an autoKey event
   if (aOSEvent.what == keyDown)
   {
     nsKeyEvent keyDownEvent(PR_TRUE, NS_KEY_DOWN, nsnull);
-    InitializeKeyEvent(keyDownEvent, aOSEvent, focusedWidget, NS_KEY_DOWN, &isCharacter, PR_FALSE);
+    InitializeKeyEvent(keyDownEvent, aOSEvent, focusedWidget, NS_KEY_DOWN, PR_FALSE);
     result = focusedWidget->DispatchWindowEvent(keyDownEvent);
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent keydown");
 
@@ -1177,15 +1169,14 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
   }
 
   // simulate key press events
-  nsKeyEvent keyPressEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
-  InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, NS_KEY_PRESS, &isCharacter, PR_FALSE);
-
-  if (isCharacter) 
+  if (!IsSpecialRaptorKey((aOSEvent.message & keyCodeMask) >> 8))
   {
     // it is a message with text, send all the unicode characters
     PRInt32 i;
     for (i = 0; i < charCount; i++)
     {
+      nsKeyEvent keyPressEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
+      InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, NS_KEY_PRESS, PR_FALSE);
       keyPressEvent.charCode = text[i];
 
       // control key is special in that it doesn't give us letters
@@ -1225,6 +1216,8 @@ PRBool nsMacEventHandler::HandleUKeyEvent(const PRUnichar* text, long charCount,
   }
   else {
     // command / shift keys, etc. only send once
+    nsKeyEvent keyPressEvent(PR_TRUE, NS_KEY_PRESS, nsnull);
+    InitializeKeyEvent(keyPressEvent, aOSEvent, focusedWidget, NS_KEY_PRESS, PR_FALSE);
     result = focusedWidget->DispatchWindowEvent(keyPressEvent);
     NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
   }
