@@ -162,7 +162,7 @@ XPCOMGlueUnload()
 }
 
 nsresult
-XPCOMGlueLoadXULFunctions(nsDynamicFunctionLoad *symbols)
+XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad *symbols)
 {
     ULONG ulrc = NO_ERROR;
 

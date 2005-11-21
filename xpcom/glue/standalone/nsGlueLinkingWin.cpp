@@ -153,7 +153,7 @@ XPCOMGlueUnload()
 }
 
 nsresult
-XPCOMGlueLoadXULFunctions(nsDynamicFunctionLoad *symbols)
+XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad *symbols)
 {
     if (!sXULLibrary)
         return NS_ERROR_NOT_INITIALIZED;
@@ -162,7 +162,7 @@ XPCOMGlueLoadXULFunctions(nsDynamicFunctionLoad *symbols)
     while (symbols->functionName) {
         *symbols->function = 
             (NSFuncPtr) GetProcAddress(sXULLibrary, symbols->functionName);
-        if (!symbols->function)
+        if (!*symbols->function)
             rv = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
 
         ++symbols;
