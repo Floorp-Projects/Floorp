@@ -195,6 +195,7 @@ sub can_logout { return 1; }
 sub logout {
     my ($class, $user, $option) = @_;
     my $dbh = Bugzilla->dbh;
+    my $cgi = Bugzilla->cgi;
     $option = LOGOUT_ALL unless defined $option;
 
     if ($option == LOGOUT_ALL) {
@@ -203,8 +204,17 @@ sub logout {
             return;
     }
 
-    # The LOGOUT_*_CURRENT options require a cookie 
-    my $cookie = Bugzilla->cgi->cookie("Bugzilla_logincookie");
+    # The LOGOUT_*_CURRENT options require the current login cookie.
+    # If a new cookie has been issued during this run, that's the current one.
+    # If not, it's the one we've received.
+    my $cookie;
+    foreach (@{$cgi->{'Bugzilla_cookie_list'}}) {
+        if ($_->name() eq 'Bugzilla_logincookie') {
+            $cookie = $_->value();
+            last;
+        }
+    }
+    $cookie ||= $cgi->cookie("Bugzilla_logincookie");
     detaint_natural($cookie);
 
     # These queries use both the cookie ID and the user ID as keys. Even
