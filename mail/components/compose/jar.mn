@@ -7,7 +7,6 @@ messenger.jar:
     content/messenger/messengercompose/askSendFormat.xul           (/mailnews/compose/resources/content/askSendFormat.xul)
     content/messenger/messengercompose/sendProgress.xul            (/mailnews/compose/resources/content/sendProgress.xul)
     content/messenger/messengercompose/sendProgress.js             (/mailnews/compose/resources/content/sendProgress.js)
-    content/messenger/messengercompose/mailComposeBindings.xml     (/mailnews/compose/resources/content/mailComposeBindings.xml)
     content/messenger/messengercompose/MsgAttachPage.xul           (/mailnews/compose/resources/content/MsgAttachPage.xul)
     content/messenger/messengercompose/MsgAttachPage.js            (/mailnews/compose/resources/content/MsgAttachPage.js)
 
