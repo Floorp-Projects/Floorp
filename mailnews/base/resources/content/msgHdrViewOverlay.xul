@@ -129,10 +129,9 @@
       </hbox>
     </column>
 
-    <column id="collapsedfromBox" collapsed="true">
+    <column id="collapsedfromBox" flex="1">
       <hbox align="start">
-        <label class="collapsedHeaderDisplayName" value="&fromField.label;"/>          
-        <mail-emailaddress id="collapsedfromValue" flex="1"/>
+        <mail-multi-emailHeaderField id="collapsedfromValue" class="collapsedHeaderDisplayName" label="&fromField.label;" collapsed="true" flex="1"/>
       </hbox>
     </column>
 
@@ -161,7 +160,8 @@
   <vbox id="expandedHeaders" flex="1">
     <mail-toggle-headerfield keywordrelated="true" id="expandedsubjectBox" class="subjectvalue" label="&subjectField.label;" ontwistyclick="ToggleHeaderView();" collapsed="true"/>
    
-    <mail-emailheaderfield id="expandedfromBox" label="&fromField.label;" collapsed="true"/>
+    <mail-multi-emailHeaderField id="expandedfromBox" label="&fromField.label;" collapsed="true"/>
+    <mail-emailheaderfield id="expandedsenderBox" label="&senderField.label;" collapsed="true"/>
     <mail-headerfield id="expandedorganizationBox" label="&organizationField.label;" collapsed="true"/>
     <mail-emailheaderfield id="expandedreply-toBox" label="&replyToField.label;" collapsed="true"/>
 

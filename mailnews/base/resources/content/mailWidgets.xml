@@ -683,9 +683,18 @@
         <parameter name="aAddress"/>
         <body>
           <![CDATA[
-            aEmailNode.setAttribute("label", aAddress.fullAddress);    
+            if (aEmailNode.parentNode.useShortView && aAddress.displayName)
+            {
+              aEmailNode.setAttribute("label", aAddress.displayName);
+              aEmailNode.setAttribute("tooltiptext", aAddress.fullAddress);
+            }
+            else
+            {
+              aEmailNode.setAttribute("label", aAddress.fullAddress || aAddress.displayName);
+              aEmailNode.removeAttribute("tooltiptext");
+            }
             aEmailNode.setTextAttribute("emailAddress", aAddress.emailAddress);
-            aEmailNode.setTextAttribute("fullAddress", aAddress.fullAddress);  
+            aEmailNode.setTextAttribute("fullAddress", aAddress.fullAddress);
             aEmailNode.setTextAttribute("displayName", aAddress.displayName);
 
             try
