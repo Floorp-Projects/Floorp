@@ -579,7 +579,7 @@ NS_IMETHODIMP_(void) nsParser::SetContentSink(nsIContentSink* aSink)
 }
 
 /**
- * retrieve the sink set into the parser 
+ * retrive the sink set into the parser 
  * @update	gess5/11/98
  * @return  current sink 
  */
