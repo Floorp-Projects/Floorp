@@ -173,13 +173,27 @@ NS_IMPL_ISUPPORTS2(nsNavHistoryResult,
 // nsNavHistoryResult::nsNavHistoryResult
 
 nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
-                                       nsIStringBundle* aHistoryBundle)
+                                       nsIStringBundle* aHistoryBundle,
+                                       const nsINavHistoryQuery** aQueries,
+                                       PRUint32 aQueryCount,
+                                       nsINavHistoryQueryOptions* aOptions)
   : mBundle(aHistoryBundle), mHistoryService(aHistoryService),
     mCollapseDuplicates(PR_TRUE),
     mTimesIncludeDates(PR_TRUE),
     mCurrentSort(nsINavHistoryQueryOptions::SORT_BY_NONE),
     mBookmarkOptions(nsINavBookmarksService::ALL_CHILDREN)
 {
+  // Fill saved source queries with copies of the original (the caller might
+  // change their original objects, and we always want to reflect the source
+  // parameters).
+  for (PRUint32 i = 0; i < aQueryCount; i ++) {
+    nsINavHistoryQuery* query = NS_CONST_CAST(nsINavHistoryQuery*, aQueries[i]);
+    nsCOMPtr<nsINavHistoryQuery> queryClone;
+    if (NS_SUCCEEDED(query->Clone(getter_AddRefs(queryClone))))
+      mSourceQueries.AppendObject(queryClone);
+  }
+  if (aOptions)
+    aOptions->Clone(getter_AddRefs(mSourceOptions));
 }
 
 // nsNavHistoryResult::~nsNavHistoryResult
@@ -485,6 +499,52 @@ nsNavHistoryResult::NodeForTreeIndex(PRUint32 index,
   if (index >= (PRUint32)mVisibleElements.Count())
     return NS_ERROR_INVALID_ARG;
   NS_ADDREF(*aResult = VisibleElementAt(index));
+  return NS_OK;
+}
+
+
+// nsNavHistoryResult::TreeIndexForNode
+
+NS_IMETHODIMP
+nsNavHistoryResult::TreeIndexForNode(nsINavHistoryResultNode* aNode,
+                                     PRUint32* aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsNavHistoryResultNode> node = do_QueryInterface(aNode, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (node->mVisibleIndex < 0)
+    *aResult = nsINavHistoryResult::INDEX_INVISIBLE;
+  else
+    *aResult = node->mVisibleIndex;
+  return NS_OK;
+}
+
+
+// nsNavHistoryResult::GetSourceQuery
+
+NS_IMETHODIMP
+nsNavHistoryResult::GetSourceQuery(nsINavHistoryQuery*** aQueries,
+                                   PRUint32* aQueryCount,
+                                   nsINavHistoryQueryOptions** aOptions)
+{
+  *aQueries = nsnull;
+  *aQueryCount = 0;
+  if (mSourceQueries.Count() > 0) {
+    *aQueries = NS_STATIC_CAST(nsINavHistoryQuery**,
+         nsMemory::Alloc(sizeof(nsINavHistoryQuery*) * mSourceQueries.Count()));
+    if (! *aQueries)
+      return NS_ERROR_OUT_OF_MEMORY;
+    *aQueryCount = mSourceQueries.Count();
+
+    for (PRInt32 i = 0; i < mSourceQueries.Count(); i ++) {
+      (*aQueries)[i] = mSourceQueries[i];
+      NS_ADDREF((*aQueries)[i]);
+    }
+  }
+
+  *aOptions = mSourceOptions;
+  NS_IF_ADDREF(*aOptions);
   return NS_OK;
 }
 
