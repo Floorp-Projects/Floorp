@@ -39,6 +39,9 @@
 #include "nsIArray.idl"
 #include "nsIURI.idl"
 
+interface nsINavHistoryQuery;
+interface nsINavHistoryQueryOptions;
+
 [scriptable, uuid(acae2b2d-5fcd-4419-b1bc-b7dc92a1836c)]
 interface nsINavHistoryResultNode : nsISupports
 {
@@ -168,6 +171,24 @@ interface nsINavHistoryResult : nsISupports
    * This allows you to get at the real node for a given row index in the tree.
    */
   nsINavHistoryResultNode nodeForTreeIndex(in PRUint32 aIndex);
+
+  /**
+   * Reverse of nodeForTreeIndex, returns the row index for a given result node.
+   * Returns INDEX_INVISIBLE if the item is not visible (for example, its
+   * parent is collapsed).
+   */
+  const PRUint32 INDEX_INVISIBLE = 0xffffffff;
+  PRUint32 treeIndexForNode(in nsINavHistoryResultNode aNode);
+
+  /**
+   * This gives you the original queries and options that generated this result.
+   * Note that these are copies of the originals. These results should be
+   * treated as read-only: they belong to the result object.
+   */
+  void getSourceQuery(
+    [array, size_is(aResultCount)] out nsINavHistoryQuery aQueries,
+    out PRUint32 aResultCount,
+    out nsINavHistoryQueryOptions aOptions);
 };
 
 
@@ -312,6 +333,11 @@ interface nsINavHistoryQuery : nsISupports
   readonly attribute boolean hasDomain;
 
   /**
+   * Creates a new query item with the same parameters of this one.
+   */
+  nsINavHistoryQuery clone();
+
+  /**
    * Limit results to items that are in all of the given folders.
    */
   //  void setFolders([const,array, size_is(folderCount)] in PRInt64 folders,
@@ -411,6 +437,11 @@ interface nsINavHistoryQueryOptions : nsISupports
    * If not set, these will appear as normal items.
    */
   void setExpandPlaces(in boolean expand);
+
+  /**
+   * Creates a new options item with the same parameters of this one.
+   */
+  nsINavHistoryQueryOptions clone();
 };
 
 [scriptable, uuid(C51F54CB-5E89-4B20-A37C-1343888935B7)]
