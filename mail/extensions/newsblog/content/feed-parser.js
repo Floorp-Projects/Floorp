@@ -146,11 +146,11 @@ FeedParser.prototype =
                    || item.title;
 
       item.author = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"author")[0]
-                                 || itemNode.getElementsByTagNameNS(nsURI,"creator")[0])
+                                 || itemNode.getElementsByTagNameNS(DC_NS,"creator")[0])
                                  || aFeed.title
                                  || item.author;
       item.date = getNodeValue(itemNode.getElementsByTagNameNS(nsURI,"pubDate")[0]
-                               || itemNode.getElementsByTagNameNS(nsURI,"date")[0])
+                               || itemNode.getElementsByTagNameNS(DC_NS,"date")[0])
                                || item.date;
     
       // If the date is invalid, users will see the beginning of the epoch
