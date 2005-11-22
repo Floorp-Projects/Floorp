@@ -861,7 +861,7 @@ function insertChannelLink (matchText, containerTag, eventData)
 
 function insertBugzillaLink (matchText, containerTag, eventData)
 {
-    var idOrAlias = matchText.match(/bug\s+#?(\d{3,6}|[^\s,]{1,20})/)[1];
+    var idOrAlias = matchText.match(/bug\s+#?(\d{3,6}|[^\s,]{1,20})/i)[1];
 
     var anchor = document.createElementNS ("http://www.w3.org/1999/xhtml",
                                            "html:a");
