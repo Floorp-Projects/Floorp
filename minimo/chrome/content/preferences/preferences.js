@@ -46,7 +46,7 @@ function readCacheLocationPref()
 
 
   var pref = document.getElementById("browser.cache.disk.parent_directory");
-  if (pref.value != null)
+  if (pref.value != "")
       return true;
   else
       return false;
