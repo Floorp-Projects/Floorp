@@ -64,7 +64,7 @@
                           label="&useproxyCheckbox.label;"
                           preference="network.proxy.type" 
                           onclick="syncPref(this)" 
-                          onsyncfrompreference="readProxyPref();"
+                          onsyncfrompreference="readProxyPref();" prefuitype="bool" 
                           onsynctopreference="writeProxyPref();"
                           />
 

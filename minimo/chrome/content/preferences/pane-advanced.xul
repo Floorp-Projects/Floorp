@@ -78,7 +78,7 @@
 	                              id="storeCacheStorageCard"
 	                              label="&storeCacheStorageCard.label;"
 	                              preference="browser.cache.disk.parent_directory" 
-                                              onsyncfrompreference="readCacheLocationPref();"
+                                              onsyncfrompreference="readCacheLocationPref();" prefuitype="bool" 
                                               onsynctopreference="writeCacheLocationPref();" 
 	                              onclick="syncPref(this)" />
 
@@ -93,7 +93,7 @@
                                     <textbox id="cacheSizeField" size="5" tabindex="32"
                                              onfocus="" onblur=""
                                              style="margin:3px ! important;" 
-                                             preference="browser.cache.disk.capacity" preftype="int" 
+                                             preference="browser.cache.disk.capacity" prefuitype="int" 
                                              onchange="syncPref(this)" 
                                              />
 

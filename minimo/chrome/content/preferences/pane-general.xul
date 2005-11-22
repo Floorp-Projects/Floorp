@@ -78,7 +78,7 @@
                                               tabindex="11" 
                                               onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
                                               label="&imagesCheckbox.label;"
-                                              preference="permissions.default.image" preftype="int" prefvalue=""
+                                              preference="permissions.default.image" prefuitype="bool" prefvalue=""
                                               onsyncfrompreference="readEnableImagesPref();"
                                               onsynctopreference="writeEnableImagesPref();" 
                                               onclick="syncPref(this)" 
