@@ -1,8 +1,7 @@
 xpconnect
 nsUConvModule
 nsI18nModule
-necko_core_and_primary_protocols
-necko_secondary_protocols
+necko
 nsJarModule
 nsPrefModule
 nsSecurityManagerModule
@@ -10,6 +9,7 @@ nsRDFModule
 nsParserModule
 nsGfxGTKModule
 nsImageLib2Module
+nsPluginModule
 nsWidgetGtk2Module
 nsLayoutModule
 docshell_provider
@@ -22,7 +22,6 @@ nsChromeModule
 nsMorkModule
 nsToolkitCompsModule
 nsXMLExtrasModule
-TransformiixModule
 nsWebServicesModule
 SpatialNavigationModule
 nsPhoneSupportModule

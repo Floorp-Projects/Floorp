@@ -9,6 +9,7 @@ rdf
 htmlpars
 gfx_gtk
 imglib2
+gkplugin
 widget_gtk2
 gklayout
 docshell
@@ -21,8 +22,15 @@ chrome
 mork
 toolkitcomps
 xmlextras
-transformiix
 websrvcs
 snav
 phone
 softkey
+pipboot
+pipnss
+permissions
+snav
+phone
+softkey
+ssr
+
