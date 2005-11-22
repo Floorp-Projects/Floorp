@@ -40,7 +40,6 @@ var PlacesPage = {
   _tabbrowser: null,
   _topWindow: null,
   _topDocument: null,
-  _populators: { },
   _bmsvc : null,
 };
 
@@ -52,40 +51,29 @@ PlacesPage.init = function PP_init() {
   this._topDocument = this._topWindow.document;
   this._tabbrowser = this._topWindow.getBrowser();
 
+  // Hook into the tab strip to get notifications about when the Places Page is
+  // selected so that the browser UI can be modified. 
   var self = this;
   function onTabSelect(event) {
     self.onTabSelect(event);
   }
   this._tabbrowser.mTabContainer.addEventListener("select", onTabSelect, false);
 
+  // Attach the Command Controller to the Places Views. 
   var placesList = document.getElementById("placesList");
-  var placeContent = document.getElementById("placeContent");
-  var placesCommands = document.getElementById("placesCommands");
-  
-  this.controller = 
-    new PlacesController([placesList, placeContent], placesCommands);
+  var placeContent = document.getElementById("placeContent");  
+  placeContent.controllers.appendController(PlacesController);
+  placesList.controllers.appendController(PlacesController);
 
-  const NH = Ci.nsINavHistory;  
-  const NHQO = Ci.nsINavHistoryQueryOptions;
-  const TV = Ci.nsITreeView;
-  var places = 
-      Cc["@mozilla.org/browser/nav-history;1"].getService(NH);
-  var query = places.getNewQuery();
-  var date = new Date();
-  var options = places.getNewQueryOptions();
-  options.setGroupingMode([NHQO.GROUP_BY_HOST], 1);
-  options.setSortingMode(NHQO.SORT_BY_NONE);
-  options.setResultType(NHQO.RESULT_TYPE_URL);
-  var result = places.executeQuery(query, options);
-  result.QueryInterface(TV);
-  var placeContent = document.getElementById("placeContent");
-  placeContent.view = result;
+  // Attach the History model to the Content View
+  placeContent.queryString = "group=1";
 
+  // Attach the Places model to the Place View
   const BS = Ci.nsINavBookmarksService;
   this._bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(BS);
   var children = this._bmsvc.getFolderChildren(this._bmsvc.placesRoot,
                                                BS.FOLDER_CHILDREN);
-  document.getElementById("placesList").view = children.QueryInterface(TV);
+  document.getElementById("placesList").view = children.QueryInterface(Ci.nsITreeView);
 
   this._showPlacesUI();
 };
@@ -136,26 +124,9 @@ PlacesPage.applyFilter = function PP_applyFilter(filterString) {
     this.setFilterCollection("all");
   }
   else if (collectionName == "all") {
-    this._buildQuery(filterString);
+    var placeContent = document.getElementById("placeContent");
+    placeContent.filterString = filterString;
   }
-};
-
-PlacesPage._buildQuery = function PP__buildQuery(filterString) {
-  const NH = Ci.nsINavHistory;  
-  const NHQO = Ci.nsINavHistoryQueryOptions;
-  var places = Cc["@mozilla.org/browser/nav-history;1"].getService(NH);
-  var query = places.getNewQuery();
-  query.searchTerms = filterString;
-  var options = places.getNewQueryOptions();
-  options.setGroupingMode([NHQO.GROUP_BY_HOST], 1);
-  options.setSortingMode(NHQO.SORT_BY_NONE);
-  options.setResultType(NHQO.RESULT_TYPE_URL);
-  var result = places.executeQuery(query, options);
-  result.QueryInterface(Ci.nsITreeView);
-  var placeContent = document.getElementById("placeContent");
-  placeContent.view = result;
-  placeContent.query = query;
-  placeContent.options = options;
 };
 
 PlacesPage._getLoadFunctionForEvent = 

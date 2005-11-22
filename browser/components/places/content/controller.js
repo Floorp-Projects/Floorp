@@ -35,15 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Abstract View Interface:
-/*
-
-  get selection() {
-  
-  },
-
-*/
-
 const PLACES_URI = "chrome://browser/content/places/places.xul";
 
 function LOG(str) {
@@ -62,61 +53,30 @@ const SELECTION_IS_CHANGEABLE = 0x10;
 const SELECTION_IS_REMOVABLE = 0x20;
 const SELECTION_IS_MOVABLE = 0x40;
 
-/**
- * Implements nsIController, nsICommandController... 
- * @param   elements
- *          A list of elements that this controller applies to
- * @param   commandSet
- *          A XUL <commandset> that contains the commands supported by this 
- *          controller
- * @constructor
- */
-function PlacesController(elements, commandSet) {
-  if (!commandSet || !elements)
-    throw Cr.NS_ERROR_NULL_POINTER;
-    
-  for (var i = 0; i < elements.length; ++i)
-    elements[i].controllers.appendController(this);
-}
+var PlacesController = {
+};
 
-PlacesController.prototype.isCommandEnabled =
-function PC_isCommandEnabled(command) {
+PlacesController.isCommandEnabled = function PC_isCommandEnabled(command) {
   LOG("isCommandEnabled: " + command);
   
 };
 
-PlacesController.prototype.supportsCommand = 
-function PC_supportsCommand(command) {
+PlacesController.supportsCommand = function PC_supportsCommand(command) {
   //LOG("supportsCommand: " + command);
   return document.getElementById(command) != null;
 };
 
-PlacesController.prototype.doCommand = 
-function PC_doCommand(command) {
+PlacesController.doCommand = function PC_doCommand(command) {
   LOG("doCommand: " + command);
   
 };
 
-PlacesController.prototype.doCommandWithParams = 
-function PC_doCommandWithParams(command) {
-  LOG("doCommandWithParams: " + command);
-
-};
-
-PlacesController.prototype.getCommandStateWithParams =
-function PC_getCommandStateWithParams(command, params) {
-  LOG("getCommandStateWithParams: " + command);
-
-};
-
-PlacesController.prototype.onEvent = 
-function PC_onEvent(eventName) {
+PlacesController.onEvent = function PC_onEvent(eventName) {
   LOG("onEvent: " + eventName);
 
 };
 
-PlacesController.prototype.buildContextMenu = 
-function PC_buildContextMenu(popup) {
+PlacesController.buildContextMenu = function PC_buildContextMenu(popup) {
   return true;
 };
 
@@ -140,20 +100,6 @@ function PC_buildContextMenu(popup) {
    SELECTION_CONTAINS_REMOVABLE
    SELECTION_CONTAINS_MOVABLE 
  
-*/
-
-PlacesController.prototype.QueryInterface = 
-function PC_QueryInterface(iid) {
-  if (!iid.equals(Ci.nsIController) &&
-      !iid.equals(Ci.nsICommandController))
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  return this;
-};
-
-var PlacesUtils = {};
-
-/*
-
  Given a:
    - view, via AVI
    - query

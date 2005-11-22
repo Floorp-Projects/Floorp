@@ -1,4 +1,9 @@
 .calendar {
-  -moz-binding:url("chrome://browser/content/places/places.xml#calendar");
-  display:-moz-box;
+  -moz-binding: url("chrome://browser/content/places/places.xml#calendar");
+  display: -moz-box;
 }
+
+tree {
+  -moz-binding: url("chrome://browser/content/places/places.xml#places-tree");
+}
+
