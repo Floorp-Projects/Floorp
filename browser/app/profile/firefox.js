@@ -434,3 +434,6 @@ pref("bidi.browser.ui", false);
 // 1 act like PgUp/PgDown
 // 2 and other values, nothing
 pref("browser.backspace_action", 0);
+
+pref("view_source.editor.path", "");
+pref("view_source.editor.external", false);

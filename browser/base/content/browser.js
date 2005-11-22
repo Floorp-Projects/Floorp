@@ -1932,12 +1932,11 @@ function readFromClipboard()
 
 function BrowserViewSourceOfDocument(aDocument)
 {
-  var docCharset;
   var pageCookie;
   var webNav;
 
   // Get the document charset
-  docCharset = "charset=" + aDocument.characterSet;
+  var docCharset = "charset=" + aDocument.characterSet;
 
   // Get the nsIWebNavigation associated with the document
   try {
@@ -1973,16 +1972,17 @@ function BrowserViewSourceOfDocument(aDocument)
     // If no page descriptor is available, just use the view-source URL...
   }
 
-  BrowserViewSourceOfURL(webNav.currentURI.spec, docCharset, pageCookie);
+  ViewSourceOfURL(webNav.currentURI.spec, pageCookie, aDocument);
 }
 
-function BrowserViewSourceOfURL(url, charset, pageCookie)
+function ViewSourceOfURL(aURL, aPageDescriptor, aDocument)
 {
-  // try to open a view-source window while inheriting the charset (if any)
-  openDialog("chrome://global/content/viewSource.xul",
-             "_blank",
-             "scrollbars,resizable,chrome,dialog=no",
-             url, charset, pageCookie);
+  if (getBoolPref("view_source.editor.external", false)) {
+    gViewSourceUtils.openInExternalEditor(aURL, aPageDescriptor, aDocument);
+  }
+  else {
+    gViewSourceUtils.openInInternalViewer(aURL, aPageDescriptor, aDocument);
+  }
 }
 
 // doc - document to use for source, or null for this window's document
