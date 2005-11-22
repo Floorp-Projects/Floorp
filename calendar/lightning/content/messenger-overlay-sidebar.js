@@ -171,6 +171,12 @@ function switchView(type) {
 
     showCalendar(d1, d2);
 
+    // Set the labels for the context-menu
+    var nextCommand = document.getElementById("context_next");
+    nextCommand.setAttribute("label", nextCommand.getAttribute("label-"+type));
+    var previousCommand = document.getElementById("context_previous")
+    previousCommand.setAttribute("label", previousCommand.getAttribute("label-"+type));
+
     calendarViewBox.selectedPanel.selectedDay = selectedDay;
 }
 
@@ -225,6 +231,18 @@ function ltnFinish() {
     pb2 = pb2.QueryInterface(Components.interfaces.nsIPrefBranch2);
     pb2.removeObserver("calendar.", ltnPrefObserver);
     return;
+}
+
+function ltnEditSelectedItem() {
+    ltnCalendarViewController.modifyOccurrence(currentView().selectedItem);
+}
+
+function ltnDeleteSelectedItem() {
+    ltnCalendarViewController.deleteOccurrence(currentView().selectedItem);
+}
+
+function ltnCreateEvent() {
+    ltnCalendarViewController.createNewEvent(ltnSelectedCalendar());
 }
 
 // Preference observer, watches for changes to any 'calendar.' pref

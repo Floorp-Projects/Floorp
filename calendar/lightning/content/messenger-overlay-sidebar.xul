@@ -44,6 +44,7 @@
 [
   <!ENTITY % dtd1 SYSTEM "chrome://lightning/locale/lightning.dtd" > %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd3;
 ]>
 
 
@@ -69,6 +70,29 @@
   <popupset>
     <popup id="calendartree-context-menu" onpopupshowing="return true;">
       <menuitem label="&calendar.publish.label;" observes="publish_calendar"/>
+    </popup>
+    <popup id="calendar-view-context-menu" onpopupshowing="return true;">
+      <!-- These labels are set dynamically, based on the current view -->
+      <menuitem id="context_previous" label="" oncommand="moveView(-1)" disabled="true"
+                label-day="&calendar.prevday.button.tooltip;"
+                label-week="&calendar.prevweek.button.tooltip;"
+                label-month="&calendar.prevmonth.button.tooltip;"
+                accesskey="&goPreviousCmd.accesskey;"/>
+      <menuitem id="context_next" label="" oncommand="moveView(1)" disabled="true"
+                label-day="&calendar.nextday.button.tooltip;"
+                label-week="&calendar.nextweek.button.tooltip;"
+                label-month="&calendar.nextmonth.button.tooltip;"
+                accesskey="&goNextCmd.accesskey;"/>
+      <menuitem label="&calendar.context.newevent.label;" oncommand="ltnCreateEvent()"
+                accesskey="&lightning.context.newevent.accesskey;"/>
+    </popup>
+    <popup id="calendar-item-context-menu" onpopupshowing="return true;">
+      <menuitem label="&calendar.context.modifyitem.label;" 
+                accesskey="&calendar.context.modifyitem.accesskey;" 
+                oncommand="ltnEditSelectedItem()"/>
+      <menuitem label="&calendar.context.deleteitem.label;" 
+                accesskey="&lightning.context.deleteitem.accesskey;"
+                oncommand="ltnDeleteSelectedItem()"/>
     </popup>
   </popupset>
 </window>
@@ -119,8 +143,12 @@
 
 <deck id="displayDeck">
   <deck flex="1" id="calendar-view-box">
-    <calendar-month-view id="calendar-month-view" flex="1"/>
-    <calendar-multiday-view orient="vertical" id="calendar-multiday-view" flex="1"/>
+    <calendar-month-view id="calendar-month-view" flex="1" 
+                         context="calendar-view-context-menu"
+                         item-context="calendar-item-context-menu"/>
+    <calendar-multiday-view orient="vertical" id="calendar-multiday-view" flex="1"
+                            context="calendar-view-context-menu"
+                            item-context="calendar-item-context-menu"/>
   </deck>
 </deck>
 </overlay>

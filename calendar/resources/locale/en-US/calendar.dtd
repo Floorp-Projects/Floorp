@@ -407,10 +407,14 @@
 <!ENTITY calendar.context.modifyevent.accesskey       "E">
 <!ENTITY calendar.context.modifytask.label            "Edit Task…">
 <!ENTITY calendar.context.modifytask.accesskey        "E">
+<!ENTITY calendar.context.modifyitem.label            "Edit Item">
+<!ENTITY calendar.context.modifyitem.accesskey        "E">
 <!ENTITY calendar.context.deleteevent.label           "Delete Selected Event">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
 <!ENTITY calendar.context.deletetask.label            "Delete Task">
 <!ENTITY calendar.context.deletetask.accesskey        "l">
+<!ENTITY calendar.context.deleteitem.label            "Delete Item">
+<!ENTITY calendar.context.deleteitem.accesskey        "l">
 <!ENTITY calendar.context.cutevent.label              "Cut">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
 <!ENTITY calendar.context.copyevent.label             "Copy">
