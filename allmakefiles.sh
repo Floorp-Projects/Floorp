@@ -1343,6 +1343,19 @@ if [ "$MOZ_XTF" ]; then
 "
 fi
 
+if [ "$MOZ_XMLEXTRAS" ]; then
+    MAKEFILES_content="$MAKEFILES_content
+        extensions/xmlextras/Makefile
+        extensions/xmlextras/base/Makefile
+        extensions/xmlextras/base/src/Makefile
+        extensions/xmlextras/base/public/Makefile
+        extensions/xmlextras/pointers/Makefile
+        extensions/xmlextras/pointers/src/Makefile
+        extensions/xmlextras/build/Makefile
+        extensions/xmlextras/build/src/Makefile
+"
+fi
+
 # directory/xpcom
 if [ "$MOZ_LDAP_XPCOM" ]; then
     MAKEFILES_ldap="
@@ -1501,16 +1514,6 @@ for extension in $MOZ_EXTENSIONS; do
             " ;;
         xforms ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/xforms/Makefile
-            " ;;
-        xmlextras ) MAKEFILES_extensions="$MAKEFILES_extensions
-            extensions/xmlextras/Makefile
-            extensions/xmlextras/base/Makefile
-            extensions/xmlextras/base/src/Makefile
-            extensions/xmlextras/base/public/Makefile
-            extensions/xmlextras/pointers/Makefile
-            extensions/xmlextras/pointers/src/Makefile
-            extensions/xmlextras/build/Makefile
-            extensions/xmlextras/build/src/Makefile
             " ;;
         xml-rpc ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/xml-rpc/Makefile

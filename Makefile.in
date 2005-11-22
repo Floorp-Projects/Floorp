@@ -180,6 +180,10 @@ tier_9_dirs	+= \
 		xpfe/appshell \
 		$(NULL)
 
+ifdef MOZ_XMLEXTRAS
+tier_9_dirs += extensions/xmlextras
+endif
+
 ifdef MOZ_OJI
 tier_9_dirs	+= \
 		js/src/liveconnect \
