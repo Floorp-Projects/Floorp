@@ -97,11 +97,9 @@ nsBrowserStatusHandler.prototype =
       if (aStateFlags & nsIWebProgressListener.STATE_START)
       {
       
-        
 		if(aRequest && aWebProgress.DOMWindow == content) {
 			this.startDocumentLoad(aRequest);
 		}
-		
         this.stopreloadButton.className = "stop-button";
         this.stopreloadButton.command = "cmd_BrowserStop";
         
@@ -440,7 +438,9 @@ function eventHandlerMenu(e) {
   if(document.commandDispatcher&&document.commandDispatcher.focusedElement) { 
 
 	  var outnavTarget=document.commandDispatcher.focusedElement.getAttribute("accessrule");
-	  if(outnavTarget!="" && (e.keyCode==40||e.keyCode==38) && !gShowingMenuPopup) {
+
+	  if(outnavTarget && (e.keyCode==40||e.keyCode==38) && !gShowingMenuPopup) {
+
 	      e.preventBubble();
 	      if(e.keyCode==40) {
 	
