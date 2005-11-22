@@ -83,6 +83,9 @@
       <preferenceitem name="networkProxyHTTP_Port" />
       <preferenceitem name="browserDisplayZoomUI"/>
       <preferenceitem name="browserDisplayZoomContent"/> 
+      <preferenceitem name="useDiskCache" />
+      <preferenceitem name="storeCacheStorageCard" />
+      <preferenceitem name="enablePreFetching" />
   </preferenceset>
 
   <command id="cmd_PrefOkay"      oncommand="PrefOkay()" />
