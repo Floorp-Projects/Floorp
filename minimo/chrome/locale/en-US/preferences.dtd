@@ -42,6 +42,11 @@
 <!ENTITY miscCaption.label           "Random Settings">
 <!ENTITY useSWKeyboard.label         "Use Software Keyboard">
 <!ENTITY dumpJSConsole.label         "Dump JS console at shutdown">
+<!ENTITY useDiskCache.label          "Use Disk Cache">
+<!ENTITY storeCacheStorageCard.label "Store Cache on Storage Card">
+<!ENTITY enablePreFetching.label     "Enable Pre-Fetching">
+<!ENTITY cacheSettings.label         "Cache">
+<!ENTITY cacheSize.label             "Cache Size (KB)">
 
 <!-- Summary Pane -->
 
