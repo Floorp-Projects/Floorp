@@ -303,6 +303,12 @@ nsGridLayout2::GetRowCount(PRInt32& aRowCount)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsIGridPart::Type)
+nsGridLayout2::GetType()
+{
+  return eGrid;
+}
+
 NS_IMETHODIMP
 nsGridLayout2::ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
                                 nsIBox* aPrevBox, nsIBox* aChildList)

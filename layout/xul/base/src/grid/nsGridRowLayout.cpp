@@ -97,9 +97,11 @@ nsGridRowLayout::GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPar
       nsCOMPtr<nsIBoxLayout> layout;
       aBox->GetLayoutManager(getter_AddRefs(layout));
       nsCOMPtr<nsIGridPart> parentGridRow = do_QueryInterface(layout);
-      parentGridRow.swap(*aParentGridPart);
-      *aParentBox = aBox;
-      return NS_OK;
+      if (parentGridRow && parentGridRow->CanContain(this)) {
+          parentGridRow.swap(*aParentGridPart);
+          *aParentBox = aBox;
+          return NS_OK;
+      }
   }
 
   return NS_OK;
