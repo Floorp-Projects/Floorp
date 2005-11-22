@@ -91,10 +91,19 @@
                                  (PRUint32(l) & 0x03FF) + PLANE1_BASE)
 
 // Extract surrogates from a UCS4 char
-// See unicode specification 3.7 for following math.
-#define H_SURROGATE(c) PRUnichar(PRUnichar((PRUint32(c) - PLANE1_BASE) >> 10) | \
-                                 PRUnichar(0xD800))
-#define L_SURROGATE(c) PRUnichar(PRUnichar((PRUint32(c) - PLANE1_BASE) & 0x03FF) | \
+// Reference: the Unicode standard 4.0, section 3.9
+// Since (c - 0x10000) >> 10 == (c >> 10) - 0x0080 and 
+// 0xD7C0 == 0xD800 - 0x0080,
+// ((c - 0x10000) >> 10) + 0xD800 can be simplified to
+#define H_SURROGATE(c) PRUnichar(PRUnichar(PRUint32(c) >> 10) + \
+                                 PRUnichar(0xD7C0)) 
+// where it's to be noted that 0xD7C0 is not bitwise-OR'd
+// but added.
+
+// Since 0x10000 & 0x03FF == 0, 
+// (c - 0x10000) & 0x03FF == c & 0x03FF so that
+// ((c - 0x10000) & 0x03FF) | 0xDC00 is equivalent to
+#define L_SURROGATE(c) PRUnichar(PRUnichar(PRUint32(c) & PRUint32(0x03FF)) | \
                                  PRUnichar(0xDC00))
 
 #define IS_IN_BMP(ucs) (PRUint32(ucs) < PLANE1_BASE)
