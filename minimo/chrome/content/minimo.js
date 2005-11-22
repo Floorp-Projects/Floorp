@@ -96,6 +96,12 @@ nsBrowserStatusHandler.prototype =
 
       if (aStateFlags & nsIWebProgressListener.STATE_START)
       {
+      
+        
+		if(aRequest && aWebProgress.DOMWindow == content) {
+			this.startDocumentLoad(aRequest);
+		}
+		
         this.stopreloadButton.className = "stop-button";
         this.stopreloadButton.command = "cmd_BrowserStop";
         
@@ -173,7 +179,10 @@ nsBrowserStatusHandler.prototype =
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
   {
   },
-
+  startDocumentLoad : function(aRequest)
+  {
+    getBrowser().mCurrentBrowser.feeds = null;
+  },
   onSecurityChange : function(aWebProgress, aRequest, aState)
   {
     /* Color is temporary. We shall dynamically assign a new class to the element and or to 
