@@ -221,6 +221,7 @@ if (observer._itemChanged.spec != "http://espn.com/" ||
     observer._itemChangedProperty != "title") {
   dump("setItemTitle notification FAILED\n");
 }
+bmsvc.insertItem(root, uri("place:domain=google.com&group=1"), "Google sites");
 
 ///  EXPECTED TABLE RESULTS
 ///  moz_bookmarks_assoc:

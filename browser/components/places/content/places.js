@@ -71,7 +71,8 @@ var PlacesPage = {
     const BS = Ci.nsINavBookmarksService;
     this._bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(BS);
     var children = this._bmsvc.getFolderChildren(this._bmsvc.placesRoot,
-                                                 BS.FOLDER_CHILDREN);
+                                                 BS.FOLDER_CHILDREN |
+                                                 BS.QUERY_CHILDREN);
     document.getElementById("placesList").view = children.QueryInterface(Ci.nsITreeView);
 
     this._showPlacesUI();
@@ -136,7 +137,16 @@ var PlacesPage = {
     resultView.QueryInterface(Components.interfaces.nsINavHistoryResult);
 
     var folder = resultView.nodeForTreeIndex(resultView.selection.currentIndex);
-    document.getElementById("placeContent").view = this._bmsvc.getFolderChildren(folder.folderId, Components.interfaces.nsINavBookmarksService.ALL_CHILDREN);
+    var view;
+    if (folder.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
+      view = this._bmsvc.getFolderChildren(folder.folderId, Ci.nsINavBookmarksService.ALL_CHILDREN);
+    } else {
+      var optionsOut = {};
+      var queries = folder.getQueries(optionsOut, {});
+      var history = Cc["@mozilla.org/browser/nav-history;1"].getService(Ci.nsINavHistory);
+      view = history.executeQueries(queries, queries.length, optionsOut.value).QueryInterface(Ci.nsITreeView);
+    }
+    document.getElementById("placeContent").view = view;
   },
 };
 
