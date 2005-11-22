@@ -82,10 +82,8 @@ nsGridRowLayout::GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPar
 {
   // go up and find our parent gridRow. Skip and non gridRow
   // parents.
-  nsCOMPtr<nsIBoxLayout> layout;
-  nsCOMPtr<nsIGridPart> parentGridRow;
-  nsresult rv = NS_OK;
   *aParentGridPart = nsnull;
+  *aParentBox = nsnull;
   
   // walk up through any scrollboxes
   aBox = nsGrid::GetScrollBox(aBox);
@@ -96,18 +94,15 @@ nsGridRowLayout::GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPar
 
   if (aBox)
   {
+      nsCOMPtr<nsIBoxLayout> layout;
       aBox->GetLayoutManager(getter_AddRefs(layout));
-      parentGridRow = do_QueryInterface(layout);
-      *aParentGridPart = parentGridRow.get();
+      nsCOMPtr<nsIGridPart> parentGridRow = do_QueryInterface(layout);
+      parentGridRow.swap(*aParentGridPart);
       *aParentBox = aBox;
-      NS_IF_ADDREF(*aParentGridPart);
       return NS_OK;
   }
 
-  *aParentGridPart = nsnull;
-  *aParentBox = nsnull;
-  
-  return rv;
+  return NS_OK;
 }
 
 

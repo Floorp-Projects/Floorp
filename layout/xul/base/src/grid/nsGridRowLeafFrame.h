@@ -48,6 +48,11 @@
 
 #include "nsBoxFrame.h"
 
+/**
+ * A frame representing a grid row (or column).  Grid row (and column)
+ * elements are the children of row group (or column group) elements,
+ * and their children are placed one to a cell.
+ */
 class nsGridRowLeafFrame : public nsBoxFrame
 {
 public:

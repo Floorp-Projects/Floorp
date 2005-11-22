@@ -52,6 +52,9 @@ class nsGridRow;
 class nsBoxLayoutState;
 class nsGridCell;
 
+/**
+ * The nsIBoxLayout implementation for a grid.
+ */
 class nsGridLayout2 : public nsStackLayout, 
                       public nsIGridPart
 {

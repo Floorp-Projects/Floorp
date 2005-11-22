@@ -48,6 +48,9 @@
 #include "nsGridRowLayout.h"
 #include "nsCOMPtr.h"
 
+/**
+ * The nsIBoxLayout implementation for nsGridRowLeafFrame.
+ */
 class nsGridRowLeafLayout : public nsGridRowLayout
 {
 public:
@@ -57,7 +60,6 @@ public:
   NS_IMETHOD GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMinSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
-  NS_IMETHOD CastToGridRowLeaf(nsGridRowLeafLayout** aGridRowLeaf);
   NS_IMETHOD ChildBecameDirty(nsIBox* aBox, nsBoxLayoutState& aState, nsIBox* aChild);
   NS_IMETHOD BecameDirty(nsIBox* aBox, nsBoxLayoutState& aState);
   NS_IMETHOD ChildAddedOrRemoved(nsIBox* aBox, nsBoxLayoutState& aState);
