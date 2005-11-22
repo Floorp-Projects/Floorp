@@ -92,6 +92,81 @@ input[mozType|type="http://www.w3.org/2001/XMLSchema#boolean"] {
   -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-input-boolean');
 }
 
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-input-date');
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|input[anonid="dropmarker"] {
+  min-width:27px;
+  min-height: 1.3em;
+  background-image: url(chrome://xforms/content/calendar.png) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|div[anonid="picker"] {
+  border: 1px outset black !important;
+  background-color: -moz-Field;
+  font: -moz-list;
+  text-align: start;
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td {
+  border: 1px solid transparent;
+  text-align: center;
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.prevMonth,
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.nextMonth {
+  color: GrayText;
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.prevMonth:hover,
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.nextMonth:hover {
+  background-color: grey;
+  cursor: pointer;
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.currentMonth {
+  color: black;
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td.currentMonth:hover {
+  color: HighlightText;
+  background-color: Highlight;
+  cursor: pointer;
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#date"] html|td[tabindex="0"] {
+  border: 1px solid black;
+}
+
+html|input.-moz-date-back-button {
+  width: 20px;
+  background-image: url("chrome://global/skin/arrow/arrow-lft.gif") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+
+html|input.-moz-date-fwd-button {
+  width: 20px;
+  background-image: url("chrome://global/skin/arrow/arrow-rit.gif") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#gMonth"] {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-input-month');
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#gDay"] {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-input-day');
+}
+
+input[mozType|type="http://www.w3.org/2001/XMLSchema#gYear"] {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-input-year');
+}
+
 secret {
   -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-secret');
 }
@@ -132,6 +207,8 @@ select1 item {
   white-space : nowrap;
 }
 
+
+html|input.-moz-xforms-date-dropdown,
 html|input.-moz-xforms-select1-dropdown {
   width: 12px;
   height: 1.3em;
@@ -171,6 +248,7 @@ html|input.-moz-xforms-select1-input:focus {
   border: 1px dotted black;
 }
 
+html|span.-moz-date-container,
 html|span.-moz-select1-container {
   margin: 0px;
   margin-bottom: 1px;

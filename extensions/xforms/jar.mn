@@ -13,6 +13,7 @@ xforms.jar:
   content/xforms/select.xml                    (resources/content/select.xml)
   content/xforms/bindingex.css                 (resources/content/bindingex.css)
   content/xforms/bindingex.xul                 (resources/content/bindingex.xul)
+  content/xforms/calendar.png                  (resources/content/calendar.png)
 * locale/en-US/xforms/contents.rdf             (resources/locale/en-US/contents.rdf)
   locale/en-US/xforms/xforms.properties        (resources/locale/en-US/xforms.properties)
   locale/en-US/xforms/xforms.dtd               (resources/locale/en-US/xforms.dtd)

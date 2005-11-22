@@ -88,11 +88,11 @@
 
       <property name="accessors" readonly="true">
         <getter>
-	  <![CDATA[
+        <![CDATA[
           if (!this._accessors && this.delegate)
             this._accessors = this.delegate.getXFormsAccessors();
           return this._accessors;
-	  ]]>
+        ]]>
         </getter>
       </property>
 
@@ -300,6 +300,698 @@
     </implementation>
   </binding>
 
+  <!-- INPUT: DATE -->
+  <binding id="xformswidget-input-date"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-input">
+    <content>
+      <children/>
+      <html:input anonid="control"
+                  onblur="this.parentNode.accessors.setValue(this.value); this.parentNode.dispatchDOMUIEvent('DOMFocusOut');"
+                  onfocus="this.parentNode.dispatchDOMUIEvent('DOMFocusIn'); this.parentNode._hidePicker(true);"
+                  onclick="this.parentNode._change(); this.parentNode._hidePicker(true);"
+                  onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
+                  xbl:inherits="accesskey" size="10"/>
+      <html:input type="button" anonid="dropmarker" title="&xforms.datepicker.title;"
+                  onkeypress="if (event.keyCode == event.DOM_VK_ENTER) this.parentNode._togglePicker();"
+                  onclick="this.parentNode._togglePicker();"/>
+      <html:div style="position:absolute; display:none;" anonid="picker">
+        <html:table>
+           <html:tbody anonid="tbody">
+            <html:tr>
+              <html:td colspan="1">
+                <html:input type="button" anonid="back-button"
+                            class="-moz-date-back-button" title="&xforms.datepicker.prevMonth.title;"
+                            onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.goBack(true);"/>
+              </html:td>
+              <html:td colspan="5" align="center">
+                <html:span anonid="date"/>
+              </html:td>
+              <html:td colspan="1">
+                <html:input type="button" anonid="fwd-button"
+                            class="-moz-date-fwd-button" title="&xforms.datepicker.nextMonth.title;"
+                            onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.goForward(true);"/>
+              </html:td>
+            </html:tr>
+          </html:tbody>
+        </html:table>
+      </html:div>
+    </content>
+
+    <implementation>
+      <method name="refresh">
+        <body>
+          return true;
+        </body>
+      </method>
+
+      <field name="_picker">null</field>
+      <property name="picker" readonly="true">
+        <getter>
+          if (!this._picker) {
+            this._picker =
+              document.getAnonymousElementByAttribute(this, "anonid", "picker");
+          }
+          return this._picker;
+        </getter>
+      </property>
+
+      <field name="_dateField">null</field>
+
+      <property name="dateField" readonly="true">
+        <getter>
+          if (!this._dateField) {
+            this._dateField =
+              document.getAnonymousElementByAttribute(this, "anonid", "date");
+          }
+          return this._dateField;
+        </getter>
+      </property>
+
+      <field name="_uibuilt">false</field>
+      <field name="_isPickerVisible">false</field>
+      <field name="_cells">null</field>
+      <field name="_date">null</field>
+
+      <field name="_currentCellIndex">-1</field>
+
+      <method name="_togglePicker">
+        <body>
+        <![CDATA[
+          if (this._isPickerVisible)
+            this._hidePicker(true);
+          else
+            this._showPicker();
+        ]]>
+        </body>
+      </method>
+
+
+      <method name="_showPicker">
+        <body>
+        <![CDATA[
+          // show the picker
+          var picker = this.picker;
+
+          if (this._isPickerVisible) {
+            return;
+          }
+
+          picker.style.display = "block";
+          this._isPickerVisible = true;
+
+          var value = this.inputField.value;
+          // js date likes YYYY/MM/DD, schema's is YYYY-MM-DD
+          value = value.replace(/-/g, "/");
+
+          // we check if the delgate is valid since javascript Date()
+          // returns a valid date for 2005-04-56.
+          var tmpDate = new Date(value);
+          if (!this.accessors.isValid() || tmpDate == "Invalid Date")
+            this._date = new Date();
+          else
+            this._date = tmpDate;
+
+          if (!this._uibuilt)
+            this._buildUI(this._date);
+
+          // position the dropdown, aligning it's right side with the calendar
+          // button's right side
+          var dropmarker = document.getAnonymousElementByAttribute(this, "anonid", "dropmarker");
+          var dropmarkerBox = document.getBoxObjectFor(dropmarker);
+          var width = document.getBoxObjectFor(picker).width;
+
+          var position = dropmarkerBox.x - width + dropmarkerBox.width;
+
+          // reset position if it will bleed to the left or right
+          if (position < 0) {
+            position = 0;
+          } else if ((position + width) > window.innerWidth) {
+            // we use window.innerWidth because XHTML documents are not always
+            // 100% width, and innerWidth will always give use the browser size.
+            position = window.innerWidth - width;
+          }
+
+          picker.style.left = position + "px";
+
+          this._refreshCells(this._date, this._date.getDate());
+        ]]>
+        </body>
+      </method>
+
+      <method name="_hidePicker">
+        <parameter name="aFocusInput"/>
+        <body>
+        <![CDATA[
+          if (!this._isPickerVisible)
+            return;
+
+          this._cells[this._currentCellIndex].node.setAttribute("tabindex", "-1");
+          this._currentCellIndex = -1;
+          this.picker.style.display = "none";
+          this._isPickerVisible = false;
+
+          if (aFocusInput)
+            this.inputField.focus();
+        ]]>
+        </body>
+      </method>
+
+      <method name="_buildUI">
+        <parameter name="aDate"/>
+        <body>
+        <![CDATA[
+          var xhtmlNS = "http://www.w3.org/1999/xhtml";
+
+          // shortname defaults
+          var dayShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+          // try to get localized short names.
+          // May 2005's first day is a Sunday - also, month is 0-indexed in JS
+          var day;
+          for (var i = 0; i < 7; i++) {
+            day = new Date(2005, 4, i+1).toLocaleFormat("%a");
+            if (day)
+              dayShort[i] = day;
+          }
+
+          var month = aDate.getMonth();
+          var year = aDate.getFullYear();
+
+          // clear the cells array
+          this._cells = new Array();
+
+          var table = document.getAnonymousElementByAttribute(this, "anonid", "tbody");
+          var row, cell, header, caption;
+
+          // create the table headers
+          row = document.createElementNS(xhtmlNS, "tr");
+
+          for (var i = 0; i < 7; i++) {
+            header = document.createElementNS(xhtmlNS, "th");
+            // day shorthands
+            header.textContent = dayShort[i];
+            row.appendChild(header);
+          }
+
+          table.appendChild(row);
+
+          // create a table of 7 columns, 6 rows
+          for (var i = 0; i < 6; i++) {
+            row = document.createElementNS(xhtmlNS, "tr");
+
+            for (var y = 0; y < 7; y++) {
+              cell = document.createElementNS(xhtmlNS, "td");
+              cell.setAttribute("num", this._cells.length)
+              this._cells[this._cells.length] = {row:i, col:y, node: cell};
+
+              row.appendChild(cell);
+            }
+
+            table.appendChild(row);
+          }
+
+          this._uibuilt = true;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_refreshCells">
+        <parameter name="aDate"/>
+        <parameter name="aDayToSelect"/>
+        <parameter name="aSkipFocus"/>
+        <body>
+        <![CDATA[
+          var month = aDate.getMonth();
+          var year = aDate.getFullYear();
+
+          var totaldays = this._getDaysInMonth(month, year);
+
+          // first day of month is?
+          var firstDay = new Date(year, month, 1).getDay();
+
+          // get the previous month's date so we can prefill that section.  The
+          // next month is easy, we go from 1..x as far as we need
+          var prevDate = this._getPrevDate(month, year);
+          var showsPrevDays = 0;
+
+          // init cells
+          for (var i = 0; i < this._cells.length; i++) {
+            if (i < firstDay || i >= (firstDay + totaldays)) {
+              // either previous or next month
+              if (i < firstDay) {
+                // previous month
+                var prevyear = prevDate.getFullYear();
+                var prevmonth = prevDate.getMonth();
+
+                var maxprev = this._getDaysInMonth(prevmonth, prevyear);
+                this._cells[i].node.textContent = maxprev - firstDay + i + 1;
+
+                this._cells[i].node.className = "prevMonth"
+                showsPrevDays++;
+              } else {
+                // next month
+                this._cells[i].node.textContent = i - (firstDay + totaldays) + 1;
+                this._cells[i].node.className = "nextMonth"
+              }
+            } else {
+              // current month
+              // this._cells add one since the first day is 1, not 0!
+              this._cells[i].node.textContent = i - firstDay + 1;
+              this._cells[i].node.className = "currentMonth";
+            }
+
+            this._cells[i].node.setAttribute("tabindex", "-1");
+          }
+
+          // first time
+          if (this._currentCellIndex == -1) {
+            // select the current day
+            this._currentCellIndex = aDate.getDate() + showsPrevDays - 1;
+          } else {
+            // if the day is larger that the total days in this month
+            if (aDayToSelect > totaldays)
+              aDayToSelect = totaldays;
+
+            this._currentCellIndex = aDayToSelect + showsPrevDays - 1;
+          }
+
+          this._cells[this._currentCellIndex].node.setAttribute("tabindex", "0");
+
+          if (!aSkipFocus)
+            this._cells[this._currentCellIndex].node.focus();
+
+          // update the month year heading
+          this.dateField.textContent = this._date.toLocaleFormat("%B %Y");
+        ]]>
+        </body>
+      </method>
+
+      <method name="_getPrevDate">
+        <parameter name="aMonth"/>
+        <parameter name="aYear"/>
+        <body>
+          var month, year = aYear;
+
+          if (aMonth == 0) {
+            month = 11
+            year--;
+          } else {
+            month = aMonth - 1;
+          }
+
+          return new Date(year, month);
+        </body>
+      </method>
+
+      <method name="_getNextDate">
+        <parameter name="aMonth"/>
+        <parameter name="aYear"/>
+        <body>
+          var month, year = aYear;
+
+          if (aMonth == 11) {
+            month = 0
+            year++;
+          } else {
+            month = aMonth + 1;
+          }
+
+          return new Date(year, month);
+        </body>
+      </method>
+
+      <method name="_getDaysInMonth">
+        <parameter name="aMonth"/>
+        <parameter name="aYear"/>
+        <body>
+        <![CDATA[
+          var days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+          // check for leap year
+          if ((aYear % 4 == 0 && aYear % 100 != 0) || aYear % 400 == 0)
+            days[1] = 29;
+
+          return days[aMonth];
+        ]]>
+        </body>
+      </method>
+
+      <method name="goBack">
+        <parameter name="aCalledFromButton"/>
+        <body>
+        <![CDATA[
+          var day = parseInt(this._cells[this._currentCellIndex].node.textContent);
+          this._date = this._getPrevDate(this._date.getMonth(), this._date.getFullYear());
+          this._refreshCells(this._date, day, aCalledFromButton);
+        ]]>
+        </body>
+      </method>
+
+      <method name="goForward">
+        <parameter name="aCalledFromButton"/>
+        <body>
+        <![CDATA[
+          var day = parseInt(this._cells[this._currentCellIndex].node.textContent);
+          this._date = this._getNextDate(this._date.getMonth(), this._date.getFullYear());
+          this._refreshCells(this._date, day, aCalledFromButton);
+        ]]>
+        </body>
+      </method>
+
+      <method name="selectCell">
+        <parameter name="aCellNum"/>
+        <body>
+        <![CDATA[
+          if (aCellNum == this._currentCellIndex)
+            return;
+
+          this._cells[this._currentCellIndex].node.setAttribute("tabindex", "-1");
+
+          this._currentCellIndex = aCellNum;
+
+          this._cells[this._currentCellIndex].node.setAttribute("tabindex", "0");
+          this._cells[this._currentCellIndex].node.focus();
+        ]]>
+        </body>
+      </method>
+
+      <method name="_valueSet">
+        <body>
+        <![CDATA[
+          // called when a cell is choosen (enter or mouse click)
+          var value = this._cells[this._currentCellIndex].node.textContent;
+
+          var date = new Date(this._date.getFullYear(), this._date.getMonth(),
+                              parseInt(value));
+          this.inputField.value = date.toLocaleFormat("%Y-%m-%d");
+
+          this._hidePicker(true);
+        ]]>
+        </body>
+      </method>
+
+    </implementation>
+
+    <handlers>
+      <handler event="keypress">
+      <![CDATA[
+        // first we handle events that will always toggle the picker dropdown -
+        // F4 and alt-down/up
+        if (event.keyCode == event.DOM_VK_F4 ||
+            event.altKey && (event.keyCode == event.DOM_VK_DOWN || 
+                             event.keyCode == event.DOM_VK_UP)) {
+          // first set the accessor value, since the input's value hasn't
+          // been validated yet, and forcing this will.
+          this.accessors.setValue(this.inputField.value);
+
+          this._togglePicker();
+        } else if (this._isPickerVisible) {
+          // handle events if the picker dropdown is visible - we always
+          // hide the picker if focus returns to the input
+          var index = this._currentCellIndex;
+          var currentElement = event.originalTarget;
+
+          if (event.keyCode == event.DOM_VK_DOWN) {
+            if (currentElement.localName == "input") {
+              // if we are on the button, down should focus the current selected
+              // cell
+              this.selectCell(this._currentCellIndex);
+            } else if ((index + 7) < this._cells.length) {
+              this.selectCell(index + 7);
+            }
+          } else if (event.keyCode == event.DOM_VK_UP) {
+            // td means we are on a cell
+            if (currentElement.localName == "td" && (index - 7) >= 0) {
+              this.selectCell(index - 7);
+            } else {
+              // focus the back button
+              document.getAnonymousElementByAttribute(this, "anonid", "back-button").focus();
+            }
+          } else if (event.keyCode == event.DOM_VK_LEFT) {
+            // ctrl-left goes back a month
+            if (event.ctrlKey) {
+              this.goBack();
+            } else if (currentElement.localName == "input") {
+              // input means we are on one of the back/fwd buttons
+              document.getAnonymousElementByAttribute(this, "anonid", "back-button").focus();
+            } else if ((index - 1) >= 0) {
+              this.selectCell(index - 1);
+            }
+          } else if (event.keyCode == event.DOM_VK_RIGHT) {
+            // ctrl-right goes forward a month
+            if (event.ctrlKey) {
+              this.goForward();
+            } else if (currentElement.localName == "input") {
+              // input means we are on one of the back/fwd buttons
+              document.getAnonymousElementByAttribute(this, "anonid", "fwd-button").focus();
+            } else if ((index + 1) < this._cells.length) {
+              this.selectCell(index + 1);
+            }
+          } else if (event.keyCode == event.DOM_VK_RETURN &&
+                     event.originalTarget.localName == "td") {
+            var type = event.originalTarget.className;
+            if (type == "currentMonth") {
+              this.selectCell(event.originalTarget.getAttribute("num"));
+              this._valueSet();
+            } else if (type == "prevMonth") {
+              this.goBack();
+            } else if (type == "nextMonth") {
+              this.goForward();
+            }
+          } else if (event.keyCode == event.DOM_VK_ESCAPE) {
+            this._hidePicker(true);
+          }
+        } else {
+          // pressing down if the picker is hidden will show it
+          if (event.keyCode == event.DOM_VK_DOWN)
+            // first set the accessor value, since the input's value hasn't
+            // been validated yet, and forcing this will.
+            this.accessors.setValue(this.inputField.value);
+
+            this._showPicker();
+          }
+        }
+      ]]>
+      </handler>
+
+      <handler event="mousedown">
+      <![CDATA[
+        if (event.originalTarget.localName == "td") {
+          var type = event.originalTarget.className;
+          var cell = parseInt(event.originalTarget.getAttribute("num"));
+
+          if (type == "currentMonth") {
+            this.selectCell(cell);
+            this._valueSet();
+          } else if (type == "prevMonth") {
+            this._currentCellIndex = cell;
+            this.goBack();
+          } else if (type == "nextMonth") {
+            this._currentCellIndex = cell;
+            this.goForward();
+          }
+        }
+      ]]>
+      </handler>
+
+      <handler event="xforms-next">
+      <![CDATA[
+        this._hidePicker(false);
+      ]]>
+      </handler>
+
+      <handler event="xforms-previous">
+      <![CDATA[
+        this._hidePicker(false);
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+ <!-- INPUT: Month -->
+  <binding id="xformswidget-input-month"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <children/>
+      <html:select anonid="control" xbl:inherits="style, accesskey"
+                   onchange="this.parentNode._change();"
+                   onblur="this.parentNode._setValue()">
+        <html:option value=""></html:option>
+      </html:select>
+    </content>
+
+    <implementation implements="nsIXFormsUIWidget">
+
+      <constructor>
+        <![CDATA[
+          this._build();
+        ]]>
+      </constructor>
+
+      <method name="refresh">
+        <body>
+        <![CDATA[
+          this.select.readonly = this.accessors.isReadonly();
+
+          if (this.accessors.isValid())
+            this.select.value = this.stringValue.substr(2,2)
+          else
+            this.select.value = "";
+
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_build">
+        <body>
+        <![CDATA[
+         // create the select options
+         var xhtmlNS = "http://www.w3.org/1999/xhtml";
+
+         var date = new Date();
+         var option, monthName;
+         for (var i = 0; i < 12; i++) {
+           option = document.createElementNS(xhtmlNS, "option");
+
+           var value = i + 1;
+           if (value < 10)
+             value = "0" + value;
+           option.setAttribute("value", value);
+
+           date.setMonth(i);
+           monthName = date.toLocaleFormat("%B");
+
+           var txt = document.createTextNode(monthName);
+           option.appendChild(txt);
+           this.select.appendChild(option);
+         }
+
+         this.refresh();
+        ]]>
+        </body>
+      </method>
+
+      <method name="_change">
+        <body>
+          if (this.getAttribute("incremental") == "true") {
+            this._setValue();
+          }
+        </body>
+      </method>
+
+      <method name="_setValue">
+        <body>
+          if (this.select.value != "")
+            this.accessors.setValue("--" + this.select.value);
+          else
+            this.accessors.setValue("");
+        </body>
+      </method>
+
+      <field name="_select">null</field>
+      <property name="select" readonly="true">
+        <getter>
+          if (!this._select) {
+            this._select =
+              document.getAnonymousElementByAttribute(this, "anonid", "control");
+          }
+          return this._select;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
+
+  <!-- INPUT: Day -->
+  <binding id="xformswidget-input-day"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <children/>
+      <html:select anonid="control" xbl:inherits="style, accesskey"
+                   onchange="this.parentNode._change();"
+                   onblur="this.parentNode._setValue()">
+        <html:option value=""></html:option>
+      </html:select>
+    </content>
+
+    <implementation implements="nsIXFormsUIWidget">
+
+      <constructor>
+        <![CDATA[
+          this._build();
+        ]]>
+      </constructor>
+
+      <method name="refresh">
+        <body>
+        <![CDATA[
+          this.select.readonly = this.accessors.isReadonly();
+
+          if (this.accessors.isValid())
+            this.select.value = this.stringValue.substr(3,2)
+          else
+            this.select.value = "";
+
+          return true;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_build">
+        <body>
+        <![CDATA[
+         // create the select options
+         var xhtmlNS = "http://www.w3.org/1999/xhtml";
+
+         var date = new Date();
+         var option, monthName;
+         for (var i = 0; i < 31; i++) {
+           option = document.createElementNS(xhtmlNS, "option");
+
+           var value = i + 1;
+           option.textContent = value;
+
+           if (value < 10)
+             value = "0" + value;
+           option.setAttribute("value", value);
+
+           this.select.appendChild(option);
+         }
+
+         this.refresh();
+        ]]>
+        </body>
+      </method>
+
+      <method name="_change">
+        <body>
+          if (this.getAttribute("incremental") == "true") {
+            this._setValue();
+          }
+        </body>
+      </method>
+
+      <method name="_setValue">
+        <body>
+          if (this.select.value != "")
+            this.accessors.setValue("---" + this.select.value);
+          else
+            this.accessors.setValue("");
+        </body>
+      </method>
+
+      <field name="_select">null</field>
+      <property name="select" readonly="true">
+        <getter>
+          if (!this._select) {
+            this._select =
+              document.getAnonymousElementByAttribute(this, "anonid", "control");
+          }
+          return this._select;
+        </getter>
+      </property>
+    </implementation>
+  </binding>
 
   <!-- SECRET: <DEFAULT> -->
   <binding id="xformswidget-secret"
