@@ -58,7 +58,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsContentList.h"
 #include "nsGUIEvent.h"
-#include "nsSupportsArray.h"
+#include "nsCOMArray.h"
 
 // form submission
 #include "nsIFormSubmitObserver.h"
@@ -396,7 +396,7 @@ public:
 private:
   nsHTMLFormElement* mForm;
   PRUint32 mElementsIndex;
-  nsSupportsArray mNotInElementsSorted;
+  nsCOMArray<nsIDOMNode> mNotInElementsSorted;
   PRUint32 mNotInElementsIndex;
 };
 
@@ -1637,7 +1637,7 @@ nsHTMLFormElement::GetNextRadioButton(const nsAString& aName,
         index = numRadios -1;
       }
     }
-    else if (++index >= numRadios) {
+    else if (++index >= (PRInt32)numRadios) {
       index = 0;
     }
     nsCOMPtr<nsIDOMNode> radioDOMNode;
@@ -2046,7 +2046,6 @@ nsFormControlEnumerator::nsFormControlEnumerator(nsHTMLFormElement* aForm)
     // Go through the array and insert the element at the first place where
     // it is less than the element already in the array
     nsCOMPtr<nsIDOMNode> controlToAddNode = do_QueryInterface(controlToAdd);
-    nsCOMPtr<nsIDOMNode> existingNode;
     PRBool inserted = PR_FALSE;
     // Loop over all elements backwards (from indexToAdd to 0)
     // indexToAdd is equal to the array length because we've been adding to it
@@ -2054,7 +2053,7 @@ nsFormControlEnumerator::nsFormControlEnumerator(nsHTMLFormElement* aForm)
     PRUint32 i = indexToAdd;
     while (i > 0) {
       i--;
-      existingNode = do_QueryElementAt(&mNotInElementsSorted, i);
+      nsCOMPtr<nsIDOMNode> existingNode = mNotInElementsSorted[i];
       PRInt32 comparison;
       if (NS_FAILED(nsHTMLFormElement::CompareNodes(controlToAddNode,
                                                     existingNode,
@@ -2062,7 +2061,7 @@ nsFormControlEnumerator::nsFormControlEnumerator(nsHTMLFormElement* aForm)
         break;
       }
       if (comparison > 0) {
-        if (mNotInElementsSorted.InsertElementAt(controlToAdd, i+1)) {
+        if (mNotInElementsSorted.InsertObjectAt(controlToAddNode, i + 1)) {
           inserted = PR_TRUE;
         }
         break;
@@ -2072,7 +2071,7 @@ nsFormControlEnumerator::nsFormControlEnumerator(nsHTMLFormElement* aForm)
     // If it wasn't inserted yet, it is greater than everything in the array
     // and must be appended.
     if (!inserted) {
-      if (!mNotInElementsSorted.InsertElementAt(controlToAdd,0)) {
+      if (!mNotInElementsSorted.InsertObjectAt(controlToAddNode, 0)) {
         break;
       }
     }
@@ -2087,8 +2086,7 @@ nsFormControlEnumerator::HasMoreElements(PRBool* aHasMoreElements)
   if (mElementsIndex < len) {
     *aHasMoreElements = PR_TRUE;
   } else {
-    PRUint32 notInElementsLen;
-    mNotInElementsSorted.Count(&notInElementsLen);
+    PRUint32 notInElementsLen = mNotInElementsSorted.Count();
     *aHasMoreElements = mNotInElementsIndex < notInElementsLen;
   }
   return NS_OK;
@@ -2108,13 +2106,11 @@ nsFormControlEnumerator::GetNext(nsISupports** aNext)
   // If there are still controls in mNotInElementsSorted, determine whether said
   // control is before the current control in the array, and if so, choose it
   // instead
-  PRUint32 notInElementsLen;
-  mNotInElementsSorted.Count(&notInElementsLen);
+  PRUint32 notInElementsLen = mNotInElementsSorted.Count();
   if (mNotInElementsIndex < notInElementsLen) {
     // Get the not-in-elements control - weak ref
-    
     nsCOMPtr<nsIFormControl> formControl2 =
-        do_QueryElementAt(&mNotInElementsSorted, mNotInElementsIndex);
+        do_QueryInterface(mNotInElementsSorted[mNotInElementsIndex]);
 
     if (formControl) {
       // Both form controls are there.  We have to compare them and see which

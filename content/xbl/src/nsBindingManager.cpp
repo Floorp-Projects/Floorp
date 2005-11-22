@@ -58,7 +58,6 @@
 #include "nsContentCID.h"
 #include "nsXMLDocument.h"
 #include "nsHTMLAtoms.h"
-#include "nsSupportsArray.h"
 #include "nsITextContent.h"
 #include "nsIStreamListener.h"
 
