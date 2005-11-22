@@ -679,8 +679,12 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI, const PRUnichar* aTitle,
   // host (reversed with trailing period)
   nsAutoString revHost;
   rv = GetReversedHostname(aURI, revHost);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = dbInsertStatement->BindStringParameter(2, revHost);
+  // Not all URI types have hostnames, so this is optional.
+  if (NS_SUCCEEDED(rv)) {
+    rv = dbInsertStatement->BindStringParameter(2, revHost);
+  } else {
+    rv = dbInsertStatement->BindNullParameter(2);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // hidden
@@ -1007,8 +1011,7 @@ NS_IMETHODIMP
 nsNavHistory::ExecuteQuery(nsINavHistoryQuery *aQuery, nsINavHistoryQueryOptions *aOptions,
                            nsINavHistoryResult** _retval)
 {
-  return ExecuteQueries(NS_CONST_CAST(const nsINavHistoryQuery**, &aQuery), 1,
-                        aOptions, _retval);
+  return ExecuteQueries(&aQuery, 1, aOptions, _retval);
 }
 
 
@@ -1018,7 +1021,7 @@ nsNavHistory::ExecuteQuery(nsINavHistoryQuery *aQuery, nsINavHistoryQueryOptions
 //    it ANDed with the all the rest of the queries.
 
 NS_IMETHODIMP
-nsNavHistory::ExecuteQueries(const nsINavHistoryQuery** aQueries, PRUint32 aQueryCount,
+nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount,
                              nsINavHistoryQueryOptions *aOptions,
                              nsINavHistoryResult** _retval)
 {
@@ -2666,17 +2669,32 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
 {
   *aResult = nsnull;
 
-  nsCOMPtr<nsNavHistoryResultNode> result = new nsNavHistoryResultNode();
+  nsCAutoString spec;
+  nsresult rv = aRow->GetUTF8String(kGetInfoIndex_URL, spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsNavHistoryResultNode> result;
+  if (IsQueryURI(spec)) {
+    result = new nsNavHistoryQueryNode();
+    result->mType = nsINavHistoryResultNode::RESULT_TYPE_QUERY;
+  } else {
+    result = new nsNavHistoryResultNode();
+    if (aAsVisits) {
+      result->mType = nsNavHistoryResultNode::RESULT_TYPE_VISIT;
+    } else {
+      result->mType = nsNavHistoryResultNode::RESULT_TYPE_URL;
+    }
+  }
+
   if (! result)
     return NS_ERROR_OUT_OF_MEMORY;
 
   // ID
-  nsresult rv = aRow->GetInt64(kGetInfoIndex_PageID, &result->mID);
+  rv = aRow->GetInt64(kGetInfoIndex_PageID, &result->mID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // url
-  rv = aRow->GetUTF8String(kGetInfoIndex_URL, result->mUrl);
-  NS_ENSURE_SUCCESS(rv, rv);
+  // URL
+  result->mUrl = spec;
 
   // title
   rv = aRow->GetString(kGetInfoIndex_Title, result->mTitle);
@@ -2693,14 +2711,10 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow, PRBool aAsVisits,
   // reversed hostname
   nsAutoString revHost;
   rv = aRow->GetString(kGetInfoIndex_RevHost, revHost);
-  GetUnreversedHostname(revHost, result->mHost);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aAsVisits) {
-    result->mType = nsNavHistoryResultNode::RESULT_TYPE_VISIT;
-  } else {
-    result->mType = nsNavHistoryResultNode::RESULT_TYPE_URL;
+  if (!revHost.IsEmpty()) {
+    GetUnreversedHostname(revHost, result->mHost);
   }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   result.swap(*aResult);
   return NS_OK;
@@ -3014,7 +3028,9 @@ GetReversedHostname(nsIURI* aURI, nsAString& aRevHost)
 {
   nsCString forward8;
   nsresult rv = aURI->GetHost(forward8);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // can't do reversing in UTF8, better use 16-bit chars
   nsAutoString forward = NS_ConvertUTF8toUTF16(forward8);

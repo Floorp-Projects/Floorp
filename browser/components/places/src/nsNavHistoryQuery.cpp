@@ -92,6 +92,7 @@ nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
   nsresult rv;
   *aQueries = nsnull;
   *aResultCount = 0;
+  *aOptions = nsnull;
 
   nsRefPtr<nsNavHistoryQueryOptions> options(new nsNavHistoryQueryOptions());
   if (! options)
@@ -106,6 +107,7 @@ nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
   FreeTokenList(&tokens);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  NS_STATIC_CAST(nsRefPtr<nsINavHistoryQueryOptions>, options).swap(*aOptions);
   *aResultCount = queries.Count();
   if (queries.Count() == 0) {
     // need to special-case 0 queries since we don't allocate an array
@@ -132,7 +134,7 @@ nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
 // QueriesToQueryString
 
 NS_IMETHODIMP
-nsNavHistory::QueriesToQueryString(const nsINavHistoryQuery **aQueries,
+nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
                                    PRUint32 aQueryCount,
                                    nsINavHistoryQueryOptions* aOptions,
                                    nsACString& aQueryString)
@@ -144,8 +146,7 @@ nsNavHistory::QueriesToQueryString(const nsINavHistoryQuery **aQueries,
 
   aQueryString.Truncate(0);
   for (PRUint32 queryIndex = 0; queryIndex < aQueryCount;  queryIndex ++) {
-    nsINavHistoryQuery* query = NS_CONST_CAST(nsINavHistoryQuery*,
-                                              aQueries[queryIndex]);
+    nsINavHistoryQuery* query = aQueries[queryIndex];
     if (queryIndex > 0) {
       AppendAmpersandIfNonempty(aQueryString);
       aQueryString += NS_LITERAL_CSTRING(QUERYKEY_SEPARATOR);

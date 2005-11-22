@@ -128,6 +128,7 @@ public:
 
   // Non-XPCOM member accessors
   PRInt32 Type() const { return mType; }
+  const nsCString& URL() const { return mUrl; }
 
 protected:
   virtual ~nsNavHistoryResultNode() {}
@@ -169,6 +170,30 @@ protected:
   friend class nsNavHistoryResult;
 };
 
+// nsNavHistoryQueryNode is a special type of ResultNode that executes a
+// query when asked to build its children.
+class nsNavHistoryQueryNode : public nsNavHistoryResultNode
+{
+public:
+  nsNavHistoryQueryNode() : mQueries(nsnull), mQueryCount(0) {}
+
+  // nsINavHistoryResultNode methods
+  NS_IMETHOD GetQueries(nsINavHistoryQueryOptions **aOptions,
+                        PRUint32 *aQueryCount,
+                        nsINavHistoryQuery ***aQueries);
+
+  // nsNavHistoryResultNode methods
+  virtual nsresult BuildChildren(PRUint32 aOptions);
+
+protected:
+  virtual ~nsNavHistoryQueryNode();
+  nsresult ParseQueries();
+
+  nsINavHistoryQuery **mQueries;
+  PRUint32 mQueryCount;
+  nsCOMPtr<nsINavHistoryQueryOptions> mOptions;
+};
+
 class nsIDateTimeFormat;
 
 // nsNavHistoryResult
@@ -183,7 +208,7 @@ class nsNavHistoryResult : public nsINavHistoryResult,
 public:
   nsNavHistoryResult(nsNavHistory* aHistoryService,
                      nsIStringBundle* aHistoryBundle,
-                     const nsINavHistoryQuery** aQueries,
+                     nsINavHistoryQuery** aQueries,
                      PRUint32 aQueryCount,
                      nsINavHistoryQueryOptions *aOptions);
 
@@ -409,7 +434,7 @@ public:
                        nsNavHistoryResultNode** aResult);
 
   // Construct a new HistoryResult object. You can give it null query/options.
-  nsNavHistoryResult* NewHistoryResult(const nsINavHistoryQuery** aQueries,
+  nsNavHistoryResult* NewHistoryResult(nsINavHistoryQuery** aQueries,
                                        PRUint32 aQueryCount,
                                        nsINavHistoryQueryOptions* aOptions)
   {
@@ -567,5 +592,20 @@ protected:
  */
 nsresult BindStatementURI(mozIStorageStatement* statement, PRInt32 index,
                           nsIURI* aURI);
+
+NS_NAMED_LITERAL_CSTRING(placesURIPrefix, "place:");
+
+/* Returns true if the given URI represents a history query. */
+inline PRBool IsQueryURI(const nsCString &uri)
+{
+  return StringBeginsWith(uri, placesURIPrefix);
+}
+
+/* Extracts the query string from a query URI. */
+inline const nsDependentCSubstring QueryURIToQuery(const nsCString &uri)
+{
+  NS_ASSERTION(IsQueryURI(uri), "should only be called for query URIs");
+  return Substring(uri, placesURIPrefix.Length());
+}
 
 #endif // nsNavHistory_h_
