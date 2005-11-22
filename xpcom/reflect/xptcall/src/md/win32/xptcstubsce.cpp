@@ -81,8 +81,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 		const nsXPTType& type = param.GetType();
 		nsXPTCMiniVariant* dp = &dispatchParams[i];
 
-#ifndef AARONTEMP
-		if(i==3)
+        // Aaron Reed suggestion:
+		if(i==4)
 		{
 			// PrepareAndDispatch makes an assumption that is causing us problems.  It
 			// assumes that all of the parameters that need to go to the method that we
@@ -106,7 +106,6 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
 			// called in the sequence mentioned above.
 			ap += 5;
 		}
-#endif /* AARONTEMP */
 
 		if(param.IsOut() || !type.IsArithmetic())
 		{
