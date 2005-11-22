@@ -34,6 +34,8 @@
       </property>
 
       <field name="mInputField">null</field>
+      <field name="mIgnoreClick">false</field>
+      <field name="mIgnoreFocus">false</field>
       
       <property name="inputField" readonly="true">
         <getter><![CDATA[
@@ -63,6 +65,10 @@
                                          if (val) this.setAttribute('readonly', 'true');
                                          else this.removeAttribute('readonly'); return val;"
                                   onget="return this.inputField.readonly;"/>
+      <property name="clickSelectsAll"
+                onget="return this.getAttribute('clickSelectsAll') == 'true';"
+                onset="if (val) this.setAttribute('clickSelectsAll', 'true');
+                       else this.removeAttribute('clickSelectsAll'); return val;" />
 
       <method name="select">
         <body>
@@ -76,7 +82,7 @@
                                       onget="return this.inputField.selectionStart;"/>
       <property name="selectionEnd"   onset="this.inputField.selectionEnd = val; return val;"
                                       onget="return this.inputField.selectionEnd;"/>
-     
+
       <method name="setSelectionRange">
         <parameter name="aSelectionStart"/>
         <parameter name="aSelectionEnd"/>
@@ -97,17 +103,41 @@
     <handlers>
       <handler event="focus" phase="capturing">
         <![CDATA[
-          if (!this.hasAttribute('focused')) {
-            if (document.commandDispatcher.focusedElement != this.inputField) 
+          if (!this.hasAttribute("focused")) {
+            if (document.commandDispatcher.focusedElement != this.inputField)
               this.inputField.focus();
-            this.setAttribute('focused','true');
+            else if (this.mIgnoreFocus)
+              this.mIgnoreFocus = false;
+            else if (this.clickSelectsAll)
+              this.inputField.select();
+
+            this.setAttribute("focused", "true");
           }
         ]]>
       </handler>
-      
+
       <handler event="blur" phase="capturing">
         <![CDATA[
           this.removeAttribute('focused');
+        ]]>
+      </handler>
+
+      <handler event="mousedown" phase="capturing">
+        <![CDATA[
+          this.mIgnoreClick = this.hasAttribute("focused");
+
+          if (!this.mIgnoreClick) {
+            this.mIgnoreFocus = true;
+            this.inputField.setSelectionRange(0, 0);
+          }
+        ]]>
+      </handler>
+
+      <handler event="click" phase="capturing">
+        <![CDATA[
+          if (!this.mIgnoreClick && this.clickSelectsAll &&
+              this.inputField.selectionStart == this.inputField.selectionEnd)
+            this.inputField.select();
         ]]>
       </handler>
     </handlers>    
