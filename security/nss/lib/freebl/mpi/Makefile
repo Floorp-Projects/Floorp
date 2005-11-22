@@ -41,7 +41,7 @@
 # ***** END LICENSE BLOCK *****
 
 #
-# $Id: Makefile,v 1.21 2005/02/02 22:28:22 gerv%gerv.net Exp $
+# $Id: Makefile,v 1.22 2005/11/22 07:16:43 relyea%netscape.com Exp $
 #
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -89,7 +89,8 @@ VERS=1.7p6
 ##
 ## This is the list of source files that need to be packed into
 ## the distribution file
-SRCS=   mpi.c mpprime.c mplogic.c mp_gf2m.c mpmontg.c mpi-test.c primes.c tests/ \
+SRCS=   mpi.c mpprime.c mplogic.c mp_gf2m.c mpmontg.c mpi-test.c primes.c \
+	mpcpucache.c tests/ \
 	utils/gcd.c utils/invmod.c utils/lap.c \
 	utils/ptab.pl utils/sieve.c utils/isprime.c\
 	utils/dec2hex.c utils/hex2dec.c utils/bbs_rand.c \
