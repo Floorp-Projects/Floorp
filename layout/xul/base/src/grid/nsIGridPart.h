@@ -111,7 +111,8 @@ public:
    * Return whether this grid part is an appropriate parent for the argument.
    */
   PRBool CanContain(nsIGridPart* aPossibleChild) {
-    return GetType() + 1 == aPossibleChild->GetType();
+    Type thisType = GetType(), childType = aPossibleChild->GetType();
+    return thisType + 1 == childType || (thisType == eRowGroup && childType == eRowGroup);
   }
 
 };
