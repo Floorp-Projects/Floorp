@@ -62,6 +62,16 @@ function writeCacheLocationPref()
   } 
 }
 
+function checkThings() {
+  if(!document.getElementById("useDiskCache").checked) {
+	document.getElementById("storeCacheStorageCard").disabled=true;
+	document.getElementById("cacheSizeField").disabled=true;
+  } else {
+	document.getElementById("storeCacheStorageCard").disabled=false;
+	document.getElementById("cacheSizeField").disabled=false;
+  }
+}
+
 
 
 /* Live Synchronizers
@@ -276,6 +286,7 @@ function syncPref(refElement) {
 		gPrefQueue[refElementPref]=refElement;
 		//document.getElementById("textbox-okay-pane").value+= "Changed key ="+gPrefQueue[refElementPref].value+"\n";
 	}
+	setTimeout("checkThings()",0);
 }
 
 
@@ -407,6 +418,7 @@ function syncPrefLoadDOM(elementList) {
 
 		
 	}
+	checkThings();
 }
 
 
