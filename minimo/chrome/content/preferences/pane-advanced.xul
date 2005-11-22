@@ -77,7 +77,7 @@
 	                    <checkbox tabindex="31"
 	                              id="storeCacheStorageCard"
 	                              label="&storeCacheStorageCard.label;"
-	                              preference="browser.cache.disk.enable" 
+	                              preference="browser.cache.disk.parent_directory" 
                                               onsyncfrompreference="readCacheLocationPref();"
                                               onsynctopreference="writeCacheLocationPref();" 
 	                              onclick="syncPref(this)" />
