@@ -78,6 +78,8 @@
 	                              id="storeCacheStorageCard"
 	                              label="&storeCacheStorageCard.label;"
 	                              preference="browser.cache.disk.enable" 
+                                              onsyncfrompreference="FROM_GOES_HERE();"
+                                              onsynctopreference="TO_GOES_HERE();" 
 	                              onclick="syncPref(this)" />
 
                        <grid class="box-prefpadding" >
