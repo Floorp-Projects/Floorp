@@ -865,6 +865,9 @@
 
           var dragState = col.mDragState;
 
+          col.fgboxes.box.setAttribute("dragging", "true");
+          col.fgboxes.dragbox.setAttribute("dragging", "true");
+
           // check if we need to jump a column
           if (dragState.dragType == "move") {
               newcol = col.calendarView.findColumnForClientPoint(event.screenX, event.screenY);
@@ -1095,10 +1098,7 @@
           this.fgboxes.box.setAttribute("dragging", "true");
           this.fgboxes.dragbox.setAttribute("dragging", "true");
 
-          // cheat and call the sweep move event handler;
-          // this will take care of setting up the sizes right for everything
           document.calendarEventColumnDragging = this;
-          //this.onEventSweepMouseMove(event);
 
           //dump (">>> drag is: " + this.mDragState.dragType + "\n");
 
@@ -1157,8 +1157,7 @@
     <handlers>
       <handler event="dblclick"><![CDATA[
         if (this.calendarView.controller) {
-            this.calendarView.controller.createNewEvent (this.mCalendarView.displayCalendar,
-                                                         this.mDate);
+            this.calendarView.controller.createNewEvent();
         }
       ]]></handler>
 
@@ -1188,13 +1187,7 @@
             this.fgboxes.dragspacer.setAttribute("width", this.mDragState.origMin * this.mPixPerMin);
         }
 
-        this.fgboxes.box.setAttribute("dragging", "true");
-        this.fgboxes.dragbox.setAttribute("dragging", "true");
-
-        // cheat and call the sweep move event handler;
-        // this will take care of setting up the sizes right for everything
         document.calendarEventColumnDragging = this;
-        this.onEventSweepMouseMove(event);
 
         window.addEventListener("mousemove", this.onEventSweepMouseMove, false);
         window.addEventListener("mouseup", this.onEventSweepMouseUp, false);

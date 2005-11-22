@@ -153,7 +153,9 @@ var ltnCalendarViewController = {
             aCalendar.addItem(event, null);
         } else {
             // default pop up the dialog
-            createEventWithDialog(aCalendar, aStartTime, aEndTime);
+            var date = document.getElementById("calendar-view-box").selectedPanel.selectedDay;
+            date.isDate = false;
+            createEventWithDialog(aCalendar, date, date);
         }
     },
 

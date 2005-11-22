@@ -351,6 +351,10 @@
         if (this.mDate)
           this.monthView.selectedDay = this.mDate;
       ]]></handler>
+      <handler event="dblclick"><![CDATA[
+        event.preventBubble();
+        this.monthView.controller.createNewEvent();
+      ]]></handler>
     </handlers>
   </binding>
 
