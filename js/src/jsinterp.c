@@ -1837,7 +1837,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
 
 # define DO_OP()            goto *jumpTable[op]
 # define DO_NEXT_OP(n)      do { op = *(pc += (n)); DO_OP(); } while (0)
-# define BEGIN_CASE(OP)     case OP: L_##OP:
+# define BEGIN_CASE(OP)     L_##OP:
 # define END_CASE(OP)       DO_NEXT_OP(OP##_LENGTH);
 # define END_VARLEN_CASE    DO_NEXT_OP(len);
 # define EMPTY_CASE(OP)     BEGIN_CASE(OP) op = *++pc; DO_OP();
@@ -2036,9 +2036,10 @@ interrupt:
             LOAD_INTERRUPT_HANDLER(rt);
         }
 
+        switch (op) {
+
 #endif /* !JS_THREADED_INTERP */
 
-        switch (op) {
           BEGIN_CASE(JSOP_STOP)
             goto out;
 
@@ -5519,8 +5520,10 @@ interrupt:
           L_JSOP_BACKPATCH:
           L_JSOP_BACKPATCH_PUSH:
           L_JSOP_BACKPATCH_POP:
+#else
+          default:
 #endif
-          default: {
+          {
             char numBuf[12];
             JS_snprintf(numBuf, sizeof numBuf, "%d", op);
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -5528,9 +5531,11 @@ interrupt:
             ok = JS_FALSE;
             goto out;
           }
-        }
 
 #ifndef JS_THREADED_INTERP
+
+        } /* switch (op) */
+
     advance_pc:
         pc += len;
 
