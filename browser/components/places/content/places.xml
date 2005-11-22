@@ -22,50 +22,73 @@
   
   <binding id="places-tree" extends="chrome://global/content/bindings/tree.xml#tree">
     <implementation>
-      <property name="selectionFlags">
-        <getter><![CDATA[ 
-          // XXXben - this should be in the controller itself, not the view!
-          // the view should not be making these determinations!
-          const NHRN = Ci.nsINavHistoryResultNode;
-          function nodeIsURL(node) {
-            return (node.type == NRHN.RESULT_TYPE_URL ||
-                    node.type == NRHN.RESULT_TYPE_VISIT);
-          }
-        
-          function nodeIsContainer(node) {
-            return !nodeIsURL(node);
-          }
-        
-          var flags = 0;
-          var nodes = this.getSelectionNodes();
-          var nodeCount = nodes.length;
-          if (nodeCount == 1 && nodeIsContainer(nodes[0])
-            flags |= SELECTION_IS_OPEN_CONTAINER; // XXXben closed container too!
+      <constructor><![CDATA[
+        this._places = 
+          Cc["@mozilla.org/browser/nav-history;1"].
+          getService(Ci.nsINavHistory);
+      ]]></constructor>
+      <property name="filterString">
+        <getter><![CDATA[
+          this.view.QueryInterface(Ci.nsINavHistoryResult);
+          var queries = { }, queryCount = { }, options = { };
+          this.view.getSourceQuery(queries, queryCount, options);
           
-          for (var i = 0; i < nodes.length; ++i) {
-            var node = nodes[i];
-            if (nodeIsURL(node))
-              flags |= SELECTION_COTNAINS_URL;
-            else
-              flags |= SELECTION_CONTAINS_CONTAINER;
-            
-            if (node.parent.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER &&
-                !this.query.hasSearchTerms) 
-              flags |= SELECTION_IS_MOVABLE;
-            flags |= SELECTION_IS_CHANGEABLE + SELECTION_IS_REMOVABLE;
-          }
-          return flags;
+          if (queries.value[i].hasSearchTerms)
+            return queries.value[i].searchTerms;
+          return null;
+        ]]></getter>
+        <setter><![CDATA[
+          // preserve grouping
+          this.view.QueryInterface(Ci.nsINavHistoryResult);
+          var queries = { }, queryCount = { }, options = { };
+          this.view.getSourceQuery(queries, queryCount, options);
+          
+          var query = this._places.getNewQuery();
+          query.searchTerms = val;
+          
+          var result = this._places.executeQuery(query, options.value);
+          result.QueryInterface(Ci.nsITreeView);
+          this.view = result;
+          
+          return val;
+        ]]></setter>
+      </property>
+    
+      <property name="queryString">
+        <getter><![CDATA[
+          this.view.QueryInterface(Ci.nsINavHistoryResult);
+          var queries = { }, queryCount = { }, options = { };
+          this.view.getSourceQuery(queries, queryCount, options);
+
+          const NH = Ci.nsINavHistory;
+          return this._places.queriesToQueryString(queries.value, 
+                                                   queryCount.value,
+                                                   options.value);
+        ]]></getter>
+        <setter><![CDATA[
+          const NH = Ci.nsINavHistory;
+          const NHQO = Ci.nsINavHistoryQueryOptions;
+          var places = 
+              Cc["@mozilla.org/browser/nav-history;1"].getService(NH);
+          var queries = { }, queryCount = { }, options = { };
+          this._places.queryStringToQueries(val, queries, queryCount, options);
+          var result = this._places.executeQueries(queries.value, 
+                                                   queryCount.value, 
+                                                   options.value);
+          result.QueryInterface(Components.interfaces.nsITreeView);
+          this.view = result;
+          return val;
+        ]]></setter>
+      </property>
+    
+      <property name="hasSelection">
+        <getter><![CDATA[
+          return this.view.selection.getRangeCount() >= 1;
         ]]></getter>
       </property>
       
-      <property name="hasSelection">
-        <getter>
-          return this.view.selection.getRangeCount() >= 1;
-        </getter>
-      </property>
-      
       <property name="hasSingleSelection">
-        <getter>
+        <getter><![CDATA[
           var selection = this.view.selection;
           var rc = selection.getRangeCount();
           if (rc != 1)
@@ -73,8 +96,7 @@
           var min = { }, max = { };
           selection.getRangeAt(0, min, max);
           return (min.value == max.value);
-        </getter>
-        
+        ]]></getter>
       </property>
       
       <method name="getSelectionNodes">
@@ -113,9 +135,12 @@
         ]]></getter>
       </property>
     </implementation>
+    <handlers>
+      <handler event="select"><![CDATA[
+        document.commandDispatcher.updateCommands("select");
+      ]]></handler>
+    </handlers>
   </binding>
-
-
 
   <binding id="calendar">
     <content>
