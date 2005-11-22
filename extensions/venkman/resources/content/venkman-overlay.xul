@@ -59,7 +59,7 @@
   This is the id that the menuitem will be appended to.  see tasksOverlay.xul
 -->
 <menupopup id="toolsPopup">
-  <menuitem position="5" label="&venkmanCmd.label;"
+  <menuitem id="venkman-menu"  position="5" label="&venkmanCmd.label;"
     accesskey="&venkmanCmd.akey;" oncommand="start_venkman()"/>
 </menupopup>
 
