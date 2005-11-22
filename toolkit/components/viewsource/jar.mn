@@ -4,3 +4,4 @@ toolkit.jar:
 * content/global/viewSource.xul             (content/viewSource.xul)
 * content/global/viewPartialSource.js       (content/viewPartialSource.js)
 * content/global/viewPartialSource.xul      (content/viewPartialSource.xul)
+* content/global/viewSourceUtils.js         (content/viewSourceUtils.js)
