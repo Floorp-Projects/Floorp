@@ -54,7 +54,6 @@ JAVA_SRCS = \
 		$(srcdir)/IAppFileLocProvider.java \
 		$(srcdir)/INIParser.java \
 		$(srcdir)/VersionComparator.java \
-		$(srcdir)/../XPCOMJavaProxyBase.java \
 		$(NULL)
 
 GEN_JAVA_SRCS = \

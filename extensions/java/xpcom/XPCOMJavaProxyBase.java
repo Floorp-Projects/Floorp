@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package org.mozilla.xpcom;
+package org.mozilla.xpcom.internal;
 
 
 /**
