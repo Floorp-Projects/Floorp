@@ -890,7 +890,7 @@ NS_IMETHODIMP nsLocalFile::IsHidden(PRBool *_retval)
   
   FSCatalogInfo catalogInfo;
   HFSUniStr255 leafName;  
-  OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoNodeFlags, &catalogInfo,
+  OSErr err = ::FSGetCatalogInfo(&fsRef, kFSCatInfoFinderInfo, &catalogInfo,
                                 &leafName, nsnull, nsnull);
   if (err != noErr)
     return MacErrorMapper(err);
