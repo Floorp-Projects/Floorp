@@ -70,6 +70,15 @@ function checkThings() {
 	document.getElementById("storeCacheStorageCard").disabled=false;
 	document.getElementById("cacheSizeField").disabled=false;
   }
+
+  if(!document.getElementById("UseProxy").checked) {
+	document.getElementById("networkProxyHTTP").disabled=true;
+	document.getElementById("networkProxyHTTP_Port").disabled=true;
+  } else {
+	document.getElementById("networkProxyHTTP").disabled=false;
+	document.getElementById("networkProxyHTTP_Port").disabled=false;
+  }
+
 }
 
 
