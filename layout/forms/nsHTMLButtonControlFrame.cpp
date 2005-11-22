@@ -80,8 +80,6 @@ NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell)
 nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
   : nsHTMLContainerFrame()
 {
-  mInline = PR_TRUE;
-
   mCacheSize.width             = -1;
   mCacheSize.height            = -1;
   mCachedMaxElementWidth       = -1;
@@ -107,13 +105,8 @@ nsHTMLButtonControlFrame::Init(nsPresContext*  aPresContext,
 {
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   mRenderer.SetFrame(this,aPresContext);
-   // cache our display type
-  mInline = (NS_STYLE_DISPLAY_BLOCK != GetStyleDisplay()->mDisplay);
 
-  PRUint32 flags = NS_BLOCK_SPACE_MGR;
-  if (mInline) {
-    flags |= NS_BLOCK_SHRINK_WRAP;
-  }
+  PRUint32 flags = NS_BLOCK_SPACE_MGR | NS_BLOCK_SHRINK_WRAP;
 
   nsIPresShell *shell = aPresContext->PresShell();
   nsIFrame* areaFrame = NS_NewAreaFrame(shell, flags);

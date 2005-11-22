@@ -171,7 +171,6 @@ protected:
   NS_IMETHOD_(nsrefcnt) Release(void);
 
   PRIntn GetSkipSides() const;
-  PRBool mInline;
   nsButtonFrameRenderer mRenderer;
 
   //Resize Reflow OpitmizationSize;
