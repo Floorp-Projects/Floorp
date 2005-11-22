@@ -392,7 +392,7 @@ public:
   void SaveExpandItem(const nsAString& aTitle);
   void SaveCollapseItem(const nsAString& aTitle);
 
-  // get the statement for selecting a history row by id
+  // get the statement for selecting a history row by URL
   mozIStorageStatement* DBGetURLPageInfo() { return mDBGetURLPageInfo; }
 
   // Constants for the columns returned by the above statement.

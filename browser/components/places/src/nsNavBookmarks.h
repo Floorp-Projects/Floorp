@@ -101,6 +101,7 @@ private:
   PRInt64 mRoot;
   PRInt64 mBookmarksRoot;
   PRInt64 mToolbarRoot;
+  PRInt32 mBatchLevel;
 
   nsCOMPtr<mozIStorageStatement> mDBGetFolderInfo;    // kGetFolderInfoIndex_* results
   static const PRInt32 kGetFolderInfoIndex_FolderID;

@@ -40,6 +40,7 @@
 #include "nsNavHistory.h"
 #include "mozStorageHelper.h"
 #include "nsIServiceManager.h"
+#include "nsNetUtil.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ItemChild = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_FolderChild = 1;
@@ -57,7 +58,14 @@ const PRInt32 nsNavBookmarks::kGetChildrenIndex_FolderTitle = 9;
 
 nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 
+class UpdateBatcher()
+{
+  UpdateBatcher() { nsNavBookmarks::sInstance->BeginUpdateBatch(); }
+  ~UpdateBatcher() { nsNavBookmarks::sInstance->EndUpdateBatch(); }
+};
+
 nsNavBookmarks::nsNavBookmarks()
+  : mRoot(0), mBookmarksRoot(0), mToolbarRoot(0), mBatchLevel(0)
 {
   NS_ASSERTION(!sInstance, "Multiple nsNavBookmarks instances!");
   sInstance = this;
@@ -100,7 +108,6 @@ nsNavBookmarks::Init()
                                getter_AddRefs(mDBGetFolderInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mRoot = mBookmarksRoot = mToolbarRoot = 0;
   {
     nsCOMPtr<mozIStorageStatement> statement;
     rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT folder_child FROM moz_bookmarks_assoc WHERE parent IS NULL"),
@@ -179,7 +186,7 @@ nsNavBookmarks::Init()
   // item_child, and folder_child from moz_bookmarks_assoc.  This selects only
   // _item_ children which are in moz_history.
   NS_NAMED_LITERAL_CSTRING(selectItemChildren,
-                           "SELECT h.id, h.url, h.title, h.visit_count, MAX(fullv.visit_date), h.rev_host, a.position, a.item_child, a.folder_child, null FROM moz_bookmarks_assoc a JOIN moz_history h ON a.item_child = h.id LEFT JOIN moz_historyvisit v ON h.id = v.page_id LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE a.parent = ?1 GROUP BY h.id");
+                           "SELECT h.id, h.url, h.title, h.visit_count, MAX(fullv.visit_date), h.rev_host, a.position, a.item_child, a.folder_child, null FROM moz_bookmarks_assoc a JOIN moz_history h ON a.item_child = h.id LEFT JOIN moz_historyvisit v ON h.id = v.page_id LEFT JOIN moz_historyvisit fullv ON h.id = fullv.page_id WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3 GROUP BY h.id");
 
   // Construct a result where the first columns are padded out to the width
   // of mDBGetVisitPageInfo, containing additional columns for position,
@@ -187,7 +194,7 @@ nsNavBookmarks::Init()
   // moz_bookmarks_containers.  This selects only _folder_ children which are
   // in moz_bookmarks_containers.
   NS_NAMED_LITERAL_CSTRING(selectFolderChildren,
-                           "SELECT null, null, null, null, null, null, a.position, a.item_child, a.folder_child, c.name FROM moz_bookmarks_assoc a JOIN moz_bookmarks_containers c ON c.id = a.folder_child WHERE a.parent = ?1");
+                           "SELECT null, null, null, null, null, null, a.position, a.item_child, a.folder_child, c.name FROM moz_bookmarks_assoc a JOIN moz_bookmarks_containers c ON c.id = a.folder_child WHERE a.parent = ?1 AND a.position >= ?2 AND a.position <= ?3");
 
   NS_NAMED_LITERAL_CSTRING(orderByPosition, " ORDER BY a.position");
 
@@ -215,11 +222,32 @@ nsNavBookmarks::Init()
   return transaction.Commit();
 }
 
+struct RenumberItem {
+  PRInt64 folderChild;
+  nsCOMPtr<nsIURI> itemURI;
+  PRInt32 position;
+};
+
+struct RenumberItemsArray {
+  nsVoidArray items;
+  ~RenumberItemsArray();
+};
+
+RenumberItemsArray::~RenumberItemsArray()
+{
+  for (PRInt32 i = 0; i < items.Count(); ++i) {
+    delete NS_STATIC_CAST(RenumberItem*, items[i]);
+  }
+}
+
 nsresult
 nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
                               PRInt32 aStartIndex, PRInt32 aEndIndex,
                               PRInt32 aDelta)
 {
+  mozIStorageConnection *dbConn = DBConn();
+  mozStorageTransaction transaction(dbConn, PR_FALSE);
+
   nsCAutoString buffer;
   buffer.AssignLiteral("UPDATE moz_bookmarks_assoc SET position = position + ");
   buffer.AppendInt(aDelta);
@@ -230,14 +258,91 @@ nsNavBookmarks::AdjustIndices(PRInt64 aFolder,
     buffer.AppendLiteral(" AND position >= ");
     buffer.AppendInt(aStartIndex);
   }
-  if (aEndIndex != -1) {
+  if (aEndIndex != PR_INT32_MAX) {
     buffer.AppendLiteral(" AND position <= ");
     buffer.AppendInt(aEndIndex);
   }
 
-  // TODO notify observers about renumbering?
+  nsresult rv = DBConn()->ExecuteSimpleSQL(buffer);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  return DBConn()->ExecuteSimpleSQL(buffer);
+  // If we have any observers that want all details, we'll need to notify them
+  // about the renumbering.
+  nsCOMArray<nsINavBookmarkObserver> detailObservers;
+  PRInt32 i;
+  for (i = 0; i < mObservers.Count(); ++i) {
+    PRBool wantDetails;
+    rv = mObservers[i]->GetWantAllDetails(&wantDetails);
+    if (NS_SUCCEEDED(rv) && wantDetails) {
+      if (!detailObservers.AppendObject(mObservers[i])) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  if (detailObservers.Count() == 0) {
+    return transaction.Commit();
+  }
+
+  RenumberItemsArray itemsArray;
+  nsVoidArray *items = &itemsArray.items;
+  {
+    mozStorageStatementScoper scope(mDBGetChildren);
+ 
+    rv = mDBGetChildren->BindInt64Parameter(0, aFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDBGetChildren->BindInt32Parameter(1, aStartIndex + aDelta);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDBGetChildren->BindInt32Parameter(2, aEndIndex + aDelta);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool results;
+    while (NS_SUCCEEDED(mDBGetChildren->ExecuteStep(&results)) && results) {
+      RenumberItem *item = new RenumberItem();
+      if (!item) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      if (mDBGetChildren->IsNull(kGetChildrenIndex_ItemChild)) {
+        item->folderChild = mDBGetChildren->AsInt64(kGetChildrenIndex_FolderChild);
+      } else {
+        nsCAutoString spec;
+        mDBGetChildren->GetUTF8String(nsNavHistory::kGetInfoIndex_URL, spec);
+        rv = NS_NewURI(getter_AddRefs(item->itemURI), spec, nsnull);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+      item->position = mDBGetChildren->AsInt32(2);
+      if (!items->AppendElement(item)) {
+        delete item;
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  UpdateBatcher batch;
+
+  for (i = 0; i < detailObservers.Count(); ++i) {
+    for (PRInt32 j = 0; j < items->Count(); ++j) {
+      RenumberItem *item = NS_STATIC_CAST(RenumberItem*, (*items)[j]);
+      PRInt32 newPosition = item->position;
+      PRInt32 oldPosition = newPosition - aDelta;
+      if (item->itemURI) {
+        nsIURI *uri = item->itemURI;
+        detailObservers[i]->OnItemMoved(uri, aFolder, oldPosition, newPosition);
+      } else {
+        detailObservers[i]->OnFolderMoved(item->folderChild,
+                                          aFolder, oldPosition,
+                                          aFolder, newPosition);
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -273,7 +378,7 @@ nsNavBookmarks::InsertItem(PRInt64 aFolder, nsIURI *aItem, PRInt32 aIndex)
 
   PRInt32 index = (aIndex == -1) ? FolderCount(aFolder) : aIndex;
 
-  rv = AdjustIndices(aFolder, index, -1, 1);
+  rv = AdjustIndices(aFolder, index, PR_INT32_MAX, 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString buffer;
@@ -341,7 +446,7 @@ nsNavBookmarks::RemoveItem(PRInt64 aFolder, nsIURI *aItem)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (childIndex != -1) {
-    rv = AdjustIndices(aFolder, childIndex + 1, -1, -1);
+    rv = AdjustIndices(aFolder, childIndex + 1, PR_INT32_MAX, -1);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -365,7 +470,7 @@ nsNavBookmarks::CreateFolder(PRInt64 aParent, const nsAString &aName,
 
   PRInt32 index = (aIndex == -1) ? FolderCount(aParent) : aIndex;
 
-  nsresult rv = AdjustIndices(aParent, index, -1, 1);
+  nsresult rv = AdjustIndices(aParent, index, PR_INT32_MAX, 1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("INSERT INTO moz_bookmarks_containers (name) VALUES (\"") +
@@ -439,7 +544,7 @@ nsNavBookmarks::RemoveFolder(PRInt64 aFolder)
   rv = dbConn->ExecuteSimpleSQL(buffer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AdjustIndices(parent, index + 1, -1, -1);
+  rv = AdjustIndices(parent, index + 1, PR_INT32_MAX, -1);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = transaction.Commit();
@@ -496,9 +601,9 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
       rv = AdjustIndices(parent, index + 1, aIndex, -1);
     }
   } else {
-    rv = AdjustIndices(parent, index + 1, -1, -1);
+    rv = AdjustIndices(parent, index + 1, PR_INT32_MAX, -1);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = AdjustIndices(aNewParent, aIndex, -1, 1);
+    rv = AdjustIndices(aNewParent, aIndex, PR_INT32_MAX, 1);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -516,7 +621,7 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnFolderMoved(aFolder, aNewParent, aIndex);
+    mObservers[i]->OnFolderMoved(aFolder, parent, index, aNewParent, aIndex);
   }
 
   return NS_OK;
@@ -712,6 +817,12 @@ nsNavBookmarks::QueryFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
     rv = statement->BindInt64Parameter(0, aFolder);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    rv = statement->BindInt64Parameter(1, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = statement->BindInt64Parameter(2, PR_INT32_MAX);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     PRBool results;
     while (NS_SUCCEEDED(statement->ExecuteStep(&results)) && results) {
       PRBool isFolder = !statement->IsNull(kGetChildrenIndex_FolderChild);
@@ -823,8 +934,10 @@ nsNavBookmarks::GetBookmarkCategories(nsIURI *aURI, PRUint32 *aCount,
 NS_IMETHODIMP
 nsNavBookmarks::BeginUpdateBatch()
 {
-  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnBeginUpdateBatch();
+  if (mBatchLevel++ == 0) {
+    for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
+      mObservers[i]->OnBeginUpdateBatch();
+    }
   }
   return NS_OK;
 }
@@ -832,8 +945,10 @@ nsNavBookmarks::BeginUpdateBatch()
 NS_IMETHODIMP
 nsNavBookmarks::EndUpdateBatch()
 {
-  for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
-    mObservers[i]->OnEndUpdateBatch();
+  if (--mBatchLevel == 0) {
+    for (PRInt32 i = 0; i < mObservers.Count(); ++i) {
+      mObservers[i]->OnEndUpdateBatch();
+    }
   }
   return NS_OK;
 }
