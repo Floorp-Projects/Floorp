@@ -102,6 +102,12 @@ var observer = {
     this._itemRemovedFolder = folder;
     this._itemRemovedIndex = index;
   },
+  onItemMoved: function(uri, folder, oldIndex, newIndex) {
+    this._itemMoved = uri;
+    this._itemMovedFolder = folder;
+    this._itemMovedOldIndex = oldIndex;
+    this._itemMovedNewIndex = newIndex;
+  },
   onItemChanged: function(uri, property) {
     this._itemChanged = uri;
     this._itemChangedProperty = property;
@@ -116,10 +122,11 @@ var observer = {
     this._folderRemovedParent = parent;
     this._folderRemovedIndex = index;
   },
-  onFolderMoved: function(folder, parent, index) {
+  onFolderMoved: function(folder, parent, oldIndex, newIndex) {
     this._folderMoved = folder;
     this._folderMovedParent = parent;
-    this._folderMovedIndex = index;
+    this._folderMovedOldIndex = oldIndex;
+    this._folderMovedNewIndex = newIndex;
   },
   QueryInterface: function(iid) {
     if (iid.equals(Components.interfaces.nsINavBookmarkObserver) ||
@@ -180,6 +187,20 @@ if (observer._itemRemoved.spec != "http://developer.mozilla.org/" ||
     observer._itemRemovedIndex != 0) {
   dump("removeItem notification FAILED\n");
 }
+if (observer._beginUpdateBatch != true) {
+  dump("beginUpdateBatch notification FAILED\n");
+}
+observer._beginUpdateBatch = false;
+if (observer._itemMoved.spec != "http://msdn.microsoft.com/" ||
+    observer._itemMovedFolder != workFolder ||
+    observer._itemMovedOldIndex != 1 ||
+    observer._itemMovedNewIndex != 0) {
+  dump("itemMoved notification FAILED\n");
+}
+if (observer._endUpdateBatch != true) {
+  dump("endUpdateBatch notification FAILED\n");
+}
+observer._endUpdateBatch = false;
 bmsvc.insertItem(workFolder, uri("http://developer.mozilla.org/"), -1);
 if (observer._itemAdded.spec != "http://developer.mozilla.org/" ||
     observer._itemAddedFolder != workFolder || observer._itemAddedIndex != 1) {
