@@ -1,8 +1,10 @@
 /* 
  * Translators function. 
- * In XUL and beyong, these mappers shall happen more and more 
+ * =====
+ * With XUL and beyond, these mappers shall happen more and more 
  * as we get more hybrid data-types. It's just like Webservice proxies for XUL elemetns. 
- *. So far we have this static hardcoded her
+ *. So far we have this static hardcoded here. These has to do with the onsyncfrompreference
+ * and onsynctopreference attributes in the XUL pref panels. 
  * ===================================================================================
  */ 
 
@@ -39,7 +41,9 @@ function writeProxyPref()
 }
 
 
-/* Live Synchronizers, 
+
+/* Live Synchronizers
+ * =====
  * In this section put all the functions you think it should be 
  * synchronized as the end-user hits the button 
  * ===================================================================================
