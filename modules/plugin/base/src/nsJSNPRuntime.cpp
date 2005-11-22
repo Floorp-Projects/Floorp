@@ -48,6 +48,7 @@
 #include "nsIXPConnect.h"
 #include "nsIDOMElement.h"
 #include "prmem.h"
+#include "nsIContent.h"
 
 // Hash of JSObject wrappers that wraps JSObjects as NPObjects. There
 // will be one wrapper per JSObject per plugin instance, i.e. if two
@@ -1409,9 +1410,40 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     return;
   }
 
+  // OK.  Now we have to get our hands on the right scope object, since
+  // GetWrappedNativeOfNativeObject doesn't call PreCreate and hence won't get
+  // the right scope if we pass in something bogus.  The right scope lives on
+  // the script global of the element's document.
+  // XXXbz we MUST have a better way of doing this... perhaps
+  // GetWrappedNativeOfNativeObject _should_ call preCreate?
+  nsCOMPtr<nsIContent> content(do_QueryInterface(element));
+  if (!content) {
+    return;
+  }
+
+  nsIDocument* doc = content->GetOwnerDoc();
+  if (!doc) {
+    return;
+  }
+
+  nsIScriptGlobalObject* sgo = doc->GetScriptGlobalObject();
+  if (!sgo) {
+    return;
+  }
+
+  JSObject* globalObj = sgo->GetGlobalJSObject();
+
+#ifdef DEBUG
+  nsIScriptContext* scx = sgo->GetContext();
+  if (scx) {
+    NS_ASSERTION((JSContext *)scx->GetNativeContext() == cx,
+                 "Unexpected JS context");
+  }
+#endif
+
   nsCOMPtr<nsISupports> supp(do_QueryInterface(element));
   nsCOMPtr<nsIXPConnectWrappedNative> holder;
-  xpc->GetWrappedNativeOfNativeObject(cx, ::JS_GetGlobalObject(cx), supp,
+  xpc->GetWrappedNativeOfNativeObject(cx, globalObj, supp,
                                       NS_GET_IID(nsISupports),
                                       getter_AddRefs(holder));
   if (!holder) {
