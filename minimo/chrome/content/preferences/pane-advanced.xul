@@ -50,27 +50,98 @@
   <!-- ADVANCED PANE --> 
 
     <hbox class="panel-container" flex="1" id="advanced-pane"
-          accessfocus="skey"
+          accessfocus="useDiskCache"
           accessnextrule="privacy-pane"
           accessprevrule="general-pane"
           collapsed="true"  >
-          
+     
         <groupbox flex="1" class="box-floatoptions scrolling" >
             <caption label="&advanced.label;" /> 
-            <hbox flex="1" >
-                <vbox flex="1" style="padding:4px ! important">
-                    <checkbox tabindex="30" id="skey"
-                              label="&useSWKeyboard.label;"
-                              preference="skey.enabled"
-                              onclick="syncPref(this)" />
-                              
-                    <checkbox tabindex="31"
-                              id="dumpJS"
-                              label="&dumpJSConsole.label;"
-                              preference="config.wince.dumpJSConsole" accessrule="advanced-pane"
-                              onclick="syncPref(this)" />
+
+               <hbox flex="1" >
+                    <vbox flex="1" style="padding:4px ! important">
+
+  
+                        <groupbox class='box-prefgroupitem'>
+
+                            <caption label="&cacheSettings.label;"/>
+
+                                <vbox class="box-prefpadding">
+
+
+	                    <checkbox tabindex="30" id="useDiskCache"
+	                              label="&useDiskCache.label;"
+	                              preference="browser.cache.disk.enable" 
+	                              onclick="syncPref(this)" />
+	                              
+	                    <checkbox tabindex="31"
+	                              id="storeCacheStorageCard"
+	                              label="&storeCacheStorageCard.label;"
+	                              preference="browser.cache.disk.enable" 
+	                              onclick="syncPref(this)" />
+
+                       <grid class="box-prefpadding" >
+                              <columns>
+                                <column flex="1"/>
+                              </columns>
+                              <rows>
+                               <row>
+
+                                    <label value="&cacheSize.label;" />
+                                    <textbox id="cacheSizeField" size="5" tabindex="32"
+                                             onfocus="" onblur=""
+                                             style="margin:3px ! important;" 
+                                             preference="browser.cache.disk.capacity" preftype="int" 
+                                             onchange="syncPref(this)" 
+                                             />
+
+                               </row>
+
+                              </rows>
+                            </grid>
+
+
+					</vbox>
+
+                        </groupbox>
+
+                      <groupbox class='box-prefgroupitem' id='home-box'>
+
+                                <vbox class="box-prefpadding">
+
+	                    <checkbox tabindex="33" id="skey"
+	                              label="&useSWKeyboard.label;"
+	                              preference="skey.enabled"
+	                              onclick="syncPref(this)" />
+	                              
+	                    <checkbox tabindex="34"
+	                              id="dumpJS"
+	                              label="&dumpJSConsole.label;"
+	                              preference="config.wince.dumpJSConsole"
+	                              onclick="syncPref(this)" />
+
+					</vbox>
+
+                        </groupbox>
+
+                        <groupbox class='box-prefgroupitem'>
+
+                                <vbox class="box-prefpadding">
+
+	                		    <checkbox tabindex="35" id="enablePreFetching"
+	                              label="&enablePreFetching.label;"
+	                              preference="network.prefetch-next" accessrule="advanced-pane"
+	                              onclick="syncPref(this)" />
+	                              
+					</vbox>
+
+                        </groupbox>
+
                 </vbox>
+
             </hbox>
+
+
         </groupbox> 
     </hbox>	
 
