@@ -76,7 +76,7 @@ interface nsIMsgImapFolderProps : nsISupports {
 };
 
 
-[scriptable, uuid(ba8ddecd-4814-4757-9a15-028157cdabb3)]
+[scriptable, uuid(19eeaeeb-1cb1-445f-bf19-80537189ece4)]
 interface nsIMsgImapMailFolder : nsISupports {
   void removeSubFolder(in nsIMsgFolder folder);
   void createClientSubfolderInfo(in string folderName, in wchar hierarchyDelimiter, in long flags, in boolean suppressNotification);
@@ -112,6 +112,8 @@ interface nsIMsgImapMailFolder : nsISupports {
                       in string aFlagsToSubtract,
                       [array, size_is (aNumKeys)] in nsMsgKey aKeysToStore,
                       in unsigned long aNumKeys);
+
+  void notifyIfNewMail();
 
   attribute boolean verifiedAsOnlineFolder;
   attribute boolean explicitlyVerify;

@@ -45,14 +45,18 @@
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgHdr.h"
+#include "nsIEventQueueService.h"
+#include "nsIMsgImapMailFolder.h"
 
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-NS_IMPL_ISUPPORTS1(nsImapMoveCoalescer, nsISupports)
+NS_IMPL_ISUPPORTS1(nsImapMoveCoalescer, nsIUrlListener)
 
 nsImapMoveCoalescer::nsImapMoveCoalescer(nsIMsgFolder *sourceFolder, nsIMsgWindow *msgWindow)
 {
   m_sourceFolder = sourceFolder; 
   m_msgWindow = msgWindow;
+  m_hasPendingMoves = PR_FALSE;
 }
 
 nsImapMoveCoalescer::~nsImapMoveCoalescer()
@@ -71,6 +75,7 @@ nsImapMoveCoalescer::~nsImapMoveCoalescer()
 
 nsresult nsImapMoveCoalescer::AddMove(nsIMsgFolder *folder, nsMsgKey key)
 {
+  m_hasPendingMoves = PR_TRUE;
   if (!m_destFolders)
     NS_NewISupportsArray(getter_AddRefs(m_destFolders));
   if (m_destFolders)
@@ -79,7 +84,7 @@ nsresult nsImapMoveCoalescer::AddMove(nsIMsgFolder *folder, nsMsgKey key)
     if (supports)
     {
       PRInt32 folderIndex = m_destFolders->IndexOf(supports);
-      nsMsgKeyArray *keysToAdd=nsnull;
+      nsMsgKeyArray *keysToAdd = nsnull;
       if (folderIndex >= 0)
       {
         keysToAdd = (nsMsgKeyArray *) m_sourceKeyArrays.ElementAt(folderIndex);
@@ -105,15 +110,16 @@ nsresult nsImapMoveCoalescer::AddMove(nsIMsgFolder *folder, nsMsgKey key)
   
 }
 
-nsresult nsImapMoveCoalescer::PlaybackMoves()
+nsresult nsImapMoveCoalescer::PlaybackMoves(PRBool doNewMailNotification /* = PR_FALSE */)
 {
   PRUint32 numFolders;
   nsresult rv = NS_OK;
-  
   if (!m_destFolders)
     return NS_OK;	// nothing to do.
-
+  m_hasPendingMoves = PR_FALSE;
+  m_doNewMailNotification = doNewMailNotification;
   m_destFolders->Count(&numFolders);
+  m_outstandingMoves = 0;
   for (PRUint32 i = 0; i < numFolders; i++)
   {
     // XXX TODO
@@ -173,12 +179,46 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
         keysToAdd->RemoveAll();
         nsCOMPtr<nsIMsgCopyService> copySvc = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID);
         if (copySvc)
+        {
+          nsCOMPtr <nsIMsgCopyServiceListener> listener;
+          if (m_doNewMailNotification)
+          {
+            nsMoveCoalescerCopyListener *copyListener = new nsMoveCoalescerCopyListener(this, destFolder);
+            if (copyListener)
+            {
+              listener = do_QueryInterface(copyListener);
+              NS_ADDREF(copyListener); // it will own its own reference
+            }
+          }
           rv = copySvc->CopyMessages(m_sourceFolder, messages, destFolder, PR_TRUE,
-          /*nsIMsgCopyServiceListener* listener*/ nsnull, m_msgWindow, PR_FALSE /*allowUndo*/);
+                                      listener, m_msgWindow, PR_FALSE /*allowUndo*/);
+          if (NS_SUCCEEDED(rv))
+            m_outstandingMoves++;
+        }
       }
     }
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsImapMoveCoalescer::OnStartRunningUrl(nsIURI *aUrl)
+{
+  NS_PRECONDITION(aUrl, "just a sanity check");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapMoveCoalescer::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
+{
+  m_outstandingMoves--;
+  if (m_doNewMailNotification && !m_outstandingMoves)
+  {
+    nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_sourceFolder);
+    if (imapFolder)
+      imapFolder->NotifyIfNewMail();
+  }
+  return NS_OK;
 }
 
 nsMsgKeyArray *nsImapMoveCoalescer::GetKeyBucket(PRInt32 keyArrayIndex)
@@ -197,3 +237,68 @@ nsMsgKeyArray *nsImapMoveCoalescer::GetKeyBucket(PRInt32 keyArrayIndex)
   }
   return (nsMsgKeyArray *) m_keyBuckets.SafeElementAt(keyArrayIndex);
 }
+
+NS_IMPL_ISUPPORTS1(nsMoveCoalescerCopyListener, nsIMsgCopyServiceListener)
+
+nsMoveCoalescerCopyListener::nsMoveCoalescerCopyListener(nsImapMoveCoalescer * coalescer, 
+                                                         nsIMsgFolder *destFolder)
+{
+  m_destFolder = destFolder;
+  m_coalescer = coalescer;
+}
+
+nsMoveCoalescerCopyListener::~nsMoveCoalescerCopyListener()
+{
+}
+
+NS_IMETHODIMP nsMoveCoalescerCopyListener::OnStartCopy()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void OnProgress (in PRUint32 aProgress, in PRUint32 aProgressMax); */
+NS_IMETHODIMP nsMoveCoalescerCopyListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void SetMessageKey (in PRUint32 aKey); */
+NS_IMETHODIMP nsMoveCoalescerCopyListener::SetMessageKey(PRUint32 aKey)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* [noscript] void GetMessageId (in nsCString aMessageId); */
+NS_IMETHODIMP nsMoveCoalescerCopyListener::GetMessageId(nsCString * aMessageId)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void OnStopCopy (in nsresult aStatus); */
+NS_IMETHODIMP nsMoveCoalescerCopyListener::OnStopCopy(nsresult aStatus)
+{
+  nsresult rv = NS_OK;
+  if (NS_SUCCEEDED(aStatus))
+  {
+    // if the dest folder is imap, update it.
+    nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_destFolder);
+    if (imapFolder)
+    {
+      nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv); 
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr <nsIURI> url;
+      nsCOMPtr<nsIEventQueueService> pEventQService = 
+        do_GetService(kEventQueueServiceCID, &rv); 
+      nsCOMPtr <nsIEventQueue> eventQueue;
+      if (NS_SUCCEEDED(rv) && pEventQService)
+        pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+        getter_AddRefs(eventQueue));
+      nsCOMPtr <nsIUrlListener> listener = do_QueryInterface(m_coalescer);
+      rv = imapService->SelectFolder(eventQueue, m_destFolder, listener, nsnull, getter_AddRefs(url));
+    }
+  }
+  return rv;
+}
+
+
+

@@ -49,27 +49,51 @@
 // This utility class will be used by both the filter code and the offline playback code,
 // to avoid multiple moves to the same folder.
 
-class NS_MSG_BASE nsImapMoveCoalescer : public nsISupports
+class NS_MSG_BASE nsImapMoveCoalescer : public nsIUrlListener
 {
 public:
+  friend class nsMoveCoalescerCopyListener;
+
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIURLLISTENER
+
   nsImapMoveCoalescer(nsIMsgFolder *sourceFolder, nsIMsgWindow *msgWindow);
   virtual ~nsImapMoveCoalescer();
 
   nsresult AddMove(nsIMsgFolder *folder, nsMsgKey key);
-  nsresult PlaybackMoves();
+  nsresult PlaybackMoves(PRBool doNewMailNotification = PR_FALSE);
   // this lets the caller store keys in an arbitrary number of buckets. If the bucket
   // for the passed in index doesn't exist, it will get created.
   nsMsgKeyArray *GetKeyBucket(PRInt32 keyArrayIndex);
   nsIMsgWindow *GetMsgWindow() {return m_msgWindow;}
+  PRBool HasPendingMoves() {return m_hasPendingMoves;}
 protected:
   // m_sourceKeyArrays and m_destFolders are parallel arrays.
   nsVoidArray m_sourceKeyArrays;
   nsCOMPtr <nsISupportsArray> m_destFolders;
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
   nsCOMPtr <nsIMsgFolder> m_sourceFolder;
+  PRBool m_doNewMailNotification;
+  PRBool m_hasPendingMoves;
   nsVoidArray m_keyBuckets;
+  PRInt32 m_outstandingMoves;
 };
+
+class nsMoveCoalescerCopyListener : public nsIMsgCopyServiceListener
+{
+public:
+    nsMoveCoalescerCopyListener(nsImapMoveCoalescer * coalescer, nsIMsgFolder *destFolder);
+    ~nsMoveCoalescerCopyListener();
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMSGCOPYSERVICELISTENER
+
+    nsCOMPtr <nsIMsgFolder> m_destFolder;
+
+      nsImapMoveCoalescer *m_coalescer;
+    // when we get OnStopCopy, update the folder. When we've finished all the copies,
+    // send the biff notification.
+};
+
 
 #endif // _nsImapMoveCoalescer_H
 

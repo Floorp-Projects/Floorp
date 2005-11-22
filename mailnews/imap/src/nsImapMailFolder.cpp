@@ -730,9 +730,6 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     }
   }
   
-  nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv); 
-  if (NS_FAILED(rv)) return rv;
-  
   selectFolder = PR_TRUE;
   
   PRBool isServer;
@@ -796,14 +793,11 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
   // don't run select if we're already running a url/select...
   if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
   {
-    nsCOMPtr <nsIEventQueue> eventQ;
-    nsCOMPtr<nsIEventQueueService> pEventQService = 
-      do_GetService(kEventQueueServiceCID, &rv); 
-    if (NS_SUCCEEDED(rv) && pEventQService)
-      pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-      getter_AddRefs(eventQ));
+    nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv); 
+    if (NS_FAILED(rv)) return rv;
+  
     nsCOMPtr <nsIURI> url;
-    rv = imapService->SelectFolder(eventQ, this, m_urlListener, msgWindow, getter_AddRefs(url));
+    rv = imapService->SelectFolder(m_eventQueue, this, m_urlListener, msgWindow, getter_AddRefs(url));
     if (NS_SUCCEEDED(rv))
       m_urlRunning = PR_TRUE;
     if (url)
@@ -4312,21 +4306,11 @@ nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopy
         rv = imapUrl->CreateListOfMessageIdsString(getter_Copies(messageIds));
 
         if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIEventQueue> queue;  
-        // get the Event Queue for this thread...
-        nsCOMPtr<nsIEventQueueService> pEventQService = 
-                 do_GetService(kEventQueueServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                                 getter_AddRefs(queue));
-        if (NS_FAILED(rv)) return rv;
-        
         nsCOMPtr<nsIImapService> imapService = 
                  do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv,rv);
    
-        rv = imapService->AddMessageFlags(queue, this, nsnull, nsnull,
+        rv = imapService->AddMessageFlags(m_eventQueue, this, nsnull, nsnull,
                                           messageIds,
                                           kImapMsgDeletedFlag,
                                           PR_TRUE);
@@ -5299,6 +5283,7 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
   if (m_performingBiff)
     GetNumNewMessages(PR_FALSE, &numNewBiffMsgs);
 
+  PRBool pendingMoves = m_moveCoalescer && m_moveCoalescer->HasPendingMoves();
   PlaybackCoalescedOperations();
   if (aProtocol)
   {
@@ -5353,7 +5338,8 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 
   PRBool filtersRun;
   CallFilterPlugins(msgWindow, &filtersRun);
-  if (!filtersRun && m_performingBiff && mDatabase && numNewBiffMsgs > 0)
+  if (!filtersRun && m_performingBiff && mDatabase && numNewBiffMsgs > 0 && 
+      (!pendingMoves || !ShowPreviewText()))
   {
     // If we are performing biff for this folder, tell the
     // stand-alone biff about the new high water mark
@@ -6958,13 +6944,16 @@ nsImapFolderCopyState::StartNextCopy()
   nsCOMPtr <nsIImapService> imapService = do_GetService (NS_IMAPSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr <nsIEventQueue> eventQueue;
-    nsCOMPtr<nsIEventQueueService> pEventQService = 
-      do_GetService(kEventQueueServiceCID, &rv); 
-    NS_ENSURE_SUCCESS(rv, rv);
-    pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQueue));
     nsXPIDLString folderName;
     m_srcFolder->GetName(getter_Copies(folderName));
+
+    nsCOMPtr<nsIEventQueueService> pEventQService = 
+      do_GetService(kEventQueueServiceCID, &rv); 
+    nsCOMPtr <nsIEventQueue> eventQueue;
+    if (NS_SUCCEEDED(rv) && pEventQService)
+      pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+      getter_AddRefs(eventQueue));
+
     rv = imapService->EnsureFolderExists(eventQueue, m_destParent,
                             folderName.get(), 
                             this, nsnull);
@@ -8135,6 +8124,20 @@ nsImapMailFolder::StoreCustomKeywords(nsIMsgWindow *aMsgWindow, const char *aFla
   return imapService->StoreCustomKeywords(m_eventQueue, this, aMsgWindow, aFlagsToAdd, aFlagsToSubtract, msgIds.get(), _retval);
 }
 
+NS_IMETHODIMP nsImapMailFolder::NotifyIfNewMail()
+{
+  return PerformBiffNotifications();
+}
+
+PRBool nsImapMailFolder::ShowPreviewText()
+{
+  PRBool showPreviewText = PR_FALSE;
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch)
+    prefBranch->GetBoolPref("mail.showPreviewText", &showPreviewText);
+  return showPreviewText;
+}
+
 nsresult
 nsImapMailFolder::PlaybackCoalescedOperations()
 {
@@ -8149,7 +8152,7 @@ nsImapMailFolder::PlaybackCoalescedOperations()
       StoreCustomKeywords(m_moveCoalescer->GetMsgWindow(), "NonJunk", "", nonJunkKeysToClassify->GetArray(), nonJunkKeysToClassify->GetSize(), nsnull);
     junkKeysToClassify->RemoveAll();
     nonJunkKeysToClassify->RemoveAll();
-    return m_moveCoalescer->PlaybackMoves();
+    return m_moveCoalescer->PlaybackMoves(ShowPreviewText());
   }
   return NS_OK; // must not be any coalesced operations
 }
@@ -8278,9 +8281,10 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
         m_junkMessagesToMarkAsRead->SizeTo(0);
       }
     }
+    PRBool pendingMoves = m_moveCoalescer && m_moveCoalescer->HasPendingMoves();
     PlaybackCoalescedOperations();
     // If we are performing biff for this folder, tell the server object
-    if (m_performingBiff)
+    if ((!pendingMoves || !ShowPreviewText()) && m_performingBiff)
     {
       // we don't need to adjust the num new messages in this folder because
       // the playback moves code already did that.

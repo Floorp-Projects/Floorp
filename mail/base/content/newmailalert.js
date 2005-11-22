@@ -71,7 +71,7 @@ function prefillAlertInfo()
   for (var folderIndex = 0; folderIndex < numFolders; folderIndex++)
   {
     var folder = allFolders.GetElementAt(folderIndex).QueryInterface(Components.interfaces.nsIMsgFolder);
-    if (folder.getNumNewMessages(false /* no deep search */))
+    if (folder.hasNewMessages)
       folderSummaryInfoEl.parseFolder(folder);
   }
 }
