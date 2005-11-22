@@ -28,6 +28,7 @@ function writeEnableImagesPref()
 function readProxyPref()
 {
   var pref = document.getElementById("network.proxy.type");
+
   return (pref.value == 1);
 }
 
@@ -42,12 +43,13 @@ function writeProxyPref()
 
 function readCacheLocationPref()
 { 
+
+
   var pref = document.getElementById("browser.cache.disk.parent_directory");
   if (pref.value != null)
       return true;
   else
       return false;
-
 }
 
 function writeCacheLocationPref()
@@ -335,43 +337,78 @@ function syncPrefSaveDOM() {
 	} catch (e) { alert(e) }
 
 }
-
 function syncPrefLoadDOM(elementList) {
+
 	for(var strCurKey in elementList) {
 
 		var elementAndPref=document.getElementById(elementList[strCurKey]);
 		var prefName=elementAndPref.getAttribute("preference");
-		var prefType=elementAndPref.getAttribute("preftype");
+		var prefUIType=elementAndPref.getAttribute("prefuitype");
+		var transValidator=elementAndPref.getAttribute("onsyncfrompreference");
 
 		var prefDOMValue=null;
-		if (gPref.getPrefType(prefName) == gPref.PREF_STRING){
+
+		if (gPref.getPrefType(prefName) == gPref.PREF_STRING) {
+
 		    prefDOMValue = gPref.getCharPref(prefName);
+		    document.getElementById(prefName).value=prefDOMValue;
+
+			if(transValidator) {
+				preGETValue=eval(transValidator);
+				if(prefUIType=="string" || prefUIType=="int") elementAndPref.value=preGETValue;
+				if(prefUIType=="bool") elementAndPref.checked=preGETValue;
+			} else {
+				elementAndPref.value=prefDOMValue;
+			}		
+		    
 		} 
+
+
 
 		if (gPref.getPrefType(prefName) == gPref.PREF_INT) {
 
 		    prefDOMValue = gPref.getIntPref(prefName);
+		    document.getElementById(prefName).value=prefDOMValue;
 
-			if(prefDOMValue==1) { 
-			   elementAndPref.checked=true;
+			if(transValidator) {
+				preGETValue=eval(transValidator);
+				if(prefUIType=="string" || prefUIType=="int") elementAndPref.value=preGETValue;
+				if(prefUIType=="bool") elementAndPref.checked=preGETValue;
 			} else {
-			   elementAndPref.checked=false;
-			} 
+				if(prefDOMValue==1) { 
+				   elementAndPref.checked=true;
+				} else {
+				   elementAndPref.checked=false;
+				} 
+				elementAndPref.value=prefDOMValue ;
+			}
  	 	}
+
+
 
 		if (gPref.getPrefType(prefName) == gPref.PREF_BOOL) {
 		    prefDOMValue = gPref.getBoolPref(prefName);
-			if(prefDOMValue==true) { 
-			   elementAndPref.checked=true;
+
+		    document.getElementById(prefName).value=prefDOMValue;
+
+			if(transValidator) {
+				preGETValue=eval(transValidator);
+				if(prefUIType=="string" || prefUIType=="int") elementAndPref.value=preGETValue;
+				if(prefUIType=="bool") elementAndPref.checked=preGETValue;
 			} else {
-			   elementAndPref.checked=false;
-			} 
+				if(prefDOMValue==true) { 
+				   elementAndPref.checked=true;
+				} else {
+				   elementAndPref.checked=false;
+				} 
+				elementAndPref.value=prefDOMValue;
+			}	
 		}
 
-		elementAndPref.value=prefDOMValue;
-
+		
 	}
 }
+
 
 
 function prefFocus(el) {
