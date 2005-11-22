@@ -102,11 +102,6 @@ var PlacesPage = {
     statusbar.hidden = this._oldStatusBarState;
   },
 
-  loadQuery: function PP_loadQuery(uri) {
-    var placeURI = uri.QueryInterface(Ci.mozIPlaceURI);
-    this._updateUI(placeURI.providerType);
-  },
-
   showAdvancedOptions: function PP_showAdvancedOptions() {
     alert("Show advanced query builder.");
   },
@@ -141,10 +136,9 @@ var PlacesPage = {
     if (folder.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
       view = this._bmsvc.getFolderChildren(folder.folderId, Ci.nsINavBookmarksService.ALL_CHILDREN);
     } else {
-      var optionsOut = {};
-      var queries = folder.getQueries(optionsOut, {});
+      var queries = folder.getQueries({ });
       var history = Cc["@mozilla.org/browser/nav-history;1"].getService(Ci.nsINavHistory);
-      view = history.executeQueries(queries, queries.length, optionsOut.value).QueryInterface(Ci.nsITreeView);
+      view = history.executeQueries(queries, queries.length, folder.queryOptions).QueryInterface(Ci.nsITreeView);
     }
     document.getElementById("placeContent").view = view;
   },
