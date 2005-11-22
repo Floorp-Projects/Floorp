@@ -47,9 +47,10 @@ class nsGridRowLayout;
 class nsGridRow;
 class nsGridLayout2;
 
-
-// {AF0C1603-06C3-11d4-BA07-001083023C1E}
-#define NS_IMONUMENT_IID { 0xaf0c1603, 0x6c3, 0x11d4, { 0xba, 0x7, 0x0, 0x10, 0x83, 0x2, 0x3c, 0x1e } }
+// adaee669-f8db-42d7-8817-a2299a341404
+#define NS_IGRIDPART_IID \
+{ 0xadaee669, 0xf8db, 0x42d7, \
+  { 0x88, 0x17, 0xa2, 0x29, 0x9a, 0x34, 0x14, 0x04 } }
 
 /**
  * An additional interface implemented by nsIBoxLayout implementations
@@ -59,7 +60,7 @@ class nsIGridPart : public nsISupports {
 
 public:
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMONUMENT_IID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IGRIDPART_IID)
 
   NS_IMETHOD CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup)=0;
   NS_IMETHOD CastToGridLayout(nsGridLayout2** aGrid)=0;
@@ -99,9 +100,23 @@ public:
   NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)=0;
   NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal)=0;
   NS_IMETHOD GetRowCount(PRInt32& aRowCount)=0;
+  
+  /**
+   * Return the level of the grid hierarchy this grid part represents.
+   */
+  enum Type { eGrid, eRowGroup, eRowLeaf };
+  NS_IMETHOD_(Type) GetType()=0;
+
+  /**
+   * Return whether this grid part is an appropriate parent for the argument.
+   */
+  PRBool CanContain(nsIGridPart* aPossibleChild) {
+    return GetType() + 1 == aPossibleChild->GetType();
+  }
+
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIGridPart, NS_IMONUMENT_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(nsIGridPart, NS_IGRIDPART_IID)
 
 #endif
 

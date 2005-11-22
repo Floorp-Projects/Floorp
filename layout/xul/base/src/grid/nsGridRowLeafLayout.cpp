@@ -418,3 +418,8 @@ nsGridRowLeafLayout::GetRowCount(PRInt32& aRowCount)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsIGridPart::Type)
+nsGridRowLeafLayout::GetType()
+{
+  return eRowLeaf;
+}

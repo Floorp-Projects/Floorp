@@ -78,6 +78,7 @@ public:
   NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount);
   NS_IMETHOD GetTotalMargin(nsIBox* aBox, nsMargin& aMargin, PRBool aIsHorizontal);
   NS_IMETHOD GetRowCount(PRInt32& aRowCount);
+  NS_IMETHOD_(Type) GetType();
   NS_IMETHOD ChildrenInserted(nsIBox* aBox, nsBoxLayoutState& aState,
                               nsIBox* aPrevBox, nsIBox* aChildList);
   NS_IMETHOD ChildrenAppended(nsIBox* aBox, nsBoxLayoutState& aState,

@@ -275,6 +275,11 @@ nsGridRowGroupLayout::GetRowCount(PRInt32& aRowCount)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsIGridPart::Type)
+nsGridRowGroupLayout::GetType()
+{
+  return eRowGroup;
+}
 
 /**
  * Fill out the given row structure recursively

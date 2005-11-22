@@ -68,6 +68,7 @@ public:
   NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState);
   NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount);
   NS_IMETHOD GetRowCount(PRInt32& aRowCount);
+  NS_IMETHOD_(Type) GetType();
 
 protected:
 
