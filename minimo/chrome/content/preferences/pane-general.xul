@@ -78,8 +78,8 @@
                                               tabindex="11" 
                                               onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
                                               label="&imagesCheckbox.label;"
-                                              preference="permissions.default.image" prefuitype="bool" prefvalue=""
-                                              onsyncfrompreference="readEnableImagesPref();"
+                                              preference="permissions.default.image" prefvalue=""
+                                              onsyncfrompreference="readEnableImagesPref();"  prefuitype="bool"
                                               onsynctopreference="writeEnableImagesPref();" 
                                               onclick="syncPref(this)" 
                                               />
@@ -88,7 +88,7 @@
                                               onfocus="prefFocus('ssrimage-box')" onblur="prefBlur('ssrimage-box')"
                                               tabindex="12" 
                                               label="&useSSRCheckbox.label;"
-                                              preference="ssr.enabled" preftype="bool"
+                                              preference="ssr.enabled" 
                                               onclick="syncPref(this)" 
                                               />
     
