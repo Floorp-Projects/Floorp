@@ -259,7 +259,7 @@
 <!ENTITY calendar.tools.modify.tooltip         "Modifier l'événement" >
 
 <!ENTITY calendar.newtask.button.tooltip          "Créer une nouvelle tâche" >
-<!ENTITY calendar.newevent.button.tooltip         "Créer un nouvel événement Calendar" >
+<!ENTITY calendar.newevent.button.tooltip         "Créer un nouvel événement" >
 <!ENTITY calendar.delete.button.tooltip           "Supprimer l'événement sélectionné" >
 <!ENTITY calendar.edit.button.tooltip             "Modifier l'événement sélectionné" >
 
@@ -306,8 +306,6 @@
 <!ENTITY calendar.weekview.button.tooltip         "Afficher une semaine" >
 <!ENTITY calendar.monthview.button.tooltip        "Afficher un mois" >
 <!ENTITY calendar.multiweekview.button.tooltip    "Afficher plusieurs semaines" >
-<!ENTITY calendar.newevent.button.tooltip         "Créer un nouvel événement" >
-<!ENTITY calendar.newtask.button.tooltip          "Créer une nouvelle tâche" >
 
 <!ENTITY calendar.nextday.button.tooltip        "Jour suivant" >
 <!ENTITY calendar.prevday.button.tooltip        "Jour précédent" >
@@ -406,13 +404,17 @@
 <!ENTITY calendar.context.newtodo.label               "Nouvelle tâche…">
 <!ENTITY calendar.context.newtodo.accesskey           "o">
 <!ENTITY calendar.context.modifyevent.label           "Modifier l'événement sélectionné…">
-<!ENTITY calendar.context.modifyevent.accesskey       "m">
+<!ENTITY calendar.context.modifyevent.accesskey       "M">
 <!ENTITY calendar.context.modifytask.label            "Modifier la tâche…">
-<!ENTITY calendar.context.modifytask.accesskey        "e">
+<!ENTITY calendar.context.modifytask.accesskey        "M">
+<!ENTITY calendar.context.modifyitem.label            "Modifier l'élément">
+<!ENTITY calendar.context.modifyitem.accesskey        "M">
 <!ENTITY calendar.context.deleteevent.label           "Supprimer l'événement sélectionné">
-<!ENTITY calendar.context.deleteevent.accesskey       "u">
+<!ENTITY calendar.context.deleteevent.accesskey       "S">
 <!ENTITY calendar.context.deletetask.label            "Supprimer la tâche">
-<!ENTITY calendar.context.deletetask.accesskey        "s">
+<!ENTITY calendar.context.deletetask.accesskey        "S">
+<!ENTITY calendar.context.deleteitem.label            "Supprimer l'élément">
+<!ENTITY calendar.context.deleteitem.accesskey        "S">
 <!ENTITY calendar.context.cutevent.label              "Couper">
 <!ENTITY calendar.context.cutevent.accesskey          "c">
 <!ENTITY calendar.context.copyevent.label             "Copier">
