@@ -123,6 +123,8 @@ nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
     NS_ADDREF((*aQueries)[i]);
   }
 
+  NS_ADDREF(*aOptions = options);
+
   return NS_OK;
 }
 

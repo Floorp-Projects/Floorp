@@ -36,172 +36,107 @@
  * ***** END LICENSE BLOCK ***** */
 
 var PlacesPage = { 
-  _controller: null,
+  controller: null,
   _tabbrowser: null,
   _topWindow: null,
   _topDocument: null,
   _bmsvc : null,
-};
 
-PlacesPage.init = function PP_init() {
-  var wm =
-      Cc["@mozilla.org/appshell/window-mediator;1"].
-      getService(Ci.nsIWindowMediator);
-  this._topWindow = wm.getMostRecentWindow("navigator:browser");
-  this._topDocument = this._topWindow.document;
-  this._tabbrowser = this._topWindow.getBrowser();
+  init: function PP_init() {
+    var wm =
+        Cc["@mozilla.org/appshell/window-mediator;1"].
+        getService(Ci.nsIWindowMediator);
+    this._topWindow = wm.getMostRecentWindow("navigator:browser");
+    this._topDocument = this._topWindow.document;
+    this._tabbrowser = this._topWindow.getBrowser();
 
-  // Hook into the tab strip to get notifications about when the Places Page is
-  // selected so that the browser UI can be modified. 
-  var self = this;
-  function onTabSelect(event) {
-    self.onTabSelect(event);
-  }
-  this._tabbrowser.mTabContainer.addEventListener("select", onTabSelect, false);
-
-  // Attach the Command Controller to the Places Views. 
-  var placesList = document.getElementById("placesList");
-  var placeContent = document.getElementById("placeContent");  
-  placeContent.controllers.appendController(PlacesController);
-  placesList.controllers.appendController(PlacesController);
-
-  // Attach the History model to the Content View
-  placeContent.queryString = "group=1";
-
-  // Attach the Places model to the Place View
-  const BS = Ci.nsINavBookmarksService;
-  this._bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(BS);
-  var children = this._bmsvc.getFolderChildren(this._bmsvc.placesRoot,
-                                               BS.FOLDER_CHILDREN);
-  document.getElementById("placesList").view = children.QueryInterface(Ci.nsITreeView);
-
-  this._showPlacesUI();
-};
-
-PlacesPage.uninit = function PP_uninit() {
-  this._hidePlacesUI();
-};
-
-PlacesPage.onTabSelect = function PP_onTabSelect(event) {
-  var tabURI = this._tabbrowser.selectedBrowser.currentURI.spec;
-  (tabURI == PLACES_URI) ? this._showPlacesUI() : this._hidePlacesUI();
-};
-
-PlacesPage._showPlacesUI = function PP__showPlacesUI() {
-  LOG("SHOW Places UI");
-  this._tabbrowser.setAttribute("places", "true");
-  var statusbar = this._topDocument.getElementById("status-bar");
-  this._oldStatusBarState = statusbar.hidden;
-  statusbar.hidden = true;
-};
-
-PlacesPage._hidePlacesUI = function PP__hidePlacesUI() {
-  LOG("HIDE Places UI");
-  this._tabbrowser.removeAttribute("places");
-  var statusbar = this._topDocument.getElementById("status-bar");
-  statusbar.hidden = this._oldStatusBarState;
-};
-
-PlacesPage.loadQuery = function PP_loadQuery(uri) {
-  var placeURI = uri.QueryInterface(Ci.mozIPlaceURI);
-  this._updateUI(placeURI.providerType);
-};
-
-PlacesPage.showAdvancedOptions = function PP_showAdvancedOptions() {
-  alert("Show advanced query builder.");
-};
-
-PlacesPage.setFilterCollection = function PP_setFilterCollection(collectionName) {
-  var searchFilter = document.getElementById("searchFilter");
-  searchFilter.setAttribute("collection", collectionName);
-};
-
-PlacesPage.applyFilter = function PP_applyFilter(filterString) {
-  var searchFilter = document.getElementById("searchFilter");
-  var collectionName = searchFilter.getAttribute("collection");
-  if (collectionName == "collection") {
-    alert("Search Only This Collection Not Yet Supported");
-    this.setFilterCollection("all");
-  }
-  else if (collectionName == "all") {
-    var placeContent = document.getElementById("placeContent");
-    placeContent.filterString = filterString;
-  }
-};
-
-PlacesPage._getLoadFunctionForEvent = 
-function PP__getLoadFunctionForEvent(event) {
-  if (event.button != 0)
-    return null;
-  
-  if (event.ctrlKey)
-    return this.openLinkInNewTab;
-  else if (event.shiftKey)
-    return this.openLinkInNewWindow;
-  return this.openLinkInCurrentWindow;
-};
-
-/**
- * Loads a URL in the appropriate tab or window, given the user's preference
- * specified by modifier keys tracked by a DOM event
- * @param   event
- *          The DOM Mouse event with modifier keys set that track the user's
- *          preferred destination window or tab.
- */
-PlacesPage.mouseLoadURIInBrowser = function PP_loadURIInBrowser(event) {
-  this._getLoadFunctionForEvent(event)();
-};
-
-function getSelectedURL() {
-  var placeContent = document.getElementById("placeContent");
-  var view = placeContent.view;
-  var selection = view.selection;
-  var rc = selection.getRangeCount();
-  if (rc != 1) 
-    return null;
-  var min = { }, max = { };
-  selection.getRangeAt(0, min, max);
-  
-  // Cannot load containers
-  if (view.isContainer(min.value) || view.isSeparator(min.value))
-    return null;
+    // Hook into the tab strip to get notifications about when the Places Page is
+    // selected so that the browser UI can be modified. 
+    var self = this;
+    function onTabSelect(event) {
+      self.onTabSelect(event);
+    }
+    this._tabbrowser.mTabContainer.addEventListener("select", onTabSelect, false);
     
-  var result = view.QueryInterface(Ci.nsINavHistoryResult);
-  return result.nodeForTreeIndex(min.value).url;
-}
+    // Attach the Command Controller to the Places Views. 
+    var placesList = document.getElementById("placesList");
+    var placeContent = document.getElementById("placeContent");  
+    placeContent.controllers.appendController(PlacesController);
+    placesList.controllers.appendController(PlacesController);
 
-/**
- * Loads the selected URL in a new tab. 
- */
-PlacesPage.openLinkInNewTab = function PP_openLinkInNewTab() {
-  var placeContent = document.getElementById("placeContent");
-  this._topWindow.openNewTabWith(getSelectedURL() /* placeContent.selectedURL*/, null, null);
-};
+    // Attach the History model to the Content View
+    placeContent.queryString = "group=1";
 
-/**
- * Loads the selected URL in a new window.
- */
-PlacesPage.openLinkInNewWindow = function PP_openLinkInNewWindow() {
-  var placeContent = document.getElementById("placeContent");
-  this._topWindow.openNewWindowWith(getSelectedURL() /*placeContent.selectedURL*/, null, null);
-};
+    // Attach the Places model to the Place View
+    const BS = Ci.nsINavBookmarksService;
+    this._bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(BS);
+    var children = this._bmsvc.getFolderChildren(this._bmsvc.placesRoot,
+                                                 BS.FOLDER_CHILDREN);
+    document.getElementById("placesList").view = children.QueryInterface(Ci.nsITreeView);
 
-/**
- * Loads the selected URL in the current window, replacing the Places page.
- */
-PlacesPage.openLinkInCurrentWindow = function PP_openLinkInCurrentWindow() {
-  var placeContent = document.getElementById("placeContent");
-  this._topWindow.loadURI(getSelectedURL()/*placeContent.selectedURL*/, null, null);
-};
+    this._showPlacesUI();
+  },
 
-/**
- * Called when a place folder is selected in the left pane.
- */
-PlacesPage.placeSelected = function PP_placeSelected(event) {
-  var resultView = event.target.view;
-  resultView.QueryInterface(Components.interfaces.nsINavHistoryResult);
+  uninit: function PP_uninit() {
+    this._hidePlacesUI();
+  },
 
-  var folder = resultView.nodeForTreeIndex(resultView.selection.currentIndex);
-  document.getElementById("placeContent").view = this._bmsvc.getFolderChildren(folder.folderId, Components.interfaces.nsINavBookmarksService.ALL_CHILDREN);
+  onTabSelect: function PP_onTabSelect(event) {
+    var tabURI = this._tabbrowser.selectedBrowser.currentURI.spec;
+    (tabURI == PLACES_URI) ? this._showPlacesUI() : this._hidePlacesUI();
+  },
+
+  _showPlacesUI: function PP__showPlacesUI() {
+    LOG("SHOW Places UI");
+    this._tabbrowser.setAttribute("places", "true");
+    var statusbar = this._topDocument.getElementById("status-bar");
+    this._oldStatusBarState = statusbar.hidden;
+    statusbar.hidden = true;
+  },
+
+  _hidePlacesUI: function PP__hidePlacesUI() {
+    LOG("HIDE Places UI");
+    this._tabbrowser.removeAttribute("places");
+    var statusbar = this._topDocument.getElementById("status-bar");
+    statusbar.hidden = this._oldStatusBarState;
+  },
+
+  loadQuery: function PP_loadQuery(uri) {
+    var placeURI = uri.QueryInterface(Ci.mozIPlaceURI);
+    this._updateUI(placeURI.providerType);
+  },
+
+  showAdvancedOptions: function PP_showAdvancedOptions() {
+    alert("Show advanced query builder.");
+  },
+
+  setFilterCollection: function PP_setFilterCollection(collectionName) {
+    var searchFilter = document.getElementById("searchFilter");
+    searchFilter.setAttribute("collection", collectionName);
+  },
+
+  applyFilter: function PP_applyFilter(filterString) {
+    var searchFilter = document.getElementById("searchFilter");
+    var collectionName = searchFilter.getAttribute("collection");
+    if (collectionName == "collection") {
+      alert("Search Only This Collection Not Yet Supported");
+      this.setFilterCollection("all");
+    }
+    else if (collectionName == "all") {
+      var placeContent = document.getElementById("placeContent");
+      placeContent.filterString = filterString;
+    }
+  },
+
+  /**
+   * Called when a place folder is selected in the left pane.
+   */
+  placeSelected: function PP_placeSelected(event) {
+    var resultView = event.target.view;
+    resultView.QueryInterface(Components.interfaces.nsINavHistoryResult);
+
+    var folder = resultView.nodeForTreeIndex(resultView.selection.currentIndex);
+    document.getElementById("placeContent").view = this._bmsvc.getFolderChildren(folder.folderId, Components.interfaces.nsINavBookmarksService.ALL_CHILDREN);
+  },
 };
 

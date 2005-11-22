@@ -79,7 +79,7 @@
   
   <popupset id="placesPopupset">
     <popup id="placesContext" 
-           onpopupshowing="return PlacesPage.controller.buildContextMenu(this);">
+           onpopupshowing="return PlacesController.buildContextMenu(this);">
       <menuitem id="placesContext_open" command="placesCmd_open" default="true"/>
       <menuitem id="placesContext_open:newwindow" command="placesCmd_open:window"/>
       <menuitem id="placesContext_open:newtab" command="placesCmd_open:tab"/>
@@ -111,7 +111,7 @@
         </treecols>
         <treechildren id="placesListChildren" flex="1"/>
       </tree>
-      <vbox align="center" class="calendar" id="historyCalendar" onselectionchanged="dump('FIXME: do history query\n');"/>
+      <vbox align="center" class="calendar" id="historyCalendar" onselectionchanged="LOG('FIXME: do history query');"/>
       <hbox class="commands">
         <button id="newPlace" command="placesCmd_new:folder"/>
       </hbox>
@@ -142,7 +142,7 @@
       <deck id="content" flex="1">
         <vbox flex="1">
           <tree id="placeContent" class="placesTree" context="placesContext" flex="1"
-                ondblclick="PlacesPage.mouseLoadURIInBrowser(event);">
+                ondblclick="PlacesController.mouseLoadURI(event);">
             <treecols>
               <treecol label="&col.title.label;" id="title" flex="1" primary="true"/>
               <treecol label="&col.url.label;" id="url" flex="1"/>

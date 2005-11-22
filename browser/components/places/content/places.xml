@@ -26,27 +26,37 @@
         this._places = 
           Cc["@mozilla.org/browser/nav-history;1"].
           getService(Ci.nsINavHistory);
+        
+        // Let's all do the happy QI/IRQ dance. 
+        // Go from window->docshell->window.
+        window.QueryInterface(Ci.nsIInterfaceRequestor);
+        var shell = window.getInterface(Ci.nsIWebNavigation);
+        shell.QueryInterface(Ci.nsIDocShell);
+        var item = shell.QueryInterface(Ci.nsIDocShellTreeItem);
+        while (item.parent)
+          item = item.parent;
+        item.QueryInterface(Ci.nsIInterfaceRequestor);
+        this._browserWindow = item.getInterface(Ci.nsIDOMWindowInternal);
       ]]></constructor>
       <property name="filterString">
         <getter><![CDATA[
           this.view.QueryInterface(Ci.nsINavHistoryResult);
-          var queries = { }, queryCount = { }, options = { };
-          this.view.getSourceQuery(queries, queryCount, options);
-          
-          if (queries.value[i].hasSearchTerms)
-            return queries.value[i].searchTerms;
+          var queries = this.view.getSourceQueries({ });
+          if (queries[i].hasSearchTerms)
+            return queries[i].searchTerms;
           return null;
         ]]></getter>
         <setter><![CDATA[
           // preserve grouping
           this.view.QueryInterface(Ci.nsINavHistoryResult);
-          var queries = { }, queryCount = { }, options = { };
-          this.view.getSourceQuery(queries, queryCount, options);
+          var options = this.view.sourceQueryOptions;
+          if (!options)
+            options = this._places.getNewQueryOptions();
           
           var query = this._places.getNewQuery();
           query.searchTerms = val;
           
-          var result = this._places.executeQuery(query, options.value);
+          var result = this._places.executeQuery(query, options);
           result.QueryInterface(Ci.nsITreeView);
           this.view = result;
           
@@ -57,19 +67,16 @@
       <property name="queryString">
         <getter><![CDATA[
           this.view.QueryInterface(Ci.nsINavHistoryResult);
-          var queries = { }, queryCount = { }, options = { };
-          this.view.getSourceQuery(queries, queryCount, options);
+          var queries = this.view.getSourceQueries({ });
+          var options = this.view.sourceQueryOptions;
 
           const NH = Ci.nsINavHistory;
-          return this._places.queriesToQueryString(queries.value, 
-                                                   queryCount.value,
-                                                   options.value);
+          return this._places.queriesToQueryString(queries, queries.length,
+                                                   options);
         ]]></getter>
         <setter><![CDATA[
           const NH = Ci.nsINavHistory;
           const NHQO = Ci.nsINavHistoryQueryOptions;
-          var places = 
-              Cc["@mozilla.org/browser/nav-history;1"].getService(NH);
           var queries = { }, queryCount = { }, options = { };
           this._places.queryStringToQueries(val, queries, queryCount, options);
           var result = this._places.executeQueries(queries.value, 
@@ -116,7 +123,7 @@
         ]]></body>
       </method>
       
-      <property name="selectedURL">
+      <property name="selectedNode">
         <getter><![CDATA[
           var view = this.view;
           var selection = view.selection;
@@ -131,9 +138,11 @@
             return null;
             
           var result = view.QueryInterface(Ci.nsINavHistoryResult);
-          return result.nodeForTreeIndex(min.value).url;
+          return result.nodeForTreeIndex(min.value);
         ]]></getter>
       </property>
+      
+      <property name="browserWindow" onget="return this._browserWindow"/>
     </implementation>
     <handlers>
       <handler event="select"><![CDATA[

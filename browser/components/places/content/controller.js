@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla History System
+ * The Original Code is the Places Command Controller.
  *
  * The Initial Developer of the Original Code is Google Inc.
  * Portions created by the Initial Developer are Copyright (C) 2005
@@ -35,8 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const PLACES_URI = "chrome://browser/content/places/places.xul";
-
 function LOG(str) {
   dump("*** " + str + "\n");
 }
@@ -54,30 +52,83 @@ const SELECTION_IS_REMOVABLE = 0x20;
 const SELECTION_IS_MOVABLE = 0x40;
 
 var PlacesController = {
-};
-
-PlacesController.isCommandEnabled = function PC_isCommandEnabled(command) {
-  LOG("isCommandEnabled: " + command);
+  _activeView: null,
+  get activeView() {
+    return this._activeView;
+  },
+  set activeView(activeView) {
+    this._activeView = activeView;
+    return this._activeView;
+  },
   
-};
+  _getLoadFunctionForEvent: function PP__getLoadFunctionForEvent(event) {
+    if (event.button != 0)
+      return null;
+    
+    if (event.ctrlKey)
+      return this.openLinkInNewTab;
+    else if (event.shiftKey)
+      return this.openLinkInNewWindow;
+    return this.openLinkInCurrentWindow;
+  },
 
-PlacesController.supportsCommand = function PC_supportsCommand(command) {
-  //LOG("supportsCommand: " + command);
-  return document.getElementById(command) != null;
-};
+  /**
+   * Loads a URL in the appropriate tab or window, given the user's preference
+   * specified by modifier keys tracked by a DOM event
+   * @param   event
+   *          The DOM Mouse event with modifier keys set that track the user's
+   *          preferred destination window or tab.
+   */
+  mouseLoadURI: function PC_mouseLoadURI(event) {
+    this._getLoadFunctionForEvent(event)();
+  },
 
-PlacesController.doCommand = function PC_doCommand(command) {
-  LOG("doCommand: " + command);
-  
-};
+  /**
+   * Loads the selected URL in a new tab. 
+   */
+  openLinkInNewTab: function PC_openLinkInNewTab() {
+    var view = this._activeView;
+    view.browserWindow.openNewTabWith(view.selectedNode.url, null, null);
+  },
 
-PlacesController.onEvent = function PC_onEvent(eventName) {
-  LOG("onEvent: " + eventName);
+  /**
+   * Loads the selected URL in a new window.
+   */
+  openLinkInNewWindow: function PP_openLinkInNewWindow() {
+    var view = this._activeView;
+    view.browserWindow.openNewWindowWith(view.selectedNode.url, null, null);
+  },
 
-};
+  /**
+   * Loads the selected URL in the current window, replacing the Places page.
+   */
+  openLinkInCurrentWindow: function PP_openLinkInCurrentWindow() {
+    var view = this._activeView;
+    view.browserWindow.loadURI(view.selectedNode.url, null, null);
+  },
 
-PlacesController.buildContextMenu = function PC_buildContextMenu(popup) {
-  return true;
+  isCommandEnabled: function PC_isCommandEnabled(command) {
+    LOG("isCommandEnabled: " + command);
+  },
+
+  supportsCommand: function PC_supportsCommand(command) {
+    //LOG("supportsCommand: " + command);
+    return document.getElementById(command) != null;
+  },
+
+  doCommand: function PC_doCommand(command) {
+    LOG("doCommand: " + command);
+    
+  },
+
+  onEvent: function PC_onEvent(eventName) {
+    LOG("onEvent: " + eventName);
+
+  },
+
+  buildContextMenu: function PC_buildContextMenu(popup) {
+    return true;
+  }
 };
 
 /*
