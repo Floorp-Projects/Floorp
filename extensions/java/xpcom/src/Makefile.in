@@ -71,6 +71,7 @@ JARFILE_SRC = $(patsubst %.jar,%-src.jar,$(JARFILE))
 
 JAVA_SRCS = \
 		$(srcdir)/../XPCOMJavaProxy.java \
+		$(srcdir)/../XPCOMJavaProxyBase.java \
 		$(srcdir)/GREImpl.java \
 		$(srcdir)/XPCOMImpl.java \
 		$(NULL)
