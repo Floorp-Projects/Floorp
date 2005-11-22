@@ -11,6 +11,7 @@
 
 function readEnableImagesPref()
 {
+  // get the pref value as it is (String, int or bool).
   var pref = document.getElementById("permissions.default.image");
   return (pref.value == 1);
 }
@@ -27,8 +28,8 @@ function writeEnableImagesPref()
   
 function readProxyPref()
 {
+  // get the pref value as it is (String, int or bool).
   var pref = document.getElementById("network.proxy.type");
-
   return (pref.value == 1);
 }
 
@@ -43,8 +44,7 @@ function writeProxyPref()
 
 function readCacheLocationPref()
 { 
-
-
+  // get the pref value as it is (String, int or bool).
   var pref = document.getElementById("browser.cache.disk.parent_directory");
   if (pref.value != "")
       return true;
@@ -54,6 +54,7 @@ function readCacheLocationPref()
 
 function writeCacheLocationPref()
 { 
+  // set the visual element. 
   var checkbox = document.getElementById("storeCacheStorageCard");
   if (checkbox.checked==true) {
     return "\\Storage Card\\Minimo Cache";
@@ -62,6 +63,12 @@ function writeCacheLocationPref()
   } 
 }
 
+
+/* 
+ * This is called after pref -> DOM load. 
+ * and also when clicks sync happens - see each pref element item the onchange attribute
+ */
+ 
 function checkThings() {
   if(!document.getElementById("useDiskCache").checked) {
 	document.getElementById("storeCacheStorageCard").disabled=true;
