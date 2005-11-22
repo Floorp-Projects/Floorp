@@ -56,8 +56,8 @@
 
 #include "nsString.h"
 #include "nsVoidArray.h"
-#include "nsSupportsArray.h"
 #include "nsHashSets.h"
+#include "nsCOMArray.h"
 
 struct MatchHostData;
 struct SearchQueryData;
@@ -278,7 +278,7 @@ protected:
   nsCOMPtr<nsITimer>  mExpireTimer;
 
   // observers
-  nsSupportsArray     mHistoryObservers;
+  nsCOMArray<nsIHistoryObserver> mHistoryObservers;
   
   // autocomplete stuff
   PRBool              mAutocompleteOnlyTyped;

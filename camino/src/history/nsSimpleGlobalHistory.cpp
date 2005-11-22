@@ -23,6 +23,7 @@
  *   Chris Waterson <waterson@netscape.com>
  *   Blake Ross <blaker@netscape.com>
  *   Simon Fraser <smfr@smfr.org>
+ *   Josh Aas <josh@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -828,15 +829,11 @@ nsSimpleGlobalHistory::EndBatching()
 nsresult
 nsSimpleGlobalHistory::NotifyObserversHistoryLoaded()
 {
-  PRUint32 numObservers;
-  mHistoryObservers.Count(&numObservers);
+  PRUint32 numObservers = mHistoryObservers.Count();
   
   for (PRUint32 i = 0; i < numObservers; i ++)
   {
-    nsCOMPtr<nsISupports> element;
-    mHistoryObservers.GetElementAt(i, getter_AddRefs(element));
-  
-    nsCOMPtr<nsIHistoryObserver> historyObserver = do_QueryInterface(element);
+    nsIHistoryObserver* historyObserver = mHistoryObservers[i];
     if (historyObserver)
       historyObserver->HistoryLoaded(); 
   }
@@ -848,19 +845,13 @@ nsSimpleGlobalHistory::NotifyObserversHistoryClosing()
 {
   // copy the array to avoid problems when implementors of
   // HistoryClosing() use it to remove observers
-  nsCOMPtr<nsISupportsArray> observersCopy;
-  mHistoryObservers.Clone(getter_AddRefs(observersCopy));
-  if (!observersCopy) return NS_ERROR_FAILURE;
-  
-  PRUint32 numObservers;
-  observersCopy->Count(&numObservers);
+  nsCOMArray<nsIHistoryObserver> observersCopy(mHistoryObservers);
+
+  PRUint32 numObservers = observersCopy.Count();
   
   for (PRUint32 i = 0; i < numObservers; i ++)
   {
-    nsCOMPtr<nsISupports> element;
-    observersCopy->GetElementAt(i, getter_AddRefs(element));
-  
-    nsCOMPtr<nsIHistoryObserver> historyObserver = do_QueryInterface(element);
+    nsIHistoryObserver* historyObserver = observersCopy[i];
     if (historyObserver)
       historyObserver->HistoryClosing(); 
   }
@@ -877,15 +868,11 @@ nsSimpleGlobalHistory::NotifyObserversItemLoaded(nsIMdbRow* inRow, PRBool inFirs
   nsresult rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  PRUint32 numObservers;
-  mHistoryObservers.Count(&numObservers);
+  PRUint32 numObservers = mHistoryObservers.Count();
   
   for (PRUint32 i = 0; i < numObservers; i ++)
   {
-    nsCOMPtr<nsISupports> element;
-    mHistoryObservers.GetElementAt(i, getter_AddRefs(element));
-  
-    nsCOMPtr<nsIHistoryObserver> historyObserver = do_QueryInterface(element);
+    nsIHistoryObserver* historyObserver = mHistoryObservers[i];
     if (historyObserver)
       historyObserver->ItemLoaded(historyItem, inFirstVisit);
   }
@@ -904,15 +891,11 @@ nsSimpleGlobalHistory::NotifyObserversItemRemoved(nsIMdbRow* inRow)
   nsresult rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 numObservers;
-  mHistoryObservers.Count(&numObservers);
+  PRUint32 numObservers = mHistoryObservers.Count();
   
   for (PRUint32 i = 0; i < numObservers; i ++)
   {
-    nsCOMPtr<nsISupports> element;
-    mHistoryObservers.GetElementAt(i, getter_AddRefs(element));
-  
-    nsCOMPtr<nsIHistoryObserver> historyObserver = do_QueryInterface(element);
+    nsIHistoryObserver* historyObserver = mHistoryObservers[i];
     if (historyObserver)
       historyObserver->ItemRemoved(historyItem); 
   }
@@ -931,15 +914,11 @@ nsSimpleGlobalHistory::NotifyObserversItemTitleChanged(nsIMdbRow* inRow)
   nsresult rv = HistoryItemFromRow(inRow, getter_AddRefs(historyItem));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 numObservers;
-  mHistoryObservers.Count(&numObservers);
+  PRUint32 numObservers = mHistoryObservers.Count();
   
   for (PRUint32 i = 0; i < numObservers; i ++)
   {
-    nsCOMPtr<nsISupports> element;
-    mHistoryObservers.GetElementAt(i, getter_AddRefs(element));
-  
-    nsCOMPtr<nsIHistoryObserver> historyObserver = do_QueryInterface(element);
+    nsIHistoryObserver* historyObserver = mHistoryObservers[i];
     if (historyObserver)
       historyObserver->ItemTitleChanged(historyItem);
   }
@@ -950,15 +929,11 @@ nsSimpleGlobalHistory::NotifyObserversItemTitleChanged(nsIMdbRow* inRow)
 nsresult
 nsSimpleGlobalHistory::NotifyObserversBatchingStarted()
 {
-  PRUint32 numObservers;
-  mHistoryObservers.Count(&numObservers);
+  PRUint32 numObservers = mHistoryObservers.Count();
   
   for (PRUint32 i = 0; i < numObservers; i ++)
   {
-    nsCOMPtr<nsISupports> element;
-    mHistoryObservers.GetElementAt(i, getter_AddRefs(element));
-  
-    nsCOMPtr<nsIHistoryObserver> historyObserver = do_QueryInterface(element);
+    nsIHistoryObserver* historyObserver = mHistoryObservers[i];
     if (historyObserver)
       historyObserver->StartBatchChanges(); 
   }
@@ -969,15 +944,11 @@ nsSimpleGlobalHistory::NotifyObserversBatchingStarted()
 nsresult
 nsSimpleGlobalHistory::NotifyObserversBatchingFinished()
 {
-  PRUint32 numObservers;
-  mHistoryObservers.Count(&numObservers);
+  PRUint32 numObservers = mHistoryObservers.Count();
   
   for (PRUint32 i = 0; i < numObservers; i ++)
   {
-    nsCOMPtr<nsISupports> element;
-    mHistoryObservers.GetElementAt(i, getter_AddRefs(element));
-  
-    nsCOMPtr<nsIHistoryObserver> historyObserver = do_QueryInterface(element);
+    nsIHistoryObserver* historyObserver = mHistoryObservers[i];
     if (historyObserver)
       historyObserver->EndBatchChanges(); 
   }
@@ -1521,8 +1492,8 @@ nsSimpleGlobalHistory::Flush()
 NS_IMETHODIMP
 nsSimpleGlobalHistory::AddObserver(nsIHistoryObserver* inObserver)
 {
-  if (mHistoryObservers.IndexOf(inObserver) == -1)
-    return mHistoryObservers.AppendElement(inObserver);
+  if (mHistoryObservers.IndexOfObject(inObserver) == -1)
+    return mHistoryObservers.AppendObject(inObserver);
     
   return NS_OK;
 }
@@ -1530,7 +1501,7 @@ nsSimpleGlobalHistory::AddObserver(nsIHistoryObserver* inObserver)
 NS_IMETHODIMP
 nsSimpleGlobalHistory::RemoveObserver(nsIHistoryObserver* inObserver)
 {
-  mHistoryObservers.RemoveElement(inObserver);
+  mHistoryObservers.RemoveObject(inObserver);
   return NS_OK;
 }
 
