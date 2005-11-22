@@ -222,7 +222,7 @@
                              this.parentNode.selectedIndex = 0;"
                     tooltiptext="&proxyIcon.tooltip;"/>
           </deck>
-          <hbox>
+          <hbox id="urlbar-icons">
             <button type="menu" style="-moz-user-focus: none" class="plain" id="feed-button" chromedir="&locale.dir;">
               <menupopup onpopupshowing="return FeedHandler.buildFeedList(event);" position="after_end"
                          oncommand="FeedHandler.addLiveBookmark(event.target.getAttribute('feed'));" />
