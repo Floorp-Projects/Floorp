@@ -72,21 +72,24 @@
   <!-- defined in minimo/content/bindings/preferences.css and preferences.xml -->  
 
   <preferenceset id="prefsInstance" >
-      <preferenceitem name="browserStartupHomepage" />
-      <preferenceitem name="enableImages" />
-      <preferenceitem name="ssr"/>
-      <preferenceitem name="sitessr" />
-      <preferenceitem name="skey" />
-      <preferenceitem name="dumpJS" />
-      <preferenceitem name="UseProxy" />
-      <preferenceitem name="networkProxyHTTP" />
-      <preferenceitem name="networkProxyHTTP_Port" />
-      <preferenceitem name="browserDisplayZoomUI"/>
-      <preferenceitem name="browserDisplayZoomContent"/> 
-      <preferenceitem name="useDiskCache" />
-      <preferenceitem name="storeCacheStorageCard" />
-      <preferenceitem name="enablePreFetching" />
+      <preferenceitem id="browser.startup.homepage" name="browserStartupHomepage" />
+      <preferenceitem id="permissions.default.image" name="enableImages" />
+      <preferenceitem id="ssr.enabled" name="ssr"/>
+      <preferenceitem id="ssr.site.enabled" name="sitessr" />
+      <preferenceitem id="skey.enabled" name="skey" />
+      <preferenceitem id="config.wince.dumpJSConsole" name="dumpJS" />
+      <preferenceitem id="network.proxy.type" name="UseProxy" />
+      <preferenceitem id="network.proxy.http" name="networkProxyHTTP" />
+      <preferenceitem id="network.proxy.http_port" name="networkProxyHTTP_Port" />
+      <preferenceitem id="browser.display.zoomui" name="browserDisplayZoomUI"/>
+      <preferenceitem id="browser.display.zoomcontent" name="browserDisplayZoomContent"/> 
+      <preferenceitem id="browser.cache.disk.enable" name="useDiskCache" />
+      <preferenceitem id="browser.cache.disk.parent_directory" name="storeCacheStorageCard" />
+      <preferenceitem id="network.prefetch-next" name="enablePreFetching" />
+      <preferenceitem id="browser.cache.disk.capacity" name="cacheSizeField" />
+
   </preferenceset>
+  
 
   <command id="cmd_PrefOkay"      oncommand="PrefOkay()" />
   <command id="cmd_PrefCancel"    oncommand="PrefCancel();" />
