@@ -108,7 +108,8 @@ class nsIDOMUserDataHandler;
 
 //----------------------------------------------------------------------
 
-// Document interface
+// Document interface.  This is implemented by all document objects in
+// Gecko.
 class nsIDocument : public nsISupports
 {
 public:
@@ -123,6 +124,30 @@ public:
   {
   }
 
+  /**
+   * Let the document know that we're starting to load data into it.
+   * @param aCommand The parser command
+   *                 XXXbz It's odd to have that here.
+   * @param aChannel The channel the data will come from
+   * @param aLoadGroup The loadgroup this document should use from now on.
+   *                   Note that the document might not be the only thing using
+   *                   this loadgroup.
+   * @param aContainer The container this document is in.  This may be null.
+   *                   XXXbz maybe we should make it more explicit (eg make the
+   *                   container an nsIWebNavigation or nsIDocShell or
+   *                   something)?
+   * @param [out] aDocListener the listener to pump data from the channel into.
+   *                           Generally this will be the parser this document
+   *                           sets up, or some sort of data-handler for media
+   *                           documents.
+   * @param aReset whether the document should call Reset() on itself.  If this
+   *               is false, the document will NOT set its principal to the
+   *               channel's owner, will not clear any event listeners that are
+   *               already set on it, etc.
+   * @param aSink The content sink to use for the data.  If this is null and
+   *              the document needs a content sink, it will create one based
+   *              on whatever it knows about the data it's going to load.
+   */  
   virtual nsresult StartDocumentLoad(const char* aCommand,
                                      nsIChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,
@@ -130,11 +155,11 @@ public:
                                      nsIStreamListener **aDocListener,
                                      PRBool aReset,
                                      nsIContentSink* aSink = nsnull) = 0;
-
   virtual void StopDocumentLoad() = 0;
 
   /**
-   * Return the title of the document. May return null.
+   * Return the title of the document.  This will return a void string
+   * if there is no title for this document).
    */
   const nsString& GetDocumentTitle() const
   {
