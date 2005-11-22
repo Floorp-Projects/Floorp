@@ -51,6 +51,10 @@ class nsGridLayout2;
 // {AF0C1603-06C3-11d4-BA07-001083023C1E}
 #define NS_IMONUMENT_IID { 0xaf0c1603, 0x6c3, 0x11d4, { 0xba, 0x7, 0x0, 0x10, 0x83, 0x2, 0x3c, 0x1e } }
 
+/**
+ * An additional interface implemented by nsIBoxLayout implementations
+ * for parts of a grid (excluding cells, which are not special).
+ */
 class nsIGridPart : public nsISupports {
 
 public:
@@ -59,8 +63,37 @@ public:
 
   NS_IMETHOD CastToRowGroupLayout(nsGridRowGroupLayout** aRowGroup)=0;
   NS_IMETHOD CastToGridLayout(nsGridLayout2** aGrid)=0;
+
+  /**
+   * @param aBox [IN] The other half of the |this| parameter, i.e., the box
+   *                  whose layout manager is |this|.
+   * @param aList [OUT] The grid of which aBox (a row, row group, or grid)
+   *                    is a part.
+   * @param aIndex [INOUT] For callers not setting aRequestor, the value
+   *                       pointed to by aIndex is incremented by the index
+   *                       of the row (aBox) within its row group; if aBox
+   *                       is not a row/column, it is untouched.
+   *                       The implementation does this by doing the aIndex
+   *                       incrementing in the call to the parent row group
+   *                       when aRequestor is non-null.
+   * @param aRequestor [IN] Non-null if and only if this is a recursive
+   *                   call from the GetGrid method on a child grid part,
+   *                   in which case it is a pointer to that grid part.
+   *                   (This may only be non-null for row groups and
+   *                   grids.)
+   */
   NS_IMETHOD GetGrid(nsIBox* aBox, nsGrid** aList, PRInt32* aIndex, nsGridRowLayout* aRequestor=nsnull)=0;
+
+  /**
+   * @param aBox [IN] The other half of the |this| parameter, i.e., the box
+   *                  whose layout manager is |this|.
+   * @param aParentBox [OUT] The box representing the next level up in
+   *                   the grid (i.e., row group for a row, grid for a
+   *                   row group).
+   * @param aParentGridRow [OUT] The layout manager for aParentBox.
+   */
   NS_IMETHOD GetParentGridPart(nsIBox* aBox, nsIBox** aParentBox, nsIGridPart** aParentGridRow)=0;
+
   NS_IMETHOD CountRowsColumns(nsIBox* aBox, PRInt32& aRowCount, PRInt32& aComputedColumnCount)=0;
   NS_IMETHOD DirtyRows(nsIBox* aBox, nsBoxLayoutState& aState)=0;
   NS_IMETHOD BuildRows(nsIBox* aBox, nsGridRow* aRows, PRInt32* aCount)=0;

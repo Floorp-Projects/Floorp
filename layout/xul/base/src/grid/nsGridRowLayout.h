@@ -53,6 +53,11 @@ class nsBoxLayoutState;
 class nsIPresShell;
 class nsGrid;
 
+/**
+ * A common base class for nsGridRowLeafLayout (the nsIBoxLayout object
+ * for a grid row or column) and nsGridRowGroupLayout (the nsIBoxLayout
+ * object for a grid row group or column group).
+ */
 class nsGridRowLayout : public nsSprocketLayout,
                         public nsIGridPart
 {

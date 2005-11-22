@@ -47,6 +47,9 @@
 
 #include "nsGridRowLayout.h"
 
+/**
+ * The nsIBoxLayout implementation for nsGridRowGroupFrame.
+ */
 class nsGridRowGroupLayout : public nsGridRowLayout
 {
 public:

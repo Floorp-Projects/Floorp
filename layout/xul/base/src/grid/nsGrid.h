@@ -52,6 +52,9 @@ class nsGridCell;
 
 //#define DEBUG_grid 1
 
+/**
+ * The grid data structure, i.e., the grid cellmap.
+ */
 class nsGrid
 {
 public:
