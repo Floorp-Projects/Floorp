@@ -78,8 +78,8 @@
 	                              id="storeCacheStorageCard"
 	                              label="&storeCacheStorageCard.label;"
 	                              preference="browser.cache.disk.enable" 
-                                              onsyncfrompreference="FROM_GOES_HERE();"
-                                              onsynctopreference="TO_GOES_HERE();" 
+                                              onsyncfrompreference="readCacheLocationPref();"
+                                              onsynctopreference="writeCacheLocationPref();" 
 	                              onclick="syncPref(this)" />
 
                        <grid class="box-prefpadding" >
@@ -107,6 +107,19 @@
 
                         </groupbox>
 
+                        <groupbox class='box-prefgroupitem'>
+
+                                <vbox class="box-prefpadding">
+
+	                		    <checkbox tabindex="35" id="enablePreFetching"
+	                              label="&enablePreFetching.label;"
+	                              preference="network.prefetch-next" accessrule="advanced-pane"
+	                              onclick="syncPref(this)" />
+	                              
+					</vbox>
+
+                        </groupbox>
+
                       <groupbox class='box-prefgroupitem' id='home-box'>
 
                                 <vbox class="box-prefpadding">
@@ -126,18 +139,7 @@
 
                         </groupbox>
 
-                        <groupbox class='box-prefgroupitem'>
 
-                                <vbox class="box-prefpadding">
-
-	                		    <checkbox tabindex="35" id="enablePreFetching"
-	                              label="&enablePreFetching.label;"
-	                              preference="network.prefetch-next" accessrule="advanced-pane"
-	                              onclick="syncPref(this)" />
-	                              
-					</vbox>
-
-                        </groupbox>
 
                 </vbox>
 

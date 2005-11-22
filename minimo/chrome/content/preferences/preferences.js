@@ -40,6 +40,26 @@ function writeProxyPref()
   return 0;
 }
 
+function readCacheLocationPref()
+{ 
+  var pref = document.getElementById("browser.cache.disk.parent_directory");
+  if (pref.value != null)
+      return true;
+  else
+      return false;
+
+}
+
+function writeCacheLocationPref()
+{ 
+  var checkbox = document.getElementById("storeCacheStorageCard");
+  if (checkbox.checked==true) {
+    return "\\Storage Card\\Minimo Cache";
+  } else {
+    return "";
+  } 
+}
+
 
 
 /* Live Synchronizers
