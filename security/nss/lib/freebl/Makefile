@@ -333,9 +333,10 @@ else
 	    MPI_SRCS += mp_comba.c
 	else
 	    ASFILES  = arcfour-amd64-sun.s mpi_amd64_sun.s sha-fast-amd64-sun.s
-	    ASFILES += mp_comba_amd64_sun.s
+ 	    ASFILES += mp_comba_amd64_sun.s mpcpucache_amd64.s
 	    ASFLAGS += -xarch=generic64 -K PIC
 	    SHA_SRCS =
+ 	    MPCPU_SRCS =
 	endif
 	DEFINES += -DNSS_BEVAND_ARCFOUR -DMPI_AMD64 -DMP_ASSEMBLY_MULTIPLY
 	DEFINES += -DNSS_USE_COMBA
@@ -347,6 +348,10 @@ else
 	DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
 	DEFINES += -DMP_ASSEMBLY_DIV_2DX1D
 	ASFILES  = mpi_i86pc.s
+ 	ifndef NS_USE_GCC
+ 	   MPCPU_SRCS =
+ 	   ASFILES += mpcpucache_x86.s
+ 	endif
     endif
 endif # Solaris for non-sparc family CPUs
 endif # target == SunOS

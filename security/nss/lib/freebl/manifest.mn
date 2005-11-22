@@ -113,6 +113,7 @@ else
 ECL_SRCS = $(NULL)
 endif
 SHA_SRCS = sha_fast.c
+MPCPU_SRCS = mpcpucache.c
 
 CSRCS = \
 	freeblver.c \
@@ -140,6 +141,7 @@ CSRCS = \
 	shvfy.c \
 	tlsprfalg.c \
 	$(MPI_SRCS) \
+	$(MPCPU_SRCS) \
 	$(ECL_SRCS) \
 	$(NULL)
 
