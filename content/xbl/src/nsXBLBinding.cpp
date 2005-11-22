@@ -64,7 +64,6 @@
 #include "nsXMLDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
-#include "nsSupportsArray.h"
 #include "jsapi.h"
 #include "nsXBLService.h"
 #include "nsXBLInsertionPoint.h"

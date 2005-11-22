@@ -58,7 +58,6 @@
 #include "nsXMLDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMText.h"
-#include "nsSupportsArray.h"
 #include "nsXBLService.h"
 #include "nsXBLBinding.h"
 #include "nsXBLInsertionPoint.h"
