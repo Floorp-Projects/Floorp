@@ -598,7 +598,7 @@
               options[i].option ? options[i].option.selected : options[i].checkbox.checked;
 
             if (isSelected) {
-              // space delimeted list
+              // space delimited list
               if (selectedValues.length > 0) {
                 selectedValues += " ";
               }

@@ -227,7 +227,7 @@ nsXFormsSchemaValidator::IsValidSchemaListItems(const nsAString & aValue)
   PRBool isValid = PR_FALSE;
 
   // listItem is like a string, but no whitespace.  listItems is a whitespace
-  // delimeted list of listItem, so therefore just need to see if it is a valid
+  // delimited list of listItem, so therefore just need to see if it is a valid
   // xsd:string
   mSchemaValidator->ValidateString(aValue, NS_LITERAL_STRING("string"),
                                    NS_LITERAL_STRING("http://www.w3.org/1999/XMLSchema"),
