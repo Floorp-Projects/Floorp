@@ -166,6 +166,7 @@
     ICON_MODULE                              \
     MODULE(nsPluginModule)                   \
     MODULE(nsLayoutModule)                   \
+    MODULE(nsXMLExtrasModule)                \
     MODULE(docshell_provider)                \
     MODULE(embedcomponents)                  \
     MODULE(Browser_Embedding_Module)         \

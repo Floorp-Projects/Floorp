@@ -118,6 +118,7 @@ COMPONENT_LIBS += \
 	imglib2 \
 	gkplugin \
 	gklayout \
+	xmlextras \
 	docshell \
 	embedcomponents \
 	webbrwsr \
