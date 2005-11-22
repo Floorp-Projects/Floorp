@@ -79,9 +79,14 @@ interface nsINavHistoryResultNode : nsISupports
    * Get the queries which build this node's children.
    * Only valid for RESULT_TYPE_QUERY nodes.
    */
-  void getQueries(out nsINavHistoryQueryOptions options,
-                  out unsigned long queryCount,
+  void getQueries(out unsigned long queryCount,
                   [retval,array,size_is(queryCount)] out nsINavHistoryQuery queries);
+
+  /**
+   * Get the options which group this node's children.
+   * Only valid for RESULT_TYPE_QUERY nodes.
+   */
+  readonly attribute nsINavHistoryQueryOptions queryOptions;
 
   /**
    * Title of the web page, or name of the host.
