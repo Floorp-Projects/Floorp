@@ -77,17 +77,6 @@ function prefillAlertInfo()
 }
 
 function onAlertLoad()
-{ 
-  // this delay is required because the folder summary element
-  // ends up dynamically creating an arbitrary number of folderSummaryMessage xbl widgets
-  // and we have to fire a timeout to wait for the various properties and methods on the folderSummaryMessage widget
-  // before we can actually initialize it. Because of that timeout, we don't know the total width of the alert
-  // dialog when onAlertLoad is called, so we have to delay again. This work around in turn causes the alert to flash up in the middle
-  // of your window for a second until onDelayAlertLoad gets called and moves the window to the right position.
-  setTimeout(onDelayAlertLoad, 0);
-}
-
-function onDelayAlertLoad()
 {
   // read out our initial settings from prefs.
   try 
