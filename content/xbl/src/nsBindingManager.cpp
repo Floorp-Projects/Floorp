@@ -344,6 +344,17 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
       return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // After this point, aBinding will be the most-derived binding for aContent.
+  // If we already have a binding for aContent in our table, make sure to
+  // remove it from the attached stack.  Otherwise we might end up firing its
+  // constructor twice (if aBinding inherits from it) or firing its constructor
+  // after aContent has been deleted (if aBinding is null and the content node
+  // dies before we process mAttachedStack).
+  nsXBLBinding* oldBinding = mBindingTable.GetWeak(aContent);
+  if (oldBinding && mAttachedStack.RemoveElement(oldBinding)) {
+    NS_RELEASE(oldBinding);
+  }
+  
   PRBool result = PR_TRUE;
 
   if (aBinding) {
