@@ -2068,8 +2068,8 @@ nsFormControlEnumerator::nsFormControlEnumerator(nsHTMLFormElement* aForm)
       }
     }
 
-    // If it wasn't inserted yet, it is greater than everything in the array
-    // and must be appended.
+    // If it wasn't inserted yet, it is smaller than everything in the array
+    // and must be added to the beginning.
     if (!inserted) {
       if (!mNotInElementsSorted.InsertObjectAt(controlToAddNode, 0)) {
         break;
