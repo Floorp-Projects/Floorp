@@ -52,7 +52,7 @@ endif
 
 DIRS         += src
 
-ifndef WINCE
+ifndef MINIMO
 TOOL_DIRS    += shell
 endif
 
