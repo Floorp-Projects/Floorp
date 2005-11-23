@@ -250,8 +250,10 @@ ifdef MOZ_PSM
 tier_50_dirs	+= security/manager
 endif
 
+ifdef MOZ_XUL_APP
 ifndef BUILD_STATIC_LIBS
 tier_50_dirs += toolkit/library
+endif
 endif
 
 ifdef MOZ_ENABLE_LIBXUL
