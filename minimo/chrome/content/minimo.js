@@ -786,7 +786,6 @@ function DoBrowserSearch() {
  */
 
 function DoBrowserSearchURLBAR(vQuery) {
-  BrowserViewSearch();
   try { 
     if(vQuery!="") {
 	 getBrowser().selectedTab = getBrowser().addTab('http://www.google.com/xhtml?q='+vQuery+'&hl=en&lr=&safe=off&btnG=Search&site=search&mrestrict=xhtml');
