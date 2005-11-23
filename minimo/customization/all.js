@@ -1,7 +1,7 @@
-pref("general.useragent.extra.minimo", "Minimo/0.010");
+pref("general.useragent.extra.minimo", "Minimo/0.011");
 
 pref("browser.cache.disk.enable",           false);
-pref("browser.cache.disk.capacity",         0);
+pref("browser.cache.disk.capacity",         1024);
 pref("browser.cache.memory.enable",         true);
 pref("browser.cache.memory.capacity",       1024);
 // -1 = determine dynamically, 0 = none, n = memory capacity in kilobytes
