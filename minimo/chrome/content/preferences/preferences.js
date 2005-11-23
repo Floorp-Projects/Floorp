@@ -46,7 +46,7 @@ function readCacheLocationPref()
 { 
   // get the pref value as it is (String, int or bool).
   var pref = document.getElementById("browser.cache.disk.parent_directory");
-  if (pref.value != "")
+  if (pref.value)
       return true;
   else
       return false;
@@ -69,7 +69,7 @@ function writeCacheLocationPref()
  * and also when clicks sync happens - see each pref element item the onchange attribute
  */
  
-function checkThings() {
+function UIdependencyCheck() {
   if(!document.getElementById("useDiskCache").checked) {
 	document.getElementById("storeCacheStorageCard").disabled=true;
 	document.getElementById("cacheSizeField").disabled=true;
@@ -302,7 +302,7 @@ function syncPref(refElement) {
 		gPrefQueue[refElementPref]=refElement;
 		//document.getElementById("textbox-okay-pane").value+= "Changed key ="+gPrefQueue[refElementPref].value+"\n";
 	}
-	setTimeout("checkThings()",0);
+	setTimeout("UIdependencyCheck()",0);
 }
 
 
@@ -347,21 +347,29 @@ function syncPrefSaveDOM() {
 				}
 				prefSETValue=elRef.value;
 			}
-			if (gPref.getPrefType(prefName) == gPref.PREF_STRING){
-				gPref.setCharPref(prefName, prefSETValue);
+
+			if (document.getElementById(prefName).getAttribute("preftype")=="string"){
+				try { 
+					gPref.setCharPref(prefName, prefSETValue);
+				} catch (e) { } 
 			} 
 	
-			if (gPref.getPrefType(prefName) == gPref.PREF_INT) {
+			if (document.getElementById(prefName).getAttribute("preftype")=="int") {
+				try { 
 				gPref.setIntPref(prefName, prefSETValue);
+				} catch (e) { } 
 	 	 	}
 	
-			if (gPref.getPrefType(prefName) == gPref.PREF_BOOL) {
+			if (document.getElementById(prefName).getAttribute("preftype")=="bool") {
+				try { 
 				gPref.setBoolPref(prefName, prefSETValue);
+				} catch (e) { } 
 			}
 		}
 
 		psvc.savePrefFile(null);
-	} catch (e) { alert(e) }
+
+	} catch (e) { alert(e); }
 
 }
 function syncPrefLoadDOM(elementList) {
@@ -375,9 +383,12 @@ function syncPrefLoadDOM(elementList) {
 
 		var prefDOMValue=null;
 
-		if (gPref.getPrefType(prefName) == gPref.PREF_STRING) {
+		if (document.getElementById(prefName).getAttribute("preftype")=="string") {
 
-		    prefDOMValue = gPref.getCharPref(prefName);
+		    try {
+		 	   prefDOMValue = gPref.getCharPref(prefName);
+                } catch (ex) { prefDOMValue=null; } 
+
 		    document.getElementById(prefName).value=prefDOMValue;
 
 			if(transValidator) {
@@ -390,11 +401,11 @@ function syncPrefLoadDOM(elementList) {
 		    
 		} 
 
+		if (document.getElementById(prefName).getAttribute("preftype")=="int") {
 
-
-		if (gPref.getPrefType(prefName) == gPref.PREF_INT) {
-
-		    prefDOMValue = gPref.getIntPref(prefName);
+		    try {
+			    prefDOMValue = gPref.getIntPref(prefName);
+                } catch (ex) { prefDOMValue=null; } 
 		    document.getElementById(prefName).value=prefDOMValue;
 
 			if(transValidator) {
@@ -411,11 +422,13 @@ function syncPrefLoadDOM(elementList) {
 			}
  	 	}
 
+		if (document.getElementById(prefName).getAttribute("preftype")=="bool") {
 
+		    try { 
+		 	   prefDOMValue = gPref.getBoolPref(prefName);
+                } catch (ex) { prefDOMValue=null; } 
 
-		if (gPref.getPrefType(prefName) == gPref.PREF_BOOL) {
-		    prefDOMValue = gPref.getBoolPref(prefName);
-
+			
 		    document.getElementById(prefName).value=prefDOMValue;
 
 			if(transValidator) {
@@ -434,7 +447,7 @@ function syncPrefLoadDOM(elementList) {
 
 		
 	}
-	checkThings();
+	UIdependencyCheck();
 }
 
 
