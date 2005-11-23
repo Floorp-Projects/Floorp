@@ -90,9 +90,14 @@ LOCAL_INCLUDES += \
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
-LIBS += -lXUL
+endif
+
+ifndef MOZ_ENABLE_LIBXUL
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+LIBS += $(DIST)/bin/XUL
 else
 EXTRA_DSO_LIBS += xul
+endif
 endif
 
 LIBS += \
