@@ -61,6 +61,36 @@ var PlacesController = {
     return this._activeView;
   },
   
+  isCommandEnabled: function PC_isCommandEnabled(command) {
+    LOG("isCommandEnabled: " + command);
+  },
+
+  supportsCommand: function PC_supportsCommand(command) {
+    //LOG("supportsCommand: " + command);
+    return document.getElementById(command) != null;
+  },
+
+  doCommand: function PC_doCommand(command) {
+    LOG("doCommand: " + command);
+    
+  },
+
+  onEvent: function PC_onEvent(eventName) {
+    LOG("onEvent: " + eventName);
+  },
+  
+  buildContextMenu: function PC_buildContextMenu(popup) {
+    return true;
+  },
+
+  /**
+   * Given a Mouse event, determine which function should be used to load
+   * the selected link. Modifiers may override the default settings and cause
+   * a link to be opened in a new tab or window. 
+   * @param   event
+   *          The DOM Mouse Event triggering a URL load
+   * @returns A function which should be used to load the selected URL.
+   */
   _getLoadFunctionForEvent: function PP__getLoadFunctionForEvent(event) {
     if (event.button != 0)
       return null;
@@ -106,29 +136,22 @@ var PlacesController = {
     var view = this._activeView;
     view.browserWindow.loadURI(view.selectedNode.url, null, null);
   },
-
-  isCommandEnabled: function PC_isCommandEnabled(command) {
-    LOG("isCommandEnabled: " + command);
-  },
-
-  supportsCommand: function PC_supportsCommand(command) {
-    //LOG("supportsCommand: " + command);
-    return document.getElementById(command) != null;
-  },
-
-  doCommand: function PC_doCommand(command) {
-    LOG("doCommand: " + command);
+  
+  /**
+   * Rebuilds the view using a new set of grouping options.
+   * @param   options
+   *          An array of grouping options, see nsINavHistoryQueryOptions
+   *          for details.
+   */
+  setGroupingMode: function PP_setGroupingOptions(options) {
+    var result = this._activeView.view.QueryInterface(Ci.nsINavHistoryResult);
+    var queries = result.getSourceQueries({ });
+    var newOptions = result.sourceQueryOptions.clone();
+    newOptions.setGroupingMode(options, options.length);
     
+    this._activeView.load(queries, newOptions);
   },
-
-  onEvent: function PC_onEvent(eventName) {
-    LOG("onEvent: " + eventName);
-
-  },
-
-  buildContextMenu: function PC_buildContextMenu(popup) {
-    return true;
-  }
+  
 };
 
 /*

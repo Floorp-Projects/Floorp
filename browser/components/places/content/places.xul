@@ -15,7 +15,7 @@
   <script type="application/x-javascript"
           src="chrome://browser/content/places/places.js"/>
   
-  <commandset id="placesCommands" events="*" commandupdater="true">
+  <commandset id="placesCommands">
     <command id="placesCmd_find" label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"/>
     <command id="placesCmd_export" label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"/>
     <command id="placesCmd_import"/>
@@ -37,18 +37,22 @@
     </commandset>
     <commandset type="link" readonly="true">
       <command id="placesCmd_open" label="&cmd.open.label;" accesskey="&cmd.open.accesskey;"
-               oncommand="PlacesPage.openLinkInCurrentWindow();"/>
+               oncommand="PlacesController.openLinkInCurrentWindow();"/>
       <command id="placesCmd_open:window" label="&cmd.open_window.label;" accesskey="&cmd.open_window.accesskey;"
-               oncommand="PlacesPage.openLinkInNewWindow();"/>
+               oncommand="PlacesController.openLinkInNewWindow();"/>
       <command id="placesCmd_open:tab" label="&cmd.open_tab.label;" accesskey="&cmd.open_tab.accesskey;"
-               oncommand="PlacesPage.openLinkInNewTab();"/>
+               oncommand="PlacesController.openLinkInNewTab();"/>
     </commandset>
     <commandset type="link">
     </commandset>
     <commandset type="container" readonly="true">
       <command id="placesCmd_open:tabs" label="&cmd.open_tabs.label;" accesskey="&cmd.open_tabs.accesskey;"/>
-      <command id="placesCmd_groupby:site" label="&cmd.groupby_site.label;" accesskey="&cmd.groupby_site.accesskey;"/>
-      <command id="placesCmd_groupby:page" label="&cmd.groupby_page.label;" accesskey="&cmd.groupby_page.accesskey;"/>
+      <command id="placesCmd_groupby:site" 
+               label="&cmd.groupby_site.label;" accesskey="&cmd.groupby_site.accesskey;"
+               oncommand="PlacesPage.groupBySite();"/>
+      <command id="placesCmd_groupby:page" 
+               label="&cmd.groupby_page.label;" accesskey="&cmd.groupby_page.accesskey;"
+               oncommand="PlacesPage.groupByPage();"/>
       <command id="placesCmd_groupby:feed" label="&cmd.groupby_feed.label;" accesskey="&cmd.groupby_feed.accesskey;"/>
       <command id="placesCmd_groupby:post" label="&cmd.groupby_post.label;" accesskey="&cmd.groupby_post.accesskey;"/>
     </commandset>
@@ -142,7 +146,8 @@
       <deck id="content" flex="1">
         <vbox flex="1">
           <tree id="placeContent" class="placesTree" context="placesContext" flex="1"
-                ondblclick="PlacesController.mouseLoadURI(event);">
+                ondblclick="PlacesController.mouseLoadURI(event);"
+                onplacestreereloaded="PlacesPage.onContentChanged();">
             <treecols>
               <treecol label="&col.title.label;" id="title" flex="1" primary="true"/>
               <treecol label="&col.url.label;" id="url" flex="1"/>

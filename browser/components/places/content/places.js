@@ -35,19 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var PlacesPage = { 
-  controller: null,
+var PlacesUIHook = {
   _tabbrowser: null,
   _topWindow: null,
-  _topDocument: null,
-  _bmsvc : null,
-
-  init: function PP_init() {
-    var wm =
-        Cc["@mozilla.org/appshell/window-mediator;1"].
-        getService(Ci.nsIWindowMediator);
-    this._topWindow = wm.getMostRecentWindow("navigator:browser");
-    this._topDocument = this._topWindow.document;
+  _placesURI: "chrome://browser/content/places/places.xul",
+  
+  init: function PUIH_init(placesList) {
+    this._topWindow = placesList.browserWindow;
     this._tabbrowser = this._topWindow.getBrowser();
 
     // Hook into the tab strip to get notifications about when the Places Page is
@@ -57,49 +51,67 @@ var PlacesPage = {
       self.onTabSelect(event);
     }
     this._tabbrowser.mTabContainer.addEventListener("select", onTabSelect, false);
-    
-    // Attach the Command Controller to the Places Views. 
-    var placesList = document.getElementById("placesList");
-    var placeContent = document.getElementById("placeContent");  
-    placeContent.controllers.appendController(PlacesController);
-    placesList.controllers.appendController(PlacesController);
-
-    // Attach the History model to the Content View
-    placeContent.queryString = "group=1";
-
-    // Attach the Places model to the Place View
-    const BS = Ci.nsINavBookmarksService;
-    this._bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(BS);
-    var children = this._bmsvc.getFolderChildren(this._bmsvc.placesRoot,
-                                                 BS.FOLDER_CHILDREN |
-                                                 BS.QUERY_CHILDREN);
-    document.getElementById("placesList").view = children.QueryInterface(Ci.nsITreeView);
 
     this._showPlacesUI();
   },
-
-  uninit: function PP_uninit() {
+  
+  uninit: function PUIH_uninit() {
     this._hidePlacesUI();
   },
 
   onTabSelect: function PP_onTabSelect(event) {
     var tabURI = this._tabbrowser.selectedBrowser.currentURI.spec;
-    (tabURI == PLACES_URI) ? this._showPlacesUI() : this._hidePlacesUI();
+    (tabURI == this._placesURI) ? this._showPlacesUI() : this._hidePlacesUI();
+  },
+  
+  _topElement: function PUIH__topElement(id) {
+    return this._topWindow.document.getElementById(id);
   },
 
   _showPlacesUI: function PP__showPlacesUI() {
-    LOG("SHOW Places UI");
     this._tabbrowser.setAttribute("places", "true");
-    var statusbar = this._topDocument.getElementById("status-bar");
+    var statusbar = this._topElement("status-bar");
     this._oldStatusBarState = statusbar.hidden;
     statusbar.hidden = true;
   },
 
   _hidePlacesUI: function PP__hidePlacesUI() {
-    LOG("HIDE Places UI");
     this._tabbrowser.removeAttribute("places");
-    var statusbar = this._topDocument.getElementById("status-bar");
+    var statusbar = this._topElement("status-bar");
     statusbar.hidden = this._oldStatusBarState;
+  },
+};
+
+var PlacesPage = {
+  _content: null,
+  _places: null,
+  _bmsvc : null,
+
+  init: function PP_init() {
+    // Attach the Command Controller to the Places Views. 
+    this._places = document.getElementById("placesList");
+    this._content = document.getElementById("placeContent");  
+    this._places.controllers.appendController(PlacesController);
+    this._content.controllers.appendController(PlacesController);
+    
+    // Hook the browser UI
+    PlacesUIHook.init(this._content);
+
+    // Attach the History model to the Content View
+    this._content.queryString = "group=1";
+
+    // Attach the Places model to the Place View
+    // XXXben - move this to an attribute/property on the tree view
+    const BS = Ci.nsINavBookmarksService;
+    this._bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(BS);
+    var children = this._bmsvc.getFolderChildren(this._bmsvc.placesRoot,
+                                                 BS.FOLDER_CHILDREN |
+                                                 BS.QUERY_CHILDREN);
+    this._places.view = children.QueryInterface(Ci.nsITreeView);
+  },
+
+  uninit: function PP_uninit() {
+    PlacesUIHook.uninit();
   },
 
   showAdvancedOptions: function PP_showAdvancedOptions() {
@@ -119,8 +131,7 @@ var PlacesPage = {
       this.setFilterCollection("all");
     }
     else if (collectionName == "all") {
-      var placeContent = document.getElementById("placeContent");
-      placeContent.filterString = filterString;
+      this._content.filterString = filterString;
     }
   },
 
@@ -140,7 +151,41 @@ var PlacesPage = {
       var history = Cc["@mozilla.org/browser/nav-history;1"].getService(Ci.nsINavHistory);
       view = history.executeQueries(queries, queries.length, folder.queryOptions).QueryInterface(Ci.nsITreeView);
     }
-    document.getElementById("placeContent").view = view;
+    this._content.view = view;
+  },
+  
+  /**
+   * Update the Places UI when the content of the right tree changes. 
+   */
+  onContentChanged: function PP_onContentChanged() {
+    var result = this._content.view.QueryInterface(Ci.nsINavHistoryResult);
+    var queries = result.getSourceQueries({ });
+    var query = queries[0];
+    var panelID = "commands_history";
+    if (query.onlyBookmarked) {
+      // if (query.annotation == "feed") {
+      panelID = "commands_bookmark";
+    }
+    var commands = document.getElementById("commands");
+    commands.selectedPanel = document.getElementById(panelID);
+  },
+  
+  /**
+   * Group the current content view by domain
+   */
+  groupBySite: function PP_groupBySite() {
+    PlacesController.activeView = this._content;
+    var modes = [Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN, 
+    Ci.nsINavHistoryQueryOptions.GROUP_BY_HOST];
+    PlacesController.setGroupingMode(modes);
+  },
+  
+  /**
+   * Ungroup the current content view (i.e. show individual pages)
+   */
+  groupByPage: function PP_groupByPage() {
+    PlacesController.activeView = this._content;
+    PlacesController.setGroupingMode([]);
   },
 };
 
