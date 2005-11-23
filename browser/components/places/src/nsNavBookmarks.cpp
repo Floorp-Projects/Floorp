@@ -794,6 +794,8 @@ nsNavBookmarks::GetFolderChildren(PRInt64 aFolder, PRUint32 aOptions,
   NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
 
   result->SetBookmarkOptions(aOptions);
+  result->mType = nsINavHistoryResultNode::RESULT_TYPE_FOLDER;
+  result->mID = aFolder;
 
   nsresult rv = QueryFolderChildren(aFolder, aOptions, result->GetTopLevel());
   NS_ENSURE_SUCCESS(rv, rv);

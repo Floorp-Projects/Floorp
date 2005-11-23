@@ -76,6 +76,7 @@
 
 class mozIAnnotationService;
 class nsNavHistory;
+class nsNavBookmarks;
 
 // nsNavHistoryQuery
 //
@@ -170,6 +171,7 @@ protected:
 
   friend class nsNavHistory;
   friend class nsNavHistoryResult;
+  friend class nsNavBookmarks;
 };
 
 // nsNavHistoryQueryNode is a special type of ResultNode that executes a
