@@ -62,3 +62,13 @@
  }
 }
 
+@-moz-document domain(forums.mozillazine.org)
+{
+ div#masthead, td#sidebar
+ {
+    display: none  ! important;
+    margin: 0      ! important; 
+    padding: 0     ! important;
+ }
+}
+
