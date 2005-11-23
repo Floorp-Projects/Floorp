@@ -94,7 +94,10 @@ EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS)
 ifdef MOZ_ENABLE_LIBXUL
 include $(srcdir)/libxul-rules.mk
 else
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+EXTRA_DSO_LDOPTS += \
+	$(MOZ_COMPONENT_LIBS) \
+	$(MOZ_JS_LIBS) \
+	$(NULL)
 endif
 
 DEFINES += -DIMPL_XREAPI
