@@ -38,16 +38,32 @@
 #ifndef nsObserverList_h___
 #define nsObserverList_h___
 
-#include "nsISupports.h"
-#include "nsCOMArray.h"
+#include "nsIObserver.h"
+#include "nsIEnumerator.h"
+#include "nsISupportsArray.h"
+#include "nsISimpleEnumerator.h"
 
-class nsISimpleEnumerator;
-class nsIObserver;
+class ObserverListEnumerator : public nsISimpleEnumerator
+{
+public:
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISIMPLEENUMERATOR
+
+    ObserverListEnumerator(nsISupportsArray* aValueArray);
+
+private:
+    ~ObserverListEnumerator(void);
+
+protected:
+    nsISupportsArray* mValueArray;
+    PRInt32 mIndex;
+};
 
 class nsObserverList
 {
 public:
-  nsObserverList(nsresult &rv);
+  nsObserverList();
   ~nsObserverList();
 
   nsresult AddObserver(nsIObserver* anObserver, PRBool ownsWeak);
@@ -56,7 +72,7 @@ public:
      
 protected:
   PRLock* mLock;
-  nsCOMArray<nsISupports> mObservers;
+  nsCOMPtr<nsISupportsArray>  mObserverList;
 };
 
 

@@ -42,13 +42,12 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsIObserverService.h"
-#include "nsIObserver.h"
-#include "nsISimpleEnumerator.h"
 #include "nsObserverService.h"
 #include "nsObserverList.h"
 #include "nsHashtable.h"
 #include "nsIWeakReference.h"
 
+#define NS_WEAK_OBSERVERS
 #define NOTIFY_GLOBAL_OBSERVERS
 
 #if defined(PR_LOGGING)
@@ -136,15 +135,9 @@ nsresult nsObserverService::GetObserverList(const char* aTopic, nsObserverList**
         return NS_OK;
     }
 
-    nsresult rv = NS_OK;
-    topicObservers = new nsObserverList(rv);
+    topicObservers = new nsObserverList();
     if (!topicObservers)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    if (NS_FAILED(rv)) {
-        delete topicObservers;
-        return rv;
-    }
     
     *anObserverList = topicObservers;
     mObserverTopicTable->Put(&key, topicObservers);
@@ -238,6 +231,7 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports *aSubject,
             nsCOMPtr<nsIObserver> observer = do_QueryInterface(observerRef);
             if (observer) 
                 observer->Observe(aSubject, aTopic, someData);
+#ifdef NS_WEAK_OBSERVERS
             else
             {  // check for weak reference.
                 nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(observerRef);     
@@ -250,6 +244,7 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports *aSubject,
                 PR_LOG(observerServiceLog, PR_LOG_DEBUG, ("Notification - %s\n", aTopic ? aTopic : "undefined"));
 
             }
+#endif
         }
     } while (observers);
     return NS_OK;
