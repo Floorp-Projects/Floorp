@@ -41,6 +41,7 @@
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsInt64.h"
+#include "nsEscape.h"
 
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
@@ -279,6 +280,12 @@ nsJARChannel::EnsureJarInput(PRBool blocking)
 
     rv = mJarURI->GetJAREntry(mJarEntry);
     if (NS_FAILED(rv)) return rv;
+
+    // The name of the JAR entry must not contains URL escaped characters:
+    // we're moving from URL domain to a filename domain here. nsStandardURL
+    // does basic escaping by default, which breaks reading zipped files which
+    // have e.g. spaces in their filenames.
+    NS_UnescapeURL(mJarEntry);
 
     // try to get a nsIFile directly from the url, which will often succeed.
     {

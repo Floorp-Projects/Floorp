@@ -51,14 +51,14 @@
 interface nsIJARURI : nsIURL {
 
     /**
-     * Returns the root URI (the one for the actual JAR file) for this JAR.
-     * eg http://www.big.com/blue.jar
+     * Returns the root URI (the one for the actual JAR file) for this JAR
+     * (e.g., http://www.big.com/blue.jar).
      */
     attribute nsIURI JARFile;
 
     /**
-     * Returns the entry specified for this JAR URI.
-     * eg ocean.html
+     * Returns the entry specified for this JAR URI (e.g., "ocean.html").  This
+     * value may contain %-escaped byte sequences.
      */
     attribute AUTF8String JAREntry;
 };
