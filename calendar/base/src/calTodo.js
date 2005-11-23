@@ -198,7 +198,7 @@ calTodo.prototype = {
             try {
                 if (!this.todoPromotedProps[iprop.name]) {
                     var icalprop = icssvc.createIcalProperty(iprop.name);
-                    icalprop.stringValue = iprop.value;
+                    icalprop.value = iprop.value;
                     icalcomp.addProperty(icalprop);
                 }
             } catch (e) {
