@@ -872,3 +872,9 @@ SECMOD_OpenUserDB;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.12 { 	# NSS 3.12 release
+;+    global:
+PK11_GetAllSlotsForCert;
+;+    local:
+;+       *;
+;+};
