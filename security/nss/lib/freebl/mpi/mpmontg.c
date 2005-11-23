@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: mpmontg.c,v 1.16 2005/11/22 07:16:43 relyea%netscape.com Exp $ */
+/* $Id: mpmontg.c,v 1.17 2005/11/23 01:12:34 nelsonb%netscape.com Exp $ */
 
 /* This file implements moduluar exponentiation using Montgomery's
  * method for modular reduction.  This file implements the method
@@ -898,7 +898,7 @@ mp_err weave_to_mpi(mp_int *a, const unsigned char *b,
   MUL_NOWEAVE(&tmp,a,b)
 
 #define SWAPPA ptmp = pa1; pa1 = pa2; pa2 = ptmp
-#define MP_ALIGN(x,y) ((((ptrdiff_t)(x))+((y)-1))&(~((y)-1)))
+#define MP_ALIGN(x,y) ((((ptrdiff_t)(x))+((y)-1))&(((ptrdiff_t)0)-(y)))
 
 /* Do modular exponentiation using integer multiply code. */
 mp_err mp_exptmod_safe_i(const mp_int *   montBase, 
