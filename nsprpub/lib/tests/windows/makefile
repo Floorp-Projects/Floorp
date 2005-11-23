@@ -80,7 +80,5 @@ $(OBJDIR)/winevent.exe: $(OBJS)
 
 export:: $(TARGETS)
 
-install:: export
-
 clean::
 	rm -rf $(TARGETS)
