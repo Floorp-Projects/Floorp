@@ -2525,8 +2525,8 @@ case "$target" in
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
     ;;
-*-mingw*|*-cygwin*|*-msvc*|*-mks*)
-    dnl win32 does not use pthreads
+*-mingw*|*-cygwin*|*-msvc*|*-mks*|*-os2*|*-beos*)
+    dnl win32, os2 & beos cannot use pthreads
     USE_PTHREADS=
     _PTHREAD_LDFLAGS=
     USE_USER_PTHREADS=
