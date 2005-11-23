@@ -112,9 +112,6 @@ var PlacesPage = {
                                                  BS.FOLDER_CHILDREN |
                                                  BS.QUERY_CHILDREN);
     this._places.view = children.QueryInterface(Ci.nsITreeView);
-    
-    LOG("Roots:");
-    LOG("Places: " + this._bmsvc.placesRoot + " Menu: " + this._bmsvc.bookmarksRoot + " Toolbar: " + this._bmsvc.placesRoot);
   },
 
   uninit: function PP_uninit() {
