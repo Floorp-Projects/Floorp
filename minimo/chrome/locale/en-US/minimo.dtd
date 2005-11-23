@@ -26,6 +26,11 @@
 <!ENTITY reloadCmd.label              "Reload">
 <!ENTITY linknewtab.label             "Open link in New Tab">
 
+<!-- menu urlabr view options --> 
+
+<!ENTITY decksb.label                  "Search By Tag" >
+<!ENTITY decksearch.label              "Search Mode" >
+
 <!-- toolbar view options --> 
 
 <!ENTITY zoom.label                    "Zoom" >

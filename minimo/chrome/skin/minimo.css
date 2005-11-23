@@ -224,4 +224,23 @@ caption {
   list-style-image: url("chrome://minimo/skin/rssfavicon.png");
 }
 
+/*
+ * urlbar selector icons, these are extensions
+ * and should be placed somewhere else. 
+ */ 
+ 
+#urlbar-deck {
+
+}
+
+#urlbar-deck.sb {
+  list-style-image: url("chrome://minimo/skin/extensions/icon-delicious.png");
+}
+
+#urlbar-deck.search {
+  list-style-image: url("chrome://minimo/skin/extensions/icon-google.png");
+}
+
+ 
+
 

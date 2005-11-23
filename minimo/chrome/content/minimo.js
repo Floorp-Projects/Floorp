@@ -48,6 +48,8 @@ var gGlobalHistory = null;
 var gURIFixup = null;
 var gShowingMenuPopup=null;
 var gFocusedElementHREFContextMenu=null;
+var gDeckMode=0; // 0 = site, 1 = sb, 2= rss. Used for the URLBAR selector, DeckMode impl.
+var gDeckMenuChecked=null; // to keep the state of the checked URLBAR selector mode. 
 
 var gPref = null;                    // so far snav toggles on / off via direct access to pref.
                                      // See bugzilla.mozilla.org/show_bug.cgi?id=311287#c1
@@ -625,6 +627,20 @@ function BrowserViewRSS() {
 }
 
 /**
+  * Deckmode urlbar selector. 
+  * Toggles menu item and deckmode.
+  */
+function BrowserViewDeckSB() {
+  if(gDeckMode==1) BrowserSetDeck(0,null); else BrowserSetDeck(1,document.getElementById("command_ViewDeckSB"));
+}
+
+function BrowserViewDeckSearch() {
+  if(gDeckMode==2) BrowserSetDeck(0,null); else BrowserSetDeck(2,document.getElementById("command_ViewDeckSearch"));
+}
+
+
+
+/**
   * Has to go through some other approach like a XML-based rule system. 
   * Those are constraints conditions and action. 
   **/
@@ -761,6 +777,22 @@ function DoBrowserSearch() {
     }
   } catch (e) {
    
+  }  
+}
+
+/* 
+ * Search extension to urlbar, deckmode.
+ * Called form the deckmode urlbar selector
+ */
+
+function DoBrowserSearchURLBAR(vQuery) {
+  BrowserViewSearch();
+  try { 
+    if(vQuery!="") {
+	 getBrowser().selectedTab = getBrowser().addTab('http://www.google.com/xhtml?q='+vQuery+'&hl=en&lr=&safe=off&btnG=Search&site=search&mrestrict=xhtml');
+   	 browserInit(getBrowser().selectedTab);
+    }
+  } catch (e) {
   }  
 }
 
@@ -951,6 +983,16 @@ function URLBarEntered()
 		return;
     }
     
+    // SB mode
+    if(gDeckMode==1) {
+	DoBrowserSB(gURLBar.value);
+	return;
+    }
+
+    if(gDeckMode==2) {
+	DoBrowserSearchURLBAR(gURLBar.value);
+      return;
+    }
     /* Other normal cases */ 
 
     var fixedUpURI = gURIFixup.createFixupURI(url, 2 /*fixup url*/ );
@@ -1016,6 +1058,24 @@ function MenuPopupHidden() {
     gShowingMenuPopup=false;
 }
 
+/* The URLBAR Deck mode selector 
+ */
+ 
+function BrowserSetDeck(dMode,menuElement) {
+
+ if(gDeckMenuChecked!=null) {
+    gDeckMenuChecked.setAttribute("checked","false");
+ } 
+ gDeckMenuChecked=menuElement;
+
+ if(menuElement!=null) menuElement.setAttribute("checked","true");
+
+ gDeckMode=dMode;
+ if(dMode==2) document.getElementById("urlbar-deck").className='search';
+ if(dMode==1) document.getElementById("urlbar-deck").className='sb';
+ if(dMode==0) document.getElementById("urlbar-deck").className='';
+
+}
 
 
 
