@@ -83,6 +83,7 @@ EXPORTS		= \
 		nsStringGlue.h \
 		nsTHashtable.h \
 		nsVoidArray.h \
+		nsTArray.h \
 		$(NULL)
 
 SDK_HEADERS     = \
