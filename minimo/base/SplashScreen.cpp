@@ -79,6 +79,11 @@ static HWND gSplashScreenDialog = NULL;
 BOOL CALLBACK
 SplashScreenDialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp ) 
 {
+  if (msg == WM_ERASEBKGND)
+  {
+    return 1; // don't erase the background
+  } 
+
   if ( msg == WM_INITDIALOG ) 
   {
     SetWindowText(dlg, "Minimo");
@@ -97,12 +102,18 @@ SplashScreenDialogProc( HWND dlg, UINT msg, WPARAM wp, LPARAM lp )
         BITMAP bitmap;
         if ( GetObject( hbitmap, sizeof bitmap, &bitmap ) )
         {
+          int maxXMetric = SM_CXSCREEN;
+          int maxYMetric = SM_CYSCREEN;
+          
+          int x = (::GetSystemMetrics(maxXMetric) - bitmap.bmWidth  - 2)/2;
+          int y = (::GetSystemMetrics(maxYMetric) - bitmap.bmHeight - 2)/2; 
+          
           SetWindowPos( dlg,
                         NULL,
-                        GetSystemMetrics(SM_CXSCREEN)/2 - bitmap.bmWidth/2,
-                        GetSystemMetrics(SM_CYSCREEN)/2 - bitmap.bmHeight/2,
-                        bitmap.bmWidth,
-                        bitmap.bmHeight,
+                        x,
+                        y,
+                        bitmap.bmWidth  +2,
+                        bitmap.bmHeight +2,
                         SWP_NOZORDER );
           ShowWindow( dlg, SW_SHOW );
         }
