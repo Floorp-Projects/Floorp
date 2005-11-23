@@ -69,7 +69,7 @@ public class GenerateTestCert {
             System.out.println("USAGE: " + 
                     "java org.mozilla.jss.tests.GenerateTestCert " + 
                     "<test dir> <password file>\n");
-        System.exit(0);
+        System.exit(1);
     }
     
     /**

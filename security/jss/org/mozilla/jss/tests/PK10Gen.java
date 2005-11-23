@@ -106,5 +106,6 @@ public class PK10Gen {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		System.exit(0);
 	}
 }

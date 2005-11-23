@@ -678,7 +678,10 @@ public class JSSE_SSLClient {
             if ( args.length == 4) {
                 testHost         = (String)args[3];
             }
-        } catch (Exception e) { }
+        } catch (Exception e) { 
+            System.out.println(usage);
+            System.exit(1);
+        }
         
         JSSE_SSLClient sslSock = new JSSE_SSLClient();
         

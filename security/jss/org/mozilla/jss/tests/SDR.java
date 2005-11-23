@@ -83,6 +83,7 @@ public class SDR {
         e.printStackTrace();
         System.exit(1);
       }
+      System.exit(0);
     }
 
     private static char[] hex = new char[]

@@ -51,8 +51,8 @@
 package org.mozilla.jss.tests;
 
 import org.mozilla.jss.crypto.*;
-import java.security.Signature;
-import java.security.KeyPairGenerator;
+import org.mozilla.jss.crypto.Signature;
+import org.mozilla.jss.crypto.KeyPairGenerator;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.io.*;
@@ -105,12 +105,13 @@ public class SigTest {
         token = manager.getTokenByName(tokenname);
 
         // Generate an RSA keypair
-        kpgen = KeyPairGenerator.getInstance("RSA");
+        kpgen = token.getKeyPairGenerator(KeyPairAlgorithm.RSA);
         kpgen.initialize(1024);
         keyPair = kpgen.genKeyPair();
 
         // RSA MD5
-        signer = Signature.getInstance("MD5withRSA");
+        signer = token.getSignatureContext(
+                        SignatureAlgorithm.RSASignatureWithMD5Digest);
         System.out.println("Created a signing context");
         signer.initSign(
             (org.mozilla.jss.crypto.PrivateKey)keyPair.getPrivate());
