@@ -84,7 +84,9 @@
       <preferenceitem preftype="int"     id="browser.display.zoomui" name="browserDisplayZoomUI"/>
       <preferenceitem preftype="int"     id="browser.display.zoomcontent" name="browserDisplayZoomContent"/> 
       <preferenceitem preftype="bool"    id="browser.cache.disk.enable" name="useDiskCache" />
+      <!--
       <preferenceitem preftype="string"  id="browser.cache.disk.parent_directory" name="storeCacheStorageCard" />
+      -->
       <preferenceitem preftype="bool"    id="network.prefetch-next" name="enablePreFetching" />
       <preferenceitem preftype="int"     id="browser.cache.disk.capacity" name="cacheSizeField" />
   </preferenceset>
