@@ -13,3 +13,4 @@ classic.jar:
 
 en-US.jar:
     locale/browser/places/places.dtd                     (locale/places.dtd)
+    locale/browser/places/places.properties              (locale/places.properties)

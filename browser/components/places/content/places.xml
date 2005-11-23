@@ -38,6 +38,25 @@
         item.QueryInterface(Ci.nsIInterfaceRequestor);
         this._browserWindow = item.getInterface(Ci.nsIDOMWindowInternal);
       ]]></constructor>
+      
+      <method name="_fireEvent">
+        <parameter name="name"/>
+        <body><![CDATA[ 
+          var event = document.createEvent("events");
+          event.initEvent("placestree-" + name, false, true);
+          
+          var canceled = !this.dispatchEvent(event);
+          
+          var handler = this.getAttribute("onplacestree" + name);
+          if (handler != "") {
+            var fn = new Function("event", handler);
+            if (!fn(event))
+              canceled = true;
+          }
+          return !canceled;
+        ]]></body>
+      </method>
+      
       <property name="filterString">
         <getter><![CDATA[
           this.view.QueryInterface(Ci.nsINavHistoryResult);
@@ -56,10 +75,7 @@
           var query = this._places.getNewQuery();
           query.searchTerms = val;
           
-          var result = this._places.executeQuery(query, options);
-          result.QueryInterface(Ci.nsITreeView);
-          this.view = result;
-          
+          this.load([query], options);          
           return val;
         ]]></setter>
       </property>
@@ -75,18 +91,24 @@
                                                    options);
         ]]></getter>
         <setter><![CDATA[
-          const NH = Ci.nsINavHistory;
-          const NHQO = Ci.nsINavHistoryQueryOptions;
-          var queries = { }, queryCount = { }, options = { };
-          this._places.queryStringToQueries(val, queries, queryCount, options);
-          var result = this._places.executeQueries(queries.value, 
-                                                   queryCount.value, 
-                                                   options.value);
-          result.QueryInterface(Components.interfaces.nsITreeView);
-          this.view = result;
+          var queries = { }, options = { };
+          this._places.queryStringToQueries(val, queries, { }, options);
+          this.load(queries.value, options.value);
           return val;
         ]]></setter>
       </property>
+      
+      <method name="load">
+        <parameter name="queries"/>
+        <parameter name="options"/>
+        <body><![CDATA[ 
+          var result = this._places.executeQueries(queries, queries.length, 
+                                                   options);
+          result.QueryInterface(Ci.nsITreeView);
+          this.view = result;
+          this._fireEvent("reloaded");
+        ]]></body>
+      </method>
     
       <property name="hasSelection">
         <getter><![CDATA[
@@ -145,6 +167,9 @@
       <property name="browserWindow" onget="return this._browserWindow"/>
     </implementation>
     <handlers>
+      <handler event="focus"><![CDATA[
+        PlacesController.activeView = this;
+      ]]></handler>
       <handler event="select"><![CDATA[
         document.commandDispatcher.updateCommands("select");
       ]]></handler>
