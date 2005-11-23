@@ -104,7 +104,6 @@ nsSpatialNavigation::KeyPress(nsIDOMEvent* aEvent)
       return NS_OK;
   }
 
-
   PRInt32 formControlType = -1;
   // check to see if we are in a text field.
   // based on nsTypeAheadFind.
@@ -118,6 +117,9 @@ nsSpatialNavigation::KeyPress(nsIDOMEvent* aEvent)
   nsEvent->GetOriginalTarget(getter_AddRefs(domEventTarget));
   
   nsCOMPtr<nsIContent> targetContent = do_QueryInterface(domEventTarget);
+
+  if (targetContent->IsContentOfType(nsIContent::eXUL)) 
+    return NS_OK;
   
   if (targetContent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) 
   {
