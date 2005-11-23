@@ -72,6 +72,7 @@
 
 #include "nsEventQueueService.h"
 #include "nsEventQueue.h"
+#include "nsEventQueueUtils.h"
 
 #include "nsIProxyObjectManager.h"
 #include "nsProxyEventPrivate.h"  // access to the impl of nsProxyObjectManager for the generic factory registration.
