@@ -83,7 +83,7 @@ InitEmbedding_Impl(JNIEnv* env, jobject aLibXULDirectory,
   }
 
   // init libXUL
-  rv = XRE_InitEmbedding(libXULDir, appDir, provider);
+  rv = XRE_InitEmbedding(libXULDir, appDir, provider, nsnull, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;

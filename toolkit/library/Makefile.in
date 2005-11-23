@@ -44,7 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = libxul
 LIBRARY_NAME = xul
-EXPORT_LIBRARY = 1
 FORCE_USE_PIC = 1
 FORCE_SHARED_LIB = 1
 MOZILLA_INTERNAL_API = 1
@@ -65,237 +64,40 @@ REQUIRES = \
 	xulapp \
 	$(NULL)
 
-CPPSRCS = \
-	nsStaticXULComponents.cpp \
-	$(NULL)
-
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
-REQUIRES += libreg widget gfx
-
-CPPSRCS += \
-	dlldeps.cpp \
-	dlldeps-obs.cpp \
-	nsGFXDeps.cpp \
-	nsDllMain.cpp \
-	dlldeps-xul.cpp \
-	$(NULL)
-
-ifndef MOZ_NATIVE_ZLIB
-CPPSRCS += dlldeps-zlib.cpp
-DEFINES += -DZLIB_INTERNAL
-endif
-
-LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/windows
-endif
-
-ifeq ($(OS_ARCH),WINNT)
-DEFINES	+= -DZLIB_DLL=1
+CPPSRCS += dlldeps-xul.cpp
 endif
 
 # dependent libraries
 STATIC_LIBS = \
-	xpcom_core \
-	xpcom_compat \
-	unicharutil_s \
-	ucvutil_s \
-	gkgfx \
-	gfxshared_s \
 	xulapp_s \
 	$(NULL)
-
-# component libraries
-COMPONENT_LIBS += \
-	xpcom_compat_c \
-	xpconnect \
-	necko \
-	uconv \
-	i18n \
-	jar$(VERSION_NUMBER) \
-	pref \
-	caps \
-	rdf \
-	htmlpars \
-	imglib2 \
-	gkplugin \
-	gklayout \
-	xmlextras \
-	docshell \
-	embedcomponents \
-	webbrwsr \
-	editor \
-	nsappshell \
-	txmgr \
-	composer \
-	chrome \
-	mork \
-	mozfind \
-	appcomps \
-	commandlines \
-	tkautocomplete \
-	toolkitcomps \
-	xpinstall \
-	jsd \
-	pippki \
-	pipboot \
-	pipnss \
-	$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-COMPONENT_LIBS += intlcmpt
-endif
-
-ifdef MOZ_MATHML
-COMPONENT_LIBS += ucvmath
-endif
-
-ifneq (,$(filter xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB)$(MOZ_ENABLE_XPRINT))
-STATIC_LIBS += xlibrgb
-endif
-
-ifdef MOZ_ENABLE_XPRINT
-DEFINES += -DMOZ_ENABLE_XPRINT
-STATIC_LIBS += xprintutil
-COMPONENTS_LIBS += gfxxprint
-endif
-
-ifdef MOZ_ENABLE_XLIB
-STATIC_LIBS += xlibxtbin
-endif
-
-ifdef MOZ_ENABLE_GTK
-STATIC_LIBS += gtksuperwin
-COMPONENT_LIBS += widget_gtk
-endif
-
-ifdef MOZ_ENABLE_GTK2
-COMPONENT_LIBS += widget_gtk2
-endif
-
-ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
-STATIC_LIBS += gtkxtbin
-endif
-
-ifdef MOZ_IPCD
-DEFINES += -DMOZ_IPCD
-COMPONENT_LIBS += ipcdc
-endif
-
-ifdef MOZ_ENABLE_POSTSCRIPT
-DEFINES += -DMOZ_ENABLE_POSTSCRIPT
-STATIC_LIBS += gfxpsshar
-COMPONENT_LIBS += gfxps
-endif
-ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
-ifndef MOZ_ENABLE_GNOMEUI
-DEFINES += -DICON_DECODER
-COMPONENT_LIBS += imgicon
-endif
-endif
-ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += gkgfxwin gkwidget
-endif
-ifeq (beos,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += gfx_beos widget_beos
-endif
-ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += gfx_os2 wdgtos2
-endif
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-COMPONENT_LIBS += gfx_mac widget_mac
-endif
-ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += widget_qt
-endif
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-DEFINES += -DMOZ_ENABLE_CAIRO_GFX
-COMPONENT_LIBS += gkgfxcairo
-else
-  ifneq (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2))
-  COMPONENT_LIBS += gfx_gtk
-  endif
-  ifdef MOZ_ENABLE_QT
-  COMPONENT_LIBS += gfx_qt
-  endif
-  ifdef MOZ_ENABLE_XLIB
-  COMPONENT_LIBS += gfx_xlib
-  endif
-  ifdef MOZ_ENABLE_PHOTON
-  COMPONENT_LIBS += gfx_photon
-  endif
-endif
-
-ifdef MOZ_ENABLE_XLIB
-COMPONENT_LIBS += widget_xlib
-endif
-ifdef MOZ_ENABLE_PHOTON
-COMPONENT_LIBS += widget_photon
-endif
-
-ifdef MOZ_OJI
-STATIC_LIBS += jsj
-COMPONENT_LIBS += oji
-endif
-
-ifdef ACCESSIBILITY
-COMPONENT_LIBS += accessibility
-endif
-
-ifdef MOZ_ENABLE_XREMOTE
-COMPONENT_LIBS += remoteservice
-endif
 
 SHARED_LIBRARY_LIBS = \
 	$(foreach lib,$(STATIC_LIBS),$(DIST)/lib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
 	$(foreach component,$(COMPONENT_LIBS),$(DIST)/lib/components/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
 	$(NULL)
 
-EXTRA_DSO_LDOPTS += \
-	$(MOZ_FIX_LINK_PATHS) \
-	$(LIBS_DIR) \
-	$(JPEG_LIBS) \
-	$(PNG_LIBS) \
-	$(MOZ_JS_LIBS) \
-	$(NSS_LIBS) \
+ifdef MOZ_ENABLE_LIBXUL
+include $(srcdir)/libxul-config.mk
+
+EXTRA_DEPS += \
+	$(srcdir)/libxul-config.mk \
+	$(srcdir)/libxul-rules.mk \
 	$(NULL)
-
-ifdef MOZ_NATIVE_ZLIB
-EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
-else
-EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
-
-ifdef GC_LEAK_DETECTOR
-EXTRA_DSO_LIBS += boehm
-endif
-
-ifdef NS_TRACE_MALLOC
-EXTRA_DSO_LIBS += tracemalloc
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LIBS += macmorefiles_s
-EXTRA_DEPS += $(DIST)/lib/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX)
-endif
-
-LOCAL_INCLUDES += -I$(topsrcdir)/config
 
 include $(topsrcdir)/config/rules.mk
 
 EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS)
 
-OS_LIBS += $(LIBICONV)
+ifdef MOZ_ENABLE_LIBXUL
+include $(srcdir)/libxul-rules.mk
+else
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
+endif
 
-DEFINES += \
-	-D_IMPL_NS_COM \
-	-D_IMPL_NS_STRINGAPI \
-	-DEXPORT_XPT_API \
-	-DEXPORT_XPTC_API \
-	-D_IMPL_NS_COM_OBSOLETE \
-	-D_IMPL_NS_GFX \
-	-D_IMPL_NS_WIDGET \
-	-DIMPL_XULAPI \
-	$(NULL)
+DEFINES += -DIMPL_XREAPI
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
 
@@ -332,23 +134,3 @@ ifdef GNU_CXX
 DSO_LDOPTS += -Wl,--export-all-symbols
 endif
 endif # WINNT
-
-ifdef MOZ_SVG_RENDERER_GDIPLUS
-OS_LIBS += Gdiplus.lib
-endif
-
-ifdef MOZ_SVG_RENDERER_LIBART
-EXTRA_DSO_LDOPTS += $(MOZ_LIBART_LIBS)
-endif
-
-ifneq (,$(MOZ_ENABLE_CANVAS)$(MOZ_SVG_RENDERER_CAIRO))
-EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
-endif
-
-export:: dlldeps.cpp dlldeps-obs.cpp
-
-dlldeps.cpp: $(topsrcdir)/xpcom/build/dlldeps.cpp
-	$(INSTALL) $^ .
-
-dlldeps-obs.cpp: $(topsrcdir)/xpcom/obsolete/dlldeps-obs.cpp
-	$(INSTALL) $^ .

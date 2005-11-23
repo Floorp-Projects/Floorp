@@ -88,26 +88,20 @@ LOCAL_INCLUDES += \
         -I$(topsrcdir)/toolkit/profile/src \
         $(NULL)
 
-ifdef BUILD_STATIC_LIBS
-STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
-endif
-
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
+LIBS += -lXUL
+else
+EXTRA_DSO_LIBS += xul
 endif
 
-LIBS = \
-	$(STATIC_COMPONENTS_LINKER_PATH) \
+LIBS += \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(NULL)
-
-ifndef MOZ_ENABLE_LIBXUL
-LIBS += $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
-endif
 
 # Add explicit X11 dependency when building against X11 toolkits
 ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
@@ -130,23 +124,9 @@ DEFINES += -DMOZ_WINCONSOLE=$(MOZ_WINCONSOLE)
 NSDISTMODE = copy
 
 include $(topsrcdir)/config/config.mk
-ifndef BUILD_STATIC_LIBS
 
 ifdef NS_TRACE_MALLOC
 EXTRA_DSO_LIBS += tracemalloc
-endif
-
-else
-include $(topsrcdir)/config/static-config.mk
-
-EXTRA_DEPS	+= \
-	$(STATIC_EXTRA_DEPS) \
-	$(NULL)
-DEFINES		+= $(STATIC_DEFINES)
-CPPSRCS		+= $(STATIC_CPPSRCS)
-EXTRA_DSO_LIBS	+= $(STATIC_EXTRA_DSO_LIBS)
-REQUIRES	+= $(STATIC_REQUIRES)
-EXTRA_LIBS	+= $(STATIC_EXTRA_LIBS)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -156,9 +136,6 @@ ifndef GNU_CC
 RCFLAGS += -DMOZ_XULRUNNER -I$(srcdir)
 else
 RCFLAGS += -DMOZ_XULRUNNER --include-dir $(srcdir)
-endif
-ifdef BUILD_STATIC_LIBS
-RCFLAGS += -DMOZ_STATIC_BUILD
 endif
 ifdef DEBUG
 RCFLAGS += -DDEBUG
@@ -172,10 +149,6 @@ endif
 ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
 RCFLAGS += -DMOZ_XULRUNNER
-ifdef BUILD_STATIC_LIBS
-EXE_DEF_FILE = xulrunner.def
-RCFLAGS += -DMOZ_STATIC_BUILD -i $(DIST)/include/widget
-endif
 ifdef DEBUG
 RCFLAGS += -DDEBUG
 endif
@@ -185,19 +158,6 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DXULRUNNER_ICO=\"$(DIST)/branding/xulrunner.ico\" -DDOCUMENT_ICO=\"$(DIST)/branding/document.ico\"
-
-ifdef BUILD_STATIC_LIBS
-include $(topsrcdir)/config/static-rules.mk
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-ifdef BUILD_STATIC_LIBS
-LIBS	+= -framework QuickTime -framework IOKit
-ifdef USE_PREBINDING
-BIN_FLAGS += -Wl,-headerpad -Wl,5a0c
-endif
-endif
-endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
 LIBS += -lphexlib
@@ -216,20 +176,6 @@ ifeq ($(OS_ARCH),WINNT)
 #
 ifndef GNU_CC
 LDFLAGS += /HEAP:0x40000
-endif
-endif
-
-ifeq ($(OS_ARCH),OS2)
-ifdef BUILD_STATIC_LIBS
-$(EXE_DEF_FILE):
-	rm -f $@
-	@echo NAME mozilla >$(EXE_DEF_FILE)
-	@echo IMPORTS >>$(EXE_DEF_FILE)
-	@echo 	WinQueryProperty		= PMMERGE.5450 >>$(EXE_DEF_FILE)
-	@echo 	WinRemoveProperty		= PMMERGE.5451 >>$(EXE_DEF_FILE)
-	@echo 	WinSetProperty			= PMMERGE.5452 >>$(EXE_DEF_FILE)
-
-LDFLAGS += -Zlinker /NOE
 endif
 endif
 
