@@ -52,7 +52,9 @@ static nsresult ParseQueryTimeString(const nsCString& aString,
 
 // components of a query string
 #define QUERYKEY_BEGIN_TIME "beginTime"
+#define QUERYKEY_BEGIN_TIME_REFERENCE "beginTimeRef"
 #define QUERYKEY_END_TIME "endTime"
+#define QUERYKEY_END_TIME_REFERENCE "endTimeRef"
 #define QUERYKEY_SEARCH_TERMS "terms"
 #define QUERYKEY_ONLY_BOOKMARKED "onlyBookmarked"
 #define QUERYKEY_DOMAIN_IS_HOST "domainIsHost"
@@ -163,9 +165,17 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       NS_ENSURE_SUCCESS(rv, rv);
 
       AppendAmpersandIfNonempty(aQueryString);
-      aQueryString += NS_LITERAL_CSTRING(QUERYKEY_BEGIN_TIME);
-      aQueryString.Append('=');
+      aQueryString += NS_LITERAL_CSTRING(QUERYKEY_BEGIN_TIME "=");
       AppendInt64(aQueryString, beginTime);
+
+      // reference
+      PRUint32 reference;
+      query->GetBeginTimeReference(&reference);
+      if (reference != nsINavHistoryQuery::TIME_RELATIVE_EPOCH) {
+        AppendAmpersandIfNonempty(aQueryString);
+        aQueryString += NS_LITERAL_CSTRING(QUERYKEY_BEGIN_TIME_REFERENCE "=");
+        AppendInt32(aQueryString, reference);
+      }
     }
 
     // end time
@@ -177,9 +187,17 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       NS_ENSURE_SUCCESS(rv, rv);
 
       AppendAmpersandIfNonempty(aQueryString);
-      aQueryString += NS_LITERAL_CSTRING(QUERYKEY_END_TIME);
-      aQueryString.Append('=');
+      aQueryString += NS_LITERAL_CSTRING(QUERYKEY_END_TIME "=");
       AppendInt64(aQueryString, endTime);
+
+      // reference
+      PRUint32 reference;
+      query->GetEndTimeReference(&reference);
+      if (reference != nsINavHistoryQuery::TIME_RELATIVE_EPOCH) {
+        AppendAmpersandIfNonempty(aQueryString);
+        aQueryString += NS_LITERAL_CSTRING(QUERYKEY_END_TIME_REFERENCE "=");
+        AppendInt32(aQueryString, reference);
+      }
     }
 
     // search terms
@@ -416,6 +434,18 @@ nsNavHistory::TokensToQueries(const nsVoidArray& aTokens,
         NS_WARNING("Begin time format in query is invalid, ignoring");
       }
 
+    } else if (kvp->key.EqualsLiteral(QUERYKEY_BEGIN_TIME_REFERENCE)) {
+
+      // begin time reference
+      PRUint32 ref = kvp->value.ToInteger((PRInt32*)&rv);
+      if (NS_SUCCEEDED(rv)) {
+        if (NS_FAILED(query->SetBeginTimeReference(ref))) {
+          NS_WARNING("Begin time reference is out of range, ignoring");
+        }
+      } else {
+        NS_WARNING("Begin time reference is invalid number, ignoring");
+      }
+
     } else if (kvp->key.EqualsLiteral(QUERYKEY_END_TIME)) {
 
       // end time
@@ -426,6 +456,18 @@ nsNavHistory::TokensToQueries(const nsVoidArray& aTokens,
         NS_ENSURE_SUCCESS(rv, rv);
       } else {
         NS_WARNING("Begin time format in query is invalid, ignoring");
+      }
+
+    } else if (kvp->key.EqualsLiteral(QUERYKEY_END_TIME_REFERENCE)) {
+
+      // end time reference
+      PRUint32 ref = kvp->value.ToInteger((PRInt32*)&rv);
+      if (NS_SUCCEEDED(rv)) {
+        if (NS_FAILED(query->SetEndTimeReference(ref))) {
+          NS_WARNING("End time reference is out of range, ignoring");
+        }
+      } else {
+        NS_WARNING("End time reference is invalid number, ignoring");
       }
 
     } else if (kvp->key.EqualsLiteral(QUERYKEY_SEARCH_TERMS)) {
@@ -537,9 +579,7 @@ nsNavHistory::TokensToQueries(const nsVoidArray& aTokens,
 nsresult
 ParseQueryTimeString(const nsCString& aString, PRTime* aTime)
 {
-  // since we only support large number microseconds, disallow any small numbers
-  // that people might try to use for year or month numbers.
-  if (PR_sscanf(aString.get(), "%lld", aTime) != 1 || *aTime < 3000)
+  if (PR_sscanf(aString.get(), "%lld", aTime) != 1)
     return NS_ERROR_INVALID_ARG;
   return NS_OK;
 }
