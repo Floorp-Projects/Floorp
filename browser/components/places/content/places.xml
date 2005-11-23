@@ -130,7 +130,7 @@
       
       <method name="getSelectionNodes">
         <body><![CDATA[ 
-          var result = this.view.queryInterface(Ci.nsINavHistoryResult);
+          var result = this.view.QueryInterface(Ci.nsINavHistoryResult);
           var selection = this.view.selection;
           var rc = selection.getRangeCount();
           var nodes = [];
@@ -155,12 +155,49 @@
           var min = { }, max = { };
           selection.getRangeAt(0, min, max);
           
+          var result = view.QueryInterface(Ci.nsINavHistoryResult);
+          return result.nodeForTreeIndex(min.value);
+        ]]></getter>
+      </property>
+      
+      <property name="selectedURLNode">
+        <getter><![CDATA[
+          var view = this.view;
+          var selection = view.selection;
+          var rc = selection.getRangeCount();
+          if (rc != 1) 
+            return null;
+          var min = { }, max = { };
+          selection.getRangeAt(0, min, max);
+          
           // Cannot load containers
           if (view.isContainer(min.value) || view.isSeparator(min.value))
             return null;
             
           var result = view.QueryInterface(Ci.nsINavHistoryResult);
           return result.nodeForTreeIndex(min.value);
+        ]]></getter>
+      </property>
+      
+      <property name="insertionPoint">
+        <getter><![CDATA[ 
+          var view = this.view;
+          var selection = view.selection;
+          var rc = selection.getRangeCount();
+          var min = { }, max = { };
+          selection.getRangeAt(rc - 1, min, max);
+          
+          var result = view.QueryInterface(Ci.nsINavHistoryResult);
+          var lastSelected = result.nodeForTreeIndex(max.value);
+
+          // Any visible selected item will always have a parent. The parent of
+          // an item at the root is the result itself, which can be QI'ed to 
+          // nsINavHistoryResult
+          var container = lastSelected.parent;
+          for (var i = 0; 
+               i < container.childCount && container.getChild(i) != lastSelected;
+               ++i);
+          return { container: 1, index: -1 };
         ]]></getter>
       </property>
       
@@ -173,6 +210,34 @@
       <handler event="select"><![CDATA[
         document.commandDispatcher.updateCommands("select");
       ]]></handler>
+      <handler event="click"><![CDATA[
+        if (this.getAttribute("singleclick") == "true") {
+          var view = this.view;
+          var selection = view.selection;
+          var rc = selection.getRangeCount();
+          if (rc != 1) 
+            return null;
+          var min = { };
+          selection.getRangeAt(0, min, { });
+          if (!view.isContainerEmpty(min.value))
+            view.toggleOpenState(min.value);
+        }
+      ]]></handler>
+    </handlers>
+  </binding>
+  
+  <binding id="command-button" extends="chrome://global/content/bindings/button.xml#button">
+    <implementation>
+      <method name="updateActiveView">
+        <body><![CDATA[ 
+          if (this.hasAttribute("view"))
+            PlacesController.activeView = document.getElementById(this.getAttribute("view"));
+        ]]></body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="click" button="0" action="this.updateActiveView();"/>
+      <handler event="keypress" keycode="VK_SPACE" action="this.updateActiveView();"/>
     </handlers>
   </binding>
 

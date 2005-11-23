@@ -7,3 +7,7 @@ tree {
   -moz-binding: url("chrome://browser/content/places/places.xml#places-tree");
 }
 
+button {
+  -moz-binding: url("chrome://browser/content/places/places.xml#command-button");
+}
+

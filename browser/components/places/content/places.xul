@@ -16,6 +16,11 @@
   <script type="application/x-javascript"
           src="chrome://browser/content/places/places.js"/>
   
+  <stringbundleset id="stringbundles">
+    <stringbundle id="placeBundle" src="chrome://browser/locale/places/places.properties"/>
+    <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
+  </stringbundleset>
+  
   <commandset id="placesCommands">
     <command id="placesCmd_find" label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"/>
     <command id="placesCmd_export" label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"/>
@@ -33,7 +38,9 @@
     <commandset>
       <command id="placesCmd_edit:cut" label="&cmd.edit_cut.label;" accesskey="&cmd.edit_cut.accesskey;"/>
       <command id="placesCmd_edit:paste" label="&cmd.edit_paste.label;" accesskey="&cmd.edit_paste.accesskey;"/>
-      <command id="placesCmd_edit:delete" label="&cmd.edit_delete.label;" accesskey="&cmd.edit_delete.accesskey;"/>
+      <command id="placesCmd_edit:delete" 
+               label="&cmd.edit_delete.label;" accesskey="&cmd.edit_delete.accesskey;"
+               oncommand="PlacesController.remove();"/>
       <command id="placesCmd_rename" label="&cmd.rename.label;" accesskey="&cmd.rename.accesskey;"/>
     </commandset>
     <commandset type="link" readonly="true">
@@ -50,16 +57,18 @@
       <command id="placesCmd_open:tabs" label="&cmd.open_tabs.label;" accesskey="&cmd.open_tabs.accesskey;"/>
       <command id="placesCmd_groupby:site" 
                label="&cmd.groupby_site.label;" accesskey="&cmd.groupby_site.accesskey;"
-               oncommand="PlacesPage.groupBySite();"/>
+               oncommand="PlacesController.groupBySite();"/>
       <command id="placesCmd_groupby:page" 
                label="&cmd.groupby_page.label;" accesskey="&cmd.groupby_page.accesskey;"
-               oncommand="PlacesPage.groupByPage();"/>
+               oncommand="PlacesController.groupByPage();"/>
       <command id="placesCmd_groupby:feed" label="&cmd.groupby_feed.label;" accesskey="&cmd.groupby_feed.accesskey;"/>
       <command id="placesCmd_groupby:post" label="&cmd.groupby_post.label;" accesskey="&cmd.groupby_post.accesskey;"/>
     </commandset>
     <commandset type="container">
       <command id="placesCmd_sortby:name" label="&cmd.sortby_name.label;" accesskey="&cmd.sortby_name.accesskey;"/>
-      <command id="placesCmd_new:folder" label="&cmd.new_folder.label;" accesskey="&cmd.new_folder.accesskey;"/>
+      <command id="placesCmd_new:folder" 
+               label="&cmd.new_folder.label;" accesskey="&cmd.new_folder.accesskey;"
+               oncommand="PlacesController.newFolder()"/>
       <command id="placesCmd_new:separator" label="&cmd.new_separator.label;" accesskey="&cmd.new_separator.accesskey;"/>
     </commandset>
     <commandset type="container|feed" readonly="true">
@@ -74,7 +83,7 @@
     <key id="placesKey_edit:copy" command="placesCmd_edit:copy" key="&cmd.edit_copy.key;" modifiers="accel"/>
     <key id="placesKey_edit:paste" command="placesCmd_edit:paste" key="&cmd.edit_paste.key;" modifiers="accel"/>
     <key id="placesKey_edit:delete" command="placesCmd_edit:delete" keycode="VK_DELETE"/>
-    <key id="placesKey_open" command="placesCmd_open"/>
+    <key id="placesKey_open" command="placesCmd_open" keycode="VK_ENTER"/>
     <key id="placesKey_open:window" command="placesCmd_open:window" keycode="VK_ENTER" modifiers="shift"/>
     <key id="placesKey_open:tab" oncommand="placesCmd_open:tab" keycode="VK_ENTER" modifiers="accel"/>
     <key id="placesKey_show:info" oncommand="placesCmd_show:info" key="&cmd.show_info.key;" modifiers="accel"/>
@@ -110,16 +119,17 @@
     <vbox>
       <tree id="placesList" class="placesTree" flex="1"
             hidecolumnpicker="true" context="placesContext"
-            onselect="PlacesPage.placeSelected(event);">
+            onselect="PlacesPage.placeSelected(event);"
+            singleclick="true">
         <treecols>
           <treecol id="title" flex="1" primary="true" hideheader="true"/>
         </treecols>
-        <treechildren id="placesListChildren" flex="1"/>
+        <treechildren id="placesListChildren" view="placesList"  flex="1"/>
       </tree>
       <vbox id="historyCalendar" 
             onselectionchanged="LOG('FIXME: do history query');"/>
       <hbox class="commands">
-        <button id="newPlace" command="placesCmd_new:folder"/>
+        <button id="newPlace" view="placesList" command="placesCmd_new:folder"/>
       </hbox>
     </vbox>
     <splitter id="splitter"/>
@@ -154,26 +164,32 @@
               <treecol label="&col.title.label;" id="title" flex="1" primary="true"/>
               <treecol label="&col.url.label;" id="url" flex="1"/>
             </treecols>
-            <treechildren id="placesContentChildren" flex="1"/>
+            <treechildren id="placeContentChildren" view="placeContent" flex="1"/>
           </tree>
           <hbox>
             <deck id="commands" flex="1">
               <hbox class="commands" id="commands_bookmark" flex="1">
-                <button id="newFolder" command="placesCmd_new:folder"/>
+                <button id="newFolder" view="placeContent" command="placesCmd_new:folder"/>
                 <spacer flex="1"/>
                 <button id="saveSearch_bookmark" command="placesCmd_saveSearch" hidden="true"/>
               </hbox>
               <hbox class="commands" id="commands_history" flex="1">
-                <button id="groupBy_site"  command="placesCmd_groupby:site"/>
-                <button id="groupBy_page" command="placesCmd_groupby:page"/>
+                <button id="groupBy_site" class="commandGroupButton first" 
+                        view="placeContent" command="placesCmd_groupby:site"/>
+                <spacer class="groupSpacer"/>
+                <button id="groupBy_page" class="commandGroupButton last" 
+                        view="placeContent" command="placesCmd_groupby:page"/>
                 <spacer flex="1"/>
                 <button id="saveSearch_history" command="placesCmd_saveSearch" hidden="true"/>
               </hbox>
               <hbox class="commands" id="commands_feed" flex="1">
                 <button id="subscribe" command="placesCmd_new:folder"/>
                 <separator/>
-                <button id="groupOption0"  command="placesCmd_groupby:site"/>
-                <button id="groupOption1" command="placesCmd_groupby:page"/>
+                <button id="groupOption0" class="commandGroupButton first" 
+                        view="placeContent" command="placesCmd_groupby:site"/>
+                <spacer class="groupSpacer"/>
+                <button id="groupOption1" class="commandGroupButton last" 
+                        view="placeContent" command="placesCmd_groupby:page"/>
                 <spacer flex="1"/>
                 <button id="saveSearch_feed" command="placesCmd_saveSearch" hidden="true"/>
               </hbox>

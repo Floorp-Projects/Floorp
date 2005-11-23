@@ -10,6 +10,7 @@ browser.jar:
 
 classic.jar:
     skin/classic/browser/places/places.css               (skin-win/places.css)
+    skin/classic/browser/places/icons.png                (skin-win/icons.png)
 
 en-US.jar:
     locale/browser/places/places.dtd                     (locale/places.dtd)

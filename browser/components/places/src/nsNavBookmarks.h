@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsINavBookmarksService.h"
+#include "nsIStringBundle.h"
 #include "nsNavHistory.h"
 #include "nsBrowserCompsCID.h"
 
@@ -124,4 +125,6 @@ private:
   nsCOMPtr<mozIStorageStatement> mDBFolderCount;
 
   friend class nsNavFolderResultNode;
+
+  nsCOMPtr<nsIStringBundle> mBundle;
 };

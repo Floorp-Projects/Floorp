@@ -80,6 +80,13 @@ var PlacesController = {
   },
   
   buildContextMenu: function PC_buildContextMenu(popup) {
+    if (document.popupNode.hasAttribute("view")) {
+      var view = document.popupNode.getAttribute("view");
+      this.activeView = document.getElementById(view);
+    }
+    
+    // Determine availability/enabled state of commands
+    // ...
     return true;
   },
 
@@ -118,23 +125,23 @@ var PlacesController = {
    */
   openLinkInNewTab: function PC_openLinkInNewTab() {
     var view = this._activeView;
-    view.browserWindow.openNewTabWith(view.selectedNode.url, null, null);
+    view.browserWindow.openNewTabWith(view.selectedURLNode.url, null, null);
   },
 
   /**
    * Loads the selected URL in a new window.
    */
-  openLinkInNewWindow: function PP_openLinkInNewWindow() {
+  openLinkInNewWindow: function PC_openLinkInNewWindow() {
     var view = this._activeView;
-    view.browserWindow.openNewWindowWith(view.selectedNode.url, null, null);
+    view.browserWindow.openNewWindowWith(view.selectedURLNode.url, null, null);
   },
 
   /**
    * Loads the selected URL in the current window, replacing the Places page.
    */
-  openLinkInCurrentWindow: function PP_openLinkInCurrentWindow() {
+  openLinkInCurrentWindow: function PC_openLinkInCurrentWindow() {
     var view = this._activeView;
-    view.browserWindow.loadURI(view.selectedNode.url, null, null);
+    view.browserWindow.loadURI(view.selectedURLNode.url, null, null);
   },
   
   /**
@@ -143,7 +150,7 @@ var PlacesController = {
    *          An array of grouping options, see nsINavHistoryQueryOptions
    *          for details.
    */
-  setGroupingMode: function PP_setGroupingOptions(options) {
+  setGroupingMode: function PC_setGroupingOptions(options) {
     var result = this._activeView.view.QueryInterface(Ci.nsINavHistoryResult);
     var queries = result.getSourceQueries({ });
     var newOptions = result.sourceQueryOptions.clone();
@@ -152,6 +159,71 @@ var PlacesController = {
     this._activeView.load(queries, newOptions);
   },
   
+  /**
+   * Group the current content view by domain
+   */
+  groupBySite: function PC_groupBySite() {
+    var modes = [Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN, 
+    Ci.nsINavHistoryQueryOptions.GROUP_BY_HOST];
+    this.setGroupingMode(modes);
+  },
+  
+  /**
+   * Ungroup the current content view (i.e. show individual pages)
+   */
+  groupByPage: function PC_groupByPage() {
+    this.setGroupingMode([]);
+  },
+  
+  /**
+   * Create a new Bookmark folder somewhere. Prompts the user for the name
+   * of the folder. 
+   */
+  newFolder: function PC_newFolder() {
+    var view = this._activeView;
+    
+    var ps =
+        Cc["@mozilla.org/embedcomp/prompt-service;1"].
+        getService(Ci.nsIPromptService);
+    var bundle = document.getElementById("placeBundle");
+    var title = bundle.getString("newFolderTitle");
+    var text = bundle.getString("newFolderMessage");
+    var value = { value: bundle.getString("newFolderDefault") };
+    if (ps.prompt(window, title, text, value, null, { })) {
+      var ip = view.insertionPoint;
+      LOG("Insertion Point = " + ip.toSource());
+      
+      var bms = 
+          Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+          getService(Ci.nsINavBookmarksService);
+      LOG("Insert Folder: " + value.value + " into: " + ip.container + " at: " + ip.index);
+      var folder = bms.createFolder(ip.container, value.value, ip.index);
+    }
+  },
+  
+  /**
+   * Removes the selection
+   */
+  remove: function() {
+    var bms = 
+        Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+        getService(Ci.nsINavBookmarksService);
+    var ios = 
+        Cc["@mozilla.org/network/io-service;1"].
+        getService(Ci.nsIIOService);
+    var nodes = this._activeView.getSelectionNodes();
+    for (var i = 0; i < nodes.length; ++i) {
+      var node = nodes[i];
+      if (node.folderId) {
+        LOG("Remove Folder: " + node.folderId);
+        bms.removeFolder(node.folderId);
+      }
+      else {
+        LOG("Remove: " + node.url + " from: " + node.parent.folderId);
+        bms.removeItem(node.parent.folderId, ios.newURI(node.url, null, null));
+      }
+    }
+  },
 };
 
 /*

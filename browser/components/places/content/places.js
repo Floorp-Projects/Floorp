@@ -41,18 +41,22 @@ var PlacesUIHook = {
   _placesURI: "chrome://browser/content/places/places.xul",
   
   init: function PUIH_init(placesList) {
-    this._topWindow = placesList.browserWindow;
-    this._tabbrowser = this._topWindow.getBrowser();
+    try {
+      this._topWindow = placesList.browserWindow;
+      this._tabbrowser = this._topWindow.getBrowser();
 
-    // Hook into the tab strip to get notifications about when the Places Page is
-    // selected so that the browser UI can be modified. 
-    var self = this;
-    function onTabSelect(event) {
-      self.onTabSelect(event);
+      // Hook into the tab strip to get notifications about when the Places Page is
+      // selected so that the browser UI can be modified. 
+      var self = this;
+      function onTabSelect(event) {
+        self.onTabSelect(event);
+      }
+      this._tabbrowser.mTabContainer.addEventListener("select", onTabSelect, false);
+
+      this._showPlacesUI();
     }
-    this._tabbrowser.mTabContainer.addEventListener("select", onTabSelect, false);
-
-    this._showPlacesUI();
+    catch (e) { 
+    }
   },
   
   uninit: function PUIH_uninit() {
@@ -108,6 +112,9 @@ var PlacesPage = {
                                                  BS.FOLDER_CHILDREN |
                                                  BS.QUERY_CHILDREN);
     this._places.view = children.QueryInterface(Ci.nsITreeView);
+    
+    LOG("Roots:");
+    LOG("Places: " + this._bmsvc.placesRoot + " Menu: " + this._bmsvc.bookmarksRoot + " Toolbar: " + this._bmsvc.placesRoot);
   },
 
   uninit: function PP_uninit() {
@@ -171,24 +178,6 @@ var PlacesPage = {
 
     // Hide the Calendar for Bookmark queries. 
     document.getElementById("historyCalendar").hidden = query.onlyBookmarked;
-  },
-  
-  /**
-   * Group the current content view by domain
-   */
-  groupBySite: function PP_groupBySite() {
-    PlacesController.activeView = this._content;
-    var modes = [Ci.nsINavHistoryQueryOptions.GROUP_BY_DOMAIN, 
-    Ci.nsINavHistoryQueryOptions.GROUP_BY_HOST];
-    PlacesController.setGroupingMode(modes);
-  },
-  
-  /**
-   * Ungroup the current content view (i.e. show individual pages)
-   */
-  groupByPage: function PP_groupByPage() {
-    PlacesController.activeView = this._content;
-    PlacesController.setGroupingMode([]);
   },
 };
 
