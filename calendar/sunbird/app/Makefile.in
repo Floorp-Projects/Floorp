@@ -74,7 +74,7 @@ STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
 LIBS += $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-LIBS += -lXUL
+LIBS += $(DIST)/bin/XUL
 else
 EXTRA_DSO_LIBS += xul
 endif
