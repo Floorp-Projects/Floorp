@@ -68,6 +68,7 @@
 		<body>
 		  <![CDATA[ 
 			this.prefArray[this._counter++]=elementKey;
+
 		  ]]>
 		</body>
 	</method>
@@ -84,10 +85,12 @@
       <constructor>
       <![CDATA[
 		this.preferenceset.addPref(this.getAttribute("name"));
+
       ]]>
       </constructor>
 
 	<property name="name" />
+	<property name="preftype" />
       <property name="preferenceset" onget="return this.parentNode"/>
 
     </implementation>
