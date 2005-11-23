@@ -250,11 +250,12 @@ ifdef MOZ_PSM
 tier_50_dirs	+= security/manager
 endif
 
+ifndef BUILD_STATIC_LIBS
+tier_50_dirs += toolkit/library
+endif
+
 ifdef MOZ_ENABLE_LIBXUL
-tier_50_dirs += \
-		toolkit/library \
-		xpcom/stub \
-		$(NULL)
+tier_50_dirs += xpcom/stub
 endif
 
 ifdef NS_TRACE_MALLOC
