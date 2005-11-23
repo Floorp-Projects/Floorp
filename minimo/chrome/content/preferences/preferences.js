@@ -71,10 +71,10 @@ function writeCacheLocationPref()
  
 function UIdependencyCheck() {
   if(!document.getElementById("useDiskCache").checked) {
-	document.getElementById("storeCacheStorageCard").disabled=true;
+	//document.getElementById("storeCacheStorageCard").disabled=true;
 	document.getElementById("cacheSizeField").disabled=true;
   } else {
-	document.getElementById("storeCacheStorageCard").disabled=false;
+	//document.getElementById("storeCacheStorageCard").disabled=false;
 	document.getElementById("cacheSizeField").disabled=false;
   }
 
