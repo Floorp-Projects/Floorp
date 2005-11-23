@@ -310,6 +310,5 @@ endif
 endif
 
 export:: $(TARGETS)
-export:: install
 clean::
 	rm -f $(TARGETS)

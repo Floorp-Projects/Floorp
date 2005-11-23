@@ -37,16 +37,18 @@
 # ***** END LICENSE BLOCK *****
 
 ################################################################################
-# We have a 4 pass build process:
+# We used to have a 4 pass build process.  Now we do everything in one pass.
 #
-# Pass 1. export - Create generated headers and stubs. Publish public headers to
-#		dist/<arch>/include.
+# export - Create generated headers and stubs. Publish public headers to
+#          dist/<arch>/include.
+#          Create libraries. Publish libraries to dist/<arch>/lib.
+#          Create programs. 
 #
-# Pass 2. libs - Create libraries. Publish libraries to dist/<arch>/lib.
+# libs - obsolete.  Now a synonym of "export".
 #
-# Pass 3. all - Create programs. 
+# all - the default makefile target.  Now a synonym of "export".
 #
-# Pass 4. install - Publish programs to dist/<arch>/bin.
+# install - Install headers, libraries, and programs on the system.
 #
 # Parameters to this makefile (set these before including):
 #
@@ -205,8 +207,6 @@ export::
 
 libs:: export
 
-install:: export
-
 clean::
 	rm -rf $(OBJS) $(RES) so_locations $(NOSUCHFILE) $(GARBAGE)
 	+$(LOOP_OVER_DIRS)
@@ -223,7 +223,7 @@ distclean::
 	rm -rf $(wildcard *.OBJ *.OBJD) dist $(ALL_TRASH) $(DIST_GARBAGE)
 	+$(LOOP_OVER_DIRS)
 
-real_install:: $(RELEASE_BINS) $(RELEASE_HEADERS) $(RELEASE_LIBS)
+install:: $(RELEASE_BINS) $(RELEASE_HEADERS) $(RELEASE_LIBS)
 ifdef RELEASE_BINS
 	$(NSINSTALL) -t -m 0755 $(RELEASE_BINS) $(DESTDIR)$(bindir)
 endif

@@ -63,7 +63,7 @@ else
 	mv -f $(dist_includedir)/$(MDCPUCFG_H) $(dist_includedir)/prcpucfg.h
 endif
 
-real_install::
+install::
 	$(NSINSTALL) -D $(DESTDIR)$(includedir)/md
 	cp $(srcdir)/$(MDCPUCFG_H) $(DESTDIR)$(includedir)/prcpucfg.h
 	$(NSINSTALL) -t -m 644 $(CONFIGS) $(DESTDIR)$(includedir)/md
