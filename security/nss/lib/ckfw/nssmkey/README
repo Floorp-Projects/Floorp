@@ -1,0 +1,21 @@
+This Cryptoki module provides acces to certs and keys stored in
+Macintosh key Ring.
+
+- It does not yet export PKCS #12 keys. To get this to work should be 
+  implemented using exporting the key object in PKCS #8 wrapped format.
+  PSM work needs to happen before this can be completed.
+- It does not import or export CA Root trust from the mac keychain.
+- It does not handle S/MIME objects (pkcs #7 in mac keychain terms?).
+- The AuthRoots don't show up on the default list.
+- Only RSA keys are supported currently.
+
+There are a number of things that have not been tested that other PKCS #11
+apps may need:
+- reading Modulus and Public Exponents from private keys and public keys.
+- storing public keys.
+- setting attributes other than CKA_ID and CKA_LABEL.
+
+Other TODOs:
+- Check for and plug memory leaks.
+- Need to map mac errors into something more intellegible than 
+  CKR_GENERAL_ERROR.
