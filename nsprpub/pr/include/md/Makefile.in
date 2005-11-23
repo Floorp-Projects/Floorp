@@ -44,13 +44,14 @@ VPATH		= @srcdir@
 
 include $(MOD_DEPTH)/config/autoconf.mk
 
-HEADERS = $(wildcard $(srcdir)/*.h)
+# The .cfg files need to be exported and installed to support
+# cross-compilation.
 CONFIGS = $(wildcard $(srcdir)/*.cfg)
 
 include $(topsrcdir)/config/rules.mk
 
 export:: $(MDCPUCFG_H)
-	$(INSTALL) -m 444 $(CONFIGS) $(HEADERS) $(dist_includedir)/md
+	$(INSTALL) -m 444 $(CONFIGS) $(dist_includedir)/md
 	$(INSTALL) -m 444 $(srcdir)/$(MDCPUCFG_H) $(dist_includedir)
 ifeq ($(OS_ARCH),OpenVMS)
 # On OpenVMS mv updates the file's modified time, so we create a hard link.
@@ -65,7 +66,7 @@ endif
 real_install::
 	$(NSINSTALL) -D $(DESTDIR)$(includedir)/md
 	cp $(srcdir)/$(MDCPUCFG_H) $(DESTDIR)$(includedir)/prcpucfg.h
-	$(NSINSTALL) -t -m 644 $(HEADERS) $(DESTDIR)$(includedir)/md
+	$(NSINSTALL) -t -m 644 $(CONFIGS) $(DESTDIR)$(includedir)/md
 
 release:: export
 	@echo "Copying machine-dependent prcpucfg.h"
