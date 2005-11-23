@@ -79,6 +79,12 @@
   -moz-user-focus: ignore;
 }
 
+/* Calendar */
+
+#historyCalendar {
+  margin: 0px 0px 7px 6px;
+}
+
 .calendar-box {
   border:1px solid black;
   background-color:white;

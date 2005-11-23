@@ -168,6 +168,9 @@ var PlacesPage = {
     }
     var commands = document.getElementById("commands");
     commands.selectedPanel = document.getElementById(panelID);
+
+    // Hide the Calendar for Bookmark queries. 
+    document.getElementById("historyCalendar").hidden = query.onlyBookmarked;
   },
   
   /**

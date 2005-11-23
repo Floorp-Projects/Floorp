@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
-<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/places/places.dtd">
 
@@ -106,7 +107,7 @@
   </popupset>
   
   <hbox flex="1" id="placesView">
-    <vbox flex="1">
+    <vbox>
       <tree id="placesList" class="placesTree" flex="1"
             hidecolumnpicker="true" context="placesContext"
             onselect="PlacesPage.placeSelected(event);">
@@ -115,7 +116,8 @@
         </treecols>
         <treechildren id="placesListChildren" flex="1"/>
       </tree>
-      <vbox align="center" class="calendar" id="historyCalendar" onselectionchanged="LOG('FIXME: do history query');"/>
+      <vbox id="historyCalendar" 
+            onselectionchanged="LOG('FIXME: do history query');"/>
       <hbox class="commands">
         <button id="newPlace" command="placesCmd_new:folder"/>
       </hbox>
