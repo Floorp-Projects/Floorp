@@ -818,16 +818,10 @@ NS_ShutdownXPCOM(nsIServiceManager* servMgr)
             }
         }
 
-        if (currentQ)
-            currentQ->ProcessPendingEvents();
-
         if (observerService)
             (void) observerService->
                 NotifyObservers(nsnull, NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID,
                                 nsnull);
-
-        if (currentQ)
-            currentQ->ProcessPendingEvents();
 
         // We save the "xpcom-shutdown-loaders" observers to notify after
         // the observerservice is gone.
