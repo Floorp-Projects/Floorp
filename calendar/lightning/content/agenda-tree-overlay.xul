@@ -62,7 +62,8 @@
     <spacer/>
   </hbox>
   <deck id="agenda-viewcustomize-deck" selectedIndex="0" flex="1">
-    <tree id="agenda-tree" hidecolumnpicker="true" flex="1">
+    <tree id="agenda-tree" hidecolumnpicker="true" flex="1"
+          ondblclick="agendaTreeView.onDoubleClick(event);">
       <treecols>
         <treecol id="col-agenda-item" primary="true" label="&agenda.treeview.item.label;" flex="3"/>
         <treecol id="col-agenda-when" label="" flex="1"/>

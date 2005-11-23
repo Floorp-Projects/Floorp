@@ -253,6 +253,38 @@ function addItem(item)
     this.calendarUpdateComplete();
 };
 
+agendaTreeView.onDoubleClick =
+function agendaDoubleClick(event)
+{
+    // We only care about left-clicks
+    if (event.button != 0) 
+        return;
+
+    // Find the row clicked on, and the corresponding event
+    var tree = document.getElementById("agenda-tree");
+    var row = tree.treeBoxObject.getRowAt(event.clientX, event.clientY);
+    var calendar = ltnSelectedCalendar();
+    var calEvent = this.events[row];
+
+    if (!calEvent) { // Clicked in empty space, just create a new event
+        createEventWithDialog(calendar, today(), today());
+        return;
+    }
+    if (!this.isContainer(row)) { // Clicked on a task/event, edit it
+        modifyEventWithDialog(calEvent);
+    } else { // Clicked on a container, create an event that day
+        if (calEvent == this.today) {
+            createEventWithDialog(calendar, today(), today());
+        } else {
+            var tom = today().clone();
+            var offset = (calEvent == this.tomorrow) ? 1 : 2;
+            tom.day += offset;
+            tom.normalize()
+            createEventWithDialog(calendar, tom, tom);
+        }
+    }
+}
+
 agendaTreeView.deleteItem =
 function deleteItem(item)
 {

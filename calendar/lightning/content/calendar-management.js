@@ -340,7 +340,25 @@ var ltnCalendarTreeView = {
     getImageSrc: function(row, col) { return null; },
     getRowProperties: function(row, props) { },
     getColumnProperties: function(colid, col, props) { },
-    cycleHeader: function() { }
+    cycleHeader: function() { },
+    onDoubleClick: function(event)
+    {
+        // We only care about left-clicks
+        if (event.button != 0) 
+            return;
+
+        // Find the row clicked on
+        var tree = document.getElementById("agenda-tree");
+        var row = tree.treeBoxObject.getRowAt(event.clientX, event.clientY);
+
+        // If we clicked on a calendar, edit it, otherwise create a new one
+        var cal = getCalendars()[row];
+        if (!cal) {
+            ltnNewCalendar();
+        } else {
+            ltnEditCalendarProperties(cal);
+        }
+    }
 };
 
 function ltnSetTreeView()
