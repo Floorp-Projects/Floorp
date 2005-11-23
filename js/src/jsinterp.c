@@ -5361,8 +5361,8 @@ interrupt:
             *result = POP_OPND();
             goto out;
 
-	  EMPTY_CASE(JSOP_STARTXML)
-	  EMPTY_CASE(JSOP_STARTXMLEXPR)
+          EMPTY_CASE(JSOP_STARTXML)
+          EMPTY_CASE(JSOP_STARTXMLEXPR)
 
           BEGIN_CASE(JSOP_TOXML)
             rval = FETCH_OPND(-1);
