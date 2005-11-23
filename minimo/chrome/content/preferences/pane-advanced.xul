@@ -73,7 +73,7 @@
 	                              label="&useDiskCache.label;"
 	                              preference="browser.cache.disk.enable" 
 	                              onclick="syncPref(this)" />
-	                              
+<!--
 	                    <checkbox tabindex="31"
 	                              id="storeCacheStorageCard"
 	                              label="&storeCacheStorageCard.label;"
@@ -81,7 +81,7 @@
                                               onsyncfrompreference="readCacheLocationPref();" prefuitype="bool" 
                                               onsynctopreference="writeCacheLocationPref();" 
 	                              onclick="syncPref(this)" />
-
+-->
                        <grid class="box-prefpadding" >
                               <columns>
                                 <column flex="1"/>
