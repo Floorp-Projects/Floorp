@@ -7480,7 +7480,7 @@ nsCSSFrameConstructor::SVGSwitchProcessChildren(nsFrameConstructorState& aState,
     nsAutoString str;
     child->Tag()->ToString(str);
     printf("Child tag: %s\n", NS_ConvertUCS2toUTF8(str).get());
-    printf("SwitchProcessChildren: Required Extentions = %s, Required Features = %s, System Language = %s\n",
+    printf("SwitchProcessChildren: Required Extensions = %s, Required Features = %s, System Language = %s\n",
             hasRequiredExtensions ? "true" : "false",
             hasRequiredFeatures ? "true" : "false",
             hasSystemLanguage ? "true" : "false");
