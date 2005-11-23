@@ -47,6 +47,7 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
+#include "nsIAtom.h"
 #include "nsINavHistory.h"
 #include "nsIAutoCompleteSearch.h"
 #include "nsIAutoCompleteResult.h"
@@ -426,6 +427,9 @@ public:
   static const PRInt32 kGetInfoIndex_VisitCount;
   static const PRInt32 kGetInfoIndex_VisitDate;
   static const PRInt32 kGetInfoIndex_RevHost;
+
+  static nsIAtom* sMenuRootAtom;
+  static nsIAtom* sToolbarRootAtom;
 
   // Take a result returned from DBGetURLPageInfo and construct a
   // ResultNode.

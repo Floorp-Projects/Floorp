@@ -65,6 +65,8 @@
 #include "prtime.h"
 #include "prprf.h"
 
+#define S(x) nsINavHistoryResult::##x
+
 // emulate string comparison (used for sorting) for PRTime and int
 inline PRInt32 ComparePRTime(PRTime a, PRTime b)
 {
@@ -81,7 +83,6 @@ inline PRInt32 CompareIntegers(PRUint32 a, PRUint32 b)
 
 
 // nsNavHistoryResultNode ******************************************************
-
 
 NS_IMPL_ISUPPORTS2(nsNavHistoryResultNode,
                    nsNavHistoryResultNode, nsINavHistoryResultNode)
@@ -114,7 +115,7 @@ NS_IMETHODIMP nsNavHistoryResultNode::GetUrl(nsACString& aUrl)
 /* attribute PRInt64 folderId; */
 NS_IMETHODIMP nsNavHistoryResultNode::GetFolderId(PRInt64 *aID)
 {
-  *aID = mType == RESULT_TYPE_FOLDER ? mID : 0;
+  *aID = mType == nsINavHistoryResult::RESULT_TYPE_FOLDER ? mID : 0;
   return NS_OK;
 }
 
@@ -286,7 +287,8 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistory* aHistoryService,
   }
   if (aOptions)
     aOptions->Clone(getter_AddRefs(mSourceOptions));
-  mType = RESULT_TYPE_QUERY;
+
+  mType = nsINavHistoryResult::RESULT_TYPE_QUERY;
   mFlatIndex = -1;
   mVisibleIndex = -1;
 }
@@ -735,12 +737,12 @@ PRInt32 PR_CALLBACK nsNavHistoryResult::SortComparison_URLLess(
   }
 
   PRInt32 value;
-  if (a->mType == nsINavHistoryResultNode::RESULT_TYPE_HOST) {
+  if (a->mType == nsINavHistoryResult::RESULT_TYPE_HOST) {
     // for host nodes, use title (= host name)
     nsNavHistoryResult* result = NS_STATIC_CAST(nsNavHistoryResult*, closure);
     result->mCollation->CompareString(
         nsICollation::kCollationCaseInSensitive, a->mTitle, b->mTitle, &value);
-  } else if (a->mType == nsINavHistoryResultNode::RESULT_TYPE_DAY) {
+  } else if (a->mType == nsINavHistoryResult::RESULT_TYPE_DAY) {
     // date nodes use date (skip conflict resolution becuase it uses date too)
     return ComparePRTime(a->mTime, b->mTime);
   } else {
@@ -1007,19 +1009,34 @@ NS_IMETHODIMP nsNavHistoryResult::SetSelection(nsITreeSelection* aSelection)
 /* void getRowProperties (in long index, in nsISupportsArray properties); */
 NS_IMETHODIMP nsNavHistoryResult::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void getCellProperties (in long row, in nsITreeColumn col, in nsISupportsArray properties); */
 NS_IMETHODIMP nsNavHistoryResult::GetCellProperties(PRInt32 row, nsITreeColumn *col, nsISupportsArray *properties)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (row < 0 || row >= mVisibleElements.Count())
+    return NS_ERROR_INVALID_ARG;
+
+  nsNavHistoryResultNode *node = VisibleElementAt(row);
+  PRInt64 folderId, bookmarksRootId, toolbarRootId;
+  node->GetFolderId(&folderId);
+
+  nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID));
+  bms->GetBookmarksRoot(&bookmarksRootId);
+  bms->GetToolbarRoot(&toolbarRootId);
+  if (bookmarksRootId == folderId)
+    properties->AppendElement(nsNavHistory::sMenuRootAtom);
+  else if (toolbarRootId == folderId)
+    properties->AppendElement(nsNavHistory::sToolbarRootAtom);
+
+  return NS_OK;
 }
 
 /* void getColumnProperties (in nsITreeColumn col, in nsISupportsArray properties); */
 NS_IMETHODIMP nsNavHistoryResult::GetColumnProperties(nsITreeColumn *col, nsISupportsArray *properties)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
@@ -1032,8 +1049,8 @@ NS_IMETHODIMP nsNavHistoryResult::IsContainer(PRInt32 index, PRBool *_retval)
 
   nsNavHistoryResultNode *node = VisibleElementAt(index);
   *_retval = (node->mChildren.Count() > 0 ||
-              node->mType == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
-              node->mType == nsINavHistoryResultNode::RESULT_TYPE_QUERY);
+              node->mType == nsINavHistoryResult::RESULT_TYPE_FOLDER ||
+              node->mType == nsINavHistoryResult::RESULT_TYPE_QUERY);
   return NS_OK;
 }
 
@@ -1205,8 +1222,8 @@ NS_IMETHODIMP nsNavHistoryResult::GetCellText(PRInt32 rowIndex,
     }
     case Column_Date:
     {
-      if (elt->mType == nsINavHistoryResultNode::RESULT_TYPE_HOST ||
-          elt->mType == nsINavHistoryResultNode::RESULT_TYPE_DAY) {
+      if (elt->mType == nsINavHistoryResult::RESULT_TYPE_HOST ||
+          elt->mType == nsINavHistoryResult::RESULT_TYPE_DAY) {
         // hosts and days shouldn't have a value for the date column. Actually,
         // you could argue this point, but looking at the results, seeing the
         // most recently visited date is not what I expect, and gives me no

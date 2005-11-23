@@ -1,24 +1,8 @@
+/* Root View */
 #placesView {
   -moz-appearance: tabpanels;
   margin: -10px;
   padding: 8px 6px 6px 8px;
-}
-
-.placesTree {
-  margin: 0px;
-  border: none;
-}
-
-#placesList {
-  margin: 7px 0px 7px 6px;
-}
-
-#placeContent {
-  margin: 0px 6px 7px 0px;
-}
-
-#showAdvancedSearch {
-  font-size: smaller;
 }
 
 #splitter {
@@ -27,41 +11,86 @@
   background-color: transparent;
 }
 
-#placesContentChildren::-moz-tree-image(title) {
+/* Place List, Place Content */
+.placesTree {
+  margin: 0px;
+}
+
+#placesList {
+  margin: 7px 0px 7px 6px;
+}
+
+#placesListChildren::-moz-tree-twisty {
+  list-style-image: none;
+  width: 0px;
+  padding: 0px;
+}
+
+#placeContent {
+  margin: 0px 6px 7px 0px;
+}
+
+treechildren::-moz-tree-image(title) {
   padding-right: 2px;
   margin: 0px 2px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png") !important;
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-#placesContentChildren::-moz-tree-image(title, container) {
+treechildren::-moz-tree-image(title, container) {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
-#placesContentChildren::-moz-tree-image(title, open) {
+treechildren::-moz-tree-image(title, container, menu-root) {
+  list-style-image: url("chrome://browser/skin/places/icons.png") !important;
+  -moz-image-region: rect(0px, 16px, 17px, 0px);
+}
+
+treechildren::-moz-tree-image(title, container, toolbar-root) {
+  list-style-image: url("chrome://browser/skin/places/icons.png") !important;
+  -moz-image-region: rect(17px, 16px, 32px, 0px);
+}
+
+treechildren::-moz-tree-image(title, open) {
   -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
-#placesContentChildren::-moz-tree-image(title, separator) {
+treechildren::-moz-tree-image(title, separator) {
   list-style-image: none;
   width: 0px !important;
   height: 0px !important;
   margin: 0px;
 }
 
-#placesContentChildren::-moz-tree-cell-text(title, separator) {
+treechildren::-moz-tree-cell-text(title, separator) {
   color: ThreeDShadow;
   margin: 0px 5px;
 }
 
-#placesContentChildren::-moz-tree-cell-text(title, separator, selected, focus) {
+treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
   color: HighlightText;
 }
 
+/* Command Bar */
 .commands {
   padding-bottom: 5px;  
 }
 
+.commandGroupButton {
+  margin-left: 0px;
+  margin-top: 0px;
+}
+
+
+.commandGroupButton.first {
+  margin-right: -10px;
+}
+
+.commandGroupButton.last {
+  margin-left: 20px;
+}
+
+/* Search Bar */
 #searchFilter {
   -moz-binding: url("chrome://browser/content/places/places.xml#textbox-timed-arbitrary");
 }
@@ -80,12 +109,12 @@
 }
 
 /* Calendar */
-
 #historyCalendar {
   margin: 0px 0px 7px 6px;
 }
 
 .calendar-box {
+  -moz-appearance: listbox;
   border:1px solid black;
   background-color:white;
 }

@@ -124,6 +124,14 @@ nsNavBookmarks::Init()
 
   nsCAutoString buffer;
 
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = bundleService->CreateBundle(
+      "chrome://browser/locale/places/places.properties",
+      getter_AddRefs(mBundle));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (mRoot) {
     // Locate the bookmarks and toolbar folders
     buffer.AssignLiteral("SELECT folder_child FROM moz_bookmarks_assoc a JOIN moz_bookmarks_containers c ON a.folder_child = c.id WHERE c.name = ?1 AND a.parent = ");
@@ -133,7 +141,10 @@ nsNavBookmarks::Init()
     rv = dbConn->CreateStatement(buffer, getter_AddRefs(locateChild));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = locateChild->BindStringParameter(0, NS_LITERAL_STRING("Bookmarks"));
+    nsXPIDLString bookmarksMenuName;
+    mBundle->GetStringFromName(NS_LITERAL_STRING("bookmarksMenuName").get(),
+      getter_Copies(bookmarksMenuName));
+    rv = locateChild->BindStringParameter(0, bookmarksMenuName);
     NS_ENSURE_SUCCESS(rv, rv);
     PRBool results;
     rv = locateChild->ExecuteStep(&results);
@@ -143,7 +154,10 @@ nsNavBookmarks::Init()
     }
     rv = locateChild->Reset();
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = locateChild->BindStringParameter(0, NS_LITERAL_STRING("Personal Toolbar Folder"));
+    nsXPIDLString bookmarksToolbarName;
+    mBundle->GetStringFromName(NS_LITERAL_STRING("bookmarksToolbarName").get(),
+      getter_Copies(bookmarksToolbarName));
+    rv = locateChild->BindStringParameter(0, bookmarksToolbarName);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = locateChild->ExecuteStep(&results);
     if (results) {
@@ -168,12 +182,17 @@ nsNavBookmarks::Init()
     NS_ENSURE_SUCCESS(rv, rv);
   }
   if (!mBookmarksRoot) {
-    CreateFolder(mRoot, NS_LITERAL_STRING("Bookmarks"), 0, &mBookmarksRoot);
+    nsXPIDLString bookmarksMenuName;
+    mBundle->GetStringFromName(NS_LITERAL_STRING("bookmarksMenuName").get(),
+      getter_Copies(bookmarksMenuName));
+    CreateFolder(mRoot, bookmarksMenuName, 0, &mBookmarksRoot);
     NS_ASSERTION(mBookmarksRoot != 0, "row id must be non-zero!");
   }
   if (!mToolbarRoot) {
-    CreateFolder(mRoot, NS_LITERAL_STRING("Personal Toolbar Folder"), 1,
-                 &mToolbarRoot);
+    nsXPIDLString bookmarksToolbarName;
+    mBundle->GetStringFromName(NS_LITERAL_STRING("bookmarksToolbarName").get(),
+      getter_Copies(bookmarksToolbarName));
+    CreateFolder(mRoot, bookmarksToolbarName, 1, &mToolbarRoot);
     NS_ASSERTION(mToolbarRoot != 0, "row id must be non-zero!");
   }
 
