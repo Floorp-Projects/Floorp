@@ -1131,12 +1131,6 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
       mInnerWindow = newInnerWindow;
     }
 
-    if ((!reUseInnerWindow || newDoc != oldDoc) && !aState) {
-      nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
-      nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
-                                             html_doc);
-    }
-
     if (!aState && !reUseInnerWindow) {
       // Loading a new page and creating a new inner window, *not*
       // restoring from session history.
@@ -1181,6 +1175,23 @@ nsGlobalWindow::SetNewDocument(nsIDOMDocument* aDocument,
 
       ::JS_SetPrototype(cx, newInnerWindow->mJSObject, proto);
       ::JS_SetPrototype(cx, proto, innerProtoProto);
+    }
+
+    // Now that the prototype is all set up, install the global scope
+    // polluter. This must happen after the above prototype fixup. If
+    // the GSP was to be installed on the inner window's real
+    // prototype (as it would be if this was done before the prototype
+    // fixup above) we would end up holding the GSP alive (through
+    // XPConnect's internal marking of wrapper prototypes) as long as
+    // the inner window was around, and if the GSP had properties on
+    // it that held an element alive we'd hold the document alive,
+    // which could hold event handlers alive, which hold the context
+    // alive etc.
+
+    if ((!reUseInnerWindow || newDoc != oldDoc) && !aState) {
+      nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(mDocument));
+      nsWindowSH::InstallGlobalScopePolluter(cx, newInnerWindow->mJSObject,
+                                             html_doc);
     }
 
     if (aState) {
