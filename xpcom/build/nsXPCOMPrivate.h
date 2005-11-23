@@ -54,6 +54,18 @@ class nsCStringContainer;
 class nsIComponentLoader;
 
 /**
+ * During this shutdown notification all threads which run XPCOM code must
+ * be joined.
+ */
+#define NS_XPCOM_SHUTDOWN_THREADS_OBSERVER_ID "xpcom-shutdown-threads"
+
+/**
+ * During this shutdown notification all module loaders must unload XPCOM
+ * modules.
+ */
+#define NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID "xpcom-shutdown-loaders"
+
+/**
  * Private Method to register an exit routine.  This method
  * allows you to setup a callback that will be called from 
  * the NS_ShutdownXPCOM function after all services and 
