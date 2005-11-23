@@ -223,6 +223,6 @@ EXTRA_DSO_LIBS += tracemalloc
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += macmorefiles_s
+EXTRA_DSO_LIBS += macmorefiles_s
 EXTRA_DEPS += $(DIST)/lib/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX)
 endif
