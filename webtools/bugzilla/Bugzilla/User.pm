@@ -955,10 +955,13 @@ sub match_field {
         # the field here, and not set it to '', so that we will add
         # things to an empty list, and not to a list containing one
         # empty string.
-        # If no match or more than one match is found for this field,
+        # If the field accepts only one match (type eq "single") and
+        # no match or more than one match is found for this field,
         # we will set it back to '' so that the field remains defined
         # outside this function (it was if we came here; else we would
-        # have returned ealier above).
+        # have returned earlier above).
+        # If the field accepts several matches (type eq "multi") and no match
+        # is found, we leave this field undefined (= empty array).
         $cgi->delete($field);
 
         my @queries = ();
@@ -1044,10 +1047,14 @@ sub match_field {
             }
         }
         # Above, we deleted the field before adding matches. If no match
-        # or more than one match has been found, we set it back to '' so
+        # or more than one match has been found for a field expecting only
+        # one match (type eq "single"), we set it back to '' so
         # that the caller of this function can still check whether this
         # field was defined or not (and it was if we came here).
-        $cgi->param($field, '') unless defined $cgi->param($field);
+        if (!defined $cgi->param($field)
+            && $fields->{$field}->{'type'} eq 'single') {
+            $cgi->param($field, '');
+        }
     }
 
     my $retval;
