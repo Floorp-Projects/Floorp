@@ -45,7 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = xulapp
 LIBRARY_NAME = xulapp_s
-EXPORT_LIBRARY = 1
 LIBXUL_LIBRARY = 1
 
 REQUIRES = \
@@ -92,7 +91,10 @@ XPIDLSRCS = \
 	nsIXULRuntime.idl \
 	$(NULL)
 
-EXPORTS = nsXULAppAPI.h
+EXPORTS = \
+	xrecore.h \
+	nsXULAppAPI.h \
+	$(NULL)
 
 SHAREDCPPSRCS = \
 	showOSAlert.cpp \
@@ -106,7 +108,9 @@ CPPSRCS = \
 	nsNativeAppSupportBase.cpp \
 	$(NULL)
 
-ifdef MOZ_ENABLE_LIBXUL
+DEFINES += -DIMPL_XREAPI
+
+ifndef BUILD_STATIC_LIBS
 CPPSRCS += nsEmbedFunctions.cpp
 endif
 

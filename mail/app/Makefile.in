@@ -63,23 +63,28 @@ endif
 
 REQUIRES = \
 	xpcom \
+	xulapp \
 	$(NULL)
-
-LOCAL_INCLUDES = -I$(topsrcdir)/toolkit/xre
 
 CPPSRCS = nsMailApp.cpp
 
 ifdef BUILD_STATIC_LIBS
 STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
+LIBS += $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
+else
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+LIBS += -lXUL
+else
+EXTRA_DSO_LIBS += xul
+endif
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
 
-LIBS = \
+LIBS += \
 	$(STATIC_COMPONENTS_LINKER_PATH) \
-	$(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX) \
 	$(MOZ_JS_LIBS) \
 	$(EXTRA_DSO_LIBS) \
 	$(XPCOM_LIBS) \

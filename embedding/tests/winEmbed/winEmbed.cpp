@@ -43,12 +43,10 @@
 #include <commdlg.h>
 
 // Mozilla Frozen APIs
-#ifdef MOZ_ENABLE_LIBXUL
 #include "nsXULAppAPI.h"
-#else
-// This is not technically frozen, it is statically linked
-#include "nsEmbedAPI.h"
-#endif
+
+XRE_InitEmbeddingType XRE_InitEmbedding;
+XRE_TermEmbeddingType XRE_TermEmbedding;
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
@@ -134,13 +132,6 @@ static const TCHAR *gDefaultURLs[] =
     _T("http://www.javasoft.com/")
 };
 
-typedef nsresult (*XRE_InitEmbeddingFunc)(nsILocalFile*,
-                                          nsILocalFile*,
-                                          nsIDirectoryServiceProvider*,
-                                          nsStaticModuleInfo const *,
-                                          PRUint32);
-typedef void (*XRE_TermEmbeddingFunc)();
-
 int main(int argc, char *argv[])
 {
     nsresult rv;
@@ -211,17 +202,19 @@ int main(int argc, char *argv[])
     char temp[_MAX_PATH];
     GetModuleFileName(xulModule, temp, sizeof(temp));
 
-    XRE_InitEmbeddingFunc initFunc =
-        (XRE_InitEmbeddingFunc) GetProcAddress(xulModule, "XRE_InitEmbedding");
-    if (!initFunc) {
+    XRE_InitEmbedding =
+        (XRE_InitEmbeddingType) GetProcAddress(xulModule, "XRE_InitEmbedding");
+    if (!XRE_InitEmbedding) {
         fprintf(stderr, "Error: %i\n", GetLastError());
         return 5;
     }
 
-    XRE_TermEmbeddingFunc termFunc =
-        (XRE_TermEmbeddingFunc) GetProcAddress(xulModule, "XRE_TermEmbedding");
-    if (!initFunc || !termFunc)
+    XRE_TermEmbedding =
+        (XRE_TermEmbeddingType) GetProcAddress(xulModule, "XRE_TermEmbedding");
+    if (!XRE_TermEmbedding) {
+        fprintf(stderr, "Error: %i\n", GetLastError());
         return 5;
+    }
 
     // Scope all the XPCOM stuff
     {
@@ -245,7 +238,7 @@ int main(int argc, char *argv[])
         if (NS_FAILED(rv))
             return 8;
 
-        rv = initFunc(xuldir, appdir, nsnull, nsnull, 0);
+        rv = XRE_InitEmbedding(xuldir, appdir, nsnull, nsnull, 0);
         if (NS_FAILED(rv))
             return 9;
 
@@ -267,7 +260,7 @@ int main(int argc, char *argv[])
             rv = AppCallbacks::RunEventLoop(runCondition);
         }
     }
-    termFunc();
+    XRE_TermEmbedding();
 
     return rv;
 }

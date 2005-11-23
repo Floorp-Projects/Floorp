@@ -42,22 +42,8 @@
 
 #include "prtypes.h"
 #include "nsID.h"
-#include "nscore.h"
+#include "xrecore.h"
 #include "nsXPCOM.h"
-
-// XXXbsmedberg - eventually we're going to freeze the XULAPI
-// symbols, and we don't want every consumer to define MOZ_ENABLE_LIBXUL.
-// Reverse the logic so that those who aren't using libxul have to do the
-// work.
-#ifdef MOZ_ENABLE_LIBXUL
-#ifdef IMPL_XULAPI
-#define XULAPI NS_EXPORT
-#else
-#define XULAPI NS_IMPORT
-#endif
-#else
-#define XULAPI
-#endif
 
 /**
  * Application-specific data needed to start the apprunner.
@@ -193,16 +179,15 @@ struct nsXREAppData
  *                 SetCurrentDirectory, and relative paths on the command line
  *                 won't be correct.
  */
-extern "C" XULAPI int
-XRE_main(int argc, char* argv[],
-         const nsXREAppData* aAppData);
+XRE_API(int,
+        XRE_main, (int argc, char* argv[], const nsXREAppData* sAppData))
 
 /**
  * Given a path relative to the current working directory (or an absolute
  * path), return an appropriate nsILocalFile object.
  */
-extern "C" XULAPI nsresult
-XRE_GetFileFromPath(const char *aPath, nsILocalFile* *aResult);
+XRE_API(nsresult,
+        XRE_GetFileFromPath, (const char *aPath, nsILocalFile* *aResult))
 
 /**
  * Get the path of the running application binary and store it in aResult.
@@ -210,15 +195,15 @@ XRE_GetFileFromPath(const char *aPath, nsILocalFile* *aResult);
  *                used on *nix, and only when other methods of determining
  *                the binary path have failed.
  */
-extern "C" XULAPI nsresult
-XRE_GetBinaryPath(const char *argv0, nsILocalFile* *aResult);
+XRE_API(nsresult,
+        XRE_GetBinaryPath, (const char *argv0, nsILocalFile* *aResult))
 
 /**
  * Get the static components built in to libxul.
  */
-extern "C" XULAPI void
-XRE_GetStaticComponents(nsStaticModuleInfo const **aStaticComponents,
-                        PRUint32 *aComponentCount);
+XRE_API(void,
+        XRE_GetStaticComponents, (nsStaticModuleInfo const **aStaticComponents,
+                                  PRUint32 *aComponentCount))
 
 /**
  * Initialize libXUL for embedding purposes.
@@ -245,14 +230,14 @@ XRE_GetStaticComponents(nsStaticModuleInfo const **aStaticComponents,
  * resources allocated by XRE_InitEmbedding.
  */
 
-extern "C" XULAPI nsresult
-XRE_InitEmbedding(nsILocalFile *aLibXULDirectory,
-                  nsILocalFile *aAppDirectory,
-                  nsIDirectoryServiceProvider *aAppDirProvider = nsnull,
-                  nsStaticModuleInfo const *aStaticComponents = nsnull,
-                  PRUint32 aStaticComponentCount = 0);
+XRE_API(nsresult,
+        XRE_InitEmbedding, (nsILocalFile *aLibXULDirectory,
+                            nsILocalFile *aAppDirectory,
+                            nsIDirectoryServiceProvider *aAppDirProvider,
+                            nsStaticModuleInfo const *aStaticComponents,
+                            PRUint32 aStaticComponentCount))
 
-extern "C" XULAPI void
-XRE_TermEmbedding();
+XRE_API(void,
+        XRE_TermEmbedding, ())
 
 #endif // _nsXULAppAPI_h__
