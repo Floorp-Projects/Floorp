@@ -186,18 +186,31 @@
           var rc = selection.getRangeCount();
           var min = { }, max = { };
           selection.getRangeAt(rc - 1, min, max);
-          
-          var result = view.QueryInterface(Ci.nsINavHistoryResult);
-          var lastSelected = result.nodeForTreeIndex(max.value);
 
-          // Any visible selected item will always have a parent. The parent of
-          // an item at the root is the result itself, which can be QI'ed to 
-          // nsINavHistoryResult
-          var container = lastSelected.parent;
-          for (var i = 0; 
-               i < container.childCount && container.getChild(i) != lastSelected;
-               ++i);
-          return { container: 1, index: -1 };
+          var result = view.QueryInterface(Ci.nsINavHistoryResult);
+          var container = result;
+          // When there's no selection, assume the container is the container
+          // the view is populated from (i.e. the result's folderId).
+          if (max.value != -1) {
+            var lastSelected = result.nodeForTreeIndex(max.value);
+            if (view.isContainer(max.value) && view.isContainerOpen(max.value)) {
+              // If the last selected item is an open container, append _into_
+              // it, rather than insert adjacent to it. 
+              container = lastSelected;
+              max.value = -1;
+            }
+            else {
+              // Any visible selected item will always have a parent. The parent of
+              // an item at the root is the result itself, which can be QI'ed to 
+              // nsINavHistoryResult
+              container = lastSelected.parent;
+              for (var i = 0; 
+                   i < container.childCount && container.getChild(i) != lastSelected;
+                   ++i);
+              max.value = i < container.childCount ? i + 1 : i;
+            }
+          }
+          return { container: container.folderId, index: max.value };
         ]]></getter>
       </property>
       
