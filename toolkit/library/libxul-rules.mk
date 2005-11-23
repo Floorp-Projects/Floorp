@@ -51,19 +51,6 @@ else
 EXTRA_DSO_LDOPTS += $(MOZ_ZLIB_LIBS)
 endif
 
-ifdef GC_LEAK_DETECTOR
-EXTRA_DSO_LIBS += boehm
-endif
-
-ifdef NS_TRACE_MALLOC
-EXTRA_DSO_LIBS += tracemalloc
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LIBS += macmorefiles_s
-EXTRA_DEPS += $(DIST)/lib/$(LIB_PREFIX)macmorefiles_s.$(LIB_SUFFIX)
-endif
-
 LOCAL_INCLUDES += -I$(topsrcdir)/config
 
 OS_LIBS += $(LIBICONV)
