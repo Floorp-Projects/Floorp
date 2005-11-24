@@ -71,10 +71,6 @@ class nsAutoPtr
           delete oldPtr;
         }
 
-      // NOT IMPLEMENTED
-      nsAutoPtr( const nsAutoPtr<T>& aSmartPtr );
-      nsAutoPtr<T>& operator=( const nsAutoPtr<T>& rhs );
-
     private:
       T* mRawPtr;
 
