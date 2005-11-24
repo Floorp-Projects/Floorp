@@ -50,7 +50,7 @@
  *      <script src="./mytest.js"></script>
  */
 
-GLOBAL = "[object Window]";
+GLOBAL = this + '';
 
 var TT = "<tt>";
 var TT_ = "</tt>";

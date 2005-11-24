@@ -50,7 +50,7 @@
  *      <script src="./mytest.js"></script>
  */
 
-GLOBAL = "[object Window]";
+GLOBAL = this + '';
 
 function writeLineToLog( string ) {
   document.write( string + "<br>\n");
