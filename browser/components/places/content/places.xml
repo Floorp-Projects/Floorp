@@ -112,19 +112,13 @@
     
       <property name="hasSelection">
         <getter><![CDATA[
-          return this.view.selection.getRangeCount() >= 1;
+          return this.view.selection.count >= 1;
         ]]></getter>
       </property>
       
       <property name="hasSingleSelection">
         <getter><![CDATA[
-          var selection = this.view.selection;
-          var rc = selection.getRangeCount();
-          if (rc != 1)
-            return false;
-          var min = { }, max = { };
-          selection.getRangeAt(0, min, max);
-          return (min.value == max.value);
+          return this.view.selection.count == 1;
         ]]></getter>
       </property>
       
@@ -215,6 +209,62 @@
       </property>
       
       <property name="browserWindow" onget="return this._browserWindow"/>
+      
+      <method name="_getTransferData">
+        <body><![CDATA[ 
+          var result = this.view.QueryInterface(Ci.nsINavHistoryResult);
+          var selection = this.view.selection;
+          if (selection.count == 0)
+            return null;
+          var dataSet = new TransferDataSet();
+          var rc = selection.getRangeCount();
+          
+          for (var i = 0; i < rc; ++i) {
+            var min = { }, max = { };
+            selection.getRangeAt(i, min, max);
+            for (var j = min.value; j <= max.value; ++j) {
+              var node = result.nodeForTreeIndex(j);
+              
+              var data = new TransferData();
+              data.addDataForFlavour("text/x-moz-url", node.url + "\n" + node.title);
+              data.addDataForFlavour("text/html", "<A HREF=\"" + node.url + "\">" + node.title + "</A>");
+              data.addDataForFlavour("text/unicode", node.url);
+              dataSet.push(data);
+            }
+          }
+          return dataSet;
+        ]]></body>
+      </method>
+      
+      <field name="_DNDObserver"><![CDATA[({
+        // XXXben ew.
+        _self: this,
+        onDragStart: function(event, xferData, dragAction) {
+          if (this._self.getAttribute("sortActive") == "true")
+            throw Components.results.NS_OK;
+          xferData.data = this._self._getTransferData();
+          if (event.ctrlKey)
+            dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+        },
+        
+        onDragOver: function(event, flavor, dragSession) {
+          if (dragSession.sourceNode == this._self)
+            dragSession.canDrop = true;
+        },
+        
+        onDrop: function(event, xferData, dragSession) {
+        
+        },
+        
+        getSupportedFlavours: function() {
+          var flavorSet = new FlavourSet();
+          flavorSet.appendFlavour("application/x-moz-file", "nsIFile");
+          flavorSet.appendFlavour("text/x-moz-url");
+          flavorSet.appendFlavour("text/unicode");
+          return flavorSet;
+        }
+      })]]></field>
+      
     </implementation>
     <handlers>
       <handler event="focus"><![CDATA[
@@ -235,6 +285,11 @@
           if (!view.isContainerEmpty(min.value))
             view.toggleOpenState(min.value);
         }
+      ]]></handler>
+      <handler event="draggesture"><![CDATA[
+        // XXXben ew.
+        if (event.target.localName == "treechildren")
+          nsDragAndDrop.startDrag(event, this._DNDObserver);
       ]]></handler>
     </handlers>
   </binding>

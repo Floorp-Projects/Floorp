@@ -15,6 +15,9 @@
           src="chrome://browser/content/places/controller.js"/>
   <script type="application/x-javascript"
           src="chrome://browser/content/places/places.js"/>
+  <!-- ew. -->
+  <script type="application/x-javascript"
+          src="chrome://global/content/nsDragAndDrop.js"/>
   
   <stringbundleset id="stringbundles">
     <stringbundle id="placeBundle" src="chrome://browser/locale/places/places.properties"/>
