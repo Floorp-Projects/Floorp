@@ -53,6 +53,13 @@ for (var size = 1000; size < 10000; size += 1000)
 
 var order = BigO(data);
 
+var msg = '';
+for (var p = 0; p < data.X.length; p++)
+{ 
+  msg += '(' + data.X[p] + ', ' + data.Y[p] + '); ';
+}
+printStatus(msg);
+printStatus('Order: ' + order);
 reportCompare(true, order < 2, 'BigO ' + order + ' < 2');
 
 function concat(size) 
