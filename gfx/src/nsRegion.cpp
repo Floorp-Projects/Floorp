@@ -1101,6 +1101,7 @@ void nsRegion::SubRect (const nsRectFast& aRect, nsRegion& aResult, nsRegion& aC
         } else
         if (*pSrcRect == aRect)         // 4. subset
         {                               // Current rectangle is equal to aRect
+          pSrcRect = pSrcRect->next;    // don't add this one to the result, it's removed
           break;                        // No any other rectangle in region can intersect it
         }
       } else
@@ -1160,6 +1161,7 @@ void nsRegion::SubRect (const nsRectFast& aRect, nsRegion& aResult, nsRegion& aC
           aResult.InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
 
           // Current rectangle fully overlays aRect. No any other rectangle can intersect it.
+          pSrcRect = pSrcRect->next;    // don't add this one to the result, it's removed
           break;
         } else
         if (bxm >= axm && bym < aym)    // 14.
