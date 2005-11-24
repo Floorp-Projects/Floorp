@@ -1389,6 +1389,7 @@ PK11_ExportEncryptedPrivKeyInfo(
     SECAlgorithmID                *algid;
     SECItem                       *pbe_param = NULL;
     PK11SymKey                    *key       = NULL;
+    SECKEYPrivateKey		  *tmpPK = NULL;
     SECStatus                      rv        = SECSuccess;
     int                            encryptBufLen;
     CK_RV                          crv;
@@ -1480,13 +1481,19 @@ PK11_ExportEncryptedPrivKeyInfo(
 	PK11SymKey *newkey = pk11_CopyToSlot(pk->pkcs11Slot,
 						key->type, CKA_WRAP, key);
 	if (newkey == NULL) {
-	    rv= SECFailure;
-	    goto loser;
+	    tmpPK = pk11_loadPrivKey(key->slot, pk, NULL, PR_FALSE, PR_TRUE);
+	    if (tmpPK == NULL) {
+		/* couldn't import the wrapping key, couldn't export the
+		 * private key, we are done */
+		rv = SECFailure;
+		goto loser;
+	    }
+	    pk = tmpPK;
+	} else {
+	    /* free the old key and use the new key */
+	    PK11_FreeSymKey(key);
+	    key = newkey;
 	}
-
-	/* free the old key and use the new key */
-	PK11_FreeSymKey(key);
-	key = newkey;
     }
 	
     /* we are extracting an encrypted privateKey structure.
@@ -1530,6 +1537,9 @@ loser:
 
     if(key != NULL) {
     	PK11_FreeSymKey(key);
+    }
+    if (tmpPK != NULL) {
+	SECKEY_DestroyPrivateKey(tmpPK);
     }
     SECOID_DestroyAlgorithmID(algid, PR_TRUE);
 
