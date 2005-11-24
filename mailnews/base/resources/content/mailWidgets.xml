@@ -2004,7 +2004,8 @@
           var msgFolder = GetFolderResource(folderTree, row).QueryInterface(Components.interfaces.nsIMsgFolder);
           if (!msgFolder || msgFolder.isServer) 
             return false;
-          return document.getAnonymousNodes(this)[0].parseFolder(msgFolder);
+          var asyncResults = {};
+          return document.getAnonymousNodes(this)[0].parseFolder(msgFolder, null, asyncResults);
         ]]>
       </handler>
 
@@ -2023,6 +2024,8 @@
       <field name="mMaxMsgHdrsInPopup">8</field>
       <method name="parseFolder">
         <parameter name="aFolder"/>
+        <parameter name="aUrlListener"/>
+        <parameter name="aOutAsync"/>
         <body>
           <![CDATA[
             // from nsMsgFolderFlags.h
@@ -2044,10 +2047,8 @@
 
             // fetchMsgPreviewText forces the previewText property to get generated
             // for each of the message keys.
-            var asyncResults = {};
-
             try {
-              aFolder.fetchMsgPreviewText(msgKeys.value, numMsgKeys.value, false, null, asyncResults);
+              aFolder.fetchMsgPreviewText(msgKeys.value, numMsgKeys.value, false, aUrlListener, aOutAsync);
               aFolder.setMsgDatabase(null);
             }
             catch (ex)
@@ -2057,6 +2058,12 @@
               aFolder.setMsgDatabase(null);
               return false; 
             }
+
+            // if fetching the preview text is going to be an asynch operation and the caller
+            // is set up to handle that fact, then don't bother filling in any of the fields since 
+            // we'll have to do this all over again when the fetch for the preview text completes.
+            if (aOutAsync.value && aUrlListener)
+              return false; 
 
             var index = 0;
             var hdrParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);

@@ -690,6 +690,20 @@ nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 
     if(mDatabase)
     {
+      PRBool hasNewMessages = PR_FALSE; 
+      for (PRUint32 keyIndex = 0; keyIndex < m_newMsgs.GetSize(); keyIndex++) 
+      { 
+        PRBool isRead = PR_FALSE; 
+        mDatabase->IsRead(m_newMsgs[keyIndex], &isRead); 
+        if (!isRead) 
+        { 
+          hasNewMessages = PR_TRUE; 
+          mDatabase->AddToNewList(m_newMsgs[keyIndex]); 
+        } 
+      } 
+      
+      SetHasNewMessages(hasNewMessages); 
+
       if(mAddListener)
         mDatabase->AddListener(this);
       UpdateSummaryTotals(PR_TRUE);
@@ -8392,7 +8406,7 @@ NS_IMETHODIMP nsImapMailFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUi
     nsCOMPtr <nsICacheEntryDescriptor> cacheEntry;
 
     // if mem cache entry is broken or empty, go to next message.
-    rv = cacheSession->OpenCacheEntry(cacheKey, nsICache::ACCESS_READ, PR_TRUE, getter_AddRefs(cacheEntry));
+    rv = cacheSession->OpenCacheEntry(cacheKey, nsICache::ACCESS_READ, PR_FALSE, getter_AddRefs(cacheEntry));
     if (cacheEntry)
     {
       rv = cacheEntry->OpenInputStream(0, getter_AddRefs(inputStream));
@@ -8434,6 +8448,7 @@ NS_IMETHODIMP nsImapMailFolder::FetchMsgPreviewText(nsMsgKey *aKeysToFetch, PRUi
                            nsnull, messageIds);
       rv = imapService->GetBodyStart(m_eventQueue, this, aUrlListener,
                                          messageIds.get(), 2048, nsnull);
+      *aAsyncResults = PR_TRUE; // the preview text will be available async...
   }
   return NS_OK;
 }

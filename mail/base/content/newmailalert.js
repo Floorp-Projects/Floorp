@@ -42,6 +42,7 @@ var gSlideTime = 10;
 var gOpenTime = 3000; // total time the alert should stay up once we are done animating.
 var gAlertCookie = "";
 var gAlertListener = null;
+var gPendingPreviewFetchRequests = 0;
 
 function prefillAlertInfo()
 {
@@ -72,8 +73,40 @@ function prefillAlertInfo()
   {
     var folder = allFolders.GetElementAt(folderIndex).QueryInterface(Components.interfaces.nsIMsgFolder);
     if (folder.hasNewMessages)
-      folderSummaryInfoEl.parseFolder(folder);
+    {
+      var asyncFetch = {};
+      folderSummaryInfoEl.parseFolder(folder, new urlListener(folder), asyncFetch);
+      if (asyncFetch.value)
+        gPendingPreviewFetchRequests++;
+    }
   }
+  }
+
+function urlListener(aFolder)
+{
+  this.mFolder = aFolder;
+}
+
+urlListener.prototype = {
+  OnStartRunningUrl: function(aUrl)
+  {
+  },
+
+  OnStopRunningUrl: function(aUrl, aExitCode)
+  {
+    var folderSummaryInfoEl = document.getElementById('folderSummaryInfo');
+    var asyncFetch = {};
+    folderSummaryInfoEl.parseFolder(this.mFolder, null, asyncFetch);
+    gPendingPreviewFetchRequests--;
+
+    // when we are done running all of our urls for fetching the preview text,
+    // start the alert.
+    if (!gPendingPreviewFetchRequests)
+    {
+      resizeAlert();
+      setTimeout(animateAlert, gSlideTime);
+    }
+  },
 }
 
 function onAlertLoad()
@@ -89,16 +122,22 @@ function onAlertLoad()
     gOpenTime = prefBranch.getIntPref("alerts.totalOpenTime");
   } catch (ex) {}
 
+  resizeAlert();
+
+  // if we aren't waiting to fetch preview text, then go ahead and 
+  // start showing the alert.
+  if (!gPendingPreviewFetchRequests)
+    setTimeout(animateAlert, gSlideTime);
+}
+
+function resizeAlert()
+{
   sizeToContent();
-
   gFinalHeight = window.outerHeight;
-
   window.outerHeight = 1;
 
   // be sure to offset the alert by 10 pixels from the far right edge of the screen
   window.moveTo( (screen.availLeft + screen.availWidth - window.outerWidth) - 10, screen.availTop + screen.availHeight - window.outerHeight);
-
-  setTimeout(animateAlert, gSlideTime);
 }
 
 function animateAlert()
