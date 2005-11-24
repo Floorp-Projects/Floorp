@@ -223,9 +223,9 @@ reportCompare(expect, actual, 'Date.toLocaleFormat("%m/%d/%y) == ' +
               'Date.toLocaleFormat("%x")');
 */
 
-expect = date.toLocaleFormat('%H:%M:%S');
+expect = date.toLocaleTimeString();
 actual = date.toLocaleFormat('%X');
-reportCompare(expect, actual, 'Date.toLocaleFormat("%H:%M:%S) == ' + 
+reportCompare(expect, actual, 'Date.toLocaleTimeString() == ' + 
               'Date.toLocaleFormat("%X")');
 
 expect = '05';
@@ -235,18 +235,6 @@ reportCompare(expect, actual, 'Date.toLocaleFormat("%y")');
 expect = '2005';
 actual = date.toLocaleFormat('%Y');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%Y")');
-
-/*
-expect = String(-date.getTimezoneOffset()/60); // assume integral hours
-actual = Number(date.toLocaleFormat('%z'))/100;
-reportCompare(expect, actual, 'Date.getTimezoneOffset() == ' +
-              'Date.toLocaleFormat("%z")');
-*/
-
-expect = true;
-temp   = date.toLocaleFormat('%Z');
-actual = temp.indexOf('Time') > 0;
-reportCompare(expect, actual, 'Date.toLocaleFormat("%Z")');
 
 expect = '%';
 actual = date.toLocaleFormat('%%');
