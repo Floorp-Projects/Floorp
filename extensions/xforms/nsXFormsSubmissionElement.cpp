@@ -965,9 +965,13 @@ nsXFormsSubmissionElement::CheckSameOrigin(nsIURI *aBaseURI, nsIURI *aTestURI)
     // if same origin is required, default to false
     allowSubmission = PR_FALSE;
 
-    // if we don't replace the instance, we allow file:// to submit data anywhere
+    // if we don't replace the instance, we allow file:// and chrome://
+    // to submit data anywhere
     if (!mIsReplaceInstance) {
       aBaseURI->SchemeIs("file", &allowSubmission);
+      if (!allowSubmission) {
+        aBaseURI->SchemeIs("chrome", &allowSubmission);
+      }
     }
 
     // let's check the permission manager
