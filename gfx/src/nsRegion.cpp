@@ -1289,11 +1289,13 @@ void nsRegion::SimpleSubtract (const nsRect& aRect)
   if (aRect.IsEmpty())
     return;
 
+  // protect against aRect being one of our own rectangles
+  nsRect param = aRect;
   RgnRect* r = mRectListHead.next;
   while (r != &mRectListHead)
   {
     RgnRect* next = r->next;
-    if (aRect.Contains(*r)) {
+    if (param.Contains(*r)) {
       delete Remove(r);
     }
     r = next;
