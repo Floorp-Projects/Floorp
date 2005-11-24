@@ -154,6 +154,8 @@ public:
     return Sub (*this, aRect2);
   }
 
+  PRBool Contains (const nsRect& aRect) const;
+  PRBool Intersects (const nsRect& aRect) const;
 
   void MoveBy (PRInt32 aXOffset, PRInt32 aYOffset)
   {
@@ -185,6 +187,23 @@ public:
    * original region.
    */
   void SimplifyInward (PRUint32 aMaxRects);
+  /**
+   * Efficiently try to remove a rectangle from this region. The actual
+   * area removed could be some sub-area contained by the rectangle
+   * (even possibly nothing at all).
+   * 
+   * We remove all rectangles that are contained by aRect.
+   */
+  void SimpleSubtract (const nsRect& aRect);
+  /**
+   * Efficiently try to remove a region from this region. The actual
+   * area removed could be some sub-area contained by aRegion
+   * (even possibly nothing at all).
+   * 
+   * We remove all rectangles of this region that are contained by
+   * a rectangle of aRegion.
+   */
+  void SimpleSubtract (const nsRegion& aRegion);
 
 private:
   PRUint32    mRectCount;
