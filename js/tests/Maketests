@@ -64,6 +64,8 @@ shell: jsshell e4xshell
 
 browser: jsbrowser e4xbrowser jsbrowsereach e4xbrowsereach
 
+browsereach: jsbrowsereach e4xbrowsereach
+
 #
 # shell based tests
 #
