@@ -101,7 +101,10 @@ function test()
 function testA(ver)
 {
   // Set the version of JS to test -
-  version(ver);
+  if (typeof version == 'function')
+  {
+    version(ver);
+  }
 
   // eval the test, so it compiles AFTER version() has executed -
   var sTestScript = "";
@@ -120,7 +123,10 @@ function testA(ver)
 function testB(ver)
 {
   // Set the version of JS to test -
-  version(ver);
+  if (typeof version == 'function')
+  {
+    version(ver);
+  }
 
   // eval the test, so it compiles AFTER version() has executed -
   var sTestScript = "";
@@ -141,7 +147,10 @@ function testB(ver)
 function testC(ver)
 {
   // Set the version of JS to test -
-  version(ver);
+  if (typeof version == 'function')
+  {
+    version(ver);
+  }
 
   // eval the test, so it compiles AFTER version() has executed -
   var sTestScript = "";
