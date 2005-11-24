@@ -94,7 +94,11 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 
 // regress http://scopus/bugsplat/show_bug.cgi?id=105721
 
-new TestCase( SECTION, "function f() { return this; }; function g() { var h = f; return h(); }; g().toString()",    GLOBAL,  g().toString() );
+new TestCase( SECTION, 
+              "function f() { return this; }; function g() { var h = f; return h(); }; g().toString()",    
+              GLOBAL,  
+              g().toString()
+              );
 
 
 new TestCase( SECTION, "String.prototype.indexOf.length",                                               1,     String.prototype.indexOf.length );
@@ -183,7 +187,7 @@ new TestCase( SECTION,
 new TestCase( SECTION,
 	      "var f = new Object( String.prototype.indexOf ); f('"+GLOBAL+"')",
 	      0,
-	      eval("var f = new Object( String.prototype.indexOf ); f('"+GLOBAL+"')") );
+	      eval("var f = new Object( String.prototype.indexOf ); f('"+GLOBAL.replace(/ @ 0x[0-9a-fA-F]+ \(native @ 0x[0-9a-fA-F]+\)/, '')+"')") );
 
 new TestCase( SECTION,
 	      "var f = new Function(); f.toString = Object.prototype.toString; f.indexOf = String.prototype.indexOf; f.indexOf('[object Function]')",

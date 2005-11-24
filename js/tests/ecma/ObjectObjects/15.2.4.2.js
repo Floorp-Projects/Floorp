@@ -62,8 +62,9 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 new TestCase( SECTION,  "(new Object()).toString()",    "[object Object]",  (new Object()).toString() );
 
 new TestCase( SECTION,  "myvar = this;  myvar.toString = Object.prototype.toString; myvar.toString()",
-	      GLOBAL,
-	      eval("myvar = this;  myvar.toString = Object.prototype.toString; myvar.toString()") );
+	      GLOBAL.replace(/ @ 0x[0-9a-fA-F]+ \(native @ 0x[0-9a-fA-F]+\)/, ''),
+	      eval("myvar = this;  myvar.toString = Object.prototype.toString; myvar.toString()")
+  );
 
 new TestCase( SECTION,  "myvar = MyObject; myvar.toString = Object.prototype.toString; myvar.toString()",
 	      "[object Function]",
@@ -102,8 +103,9 @@ new TestCase( SECTION,  "myvar = new Date(); myvar.toString = Object.prototype.t
 	      eval("myvar = new Date(); myvar.toString = Object.prototype.toString; myvar.toString()") );
 
 new TestCase( SECTION,  "var MYVAR = new Object( this ); MYVAR.toString()",
-	      GLOBAL,
-	      eval("var MYVAR = new Object( this ); MYVAR.toString()") );
+	      GLOBAL.replace(/ @ 0x[0-9a-fA-F]+ \(native @ 0x[0-9a-fA-F]+\)/, ''),
+	      eval("var MYVAR = new Object( this ); MYVAR.toString()")
+  );
 
 new TestCase( SECTION,  "var MYVAR = new Object(); MYVAR.toString()",
 	      "[object Object]",
@@ -122,3 +124,5 @@ function MyObject( value ) {
   this.value = new Function( "return this.value" );
   this.toString = new Function ( "return this.value+''");
 }
+
+test();
