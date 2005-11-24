@@ -151,6 +151,8 @@ for ( var i = 0; i < S.length; i++ ) {
   CheckItems( S[i] );
 }
 
+test();
+
 function CheckItems( S ) {
   eval( S );
   var E = Sort( A );
