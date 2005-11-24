@@ -575,6 +575,7 @@ function ShowAccountCentral()
         document.getElementById("threadpane-splitter").collapsed = true;
         gSearchBox.collapsed = true;
         GetThreadTree().collapsed = true;
+        document.getElementById("key_toggleMessagePane").setAttribute("disabled", "true");
         document.getElementById("accountCentralBox").collapsed = false;
         window.frames["accountCentralPane"].location.href = acctCentralPage;
         if (!IsFolderPaneCollapsed())
@@ -597,6 +598,7 @@ function HideAccountCentral()
     {
         window.frames["accountCentralPane"].location.href = "about:blank";
         document.getElementById("accountCentralBox").collapsed = true;
+        document.getElementById("key_toggleMessagePane").removeAttribute("disabled");
         GetThreadTree().collapsed = false;
         gSearchBox.collapsed = false;
         var threadPaneSplitter = document.getElementById("threadpane-splitter");
