@@ -113,7 +113,7 @@ static const  char kInvalidTagStackPos[] = "Error: invalid tag stack position";
 #define NS_DTD_FLAG_HAS_MAIN_CONTAINER     (NS_DTD_FLAG_HAD_BODY |            \
                                             NS_DTD_FLAG_HAD_FRAMESET)
 
-NS_IMPL_ISUPPORTS2(CNavDTD, nsIDTD, CNavDTD);
+NS_IMPL_ISUPPORTS2(CNavDTD, nsIDTD, CNavDTD)
 
 CNavDTD::CNavDTD()
   : mMisplacedContent(0),
