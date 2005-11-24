@@ -12,7 +12,7 @@
 var SECTION = "RegExp/hex-001.js";
 var VERSION = "ECMA_2";
 var TITLE   = "JS regexp anchoring on empty match bug";
-var BUGNUMBER = "http://bugzilla.mozilla.org/show_bug.cgi?id=2157";
+var BUGNUMBER = "2157";
 
 startTest();
 

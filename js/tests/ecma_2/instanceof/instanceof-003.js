@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=281606
     var SECTION = "instanceof-003";
     var VERSION = "ECMA_2";
     var TITLE   = "instanceof operator";
-    var BUGNUMBER ="http://bugzilla.mozilla.org/show_bug.cgi?id=7635";
+    var BUGNUMBER ="7635";
 
     startTest();
 
