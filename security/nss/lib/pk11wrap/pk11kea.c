@@ -144,6 +144,11 @@ pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 	if (rv == SECSuccess) {
 	    newSymKey = PK11_PubUnwrapSymKeyWithFlagsPerm(privKey,
 			&wrapData,type,operation,symKeyLength,flags,isPerm);
+	    /* make sure we wound up where we wanted to be! */
+	    if (newSymKey && newSymKey->slot != slot) {
+		PK11_FreeSymKey(newSymKey);
+		newSymKey = NULL;
+	    }
 	}
 rsa_failed:
 	if (wrapData.data != NULL) PORT_Free(wrapData.data);
