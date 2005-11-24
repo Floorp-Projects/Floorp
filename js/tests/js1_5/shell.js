@@ -210,18 +210,27 @@ function BigO(data)
   var order = 0;
   var origLength = data.X.length;
 
-  while (data.X.length > 1)
+  while (data.X.length > 2)
   {
     var lr = new LinearRegression(data);
-    order++;
-    if (lr.SE < 0.01)
+    if (lr.b > 1e-6)
     {
+      // only increase the order if the slope
+      // is "great" enough
+      order++;
+    }
+
+    if (lr.r > 0.98 || lr.Syx < 1 || lr.b < 1e-6)
+    {
+      // terminate if close to a line lr.r
+      // small error lr.Syx
+      // small slope lr.b
       break;
     }
     data = dataDeriv(data);
   }
  
-  if (order == origLength - 1)
+  if (2 == origLength - order)
   {
     order = Number.POSITIVE_INFINITY;
   }
@@ -229,14 +238,12 @@ function BigO(data)
 
   function LinearRegression(data)
     {
-      // http://www.bearcave.com/misl/misl_tech/wavelets/stat/
       /*
-        X0,X1...; Y0,Y1,...
-        b = sum( (Xi - Xavg)(Yi - Yavg) ) / sum ( (Xi - Xavg)*(Xi - Xavg) )
-        a = Yavg - b * Xavg
-        stddev*stddev = (sum( (Yi - Yavg) * (Yi - Yavg) ) - 
-        b * sum( (Xi - Xavg)*(Yi - Yavg) ) ) /
-        sum ( (Xi - Xavg) * (Xi - Xavg) )
+        y = a + bx
+        for data points (Xi, Yi); 0 <= i < n
+
+        b = (n*SUM(XiYi) - SUM(Xi)*SUM(Yi))/(n*SUM(Xi*Xi) - SUM(Xi)*SUM(Xi))
+        a = (SUM(Yi) - b*SUM(Xi))/n
       */
       var i;
 
@@ -244,46 +251,59 @@ function BigO(data)
       {
         throw 'LinearRegression: data point length mismatch';
       }
-      if (data.X.length < 2)
+      if (data.X.length < 3)
       {
         throw 'LinearRegression: data point length < 2';
       }
-      var length = data.X.length;
+      var n = data.X.length;
       var X = data.X;
       var Y = data.Y;
 
       this.Xavg = 0;
       this.Yavg = 0;
 
-      for (i = 0; i < length; i++)
+      var SUM_X  = 0;
+      var SUM_XY = 0;
+      var SUM_XX = 0;
+      var SUM_Y  = 0;
+      var SUM_YY = 0;
+
+      for (i = 0; i < n; i++)
       {
-        this.Xavg += X[i];
-        this.Yavg += Y[i];
-      }
-      this.Xavg /= length;
-      this.Yavg /= length;
-
-      var sumXdiffYdiff = 0;
-      var sumXdiffsquared = 0;
-      var sumYdiffsquared = 0;
-
-      for (i = 0; i < length; i++)
-      {
-        var xDiff = (X[i] - this.Xavg);
-        var yDiff = (Y[i] - this.Yavg);
-
-        sumXdiffYdiff   += xDiff * yDiff;
-        sumXdiffsquared += xDiff * xDiff; 
-        sumYdiffsquared += yDiff * yDiff;
+          SUM_X  += X[i];
+          SUM_XY += X[i]*Y[i];
+          SUM_XX += X[i]*X[i];
+          SUM_Y  += Y[i];
+          SUM_YY += Y[i]*Y[i];
       }
 
-      this.b = sumXdiffYdiff / sumXdiffsquared;
-      this.a = this.Yavg - this.b * this.Xavg;
-      // standard deviation of regression
-      this.sigma = Math.sqrt( (sumYdiffsquared - this.b * sumXdiffYdiff) / 
-                              (length - 2));
-      // standard error in b
-      this.SE = this.sigma / Math.sqrt(sumXdiffsquared);
+      this.b = (n * SUM_XY - SUM_X * SUM_Y)/(n * SUM_XX - SUM_X * SUM_X);
+      this.a = (SUM_Y - this.b * SUM_X)/n;
+
+      this.Xavg = SUM_X/n;
+      this.Yavg = SUM_Y/n;
+
+      var SUM_Ydiff2 = 0;
+      var SUM_Xdiff2 = 0;
+      var SUM_XdiffYdiff = 0;
+
+      for (i = 0; i < n; i++)
+      {
+        var Ydiff = Y[i] - this.Yavg;
+        var Xdiff = X[i] - this.Xavg;
+        
+        SUM_Ydiff2 += Ydiff * Ydiff;
+        SUM_Xdiff2 += Xdiff * Xdiff;
+        SUM_XdiffYdiff += Xdiff * Ydiff;
+      }
+
+      var Syx2 = (SUM_Ydiff2 - Math.pow(SUM_XdiffYdiff/SUM_Xdiff2, 2))/(n - 2);
+      var r2   = Math.pow((n*SUM_XY - SUM_X * SUM_Y), 2) /
+        ((n*SUM_XX - SUM_X*SUM_X)*(n*SUM_YY-SUM_Y*SUM_Y));
+
+      this.Syx = Math.sqrt(Syx2);
+      this.r = Math.sqrt(r2);
+
     }
 
   function dataDeriv(data)
@@ -312,7 +332,6 @@ function BigO(data)
     }
 
 }
-
 
 /* JavaScriptOptions
    encapsulate the logic for setting and retrieving the values
