@@ -52,7 +52,7 @@ function replace(str) {
 }
 
 function runTest() {
-  for (var j = 0; j <= 10000; j += 1000)
+  for (var j = 1000; j <= 10000; j += 1000)
   {
     neurodna(j);
   }
@@ -81,5 +81,5 @@ for (var p = 0; p < data.X.length; p++)
   msg += '(' + data.X[p] + ', ' + data.Y[p] + '); ';
 }
 printStatus(msg);
-
+printStatus('Order: ' + order);
 reportCompare(true, order < 2, summary + ' BigO ' + order + ' < 2');

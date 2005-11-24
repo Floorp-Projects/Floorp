@@ -79,5 +79,20 @@ for (var x = 0; x < 5; x++)
 var order1 = BigO(data1);
 var order2 = BigO(data2);
 
+var msg = '';
+for (var p = 0; p < data1.X.length; p++)
+{ 
+  msg += '(' + data1.X[p] + ', ' + data1.Y[p] + '); ';
+}
+printStatus(msg);
+printStatus('Order: ' + order1);
 reportCompare(true, order1 < 2 , summary + ' BigO ' + order1 + ' < 2');
+
+msg = '';
+for (var p = 0; p < data2.X.length; p++)
+{ 
+  msg += '(' + data2.X[p] + ', ' + data2.Y[p] + '); ';
+}
+printStatus(msg);
+printStatus('Order: ' + order2);
 reportCompare(true, order2 < 2 , summary + ' BigO ' + order2 + ' < 2');
