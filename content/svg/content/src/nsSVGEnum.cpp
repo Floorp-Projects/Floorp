@@ -173,7 +173,8 @@ nsSVGEnum::SetValueString(const nsAString& aValue)
     tmp++;
   }
 
-  NS_ERROR("unknown enumeration key");
+  // only a warning since authors may mistype attribute values
+  NS_WARNING("unknown enumeration key");
   return NS_ERROR_FAILURE;
 }
 
