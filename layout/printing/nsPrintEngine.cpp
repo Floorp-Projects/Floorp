@@ -75,6 +75,7 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIDOMHTMLFrameSetElement.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLObjectElement.h"
+#include "nsIDOMHTMLEmbedElement.h"
 
 // Print Preview
 #include "imgIContainer.h" // image animation mode constants
@@ -1951,8 +1952,10 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aRootObject,
               do_QueryInterface(aContent);
             nsCOMPtr<nsIDOMHTMLIFrameElement> iFrame =
               do_QueryInterface(aContent);
+            nsCOMPtr<nsIDOMHTMLEmbedElement> embedElement =
+              do_QueryInterface(aContent);
 
-            if (iFrame || objElement) {
+            if (iFrame || objElement || embedElement) {
               po->mFrameType = eIFrame;
               po->mPrintAsIs = PR_TRUE;
               if (po->mParent) {
