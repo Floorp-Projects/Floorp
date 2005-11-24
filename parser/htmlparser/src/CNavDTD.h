@@ -38,21 +38,20 @@
 
 /**
  * MODULE NOTES:
- * @update  gess 7/15/98
  *
  * NavDTD is an implementation of the nsIDTD interface.
  * In particular, this class captures the behaviors of the original 
  * Navigator parser productions.
  *
  * This DTD, like any other in NGLayout, provides a few basic services:
- *	- First, the DTD collaborates with the Parser class to convert plain 
+ *  - First, the DTD collaborates with the Parser class to convert plain 
  *    text into a sequence of HTMLTokens. 
- *	- Second, the DTD describes containment rules for known elements. 
- *	- Third the DTD controls and coordinates the interaction between the
- *	  parsing system and content sink. (The content sink is the interface
+ *  - Second, the DTD describes containment rules for known elements. 
+ *  - Third the DTD controls and coordinates the interaction between the
+ *    parsing system and content sink. (The content sink is the interface
  *    that serves as a proxy for content model).
- *	- Fourth the DTD maintains an internal style-stack to handle residual (leaky)
- *	  style tags.
+ *  - Fourth the DTD maintains an internal style-stack to handle residual (leaky)
+ *    style tags.
  *
  * You're most likely working in this class file because
  * you want to add or change a behavior inherent in this DTD. The remainder
@@ -60,35 +59,35 @@
  * change you want in this DTD.
  *
  * RESIDUAL-STYLE HANDLNG:
- *	 There are a number of ways to represent style in an HTML document.
- *		1) explicit style tags (<B>, <I> etc)
- *		2) implicit styles (like those implicit in <Hn>)
- *		3) CSS based styles
+ *   There are a number of ways to represent style in an HTML document.
+ *    1) explicit style tags (<B>, <I> etc)
+ *    2) implicit styles (like those implicit in <Hn>)
+ *    3) CSS based styles
  *
- *	 Residual style handling results from explicit style tags that are
- *	 not closed. Consider this example: <p>text <b>bold </p>
- *	 When the <p> tag closes, the <b> tag is NOT automatically closed.
- *	 Unclosed style tags are handled by the process we call residual-style 
- *	 tag handling. 
+ *   Residual style handling results from explicit style tags that are
+ *   not closed. Consider this example: <p>text <b>bold </p>
+ *   When the <p> tag closes, the <b> tag is NOT automatically closed.
+ *   Unclosed style tags are handled by the process we call residual-style 
+ *   tag handling. 
  *
- *	 There are two aspects to residual style tag handling. The first is the 
- *	 construction and managing of a stack of residual style tags. The 
- *	 second is the automatic emission of residual style tags onto leaf content
- *	 in subsequent portions of the document.This step is necessary to propagate
- *	 the expected style behavior to subsequent portions of the document.
+ *   There are two aspects to residual style tag handling. The first is the 
+ *   construction and managing of a stack of residual style tags. The 
+ *   second is the automatic emission of residual style tags onto leaf content
+ *   in subsequent portions of the document.This step is necessary to propagate
+ *   the expected style behavior to subsequent portions of the document.
  *
- *	 Construction and managing the residual style stack is an inline process that
- *	 occurs during the model building phase of the parse process. During the model-
- *	 building phase of the parse process, a content stack is maintained which tracks
- *	 the open container hierarchy. If a style tag(s) fails to be closed when a normal
- *	 container is closed, that style tag is placed onto the residual style stack. If
- *	 that style tag is subsequently closed (in most contexts), it is popped off the
- *	 residual style stack -- and are of no further concern.
+ *   Construction and managing the residual style stack is an inline process that
+ *   occurs during the model building phase of the parse process. During the model-
+ *   building phase of the parse process, a content stack is maintained which tracks
+ *   the open container hierarchy. If a style tag(s) fails to be closed when a normal
+ *   container is closed, that style tag is placed onto the residual style stack. If
+ *   that style tag is subsequently closed (in most contexts), it is popped off the
+ *   residual style stack -- and are of no further concern.
  *
- *	 Residual style tag emission occurs when the style stack is not empty, and leaf
- *	 content occurs. In our earlier example, the <b> tag "leaked" out of the <p> 
- *	 container. Just before the next leaf is emitted (in this or another container) the 
- *	 style tags that are on the stack are emitted in succession. These same residual
+ *   Residual style tag emission occurs when the style stack is not empty, and leaf
+ *   content occurs. In our earlier example, the <b> tag "leaked" out of the <p> 
+ *   container. Just before the next leaf is emitted (in this or another container) the 
+ *   style tags that are on the stack are emitted in succession. These same residual
  *   style tags get closed automatically when the leaf's container closes, or if a
  *   child container is opened.
  * 
@@ -135,137 +134,161 @@ class nsTokenAllocator;
 
 class CNavDTD : public nsIDTD
 {
-
 #ifdef _MSC_VER
 #pragma warning( default : 4275 )
 #endif
 
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIDTD
-     
     /**
-      *  Common constructor for navdtd. You probably want to call
-      *  NS_NewNavHTMLDTD().
-      *
-      *  @update  gess 7/9/98
-      */
+     *  Common constructor for navdtd. You probably want to call
+     *  NS_NewNavHTMLDTD().
+     */
     CNavDTD();
     virtual ~CNavDTD();
-    
 
+    /**
+     * This method is offered publically for the sole use from
+     * nsParser::ParseFragment. In general, you should prefer to use methods
+     * that are directly on nsIDTD, since those will be guaranteed to do the
+     * right thing.
+     *
+     * @param aNode The parser node that contains the token information for
+     *              this tag.
+     * @param aTag The actual tag that is being opened (should correspond to
+     *             aNode.
+     * @param aStyleStack The style stack that aNode might be a member of
+     *                    (usually null).
+     */
+    nsresult OpenContainer(const nsCParserNode *aNode,
+                           eHTMLTags aTag,
+                           nsEntryStack* aStyleStack = nsnull);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIDTD
+
+private:
     /**
      *  This method is called to determine whether or not a tag
      *  of one type can contain a tag of another type.
      *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- int tag of parent container
-     *  @param   aChild -- int tag of child container
+     *  @param   aParent Tag of parent container
+     *  @param   aChild Tag of child container
      *  @return  PR_TRUE if parent can contain child
      */
-    virtual PRBool CanPropagate(eHTMLTags aParent,
-                                eHTMLTags aChild,
-                                PRBool aParentContains) ;
+    PRBool CanPropagate(eHTMLTags aParent,
+                        eHTMLTags aChild,
+                        PRBool aParentContains);
 
     /**
      *  This method gets called to determine whether a given 
      *  child tag can be omitted by the given parent.
      *  
-     *  @update  gess 3/25/98
-     *  @param   aParent -- parent tag being asked about omitting given child
-     *  @param   aChild -- child tag being tested for omittability by parent
-     *  @param   aParentContains -- can be 0,1,-1 (false,true, unknown)
+     *  @param   aParent Parent tag being asked about omitting given child
+     *  @param   aChild Child tag being tested for omittability by parent
+     *  @param   aParentContains Can be 0,1,-1 (false,true, unknown)
+     *                           XXX should be PRInt32, not PRBool
      *  @return  PR_TRUE if given tag can be omitted
      */
-    virtual PRBool CanOmit(eHTMLTags aParent, 
-                           eHTMLTags aChild,
-                           PRBool& aParentContains);
+    PRBool CanOmit(eHTMLTags aParent, 
+                   eHTMLTags aChild,
+                   PRBool& aParentContains);
 
     /**
-     * This method tries to design a context map (without actually
-     * changing our parser state) from the parent down to the
-     * child. 
+     * Looking at aParent, try to see if we can propagate from aChild to
+     * aParent. If aParent is a TR tag, then see if we can start at TD instead
+     * of at aChild.
      *
-     * @update  gess4/6/98
-     * @param   aParent -- tag type of parent
-     * @param   aChild -- tag type of child
-     * @return  True if closure was achieved -- other false
+     * @param   aParent Tag type of parent
+     * @param   aChild Tag type of child
+     * @return  PR_TRUE if closure was achieved -- otherwise false
      */
-    virtual PRBool ForwardPropagate(nsString& aSequence,
-                                    eHTMLTags aParent,
-                                    eHTMLTags aChild);
+    PRBool ForwardPropagate(nsString& aSequence,
+                            eHTMLTags aParent,
+                            eHTMLTags aChild);
 
     /**
-     * This method tries to design a context map (without actually
-     * changing our parser state) from the child up to the parent.
+     * Given aParent that does not contain aChild, starting with aChild's
+     * first root tag, try to find aParent. If we can reach aParent simply by
+     * going up each first root tag, then return true. Otherwise, we could not
+     * propagate from aChild up to aParent, so return false.
      *
-     * @update  gess4/6/98
-     * @param   aParent -- tag type of parent
-     * @param   aChild -- tag type of child
-     * @return  True if closure was achieved -- other false
+     * @param   aParent Tag type of parent
+     * @param   aChild Tag type of child
+     * @return  PR_TRUE if closure was achieved -- other false
      */
-    virtual PRBool BackwardPropagate(nsString& aSequence,
-                                     eHTMLTags aParent,
-                                     eHTMLTags aChild) const;
+    PRBool BackwardPropagate(nsString& aSequence,
+                             eHTMLTags aParent,
+                             eHTMLTags aChild) const;
 
     /**
-     * Attempt forward and/or backward propagation for the given
-     * child within the current context vector stack.
-     * @update	gess5/11/98
-     * @param   aChild -- type of child to be propagated.
-     * @return  TRUE if succeeds, otherwise FALSE
+     * Attempt forward and/or backward propagation for the given child within
+     * the current context vector stack. And actually open the required tags.
+     *
+     * @param   aChild Type of child to be propagated.
      */
-    nsresult CreateContextStackFor(eHTMLTags aChild);
+    void CreateContextStackFor(eHTMLTags aChild);
 
     /**
-     * Ask parser if a given container is open ANYWHERE on stack
-     * @update	gess5/11/98
+     * Ask if a given container is open anywhere on its stack
+     *
      * @param   id of container you want to test for
      * @return  TRUE if the given container type is open -- otherwise FALSE
      */
-    virtual PRBool HasOpenContainer(eHTMLTags aContainer) const;
+    PRBool HasOpenContainer(eHTMLTags aContainer) const;
 
     /**
-     * Ask parser if a given container is open ANYWHERE on stack
-     * @update	gess5/11/98
-     * @param   id of container you want to test for
-     * @return  TRUE if the given container type is open -- otherwise FALSE
-     */
-    virtual PRBool HasOpenContainer(const eHTMLTags aTagSet[],PRInt32 aCount) const;
-
-    /**
-     * Accessor that retrieves the tag type of the topmost item on context 
-     * vector stack.
+     * This method allows the caller to determine if a any member
+     * in a set of tags is currently open.
      *
-     * @update	gess5/11/98
-     * @return  tag type (may be unknown)
+     * @param   aTagSet A set of tags you care about.
+     * @return  PR_TRUE if any of the members of aTagSet are currently open.
      */
-    virtual eHTMLTags GetTopNode() const;
+    PRBool HasOpenContainer(const eHTMLTags aTagSet[], PRInt32 aCount) const;
+
+    /**
+     * Accessor that retrieves the tag type of the topmost item on the DTD's
+     * tag stack.
+     *
+     * @return The tag type (may be unknown)
+     */
+    eHTMLTags GetTopNode() const;
 
     /**
      * Finds the topmost occurance of given tag within context vector stack.
-     * @update	gess5/11/98
+     *
      * @param   tag to be found
      * @return  index of topmost tag occurance -- may be -1 (kNotFound).
      */
-    // virtual PRInt32 GetTopmostIndexOf(eHTMLTags aTag) const;
+    PRInt32 LastOf(eHTMLTags aTagSet[], PRInt32 aCount) const;
 
     /**
-     * Finds the topmost occurance of given tag within context vector stack.
-     * @update	gess5/11/98
-     * @param   tag to be found
-     * @return  index of topmost tag occurance -- may be -1 (kNotFound).
-     */
-    virtual PRInt32 LastOf(eHTMLTags aTagSet[],PRInt32 aCount) const;
-
-    /**
-     * The following set of methods are used to partially construct 
-     * the content model (via the sink) according to the type of token.
-     * @update	gess5/11/98
-     * @param   aToken is the token (of a given type) to be handled
-     * @return  error code representing construction state; usually 0.
+     *  This method gets called when a start token has been
+     *  encountered in the parse process. If the current container
+     *  can contain this tag, then add it. Otherwise, you have
+     *  two choices: 1) create an implicit container for this tag
+     *                  to be stored in
+     *               2) close the top container, and add this to
+     *                  whatever container ends up on top.
+     *
+     *  @param   aToken -- next (start) token to be handled
+     *  @return  Whether or not we should block the parser.
      */
     nsresult    HandleStartToken(CToken* aToken);
+
+    /** 
+     *  This method gets called when a start token has been 
+     *  encountered in the parse process. If the current container
+     *  can contain this tag, then add it. Otherwise, you have
+     *  two choices: 1) create an implicit container for this tag
+     *                  to be stored in
+     *               2) close the top container, and add this to
+     *                  whatever container ends up on top.
+     *   
+     *  @param   aToken Next (start) token to be handled.
+     *  @param   aChildTag The tag corresponding to aToken.
+     *  @param   aNode CParserNode representing this start token
+     *  @return  A potential request to block the parser.
+     */
     nsresult    HandleDefaultStartToken(CToken* aToken, eHTMLTags aChildTag,
                                         nsCParserNode *aNode);
     nsresult    HandleEndToken(CToken* aToken);
@@ -277,34 +300,12 @@ public:
     nsresult    BuildNeglectedTarget(eHTMLTags aTarget, eHTMLTokenTypes aType,
                                      nsIParser* aParser, nsIContentSink* aSink);
 
-    //*************************************************
-    //these cover methods mimic the sink, and are used
-    //by the parser to manage its context-stack.
-    //*************************************************
-
-    /**
-     * The next set of method open given HTML elements of
-     * various types.
-     * 
-     * @update	gess5/11/98
-     * @param   node to be opened in content sink.
-     * @return  error code representing error condition-- usually 0.
-     */
     nsresult OpenHTML(const nsCParserNode *aNode);
     nsresult OpenBody(const nsCParserNode *aNode);
-    nsresult OpenContainer(const nsCParserNode *aNode,
-                           eHTMLTags aTag,
-                           nsEntryStack* aStyleStack=0);
 
-    /**
-     * Close head element if it is open.
-     */
-    nsresult CloseHead();
-    
     /**
      * The special purpose methods automatically close
      * one or more open containers.
-     * @update	gess5/11/98
      * @return  error code - 0 if all went well.
      */
     nsresult CloseContainer(const eHTMLTags aTag);
@@ -316,7 +317,6 @@ public:
 
     /**
      * Causes leaf to be added to sink at current vector pos.
-     * @update	gess5/11/98
      * @param   aNode is leaf node to be added.
      * @return  error code - 0 if all went well.
      */
@@ -328,14 +328,12 @@ public:
      * transient styles that occur as a result of poorly formed HTML
      * or bugs in the original navigator.
      *
-     * @update	gess5/11/98
      * @param   aTag -- represents the transient style tag to be handled.
      * @return  error code -- usually 0
      */
     nsresult  OpenTransientStyles(eHTMLTags aChildTag,
                                   PRBool aCloseInvalid = PR_TRUE);
-    nsresult  CloseTransientStyles(eHTMLTags aChildTag);
-    nsresult  PopStyle(eHTMLTags aTag);
+    void      PopStyle(eHTMLTags aTag);
 
     nsresult  PushIntoMisplacedStack(CToken* aToken)
     {
@@ -349,9 +347,31 @@ public:
 protected:
 
     nsresult        CollectAttributes(nsIParserNode* aNode,eHTMLTags aTag,PRInt32 aCount);
+
+    /**
+     * This gets called before we've handled a given start tag.
+     * It's a generic hook to let us do pre processing.
+     *
+     * @param   aToken contains the tag in question
+     * @param   aTag is the tag itself.
+     * @param   aNode is the node (tag) with associated attributes.
+     * @return  NS_OK if we should continue, a failure code otherwise.
+     */
     nsresult        WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsIParserNode& aNode);
     nsresult        DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag);
-    nsresult        HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags aParent,nsIParserNode *aNode);
+
+    /**
+     *  This method gets called when a start token has been encountered that
+     *  the parent wants to omit. It stashes it in the current element if that
+     *  element accepts such misplaced tokens.
+     *
+     *  @param   aToken Next (start) token to be handled
+     *  @param   aChildTag id of the child in question
+     *  @param   aParent id of the parent in question
+     *  @param   aNode CParserNode representing this start token
+     */
+    void            HandleOmittedTag(CToken* aToken, eHTMLTags aChildTag,
+                                     eHTMLTags aParent, nsIParserNode *aNode);
     nsresult        HandleSavedTokens(PRInt32 anIndex);
     nsresult        HandleKeyGen(nsIParserNode *aNode);
     PRBool          IsAlternateTag(eHTMLTags aTag);
