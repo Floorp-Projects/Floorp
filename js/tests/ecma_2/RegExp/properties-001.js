@@ -10,7 +10,7 @@
 var SECTION = "RegExp/properties-001.js";
 var VERSION = "ECMA_2";
 var TITLE   = "Properties of RegExp Instances";
-var BUGNUMBER ="http://scopus/bugsplat/show_bug.cgi?id=346000";
+var BUGNUMBER ="";
 
 startTest();
 
