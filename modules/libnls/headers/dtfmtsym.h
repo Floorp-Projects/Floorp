@@ -352,7 +352,7 @@ private:
     t_uint8                 fIsOwned;
 
     /**
-     * Sets the fIsOwned flag for the specfied string array
+     * Sets the fIsOwned flag for the specified string array
      */
     void                    setIsOwned(int which, t_bool isOwned);
 

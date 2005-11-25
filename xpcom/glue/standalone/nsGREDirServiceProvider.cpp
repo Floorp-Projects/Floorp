@@ -97,10 +97,10 @@ NS_IMPL_ISUPPORTS1(nsGREDirServiceProvider, nsIDirectoryServiceProvider)
 //*****************************************************************************   
 
 NS_IMETHODIMP
-nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
 {
   *_retval = nsnull;
-  *persistant = PR_TRUE;
+  *persistent = PR_TRUE;
 
   //---------------------------------------------------------------
   // Note that by returning a valid localFile's for NS_GRE_DIR,

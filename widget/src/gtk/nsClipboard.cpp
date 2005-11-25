@@ -509,7 +509,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 }
 
 /**
- * Called when the data from a paste comes in (recieved from gdk_selection_convert)
+ * Called when the data from a paste comes in (received from gdk_selection_convert)
  *
  * @param  aWidget the widget
  * @param  aSelectionData gtk selection stuff

@@ -55,7 +55,7 @@
 #  For file urls, the websites tree is assumed to be the one committed to cvs. Installed
 #  files will be at s:\mozilla\tools\perftools\websites\url\file
 #  If you have the files in a different location, adjust the part that extracts the url
-#  (most likely the index into the tokens will change. Search for SENSITIVE in teh script)
+#  (most likely the index into the tokens will change. Search for SENSITIVE in the script)
 
 #------------------------------------------------------------------------------
 sub debug_print {

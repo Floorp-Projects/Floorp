@@ -369,7 +369,7 @@ PRInt32 UTF8InputStream::Fill(nsresult * aErrorCode)
   if (nb <= 0) {
     // Because we assume a many to one conversion, the lingering data
     // in the byte buffer must be a partial conversion
-    // fragment. Because we know that we have recieved no more new
+    // fragment. Because we know that we have received no more new
     // data to add to it, we can't convert it. Therefore, we discard
     // it.
     return nb;

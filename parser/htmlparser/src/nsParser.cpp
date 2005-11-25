@@ -621,7 +621,7 @@ NS_IMETHODIMP_(nsDTDMode) nsParser::GetParseMode(void)
 
 /**
  * Determine what DTD mode (and thus what layout nsCompatibility mode)
- * to use for this document based on the first chunk of data recieved
+ * to use for this document based on the first chunk of data received
  * from the network (each parsercontext can have its own mode).  (No,
  * this is not an optimal solution -- we really don't need to know until
  * after we've received the DOCTYPE, and this could easily be part of

@@ -90,13 +90,13 @@ NS_IMPL_ISUPPORTS1(winEmbedFileLocProvider, nsIDirectoryServiceProvider)
 //*****************************************************************************   
 
 NS_IMETHODIMP
-winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
 {    
 	nsCOMPtr<nsILocalFile>  localFile;
 	nsresult rv = NS_ERROR_FAILURE;
 
 	*_retval = nsnull;
-	*persistant = PR_TRUE;
+	*persistent = PR_TRUE;
 	
     if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
     {

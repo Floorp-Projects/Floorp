@@ -110,7 +110,7 @@ nsImageXlib::~nsImageXlib()
 
     if (mAlphaPixmap != nsnull) 
     {
-      // The display cant be null.  It gets fetched from the drawing 
+      // The display can't be null.  It gets fetched from the drawing 
       // surface used to create the pixmap.  It gets assigned once
       // in Draw()
       NS_ASSERTION(nsnull != mDisplay,"display is null.");

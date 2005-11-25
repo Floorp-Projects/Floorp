@@ -69,7 +69,7 @@ function test()
     }
 
     if (!caught)
-        reportFailure ("Execption was never caught.");
+        reportFailure ("Exception was never caught.");
     
     if (e != "foo")
         reportFailure ("Exception data modified inside catch() scope should " +

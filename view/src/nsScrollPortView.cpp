@@ -569,7 +569,7 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoin
       // consistent with the view hierarchy.
       mViewManager->UpdateView(this, 0);
     } else { // if we can blit and have a scrollwidget then scroll.
-      // Scroll the contents of the widget by the specfied amount, and scroll
+      // Scroll the contents of the widget by the specified amount, and scroll
       // the child widgets
       scrollWidget->Scroll(aPixDelta.x, aPixDelta.y, nsnull);
       mViewManager->UpdateViewAfterScroll(this);

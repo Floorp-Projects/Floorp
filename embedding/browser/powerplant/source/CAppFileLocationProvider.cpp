@@ -78,13 +78,13 @@ NS_IMPL_ISUPPORTS1(CAppFileLocationProvider, nsIDirectoryServiceProvider)
 //*****************************************************************************   
 
 NS_IMETHODIMP
-CAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+CAppFileLocationProvider::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
 {    
     nsCOMPtr<nsILocalFile>  localFile;
     nsresult rv = NS_ERROR_FAILURE;
 
     *_retval = nsnull;
-    *persistant = PR_TRUE;
+    *persistent = PR_TRUE;
 	
     if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
     {

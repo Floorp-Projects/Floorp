@@ -125,7 +125,7 @@ NS_IMETHODIMP nsInternetConfigService::HasMappingForMIMEType(const char *mimetyp
   return rv;
 }
 
-/* boolean hasProtocalHandler (in string protocol); */
+/* boolean hasProtocolHandler (in string protocol); */
 // returns NS_ERROR_NOT_AVAILABLE if the current application is registered for as the
 // protocol handler for protocol
 NS_IMETHODIMP nsInternetConfigService::HasProtocolHandler(const char *protocol, PRBool *_retval)

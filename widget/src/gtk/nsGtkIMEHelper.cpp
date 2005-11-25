@@ -1137,7 +1137,7 @@ nsIMEGtkIC::~nsIMEGtkIC()
 // xim.status.input_style
 //
 // "xim.status.input_style" and "xim.preedit.input_style" preferences
-// will be overwrote the setting of PREF_XIM_INPUTSTYLE when specfied.
+// will be overwritten by the setting of PREF_XIM_INPUTSTYLE when specified.
 // These preferences are only for special purpose. e.g. debugging
 
 #define PREF_XIM_PREEDIT	"xim.preedit.input_style"

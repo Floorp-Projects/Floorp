@@ -306,7 +306,7 @@ tmTransactionService::OnMessageAvailable(const PRUint32 aSenderID,
         OnPost(trans);
         break;
       default: // error, should not happen
-        NS_NOTREACHED("Recieved a TM reply outside of mapped messages");
+        NS_NOTREACHED("Received a TM reply outside of mapped messages");
         break;
       }
     }

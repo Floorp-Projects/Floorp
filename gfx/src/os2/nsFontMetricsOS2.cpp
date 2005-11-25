@@ -1977,7 +1977,7 @@ nsFontMetricsOS2FT::FindPrefFont(HPS aPS, PRUint32 aChar)
   // be identified instead of a single language (eg. CJK and latin). In this case we have to 
   // try every language in the set. gUserLocale and gSystemLocale provide some hints about 
   // which one should be tried first. This is important for CJK font, since the glyph for single 
-  // char varies dramatically in different langauges. For latin languages, their glyphs are 
+  // char varies dramatically in different languages. For latin languages, their glyphs are 
   // similar. In fact, they almost always share identical fonts. It will be a waste of time to 
   // figure out which one comes first. As a final fallback, unicode preference is always tried. 
 

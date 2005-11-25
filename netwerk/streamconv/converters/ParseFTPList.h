@@ -77,7 +77,7 @@
 ** If there are others, then I'd like to hear about them (send me a sample).
 **
 ** NLSTings are not supported explicitely because they cannot be machine 
-** parsed consistantly: NLSTings do not have unique characteristics - even 
+** parsed consistently: NLSTings do not have unique characteristics - even 
 ** the assumption that there won't be whitespace on the line does not hold
 ** because some nlistings have more than one filename per line and/or
 ** may have filenames that have spaces in them. Moreover, distinguishing

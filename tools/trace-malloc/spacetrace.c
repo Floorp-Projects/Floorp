@@ -2233,7 +2233,7 @@ resolveSourceFile(tmmethodnode * aMethod)
 ** Output an html anchor that will resolve to the callsite in question.
 ** If no text is provided, we provide our own.
 **
-** RealName determines wether or not we crawl our parents until the point
+** RealName determines whether or not we crawl our parents until the point
 **  we no longer match stats.
 */
 void
@@ -5790,7 +5790,7 @@ handleClient(void *inArg)
                  */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
                 PR_fprintf(aFD, "Server: %s%s",
-                           "$Id: spacetrace.c,v 1.51 2005/11/25 19:47:26 timeless%mozdev.org Exp $",
+                           "$Id: spacetrace.c,v 1.52 2005/11/25 21:57:05 timeless%mozdev.org Exp $",
                            crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if (NULL != strstr(start, ".png")) {

@@ -69,7 +69,7 @@ typedef struct __struct_Options
 **  mOutput         Output file, append.
 **                  Default is stdout.
 **  mOutputName     Name of the file.
-**  mHelp           Wether or not help should be shown.
+**  mHelp           Whether or not help should be shown.
 **  mOverhead       How much overhead an allocation will have.
 **  mAlignment      What boundry will the end of an allocation line up on.
 **  mPageSize       Controls the page size.  A page containing only fragments

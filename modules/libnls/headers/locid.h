@@ -426,7 +426,7 @@ public:
 				UnicodeString&	getDisplayName(			UnicodeString&	name) const;
     /**
 	 * Fills in "name" with the name of this locale in a format suitable for user display 
-	 * in the locale specfied by "inLocale".  This function uses getDisplayLanguage(),
+	 * in the locale specified by "inLocale".  This function uses getDisplayLanguage(),
 	 * getDisplayCountry(), and getDisplayVariant() to do its work, and outputs the display
 	 * name in the format "language (country[,variant])".  For example, if inLocale is
 	 * fr_FR, then en_US's display name would be "Anglais (États-Unis)", and no_NO_NY's

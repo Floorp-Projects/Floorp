@@ -45,7 +45,7 @@ class T_UTILITY_API StringCharacterIterator : public CharacterIterator {
 		/**
 		 * Create an iterator over the UnicodeString referred to by "text".
 		 * The iteration range begins with the character specified by "begin" and
-		 * ends with the character BEFORE the character specfied by "end".  The
+		 * ends with the character BEFORE the character specified by "end".  The
 		 * starting position is specified by "pos".  If "begin" and "end" don't form
 		 * a valid range on "text" (i.e., begin >= end or either is negative or
 		 * greater than text.size()), or "pos" is outside the range defined by "begin"

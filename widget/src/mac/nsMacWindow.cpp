@@ -1625,7 +1625,7 @@ nsMacWindow::HandleUpdateActiveInputArea(const nsAString & text,
   *_retval = eventNotHandledErr;
   NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
   const nsPromiseFlatString& buffer = PromiseFlatString(text);
-  // ignore script and langauge information for now. 
+  // ignore script and language information for now. 
   nsresult res = mMacEventHandler->UnicodeHandleUpdateInputArea(buffer.get(), buffer.Length(), fixLen, (TextRangeArray*) hiliteRng);
   // we will lost the real OSStatus for now untill we change the nsMacEventHandler
   if (NS_SUCCEEDED(res))
@@ -1643,7 +1643,7 @@ nsMacWindow::HandleUpdateActiveInputAreaForNonUnicode(const nsACString & text,
   *_retval = eventNotHandledErr;
   NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
   const nsPromiseFlatCString& buffer = PromiseFlatCString(text);
-  // ignore langauge information for now. 
+  // ignore language information for now. 
   nsresult res = mMacEventHandler->HandleUpdateInputArea(buffer.get(), buffer.Length(), script, fixLen, (TextRangeArray*) hiliteRng);
   // we will lost the real OSStatus for now untill we change the nsMacEventHandler
   if (NS_SUCCEEDED(res))
@@ -1659,7 +1659,7 @@ nsMacWindow::HandleUnicodeForKeyEvent(const nsAString & text,
 {
   *_retval = eventNotHandledErr;
   NS_ENSURE_TRUE(mMacEventHandler.get(), NS_ERROR_FAILURE);
-  // ignore langauge information for now. 
+  // ignore language information for now. 
   // we will lost the real OSStatus for now untill we change the nsMacEventHandler
   EventRecord* eventPtr = (EventRecord*)keyboardEvent;
   const nsPromiseFlatString& buffer = PromiseFlatString(text);

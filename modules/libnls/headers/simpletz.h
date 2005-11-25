@@ -96,7 +96,7 @@ public:
      * TimeZone.createInstance() to create a TimeZone instead of creating a
      * SimpleTimeZone directly with this constructor.
      * <P>
-     * Various types of daylight-savings time rules can be specfied by using different
+     * Various types of daylight-savings time rules can be specified by using different
      * values for startDay and startDayOfWeek and endDay and endDayOfWeek.  For a
      * complete explanation of how these parameters work, see the documentation for
      * setStartRule().
@@ -163,7 +163,7 @@ public:
      *       month, regardless of what day of the week it is (e.g., (-2, 0) is the
      *       next-to-last day of the month).
      *   <li>If dayOfWeek is negative and dayOfWeekInMonth is positive, they specify the
-     *       first specified day of the week on or after the specfied day of the month.
+     *       first specified day of the week on or after the specified day of the month.
      *       (e.g., (15, -SUNDAY) is the first Sunday after the 15th of the month
      *       [or the 15th itself if the 15th is a Sunday].)
      *   <li>If dayOfWeek and DayOfWeekInMonth are both negative, they specify the

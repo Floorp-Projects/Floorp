@@ -221,7 +221,7 @@ public class LiveConnectTest extends Applet implements Runnable {
      *  @param expect a string representation of the expected result
      *  @param actual a string representation of the actual result
      *  @param exception the message in any JavaScript runtime error
-     *         or Java exeption that was thrown.
+     *         or Java exception that was thrown.
      *
      */
     

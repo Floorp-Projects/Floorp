@@ -95,7 +95,7 @@ public:
                               nsICSSLoaderObserver* aObserver) = 0;
 
   /**
-   * Tells this element wether to update the stylesheet when the
+   * Tells this element whether to update the stylesheet when the
    * element's properties change.
    *
    * @param aEnableUpdates update on changes or not.

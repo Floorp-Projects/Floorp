@@ -191,7 +191,7 @@ typedef struct _csname2id_t {
 } csname2id_t;
 
 
-/* Charset names and aliases from RFC 1700. Also encloded equivelend Java encoding names. Names are case
+/* Charset names and aliases from RFC 1700. Also encoded equivalent Java encoding names. Names are case
  * insenstive. Currently searches table linearly, so keep commonly used names at the beginning.
  */
 static csname2id_t csname2id_tbl[] = {

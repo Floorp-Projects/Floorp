@@ -60,7 +60,7 @@ typedef struct __struct_Options
 **  mOutput         Output file, append.
 **                  Default is stdout.
 **  mOutputName     Name of the file.
-**  mHelp           Wether or not help should be shown.
+**  mHelp           Whether or not help should be shown.
 **  mModules        Output module by module information.
 **  mTotalOnly      Only output one number, the total.
 **  mMinSize        Ignore lines below this size.

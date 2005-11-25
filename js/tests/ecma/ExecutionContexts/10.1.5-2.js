@@ -61,7 +61,7 @@
     var VERSION = "ECMA_1";
     startTest();
 
-    writeHeaderToLog( SECTION + " Global Ojbect");
+    writeHeaderToLog( SECTION + " Global Object");
 
     new TestCase( "SECTION", "Eval Code check" );
 

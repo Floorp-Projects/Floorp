@@ -336,7 +336,7 @@ nsChromeTreeOwner::GetPersistence(PRBool* aPersistPosition,
 NS_IMETHODIMP nsChromeTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
-   // Ignore wigdet parents for now.  Don't think those are a vaild thing to call.
+   // Ignore widget parents for now.  Don't think those are a vaild thing to call.
    NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, PR_FALSE), NS_ERROR_FAILURE);
 
    return NS_OK;

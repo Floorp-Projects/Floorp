@@ -177,7 +177,7 @@ void PyXPCOM_ReleaseGlobalLock(void)
 
 void PyXPCOM_DLLAddRef(void)
 {
-	// Must be thread-safe, although cant have the Python lock!
+	// Must be thread-safe, although can't have the Python lock!
 	CEnterLeaveXPCOMFramework _celf;
 	PRInt32 cnt = PR_AtomicIncrement(&g_cLockCount);
 	if (cnt==1) { // First call 

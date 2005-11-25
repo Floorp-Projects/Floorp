@@ -376,7 +376,7 @@ pangolite_coverage_to_bytes(PangoliteCoverage  *coverage,
     
     /* Check for solid blocks. This is a sort of random place
      * to do the optimization, but we care most about getting
-     * it right when storing it somewhere persistant.
+     * it right when storing it somewhere persistent.
      */
     if (coverage->blocks[i].data != NULL) {
       guchar *data = coverage->blocks[i].data;
