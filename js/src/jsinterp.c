@@ -3437,7 +3437,7 @@ interrupt:
             goto out;                                                         \
     JS_END_MACRO
 
-                if ((cs->format & JOF_POST) && i != -2) {
+                if (cs->format & JOF_POST) {
                     /*
                      * We must push early to protect the postfix increment
                      * or decrement result, if converted to a jsdouble from
@@ -3450,6 +3450,7 @@ interrupt:
 #ifdef __GNUC__
                 else vp = NULL; /* suppress bogus gcc warnings */
 #endif
+
                 NONINT_INCREMENT_OP_MIDDLE();
             }
 
