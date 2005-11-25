@@ -552,7 +552,7 @@ public class AddressList extends JScrollPane implements Serializable {
 
     public class AddressTextField extends JTextField implements FocusListener {
   //    public class AddressTextField extends ATC_Field implements FocusListener {
-        private final String ADDRESS_SEPERATORS = ",";
+        private final String ADDRESS_SEPARATORS = ",";
         private final String ADDRESS_QUOTES = "\"";
 
         private DeliveryButton mDeliveryButton;
@@ -615,7 +615,7 @@ public class AddressList extends JScrollPane implements Serializable {
         private void evaluate() {
             String [] tokens = parseLine (getText());
 
-            //we've lost focus and they type nothing or a bunch of ADDRESS_SEPERATORS on this line.
+            //we've lost focus and they type nothing or a bunch of ADDRESS_SEPARATORS on this line.
             if (tokens.length == 0) {
                 setText ("");
             }
@@ -641,7 +641,7 @@ public class AddressList extends JScrollPane implements Serializable {
              * Parses up the string.
              * @param aString The String to parse.
              * @return returns an array of strings.
-             * @see ADDRESS_SEPERATORS
+             * @see ADDRESS_SEPARATORS
              * @see ADDRESS_QUOTES
          */
         private String[] parseLine (String aString) {
@@ -673,8 +673,8 @@ public class AddressList extends JScrollPane implements Serializable {
                     }
                 }
 
-                //is this a seperator character?
-                else if (-1 != ADDRESS_SEPERATORS.indexOf(aString.charAt(head))) {
+                //is this a separator character?
+                else if (-1 != ADDRESS_SEPARATORS.indexOf(aString.charAt(head))) {
 
                     //if not in a quote and not
                     if (!quoted) {

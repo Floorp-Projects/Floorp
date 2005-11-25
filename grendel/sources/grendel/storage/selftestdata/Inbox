@@ -285,7 +285,7 @@ your mailbox (because nobody would have known to remove or recalculate
 it), and it would possibly be incorrect.  (Presume further that the
 header was not just incorrect, but intentionally malicious...)
 
-Stricter parsing of the "From " seperator line doesn't help either,
+Stricter parsing of the "From " separator line doesn't help either,
 because there are many, many variations on what goes in that line
 (since it was never standardized either); and also, some mail readers
 include that line verbatim when forwarding messages (Sun's MailTool,

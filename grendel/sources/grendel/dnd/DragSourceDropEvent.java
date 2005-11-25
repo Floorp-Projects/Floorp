@@ -27,10 +27,10 @@ package grendel.dnd;
 public class DragSourceDropEvent
   extends java.util.EventObject {
   boolean fCancelled;
-  boolean fSucessful;
+  boolean fSuccessful;
 
   public DragSourceDropEvent(Object aSource, boolean cancelled,
-                             boolean sucessful) {
+                             boolean successful) {
     super(aSource);
     fSucessful = sucessful;
     fCancelled = cancelled;
@@ -41,6 +41,6 @@ public class DragSourceDropEvent
   }
 
   public boolean isDropSuccessful() {
-    return fSucessful;
+    return fSuccessful;
   }
 }

@@ -121,7 +121,7 @@ public class NSTabbedPane extends JTabbedPane {
             int widest = 0;
             int tallest = 0;
 
-            //return the component with the largst preferred size.
+            //return the component with the largest preferred size.
             Component[] comps = container.getComponents();
             for (int i = 0; i < comps.length; i++) {
                 Dimension dim = comps[i].getPreferredSize();
