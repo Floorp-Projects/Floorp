@@ -3702,8 +3702,14 @@ nsFontMetricsWin::RealizeFont()
   if (0 < ::GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
 //    mXHeight = NSToCoordRound(oMetrics.otmsXHeight * dev2app);  XXX not really supported on windows
     mXHeight = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.56f); // 50% of ascent, best guess for true type
-    mSuperscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * dev2app);
-    mSubscriptOffset = NSToCoordRound(oMetrics.otmptSubscriptOffset.y * dev2app);
+    if (oMetrics.otmptSuperscriptOffset.y == 0 || oMetrics.otmptSuperscriptOffset.y >= metrics.tmAscent)
+      mSuperscriptOffset = mXHeight;     // XXX temporary code!
+    else
+      mSuperscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * dev2app);
+    if (oMetrics.otmptSubscriptOffset.y == 0 || oMetrics.otmptSubscriptOffset.y >= metrics.tmAscent)
+      mSubscriptOffset =  mXHeight;     // XXX temporary code!
+    else
+      mSubscriptOffset = NSToCoordRound(oMetrics.otmptSubscriptOffset.y * dev2app);
 
     mStrikeoutSize = PR_MAX(onePixel, NSToCoordRound(oMetrics.otmsStrikeoutSize * dev2app));
     mStrikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * dev2app);
