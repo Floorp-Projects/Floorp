@@ -103,7 +103,7 @@ XFORM_ARITH_DEFINE(Or,		444, 31)
 XFORM_ARITH_DEFINE(Orc,		412, 31)
 XFORM_ARITH_DEFINE(Slw, 	24, 31)
 XFORM_ARITH_DEFINE(Sraw, 	792, 31) // FIX-ME prob isn't correct
-XFORM_ARITH_DEFINE(Srw, 	536, 31) // FIX-ME prob isn't corect
+XFORM_ARITH_DEFINE(Srw, 	536, 31) // FIX-ME prob isn't correct
 XFORM_ARITH_DEFINE(Xor, 	316, 31)
 
 XFORM_CMP_DEFINE(Cmp,	0, 31)
@@ -113,33 +113,33 @@ XFORM_CMP_DEFINE(Fcmpo,	0, 63)
 XFORM_CMP_DEFINE(Fcmpu,	32, 63)
 
 XFORM_LOAD_DEFINE(Lbzx, 87, 31)
-XFORM_LOAD_DEFINE(Lfdx, 599, 31)	// FIX-ME prob isn't corect
+XFORM_LOAD_DEFINE(Lfdx, 599, 31)	// FIX-ME prob isn't correct
 XFORM_LOAD_DEFINE(Lfsx, 535, 31)
 XFORM_LOAD_DEFINE(Lhax, 343, 31)
-XFORM_LOAD_DEFINE(Lhbrx, 790, 31)	// FIX-ME prob isn't corect
+XFORM_LOAD_DEFINE(Lhbrx, 790, 31)	// FIX-ME prob isn't correct
 XFORM_LOAD_DEFINE(Lhzx, 279, 31)
 XFORM_LOAD_DEFINE(Lwarx, 20, 31)
-XFORM_LOAD_DEFINE(Lwbrx, 534, 31)	// FIX-ME prob isn't corect
+XFORM_LOAD_DEFINE(Lwbrx, 534, 31)	// FIX-ME prob isn't correct
 XFORM_LOAD_DEFINE(Lwzx, 23, 31)
 
 XFORM_LOADU_DEFINE(Lbzux, 119, 31)
-XFORM_LOADU_DEFINE(Lfdux, 631, 31)	// FIX-ME prob isn't corect
-XFORM_LOADU_DEFINE(Lfsux, 567, 31)	// FIX-ME prob isn't corect
+XFORM_LOADU_DEFINE(Lfdux, 631, 31)	// FIX-ME prob isn't correct
+XFORM_LOADU_DEFINE(Lfsux, 567, 31)	// FIX-ME prob isn't correct
 XFORM_LOADU_DEFINE(Lhaux, 375, 31)	
 XFORM_LOADU_DEFINE(Lhzux, 311, 31)
 XFORM_LOADU_DEFINE(Lwzux, 55, 31)
 
 XFORM_STORE_DEFINE(Stbx, 215, 31)
-XFORM_STORE_DEFINE(Stfdx, 727, 31)	// FIX-ME prob isn't corect
-XFORM_STORE_DEFINE(Stfsx, 663, 31)	// FIX-ME prob isn't corect
-XFORM_STORE_DEFINE(Sthbrx, 918, 31)	// FIX-ME prob isn't corect
+XFORM_STORE_DEFINE(Stfdx, 727, 31)	// FIX-ME prob isn't correct
+XFORM_STORE_DEFINE(Stfsx, 663, 31)	// FIX-ME prob isn't correct
+XFORM_STORE_DEFINE(Sthbrx, 918, 31)	// FIX-ME prob isn't correct
 XFORM_STORE_DEFINE(Sthx, 407, 31)
-XFORM_STORE_DEFINE(Stwbrx, 662, 31)	// FIX-ME prob isn't corect
+XFORM_STORE_DEFINE(Stwbrx, 662, 31)	// FIX-ME prob isn't correct
 XFORM_STORE_DEFINE(Stwx, 151, 31)
 
 XFORM_STOREU_DEFINE(Stbux, 247, 31)
-XFORM_STOREU_DEFINE(Stfdux, 759, 31) // FIX-ME prob isn't corect
-XFORM_STOREU_DEFINE(Stfsux, 695, 31)	// FIX-ME prob isn't corect
+XFORM_STOREU_DEFINE(Stfdux, 759, 31) // FIX-ME prob isn't correct
+XFORM_STOREU_DEFINE(Stfsux, 695, 31)	// FIX-ME prob isn't correct
 XFORM_STOREU_DEFINE(Sthux, 439, 31)
 XFORM_STOREU_DEFINE(Stwux, 183, 31)
 

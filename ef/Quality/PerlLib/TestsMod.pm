@@ -324,7 +324,7 @@ sub parseArgs {
 	print("\t-q\t\t\tQuiet mode.  Print non-passing tests only.\n");
 	print("\t-gr\t\t\tGenerate result files in html format.\n");
 	print("\t-gt\t\t\tGenerate a report file in text format.\n");
-	print("\t-uw <class>\t\tUse specfied class as a wrapper class.\n");
+	print("\t-uw <class>\t\tUse specified class as a wrapper class.\n");
 	print("\t-classpath <path>\tUse specified path as the classpath.\n");
 	print("\t-workdir <dir>\t\tUse specified dir as the working dir.\n");
 	print("\t-testroot <path>\tUse specified path as the test root.\n");
