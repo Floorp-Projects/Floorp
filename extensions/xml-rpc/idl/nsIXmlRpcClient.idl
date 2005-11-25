@@ -37,9 +37,9 @@
 
 /*
  *  XPCOM XML-RPC Client, interface definition.
- *  Version: $Revision: 1.6 $
+ *  Version: $Revision: 1.7 $
  *
- *  $Id: nsIXmlRpcClient.idl,v 1.6 2004/04/18 22:14:12 gerv%gerv.net Exp $
+ *  $Id: nsIXmlRpcClient.idl,v 1.7 2005/11/25 21:56:42 timeless%mozdev.org Exp $
  */
 
 #include "nsISupports.idl"
@@ -125,7 +125,7 @@ interface nsIXmlRpcClient: nsISupports {
         [array, size_is(count)] in nsISupports arguments, in PRUint32 count);
 
     /**
-     * Wether or not a call is in progress
+     * Whether or not a call is in progress
      */
     readonly attribute boolean inProgress;
     

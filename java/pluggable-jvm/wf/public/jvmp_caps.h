@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  * 
- * $Id: jvmp_caps.h,v 1.2 2001/07/12 19:58:06 edburns%acm.org Exp $
+ * $Id: jvmp_caps.h,v 1.3 2005/11/25 21:56:45 timeless%mozdev.org Exp $
  * 
  * Contributor(s):
  * 
@@ -59,7 +59,7 @@ typedef struct JVMP_SecurityCap JVMP_SecurityAction;
         ( ((cap).bits[action_no >> 3]) & (1 << (action_no & 0x7))) ? 1 : 0
 #define JVMP_ALLOW_USER_CAP(cap, cap_no) JVMP_ALLOW_CAP(cap, cap_no + JVMP_MAX_SYS_CAPS)
 #define JVMP_FORBID_USER_CAP(cap, cap_no) JVMP_FORBID_CAP(cap, cap_no + JVMP_MAX_SYS_CAPS)
-/* not completly safe */ 
+/* not completely safe */ 
 #define JVMP_FORBID_ALL_USER_CAPS(cap) \
         { int _i; for(_i = JVMP_MAX_SYS_CAPS_BYTES; _i < JVMP_MAX_CAPS_BYTES; _i++) \
                        ((cap).bits)[_i] = 0x0; }

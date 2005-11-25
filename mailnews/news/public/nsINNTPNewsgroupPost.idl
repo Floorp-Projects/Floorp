@@ -64,7 +64,7 @@ interface nsINNTPNewsgroupPost : nsISupports {
     attribute string replyTo;
     attribute string sender;
     attribute string followupTo;
-    attribute string dateRecieved;
+    attribute string dateReceived;
     attribute string expires;
 
     readonly attribute string references;

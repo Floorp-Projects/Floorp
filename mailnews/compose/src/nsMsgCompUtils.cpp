@@ -2137,7 +2137,7 @@ nsMsgParseSubjectFromFile(nsFileSpec* fileSpec)
  *
  * We will use format=flowed unless prefs tells us not to do
  * or if a charset which are known to have problems with
- * format=flowed is specifed. (See bug 26734 in Bugzilla)
+ * format=flowed is specified. (See bug 26734 in Bugzilla)
  */
 PRBool UseFormatFlowed(const char *charset)
 {

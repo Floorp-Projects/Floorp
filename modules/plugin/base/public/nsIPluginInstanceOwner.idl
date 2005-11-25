@@ -62,7 +62,7 @@ interface nsIPluginInstanceOwner : nsISupports
 
   /**
    * Get a handle to the window structure of the owner.
-   * This pointer cannot be made persistant by the caller.
+   * This pointer cannot be made persistent by the caller.
    */
   void getWindow(in nsPluginWindowStarRef aWindow);
 

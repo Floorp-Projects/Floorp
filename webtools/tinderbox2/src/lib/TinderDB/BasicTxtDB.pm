@@ -6,8 +6,8 @@
 # as a Dump of the $DATABASE reference.
 
 
-# $Revision: 1.13 $ 
-# $Date: 2005/11/25 19:47:48 $ 
+# $Revision: 1.14 $ 
+# $Date: 2005/11/25 21:57:10 $ 
 # $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BasicTxtDB.pm,v $ 
 # $Name:  $ 
@@ -48,14 +48,14 @@ use FileStructure;
 use Persistence;
 
 
-$VERSION = ( qw $Revision: 1.13 $ )[1];
+$VERSION = ( qw $Revision: 1.14 $ )[1];
 
 
 # To help preserve the database in the event of a serious system
 # problem we save the database to a different file name then change
 # the name of the file to the database file name.  This allows us to
 # recover from a program crash during the save operation since we
-# always have at least one copy of the data arround.
+# always have at least one copy of the data around.
 
 sub new {
 
@@ -70,7 +70,7 @@ sub new {
   # calling sequences. Also now the TinderDB object is quite complex
   # it needs to be indexed by: module, tree, value.  The build module
   # uses the fact that STATUS can be peeked at when the TinderDB
-  # object is not arround.
+  # object is not around.
 
   my $type = shift;
   my %params = @_;

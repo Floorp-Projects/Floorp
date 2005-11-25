@@ -33,8 +33,8 @@
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.36 $ 
-# $Date: 2005/11/25 19:47:48 $ 
+# $Revision: 1.37 $ 
+# $Date: 2005/11/25 21:57:10 $ 
 # $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_CVS.pm,v $ 
 # $Name:  $ 
@@ -137,7 +137,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.36 $ )[1];
+$VERSION = ( qw $Revision: 1.37 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -367,7 +367,7 @@ sub get_all_cvs_data {
   return $out;
 }
 
-# Return the most recent times that we recieved treestate and checkin
+# Return the most recent times that we received treestate and checkin
 # data.
 
 sub find_last_data {

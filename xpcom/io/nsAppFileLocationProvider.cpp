@@ -138,14 +138,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsAppFileLocationProvider, nsIDirectoryServiceProv
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
 {
     nsCOMPtr<nsILocalFile>  localFile;
     nsresult rv = NS_ERROR_FAILURE;
 
     NS_ENSURE_ARG(prop);
     *_retval = nsnull;
-    *persistant = PR_TRUE;
+    *persistent = PR_TRUE;
 
 #if defined (XP_MAC) || defined(XP_MACOSX)
     short foundVRefNum;

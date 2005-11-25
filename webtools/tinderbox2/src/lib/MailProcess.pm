@@ -4,9 +4,9 @@
 # mailprocessing program.
 
 
-# $Revision: 1.14 $ 
-# $Date: 2003/08/17 01:44:08 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.15 $ 
+# $Date: 2005/11/25 21:57:09 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/MailProcess.pm,v $ 
 # $Name:  $ 
 
@@ -120,7 +120,7 @@ sub parse_mail_header {
 # 1) build machines should not lie in the buildname line about their
 #    hostname
 
-# 2) check the time the mail was sent with the time we recieved it
+# 2) check the time the mail was sent with the time we received it
 
   my (%mail_header) =();
 

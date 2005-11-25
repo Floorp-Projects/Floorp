@@ -421,7 +421,7 @@ int binhex_reencode_head(
 	if (p_bh_encode_obj->state86 != 0)
 	{
 		/*	
-		**	Make sure we don't destroy the orignal valid coding.
+		**	Make sure we don't destroy the original valid coding.
 		**
 		**	(Keep in mind that 3 characters share 4 coding chars,
 		**	 so it is possible for the head and data stream share one 4 code group.

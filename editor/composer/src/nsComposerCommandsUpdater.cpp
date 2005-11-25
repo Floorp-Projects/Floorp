@@ -86,7 +86,7 @@ nsComposerCommandsUpdater::NotifyDocumentCreated()
 NS_IMETHODIMP
 nsComposerCommandsUpdater::NotifyDocumentWillBeDestroyed()
 {
-  // cancel any outstanding udpate timer
+  // cancel any outstanding update timer
   if (mUpdateTimer)
   {
     mUpdateTimer->Cancel();

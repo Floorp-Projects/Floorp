@@ -449,7 +449,7 @@ net_pop3_free_state(Pop3UidlHost* host)
 /*
 Look for a specific UIDL string in our hash tables, if we have it then we need
 to mark the message for deletion so that it can be deleted later. If the uidl of the
-message is not found, then the message was downloaded completly and already deleted
+message is not found, then the message was downloaded completely and already deleted
 from the server. So this only applies to messages kept on the server or too big
 for download. */
 /* static */

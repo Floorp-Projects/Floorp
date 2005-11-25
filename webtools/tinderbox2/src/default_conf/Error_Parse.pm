@@ -5,9 +5,9 @@
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.18 $ 
-# $Date: 2004/07/12 01:01:53 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.19 $ 
+# $Date: 2005/11/25 21:57:08 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
 
@@ -85,7 +85,7 @@ $VERSION = '#tinder_version#';
 # candidate.
 {
 
-# window of context arround error message,  for summary log
+# window of context around error message,  for summary log
 # created by Error_Parse.pm and processmail
 
 $LINES_AFTER_ERROR = 5;

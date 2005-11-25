@@ -39,9 +39,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.35 $
+ *  Version: $Revision: 1.36 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.35 2005/10/21 22:36:39 bzbarsky%mit.edu Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.36 2005/11/25 21:56:43 timeless%mozdev.org Exp $
  */
 
 /*
@@ -197,7 +197,7 @@ nsXmlRpcClient.prototype = {
         return chann;
     },
 
-    // Flag indicating wether or not we are calling the server.
+    // Flag indicating whether or not we are calling the server.
     _inProgress: false,
     get inProgress() { return this._inProgress; },
 

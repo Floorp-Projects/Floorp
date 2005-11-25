@@ -497,10 +497,10 @@ typedef struct __struct_STContext
 **                          lock per cached image data.
 **                      However, this will prove to be simpler for the time
 **                          being.
-**  mFootprintCached    Wether or not YData contains something useful.
-**  mTimevalCached      Wether or not YData contains something useful.
-**  mLifespanCached     Wether or not YData contains something useful.
-**  mWeightCached       Wether or not YData contains something useful.
+**  mFootprintCached    Whether or not YData contains something useful.
+**  mTimevalCached      Whether or not YData contains something useful.
+**  mLifespanCached     Whether or not YData contains something useful.
+**  mWeightCached       Whether or not YData contains something useful.
 **  mFootprintYData     Precomputed cached graph data.
 **  mTimevalYData       Precomputed cached graph data.
 **  mLifespanYData      Precomputed cached graph data.
@@ -608,7 +608,7 @@ typedef struct __struct_STRequest
         STOptions mOptions;
 
         /*
-        **  The context/data/state of the reqeust.
+        **  The context/data/state of the request.
         */
         STContext* mContext;
 } STRequest;

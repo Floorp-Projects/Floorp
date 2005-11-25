@@ -48,7 +48,7 @@ test();
 
 /**
  *  This is the object that will be the "this" in a with block.
- *  The check function is either throwExeption() or noException().
+ *  The check function is either throwException() or noException().
  *  See above.
  *
  */

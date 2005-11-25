@@ -4119,7 +4119,7 @@ static char* matchFieldBrackets(char* in_data, char** out_ppValue)
 }
 
 /**
-* Retrieves the value of the next set of qoutes, also treats NIL
+* Retrieves the value of the next set of quotes, also treats NIL
 * as a quoted value
 * @param in_data The response string
 * @param out_ppValue The bracketed value

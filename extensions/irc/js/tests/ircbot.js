@@ -138,7 +138,7 @@ function go()
 }
 
 /*
- * If you didnt compile libjs with JS_HAS_ERROR_EXCEPTIONS, any error the
+ * If you didn't compile libjs with JS_HAS_ERROR_EXCEPTIONS, any error the
  * bot encounters will exit the mainloop and drop you back to a shell ("js>")
  * prompt.  You can continue the mainloop by executing this function.
  */
@@ -286,7 +286,7 @@ function bot_eval(e, script)
  */
 
 /*
- * What to do when a privmsg is recieved on a channel
+ * What to do when a privmsg is received on a channel
  */
 function my_chan_privmsg (e)
 {
@@ -366,7 +366,7 @@ function my_433 (e)
 }
 
 /*
- * What to do when raw data is recieved on a dcc chat connection
+ * What to do when raw data is received on a dcc chat connection
  */
 function my_dccchat_rawdata (e)
 {

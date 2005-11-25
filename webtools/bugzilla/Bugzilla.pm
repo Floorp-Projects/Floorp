@@ -330,7 +330,7 @@ This approach has several advantages:
 
 =item *
 
-They're not global variables, so we don't have issues with them staying arround
+They're not global variables, so we don't have issues with them staying around
 with mod_perl
 
 =item *

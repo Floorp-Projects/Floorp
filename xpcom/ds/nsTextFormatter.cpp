@@ -561,7 +561,7 @@ static int cvt_s(SprintfState *ss, const char *s, int width,
 }
 
 /*
-** BiuldArgArray stands for Numbered Argument list Sprintf
+** BuildArgArray stands for Numbered Argument list Sprintf
 ** for example,  
 **	fmp = "%4$i, %2$d, %3s, %1d";
 ** the number must start from 1, and no gap among them

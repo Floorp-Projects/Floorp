@@ -117,7 +117,7 @@ public class Main {
         }
         catch(Throwable t)
         {
-            System.out.println("execption thrown " + t );
+            System.out.println("exception thrown " + t );
         }
 
         //-------------------- LOOP -----------------

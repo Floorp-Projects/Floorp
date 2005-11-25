@@ -456,7 +456,7 @@ nsDNSService::Resolve(const nsACString &hostname,
     // sync resolve: since the host resolver only works asynchronously, we need
     // to use a mutex and a condvar to wait for the result.  however, since the
     // result may be in the resolvers cache, we might get called back recursively
-    // on the same thread.  so, our mutex needs to be re-entrant.  inotherwords,
+    // on the same thread.  so, our mutex needs to be re-entrant.  in other words,
     // we need to use a monitor! ;-)
     //
     

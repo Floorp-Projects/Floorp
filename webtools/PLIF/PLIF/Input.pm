@@ -298,7 +298,7 @@ sub hash {
 #    acceptLanguage
 #
 # There may also be session-specific data accessible through
-# getSesionData. This is mainly for HTTP cookies, although other input
+# getSessionData. This is mainly for HTTP cookies, although other input
 # systems may have ways of exposing session data. To set session data,
 # for now, you have to use output-specific mechanisms. (e.g. for HTTP,
 # output Set-Cookie headers.) Eventually, output systems will have

@@ -1824,7 +1824,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   else
     return NS_ERROR_FAILURE;
 
-  // If our holder for the orignal body text is STILL null, then just 
+  // If our holder for the original body text is STILL null, then just 
   // just copy what we have as the original body text.
   //
   if (!origHTMLBody)

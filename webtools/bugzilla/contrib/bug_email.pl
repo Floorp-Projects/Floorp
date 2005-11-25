@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.30 2005/11/25 19:47:38 timeless%mozdev.org Exp $
+# $Id: bug_email.pl,v 1.31 2005/11/25 21:57:07 timeless%mozdev.org Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -448,7 +448,7 @@ sub FetchAllSQLData( )
 # BugMailError takes two arguments: The first one is a flag, how heavy
 # the error is:
 # 
-# 0 - Its an error, but bugzilla can process the bug. The user should
+# 0 - It's an error, but Bugzilla can process the bug. The user should
 #     handle that as a warning.
 # 
 # 1 - It's a real bug. Bugzilla can't store the bug. The mail has to be
@@ -457,7 +457,7 @@ sub FetchAllSQLData( )
 # 2 - Permission error: The user does not have the permission to send
 #     a bug.
 # 
-# The second argument is a Text which describs the bug.
+# The second argument is a Text which describes the bug.
 # 
 # 
 # #
@@ -747,7 +747,7 @@ my $Sender = $entity->get( 'From' );
 $Sender ||=  $entity->get( 'Reply-To' );
 $Message_ID = $entity->get( 'Message-Id' );
 
-die (" *** Cant find Sender-adress in sent mail ! ***\n" ) unless defined( $Sender );
+die (" *** Can't find Sender-address in sent mail ! ***\n" ) unless defined( $Sender );
 chomp( $Sender );
 chomp( $Message_ID );
 
@@ -852,7 +852,7 @@ my $Product = $DEFAULT_PRODUCT;
 $Product = CheckProduct( $Control{'product'} ) if( defined( $Control{ 'product'} ));
 
 if ( $Product eq "" ) {
-    my $Text = "You didnt send a value for the required key \@product !\n\n";
+    my $Text = "You didn't send a value for the required key \@product !\n\n";
 
     $Text = "You sent the invalid product \"$Control{'product'}\"!\n\n"
         if( defined( $Control{ 'product'} ));

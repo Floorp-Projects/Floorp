@@ -521,7 +521,7 @@ void leaky::analyze()
       }
     }
 
-    // idx should be the function that we were in when we recieved the signal.
+    // idx should be the function that we were in when we received the signal.
     if(idx>=0) {
       ++externalSymbols[idx].timerHit;
     }

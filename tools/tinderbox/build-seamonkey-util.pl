@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.302 $ ';
+$::UtilsVersion = '$Revision: 1.303 $ ';
 
 package TinderUtils;
 
@@ -840,7 +840,7 @@ sub BuildIt {
             my $time_str = POSIX::strftime("%m/%d/%Y %H:%M +0000", gmtime($start_time));
 
             # Global, sorry.  Tests need this, it's everywhere.
-            # Switch to format the graph server uses, to be consistant.
+            # Switch to format the graph server uses, to be consistent.
             $co_time_str = POSIX::strftime("%Y:%m:%d:%H:%M:%S", localtime($start_time));
 
             $ENV{MOZ_CO_DATE} = "$time_str";

@@ -166,7 +166,7 @@ insertTextCB(AtkEditableText *aText,
 
     NS_ConvertUTF8toUCS2 strContent(aString);
 
-    // interface changed in nsIAccessibleEditabelText.idl ???
+    // interface changed in nsIAccessibleEditableText.idl ???
     //
     // PRInt32 pos = *aPosition;
     // nsresult rv = accText->InsertText(strContent, aLength, &pos);

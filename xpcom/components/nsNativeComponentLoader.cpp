@@ -880,7 +880,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     {
         // Create and add the dll to the mDllStore
         // It is ok to do this even if the creation of nsDll
-        // didnt succeed. That way we won't do this again
+        // didn't succeed. That way we won't do this again
         // when we encounter the same dll.
         dll = new nsDll(component, this);
         if (dll == NULL)

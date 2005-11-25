@@ -60,7 +60,7 @@
     var SECTION = "10.5.1-3";
     var VERSION = "ECMA_1";
     startTest();
-    writeHeaderToLog( SECTION + " Global Ojbect");
+    writeHeaderToLog( SECTION + " Global Object");
 
     new TestCase( "SECTION", "Function Code check" );
 

@@ -114,7 +114,7 @@ protected:
   PRBool      mAbsorb;          // do we auto absorb any and all transaction?
   nsWeakPtr   mForwarding;
   IMETextTxn *mIMETextTxn;      // first IME txn in this placeholder - used for IME merging
-                                // non-owning for now - cant nsCOMPtr it due to broken transaction interfaces
+                                // non-owning for now - can't nsCOMPtr it due to broken transaction interfaces
   PRBool      mCommitted;       // do we stop auto absorbing any matching placeholder txns?
   // these next two members store the state of the selection in a safe way. 
   // selection at the start of the txn is stored, as is the selection at the end.

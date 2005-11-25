@@ -67,7 +67,7 @@ public class RuntimeRhino implements IRuntime
             }
             catch(Throwable t)
             {
-                System.out.println("execption thrown " + t );
+                System.out.println("exception thrown " + t );
             }
         }
     }

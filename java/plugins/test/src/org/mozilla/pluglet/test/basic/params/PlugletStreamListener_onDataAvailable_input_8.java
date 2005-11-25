@@ -74,7 +74,7 @@ public class PlugletStreamListener_onDataAvailable_input_8 implements Test {
                 context.registerFAILED("The pushed portion can't be read again after reset");
                 return;
             }  
-            // check the corectnesses of the read again data and the next byte
+            // check the correctnesses of the read again data and the next byte
             RandomAccessFile testFile;
             try {
                 testFile = new RandomAccessFile(context.getTestDir()+"/test.tdt", "r");    

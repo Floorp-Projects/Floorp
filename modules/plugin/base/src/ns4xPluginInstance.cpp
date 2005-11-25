@@ -992,7 +992,7 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
     
     // nsPluginTagType_Object or Applet may also have PARAM tags
     // Note: The arrays handed back by GetParameters() are
-    // crafted specially to be directly behind the arrays from GetAtributes()
+    // crafted specially to be directly behind the arrays from GetAttributes()
     // with a null entry as a separator. This is for 4.x backwards compatibility!
     // see bug 111008 for details
     if (tagtype != nsPluginTagType_Embed) {

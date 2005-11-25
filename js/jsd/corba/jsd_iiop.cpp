@@ -473,7 +473,7 @@ private:
     PREventQueue*       _hookCallerEventQueue;
 
     PRBool              _hookCallerEventQueueCreateFinished;
-    PRBool              _suicideMessageRecieved;
+    PRBool              _suicideMessageReceived;
 };
 
 /***************************************************************************/
@@ -1524,7 +1524,7 @@ ThreadState::ThreadState(PRThread* currentThread)
         _mainEventQueue(NULL),
         _hookCallerEventQueue(NULL),
         _hookCallerEventQueueCreateFinished(PR_FALSE),
-        _suicideMessageRecieved(PR_FALSE),
+        _suicideMessageReceived(PR_FALSE),
         _execResult()
 {
     // do nothing...   
@@ -1683,7 +1683,7 @@ ThreadState::_initEventQueues(void)
     PR_ASSERT(NULL == _mainEventQueue);
     PR_ASSERT(NULL == _hookCallerEventQueue);
     PR_ASSERT(! _hookCallerEventQueueCreateFinished);
-    PR_ASSERT(! _suicideMessageRecieved);
+    PR_ASSERT(! _suicideMessageReceived);
 
     sprintf(name, "ThreadState::_mainEventQueue_%d", (int) this);
 
@@ -1732,7 +1732,7 @@ ThreadState::_otherThreadProc(void* arg)
     {
         // run the queue
 
-        while( ! self->_suicideMessageRecieved )
+        while( ! self->_suicideMessageReceived )
         {
             PREvent* e = PR_WaitForEvent(self->_hookCallerEventQueue);
             if(e)
@@ -1865,7 +1865,7 @@ ThreadState::resumeThread()
 void
 ThreadState::eventSaysSuicide(void)
 {
-    _suicideMessageRecieved = PR_TRUE;
+    _suicideMessageReceived = PR_TRUE;
 }    
 void
 ThreadState::eventSaysResume(void)

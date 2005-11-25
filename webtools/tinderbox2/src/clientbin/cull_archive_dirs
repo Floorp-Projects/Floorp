@@ -26,9 +26,9 @@
 #     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
-# $Revision: 1.12 $
-# $Date: 2003/08/17 00:48:54 $
-# $Author: kestes%walrus.com $
+# $Revision: 1.13 $
+# $Date: 2005/11/25 21:57:08 $
+# $Author: timeless%mozdev.org $
 # $Name:  $
 
 
@@ -48,7 +48,7 @@ Usage
 		dir1 [ [dir2] . . . ]
 
 
-Optional Aguments
+Optional Arguments
 
 version			Show the version number of this program.
 

@@ -42,7 +42,7 @@ interface nsISOAPResponse;
 
 /**
  * This interface represents a response handler to be invoked whenever
- * a response of a particular call is recieved and when no more
+ * a response of a particular call is received and when no more
  * responses are expected.
  */
 

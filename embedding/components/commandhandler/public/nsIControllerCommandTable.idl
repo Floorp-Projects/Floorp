@@ -89,7 +89,7 @@ interface nsIControllerCommandTable : nsISupports
 	boolean isCommandEnabled(in string aCommandName, in nsISupports aCommandRefCon);
 
   /**
-   * Tell the command to udpate its state (if it is a state updating command)
+   * Tell the command to update its state (if it is a state updating command)
    *
    * @param aCommandName    the name of the command to update
    * @param aCommandRefCon  the command context data

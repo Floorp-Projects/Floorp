@@ -2367,7 +2367,7 @@ nsFtpState::KillControlConnection()
 
         LOG_ALWAYS(("(%x) nsFtpState caching control connection", this));
 
-        // Store connection persistant data
+        // Store connection persistent data
         mControlConnection->mServerType = mServerType;           
         mControlConnection->mPassword = mPassword;
         mControlConnection->mPwd = mPwd;

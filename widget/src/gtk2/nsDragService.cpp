@@ -790,7 +790,7 @@ nsDragService::IsTargetContextList(void)
     return retval;
 }
 
-// Maximum time to wait for a "drag_recieved" arrived, in microseconds
+// Maximum time to wait for a "drag_received" arrived, in microseconds
 #define NS_DND_TIMEOUT 500000
 
 void

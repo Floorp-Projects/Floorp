@@ -81,7 +81,7 @@
  *   |
  *   |  The following beep prefs can be set to the text "beep" to use the
  *   |  system beep, or "" to disable the beep.
- *   +- msgBeep   (String) url to sound to play when a /msg is recieved
+ *   +- msgBeep   (String) url to sound to play when a /msg is received
  *   +- stalkBeep (String) url to sound to play when a /stalk matches
  *   +- queryBeep (String) url to sound to play for new msgs in a /query
  *   |

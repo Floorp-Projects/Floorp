@@ -120,7 +120,7 @@ interface nsISOAPCall : nsISOAPMessage {
    * If not, an error is returned in the status of the response.
    *
    * @param aListener Handler to be invoked asynchronously after the
-   *  response is recieved.  Should be null if no response is
+   *  response is received.  Should be null if no response is
    *  expected.
    */
   nsISOAPCallCompletion asyncInvoke(in nsISOAPResponseListener aListener);

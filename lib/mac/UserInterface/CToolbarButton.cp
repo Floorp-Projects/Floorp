@@ -136,7 +136,7 @@ Boolean CToolbarButton::ChangeMode(Int8 inNewMode, SDimension16& outDimensionDel
 void CToolbarButton::DrawButtonTitle(void)
 {
 	if (mCurrentMode == eTOOLBAR_TEXT && (!IsActive() || !IsEnabled()))
-		::TextMode(grayishTextOr);  // this is so light you cant see it.
+		::TextMode(grayishTextOr);  // this is so light you can't see it.
 
 	CButton::DrawButtonTitle();
 }

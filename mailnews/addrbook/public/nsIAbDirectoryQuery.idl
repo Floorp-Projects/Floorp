@@ -212,7 +212,7 @@ interface nsIAbDirectoryQuery : nsISupports
      *        The listener which will obtain individual
      *        query results
      * @param resultLimit
-     *        Limits the results returned to a specifed
+     *        Limits the results returned to a specified
      *        maximum value
      * @return
      *        Unique number representing the context ID of

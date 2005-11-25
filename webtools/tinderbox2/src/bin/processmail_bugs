@@ -23,9 +23,9 @@
 
 
 
-# $Revision: 1.14 $ 
-# $Date: 2003/08/17 00:44:04 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.15 $ 
+# $Date: 2005/11/25 21:57:07 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/processmail_bugs,v $ 
 # $Name:  $ 
 
@@ -78,7 +78,7 @@ use TinderDB::BT_Generic;
 # notice that mail is a diff either -u or -c format
 
 # There are other format that mail can be sent: "prettyasciimail",
-# "newemailtech". I have not recieved any mail in these formats so I
+# "newemailtech". I have not received any mail in these formats so I
 # have not written a parser yet.
 
 # The first example comes from redhat.com the second from bugzilla.org

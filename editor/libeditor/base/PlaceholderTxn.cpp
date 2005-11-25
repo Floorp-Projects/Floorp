@@ -149,7 +149,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMe
   EditTxn *editTxn = (EditTxn*)aTransaction;  //XXX: hack, not safe!  need nsIEditTransaction!
   // determine if this incoming txn is a placeholder txn
   nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
-  // cant do_QueryInterface() above due to our broken transaction interfaces.
+  // can't do_QueryInterface() above due to our broken transaction interfaces.
   // instead have to brute it below. ugh. 
   editTxn->QueryInterface(NS_GET_IID(nsIAbsorbingTransaction), getter_AddRefs(plcTxn));
 

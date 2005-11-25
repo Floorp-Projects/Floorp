@@ -1,6 +1,6 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# TinderHeader.pm - the persistant storage for tinterbox
+# TinderHeader.pm - the persistent storage for tinderbox
 # administrative settings.  This package allows the adminstrator to
 # set their values and retrieves the values for the status pages.
 
@@ -8,9 +8,9 @@
 #	 TreeState, Build, IgnoreBuilds, MOTD, Images, 
 
 
-# $Revision: 1.11 $ 
-# $Date: 2004/08/07 13:12:09 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.12 $ 
+# $Date: 2005/11/25 21:57:09 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader.pm,v $ 
 # $Name:  $ 
 

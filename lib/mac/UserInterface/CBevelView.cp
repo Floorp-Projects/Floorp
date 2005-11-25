@@ -198,7 +198,7 @@ Boolean CBevelView::CalcSubpaneLocalRect(PaneIDT inPaneID, Rect& subFrame)
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 void CBevelView::CalcBevelRegion(void)
 {
-	// If we can't focus, we cant establish a coordinate scheme and make
+	// If we can't focus, we can't establish a coordinate scheme and make
 	// subpane position calculations.  So leave the recalc flag set.
 	if (!FocusExposed(false))
 		{

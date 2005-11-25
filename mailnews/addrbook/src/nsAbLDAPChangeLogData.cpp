@@ -554,7 +554,7 @@ nsresult nsAbLDAPProcessChangeLogData::OnReplicatingChangeDone()
             rv = mBackupReplicationFile->Remove(PR_FALSE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "Replication BackupFile Remove on Success failed");
         }
-        Done(PR_TRUE);  // all data is recieved
+        Done(PR_TRUE);  // all data is received
         return NS_OK;
     }
 

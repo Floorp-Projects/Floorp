@@ -234,7 +234,7 @@ EmbedPrivate::Realize(PRBool *aAlreadyRealized)
   // create the offscreen window if we have to
   EnsureOffscreenWindow();
 
-  // Have we ever been initialized before?  If so then just reparetn
+  // Have we ever been initialized before?  If so then just reparent
   // from the offscreen window.
   if (mMozWindowWidget) {
     gtk_widget_reparent(mMozWindowWidget, GTK_WIDGET(mOwningWidget));

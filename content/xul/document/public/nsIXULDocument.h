@@ -134,7 +134,7 @@ public:
 
   /**
    * Attach a XUL template builder to the specified content node.
-   * @param aBuilder the tmeplate builder to attach, or null if
+   * @param aBuilder the template builder to attach, or null if
    *   the builder is to be removed.
    */
   NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder* aBuilder) = 0;

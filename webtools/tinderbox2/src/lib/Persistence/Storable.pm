@@ -1,17 +1,17 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
-# Persistence::Storable.pm - A implementation of the Persistance API
+# Persistence::Storable.pm - A implementation of the Persistence API
 # using Storable.  Storable is a commonly used Perl CPAN Module which
 # writes/recovers perl datastructures to files using a binary format.
-# This implemenation of Persistence should be faster then Dumper.pm
+# This implemenation of Persistence should be faster than Dumper.pm
 # but will be harder to debug Tinderbox if it is in use as it is not
 # possible to read the data structures which are generated with a
 # browser.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2003/08/17 01:30:15 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.9 $ 
+# $Date: 2005/11/25 21:57:09 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence/Storable.pm,v $ 
 # $Name:  $ 
 
@@ -60,7 +60,7 @@ use lib '#tinder_libdir#';
 
 #    $data: is a scalar (often a list of references to the data) which
 #    contains the data we will save. We can only save scalars to be
-#    consistant with the storable interface.
+#    consistent with the storable interface.
 
 #    $data_file: The file where the data will be stored.
 

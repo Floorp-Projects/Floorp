@@ -128,7 +128,7 @@ interface ipcITransactionService : nsISupports
     *
     * @param aLockingCall
     *        Have the Transaction Sevice acquire a lock based on the domain
-    *        before attaching. This should be used when persistant storage
+    *        before attaching. This should be used when persistent storage
     *        is being used to prevent data corruption.
     *
     * @returns NS_OK if the attach message was sent to the Transaction Manager.
@@ -181,7 +181,7 @@ interface ipcITransactionService : nsISupports
     *
     * @param aLockingCall
     *        Have the Transaction Sevice acquire a lock based on the domain
-    *        before flushing. This should be used when persistant storage
+    *        before flushing. This should be used when persistent storage
     *        is being used to prevent data corruption.
     *
     * @returns NS_OK if the flush message is sent to the Transaction Manager

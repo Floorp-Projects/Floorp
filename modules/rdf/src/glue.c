@@ -463,7 +463,7 @@ gRDFMWContext(RDFT db)
  * the net (or local drive). The url of the file to be read is at
  * file->url.  As the bits are read in (and it can take the bits in
  * any sized chunks) it should call parseNextRDFBlob(file, nextBlock,
- * blobSize) when its done, it should call void finishRDFParse
+ * blobSize) when it's done, it should call void finishRDFParse
  * (RDFFile f) to abort, it should call void abortRDFParse (RDFFile f)
  * [which will undo all that has been read from that file] 
  */

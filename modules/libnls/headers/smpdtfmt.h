@@ -476,7 +476,7 @@ private:
      *                  the finished string.  Used when this function needs to fill
      *                  in a FieldPosition
      * @param pos       The FieldPosition being filled in by the format() call.  If
-     *                  this function is formatting the field specfied by pos, it
+     *                  this function is formatting the field specified by pos, it
      *                  will fill in pos will the beginning and ending offsets of the
      *                  field.
      * @param status    Receives a status code, which will be ZERO_ERROR if the operation

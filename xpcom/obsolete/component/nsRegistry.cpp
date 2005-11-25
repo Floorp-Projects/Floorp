@@ -421,7 +421,7 @@ NS_IMETHODIMP nsRegistry::Open( nsIFile *regFile ) {
    
     if (mCurRegID != nsIRegistry::None && mCurRegID != nsIRegistry::ApplicationCustomRegistry)
     {
-        // Cant open another registry without closing explictly.
+        // Can't open another registry without closing explictly.
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -519,7 +519,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
 
     if (mCurRegID != nsIRegistry::None && mCurRegID != regid)
     {
-        // Cant open another registry without closing explictly.
+        // Can't open another registry without closing explictly.
         return NS_ERROR_INVALID_ARG;
     }
 

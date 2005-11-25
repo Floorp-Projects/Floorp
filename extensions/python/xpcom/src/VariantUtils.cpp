@@ -330,7 +330,7 @@ PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence
 				if ((val_use = PyObject_Str(val))==NULL)
 					BREAK_FALSE;
 				// Sanity check should PyObject_Str() ever loosen its semantics wrt Unicode!
-				NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didnt return a string object!");
+				NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didn't return a string object!");
 				FILL_SIMPLE_POINTER( char, *PyString_AS_STRING(val_use) );
 				break;
 
@@ -381,7 +381,7 @@ PRBool FillSingleArray(void *array_ptr, PyObject *sequence_ob, PRUint32 sequence
 				if ((val_use = PyObject_Str(val))==NULL)
 					BREAK_FALSE;
 				// Sanity check should PyObject_Str() ever loosen its semantics wrt Unicode!
-				NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didnt return a string object!");
+				NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didn't return a string object!");
 
 				const char *sz = PyString_AS_STRING(val_use);
 				int nch = PyString_GET_SIZE(val_use);
@@ -1179,7 +1179,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 			if ((val_use = PyObject_Str(val))==NULL)
 				BREAK_FALSE;
 			// Sanity check should PyObject_Str() ever loosen its semantics wrt Unicode!
-			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didnt return a string object!");
+			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didn't return a string object!");
 			if (PyString_GET_SIZE(val_use) != 1) {
 				PyErr_SetString(PyExc_ValueError, "Must specify a one character string for a character");
 				BREAK_FALSE;
@@ -1301,7 +1301,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 			if ((val_use = PyObject_Str(val))==NULL)
 				BREAK_FALSE;
 			// Sanity check should PyObject_Str() ever loosen its semantics wrt Unicode!
-			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didnt return a string object!");
+			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didn't return a string object!");
 
 			cb_this_buffer_pointer = PyString_GET_SIZE(val_use)+1;
 			MAKE_VALUE_BUFFER(cb_this_buffer_pointer);
@@ -1385,7 +1385,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 			if ((val_use = PyObject_Str(val))==NULL)
 				BREAK_FALSE;
 			// Sanity check should PyObject_Str() ever loosen its semantics wrt Unicode!
-			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didnt return a string object!");
+			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didn't return a string object!");
 
 			cb_this_buffer_pointer = PyString_GET_SIZE(val_use);
 			MAKE_VALUE_BUFFER(cb_this_buffer_pointer);
@@ -1453,7 +1453,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 			rc = PR_FALSE;
 			break;
 		}
-		Py_DECREF(val); // Cant be NULL!
+		Py_DECREF(val); // Can't be NULL!
 		Py_XDECREF(val_use);
 	}
 	return rc && !PyErr_Occurred();
@@ -2214,7 +2214,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		if ((val_use = PyObject_Str(val))==NULL)
 			BREAK_FALSE;
 		// Sanity check should PyObject_Str() ever loosen its semantics wrt Unicode!
-		NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didnt return a string object!");
+		NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didn't return a string object!");
 		FILL_SIMPLE_POINTER( char, *PyString_AS_STRING(val_use) );
 		break;
 
@@ -2288,7 +2288,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 				BREAK_FALSE;
 			}
 			val_use = PyObject_Str(val);
-			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didnt return a string object!");
+			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didn't return a string object!");
 			const char *sz = PyString_AS_STRING(val_use);
 			ws->Assign(sz, PyString_Size(val_use));
 		}
@@ -2332,7 +2332,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		if ((val_use = PyObject_Str(val))==NULL)
 			BREAK_FALSE;
 		// Sanity check should PyObject_Str() ever loosen its semantics wrt Unicode!
-		NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didnt return a string object!");
+		NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didn't return a string object!");
 
 		const char *sz = PyString_AS_STRING(val_use);
 		int nch = PyString_GET_SIZE(val_use);
@@ -2422,7 +2422,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			if ((val_use = PyObject_Str(val))==NULL)
 				BREAK_FALSE;
 			// Sanity check should PyObject_Str() ever loosen its semantics wrt Unicode!
-			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didnt return a string object!");
+			NS_ABORT_IF_FALSE(PyString_Check(val_use), "PyObject_Str didn't return a string object!");
 
 			sz = PyString_AS_STRING(val_use);
 			nch = PyString_GET_SIZE(val_use);

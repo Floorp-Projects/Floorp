@@ -113,7 +113,7 @@ def test_string_attribute(ob, attr_name, expected_init, is_dumb_sz = False, asci
 def test_attribute_failure(ob, attr_name, new_value, expected_exception):
     try:
         setattr(ob, attr_name, new_value)
-        print_error("*** Setting attribute '%s' to '%r' didnt yield an exception!" % (attr_name, new_value) )
+        print_error("*** Setting attribute '%s' to '%r' didn't yield an exception!" % (attr_name, new_value) )
     except:
         exc_typ = sys.exc_info()[0]
         exc_val = sys.exc_info()[1]

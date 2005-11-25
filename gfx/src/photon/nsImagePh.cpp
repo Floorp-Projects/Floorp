@@ -516,7 +516,7 @@ nsresult nsImagePh :: Optimize(nsIDeviceContext* aContext)
 	/* TODO: need to invalidate the caches if the graphics system has changed somehow (ie: mode switch, dragged to a remote
 			display, etc... */
 
-	/* TODO: remote graphics drivers should always cache the images offscreen regardless of wether there is a mask or not,
+	/* TODO: remote graphics drivers should always cache the images offscreen regardless of whether there is a mask or not,
 			the Draw code will need to be updated for this */
 
 	return NS_OK;

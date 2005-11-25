@@ -170,7 +170,7 @@ irc.js:
 - changes to work with new socket interface.
 - correct isOp detection in setTopic
 - remove checks for undefined exceptions
-- route data-available immediatley.  inserting a data-available event to be routed later caused disconnect events to be recieved out of order.
+- route data-available immediately.  inserting a data-available event to be routed later caused disconnect events to be received out of order.
 
 utils.js:
 - fix HAS_XPCOM test (XPCDOM broke it.)
@@ -253,7 +253,7 @@ irc.js:
 - add try/catch around server creation, to be safe.
 - spew info event when moving on to the next connection attempt. (bug 22890 and 66040)
 - modify CIRCServer connection to check for a dupe server in it's parent.servers collection, re-init/return that object if it exists, otherwise make a new one.
-- try to reconnect if the connection was broken before we got a 001 message from the server, regardless of wether ot not the parent IRCNetwork has it's "stayingPower" flag set.
+- try to reconnect if the connection was broken before we got a 001 message from the server, regardless of whether ot not the parent IRCNetwork has it's "stayingPower" flag set.
 - forward the disconnect event from the server to the network, to keep the network properly informed.
 - if an unknown message arrives at the server, send it to the server's onUnknown handler if it exists.  If the server has no onUnknown handler, send it to the parent network's handler for that type of message, if it has one.  If the parent network has no handler for this message, send it to the network's onUnknown handler as a last ditch.  (the event code will fail silently if the network has no onUnknown handler.)
 - when we get an 001, reset connection attempt cound, and record the successful connection.
@@ -332,7 +332,7 @@ handlers.js:
 - use the new arraySpeak() and formatDateOffset() functions when printing WHOIS information.
 - print error message when a network gets disconnected. (bug 42905)
 - show nick change information on the network if it is the current view.
-- display "end of NAMES" message if the channel's pendingNamesReply flag is set, then clear pendingNamesReply.  channel.pendingNamesReply is set by the /names command (and cleared in on366) to control wether or not NAMES information (353 and 366 messages) should actually be displayed.  (the irc library will request this information when a new channels is joined, and we don't want to display it in that case.) (bug 40959)
+- display "end of NAMES" message if the channel's pendingNamesReply flag is set, then clear pendingNamesReply.  channel.pendingNamesReply is set by the /names command (and cleared in on366) to control whether or not NAMES information (353 and 366 messages) should actually be displayed.  (the irc library will request this information when a new channels is joined, and we don't want to display it in that case.) (bug 40959)
 - print topic information on a 332.
 - print topic setter information on a 333.
 - print NAMES information on 353 if the channel's pendingNamesReply flag is set. (bug 40959)

@@ -163,7 +163,7 @@ NS_IMETHODIMP mozLineTerm::ArePrefsSecure(PRBool *_retval)
     "  pref(\"security.checkxpcconnect\",true);\n"
     "to your preferences file (.mozilla/prefs.js)\n");
     *_retval = PR_FALSE;
-#if 0  // Temporarily comented out
+#if 0  // Temporarily commented out
     return NS_OK;
 #endif
   }
@@ -297,7 +297,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
   // Ensure that preferences are secure for LineTerm creation and use
   PRBool arePrefsSecure;
   result = ArePrefsSecure(&arePrefsSecure);
-#if 0  // Temporarily comented out
+#if 0  // Temporarily commented out
   if (NS_FAILED(result) || !arePrefsSecure)
     return NS_ERROR_FAILURE;
 #endif

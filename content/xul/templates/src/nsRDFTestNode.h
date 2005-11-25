@@ -56,7 +56,7 @@ public:
         : TestNode(aParent) {}
 
     /**
-     * Determine wether the node can propagate an assertion
+     * Determine whether the node can propagate an assertion
      * with the specified source, property, and target. If the
      * assertion can be propagated, aInitialBindings will be
      * initialized with appropriate variable-to-value assignments

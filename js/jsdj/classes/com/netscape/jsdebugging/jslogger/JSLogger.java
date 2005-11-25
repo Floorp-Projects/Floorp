@@ -146,7 +146,7 @@ public class JSLogger
         }
         catch(Throwable t)
         {
-            Log.log(null, "execption thrown " + t );
+            Log.log(null, "exception thrown " + t );
         }
     }
 
@@ -166,7 +166,7 @@ public class JSLogger
             }
             catch(Throwable t)
             {
-                Log.log(null, "execption thrown " + t );
+                Log.log(null, "exception thrown " + t );
             }
         }
     }

@@ -55,7 +55,7 @@ public:
     // Make sure we are initialized, called from the factory
     // constructor
     nsresult  Init                (void);
-    // Someone reqeusted the selection from the hidden widget
+    // Someone requested the selection from the hidden widget
     void      SelectionGetEvent   (GtkWidget         *aWidget,
                                    GtkSelectionData  *aSelectionData,
                                    guint              aTime);

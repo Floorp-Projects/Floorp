@@ -136,7 +136,7 @@ nsXPINotifierImpl::NotificationEnabled(PRBool* aReturn)
 
         if (NS_SUCCEEDED(rv) && value)
         {
-            // check to see the last time we did anything.  Since flash does not have a persistant
+            // check to see the last time we did anything.  Since flash does not have a persistent
             // way to do poll invervals longer than a session, we will implemented that here by using the
             // preferences.  
 

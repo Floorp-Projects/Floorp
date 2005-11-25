@@ -128,7 +128,7 @@ public class Main {
         }
         catch(Throwable t)
         {
-            System.err.println("execption thrown " + t );
+            System.err.println("exception thrown " + t );
         }
         
         _xmlw.tag ("ENGINE", _engine_name);

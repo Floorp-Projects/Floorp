@@ -75,13 +75,13 @@ class DirectoryServiceProvider : public nsIDirectoryServiceProvider
 NS_IMPL_ISUPPORTS1(DirectoryServiceProvider, nsIDirectoryServiceProvider)
 
 NS_IMETHODIMP
-DirectoryServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+DirectoryServiceProvider::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
 {    
   nsCOMPtr<nsILocalFile> localFile;
   nsresult rv = NS_ERROR_FAILURE;
 
   *_retval = nsnull;
-  *persistant = PR_TRUE;
+  *persistent = PR_TRUE;
 
   const char* fileLocation = nsnull;
 
@@ -268,10 +268,10 @@ void printHelp()
 "                        the \"load library\" path.  If not specified, the      \n"
 "                        current working directory will be used.                \n"
 "         -c path        Specifies the location of the compreg.dat file.  If    \n"
-"                        not specifed, the compreg.dat file will be in its      \n"
+"                        not specified, the compreg.dat file will be in its     \n"
 "                        default location.                                      \n"
 "         -d path        Specifies the location of the xpti.dat file.  If not   \n"
-"                        specifed, the xpti.dat file will be in its default     \n"
+"                        specified, the xpti.dat file will be in its default    \n"
 "                        location.                                              \n"
 "         -a             Option to register all files in the default component  \n"
 "                        directories.  This is the default behavior if regxpcom \n"

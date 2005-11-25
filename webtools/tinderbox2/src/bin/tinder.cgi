@@ -2,9 +2,9 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.39 $ 
-# $Date: 2005/10/06 07:06:39 $ 
-# $Author: bear%code-bear.com $ 
+# $Revision: 1.40 $ 
+# $Date: 2005/11/25 21:57:07 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
 
@@ -86,7 +86,7 @@ Informational Arguments
 
 CGI Mode Arguments
 
-(These argments are desgined to be pased to the cgi script via the webserver.  
+(These arguments are designed to be passed to the cgi script via the webserver.  
  The command line interface is provided for testing.)
 
 

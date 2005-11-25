@@ -1059,7 +1059,7 @@ bool JS::Parser::doubleColonFollows()
 }
 
 
-// Parse and return a VariableBinding or, depnding on the flags given, one of the related productions 
+// Parse and return a VariableBinding or, depending on the flags given, one of the related productions 
 // UntypedVariableBinding, TypedIdentifier, TypedInitialiser, or Identifier.
 // pos is the position of the binding or its first attribute, if any.
 // If noIn is true, don't allow the in operator.

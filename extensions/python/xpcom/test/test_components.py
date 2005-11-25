@@ -64,7 +64,7 @@ def test_interfaces():
                len(xpcom.components.interfaces.items()) == len(xpcom.components.interfaces) == \
                num_fetched, "The collection lengths were wrong"
     if num_nsisupports != 1:
-        print "Didnt find exactly 1 nsiSupports!"
+        print "Didn't find exactly 1 nsiSupports!"
     print "The interfaces object appeared to work!"
 
 def test_classes():
@@ -95,9 +95,9 @@ def test_classes():
     else:
         raise RuntimeError, "The collection lengths were wrong"
     if num_fetched <= 0:
-        raise RuntimeError, "Didnt get any classes!!!"
+        raise RuntimeError, "Didn't get any classes!!!"
     if num_mine != 1:
-        raise RuntimeError, "Didnt find exactly 1 of my contractid! (%d)" % (num_mine,)
+        raise RuntimeError, "Didn't find exactly 1 of my contractid! (%d)" % (num_mine,)
     print "The classes object appeared to work!"
     
 def test_id():

@@ -70,14 +70,14 @@ NS_IMPL_ISUPPORTS1(AppDirServiceProvider, nsIDirectoryServiceProvider)
 //*****************************************************************************   
 
 NS_IMETHODIMP
-AppDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
+AppDirServiceProvider::GetFile(const char *prop, PRBool *persistent, nsIFile **_retval)
 {    
   nsCOMPtr<nsILocalFile>  localFile;
   nsresult rv = NS_ERROR_FAILURE;
   nsCAutoString strBuf;
 
   *_retval = nsnull;
-  *persistant = PR_TRUE;
+  *persistent = PR_TRUE;
   
   if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
   {

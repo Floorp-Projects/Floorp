@@ -59,7 +59,7 @@ typedef struct __struct_Options
 **  mOutput         Output file, append.
 **                  Default is stdout.
 **  mOutputName     Name of the file.
-**  mHelp           Wether or not help should be shown.
+**  mHelp           Whether or not help should be shown.
 **  mSummaryOnly    Only output a signle line.
 **  mZeroDrift      Output zero drift data.
 **  mNegation       Perform negation heuristics on the symbol drifts.

@@ -225,7 +225,7 @@ NLS_CollationGetStrength(const Collator * collation);
 NLSCOLAPI_PUBLIC(NLS_ErrorCode)
 NLS_CollationSetStrength(Collator * collation,    NLS_CollationStrength newStrength);
 /**
- * Get name of the object for the desired Locale, in the desired langauge
+ * Get name of the object for the desired Locale, in the desired language
  */
 NLSCOLAPI_PUBLIC(NLS_ErrorCode)
 NLS_CollationGetDisplayName(const Collator * collation,
@@ -233,7 +233,7 @@ NLS_CollationGetDisplayName(const Collator * collation,
                     const Locale * displayLocale,
                     UnicodeString * name);
 /**
- * Get name of the object for the desired Locale, in the langauge of the
+ * Get name of the object for the desired Locale, in the language of the
  * default locale.
  */
 NLSCOLAPI_PUBLIC(NLS_ErrorCode)

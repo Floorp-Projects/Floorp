@@ -318,7 +318,7 @@ class T_UTILITY_API UnicodeString {
 		UniChar&					operator[](TextOffset	offset);
 		
 		/**
-		 * Append a string or character.  The specfied string or character is added
+		 * Append a string or character.  The specified string or character is added
 		 * to the end of the string.
 		 */
 		UnicodeString&				operator+=(const UnicodeString&	that);
@@ -354,7 +354,7 @@ class T_UTILITY_API UnicodeString {
 
 		/**
 		 * Replace characters.  Replaces the characters in the range specified by
-		 * thisOffset and thisLength with the characters in "that" (or the specfied
+		 * thisOffset and thisLength with the characters in "that" (or the specified
 		 * subrange of "that").  All parameters are pinned to permissible values
 		 * if necessary.  If the source and replacement text are different lengths,
 		 * the string will be lengthened or shortened as necessary.

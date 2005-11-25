@@ -65,7 +65,7 @@ my $Sender = $entity->get( 'From' );
 $Sender ||=  $entity->get( 'Reply-To' );
 my $Message_ID = $entity->get( 'Message-Id' );
 
-die (" *** Cant find Sender-adress in sent mail ! ***\n" ) unless defined( $Sender );
+die (" *** Can't find Sender-address in sent mail ! ***\n" ) unless defined( $Sender );
 chomp( $Sender );
 chomp( $Message_ID );
 

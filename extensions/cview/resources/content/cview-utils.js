@@ -193,7 +193,7 @@ function Clone (obj)
 
 /*
  * matches a real object against one or more pattern objects.
- * if you pass an array of pattern objects, |negate| controls wether to check
+ * if you pass an array of pattern objects, |negate| controls whether to check
  * if the object matches ANY of the patterns, or NONE of the patterns.
  */
 function matchObject (o, pattern, negate)

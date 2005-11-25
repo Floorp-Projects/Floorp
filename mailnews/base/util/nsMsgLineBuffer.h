@@ -40,7 +40,7 @@
 #include "msgCore.h"    // precompiled header...
 
 // I can't believe I have to have this stupid class, but I can't find
-// anything suitable (nsStrImpl might be, when its done). nsIByteBuffer
+// anything suitable (nsStrImpl might be, when it's done). nsIByteBuffer
 // would do, if I had a stream for input, which I don't.
 
 class NS_MSG_BASE nsByteArray 

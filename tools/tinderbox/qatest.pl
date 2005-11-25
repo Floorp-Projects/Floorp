@@ -14,7 +14,7 @@
 #	  Separates the results into suites with a convinient quick link
 #		 at the top of the page
 ###################################################################
-# Questions Coments go to vladimire@netscape.com
+# Questions & Comments go to vladimire@netscape.com
 ###################################################################
 
 sub PrintUsage {

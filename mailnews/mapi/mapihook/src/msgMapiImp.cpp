@@ -240,7 +240,7 @@ STDMETHODIMP CMapiImp::SendMail( unsigned long aSession, lpnsMapiMessage aMessag
 
     PR_LOG(MAPI, PR_LOG_DEBUG, ("CMapiImp::SendMail using flags %d\n", aFlags));
     // Assign the pointers in the aMessage struct to the array of Recips and Files
-    // recieved here from MS COM. These are used in BlindSendMail and ShowCompWin fns 
+    // received here from MS COM. These are used in BlindSendMail and ShowCompWin fns 
     aMessage->lpRecips = aRecips ;
     aMessage->lpFiles = aFiles ;
 

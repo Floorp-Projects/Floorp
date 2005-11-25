@@ -12,7 +12,7 @@ o i18n the API
 
 o Use nsISupportsProxies to work around thread 
   limitations. This will mean writing an IDL for nsIJavaDOM.h, but 
-  that sould be trivial. Dcumentation for nsISupportsProxies is 
+  that sould be trivial. Documentation for nsISupportsProxies is 
   available at
   http://www.mozilla.org/projects/xpcom/Proxies.html.
 

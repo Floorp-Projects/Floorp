@@ -54,7 +54,7 @@ interface nsISOAPTransport : nsISupports {
    *
    * @param aCall Actual message to be sent.
    *
-   * @param aResponse Message to be recieved.  Calling synchronously assumes that 
+   * @param aResponse Message to be received.  Calling synchronously assumes that 
    *   exactly one response is expected.
    */
   void syncCall(in nsISOAPCall aCall, in nsISOAPResponse aResponse);

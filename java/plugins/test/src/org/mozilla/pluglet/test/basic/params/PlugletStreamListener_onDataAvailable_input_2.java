@@ -38,7 +38,7 @@ import org.mozilla.util.*;
  *  The test reads at first the amount of data less than just
  *  pushed length. On the next onDataAvailable calls it is  
  *  supposed to read all other data. Currently  
- *  the incorectnesses of such behaviour isn't specified.
+ *  the incorrectnesses of such behaviour isn't specified.
  *
  */
 

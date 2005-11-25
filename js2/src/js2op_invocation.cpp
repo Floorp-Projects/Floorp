@@ -230,7 +230,7 @@ doCall:
         {
 			retval = top();
 			if (!JS2VAL_IS_VOID(activationStackTop[-1].retval))
-				// we're in a constructor function, ignore teh return value
+				// we're in a constructor function, ignore the return value
 				// if it's not an object
 				if (JS2VAL_IS_OBJECT(retval))
 					activationStackTop[-1].retval = retval;

@@ -107,14 +107,14 @@
       if (window.arguments && window.arguments[0]) {
         var setting;
         var control;
-        // set checkbox from the value of argment[0]'s "value" property
+        // set checkbox from the value of argument[0]'s "value" property
         setting = window.arguments[0].remind;
         if (setting) { // (exists and true)
           control = document.getElementById("remind");
           if (control)
             control.checked = setting;
         }
-        // set prompt from the value of argment[0]'s "prompt" property
+        // set prompt from the value of argument[0]'s "prompt" property
         setting = window.arguments[0].prompt;
         if (setting) {
           if (typeof setting == "string") {

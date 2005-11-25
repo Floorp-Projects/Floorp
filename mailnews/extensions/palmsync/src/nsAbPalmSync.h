@@ -72,7 +72,7 @@ public:
     // this will create a new AB and all data into it
     nsresult AddAllRecordsToAB(PRBool replaceExisting, PRInt32 aCount, lpnsABCOMCardStruct aPalmRecords);
 
-    // this will be called when an AckSyncDone is recieved from the Conduit
+    // this will be called when an AckSyncDone is received from the Conduit
     nsresult Done(PRBool aSuccess, PRInt32 aPalmCatIndex, PRUint32 aPalmRecIDListCount = 0, unsigned long * aPalmRecordIDList = nsnull);
 
     // this will upate AB with new category id and mod time.

@@ -63,7 +63,7 @@ enum jsd_prop_ids
     JSD_PROP_ID_EVALUATING          = -3,
     JSD_PROP_ID_DEBUGGER_DEPTH      = -4,
     JSD_PROP_ID_RETURN_EXPRESSION   = -5,
-    COMPLETLY_IGNORED_ID            = 0 /* just to avoid tracking the comma */
+    COMPLETELY_IGNORED_ID           = 0 /* just to avoid tracking the comma */
 };
 
 static JSPropertySpec jsd_properties[] = {

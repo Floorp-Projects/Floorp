@@ -142,7 +142,7 @@ void CTabSwitcher::SwitchToPage(ResIDT inPageResID)
 #if 0
 /*
 			// We temporarily disable signaling since we're reanimating into a NULL
-			// view container.  FocusDraw() signals if it cant establish a port.
+			// view container.  FocusDraw() signals if it can't establish a port.
 			StValueChanger<EDebugAction> okayToSignal(gDebugSignal, debugAction_Nothing);
 			thePage = UReanimator::CreateView(inPageResID, NULL, this);
 */

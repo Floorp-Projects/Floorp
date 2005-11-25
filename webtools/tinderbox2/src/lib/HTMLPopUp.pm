@@ -12,9 +12,9 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.28 $ 
-# $Date: 2004/07/12 01:01:19 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.29 $ 
+# $Date: 2005/11/25 21:57:09 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
 
@@ -189,7 +189,7 @@ sub gmtimeHTML {
 
 # primative parsing of CGI arguments into a hash.
 
-# These argments are desgined to be pased to the cgi script via the
+# These arguments are designed to be passed to the cgi script via the
 # webserver.  The can also be passed via command line interface
 # ('name=value') for testing.
 

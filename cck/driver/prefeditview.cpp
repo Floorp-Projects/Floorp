@@ -156,7 +156,7 @@ void CPrefEditView::DeleteTreeCtrl(HTREEITEM hParent)
 
   CTreeCtrl &treeCtrl = GetTreeCtrl();
 
-  // Delete the prefelement ojbect we created with new.
+  // Delete the prefelement object we created with new.
   CPrefElement* pe = (CPrefElement*)treeCtrl.GetItemData(hParent);
   delete pe;
 

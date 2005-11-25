@@ -83,7 +83,7 @@ int main( int argc, char *argv[] ) {
         nsCOMPtr<nsIComponentManager> compMgr = do_GetService(kComponentManagerCID, &rv);
         if (NS_FAILED(rv))
         {
-            // Cant get component manager
+            // Can't get component manager
             printf("Cannot get component manager from service manager.. Exit. [rv=0x%08X]\n", (int)rv);
             exit(-1);
         }

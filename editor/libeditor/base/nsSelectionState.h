@@ -48,7 +48,7 @@ class nsISelection;
 
 /***************************************************************************
  * class for recording selection info.  stores selection as collection of
- * { {startnode, startoffset} , {endnode, endoffset} } tuples.  Cant store
+ * { {startnode, startoffset} , {endnode, endoffset} } tuples.  Can't store
  * ranges since dom gravity will possibly change the ranges.
  */
 

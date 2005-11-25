@@ -510,7 +510,7 @@ class nsTSubstring_CharT : public nsTAString_CharT
 
         /**
          * this function releases mData and does not change the value of
-         * any of its member variables.  inotherwords, this function acts
+         * any of it's member variables.  in other words, this function acts
          * like a destructor.
          */
       void NS_FASTCALL Finalize();

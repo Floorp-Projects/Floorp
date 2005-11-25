@@ -170,7 +170,7 @@ class MyInterruptHook
         catch(Throwable t)
         {
             // eat it...
-            Log.log(null, "execption thrown " + t );
+            Log.log(null, "exception thrown " + t );
         }
     }
 

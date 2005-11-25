@@ -183,7 +183,7 @@ sub multipart_start {
 }
 
 # The various parts of Bugzilla which create cookies don't want to have to
-# pass them arround to all of the callers. Instead, store them locally here,
+# pass them around to all of the callers. Instead, store them locally here,
 # and then output as required from |header|.
 sub send_cookie {
     my $self = shift;

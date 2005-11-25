@@ -227,7 +227,7 @@ PyG_Base::AutoWrapPythonInstance(PyObject *ob, const nsIID &iid, nsISupports **p
 		// Check we _now_ have a default gateway
 		{
 			nsISupports *temp = NULL;
-			NS_ABORT_IF_FALSE(CheckDefaultGateway(ob, iid, &temp), "Auto-wrapped object didnt get a default gateway!");
+			NS_ABORT_IF_FALSE(CheckDefaultGateway(ob, iid, &temp), "Auto-wrapped object didn't get a default gateway!");
 			if (temp) temp->Release();
 		}
 #endif
