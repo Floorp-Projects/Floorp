@@ -33,8 +33,8 @@ static nsModuleComponentInfo components[] =
    X2JINOUTCLIENTTESTCOMPONENT_CID,
    X2JINOUTCLIENTTESTCOMPONENT_PROGID,
    X2JINOUTClientTestComponentImplConstructor,
-   NULL /* NULL if you dont need one */,
-   NULL /* NULL if you dont need one */
+   NULL /* NULL if you don't need one */,
+   NULL /* NULL if you don't need one */
   }
 };
 

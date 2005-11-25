@@ -576,7 +576,7 @@ nsresult nsContentIterator::RebuildIndexStack()
 {
   // Make sure we start at the right indexes on the stack!  Build array up
   // to common parent of start and end.  Perhaps it's too many entries, but
-  // thats far better than too few.
+  // that's far better than too few.
   nsIContent* parent;
   nsIContent* current;
 

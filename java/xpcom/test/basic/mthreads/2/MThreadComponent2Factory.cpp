@@ -30,8 +30,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(MThreadComponent2Impl)
 static nsModuleComponentInfo components[] =
 {
   { "MultiThread Component 2", MTHREADCOMPONENT2_CID, MTHREADCOMPONENT2_PROGID, MThreadComponent2ImplConstructor,
-     NULL /* NULL if you dont need one */,
-     NULL /* NULL if you dont need one */
+     NULL /* NULL if you don't need one */,
+     NULL /* NULL if you don't need one */
   }
 };
 

@@ -122,7 +122,7 @@ static PyObject *DoPyRead_Size(nsIInputStream *pI, PRUint32 n)
 				return NULL;
 			}
 			if (buf_len != nread) {
-				PyErr_SetString(PyExc_RuntimeError, "New buffer isnt the size we create it!");
+				PyErr_SetString(PyExc_RuntimeError, "New buffer isn't the size we created it!");
 				return NULL;
 			}
 			memcpy(ob_buf, buf, nread);

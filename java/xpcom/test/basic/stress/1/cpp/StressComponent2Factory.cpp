@@ -30,8 +30,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(StressComponent2Impl)
 static nsModuleComponentInfo components[] =
 {
   { "Stress Test Component 2", STRESSCOMPONENT2_CID, STRESSCOMPONENT2_PROGID, StressComponent2ImplConstructor,
-     NULL /* NULL if you dont need one */,
-     NULL /* NULL if you dont need one */
+     NULL /* NULL if you don't need one */,
+     NULL /* NULL if you don't need one */
   }
 };
 

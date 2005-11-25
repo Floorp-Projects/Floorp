@@ -17,7 +17,7 @@ private:
 	nsrefcnt mRefCnt;
 
 public:
-// Constructor and Destuctor
+// Constructor and Destructor
 	nsTestQueryApi();
 	~nsTestQueryApi();
 

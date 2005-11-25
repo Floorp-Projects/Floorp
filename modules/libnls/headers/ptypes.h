@@ -339,7 +339,7 @@ public:
    static const char*  getDefaultDataDirectory();
 
     /* complete a relative path to a full pathname, and convert to platform-specific syntax. */
-    /* The character seperating directories for the relative path is '|'.                    */
+    /* The character separating directories for the relative path is '|'.                    */
     static void pathnameInContext( char* fullname, t_int32 maxsize, char* relpath );
 
 	/* Return the default locale ID string by querying ths system, or
@@ -347,7 +347,7 @@ public:
 	static const char*	getDefaultLocaleID();
 
 	/**
-	 * Retrun true if this platform is big-endian, that is, if the number
+	 * Return true if this platform is big-endian, that is, if the number
 	 * 0x1234 is stored 0x12, 0x34 in memory.  Return false if this platform
 	 * is little-endian, and is, if 0x1234 is stored 0x34, 0x12 in memory.
 	 */

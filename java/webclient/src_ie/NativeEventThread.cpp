@@ -318,7 +318,7 @@ HRESULT InitIEStuff (WebShellInitContext * initContext)
 
     if SUCCEEDED(hr)
     {
-	ATLTRACE(_T("Browser succesfully retrieved"));
+	ATLTRACE(_T("Browser successfully retrieved"));
     }
 
     initContext->browserHost = m_hWndClient;

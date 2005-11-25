@@ -402,7 +402,7 @@ class TypeDescriber:
         if self.tag == T_ARRAY:
             # NOTE - Adding a type specifier to the array is different from xpt_dump.exe
             if self.param is None or self.param.interface_info is None:
-                type_desc = "" # Dont have explicit info about the array type :-(
+                type_desc = "" # Don't have explicit info about the array type :-(
             else:
                 i_info = self.param.interface_info
                 type_code = i_info.GetTypeForParam(self.param.method_index, self.param.param_index, 1)
@@ -410,7 +410,7 @@ class TypeDescriber:
             return self.GetName() + "[" + type_desc + "]" 
         elif self.tag == T_INTERFACE:
             if self.param is None or self.param.interface_info is None:
-                return "nsISomething" # Dont have explicit info about the IID :-(
+                return "nsISomething" # Don't have explicit info about the IID :-(
             i_info = self.param.interface_info
             m_index = self.param.method_index
             p_index = self.param.param_index

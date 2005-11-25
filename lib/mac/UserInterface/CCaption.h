@@ -83,7 +83,7 @@ class CListenerCaption : public CCaption, public LListener
 {
 	public:
 		enum { class_ID = 'CCap' }; 						// class id 
-		enum { default_menu_item = 1 };						// initial defualt menu item
+		enum { default_menu_item = 1 };						// initial default menu item
 										
 							CListenerCaption( LStream *inStream );
 		virtual				~CListenerCaption();

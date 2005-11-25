@@ -2785,7 +2785,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 continue;
 
             /*
-             * Occurs at (succesful) end of REOP_ALT,
+             * Occurs at (successful) end of REOP_ALT,
              */
             case REOP_JUMP:
                 --gData->stateStackTop;
@@ -2794,7 +2794,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 continue;
 
             /*
-             * Occurs at last (succesful) end of REOP_ALT,
+             * Occurs at last (successful) end of REOP_ALT,
              */
             case REOP_ENDALT:
                 --gData->stateStackTop;

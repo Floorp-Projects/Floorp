@@ -55,7 +55,7 @@ if (c.boolean_value != false)
 	throw("boolean_value has wrong new value");
 
 // Python's own test does thorough testing of all numeric types
-// Wont bother from here!
+// Won't bother from here!
 
 if (c.char_value != 'a')
 	throw("char_value has wrong initial value");

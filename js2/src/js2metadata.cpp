@@ -2978,7 +2978,7 @@ doUnary:
     // Read the value of a lexical reference - it's an error if that reference
     // doesn't have a binding somewhere.
     // Attempt the read in each frame in the current environment, stopping at the
-    // first succesful effort. If the property can't be found in any frame, it's 
+    // first successful effort. If the property can't be found in any frame, it's 
     // an error.
     void Environment::lexicalRead(JS2Metadata *meta, Multiname *multiname, Phase phase, js2val *rval, js2val *base)
     {

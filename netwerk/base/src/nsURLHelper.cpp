@@ -164,17 +164,17 @@ net_ParseFileURL(const nsACString &inURL,
 
     // invoke the parser to extract the URL path
     rv = parser->ParseURL(url, flatURL.Length(),
-                          nsnull, nsnull, // dont care about scheme
-                          nsnull, nsnull, // dont care about authority
+                          nsnull, nsnull, // don't care about scheme
+                          nsnull, nsnull, // don't care about authority
                           &pathPos, &pathLen);
     if (NS_FAILED(rv)) return rv;
 
     // invoke the parser to extract filepath from the path
     rv = parser->ParsePath(url + pathPos, pathLen,
                            &filepathPos, &filepathLen,
-                           nsnull, nsnull,  // dont care about param
-                           nsnull, nsnull,  // dont care about query
-                           nsnull, nsnull); // dont care about ref
+                           nsnull, nsnull,  // don't care about param
+                           nsnull, nsnull,  // don't care about query
+                           nsnull, nsnull); // don't care about ref
     if (NS_FAILED(rv)) return rv;
 
     filepathPos += pathPos;

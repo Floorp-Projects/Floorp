@@ -275,7 +275,7 @@ static BookmarkManager* gBookmarkManager = nil;
   [root release];
 
   // Turn off the posting of update notifications while reading in bookmarks.
-  // All interested parties haven't been init'd yet, and/or will recieve the
+  // All interested parties haven't been init'd yet, and/or will receive the
   // managerStartedNotification when setup is actually complete.
   [BookmarkItem setSuppressAllUpdateNotifications:YES];
   BOOL bookmarksReadOK = [self readBookmarks];
@@ -1393,7 +1393,7 @@ static BookmarkManager* gBookmarkManager = nil;
           if ([tokenScanner isAtEnd]) {
             // we scanned up to the </A> but didn't find a " character ending the HREF. This is probably
             // because we're scanning a bookmarklet that contains an embedded <A></A> so we're in the
-            // middle of the string. Just bail and dont import this bookmark. The parser should be able
+            // middle of the string. Just bail and don't import this bookmark. The parser should be able
             // to recover on its own once it gets to the next "<A" token.
             [tokenScanner release];
             [tokenTag release];

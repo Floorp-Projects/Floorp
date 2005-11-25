@@ -94,7 +94,7 @@ URLPropertyElement::SetKey(const nsACString& aKey)
 {
     // this is just wrong - ideally you'd take the key, append it to
     // the url, and set that as the key. However, that would require
-    // us to hold onto a copy of the string, and thats a waste,
+    // us to hold onto a copy of the string, and that's a waste,
     // considering nobody should ever be calling this.
     NS_ASSERTION(0, "This makes no sense!");
     return NS_ERROR_NOT_IMPLEMENTED;

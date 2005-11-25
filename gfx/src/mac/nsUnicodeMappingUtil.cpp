@@ -327,7 +327,7 @@ nsUnicodeMappingUtil::PrefEnumCallback(const char* aName, void* aClosure)
   nsString genNameString;
   genNameString.AssignWithConversion(genName);
   nsGenericFontNameType type = Self->MapGenericFontNameType(genNameString);
-  if(type >= kUknownGenericFontName)
+  if(type >= kUnknownGenericFontName)
   	return;
   	
   char* valueInUTF8 = nsnull;
@@ -472,7 +472,7 @@ nsGenericFontNameType nsUnicodeMappingUtil::MapGenericFontNameType(const nsStrin
 	if (aGenericName.LowerCaseEqualsLiteral("fantasy"))
 	  return kFantasy;
 	  
-	return kUknownGenericFontName;			
+	return kUnknownGenericFontName;			
 }
 
 //--------------------------------------------------------------------------

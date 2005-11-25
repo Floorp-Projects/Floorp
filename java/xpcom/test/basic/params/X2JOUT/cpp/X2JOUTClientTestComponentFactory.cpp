@@ -34,8 +34,8 @@ static nsModuleComponentInfo components[] =
 	X2JOUTCLIENTTESTCOMPONENT_CID,
 	X2JOUTCLIENTTESTCOMPONENT_PROGID,
 	X2JOUTClientTestComponentImplConstructor,
-	NULL /* NULL if you dont need one */,
-	NULL /* NULL if you dont need one */
+	NULL /* NULL if you don't need one */,
+	NULL /* NULL if you don't need one */
   }
 };
 

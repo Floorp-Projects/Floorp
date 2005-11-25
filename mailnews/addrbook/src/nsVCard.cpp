@@ -1194,7 +1194,7 @@ static int yylex() {
 			    }
 			}
 		    else {
-			/* unknow token */
+			/* unknown token */
 			return 0;
 			}
 		    break;

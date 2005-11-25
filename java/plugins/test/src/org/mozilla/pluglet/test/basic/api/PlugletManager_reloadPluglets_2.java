@@ -97,7 +97,7 @@ public class PlugletManager_reloadPluglets_2  implements Test
 	}
 	TestContext.printLog("}");
 	if(((Boolean)copySecondPluglet(sourceDir,destDir,fileName)).booleanValue()) {
-	  context.printLog("Second pluglet library was succesfully copied..");
+	  context.printLog("Second pluglet library was successfully copied..");
 	  PlugletManager_obj.reloadPluglets(((Boolean)vectorOfParameters.elementAt(0)).booleanValue());
 	  System.err.println("DEBUG: Void method PlugletManager_reloadPluglets(" + ((Boolean)vectorOfParameters.elementAt(0)).booleanValue() + ")"); 
 	  return;

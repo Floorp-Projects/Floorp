@@ -72,7 +72,7 @@ var gCalendar = null;
 //the next line needs XX-DATE-XY but last X instead of Y
 var gDateMade = "2002052213-cal"
 
-// turn on debuging
+// turn on debugging
 var gDebugCalendar = false;
 
 // single global instance of CalendarWindow

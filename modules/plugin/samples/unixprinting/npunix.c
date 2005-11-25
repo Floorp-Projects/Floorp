@@ -405,7 +405,7 @@ NP_GetValue(void* future, NPPVariable variable, void *value)
  *
  * PARAMETERS
  *    nsTable   - The netscape function table. If developers just use these
- *        wrappers, they dont need to worry about all these function
+ *        wrappers, they don't need to worry about all these function
  *        tables.
  * RETURN
  *    pluginFuncs

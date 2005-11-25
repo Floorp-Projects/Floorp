@@ -853,7 +853,7 @@ LRESULT CALLBACK EventsPluginInstance::WndProcChild(HWND hWnd, UINT Msg, WPARAM 
 	EventsPluginInstance* inst = (EventsPluginInstance*) GetProp(hWnd, gInstanceLookupString);
 	NS_ABORT_IF_FALSE(inst, "Could not get the inst from the Window!!");
 	switch (Msg) {
-	// NOTE: We DONT pass on DBLCLK messages, as both Scintilla and
+	// NOTE: We DON'T pass on DBLCLK messages, as both Scintilla and
 	// Mozilla have their own special logic, and they step on each other.
 	// (causing our child to see a double-click as a triple-click)
 		case WM_KEYDOWN:

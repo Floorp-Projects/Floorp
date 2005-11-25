@@ -30,8 +30,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(J2XINServerTestComponentImpl)
 static nsModuleComponentInfo components[] =
 {
   { "J2XIN Server Test Component", J2XINSERVERTESTCOMPONENT_CID, J2XINSERVERTESTCOMPONENT_PROGID, J2XINServerTestComponentImplConstructor,
-     NULL /* NULL if you dont need one */,
-     NULL /* NULL if you dont need one */
+     NULL /* NULL if you don't need one */,
+     NULL /* NULL if you don't need one */
   }
 };
 

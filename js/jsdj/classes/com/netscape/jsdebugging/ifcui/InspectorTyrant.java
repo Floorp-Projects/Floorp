@@ -146,7 +146,7 @@ public class InspectorTyrant
             }
 
             // we build both a string and a number vector so that we can
-            // seperately sort them before concating them. NOTE that numVec
+            // separately sort them before concating them. NOTE that numVec
             // actually holds strings representing numbers, rather than the
             // numbers themselves - we don't want rounding & conversions errors
             Vector stringVec = new Vector();

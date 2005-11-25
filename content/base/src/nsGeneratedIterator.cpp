@@ -1067,7 +1067,7 @@ nsGeneratedSubtreeIterator::Init(nsIDOMRange* aRange)
     mLastIter = mGenIter;
     mLastIterType = mIterType;
   }
-  if (!mLastIter)//dont ever set last candidate to a generated node!
+  if (!mLastIter)//don't ever set last candidate to a generated node!
   {
     lastCandidate = GetDeepLastChild(lastCandidate);
     if (mGenIter)

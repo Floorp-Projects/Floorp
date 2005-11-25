@@ -30,8 +30,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(MTStartImpl)
 static nsModuleComponentInfo components[] =
 {
   { "Multi thread tests start component", MTSTART_CID, MTSTART_PROGID, MTStartImplConstructor,
-     NULL /* NULL if you dont need one */,
-     NULL /* NULL if you dont need one */
+     NULL /* NULL if you don't need one */,
+     NULL /* NULL if you don't need one */
   }
 };
 

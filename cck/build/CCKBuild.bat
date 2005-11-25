@@ -4,7 +4,7 @@ REM  3/16/99 Frank Petitta   Netscape Communications Corp.
 REM
 REM  Basic operation outline:
 REM    _MSC_VER and MOZ_DEBUG are the only System Vars used(currently)
-REM    IF _MSC_VER doesnt equal 1200 then VC+ is not version 6.0,
+REM    IF _MSC_VER doesn't equal 1200 then VC+ is not version 6.0,
 REM    6.0 is the standard so the build will not happen if _MSC_VER is
 REM    any value other than 1200!
 REM    System var MOZ_DEBUG is used to detemine Debug or Non-Debug builds

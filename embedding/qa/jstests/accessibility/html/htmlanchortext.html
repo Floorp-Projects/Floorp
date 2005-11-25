@@ -78,7 +78,7 @@ function executeTestCase()
 
     // Even though you tell it to focus the textnode, the focus doesnot happen to the
     // text node, the focus happens to the link node. textnodes cannot get focus
-    // by design. Thats the reason i attached focus listener to the anchor node above.
+    // by design. That's the reason I attached focus listener to the anchor node above.
     accNode.accTakeFocus();
     accNode = getAccessibleNode(domNode);
     setTimeout("constructResults();", 2000);

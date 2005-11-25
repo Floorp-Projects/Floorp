@@ -127,7 +127,7 @@ function processFile(f, fname, inputdir, out) {
 			functionDocArray[functionDocArray.length] = {name:m[1], text:htmlText};
 
 			// Store the function also in the indexFunctionArray
-			// so we can have a seperate file with the function table of contents
+			// so we can have a separate file with the function table of contents
 			if (indexFunctionArray[m[1]]) {
 				//  print("ERROR: function: " + m[1] + " is defined more than once!");
 				// Allow multiple files for a function
@@ -154,7 +154,7 @@ function processFile(f, fname, inputdir, out) {
 			functionDocArray[functionDocArray.length] = {name:m[1]+".prototype."+m[2], text:htmlText};
 
 			// Store the function also in the indexFunctionArray
-			// so we can have a seperate file with the function table of contents
+			// so we can have a separate file with the function table of contents
 			if (indexFunctionArray[m[1]]) {
 				//  print("ERROR: function: " + m[1] + " is defined more than once!");
 				// Allow multiple files for a function

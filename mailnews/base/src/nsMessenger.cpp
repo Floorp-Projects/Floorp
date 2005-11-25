@@ -1751,7 +1751,7 @@ nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity, nsIMsgWindow *aMsgWin
   if (NS_SUCCEEDED(rv) && pMsgSendLater)
   { 
 #ifdef DEBUG
-        printf("We succesfully obtained a nsIMsgSendLater interface....\n"); 
+        printf("We successfully obtained a nsIMsgSendLater interface....\n"); 
 #endif
 
     SendLaterListener *sendLaterListener = new SendLaterListener(this);

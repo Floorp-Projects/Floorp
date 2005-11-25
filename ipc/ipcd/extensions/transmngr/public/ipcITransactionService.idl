@@ -92,7 +92,7 @@ interface ipcITransactionService : nsISupports
     *
     * @param aNamespace
     *        A string defining the scope of the transaction domains. It is
-    *        used internally to seperate process listening to the same domain
+    *        used internally to separate process listening to the same domain
     *        (ie. preferences) but for two different namespaces (ie. profile1 vs
     *        profile2).
     *

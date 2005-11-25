@@ -41,9 +41,9 @@
 # This script will print the depth path for a mozilla directory based
 # on the info in Makefile
 #
-# Its a hack.  Its brute force.  Its horrible.  
-# It dont use Artificial Intelligence.  It dont use Virtual Reality.
-# Its not perl.  Its not python.   But it works.
+# It's a hack.  It's brute force.  It's horrible.  
+# It don't use Artificial Intelligence.  It don't use Virtual Reality.
+# It's not perl.  It's not python.   But it works.
 #
 # Usage: print-depth-path.sh
 #

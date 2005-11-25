@@ -24,7 +24,7 @@ Things left to do:
  - test the implementation to make sure all the fields in the js objects are
    actually getting populated as they should. This is mainly focused at the
    decoding of the objects (which is why we need the first task handled.
- - take the js code in the uddi.html file and create a seperate library that
+ - take the js code in the uddi.html file and create a separate library that
    includes those methods for testing purposes.
  - transform the uddi.html file into a full coverage UDDI testing page that
    will not only allow for the testing of methods, but will populate fields

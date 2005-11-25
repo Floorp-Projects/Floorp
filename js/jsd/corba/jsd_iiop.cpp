@@ -2670,7 +2670,7 @@ _WAIReturnType2String( WAIReturnType_t t )
 // static PRThread*            _SourceTextProviderThread;
 // 
 // static void
-// _exportRemotedObjectsOnSeperateThreads()
+// _exportRemotedObjectsOnSeparateThreads()
 // {
 //     ///////////////////////////
 // 

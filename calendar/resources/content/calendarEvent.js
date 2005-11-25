@@ -129,7 +129,7 @@ CalendarEventDataSource.InitService = function calEvent_InitService( root )
    return new CalendarEventDataSource( null, root.getUserPath() );
 }
 
-// turn on/off debuging
+// turn on/off debugging
 CalendarEventDataSource.gDebug = true;
 
 // Singleton CalendarEventDataSource variable.

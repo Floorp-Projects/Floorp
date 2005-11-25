@@ -497,7 +497,7 @@ public class BoxView extends ShapeableView
 
     /**
      * Adds a strut to the view. A Strut is really just a simple case
-     * of a spring whos springConstant is 0 making it not stretchable.
+     * of a spring whose springConstant is 0 making it not stretchable.
      * Struts also know how to draw a "Strut" when showBoxesAndSprings is set to true.
      * Use these to place fixed padding between views.
      * @param preferredSize The initial size of the spring in pixels.

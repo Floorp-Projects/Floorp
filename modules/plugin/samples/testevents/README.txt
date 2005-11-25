@@ -30,7 +30,7 @@ with focus.
 
 PROBLEMS:
 * Plugins on Windows don't have event messages.
-* Plugins on Windows dont have key-pressed messages (only keyup and down)
+* Plugins on Windows don't have key-pressed messages (only keyup and down)
 * Focus interaction is not correct (probably need a focus event)
 
 

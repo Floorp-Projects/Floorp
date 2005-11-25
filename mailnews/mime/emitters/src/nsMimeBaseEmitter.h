@@ -132,7 +132,7 @@ protected:
   MimeRebuffer        *mBufferMgr;
 
 	// mscott
-  // dont ref count the streams....the emitter is owned by the converter
+  // don't ref count the streams....the emitter is owned by the converter
 	// which owns these streams...
   //
   nsIOutputStream     *mOutStream;

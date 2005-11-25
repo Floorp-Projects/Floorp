@@ -16,7 +16,7 @@
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
  * 
- * $Id: PluggableJVM.java,v 1.2 2001/07/12 19:57:54 edburns%acm.org Exp $
+ * $Id: PluggableJVM.java,v 1.3 2005/11/25 08:16:30 timeless%mozdev.org Exp $
  * 
  * Contributor(s):
  * 
@@ -807,7 +807,7 @@ public abstract class PluggableJVM
 		    }
 		  break;
 		default:		    
-		    trace("Unknow event type: "+evt.getType(), LOG_ERROR);
+		    trace("Unknown event type: "+evt.getType(), LOG_ERROR);
 		    break;
 		}	    
 	    if (evt.isSync())

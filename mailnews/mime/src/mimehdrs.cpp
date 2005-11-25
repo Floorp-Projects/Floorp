@@ -397,7 +397,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		while (contents <= end && nsCRT::IsAsciiSpace(*contents))
 		  contents++;
 
-		/* If we're supposed to strip at the frist token, pull `end' back to
+		/* If we're supposed to strip at the first token, pull `end' back to
 		   the first whitespace or ';' after the first token.
 		 */
 		if (strip_p)

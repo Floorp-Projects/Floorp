@@ -47,7 +47,7 @@ static char *ToString(jobject obj,JNIEnv *env) {
 void PlugletLoader::Initialize(void) {
     PR_LOG(PlugletLog::log, PR_LOG_DEBUG,
 	    ("PlugletLoader::Initialize\n"));
-    //nb erors handling
+    //nb errors handling
     JNIEnv * env = PlugletEngine::GetJNIEnv();
     if (!env) {
       return;

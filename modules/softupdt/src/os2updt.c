@@ -1323,7 +1323,7 @@ PSZ CsysUpdate(
                             pszScan    );
 
               }                             /* End if path not already there*/
-                                            /* Else path exists..dont add   */
+                                            /* Else path exists..don't add  */
          break;
    }
 

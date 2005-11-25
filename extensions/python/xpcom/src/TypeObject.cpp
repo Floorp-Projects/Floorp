@@ -145,7 +145,7 @@ PyXPCOM_TypeObject::Py_repr(PyObject *self)
 	if (iim!=nsnull)
 		iim->GetNameForIID(&pis->m_iid, &iid_repr);
 	if (iid_repr==nsnull)
-		// no IIM available, or it doesnt know the name.
+		// no IIM available, or it doesn't know the name.
 		iid_repr = pis->m_iid.ToString();
 	// XXX - need some sort of buffer overflow.
 	char buf[512];
@@ -212,7 +212,7 @@ PyXPCOM_TypeObject::PyXPCOM_TypeObject( const char *name, PyXPCOM_TypeObject *pB
 	baseType = pBase;
 	ctor = thector;
 
-	// cast away const, as Python doesnt use it.
+	// cast away const, as Python doesn't use it.
 	tp_name = (char *)name;
 	tp_basicsize = typeSize;
 }

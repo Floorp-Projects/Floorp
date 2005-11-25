@@ -38,7 +38,7 @@
 # Test our support for the interfaces defined in nsISupportsPrimitives.idl
 #
 # The framework supports nsISupportsCString and nsISupportsString, but
-# only if our class doesnt provide explicit support.
+# only if our class doesn't provide explicit support.
 
 from xpcom import components
 

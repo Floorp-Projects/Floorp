@@ -54,7 +54,7 @@ START /complex
 INCLUDE generic.res
 Content-Type: multipart/mixed; boundary=TheWallFromPinkFloyd
 CRLF
-Preamble to multipart messages. Only clients that dont handle
+Preamble to multipart messages. Only clients that don't handle
 multipart would see this!
 CRLF
 --TheWallFromPinkFloyd

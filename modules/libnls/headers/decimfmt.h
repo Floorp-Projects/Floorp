@@ -124,7 +124,7 @@ class DigitList;
  * <pre>
  * .    Symbol   Meaning
  * .      0      a digit, showing up a zero if it is zero
- * .      #      a digit, supressed if zero
+ * .      #      a digit, suppressed if zero
  * .      .      placeholder for decimal separator
  * .      ,      placeholder for grouping separator
  * .      ;      separates postive from negative formats

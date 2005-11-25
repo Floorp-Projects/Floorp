@@ -610,7 +610,7 @@ nsFtpState::OnStopRequest(nsIRequest *request, nsISupports *aContext,
         return NS_OK;
     }        
 
-    if (NS_FAILED(aStatus)) // aStatus will be NS_OK if we are sucessfully disconnecing the control connection. 
+    if (NS_FAILED(aStatus)) // aStatus will be NS_OK if we are successfully disconnecing the control connection. 
         StopProcessing();
 
     return NS_OK;

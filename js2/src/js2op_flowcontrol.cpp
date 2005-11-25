@@ -109,7 +109,7 @@
         
         // Get the first enumerable property from the object
         // and save it's 'state' on the stack. Push true/false
-        // for whether that was succesful.
+        // for whether that was successful.
     case eFirst:
         {
             a = pop();
@@ -121,7 +121,7 @@
         break;
 
         // Increment the enumeration 'state' on the stack. 
-        // Push true/false for whether that was succesful.
+        // Push true/false for whether that was successful.
     case eNext:
         {
             a = top();

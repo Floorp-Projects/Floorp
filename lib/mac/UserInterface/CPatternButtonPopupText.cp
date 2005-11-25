@@ -138,7 +138,7 @@ CPatternButtonPopupText::DrawButtonContent(void)
 			{
 			// draw round rect frame
 			UGraphicGizmos::BevelTintRoundRect(mCachedButtonFrame, 8, 8, UGAAppearance::sGASevenGrayLevels, false);
-			// draw seperator between text and arrow
+			// draw saperator between text and arrow
 			UGraphicGizmos::BevelTintLine(mCachedButtonFrame.right - gsPopup_ArrowButtonWidth,
 										  mCachedButtonFrame.top + 1,
 										  mCachedButtonFrame.right - gsPopup_ArrowButtonWidth,

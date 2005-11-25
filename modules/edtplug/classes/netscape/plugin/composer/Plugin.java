@@ -73,9 +73,9 @@ import java.util.ResourceBundle;
  * framework:
  * <pre>
  * netscape.plugin.composer.factory - a single classname of a Factory class.
- * netscape.plugin.composer.classes - a colon-seperated list of the classnames of
+ * netscape.plugin.composer.classes - a colon-separated list of the classnames of
  *     the plugins in this archive.
- * netscape.plugin.composer.eventHandlers - a colon-seperated list of the classnames
+ * netscape.plugin.composer.eventHandlers - a colon-separated list of the classnames
  *     of the plugins in this archive to execute when an event happens. See Document
  *     for a list of the standard events.
  * </pre>

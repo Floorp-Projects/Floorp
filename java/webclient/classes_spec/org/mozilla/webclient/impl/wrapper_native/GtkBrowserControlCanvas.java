@@ -41,7 +41,7 @@ import java.awt.Dimension;
 
  * There is one instance of GtkBrowserControlCanvas per top level awt Frame.
 
- * @version $Id: GtkBrowserControlCanvas.java,v 1.1 2004/04/23 14:52:20 edburns%acm.org Exp $
+ * @version $Id: GtkBrowserControlCanvas.java,v 1.2 2005/11/25 08:16:32 timeless%mozdev.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
@@ -56,7 +56,7 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
     private int gtkTopWindow;
     private int canvasWinID;
     private int gtkWinPtr;
-    // We dont need this, now that we use the JAWT Native Interface
+    // We don't need this, now that we use the JAWT Native Interface
     //    private MDrawingSurfaceInfo drawingSurfaceInfo;
 
     native int createTopLevelWindow();
@@ -74,7 +74,7 @@ public class GtkBrowserControlCanvas extends BrowserControlCanvas /* implements 
         this.gtkWinID = 0;
         this.canvasWinID = 0;
         this.gtkWinPtr = 0;
-        // We dont need this, now that we use the JAWT Native Interface
+        // We don't need this, now that we use the JAWT Native Interface
         //        this.drawingSurfaceInfo = null;
 
     }

@@ -456,7 +456,7 @@ public class JSDebuggerApp
         LicenseViewer v =
             new LicenseViewer("Netscape JavaScript Debugger License", licenseHtmlFilename);
 
-        if( ! v.HtmlLoadedSuccesfully() )
+        if( ! v.HtmlLoadedsuccessfully() )
         {
             setWaitCursor(false);
             int answer = Alert.runAlertInternally( Alert.warningImage(),

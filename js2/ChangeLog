@@ -1,7 +1,7 @@
 2001-01-30    <rginda@netscape.com>
 
 	* broke apart some classes contained parser.* and utilities.* into
-	  seperate files.
+	  separate files.
 	  parser.* begat lexer.*, token.*, reader.*
 	  utilities.* begat mem.*, stlcfg.h, ds.h, strings.*, exception.*,
 	  formatter.*, and algo.h

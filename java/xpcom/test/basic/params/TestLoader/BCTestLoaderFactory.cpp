@@ -30,8 +30,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(BCTestLoaderImpl)
 static nsModuleComponentInfo components[] =
 {
   { "BlackConnect TestLoader", BCTESTLOADER_CID, BCTESTLOADER_PROGID, BCTestLoaderImplConstructor,
-    NULL /* dont need additional registration */,
-    NULL /* dont need additional unregistration  */
+    NULL /* don't need additional registration */,
+    NULL /* don't need additional unregistration  */
   }
 };
 

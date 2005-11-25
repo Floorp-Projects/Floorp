@@ -30,8 +30,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(initImpl)
 static nsModuleComponentInfo components[] =
 {
   { "Init Component", URPINIT_CID, URPINIT_PROGID, initImplConstructor,
-     NULL /* NULL if you dont need one */,
-     NULL /* NULL if you dont need one */
+     NULL /* NULL if you don't need one */,
+     NULL /* NULL if you don't need one */
   }
 };
 

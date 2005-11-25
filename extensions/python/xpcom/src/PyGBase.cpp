@@ -144,7 +144,7 @@ PyG_Base::PyG_Base(PyObject *instance, const nsIID &iid)
 		Py_XDECREF(real_repr);
 	}
 #endif // DEBUG_LIFETIMES
-	Py_XINCREF(instance); // instance should never be NULL - but whats an X between friends!
+	Py_XINCREF(instance); // instance should never be NULL - but what's an X between friends!
 
 	PyXPCOM_DLLAddRef();
 
@@ -166,7 +166,7 @@ PyG_Base::~PyG_Base()
 	if (m_pBaseObject)
 		m_pBaseObject->Release();
 	if (m_pWeakRef) {
-		// Need to ensure some other thread isnt doing a QueryReferent on
+		// Need to ensure some other thread isn't doing a QueryReferent on
 		// our weak reference at the same time
 		CEnterLeaveXPCOMFramework _celf;
 		PyXPCOM_GatewayWeakReference *p = (PyXPCOM_GatewayWeakReference *)(nsISupports *)m_pWeakRef;
@@ -246,7 +246,7 @@ done:
 // object in one of the xpcom.client.Interface objects, allowing 
 // natural usage of the interface from Python clients.
 // Note that piid will usually be NULL - this is because the runtime
-// reflection interfaces dont provide this information to me.
+// reflection interfaces don't provide this information to me.
 // In this case, the Python code may choose to lookup the complete
 // interface info to obtain the IID.
 // It is expected (but should not be assumed) that the method info
@@ -310,7 +310,7 @@ done:
 		// return our obISupports.  If NULL, we are really hosed and nothing we can do.
 		return obISupports;
 	}
-	// Dont need to return this - we have a better result.
+	// Don't need to return this - we have a better result.
 	Py_XDECREF(obISupports);
 	return result;
 }
@@ -570,7 +570,7 @@ nsresult PyG_Base::InvokeNativeViaPolicyInternal(
 		ppResult = &temp;
 	nsresult nr = do_dispatch(m_pPyObject, ppResult, szMethodName, szFormat, va);
 
-	// If temp is NULL, they provided a buffer, and we dont touch it.
+	// If temp is NULL, they provided a buffer, and we don't touch it.
 	// If not NULL, *ppResult = temp, and _we_ do own it.
 	Py_XDECREF(temp);
 	return nr;

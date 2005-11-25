@@ -255,7 +255,7 @@ nsRenderingContextXlib::GetHints(PRUint32& aResult)
 {
   PRUint32 result = 0;
 
-  // Most X servers implement 8 bit text rendering alot faster than
+  // Most X servers implement 8 bit text rendering a lot faster than
   // XChar2b rendering. In addition, we can avoid the PRUnichar to
   // XChar2b conversion. So we set this bit...
   result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
@@ -678,7 +678,7 @@ nsRenderingContextXlib::SetLineStyle(nsLineStyle aLineStyle)
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetLineStyle()\n"));
 
   if (aLineStyle != mCurrentLineStyle) {
-    /* XXX this isnt done in gtk, copy from there when ready
+    /* XXX this isn't done in gtk, copy from there when ready
     switch(aLineStyle)
       { 
       case nsLineStyle_kSolid:

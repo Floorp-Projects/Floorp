@@ -46,7 +46,7 @@ class nsImportStringBundle {
 public:
 	static PRUnichar     *		GetStringByID(PRInt32 stringID, nsIStringBundle *pBundle = nsnull);
 	static void					GetStringByID(PRInt32 stringID, nsString& result, nsIStringBundle *pBundle = nsnull);
-	static nsIStringBundle *	GetStringBundle( void); // dont release
+	static nsIStringBundle *	GetStringBundle( void); // don't release
 	static void					FreeString( PRUnichar *pStr) { nsCRT::free( pStr);}
 	static void					Cleanup( void);
 	static nsIStringBundle *	GetStringBundleProxy( void); // release

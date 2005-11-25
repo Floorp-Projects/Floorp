@@ -255,7 +255,7 @@ NPP_WriteReady(NPP pInstance, NPStream *stream)
   // We don't want any data, kill the stream
   NPN_DestroyStream(pInstance, stream, NPRES_DONE);
 
-  return -1L;   // dont accept any bytes in NPP_Write()
+  return -1L;   // don't accept any bytes in NPP_Write()
 }
 
 //------------------------------------------------------------------------------------

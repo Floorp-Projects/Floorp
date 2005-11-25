@@ -128,7 +128,7 @@ function ActivationWarning()
     /* The pref here is intended not to exist (code logic falling back to
        false) when the user first activates roaming,
        then to be set, so that the user doesn't see the dialog twice.
-       It being a pref also leaves admins the choice of supressing it,
+       It being a pref also leaves admins the choice of suppressing it,
        e.g. when they set up appropriate backups on behalf of the user on
        the server or client in a large installation. */
     var prefBranch = Components.classes["@mozilla.org/preferences;1"]

@@ -974,7 +974,7 @@ scale_image(nsAntiAliasedGlyph *aSrc, nsAntiAliasedGlyph *aDst)
 // amount of pixels so the image should retain approximately the
 // correct visual weight.
 //
-// This helps *alot* with lines at 45 degree angles.
+// This helps *a lot* with lines at 45 degree angles.
 // This helps somewhat with lines at other angles.
 //
 // This fills in the corners of lines that cross making the

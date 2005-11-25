@@ -126,7 +126,7 @@ function noMail()
 
 function noAccount()
 {
-	// this could call the account wizard I guess thats a later feature
+	// this could call the account wizard, I guess that's a later feature
 	mdebug("You don't have a mail account");
 }
 

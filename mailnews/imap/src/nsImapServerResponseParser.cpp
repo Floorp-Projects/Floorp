@@ -292,7 +292,7 @@ void nsImapServerResponseParser::ParseIMAPServerResponse(const char *currentComm
         
         if (ContinueParse() && !CommandFailed())
         {
-          // a sucessful command may change the eIMAPstate
+          // a successful command may change the eIMAPstate
           ProcessOkCommand(commandToken);
         }
         else if (CommandFailed())

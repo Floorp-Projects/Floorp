@@ -152,7 +152,7 @@ WSPCallContext::HandleResponse(nsISOAPResponse *aResponse, nsISOAPCall *aCall,
   mStatus = status;
   *_retval = PR_TRUE;
   CallCompletionListener();
-  // Drop our ref to the completion object now that we dont need it.
+  // Drop our ref to the completion object now that we don't need it.
   // This breaks our reference cycle with it and prevents leaks.
   mCompletion = nsnull;
   return NS_OK;

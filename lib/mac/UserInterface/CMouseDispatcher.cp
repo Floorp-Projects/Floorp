@@ -64,7 +64,7 @@ void CMouseDispatcher::ExecuteSelf(
 	Assert_(inMessage == msg_Event);
 	const EventRecord* theEvent = (const EventRecord*)ioParam;
 	
-	// High level events dont have the mouse position in the where field
+	// High level events don't have the mouse position in the where field
 	// of the event record.
 	if (theEvent->what == kHighLevelEvent)
 		return;

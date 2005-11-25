@@ -144,7 +144,7 @@ function initMingus ()
             bot.personality.dp.getPhraseContaining (escape(subject.toLowerCase()));
 
         if (!answer)
-            answer = "I dont know anything about " + e.matchresult[1];
+            answer = "I don't know anything about " + e.matchresult[1];
 
         if (answer.charCodeAt (0) != 1)    
             e.replyTo.say (e.user.properNick + ", " + answer);

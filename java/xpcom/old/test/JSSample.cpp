@@ -31,7 +31,7 @@
 
 class JSSample: public JSISample {  
 public:  
-  // Constructor and Destuctor  
+  // Constructor and Destructor  
   JSSample();  
   virtual ~JSSample();  
 
@@ -76,7 +76,7 @@ static NS_DEFINE_CID(kSampleCID, JS_SAMPLE_CID);
  */  
 class JSComplex : public JSIComplex {
 public: 
-  // Constructor and Destuctor  
+  // Constructor and Destructor  
   JSComplex();  
   JSComplex(int aReal, int aImaginary);
   virtual ~JSComplex();  

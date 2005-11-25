@@ -186,7 +186,7 @@ PR_PUBLIC_API(RDF_Error) RDF_Shutdown(void);
 
 #include "vocab.h"
 
-/* the stuff in vocab.h will supercede whats below. I am leaving this here
+/* the stuff in vocab.h will supercede what's below. I am leaving this here
    only for the very near future */
 
 

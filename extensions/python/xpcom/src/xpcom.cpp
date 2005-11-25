@@ -365,8 +365,8 @@ PyXPCOMMethod_NS_ShutdownXPCOM(PyObject *self, PyObject *args)
 	nr = NS_ShutdownXPCOM(nsnull);
 	Py_END_ALLOW_THREADS;
 
-	// Dont raise an exception - as we are probably shutting down
-	// and dont really case - just return the status
+	// Don't raise an exception - as we are probably shutting down
+	// and don't really care - just return the status
 	return PyInt_FromLong(nr);
 }
 

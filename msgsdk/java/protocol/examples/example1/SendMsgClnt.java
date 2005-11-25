@@ -568,7 +568,7 @@ public class SendMsgClnt extends Frame
 
 	    try
 	    {
-		// >>>> Build and retrun a text MIME Message <<<<
+		// >>>> Build and return a text MIME Message <<<<
 		
 		// Get an inputStream to user entered text 
                 bins = new ByteArrayInputStream ((textArea.getText()).getBytes());
@@ -621,7 +621,7 @@ public class SendMsgClnt extends Frame
 
 	    try
 	    {
-		// >>>> Build and retrun a Multi-pArt MIME Message <<<<
+		// >>>> Build and return a Multi-Part MIME Message <<<<
 
 		// Get an inputStream to user entered text 
                 bins = new ByteArrayInputStream ((textArea.getText()).getBytes());

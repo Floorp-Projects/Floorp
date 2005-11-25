@@ -251,7 +251,7 @@ NPP_WriteReady(NPP pInstance, NPStream *stream)
   CPlugin * pPlugin = (CPlugin *)pInstance->pdata;
   assert(pPlugin != NULL);
 
-  return -1L;   // dont accept any bytes in NPP_Write()
+  return -1L;   // don't accept any bytes in NPP_Write()
 }
 
 //------------------------------------------------------------------------------------

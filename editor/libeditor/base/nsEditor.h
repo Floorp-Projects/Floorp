@@ -131,7 +131,7 @@ public:
    */
   nsEditor();
   /** The default destructor. This should suffice. Should this be pure virtual 
-   *  for someone to derive from the nsEditor later? I dont believe so.
+   *  for someone to derive from the nsEditor later? I don't believe so.
    */
   virtual ~nsEditor();
 

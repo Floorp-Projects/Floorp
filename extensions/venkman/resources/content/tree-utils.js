@@ -769,7 +769,7 @@ function xtvr_appchild (children)
 }
 
 /*
- * remove a child from this record. updates the tree too.  DONT call this with
+ * remove a child from this record. updates the tree too.  DON'T call this with
  * an index not actually contained by this record.
  */
 XULTreeViewRecord.prototype.removeChildAtIndex =
@@ -826,7 +826,7 @@ function xtvr_uhide ()
 }
 
 /*
- * open this record, exposing it's children.  DONT call this method if the
+ * open this record, exposing it's children.  DON'T call this method if the
  * record has no children.
  */
 XULTreeViewRecord.prototype.open =
@@ -859,7 +859,7 @@ function xtvr_open ()
 }
 
 /*
- * close this record, hiding it's children.  DONT call this method if the record
+ * close this record, hiding it's children.  DON'T call this method if the record
  * has no children, or if it is already closed.
  */
 XULTreeViewRecord.prototype.close =

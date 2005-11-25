@@ -50,7 +50,7 @@ TARGET_OS="${target_os}"
 
 dnl ========================================================
 dnl =
-dnl = Dont change the following two lines.  Doing so breaks:
+dnl = Don't change the following two lines.  Doing so breaks:
 dnl =
 dnl = CFLAGS="-foo" ./configure
 dnl =
@@ -3327,7 +3327,7 @@ if test "$ac_cv_can_resolve_const_ambiguity" = no ; then
 fi
 
 dnl
-dnl We dont do exceptions on unix.  The only reason this used to be here
+dnl We don't do exceptions on unix.  The only reason this used to be here
 dnl is that mozilla/xpcom/tests/TestCOMPtr.cpp has a test which uses 
 dnl exceptions.  But, we turn exceptions off by default and this test breaks.
 dnl So im commenting this out until someone writes some artificial 

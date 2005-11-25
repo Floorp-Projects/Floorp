@@ -115,12 +115,12 @@ public class testsendMessage
 
 	    try
 	    {
-		// >>>> Build and retrun a Multi-pArt MIME Message <<<<
+		// >>>> Build and return a Multi-Part MIME Message <<<<
 
 		// Get an inputStream to user entered text 
                 bins = new ByteArrayInputStream (textMsg.getBytes());
 
-		// Create a new Multi-part MIMEMessage with the above text and the file passed
+		// Create a new Multi-Part MIMEMessage with the above text and the file passed
                 mmsg = new MIMEMessage(bins, fullfilename, encoding);
 
 		// set the user entered headers on the message

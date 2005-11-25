@@ -112,7 +112,7 @@ The basic implementation architecture is following:
        created and is registered with Mozilla's DOM 
      It's task is to propagate event notifications from Mozilla's DOM
        to target Java EventListener
-   - In order to sucessfully unregister EventListeners we need to 
+   - In order to successfully unregister EventListeners we need to 
        save association between java EventListener and corresponding 
        NativeDOMProxyListener object. This is done by storing such
        associations Vector at NodeImpl

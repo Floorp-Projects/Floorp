@@ -889,7 +889,7 @@ nsresult
 nsOperaCookieMigrator::AddCookie(nsICookieManager2* aManager)
 {
   // This is where we use the information gathered in all the other 
-  // states to add a cookie to the Firebird Cookie Manager.
+  // states to add a cookie to the Firebird/Firefox Cookie Manager.
   nsXPIDLCString domain;
   SynthesizeDomain(getter_Copies(domain));
 

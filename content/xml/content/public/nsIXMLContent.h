@@ -65,7 +65,7 @@ public:
   /**
    * Give this element a chance to fire links that should be fired
    * automatically when loaded. If the element was an autoloading link
-   * and it was succesfully handled, we will throw special nsresult values.
+   * and it was successfully handled, we will throw special nsresult values.
    *
    * @param aShell the current doc shell (to possibly load the link on)
    * @throws NS_OK if nothing happened

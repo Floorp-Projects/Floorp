@@ -129,7 +129,7 @@ private:
   nsresult removeKeyedAccount(const char *key);
 
 
-  // sets the pref for the defualt server
+  // sets the pref for the default server
   nsresult setDefaultAccountPref(nsIMsgAccount *aDefaultAccount);
 
   // fires notifications to the appropriate root folders

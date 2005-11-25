@@ -257,7 +257,7 @@ nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool exists)
 				{
 					ret = thumb->DoMore(m_mdbEnv, &outTotal, &outCurrent, &outDone, &outBroken);
 					if (ret != 0)
-					{// mork isn't really doing NS erorrs yet.
+					{// mork isn't really doing NS errors yet.
 						outDone = PR_TRUE;
 						break;
 					}

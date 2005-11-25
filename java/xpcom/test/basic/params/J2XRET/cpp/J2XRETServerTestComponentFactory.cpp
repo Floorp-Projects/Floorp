@@ -30,8 +30,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(J2XRETServerTestComponentImpl)
 static nsModuleComponentInfo components[] =
 {
   { "J2XRET Server Test Component", J2XRETSERVERTESTCOMPONENT_CID, J2XRETSERVERTESTCOMPONENT_PROGID, J2XRETServerTestComponentImplConstructor,
-     NULL /* NULL if you dont need one */,
-     NULL /* NULL if you dont need one */
+     NULL /* NULL if you don't need one */,
+     NULL /* NULL if you don't need one */
   }
 };
 

@@ -69,7 +69,7 @@ public class DelApp extends Applet
       printLog("Can't delete " + secondPluglet);
       return;
     } else {
-      printLog("File: " + secondPluglet + " succesfully deleted");
+      printLog("File: " + secondPluglet + " successfully deleted");
     }
     nextURL();
   }

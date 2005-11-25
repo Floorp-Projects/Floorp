@@ -16,9 +16,9 @@ function test_matchObject()
     /* false, single pattern matches, negated */
     f &= !matchObject (obj1, p1, true);
 
-    /* false, single pattern doesnt match*/
+    /* false, single pattern doesn't match */
     f &= !matchObject (obj1, p3);
-    /* true, single pattern doesnt match, negated */
+    /* true, single pattern doesn't match, negated */
     f &= matchObject (obj1, p3, true);    
 
     /* true, p1 matches */

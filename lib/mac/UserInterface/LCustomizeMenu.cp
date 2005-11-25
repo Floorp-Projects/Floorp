@@ -151,7 +151,7 @@ void LCustomizeMenu::Draw(MenuHandle menu, MenuDefUPP* /* root */, Rect *rect, P
 //
 //	DrawItemSeparator
 //
-void LCustomizeMenu::DrawItemSeperator(Rect& itemrect )
+void LCustomizeMenu::DrawItemSeparator(Rect& itemrect )
 {
 	::PenPat(&qd.gray);
 	::MoveTo(itemrect.left, itemrect.top + 8);
@@ -284,8 +284,8 @@ void LCustomizeMenu::DrawItem(MenuHandle menu, int item, Rect& itemrect )
 	::GetMenuItemText(menu, item, itemtext);
 	if(itemtext[1] == '-')
 	{
-		// Draw Seperator
-		DrawItemSeperator(itemrect );
+		// Draw Separator
+		DrawItemSeparator(itemrect);
 	}
 	else
 	{

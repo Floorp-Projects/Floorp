@@ -1971,7 +1971,7 @@ JSBool JS_ValueToBoolean(JSContext *cx, jsval v,
     </SYNTAX>
     <DESCRIPTION>
       <C>JS_ValueToBoolean</C> converts a specified JS value, <C>v</C>, to a JS Boolean. The actual conversion is performed by the object's convert operation. Converting any JS value to a Boolean always succeeds, except when the JS value is a <C>JSVAL_OBJECT</C> that does not support its own conversion routine.<P/>
-      The converted value is stored in the <C>JSBool</C> pointed to by <C>bp</C>. If the conversion is successful, <C>JS_ValueToBoolean</C> returns <C>JS_TRUE</C>. If the value to convert is an empty string, or conversion is unsuccesful, <C>JS_ValueToBoolean</C> returns <C>JS_FALSE</C>.<P/>
+      The converted value is stored in the <C>JSBool</C> pointed to by <C>bp</C>. If the conversion is successful, <C>JS_ValueToBoolean</C> returns <C>JS_TRUE</C>. If the value to convert is an empty string, or conversion is unsuccessful, <C>JS_ValueToBoolean</C> returns <C>JS_FALSE</C>.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_ConvertArguments'/>
     <SEEALSO value='JS_ConvertValue'/>
@@ -5296,7 +5296,7 @@ JSFunction * JS_DefineFunction(JSContext *cx, JSObject *obj,
       <C>JS_DefineFunction</C> defines a single function and assigns it as a property (method) to a specified object, <C>obj</C>.<P/>
       <C>name</C> is the name to assign to the function in the object. <C>call</C> is a built-in, native C call that is wrapped by your function. <C>nargs</C> indicates the number of arguments the function expects to receive. JS uses this information to allocate storage space for each argument.<P/>
       <C>flags</C> lists the attributes to apply to the function. Currently documented attributes, <C>JSFUN_BOUND_METHOD</C> and <C>JSFUN_GLOBAL_PARENT</C>, are deprecated and should no longer be used. They continue to be supported only for existing applications that already depend on them.<P/>
-      If it succesfully creates the property, <C>JS_DefineFunction</C> returns a pointer to the function. Otherwise it returns <C>NULL</C>.<P/>
+      If it successfully creates the property, <C>JS_DefineFunction</C> returns a pointer to the function. Otherwise it returns <C>NULL</C>.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_DefineObject'/>
     <SEEALSO value='JS_DefineConstDoubles'/>
@@ -5370,7 +5370,7 @@ JSScript * JS_CompileScript(JSContext *cx, JSObject *obj,
       <P/>
     </NOTE>
     <DESCRIPTION>
-      <C>filename</C> is the name of the file (or URL) containing the script. This information in included in error messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the script. This information in included in error messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
       If a script compiles successfully, <C>JS_CompileScript</C> returns a pointer to the compiled script. Otherwise <C>JS_CompileScript</C> returns <C>NULL</C>, and reports an error.<P/>
     </DESCRIPTION>
     <NOTE>
@@ -5427,7 +5427,7 @@ JSScript * JS_CompileScriptForPrincipals(JSContext *cx,
       <P/>
     </NOTE>
     <DESCRIPTION>
-      <C>filename</C> is the name of the file (or URL) containing the script. This information in included in error messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the script. This information in included in error messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
       If a script compiles successfully, <C>JS_CompileScriptForPrincipals</C> returns a pointer to the compiled script. Otherwise <C>JS_CompileScriptForPrincipals</C> returns <C>NULL</C>, and reports an error.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_CompileFile'/>
@@ -5469,7 +5469,7 @@ JSScript * JS_CompileUCScript(JSContext *cx, JSObject *obj,
     </SYNTAX>
     <DESCRIPTION>
       <C>JS_CompileUCScript</C> compiles a script using a Unicode character set, <C>chars</C>, for execution. The script is associated with a JS object. <C>chars</C> is the Unicode string containing the text of the script. <C>length</C> indicates the size of the script in characters.<P/>
-      <C>filename</C> is the name of the file (or URL) containing the script. This information in included in error messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the script. This information in included in error messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
       If a script compiles successfully, <C>JS_CompileUCScript</C> returns a pointer to the compiled script. Otherwise <C>JS_UCCompileScript</C> returns <C>NULL</C>, and reports an error.<P/>
     </DESCRIPTION>
     <NOTE>
@@ -5519,7 +5519,7 @@ JSScript * JS_CompileUCScriptForPrincipals(JSContext *cx,
       <C>JS_CompileUCScriptForPrincipals</C> compiles a security-enabled script using a Unicode character set, <C>chars</C>, for execution. The script is associated with a JS object.<P/>
       <C>principals</C> is a pointer to the <C>JSPrincipals</C> structure that contains the security information to associate with this script.<P/>
       <C>chars</C> is the Unicode string containing the text of the script. <C>length</C> indicates the size of the script in characters.<P/>
-      <C>filename</C> is the name of the file (or URL) containing the script. This information in messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the script. This information in messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
       If a script compiles successfully, <C>JS_CompileUCScriptForPrincipals</C> returns a pointer to the compiled script. Otherwise <C>JS_CompileUCScriptForPrincipals</C> returns <C>NULL</C>, and reports an error.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_CompileScript'/>
@@ -5652,7 +5652,7 @@ JSFunction * JS_CompileFunction(JSContext *cx, JSObject *obj,
       <C>JS_CompileFunction</C> compiles a function from a text string, <C>bytes</C>, and associated it with a JS object, <C>obj</C>.<P/>
       <C>name</C> is the name to assign to the newly created function. <C>nargs</C> is the number of arguments the function takes, and <C>argnames</C> is a pointer to an array of names to assign each argument. The number of argument names should match the number of arguments specified in <C>nargs</C>.<P/>
       <C>bytes</C> is the string containing the text of the function. <C>length</C> indicates the size of the text version of the function in bytes.<P/>
-      <C>filename</C> is the name of the file (or URL) containing the function. This information in messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the function or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the function. This information in messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the function or file where an error occurred during compilation.<P/>
       If a function compiles successfully, <C>JS_CompileFunction</C> returns a pointer to the function. Otherwise <C>JS_CompileFunction</C> returns <C>NULL</C>.<P/>
     </DESCRIPTION>
     <SEEALSO value='JSFUN_BOUND_METHOD'/>
@@ -5715,7 +5715,7 @@ JSFunction * JS_CompileFunctionForPrincipals(JSContext *cx,
       <C>principals</C> is a pointer to the <C>JSPrincipals</C> structure that contains the security information to associate with this function.<P/>
       <C>name</C> is the name to assign to the newly created function. <C>nargs</C> is the number of arguments the function takes, and <C>argnames</C> is a pointer to an array of names to assign each argument. The number of argument names should match the number of arguments specified in <C>nargs</C>.<P/>
       <C>bytes</C> is the string containing the text of the function. <C>length</C> indicates the size of the text version of the function in bytes.<P/>
-      <C>filename</C> is the name of the file (or URL) containing the function. This information in messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the function or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the function. This information in messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the function or file where an error occurred during compilation.<P/>
       If a function compiles successfully, <C>JS_CompileFunctionForPrincipals</C> returns a pointer to the function. Otherwise <C>JS_CompileFunctionForPrincipals</C> returns <C>NULL</C>.<P/>
     </DESCRIPTION>
     <SEEALSO value='JSFUN_BOUND_METHOD'/>
@@ -5776,7 +5776,7 @@ JSFunction * JS_CompileUCFunction(JSContext *cx, JSObject *obj,
       <C>JS_CompileUCFunction</C> compiles a function from a Unicode-encoded character string, <C>chars</C>, and associated it with a JS object, <C>obj</C>.<P/>
       <C>name</C> is the name to assign to the newly created function. <C>nargs</C> is the number of arguments the function takes, and <C>argnames</C> is a pointer to an array of names to assign each argument. The number of argument names should match the number of arguments specified in <C>nargs</C>.<P/>
       <C>chars</C> is the Unicode-encoded string containing the function. <C>length</C> indicates the size of the function in Unicode characters.<P/>
-      <C>filename</C> is the name of the file (or URL) containing the function. This information in messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the function or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the function. This information in messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the function or file where an error occurred during compilation.<P/>
       If a function compiles successfully, <C>JS_CompileUCFunction</C> returns a pointer to the function. Otherwise <C>JS_CompileUCFunction</C> returns <C>NULL</C>.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_ValueToFunction'/>
@@ -5838,7 +5838,7 @@ JSFunction * JS_CompileUCFunctionForPrincipals(JSContext *cx,
       <C>principals</C> is a pointer to the <C>JSPrincipals</C> structure that contains the security information to associate with this function.<P/>
       <C>name</C> is the name to assign to the newly created function. <C>nargs</C> is the number of arguments the function takes, and <C>argnames</C> is a pointer to an array of names to assign each argument. The number of argument names should match the number of arguments specified in <C>nargs</C>.<P/>
       <C>chars</C> is the Unicode-encoded string containing the function. <C>length</C> indicates the size of the function in Unicode characters.<P/>
-      <C>filename</C> is the name of the file (or URL) containing the function. This information is included in messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the function or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the function. This information is included in messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the function or file where an error occurred during compilation.<P/>
       If a function compiles successfully, <C>JS_CompileUCFunctionForPrincipals</C> returns a pointer to the function. Otherwise <C>JS_CompileUCFunctionForPrincipals </C>returns <C>NULL</C>.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_ValueToFunction'/>
@@ -6031,7 +6031,7 @@ JSBool JS_EvaluateScript(JSContext *cx, JSObject *obj,
     <DESCRIPTION>
       <C>JS_EvaluateScript</C> compiles and executes a script associated with a JS object, <C>obj</C>. On successful completion, <C>rval</C> is a pointer to a variable that holds the value from the last executed expression statement processed in the script.<P/>
       <C>bytes</C> is the string containing the text of the script. <C>length</C> indicates the size of the text version of the script in bytes.<P/>
-      <C>filename</C> is the name of the file (or URL) containing the script. This information in messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the script. This information in messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
       If a script compiles and executes successfully, <C>JS_EvaluateScript</C> returns <C>JS_TRUE</C>. Otherwise it returns <C>JS_FALSE</C>. On failure, your application should assume that <C>rval</C> is undefined.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_CompileScript'/>
@@ -6075,7 +6075,7 @@ JSBool JS_EvaluateUCScript(JSContext *cx, JSObject *obj,
     <DESCRIPTION>
       <C>JS_EvaluateUCScript</C> compiles and executes a script associated with a JS object, <C>obj</C>. On successful completion, <C>rval</C> is a pointer to a variable that holds the value from the last executed expression statement processed in the script.<P/>
       <C>chars</C> is the Unicode character array containing the text of the script. <C>length</C> indicates the size of the text version of the script in Unicode characters.<P/>
-      <C>filename</C> is the name of the file (or URL) containing the script. This information is included in messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the script. This information is included in messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
       If a script compiles and executes successfully, <C>JS_EvaluateUCScript</C> returns <C>JS_TRUE</C>. Otherwise it returns <C>JS_FALSE</C>. On failure, your application should assume that <C>rval</C> is undefined.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_CompileScript'/>
@@ -6126,7 +6126,7 @@ JSBool JS_EvaluateScriptForPrincipals(JSContext *cx,
       <C>JS_EvaluateScriptForPrincipals</C> compiles and executes a script associated with a JS object, <C>obj</C>. On successful completion, <C>rval</C> is a pointer to a variable that holds the value from the last executed expression statement processed in the script.<P/>
       <C>principals</C> is a pointer to the <C>JSPrincipals</C> structure that contains the security information to associate with this script.<P/>
       <C>bytes</C> is the string containing the text of the script. <C>length</C> indicates the size of the text version of the script in bytes.<P/>
-      <C>filename</C> is the name of the file (or URL) containing the script. This information in messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the script. This information in messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
       If a secure script compiles and executes successfully, <C>JS_EvaluateScriptForPrincipals</C> returns <C>JS_TRUE</C>. Otherwise it returns <C>JS_FALSE</C>. On failure, your application should assume that <C>rval</C> is undefined.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_CompileScript'/>
@@ -6177,7 +6177,7 @@ JSBool JS_EvaluateScriptUCForPrincipals(JSContext *cx,
       <C>JS_EvaluateUCScriptForPrincipals</C> compiles and executes a Unicode-encoded script associated with a JS object, <C>obj</C>. On successful completion, <C>rval</C> is a pointer to a variable that holds the value from the last executed expression statement processed in the script.<P/>
       <C>principals</C> is a pointer to the <C>JSPrincipals</C> structure that contains the security information to associate with this script.<P/>
       <C>chars</C> is the Unicode-encoded character array containing the text of the script. <C>length</C> indicates the number of characters in the text version of the script.<P/>
-      <C>filename</C> is the name of the file (or URL) containing the script. This information is included in messages if an eror occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
+      <C>filename</C> is the name of the file (or URL) containing the script. This information is included in messages if an error occurs during compilation. Similarly, <C>lineno</C> is used to report the line number of the script or file where an error occurred during compilation.<P/>
       If a secure script compiles and executes successfully, <C>JS_EvaluateUCScriptForPrincipals</C> returns <C>JS_TRUE</C>. Otherwise it returns <C>JS_FALSE</C>. On failure, your application should assume that <C>rval</C> is undefined.<P/>
     </DESCRIPTION>
     <SEEALSO value='JS_CompileScript'/>

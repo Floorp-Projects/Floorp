@@ -44,7 +44,7 @@ JNI_OJIAPITest(JNIEnv_FindClass_1)
   jclass clazz = env->FindClass(NULL);
 
   if(clazz!=NULL){
-      return TestResult::FAIL("FindClass(NULL) doesnt return NULL - incorrect");
+      return TestResult::FAIL("FindClass(NULL) doesn't return NULL - incorrect");
   }
   return TestResult::PASS("FindClass(NULL) return NULL - correct");
 

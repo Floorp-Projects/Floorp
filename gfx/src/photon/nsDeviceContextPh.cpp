@@ -441,7 +441,7 @@ printf( "\t\tFound it in cache it exists\n" );
 			else if( value == 2 ) { /* the font doesn't exist and you already asked this before */
 				delete [] fontName;
 #ifdef DEBUG_Adrian
-printf( "\t\tFound it in cache it doesnt exist\n" );
+printf( "\t\tFound it in cache it doesn't exist\n" );
 #endif
 				return NS_ERROR_FAILURE;
 				}

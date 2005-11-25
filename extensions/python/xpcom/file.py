@@ -54,7 +54,7 @@ Known Limitations:
    setup a message queue.
 
 Known Bugs:
-  * Only read ("r") mode is supported.  Although write ("w") mode doesnt make
+  * Only read ("r") mode is supported.  Although write ("w") mode doesn't make
     sense for HTTP type URLs, it potentially does for file:// etc type ones.
   * No concept of text mode vs binary mode.  It appears Mozilla takes care of
     this internally (ie, all "text/???" mime types are text, rest are binary)

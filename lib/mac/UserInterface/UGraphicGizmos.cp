@@ -1590,5 +1590,5 @@ void CIconFamily::CalcBestSize(const Rect& inContainer)
 		mIconRect.bottom = 12;
 		}
 	else
-		Assert_(false);	// you really wont be able to draw in bounds
+		Assert_(false);	// you really won't be able to draw in bounds
 }

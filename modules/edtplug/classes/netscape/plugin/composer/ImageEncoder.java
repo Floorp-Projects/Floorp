@@ -70,7 +70,7 @@ import java.util.Enumeration;
  * framework:
  * <pre>
  * netscape.plugin.composer.imageEncoder.factory - a single classname of a Factory class.
- * netscape.plugin.composer.imageEncoder.classes - a colon-seperated list of the classnames of the plugins in
+ * netscape.plugin.composer.imageEncoder.classes - a colon-separated list of the classnames of the plugins in
  * this archive.
  * </pre>
  * <p> Your encoder's class name should be listed as the value of the

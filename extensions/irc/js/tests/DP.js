@@ -170,7 +170,7 @@ function DPM_getPhraseDirected(seedWord, dir)
         else
             word= this.wordPivots[word].previousList.getRandomLink().link;
         
-        if (word != "")  // if it isnt blank
+        if (word != "")  // if it isn't blank
         {
             dpprint ("DPM_getPhraseDirected: got word '" + word + "'");
 

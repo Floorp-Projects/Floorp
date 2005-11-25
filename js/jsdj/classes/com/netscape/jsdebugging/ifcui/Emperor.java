@@ -249,7 +249,7 @@ public class Emperor
 
         _pageListView      = new PageListView( this, rectPageList );
         _sourceViewManager = new SourceViewManager(this);
-        _sourceViewManager.setPreferedNewViewRect( rectSrc );
+        _sourceViewManager.setPreferredNewViewRect( rectSrc );
         _stackView         = new StackView( this, rectStackView );
         _consoleView       = new ConsoleView(this, rectConsole );
         _watchView        = new WatchView(this, rectWatchView);
@@ -426,7 +426,7 @@ public class Emperor
             _toolBarWindow.sizeTo(minSize.width,_toolBarWindow.height());
         }
         if( null != _sourceViewManager )
-            _sourceViewManager.setPreferedNewViewRect(getPreferedNewSourceViewRect());
+            _sourceViewManager.setPreferredNewViewRect(getPreferedNewSourceViewRect());
     }
 
 
@@ -557,7 +557,7 @@ public class Emperor
                         s.width,s.height-_toolbarHeight-_menuViewHeight);
     }
 
-    private Rect getPreferedNewSourceViewRect()
+    private Rect getPreferredNewSourceViewRect()
     {
         Rect rect = getClientRect();
         rect.height -= _lowerWindowDY;

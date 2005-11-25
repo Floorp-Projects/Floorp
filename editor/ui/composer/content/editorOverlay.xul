@@ -614,7 +614,7 @@
   <!-- Next 3 are items to append at the bottom of the formatMenuPopup -->
   <!-- label and accesskey filled in during menu creation -->
   <menuitem id="objectProperties"   oncommand="goDoCommand('cmd_objectProperties')"   observes="cmd_renderedHTMLEnabler"/>
-  <!-- Dont use 'observes', must call command correctly -->
+  <!-- Don't use 'observes', must call command correctly -->
   <menuitem id="pageProperties"       label="&pageProperties.label;"       accesskey="&pageproperties.accesskey;"      
             oncommand="goDoCommand('cmd_pageProperties')"  observes="cmd_renderedHTMLEnabler"/>
   <menuitem id="colorsAndBackground"  label="&colorsAndBackground.label;"  accesskey="&colorsandbackground.accesskey;"

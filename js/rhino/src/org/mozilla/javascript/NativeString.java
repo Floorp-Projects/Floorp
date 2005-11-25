@@ -497,7 +497,7 @@ final class NativeString extends IdScriptableObject
             return (i == length) ? -1 : i + 1;
         }
 
-        /* Punt to j.l.s.indexOf; return target length if seperator is
+        /* Punt to j.l.s.indexOf; return target length if separator is
          * not found.
          */
         if (ip[0] >= length)

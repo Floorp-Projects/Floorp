@@ -1918,8 +1918,8 @@ int interpret(char *cmd)
 				return TRUE;//*** Changed FALSE to TRUE
 
 		/*Post Beta -This is a hack to prevent the last page from staying up there endlessly;
-		  We check to see if the filename is null and if it is so we return true 
-		  so that the return value isnt made FALSE */
+		  We check to see if the filename is null and if it is, we return true 
+		  so that the return value isn't made FALSE */
 		CString filename = newvalue;
 		if (filename.IsEmpty())
 			return TRUE;
@@ -2268,7 +2268,7 @@ void init_components()
 /*Post Beta - we will use the DISABLED key.
 Now this is implemented the round about way here.
 We have to take only the components that are chosen and mark the rest as disabled
-Disabled doesnt work now - so what we are doing is re writing every key in the sections
+Disabled doesn't work now - so what we are doing is rewriting every key in the sections.
 besides that we are also deleting the keys in the setup types 2&3 so that we have only two 
 as per request of mktg.
 */
@@ -3135,7 +3135,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 		return TRUE;
 	}
 //PostBeta - We have to inform the user that he has not set any value
-//and that it will default.Returning TRUE so that it doesnt stay in the last
+//and that it will default. Returning TRUE so that it doesn't stay in the last
 //screen forever.  
 
 	// Read in script file and interpret commands from it

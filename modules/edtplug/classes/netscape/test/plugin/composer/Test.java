@@ -45,7 +45,7 @@ import java.net.*;
 import java.util.*;
 
 /** The composer plugin testbed. Allows you to test your plugin
- * seperately from the Netscape Composer.
+ * separately from the Netscape Composer.
  *
  * <pre>
  *

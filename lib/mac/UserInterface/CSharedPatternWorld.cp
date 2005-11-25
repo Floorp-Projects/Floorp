@@ -96,7 +96,7 @@ void CSharedPatternWorld::CalcRelativePoint(
 	// the downward scale from 32 to 16 bit coordinate spaces
 	// in converting from SPoint32 to plain old Point
 	// is ok because we are guaranteed to be in bounds since we
-	// wont be drawing if we cant FocusExposed().
+	// won't be drawing if we can't FocusExposed().
 
 	switch (inOrientation)
 		{

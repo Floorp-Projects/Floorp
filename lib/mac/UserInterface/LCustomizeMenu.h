@@ -51,7 +51,7 @@ protected:
 	virtual short MeasureItem		(MenuHandle menu, int item);
 	
 	// Function called by DrawItem() 
-	virtual void DrawItemSeperator	(Rect& itemrect);
+	virtual void DrawItemSeparator	(Rect& itemrect);
 	virtual void DrawItemText		(Rect& itemrect, Str255 itemtext );
 	virtual void DrawItemIcon		(Rect& itemrect, short iconindex);
 	virtual void DrawItemCommand	(Rect& itemrect, short cmd);

@@ -596,7 +596,7 @@ function tovr_appchild (children, skipResort)
 }
 
 /*
- * remove a child from this record. updates the tree too.  DONT call this with
+ * remove a child from this record. updates the tree too.  DON'T call this with
  * an index not actually contained by this record.
  */
 TreeOViewRecord.prototype.removeChildAtIndex =
@@ -648,7 +648,7 @@ function tovr_uhide ()
 }
 
 /*
- * open this record, exposing it's children.  DONT call this method if the record
+ * open this record, exposing it's children.  DON'T call this method if the record
  * has no children.
  */
 TreeOViewRecord.prototype.open =
@@ -676,7 +676,7 @@ function tovr_open ()
 }
 
 /*
- * close this record, hiding it's children.  DONT call this method if the record
+ * close this record, hiding it's children.  DON'T call this method if the record
  * has no children, or if it is already closed.
  */
 TreeOViewRecord.prototype.close =

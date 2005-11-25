@@ -110,7 +110,7 @@ class LicenseViewer
                                 - sg.vertScrollBar().width(),
                             0);
 
-        _HtmlLoadedSuccesfully = true;
+        _HtmlLoadedSuccessfully = true;
 
         Button button;
 
@@ -150,10 +150,10 @@ class LicenseViewer
     }
 
     public boolean  userPressedAccept()     {return _userPressedAccept;}
-    public boolean  HtmlLoadedSuccesfully() {return _HtmlLoadedSuccesfully;}
+    public boolean  HtmlLoadedSuccessfully() {return _HtmlLoadedSuccessfully;}
 
     private boolean   _userPressedAccept     = false;
-    private boolean   _HtmlLoadedSuccesfully = false;
+    private boolean   _HtmlLoadedSuccessfully = false;
     private TextView  _textView;
 
     private static final String CANCEL_CMD  = "CANCEL_CMD";

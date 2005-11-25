@@ -439,7 +439,7 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
   
   if (bDamagedRange && !((action == nsEditor::kOpUndo) || (action == nsEditor::kOpRedo)))
   {
-    // dont let any txns in here move the selection around behind our back.
+    // don't let any txns in here move the selection around behind our back.
     // Note that this won't prevent explicit selection setting from working.
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
    
@@ -1038,7 +1038,7 @@ NS_IMETHODIMP
 nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
 {
   // This routine is *heavily* tied to our ui choices in the paragraph
-  // style popup.  I cant see a way around that.
+  // style popup.  I can't see a way around that.
   if (!aMixed)
     return NS_ERROR_NULL_POINTER;
   *aMixed = PR_TRUE;
@@ -1322,7 +1322,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
 
-  // dont put text in places that cant have it
+  // dont put text in places that can't have it
   if (!mHTMLEditor->IsTextNode(selNode) &&
       !mHTMLEditor->CanContainTag(selNode, NS_LITERAL_STRING("#text")))
     return NS_ERROR_FAILURE;
@@ -1366,7 +1366,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     // the changes one at a time.
     nsAutoLockListener lockit(&mListenerEnabled); 
     
-    // dont spaz my selection in subtransactions
+    // don't spaz my selection in subtransactions
     nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString tString(*inString);
     const PRUnichar *unicodeBuf = tString.get();
@@ -1729,7 +1729,7 @@ nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRB
     // just after it.  This does two things for us.  It saves us the trouble of having to add
     // a break here ourselves to preserve the "blockness" of the inline span mailquote
     // (in the inline case), and :
-    // it means the break wont end up making an empty line that happens to be inside a
+    // it means the break won't end up making an empty line that happens to be inside a
     // mailquote (in either inline or block case).  
     // The latter can confuse a user if they click there and start typing,
     // because being in the mailquote may affect wrapping behavior, or font color, etc.
@@ -1766,7 +1766,7 @@ nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRB
     if (NS_FAILED(res)) return res;
     // if citeNode wasn't a block, we might also want another break before it.
     // We need to examine the content both before the br we just added and also
-    // just after it.  If we dont have another br or block boundary adjacent,
+    // just after it.  If we don't have another br or block boundary adjacent,
     // then we will need a 2nd br added to achieve blank line that user expects.
     if (IsInlineNode(citeNode))
     {
@@ -2099,7 +2099,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         bDeletedBR = PR_TRUE;
       }
       
-      // dont cross table boundaries
+      // don't cross table boundaries
       if (leftNode && rightNode)
       {
         PRBool bInDifTblElems;
@@ -2181,7 +2181,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         return NS_OK;
       }
 
-      // dont cross table boundaries
+      // don't cross table boundaries
       PRBool bInDifTblElems;
       res = InDifferentTableElements(leftNode, rightNode, &bInDifTblElems);
       if (NS_FAILED(res) || bInDifTblElems) return res;
@@ -2520,7 +2520,7 @@ nsHTMLEditRules::JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock,
     return NS_OK;
   }
 
-  // make sure we dont try to move thing's into HR's, which look like blocks but aren't containers
+  // make sure we don't try to move thing's into HR's, which look like blocks but aren't containers
   if (nsHTMLEditUtils::IsHR(*aLeftBlock))
   {
     nsCOMPtr<nsIDOMNode> realLeft = mHTMLEditor->GetBlockNodeParent(*aLeftBlock);
@@ -2977,7 +2977,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     if (NS_FAILED(res)) return res;
   
-    // make sure we dont assemble content that is in different table cells into the same list.
+    // make sure we don't assemble content that is in different table cells into the same list.
     // respect table cell boundaries when listifying.
     if (curList)
     {
@@ -3043,7 +3043,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
       if ( existingListStr != *aListType )
       {
         // list item is in wrong type of list.  
-        // if we dont have a curList, split the old list
+        // if we don't have a curList, split the old list
         // and make a new list of correct type.
         if (!curList || nsEditorUtils::IsDescendantOf(curNode, curList))
         {
@@ -3708,7 +3708,7 @@ nsHTMLEditRules::WillHTMLIndent(nsISelection *aSelection, PRBool *aCancel, PRBoo
     
     else // not a list item, use blockquote?
     {
-      // if we are inside a list item, we dont want to blockquote, we want
+      // if we are inside a list item, we don't want to blockquote, we want
       // to sublist the list item.  We may have several nodes listed in the
       // array of nodes to act on, that are in the same list item.  Since
       // we only want to indent that li once, we must keep track of the most
@@ -3872,7 +3872,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
         if (nsEditorUtils::IsDescendantOf(curNode, curBlockQuote))
         {
           lastBQChild = curNode;
-          continue;  // then we dont need to do anything different for this node
+          continue;  // then we don't need to do anything different for this node
         }
         else
         {
@@ -3894,7 +3894,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
       nsCOMPtr<nsIDOMNode> n = curNode;
       nsCOMPtr<nsIDOMNode> tmp;
       curBlockQuoteIsIndentedWithCSS = PR_FALSE;
-      // keep looking up the heirarchy as long as we dont hit the body or a table element
+      // keep looking up the heirarchy as long as we don't hit the body or a table element
       // (other than an entire table)
       while (!nsTextEditUtils::IsBody(n) &&   
              (nsHTMLEditUtils::IsTable(n) || !nsHTMLEditUtils::IsTableElement(n)))
@@ -4487,7 +4487,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     res = CreateMozBR(theDiv, 0, address_of(brNode));
     if (NS_FAILED(res)) return res;
     res = aSelection->Collapse(theDiv, 0);
-    selectionResetter.Abort();  // dont reset our selection in this case.
+    selectionResetter.Abort();  // don't reset our selection in this case.
     return res;
   }
 
@@ -5275,7 +5275,7 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
   nsCOMPtr<nsIDOMNode> parent = aNode;
   PRInt32 pOffset, offset = aOffset;
   
-  // defualt values
+  // default values
   *outNode = node;
   *outOffset = offset;
 
@@ -5444,7 +5444,7 @@ nsHTMLEditRules::GetPromotedRanges(nsISelection *inSelection,
     res = inSelection->GetRangeAt(i, getter_AddRefs(selectionRange));
     if (NS_FAILED(res)) return res;
 
-    // clone range so we dont muck with actual selection ranges
+    // clone range so we don't muck with actual selection ranges
     res = selectionRange->CloneRange(getter_AddRefs(opRange));
     if (NS_FAILED(res)) return res;
 
@@ -5628,7 +5628,7 @@ nsHTMLEditRules::GetNodesForOperation(nsCOMArray<nsIDOMRange>& inArrayOfRanges,
     }
   }
   // indent/outdent already do something special for list items, but
-  // we still need to make sure we dont act on table elements
+  // we still need to make sure we don't act on table elements
   else if ( (inOperationType == kOutdent)  ||
             (inOperationType == kIndent)   ||
             (inOperationType == kSetAbsolutePosition))
@@ -6251,7 +6251,7 @@ nsHTMLEditRules::ReturnInHeader(nsISelection *aSelection,
     res = mHTMLEditor->DeleteNode(aHeader);
     if (NS_FAILED(res)) return res;
     // layout tells the caret to blink in a weird place
-    // if we dont place a break after the header.
+    // if we don't place a break after the header.
     nsCOMPtr<nsIDOMNode> sibling;
     res = mHTMLEditor->GetNextHTMLSibling(headerParent, offset+1, address_of(sibling));
     if (NS_FAILED(res)) return res;
@@ -6746,7 +6746,7 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
         if (nsEditorUtils::IsDescendantOf(curNode, curBlock))
         {
           lastNode = curNode;
-          continue;  // then we dont need to do anything different for this node
+          continue;  // then we don't need to do anything different for this node
         }
         else
         {
@@ -6842,7 +6842,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes, const nsA
         
     // if curNode is a address, p, header, address, or pre, replace 
     // it with a new block of correct type.
-    // xxx floppy moose: pre cant hold everything the others can
+    // xxx floppy moose: pre can't hold everything the others can
     if (nsHTMLEditUtils::IsMozDiv(curNode)     ||
         nsHTMLEditUtils::IsFormatNode(curNode))
     {
@@ -7559,7 +7559,7 @@ nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode,
   }
   
   // scan in the right direction until we find an eligible text node,
-  // but dont cross any breaks, images, or table elements.
+  // but don't cross any breaks, images, or table elements.
   while (nearNode && !(mHTMLEditor->IsTextNode(nearNode)
                        || nsTextEditUtils::IsBreak(nearNode)
                        || nsHTMLEditUtils::IsImage(nearNode)))
@@ -7574,7 +7574,7 @@ nsHTMLEditRules::FindNearSelectableNode(nsIDOMNode *aSelNode,
   
   if (nearNode)
   {
-    // dont cross any table elements
+    // don't cross any table elements
     PRBool bInDifTblElems;
     res = InDifferentTableElements(nearNode, aSelNode, &bInDifTblElems);
     if (NS_FAILED(res)) return res;
@@ -7905,7 +7905,7 @@ nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
   if (!nsHTMLEditUtils::IsListItem(curNode))
     return NS_ERROR_FAILURE;
     
-  // if it's first or last list item, dont need to split the list
+  // if it's first or last list item, don't need to split the list
   // otherwise we do.
   nsCOMPtr<nsIDOMNode> curParPar;
   PRInt32 parOffset;
@@ -8774,7 +8774,7 @@ nsHTMLEditRules::WillAbsolutePosition(nsISelection *aSelection, PRBool *aCancel,
     
     else // not a list item, use blockquote?
     {
-      // if we are inside a list item, we dont want to blockquote, we want
+      // if we are inside a list item, we don't want to blockquote, we want
       // to sublist the list item.  We may have several nodes listed in the
       // array of nodes to act on, that are in the same list item.  Since
       // we only want to indent that li once, we must keep track of the most

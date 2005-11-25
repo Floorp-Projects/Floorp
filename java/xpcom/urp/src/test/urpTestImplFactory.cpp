@@ -30,8 +30,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(urpTestImpl)
 static nsModuleComponentInfo components[] =
 {
   { "URP Test Component", URPTEST_CID, URPTEST_PROGID, urpTestImplConstructor,
-     NULL /* NULL if you dont need one */,
-     NULL /* NULL if you dont need one */
+     NULL /* NULL if you don't need one */,
+     NULL /* NULL if you don't need one */
   }
 };
 

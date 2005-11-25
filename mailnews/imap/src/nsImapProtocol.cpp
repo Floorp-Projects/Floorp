@@ -2007,7 +2007,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
         {
           nsXPIDLCString messageIdString;
           m_runningUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
-          // we dont want to send the flags back in a group
+          // we don't want to send the flags back in a group
           // GetServerStateParser().ResetFlagInfo(0);
           if (HandlingMultipleMessages(messageIdString) || m_imapAction == nsIImapUrl::nsImapMsgDownloadForOffline
             || m_imapAction == nsIImapUrl::nsImapMsgFetchPeek || m_imapAction == nsIImapUrl::nsImapMsgPreview)

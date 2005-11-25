@@ -69,7 +69,7 @@ interface gfxIImageFrame : nsISupports
    * @param aHeight The height of the image to create.
    * @param aFormat the width of the image to create.
    *
-   * @note The data of a new image is unspecified (Whats the word i'm looking for here?).
+   * @note The data in a new image is uninitialized.
    */
   void init(in PRInt32 aX,
             in PRInt32 aY,

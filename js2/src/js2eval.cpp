@@ -299,7 +299,7 @@ namespace MetaData {
             }
             invokeFunction(init, thisValue, argv, argc, runtimeFrame);
             if (!runtimeFrame->superConstructorCalled)
-                reportError(Exception::uninitializedError, "The superconstuctor must be called before returning normally from a constructor", engine->errorPos());
+                reportError(Exception::uninitializedError, "The superconstructor must be called before returning normally from a constructor", engine->errorPos());
         }
         else
             if (argc)

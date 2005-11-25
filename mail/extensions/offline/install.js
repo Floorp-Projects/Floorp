@@ -31,7 +31,7 @@ if(err == SUCCESS) {
   }
 	err = performInstall();
 	if(err == SUCCESS || err == 999) {
-		alert(APP_DISPLAY_NAME+" "+APP_VERSION+" has been succesfully installed.\n"+APP_SUCCESS_MESSAGE);
+		alert(APP_DISPLAY_NAME+" "+APP_VERSION+" has been successfully installed.\n"+APP_SUCCESS_MESSAGE);
 	} else {
 		alert("Install failed. Error code:" + err);
 		cancelInstall(err);

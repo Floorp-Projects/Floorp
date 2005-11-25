@@ -290,7 +290,7 @@ Title={Integration_Title}
 Sub Title={Integration_SubTitle}
 Message0={Integration_Message0}
 
-; Only a maximum of 3 "Windows Integration-Item"s are allowded.  Each Item
+; Only a maximum of 3 "Windows Integration-Item"s are allowed.  Each Item
 ; shows up as a checkbox in the Windows Integration dialog.
 [Windows Integration-Item0]
 CheckBoxState=FALSE

@@ -446,7 +446,7 @@ char* AFMFileName= ToNewUTF8String(aFontName.name); // file we will open
             break;
 	        case kNotice:
 	          mPSFontInfo->mNotice = GetAFMString();
-            // we really dont want to keep this around...
+            // we really don't want to keep this around...
             delete [] mPSFontInfo->mNotice;
             mPSFontInfo->mNotice = 0;
 	          break;

@@ -403,7 +403,7 @@ void UGAAppearance::DrawGAPopupDimmedBevelTint(
 
 	// draw round rect frame
 	UGraphicGizmos::BevelTintRoundRect(frame, 8, 8, sGAFiveGrayLevels, false);
-	// draw seperator between text and arrow
+	// draw separator between text and arrow
 	UGraphicGizmos::BevelTintLine(frame.right - gsPopup_ArrowButtonWidth,
 								  frame.top + 1,
 								  frame.right - gsPopup_ArrowButtonWidth,

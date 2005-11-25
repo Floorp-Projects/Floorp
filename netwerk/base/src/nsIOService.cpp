@@ -258,7 +258,7 @@ nsIOService::CacheProtocolHandler(const char *scheme, nsIProtocolHandler *handle
             nsCOMPtr<nsISupportsWeakReference> factoryPtr = do_QueryInterface(handler, &rv);
             if (!factoryPtr)
             {
-                // Dont cache handlers that dont support weak reference as
+                // Don't cache handlers that don't support weak reference as
                 // there is real danger of a circular reference.
 #ifdef DEBUG_dp
                 printf("DEBUG: %s protcol handler doesn't support weak ref. Not cached.\n", scheme);

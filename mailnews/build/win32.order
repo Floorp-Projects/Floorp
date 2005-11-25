@@ -277,7 +277,7 @@
 ?GetSortType@nsMsgDBView@@UAGIPAH@Z ; 2
 ?CreateLiterals@nsMsgFolderDataSource@@IAEIPAVnsIRDFService@@@Z ; 2
 ?AdjustRowCount@nsMsgDBView@@IAEIHH@Z ; 2
-?SetSupressMsgDisplay@nsMsgDBView@@UAGIH@Z ; 2
+?SetSuppressMsgDisplay@nsMsgDBView@@UAGIH@Z ; 2
 ?SetOpenFolder@nsMsgWindow@@UAGIPAVnsIMsgFolder@@@Z ; 2
 ?OnItemBoolPropertyChanged@nsMsgFolderDataSource@@UAGIPAVnsISupports@@PAVnsIAtom@@HH@Z ; 2
 ?createRootResources@nsMsgAccountManagerDataSource@@IAEIPAVnsIRDFResource@@PAVnsISupportsArray@@@Z ; 2

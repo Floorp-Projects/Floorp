@@ -135,7 +135,7 @@ class MultiLineLabel extends Canvas {
         }
     }
 
-    // Here are four versions of the cosntrutor.
+    // Here are four versions of the constructor.
     // Break the label up into separate lines, and save the other info.
     public MultiLineLabel(String label, int margin_width, int margin_height,
                   int alignment) {

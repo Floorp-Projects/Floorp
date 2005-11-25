@@ -1045,9 +1045,9 @@ nsFreeTypeFaceRequester(FTC_FaceID face_id, FT_Library lib,
           *aFace = nsnull;
           fterror = 1;
         }
-        // UCS_4 is the most prefered cmap since it supports surrogates
+        // UCS_4 is the most preferred cmap since it supports surrogates
         // so stop here to avoid the possibly of getting UNICODE_CS which
-        // is the 2nd prefered choice.
+        // is the 2nd preferred choice.
         break;
       } else
 #endif /* defined(TT_MS_ID_UCS_4) */

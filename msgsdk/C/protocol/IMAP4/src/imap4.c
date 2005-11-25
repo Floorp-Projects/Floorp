@@ -1294,7 +1294,7 @@ int imap4_unsubscribe(imap4Client_t* in_pimap4, const char* in_mailbox, char** o
 
 /**
 * This function is called to get the server to (possibly) checkpoint 
-* its state, if that is necesary. Note: This does not imply that you 
+* its state, if that is necessary. Note: This does not imply that you 
 * will get new EXISTS messages. If you want that type of stuff, use 
 * NOOP. Note: This may not instantaneous. For more info on this and the 
 * differences from NOOP, see RFC 1730.

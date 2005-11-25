@@ -31,7 +31,7 @@ if ($ENV{'_MSC_VER'}!=1200) {
 $SourceRoot = $ENV{'MOZ_SRC'};
 $len = length($SourceRoot);
 if ($len < 2)  {
-	# Can't start if you dont know the Src Root.
+	# Can't start if you don't know the Src Root.
 	$ErrorType = 2;
 	CFHandler($ErrorType);
 }

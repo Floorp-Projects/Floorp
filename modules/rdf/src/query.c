@@ -336,7 +336,7 @@ RDF_Literal noUnknownAs(RDF_Query q, RDF_LiteralList orderedLiterals, RDF_Variab
 	return NULL;
 }
 
-/* Returns true if the conjuncts were ordered succesfully.
+/* Returns true if the conjuncts were ordered successfully.
 */
 PRBool orderConjuncts(RDF_Query q) {
 	uint16 numOrdered = 0;
@@ -390,7 +390,7 @@ PRBool orderConjuncts(RDF_Query q) {
 			} else break;
 		} 
 	}
-	if (numOrdered == q->numLiterals) {	/* ordered all succesfully so replace literals */
+	if (numOrdered == q->numLiterals) {	/* ordered all successfully so replace literals */
 		RDF_LiteralList old = q->literals;
 		q->literals = orderedLiterals;
 		destroyLiteralList(old, false);

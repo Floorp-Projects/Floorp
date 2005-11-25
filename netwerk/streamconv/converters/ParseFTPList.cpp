@@ -81,7 +81,7 @@ int ParseFTPList(const char *line, struct list_state *state,
   if (linelen > 0 && *p == '\n' && *(p-1) == '\r')
     linelen--;
 
-  /* DONT strip trailing whitespace. */
+  /* DON'T strip trailing whitespace. */
 
   if (linelen > 0)
   {
@@ -1629,7 +1629,7 @@ int ParseFTPList(const char *line, struct list_state *state,
   } /* if (linelen > 0) */
 
   if (state->parsed_one || state->lstyle) /* junk if we fail to parse */
-    return '?';      /* this time but had previously parsed sucessfully */
+    return '?';      /* this time but had previously parsed successfully */
   return '"';        /* its part of a comment or error message */
 }
 

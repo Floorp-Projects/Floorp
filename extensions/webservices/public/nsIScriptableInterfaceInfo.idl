@@ -113,7 +113,7 @@ interface nsIScriptableInterfaceInfo : nsISupports
     readonly attribute nsIIDPtr interfaceID;
 
      /** 
-     * True if this object has been sucessfully set to wrap an interface info.
+     * True if this object has been successfully set to wrap an interface info.
      */
     readonly attribute PRBool isValid;
 

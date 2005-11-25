@@ -96,7 +96,7 @@ LINCS=\
 
 include <$(DEPTH)\config\rules.mak>
 
-# XXX this should not be required, but mantomake doesnt grok J?I yet
+# XXX this should not be required, but mantomake doesn't grok J?I yet
 # also, -I..\public should be -I$(PUBLIC)\progress 
 LINCS=$(LINCS) \
 	-I$(DEPTH)/cmd/winfe            	\

@@ -7,7 +7,7 @@ Once the HTML files are generated, visit the <sparse-frameset.html> or
 <complete-frameset.html> files in this directory for one-entry-at-a-time and
 all-in-one framesets.
 
-APIDOC output can also be browsed in two seperate windows.  Open
+APIDOC output can also be browsed in two separate windows.  Open
 <gen/sparse-toc.html> in one window.  Click on any API entrypoint to open a new
 window.  The new window will be re-used when you choose a different entrypoint.
 

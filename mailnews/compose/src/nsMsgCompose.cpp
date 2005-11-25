@@ -1277,11 +1277,11 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
         
         /**
          * In order to really free the memory, we need to call the JS garbage collector for our window.
-         * If we don't call GC, the nsIMsgCompose object hold by JS will not be released despite we set
-         * the JS global that hold it to null. Each time we reopen a recycled window, we allocate a new
-         * nsIMsgCompose that we really need to be releazed when we recycle the window. In fact despite
-         * we call GC here atfer the release wont occurs right away. But if we don't call it, the release
-         * will apppend only when we phisically close the window which will append only on quit.
+         * If we don't call GC, the nsIMsgCompose object held by JS will not be released despite we set
+         * the JS global that held it to null. Each time we reopen a recycled window, we allocate a new
+         * nsIMsgCompose that we really need to be released when we recycle the window. In fact despite
+         * we call GC here, the release won't occur right away. But if we don't call it, the release
+         * will happen only when we physically close the window which will happen only on quit.
          */
         nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(m_window));
         if (sgo)
@@ -1301,7 +1301,7 @@ NS_IMETHODIMP nsMsgCompose::CloseWindow(PRBool recycleIt)
     if (m_editor)
     {
         /* The editor will be destroyed during yje close window.
-         * Set it to null to be sure we wont uses it anymore
+         * Set it to null to be sure we won't use it anymore
          */
       m_editor = nsnull;
     }
@@ -2689,7 +2689,7 @@ nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // 
   return rv;
 }
 
-//CleanUpRecipient will remove un-necesary "<>" when a recipient as an address without name
+//CleanUpRecipient will remove un-necessary "<>" when a recipient as an address without name
 void nsMsgCompose::CleanUpRecipients(nsString& recipients)
 {
   PRUint16 i;

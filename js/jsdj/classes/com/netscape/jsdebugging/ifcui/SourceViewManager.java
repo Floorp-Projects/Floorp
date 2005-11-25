@@ -203,7 +203,7 @@ public class SourceViewManager
         _sourceViews.remove(view.getURL());
     }
 
-    public void setPreferedNewViewRect( Rect rect ){_preferredNewViewRect = rect;}
+    public void setPreferredNewViewRect( Rect rect ){_preferredNewViewRect = rect;}
 
     public boolean getShowLineNumbers() {return _showLineNumbers;}
 

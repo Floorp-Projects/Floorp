@@ -62,7 +62,7 @@ XPC_MSG_DEF(NS_ERROR_XPC_CANT_EXPORT_WN_STATIC          , "Cannot export a Wrapp
 XPC_MSG_DEF(NS_ERROR_XPC_SCRIPTABLE_CALL_FAILED         , "nsIXPCScriptable::Call failed")
 XPC_MSG_DEF(NS_ERROR_XPC_SCRIPTABLE_CTOR_FAILED         , "nsIXPCScriptable::Construct failed")
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_CALL_WO_SCRIPTABLE        , "Cannot use wrapper as function unless it implements nsIXPCScriptable")
-XPC_MSG_DEF(NS_ERROR_XPC_CANT_CTOR_WO_SCRIPTABLE        , "Cannot use wrapper as constuctor unless it implements nsIXPCScriptable")
+XPC_MSG_DEF(NS_ERROR_XPC_CANT_CTOR_WO_SCRIPTABLE        , "Cannot use wrapper as constructor unless it implements nsIXPCScriptable")
 XPC_MSG_DEF(NS_ERROR_XPC_CI_RETURNED_FAILURE            , "ComponentManager::CreateInstance returned failure code:")
 XPC_MSG_DEF(NS_ERROR_XPC_GS_RETURNED_FAILURE            , "ServiceManager::GetService returned failure code:")
 XPC_MSG_DEF(NS_ERROR_XPC_BAD_CID                        , "Invalid ClassID or ContractID")

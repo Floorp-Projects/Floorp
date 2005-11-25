@@ -207,11 +207,11 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent,
     // handle any changes needed to ws run after inserted br
     if (!afterRun)
     {
-      // dont need to do anything.  just insert break.  ws wont change.
+      // don't need to do anything.  just insert break.  ws won't change.
     }
     else if (afterRun->mType & eTrailingWS)
     {
-      // dont need to do anything.  just insert break.  ws wont change.
+      // don't need to do anything.  just insert break.  ws won't change.
     }
     else if (afterRun->mType & eLeadingWS)
     {
@@ -244,11 +244,11 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsIDOMNode> *aInOutParent,
     // handle any changes needed to ws run before inserted br
     if (!beforeRun)
     {
-      // dont need to do anything.  just insert break.  ws wont change.
+      // don't need to do anything.  just insert break.  ws won't change.
     }
     else if (beforeRun->mType & eLeadingWS)
     {
-      // dont need to do anything.  just insert break.  ws wont change.
+      // don't need to do anything.  just insert break.  ws won't change.
     }
     else if (beforeRun->mType & eTrailingWS)
     {
@@ -304,11 +304,11 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
     // handle any changes needed to ws run after inserted text
     if (!afterRun)
     {
-      // dont need to do anything.  just insert text.  ws wont change.
+      // don't need to do anything.  just insert text.  ws won't change.
     }
     else if (afterRun->mType & eTrailingWS)
     {
-      // dont need to do anything.  just insert text.  ws wont change.
+      // don't need to do anything.  just insert text.  ws won't change.
     }
     else if (afterRun->mType & eLeadingWS)
     {
@@ -328,11 +328,11 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
     // handle any changes needed to ws run before inserted text
     if (!beforeRun)
     {
-      // dont need to do anything.  just insert text.  ws wont change.
+      // don't need to do anything.  just insert text.  ws won't change.
     }
     else if (beforeRun->mType & eLeadingWS)
     {
-      // dont need to do anything.  just insert text.  ws wont change.
+      // don't need to do anything.  just insert text.  ws won't change.
     }
     else if (beforeRun->mType & eTrailingWS)
     {
@@ -426,7 +426,7 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
     {
       if (prevWS)
       {
-        theString.SetCharAt(nbsp, j-1);  // j-1 cant be negative because prevWS starts out false
+        theString.SetCharAt(nbsp, j-1);  // j-1 can't be negative because prevWS starts out false
       }
       else
       {
@@ -838,7 +838,7 @@ nsWSRunObject::GetWSNodes()
   // then look ahead to find following ws nodes
   if (mHTMLEditor->IsTextNode(mNode))
   {
-    // dont need to put it on list. it already is from code above
+    // don't need to put it on list. it already is from code above
     nsCOMPtr<nsITextContent> textNode(do_QueryInterface(mNode));
     const nsTextFragment *textFrag = textNode->Text();
 

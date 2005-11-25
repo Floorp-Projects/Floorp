@@ -1356,7 +1356,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
   PRInt32 oldType = mType;
 
   // Try script event handlers first if its not a focus/blur event
-  //we dont want the doc to get these
+  //we don't want the doc to get these
   rv = nsGenericHTMLFormElement::HandleDOMEvent(aPresContext, aEvent,
                                                 aDOMEvent, aFlags,
                                                 aEventStatus);

@@ -134,7 +134,7 @@ NOTE: These API tests are build using Gnu Compiler gcc.
 
 
 13) On executing autorun.pl, browser always invokes "Profile Window". Is there
-    any way to supress this box.
+    any way to suppress this box.
 
    In autorun.pl, search of ADDITIONAL_PARAMETERS. It is set to "-P default"
    Change it to reflect your Profile name  (-P myProfile)

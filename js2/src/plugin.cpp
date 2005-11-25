@@ -270,7 +270,7 @@ void nsPluginInstance::StreamAsFile(NPStream* stream, const char* fname)
 {
     printf("Pandora: compiling source\n");
     // compile the file, error reports need to go to the JS console
-    // if succesful, script level functions get proxies generated
+    // if successful, script level functions get proxies generated
     try {
         metadata->readEvalFile(fname);    
         for (LocalBindingIterator bi = metadata->glob->localBindings.begin(), 

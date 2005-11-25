@@ -46,9 +46,9 @@ JNI_OJIAPITest(JNIEnv_GetMethodID_1)
 
 
   if(MethodID == NULL){
-     return TestResult::PASS("GetMethodID with class == NULL return 0, its correct");
+     return TestResult::PASS("GetMethodID with class == NULL return 0, it's correct");
   }else{
-     return TestResult::FAIL("GetMethodID with class == NULL doesnt return 0, its incorrect");
+     return TestResult::FAIL("GetMethodID with class == NULL doesn't return 0, it's incorrect");
   }
 
 }

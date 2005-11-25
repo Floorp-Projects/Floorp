@@ -94,7 +94,7 @@ public class MIMEEncodeTest
 
 	    try
 	    {
-		// >>>> Build and retrun a Multi-Part MIME Message <<<<
+		// >>>> Build and return a Multi-Part MIME Message <<<<
 
 		// Get an inputStream to user entered text 
                 bins = new ByteArrayInputStream (textMsg.getBytes());

@@ -397,7 +397,7 @@ class Evaluator
 
             if(_evalToValue)
             {
-                // we break this out as a seperate method because 
+                // we break this out as a separate method because 
                 // netscape.jsdebug 1.0 had no Value class and we need to 
                 // avoid any unnecessary references to netscape.jsdebug.Value.
                 _doEvalToValue();
