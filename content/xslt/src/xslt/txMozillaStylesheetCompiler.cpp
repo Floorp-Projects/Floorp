@@ -121,7 +121,7 @@ private:
     PRPackedBool mCheckedForXML;
 
 protected:
-    // This exists soly to supress a warning from nsDerivedSafe
+    // This exists solely to suppress a warning from nsDerivedSafe
     txStylesheetSink();
 };
 
@@ -472,7 +472,7 @@ private:
     nsCOMPtr<nsILoadGroup> mLoadGroup;
 
 protected:
-    // This exists soly to supress a warning from nsDerivedSafe
+    // This exists solely to suppress a warning from nsDerivedSafe
     txCompileObserver();
 };
 

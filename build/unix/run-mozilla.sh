@@ -139,7 +139,7 @@ moz_run_program()
 	fi
 	##
 	## Use md5sum to crc a core file.  If md5sum is not found on the system,
-	## then dont debug core files.
+	## then don't debug core files.
 	##
 	moz_test_binary /bin/type
 	if [ $? -eq 1 ]

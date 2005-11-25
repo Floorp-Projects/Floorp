@@ -1001,7 +1001,7 @@ txMozillaXSLTProcessor::DocumentWillBeDestroyed(nsIDocument* aDocument)
     mStylesheetDocument = nsnull;
     mEmbeddedStylesheetRoot = nsnull;
 
-    // This might not be neccesary, but just in case some element ends up
+    // This might not be necessary, but just in case some element ends up
     // causing a notification as the document goes away we don't want to
     // invalidate the stylesheet.
     aDocument->RemoveObserver(this);
