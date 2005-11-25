@@ -50,7 +50,7 @@ struct DebuggerMessageRequest
 
 struct DebuggerMessageResponse
 {
-	Int32 status;  // 0 = succesful, non-zero is an error code
+	Int32 status;  // 0 = successful, non-zero is an error code
 };
 
 const Int32 kAddressToMethod = 120;

@@ -129,7 +129,7 @@ Imap4ParseStart (pmail_command_t cmd,
     pish->hostInfo.portNum = IMAP4_PORT; /* get default port */
 
     D_PRINTF(stderr, "Imap4 Assign defaults\n");
-    /* Fill in defaults first, ignore defaults we dont use */
+    /* Fill in defaults first, ignore defaults we don't use */
     for (pp = defparm; pp; pp = pp->next) {
 	(void)ImapParseNameValue (cmd, pp->name, pp->value);
     }
@@ -377,7 +377,7 @@ readImapResponse(ptcx_t ptcx, SOCKET sock, int seqNum, char *buffer, int buflen)
     char markerSingleLine[20];
     char markerMultiLine[20];
 
-    /* marker to tell us when we've recieved the final line from server */
+    /* marker to tell us when we've received the final line from server */
     sprintf(markerSingleLine, "%d ", seqNum);
     sprintf(markerMultiLine, "\n%d ", seqNum);
 
@@ -423,7 +423,7 @@ retrImapMsg(ptcx_t ptcx, SOCKET sock, int seqNum,
     char markerSingleLine[20];
     char markerMultiLine[20];
 
-    /* marker to tell us when we've recieved the final line from server */
+    /* marker to tell us when we've received the final line from server */
     sprintf(markerSingleLine, "%d ", seqNum);
     sprintf(markerMultiLine, "\n%d ", seqNum);
     
@@ -784,7 +784,7 @@ imapRetrRecentMessages(ptcx_t ptcx,
 				   command, pIMAP->resp_buffer, sizeof(pIMAP->resp_buffer));
 	event_stop (ptcx, &stats->cmd);
 	if (rc == -1) {
-	    if (gf_timeexpired >= EXIT_FAST) break; /* dont fall into error */
+	    if (gf_timeexpired >= EXIT_FAST) break; /* don't fall into error */
 	    return -1;
 	}
 
@@ -806,7 +806,7 @@ imapRetrRecentMessages(ptcx_t ptcx,
 	if (numBytes == -1) {
 	    event_stop(ptcx, &stats->msgread);
 	    myfree(msgBuffer);
-	    if (gf_timeexpired >= EXIT_FAST) break; /* dont fall into error */
+	    if (gf_timeexpired >= EXIT_FAST) break; /* don't fall into error */
 	    stats->msgread.errs++;
 	    returnerr(debugfile, "IMAP4 Error sending [%s] command: %s\n",
 		      command, neterrstr());
@@ -819,7 +819,7 @@ imapRetrRecentMessages(ptcx_t ptcx,
 	event_stop(ptcx, &stats->msgread);
 	if (numBytes <= 0) {
 	    myfree(msgBuffer);
-	    if (gf_timeexpired >= EXIT_FAST) break; /* dont fall into error */
+	    if (gf_timeexpired >= EXIT_FAST) break; /* don't fall into error */
 	    stats->msgread.errs++;
 	    returnerr(debugfile, "IMAP4 Error retrieving msg %d: %s\n",
 		      i, neterrstr());
@@ -835,7 +835,7 @@ imapRetrRecentMessages(ptcx_t ptcx,
 				   command, pIMAP->resp_buffer, sizeof(pIMAP->resp_buffer));
 	event_stop (ptcx, &stats->cmd);
 	if (rc == -1) {
-	    if (gf_timeexpired >= EXIT_FAST) break; /* dont fall into error */
+	    if (gf_timeexpired >= EXIT_FAST) break; /* don't fall into error */
 	    stats->cmd.errs++;
 	    return -1;
 	}
@@ -856,12 +856,12 @@ imapRetrRecentMessages(ptcx_t ptcx,
 				       command, pIMAP->resp_buffer, sizeof(pIMAP->resp_buffer));
 	    event_stop (ptcx, &stats->cmd);
 	    if (rc == -1) {
-		if (gf_timeexpired >= EXIT_FAST) break; /* dont fall into error */
+		if (gf_timeexpired >= EXIT_FAST) break; /* don't fall into error */
 		stats->cmd.errs++;
 		return -1;
 	    }
 	} else {
-	    /* We dont mark it seen, but it still isnt new anymore... */
+	    /* We don't mark it seen, but it still isn't new anymore... */
 	    D_PRINTF (stderr, "retrRecentMsgs() Leaving messaged %d unseen\n", i);
 	}
     }
@@ -874,7 +874,7 @@ imapRetrRecentMessages(ptcx_t ptcx,
 				   command, pIMAP->resp_buffer, sizeof(pIMAP->resp_buffer));
 	event_stop (ptcx, &stats->cmd);
 	if (rc == -1) {
-	    if (gf_timeexpired < EXIT_FAST)	/* dont fall into error */
+	    if (gf_timeexpired < EXIT_FAST)	/* don't fall into error */
 		return -1;
 	    stats->cmd.errs++;
 	}

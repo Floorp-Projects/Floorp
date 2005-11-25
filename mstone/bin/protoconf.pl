@@ -74,7 +74,7 @@
 # Totals are done during plotting, if needed
 %finals = ();			# create base finals hash
 
-# These are sections that dont get passed to mailclient (case insensitive)
+# These are sections that don't get passed to mailclient (case insensitive)
 @scriptWorkloadSections
     = (
        "Config",		# special, references %params
@@ -87,7 +87,7 @@
        "PostTest",		# things to run after test
        );
 
-# These are sections that arent protocols.  Anything else must be.
+# These are sections that aren't protocols.  Anything else must be.
 @nonProtocolSections
     = (@scriptWorkloadSections, ("Default"));
 

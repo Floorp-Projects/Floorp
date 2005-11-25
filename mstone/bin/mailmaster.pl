@@ -338,7 +338,7 @@ if ($params{NT}) {		# single client on local host
 	$slist =~ s/HOSTS=\s*//; # strip off initial bit
 	my $myCmd = $section->{COMMAND};
 	$myCmd =~ s/%f/$params{FREQUENCY}/; # fill in frequency variable
-	if ($myCmd =~ m/%c/o) { # dont force down if count is used
+	if ($myCmd =~ m/%c/o) { # don't force down if count is used
 	    $count = $testsecs / $params{FREQUENCY};
 	    $myCmd =~ s/%c/$count/; # fill in count variable
 	}
@@ -371,7 +371,7 @@ if ($params{NT}) {		# single client on local host
 	$myCmd =~ s/,/ /g;	# turn commas into spaces BACK COMPATIBIILITY
 	$myCmd =~ s/%f/$params{FREQUENCY}/; # fill in frequency variable
 
-	if ($myCmd =~ m/%c/o) { # dont force down if count is used
+	if ($myCmd =~ m/%c/o) { # don't force down if count is used
 	    $count = $testsecs / $params{FREQUENCY};
 	    $myCmd =~ s/%c/$count/; # fill in count variable
 	} else {
@@ -458,7 +458,7 @@ if ($params{NT}) {		# single client on local host
 
     if (@localPids) {
 	# print "Trapping extraneous local signals\n";
-	# This doesnt trap quite right.  We dont die, but shell returns...
+	# This doesn't trap quite right.  We don't die, but shell returns...
 	$SIG{ALRM} = 'IGNORE';	# in case we get an ALRM from the mailclient
     }
 
@@ -495,7 +495,7 @@ if ($params{NT}) {		# single client on local host
 	$slist =~ s/HOSTS=\s*//; # strip off initial bit
 	my $myCmd = $section->{COMMAND};
 	$myCmd =~ s/%f/$params{FREQUENCY}/; # fill in frequency variable
-	if ($myCmd =~ m/%c/o) { # dont force down if count is used
+	if ($myCmd =~ m/%c/o) { # don't force down if count is used
 	    $count = $testsecs / $params{FREQUENCY};
 	    $myCmd =~ s/%c/$count/; # fill in count variable
 	}

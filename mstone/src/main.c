@@ -762,7 +762,7 @@ waitChildren(void)
 
     for (;;) {
 	errno = 0;
-	alarm(gt_stopinterval);		/* dont wait forever */
+	alarm(gt_stopinterval);		/* don't wait forever */
 	pid = wait(&status);
 	if (pid == -1) {
 	    if (errno == ECHILD) {

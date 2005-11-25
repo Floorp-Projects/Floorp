@@ -90,7 +90,7 @@ Pop3ParseStart (pmail_command_t cmd,
     pish->hostInfo.portNum = POP3_PORT;	/* default port */
 
     D_PRINTF(stderr, "Pop3 Assign defaults\n");
-    /* Fill in defaults first, ignore defaults we dont use */
+    /* Fill in defaults first, ignore defaults we don't use */
     for (pp = defparm; pp; pp = pp->next) {
 	(void)PopParseNameValue (cmd, pp->name, pp->value);
     }

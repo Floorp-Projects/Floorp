@@ -368,7 +368,7 @@ SmtpParseStart (pmail_command_t cmd,
     pish->hostInfo.portNum = SMTP_PORT;	/* get default port */
 
     D_PRINTF(stderr, "Smtp Assign defaults\n");
-    /* Fill in defaults first, ignore defaults we dont use */
+    /* Fill in defaults first, ignore defaults we don't use */
     for (pp = defparm; pp; pp = pp->next) {
 	(void)pishParseNameValue (cmd, pp->name, pp->value);
     }
@@ -720,7 +720,7 @@ doSmtpCommandResponse(ptcx_t ptcx, SOCKET sock, char *command, char *response, i
     /* D_PRINTF(stderr, "SMTP command=[%s] response=[%s]\n", command, response); */
     if (!isSmtpResponseOK(response)) {
 	if (gf_timeexpired < EXIT_FAST) {
-	    /* dont modify command (in case it could be re-tried) */
+	    /* don't modify command (in case it could be re-tried) */
 	    trimEndWhite (response);	/* clean up for printing */
 	    strcpy (ptcx->errMsg, "SmtpCommandResponse: got SMTP error response");
 	}

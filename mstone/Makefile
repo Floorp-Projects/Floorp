@@ -68,7 +68,7 @@ perl $(OBJDIR)/perl/perl::
 	$(MAKE) -f perl.mk PERL_DIR=$(PERL_DIR) perl
 
 # Create packaging binary directories
-# Note: dont make gd or gnuplot here.  For multi-OS, they are links
+# Note: don't make gd or gnuplot here.  For multi-OS, they are links
 mkpkgdirs::	$(PKGDIR)/bin $(PKGDIR)/conf $(PKGDIR)/data $(PKGDIR)/doc
 
 $(PKGDIR)/bin:
@@ -142,7 +142,7 @@ pkg-perl-files:: $(PKGDIR)/bin $(OBJDIR)/perl/perl
 	-$(STRIP) $(PKGDIR)/perl/bin/a2p
 
 # for combined packaging, this should not be part of pkg-arch-files
-# perl is handled seperately do to its size
+# perl is handled separately do to its size
 ifneq (,$(PERL_DIR))
 pkg::	pkg-perl-files
 endif
@@ -166,9 +166,9 @@ build/$(ZIPFILE):
 
 ########################################################################
 # Generate a combined build for every Unix OS that is already packaged
-# NT has to be done seperately because it has different file names
-# We have to nuke some old parts, because permissions wont allow overwrites
-# Finally, dont ship perl development headers and libraries
+# NT has to be done separately because it has different file names
+# We have to nuke some old parts, because permissions won't allow overwrites
+# Finally, don't ship perl development headers and libraries
 all_DBG all_OPT::
 	@$(ECHO) "===== [`date`] unified packaging for $@..."
 	$(MAKE) NSARCH=$@ OBJDIR_TAG='' \
@@ -222,7 +222,7 @@ debug::
 	$(MAKE) BUILD_VARIANT=debug OBJDIR_TAG=_DBG targets
 	@$(ECHO) "\n===== [`date`] making debug build done."
 
-# We dont usually bother to tar up a debug build
+# We don't usually bother to tar up a debug build
 dpackage:: debug
 	@$(ECHO) "\n===== [`date`] making debug package..."
 	$(MAKE) BUILD_VARIANT=debug OBJDIR_TAG=_DBG pkg

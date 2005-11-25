@@ -101,7 +101,7 @@ may be costly, and can create holes in the proper sequence.
 Improve printing
 	The color graphs are great on screen, but tend to print
 poorly.  Either we need a better way to generate a printable version
-(maybe through a CGI button), or the seperate protocols need to be
+(maybe through a CGI button), or the separate protocols need to be
 printed individually.  Also, Communicator does a lousy job of keeping
 title with tables or graphs.  Hopefully, Mozilla will do better.
 

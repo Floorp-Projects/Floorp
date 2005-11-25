@@ -170,7 +170,7 @@ sub readWorkConfig {		# read the workload in, parse our params
 	#$userpassword =~ s/%ld//g;
     }
 
-    # what isnt set: basedn, storebase, maxstores, usemsg4schema
+    # what isn't set: basedn, storebase, maxstores, usemsg4schema
 }
 
 while (@ARGV) {

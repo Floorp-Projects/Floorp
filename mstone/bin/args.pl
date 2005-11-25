@@ -296,7 +296,7 @@ sub kformat {
 
 # simple function to formatted a time into Ns, Nms, or Nus
 # the goal is to make a table of timss uncluttered and easy to read
-# I dont convert to minutes or hours because the non-1000x multipliers
+# I don't convert to minutes or hours because the non-1000x multipliers
 #   are hard to back solve in your head for comparisons
 sub tformat {
     my $n = shift;

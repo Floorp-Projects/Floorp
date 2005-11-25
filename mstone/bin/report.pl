@@ -58,7 +58,7 @@ sub walkSetupTotals {
 sub setupTotals {
     # Figure out combined timers for "Total" protocol
     # We might do a smarter merge here (look at context and try to match order)
-    # As long as the first protocol is a superset, it wont matter
+    # As long as the first protocol is a superset, it won't matter
     my @tnames;
     foreach $proto (@protocols) {
 	foreach $n (@{$protocolFields{$proto}}) {
@@ -82,7 +82,7 @@ sub setupTotals {
     # Create "Total" hashes
     $finals{Total} =  ArrayInstance->new();
     foreach $n (@{$protocolFields{"Total"}}) { # all timers
-	my $t = $n;	# dont modify original list
+	my $t = $n;	# don't modify original list
 	if ($t =~ /^\[(\w+)\]$/) { # Timer case, strip off brackets
 	    $finals{Total}->{$1} = ArrayInstance->new();
 	    #print "Creating Total timer field $1\n";
@@ -121,9 +121,9 @@ sub setupTotals {
     # Convert Time2 to standard deviation
     foreach $proto (@protocolsAll) {
 	foreach $n (@{$protocolFields{$proto}}) {
-	    my $t = $n;	# dont modify original list
+	    my $t = $n;	# don't modify original list
 	    if ($t =~ /^\[(\w+)\]$/) { $t = $1; } # strip off brackets
-	    next unless ($finals{$proto}->{$t}); # proto doesnt have timer
+	    next unless ($finals{$proto}->{$t}); # proto doesn't have timer
 	    next unless ($finals{$proto}->{$t}->{Try});
 	    next unless ($finals{$proto}->{$t}->{Time2} > 0);
 	    my $ss = $finals{$proto}->{$t}->{Time2};
@@ -141,9 +141,9 @@ sub setupTotals {
     # Divide total times by trys to get averate time
     foreach $proto (@protocolsAll) {
 	foreach $n (@{$protocolFields{$proto}}) {
-	    my $t = $n;	# dont modify original list
+	    my $t = $n;	# don't modify original list
 	    if ($t =~ /^\[(\w+)\]$/) { $t = $1; } # strip off brackets
-	    next unless ($finals{$proto}->{$t}); # proto doesnt have timer
+	    next unless ($finals{$proto}->{$t}); # proto doesn't have timer
 	    ($finals{$proto}->{$t}->{Try}) || next;
 	    $finals{$proto}->{$t}->{Time} /= $finals{$proto}->{$t}->{Try}
 	}
@@ -181,7 +181,7 @@ sub genTextReport {
 	    ($fieldNames{$f}) ? $fieldNames{$f} : $f;
 	}
 	foreach $n (@{$protocolFields{$proto}}) {
-	    my $t = $n;	# dont modify original list
+	    my $t = $n;	# don't modify original list
 	    unless ($t =~ /^\[(\w+)\]$/) { # scalar case
 		#next;		# skip scalars for now
 		# do scalar counters. Column should line up with "Try"
@@ -218,7 +218,7 @@ sub genTextReport {
 	    ($fieldNames{$f}) ? $fieldNames{$f} : $f;
 	}
 	foreach $n (@{$protocolFields{$proto}}) {
-	    my $t = $n;	# dont modify original list
+	    my $t = $n;	# don't modify original list
 	    unless ($t =~ /^\[(\w+)\]$/) { # scalar case
 		#next;		# skip scalars for now
 		# do scalar counter/sec. Column should line up with "Try"
@@ -370,7 +370,7 @@ END
 	print RESULTSHTML
 	    "</TR>\n";
 	foreach $n (@{$protocolFields{$proto}}) {
-	    my $t = $n;	# dont modify original list
+	    my $t = $n;	# don't modify original list
 	    unless ($t =~ /^\[(\w+)\]$/) { # scalar case
 		next;		# skip scalars for now
 		# do scalar counters. Column should line up with "Try"
@@ -415,7 +415,7 @@ END
 	print RESULTSHTML
 	    "</TR>\n";
 	foreach $n (@{$protocolFields{$proto}}) {
-	    my $t = $n;	# dont modify original list
+	    my $t = $n;	# don't modify original list
 	    unless ($t =~ /^\[(\w+)\]$/) { # scalar case
 		next;		# skip scalars for now
 		# do scalar counters. Column should line up with "Try"

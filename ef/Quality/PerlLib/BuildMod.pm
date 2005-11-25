@@ -109,7 +109,7 @@ sub build {
 
     }	    
 
-    # Check if the build is busted or sucessful.
+    # Check if the build is busted or successful.
     $buildStatusStr = ($buildStatus ? 'busted' : 'success');
     print("Build Status: $buildStatusStr\n");
 
@@ -119,7 +119,7 @@ sub build {
     # Rename the log file.
     rename("${buildLog}", "${buildPlatform}${buildTarget}.last");
 
-    # Return 1 if build was sucessful, else return 0;
+    # Return 1 if build was successful, else return 0;
     if ($buildStatusStr == 'success') {
 	return 1;
     } else {

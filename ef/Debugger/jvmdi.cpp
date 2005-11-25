@@ -53,7 +53,7 @@ JVMDI_GetThreadStatus(JNIEnv * /* env */, jthread thread, jint *statusPtr)
 /* Note: jvm.h has suspend/resume (which may be deprecated - as
 	 * Thread.suspend() has been).  JVMDI version is different, as it
 	 * takes precautions to attempt to avoid deadlock.  Also it
-	 * cannot be depreciated.
+	 * cannot be deprecated.
 	 */
 /*
  * Suspend the specified thread.

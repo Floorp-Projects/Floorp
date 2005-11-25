@@ -53,7 +53,7 @@ save_run () {
   [[ -d $save_dir ]] || \
 	mkdir $save_dir
 
-  [[ $only_show_it -gt 0 ]] && return 0	# dont do anything important
+  [[ $only_show_it -gt 0 ]] && return 0	# don't do anything important
 
   if [[ -n "$last_timestamp" && -d "results/$last_timestamp/" ]] ; then
 	cp -pR results/$last_timestamp $save_dir/

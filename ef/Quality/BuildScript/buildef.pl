@@ -35,7 +35,7 @@ while (1) {
 
     TestsMod::runSuite("testsuite.txt");
 
-    # Run the conformance tests only if the build was sucessful.
+    # Run the conformance tests only if the build was successful.
     if ($runTests) {
 
 	print "Tests not being run right now.\n";

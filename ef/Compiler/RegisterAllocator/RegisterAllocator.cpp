@@ -587,7 +587,7 @@ buildInterferenceGraph()
 bool RegisterAllocator::
 canCoalesceRegisters(VirtualRegister& inVR, VirtualRegister& outVR, PRUint32& from, PRUint32& to)
 {
-  // We dont have to check the register class because if a Copy instruction
+  // We don't have to check the register class because if a Copy instruction
   // is emitted then in & out have the same register class.
 
   from = inVR.getRegisterIndex();
