@@ -50,7 +50,7 @@
 #error "need CONTEXT_EIP and CONTEXT_EBP for this architecture"
 #endif
 
-// Supend the thread specified by the pid
+// Suspend the thread specified by the pid
 void _suspendThread(HANDLE  handle) 
 {
 #ifdef _REENTRANT

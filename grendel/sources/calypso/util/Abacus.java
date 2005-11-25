@@ -82,7 +82,7 @@ public class Abacus
    * @author  gess   05-05-97 12:53pm
    * @notes   Those pesky romans used dashed above a value to multiply
    *          that number by 1000. This has the unfortunate side effect
-   *          that without special font treatment, we cant represent
+   *          that without special font treatment, we can't represent
    *          numbers in roman above 3999.
    *          THIS METHOD HANDLES VALUES IN THE RANGE [1..3999].
    *          (any other value is converted to simple numeric format.)

@@ -267,7 +267,7 @@ L5:
 		mov		%eax,%esi				/* save quotient */
 
 		/* We may be off by one, so to check, we will multiply the quotient
-		 * by the divisor and check the result against the orignal dividend
+		 * by the divisor and check the result against the original dividend
 		 * Note that we must also check for overflow, which can occur if the
 		 * dividend is close to 2**64 and the quotient is off by 1.
 		 */
@@ -391,7 +391,7 @@ LL5:
 		div		%ecx					/* now divide, ignore remainder */
 
 		/* We may be off by one, so to check, we will multiply the quotient
-		 * by the divisor and check the result against the orignal dividend
+		 * by the divisor and check the result against the original dividend
 		 * Note that we must also check for overflow, which can occur if the
 		 * dividend is close to 2**64 and the quotient is off by 1.
 		 */

@@ -129,7 +129,7 @@ public interface TreeTableDataModel {
   /**
    * Indicates whether the given node is a leaf. The values
    * returned by <code>isLeaf()</code> and <code>getChild()</code>
-   * or <code>getChildren()</code> should be consistant.
+   * or <code>getChildren()</code> should be consistent.
    *
    * @return <code>true</code> if the given node is a leaf.
    */

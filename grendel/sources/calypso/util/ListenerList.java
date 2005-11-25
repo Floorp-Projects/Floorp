@@ -59,7 +59,7 @@ public class ListenerList
   private Vector fEnumerators; // list of enumerators for this list of listeners
 
   /**
-   * Construct an array of listeners with the specifed size. <p>
+   * Construct an array of listeners with the specified size. <p>
    * The array size is doubled every time an element is added
    * to a full array.
    *
@@ -71,7 +71,7 @@ public class ListenerList
   }
 
   /**
-   * Construct an array of listeners with the specifed size. <p>
+   * Construct an array of listeners with the specified size. <p>
    * The array size is doubled every time an element is added
    * to a full array.
    *
