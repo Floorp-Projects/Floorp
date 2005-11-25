@@ -18,5 +18,5 @@ ac_add_options --disable-shared
 ac_add_options --enable-static
 
 # remove link dependency on libstdc++.so
-LIBS=-lsupc++
-CXX=gcc
+#LIBS=-lsupc++
+#CXX=gcc
