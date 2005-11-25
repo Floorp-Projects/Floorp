@@ -49,9 +49,9 @@ JNI_OJIAPITest(JNIEnv_IsInstanceOf_3)
   
 
   if(env->IsInstanceOf(obj1, clazz3)){
-      return TestResult::FAIL("IsInstanceOf(some obj, isnt superclass or class) return incorrect value");
+      return TestResult::FAIL("IsInstanceOf(some obj, isn't superclass or class) return incorrect value");
   }else{
-      return TestResult::PASS("IsInstanceOf(some obj, isnt superclass or class) return correct value");
+      return TestResult::PASS("IsInstanceOf(some obj, isn't superclass or class) return correct value");
   }
 
 

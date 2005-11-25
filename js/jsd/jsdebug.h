@@ -1471,7 +1471,7 @@ extern JSD_PUBLIC_API(const char*)
 JSD_GetObjectConstructorURL(JSDContext* jsdc, JSDObject* jsdobj);
 
 /*
-* Get the line number of the line of source of the constuctor for this object.
+* Get the line number of the line of source of the constructor for this object.
 * created. May be 0 indicating that the line number is unknown.
 * *** new for version 1.1 ****
 */

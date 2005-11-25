@@ -599,7 +599,7 @@ JS_DestroyRuntime(rt)
             [exit here]
         So both $rt->DESTROY and $rt1->DESTROY will cause runtime destruction.
 
-        _PH_ Thats not true, I guess. At least for Perl 5.
+        _PH_ That's not true, I guess. At least for Perl 5.
      */
      /* warn("===> before runtime check\n"); */
     if(SvREFCNT(ST(0)) == 1){

@@ -159,7 +159,7 @@ class DefaultPolicy:
         if iid in self._nominated_interfaces_:
             # We return the underlying object re-wrapped
             # in a new gateway - which is desirable, as one gateway should only support
-            # one interface (this wont affect the users of this policy - we can have as many
+            # one interface (this won't affect the users of this policy - we can have as many
             # gateways as we like pointing to the same Python objects - the users never
             # see what object the call came in from.
             # NOTE: We could have simply returned the instance and let the framework
@@ -172,12 +172,12 @@ class DefaultPolicy:
             return GetClassInfoForObject(self._obj_)
 
         # See if the instance has a QI
-        # use lower-case "_query_interface_" as win32com does, and it doesnt really matter.
+        # use lower-case "_query_interface_" as win32com does, and it doesn't really matter.
         delegate = getattr(self._obj_, "_query_interface_", None)
         if delegate is not None:
-            # The COM object itself doesnt get passed to the child
+            # The COM object itself doesn't get passed to the child
             # (again, as win32com doesnt).  It is rarely needed
-            # (in win32com, we dont even pass it to the policy, although we have identified
+            # (in win32com, we don't even pass it to the policy, although we have identified
             # one place where we should - for marshalling - so I figured I may as well pass it
             # to the policy layer here, but no all the way down to the object.
             return delegate(iid)
@@ -191,7 +191,7 @@ class DefaultPolicy:
         if attr is not None and hasattr(self._obj_, attr):
             return xpcom.server.WrapObject(SupportsPrimitive(iid, self._obj_, attr, cvt), iid, bWrapClient = 0)
         # Out of clever things to try!
-        return None # We dont support this IID.
+        return None # We don't support this IID.
 
     def _MakeInterfaceParam_(self, interface, iid, method_index, mi, param_index):
         # Wrap a "raw" interface object in a nice object.  The result of this

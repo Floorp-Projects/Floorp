@@ -37,7 +37,7 @@
 
 # NOTE: This is a TEST interface, not a DEMO interface :-)
 # We try to get as many data-types etc exposed, meaning this
-# doesnt really make a good demo of a "simple component"
+# doesn't really make a good demo of a "simple component"
 
 
 from xpcom import components, verbose

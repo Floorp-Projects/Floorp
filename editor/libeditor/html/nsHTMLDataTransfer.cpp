@@ -683,7 +683,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
       nsCOMPtr<nsIDOMNode> selNode, tmp, visNode, highTable;
       PRInt32 selOffset;
       
-      // but dont cross tables
+      // but don't cross tables
       if (!nsHTMLEditUtils::IsTable(lastInsertNode))
       {
         res = GetLastEditableLeaf(lastInsertNode, address_of(selNode));
@@ -715,7 +715,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
         if (NS_FAILED(res)) return res;
       }
       
-      // make sure we dont end up with selection collapsed after an invisible break node
+      // make sure we don't end up with selection collapsed after an invisible break node
       nsWSRunObject wsRunObj(this, selNode, selOffset);
       PRInt32 outVisOffset=0;
       PRInt16 visType=0;
@@ -729,7 +729,7 @@ nsHTMLEditor::InsertHTMLWithContext(const nsAString & aInputString,
         // out of the nsWSRunObject's state.
         if (!IsVisBreak(wsRunObj.mStartReasonNode))
         {
-          // dont leave selection past an invisible break;
+          // don't leave selection past an invisible break;
           // reset {selNode,selOffset} to point before break
           res = GetNodeLocation(wsRunObj.mStartReasonNode, address_of(selNode), &selOffset);
           // we want to be inside any inline style prior to break
@@ -1602,11 +1602,11 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
 
           rv = selection->GetRangeAt(j, getter_AddRefs(range));
           if (NS_FAILED(rv) || !range) 
-            continue;//dont bail yet, iterate through them all
+            continue;//don't bail yet, iterate through them all
 
           nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
           if (NS_FAILED(rv) || !nsrange) 
-            continue;//dont bail yet, iterate through them all
+            continue;//don't bail yet, iterate through them all
 
           rv = nsrange->IsPointInRange(newSelectionParent, newSelectionOffset, &cursorIsInSelection);
           if(cursorIsInSelection)
@@ -2811,7 +2811,7 @@ nsHTMLEditor::ReplaceOrphanedStructure(PRBool aEnd,
   if (replaceNode)
   {
     // postprocess list to remove any descendants of this node
-    // so that we dont insert them twice.
+    // so that we don't insert them twice.
     nsCOMPtr<nsIDOMNode> endpoint;
     do
     {

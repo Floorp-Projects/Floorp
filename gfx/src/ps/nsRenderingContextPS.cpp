@@ -648,7 +648,7 @@ nsPoint         pp;
                 mPSObj->lineto(pp.x, pp.y);
 	}
 
-  // we dont close the path, this will give us a polyline
+  // we don't close the path, this will give us a polyline
   mPSObj->stroke();
 
   return NS_OK;

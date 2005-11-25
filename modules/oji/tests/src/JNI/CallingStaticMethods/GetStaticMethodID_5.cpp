@@ -45,8 +45,8 @@ JNI_OJIAPITest(JNIEnv_GetStaticMethodID_5)
   //env->CallVoidMethod(clazz, MethodID, 10);
 
   if(MethodID == NULL){
-    return TestResult::PASS("GetStaticMethodID for not existing name return 0, its correct");
+    return TestResult::PASS("GetStaticMethodID for not existing name return 0, it's correct");
   }else{
-    return TestResult::FAIL("GetStaticMethodID for not existing name doesnt return 0, its incorrect");
+    return TestResult::FAIL("GetStaticMethodID for not existing name doesn't return 0, it's incorrect");
   }
 }

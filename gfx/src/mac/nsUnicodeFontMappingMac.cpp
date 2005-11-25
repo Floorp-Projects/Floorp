@@ -212,7 +212,7 @@ PRBool nsUnicodeFontMappingMac::FontEnumCallback(const nsString& aFamily, PRBool
   		return PR_FALSE;
     nsGenericFontNameType type = info->MapGenericFontNameType(aFamily);
 
-	if( type != kUknownGenericFontName) {
+	if( type != kUnknownGenericFontName) {
 	    for(ScriptCode script = 0; script < 32 ; script++)
 		{
 			const nsString* fontName =  info->GenericFontNameForScript(script,type);

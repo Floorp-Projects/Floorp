@@ -164,7 +164,7 @@ Bool XpuXprintServersAvailable( void )
         c++;
     }
   }
-  /* a valid server name must at least contain the ':'-seperator
+  /* a valid server name must at least contain the ':'-separator
    * and a number (e.g. ":1") */
   return( c >= 2 );
 }

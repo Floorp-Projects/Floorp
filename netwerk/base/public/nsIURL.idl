@@ -108,7 +108,7 @@ interface nsIURL : nsIURI
      * empty string. If the trailing slash is omitted, then the
      * Directory is /foo/ and the file is bar (i.e. this is a 
      * syntactic, not a semantic breakdown of the Path).
-     * And hence dont rely on this for something to be a definitely 
+     * And hence don't rely on this for something to be a definitely 
      * be a file. But you can get just the leading directory portion 
      * for sure.
      *
@@ -122,7 +122,7 @@ interface nsIURL : nsIURI
      * e.g. http://foo/bar/, then the Directory attribute accesses
      * the complete /foo/bar/ portion, and the FileName is the 
      * empty string. Note that this is purely based on searching 
-     * for the last trailing slash. And hence dont rely on this to 
+     * for the last trailing slash. And hence don't rely on this to 
      * be a definite file. 
      *
      * Some characters may be escaped.

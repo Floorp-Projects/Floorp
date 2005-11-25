@@ -125,10 +125,10 @@
       <!-- When more than one toolbar is placed next to each other, they are typically
       grouped together in something called a toolbox.
       Along the left side of the toolbar is a little notch which, if clicked, will
-      colapse the toolbar so that only the notch is visible. The notch is called
+      collapse the toolbar so that only the notch is visible. The notch is called
       a grippy. When multiple toolbars are placed in the same toolbox, the grippies
       will collapse into a single row.
-      The toolbar should have an id attribute or the grippy wont be able to collapse
+      The toolbar should have an id attribute or the grippy won't be able to collapse
       or expand it properly -->
       <toolbox>
         <toolbar id="nav-toolbar">

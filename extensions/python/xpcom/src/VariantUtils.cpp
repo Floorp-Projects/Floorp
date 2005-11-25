@@ -1348,7 +1348,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::FillInVariant(const PythonTypeDescriptor 
 		  case nsXPTType::T_INTERFACE_IS: {
 			nsIID iid;
 			nsXPTCVariant &ns_viid = m_var_array[td.argnum];
-			NS_WARN_IF_FALSE(XPT_TDP_TAG(ns_viid.type)==nsXPTType::T_IID, "The INTERFACE_IS iid describer isnt an IID!");
+			NS_WARN_IF_FALSE(XPT_TDP_TAG(ns_viid.type)==nsXPTType::T_IID, "The INTERFACE_IS iid describer isn't an IID!");
 			// This is a pretty serious problem, but not Python's fault!
 			// Just return an nsISupports and hope the caller does whatever
 			// QI they need before using it.
@@ -1515,7 +1515,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::PrepareOutVariant(const PythonTypeDescrip
 			// we allocate a buffer for the value, but this is NOT cleaned up
 			// via normal VARIANT cleanup rules - hence we clean it up ourselves.
 			// If the param is IN/OUT, then the buffer falls under the normal variant
-			// rules (ie, is flagged as VAL_IS_ALLOCD), so we dont clean it as a temporary.
+			// rules (ie, is flagged as VAL_IS_ALLOCD), so we don't clean it as a temporary.
 			// (it may have been changed under us - we free the _new_ value.
 			// Even if ns_val.p already setup as part of "in" processing,
 			// we need to ensure setup for out.
@@ -1526,7 +1526,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::PrepareOutVariant(const PythonTypeDescrip
 			break;
 		  case nsXPTType::T_DOMSTRING:
 		  case nsXPTType::T_ASTRING: {
-			  NS_ABORT_IF_FALSE(ns_v.val.p==nsnull, "T_DOMTSTRINGS cant be out and have a value (ie, no in/outs are allowed!");
+			  NS_ABORT_IF_FALSE(ns_v.val.p==nsnull, "T_DOMTSTRINGS can't be out and have a value (ie, no in/outs are allowed!");
 			  NS_ABORT_IF_FALSE(XPT_PD_IS_DIPPER(td.param_flags) && XPT_PD_IS_IN(td.param_flags), "out DOMStrings must really be in dippers!");
 			  ns_v.flags |= nsXPTCVariant::VAL_IS_DOMSTR;
 			  // Dippers are really treated like "in" params.
@@ -1540,7 +1540,7 @@ PRBool PyXPCOM_InterfaceVariantHelper::PrepareOutVariant(const PythonTypeDescrip
 			}
 		  case nsXPTType::T_CSTRING:
 		  case nsXPTType::T_UTF8STRING: {
-			  NS_ABORT_IF_FALSE(ns_v.val.p==nsnull, "T_DOMTSTRINGS cant be out and have a value (ie, no in/outs are allowed!");
+			  NS_ABORT_IF_FALSE(ns_v.val.p==nsnull, "T_DOMTSTRINGS can't be out and have a value (ie, no in/outs are allowed!");
 			  NS_ABORT_IF_FALSE(XPT_PD_IS_DIPPER(td.param_flags) && XPT_PD_IS_IN(td.param_flags), "out DOMStrings must really be in dippers!");
 			  ns_v.flags |= ( XPT_TDP_TAG(ns_v.type)==nsXPTType::T_CSTRING ? nsXPTCVariant::VAL_IS_CSTR : nsXPTCVariant::VAL_IS_UTF8STR);
 			  ns_v.ptr = new nsCString();
@@ -1666,7 +1666,7 @@ PyObject *PyXPCOM_InterfaceVariantHelper::MakeSinglePythonResult(int index)
 	  case nsXPTType::T_INTERFACE_IS: {
 		nsIID iid;
 		nsXPTCVariant &ns_viid = m_var_array[td.argnum];
-		NS_WARN_IF_FALSE(XPT_TDP_TAG(ns_viid.type)==nsXPTType::T_IID, "The INTERFACE_IS iid describer isnt an IID!");
+		NS_WARN_IF_FALSE(XPT_TDP_TAG(ns_viid.type)==nsXPTType::T_IID, "The INTERFACE_IS iid describer isn't an IID!");
 		if (XPT_TDP_TAG(ns_viid.type)==nsXPTType::T_IID) {
 			nsIID *piid = (nsIID *)ns_viid.val.p;
 			if (piid==NULL)
@@ -1903,7 +1903,7 @@ PRUint32 PyXPCOM_GatewayVariantHelper::GetSizeIs( int var_index, PRBool is_arg1)
 		m_python_type_desc_array[var_index].argnum2;
 	NS_ABORT_IF_FALSE(argnum < m_num_type_descs, "size_is param is invalid");
 	if (argnum >= m_num_type_descs) {
-		PyErr_SetString(PyExc_ValueError, "dont have a valid size_is indicator for this param");
+		PyErr_SetString(PyExc_ValueError, "don't have a valid size_is indicator for this param");
 		return PR_FALSE;
 	}
 	PRBool is_out = XPT_PD_IS_OUT(m_python_type_desc_array[argnum].param_flags);
@@ -2019,7 +2019,7 @@ PyObject *PyXPCOM_GatewayVariantHelper::MakeSingleParam(int index, PythonTypeDes
 		nsISupports *iret = DEREF_IN_OR_OUT(ns_v.val.p, nsISupports *);
 		nsXPTParamInfo *pi = (nsXPTParamInfo *)m_info->params+index;
 		nsXPTCMiniVariant &ns_viid = m_params[td.argnum];
-		NS_ABORT_IF_FALSE((m_python_type_desc_array[td.argnum].type_flags & XPT_TDP_TAGMASK) == nsXPTType::T_IID, "The INTERFACE_IS iid describer isnt an IID!");
+		NS_ABORT_IF_FALSE((m_python_type_desc_array[td.argnum].type_flags & XPT_TDP_TAGMASK) == nsXPTType::T_IID, "The INTERFACE_IS iid describer isn't an IID!");
 		const nsIID * iid = NULL;
 		if (XPT_PD_IS_IN(m_python_type_desc_array[td.argnum].param_flags))
 			// may still be inout!
@@ -2107,7 +2107,7 @@ PRBool PyXPCOM_GatewayVariantHelper::GetIIDForINTERFACE_ID(int index, const nsII
 	// in or out, so we will allow it.
 	nsXPTParamInfo *pi = (nsXPTParamInfo *)m_info->params+index;
 	nsXPTType typ = pi->GetType();
-	NS_WARN_IF_FALSE(XPT_TDP_TAG(typ) == nsXPTType::T_IID, "INTERFACE_IS IID param isnt an IID!");
+	NS_WARN_IF_FALSE(XPT_TDP_TAG(typ) == nsXPTType::T_IID, "INTERFACE_IS IID param isn't an IID!");
 	NS_ABORT_IF_FALSE(typ.IsPointer(), "Expecting to re-fill a pointer value.");
 	if (XPT_TDP_TAG(typ) != nsXPTType::T_IID)
 		*ppret = &NS_GET_IID(nsISupports);
@@ -2151,7 +2151,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 {
 	nsXPTParamInfo *pi = (nsXPTParamInfo *)m_info->params+index;
 	NS_ABORT_IF_FALSE(pi->IsOut() || pi->IsDipper(), "The value must be marked as [out] (or a dipper) to be back-filled!");
-	NS_ABORT_IF_FALSE(!pi->IsShared(), "Dont know how to back-fill a shared out param");
+	NS_ABORT_IF_FALSE(!pi->IsShared(), "Don't know how to back-fill a shared out param");
 	nsXPTCMiniVariant &ns_v = m_params[index];
 
 	nsXPTType typ = pi->GetType();
@@ -2281,7 +2281,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		nsCString *ws = (nsCString *)ns_v.val.p;
 		NS_ABORT_IF_FALSE(ws->Length() == 0, "Why does this writable string already have chars??");
 		if (val == Py_None) {
-			NS_ABORT_IF_FALSE(0, "dont handle None here yet");
+			NS_ABORT_IF_FALSE(0, "don't handle None here yet");
 		} else {
 			if (!PyString_Check(val) && !PyUnicode_Check(val)) {
 				PyErr_SetString(PyExc_TypeError, "This parameter must be a string or Unicode object");
@@ -2298,7 +2298,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		nsCString *ws = (nsCString *)ns_v.val.p;
 		NS_ABORT_IF_FALSE(ws->Length() == 0, "Why does this writable string already have chars??");
 		if (val == Py_None) {
-			NS_ABORT_IF_FALSE(0, "dont handle None here yet");
+			NS_ABORT_IF_FALSE(0, "don't handle None here yet");
 		} else {
 			if (PyString_Check(val)) {
 				val_use = val;
@@ -2460,7 +2460,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			if (bCanSetSizeIs)
 				rc = SetSizeIs(index, PR_TRUE, nch);
 			else {
-				NS_ABORT_IF_FALSE(GetSizeIs(index, PR_TRUE) == nch, "Can't set sizeis, but string isnt correct size");
+				NS_ABORT_IF_FALSE(GetSizeIs(index, PR_TRUE) == nch, "Can't set sizeis, but string isn't correct size");
 			}
 		}
 		break;
@@ -2509,7 +2509,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			if (bCanSetSizeIs)
 				rc = SetSizeIs(index, PR_TRUE, nch);
 			else {
-				NS_ABORT_IF_FALSE(GetSizeIs(index, PR_TRUE) == nch, "Can't set sizeis, but string isnt correct size");
+				NS_ABORT_IF_FALSE(GetSizeIs(index, PR_TRUE) == nch, "Can't set sizeis, but string isn't correct size");
 			}
 		}
 		if (sz)
@@ -2567,7 +2567,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 			if (bCanSetSizeIs)
 				rc = SetSizeIs(index, PR_FALSE, sequence_size);
 			else {
-				NS_ABORT_IF_FALSE(GetSizeIs(index, PR_FALSE) == sequence_size, "Can't set sizeis, but string isnt correct size");
+				NS_ABORT_IF_FALSE(GetSizeIs(index, PR_FALSE) == sequence_size, "Can't set sizeis, but string isn't correct size");
 			}
 		}
 		break;
@@ -2593,7 +2593,7 @@ nsresult PyXPCOM_GatewayVariantHelper::ProcessPythonResult(PyObject *ret_ob)
 	NS_PRECONDITION(!PyErr_Occurred(), "Expecting no Python exception to be pending when processing the return result");
 
 	nsresult rc = NS_OK;
-	// If we dont get a tuple back, then the result is only
+	// If we don't get a tuple back, then the result is only
 	// an int nresult for the underlying function.
 	// (ie, the policy is expected to return (NS_OK, user_retval),
 	// but can also return (say), NS_ERROR_FAILURE
@@ -2628,7 +2628,7 @@ nsresult PyXPCOM_GatewayVariantHelper::ProcessPythonResult(PyObject *ret_ob)
 		; // do nothing
 	} else if (num_results==1) {
 		// May or may not be the nominated retval - who cares!
-		NS_ABORT_IF_FALSE(last_result >=0 && last_result < m_num_type_descs, "Have one result, but dont know its index!");
+		NS_ABORT_IF_FALSE(last_result >=0 && last_result < m_num_type_descs, "Have one result, but don't know its index!");
 		rc = BackFillVariant( user_result, last_result );
 	} else {
 		// Loop over each one, filling as we go.
@@ -2645,7 +2645,7 @@ nsresult PyXPCOM_GatewayVariantHelper::ProcessPythonResult(PyObject *ret_ob)
 			return NS_ERROR_FAILURE;
 		}
 		int num_user_results = PySequence_Length(user_result);
-		// If they havent given enough, we dont really care.
+		// If they havent given enough, we don't really care.
 		// although a warning is probably appropriate.
 		if (num_user_results != num_results) {
 			const char *method_name = m_info->GetName();
@@ -2665,7 +2665,7 @@ nsresult PyXPCOM_GatewayVariantHelper::ProcessPythonResult(PyObject *ret_ob)
 			this_py_index = 1;
 		}
 		for (i=0;NS_SUCCEEDED(rc) && i<m_info->GetParamCount();i++) {
-			// If weve already done it, or dont need to do it!
+			// If we've already done it, or don't need to do it!
 			if (i==index_retval || m_python_type_desc_array[i].is_auto_out) 
 				continue;
 			nsXPTParamInfo *pi = (nsXPTParamInfo *)m_info->params+i;

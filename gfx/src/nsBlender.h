@@ -103,7 +103,7 @@ protected:
    * @param aSLSpan number of bytes per line for the source bytes
    * @param aDLSpan number of bytes per line for the destination bytes
    * @param aMLSpan number of bytes per line for the Mask bytes
-   * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+   * @param aBlendQuality The quality of this blend, this is for tweening if necessary
    */
   void Do32Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
                  PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
@@ -119,7 +119,7 @@ protected:
   * @param aSLSpan number of bytes per line for the source bytes
   * @param aDLSpan number of bytes per line for the destination bytes
   * @param aMLSpan number of bytes per line for the Mask bytes
-  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+  * @param aBlendQuality The quality of this blend, this is for tweening if necessary
   */
   void Do24Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
                  PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,
@@ -135,7 +135,7 @@ protected:
   * @param aSLSpan number of bytes per line for the source bytes
   * @param aDLSpan number of bytes per line for the destination bytes
   * @param aMLSpan number of bytes per line for the Mask bytes
-  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+  * @param aBlendQuality The quality of this blend, this is for tweening if necessary
   */
   void Do16Blend(float aOpacity, PRInt32 aNumLines, PRInt32 aNumBytes,
                  PRUint8 *aSImage, PRUint8 *aDImage, PRUint8 *aSecondSImage,

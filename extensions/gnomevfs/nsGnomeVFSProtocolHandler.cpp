@@ -207,7 +207,7 @@ ProxiedAuthCallback(gconstpointer in,
     return;
 
   // Construct the single signon key.  Altering the value of this key will
-  // cause peoples remembered passwords to be forgotten.  Think carefully
+  // cause people's remembered passwords to be forgotten.  Think carefully
   // before changing the way this key is constructed.
   nsAutoString key, dispHost, realm;
   AppendUTF8toUTF16(scheme + NS_LITERAL_CSTRING("://") + hostPort, dispHost);

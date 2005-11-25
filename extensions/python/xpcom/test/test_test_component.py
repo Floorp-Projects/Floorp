@@ -441,7 +441,7 @@ def do_test_failures():
     try:
         ret = c.do_nsISupportsIs( xpcom._xpcom.IID_nsIInterfaceInfoManager )
         print "*** got", ret, "***"
-        raise RuntimeError, "We worked when using an IID we dont support!?!"
+        raise RuntimeError, "We worked when using an IID we don't support!?!"
     except xpcom.Exception, details:
         if details.errno != xpcom.nsError.NS_ERROR_NO_INTERFACE:
             raise RuntimeError, "Wrong COM exception type: %r" % (details,)
@@ -554,7 +554,7 @@ def doit(num_loops = -1):
     else:
         print "The Python test component worked!"
 
-# regrtest doesnt like if __name__=='__main__' blocks - it fails when running as a test!
+# regrtest doesn't like if __name__=='__main__' blocks - it fails when running as a test!
 num_iters = -1
 if __name__=='__main__' and len(sys.argv) > 1:
     num_iters = int(sys.argv[1])

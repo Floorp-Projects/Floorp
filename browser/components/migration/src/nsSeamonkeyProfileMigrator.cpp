@@ -439,7 +439,7 @@ nsSeamonkeyProfileMigrator::SetDownloadManager(void* aTransform, nsIPrefBranch* 
     // 1 - show individual progress dialogs
     // 2 - show nothing
     //
-    // Firebird has only a download manager window, but it can behave like a progress dialog, thus:
+    // Firefox has only a download manager window, but it can behave like a progress dialog, thus:
     // 0 || 1  -> show downloads window when a download starts
     // 2       -> don't show anything when a download starts
     // 1       -> close the downloads window as if it were a progress window when downloads complete.

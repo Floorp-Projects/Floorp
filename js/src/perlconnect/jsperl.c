@@ -188,12 +188,12 @@ JS_InitPerlClass(JSContext *cx, JSObject *obj)
 
 /*
     Perl constructor. Allocates a new interpreter and defines methods on it.
-    The constuctor is sort of bogus in that it doesn't create a new namespace
+    The constructor is sort of bogus in that it doesn't create a new namespace
     and all the variables defined in one instance of the Perl object will be
     visible in others. In the future, I think it may be a good idea to use
     Safe.pm to provide independent contexts for different Perl objects and
     prohibit certain operations (like exit(), alarm(), die(), etc.). Or we
-    may simple disallow calling the constuctor more than once.
+    may simple disallow calling the constructor more than once.
 */
 static JSBool
 PerlConstruct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *v)

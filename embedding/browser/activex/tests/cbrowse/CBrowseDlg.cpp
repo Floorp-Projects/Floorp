@@ -353,7 +353,7 @@ HRESULT CBrowseDlg::CreateWebBrowser()
 	}
 	else
 	{
-		OutputString(_T("Sucessfully attached to browser control"));
+		OutputString(_T("Successfully attached to browser control"));
 	}
 	
 	m_pControlSite->SetPosition(rcMarker);
@@ -364,7 +364,7 @@ HRESULT CBrowseDlg::CreateWebBrowser()
 	}
 	else
 	{
-		OutputString(_T("Sucessfully subscribed to events"));
+		OutputString(_T("Successfully subscribed to events"));
 	}
 
 	CComPtr<IUnknown> spUnkBrowser;

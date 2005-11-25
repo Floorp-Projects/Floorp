@@ -217,7 +217,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetHints(PRUint32& aResult)
 {
   PRUint32 result = 0;
 
-  // Most X servers implement 8 bit text rendering alot faster than
+  // Most X servers implement 8 bit text rendering a lot faster than
   // XChar2b rendering. In addition, we can avoid the PRUnichar to
   // XChar2b conversion. So we set this bit...
   result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;

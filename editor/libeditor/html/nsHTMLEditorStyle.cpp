@@ -451,7 +451,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
     }
   }
   
-  // dont need to do anything if property already set on node
+  // don't need to do anything if property already set on node
   PRBool bHasProp;
   nsCOMPtr<nsIDOMNode> styleNode;
   IsTextPropertySetByContent(aNode, aProperty, aAttribute, aValue, bHasProp, getter_AddRefs(styleNode));
@@ -1635,7 +1635,7 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
     return NS_ERROR_ILLEGAL_VALUE;
   if (!aTextNode) return NS_ERROR_NULL_POINTER;
   
-  // dont need to do anything if no characters actually selected
+  // don't need to do anything if no characters actually selected
   if (aStartOffset == aEndOffset) return NS_OK;
   
   nsresult res = NS_OK;

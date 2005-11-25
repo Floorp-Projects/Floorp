@@ -311,7 +311,7 @@ Py_nsISupports::PyObjectFromInterface(nsISupports *pis,
 	// since that means we have a spare reference
         
 	PyTypeObject *createType = NULL;
-	// If the IID is for nsISupports, dont bother with
+	// If the IID is for nsISupports, don't bother with
 	// a map lookup as we know the type!
 	if (!riid.Equals(NS_GET_IID(nsISupports))) {
 		// Look up the map

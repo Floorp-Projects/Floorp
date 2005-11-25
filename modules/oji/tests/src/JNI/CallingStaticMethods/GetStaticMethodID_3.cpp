@@ -46,8 +46,8 @@ JNI_OJIAPITest(JNIEnv_GetStaticMethodID_3)
 
 
   if(MethodID == NULL){
-    return TestResult::PASS("GetStaticMethodID for name = NULL return 0, its correct");
+    return TestResult::PASS("GetStaticMethodID for name = NULL return 0, it's correct");
   }else{
-    return TestResult::FAIL("GetStaticMethodID for name = NULL doesnt return 0, its incorrect");
+    return TestResult::FAIL("GetStaticMethodID for name = NULL doesn't return 0, it's incorrect");
   }
 }

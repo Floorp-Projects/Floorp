@@ -45,9 +45,9 @@ JNI_OJIAPITest(JNIEnv_GetStaticMethodID_4)
   //env->CallVoidMethod(clazz, MethodID, NULL);
 
   if(MethodID == NULL){
-     return TestResult::PASS("GetStaticMethodID with incorrect sig return 0, its correct");
+     return TestResult::PASS("GetStaticMethodID with incorrect sig return 0, it's correct");
   }else{
-     return TestResult::FAIL("GetStaticMethodID with incorrect sig doesnt return 0, its incorrect");
+     return TestResult::FAIL("GetStaticMethodID with incorrect sig doesn't return 0, it's incorrect");
   }
 
 }

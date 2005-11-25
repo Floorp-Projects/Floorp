@@ -44,9 +44,9 @@ JNI_OJIAPITest(JNIEnv_GetMethodID_2)
   IMPLEMENT_GetMethodID_METHOD("Test1", "Print_string", NULL);
 
   if(MethodID == NULL){
-     return TestResult::PASS("GetMethodID with sig==NULL return 0, its correct");
+     return TestResult::PASS("GetMethodID with sig==NULL return 0, it's correct");
   }else{
-     return TestResult::FAIL("GetMethodID with sig==NULL doesnt return 0, its incorrect");
+     return TestResult::FAIL("GetMethodID with sig==NULL doesn't return 0, it's incorrect");
   }
 
 }

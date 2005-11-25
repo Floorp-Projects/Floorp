@@ -281,7 +281,7 @@ Title=@WININT_TITLE@
 Sub Title=@WININT_SUBTITLE@
 Message0=@WININT_MESSAGE0@
 
-; Only a maximum of 4 "Windows Integration-Item"s are allowded.  Each Item
+; Only a maximum of 4 "Windows Integration-Item"s are allowed.  Each Item
 ; shows up as a checkbox in the Windows Integration dialog.
 [Windows Integration-Item0]
 CheckBoxState=TRUE

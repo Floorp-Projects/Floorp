@@ -370,7 +370,7 @@ static PRBool FillFontInfoFromCMAP(FMFont aFont, PRUint32 *aFontInfo, FourCharCo
 
   p = buf + offset;
   PRUint16 format = GET_SHORT(p);
-  NS_ASSERTION((kSFNTLookupSegmentArray == format), "hit some unknow format");
+  NS_ASSERTION((kSFNTLookupSegmentArray == format), "hit some unknown format");
   switch(format) {
     case kSFNTLookupSegmentArray: // format 4
     {

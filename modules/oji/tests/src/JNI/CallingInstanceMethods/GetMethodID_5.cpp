@@ -53,8 +53,8 @@ JNI_OJIAPITest(JNIEnv_GetMethodID_5)
 
   if(MethodID == NULL && env->ExceptionOccurred()) {
     env->ExceptionDescribe(); //exception should be thrown){
-    return TestResult::PASS("GetMethodID for not existing name return 0, its correct");
+    return TestResult::PASS("GetMethodID for not existing name return 0, it's correct");
   }else{
-    return TestResult::FAIL("GetMethodID for not existing name doesnt return 0, its incorrect");
+    return TestResult::FAIL("GetMethodID for not existing name doesn't return 0, it's incorrect");
   }
 }

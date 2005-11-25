@@ -55,7 +55,7 @@ protected:
     nsVoidArray mArray;
     
     // XXX - we could make these statics, and share them. But we're only going to have one
-    // of directoryindexstream at once, so theres no point
+    // of directoryindexstream at once, so there's no point
     nsXPIDLCString mFSCharset;
     nsCOMPtr<nsITextToSubURI> mTextToSubURI;
 

@@ -2677,7 +2677,7 @@ NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToIns
   }
   if (NS_FAILED(result)) return result;  // we potentially leak txn here?
 
-  // let listeners know whats up
+  // let listeners know what's up
   PRInt32 i;
   nsIEditActionListener *listener;
   if (mActionListeners)
@@ -2891,7 +2891,7 @@ NS_IMETHODIMP nsEditor::DeleteText(nsIDOMCharacterData *aElement,
   nsAutoRules beginRulesSniffing(this, kOpDeleteText, nsIEditor::ePrevious);
   if (NS_SUCCEEDED(result))  
   {
-    // let listeners know whats up
+    // let listeners know what's up
     PRInt32 i;
     nsIEditActionListener *listener;
     if (mActionListeners)
@@ -4234,7 +4234,7 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
 //                That dom point must be inside aNode, which is the node to 
 //                split.  outOffset is set to the offset in the parent of aNode where
 //                the split terminates - where you would want to insert 
-//                a new element, for instance, if thats why you were splitting 
+//                a new element, for instance, if that's why you were splitting 
 //                the node.
 //
 nsresult
@@ -4682,7 +4682,7 @@ nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSele
 
     offsetOfNewNode = offsetOfSelectedNode;
     
-    /* if the selection is a text node, split the text node if necesary
+    /* if the selection is a text node, split the text node if necessary
        and compute where to put the new node
     */
     if (selectedParentNodeAsText) 

@@ -3370,7 +3370,7 @@ HTMLContentSink::DidProcessAToken(void)
     // time to create windows.  This is important because on some
     // systems (Windows, for example) when a window is created and the
     // mouse is over it, a mouse move event is sent, which will kick
-    // us into interactive mode otherwise. It also supresses reaction
+    // us into interactive mode otherwise. It also suppresses reaction
     // to pressing the ENTER key in the URL bar...
 
     PRUint32 delayBeforeLoweringThreshold =

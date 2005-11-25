@@ -1059,7 +1059,7 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
           // and free it at line #2096, so it couldn't be a const ptr to string literal
           char *val = (char*) values[i];
           if (val && *val) {
-            // we cannot just *val=0, it wont be free properly in such case
+            // we cannot just *val=0, it won't be free properly in such case
             val[0] = '0';
             val[1] = 0;
           }

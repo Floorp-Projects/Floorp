@@ -1096,7 +1096,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
     }
   }// if end . checking all sub docshell ends here.
 
-  // bubble up the process to the parent docShell if necesary
+  // bubble up the process to the parent docShell if necessary
   if (eAccessKeyProcessingDown != aAccessKeyState && nsEventStatus_eConsumeNoDefault != *aStatus) {
     nsCOMPtr<nsISupports> pcContainer = aPresContext->GetContainer();
     NS_ASSERTION(pcContainer, "no container for presContext");

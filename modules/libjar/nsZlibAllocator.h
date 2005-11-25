@@ -74,7 +74,7 @@ class nsZlibAllocator {
       PRBool claimed = Claim(i);
       
       // ASSERT that we claimed the bucked. If we cannot, then the bucket is in use.
-      // We dont attempt to free this ptr.
+      // We don't attempt to free this ptr.
       // This will most likely cause a leak of this memory.
       PR_ASSERT(claimed);
       

@@ -996,7 +996,7 @@ nsGenericDOMDataNode::RangeAdd(nsIDOMRange* aRange)
     }
   }
 
-  // dont need to addref - this call is made by the range object itself
+  // don't need to addref - this call is made by the range object itself
   PRBool rv = range_list->AppendElement(aRange);
 
   return rv ? NS_OK : NS_ERROR_FAILURE;

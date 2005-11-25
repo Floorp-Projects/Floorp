@@ -553,7 +553,7 @@ PRInt32 nsZipArchive::CloseArchive()
   PL_FinishArenaPool(&mArena);
 
   // CAUTION:
-  // We dont need to delete each of the nsZipItem as the memory for
+  // We don't need to delete each of the nsZipItem as the memory for
   // the zip item and the filename it holds are both allocated from the Arena.
   // Hence, destroying the Arena is like destroying all the memory
   // for all the nsZipItem in one shot. But if the ~nsZipItem is doing

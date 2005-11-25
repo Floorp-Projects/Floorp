@@ -4914,9 +4914,9 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
     delete pfd;
     if (pluginTag) {
-      // If plugin changed, delete cachedPluginTag and dont use cache
+      // If plugin changed, delete cachedPluginTag and don't use cache
       if (LL_NE(fileModTime, pluginTag->mLastModifiedTime)) {
-        // Plugins has changed. Dont use cached plugin info.
+        // Plugins has changed. Don't use cached plugin info.
         delete pluginTag;
         pluginTag = nsnull;
 

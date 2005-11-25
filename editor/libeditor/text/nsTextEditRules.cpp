@@ -452,7 +452,7 @@ nsTextEditRules::DidInsertBreak(nsISelection *aSelection, nsresult aResult)
   res = mEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
   if (NS_FAILED(res)) return res;
   // confirm we are at end of document
-  if (selOffset == 0) return NS_OK;  // cant be after a br if we are at offset 0
+  if (selOffset == 0) return NS_OK;  // can't be after a br if we are at offset 0
   nsIDOMElement *rootElem = mEditor->GetRoot();
 
   nsCOMPtr<nsIDOMNode> root = do_QueryInterface(rootElem);
@@ -1146,7 +1146,7 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
   if (!aRange) return NS_ERROR_NULL_POINTER;
   
   // convert any newlines in editable, preformatted text nodes 
-  // into normal breaks.  this is because layout wont give us a place 
+  // into normal breaks.  this is because layout won't give us a place 
   // to put the cursor on empty lines otherwise.
 
   nsresult res;

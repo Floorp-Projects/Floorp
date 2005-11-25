@@ -2488,7 +2488,7 @@ nsGenericElement::RangeAdd(nsIDOMRange* aRange)
     return NS_OK;
   }
 
-  // dont need to addref - this call is made by the range object
+  // don't need to addref - this call is made by the range object
   // itself
   PRBool rv = entry->mRangeList->AppendElement(aRange);
   if (!rv) {
@@ -2528,7 +2528,7 @@ nsGenericElement::RangeRemove(nsIDOMRange* aRange)
     return;
   }
 
-  // dont need to release - this call is made by the range object itself
+  // don't need to release - this call is made by the range object itself
   entry->mRangeList->RemoveElement(aRange);
 
   if (entry->mRangeList->Count() == 0) {
