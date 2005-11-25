@@ -55,10 +55,6 @@
 <!-- LOCALIZATION NOTE (newLDAPDirectoryCmd.accesskey) : DONT_TRANSLATE -->
 <!ENTITY newLDAPDirectoryCmd.accesskey                  "D">
 <!ENTITY newIM.label                                    "IM">
-<!ENTITY importCmd.label                                "Import..."> 
-<!ENTITY importCmd.accesskey                            "I"> 
-<!ENTITY exportCmd.label                                "Export...">  
-<!ENTITY exportCmd.accesskey                            "E"> 
 <!ENTITY printCardViewCmd.label                         "Print Card...">
 <!ENTITY printCardViewCmd.accesskey                     "p">
 <!ENTITY printPreviewCardViewCmd.label                  "Print Preview Card">
@@ -101,6 +97,14 @@
 <!ENTITY lastFirstCmd.accesskey                         "l"> 
 <!ENTITY displayNameCmd.label                           "Display Name">  
 <!ENTITY displayNameCmd.accesskey                       "d"> 
+
+<!-- Tasks Menu -->
+<!ENTITY importCmd.label                                "Import...">
+<!ENTITY importCmd.accesskey                            "I">
+<!ENTITY exportCmd.label                                "Export...">
+<!ENTITY exportCmd.accesskey                            "E">
+<!ENTITY allowOnlineCheck.label                         "Check online presence (AOL)">
+<!ENTITY allowOnlineCheck.accesskey                     "C">
 
 <!ENTITY stopSearchingCmd.label                         ".Stop Searching"> 
 

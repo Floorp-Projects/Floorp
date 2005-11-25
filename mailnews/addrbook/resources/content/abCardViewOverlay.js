@@ -231,10 +231,11 @@ function DisplayCardViewPane(card)
     visible = HandleLink(data.cvEmail1, zPrimaryEmail, card.primaryEmail, data.cvEmail1Box, "mailto:" + card.primaryEmail) || visible;
   }
 
+  var onlineCheckAllowed = gPrefs.getBoolPref("mail.addr_book.im.online_check_allowed");
   var goimURL = "aim:goim?screenname=" + card.aimScreenName;
   var hasScreenName = HandleLink(data.cvScreenname, zScreenName, card.aimScreenName, data.cvScreennameBox, goimURL);
-  
-  if (!hasScreenName || gIOService.offline) {
+
+  if (!onlineCheckAllowed || !hasScreenName || gIOService.offline) {
     data.cvAimPresence.removeAttribute("src");
     data.cvAimPresence.removeAttribute("url");
     data.cvAimPresence.setAttribute("width","0");

@@ -372,6 +372,12 @@
             <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
             <menuitem label="&exportCmd.label;" accesskey="&exportCmd.accesskey;" oncommand="AbExport()"/>
             <menuseparator/>
+            <menuitem label="&allowOnlineCheck.label;"
+                      accesskey="&allowOnlineCheck.accesskey;"
+                      id="menu_allow_online_check"
+                      oncommand="onAllowOnlineCheck(event.target);"
+                      type="checkbox"/>
+            <menuseparator/>
           </menupopup>
         </menu>
 
