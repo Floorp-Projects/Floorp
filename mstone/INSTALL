@@ -39,7 +39,7 @@ Do initial configuration:
 Run "mstone config".  It will ask you about your system configuration.
 Fill in the appropriate values and create the optional user accounts
 and broadcast account.  When it asks about client machines, enter them
-seperated by commas, with no spaces (e.g. host1,host2,host3).  If you
+separated by commas, with no spaces (e.g. host1,host2,host3).  If you
 need to re-configure, run "mstone config".
 
 The machine starting the test may also be a client.  For accurate

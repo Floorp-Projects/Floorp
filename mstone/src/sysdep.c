@@ -259,14 +259,14 @@ crank_limits(void)
 static void
 nullHandler(int sig)
 {
-    /* Dont do anything, (trap SIGPIPE) */
+    /* Don't do anything, (trap SIGPIPE) */
     return;
 }
 
 static void
 alarmHandler(int sig)
 {
-    /* Dont do anything, mainly break system calls */
+    /* Don't do anything, mainly break system calls */
     if (gf_timeexpired < EXIT_SOON) gf_timeexpired = EXIT_SOON;
     return;
 }

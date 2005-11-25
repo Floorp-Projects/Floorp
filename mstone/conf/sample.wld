@@ -44,7 +44,7 @@
 
   telemetry	1			# log telemetry (for debugging)
 
-  # These usually dont need to be set.  These are the defaults
+  # These usually don't need to be set.  These are the defaults
   GnuPlot	gnuplot/gnuplot
   RSH		ssh
 # RSH		/usr/bin/remsh		# HP-UX uses this path
@@ -86,7 +86,7 @@
 # Here is how to configure a WinNT client from a Unix mail master
 # The NT rshd must interoperate with Unix rsh; allow redirection of
 #   stdin, stdout, and stderr; and must support binary file copies.
-# Denicomp's wrshdnt has been used sucessfully.  www.denicomp.com
+# Denicomp's wrshdnt has been used successfully.  www.denicomp.com
 <CLIENT HOSTS=winnt01>
   Arch	WINNT4.0
   command	mailclient.exe

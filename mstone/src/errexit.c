@@ -59,7 +59,7 @@ errexit(FILE *dfile, const char *format, ...)
     va_start(args, format);
 
 #if defined (HAVE_SNPRINTF) && defined (HAVE_VPRINTF)
-    /* puts as one chunk so that output doesnt get mixed up */
+    /* puts as one chunk so that output doesn't get mixed up */
     r = snprintf(buff, sizeof(buff),
 	     "%s[%d]\tt=%lu EXITING: ", gs_thishostname, gn_myPID, t);
     vsnprintf(buff+r, sizeof(buff) - r, format, args);
@@ -103,7 +103,7 @@ returnerr(FILE *dfile, const char *format, ...)
     va_start(args, format);
 
 #if defined (HAVE_SNPRINTF) && defined (HAVE_VPRINTF)
-    /* puts as one chunk so that output doesnt get mixed up */
+    /* puts as one chunk so that output doesn't get mixed up */
     r = snprintf(buff, sizeof(buff),
 	     "%s[%d]\tt=%lu: ", gs_thishostname, gn_myPID, t);
     vsnprintf(buff+r, sizeof(buff) - r, format, args);

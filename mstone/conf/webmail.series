@@ -13,7 +13,7 @@ export test_host="mail02"
 export desc_conf="12 CPUs"
 
 # Extra arguments common to all tests.  Any other args go here.
-# Note that arguments with embedded spaces wont work here.  
+# Note that arguments with embedded spaces won't work here.  
 #   Instead use: go_series -- <args...>
 export extra_args=""
 

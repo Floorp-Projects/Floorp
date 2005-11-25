@@ -128,7 +128,7 @@
 
 /* levels for timeexpired */
 #define EXIT_SOON	1		/* do a clean shutdown ASAP */
-#define EXIT_FAST	20		/* shutdown now, dont block */
+#define EXIT_FAST	20		/* shutdown now, don't block */
 #define EXIT_FASTEST	50		/* close sockets unconnditionally */
 
 /* Debug macros */
@@ -154,7 +154,7 @@ typedef struct string_list {
     char *	value;
 } string_list_t;
 
-/* Numeric range (Shared).  Previous value must be stored seperately */
+/* Numeric range (Shared).  Previous value must be stored separately */
 typedef struct range {
     unsigned long	first;			/* first valid value */
     unsigned long	last;			/* last valid value */
@@ -296,7 +296,7 @@ typedef struct thread_context {
 
    The routine getting the system error sets errMsg (strcpy, or sprintf).
    Calling routines append a "call trace" with additional info (strcat).
-   The "call trace" starts with '<' as a seperator.
+   The "call trace" starts with '<' as a separator.
 */
 #define debugfile (ptcx->dfile)
 

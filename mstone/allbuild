@@ -85,7 +85,7 @@ ARGS="$@"
 for ARG in "$@"; do
 
 # If this is a make assignment (FOO=whatever), add it to make command
-# Arguments with quotes in them dont go all the way through.
+# Arguments with quotes in them don't go all the way through.
 # Make args trick: 'FOO=nop -j 2'
 # The pre-post arg stuff uses hostnames as a switch, ugly calling syntax.
 if [[ -n "`echo z$ARG | egrep '^z[A-Z0-9_]+=[^ 	]'`" ]] ; then
@@ -124,10 +124,10 @@ fi
 # And build on each machine: "cd $BUILDDIR && $BUILDCMD"
 
 
-# expand targets (but dont confuse hosts for targets (msg7))
+# expand targets (but don't confuse hosts for targets (msg7))
 
 # These will build just mstone
-# expand targets (but dont confuse hosts for targets (msg7))
+# expand targets (but don't confuse hosts for targets (msg7))
 if [[ "$BUILDCMD" = "" && "$ARG" = mailstone* ]]; then
   case ${ARG#mstone} in
 	"")

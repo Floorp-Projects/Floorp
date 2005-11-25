@@ -32,7 +32,7 @@ include $(DEPTH)/config/corerules.mk
 
 ifneq ($(MODULE_NAME),)
 
-# OBJFILTERS is neccesary for the ifneq check below 
+# OBJFILTERS is necessary for the ifneq check below 
 # since OBJS seems to have an undetermined number of blanks in it
 OBJFILTERS = $(filter %$(OBJ_SUFFIX),$(OBJS))
 

@@ -92,7 +92,7 @@ HttpParseStart (pmail_command_t cmd,
     mycmd->hostInfo.portNum = HTTP_PORT;	/* get default port */
 
     D_PRINTF(stderr, "Http Assign defaults\n");
-    /* Fill in defaults first, ignore defaults we dont use */
+    /* Fill in defaults first, ignore defaults we don't use */
     for (pp = defparm; pp; pp = pp->next) {
 	(void)HttpParseNameValue (cmd, pp->name, pp->value);
     }

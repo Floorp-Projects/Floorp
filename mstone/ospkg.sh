@@ -42,7 +42,7 @@ do
 	[ -d $pkgdir/perl ] || mkdir -p $pkgdir/perl
 	cp -pf $srcdir/perl/Artistic $pkgdir/perl/
 
-	# we dont pull everything in, just the potentially useful parts
+	# we don't pull everything in, just the potentially useful parts
 	for subdir in man/man1 \
 		lib/$perlver lib/$perlver/$perlarch \
 		lib/$perlver/Time lib/$perlver/Term lib/$perlver/Class \

@@ -187,7 +187,7 @@ int main(int argc, char **argv)
 	    dynamicallyResolved = 
 	      info->lookupVirtualMethod(i, sig, vIndex, a);
 	  } catch (VerifyError err) {
-	    printf("\tlookupVirtualMethod() failed with erorr %d\n",
+	    printf("\tlookupVirtualMethod() failed with error %d\n",
 		   err.cause);
 	    printf("\tOk, so method is not virtual. trying static...\n");
 	    

@@ -56,7 +56,7 @@ static int	FinishedThreads = 0;   /* counter semaphore for children */
 /*
   This is a sleep that knows about test end.
   Should also do throttling.
-  We dont check for signals because the only signal expected is test end
+  We don't check for signals because the only signal expected is test end
  */
 void
 MS_idle(ptcx_t ptcx, int idleSecs)
@@ -292,7 +292,7 @@ clientLoop(ptcx_t ptcx)
 	ptcx->connectCount += do_command(ptcx, comm_index);
 	++ptcx->blockCount;
 
-	if (gf_timeexpired >= EXIT_SOON) break;	/* done, dont throttle */
+	if (gf_timeexpired >= EXIT_SOON) break;	/* done, don't throttle */
 
 	/* For the single processes/thread case, this should be exact */
 	if ((gn_maxBlockCnt)		/* check for max loops */
@@ -588,7 +588,7 @@ clientTimeSummary(ptcx_t ptcxs, int ntcxs, int clientnum, int outfd)
     for (pp=g_protocols; pp->name != NULL; ++pp) { /* output proto parts */
 	if (!pp->cmdCount) continue;	/* not used */
 	(pp->statsOutput)(pp, &pp->stats, rqsttextbuf);
-	/* The \t seperates sections for report parsing */
+	/* The \t separates sections for report parsing */
 	sprintf(&buf[strlen(buf)], "\t<%s blocks=%ld %s/>",
 		pp->name, pp->stats.totalcommands,
 		rqsttextbuf);

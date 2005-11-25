@@ -305,7 +305,7 @@ foreach $section (@workload) {
 	}
 	# most time critical first
 	if ($mode eq "timesync") {
-	    next if ($cli =~ /^localhost$/i); # dont reset our own time
+	    next if ($cli =~ /^localhost$/i); # don't reset our own time
 	    # run all these in parallel to minimize skew
 	    next if ($section->{ARCH} eq "NT4.0");
 	    forkproc ($rsh, $cli, "date $systime");

@@ -80,7 +80,7 @@ typedef struct wmap_command {
     int 	msgsize;	/* message size without trailing CRLF.CRLF */
     char *	msgdata;	/* cache the file in mem */
 
-    /* flag to leave mail on server (dont delete read mail) */
+    /* flag to leave mail on server (don't delete read mail) */
     int 	leaveMailOnServer;
 
     /* WMAP client http header */
@@ -115,7 +115,7 @@ typedef struct wmap_command {
 /*
   State during command execution.
 */
-/* This is (now) parsed on the fly, doesnt have to be huge */
+/* This is (now) parsed on the fly, doesn't have to be huge */
 #define RESPONSE_BUFFER_SIZE	(3*1024)
 
 typedef struct _doWMAP_state {
@@ -149,7 +149,7 @@ WmapParseStart(pmail_command_t cmd, char *line, param_list_t *defparm)
     wmap->hostInfo.portNum = WMAP_PORT;	/* get default port */
 
     D_PRINTF(stderr, "Wmap Assign defaults\n");
-    /* Fill in defaults first, ignore defaults we dont use */
+    /* Fill in defaults first, ignore defaults we don't use */
     for (pp = defparm; pp; pp = pp->next) {
 	(void)WmapParseNameValue(cmd, pp->name, pp->value);
     }

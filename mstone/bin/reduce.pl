@@ -414,7 +414,7 @@ sub parseLine {
 		foreach $k (keys %scalar) {
 		    #print "$k=$scalar{$k} ";
 		    $subcli->{$k} = $scalar{$k};
-		    # Dont bother with time graphs here
+		    # Don't bother with time graphs here
 		}
 		#print ") ";
 	    }
@@ -441,10 +441,10 @@ sub parseLine {
 		 $lastTime, $time, $timeD,
 		 $ltype, "PROTOCOLS:$1", $chunk);
 	    } else {
-		die "parseLine: Unkown separator $posttext\n";
+		die "parseLine: Unknown separator $posttext\n";
 	    }
 	} else {		# direct assignment
-	    # Note: we dont graph any scalars at the line level
+	    # Note: we don't graph any scalars at the line level
 	    #print "$vname='$chunk'\n";
 	    $scalar{$vname} = $chunk; # store for later
 	    $subcli->{$k} = $chunk if ($subcli);
@@ -537,7 +537,7 @@ sub allocTimerStorage {
     my $graphs = shift;		# hash of graphs
     my $ltype = shift;		# hash of line parsing info
     my $fstr = shift;		# format string to match
-    my $sepstr = shift;		# seperator storage to fill in
+    my $sepstr = shift;		# separator storage to fill in
 
     #print "parseTimer: format='$fstr'\n\tline='$line'\n";
     my $sepf;
@@ -578,7 +578,7 @@ sub allocTimerStorage {
 }
 
 # Walk a format discription and create storage hierarchy
-# Also creates the seperator and field names lists used everywhere else
+# Also creates the separator and field names lists used everywhere else
 # 	Some way to precompile the regular expressions (perl 5.005)?
 # Usage: allocStorage (clientsHash, graphHash, lineHash, format, "LINE")
 sub allocStorage {
@@ -586,7 +586,7 @@ sub allocStorage {
     my $graphs = shift;		# hash of graphs
     my $ltype = shift;		# hash of line parsing info
     my $fstr = shift;		# format string to match
-    my $sepstr = shift;		# seperator storage to fill in
+    my $sepstr = shift;		# separator storage to fill in
     #print "\nallocStorage format='$fstr'\n";
 
     my @tlist = ();		# list of text tokens
@@ -612,7 +612,7 @@ sub allocStorage {
 	    next;
 	}
 	
-	$remf = $sepf . $remf	# put seperator back in to remainder
+	$remf = $sepf . $remf	# put separator back in to remainder
 	    unless ($sepf  =~ /[\]\}]/); # unless after a timer/proto name
 	#print "vname='$vname'\n";
 
@@ -626,8 +626,8 @@ sub allocStorage {
 	$posttext =~ s/([][{}*+?^.\/])/\\$1/g; # quote regex syntax
 	#print "`$lasttext' ";	# this shows some trailing cruft, oops
 	#print "remf='$remf'\n";
-#	push @tlist, qr/$posttext/;	# save seperator text
-	push @tlist, $posttext;	# save seperator text
+#	push @tlist, qr/$posttext/;	# save separator text
+	push @tlist, $posttext;	# save separator text
 
 	if ($lasttext =~ m/[][]/) { # timer
 	    #print "[$vname] ";
@@ -662,7 +662,7 @@ sub allocStorage {
 	    }
 	    # recurse into protocol definition
 	    # this would allow recursive protocols, 
-	    #   but this isnt supported elsewhere
+	    #   but this isn't supported elsewhere
 	    allocStorage ($clients->{$vname}, $graphs->{$vname},
 			  $ltype,
 			  $ltype->{PROTOCOLS}->{$nm}, "PROTOCOLS:$vname");
@@ -952,9 +952,9 @@ $realTestSecs = $testsecs if ($realTestSecs > $testsecs);
 foreach $p (@protocols) {
     my $gp = $graphs{$p};
     foreach $n (@{$protocolFields{$p}}) { # all timers
-	my $t = $n;	# dont modify original list
+	my $t = $n;	# don't modify original list
 	if ($t =~ /^\[(\w+)\]$/) { $t = $1; } # strip off brackets
-	next unless ($gp->{$t}); # proto doesnt have this timer
+	next unless ($gp->{$t}); # proto doesn't have this timer
 	my $sp = $gp->{$t}->{"Time2"}; # sum of time squared graph pointer
 	my $tp = $gp->{$t}->{"Time"}; # sum of time graph pointer
 	my $np = $gp->{$t}->{"Try"}; # try graph pointer
@@ -985,9 +985,9 @@ foreach $p (@protocols) {
 foreach $p (@protocols) {
     my $gp = $graphs{$p};
     foreach $n (@{$protocolFields{$p}}) { # all timers
-	my $t = $n;	# dont modify original list
+	my $t = $n;	# don't modify original list
 	if ($t =~ /^\[(\w+)\]$/) { $t = $1; } # strip off brackets
-	next unless ($gp->{$t}); # proto doesnt have this timer
+	next unless ($gp->{$t}); # proto doesn't have this timer
 
 	my $tp = $gp->{$t}->{"Time"}; # time graph pointer
 	my $np = $gp->{$t}->{"Try"}; # try graph pointer

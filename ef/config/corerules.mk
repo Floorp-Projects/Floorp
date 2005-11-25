@@ -687,7 +687,7 @@ dependclean::
 	rm -f $(MKDEPENDENCIES)
 	+$(LOOP_OVER_DIR)
 
-# CUR_DIR is neccesary since it seems to crash gmake otherwise
+# CUR_DIR is necessary since it seems to crash gmake otherwise
 CUR_DIR = $(shell pwd)
 
 ifndef NO_IMPLICIT_DEPENDENCIES

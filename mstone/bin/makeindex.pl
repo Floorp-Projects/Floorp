@@ -94,7 +94,7 @@ END
 	if ($file eq $params{TSTAMP}) { next; } # written above
 	my $dir = $file;
 	$dir =~ s:/results.html::;
-	# dont read in old workloads, it will override the current one
+	# don't read in old workloads, it will override the current one
 	print INDEXNEW "<TR><TD><BR><A HREF=\"$file\">$dir</A></TD>\n";
 	print INDEXNEW "<TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD>\n";
 	print INDEXNEW "<TD><A HREF=\"$dir/all.wld\">workload</A></TD>\n";
