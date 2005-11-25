@@ -39,6 +39,7 @@
 
 #include "calICSService.h"
 #include "calDateTime.h"
+#include "calDuration.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsInterfaceHashtable.h"
@@ -725,6 +726,27 @@ calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
     return NS_OK;                                                       \
 }
 
+#define RO_COMP_DURATION_ATTRIBUTE(Attrname, ICALNAME)                  \
+NS_IMETHODIMP                                                           \
+calIcalComponent::Get##Attrname(calIDuration **dtp)                     \
+{                                                                       \
+    icalproperty *prop =                                                \
+        icalcomponent_get_first_property(mComponent,                    \
+                                         ICAL_##ICALNAME##_PROPERTY);   \
+    calDuration *dt;                                                    \
+    if (!prop) {                                                        \
+        *dtp = nsnull;  /* invalid duration */                          \
+        return NS_OK;                                                   \
+    }                                                                   \
+    struct icaldurationtype idt =                                       \
+        icalvalue_get_duration(icalproperty_get_value(prop));           \
+    dt = new calDuration(&idt);                                         \
+    if (!dt)                                                            \
+        return NS_ERROR_OUT_OF_MEMORY;                                  \
+    NS_ADDREF(*dtp = dt);                                               \
+    return NS_OK;                                                       \
+}
+
 NS_IMPL_ISUPPORTS1(calIcalComponent, calIIcalComponent)
 
 icalcomponent*
@@ -806,6 +828,7 @@ COMP_INT_ATTRIBUTE(Priority, PRIORITY, priority)
 COMP_STRING_TO_GENERAL_ENUM_ATTRIBUTE(IcalClass, CLASS, class)
 COMP_DATE_ATTRIBUTE(StartTime, DTSTART)
 COMP_DATE_ATTRIBUTE(EndTime, DTEND)
+RO_COMP_DURATION_ATTRIBUTE(Duration, DURATION)
 COMP_DATE_ATTRIBUTE(DueTime, DUE)
 COMP_DATE_ATTRIBUTE(StampTime, DTSTAMP)
 COMP_DATE_ATTRIBUTE(LastModified, LASTMODIFIED)

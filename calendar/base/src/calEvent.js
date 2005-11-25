@@ -206,6 +206,16 @@ calEvent.prototype = {
         this.mapPropsFromICS(event, this.icsEventPropMap);
 
         this.importUnpromotedProperties(event, this.eventPromotedProps);
+        
+        // If there is a duration set on the event, calculate the right
+        // end time.
+        // XXX This means that serializing later will loose the duration
+        //     information, to replace it with a dtend. bug 317786
+        if (event.duration) {
+            this.endDate = this.startDate.clone();
+            this.endDate.addDuration(event.duration);
+        }
+        
         // Importing didn't really change anything
         this.mDirty = false;
     },

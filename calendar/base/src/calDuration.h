@@ -51,6 +51,7 @@ class calDuration : public calIDuration
 public:
     calDuration ();
     calDuration (const calDuration& cdt);
+    calDuration (const struct icaldurationtype * const aDurationPtr);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -62,6 +63,8 @@ protected:
     PRBool mImmutable;
 
     struct icaldurationtype mDuration;
+
+    void FromIcalDuration(const struct icaldurationtype * const icald);
 };
 
 #endif /* CALDURATION_H_ */

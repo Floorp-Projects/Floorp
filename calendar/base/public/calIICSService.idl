@@ -43,6 +43,7 @@
 
 interface calIItemBase;
 interface calIDateTime;
+interface calIDuration;
 
 interface calIIcalProperty;
 interface nsIUTF8StringEnumerator;
@@ -110,6 +111,7 @@ interface calIIcalComponent : nsISupports
 
     attribute calIDateTime startTime;
     attribute calIDateTime endTime;
+    readonly attribute calIDuration duration;
     attribute calIDateTime dueTime;
     attribute calIDateTime stampTime;
 

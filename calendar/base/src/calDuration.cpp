@@ -69,6 +69,11 @@ calDuration::calDuration(const calDuration& cdt)
     mImmutable = PR_FALSE;
 }
 
+calDuration::calDuration(const struct icaldurationtype * const aDurationPtr)
+{
+    FromIcalDuration(aDurationPtr);
+}
+
 NS_IMETHODIMP
 calDuration::GetIsMutable(PRBool *aResult)
 {
@@ -279,6 +284,19 @@ calDuration::ToIcalDuration(struct icaldurationtype *icald)
     icald->hours   = mDuration.hours;
     icald->minutes = mDuration.minutes;
     icald->seconds = mDuration.seconds;
+    return;
+}
+
+void
+calDuration::FromIcalDuration(const struct icaldurationtype * const icald)
+{
+    mDuration.is_neg  = icald->is_neg;
+    mDuration.weeks   = icald->weeks;
+    mDuration.days    = icald->days;
+    mDuration.hours   = icald->hours;
+    mDuration.minutes = icald->minutes;
+    mDuration.seconds = icald->seconds;
+    return;
 }
 
 NS_IMETHODIMP
