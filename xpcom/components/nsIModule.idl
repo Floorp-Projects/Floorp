@@ -107,7 +107,7 @@ interface nsIModule : nsISupports
     *		unloaded.  It is very important to ensure that no outstanding 
     *       references to the module's code/data exist before returning 
     *       PR_TRUE. 
-    *		Returning PR_FALSE guaratees that the module wont be unloaded.
+    *		Returning PR_FALSE guaratees that the module won't be unloaded.
     */
     boolean canUnload(in nsIComponentManager aCompMgr);
 };

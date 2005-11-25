@@ -141,7 +141,7 @@ void trimWhite(char* inString)
 int nm2tsv(Options* inOptions)
 /*
 **  Read all input.
-**  Output tab seperated value data.
+**  Output tab separated value data.
 **
 **  We expect our data to be in a particular format.
 **  nm --format=bsd --size-sort --print-file-name --demangle

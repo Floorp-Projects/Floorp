@@ -83,7 +83,7 @@ nsCParserNode::nsCParserNode(CToken* aToken,
 
 /**
  *  destructor
- *  NOTE: We intentionally DONT recycle mToken here.
+ *  NOTE: We intentionally DON'T recycle mToken here.
  *        It may get cached for use elsewhere
  *  @update  gess 3/25/98
  *  @param   

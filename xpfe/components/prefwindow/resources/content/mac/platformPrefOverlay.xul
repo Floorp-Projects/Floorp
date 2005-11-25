@@ -41,7 +41,7 @@
 <overlay id="platformPreferencesOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <!-- the poor macintosh doesnt support any of the extra goodies that unix and 
+  <!-- the poor macintosh doesn't support any of the extra goodies that unix and 
        windows do, so this file is blank. (that doesn't mean it's not required,
        so don't remove it!) -->
          

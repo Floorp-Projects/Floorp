@@ -3574,7 +3574,7 @@ get_gtk_cursor(nsCursor aCursor)
         break;
     }
 
-    // if by now we dont have a xcursor, this means we have to make a
+    // if by now we don't have a xcursor, this means we have to make a
     // custom one
     if (newType != 0xff) {
         gdk_color_parse("#000000", &fg);

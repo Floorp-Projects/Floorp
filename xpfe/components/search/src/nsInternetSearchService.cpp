@@ -960,7 +960,7 @@ InternetSearchDataSource::Init()
 
 	gEngineListBuilt = PR_FALSE;
 
-	// Register as a profile change obsevrer
+	// Register as a profile change observer
   nsCOMPtr<nsIObserverService> observerService = 
            do_GetService("@mozilla.org/observer-service;1", &rv);
   if (observerService) {

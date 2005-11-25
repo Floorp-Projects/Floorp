@@ -166,7 +166,7 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
     // other CID for which factory creation can pass.
     // We will just let it be. The effect will be next time we try
     // creating the object, we will query the dll again. Since the
-    // dll is loaded, this aint a big hit. So for optimized builds
+    // dll is loaded, this ain't a big hit. So for optimized builds
     // this is ok to limp along.
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Factory creation failed");
     
@@ -212,7 +212,7 @@ nsNativeComponentLoader::RegisterComponentsInDir(PRInt32 when,
 #if 0
     // Going to many of these checks is a performance hit on the mac.
     // Since these routines are called relatively infrequently and
-    // we will fail anyway down the line if a directory aint there,
+    // we will fail anyway down the line if a directory ain't there,
     // we are commenting this check out.
 
     // Make sure we are dealing with a directory
@@ -328,7 +328,7 @@ nsFreeLibrary(nsDll *dll, nsIServiceManager *serviceMgr, PRInt32 when)
 
 #ifdef DEBUG_dougt
             // XXX dlls aren't counting their outstanding instances correctly
-            // XXX hence, dont unload until this gets enforced.
+            // XXX hence, don't unload until this gets enforced.
             rv = dll->Unload();
 #endif /* 0 */
         }
@@ -880,7 +880,7 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
     {
         // Create and add the dll to the mDllStore
         // It is ok to do this even if the creation of nsDll
-        // didnt succeed. That way we wont do this again
+        // didnt succeed. That way we won't do this again
         // when we encounter the same dll.
         dll = new nsDll(component, this);
         if (dll == NULL)

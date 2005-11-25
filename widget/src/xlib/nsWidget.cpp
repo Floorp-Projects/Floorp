@@ -363,7 +363,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
 NS_IMETHODIMP nsWidget::Destroy()
 {
 
-  // Dont reenter.
+  // Don't reenter.
   if (mIsDestroying)
     return NS_OK;
 
@@ -724,7 +724,7 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
   if (!mBaseWindow)
     return NS_ERROR_FAILURE;
 
-  /* don't bother setting if it it isnt mapped, duh */
+  /* don't bother setting if it it isn't mapped, duh */
   if (!mMapped)
     return NS_OK;
   
@@ -1464,7 +1464,7 @@ Cursor nsWidget::XlibCreateCursor(nsCursor aCursorType)
       break;
   }
 
-  /* if by now we dont have a xcursor, this means we have to make a custom one */
+  /* if by now we don't have a xcursor, this means we have to make a custom one */
   if (!xcursor) {
     NS_ASSERTION(newType != 0xff, "Unknown cursor type and no standard cursor");
     

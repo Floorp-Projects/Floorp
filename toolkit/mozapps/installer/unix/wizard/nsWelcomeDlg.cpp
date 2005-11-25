@@ -228,7 +228,7 @@ nsWelcomeDlg::Show(int aDirection)
 
     free(msgText);
 
-    // Now add 100px of padding, and then the last mesage.
+    // Now add 100px of padding, and then the last message.
     spacer = gtk_alignment_new(0.0, 0.0, 0.0, 0.0);
     gtk_widget_set_size_request(spacer, -1, 110);
     gtk_box_pack_start(GTK_BOX(vbox), spacer, FALSE, FALSE, 0);

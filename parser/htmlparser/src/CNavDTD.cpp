@@ -3067,7 +3067,7 @@ CNavDTD::CreateContextStackFor(eHTMLTags aChild)
     if (eHTMLTag_unknown == theTop) {
       result = BackwardPropagate(mScratch, eHTMLTag_html, aChild);
     } else if (theTop != aChild) {
-      // Dont even bother if we're already inside a similar element...
+      // Don't even bother if we're already inside a similar element...
       result = BackwardPropagate(mScratch, theTop, aChild);
     }
   }

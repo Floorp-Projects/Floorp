@@ -64,7 +64,7 @@ DIRS		+= windows build
 endif
 
 #
-# Dont build the DSO under the 'build' directory as windows does.
+# Don't build the DSO under the 'build' directory as windows does.
 #
 # The DSOs get built in the toolkit dir itself.  Do this so that 
 # multiple implementations of widget can be built on the same

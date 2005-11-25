@@ -445,7 +445,7 @@ function SelectCellHAlign()
 {
   SetCheckbox("CellHAlignCheckbox");
   // Once user changes the alignment,
-  //  we loose their original "CharAt" alignment"
+  //  we lose their original "CharAt" alignment"
   gAlignWasChar = false;
 }
 

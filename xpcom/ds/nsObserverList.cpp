@@ -76,7 +76,7 @@ nsObserverList::AddObserver(nsIObserver* anObserver, PRBool ownsWeak)
     nsCOMPtr<nsISupports> observerRef;
     if (ownsWeak) {
         nsCOMPtr<nsISupportsWeakReference> weakRefFactory = do_QueryInterface(anObserver);
-        NS_ASSERTION(weakRefFactory, "AddObserver: trying weak object that doesnt support nsIWeakReference");
+        NS_ASSERTION(weakRefFactory, "AddObserver: trying weak object that doesn't support nsIWeakReference");
         if ( weakRefFactory )
             observerRef = getter_AddRefs(NS_STATIC_CAST(nsISupports*, NS_GetWeakReference(weakRefFactory)));
     } else {

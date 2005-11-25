@@ -15,7 +15,7 @@ if [ ${MOZ_PIS_API} -lt 2 ] ; then
     exit 1
 fi
 
-# We run in a seperate process so we are allows to use single-letter
+# We run in a separate process so we are allows to use single-letter
 # shell vars (see mozilla/xpfe/bootstrap/init.d/README)
 for i in "${HOME}/${MOZ_PIS_USER_DIR}"/*/*.slt/Calendar ; do
     if [ -d "${i}" ] ; then

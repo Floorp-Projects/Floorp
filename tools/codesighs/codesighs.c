@@ -251,7 +251,7 @@ int codesighs(Options* inOptions)
 
     /*
     **  Read the file line by line, regardless of number of fields.
-    **  We assume tab seperated value formatting, at least 7 lead values:
+    **  We assume tab separated value formatting, at least 7 lead values:
     **      size class scope module segment object symbol ....
     */
     while(0 == retval && NULL != fgets(lineBuffer, sizeof(lineBuffer), inOptions->mInput))

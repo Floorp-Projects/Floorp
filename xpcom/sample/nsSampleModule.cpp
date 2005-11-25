@@ -80,10 +80,10 @@ static NS_METHOD nsSampleRegistrationProc(nsIComponentManager *aCompMgr,
 {
     // Do any registration specific activity like adding yourself to a
     // category. The Generic Module will take care of registering your
-    // component with xpcom. You dont need to do that. Only any component
+    // component with xpcom. You don't need to do that. Only any component
     // specific additional activity needs to be done here.
 
-    // This functions is optional. If you dont need it, dont add it to the structure.
+    // This functions is optional. If you don't need it, don't add it to the structure.
 
     return NS_OK;
 }
@@ -95,10 +95,10 @@ static NS_METHOD nsSampleUnregistrationProc(nsIComponentManager *aCompMgr,
 {
     // Undo any component specific registration like adding yourself to a
     // category here. The Generic Module will take care of unregistering your
-    // component from xpcom. You dont need to do that. Only any component
+    // component from xpcom. You don't need to do that. Only any component
     // specific additional activity needs to be done here.
 
-    // This functions is optional. If you dont need it, dont add it to the structure.
+    // This functions is optional. If you don't need it, don't add it to the structure.
 
     // Return value is not used from this function.
     return NS_OK;
@@ -110,8 +110,8 @@ NS_DECL_CLASSINFO(nsSampleImpl)
 static const nsModuleComponentInfo components[] =
 {
   { "Sample Component", NS_SAMPLE_CID, NS_SAMPLE_CONTRACTID, nsSampleImplConstructor,
-    nsSampleRegistrationProc /* NULL if you dont need one */,
-    nsSampleUnregistrationProc /* NULL if you dont need one */,
+    nsSampleRegistrationProc /* NULL if you don't need one */,
+    nsSampleUnregistrationProc /* NULL if you don't need one */,
     NULL /* no factory destructor */,
     NS_CI_INTERFACE_GETTER_NAME(nsSampleImpl),
     NULL /* no language helper */,

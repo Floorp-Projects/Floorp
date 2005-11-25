@@ -1393,7 +1393,7 @@ nsExternalAppHandler::~nsExternalAppHandler()
 
 NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener2 * aWebProgressListener)
 { 
-  // this call back means we've succesfully brought up the 
+  // this call back means we've successfully brought up the 
   // progress window so set the appropriate flag, even though
   // aWebProgressListener might be null
   

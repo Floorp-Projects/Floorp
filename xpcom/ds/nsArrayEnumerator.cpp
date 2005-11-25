@@ -185,7 +185,7 @@ nsCOMArrayEnumerator::operator new (size_t size, const nsCOMArray_base& aArray)
         NS_STATIC_CAST(nsCOMArrayEnumerator*, ::operator new(size));
 
     // now need to copy over the values, and addref each one
-    // now this might seem like alot of work, but we're actually just
+    // now this might seem like a lot of work, but we're actually just
     // doing all our AddRef's ahead of time since GetNext() doesn't
     // need to AddRef() on the way out
     PRUint32 i;

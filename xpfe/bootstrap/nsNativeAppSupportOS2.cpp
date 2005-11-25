@@ -2334,7 +2334,7 @@ NS_IMETHODIMP
 nsNativeAppSupportOS2::StartServerMode() {
 
     if (mShouldShowUI) {
-        // We dont have to anything anymore. The native UI
+        // We don't have to anything anymore. The native UI
         // will create the window
         return NS_OK;
     } else {
@@ -2349,7 +2349,7 @@ nsNativeAppSupportOS2::StartServerMode() {
         }
     }
 
-    // Since native UI wont create any window, we create a hidden window
+    // Since native UI won't create any window, we create a hidden window
     // so thing work alright.
 
     // Create some of the objects we'll need.

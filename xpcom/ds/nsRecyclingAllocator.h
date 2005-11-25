@@ -55,7 +55,7 @@
  * This allocator is thread safe.
  *
  * CAVEATS: As the number of buckets increases, this allocators performance
- *          will drop. As a general guideline, dont use this for more
+ *          will drop. As a general guideline, don't use this for more
  *          than NS_MAX_BLOCKS
  */
 

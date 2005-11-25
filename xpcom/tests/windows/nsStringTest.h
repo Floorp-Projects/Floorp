@@ -1074,7 +1074,7 @@ int CStringTester::TestDelete(){
 
     //let's try some whacky string deleting calls
   {
-    const char* pbuf = "whats up doc?";
+    const char* pbuf = "what's up doc?";
 
     nsCString s1(pbuf);
     s1.Cut(3,20); //try deleting more chars than actual length of pbuf
@@ -1085,7 +1085,7 @@ int CStringTester::TestDelete(){
     NS_ASSERTION(s1==pbuf,"Cut error");
 
     s1=pbuf;
-    s1.Cut(3,2);
+    s1.Cut(3,3);
     NS_ASSERTION(s1=="wha up doc?","Cut error");
 
   }

@@ -592,7 +592,7 @@ nsFilePicker::PutLocalFile(const nsString& inTitle, const nsString& inDefaultNam
   else
   {
     dialogCreateOptions.optionFlags &= ~kNavAllowStationery;  // remove Stationery option
-    creatorToSave = kNavGenericSignature;   // This supresses the default format menu items
+    creatorToSave = kNavGenericSignature;   // This suppresses the default format menu items
     SetupFormatMenuItems(&dialogCreateOptions);
   }
   

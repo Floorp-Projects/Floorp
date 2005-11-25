@@ -246,7 +246,7 @@ NewCategoryNode(const char *catName, STCategoryNode * parent, STGlobals * g)
 /*
 ** ProcessCategoryLeafRule
 **
-** Add this into the tree as a leaf node. It doesnt know who its parent is. For now we make
+** Add this into the tree as a leaf node. It doesn't know who its parent is. For now we make
 ** root as its parent
 */
 int
@@ -337,7 +337,7 @@ initCategories(STGlobals * g)
 
     fp = fopen(g->mCommandLineOptions.mCategoryFile, "r");
     if (!fp) {
-        /* It isnt an error to not have a categories file */
+        /* It isn't an error to not have a categories file */
         REPORT_INFO("No categories file.");
         return -1;
     }
@@ -576,7 +576,7 @@ categorizeAllocation(STOptions * inOptions, STContext * inContext,
         aAllocation;
 
     /*
-     ** Make sure run's stats are calculated. We dont go update the parents of allocation
+     ** Make sure run's stats are calculated. We don't go update the parents of allocation
      ** at this time. That will happen when we focus on this category. This updating of
      ** stats will provide us fast categoryreports.
      */

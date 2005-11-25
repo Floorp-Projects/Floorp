@@ -97,7 +97,7 @@ while(<>)
     {
         $uncommFreeCount++;
         $uncommFreeBytes += $2;
-        # these wont have an overhead
+        # these won't have any overhead
         # we shouldn't view this as a free as we could shed this and
         # reduce our VmSize
         $prevFree = $2;

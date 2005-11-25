@@ -74,7 +74,7 @@ void ParseDefaultsInfo()
   int  iIndex;
   DWORD dwIconsVisible;
 
-  // If szAppPath is a null sting, i.e. we cannot find where the app has been installed:
+  // If szAppPath is a null string, i.e. we cannot find where the app has been installed:
   //   - HIDEICONS will still remove the shortcuts but
   //   - SHOWICONS will do nothing because we won't be able to find the shortcuts to display.
   ParsePath(ugUninstall.szAppPath, szStorageDir, MAX_BUF, PP_PATH_ONLY);
