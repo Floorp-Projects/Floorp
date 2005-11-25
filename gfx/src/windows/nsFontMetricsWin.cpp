@@ -3625,7 +3625,7 @@ nsFontMetricsWin::RealizeFont()
     // XXX - DC If we are printing, we need to get the printer HDC and a screen HDC
     // The screen HDC is because there seems to be a bug or requirment that the 
     // GetFontData() method call have a screen HDC, some printers HDC's return nothing
-    // thats will give us bad font data, and break us.  
+    // that's will give us bad font data, and break us.  
     dc = mDeviceContext->mDC;
     win = (HWND)mDeviceContext->mWidget;
     dc1 = ::GetDC(win);
