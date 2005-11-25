@@ -4345,16 +4345,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
           case TOK_DOT:
             if (!EmitPropOp(cx, pn2, op, cg))
                 return JS_FALSE;
-            /*
-             * Allocate an extra stack slot for GC protection in case the
-             * initial value being post-incremented or -decremented is not
-             * a number, but converts to a jsdouble.  See jsinterp.c, the
-             * JSOP_PROPINC and JSOP_PROPDEC cases.
-             */
-            if ((js_CodeSpec[op].format & JOF_POST) &&
-                (uintN)cg->stackDepth == cg->maxStackDepth) {
-                ++cg->maxStackDepth;
-            }
             break;
           case TOK_LB:
             if (!EmitElemOp(cx, pn2, op, cg))
@@ -4385,6 +4375,19 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 #endif
           default:
             JS_ASSERT(0);
+        }
+
+        /*
+         * Allocate another stack slot for GC protection in case the initial
+         * value being post-incremented or -decremented is not a number, but
+         * converts to a jsdouble.  In the TOK_NAME cases, op has 0 operand
+         * uses and 1 definition, so we don't need an extra stack slot -- we
+         * can use the one allocated for the def.
+         */
+        if (pn2->pn_type != TOK_NAME &&
+            (js_CodeSpec[op].format & JOF_POST) &&
+            (uintN)cg->stackDepth == cg->maxStackDepth) {
+            ++cg->maxStackDepth;
         }
         break;
 
