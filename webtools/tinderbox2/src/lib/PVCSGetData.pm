@@ -27,9 +27,9 @@
 # Contributor(s): 
 
 
-# $Revision: 1.1 $ 
-# $Date: 2003/12/23 13:24:29 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.2 $ 
+# $Date: 2005/11/25 19:47:47 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/PVCSGetData.pm,v $ 
 # $Name:  $ 
 
@@ -42,7 +42,7 @@ use Time::Local;
 
 
 $SQL_USER = $TinderConfig::VC_PVCS_USER || 'tinderbox/tinderbox';
-$SEP = $TinderConfig::VC_PVCS_SEPERATOR || '___///___';
+$SEP = $TinderConfig::VC_PVCS_SEPARATOR || '___///___';
 
 sub time2pvcsFormat {
   # convert time() format to the format which appears in perforce output

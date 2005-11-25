@@ -762,7 +762,7 @@ function toggleShowHidden(event) {
 
 // from the current directory and whatever was entered
 // in the entry field, try to make a new path. This
-// uses "/" as the directory seperator, "~" as a shortcut
+// uses "/" as the directory separator, "~" as a shortcut
 // for the home directory (but only when seen at the start
 // of a path), and ".." to denote the parent directory.
 // returns an array of the files listed,

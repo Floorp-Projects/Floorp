@@ -54,7 +54,7 @@ Search the script after 'default' - you find some default-Settings for bug
 reports, which are used, if the sender did not send a field for it. The defaults
 should be checked and changed.
 
-Thats hopefully all, we will come up with any configuration file or something.
+That's hopefully all, we will come up with any configuration file or something.
 
 
 If your mail works, your script will insert mails from now on.

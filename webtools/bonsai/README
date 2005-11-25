@@ -307,7 +307,7 @@ doeditmessage.cgi	Perl.  Edits one of the email messages that bonsai sends
 			Calls:
 				nobody
 
-doeditprofile.cgi	Perl.  Edit peoples contact info.  Left-over code from
+doeditprofile.cgi	Perl.  Edit people's contact info.  Left-over code from
 			before we started getting this info from LDAP.
 			Called by:
 				editprofile.cgi
@@ -345,7 +345,7 @@ editmessage.cgi		Perl.  Edits one of the email messages that bonsai sends
 			Calls:
 				doeditmessage.cgi
 
-editprofile.cgi		Perl.  Edit peoples contact info.  Left-over code from
+editprofile.cgi		Perl.  Edit people's contact info.  Left-over code from
 			before we started getting this info from LDAP.
 			Called by:
 				localprofile.cgi

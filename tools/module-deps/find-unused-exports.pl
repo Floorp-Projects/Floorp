@@ -154,7 +154,7 @@ while ($func = pop @funcs_to_demangle) {
 
       #      print STDERR "Got result $_\n";
       if (/\s*(\S+)\s*==\s*(.*)$/) {
-        #        print STDERR"succesfully demangled $1 to $2\n";
+        #        print STDERR"successfully demangled $1 to $2\n";
         $demangle{$1} = $2;
       } else {
         $demangle{$1} = $1;

@@ -123,7 +123,7 @@ static int rtcFD = -1;
 #if defined(linux) || defined(NTO)
 static void DumpAddressMap()
 {
-  // Turn off the timer so we dont get interrupts during shutdown
+  // Turn off the timer so we don't get interrupts during shutdown
 #if defined(linux)
   if (rtcHz) {
     enableRTCSignals(false);

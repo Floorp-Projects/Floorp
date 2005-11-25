@@ -779,7 +779,7 @@ sub _to_array {
      return ($thing);
 }
 
-# Get all of the headers for a mail message, returned as a comma seperated
+# Get all of the headers for a mail message, returned as a comma separated
 # string, unless looking for a subject
 sub _GetMailHeaders {
      my ($mail_hdrs, $hdr) = @_;

@@ -40,9 +40,9 @@
 
 
 
-# $Revision: 1.8 $ 
-# $Date: 2003/08/17 01:37:52 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.9 $ 
+# $Date: 2005/11/25 19:47:48 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BT_Req.pm,v $ 
 # $Name:  $ 
 
@@ -80,7 +80,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.8 $ )[1];
+$VERSION = ( qw $Revision: 1.9 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -347,7 +347,7 @@ sub status_table_row {
 
     foreach $status (keys %{ $DATABASE{$tree}{$time} }) {
 
-      # do not display bugs whos status_progres is null, these have
+      # do not display bugs whose status_progress is null, these have
       # been deemed uninteresting.
 
       ($ReqData::STATUS_PROGRESS{$status}) ||

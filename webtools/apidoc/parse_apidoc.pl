@@ -30,7 +30,7 @@
 #
 # Contributor(s):
 #  Robert Ginda <rginda@netscape.com>, Initial development.
-#  Pavel Hlavnicka <pavel@gingerall.cz>, seperate tocs, param linking.
+#  Pavel Hlavnicka <pavel@gingerall.cz>, separate tocs, param linking.
 #  Petr Cimprich <petr@gingerall.cz>, nested frameset fix, encoded URLs.
 #  Petr Cimprich <petr@gingerall.cz>, Mozilla sidebar generated from TOC
 #

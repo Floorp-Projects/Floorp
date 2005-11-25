@@ -1151,7 +1151,7 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
     }
   }
 
-  // drop the const.. whats the right thing to do here?
+  // drop the const.. what's the right thing to do here?
   ((nsIRegion*)aRegion)->FreeRects(regionRectSet);
 
   return NS_OK;

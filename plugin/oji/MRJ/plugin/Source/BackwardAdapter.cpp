@@ -1272,7 +1272,7 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 // NPP_NewStream:
 // Notifies an instance of a new data stream and returns an error value. 
 //
-// Create a stream peer and stream.  If succesful, save
+// Create a stream peer and stream.  If successful, save
 // the stream peer in NPStream's pdata.
 //+++++++++++++++++++++++++++++++++++++++++++++++++
 

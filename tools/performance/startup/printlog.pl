@@ -3,7 +3,7 @@
 # big % differences
 
 my $percent = 1; # anything over 1% of total is of interest to us
-my $ignoreDllLoads = 0; # by default dont ignore dll timings
+my $ignoreDllLoads = 0; # by default don't ignore dll timings
 
 # Read in log to memory
 my @lines = <>;

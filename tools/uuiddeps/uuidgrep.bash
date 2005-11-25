@@ -65,7 +65,7 @@ find . -type f -and \( -name \*.cpp -or -name \*.c -or -name \*.h \) > $ALLSOURC
 export IDMATCHFILE=$MYTMPDIR/idmatches.txt
 xargs -l grep -Hn $SEARCHING4 < $ALLSOURCEFILES > $IDMATCHFILE
 
-# Seperate the variable names out of the matches.
+# Separate the variable names out of the matches.
 # We have the possibility here of having duplicates with differing names
 #  or of having different CIDs with the same names here, but this is as
 #  good as it gets for now.

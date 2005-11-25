@@ -1101,7 +1101,7 @@ void RemoveFromStartupFolder() {
     }
   }
 
-  if(theFilename) { //dont try if you can't get a reasonable guess to the path in the startup folder.
+  if(theFilename) { //don't try if you can't get a reasonable guess to the path in the startup folder.
   
     //-----------------------------------------------------------------------------
     //first, let's try to remove ourselves from the current users's startup folder...
@@ -1385,7 +1385,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpszArgs,in
         }
 
 
-        if(!gUserPath[0]) { //dont override something they provide at the 
+        if(!gUserPath[0]) { //don't override something they provide at the 
           if(cp){
             cp=strchr(cp,'['); //seek to the separator for the pathname (optional)
             if(cp && *cp) {

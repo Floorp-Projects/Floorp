@@ -179,7 +179,7 @@ nsRecyclingAllocator::Malloc(PRSize bytes, PRBool zeroit)
     // Add 4 bytes to what we allocate to hold the bucket index
     PRSize allocBytes = bytes + NS_ALLOCATOR_OVERHEAD_BYTES;
   
-    // We dont have that memory already. Allocate.
+    // We don't have that memory already. Allocate.
     Block *ptr = (Block *) (zeroit ? calloc(1, allocBytes) : malloc(allocBytes));
     
     // Deal with no memory situation
@@ -188,7 +188,7 @@ nsRecyclingAllocator::Malloc(PRSize bytes, PRBool zeroit)
   
     // This is the first allocation we are holding.
     // Setup timer for releasing memory
-    // If this fails, then we wont have a timer to release unused
+    // If this fails, then we won't have a timer to release unused
     // memory. We can live with that. Also, the next allocation
     // will try again to set the timer.
     if (mRecycleAfter && !mRecycleTimer)
@@ -285,7 +285,7 @@ nsRecyclingAllocator::FreeUnusedBuckets()
 nsRecyclingAllocator::Block*
 nsRecyclingAllocator::FindFreeBlock(PRSize bytes)
 {
-    // We dont enter lock for this check. This is intentional.
+    // We don't enter lock for this check. This is intentional.
     // Here is my logic: we are checking if (!mFreeList). Doing this check
     // without locking can lead to unpredictable results. YES. But the effect
     // of the unpredictedness are ok. here is why:
@@ -298,7 +298,7 @@ nsRecyclingAllocator::FindFreeBlock(PRSize bytes)
     //    FindFreeBlock() will enter lock, while (null) and return null.
     //
     // The reason why I chose to not enter lock for this check was that when
-    // the allocator is full, we dont want to impose any more overhead than
+    // the allocator is full, we don't want to impose any more overhead than
     // we already are for failing over to malloc/free.
 
     if (!mFreeList)

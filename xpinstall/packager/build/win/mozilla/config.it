@@ -256,7 +256,7 @@ Title=$ProductName$ Setup - Windows Integration
 Message0=Check the options you would like Setup to perform.
 Message1=These settings allow you to set default Internet preferences for browsing and searching.  They affect browsers installed on your machine, including Mozilla, Netscape and Microsoft Internet Explorer.
 
-; Only a maximum of 4 "Windows Integration-Item"s are allowded.  Each Item
+; Only a maximum of 4 "Windows Integration-Item"s are allowed.  Each Item
 ; shows up as a checkbox in the Windows Integration dialog.
 [Windows Integration-Item0]
 CheckBoxState=FALSE

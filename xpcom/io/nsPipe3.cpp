@@ -413,7 +413,7 @@ nsPipe::GetReadSegment(const char *&segment, PRUint32 &segmentLen)
 void
 nsPipe::AdvanceReadCursor(PRUint32 bytesRead)
 {
-    NS_ASSERTION(bytesRead, "dont call if no bytes read");
+    NS_ASSERTION(bytesRead, "don't call if no bytes read");
 
     nsPipeEvents events;
     {
@@ -511,7 +511,7 @@ nsPipe::GetWriteSegment(char *&segment, PRUint32 &segmentLen)
 void
 nsPipe::AdvanceWriteCursor(PRUint32 bytesWritten)
 {
-    NS_ASSERTION(bytesWritten, "dont call if no bytes written");
+    NS_ASSERTION(bytesWritten, "don't call if no bytes written");
 
     nsPipeEvents events;
     {

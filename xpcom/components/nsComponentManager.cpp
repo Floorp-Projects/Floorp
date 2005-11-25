@@ -312,7 +312,7 @@ PR_STATIC_CALLBACK(void)
 factory_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
 {
     nsFactoryTableEntry* entry = NS_STATIC_CAST(nsFactoryTableEntry*, aHdr);
-    // nsFactoryEntry is arena allocated. So we dont delete it.
+    // nsFactoryEntry is arena allocated. So we don't delete it.
     // We call the destructor by hand.
     entry->mFactoryEntry->~nsFactoryEntry();
     PL_DHashClearEntryStub(aTable, aHdr);
@@ -336,7 +336,7 @@ contractID_ClearEntry(PLDHashTable *aTable, PLDHashEntryHdr *aHdr)
     if (entry->mFactoryEntry->mTypeIndex == NS_COMPONENT_TYPE_SERVICE_ONLY &&
         entry->mFactoryEntry->mCid.Equals(kEmptyCID)) {
         // this object is owned by the hash.
-        // nsFactoryEntry is arena allocated. So we dont delete it.
+        // nsFactoryEntry is arena allocated. So we don't delete it.
         // We call the destructor by hand.
         entry->mFactoryEntry->~nsFactoryEntry();
     }
@@ -396,7 +396,7 @@ nsFactoryEntry::~nsFactoryEntry(void)
     // Release any service reference
     mServiceObject = nsnull;
 
-    // nsFactoryEntry is arena allocated. So we dont delete it.
+    // nsFactoryEntry is arena allocated. So we don't delete it.
     // We call the destructor by hand.
     if (mParent)
         mParent->~nsFactoryEntry();
@@ -1783,7 +1783,7 @@ nsComponentManagerImpl::ContractIDToClassID(const char *aContractID, nsCID *aCla
  * Translates a classID to a {ContractID, Class Name}. Does direct registry
  * access to do the translation.
  *
- * NOTE: Since this isn't heavily used, we arent caching this.
+ * NOTE: Since this isn't heavily used, we aren't caching this.
  */
 nsresult
 nsComponentManagerImpl::CLSIDToContractID(const nsCID &aClass,
@@ -1858,7 +1858,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID &aClass,
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
     if (gXPCOMShuttingDown) {
-        // When processing shutdown, dont process new GetService() requests
+        // When processing shutdown, don't process new GetService() requests
 #ifdef SHOW_DENIED_ON_SHUTDOWN
         nsXPIDLCString cid, iid;
         cid.Adopt(aClass.ToString());
@@ -1939,7 +1939,7 @@ nsComponentManagerImpl::CreateInstanceByContractID(const char *aContractID,
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
     if (gXPCOMShuttingDown) {
-        // When processing shutdown, dont process new GetService() requests
+        // When processing shutdown, don't process new GetService() requests
 #ifdef SHOW_DENIED_ON_SHUTDOWN
         nsXPIDLCString iid;
         iid.Adopt(aIID.ToString());
@@ -2058,7 +2058,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
     if (gXPCOMShuttingDown) {
-        // When processing shutdown, dont process new GetService() requests
+        // When processing shutdown, don't process new GetService() requests
 #ifdef SHOW_DENIED_ON_SHUTDOWN
         nsXPIDLCString cid, iid;
         cid.Adopt(aClass.ToString());
@@ -2242,14 +2242,14 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
                                               const nsIID& aIID,
                                               PRBool *result)
 {
-    // Now we want to get the service if we already got it. If not, we dont want
+    // Now we want to get the service if we already got it. If not, we don't want
     // to create an instance of it. mmh!
 
     // test this first, since there's no point in returning a service during
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
     if (gXPCOMShuttingDown) {
-        // When processing shutdown, dont process new GetService() requests
+        // When processing shutdown, don't process new GetService() requests
 #ifdef SHOW_DENIED_ON_SHUTDOWN
         nsXPIDLCString cid, iid;
         cid.Adopt(aClass.ToString());
@@ -2284,14 +2284,14 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
                                                                         const nsIID& aIID,
                                                                         PRBool *result)
 {
-    // Now we want to get the service if we already got it. If not, we dont want
+    // Now we want to get the service if we already got it. If not, we don't want
     // to create an instance of it. mmh!
 
     // test this first, since there's no point in returning a service during
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
     if (gXPCOMShuttingDown) {
-        // When processing shutdown, dont process new GetService() requests
+        // When processing shutdown, don't process new GetService() requests
 #ifdef SHOW_DENIED_ON_SHUTDOWN
         nsXPIDLCString iid;
         iid.Adopt(aIID.ToString());
@@ -2358,7 +2358,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
     // shutdown -- whether it's available or not would depend on the order it
     // occurs in the list
     if (gXPCOMShuttingDown) {
-        // When processing shutdown, dont process new GetService() requests
+        // When processing shutdown, don't process new GetService() requests
 #ifdef SHOW_DENIED_ON_SHUTDOWN
         nsXPIDLCString iid;
         iid.Adopt(aIID.ToString());

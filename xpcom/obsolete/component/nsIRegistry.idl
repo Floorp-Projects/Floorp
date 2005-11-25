@@ -53,7 +53,7 @@ interface nsIRegistry : nsISupports
     const long ApplicationComponentRegistry = 1;
     const long ApplicationRegistry = 2;
 
-    // Dont use this one. This for internal use only.
+    // Don't use this one. This for internal use only.
     const long ApplicationCustomRegistry = -1;
 
     void open(in nsIFile regFile);
@@ -159,7 +159,7 @@ interface nsIRegistryGetter : nsISupports
      *    terminating NULL and buf will be unchanged.
      *  NS_ERROR_FAILURE if an unknown error happened. state of buf and
      *    length undefined.
-     *  various failure codes otherwise. buf and length wont be updated.
+     *  various failure codes otherwise. buf and length won't be updated.
      */
     void getStringUTF8IntoBuffer(in nsRegistryKey baseKey, in string path,
                                  inout char buf, inout PRUint32 length);
@@ -175,7 +175,7 @@ interface nsIRegistryGetter : nsISupports
      *    terminating NULL and buf will be unchanged.
      *  NS_ERROR_FAILURE if an unknown error happened. state of buf and
      *    length undefined.
-     *  various other failure codes otherwise. buf and length wont be updated.
+     *  various other failure codes otherwise. buf and length won't be updated.
      */
     void getBytesUTF8IntoBuffer(in nsRegistryKey baseKey, in string path,
                                 inout PRUint8 buf, inout PRUint32 length);

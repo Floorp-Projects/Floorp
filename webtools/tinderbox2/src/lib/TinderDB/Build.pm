@@ -7,9 +7,9 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.67 $ 
-# $Date: 2003/08/17 16:05:42 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.68 $ 
+# $Date: 2005/11/25 19:47:48 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
 
@@ -87,11 +87,11 @@
 
 
 # $DATABASE{$tree}{$buildname}{'recent_success'}
-#    If the build is broken it is the first sucessful build following
+#    If the build is broken it is the first successful build following
 #    the minumum of all earliest_failures.
 
 # $DATABASE{$tree}{$buildname}{'average_buildtime'}
-#     the average time a sucessful build takes(in seconds).
+#     the average time a successful build takes(in seconds).
 
 # $DATABASE{$tree}{$buildname}{'average_deadtime'}
 #     the average deadtime (in seconds).

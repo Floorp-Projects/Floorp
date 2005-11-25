@@ -411,7 +411,7 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
                                 HandleQueueXtProc,
                                 (XtPointer)mEventQueue);
 
-/* This hack would not be neccesary if we would have a hashtable function
+/* This hack would not be necessary if we would have a hashtable function
  * which returns success/failure in a separate var ...
  */
 #define NEVER_BE_ZERO_MAGIC (54321) 
@@ -869,7 +869,7 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
       break;
   }
 
-  // Dont dispatch events for modifier keys pressed ALONE
+  // Don't dispatch events for modifier keys pressed ALONE
   if (nsKeyCode::KeyCodeIsModifier(event->xkey.keycode))
   {
     return;
@@ -942,7 +942,7 @@ nsAppShell::HandleKeyReleaseEvent(XEvent *event, nsWidget *aWidget)
       break;
   }
 
-  // Dont dispatch events for modifier keys pressed ALONE
+  // Don't dispatch events for modifier keys pressed ALONE
   if (nsKeyCode::KeyCodeIsModifier(event->xkey.keycode))
   {
     return;
@@ -1214,7 +1214,7 @@ void nsAppShell::HandleDragDropEvent(XEvent *event, nsWidget *aWidget) {
   nsresult rv;
   nsCOMPtr<nsIDragService> dragService( do_GetService(kCDragServiceCID, &rv) );
 
-  // FIXME: Dont think the currentlyDragging check is required. KenF
+  // FIXME: Don't think the currentlyDragging check is required. KenF
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDragSessionXlib> dragServiceXlib;
     dragServiceXlib = do_QueryInterface(dragService);

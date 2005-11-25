@@ -687,7 +687,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
 		PtWidgetOffset(pWidget, &offset);
 		/* Build a List of Tiles that might be in front of me.... */
 		PhTile_t *new_damage, *clip_tiles, *intersect;
-		/* Intersect the Damage tile list w/ the clipped out list and see whats left! */
+		/* Intersect the Damage tile list w/ the clipped out list and see what's left! */
 		new_damage = PhRectsToTiles(&damage->rect, 1);
 		PhDeTranslateTiles(new_damage, &offset);
 		clip_tiles = GetWindowClipping( pWidget );

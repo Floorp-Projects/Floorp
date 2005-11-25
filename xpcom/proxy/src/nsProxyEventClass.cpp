@@ -78,7 +78,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
     if (manager == nsnull) return nsnull;
 	
-	// dont need to lock the map, because this is only called
+	// don't need to lock the map, because this is only called
 	// by nsProxyEventClass::GetNewOrUsed which locks it for us.
 
 	nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
@@ -169,7 +169,7 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
 
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
     if (manager == nsnull) return;
-	// dont need to lock the map, because this is only called
+	// don't need to lock the map, because this is only called
 	// by GetNewOrUsed which locks it for us.
 
 	nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();

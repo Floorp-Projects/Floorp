@@ -2811,7 +2811,7 @@ nsChromeRegistry::GetProfileRoot(nsACString& aFileURL)
        const nsAFlatCString& empty = EmptyCString();
 
        // copy along
-       // It aint an error if these files dont exist
+       // It ain't an error if these files don't exist
        defaultUserContentFile->CopyToNative(userChromeDir, empty);
        defaultUserChromeFile->CopyToNative(userChromeDir, empty);
      }

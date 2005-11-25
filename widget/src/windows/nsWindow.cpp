@@ -5829,7 +5829,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, WPARAM wParam, nsPoint*
   PRBool insideMovementThreshold = (abs(gLastMousePoint.x - mp.x) < (short)::GetSystemMetrics(SM_CXDOUBLECLK)) &&
                                    (abs(gLastMousePoint.y - mp.y) < (short)::GetSystemMetrics(SM_CYDOUBLECLK));
 
-  // Supress mouse moves caused by widget creation
+  // Suppress mouse moves caused by widget creation
   if ((aEventType == NS_MOUSE_MOVE) &&
       (gLastMouseMovePoint.x == mp.x) &&
       (gLastMouseMovePoint.y == mp.y))

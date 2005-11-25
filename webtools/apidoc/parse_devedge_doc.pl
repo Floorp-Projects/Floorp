@@ -65,7 +65,7 @@ my $NAMESPACE = ""; # "APIDOC";
 my $TAB = "  ";
 my $indent_pfx = "";
 
-die ("I said, dont use this script!  Don't you read the comments?\n");
+die ("I said, don't use this script!  Don't you read the comments?\n");
 
 &parse_old_doc ();
 

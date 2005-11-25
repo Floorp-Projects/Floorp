@@ -829,7 +829,7 @@ void ConsumeArguments(int argc, char* argv[]) {
             break;
           case 's':
           case 'S':
-            gSloppy=true; // Dont look for member variables
+            gSloppy=true; // Don't look for member variables
             break;
 
           default:

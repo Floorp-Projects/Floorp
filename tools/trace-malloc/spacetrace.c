@@ -586,7 +586,7 @@ pngSink(void *aContext, const char *aBuffer, int aLen)
 /*
 ** FormatNumber
 **
-** Formats a number with thousands separator. Dont free the result. Returns
+** Formats a number with thousands separator. Don't free the result. Returns
 ** static data.
 */
 char *
@@ -5251,7 +5251,7 @@ contextLookup(STOptions * inOptions)
 
                 unlock = PR_TRUE;
                 /*
-                 ** Just a category change. We dont need to harvest. Just find the
+                 ** Just a category change. We don't need to harvest. Just find the
                  ** right node and set the cache.mSortedRun. We need to recompute
                  ** cost though. But that is cheap.
                  */
@@ -5790,7 +5790,7 @@ handleClient(void *inArg)
                  */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
                 PR_fprintf(aFD, "Server: %s%s",
-                           "$Id: spacetrace.c,v 1.50 2004/04/25 21:07:16 gerv%gerv.net Exp $",
+                           "$Id: spacetrace.c,v 1.51 2005/11/25 19:47:26 timeless%mozdev.org Exp $",
                            crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if (NULL != strstr(start, ".png")) {
@@ -5810,7 +5810,7 @@ handleClient(void *inArg)
                 }
                 PR_fprintf(aFD, crlf);
                 /*
-                 ** One more to seperate headers from content.
+                 ** One more to separate headers from content.
                  */
                 PR_fprintf(aFD, crlf);
                 /*

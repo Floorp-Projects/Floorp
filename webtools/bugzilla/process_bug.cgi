@@ -341,7 +341,7 @@ if (((defined $cgi->param('id') && $cgi->param('product') ne $oldproduct)
             my %defaults;
             # We set the defaults to these fields to the old value,
             # if its a valid option, otherwise we use the default where
-            # thats appropriate
+            # that's appropriate
             $vars->{'versions'} = $::versions{$prod};
             if ($vok) {
                 $defaults{'version'} = $cgi->param('version');

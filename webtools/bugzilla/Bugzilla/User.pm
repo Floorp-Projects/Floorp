@@ -1488,7 +1488,7 @@ the page footer, and C<0> otherwise.
 
 =item C<identity>
 
-Retruns a string for the identity of the user. This will be of the form
+Returns a string for the identity of the user. This will be of the form
 C<name E<lt>emailE<gt>> if the user has specified a name, and C<email>
 otherwise.
 

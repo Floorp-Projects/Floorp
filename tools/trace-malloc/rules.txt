@@ -14,7 +14,7 @@
 #
 # Predefined Categories
 # "All"           - All allocations [default]
-# "uncategorized" - All allocations that dont match any category
+# "uncategorized" - All allocations that don't match any category
 #
 #
 # Suresh Duddi <dp@netscape.com>
@@ -445,4 +445,4 @@ js_
 # Everything else
 # ----------------------------------------------------------------------
 # <uncategorized>
-# This is a predefined category. Dont create it yourself.
+# This is a predefined category. Don't create it yourself.

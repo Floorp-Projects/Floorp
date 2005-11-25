@@ -371,9 +371,9 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
   for(int cnt=usefulSymbols; --cnt>=0; rankingTable[cnt]=cnt);
 
   // Drat.  I would use ::qsort() but I would need a global variable and my
-  // into-pascal professor threatened to flunk anyone who used globals.
-  // She dammaged me for life :-) (That was 1986.  See how much influence
-  // she had.  I dont remember her name but I always feel guilty about globals)
+  // intro-pascal professor threatened to flunk anyone who used globals.
+  // She damaged me for life :-) (That was 1986.  See how much influence
+  // she had.  I don't remember her name but I always feel guilty about globals)
 
   // Shell Sort. 581130733 is the max 31 bit value of h = 3h+1
   int mx, i, h;
@@ -389,8 +389,8 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
     }
   }
 
-  // Ok, We are sorted now.  Lets go through the table until we get to
-  // functions that were never called.  Right now we dont do much inside
+  // Ok, We are sorted now.  Let's go through the table until we get to
+  // functions that were never called.  Right now we don't do much inside
   // this loop.  Later we can get callers and callees into it like gprof
   // does
   fprintf(fp,

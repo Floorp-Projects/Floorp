@@ -8,9 +8,9 @@
 # a programmer. Be sure to test the None.pm module as well as the
 # other VC Modules.
 
-# $Revision: 1.5 $ 
-# $Date: 2003/08/17 00:57:38 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.6 $ 
+# $Date: 2005/11/25 19:47:48 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcdisplay.tst,v $ 
 # $Name:  $ 
 #
@@ -104,11 +104,11 @@ sub print_tests {
     my $url;
     my $out;
 
-    my $seperator = ("-" x 30)."\n\n\n";
+    my $separator = ("-" x 30)."\n\n\n";
 
 
     $out .= "Simulation of processmail_build call\n";
-    $out .=  $seperator;
+    $out .=  $separator;
 
     %args = (
 	     'tree' => 'Project_A',
@@ -136,7 +136,7 @@ sub print_tests {
 
 
     $out .= "Simulation of VC column call\n";
-    $out .=  $seperator;
+    $out .=  $separator;
     
     %args = (
 	     'tree' => 'Project_A',
@@ -149,7 +149,7 @@ sub print_tests {
     $out .= print_test($url, %args);
  
     $out .= "Simulation of time column call\n";
-    $out .=  $seperator;
+    $out .=  $separator;
 
     %args = (
 	     'tree' => 'Project_A',

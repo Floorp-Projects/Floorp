@@ -471,7 +471,7 @@ nsClipboard::SelectionGetEvent (GtkWidget        *aWidget,
     else if (aSelectionData->selection == GDK_SELECTION_CLIPBOARD)
         whichClipboard = kGlobalClipboard;
     else
-        return; // THAT AINT NO CLIPBOARD I EVER HEARD OF
+        return; // THAT AIN'T NO CLIPBOARD I EVER HEARD OF
 
     nsCOMPtr<nsITransferable> trans = GetTransferable(whichClipboard);
     
@@ -572,7 +572,7 @@ nsClipboard::SelectionClearEvent (GtkWidget         *aWidget,
     else if (aEvent->selection == GDK_SELECTION_CLIPBOARD)
         whichClipboard = kGlobalClipboard;
     else
-        return; // THAT AINT NO CLIPBOARD I EVER HEARD OF
+        return; // THAT AIN'T NO CLIPBOARD I EVER HEARD OF
 
     EmptyClipboard(whichClipboard);
 }

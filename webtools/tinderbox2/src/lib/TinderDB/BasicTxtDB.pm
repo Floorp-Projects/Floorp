@@ -6,9 +6,9 @@
 # as a Dump of the $DATABASE reference.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2003/08/17 01:45:10 $ 
-# $Author: kestes%walrus.com $ 
+# $Revision: 1.13 $ 
+# $Date: 2005/11/25 19:47:48 $ 
+# $Author: timeless%mozdev.org $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BasicTxtDB.pm,v $ 
 # $Name:  $ 
 
@@ -48,7 +48,7 @@ use FileStructure;
 use Persistence;
 
 
-$VERSION = ( qw $Revision: 1.12 $ )[1];
+$VERSION = ( qw $Revision: 1.13 $ )[1];
 
 
 # To help preserve the database in the event of a serious system
@@ -127,7 +127,7 @@ sub readdir_file_prefix {
 
 # return the list of all files in $dir which begin with the prefix
 # $prefix in sorted (ascii' betically) order.  This is important since
-# we often deal with files whos suffix is time().$pid.
+# we often deal with files whose suffix is time().$pid.
 
   my ($self, $dir, $prefix) = @_;
 

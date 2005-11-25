@@ -97,7 +97,7 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
         $summary = $summary . $_ while (defined($_ = $IO->getline));
         $IO->close;
         if ( $entity->parts(0)->head->mime_type =~ /text\/plain/ ) {
-             # line beginning with -- is a signature seperator. Delete the sig
+             # line beginning with -- is a signature separator. Delete the sig
              $summary =~ s/^--.*//ms;
              $summary =~ s/&/&amp;/g;
              $summary =~ s/</&lt;/mg;

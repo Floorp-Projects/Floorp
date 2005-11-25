@@ -4,7 +4,7 @@
 #
 #   This file is hand crafted.
 #
-#   Each line contains two module names seperated by whitespace.
+#   Each line contains two module names separated by whitespace.
 #   If both modules are in the needed modules as defined by module-graph.pl,
 #       then the first module will always proceed the second module.
 #   Module order is not changed otherwise.

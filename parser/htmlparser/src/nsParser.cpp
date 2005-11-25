@@ -1625,7 +1625,7 @@ nsParser::Parse(const nsAString& aSourceBuffer,
     CParserContext* pc=0;
 
     if((!mParserContext) || (mParserContext->mKey!=aKey))  { 
-      //only make a new context if we dont have one, OR if we do, but has a different context key... 
+      //only make a new context if we don't have one, OR if we do, but has a different context key... 
   
       nsScanner* theScanner = new nsScanner(mUnusedInput,mCharset,mCharsetSource);
       NS_ENSURE_TRUE(theScanner, NS_ERROR_OUT_OF_MEMORY);

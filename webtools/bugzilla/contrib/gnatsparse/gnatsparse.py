@@ -270,7 +270,7 @@ def load_responsible(fname):
     rfp.close()
 
 def split_csl(list):
-    """ Split a comma seperated list """
+    """ Split a comma separated list """
     newlist = re.split(r"""\s*,\s*""", list)
     return newlist
 
