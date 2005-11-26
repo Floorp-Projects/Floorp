@@ -297,7 +297,6 @@ public:
 
 	nsIMdbFactory	*GetMDBFactory();
 	nsIMdbEnv		*GetEnv() {return m_mdbEnv;}
-	nsIMdbStore		*GetStore() {return m_mdbStore;}
 	PRUint32		GetCurVersion();
 	nsIMdbTableRowCursor *GetTableRowCursor();
 	nsIMdbTable		*GetPabTable() {return m_mdbPabTable;}
@@ -381,10 +380,10 @@ protected:
 
 	nsresult			DeleteRow(nsIMdbTable* dbTable, nsIMdbRow* dbRow);
 
-	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
-	nsIMdbStore	 	    *m_mdbStore;
-	nsIMdbTable		    *m_mdbPabTable;
-	nsIMdbTable                 *m_mdbDeletedCardsTable;
+  nsIMdbEnv   *m_mdbEnv;	// to be used in all the db calls.
+  nsIMdbStore *m_mdbStore;
+  nsIMdbTable *m_mdbPabTable;
+  nsIMdbTable *m_mdbDeletedCardsTable;
   nsCOMPtr<nsIFile> m_dbName;
 	PRBool				m_mdbTokensInitialized;
     nsVoidArray /*<nsIAddrDBListener>*/ *m_ChangeListeners;
