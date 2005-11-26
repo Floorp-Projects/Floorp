@@ -1653,6 +1653,9 @@ nsPlaintextEditor::GetReconversionString(nsReconversionEventReply* aReply)
   if (!aReply->mReconversionString)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  if (textValue.IsEmpty())
+    return NS_OK;
+
   // delete the selection
   return DeleteSelection(eNone);
 }

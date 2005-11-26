@@ -1879,6 +1879,9 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
     if (NS_FAILED(res)) return res;
     if (*aCancel) return NS_OK;
 
+    // We should delete nothing.
+    if (aAction == nsIEditor::eNone)
+      return NS_OK;
 
     // what's in the direction we are deleting?
     nsWSRunObject wsObj(mHTMLEditor, startNode, startOffset);
