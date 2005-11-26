@@ -403,6 +403,7 @@ function getNetworkPrefManager(network)
          ["font.family",      defer, "appearance.misc"],
          ["font.size",        defer, "appearance.misc"],
          ["hasPrefs",         false, "hidden"],
+         ["ignoreList",       [],    "hidden"],
          ["log",              client.prefs["networkLog"], ".log"],
          ["logFileName",      makeLogNameNetwork,         ".log"],
          ["motif.current",    defer, "appearance.motif"],

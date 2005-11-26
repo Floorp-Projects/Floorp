@@ -1001,6 +1001,10 @@ function my_showtonet (e)
                 // This makes sure we have the *right* me object.
                 this.primServ.me.rehome(this.primServ);
             }
+            // Update the list of ignored users from the prefs:
+            var ignoreAry = this.prefs["ignoreList"];
+            for (var j = 0; j < ignoreAry.length; ++j)
+                this.ignoreList[ignoreAry[j]] = getHostmaskParts(ignoreAry[j]);
 
             // After rehoming it is now safe for the user's commands.
             var cmdary = this.prefs["autoperform"];

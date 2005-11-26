@@ -3474,6 +3474,10 @@ function cmdIgnore(e)
             else
                 display(getMsg(MSG_IGNORE_DELERR, e.mask));
         }
+        // Update pref:
+        var ignoreList = keys(e.network.ignoreList);
+        e.network.prefs["ignoreList"] = ignoreList;
+        e.network.prefs["ignoreList"].update();
     }
     else
     {
