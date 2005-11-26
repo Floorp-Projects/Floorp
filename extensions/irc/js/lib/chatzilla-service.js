@@ -88,7 +88,7 @@ const ASS_CONTRACTID =
 const RDFS_CONTRACTID =
     "@mozilla.org/rdf/rdf-service;1";
 
-/* interafces used in this file */
+/* interfaces used in this file */
 const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
 const nsICmdLineHandler  = Components.interfaces.nsICmdLineHandler;
 const nsICategoryManager = Components.interfaces.nsICategoryManager;
@@ -104,11 +104,30 @@ const nsIAppShellService = Components.interfaces.nsIAppShellService;
 const nsISupports        = Components.interfaces.nsISupports;
 const nsISupportsWeakReference = Components.interfaces.nsISupportsWeakReference;
 const nsIRDFService      = Components.interfaces.nsIRDFService;
+const nsICommandLineHandler = Components.interfaces.nsICommandLineHandler;
+const nsICommandLine     = Components.interfaces.nsICommandLine;
 
 /* Command Line handler service */
 function CLineService()
 {}
 
+/* nsISupports */
+CLineService.prototype.QueryInterface =
+function handler_QI(iid)
+{
+    if (iid.equals(nsISupports))
+        return this;
+
+    if (nsICmdLineHandler && iid.equals(nsICmdLineHandler))
+        return this;
+
+    if (nsICommandLineHandler && iid.equals(nsICommandLineHandler))
+        return this;
+
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+}
+
+/* nsICmdLineHandler */
 CLineService.prototype.commandLineArgument = "-chat";
 CLineService.prototype.prefNameForStartup = "general.startup.chat";
 CLineService.prototype.chromeUrlForTask = "chrome://chatzilla/content";
@@ -116,6 +135,39 @@ CLineService.prototype.helpText = "Start with an IRC chat client";
 CLineService.prototype.handlesArgs = true;
 CLineService.prototype.defaultArgs = "";
 CLineService.prototype.openWindowWithArgs = true;
+
+/* nsICommandLineHandler */
+CLineService.prototype.handle =
+function handler_handle(cmdLine)
+{
+    var args;
+    try
+    {
+        var uristr = cmdLine.handleFlagWithParam("chat", false);
+        if (uristr)
+        {
+            args = new Object();
+            args.url = uristr;
+        }
+    }
+    catch (e)
+    {
+    }
+
+    if (args || cmdLine.handleFlag("chat", false))
+    {
+        var assClass = Components.classes[ASS_CONTRACTID];
+        var ass = assClass.getService(nsIAppShellService);
+        var hWin = ass.hiddenDOMWindow;
+        hWin.openDialog("chrome://chatzilla/content/", "_blank",
+                        "chrome,menubar,toolbar,status,resizable,dialog=no",
+                        args);
+        cmdLine.preventDefault = true;
+    }
+}
+
+CLineService.prototype.helpInfo =
+ "  -chat [<ircurl>]  Start with an IRC chat client.\n"
 
 /* factory for command line handler service (CLineService) */
 var CLineFactory = new Object();
@@ -126,10 +178,7 @@ function (outer, iid)
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
 
-    if (!iid.equals(nsICmdLineHandler) && !iid.equals(nsISupports))
-        throw Components.results.NS_ERROR_INVALID_ARG;
-
-    return new CLineService();
+    return new CLineService().QueryInterface(iid);
 }
 
 /* content listener */
@@ -438,6 +487,9 @@ function cz_mod_registerSelf(compMgr, fileSpec, location, type)
     catman.addCategoryEntry("command-line-argument-handlers",
                             "chatzilla command line handler",
                             CLINE_SERVICE_CONTRACTID, true, true);
+    catman.addCategoryEntry("command-line-handler",
+                            "m-irc",
+                            CLINE_SERVICE_CONTRACTID, true, true);
 
     debug("*** Registering content listener.\n");
     compMgr.registerFactoryLocation(IRCCONTENT_LISTENER_CID,
@@ -480,7 +532,9 @@ function cz_mod_unregisterSelf(compMgr, fileSpec, location)
     var catman = Components.classes["@mozilla.org/categorymanager;1"]
         .getService(nsICategoryManager);
     catman.deleteCategoryEntry("command-line-argument-handlers",
-                               CLINE_SERVICE_CONTRACTID, true);
+                               "chatzilla command line handler", true);
+    catman.deleteCategoryEntry("command-line-handler",
+                               "m-irc", true);
 }
 
 ChatzillaModule.getClassObject =
