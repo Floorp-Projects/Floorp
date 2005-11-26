@@ -553,15 +553,15 @@ function onWindowKeyPress (e)
         case 119:
         case 120:
         case 121: /* F10 */
-            var modifier = (e.ctrlKey || e.shiftKey || e.Altkey || e.metaKey);
+            if (e.ctrlKey || e.shiftKey || e.Altkey || e.metaKey)
+                break;
             var idx = code - 112;
-            if (!modifier && (idx in client.viewsArray) &&
-                client.viewsArray[idx].source)
+            if ((idx in client.viewsArray) && client.viewsArray[idx].source)
             {
                 var newView = client.viewsArray[idx].source;
                 dispatch("set-current-view", { view: newView });
-                e.preventDefault();
             }
+            e.preventDefault();
             break;
 
         case 33: /* pgup */
