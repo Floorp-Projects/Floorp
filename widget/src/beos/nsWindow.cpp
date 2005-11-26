@@ -1580,26 +1580,29 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 {
 	nsresult rv = NS_ERROR_FAILURE;
-
-	if (PR_TRUE == aIsSynchronous)
+	// Asynchronous painting is performed with via nsViewBeOS::Draw() call and its message queue. 
+	// All update rects are collected in nsViewBeOS member  "paintregion".
+	// Flushing of paintregion happens in nsViewBeOS::GetPaintRegion(),
+	// cleanup  - in nsViewBeOS::Validate(), called in OnPaint().
+	BRegion reg;
+	reg.MakeEmpty();
+	if (mView && mView->LockLooper())
 	{
-		//Synchronous painting is using direct call of OnPaint() now,
-		//to avoid senseless overhead of callbacks and messages
-		rv = OnPaint(mBounds) ? NS_OK : NS_ERROR_FAILURE;
-	}
-	else
-	{
-		//Asynchronous painting is performed with implicit usage of BWindow/app_server queues, via Draw() calls. 
-		//All update rects are collected in nsViewBeOS member  "paintregion".
-		//Flushing and cleanup of paintregion happens in nsViewBeOS::GetPaintRegion() when it
-		//is called in nsWindow::CallMethod() in case of ONPAINT.
-		if (mView && mView->LockLooper())
+		if (PR_TRUE == aIsSynchronous)
+		{
+			mView->paintregion.Include(mView->Bounds());
+			reg.Include(mView->Bounds());
+		}
+		else
 		{
 			mView->Draw(mView->Bounds());
-			mView->UnlockLooper();
 			rv = NS_OK;
 		}
+		mView->UnlockLooper();
 	}
+	// Instant repaint.
+	if (PR_TRUE == aIsSynchronous)
+		rv = OnPaint(&reg);
 	return rv;
 }
 
@@ -1611,24 +1614,34 @@ NS_METHOD nsWindow::Invalidate(PRBool aIsSynchronous)
 NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
 	nsresult rv = NS_ERROR_FAILURE;
-
-	if (PR_TRUE == aIsSynchronous)
+	// Very temporary region for double accounting.
+	BRegion reg;
+	reg.MakeEmpty();
+	if (mView && mView->LockLooper()) 
 	{
-		rv = OnPaint((nsRect &)aRect) ? NS_OK : NS_ERROR_FAILURE;
-	}
-	else
-	{
-		if (mView && mView->LockLooper()) 
+		BRect	r(aRect.x, 
+				aRect.y, 
+				aRect.x + aRect.width - 1, 
+				aRect.y + aRect.height - 1);
+		if (PR_TRUE == aIsSynchronous)
 		{
-			BRect	r(aRect.x, 
-					aRect.y, 
-					aRect.x + aRect.width - 1, 
-					aRect.y + aRect.height - 1);
+			mView->paintregion.Include(r);
+			reg.Include(r);
+		}
+		else
+		{
+			// we use Draw() instead direct addition to paintregion,
+			// as it sets queue of notification messages for painting.
 			mView->Draw(r);
 			rv = NS_OK;
-			mView->UnlockLooper();
 		}
+		mView->UnlockLooper();
 	}
+	// Instant repaint - for given rect only. 
+	// Don't repaint area which isn't marked here for synchronous repaint explicitly.
+	// BRegion "reg" (equal to aRect) will be substracted from paintregion in OnPaint().
+	if (PR_TRUE == aIsSynchronous)
+		rv = OnPaint(&reg);
 	return rv;
 }
 
@@ -1640,35 +1653,38 @@ NS_METHOD nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
 {
 	
-	nsRect r;
 	nsRegionRectSet *rectSet = nsnull;
 	if (!aRegion)
 		return NS_ERROR_FAILURE;
 	nsresult rv = ((nsIRegion *)aRegion)->GetRects(&rectSet);
 	if (NS_FAILED(rv))
 		return rv;
-	if (aIsSynchronous)
-	{
-		
-		((nsIRegion *)aRegion)->GetBoundingBox(&r.x, &r.y, &r.width, &r.height);
-		rv = OnPaint(r, aRegion) ? NS_OK : NS_ERROR_FAILURE;
-	}
-	else
+	BRegion reg;
+	reg.MakeEmpty();
+	if (mView && mView->LockLooper())
 	{
 		for (PRUint32 i=0; i< rectSet->mRectsLen; ++i)
 		{
-			r.x = rectSet->mRects[i].x;
-			r.y = rectSet->mRects[i].y;
-			r.width = rectSet->mRects[i].width;
-			r.height = rectSet->mRects[i].height;
-			if (mView && mView->LockLooper())
+			BRect br(rectSet->mRects[i].x, rectSet->mRects[i].y,
+					rectSet->mRects[i].x + rectSet->mRects[i].width-1,
+					rectSet->mRects[i].y + rectSet->mRects[i].height -1);
+			if (PR_TRUE == aIsSynchronous)
 			{
-				mView->Draw(BRect(r.x, r.y, r.x + r.width -1, r.y + r.height -1));
-				mView->UnlockLooper();
+				mView->paintregion.Include(br);
+				reg.Include(br);
+			}
+			else
+			{
+				mView->Draw(br);
 				rv = NS_OK;
 			}
 		}
+		mView->UnlockLooper();
 	}
+	// Instant repaint - for given region only. 
+	// BRegion "reg"(equal to aRegion) will be substracted from paintregion in OnPaint().
+	if (PR_TRUE == aIsSynchronous)
+		rv = OnPaint(&reg);
 
 	return rv;
 }
@@ -1680,17 +1696,27 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Update()
 {
-
+	nsresult rv = NS_ERROR_FAILURE;
 	//Restoring children visibility if scrolling trigger is off
 	if (!mIsScrolling)
 		HideKids(PR_FALSE);
 	//Switching scrolling trigger off
 	mIsScrolling = PR_FALSE;
-	//Flushing native pending updates
-	if (mView && mView->Window())
-		mView->Window()->UpdateIfNeeded();
-
-	return NS_OK;
+	// Getting whole paint cache filled in native and non-native Invalidate() calls.
+	// Sending it all to view manager via OnPaint()
+	BRegion reg;
+	reg.MakeEmpty();
+	if(mView && mView->LockLooper())
+	{
+		//Flushing native pending updates*/
+		if (mView->Window())
+			mView->Window()->UpdateIfNeeded();
+		bool nonempty = mView->GetPaintRegion(&reg);
+		mView->UnlockLooper();
+		if (nonempty)
+			rv = OnPaint(&reg);
+	}
+	return rv;
 }
 
 //-------------------------------------------------------------------------
@@ -1783,11 +1809,13 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 			{
 				BRect siblingframe = mView->ConvertFromParent(child->Frame());
 				if (child != mView && child->Parent() != mView)
+				{
 					invalid.Exclude(siblingframe);
+					mView->paintregion.Exclude(siblingframe);
+				}
 			}
 			src = invalid.Frame();
 		}
-		
 
 		// make sure we only reference visible bits
 		// so we don't trigger a BView invalidate
@@ -1803,12 +1831,15 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 		
 		BRect dest = src.OffsetByCopy(aDx, aDy);
 		mView->ConstrainClippingRegion(&invalid);
-		// Moving content
+		// Moving visible content 
 		if (src.IsValid() && dest.IsValid())
 			mView->CopyBits(src, dest);
 
-		invalid.Exclude(dest);		
-
+		invalid.Exclude(dest);	
+		// Native paintregion needs shifting too, it is very important action
+		// (as app_server doesn't know about Mozilla viewmanager tricks) -
+		// it allows proper update after scroll for areas covered by other windows.
+		mView->paintregion.OffsetBy(aDx, aDy);
 		mView->ConstrainClippingRegion(&invalid);
 		// Time to silently move now invisible children
 		for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) 
@@ -1824,6 +1855,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 			{
 				//There is native child
 				childWidget->SetBounds(bounds);
+				mView->paintregion.Exclude(child->Frame());
 				child->MoveBy(aDx, aDy);
 			}
 			else
@@ -1831,31 +1863,12 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 				childWidget->Move(bounds.x, bounds.y);
 			}
 		}			
-		// Native region needs shifting too.
-		mView->paintregion.OffsetBy(aDx, aDy);
-		// Adding native paintregion to calculated one.
-		// May be done with BRegion reg; GetNativeRegion(&reg);
-		invalid.Include(&mView->paintregion);
-		//OnPaint don't need Lock()
+
 		mView->UnlockLooper();
-		// Drawing uncovered regions by direct OnPaint call,
-		// so we avoid going through the callback stuff
-		BRect	curr = invalid.Frame();
-		nsRect r(nscoord(curr.left), nscoord(curr.top), 
-						nscoord(curr.IntegerWidth() + 1), nscoord(curr.IntegerHeight() + 1));
-		mUpdateArea->SetTo(0,0,0,0);
-		int numrects = invalid.CountRects();
-		for (int i = 0; i< numrects; i++)
-		{
-			b = invalid.RectAt(i);
-			mUpdateArea->Union(int(b.left), int(b.top), 
-								b.IntegerWidth() + 1, b.IntegerHeight() + 1);
-		}
-		OnPaint(r, mUpdateArea);
 
-		if (mView->Window())
-			mView->Window()->UpdateIfNeeded();
-
+		// Painting calculated region now,
+		// letting Update() to paint remaining content of paintregion
+		OnPaint(&invalid);
 	}
 	return NS_OK;
 }
@@ -1995,14 +2008,15 @@ bool nsWindow::CallMethod(MethodInfo *info)
 			}
 			else
 				return false;
-			// BeOS TwoWheel input-filter is bit buggy atm, generating sometimes X-wheel without reason
-			// so we setting priority for Y-wheel with "else", in future code may be more elegant
+			// BeOS TwoWheel input-filter is bit buggy atm, generating sometimes X-wheel with no reason,
+			// so we're setting priority for Y-wheel.
+			// Also hardcoding here _system_ scroll-step value to 3 lines.
 			if (nscoord(delta.y) != 0)
 			{
-				OnWheel(nsMouseScrollEvent::kIsVertical, buttons, cursor, nscoord(delta.y));
+				OnWheel(nsMouseScrollEvent::kIsVertical, buttons, cursor, nscoord(delta.y)*3);
 			}
 			else if(nscoord(delta.x) != 0)
-				OnWheel(nsMouseScrollEvent::kIsHorizontal, buttons, cursor, nscoord(delta.x));
+				OnWheel(nsMouseScrollEvent::kIsHorizontal, buttons, cursor, nscoord(delta.x)*3);
 		}
 		break;
 
@@ -2026,27 +2040,18 @@ bool nsWindow::CallMethod(MethodInfo *info)
 		break;
 
 	case nsWindow::ONPAINT :
-		NS_ASSERTION(info->nArgs == 0, "Wrong number of arguments to CallMethod");
-		if (mView)
+		NS_ASSERTION(info->nArgs == 1, "Wrong number of arguments to CallMethod");
 		{
+			if ((uint32)mView != ((uint32 *)info->args)[0])
+				return false;
 			BRegion reg;
-			nsRegion nreg;
 			reg.MakeEmpty();
-			bool nonempty = mView->GetPaintRegion(&reg);
-			BRect br = reg.Frame();
-			if (nonempty && br.IsValid())
+			if(mView && mView->LockLooper())
 			{
-				nsRect r(nscoord(br.left), nscoord(br.top), 
-						nscoord(br.IntegerWidth() + 1), nscoord(br.IntegerHeight() + 1));
-				mUpdateArea->SetTo(0,0,0,0);
-				int numrects = reg.CountRects();
-				for (int i = 0; i< numrects; i++)
-				{
-					br = reg.RectAt(i);
-					mUpdateArea->Union(int(br.left), int(br.top), 
-										br.IntegerWidth() + 1, br.IntegerHeight() + 1);
-				}
-				OnPaint(r, mUpdateArea);
+				bool nonempty = mView->GetPaintRegion(&reg);
+				mView->UnlockLooper();
+				if (nonempty)
+					OnPaint(&reg);
 			}
 		}
 		break;
@@ -2630,26 +2635,40 @@ void nsWindow::OnWheel(PRInt32 aDirection, uint32 aButtons, BPoint aPoint, nscoo
 // Paint
 //
 //-------------------------------------------------------------------------
-nsresult nsWindow::OnPaint(nsRect &r, const nsIRegion *nsr)
+nsresult nsWindow::OnPaint(BRegion *breg)
 {
 	nsresult rv = NS_ERROR_FAILURE;
-
-	if (r.IsEmpty() || !mEventCallback || !mView  || (eWindowType_child != mWindowType && eWindowType_popup != mWindowType))
-		return rv;
-	
-	// Substracting update rect from pending drawing region
-	if (mView->LockLooper())
+	if (mView && mView->LockLooper())
 	{
-		BRect br(r.x, r.y, r.x + r.width - 1, r.y + r.height -1);
-		mView->Validate(br);
+		// Substracting area from paintregion
+		mView->Validate(breg);
+		// looks like it should be done by Mozilla via nsRenderingContext methods,
+		// but we saw in some cases how it follows Win32 ideas and don't care about clipping there
+		mView->ConstrainClippingRegion(breg);
 		mView->UnlockLooper();
 	}
+	else
+		return rv;
+	BRect br = breg->Frame();
+	if (!br.IsValid() || !mEventCallback || !mView  || (eWindowType_child != mWindowType && eWindowType_popup != mWindowType))
+		return rv;
+	nsRect nsr(nscoord(br.left), nscoord(br.top), 
+			nscoord(br.IntegerWidth() + 1), nscoord(br.IntegerHeight() + 1));
+	mUpdateArea->SetTo(0,0,0,0);
+	int numrects = breg->CountRects();
+	for (int i = 0; i< numrects; i++)
+	{
+		BRect br = breg->RectAt(i);
+		mUpdateArea->Union(int(br.left), int(br.top), 
+							br.IntegerWidth() + 1, br.IntegerHeight() + 1);
+	}	
+
 	
 	nsPaintEvent event(PR_TRUE, NS_PAINT, this);
 
 	InitEvent(event);
-	event.region = (nsIRegion *)nsr;
-	event.rect = &r;
+	event.region = mUpdateArea;
+	event.rect = &nsr;
 	event.renderingContext = GetRenderingContext();
 	if (event.renderingContext != nsnull)
 	{
@@ -2657,13 +2676,13 @@ nsresult nsWindow::OnPaint(nsRect &r, const nsIRegion *nsr)
 		// It will help toget rid of some hacks in LockAndUpdateView and
 		// allow non-permanent nsDrawingSurface for BeOS - currently it fails for non-bitmapped BViews/widgets.
 		// Something like this:
-		// event.renderingContext->SetFont(mFontMetrics);
+		//if (mFontMetrics)
+		//	event.renderingContext->SetFont(mFontMetrics);
 		rv = DispatchWindowEvent(&event) ? NS_OK : NS_ERROR_FAILURE;
 		NS_RELEASE(event.renderingContext);
 	}
 
 	NS_RELEASE(event.widget);
-
 	return rv;
 }
 
@@ -2972,12 +2991,14 @@ void nsViewBeOS::Draw(BRect updateRect)
 	// if update region is empty.
 	if (paintregion.CountRects() == 0 || !paintregion.Frame().IsValid() || !fJustValidated)
 		return;
+	uint32	args[1];
+	args[0] = (uint32)this;
 	nsWindow	*w = (nsWindow *)GetMozillaWidget();
 	nsToolkit	*t;
 	if (w && (t = w->GetToolkit()) != 0)
 	{
 		MethodInfo *info = nsnull;
-		info = new MethodInfo(w, w, nsWindow::ONPAINT);
+		info = new MethodInfo(w, w, nsWindow::ONPAINT, 1, args);
 		if (info)
 		{
 			t->CallMethodAsync(info);
@@ -2991,18 +3012,20 @@ void nsViewBeOS::Draw(BRect updateRect)
 // Method to get update rects for asynchronous drawing.
 bool nsViewBeOS::GetPaintRegion(BRegion *r)
 {
+
+	// Mozilla got previous ONPAINT message,
+	// ready for next event.
+	fJustValidated = true;
 	if (paintregion.CountRects() == 0)
 		return false;
 	r->Include(&paintregion);
 	return true;
 }
+
 // Method to remove painted rects from pending update region
-void nsViewBeOS::Validate(BRect r)
+void nsViewBeOS::Validate(BRegion *reg)
 {
-	paintregion.Exclude(r);
-	// Mozilla got previous ONPAINT message,
-	// ready for next event.
-	fJustValidated = true;
+	paintregion.Exclude(reg);
 }
 
 BPoint nsViewBeOS::GetWheel()

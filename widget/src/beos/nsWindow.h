@@ -190,7 +190,7 @@ protected:
 	void                    OnDestroy();
 	void                    OnWheel(PRInt32 aDirection, uint32 aButtons, BPoint aPoint, nscoord aDelta);
 	PRBool                  OnMove(PRInt32 aX, PRInt32 aY);
-	nsresult                OnPaint(nsRect &r, const nsIRegion *nsreg = nsnull);
+	nsresult                OnPaint(BRegion *breg);
 	PRBool                  OnResize(nsRect &aWindowRect);
 	PRBool                  OnKeyDown(PRUint32 aEventType, 
 	                                  const char *bytes, 
@@ -321,7 +321,7 @@ public:
 	                                   const BMessage *message);
 	virtual void            MouseUp(BPoint point);
 	bool                    GetPaintRegion(BRegion *breg);
-	void                    Validate(BRect r);
+	void                    Validate(BRegion *reg);
 	BPoint                  GetWheel();
 	void                    KeyDown(const char *bytes, int32 numBytes);
 	void                    KeyUp(const char *bytes, int32 numBytes);
