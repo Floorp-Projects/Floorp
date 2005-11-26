@@ -1024,41 +1024,31 @@ function mircChangeColor (colorInfo, containerTag, data)
 
     var ary = colorInfo.match (/.(\d{1,2}|)(,(\d{1,2})|)/);
 
-    var fgColor = ary[1];
-    if (fgColor > 16)
-        fgColor &= 16;
-
-    switch (fgColor.length)
+    // Do we have a BG color specified...?
+    if (!arrayHasElementAt(ary, 1) || !ary[1])
     {
-        case 0:
-            delete data.currFgColor;
-            delete data.currBgColor;
-            return;
-
-        case 1:
-            data.currFgColor = "0" + fgColor;
-            break;
-
-        case 2:
-            data.currFgColor = fgColor;
-            break;
+        // Oops, no colors.
+        delete data.currFgColor;
+        delete data.currBgColor;
+        return;
     }
 
-    if (fgColor == 1)
-        delete data.currFgColor;
-    if (arrayHasElementAt(ary, 3))
+    var fgColor = String(Number(ary[1]) % 16);
+
+    if (fgColor.length == 1)
+        data.currFgColor = "0" + fgColor;
+    else
+        data.currFgColor = fgColor;
+
+    // Do we have a BG color specified...?
+    if (arrayHasElementAt(ary, 3) && ary[3])
     {
-        var bgColor = ary[3];
-        if (bgColor > 16)
-            bgColor &= 16;
+        var bgColor = String(Number(ary[3]) % 16);
 
         if (bgColor.length == 1)
             data.currBgColor = "0" + bgColor;
         else
             data.currBgColor = bgColor;
-
-        if (bgColor == 0)
-            delete data.currBgColor;
     }
 
     data.hasColorInfo = true;
@@ -1122,13 +1112,16 @@ function mircReverseColor (text, containerTag, data)
         return;
     }
 
-    var tempColor = ("currFgColor" in data ? data.currFgColor : "01");
+    var tempColor = ("currFgColor" in data ? data.currFgColor : "");
 
     if ("currBgColor" in data)
         data.currFgColor = data.currBgColor;
     else
-        data.currFgColor = "00";
-    data.currBgColor = tempColor;
+        delete data.currFgColor;
+    if (tempColor)
+        data.currBgColor = tempColor;
+    else
+        delete data.currBgColor;
     data.hasColorInfo = true;
 }
 

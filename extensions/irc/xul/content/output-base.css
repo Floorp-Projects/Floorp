@@ -216,131 +216,131 @@ a.chatzilla-link:hover {
 
 /* mirc colors */
 .chatzilla-fg00 {
-    color: #000000;
+    color: #FFFFFF;
 }
 
 .chatzilla-fg01 {
-    color: #c8c8c8;
+    color: #000000;
 }
 
 .chatzilla-fg02 {
-    color: #0000c8;
+    color: #00007F;
 }
 
 .chatzilla-fg03 {
-    color: #00c800;
+    color: #009300;
 }
 
 .chatzilla-fg04 {
-    color: #c80000;
+    color: #FF0000;
 }
 
 .chatzilla-fg05 {
-    color: #c8c800;
+    color: #7F0000;
 }
 
 .chatzilla-fg06 {
-    color: #c800c8;
+    color: #9C009C;
 }
 
 .chatzilla-fg07 {
-    color: #ffb000;
+    color: #FC7F00;
 }
 
 .chatzilla-fg08 {
-    color: #ffff00;
+    color: #FFFF00;
 }
 
 .chatzilla-fg09 {
-    color: #00ff00;
+    color: #00FC00;
 }
 
 .chatzilla-fg10 {
-    color: #00c8c8;
+    color: #009393;
 }
 
 .chatzilla-fg11 {
-    color: #00ffff;
+    color: #00FFFF;
 }
 
 .chatzilla-fg12 {
-    color: #0000ff;
+    color: #0000FC;
 }
 
 .chatzilla-fg13 {
-    color: #ff00ff;
+    color: #FF00FF;
 }
 
 .chatzilla-fg14 {
-    color: #808080;
+    color: #7F7F7F;
 }
 
 .chatzilla-fg15 {
-    color: #989898;
+    color: #D2D2D2;
 }
 
 .chatzilla-bg00 {
-    background: #000000;
+    background-color: #FFFFFF;
 }
 
 .chatzilla-bg01 {
-    background: #c8c8c8;
+    background-color: #000000;
 }
 
 .chatzilla-bg02 {
-    background: #0000c8;
+    background-color: #00007F;
 }
 
 .chatzilla-bg03 {
-    background: #00c800;
+    background-color: #009300;
 }
 
 .chatzilla-bg04 {
-    background: #c80000;
+    background-color: #FF0000;
 }
 
 .chatzilla-bg05 {
-    background: #c8c800;
+    background-color: #7F0000;
 }
 
 .chatzilla-bg06 {
-    background: #c800c8;
+    background-color: #9C009C;
 }
 
 .chatzilla-bg07 {
-    background: #ffb000;
+    background-color: #FC7F00;
 }
 
 .chatzilla-bg08 {
-    background: #ffff00;
+    background-color: #FFFF00;
 }
 
 .chatzilla-bg09 {
-    background: #00ff00;
+    background-color: #00FC00;
 }
 
 .chatzilla-bg10 {
-    background: #00c8c8;
+    background-color: #009393;
 }
 
 .chatzilla-bg11 {
-    background: #00ffff;
+    background-color: #00FFFF;
 }
 
 .chatzilla-bg12 {
-    background: #0000ff;
+    background-color: #0000FC;
 }
 
 .chatzilla-bg13 {
-    background: #ff00ff;
+    background-color: #FF00FF;
 }
 
 .chatzilla-bg14 {
-    background: #808080;
+    background-color: #7F7F7F;
 }
 
 .chatzilla-bg15 {
-    background: #989898;
+    background-color: #D2D2D2;
 }
 
 .chatzilla-control-char:before {

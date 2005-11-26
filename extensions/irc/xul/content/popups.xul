@@ -103,13 +103,13 @@
                   <box class="colorGrid chatzilla-bg01 chatzilla-fg00">
                       <label value="1"/>
                   </box>
-                  <box class="colorGrid chatzilla-bg02 chatzilla-fg01">
+                  <box class="colorGrid chatzilla-bg02 chatzilla-fg00">
                       <label value="2"/>
                   </box>
-                  <box class="colorGrid chatzilla-bg03 chatzilla-fg01">
+                  <box class="colorGrid chatzilla-bg03 chatzilla-fg00">
                       <label value="3"/>
                   </box>
-                  <box class="colorGrid chatzilla-bg04 chatzilla-fg01">
+                  <box class="colorGrid chatzilla-bg04 chatzilla-fg00">
                       <label value="4"/>
                   </box>
                   <box class="colorGrid chatzilla-bg05 chatzilla-fg00">
@@ -123,16 +123,16 @@
                   </box>
               </row>
               <row>
-                  <box class="colorGrid chatzilla-bg08 chatzilla-fg00">
+                  <box class="colorGrid chatzilla-bg08 chatzilla-fg01">
                       <label value="8"/>
                   </box>
-                  <box class="colorGrid chatzilla-bg09 chatzilla-fg00">
+                  <box class="colorGrid chatzilla-bg09 chatzilla-fg01">
                       <label value="9"/>
                   </box>
-                  <box class="colorGrid chatzilla-bg10 chatzilla-fg00">
+                  <box class="colorGrid chatzilla-bg10 chatzilla-fg01">
                       <label value="10"/>
                   </box>
-                  <box class="colorGrid chatzilla-bg11 chatzilla-fg00">
+                  <box class="colorGrid chatzilla-bg11 chatzilla-fg01">
                       <label value="11"/>
                   </box>
                   <box class="colorGrid chatzilla-bg12 chatzilla-fg01">
