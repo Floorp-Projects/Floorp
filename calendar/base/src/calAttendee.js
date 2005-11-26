@@ -112,7 +112,7 @@ calAttendee.prototype = {
     // icalatt is a calIcalProperty of type attendee
     set icalProperty (icalatt) {
         this.modify();
-        this.id = icalatt.stringValue;
+        this.id = icalatt.valueAsIcalString;
         var promotedProps = { };
         for (var i = 0; i < this.icalAttendeePropMap.length; i++) {
             var prop = this.icalAttendeePropMap[i];
@@ -137,7 +137,7 @@ calAttendee.prototype = {
         var icalatt = icssvc.createIcalProperty("ATTENDEE");
         if (!this.id)
             throw Components.results.NS_ERROR_NOT_INITIALIZED;
-        icalatt.stringValue = this.id;
+        icalatt.valueAsIcalString = this.id;
         for (var i = 0; i < this.icalAttendeePropMap.length; i++) {
             var prop = this.icalAttendeePropMap[i];
             if (this[prop.cal])

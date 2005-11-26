@@ -264,14 +264,14 @@ function guessSystemTimezone()
         var comp = icssrv.getTimezone(someTZ);
         var subComp = comp.getFirstSubcomponent("VTIMEZONE");
         var standard = subComp.getFirstSubcomponent("STANDARD");
-        var standardTZOffset = standard.getFirstProperty("TZOFFSETTO").stringValue;
-        var standardName = standard.getFirstProperty("TZNAME").stringValue;
+        var standardTZOffset = standard.getFirstProperty("TZOFFSETTO").valueAsIcalString;
+        var standardName = standard.getFirstProperty("TZNAME").valueAsIcalString;
         var daylight = subComp.getFirstSubcomponent("DAYLIGHT");
         var daylightTZOffset = null;
         var daylightName = null;
         if (daylight) {
-            daylightTZOffset = daylight.getFirstProperty("TZOFFSETTO").stringValue;
-            daylightName = daylight.getFirstProperty("TZNAME").stringValue;
+            daylightTZOffset = daylight.getFirstProperty("TZOFFSETTO").valueAsIcalString;
+            daylightName = daylight.getFirstProperty("TZNAME").valueAsIcalString;
         }
         if (TZoffset2 == standardTZOffset && TZoffset2 == TZoffset1 &&
            !daylight) {
