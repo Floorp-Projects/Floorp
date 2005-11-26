@@ -180,11 +180,6 @@ public:
 
   NS_IMETHOD GetNextElementByTagName(nsIDOMElement *aCurrentElement, const nsAString *aTagName, nsIDOMElement **aReturn);
 
-  /* ------------ nsIEditorIMESupport overrides -------------- */
-  
-  NS_IMETHOD SetCompositionString(const nsAString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply);
-  NS_IMETHOD GetReconversionString(nsReconversionEventReply* aReply);
-
   /* ------------ nsIEditorStyleSheets methods -------------- */
 
   NS_IMETHOD AddStyleSheet(const nsAString & aURL);
