@@ -111,6 +111,7 @@ client.CONFERENCE_LOW_PASS = 10;
 
 client.viewsArray = new Array();
 client.activityList = new Object();
+client.hostCompat = new Object();
 client.inputHistory = new Array();
 client.lastHistoryReferenced = -1;
 client.incompleteLine = "";
@@ -352,9 +353,40 @@ function initApplicationCompatibility()
     // This routine does nothing more than tweak the UI based on the host
     // application.
 
+    /* client.hostCompat.typeChromeBrowser indicates whether we should use 
+     * type="chrome" <browser> elements for the output window documents.
+     * Using these is necessary to work properly with xpcnativewrappers, but
+     * broke selection in older builds.
+     */
+    client.hostCompat.typeChromeBrowser = false;
+
     // Set up simple host and platform information.
     client.host = "Unknown";
-    if ("getBrowserURL" in window)
+    var app = getService("@mozilla.org/xre/app-info;1", "nsIXULAppInfo");
+    if (app)
+    {
+        // Use the XULAppInfo.ID to find out what host we run on.
+        switch (app.ID)
+        {
+            case "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}":
+                client.host = "Firefox";
+                if (compareVersions(app.version, "1.4") <= 0)
+                    client.hostCompat.typeChromeBrowser = true;
+                break;
+            case "{" + __cz_guid + "}":
+                // We ARE the app, in other words, we're running in XULrunner.
+                client.host = "XULrunner";
+                client.hostCompat.typeChromeBrowser = true;
+                break;
+            case "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}": // SeaMonkey
+                client.host = "Mozilla";
+                client.hostCompat.typeChromeBrowser = true;
+                break;
+            default:
+                client.host = ""; // Unknown host, show an error later.
+        }
+    }
+    else if ("getBrowserURL" in window)
     {
         var url = getBrowserURL();
         if (url == "chrome://navigator/content/navigator.xul")
@@ -363,10 +395,6 @@ function initApplicationCompatibility()
             client.host = "Firefox";
         else
             client.host = ""; // We don't know this host. Show an error later.
-    }
-    else
-    {
-        client.host = "XULrunner";
     }
 
     client.platform = "Unknown";
@@ -3056,7 +3084,11 @@ function getTabForObject (source, create)
 
         var browser = document.createElement ("browser");
         browser.setAttribute("class", "output-container");
-        browser.setAttribute("type", "content");
+        // Only use type="chrome" if the host app supports it properly:
+        if (client.hostCompat.typeChromeBrowser)
+            browser.setAttribute("type", "chrome");
+        else
+            browser.setAttribute("type", "content");
         browser.setAttribute("flex", "1");
         browser.setAttribute("tooltip", "html-tooltip-node");
         browser.setAttribute("context", "context:messages");
