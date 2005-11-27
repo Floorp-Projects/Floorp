@@ -13250,6 +13250,10 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   // already processing, sending us into an infinite loop.
   mPendingRestyles.Clear();
 
+  // Make sure to not rebuild quote or counter lists while we're
+  // processing restyles
+  BeginUpdate();
+
   for (nsCSSFrameConstructor::RestyleEnumerateData* currentRestyle =
          restylesToProcess;
        currentRestyle != lastRestyle;
@@ -13260,6 +13264,8 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
   }
 
   delete [] restylesToProcess;
+
+  EndUpdate();
 
 #ifdef DEBUG
   mPresShell->VerifyStyleTree();
