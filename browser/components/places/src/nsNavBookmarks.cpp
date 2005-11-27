@@ -630,7 +630,7 @@ nsNavBookmarks::MoveFolder(PRInt64 aFolder, PRInt64 aNewParent, PRInt32 aIndex)
   buffer.AppendInt(aNewParent);
   buffer.AppendLiteral(", position = ");
   buffer.AppendInt(aIndex);
-  buffer.AppendLiteral(" WHERE id = ");
+  buffer.AppendLiteral(" WHERE folder_child = ");
   buffer.AppendInt(aFolder);
 
   rv = dbConn->ExecuteSimpleSQL(buffer);
