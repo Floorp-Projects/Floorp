@@ -41,18 +41,20 @@ treechildren::-moz-tree-image(title, container) {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
-treechildren::-moz-tree-image(title, container, menu-root) {
+treechildren::-moz-tree-image(title, open) {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+
+treechildren::-moz-tree-image(title, container, menu-root),
+treechildren::-moz-tree-image(title, container, open, menu-root) {
   list-style-image: url("chrome://browser/skin/places/icons.png") !important;
   -moz-image-region: rect(0px, 16px, 17px, 0px);
 }
 
-treechildren::-moz-tree-image(title, container, toolbar-root) {
+treechildren::-moz-tree-image(title, container, toolbar-root), 
+treechildren::-moz-tree-image(title, container, open, toolbar-root) {
   list-style-image: url("chrome://browser/skin/places/icons.png") !important;
   -moz-image-region: rect(17px, 16px, 32px, 0px);
-}
-
-treechildren::-moz-tree-image(title, open) {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
 }
 
 treechildren::-moz-tree-image(title, separator) {
@@ -92,20 +94,29 @@ treechildren::-moz-tree-cell-text(title, separator, selected, focus) {
 
 /* Search Bar */
 #searchFilter {
-  -moz-binding: url("chrome://browser/content/places/places.xml#textbox-timed-arbitrary");
+  padding: 0px;
 }
 
-#filterCollection {
+#searchFilter .textbox-input-box {
+  padding: 2px 2px 3px 4px;
+}
+
+.filterList {
   -moz-appearance: none;
   background-color: transparent;
   border: 0px;
-  margin: 0px;
+  margin: 2px;
   padding: 0px;
   min-width: 0px;
   width: 16px;
   height: 16px;
   list-style-image: url("chrome://browser/skin/Search-bar.png");
   -moz-user-focus: ignore;
+}
+
+.filterList .button-box {
+  border: 0px;
+  padding: 0px;
 }
 
 /* Calendar */

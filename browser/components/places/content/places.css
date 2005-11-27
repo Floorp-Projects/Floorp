@@ -3,6 +3,10 @@
   display: -moz-box;
 }
 
+#searchFilter {
+  -moz-binding: url("chrome://browser/content/places/places.xml#textbox-timed-arbitrary");
+}
+
 tree {
   -moz-binding: url("chrome://browser/content/places/places.xml#places-tree");
 }
@@ -11,3 +15,6 @@ button {
   -moz-binding: url("chrome://browser/content/places/places.xml#command-button");
 }
 
+.filterList {
+  -moz-binding: url("chrome://browser/content/places/places.xml#filter-button");
+}

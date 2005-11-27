@@ -12,8 +12,8 @@
   <binding id="textbox-timed-arbitrary" 
            extends="chrome://global/content/bindings/textbox.xml#timed-textbox">
     <content>
+      <children/>
       <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context">
-        <children/>
         <html:input class="textbox-input" flex="1" anonid="input"
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       </xul:hbox>
@@ -21,7 +21,7 @@
   </binding>
   
   <binding id="places-tree" extends="chrome://global/content/bindings/tree.xml#tree">
-    <implementation>
+    <implementation implements="nsINavHistoryResultViewObserver">
       <constructor><![CDATA[
         this._places = 
           Cc["@mozilla.org/browser/nav-history;1"].
@@ -57,34 +57,83 @@
         ]]></body>
       </method>
       
+      <!-- AVI Method -->
+      <method name="getResult">
+        <body><![CDATA[
+          try {
+            return this.view.QueryInterface(Ci.nsINavHistoryResult);
+          }
+          catch (e) {
+          }
+        ]]></body>
+      </method>
+      
+      <!-- overriding -->
+      <property name="view">
+        <getter><![CDATA[
+          return this.treeBoxObject.view;
+        ]]></getter>
+        <setter><![CDATA[ 
+          // Make sure the last result doesn't hold a reference to us anymore
+          var result = this.getResult();
+          if (result)
+            result.removeObserver(this._viewObserver);
+          this.treeBoxObject.view = val;
+          this.getResult().addObserver(this._viewObserver);          
+        ]]></setter>        
+      </property>
+      
+      <method name="getBestOptions">
+        <body><![CDATA[
+          // Get the best set of grouping options to use, either reuse the 
+          // existing ones or create new ones. 
+          var options = this.getResult().sourceQueryOptions;
+          if (!options)
+            options = this._places.getNewQueryOptions();
+          return options;
+        ]]></body>
+      </method>
+      
       <property name="filterString">
         <getter><![CDATA[
-          this.view.QueryInterface(Ci.nsINavHistoryResult);
-          var queries = this.view.getSourceQueries({ });
+          var queries = this.getResult().getSourceQueries({ });
           if (queries[i].hasSearchTerms)
             return queries[i].searchTerms;
           return null;
         ]]></getter>
         <setter><![CDATA[
+          var query = this._places.getNewQuery();
+          query.searchTerms = val;
+          
+          this.load([query], this.getBestOptions());
+          return val;
+        ]]></setter>
+      </property>
+      
+      <method name="applyFilter">
+        <parameter name="filterString"/>
+        <parameter name="onlyBookmarks"/>
+        <parameter name="folderRestrict"/>
+        <body><![CDATA[ 
           // preserve grouping
-          this.view.QueryInterface(Ci.nsINavHistoryResult);
-          var options = this.view.sourceQueryOptions;
+          var options = this.getResult().sourceQueryOptions;
           if (!options)
             options = this._places.getNewQueryOptions();
           
           var query = this._places.getNewQuery();
-          query.searchTerms = val;
-          
-          this.load([query], options);          
-          return val;
-        ]]></setter>
-      </property>
+          query.searchTerms = filterString;
+          query.onlyBookmarked = onlyBookmarks;
+          //if (onlyBookmarks)
+          //  query.setFolders(folderRestrict, folderRestrict.length);
+          this.load([query], this.getBestOptions());
+        ]]></body>
+      </method>
     
       <property name="queryString">
         <getter><![CDATA[
-          this.view.QueryInterface(Ci.nsINavHistoryResult);
-          var queries = this.view.getSourceQueries({ });
-          var options = this.view.sourceQueryOptions;
+          var result = this.getResult();
+          var queries = result.getSourceQueries({ });
+          var options = result.sourceQueryOptions;
 
           const NH = Ci.nsINavHistory;
           return this._places.queriesToQueryString(queries, queries.length,
@@ -98,6 +147,21 @@
         ]]></setter>
       </property>
       
+      <method name="loadFolder">
+        <parameter name="folderId"/>
+        <parameter name="filterOptions"/>
+        <body><![CDATA[ 
+          var bms = 
+              Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+              getService(Ci.nsINavBookmarksService);
+          var filterOptions = filterOptions || bms.ALL_CHILDREN;
+          var result = bms.getFolderChildren(folderId, filterOptions);
+          result.QueryInterface(Ci.nsITreeView);
+          this.view = result;
+          this._fireEvent("reloaded");
+        ]]></body>
+      </method>
+      
       <method name="load">
         <parameter name="queries"/>
         <parameter name="options"/>
@@ -110,24 +174,27 @@
         ]]></body>
       </method>
     
+      <!-- AVI Method -->
       <property name="hasSelection">
         <getter><![CDATA[
           return this.view.selection.count >= 1;
         ]]></getter>
       </property>
       
+      <!-- AVI Method -->
       <property name="hasSingleSelection">
         <getter><![CDATA[
           return this.view.selection.count == 1;
         ]]></getter>
       </property>
       
+      <!-- AVI Method -->
       <method name="getSelectionNodes">
         <body><![CDATA[ 
-          var result = this.view.QueryInterface(Ci.nsINavHistoryResult);
           var selection = this.view.selection;
           var rc = selection.getRangeCount();
           var nodes = [];
+          var result = this.getResult();
           for (var i = 0; i < rc; ++i) {
             var min = { }, max = { };
             selection.getRangeAt(i, min, max);
@@ -139,6 +206,14 @@
         ]]></body>
       </method>
       
+      <!-- AVI Method -->
+      <method name="getCopyableSelection">
+        <body><![CDATA[ 
+          return this.getSelectionNodes();
+        ]]></body>
+      </method>
+      
+      <!-- AVI Method -->
       <property name="selectedNode">
         <getter><![CDATA[
           var view = this.view;
@@ -149,11 +224,11 @@
           var min = { }, max = { };
           selection.getRangeAt(0, min, max);
           
-          var result = view.QueryInterface(Ci.nsINavHistoryResult);
-          return result.nodeForTreeIndex(min.value);
+          return this.getResult().nodeForTreeIndex(min.value);
         ]]></getter>
       </property>
       
+      <!-- AVI Method -->
       <property name="selectedURLNode">
         <getter><![CDATA[
           var view = this.view;
@@ -168,11 +243,11 @@
           if (view.isContainer(min.value) || view.isSeparator(min.value))
             return null;
             
-          var result = view.QueryInterface(Ci.nsINavHistoryResult);
-          return result.nodeForTreeIndex(min.value);
+          return this.getResult().nodeForTreeIndex(min.value);
         ]]></getter>
       </property>
       
+      <!-- AVI Method -->
       <property name="insertionPoint">
         <getter><![CDATA[ 
           var view = this.view;
@@ -181,7 +256,7 @@
           var min = { }, max = { };
           selection.getRangeAt(rc - 1, min, max);
 
-          var result = view.QueryInterface(Ci.nsINavHistoryResult);
+          var result = this.getResult();
           var container = result;
           // When there's no selection, assume the container is the container
           // the view is populated from (i.e. the result's folderId).
@@ -208,11 +283,22 @@
         ]]></getter>
       </property>
       
+      <!-- AVI Method -->
       <property name="browserWindow" onget="return this._browserWindow"/>
+      
+      <!-- AVI Method -->
+      <field name="supportedDropTypes">null</field>
+      
+      <!-- AVI Method -->
+      <method name="selectAll">
+        <body><![CDATA[ 
+          this.view.selection.selectAll();
+        ]]></body>
+      </method>
       
       <method name="_getTransferData">
         <body><![CDATA[ 
-          var result = this.view.QueryInterface(Ci.nsINavHistoryResult);
+          var result = this.getResult();
           var selection = this.view.selection;
           if (selection.count == 0)
             return null;
@@ -226,9 +312,17 @@
               var node = result.nodeForTreeIndex(j);
               
               var data = new TransferData();
-              data.addDataForFlavour("text/x-moz-url", node.url + "\n" + node.title);
-              data.addDataForFlavour("text/html", "<A HREF=\"" + node.url + "\">" + node.title + "</A>");
-              data.addDataForFlavour("text/unicode", node.url);
+              function addData(type) {
+                var s = 
+                    Cc["@mozilla.org/supports-string;1"].
+                    createInstance(Ci.nsISupportsString);
+                s.data = PlacesController.wrapNode(node, type);
+                data.addDataForFlavour(type, s);
+              }
+              addData(TYPE_X_MOZ_PLACE);
+              addData(TYPE_X_MOZ_URL);
+              addData(TYPE_HTML);
+              addData(TYPE_UNICODE);
               dataSet.push(data);
             }
           }
@@ -243,6 +337,7 @@
           if (this._self.getAttribute("sortActive") == "true")
             throw Components.results.NS_OK;
           xferData.data = this._self._getTransferData();
+          // XXXben - the drag wrapper should do this automatically. 
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
         },
@@ -256,19 +351,71 @@
         
         },
         
+        _flavorSet: null,
         getSupportedFlavours: function() {
-          var flavorSet = new FlavourSet();
-          flavorSet.appendFlavour("application/x-moz-file", "nsIFile");
-          flavorSet.appendFlavour("text/x-moz-url");
-          flavorSet.appendFlavour("text/unicode");
-          return flavorSet;
+          if (!this._flavorSet) {
+            this._flavorSet = new FlavourSet();
+            for (var i = 0; i < this._self.supportedDropTypes.length; ++i) 
+              this._flavorSet.appendFlavour(this._self.supportedDropTypes[i]);
+          }
+          return this._flavorSet;
         }
       })]]></field>
+      
+      <field name="_viewObserver"><![CDATA[ 
+        ({
+        _self: this,
+        
+        canDrop: function VO_canDrop() {
+          return PlacesControllerDragHelper.canDrop(this._self);
+        },
+        
+        onDrop: function VO_onDrop(index, orientation) {
+          LOG("VO: onDrop: " + index + ", orientation: " + orientation);
+          
+          // We are responsible for translating the |index| and |orientation| 
+          // parameters into a container id and index within the container, 
+          // since this information is specific to the tree view. 
+          const NHRVO = Ci.nsINavHistoryResultViewObserver;
+          var result = this._self.getResult();
+          var view = this._self.view;
+          var node = result.nodeForTreeIndex(index);
+          var destContainer = null;
+          var destIndex = -1;
+          // If we're dropping _on_ a container, the container is the container
+          // we dropped on, otherwise it's the parent of the drop target. 
+          if (view.isContainer(index) && orientation == NHRVO.DROP_ON)
+            destContainer = node.folderId;
+          else {
+            var destIndex = PlacesController.getIndexOfNode(node);
+            // For non leaves, or when not dropping _on_ a container, drop after
+            // by default (i.e. when dropping after a container, or ON AND AFTER
+            // a leaf node).
+            if (orientation != NHRVO.DROP_BEFORE)
+              ++destIndex;
+            destContainer = node.parent.folderId;
+          }
+          PlacesControllerDragHelper.onDrop(this._self, destContainer, 
+                                            destIndex);
+        },
+        
+        // XXXben we will probably have to implement this to refresh Live 
+        //        Bookmarks.
+        onToggleOpenState: function VO_onToggleOpenState(index) { },
+        onCycleHeader: function VO_onCycleHeader(column) { },
+        onCycleCell: function VO_onCycleCell(row, column) { },
+        onSelectionChanged: function VO_onSelectionChanged() { },
+        onPerformAction: function VO_onPerformAction(action) { },
+        onPerformActionOnRow: function VO_onPerformActionOnRow(action, row) { },
+        onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { },      
+        })
+      ]]></field>
       
     </implementation>
     <handlers>
       <handler event="focus"><![CDATA[
         PlacesController.activeView = this;
+        document.commandDispatcher.updateCommands("focus");
       ]]></handler>
       <handler event="select"><![CDATA[
         document.commandDispatcher.updateCommands("select");
@@ -306,6 +453,14 @@
     <handlers>
       <handler event="click" button="0" action="this.updateActiveView();"/>
       <handler event="keypress" keycode="VK_SPACE" action="this.updateActiveView();"/>
+    </handlers>
+  </binding>
+  
+  <binding id="filter-button" extends="chrome://global/content/bindings/button.xml#menu">
+    <handlers>
+      <handler event="command"><![CDATA[
+        PlacesPage.setFilterCollection(event.target.getAttribute("value"));
+      ]]></handler>
     </handlers>
   </binding>
 
