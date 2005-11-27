@@ -766,12 +766,14 @@ nsXBLContentSink::ConstructField(const PRUnichar **aAtts, PRUint32 aLineNumber)
     }
   }
 
-  // All of our pointers are now filled in. Construct our field with all of
-  // these parameters.
-  mField = new nsXBLProtoImplField(name, readonly);
-  if (mField) {
-    mField->SetLineNumber(aLineNumber);
-    AddMember(mField);
+  if (name) {
+    // All of our pointers are now filled in. Construct our field with all of
+    // these parameters.
+    mField = new nsXBLProtoImplField(name, readonly);
+    if (mField) {
+      mField->SetLineNumber(aLineNumber);
+      AddMember(mField);
+    }
   }
 }
 
