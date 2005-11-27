@@ -150,7 +150,8 @@ interface nsINavHistoryResultViewObserver : nsISupports
    * Methods used by the drag feedback code to determine if a drag is allowable at
    * the current location. To get the behavior where drops are only allowed on
    * items, such as the mailNews folder pane, always return false whe
-   * the orientation is not DROP_ON.
+   * the orientation is not DROP_ON. Implementors should not change the content of
+   * the observer list!
    */
   boolean canDrop(in long index, in long orientation);
 
