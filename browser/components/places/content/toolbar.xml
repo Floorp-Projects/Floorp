@@ -7,7 +7,7 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="places-bar">
-    <implementation implements="nsINavBookmarkObserver">
+    <implementation>
       <constructor><![CDATA[ 
         this._places = 
           Cc["@mozilla.org/browser/nav-history;1"].
@@ -55,8 +55,12 @@
             if (PlacesController.nodeIsURL(child))
               button.setAttribute("url", child.url)
             else if (PlacesController.nodeIsFolder(child)) {
-              button.setAttribute("folder-id", child.folderId);
               button.setAttribute("type", "menu");
+              button.setAttribute("container", "true");
+              var popup = document.createElementNS(XULNS, "menupopup");
+              popup.setAttribute("type", "places");
+              button.appendChild(popup);
+              popup.folderId = child.folderId;
             }
             button.className = "bookmark-item";
             button.node = child;
