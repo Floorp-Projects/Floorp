@@ -1,0 +1,133 @@
+<?xml version="1.0"?>
+
+<bindings id="placesBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="places-bar">
+    <implementation>
+      <constructor><![CDATA[ 
+        this._places = 
+          Cc["@mozilla.org/browser/nav-history;1"].
+          getService(Ci.nsINavHistory);
+        
+        var self = this;
+        function onClick(event) {
+          if (event.target.localName != "toolbarbutton")
+            return;
+          self._selection = event.target.node;
+          PlacesController.activeView = self;
+          PlacesController.mouseLoadURI(event);
+        }
+        this.addEventListener("click", onClick, false); 
+      ]]></constructor>
+      
+      <field name="_selection">null</field>
+      
+      <field name="_result">null</field>
+      <method name="getResult">
+        <body><![CDATA[
+          return this._result;
+        ]]></body>
+      </method>
+      
+      <method name="_rebuild">
+        <body><![CDATA[ 
+          while (this.hasChildNodes())
+            this.removeChild(this.firstChild);
+          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var cc = this._result.childCount;
+          for (var i = 0; i < cc; ++i) {
+            var child = this._result.getChild(i);
+            var button = document.createElementNS(XULNS, "toolbarbutton");
+            button.setAttribute("label", child.title);
+            if (PlacesController.nodeIsURL(child))
+              button.setAttribute("url", child.url)
+            else if (PlacesController.nodeIsFolder(child)) {
+              button.setAttribute("folder-id", child.folderId);
+              button.setAttribute("type", "menu");
+            }
+            button.className = "bookmark-item";
+            button.node = child;
+            this.appendChild(button);
+          }
+        ]]></body>
+      </method>
+      
+      <method name="load">
+        <parameter name="queries"/>
+        <parameter name="options"/>
+        <body><![CDATA[ 
+          this._result = this._places.executeQueries(queries, queries.length,
+                                                     options);
+          this._rebuild();
+        ]]></body>
+      </method>
+      
+      <property name="hasSelection">
+        <getter><![CDATA[ 
+          return this._selection != null;
+        ]]></getter>
+      </property>
+      
+      <property name="hasSingleSelection">
+        <getter><![CDATA[ 
+          return this.hasSelection;
+        ]]></getter>
+      </property>
+      
+      <method name="getSelectionNodes">
+        <body><![CDATA[
+          return this.hasSelection ? [this.selectedNode] : [];
+        ]]></body>
+      </method>
+      
+      <method name="getCopyableSelection">
+        <body><![CDATA[ 
+          return this.getSelectionNodes();
+        ]]></body>
+      </method>
+      
+      <property name="selectedNode">
+        <getter><![CDATA[ 
+          return this.hasSelection ? this._selection : null;
+        ]]></getter>
+      </property>
+      
+      <property name="selectedURLNode">
+        <getter><![CDATA[
+          var node = this.selectedNode;
+          return node && PlacesController.nodeIsURL(node) ? node : null;
+        ]]></getter>
+      </property>
+      
+      <property name="insertionPoint">
+        <getter><![CDATA[ 
+          if (!this.hasSelection)
+            var index = -1;
+          else
+            index = PlacesController.getIndexOfNode(this.selectedNode)
+          return { container: this._result.folderId, index: index };
+        ]]></getter>
+      </property>
+      
+      <property name="browserWindow" onget="return window;"/>
+      
+      <property name="supportedDropTypes">["text/x-moz-place", "text/x-moz-url"]</property>
+      
+      <method name="selectAll">
+        <body><![CDATA[ 
+          // Nothing
+        ]]></body>
+      </method>
+    </implementation>
+    <handlers>
+      <handler event="mousedown">
+        dump("ET: " + event.target.localName);
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>

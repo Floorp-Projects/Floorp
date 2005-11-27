@@ -4,10 +4,11 @@ browser.jar:
     content/browser/places/places.js                     (content/places.js)
     content/browser/places/places.xml                    (content/places.xml)
     content/browser/places/places.css                    (content/places.css)
+    content/browser/places/toolbar.xml                   (content/toolbar.xml)
     content/browser/places/controller.js                 (content/controller.js)
-    content/browser/places/draghelper.xml                (content/draghelper.xml)
     content/browser/places/browserShim.js                (content-shim/browserShim.js)
-    content/browser/places/browserShim.xul               (content-shim/browserShim.xul)
+*   content/browser/places/browserShim.xul               (content-shim/browserShim.xul)
+    content/browser/places/browserShim.css               (content-shim/browserShim.css)
 
 classic.jar:
     skin/classic/browser/places/places.css               (skin-win/places.css)
