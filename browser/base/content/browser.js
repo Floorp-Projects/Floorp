@@ -1185,10 +1185,8 @@ function SanitizeListener()
   if (gPrefService.prefHasUserValue(this.didSanitizeDomain)) {
     gPrefService.clearUserPref(this.didSanitizeDomain);
     // We need to persist this preference change, since we want to
-    // check it at next app start even if the browser exits abruptly,
-    // but we can afford some delay before I/O, so perceived 
-    // startup speed is not affected :)
-    window.setTimeout(function() { gPrefService.savePrefFile(null); }, 1000);
+    // check it at next app start even if the browser exits abruptly
+    gPrefService.savePrefFile(null);
   }
 }
 
