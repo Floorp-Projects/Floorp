@@ -100,30 +100,15 @@ NS_IMETHODIMP nsMsgQuoteListener::GetMsgQuote(nsIMsgQuote ** aMsgQuote)
 
 nsresult nsMsgQuoteListener::OnHeadersReady(nsIMimeHeaders * headers)
 {
-	nsCOMPtr<nsIStreamListener> aStreamListener;
+  nsCOMPtr<nsIStreamListener> aStreamListener;
   nsCOMPtr<nsIMsgQuote> msgQuote = do_QueryReferent(mMsgQuote);
 
   if (msgQuote)
     msgQuote->GetStreamListener(getter_AddRefs(aStreamListener));
 
-	if (aStreamListener)
-	{
-		QuotingOutputStreamListener * quoting;
-		if (NS_SUCCEEDED(aStreamListener->QueryInterface(NS_GET_IID(QuotingOutputStreamListener), (void**)&quoting)) &&
-			quoting)
-		{
-	  	quoting->SetMimeHeaders(headers);
-			NS_RELEASE(quoting);			
-		}
-		else
-			return NS_ERROR_FAILURE;
-/* ducarroz: Impossible to compile the COMPtr version of this code !!!!
-   		nsCOMPtr<QuotingOutputStreamListener> quoting (do_QueryInterface(streamListener));
-  		if (quoting)
-  		  	quoting->SetMimeHeaders(headers);
-*/
-	}
-	return NS_OK;
+  if (aStreamListener)
+    NS_STATIC_CAST(QuotingOutputStreamListener*, NS_STATIC_CAST(nsIStreamListener*, aStreamListener))->SetMimeHeaders(headers);
+  return NS_OK;
 }
 
 //

@@ -159,6 +159,7 @@
 #include "nsWeakReference.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIMsgComposeSecure.h"
+#include "nsAutoPtr.h"
 
 //
 // Some necessary defines...
@@ -304,7 +305,7 @@ public:
   nsMsgKey                  m_messageKey;        // jt -- Draft/Template support; newly created key
   nsCOMPtr<nsIMsgIdentity>  mUserIdentity;
   nsCString                 mAccountKey;
-  nsCOMPtr<nsMsgCompFields> mCompFields;         // All needed composition fields (header, etc...)
+  nsRefPtr<nsMsgCompFields> mCompFields;         // All needed composition fields (header, etc...)
   nsFileSpec                *mTempFileSpec;      // our temporary file
   
   nsOutputFileStream        *mOutputFile;        // the actual output file stream

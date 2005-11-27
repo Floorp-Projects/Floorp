@@ -42,7 +42,7 @@
 #include "nsCOMPtr.h"
 #include "MailNewsTypes2.h"
 
-NS_IMPL_ISUPPORTS1(nsMsgThread, nsMsgThread)
+NS_IMPL_ISUPPORTS1(nsMsgThread, nsIMsgThread)
 
 
 nsMsgThread::nsMsgThread()

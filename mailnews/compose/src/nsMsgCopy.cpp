@@ -78,7 +78,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 CopyListener::CopyListener(void) 
 { 
-  mCopyObject = nsnull;
   mCopyInProgress = PR_FALSE;
 }
 
@@ -143,12 +142,12 @@ CopyListener::OnStopCopy(nsresult aStatus)
 #endif
   }
 
-  if (mCopyObject)
+  if (mCopyInProgress)
   {
-      PR_CEnterMonitor(mCopyObject);
-      PR_CNotifyAll(mCopyObject);
+      PR_CEnterMonitor(this);
+      PR_CNotifyAll(this);
       mCopyInProgress = PR_FALSE;
-      PR_CExitMonitor(mCopyObject);
+      PR_CExitMonitor(this);
   }
   if (mComposeAndSend)
     mComposeAndSend->NotifyListenerOnStopCopy(aStatus);
@@ -279,12 +278,8 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
   //Call copyservice with dstFolder, disk file, and txnManager
   if(NS_SUCCEEDED(rv))
   {
-    CopyListener    *tPtr = new CopyListener();
-    if (!tPtr)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    mCopyListener = do_QueryInterface(tPtr, &rv);
-    if (NS_FAILED(rv) || !mCopyListener)
+    mCopyListener = new CopyListener();
+    if (!mCopyListener)
       return NS_ERROR_OUT_OF_MEMORY;
 
     mCopyListener->SetMsgComposeAndSendObject(aMsgSendObj);
@@ -304,7 +299,6 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
         { 
           // set the following only when we were in the middle of shutdown
           // process
-            mCopyListener->mCopyObject = do_QueryInterface(tPtr);
             mCopyListener->mCopyInProgress = PR_TRUE;
             nsCOMPtr<nsIEventQueueService> pEventQService = 
                      do_GetService(kEventQueueServiceCID, &rv);
@@ -313,21 +307,18 @@ nsMsgCopy::DoCopy(nsIFileSpec *aDiskFile, nsIMsgFolder *dstFolder,
                                                 getter_AddRefs(eventQueue)); 
         }
     }
-    // ** make sure we have a valid copy listener while waiting for copy
-    // server to finish
-    nsCOMPtr<CopyListener> aCopyListener = do_QueryInterface(tPtr);
     nsCOMPtr<nsIMsgCopyService> copyService = do_GetService(NS_MSGCOPYSERVICE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = copyService->CopyFileMessage(aDiskFile, dstFolder, aMsgToReplace, 
                                       aIsDraft, MSG_FLAG_READ, mCopyListener, msgWindow);
-    // aCopyListener->mCopyInProgress can only be set when we are in the
+    // mCopyListener->mCopyInProgress can only be set when we are in the
     // middle of the shutdown process
-    while (aCopyListener->mCopyInProgress)
+    while (mCopyListener->mCopyInProgress)
     {
-        PR_CEnterMonitor(aCopyListener);
-        PR_CWait(aCopyListener, PR_MicrosecondsToInterval(1000UL));
-        PR_CExitMonitor(aCopyListener);
+        PR_CEnterMonitor(mCopyListener);
+        PR_CWait(mCopyListener, PR_MicrosecondsToInterval(1000UL));
+        PR_CExitMonitor(mCopyListener);
         if (eventQueue)
             eventQueue->ProcessPendingEvents();
     }
