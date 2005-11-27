@@ -1,0 +1,202 @@
+<?xml version="1.0"?>
+
+<bindings id="placesBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:html="http://www.w3.org/1999/xhtml"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="places-menupopup" 
+           extends="chrome://global/content/bindings/popup.xml#popup">
+    <implementation>
+      <constructor><![CDATA[ 
+        this._places = 
+          Cc["@mozilla.org/browser/nav-history;1"].
+          getService(Ci.nsINavHistory);
+        this._bms = 
+          Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+          getService(Ci.nsINavBookmarksService);
+          
+        this._bms.addObserver(this._observer);
+      ]]></constructor>
+      
+      <destructor><![CDATA[ 
+        this._bms.removeObserver(this._observer);
+      ]]></destructor>
+      
+      <property name="folderId" 
+                onget="return parseInt(this.getAttribute('folderId'));"
+                onset="this.setAttribute('folderId', val); return val;"/>
+      
+      <method name="onPopupShowing">
+        <body><![CDATA[
+        this._result = this._bms.getFolderChildren(this.folderId, 
+                                                   this._bms.ALL_CHILDREN);
+        this._rebuild();
+        ]]></body>
+      </method>
+      
+      <field name="_selection">null</field>
+      
+      <field name="_result">null</field>
+      <method name="getResult">
+        <body><![CDATA[
+          return this._result;
+        ]]></body>
+      </method>
+      
+      <method name="_rebuild">
+        <body><![CDATA[ 
+          while (this.hasChildNodes())
+            this.removeChild(this.firstChild);
+          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var cc = this._result.childCount;
+          for (var i = 0; i < cc; ++i) {
+            var child = this._result.getChild(i);
+            var element = null;
+            if (PlacesController.nodeIsURL(child)) {
+              element = document.createElementNS(XULNS, "menuitem");
+              element.setAttribute("label", child.title);
+              element.setAttribute("url", child.url)
+            }
+            else if (PlacesController.nodeIsFolder(child)) {
+              element = document.createElementNS(XULNS, "menu");
+              element.setAttribute("type", "menu");
+              element.setAttribute("container", "true");
+              var popup = document.createElementNS(XULNS, "menupopup");
+              popup.setAttribute("type", "places");
+              element.appendChild(popup);
+              popup.folderId = child.folderId;
+            }
+            // else if (nodeIsQuery) ... add menu to build kids
+            if (element) {
+              element.className = "bookmark-item";
+              element.node = child;
+              this.appendChild(element);
+            }
+          }
+        ]]></body>
+      </method>
+      
+      <method name="load">
+        <parameter name="queries"/>
+        <parameter name="options"/>
+        <body><![CDATA[ 
+          this._result = this._places.executeQueries(queries, queries.length,
+                                                     options);
+          this._rebuild();
+        ]]></body>
+      </method>
+      
+      <property name="hasSelection">
+        <getter><![CDATA[ 
+          return this._selection != null;
+        ]]></getter>
+      </property>
+      
+      <property name="hasSingleSelection">
+        <getter><![CDATA[ 
+          return this.hasSelection;
+        ]]></getter>
+      </property>
+      
+      <method name="getSelectionNodes">
+        <body><![CDATA[
+          return this.hasSelection ? [this.selectedNode] : [];
+        ]]></body>
+      </method>
+      
+      <method name="getCopyableSelection">
+        <body><![CDATA[ 
+          return this.getSelectionNodes();
+        ]]></body>
+      </method>
+      
+      <property name="selectedNode">
+        <getter><![CDATA[ 
+          return this.hasSelection ? this._selection : null;
+        ]]></getter>
+      </property>
+      
+      <property name="selectedURLNode">
+        <getter><![CDATA[
+          var node = this.selectedNode;
+          return node && PlacesController.nodeIsURL(node) ? node : null;
+        ]]></getter>
+      </property>
+      
+      <property name="insertionPoint">
+        <getter><![CDATA[ 
+          if (!this.hasSelection)
+            var index = -1;
+          else
+            index = PlacesController.getIndexOfNode(this.selectedNode)
+          return { container: this._result.folderId, index: index };
+        ]]></getter>
+      </property>
+      
+      <property name="browserWindow" onget="return window;"/>
+      
+      <field name="supportedDropTypes">["text/x-moz-place", "text/x-moz-url"]</field>
+      
+      <method name="selectAll">
+        <body><![CDATA[ 
+          // Nothing
+        ]]></body>
+      </method>
+      
+      <!-- nsINavBookmarkObserver -->
+      <field name="_observer"><![CDATA[({
+        _numBatches: 0,
+        _self: this,
+        onBeginUpdateBatch: function TB_O_onBeginUpdateBatch() {
+          ++this._numBatches;
+        },
+        onEndUpdateBatch: function TB_O_onEndUpdateBatch() {
+          if (!--this._numBatches) ;
+            //this._self.init();
+        },
+        get wantAllDetails() { 
+          return false;
+        },
+        onItemAdded: function TB_O_onItemAdded(bookmark, folder, index) {
+          //this._self.init();
+        },
+        onItemRemoved: function TB_O_onItemRemoved(bookmark, folder, index) {
+          //this._self.init();
+        },
+        onItemMoved: function TB_O_onItemMoved(bookmark, folder, oldIndex, newIndex) {
+          //this._self.init();
+        },
+        onItemChanged: function TB_O_onItemChanged(bookmark, property) {
+          //this._self.init();
+        },
+        onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
+          //this._self.init();
+        },
+        onFolderRemoved: function TB_O_onFolderRemoved(folder, parent, index) {
+          //this._self.init();
+        },
+        onFolderMoved: function TB_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
+          //this._self.init();
+        },
+        onFolderChanged: function TB_O_onFolderChanged(folder, property) {
+          //this._self.init();
+        },
+      })]]></field>
+    </implementation>
+    <handlers>
+      <handler event="popupshowing">
+        this.onPopupShowing();
+      </handler>
+      <handler event="click">
+        if (event.target.localName != "menuitem")
+          return;
+        this._selection = event.target.node;
+        PlacesController.activeView = this;
+        PlacesController.mouseLoadURI(event);
+      </handler>
+    </handlers>
+  </binding>
+
+</bindings>
