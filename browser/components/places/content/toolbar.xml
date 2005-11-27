@@ -7,22 +7,31 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="places-bar">
-    <implementation>
+    <implementation implements="nsINavBookmarkObserver">
       <constructor><![CDATA[ 
         this._places = 
           Cc["@mozilla.org/browser/nav-history;1"].
           getService(Ci.nsINavHistory);
-        
-        var self = this;
-        function onClick(event) {
-          if (event.target.localName != "toolbarbutton")
-            return;
-          self._selection = event.target.node;
-          PlacesController.activeView = self;
-          PlacesController.mouseLoadURI(event);
-        }
-        this.addEventListener("click", onClick, false); 
+        this._bms = 
+          Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+          getService(Ci.nsINavBookmarksService);
+          
+        this._bms.addObserver(this._observer);
+        this.init();
       ]]></constructor>
+      
+      <destructor><![CDATA[ 
+        this._bms.removeObserver(this._observer);
+      ]]></destructor>
+      
+      <method name="init">
+        <body><![CDATA[
+        var kids = this._bms.getFolderChildren(this._bms.toolbarRoot, 
+                                               this._bms.ALL_CHILDREN);
+        this._result = kids;
+        this._rebuild();
+        ]]></body>
+      </method>
       
       <field name="_selection">null</field>
       
@@ -115,17 +124,61 @@
       
       <property name="browserWindow" onget="return window;"/>
       
-      <property name="supportedDropTypes">["text/x-moz-place", "text/x-moz-url"]</property>
+      <field name="supportedDropTypes">["text/x-moz-place", "text/x-moz-url"]</field>
       
       <method name="selectAll">
         <body><![CDATA[ 
           // Nothing
         ]]></body>
       </method>
+      
+      <!-- nsINavBookmarkObserver -->
+      <field name="_observer"><![CDATA[({
+        _numBatches: 0,
+        _self: this,
+        onBeginUpdateBatch: function TB_O_onBeginUpdateBatch() {
+          ++this._numBatches;
+        },
+        onEndUpdateBatch: function TB_O_onEndUpdateBatch() {
+          if (!--this._numBatches)
+            this._self.init();
+        },
+        get wantAllDetails() { 
+          return false;
+        },
+        onItemAdded: function TB_O_onItemAdded(bookmark, folder, index) {
+          this._self.init();
+        },
+        onItemRemoved: function TB_O_onItemRemoved(bookmark, folder, index) {
+          this._self.init();
+        },
+        onItemMoved: function TB_O_onItemMoved(bookmark, folder, oldIndex, newIndex) {
+          this._self.init();
+        },
+        onItemChanged: function TB_O_onItemChanged(bookmark, property) {
+          this._self.init();
+        },
+        onFolderAdded: function TB_O_onFolderAdded(folder, parent, index) {
+          this._self.init();
+        },
+        onFolderRemoved: function TB_O_onFolderRemoved(folder, parent, index) {
+          this._self.init();
+        },
+        onFolderMoved: function TB_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
+          this._self.init();
+        },
+        onFolderChanged: function TB_O_onFolderChanged(folder, property) {
+          this._self.init();
+        },
+      })]]></field>
     </implementation>
     <handlers>
-      <handler event="mousedown">
-        dump("ET: " + event.target.localName);
+      <handler event="click">
+        if (event.target.localName != "toolbarbutton")
+          return;
+        this._selection = event.target.node;
+        PlacesController.activeView = this;
+        PlacesController.mouseLoadURI(event);
       </handler>
     </handlers>
   </binding>
