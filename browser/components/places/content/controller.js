@@ -787,7 +787,7 @@ var PlacesControllerDragHelper = {
   function PC__getFolderCopyTransaction(data, container, index) {
     var transactions = [];
     function createTransactions(folderId, container, index) {
-      var bms = PlacesController.bms;
+      var bms = PlacesController._bms;
       var folderTitle = bms.getFolderTitle(folderId);
     
       var createTxn = 
