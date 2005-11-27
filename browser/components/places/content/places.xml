@@ -37,7 +37,16 @@
           item = item.parent;
         item.QueryInterface(Ci.nsIInterfaceRequestor);
         this._browserWindow = item.getInterface(Ci.nsIDOMWindowInternal);
+        
+        this._bms = 
+          Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+          getService(Ci.nsINavBookmarksService);
+        this._bms.addObserver(this._bookmarkObserver);
       ]]></constructor>
+      
+      <destructor><![CDATA[ 
+        this._bms.removeObserver(this._bookmarkObserver);
+      ]]></destructor>
       
       <method name="_fireEvent">
         <parameter name="name"/>
@@ -151,13 +160,11 @@
         <parameter name="folderId"/>
         <parameter name="filterOptions"/>
         <body><![CDATA[ 
-          var bms = 
-              Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-          var filterOptions = filterOptions || bms.ALL_CHILDREN;
-          var result = bms.getFolderChildren(folderId, filterOptions);
+          var filterOptions = filterOptions || this._bms.ALL_CHILDREN;
+          var result = this._bms.getFolderChildren(folderId, filterOptions);
           result.QueryInterface(Ci.nsITreeView);
           this.view = result;
+          this._lastFilterOptions = filterOptions;
           this._fireEvent("reloaded");
         ]]></body>
       </method>
@@ -411,6 +418,56 @@
         onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { },      
         })
       ]]></field>
+      
+      <method name="_reloadView">
+        <body><![CDATA[ 
+          var result = this.getResult();
+          if (PlacesController.nodeIsFolder(result))
+            this.loadFolder(result.folderId, this._lastFilterOptions);
+          else
+            this.load(result.getSourceQueries({ }), result.sourceQueryOptions);
+        ]]></body>
+      </method>
+      
+      <!-- nsINavBookmarkObserver -->
+      <field name="_bookmarkObserver"><![CDATA[({
+        _numBatches: 0,
+        _self: this,
+        onBeginUpdateBatch: function PT_O_onBeginUpdateBatch() {
+          ++this._numBatches;
+        },
+        onEndUpdateBatch: function PT_O_onEndUpdateBatch() {
+          if (!--this._numBatches)
+            this._self._reloadView();
+        },
+        get wantAllDetails() { 
+          return false;
+        },
+        onItemAdded: function PT_O_onItemAdded(bookmark, folder, index) {
+          this._self._reloadView();
+        },
+        onItemRemoved: function PT_O_onItemRemoved(bookmark, folder, index) {
+          this._self._reloadView();
+        },
+        onItemMoved: function PT_O_onItemMoved(bookmark, folder, oldIndex, newIndex) {
+          this._self._reloadView();
+        },
+        onItemChanged: function PT_O_onItemChanged(bookmark, property) {
+          this._self._reloadView();
+        },
+        onFolderAdded: function PT_O_onFolderAdded(folder, parent, index) {
+          this._self._reloadView();
+        },
+        onFolderRemoved: function PT_O_onFolderRemoved(folder, parent, index) {
+          this._self._reloadView();
+        },
+        onFolderMoved: function PT_O_onFolderMoved(folder, oldParent, oldIndex, newParent, newIndex) {
+          this._self._reloadView();
+        },
+        onFolderChanged: function PT_O_onFolderChanged(folder, property) {
+          this._self._reloadView();
+        },
+      })]]></field>
       
     </implementation>
     <handlers>
