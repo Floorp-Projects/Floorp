@@ -57,6 +57,14 @@ var PlacesUIHook = {
     }
     catch (e) { 
     }
+    
+    // Stop the browser from handling certain types of events. 
+    function onDragEvent(event) {
+      event.stopPropagation();
+    }
+    window.addEventListener("draggesture", onDragEvent, false);
+    window.addEventListener("dragover", onDragEvent, false);
+    window.addEventListener("dragdrop", onDragEvent, false);
   },
   
   uninit: function PUIH_uninit() {
@@ -98,6 +106,9 @@ var PlacesPage = {
     this._places.controllers.appendController(PlacesController);
     this._content.controllers.appendController(PlacesController);
     
+    this._places.supportedDropTypes = ["text/x-moz-place"];
+    this._content.supportedDropTypes = ["text/x-moz-place", "text/x-moz-url"];
+    
     // Hook the browser UI
     PlacesUIHook.init(this._content);
 
@@ -106,12 +117,9 @@ var PlacesPage = {
 
     // Attach the Places model to the Place View
     // XXXben - move this to an attribute/property on the tree view
-    const BS = Ci.nsINavBookmarksService;
-    this._bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].getService(BS);
-    var children = this._bmsvc.getFolderChildren(this._bmsvc.placesRoot,
-                                                 BS.FOLDER_CHILDREN |
-                                                 BS.QUERY_CHILDREN);
-    this._places.view = children.QueryInterface(Ci.nsITreeView);
+    var bms = PlacesController._bms;
+    this._places.loadFolder(bms.placesRoot, 
+                            bms.FOLDER_CHILDREN | bms.QUERY_CHILDREN);
   },
 
   uninit: function PP_uninit() {
@@ -121,7 +129,7 @@ var PlacesPage = {
   showAdvancedOptions: function PP_showAdvancedOptions() {
     alert("Show advanced query builder.");
   },
-
+  
   setFilterCollection: function PP_setFilterCollection(collectionName) {
     var searchFilter = document.getElementById("searchFilter");
     searchFilter.setAttribute("collection", collectionName);
@@ -130,12 +138,20 @@ var PlacesPage = {
   applyFilter: function PP_applyFilter(filterString) {
     var searchFilter = document.getElementById("searchFilter");
     var collectionName = searchFilter.getAttribute("collection");
-    if (collectionName == "collection") {
-      alert("Search Only This Collection Not Yet Supported");
-      this.setFilterCollection("all");
-    }
-    else if (collectionName == "all") {
+    switch (collectionName) {
+    case "collection":
+      var folder = this._content.getResult().folderId;
+      this._content.applyFilter(filterString, true, folder);
+      break;
+    case "bookmarks":
+      this._content.applyFilter(filterString, true, 0);
+      break;
+    case "history":
+      this._content.applyFilter(filterString, false, 0);
+      break;
+    case "all":
       this._content.filterString = filterString;
+      break;
     }
   },
 
@@ -143,38 +159,34 @@ var PlacesPage = {
    * Called when a place folder is selected in the left pane.
    */
   placeSelected: function PP_placeSelected(event) {
-    var resultView = event.target.view;
-    resultView.QueryInterface(Components.interfaces.nsINavHistoryResult);
-
-    var folder = resultView.nodeForTreeIndex(resultView.selection.currentIndex);
-    var view;
-    if (folder.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER) {
-      view = this._bmsvc.getFolderChildren(folder.folderId, Ci.nsINavBookmarksService.ALL_CHILDREN);
-    } else {
-      var queries = folder.getQueries({ });
-      var history = Cc["@mozilla.org/browser/nav-history;1"].getService(Ci.nsINavHistory);
-      view = history.executeQueries(queries, queries.length, folder.queryOptions).QueryInterface(Ci.nsITreeView);
+    var node = this._places.selectedNode;
+    if (PlacesController.nodeIsFolder(node))
+      this._content.loadFolder(node.folderId);
+    else {
+      var queries = node.getQueries({ });
+      this._content.load(queries, node.queryOptions);
     }
-    this._content.view = view;
   },
   
   /**
    * Update the Places UI when the content of the right tree changes. 
    */
   onContentChanged: function PP_onContentChanged() {
-    var result = this._content.view.QueryInterface(Ci.nsINavHistoryResult);
-    var queries = result.getSourceQueries({ });
-    var query = queries[0];
     var panelID = "commands_history";
-    if (query.onlyBookmarked) {
+    var filterButtonID = "filterList_history";
+    var isBookmarks = PlacesController.nodeIsFolder(this._content.getResult());
+    if (isBookmarks) {
       // if (query.annotation == "feed") {
       panelID = "commands_bookmark";
+      filterButtonID = "filterList_bookmark";
     }
-    var commands = document.getElementById("commands");
-    commands.selectedPanel = document.getElementById(panelID);
+    var commandBar = document.getElementById("commandBar");
+    commandBar.selectedPanel = document.getElementById(panelID);
+    var filterCollectionDeck = document.getElementById("filterCollectionDeck");
+    filterCollectionDeck.selectedPanel = document.getElementById(filterButtonID);
 
     // Hide the Calendar for Bookmark queries. 
-    document.getElementById("historyCalendar").hidden = query.onlyBookmarked;
+    document.getElementById("historyCalendar").hidden = isBookmarks;
   },
 };
 

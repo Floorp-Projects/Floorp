@@ -24,13 +24,19 @@
     <stringbundle id="brandBundle" src="chrome://branding/locale/brand.properties"/>
   </stringbundleset>
   
-  <commandset id="placesCommands">
+  <commandset id="placesCommands" 
+              commandupdater="true" events="focus,select" 
+              oncommandupdate="PlacesController.onCommandUpdate()">
     <command id="placesCmd_find" label="&cmd.find.label;" accesskey="&cmd.find.accesskey;"/>
     <command id="placesCmd_export" label="&cmd.export.label;" accesskey="&cmd.export.accesskey;"/>
     <command id="placesCmd_import"/>
-    <command id="placesCmd_select:all" label="&cmd.select_all.label;" accesskey="&cmd.select_all.accesskey;"/>
+    <command id="placesCmd_select:all" 
+             label="&cmd.select_all.label;" accesskey="&cmd.select_all.accesskey;"
+             oncommand="PlacesController.selectAll();"/>
     <commandset readonly="true">
-      <command id="placesCmd_edit:copy" label="&cmd.edit_copy.label;" accesskey="&cmd.edit_copy.accesskey;"/>
+      <command id="placesCmd_edit:copy" 
+               label="&cmd.edit_copy.label;" accesskey="&cmd.edit_copy.accesskey;"
+               oncommand="PlacesController.copy();"/>
       <command id="placesCmd_show:info" 
 #ifdef XP_WIN
                label="&cmd.show_infoWin.label;" accesskey="&cmd.show_infoWin.accesskey;"/>
@@ -39,8 +45,12 @@
 #endif
     </commandset>
     <commandset>
-      <command id="placesCmd_edit:cut" label="&cmd.edit_cut.label;" accesskey="&cmd.edit_cut.accesskey;"/>
-      <command id="placesCmd_edit:paste" label="&cmd.edit_paste.label;" accesskey="&cmd.edit_paste.accesskey;"/>
+      <command id="placesCmd_edit:cut" 
+               label="&cmd.edit_cut.label;" accesskey="&cmd.edit_cut.accesskey;"
+               oncommand="PlacesController.cut();"/>
+      <command id="placesCmd_edit:paste" 
+               label="&cmd.edit_paste.label;" accesskey="&cmd.edit_paste.accesskey;"
+               oncommand="PlacesController.paste();"/>
       <command id="placesCmd_edit:delete" 
                label="&cmd.edit_delete.label;" accesskey="&cmd.edit_delete.accesskey;"
                oncommand="PlacesController.remove();"/>
@@ -123,7 +133,7 @@
       <tree id="placesList" class="placesTree" flex="1"
             hidecolumnpicker="true" context="placesContext"
             onselect="PlacesPage.placeSelected(event);"
-            singleclick="true">
+            singleclick="true" seltype="single">
         <treecols>
           <treecol id="title" flex="1" primary="true" hideheader="true"/>
         </treecols>
@@ -142,16 +152,28 @@
         <textbox id="searchFilter" flex="3" style="width: 0px;" timeout="500"
                  oncommand="PlacesPage.applyFilter(this.value);" 
                  collection="all" persist="collection">
-          <button type="menu" id="filterCollection">
-            <menupopup oncommand="PlacesPage.setFilterCollection(event.target.getAttribute('value'));">
-              <menuitem label="&search.collection.label;" 
-                        accesskey="&search.collection.accesskey;"
-                        type="radio" name="collection" value="collection"/>
-              <menuitem label="&search.all.label;" 
-                        accesskey="&search.all.accesskey;"
-                        type="radio" name="collection" value="all"/>
-            </menupopup>
-          </button>
+          <deck id="filterCollectionDeck">
+            <button type="menu" class="filterList" id="filterList_history">
+              <menupopup>
+                <menuitem label="&search.history.label;" accesskey="&search.history.accesskey;"
+                          type="radio" name="collection" value="history" 
+                          checked="true" default="true"/>
+                <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
+                          type="radio" name="collection" value="all"/>
+              </menupopup>
+            </button>
+            <button type="menu" class="filterList" id="filterList_bookmark">
+              <menupopup>
+                <menuitem label="&search.collection.label;" accesskey="&search.collection.accesskey;"
+                          type="radio" name="collection" value="collection"/>
+                <menuitem label="&search.bookmarks.label;" accesskey="&search.bookmarks.accesskey;"
+                          type="radio" name="collection" value="bookmarks"
+                          checked="true" default="true"/>
+                <menuitem label="&search.all.label;" accesskey="&search.all.accesskey;"
+                          type="radio" name="collection" value="all"/>
+              </menupopup>
+            </button>
+          </deck>
         </textbox>
         <button id="showAdvancedSearch" 
                 label="&advancedSearch.label;" accesskey="&advancedSearch.accesskey;" 
@@ -170,7 +192,7 @@
             <treechildren id="placeContentChildren" view="placeContent" flex="1"/>
           </tree>
           <hbox>
-            <deck id="commands" flex="1">
+            <deck id="commandBar" flex="1">
               <hbox class="commands" id="commands_bookmark" flex="1">
                 <button id="newFolder" view="placeContent" command="placesCmd_new:folder"/>
                 <spacer flex="1"/>
