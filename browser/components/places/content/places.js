@@ -162,7 +162,7 @@ var PlacesPage = {
     var node = this._places.selectedNode;
     if (PlacesController.nodeIsFolder(node))
       this._content.loadFolder(node.folderId);
-    else {
+    else { // XXXben, this is risky, need to filter out TYPE_DAY/TYPE_HOST
       var queries = node.getQueries({ });
       this._content.load(queries, node.queryOptions);
     }
