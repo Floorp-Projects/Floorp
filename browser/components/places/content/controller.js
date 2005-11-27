@@ -106,7 +106,7 @@ var PlacesController = {
   },
   
   isCommandEnabled: function PC_isCommandEnabled(command) {
-    LOG("isCommandEnabled: " + command);
+    //LOG("isCommandEnabled: " + command);
     return document.getElementById(command).getAttribute("disabled") == "true";
   },
 
@@ -199,6 +199,18 @@ var PlacesController = {
     return node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
   },
   
+  /**
+   * Determines whether or not a ResultNode is a URL item or not
+   * @param   node
+   *          A NavHistoryResultNode
+   * @returns true if the ndoe is a URL item, false otherwise
+   */
+  nodeIsURL: function PC_nodeIsURL(node) {
+    const NHRN = Ci.nsINavHistoryResultNode;
+    return node.type == NHRN.RESULT_TYPE_URL || 
+           node.type == NHRN.RESULT_TYPE_VISIT;
+  },
+  
   onCommandUpdate: function PC_onCommandUpdate() {
     if (!this._activeView) {
       // Initial command update, no view yet. 
@@ -245,6 +257,55 @@ var PlacesController = {
     this._setEnabled("placesCmd_reload", false);
   },
   
+  /** 
+   * Gather information about the selection according to the following
+   * rules: 
+   * Selection Grammar: 
+   *    is-link       "link"
+   *    is-links      "links"
+   *    is-folder     "folder"
+   *    is-mutable    "mutable"
+   *    is-removable  "removable"
+   *    is-multiselect"multiselect"
+   *    is-livemark   "livemark"
+   * @returns an object with each of the properties above set if the selection
+   *          matches that rule. 
+   */
+  _buildSelectionMetadata: function PC__buildSelectionMetadata() {
+    var metadata = { mixed: true };
+    
+    var hasSingleSelection = this._activeView.hasSingleSelection;
+    if (this._activeView.selectedURLNode && hasSingleSelection)
+      metadata["link"] = true;
+    var selectedNode = this._activeView.selectedNode;
+    if (this.nodeIsFolder(selectedNode) && hasSingleSelection)
+      metadata["folder"] = true;
+    
+    var foundNonLeaf = false;
+    var nodes = this._activeView.getSelectionNodes();
+    for (var i = 0; i < nodes.length; ++i) {
+      var node = nodes[i];
+      if (node.type != Ci.nsINavHistoryResultNode.RESULT_TYPE_URL)
+        foundNonLeaf = true;
+      // XXXben check for livemarkness
+      if (!node.readonly)
+        metadata["mutable"] = true;
+    }
+    if (this._activeView.getAttribute("seltype") != "single")
+      metadata["multiselect"] = true;
+    if (!foundNonLeaf && nodes.length > 1)
+      metadata["links"] = true;
+    return metadata;
+  },
+  
+  _shouldShowMenuItem: function(metadata, rules) {
+    for (var i = 0; i < rules.length; ++i) {
+      if (rules[i] in metadata)
+        return true;
+    }
+    return false;
+  },
+    
   buildContextMenu: function PC_buildContextMenu(popup) {
     if (document.popupNode.hasAttribute("view")) {
       var view = document.popupNode.getAttribute("view");
@@ -252,13 +313,21 @@ var PlacesController = {
     }
     
     // Determine availability/enabled state of commands
+    var metadata = this._buildSelectionMetadata();
+    var lastVisible = null;
     for (var i = 0; i < popup.childNodes.length; ++i) {
       var item = popup.childNodes[i];
+      var rules = item.getAttribute("selection")
+      item.hidden = !this._shouldShowMenuItem(metadata, rules.split("|"));
+      if (!item.hidden)
+        lastVisible = item;
       if (item.hasAttribute("command")) {
         var disabled = !this.isCommandEnabled(item.getAttribute("command"));
         item.setAttribute("disabled", disabled);
       }
     }
+    if (lastVisible.localName == "menuseparator")
+      lastVisible.hidden = true;
     
     return true;
   },
@@ -325,6 +394,29 @@ var PlacesController = {
     var node = this._activeView.selectedURLNode;
     if (node)
       this._activeView.browserWindow.loadURI(node.url, null, null);
+  },
+  
+  /**
+   * Opens the links in the selected folder, or the selected links in new tabs. 
+   */
+  openLinksInTabs: function PC_openLinksInTabs() {
+    var node = this._activeView.selectedNode;
+    if (this._activeView.hasSingleSelection && this.nodeIsFolder(node)) {
+      var kids = this._bms.getFolderChildren(node.folderId, 
+                                             this._bms.ITEM_CHILDREN);
+      var cc = kids.childCount;
+      for (var i = 0; i < cc; ++i)
+        this._activeView.browserWindow.openNewTabWith(kids.getChild(i).url, 
+                                                      null, null);
+    }
+    else {
+      var nodes = this._activeView.getSelectionNodes();
+      for (var i = 0; i < nodes.length; ++i) {
+        if (this.nodeIsURL(nodes[i]))
+          this._activeView.browserWindow.openNewTabWith(nodes[i].url, null, null);
+      }
+    }
+      
   },
   
   /**

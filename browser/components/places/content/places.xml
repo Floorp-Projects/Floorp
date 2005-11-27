@@ -209,6 +209,7 @@
       <!-- AVI Method -->
       <method name="getCopyableSelection">
         <body><![CDATA[ 
+          // XXXben implement me!
           return this.getSelectionNodes();
         ]]></body>
       </method>
