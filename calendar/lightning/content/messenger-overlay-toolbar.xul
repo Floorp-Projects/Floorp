@@ -49,29 +49,59 @@
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://calendar/content/calendar-item-editing.js"/>
+  <script type="application/x-javascript" 
+          src="chrome://calendar/content/calendar-item-editing.js"/>
 
   <menupopup id="menu_NewPopup">
-    <menuitem id="ltnNewEvent" label="&event.title.new;" oncommand="createEventWithDialog();"/>
-    <menuitem id="ltnNewTask" label="&todo.title.new;" oncommand="createTodoWithDialog();"/>
+    <menuitem id="ltnNewEvent" label="&event.title.new;" 
+              oncommand="createEventWithDialog(ltnSelectedCalendar());"/>
+    <menuitem id="ltnNewTask" label="&todo.title.new;" 
+              oncommand="createTodoWithDialog(ltnSelectedCalendar());"/>
   </menupopup>
 
   <menubar id="mail-menubar">
-    <menu id="ltnCalendarMenu" label="&lightning.calendar.label;" insertbefore="tasksMenu">
+    <menu id="ltnCalendarMenu" label="&lightning.calendar.label;" 
+          insertbefore="tasksMenu">
       <menupopup id="ltncalendarMenuPopup">
-        <menuitem id="ltnChangeViewDay" label="&lightning.toolbar.dayview.label;" oncommand="switchView('day')"/>
-        <menuitem id="ltnChangeViewWeek" label="&lightning.toolbar.weekview.label;" oncommand="switchView('week')"/>
-        <menuitem id="ltnChangeViewMonth" label="&lightning.toolbar.monthview.label;" oncommand="switchView('month')"/>
+        <menuitem id="ltnChangeViewDay" 
+                  label="&lightning.toolbar.dayview.label;" 
+                  oncommand="switchView('day')"/>
+        <menuitem id="ltnChangeViewWeek" 
+                  label="&lightning.toolbar.weekview.label;" 
+                  oncommand="switchView('week')"/>
+        <menuitem id="ltnChangeViewMonth" 
+                  label="&lightning.toolbar.monthview.label;" 
+                  oncommand="switchView('month')"/>
       </menupopup>
     </menu>
   </menubar>
 
   <toolbarpalette id="MailToolbarPalette">
-    <toolbarbutton id="calendar-new-event-button" class="cal-toolbarbutton-1" label="&calendar.newevent.button.label;" tooltiptext="&calendar.newevent.button.tooltip;" oncommand="createEventWithDialog()"/>
-    <toolbarbutton id="calendar-new-task-button" class="cal-toolbarbutton-1" label="&calendar.newtask.button.label;" tooltiptext="&calendar.newtask.button.tooltip;" oncommand="createTodoWithDialog()"/>
-    <toolbarbutton id="calendar-week-view-button" class="cal-toolbarbutton-1" label="&calendar.weekview.button.label;" tooltiptext="&calendar.weekview.button.tooltip;" oncommand="switchView('week')"/>
-    <toolbarbutton id="calendar-month-view-button" class="cal-toolbarbutton-1" label="&calendar.monthview.button.label;" tooltiptext="&calendar.monthview.button.tooltip;" oncommand="switchView('month')"/>
-    <toolbarbutton id="calendar-day-view-button" class="cal-toolbarbutton-1" label="&calendar.dayview.button.label;" tooltiptext="&calendar.dayview.button.tooltip;" oncommand="switchView('day')"/>
+    <toolbarbutton id="calendar-new-event-button" 
+                   class="cal-toolbarbutton-1" 
+                   label="&calendar.newevent.button.label;" 
+                   tooltiptext="&calendar.newevent.button.tooltip;" 
+                   oncommand="createEventWithDialog(ltnSelectedCalendar())"/>
+    <toolbarbutton id="calendar-new-task-button" 
+                   class="cal-toolbarbutton-1" 
+                   label="&calendar.newtask.button.label;" 
+                   tooltiptext="&calendar.newtask.button.tooltip;" 
+                   oncommand="createTodoWithDialog(ltnSelectedCalendar())"/>
+    <toolbarbutton id="calendar-week-view-button" 
+                   class="cal-toolbarbutton-1" 
+                   label="&calendar.weekview.button.label;" 
+                   tooltiptext="&calendar.weekview.button.tooltip;" 
+                   oncommand="switchView('week')"/>
+    <toolbarbutton id="calendar-month-view-button" 
+                   class="cal-toolbarbutton-1" 
+                   label="&calendar.monthview.button.label;" 
+                   tooltiptext="&calendar.monthview.button.tooltip;" 
+                   oncommand="switchView('month')"/>
+    <toolbarbutton id="calendar-day-view-button" 
+                   class="cal-toolbarbutton-1" 
+                   label="&calendar.dayview.button.label;" 
+                   tooltiptext="&calendar.dayview.button.tooltip;" 
+                   oncommand="switchView('day')"/>
   </toolbarpalette>
 
 </overlay>

@@ -161,6 +161,10 @@ function loadDialog(item)
             if (item.calendar.uri.equals(calendars[i].uri))
                 calendarList.selectedIndex = i;
         }
+    } else {
+        // no calendar attached to item
+        // select first entry in calendar list as default
+        document.getElementById("item-calendar").selectedIndex = 0;
     }
 
     /* recurrence */

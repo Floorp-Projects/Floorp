@@ -140,6 +140,10 @@ var ltnCalendarViewController = {
         // XXX If we're adding an item from the view, let's make sure that
         // XXX the calendar in question is visible!
         
+        if (!aCalendar) {
+            aCalendar = ltnSelectedCalendar();
+        }
+
         // if we're given both times, skip the dialog
         if (aStartTime && aEndTime && !aStartTime.isDate && !aEndTime.isDate) {
             var event = createEvent();
@@ -364,6 +368,11 @@ var ltnCalendarTreeView = {
 function ltnSetTreeView()
 {
     document.getElementById("calendarTree").view = ltnCalendarTreeView;
+
+    // Ensure that a calendar is selected in calendar tree after startup.
+    if (document.getElementById("calendarTree").currentIndex == -1) {
+        document.getElementById("calendarTree").view.selection.select(0);
+    }
 }
 
 window.addEventListener("load", ltnSetTreeView, false);

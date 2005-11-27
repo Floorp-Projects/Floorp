@@ -77,6 +77,10 @@ function createEventWithDialog(calendar, startDate, endDate, summary)
     }
     event.endDate = endDate.clone();
 
+    if (calendar) {
+        event.calendar = calendar;
+    }
+
     if (summary)
         event.title = summary;
 
@@ -91,6 +95,10 @@ function createTodoWithDialog(calendar, dueDate, summary)
 {
     const kDefaultTimezone = calendarDefaultTimezone();
     var todo = createToDo();
+
+    if (calendar) {
+        todo.calendar = calendar;
+    }
 
     if (summary)
         todo.title = summary;
