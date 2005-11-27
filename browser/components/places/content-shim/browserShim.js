@@ -35,10 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cr = Components.results;
-
 var PlacesBrowserShim = {
   _bookmarks: null,
   _history: null,
@@ -60,6 +56,12 @@ PlacesBrowserShim.init = function PBS_init() {
   PlacesBrowserShim._bookmarks = 
       Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
       getService(Ci.nsINavBookmarksService);
+  var bms = PlacesBrowserShim._bookmarks;
+  
+  var bookmarksBarContent = document.getElementById("bookmarksBarContent");
+  var kids = bms.getFolderChildren(bms.toolbarRoot, bms.ALL_CHILDREN);
+  bookmarksBarContent._result = kids;
+  bookmarksBarContent._rebuild();
 };
 
 PlacesBrowserShim.addBookmark = function PBS_addBookmark() {

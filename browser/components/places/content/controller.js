@@ -366,7 +366,9 @@ var PlacesController = {
    *          preferred destination window or tab.
    */
   mouseLoadURI: function PC_mouseLoadURI(event) {
-    this._getLoadFunctionForEvent(event)();
+    var fn = this._getLoadFunctionForEvent(event);
+    if (fn)
+      this._getLoadFunctionForEvent(event)();
   },
 
   /**
@@ -416,7 +418,6 @@ var PlacesController = {
           this._activeView.browserWindow.openNewTabWith(nodes[i].url, null, null);
       }
     }
-      
   },
   
   /**
