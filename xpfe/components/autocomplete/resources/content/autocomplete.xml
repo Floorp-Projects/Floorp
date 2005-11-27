@@ -300,7 +300,7 @@
       <field name="mNeedToComplete">false</field>
       <field name="mTransientValue">false</field>
       <field name="mView">null</field>
-      <field name="currentSearchString">null</field>
+      <field name="currentSearchString">""</field>
       <field name="ignoreInputEvent">false</field>
       <field name="oninit">null</field>
       <field name="ontextcommand">null</field>
@@ -973,6 +973,10 @@
           {
             // up/down keys while menu is closed will open menu
             if (!this.mMenuOpen) {
+              if (this.currentSearchString != this.value) {
+                 this.processInput();
+                 return true;
+              }
               if (!this.view.rowCount && !this.alwaysOpenPopup)
                 return false;
 
