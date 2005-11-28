@@ -354,14 +354,14 @@ class nsTArray : public nsTArray_base {
 
     // A variation on the ReplaceElementsAt method defined above.
     PRBool ReplaceElementsAt(index_type start, size_type count,
-                             const self_type& a) {
-      return ReplaceElementsAt(start, count, &a[0], a.Length());
+                             const self_type& array) {
+      return ReplaceElementsAt(start, count, array.Elements(), array.Length());
     }
 
     // A variation on the ReplaceElementsAt method defined above.
     PRBool ReplaceElementsAt(index_type start, size_type count,
-                             const elem_type& e) {
-      return ReplaceElementsAt(start, count, &e, 1);
+                             const elem_type& elem) {
+      return ReplaceElementsAt(start, count, &elem, 1);
     }
     
     // A variation on the ReplaceElementsAt method defined above.
@@ -372,12 +372,12 @@ class nsTArray : public nsTArray_base {
 
     // A variation on the ReplaceElementsAt method defined above.
     PRBool InsertElementsAt(index_type index, const self_type& array) {
-      return ReplaceElementsAt(index, 0, &array[0], array.Length());
+      return ReplaceElementsAt(index, 0, array.Elements(), array.Length());
     }
 
     // A variation on the ReplaceElementsAt method defined above.
-    PRBool InsertElementAt(index_type index, const elem_type& e) {
-      return ReplaceElementsAt(index, 0, &e, 1);
+    PRBool InsertElementAt(index_type index, const elem_type& elem) {
+      return ReplaceElementsAt(index, 0, &elem, 1);
     }
 
     // This method appends elements to the end of this array.
@@ -393,13 +393,13 @@ class nsTArray : public nsTArray_base {
     }
 
     // A variation on the AppendElements method defined above.
-    PRBool AppendElements(const self_type& a) {
-      return AppendElements(&a[0], a.Length());
+    PRBool AppendElements(const self_type& array) {
+      return AppendElements(array.Elements(), array.Length());
     }
 
     // A variation on the AppendElements method defined above.
-    PRBool AppendElement(const elem_type& e) {
-      return AppendElements(&e, 1);
+    PRBool AppendElement(const elem_type& elem) {
+      return AppendElements(&elem, 1);
     }
 
     // This method removes a range of elements from this array.
@@ -411,8 +411,8 @@ class nsTArray : public nsTArray_base {
     }
 
     // A variation on the RemoveElementsAt method defined above.
-    void RemoveElementAt(index_type i) {
-      RemoveElementsAt(i, 1);
+    void RemoveElementAt(index_type index) {
+      RemoveElementsAt(index, 1);
     }
 
     // A variation on the RemoveElementsAt method defined above.

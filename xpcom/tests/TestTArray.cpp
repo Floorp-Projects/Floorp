@@ -116,6 +116,11 @@ static PRBool test_basic_array(ElementType *data,
       return PR_FALSE;
   }
 
+  // These shouldn't crash!
+  nsTArray<ElementType> empty;
+  ary.AppendElements(nsnull, 0);
+  ary.AppendElements(empty);
+
   return PR_TRUE;
 }
 
