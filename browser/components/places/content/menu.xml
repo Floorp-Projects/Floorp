@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<bindings id="placesBindings"
+<bindings id="placesMenuBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"

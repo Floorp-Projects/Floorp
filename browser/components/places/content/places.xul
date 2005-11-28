@@ -47,7 +47,7 @@
   
   <hbox flex="1" id="placesView">
     <vbox>
-      <tree id="placesList" class="placesTree" flex="1"
+      <tree id="placesList" class="placesTree" flex="1" type="places" 
             hidecolumnpicker="true" context="placesContext"
             onselect="PlacesPage.placeSelected(event);"
             singleclick="true" seltype="single">
@@ -100,7 +100,7 @@
       <deck id="content" flex="1">
         <vbox flex="1">
           <tree id="placeContent" class="placesTree" context="placesContext" 
-                flex="1" query=""
+                flex="1" query="" type="places" 
                 ondblclick="PlacesController.mouseLoadURI(event);"
                 onplacestreereloaded="PlacesPage.onContentChanged();">
             <treecols>

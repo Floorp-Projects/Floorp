@@ -6,8 +6,8 @@
   -moz-binding: url("chrome://browser/content/places/places.xml#textbox-timed-arbitrary");
 }
 
-tree {
-  -moz-binding: url("chrome://browser/content/places/places.xml#places-tree");
+tree[type="places"] {
+  -moz-binding: url("chrome://browser/content/places/tree.xml#places-tree");
 }
 
 button {

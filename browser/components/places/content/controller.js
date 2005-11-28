@@ -843,6 +843,10 @@ var PlacesControllerDragHelper = {
    *          it is being dragged over, false otherwise. 
    */
   canDrop: function PCDH_canDrop(view, orientation) {
+    var result = view.getResult();
+    if (result.readOnly)
+      return false;
+  
     var session = this._getSession();
     if (session) {
       if (orientation != Ci.nsINavHistoryResultViewObserver.DROP_ON)
