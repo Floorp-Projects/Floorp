@@ -36,51 +36,39 @@
  * ***** END LICENSE BLOCK ***** */
 
 var PlacesBrowserShim = {
-  _bookmarks: null,
+  _bms: null,
   _history: null,
 };
 
 PlacesBrowserShim.init = function PBS_init() {
   var addBookmarkCmd = document.getElementById("Browser:AddBookmarkAs");
-  var addBookmarksCmd = document.getElementById("Browser:BookmarkAllTabs");
-  var addBookmarksItem = document.getElementById("bookmarkAllCmd");
-  var viewBookmarksItem = addBookmarksItem.nextSibling;
-  var endHistoryItem = document.getElementById("endHistorySeparator");
-  var viewHistoryItem = endHistoryItem.nextSibling;
-  
   addBookmarkCmd.setAttribute("oncommand", "PlacesBrowserShim.addBookmark()");
-  addBookmarksCmd.setAttribute("oncommand", "PlacesBrowserShim.addBookmarks()");
-  viewBookmarksItem.setAttribute("oncommand", "PlacesBrowserShim.showPlaces()");
-  //viewHistoryItem.setAttribute("oncommand", "PlacesBrowserShim.showPlaces");
 
-  PlacesBrowserShim._bookmarks = 
+  this._bms = 
       Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
       getService(Ci.nsINavBookmarksService);
+  
+  var oldMenu = document.getElementById("bookmarks-menu");
+  oldMenu.parentNode.removeChild(oldMenu);
+  
+  var newMenuPopup = document.getElementById("bookmarksMenuPopup");
+  newMenuPopup.folderId = this._bms.bookmarksRoot;
 };
 
 PlacesBrowserShim.addBookmark = function PBS_addBookmark() {
   var selectedBrowser = getBrowser().selectedBrowser;
-  this._bookmarkURI(this._bookmarks.bookmarksRoot, selectedBrowser.currentURI, 
+  this._bookmarkURI(this._bms.bookmarksRoot, selectedBrowser.currentURI, 
                     selectedBrowser.contentTitle);
-};
-
-PlacesBrowserShim.addBookmarks = function PBS_addBookmarks() {
-  var folder = this._bookmarks.createFolder(this._bookmarks.bookmarksRoot, 
-                                            "Goats", -1);
-  var browsers = getBrowser().browsers;
-  for (var i = 0; i < browsers.length; ++i)
-    this._bookmarkURI(folder, browsers[i].currentURI, 
-                      browsers[i].contentTitle);
 };
 
 PlacesBrowserShim._bookmarkURI = 
 function PBS__bookmarkURI(folder, uri, title) {
-  this._bookmarks.insertItem(folder, uri, -1);
-  this._bookmarks.setItemTitle(uri, title);
+  this._bms.insertItem(folder, uri, -1);
+  this._bms.setItemTitle(uri, title);
 };
 
 PlacesBrowserShim.showPlaces = function PBS_showPlaces() {
   loadURI("chrome://browser/content/places/places.xul", null, null);
 };
 
-addEventListener("load", PlacesBrowserShim.init, false);
+addEventListener("load", function () { PlacesBrowserShim.init(); }, false);
