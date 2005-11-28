@@ -298,6 +298,9 @@
       <field name="supportedDropTypes">null</field>
       
       <!-- AVI Method -->
+      <field name="supportedDropOnTypes">null</field>
+      
+      <!-- AVI Method -->
       <method name="selectAll">
         <body><![CDATA[ 
           this.view.selection.selectAll();
@@ -380,8 +383,8 @@
         ({
         _self: this,
         
-        canDrop: function VO_canDrop() {
-          return PlacesControllerDragHelper.canDrop(this._self);
+        canDrop: function VO_canDrop(index, orientation) {
+          return PlacesControllerDragHelper.canDrop(this._self, orientation);
         },
         
         onDrop: function VO_onDrop(index, orientation) {
