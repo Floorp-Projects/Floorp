@@ -159,7 +159,7 @@
             var index = -1;
           else
             index = PlacesController.getIndexOfNode(this.selectedNode)
-          return { container: this._result.folderId, index: index };
+          return new InsertionPoint(this._result.folderId, index);
         ]]></getter>
       </property>
       

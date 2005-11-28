@@ -259,39 +259,49 @@
       
       <!-- AVI Method -->
       <property name="insertionPoint">
-        <getter><![CDATA[ 
-          var view = this.view;
-          var selection = view.selection;
+        <getter><![CDATA[
+          var selection = this.view.selection;
           var rc = selection.getRangeCount();
           var min = { }, max = { };
           selection.getRangeAt(rc - 1, min, max);
-
+          
+          return this._getInsertionPoint(max.value, 1);
+        ]]></getter>
+      </property>
+      
+      <method name="_getInsertionPoint">
+        <parameter name="index"/>
+        <parameter name="orientation"/>
+        <body><![CDATA[ 
+          const NHRVO = Ci.nsINavHistoryResultViewObserver;
           var result = this.getResult();
           var container = result;
           // When there's no selection, assume the container is the container
           // the view is populated from (i.e. the result's folderId).
-          if (max.value != -1) {
-            var lastSelected = result.nodeForTreeIndex(max.value);
-            if (view.isContainer(max.value) && view.isContainerOpen(max.value)) {
+          if (index != -1) {
+            var lastSelected = result.nodeForTreeIndex(index);
+            if (this.view.isContainer(index) && 
+                (this.view.isContainerOpen(index) || orientation == NHRVO.DROP_ON)) {
               // If the last selected item is an open container, append _into_
               // it, rather than insert adjacent to it. 
               container = lastSelected;
-              max.value = -1;
+              index = -1;
             }
             else {
               // Any visible selected item will always have a parent. The parent of
               // an item at the root is the result itself, which can be QI'ed to 
               // nsINavHistoryResult
               container = lastSelected.parent;
-              for (var i = 0; 
-                   i < container.childCount && container.getChild(i) != lastSelected;
-                   ++i);
-              max.value = i < container.childCount ? i + 1 : i;
+              var lsi = PlacesController.getIndexOfNode(lastSelected);
+              if (lsi < container.childCount)
+                index = orientation == NHRVO.DROP_BEFORE ? lsi : lsi + 1;
+              else
+                index = orientation == NHRVO.DROP_BEFORE ? lsi - 1 : lsi;
             }
           }
-          return { container: container.folderId, index: max.value };
-        ]]></getter>
-      </property>
+          return new InsertionPoint(container.folderId, index);
+        ]]></body>
+      </method>
       
       <!-- AVI Method -->
       <property name="browserWindow" onget="return this._browserWindow"/>
@@ -341,7 +351,7 @@
         
         canDrop: function VO_canDrop(index, orientation) {
           var root = this._self.getResult();
-          var node = root.nodeForTreeIndex(index);
+          var node = index != -1 ? root.nodeForTreeIndex(index) : root;
           // Cannot drop before fixed items in the list. 
           if (node.parent == root && 
               PlacesController.getIndexOfNode(node) < this._self.firstDropIndex &&
@@ -358,54 +368,60 @@
           // We are responsible for translating the |index| and |orientation| 
           // parameters into a container id and index within the container, 
           // since this information is specific to the tree view. 
-          const NHRVO = Ci.nsINavHistoryResultViewObserver;
-          var result = this._self.getResult();
-          var view = this._self.view;
-          var node = index != -1 ? result.nodeForTreeIndex(index) : null;
-          var destContainer = null;
-          var destIndex = -1;
-          if (!node) {
-            // Dropping in some blank area of the view, just use the result as
-            // the container.
-            destContainer = result.folderId;
-          }
-          else if (view.isContainer(index) && orientation == NHRVO.DROP_ON) {
-            // If we're dropping _on_ a container, the container is the 
-            // container we dropped on, otherwise it's the parent of the drop 
-            // target. 
-            destContainer = node.folderId;
-          }
-          else {
-            var destIndex = PlacesController.getIndexOfNode(node);
-            // For non leaves, or when not dropping _on_ a container, drop after
-            // by default (i.e. when dropping after a container, or ON AND AFTER
-            // a leaf node).
-            if (orientation != NHRVO.DROP_BEFORE)
-              ++destIndex;
-            destContainer = node.parent.folderId;
-          }
-          PlacesControllerDragHelper.onDrop(this._self, destContainer, 
-                                            destIndex, orientation);
+          var ip = this._self._getInsertionPoint(index, orientation);
+          PlacesControllerDragHelper.onDrop(this._self, ip.folderId, ip.index, 
+                                            orientation);
         },
         
-        // XXXben we will probably have to implement this to refresh Live 
-        //        Bookmarks.
-        onToggleOpenState: function VO_onToggleOpenState(index) { },
+        _states: { },
+        onToggleOpenState: function VO_onToggleOpenState(index) { 
+          // XXXben we will probably have to implement this to refresh Live 
+          //        Bookmarks.
+          var view = this._self.view;
+          if (view.isContainer(index))
+            this._states[index] = view.isContainerOpen(index);
+        },
+        onSelectionChanged: function VO_onSelectionChanged() { },
         onCycleHeader: function VO_onCycleHeader(column) { },
         onCycleCell: function VO_onCycleCell(row, column) { },
-        onSelectionChanged: function VO_onSelectionChanged() { },
         onPerformAction: function VO_onPerformAction(action) { },
         onPerformActionOnRow: function VO_onPerformActionOnRow(action, row) { },
         onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { },      
       })]]></field>
       
+      <field name="_selection">null</field>
+      <method name="_saveSelection">
+        <body><![CDATA[ 
+          this._selection = [];
+          var selection = this.view.selection;
+          var rc = selection.getRangeCount();
+          for (var i = 0; i < rc; ++i) {
+            var min = { }, max = { };
+            selection.getRangeAt(i, min, max);
+            this._selection.push({ min: min.value, max: max.value });
+          }
+        ]]></body>
+      </method>
+      
+      <method name="_restoreSelection">
+        <body><![CDATA[ 
+          var selection = this.view.selection;
+          for (var i = 0; i < this._selection.length; ++i) {
+            var range = this._selection[i];
+            selection.rangedSelect(range.min, range.max, true);
+          }
+        ]]></body>
+      </method>
+      
       <method name="_reloadView">
         <body><![CDATA[ 
           var result = this.getResult();
+          this._saveSelection();
           if (PlacesController.nodeIsFolder(result))
             this.loadFolder(result.folderId, this._lastFilterOptions);
           else
             this.load(result.getSourceQueries({ }), result.sourceQueryOptions);
+          this._restoreSelection();
         ]]></body>
       </method>
       

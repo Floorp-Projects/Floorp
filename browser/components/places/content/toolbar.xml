@@ -122,7 +122,7 @@
             var index = -1;
           else
             index = PlacesController.getIndexOfNode(this.selectedNode)
-          return { container: this._result.folderId, index: index };
+          return new InsertionPoint(this._result.folderId, index);
         ]]></getter>
       </property>
       
@@ -231,9 +231,10 @@
       <handler event="mousedown"><![CDATA[
         // When the user clicks down on a button, set it as the selection and 
         // tell the controller that we are the active view. 
-        if (event.target.localName != "toolbarbutton")
-          return;
-        this._selection = event.target.node;
+        if (event.target.localName == "toolbarbutton")
+          this._selection = event.target.node;
+        else 
+          this._selection = this.getResult();
         PlacesController.activeView = this;
       ]]></handler>
       <handler event="click">
