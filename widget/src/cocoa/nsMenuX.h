@@ -145,8 +145,7 @@ protected:
 
 protected:
     nsString                    mLabel;
-    PRUint32                    mNumMenuItems;
-    nsSupportsArray             mMenuItemsArray;        // array holds refs
+    nsCOMArray<nsISupports>     mMenuItemsArray;
 
     nsISupports*                mParent;                // weak, my parent owns me
     nsIChangeManager*           mManager;               // weak ref, it will outlive us [menubar]
