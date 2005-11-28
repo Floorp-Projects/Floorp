@@ -45,10 +45,37 @@
         ]]></body>
       </method>
       
+      <method name="_cleanMenu">
+        <body><![CDATA[
+          var foundStartMarker = false;
+          var foundEndMarker = false;
+          var items = [];
+          for (var i = 0; i < this.childNodes.length; ++i) {
+            var item = this.childNodes[i];
+            if (item.getAttribute("builder") == "start") {
+              foundStartMarker = true;
+              continue;
+            }
+            if (item.getAttribute("builder") == "end") {
+              foundEndMarker = true;
+              continue;
+            }
+            if (foundStartMarker && !foundEndMarker) 
+              items.push(item);
+          }
+          for (var i = 0; i < items.length; ++i)
+            items[i].parentNode.removeChild(items[i]);
+          if (!foundStartMarker && !foundEndMarker) {
+            while (this.hasChildNodes())
+              this.removeChild(this.firstChild);
+          }
+          LOG("KIDS = " + this.childNodes.length);
+        ]]></body>
+      </method>
+      
       <method name="_rebuild">
-        <body><![CDATA[ 
-          while (this.hasChildNodes())
-            this.removeChild(this.firstChild);
+        <body><![CDATA[
+          this._cleanMenu();
           const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           var cc = this._result.childCount;
           for (var i = 0; i < cc; ++i) {

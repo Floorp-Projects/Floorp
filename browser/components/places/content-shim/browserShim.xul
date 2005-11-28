@@ -26,6 +26,17 @@
       <hbox id="bookmarksBarContent" flex="1" context="placesContext"/>
     </toolbar>
   </toolbox>
+  
+  <menubar id="main-menubar">
+    <menu id="bookmarksMenu" insertafter="go-menu" label="Bookmarks">
+      <menupopup id="bookmarksMenuPopup" type="places">
+        <menuitem label="Add Bookmark" command="Browser:AddBookmarkAs"
+                  key="addBookmarkAsKb"/>
+        <menuitem label="Show Places" oncommand="PlacesBrowserShim.showPlaces();"/>
+        <menuseparator builder="start"/>
+      </menupopup>
+    </menu>
+  </menubar>
 
 </overlay>
 
