@@ -58,7 +58,6 @@
 #include "nsIXFormsXPathEvaluator.h"
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMNSXPathExpression.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"

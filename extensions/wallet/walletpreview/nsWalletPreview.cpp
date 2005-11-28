@@ -42,9 +42,8 @@
 #include "nsReadableUtils.h"
 #include "nsIWalletService.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsCOMPtr.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsWalletPreview.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -92,10 +91,10 @@ static void DOMWindowToTreeOwner(
   if (!DOMWindow) {
     return; // with webWindow unchanged -- its constructor gives it a null ptr
   }
-  nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(DOMWindow));
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(DOMWindow));
   nsIDocShell *docShell = nsnull;
-  if (globalScript) {
-    docShell = globalScript->GetDocShell();
+  if (window) {
+    docShell = window->GetDocShell();
   }
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
   if(!docShellAsItem)

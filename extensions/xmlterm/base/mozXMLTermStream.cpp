@@ -59,9 +59,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIFrame.h"
 
-#include "nsIScriptContextOwner.h"
-#include "nsIScriptGlobalObject.h"
-
 #include "nsICategoryManager.h"
 #include "nsXPCOMCID.h"
 

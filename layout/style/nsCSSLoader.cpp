@@ -62,7 +62,6 @@
 #include "nsCRT.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsITimelineService.h"
 #include "nsIHttpChannel.h"
 #include "nsIScriptError.h"

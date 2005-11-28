@@ -92,16 +92,9 @@ public:
                                     nsISupports *aState,
                                     PRBool aRemoveEventListeners,
                                     PRBool aClearScope);
-    virtual void SetDocShell(nsIDocShell *aDocShell);
-    virtual nsIDocShell *GetDocShell();
     virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener);
     virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
     virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
-    virtual nsresult HandleDOMEvent(nsPresContext* aPresContext, 
-                                    nsEvent* aEvent, 
-                                    nsIDOMEvent** aDOMEvent,
-                                    PRUint32 aFlags,
-                                    nsEventStatus* aEventStatus);
     virtual JSObject *GetGlobalJSObject();
     virtual void OnFinalize(JSObject *aObject);
     virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
@@ -857,20 +850,6 @@ nsXULPDGlobalObject::SetNewDocument(nsIDOMDocument *aDocument,
 
 
 void
-nsXULPDGlobalObject::SetDocShell(nsIDocShell *aDocShell)
-{
-    NS_NOTREACHED("waaah!");
-}
-
-
-nsIDocShell *
-nsXULPDGlobalObject::GetDocShell()
-{
-    return nsnull;
-}
-
-
-void
 nsXULPDGlobalObject::SetOpenerWindow(nsIDOMWindowInternal *aOpener)
 {
     NS_NOTREACHED("waaah!");
@@ -890,17 +869,6 @@ nsXULPDGlobalObject::GetGlobalObjectOwner()
     return mGlobalObjectOwner;
 }
 
-
-nsresult
-nsXULPDGlobalObject::HandleDOMEvent(nsPresContext* aPresContext, 
-                                       nsEvent* aEvent, 
-                                       nsIDOMEvent** aDOMEvent,
-                                       PRUint32 aFlags,
-                                       nsEventStatus* aEventStatus)
-{
-    NS_NOTREACHED("waaah!");
-    return NS_ERROR_UNEXPECTED;
-}
 
 JSObject *
 nsXULPDGlobalObject::GetGlobalJSObject()

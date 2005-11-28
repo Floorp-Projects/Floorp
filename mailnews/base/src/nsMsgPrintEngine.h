@@ -46,7 +46,6 @@
 #include "nsVoidArray.h"
 #include "nsIDocShell.h"
 #include "nsIMsgPrintEngine.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIStreamListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsIMsgStatusFeedback.h"

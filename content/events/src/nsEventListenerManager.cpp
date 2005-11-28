@@ -733,17 +733,16 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
   // Otherwise we won't actually fire the mutation event.
   if (aType == eEventArrayType_Mutation) {
     // Go from our target to the nearest enclosing DOM window.
-    nsCOMPtr<nsIScriptGlobalObject> global;
+    nsCOMPtr<nsPIDOMWindow> window;
     nsCOMPtr<nsIDocument> document;
     nsCOMPtr<nsIContent> content(do_QueryInterface(mTarget));
     if (content)
       document = content->GetOwnerDoc();
     else document = do_QueryInterface(mTarget);
     if (document)
-      global = document->GetScriptGlobalObject();
-    else global = do_QueryInterface(mTarget);
-    if (global) {
-      nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(global));
+      window = document->GetWindow();
+    else window = do_QueryInterface(mTarget);
+    if (window) {
       NS_ASSERTION(window->IsInnerWindow(),
                    "Setting mutation listener bits on outer window?");
       window->SetMutationListeners(aSubType);

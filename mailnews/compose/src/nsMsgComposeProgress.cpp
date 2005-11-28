@@ -38,7 +38,6 @@
 
 #include "nsMsgComposeProgress.h"
 
-#include "nsIScriptGlobalObject.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"

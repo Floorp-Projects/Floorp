@@ -43,7 +43,7 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIContentViewer.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
@@ -81,10 +81,10 @@ inLayoutUtils::GetWindowFor(nsIDOMDocument* aDoc)
 nsIPresShell* 
 inLayoutUtils::GetPresShellFor(nsISupports* aThing)
 {
-  nsCOMPtr<nsIScriptGlobalObject> so = do_QueryInterface(aThing);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aThing);
 
   nsCOMPtr<nsIPresShell> presShell;
-  so->GetDocShell()->GetPresShell(getter_AddRefs(presShell));
+  window->GetDocShell()->GetPresShell(getter_AddRefs(presShell));
 
   return presShell;
 }

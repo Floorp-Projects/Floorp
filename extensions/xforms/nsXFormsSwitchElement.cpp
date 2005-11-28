@@ -46,7 +46,6 @@
 // For focus control
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
-#include "nsIScriptGlobalObject.h"
 
 #include "nsIXTFXMLVisualWrapper.h"
 
@@ -304,7 +303,7 @@ nsXFormsSwitchElement::SetFocus(nsIDOMElement* aDeselected,
   if (!doc)
     return;
 
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(doc->GetScriptGlobalObject());
+  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
   if (!win)
     return;
 

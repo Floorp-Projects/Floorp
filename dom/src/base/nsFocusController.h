@@ -112,8 +112,8 @@ public:
 protected:
   nsCOMPtr<nsIDOMElement> mCurrentElement; // [OWNER]
   nsCOMPtr<nsIDOMElement> mPreviousElement; // [OWNER]
-  nsCOMPtr<nsIDOMWindowInternal> mCurrentWindow; // [OWNER]
-  nsCOMPtr<nsIDOMWindowInternal> mPreviousWindow; // [OWNER]
+  nsCOMPtr<nsPIDOMWindow> mCurrentWindow; // [OWNER]
+  nsCOMPtr<nsPIDOMWindow> mPreviousWindow; // [OWNER]
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
 
   PRUint32 mSuppressFocus;

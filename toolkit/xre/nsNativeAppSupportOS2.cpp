@@ -55,14 +55,12 @@
 #include "nsXPIDLString.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISupportsArray.h"
 #include "nsIWindowWatcher.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIBaseWindow.h"
@@ -1164,7 +1162,7 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                             break;
                         }
                         // Convert that to internal interface.
-                        nsCOMPtr<nsIDOMWindowInternal> internalContent( do_QueryInterface( content ) );
+                        nsCOMPtr<nsPIDOMWindow> internalContent( do_QueryInterface( content ) );
                         if ( !internalContent ) {
                             break;
                         }
@@ -1182,14 +1180,11 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                         // Escape any double-quotes.
                         escapeQuotes( url );
 
-                        // Now for the title; first, get the "window" script global object.
-                        nsCOMPtr<nsIScriptGlobalObject> scrGlobalObj( do_QueryInterface( internalContent ) );
-                        if ( !scrGlobalObj ) {
-                            break;
-                        }
-                        // Then from its doc shell get the base window...
+                        // Now for the title...
+
+                        // Get the base window from the doc shell...
                         nsCOMPtr<nsIBaseWindow> baseWindow =
-                          do_QueryInterface( scrGlobalObj->GetDocShell() );
+                          do_QueryInterface( internalContent->GetDocShell() );
                         if ( !baseWindow ) {
                             break;
                         }
@@ -1615,13 +1610,13 @@ nsNativeAppSupportOS2::OpenWindow( const char*urlstr, const char *args ) {
 }
 
 HWND hwndForDOMWindow( nsISupports *window ) {
-    nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
-    if ( !ppScriptGlobalObj ) {
+    nsCOMPtr<nsPIDOMWindow> pidomwindow( do_QueryInterface(window) );
+    if ( !pidomwindow ) {
         return 0;
     }
 
     nsCOMPtr<nsIBaseWindow> ppBaseWindow =
-        do_QueryInterface( ppScriptGlobalObj->GetDocShell() );
+        do_QueryInterface( pidomwindow->GetDocShell() );
     if ( !ppBaseWindow ) {
         return 0;
     }

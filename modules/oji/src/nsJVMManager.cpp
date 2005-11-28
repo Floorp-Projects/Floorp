@@ -66,8 +66,7 @@
 // nsIWebBrowserChrome to send the "Starting Java" message to the status
 // bar.
 #include "nsIWindowWatcher.h"
-#include "nsIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
@@ -773,12 +772,12 @@ nsJVMManager::GetChrome(nsIWebBrowserChrome **theChrome)
     }
     nsCOMPtr<nsIDOMWindow> domWindow;
     windowWatcher->GetActiveWindow(getter_AddRefs(domWindow));
-    nsCOMPtr<nsIScriptGlobalObject> scriptObject =
+    nsCOMPtr<nsPIDOMWindow> window =
         do_QueryInterface(domWindow, &rv);
-    if (!scriptObject) {
+    if (!window) {
         return rv;
     }
-    nsIDocShell *docShell = scriptObject->GetDocShell();
+    nsIDocShell *docShell = window->GetDocShell();
     if (!docShell) {
         return NS_OK;
     }

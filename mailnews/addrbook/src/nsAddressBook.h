@@ -42,7 +42,6 @@
 #include "nsIAbCard.h"
 #include "nsCOMPtr.h"
 #include "nsIAddrDatabase.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIComponentManager.h"
 #include "nsIContentHandler.h"
 #include "nsIStreamLoader.h"

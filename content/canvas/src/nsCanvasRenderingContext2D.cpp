@@ -69,12 +69,11 @@
 #include "nsGfxCIID.h"
 #include "nsIDrawingSurface.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 
 #include "cairo.h"
 #include "imgIEncoder.h"
@@ -1832,9 +1831,9 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, PRInt32 aX, PRInt3
     }
 
     nsCOMPtr<nsPresContext> presContext;
-    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
-    if (sgo) {
-        nsIDocShell* docshell = sgo->GetDocShell();
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aWindow);
+    if (win) {
+        nsIDocShell* docshell = win->GetDocShell();
         if (docshell) {
             docshell->GetPresContext(getter_AddRefs(presContext));
         }

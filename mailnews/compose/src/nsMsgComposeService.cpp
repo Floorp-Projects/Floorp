@@ -63,7 +63,7 @@
 #include "nsIContentViewer.h"
 #include "nsIMsgWindow.h"
 #include "nsIDocShell.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIXULWindow.h"
@@ -311,11 +311,11 @@ void nsMsgComposeService::CloseWindow(nsIDOMWindowInternal *domWindow)
   if (domWindow)
   {
     nsCOMPtr<nsIDocShell> docshell;
-    nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(domWindow));
-    if (globalObj)
+    nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(domWindow));
+    if (window)
     {
       nsCOMPtr<nsIDocShellTreeItem> treeItem =
-        do_QueryInterface(globalObj->GetDocShell());
+        do_QueryInterface(window->GetDocShell());
 
       if (treeItem)
       {
@@ -658,12 +658,12 @@ nsresult nsMsgComposeService::OpenComposeWindowWithParams(const char *msgCompose
 // begin shameless copying from nsNativeAppSupportWin
 HWND hwndForComposeDOMWindow( nsISupports *window ) 
 {
-  nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
-  if ( !ppScriptGlobalObj )
+  nsCOMPtr<nsPIDOMWindow> win( do_QueryInterface(window) );
+  if ( !win )
       return 0;
 
   nsCOMPtr<nsIBaseWindow> ppBaseWindow =
-    do_QueryInterface( ppScriptGlobalObj->GetDocShell() );
+    do_QueryInterface( win->GetDocShell() );
   if (!ppBaseWindow) return 0;
 
   nsCOMPtr<nsIWidget> ppWidget;
@@ -1192,11 +1192,11 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
     (do_GetService("@mozilla.org/observer-service;1", &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr <nsIScriptGlobalObject> globalScript = do_QueryInterface(aComposeWindow, &rv);
+  nsCOMPtr <nsPIDOMWindow> window = do_QueryInterface(aComposeWindow, &rv);
 
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsIDocShell *docShell = globalScript->GetDocShell();
+  nsIDocShell *docShell = window->GetDocShell();
 
   nsCOMPtr <nsIDocShellTreeItem> treeItem = do_QueryInterface(docShell, &rv);
   NS_ENSURE_SUCCESS(rv,rv);

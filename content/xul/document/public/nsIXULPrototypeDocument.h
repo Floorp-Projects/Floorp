@@ -55,7 +55,6 @@ class nsString;
 class nsVoidArray;
 class nsXULPrototypeElement;
 class nsIXULDocument;
-class nsIScriptGlobalObject;
 class nsNodeInfoManager;
 class nsISupportsArray;
 

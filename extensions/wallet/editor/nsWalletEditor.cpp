@@ -45,7 +45,6 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsIDocShell.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsWalletEditor.h"
 #include "nsString.h"
 

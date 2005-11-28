@@ -726,9 +726,9 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
   // charset of its opener as a fallback in the event the document being loaded 
   // does not specify a charset. Failing to set this charset is not fatal, so we 
   // want to continue in the face of errors.
-  nsCOMPtr<nsIScriptGlobalObject> parentSGO(do_QueryInterface(aParent));
-  if (parentSGO) {
-    nsIDocShell *parentDocshell = parentSGO->GetDocShell();
+  nsCOMPtr<nsPIDOMWindow> parentWin(do_QueryInterface(aParent));
+  if (parentWin) {
+    nsIDocShell *parentDocshell = parentWin->GetDocShell();
     // parentDocshell may be null if the parent got closed in the meantime
     if (parentDocshell) {
       nsCOMPtr<nsIContentViewer> parentContentViewer;
@@ -2057,9 +2057,9 @@ nsWindowWatcher::GetWindowTreeItem(nsIDOMWindow *inWindow,
 {
   *outTreeItem = 0;
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(inWindow));
-  if (sgo) {
-    nsIDocShell *docshell = sgo->GetDocShell();
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(inWindow));
+  if (window) {
+    nsIDocShell *docshell = window->GetDocShell();
     if (docshell)
       CallQueryInterface(docshell, outTreeItem);
   }

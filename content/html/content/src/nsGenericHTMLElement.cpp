@@ -85,7 +85,6 @@
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsDOMError.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIScriptLoader.h"
 #include "nsRuleData.h"
 
@@ -1531,8 +1530,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
             // If the window is not active, do not allow the focus to bring the
             // window to the front.  We update the focus controller, but do
             // nothing else.
-            nsCOMPtr<nsPIDOMWindow> win =
-              do_QueryInterface(document->GetScriptGlobalObject());
+            nsPIDOMWindow *win = document->GetWindow();
             if (win) {
               nsIFocusController *focusController =
                 win->GetRootFocusController();
@@ -1737,7 +1735,7 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
   // Attributes on the body and frameset tags get set on the global object
   if (mNodeInfo->Equals(nsHTMLAtoms::body) ||
       mNodeInfo->Equals(nsHTMLAtoms::frameset)) {
-    nsIScriptGlobalObject *sgo;
+    nsPIDOMWindow *win;
 
     // If we have a document, and it has a script global, add the
     // event listener on the global. If not, proceed as normal.
@@ -1745,14 +1743,14 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIEventListenerManager** a
     // override BindToTree for those classes and munge event listeners there?
     nsIDocument *document = GetOwnerDoc();
     nsresult rv = NS_OK;
-    if (document && (sgo = document->GetScriptGlobalObject())) {
-      nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(sgo));
+    if (document && (win = document->GetWindow())) {
+      nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(win));
       NS_ENSURE_TRUE(receiver, NS_ERROR_FAILURE);
 
       rv = receiver->GetListenerManager(aManager);
 
       if (NS_SUCCEEDED(rv)) {
-        NS_ADDREF(*aTarget = sgo);
+        NS_ADDREF(*aTarget = win);
       }
       *aDefer = PR_FALSE;
     } else {

@@ -51,7 +51,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIEditor.h"
 #include "nsIPresShell.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 
 #include "nsHTMLEditor.h"
 #include "nsEditor.h"
@@ -397,19 +397,18 @@ nsHTMLEditor::ShowResizers(nsIDOMElement *aResizedElement)
   if (NS_FAILED(res)) return res;
 
 
-  // and listen to the "resize" event on the window
-  // first, get the script global object from the document...
+  // and listen to the "resize" event on the window first, get the
+  // window from the document...
   nsCOMPtr<nsIDOMDocument> domDoc;
   GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (!doc) return NS_ERROR_NULL_POINTER;
 
-  nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
-  if (!global) { return NS_ERROR_NULL_POINTER; }
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(doc->GetWindow());
+  if (!target) { return NS_ERROR_NULL_POINTER; }
 
   mResizeEventListenerP = new DocumentResizeEventListener(this);
   if (!mResizeEventListenerP) { return NS_ERROR_OUT_OF_MEMORY; }
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(global);
   res = target->AddEventListener(NS_LITERAL_STRING("resize"), mResizeEventListenerP, PR_FALSE);
 
   aResizedElement->SetAttribute(NS_LITERAL_STRING("_moz_resizing"), NS_LITERAL_STRING("true"));
@@ -473,11 +472,10 @@ nsHTMLEditor::HideResizers(void)
   GetDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (!doc) { return NS_ERROR_NULL_POINTER; }
-  nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
-  if (!global) { return NS_ERROR_NULL_POINTER; }
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(doc->GetWindow());
+  if (!target) { return NS_ERROR_NULL_POINTER; }
 
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(global);
-  if (target && mResizeEventListenerP) {
+  if (mResizeEventListenerP) {
     res = target->RemoveEventListener(NS_LITERAL_STRING("resize"), mResizeEventListenerP, PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(res), "failed to remove resize event listener");
   }

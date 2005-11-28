@@ -1174,13 +1174,13 @@ nsresult nsDocShell::FindTarget(const PRUnichar *aWindowTarget,
         }
         if (NS_FAILED(rv)) return rv;
 
-        // Get the DocShell from the new window...
-        nsCOMPtr<nsIScriptGlobalObject> sgo;
-        sgo = do_QueryInterface(newWindow, &rv);
-        if (NS_FAILED(rv)) return rv;
+        {
+            // Get the DocShell from the new window...
+            nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(newWindow));
 
-        // This will AddRef() aResult...
-        *aResult = sgo->GetDocShell();
+            // *aResult will be AddRef()'ed below...
+            *aResult = piwindow->GetDocShell();
+        }
 
         // If all went well, indicate that a new window has been created.
         if (*aResult) {
@@ -2203,8 +2203,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   parentAsDocShell->GetPresContext(getter_AddRefs(presContext));
   nsIDocument *doc = presShell->GetDocument();
 
-  nsIScriptGlobalObject* sgo = doc->GetScriptGlobalObject();
-  nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
+  nsCOMPtr<nsIDOMWindowInternal> domwin(doc->GetWindow());
 
   nsCOMPtr<nsIWidget> widget;
   nsIViewManager* vm = presShell->GetViewManager();
@@ -3537,7 +3536,9 @@ nsDocShell::Destroy()
     mCurrentURI = nsnull;
 
     if (mScriptGlobal) {
-        mScriptGlobal->SetDocShell(nsnull);
+        nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
+        win->SetDocShell(nsnull);
+
         mScriptGlobal->SetGlobalObjectOwner(nsnull);
         mScriptGlobal = nsnull;
     }
@@ -6150,10 +6151,10 @@ nsDocShell::CheckLoadingPermissions()
 
     nsIScriptContext *currentCX = GetScriptContextFromJSContext(cx);
     nsCOMPtr<nsIDocShellTreeItem> callerTreeItem;
-    nsIScriptGlobalObject *sgo;
+    nsCOMPtr<nsPIDOMWindow> win;
     if (currentCX &&
-        (sgo = currentCX->GetGlobalObject()) &&
-        (callerTreeItem = do_QueryInterface(sgo->GetDocShell()))) {
+        (win = do_QueryInterface(currentCX->GetGlobalObject())) &&
+        (callerTreeItem = do_QueryInterface(win->GetDocShell()))) {
         nsCOMPtr<nsIDocShellTreeItem> callerRoot;
         callerTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(callerRoot));
 
@@ -8230,7 +8231,8 @@ nsDocShell::EnsureScriptEnvironment()
                                    getter_AddRefs(mScriptGlobal));
     NS_ENSURE_TRUE(mScriptGlobal, NS_ERROR_FAILURE);
 
-    mScriptGlobal->SetDocShell(NS_STATIC_CAST(nsIDocShell *, this));
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
+    win->SetDocShell(NS_STATIC_CAST(nsIDocShell *, this));
     mScriptGlobal->
         SetGlobalObjectOwner(NS_STATIC_CAST
                              (nsIScriptGlobalObjectOwner *, this));

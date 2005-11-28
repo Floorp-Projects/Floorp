@@ -50,10 +50,8 @@
 #include "nsPluginLogging.h"
 
 #include "nsPIPluginInstancePeer.h"
-#include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
-#include "nsIScriptGlobalObject.h"
 
 #include "nsJSNPRuntime.h"
 
@@ -880,11 +878,10 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
 
   // Make sure the plugin didn't leave popups enabled.
   if (mPopupStates.Count() > 0) {
-    nsCOMPtr<nsIDOMWindow> window = GetDOMWindow();
-    nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
+    nsCOMPtr<nsPIDOMWindow> window = GetDOMWindow();
 
-    if (piwindow) {
-      piwindow->PopPopupControlState(openAbused);
+    if (window) {
+      window->PopPopupControlState(openAbused);
     }
   }
 
@@ -938,7 +935,7 @@ NS_IMETHODIMP ns4xPluginInstance::Stop(void)
     return NS_OK;
 }
 
-already_AddRefed<nsIDOMWindow>
+already_AddRefed<nsPIDOMWindow>
 ns4xPluginInstance::GetDOMWindow()
 {
   nsCOMPtr<nsPIPluginInstancePeer> pp (do_QueryInterface(mPeer));
@@ -960,16 +957,7 @@ ns4xPluginInstance::GetDOMWindow()
     return nsnull;
   }
 
-  nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
-
-  if (!sgo) {
-    return nsnull;
-  }
-
-  nsIDOMWindow *window;
-  CallQueryInterface(sgo, &window);
-
-  return window;
+  return doc->GetWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1612,20 +1600,18 @@ ns4xPluginInstance::GetFormValue(nsAString& aValue)
 void
 ns4xPluginInstance::PushPopupsEnabledState(PRBool aEnabled)
 {
-  nsCOMPtr<nsIDOMWindow> window = GetDOMWindow();
-  nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
-
-  if (!piwindow)
+  nsCOMPtr<nsPIDOMWindow> window = GetDOMWindow();
+  if (!window)
     return;
 
   PopupControlState oldState =
-    piwindow->PushPopupControlState(aEnabled ? openAllowed : openAbused,
-                                    PR_TRUE);
+    window->PushPopupControlState(aEnabled ? openAllowed : openAbused,
+                                  PR_TRUE);
 
   if (!mPopupStates.AppendElement(NS_INT32_TO_PTR(oldState))) {
     // Appending to our state stack failed, push what we just popped.
 
-    piwindow->PopPopupControlState(oldState);
+    window->PopPopupControlState(oldState);
   }
 }
 
@@ -1640,16 +1626,14 @@ ns4xPluginInstance::PopPopupsEnabledState()
     return;
   }
 
-  nsCOMPtr<nsIDOMWindow> window = GetDOMWindow();
-  nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
-
-  if (!piwindow)
+  nsCOMPtr<nsPIDOMWindow> window = GetDOMWindow();
+  if (!window)
     return;
 
   PopupControlState oldState =
     (PopupControlState)NS_PTR_TO_INT32(mPopupStates[last]);
 
-  piwindow->PopPopupControlState(oldState);
+  window->PopPopupControlState(oldState);
 
   mPopupStates.RemoveElementAt(last);
 }

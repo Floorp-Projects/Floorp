@@ -55,7 +55,7 @@
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMAbstractView.h"
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMRange.h"
@@ -89,7 +89,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIFrame.h"
 #include "nsLayoutAtoms.h"
@@ -356,16 +355,14 @@ nsContentAreaDragDrop::DragOver(nsIDOMEvent* inEvent)
       NS_ASSERTION(sourceDocument, "Confused document object");
       NS_ASSERTION(eventDocument, "Confused document object");
 
-      nsIScriptGlobalObject * sourceGlobal =
-        sourceDocument->GetScriptGlobalObject();
-      nsIScriptGlobalObject* eventGlobal =
-        eventDocument->GetScriptGlobalObject();
+      nsPIDOMWindow* sourceWindow = sourceDocument->GetWindow();
+      nsPIDOMWindow* eventWindow = eventDocument->GetWindow();
 
-      if (sourceGlobal && eventGlobal) {
+      if (sourceWindow && eventWindow) {
         nsCOMPtr<nsIDocShellTreeItem> sourceShell =
-          do_QueryInterface(sourceGlobal->GetDocShell());
+          do_QueryInterface(sourceWindow->GetDocShell());
         nsCOMPtr<nsIDocShellTreeItem> eventShell =
-          do_QueryInterface(eventGlobal->GetDocShell());
+          do_QueryInterface(eventWindow->GetDocShell());
 
         if (sourceShell && eventShell) {
           // Whew.  Almost there.  Get the roots that are of the same type

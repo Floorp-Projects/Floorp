@@ -50,8 +50,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIEditorDocShell.h"
 #include "nsISimpleEnumerator.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSUIEvent.h"
@@ -86,7 +84,6 @@
 #include "nsILookAndFeel.h"
 
 #include "nsICaret.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
@@ -2479,7 +2476,7 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(doc->GetScriptGlobalObject()));
+  nsIDOMWindow *domWin = doc->GetWindow();
   nsCOMPtr<nsIDOMWindow> topContentWin;
   GetStartWindow(domWin, getter_AddRefs(topContentWin));
 

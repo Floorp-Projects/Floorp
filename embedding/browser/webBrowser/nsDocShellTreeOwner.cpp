@@ -80,8 +80,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIFocusController.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"
@@ -304,20 +302,18 @@ nsDocShellTreeOwner::FindChildWithName(const PRUnichar *aName, PRBool aRecurse,
   for (ctr = 0; ctr < count; ctr++) {
     nsCOMPtr<nsIDOMWindow> frame;
     frames->Item(ctr, getter_AddRefs(frame));
-    if (frame) {
-      nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(frame));
-      if (sgo) {
-        nsCOMPtr<nsIDocShellTreeItem> item =
-          do_QueryInterface(sgo->GetDocShell());
-        if (item && item != aRequestor) {
-          rv = item->FindItemWithName(aName, mWebBrowser->mDocShellAsItem,
-                                      aOriginalRequestor, aFoundItem);
-          if (NS_FAILED(rv) || *aFoundItem)
-            break;
-        }
+    nsCOMPtr<nsPIDOMWindow> w(do_QueryInterface(frame));
+    if (w) {
+      nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(w->GetDocShell());
+      if (item && item != aRequestor) {
+        rv = item->FindItemWithName(aName, mWebBrowser->mDocShellAsItem,
+                                    aOriginalRequestor, aFoundItem);
+        if (NS_FAILED(rv) || *aFoundItem)
+          break;
       }
     }
   }
+
   return rv;
 }
 

@@ -50,7 +50,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 #include "nsIScriptContext.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"

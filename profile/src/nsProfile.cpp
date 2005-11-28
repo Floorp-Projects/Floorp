@@ -88,9 +88,6 @@
 // Interfaces Needed
 #include "nsIDocShell.h"
 #include "nsIWebBrowserChrome.h"
-
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptContext.h"
 #include "nsIBaseWindow.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindowInternal.h"

@@ -59,7 +59,6 @@
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"
@@ -105,12 +104,12 @@
 // begin shameless copying from nsNativeAppSupportWin
 HWND hwndForDOMWindow( nsISupports *window ) 
 {
-  nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
-  if ( !ppScriptGlobalObj )
+  nsCOMPtr<nsPIDOMWindow> win( do_QueryInterface(window) );
+  if ( !win )
       return 0;
   
   nsCOMPtr<nsIBaseWindow> ppBaseWindow =
-      do_QueryInterface( ppScriptGlobalObj->GetDocShell() );
+      do_QueryInterface( win->GetDocShell() );
   if (!ppBaseWindow) return 0;
 
   nsCOMPtr<nsIWidget> ppWidget;

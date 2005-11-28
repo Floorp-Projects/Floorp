@@ -565,15 +565,15 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
 
     nsIContent *root = doc->GetRootContent();
     if ((!root || root == this) && !mNodeInfo->Equals(nsXULAtoms::overlay)) {
-        nsIScriptGlobalObject *global = doc->GetScriptGlobalObject();
+        nsPIDOMWindow *window = doc->GetWindow();
 
-        nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(global);
-        if (! receiver)
+        nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(window);
+        if (!receiver)
             return NS_ERROR_UNEXPECTED;
 
         nsresult rv = receiver->GetListenerManager(aManager);
         if (NS_SUCCEEDED(rv)) {
-            NS_ADDREF(*aTarget = global);
+            NS_ADDREF(*aTarget = window);
         }
         *aDefer = PR_FALSE;
         return rv;

@@ -152,24 +152,19 @@ nsFocusController::RewindFocusState()
 NS_IMETHODIMP
 nsFocusController::SetFocusedWindow(nsIDOMWindowInternal* aWindow)
 {
-  nsCOMPtr<nsPIDOMWindow> pwin = do_QueryInterface(aWindow);
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aWindow);
 
-  if (pwin) {
-    pwin = pwin->GetOuterWindow();
+  if (win) {
+    win = win->GetOuterWindow();
   }
 
-  NS_ASSERTION(!pwin || !pwin->IsInnerWindow(),
+  NS_ASSERTION(!win || !win->IsInnerWindow(),
                "Uh, inner window can't have focus!");
 
-  nsCOMPtr<nsIDOMWindowInternal> win = do_QueryInterface(pwin);
-
   if (win && (mCurrentWindow != win)) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(win);
-    if (sgo) {
-      nsCOMPtr<nsIBaseWindow> basewin = do_QueryInterface(sgo->GetDocShell());
-      if (basewin)
-        basewin->SetFocus();
-    }
+    nsCOMPtr<nsIBaseWindow> basewin = do_QueryInterface(win->GetDocShell());
+    if (basewin)
+      basewin->SetFocus();
   }
 
   if (mCurrentWindow) {
@@ -561,10 +556,8 @@ nsFocusController::UpdateWWActiveWindow()
   if (!wwatch) return;
 
   // This gets the toplevel DOMWindow
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(mCurrentWindow);
-
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-    do_QueryInterface(sgo->GetDocShell());
+    do_QueryInterface(mCurrentWindow->GetDocShell());
   if (!docShellAsItem) return;
 
   nsCOMPtr<nsIDocShellTreeItem> rootItem;

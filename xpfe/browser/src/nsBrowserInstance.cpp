@@ -61,10 +61,8 @@
 #include "nsIComponentManager.h"
 #include "nsCRT.h"
 
-#include "nsIScriptContext.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 
 #include "nsIContentViewer.h"
 #include "nsIContentViewerEdit.h"
@@ -418,10 +416,10 @@ nsBrowserInstance::ReinitializeContentVariables()
   nsCOMPtr<nsIDOMWindow> contentWindow;
   mDOMWindow->GetContent(getter_AddRefs(contentWindow));
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
+  nsCOMPtr<nsPIDOMWindow> pcontentWindow(do_QueryInterface(contentWindow));
 
-  if (globalObj) {
-    nsIDocShell *docShell = globalObj->GetDocShell();
+  if (pcontentWindow) {
+    nsIDocShell *docShell = pcontentWindow->GetDocShell();
 
     mContentAreaDocShellWeak = do_GetWeakReference(docShell); // Weak reference
 
@@ -580,14 +578,14 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
   NS_ENSURE_ARG(aWin);
   mDOMWindow = aWin;
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
-  if (!globalObj) {
+  nsCOMPtr<nsPIDOMWindow> win( do_QueryInterface(aWin) );
+  if (!win) {
     return NS_ERROR_FAILURE;
   }
 
   if (APP_DEBUG) {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-      do_QueryInterface(globalObj->GetDocShell());
+      do_QueryInterface(win->GetDocShell());
 
     if (docShellAsItem) {
       // inform our top level webshell that we are its parent URI content listener...

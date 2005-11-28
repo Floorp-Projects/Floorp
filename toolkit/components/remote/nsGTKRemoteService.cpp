@@ -50,11 +50,10 @@
 
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIGenericFactory.h"
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIWeakReference.h"
 #include "nsIWidget.h"
@@ -151,12 +150,11 @@ NS_IMETHODIMP
 nsGTKRemoteService::RegisterWindow(nsIDOMWindow* aWindow)
 {
   // get the native window for this instance
-  nsCOMPtr<nsIScriptGlobalObject> scriptObject
-    (do_QueryInterface(aWindow));
-  NS_ENSURE_TRUE(scriptObject, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIBaseWindow> baseWindow
-    (do_QueryInterface(scriptObject->GetDocShell()));
+    (do_QueryInterface(window->GetDocShell()));
   NS_ENSURE_TRUE(baseWindow, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIWidget> mainWidget;

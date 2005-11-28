@@ -51,7 +51,6 @@
 #include "nsXFormsModelElement.h"
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIEventStateManager.h"
 #include "nsIContent.h"
@@ -395,15 +394,13 @@ nsXFormsControlStubBase::HandleDefault(nsIDOMEvent *aEvent,
       // element isn't in a document, yet?  Odd, indeed.  Well, if not in
       // document, these two events have no meaning.
       NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-      nsCOMPtr<nsPIDOMWindow> win = 
-                               do_QueryInterface(doc->GetScriptGlobalObject()); 
-                                               
     
       // An inelegant way to retrieve this to be sure, but we are
       // guaranteed that the focus controller outlives us, so it
       // is safe to hold on to it (since we can't die until it has
       // died).
-      nsIFocusController *focusController = win->GetRootFocusController();
+      nsIFocusController *focusController =
+        doc->GetWindow()->GetRootFocusController();
       if (focusController &&
           type.EqualsASCII(sXFormsEventsEntries[eEvent_Next].name)) {
         focusController->MoveFocus(PR_TRUE, nsnull);

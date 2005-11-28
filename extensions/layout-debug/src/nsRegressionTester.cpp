@@ -45,14 +45,13 @@
 #include "prmem.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIURI.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsISimpleEnumerator.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIFrameDebug.h"
 #include "nsIFrame.h"
@@ -170,10 +169,10 @@ nsRegressionTester::CompareFrameModels(nsILocalFile *aBaseFile, nsILocalFile *aV
 nsresult
 nsRegressionTester::GetDocShellFromWindow(nsIDOMWindow* inWindow, nsIDocShell** outShell)
 {
-  nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(inWindow));
-  if (!scriptObj) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(inWindow));
+  if (!window) return NS_ERROR_FAILURE;
 
-  *outShell = scriptObj->GetDocShell();
+  *outShell = window->GetDocShell();
   NS_IF_ADDREF(*outShell);
 
   return NS_OK;

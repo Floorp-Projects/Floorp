@@ -50,11 +50,10 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsReadableUtils.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIWindowMediator.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgMailSession)
@@ -338,11 +337,11 @@ nsresult nsMsgMailSession::GetTopmostMsgWindow(nsIMsgWindow* *aMsgWindow)
       // identified the top most window
       if (more)
       {
-        nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(topMostWindow, &rv);
+        nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(topMostWindow, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
   
         // use this for the match
-        nsIDocShell *topDocShell = globalObj->GetDocShell();
+        nsIDocShell *topDocShell = win->GetDocShell();
 
         // loop for the msgWindow array to find the match
         nsCOMPtr<nsIDocShell> docShell;

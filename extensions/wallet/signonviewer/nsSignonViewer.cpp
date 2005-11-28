@@ -45,7 +45,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsSignonViewer.h"
 #include "nsString.h"
 

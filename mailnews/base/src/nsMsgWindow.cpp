@@ -42,7 +42,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeNode.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsTransactionManagerCID.h"
@@ -140,7 +139,7 @@ void nsMsgWindow::GetMessageWindowDocShell(nsIDocShell ** aDocShell)
 /* void SelectFolder (in string folderUri); */
 NS_IMETHODIMP nsMsgWindow::SelectFolder(const char *folderUri)
 {
-	return mMsgWindowCommands->SelectFolder(folderUri);
+  return mMsgWindowCommands->SelectFolder(folderUri);
 }
 
 /* void SelectMessage (in string messasgeUri); */
@@ -186,12 +185,12 @@ NS_IMETHODIMP nsMsgWindow::CloseWindow()
 
 NS_IMETHODIMP nsMsgWindow::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeedback)
 {
-	if(!aStatusFeedback)
-		return NS_ERROR_NULL_POINTER;
+  if(!aStatusFeedback)
+    return NS_ERROR_NULL_POINTER;
 
-	*aStatusFeedback = mStatusFeedback;
-	NS_IF_ADDREF(*aStatusFeedback);
-	return NS_OK;
+  *aStatusFeedback = mStatusFeedback;
+  NS_IF_ADDREF(*aStatusFeedback);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedback)
@@ -209,7 +208,7 @@ NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedb
     webProgress->AddProgressListener(webProgressListener, nsIWebProgress::NOTIFY_ALL);
   }
 
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::GetMessagePaneController(nsIMsgMessagePaneController * * aMsgPaneController)
@@ -217,56 +216,56 @@ NS_IMETHODIMP nsMsgWindow::GetMessagePaneController(nsIMsgMessagePaneController 
   NS_ENSURE_ARG(aMsgPaneController);
 
   *aMsgPaneController = mMsgPaneController;
-	NS_IF_ADDREF(*aMsgPaneController);
-	return NS_OK;
+  NS_IF_ADDREF(*aMsgPaneController);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::SetMessagePaneController(nsIMsgMessagePaneController * aMsgPaneController)
 {
-	mMsgPaneController = aMsgPaneController;
-	return NS_OK;
+  mMsgPaneController = aMsgPaneController;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::GetMsgHeaderSink(nsIMsgHeaderSink * *aMsgHdrSink)
 {
-	if(!aMsgHdrSink)
-		return NS_ERROR_NULL_POINTER;
+  if(!aMsgHdrSink)
+    return NS_ERROR_NULL_POINTER;
 
-	*aMsgHdrSink = mMsgHeaderSink;
-	NS_IF_ADDREF(*aMsgHdrSink);
-	return NS_OK;
+  *aMsgHdrSink = mMsgHeaderSink;
+  NS_IF_ADDREF(*aMsgHdrSink);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::SetMsgHeaderSink(nsIMsgHeaderSink * aMsgHdrSink)
 {
-	mMsgHeaderSink = aMsgHdrSink;
-	return NS_OK;
+  mMsgHeaderSink = aMsgHdrSink;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::GetTransactionManager(nsITransactionManager * *aTransactionManager)
 {
-	NS_ENSURE_ARG_POINTER(aTransactionManager);
-	NS_IF_ADDREF(*aTransactionManager = mTransactionManager);
-	return NS_OK;
+  NS_ENSURE_ARG_POINTER(aTransactionManager);
+  NS_IF_ADDREF(*aTransactionManager = mTransactionManager);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::SetTransactionManager(nsITransactionManager * aTransactionManager)
 {
-	mTransactionManager = aTransactionManager;
-	return NS_OK;
+  mTransactionManager = aTransactionManager;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::GetOpenFolder(nsIMsgFolder * *aOpenFolder)
 {
-	NS_ENSURE_ARG_POINTER(aOpenFolder);
-	NS_IF_ADDREF(*aOpenFolder = mOpenFolder);
-	return NS_OK;
+  NS_ENSURE_ARG_POINTER(aOpenFolder);
+  NS_IF_ADDREF(*aOpenFolder = mOpenFolder);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::SetOpenFolder(nsIMsgFolder * aOpenFolder)
 {
-	mOpenFolder = aOpenFolder;
-	return NS_OK;
+  mOpenFolder = aOpenFolder;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgWindow::GetRootDocShell(nsIDocShell * *aDocShell)
@@ -291,9 +290,9 @@ NS_IMETHODIMP nsMsgWindow::SetRootDocShell(nsIDocShell * aDocShell)
     if (listener) {
       listener->SetParentContentListener(this);
     }
-	// be sure to set the application flag on the root docshell
-	// so it knows we are a mail application.
-	aDocShell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
+  // be sure to set the application flag on the root docshell
+  // so it knows we are a mail application.
+  aDocShell->SetAppType(nsIDocShell::APP_TYPE_MAIL);
   }
   return NS_OK;
 }
@@ -342,15 +341,15 @@ NS_IMETHODIMP nsMsgWindow::SetCharsetOverride(PRBool aCharsetOverride)
 
 NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
 {
-	if (!aWindow)
-		return NS_ERROR_NULL_POINTER;
+  if (!aWindow)
+    return NS_ERROR_NULL_POINTER;
 
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 
-	nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(aWindow));
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aWindow));
   nsIDocShell *docShell = nsnull;
-	if (globalScript)
-		docShell = globalScript->GetDocShell();
+  if (win)
+    docShell = win->GetDocShell();
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
 
@@ -368,7 +367,7 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindowInternal *aWindow)
     SetStatusFeedback(mStatusFeedback);
   }
 
-	//Get nsIMsgWindowCommands object 
+  //Get nsIMsgWindowCommands object 
   nsCOMPtr<nsISupports> xpConnectObj;
   nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(aWindow));
   if (piDOMWindow)

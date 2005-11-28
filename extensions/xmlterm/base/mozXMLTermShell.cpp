@@ -53,7 +53,6 @@
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIScriptGlobalObject.h"
 
 #include "nsIServiceManager.h"
 
@@ -61,7 +60,7 @@
 
 #include "nsIDOMDocument.h"
 #include "nsISelection.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 
 #include "mozXMLT.h"
 #include "mozLineTerm.h"
@@ -266,12 +265,11 @@ mozXMLTermShell::Init(nsIDOMWindowInternal* aContentWin,
 
   mContentWindow = aContentWin;  // no addref
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(mContentWindow,
-                                                                &result);
-  if (NS_FAILED(result) || !globalObj)
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mContentWindow);
+  if (!window)
     return NS_ERROR_FAILURE;
 
-  nsIDocShell *docShell = globalObj->GetDocShell();
+  nsIDocShell *docShell = window->GetDocShell();
   if (!docShell)
     return NS_ERROR_FAILURE;
     

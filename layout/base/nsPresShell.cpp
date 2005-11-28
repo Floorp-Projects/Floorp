@@ -148,8 +148,6 @@
 
 #include "nsIReflowCallback.h"
 
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
 #include "nsIPluginInstance.h"
@@ -2063,14 +2061,14 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsIScriptGlobalObject *globalObj = mDocument->GetScriptGlobalObject();
+  nsPIDOMWindow *window = mDocument->GetWindow();
 
-  // If the document doesn't have a global object there's no need to
-  // notify its presshell about changes to preferences since the
-  // document is in a state where it doesn't matter any more (see
+  // If the document doesn't have a window there's no need to notify
+  // its presshell about changes to preferences since the document is
+  // in a state where it doesn't matter any more (see
   // DocumentViewerImpl::Close()).
 
-  if (!globalObj) {
+  if (!window) {
     return NS_ERROR_NULL_POINTER;
   } 
 
@@ -2999,9 +2997,10 @@ PresShell::FireResizeEvent()
   nsEvent event(PR_TRUE, NS_RESIZE_EVENT);
   nsEventStatus status = nsEventStatus_eIgnore;
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj = mDocument->GetScriptGlobalObject();
-  if (globalObj) {
-    globalObj->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  nsPIDOMWindow *window = mDocument->GetWindow();
+  if (window) {
+    window->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT,
+                           &status);
   }
 }
 
@@ -4183,7 +4182,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   if (content) {
     nsIDocument* document = content->GetDocument();
     if (document){
-      nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(document->GetScriptGlobalObject());
+      nsPIDOMWindow *ourWindow = document->GetWindow();
       if(ourWindow) {
         nsIFocusController *focusController =
           ourWindow->GetRootFocusController();
@@ -4375,7 +4374,7 @@ PresShell::GetSelectionForCopy(nsISelection** outSelection)
   if (!mDocument) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
+  nsPIDOMWindow *ourWindow = mDocument->GetWindow();
   if (ourWindow) {
     nsIFocusController *focusController = ourWindow->GetRootFocusController();
     if (focusController) {
@@ -4466,8 +4465,7 @@ PresShell::DoCopy()
     return rv;
 
   // Now that we have copied, update the Paste menu item
-  nsCOMPtr<nsIDOMWindowInternal> domWindow =
-    do_QueryInterface(mDocument->GetScriptGlobalObject());
+  nsPIDOMWindow *domWindow = mDocument->GetWindow();
   if (domWindow)
   {
     domWindow->UpdateCommands(NS_LITERAL_STRING("clipboard"));
@@ -5573,7 +5571,7 @@ PRBool PresShell::InZombieDocument(nsIContent *aContent)
   // It might actually be in a node not attached to any document,
   // in which case there is not parent presshell to retarget it to.
   nsIDocument *doc = aContent->GetDocument();
-  return !doc || !doc->GetScriptGlobalObject();
+  return !doc || !doc->GetWindow();
 }
 
 nsresult PresShell::RetargetEventToParent(nsIView         *aView,
@@ -5749,7 +5747,7 @@ PresShell::HandleEvent(nsIView         *aView,
           // doesn't have focus and event is key event or IME event, we should
           // send the events to pre-focused element.
 #endif /* defined(MOZ_X11) */
-          nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(mDocument->GetScriptGlobalObject());
+          nsPIDOMWindow *ourWindow = mDocument->GetWindow();
           if (ourWindow) {
             nsIFocusController *focusController =
               ourWindow->GetRootFocusController();

@@ -72,7 +72,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 class ns4xPluginStreamListener;
-class nsIDOMWindow;
+class nsPIDOMWindow;
 
 struct nsInstanceStream
 {
@@ -182,7 +182,7 @@ public:
         return mPeer;
     }
 
-    already_AddRefed<nsIDOMWindow> GetDOMWindow();
+    already_AddRefed<nsPIDOMWindow> GetDOMWindow();
 
 protected:
 

@@ -50,6 +50,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsPIDOMWindow.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -506,8 +507,8 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
     {
       // XXX see bug #206793
       nsIDocShell *docshell = nsnull;
-      nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(m_window);
-      if (globalObj && (docshell = globalObj->GetDocShell()))
+      nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(m_window);
+      if (window && (docshell = window->GetDocShell()))
         docshell->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
 
       if (aHTMLEditor && !mCiteReference.IsEmpty())
@@ -675,19 +676,19 @@ nsMsgCompose::Initialize(nsIDOMWindowInternal *aWindow, nsIMsgComposeParams *par
   if (aWindow)
   {
     m_window = aWindow;
-    nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWindow));
-    if (!globalObj)
+    nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
+    if (!window)
       return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShellTreeItem>  treeItem =
-      do_QueryInterface(globalObj->GetDocShell());
+      do_QueryInterface(window->GetDocShell());
     nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
     rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
     if (NS_FAILED(rv)) return rv;
 
     m_baseWindow = do_QueryInterface(treeOwner);
 
-    globalObj->GetDocShell()->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
+    window->GetDocShell()->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
   }
   
   MSG_ComposeFormat format;
@@ -1351,9 +1352,9 @@ NS_IMETHODIMP nsMsgCompose::InitEditor(nsIEditor* aEditor, nsIDOMWindow* aConten
   const nsDependentCString msgCharSet(m_compFields->GetCharacterSet());
   m_editor->SetDocumentCharacterSet(msgCharSet);
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(m_window);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(m_window);
 
-  nsIDocShell *docShell = globalObj->GetDocShell();
+  nsIDocShell *docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIContentViewer> childCV;
@@ -2540,9 +2541,9 @@ QuotingOutputStreamListener::InsertToCompose(nsIEditor *aEditor,
       if (compose)
         compose->GetDomWindow(getter_AddRefs(domWindow));
       nsIDocShell *docshell = nsnull;
-      nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(domWindow);
-      if (globalObj)
-        docshell = globalObj->GetDocShell();
+      nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(domWindow);
+      if (window)
+        docshell = window->GetDocShell();
       if (docshell)
         docshell->SetAppType(nsIDocShell::APP_TYPE_EDITOR);
       

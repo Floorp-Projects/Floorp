@@ -889,9 +889,10 @@ nsContentUtils::GetDocShellFromCaller()
 
   if (cx) {
     nsIScriptGlobalObject *sgo = nsJSUtils::GetDynamicScriptGlobal(cx);
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(sgo));
 
-    if (sgo) {
-      return sgo->GetDocShell();
+    if (win) {
+      return win->GetDocShell();
     }
   }
 

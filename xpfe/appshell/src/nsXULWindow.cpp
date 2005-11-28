@@ -78,7 +78,6 @@
 #include "nsIScreen.h"
 #include "nsIScrollable.h"
 #include "nsIPref.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIWindowWatcher.h"
 #include "nsIURI.h"

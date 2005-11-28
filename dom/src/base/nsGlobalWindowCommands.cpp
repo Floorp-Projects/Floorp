@@ -48,10 +48,9 @@
 #include "nsIControllerCommandTable.h"
 #include "nsICommandParams.h"
 
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsISelectionController.h"
 #include "nsIEventStateManager.h"
@@ -204,10 +203,10 @@ nsSelectionCommandsBase::GetPresShellFromWindow(nsIDOMWindow *aWindow, nsIPresSh
 {
   *aPresShell = nsnull;
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
-  NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(aWindow));
+  NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
 
-  nsIDocShell *docShell = sgo->GetDocShell();
+  nsIDocShell *docShell = win->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   return docShell->GetPresShell(aPresShell);
@@ -481,13 +480,10 @@ nsClipboardBaseCommand::GetContentViewerEditFromContext(nsISupports *aContext,
   NS_ENSURE_ARG(aEditInterface);
   *aEditInterface = nsnull;
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(aContext);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContext);
   NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(window));
-  NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
-
-  nsIDocShell *docShell = sgo->GetDocShell();
+  nsIDocShell *docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIContentViewer> viewer;
@@ -843,11 +839,10 @@ nsClipboardDragDropHookCommand::DoCommandParams(const char *aCommandName,
 {
   NS_ENSURE_ARG(aParams);
 
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(aCommandContext);
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(window);
-  NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aCommandContext);
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
-  nsIDocShell *docShell = sgo->GetDocShell();
+  nsIDocShell *docShell = window->GetDocShell();
 
   nsCOMPtr<nsIClipboardDragDropHookList> obj = do_GetInterface(docShell);
   if (!obj) return NS_ERROR_INVALID_ARG;

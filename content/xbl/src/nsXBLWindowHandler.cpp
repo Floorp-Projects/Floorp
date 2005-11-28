@@ -43,9 +43,8 @@
 
 #include "nsCOMPtr.h"
 #include "nsPIWindowRoot.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIPresShell.h"
 #include "nsIDOMElement.h"
@@ -224,8 +223,8 @@ nsXBLWindowHandler :: IsEditor()
   if (!focusedWindow)
     return PR_FALSE;
   
-  nsCOMPtr<nsIScriptGlobalObject> obj(do_QueryInterface(focusedWindow));
-  nsIDocShell *docShell = obj->GetDocShell();
+  nsCOMPtr<nsPIDOMWindow> piwin(do_QueryInterface(focusedWindow));
+  nsIDocShell *docShell = piwin->GetDocShell();
   nsCOMPtr<nsIPresShell> presShell;
   if (docShell)
     docShell->GetPresShell(getter_AddRefs(presShell));

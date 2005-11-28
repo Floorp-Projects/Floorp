@@ -38,7 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsWebBrowserContentPolicy.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsCOMPtr.h"
 #include "nsContentPolicyUtils.h"

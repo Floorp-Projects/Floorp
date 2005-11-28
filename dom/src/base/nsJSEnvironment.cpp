@@ -40,7 +40,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIDOMChromeWindow.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
@@ -168,9 +168,9 @@ NS_ScriptErrorReporter(JSContext *cx,
   nsEventStatus status = nsEventStatus_eIgnore;
 
   if (context) {
-    nsIScriptGlobalObject *globalObject = context->GetGlobalObject();
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(context->GetGlobalObject()));
 
-    if (globalObject) {
+    if (win) {
       nsAutoString fileName, msg;
 
       if (report) {
@@ -195,7 +195,7 @@ NS_ScriptErrorReporter(JSContext *cx,
        * then we'd need to generate a new OOM event for that
        * new OOM instance -- this isn't pretty.
        */
-      nsIDocShell *docShell = globalObject->GetDocShell();
+      nsIDocShell *docShell = win->GetDocShell();
       if (docShell &&
           (!report ||
            (report->errorNumber != JSMSG_OUT_OF_MEMORY &&
@@ -215,8 +215,8 @@ NS_ScriptErrorReporter(JSContext *cx,
 
           // HandleDOMEvent() must be synchronous for the recursion block
           // (errorDepth) to work.
-          globalObject->HandleDOMEvent(presContext, &errorevent, nsnull,
-                                       NS_EVENT_FLAG_INIT, &status);
+          win->HandleDOMEvent(presContext, &errorevent, nsnull,
+                              NS_EVENT_FLAG_INIT, &status);
         }
 
         --errorDepth;
@@ -233,7 +233,7 @@ NS_ScriptErrorReporter(JSContext *cx,
 
           // Set category to chrome or content
           nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal =
-            do_QueryInterface(globalObject);
+            do_QueryInterface(win);
           NS_ASSERTION(scriptPrincipal, "Global objects must implement "
                        "nsIScriptObjectPrincipal");
           nsCOMPtr<nsIPrincipal> systemPrincipal;
@@ -536,10 +536,10 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   // If we get here we're most likely executing an infinite loop in JS,
   // we'll tell the user about this and we'll give the user the option
   // of stopping the execution of the script.
-  nsIScriptGlobalObject *global = ctx->GetGlobalObject();
-  NS_ENSURE_TRUE(global, JS_TRUE);
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(ctx->GetGlobalObject()));
+  NS_ENSURE_TRUE(win, JS_TRUE);
 
-  nsIDocShell *docShell = global->GetDocShell();
+  nsIDocShell *docShell = win->GetDocShell();
   NS_ENSURE_TRUE(docShell, JS_TRUE);
 
   nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(docShell));

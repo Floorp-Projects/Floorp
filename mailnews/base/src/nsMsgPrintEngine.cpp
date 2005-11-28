@@ -50,7 +50,7 @@
 #include "nsReadableUtils.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDocumentViewer.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
@@ -268,11 +268,11 @@ nsMsgPrintEngine::SetWindow(nsIDOMWindowInternal *aWin)
 
   mWindow = aWin;
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
-  NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIDOMWindow> win( do_QueryInterface(aWin) );
+  NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-    do_QueryInterface(globalObj->GetDocShell());
+    do_QueryInterface(win->GetDocShell());
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeItem> rootAsItem;
@@ -309,12 +309,12 @@ nsMsgPrintEngine::ShowWindow(PRBool aShow)
 
   NS_ENSURE_TRUE(mWindow, NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr <nsIScriptGlobalObject> globalScript = do_QueryInterface(mWindow, &rv);
+  nsCOMPtr <nsPIDOMWindow> win = do_QueryInterface(mWindow, &rv);
 
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIDocShellTreeItem> treeItem =
-    do_QueryInterface(globalScript->GetDocShell(), &rv);
+    do_QueryInterface(win->GetDocShell(), &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIDocShellTreeOwner> treeOwner;

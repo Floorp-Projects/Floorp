@@ -39,12 +39,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsComposerCommandsUpdater.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIDOMDocument.h"
 #include "nsISelection.h"
-#include "nsIScriptGlobalObject.h"
 
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsString.h"
@@ -246,10 +245,10 @@ nsComposerCommandsUpdater::Init(nsIDOMWindow* aDOMWindow)
   NS_ENSURE_ARG(aDOMWindow);
   mDOMWindow = aDOMWindow;
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptObject(do_QueryInterface(aDOMWindow));
-  if (scriptObject)
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aDOMWindow));
+  if (window)
   {
-    mDocShell = scriptObject->GetDocShell();
+    mDocShell = window->GetDocShell();
   }
   return NS_OK;
 }

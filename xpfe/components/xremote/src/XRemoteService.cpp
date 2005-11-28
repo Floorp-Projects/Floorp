@@ -43,10 +43,9 @@
 
 #include <nsIGenericFactory.h>
 #include <nsIWebNavigation.h>
-#include <nsIDOMWindowInternal.h>
+#include <nsPIDOMWindow.h>
 #include <nsIDOMChromeWindow.h>
 #include <nsIDocShell.h>
-#include <nsIScriptGlobalObject.h>
 #include <nsIBaseWindow.h>
 #include <nsIServiceManager.h>
 #include <nsString.h>
@@ -594,14 +593,13 @@ XRemoteService::OpenURL(nsCString &aArgument,
   else { // non-browser URLs
     // find the primary content shell for the window that we've been
     // asked to load into.
-    nsCOMPtr<nsIScriptGlobalObject> scriptObject;
-    scriptObject = do_QueryInterface(finalWindow);
-    if (!scriptObject) {
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(finalWindow));
+    if (!win) {
       NS_WARNING("Failed to get script object for browser instance");
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDocShell> docShell = scriptObject->GetDocShell();
+    nsCOMPtr<nsIDocShell> docShell = win->GetDocShell();
     if (!docShell) {
       NS_WARNING("Failed to get docshell object for browser instance");
       return NS_ERROR_FAILURE;

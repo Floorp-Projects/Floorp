@@ -53,7 +53,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIFormControl.h"
 #include "nsIDocShell.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIPrompt.h"
 #include "nsIChannel.h"
 #include "nsIWindowWatcher.h"
@@ -65,7 +65,6 @@
 #include "nsNetUtil.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell
-#include "nsIScriptGlobalObject.h"
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
@@ -118,9 +117,8 @@ nsWalletlibService::WALLET_RequestToCapture(nsIDOMWindowInternal* aWin,
                                             PRUint32* status)
 {
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  scriptGlobalObject = do_QueryInterface(aWin);
-  nsIDocShell *docShell = scriptGlobalObject->GetDocShell();
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWin));
+  nsIDocShell *docShell = window->GetDocShell();
 
   nsCOMPtr<nsIPresShell> presShell;
   if(docShell)
@@ -145,9 +143,8 @@ nsWalletlibService::WALLET_Prefill(PRBool quick,
                                    nsIDOMWindowInternal* aWin,
                                    PRBool* status)
 {
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
-  scriptGlobalObject = do_QueryInterface(aWin);
-  nsIDocShell *docShell = scriptGlobalObject->GetDocShell();
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWin));
+  nsIDocShell *docShell = window->GetDocShell();
 
   nsCOMPtr<nsIPresShell> presShell;
   if(docShell)

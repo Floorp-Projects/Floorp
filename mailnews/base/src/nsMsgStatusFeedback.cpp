@@ -44,7 +44,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsMsgStatusFeedback.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMElement.h"

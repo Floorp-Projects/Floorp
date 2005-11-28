@@ -105,8 +105,7 @@
 #include "nsIDOMCharacterData.h" //for selection setting helper func
 #include "nsIDOMNodeList.h" //for selection setting helper func
 #include "nsIDOMRange.h" //for selection setting helper func
-#include "nsIScriptGlobalObject.h" //needed for notify selection changed to update the menus etc.
-#include "nsIDOMWindowInternal.h" //needed for notify selection changed to update the menus etc.
+#include "nsPIDOMWindow.h" //needed for notify selection changed to update the menus ect.
 #include "nsITextContent.h" //needed to create initial text control content
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
@@ -494,7 +493,7 @@ nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
   nsCOMPtr<nsIDocument> doc = content->GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(doc->GetScriptGlobalObject());
+  nsPIDOMWindow *domWindow = doc->GetWindow();
   NS_ENSURE_TRUE(domWindow, NS_ERROR_FAILURE);
 
   return domWindow->UpdateCommands(commandsToUpdate);

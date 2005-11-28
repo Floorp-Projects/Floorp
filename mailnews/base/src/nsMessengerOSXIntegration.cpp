@@ -56,7 +56,6 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIWidget.h"

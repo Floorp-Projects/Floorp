@@ -88,8 +88,7 @@
 #include "nsIWebBrowserPrint.h"
 
 /* for access to docshell */
-#include "nsIDOMWindowInternal.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
@@ -371,10 +370,10 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
   
   mWindow = aWin;
   
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
-  NS_ENSURE_TRUE(globalObj, NS_ERROR_FAILURE);
+  nsCOMPtr<nsPIDOMWindow> win( do_QueryInterface(aWin) );
+  NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
 
-  nsIDocShell *docShell = globalObj->GetDocShell();
+  nsIDocShell *docShell = win->GetDocShell();
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
   
