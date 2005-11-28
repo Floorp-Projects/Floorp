@@ -1095,6 +1095,7 @@ nsProfileAccess::Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport)
         profileItem->isImportType = fromImport;
 
         SetValue(profileItem);
+        delete profileItem;
 
         rv = enumKeys->Next();
         if (NS_FAILED(rv)) return rv;
@@ -1160,6 +1161,7 @@ nsProfileAccess::Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport)
                 profileItem->isImportType = fromImport;
 
                 SetValue(profileItem);
+                delete profileItem;
             }
             else {
 #ifdef DEBUG

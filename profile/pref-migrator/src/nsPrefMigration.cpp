@@ -1474,17 +1474,14 @@ nsCStringStartsWith(nsCString& name, const char *starting)
 nsresult
 nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *sizeTotal)
 {
-  char* folderName;
   nsCAutoString fileOrDirNameStr;
 
   for (nsDirectoryIterator dir(inputPath, PR_FALSE); dir.Exists(); dir++)
   {
     nsFileSpec fileOrDirName = dir.Spec();
-    folderName = fileOrDirName.GetLeafName();
+    char* folderName = fileOrDirName.GetLeafName();
     fileOrDirNameStr.Assign(folderName);
-    if (nsCStringEndsWith(fileOrDirNameStr, MAIL_SUMMARY_SUFFIX_IN_4x) || nsCStringEndsWith(fileOrDirNameStr, NEWS_SUMMARY_SUFFIX_IN_4x) || nsCStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
-      continue;
-    else
+    if (!nsCStringEndsWith(fileOrDirNameStr, MAIL_SUMMARY_SUFFIX_IN_4x) && !nsCStringEndsWith(fileOrDirNameStr, NEWS_SUMMARY_SUFFIX_IN_4x) && !nsCStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
     {
       if (fileOrDirName.IsDirectory())
       {
@@ -1492,12 +1489,11 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
         {
           GetSizes(fileOrDirName, PR_TRUE, sizeTotal); /* re-enter the GetSizes function */
         }
-        else
-          continue;
       }
       else
         *sizeTotal += fileOrDirName.GetFileSize();
     }
+    nsCRT::free(folderName);
   }
 
   return NS_OK;
@@ -1544,7 +1540,6 @@ nsPrefMigration::CopyAndRenameNewsrcFiles(nsIFileSpec * newPathSpec)
   nsCOMPtr <nsIFileSpec>oldPathSpec;
   nsFileSpec oldPath;
   nsFileSpec newPath;
-  char* folderName = nsnull;
   nsCAutoString fileOrDirNameStr;
 
   rv = GetPremigratedFilePref(PREF_NEWS_DIRECTORY, getter_AddRefs(oldPathSpec));
@@ -1557,7 +1552,8 @@ nsPrefMigration::CopyAndRenameNewsrcFiles(nsIFileSpec * newPathSpec)
   for (nsDirectoryIterator dir(oldPath, PR_FALSE); dir.Exists(); dir++)
   {
     nsFileSpec fileOrDirName = dir.Spec(); //set first file or dir to a nsFileSpec
-    folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
+    //get the filename without the full path
+    char* folderName = fileOrDirName.GetLeafName();
     fileOrDirNameStr.Assign(folderName);
 
     if (nsCStringStartsWith(fileOrDirNameStr, NEWSRC_PREFIX_IN_4x) || nsCStringStartsWith(fileOrDirNameStr, SNEWSRC_PREFIX_IN_4x)) {
@@ -1572,6 +1568,7 @@ nsPrefMigration::CopyAndRenameNewsrcFiles(nsIFileSpec * newPathSpec)
         newFile += fileOrDirNameStr.get();
         newFile.Rename(folderName + 1); /* rename .newsrc-news to newsrc-news, no need to keep it hidden anymore */
     }
+    nsCRT::free(folderName);
   }
 
   return NS_OK;
@@ -1603,7 +1600,6 @@ nsresult
 nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newPathSpec, PRBool readSubdirs, PRBool needToRenameFiles, const char *oldName, const char *newName)
 {
   nsresult rv;
-  char* folderName = nsnull;
   nsCAutoString fileOrDirNameStr;
   nsFileSpec oldPath;
   nsFileSpec newPath;
@@ -1616,12 +1612,11 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
   for (nsDirectoryIterator dir(oldPath, PR_FALSE); dir.Exists(); dir++)
   {
     nsFileSpec fileOrDirName = dir.Spec(); //set first file or dir to a nsFileSpec
-    folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
+    //get the filename without the full path
+    char* folderName = fileOrDirName.GetLeafName();
     fileOrDirNameStr.Assign(folderName);
 
-    if (nsCStringEndsWith(fileOrDirNameStr, MAIL_SUMMARY_SUFFIX_IN_4x) || nsCStringEndsWith(fileOrDirNameStr, NEWS_SUMMARY_SUFFIX_IN_4x) || nsCStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
-      continue;
-    else
+    if (!nsCStringEndsWith(fileOrDirNameStr, MAIL_SUMMARY_SUFFIX_IN_4x) && !nsCStringEndsWith(fileOrDirNameStr, NEWS_SUMMARY_SUFFIX_IN_4x) && !nsCStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
     {
       if (fileOrDirName.IsDirectory())
       {
@@ -1636,8 +1631,6 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
           rv = NS_NewFileSpecWithSpec(fileOrDirName, getter_AddRefs(fileOrDirNameSpec));
           DoTheCopyAndRename(fileOrDirNameSpec, newPathExtended, PR_TRUE, needToRenameFiles, oldName, newName); /* re-enter the DoTheCopyAndRename function */
         }
-        else
-          continue;
       }
       else {
         // copy the file
@@ -1654,6 +1647,7 @@ nsPrefMigration::DoTheCopyAndRename(nsIFileSpec * oldPathSpec, nsIFileSpec *newP
         }
       }
     }
+    nsCRT::free(folderName);
   }  
   
   return NS_OK;
