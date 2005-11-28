@@ -414,7 +414,11 @@ GetCurrentPIDorHandle()
 PRBool
 EnsureSymInitialized()
 {
+    static PRBool gInitialized = PR_FALSE;
     PRBool retStat;
+
+    if (gInitialized)
+        return gInitialized;
 
     if (!EnsureImageHlpInitialized())
         return PR_FALSE;
@@ -423,6 +427,10 @@ EnsureSymInitialized()
     retStat = _SymInitialize(GetCurrentPIDorHandle(), NULL, TRUE);
     if (!retStat)
         PrintError("SymInitialize", NULL);
+
+    gInitialized = retStat;
+    /* XXX At some point we need to arrange to call _SymCleanup */
+
     return retStat;
 }
 
@@ -613,12 +621,12 @@ DumpStackToFileMain64(struct DumpStackToFileData* data)
             ReleaseMutex(hStackWalkMutex);
 
             if (ok)
-                fprintf(aStream, "%s!%s+0x%016X\n", modInfo.ImageName, pSymbol->Name, displacement);
+                fprintf(aStream, "%s!%s+0x%016X\n", modInfo.ModuleName, pSymbol->Name, displacement);
             else
                 fprintf(aStream, "0x%016X\n", addr);
 
-            // Stop walking when we get to kernel32.dll.
-            if (strcmp(modInfo.ImageName, "kernel32.dll") == 0)
+            // Stop walking when we get to kernel32.
+            if (strcmp(modInfo.ModuleName, "kernel32") == 0)
                 break;
         }
         else {
