@@ -8979,11 +8979,11 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
       AppendFrames(state, aContainer, parentFrame, firstAppendedFrame,
                    parentAfterFrame);
     }
+  }
 
-    // Recover first-letter frames
-    if (haveFirstLetterStyle) {
-      RecoverLetterFrames(state, containingBlock);
-    }
+  // Recover first-letter frames
+  if (haveFirstLetterStyle) {
+    RecoverLetterFrames(state, containingBlock);
   }
 
 #ifdef DEBUG
@@ -9537,12 +9537,6 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       state.mFrameManager->InsertFrames(parentFrame,
                                         nsnull, prevSibling, newFrame);
     }
-
-    if (haveFirstLetterStyle) {
-      // Recover the letter frames for the containing block when
-      // it has first-letter style.
-      RecoverLetterFrames(state, state.mFloatedItems.containingBlock);
-    }
   }
   else {
     // we might have a caption treat it here
@@ -9564,6 +9558,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                           newCaptionFrame);
       }
     }
+  }
+
+  if (haveFirstLetterStyle) {
+    // Recover the letter frames for the containing block when
+    // it has first-letter style.
+    RecoverLetterFrames(state, state.mFloatedItems.containingBlock);
   }
 
 #ifdef DEBUG
