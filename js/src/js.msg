@@ -285,3 +285,4 @@ MSG_DEF(JSMSG_BUFFER_TOO_SMALL,       202, 0, JSEXN_INTERNALERR, "buffer too sma
 MSG_DEF(JSMSG_BAD_SURROGATE_CHAR,     203, 1, JSEXN_TYPEERR, "bad surrogate character {0}")
 MSG_DEF(JSMSG_UTF8_CHAR_TOO_LARGE,    204, 1, JSEXN_TYPEERR, "UTF-8 character {0} too large")
 MSG_DEF(JSMSG_MALFORMED_UTF8_CHAR,    205, 1, JSEXN_TYPEERR, "malformed UTF-8 character sequence at offset {0}")
+MSG_DEF(JSMSG_USER_DEFINED_ERROR,     206, 0, JSEXN_ERR, "JS_ReportError was called")
