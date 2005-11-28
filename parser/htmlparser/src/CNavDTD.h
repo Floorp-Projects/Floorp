@@ -166,6 +166,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDTD
 
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_INAVHTML_DTD_IID);
+
 private:
     /**
      *  This method is called to determine whether or not a tag
