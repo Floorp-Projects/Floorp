@@ -70,6 +70,23 @@ function STACK(args) {
   }
 }
 
+/**
+ * Represents an insertion point within a container where we can insert
+ * items. 
+ * @param   folderId
+ *          The folderId of the parent container
+ * @param   index
+ *          The index within the container where we should insert
+ * @constructor
+ */
+function InsertionPoint(folderId, index) {
+  this.folderId = folderId;
+  this.index = index;
+}
+
+/**
+ * The Master Places Controller
+ */
 var PlacesController = {
   _uri: function PC__uri(spec) {
     var ios = 
@@ -202,6 +219,8 @@ var PlacesController = {
    * @returns true if the node is a Bookmark folder, false otherwise
    */
   nodeIsFolder: function PC_nodeIsFolder(node) {
+    if (!node)
+      STACK(arguments);
     return node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
   },
   
@@ -483,7 +502,7 @@ var PlacesController = {
     var value = { value: bundle.getString("newFolderDefault") };
     if (ps.prompt(window, title, text, value, null, { })) {
       var ip = view.insertionPoint;
-      var txn = new PlacesCreateFolderTransaction(value.value, ip.container, 
+      var txn = new PlacesCreateFolderTransaction(value.value, ip.folderId, 
                                                   ip.index);
       this._txmgr.doTransaction(txn);
     }
@@ -521,10 +540,12 @@ var PlacesController = {
    * @param   node
    *          The node to look up
    * @returns The index of the node within its parent container, or -1 if the
-   *          node was not found. 
+   *          node was not found or the node specified has no parent.
    */
   getIndexOfNode: function PC_getIndexOfNode(node) {
     var parent = node.parent;
+    if (!parent)
+      return -1;
     var cc = parent.childCount;
     for (var i = 0; i < cc && parent.getChild(i) != node; ++i);
     return i < cc ? i : -1;
@@ -789,13 +810,11 @@ var PlacesController = {
     data = data.value.QueryInterface(Ci.nsISupportsString).data;
     data = this.unwrapNodes(data, type.value);
     
-    LOG("NODES: " + data);
-    
     var ip = this._activeView.insertionPoint;
     var transactions = [];
     for (var i = 0; i < data.length; ++i)
       transactions.push(this.makeTransaction(data[i], type.value, 
-                                             ip.container, ip.index, true));
+                                             ip.folderId, ip.index, true));
     var txn = new PlacesAggregateTransaction("Paste", transactions);
     this._txmgr.doTransaction(txn);
   },
