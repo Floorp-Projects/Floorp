@@ -85,7 +85,8 @@ inline PRInt32 CompareIntegers(PRUint32 a, PRUint32 b)
 NS_IMPL_ISUPPORTS2(nsNavHistoryResultNode,
                    nsNavHistoryResultNode, nsINavHistoryResultNode)
 
-nsNavHistoryResultNode::nsNavHistoryResultNode() : mID(0), mExpanded(PR_FALSE)
+nsNavHistoryResultNode::nsNavHistoryResultNode() : mID(0), mExpanded(PR_FALSE), 
+  mParent(nsnull), mAccessCount(0), mTime(0)
 {
 }
 
