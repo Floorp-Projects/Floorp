@@ -45,7 +45,7 @@
  */
 #ifdef XPCOM_GLUE
 #define XRE_API(type, name, params) \
-  typedef (NS_FROZENCALL * name##Type) params; \
+  typedef type (NS_FROZENCALL * name##Type) params; \
   extern name##Type name NS_HIDDEN;
 #elif defined(IMPL_XREAPI)
 #define XRE_API(type, name, params) EXPORT_XPCOM_API(type) name params;
