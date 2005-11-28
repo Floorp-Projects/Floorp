@@ -2309,12 +2309,11 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIFrame* aRowGroupFrame,
           nsTableCellFrame* lastCell = nsnull;
           for (int colX = 0; colX < numCols; colX++) {
             CellData* cellData = cellMap->GetDataAt(aRowX, colX);
-            if (cellData && cellData->IsSpan()) { // a cell above is spanning into here
+            if (cellData && cellData->IsRowSpan()) { // a cell above is spanning into here
               // adjust the real cell's rect only once
-              nsTableCellFrame* realCell = nsnull;
-              if (cellData->IsRowSpan())
-                realCell = cellMap->GetCellFrame(aRowX, colX, *cellData, PR_TRUE);
-              if (realCell != lastCell) {
+              nsTableCellFrame* realCell = cellMap->GetCellFrame(aRowX, colX, *cellData, PR_TRUE);
+              NS_ASSERTION(realCell, "row span without origin?");
+              if (realCell && (realCell != lastCell)) {
                 nsRect realRect = realCell->GetRect();
                 realRect.height -= rowRect.height;
                 realCell->SetRect(realRect);
