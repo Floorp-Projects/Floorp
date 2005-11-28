@@ -22,6 +22,7 @@
 
 
 use strict;
+use Cwd;
 
 if (($#ARGV >= 0) && (-d $ARGV[0])) {
      chdir($ARGV[0]);
@@ -37,7 +38,7 @@ if (($#ARGV >= 0) && (-d $ARGV[0])) {
 my $filename = "data/temp.$$";
 unlink($filename);
 
-die "Cannot Open data file: $!\n"
+die "Cannot Open data file (cwd: ". cwd() . "; $filename): $!\n"
      unless (open(FILE, "> $filename"));
 
 while (<STDIN>) {
