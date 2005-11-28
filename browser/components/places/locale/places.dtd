@@ -69,7 +69,7 @@
 <!ENTITY cmd.sortby_name.accesskey
   "S">
 <!ENTITY cmd.new_folder.label
-  "New Folder">
+  "New Folder...">
 <!ENTITY cmd.new_folder.accesskey
   "F">
 <!ENTITY cmd.new_separator.label

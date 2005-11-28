@@ -1,6 +1,5 @@
 #historyCalendar {
   -moz-binding: url("chrome://browser/content/places/places.xml#calendar");
-  display: -moz-box;
 }
 
 #searchFilter {
