@@ -98,10 +98,10 @@ NS_IMPL_ISUPPORTS4(nsMenuX, nsIMenu, nsIMenuListener, nsIChangeObserver, nsISupp
 
 
 nsMenuX::nsMenuX()
-: mNumMenuItems(0), mParent(nsnull), mManager(nsnull),
-  mMacMenuID(0), mMacMenu(NULL), mHelpMenuOSItemsCount(0),
-  mIsHelpMenu(PR_FALSE), mIsEnabled(PR_TRUE), mDestroyHandlerCalled(PR_FALSE),
-  mNeedsRebuild(PR_TRUE), mConstructed(PR_FALSE), mVisible(PR_TRUE), mHandler(nsnull)
+: mParent(nsnull), mManager(nsnull), mMacMenuID(0), mMacMenu(NULL),
+  mHelpMenuOSItemsCount(0), mIsHelpMenu(PR_FALSE), mIsEnabled(PR_TRUE),
+  mDestroyHandlerCalled(PR_FALSE), mNeedsRebuild(PR_TRUE),
+  mConstructed(PR_FALSE), mVisible(PR_TRUE), mHandler(nsnull)
 {
     mMenuDelegate = [[MenuDelegate alloc] initWithGeckoMenu:this];
 }
@@ -126,7 +126,7 @@ nsMenuX::~nsMenuX()
 
 NS_IMETHODIMP 
 nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode )
+                nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode)
 {
   mDocShellWeakRef = do_GetWeakReference(aShell);
   mMenuContent = aNode;
@@ -206,7 +206,8 @@ NS_IMETHODIMP nsMenuX::AddItem(nsISupports* aItem)
     nsCOMPtr<nsIMenuItem> menuItem(do_QueryInterface(aItem));
     if (menuItem) {
       rv = AddMenuItem(menuItem);
-    } else {
+    }
+    else {
       nsCOMPtr<nsIMenu> menu(do_QueryInterface(aItem));
       if (menu)
         rv = AddMenu(menu);
@@ -221,17 +222,17 @@ NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   if (!aMenuItem)
     return NS_ERROR_NULL_POINTER;
 
-  PRUint32 currItemIndex;
-  mMenuItemsArray.Count(&currItemIndex);
-  mMenuItemsArray.AppendElement(aMenuItem); // owning ref
-
-  mNumMenuItems++;
+  PRUint32 currItemIndex = mMenuItemsArray.Count();
+  mMenuItemsArray.AppendObject(aMenuItem); // owning ref
 
   nsAutoString label;
   aMenuItem->GetLabel(label);
   InsertMenuItemWithTruncation(label, currItemIndex);
-  
   NSMenuItem *newNativeMenuItem = [mMacMenu itemAtIndex:currItemIndex];
+  
+  // set up target/action
+  [newNativeMenuItem setTarget:mMenuDelegate];
+  [newNativeMenuItem setAction:@selector(menuItemHit:)];
   
   // set up shortcut keys
   nsAutoString geckoKeyEquivalent(NS_LITERAL_STRING(" "));
@@ -255,17 +256,14 @@ NS_IMETHODIMP nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
     macModifiers |= NSCommandKeyMask;
   [newNativeMenuItem setKeyEquivalentModifierMask:macModifiers];
 
-  /*
   // set its command. we get the unique command id from the menubar
-  //XXXJOSH we should no longer handle this with carbon events
   nsCOMPtr<nsIMenuCommandDispatcher> dispatcher(do_QueryInterface(mManager));
   if (dispatcher) {
     PRUint32 commandID = 0L;
     dispatcher->Register(aMenuItem, &commandID);
     if (commandID)
-      ::SetMenuItemCommandID(mMacMenu, currItemIndex, commandID);
+      [newNativeMenuItem setTag:commandID];
   }
-   */
   
   PRBool isEnabled;
   aMenuItem->GetEnabled(&isEnabled);
@@ -295,10 +293,8 @@ NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
   if (!supports)
     return NS_ERROR_NO_INTERFACE;
 
-  PRUint32 currItemIndex;
-  mMenuItemsArray.Count(&currItemIndex);
-  mMenuItemsArray.AppendElement(supports); // owning ref
-  mNumMenuItems++;
+  PRUint32 currItemIndex = mMenuItemsArray.Count();
+  mMenuItemsArray.AppendObject(supports); // owning ref
 
   // We have to add it as a menu item and then associate it with the item
   nsAutoString label;
@@ -307,11 +303,12 @@ NS_IMETHODIMP nsMenuX::AddMenu(nsIMenu * aMenu)
 
   PRBool isEnabled;
   aMenu->GetEnabled(&isEnabled);
-  if (isEnabled)
+  if (isEnabled) {
     [[mMacMenu itemAtIndex:currItemIndex] setEnabled:YES];
-  else
+  }
+  else {
     [[mMacMenu itemAtIndex:currItemIndex] setEnabled:NO];   
-
+  }
   NSMenu* childMenu;
   if (aMenu->GetNativeData((void**)&childMenu) == NS_OK) {
     [[mMacMenu itemAtIndex:currItemIndex] setSubmenu:childMenu];
@@ -347,24 +344,23 @@ NS_IMETHODIMP nsMenuX::AddSeparator()
 {
   // We're not really appending an nsMenuItem but it needs to be here to make
   // sure that event dispatching isn't off by one.
-  mMenuItemsArray.AppendElement(&gDummyMenuItemX); // owning ref
-  PRUint32  numItems;
-  mMenuItemsArray.Count(&numItems);
+  mMenuItemsArray.AppendObject(&gDummyMenuItemX); // owning ref
   [mMacMenu addItem:[NSMenuItem separatorItem]];
-  mNumMenuItems++;
   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsMenuX::GetItemCount(PRUint32 &aCount)
 {
-  return mMenuItemsArray.Count(&aCount);
+  aCount = mMenuItemsArray.Count();
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP nsMenuX::GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem)
 {
-  mMenuItemsArray.GetElementAt(aPos, &aMenuItem);
+  aMenuItem = mMenuItemsArray.ObjectAt(aPos);
+  NS_IF_ADDREF(aMenuItem);
   return NS_OK;
 }
 
@@ -378,34 +374,38 @@ NS_IMETHODIMP nsMenuX::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem
 
 NS_IMETHODIMP nsMenuX::RemoveItem(const PRUint32 aPos)
 {
-  //XXXJOSH Implement this
-  NS_WARNING("Not implemented");
+  if (mMacMenu != NULL) {
+    // clear command id
+    nsCOMPtr<nsIMenuCommandDispatcher> dispatcher(do_QueryInterface(mManager));
+    if (dispatcher) {
+      dispatcher->Unregister((PRUint32)[[mMacMenu itemAtIndex:aPos] tag]);
+    }
+    // get rid of Cocoa menu item
+    [mMacMenu removeItemAtIndex:aPos];
+  }
+  // get rid of Gecko menu items
+  mMenuItemsArray.RemoveObjectAt(aPos);
+
   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsMenuX::RemoveAll()
 {
-  //XXXJOSH why don't we set |mNumMenuItems| to 0 after removing all menu items?
   if (mMacMenu != NULL) {
-    /*
     // clear command id's
     nsCOMPtr<nsIMenuCommandDispatcher> dispatcher(do_QueryInterface(mManager));
     if (dispatcher) {
-      for (unsigned int i = 1; i <= mNumMenuItems; ++i) {
-        PRUint32 commandID = 0L;
-        OSErr err = ::GetMenuItemCommandID(mMacMenu, i, (unsigned long*)&commandID);
-        if (!err)
-          dispatcher->Unregister(commandID);
-      }
+      for (int i = 0; i < [mMacMenu numberOfItems]; i++)
+        dispatcher->Unregister((PRUint32)[[mMacMenu itemAtIndex:i] tag]);
     }
-     */
-    for (int i = [mMacMenu numberOfItems] - 1; i >= 0; i--) {
+    // get rid of Cocoa menu items
+    for (int i = [mMacMenu numberOfItems] - 1; i >= 0; i--)
       [mMacMenu removeItemAtIndex:i];
-    }
   }
+  // get rid of Gecko menu items
+  mMenuItemsArray.Clear();
   
-  mMenuItemsArray.Clear(); // remove all items
   return NS_OK;
 }
 
@@ -503,11 +503,9 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
   }
   else {
     // Make sure none of our submenus are the ones that should be handling this
-    PRUint32    numItems;
-    mMenuItemsArray.Count(&numItems);
-    for (PRUint32 i = numItems; i > 0; i--) {
-      nsCOMPtr<nsISupports>     menuSupports = getter_AddRefs(mMenuItemsArray.ElementAt(i - 1));    
-      nsCOMPtr<nsIMenu>         submenu = do_QueryInterface(menuSupports);
+    for (PRUint32 i = mMenuItemsArray.Count() - 1; i >= 0; i--) {
+      nsISupports*              menuSupports = mMenuItemsArray.ObjectAt(i);
+      nsCOMPtr<nsIMenu>              submenu = do_QueryInterface(menuSupports);
       nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(submenu);
       if (menuListener) {
         eventStatus = menuListener->MenuSelected(aMenuEvent);
@@ -545,7 +543,6 @@ nsEventStatus nsMenuX::MenuConstruct(
   mDestroyHandlerCalled = PR_FALSE;
   
   //printf("nsMenuX::MenuConstruct called for %s = %d \n", NS_LossyConvertUCS2toASCII(mLabel).get(), mMacMenu);
-  // Begin menuitem inner loop
   
   // Retrieve our menupopup.
   nsCOMPtr<nsIContent> menuPopup;
@@ -585,7 +582,7 @@ nsEventStatus nsMenuX::HelpMenuConstruct(
 { 
   int i, numHelpItems = [mMacMenu numberOfItems];
   for (i = 0; i < numHelpItems; i++)
-    mMenuItemsArray.AppendElement(&gDummyMenuItemX);
+    mMenuItemsArray.AppendObject(&gDummyMenuItemX);
      
   // Retrieve our menupopup.
   nsCOMPtr<nsIContent> menuPopup;
@@ -641,9 +638,9 @@ nsEventStatus nsMenuX::CheckRebuild(PRBool & aNeedsRebuild)
 
 nsEventStatus nsMenuX::SetRebuild(PRBool aNeedsRebuild)
 {
-  if (!gConstructingMenu) {
+  if (!gConstructingMenu)
     mNeedsRebuild = aNeedsRebuild;
-  }
+  
   return nsEventStatus_eIgnore;
 }
 
@@ -722,7 +719,7 @@ void nsMenuX::LoadMenuItem(nsIMenu* inParentMenu, nsIContent* inMenuItemContent)
 
     // printf("menuitem %s \n", NS_LossyConvertUCS2toASCII(menuitemName).get());
               
-    PRBool enabled = ! (disabled.EqualsLiteral("true"));
+    PRBool enabled = !(disabled.EqualsLiteral("true"));
     
     nsIMenuItem::EMenuItemType itemType = nsIMenuItem::eRegular;
     if (type.EqualsLiteral("checkbox"))
@@ -869,7 +866,7 @@ nsMenuX::OnCreate()
     return PR_FALSE;
   }
   nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext) );
+  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
   if (presContext) {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
@@ -906,7 +903,8 @@ nsMenuX::OnCreate()
               // The menu's disabled state needs to be updated to match the command.
               if (commandDisabled.IsEmpty()) 
                 grandChild->UnsetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, PR_TRUE);
-              else grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
+              else
+                grandChild->SetAttr(kNameSpaceID_None, nsWidgetAtoms::disabled, commandDisabled, PR_TRUE);
             }
 
             // The menu's value and checked states need to be updated to match the command.
@@ -989,8 +987,8 @@ nsMenuX::OnDestroy()
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
   nsCOMPtr<nsPresContext> presContext;
-  MenuHelpersX::DocShellToPresContext (docShell, getter_AddRefs(presContext) );
-  if (presContext )  {
+  MenuHelpersX::DocShellToPresContext(docShell, getter_AddRefs(presContext));
+  if (presContext) {
     nsresult rv = NS_OK;
     nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
     rv = dispatchTo->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
@@ -1146,7 +1144,7 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
       SetEnabled(PR_FALSE);
     else
       SetEnabled(PR_TRUE);
-  } 
+  }
   else if (aAttribute == nsWidgetAtoms::label) {
     SetRebuild(PR_TRUE);
     
@@ -1213,8 +1211,6 @@ nsMenuX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom 
               // handle in, the correct title goes with it.
               [menubar insertItemWithTitle:@"placeholder" action:NULL keyEquivalent:@"" atIndex:insertAfter - 1];
               [[menubar itemAtIndex:insertAfter] setSubmenu:mMacMenu];
-              //::InsertMenuItem(menubar, "\pPlaceholder", insertAfter);
-              //::SetMenuItemHierarchicalMenu(menubar, insertAfter + 1, mMacMenu);  // add 1 to get index of inserted item
               mVisible = PR_TRUE;
             }
           }
@@ -1278,8 +1274,9 @@ static pascal OSStatus MyMenuEventHandler(EventHandlerCallRef myHandler, EventRe
       if (kind == kEventMenuOpening) {
         listener->MenuSelected(menuEvent);
       }
-      else
+      else {
         listener->MenuDeselected(menuEvent);
+      }
     }
   }
   return result;
@@ -1362,9 +1359,36 @@ static MenuRef GetCarbonMenuRef(NSMenu* aMenu)
   }
 }
 
-// this gets called when some menu item in this menu get hit
+// called when some menu item in this menu gets hit
 - (IBAction)menuItemHit:(id)sender {
-  NSLog(@"Your friendly Cocoa menu item delegat object would like to inform you that a menu item got hit\n");  
+  MenuRef senderMenuRef = GetCarbonMenuRef([sender menu]);
+  int senderCarbonMenuItemIndex = [[sender menu] indexOfItem:sender] + 1;
+  
+  // If this carbon menu item has never had a command ID assigned to it, give it
+  // one from the sender's tag
+  MenuCommand menuCommand;
+  ::GetMenuItemCommandID(senderMenuRef, senderCarbonMenuItemIndex, &menuCommand);
+  if (menuCommand == 0) {
+    menuCommand = (MenuCommand)[sender tag];
+    ::SetMenuItemCommandID(senderMenuRef, senderCarbonMenuItemIndex, menuCommand);
+  }
+  
+  // set up an HICommand to send
+  HICommand menuHICommand;
+  menuHICommand.commandID = menuCommand;
+  menuHICommand.menu.menuRef = senderMenuRef;
+  menuHICommand.menu.menuItemIndex = senderCarbonMenuItemIndex;
+  
+  // send Carbon Event
+  EventRef newEvent;
+  OSErr err = ::CreateEvent(NULL, kEventClassCommand, kEventCommandProcess, 0, kEventAttributeUserEvent, &newEvent);
+  if (err == noErr) {
+    err = ::SetEventParameter(newEvent, kEventParamDirectObject, typeHICommand, sizeof(HICommand), &menuHICommand);
+    if (err == noErr) {
+      err = ::SendEventToEventTarget(newEvent, GetWindowEventTarget((WindowRef)[[NSApp keyWindow] windowRef]));
+      NS_ASSERTION(err == noErr, "Carbon event for menu hit not sent!");
+    }
+  }
 }
 
 

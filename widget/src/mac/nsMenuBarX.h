@@ -133,7 +133,6 @@ protected:
     nsresult CreateAppleMenu ( nsIMenu* inMenu ) ;
 
     nsHashtable             mObserverTable;     // stores observers for content change notification
-    nsHashtable             mCommandMapTable;   // maps CommandIDs to content nodes for CarbonEvent item selection
 
     PRUint32                mNumMenus;
     nsSupportsArray         mMenusArray;        // holds refs

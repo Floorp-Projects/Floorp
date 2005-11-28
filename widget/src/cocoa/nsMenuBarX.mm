@@ -134,7 +134,8 @@ nsMenuBarX::MenuSelected(const nsMenuEvent &aMenuEvent)
     eventStatus = menuListener->MenuItemSelected(aMenuEvent);
     if (nsEventStatus_eIgnore != eventStatus)
       return eventStatus;
-  } else {
+  }
+  else {
     PRUint32  numItems;
     mMenusArray.Count(&numItems);
     for (PRUint32 i = numItems; i > 0; i--) {
@@ -325,7 +326,7 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
           if (content) {
             content->DoCommand();
             handled = noErr;
-          }        
+          }
           break;
         }
       } // switch on commandID
@@ -350,7 +351,6 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
   } // switch on event type
   
   return handled;
-  
 } // CommandEventHandler
 
 
@@ -499,7 +499,8 @@ NS_IMETHODIMP nsMenuBarX::AddMenu(nsIMenu * aMenu)
   if (mNumMenus == 0) {
     // if application menu hasn't been created, create it.
     if (!sApplicationMenu) {
-      nsresult rv = CreateApplicationMenu(aMenu);
+      nsresult rv = NS_OK; // avoid warning about rv being unused
+      rv = CreateApplicationMenu(aMenu);
       NS_ASSERTION(NS_SUCCEEDED(rv), "Can't create Application menu");
     }
     
@@ -575,8 +576,6 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
     
     // add separator after About menu
     [sApplicationMenu addItem:[NSMenuItem separatorItem]];
-    
-    
   }
   
   return (sApplicationMenu) ? NS_OK : NS_ERROR_FAILURE;
