@@ -327,10 +327,16 @@
                 s.data = PlacesController.wrapNode(node, type);
                 data.addDataForFlavour(type, s);
               }
-              addData(TYPE_X_MOZ_PLACE);
-              addData(TYPE_X_MOZ_URL);
-              addData(TYPE_HTML);
-              addData(TYPE_UNICODE);
+              if (PlacesController.nodeIsFolder(node) || 
+                  PlacesController.nodeIsQuery(node))
+                addData(TYPE_X_MOZ_PLACE_CONTAINER);
+              else {
+                // Order here is _important_!
+                addData(TYPE_X_MOZ_PLACE);
+                addData(TYPE_UNICODE);
+                addData(TYPE_HTML);
+                addData(TYPE_X_MOZ_URL);
+              }
               dataSet.push(data);
             }
           }
