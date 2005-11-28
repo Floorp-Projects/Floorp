@@ -1394,10 +1394,8 @@ nsMacEventHandler::Scroll(EventMouseWheelAxis inAxis, PRInt32 inDelta,
   nsMouseScrollEvent scrollEvent(PR_TRUE, NS_MOUSE_SCROLL, widgetToScroll);
 
   // The direction we get from the carbon event is opposite from the way
-  // mozilla looks at it.  Reverse the direction.  Also, scroll by 3 lines
-  // at a time. |inDelta| represents the number of groups of lines to scroll,
-  // not the exact number of lines to scroll.
-  scrollEvent.delta = inDelta * -3;
+  // mozilla looks at it.  Reverse the direction.
+  scrollEvent.delta = -inDelta;
 
   // If the scroll event comes from a mouse that only has a scroll wheel for
   // the vertical axis, and the shift key is held down, the system presents
