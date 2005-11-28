@@ -820,7 +820,6 @@ var PlacesControllerDragHelper = {
    *          An object implementing the AVI
    * @param   orientation
    *          The orientation of the drop
-   * XXXben implement index param!
    * @returns true if the data being dragged is of a type supported by the view
    *          it is being dragged over, false otherwise. 
    */

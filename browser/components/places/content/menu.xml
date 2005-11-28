@@ -90,6 +90,7 @@
               element = document.createElementNS(XULNS, "menu");
               element.setAttribute("type", "menu");
               element.setAttribute("container", "true");
+              element.setAttribute("label", child.title);
               var popup = document.createElementNS(XULNS, "menupopup");
               popup.setAttribute("type", "places");
               element.appendChild(popup);
