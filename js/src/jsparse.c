@@ -1,4 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=80:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -531,10 +532,9 @@ HasFinalReturn(JSParseNode *pn)
         return HasFinalReturn(PN_LAST(pn));
 
       case TOK_IF:
-        rv = HasFinalReturn(pn->pn_kid2);
-        if (pn->pn_kid3)
-            rv &= HasFinalReturn(pn->pn_kid3);
-        return rv;
+        if (!pn->pn_kid3)
+            return ENDS_IN_OTHER;
+        return HasFinalReturn(pn->pn_kid2) & HasFinalReturn(pn->pn_kid3);
 
 #if JS_HAS_SWITCH_STATEMENT
       case TOK_SWITCH:
