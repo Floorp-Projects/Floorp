@@ -758,7 +758,9 @@ js_ReportOutOfMemory(JSContext *cx, JSErrorCallback callback)
 JSBool
 js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 {
-    char *last;
+    char *message;
+    jschar *ucmessage;
+    size_t messagelen;
     JSStackFrame *fp;
     JSErrorReport report;
     JSBool warning;
@@ -766,12 +768,15 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
     if ((flags & JSREPORT_STRICT) && !JS_HAS_STRICT_OPTION(cx))
         return JS_TRUE;
 
-    last = JS_vsmprintf(format, ap);
-    if (!last)
+    message = JS_vsmprintf(format, ap);
+    if (!message)
         return JS_FALSE;
+    messagelen = strlen(message);
 
     memset(&report, 0, sizeof (struct JSErrorReport));
     report.flags = flags;
+    report.errorNumber = JSMSG_USER_DEFINED_ERROR;
+    report.ucmessage = ucmessage = js_InflateString(cx, message, &messagelen);
 
     /* Find the top-most active script frame, for best line number blame. */
     for (fp = cx->fp; fp; fp = fp->down) {
@@ -788,8 +793,9 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
         warning = JS_FALSE;
     }
 
-    ReportError(cx, last, &report);
-    free(last);
+    ReportError(cx, message, &report);
+    free(message);
+    JS_free(cx, ucmessage);
     return warning;
 }
 

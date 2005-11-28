@@ -1612,6 +1612,13 @@ TestUtf8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return !JS_IsExceptionPending (cx);
 }
 
+static JSBool
+ThrowError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JS_ReportError(cx, "This is an error");
+    return JS_FALSE;
+}
+
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1627,6 +1634,7 @@ static JSFunctionSpec shell_functions[] = {
     {"pc2line",         PCToLine,       0},
     {"stringsAreUtf8",  StringsAreUtf8, 0},
     {"testUtf8",        TestUtf8,       1},
+    {"throwError",      ThrowError,     0},
 #ifdef DEBUG
     {"dis",             Disassemble,    1},
     {"dissrc",          DisassWithSrc,  1},
@@ -1668,6 +1676,7 @@ static char *shell_help_messages[] = {
     "pc2line(fun[, pc])     Map PC to line number",
     "stringsAreUTF8()       Check if strings are UTF-8 encoded",
     "testUTF8(mode)         Perform UTF-8 tests (modes are 1 to 4)",
+    "throwError()           Throw an error from JS_ReportError",
 #ifdef DEBUG
     "dis([fun])             Disassemble functions into bytecodes",
     "dissrc([fun])          Disassemble functions with source lines",
