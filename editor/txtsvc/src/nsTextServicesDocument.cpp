@@ -2494,6 +2494,8 @@ nsTextServicesDocument::InsertNode(nsIDOMNode *aNode,
 nsresult
 nsTextServicesDocument::DeleteNode(nsIDOMNode *aChild)
 {
+  NS_ENSURE_TRUE(mIterator, NS_ERROR_FAILURE);
+
   //**** KDEBUG ****
   // printf("** DeleteNode: 0x%.8x\n", aChild);
   // fflush(stdout);
