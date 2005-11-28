@@ -8188,6 +8188,35 @@ nsCSSFrameConstructor::GetFloatContainingBlock(nsIFrame* aFrame)
 }
 
 /**
+ * This function will check whether aContainer has :after generated content.
+ * If so, appending to it should actually insert.  The return value is the
+ * parent to use for newly-appended content.  *aAfterFrame points to the :after
+ * frame before which appended content should go, if there is one.
+ */
+static nsIFrame*
+AdjustAppendParentForAfterContent(nsPresContext* aPresContext,
+                                  nsIContent* aContainer,
+                                  nsIFrame* aParentFrame,
+                                  nsIFrame** aAfterFrame)
+{
+  // See if the parent has an :after pseudo-element.  Check for the presence
+  // of style first, since nsLayoutUtils::GetAfterFrame is sorta expensive.
+  nsStyleContext* parentStyle = aParentFrame->GetStyleContext();
+  if (nsLayoutUtils::HasPseudoStyle(aContainer, parentStyle,
+                                    nsCSSPseudoElements::after,
+                                    aPresContext)) {
+    nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(aParentFrame);
+    if (afterFrame) {
+      *aAfterFrame = afterFrame;
+      return afterFrame->GetParent();
+    }
+  }
+
+  *aAfterFrame = nsnull;
+  return aParentFrame;
+}
+
+/**
  * This function is called by ContentAppended() and ContentInserted()
  * when appending flowed frames to a parent's principal child list. It
  * handles the case where the parent frame has :after pseudo-element
@@ -8197,35 +8226,26 @@ nsresult
 nsCSSFrameConstructor::AppendFrames(const nsFrameConstructorState& aState,
                                     nsIContent*                    aContainer,
                                     nsIFrame*                      aParentFrame,
-                                    nsIFrame*                      aFrameList)
+                                    nsIFrame*                      aFrameList,
+                                    nsIFrame*                      aAfterFrame)
 {
-  // See if the parent has an :after pseudo-element.  Check for the presence
-  // of style first, since nsLayoutUtils::GetAfterFrame is sorta expensive.
-  nsStyleContext* parentStyle = aParentFrame->GetStyleContext();
-  nsFrameManager* frameManager = aState.mFrameManager;
-  if (nsLayoutUtils::HasPseudoStyle(aContainer, parentStyle,
-                                    nsCSSPseudoElements::after,
-                                    aState.mPresContext)) {
-    nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(aParentFrame);
-    if (afterFrame) {
-      // aParentFrame may have next-in-flows.  If there's no :after content
-      // around, we automatically get the right in-flow as aParentFrame.  But
-      // in this case, we could have ended up with the prev-in-flow of the
-      // right thing (the "right thing" being the last-in-flow for an append).
-      // Looking for afterFrame in the child list of it would then fail, and we
-      // could end up inserting our new frame at the wrong place.  So just set
-      // aParentFrame to the parent of afterFrame.  That will make sure we're
-      // getting our ordering right, and if our frame needs to be pulled up to
-      // the prev-in-flow that will happen when we reflow.
-      aParentFrame = afterFrame->GetParent();
-      nsFrameList frames(aParentFrame->GetFirstChild(nsnull));
+#ifdef DEBUG
+  nsIFrame* debugAfterFrame;
+  nsIFrame* debugNewParent =
+    ::AdjustAppendParentForAfterContent(aState.mPresContext, aContainer,
+                                        aParentFrame, &debugAfterFrame);
+  NS_ASSERTION(debugNewParent == aParentFrame, "Incorrect parent");
+  NS_ASSERTION(debugAfterFrame == aAfterFrame, "Incorrect after frame");
+#endif
 
-      // Insert the frames before the :after pseudo-element.
-      return frameManager->InsertFrames(aParentFrame,
-                                        nsnull,
-                                        frames.GetPrevSiblingFor(afterFrame),
-                                        aFrameList);
-    }
+  nsFrameManager* frameManager = aState.mFrameManager;
+  if (aAfterFrame) {
+    nsFrameList frames(aParentFrame->GetFirstChild(nsnull));
+
+    // Insert the frames before the :after pseudo-element.
+    return frameManager->InsertFrames(aParentFrame, nsnull,
+                                      frames.GetPrevSiblingFor(aAfterFrame),
+                                      aFrameList);
   }
 
   return frameManager->AppendFrames(aParentFrame, nsnull, aFrameList);
@@ -8822,6 +8842,14 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   // Deal with inner/outer tables, fieldsets
   parentFrame = ::GetAdjustedParentFrame(parentFrame, frameType,
                                          aContainer, aNewIndexInContainer);
+
+  // Deal with possible :after generated content on the parent
+  nsIFrame* parentAfterFrame;
+  parentFrame =
+    ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
+                                        aContainer, parentFrame,
+                                        &parentAfterFrame);
+  
   // Create some new frames
   PRUint32                count;
   nsIFrame*               firstAppendedFrame = nsnull;
@@ -8943,11 +8971,13 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
         }
       }
       if (frameItems.childList) { // append children of the inner table
-        AppendFrames(state, aContainer, parentFrame, frameItems.childList);
+        AppendFrames(state, aContainer, parentFrame, frameItems.childList,
+                     parentAfterFrame);
       }
     }
     else {
-      AppendFrames(state, aContainer, parentFrame, firstAppendedFrame);
+      AppendFrames(state, aContainer, parentFrame, firstAppendedFrame,
+                   parentAfterFrame);
     }
 
     // Recover first-letter frames
@@ -9267,6 +9297,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     : FindPreviousAnonymousSibling(mPresShell, mDocument, aContainer, aChild);
 
   PRBool    isAppend = PR_FALSE;
+  nsIFrame* appendAfterFrame;  // This is only looked at when isAppend is true
   nsIFrame* nextSibling = nsnull;
     
   // If there is no previous sibling, then find the frame that follows
@@ -9295,6 +9326,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     // Deal with inner/outer tables, fieldsets
     parentFrame = ::GetAdjustedParentFrame(parentFrame, parentFrame->GetType(),
                                            aContainer, aIndexInContainer);
+    parentFrame =
+      ::AdjustAppendParentForAfterContent(mPresShell->GetPresContext(),
+                                          aContainer, parentFrame,
+                                          &appendAfterFrame);
   }
 
   if (parentFrame->GetType() == nsLayoutAtoms::frameSetFrame) {
@@ -9484,7 +9519,7 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   if (NS_SUCCEEDED(rv) && newFrame) {
     // Notify the parent frame
     if (isAppend) {
-      AppendFrames(state, aContainer, parentFrame, newFrame);
+      AppendFrames(state, aContainer, parentFrame, newFrame, appendAfterFrame);
     }
     else {
       if (!prevSibling) {
@@ -13370,7 +13405,7 @@ nsCSSFrameConstructor::CreateInsertionPointChildren(nsFrameConstructorState &aSt
 
   if (NS_SUCCEEDED(rv) && insertionItems.childList) {
     rv = AppendFrames(aState, creatorContent, insertionFrame,
-                      insertionItems.childList);
+                      insertionItems.childList, nsnull);
   }
 
   return rv;
