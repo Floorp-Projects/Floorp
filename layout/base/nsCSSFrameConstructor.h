@@ -271,7 +271,8 @@ private:
   nsresult AppendFrames(const nsFrameConstructorState& aState,
                         nsIContent*                    aContainer,
                         nsIFrame*                      aParentFrame,
-                        nsIFrame*                      aFrameList);
+                        nsIFrame*                      aFrameList,
+                        nsIFrame*                      aAfterFrame);
 
   // BEGIN TABLE SECTION
   /**
