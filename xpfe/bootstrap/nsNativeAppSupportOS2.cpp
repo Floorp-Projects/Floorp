@@ -60,10 +60,9 @@
 #include "nsISupportsPrimitives.h"
 #include "nsISupportsArray.h"
 #include "nsIWindowWatcher.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIBrowserDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"         
 #include "nsIBaseWindow.h"       
 #include "nsIWidget.h"
@@ -1608,13 +1607,13 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                         escapeQuotes( url );
 
                         // Now for the title; first, get the "window" script global object.
-                        nsCOMPtr<nsIScriptGlobalObject> scrGlobalObj( do_QueryInterface( internalContent ) );
-                        if ( !scrGlobalObj ) {
+                        nsCOMPtr<nsPIDOMWindow> scrWin( do_QueryInterface( internalContent ) );
+                        if ( !scrWin ) {
                             break;
                         }
                         // Then from its doc shell get the base window...
                         nsCOMPtr<nsIBaseWindow> baseWindow =
-                          do_QueryInterface( scrGlobalObj->GetDocShell() );
+                          do_QueryInterface( scrWin->GetDocShell() );
                         if ( !baseWindow ) {
                             break;
                         }
@@ -2193,13 +2192,13 @@ nsNativeAppSupportOS2::OpenWindow( const char*urlstr, const char *args, nsIDOMWi
 }
 
 HWND hwndForDOMWindow( nsISupports *window ) {
-    nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
-    if ( !ppScriptGlobalObj ) {
+    nsCOMPtr<nsPIDOMWindow> win( do_QueryInterface(window) );
+    if ( !win ) {
         return 0;
     }
 
     nsCOMPtr<nsIBaseWindow> ppBaseWindow =
-      do_QueryInterface( ppScriptGlobalObj->GetDocShell() );
+      do_QueryInterface( win->GetDocShell() );
     if ( !ppBaseWindow ) {
         return 0;
     }

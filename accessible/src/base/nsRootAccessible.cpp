@@ -49,7 +49,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMNSEvent.h"
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
@@ -60,12 +60,10 @@
 #include "nsIFocusController.h"
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIScrollableView.h"
 #include "nsIServiceManager.h"
 #include "nsIViewManager.h"
 #include "nsLayoutAtoms.h"
-#include "nsPIDOMWindow.h"
 #include "nsReadableUtils.h"
 #include "nsRootAccessible.h"
 #include "nsIDocShell.h"
@@ -132,10 +130,10 @@ NS_IMETHODIMP nsRootAccessible::GetName(nsAString& aName)
     }
   }
 
-  nsIScriptGlobalObject *globalScript = mDocument->GetScriptGlobalObject();
+  nsPIDOMWindow *window = mDocument->GetWindow();
   nsIDocShell *docShell = nsnull;
-  if (globalScript) {
-    docShell = globalScript->GetDocShell();
+  if (window) {
+    docShell = window->GetDocShell();
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));

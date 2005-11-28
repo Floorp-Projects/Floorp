@@ -37,7 +37,6 @@
 #include "nsMailnewsContentBlocker.h"
 #include "nsIURI.h"
 #include "nsIServiceManager.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIPrefService.h"

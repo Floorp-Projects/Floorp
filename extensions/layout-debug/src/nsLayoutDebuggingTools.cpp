@@ -42,8 +42,7 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDocumentViewer.h"
 
 #include "nsIServiceManager.h"
@@ -150,10 +149,10 @@ NS_IMETHODIMP
 nsLayoutDebuggingTools::Init(nsIDOMWindow *aWin)
 {
     {
-        nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(aWin);
-        if (!global)
+        nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWin);
+        if (!window)
             return NS_ERROR_UNEXPECTED;
-        mDocShell = global->GetDocShell();
+        mDocShell = window->GetDocShell();
     }
 
     mPrefs = do_GetService(NS_PREF_CONTRACTID);

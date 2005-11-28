@@ -46,7 +46,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLDocument.h"
 #include "nsIFormControl.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsDOMError.h"
 #include "nsGenericHTMLElement.h"

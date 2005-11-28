@@ -46,8 +46,6 @@
 #include "nsISecurityContext.h"
 #include "nsCSecurityContext.h"
 #include "nsCRT.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptObjectPrincipal.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"

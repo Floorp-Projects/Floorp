@@ -55,7 +55,7 @@
 
 //XXXtw sadly, this makes consumers of nsContentPolicyUtils depend on widget
 #include "nsIDocument.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 
 #define NS_CONTENTPOLICY_CONTRACTID   "@mozilla.org/layout/content-policy;1"
 #define NS_CONTENTPOLICY_CATEGORY "content-policy"
@@ -221,9 +221,9 @@ NS_CP_GetDocShellFromContext(nsISupports *aContext)
         return nsnull;
     }
 
-    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal = do_QueryInterface(aContext);
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aContext);
 
-    if (!scriptGlobal) {
+    if (!window) {
         // our context might be a document (which also QIs to nsIDOMNode), so
         // try that first
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(aContext);
@@ -237,15 +237,15 @@ NS_CP_GetDocShellFromContext(nsISupports *aContext)
         }
 
         if (doc) {
-            scriptGlobal = doc->GetScriptGlobalObject();
+            window = doc->GetWindow();
         }
     }
 
-    if (!scriptGlobal) {
+    if (!window) {
         return nsnull;
     }
 
-    return scriptGlobal->GetDocShell();
+    return window->GetDocShell();
 }
 
 #endif /* __nsContentPolicyUtils_h__ */

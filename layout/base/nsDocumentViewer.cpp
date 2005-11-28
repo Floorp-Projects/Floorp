@@ -988,11 +988,11 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   nsresult rv = NS_OK;
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_AVAILABLE);
 
-  // First, get the script global object from the document...
-  nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
+  // First, get the window from the document...
+  nsPIDOMWindow *window = mDocument->GetWindow();
 
-  // Fail if no ScriptGlobalObject is available...
-  NS_ENSURE_TRUE(global, NS_ERROR_NULL_POINTER);
+  // Fail if no window is available...
+  NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
 
   mLoaded = PR_TRUE;
 
@@ -1013,12 +1013,12 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     // onload to the document content since that would likely confuse scripts
     // on the page.
 
-    nsIDocShell *docShell = global->GetDocShell();
+    nsIDocShell *docShell = window->GetDocShell();
     NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
 
     docShell->GetRestoringDocument(&restoring);
     if (!restoring) {
-      rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
+      rv = window->HandleDOMEvent(mPresContext, &event, nsnull,
                                   NS_EVENT_FLAG_INIT, &status);
 #ifdef MOZ_TIMELINE
       // if navigator.xul's load is complete, the main nav window is visible
@@ -1090,11 +1090,11 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
   }
 
   // First, get the script global object from the document...
-  nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
+  nsPIDOMWindow *window = mDocument->GetWindow();
 
-  if (!global) {
+  if (!window) {
     // This is odd, but not fatal
-    NS_WARNING("nsIScriptGlobalObject not set for document!");
+    NS_WARNING("window not set for document!");
     return NS_OK;
   }
 
@@ -1114,7 +1114,7 @@ DocumentViewerImpl::PermitUnload(PRBool *aPermitUnload)
     nsRefPtr<DocumentViewerImpl> kungFuDeathGrip(this);
 
     mInPermitUnload = PR_TRUE;
-    rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
+    rv = window->HandleDOMEvent(mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &status);
     mInPermitUnload = PR_FALSE;
   }
@@ -1194,12 +1194,12 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
   if (!aIsUnload)
     return NS_OK;
 
-  // First, get the script global object from the document...
-  nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
+  // First, get the window from the document...
+  nsPIDOMWindow *window = mDocument->GetWindow();
 
-  if (!global) {
-    // Fail if no ScriptGlobalObject is available...
-    NS_ERROR("nsIScriptGlobalObject not set for document!");
+  if (!window) {
+    // Fail if no window is available...
+    NS_ERROR("window not set for document!");
     return NS_ERROR_NULL_POINTER;
   }
 
@@ -1211,7 +1211,7 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
   // here.
   nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
 
-  return global->HandleDOMEvent(mPresContext, &event, nsnull,
+  return window->HandleDOMEvent(mPresContext, &event, nsnull,
                                 NS_EVENT_FLAG_INIT, &status);
 }
 
@@ -3147,8 +3147,8 @@ DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
 
 
   // get the private dom window
-  nsCOMPtr<nsPIDOMWindow> privateWin(do_QueryInterface(document->GetScriptGlobalObject(), &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsPIDOMWindow *privateWin = document->GetWindow();
+  NS_ENSURE_TRUE(privateWin, NS_ERROR_NOT_AVAILABLE);
 
   // get the focus controller
   nsIFocusController *focusController = privateWin->GetRootFocusController();
@@ -3309,7 +3309,7 @@ NS_IMETHODIMP nsDocViewerSelectionListener::NotifySelectionChanged(nsIDOMDocumen
     mDocViewer->GetDocument(getter_AddRefs(theDoc));
     if (!theDoc) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(theDoc->GetScriptGlobalObject());
+    nsPIDOMWindow *domWindow = theDoc->GetWindow();
     if (!domWindow) return NS_ERROR_FAILURE;
 
     domWindow->UpdateCommands(NS_LITERAL_STRING("select"));

@@ -298,7 +298,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mIsPopupSpam(PR_FALSE),
     mArguments(nsnull),
     mGlobalObjectOwner(nsnull),
-    mDocShell(nsnull),
     mTimeouts(nsnull),
     mTimeoutInsertionPoint(&mTimeouts),
     mTimeoutPublicIdCounter(1),
@@ -1414,12 +1413,6 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
   }
 }
 
-nsIDocShell *
-nsGlobalWindow::GetDocShell()
-{
-  return GetDocShellInternal();
-}
-
 void
 nsGlobalWindow::SetOpenerWindow(nsIDOMWindowInternal* aOpener)
 {
@@ -1591,7 +1584,7 @@ nsGlobalWindow::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     nsCOMPtr<nsIContent> content(do_QueryInterface(GetFrameElementInternal()));
 
     nsCOMPtr<nsIDocShellTreeItem> treeItem =
-      do_QueryInterface(GetDocShellInternal());
+      do_QueryInterface(GetDocShell());
 
     PRInt32 itemType = nsIDocShellTreeItem::typeChrome;
 
@@ -1770,8 +1763,8 @@ nsGlobalWindow::GetDocument(nsIDOMDocument** aDocument)
 {
   // This method *should* forward calls to the outer window, but since
   // there's nothing here that *depends* on anything in the outer
-  // (GetDocShellInternal() eliminates that dependency), we won't do
-  // that to avoid the extra virtual function call.
+  // (GetDocShell() eliminates that dependency), we won't do that to
+  // avoid the extra virtual function call.
 
   // lazily instantiate an about:blank document if necessary, and if
   // we have what it takes to do so. Note that domdoc here is the same
@@ -1779,7 +1772,7 @@ nsGlobalWindow::GetDocument(nsIDOMDocument** aDocument)
   // member variable because the docshell has already called
   // SetNewDocument().
   nsIDocShell *docShell;
-  if (!mDocument && (docShell = GetDocShellInternal()))
+  if (!mDocument && (docShell = GetDocShell()))
     nsCOMPtr<nsIDOMDocument> domdoc(do_GetInterface(docShell));
 
   NS_IF_ADDREF(*aDocument = mDocument);
@@ -2226,10 +2219,10 @@ nsGlobalWindow::GetOpener(nsIDOMWindowInternal** aOpener)
   // We don't want to reveal the opener if the opener is a mail window,
   // because opener can be used to spoof the contents of a message (bug 105050).
   // So, we look in the opener's root docshell to see if it's a mail window.
-  nsCOMPtr<nsIScriptGlobalObject> openerSGO(do_QueryInterface(mOpener));
-  if (openerSGO) {
+  nsCOMPtr<nsPIDOMWindow> openerPwin(do_QueryInterface(mOpener));
+  if (openerPwin) {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-      do_QueryInterface(openerSGO->GetDocShell());
+      do_QueryInterface(openerPwin->GetDocShell());
 
     if (docShellAsItem) {
       nsCOMPtr<nsIDocShellTreeItem> openerRootItem;
@@ -2938,11 +2931,11 @@ nsGlobalWindow::WindowExists(const nsAString& aName)
 
   if (!caller) {
     // If we can't reach a caller, try to use our own docshell
-    caller = do_QueryInterface(GetDocShellInternal());
+    caller = do_QueryInterface(GetDocShell());
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShell =
-    do_QueryInterface(GetDocShellInternal());
+    do_QueryInterface(GetDocShell());
 
   if (docShell) {
     nsCOMPtr<nsIDocShellTreeItem> namedItem;
@@ -5243,15 +5236,15 @@ nsGlobalWindow::GetPrivateRoot()
 {
   FORWARD_TO_OUTER(GetPrivateRoot, (), nsnull);
 
-  nsCOMPtr<nsIDOMWindow> parent;
-  GetTop(getter_AddRefs(parent));
+  nsCOMPtr<nsIDOMWindow> top;
+  GetTop(getter_AddRefs(top));
 
-  nsCOMPtr<nsIScriptGlobalObject> parentTop = do_QueryInterface(parent);
-  NS_ASSERTION(parentTop, "cannot get parentTop");
-  if (!parentTop)
+  nsCOMPtr<nsPIDOMWindow> ptop = do_QueryInterface(top);
+  NS_ASSERTION(ptop, "cannot get ptop");
+  if (!ptop)
     return nsnull;
 
-  nsIDocShell *docShell = parentTop->GetDocShell();
+  nsIDocShell *docShell = ptop->GetDocShell();
 
   // Get the chrome event handler from the doc shell, since we only
   // want to deal with XUL chrome handlers and not the new kind of
@@ -5263,17 +5256,15 @@ nsGlobalWindow::GetPrivateRoot()
   if (chromeElement) {
     nsIDocument* doc = chromeElement->GetDocument();
     if (doc) {
-      parent = do_QueryInterface(doc->GetScriptGlobalObject());
+      nsIDOMWindow *parent = doc->GetWindow();
       if (parent) {
-        nsCOMPtr<nsIDOMWindow> tempParent;
-        parent->GetTop(getter_AddRefs(tempParent));
-        tempParent.swap(parent);
+        parent->GetTop(getter_AddRefs(top));
       }
     }
   }
 
   return NS_STATIC_CAST(nsGlobalWindow *,
-                        NS_STATIC_CAST(nsIDOMWindow *, parent));
+                        NS_STATIC_CAST(nsIDOMWindow *, top));
 }
 
 
@@ -6917,8 +6908,7 @@ nsGlobalWindow::SuspendTimeouts()
   }
 
   // Suspend our children as well.
-  nsCOMPtr<nsIDocShellTreeNode> node =
-    do_QueryInterface(GetDocShellInternal());
+  nsCOMPtr<nsIDocShellTreeNode> node(do_QueryInterface(GetDocShell()));
   if (node) {
     PRInt32 childCount = 0;
     node->GetChildCount(&childCount);
@@ -6971,7 +6961,7 @@ nsGlobalWindow::ResumeTimeouts()
 
   // Resume our children as well.
   nsCOMPtr<nsIDocShellTreeNode> node =
-    do_QueryInterface(GetDocShellInternal());
+    do_QueryInterface(GetDocShell());
   if (node) {
     PRInt32 childCount = 0;
     node->GetChildCount(&childCount);

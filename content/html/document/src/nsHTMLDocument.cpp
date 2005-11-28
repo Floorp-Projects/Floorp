@@ -77,7 +77,6 @@
 #include "nsIBaseWindow.h"
 #include "nsIWebShellServices.h"
 #include "nsIDocumentLoader.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIXPConnect.h"
 #include "nsContentList.h"
@@ -1830,8 +1829,7 @@ nsHTMLDocument::SetCookie(const nsAString& aCookie)
   nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID);
   if (service && mDocumentURI) {
     nsCOMPtr<nsIPrompt> prompt;
-    nsCOMPtr<nsIDOMWindowInternal> window =
-      do_QueryInterface(GetScriptGlobalObject());
+    nsCOMPtr<nsPIDOMWindow> window = GetWindow();
     if (window) {
       window->GetPrompter(getter_AddRefs(prompt));
     }
@@ -3559,10 +3557,11 @@ NS_IMETHODIMP
 nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
 {
   // get editing session
-  if (!mScriptGlobalObject)
+  nsPIDOMWindow *window = GetWindow();
+  if (!window)
     return NS_ERROR_FAILURE;
 
-  nsIDocShell *docshell = mScriptGlobalObject->GetDocShell();
+  nsIDocShell *docshell = window->GetDocShell();
   if (!docshell)
     return NS_ERROR_FAILURE;
 
@@ -3583,9 +3582,6 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
   nsCOMPtr<nsIEditingSession> editSession = do_GetInterface(docshell);
   if (!editSession)
     return NS_ERROR_FAILURE;
-
-  nsIDOMWindow *window = GetWindow();
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   if (aDesignMode.LowerCaseEqualsLiteral("on") && !mEditingIsOn) {
     rv = editSession->MakeWindowEditable(window, "html", PR_FALSE);
@@ -3634,10 +3630,12 @@ nsHTMLDocument::GetMidasCommandManager(nsICommandManager** aCmdMgr)
   }
 
   *aCmdMgr = nsnull;
-  if (!mScriptGlobalObject)
+
+  nsPIDOMWindow *window = GetWindow();
+  if (!window)
     return NS_ERROR_FAILURE;
 
-  nsIDocShell *docshell = mScriptGlobalObject->GetDocShell();
+  nsIDocShell *docshell = window->GetDocShell();
   if (!docshell)
     return NS_ERROR_FAILURE;
 

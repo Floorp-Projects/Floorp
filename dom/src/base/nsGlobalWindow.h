@@ -158,7 +158,6 @@ public:
                                   PRBool aRemoveEventListeners,
                                   PRBool aClearScopeHint);
   virtual void SetDocShell(nsIDocShell* aDocShell);
-  virtual nsIDocShell *GetDocShell();
   virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener);
   virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
   virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
@@ -259,15 +258,6 @@ public:
   nsGlobalWindow *GetCurrentInnerWindowInternal()
   {
     return NS_STATIC_CAST(nsGlobalWindow *, mInnerWindow);
-  }
-
-  nsIDocShell *GetDocShellInternal()
-  {
-    if (mOuterWindow) {
-      return GetOuterWindowInternal()->mDocShell;
-    }
-
-    return mDocShell;
   }
 
   PRBool IsFrozen() const
@@ -455,7 +445,6 @@ protected:
   nsString                      mDefaultStatus;
 
   nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
-  nsIDocShell*                  mDocShell;  // Weak Reference
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
 

@@ -55,7 +55,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIObserverService.h"
 #include "nsIDocumentLoader.h"
 #include "nsCURILoader.h"
@@ -206,10 +205,10 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
     rv = svc->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
   }
   
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(mWindow));
-  if (!sgo) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsPIDOMWindow> piwindow(do_QueryInterface(mWindow));
+  if (!piwindow) return NS_ERROR_FAILURE;
 
-  nsIDocShell *docShell = sgo->GetDocShell();
+  nsIDocShell *docShell = piwindow->GetDocShell();
 
   // The Docshell will own the SecureBrowserUI object
   if (!docShell)

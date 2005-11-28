@@ -46,12 +46,9 @@
 #include "nsFind.h"
 
 #include "nsIComponentManager.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIURI.h"
 #include "nsIDocShell.h"
@@ -372,8 +369,7 @@ static void
 FocusElementButNotDocument(nsIDocument* aDocument, nsIContent* aContent)
 {
   nsIFocusController *focusController = nsnull;
-  nsCOMPtr<nsPIDOMWindow> ourWindow =
-    do_QueryInterface(aDocument->GetScriptGlobalObject());
+  nsPIDOMWindow *ourWindow = aDocument->GetWindow();
   if (ourWindow)
     focusController = ourWindow->GetRootFocusController();
   if (!focusController)
@@ -819,55 +815,54 @@ void
 nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow, 
                                     nsISelection** aSel)
 {
-  *aSel = nsnull;
+    *aSel = nsnull;
 
-  nsCOMPtr<nsIDOMDocument> domDoc;    
-  aWindow->GetDocument(getter_AddRefs(domDoc));
-  if (!domDoc) return;
+    nsCOMPtr<nsIDOMDocument> domDoc;    
+    aWindow->GetDocument(getter_AddRefs(domDoc));
+    if (!domDoc) return;
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  nsIPresShell* presShell = doc->GetShellAt(0);
-  if (!presShell) return;
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+    nsIPresShell* presShell = doc->GetShellAt(0);
+    if (!presShell) return;
 
-  // text input controls have their independent selection controllers
-  // that we must use when they have focus.
-  nsPresContext *presContext = presShell->GetPresContext();
+    // text input controls have their independent selection controllers
+    // that we must use when they have focus.
+    nsPresContext *presContext = presShell->GetPresContext();
 
-  nsIFrame *frame = nsnull;
-  presContext->EventStateManager()->GetFocusedFrame(&frame);
-  if (!frame) {
-    nsCOMPtr<nsPIDOMWindow> ourWindow = 
-      do_QueryInterface(doc->GetScriptGlobalObject());
-    if (ourWindow) {
-      nsIFocusController *focusController =
-          ourWindow->GetRootFocusController();
-      if (focusController) {
-        nsCOMPtr<nsIDOMElement> focusedElement;
-        focusController->GetFocusedElement(getter_AddRefs(focusedElement));
-        if (focusedElement) {
-            nsCOMPtr<nsIContent> content(do_QueryInterface(focusedElement));
-            frame = presShell->GetPrimaryFrameFor(content);
+    nsIFrame *frame = nsnull;
+    presContext->EventStateManager()->GetFocusedFrame(&frame);
+    if (!frame) {
+        nsPIDOMWindow *ourWindow = doc->GetWindow();
+        if (ourWindow) {
+            nsIFocusController *focusController =
+                ourWindow->GetRootFocusController();
+            if (focusController) {
+                nsCOMPtr<nsIDOMElement> focusedElement;
+                focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+                if (focusedElement) {
+                    nsCOMPtr<nsIContent> content(do_QueryInterface(focusedElement));
+                    frame = presShell->GetPrimaryFrameFor(content);
+                }
+            }
         }
-      }
     }
-  }
 
-  nsCOMPtr<nsISelectionController> selCon;
-  if (frame) {
-    frame->GetSelectionController(presContext, getter_AddRefs(selCon));
+    nsCOMPtr<nsISelectionController> selCon;
+    if (frame) {
+        frame->GetSelectionController(presContext, getter_AddRefs(selCon));
+        selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSel);
+        if (*aSel) {
+            PRInt32 count = -1;
+            (*aSel)->GetRangeCount(&count);
+            if (count > 0) {
+                return;
+            }
+            NS_RELEASE(*aSel);
+        }
+    }
+
+    selCon = do_QueryInterface(presShell);
     selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSel);
-    if (*aSel) {
-      PRInt32 count = -1;
-      (*aSel)->GetRangeCount(&count);
-      if (count > 0) {
-        return;
-      }
-      NS_RELEASE(*aSel);
-    }
-  }
-
-  selCon = do_QueryInterface(presShell);
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, aSel);
 }
 
 nsresult nsWebBrowserFind::ClearFrameSelection(nsIDOMWindow *aWindow)
@@ -915,9 +910,9 @@ nsresult nsWebBrowserFind::OnFind(nsIDOMWindow *aFoundWindow)
 nsIDocShell *
 nsWebBrowserFind::GetDocShellFromWindow(nsIDOMWindow *inWindow)
 {
-  nsCOMPtr<nsIScriptGlobalObject> scriptGO(do_QueryInterface(inWindow));
-  if (!scriptGO) return nsnull;
+    nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(inWindow));
+    if (!window) return nsnull;
 
-  return scriptGO->GetDocShell();
+    return window->GetDocShell();
 }
 

@@ -79,14 +79,11 @@ mozXMLTermUtils::ConvertDocShellToDOMWindow(nsIDocShell* aDocShell,
 
   *aDOMWindow = nsnull;
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject(do_GetInterface(aDocShell));
-
-  nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(scriptGlobalObject));
+  nsCOMPtr<nsIDOMWindowInternal> domWindow(do_GetInterface(aDocShell));
   if (!domWindow)
     return NS_ERROR_FAILURE;
 
-  *aDOMWindow = domWindow.get();
-  NS_ADDREF(*aDOMWindow);
+  domWindow.swap(*aDOMWindow);
 
   return NS_OK;
 }
@@ -103,11 +100,11 @@ mozXMLTermUtils::ConvertDOMWindowToDocShell(nsIDOMWindowInternal* aDOMWindow,
 {
   XMLT_LOG(mozXMLTermUtils::ConvertDOMWindowToDocShell,30,("\n"));
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObject = do_QueryInterface(aDOMWindow);
-  if (!globalObject)
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aDOMWindow);
+  if (!window)
     return NS_ERROR_FAILURE;
 
-  *aDocShell = globalObject->GetDocShell();
+  *aDocShell = window->GetDocShell();
   if (!*aDocShell)
     return NS_ERROR_FAILURE;
 

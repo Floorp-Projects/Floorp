@@ -77,8 +77,8 @@ class nsIDocument;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x55f987bc, 0xca30, 0x494c, \
-  { 0xa9, 0x85, 0xf1, 0xf3, 0x4b, 0x9d, 0x47, 0xd8 } }
+{ 0x96138335, 0x51be, 0x4b2e, \
+  { 0x81, 0xd4, 0x35, 0x8a, 0xaf, 0x5b, 0x17, 0xfa } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -292,16 +292,32 @@ public:
 
   virtual PRBool WouldReuseInnerWindow(nsIDocument *aNewDocument) = 0;
 
+  virtual nsresult HandleDOMEvent(nsPresContext *aPresContext, nsEvent *aEvent,
+                                  nsIDOMEvent **aDOMEvent, PRUint32 aFlags,
+                                  nsEventStatus *aEventStatus) = 0;
+
+  nsIDocShell *GetDocShell()
+  {
+    if (mOuterWindow) {
+      return mOuterWindow->mDocShell;
+    }
+
+    return mDocShell;
+  }
+
+  virtual void SetDocShell(nsIDocShell *aDocShell) = 0;
+
+
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
   // be null if and only if the created window itself is an outer
   // window. In all other cases aOuterWindow should be the outer
   // window for the inner window that is being created.
   nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
-    : mFrameElement(nsnull), mRunningTimeout(nsnull), mMutationBits(0),
-      mIsDocumentLoaded(PR_FALSE), mIsHandlingResizeEvent(PR_FALSE),
-      mIsInnerWindow(aOuterWindow != nsnull), mInnerWindow(nsnull),
-      mOuterWindow(aOuterWindow)
+    : mFrameElement(nsnull), mDocShell(nsnull), mRunningTimeout(nsnull),
+      mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
+      mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
+      mInnerWindow(nsnull), mOuterWindow(aOuterWindow)
   {
   }
 
@@ -314,6 +330,7 @@ protected:
   // These members are only used on outer windows.
   nsIDOMElement *mFrameElement; // weak
   nsCOMPtr<nsIURI> mOpenerScriptURL; // strong; used to determine whether to clear scope
+  nsIDocShell           *mDocShell;  // Weak Reference
 
   // These variables are only used on inner windows.
   nsTimeout             *mRunningTimeout;

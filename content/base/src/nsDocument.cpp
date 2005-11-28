@@ -2135,9 +2135,10 @@ nsDocument::DispatchContentLoadedEvents()
   // loading.
   nsCOMPtr<nsIDOMEventTarget> target_frame;
 
-  if (mScriptGlobalObject) {
+  nsPIDOMWindow *win = GetWindow();
+  if (win) {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-      do_QueryInterface(mScriptGlobalObject->GetDocShell());
+      do_QueryInterface(win->GetDocShell());
 
     if (docShellAsItem) {
       docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
@@ -4183,11 +4184,12 @@ nsDocument::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
     aFlags |= NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE;
   }
 
+  nsPIDOMWindow *window = GetWindow();
+
   // Capturing stage
-  if (NS_EVENT_FLAG_CAPTURE & aFlags && mScriptGlobalObject) {
-    mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                        aFlags & NS_EVENT_CAPTURE_MASK,
-                                        aEventStatus);
+  if (NS_EVENT_FLAG_CAPTURE & aFlags && window) {
+    window->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                           aFlags & NS_EVENT_CAPTURE_MASK, aEventStatus);
   }
 
   // Local handling stage
@@ -4205,10 +4207,9 @@ nsDocument::HandleDOMEvent(nsPresContext* aPresContext, nsEvent* aEvent,
   }
 
   // Bubbling stage
-  if (NS_EVENT_FLAG_BUBBLE & aFlags && mScriptGlobalObject) {
-    mScriptGlobalObject->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
-                                        aFlags & NS_EVENT_BUBBLE_MASK,
-                                        aEventStatus);
+  if (NS_EVENT_FLAG_BUBBLE & aFlags && window) {
+    window->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                           aFlags & NS_EVENT_BUBBLE_MASK, aEventStatus);
   }
 
   if (NS_EVENT_FLAG_INIT & aFlags) {
@@ -4406,8 +4407,10 @@ nsDocument::CreateEventGroup(nsIDOMEventGroup **aInstancePtrResult)
 void
 nsDocument::FlushPendingNotifications(mozFlushType aType)
 {
+  nsPIDOMWindow *window = GetWindow();
+
   if (aType == (aType & (Flush_Content | Flush_SinkNotifications)) ||
-      !mScriptGlobalObject) {
+      !window) {
     // Nothing to do here
     return;
   }
@@ -4417,17 +4420,17 @@ nsDocument::FlushPendingNotifications(mozFlushType aType)
   // the current code!
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-    do_QueryInterface(mScriptGlobalObject->GetDocShell());
+    do_QueryInterface(window->GetDocShell());
 
   if (docShellAsItem) {
     nsCOMPtr<nsIDocShellTreeItem> docShellParent;
     docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
 
-    nsCOMPtr<nsIDOMWindow> win(do_GetInterface(docShellParent));
+    nsCOMPtr<nsIDOMWindow> parentWin(do_GetInterface(docShellParent));
 
-    if (win) {
+    if (parentWin) {
       nsCOMPtr<nsIDOMDocument> dom_doc;
-      win->GetDocument(getter_AddRefs(dom_doc));
+      parentWin->GetDocument(getter_AddRefs(dom_doc));
 
       nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
 
@@ -5254,8 +5257,8 @@ nsDocument::DoUnblockOnload()
 void
 nsDocument::DispatchEventToWindow(nsEvent *aEvent)
 {
-  nsIScriptGlobalObject *sgo = GetScriptGlobalObject();
-  if (!sgo)
+  nsPIDOMWindow *window = GetWindow();
+  if (!window)
     return;
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -5279,7 +5282,8 @@ nsDocument::DispatchEventToWindow(nsEvent *aEvent)
   privEvt->SetTarget(this);
 
   nsIDOMEvent *domEvtPtr = domEvt;
-  sgo->HandleDOMEvent(nsnull, aEvent, &domEvtPtr, NS_EVENT_FLAG_INIT, &status);
+  window->HandleDOMEvent(nsnull, aEvent, &domEvtPtr, NS_EVENT_FLAG_INIT,
+                         &status);
 
   NS_ASSERTION(domEvtPtr == domEvt, "event modified during dipatch");
 }

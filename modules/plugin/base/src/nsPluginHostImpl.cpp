@@ -5713,7 +5713,8 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
       if (doc)
       {
-        // Get the script global object owner and use that as the notification callback
+        // Get the script global object owner and use that as the
+        // notification callback.
         nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
 
         if (global)

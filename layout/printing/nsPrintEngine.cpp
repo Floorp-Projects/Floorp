@@ -44,7 +44,7 @@
 
 #include "nsISelection.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIURI.h"
 
@@ -731,7 +731,7 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
     if (!printSilently) {
       nsCOMPtr<nsIPrintingPromptService> printPromptService(do_GetService(kPrintingPromptService));
       if (printPromptService) {
-        nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(mDocument->GetScriptGlobalObject()); 
+        nsIDOMWindow *domWin = mDocument->GetWindow(); 
         NS_ENSURE_TRUE(domWin, NS_ERROR_FAILURE);
 
         // Platforms not implementing a given dialog for the service may
@@ -1647,7 +1647,7 @@ nsPrintEngine::ShowPrintProgress(PRBool aIsForPrinting, PRBool& aDoNotify)
   if (mPrt->mShowProgressDialog) {
     nsCOMPtr<nsIPrintingPromptService> printPromptService(do_GetService(kPrintingPromptService));
     if (printPromptService) {
-      nsCOMPtr<nsIDOMWindow> domWin = do_QueryInterface(mDocument->GetScriptGlobalObject()); 
+      nsPIDOMWindow *domWin = mDocument->GetWindow(); 
       if (!domWin) return;
 
       nsCOMPtr<nsIWebBrowserPrint> wbp(do_QueryInterface(mDocViewerPrint));
@@ -1676,8 +1676,8 @@ nsPrintEngine::IsThereARangeSelection(nsIDOMWindow* aDOMWin)
 {
   nsCOMPtr<nsIPresShell> presShell;
   if (aDOMWin) {
-    nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(aDOMWin));
-    scriptObj->GetDocShell()->GetPresShell(getter_AddRefs(presShell));
+    nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aDOMWin));
+    window->GetDocShell()->GetPresShell(getter_AddRefs(presShell));
   }
 
   // check here to see if there is a range selection
@@ -3948,8 +3948,7 @@ nsPrintEngine::FindFocusedDOMWindow()
 
   mDocViewer->GetDocument(getter_AddRefs(theDoc));
   if(theDoc){
-    nsIScriptGlobalObject* theSGO = theDoc->GetScriptGlobalObject();
-    nsCOMPtr<nsPIDOMWindow> theDOMWindow = do_QueryInterface(theSGO);
+    nsPIDOMWindow *theDOMWindow = theDoc->GetWindow();
     if(theDOMWindow){
       nsIFocusController *focusController =
         theDOMWindow->GetRootFocusController();
@@ -3973,10 +3972,10 @@ nsPrintEngine::IsWindowsInOurSubTree(nsIDOMWindow * aDOMWindow)
   PRBool found = PR_FALSE;
 
   // now check to make sure it is in "our" tree of docshells
-  nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(aDOMWindow));
-  if (scriptObj) {
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aDOMWindow));
+  if (window) {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-      do_QueryInterface(scriptObj->GetDocShell());
+      do_QueryInterface(window->GetDocShell());
 
     if (docShellAsItem) {
       // get this DocViewer docshell
@@ -4427,7 +4426,9 @@ nsPrintEngine::TurnScriptingOn(PRBool aDoTurnOn)
     NS_ASSERTION(po, "nsPrintObject can't be null!");
     
     // get the script global object
-    nsIScriptGlobalObject *scriptGlobalObj = po->mDocument->GetScriptGlobalObject();
+    nsIScriptGlobalObject *scriptGlobalObj =
+      po->mDocument->GetScriptGlobalObject();
+
     if (scriptGlobalObj) {
       nsIScriptContext *scx = scriptGlobalObj->GetContext();
       NS_ASSERTION(scx, "Can't get nsIScriptContext");

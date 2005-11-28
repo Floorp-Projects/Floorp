@@ -53,8 +53,6 @@
 #include "nsIPrompt.h"
 #include "nsNetUtil.h"
 #include "nsIRefreshURI.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectOwner.h"
 #include "nsIDOMEvent.h"
 #include "nsPresContext.h"
 #include "nsIComponentManager.h"

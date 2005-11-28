@@ -45,7 +45,6 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIXMLContent.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIDocShell.h"

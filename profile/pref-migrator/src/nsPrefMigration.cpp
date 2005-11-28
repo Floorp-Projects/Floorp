@@ -43,7 +43,7 @@
 #include "nsIComponentManager.h"
 #include "nsIPromptService.h"
 #include "nsIServiceManager.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsIScriptContext.h"
 #include "nsILocalFile.h"
 #include "nsDirectoryServiceUtils.h"
@@ -441,11 +441,11 @@ extern "C" void ProfileMigrationController(void *data)
 NS_IMETHODIMP
 nsPrefMigration::WindowCloseCallback()
 {
-  nsCOMPtr<nsIScriptGlobalObject> scriptGO(do_QueryInterface(mPMProgressWindow));
-  if (!scriptGO) return NS_ERROR_FAILURE;
+  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mPMProgressWindow));
+  if (!window) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    do_QueryInterface(scriptGO->GetDocShell());
+    do_QueryInterface(window->GetDocShell());
   if (!treeItem) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   treeItem->GetTreeOwner(getter_AddRefs(treeOwner));

@@ -45,8 +45,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIWidget.h"
 #include "nsPresContext.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsIViewManager.h"
 #include "nsGUIEvent.h"
 
@@ -62,9 +61,9 @@ NS_NewTitleBarFrame(nsIPresShell* aPresShell)
 } // NS_NewTitleBarFrame
 
 nsTitleBarFrame::nsTitleBarFrame(nsIPresShell* aPresShell)
-:nsBoxFrame(aPresShell, PR_FALSE) 
+:nsBoxFrame(aPresShell, PR_FALSE)
 {
-	mTrackingMouseMove = PR_FALSE;
+  mTrackingMouseMove = PR_FALSE;
 }
 
 
@@ -75,11 +74,11 @@ NS_IMETHODIMP  nsTitleBarFrame::Init(nsPresContext*  aPresContext,
                 nsStyleContext*  aContext,
                 nsIFrame*        asPrevInFlow)
 {
-	nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, asPrevInFlow);
+  nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, asPrevInFlow);
 
-	CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
+  CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
 
-	return rv;
+  return rv;
 }
 
 
@@ -101,7 +100,7 @@ nsTitleBarFrame::GetFrameForPoint(const nsPoint& aPoint,
 }
 
 NS_IMETHODIMP
-nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext, 
+nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
                                       nsGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus)
 {
@@ -111,59 +110,59 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 
   switch (aEvent->message) {
 
-	 case NS_MOUSE_LEFT_BUTTON_DOWN:	{
-			 
-			 // we're tracking.
-			 mTrackingMouseMove = PR_TRUE;
-			 
-			 // start capture.		
-			 CaptureMouseEvents(aPresContext,PR_TRUE);
+   case NS_MOUSE_LEFT_BUTTON_DOWN:  {
+
+       // we're tracking.
+       mTrackingMouseMove = PR_TRUE;
+
+       // start capture.
+       CaptureMouseEvents(aPresContext,PR_TRUE);
 
 
-			 
-			 // remember current mouse coordinates.
-			 mLastPoint = aEvent->refPoint;
 
-			 *aEventStatus = nsEventStatus_eConsumeNoDefault;
-			 doDefault = PR_FALSE;
-		 }
-		 break;
-		 
+       // remember current mouse coordinates.
+       mLastPoint = aEvent->refPoint;
 
-	 case NS_MOUSE_LEFT_BUTTON_UP: {
+       *aEventStatus = nsEventStatus_eConsumeNoDefault;
+       doDefault = PR_FALSE;
+     }
+     break;
 
-			 if(mTrackingMouseMove)
-			 {
-				 // we're done tracking.
-				 mTrackingMouseMove = PR_FALSE;
-				 
-				 // end capture
-				 CaptureMouseEvents(aPresContext,PR_FALSE);
 
-				 *aEventStatus = nsEventStatus_eConsumeNoDefault;
-				 doDefault = PR_FALSE;
-			 }
-		 }
-		 break;
+   case NS_MOUSE_LEFT_BUTTON_UP: {
 
-	 case NS_MOUSE_MOVE: {
-			 if(mTrackingMouseMove)
-			 {				 				 
-			   // get the document and the global script object - should this be cached?
-			   nsCOMPtr<nsIDOMWindowInternal>
-           window(do_QueryInterface(aPresContext->PresShell()->GetDocument()->GetScriptGlobalObject()));
+       if(mTrackingMouseMove)
+       {
+         // we're done tracking.
+         mTrackingMouseMove = PR_FALSE;
+
+         // end capture
+         CaptureMouseEvents(aPresContext,PR_FALSE);
+
+         *aEventStatus = nsEventStatus_eConsumeNoDefault;
+         doDefault = PR_FALSE;
+       }
+     }
+     break;
+
+   case NS_MOUSE_MOVE: {
+       if(mTrackingMouseMove)
+       {
+         // get the document and the window - should this be cached?
+         nsPIDOMWindow *window =
+           aPresContext->PresShell()->GetDocument()->GetWindow();
 
          if (window) {
            nsPoint nsMoveBy = aEvent->refPoint - mLastPoint;
            window->MoveBy(nsMoveBy.x,nsMoveBy.y);
          }
-				 
-				 *aEventStatus = nsEventStatus_eConsumeNoDefault;				
-				 
-				 doDefault = PR_FALSE;
-			 }
-		 }
-		 break;
+
+         *aEventStatus = nsEventStatus_eConsumeNoDefault;
+
+         doDefault = PR_FALSE;
+       }
+     }
+     break;
 
 
 
@@ -171,17 +170,17 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
       MouseClicked(aPresContext, aEvent);
       break;
   }
-  
-  if ( doDefault )  
-	  return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+
+  if ( doDefault )
+    return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   else
-	  return NS_OK;
+    return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsTitleBarFrame::CaptureMouseEvents(nsPresContext* aPresContext,PRBool aGrabMouseEvents)
 {
-	// get its view
+  // get its view
   nsIView* view = GetView();
   PRBool result;
 
@@ -207,8 +206,8 @@ nsTitleBarFrame::CaptureMouseEvents(nsPresContext* aPresContext,PRBool aGrabMous
 
 
 
-void 
-nsTitleBarFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent) 
+void
+nsTitleBarFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent)
 {
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;

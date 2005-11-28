@@ -532,7 +532,8 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement,
       nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
       nsCOMPtr<nsIStreamLoader> loader;
 
-      nsIDocShell *docshell = globalObject->GetDocShell();
+      nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(globalObject));
+      nsIDocShell *docshell = window->GetDocShell();
 
       nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
 

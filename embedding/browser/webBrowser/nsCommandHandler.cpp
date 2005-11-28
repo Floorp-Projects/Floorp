@@ -42,7 +42,7 @@
 #include "nsDocShellTreeOwner.h"
 
 #include "nsIAllocator.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 
 nsCommandHandler::nsCommandHandler() :
     mWindow(nsnull)
@@ -63,8 +63,8 @@ nsresult nsCommandHandler::GetCommandHandler(nsICommandHandler **aCommandHandler
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mWindow) );
-    if (!globalObj)
+    nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mWindow));
+    if (!window)
     {
         return NS_ERROR_FAILURE;
     }
@@ -72,7 +72,7 @@ nsresult nsCommandHandler::GetCommandHandler(nsICommandHandler **aCommandHandler
     // Get the document tree owner
 
     nsCOMPtr<nsIDocShellTreeItem> docShellAsTreeItem =
-      do_QueryInterface(globalObj->GetDocShell());
+      do_QueryInterface(window->GetDocShell());
     nsIDocShellTreeOwner *treeOwner = nsnull;
     docShellAsTreeItem->GetTreeOwner(&treeOwner);
 

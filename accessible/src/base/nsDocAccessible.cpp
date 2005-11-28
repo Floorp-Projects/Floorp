@@ -55,7 +55,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMXULPopupElement.h"
 #include "nsIEditingSession.h"
 #include "nsIEventStateManager.h"
@@ -66,7 +66,6 @@
 #include "nsIObserverService.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIPresShell.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIServiceManager.h"
 #include "nsIScrollableView.h"
 #include "nsUnicharUtils.h"
@@ -335,12 +334,12 @@ NS_IMETHODIMP nsDocAccessible::GetWindow(nsIDOMWindow **aDOMWin)
   if (!mDocument) {
     return NS_ERROR_FAILURE;  // Accessible is Shutdown()
   }
-  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(mDocument->GetScriptGlobalObject()));
+  *aDOMWin = mDocument->GetWindow();
 
-  if (!domWindow)
+  if (!*aDOMWin)
     return NS_ERROR_FAILURE;  // No DOM Window
 
-  NS_ADDREF(*aDOMWin = domWindow);
+  NS_ADDREF(*aDOMWin);
 
   return NS_OK;
 }
@@ -366,16 +365,14 @@ void nsDocAccessible::CheckForEditor()
   if (!mDocument) {
     return;  // No document -- we've been shut down
   }
-  nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(mDocument->GetScriptGlobalObject()));
-  if (!domWindow)
-    return;  // No DOM Window
 
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(container));
   if (!editingSession)
     return; // No editing session interface
 
-  editingSession->GetEditorForWindow(domWindow, getter_AddRefs(mEditor));
+  editingSession->GetEditorForWindow(mDocument->GetWindow(),
+                                     getter_AddRefs(mEditor));
   if (mEditor) {
     // State readonly is now clear
 #ifdef MOZ_ACCESSIBILITY_ATK

@@ -61,7 +61,6 @@
 
 // for focus
 #include "nsIDOMWindowInternal.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIFocusController.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollableView.h"

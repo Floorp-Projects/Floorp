@@ -52,7 +52,6 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsDOMError.h"
 #include "nsContentUtils.h"
 #include "nsInterfaceHashtable.h"
@@ -67,7 +66,6 @@
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsISimpleEnumerator.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsRange.h"
 #include "nsIScriptSecurityManager.h"
@@ -853,8 +851,7 @@ nsHTMLFormElement::DoSubmit(nsEvent* aEvent)
 
   // XXXbz if the script global is that for an sXBL/XBL2 doc, it won't
   // be a window...
-  nsCOMPtr<nsPIDOMWindow> window =
-    do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
+  nsPIDOMWindow *window = GetOwnerDoc()->GetWindow();
 
   if (window) {
     mSubmitPopupState = window->GetPopupControlState();
@@ -1037,8 +1034,7 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
     // XXXbz what do the submit observers actually want?  The window
     // of the document this is shown in?  Or something else?
     // sXBL/XBL2 issue
-    nsCOMPtr<nsIDOMWindowInternal> window =
-      do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
+    nsCOMPtr<nsPIDOMWindow> window = GetOwnerDoc()->GetWindow();
 
     PRBool loop = PR_TRUE;
     while (NS_SUCCEEDED(theEnum->HasMoreElements(&loop)) && loop) {

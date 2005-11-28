@@ -43,7 +43,6 @@
 #include "nsCRT.h"
 
 #include "nsISelection.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIURI.h"
 

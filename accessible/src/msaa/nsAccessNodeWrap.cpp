@@ -51,7 +51,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPresShell.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIServiceManager.h"
 
@@ -272,7 +272,7 @@ NS_IMETHODIMP nsAccessNodeWrap::GetComputedStyleDeclaration(nsIDOMCSSStyleDeclar
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(doc->GetScriptGlobalObject()));
+  nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(doc->GetWindow()));
 
   if (!viewCSS)
     return NS_ERROR_FAILURE;   

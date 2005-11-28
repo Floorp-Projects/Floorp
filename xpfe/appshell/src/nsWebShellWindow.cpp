@@ -55,8 +55,6 @@
 #include "nsReadableUtils.h"
 
 #include "nsEscape.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMFocusListener.h"
@@ -80,10 +78,6 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 #include "nsITimer.h"
-
-// For JS Execution
-#include "nsIScriptGlobalObjectOwner.h"
-#include "nsIJSContextStack.h"
 
 #include "nsIEventQueueService.h"
 #include "plevent.h"
@@ -799,9 +793,9 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
      than it otherwise would.) */
   nsCOMPtr<nsIXULWindow> kungFuDeathGrip(this);
 
-  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(mDocShell));
+  nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mDocShell));
 
-  if (globalObject) {
+  if (window) {
     nsCOMPtr<nsIContentViewer> contentViewer;
     mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
     nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(contentViewer));
@@ -814,8 +808,8 @@ PRBool nsWebShellWindow::ExecuteCloseHandler()
       nsMouseEvent event(PR_TRUE, NS_XUL_CLOSE, nsnull,
                          nsMouseEvent::eReal);
 
-      nsresult rv = globalObject->HandleDOMEvent(presContext, &event, nsnull,
-                                                 NS_EVENT_FLAG_INIT, &status);
+      nsresult rv = window->HandleDOMEvent(presContext, &event, nsnull,
+                                           NS_EVENT_FLAG_INIT, &status);
       if (NS_SUCCEEDED(rv) && status == nsEventStatus_eConsumeNoDefault)
         return PR_TRUE;
       // else fall through and return PR_FALSE

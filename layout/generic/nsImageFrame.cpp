@@ -91,9 +91,6 @@
 #include "plevent.h"
 
 #include "nsContentPolicyUtils.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMDocument.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"

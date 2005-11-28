@@ -59,7 +59,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDocument.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -1056,7 +1055,7 @@ nsFormFillController::GetDocShellForInput(nsIDOMHTMLInputElement *aInput)
   aInput->GetOwnerDocument(getter_AddRefs(domDoc));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   
-  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(doc->GetScriptGlobalObject());
+  nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(doc->GetWindow());
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(webNav);
   return docShell;
 }
@@ -1073,8 +1072,7 @@ nsFormFillController::GetWindowForDocShell(nsIDocShell *aDocShell)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   NS_ENSURE_TRUE(doc, nsnull);
 
-  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(doc->GetScriptGlobalObject());
-  return domWindow;
+  return doc->GetWindow();
 }
 
 PRInt32

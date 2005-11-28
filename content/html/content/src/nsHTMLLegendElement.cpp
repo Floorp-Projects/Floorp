@@ -45,7 +45,6 @@
 #include "nsIFormControl.h"
 #include "nsIEventStateManager.h"
 #include "nsIFocusController.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 
@@ -258,11 +257,12 @@ nsHTMLLegendElement::SetFocus(nsPresContext* aPresContext)
   } else {
     // If the legend isn't focusable (no tabindex) we focus whatever is
     // focusable following the legend instead, bug 81481.
-    nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(document->GetScriptGlobalObject());
+    nsCOMPtr<nsPIDOMWindow> ourWindow = document->GetWindow();
     if (ourWindow) {
-      nsIFocusController* focusController = ourWindow->GetRootFocusController();
-      nsIDOMElement* domElement = nsnull;
-      CallQueryInterface(this, &domElement);
+      nsIFocusController* focusController =
+        ourWindow->GetRootFocusController();
+      nsCOMPtr<nsIDOMElement> domElement =
+        do_QueryInterface(NS_STATIC_CAST(nsIContent *, this));
       if (focusController && domElement) {
         focusController->MoveFocus(PR_TRUE, domElement);
       }

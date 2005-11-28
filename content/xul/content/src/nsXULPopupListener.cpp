@@ -57,7 +57,6 @@
 #include "nsContentCID.h"
 #include "nsContentUtils.h"
 
-#include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULDocument.h"
@@ -375,8 +374,7 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
       // Lock to scroll by SetFocus. See bug 309075.
       nsCOMPtr<nsIFocusController> focusController = nsnull;
       PRBool isAlreadySuppressed = PR_FALSE;
-      nsCOMPtr<nsPIDOMWindow> ourWindow =
-        do_QueryInterface(doc->GetScriptGlobalObject());
+      nsPIDOMWindow *ourWindow = doc->GetWindow();
       if (ourWindow) {
         focusController = ourWindow->GetRootFocusController();
         if (focusController) {
@@ -599,8 +597,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
     return NS_OK;
 
   // We have some popup content. Obtain our window.
-  nsCOMPtr<nsIDOMWindowInternal> domWindow =
-    do_QueryInterface(document->GetScriptGlobalObject());
+  nsPIDOMWindow *domWindow = document->GetWindow();
 
   if (domWindow) {
     // Find out if we're anchored.

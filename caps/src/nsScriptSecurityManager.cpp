@@ -68,7 +68,7 @@
 #include "nsIPluginInstance.h"
 #include "nsIXPConnect.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIPrompt.h"
@@ -1525,12 +1525,13 @@ nsScriptSecurityManager::GetRootDocShell(JSContext *cx, nsIDocShell **result)
     if (!scriptContext)
         return NS_ERROR_FAILURE;
 
-    nsIScriptGlobalObject *globalObject = scriptContext->GetGlobalObject();
-    if (!globalObject)
+    nsCOMPtr<nsPIDOMWindow> window =
+        do_QueryInterface(scriptContext->GetGlobalObject());
+    if (!window)
         return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem =
-        do_QueryInterface(globalObject->GetDocShell(), &rv);
+        do_QueryInterface(window->GetDocShell(), &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDocShellTreeItem> rootItem;
@@ -1557,11 +1558,12 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     //-- See if the current window allows JS execution
     nsIScriptContext *scriptContext = GetScriptContext(cx);
     if (!scriptContext) return NS_ERROR_FAILURE;
-    nsIScriptGlobalObject *globalObject = scriptContext->GetGlobalObject();
-    if (!globalObject) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsPIDOMWindow> window =
+        do_QueryInterface(scriptContext->GetGlobalObject());
+    if (!window) return NS_ERROR_FAILURE;
 
     nsresult rv;
-    nsCOMPtr<nsIDocShell> docshell = globalObject->GetDocShell();
+    nsCOMPtr<nsIDocShell> docshell = window->GetDocShell();
     nsCOMPtr<nsIDocShellTreeItem> globalObjTreeItem = do_QueryInterface(docshell);
     if (globalObjTreeItem) 
     {

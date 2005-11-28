@@ -47,8 +47,7 @@
 #include "nsIObserver.h"
 #include "nsIXSLTProcessor.h"
 #include "nsISyncLoadDOMService.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIServiceManager.h"
@@ -79,7 +78,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument)
     }
 
     // check if we're in an invisible iframe
-    nsCOMPtr<nsIDOMWindowInternal> internalWin = do_QueryInterface(aDocument->GetScriptGlobalObject());
+    nsPIDOMWindow *internalWin = aDocument->GetWindow();
     nsCOMPtr<nsIDOMElement> frameElem;
     if (internalWin) {
         internalWin->GetFrameElement(getter_AddRefs(frameElem));

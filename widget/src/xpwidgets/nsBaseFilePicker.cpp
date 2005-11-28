@@ -39,8 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -79,9 +78,9 @@ nsIWidget *nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw)
 {
   nsCOMPtr<nsIWidget> widget;
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(dw);
-  if (sgo) {
-    nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(sgo->GetDocShell()));
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(dw);
+  if (window) {
+    nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(window->GetDocShell()));
 
     while (!widget && baseWin) {
       baseWin->GetParentWidget(getter_AddRefs(widget));
@@ -93,11 +92,11 @@ nsIWidget *nsBaseFilePicker::DOMWindowToWidget(nsIDOMWindow *dw)
         nsCOMPtr<nsIDocShellTreeItem> parent;
         docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
 
-        sgo = do_GetInterface(parent);
-        if (!sgo)
+        window = do_GetInterface(parent);
+        if (!window)
           return nsnull;
 
-        baseWin = do_QueryInterface(sgo->GetDocShell());
+        baseWin = do_QueryInterface(window->GetDocShell());
       }
     }
   }

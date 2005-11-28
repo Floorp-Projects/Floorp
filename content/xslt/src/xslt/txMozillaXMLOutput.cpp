@@ -53,7 +53,7 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIParser.h"
 #include "nsIRefreshURI.h"
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsITextContent.h"
 #include "nsIXMLContent.h"
 #include "nsContentCID.h"
@@ -212,10 +212,10 @@ void txMozillaXMLOutput::endDocument(nsresult aResult)
 
     if (!mRefreshString.IsEmpty()) {
         nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-        nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
-        if (sgo) {
+        nsPIDOMWindow *win = doc->GetWindow();
+        if (win) {
             nsCOMPtr<nsIRefreshURI> refURI =
-                do_QueryInterface(sgo->GetDocShell());
+                do_QueryInterface(win->GetDocShell());
             if (refURI) {
                 refURI->SetupRefreshURIFromHeader(doc->GetBaseURI(),
                                                   mRefreshString);

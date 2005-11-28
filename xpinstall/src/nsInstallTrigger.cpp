@@ -46,6 +46,7 @@
 #include "netCore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
+#include "nsPIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
 
@@ -252,9 +253,10 @@ nsInstallTrigger::HandleContent(const char * aContentType,
     }
     else
     {
+        nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObject));
         nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
         if (os) {
-            os->NotifyObservers(globalObject->GetDocShell(), 
+            os->NotifyObservers(win->GetDocShell(),
                                 "xpinstall-install-blocked", 
                                 NS_LITERAL_STRING("install-chrome").get());
         }

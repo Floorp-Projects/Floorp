@@ -61,12 +61,11 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIFilePicker.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsILocalFile.h"
 #include "nsITextControlElement.h"
 #include "nsNodeInfoManager.h"
@@ -315,9 +314,6 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> parentWindow =
-    do_QueryInterface(doc->GetScriptGlobalObject());
-
   // Get Loc title
   nsXPIDLString title;
   nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
@@ -327,7 +323,7 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
   if (!filePicker)
     return NS_ERROR_FAILURE;
 
-  result = filePicker->Init(parentWindow, title, nsIFilePicker::modeOpen);
+  result = filePicker->Init(doc->GetWindow(), title, nsIFilePicker::modeOpen);
   if (NS_FAILED(result))
     return result;
 

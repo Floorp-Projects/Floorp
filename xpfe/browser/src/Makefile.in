@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  appshell \
 		  appcomps \
 		  dom \
+		  layout \
 		  js \
 		  uriloader \
 		  pref \

@@ -39,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMNSHTMLDocument.h"
@@ -47,7 +47,6 @@
 #include "nsIHTMLDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIURI.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsISelectionPrivate.h"
 #include "nsITransactionManager.h"
 
@@ -1230,11 +1229,11 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
 nsIDocShell *
 nsEditingSession::GetDocShellFromWindow(nsIDOMWindow *aWindow)
 {
-  nsCOMPtr<nsIScriptGlobalObject> scriptGO = do_QueryInterface(aWindow);
-  if (!scriptGO)
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
+  if (!window)
     return nsnull;
 
-  return scriptGO->GetDocShell();
+  return window->GetDocShell();
 }
 
 /*---------------------------------------------------------------------------

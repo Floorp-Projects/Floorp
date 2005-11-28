@@ -47,7 +47,6 @@
 #include "nsIControllers.h"
 #include "nsIFocusController.h"
 #include "nsPIDOMWindow.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsContentCID.h"
 #include "nsIComponentManager.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -1057,8 +1056,7 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
   // If the window is not active, do not allow the focus to bring the
   // window to the front.  We update the focus controller, but do
   // nothing else.
-  nsCOMPtr<nsPIDOMWindow> win =
-    do_QueryInterface(doc->GetScriptGlobalObject());
+  nsCOMPtr<nsPIDOMWindow> win = doc->GetWindow();
   if (win) {
     nsIFocusController *focusController = win->GetRootFocusController();
     PRBool isActive = PR_FALSE;
@@ -1104,8 +1102,7 @@ nsHTMLInputElement::Select()
     // If the window is not active, do not allow the select to bring the
     // window to the front.  We update the focus controller, but do
     // nothing else.
-    nsCOMPtr<nsPIDOMWindow> win =
-      do_QueryInterface(doc->GetScriptGlobalObject());
+    nsPIDOMWindow *win = doc->GetWindow();
     if (win) {
       nsIFocusController *focusController = win->GetRootFocusController();
       PRBool isActive = PR_FALSE;

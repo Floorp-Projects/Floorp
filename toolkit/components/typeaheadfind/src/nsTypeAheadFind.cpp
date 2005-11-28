@@ -52,8 +52,6 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIEditorDocShell.h"
 #include "nsISimpleEnumerator.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIPrefBranch.h"
@@ -83,7 +81,6 @@
 #include "nsTextFragment.h"
 
 #include "nsICaret.h"
-#include "nsIScriptGlobalObject.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebNavigation.h"
 #include "nsIInterfaceRequestor.h"
@@ -443,7 +440,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
         nsCOMPtr<nsIDocument> doc =
           do_QueryInterface(presShell->GetDocument());
         NS_ASSERTION(doc, "Wow, presShell doesn't have document!");
-        mCurrentWindow = do_QueryInterface(doc->GetScriptGlobalObject());
+        mCurrentWindow = doc->GetWindow();
       }
 
       if (hasWrapped)

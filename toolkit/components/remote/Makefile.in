@@ -61,6 +61,7 @@ REQUIRES = \
 	widget \
 	gfx \
 	dom \
+	layout \
 	docshell \
 	$(NULL)
 
