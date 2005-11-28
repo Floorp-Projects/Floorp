@@ -137,7 +137,13 @@
       
       <property name="browserWindow" onget="return window;"/>
       
-      <field name="supportedDropTypes">["text/x-moz-place", "text/x-moz-url"]</field>
+      <field name="supportedDropTypes">
+        [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
+      </field>
+
+      <field name="supportedDropOnTypes">
+        [TYPE_X_MOZ_PLACE_CONTAINER, TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL]
+      </field>
       
       <method name="selectAll">
         <body><![CDATA[ 

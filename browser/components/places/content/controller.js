@@ -789,13 +789,19 @@ var PlacesControllerDragHelper = {
    * on the specified view. 
    * @param   view
    *          An object implementing the AVI
+   * @param   orientation
+   *          The orientation of the drop
+   * XXXben implement index param!
    * @returns true if the data being dragged is of a type supported by the view
    *          it is being dragged over, false otherwise. 
    */
-  canDrop: function PCDH_canDrop(view) {
+  canDrop: function PCDH_canDrop(view, orientation) {
     var session = this._getSession();
     if (session) {
-      var types = view.supportedDropTypes;
+      if (orientation != Ci.nsINavHistoryResultViewObserver.DROP_ON)
+        var types = view.supportedDropTypes;
+      else
+        types = view.supportedDropOnTypes;
       for (var i = 0; i < types.length; ++i) {
         if (session.isDataFlavorSupported(types[i]))
           return true;
