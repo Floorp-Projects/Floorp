@@ -324,7 +324,7 @@ my $modules = [
     },
     {
         name => 'MIME::Base64',
-        version => $^O =~ /MSWin32/i ? '3.01' : '3.03'
+        version => '3.01'
     },
     {
         name => 'MIME::Parser',
