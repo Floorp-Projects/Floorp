@@ -78,7 +78,7 @@
             <spacer flex="1"/>
             <label control="&NameField1.id;" value="&NameField1.label;" accesskey="&NameField1.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="&NameField1.id;" flex="1" oninput="GenerateDisplayName()" disableforreadonly="true"/>
+              <textbox id="&NameField1.id;" flex="1" oninput="GenerateDisplayName()"/>
 
               <!-- LOCALIZATION NOTE:
               Fields for phonetic are disabled as default and can be enabled by 
@@ -87,14 +87,14 @@
 
               <spacer id="PhoneticSpacer1" flex="1" hidden="true"/>
               <label id="PhoneticLabel1" control="&PhoneticField1.id;" value="&PhoneticField1.label;" class="CardEditLabel" hidden="true"/>
-              <textbox id="&PhoneticField1.id;" flex="1" disableforreadonly="true" hidden="true"/>
+              <textbox id="&PhoneticField1.id;" flex="1" hidden="true"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="&NameField2.id;" value="&NameField2.label;" accesskey="&NameField2.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="&NameField2.id;" flex="1" oninput="GenerateDisplayName()" disableforreadonly="true"/>
+              <textbox id="&NameField2.id;" flex="1" oninput="GenerateDisplayName()"/>
 
               <!-- LOCALIZATION NOTE:
               Fields for phonetic are disabled as default and can be enabled by 
@@ -103,21 +103,21 @@
 
               <spacer id="PhoneticSpacer2" flex="1" hidden="true"/>
               <label id="PhoneticLabel2" control="&PhoneticField2.id;" value="&PhoneticField2.label;" class="CardEditLabel" hidden="true"/>
-              <textbox id="&PhoneticField2.id;" flex="1" disableforreadonly="true" hidden="true"/>
+              <textbox id="&PhoneticField2.id;" flex="1" hidden="true"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="DisplayName" value="&DisplayName.label;" accesskey="&DisplayName.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="DisplayName" flex="1" oninput="DisplayNameChanged()" disableforreadonly="true"/>
+              <textbox id="DisplayName" flex="1" oninput="DisplayNameChanged()"/>
             </hbox>
           </hbox>
           <hbox id="nickNameContainer">
             <spacer flex="1"/>
             <label control="NickName" value="&NickName.label;" accesskey="&NickName.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="NickName" flex="1" disableforreadonly="true"/>
+              <textbox id="NickName" flex="1"/>
             </hbox>
           </hbox>
         </vbox>
@@ -130,21 +130,21 @@
             <spacer flex="1"/>
             <label control="PrimaryEmail" value="&PrimaryEmail.label;" accesskey="&PrimaryEmail.accesskey;"  class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="PrimaryEmail" flex="1" disableforreadonly="true" class="uri-element"/>
+              <textbox id="PrimaryEmail" flex="1" class="uri-element"/>
             </hbox>
           </hbox>
           <hbox id="secondaryEmailContainer">
             <spacer flex="1"/>
             <label control="SecondEmail" value="&SecondEmail.label;" accesskey="&SecondEmail.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="SecondEmail" flex="1" disableforreadonly="true" class="uri-element"/>
+              <textbox id="SecondEmail" flex="1" class="uri-element"/>
             </hbox>
           </hbox>
           <hbox>
             <vbox valign="middle">
               <label control="PreferMailFormatPopup" value="&PreferMailFormat.label;" accesskey="&PreferMailFormat.accesskey;"/>
             </vbox>
-            <menulist id="PreferMailFormatPopup" disableforreadonly="true">
+            <menulist id="PreferMailFormatPopup">
               <menupopup>
                 <!-- 0,1,2 come from nsIAbPreferMailFormat in nsIAbCard.idl -->
                 <menuitem value="0" label="&Unknown.label;"/>
@@ -157,7 +157,7 @@
             <spacer flex="1"/>
             <label control="ScreenName" value="&ScreenName.label;" accesskey="&ScreenName.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="ScreenName" flex="1" disableforreadonly="true"/>
+              <textbox id="ScreenName" flex="1"/>
             </hbox>
           </hbox>
         </vbox>
@@ -170,35 +170,35 @@
             <spacer flex="1"/>
             <label control="WorkPhone" value="&WorkPhone.label;" accesskey="&WorkPhone.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="WorkPhone" flex="1" disableforreadonly="true"/>
+              <textbox id="WorkPhone" flex="1"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="HomePhone" value="&HomePhone.label;" accesskey="&HomePhone.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="HomePhone" flex="1" disableforreadonly="true"/>
+              <textbox id="HomePhone" flex="1"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="FaxNumber" value="&FaxNumber.label;" accesskey="&FaxNumber.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="FaxNumber" flex="1" disableforreadonly="true"/>
+              <textbox id="FaxNumber" flex="1"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="PagerNumber" value="&PagerNumber.label;" accesskey="&PagerNumber.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="PagerNumber" flex="1" disableforreadonly="true"/>
+              <textbox id="PagerNumber" flex="1"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="CellularNumber" value="&CellularNumber.label;" accesskey="&CellularNumber.accesskey;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="CellularNumber" flex="1" disableforreadonly="true"/>
+              <textbox id="CellularNumber" flex="1"/>
             </hbox>
           </hbox>
         </vbox>
@@ -214,45 +214,45 @@
             <spacer flex="1"/>
             <label control="HomeAddress" value="&HomeAddress.label;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="HomeAddress" flex="1" disableforreadonly="true"/>
+              <textbox id="HomeAddress" flex="1"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="HomeAddress2" value="&HomeAddress2.label;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="HomeAddress2" flex="1" disableforreadonly="true"/>
+              <textbox id="HomeAddress2" flex="1"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="HomeCity" value="&HomeCity.label;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="HomeCity" flex="1" disableforreadonly="true"/>
+              <textbox id="HomeCity" flex="1"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="HomeState" value="&HomeState.label;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="HomeState" flex="1" disableforreadonly="true"/>
+              <textbox id="HomeState" flex="1"/>
               <spacer class="stateZipSpacer"/>
               <label control="HomeZipCode" value="&HomeZipCode.label;" class="CardEditLabel"/>
-              <textbox id="HomeZipCode" flex="1" disableforreadonly="true"/>
+              <textbox id="HomeZipCode" flex="1"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="HomeCountry" value="&HomeCountry.label;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="HomeCountry" flex="1" disableforreadonly="true"/>
+              <textbox id="HomeCountry" flex="1"/>
             </hbox>
           </hbox>
           <hbox>
             <spacer flex="1"/>
             <label control="WebPage2" value="&HomeWebPage.label;" class="CardEditLabel"/>
             <hbox class="CardEditWidth">
-              <textbox id="WebPage2" flex="1" disableforreadonly="true" class="uri-element"/>
+              <textbox id="WebPage2" flex="1" class="uri-element"/>
             </hbox>
           </hbox>
         </vbox>
@@ -265,66 +265,66 @@
               <spacer flex="1"/>
               <label control="JobTitle" value="&JobTitle.label;" class="CardEditLabel"/>
               <hbox class="CardEditWidth">
-                <textbox id="JobTitle" flex="1" disableforreadonly="true"/>
+                <textbox id="JobTitle" flex="1"/>
               </hbox>
             </hbox>
             <hbox>
               <spacer flex="1"/>
               <label control="Department" value="&Department.label;" class="CardEditLabel"/>
               <hbox class="CardEditWidth">
-                <textbox id="Department" flex="1" disableforreadonly="true"/>
+                <textbox id="Department" flex="1"/>
               </hbox>
             </hbox>
             <hbox>
               <spacer flex="1"/>
               <label control="Company" value="&Company.label;" class="CardEditLabel"/>
               <hbox class="CardEditWidth">
-                <textbox id="Company" flex="1" disableforreadonly="true"/>
+                <textbox id="Company" flex="1"/>
               </hbox>
             </hbox>
             <hbox>
               <spacer flex="1"/>
               <label control="WorkAddress" value="&WorkAddress.label;" class="CardEditLabel"/>
               <hbox class="CardEditWidth">
-                <textbox id="WorkAddress" flex="1" disableforreadonly="true"/>
+                <textbox id="WorkAddress" flex="1"/>
               </hbox>
             </hbox>
             <hbox>
               <spacer flex="1"/>
               <label control="WorkAddress2" value="&WorkAddress2.label;" class="CardEditLabel"/>
               <hbox class="CardEditWidth">
-                <textbox id="WorkAddress2" flex="1" disableforreadonly="true"/>
+                <textbox id="WorkAddress2" flex="1"/>
               </hbox>
             </hbox>
             <hbox>
               <spacer flex="1"/>
               <label control="WorkCity" value="&WorkCity.label;" class="CardEditLabel"/>
               <hbox class="CardEditWidth">
-                <textbox id="WorkCity" flex="1" disableforreadonly="true"/>
+                <textbox id="WorkCity" flex="1"/>
               </hbox>
             </hbox>
             <hbox>
               <spacer flex="1"/>
               <label control="WorkState" value="&WorkState.label;" class="CardEditLabel"/>
               <hbox class="CardEditWidth">
-                <textbox id="WorkState" flex="1" disableforreadonly="true"/>
+                <textbox id="WorkState" flex="1"/>
                 <spacer class="stateZipSpacer"/>
                 <label control="WorkZipCode" value="&WorkZipCode.label;" class="CardEditLabel"/>
-                <textbox id="WorkZipCode" flex="1" disableforreadonly="true"/>
+                <textbox id="WorkZipCode" flex="1"/>
               </hbox>
             </hbox>
             <hbox>
               <spacer flex="1"/>
               <label control="WorkCountry" value="&WorkCountry.label;" class="CardEditLabel"/>
               <hbox class="CardEditWidth">
-                <textbox id="WorkCountry" flex="1" disableforreadonly="true"/>
+                <textbox id="WorkCountry" flex="1"/>
               </hbox>
             </hbox>
             <hbox>
               <spacer flex="1"/>
               <label control="WebPage1" value="&WorkWebPage.label;" class="CardEditLabel"/>
               <hbox class="CardEditWidth">
-                <textbox id="WebPage1" flex="1" disableforreadonly="true" class="uri-element"/>
+                <textbox id="WebPage1" flex="1" class="uri-element"/>
               </hbox>
             </hbox>
           </vbox>
@@ -336,26 +336,26 @@
         <vbox id="customFields" class="alignBoxWithFieldset">
           <hbox flex="1">
             <label control="Custom1" value="&Custom1.label;" accesskey="&Custom1.accesskey;" class="CardEditLabel"/>
-            <textbox id="Custom1" flex="1" disableforreadonly="true"/>
+            <textbox id="Custom1" flex="1"/>
           </hbox>
           <hbox flex="1">
             <label control="Custom2" value="&Custom2.label;" accesskey="&Custom2.accesskey;" class="CardEditLabel"/>
-            <textbox id="Custom2" flex="1" disableforreadonly="true"/>
+            <textbox id="Custom2" flex="1"/>
           </hbox>
           <hbox flex="1">
             <label control="Custom3" value="&Custom3.label;" accesskey="&Custom3.accesskey;" class="CardEditLabel"/>
-            <textbox id="Custom3" flex="1" disableforreadonly="true"/>
+            <textbox id="Custom3" flex="1"/>
           </hbox>
           <hbox flex="1">
             <label control="Custom4" value="&Custom4.label;" accesskey="&Custom4.accesskey;" class="CardEditLabel"/>
-            <textbox id="Custom4" flex="1" disableforreadonly="true"/>
+            <textbox id="Custom4" flex="1"/>
           </hbox>
         </vbox>
 
         <groupbox style="width:100%">
           <caption label="&Notes.box;"/>
           <vbox style="width:100%">
-            <textbox id="Notes" multiline="true" rows="15" wrap="virtual" disableforreadonly="true"/>
+            <textbox id="Notes" multiline="true" rows="15" wrap="virtual"/>
           </vbox>
         </groupbox>
 
