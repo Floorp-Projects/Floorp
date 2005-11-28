@@ -184,12 +184,47 @@
       <field name="_DNDObserver"><![CDATA[({
         // XXXben ew.
         _self: this,
-        onDragStart: function(event, xferData, dragAction) {
+        onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
           xferData.data = PlacesController.getTransferData();
           // XXXben - the drag wrapper should do this automatically. 
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
         },
+        
+        canDrop: function TBV_DO_canDrop(event, session) {
+          return PlacesControllerDragHelper.canDrop(this._self, -1);
+        },
+        onDragOver: function TBV_DO_onDragOver(event, flavor, session) {
+        },
+        onDrop: function TBV_DO_onDrop(event, dropData, session) {
+          var result = this._self.getResult();
+          var destContainer = result.folderId;
+          var destIndex = -1;
+          var orientation = 1;
+          if (event.target.localName == "toolbarbutton") {
+            if (PlacesController.nodeIsFolder(event.target.node)) {
+              destContainer = event.target.node.folderId;
+              destIndex = -1;
+              orientation = 0;
+            }
+            else {
+              destIndex = PlacesController.getIndexOfNode(event.target.node);
+              var bo = event.target.boxObject;
+              orientation = (event.screenX < bo.screenX + (bo.width / 2)) ? -1 : 1;
+              if (orientation == 1)
+                ++destIndex;
+            }
+          }
+          PlacesControllerDragHelper.onDrop(this._self, destContainer, 
+                                            destIndex, orientation);
+        },
+        getSupportedFlavours: function TBV_DO_getSupportedFlavours() {
+          var flavorSet = new FlavourSet();
+          for (var i = 0; i < this._self.supportedDropTypes.length; ++i)
+            flavorSet.appendFlavour(this._self.supportedDropTypes[i]);
+          return flavorSet;
+        },
+        
       })]]></field>
     </implementation>
     <handlers>
@@ -209,6 +244,14 @@
         if (event.target.localName == "toolbarbutton" && 
             !event.target.hasAttribute("type"))
           nsDragAndDrop.startDrag(event, this._DNDObserver);
+      ]]></handler>
+      <handler event="dragover"><![CDATA[
+        // XXXben ew.
+        nsDragAndDrop.dragOver(event, this._DNDObserver);
+      ]]></handler>
+      <handler event="dragdrop"><![CDATA[
+        // XXXben ew.
+        nsDragAndDrop.drop(event, this._DNDObserver);
       ]]></handler>
     </handlers>
   </binding>

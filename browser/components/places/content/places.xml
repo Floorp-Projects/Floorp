@@ -312,7 +312,7 @@
       <field name="_DNDObserver"><![CDATA[({
         // XXXben ew.
         _self: this,
-        onDragStart: function(event, xferData, dragAction) {
+        onDragStart: function TV_DO_onDragStart(event, xferData, dragAction) {
           if (this._self.getAttribute("sortActive") == "true")
             throw Components.results.NS_OK;
           xferData.data = PlacesController.getTransferData();
@@ -320,12 +320,12 @@
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
         },
-        canDrop: function(event, session) {
+        canDrop: function TV_DO_canDrop(event, session) {
           return this._self._viewObserver.canDrop(-1, -1);
         },
-        onDragOver: function(event, flavor, session) {
+        onDragOver: function TV_DO_onDragOver(event, flavor, session) {
         },
-        getSupportedFlavours: function() {
+        getSupportedFlavours: function TV_DO_getSupportedFlavours() {
           var flavorSet = new FlavourSet();
           for (var i = 0; i < this._self.supportedDropTypes.length; ++i)
             flavorSet.appendFlavour(this._self.supportedDropTypes[i]);

@@ -51,10 +51,15 @@ const SELECTION_IS_CHANGEABLE = 0x10;
 const SELECTION_IS_REMOVABLE = 0x20;
 const SELECTION_IS_MOVABLE = 0x40;
 
+// Place entries that are containers, e.g. bookmark folders or queries. 
 const TYPE_X_MOZ_PLACE_CONTAINER = "text/x-moz-place-container";
+// Place entries that are not containers
 const TYPE_X_MOZ_PLACE = "text/x-moz-place";
+// Place entries in shortcut url format (url\ntitle)
 const TYPE_X_MOZ_URL = "text/x-moz-url";
+// Place entries formatted as HTML anchors
 const TYPE_HTML = "text/html";
+// Place entries as raw URL text
 const TYPE_UNICODE = "text/unicode";
 
 function STACK(args) {
