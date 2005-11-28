@@ -51,6 +51,7 @@ const SELECTION_IS_CHANGEABLE = 0x10;
 const SELECTION_IS_REMOVABLE = 0x20;
 const SELECTION_IS_MOVABLE = 0x40;
 
+const TYPE_X_MOZ_PLACE_CONTAINER = "text/x-moz-place-container";
 const TYPE_X_MOZ_PLACE = "text/x-moz-place";
 const TYPE_X_MOZ_URL = "text/x-moz-url";
 const TYPE_HTML = "text/html";
@@ -203,12 +204,22 @@ var PlacesController = {
    * Determines whether or not a ResultNode is a URL item or not
    * @param   node
    *          A NavHistoryResultNode
-   * @returns true if the ndoe is a URL item, false otherwise
+   * @returns true if the node is a URL item, false otherwise
    */
   nodeIsURL: function PC_nodeIsURL(node) {
     const NHRN = Ci.nsINavHistoryResultNode;
     return node.type == NHRN.RESULT_TYPE_URL || 
            node.type == NHRN.RESULT_TYPE_VISIT;
+  },
+  
+  /**
+   * Determines whether or not a ResultNode is a Query item or not
+   * @param   node
+   *          A NavHistoryResultNode
+   * @returns true if the node is a Query item, false otherwise
+   */
+  nodeIsQuery: function PC_nodeIsQuery(node) {
+    node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY;
   },
   
   onCommandUpdate: function PC_onCommandUpdate() {
@@ -525,6 +536,7 @@ var PlacesController = {
    */
   wrapNode: function PC_wrapNode(node, type) {
     switch (type) {
+    case TYPE_X_MOZ_PLACE_CONTAINER:
     case TYPE_X_MOZ_PLACE: 
       return node.folderId + "\n" + node.url + "\n" + node.parent.folderId + "\n" + this.getIndexOfNode(node);
     case TYPE_X_MOZ_URL:
@@ -551,6 +563,7 @@ var PlacesController = {
     for (var i = 0; i < parts.length; ++i) {
       var data = { };
       switch (type) {
+      case TYPE_X_MOZ_PLACE_CONTAINER:
       case TYPE_X_MOZ_PLACE:
         nodes.push({  folderId: parseInt(parts[i++]),
                       uri: parts[i] ? this._uri(parts[i++]) : null,
@@ -608,6 +621,7 @@ var PlacesController = {
   makeTransaction: function PC_makeTransaction(data, type, container, 
                                                index, copy) {
     switch (type) {
+    case TYPE_X_MOZ_PLACE_CONTAINER:
     case TYPE_X_MOZ_PLACE:
       if (data.folderId > 0) {
         // Place is a folder. 
@@ -652,7 +666,7 @@ var PlacesController = {
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
     var foundFolder = false, foundLink = false;
-    var placeString = htmlString = unicodeString = "";
+    var pcString = placeString = mozURLString = htmlString = unicodeString = "";
     for (var i = 0; i < nodes.length; ++i) {
       var node = nodes[i];
       var self = this;
@@ -660,10 +674,14 @@ var PlacesController = {
         var suffix = i < (nodes.length - 1) ? "\n" : "";
         return self.wrapNode(node, type) + suffix;
       }
-      placeString += generateChunk(TYPE_X_MOZ_PLACE);
-      mozURLString += generateChunk(TYPE_X_MOZ_URL);
-      htmlString += generateChunk(TYPE_HTML);
-      unicodeString += generateChunk(TYPE_UNICODE);
+      if (this.nodeIsFolder(node) || this.nodeIsQuery(node)) 
+        pcString += generateChunk(TYPE_X_MOZ_PLACE_CONTAINER);
+      else {
+        placeString += generateChunk(TYPE_X_MOZ_PLACE);
+        mozURLString += generateChunk(TYPE_X_MOZ_URL);
+        htmlString += generateChunk(TYPE_HTML);
+        unicodeString += generateChunk(TYPE_UNICODE);
+      }
     }
     
     /**
@@ -680,20 +698,34 @@ var PlacesController = {
       return s;
     }
     
-    if (unicodeString != "") {
+    if (pcString) {
+      xferable.addDataFlavor(TYPE_X_MOZ_PLACE_CONTAINER);
+      xferable.setTransferData(TYPE_X_MOZ_PLACE_CONTAINER, 
+                               wrapString(placeString), placeString.length * 2);
+    }
+    if (placeString) {
       xferable.addDataFlavor(TYPE_X_MOZ_PLACE);
       xferable.setTransferData(TYPE_X_MOZ_PLACE, wrapString(placeString), 
                                placeString.length * 2);
-      xferable.addDataFlavor(TYPE_X_MOZ_URL);
-      xferable.setTransferData(TYPE_X_MOZ_URL, wrapString(mozURLString), 
-                               mozURLString.length * 2);
-      xferable.addDataFlavor(TYPE_HTML);
-      xferable.setTransferData(TYPE_HTML, wrapString(htmlString), 
-                               htmlString.length * 2);
+    }
+    if (unicodeString) {
       xferable.addDataFlavor(TYPE_UNICODE);
       xferable.setTransferData(TYPE_UNICODE, wrapString(unicodeString), 
                                unicodeString.length * 2);
+    }
+    if (htmlString) {
+      xferable.addDataFlavor(TYPE_HTML);
+      xferable.setTransferData(TYPE_HTML, wrapString(htmlString), 
+                               htmlString.length * 2);
+    }
+    if (mozURLString) {
+      xferable.addDataFlavor(TYPE_X_MOZ_URL);
+      xferable.setTransferData(TYPE_X_MOZ_URL, wrapString(mozURLString), 
+                               mozURLString.length * 2);
+    }
     
+    if (pcString || placeString || unicodeString || htmlString || 
+        mozURLString) {
       var clipboard = 
           Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
       clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
