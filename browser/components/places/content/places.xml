@@ -364,10 +364,6 @@
             dragSession.canDrop = true;
         },
         
-        onDrop: function(event, xferData, dragSession) {
-        
-        },
-        
         _flavorSet: null,
         getSupportedFlavours: function() {
           if (!this._flavorSet) {
@@ -413,7 +409,7 @@
             destContainer = node.parent.folderId;
           }
           PlacesControllerDragHelper.onDrop(this._self, destContainer, 
-                                            destIndex);
+                                            destIndex, orientation);
         },
         
         // XXXben we will probably have to implement this to refresh Live 

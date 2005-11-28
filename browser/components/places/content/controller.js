@@ -855,14 +855,19 @@ var PlacesControllerDragHelper = {
    * @param   view
    *          An object implementing the AVI that supplies a list of 
    *          supported droppable content types
+   * @param   orientation
+   *          The orientation of the drop
    * @returns An object implementing nsITransferable that can receive data
    *          dropped onto a view. 
    */
-  _initTransferable: function PCDH__initTransferable(view) {
+  _initTransferable: function PCDH__initTransferable(view, orientation) {
     var xferable = 
         Cc["@mozilla.org/widget/transferable;1"].
         createInstance(Ci.nsITransferable);
-    var types = view.supportedDropTypes;
+    if (orientation != Ci.nsINavHistoryResultViewObserver.DROP_ON) 
+      var types = view.supportedDropTypes;
+    else
+      types = view.supportedDropOnTypes;    
     for (var j = 0; j < types.length; ++j)
       xferable.addDataFlavor(types[j]);
     return xferable;
@@ -876,6 +881,8 @@ var PlacesControllerDragHelper = {
    *          The container the drop was into
    * @param   index
    *          The index within the container the item was dropped at
+   * @param   orientation
+   *          The orientation of the drop
    */
   onDrop: function PCDH_onDrop(view, container, index) {
     var session = this._getSession();
@@ -884,7 +891,7 @@ var PlacesControllerDragHelper = {
     
     var copy = session.dragAction & Ci.nsIDragService.DRAGDROP_ACTION_COPY;
     var transactions = [];
-    var xferable = this._initTransferable(view);      
+    var xferable = this._initTransferable(view, orientation);
     for (var i = 0; i < session.numDropItems; ++i) {
       session.getData(xferable, i);
     
