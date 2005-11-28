@@ -178,6 +178,7 @@ function updateconfiglist()
       document.getElementById('byb-configs').disabled = false;
       document.getElementById('deleteconfig').disabled = false;
       document.getElementById('showconfig').disabled = false;
+      document.getElementById('copyconfig').disabled = false;
     }
   }
   if ((!selecteditem) && (list.length > 0)) {
@@ -189,7 +190,7 @@ function updateconfiglist()
     document.getElementById('byb-configs').disabled = true;
     document.getElementById('deleteconfig').disabled = true;
     document.getElementById('showconfig').disabled = true;
-    
+    document.getElementById('copyconfig').disabled = true;
   }
 }
 
@@ -238,7 +239,13 @@ function OnConfigOK()
     gPrefBranch.setCharPref("cck.config." + configname, configlocation);
     this.opener.setcurrentconfig(configname);
     if (window.name == 'copyconfig') {
-/* copy prefs from current config */    
+    /* ---------- */
+  var destdir = Components.classes["@mozilla.org/file/local;1"]
+                          .createInstance(Components.interfaces.nsILocalFile);
+  destdir.initWithPath(configlocation);
+  
+  this.opener.CCKWriteConfigFile(destdir);
+
     }
   } else {
     return false;
@@ -297,6 +304,17 @@ function OnPrefOK()
   } else {
     listbox.selectedItem.label = document.getElementById('prefname').value;
     listbox.selectedItem.value = document.getElementById('prefvalue').value;
+  }
+}
+
+function enablePrefButtons() {
+  listbox = document.getElementById('prefList');
+  if (listbox.selectedItem) {
+    document.getElementById('editPrefButton').disabled = false;
+    document.getElementById('deletePrefButton').disabled = false;
+  } else {
+    document.getElementById('editPrefButton').disabled = true;
+    document.getElementById('deletePrefButton').disabled = true;
   }
 }
 
@@ -359,7 +377,89 @@ function OnRegOK()
   }
 }
 
+function enableRegButtons() {
+  listbox = document.getElementById('regList');
+  if (listbox.selectedItem) {
+    document.getElementById('editRegButton').disabled = false;
+    document.getElementById('deleteRegButton').disabled = false;
+  } else {
+    document.getElementById('editRegButton').disabled = true;
+    document.getElementById('deleteRegButton').disabled = true;
+  }
+}
 
+
+function onNewSearchPlugin()
+{
+  window.openDialog("chrome://cckwizard/content/searchplugin.xul","newsearchplugin","chrome,modal");
+}
+
+function onEditSearchPlugin()
+{
+  window.openDialog("chrome://cckwizard/content/searchplugin.xul","editsearchplugin","chrome,modal");
+}
+function onDeleteSearchPlugin()
+{
+  listbox = document.getElementById('searchPluginList');
+  listboxitem = listbox.selectedItem;
+  listbox.removeChild(listboxitem);
+}
+
+function OnSearchPluginLoad()
+{
+  listbox = this.opener.document.getElementById('searchPluginList');    
+  listboxitem = listbox.selectedItem;
+  if (window.name == 'editsearchplugin') {
+    document.getElementById('searchplugin').value = listboxitem.childNodes[1].value;
+    document.getElementById('searchpluginicon').value = listboxitem.childNodes[0].value;
+    document.getElementById('icon').src = listboxitem.childNodes[0].src;
+  }
+  searchPluginCheckOKButton();
+  
+}
+
+function searchPluginCheckOKButton()
+{
+//  if ((document.getElementById("prefname").value) && (document.getElementById("prefvalue").value)) {
+//    document.documentElement.getButton("accept").setAttribute( "disabled", "false" );
+//  } else {
+//    document.documentElement.getButton("accept").setAttribute( "disabled", "true" );  
+//  }
+}
+
+function OnSearchPluginOK()
+{
+  listbox = this.opener.document.getElementById('searchPluginList');    
+  if (window.name == 'newsearchplugin') {
+    item = this.opener.document.createElement("richlistitem");
+    image = this.opener.document.createElement("image");
+    label = this.opener.document.createElement("label");
+    image.setAttribute("src", document.getElementById('icon').src); 
+    image.value = document.getElementById('searchpluginicon').value;
+    label.setAttribute("value", document.getElementById('searchplugin').value);
+
+    item.appendChild(image);
+    item.appendChild(label);
+  
+    listbox.appendChild(item);
+  } else {
+    listboxitem = listbox.selectedItem;  
+    listboxitem.childNodes[1].value = document.getElementById('searchplugin').value;
+    listboxitem.childNodes[0].src = document.getElementById('icon').src;
+    listboxitem.childNodes[0].value = document.getElementById('searchpluginicon').value;
+  }
+}
+
+function enableSearchPluginButtons() {
+  listbox = document.getElementById('searchPluginList');
+  if (listbox.selectedItem) {
+    document.getElementById('editSearchPluginButton').disabled = false;
+    document.getElementById('deleteSearchPluginButton').disabled = false;
+  } else {
+    document.getElementById('editSearchPluginButton').disabled = true;
+    document.getElementById('deleteSearchPluginButton').disabled = true;
+  }
+}
 
 
 
@@ -468,16 +568,15 @@ function CreateCCK()
     destdir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0775);
   } catch(ex) {}
   
-  havesearchplugins = CCKCopyFile(document.getElementById("SearchPlugin1").value, destdir);
-  CCKCopyFile(document.getElementById("SearchPluginIcon1").value, destdir);
-  havesearchplugins |= CCKCopyFile(document.getElementById("SearchPlugin2").value, destdir);
-  CCKCopyFile(document.getElementById("SearchPluginIcon2").value, destdir);
-  havesearchplugins |= CCKCopyFile(document.getElementById("SearchPlugin3").value, destdir);
-  CCKCopyFile(document.getElementById("SearchPluginIcon3").value, destdir);
-  havesearchplugins |= CCKCopyFile(document.getElementById("SearchPlugin4").value, destdir);
-  CCKCopyFile(document.getElementById("SearchPluginIcon4").value, destdir);
-  havesearchplugins |= CCKCopyFile(document.getElementById("SearchPlugin5").value, destdir);
-  CCKCopyFile(document.getElementById("SearchPluginIcon5").value, destdir);
+  listbox = document.getElementById('searchPluginList');
+
+  if (listbox.getRowCount() > 0)
+    havesearchplugins = true;
+  for (var i=0; i < listbox.getRowCount(); i++) {
+    listitem = listbox.getItemAtIndex(i);
+    CCKCopyFile(listitem.childNodes[0].value, destdir);
+    CCKCopyFile(listitem.childNodes[1].value, destdir);
+  }
 
   destdir.initWithPath(currentconfigpath);
   destdir.append("xpi");
@@ -1268,6 +1367,15 @@ function CCKWriteConfigFile(destdir)
         var line = "Type" + (j+1) + "=" + listitem.type + "\n";
         fos.write(line, line.length);
       }
+    } else if (elements[i].id == "searchPluginList") {
+      listbox = document.getElementById('searchPluginList');    
+      for (var j=0; j < listbox.getRowCount(); j++) {
+        listitem = listbox.getItemAtIndex(j);
+        var line = "SearchPlugin" + (j+1) + "=" + listitem.childNodes[1].value + "\n";
+        fos.write(line, line.length);
+        var line = "SearchPluginIcon" + (j+1) + "=" + listitem.childNodes[0].value + "\n";
+        fos.write(line, line.length);      
+      }
     }
   }
   fos.close();
@@ -1328,9 +1436,35 @@ function CCKReadConfigFile(srcdir)
     i++;
   }  
 
+  var sourcefile = Components.classes["@mozilla.org/file/local;1"]
+                       .createInstance(Components.interfaces.nsILocalFile);
 
-
+  // handle searchplugins
+  listbox = document.getElementById('searchPluginList');
+  var i = 1;
+  while(searchpluginname = configarray['SearchPlugin' + i]) {
+    item = document.createElement("richlistitem");
+    image = document.createElement("image");
+    label = document.createElement("label");
+    image.value = configarray['SearchPluginIcon' + i];
+    label.setAttribute("value", searchpluginname);
+    
+  try {
+    sourcefile.initWithPath(configarray['SearchPluginIcon' + i]);
+    var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
+                           .getService(Components.interfaces.nsIIOService);
+    var foo = ioServ.newFileURI(sourcefile);
+    image.setAttribute("src", foo.spec);
+  } catch (e) {
+    image.setAttribute("src", "");
+  }
+    item.appendChild(image);
+    item.appendChild(label);
   
+    listbox.appendChild(item);
+    i++;
+  }  
+
   DoEnabling();
   toggleProxySettings();
   

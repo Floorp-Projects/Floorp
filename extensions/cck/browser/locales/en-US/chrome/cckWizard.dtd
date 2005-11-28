@@ -1,6 +1,6 @@
 <!ENTITY  cckWizard.title               "Firefox Client Customization Kit (CCK)">
 <!ENTITY  cckWizard.description         "This tool helps you create an extension that customizes Firefox. This extension can either be installed by the user or included in an install package.">
-<!ENTITY  cckWizard.oncancel            "All changed data will be saved">
+
 <!ENTITY  beforeYouBegin.label          "Before You Begin">
 <!ENTITY  beforeYouBegin.description    "Decide which customizations you want to make and create/collect the customized files, such as:
                                          <html:ul>
@@ -16,6 +16,15 @@
 <!ENTITY  newConfig.label               "New">
 <!ENTITY  copyConfig.label              "Copy">
 <!ENTITY  deleteConfig.label            "Delete">
+
+<!ENTITY  createConfig.title            "Create New Configuration">
+<!ENTITY  copyConfig.title              "Copy Existing Configuration">
+<!ENTITY  configName.label              "Name of configuration">
+<!ENTITY  configLocation.label          "Location of configuration">
+
+
+
+
 
 <!ENTITY  customizeExt.label            "Customize Extension">
 <!ENTITY  customizeExt.description      "">
@@ -81,7 +90,7 @@
 
 
 <!ENTITY  customizeSearchPlugins.label  "Customize Search Plugins">
-<!ENTITY  searchPlugins.description     "You may select up to five search plugins to be preinstalled.">
+<!ENTITY  searchPlugins.description     "Use the buttons below to add search plugins.">
 
 <!ENTITY  file.label                    "File:">
 <!ENTITY  icon.label                    "Icon:">
@@ -129,7 +138,7 @@
 <!ENTITY  customizeRegistry.label       "Customize Registry (Windows Only)">
 
 <!ENTITY  registry.label                "Registry">
-<!ENTITY  registry.description          "You can add up to five registry items.">
+<!ENTITY  registry.description          "You can add registry items.">
 
 <!ENTITY  regRootKey.label              "Root Key">
 <!ENTITY  regKey.label                  "Key">
@@ -190,6 +199,7 @@
 
 <!ENTITY  showConfig.title              "Show Configuration">
 
-<!ENTITY  createConfig.title            "Create New Configuration">
-<!ENTITY  configName.label              "Name of new configuration">
-<!ENTITY  configLocation.label          "Location of new configuration">
+
+
+<!ENTITY  cckWizard.oncancel            "All changed data will be saved">
+

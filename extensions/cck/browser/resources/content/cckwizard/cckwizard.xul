@@ -72,7 +72,7 @@
      </hbox>
      <hbox>
        <button label="&newConfig.label;" id="newconfig" oncommand="CreateConfig();"/>
-       <button label="&copyConfig.label;" id="copyconfig" disabled="true" oncommand="CopyConfig();"/>/>
+       <button label="&copyConfig.label;" id="copyconfig" oncommand="CopyConfig();"/>/>
        <button label="&deleteConfig.label;" id="deleteconfig" oncommand="DeleteConfig();"/>
      </hbox>
    </groupbox>
@@ -91,7 +91,13 @@
          <vbox align="right">
            <label control="id" pack="end">&id.label;</label>
          </vbox>
-         <textbox id="id" tooltiptext="Format: cck-companyname@extensions.domainname.tld"/>
+         <textbox id="id"/>
+       </row>
+       <row align="center">
+         <vbox align="right">
+           <label/>
+         </vbox>
+         <label>Format: cck-companyname@extensions.domainname.tld</label>
        </row>
        <row align="center">
          <vbox align="right">
@@ -143,7 +149,7 @@
          <vbox align="right">
            <label control="filename">&filename.label;</label>
          </vbox>
-         <hbox>
+         <hbox align="center">
            <textbox flex="1" id="filename"/>
            <label>.xpi</label>
          </hbox>
@@ -266,64 +272,33 @@
     </hbox>
   </wizardpage>
 
-  <wizardpage label="&customizeSearchPlugins.label;" onpageadvanced="return ValidateFile('SearchPlugin1','SearchPluginIcon1','SearchPlugin2','SearchPluginIcon2','SearchPlugin3','SearchPluginIcon3','SearchPlugin4','SearchPluginIcon4','SearchPlugin5','SearchPluginIcon5');">
+
+  <wizardpage label="&customizeSearchPlugins.label;" onpageshow="enableSearchPluginButtons();">
     <description>&searchPlugins.description;</description>
-    <separator class="groove"/>
-    <hbox align="center">
-      <label control="SearchPlugin1">&file.label;</label>
-      <textbox id="SearchPlugin1" flex="1" />
-      <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin1');"/>
-    </hbox>
-    <hbox align="center">
-      <label control="SearchPluginIcon1">&icon.label;</label>
-      <textbox id="SearchPluginIcon1" flex="1" />
-      <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon1');"/>
-    </hbox>
-    <separator class="groove"/>
-    <hbox align="center">
-      <label control="SearchPlugin2">&file.label;</label>
-      <textbox id="SearchPlugin2" flex="1" />
-      <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin2');"/>
-    </hbox>
-    <hbox align="center">
-      <label control="SearchPluginIcon2">&icon.label;</label>
-      <textbox id="SearchPluginIcon2" flex="1" />
-      <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon2');"/>
-    </hbox>
-    <separator class="groove"/>
-    <hbox align="center">
-      <label control="SearchPlugin3">&file.label;</label>
-      <textbox id="SearchPlugin3" flex="1" />
-      <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin3');"/>
-    </hbox>
-    <hbox align="center">
-      <label control="SearchPluginIcon3">&icon.label;</label>
-      <textbox id="SearchPluginIcon3" flex="1" />
-      <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon3');"/>
-    </hbox>
-    <separator class="groove"/>
-    <hbox align="center">
-      <label control="SearchPlugin4">&file.label;</label>
-      <textbox id="SearchPlugin4" flex="1" />
-      <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin4');"/>
-    </hbox>
-    <hbox align="center">
-      <label control="SearchPluginIcon4">&icon.label;</label>
-      <textbox id="SearchPluginIcon4" flex="1" />
-      <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon4');"/>
-    </hbox>
-    <separator class="groove"/>
-    <hbox align="center">
-      <label control="SearchPlugin5">&file.label;</label>
-      <textbox id="SearchPlugin5" flex="1" />
-      <button label="&chooseFile.label;" oncommand="choosefile('SearchPlugin5');"/>
-    </hbox>
-    <hbox align="center">
-      <label control="SearchPluginIcon5">&icon.label;</label>
-      <textbox id="SearchPluginIcon5" flex="1" />
-      <button label="&chooseFile.label;" oncommand="choosefile('SearchPluginIcon5');"/>
-    </hbox>
+
+    <groupbox>
+      <caption label="&prefs.label;"/>
+      <description>&prefs.description;</description>
+      <hbox flex="1">
+      <vbox flex="1">
+      <richlistbox id="searchPluginList" flex="1" rows="5" onselect="enableSearchPluginButtons();" ondblclick="onEditSearchPlugin();">
+    </richlistbox>
+    </vbox>
+        <vbox>
+          <button id="newSearchPluginButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
+                  oncommand="onNewSearchPlugin();"/>
+          <button id="editSearchPluginButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
+                  oncommand="onEditSearchPlugin();"/>
+          <button id="deleteSearchPluginButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
+                  oncommand="onDeleteSearchPlugin();"/>
+          <spacer flex="1"/>
+        </vbox>
+        </hbox>
+    </groupbox>
+    
   </wizardpage>
+
+
 
   <wizardpage label="&customizeToolbarOne.label;">
     <groupbox>
@@ -501,23 +476,21 @@
     </groupbox>
   </wizardpage>
 
-  <wizardpage label="&customizePrefs.label;">
+  <wizardpage label="&customizePrefs.label;" onpageshow="enablePrefButtons();">
     <groupbox>
       <caption label="&prefs.label;"/>
       <description>&prefs.description;</description>
       <hbox flex="1">
       <vbox flex="1">
-    <listbox id="prefList" flex="1" rows="5" 
-          sortDirection="ascending">
-      
-    </listbox>
-    </vbox>
+        <listbox id="prefList" flex="1" rows="5" onselect="enablePrefButtons();" ondblclick="onEditPreference();">
+        </listbox>
+      </vbox>
         <vbox>
-          <button id="newButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
+          <button id="newPrefButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
                   oncommand="onNewPreference();"/>
-          <button id="editButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
+          <button id="editPrefButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
                   oncommand="onEditPreference();"/>
-          <button id="deleteButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
+          <button id="deletePrefButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
                   oncommand="onDeletePreference();"/>
           <spacer flex="1"/>
         </vbox>
@@ -525,23 +498,22 @@
     </groupbox>
   </wizardpage>
   
-  <wizardpage label="&customizeRegistry.label;">
+  <wizardpage label="&customizeRegistry.label;" onpageshow="enableRegButtons();">
     <groupbox>
       <caption label="&registry.label;"/>
       <description>&registry.description;</description>
       <hbox flex="1">
       <vbox flex="1">
-    <listbox id="regList" flex="1" rows="5" 
-          sortDirection="ascending">
+    <listbox id="regList" flex="1" rows="5" onselect="enableRegButtons();" ondblclick="onEditRegKey();">
       
     </listbox>
     </vbox>
         <vbox>
-          <button id="newButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
+          <button id="newRegButton" label="&newButton.label;" accesskey="&newButton.accesskey;"
                   oncommand="onNewRegKey();"/>
-          <button id="editButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
+          <button id="editRegButton" label="&editButton.label;" accesskey="&editButton.accesskey;" 
                   oncommand="onEditRegKey();"/>
-          <button id="deleteButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
+          <button id="deleteRegButton" label="&deleteButton.label;" accesskey="&deleteButton.accesskey;" 
                   oncommand="onDeleteRegKey();"/>
           <spacer flex="1"/>
         </vbox>
