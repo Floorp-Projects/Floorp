@@ -111,6 +111,8 @@ var PlacesPage = {
     this._content.supportedDropTypes = [TYPE_X_MOZ_PLACE_CONTAINER, 
                                         TYPE_X_MOZ_PLACE, TYPE_X_MOZ_URL];
     this._content.supportedDropOnTypes = this._content.supportedDropTypes;
+    this._places.firstDropIndex = 2;
+    this._content.firstDropIndex = 0;
     
     // Hook the browser UI
     PlacesUIHook.init(this._content);

@@ -297,6 +297,9 @@
       <property name="browserWindow" onget="return this._browserWindow"/>
       
       <!-- AVI Method -->
+      <field name="firstDropIndex">null</field>
+      
+      <!-- AVI Method -->
       <field name="supportedDropTypes">null</field>
       
       <!-- AVI Method -->
@@ -337,12 +340,21 @@
         _self: this,
         
         canDrop: function VO_canDrop(index, orientation) {
+          var root = this._self.getResult();
+          var node = root.nodeForTreeIndex(index);
+          // Cannot drop before fixed items in the list. 
+          if (node.parent == root && 
+              PlacesController.getIndexOfNode(node) < this._self.firstDropIndex &&
+              orientation != Ci.nsINavHistoryResultViewObserver.DROP_ON)
+            return false;
           return PlacesControllerDragHelper.canDrop(this._self, orientation);
         },
         
         onDrop: function VO_onDrop(index, orientation) {
           LOG("VO: onDrop: " + index + ", orientation: " + orientation);
-          
+          if (!this.canDrop(index, orientation))
+            return;
+            
           // We are responsible for translating the |index| and |orientation| 
           // parameters into a container id and index within the container, 
           // since this information is specific to the tree view. 
