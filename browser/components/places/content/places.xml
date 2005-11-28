@@ -146,11 +146,13 @@
 
           const NH = Ci.nsINavHistory;
           return this._places.queriesToQueryString(queries, queries.length,
-                                                   options);
+                                                  options);
         ]]></getter>
         <setter><![CDATA[
           var queries = { }, options = { };
           this._places.queryStringToQueries(val, queries, { }, options);
+          if (!queries.value.length) 
+            queries.value = [this._places.getNewQuery()];
           this.load(queries.value, options.value);
           return val;
         ]]></setter>
@@ -307,76 +309,31 @@
         ]]></body>
       </method>
       
-      <method name="_getTransferData">
-        <body><![CDATA[ 
-          var result = this.getResult();
-          var selection = this.view.selection;
-          if (selection.count == 0)
-            return null;
-          var dataSet = new TransferDataSet();
-          var rc = selection.getRangeCount();
-          
-          for (var i = 0; i < rc; ++i) {
-            var min = { }, max = { };
-            selection.getRangeAt(i, min, max);
-            for (var j = min.value; j <= max.value; ++j) {
-              var node = result.nodeForTreeIndex(j);
-              
-              var data = new TransferData();
-              function addData(type) {
-                var s = 
-                    Cc["@mozilla.org/supports-string;1"].
-                    createInstance(Ci.nsISupportsString);
-                s.data = PlacesController.wrapNode(node, type);
-                data.addDataForFlavour(type, s);
-              }
-              if (PlacesController.nodeIsFolder(node) || 
-                  PlacesController.nodeIsQuery(node))
-                addData(TYPE_X_MOZ_PLACE_CONTAINER);
-              else {
-                // Order here is _important_!
-                addData(TYPE_X_MOZ_PLACE);
-                addData(TYPE_UNICODE);
-                addData(TYPE_HTML);
-                addData(TYPE_X_MOZ_URL);
-              }
-              dataSet.push(data);
-            }
-          }
-          return dataSet;
-        ]]></body>
-      </method>
-      
       <field name="_DNDObserver"><![CDATA[({
         // XXXben ew.
         _self: this,
         onDragStart: function(event, xferData, dragAction) {
           if (this._self.getAttribute("sortActive") == "true")
             throw Components.results.NS_OK;
-          xferData.data = this._self._getTransferData();
+          xferData.data = PlacesController.getTransferData();
           // XXXben - the drag wrapper should do this automatically. 
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
         },
-        
-        onDragOver: function(event, flavor, dragSession) {
-          if (dragSession.sourceNode == this._self)
-            dragSession.canDrop = true;
+        canDrop: function(event, session) {
+          return this._self._viewObserver.canDrop(-1, -1);
         },
-        
-        _flavorSet: null,
+        onDragOver: function(event, flavor, session) {
+        },
         getSupportedFlavours: function() {
-          if (!this._flavorSet) {
-            this._flavorSet = new FlavourSet();
-            for (var i = 0; i < this._self.supportedDropTypes.length; ++i) 
-              this._flavorSet.appendFlavour(this._self.supportedDropTypes[i]);
-          }
-          return this._flavorSet;
-        }
+          var flavorSet = new FlavourSet();
+          for (var i = 0; i < this._self.supportedDropTypes.length; ++i)
+            flavorSet.appendFlavour(this._self.supportedDropTypes[i]);
+          return flavorSet;
+        },
       })]]></field>
       
-      <field name="_viewObserver"><![CDATA[ 
-        ({
+      <field name="_viewObserver"><![CDATA[({
         _self: this,
         
         canDrop: function VO_canDrop(index, orientation) {
@@ -392,13 +349,20 @@
           const NHRVO = Ci.nsINavHistoryResultViewObserver;
           var result = this._self.getResult();
           var view = this._self.view;
-          var node = result.nodeForTreeIndex(index);
+          var node = index != -1 ? result.nodeForTreeIndex(index) : null;
           var destContainer = null;
           var destIndex = -1;
-          // If we're dropping _on_ a container, the container is the container
-          // we dropped on, otherwise it's the parent of the drop target. 
-          if (view.isContainer(index) && orientation == NHRVO.DROP_ON)
+          if (!node) {
+            // Dropping in some blank area of the view, just use the result as
+            // the container.
+            destContainer = result.folderId;
+          }
+          else if (view.isContainer(index) && orientation == NHRVO.DROP_ON) {
+            // If we're dropping _on_ a container, the container is the 
+            // container we dropped on, otherwise it's the parent of the drop 
+            // target. 
             destContainer = node.folderId;
+          }
           else {
             var destIndex = PlacesController.getIndexOfNode(node);
             // For non leaves, or when not dropping _on_ a container, drop after
@@ -421,8 +385,7 @@
         onPerformAction: function VO_onPerformAction(action) { },
         onPerformActionOnRow: function VO_onPerformActionOnRow(action, row) { },
         onPerformActionOnCell: function VO_onPerformActionOnCell(action, row, column) { },      
-        })
-      ]]></field>
+      })]]></field>
       
       <method name="_reloadView">
         <body><![CDATA[ 
@@ -500,6 +463,10 @@
         // XXXben ew.
         if (event.target.localName == "treechildren")
           nsDragAndDrop.startDrag(event, this._DNDObserver);
+      ]]></handler>
+      <handler event="dragover"><![CDATA[
+        if (event.target.localName == "treechildren")
+          nsDragAndDrop.dragOver(event, this._DNDObserver);
       ]]></handler>
     </handlers>
   </binding>

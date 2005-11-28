@@ -97,7 +97,6 @@ var PlacesUIHook = {
 var PlacesPage = {
   _content: null,
   _places: null,
-  _bmsvc : null,
 
   init: function PP_init() {
     // Attach the Command Controller to the Places Views. 
@@ -117,7 +116,7 @@ var PlacesPage = {
     PlacesUIHook.init(this._content);
 
     // Attach the History model to the Content View
-    this._content.queryString = "group=1";
+    this._content.queryString = "";
 
     // Attach the Places model to the Place View
     // XXXben - move this to an attribute/property on the tree view
@@ -190,7 +189,7 @@ var PlacesPage = {
     filterCollectionDeck.selectedPanel = document.getElementById(filterButtonID);
 
     // Hide the Calendar for Bookmark queries. 
-    document.getElementById("historyCalendar").hidden = isBookmarks;
+    document.getElementById("historyCalendar").setAttribute("hidden", isBookmarks);
   },
 };
 

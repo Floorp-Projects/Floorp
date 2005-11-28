@@ -657,6 +657,52 @@ var PlacesController = {
   },
   
   /**
+   * Wraps a string in a nsISupportsString wrapper
+   * @param   str
+   *          The string to wrap
+   * @returns A nsISupportsString object containing a string.
+   */
+  _wrapString: function PC__wrapString(str) {
+    var s = 
+        Cc["@mozilla.org/supports-string;1"].
+        createInstance(Ci.nsISupportsString);
+    s.data = str;
+    return s;
+  },
+  
+  /**
+   * Get a TransferDataSet containing the content of the selection that can be
+   * dropped elsewhere. 
+   * @returns A TransferDataSet object that can be dragged and dropped 
+   *          elsewhere.
+   */
+  getTransferData: function PC_getTransferData() {
+    var nodes = this._activeView.getCopyableSelection();
+    var dataSet = new TransferDataSet();
+    for (var i = 0; i < nodes.length; ++i) {
+      var node = nodes[i];
+              
+      var data = new TransferData();
+      var self = this;
+      function addData(type) {
+        data.addDataForFlavour(type, self._wrapString(self.wrapNode(node, type)));
+      }
+      if (this.nodeIsFolder(node) || this.nodeIsQuery(node))
+        addData(TYPE_X_MOZ_PLACE_CONTAINER);
+      else {
+        // This order is _important_! It controls how this and other 
+        // applications select data to be inserted based on type. 
+        addData(TYPE_X_MOZ_PLACE);
+        addData(TYPE_UNICODE);
+        addData(TYPE_HTML);
+        addData(TYPE_X_MOZ_URL);
+      }
+      dataSet.push(data);
+    }
+    return dataSet;
+  },
+  
+  /**
    * Copy Bookmarks and Folders to the clipboard
    */
   copy: function() {
@@ -684,45 +730,23 @@ var PlacesController = {
       }
     }
     
-    /**
-     * Wraps a string in a nsISupportsString wrapper
-     * @param   str
-     *          The string to wrap
-     * @returns A nsISupportsString object containing a string.
-     */
-    function wrapString(str) {
-      var s = 
-          Cc["@mozilla.org/supports-string;1"].
-          createInstance(Ci.nsISupportsString);
-      s.data = str;
-      return s;
+    var self = this;
+    function addData(type, data) {
+      xferable.addDataFlavor(type);
+      xferable.setTransferData(type, self._wrapString(data), data.length * 2);
     }
-    
-    if (pcString) {
-      xferable.addDataFlavor(TYPE_X_MOZ_PLACE_CONTAINER);
-      xferable.setTransferData(TYPE_X_MOZ_PLACE_CONTAINER, 
-                               wrapString(placeString), placeString.length * 2);
-    }
-    if (placeString) {
-      xferable.addDataFlavor(TYPE_X_MOZ_PLACE);
-      xferable.setTransferData(TYPE_X_MOZ_PLACE, wrapString(placeString), 
-                               placeString.length * 2);
-    }
-    if (unicodeString) {
-      xferable.addDataFlavor(TYPE_UNICODE);
-      xferable.setTransferData(TYPE_UNICODE, wrapString(unicodeString), 
-                               unicodeString.length * 2);
-    }
-    if (htmlString) {
-      xferable.addDataFlavor(TYPE_HTML);
-      xferable.setTransferData(TYPE_HTML, wrapString(htmlString), 
-                               htmlString.length * 2);
-    }
-    if (mozURLString) {
-      xferable.addDataFlavor(TYPE_X_MOZ_URL);
-      xferable.setTransferData(TYPE_X_MOZ_URL, wrapString(mozURLString), 
-                               mozURLString.length * 2);
-    }
+    // This order is _important_! It controls how this and other applications 
+    // select data to be inserted based on type. 
+    if (pcString)
+      addData(TYPE_X_MOZ_PLACE_CONTAINER, pcString);
+    if (placeString)
+      addData(TYPE_X_MOZ_PLACE, placeString);
+    if (unicodeString)
+      addData(TYPE_UNICODE, unicodeString);
+    if (htmlString)
+      addData(TYPE_HTML, htmlString);
+    if (mozURLString)
+      addData(TYPE_X_MOZ_URL, mozURLString);
     
     if (pcString || placeString || unicodeString || htmlString || 
         mozURLString) {
@@ -884,7 +908,7 @@ var PlacesControllerDragHelper = {
    * @param   orientation
    *          The orientation of the drop
    */
-  onDrop: function PCDH_onDrop(view, container, index) {
+  onDrop: function PCDH_onDrop(view, container, index, orientation) {
     var session = this._getSession();
     if (!session)
       return;

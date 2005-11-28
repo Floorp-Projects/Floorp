@@ -99,7 +99,8 @@
       </hbox>
       <deck id="content" flex="1">
         <vbox flex="1">
-          <tree id="placeContent" class="placesTree" context="placesContext" flex="1"
+          <tree id="placeContent" class="placesTree" context="placesContext" 
+                flex="1" query=""
                 ondblclick="PlacesController.mouseLoadURI(event);"
                 onplacestreereloaded="PlacesPage.onContentChanged();">
             <treecols>

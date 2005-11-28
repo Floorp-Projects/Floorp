@@ -18,6 +18,7 @@
 
 #placesList {
   margin: 7px 0px 7px 6px;
+  width: 160px;
 }
 
 #placesListChildren::-moz-tree-twisty {

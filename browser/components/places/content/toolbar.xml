@@ -181,15 +181,35 @@
           this._self.init();
         },
       })]]></field>
+      <field name="_DNDObserver"><![CDATA[({
+        // XXXben ew.
+        _self: this,
+        onDragStart: function(event, xferData, dragAction) {
+          xferData.data = PlacesController.getTransferData();
+          // XXXben - the drag wrapper should do this automatically. 
+          if (event.ctrlKey)
+            dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
+        },
+      })]]></field>
     </implementation>
     <handlers>
-      <handler event="click">
+      <handler event="mousedown"><![CDATA[
+        // When the user clicks down on a button, set it as the selection and 
+        // tell the controller that we are the active view. 
         if (event.target.localName != "toolbarbutton")
           return;
         this._selection = event.target.node;
         PlacesController.activeView = this;
+      ]]></handler>
+      <handler event="click">
         PlacesController.mouseLoadURI(event);
       </handler>
+      <handler event="draggesture"><![CDATA[
+        // XXXben ew.
+        if (event.target.localName == "toolbarbutton" && 
+            !event.target.hasAttribute("type"))
+          nsDragAndDrop.startDrag(event, this._DNDObserver);
+      ]]></handler>
     </handlers>
   </binding>
 
