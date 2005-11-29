@@ -1162,7 +1162,7 @@
 #define FindNextFile               FindNextFileW
 
 
-#if 0
+#if 1
 
 #ifdef GetProp
 #undef GetProp
@@ -1303,18 +1303,17 @@ extern "C" {
 
   // from win32.cpp
 
-  MOZCE_SHUNT_API BOOL mozce_AlphaBlend(  HDC hdcDest,                 // handle to destination DC
-										  int nXOriginDest,            // x-coord of upper-left corner
-										  int nYOriginDest,            // y-coord of upper-left corner
-										  int nWidthDest,              // destination width
-										  int nHeightDest,             // destination height
-										  HDC hdcSrc,                  // handle to source DC
-										  int nXOriginSrc,             // x-coord of upper-left corner
-										  int nYOriginSrc,             // y-coord of upper-left corner
-										  int nWidthSrc,               // source width
-										  int nHeightSrc,              // source height
-										  BLENDFUNCTION blendFunction  // alpha-blending function
-										  );
+  MOZCE_SHUNT_API BOOL mozce_AlphaBlend(  HDC hdcDest,
+										  int nXOriginDest,
+										  int nYOriginDest,
+										  int nWidthDest,
+										  int nHeightDest,
+										  HDC hdcSrc,
+										  int nXOriginSrc,
+										  int nYOriginSrc,
+										  int nWidthSrc,
+										  int nHeightSrc,
+                                          BLENDFUNCTION blendFunction);
 
 
   MOZCE_SHUNT_API struct lconv * mozce_localeconv(void);
