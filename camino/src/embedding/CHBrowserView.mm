@@ -63,7 +63,7 @@
 #include "nsIPrintSettingsService.h"
 
 // bigger/smaller text
-#include "nsIScriptGlobalObject.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIContentViewer.h"
@@ -1102,10 +1102,10 @@ const long NSFindPanelActionSetFindString = 7;
     return NULL;
   nsCOMPtr<nsIDOMWindow> domWindow;
   _webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-  nsCOMPtr<nsIScriptGlobalObject> global(do_QueryInterface(domWindow));
-  if (!global)
+  nsCOMPtr<nsPIDOMWindow> privWin(do_QueryInterface(domWindow));
+  if (!privWin)
     return NULL;
-  return global->GetDocShell();
+  return privWin->GetDocShell();
 }
 
 - (id<CHBrowserContainer>)getBrowserContainer
