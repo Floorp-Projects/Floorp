@@ -190,17 +190,14 @@ public:
     /**
      * Add the text outline to the current path.
      */
-    void AddStringToPath(gfxTextRun& text, int pos, int len);
+    // specify this in a sane way.
+    //void AddStringToPath(gfxTextRun& text);
 
     /**
-     * Draw a substring of the text run at the current point.
+     * Draw the text run at the current point.
+     * XXX support drawing subsections of the text run
      */
-    void DrawText(gfxTextRun& text, int pos, int len);
-
-    /**
-     * Draw the string at some point (XXX need docs)
-     */
-    void DrawText(const nsAString& aString, gfxPoint pt, gfxFontGroup &aFontGroup);
+    void DrawText(gfxTextRun& text);
 
     /**
      ** Transformation Matrix manipulation

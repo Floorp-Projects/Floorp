@@ -253,23 +253,43 @@ gfxWindowsFontGroup::~gfxWindowsFontGroup()
 
 }
 
-void
-gfxWindowsFontGroup::DrawString(gfxContext *aContext, const nsAString& aString, gfxPoint pt)
+gfxTextRun *
+gfxWindowsFontGroup::MakeTextRun(const nsAString& aString)
 {
-    MeasureOrDrawUniscribe(aContext, PromiseFlatString(aString).get(), aString.Length(), PR_TRUE, pt.x, pt.y, nsnull);
+    return new gfxWindowsTextRun(aString, this);
+}
+
+
+
+
+THEBES_IMPL_REFCOUNTING(gfxWindowsTextRun)
+
+gfxWindowsTextRun::gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup)
+    : mString(aString), mGroup(aFontGroup)
+{
+}
+
+gfxWindowsTextRun::~gfxWindowsTextRun()
+{
+}
+
+void
+gfxWindowsTextRun::DrawString(gfxContext *aContext, gfxPoint pt)
+{
+    MeasureOrDrawUniscribe(aContext, mString.get(), mString.Length(), PR_TRUE, pt.x, pt.y, nsnull);
 }
 
 gfxFloat
-gfxWindowsFontGroup::MeasureText(gfxContext *aContext, const nsAString& aString)
+gfxWindowsTextRun::MeasureString(gfxContext *aContext)
 {
-    return MeasureOrDrawUniscribe(aContext, PromiseFlatString(aString).get(), aString.Length(), PR_FALSE, 0, 0, nsnull);
+    return MeasureOrDrawUniscribe(aContext, mString.get(), mString.Length(), PR_FALSE, 0, 0, nsnull);
 }
 
 
 PRInt32
-gfxWindowsFontGroup::MeasureOrDrawUniscribe(gfxContext *aContext,
-                                            const PRUnichar *aString, PRUint32 aLength,
-                                            PRBool aDraw, PRInt32 aX, PRInt32 aY, const PRInt32 *aSpacing)
+gfxWindowsTextRun::MeasureOrDrawUniscribe(gfxContext *aContext,
+                                          const PRUnichar *aString, PRUint32 aLength,
+                                          PRBool aDraw, PRInt32 aX, PRInt32 aY, const PRInt32 *aSpacing)
 {
     HDC aDC = static_cast<gfxWindowsSurface*>(aContext->CurrentSurface())->GetDC();
 
@@ -323,15 +343,15 @@ TRY_AGAIN_SAME_SCRIPT:
         loops++;
         SaveDC(aDC);
 
-        gfxWindowsFont *currentFont = static_cast<gfxWindowsFont*>(mFonts[fontIndex]);
+        gfxWindowsFont *currentFont = static_cast<gfxWindowsFont*>(mGroup->mFonts[fontIndex]);
         fontFace = currentFont->CairoFontFace();
         scaledFont = currentFont->CairoScaledFont();
 
         cairo_set_font_face(cr, fontFace);
-        cairo_set_font_size(cr, mStyle.size);
+        cairo_set_font_size(cr, mGroup->mStyle.size);
         cairo_win32_scaled_font_select_font(scaledFont, aDC);
         const double cairofontfactor = cairo_win32_scaled_font_get_metrics_factor(scaledFont);
-        const double cairoToPixels = cairofontfactor * mStyle.size;
+        const double cairoToPixels = cairofontfactor * mGroup->mStyle.size;
 
         if (!isComplex)
             items[i].a.eScript = SCRIPT_UNDEFINED;
@@ -346,7 +366,7 @@ TRY_AGAIN_SAME_SCRIPT:
         }
 
         if (rv == USP_E_SCRIPT_NOT_IN_FONT) {
-            if (fontIndex < mFonts.size() - 1) {
+            if (fontIndex < mGroup->mFonts.size() - 1) {
                 fontIndex++;
                 cairo_win32_scaled_font_done_font(scaledFont);
                 RestoreDC(aDC, -1);
@@ -361,13 +381,14 @@ TRY_AGAIN_SAME_SCRIPT:
         }
 
         if (numGlyphs > 0 && glyphs[0] == 0) {
-            if (fontIndex < mFonts.size() - 1) {
+            if (fontIndex < mGroup->mFonts.size() - 1) {
                 fontIndex++;
                 cairo_win32_scaled_font_done_font(scaledFont);
                 RestoreDC(aDC, -1);
                 goto TRY_AGAIN_SAME_SCRIPT;
             }
             // otherwise we fail to draw the characters so give up and continue on.
+            printf("failed to render glyphs :(\n");
         }
 
         if (rv == 0) {

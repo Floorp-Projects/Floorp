@@ -51,11 +51,8 @@ public:
 
     virtual const gfxFont::Metrics& GetMetrics();
 
-    // private, but for use by gfxPangoFontGroup
-    void UpdateContext(gfxContext *ctx);
-    PangoContext *GetContext() { RealizeFont(); return mPangoCtx; }
-    void GetSize(const char *aString, PRUint32 aLength, gfxSize& inkSize, gfxSize& logSize);
-    void DrawString(gfxContext *ctx, const char *aString, PRUint32 aLength, gfxPoint pt);
+    PangoFontDescription* GetPangoFontDescription() { RealizeFont(); return mPangoFontDesc; }
+    PangoContext* GetPangoContext() { RealizeFont(); return mPangoCtx; }
 
 protected:
     nsString mName;
@@ -69,6 +66,7 @@ protected:
     Metrics mMetrics;
 
     void RealizeFont(PRBool force = PR_FALSE);
+    void GetSize(const char *aString, PRUint32 aLength, gfxSize& inkSize, gfxSize& logSize);
 };
 
 class NS_EXPORT gfxPangoFontGroup : public gfxFontGroup {
@@ -77,15 +75,29 @@ public:
                        const gfxFontStyle *aStyle);
     virtual ~gfxPangoFontGroup ();
 
-    virtual void DrawString (gfxContext *aContext,
-                             const nsAString& aString,
-                             gfxPoint pt);
-
-    virtual gfxFloat MeasureText (gfxContext *aContext,
-                                  const nsAString& aString);
+    virtual gfxTextRun *MakeTextRun(const nsAString& aString);
 
 protected:
     virtual gfxFont* MakeFont(const nsAString& aName);
+};
+
+class NS_EXPORT gfxPangoTextRun : public gfxTextRun {
+    THEBES_DECL_ISUPPORTS_INHERITED
+public:
+    gfxPangoTextRun(const nsAString& aString, gfxPangoFontGroup *aFontGroup);
+    ~gfxPangoTextRun();
+
+    virtual void DrawString(gfxContext *aContext, gfxPoint pt);
+    virtual gfxFloat MeasureString(gfxContext *aContext);
+
+private:
+    nsString mString;
+    gfxPangoFontGroup *mGroup;
+
+    PangoLayout *mPangoLayout;
+    int mWidth, mHeight;
+
+    void EnsurePangoLayout(gfxContext *aContext = nsnull);
 };
 
 #endif /* GFX_PANGOFONTS_H */

@@ -72,6 +72,9 @@ public:
   NS_IMETHOD Init(nsIDeviceContext* aContext);
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget) {return NS_ERROR_NOT_IMPLEMENTED;}
   NS_IMETHOD Init(nsIDeviceContext* aContext, nsIDrawingSurface* aSurface) {return NS_ERROR_NOT_IMPLEMENTED;}
+#ifdef MOZ_CAIRO_GFX
+  NS_IMETHOD Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface) {return NS_ERROR_NOT_IMPLEMENTED;}
+#endif
 
   NS_IMETHOD Reset(void);
 

@@ -78,18 +78,37 @@ class NS_EXPORT gfxWindowsFontGroup : public gfxFontGroup {
 public:
     gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFontStyle* aStyle, HWND hwnd);
     virtual ~gfxWindowsFontGroup();
-    void DrawString(gfxContext *aContext, const nsAString& aString, gfxPoint pt);
-    gfxFloat MeasureText(gfxContext *aContext, const nsAString& aString);
+
+    virtual gfxTextRun *MakeTextRun(const nsAString& aString);
 
 protected:
     virtual gfxFont *MakeFont(const nsAString& aName);
+
+private:
+    HWND mWnd;
+
+    friend class gfxWindowsTextRun;
+};
+
+
+class NS_EXPORT gfxWindowsTextRun : public gfxTextRun {
+    THEBES_DECL_ISUPPORTS_INHERITED
+
+public:
+    gfxWindowsTextRun(const nsAString& aString, gfxWindowsFontGroup *aFontGroup);
+    ~gfxWindowsTextRun();
+
+    virtual void DrawString(gfxContext *aContext, gfxPoint pt);
+    virtual gfxFloat MeasureString(gfxContext *aContext);
 
 private:
     PRInt32 MeasureOrDrawUniscribe(gfxContext *aContext,
                                    const PRUnichar *aString, PRUint32 aLength,
                                    PRBool aDraw, PRInt32 aX, PRInt32 aY, const PRInt32 *aSpacing);
 
-    HWND mWnd;
+
+    nsString mString;
+    gfxWindowsFontGroup *mGroup;
 };
 
 #endif /* GFX_WINDOWSFONTS_H */

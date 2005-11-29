@@ -38,6 +38,8 @@
 
 #ifndef __nsWindow_h__
 
+#include "nsAutoPtr.h"
+
 #include "nsCommonWidget.h"
 
 #include "mozcontainer.h"
@@ -285,6 +287,10 @@ public:
    NS_IMETHOD          UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas);
 #endif
 
+#ifdef MOZ_CAIRO_GFX
+    gfxASurface       *GetThebesSurface();
+#endif
+
 private:
     void               GetToplevelWidget(GtkWidget **aWidget);
     void               GetContainerWindow(nsWindow  **aWindow);
@@ -309,6 +315,10 @@ private:
     GtkWindow          *mTransientParent;
     PRInt32             mSizeState;
     PluginType          mPluginType;
+
+#ifdef MOZ_CAIRO_GFX
+    nsRefPtr<gfxASurface> mThebesSurface;
+#endif
 
 #ifdef ACCESSIBILITY
     nsCOMPtr<nsIAccessible> mRootAccessible;

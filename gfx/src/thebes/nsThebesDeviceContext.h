@@ -90,14 +90,6 @@ public:
     NS_IMETHOD GetRect(nsRect &aRect);
     NS_IMETHOD GetClientRect(nsRect &aRect);
 
-#ifdef MOZ_ENABLE_GLITZ
-    /* glitz_drawable_format_t */ void* GetGlitzDrawableFormat();
-
-#ifdef MOZ_ENABLE_GTK2
-    /* GdkVisual */ void* GetDesiredVisual();
-#endif
-#endif
-
     /* printing goop */
     NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                    nsIDeviceContext *&aContext);

@@ -60,6 +60,9 @@ public:
     // a fast server pixmap
     nsresult Init (nsThebesDeviceContext *aDC, PRUint32 aWidth, PRUint32 aHeight, PRBool aFastAccess);
 
+    // wrap a gfxASurface with a nsThebesDrawingSurface
+    nsresult Init (nsThebesDeviceContext *aDC, gfxASurface *aSurface);
+
     // create a fast drawing surface for a native widget
     nsresult Init (nsThebesDeviceContext *aDC, nsIWidget *aWidget);
 

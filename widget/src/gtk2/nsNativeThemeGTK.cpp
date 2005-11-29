@@ -63,6 +63,7 @@
 
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
+#include "gfxPlatformGtk.h"
 #endif
 
 NS_IMPL_ISUPPORTS2(nsNativeThemeGTK, nsITheme, nsIObserver)
@@ -490,7 +491,8 @@ nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
                             aClipRect.width * t2p,
                             aClipRect.height * t2p };
 
-  GdkWindow *gdkwin = (GdkWindow*) aContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE);
+
+  GdkWindow* gdkwin = (GdkWindow*) gfxPlatformGtk::GetPlatform()->GetSurfaceGdkDrawable(ctx->CurrentSurface());
   GdkDrawable *target_drawable = nsnull;
   PRBool needs_thebes_composite = PR_FALSE;
 

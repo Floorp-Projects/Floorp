@@ -47,6 +47,10 @@
 
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
 
+/**
+ ** gfxPangoFont
+ **/
+
 gfxPangoFont::gfxPangoFont(const nsAString &aName, const gfxFontGroup *aFontGroup)
     : mName(aName), mFontGroup(aFontGroup)
 {
@@ -159,13 +163,6 @@ gfxPangoFont::RealizeFont(PRBool force)
 }
 
 void
-gfxPangoFont::UpdateContext(gfxContext *ctx)
-{
-    RealizeFont();
-    pango_cairo_update_context (ctx->GetCairo(), mPangoCtx);
-}
-
-void
 gfxPangoFont::GetSize(const char *aCharString, PRUint32 aLength, gfxSize& inkSize, gfxSize& logSize)
 {
     RealizeFont();
@@ -194,35 +191,6 @@ gfxPangoFont::GetSize(const char *aCharString, PRUint32 aLength, gfxSize& inkSiz
     pango_glyph_string_free(glstr);
     pango_item_free(item);
     g_list_free(items);
-}
-
-void
-gfxPangoFont::DrawString(gfxContext *ctx, const char *aString, PRUint32 aLength, gfxPoint pt)
-{
-    //fprintf (stderr, "DrawString: '%s'\n", aString);
-    gfxMatrix mat = ctx->CurrentMatrix();
-
-    PangoLayout *layout = pango_layout_new (mPangoCtx);
-    pango_layout_set_text (layout, aString, aLength);
-
-    if (pango_layout_get_line_count(layout) == 1) {
-        // we draw only the first layout line, because
-        // we can then position by baseline (which is what pt is at);
-        // using show_layout expects top-left point.
-        ctx->MoveTo(pt);
-        UpdateContext(ctx);
-        PangoLayoutLine *line = pango_layout_get_line(layout, 0);
-        pango_cairo_show_layout_line (ctx->GetCairo(), line);
-    } else {
-        //printf("**** gfxPangoFonts: more than one line in layout!\n");
-        // we really should never hit this
-        ctx->MoveTo(gfxPoint(pt.x, pt.y - mMetrics.height));
-        UpdateContext(ctx);
-        pango_cairo_show_layout (ctx->GetCairo(), layout);
-    }
-    g_object_unref (layout);
-
-    ctx->SetMatrix(mat);
 }
 
 const gfxFont::Metrics&
@@ -302,6 +270,10 @@ gfxPangoFont::GetMetrics()
     return mMetrics;
 }
 
+/**
+ ** gfxPangoFontGroup
+ **/
+
 gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
                                       const gfxFontStyle *aStyle)
     : gfxFontGroup(families, aStyle)
@@ -314,42 +286,92 @@ gfxPangoFontGroup::~gfxPangoFontGroup()
 {
 }
 
-void
-gfxPangoFontGroup::DrawString (gfxContext *aContext,
-                               const nsAString& aString,
-                               gfxPoint pt)
-{
-    gfxPangoFont *pf = ((gfxPangoFont*) mFonts[0]);
-    NS_ConvertUTF16toUTF8 u8str(aString);
-    pf->DrawString(aContext, u8str.Data(), u8str.Length(), pt);
-}
-
-gfxFloat
-gfxPangoFontGroup::MeasureText (gfxContext *aContext,
-                                const nsAString& aString)
-{
-    gfxPangoFont *pf = ((gfxPangoFont*) mFonts[0]);
-    NS_ConvertUTF16toUTF8 u8str(aString);
-    int pw, ph;
-
-    //fprintf (stderr, "SizeString: '%s'\n", u8str.Data());
-
-    pf->UpdateContext(aContext);
-    PangoLayout *layout = pango_layout_new (pf->GetContext());
-    pango_layout_set_text (layout, u8str.Data(), u8str.Length());
-    pango_layout_get_size(layout, &pw, &ph);
-    g_object_unref (layout);
-
-    return pw/PANGO_SCALE;
-}
-
 gfxFont*
 gfxPangoFontGroup::MakeFont(const nsAString& aName)
 {
     return nsnull;
 }
 
-/** language group helpers **/
+gfxTextRun*
+gfxPangoFontGroup::MakeTextRun(const nsAString& aString)
+{
+    return new gfxPangoTextRun(aString, this);
+}
+
+
+/**
+ ** gfxPangoTextRun
+ **/
+
+THEBES_IMPL_REFCOUNTING(gfxPangoTextRun)
+
+gfxPangoTextRun::gfxPangoTextRun(const nsAString& aString, gfxPangoFontGroup *aGroup)
+    : mString(aString), mGroup(aGroup), mPangoLayout(nsnull), mWidth(-1), mHeight(-1)
+{
+}
+
+gfxPangoTextRun::~gfxPangoTextRun()
+{
+    if (mPangoLayout) {
+        g_object_unref (mPangoLayout);
+        mPangoLayout = nsnull;
+    }
+}
+
+void
+gfxPangoTextRun::EnsurePangoLayout(gfxContext *aContext)
+{
+    gfxPangoFont *pf = ((gfxPangoFont*) mGroup->GetFontList()[0]);
+
+    if (mPangoLayout == nsnull) {
+        NS_ConvertUTF16toUTF8 u8str(mString);
+
+        mPangoLayout = pango_layout_new (pf->GetPangoContext());
+        pango_layout_set_text (mPangoLayout, u8str.Data(), u8str.Length());
+
+        if (pango_layout_get_line_count(mPangoLayout) != 1) {
+            NS_WARNING("gfxPangoFonts: more than one line in layout!\n");
+        }
+    }
+
+    if (aContext) {
+        pango_cairo_update_context (aContext->GetCairo(), pf->GetPangoContext());
+    }
+}
+
+void
+gfxPangoTextRun::DrawString (gfxContext *aContext, gfxPoint pt)
+{
+    gfxMatrix mat = aContext->CurrentMatrix();
+
+    aContext->MoveTo(pt);
+
+    // we draw only the first layout line, because
+    // we can then position by baseline (which is what pt is at);
+    // using show_layout expects top-left point.
+    EnsurePangoLayout(aContext);
+    PangoLayoutLine *line = pango_layout_get_line(mPangoLayout, 0);
+    pango_cairo_show_layout_line (aContext->GetCairo(), line);
+
+    aContext->SetMatrix(mat);
+}
+
+gfxFloat
+gfxPangoTextRun::MeasureString (gfxContext *aContext)
+{
+    if (mWidth == -1) {
+        EnsurePangoLayout(aContext);
+        pango_layout_get_size (mPangoLayout, &mWidth, &mHeight);
+    }
+
+    return mWidth/PANGO_SCALE;
+}
+
+
+/**
+ ** language group helpers
+ **/
+
 struct MozPangoLangGroup {
     const char *mozLangGroup;
     const char *PangoLang;
