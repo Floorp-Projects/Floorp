@@ -276,7 +276,7 @@ nsThebesDeviceContext::CreateRenderingContext(nsIDrawingSurface *aSurface,
 
 NS_IMETHODIMP
 nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
-                                             nsIRenderingContext *&aContext)
+                                              nsIRenderingContext *&aContext)
 {
     nsresult rv;
 
@@ -284,7 +284,11 @@ nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
     nsCOMPtr<nsIRenderingContext> pContext;
     rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
     if (NS_SUCCEEDED(rv)) {
-        rv = pContext->Init(this, aWidget->GetThebesSurface());
+        nsRefPtr<gfxASurface> surface(aWidget->GetThebesSurface());
+        if (surface)
+            rv = pContext->Init(this, surface);
+        else
+            rv = pContext->Init(this, aWidget);
         if (NS_SUCCEEDED(rv)) {
             aContext = pContext;
             NS_ADDREF(aContext);

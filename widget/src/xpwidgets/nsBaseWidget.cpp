@@ -48,11 +48,6 @@
 #include "nsIScreenManager.h"
 #include "nsAppDirectoryServiceDefs.h"
 
-#ifdef MOZ_CAIRO_GFX
-#include <stdlib.h>
-#include "gfxPlatform.h"
-#endif
-
 #ifdef DEBUG
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
@@ -617,10 +612,12 @@ nsIRenderingContext* nsBaseWidget::GetRenderingContext()
 
   rv = mContext->CreateRenderingContextInstance(*getter_AddRefs(renderingCtx));
   if (NS_SUCCEEDED(rv)) {
-#ifndef MOZ_CAIRO_GFX
-    rv = renderingCtx->Init(mContext, this);
-#else
+    // this should be all MOZ_CAIRO_GFX, but none of the other
+    // platforms have GetThebesSurface() implemented yet
+#if defined(MOZ_CAIRO_GFX) && defined(MOZ_WIDGET_GTK2)
     rv = renderingCtx->Init(mContext, GetThebesSurface());
+#else
+    rv = renderingCtx->Init(mContext, this);
 #endif
     if (NS_SUCCEEDED(rv)) {
       nsIRenderingContext *ret = renderingCtx;

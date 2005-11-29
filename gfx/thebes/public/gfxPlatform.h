@@ -49,7 +49,7 @@ public:
      * This is a singleton; it contains mostly convenience
      * functions to obtain platform-specific objects.
      */
-    static gfxPlatform* GetPlatform();
+    static gfxPlatform *GetPlatform();
 
     /**
      * Return PR_TRUE if we're to use Glitz for acceleration.
@@ -69,15 +69,15 @@ public:
      * create a surface that is optimized for rapid pixel
      * changing.
      */
-    virtual gfxASurface* CreateOffscreenSurface (PRUint32 width,
-                                                 PRUint32 height,
-                                                 gfxASurface::gfxImageFormat imageFormat,
-                                                 PRBool fastPixelAccess = PR_FALSE) = 0;
+    virtual gfxASurface *CreateOffscreenSurface(PRUint32 width,
+                                                PRUint32 height,
+                                                gfxASurface::gfxImageFormat imageFormat,
+                                                PRBool fastPixelAccess = PR_FALSE) = 0;
 protected:
     gfxPlatform() { }
     ~gfxPlatform() { }
 
-    static gfxPlatform* mPlatform;
+    static gfxPlatform *mPlatform;
     static int mGlitzState;
 };
 
