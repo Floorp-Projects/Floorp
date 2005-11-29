@@ -81,7 +81,8 @@ public:
   // nsIDOMHTMLTableElement
   NS_DECL_NSIDOMHTMLTABLEELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -876,62 +877,69 @@ static const nsAttrValue::EnumTable kLayoutTable[] = {
 
 
 PRBool
-nsHTMLTableElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLTableElement::ParseAttribute(PRInt32 aNamespaceID,
+                                   nsIAtom* aAttribute,
                                    const nsAString& aValue,
                                    nsAttrValue& aResult)
 {
   /* ignore summary, just a string */
-  if (aAttribute == nsHTMLAtoms::cellspacing ||
-      aAttribute == nsHTMLAtoms::cellpadding) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::cols) {
-    return aResult.ParseIntWithBounds(aValue, 0);
-  }
-  if (aAttribute == nsHTMLAtoms::border) {
-    if (!aResult.ParseIntWithBounds(aValue, 0)) {
-      // XXX this should really be NavQuirks only to allow non numeric value
-      aResult.SetTo(1);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::cellspacing ||
+        aAttribute == nsHTMLAtoms::cellpadding) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-
-    return PR_TRUE;
-  }
-  if (aAttribute == nsHTMLAtoms::height) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::width) {
-    if (aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE)) {
-      // treat 0 width as auto
-      nsAttrValue::ValueType type = aResult.Type();
-      if ((type == nsAttrValue::eInteger && aResult.GetIntegerValue() == 0) ||
-          (type == nsAttrValue::ePercent && aResult.GetPercentValue() == 0.0f)) {
-        return PR_FALSE;
+    if (aAttribute == nsHTMLAtoms::cols) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
+    if (aAttribute == nsHTMLAtoms::border) {
+      if (!aResult.ParseIntWithBounds(aValue, 0)) {
+        // XXX this should really be NavQuirks only to allow non numeric value
+        aResult.SetTo(1);
       }
+
+      return PR_TRUE;
     }
-    return PR_TRUE;
-  }
-  if (aAttribute == nsHTMLAtoms::align) {
-    return ParseTableHAlignValue(aValue, aResult);
-  }
-  if (aAttribute == nsHTMLAtoms::bgcolor ||
-           aAttribute == nsHTMLAtoms::bordercolor) {
-    return aResult.ParseColor(aValue, GetOwnerDoc());
-  }
-  if (aAttribute == nsHTMLAtoms::frame) {
-    return aResult.ParseEnumValue(aValue, kFrameTable);
-  }
-  if (aAttribute == nsHTMLAtoms::layout) {
-    return aResult.ParseEnumValue(aValue, kLayoutTable);
-  }
-  if (aAttribute == nsHTMLAtoms::rules) {
-    return aResult.ParseEnumValue(aValue, kRulesTable);
-  }
-  if (aAttribute == nsHTMLAtoms::hspace ||
-           aAttribute == nsHTMLAtoms::vspace) {
-    return aResult.ParseIntWithBounds(aValue, 0);
+    if (aAttribute == nsHTMLAtoms::height) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::width) {
+      if (aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE)) {
+        // treat 0 width as auto
+        nsAttrValue::ValueType type = aResult.Type();
+        if ((type == nsAttrValue::eInteger &&
+             aResult.GetIntegerValue() == 0) ||
+            (type == nsAttrValue::ePercent &&
+             aResult.GetPercentValue() == 0.0f)) {
+          return PR_FALSE;
+        }
+      }
+      return PR_TRUE;
+    }
+    
+    if (aAttribute == nsHTMLAtoms::align) {
+      return ParseTableHAlignValue(aValue, aResult);
+    }
+    if (aAttribute == nsHTMLAtoms::bgcolor ||
+        aAttribute == nsHTMLAtoms::bordercolor) {
+      return aResult.ParseColor(aValue, GetOwnerDoc());
+    }
+    if (aAttribute == nsHTMLAtoms::frame) {
+      return aResult.ParseEnumValue(aValue, kFrameTable);
+    }
+    if (aAttribute == nsHTMLAtoms::layout) {
+      return aResult.ParseEnumValue(aValue, kLayoutTable);
+    }
+    if (aAttribute == nsHTMLAtoms::rules) {
+      return aResult.ParseEnumValue(aValue, kRulesTable);
+    }
+    if (aAttribute == nsHTMLAtoms::hspace ||
+        aAttribute == nsHTMLAtoms::vspace) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static void 

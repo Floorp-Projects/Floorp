@@ -64,7 +64,8 @@ public:
   // nsIDOMHTMLDivElement
   NS_DECL_NSIDOMHTMLDIVELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -104,29 +105,34 @@ NS_IMPL_STRING_ATTR(nsHTMLDivElement, Align, align)
 
 
 PRBool
-nsHTMLDivElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLDivElement::ParseAttribute(PRInt32 aNamespaceID,
+                                 nsIAtom* aAttribute,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::marquee)) {
-   if ((aAttribute == nsHTMLAtoms::width) ||
-       (aAttribute == nsHTMLAtoms::height)) {
-     return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-   }
-   if (aAttribute == nsHTMLAtoms::bgcolor) {
-     return aResult.ParseColor(aValue, GetOwnerDoc());
-   }
-   if ((aAttribute == nsHTMLAtoms::hspace) ||
-       (aAttribute == nsHTMLAtoms::vspace)) {
-     return aResult.ParseIntWithBounds(aValue, 0);
-   }
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (mNodeInfo->Equals(nsHTMLAtoms::marquee)) {
+      if ((aAttribute == nsHTMLAtoms::width) ||
+          (aAttribute == nsHTMLAtoms::height)) {
+        return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+      }
+      if (aAttribute == nsHTMLAtoms::bgcolor) {
+        return aResult.ParseColor(aValue, GetOwnerDoc());
+      }
+      if ((aAttribute == nsHTMLAtoms::hspace) ||
+          (aAttribute == nsHTMLAtoms::vspace)) {
+        return aResult.ParseIntWithBounds(aValue, 0);
+      }
+    }
+
+    if (mNodeInfo->Equals(nsHTMLAtoms::div) &&
+        aAttribute == nsHTMLAtoms::align) {
+      return ParseDivAlignValue(aValue, aResult);
+    }
   }
 
-  if (mNodeInfo->Equals(nsHTMLAtoms::div) && aAttribute == nsHTMLAtoms::align) {
-    return ParseDivAlignValue(aValue, aResult);
-  }
-
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static void

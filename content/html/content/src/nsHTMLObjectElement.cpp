@@ -98,7 +98,8 @@ public:
   virtual void DoneAddingChildren(PRBool aHaveNotified);
   virtual PRBool IsDoneAddingChildren();
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -365,18 +366,22 @@ nsHTMLObjectElement::GetContentDocument(nsIDOMDocument** aContentDocument)
 }
 
 PRBool
-nsHTMLObjectElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLObjectElement::ParseAttribute(PRInt32 aNamespaceID,
+                                    nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::align) {
-    return ParseAlignValue(aValue, aResult);
-  }
-  if (ParseImageAttribute(aAttribute, aValue, aResult)) {
-    return PR_TRUE;
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::align) {
+      return ParseAlignValue(aValue, aResult);
+    }
+    if (ParseImageAttribute(aAttribute, aValue, aResult)) {
+      return PR_TRUE;
+    }
   }
 
-  return nsGenericHTMLFormElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLFormElement::ParseAttribute(aNamespaceID, aAttribute,
+                                                  aValue, aResult);
 }
 
 static void

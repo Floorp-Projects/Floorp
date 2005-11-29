@@ -1237,7 +1237,8 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 }
 
 PRBool
-nsXULElement::ParseAttribute(nsIAtom* aAttribute,
+nsXULElement::ParseAttribute(PRInt32 aNamespaceID,
+                             nsIAtom* aAttribute,
                              const nsAString& aValue,
                              nsAttrValue& aResult)
 {
@@ -1246,18 +1247,21 @@ nsXULElement::ParseAttribute(nsIAtom* aAttribute,
     // WARNING!!
     // This code is largely duplicated in nsXULPrototypeElement::SetAttrAt.
     // Any changes should be made to both functions.
-    if (aAttribute == nsXULAtoms::style) {
-        nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE, aValue,
-                                                  aResult);
-        return PR_TRUE;
+    if (aNamespaceID == kNameSpaceID_None) {
+        if (aAttribute == nsXULAtoms::style) {
+            nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE, aValue,
+                                                      aResult);
+            return PR_TRUE;
+        }
+
+        if (aAttribute == nsXULAtoms::clazz) {
+            aResult.ParseAtomArray(aValue);
+            return PR_TRUE;
+        }
     }
 
-    if (aAttribute == nsXULAtoms::clazz) {
-        aResult.ParseAtomArray(aValue);
-        return PR_TRUE;
-    }
-
-    if (!nsGenericElement::ParseAttribute(aAttribute, aValue, aResult)) {
+    if (!nsGenericElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                          aResult)) {
         // Fall back to parsing as atom for short values
         aResult.ParseStringOrAtom(aValue);
     }

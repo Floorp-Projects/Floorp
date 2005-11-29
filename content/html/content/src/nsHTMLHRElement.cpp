@@ -70,7 +70,8 @@ public:
   // nsIDOMNSHTMLHRElement
   NS_DECL_NSIDOMNSHTMLHRELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -120,24 +121,28 @@ static const nsAttrValue::EnumTable kAlignTable[] = {
 };
 
 PRBool
-nsHTMLHRElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLHRElement::ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::width) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::size) {
-    return aResult.ParseIntWithBounds(aValue, 1, 1000);
-  }
-  if (aAttribute == nsHTMLAtoms::align) {
-    return aResult.ParseEnumValue(aValue, kAlignTable);
-  }
-  if (aAttribute == nsHTMLAtoms::color) {
-    return aResult.ParseColor(aValue, GetOwnerDoc());
+  if (aAttribute == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::width) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::size) {
+      return aResult.ParseIntWithBounds(aValue, 1, 1000);
+    }
+    if (aAttribute == nsHTMLAtoms::align) {
+      return aResult.ParseEnumValue(aValue, kAlignTable);
+    }
+    if (aAttribute == nsHTMLAtoms::color) {
+      return aResult.ParseColor(aValue, GetOwnerDoc());
+    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static void

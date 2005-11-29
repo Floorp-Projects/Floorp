@@ -199,7 +199,8 @@ public:
                                   nsIFormControl* aRadio);
 
   // nsIContent
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
@@ -646,18 +647,22 @@ static const nsAttrValue::EnumTable kFormEnctypeTable[] = {
 };
 
 PRBool
-nsHTMLFormElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLFormElement::ParseAttribute(PRInt32 aNamespaceID,
+                                  nsIAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::method) {
-    return aResult.ParseEnumValue(aValue, kFormMethodTable);
-  }
-  if (aAttribute == nsHTMLAtoms::enctype) {
-    return aResult.ParseEnumValue(aValue, kFormEnctypeTable);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::method) {
+      return aResult.ParseEnumValue(aValue, kFormMethodTable);
+    }
+    if (aAttribute == nsHTMLAtoms::enctype) {
+      return aResult.ParseEnumValue(aValue, kFormEnctypeTable);
+    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 nsresult

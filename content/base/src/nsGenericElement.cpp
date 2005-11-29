@@ -4033,8 +4033,7 @@ nsGenericElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   NS_ENSURE_SUCCESS(rv, rv);
   
   nsAttrValue attrValue;
-  if (aNamespaceID != kNameSpaceID_None ||
-      !ParseAttribute(aName, aValue, attrValue)) {
+  if (!ParseAttribute(aNamespaceID, aName, aValue, attrValue)) {
     attrValue.SetTo(aValue);
   }
 
@@ -4131,11 +4130,13 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
 }
 
 PRBool
-nsGenericElement::ParseAttribute(nsIAtom* aAttribute,
+nsGenericElement::ParseAttribute(PRInt32 aNamespaceID,
+                                 nsIAtom* aAttribute,
                                  const nsAString& aValue,
                                  nsAttrValue& aResult)
 {
-  if (aAttribute == GetIDAttributeName() && !aValue.IsEmpty()) {
+  if (aNamespaceID == kNameSpaceID_None &&
+      aAttribute == GetIDAttributeName() && !aValue.IsEmpty()) {
     // Store id as an atom.  id="" means that the element has no id,
     // not that it has an emptystring as the id.
     aResult.ParseAtom(aValue);

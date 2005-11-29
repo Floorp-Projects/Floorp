@@ -69,7 +69,8 @@ public:
   // nsIDOMHTMLFontElement
   NS_DECL_NSIDOMHTMLFONTELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -135,30 +136,34 @@ static const nsAttrValue::EnumTable kRelFontSizeTable[] = {
 
 
 PRBool
-nsHTMLFontElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
+                                  nsIAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::size) {
-    nsAutoString tmp(aValue);
-    tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
-    PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
-    if ((ch == '+' || ch == '-') &&
-        aResult.ParseEnumValue(aValue, kRelFontSizeTable)) {
-      return PR_TRUE;
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::size) {
+      nsAutoString tmp(aValue);
+      tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
+      PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
+      if ((ch == '+' || ch == '-') &&
+          aResult.ParseEnumValue(aValue, kRelFontSizeTable)) {
+        return PR_TRUE;
+      }
+
+      return aResult.ParseIntValue(aValue);
     }
-
-    return aResult.ParseIntValue(aValue);
-  }
-  if (aAttribute == nsHTMLAtoms::pointSize ||
-      aAttribute == nsHTMLAtoms::fontWeight) {
-    return aResult.ParseIntValue(aValue);
-  }
-  if (aAttribute == nsHTMLAtoms::color) {
-    return aResult.ParseColor(aValue, GetOwnerDoc());
+    if (aAttribute == nsHTMLAtoms::pointSize ||
+        aAttribute == nsHTMLAtoms::fontWeight) {
+      return aResult.ParseIntValue(aValue);
+    }
+    if (aAttribute == nsHTMLAtoms::color) {
+      return aResult.ParseColor(aValue, GetOwnerDoc());
+    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static void

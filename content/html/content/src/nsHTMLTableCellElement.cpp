@@ -68,7 +68,8 @@ public:
   // nsIDOMHTMLTableCellElement
   NS_DECL_NSIDOMHTMLTABLECELLELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -261,60 +262,65 @@ static const nsAttrValue::EnumTable kCellScopeTable[] = {
 #define MAX_COLSPAN 1000 // limit as IE and opera do
 
 PRBool
-nsHTMLTableCellElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
+                                       nsIAtom* aAttribute,
                                        const nsAString& aValue,
                                        nsAttrValue& aResult)
 {
-  /* ignore these attributes, stored simply as strings
-     abbr, axis, ch, headers
-   */
-  if (aAttribute == nsHTMLAtoms::charoff) {
-    /* attributes that resolve to integers with a min of 0 */
-    return aResult.ParseIntWithBounds(aValue, 0);
-  }
-  if (aAttribute == nsHTMLAtoms::colspan) {
-    PRBool res = aResult.ParseIntWithBounds(aValue, -1);
-    if (res) {
-      PRInt32 val = aResult.GetIntegerValue();
-      // reset large colspan values as IE and opera do
-      // quirks mode does not honor the special html 4 value of 0
-      if (val > MAX_COLSPAN || val < 0 || (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
-        aResult.SetTo(1);
-      }
+  if (aNamespaceID == kNameSpaceID_None) {
+    /* ignore these attributes, stored simply as strings
+       abbr, axis, ch, headers
+    */
+    if (aAttribute == nsHTMLAtoms::charoff) {
+      /* attributes that resolve to integers with a min of 0 */
+      return aResult.ParseIntWithBounds(aValue, 0);
     }
-    return res;
-  }
-  if (aAttribute == nsHTMLAtoms::rowspan) {
-    PRBool res = aResult.ParseIntWithBounds(aValue, -1, MAX_ROWSPAN);
-    if (res) {
-      PRInt32 val = aResult.GetIntegerValue();
-      // quirks mode does not honor the special html 4 value of 0
-      if (val < 0 || (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
-        aResult.SetTo(1);
+    if (aAttribute == nsHTMLAtoms::colspan) {
+      PRBool res = aResult.ParseIntWithBounds(aValue, -1);
+      if (res) {
+        PRInt32 val = aResult.GetIntegerValue();
+        // reset large colspan values as IE and opera do
+        // quirks mode does not honor the special html 4 value of 0
+        if (val > MAX_COLSPAN || val < 0 ||
+            (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
+          aResult.SetTo(1);
+        }
       }
+      return res;
     }
-    return res;
-  }
-  if (aAttribute == nsHTMLAtoms::height) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::width) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::align) {
-    return ParseTableCellHAlignValue(aValue, aResult);
-  }
-  if (aAttribute == nsHTMLAtoms::bgcolor) {
-    return aResult.ParseColor(aValue, GetOwnerDoc());
-  }
-  if (aAttribute == nsHTMLAtoms::scope) {
-    return aResult.ParseEnumValue(aValue, kCellScopeTable);
-  }
-  if (aAttribute == nsHTMLAtoms::valign) {
-    return ParseTableVAlignValue(aValue, aResult);
+    if (aAttribute == nsHTMLAtoms::rowspan) {
+      PRBool res = aResult.ParseIntWithBounds(aValue, -1, MAX_ROWSPAN);
+      if (res) {
+        PRInt32 val = aResult.GetIntegerValue();
+        // quirks mode does not honor the special html 4 value of 0
+        if (val < 0 || (0 == val && InNavQuirksMode(GetOwnerDoc()))) {
+          aResult.SetTo(1);
+        }
+      }
+      return res;
+    }
+    if (aAttribute == nsHTMLAtoms::height) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::width) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::align) {
+      return ParseTableCellHAlignValue(aValue, aResult);
+    }
+    if (aAttribute == nsHTMLAtoms::bgcolor) {
+      return aResult.ParseColor(aValue, GetOwnerDoc());
+    }
+    if (aAttribute == nsHTMLAtoms::scope) {
+      return aResult.ParseEnumValue(aValue, kCellScopeTable);
+    }
+    if (aAttribute == nsHTMLAtoms::valign) {
+      return ParseTableVAlignValue(aValue, aResult);
+    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 static 

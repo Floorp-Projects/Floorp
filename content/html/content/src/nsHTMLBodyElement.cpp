@@ -106,7 +106,8 @@ public:
   // nsIDOMHTMLBodyElement
   NS_DECL_NSIDOMHTMLBODYELEMENT
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
@@ -387,27 +388,31 @@ nsHTMLBodyElement::SetBgColor(const nsAString& aBgColor)
 }
 
 PRBool
-nsHTMLBodyElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLBodyElement::ParseAttribute(PRInt32 aNamespaceID,
+                                  nsIAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::bgcolor ||
-      aAttribute == nsHTMLAtoms::text ||
-      aAttribute == nsHTMLAtoms::link ||
-      aAttribute == nsHTMLAtoms::alink ||
-      aAttribute == nsHTMLAtoms::vlink) {
-    return aResult.ParseColor(aValue, GetOwnerDoc());
-  }
-  if (aAttribute == nsHTMLAtoms::marginwidth ||
-      aAttribute == nsHTMLAtoms::marginheight ||
-      aAttribute == nsHTMLAtoms::topmargin ||
-      aAttribute == nsHTMLAtoms::bottommargin ||
-      aAttribute == nsHTMLAtoms::leftmargin ||
-      aAttribute == nsHTMLAtoms::rightmargin) {
-    return aResult.ParseIntWithBounds(aValue, 0);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::bgcolor ||
+        aAttribute == nsHTMLAtoms::text ||
+        aAttribute == nsHTMLAtoms::link ||
+        aAttribute == nsHTMLAtoms::alink ||
+        aAttribute == nsHTMLAtoms::vlink) {
+      return aResult.ParseColor(aValue, GetOwnerDoc());
+    }
+    if (aAttribute == nsHTMLAtoms::marginwidth ||
+        aAttribute == nsHTMLAtoms::marginheight ||
+        aAttribute == nsHTMLAtoms::topmargin ||
+        aAttribute == nsHTMLAtoms::bottommargin ||
+        aAttribute == nsHTMLAtoms::leftmargin ||
+        aAttribute == nsHTMLAtoms::rightmargin) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 void

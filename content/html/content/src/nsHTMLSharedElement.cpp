@@ -132,8 +132,9 @@ public:
   NS_IMETHOD SetTabIndex(PRInt32 aTabIndex);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
   virtual PRUint32 GetDesiredIMEState();
-
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -283,46 +284,50 @@ NS_IMPL_URI_ATTR(nsHTMLSharedElement, Href, href)
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Target, target)
 
 PRBool
-nsHTMLSharedElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLSharedElement::ParseAttribute(PRInt32 aNamespaceID,
+                                    nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
-    if (aAttribute == nsHTMLAtoms::align) {
-      return ParseAlignValue(aValue, aResult);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
+      if (aAttribute == nsHTMLAtoms::align) {
+        return ParseAlignValue(aValue, aResult);
+      }
+      if (ParseImageAttribute(aAttribute, aValue, aResult)) {
+        return PR_TRUE;
+      }
     }
-    if (ParseImageAttribute(aAttribute, aValue, aResult)) {
-      return PR_TRUE;
+    else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
+      if (aAttribute == nsHTMLAtoms::size) {
+        return aResult.ParseIntWithBounds(aValue, 0);
+      }
+      if (aAttribute == nsHTMLAtoms::align) {
+        return ParseAlignValue(aValue, aResult);
+      }
+      if (aAttribute == nsHTMLAtoms::width ||
+          aAttribute == nsHTMLAtoms::height) {
+        return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+      }
     }
-  }
-  else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
-    if (aAttribute == nsHTMLAtoms::size) {
-      return aResult.ParseIntWithBounds(aValue, 0);
+    else if (mNodeInfo->Equals(nsHTMLAtoms::dir) ||
+             mNodeInfo->Equals(nsHTMLAtoms::menu)) {
+      if (aAttribute == nsHTMLAtoms::type) {
+        return aResult.ParseEnumValue(aValue, kListTypeTable);
+      }
+      if (aAttribute == nsHTMLAtoms::start) {
+        return aResult.ParseIntWithBounds(aValue, 1);
+      }
     }
-    if (aAttribute == nsHTMLAtoms::align) {
-      return ParseAlignValue(aValue, aResult);
-    }
-    if (aAttribute == nsHTMLAtoms::width ||
-        aAttribute == nsHTMLAtoms::height) {
-      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-    }
-  }
-  else if (mNodeInfo->Equals(nsHTMLAtoms::dir) ||
-           mNodeInfo->Equals(nsHTMLAtoms::menu)) {
-    if (aAttribute == nsHTMLAtoms::type) {
-      return aResult.ParseEnumValue(aValue, kListTypeTable);
-    }
-    if (aAttribute == nsHTMLAtoms::start) {
-      return aResult.ParseIntWithBounds(aValue, 1);
-    }
-  }
-  else if (mNodeInfo->Equals(nsHTMLAtoms::basefont)) {
-    if (aAttribute == nsHTMLAtoms::size) {
-      return aResult.ParseIntValue(aValue);
+    else if (mNodeInfo->Equals(nsHTMLAtoms::basefont)) {
+      if (aAttribute == nsHTMLAtoms::size) {
+        return aResult.ParseIntValue(aValue);
+      }
     }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 // spacer element code

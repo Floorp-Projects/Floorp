@@ -120,9 +120,8 @@ protected:
                                  const nsAString* aValue, PRBool aNotify);
   virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                 const nsAString* aValue, PRBool aNotify);
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsAttrValue& aResult);
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
+                                const nsAString& aValue, nsAttrValue& aResult);
 
   // Hooks for subclasses
   virtual PRBool IsEventName(nsIAtom* aName);

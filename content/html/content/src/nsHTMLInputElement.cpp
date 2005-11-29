@@ -180,7 +180,8 @@ public:
   virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
@@ -1728,56 +1729,60 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 };
 
 PRBool
-nsHTMLInputElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
+                                   nsIAtom* aAttribute,
                                    const nsAString& aValue,
                                    nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::type) {
-    // XXX ARG!! This is major evilness. ParseAttribute
-    // shouldn't set members. Override SetAttr instead
-    if (!aResult.ParseEnumValue(aValue, kInputTypeTable)) {
-      mType = NS_FORM_INPUT_TEXT;
-      return PR_FALSE;
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::type) {
+      // XXX ARG!! This is major evilness. ParseAttribute
+      // shouldn't set members. Override SetAttr instead
+      if (!aResult.ParseEnumValue(aValue, kInputTypeTable)) {
+        mType = NS_FORM_INPUT_TEXT;
+        return PR_FALSE;
+      }
+
+      mType = aResult.GetEnumValue();
+      if (mType == NS_FORM_INPUT_FILE) {
+        // If the type is being changed to file, set the element value
+        // to the empty string. This is for security.
+        // Call SetValueInternal so that this doesn't accidentally get caught
+        // in the security checks in SetValue.
+        SetValueInternal(EmptyString(), nsnull);
+      }
+
+      return PR_TRUE;
     }
-
-    mType = aResult.GetEnumValue();
-    if (mType == NS_FORM_INPUT_FILE) {
-      // If the type is being changed to file, set the element value
-      // to the empty string. This is for security.
-      // Call SetValueInternal so that this doesn't accidentally get caught
-      // in the security checks in SetValue.
-      SetValueInternal(EmptyString(), nsnull);
+    if (aAttribute == nsHTMLAtoms::width) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
     }
-
-    return PR_TRUE;
-  }
-  if (aAttribute == nsHTMLAtoms::width) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::height) {
-    return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
-  }
-  if (aAttribute == nsHTMLAtoms::maxlength) {
-    return aResult.ParseIntWithBounds(aValue, 0);
-  }
-  if (aAttribute == nsHTMLAtoms::size) {
-    return aResult.ParseIntWithBounds(aValue, 0);
-  }
-  if (aAttribute == nsHTMLAtoms::border) {
-    return aResult.ParseIntWithBounds(aValue, 0);
-  }
-  if (aAttribute == nsHTMLAtoms::align) {
-    return ParseAlignValue(aValue, aResult);
-  }
-  if (ParseImageAttribute(aAttribute, aValue, aResult)) {
-    // We have to call |ParseImageAttribute| unconditionally since we
-    // don't know if we're going to have a type="image" attribute yet,
-    // (or could have it set dynamically in the future).  See bug
-    // 214077.
-    return PR_TRUE;
+    if (aAttribute == nsHTMLAtoms::height) {
+      return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
+    }
+    if (aAttribute == nsHTMLAtoms::maxlength) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
+    if (aAttribute == nsHTMLAtoms::size) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
+    if (aAttribute == nsHTMLAtoms::border) {
+      return aResult.ParseIntWithBounds(aValue, 0);
+    }
+    if (aAttribute == nsHTMLAtoms::align) {
+      return ParseAlignValue(aValue, aResult);
+    }
+    if (ParseImageAttribute(aAttribute, aValue, aResult)) {
+      // We have to call |ParseImageAttribute| unconditionally since we
+      // don't know if we're going to have a type="image" attribute yet,
+      // (or could have it set dynamically in the future).  See bug
+      // 214077.
+      return PR_TRUE;
+    }
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 NS_IMETHODIMP

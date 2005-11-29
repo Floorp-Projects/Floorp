@@ -615,7 +615,8 @@ protected:
     virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                   const nsAString* aValue, PRBool aNotify);
 
-    virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+    virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                  nsIAtom* aAttribute,
                                   const nsAString& aValue,
                                   nsAttrValue& aResult);
 

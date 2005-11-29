@@ -98,7 +98,8 @@ public:
   // nsIContent overrides...
   virtual void SetFocus(nsPresContext* aPresContext);
   virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
@@ -262,11 +263,12 @@ static const nsAttrValue::EnumTable kButtonTypeTable[] = {
 };
 
 PRBool
-nsHTMLButtonElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLButtonElement::ParseAttribute(PRInt32 aNamespaceID,
+                                    nsIAtom* aAttribute,
                                     const nsAString& aValue,
                                     nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::type) {
+  if (aAttribute == nsHTMLAtoms::type && kNameSpaceID_None == aNamespaceID) {
     // XXX ARG!! This is major evilness. ParseAttribute
     // shouldn't set members. Override SetAttr instead
     PRBool res = aResult.ParseEnumValue(aValue, kButtonTypeTable);
@@ -276,7 +278,8 @@ nsHTMLButtonElement::ParseAttribute(nsIAtom* aAttribute,
     return res;
   }
 
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 nsresult

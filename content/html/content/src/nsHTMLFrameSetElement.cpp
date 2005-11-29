@@ -82,7 +82,8 @@ public:
   NS_IMETHOD GetRowSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs);
   NS_IMETHOD GetColSpec(PRInt32 *aNumValues, const nsFramesetSpec** aSpecs);
 
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
@@ -258,21 +259,25 @@ nsHTMLFrameSetElement::GetColSpec(PRInt32 *aNumValues,
 
 
 PRBool
-nsHTMLFrameSetElement::ParseAttribute(nsIAtom* aAttribute,
+nsHTMLFrameSetElement::ParseAttribute(PRInt32 aNamespaceID,
+                                      nsIAtom* aAttribute,
                                       const nsAString& aValue,
                                       nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::bordercolor) {
-    return aResult.ParseColor(aValue, GetOwnerDoc());
-  } 
-  if (aAttribute == nsHTMLAtoms::frameborder) {
-    return nsGenericHTMLElement::ParseFrameborderValue(aValue, aResult);
-  } 
-  if (aAttribute == nsHTMLAtoms::border) {
-    return aResult.ParseIntWithBounds(aValue, 0, 100);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (aAttribute == nsHTMLAtoms::bordercolor) {
+      return aResult.ParseColor(aValue, GetOwnerDoc());
+    }
+    if (aAttribute == nsHTMLAtoms::frameborder) {
+      return nsGenericHTMLElement::ParseFrameborderValue(aValue, aResult);
+    }
+    if (aAttribute == nsHTMLAtoms::border) {
+      return aResult.ParseIntWithBounds(aValue, 0, 100);
+    }
   }
-
-  return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
+  
+  return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+                                              aResult);
 }
 
 nsChangeHint

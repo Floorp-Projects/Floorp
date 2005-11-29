@@ -727,12 +727,14 @@ protected:
    * attribute.  Called by SetAttr().  Note that at the moment we only do this
    * for attributes in the null namespace (kNameSpaceID_None).
    *
+   * @param aNamespaceID the namespace of the attribute to convert
    * @param aAttribute the attribute to convert
    * @param aValue the string value to convert
    * @param aResult the nsAttrValue [OUT]
    * @return PR_TRUE if the parsing was successful, PR_FALSE otherwise
    */
-  virtual PRBool ParseAttribute(nsIAtom* aAttribute,
+  virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
+                                nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
 
