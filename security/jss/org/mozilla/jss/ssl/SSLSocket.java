@@ -289,24 +289,39 @@ public class SSLSocket extends java.net.Socket {
     }
 
     /**
-     * @return The remote peer's IP address.
+     * @return The remote peer's IP address or null if the SSLSocket is closed.
      */
     public InetAddress getInetAddress() {
-        return base.getInetAddress();
+        synchronized (this) {
+            if( isClosed ) {
+                return null;
+            }
+            else return base.getInetAddress();
+        }
     }
 
     /**
-     * @return The local IP address.
+     * @return The local IP address or null if the SSLSocket is closed.
      */
     public InetAddress getLocalAddress() {
-        return base.getLocalAddress();
+        synchronized (this) {
+            if( isClosed ) {
+                return null;
+            }
+            else return base.getLocalAddress();
+        }
     }
 
     /**
-     * @return The local port.
+     * @return The local port or -1 if the SSLSocket is closed.
      */
     public int getLocalPort() {
-        return base.getLocalPort();
+        synchronized (this) {
+            if( isClosed ) {
+                return -1;
+            }
+            else  return base.getLocalPort();
+        }
     }
 
     /**
