@@ -62,6 +62,7 @@
                  anonid="container"><html:input
                  class="-moz-xforms-select1-input"
                  anonid="control"
+                 xbl:inherits="accesskey"
                  onfocus="this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusIn')"
                  onblur="this.parentNode.parentNode.handleBlur(); this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusOut');"
                  onclick="this.parentNode.parentNode.handleControlClick();"

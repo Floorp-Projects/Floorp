@@ -191,6 +191,17 @@ label {
   -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-label');
 }
 
+input > label,
+secret > label,
+textarea > label,
+trigger > label,
+submit > label,
+select > label,
+select1 > label,
+upload > label {
+  -moz-binding: url('chrome://xforms/content/xforms.xml#xformswidget-label-accesskey');
+}
+
 select1 {
   -moz-binding: url('chrome://xforms/content/select1.xml#xformswidget-select1');
 }

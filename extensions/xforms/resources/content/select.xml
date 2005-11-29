@@ -82,7 +82,7 @@
         <html:span>
            <children includes="label"/>
         </html:span>
-        <html:select xbl:inherits="style"
+        <html:select xbl:inherits="style, accesskey"
                      class="xf-value"
                      onchange="this.parentNode.parentNode.selectionChanged();"
                      onfocus="this.parentNode.parentNode.dispatchDOMUIEvent('DOMFocusIn');"

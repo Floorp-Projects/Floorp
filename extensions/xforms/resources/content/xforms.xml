@@ -198,7 +198,75 @@
       </method>
     </implementation>
   </binding>
-  
+
+  <!-- LABEL: <ACCESKEY SUPPORT> -->
+  <binding id="xformswidget-label-accesskey"
+           extends="chrome://xforms/content/xforms.xml#xformswidget-base">
+    <content>
+      <html:span anonid="content"></html:span>
+      <html:span anonid="anoncontent" style="display:none;">
+        <children/>
+      </html:span>
+    </content>
+    <implementation implements="nsIXFormsUIWidget">
+      <method name="refresh">
+        <body>
+        <![CDATA[
+          // we cannot access the <children/> content in XBL1, so we switch to
+          // always cloning the content into the content span.
+          var content =
+            document.getAnonymousElementByAttribute(this, "anonid", "content");
+
+          var hasElementChildren = false;
+          var hasBoundValue = false;
+
+          if (this.accessors.hasBoundNode() || this.accessors.getValue() != null) {
+            content.textContent = this.stringValue;
+            hasBoundValue = true;
+          } else {
+            // clone the contents child by child
+            var node;
+            for (var i = 0; i < this.childNodes.length; i++) {
+              if (!hasElementChildren && this.childNodes[i].nodeType == Node.ELEMENT_NODE)
+                hasElementChildren = true;
+
+              content.appendChild(this.childNodes[i].cloneNode(true));
+            }
+          }
+
+          // XXX: if label has element node children, we skip accesskey underlining
+          if (!hasElementChildren && this.parentNode.hasAttribute("accesskey")) {
+            var accesskey = this.parentNode.getAttribute("accesskey");
+
+            // bail if no accesskey or accesskey is longer than 1 character
+            if (!accesskey || accesskey.length != 1)
+              return true;
+
+            var str = content.textContent;
+            var location = str.indexOf(accesskey);
+
+            if (location > -1) {
+              // we create a range around the character we want and surround it
+              // with an <html:u>
+              var range = document.createRange();
+              range.setStart(content.firstChild, location)
+              range.setEnd(content.firstChild, location+1)
+
+              var u = document.createElementNS("http://www.w3.org/1999/xhtml", "u");
+              range.surroundContents(u);
+            } else {
+              // if we didn't find the accesskey, append it to the end
+              content.textContent += "(" + accesskey + ")";
+            }
+          }
+
+          return true;
+        ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
   <!-- INPUT: <DEFAULT> -->
   <binding id="xformswidget-input"
            extends="chrome://xforms/content/xforms.xml#xformswidget-base">
@@ -1178,8 +1246,7 @@
       <children includes="label"/>
       <html:input anonid="upload_text_control"
                   class="xf-value"
-                  readonly="true"
-                  xbl:inherits="accesskey"/>
+                  readonly="true"/>
       <html:button anonid="upload_browse_button"
                    type="button"
                    onclick="this.parentNode.uploadElem.pickFile();"
@@ -1189,7 +1256,7 @@
                    type="button"
                    onclick="this.parentNode.uploadElem.clearFile();"
                    onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.parentNode.dispatchDOMUIEvent('DOMActivate');"
-                   xbl:inherits="accesskey"> &xforms.upload.cleartext; </html:button>
+                   > &xforms.upload.cleartext; </html:button>
       <children/>
     </content>
 
